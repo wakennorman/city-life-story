@@ -1,0 +1,229 @@
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:33:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:45:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:56:          StateManager.addMessage("🚶 你假装没看见走了过去。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:78:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:89:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:97:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:110:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:117:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:140:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:151:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:156:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:167:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:179:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:206:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:212:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:224:          StateManager.addMessage("🚶 你低着头快步走开了。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:246:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:253:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:260:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:271:          StateManager.addMessage("🚶 你摇摇头继续忙自己的事了。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:291:            StateManager.addMessage("🛍️ 钱不够买！", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:298:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:310:            StateManager.addMessage("🧥 钱不够买！", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:316:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:326:          StateManager.addMessage("🚶 家里啥都不缺，看看就好。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:345:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:358:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:364:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:375:          StateManager.addMessage("🚶 你戴上耳机假装没听见。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:397:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:411:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:422:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:458:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:473:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:480:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:501:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:510:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:541:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:555:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:575:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:584:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:612:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:632:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:638:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:659:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:690:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:702:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:717:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:731:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:763:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:779:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:792:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:811:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:844:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:867:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:876:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:896:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:909:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:940:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:954:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:960:            StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:963:            StateManager.addMessage("🎰 啥也没中。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:980:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1010:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1025:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1039:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1239:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1270:      StateManager.addMessage(`📰 ${news.headline}`, "event");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/save.js:37:    StateManager.addMessage("⚠️ 无效的存档槽位。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/save.js:68:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/save.js:75:    StateManager.addMessage("⚠️ 存档失败: " + e.message, "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/save.js:256:    StateManager.addMessage("📥 存档导入成功！", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/save.js:259:    StateManager.addMessage("⚠️ 存档导入失败: " + e.message, "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/state.js:275:  addMessage(text, type = "info") {
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:119:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:123:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:127:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:146:    StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:246:            StateManager.addMessage(`⚠️ ${finalReq}`, "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:250:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:334:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:390:              StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:443:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:464:          StateManager.addMessage(`🚶 你来到了${dest.name}。`, "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:483:        StateManager.addMessage(`😴 你休息了一会，疲劳-${recovery}。`, "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:501:          StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:510:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:530:          StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:535:        StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:599:          StateManager.addMessage("🏥 看了医生，健康恢复了不少。", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:624:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:630:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:649:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:791:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:797:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:833:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:840:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:989:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1025:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1031:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1051:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1062:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1069:  StateManager.addMessage(`💰 ${job.name}完成，赚了 ¥${pay}。`, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1085:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1227:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1241:      StateManager.addMessage("⚠️ 付不起仓库租金，仓库被收回。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1280:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1324:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1338:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1352:  StateManager.addMessage(`📰 ${evt.text}`, evt.type);
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:26:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:50:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:56:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:78:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:96:        StateManager.addMessage("🎲 押不起 50 块。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:104:        StateManager.addMessage("🎲 赢了！100 块到手！", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:107:        StateManager.addMessage("🎲 输了...50 块没了。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:123:        StateManager.addMessage("📞 电话费都付不起...", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:131:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:137:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:167:        StateManager.addMessage("💻 5 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:177:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:195:        StateManager.addMessage("💈 剪不起头。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:202:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:224:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:242:        StateManager.addMessage("🌃 学费 50 块都交不起。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:251:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:270:        StateManager.addMessage("🏋️ 月卡 200 块都办不起。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:279:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:297:        StateManager.addMessage("🎬 35 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:304:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:322:        StateManager.addMessage("🎤 80 块都凑不齐。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:330:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:348:        StateManager.addMessage("💊 30 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:354:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:372:        StateManager.addMessage("🛒 30 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:379:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:397:        StateManager.addMessage("👕 80 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:404:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:423:        StateManager.addMessage("🎰 2 块都掏不出来。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:432:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:441:        StateManager.addMessage(`🎰 小赚一笔！中了 ¥${prize}！`, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:444:        StateManager.addMessage("🎰 没中。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:471:        StateManager.addMessage("🛡️ 保险都买不起。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:477:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:496:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:514:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:532:        StateManager.addMessage("🏪 200 块启动资金都没有。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:545:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:555:        StateManager.addMessage(`🏪 摆摊小赚 ¥${earned}。`, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:558:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:592:            StateManager.addMessage("💌 至少汇 100 块。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:604:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:637:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:657:            StateManager.addMessage("💰 至少转入 100 块。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:662:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:692:    StateManager.addMessage("🛡️ 你的保险到期了，记得续保。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/actions_extra.js:698:      StateManager.addMessage("🛡️ 保险赔付了 ¥500！", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/needs.js:42:    StateManager.addMessage(msg, "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/needs.js:53:      StateManager.addMessage("🤒 病好了，身体恢复了。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/needs.js:60:      StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:12:    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:33:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:46:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:70:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:82:    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:89:    StateManager.addMessage(`⚠️ 背包中没有足够的${good.name}！`, "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:141:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:153:    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:173:    StateManager.addMessage("⚠️ 批发最少购买5件。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:179:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:192:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:221:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase1/trade.js:233:    StateManager.addMessage(`⚠️ 背包中没有该商品。`, "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:20:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:30:    StateManager.addMessage(`⚠️ 需要 ¥${action.cost}，现金不足。`, "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:87:  StateManager.addMessage(`${action.icon} ${action.name}完成！`, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:127:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:139:      StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:150:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:189:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:250:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/corp_ops.js:254:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:203:      StateManager.addMessage("比特币减半事件！", "event");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:229:    StateManager.addMessage("现金不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:240:  StateManager.addMessage("买入 " + symbol + " " + shares + "股", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:248:    StateManager.addMessage("持仓不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:257:  StateManager.addMessage("卖出 " + symbol + " " + shares + "股", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:265:    StateManager.addMessage("现金不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:270:  StateManager.addMessage("买入 " + amount + " BTC", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:277:    StateManager.addMessage("持仓不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:282:  StateManager.addMessage("卖出 " + amount + " BTC", "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:291:    StateManager.addMessage("现金不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:301:  StateManager.addMessage("购入" + prop.name, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:313:  StateManager.addMessage("出售" + prop.name + " 到手" + net, "success");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:322:    StateManager.addMessage("现金不足", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:338:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/promo.js:51:      StateManager.addMessage("🏛️ 董事会投票未通过...下次再试。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/promo.js:76:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:225:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:249:    StateManager.addMessage("⚠️ 不存在的股票。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:255:    StateManager.addMessage("⚠️ 至少买入1股。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:261:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:287:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:299:    StateManager.addMessage("⚠️ 持仓不足。", "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:321:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:545:          StateManager.addMessage("⚠️ 现金不足买入 1 股。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/stock.js:568:          StateManager.addMessage("⚠️ 没有持仓可卖。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/team.js:10:    StateManager.addMessage("⚠️ P7以上才能管理团队。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/team.js:14:    StateManager.addMessage("⚠️ 团队已满员。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/team.js:24:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/team.js:48:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/team.js:72:  StateManager.addMessage(`👋 ${member.name} 离开了团队。`, "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:305:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:309:  StateManager.addMessage(`📋 ${reason}`, "danger");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:310:  StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:144:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:169:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:198:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:226:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:239:          StateManager.addMessage("📝 贷款 ¥5,000。", "warning");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:262:          StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:417:    StateManager.addMessage("📭 没有可删除的存档。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:449:          StateManager.addMessage("🗑️ 存档已删除。", "info");
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:164:            StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:751:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:822:        StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/tutorial.js:131:    StateManager.addMessage(
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/tutorial.js:157:          StateManager.addMessage(
