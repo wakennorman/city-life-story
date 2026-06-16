@@ -224,6 +224,158 @@ function cleanupHighlight() {
   document.querySelectorAll(".tutorial-highlight").forEach((e) => e.remove());
 }
 
+// ====== 动态教程提示系统 ======
+/**
+ * 基于游戏状态触发的一次性情境提示。
+ * 存储于 state.flags._hint_<id>，每条只触发一次。
+ * 参考《Stardew Valley》的新手引导理念：在玩家自然遇到问题时给出实用建议。
+ */
+
+var DYNAMIC_HINTS = [
+  {
+    id: "first_hundred",
+    trigger: function (st) {
+      return (st.resources.cash || 0) >= 100 && !st.flags._hint_first_hundred;
+    },
+    message:
+      "💡 提示：攒到100元了！建议去🏦银行存钱，存款有利息，还能抵御突发支出。",
+  },
+  {
+    id: "first_low_cash",
+    trigger: function (st) {
+      return (
+        (st.resources.cash || 0) < 80 &&
+        st.player.day > 5 &&
+        !st.flags._hint_first_low_cash
+      );
+    },
+    message:
+      "💡 提示：现金不多了！废品回收是最稳定的收入，城中村和工厂区都能做，不挑天气。",
+  },
+  {
+    id: "first_injury",
+    trigger: function (st) {
+      return st.status && st.status.health < 70 && !st.flags._hint_first_injury;
+    },
+    message:
+      "💡 提示：健康在下降！去🏥医院看病，也可以考虑买意外保险，防止突发大额医疗支出。",
+  },
+  {
+    id: "first_fatigue_high",
+    trigger: function (st) {
+      return (
+        st.needs && st.needs.fatigue >= 75 && !st.flags._hint_first_fatigue_high
+      );
+    },
+    message:
+      "💡 提示：疲劳过高！工作效率会降低。升级住所能加快每晚恢复速度，花¥500就能搬到单间。",
+  },
+  {
+    id: "first_happy_low",
+    trigger: function (st) {
+      return (
+        st.needs &&
+        st.needs.happiness < 25 &&
+        st.player.day > 3 &&
+        !st.flags._hint_first_happy_low
+      );
+    },
+    message:
+      "💡 提示：心情低落！去公园散步、找NPC聊天，或者喝杯奶茶都能改善心情，心情好干活效率更高。",
+  },
+  {
+    id: "day10_tip",
+    trigger: function (st) {
+      return st.player.day >= 10 && !st.flags._hint_day10_tip;
+    },
+    message:
+      "💡 提示：第10天了！如果手头有¥500，可以在城中村租个单间，改善睡眠质量，每晚多恢复疲劳。",
+  },
+  {
+    id: "first_repay_ready",
+    trigger: function (st) {
+      var debt = st.resources.villageDebt || st.resources.debt || 0;
+      return (
+        debt > 0 &&
+        (st.resources.cash || 0) >= debt &&
+        !st.flags._hint_first_repay_ready
+      );
+    },
+    message:
+      "💡 提示：现金够还村长的债了！日息0.3%每天都在涨，尽快还清能省不少利息。",
+  },
+  {
+    id: "first_5000",
+    trigger: function (st) {
+      return (
+        (st.resources.cash || 0) + (st.resources.bankBalance || 0) >= 5000 &&
+        !st.flags._hint_first_5000
+      );
+    },
+    message:
+      "💡 提示：资产超5000元！可以去🎓培训中心学技能考证书，智力≥45后还能去科技园应聘职场。",
+  },
+  {
+    id: "first_trade_tip",
+    trigger: function (st) {
+      return (
+        st.trade &&
+        (st.trade.totalProfit || 0) >= 200 &&
+        !st.flags._hint_first_trade_tip
+      );
+    },
+    message:
+      "💡 提示：交易赚了200元！去📦批发市场可以租仓库增加库存量，更多商品→更大利润空间。",
+  },
+  {
+    id: "first_intel_tip",
+    trigger: function (st) {
+      return st.player.intelligence >= 35 && !st.flags._hint_first_intel_tip;
+    },
+    message:
+      "💡 提示：智力达到35！培训中心的课程学得更快了，再提升到45就能应聘互联网职场。",
+  },
+  {
+    id: "first_npc_tip",
+    trigger: function (st) {
+      var rels = st.relationships || {};
+      var met = Object.values(rels).filter(function (r) {
+        return r && r.met;
+      }).length;
+      return met >= 1 && !st.flags._hint_first_npc_tip;
+    },
+    message:
+      "💡 提示：认识了NPC！多送礼提升好感度，好感度高的NPC会提供特殊帮助和奖励。",
+  },
+  {
+    id: "day30_dream_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 30 &&
+        !st.flags._dreamId &&
+        !st.flags._hint_day30_dream_tip
+      );
+    },
+    message:
+      "💡 提示：在城市打拼一个月了！去公园或城中村可以「确立人生目标」，设定梦想让努力更有方向感。",
+  },
+];
+
+/** 每日检查动态提示，触发后标记防重复 */
+function checkDynamicHints(state) {
+  for (var i = 0; i < DYNAMIC_HINTS.length; i++) {
+    var hint = DYNAMIC_HINTS[i];
+    try {
+      if (hint.trigger(state)) {
+        state.flags["_hint_" + hint.id] = true;
+        StateManager.addMessage(hint.message, "hint");
+      }
+    } catch (e) {
+      /* 防止单条hint出错影响全局 */
+    }
+  }
+}
+
 // 全局挂载
 if (typeof window !== "undefined") {
   Object.assign(window, {
@@ -235,5 +387,7 @@ if (typeof window !== "undefined") {
     highlightElement,
     cleanupHighlight,
     TUTORIAL_KEY,
+    DYNAMIC_HINTS,
+    checkDynamicHints,
   });
 }

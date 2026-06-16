@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-17 (累计72项改动，本轮新增：节日系统+客流量+梦想追踪系统)
+> 最后更新: 2026-06-17 (累计75项改动，本轮新增：节日系统+客流量+梦想追踪+动态教程提示+成长可视化)
 
 ## 项目概述
 
@@ -496,3 +496,5 @@ src/
 | 2026-06-17 | 新增内容#11: 节日系统 — 新建js/core/festivals.js：5个节日(春节day20-27/劳动节day120-122/端午day162-164/中秋day256-258/国庆day273-280)，每节日有价格修正表(food/electronics/clothing/luxury/daily，最高±35%)、每日心情加成(3-8点)、第一天公告文本；trade.js的getCurrentPrice()自动叠加节日价格修正；交易界面新增节日价格提示横幅；header显示当前季节+节日倒计时徽章；送礼系统节日加成(春节/中秋+10，其他+5)；festival_check加入daily_pipeline |
 | 2026-06-17 | 新增内容#12: 摆摊选址策略 — locations.js为11个地点新增footfall(0.4-1.8)和vendingNote字段；skill_bonuses.js新增getVendingFootfallMod()(位置×天气×节日×周末综合修正)和getFootfallStars()；jobs.js三个摆摊工作payCalc()接入footfall修正(商业区收入是城中村的3倍)；摆摊工作扩展至城中村/工业区/大学城/公园/科技园；行动卡片显示客流量星级；侧边栏地点区块显示实时客流量评级；street_performer和busking迁至公园可用                               |
 | 2026-06-17 | 新增内容#13: 梦想追踪系统 — 新建js/core/dreams.js：5类人生目标(开餐馆/买房/出国/投资/成为名人)×各5个里程碑，每个里程碑有条件判定+专属叙事文本；actions_extra.js新增确立人生目标行动和梦想进度查看行动；dream_check步骤加入daily_pipeline；侧边栏显示梦想进度条+当前里程碑                                                                                                                                                                    |
+| 2026-06-17 | 新增内容#14: 动态教程提示 — tutorial.js新增DYNAMIC*HINTS数组(12条情境提示)和checkDynamicHints()函数；首次赚100元/资产不足/受伤/疲劳高/心情低/第10天/还债提醒/资产5000/贸易盈利/智力35/认识NPC/30天梦想提示各触发一次；daily_pipeline新增hint_check步骤；CSS新增hint样式(绿色左边框)；消息类型"hint"自动渲染，每条只触发一次存储在state.flags.\_hint*<id>                                                                                     |
+| 2026-06-17 | 新增内容#15: 成长数据可视化 — 新增📈成长tab；daily_pipeline新增snapshot步骤每日记录总资产(存入state.flags.\_cashHistory最多90天)；render.js新增renderGrowthTab()/drawAssetLineChart()/drawRadarChart()/\_growthStat()；Canvas折线图(资产曲线/网格线/面积填充/最新点高亮/X轴天数标注)；Canvas雷达图(5维：体质/智力/敏捷/心智/名气，五色顶点点)；数字面板(9个统计格：游戏天数/年龄/总资产/银行存款/负债/成就数/梦想进度/贸易利润)              |

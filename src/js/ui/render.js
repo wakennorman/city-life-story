@@ -529,9 +529,338 @@ function renderCurrentTab(state) {
     case "achievements":
       renderAchievementsTab(state, area);
       break;
+    case "growth":
+      renderGrowthTab(state, area);
+      break;
     default:
       area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
   }
+}
+
+// ====== Growth Tab — 成长数据可视化 ======
+function renderGrowthTab(state, parent) {
+  parent.innerHTML = "";
+
+  var p = state.player;
+  var wrapper = document.createElement("div");
+  wrapper.style.cssText = "padding:12px;";
+
+  // ---- 1. 资产曲线 ----
+  var chartSection = document.createElement("div");
+  chartSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+  chartSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📈 资产变化曲线</h3>';
+
+  var lineCanvas = document.createElement("canvas");
+  lineCanvas.width = 520;
+  lineCanvas.height = 160;
+  lineCanvas.style.cssText = "width:100%;height:auto;display:block;";
+  chartSection.appendChild(lineCanvas);
+  wrapper.appendChild(chartSection);
+
+  // ---- 2. 属性雷达图 ----
+  var radarSection = document.createElement("div");
+  radarSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;";
+
+  var radarInfo = document.createElement("div");
+  radarInfo.style.cssText = "flex:1;min-width:0;";
+  radarInfo.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🕸️ 能力雷达图</h3>';
+  var radarCanvas = document.createElement("canvas");
+  radarCanvas.width = 200;
+  radarCanvas.height = 200;
+  radarCanvas.style.cssText =
+    "width:100%;max-width:200px;height:auto;display:block;margin:0 auto;";
+  radarInfo.appendChild(radarCanvas);
+  radarSection.appendChild(radarInfo);
+
+  // 属性说明
+  var statSummary = document.createElement("div");
+  statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
+  var stats = [
+    { label: "体质", value: p.physique, color: "#c4803a" },
+    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
+    { label: "心智", value: p.mental, color: "#9b74b8" },
+    {
+      label: "名气",
+      value: (state.status && state.status.fame) || 0,
+      color: "#d4a017",
+    },
+  ];
+  stats.forEach(function (s) {
+    var row = document.createElement("div");
+    row.style.cssText =
+      "display:flex;align-items:center;gap:6px;margin-bottom:6px;";
+    row.innerHTML =
+      '<span style="width:32px;font-size:11px;color:var(--text-muted);">' +
+      s.label +
+      "</span>" +
+      '<div style="flex:1;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+      '<div style="width:' +
+      Math.min(100, s.value) +
+      "%;height:100%;background:" +
+      s.color +
+      ';border-radius:3px;"></div>' +
+      "</div>" +
+      '<span style="width:24px;font-size:11px;color:var(--text-secondary);text-align:right;">' +
+      s.value +
+      "</span>";
+    statSummary.appendChild(row);
+  });
+  radarSection.appendChild(statSummary);
+  wrapper.appendChild(radarSection);
+
+  // ---- 3. 今日简报 ----
+  var briefSection = document.createElement("div");
+  briefSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;border:1px solid var(--border);";
+  var totalAsset =
+    (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  var debt =
+    (state.resources.villageDebt || state.resources.debt || 0) +
+    (state.resources.bankDebt || 0);
+  briefSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">' +
+    _growthStat("📅 游戏天数", "第" + p.day + "天") +
+    _growthStat("🎂 当前年龄", p.age + "岁") +
+    _growthStat("💰 总资产", "¥" + totalAsset.toLocaleString()) +
+    _growthStat(
+      "🏦 银行存款",
+      "¥" + (state.resources.bankBalance || 0).toLocaleString(),
+    ) +
+    (debt > 0
+      ? _growthStat("💸 总负债", "¥" + debt.toLocaleString(), "#c4553d")
+      : "") +
+    _growthStat(
+      "🏅 成就数",
+      ((state.flags && state.flags._unlockedAchievements) || []).length + "个",
+    ) +
+    _growthStat(
+      "🌟 梦想进度",
+      typeof getDreamProgress === "function"
+        ? getDreamProgress(state) + "%"
+        : "未设定",
+    ) +
+    (state.trade && state.trade.totalProfit
+      ? _growthStat(
+          "📦 贸易总利润",
+          "¥" + (state.trade.totalProfit || 0).toLocaleString(),
+        )
+      : "") +
+    "</div>";
+  wrapper.appendChild(briefSection);
+
+  parent.appendChild(wrapper);
+
+  // ---- 绘制图表（DOM插入后） ----
+  setTimeout(function () {
+    var history = (state.flags && state.flags._cashHistory) || [];
+    drawAssetLineChart(lineCanvas, history);
+    drawRadarChart(
+      radarCanvas,
+      [
+        p.physique,
+        p.intelligence,
+        p.agility,
+        p.mental,
+        Math.min(100, (state.status && state.status.fame) || 0),
+      ],
+      ["体质", "智力", "敏捷", "心智", "名气"],
+      100,
+    );
+  }, 30);
+}
+
+function _growthStat(label, value, color) {
+  return (
+    '<div style="background:var(--bg-input);border-radius:6px;padding:8px;text-align:center;">' +
+    '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">' +
+    label +
+    "</div>" +
+    '<div style="font-size:13px;font-weight:700;color:' +
+    (color || "var(--text-primary)") +
+    ';">' +
+    value +
+    "</div>" +
+    "</div>"
+  );
+}
+
+/** 资产折线图 (Canvas) */
+function drawAssetLineChart(canvas, data) {
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width,
+    H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var pad = { t: 18, r: 10, b: 24, l: 52 };
+  var cw = W - pad.l - pad.r,
+    ch = H - pad.t - pad.b;
+
+  if (!data || data.length < 2) {
+    ctx.fillStyle = "#aaa";
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("数据积累中（每天结束后记录一次）", W / 2, H / 2);
+    return;
+  }
+
+  var values = data.map(function (d) {
+    return d.value;
+  });
+  var maxV = Math.max.apply(null, values) * 1.15 || 1000;
+  var minV = Math.min(0, Math.min.apply(null, values) * 0.9);
+
+  function tx(i) {
+    return pad.l + (i / (data.length - 1)) * cw;
+  }
+  function ty(v) {
+    return pad.t + (1 - (v - minV) / (maxV - minV)) * ch;
+  }
+
+  // Grid & Y-axis labels
+  ctx.font = "9px sans-serif";
+  ctx.textAlign = "right";
+  for (var g = 0; g <= 4; g++) {
+    var gy = pad.t + (g / 4) * ch;
+    ctx.strokeStyle = "rgba(0,0,0,0.07)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, gy);
+    ctx.lineTo(W - pad.r, gy);
+    ctx.stroke();
+    var lv = maxV - (g / 4) * (maxV - minV);
+    ctx.fillStyle = "#999";
+    ctx.fillText(
+      "¥" + (lv >= 1000 ? (lv / 1000).toFixed(1) + "k" : Math.round(lv)),
+      pad.l - 4,
+      gy + 3,
+    );
+  }
+
+  // Area fill
+  ctx.beginPath();
+  ctx.moveTo(tx(0), ty(data[0].value));
+  data.forEach(function (d, i) {
+    ctx.lineTo(tx(i), ty(d.value));
+  });
+  ctx.lineTo(tx(data.length - 1), pad.t + ch);
+  ctx.lineTo(tx(0), pad.t + ch);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(74,158,92,0.12)";
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach(function (d, i) {
+    if (i === 0) ctx.moveTo(tx(0), ty(d.value));
+    else ctx.lineTo(tx(i), ty(d.value));
+  });
+  ctx.strokeStyle = "#4a9e5c";
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  // Last point dot
+  var last = data[data.length - 1];
+  ctx.beginPath();
+  ctx.arc(tx(data.length - 1), ty(last.value), 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#4a9e5c";
+  ctx.fill();
+
+  // X-axis day labels
+  var step = Math.max(1, Math.ceil(data.length / 7));
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#aaa";
+  data.forEach(function (d, i) {
+    if (i % step === 0 || i === data.length - 1) {
+      ctx.fillText("D" + d.day, tx(i), H - 5);
+    }
+  });
+}
+
+/** 属性雷达图 (Canvas) */
+function drawRadarChart(canvas, values, labels, maxVal) {
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width,
+    H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var cx = W / 2,
+    cy = H / 2;
+  var r = Math.min(cx, cy) - 28;
+  var n = values.length;
+  var colors = ["#c4803a", "#5a8ab4", "#5aaa5a", "#9b74b8", "#d4a017"];
+
+  function pt(i, radius) {
+    var angle = (i / n) * 2 * Math.PI - Math.PI / 2;
+    return {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+    };
+  }
+
+  // Grid rings
+  [0.25, 0.5, 0.75, 1.0].forEach(function (f) {
+    ctx.beginPath();
+    for (var i = 0; i < n; i++) {
+      var p = pt(i, r * f);
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = "rgba(0,0,0,0.09)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Axis lines
+  for (var i = 0; i < n; i++) {
+    var ep = pt(i, r);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ep.x, ep.y);
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Data polygon
+  ctx.beginPath();
+  values.forEach(function (v, i) {
+    var p = pt(i, r * Math.min(v / maxVal, 1));
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = "rgba(74,158,92,0.18)";
+  ctx.fill();
+  ctx.strokeStyle = "#4a9e5c";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Data points
+  values.forEach(function (v, i) {
+    var dp = pt(i, r * Math.min(v / maxVal, 1));
+    ctx.beginPath();
+    ctx.arc(dp.x, dp.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i] || "#4a9e5c";
+    ctx.fill();
+  });
+
+  // Labels
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  labels.forEach(function (lbl, i) {
+    var lp = pt(i, r + 16);
+    ctx.fillStyle = colors[i] || "#666";
+    ctx.fillText(lbl, lp.x, lp.y);
+  });
 }
 
 function renderTimeSlot(state, parent) {

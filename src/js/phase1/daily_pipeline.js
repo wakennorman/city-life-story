@@ -151,6 +151,23 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 每日快照（用于成长图表） ===
+  {
+    name: "snapshot",
+    fn: function (state) {
+      if (!state.flags._cashHistory) state.flags._cashHistory = [];
+      var totalAsset =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      state.flags._cashHistory.push({
+        day: state.player.day,
+        value: totalAsset,
+      });
+      if (state.flags._cashHistory.length > 90) {
+        state.flags._cashHistory = state.flags._cashHistory.slice(-90);
+      }
+    },
+  },
+
   // === 价格更新 ===
   {
     name: "price_update",
@@ -280,6 +297,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkDreamProgress === "function") {
         checkDreamProgress(state);
+      }
+    },
+  },
+
+  // === 动态教程提示 ===
+  {
+    name: "hint_check",
+    fn: function (state) {
+      if (typeof checkDynamicHints === "function") {
+        checkDynamicHints(state);
       }
     },
   },
