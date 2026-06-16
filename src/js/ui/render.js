@@ -110,8 +110,50 @@ function renderSidebar(state) {
   }
 
   renderNeedsBars(state);
-  renderLocation(state);
   renderDebtInfo(state);
+  renderDreamSection(state);
+  renderLocation(state);
+}
+
+/** 梦想追踪侧边栏区块 */
+function renderDreamSection(state) {
+  var dreamEl = document.getElementById("dream-section");
+  if (!dreamEl) return;
+  if (typeof getCurrentDream !== "function") {
+    dreamEl.style.display = "none";
+    return;
+  }
+  var dream = getCurrentDream(state);
+  if (!dream) {
+    dreamEl.style.display = "none";
+    return;
+  }
+  var progress =
+    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+  var curTitle =
+    typeof getDreamCurrentTitle === "function"
+      ? getDreamCurrentTitle(state)
+      : "";
+  dreamEl.style.display = "";
+  dreamEl.innerHTML =
+    "<h3>🌟 人生目标</h3>" +
+    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+    '<span style="font-size:18px;">' +
+    dream.icon +
+    "</span>" +
+    '<span style="font-size:12px;font-weight:600;color:var(--text-primary);">' +
+    dream.name +
+    "</span></div>" +
+    '<div style="background:var(--bg-input);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;">' +
+    '<div style="width:' +
+    progress +
+    '%;height:100%;background:var(--accent);border-radius:4px;"></div>' +
+    "</div>" +
+    '<div style="font-size:10px;color:var(--text-muted);">' +
+    progress +
+    "% · " +
+    curTitle +
+    "</div>";
 }
 
 /** 侧边栏显示村长/银行债务 */

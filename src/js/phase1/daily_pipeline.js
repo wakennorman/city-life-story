@@ -274,6 +274,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 梦想进度检查 ===
+  {
+    name: "dream_check",
+    fn: function (state) {
+      if (typeof checkDreamProgress === "function") {
+        checkDreamProgress(state);
+      }
+    },
+  },
+
   // === 结束日志 ===
   {
     name: "end_log",

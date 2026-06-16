@@ -734,6 +734,142 @@ function addStreetExtras(state, actions) {
       },
     });
   }
+
+  // === 确立人生梦想（公园/家里才显示，未设定梦想时） ===
+  var hasDream = state.flags && state.flags._dreamId;
+  var atRestfulLoc =
+    state.trade.currentLocation === "park" ||
+    state.trade.currentLocation === "slum";
+  if (!hasDream && atRestfulLoc) {
+    actions.push({
+      id: "set_dream",
+      name: "💭 确立人生目标",
+      desc: "在这座城市，你想要什么？选定一个方向，脚踏实地去努力。",
+      icon: "🌟",
+      apCost: 5,
+      handler: function () {
+        showDreamSelectModal();
+      },
+    });
+  }
+
+  // === 查看梦想进度（已有梦想时显示） ===
+  if (hasDream) {
+    var dream = typeof getCurrentDream === "function"
+      ? getCurrentDream(state)
+      : null;
+    if (dream) {
+      var progress = typeof getDreamProgress === "function"
+        ? getDreamProgress(state)
+        : 0;
+      var curTitle = typeof getDreamCurrentTitle === "function"
+        ? getDreamCurrentTitle(state)
+        : "";
+      actions.push({
+        id: "view_dream",
+        name: dream.icon + " 梦想：" + dream.name,
+        desc: "进度 " + progress + "% · 当前里程碑：" + curTitle,
+        icon: "🌟",
+        apCost: 0,
+        handler: function () {
+          showDreamProgressModal();
+        },
+      });
+    }
+  }
+}
+
+/** 梦想选择模态框 */
+function showDreamSelectModal() {
+  if (typeof DREAMS === "undefined") return;
+  var optHtml = DREAMS.map(function (d) {
+    return (
+      '<div onclick="selectDream(\'' +
+      d.id +
+      '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
+      'onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"> ' +
+      "<strong>" +
+      d.icon +
+      " " +
+      d.name +
+      "</strong>" +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
+      d.desc +
+      "</div>" +
+      "</div>"
+    );
+  }).join("");
+  showModal({
+    title: "🌟 确立人生目标",
+    body:
+      '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">选定一个方向，游戏会追踪你的进度，在每个里程碑时给你一段专属故事。</p>' +
+      optHtml,
+    buttons: [{ text: "稍后再说", cls: "", callback: function () {} }],
+  });
+}
+
+window.selectDream = function (dreamId) {
+  document.querySelector(".modal-overlay") &&
+    document.querySelector(".modal-overlay").remove();
+  var st = StateManager.getState();
+  st.flags._dreamId = dreamId;
+  st.flags._dreamMilestone = 0;
+  st.flags._dreamStartDay = st.player.day;
+  var dream = typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
+  if (dream) {
+    StateManager.addMessage(
+      dream.icon +
+        " 你确立了人生目标：" +
+        dream.name +
+        "。\n" +
+        dream.desc +
+        "。\n第一个里程碑：" +
+        (dream.milestones[0] ? dream.milestones[0].title : ""),
+      "event",
+    );
+  }
+};
+
+/** 梦想进度模态框 */
+function showDreamProgressModal() {
+  var st = StateManager.getState();
+  var dream = typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
+  if (!dream) return;
+  var milestoneHtml = dream.milestones
+    .map(function (m, i) {
+      var done = (st.flags._dreamMilestone || 0) > i;
+      var current = (st.flags._dreamMilestone || 0) === i;
+      return (
+        '<div style="padding:8px 12px;margin:4px 0;border-radius:5px;background:' +
+        (done
+          ? "rgba(74,158,92,0.1)"
+          : current
+          ? "rgba(74,158,92,0.05)"
+          : "var(--bg-card)") +
+        ";border:1px solid " +
+        (done ? "var(--accent)" : current ? "rgba(74,158,92,0.3)" : "var(--border)") +
+        ";font-size:12px;">'
+        + (done ? "✅ " : current ? "⏳ " : "⬜ ") +
+        "<strong>" + m.title + "</strong>" +
+        (current
+          ? '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">进行中…</div>'
+          : "") +
+        "</div>"
+      );
+    })
+    .join("");
+  var progress = typeof getDreamProgress === "function" ? getDreamProgress(st) : 0;
+  showModal({
+    title: dream.icon + " " + dream.name,
+    body:
+      '<div style="margin-bottom:12px;">' +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">总进度：' + progress + "%</div>" +
+      '<div style="background:var(--bg-input);border-radius:4px;height:8px;overflow:hidden;">' +
+      '<div style="width:' + progress + '%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.5s;"></div>' +
+      "</div></div>" +
+      milestoneHtml,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
 }
 
 /** 汇款模态框 */
