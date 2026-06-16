@@ -37,18 +37,23 @@ const STREET_JOBS = [
     risk: { injury: 0.04, illness: 0.03 },
   },
 
-  // ====== 商业区 — 摆摊 ======
+  // ====== 街头摆摊（多地点，收益受客流量影响）======
   {
     id: "street_vending_food",
     name: "摆摊卖小吃",
-    desc: "在街边支个小摊卖烤串、煎饼果子。手艺越好，回头客越多。",
+    desc: "在街边支个小摊卖烤串、煎饼果子。客流量越大，手艺越好，赚得越多。",
     icon: "🍢",
     location: "commercialDist",
     requirements: { minAge: 16, maxAge: 60 },
     effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
     payCalc(state) {
       const skillBonus = state.skills.cooking.level * 0.8;
-      return Math.floor(45 + skillBonus + Math.random() * 35);
+      const base = 45 + skillBonus + Math.random() * 35;
+      const footfall =
+        typeof getVendingFootfallMod === "function"
+          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          : 1.0;
+      return Math.floor(base * footfall);
     },
     startupCost: 50,
     risk: {},
@@ -56,14 +61,19 @@ const STREET_JOBS = [
   {
     id: "street_vending_goods",
     name: "摆摊卖小商品",
-    desc: "从批发市场进些日用品、小电子产品，在商业区摆摊赚差价。",
+    desc: "从批发市场进些日用品、小电子产品，在各地摆摊赚差价。",
     icon: "🧦",
     location: "commercialDist",
     requirements: { minAge: 16, maxAge: 60 },
     effects: { fatigue: 14, happiness: 2, salesXp: 3 },
     payCalc(state) {
       const skillBonus = state.skills.sales.level * 0.6;
-      return Math.floor(38 + skillBonus + Math.random() * 28);
+      const base = 38 + skillBonus + Math.random() * 28;
+      const footfall =
+        typeof getVendingFootfallMod === "function"
+          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          : 1.0;
+      return Math.floor(base * footfall);
     },
     startupCost: 30,
     risk: { injury: 0.02 },
@@ -191,9 +201,12 @@ const STREET_JOBS = [
     requirements: { cooking: 10, minAge: 18, maxAge: 55 },
     effects: { fatigue: 22, hygiene: -8, cookingXp: 5, happiness: 2 },
     payCalc(state) {
-      return Math.floor(
-        95 + state.skills.cooking.level * 1.5 + Math.random() * 50,
-      );
+      const base = 95 + state.skills.cooking.level * 1.5 + Math.random() * 50;
+      const footfall =
+        typeof getVendingFootfallMod === "function"
+          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          : 1.0;
+      return Math.floor(base * footfall);
     },
     startupCost: 200,
     risk: { injury: 0.02 },

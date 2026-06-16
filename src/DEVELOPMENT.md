@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-17 (累计62项改动，本轮新增：节日系统)
+> 最后更新: 2026-06-17 (累计67项改动，本轮新增：节日系统+摆摊选址客流量系统)
 
 ## 项目概述
 
@@ -494,3 +494,4 @@ src/
 | 2026-06-17 | 新增内容#9: NPC好感阈值奖励系统 — skill_bonuses.js新增checkNpcAffinityRewards()函数，npcs.js为6个NPC各配置3级阈值奖励(30/60/80)：王阿姨带饭/降租/介绍费，老板李技术活加成/借款/推荐工程队，张姐内推/技能XP/猎头，老周密报/三轮车/高价渠道，小美英语XP/图书馆/实习机会，陈师傅烹饪XP/帮厨/秘方；参考StardewValley心事件设计，好感满了才解锁关键内容                                                                                           |
 | 2026-06-17 | 新增内容#10: 成就系统 — 新建js/core/achievements.js(22个成就，4类别)：人生第一次7个(首次打工/开源节流/上网课/租房/存款/受伤/入职)/里程碑8个(月入5000/三个月/存款1万/健康满值/满级技能/全NPC结识/房屋升级/职场晋升)/道德档案4个(隐藏，追踪帮助or放弃选择)/隐藏3个(\_everBegged流浪歌手/\_keptWallet还是私吞/100天坚韧)；index.html新增🏅成就tab，render.js新增渲染函数，Papers Please叙事风格展示解锁故事                                     |
 | 2026-06-17 | 新增内容#11: 节日系统 — 新建js/core/festivals.js：5个节日(春节day20-27/劳动节day120-122/端午day162-164/中秋day256-258/国庆day273-280)，每节日有价格修正表(food/electronics/clothing/luxury/daily，最高±35%)、每日心情加成(3-8点)、第一天公告文本；trade.js的getCurrentPrice()自动叠加节日价格修正；交易界面新增节日价格提示横幅；header显示当前季节+节日倒计时徽章；送礼系统节日加成(春节/中秋+10，其他+5)；festival_check加入daily_pipeline |
+| 2026-06-17 | 新增内容#12: 摆摊选址策略 — locations.js为11个地点新增footfall(0.4-1.8)和vendingNote字段；skill_bonuses.js新增getVendingFootfallMod()(位置×天气×节日×周末综合修正)和getFootfallStars()；jobs.js三个摆摊工作payCalc()接入footfall修正(商业区收入是城中村的3倍)；摆摊工作扩展至城中村/工业区/大学城/公园/科技园；行动卡片显示客流量星级；侧边栏地点区块显示实时客流量评级；street_performer和busking迁至公园可用                               |

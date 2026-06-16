@@ -231,12 +231,28 @@ function renderLocation(state) {
   const servicesEl = document.getElementById("location-services");
   if (servicesEl) {
     const badges = getLocationServiceBadges(locKey);
-    servicesEl.innerHTML = badges
+    let badgeHtml = badges
       .map(
         (b) =>
           `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`,
       )
       .join("");
+    // 客流量徽章（摆摊选址策略）
+    if (
+      typeof getVendingFootfallMod === "function" &&
+      typeof getFootfallStars === "function" &&
+      loc &&
+      loc.footfall
+    ) {
+      const footfall = getVendingFootfallMod(locKey, state);
+      const stars = getFootfallStars(footfall);
+      const note = loc.vendingNote || "";
+      badgeHtml +=
+        `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
+        `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
+        `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
+    }
+    servicesEl.innerHTML = badgeHtml;
   }
 
   // 附近可前往地点（仅街头阶段显示）

@@ -224,10 +224,26 @@ function getAvailableActions(state) {
       const reqFail = checkJobRequirements(job, state);
       const payEstimate = reqFail ? null : estimateJobPay(job, state);
 
+      // 摆摊类工作添加客流量提示
+      const isVending = [
+        "street_vending_food",
+        "street_vending_goods",
+        "food_stall",
+      ].includes(jobId);
+      let footfallLabel = "";
+      if (
+        isVending &&
+        typeof getVendingFootfallMod === "function" &&
+        typeof getFootfallStars === "function"
+      ) {
+        const mod = getVendingFootfallMod(locKey, state);
+        footfallLabel = " | " + getFootfallStars(mod);
+      }
+
       actions.push({
         id: "job_" + jobId,
         name: job.name,
-        desc: job.desc,
+        desc: job.desc + footfallLabel,
         icon: job.icon,
         payEstimate: payEstimate
           ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`

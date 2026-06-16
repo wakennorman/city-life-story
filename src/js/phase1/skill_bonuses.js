@@ -213,6 +213,44 @@ function getSkillChineseName(skillKey) {
 }
 
 /**
+ * 摆摊客流量综合修正（位置 × 天气 × 节日 × 周末）
+ * 供 jobs.js 的 payCalc 调用
+ */
+function getVendingFootfallMod(locKey, state) {
+  // 基础客流量（来自 LOCATIONS 定义）
+  var loc = typeof LOCATIONS !== "undefined" ? LOCATIONS[locKey] : null;
+  var base = loc ? loc.footfall || 1.0 : 1.0;
+
+  // 天气修正（雨天-35%/-70%，晴天+10%）
+  var weather = state.weather ? state.weather.current : null;
+  if (weather === "stormy") base *= 0.3;
+  else if (weather === "rainy") base *= 0.65;
+  else if (weather === "snowy") base *= 0.5;
+  else if (weather === "sunny") base *= 1.1;
+
+  // 节日修正（节日期间客流量+30%）
+  if (typeof getCurrentFestival === "function") {
+    var festival = getCurrentFestival(state.player.day);
+    if (festival) base *= 1.3;
+  }
+
+  // 周末修正（day%7=0或6时为"周末"，客流量+20%）
+  var dow = state.player.day % 7;
+  if (dow === 0 || dow === 6) base *= 1.2;
+
+  return Math.max(0.1, base);
+}
+
+/** 获取客流量星级说明（用于UI展示） */
+function getFootfallStars(mod) {
+  if (mod >= 2.0) return "⭐⭐⭐⭐⭐ 爆满";
+  if (mod >= 1.5) return "⭐⭐⭐⭐ 旺盛";
+  if (mod >= 1.0) return "⭐⭐⭐ 正常";
+  if (mod >= 0.7) return "⭐⭐ 冷清";
+  return "⭐ 萧条";
+}
+
+/**
  * NPC 好感阈值检测 — 每次好感变动后调用
  * 参考 Stardew Valley Heart Events：达到阈值触发一次性奖励
  */
