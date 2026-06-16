@@ -31,6 +31,107 @@ function setSaveIndex(index) {
   localStorage.setItem(INDEX_KEY, JSON.stringify(index));
 }
 
+/** 生成"那时候你..."回忆文案（存储于索引，读档时展示） */
+function generateSaveNarrative(state) {
+  var p = state.player;
+  var r = state.resources;
+  var day = p.day;
+  var cash = (r.cash || 0) + (r.bankBalance || 0);
+  var debt = r.villageDebt || r.debt || 0;
+
+  var locNames = {
+    slum: "城中村",
+    wholesaleMarket: "批发市场",
+    construction: "建筑工地",
+    factoryZone: "工厂区",
+    school: "大学城",
+    commercialDist: "商业区",
+    techPark: "科技园",
+    hospital: "医院",
+    bank: "银行",
+    park: "公园",
+    trainingCenter: "培训中心",
+  };
+  var loc = locNames[state.trade && state.trade.currentLocation] || "城市某处";
+
+  if (p.phase === "corporate") {
+    var rank = (state.corporate && state.corporate.rank) || "P5";
+    var company = (state.corporate && state.corporate.company) || "科技公司";
+    return (
+      "那时候你已经是" +
+      company +
+      "的" +
+      rank +
+      "，在职场打拼了" +
+      day +
+      "天，存款" +
+      (cash >= 1000 ? (cash / 1000).toFixed(1) + "万" : "¥" + cash) +
+      "元。"
+    );
+  }
+
+  var tail = "";
+  var dreamId = state.flags && state.flags._dreamId;
+  if (dreamId) {
+    var dreamNames = {
+      restaurant: "开餐馆",
+      apartment: "买房",
+      abroad: "出国",
+      investor: "投资大亨",
+      celebrity: "城市名人",
+    };
+    tail = "，梦想着" + (dreamNames[dreamId] || dreamId);
+  }
+
+  if (day <= 15) {
+    return (
+      "那时候你刚来这座城市第" +
+      day +
+      "天，在" +
+      loc +
+      "落脚，兜里" +
+      (debt > 0
+        ? "还欠着¥" + debt.toLocaleString() + "的债"
+        : "有¥" + cash.toLocaleString()) +
+      tail +
+      "。"
+    );
+  } else if (cash < 500) {
+    return (
+      "那时候你在城里漂了" +
+      day +
+      "天，手里只剩¥" +
+      cash.toLocaleString() +
+      "，日子过得很紧巴" +
+      tail +
+      "。"
+    );
+  } else if (cash >= 50000) {
+    return (
+      "那时候你在" +
+      loc +
+      "打拼了" +
+      day +
+      "天，已经攒下" +
+      Math.round(cash / 1000) +
+      "千元，离梦想越来越近" +
+      tail +
+      "。"
+    );
+  } else {
+    return (
+      "那时候你在城里走过了" +
+      day +
+      "天，在" +
+      loc +
+      "一步一步往前走，手里有¥" +
+      cash.toLocaleString() +
+      tail +
+      "。"
+    );
+  }
+}
+
 /** 保存游戏到指定槽位（1-5） */
 function saveGame(slot) {
   if (slot < 1 || slot > NUM_SLOTS) {
@@ -62,6 +163,7 @@ function saveGame(slot) {
       location: state.trade.currentLocation,
       rank: state.player.phase === "corporate" ? state.corporate.rank : null,
       savedAt: Date.now(),
+      narrative: generateSaveNarrative(state),
     };
     setSaveIndex(index);
 
@@ -100,6 +202,7 @@ function autoSave() {
       location: state.trade.currentLocation,
       rank: state.player.phase === "corporate" ? state.corporate.rank : null,
       savedAt: Date.now(),
+      narrative: generateSaveNarrative(state),
     };
     setSaveIndex(index);
   } catch (e) {

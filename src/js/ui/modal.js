@@ -411,17 +411,18 @@ function showLoadMenu() {
       hasAnySave = true;
       const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
       bodyHtml += `
-        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color 0.15s;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <strong>${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
           </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString() || 0}
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
+            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${(s.cash || 0).toLocaleString()}
             ${s.rank ? ` | 🏢 ${s.rank}` : ""}
             ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
             ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
           </div>
+          ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
         </div>`;
     }
   }
