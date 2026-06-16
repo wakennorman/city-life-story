@@ -256,15 +256,26 @@ function adjustPriceAfterTrade(locKey, goodId, delta) {
   prices[goodId] = newPrice;
 }
 
-/** 获取当前地点某商品的零售价 */
+/** 获取当前地点某商品的零售价（含节日价格修正） */
 function getCurrentPrice(locKey, goodId) {
   const state = StateManager.getState();
   const prices = state.trade.goodsPrices[locKey];
+  let price;
   if (prices && prices[goodId] !== undefined) {
-    return prices[goodId];
+    price = prices[goodId];
+  } else {
+    const good = getGoodById(goodId);
+    price = good ? good.basePrice : 1;
   }
-  const good = getGoodById(goodId);
-  return good ? good.basePrice : 1;
+  // 节日价格修正
+  if (typeof getFestivalPriceMod === "function") {
+    const good = getGoodById(goodId);
+    if (good && good.category) {
+      const mod = getFestivalPriceMod(state, good.category);
+      if (mod !== 1.0) price = Math.round(price * mod * 10) / 10;
+    }
+  }
+  return price;
 }
 
 /** 获取某商品在所有地点的最低价格（用于价格对比） */

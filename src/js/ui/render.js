@@ -74,6 +74,29 @@ function renderHeader(state) {
   document.getElementById("header-phase").textContent = phaseLabel;
   document.getElementById("header-cash").textContent =
     "¥" + r.cash.toLocaleString();
+
+  // 季节显示
+  var seasonEl = document.getElementById("header-season-label");
+  if (seasonEl && typeof getSeason === "function") {
+    var season = getSeason(p.day);
+    seasonEl.textContent = season.icon + " " + season.name;
+  }
+
+  // 节日显示
+  var festStat = document.getElementById("header-festival-stat");
+  var festEl = document.getElementById("header-festival");
+  if (festStat && festEl && typeof getCurrentFestival === "function") {
+    var festival = getCurrentFestival(p.day);
+    if (festival) {
+      var doy = p.day % 365;
+      var daysLeft = festival.startDay + festival.duration - doy;
+      festEl.textContent =
+        festival.icon + " " + festival.name + "（" + daysLeft + "天）";
+      festStat.style.display = "";
+    } else {
+      festStat.style.display = "none";
+    }
+  }
 }
 
 // ====== Sidebar 渲染 ======
@@ -959,6 +982,19 @@ function renderTradeTab(state, parent) {
     <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
   `;
   parent.appendChild(headerDiv);
+
+  // 节日价格提示横幅
+  if (typeof getFestivalPriceNote === "function") {
+    var festNote = getFestivalPriceNote(state);
+    if (festNote) {
+      var festBanner = document.createElement("div");
+      festBanner.style.cssText =
+        "background:rgba(196,85,61,0.08);border:1px solid rgba(196,85,61,0.2);border-radius:6px;" +
+        "padding:6px 10px;margin-bottom:12px;font-size:12px;color:#c4553d;";
+      festBanner.textContent = festNote;
+      parent.appendChild(festBanner);
+    }
+  }
 
   if (goodsList.length === 0) {
     parent.innerHTML +=

@@ -183,6 +183,27 @@ body {
   color: var(--warning);
 }
 
+.festival-badge {
+  color: #c4553d;
+  font-weight: 700;
+  font-size: 12px;
+  background: rgba(196, 85, 61, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(196, 85, 61, 0.2);
+  animation: festival-pulse 2s ease-in-out infinite;
+}
+
+@keyframes festival-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .header-actions {
   display: flex;
   align-items: center;

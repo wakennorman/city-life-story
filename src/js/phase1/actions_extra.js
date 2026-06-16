@@ -911,7 +911,20 @@ function showGiftModal() {
   showModal({
     title: "🎁 送礼联络感情",
     body:
-      '<p style="font-size:12px;color:var(--text-secondary);">投其所好+15好感，普通礼物+5好感，每天每人限送一次。</p>' +
+      (function () {
+        var note =
+          '<p style="font-size:12px;color:var(--text-secondary);">投其所好+15好感，普通礼物+5好感，每天每人限送一次。</p>';
+        var festBonus =
+          typeof getFestivalGiftBonus === "function"
+            ? getFestivalGiftBonus()
+            : 0;
+        if (festBonus > 0)
+          note +=
+            '<p style="font-size:12px;color:#c4553d;">🎊 节日期间送礼额外+' +
+            festBonus +
+            "好感！</p>";
+        return note;
+      })() +
       '<label style="display:block;margin-top:10px;">选择对象：' +
       '<select id="gift-npc" style="width:100%;padding:8px;margin-top:4px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;">' +
       npcOptions +
@@ -967,6 +980,12 @@ function showGiftModal() {
           var rel = st.relationships[npcId];
           var isPreferred = npc.giftPrefers && npc.giftPrefers.includes(goodId);
           var bonus = isPreferred ? 15 : 5;
+          // 节日送礼额外加成（春节/中秋+10，其他节日+5）
+          var festBonus =
+            typeof getFestivalGiftBonus === "function"
+              ? getFestivalGiftBonus()
+              : 0;
+          bonus += festBonus;
           rel.affinity = Math.min(100, rel.affinity + bonus);
           rel.met = true;
           st.flags[todayKey] = st.player.day;
@@ -977,11 +996,17 @@ function showGiftModal() {
                 })
               : null;
           var goodName = goodDef ? goodDef.name : goodId;
+          var festSuffix =
+            festBonus > 0 ? "（🎊节日加成+" + festBonus + "）" : "";
           if (isPreferred) {
             StateManager.addMessage(
               "🎁 " +
                 npc.name +
-                '眼睛一亮："正合我意！" 好感度+15。（当前：' +
+                '眼睛一亮："正合我意！" 好感度+' +
+                bonus +
+                "。" +
+                festSuffix +
+                "（当前：" +
                 rel.affinity +
                 "）",
               "success",
@@ -992,7 +1017,11 @@ function showGiftModal() {
                 npc.name +
                 "送了" +
                 goodName +
-                "，对方礼貌收下。好感度+5。（当前：" +
+                "，对方礼貌收下。好感度+" +
+                bonus +
+                "。" +
+                festSuffix +
+                "（当前：" +
                 rel.affinity +
                 "）",
               "info",

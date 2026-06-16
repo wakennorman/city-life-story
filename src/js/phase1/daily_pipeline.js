@@ -177,6 +177,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 节日效果 ===
+  {
+    name: "festival",
+    fn: function (state) {
+      if (typeof checkFestivalDailyEffects === "function") {
+        checkFestivalDailyEffects(state);
+      }
+    },
+  },
+
   // === 新闻 ===
   {
     name: "news",
