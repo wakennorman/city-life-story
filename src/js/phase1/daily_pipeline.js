@@ -301,6 +301,32 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === NPC 生日提醒 ===
+  {
+    name: "npc_birthday",
+    fn: function (state) {
+      if (typeof NPCS === "undefined") return;
+      var dayOfYear = ((state.player.day - 1) % 365) + 1;
+      for (var i = 0; i < NPCS.length; i++) {
+        var npc = NPCS[i];
+        if (!npc.birthday) continue;
+        var key = "_birthdayToday_" + npc.id;
+        if (dayOfYear === npc.birthday) {
+          state.flags[key] = true;
+          var rel = state.relationships && state.relationships[npc.id];
+          if (rel && rel.met) {
+            StateManager.addMessage(
+              "🎂 今天是" + npc.name + "的生日！送礼好感×2，快去找ta吧！",
+              "event",
+            );
+          }
+        } else {
+          delete state.flags[key];
+        }
+      }
+    },
+  },
+
   // === 动态教程提示 ===
   {
     name: "hint_check",

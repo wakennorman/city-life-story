@@ -14,6 +14,7 @@ const NPCS = [
     name: "王大婶",
     role: "房东",
     location: "slum",
+    birthday: 45,
     desc: "城中村的房东，说话嗓门大但心地不坏。偶尔会介绍些零活。",
     talkLines: [
       "小伙子，这个月房租该交了啊！",
@@ -70,6 +71,7 @@ const NPCS = [
     name: "李工头",
     role: "包工头",
     location: "construction",
+    birthday: 98,
     desc: "建筑工地的包工头，手上活多。关系好了会给好活。",
     talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
     giftPrefers: ["cigarettes", "beer"],
@@ -118,6 +120,7 @@ const NPCS = [
     name: "张姐",
     role: "中介",
     location: "commercialDist",
+    birthday: 155,
     desc: "人力资源中介，认识各行各业的人。帮她跑腿可以提升关系。",
     talkLines: [
       "我这边有几个好工作，你要不要看看？",
@@ -174,6 +177,7 @@ const NPCS = [
     name: "老周",
     role: "收废品老人",
     location: "slum",
+    birthday: 210,
     desc: "在城中村收了几十年废品的老前辈。知道废品行情的门道。",
     talkLines: [
       "废金属最近涨了，赶紧多收点。",
@@ -225,6 +229,7 @@ const NPCS = [
     name: "小美",
     role: "大学生",
     location: "school",
+    birthday: 280,
     desc: "大学城的贫困生，周末做家教赚生活费。",
     talkLines: [
       "你知道哪里还有家教的机会吗？",
@@ -277,6 +282,7 @@ const NPCS = [
     name: "陈师傅",
     role: "大厨",
     location: "commercialDist",
+    birthday: 325,
     desc: "商业区小有名气的厨师，手艺了得。想学烹饪可以找他。",
     talkLines: [
       "做菜讲究火候，做人讲究分寸。",

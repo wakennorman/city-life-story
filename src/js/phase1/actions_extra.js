@@ -1011,6 +1011,7 @@ function showGiftModal() {
         typeof getAffinityLabel === "function"
           ? getAffinityLabel(rel.affinity)
           : "";
+      var bdTag = state.flags["_birthdayToday_" + npc.id] ? " 🎂生日" : "";
       return (
         '<option value="' +
         npc.id +
@@ -1020,6 +1021,7 @@ function showGiftModal() {
         npc.role +
         "）" +
         label +
+        bdTag +
         "</option>"
       );
     })
@@ -1059,6 +1061,16 @@ function showGiftModal() {
             '<p style="font-size:12px;color:#c4553d;">🎊 节日期间送礼额外+' +
             festBonus +
             "好感！</p>";
+        // 生日提示
+        var birthdayNpcs = npcsHere.filter(function (n) {
+          return state.flags["_birthdayToday_" + n.id];
+        });
+        if (birthdayNpcs.length > 0) {
+          note +=
+            '<p style="font-size:12px;color:#e67e22;font-weight:600;">🎂 今天是' +
+            birthdayNpcs.map(function (n) { return n.name; }).join("、") +
+            "的生日！送礼好感×2！</p>";
+        }
         return note;
       })() +
       '<label style="display:block;margin-top:10px;">选择对象：' +
@@ -1122,6 +1134,9 @@ function showGiftModal() {
               ? getFestivalGiftBonus()
               : 0;
           bonus += festBonus;
+          // 生日送礼好感×2
+          var isBirthday = !!st.flags["_birthdayToday_" + npcId];
+          if (isBirthday) bonus = bonus * 2;
           rel.affinity = Math.min(100, rel.affinity + bonus);
           rel.met = true;
           st.flags[todayKey] = st.player.day;
@@ -1134,6 +1149,7 @@ function showGiftModal() {
           var goodName = goodDef ? goodDef.name : goodId;
           var festSuffix =
             festBonus > 0 ? "（🎊节日加成+" + festBonus + "）" : "";
+          var bdSuffix = isBirthday ? "（🎂生日双倍好感！）" : "";
           if (isPreferred) {
             StateManager.addMessage(
               "🎁 " +
@@ -1142,6 +1158,7 @@ function showGiftModal() {
                 bonus +
                 "。" +
                 festSuffix +
+                bdSuffix +
                 "（当前：" +
                 rel.affinity +
                 "）",
@@ -1157,6 +1174,7 @@ function showGiftModal() {
                 bonus +
                 "。" +
                 festSuffix +
+                bdSuffix +
                 "（当前：" +
                 rel.affinity +
                 "）",
