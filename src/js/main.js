@@ -889,17 +889,24 @@ function getAvailableActions(state) {
             state.relationships[npc.id] = { affinity: 0, met: true };
           const r = state.relationships[npc.id];
           r.met = true;
-          r.affinity = Math.min(
-            100,
-            r.affinity + 5 + Math.floor(Math.random() * 5),
-          );
+          const isBirthday = !!state.flags["_birthdayToday_" + npc.id];
+          const affinityGain = isBirthday
+            ? 10 + Math.floor(Math.random() * 5)
+            : 5 + Math.floor(Math.random() * 5);
+          r.affinity = Math.min(100, r.affinity + affinityGain);
           const line =
-            npc.talkLines[Math.floor(Math.random() * npc.talkLines.length)];
+            isBirthday && npc.birthdayLine
+              ? npc.birthdayLine
+              : npc.talkLines[Math.floor(Math.random() * npc.talkLines.length)];
+          const bdTag = isBirthday ? " 🎂" : "";
           StateManager.addMessage(
-            `💬 ${npc.name}：${line} (好感+${5})`,
-            "info",
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})`,
+            isBirthday ? "success" : "info",
           );
-          state.needs.happiness = Math.min(100, state.needs.happiness + 3);
+          state.needs.happiness = Math.min(
+            100,
+            state.needs.happiness + (isBirthday ? 8 : 3),
+          );
           // 检查好感阈值奖励
           if (typeof checkNpcAffinityRewards === "function") {
             checkNpcAffinityRewards(npc.id, state);

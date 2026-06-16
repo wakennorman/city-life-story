@@ -2428,6 +2428,235 @@ const RANDOM_EVENTS = [
   },
 
   {
+    id: "dorm_theft",
+    phase: "street",
+    icon: "🔑",
+    title: "宿舍里发生了失窃",
+    story: "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
+    choices: [
+      {
+        text: "🗣️ 说出你看到的情况",
+        hint: "仗义执言",
+        apply: function (st) {
+          if (Math.random() < 0.6) {
+            st.status.fame = Math.min(100, st.status.fame + 5);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            StateManager.addMessage("🗣️ 你提供了线索，失主追回了钱，大家都说你讲义气，名气+5。", "success");
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage("🗣️ 你说了，但嫌疑人矢口否认，搞得大家都尴尬，没结果。", "warning");
+          }
+        },
+      },
+      {
+        text: "🤐 不关我事，沉默",
+        hint: "明哲保身",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+          StateManager.addMessage("🤐 你选择沉默，这件事就这么算了。心里有点不是滋味。", "info");
+        },
+      },
+      {
+        text: "🚔 去跟楼管反映",
+        hint: "走正规途径",
+        apply: function (st) {
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          StateManager.addMessage("🚔 你找了楼管，装了监控，宿舍氛围变好了，心智+2。", "success");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "night_shift_offer",
+    phase: "street",
+    icon: "🌙",
+    title: "夜班搬运工机会",
+    story: "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
+    conditions: function (st) {
+      return st.player.phase === "street" && st.needs.fatigue <= 60;
+    },
+    choices: [
+      {
+        text: "🌙 接！钱要紧",
+        hint: "赚快钱",
+        apply: function (st) {
+          var earned = 120 + Math.floor(Math.random() * 60);
+          st.resources.cash += earned;
+          st.resources.totalEarned += earned;
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 40);
+          st.status.health = Math.max(0, st.status.health - 8);
+          StateManager.addMessage("🌙 熬了一夜，赚了¥" + earned + "。白天走路都在飘，健康-8，疲劳+40。", "warning");
+        },
+      },
+      {
+        text: "😴 不接，保证休息",
+        hint: "长线考量",
+        apply: function (st) {
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage("😴 你克制住了短期诱惑，好好睡了一觉。细水长流，心智+3。", "info");
+        },
+      },
+      {
+        text: "💬 问能不能做两三次就走",
+        hint: "试探谈条件",
+        apply: function (st) {
+          if (Math.random() < 0.5) {
+            var earned2 = 100 + Math.floor(Math.random() * 50);
+            st.resources.cash += earned2;
+            st.resources.totalEarned += earned2;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            StateManager.addMessage("💬 对方同意试做一晚，你赚了¥" + earned2 + "，没耗太多精力。", "success");
+          } else {
+            StateManager.addMessage("💬 对方说要长期干才要，你婉拒了。", "info");
+          }
+        },
+      },
+    ],
+  },
+
+  {
+    id: "expensive_phone_found",
+    phase: "street",
+    icon: "📲",
+    title: "路边捡到一部高端手机",
+    story: "你在公交站椅子下发现一部崭新旗舰手机，锁屏是一对老夫妻和孙子的合影。附近几乎没人。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
+    choices: [
+      {
+        text: "📞 等失主，或交给警察",
+        hint: "拾金不昧",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          if (Math.random() < 0.6) {
+            var reward = 200 + Math.floor(Math.random() * 300);
+            st.resources.cash += reward;
+            StateManager.addMessage("📞 失主找来了，感激地塞给你¥" + reward + " 酬谢。良心无价，名气+8。", "success");
+          } else {
+            StateManager.addMessage("📞 手机还给了失主，对方道谢就走了没给钱。但你心里踏实，名气+8。", "success");
+          }
+          st.flags._everReturnedPhone = true;
+        },
+      },
+      {
+        text: "💰 卖给二手机商",
+        hint: "换现金",
+        apply: function (st) {
+          var earn = 600 + Math.floor(Math.random() * 400);
+          st.resources.cash += earn;
+          st.resources.totalEarned += earn;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+          StateManager.addMessage("💰 卖了¥" + earn + "。但那张锁屏合影的眼神你忘不掉。", "warning");
+        },
+      },
+      {
+        text: "📲 先找联系人再决定",
+        hint: "人性化处理",
+        apply: function (st) {
+          st.player.intelligence = Math.min(100, st.player.intelligence + 0.5);
+          var rewardB = 100 + Math.floor(Math.random() * 200);
+          st.resources.cash += rewardB;
+          st.resources.totalEarned += rewardB;
+          st.status.fame = Math.min(100, st.status.fame + 4);
+          StateManager.addMessage("📲 找到紧急联系人，家属赶来给了¥" + rewardB + " 感谢。名气+4。", "success");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "volunteer_event",
+    phase: "street",
+    icon: "🤝",
+    title: "社区招募志愿者",
+    story: "街道办在门口贴了公告，招募周末社区义务清扫志愿者，完成可获荣誉证书，在本地求职有加分。",
+    conditions: function (st) {
+      return st.player.phase === "street" && st.player.day % 7 === 0;
+    },
+    choices: [
+      {
+        text: "🧹 参加！积累社会形象",
+        hint: "名气+幸福感",
+        apply: function (st) {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 18);
+          st.status.fame = Math.min(100, st.status.fame + 10);
+          StateManager.addMessage("🤝 参加了社区打扫，认识了不少街坊邻居！名气+10，心情+18。", "success");
+        },
+      },
+      {
+        text: "⏰ 太忙了，等下次",
+        hint: "理性权衡",
+        apply: function (st) {
+          StateManager.addMessage("⏰ 你记下了下次活动的时间，今天还有正事要做。", "info");
+        },
+      },
+      {
+        text: "📸 去打个卡拍照就走",
+        hint: "刷存在感",
+        apply: function (st) {
+          st.status.fame = Math.min(100, st.status.fame + 3);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          StateManager.addMessage("📸 打了个卡拍了张照就溜走了。名气+3，但感觉有点空洞。", "info");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "elderly_collapse",
+    phase: "street",
+    icon: "🚑",
+    title: "路边老人突然倒地",
+    story: "去工地路上，一个老大爷突然捂着胸口倒在路边。旁边路人大多驻足观望，没人敢上前——\"扶不扶\"的事大家都怕。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
+    choices: [
+      {
+        text: "🚑 立刻上前扶起，打120",
+        hint: "救人第一",
+        apply: function (st) {
+          if (Math.random() < 0.2) {
+            var cost = 200 + Math.floor(Math.random() * 200);
+            if (st.resources.cash >= cost) st.resources.cash -= cost;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage("🚑 老人救回来了！但家属误以为你是肇事者讹了你¥" + cost + "，后来路人作证才澄清。", "warning");
+          } else {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+            st.status.fame = Math.min(100, st.status.fame + 12);
+            StateManager.addMessage("🚑 你帮老人撑住身体等来了救护车，家属感激涕零，名气+12！", "success");
+          }
+          st.flags._everHelpedElderly = true;
+        },
+      },
+      {
+        text: "📞 打120但不上前",
+        hint: "帮忙不担责",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          StateManager.addMessage("📞 你打了120再守在远处，救护车来了。帮了忙也保护了自己，名气+5。", "info");
+        },
+      },
+      {
+        text: "🚶 快步走开，不惹麻烦",
+        hint: "自保优先",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+          StateManager.addMessage("🚶 你走了。那个画面在脑海中挥散不去，心情-15。", "warning");
+        },
+      },
+    ],
+  },
+
+  {
     id: "xiao_mei_tutoring_lead",
     phase: "street",
     icon: "📚",

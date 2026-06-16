@@ -16,6 +16,7 @@ const NPCS = [
     location: "slum",
     birthday: 45,
     desc: "城中村的房东，说话嗓门大但心地不坏。偶尔会介绍些零活。",
+    birthdayLine: "哎呀今天是我生日，没想到你还记得！来来来，坐下吃块蛋糕！",
     talkLines: [
       "小伙子，这个月房租该交了啊！",
       "看你挺勤快的，工地上缺人要不要去试试？",
@@ -73,6 +74,7 @@ const NPCS = [
     location: "construction",
     birthday: 98,
     desc: "建筑工地的包工头，手上活多。关系好了会给好活。",
+    birthdayLine: "哈哈，我今天生日，难得碰上你，请你喝瓶啤酒！",
     talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
     giftPrefers: ["cigarettes", "beer"],
     affinityRewards: [
@@ -122,6 +124,8 @@ const NPCS = [
     location: "commercialDist",
     birthday: 155,
     desc: "人力资源中介，认识各行各业的人。帮她跑腿可以提升关系。",
+    birthdayLine:
+      "今天我生日！你记得？哎，平时太忙了，难得有人想着我，谢谢你啊！",
     talkLines: [
       "我这边有几个好工作，你要不要看看？",
       "做服务业态度最重要。",
@@ -179,6 +183,8 @@ const NPCS = [
     location: "slum",
     birthday: 210,
     desc: "在城中村收了几十年废品的老前辈。知道废品行情的门道。",
+    birthdayLine:
+      "嗐，还是你记性好，我自己都忘了今天是我生日。岁数大了，每年过一年少一年呐。",
     talkLines: [
       "废金属最近涨了，赶紧多收点。",
       "收废品虽然脏，但也是一门生意经。",
@@ -231,6 +237,8 @@ const NPCS = [
     location: "school",
     birthday: 280,
     desc: "大学城的贫困生，周末做家教赚生活费。",
+    birthdayLine:
+      "哇你怎么知道今天是我生日？！室友们都忘了，就你记得，好感动呀～",
     talkLines: [
       "你知道哪里还有家教的机会吗？",
       "我英语还不错，可以教初中生。",
@@ -284,6 +292,7 @@ const NPCS = [
     location: "commercialDist",
     birthday: 325,
     desc: "商业区小有名气的厨师，手艺了得。想学烹饪可以找他。",
+    birthdayLine: "哟，今天我生日，我刚做了个大蛋糕。来，切一块尝尝！",
     talkLines: [
       "做菜讲究火候，做人讲究分寸。",
       "来尝尝我新研制的配方。",
