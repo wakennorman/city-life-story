@@ -320,9 +320,68 @@ const DAILY_PIPELINE = [
         "🌙 第" + state.player.day + "天结束。" + emoIcon + " 新的一天开始了。",
         "info",
       );
+      // 今日总结（仅街头阶段，职场有自己的季末总结）
+      if (state.player.phase === "street") {
+        var summary = generateDailySummary(
+          state,
+          state.flags._dayStartCash || 0,
+          state.flags._dayStartHealth || 100,
+          state.flags._dayStartHappiness || 0,
+        );
+        StateManager.addMessage(summary, "hint");
+      }
     },
   },
 ];
+
+/** 生成每日一句话总结 */
+function generateDailySummary(state, startCash, startHealth, startHappiness) {
+  var cash = state.resources.cash || 0;
+  var bank = state.resources.bankBalance || 0;
+  var delta = cash - startCash;
+  var healthDrop = startHealth - ((state.status && state.status.health) || 100);
+  var happyDrop =
+    startHappiness - ((state.needs && state.needs.happiness) || 0);
+
+  var highlights = [];
+
+  // 财务总结
+  if (delta >= 500) {
+    highlights.push("今天大丰收，净赚了¥" + delta.toLocaleString());
+  } else if (delta >= 100) {
+    highlights.push("今天赚了¥" + delta.toLocaleString() + "，小有收获");
+  } else if (delta >= 0) {
+    highlights.push("今天收支基本持平");
+  } else if (delta < -200) {
+    highlights.push(
+      "今天支出比收入多了¥" + Math.abs(delta).toLocaleString() + "，要节省一点",
+    );
+  } else {
+    highlights.push("今天支出略多于收入");
+  }
+
+  // 健康/状态提示
+  if (healthDrop >= 10) {
+    highlights.push("健康下降了不少");
+  }
+  if (happyDrop >= 15) {
+    highlights.push("心情差了很多，注意调整");
+  }
+
+  // 银行存款有利息
+  if (bank > 0) {
+    highlights.push("银行里的¥" + bank.toLocaleString() + "还在生息");
+  }
+
+  // 节日
+  if (typeof getCurrentFestival === "function") {
+    var fest = getCurrentFestival(state.player.day);
+    if (fest) highlights.push(fest.icon + " " + fest.name + "气氛浓厚");
+  }
+
+  var summary = highlights.slice(0, 2).join("，") + "。";
+  return "📋 今日总结：" + summary;
+}
 
 /**
  * 执行每日结算管线。
@@ -330,6 +389,11 @@ const DAILY_PIPELINE = [
  * MiniMax 友好：新增步骤只需 push 一个 {name, fn} 对象。
  */
 function runDailyPipeline(state) {
+  // 记录日始状态用于今日总结（存入 state.flags 供 end_log fn 读取）
+  state.flags._dayStartCash = state.resources.cash || 0;
+  state.flags._dayStartHealth = (state.status && state.status.health) || 100;
+  state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
+
   for (var i = 0; i < DAILY_PIPELINE.length; i++) {
     var step = DAILY_PIPELINE[i];
 

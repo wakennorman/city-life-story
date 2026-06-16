@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-17 (累计76项改动，本轮新增：节日系统+客流量+梦想追踪+动态教程+成长图+存档回忆)
+> 最后更新: 2026-06-17 (累计77项改动，本轮新增：+今日总结)
 
 ## 项目概述
 
@@ -499,3 +499,4 @@ src/
 | 2026-06-17 | 新增内容#14: 动态教程提示 — tutorial.js新增DYNAMIC*HINTS数组(12条情境提示)和checkDynamicHints()函数；首次赚100元/资产不足/受伤/疲劳高/心情低/第10天/还债提醒/资产5000/贸易盈利/智力35/认识NPC/30天梦想提示各触发一次；daily_pipeline新增hint_check步骤；CSS新增hint样式(绿色左边框)；消息类型"hint"自动渲染，每条只触发一次存储在state.flags.\_hint*<id>                                                                                     |
 | 2026-06-17 | 新增内容#15: 成长数据可视化 — 新增📈成长tab；daily_pipeline新增snapshot步骤每日记录总资产(存入state.flags.\_cashHistory最多90天)；render.js新增renderGrowthTab()/drawAssetLineChart()/drawRadarChart()/\_growthStat()；Canvas折线图(资产曲线/网格线/面积填充/最新点高亮/X轴天数标注)；Canvas雷达图(5维：体质/智力/敏捷/心智/名气，五色顶点点)；数字面板(9个统计格：游戏天数/年龄/总资产/银行存款/负债/成就数/梦想进度/贸易利润)              |
 | 2026-06-17 | 新增内容#16: 存档回忆快照 — save.js新增generateSaveNarrative(state)：根据阶段/天数/地点/资产/梦想生成「那时候你...」叙事文案；saveGame()/autoSave()将narrative存入索引；showLoadMenu()在每个存档卡片下方展示绿色回忆文字；参考《大多数》成长感设计，读档界面能看到"那时候你在城中村漂了30天..."的叙事                                                                                                                                        |
+| 2026-06-17 | 新增内容#17: 每日今日总结 — daily_pipeline新增generateDailySummary()函数；runDailyPipeline()在pipeline执行前记录日始现金/健康/心情到state.flags.\_dayStart\*；end_log步骤末尾追加一条hint类型消息："📋 今日总结：今天赚了¥XXX，小有收获/收支持平/大丰收"等；同时检测健康下降/心情下降/银行利息/节日气氛；仅街头阶段触发(职场有季末总结)；参考《大多数》一句话高光总结设计                                                                    |
