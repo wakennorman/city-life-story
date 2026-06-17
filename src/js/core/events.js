@@ -3012,6 +3012,316 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+
+  // ── 中期生活片段事件 #60-69 ─────────────────────────────────
+  {
+    id: "neighbor_dispute",
+    title: "🏠 邻里纷争",
+    description: "隔壁两家因为停车位的事吵得不可开交，其中一家来找你评理。你在这片住了一阵，两边都有些交情。",
+    conditions: function(state) {
+      return state.player.day >= 15 && state.player.phase === "street" &&
+        (state.trade.currentLocation === "slum" || state.trade.currentLocation === "park");
+    },
+    weight: 0.7,
+    choices: [
+      {
+        text: "🤝 居中调停，说明利害",
+        apply: function(state) {
+          state.status.fame = Math.min(100, (state.status.fame || 0) + 5);
+          state.needs.happiness = Math.min(100, state.needs.happiness + 8);
+          StateManager.addMessage('🤝 你耐心劝说，双方各退一步，你在街坊间的声望涨了不少。名气+5，心情+8。', 'success');
+        },
+      },
+      {
+        text: "🚶 假装没看见，快步走开",
+        apply: function(state) {
+          state.needs.happiness = Math.max(0, state.needs.happiness - 3);
+          StateManager.addMessage('😬 你低头快步走开，但总觉得少了点什么——有些事不能只当路人。', 'info');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "street_cat_rescue",
+    title: "🐱 巷子里的小猫",
+    description: "一只小橘猫被卡在了下水道格栅里，路人围着看却没人动手。猫叫得越来越弱，再不救怕是凶多吉少。",
+    conditions: function(state) {
+      return state.player.day >= 10 && state.player.phase === "street" &&
+        state.trade.currentLocation === "slum";
+    },
+    weight: 0.6,
+    choices: [
+      {
+        text: "🛠️ 撸起袖子，想办法救出来",
+        apply: function(state) {
+          state.needs.happiness = Math.min(100, state.needs.happiness + 12);
+          state.needs.hygiene = Math.max(0, state.needs.hygiene - 10);
+          state.status.fame = Math.min(100, (state.status.fame || 0) + 3);
+          StateManager.addMessage('🐱 你把小猫救了出来，路人鼓起掌来。衣服脏了，但心情大好。心情+12，卫生-10，名气+3。', 'success');
+        },
+      },
+      {
+        text: "😔 看了一眼，叹气离开",
+        apply: function(state) {
+          state.needs.happiness = Math.max(0, state.needs.happiness - 5);
+          state.player.mental = Math.max(0, state.player.mental - 1);
+          StateManager.addMessage('😔 小猫的叫声追了你好久。城市太大了，不是每件事都能管。心情-5，心智-1。', 'warning');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "expired_food_deal",
+    title: "🛒 廉价食品",
+    description: "超市门口有人在低价甩卖一批临期食品，看起来都是正规品牌，就是保质期只剩三天了。对现在的你来说，¥20能买够吃三天。",
+    conditions: function(state) {
+      return state.player.day >= 5 && state.player.phase === "street" &&
+        state.resources.cash < 100 &&
+        (state.trade.currentLocation === "commercialDist" || state.trade.currentLocation === "slum");
+    },
+    weight: 0.8,
+    choices: [
+      {
+        text: "💰 买！¥20，省下来买别的",
+        apply: function(state) {
+          if (state.resources.cash >= 20) {
+            state.resources.cash -= 20;
+            state.needs.hunger = Math.min(100, state.needs.hunger + 40);
+            StateManager.addMessage('🛒 花了¥20买了一堆临期食品，够吃好几天了。饥饱+40。', 'success');
+          } else {
+            StateManager.addMessage('😢 翻了翻口袋，连¥20都不够了……', 'warning');
+          }
+        },
+      },
+      {
+        text: "🙅 算了，吃新鲜的",
+        apply: function(state) {
+          state.needs.happiness = Math.min(100, state.needs.happiness + 3);
+          StateManager.addMessage('😌 你还是选择了有尊严地生活。省钱是省钱，但底线还是要有的。心情+3。', 'info');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "rain_shelter",
+    title: "🌧️ 避雨奇遇",
+    description: "突然下起大雨，你跑进一家面馆门廊避雨。老板娘看你淋成落汤鸡的样子，笑着说'进来坐吧，不买也没事'。",
+    conditions: function(state) {
+      return state.player.day >= 8 && state.player.phase === "street" &&
+        state.weather && (state.weather.type === "rainy" || state.weather.type === "storm");
+    },
+    weight: 1.0,
+    choices: [
+      {
+        text: "☕ 进去坐，要碗便宜的汤",
+        apply: function(state) {
+          var cost = 8;
+          if (state.resources.cash >= cost) {
+            state.resources.cash -= cost;
+            state.needs.hunger = Math.min(100, state.needs.hunger + 20);
+            state.needs.happiness = Math.min(100, state.needs.happiness + 15);
+            StateManager.addMessage('🍜 热腾腾的汤下肚，冷意散了大半。雨里遇到的温情，比汤还暖。花费¥8，饥饱+20，心情+15。', 'success');
+          } else {
+            state.needs.happiness = Math.min(100, state.needs.happiness + 8);
+            StateManager.addMessage('😊 老板娘让你白坐着等雨停，还给你倒了杯热水。世界有时候比你想的温柔。心情+8。', 'success');
+          }
+        },
+      },
+      {
+        text: "🏃 谢谢，我还有事，冒雨走",
+        apply: function(state) {
+          state.needs.hygiene = Math.max(0, state.needs.hygiene - 15);
+          state.needs.fatigue = Math.min(100, state.needs.fatigue + 10);
+          StateManager.addMessage('🌧️ 你淋着雨跑回去，衣服全湿透了，疲惫加重了不少。卫生-15，疲劳+10。', 'warning');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "phone_scam_call",
+    title: "📞 诈骗电话",
+    description: "你接到一个陌生电话，对方声称是'公安局'，说你名下有一张违规信用卡，需要配合调查，要你把存款转到'安全账户'……",
+    conditions: function(state) {
+      return state.player.day >= 20 && state.player.phase === "street" &&
+        state.resources.bankBalance > 0 && !state.flags._scamPhoneCall;
+    },
+    weight: 0.5,
+    choices: [
+      {
+        text: "📴 挂断！然后屏蔽这个号码",
+        apply: function(state) {
+          state.flags._scamPhoneCall = true;
+          state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+          StateManager.addMessage('✅ 你果断挂断了电话，记住了这个手法。以后遇到这种情况更警觉了。智力+1。', 'success');
+        },
+      },
+      {
+        text: "😰 半信半疑，继续听听……",
+        apply: function(state) {
+          state.flags._scamPhoneCall = true;
+          var loss = Math.min(state.resources.bankBalance, Math.floor(state.resources.bankBalance * 0.3));
+          state.resources.bankBalance -= loss;
+          StateManager.addMessage('😱 你被骗了！对方说服你转账验证，转过去的¥' + loss.toLocaleString() + '再也没有了。银行存款-¥' + loss.toLocaleString() + '。', 'danger');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "job_gossip",
+    title: "📋 工友小道消息",
+    description: "休息时，旁边的老工人凑过来低声说：'我听说隔壁工地老板要跑路，拖了两个月工资。你这里靠谱吗？'",
+    conditions: function(state) {
+      return state.player.day >= 12 && state.player.phase === "street" &&
+        state.trade.currentLocation === "construction";
+    },
+    weight: 0.8,
+    choices: [
+      {
+        text: "🤔 认真打听一下，看看情况",
+        apply: function(state) {
+          state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+          state.status.fame = Math.min(100, (state.status.fame || 0) + 2);
+          StateManager.addMessage('🔍 你详细问了问情况，记在心里了。这种消息，在工地里往往比官方通知更准。智力+1，名气+2。', 'info');
+        },
+      },
+      {
+        text: "🙄 当作没听到，自己顾自己",
+        apply: function(state) {
+          StateManager.addMessage('😶 你点点头没多说话。工地里的事，不打听是非，是一种保护自己的方式。', 'info');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "library_notice",
+    title: "📚 图书馆限时开放",
+    description: "公告牌上贴着一张告示：'本市市民图书馆本周免费开放，附赠一次免费自习时间和专业书借阅机会。'",
+    conditions: function(state) {
+      return state.player.day >= 8 && state.player.phase === "street" &&
+        (state.trade.currentLocation === "park" || state.trade.currentLocation === "school") &&
+        !state.flags._libraryVisit;
+    },
+    weight: 0.7,
+    choices: [
+      {
+        text: "📖 去借本书，认真读读",
+        apply: function(state) {
+          state.flags._libraryVisit = true;
+          var xp = 20 + Math.floor(Math.random() * 15);
+          state.player.intelligence = Math.min(100, state.player.intelligence + 2);
+          StateManager.addMessage('📚 你借了本关于经济学的书，读了几章，感觉打开了新世界。智力+2。', 'success');
+        },
+      },
+      {
+        text: "🛌 太累了，改天再说",
+        apply: function(state) {
+          state.flags._libraryVisit = true;
+          StateManager.addMessage('😴 你收好了告示，心想改天有空一定去——但这样的机会不多了。', 'info');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "market_price_tip",
+    title: "💡 摊主的价格情报",
+    description: "批发市场里一个熟面孔摊主把你拉到一边低声说：'最近水果价格要涨，你要进货的话，今天最合适。'",
+    conditions: function(state) {
+      return state.player.day >= 10 && state.player.phase === "street" &&
+        state.trade.currentLocation === "wholesaleMarket" &&
+        !state.flags._marketTipToday;
+    },
+    weight: 0.8,
+    choices: [
+      {
+        text: "💸 现在多进一些货",
+        apply: function(state) {
+          state.flags._marketTipToday = true;
+          var cost = Math.min(state.resources.cash, 120);
+          if (cost >= 40) {
+            state.resources.cash -= cost;
+            state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+            StateManager.addMessage('📦 你多进了¥' + cost + '的货，如果情报准确，这次能多赚不少。花费¥' + cost + '，心情+5。', 'info');
+          } else {
+            StateManager.addMessage('😅 虽然心动，但现在兜里没钱，只好作罢。', 'warning');
+          }
+        },
+      },
+      {
+        text: "🤔 谢谢，我考虑一下",
+        apply: function(state) {
+          state.flags._marketTipToday = true;
+          StateManager.addMessage('🤔 市场消息真真假假，谨慎没有坏处——但有时候错过就是错过了。', 'info');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "sick_coworker_food",
+    title: "🤧 病倒的工友",
+    description: "工地上有个工友感冒发烧，趴在宿舍起不来，也没什么人管他。你正好手里有点零钱……",
+    conditions: function(state) {
+      return state.player.day >= 15 && state.player.phase === "street" &&
+        state.trade.currentLocation === "construction" &&
+        state.resources.cash >= 20;
+    },
+    weight: 0.6,
+    choices: [
+      {
+        text: "🍜 给他买碗热粥送过去",
+        apply: function(state) {
+          state.resources.cash -= 15;
+          state.needs.happiness = Math.min(100, state.needs.happiness + 10);
+          state.status.fame = Math.min(100, (state.status.fame || 0) + 4);
+          state.flags._helpedCoworker = true;
+          StateManager.addMessage('🤝 你花了¥15给工友买了碗粥，他虚弱地道谢。这条街上，大家都是相互依靠的。花费¥15，心情+10，名气+4。', 'success');
+        },
+      },
+      {
+        text: "😟 自己都不宽裕，帮不上忙",
+        apply: function(state) {
+          state.needs.happiness = Math.max(0, state.needs.happiness - 3);
+          StateManager.addMessage('😟 你叹了口气，每个人都有自己的难处。只是这份愧疚，不好受。心情-3。', 'warning');
+        },
+      },
+    ],
+  },
+
+  {
+    id: "city_night_view",
+    title: "🌃 城市夜景",
+    description: "天色晚了，你站在一处高处，看着这座城市的万家灯火。灯光里有那么多普通人，都在努力活着。",
+    conditions: function(state) {
+      return state.player.day >= 25 && state.player.phase === "street" &&
+        (state.trade.currentLocation === "park" || state.trade.currentLocation === "techPark") &&
+        state.needs.happiness < 50;
+    },
+    weight: 0.7,
+    choices: [
+      {
+        text: "🌟 看一会儿，让思绪飘荡",
+        apply: function(state) {
+          state.needs.happiness = Math.min(100, state.needs.happiness + 18);
+          state.player.mental = Math.min(100, state.player.mental + 2);
+          StateManager.addMessage('🌃 夜风轻轻吹来，你突然觉得这一切都有意义。心情+18，心智+2。', 'success');
+        },
+      },
+      {
+        text: "🏠 还是回去睡，明天还要干活",
+        apply: function(state) {
+          state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+          StateManager.addMessage('😌 是啊，得继续努力。感慨归感慨，日子还是要过的。心情+5。', 'info');
+        },
+      },
+    ],
+  },
 ];
 
 /* =========================================================

@@ -906,8 +906,126 @@ function renderActiveNews(state, parent) {
 }
 
 // ====== Actions Tab ======
+/** 根据当前状态生成1-2条行动建议 */
+function getDailyActionTips(state) {
+  var tips = [];
+  var p = state.player;
+  var needs = state.needs;
+  var loc = state.trade && state.trade.currentLocation;
+  var day = p.day;
+  var dayOfWeek = day % 7;
+
+  // 需求警示类
+  if (needs.hunger <= 25) tips.push("🍚 饥饱很低了，记得先吃顿饭再干活！");
+  else if (needs.fatigue >= 80)
+    tips.push("😴 太疲惫了，今天多休息，明天效率会更高。");
+  if (needs.hygiene <= 20)
+    tips.push("🚿 卫生告急，找个地方洗洗澡，保持形象也保持健康。");
+
+  // 财务类
+  if (state.resources.cash < 50 && day > 5) {
+    tips.push("💸 现金快用完了，今天务必打工赚钱！");
+  } else if (state.resources.cash > 500 && state.resources.bankBalance === 0) {
+    tips.push("🏦 现金较多，去银行存一些，每天都能收利息！");
+  }
+
+  // 天气类
+  if (state.weather) {
+    var w = state.weather.type;
+    if (w === "rainy" || w === "storm") {
+      tips.push("🌧️ 今天下雨，室内工作（工厂/理发/摆摊室内）比户外更舒适。");
+    } else if (w === "sunny" && typeof getVendingFootfallMod === "function") {
+      var mod = getVendingFootfallMod(state);
+      if (mod > 1.2) tips.push("☀️ 天气晴好，客流量高，今天摆摊收益不错！");
+    }
+  }
+
+  // 周期类
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    var weekKey = "_weekendMarket_" + Math.floor(day / 7);
+    if (!state.flags[weekKey]) {
+      tips.push("🛍️ 今天是周末！公园/商业区有集市，去摆摊可以多赚一笔。");
+    }
+  }
+  if (dayOfWeek === 1) {
+    var mondayKey = "_mondayInfo_" + Math.floor(day / 7);
+    if (!state.flags[mondayKey]) {
+      tips.push("📋 周一信息日！去工地/工业区打听零工机会，有时会有意外收获。");
+    }
+  }
+
+  // NPC生日提醒
+  if (typeof NPCS !== "undefined") {
+    var dayOfYear = ((day - 1) % 365) + 1;
+    for (var i = 0; i < NPCS.length; i++) {
+      var npc = NPCS[i];
+      if (npc.birthday === dayOfYear) {
+        var rel = state.relationships && state.relationships[npc.id];
+        if (rel && rel.met) {
+          tips.unshift(
+            "🎂 今天是" + npc.name + "的生日！送礼好感×2，快去找ta！",
+          );
+          break;
+        }
+      }
+    }
+  }
+
+  // 技能/工作机会类
+  if (loc === "school" && p.intelligence >= 25) {
+    tips.push("📚 在大学城，可以去接外包单（需编程技能），收入不错。");
+  }
+  if (loc === "construction" && state.flags && state.flags.bossLiReferred) {
+    tips.push("🏗️ 李工头已推荐你，可以申请正规工程队，工资大幅提升！");
+  }
+
+  // 里程碑提醒
+  if (day === 29)
+    tips.unshift("🌟 明天就是第30天！准备迎接一个重要的人生节点。");
+  if (day === 59) tips.unshift("🌟 明天就是第60天里程碑，回顾一下自己的成长。");
+  if (day === 89) tips.unshift("🌟 明天就是第90天！这是城市生涯的重要转折点。");
+
+  return tips;
+}
+
 function renderActionsTab(state, parent) {
   const actions = getAvailableActions(state);
+
+  // === 地点氛围描写（每日轮换，让城市有生命感）===
+  if (typeof getLocationFlavor === "function") {
+    var locId = state.trade && state.trade.currentLocation;
+    var flavorText = getLocationFlavor(locId, state.player.day);
+    if (flavorText) {
+      var flavorBox = document.createElement("div");
+      flavorBox.style.cssText =
+        "margin-bottom:12px;padding:9px 12px;background:rgba(255,255,255,0.03);border-left:3px solid var(--border);border-radius:0 6px 6px 0;color:var(--text-muted);font-size:12px;font-style:italic;line-height:1.5;";
+      flavorBox.textContent = flavorText;
+      parent.appendChild(flavorBox);
+    }
+  }
+
+  // === 今日智能建议（1-2条情境化提示，帮助玩家决策）===
+  {
+    var tips = getDailyActionTips(state);
+    if (tips.length > 0) {
+      var tipBox = document.createElement("div");
+      tipBox.style.cssText =
+        "margin-bottom:14px;padding:10px 12px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.25);border-radius:8px;";
+      tipBox.innerHTML =
+        '<div style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:5px;letter-spacing:0.5px;">💡 今日建议</div>' +
+        tips
+          .slice(0, 2)
+          .map(function (t) {
+            return (
+              '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:3px;">' +
+              t +
+              "</div>"
+            );
+          })
+          .join("");
+      parent.appendChild(tipBox);
+    }
+  }
 
   // 分离出行和其他行动
   const travelActions = actions.filter((a) => a.id.startsWith("travel_"));
