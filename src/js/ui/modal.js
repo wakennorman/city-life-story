@@ -722,3 +722,285 @@ function showItemShopModal(locationId) {
   });
   document.body.appendChild(overlay);
 }
+
+// ====== 拾荒路线规划模态框 ======
+function showScavengeRouteModal() {
+  var st = StateManager.getState();
+  var loc = st.trade.currentLocation;
+  var day = st.player.day;
+  var ap = st.player.actionPoints;
+
+  var ROUTES = [
+    {
+      id: "alley",
+      name: "🏘️ 城中村小巷",
+      desc: "熟悉的街巷垃圾箱，稳定但没惊喜。有老周指路时收益更好。",
+      ap: 15,
+      yieldText: "¥2~9",
+      risk: "低",
+      riskColor: "#4a9e5c",
+      available: true,
+      lockHint: null,
+    },
+    {
+      id: "depot",
+      name: "🏭 废品收购站边缘",
+      desc: "收购站后巷偶有未收走的好货，需要爬围栏进去翻找。",
+      ap: 22,
+      yieldText: "¥8~22",
+      risk: "中",
+      riskColor: "#e6a817",
+      available: day >= 8 || st.player.physique >= 12,
+      lockHint: "第8天后 或 体质≥12",
+    },
+    {
+      id: "factory",
+      name: "🔧 工业区废料场",
+      desc: "工厂废弃零件和边角料，价值不低。需要熟悉工业区地形。",
+      ap: 30,
+      yieldText: "¥15~45",
+      risk: "中高",
+      riskColor: "#e67e22",
+      available: loc === "factoryZone" || !!st.flags.oldZhouTips,
+      lockHint: "在工业区 或 老周(好感≥30)指路",
+    },
+    {
+      id: "zhou_channel",
+      name: "⭐ 老周专线",
+      desc: "老周的内部渠道，废品站朋友提前留好货，稳定高收益。",
+      ap: 25,
+      yieldText: "¥25~65",
+      risk: "低",
+      riskColor: "#4a9e5c",
+      available: !!st.flags.oldZhouChannel,
+      lockHint: "老周好感≥80（开通高价渠道）",
+    },
+  ];
+
+  var overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  var box = document.createElement("div");
+  box.className = "modal-box";
+  box.style.maxWidth = "460px";
+
+  var title = document.createElement("h2");
+  title.textContent = "🗺️ 规划拾荒路线";
+  box.appendChild(title);
+
+  var hint = document.createElement("div");
+  hint.style.cssText =
+    "font-size:11px;color:var(--text-muted);margin-bottom:12px;";
+  hint.textContent =
+    "当前行动力：⚡" + ap + " | 选择路线，不同区域收益和风险各异";
+  box.appendChild(hint);
+
+  var cardContainer = document.createElement("div");
+  cardContainer.style.cssText =
+    "display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto;";
+
+  ROUTES.forEach(function (r) {
+    var apInsufficient = ap < r.ap;
+    var locked = !r.available;
+    var disabled = locked || apInsufficient;
+
+    var card = document.createElement("div");
+    card.style.cssText =
+      "border:1px solid " +
+      (disabled ? "#e0e0e0" : "var(--border)") +
+      ";border-radius:8px;padding:10px 12px;" +
+      "background:" +
+      (disabled ? "#f8f8f8" : "#fff") +
+      ";opacity:" +
+      (disabled ? "0.65" : "1");
+
+    var headerRow = document.createElement("div");
+    headerRow.style.cssText =
+      "display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;";
+
+    var nameEl = document.createElement("strong");
+    nameEl.style.fontSize = "13px";
+    nameEl.textContent = r.name;
+    headerRow.appendChild(nameEl);
+
+    var apBadge = document.createElement("span");
+    apBadge.style.cssText =
+      "background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;";
+    apBadge.textContent = "⚡" + r.ap + "AP";
+    card.appendChild(headerRow);
+    headerRow.appendChild(apBadge);
+
+    var descEl = document.createElement("div");
+    descEl.style.cssText =
+      "color:var(--text-secondary);font-size:12px;margin-bottom:6px;line-height:1.4;";
+    descEl.textContent = r.desc;
+    card.appendChild(descEl);
+
+    var statsRow = document.createElement("div");
+    statsRow.style.cssText =
+      "display:flex;gap:16px;font-size:12px;margin-bottom:6px;";
+    var yieldSpan = document.createElement("span");
+    yieldSpan.textContent = "💰 " + r.yieldText;
+    var riskSpan = document.createElement("span");
+    riskSpan.style.color = r.riskColor;
+    riskSpan.textContent = "⚠️ 风险：" + r.risk;
+    statsRow.appendChild(yieldSpan);
+    statsRow.appendChild(riskSpan);
+    card.appendChild(statsRow);
+
+    if (locked && r.lockHint) {
+      var lockEl = document.createElement("div");
+      lockEl.style.cssText = "color:#e74c3c;font-size:11px;margin-bottom:6px;";
+      lockEl.textContent = "🔒 需要：" + r.lockHint;
+      card.appendChild(lockEl);
+    } else if (apInsufficient) {
+      var apWarnEl = document.createElement("div");
+      apWarnEl.style.cssText =
+        "color:#e67e22;font-size:11px;margin-bottom:6px;";
+      apWarnEl.textContent = "⚡ 行动力不足（需要 " + r.ap + "AP）";
+      card.appendChild(apWarnEl);
+    }
+
+    var btn = document.createElement("button");
+    btn.className = "btn btn-sm" + (disabled ? "" : " btn-primary");
+    btn.style.cssText =
+      "width:100%;margin-top:2px;" +
+      (disabled ? "pointer-events:none;cursor:not-allowed;" : "");
+    btn.disabled = disabled;
+    btn.textContent = disabled
+      ? locked
+        ? "🔒 未解锁"
+        : "⚡ AP不足"
+      : "走这条路 →";
+
+    if (!disabled) {
+      (function (routeId) {
+        btn.addEventListener("click", function () {
+          document.body.removeChild(overlay);
+          executeScavengeRoute(routeId);
+        });
+      })(r.id);
+    }
+
+    card.appendChild(btn);
+    cardContainer.appendChild(card);
+  });
+
+  box.appendChild(cardContainer);
+
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn btn-sm";
+  cancelBtn.style.cssText = "margin-top:12px;width:100%;";
+  cancelBtn.textContent = "取消";
+  cancelBtn.addEventListener("click", function () {
+    document.body.removeChild(overlay);
+  });
+  box.appendChild(cancelBtn);
+
+  overlay.appendChild(box);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+  document.body.appendChild(overlay);
+}
+
+function executeScavengeRoute(routeId) {
+  var st = StateManager.getState();
+  var earned = 0;
+  var msg = "";
+  var hygieneCost = 0;
+  var fatigueCost = 0;
+  var apCost = 0;
+  var msgType = "success";
+
+  if (routeId === "alley") {
+    apCost = 15;
+    var base = 2 + Math.floor(Math.random() * 8);
+    var bonus = 0;
+    var bonusNote = "";
+    if (st.flags.oldZhouTips) {
+      bonus += 5 + Math.floor(Math.random() * 8);
+      bonusNote = "（老周教的路线多翻了些）";
+    }
+    if (st.flags.oldZhouChannel) {
+      bonus += 8 + Math.floor(Math.random() * 12);
+      bonusNote = "（老周渠道内部价又多赚了点）";
+    }
+    // 新人保护
+    if (st.player.day <= 15) bonus += 5;
+    earned = base + bonus;
+    hygieneCost = 5;
+    fatigueCost = 5;
+    msg =
+      "🏘️ 城中村小巷翻了一圈，捡到瓶瓶罐罐卖了 ¥" +
+      earned +
+      bonusNote +
+      "，手脏兮兮的。";
+  } else if (routeId === "depot") {
+    apCost = 22;
+    var base2 = 8 + Math.floor(Math.random() * 15);
+    earned = base2;
+    hygieneCost = 8;
+    fatigueCost = 8;
+    if (Math.random() < 0.3) {
+      var extra = 8 + Math.floor(Math.random() * 11);
+      earned += extra;
+      msg =
+        "🏭 废品收购站边缘翻到好货！废料多卖了 ¥" +
+        extra +
+        "，一共 ¥" +
+        earned +
+        "。爬围栏费了点力气。";
+    } else {
+      msg = "🏭 在废品收购站边缘转了一圈，收获 ¥" + earned + "，今天一般般。";
+    }
+    if (Math.random() < 0.08) {
+      var loss = Math.min(5, earned);
+      earned -= loss;
+      st.needs.health = Math.max(0, (st.needs.health || 100) - 3);
+      st.status.fame = Math.max(0, st.status.fame - 1);
+      msg += " 被城管看见了，追赶中丢了 ¥" + loss + "。";
+      msgType = "warning";
+    }
+  } else if (routeId === "factory") {
+    apCost = 30;
+    var base3 = 15 + Math.floor(Math.random() * 31);
+    earned = base3;
+    hygieneCost = 10;
+    fatigueCost = 12;
+    if (Math.random() < 0.4) {
+      var extra2 = 10 + Math.floor(Math.random() * 16);
+      earned += extra2;
+      msg =
+        "🔧 工业区废料场收获满满！废金属多卖了 ¥" +
+        extra2 +
+        "，到手 ¥" +
+        earned +
+        "。";
+    } else {
+      msg = "🔧 工业区废料场跑了一圈，卖了 ¥" + earned + "，今天废料不多。";
+    }
+    if (Math.random() < 0.15) {
+      earned = Math.floor(earned * 0.5);
+      fatigueCost += 10;
+      msg += " 被保安发现吓跑了，东西丢了一半，到手 ¥" + earned + "。";
+      msgType = "warning";
+    }
+  } else if (routeId === "zhou_channel") {
+    apCost = 25;
+    earned = 25 + Math.floor(Math.random() * 41);
+    hygieneCost = 5;
+    fatigueCost = 6;
+    msg =
+      "⭐ 按老周的专线走了一趟，废品站朋友给了内部价，卖了 ¥" +
+      earned +
+      "，稳稳的！";
+  }
+
+  st.resources.cash += earned;
+  st.resources.totalEarned += earned;
+  st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
+  st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
+
+  StateManager.addMessage(msg, msgType);
+  consumeAP(apCost);
+}

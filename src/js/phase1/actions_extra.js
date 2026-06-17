@@ -12,36 +12,13 @@ function addStreetExtras(state, actions) {
   // === 街头生存类（任何街头地点都行） ===
   actions.push({
     id: "scavenge_trash",
-    name: "🗑️ 翻垃圾桶找废品",
-    desc: "在巷子里翻垃圾桶找瓶瓶罐罐卖钱。脏但能赚点零花钱。",
-    icon: "🗑️",
-    apCost: 20,
-    payEstimate: "2~9",
+    name: "🗺️ 规划拾荒路线",
+    desc: "选择今天的拾荒区域：城中村小巷(稳)/废品站边缘(中)/工业区(高)/老周专线(⭐)。不同路线收益和风险各异。",
+    icon: "🗺️",
+    apCost: 15,
+    payEstimate: "2~65",
     handler: () => {
-      const st = StateManager.getState();
-      var base = 2 + Math.floor(Math.random() * 8);
-      var bonus = 0;
-      var bonusMsg = "";
-      // 老周好感30解锁：知道好地段，废品多+¥5-12
-      if (st.flags.oldZhouTips) {
-        bonus += 5 + Math.floor(Math.random() * 8);
-        bonusMsg = "（老周教的路线多翻了不少）";
-      }
-      // 老周好感80解锁：高价废品收购渠道，额外溢价
-      if (st.flags.oldZhouChannel) {
-        bonus += 8 + Math.floor(Math.random() * 12);
-        bonusMsg = "（老周的高价渠道又多卖了一点）";
-      }
-      const earned = base + bonus;
-      st.resources.cash += earned;
-      st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
-      st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-      st.resources.totalEarned += earned;
-      StateManager.addMessage(
-        `🗑️ 翻了半天垃圾桶，捡到 ¥${earned}${bonusMsg}，脏兮兮的。`,
-        "success",
-      );
-      consumeAP(20);
+      showScavengeRouteModal();
     },
   });
 
