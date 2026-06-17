@@ -67,6 +67,16 @@ const DAILY_PIPELINE = [
         0,
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
+      // 王大婶好感30解锁每日带饭（饥饱+15）
+      if (state.flags.auntWangMeal) {
+        state.needs.hunger = Math.min(100, state.needs.hunger + 15);
+        if (Math.random() < 0.3) {
+          StateManager.addMessage(
+            "🍱 早上发现门口有王大婶留的饭菜，暖心。",
+            "info",
+          );
+        }
+      }
     },
   },
 
@@ -76,11 +86,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       var house = getCurrentHousing(state);
       if (house.rent > 0) {
-        if (state.resources.cash >= house.rent) {
-          state.resources.cash -= house.rent;
+        var rentAmount = house.rent;
+        // 王大婶好感60解锁租房折扣（-¥50/天）
+        if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
+          rentAmount -= 50;
+        }
+        if (state.resources.cash >= rentAmount) {
+          state.resources.cash -= rentAmount;
         } else {
           StateManager.addMessage(
-            "⚠️ 付不起房租 ¥" + house.rent + "！被赶回流落街头。",
+            "⚠️ 付不起房租 ¥" + rentAmount + "！被赶回流落街头。",
             "danger",
           );
           state.housing.tier = 0;

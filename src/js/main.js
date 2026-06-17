@@ -64,6 +64,8 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
+  if (job.requiredFlag && !state.flags[job.requiredFlag])
+    return "尚未解锁（需要NPC好感度）";
 
   return null; // 通过
 }
@@ -476,7 +478,9 @@ function getAvailableActions(state) {
           typeof getTravelApReduction === "function"
             ? getTravelApReduction(st.skills.driving.level || 0)
             : 0;
-        return Math.max(5, 15 - reduction);
+        // 老周好感60解锁三轮车：旅行AP再-2
+        const tricycleBonus = st.flags.oldZhouTricycle ? 2 : 0;
+        return Math.max(5, 15 - reduction - tricycleBonus);
       })();
       actions.push({
         id: "travel_" + destKey,
@@ -555,7 +559,13 @@ function getAvailableActions(state) {
             ? getCookingDiscount(cookingLvl)
             : 0;
         const baseCost = isNewbie ? 8 : 15;
-        const foodCost = Math.max(5, Math.round(baseCost * (1 - discount)));
+        // 陈师傅好感80解锁秘方：额外-20%食费
+        const recipeDiscount = st.flags.chefChenRecipe ? 0.2 : 0;
+        const totalDiscount = Math.min(0.85, discount + recipeDiscount);
+        const foodCost = Math.max(
+          5,
+          Math.round(baseCost * (1 - totalDiscount)),
+        );
         if (st.resources.cash < foodCost) {
           StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
           return;
@@ -563,10 +573,15 @@ function getAvailableActions(state) {
         st.resources.cash -= foodCost;
         st.needs.hunger = Math.min(100, st.needs.hunger + 35);
         st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-        const cookHint =
-          discount > 0
-            ? `（烹饪Lv${cookingLvl}省了¥${baseCost - foodCost}）`
-            : "";
+        var saved = baseCost - foodCost;
+        var cookHint = "";
+        if (recipeDiscount > 0 && discount > 0) {
+          cookHint = `（烹饪Lv${cookingLvl}+陈师傅秘方共省¥${saved}）`;
+        } else if (recipeDiscount > 0) {
+          cookHint = `（陈师傅秘方省¥${saved}）`;
+        } else if (discount > 0) {
+          cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
+        }
         StateManager.addMessage(
           `🍚 你花¥${foodCost}吃了顿饭，肚子饱了。${cookHint}`,
           "success",
@@ -1070,6 +1085,7 @@ function doStreetJob(job) {
     addSkillXp("physique", job.effects.physiqueXp || 0);
     addSkillXp("intelligence", job.effects.intelligenceXp || 0);
     addSkillXp("english", job.effects.englishXp || 0);
+    addSkillXp("welding", job.effects.weldingXp || 0);
   }
 
   // 属性经验转化

@@ -93,9 +93,11 @@ const STREET_JOBS = [
         typeof getConstructionBonus === "function"
           ? getConstructionBonus(state.skills.welding.level || 0)
           : 0;
+      const bossBonus = state.flags && state.flags.bossLiSkillJob ? 1.2 : 1.0;
       return Math.floor(
         (65 + state.player.physique * 0.5 + Math.random() * 30) *
-          (1 + weldBonus),
+          (1 + weldBonus) *
+          bossBonus,
       );
     },
     risk: { injury: 0.1, illness: 0.04 },
@@ -125,15 +127,65 @@ const STREET_JOBS = [
         typeof getConstructionBonus === "function"
           ? getConstructionBonus(state.skills.welding.level || 0)
           : 0;
+      const bossBonus = state.flags && state.flags.bossLiSkillJob ? 1.2 : 1.0;
       return Math.floor(
         (120 +
           state.skills.repair.level * 1.2 +
           state.player.physique * 0.25 +
           Math.random() * 35) *
-          (1 + weldBonus),
+          (1 + weldBonus) *
+          bossBonus,
       );
     },
     risk: { injury: 0.05 },
+  },
+  {
+    id: "premium_engineering",
+    name: "🏗️ 正规工程队（李工头推荐）",
+    desc: "李工头介绍的正规建筑公司，工资两倍、有工伤险，活儿也相对规范。",
+    icon: "🏗️",
+    location: "construction",
+    requirements: { physique: 30, minAge: 20, maxAge: 60 },
+    requiredFlag: "bossLiReferred",
+    effects: {
+      fatigue: 22,
+      hygiene: -8,
+      physiqueXp: 3,
+      repairXp: 5,
+      weldingXp: 3,
+    },
+    payCalc(state) {
+      const weldBonus =
+        typeof getConstructionBonus === "function"
+          ? getConstructionBonus(state.skills.welding.level || 0)
+          : 0;
+      return Math.floor(
+        (220 +
+          state.player.physique * 0.8 +
+          state.skills.repair.level * 1.5 +
+          Math.random() * 60) *
+          (1 + weldBonus),
+      );
+    },
+    risk: { injury: 0.03 },
+  },
+  {
+    id: "restaurant_assistant",
+    name: "🍳 帮陈师傅打下手",
+    desc: "在陈师傅餐厅打下手，学做菜的同时赚点辛苦钱。",
+    icon: "🍳",
+    location: "commercialDist",
+    requirements: { minAge: 16 },
+    requiredFlag: "chefChenAssistant",
+    effects: { fatigue: 20, hygiene: -5, cookingXp: 12, happiness: 5 },
+    payCalc(state) {
+      const cookBonus =
+        typeof getCookingDiscount === "function"
+          ? Math.floor(state.skills.cooking.level * 0.5)
+          : 0;
+      return Math.floor(50 + cookBonus + Math.random() * 30);
+    },
+    risk: {},
   },
 
   // ====== 工业区 — 工厂 ======

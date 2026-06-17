@@ -30,6 +30,7 @@ const RANDOM_EVENTS = [
           const cash = 80 + Math.floor(Math.random() * 200);
           st.resources.cash += cash;
           st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+          st.flags._keptWallet = true;
           StateManager.addMessage(
             `💰 钱包里翻出了 ¥${cash}，但心里有点虚...`,
             "warning",
@@ -42,6 +43,7 @@ const RANDOM_EVENTS = [
         apply: (st) => {
           st.needs.happiness = Math.min(100, st.needs.happiness + 12);
           st.status.fame = Math.min(100, st.status.fame + 3);
+          st.flags._returnedWallet = true;
           StateManager.addMessage(
             "🏛️ 钱包交给了警察，警察夸你拾金不昧，心情大好！",
             "success",
@@ -1896,6 +1898,7 @@ const RANDOM_EVENTS = [
         apply: function(st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
           st.status.fame = Math.min(100, st.status.fame + 8);
+          st.flags._helpedCoworker = true;
           if (st.relationships && st.relationships['boss_li']) {
             st.relationships['boss_li'].affinity = Math.max(-100, st.relationships['boss_li'].affinity - 20);
           }
@@ -1943,6 +1946,7 @@ const RANDOM_EVENTS = [
         apply: function(st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
           st.status.fame = Math.min(100, st.status.fame + 5);
+          st.flags._refusedFakeGoods = true;
           StateManager.addMessage('🗑️ 你把假货全部扔掉，损失¥800。这钱是教训钱，名气+5。', 'info');
         },
       },
@@ -2036,6 +2040,7 @@ const RANDOM_EVENTS = [
           st.resources.cash += recovered;
           st.resources.totalEarned += recovered;
           st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+          st.flags._foughtWageTheft = true;
           StateManager.addMessage('🏛️ 劳动仲裁历时3周，追回了 ¥' + recovered + '，虽然没全追回，但出了口气。', 'success');
         },
       },
@@ -2651,6 +2656,191 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 15);
           StateManager.addMessage("🚶 你走了。那个画面在脑海中挥散不去，心情-15。", "warning");
+        },
+      },
+    ],
+  },
+
+  // === 道德后果事件 — 过去的选择会被记住 ===
+  {
+    id: "coworker_payback",
+    phase: "street",
+    icon: "🤝",
+    title: "工友老刘来还人情",
+    story: "当年你不顾工头施压，帮工友老刘叫了救护车。今天他来找你，说他表弟在正规工程公司，手上有个活缺人……",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.flags._helpedCoworker && st.player.day >= 30;
+    },
+    choices: [
+      {
+        text: "💪 接！认识新朋友",
+        hint: "人情就是资本",
+        apply: function(st) {
+          var pay = 300 + Math.floor(Math.random() * 200);
+          st.resources.cash += pay;
+          st.resources.totalEarned += pay;
+          st.player.physique = Math.min(100, st.player.physique + 2);
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          StateManager.addMessage("🤝 老刘的表弟给了你一单活，干完赚了¥" + pay + "，还认识了不少工地朋友！体质+2，名气+5。", "success");
+        },
+      },
+      {
+        text: "🙏 谢谢，但我最近有事",
+        hint: "婉拒但维持关系",
+        apply: function(st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage("🙏 婉拒了老刘，但他说下次还有机会。好人好报，心情不错。", "info");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "wallet_karma",
+    phase: "street",
+    icon: "👛",
+    title: "噩梦还是惊喜",
+    story: "路上你听到身后有人喊你。一个陌生女人说她当时丢了钱包，到处找，最后从监控看到你捡走了……",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.flags._keptWallet && st.player.day >= 15;
+    },
+    choices: [
+      {
+        text: "😰 坦白承认，还钱",
+        hint: "归还钱包里的钱",
+        apply: function(st) {
+          var repaid = 100 + Math.floor(Math.random() * 80);
+          st.resources.cash = Math.max(0, st.resources.cash - repaid);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          st.flags._keptWallet = false;
+          StateManager.addMessage("😰 你道了歉、还了¥" + repaid + "，对方感谢你的诚实。心里反而轻了许多。心情+15，名气+8。", "success");
+        },
+      },
+      {
+        text: "😤 矢口否认",
+        hint: "死不承认",
+        apply: function(st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 20);
+          st.status.fame = Math.max(0, st.status.fame - 10);
+          StateManager.addMessage("😤 你否认了。她半信半疑地走了。心里像压了块石头，名气-10。", "warning");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "integrity_reward",
+    phase: "street",
+    icon: "🌟",
+    title: "信誉带来回报",
+    story: "你拒绝假货、做生意讲诚信的事传开了。商业区的老板们私下讨论，说你这个人靠谱，有个批发商想跟你长期合作……",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.flags._refusedFakeGoods && st.status.fame >= 20;
+    },
+    choices: [
+      {
+        text: "🤝 合作！建立长期供货关系",
+        hint: "打开批发渠道",
+        apply: function(st) {
+          var bonus = 500 + Math.floor(Math.random() * 300);
+          st.resources.cash += bonus;
+          st.resources.totalEarned += bonus;
+          st.status.fame = Math.min(100, st.status.fame + 10);
+          st.flags._bulkSupplier = true;
+          StateManager.addMessage("🤝 合作谈成了！批发商先给了¥" + bonus + "的预付款。你的诚信名声打出去了，名气+10。", "success");
+        },
+      },
+      {
+        text: "🤔 了解一下，不急于答应",
+        hint: "谨慎观望",
+        apply: function(st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage("🤔 你说先考虑一下，对方表示理解，留了联系方式。机会还在。", "info");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "labor_rights_recognition",
+    phase: "street",
+    icon: "⚖️",
+    title: "劳动局表彰",
+    story: "你上次举报欠薪的事情，劳动仲裁中心记了档。今天接到通知：你的案例被评为"维权先锋"，有奖励，也有记者想采访……",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.flags._foughtWageTheft && st.player.day >= 20;
+    },
+    choices: [
+      {
+        text: "🎤 接受采访，公开发声",
+        hint: "名气暴增，但会树敌",
+        apply: function(st) {
+          var award = 200 + Math.floor(Math.random() * 100);
+          st.resources.cash += award;
+          st.resources.totalEarned += award;
+          st.status.fame = Math.min(100, st.status.fame + 18);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage("🎤 采访播出了！你成了工友圈的红人，拿了¥" + award + "奖励，名气+18！有些工头不太高兴……", "success");
+        },
+      },
+      {
+        text: "🏆 领奖就好，不接受采访",
+        hint: "低调处理",
+        apply: function(st) {
+          var award = 200 + Math.floor(Math.random() * 100);
+          st.resources.cash += award;
+          st.resources.totalEarned += award;
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage("🏆 低调领了奖金¥" + award + "和荣誉证书，名气+8。做了好事，心里踏实。", "success");
+        },
+      },
+      {
+        text: "🙅 放弃，别惹麻烦",
+        hint: "多一事不如少一事",
+        apply: function(st) {
+          StateManager.addMessage("🙅 你婉拒了。这段经历只有你自己知道。", "info");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "old_liu_info",
+    phase: "street",
+    icon: "📱",
+    title: "工友老刘发来内部消息",
+    story: "老刘微信说他在新工地发现包工头要跑路，三十几个工友的工资危了！他第一个想到你——那次你帮他的事他一直没忘。",
+    conditions: function(st) {
+      return st.player.phase === "street" && (st.flags._helpedCoworker || st.flags._foughtWageTheft) && st.player.day >= 25;
+    },
+    choices: [
+      {
+        text: "📣 帮忙组织工友维权",
+        hint: "用你的经验帮大家",
+        apply: function(st) {
+          st.status.fame = Math.min(100, st.status.fame + 12);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          StateManager.addMessage("📣 你和老刘一起组织，工友们联名上报，成功阻止了包工头跑路。大家都感谢你，名气+12，心智+2！", "success");
+        },
+      },
+      {
+        text: "📋 帮忙收集证据，但不出头",
+        hint: "背后出力",
+        apply: function(st) {
+          st.player.intelligence = Math.min(100, st.player.intelligence + 1);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage("📋 你偷偷收集了包工头的逃跑证据交给老刘，工友们维权成功。智力+1，良心过得去。", "success");
+        },
+      },
+      {
+        text: "😶 告诉他我帮不上",
+        hint: "事不关己",
+        apply: function(st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage("😶 你说你帮不上忙。老刘半天没回复。心里有点不是滋味。", "warning");
         },
       },
     ],

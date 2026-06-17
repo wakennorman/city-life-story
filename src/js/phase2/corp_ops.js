@@ -252,6 +252,25 @@ function enterCorporatePhase(companyId) {
     initInvestment(state);
   }
 
+  // 张姐内推：入职时额外向上管理+10、人缘+10（有人脉就是不一样）
+  if (state.flags.zhangReferred) {
+    p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + 10);
+    p.corporate.popularity = Math.min(100, p.corporate.popularity + 10);
+    StateManager.addMessage(
+      "🤝 张姐内推加分：向上管理和人缘都好了不少！",
+      "success",
+    );
+  }
+  // 小美实习引荐：入职时额外能力+15、KPI+10（实习经历是资本）
+  if (state.flags.xiaomeiInternship) {
+    p.corporate.ability = Math.min(100, p.corporate.ability + 15);
+    p.corporate.kpi = Math.min(150, p.corporate.kpi + 10);
+    StateManager.addMessage(
+      "💻 小美的实习引荐：工作能力和KPI起点高了不少！",
+      "success",
+    );
+  }
+
   StateManager.addMessage(
     `🏢 入职 ${company.name}！从P5开始职场生涯。${company.culture}。`,
     "success",

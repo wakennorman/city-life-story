@@ -52,6 +52,7 @@ const LOCATIONS = {
     jobs: [
       "manual_labor_construction",
       "skilled_labor_construction",
+      "premium_engineering",
       "street_vending_food",
     ],
     priceMod: {},
@@ -116,6 +117,7 @@ const LOCATIONS = {
       "repair_service",
       "delivery_rider",
       "street_performer",
+      "restaurant_assistant",
     ],
     priceMod: {
       water: 1.1,

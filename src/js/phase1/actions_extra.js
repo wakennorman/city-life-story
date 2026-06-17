@@ -18,14 +18,27 @@ function addStreetExtras(state, actions) {
     apCost: 20,
     payEstimate: "2~9",
     handler: () => {
-      const earned = 2 + Math.floor(Math.random() * 8);
       const st = StateManager.getState();
+      var base = 2 + Math.floor(Math.random() * 8);
+      var bonus = 0;
+      var bonusMsg = "";
+      // 老周好感30解锁：知道好地段，废品多+¥5-12
+      if (st.flags.oldZhouTips) {
+        bonus += 5 + Math.floor(Math.random() * 8);
+        bonusMsg = "（老周教的路线多翻了不少）";
+      }
+      // 老周好感80解锁：高价废品收购渠道，额外溢价
+      if (st.flags.oldZhouChannel) {
+        bonus += 8 + Math.floor(Math.random() * 12);
+        bonusMsg = "（老周的高价渠道又多卖了一点）";
+      }
+      const earned = base + bonus;
       st.resources.cash += earned;
       st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
       st.resources.totalEarned += earned;
       StateManager.addMessage(
-        `🗑️ 翻了半天垃圾桶，捡到 ¥${earned}，脏兮兮的。`,
+        `🗑️ 翻了半天垃圾桶，捡到 ¥${earned}${bonusMsg}，脏兮兮的。`,
         "success",
       );
       consumeAP(20);
@@ -236,10 +249,14 @@ function addStreetExtras(state, actions) {
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
       const skills = Object.keys(st.skills);
       const key = skills[Math.floor(Math.random() * skills.length)];
-      st.skills[key].xp += 30 + Math.floor(Math.random() * 20);
+      // 小美好感60解锁图书馆内部账号：学习效率+30%
+      var xpMult = st.flags.xiaomeiLibrary ? 1.3 : 1.0;
+      var xpGain = Math.floor((30 + Math.floor(Math.random() * 20)) * xpMult);
+      st.skills[key].xp += xpGain;
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
+      var libTag = st.flags.xiaomeiLibrary ? "（小美的图书馆账号让效率提升30%）" : "";
       StateManager.addMessage(
-        `📖 在图书馆泡了一下午，${key} 技能经验大涨！`,
+        `📖 在图书馆泡了一下午，${key} XP+${xpGain}${libTag}！`,
         "success",
       );
       consumeAP(20);
