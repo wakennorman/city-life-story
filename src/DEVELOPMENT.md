@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-17 (累计80项改动，本轮新增：+随机事件51个+NPC生日对话)
+> 最后更新: 2026-06-17 (累计81项改动，本轮新增：+NPC委托任务)
 
 ## 项目概述
 
@@ -502,3 +502,4 @@ src/
 | 2026-06-17 | 新增内容#17: 每日今日总结 — daily_pipeline新增generateDailySummary()函数；runDailyPipeline()在pipeline执行前记录日始现金/健康/心情到state.flags.\_dayStart\*；end_log步骤末尾追加一条hint类型消息："📋 今日总结：今天赚了¥XXX，小有收获/收支持平/大丰收"等；同时检测健康下降/心情下降/银行利息/节日气氛；仅街头阶段触发(职场有季末总结)；参考《大多数》一句话高光总结设计                                                                                   |
 | 2026-06-17 | 新增内容#18: NPC生日系统 — npcs.js为6个NPC新增birthday字段(王大婶45/李工头98/张姐155/老周210/小美280/陈师傅325，按年份取模)；daily*pipeline新增npc_birthday步骤：每日以day%365计算年内天序，匹配NPC生日且已认识时发event事件提醒"今天是XX的生日！送礼好感×2"；actions_extra.js送礼逻辑新增生日双倍加成(isBirthday=state.flags.\_birthdayToday*<id>时bonus×2)；送礼弹窗NPC下拉列表标注🎂生日角标并在弹窗顶部显示橙色提示；参考《Stardew Valley》生日礼物机制 |
 | 2026-06-17 | 新增内容#19: 随机事件51个+NPC生日对话 — events.js新增5个街头事件(宿舍失窃/夜班搬运/捡手机/社区志愿者/路边老人倒地)总量从46→51超过P0目标50+；npcs.js为6个NPC各增birthdayLine个性化台词；main.js谈话handler在生日当天使用birthdayLine显示success颜色、好感+10(原+5)、心情+8(原+3)                                                                                                                                                                             |
+| 2026-06-17 | 新增内容#20: NPC委托任务系统 — npcs.js为6个NPC各添加favor委托对象(story+choices)：王大婶修水管/李工头代班/张姐发传单/老周搬废铁/小美取包裹/陈师傅买蔬菜；main.js在NPC交谈行动旁新增"❤️ NPC有请求"行动卡(⚡15AP)，条件：好感≥30且该NPC委托未完成；点击显示委托内容和选择，接受后给予好感+15+角色特定奖励(属性/技能XP/现金/解锁flag)；委托一次性完成存state.flags._npcFavor_<id>；参考《Stardew Valley》心事件设计                                            |

@@ -914,6 +914,68 @@ function getAvailableActions(state) {
           consumeAP(10);
         },
       });
+
+      // NPC 委托任务（好感≥30且任务未完成）
+      if (npc.favor) {
+        var favorKey = "_npcFavor_" + npc.id;
+        var rel2 = state.relationships[npc.id] || {};
+        if (!state.flags[favorKey] && (rel2.affinity || 0) >= 30) {
+          actions.push({
+            id: "favor_" + npc.id,
+            name: "❤️ " + npc.name + "有个请求",
+            desc: npc.favor.story.slice(0, 40) + "...",
+            icon: "❤️",
+            apCost: 15,
+            handler: (function (capturedNpc) {
+              return function () {
+                var choicesHtml = capturedNpc.favor.choices
+                  .map(function (ch, ci) {
+                    return (
+                      '<button class="event-choice" data-idx="' +
+                      ci +
+                      '">' +
+                      '<div class="choice-main">' +
+                      ch.text +
+                      "</div>" +
+                      "</button>"
+                    );
+                  })
+                  .join("");
+                showModal({
+                  title: "❤️ " + capturedNpc.name + " 的请求",
+                  body:
+                    '<p style="color:var(--text-secondary);font-size:13px;line-height:1.6;">' +
+                    capturedNpc.favor.story +
+                    "</p>" +
+                    '<div style="margin-top:12px;">' +
+                    choicesHtml +
+                    "</div>",
+                  buttons: [],
+                });
+                setTimeout(function () {
+                  var overlay = document.querySelector(".modal-overlay");
+                  if (!overlay) return;
+                  overlay
+                    .querySelectorAll(".event-choice")
+                    .forEach(function (btn) {
+                      btn.addEventListener("click", function () {
+                        var idx = parseInt(btn.getAttribute("data-idx"), 10);
+                        var ch = capturedNpc.favor.choices[idx];
+                        if (ch) {
+                          var st2 = StateManager.getState();
+                          ch.apply(st2);
+                          consumeAP(15);
+                          overlay.remove();
+                          if (typeof renderAll === "function") renderAll();
+                        }
+                      });
+                    });
+                }, 30);
+              };
+            })(npc),
+          });
+        }
+      }
     }
   }
 

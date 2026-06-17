@@ -66,6 +66,66 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "王大婶愁眉苦脸：「楼道水管漏水，修理工开价¥300！你懂修理不？帮大婶看看？」",
+      choices: [
+        {
+          text: "🔧 自己动手修（需维修≥5级）",
+          apply: function (st) {
+            st.flags._npcFavor_aunt_wang = true;
+            if (st.skills.repair && st.skills.repair.level >= 5) {
+              st.flags.auntWangRentDiscount = true;
+              st.skills.repair.xp += 30;
+              StateManager.addMessage(
+                "🔧 不到一小时修好了！王大婶感动得直抹眼泪，以后房租悄悄给你打折了。维修XP+30。",
+                "success",
+              );
+            } else {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+              StateManager.addMessage(
+                "🔧 自己修不了，帮大婶联系了师傅还垫付了¥50。大婶记在心里了。",
+                "info",
+              );
+            }
+            if (!st.relationships.aunt_wang)
+              st.relationships.aunt_wang = { affinity: 0, met: true };
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              st.relationships.aunt_wang.affinity + 15,
+            );
+          },
+        },
+        {
+          text: "📞 帮联系专业修理工",
+          apply: function (st) {
+            st.flags._npcFavor_aunt_wang = true;
+            if (!st.relationships.aunt_wang)
+              st.relationships.aunt_wang = { affinity: 0, met: true };
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              st.relationships.aunt_wang.affinity + 8,
+            );
+            StateManager.addMessage(
+              "📞 帮大婶联系了靠谱师傅，省了她不少麻烦，好感+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙅 现在太忙",
+          apply: function (st) {
+            if (!st.relationships.aunt_wang)
+              st.relationships.aunt_wang = { affinity: 0, met: true };
+            st.relationships.aunt_wang.affinity = Math.max(
+              -100,
+              st.relationships.aunt_wang.affinity - 3,
+            );
+            StateManager.addMessage("🙅 推掉了，王大婶有点失望。", "warning");
+          },
+        },
+      ],
+    },
   },
   {
     id: "boss_li",
@@ -116,6 +176,51 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "李工头压低声音：「我明天有事不来，但工地不能没人，你能顶半天班帮我挡着不？有好处。」",
+      choices: [
+        {
+          text: "💪 行，我来顶",
+          apply: function (st) {
+            st.flags._npcFavor_boss_li = true;
+            var reward = 150 + Math.floor(Math.random() * 100);
+            st.resources.cash += reward;
+            st.resources.totalEarned += reward;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            st.player.physique = Math.min(100, st.player.physique + 1);
+            if (!st.relationships.boss_li)
+              st.relationships.boss_li = { affinity: 0, met: true };
+            st.relationships.boss_li.affinity = Math.min(
+              100,
+              st.relationships.boss_li.affinity + 15,
+            );
+            StateManager.addMessage(
+              "💪 顶了半天班，工人们听你的！李工头事后塞给你¥" +
+                reward +
+                "，体质+1。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 我也有事，帮不上",
+          apply: function (st) {
+            st.flags._npcFavor_boss_li = true;
+            if (!st.relationships.boss_li)
+              st.relationships.boss_li = { affinity: 0, met: true };
+            st.relationships.boss_li.affinity = Math.max(
+              -100,
+              st.relationships.boss_li.affinity - 5,
+            );
+            StateManager.addMessage(
+              "😅 推掉了。李工头皱眉，有点不高兴。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
   },
   {
     id: "sister_zhang",
@@ -175,6 +280,48 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "张姐有些不好意思：「我这边有个招聘会，能不能帮我发100份传单？跑腿费我给你。」",
+      choices: [
+        {
+          text: "📋 帮忙！正好认识更多人",
+          apply: function (st) {
+            st.flags._npcFavor_sister_zhang = true;
+            var pay = 80 + Math.floor(Math.random() * 60);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.status.fame = Math.min(100, st.status.fame + 5);
+            st.skills.sales && (st.skills.sales.xp += 20);
+            if (!st.relationships.sister_zhang)
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            st.relationships.sister_zhang.affinity = Math.min(
+              100,
+              st.relationships.sister_zhang.affinity + 15,
+            );
+            StateManager.addMessage(
+              "📋 发完了传单还认识了好几个HR！拿了¥" +
+                pay +
+                " 跑腿费，名气+5，销售XP+20。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🚶 不干，太累了",
+          apply: function (st) {
+            st.flags._npcFavor_sister_zhang = true;
+            if (!st.relationships.sister_zhang)
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            st.relationships.sister_zhang.affinity = Math.max(
+              -100,
+              st.relationships.sister_zhang.affinity - 3,
+            );
+            StateManager.addMessage("🚶 推掉了，张姐只好自己找人。", "info");
+          },
+        },
+      ],
+    },
   },
   {
     id: "old_zhou",
@@ -229,6 +376,47 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "老周叹气：「我老腰不好，今天这批废铁实在搬不动，你年轻力壮，帮老头子推到站里去？」",
+      choices: [
+        {
+          text: "💪 帮！搬就搬",
+          apply: function (st) {
+            st.flags._npcFavor_old_zhou = true;
+            st.player.physique = Math.min(100, st.player.physique + 2);
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            st.flags.oldZhouTips = true;
+            if (!st.relationships.old_zhou)
+              st.relationships.old_zhou = { affinity: 0, met: true };
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              st.relationships.old_zhou.affinity + 15,
+            );
+            StateManager.addMessage(
+              "💪 推着三轮车去了废品站，累是累，体质+2！老周悄悄告诉你废品行情诀窍。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🚶 今天实在没时间",
+          apply: function (st) {
+            st.flags._npcFavor_old_zhou = true;
+            if (!st.relationships.old_zhou)
+              st.relationships.old_zhou = { affinity: 0, met: true };
+            st.relationships.old_zhou.affinity = Math.max(
+              -100,
+              st.relationships.old_zhou.affinity - 3,
+            );
+            StateManager.addMessage(
+              "🚶 推掉了，老周叹了口气独自推车走了。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
   },
   {
     id: "xiao_mei",
@@ -284,6 +472,47 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "小美焦急地说：「我妈从老家寄来的包裹卡在快递站了，我有课走不开，能不能帮我去取一下？」",
+      choices: [
+        {
+          text: "🚚 帮你去取",
+          apply: function (st) {
+            st.flags._npcFavor_xiao_mei = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.skills.english && (st.skills.english.xp += 40);
+            st.skills.coding && (st.skills.coding.xp += 40);
+            if (!st.relationships.xiao_mei)
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              st.relationships.xiao_mei.affinity + 15,
+            );
+            StateManager.addMessage(
+              "🚚 取到了！小美开心地打开包裹——有妈妈腌的咸菜，分了你一罐。她感谢你，给你补了英语和编程各+40XP。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 对不起，今天没空",
+          apply: function (st) {
+            st.flags._npcFavor_xiao_mei = true;
+            if (!st.relationships.xiao_mei)
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            st.relationships.xiao_mei.affinity = Math.max(
+              -100,
+              st.relationships.xiao_mei.affinity - 3,
+            );
+            StateManager.addMessage(
+              "😅 推掉了，小美失望地点点头，只好请室友去了。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   },
   {
     id: "chef_chen",
@@ -339,6 +568,50 @@ const NPCS = [
         },
       },
     ],
+    favor: {
+      story:
+        "陈师傅拦住你：「我今天缺新鲜蔬菜，批发市场你熟不熟？帮我带两斤萝卜和一斤香菇，我多给你工钱。」",
+      choices: [
+        {
+          text: "🥕 帮你买！我正好去批发市场",
+          apply: function (st) {
+            st.flags._npcFavor_chef_chen = true;
+            var pay = 60 + Math.floor(Math.random() * 40);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.skills.cooking && (st.skills.cooking.xp += 50);
+            if (!st.relationships.chef_chen)
+              st.relationships.chef_chen = { affinity: 0, met: true };
+            st.relationships.chef_chen.affinity = Math.min(
+              100,
+              st.relationships.chef_chen.affinity + 15,
+            );
+            StateManager.addMessage(
+              "🥕 买回来了！陈师傅做菜时顺便教了你几招刀工，拿了¥" +
+                pay +
+                " 跑腿费，烹饪XP+50。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙅 不顺路",
+          apply: function (st) {
+            st.flags._npcFavor_chef_chen = true;
+            if (!st.relationships.chef_chen)
+              st.relationships.chef_chen = { affinity: 0, met: true };
+            st.relationships.chef_chen.affinity = Math.max(
+              -100,
+              st.relationships.chef_chen.affinity - 3,
+            );
+            StateManager.addMessage(
+              "🙅 推掉了，陈师傅只好自己跑一趟。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   },
 ];
 
