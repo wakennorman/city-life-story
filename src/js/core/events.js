@@ -4842,6 +4842,208 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- 有梗世界事件：房地产开发商暴雷 ----
+  {
+    id: "developer_collapse",
+    phase: "street",
+    icon: "🏚️",
+    title: "楼盘暴雷了！",
+    story:
+      "你投资的楼盘开发商突然资金链断裂，宣布破产重组！工地停工，物业跑路，业主群炸了锅。这套房子…可能要烂尾了。",
+    conditions: function (st) {
+      var inv = st.investment || {};
+      return (
+        inv.properties &&
+        inv.properties.length > 0 &&
+        st.player.day > 100 &&
+        !st.flags._developerCollapseTriggered
+      );
+    },
+    choices: [
+      {
+        text: "💸 立刻低价出手，割肉止损",
+        hint: "到手55%",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._hasLostPropertyCollapse = true;
+          var inv = st.investment || {};
+          if (!inv.properties) return;
+          var total = 0;
+          for (var pi = 0; pi < inv.properties.length; pi++) {
+            total +=
+              inv.properties[pi].currentPrice || inv.properties[pi].buyPrice;
+          }
+          var proceeds = Math.round(total * 0.55);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          inv.properties = [];
+          st.needs.happiness = Math.max(0, st.needs.happiness - 20);
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage(
+            "🏚️ 忍痛割肉，以原价55折出手，回笼¥" +
+              proceeds.toLocaleString() +
+              "。心里堵得慌，但总比全砸进去强。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "✊ 加入业主维权团，去要说法",
+        hint: "花¥500，等结果",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._propertyRightsGroup = true;
+          st.flags._propertyCollapseDay = st.player.day;
+          st.resources.cash = Math.max(0, st.resources.cash - 500);
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "✊ 加入了业主维权团，交了¥500组织费，开始每周去工地讨说法。名气+5，路很长…",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤞 相信政府会托底，先等等",
+        hint: "不确定结果",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._waitingPropertyResolution = true;
+          st.flags._propertyCollapseDay = st.player.day;
+          StateManager.addMessage(
+            "🤞 新闻说政府在研究'保交楼'政策，先观望…内心不安，但还是选择相信。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：维权胜利结局 ----
+  {
+    id: "property_rights_win",
+    phase: "street",
+    icon: "✊",
+    title: "维权有结果了！",
+    story:
+      "历时数月的业主维权终于有了结果——银行接管开发商，承诺续建烂尾楼，业主获得延期赔偿。你们赢了！",
+    conditions: function (st) {
+      return (
+        !!st.flags._propertyRightsGroup &&
+        st.player.day >= (st.flags._propertyCollapseDay || 0) + 25 &&
+        !st.flags._propertyRightsResolved
+      );
+    },
+    choices: [
+      {
+        text: "🎉 接受赔偿，继续等交房",
+        hint: "补偿¥800+名气",
+        apply: function (st) {
+          st.flags._propertyRightsResolved = true;
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          st.player.mental = Math.min(100, st.player.mental + 8);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "✊ 维权成功！获得赔偿¥800，房子续建中，预计延期2年交付。名气+8，心里终于松了口气。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 拿赔偿后转让房产",
+        hint: "套现离场",
+        apply: function (st) {
+          st.flags._propertyRightsResolved = true;
+          var inv = st.investment || {};
+          var total = 0;
+          if (inv.properties) {
+            for (var pi2 = 0; pi2 < inv.properties.length; pi2++) {
+              total +=
+                inv.properties[pi2].currentPrice ||
+                inv.properties[pi2].buyPrice;
+            }
+            inv.properties = [];
+          }
+          var proceeds = Math.round(total * 0.72) + 800;
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          StateManager.addMessage(
+            "💰 拿了¥800赔偿，再以72折转让房产，共到手¥" +
+              proceeds.toLocaleString() +
+              "。彻底离场，心里反而轻松了。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：政府托底结局 ----
+  {
+    id: "property_govt_rescue",
+    phase: "street",
+    icon: "🏛️",
+    title: "政府出手保交楼",
+    story:
+      "等了这么久，终于等到消息：政府启动'保交楼'专项基金，接管你的楼盘续建。代价是交付时间推迟2年，但总归不会烂尾了。",
+    conditions: function (st) {
+      return (
+        !!st.flags._waitingPropertyResolution &&
+        st.player.day >= (st.flags._propertyCollapseDay || 0) + 20 &&
+        !st.flags._propertyGovtResolved
+      );
+    },
+    choices: [
+      {
+        text: "😮‍💨 接受现实，继续持有",
+        hint: "房产价值-25%，但保住了",
+        apply: function (st) {
+          st.flags._propertyGovtResolved = true;
+          var inv = st.investment || {};
+          if (inv.properties) {
+            for (var pi3 = 0; pi3 < inv.properties.length; pi3++) {
+              var p = inv.properties[pi3];
+              p.currentPrice = Math.round(
+                (p.currentPrice || p.buyPrice) * 0.75,
+              );
+            }
+          }
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          StateManager.addMessage(
+            "🏛️ 政府托底了。房产账面贬值25%，但终究没烂尾。等2年吧，也许还能涨回来。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏃 趁现在还能转让，赶紧出手",
+        hint: "70折卖出",
+        apply: function (st) {
+          st.flags._propertyGovtResolved = true;
+          var inv2 = st.investment || {};
+          var total2 = 0;
+          if (inv2.properties) {
+            for (var pi4 = 0; pi4 < inv2.properties.length; pi4++) {
+              total2 +=
+                inv2.properties[pi4].currentPrice ||
+                inv2.properties[pi4].buyPrice;
+            }
+            inv2.properties = [];
+          }
+          var out = Math.round(total2 * 0.7);
+          st.resources.cash += out;
+          st.resources.totalEarned += out;
+          StateManager.addMessage(
+            "🏃 以70折出手，到手¥" +
+              out.toLocaleString() +
+              "。政府是托底了，但这2年的等待成本太高，离场更划算。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 /* =========================================================

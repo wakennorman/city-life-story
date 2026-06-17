@@ -73,6 +73,24 @@ var FESTIVALS = [
     announceTxt:
       "🎉 国庆黄金周！全国欢庆，商场大促。电子产品和服装打折，但食品因人流量稍涨。",
   },
+  {
+    id: "shopping_festival",
+    name: "全民剁手节",
+    icon: "🛒",
+    startDay: 315,
+    duration: 2,
+    desc: "电商年度最大促销，零售品需求暴增，商业区人流爆炸，摆摊收益翻倍。",
+    priceMods: {
+      daily: 2.0,
+      clothing: 1.9,
+      electronics: 1.85,
+      food: 1.15,
+      luxury: 1.5,
+    },
+    moodBonus: 6,
+    announceTxt:
+      "🛒 全民剁手节开始！商业区人山人海，日用品/服装/电子需求暴涨——这是今年摆摊最赚的两天！准备好货了吗？",
+  },
 ];
 
 /** 根据游戏天数获取当前节日（无则返回null） */
@@ -85,11 +103,24 @@ function getCurrentFestival(day) {
   return null;
 }
 
-/** 获取节日对某商品分类的价格修正乘数（无节日=1.0） */
+/** 判断是否处于剁手节余震清仓期（节日结束后3天） */
+function isShoppingClearancePeriod(state) {
+  return !!(
+    state.flags._shoppingClearanceEndDay &&
+    state.player.day <= state.flags._shoppingClearanceEndDay
+  );
+}
+
+/** 获取节日对某商品分类的价格修正乘数（无节日=1.0，清仓期低于1.0） */
 function getFestivalPriceMod(state, category) {
   var f = getCurrentFestival(state.player.day);
-  if (!f || !f.priceMods || !f.priceMods[category]) return 1.0;
-  return f.priceMods[category];
+  if (f && f.priceMods && f.priceMods[category]) return f.priceMods[category];
+  // 剁手节余震清仓期：日用品/服装/电子便宜15-25%（买货好时机）
+  if (isShoppingClearancePeriod(state)) {
+    var clearMods = { daily: 0.82, clothing: 0.78, electronics: 0.8 };
+    if (clearMods[category]) return clearMods[category];
+  }
+  return 1.0;
 }
 
 /** 节日分类中文名 */
@@ -107,14 +138,51 @@ function getFestivalCategoryName(cat) {
 
 /**
  * 每日节日效果结算 — 加入 DAILY_PIPELINE
- * 节日第一天发布公告；节日期间每日心情加成
+ * 节日第一天发布公告；节日期间每日心情加成；
+ * 剁手节额外：3天预热公告 + 节日结束后清仓期
  */
 function checkFestivalDailyEffects(state) {
-  var f = getCurrentFestival(state.player.day);
-  if (!f) return;
-
   var doy = state.player.day % 365;
   var year = Math.floor(state.player.day / 365);
+
+  // === 剁手节专项：3天预热 + 余震清仓 ===
+  var shoppingFest = null;
+  for (var si = 0; si < FESTIVALS.length; si++) {
+    if (FESTIVALS[si].id === "shopping_festival") {
+      shoppingFest = FESTIVALS[si];
+      break;
+    }
+  }
+  if (shoppingFest) {
+    var daysToFest = shoppingFest.startDay - doy;
+    // 预热公告（3天前）
+    if (daysToFest === 3) {
+      var preKey = "_shopFestPre_y" + year;
+      if (!state.flags[preKey]) {
+        state.flags[preKey] = true;
+        StateManager.addMessage(
+          "📦【预热提醒】全民剁手节还有3天！现在去批发市场囤好日用品/服装，节日当天商业区摆摊收益可翻倍！早买早赚。",
+          "hint",
+        );
+      }
+    }
+    // 节日结束第1天：开启余震清仓期3天
+    if (doy === shoppingFest.startDay + shoppingFest.duration) {
+      var clearKey = "_shopFestClear_y" + year;
+      if (!state.flags[clearKey]) {
+        state.flags[clearKey] = true;
+        state.flags._shoppingClearanceEndDay = state.player.day + 3;
+        StateManager.addMessage(
+          "📉【剁手节余波】消费者买完了，日用品/服装/电子降价15-20%清仓中（还有3天），是囤货低吸的好时机！",
+          "info",
+        );
+      }
+    }
+  }
+
+  // === 普通节日效果 ===
+  var f = getCurrentFestival(state.player.day);
+  if (!f) return;
 
   // 节日第一天公告（每年触发一次）
   if (doy === f.startDay) {
@@ -220,6 +288,26 @@ var FESTIVAL_JOBS = {
       desc: "黄金周游客多，兼职景区向导，需要一定的智力",
     },
   ],
+  shopping_festival: [
+    {
+      id: "fest_shopping_vendor",
+      name: "🛒 剁手节爆款摊位",
+      icon: "🛒",
+      location: "commercialDist",
+      pay: 280,
+      apCost: 25,
+      desc: "剁手节商业区人流爆炸！摆摊卖热销品，收益是平时的5倍！",
+    },
+    {
+      id: "fest_shopping_warehouse",
+      name: "📦 节日仓库搬运",
+      icon: "📦",
+      location: "wholesaleMarket",
+      pay: 160,
+      apCost: 20,
+      desc: "双节备货旺季，批发仓库搬运需求激增，轻松赚体力钱",
+    },
+  ],
 };
 
 /** 获取节日NPC专属台词（返回字符串或null） */
@@ -239,6 +327,15 @@ function getFestivalNpcLine(npcId, state) {
 
 /** 获取节日价格修正说明文本（用于交易界面提示） */
 function getFestivalPriceNote(state) {
+  // 余震清仓期提示
+  if (isShoppingClearancePeriod(state)) {
+    var daysLeft2 = state.flags._shoppingClearanceEndDay - state.player.day;
+    return (
+      "📉 剁手节清仓（还剩" +
+      daysLeft2 +
+      "天）：日用品-18%, 服装-22%, 电子-20%（进货好时机）"
+    );
+  }
   var f = getCurrentFestival(state.player.day);
   if (!f || !f.priceMods) return "";
   var doy = state.player.day % 365;

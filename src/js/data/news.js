@@ -167,6 +167,8 @@ const NEWS_EVENTS = [
       duration: 5,
     },
     type: "job",
+    followUpId: "rider_winter",
+    followUpDelay: 7,
   },
   {
     id: "urban_renewal_pilot",
@@ -341,6 +343,8 @@ const NEWS_EVENTS = [
       duration: 6,
     },
     type: "investment",
+    followUpId: "chip_domestic_rise",
+    followUpDelay: 5,
   },
   {
     id: "ai_boom",
@@ -543,6 +547,31 @@ var NEWS_FOLLOWUP = {
         { category: "贵金属", mul: 1.11 },
       ],
       duration: 2,
+    },
+  },
+  chip_domestic_rise: {
+    headline: "🇨🇳 国产替代加速崛起！国内芯片厂商订单爆满，多家宣布量产突破",
+    effects: {
+      investmentEffect: [
+        { symbols: ["SMIC", "HUAW"], mul: 1.22 },
+        { symbols: ["NVDA", "TSMC"], mul: 0.91 },
+        { industry: "科技", mul: 1.08 },
+      ],
+      jobBonus: ["coding_freelance", "data_analyst"],
+      jobMultiplier: 1.2,
+      duration: 5,
+    },
+  },
+  rider_winter: {
+    headline: "🛵 外卖平台补贴战偃旗息鼓，骑手单价悄然回落，接单量萎缩",
+    effects: {
+      investmentEffect: [
+        { symbols: ["MEIT", "DIDI"], mul: 0.93 },
+        { industry: "消费", mul: 0.97 },
+      ],
+      jobBonus: ["delivery_rider"],
+      jobMultiplier: 0.8,
+      duration: 4,
     },
   },
 };

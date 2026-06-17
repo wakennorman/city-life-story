@@ -436,10 +436,12 @@ function getVendingFootfallMod(locKey, state) {
   else if (weather === "snowy") base *= 0.5;
   else if (weather === "sunny") base *= 1.1;
 
-  // 节日修正（节日期间客流量+30%）
+  // 节日修正（普通节日+30%；全民剁手节人流爆炸×2.5）
   if (typeof getCurrentFestival === "function") {
     var festival = getCurrentFestival(state.player.day);
-    if (festival) base *= 1.3;
+    if (festival) {
+      base *= festival.id === "shopping_festival" ? 2.5 : 1.3;
+    }
   }
 
   // 周末修正（day%7=0或6时为"周末"，客流量+20%）
