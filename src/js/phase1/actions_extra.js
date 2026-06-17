@@ -254,7 +254,9 @@ function addStreetExtras(state, actions) {
       var xpGain = Math.floor((30 + Math.floor(Math.random() * 20)) * xpMult);
       st.skills[key].xp += xpGain;
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
-      var libTag = st.flags.xiaomeiLibrary ? "（小美的图书馆账号让效率提升30%）" : "";
+      var libTag = st.flags.xiaomeiLibrary
+        ? "（小美的图书馆账号让效率提升30%）"
+        : "";
       StateManager.addMessage(
         `📖 在图书馆泡了一下午，${key} XP+${xpGain}${libTag}！`,
         "success",
@@ -772,16 +774,15 @@ function addStreetExtras(state, actions) {
 
   // === 查看梦想进度（已有梦想时显示） ===
   if (hasDream) {
-    var dream = typeof getCurrentDream === "function"
-      ? getCurrentDream(state)
-      : null;
+    var dream =
+      typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
     if (dream) {
-      var progress = typeof getDreamProgress === "function"
-        ? getDreamProgress(state)
-        : 0;
-      var curTitle = typeof getDreamCurrentTitle === "function"
-        ? getDreamCurrentTitle(state)
-        : "";
+      var progress =
+        typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+      var curTitle =
+        typeof getDreamCurrentTitle === "function"
+          ? getDreamCurrentTitle(state)
+          : "";
       actions.push({
         id: "view_dream",
         name: dream.icon + " 梦想：" + dream.name,
@@ -802,7 +803,8 @@ function addStreetExtras(state, actions) {
     state.trade.currentLocation === "park" ||
     state.trade.currentLocation === "commercialDist" ||
     state.trade.currentLocation === "wholesaleMarket";
-  var weekendMarketDoneKey = "_weekendMarket_" + Math.floor(state.player.day / 7);
+  var weekendMarketDoneKey =
+    "_weekendMarket_" + Math.floor(state.player.day / 7);
   if (isWeekend && atMarketLoc && !state.flags[weekendMarketDoneKey]) {
     actions.push({
       id: "weekend_market",
@@ -814,7 +816,10 @@ function addStreetExtras(state, actions) {
         var st = StateManager.getState();
         var dk = "_weekendMarket_" + Math.floor(st.player.day / 7);
         if (st.flags[dk]) {
-          StateManager.addMessage("🏪 本周集市机会已用过了，下周再来。", "warning");
+          StateManager.addMessage(
+            "🏪 本周集市机会已用过了，下周再来。",
+            "warning",
+          );
           return;
         }
         st.flags[dk] = true;
@@ -829,7 +834,11 @@ function addStreetExtras(state, actions) {
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         if (st.skills.sales) st.skills.sales.xp += 15;
         StateManager.addMessage(
-          "🏪 周末集市火爆！你摆摊赚了¥" + earned + "，认识了不少顾客。名气+" + fameGain + "，销售XP+15。",
+          "🏪 周末集市火爆！你摆摊赚了¥" +
+            earned +
+            "，认识了不少顾客。名气+" +
+            fameGain +
+            "，销售XP+15。",
           "success",
         );
         consumeAP(25);
@@ -860,7 +869,9 @@ function addStreetExtras(state, actions) {
           st.resources.cash += cashTip;
           st.resources.totalEarned += cashTip;
           StateManager.addMessage(
-            "📋 打听到一个搬家公司临时招人，接了个单赚了¥" + cashTip + "！情报就是钱。",
+            "📋 打听到一个搬家公司临时招人，接了个单赚了¥" +
+              cashTip +
+              "！情报就是钱。",
             "success",
           );
         } else if (roll < 0.7) {
@@ -876,7 +887,11 @@ function addStreetExtras(state, actions) {
           var sk = skillKeys[Math.floor(Math.random() * skillKeys.length)];
           st.skills[sk].xp += xpGainM;
           StateManager.addMessage(
-            "📋 碰到个老师傅，聊了很久，" + sk + " XP+" + xpGainM + "！见人长一智。",
+            "📋 碰到个老师傅，聊了很久，" +
+              sk +
+              " XP+" +
+              xpGainM +
+              "！见人长一智。",
             "success",
           );
         }
@@ -891,10 +906,10 @@ function showDreamSelectModal() {
   if (typeof DREAMS === "undefined") return;
   var optHtml = DREAMS.map(function (d) {
     return (
-      '<div onclick="selectDream(\'' +
+      "<div onclick=\"selectDream('" +
       d.id +
       '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
-      'onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"> ' +
+      "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"> " +
       "<strong>" +
       d.icon +
       " " +
@@ -922,7 +937,8 @@ window.selectDream = function (dreamId) {
   st.flags._dreamId = dreamId;
   st.flags._dreamMilestone = 0;
   st.flags._dreamStartDay = st.player.day;
-  var dream = typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
+  var dream =
+    typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
   if (dream) {
     StateManager.addMessage(
       dream.icon +
@@ -940,7 +956,8 @@ window.selectDream = function (dreamId) {
 /** 梦想进度模态框 */
 function showDreamProgressModal() {
   var st = StateManager.getState();
-  var dream = typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
+  var dream =
+    typeof getCurrentDream === "function" ? getCurrentDream(st) : null;
   if (!dream) return;
   var milestoneHtml = dream.milestones
     .map(function (m, i) {
@@ -951,13 +968,19 @@ function showDreamProgressModal() {
         (done
           ? "rgba(74,158,92,0.1)"
           : current
-          ? "rgba(74,158,92,0.05)"
-          : "var(--bg-card)") +
+            ? "rgba(74,158,92,0.05)"
+            : "var(--bg-card)") +
         ";border:1px solid " +
-        (done ? "var(--accent)" : current ? "rgba(74,158,92,0.3)" : "var(--border)") +
-        ";font-size:12px;">'
-        + (done ? "✅ " : current ? "⏳ " : "⬜ ") +
-        "<strong>" + m.title + "</strong>" +
+        (done
+          ? "var(--accent)"
+          : current
+            ? "rgba(74,158,92,0.3)"
+            : "var(--border)") +
+        ';font-size:12px;">' +
+        (done ? "✅ " : current ? "⏳ " : "⬜ ") +
+        "<strong>" +
+        m.title +
+        "</strong>" +
         (current
           ? '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">进行中…</div>'
           : "") +
@@ -965,14 +988,19 @@ function showDreamProgressModal() {
       );
     })
     .join("");
-  var progress = typeof getDreamProgress === "function" ? getDreamProgress(st) : 0;
+  var progress =
+    typeof getDreamProgress === "function" ? getDreamProgress(st) : 0;
   showModal({
     title: dream.icon + " " + dream.name,
     body:
       '<div style="margin-bottom:12px;">' +
-      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">总进度：' + progress + "%</div>" +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">总进度：' +
+      progress +
+      "%</div>" +
       '<div style="background:var(--bg-input);border-radius:4px;height:8px;overflow:hidden;">' +
-      '<div style="width:' + progress + '%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.5s;"></div>' +
+      '<div style="width:' +
+      progress +
+      '%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.5s;"></div>' +
       "</div></div>" +
       milestoneHtml,
     buttons: [{ text: "关闭", cls: "", callback: function () {} }],
@@ -1175,7 +1203,11 @@ function showGiftModal() {
         if (birthdayNpcs.length > 0) {
           note +=
             '<p style="font-size:12px;color:#e67e22;font-weight:600;">🎂 今天是' +
-            birthdayNpcs.map(function (n) { return n.name; }).join("、") +
+            birthdayNpcs
+              .map(function (n) {
+                return n.name;
+              })
+              .join("、") +
             "的生日！送礼好感×2！</p>";
         }
         return note;

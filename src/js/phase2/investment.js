@@ -1102,7 +1102,9 @@ function tickInvestmentDaily(state) {
       (prop.currentPrice || prop.buyPrice) *
         (1 + prop.appreciation + (Math.random() - 0.5) * 0.002),
     );
-    if (state.player.day % 30 === 0) state.resources.cash += prop.rent || 0;
+    var isSelfLived = inv.selfLivePropertyId === prop.id;
+    if (state.player.day % 30 === 0 && !isSelfLived)
+      state.resources.cash += prop.rent || 0;
   }
 
   // 汽车
@@ -1416,6 +1418,102 @@ function drawPriceChart(canvasId, priceData, color) {
 }
 
 // ============================================================
+//  市场情绪看板（P3.2）
+// ============================================================
+function renderMarketSentiment(state, inv) {
+  var activeNews = state.activeNews || [];
+  var pending = (state.flags && state.flags._pendingFollowUpNews) || [];
+
+  // 计算牛熊分数
+  var bullScore = 0,
+    bearScore = 0;
+  for (var i = 0; i < activeNews.length; i++) {
+    var effs = (activeNews[i].effects || {}).investmentEffect || [];
+    for (var j = 0; j < effs.length; j++) {
+      var mul = effs[j].mul || 1;
+      if (mul > 1) bullScore += (mul - 1) * 8;
+      else if (mul < 1) bearScore += (1 - mul) * 8;
+    }
+  }
+  var fg = (inv && inv.btcFearGreed) || 50;
+  if (fg > 65) bullScore += (fg - 65) * 0.4;
+  else if (fg < 35) bearScore += (35 - fg) * 0.4;
+
+  var sentiment, sentColor;
+  if (bullScore > bearScore + 1.5) {
+    sentiment = "🐂 牛市氛围";
+    sentColor = "var(--success)";
+  } else if (bearScore > bullScore + 1.5) {
+    sentiment = "🐻 熊市氛围";
+    sentColor = "var(--danger)";
+  } else {
+    sentiment = "⚖️ 震荡市";
+    sentColor = "var(--accent)";
+  }
+
+  if (activeNews.length === 0 && pending.length === 0) return "";
+
+  var html =
+    '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;">';
+  html +=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">';
+  html +=
+    '<span style="font-size:11px;font-weight:bold;color:' +
+    sentColor +
+    ';">' +
+    sentiment +
+    "</span>";
+  html +=
+    '<span style="font-size:10px;color:var(--text-muted);">BTC恐贪: ' +
+    fg +
+    "/100</span>";
+  html += "</div>";
+
+  // 当前活跃新闻（最多3条）
+  var shownNews = 0;
+  for (var k = 0; k < activeNews.length && shownNews < 3; k++) {
+    var news = activeNews[k];
+    var daysLeft =
+      (news._appliedDay || 0) +
+      ((news.effects && news.effects.duration) || 5) -
+      state.player.day;
+    if (daysLeft <= 0) continue;
+    html +=
+      '<div style="font-size:10px;color:var(--text-light);padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">';
+    html +=
+      news.headline +
+      ' <span style="color:var(--text-muted);">(' +
+      daysLeft +
+      "天)</span>";
+    html += "</div>";
+    shownNews++;
+  }
+
+  // 即将触发的级联新闻预告
+  if (pending.length > 0) {
+    html +=
+      '<div style="font-size:10px;color:var(--accent);margin-top:4px;margin-bottom:2px;">⏰ 近期动向：</div>';
+    var fuRef = typeof NEWS_FOLLOWUP !== "undefined" ? NEWS_FOLLOWUP : {};
+    var shownPend = 0;
+    for (var m = 0; m < pending.length && shownPend < 2; m++) {
+      var pitem = pending[m];
+      var fu = fuRef[pitem.id];
+      if (!fu) continue;
+      var daysUntil = pitem.triggerDay - state.player.day;
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);padding:1px 0;">';
+      html +=
+        (daysUntil <= 0 ? "今日" : daysUntil + "天后") + "：" + fu.headline;
+      html += "</div>";
+      shownPend++;
+    }
+  }
+
+  html += "</div>";
+  return html;
+}
+
+// ============================================================
 //  投资主页面渲染
 // ============================================================
 function renderInvestmentTab(state, parent) {
@@ -1477,6 +1575,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", propVal) +
     summaryCard("汽车", carVal) +
     "</div>" +
+    renderMarketSentiment(state, inv) +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
     '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
     '<button class="btn btn-sm sub-tab" data-stab="crypto">虚拟币</button>' +
@@ -1647,13 +1746,18 @@ function renderStocks(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;">' +
+      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
       '<button class="btn btn-sm btn-success ibuy" data-s="' +
       s.symbol +
       '" data-q="10">买10</button>' +
       '<button class="btn btn-sm btn-success ibuy" data-s="' +
       s.symbol +
       '" data-q="100">买100</button>' +
+      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
+      s.symbol +
+      '" data-p="' +
+      m.price.toFixed(4) +
+      '">全买</button>' +
       '<button class="btn btn-sm btn-danger isell" data-s="' +
       s.symbol +
       '" data-q="10">卖10</button>' +
@@ -1683,6 +1787,21 @@ function renderStocks(area, inv, state, parent) {
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
         buyInvStock(this.dataset.s, parseInt(this.dataset.q));
+        renderInvestmentTab(state, parent);
+      };
+    });
+    area.querySelectorAll(".ibuy-all").forEach(function (b) {
+      b.onclick = function () {
+        var price = parseFloat(this.dataset.p);
+        var maxQ =
+          price > 0
+            ? Math.floor(StateManager.getState().resources.cash / price)
+            : 0;
+        if (maxQ < 1) {
+          StateManager.addMessage("现金不足，无法全买", "warning");
+          return;
+        }
+        buyInvStock(this.dataset.s, maxQ);
         renderInvestmentTab(state, parent);
       };
     });
@@ -1789,6 +1908,13 @@ function renderBtc(area, inv, state, parent) {
       '" data-q="' +
       (s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10) +
       '">买</button>' +
+      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
+      s.symbol +
+      '" data-p="' +
+      m.price.toFixed(6) +
+      '" data-dec="' +
+      (s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0) +
+      '">全买</button>' +
       '<button class="btn btn-sm btn-danger isell" data-s="' +
       s.symbol +
       '" data-q="' +
@@ -1816,6 +1942,25 @@ function renderBtc(area, inv, state, parent) {
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
         buyInvStock(this.dataset.s, parseFloat(this.dataset.q));
+        renderInvestmentTab(state, parent);
+      };
+    });
+    area.querySelectorAll(".ibuy-all").forEach(function (b) {
+      b.onclick = function () {
+        var price = parseFloat(this.dataset.p);
+        var dec = parseInt(this.dataset.dec) || 0;
+        var factor = Math.pow(10, dec);
+        var maxQ =
+          price > 0
+            ? Math.floor(
+                (StateManager.getState().resources.cash / price) * factor,
+              ) / factor
+            : 0;
+        if (maxQ <= 0) {
+          StateManager.addMessage("现金不足，无法全买", "warning");
+          return;
+        }
+        buyInvStock(this.dataset.s, maxQ);
         renderInvestmentTab(state, parent);
       };
     });
@@ -1899,7 +2044,7 @@ function renderPrecious(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;">' +
+      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
       '<button class="btn btn-sm btn-success ibuy" data-s="' +
       sym +
       '" data-q="10">买10' +
@@ -1910,6 +2055,11 @@ function renderPrecious(area, inv, state, parent) {
       '" data-q="100">买100' +
       unit +
       "</button>" +
+      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
+      sym +
+      '" data-p="' +
+      m.price.toFixed(4) +
+      '">全买</button>' +
       '<button class="btn btn-sm btn-danger isell" data-s="' +
       sym +
       '" data-q="10">卖10' +
@@ -1937,6 +2087,21 @@ function renderPrecious(area, inv, state, parent) {
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
         buyInvStock(this.dataset.s, parseInt(this.dataset.q));
+        renderInvestmentTab(state, parent);
+      };
+    });
+    area.querySelectorAll(".ibuy-all").forEach(function (b) {
+      b.onclick = function () {
+        var price = parseFloat(this.dataset.p);
+        var maxQ =
+          price > 0
+            ? Math.floor(StateManager.getState().resources.cash / price)
+            : 0;
+        if (maxQ < 1) {
+          StateManager.addMessage("现金不足，无法全买", "warning");
+          return;
+        }
+        buyInvStock(this.dataset.s, maxQ);
         renderInvestmentTab(state, parent);
       };
     });
@@ -2021,7 +2186,7 @@ function renderFutures(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;">' +
+      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
       '<button class="btn btn-sm btn-success ibuy" data-s="' +
       sym +
       '" data-q="1">买1' +
@@ -2032,6 +2197,11 @@ function renderFutures(area, inv, state, parent) {
       '" data-q="10">买10' +
       unit +
       "</button>" +
+      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
+      sym +
+      '" data-p="' +
+      m.price.toFixed(4) +
+      '">全买</button>' +
       '<button class="btn btn-sm btn-danger isell" data-s="' +
       sym +
       '" data-q="1">卖1' +
@@ -2062,6 +2232,21 @@ function renderFutures(area, inv, state, parent) {
         renderInvestmentTab(state, parent);
       };
     });
+    area.querySelectorAll(".ibuy-all").forEach(function (b) {
+      b.onclick = function () {
+        var price = parseFloat(this.dataset.p);
+        var maxQ =
+          price > 0
+            ? Math.floor(StateManager.getState().resources.cash / price)
+            : 0;
+        if (maxQ < 1) {
+          StateManager.addMessage("现金不足，无法全买", "warning");
+          return;
+        }
+        buyInvStock(this.dataset.s, maxQ);
+        renderInvestmentTab(state, parent);
+      };
+    });
     area.querySelectorAll(".isell").forEach(function (b) {
       b.onclick = function () {
         sellInvStock(this.dataset.s, parseInt(this.dataset.q));
@@ -2074,6 +2259,89 @@ function renderFutures(area, inv, state, parent) {
 // ---- 子tab渲染：房产 ----
 function renderProperties(area, inv, state, parent) {
   var list = inv.properties || [];
+
+  // === 说明区 ===
+  var tipDiv = document.createElement("div");
+  tipDiv.style.cssText =
+    "font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 10px;margin-bottom:10px;";
+  tipDiv.textContent =
+    "💡 租房 = 日常居住开销（在城中村升级住所）；买房 = 投资出租/自住，持有后可切换「自住」免日租并升格住所。";
+  area.appendChild(tipDiv);
+
+  // === 🏡 高档租赁区（供玩家作为租客升格到更高tier） ===
+  if (typeof HOUSING_TIERS !== "undefined") {
+    var highTier = HOUSING_TIERS[4]; // tier 4 豪华公寓
+    if (highTier) {
+      var rentDiv = document.createElement("div");
+      rentDiv.style.cssText =
+        "margin-bottom:12px;padding:10px;background:rgba(52,152,219,0.08);border:1px solid var(--info,#3498db);border-radius:8px;";
+      var curTier = state.housing ? state.housing.tier || 0 : 0;
+      var canRentHigh = state.resources.cash >= highTier.cost && curTier < 4;
+      var alreadyHigh = curTier >= 4;
+      rentDiv.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+        '<h4 style="margin:0;font-size:12px;color:var(--info,#3498db);">🏡 高档租赁房源</h4>' +
+        '<span style="font-size:10px;color:var(--text-muted);">押金即日费，日租持续扣除</span>' +
+        "</div>" +
+        '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<span style="font-size:20px;">' +
+        highTier.icon +
+        "</span>" +
+        '<div style="flex:1;">' +
+        '<div style="font-weight:600;font-size:12px;">' +
+        highTier.name +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        highTier.desc +
+        "</div>" +
+        '<div style="font-size:11px;margin-top:3px;">押金 <strong style="color:var(--warning);">¥' +
+        highTier.cost.toLocaleString() +
+        "</strong> | 日租 <strong>¥" +
+        highTier.rent +
+        "/天</strong> | 疲劳恢复+" +
+        highTier.fatigueRecovery +
+        " 卫生+" +
+        highTier.hygieneBonus +
+        " 心情+" +
+        highTier.happinessBonus +
+        "</div>" +
+        "</div>" +
+        (alreadyHigh
+          ? '<span style="font-size:11px;color:var(--success);">✅ 当前住所</span>'
+          : '<button class="btn btn-sm btn-primary" id="rent-high-tier-btn"' +
+            (canRentHigh ? "" : " disabled") +
+            ">" +
+            (canRentHigh ? "租入" : "现金不足") +
+            "</button>") +
+        "</div>";
+      area.appendChild(rentDiv);
+      if (!alreadyHigh) {
+        setTimeout(function () {
+          var btn = document.getElementById("rent-high-tier-btn");
+          if (btn)
+            btn.onclick = function () {
+              var s = StateManager.getState();
+              if (s.resources.cash < highTier.cost) {
+                StateManager.addMessage("现金不足", "danger");
+                return;
+              }
+              s.resources.cash -= highTier.cost;
+              s.housing.tier = 4;
+              s.housing.rentedDay = s.player.day;
+              s.inventory.capacity =
+                highTier.capacity + (s.housing.storageCapacity || 0);
+              StateManager.addMessage(
+                "🏙️ 搬入豪华公寓！每日租金¥" +
+                  highTier.rent +
+                  "，享受人上人的生活。",
+                "success",
+              );
+              renderInvestmentTab(s, parent);
+            };
+        }, 0);
+      }
+    }
+  }
 
   // === 🏠 可购买房产市场 ===
   var marketDiv = document.createElement("div");
@@ -2149,14 +2417,16 @@ function renderProperties(area, inv, state, parent) {
       totalPropVal += cur;
       totalPropPL += diff;
       var monthlyRent = p.rent || 0;
+      var isSelf = inv.selfLivePropertyId === p.id;
       holdingRows += `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
-          <span style="font-weight:600;min-width:80px;">${p.name}</span>
+          <span style="font-weight:600;min-width:80px;">${p.name}${isSelf ? ' <span style="color:var(--info,#3498db);font-size:9px;">🏠自住</span>' : ""}</span>
           <span style="color:var(--text-muted);min-width:35px;font-size:10px;">${p.type || ""}</span>
           <span style="min-width:70px;text-align:right;">买入 ¥${buyP.toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${clr};">现值 ¥${cur.toLocaleString()}</span>
           <span style="min-width:80px;text-align:right;color:${clr};font-weight:600;">${sign}¥${Math.round(diff).toLocaleString()} (${sign}${pct}%)</span>
-          <span style="min-width:55px;text-align:right;font-size:10px;">月租 ¥${monthlyRent.toLocaleString()}</span>
+          <span style="min-width:55px;text-align:right;font-size:10px;">${isSelf ? '<span style="color:var(--info,#3498db);">免日租</span>' : "月租 ¥" + monthlyRent.toLocaleString()}</span>
+          <button class="btn btn-sm ${isSelf ? "btn-secondary" : "btn-info"} toggle-self-live" data-id="${p.id}" style="font-size:10px;">${isSelf ? "改出租" : "自住"}</button>
           <button class="btn btn-sm btn-danger sell-prop" data-id="${p.id}" style="font-size:10px;">出售</button>
         </div>`;
     }
@@ -2187,6 +2457,49 @@ function renderProperties(area, inv, state, parent) {
       b.onclick = function () {
         sellProperty(this.dataset.id);
         renderInvestmentTab(state, parent);
+      };
+    });
+    area.querySelectorAll(".toggle-self-live").forEach(function (b) {
+      b.onclick = function () {
+        var s = StateManager.getState();
+        var propId = this.dataset.id;
+        if (s.investment.selfLivePropertyId === propId) {
+          // 切换为出租
+          s.investment.selfLivePropertyId = null;
+          StateManager.addMessage(
+            "🏢 已将房产改为出租，恢复日常租房模式。",
+            "info",
+          );
+        } else {
+          // 切换为自住：找对应房产定义，升格住所tier
+          s.investment.selfLivePropertyId = propId;
+          var propDef = (
+            typeof PROPERTIES !== "undefined" ? PROPERTIES : []
+          ).find(function (pd) {
+            return pd.id === propId;
+          });
+          if (typeof HOUSING_TIERS !== "undefined") {
+            var newTier = propDef
+              ? propDef.price >= 1000000
+                ? 4
+                : propDef.price >= 200000
+                  ? 3
+                  : 2
+              : 3;
+            if (newTier > (s.housing.tier || 0)) {
+              s.housing.tier = newTier;
+              s.inventory.capacity =
+                HOUSING_TIERS[newTier].capacity +
+                (s.housing.storageCapacity || 0);
+            }
+          }
+          StateManager.addMessage(
+            "🏠 已将房产设为自住，每日免租金！" +
+              (propDef ? "住所升格为" + propDef.name + "。" : ""),
+            "success",
+          );
+        }
+        renderInvestmentTab(s, parent);
       };
     });
   }, 0);

@@ -340,6 +340,33 @@ const STREET_JOBS = [
     risk: { injury: 0.05 },
   },
 
+  // ====== 医院 ======
+  {
+    id: "hospital_caregiver",
+    name: "临时陪诊护工",
+    desc: "在医院帮病人挂号、取药、陪检。需要耐心和体力，流感季需求会暴涨。",
+    icon: "🏥",
+    location: "hospital",
+    requirements: { physique: 18, mental: 22, minAge: 18, maxAge: 60 },
+    effects: {
+      fatigue: 30,
+      hygiene: -10,
+      happiness: 4,
+      mental: -2,
+      physiqueXp: 2,
+      salesXp: 2,
+    },
+    payCalc(state) {
+      return Math.floor(
+        72 +
+          state.player.mental * 0.45 +
+          state.player.physique * 0.25 +
+          Math.random() * 42,
+      );
+    },
+    risk: { illness: 0.08 },
+  },
+
   // ====== 大学城 ======
   {
     id: "school_maintenance",
@@ -370,10 +397,11 @@ const STREET_JOBS = [
   {
     id: "tutoring",
     name: "家教",
-    desc: "给中小学生辅导功课。知识就是金钱，智力越高收入越好。",
+    desc: "给中小学生辅导功课。知识就是金钱，智力越高收入越好。需要本科学历。",
     icon: "📖",
     location: "school",
     requirements: { intelligence: 30, minAge: 18, maxAge: 65 },
+    educationRequired: 1,
     effects: { fatigue: 12, intelligenceXp: 3, englishXp: 2, happiness: 10 },
     payCalc(state) {
       return Math.floor(
@@ -414,6 +442,89 @@ const STREET_JOBS = [
           state.player.mental * 0.2 +
           state.status.fame * 0.3 +
           Math.random() * 42,
+      );
+    },
+    risk: {},
+  },
+
+  // ====== 科技园 — 需要学历 ======
+  {
+    id: "data_entry",
+    name: "数据录入员",
+    desc: "在科技公司做基础数据录入整理。大专学历起步，入门白领工作。",
+    icon: "💻",
+    location: "techPark",
+    requirements: { intelligence: 18, minAge: 18, maxAge: 45 },
+    educationRequired: 0,
+    effects: { fatigue: 14, happiness: 5, intelligenceXp: 2, happiness: 8 },
+    payCalc(state) {
+      return Math.floor(
+        70 + state.player.intelligence * 0.4 + Math.random() * 30,
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "customer_service_tech",
+    name: "科技客服专员",
+    desc: "在互联网公司做线上客服，处理用户投诉和咨询。需要本科学历，薪资比普通体力活高一档。",
+    icon: "🎧",
+    location: "techPark",
+    requirements: { intelligence: 25, mental: 20, minAge: 18, maxAge: 40 },
+    educationRequired: 1,
+    effects: {
+      fatigue: 16,
+      happiness: 3,
+      mental: -2,
+      intelligenceXp: 3,
+      salesXp: 2,
+    },
+    payCalc(state) {
+      const engBonus = state.skills.english
+        ? state.skills.english.level * 0.3
+        : 0;
+      return Math.floor(
+        95 + state.player.intelligence * 0.6 + engBonus + Math.random() * 40,
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "content_writing",
+    name: "内容创作者",
+    desc: "给平台和公众号写文章、做内容。要有文字功底和英语能力，本科以上学历优先。",
+    icon: "✍️",
+    location: "techPark",
+    requirements: { intelligence: 30, english: 15, minAge: 18, maxAge: 50 },
+    educationRequired: 1,
+    effects: {
+      fatigue: 12,
+      happiness: 12,
+      intelligenceXp: 4,
+      englishXp: 3,
+      mental: 1,
+    },
+    payCalc(state) {
+      const engBonus = state.skills.english
+        ? state.skills.english.level * 0.8
+        : 0;
+      const intBonus = state.player.intelligence * 0.7;
+      return Math.floor(85 + intBonus + engBonus + Math.random() * 50);
+    },
+    risk: {},
+  },
+  {
+    id: "junior_analyst",
+    name: "初级数据分析师",
+    desc: "用Excel/表格做市场数据分析，输出报告。高学历高智力才能胜任，但薪资也是街头最高档。",
+    icon: "📊",
+    location: "techPark",
+    requirements: { intelligence: 40, minAge: 20, maxAge: 45 },
+    educationRequired: 1,
+    effects: { fatigue: 18, intelligenceXp: 5, happiness: 5 },
+    payCalc(state) {
+      return Math.floor(
+        130 + state.player.intelligence * 1.2 + Math.random() * 60,
       );
     },
     risk: {},

@@ -147,6 +147,96 @@ function getFestivalGiftBonus() {
   return 0;
 }
 
+/** 获取当前季节 */
+function getCurrentSeason(day) {
+  var doy = ((day - 1) % 365) + 1;
+  if (doy >= 60 && doy <= 151)
+    return { id: "spring", name: "春季", icon: "🌸" };
+  if (doy >= 152 && doy <= 243)
+    return { id: "summer", name: "夏季", icon: "☀️" };
+  if (doy >= 244 && doy <= 334)
+    return { id: "autumn", name: "秋季", icon: "🍂" };
+  return { id: "winter", name: "冬季", icon: "❄️" };
+}
+
+/**
+ * 节日限定临时工作（节日期间在对应地点出现）
+ * pay: 基础收入（每次行动）, apCost: 行动点消耗, intReq: 智力门槛
+ */
+var FESTIVAL_JOBS = {
+  spring_festival: [
+    {
+      id: "fest_spring_promo",
+      name: "年货节推广员",
+      icon: "🧨",
+      location: "commercialDist",
+      pay: 100,
+      apCost: 20,
+      desc: "过年人流旺，帮年货店招揽顾客，节日加价！",
+    },
+  ],
+  labor_day: [
+    {
+      id: "fest_labor_promo",
+      name: "劳动节促销员",
+      icon: "🔨",
+      location: "commercialDist",
+      pay: 80,
+      apCost: 20,
+      desc: "商场劳动节大促，协助发传单摆摊台",
+    },
+  ],
+  dragon_boat: [
+    {
+      id: "fest_zongzi_deliver",
+      name: "粽子配送员",
+      icon: "🐉",
+      location: "slum",
+      pay: 70,
+      apCost: 15,
+      desc: "端午粽子销量大增，帮忙骑车配送",
+    },
+  ],
+  mid_autumn: [
+    {
+      id: "fest_mooncake_deliver",
+      name: "月饼礼盒配送",
+      icon: "🥮",
+      location: "commercialDist",
+      pay: 90,
+      apCost: 20,
+      desc: "中秋月饼礼盒配送旺季，件数多奖金高",
+    },
+  ],
+  national_day: [
+    {
+      id: "fest_guide",
+      name: "景区导游志愿者",
+      icon: "🎉",
+      location: "park",
+      pay: 120,
+      apCost: 25,
+      intReq: 20,
+      desc: "黄金周游客多，兼职景区向导，需要一定的智力",
+    },
+  ],
+};
+
+/** 获取节日NPC专属台词（返回字符串或null） */
+function getFestivalNpcLine(npcId, state) {
+  var f = getCurrentFestival(state.player.day);
+  if (!f) return null;
+  if (typeof NPCS === "undefined") return null;
+  for (var i = 0; i < NPCS.length; i++) {
+    var npc = NPCS[i];
+    if (npc.id !== npcId) continue;
+    if (!npc.festivalLines) return null;
+    var line = npc.festivalLines[f.id];
+    return line || null;
+  }
+  return null;
+}
+
 /** 获取节日价格修正说明文本（用于交易界面提示） */
 function getFestivalPriceNote(state) {
   var f = getCurrentFestival(state.player.day);

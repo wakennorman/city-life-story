@@ -72,8 +72,50 @@ function renderHeader(state) {
   document.getElementById("header-day").textContent = p.day;
   document.getElementById("header-age").textContent = p.age;
   document.getElementById("header-phase").textContent = phaseLabel;
-  document.getElementById("header-cash").textContent =
-    "¥" + r.cash.toLocaleString();
+
+  // 构建轮播数据：现金 → 储蓄(if>0) → 欠村长(if>0) → 欠银行(if>0)
+  var carouselItems = [
+    {
+      label: "💰 现金",
+      value: "¥" + r.cash.toLocaleString(),
+      color: "var(--success)",
+    },
+  ];
+  var bankBalance = r.bankBalance || 0;
+  var villageDebt = r.villageDebt || r.debt || 0;
+  var bankDebt = r.bankDebt || 0;
+  if (bankBalance > 0) {
+    carouselItems.push({
+      label: "🏦 储蓄",
+      value: "¥" + bankBalance.toLocaleString(),
+      color: "#4fc3f7",
+    });
+  }
+  if (villageDebt > 0) {
+    carouselItems.push({
+      label: "🏘️ 欠村长",
+      value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (bankDebt > 0) {
+    carouselItems.push({
+      label: "🏦 欠银行",
+      value: "¥" + bankDebt.toLocaleString(),
+      color: "var(--warning)",
+    });
+  }
+  window._cashCarouselData = carouselItems;
+  // 若只有现金则直接显示，不需要轮播
+  if (carouselItems.length === 1) {
+    var labelEl = document.getElementById("header-cash-label");
+    var cashEl = document.getElementById("header-cash");
+    if (labelEl) labelEl.textContent = carouselItems[0].label;
+    if (cashEl) {
+      cashEl.textContent = carouselItems[0].value;
+      cashEl.style.color = carouselItems[0].color;
+    }
+  }
 
   // 季节显示
   var seasonEl = document.getElementById("header-season-label");
@@ -99,6 +141,31 @@ function renderHeader(state) {
   }
 }
 
+/** 顶部现金/储蓄/债务轮播（页面初始化时调用一次） */
+function initCashCarousel() {
+  if (window._cashCarouselTimer) return; // 防止重复初始化
+  window._cashCarouselData = window._cashCarouselData || [];
+  window._cashCarouselIdx = 0;
+  window._cashCarouselTimer = setInterval(function () {
+    var data = window._cashCarouselData || [];
+    if (data.length <= 1) return; // 只有现金时不轮播
+    window._cashCarouselIdx = (window._cashCarouselIdx + 1) % data.length;
+    var item = data[window._cashCarouselIdx];
+    var labelEl = document.getElementById("header-cash-label");
+    var cashEl = document.getElementById("header-cash");
+    if (labelEl) labelEl.textContent = item.label;
+    if (cashEl) {
+      cashEl.style.opacity = "0";
+      cashEl.style.transition = "opacity 0.3s";
+      setTimeout(function () {
+        cashEl.textContent = item.value;
+        cashEl.style.color = item.color;
+        cashEl.style.opacity = "1";
+      }, 150);
+    }
+  }, 4000);
+}
+
 // ====== Sidebar 渲染 ======
 function renderSidebar(state) {
   const p = state.player;
@@ -112,7 +179,87 @@ function renderSidebar(state) {
   renderNeedsBars(state);
   renderDebtInfo(state);
   renderDreamSection(state);
+  renderEduSection(state);
+  renderReputationBadge(state);
   renderLocation(state);
+}
+
+/** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
+function renderReputationBadge(state) {
+  if (typeof getHistoryModifiers !== "function") return;
+  var mods = getHistoryModifiers(state);
+  if (!mods.reputationLabel) {
+    var el = document.getElementById("reputation-badge");
+    if (el) el.style.display = "none";
+    return;
+  }
+  var el = document.getElementById("reputation-badge");
+  if (!el) {
+    // 动态创建并附加到 edu-section 之后
+    el = document.createElement("div");
+    el.id = "reputation-badge";
+    el.style.cssText =
+      "margin-top:6px;padding:6px 10px;background:rgba(74,158,92,0.10);border:1px solid rgba(74,158,92,0.30);border-radius:8px;";
+    var eduEl = document.getElementById("edu-section");
+    if (eduEl && eduEl.parentNode) {
+      eduEl.parentNode.insertBefore(el, eduEl.nextSibling);
+    } else {
+      return;
+    }
+  }
+  el.style.display = "block";
+  var earning =
+    mods.earningsBonus > 1.0
+      ? "收入+" + Math.round((mods.earningsBonus - 1) * 100) + "%"
+      : "";
+  var luck = mods.luckBonus > 0 ? " 幸运+" + mods.luckBonus : "";
+  el.innerHTML =
+    "<h3>🏅 声誉</h3>" +
+    '<div style="font-size:12px;font-weight:600;color:var(--accent);">' +
+    mods.reputationLabel +
+    "</div>" +
+    (earning || luck
+      ? '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' +
+        earning +
+        luck +
+        "</div>"
+      : "");
+}
+
+function renderEduSection(state) {
+  var el = document.getElementById("edu-section");
+  if (!el) return;
+  var p = state.player;
+  var edu = p.education ?? state.education ?? 0;
+  var ep = p.eduProgress ||
+    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  var eduNames = ["大专", "本科", "研究生"];
+  var eduIcons = ["🎓", "📜", "🏛️"];
+  el.style.display = "block";
+  var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
+  var progressHtml = "";
+  if (edu === 0) {
+    var pct = Math.round((ep.examsPassed / (ep.totalExams || 6)) * 100);
+    progressHtml =
+      '<div style="background:var(--bg-input);border-radius:3px;height:5px;overflow:hidden;margin:4px 0;">' +
+      '<div style="width:' +
+      pct +
+      '%;height:100%;background:var(--accent);border-radius:3px;"></div></div>' +
+      '<div style="font-size:10px;color:var(--text-muted);">' +
+      "备考进度：" +
+      ep.examsPassed +
+      "/" +
+      (ep.totalExams || 6) +
+      "门（学习点" +
+      ep.studyPoints +
+      "/150）</div>";
+  }
+  el.innerHTML =
+    "<h3>🎓 学历</h3>" +
+    '<div style="font-size:12px;font-weight:600;">' +
+    label +
+    "</div>" +
+    progressHtml;
 }
 
 /** 梦想追踪侧边栏区块 */
@@ -293,6 +440,19 @@ function renderLocation(state) {
         `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
         `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
         `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
+    }
+    if (typeof getLocationNewsBadges === "function") {
+      const pulseBadges = getLocationNewsBadges(locKey, state);
+      pulseBadges.forEach(function (b) {
+        const color = b.positive ? "var(--success)" : "var(--warning)";
+        const bg = b.positive
+          ? "rgba(46,204,113,0.10)"
+          : "rgba(243,156,18,0.10)";
+        badgeHtml +=
+          `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
+          `background:${bg};color:${color};border:1px solid ${color};" ` +
+          `title="${_esc(b.tip || "")}">📰 ${_esc(b.label)}</span>`;
+      });
     }
     servicesEl.innerHTML = badgeHtml;
   }
@@ -654,6 +814,49 @@ function renderGrowthTab(state, parent) {
     "</div>";
   wrapper.appendChild(briefSection);
 
+  // ---- 4. NPC 人际关系面板 ----
+  if (typeof NPCS !== "undefined" && state.relationships) {
+    var npcSection = document.createElement("div");
+    npcSection.style.cssText =
+      "background:var(--bg-card);border-radius:8px;padding:14px;margin-top:12px;border:1px solid var(--border);";
+    var npcHtml =
+      '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🤝 人际关系</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">';
+    NPCS.forEach(function (npc) {
+      var rel = state.relationships[npc.id];
+      if (!rel || !rel.met) return;
+      var aff = rel.affinity || 0;
+      var affLabel =
+        typeof getAffinityLabel === "function" ? getAffinityLabel(aff) : "";
+      var deepDone = !!(state.flags && state.flags["_npcDeepTask_" + npc.id]);
+      var favorDone = !!(state.flags && state.flags["_npcFavor_" + npc.id]);
+      var bar = Math.min(100, Math.max(0, aff));
+      var barColor = aff >= 70 ? "#4caf50" : aff >= 40 ? "#ff9800" : "#2196f3";
+      npcHtml +=
+        '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">' +
+        _esc(npc.name) +
+        " " +
+        affLabel +
+        "</div>" +
+        '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
+        '<div style="width:' +
+        bar +
+        "%;height:100%;background:" +
+        barColor +
+        ';transition:width 0.3s;"></div>' +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        (favorDone ? "✅ 委托完成 " : "⬜ 委托未完 ") +
+        (deepDone ? "💌 深度对话" : aff >= 70 ? "💌 可对话" : "") +
+        "</div>" +
+        "</div>";
+    });
+    npcHtml += "</div>";
+    npcSection.innerHTML = npcHtml;
+    wrapper.appendChild(npcSection);
+  }
+
   parent.appendChild(wrapper);
 
   // ---- 绘制图表（DOM插入后） ----
@@ -903,58 +1106,56 @@ function renderActiveNews(state, parent) {
       parent.appendChild(banner);
     }
   }
+
+  var intelList = (state.flags && state.flags._activeIntel) || [];
+  var today = state.player ? state.player.day : 1;
+  for (var ii = 0; ii < intelList.length; ii++) {
+    var intel = intelList[ii];
+    if (intel.expireDay < today) continue;
+    var daysLeft = Math.max(0, intel.triggerDay - today);
+    var intelBanner = document.createElement("div");
+    intelBanner.className = "news-banner";
+    intelBanner.style.background = "rgba(255, 193, 7, 0.12)";
+    intelBanner.style.borderColor = "rgba(255, 193, 7, 0.35)";
+    intelBanner.textContent =
+      "🗞️ " +
+      intel.sourceName +
+      "的风声：" +
+      intel.text +
+      "（约" +
+      daysLeft +
+      "天后，可信度" +
+      intel.confidence +
+      "%）";
+    parent.appendChild(intelBanner);
+  }
 }
 
 // ====== Actions Tab ======
-/** 根据当前状态生成1-2条行动建议 */
+function _esc(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** 根据当前状态生成若干条行动建议（数量由心智决定） */
 function getDailyActionTips(state) {
-  var tips = [];
+  var urgent = []; // 紧急（最前）
+  var tips = []; // 普通建议
   var p = state.player;
-  var needs = state.needs;
+  var needs = state.needs || {};
   var loc = state.trade && state.trade.currentLocation;
   var day = p.day;
   var dayOfWeek = day % 7;
+  var mental = p.mental || 0;
+  var cash = (state.resources && state.resources.cash) || 0;
+  var bankBalance = (state.resources && state.resources.bankBalance) || 0;
 
-  // 需求警示类
-  if (needs.hunger <= 25) tips.push("🍚 饥饱很低了，记得先吃顿饭再干活！");
-  else if (needs.fatigue >= 80)
-    tips.push("😴 太疲惫了，今天多休息，明天效率会更高。");
-  if (needs.hygiene <= 20)
-    tips.push("🚿 卫生告急，找个地方洗洗澡，保持形象也保持健康。");
+  // ===== 紧急警示（无心智门槛，任何时候都显示）=====
 
-  // 财务类
-  if (state.resources.cash < 50 && day > 5) {
-    tips.push("💸 现金快用完了，今天务必打工赚钱！");
-  } else if (state.resources.cash > 500 && state.resources.bankBalance === 0) {
-    tips.push("🏦 现金较多，去银行存一些，每天都能收利息！");
-  }
-
-  // 天气类
-  if (state.weather) {
-    var w = state.weather.type;
-    if (w === "rainy" || w === "storm") {
-      tips.push("🌧️ 今天下雨，室内工作（工厂/理发/摆摊室内）比户外更舒适。");
-    } else if (w === "sunny" && typeof getVendingFootfallMod === "function") {
-      var mod = getVendingFootfallMod(state);
-      if (mod > 1.2) tips.push("☀️ 天气晴好，客流量高，今天摆摊收益不错！");
-    }
-  }
-
-  // 周期类
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    var weekKey = "_weekendMarket_" + Math.floor(day / 7);
-    if (!state.flags[weekKey]) {
-      tips.push("🛍️ 今天是周末！公园/商业区有集市，去摆摊可以多赚一笔。");
-    }
-  }
-  if (dayOfWeek === 1) {
-    var mondayKey = "_mondayInfo_" + Math.floor(day / 7);
-    if (!state.flags[mondayKey]) {
-      tips.push("📋 周一信息日！去工地/工业区打听零工机会，有时会有意外收获。");
-    }
-  }
-
-  // NPC生日提醒
+  // NPC生日置顶
   if (typeof NPCS !== "undefined") {
     var dayOfYear = ((day - 1) % 365) + 1;
     for (var i = 0; i < NPCS.length; i++) {
@@ -962,30 +1163,431 @@ function getDailyActionTips(state) {
       if (npc.birthday === dayOfYear) {
         var rel = state.relationships && state.relationships[npc.id];
         if (rel && rel.met) {
-          tips.unshift(
-            "🎂 今天是" + npc.name + "的生日！送礼好感×2，快去找ta！",
+          urgent.push(
+            "🎂 今天是" + _esc(npc.name) + "的生日！送礼好感×2，快去找ta！",
           );
           break;
         }
       }
     }
   }
+  // 里程碑
+  if (day === 29)
+    urgent.push("🌟 明天就是第30天！准备迎接一个重要的人生节点。");
+  if (day === 59) urgent.push("🌟 明天就是第60天里程碑，回顾一下自己的成长。");
+  if (day === 89) urgent.push("🌟 明天就是第90天！这是城市生涯的重要转折点。");
 
-  // 技能/工作机会类
-  if (loc === "school" && p.intelligence >= 25) {
-    tips.push("📚 在大学城，可以去接外包单（需编程技能），收入不错。");
+  // 需求警示（基础层，无门槛）
+  if (needs.hunger <= 15)
+    urgent.push("🍚 饥饱极低！再不吃东西会晕倒，先找食物！");
+  else if (needs.hunger <= 30) tips.push("🍚 饥饱不足，记得先吃顿饭再干活。");
+  if (needs.fatigue >= 90)
+    urgent.push("😴 体力耗尽！今天必须休息，否则健康会受损。");
+  else if (needs.fatigue >= 75)
+    tips.push("😴 太疲惫了，今天多休息，明天效率更高。");
+  if (needs.hygiene <= 10)
+    urgent.push("🚿 卫生告急！形象太差会影响工作收入，快去洗澡。");
+  else if (needs.hygiene <= 25)
+    tips.push("🚿 卫生偏低，找个地方洗洗澡保持状态。");
+
+  // 健康警示
+  var health = (state.status && state.status.health) || 100;
+  if (health <= 30) urgent.push("🏥 健康危险！立刻去诊所看病，否则可能倒下！");
+  else if (health <= 50)
+    tips.push("🏥 健康偏低，今天注意休息，考虑去诊所检查。");
+  if (state.status && state.status.sick)
+    tips.push("🤒 你生病了，户外工作效率下降，药和休息是最好的选择。");
+
+  // 财务警示
+  var villageDebt =
+    (state.resources &&
+      (state.resources.villageDebt || state.resources.debt)) ||
+    0;
+  var bankDebt = (state.resources && state.resources.bankDebt) || 0;
+  if (cash < 30 && day > 3)
+    urgent.push("💸 现金见底！今天必须打工，否则连饭都吃不上。");
+  else if (cash < 100 && day > 5)
+    tips.push("💸 现金快用完了，今天务必赚点钱补充。");
+  if (villageDebt > 0 && day % 10 === 0)
+    tips.push("🏘️ 村长贷款日息0.35%，欠款越久越多，有钱就去还一点。");
+
+  // ===== 基础层建议（mental≥0，所有人可见）=====
+
+  // 天气
+  if (state.weather) {
+    var wid = state.weather.weatherId || state.weather.type;
+    if (wid === "rainy" || wid === "storm" || wid === "thunderstorm") {
+      tips.push("🌧️ 今天下雨，室内工作（工厂/理发/摆摊室内）比户外更合适。");
+    } else if (wid === "sunny" || wid === "clear") {
+      if (typeof getVendingFootfallMod === "function") {
+        var mod = getVendingFootfallMod(loc, state);
+        if (mod > 1.2) tips.push("☀️ 天气晴好，客流量高，今天摆摊收益不错！");
+      }
+    } else if (wid === "heatwave" || wid === "hot") {
+      tips.push("🥵 高温天气，多备点水，户外劳动注意防暑。");
+    } else if (wid === "coldwave" || wid === "blizzard") {
+      tips.push("🧊 寒潮来袭，厚衣物和泡面很畅销，可以考虑囤货出售。");
+    }
+  }
+
+  // 周期
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    tips.push("🛍️ 今天是周末！公园/商业区客流翻倍，去摆摊能多赚一笔。");
+  }
+  if (dayOfWeek === 1) {
+    tips.push("📋 周一新起点！去工地/工业区打听零工机会，有时会有意外收获。");
+  }
+
+  if (typeof getCityPulseTips === "function") {
+    var pulseTips = getCityPulseTips(state, mental >= 60 ? 4 : 2);
+    for (var pti = 0; pti < pulseTips.length; pti++) {
+      tips.push(pulseTips[pti]);
+    }
+  }
+
+  if (typeof getActiveIntelTips === "function") {
+    var intelTips = getActiveIntelTips(state, mental >= 70 ? 3 : 1);
+    for (var iti = 0; iti < intelTips.length; iti++) {
+      tips.push(intelTips[iti]);
+    }
+  }
+
+  // 季节/节日提示（P1.8）
+  if (typeof getCurrentFestival === "function") {
+    var festNow = getCurrentFestival(day);
+    if (festNow) {
+      var doyFest = ((day - 1) % 365) + 1;
+      var daysLeftFest = festNow.startDay + festNow.duration - doyFest;
+      // 节日限定工作提示
+      if (typeof FESTIVAL_JOBS !== "undefined" && FESTIVAL_JOBS[festNow.id]) {
+        var fjNames = FESTIVAL_JOBS[festNow.id]
+          .map(function (fj) {
+            return fj.name;
+          })
+          .join("、");
+        tips.push(
+          festNow.icon +
+            " " +
+            festNow.name +
+            "限定工作开放（还剩" +
+            daysLeftFest +
+            "天）：" +
+            fjNames +
+            "，收入比平时高！",
+        );
+      } else {
+        tips.push(
+          festNow.icon +
+            " " +
+            festNow.name +
+            "期间（还剩" +
+            daysLeftFest +
+            "天），心情加成中，去看看有没有特别的机会。",
+        );
+      }
+    } else {
+      // 节日倒计时：提前3天预警
+      var doyNow = ((day - 1) % 365) + 1;
+      if (typeof FESTIVALS !== "undefined") {
+        for (var fi = 0; fi < FESTIVALS.length; fi++) {
+          var upcoming = FESTIVALS[fi];
+          var daysUntil = upcoming.startDay - doyNow;
+          if (daysUntil > 0 && daysUntil <= 3) {
+            tips.push(
+              upcoming.icon +
+                " 距离" +
+                upcoming.name +
+                "还有" +
+                daysUntil +
+                "天！提前准备相关商品或攒AP。",
+            );
+            break;
+          }
+        }
+      }
+    }
+    // 季节建议
+    if (typeof getCurrentSeason === "function") {
+      var season = getCurrentSeason(day);
+      if (season.id === "summer") {
+        tips.push("☀️ 夏季高温，饮料/防暑物资好卖，户外劳动记得防暑。");
+      } else if (season.id === "winter") {
+        tips.push("❄️ 冬季寒冷，保暖衣物/热食需求旺盛，可以考虑相关进货。");
+      } else if (season.id === "spring") {
+        tips.push("🌸 春季万物复苏，体力恢复略快，是积累技能的好时机。");
+      } else if (season.id === "autumn") {
+        tips.push("🍂 秋收时节，市场上农产品充裕，进货成本更低。");
+      }
+    }
+  }
+
+  // 属性警示/解锁
+  var physique = p.physique || 0;
+  var intelligence = p.intelligence || 0;
+  var agility = p.agility || 0;
+  if (physique < 15)
+    tips.push(
+      "💪 体质过低（" +
+        physique +
+        "），负重上限不足15kg，今天先养生休息补体力。",
+    );
+  if (physique >= 50 && !(state.flags && state.flags._tipPhysique50))
+    tips.push("💪 体质达到50！可以挑战重体力工作，收入更高。");
+  if (intelligence >= 40 && !(state.flags && state.flags._tipInt40))
+    tips.push("📚 智力达到40！编程技能现在可以更高效地学习。");
+  if (agility >= 40 && loc === "market")
+    tips.push("⚡ 敏捷够高，在批发市场讨价还价更有优势！");
+
+  // 技能快升级提示
+  if (state.skills) {
+    var skillLabels = {
+      sales: "销售",
+      cooking: "烹饪",
+      repair: "修理",
+      fitness: "体能",
+      coding: "编程",
+    };
+    for (var sk in state.skills) {
+      var s2 = state.skills[sk];
+      if (s2 && s2.xp !== undefined && s2.maxXp !== undefined) {
+        var pct = s2.maxXp > 0 ? s2.xp / s2.maxXp : 0;
+        if (pct >= 0.85 && pct < 1) {
+          var label = skillLabels[sk] || sk;
+          tips.push(
+            "⬆️ " +
+              label +
+              "技能快升级了（" +
+              Math.round(pct * 100) +
+              "%），再努力一下！",
+          );
+          break; // 每次最多提一个技能
+        }
+      }
+    }
+  }
+
+  // 工地特殊机会
+  if (loc === "school" && intelligence >= 25) {
+    tips.push("📚 在大学城，可以接编程外包单，收入不错。");
   }
   if (loc === "construction" && state.flags && state.flags.bossLiReferred) {
     tips.push("🏗️ 李工头已推荐你，可以申请正规工程队，工资大幅提升！");
   }
 
-  // 里程碑提醒
-  if (day === 29)
-    tips.unshift("🌟 明天就是第30天！准备迎接一个重要的人生节点。");
-  if (day === 59) tips.unshift("🌟 明天就是第60天里程碑，回顾一下自己的成长。");
-  if (day === 89) tips.unshift("🌟 明天就是第90天！这是城市生涯的重要转折点。");
+  // 学历备考提示
+  var eduProgress = p.eduProgress || state.eduProgress;
+  var currentEducation = p.education ?? state.education ?? 0;
+  if (eduProgress && currentEducation === 0 && eduProgress.examsPassed < 6) {
+    var pctEdu = Math.round((eduProgress.examsPassed / 6) * 100);
+    if (eduProgress.studyPoints > 0 || eduProgress.examsPassed > 0) {
+      tips.push(
+        "🎓 自考本科备考进度：" +
+          pctEdu +
+          "%（" +
+          eduProgress.examsPassed +
+          "/6门已通过），去大学城继续备考！",
+      );
+    } else if (day > 20) {
+      tips.push("🎓 提升学历能解锁更好的工作！去大学城可以参加自考本科备考。");
+    }
+  }
 
-  return tips;
+  // ===== 中级建议（mental≥30）=====
+  if (mental >= 30) {
+    // 银行存款建议（提高到1万门槛）
+    if (cash > 10000 && bankBalance === 0) {
+      tips.push("🏦 现金超过1万，去银行存一些，每天收利息，钱生钱更稳健！");
+    } else if (cash > 50000) {
+      tips.push(
+        "🏦 现金充裕，除了银行存款，也可以考虑低风险的贵金属投资分散风险。",
+      );
+    }
+
+    // 市场事件+位置联动
+    if (
+      state.trade &&
+      state.trade.marketEvents &&
+      state.trade.marketEvents.length > 0
+    ) {
+      var ev = state.trade.marketEvents[0];
+      if (ev.remaining > 0) {
+        if (loc === ev.locKey || !ev.locKey) {
+          tips.push(
+            "📊 市场活动：" +
+              ev.name +
+              " 还剩" +
+              ev.remaining +
+              "天，" +
+              (ev.priceMod > 1
+                ? "价格偏高，适合出货！"
+                : "价格偏低，适合进货！"),
+          );
+        }
+      }
+    }
+
+    // 库存提示：背包快满
+    if (typeof calcEncumbrance === "function") {
+      var enc = calcEncumbrance(state);
+      if (enc.ratio > 0.85) {
+        tips.push(
+          "🎒 背包快满了（" +
+            Math.round(enc.ratio * 100) +
+            "%），今天优先出货减轻负重。",
+        );
+      }
+    }
+  }
+
+  // ===== 进阶建议（mental≥60，投资/新闻联动）=====
+  if (mental >= 60) {
+    // 新闻联动投资建议
+    var activeNews = state.activeNews || [];
+    for (var ni = 0; ni < activeNews.length; ni++) {
+      var hl = activeNews[ni].headline || "";
+      if (/房地产|楼市|房价/.test(hl)) {
+        tips.push(
+          "🏠 新闻：" +
+            _esc(
+              hl
+                .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+                .trim()
+                .slice(0, 20),
+            ) +
+            "…→房产投资有压力，工地收入也可能受影响，谨慎操作。",
+        );
+        break;
+      } else if (/科技|电子|数码/.test(hl)) {
+        tips.push(
+          "💻 新闻：" +
+            _esc(
+              hl
+                .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+                .trim()
+                .slice(0, 20),
+            ) +
+            "…→科技板块利好，电子股和科技园工作值得关注。",
+        );
+        break;
+      } else if (/通胀|物价|涨价/.test(hl)) {
+        tips.push(
+          "📈 物价上涨信号——现金贬值，考虑将闲钱存银行或买入贵金属保值。",
+        );
+        break;
+      } else if (/比特币|加密|虚拟币/.test(hl)) {
+        tips.push("₿ 加密市场有消息，近期波动可能加大，持仓注意风险。");
+        break;
+      } else if (/股市|大盘|暴跌/.test(hl)) {
+        tips.push("📉 股市下行消息——持股注意止损，现金为王比贸然抄底更稳。");
+        break;
+      } else if (/废品|金属|回收/.test(hl)) {
+        tips.push("♻️ 废金属/废品价格有动向，今天拾荒或出售废品收益可能更高。");
+        break;
+      } else if (/城管|执法/.test(hl)) {
+        tips.push("🚨 城管严查消息！今天摆摊风险高，选好地点或改做室内工作。");
+        break;
+      }
+    }
+
+    // 投资持仓收益提示
+    var inv = state.investment;
+    if (inv && inv.stockHoldings && inv.stockHoldings.length > 0) {
+      var bestStock = null,
+        bestPct = 0;
+      for (var hi = 0; hi < inv.stockHoldings.length; hi++) {
+        var h2 = inv.stockHoldings[hi];
+        var mkt = inv.stockMarket && inv.stockMarket[h2.symbol];
+        if (mkt && h2.avgPrice > 0) {
+          var gainPct = (mkt.price - h2.avgPrice) / h2.avgPrice;
+          if (gainPct > bestPct) {
+            bestPct = gainPct;
+            bestStock = h2.symbol;
+          }
+        }
+      }
+      if (bestStock && bestPct > 0.15) {
+        tips.push(
+          "📊 持仓" +
+            bestStock +
+            "已涨" +
+            Math.round(bestPct * 100) +
+            "%，可以考虑分批止盈。",
+        );
+      }
+    }
+  }
+
+  // ===== 精准建议（mental≥80）=====
+  if (mental >= 80) {
+    // 精确的差价机会提示
+    if (typeof calcFinalPrice === "function" && state.trade) {
+      var locs2 = [
+        "slum",
+        "market",
+        "construction",
+        "school",
+        "mall",
+        "tech_park",
+      ];
+      var curLoc = loc;
+      var GOODS2 = typeof GOODS !== "undefined" ? GOODS : [];
+      var bestProfit = 0,
+        bestGoodName = "";
+      for (var gi = 0; gi < GOODS2.length && gi < 6; gi++) {
+        var g = GOODS2[gi];
+        var minP = 9999,
+          maxP = 0;
+        for (var li2 = 0; li2 < locs2.length; li2++) {
+          var pp = calcFinalPrice(state, locs2[li2], g.id);
+          if (pp < minP) minP = pp;
+          if (pp > maxP) maxP = pp;
+        }
+        var profit = maxP - minP;
+        if (profit > bestProfit) {
+          bestProfit = profit;
+          bestGoodName = g.name;
+        }
+      }
+      if (bestProfit > 20) {
+        tips.push(
+          "💡 今日最佳差价：" +
+            bestGoodName +
+            " 地区差价约¥" +
+            Math.round(bestProfit) +
+            "，低价地进货再去高价地出售。",
+        );
+      }
+    }
+
+    // 资产配置建议
+    var totalAssets = cash + bankBalance;
+    var inv2 = state.investment;
+    if (inv2) {
+      var stockVal = 0;
+      for (var hi2 = 0; hi2 < (inv2.stockHoldings || []).length; hi2++) {
+        var h3 = inv2.stockHoldings[hi2];
+        var m3 = inv2.stockMarket && inv2.stockMarket[h3.symbol];
+        if (m3) stockVal += m3.price * h3.shares;
+      }
+      var propVal = 0;
+      for (var pi2 = 0; pi2 < (inv2.properties || []).length; pi2++) {
+        propVal +=
+          inv2.properties[pi2].currentPrice ||
+          inv2.properties[pi2].buyPrice ||
+          0;
+      }
+      totalAssets += stockVal + propVal;
+      if (stockVal > totalAssets * 0.6) {
+        tips.push(
+          "⚖️ 股票仓位占资产" +
+            Math.round((stockVal / totalAssets) * 100) +
+            "%，集中度偏高，适当分散到现金或房产。",
+        );
+      }
+    }
+  }
+
+  return urgent.concat(tips);
 }
 
 function renderActionsTab(state, parent) {
@@ -1004,25 +1606,42 @@ function renderActionsTab(state, parent) {
     }
   }
 
-  // === 今日智能建议（1-2条情境化提示，帮助玩家决策）===
+  // === 今日智能建议（心智驱动，不限数量，滚动展示）===
   {
     var tips = getDailyActionTips(state);
     if (tips.length > 0) {
       var tipBox = document.createElement("div");
       tipBox.style.cssText =
         "margin-bottom:14px;padding:10px 12px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.25);border-radius:8px;";
-      tipBox.innerHTML =
-        '<div style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:5px;letter-spacing:0.5px;">💡 今日建议</div>' +
-        tips
-          .slice(0, 2)
-          .map(function (t) {
-            return (
-              '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:3px;">' +
-              t +
-              "</div>"
-            );
-          })
-          .join("");
+      var mental = (state.player && state.player.mental) || 0;
+      var mentalTag =
+        mental >= 80
+          ? "🧠 专家洞察"
+          : mental >= 60
+            ? "💡 进阶建议"
+            : "💡 今日建议";
+      // 标题行（静态文字，safe to innerHTML）
+      var titleDiv = document.createElement("div");
+      titleDiv.style.cssText =
+        "font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
+      titleDiv.innerHTML =
+        mentalTag +
+        ' <span style="font-size:9px;color:var(--text-muted);font-weight:400;">（心智' +
+        mental +
+        "）</span>";
+      tipBox.appendChild(titleDiv);
+      // 建议列表（用 textContent 避免 XSS）
+      var listDiv = document.createElement("div");
+      listDiv.style.cssText =
+        "max-height:110px;overflow-y:auto;padding-right:2px;";
+      tips.forEach(function (t) {
+        var item = document.createElement("div");
+        item.style.cssText =
+          "font-size:12px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
+        item.textContent = t;
+        listDiv.appendChild(item);
+      });
+      tipBox.appendChild(listDiv);
       parent.appendChild(tipBox);
     }
   }
@@ -1167,6 +1786,7 @@ function createActionCard(action, state) {
       ${action.costEstimate ? `<span class="cost-estimate">💸 ¥${action.costEstimate}</span>` : ""}
       ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ""}
     </div>
+    ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px;">${action.payTags.join(" ")}</div>` : ""}
   `;
 
   if (!action.disabled) {
@@ -1745,8 +2365,17 @@ function renderInventoryTab(state, parent) {
   const equip = state.inventory.equipment;
   const equipDiv = document.createElement("div");
   equipDiv.style.marginTop = "16px";
-  equipDiv.innerHTML =
-    '<h3 style="color:var(--text-muted);margin-bottom:8px;">🛡️ 装备</h3>';
+  var equipTitle = document.createElement("h3");
+  equipTitle.style.cssText = "color:var(--text-muted);margin-bottom:4px;";
+  equipTitle.textContent = "🛡️ 装备";
+  equipDiv.appendChild(equipTitle);
+  // 购买地点引导提示
+  var equipHint = document.createElement("div");
+  equipHint.style.cssText =
+    "font-size:10px;color:var(--text-muted);margin-bottom:8px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:4px;";
+  equipHint.textContent =
+    "购买地点：劳保/工具→批发市场 | 服装→商业区 | 电子→商业区/科技园 | 书本→大学城";
+  equipDiv.appendChild(equipHint);
   const slots = [
     { key: "head", name: "头部", icon: "⛑️" },
     { key: "body", name: "身体", icon: "👕" },
@@ -2022,6 +2651,78 @@ function renderSkillsTab(state, parent) {
     grid.appendChild(card);
   }
   div.appendChild(grid);
+
+  // 技能协同面板（P3.3）
+  if (
+    typeof getSkillSynergies === "function" &&
+    typeof SKILL_SYNERGIES !== "undefined"
+  ) {
+    var activeSyn = getSkillSynergies(state);
+    var synDiv = document.createElement("div");
+    synDiv.style.cssText =
+      "margin-top:14px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);";
+    var synTitle =
+      '<h3 style="color:var(--text-muted);margin-bottom:8px;font-size:12px;">✨ 技能协同增益</h3>';
+    if (activeSyn.length === 0) {
+      synDiv.innerHTML =
+        synTitle +
+        '<div style="font-size:11px;color:var(--text-muted);">多技能达到门槛时激活持续加成。已定义组合：</div>';
+      var allHtml = "";
+      for (var si = 0; si < SKILL_SYNERGIES.length; si++) {
+        var syn = SKILL_SYNERGIES[si];
+        var reqs = Object.entries
+          ? Object.entries(syn.skills)
+              .map(function (e) {
+                return e[0] + "≥" + e[1];
+              })
+              .join("+")
+          : "";
+        allHtml +=
+          '<div style="font-size:10px;color:var(--text-muted);padding:2px 0;">🔒 ' +
+          syn.label +
+          "（" +
+          reqs +
+          "）</div>";
+      }
+      synDiv.innerHTML += allHtml;
+    } else {
+      synDiv.innerHTML = synTitle;
+      for (var ai = 0; ai < activeSyn.length; ai++) {
+        var asyn = activeSyn[ai];
+        var badge = document.createElement("div");
+        badge.style.cssText =
+          "padding:6px 8px;margin-bottom:5px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:6px;";
+        badge.innerHTML =
+          '<div style="font-size:11px;font-weight:bold;color:var(--success);">' +
+          asyn.label +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' +
+          asyn.desc +
+          "</div>";
+        synDiv.appendChild(badge);
+      }
+      // 未激活的协同
+      var remaining = SKILL_SYNERGIES.filter(function (s) {
+        return activeSyn.every(function (a) {
+          return a.id !== s.id;
+        });
+      });
+      if (remaining.length > 0) {
+        var remDiv = document.createElement("div");
+        remDiv.style.cssText =
+          "margin-top:6px;font-size:10px;color:var(--text-muted);";
+        remDiv.textContent =
+          "🔒 未激活：" +
+          remaining
+            .map(function (r) {
+              return r.label;
+            })
+            .join(" / ");
+        synDiv.appendChild(remDiv);
+      }
+    }
+    div.appendChild(synDiv);
+  }
 
   // 证书
   if (state.certificates && state.certificates.length > 0) {

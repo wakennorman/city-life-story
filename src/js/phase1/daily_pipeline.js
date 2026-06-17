@@ -85,7 +85,9 @@ const DAILY_PIPELINE = [
     name: "rent",
     fn: function (state) {
       var house = getCurrentHousing(state);
-      if (house.rent > 0) {
+      var selfLiving =
+        state.investment && state.investment.selfLivePropertyId != null;
+      if (house.rent > 0 && !selfLiving) {
         var rentAmount = house.rent;
         // 王大婶好感60解锁租房折扣（-¥50/天）
         if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
@@ -269,6 +271,10 @@ const DAILY_PIPELINE = [
       if (state.flags._dailyTrainingCounts) {
         state.flags._dailyTrainingCounts = {};
       }
+      // 名气VIP行动每日重置
+      if (state.flags._fameVipUsedToday) {
+        state.flags._fameVipUsedToday = {};
+      }
     },
   },
 
@@ -342,6 +348,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 新闻级联后续（L2层触发）===
+  {
+    name: "news_followup",
+    fn: function (state) {
+      if (typeof checkNewsFollowUp === "function") {
+        checkNewsFollowUp(state);
+      }
+    },
+  },
+
   // === 动态教程提示 ===
   {
     name: "hint_check",
@@ -383,42 +399,84 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
   var healthDrop = startHealth - ((state.status && state.status.health) || 100);
   var happyDrop =
     startHappiness - ((state.needs && state.needs.happiness) || 0);
+  var day = state.player.day || 1;
 
   var highlights = [];
 
-  // 财务总结
-  if (delta >= 500) {
-    highlights.push("今天大丰收，净赚了¥" + delta.toLocaleString());
-  } else if (delta >= 100) {
-    highlights.push("今天赚了¥" + delta.toLocaleString() + "，小有收获");
+  // 特殊叙事片段（优先级最高）
+  if (state.flags._todayDeepTaskDone) {
+    highlights.push("有个人在你心里留下了什么");
+  } else if (state.flags._todayDebtEvent) {
+    highlights.push("村长的钱，又压了一整天");
+  } else if (state.flags._todayMentalEvent) {
+    highlights.push("心里那根弦今天绷得很紧");
+  }
+
+  // 财务总结（分更多档次，语气有温度）
+  if (delta >= 1000) {
+    highlights.push("今天是个好日子，净赚了¥" + delta.toLocaleString());
+  } else if (delta >= 300) {
+    highlights.push("今天赚了¥" + delta.toLocaleString() + "，还不错");
+  } else if (delta >= 50) {
+    highlights.push("今天净入¥" + delta.toLocaleString() + "，比昨天强点");
   } else if (delta >= 0) {
-    highlights.push("今天收支基本持平");
-  } else if (delta < -200) {
+    highlights.push("今天收支基本持平，活下来了");
+  } else if (delta < -500) {
+    highlights.push("今天支出不少，净亏了¥" + Math.abs(delta).toLocaleString());
+  } else if (delta < 0) {
     highlights.push(
-      "今天支出比收入多了¥" + Math.abs(delta).toLocaleString() + "，要节省一点",
+      "今天支出略多，口袋瘦了¥" + Math.abs(delta).toLocaleString(),
     );
-  } else {
-    highlights.push("今天支出略多于收入");
   }
 
-  // 健康/状态提示
-  if (healthDrop >= 10) {
-    highlights.push("健康下降了不少");
-  }
-  if (happyDrop >= 15) {
-    highlights.push("心情差了很多，注意调整");
-  }
+  // 里程碑叙事
+  if (day === 7) highlights.push("来这座城市整整一周了");
+  else if (day === 30) highlights.push("整整一个月，你还在");
+  else if (day === 100) highlights.push("百天了，城市没把你打倒");
+  else if (day === 365) highlights.push("一年了，从头到今天");
 
-  // 银行存款有利息
-  if (bank > 0) {
+  // 存款鼓励
+  if (bank >= 10000 && highlights.length < 2) {
+    highlights.push("银行里¥" + bank.toLocaleString() + "，是你在这城市的底气");
+  } else if (bank > 0 && highlights.length < 2) {
     highlights.push("银行里的¥" + bank.toLocaleString() + "还在生息");
   }
 
-  // 节日
-  if (typeof getCurrentFestival === "function") {
-    var fest = getCurrentFestival(state.player.day);
-    if (fest) highlights.push(fest.icon + " " + fest.name + "气氛浓厚");
+  // 健康/心情状态
+  if (healthDrop >= 15) {
+    highlights.push("身体吃不消了，明天注意");
+  } else if (happyDrop >= 20) {
+    highlights.push("今天过得不太开心，明天找找乐子");
   }
+
+  // 村长债务提示（隐形压力）
+  if ((state.resources.villageDebt || 0) > 0 && highlights.length < 2) {
+    highlights.push(
+      "村长那¥" +
+        (state.resources.villageDebt || 0).toLocaleString() +
+        "的债还压着呢",
+    );
+  }
+
+  // 节日氛围
+  if (typeof getCurrentFestival === "function") {
+    var fest = getCurrentFestival(day);
+    if (fest && highlights.length < 2)
+      highlights.push(fest.icon + " " + fest.name + "的气氛越来越浓了");
+  }
+
+  // 梦想进度
+  if (typeof getDreamProgress === "function" && highlights.length < 2) {
+    var dp = getDreamProgress(state);
+    if (dp > 0 && dp < 100) highlights.push("梦想进度" + dp + "%，一直往前");
+  }
+
+  // 清除今日临时标记
+  delete state.flags._todayDeepTaskDone;
+  delete state.flags._todayDebtEvent;
+  delete state.flags._todayMentalEvent;
+
+  if (!highlights.length) highlights.push("平凡的一天，活着就是赢了");
 
   var summary = highlights.slice(0, 2).join("，") + "。";
   return "📋 今日总结：" + summary;

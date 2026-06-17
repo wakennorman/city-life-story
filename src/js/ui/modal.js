@@ -550,3 +550,175 @@ function showInterviewModal() {
     });
   }, 50);
 }
+
+// ====== 装备商店 ======
+/** 购买装备：扣钱，添加到 inventory.equipment 或 items */
+function buyItemFromShop(itemId) {
+  var state = StateManager.getState();
+  var item = typeof getItemById === "function" ? getItemById(itemId) : null;
+  if (!item) return;
+  if (state.resources.cash < item.price) {
+    StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
+    return;
+  }
+  state.resources.cash -= item.price;
+  // 装备类（有slot）：放入 equipment 槽位
+  if (item.slot) {
+    if (!state.inventory.equipment) state.inventory.equipment = {};
+    var cur = state.inventory.equipment[item.slot];
+    if (cur) {
+      StateManager.addMessage(
+        "👕 替换了旧的" +
+          (typeof getItemById === "function" && getItemById(cur)
+            ? getItemById(cur).name
+            : cur) +
+          "，装备了" +
+          item.name,
+        "info",
+      );
+    } else {
+      StateManager.addMessage("✅ 购买并装备了：" + item.name, "success");
+    }
+    state.inventory.equipment[item.slot] = itemId;
+  } else {
+    // 无slot的道具（教材/自行车等）：放入 items 背包
+    if (!state.inventory.items) state.inventory.items = [];
+    var existing = state.inventory.items.find(function (i) {
+      return i.id === itemId;
+    });
+    if (existing) {
+      existing.qty = (existing.qty || 1) + 1;
+    } else {
+      state.inventory.items.push({ id: itemId, qty: 1 });
+    }
+    StateManager.addMessage("✅ 购买了：" + item.name, "success");
+  }
+  StateManager.markDirty("all");
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 显示装备商店弹窗 */
+function showItemShopModal(locationId) {
+  var state = StateManager.getState();
+  var available = (typeof ITEMS !== "undefined" ? ITEMS : []).filter(
+    function (item) {
+      return item.buyLocations && item.buyLocations.indexOf(locationId) !== -1;
+    },
+  );
+
+  var overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  var box = document.createElement("div");
+  box.className = "modal-box";
+  box.style.maxWidth = "520px";
+
+  var title = document.createElement("h2");
+  title.textContent = "🛍️ 装备商店";
+  box.appendChild(title);
+
+  var hint = document.createElement("div");
+  hint.style.cssText =
+    "font-size:11px;color:var(--text-muted);margin-bottom:12px;";
+  hint.textContent =
+    "现金：¥" +
+    state.resources.cash.toLocaleString() +
+    " | 点击购买即可装备或放入背包";
+  box.appendChild(hint);
+
+  var grid = document.createElement("div");
+  grid.style.cssText =
+    "display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:55vh;overflow-y:auto;";
+
+  if (available.length === 0) {
+    var empty = document.createElement("div");
+    empty.style.cssText =
+      "color:var(--text-muted);font-size:13px;padding:20px;text-align:center;";
+    empty.textContent = "该地点暂无装备出售";
+    grid.appendChild(empty);
+  } else {
+    available.forEach(function (item) {
+      var canAfford = state.resources.cash >= item.price;
+      // 检查是否已装备
+      var equipped =
+        state.inventory.equipment &&
+        state.inventory.equipment[item.slot] === item.id;
+      var card = document.createElement("div");
+      card.className = "action-card";
+      card.style.cssText =
+        "border-left:3px solid " +
+        (equipped
+          ? "var(--success)"
+          : canAfford
+            ? "var(--accent)"
+            : "var(--border)") +
+        ";opacity:" +
+        (canAfford ? "1" : "0.6") +
+        ";";
+
+      var topRow = document.createElement("div");
+      topRow.style.cssText =
+        "display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;";
+      var nameSpan = document.createElement("strong");
+      nameSpan.textContent = (item.icon || "") + " " + item.name;
+      var priceSpan = document.createElement("span");
+      priceSpan.style.cssText = "color:var(--warning);font-size:12px;";
+      priceSpan.textContent = "¥" + item.price;
+      topRow.appendChild(nameSpan);
+      topRow.appendChild(priceSpan);
+
+      var descEl = document.createElement("div");
+      descEl.style.cssText =
+        "font-size:11px;color:var(--text-muted);margin-bottom:6px;";
+      descEl.textContent = item.desc || "";
+
+      var slotEl = document.createElement("div");
+      slotEl.style.cssText =
+        "font-size:10px;color:var(--text-secondary);margin-bottom:6px;";
+      slotEl.textContent = item.slot
+        ? "槽位：" + item.slot
+        : "道具（放入背包）";
+
+      var btnRow = document.createElement("div");
+      if (equipped) {
+        var eqLabel = document.createElement("span");
+        eqLabel.style.cssText = "font-size:11px;color:var(--success);";
+        eqLabel.textContent = "✅ 已装备";
+        btnRow.appendChild(eqLabel);
+      } else {
+        var buyBtn = document.createElement("button");
+        buyBtn.className = "btn btn-sm " + (canAfford ? "btn-success" : "");
+        buyBtn.textContent = canAfford ? "购买" : "现金不足";
+        buyBtn.disabled = !canAfford;
+        buyBtn.onclick = function () {
+          buyItemFromShop(item.id);
+          document.body.removeChild(overlay);
+          showItemShopModal(locationId); // 重新打开，刷新状态
+        };
+        btnRow.appendChild(buyBtn);
+      }
+
+      card.appendChild(topRow);
+      card.appendChild(descEl);
+      card.appendChild(slotEl);
+      card.appendChild(btnRow);
+      grid.appendChild(card);
+    });
+  }
+
+  box.appendChild(grid);
+
+  var closeBtn = document.createElement("button");
+  closeBtn.className = "btn btn-sm";
+  closeBtn.style.cssText = "margin-top:12px;";
+  closeBtn.textContent = "关闭";
+  closeBtn.onclick = function () {
+    document.body.removeChild(overlay);
+  };
+  box.appendChild(closeBtn);
+
+  overlay.appendChild(box);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+  document.body.appendChild(overlay);
+}

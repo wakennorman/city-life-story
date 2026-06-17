@@ -47,6 +47,8 @@ function createDefaultState() {
       timeSlot: "morning", // 'morning' | 'afternoon' | 'evening' (显示用)
       actionPoints: 100, // 当前行动力 (0-100)
       maxActionPoints: 100, // 每日行动力上限
+      education: 0, // 0=大专, 1=本科, 2=研究生
+      eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
     },
 
     // --- 经济 ---
@@ -94,7 +96,9 @@ function createDefaultState() {
       welding: { level: 0, xp: 0 },
     },
     certificates: [],
+    // 兼容早期存档/误放字段；运行逻辑以 player.education 为准。
     education: 0,
+    eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
 
     // --- 物品栏 ---
     inventory: {
@@ -163,6 +167,7 @@ function createDefaultState() {
       btcFearGreed: 50,
       btcHalvingDay: 0,
       properties: [],
+      selfLivePropertyId: null,
       cars: [],
       lastTickDay: 0,
     },

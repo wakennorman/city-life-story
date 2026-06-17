@@ -347,8 +347,20 @@ function showVictoryModal() {
       </div>`,
     buttons: [
       {
-        text: "🔄 再来一局",
+        text: "🔄 新游戏+ (继承加成)",
         cls: "btn-primary",
+        callback: () => {
+          // P2.11 新游戏+：保存继承数据到 localStorage
+          var ngData = buildNgPlusData(state);
+          try {
+            localStorage.setItem("_ngPlusData", JSON.stringify(ngData));
+          } catch (e) {}
+          location.reload();
+        },
+      },
+      {
+        text: "🔄 全新开始",
+        cls: "btn-secondary",
         callback: () => {
           location.reload();
         },
@@ -363,4 +375,39 @@ function showVictoryModal() {
       },
     ],
   });
+}
+
+/** P2.11 计算新游戏+继承内容 */
+function buildNgPlusData(state) {
+  var data = { version: 1, victoryType: state.flags.victoryType || "normal" };
+  // 起始现金奖励（基于上局总收入的1%，上限5000）
+  var totalEarned = state.resources.totalEarned || 0;
+  data.startCash = Math.min(5000, Math.floor(totalEarned * 0.01));
+  // 继承最高技能（在新游戏中从20级开始）
+  var topSkill = null,
+    topLvl = 0;
+  var skills = state.skills || {};
+  for (var sk in skills) {
+    if (skills[sk] && (skills[sk].level || 0) > topLvl) {
+      topLvl = skills[sk].level;
+      topSkill = sk;
+    }
+  }
+  data.inheritSkill = topSkill;
+  data.inheritSkillLevel = Math.min(20, Math.floor(topLvl * 0.2));
+  // 继承声誉（如果有历史声誉标签）
+  if (typeof getHistoryModifiers === "function") {
+    var rep = getHistoryModifiers(state).reputationLabel;
+    if (rep) data.reputationLabel = rep;
+  }
+  // 属性小头部奖励（上局最高属性的10%加成，最多+5）
+  var p = state.player;
+  var maxStat = Math.max(
+    p.intelligence || 0,
+    p.physique || 0,
+    p.agility || 0,
+    p.mental || 0,
+  );
+  data.statBonus = Math.min(5, Math.floor(maxStat * 0.1));
+  return data;
 }

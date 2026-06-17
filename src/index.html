@@ -79,8 +79,12 @@
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
-          <div class="header-stat">
-            <span class="label">💰</span>
+          <div
+            class="header-stat"
+            id="header-cash-area"
+            style="cursor: default; min-width: 100px"
+          >
+            <span class="label" id="header-cash-label">💰</span>
             <span class="value cash" id="header-cash">¥2,000</span>
           </div>
         </div>
@@ -242,6 +246,13 @@
         <!-- 梦想追踪 -->
         <div
           id="dream-section"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 学历 -->
+        <div
+          id="edu-section"
           class="sidebar-section"
           style="display: none"
         ></div>

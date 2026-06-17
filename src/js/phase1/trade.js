@@ -18,7 +18,14 @@ function buyGood(goodId, qty) {
 
   // 销售技能折扣（最高15%）
   const salesLvl = state.skills.sales.level || 0;
-  const discount = Math.min(0.15, salesLvl * 0.002);
+  var salesDiscount = Math.min(0.15, salesLvl * 0.002);
+  // 历史声誉折扣（P2.9：诚信经营者/拒绝假货获得进货优惠）
+  var histDiscount = 0;
+  if (typeof getHistoryModifiers === "function") {
+    var hm = getHistoryModifiers(state);
+    histDiscount = hm.priceDiscount < 1.0 ? 1.0 - hm.priceDiscount : 0;
+  }
+  const discount = Math.min(0.25, salesDiscount + histDiscount);
   const totalCost = Math.round(price * qty * (1 - discount) * 100) / 100;
 
   // 检查现金

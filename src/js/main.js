@@ -40,6 +40,98 @@ function describeItemEffects(itemDef) {
   return parts.join(", ");
 }
 
+/**
+ * 投资持仓→NPC态度语境对话（P1.6）
+ * 根据玩家当前的财富/投资状况，为特定NPC生成对应的台词。
+ * 返回string时替换随机talkLine；返回null时使用默认台词。
+ */
+function getInvestmentContextLine(npcId, state) {
+  var inv = state.investment || {};
+  var cash = (state.resources && state.resources.cash) || 0;
+  var bank = (state.resources && state.resources.bankBalance) || 0;
+  var holdings = inv.stockHoldings || [];
+  var props = inv.properties || [];
+  var btc = inv.btcHoldings || 0;
+  var totalStockValue = 0;
+  if (holdings.length && inv.stockMarket) {
+    holdings.forEach(function (h) {
+      var m = inv.stockMarket[h.symbol];
+      totalStockValue += (m ? m.price : 0) * h.shares;
+    });
+  }
+
+  if (npcId === "aunt_wang") {
+    // 王大婶关注租房/房产
+    if (props.length > 0)
+      return "哎哟，你还买了房子出租啊！现在年轻人真厉害，比我家那口子强多了。";
+    if (cash + bank > 50000)
+      return "看你最近出手大方，是不是发财了？别光顾着存钱，也要注意身体！";
+    if (cash < 500)
+      return "小伙子，这个月房租先缓缓？看你最近有点难，王大婶不是那种人。";
+    return null;
+  }
+
+  if (npcId === "old_zhou") {
+    // 老周关注废品/金属市场
+    var hasMetals =
+      inv.stockMarket &&
+      (inv.stockMarket["COPPER"] || inv.stockMarket["NICKEL"]);
+    if (
+      hasMetals &&
+      inv.stockMarket["COPPER"] &&
+      inv.stockMarket["COPPER"].price > 0.07
+    ) {
+      return "铜价最近涨了不少！你知道不？废铜现在比废铁值钱，多留意！";
+    }
+    if (totalStockValue > 10000)
+      return "哟，你也玩股票？比我聪明多了，我那些钱都压在废品站了。";
+    return null;
+  }
+
+  if (npcId === "sister_zhang") {
+    // 张姐关注职业发展/收入
+    if (totalStockValue > 50000)
+      return "我听说你在股市里赚了不少？早点财务自由，别浪费你这个脑子。";
+    if (bank > 20000)
+      return "有存款在银行，说明你有规划！这样的人进职场肯定吃香，我帮你留意着呢。";
+    if (props.length > 0)
+      return "有房有产，还来这里打工？你是想体验生活还是真需要这份收入？";
+    return null;
+  }
+
+  if (npcId === "boss_li") {
+    // 李工头关注体力/施工
+    if (cash + bank > 100000)
+      return "你现在有钱了，怎么还来工地干活？闲不住还是真喜欢？";
+    if (props.length > 0)
+      return "买了房子？现在工地上买房的工人可少了，你算一个有出息的！";
+    return null;
+  }
+
+  if (npcId === "xiao_mei") {
+    // 小美关注科技/编程/学习
+    if (inv.stockMarket && inv.stockMarket["NVDA"]) {
+      var nvdaPrice = inv.stockMarket["NVDA"].price;
+      if (nvdaPrice > 1000)
+        return "恩威达又创新高了！搞AI的都赚翻了，我都后悔没早买股票。";
+    }
+    if (btc > 0.01) return "你也持有比特币？！跌的时候心态好吗，我看着就害怕……";
+    if (bank > 30000)
+      return "哇你存款好多！我毕业两年了才存了不到两万，差距好大……";
+    return null;
+  }
+
+  if (npcId === "chef_chen") {
+    // 陈师傅关注饮食/餐饮行业
+    if (props.length > 0)
+      return "有房产出租？以后考虑开个餐厅，比租房子利润高多了！";
+    if (cash > 30000) return "你手里有钱，有没有想过投资餐饮？我这里有个店面……";
+    return null;
+  }
+
+  return null;
+}
+
 /** 检查工作需求是否满足 */
 function checkJobRequirements(job, state) {
   const reqs = job.requirements || {};
@@ -66,6 +158,10 @@ function checkJobRequirements(job, state) {
     return `英语技能不足 (需要${reqs.english})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
+  if (job.educationRequired && (p.education || 0) < job.educationRequired) {
+    const eduNames = ["大专", "本科", "研究生"];
+    return `需要${eduNames[job.educationRequired] || "本科"}学历（大学城自考获取）`;
+  }
 
   return null; // 通过
 }
@@ -75,9 +171,93 @@ function estimateJobPay(job, state) {
   // 模拟3次取平均
   let total = 0;
   for (let i = 0; i < 10; i++) {
-    total += job.payCalc(state);
+    let pay = job.payCalc(state);
+    if (state._jobMultipliers && state._jobMultipliers[job.id]) {
+      pay = Math.floor(pay * state._jobMultipliers[job.id]);
+    }
+    if (state._allJobsBonus && state._allJobsBonus !== 1) {
+      pay = Math.floor(pay * state._allJobsBonus);
+    }
+    if (typeof getNewsJobMultiplier === "function") {
+      pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
+    }
+    total += pay;
   }
   return Math.floor(total / 10);
+}
+
+/** 估算工作收入并返回加成明细（P3.5）*/
+function estimateJobPayDetailed(job, state) {
+  var base = Math.floor(job.payCalc(state));
+  var tags = [];
+
+  // 新闻+工作倍率
+  if (state._jobMultipliers && state._jobMultipliers[job.id]) {
+    var m = state._jobMultipliers[job.id];
+    if (m > 1) tags.push("📰+" + Math.round((m - 1) * 100) + "%");
+    else if (m < 1) tags.push("📰" + Math.round((m - 1) * 100) + "%");
+    base = Math.floor(base * m);
+  }
+  if (state._allJobsBonus && state._allJobsBonus !== 1) {
+    var ab = state._allJobsBonus;
+    tags.push("📋+" + Math.round((ab - 1) * 100) + "%");
+    base = Math.floor(base * ab);
+  }
+  // 城市脉搏
+  if (typeof getNewsJobMultiplier === "function") {
+    var nm = getNewsJobMultiplier(job.id, state);
+    if (nm !== 1.0) {
+      tags.push("🌆" + (nm > 1 ? "+" : "") + Math.round((nm - 1) * 100) + "%");
+      base = Math.floor(base * nm);
+    }
+  }
+  // 技能加成
+  if (typeof getSkillPayBonus === "function") {
+    var sb = getSkillPayBonus(job.id, state);
+    if (sb > 1.0) {
+      tags.push("📚+" + Math.round((sb - 1) * 100) + "%");
+      base = Math.floor(base * sb);
+    }
+  }
+  // 技能协同
+  if (typeof getSkillSynergyBonus === "function") {
+    var syn = getSkillSynergyBonus(job.id, state);
+    if (syn > 0) {
+      tags.push("✨+" + Math.round(syn * 100) + "%");
+      base = Math.floor(base * (1 + syn));
+    }
+  }
+  // NPC在场
+  if (typeof getNpcPresenceBonus === "function") {
+    var np = getNpcPresenceBonus(state.trade.currentLocation, job.id, state);
+    if (np > 1.0) {
+      tags.push("👥+" + Math.round((np - 1) * 100) + "%");
+      base = Math.floor(base * np);
+    }
+  }
+  // 历史声誉
+  if (typeof getHistoryModifiers === "function") {
+    var hm = getHistoryModifiers(state);
+    if (hm.earningsBonus > 1.0) {
+      tags.push("🏅+" + Math.round((hm.earningsBonus - 1) * 100) + "%");
+      base = Math.floor(base * hm.earningsBonus);
+    }
+  }
+  // 连击加成
+  var streakData =
+    state.flags && state.flags._jobStreaks && state.flags._jobStreaks[job.id];
+  if (
+    streakData &&
+    streakData.count >= 3 &&
+    streakData.lastDay === state.player.day - 1
+  ) {
+    var streakRate =
+      streakData.count >= 7 ? 0.15 : streakData.count >= 5 ? 0.1 : 0.05;
+    tags.push("🔥+" + Math.round(streakRate * 100) + "%");
+    base = Math.floor(base * (1 + streakRate));
+  }
+
+  return { estimated: base, tags: tags };
 }
 
 // ====== 欢迎界面 ======
@@ -118,10 +298,66 @@ function showWelcome() {
 function startNewGame() {
   StateManager.newGame();
   initializePrices();
-  StateManager.addMessage(
-    "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
-    "event",
-  );
+
+  // P2.11 新游戏+：检查并应用上局继承加成
+  var ngApplied = false;
+  try {
+    var ngRaw = localStorage.getItem("_ngPlusData");
+    if (ngRaw) {
+      var ngData = JSON.parse(ngRaw);
+      var state = StateManager.getState();
+      if (ngData.startCash > 0) {
+        state.resources.cash += ngData.startCash;
+      }
+      if (
+        ngData.inheritSkill &&
+        ngData.inheritSkillLevel > 0 &&
+        state.skills[ngData.inheritSkill]
+      ) {
+        state.skills[ngData.inheritSkill].level = ngData.inheritSkillLevel;
+      }
+      if (ngData.statBonus > 0) {
+        state.player.intelligence = Math.min(
+          100,
+          (state.player.intelligence || 0) + ngData.statBonus,
+        );
+        state.player.mental = Math.min(
+          100,
+          (state.player.mental || 0) + ngData.statBonus,
+        );
+      }
+      // 携带声誉种子（未来事件可感知）
+      if (ngData.reputationLabel) {
+        state.flags._ngPlusReputation = ngData.reputationLabel;
+      }
+      state.flags._isNgPlus = true;
+      localStorage.removeItem("_ngPlusData");
+      ngApplied = true;
+      var bonus =
+        ngData.startCash > 0 ? "额外¥" + ngData.startCash + "启动资金" : "";
+      var skillTxt = ngData.inheritSkill
+        ? "、" +
+          ngData.inheritSkill +
+          "技能Lv." +
+          ngData.inheritSkillLevel +
+          "起步"
+        : "";
+      StateManager.addMessage(
+        "🌟 新游戏+！你带着上局的经验重新出发：" +
+          bonus +
+          skillTxt +
+          "。城市依然在等你。",
+        "event",
+      );
+    }
+  } catch (e) {}
+
+  if (!ngApplied) {
+    StateManager.addMessage(
+      "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
+      "event",
+    );
+  }
   StateManager.addMessage(
     '💡 提示：点击"🗺️ 地图"标签可查看城市全景。在城中村可以租房子、收废品。有了本钱可以去批发市场进货，再到商业区摆摊。',
     "info",
@@ -134,6 +370,7 @@ function startNewGame() {
   document.getElementById("app").style.display = "";
   gameStarted = true;
   renderAll();
+  if (typeof initCashCarousel === "function") initCashCarousel();
 
   // 新手引导（首次游戏）
   if (typeof startTutorial === "function") {
@@ -150,6 +387,7 @@ function loadExistingGame(slot) {
     document.getElementById("app").style.display = "";
     gameStarted = true;
     renderAll();
+    if (typeof initCashCarousel === "function") initCashCarousel();
   }
 }
 
@@ -224,7 +462,14 @@ function getAvailableActions(state) {
       const job = getJobById(jobId);
       if (!job) continue;
       const reqFail = checkJobRequirements(job, state);
-      const payEstimate = reqFail ? null : estimateJobPay(job, state);
+      var payDetail = null;
+      var payEstimate = null;
+      if (!reqFail && typeof estimateJobPayDetailed === "function") {
+        payDetail = estimateJobPayDetailed(job, state);
+        payEstimate = payDetail.estimated;
+      } else if (!reqFail) {
+        payEstimate = estimateJobPay(job, state);
+      }
 
       // 摆摊类工作添加客流量提示
       const isVending = [
@@ -250,6 +495,10 @@ function getAvailableActions(state) {
         payEstimate: payEstimate
           ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`
           : null,
+        payTags:
+          payDetail && payDetail.tags && payDetail.tags.length > 0
+            ? payDetail.tags
+            : null,
         costEstimate: job.startupCost || null,
         reqFail,
         disabled:
@@ -460,6 +709,359 @@ function getAvailableActions(state) {
             state.inventory.capacity += pack.capacity;
             StateManager.addMessage(
               `🎒 购买了${pack.name}，随身容量+${pack.capacity}！`,
+              "success",
+            );
+          },
+        });
+      }
+    }
+
+    // === 装备商店（有装备可买的地点显示入口）===
+    {
+      const shopItems = (typeof ITEMS !== "undefined" ? ITEMS : []).filter(
+        function (item) {
+          return item.buyLocations && item.buyLocations.indexOf(locKey) !== -1;
+        },
+      );
+      if (shopItems.length > 0) {
+        const shopNames = {
+          slum: "城中村小摊",
+          wholesaleMarket: "批发市场装备区",
+          construction: "工地劳保店",
+          school: "大学城书店",
+          commercialDist: "商业区装备店",
+          techPark: "科技园数码店",
+        };
+        actions.push({
+          id: "item_shop_" + locKey,
+          name: "🛍️ " + (shopNames[locKey] || "装备商店"),
+          desc: "共" + shopItems.length + "件装备可选，含服装/工具/道具",
+          icon: "🛍️",
+          costEstimate: 0,
+          handler: function () {
+            if (typeof showItemShopModal === "function")
+              showItemShopModal(locKey);
+          },
+        });
+      }
+    }
+
+    // === 学历系统（大学城）===
+    if (locKey === "school") {
+      const edu = state.player.education ?? state.education ?? 0;
+      const ep = state.player.eduProgress ||
+        state.eduProgress || {
+          studyPoints: 0,
+          examsPassed: 0,
+          totalExams: 6,
+        };
+      state.player.education = edu;
+      state.player.eduProgress = ep;
+      if (edu < 1) {
+        // 备考行动
+        const studyReady = ep.examsPassed < ep.totalExams;
+        if (studyReady) {
+          actions.push({
+            id: "edu_study",
+            name: "📖 自考备考",
+            desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
+            ap: 20,
+            handler: () => {
+              if (!state.player.eduProgress)
+                state.player.eduProgress = {
+                  studyPoints: 0,
+                  examsPassed: 0,
+                  totalExams: 6,
+                };
+              // 小美在场加成：学习点额外+2
+              var studyAdd = 5;
+              if (typeof NPCS !== "undefined" && state.relationships) {
+                var xiaoMei = NPCS.find(function (n) {
+                  return n.id === "xiao_mei";
+                });
+                if (xiaoMei && xiaoMei.studyPresenceBonus) {
+                  var xmRel = state.relationships.xiao_mei;
+                  var xmAff = xmRel ? xmRel.affinity || 0 : 0;
+                  if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
+                    studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
+                  }
+                }
+              }
+              state.player.eduProgress.studyPoints =
+                (state.player.eduProgress.studyPoints || 0) + studyAdd;
+              consumeAP(20);
+              if (Math.random() < 0.1) {
+                state.player.intelligence = Math.min(
+                  100,
+                  (state.player.intelligence || 0) + 1,
+                );
+                StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
+              } else {
+                StateManager.addMessage(
+                  `📖 备考中…学习点+${studyAdd}（${state.player.eduProgress.studyPoints}/150）`,
+                  "info",
+                );
+              }
+            },
+          });
+        }
+        // 参加考试
+        const canExam =
+          (ep.studyPoints || 0) >= 150 && ep.examsPassed < ep.totalExams;
+        const examPassRate = Math.min(
+          85,
+          40 +
+            (state.player.mental || 0) * 0.4 +
+            (state.player.intelligence || 0) * 0.1,
+        );
+        actions.push({
+          id: "edu_exam",
+          name: "📝 参加考试",
+          desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
+          ap: 30,
+          reqFail: !canExam
+            ? ep.studyPoints < 150
+              ? `学习点不足（${ep.studyPoints}/150）`
+              : "全部考试已通过"
+            : null,
+          handler: () => {
+            if (!state.player.eduProgress)
+              state.player.eduProgress = {
+                studyPoints: 0,
+                examsPassed: 0,
+                totalExams: 6,
+              };
+            consumeAP(30);
+            const rate = Math.min(
+              85,
+              40 +
+                (state.player.mental || 0) * 0.4 +
+                (state.player.intelligence || 0) * 0.1,
+            );
+            if (Math.random() * 100 < rate) {
+              state.player.eduProgress.examsPassed =
+                (state.player.eduProgress.examsPassed || 0) + 1;
+              state.player.eduProgress.studyPoints = 0;
+              StateManager.addMessage(
+                `🎉 第${state.player.eduProgress.examsPassed}门科目通过！还差${6 - state.player.eduProgress.examsPassed}门。`,
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😞 考试未通过，继续备考再战！",
+                "danger",
+              );
+            }
+          },
+        });
+        // 申请学历认证
+        if (ep.examsPassed >= ep.totalExams) {
+          actions.push({
+            id: "edu_cert",
+            name: "🎓 申请本科学历认证",
+            desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
+            ap: 0,
+            handler: () => {
+              state.player.education = 1;
+              state.education = 1;
+              StateManager.addMessage(
+                "🎓 恭喜！你已取得本科学历，人生新起点！",
+                "success",
+              );
+              renderAll();
+            },
+          });
+        }
+      } else if (edu === 1) {
+        actions.push({
+          id: "edu_done",
+          name: "🎓 本科学历持有者",
+          desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
+          disabled: true,
+        });
+      }
+    }
+
+    // === 节日限定临时工作（P1.8）===
+    if (
+      typeof FESTIVAL_JOBS !== "undefined" &&
+      typeof getCurrentFestival === "function"
+    ) {
+      var curFest = getCurrentFestival(state.player.day);
+      if (curFest) {
+        var festJobs = FESTIVAL_JOBS[curFest.id] || [];
+        for (var fji = 0; fji < festJobs.length; fji++) {
+          var fj = festJobs[fji];
+          if (fj.location && fj.location !== loc) continue;
+          if (fj.intReq && (state.player.intelligence || 0) < fj.intReq)
+            continue;
+          if ((state.player.actionPoints || 0) < (fj.apCost || 20)) continue;
+          var fjId = fj.id;
+          (function (fjob) {
+            actions.push({
+              id: fjob.id,
+              label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
+              desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
+              handler: function () {
+                var pay = fjob.pay + Math.floor(Math.random() * 30);
+                state.resources.cash += pay;
+                state.resources.totalEarned += pay;
+                consumeAP(fjob.apCost || 20);
+                StateManager.addMessage(
+                  curFest.icon +
+                    " 节日打工「" +
+                    fjob.name +
+                    "」完成！获得¥" +
+                    pay,
+                  "success",
+                );
+              },
+            });
+          })(fj);
+        }
+      }
+    }
+
+    // === 名气VIP行动（fame达到阈值后各地点解锁特殊选项）===
+    {
+      const fame = (state.status && state.status.fame) || 0;
+      const fameFlag = state.flags._fameVipUsedToday || {};
+
+      // 商业区 fame≥25：商家主动拉你代言/站台
+      if (
+        locKey === "commercialDist" &&
+        fame >= 25 &&
+        !fameFlag.commercialVip
+      ) {
+        actions.push({
+          id: "fame_commercial_vip",
+          name: "🌟 本地名人效应",
+          desc: `名气${fame}点，商家请你站台推广，收现金并涨粉。(每天一次)`,
+          ap: 15,
+          handler: () => {
+            var earn =
+              50 + Math.floor(fame * 1.2) + Math.floor(Math.random() * 80);
+            state.resources.cash += earn;
+            state.resources.totalEarned += earn;
+            state.status.fame = Math.min(100, state.status.fame + 3);
+            state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
+            state.flags._fameVipUsedToday.commercialVip = true;
+            consumeAP(15);
+            StateManager.addMessage(
+              "🌟 你在商业街露了个脸，路人纷纷拍照！获得¥" +
+                earn +
+                "，名气+3。",
+              "success",
+            );
+          },
+        });
+      }
+
+      // 公园 fame≥20：粉丝偶遇，心情大涨
+      if (locKey === "park" && fame >= 20 && !fameFlag.parkFan) {
+        actions.push({
+          id: "fame_park_fan",
+          name: "👋 粉丝认出你了",
+          desc: `有人认出你（名气${fame}），主动来搭话聊天，心情好极了。(每天一次)`,
+          ap: 5,
+          handler: () => {
+            state.needs.happiness = Math.min(100, state.needs.happiness + 20);
+            state.player.mental = Math.min(100, state.player.mental + 2);
+            state.status.fame = Math.min(100, state.status.fame + 2);
+            state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
+            state.flags._fameVipUsedToday.parkFan = true;
+            consumeAP(5);
+            StateManager.addMessage(
+              "👋 有人说「我认识你！」——被认出的感觉真的很好。心情+20，心智+2，名气+2。",
+              "success",
+            );
+          },
+        });
+      }
+
+      // 培训中心 fame≥40：教练主动免费指导
+      if (
+        (locKey === "trainingCenter" || locKey === "school") &&
+        fame >= 40 &&
+        !fameFlag.trainingVip
+      ) {
+        actions.push({
+          id: "fame_training_vip",
+          name: "🎓 名人专属指导课",
+          desc: `名气${fame}点，教练/老师主动找你，提供一次免费专项训练。(每天一次)`,
+          ap: 20,
+          handler: () => {
+            // 随机提升一项属性或技能
+            var targets = ["physique", "intelligence", "agility", "mental"];
+            var attr = targets[Math.floor(Math.random() * targets.length)];
+            state.player[attr] = Math.min(100, (state.player[attr] || 0) + 3);
+            state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
+            state.flags._fameVipUsedToday.trainingVip = true;
+            consumeAP(20);
+            var attrNames = {
+              physique: "体质",
+              intelligence: "智力",
+              agility: "敏捷",
+              mental: "心智",
+            };
+            StateManager.addMessage(
+              "🎓 名师亲自指导了你！" +
+                (attrNames[attr] || attr) +
+                "+3，这种机会很难得。",
+              "success",
+            );
+          },
+        });
+      }
+
+      // 医院 fame≥35：VIP诊疗通道，就医更省AP
+      if (locKey === "hospital" && fame >= 35 && !fameFlag.hospitalVip) {
+        actions.push({
+          id: "fame_hospital_vip",
+          name: "⭐ VIP就诊通道",
+          desc: `名气${fame}点，护士认出你直接带去优先诊室，挂号费减半。(每天一次)`,
+          ap: 10,
+          handler: () => {
+            var healAmt = 25 + Math.floor(fame * 0.3);
+            state.status.health = Math.min(
+              100,
+              (state.status.health || 100) + healAmt,
+            );
+            state.needs.happiness = Math.min(100, state.needs.happiness + 10);
+            state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
+            state.flags._fameVipUsedToday.hospitalVip = true;
+            consumeAP(10);
+            StateManager.addMessage(
+              "⭐ 护士悄悄领你走VIP通道！健康+" +
+                healAmt +
+                "，心情+10，比普通看诊省了一半AP。",
+              "success",
+            );
+          },
+        });
+      }
+
+      // 科技园 fame≥50：受邀参加论坛演讲，名气+现金
+      if (locKey === "techPark" && fame >= 50 && !fameFlag.techTalkVip) {
+        actions.push({
+          id: "fame_tech_talk",
+          name: "🎤 科技论坛演讲嘉宾",
+          desc: `名气${fame}点，主办方邀请你做嘉宾分享，演讲费+名气暴增。(每天一次)`,
+          ap: 25,
+          handler: () => {
+            var earn =
+              200 + Math.floor(fame * 2.5) + Math.floor(Math.random() * 150);
+            state.resources.cash += earn;
+            state.resources.totalEarned += earn;
+            state.status.fame = Math.min(100, state.status.fame + 8);
+            state.player.mental = Math.min(100, state.player.mental + 2);
+            state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
+            state.flags._fameVipUsedToday.techTalkVip = true;
+            consumeAP(25);
+            StateManager.addMessage(
+              "🎤 台下掌声热烈！你讲了30分钟，拿了¥" +
+                earn +
+                "出场费，名气+8，心智+2。",
               "success",
             );
           },
@@ -905,14 +1507,33 @@ function getAvailableActions(state) {
           const r = state.relationships[npc.id];
           r.met = true;
           const isBirthday = !!state.flags["_birthdayToday_" + npc.id];
-          const affinityGain = isBirthday
-            ? 10 + Math.floor(Math.random() * 5)
-            : 5 + Math.floor(Math.random() * 5);
+          // 历史声誉额外好感（P2.9）
+          var _histNpcBonus = 0;
+          if (typeof getHistoryModifiers === "function") {
+            _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
+          }
+          const affinityGain =
+            (isBirthday
+              ? 10 + Math.floor(Math.random() * 5)
+              : 5 + Math.floor(Math.random() * 5)) + _histNpcBonus;
           r.affinity = Math.min(100, r.affinity + affinityGain);
+          // 节日专属台词（P1.8）：节日期间65%概率触发
+          var festLine = null;
+          if (!isBirthday && typeof getFestivalNpcLine === "function") {
+            var candidate = getFestivalNpcLine(npc.id, state);
+            if (candidate && Math.random() < 0.65) festLine = candidate;
+          }
+          // 投资持仓态度变化（P1.6）：非节日/生日时35%概率触发
+          var investLine = null;
+          if (!isBirthday && !festLine && Math.random() < 0.35) {
+            investLine = getInvestmentContextLine(npc.id, state);
+          }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine
-              : npc.talkLines[Math.floor(Math.random() * npc.talkLines.length)];
+              : festLine ||
+                investLine ||
+                npc.talkLines[Math.floor(Math.random() * npc.talkLines.length)];
           const bdTag = isBirthday ? " 🎂" : "";
           StateManager.addMessage(
             `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})`,
@@ -929,6 +1550,44 @@ function getAvailableActions(state) {
           consumeAP(10);
         },
       });
+
+      if (rel.met || (rel.affinity || 0) >= 30) {
+        if ((rel.affinity || 0) >= 30) {
+          actions.push({
+            id: "intel_" + npc.id,
+            name: "🗞️ 向" + npc.name + "打听消息",
+            desc: "消耗10AP换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
+            icon: "🗞️",
+            apCost: 10,
+            handler: (function (capturedNpc) {
+              return function () {
+                if (typeof askNpcForIntel !== "function") {
+                  StateManager.addMessage("🗞️ 暂时没有可打听的消息。", "info");
+                  return;
+                }
+                var result = askNpcForIntel(capturedNpc.id, state);
+                if (result && result.ok) {
+                  StateManager.addMessage("🗞️ " + result.message, "hint");
+                  consumeAP(10);
+                } else {
+                  var msg = result ? result.message : "没有打听到新消息。";
+                  StateManager.addMessage("🗞️ " + msg, "info");
+                  if (msg.indexOf("没有新的可靠风声") >= 0) consumeAP(10);
+                }
+              };
+            })(npc),
+          });
+        } else {
+          actions.push({
+            id: "intel_locked_" + npc.id,
+            name: "🗞️ 打听消息（好感30解锁）",
+            desc: npc.name + "还不够信任你，多交谈几次再来问可靠风声。",
+            icon: "🗞️",
+            apCost: 0,
+            disabled: true,
+          });
+        }
+      }
 
       // NPC 委托任务（好感≥30且任务未完成）
       if (npc.favor) {
@@ -991,6 +1650,75 @@ function getAvailableActions(state) {
           });
         }
       }
+
+      // NPC 深度任务（好感≥70且深度任务未完成）
+      if (npc.deepTask) {
+        var deepKey = "_npcDeepTask_" + npc.id;
+        var relDeep = state.relationships[npc.id] || {};
+        var deepReqAff = npc.deepTask.requiredAffinity || 70;
+        if (!state.flags[deepKey] && (relDeep.affinity || 0) >= deepReqAff) {
+          actions.push({
+            id: "deeptask_" + npc.id,
+            name: "💌 " + npc.name + "想聊个重要的事",
+            desc: npc.deepTask.story.slice(0, 45) + "...",
+            icon: "💌",
+            apCost: 20,
+            handler: (function (capturedNpc) {
+              return function () {
+                var choicesHtml = capturedNpc.deepTask.choices
+                  .map(function (ch, ci) {
+                    return (
+                      '<button class="event-choice" data-idx="' +
+                      ci +
+                      '">' +
+                      '<div class="choice-main">' +
+                      ch.text +
+                      "</div>" +
+                      (ch.hint
+                        ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' +
+                          ch.hint +
+                          "</div>"
+                        : "") +
+                      "</button>"
+                    );
+                  })
+                  .join("");
+                showModal({
+                  title: "💌 " + capturedNpc.name + " 的心里话",
+                  body:
+                    '<p style="color:var(--text-secondary);font-size:13px;line-height:1.6;">' +
+                    capturedNpc.deepTask.story +
+                    "</p>" +
+                    '<div style="margin-top:12px;">' +
+                    choicesHtml +
+                    "</div>",
+                  buttons: [],
+                });
+                setTimeout(function () {
+                  var overlay = document.querySelector(".modal-overlay");
+                  if (!overlay) return;
+                  overlay
+                    .querySelectorAll(".event-choice")
+                    .forEach(function (btn) {
+                      btn.addEventListener("click", function () {
+                        var idx = parseInt(btn.getAttribute("data-idx"), 10);
+                        var ch = capturedNpc.deepTask.choices[idx];
+                        if (ch) {
+                          var st2 = StateManager.getState();
+                          ch.apply(st2);
+                          st2.flags._todayDeepTaskDone = true;
+                          consumeAP(20);
+                          overlay.remove();
+                          if (typeof renderAll === "function") renderAll();
+                        }
+                      });
+                    });
+                }, 30);
+              };
+            })(npc),
+          });
+        }
+      }
     }
   }
 
@@ -1019,6 +1747,18 @@ function doStreetJob(job) {
   if (state._allJobsBonus && state._allJobsBonus !== 1) {
     pay = Math.floor(pay * state._allJobsBonus);
   }
+  if (typeof getNewsJobMultiplier === "function") {
+    var newsJobMult = getNewsJobMultiplier(job.id, state);
+    if (newsJobMult !== 1.0) {
+      pay = Math.floor(pay * newsJobMult);
+      if (typeof getNewsJobMultiplierDesc === "function") {
+        var newsJobDesc = getNewsJobMultiplierDesc(job.id, state);
+        if (newsJobDesc) {
+          StateManager.addMessage("📰 城市脉搏：" + newsJobDesc, "hint");
+        }
+      }
+    }
+  }
   const emoMod =
     typeof getEmotionWorkModifier === "function"
       ? getEmotionWorkModifier(state)
@@ -1030,6 +1770,99 @@ function doStreetJob(job) {
   const skillBonus = getSkillPayBonus(job.id, state);
   if (skillBonus > 1.0) {
     pay = Math.floor(pay * skillBonus);
+  }
+  // NPC在场加成：熟识的NPC在同地点时提升收入（参考《星露谷》村民合作系统）
+  if (typeof getNpcPresenceBonus === "function") {
+    var npcMult = getNpcPresenceBonus(
+      state.trade.currentLocation,
+      job.id,
+      state,
+    );
+    if (npcMult > 1.0) {
+      pay = Math.floor(pay * npcMult);
+      // 偶尔显示提示
+      if (
+        Math.random() < 0.25 &&
+        typeof getNpcPresenceBonusDesc === "function"
+      ) {
+        var npcDesc = getNpcPresenceBonusDesc(
+          state.trade.currentLocation,
+          job.id,
+          state,
+        );
+        if (npcDesc)
+          StateManager.addMessage(
+            "💡 " + npcDesc + "，今日收入有加成！",
+            "hint",
+          );
+      }
+    }
+  }
+  // 玩家历史声誉加成（P2.9）：过去道德选择的持续影响
+  if (typeof getHistoryModifiers === "function") {
+    var histMods = getHistoryModifiers(state);
+    if (histMods.earningsBonus > 1.0) {
+      pay = Math.floor(pay * histMods.earningsBonus);
+    }
+  }
+  // 技能协同加成（P3.3）：多技能组合达到门槛时额外收入
+  if (typeof getSkillSynergyBonus === "function") {
+    var synBonus = getSkillSynergyBonus(job.id, state);
+    if (synBonus > 0) {
+      var synPay = Math.floor(pay * synBonus);
+      if (synPay > 0) {
+        pay += synPay;
+        if (Math.random() < 0.3) {
+          StateManager.addMessage(
+            "✨ 技能协同加成 +" + synPay + "（技能组合效果）",
+            "info",
+          );
+        }
+      }
+    }
+  }
+  // 连续工作奖励（P3.4）：同一工作连续N天，熟练度加成
+  if (!state.flags._jobStreaks) state.flags._jobStreaks = {};
+  var streakData = state.flags._jobStreaks[job.id] || { count: 0, lastDay: 0 };
+  var yesterday = state.player.day - 1;
+  if (streakData.lastDay === yesterday) {
+    streakData.count = (streakData.count || 0) + 1;
+  } else if (streakData.lastDay !== state.player.day) {
+    streakData.count = 1;
+  }
+  streakData.lastDay = state.player.day;
+  state.flags._jobStreaks[job.id] = streakData;
+  var streakBonus = 0;
+  var streakLabel = "";
+  if (streakData.count >= 7) {
+    streakBonus = 0.15;
+    streakLabel = "🔥×7连";
+  } else if (streakData.count >= 5) {
+    streakBonus = 0.1;
+    streakLabel = "🔥×5连";
+  } else if (streakData.count >= 3) {
+    streakBonus = 0.05;
+    streakLabel = "🔥×3连";
+  }
+  if (streakBonus > 0) {
+    var streakPay = Math.floor(pay * streakBonus);
+    pay += streakPay;
+    if (
+      streakData.count === 3 ||
+      streakData.count === 5 ||
+      streakData.count === 7
+    ) {
+      StateManager.addMessage(
+        streakLabel +
+          " 熟练度加成+" +
+          streakPay +
+          "！连续干" +
+          streakData.count +
+          "天" +
+          job.name,
+        "hint",
+      );
+    }
   }
   // 新人保护：前15天废品回收+5，苦力类+3
   if (state.player.day <= 15) {
@@ -1044,8 +1877,6 @@ function doStreetJob(job) {
       pay += newbieBonus;
     }
   }
-  state.resources.cash += pay;
-  state.resources.totalEarned += pay;
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
 
@@ -1147,6 +1978,9 @@ function doStreetJob(job) {
       );
     }
   }
+
+  state.resources.cash += pay;
+  state.resources.totalEarned += pay;
 
   // === 城管检查（摆摊类工作）===
   const vendingJobs = [

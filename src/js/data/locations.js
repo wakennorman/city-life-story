@@ -138,7 +138,13 @@ const LOCATIONS = {
     type: "corporate",
     footfall: 0.7,
     vendingNote: "白领消费力强但习惯点外卖",
-    jobs: ["street_vending_food"],
+    jobs: [
+      "street_vending_food",
+      "data_entry",
+      "customer_service_tech",
+      "content_writing",
+      "junior_analyst",
+    ],
     priceMod: {},
   },
   hospital: {
@@ -148,7 +154,7 @@ const LOCATIONS = {
     type: "service",
     footfall: 0.8,
     vendingNote: "探病家属是主要客群",
-    jobs: [],
+    jobs: ["hospital_caregiver"],
     priceMod: {},
   },
   bank: {

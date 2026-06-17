@@ -359,6 +359,55 @@ var DYNAMIC_HINTS = [
     message:
       "💡 提示：在城市打拼一个月了！去公园或城中村可以「确立人生目标」，设定梦想让努力更有方向感。",
   },
+  {
+    id: "festival_job_tip",
+    trigger: function (st) {
+      return (
+        typeof getCurrentFestival === "function" &&
+        getCurrentFestival(st.player.day) !== null &&
+        !st.flags._hint_festival_job_tip
+      );
+    },
+    message:
+      "🎉 节日来了！节日期间各地点会出现限定临时工作（收入比平时高），在行动页找找看！还有NPC会说节日专属的话。",
+  },
+  {
+    id: "reputation_earned_tip",
+    trigger: function (st) {
+      return (
+        typeof getHistoryModifiers === "function" &&
+        getHistoryModifiers(st).reputationLabel !== null &&
+        !st.flags._hint_reputation_earned_tip
+      );
+    },
+    message:
+      "🏅 你的道德选择已经积累成一种声誉！侧边栏会显示你的「声誉徽章」，正直的行为会带来持续的收入加成。",
+  },
+  {
+    id: "investment_first_tip",
+    trigger: function (st) {
+      return (
+        (st.resources.cash || 0) + (st.resources.bankBalance || 0) >= 20000 &&
+        !(st.investment && (st.investment.stockHoldings || []).length > 0) &&
+        !st.flags._hint_investment_first_tip
+      );
+    },
+    message:
+      "💰 你已经攒下2万块！是时候考虑投资了。行动页「投资中心」可以购买股票、比特币、贵金属，让钱为你打工！",
+  },
+  {
+    id: "corporate_ready_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 60 &&
+        st.player.intelligence >= 40 &&
+        st.player.phase === "street" &&
+        !st.flags._hint_corporate_ready_tip
+      );
+    },
+    message:
+      "🏢 智力已达40，在城市打拼60天了！你已具备进入互联网职场的条件。去培训中心可以申请入职，开始新的人生阶段。",
+  },
 ];
 
 /** 每日检查动态提示，触发后标记防重复 */

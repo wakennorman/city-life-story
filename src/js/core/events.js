@@ -1833,40 +1833,57 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🧓",
     title: "老人摔倒了",
-    story: "菜市场门口，一位老大爷摔倒在地，周围人都在看但没人上前。你要怎么做？",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      "菜市场门口，一位老大爷摔倒在地，周围人都在看但没人上前。你要怎么做？",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "🤝 立刻上前扶起",
         hint: "先扶再说",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
           st.status.fame = Math.min(100, st.status.fame + 5);
           if (Math.random() < 0.15) {
             const fine = 300 + Math.floor(Math.random() * 200);
             st.resources.cash = Math.max(0, st.resources.cash - fine);
-            StateManager.addMessage('🧓 你扶起了老人，对方家属却说你撞倒了他，赔了 ¥' + fine + '...心情极差。', 'danger');
+            StateManager.addMessage(
+              "🧓 你扶起了老人，对方家属却说你撞倒了他，赔了 ¥" +
+                fine +
+                "...心情极差。",
+              "danger",
+            );
             st.needs.happiness = Math.max(0, st.needs.happiness - 25);
           } else {
-            StateManager.addMessage('🧓 你扶起了老人，家属赶来道谢连连，周围人竖起大拇指。名气+5。', 'success');
+            StateManager.addMessage(
+              "🧓 你扶起了老人，家属赶来道谢连连，周围人竖起大拇指。名气+5。",
+              "success",
+            );
           }
         },
       },
       {
         text: "📱 拍照留证后再扶",
         hint: "保护自己也帮人",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
           st.status.fame = Math.min(100, st.status.fame + 2);
-          StateManager.addMessage('📱 拍下视频留证后扶起老人，理性与善意兼顾。', 'success');
+          StateManager.addMessage(
+            "📱 拍下视频留证后扶起老人，理性与善意兼顾。",
+            "success",
+          );
         },
       },
       {
         text: "🚶 绕道走，不惹麻烦",
         hint: "自保优先",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-          StateManager.addMessage('🚶 你选择绕道走开，内心有些不安。', 'warning');
+          StateManager.addMessage(
+            "🚶 你选择绕道走开，内心有些不安。",
+            "warning",
+          );
         },
       },
     ],
@@ -1877,40 +1894,58 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🩹",
     title: "工友在工地受伤了",
-    story: "你的工友老刘从脚手架上摔下来，工头悄悄跟你说"别声张，私了了事，你多分200块"。老刘疼得直哼。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      '你的工友老刘从脚手架上摔下来，工头悄悄跟你说"别声张，私了了事，你多分200块"。老刘疼得直哼。',
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "💰 收钱保持沉默",
         hint: "拿200块",
-        apply: function(st) {
+        apply: function (st) {
           st.resources.cash += 200;
           st.needs.happiness = Math.max(0, st.needs.happiness - 18);
-          if (st.relationships && st.relationships['boss_li']) {
-            st.relationships['boss_li'].affinity = Math.min(100, st.relationships['boss_li'].affinity + 10);
+          if (st.relationships && st.relationships["boss_li"]) {
+            st.relationships["boss_li"].affinity = Math.min(
+              100,
+              st.relationships["boss_li"].affinity + 10,
+            );
           }
-          StateManager.addMessage('💰 你拿了200块，老刘被悄悄送回宿舍。你睡不着觉。', 'warning');
+          StateManager.addMessage(
+            "💰 你拿了200块，老刘被悄悄送回宿舍。你睡不着觉。",
+            "warning",
+          );
         },
       },
       {
         text: "🚑 坚持打120叫救护车",
         hint: "保护工友权益",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
           st.status.fame = Math.min(100, st.status.fame + 8);
           st.flags._helpedCoworker = true;
-          if (st.relationships && st.relationships['boss_li']) {
-            st.relationships['boss_li'].affinity = Math.max(-100, st.relationships['boss_li'].affinity - 20);
+          if (st.relationships && st.relationships["boss_li"]) {
+            st.relationships["boss_li"].affinity = Math.max(
+              -100,
+              st.relationships["boss_li"].affinity - 20,
+            );
           }
-          StateManager.addMessage('🚑 你拨打了120，工头大怒，但工友老刘感激涕零。良心无价。', 'success');
+          StateManager.addMessage(
+            "🚑 你拨打了120，工头大怒，但工友老刘感激涕零。良心无价。",
+            "success",
+          );
         },
       },
       {
         text: "😶 假装没看到，先去干活",
         hint: "明哲保身",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-          StateManager.addMessage('😶 你低头继续干活，那声哼叫一直在耳边回响。', 'info');
+          StateManager.addMessage(
+            "😶 你低头继续干活，那声哼叫一直在耳边回响。",
+            "info",
+          );
         },
       },
     ],
@@ -1921,21 +1956,30 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📦",
     title: "发现进了假货",
-    story: "你从批发市场进了一批电子产品，摆摊时才发现全是山寨货。你手里还有20件，进货成本已经付了¥800。",
-    conditions: function(st) { return st.player.phase === 'street' && (st.resources.cash > 0); },
+    story:
+      "你从批发市场进了一批电子产品，摆摊时才发现全是山寨货。你手里还有20件，进货成本已经付了¥800。",
+    conditions: function (st) {
+      return st.player.phase === "street" && st.resources.cash > 0;
+    },
     choices: [
       {
         text: "😈 继续卖，买者自负",
         hint: "损失已发生，捞回来",
-        apply: function(st) {
+        apply: function (st) {
           const earned = 400 + Math.floor(Math.random() * 300);
           st.resources.cash += earned;
           st.resources.totalEarned += earned;
           if (Math.random() < 0.3) {
             st.status.fame = Math.max(0, st.status.fame - 10);
-            StateManager.addMessage('😈 卖出去了，但被客户投诉，名气-10。赚了 ¥' + earned + '。', 'warning');
+            StateManager.addMessage(
+              "😈 卖出去了，但被客户投诉，名气-10。赚了 ¥" + earned + "。",
+              "warning",
+            );
           } else {
-            StateManager.addMessage('😈 全部卖掉，没人发现。得了 ¥' + earned + '，但心知肚明。', 'warning');
+            StateManager.addMessage(
+              "😈 全部卖掉，没人发现。得了 ¥" + earned + "，但心知肚明。",
+              "warning",
+            );
           }
           st.needs.happiness = Math.max(0, st.needs.happiness - 8);
         },
@@ -1943,23 +1987,34 @@ const RANDOM_EVENTS = [
       {
         text: "🗑️ 全部销毁，认赔¥800",
         hint: "道德选择，损失惨重",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
           st.status.fame = Math.min(100, st.status.fame + 5);
           st.flags._refusedFakeGoods = true;
-          StateManager.addMessage('🗑️ 你把假货全部扔掉，损失¥800。这钱是教训钱，名气+5。', 'info');
+          StateManager.addMessage(
+            "🗑️ 你把假货全部扔掉，损失¥800。这钱是教训钱，名气+5。",
+            "info",
+          );
         },
       },
       {
         text: "↩️ 去找批发商理论退货",
         hint: "据理力争",
-        apply: function(st) {
+        apply: function (st) {
           if (Math.random() < 0.5) {
             const refund = 400 + Math.floor(Math.random() * 200);
             st.resources.cash += refund;
-            StateManager.addMessage('↩️ 死缠烂打两小时，批发商退了 ¥' + refund + '。没全退，但争回了一半。', 'success');
+            StateManager.addMessage(
+              "↩️ 死缠烂打两小时，批发商退了 ¥" +
+                refund +
+                "。没全退，但争回了一半。",
+              "success",
+            );
           } else {
-            StateManager.addMessage('↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天AP。', 'warning');
+            StateManager.addMessage(
+              "↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天AP。",
+              "warning",
+            );
           }
         },
       },
@@ -1971,39 +2026,56 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🎪",
     title: "同乡拉你听讲座",
-    story: "老家来的表哥说带你去听个"财富自由分享会"，说能月入过万。地址在郊区某酒店。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      '老家来的表哥说带你去听个"财富自由分享会"，说能月入过万。地址在郊区某酒店。',
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "🎪 去听听，搞不好是机会",
         hint: "好奇心驱使",
-        apply: function(st) {
+        apply: function (st) {
           const loss = 500 + Math.floor(Math.random() * 500);
           if (st.resources.cash >= loss) {
             st.resources.cash -= loss;
             st.needs.happiness = Math.max(0, st.needs.happiness - 30);
-            StateManager.addMessage('🎪 进去才发现是传销！被骗去 ¥' + loss + '，好不容易找借口跑出来。', 'danger');
+            StateManager.addMessage(
+              "🎪 进去才发现是传销！被骗去 ¥" +
+                loss +
+                "，好不容易找借口跑出来。",
+              "danger",
+            );
           } else {
             st.needs.happiness = Math.max(0, st.needs.happiness - 15);
-            StateManager.addMessage('🎪 他们嫌你穷让你走人了。心情很差，但也算逃过一劫。', 'warning');
+            StateManager.addMessage(
+              "🎪 他们嫌你穷让你走人了。心情很差，但也算逃过一劫。",
+              "warning",
+            );
           }
         },
       },
       {
         text: "🚫 直接拒绝，说有事",
         hint: "躲避风险",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-          StateManager.addMessage('🚫 你找了个借口推掉了，表哥说你没格局。没事，格局不值500块。', 'success');
+          StateManager.addMessage(
+            "🚫 你找了个借口推掉了，表哥说你没格局。没事，格局不值500块。",
+            "success",
+          );
         },
       },
       {
         text: "🔍 上网先查一下这个公司",
         hint: "谨慎核实",
-        apply: function(st) {
+        apply: function (st) {
           st.player.intelligence = Math.min(100, st.player.intelligence + 0.5);
           st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-          StateManager.addMessage('🔍 一搜就发现是传销机构，直接举报，还顺手提升了防骗意识。智力+0.5。', 'success');
+          StateManager.addMessage(
+            "🔍 一搜就发现是传销机构，直接举报，还顺手提升了防骗意识。智力+0.5。",
+            "success",
+          );
         },
       },
     ],
@@ -2014,43 +2086,60 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "💸",
     title: "老板拖欠工资",
-    story: "干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      '干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。',
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "⏳ 忍着等，年底再说",
         hint: "赌一把",
-        apply: function(st) {
+        apply: function (st) {
           if (Math.random() < 0.45) {
-            StateManager.addMessage('⏳ 年底工头跑路了。那两个月的工钱就这么没了。', 'danger');
+            StateManager.addMessage(
+              "⏳ 年底工头跑路了。那两个月的工钱就这么没了。",
+              "danger",
+            );
             st.needs.happiness = Math.max(0, st.needs.happiness - 25);
           } else {
             const paid = 1200 + Math.floor(Math.random() * 800);
             st.resources.cash += paid;
             st.resources.totalEarned += paid;
-            StateManager.addMessage('⏳ 没想到工头真的年底结账，一次性给了 ¥' + paid + '，虚惊一场。', 'success');
+            StateManager.addMessage(
+              "⏳ 没想到工头真的年底结账，一次性给了 ¥" + paid + "，虚惊一场。",
+              "success",
+            );
           }
         },
       },
       {
         text: "🏛️ 去劳动局投诉",
         hint: "用法律维权",
-        apply: function(st) {
+        apply: function (st) {
           const recovered = 600 + Math.floor(Math.random() * 400);
           st.resources.cash += recovered;
           st.resources.totalEarned += recovered;
           st.needs.happiness = Math.min(100, st.needs.happiness + 12);
           st.flags._foughtWageTheft = true;
-          StateManager.addMessage('🏛️ 劳动仲裁历时3周，追回了 ¥' + recovered + '，虽然没全追回，但出了口气。', 'success');
+          StateManager.addMessage(
+            "🏛️ 劳动仲裁历时3周，追回了 ¥" +
+              recovered +
+              "，虽然没全追回，但出了口气。",
+            "success",
+          );
         },
       },
       {
         text: "📸 偷偷收集证据再行动",
         hint: "有备无患",
-        apply: function(st) {
+        apply: function (st) {
           st.player.intelligence = Math.min(100, st.player.intelligence + 1);
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-          StateManager.addMessage('📸 你暗中留存了工资条和聊天记录。有准备的人不吃亏，智力+1。', 'info');
+          StateManager.addMessage(
+            "📸 你暗中留存了工资条和聊天记录。有准备的人不吃亏，智力+1。",
+            "info",
+          );
         },
       },
     ],
@@ -2062,42 +2151,66 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🏠",
     title: "房东突然涨租",
-    story: "房东王大婶敲门说："下个月房租从300涨到500，不行就搬走。"你现在住的这里还算安全。",
-    conditions: function(st) { return st.player.phase === 'street' && st.housing.tier >= 1; },
+    story:
+      '房东王大婶敲门说："下个月房租从300涨到500，不行就搬走。"你现在住的这里还算安全。',
+    conditions: function (st) {
+      return st.player.phase === "street" && st.housing.tier >= 1;
+    },
     choices: [
       {
         text: "😤 讨价还价，争取少涨",
         hint: "谈判试试",
-        apply: function(st) {
+        apply: function (st) {
           if (st.skills.sales && st.skills.sales.level >= 10) {
-            StateManager.addMessage('😤 凭借你的销售口才，把涨幅砍到¥50，王大婶勉强答应了。', 'success');
+            StateManager.addMessage(
+              "😤 凭借你的销售口才，把涨幅砍到¥50，王大婶勉强答应了。",
+              "success",
+            );
           } else if (Math.random() < 0.4) {
-            StateManager.addMessage('😤 磨了半小时，王大婶松口涨¥100，妥协了。', 'info');
+            StateManager.addMessage(
+              "😤 磨了半小时，王大婶松口涨¥100，妥协了。",
+              "info",
+            );
           } else {
-            StateManager.addMessage('😤 王大婶态度强硬，一分不让。只能接受¥200的涨价。', 'warning');
+            StateManager.addMessage(
+              "😤 王大婶态度强硬，一分不让。只能接受¥200的涨价。",
+              "warning",
+            );
           }
-          if (st.relationships && st.relationships['aunt_wang']) {
-            st.relationships['aunt_wang'].affinity = Math.max(-100, st.relationships['aunt_wang'].affinity - 5);
+          if (st.relationships && st.relationships["aunt_wang"]) {
+            st.relationships["aunt_wang"].affinity = Math.max(
+              -100,
+              st.relationships["aunt_wang"].affinity - 5,
+            );
           }
         },
       },
       {
         text: "✅ 直接同意，维持关系",
         hint: "花钱买安稳",
-        apply: function(st) {
-          if (st.relationships && st.relationships['aunt_wang']) {
-            st.relationships['aunt_wang'].affinity = Math.min(100, st.relationships['aunt_wang'].affinity + 8);
+        apply: function (st) {
+          if (st.relationships && st.relationships["aunt_wang"]) {
+            st.relationships["aunt_wang"].affinity = Math.min(
+              100,
+              st.relationships["aunt_wang"].affinity + 8,
+            );
           }
-          StateManager.addMessage('✅ 你爽快答应了，王大婶对你印象更好了。好感+8。', 'success');
+          StateManager.addMessage(
+            "✅ 你爽快答应了，王大婶对你印象更好了。好感+8。",
+            "success",
+          );
         },
       },
       {
         text: "🏃 找机会搬走",
         hint: "另谋住处",
-        apply: function(st) {
+        apply: function (st) {
           st.housing.tier = Math.max(0, st.housing.tier - 1);
           st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-          StateManager.addMessage('🏃 你搬去了更便宜的地方，条件差了点，但省了钱。住所降级。', 'warning');
+          StateManager.addMessage(
+            "🏃 你搬去了更便宜的地方，条件差了点，但省了钱。住所降级。",
+            "warning",
+          );
         },
       },
     ],
@@ -2108,30 +2221,45 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🌟",
     title: "摆摊时被老板相中",
-    story: "今天摆摊，一个穿着体面的中年女人在你摊位前停了很久，说她在一家公司负责采购，问你有没有兴趣合作供货。",
-    conditions: function(st) { return st.player.phase === 'street' && (st.skills.sales ? st.skills.sales.level >= 5 : false); },
+    story:
+      "今天摆摊，一个穿着体面的中年女人在你摊位前停了很久，说她在一家公司负责采购，问你有没有兴趣合作供货。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.skills.sales ? st.skills.sales.level >= 5 : false)
+      );
+    },
     choices: [
       {
         text: "💼 留下联系方式深入谈",
         hint: "可能是机遇",
-        apply: function(st) {
+        apply: function (st) {
           if (Math.random() < 0.6) {
             const bonus = 800 + Math.floor(Math.random() * 1200);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             st.status.fame = Math.min(100, st.status.fame + 8);
-            StateManager.addMessage('💼 合作谈成！对方下了首批订单，进账 ¥' + bonus + '！名气+8。', 'success');
+            StateManager.addMessage(
+              "💼 合作谈成！对方下了首批订单，进账 ¥" + bonus + "！名气+8。",
+              "success",
+            );
           } else {
-            StateManager.addMessage('💼 谈了三天，最后对方说预算砍了，合作告吹。但认识了个人脉。', 'info');
+            StateManager.addMessage(
+              "💼 谈了三天，最后对方说预算砍了，合作告吹。但认识了个人脉。",
+              "info",
+            );
           }
         },
       },
       {
         text: "🎯 专注眼前，摆摊为主",
         hint: "稳字当头",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-          StateManager.addMessage('🎯 你礼貌地拒绝了，专心摆好今天的摊。', 'info');
+          StateManager.addMessage(
+            "🎯 你礼貌地拒绝了，专心摆好今天的摊。",
+            "info",
+          );
         },
       },
     ],
@@ -2142,39 +2270,54 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📱",
     title: "路边有人卖二手手机",
-    story: "城中村路口有人摆了个二手手机摊，一部外观完好的安卓机，卖¥150，比正规店便宜多了。",
-    conditions: function(st) { return st.player.phase === 'street' && st.resources.cash >= 150; },
+    story:
+      "城中村路口有人摆了个二手手机摊，一部外观完好的安卓机，卖¥150，比正规店便宜多了。",
+    conditions: function (st) {
+      return st.player.phase === "street" && st.resources.cash >= 150;
+    },
     choices: [
       {
         text: "📱 买下来，以后跑外卖用",
         hint: "投资装备",
-        apply: function(st) {
+        apply: function (st) {
           if (Math.random() < 0.7) {
             st.resources.cash -= 150;
             st.status.fame = Math.min(100, st.status.fame + 2);
-            StateManager.addMessage('📱 手机买到了，成色还不错！跑外卖的路敞开了，名气+2。', 'success');
+            StateManager.addMessage(
+              "📱 手机买到了，成色还不错！跑外卖的路敞开了，名气+2。",
+              "success",
+            );
           } else {
             st.resources.cash -= 150;
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-            StateManager.addMessage('📱 买回来发现是翻新机，主板有问题，修了¥50还是不稳定。买贵了。', 'warning');
+            StateManager.addMessage(
+              "📱 买回来发现是翻新机，主板有问题，修了¥50还是不稳定。买贵了。",
+              "warning",
+            );
           }
         },
       },
       {
         text: "🔍 要求当场测试再决定",
         hint: "谨慎些",
-        apply: function(st) {
+        apply: function (st) {
           st.player.intelligence = Math.min(100, st.player.intelligence + 0.3);
           const price = 100 + Math.floor(Math.random() * 80);
           st.resources.cash -= price;
-          StateManager.addMessage('🔍 你仔细测试了30分钟，砍价到¥' + price + '成交，没有暗病。', 'success');
+          StateManager.addMessage(
+            "🔍 你仔细测试了30分钟，砍价到¥" + price + "成交，没有暗病。",
+            "success",
+          );
         },
       },
       {
         text: "❌ 不买，风险太大",
         hint: "安全第一",
-        apply: function(st) {
-          StateManager.addMessage('❌ 你走开了。路边货靠不住，心里踏实一点。', 'info');
+        apply: function (st) {
+          StateManager.addMessage(
+            "❌ 你走开了。路边货靠不住，心里踏实一点。",
+            "info",
+          );
         },
       },
     ],
@@ -2185,13 +2328,16 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🤗",
     title: "遇到了老乡",
-    story: "菜场里，有人叫你名字——是你们县的老周头的儿子小周，在城里打拼了三年，看起来过得还行。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      "菜场里，有人叫你名字——是你们县的老周头的儿子小周，在城里打拼了三年，看起来过得还行。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "🍺 请他喝瓶啤酒叙旧",
         hint: "¥10 维系人脉",
-        apply: function(st) {
+        apply: function (st) {
           if (st.resources.cash >= 10) {
             st.resources.cash -= 10;
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -2199,12 +2345,23 @@ const RANDOM_EVENTS = [
             if (tip < 0.4) {
               const cash = 200 + Math.floor(Math.random() * 300);
               st.resources.cash += cash;
-              StateManager.addMessage('🤗 聊得投机，他给你介绍了个短期活，赚了 ¥' + cash + '！老乡最亲。', 'success');
+              StateManager.addMessage(
+                "🤗 聊得投机，他给你介绍了个短期活，赚了 ¥" +
+                  cash +
+                  "！老乡最亲。",
+                "success",
+              );
             } else {
-              StateManager.addMessage('🤗 喝了啤酒聊了两小时，得到了不少城里生存的经验，心情+20。', 'success');
+              StateManager.addMessage(
+                "🤗 喝了啤酒聊了两小时，得到了不少城里生存的经验，心情+20。",
+                "success",
+              );
             }
           } else {
-            StateManager.addMessage('🤗 连10块啤酒钱都拿不出，尴尬，老乡请你喝了，心里不是滋味。', 'warning');
+            StateManager.addMessage(
+              "🤗 连10块啤酒钱都拿不出，尴尬，老乡请你喝了，心里不是滋味。",
+              "warning",
+            );
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
           }
         },
@@ -2212,9 +2369,12 @@ const RANDOM_EVENTS = [
       {
         text: "📞 加个微信，以后联系",
         hint: "不花钱建立联系",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          StateManager.addMessage('📞 加了老乡联系方式，城里认识的人又多了一个。', 'info');
+          StateManager.addMessage(
+            "📞 加了老乡联系方式，城里认识的人又多了一个。",
+            "info",
+          );
         },
       },
     ],
@@ -2225,30 +2385,42 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🌧️",
     title: "暴雨来了，摊子怎么办",
-    story: "下午突然电闪雷鸣，暴雨将至。你的摊子还铺着货，跑一趟要20分钟。同时有个生意正谈到关键处。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      "下午突然电闪雷鸣，暴雨将至。你的摊子还铺着货，跑一趟要20分钟。同时有个生意正谈到关键处。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "🏃 扔下生意去收摊",
         hint: "保住货物",
-        apply: function(st) {
+        apply: function (st) {
           const saved = 100 + Math.floor(Math.random() * 200);
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
           st.needs.hygiene = Math.max(0, st.needs.hygiene - 10);
-          StateManager.addMessage('🏃 冒雨跑去收摊，淋成落汤鸡，保住了约 ¥' + saved + ' 的货物。', 'info');
+          StateManager.addMessage(
+            "🏃 冒雨跑去收摊，淋成落汤鸡，保住了约 ¥" + saved + " 的货物。",
+            "info",
+          );
         },
       },
       {
         text: "💰 谈完生意再说",
         hint: "生意优先",
-        apply: function(st) {
+        apply: function (st) {
           if (Math.random() < 0.5) {
             const deal = 150 + Math.floor(Math.random() * 200);
             st.resources.cash += deal;
             st.resources.totalEarned += deal;
-            StateManager.addMessage('💰 生意谈成了 ¥' + deal + '，但摊子淋湿了一半货，有得有失。', 'warning');
+            StateManager.addMessage(
+              "💰 生意谈成了 ¥" + deal + "，但摊子淋湿了一半货，有得有失。",
+              "warning",
+            );
           } else {
-            StateManager.addMessage('💰 生意没谈拢，货也淋湿了。今天运气真差。', 'danger');
+            StateManager.addMessage(
+              "💰 生意没谈拢，货也淋湿了。今天运气真差。",
+              "danger",
+            );
             st.needs.happiness = Math.max(0, st.needs.happiness - 15);
           }
         },
@@ -2256,9 +2428,12 @@ const RANDOM_EVENTS = [
       {
         text: "🏠 躲进附近店铺等雨停",
         hint: "保命要紧",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-          StateManager.addMessage('🏠 你躲进一家便利店，雨中喝了杯热茶，心情稍好。货丢了但没感冒。', 'info');
+          StateManager.addMessage(
+            "🏠 你躲进一家便利店，雨中喝了杯热茶，心情稍好。货丢了但没感冒。",
+            "info",
+          );
         },
       },
     ],
@@ -2269,41 +2444,56 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🤢",
     title: "路边摊吃坏肚子了",
-    story: "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "💪 撑着去干活，不能误工",
         hint: "意志力胜过身体",
-        apply: function(st) {
+        apply: function (st) {
           st.status.sick = true;
           st.status.health = Math.max(0, st.status.health - 10);
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
-          StateManager.addMessage('💪 你撑着上了工，干活效率极低，肚子疼了一整天。健康-10，疲劳+20。', 'warning');
+          StateManager.addMessage(
+            "💪 你撑着上了工，干活效率极低，肚子疼了一整天。健康-10，疲劳+20。",
+            "warning",
+          );
         },
       },
       {
         text: "💊 去药店买点止泻药",
         hint: "¥15 解决问题",
-        apply: function(st) {
+        apply: function (st) {
           if (st.resources.cash >= 15) {
             st.resources.cash -= 15;
             st.status.health = Math.min(100, st.status.health + 5);
-            StateManager.addMessage('💊 买了止泻药，下午基本没事了。¥15 买健康很值。健康+5。', 'success');
+            StateManager.addMessage(
+              "💊 买了止泻药，下午基本没事了。¥15 买健康很值。健康+5。",
+              "success",
+            );
           } else {
             st.status.sick = true;
-            StateManager.addMessage('💊 连15块药费都拿不出来...只能硬扛。', 'danger');
+            StateManager.addMessage(
+              "💊 连15块药费都拿不出来...只能硬扛。",
+              "danger",
+            );
           }
         },
       },
       {
         text: "🛏️ 在家休息一天",
         hint: "休养恢复",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.fatigue = Math.max(0, st.needs.fatigue - 20);
           st.status.health = Math.min(100, st.status.health + 8);
           st.needs.hunger = Math.max(0, st.needs.hunger - 15);
-          StateManager.addMessage('🛏️ 睡了一天，肠胃好多了。少干了一天活，但恢复了精力。', 'info');
+          StateManager.addMessage(
+            "🛏️ 睡了一天，肠胃好多了。少干了一天活，但恢复了精力。",
+            "info",
+          );
         },
       },
     ],
@@ -2314,43 +2504,57 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🚨",
     title: "城管大规模清理行动",
-    story: "政府最近出通知要"整治市容"，整条街的摊贩都在风声鹤唳。据说明天会有大规模清查，抓到没证经营的罚款¥1000起。",
-    conditions: function(st) { return st.player.phase === 'street'; },
+    story:
+      '政府最近出通知要"整治市容"，整条街的摊贩都在风声鹤唳。据说明天会有大规模清查，抓到没证经营的罚款¥1000起。',
+    conditions: function (st) {
+      return st.player.phase === "street";
+    },
     choices: [
       {
         text: "📋 花¥200办个临时许可证",
         hint: "正规化应对",
-        apply: function(st) {
+        apply: function (st) {
           if (st.resources.cash >= 200) {
             st.resources.cash -= 200;
             st.status.fame = Math.min(100, st.status.fame + 3);
-            StateManager.addMessage('📋 花¥200办了临时证，城管来了直接亮证件，没事。名气+3。', 'success');
+            StateManager.addMessage(
+              "📋 花¥200办了临时证，城管来了直接亮证件，没事。名气+3。",
+              "success",
+            );
           } else {
-            StateManager.addMessage('📋 凑不出¥200，只能另想办法。', 'warning');
+            StateManager.addMessage("📋 凑不出¥200，只能另想办法。", "warning");
           }
         },
       },
       {
         text: "🤝 打听消息，提前和城管疏通",
         hint: "走关系",
-        apply: function(st) {
+        apply: function (st) {
           const bribe = 100 + Math.floor(Math.random() * 100);
           if (st.resources.cash >= bribe) {
             st.resources.cash -= bribe;
-            if (st.chengguan) st.chengguan.heat = Math.max(0, st.chengguan.heat - 30);
-            StateManager.addMessage('🤝 花了 ¥' + bribe + ' 疏通关系，城管对你睁一只眼闭一只眼。', 'warning');
+            if (st.chengguan)
+              st.chengguan.heat = Math.max(0, st.chengguan.heat - 30);
+            StateManager.addMessage(
+              "🤝 花了 ¥" + bribe + " 疏通关系，城管对你睁一只眼闭一只眼。",
+              "warning",
+            );
           } else {
-            StateManager.addMessage('🤝 没够疏通的钱，只能祈祷了。', 'warning');
+            StateManager.addMessage("🤝 没够疏通的钱，只能祈祷了。", "warning");
           }
         },
       },
       {
         text: "🏃 临时转移阵地，躲几天",
         hint: "惹不起躲得起",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-          if (st.chengguan) st.chengguan.heat = Math.max(0, st.chengguan.heat - 20);
-          StateManager.addMessage('🏃 你临时把摊子挪到了僻静处，躲过了这波清查，少赚了两天钱。', 'info');
+          if (st.chengguan)
+            st.chengguan.heat = Math.max(0, st.chengguan.heat - 20);
+          StateManager.addMessage(
+            "🏃 你临时把摊子挪到了僻静处，躲过了这波清查，少赚了两天钱。",
+            "info",
+          );
         },
       },
     ],
@@ -2362,35 +2566,45 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "👩",
     title: "王大婶介绍了个活",
-    story: "房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"",
-    conditions: function(st) {
-      var rel = st.relationships && st.relationships['aunt_wang'];
-      return st.player.phase === 'street' && rel && rel.affinity >= 20;
+    story:
+      '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships["aunt_wang"];
+      return st.player.phase === "street" && rel && rel.affinity >= 20;
     },
     choices: [
       {
         text: "👍 去！一天300值了",
         hint: "抓住机会",
-        apply: function(st) {
+        apply: function (st) {
           const earned = 250 + Math.floor(Math.random() * 150);
           st.resources.cash += earned;
           st.resources.totalEarned += earned;
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 30);
           st.needs.hygiene = Math.max(0, st.needs.hygiene - 15);
-          if (st.relationships && st.relationships['aunt_wang']) {
-            st.relationships['aunt_wang'].affinity = Math.min(100, st.relationships['aunt_wang'].affinity + 5);
+          if (st.relationships && st.relationships["aunt_wang"]) {
+            st.relationships["aunt_wang"].affinity = Math.min(
+              100,
+              st.relationships["aunt_wang"].affinity + 5,
+            );
           }
-          StateManager.addMessage('👍 刷了一天墙，累但收获 ¥' + earned + '，王大婶更器重你了。', 'success');
+          StateManager.addMessage(
+            "👍 刷了一天墙，累但收获 ¥" + earned + "，王大婶更器重你了。",
+            "success",
+          );
         },
       },
       {
         text: "❌ 推掉，有别的安排",
         hint: "婉拒",
-        apply: function(st) {
-          if (st.relationships && st.relationships['aunt_wang']) {
-            st.relationships['aunt_wang'].affinity = Math.max(-100, st.relationships['aunt_wang'].affinity - 3);
+        apply: function (st) {
+          if (st.relationships && st.relationships["aunt_wang"]) {
+            st.relationships["aunt_wang"].affinity = Math.max(
+              -100,
+              st.relationships["aunt_wang"].affinity - 3,
+            );
           }
-          StateManager.addMessage('❌ 你婉拒了王大婶，她有点失望。', 'info');
+          StateManager.addMessage("❌ 你婉拒了王大婶，她有点失望。", "info");
         },
       },
     ],
@@ -2401,32 +2615,45 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🔨",
     title: "李工头发了奖金",
-    story: "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
-    conditions: function(st) {
-      return st.player.phase === 'street';
+    story:
+      "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
+    conditions: function (st) {
+      return st.player.phase === "street";
     },
     choices: [
       {
         text: "🎉 站出来，你一直很努力",
         hint: "争取奖金",
-        apply: function(st) {
-          var affinity = (st.relationships && st.relationships['boss_li']) ? st.relationships['boss_li'].affinity : 0;
-          var bonus = affinity >= 50 ? 500 + Math.floor(Math.random() * 300)
-                    : affinity >= 20 ? 200 + Math.floor(Math.random() * 200)
-                    : 50 + Math.floor(Math.random() * 100);
+        apply: function (st) {
+          var affinity =
+            st.relationships && st.relationships["boss_li"]
+              ? st.relationships["boss_li"].affinity
+              : 0;
+          var bonus =
+            affinity >= 50
+              ? 500 + Math.floor(Math.random() * 300)
+              : affinity >= 20
+                ? 200 + Math.floor(Math.random() * 200)
+                : 50 + Math.floor(Math.random() * 100);
           st.resources.cash += bonus;
           st.resources.totalEarned += bonus;
-          StateManager.addMessage('🎉 根据你和工头的关系，拿到了奖金 ¥' + bonus + '！', 'success');
+          StateManager.addMessage(
+            "🎉 根据你和工头的关系，拿到了奖金 ¥" + bonus + "！",
+            "success",
+          );
         },
       },
       {
         text: "😌 低调，不争",
         hint: "随缘",
-        apply: function(st) {
+        apply: function (st) {
           const small = 50 + Math.floor(Math.random() * 80);
           st.resources.cash += small;
           st.resources.totalEarned += small;
-          StateManager.addMessage('😌 工头随手给了你 ¥' + small + ' 红包，低调也有收获。', 'info');
+          StateManager.addMessage(
+            "😌 工头随手给了你 ¥" + small + " 红包，低调也有收获。",
+            "info",
+          );
         },
       },
     ],
@@ -2437,7 +2664,8 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🔑",
     title: "宿舍里发生了失窃",
-    story: "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
+    story:
+      "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
     conditions: function (st) {
       return st.player.phase === "street";
     },
@@ -2449,10 +2677,16 @@ const RANDOM_EVENTS = [
           if (Math.random() < 0.6) {
             st.status.fame = Math.min(100, st.status.fame + 5);
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            StateManager.addMessage("🗣️ 你提供了线索，失主追回了钱，大家都说你讲义气，名气+5。", "success");
+            StateManager.addMessage(
+              "🗣️ 你提供了线索，失主追回了钱，大家都说你讲义气，名气+5。",
+              "success",
+            );
           } else {
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            StateManager.addMessage("🗣️ 你说了，但嫌疑人矢口否认，搞得大家都尴尬，没结果。", "warning");
+            StateManager.addMessage(
+              "🗣️ 你说了，但嫌疑人矢口否认，搞得大家都尴尬，没结果。",
+              "warning",
+            );
           }
         },
       },
@@ -2461,7 +2695,10 @@ const RANDOM_EVENTS = [
         hint: "明哲保身",
         apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-          StateManager.addMessage("🤐 你选择沉默，这件事就这么算了。心里有点不是滋味。", "info");
+          StateManager.addMessage(
+            "🤐 你选择沉默，这件事就这么算了。心里有点不是滋味。",
+            "info",
+          );
         },
       },
       {
@@ -2469,7 +2706,10 @@ const RANDOM_EVENTS = [
         hint: "走正规途径",
         apply: function (st) {
           st.player.mental = Math.min(100, st.player.mental + 2);
-          StateManager.addMessage("🚔 你找了楼管，装了监控，宿舍氛围变好了，心智+2。", "success");
+          StateManager.addMessage(
+            "🚔 你找了楼管，装了监控，宿舍氛围变好了，心智+2。",
+            "success",
+          );
         },
       },
     ],
@@ -2480,7 +2720,8 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🌙",
     title: "夜班搬运工机会",
-    story: "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
+    story:
+      "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
     conditions: function (st) {
       return st.player.phase === "street" && st.needs.fatigue <= 60;
     },
@@ -2494,7 +2735,12 @@ const RANDOM_EVENTS = [
           st.resources.totalEarned += earned;
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 40);
           st.status.health = Math.max(0, st.status.health - 8);
-          StateManager.addMessage("🌙 熬了一夜，赚了¥" + earned + "。白天走路都在飘，健康-8，疲劳+40。", "warning");
+          StateManager.addMessage(
+            "🌙 熬了一夜，赚了¥" +
+              earned +
+              "。白天走路都在飘，健康-8，疲劳+40。",
+            "warning",
+          );
         },
       },
       {
@@ -2502,7 +2748,10 @@ const RANDOM_EVENTS = [
         hint: "长线考量",
         apply: function (st) {
           st.player.mental = Math.min(100, st.player.mental + 3);
-          StateManager.addMessage("😴 你克制住了短期诱惑，好好睡了一觉。细水长流，心智+3。", "info");
+          StateManager.addMessage(
+            "😴 你克制住了短期诱惑，好好睡了一觉。细水长流，心智+3。",
+            "info",
+          );
         },
       },
       {
@@ -2514,9 +2763,15 @@ const RANDOM_EVENTS = [
             st.resources.cash += earned2;
             st.resources.totalEarned += earned2;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
-            StateManager.addMessage("💬 对方同意试做一晚，你赚了¥" + earned2 + "，没耗太多精力。", "success");
+            StateManager.addMessage(
+              "💬 对方同意试做一晚，你赚了¥" + earned2 + "，没耗太多精力。",
+              "success",
+            );
           } else {
-            StateManager.addMessage("💬 对方说要长期干才要，你婉拒了。", "info");
+            StateManager.addMessage(
+              "💬 对方说要长期干才要，你婉拒了。",
+              "info",
+            );
           }
         },
       },
@@ -2528,7 +2783,8 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📲",
     title: "路边捡到一部高端手机",
-    story: "你在公交站椅子下发现一部崭新旗舰手机，锁屏是一对老夫妻和孙子的合影。附近几乎没人。",
+    story:
+      "你在公交站椅子下发现一部崭新旗舰手机，锁屏是一对老夫妻和孙子的合影。附近几乎没人。",
     conditions: function (st) {
       return st.player.phase === "street";
     },
@@ -2542,9 +2798,17 @@ const RANDOM_EVENTS = [
           if (Math.random() < 0.6) {
             var reward = 200 + Math.floor(Math.random() * 300);
             st.resources.cash += reward;
-            StateManager.addMessage("📞 失主找来了，感激地塞给你¥" + reward + " 酬谢。良心无价，名气+8。", "success");
+            StateManager.addMessage(
+              "📞 失主找来了，感激地塞给你¥" +
+                reward +
+                " 酬谢。良心无价，名气+8。",
+              "success",
+            );
           } else {
-            StateManager.addMessage("📞 手机还给了失主，对方道谢就走了没给钱。但你心里踏实，名气+8。", "success");
+            StateManager.addMessage(
+              "📞 手机还给了失主，对方道谢就走了没给钱。但你心里踏实，名气+8。",
+              "success",
+            );
           }
           st.flags._everReturnedPhone = true;
         },
@@ -2557,7 +2821,10 @@ const RANDOM_EVENTS = [
           st.resources.cash += earn;
           st.resources.totalEarned += earn;
           st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-          StateManager.addMessage("💰 卖了¥" + earn + "。但那张锁屏合影的眼神你忘不掉。", "warning");
+          StateManager.addMessage(
+            "💰 卖了¥" + earn + "。但那张锁屏合影的眼神你忘不掉。",
+            "warning",
+          );
         },
       },
       {
@@ -2569,7 +2836,10 @@ const RANDOM_EVENTS = [
           st.resources.cash += rewardB;
           st.resources.totalEarned += rewardB;
           st.status.fame = Math.min(100, st.status.fame + 4);
-          StateManager.addMessage("📲 找到紧急联系人，家属赶来给了¥" + rewardB + " 感谢。名气+4。", "success");
+          StateManager.addMessage(
+            "📲 找到紧急联系人，家属赶来给了¥" + rewardB + " 感谢。名气+4。",
+            "success",
+          );
         },
       },
     ],
@@ -2580,7 +2850,8 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🤝",
     title: "社区招募志愿者",
-    story: "街道办在门口贴了公告，招募周末社区义务清扫志愿者，完成可获荣誉证书，在本地求职有加分。",
+    story:
+      "街道办在门口贴了公告，招募周末社区义务清扫志愿者，完成可获荣誉证书，在本地求职有加分。",
     conditions: function (st) {
       return st.player.phase === "street" && st.player.day % 7 === 0;
     },
@@ -2592,14 +2863,20 @@ const RANDOM_EVENTS = [
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
           st.needs.happiness = Math.min(100, st.needs.happiness + 18);
           st.status.fame = Math.min(100, st.status.fame + 10);
-          StateManager.addMessage("🤝 参加了社区打扫，认识了不少街坊邻居！名气+10，心情+18。", "success");
+          StateManager.addMessage(
+            "🤝 参加了社区打扫，认识了不少街坊邻居！名气+10，心情+18。",
+            "success",
+          );
         },
       },
       {
         text: "⏰ 太忙了，等下次",
         hint: "理性权衡",
         apply: function (st) {
-          StateManager.addMessage("⏰ 你记下了下次活动的时间，今天还有正事要做。", "info");
+          StateManager.addMessage(
+            "⏰ 你记下了下次活动的时间，今天还有正事要做。",
+            "info",
+          );
         },
       },
       {
@@ -2608,7 +2885,10 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.status.fame = Math.min(100, st.status.fame + 3);
           st.needs.happiness = Math.max(0, st.needs.happiness - 3);
-          StateManager.addMessage("📸 打了个卡拍了张照就溜走了。名气+3，但感觉有点空洞。", "info");
+          StateManager.addMessage(
+            "📸 打了个卡拍了张照就溜走了。名气+3，但感觉有点空洞。",
+            "info",
+          );
         },
       },
     ],
@@ -2619,7 +2899,8 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🚑",
     title: "路边老人突然倒地",
-    story: "去工地路上，一个老大爷突然捂着胸口倒在路边。旁边路人大多驻足观望，没人敢上前——\"扶不扶\"的事大家都怕。",
+    story:
+      '去工地路上，一个老大爷突然捂着胸口倒在路边。旁边路人大多驻足观望，没人敢上前——"扶不扶"的事大家都怕。',
     conditions: function (st) {
       return st.player.phase === "street";
     },
@@ -2632,11 +2913,19 @@ const RANDOM_EVENTS = [
             var cost = 200 + Math.floor(Math.random() * 200);
             if (st.resources.cash >= cost) st.resources.cash -= cost;
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            StateManager.addMessage("🚑 老人救回来了！但家属误以为你是肇事者讹了你¥" + cost + "，后来路人作证才澄清。", "warning");
+            StateManager.addMessage(
+              "🚑 老人救回来了！但家属误以为你是肇事者讹了你¥" +
+                cost +
+                "，后来路人作证才澄清。",
+              "warning",
+            );
           } else {
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
             st.status.fame = Math.min(100, st.status.fame + 12);
-            StateManager.addMessage("🚑 你帮老人撑住身体等来了救护车，家属感激涕零，名气+12！", "success");
+            StateManager.addMessage(
+              "🚑 你帮老人撑住身体等来了救护车，家属感激涕零，名气+12！",
+              "success",
+            );
           }
           st.flags._everHelpedElderly = true;
         },
@@ -2647,7 +2936,10 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
           st.status.fame = Math.min(100, st.status.fame + 5);
-          StateManager.addMessage("📞 你打了120再守在远处，救护车来了。帮了忙也保护了自己，名气+5。", "info");
+          StateManager.addMessage(
+            "📞 你打了120再守在远处，救护车来了。帮了忙也保护了自己，名气+5。",
+            "info",
+          );
         },
       },
       {
@@ -2655,7 +2947,10 @@ const RANDOM_EVENTS = [
         hint: "自保优先",
         apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 15);
-          StateManager.addMessage("🚶 你走了。那个画面在脑海中挥散不去，心情-15。", "warning");
+          StateManager.addMessage(
+            "🚶 你走了。那个画面在脑海中挥散不去，心情-15。",
+            "warning",
+          );
         },
       },
     ],
@@ -2667,51 +2962,71 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📅",
     title: "一个月了",
-    story: "不知不觉，你已经在这座城市漂了整整一个月。站在路边，望着来来往往的人群，你开始思考……接下来的路怎么走？",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day === 30 && !st.flags._milestone30;
+    story:
+      "不知不觉，你已经在这座城市漂了整整一个月。站在路边，望着来来往往的人群，你开始思考……接下来的路怎么走？",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day === 30 &&
+        !st.flags._milestone30
+      );
     },
     choices: [
       {
         text: "💪 继续努力搞钱，先还清债务",
         hint: "专注生存，攒本钱",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone30 = true;
           st.flags._milestone30Path = "money";
           st.resources.cash += 150;
           st.resources.totalEarned += 150;
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-          StateManager.addMessage("💪 你认清了方向：先把村长那5500还上，再图其他。得到了额外¥150的坚持奖励。", "success");
+          StateManager.addMessage(
+            "💪 你认清了方向：先把村长那5500还上，再图其他。得到了额外¥150的坚持奖励。",
+            "success",
+          );
         },
       },
       {
         text: "📚 投资自己，学技能升值",
         hint: "长线思维，提升竞争力",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone30 = true;
           st.flags._milestone30Path = "skills";
           var skKeys = Object.keys(st.skills);
-          skKeys.forEach(function(k) { st.skills[k].xp += 30; });
+          skKeys.forEach(function (k) {
+            st.skills[k].xp += 30;
+          });
           st.player.intelligence = Math.min(100, st.player.intelligence + 2);
-          StateManager.addMessage("📚 你决定投资自己的未来。全部技能XP+30，智力+2！知识不会贬值。", "success");
+          StateManager.addMessage(
+            "📚 你决定投资自己的未来。全部技能XP+30，智力+2！知识不会贬值。",
+            "success",
+          );
         },
       },
       {
         text: "🤝 扩展人脉，认识更多人",
         hint: "人脉是最好的资本",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone30 = true;
           st.flags._milestone30Path = "network";
           st.status.fame = Math.min(100, st.status.fame + 15);
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
           if (typeof NPCS !== "undefined") {
-            NPCS.forEach(function(npc) {
-              if (!st.relationships[npc.id]) st.relationships[npc.id] = { affinity: 0, met: false };
+            NPCS.forEach(function (npc) {
+              if (!st.relationships[npc.id])
+                st.relationships[npc.id] = { affinity: 0, met: false };
               st.relationships[npc.id].met = true;
-              st.relationships[npc.id].affinity = Math.min(100, st.relationships[npc.id].affinity + 5);
+              st.relationships[npc.id].affinity = Math.min(
+                100,
+                st.relationships[npc.id].affinity + 5,
+              );
             });
           }
-          StateManager.addMessage("🤝 你决定主动结识周围的人。所有NPC关系建立，好感+5，名气+15！人脉是最重要的资产。", "success");
+          StateManager.addMessage(
+            "🤝 你决定主动结识周围的人。所有NPC关系建立，好感+5，名气+15！人脉是最重要的资产。",
+            "success",
+          );
         },
       },
     ],
@@ -2722,35 +3037,56 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📅",
     title: "两个月了",
-    story: "六十天。你已经对这座城市不再陌生。但偶尔还是会有迷茫——这条路，走对了吗？",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day === 60 && !st.flags._milestone60;
+    story:
+      "六十天。你已经对这座城市不再陌生。但偶尔还是会有迷茫——这条路，走对了吗？",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day === 60 &&
+        !st.flags._milestone60
+      );
     },
     choices: [
       {
         text: "🏆 回顾成绩，给自己打气",
         hint: "看看走了多远",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone60 = true;
           var totalEarned = st.resources.totalEarned || 0;
-          var highlight = totalEarned > 5000 ? "赚了¥" + totalEarned.toLocaleString() + "，成绩不错！" : "虽然辛苦，但你坚持下来了。";
+          var highlight =
+            totalEarned > 5000
+              ? "赚了¥" + totalEarned.toLocaleString() + "，成绩不错！"
+              : "虽然辛苦，但你坚持下来了。";
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
           st.player.mental = Math.min(100, st.player.mental + 3);
-          StateManager.addMessage("🏆 " + highlight + " 两个月的磨练让你成长了很多。心智+3，心情大涨！", "success");
+          StateManager.addMessage(
+            "🏆 " +
+              highlight +
+              " 两个月的磨练让你成长了很多。心智+3，心情大涨！",
+            "success",
+          );
         },
       },
       {
         text: "🔍 分析自己的短板，针对性提升",
         hint: "理性规划",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone60 = true;
           var minStat = "physique";
           var minVal = st.player.physique;
-          ["intelligence", "agility", "mental"].forEach(function(s) {
-            if (st.player[s] < minVal) { minStat = s; minVal = st.player[s]; }
+          ["intelligence", "agility", "mental"].forEach(function (s) {
+            if (st.player[s] < minVal) {
+              minStat = s;
+              minVal = st.player[s];
+            }
           });
           st.player[minStat] = Math.min(100, st.player[minStat] + 5);
-          StateManager.addMessage("🔍 你找出了自己最弱的一项：" + minStat + "，专项提升+5！针对性训练效果最好。", "success");
+          StateManager.addMessage(
+            "🔍 你找出了自己最弱的一项：" +
+              minStat +
+              "，专项提升+5！针对性训练效果最好。",
+            "success",
+          );
         },
       },
     ],
@@ -2761,36 +3097,51 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📅",
     title: "三个月——关键时刻",
-    story: "九十天。一个季度。很多来这座城市的人，三个月后悄悄打道回府了。而你还在这里。这座城市在等你给它一个答案。",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day === 90 && !st.flags._milestone90;
+    story:
+      "九十天。一个季度。很多来这座城市的人，三个月后悄悄打道回府了。而你还在这里。这座城市在等你给它一个答案。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day === 90 &&
+        !st.flags._milestone90
+      );
     },
     choices: [
       {
         text: "🏙️ 我属于这里，不回头",
         hint: "正式扎根这座城市",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone90 = true;
           st.flags._cityResident = true;
           var allStatBonus = 2;
-          ["physique","intelligence","agility","mental"].forEach(function(s) {
-            st.player[s] = Math.min(100, st.player[s] + allStatBonus);
-          });
+          ["physique", "intelligence", "agility", "mental"].forEach(
+            function (s) {
+              st.player[s] = Math.min(100, st.player[s] + allStatBonus);
+            },
+          );
           st.status.fame = Math.min(100, st.status.fame + 10);
-          StateManager.addMessage("🏙️ 你决定留下来！全属性+2，名气+10。城市居民身份让你做事更自信。", "success");
+          StateManager.addMessage(
+            "🏙️ 你决定留下来！全属性+2，名气+10。城市居民身份让你做事更自信。",
+            "success",
+          );
         },
       },
       {
         text: "📞 给家人打个电话，获得支持",
         hint: "精神充电",
-        apply: function(st) {
+        apply: function (st) {
           st.flags._milestone90 = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 30);
           st.player.mental = Math.min(100, st.player.mental + 5);
           var remit = 200 + Math.floor(Math.random() * 200);
           st.resources.cash += remit;
           st.resources.totalEarned += remit;
-          StateManager.addMessage("📞 家人听说你坚持了三个月，偷偷汇来了¥" + remit + "！心情大好+30，心智+5。", "success");
+          StateManager.addMessage(
+            "📞 家人听说你坚持了三个月，偷偷汇来了¥" +
+              remit +
+              "！心情大好+30，心智+5。",
+            "success",
+          );
         },
       },
     ],
@@ -2802,29 +3153,42 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🤝",
     title: "工友老刘来还人情",
-    story: "当年你不顾工头施压，帮工友老刘叫了救护车。今天他来找你，说他表弟在正规工程公司，手上有个活缺人……",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.flags._helpedCoworker && st.player.day >= 30;
+    story:
+      "当年你不顾工头施压，帮工友老刘叫了救护车。今天他来找你，说他表弟在正规工程公司，手上有个活缺人……",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._helpedCoworker &&
+        st.player.day >= 30
+      );
     },
     choices: [
       {
         text: "💪 接！认识新朋友",
         hint: "人情就是资本",
-        apply: function(st) {
+        apply: function (st) {
           var pay = 300 + Math.floor(Math.random() * 200);
           st.resources.cash += pay;
           st.resources.totalEarned += pay;
           st.player.physique = Math.min(100, st.player.physique + 2);
           st.status.fame = Math.min(100, st.status.fame + 5);
-          StateManager.addMessage("🤝 老刘的表弟给了你一单活，干完赚了¥" + pay + "，还认识了不少工地朋友！体质+2，名气+5。", "success");
+          StateManager.addMessage(
+            "🤝 老刘的表弟给了你一单活，干完赚了¥" +
+              pay +
+              "，还认识了不少工地朋友！体质+2，名气+5。",
+            "success",
+          );
         },
       },
       {
         text: "🙏 谢谢，但我最近有事",
         hint: "婉拒但维持关系",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          StateManager.addMessage("🙏 婉拒了老刘，但他说下次还有机会。好人好报，心情不错。", "info");
+          StateManager.addMessage(
+            "🙏 婉拒了老刘，但他说下次还有机会。好人好报，心情不错。",
+            "info",
+          );
         },
       },
     ],
@@ -2835,30 +3199,44 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "👛",
     title: "噩梦还是惊喜",
-    story: "路上你听到身后有人喊你。一个陌生女人说她当时丢了钱包，到处找，最后从监控看到你捡走了……",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.flags._keptWallet && st.player.day >= 15;
+    story:
+      "路上你听到身后有人喊你。一个陌生女人说她当时丢了钱包，到处找，最后从监控看到你捡走了……",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._keptWallet &&
+        st.player.day >= 15
+      );
     },
     choices: [
       {
         text: "😰 坦白承认，还钱",
         hint: "归还钱包里的钱",
-        apply: function(st) {
+        apply: function (st) {
           var repaid = 100 + Math.floor(Math.random() * 80);
           st.resources.cash = Math.max(0, st.resources.cash - repaid);
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
           st.status.fame = Math.min(100, st.status.fame + 8);
           st.flags._keptWallet = false;
-          StateManager.addMessage("😰 你道了歉、还了¥" + repaid + "，对方感谢你的诚实。心里反而轻了许多。心情+15，名气+8。", "success");
+          st.flags._returnedWallet = true;
+          StateManager.addMessage(
+            "😰 你道了歉、还了¥" +
+              repaid +
+              "，对方感谢你的诚实。心里反而轻了许多。心情+15，名气+8。",
+            "success",
+          );
         },
       },
       {
         text: "😤 矢口否认",
         hint: "死不承认",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 20);
           st.status.fame = Math.max(0, st.status.fame - 10);
-          StateManager.addMessage("😤 你否认了。她半信半疑地走了。心里像压了块石头，名气-10。", "warning");
+          StateManager.addMessage(
+            "😤 你否认了。她半信半疑地走了。心里像压了块石头，名气-10。",
+            "warning",
+          );
         },
       },
     ],
@@ -2869,29 +3247,42 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🌟",
     title: "信誉带来回报",
-    story: "你拒绝假货、做生意讲诚信的事传开了。商业区的老板们私下讨论，说你这个人靠谱，有个批发商想跟你长期合作……",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.flags._refusedFakeGoods && st.status.fame >= 20;
+    story:
+      "你拒绝假货、做生意讲诚信的事传开了。商业区的老板们私下讨论，说你这个人靠谱，有个批发商想跟你长期合作……",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._refusedFakeGoods &&
+        st.status.fame >= 20
+      );
     },
     choices: [
       {
         text: "🤝 合作！建立长期供货关系",
         hint: "打开批发渠道",
-        apply: function(st) {
+        apply: function (st) {
           var bonus = 500 + Math.floor(Math.random() * 300);
           st.resources.cash += bonus;
           st.resources.totalEarned += bonus;
           st.status.fame = Math.min(100, st.status.fame + 10);
           st.flags._bulkSupplier = true;
-          StateManager.addMessage("🤝 合作谈成了！批发商先给了¥" + bonus + "的预付款。你的诚信名声打出去了，名气+10。", "success");
+          StateManager.addMessage(
+            "🤝 合作谈成了！批发商先给了¥" +
+              bonus +
+              "的预付款。你的诚信名声打出去了，名气+10。",
+            "success",
+          );
         },
       },
       {
         text: "🤔 了解一下，不急于答应",
         hint: "谨慎观望",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-          StateManager.addMessage("🤔 你说先考虑一下，对方表示理解，留了联系方式。机会还在。", "info");
+          StateManager.addMessage(
+            "🤔 你说先考虑一下，对方表示理解，留了联系方式。机会还在。",
+            "info",
+          );
         },
       },
     ],
@@ -2902,40 +3293,58 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "⚖️",
     title: "劳动局表彰",
-    story: "你上次举报欠薪的事情，劳动仲裁中心记了档。今天接到通知：你的案例被评为"维权先锋"，有奖励，也有记者想采访……",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.flags._foughtWageTheft && st.player.day >= 20;
+    story:
+      '你上次举报欠薪的事情，劳动仲裁中心记了档。今天接到通知：你的案例被评为"维权先锋"，有奖励，也有记者想采访……',
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._foughtWageTheft &&
+        st.player.day >= 20
+      );
     },
     choices: [
       {
         text: "🎤 接受采访，公开发声",
         hint: "名气暴增，但会树敌",
-        apply: function(st) {
+        apply: function (st) {
           var award = 200 + Math.floor(Math.random() * 100);
           st.resources.cash += award;
           st.resources.totalEarned += award;
           st.status.fame = Math.min(100, st.status.fame + 18);
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-          StateManager.addMessage("🎤 采访播出了！你成了工友圈的红人，拿了¥" + award + "奖励，名气+18！有些工头不太高兴……", "success");
+          StateManager.addMessage(
+            "🎤 采访播出了！你成了工友圈的红人，拿了¥" +
+              award +
+              "奖励，名气+18！有些工头不太高兴……",
+            "success",
+          );
         },
       },
       {
         text: "🏆 领奖就好，不接受采访",
         hint: "低调处理",
-        apply: function(st) {
+        apply: function (st) {
           var award = 200 + Math.floor(Math.random() * 100);
           st.resources.cash += award;
           st.resources.totalEarned += award;
           st.status.fame = Math.min(100, st.status.fame + 8);
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-          StateManager.addMessage("🏆 低调领了奖金¥" + award + "和荣誉证书，名气+8。做了好事，心里踏实。", "success");
+          StateManager.addMessage(
+            "🏆 低调领了奖金¥" +
+              award +
+              "和荣誉证书，名气+8。做了好事，心里踏实。",
+            "success",
+          );
         },
       },
       {
         text: "🙅 放弃，别惹麻烦",
         hint: "多一事不如少一事",
-        apply: function(st) {
-          StateManager.addMessage("🙅 你婉拒了。这段经历只有你自己知道。", "info");
+        apply: function (st) {
+          StateManager.addMessage(
+            "🙅 你婉拒了。这段经历只有你自己知道。",
+            "info",
+          );
         },
       },
     ],
@@ -2946,36 +3355,50 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📱",
     title: "工友老刘发来内部消息",
-    story: "老刘微信说他在新工地发现包工头要跑路，三十几个工友的工资危了！他第一个想到你——那次你帮他的事他一直没忘。",
-    conditions: function(st) {
-      return st.player.phase === "street" && (st.flags._helpedCoworker || st.flags._foughtWageTheft) && st.player.day >= 25;
+    story:
+      "老刘微信说他在新工地发现包工头要跑路，三十几个工友的工资危了！他第一个想到你——那次你帮他的事他一直没忘。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.flags._helpedCoworker || st.flags._foughtWageTheft) &&
+        st.player.day >= 25
+      );
     },
     choices: [
       {
         text: "📣 帮忙组织工友维权",
         hint: "用你的经验帮大家",
-        apply: function(st) {
+        apply: function (st) {
           st.status.fame = Math.min(100, st.status.fame + 12);
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
           st.player.mental = Math.min(100, st.player.mental + 2);
-          StateManager.addMessage("📣 你和老刘一起组织，工友们联名上报，成功阻止了包工头跑路。大家都感谢你，名气+12，心智+2！", "success");
+          StateManager.addMessage(
+            "📣 你和老刘一起组织，工友们联名上报，成功阻止了包工头跑路。大家都感谢你，名气+12，心智+2！",
+            "success",
+          );
         },
       },
       {
         text: "📋 帮忙收集证据，但不出头",
         hint: "背后出力",
-        apply: function(st) {
+        apply: function (st) {
           st.player.intelligence = Math.min(100, st.player.intelligence + 1);
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-          StateManager.addMessage("📋 你偷偷收集了包工头的逃跑证据交给老刘，工友们维权成功。智力+1，良心过得去。", "success");
+          StateManager.addMessage(
+            "📋 你偷偷收集了包工头的逃跑证据交给老刘，工友们维权成功。智力+1，良心过得去。",
+            "success",
+          );
         },
       },
       {
         text: "😶 告诉他我帮不上",
         hint: "事不关己",
-        apply: function(st) {
+        apply: function (st) {
           st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-          StateManager.addMessage("😶 你说你帮不上忙。老刘半天没回复。心里有点不是滋味。", "warning");
+          StateManager.addMessage(
+            "😶 你说你帮不上忙。老刘半天没回复。心里有点不是滋味。",
+            "warning",
+          );
         },
       },
     ],
@@ -2986,28 +3409,40 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📚",
     title: "小美给你介绍了家教单",
-    story: "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
-    conditions: function(st) {
-      var rel = st.relationships && st.relationships['xiao_mei'];
-      return st.player.phase === 'street' && rel && rel.affinity >= 30 && st.player.intelligence >= 30;
+    story:
+      "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships["xiao_mei"];
+      return (
+        st.player.phase === "street" &&
+        rel &&
+        rel.affinity >= 30 &&
+        st.player.intelligence >= 30
+      );
     },
     choices: [
       {
         text: "✅ 接单！智力变现",
         hint: "每周+¥160",
-        apply: function(st) {
+        apply: function (st) {
           const earned = 160 + Math.floor(Math.random() * 80);
           st.resources.cash += earned;
           st.resources.totalEarned += earned;
           st.skills.english && (st.skills.english.xp += 15);
-          StateManager.addMessage('✅ 教了两节课，赚了 ¥' + earned + '！小美这个人脉太值了。', 'success');
+          StateManager.addMessage(
+            "✅ 教了两节课，赚了 ¥" + earned + "！小美这个人脉太值了。",
+            "success",
+          );
         },
       },
       {
         text: "😅 推掉，感觉教不了",
         hint: "量力而行",
-        apply: function(st) {
-          StateManager.addMessage('😅 你说自己不太擅长，小美表示理解。下次努力提升智力。', 'info');
+        apply: function (st) {
+          StateManager.addMessage(
+            "😅 你说自己不太擅长，小美表示理解。下次努力提升智力。",
+            "info",
+          );
         },
       },
     ],
@@ -3017,26 +3452,37 @@ const RANDOM_EVENTS = [
   {
     id: "neighbor_dispute",
     title: "🏠 邻里纷争",
-    description: "隔壁两家因为停车位的事吵得不可开交，其中一家来找你评理。你在这片住了一阵，两边都有些交情。",
-    conditions: function(state) {
-      return state.player.day >= 15 && state.player.phase === "street" &&
-        (state.trade.currentLocation === "slum" || state.trade.currentLocation === "park");
+    description:
+      "隔壁两家因为停车位的事吵得不可开交，其中一家来找你评理。你在这片住了一阵，两边都有些交情。",
+    conditions: function (state) {
+      return (
+        state.player.day >= 15 &&
+        state.player.phase === "street" &&
+        (state.trade.currentLocation === "slum" ||
+          state.trade.currentLocation === "park")
+      );
     },
     weight: 0.7,
     choices: [
       {
         text: "🤝 居中调停，说明利害",
-        apply: function(state) {
+        apply: function (state) {
           state.status.fame = Math.min(100, (state.status.fame || 0) + 5);
           state.needs.happiness = Math.min(100, state.needs.happiness + 8);
-          StateManager.addMessage('🤝 你耐心劝说，双方各退一步，你在街坊间的声望涨了不少。名气+5，心情+8。', 'success');
+          StateManager.addMessage(
+            "🤝 你耐心劝说，双方各退一步，你在街坊间的声望涨了不少。名气+5，心情+8。",
+            "success",
+          );
         },
       },
       {
         text: "🚶 假装没看见，快步走开",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.max(0, state.needs.happiness - 3);
-          StateManager.addMessage('😬 你低头快步走开，但总觉得少了点什么——有些事不能只当路人。', 'info');
+          StateManager.addMessage(
+            "😬 你低头快步走开，但总觉得少了点什么——有些事不能只当路人。",
+            "info",
+          );
         },
       },
     ],
@@ -3045,28 +3491,38 @@ const RANDOM_EVENTS = [
   {
     id: "street_cat_rescue",
     title: "🐱 巷子里的小猫",
-    description: "一只小橘猫被卡在了下水道格栅里，路人围着看却没人动手。猫叫得越来越弱，再不救怕是凶多吉少。",
-    conditions: function(state) {
-      return state.player.day >= 10 && state.player.phase === "street" &&
-        state.trade.currentLocation === "slum";
+    description:
+      "一只小橘猫被卡在了下水道格栅里，路人围着看却没人动手。猫叫得越来越弱，再不救怕是凶多吉少。",
+    conditions: function (state) {
+      return (
+        state.player.day >= 10 &&
+        state.player.phase === "street" &&
+        state.trade.currentLocation === "slum"
+      );
     },
     weight: 0.6,
     choices: [
       {
         text: "🛠️ 撸起袖子，想办法救出来",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.min(100, state.needs.happiness + 12);
           state.needs.hygiene = Math.max(0, state.needs.hygiene - 10);
           state.status.fame = Math.min(100, (state.status.fame || 0) + 3);
-          StateManager.addMessage('🐱 你把小猫救了出来，路人鼓起掌来。衣服脏了，但心情大好。心情+12，卫生-10，名气+3。', 'success');
+          StateManager.addMessage(
+            "🐱 你把小猫救了出来，路人鼓起掌来。衣服脏了，但心情大好。心情+12，卫生-10，名气+3。",
+            "success",
+          );
         },
       },
       {
         text: "😔 看了一眼，叹气离开",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.max(0, state.needs.happiness - 5);
           state.player.mental = Math.max(0, state.player.mental - 1);
-          StateManager.addMessage('😔 小猫的叫声追了你好久。城市太大了，不是每件事都能管。心情-5，心智-1。', 'warning');
+          StateManager.addMessage(
+            "😔 小猫的叫声追了你好久。城市太大了，不是每件事都能管。心情-5，心智-1。",
+            "warning",
+          );
         },
       },
     ],
@@ -3075,31 +3531,45 @@ const RANDOM_EVENTS = [
   {
     id: "expired_food_deal",
     title: "🛒 廉价食品",
-    description: "超市门口有人在低价甩卖一批临期食品，看起来都是正规品牌，就是保质期只剩三天了。对现在的你来说，¥20能买够吃三天。",
-    conditions: function(state) {
-      return state.player.day >= 5 && state.player.phase === "street" &&
+    description:
+      "超市门口有人在低价甩卖一批临期食品，看起来都是正规品牌，就是保质期只剩三天了。对现在的你来说，¥20能买够吃三天。",
+    conditions: function (state) {
+      return (
+        state.player.day >= 5 &&
+        state.player.phase === "street" &&
         state.resources.cash < 100 &&
-        (state.trade.currentLocation === "commercialDist" || state.trade.currentLocation === "slum");
+        (state.trade.currentLocation === "commercialDist" ||
+          state.trade.currentLocation === "slum")
+      );
     },
     weight: 0.8,
     choices: [
       {
         text: "💰 买！¥20，省下来买别的",
-        apply: function(state) {
+        apply: function (state) {
           if (state.resources.cash >= 20) {
             state.resources.cash -= 20;
             state.needs.hunger = Math.min(100, state.needs.hunger + 40);
-            StateManager.addMessage('🛒 花了¥20买了一堆临期食品，够吃好几天了。饥饱+40。', 'success');
+            StateManager.addMessage(
+              "🛒 花了¥20买了一堆临期食品，够吃好几天了。饥饱+40。",
+              "success",
+            );
           } else {
-            StateManager.addMessage('😢 翻了翻口袋，连¥20都不够了……', 'warning');
+            StateManager.addMessage(
+              "😢 翻了翻口袋，连¥20都不够了……",
+              "warning",
+            );
           }
         },
       },
       {
         text: "🙅 算了，吃新鲜的",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.min(100, state.needs.happiness + 3);
-          StateManager.addMessage('😌 你还是选择了有尊严地生活。省钱是省钱，但底线还是要有的。心情+3。', 'info');
+          StateManager.addMessage(
+            "😌 你还是选择了有尊严地生活。省钱是省钱，但底线还是要有的。心情+3。",
+            "info",
+          );
         },
       },
     ],
@@ -3108,34 +3578,48 @@ const RANDOM_EVENTS = [
   {
     id: "rain_shelter",
     title: "🌧️ 避雨奇遇",
-    description: "突然下起大雨，你跑进一家面馆门廊避雨。老板娘看你淋成落汤鸡的样子，笑着说'进来坐吧，不买也没事'。",
-    conditions: function(state) {
-      return state.player.day >= 8 && state.player.phase === "street" &&
-        state.weather && (state.weather.type === "rainy" || state.weather.type === "storm");
+    description:
+      "突然下起大雨，你跑进一家面馆门廊避雨。老板娘看你淋成落汤鸡的样子，笑着说'进来坐吧，不买也没事'。",
+    conditions: function (state) {
+      return (
+        state.player.day >= 8 &&
+        state.player.phase === "street" &&
+        state.weather &&
+        (state.weather.type === "rainy" || state.weather.type === "storm")
+      );
     },
     weight: 1.0,
     choices: [
       {
         text: "☕ 进去坐，要碗便宜的汤",
-        apply: function(state) {
+        apply: function (state) {
           var cost = 8;
           if (state.resources.cash >= cost) {
             state.resources.cash -= cost;
             state.needs.hunger = Math.min(100, state.needs.hunger + 20);
             state.needs.happiness = Math.min(100, state.needs.happiness + 15);
-            StateManager.addMessage('🍜 热腾腾的汤下肚，冷意散了大半。雨里遇到的温情，比汤还暖。花费¥8，饥饱+20，心情+15。', 'success');
+            StateManager.addMessage(
+              "🍜 热腾腾的汤下肚，冷意散了大半。雨里遇到的温情，比汤还暖。花费¥8，饥饱+20，心情+15。",
+              "success",
+            );
           } else {
             state.needs.happiness = Math.min(100, state.needs.happiness + 8);
-            StateManager.addMessage('😊 老板娘让你白坐着等雨停，还给你倒了杯热水。世界有时候比你想的温柔。心情+8。', 'success');
+            StateManager.addMessage(
+              "😊 老板娘让你白坐着等雨停，还给你倒了杯热水。世界有时候比你想的温柔。心情+8。",
+              "success",
+            );
           }
         },
       },
       {
         text: "🏃 谢谢，我还有事，冒雨走",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.hygiene = Math.max(0, state.needs.hygiene - 15);
           state.needs.fatigue = Math.min(100, state.needs.fatigue + 10);
-          StateManager.addMessage('🌧️ 你淋着雨跑回去，衣服全湿透了，疲惫加重了不少。卫生-15，疲劳+10。', 'warning');
+          StateManager.addMessage(
+            "🌧️ 你淋着雨跑回去，衣服全湿透了，疲惫加重了不少。卫生-15，疲劳+10。",
+            "warning",
+          );
         },
       },
     ],
@@ -3144,28 +3628,49 @@ const RANDOM_EVENTS = [
   {
     id: "phone_scam_call",
     title: "📞 诈骗电话",
-    description: "你接到一个陌生电话，对方声称是'公安局'，说你名下有一张违规信用卡，需要配合调查，要你把存款转到'安全账户'……",
-    conditions: function(state) {
-      return state.player.day >= 20 && state.player.phase === "street" &&
-        state.resources.bankBalance > 0 && !state.flags._scamPhoneCall;
+    description:
+      "你接到一个陌生电话，对方声称是'公安局'，说你名下有一张违规信用卡，需要配合调查，要你把存款转到'安全账户'……",
+    conditions: function (state) {
+      return (
+        state.player.day >= 20 &&
+        state.player.phase === "street" &&
+        state.resources.bankBalance > 0 &&
+        !state.flags._scamPhoneCall
+      );
     },
     weight: 0.5,
     choices: [
       {
         text: "📴 挂断！然后屏蔽这个号码",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._scamPhoneCall = true;
-          state.player.intelligence = Math.min(100, state.player.intelligence + 1);
-          StateManager.addMessage('✅ 你果断挂断了电话，记住了这个手法。以后遇到这种情况更警觉了。智力+1。', 'success');
+          state.player.intelligence = Math.min(
+            100,
+            state.player.intelligence + 1,
+          );
+          StateManager.addMessage(
+            "✅ 你果断挂断了电话，记住了这个手法。以后遇到这种情况更警觉了。智力+1。",
+            "success",
+          );
         },
       },
       {
         text: "😰 半信半疑，继续听听……",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._scamPhoneCall = true;
-          var loss = Math.min(state.resources.bankBalance, Math.floor(state.resources.bankBalance * 0.3));
+          var loss = Math.min(
+            state.resources.bankBalance,
+            Math.floor(state.resources.bankBalance * 0.3),
+          );
           state.resources.bankBalance -= loss;
-          StateManager.addMessage('😱 你被骗了！对方说服你转账验证，转过去的¥' + loss.toLocaleString() + '再也没有了。银行存款-¥' + loss.toLocaleString() + '。', 'danger');
+          StateManager.addMessage(
+            "😱 你被骗了！对方说服你转账验证，转过去的¥" +
+              loss.toLocaleString() +
+              "再也没有了。银行存款-¥" +
+              loss.toLocaleString() +
+              "。",
+            "danger",
+          );
         },
       },
     ],
@@ -3174,25 +3679,38 @@ const RANDOM_EVENTS = [
   {
     id: "job_gossip",
     title: "📋 工友小道消息",
-    description: "休息时，旁边的老工人凑过来低声说：'我听说隔壁工地老板要跑路，拖了两个月工资。你这里靠谱吗？'",
-    conditions: function(state) {
-      return state.player.day >= 12 && state.player.phase === "street" &&
-        state.trade.currentLocation === "construction";
+    description:
+      "休息时，旁边的老工人凑过来低声说：'我听说隔壁工地老板要跑路，拖了两个月工资。你这里靠谱吗？'",
+    conditions: function (state) {
+      return (
+        state.player.day >= 12 &&
+        state.player.phase === "street" &&
+        state.trade.currentLocation === "construction"
+      );
     },
     weight: 0.8,
     choices: [
       {
         text: "🤔 认真打听一下，看看情况",
-        apply: function(state) {
-          state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+        apply: function (state) {
+          state.player.intelligence = Math.min(
+            100,
+            state.player.intelligence + 1,
+          );
           state.status.fame = Math.min(100, (state.status.fame || 0) + 2);
-          StateManager.addMessage('🔍 你详细问了问情况，记在心里了。这种消息，在工地里往往比官方通知更准。智力+1，名气+2。', 'info');
+          StateManager.addMessage(
+            "🔍 你详细问了问情况，记在心里了。这种消息，在工地里往往比官方通知更准。智力+1，名气+2。",
+            "info",
+          );
         },
       },
       {
         text: "🙄 当作没听到，自己顾自己",
-        apply: function(state) {
-          StateManager.addMessage('😶 你点点头没多说话。工地里的事，不打听是非，是一种保护自己的方式。', 'info');
+        apply: function (state) {
+          StateManager.addMessage(
+            "😶 你点点头没多说话。工地里的事，不打听是非，是一种保护自己的方式。",
+            "info",
+          );
         },
       },
     ],
@@ -3201,28 +3719,42 @@ const RANDOM_EVENTS = [
   {
     id: "library_notice",
     title: "📚 图书馆限时开放",
-    description: "公告牌上贴着一张告示：'本市市民图书馆本周免费开放，附赠一次免费自习时间和专业书借阅机会。'",
-    conditions: function(state) {
-      return state.player.day >= 8 && state.player.phase === "street" &&
-        (state.trade.currentLocation === "park" || state.trade.currentLocation === "school") &&
-        !state.flags._libraryVisit;
+    description:
+      "公告牌上贴着一张告示：'本市市民图书馆本周免费开放，附赠一次免费自习时间和专业书借阅机会。'",
+    conditions: function (state) {
+      return (
+        state.player.day >= 8 &&
+        state.player.phase === "street" &&
+        (state.trade.currentLocation === "park" ||
+          state.trade.currentLocation === "school") &&
+        !state.flags._libraryVisit
+      );
     },
     weight: 0.7,
     choices: [
       {
         text: "📖 去借本书，认真读读",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._libraryVisit = true;
           var xp = 20 + Math.floor(Math.random() * 15);
-          state.player.intelligence = Math.min(100, state.player.intelligence + 2);
-          StateManager.addMessage('📚 你借了本关于经济学的书，读了几章，感觉打开了新世界。智力+2。', 'success');
+          state.player.intelligence = Math.min(
+            100,
+            state.player.intelligence + 2,
+          );
+          StateManager.addMessage(
+            "📚 你借了本关于经济学的书，读了几章，感觉打开了新世界。智力+2。",
+            "success",
+          );
         },
       },
       {
         text: "🛌 太累了，改天再说",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._libraryVisit = true;
-          StateManager.addMessage('😴 你收好了告示，心想改天有空一定去——但这样的机会不多了。', 'info');
+          StateManager.addMessage(
+            "😴 你收好了告示，心想改天有空一定去——但这样的机会不多了。",
+            "info",
+          );
         },
       },
     ],
@@ -3231,33 +3763,50 @@ const RANDOM_EVENTS = [
   {
     id: "market_price_tip",
     title: "💡 摊主的价格情报",
-    description: "批发市场里一个熟面孔摊主把你拉到一边低声说：'最近水果价格要涨，你要进货的话，今天最合适。'",
-    conditions: function(state) {
-      return state.player.day >= 10 && state.player.phase === "street" &&
+    description:
+      "批发市场里一个熟面孔摊主把你拉到一边低声说：'最近水果价格要涨，你要进货的话，今天最合适。'",
+    conditions: function (state) {
+      return (
+        state.player.day >= 10 &&
+        state.player.phase === "street" &&
         state.trade.currentLocation === "wholesaleMarket" &&
-        !state.flags._marketTipToday;
+        !state.flags._marketTipToday
+      );
     },
     weight: 0.8,
     choices: [
       {
         text: "💸 现在多进一些货",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._marketTipToday = true;
           var cost = Math.min(state.resources.cash, 120);
           if (cost >= 40) {
             state.resources.cash -= cost;
             state.needs.happiness = Math.min(100, state.needs.happiness + 5);
-            StateManager.addMessage('📦 你多进了¥' + cost + '的货，如果情报准确，这次能多赚不少。花费¥' + cost + '，心情+5。', 'info');
+            StateManager.addMessage(
+              "📦 你多进了¥" +
+                cost +
+                "的货，如果情报准确，这次能多赚不少。花费¥" +
+                cost +
+                "，心情+5。",
+              "info",
+            );
           } else {
-            StateManager.addMessage('😅 虽然心动，但现在兜里没钱，只好作罢。', 'warning');
+            StateManager.addMessage(
+              "😅 虽然心动，但现在兜里没钱，只好作罢。",
+              "warning",
+            );
           }
         },
       },
       {
         text: "🤔 谢谢，我考虑一下",
-        apply: function(state) {
+        apply: function (state) {
           state.flags._marketTipToday = true;
-          StateManager.addMessage('🤔 市场消息真真假假，谨慎没有坏处——但有时候错过就是错过了。', 'info');
+          StateManager.addMessage(
+            "🤔 市场消息真真假假，谨慎没有坏处——但有时候错过就是错过了。",
+            "info",
+          );
         },
       },
     ],
@@ -3266,29 +3815,39 @@ const RANDOM_EVENTS = [
   {
     id: "sick_coworker_food",
     title: "🤧 病倒的工友",
-    description: "工地上有个工友感冒发烧，趴在宿舍起不来，也没什么人管他。你正好手里有点零钱……",
-    conditions: function(state) {
-      return state.player.day >= 15 && state.player.phase === "street" &&
+    description:
+      "工地上有个工友感冒发烧，趴在宿舍起不来，也没什么人管他。你正好手里有点零钱……",
+    conditions: function (state) {
+      return (
+        state.player.day >= 15 &&
+        state.player.phase === "street" &&
         state.trade.currentLocation === "construction" &&
-        state.resources.cash >= 20;
+        state.resources.cash >= 20
+      );
     },
     weight: 0.6,
     choices: [
       {
         text: "🍜 给他买碗热粥送过去",
-        apply: function(state) {
+        apply: function (state) {
           state.resources.cash -= 15;
           state.needs.happiness = Math.min(100, state.needs.happiness + 10);
           state.status.fame = Math.min(100, (state.status.fame || 0) + 4);
           state.flags._helpedCoworker = true;
-          StateManager.addMessage('🤝 你花了¥15给工友买了碗粥，他虚弱地道谢。这条街上，大家都是相互依靠的。花费¥15，心情+10，名气+4。', 'success');
+          StateManager.addMessage(
+            "🤝 你花了¥15给工友买了碗粥，他虚弱地道谢。这条街上，大家都是相互依靠的。花费¥15，心情+10，名气+4。",
+            "success",
+          );
         },
       },
       {
         text: "😟 自己都不宽裕，帮不上忙",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.max(0, state.needs.happiness - 3);
-          StateManager.addMessage('😟 你叹了口气，每个人都有自己的难处。只是这份愧疚，不好受。心情-3。', 'warning');
+          StateManager.addMessage(
+            "😟 你叹了口气，每个人都有自己的难处。只是这份愧疚，不好受。心情-3。",
+            "warning",
+          );
         },
       },
     ],
@@ -3297,27 +3856,988 @@ const RANDOM_EVENTS = [
   {
     id: "city_night_view",
     title: "🌃 城市夜景",
-    description: "天色晚了，你站在一处高处，看着这座城市的万家灯火。灯光里有那么多普通人，都在努力活着。",
-    conditions: function(state) {
-      return state.player.day >= 25 && state.player.phase === "street" &&
-        (state.trade.currentLocation === "park" || state.trade.currentLocation === "techPark") &&
-        state.needs.happiness < 50;
+    description:
+      "天色晚了，你站在一处高处，看着这座城市的万家灯火。灯光里有那么多普通人，都在努力活着。",
+    conditions: function (state) {
+      return (
+        state.player.day >= 25 &&
+        state.player.phase === "street" &&
+        (state.trade.currentLocation === "park" ||
+          state.trade.currentLocation === "techPark") &&
+        state.needs.happiness < 50
+      );
     },
     weight: 0.7,
     choices: [
       {
         text: "🌟 看一会儿，让思绪飘荡",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.min(100, state.needs.happiness + 18);
           state.player.mental = Math.min(100, state.player.mental + 2);
-          StateManager.addMessage('🌃 夜风轻轻吹来，你突然觉得这一切都有意义。心情+18，心智+2。', 'success');
+          StateManager.addMessage(
+            "🌃 夜风轻轻吹来，你突然觉得这一切都有意义。心情+18，心智+2。",
+            "success",
+          );
         },
       },
       {
         text: "🏠 还是回去睡，明天还要干活",
-        apply: function(state) {
+        apply: function (state) {
           state.needs.happiness = Math.min(100, state.needs.happiness + 5);
-          StateManager.addMessage('😌 是啊，得继续努力。感慨归感慨，日子还是要过的。心情+5。', 'info');
+          StateManager.addMessage(
+            "😌 是啊，得继续努力。感慨归感慨，日子还是要过的。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === 道德后果事件（第二波）— 过去的选择继续发酵 ===
+
+  {
+    id: "old_liu_advance",
+    phase: "street",
+    icon: "🏗️",
+    title: "老刘当了小包工头",
+    story:
+      "老刘又来找你了。这次不一样——他自己接了个小工程，手上有三四个人，正在扩张，想拉你入伙一起干。他说：「当时你帮了我，这次我想帮你往上走一步。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._helpedCoworker &&
+        st.player.day >= 60 &&
+        !st.flags._oldLiuAdvance
+      );
+    },
+    choices: [
+      {
+        text: "🤝 入伙！跟着刘哥一起干",
+        hint: "开启长期合作，工地收入提升",
+        apply: function (st) {
+          st.flags._oldLiuAdvance = true;
+          st.flags._liuPartner = true;
+          var bonus = 600 + Math.floor(Math.random() * 400);
+          st.resources.cash += bonus;
+          st.resources.totalEarned += bonus;
+          st.player.physique = Math.min(100, st.player.physique + 3);
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          StateManager.addMessage(
+            "🏗️ 你和老刘签了口头合同，先拿了¥" +
+              bonus +
+              "的进场费！体质+3，名气+8。以后在老刘的工地做事，工资有额外加成。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 谢谢老刘，但我想自己闯",
+        hint: "婉拒，但保持友谊",
+        apply: function (st) {
+          st.flags._oldLiuAdvance = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage(
+            "🙏 老刘点了点头，说：「好汉，有志气。」你们喝了杯茶，聊了很久。有些情谊比钱更珍贵。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "fakegoods_threatened",
+    phase: "street",
+    icon: "😡",
+    title: "假货商上门来找茬",
+    story:
+      "一个陌生男人堵住你的去路，自我介绍说是那家倒闭假货铺的合伙人。他沉着脸说：「你让老板损失了不少钱，我们要你解释清楚。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._refusedFakeGoods &&
+        st.status.fame >= 15 &&
+        st.player.day >= 20 &&
+        !st.flags._fakegoodsThreat
+      );
+    },
+    choices: [
+      {
+        text: "💪 硬刚！我做的没错",
+        hint: "强硬态度，名气+但有风险",
+        apply: function (st) {
+          st.flags._fakegoodsThreat = true;
+          st.status.fame = Math.min(100, st.status.fame + 12);
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+          StateManager.addMessage(
+            "💪 你看着他的眼睛说：「假货害人，我没错。你们要告就告。」他犹豫了一下，骂了句脏话走了。名气+12，但心情有点沉。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😰 假装不认识，找借口溜走",
+        hint: "暂避锋芒",
+        apply: function (st) {
+          st.flags._fakegoodsThreat = true;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "😰 你说认错人了，借口有急事，快步离开了。他盯着你的背影好久。感觉以后要小心点。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📞 当场报警",
+        hint: "彻底解决，但耗时间",
+        apply: function (st) {
+          st.flags._fakegoodsThreat = true;
+          st.flags._reportedFakeSeller = true;
+          st.status.fame = Math.min(100, st.status.fame + 6);
+          StateManager.addMessage(
+            "📞 你当着他面拨了110。他立刻转身就走。警察来了记了笔录，建议你注意人身安全。名气+6，威胁消除。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "wage_thief_retaliate",
+    phase: "street",
+    icon: "🕵️",
+    title: "欠薪包工头的报复",
+    story:
+      "你维权的事传开了，但有人告诉你，那个被举报的包工头在外面放话，说要「收拾你」。今天你注意到有人一直跟着你转，不远不近。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._foughtWageTheft &&
+        st.player.day >= 35 &&
+        !st.flags._wageThiefRevenge
+      );
+    },
+    choices: [
+      {
+        text: "🚔 直接去派出所备案",
+        hint: "主动保护自己，获得法律保护",
+        apply: function (st) {
+          st.flags._wageThiefRevenge = true;
+          st.flags._policeProtection = true;
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "🚔 你去派出所把情况说明，警察记了案，并联系了劳动局。对方收到警告后消停了。心智+3，获得法律保护光环。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 联系记者曝光",
+        hint: "借助媒体保护自己",
+        apply: function (st) {
+          st.flags._wageThiefRevenge = true;
+          st.status.fame = Math.min(100, st.status.fame + 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage(
+            "📱 你联系了做劳工报道的记者，把跟踪的事说了。记者写了篇稿子，包工头彻底缩了。名气+15，维权故事传出去了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 忍着，当没看见",
+        hint: "忍气吞声，继续观察",
+        apply: function (st) {
+          st.flags._wageThiefRevenge = true;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+          st.player.mental = Math.max(0, st.player.mental - 2);
+          StateManager.addMessage(
+            "😶 你假装没注意，但心里一直悬着。这种感觉持续了好几天，越来越难受。心情-12，心智-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "honesty_compound_effect",
+    phase: "street",
+    icon: "🌟",
+    title: "诚信声誉的叠加效应",
+    story:
+      "同时拒绝了假货、还帮工友维权，你的名声在这片地界出奇地好。今天一个在工商局上班的人主动找到你，说想帮你做点正规生意的注册手续……",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._refusedFakeGoods &&
+        st.flags._foughtWageTheft &&
+        st.status.fame >= 30 &&
+        st.player.day >= 40 &&
+        !st.flags._honestyCompound
+      );
+    },
+    choices: [
+      {
+        text: "📋 注册个体户营业执照",
+        hint: "开通正规经营资格",
+        apply: function (st) {
+          st.flags._honestyCompound = true;
+          st.flags._hasBusinessLicense = true;
+          var cost = 50;
+          st.resources.cash = Math.max(0, st.resources.cash - cost);
+          st.status.fame = Math.min(100, st.status.fame + 10);
+          StateManager.addMessage(
+            "📋 花了¥" +
+              cost +
+              "手续费，你正式拿到了个体户营业执照！以后摆摊卖货不怕城管了，名气+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 感谢好意，现在还不是时候",
+        hint: "先观望",
+        apply: function (st) {
+          st.flags._honestyCompound = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage(
+            "🙏 你婉拒了，但对方留了联系方式说「随时联系」。这份人情记下了。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "wallet_returned_good_karma",
+    phase: "street",
+    icon: "🤝",
+    title: "诚实带来的意外机缘",
+    story:
+      "那个失主后来找到你，说上次你主动还钱这事她一直记着。她的丈夫在一家正规工厂做人事，正好在招熟练工……",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._returnedWallet &&
+        st.player.day >= 22 &&
+        !st.flags._walletKarmaGood
+      );
+    },
+    choices: [
+      {
+        text: "✅ 去面试，试试看",
+        hint: "获得工厂正式工作机会",
+        apply: function (st) {
+          st.flags._walletKarmaGood = true;
+          var bonus = 400 + Math.floor(Math.random() * 300);
+          st.resources.cash += bonus;
+          st.resources.totalEarned += bonus;
+          st.player.intelligence = Math.min(100, st.player.intelligence + 2);
+          StateManager.addMessage(
+            "✅ 面试顺利，当天就入职了！对方预付了¥" +
+              bonus +
+              "的安置费。诚实不吃亏，智力+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 现在有其他安排，先谢过",
+        hint: "婉拒但维持好感",
+        apply: function (st) {
+          st.flags._walletKarmaGood = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+          StateManager.addMessage(
+            "🤔 你婉谢了，对方说机会总在，下次有合适的还会想到你。心情+12。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "labor_network_grows",
+    phase: "street",
+    icon: "📣",
+    title: "你成了打工人的主心骨",
+    story:
+      "帮了老刘、维过权、也替工友出过头。一群外来务工者聚在你常去的工地角落，说你是这里说话最算数的人，想推你做「工友互助小组」的组长。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.flags._helpedCoworker &&
+        st.flags._foughtWageTheft &&
+        st.player.day >= 55 &&
+        !st.flags._laborNetworkGrown
+      );
+    },
+    choices: [
+      {
+        text: "🤝 接了！工友互助，才是真正的依靠",
+        hint: "建立社会关系网络",
+        apply: function (st) {
+          st.flags._laborNetworkGrown = true;
+          st.flags._laborOrganizer = true;
+          st.status.fame = Math.min(100, st.status.fame + 20);
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "📣 你接受了这个身份。大家开始每天轮流通报各处的工资行情和坑人老板。名气+20，心智+3，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 大家抬举了，我只是个普通打工人",
+        hint: "谦让，但名气仍受益",
+        apply: function (st) {
+          st.flags._laborNetworkGrown = true;
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          StateManager.addMessage(
+            "😅 你摆摆手，但大家还是把你当主心骨。名气+8。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === 心理健康危机事件（P3.6）===
+  {
+    id: "mental_breakdown_edge",
+    phase: "street",
+    icon: "😰",
+    title: "撑不住了",
+    story:
+      "不知道是第几天了，你呆坐在出租屋的地板上，脑子一片空白。窗外霓虹还在闪，但什么声音都不像是给你的。那一刻你突然意识到：再这样下去，你真的会垮掉。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.player.mental || 0) < 20 &&
+        st.player.day >= 10 &&
+        !st.flags._hadMentalCrisis
+      );
+    },
+    choices: [
+      {
+        text: "📞 打电话给老家的人，哪怕什么都不说",
+        hint: "倾诉释放，心智+心情回血",
+        apply: function (st) {
+          st.flags._hadMentalCrisis = true;
+          st.flags._calledHome = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 20);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "📞 电话那头，妈妈的声音让你鼻子一酸。你说「没事，就是想打个电话」。挂断后你哭了很久，但好多了。心智+20，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 一个人出去走走，吹吹风",
+        hint: "独处消化压力，小幅恢复",
+        apply: function (st) {
+          st.flags._hadMentalCrisis = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          StateManager.addMessage(
+            "🚶 你沿着街道走了两个小时，什么都没想，什么都想了。回来的时候好像轻了一点。心智+10，心情+8。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 忍着，继续干，日子总会好的",
+        hint: "强撑，短期无效但意志力+",
+        apply: function (st) {
+          st.flags._hadMentalCrisis = true;
+          st.flags._toughMindset = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.player.physique = Math.min(100, st.player.physique + 2);
+          StateManager.addMessage(
+            "😤 你握紧拳头，告诉自己：「今天不是最难的一天。」第二天你照常出门了。心智+3，体质+2（意志力磨练）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "mental_therapy_chance",
+    phase: "street",
+    icon: "🛋️",
+    title: "社区心理援助",
+    story:
+      "路边一个小摊前贴着「免费心理援助，限今日」的纸条，旁边坐着个看起来很平和的中年人。你站住了，不知道该不该过去。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.player.mental || 0) < 35 &&
+        st.player.day >= 5 &&
+        !st.flags._hadTherapy
+      );
+    },
+    choices: [
+      {
+        text: "🛋️ 坐下来聊聊，反正免费",
+        hint: "心理咨询，心智大幅恢复",
+        apply: function (st) {
+          st.flags._hadTherapy = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 30);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+          StateManager.addMessage(
+            "🛋️ 你说了很多，关于家、关于钱、关于不知道自己在这座城市值不值得。对方没有评判，只是点头。走的时候你感觉脚步轻了很多。心智+30，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 算了，走了",
+        hint: "错过机会，但不丢脸",
+        apply: function (st) {
+          st.flags._hadTherapy = true;
+          StateManager.addMessage(
+            "🚶 你犹豫了一下，还是走开了。有些话，还没准备好说出口。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "mental_recovery_milestone",
+    phase: "street",
+    icon: "🌤️",
+    title: "那个早晨不一样",
+    story:
+      "不知道是某天的阳光太好，还是因为最近手头松了点，还是因为你真的适应了这座城市的节奏——你发现今天醒来，没有那种沉甸甸的东西压在胸口了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.player.mental || 0) >= 60 &&
+        st.flags._hadMentalCrisis &&
+        !st.flags._mentalRecoveryDone
+      );
+    },
+    choices: [
+      {
+        text: "🌤️ 好好感受这一刻",
+        hint: "全面小幅恢复",
+        apply: function (st) {
+          st.flags._mentalRecoveryDone = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 10);
+          st.status.fame = Math.min(100, st.status.fame + 3);
+          StateManager.addMessage(
+            "🌤️ 你深吸一口气，告诉自己：「我他妈真的在这座城市活下来了。」心情+20，心智+10，名气+3（自信光环）。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "child_beggar_dilemma",
+    phase: "street",
+    icon: "👶",
+    title: "巷子里的孩子",
+    story:
+      "你从批发市场回来，路过一条小巷，一个八九岁的孩子蹲在地上，脏兮兮的，手里攥着一个空饭盒。他抬头看见你，没有开口，只是盯着你的眼睛。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 5 &&
+        !st.flags._childBeggaredSeen
+      );
+    },
+    choices: [
+      {
+        text: "🍱 买一份盒饭给他",
+        hint: "花费¥15，心情+10，心智+5",
+        apply: function (st) {
+          st.flags._childBeggaredSeen = true;
+          st.flags._gaveFoodToChild = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🍱 你绕回去买了一份盒饭递给他。他接过去也没说谢谢，只是低头吃了起来。你站了一会儿，转身走了。心情+10，心智+5，-¥15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💵 给他20块钱",
+        hint: "花费¥20，心情+8",
+        apply: function (st) {
+          st.flags._childBeggaredSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage(
+            "💵 你掏出一张20块塞进他手里，他终于说了一句「谢谢叔叔」。你走了很远还在想他今晚住哪里。心情+8，-¥20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 装作没看见，走了",
+        hint: "无消耗，但心智-3",
+        apply: function (st) {
+          st.flags._childBeggaredSeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
+          StateManager.addMessage(
+            "🚶 你低着头走过去，没有停下来。走了两个路口，你想：也许他有家人来找他。心智-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "factory_fire_escape",
+    phase: "street",
+    icon: "🔥",
+    title: "工厂火警",
+    story:
+      "你在路边等人，突然听到旁边一栋老厂房里「嗡」的一声，浓烟冒了出来。厂里有工人，保安已经往外跑，但里面还有几个没出来。你手里没有工具，只有双手。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 10 &&
+        !st.flags._factoryFireSeen
+      );
+    },
+    choices: [
+      {
+        text: "🏃 冲进去帮忙疏散工人",
+        hint: "名气+10，体质+2，但健康-15，有风险",
+        apply: function (st) {
+          st.flags._factoryFireSeen = true;
+          st.flags._factoryFireHero = true;
+          st.status.fame = Math.min(100, st.status.fame + 10);
+          st.player.physique = Math.min(100, st.player.physique + 2);
+          st.status.health = Math.max(0, st.status.health - 15);
+          StateManager.addMessage(
+            "🏃 你跑进烟雾里，摸到两个工人往外推。出来时呛得直咳嗽，眼睛熏红了。但三个工人都出来了。有人拍了下来发到网上，评论区说「这年头还有这样的人。」名气+10，体质+2，健康-15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 第一时间打119，在外面等",
+        hint: "理性选择，无惩罚，名气+3",
+        apply: function (st) {
+          st.flags._factoryFireSeen = true;
+          st.status.fame = Math.min(100, st.status.fame + 3);
+          StateManager.addMessage(
+            "📞 你拨了119，然后大喊让人群散开。消防车5分钟后来了。理性，安全。你没有冲进去，但事后没有人说你做错了。名气+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😨 惊慌失措，人群里往后退",
+        hint: "无影响，但心智-5",
+        apply: function (st) {
+          st.flags._factoryFireSeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage(
+            "😨 浓烟让你腿发软，你跟着人群往后退。后来听说工人都出来了，但那一刻你腿软的感觉还在。心智-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "coworker_document_leak",
+    phase: "street",
+    icon: "📄",
+    title: "工友的秘密",
+    story:
+      "你在工地休息时，无意间看到工友老马桌上的一份文件——是他被包工头拖欠工资的记录，金额不小，足够证明违法。他不知道你看见了，但你可以帮他，也可以不说。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        !st.flags._coworkerDocSeen
+      );
+    },
+    choices: [
+      {
+        text: "🤫 偷偷复印一份，留着他需要的时候用",
+        hint: "好感+5（下次遇到老马），道德档案+",
+        apply: function (st) {
+          st.flags._coworkerDocSeen = true;
+          st.flags._savedCoworkerDoc = true;
+          StateManager.addMessage(
+            "🤫 你悄悄拍了张照留存。没有告诉他——因为时机不对。但那份证据在你手机里。也许有天老马用得上。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💬 直接告诉老马，他应该知道",
+        hint: "心情+8，老马好感大增",
+        apply: function (st) {
+          st.flags._coworkerDocSeen = true;
+          st.flags._toldCoworkerDoc = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage(
+            "💬 你找了个空档告诉老马：「我看到那份记录了，你可以去劳动局。」他愣了一会儿，然后重重地点头：「谢了，兄弟。」心情+8，老马好感提升。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 不是我的事，假装没看见",
+        hint: "无后果，但心智-2",
+        apply: function (st) {
+          st.flags._coworkerDocSeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 2);
+          StateManager.addMessage(
+            "🙅 你站起身走开了，装作没事。但那份数字在脑子里转了好久——那可是他几个月的血汗钱。心智-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "lost_elderly",
+    phase: "street",
+    icon: "👵",
+    title: "迷路的老人",
+    story:
+      "商业区路口，一位老人站在那里，手里拿着一张纸条，四处张望。你走近一看，纸条上是一个地址——距离这里大概两公里，不算远。他的眼神有点茫然。",
+    conditions: function (st) {
+      return st.player.phase === "street" && !st.flags._helpedElderlyLost;
+    },
+    choices: [
+      {
+        text: "🚶 亲自送他过去",
+        hint: "消耗一点AP，心情+15，名气+5",
+        apply: function (st) {
+          st.flags._helpedElderlyLost = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          StateManager.addMessage(
+            "🚶 你陪他走了二十多分钟，到了目的地——是他儿子家。儿子开门一看，「爸，你怎么一个人出来了！」转头谢谢你，非要留你吃饭，你推开了。但那一路他讲的故事，你记了很久。心情+15，名气+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 帮他叫了辆顺风车",
+        hint: "花费¥15，心情+8",
+        apply: function (st) {
+          st.flags._helpedElderlyLost = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage(
+            "📱 你帮他叫了车，看着车消失在路口。花了¥15，但那个老人上车前回头冲你笑了笑，你突然想起自己的爷爷。心情+8，-¥15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🗺️ 给他指了路就走了",
+        hint: "无影响",
+        apply: function (st) {
+          st.flags._helpedElderlyLost = true;
+          StateManager.addMessage(
+            "🗺️ 你跟他指了大概方向，然后走了。也许他找到了，也许他还是迷路了。你不知道，但你说了实话。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "lottery_ticket_found",
+    phase: "street",
+    icon: "🎫",
+    title: "地上的彩票",
+    story:
+      "你在公园散步，脚边踩到一张皱巴巴的彩票。拣起来一看——号码和今天的公示完全对上了。¥3800。你环顾四周，没人注意你，这地方人也不多。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 7 &&
+        !st.flags._foundLotteryTicket
+      );
+    },
+    choices: [
+      {
+        text: "💰 去兑奖，这就是运气",
+        hint: "现金+¥3800，但心智-3（总感觉有点不对劲）",
+        apply: function (st) {
+          st.flags._foundLotteryTicket = true;
+          st.flags._keptLotteryMoney = true;
+          st.resources.cash = (st.resources.cash || 0) + 3800;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 3800;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
+          StateManager.addMessage(
+            "💰 你去彩票站兑了奖，拿了3800块。柜台大妈说「运气好呀！」你笑笑，但那个「捡」字总让你脑子里有点不踏实。现金+¥3800，心智-3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📢 在原地等了一会儿，想看有没有人来找",
+        hint: "无现金收益，但心情+12，心智+5",
+        apply: function (st) {
+          st.flags._foundLotteryTicket = true;
+          st.flags._waitedForLotteryOwner = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "📢 你在原地站了半小时，没人来。最后你把彩票交给了公园管理处。什么都没拿到，但走出公园的时候脚步很轻。心情+12，心智+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "village_chief_warning",
+    phase: "street",
+    icon: "👴",
+    title: "村长来电",
+    story:
+      "你的手机响了，屏幕上显示「村长」两个字。你在出租屋里接起来，对方开门见山：「你那5000多块钱，都欠了这么多天了。你现在在城里混得怎么样？什么时候还？」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.resources.villageDebt || 0) > 2000 &&
+        st.player.day >= 15 &&
+        !st.flags._debtWarningGiven
+      );
+    },
+    choices: [
+      {
+        text: "🙏 好好解释，承诺三个月内还清",
+        hint: "好感小损，但争取到宽限期",
+        apply: function (st) {
+          st.flags._debtWarningGiven = true;
+          st.flags._debtExtensionDays = (st.player.day || 0) + 90;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage(
+            "👴 「那行，我也不是催得很急，你慢慢来，三个月以内就行。」他挂了电话。你松了口气，但心里隐隐有点压力。心情-8，心智-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💸 立刻打算还¥500过去表态",
+        hint: "现金-500，但树立信誉",
+        apply: function (st) {
+          var pay = Math.min(
+            500,
+            st.resources.cash || 0,
+            st.resources.villageDebt || 0,
+          );
+          if (pay <= 0) {
+            st.flags._debtWarningGiven = true;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+            StateManager.addMessage(
+              "💸 你翻了翻口袋——连500块都没有。「我...暂时没钱。」电话那头沉默了一会儿，然后挂掉了。心情-15。",
+              "error",
+            );
+            return;
+          }
+          st.flags._debtWarningGiven = true;
+          st.resources.cash -= pay;
+          st.resources.villageDebt -= pay;
+          st.flags._debtExtensionDays = (st.player.day || 0) + 60;
+          StateManager.addMessage(
+            "💸 你当场转了" +
+              pay +
+              "块过去。村长那边「嗯」了一声：「行，知道你有心，先这样。」现金-" +
+              pay +
+              "，村长债务-" +
+              pay +
+              "。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📵 装作没听见，挂掉电话",
+        hint: "今日不处理，但事态会升级",
+        apply: function (st) {
+          st.flags._debtWarningGiven = true;
+          st.flags._debtIgnored = true;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "📵 你盯着屏幕让它震完，然后屏幕黑了。电话没接。你知道这不是解决问题，但今天实在不想面对。心情-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "village_chief_pressure",
+    phase: "street",
+    icon: "👴",
+    title: "村长托人带话",
+    story:
+      "你老家的一个远房亲戚突然加了你微信，说「村长让我给你带个话：你那笔债不能再拖了，他说如果年前还不上，就要跟你爸说这事了。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.resources.villageDebt || 0) > 3000 &&
+        st.flags._debtWarningGiven &&
+        !st.flags._debtPressureGiven &&
+        (!st.flags._debtExtensionDays ||
+          st.player.day > st.flags._debtExtensionDays)
+      );
+    },
+    choices: [
+      {
+        text: "🤝 求亲戚帮忙说情，多给点时间",
+        hint: "心情-10，再宽限30天",
+        apply: function (st) {
+          st.flags._debtPressureGiven = true;
+          st.flags._debtExtensionDays = (st.player.day || 0) + 30;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 8);
+          StateManager.addMessage(
+            "🤝 亲戚叹了口气，说「那我帮你说说，你自己也争气点。」你知道这张人情欠下了。心情-10，心智-8，宽限30天。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💰 还¥1000，表明诚意",
+        hint: "现金-1000，压力减轻",
+        apply: function (st) {
+          var pay = Math.min(
+            1000,
+            st.resources.cash || 0,
+            st.resources.villageDebt || 0,
+          );
+          if (pay <= 0) {
+            st.flags._debtPressureGiven = true;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 20);
+            st.player.mental = Math.max(0, (st.player.mental || 0) - 10);
+            StateManager.addMessage(
+              "💰 钱包是空的。你回了个「好的」，然后关掉手机。心情-20，心智-10。",
+              "error",
+            );
+            return;
+          }
+          st.flags._debtPressureGiven = true;
+          st.resources.cash -= pay;
+          st.resources.villageDebt -= pay;
+          st.flags._debtExtensionDays = (st.player.day || 0) + 60;
+          StateManager.addMessage(
+            "💰 你转了" +
+              pay +
+              "块给村长，并让亲戚告诉他「余款月底前清」。村长那边消停了一阵子。现金-" +
+              pay +
+              "，村长债务-" +
+              pay +
+              "。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😤 跟亲戚说「随他便」",
+        hint: "日利率提高，名气受损",
+        apply: function (st) {
+          st.flags._debtPressureGiven = true;
+          st.flags._debtIgnored = true;
+          var oldRate = st.resources.dailyInterest || 0.0035;
+          st.resources.dailyInterest = Math.min(0.008, oldRate + 0.0015);
+          st.status.fame = Math.max(0, st.status.fame - 5);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+          StateManager.addMessage(
+            "😤 消息传回去，村长怒了，开始向你家里人施压，利息也跟着涨了。名气-5，心情-12，日利率提升至" +
+              (st.resources.dailyInterest * 100).toFixed(2) +
+              "%。",
+            "error",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "village_chief_final",
+    phase: "street",
+    icon: "👴",
+    title: "村长亲自找来了",
+    story:
+      "你出租屋门被敲响了。打开门，看到村长站在门口，身后跟着你爸。「找到了，」村长说，「你自己说吧。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.resources.villageDebt || 0) > 4000 &&
+        st.flags._debtPressureGiven &&
+        st.flags._debtIgnored &&
+        !st.flags._debtFinalDone
+      );
+    },
+    choices: [
+      {
+        text: "😰 当场还¥2000，保住颜面",
+        hint: "现金-2000，债务减少，家庭关系修复",
+        apply: function (st) {
+          var pay = Math.min(
+            2000,
+            st.resources.cash || 0,
+            st.resources.villageDebt || 0,
+          );
+          st.flags._debtFinalDone = true;
+          if (pay < 500) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 30);
+            st.player.mental = Math.max(0, (st.player.mental || 0) - 20);
+            st.status.fame = Math.max(0, st.status.fame - 15);
+            StateManager.addMessage(
+              "😰 你翻遍口袋，拿出零散的钞票。「就这点？」村长皱眉。你爸低下头。那个眼神……很久都忘不掉。心情-30，心智-20，名气-15。",
+              "error",
+            );
+            return;
+          }
+          st.resources.cash -= pay;
+          st.resources.villageDebt -= pay;
+          st.resources.dailyInterest = 0.0035;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+          StateManager.addMessage(
+            "😰 你数出" +
+              pay +
+              "块递过去，剩余的口头承诺下月清。村长满意地点头，你爸也松了口气。现金-" +
+              pay +
+              "，村长债务-" +
+              pay +
+              "，利率恢复正常。心情-15（这种丢脸的钱还是伤自尊的）。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🙇 跪下求情，让爸爸替你说话",
+        hint: "家庭关系修复，但名气大损、心智重创",
+        apply: function (st) {
+          st.flags._debtFinalDone = true;
+          st.status.fame = Math.max(0, st.status.fame - 25);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 30);
+          st.flags._hadMentalCrisis = true;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 25);
+          st.flags._debtExtensionDays = (st.player.day || 0) + 60;
+          StateManager.addMessage(
+            "🙇 你在出租屋门口跪下来，对你爸说「爸，对不起」。村长摆了摆手，说「算了，以后别这样了」。但那一幕……名气-25，心智-30（心理危机），心情-25，获宽限60天。",
+            "error",
+          );
         },
       },
     ],
@@ -3332,12 +4852,52 @@ const RANDOM_EVENTS = [
 function rollStreetEvent(state) {
   // 基础 18% 触发率，已存在待弹事件时不重复触发
   if (state._pendingEvent) return;
+
+  // 心理危机事件：mental<20时优先检查，不占用随机事件槽
+  var mentalCrisisIds = [
+    "mental_breakdown_edge",
+    "mental_therapy_chance",
+    "mental_recovery_milestone",
+  ];
+  for (var mci = 0; mci < mentalCrisisIds.length; mci++) {
+    var mce = RANDOM_EVENTS.find(function (e) {
+      return e.id === mentalCrisisIds[mci];
+    });
+    if (mce && typeof mce.conditions === "function" && mce.conditions(state)) {
+      state._pendingEvent = mce;
+      state.flags._todayMentalEvent = true;
+      return;
+    }
+  }
+
+  // 村长债务追讨事件：债务未还时优先触发，不占用随机事件槽
+  var debtEventIds = [
+    "village_chief_warning",
+    "village_chief_pressure",
+    "village_chief_final",
+  ];
+  for (var dci = 0; dci < debtEventIds.length; dci++) {
+    var dce = RANDOM_EVENTS.find(function (e) {
+      return e.id === debtEventIds[dci];
+    });
+    if (dce && typeof dce.conditions === "function" && dce.conditions(state)) {
+      state._pendingEvent = dce;
+      state.flags._todayDebtEvent = true;
+      return;
+    }
+  }
+
   const baseChance = 0.18;
   // 健康差或债务高时提高触发率
   let mod = 0;
   if (state.status.health < 50) mod += 0.1;
   if (state.resources.debt > 3000) mod += 0.05;
   if (state.needs.happiness < 30) mod += 0.05;
+  // 历史声誉幸运加成（P2.9）：积善之人事件触发率降低
+  if (typeof getHistoryModifiers === "function") {
+    var lk = getHistoryModifiers(state).luckBonus || 0;
+    mod -= lk * 0.008; // 每点幸运降低0.8%触发率（+5幸运≈-4%）
+  }
   if (Math.random() < baseChance + mod) {
     queueRandomEvent(state, "street");
   }
@@ -3516,9 +5076,33 @@ function showJobOfferModal() {
 
 /** 每日新闻判定（旧 API，保持兼容） */
 function rollDailyNews(state) {
-  // 街头阶段不再发广播新闻，改用事件弹窗
+  // 街头阶段：触发随机事件弹窗，同时小概率触发投资新闻
   if (state.player.phase === "street") {
     rollStreetEvent(state);
+    // 8%概率接到市场消息（影响投资市场，仅投资类新闻）
+    if (Math.random() < 0.08 && typeof getRandomNewsEvent === "function") {
+      var investNews = null;
+      for (var _attempt = 0; _attempt < 5; _attempt++) {
+        var candidate = getRandomNewsEvent();
+        if (
+          candidate &&
+          candidate.type === "investment" &&
+          !(state.flags.seenNewsToday || []).includes(candidate.id)
+        ) {
+          investNews = candidate;
+          break;
+        }
+      }
+      if (investNews) {
+        investNews._appliedDay = state.player.day;
+        state.activeNews = state.activeNews || [];
+        state.activeNews.push(investNews);
+        state.flags.seenNewsToday = state.flags.seenNewsToday || [];
+        state.flags.seenNewsToday.push(investNews.id);
+        applyNewsEffect(investNews, state);
+        StateManager.addMessage("📰 " + investNews.headline, "event");
+      }
+    }
     return;
   }
   // 职场阶段：保留少量市场新闻 + 事件弹窗
