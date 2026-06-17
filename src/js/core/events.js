@@ -2661,6 +2661,141 @@ const RANDOM_EVENTS = [
     ],
   },
 
+  // === 人生章节里程碑事件（day精确触发，每个只触发一次）===
+  {
+    id: "milestone_day30",
+    phase: "street",
+    icon: "📅",
+    title: "一个月了",
+    story: "不知不觉，你已经在这座城市漂了整整一个月。站在路边，望着来来往往的人群，你开始思考……接下来的路怎么走？",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.player.day === 30 && !st.flags._milestone30;
+    },
+    choices: [
+      {
+        text: "💪 继续努力搞钱，先还清债务",
+        hint: "专注生存，攒本钱",
+        apply: function(st) {
+          st.flags._milestone30 = true;
+          st.flags._milestone30Path = "money";
+          st.resources.cash += 150;
+          st.resources.totalEarned += 150;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage("💪 你认清了方向：先把村长那5500还上，再图其他。得到了额外¥150的坚持奖励。", "success");
+        },
+      },
+      {
+        text: "📚 投资自己，学技能升值",
+        hint: "长线思维，提升竞争力",
+        apply: function(st) {
+          st.flags._milestone30 = true;
+          st.flags._milestone30Path = "skills";
+          var skKeys = Object.keys(st.skills);
+          skKeys.forEach(function(k) { st.skills[k].xp += 30; });
+          st.player.intelligence = Math.min(100, st.player.intelligence + 2);
+          StateManager.addMessage("📚 你决定投资自己的未来。全部技能XP+30，智力+2！知识不会贬值。", "success");
+        },
+      },
+      {
+        text: "🤝 扩展人脉，认识更多人",
+        hint: "人脉是最好的资本",
+        apply: function(st) {
+          st.flags._milestone30 = true;
+          st.flags._milestone30Path = "network";
+          st.status.fame = Math.min(100, st.status.fame + 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          if (typeof NPCS !== "undefined") {
+            NPCS.forEach(function(npc) {
+              if (!st.relationships[npc.id]) st.relationships[npc.id] = { affinity: 0, met: false };
+              st.relationships[npc.id].met = true;
+              st.relationships[npc.id].affinity = Math.min(100, st.relationships[npc.id].affinity + 5);
+            });
+          }
+          StateManager.addMessage("🤝 你决定主动结识周围的人。所有NPC关系建立，好感+5，名气+15！人脉是最重要的资产。", "success");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "milestone_day60",
+    phase: "street",
+    icon: "📅",
+    title: "两个月了",
+    story: "六十天。你已经对这座城市不再陌生。但偶尔还是会有迷茫——这条路，走对了吗？",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.player.day === 60 && !st.flags._milestone60;
+    },
+    choices: [
+      {
+        text: "🏆 回顾成绩，给自己打气",
+        hint: "看看走了多远",
+        apply: function(st) {
+          st.flags._milestone60 = true;
+          var totalEarned = st.resources.totalEarned || 0;
+          var highlight = totalEarned > 5000 ? "赚了¥" + totalEarned.toLocaleString() + "，成绩不错！" : "虽然辛苦，但你坚持下来了。";
+          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage("🏆 " + highlight + " 两个月的磨练让你成长了很多。心智+3，心情大涨！", "success");
+        },
+      },
+      {
+        text: "🔍 分析自己的短板，针对性提升",
+        hint: "理性规划",
+        apply: function(st) {
+          st.flags._milestone60 = true;
+          var minStat = "physique";
+          var minVal = st.player.physique;
+          ["intelligence", "agility", "mental"].forEach(function(s) {
+            if (st.player[s] < minVal) { minStat = s; minVal = st.player[s]; }
+          });
+          st.player[minStat] = Math.min(100, st.player[minStat] + 5);
+          StateManager.addMessage("🔍 你找出了自己最弱的一项：" + minStat + "，专项提升+5！针对性训练效果最好。", "success");
+        },
+      },
+    ],
+  },
+
+  {
+    id: "milestone_day90",
+    phase: "street",
+    icon: "📅",
+    title: "三个月——关键时刻",
+    story: "九十天。一个季度。很多来这座城市的人，三个月后悄悄打道回府了。而你还在这里。这座城市在等你给它一个答案。",
+    conditions: function(st) {
+      return st.player.phase === "street" && st.player.day === 90 && !st.flags._milestone90;
+    },
+    choices: [
+      {
+        text: "🏙️ 我属于这里，不回头",
+        hint: "正式扎根这座城市",
+        apply: function(st) {
+          st.flags._milestone90 = true;
+          st.flags._cityResident = true;
+          var allStatBonus = 2;
+          ["physique","intelligence","agility","mental"].forEach(function(s) {
+            st.player[s] = Math.min(100, st.player[s] + allStatBonus);
+          });
+          st.status.fame = Math.min(100, st.status.fame + 10);
+          StateManager.addMessage("🏙️ 你决定留下来！全属性+2，名气+10。城市居民身份让你做事更自信。", "success");
+        },
+      },
+      {
+        text: "📞 给家人打个电话，获得支持",
+        hint: "精神充电",
+        apply: function(st) {
+          st.flags._milestone90 = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 30);
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          var remit = 200 + Math.floor(Math.random() * 200);
+          st.resources.cash += remit;
+          st.resources.totalEarned += remit;
+          StateManager.addMessage("📞 家人听说你坚持了三个月，偷偷汇来了¥" + remit + "！心情大好+30，心智+5。", "success");
+        },
+      },
+    ],
+  },
+
   // === 道德后果事件 — 过去的选择会被记住 ===
   {
     id: "coworker_payback",

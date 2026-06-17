@@ -794,6 +794,96 @@ function addStreetExtras(state, actions) {
       });
     }
   }
+
+  // === 周末市集（每逢day%7=0或6出现：公园/商业区） ===
+  var dayOfWeek = state.player.day % 7;
+  var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  var atMarketLoc =
+    state.trade.currentLocation === "park" ||
+    state.trade.currentLocation === "commercialDist" ||
+    state.trade.currentLocation === "wholesaleMarket";
+  var weekendMarketDoneKey = "_weekendMarket_" + Math.floor(state.player.day / 7);
+  if (isWeekend && atMarketLoc && !state.flags[weekendMarketDoneKey]) {
+    actions.push({
+      id: "weekend_market",
+      name: "🏪 周末集市摆摊",
+      desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
+      icon: "🏪",
+      apCost: 25,
+      handler: function () {
+        var st = StateManager.getState();
+        var dk = "_weekendMarket_" + Math.floor(st.player.day / 7);
+        if (st.flags[dk]) {
+          StateManager.addMessage("🏪 本周集市机会已用过了，下周再来。", "warning");
+          return;
+        }
+        st.flags[dk] = true;
+        var salesLvl = st.skills.sales ? st.skills.sales.level || 0 : 0;
+        var base = 180 + Math.floor(Math.random() * 150);
+        var bonus = Math.floor(salesLvl * 1.5);
+        var earned = base + bonus;
+        var fameGain = 3 + Math.floor(Math.random() * 5);
+        st.resources.cash += earned;
+        st.resources.totalEarned += earned;
+        st.status.fame = Math.min(100, st.status.fame + fameGain);
+        st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+        if (st.skills.sales) st.skills.sales.xp += 15;
+        StateManager.addMessage(
+          "🏪 周末集市火爆！你摆摊赚了¥" + earned + "，认识了不少顾客。名气+" + fameGain + "，销售XP+15。",
+          "success",
+        );
+        consumeAP(25);
+      },
+    });
+  }
+
+  // === 周一打听消息（每逢day%7=1出现：任意地点，每周限一次） ===
+  var mondayInfoKey = "_mondayInfo_" + Math.floor(state.player.day / 7);
+  if (dayOfWeek === 1 && !state.flags[mondayInfoKey]) {
+    actions.push({
+      id: "monday_job_board",
+      name: "📋 打听本周零工机会",
+      desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
+      icon: "📋",
+      apCost: 10,
+      handler: function () {
+        var st = StateManager.getState();
+        var mk = "_mondayInfo_" + Math.floor(st.player.day / 7);
+        if (st.flags[mk]) {
+          StateManager.addMessage("📋 本周的情报已经打听过了。", "warning");
+          return;
+        }
+        st.flags[mk] = true;
+        var roll = Math.random();
+        if (roll < 0.4) {
+          var cashTip = 100 + Math.floor(Math.random() * 150);
+          st.resources.cash += cashTip;
+          st.resources.totalEarned += cashTip;
+          StateManager.addMessage(
+            "📋 打听到一个搬家公司临时招人，接了个单赚了¥" + cashTip + "！情报就是钱。",
+            "success",
+          );
+        } else if (roll < 0.7) {
+          st.player.intelligence = Math.min(100, st.player.intelligence + 1);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          StateManager.addMessage(
+            "📋 到处问了问，没找到特别赚钱的活，但跟邻居聊了不少，涨了见识。智力+1。",
+            "info",
+          );
+        } else {
+          var xpGainM = 25 + Math.floor(Math.random() * 25);
+          var skillKeys = Object.keys(st.skills);
+          var sk = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+          st.skills[sk].xp += xpGainM;
+          StateManager.addMessage(
+            "📋 碰到个老师傅，聊了很久，" + sk + " XP+" + xpGainM + "！见人长一智。",
+            "success",
+          );
+        }
+        consumeAP(10);
+      },
+    });
+  }
 }
 
 /** 梦想选择模态框 */
