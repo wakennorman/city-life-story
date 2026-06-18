@@ -7504,6 +7504,171 @@ const RANDOM_EVENTS = [
       return choices;
     },
   },
+
+  // ============================================================
+  // 企业命运联动事件（3个）— P2#11 玩家与命运系统的互动
+  // ============================================================
+
+  // ---- 事件1：就职公司濒死，买断或坚守 ----
+  {
+    id: "fate_company_collapse",
+    phase: "corporate",
+    icon: "💀",
+    title: "公司快不行了，你的选择是？",
+    story: "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
+    conditions: function (st) {
+      if (st.player.phase !== "corporate" || !st.corporate.company) return false;
+      var cid = st.corporate.company.id;
+      var co = st.enterpriseFate && st.enterpriseFate.companies && st.enterpriseFate.companies[cid];
+      return co && co.phase === "dying" && !st.flags._fateCollapseSeen;
+    },
+    choices: [
+      {
+        text: "📄 接受N+1赔偿走人（¥50,000+）",
+        hint: "拿钱走，安全退出",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.flags._formerCompanyCollapsed = true;
+          var severance = 50000 + Math.floor(Math.random() * 20000);
+          st.resources.cash += severance;
+          st.resources.totalEarned += severance;
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage("💀 你签了离职协议，拿了¥" + severance.toLocaleString() + "赔偿金。离开公司的那一刻，你回头看了一眼——那里曾经是你的全部。心智-5。", "warning");
+        },
+      },
+      {
+        text: "💪 坚守岗位，跟公司共进退",
+        hint: "如果公司挺过去，你的忠诚会得到回报",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          StateManager.addMessage("💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。", "event");
+        },
+      },
+      {
+        text: "🚪 请假面试其他公司",
+        hint: "骑驴找马，留一手",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          st.flags._fateJobHunting = true;
+          StateManager.addMessage("🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。", "info");
+        },
+      },
+    ],
+  },
+
+  // ---- 事件2：持仓公司产品爆发，低价增持机会 ----
+  {
+    id: "fate_company_boom",
+    phase: "street",
+    icon: "🚀",
+    title: "内幕消息：你的持仓股要起飞",
+    story: "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
+    conditions: function (st) {
+      if (st.player.phase !== "street" || !st.investment || !st.investment.stockHoldings || !st.investment.stockHoldings.length) return false;
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (co && co.knownToPlayer && co.fateEventHistory && co.fateEventHistory.length > 0) {
+          var last = co.fateEventHistory[co.fateEventHistory.length - 1];
+          if (last && last.eventType === "product_breakout" && !st.flags._fateBoomSeen) return true;
+        }
+      }
+      return false;
+    },
+    choices: [
+      {
+        text: "💰 加仓买入（¥5000）",
+        hint: "消息兑现后收益+40%",
+        cost: 5000,
+        apply: function (st) {
+          st.flags._fateBoomSeen = true;
+          st.resources.cash -= 5000;
+          st.flags._fateInsiderInvest = (st.flags._fateInsiderInvest || 0) + 5000;
+          st.player.mental = Math.max(0, st.player.mental - 2);
+          StateManager.addMessage("💰 你通过场外渠道加仓¥5000。等正式公告出来，这笔钱至少能变成¥7000。但心里有点虚——这算内幕交易吗？心智-2。", "warning");
+        },
+      },
+      {
+        text: "📊 等公告出来再操作（安全但晚一步）",
+        hint: "合法合规，但收益打折扣",
+        apply: function (st) {
+          st.flags._fateBoomSeen = true;
+          st.flags._fateBoomSafe = true;
+          StateManager.addMessage("📊 你合上了手机。内幕交易是红线，碰不得。等公告出来再操作，赚少一点但睡得着。", "info");
+        },
+      },
+    ],
+  },
+
+  // ---- 事件3：命运事件导致持仓大幅波动 ----
+  {
+    id: "fate_market_mover",
+    phase: "street",
+    icon: "📉",
+    title: "你的股票大跳水！",
+    story: "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
+    conditions: function (st) {
+      if (!st.investment || !st.investment.stockHoldings || !st.investment.stockHoldings.length) return false;
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      var hasEvent = false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (co && co.knownToPlayer && co.fateEventHistory && co.fateEventHistory.length > 0) {
+          var last = co.fateEventHistory[co.fateEventHistory.length - 1];
+          if (last && st.player.day - last.day <= 3 && (last.eventType === "scandal" || last.eventType === "cash_crisis" || last.eventType === "market_erosion")) {
+            if (typeof CORP_STOCK_MAP !== "undefined") {
+              var symbols = CORP_STOCK_MAP[cid] || [];
+              for (var si = 0; si < st.investment.stockHoldings.length; si++) {
+                if (symbols.indexOf(st.investment.stockHoldings[si].symbol) >= 0) {
+                  hasEvent = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      return hasEvent && !st.flags._fateMoverSeen;
+    },
+    choices: [
+      {
+        text: "🏃 紧急减仓（卖出持仓的50%）",
+        hint: "止损，控制亏损",
+        apply: function (st) {
+          st.flags._fateMoverSeen = true;
+          var soldTotal = 0;
+          var holdings = st.investment.stockHoldings;
+          for (var i = holdings.length - 1; i >= 0; i--) {
+            var h = holdings[i];
+            var mkt = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            if (mkt) {
+              var sellShares = Math.floor(h.shares * 0.5);
+              if (sellShares > 0) {
+                var revenue = Math.round(mkt.price * sellShares * 100) / 100;
+                st.resources.cash += revenue;
+                st.resources.totalEarned += revenue;
+                h.shares -= sellShares;
+                soldTotal += revenue;
+              }
+            }
+          }
+          st.investment.stockHoldings = st.investment.stockHoldings.filter(function (h) { return h.shares > 0; });
+          StateManager.addMessage("🏃 你紧急减仓，回笼¥" + soldTotal.toLocaleString() + "。虽然亏了一些，但至少保住了本金。", "warning");
+        },
+      },
+      {
+        text: "🧘 持有不动，相信长期价值",
+        hint: "长期持有，等待反弹",
+        apply: function (st) {
+          st.flags._fateMoverSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage("🧘 你关掉了交易软件。好公司总会回来——你告诉自己。心智+3。", "info");
+        },
+      },
+    ],
+  },
 ];
 
 /* =========================================================
@@ -9275,7 +9440,8 @@ const ACHIEVEMENTS = [
     id: "witness_fall",
     name: "见证陨落",
     desc: "亲眼见证一家公司走向倒闭。",
-    story: "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
+    story:
+      "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
     icon: "💀",
     category: "隐藏",
     hidden: true,
@@ -9294,7 +9460,8 @@ const ACHIEVEMENTS = [
     id: "investor_eye",
     name: "投资眼光",
     desc: "投资的公司成长为市场领导者。",
-    story: "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
+    story:
+      "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
     icon: "🔮",
     category: "隐藏",
     hidden: true,
@@ -9311,7 +9478,8 @@ const ACHIEVEMENTS = [
     id: "corp_killer",
     name: "行业颠覆者",
     desc: "你离开后，公司倒闭了。",
-    story: "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
+    story:
+      "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
     icon: "⚡",
     category: "隐藏",
     hidden: true,
@@ -20597,13 +20765,22 @@ var FATE_EVENTS = [
     label: "市场份额被蚕食",
     icon: "🦈",
     weight: 1.5,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.trend === "down" && co.marketShare < 15;
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(5, co.health - (10 + Math.floor(Math.random() * 11)));
-      co.marketShare = Math.max(1, co.marketShare - (2 + Math.floor(Math.random() * 4)));
-      co.sentiment = Math.max(5, co.sentiment - (15 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        5,
+        co.health - (10 + Math.floor(Math.random() * 11)),
+      );
+      co.marketShare = Math.max(
+        1,
+        co.marketShare - (2 + Math.floor(Math.random() * 4)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (15 + Math.floor(Math.random() * 11)),
+      );
       return { stockMul: 0.94, msg: "市场份额持续萎缩，被竞争对手蚕食" };
     },
   },
@@ -20612,13 +20789,24 @@ var FATE_EVENTS = [
     label: "新产品爆发",
     icon: "🚀",
     weight: 1.2,
-    condition: function(st, co) {
-      return co.productScore > 65 && co.phase !== "decline" && co.phase !== "dying";
+    condition: function (st, co) {
+      return (
+        co.productScore > 65 && co.phase !== "decline" && co.phase !== "dying"
+      );
     },
-    apply: function(st, cid, co) {
-      co.health = Math.min(100, co.health + (10 + Math.floor(Math.random() * 11)));
-      co.marketShare = Math.min(40, co.marketShare + (3 + Math.floor(Math.random() * 6)));
-      co.sentiment = Math.min(100, co.sentiment + (20 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.min(
+        100,
+        co.health + (10 + Math.floor(Math.random() * 11)),
+      );
+      co.marketShare = Math.min(
+        40,
+        co.marketShare + (3 + Math.floor(Math.random() * 6)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (20 + Math.floor(Math.random() * 11)),
+      );
       if (co.phase === "mature") co.trend = "up";
       return { stockMul: 1.12, msg: "新产品引爆市场，订单暴增" };
     },
@@ -20628,14 +20816,23 @@ var FATE_EVENTS = [
     label: "丑闻曝光",
     icon: "📰",
     weight: 1.0,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.sentiment < 45 || (co.trend === "down" && co.health < 60);
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(5, co.health - (15 + Math.floor(Math.random() * 11)));
-      co.sentiment = Math.max(5, co.sentiment - (25 + Math.floor(Math.random() * 11)));
-      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 6)));
-      return { stockMul: 0.90, msg: "管理层丑闻曝光，引发信任危机" };
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        5,
+        co.health - (15 + Math.floor(Math.random() * 11)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (25 + Math.floor(Math.random() * 11)),
+      );
+      co.talentScore = Math.max(
+        5,
+        co.talentScore - (10 + Math.floor(Math.random() * 6)),
+      );
+      return { stockMul: 0.9, msg: "管理层丑闻曝光，引发信任危机" };
     },
   },
   {
@@ -20643,11 +20840,13 @@ var FATE_EVENTS = [
     label: "收购/合并",
     icon: "🤝",
     weight: 0.5,
-    condition: function(st, co) {
+    condition: function (st, co) {
       // 濒死或高市场占有率成熟公司
-      return co.phase === "dying" || (co.phase === "mature" && co.marketShare > 25);
+      return (
+        co.phase === "dying" || (co.phase === "mature" && co.marketShare > 25)
+      );
     },
-    apply: function(st, cid, co) {
+    apply: function (st, cid, co) {
       if (co.phase === "dying") {
         // 濒死公司被收购——标记flag供事件系统使用
         co.phase = "dying";
@@ -20669,12 +20868,18 @@ var FATE_EVENTS = [
     label: "行业政策利好",
     icon: "📋",
     weight: 0.8,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.health > 20; // 任何健康的公司都可能受益
     },
-    apply: function(st, cid, co) {
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 11)));
-      co.sentiment = Math.min(100, co.sentiment + (15 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 11)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (15 + Math.floor(Math.random() * 11)),
+      );
       co.trend = "up";
       return { stockMul: 1.08, msg: "所在行业获重大政策利好，板块集体走强" };
     },
@@ -20684,13 +20889,22 @@ var FATE_EVENTS = [
     label: "创始人回归",
     icon: "👑",
     weight: 0.6,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.phase === "decline" && co.sentiment < 35;
     },
-    apply: function(st, cid, co) {
-      co.sentiment = Math.min(100, co.sentiment + (10 + Math.floor(Math.random() * 11)));
-      co.talentScore = Math.min(100, co.talentScore + (5 + Math.floor(Math.random() * 11)));
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 6)));
+    apply: function (st, cid, co) {
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (10 + Math.floor(Math.random() * 11)),
+      );
+      co.talentScore = Math.min(
+        100,
+        co.talentScore + (5 + Math.floor(Math.random() * 11)),
+      );
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 6)),
+      );
       co.productScore = Math.min(100, co.productScore + 5);
       if (co.health > 40) co.trend = "up";
       return { stockMul: 1.06, msg: "创始人回归，启动重大战略重组" };
@@ -20701,13 +20915,19 @@ var FATE_EVENTS = [
     label: "资金链断裂",
     icon: "💸",
     weight: 0.7,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.phase === "decline" || co.phase === "dying";
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(3, co.health - (20 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        3,
+        co.health - (20 + Math.floor(Math.random() * 11)),
+      );
       co.sentiment = Math.max(5, co.sentiment - 20);
-      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 11)));
+      co.talentScore = Math.max(
+        5,
+        co.talentScore - (10 + Math.floor(Math.random() * 11)),
+      );
       if (co.health < 10 && co.phase !== "dying") co.phase = "dying";
       return { stockMul: 0.85, msg: "资金链断裂，大规模裁员自救" };
     },
@@ -20773,11 +20993,61 @@ function initEnterpriseFate(state) {
   if (!fate.companies) fate.companies = {};
 
   var defaults = {
-    star_tech:  { phase: "growth",  health: 82, marketShare: 15, sentiment: 60, productScore: 72, talentScore: 68, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    byte_dragon: { phase: "growth",  health: 88, marketShare: 22, sentiment: 70, productScore: 80, talentScore: 75, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    cloud_giant: { phase: "mature",  health: 78, marketShare: 18, sentiment: 55, productScore: 65, talentScore: 60, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
-    game_fun:    { phase: "growth",  health: 75, marketShare: 10, sentiment: 65, productScore: 70, talentScore: 55, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    safe_fin:    { phase: "mature",  health: 85, marketShare: 12, sentiment: 50, productScore: 60, talentScore: 70, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
+    star_tech: {
+      phase: "growth",
+      health: 82,
+      marketShare: 15,
+      sentiment: 60,
+      productScore: 72,
+      talentScore: 68,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    byte_dragon: {
+      phase: "growth",
+      health: 88,
+      marketShare: 22,
+      sentiment: 70,
+      productScore: 80,
+      talentScore: 75,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    cloud_giant: {
+      phase: "mature",
+      health: 78,
+      marketShare: 18,
+      sentiment: 55,
+      productScore: 65,
+      talentScore: 60,
+      trend: "stable",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    game_fun: {
+      phase: "growth",
+      health: 75,
+      marketShare: 10,
+      sentiment: 65,
+      productScore: 70,
+      talentScore: 55,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    safe_fin: {
+      phase: "mature",
+      health: 85,
+      marketShare: 12,
+      sentiment: 50,
+      productScore: 60,
+      talentScore: 70,
+      trend: "stable",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
   };
 
   for (var cid in defaults) {
@@ -20795,7 +21065,8 @@ function tickEnterpriseFate(state) {
 
   var fate = state.enterpriseFate;
   var companies = fate.companies;
-  var hasStocks = typeof INV_STOCKS !== "undefined" && typeof CORP_STOCK_MAP !== "undefined";
+  var hasStocks =
+    typeof INV_STOCKS !== "undefined" && typeof CORP_STOCK_MAP !== "undefined";
   var inv = state.investment;
 
   for (var cid in companies) {
@@ -20803,18 +21074,25 @@ function tickEnterpriseFate(state) {
     if (!co) continue;
 
     // 1. 自然漂移
-    var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+    var phaseDef =
+      CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
 
     // health: 缓慢向中间值收敛
-    var healthDrift = (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
+    var healthDrift =
+      (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
     co.health = Math.max(1, Math.min(100, co.health + healthDrift));
 
     // marketShare: 受阶段影响
-    var shareDrift = (Math.random() - 0.5) * 0.6 + ((co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0));
+    var shareDrift =
+      (Math.random() - 0.5) * 0.6 +
+      (co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0);
     co.marketShare = Math.max(1, Math.min(45, co.marketShare + shareDrift));
 
     // sentiment: 随机波动
-    co.sentiment = Math.max(5, Math.min(100, co.sentiment + (Math.random() - 0.5) * 4));
+    co.sentiment = Math.max(
+      5,
+      Math.min(100, co.sentiment + (Math.random() - 0.5) * 4),
+    );
 
     // 2. 阶段转换
     if (co.health < 20 && co.phase !== "dying") {
@@ -20863,7 +21141,11 @@ function tickEnterpriseFate(state) {
         var mkt = inv.stockMarket[symbols[si2]];
         if (!mkt) continue;
         // 计算目标乘数: health + sentiment + marketShare 综合
-        var targetMul = 0.7 + (co2.health / 100) * 0.15 + (co2.sentiment / 100) * 0.1 + (co2.marketShare / 30) * 0.05;
+        var targetMul =
+          0.7 +
+          (co2.health / 100) * 0.15 +
+          (co2.sentiment / 100) * 0.1 +
+          (co2.marketShare / 30) * 0.05;
         // 温和牵引: 每次向目标移动0.5%
         mkt.price = mkt.price * (1 - 0.005) + mkt.price * targetMul * 0.005;
         mkt.price = Math.max(0.0001, Math.round(mkt.price * 10000) / 10000);
@@ -20911,13 +21193,16 @@ function rollFateEvent(state) {
         // 按权重选取
         var totalWeight = 0;
         for (var vi = 0; vi < validEvents.length; vi++) {
-          totalWeight += (validEvents[vi].weight || 1);
+          totalWeight += validEvents[vi].weight || 1;
         }
         var roll = Math.random() * totalWeight;
         var picked = validEvents[0];
         for (var vi2 = 0; vi2 < validEvents.length; vi2++) {
-          roll -= (validEvents[vi2].weight || 1);
-          if (roll <= 0) { picked = validEvents[vi2]; break; }
+          roll -= validEvents[vi2].weight || 1;
+          if (roll <= 0) {
+            picked = validEvents[vi2];
+            break;
+          }
         }
 
         // 应用事件
@@ -20964,12 +21249,20 @@ function applyFateEvent(event, cid, state) {
   StateManager.addMessage("🏭 " + headline, "event");
 
   // 如果玩家已知该公司，应用股价冲击
-  if (co.knownToPlayer && state.investment && state.investment.stockMarket && typeof CORP_STOCK_MAP !== "undefined") {
+  if (
+    co.knownToPlayer &&
+    state.investment &&
+    state.investment.stockMarket &&
+    typeof CORP_STOCK_MAP !== "undefined"
+  ) {
     var symbols = CORP_STOCK_MAP[cid] || [];
     for (var si = 0; si < symbols.length; si++) {
       var mkt = state.investment.stockMarket[symbols[si]];
       if (mkt) {
-        mkt.price = Math.max(0.0001, Math.round(mkt.price * result.stockMul * 10000) / 10000);
+        mkt.price = Math.max(
+          0.0001,
+          Math.round(mkt.price * result.stockMul * 10000) / 10000,
+        );
       }
     }
     StateManager.addMessage("📊 关联股票价格已调整", "info");
@@ -20985,7 +21278,8 @@ function getCompanyFateSummary(cid, state) {
   if (!state.enterpriseFate || !state.enterpriseFate.companies) return null;
   var co = state.enterpriseFate.companies[cid];
   if (!co) return null;
-  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+  var phaseDef =
+    CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
   return {
     name: getCompanyNameById(cid),
     industry: getCompanyIndustry(cid),
@@ -21029,7 +21323,9 @@ function getPlayerCompanyImpact(state) {
       var stockSymbols = CORP_STOCK_MAP[cid] || [];
       var totalShares = 0;
       for (var si = 0; si < state.investment.stockHoldings.length; si++) {
-        if (stockSymbols.indexOf(state.investment.stockHoldings[si].symbol) >= 0) {
+        if (
+          stockSymbols.indexOf(state.investment.stockHoldings[si].symbol) >= 0
+        ) {
           totalShares += state.investment.stockHoldings[si].shares || 0;
         }
       }
@@ -21049,9 +21345,12 @@ function getPlayerCompanyImpact(state) {
  * 获取命运事件历史文本（用于UI）
  */
 function getFateHistoryText(cid, state) {
-  var co = state.enterpriseFate && state.enterpriseFate.companies && state.enterpriseFate.companies[cid];
+  var co =
+    state.enterpriseFate &&
+    state.enterpriseFate.companies &&
+    state.enterpriseFate.companies[cid];
   if (!co || !co.fateEventHistory || !co.fateEventHistory.length) return [];
-  return co.fateEventHistory.slice(-10).map(function(e) {
+  return co.fateEventHistory.slice(-10).map(function (e) {
     return { day: e.day, text: e.icon + " " + e.label + "：" + e.description };
   });
 }
@@ -24006,9 +24305,15 @@ function renderCorpTab(state, parent) {
     Math.floor((state.player.day - (c.joinedDay || 0)) / 30),
   );
 
+  // 企业命运标签
+  var fateTag = "";
+  if (typeof _fateTag === "function" && c.company) {
+    fateTag = _fateTag(state, c.company.id);
+  }
+
   var summaryHtml =
     '<h3 style="color:var(--text-muted);margin-bottom:12px;">🏢 职场信息 — ' +
-    companyName +
+    companyName + fateTag +
     " | 入职第" +
     quartersTotal +
     "个季度</h3>" +
@@ -24136,11 +24441,26 @@ function renderCorpTab(state, parent) {
   parent.appendChild(div);
 }
 
+/**
+ * 企业命运标签 — 在公司名旁显示健康度+阶段
+ * 同时被 renderCorpTab 和 corp_ui.js 使用
+ */
+function _fateTag(state, companyId) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId) return "";
+  var co = state.enterpriseFate.companies[companyId];
+  if (!co) return "";
+  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
+  if (!phaseDef) return "";
+  var healthColor = co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return '<span style="margin-left:8px;font-size:10px;color:' + phaseDef.color + ';">' + phaseDef.icon + ' ' + phaseDef.name + ' · 健康度<span style="color:' + healthColor + ';">' + Math.round(co.health) + '</span></span>';
+}
+
 // ====== Enterprise Fate Tab ======
 function renderEnterpriseFateTab(state, parent) {
   parent.innerHTML = "";
   if (!state.enterpriseFate || typeof getCompanyFateSummary !== "function") {
-    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🏭 企业生态系统中...</p>';
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);text-align:center;padding:40px;">🏭 企业生态系统中...</p>';
     return;
   }
 
@@ -24149,35 +24469,52 @@ function renderEnterpriseFateTab(state, parent) {
 
   // 标题
   var title = document.createElement("h2");
-  title.style.cssText = "margin:0 0 4px;font-size:16px;color:var(--text-primary);";
+  title.style.cssText =
+    "margin:0 0 4px;font-size:16px;color:var(--text-primary);";
   title.textContent = "🏭 企业命运生态";
   container.appendChild(title);
 
   var subtitle = document.createElement("p");
-  subtitle.style.cssText = "margin:0 0 12px;font-size:11px;color:var(--text-muted);";
-  subtitle.textContent = "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。";
+  subtitle.style.cssText =
+    "margin:0 0 12px;font-size:11px;color:var(--text-muted);";
+  subtitle.textContent =
+    "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。";
   container.appendChild(subtitle);
 
   // 公司卡片列表
-  var companyIds = ["star_tech", "byte_dragon", "cloud_giant", "game_fun", "safe_fin"];
+  var companyIds = [
+    "star_tech",
+    "byte_dragon",
+    "cloud_giant",
+    "game_fun",
+    "safe_fin",
+  ];
   for (var ci = 0; ci < companyIds.length; ci++) {
     var cid = companyIds[ci];
     var summary = getCompanyFateSummary(cid, state);
     if (!summary) continue;
 
     var card = document.createElement("div");
-    card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;";
+    card.style.cssText =
+      "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;";
 
     // 公司名称行
     var headerRow = document.createElement("div");
-    headerRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;";
+    headerRow.style.cssText =
+      "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;";
     var nameSpan = document.createElement("span");
-    nameSpan.style.cssText = "font-size:14px;font-weight:bold;color:var(--text-primary);";
-    nameSpan.textContent = summary.knownToPlayer ? (summary.phaseIcon + " " + summary.name) : "❓ " + summary.name;
+    nameSpan.style.cssText =
+      "font-size:14px;font-weight:bold;color:var(--text-primary);";
+    nameSpan.textContent = summary.knownToPlayer
+      ? summary.phaseIcon + " " + summary.name
+      : "❓ " + summary.name;
     headerRow.appendChild(nameSpan);
 
     var phaseBadge = document.createElement("span");
-    phaseBadge.style.cssText = "font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;background:" + summary.phaseColor + ";";
+    phaseBadge.style.cssText =
+      "font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;background:" +
+      summary.phaseColor +
+      ";";
     phaseBadge.textContent = summary.phaseName;
     headerRow.appendChild(phaseBadge);
     card.appendChild(headerRow);
@@ -24185,7 +24522,8 @@ function renderEnterpriseFateTab(state, parent) {
     if (!summary.knownToPlayer) {
       // 未知公司：模糊显示
       var hiddenNote = document.createElement("p");
-      hiddenNote.style.cssText = "font-size:11px;color:var(--text-muted);font-style:italic;";
+      hiddenNote.style.cssText =
+        "font-size:11px;color:var(--text-muted);font-style:italic;";
       hiddenNote.textContent = "💡 就职或购买该公司股票后解锁详情";
       card.appendChild(hiddenNote);
       container.appendChild(card);
@@ -24194,7 +24532,15 @@ function renderEnterpriseFateTab(state, parent) {
 
     // 已知公司：显示详细数据
     // 健康度条
-    var healthRow = _escRow("健康度", summary.health, summary.health > 60 ? "#4a9e5c" : summary.health > 30 ? "#f39c12" : "#c4553d");
+    var healthRow = _escRow(
+      "健康度",
+      summary.health,
+      summary.health > 60
+        ? "#4a9e5c"
+        : summary.health > 30
+          ? "#f39c12"
+          : "#c4553d",
+    );
     card.appendChild(healthRow);
 
     // 市场份额条
@@ -24202,28 +24548,48 @@ function renderEnterpriseFateTab(state, parent) {
     card.appendChild(shareRow);
 
     // 市场情绪条
-    var sentimentRow = _escRow("市场情绪", summary.sentiment, summary.sentiment > 50 ? "#4a9e5c" : "#e67e22");
+    var sentimentRow = _escRow(
+      "市场情绪",
+      summary.sentiment,
+      summary.sentiment > 50 ? "#4a9e5c" : "#e67e22",
+    );
     card.appendChild(sentimentRow);
 
     // 趋势 + 行业
     var metaDiv = document.createElement("div");
-    metaDiv.style.cssText = "display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;";
-    var trendIcon = summary.trend === "up" ? "📈" : summary.trend === "down" ? "📉" : "➡️";
-    metaDiv.innerHTML = "<span>趋势: " + trendIcon + "</span><span>行业: " + summary.industry + "</span><span>产品力: " + summary.productScore + "</span>";
+    metaDiv.style.cssText =
+      "display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;";
+    var trendIcon =
+      summary.trend === "up" ? "📈" : summary.trend === "down" ? "📉" : "➡️";
+    metaDiv.innerHTML =
+      "<span>趋势: " +
+      trendIcon +
+      "</span><span>行业: " +
+      summary.industry +
+      "</span><span>产品力: " +
+      summary.productScore +
+      "</span>";
     card.appendChild(metaDiv);
 
     // 命运事件历史（最多5条）
     var history = getFateHistoryText(cid, state);
     if (history && history.length > 0) {
       var historyDiv = document.createElement("div");
-      historyDiv.style.cssText = "margin-top:8px;padding-top:6px;border-top:1px solid var(--border);";
+      historyDiv.style.cssText =
+        "margin-top:8px;padding-top:6px;border-top:1px solid var(--border);";
       var historyTitle = document.createElement("div");
-      historyTitle.style.cssText = "font-size:10px;color:var(--text-muted);margin-bottom:4px;";
+      historyTitle.style.cssText =
+        "font-size:10px;color:var(--text-muted);margin-bottom:4px;";
       historyTitle.textContent = "📜 命运事件记录";
       historyDiv.appendChild(historyTitle);
-      for (var hi = Math.max(0, history.length - 5); hi < history.length; hi++) {
+      for (
+        var hi = Math.max(0, history.length - 5);
+        hi < history.length;
+        hi++
+      ) {
         var hEntry = document.createElement("div");
-        hEntry.style.cssText = "font-size:10px;color:var(--text-secondary);padding:1px 0;";
+        hEntry.style.cssText =
+          "font-size:10px;color:var(--text-secondary);padding:1px 0;";
         hEntry.textContent = "第" + history[hi].day + "天 " + history[hi].text;
         historyDiv.appendChild(hEntry);
       }
@@ -24241,19 +24607,27 @@ function _escRow(label, value, color) {
   var row = document.createElement("div");
   row.style.cssText = "display:flex;align-items:center;margin:2px 0;";
   var labelSpan = document.createElement("span");
-  labelSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;";
+  labelSpan.style.cssText =
+    "font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;";
   labelSpan.textContent = label;
   row.appendChild(labelSpan);
 
   var barWrap = document.createElement("div");
-  barWrap.style.cssText = "flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 6px;";
+  barWrap.style.cssText =
+    "flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 6px;";
   var bar = document.createElement("div");
-  bar.style.cssText = "height:100%;width:" + Math.round(value) + "%;background:" + color + ";border-radius:4px;transition:width 0.3s;";
+  bar.style.cssText =
+    "height:100%;width:" +
+    Math.round(value) +
+    "%;background:" +
+    color +
+    ";border-radius:4px;transition:width 0.3s;";
   barWrap.appendChild(bar);
   row.appendChild(barWrap);
 
   var valSpan = document.createElement("span");
-  valSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:30px;text-align:right;";
+  valSpan.style.cssText =
+    "font-size:11px;color:var(--text-secondary);width:30px;text-align:right;";
   valSpan.textContent = Math.round(value) + "%";
   row.appendChild(valSpan);
   return row;
@@ -24343,6 +24717,19 @@ function renderAchievementsTab(state, parent) {
     <script>/**
  * 职场专用 UI 组件
  */
+
+/**
+ * 企业命运标签 — 在职场Tab公司名旁显示健康度+阶段
+ */
+function _fateTag(state, companyId) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId) return "";
+  var co = state.enterpriseFate.companies[companyId];
+  if (!co) return "";
+  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
+  if (!phaseDef) return "";
+  var healthColor = co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return '<span style="margin-left:8px;font-size:10px;color:' + phaseDef.color + ';">' + phaseDef.icon + ' ' + phaseDef.name + ' · 健康度<span style="color:' + healthColor + ';">' + Math.round(co.health) + '</span></span>';
+}
 
 /** 渲染职场面板（替代街头行动面板） */
 function renderCorporateActions(state) {

@@ -18,13 +18,22 @@ var FATE_EVENTS = [
     label: "市场份额被蚕食",
     icon: "🦈",
     weight: 1.5,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.trend === "down" && co.marketShare < 15;
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(5, co.health - (10 + Math.floor(Math.random() * 11)));
-      co.marketShare = Math.max(1, co.marketShare - (2 + Math.floor(Math.random() * 4)));
-      co.sentiment = Math.max(5, co.sentiment - (15 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        5,
+        co.health - (10 + Math.floor(Math.random() * 11)),
+      );
+      co.marketShare = Math.max(
+        1,
+        co.marketShare - (2 + Math.floor(Math.random() * 4)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (15 + Math.floor(Math.random() * 11)),
+      );
       return { stockMul: 0.94, msg: "市场份额持续萎缩，被竞争对手蚕食" };
     },
   },
@@ -33,13 +42,24 @@ var FATE_EVENTS = [
     label: "新产品爆发",
     icon: "🚀",
     weight: 1.2,
-    condition: function(st, co) {
-      return co.productScore > 65 && co.phase !== "decline" && co.phase !== "dying";
+    condition: function (st, co) {
+      return (
+        co.productScore > 65 && co.phase !== "decline" && co.phase !== "dying"
+      );
     },
-    apply: function(st, cid, co) {
-      co.health = Math.min(100, co.health + (10 + Math.floor(Math.random() * 11)));
-      co.marketShare = Math.min(40, co.marketShare + (3 + Math.floor(Math.random() * 6)));
-      co.sentiment = Math.min(100, co.sentiment + (20 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.min(
+        100,
+        co.health + (10 + Math.floor(Math.random() * 11)),
+      );
+      co.marketShare = Math.min(
+        40,
+        co.marketShare + (3 + Math.floor(Math.random() * 6)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (20 + Math.floor(Math.random() * 11)),
+      );
       if (co.phase === "mature") co.trend = "up";
       return { stockMul: 1.12, msg: "新产品引爆市场，订单暴增" };
     },
@@ -49,14 +69,23 @@ var FATE_EVENTS = [
     label: "丑闻曝光",
     icon: "📰",
     weight: 1.0,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.sentiment < 45 || (co.trend === "down" && co.health < 60);
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(5, co.health - (15 + Math.floor(Math.random() * 11)));
-      co.sentiment = Math.max(5, co.sentiment - (25 + Math.floor(Math.random() * 11)));
-      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 6)));
-      return { stockMul: 0.90, msg: "管理层丑闻曝光，引发信任危机" };
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        5,
+        co.health - (15 + Math.floor(Math.random() * 11)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (25 + Math.floor(Math.random() * 11)),
+      );
+      co.talentScore = Math.max(
+        5,
+        co.talentScore - (10 + Math.floor(Math.random() * 6)),
+      );
+      return { stockMul: 0.9, msg: "管理层丑闻曝光，引发信任危机" };
     },
   },
   {
@@ -64,11 +93,13 @@ var FATE_EVENTS = [
     label: "收购/合并",
     icon: "🤝",
     weight: 0.5,
-    condition: function(st, co) {
+    condition: function (st, co) {
       // 濒死或高市场占有率成熟公司
-      return co.phase === "dying" || (co.phase === "mature" && co.marketShare > 25);
+      return (
+        co.phase === "dying" || (co.phase === "mature" && co.marketShare > 25)
+      );
     },
-    apply: function(st, cid, co) {
+    apply: function (st, cid, co) {
       if (co.phase === "dying") {
         // 濒死公司被收购——标记flag供事件系统使用
         co.phase = "dying";
@@ -90,12 +121,18 @@ var FATE_EVENTS = [
     label: "行业政策利好",
     icon: "📋",
     weight: 0.8,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.health > 20; // 任何健康的公司都可能受益
     },
-    apply: function(st, cid, co) {
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 11)));
-      co.sentiment = Math.min(100, co.sentiment + (15 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 11)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (15 + Math.floor(Math.random() * 11)),
+      );
       co.trend = "up";
       return { stockMul: 1.08, msg: "所在行业获重大政策利好，板块集体走强" };
     },
@@ -105,13 +142,22 @@ var FATE_EVENTS = [
     label: "创始人回归",
     icon: "👑",
     weight: 0.6,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.phase === "decline" && co.sentiment < 35;
     },
-    apply: function(st, cid, co) {
-      co.sentiment = Math.min(100, co.sentiment + (10 + Math.floor(Math.random() * 11)));
-      co.talentScore = Math.min(100, co.talentScore + (5 + Math.floor(Math.random() * 11)));
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 6)));
+    apply: function (st, cid, co) {
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (10 + Math.floor(Math.random() * 11)),
+      );
+      co.talentScore = Math.min(
+        100,
+        co.talentScore + (5 + Math.floor(Math.random() * 11)),
+      );
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 6)),
+      );
       co.productScore = Math.min(100, co.productScore + 5);
       if (co.health > 40) co.trend = "up";
       return { stockMul: 1.06, msg: "创始人回归，启动重大战略重组" };
@@ -122,13 +168,19 @@ var FATE_EVENTS = [
     label: "资金链断裂",
     icon: "💸",
     weight: 0.7,
-    condition: function(st, co) {
+    condition: function (st, co) {
       return co.phase === "decline" || co.phase === "dying";
     },
-    apply: function(st, cid, co) {
-      co.health = Math.max(3, co.health - (20 + Math.floor(Math.random() * 11)));
+    apply: function (st, cid, co) {
+      co.health = Math.max(
+        3,
+        co.health - (20 + Math.floor(Math.random() * 11)),
+      );
       co.sentiment = Math.max(5, co.sentiment - 20);
-      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 11)));
+      co.talentScore = Math.max(
+        5,
+        co.talentScore - (10 + Math.floor(Math.random() * 11)),
+      );
       if (co.health < 10 && co.phase !== "dying") co.phase = "dying";
       return { stockMul: 0.85, msg: "资金链断裂，大规模裁员自救" };
     },
@@ -194,11 +246,61 @@ function initEnterpriseFate(state) {
   if (!fate.companies) fate.companies = {};
 
   var defaults = {
-    star_tech:  { phase: "growth",  health: 82, marketShare: 15, sentiment: 60, productScore: 72, talentScore: 68, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    byte_dragon: { phase: "growth",  health: 88, marketShare: 22, sentiment: 70, productScore: 80, talentScore: 75, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    cloud_giant: { phase: "mature",  health: 78, marketShare: 18, sentiment: 55, productScore: 65, talentScore: 60, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
-    game_fun:    { phase: "growth",  health: 75, marketShare: 10, sentiment: 65, productScore: 70, talentScore: 55, trend: "up", knownToPlayer: false, fateEventHistory: [] },
-    safe_fin:    { phase: "mature",  health: 85, marketShare: 12, sentiment: 50, productScore: 60, talentScore: 70, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
+    star_tech: {
+      phase: "growth",
+      health: 82,
+      marketShare: 15,
+      sentiment: 60,
+      productScore: 72,
+      talentScore: 68,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    byte_dragon: {
+      phase: "growth",
+      health: 88,
+      marketShare: 22,
+      sentiment: 70,
+      productScore: 80,
+      talentScore: 75,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    cloud_giant: {
+      phase: "mature",
+      health: 78,
+      marketShare: 18,
+      sentiment: 55,
+      productScore: 65,
+      talentScore: 60,
+      trend: "stable",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    game_fun: {
+      phase: "growth",
+      health: 75,
+      marketShare: 10,
+      sentiment: 65,
+      productScore: 70,
+      talentScore: 55,
+      trend: "up",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
+    safe_fin: {
+      phase: "mature",
+      health: 85,
+      marketShare: 12,
+      sentiment: 50,
+      productScore: 60,
+      talentScore: 70,
+      trend: "stable",
+      knownToPlayer: false,
+      fateEventHistory: [],
+    },
   };
 
   for (var cid in defaults) {
@@ -216,7 +318,8 @@ function tickEnterpriseFate(state) {
 
   var fate = state.enterpriseFate;
   var companies = fate.companies;
-  var hasStocks = typeof INV_STOCKS !== "undefined" && typeof CORP_STOCK_MAP !== "undefined";
+  var hasStocks =
+    typeof INV_STOCKS !== "undefined" && typeof CORP_STOCK_MAP !== "undefined";
   var inv = state.investment;
 
   for (var cid in companies) {
@@ -224,18 +327,25 @@ function tickEnterpriseFate(state) {
     if (!co) continue;
 
     // 1. 自然漂移
-    var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+    var phaseDef =
+      CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
 
     // health: 缓慢向中间值收敛
-    var healthDrift = (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
+    var healthDrift =
+      (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
     co.health = Math.max(1, Math.min(100, co.health + healthDrift));
 
     // marketShare: 受阶段影响
-    var shareDrift = (Math.random() - 0.5) * 0.6 + ((co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0));
+    var shareDrift =
+      (Math.random() - 0.5) * 0.6 +
+      (co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0);
     co.marketShare = Math.max(1, Math.min(45, co.marketShare + shareDrift));
 
     // sentiment: 随机波动
-    co.sentiment = Math.max(5, Math.min(100, co.sentiment + (Math.random() - 0.5) * 4));
+    co.sentiment = Math.max(
+      5,
+      Math.min(100, co.sentiment + (Math.random() - 0.5) * 4),
+    );
 
     // 2. 阶段转换
     if (co.health < 20 && co.phase !== "dying") {
@@ -284,7 +394,11 @@ function tickEnterpriseFate(state) {
         var mkt = inv.stockMarket[symbols[si2]];
         if (!mkt) continue;
         // 计算目标乘数: health + sentiment + marketShare 综合
-        var targetMul = 0.7 + (co2.health / 100) * 0.15 + (co2.sentiment / 100) * 0.1 + (co2.marketShare / 30) * 0.05;
+        var targetMul =
+          0.7 +
+          (co2.health / 100) * 0.15 +
+          (co2.sentiment / 100) * 0.1 +
+          (co2.marketShare / 30) * 0.05;
         // 温和牵引: 每次向目标移动0.5%
         mkt.price = mkt.price * (1 - 0.005) + mkt.price * targetMul * 0.005;
         mkt.price = Math.max(0.0001, Math.round(mkt.price * 10000) / 10000);
@@ -332,13 +446,16 @@ function rollFateEvent(state) {
         // 按权重选取
         var totalWeight = 0;
         for (var vi = 0; vi < validEvents.length; vi++) {
-          totalWeight += (validEvents[vi].weight || 1);
+          totalWeight += validEvents[vi].weight || 1;
         }
         var roll = Math.random() * totalWeight;
         var picked = validEvents[0];
         for (var vi2 = 0; vi2 < validEvents.length; vi2++) {
-          roll -= (validEvents[vi2].weight || 1);
-          if (roll <= 0) { picked = validEvents[vi2]; break; }
+          roll -= validEvents[vi2].weight || 1;
+          if (roll <= 0) {
+            picked = validEvents[vi2];
+            break;
+          }
         }
 
         // 应用事件
@@ -385,12 +502,20 @@ function applyFateEvent(event, cid, state) {
   StateManager.addMessage("🏭 " + headline, "event");
 
   // 如果玩家已知该公司，应用股价冲击
-  if (co.knownToPlayer && state.investment && state.investment.stockMarket && typeof CORP_STOCK_MAP !== "undefined") {
+  if (
+    co.knownToPlayer &&
+    state.investment &&
+    state.investment.stockMarket &&
+    typeof CORP_STOCK_MAP !== "undefined"
+  ) {
     var symbols = CORP_STOCK_MAP[cid] || [];
     for (var si = 0; si < symbols.length; si++) {
       var mkt = state.investment.stockMarket[symbols[si]];
       if (mkt) {
-        mkt.price = Math.max(0.0001, Math.round(mkt.price * result.stockMul * 10000) / 10000);
+        mkt.price = Math.max(
+          0.0001,
+          Math.round(mkt.price * result.stockMul * 10000) / 10000,
+        );
       }
     }
     StateManager.addMessage("📊 关联股票价格已调整", "info");
@@ -406,7 +531,8 @@ function getCompanyFateSummary(cid, state) {
   if (!state.enterpriseFate || !state.enterpriseFate.companies) return null;
   var co = state.enterpriseFate.companies[cid];
   if (!co) return null;
-  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+  var phaseDef =
+    CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
   return {
     name: getCompanyNameById(cid),
     industry: getCompanyIndustry(cid),
@@ -450,7 +576,9 @@ function getPlayerCompanyImpact(state) {
       var stockSymbols = CORP_STOCK_MAP[cid] || [];
       var totalShares = 0;
       for (var si = 0; si < state.investment.stockHoldings.length; si++) {
-        if (stockSymbols.indexOf(state.investment.stockHoldings[si].symbol) >= 0) {
+        if (
+          stockSymbols.indexOf(state.investment.stockHoldings[si].symbol) >= 0
+        ) {
           totalShares += state.investment.stockHoldings[si].shares || 0;
         }
       }
@@ -470,9 +598,12 @@ function getPlayerCompanyImpact(state) {
  * 获取命运事件历史文本（用于UI）
  */
 function getFateHistoryText(cid, state) {
-  var co = state.enterpriseFate && state.enterpriseFate.companies && state.enterpriseFate.companies[cid];
+  var co =
+    state.enterpriseFate &&
+    state.enterpriseFate.companies &&
+    state.enterpriseFate.companies[cid];
   if (!co || !co.fateEventHistory || !co.fateEventHistory.length) return [];
-  return co.fateEventHistory.slice(-10).map(function(e) {
+  return co.fateEventHistory.slice(-10).map(function (e) {
     return { day: e.day, text: e.icon + " " + e.label + "：" + e.description };
   });
 }

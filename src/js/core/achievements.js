@@ -333,7 +333,8 @@ const ACHIEVEMENTS = [
     id: "witness_fall",
     name: "见证陨落",
     desc: "亲眼见证一家公司走向倒闭。",
-    story: "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
+    story:
+      "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
     icon: "💀",
     category: "隐藏",
     hidden: true,
@@ -352,7 +353,8 @@ const ACHIEVEMENTS = [
     id: "investor_eye",
     name: "投资眼光",
     desc: "投资的公司成长为市场领导者。",
-    story: "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
+    story:
+      "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
     icon: "🔮",
     category: "隐藏",
     hidden: true,
@@ -369,7 +371,8 @@ const ACHIEVEMENTS = [
     id: "corp_killer",
     name: "行业颠覆者",
     desc: "你离开后，公司倒闭了。",
-    story: "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
+    story:
+      "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
     icon: "⚡",
     category: "隐藏",
     hidden: true,

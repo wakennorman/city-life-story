@@ -2,6 +2,33 @@
  * 职场专用 UI 组件
  */
 
+/**
+ * 企业命运标签 — 在职场Tab公司名旁显示健康度+阶段
+ */
+function _fateTag(state, companyId) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId)
+    return "";
+  var co = state.enterpriseFate.companies[companyId];
+  if (!co) return "";
+  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
+  if (!phaseDef) return "";
+  var healthColor =
+    co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return (
+    '<span style="margin-left:8px;font-size:10px;color:' +
+    phaseDef.color +
+    ';">' +
+    phaseDef.icon +
+    " " +
+    phaseDef.name +
+    ' · 健康度<span style="color:' +
+    healthColor +
+    ';">' +
+    Math.round(co.health) +
+    "</span></span>"
+  );
+}
+
 /** 渲染职场面板（替代街头行动面板） */
 function renderCorporateActions(state) {
   const area = document.getElementById("content-area");

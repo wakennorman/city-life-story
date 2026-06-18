@@ -6317,6 +6317,243 @@ const RANDOM_EVENTS = [
       return choices;
     },
   },
+
+  // ============================================================
+  // 企业命运联动事件（3个）— P2#11 玩家与命运系统的互动
+  // ============================================================
+
+  // ---- 事件1：就职公司濒死，买断或坚守 ----
+  {
+    id: "fate_company_collapse",
+    phase: "corporate",
+    icon: "💀",
+    title: "公司快不行了，你的选择是？",
+    story:
+      "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
+    conditions: function (st) {
+      if (st.player.phase !== "corporate" || !st.corporate.company)
+        return false;
+      var cid = st.corporate.company.id;
+      var co =
+        st.enterpriseFate &&
+        st.enterpriseFate.companies &&
+        st.enterpriseFate.companies[cid];
+      return co && co.phase === "dying" && !st.flags._fateCollapseSeen;
+    },
+    choices: [
+      {
+        text: "📄 接受N+1赔偿走人（¥50,000+）",
+        hint: "拿钱走，安全退出",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.flags._formerCompanyCollapsed = true;
+          var severance = 50000 + Math.floor(Math.random() * 20000);
+          st.resources.cash += severance;
+          st.resources.totalEarned += severance;
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage(
+            "💀 你签了离职协议，拿了¥" +
+              severance.toLocaleString() +
+              "赔偿金。离开公司的那一刻，你回头看了一眼——那里曾经是你的全部。心智-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💪 坚守岗位，跟公司共进退",
+        hint: "如果公司挺过去，你的忠诚会得到回报",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          StateManager.addMessage(
+            "💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🚪 请假面试其他公司",
+        hint: "骑驴找马，留一手",
+        apply: function (st) {
+          st.flags._fateCollapseSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          st.flags._fateJobHunting = true;
+          StateManager.addMessage(
+            "🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // ---- 事件2：持仓公司产品爆发，低价增持机会 ----
+  {
+    id: "fate_company_boom",
+    phase: "street",
+    icon: "🚀",
+    title: "内幕消息：你的持仓股要起飞",
+    story:
+      "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
+    conditions: function (st) {
+      if (
+        st.player.phase !== "street" ||
+        !st.investment ||
+        !st.investment.stockHoldings ||
+        !st.investment.stockHoldings.length
+      )
+        return false;
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (
+          co &&
+          co.knownToPlayer &&
+          co.fateEventHistory &&
+          co.fateEventHistory.length > 0
+        ) {
+          var last = co.fateEventHistory[co.fateEventHistory.length - 1];
+          if (
+            last &&
+            last.eventType === "product_breakout" &&
+            !st.flags._fateBoomSeen
+          )
+            return true;
+        }
+      }
+      return false;
+    },
+    choices: [
+      {
+        text: "💰 加仓买入（¥5000）",
+        hint: "消息兑现后收益+40%",
+        cost: 5000,
+        apply: function (st) {
+          st.flags._fateBoomSeen = true;
+          st.resources.cash -= 5000;
+          st.flags._fateInsiderInvest =
+            (st.flags._fateInsiderInvest || 0) + 5000;
+          st.player.mental = Math.max(0, st.player.mental - 2);
+          StateManager.addMessage(
+            "💰 你通过场外渠道加仓¥5000。等正式公告出来，这笔钱至少能变成¥7000。但心里有点虚——这算内幕交易吗？心智-2。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📊 等公告出来再操作（安全但晚一步）",
+        hint: "合法合规，但收益打折扣",
+        apply: function (st) {
+          st.flags._fateBoomSeen = true;
+          st.flags._fateBoomSafe = true;
+          StateManager.addMessage(
+            "📊 你合上了手机。内幕交易是红线，碰不得。等公告出来再操作，赚少一点但睡得着。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // ---- 事件3：命运事件导致持仓大幅波动 ----
+  {
+    id: "fate_market_mover",
+    phase: "street",
+    icon: "📉",
+    title: "你的股票大跳水！",
+    story:
+      "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
+    conditions: function (st) {
+      if (
+        !st.investment ||
+        !st.investment.stockHoldings ||
+        !st.investment.stockHoldings.length
+      )
+        return false;
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      var hasEvent = false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (
+          co &&
+          co.knownToPlayer &&
+          co.fateEventHistory &&
+          co.fateEventHistory.length > 0
+        ) {
+          var last = co.fateEventHistory[co.fateEventHistory.length - 1];
+          if (
+            last &&
+            st.player.day - last.day <= 3 &&
+            (last.eventType === "scandal" ||
+              last.eventType === "cash_crisis" ||
+              last.eventType === "market_erosion")
+          ) {
+            if (typeof CORP_STOCK_MAP !== "undefined") {
+              var symbols = CORP_STOCK_MAP[cid] || [];
+              for (var si = 0; si < st.investment.stockHoldings.length; si++) {
+                if (
+                  symbols.indexOf(st.investment.stockHoldings[si].symbol) >= 0
+                ) {
+                  hasEvent = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      return hasEvent && !st.flags._fateMoverSeen;
+    },
+    choices: [
+      {
+        text: "🏃 紧急减仓（卖出持仓的50%）",
+        hint: "止损，控制亏损",
+        apply: function (st) {
+          st.flags._fateMoverSeen = true;
+          var soldTotal = 0;
+          var holdings = st.investment.stockHoldings;
+          for (var i = holdings.length - 1; i >= 0; i--) {
+            var h = holdings[i];
+            var mkt =
+              st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            if (mkt) {
+              var sellShares = Math.floor(h.shares * 0.5);
+              if (sellShares > 0) {
+                var revenue = Math.round(mkt.price * sellShares * 100) / 100;
+                st.resources.cash += revenue;
+                st.resources.totalEarned += revenue;
+                h.shares -= sellShares;
+                soldTotal += revenue;
+              }
+            }
+          }
+          st.investment.stockHoldings = st.investment.stockHoldings.filter(
+            function (h) {
+              return h.shares > 0;
+            },
+          );
+          StateManager.addMessage(
+            "🏃 你紧急减仓，回笼¥" +
+              soldTotal.toLocaleString() +
+              "。虽然亏了一些，但至少保住了本金。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🧘 持有不动，相信长期价值",
+        hint: "长期持有，等待反弹",
+        apply: function (st) {
+          st.flags._fateMoverSeen = true;
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "🧘 你关掉了交易软件。好公司总会回来——你告诉自己。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 /* =========================================================

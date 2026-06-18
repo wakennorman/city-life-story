@@ -2946,9 +2946,16 @@ function renderCorpTab(state, parent) {
     Math.floor((state.player.day - (c.joinedDay || 0)) / 30),
   );
 
+  // 企业命运标签
+  var fateTag = "";
+  if (typeof _fateTag === "function" && c.company) {
+    fateTag = _fateTag(state, c.company.id);
+  }
+
   var summaryHtml =
     '<h3 style="color:var(--text-muted);margin-bottom:12px;">🏢 职场信息 — ' +
     companyName +
+    fateTag +
     " | 入职第" +
     quartersTotal +
     "个季度</h3>" +
@@ -3076,11 +3083,40 @@ function renderCorpTab(state, parent) {
   parent.appendChild(div);
 }
 
+/**
+ * 企业命运标签 — 在公司名旁显示健康度+阶段
+ * 同时被 renderCorpTab 和 corp_ui.js 使用
+ */
+function _fateTag(state, companyId) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId)
+    return "";
+  var co = state.enterpriseFate.companies[companyId];
+  if (!co) return "";
+  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
+  if (!phaseDef) return "";
+  var healthColor =
+    co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return (
+    '<span style="margin-left:8px;font-size:10px;color:' +
+    phaseDef.color +
+    ';">' +
+    phaseDef.icon +
+    " " +
+    phaseDef.name +
+    ' · 健康度<span style="color:' +
+    healthColor +
+    ';">' +
+    Math.round(co.health) +
+    "</span></span>"
+  );
+}
+
 // ====== Enterprise Fate Tab ======
 function renderEnterpriseFateTab(state, parent) {
   parent.innerHTML = "";
   if (!state.enterpriseFate || typeof getCompanyFateSummary !== "function") {
-    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🏭 企业生态系统中...</p>';
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);text-align:center;padding:40px;">🏭 企业生态系统中...</p>';
     return;
   }
 
@@ -3089,35 +3125,52 @@ function renderEnterpriseFateTab(state, parent) {
 
   // 标题
   var title = document.createElement("h2");
-  title.style.cssText = "margin:0 0 4px;font-size:16px;color:var(--text-primary);";
+  title.style.cssText =
+    "margin:0 0 4px;font-size:16px;color:var(--text-primary);";
   title.textContent = "🏭 企业命运生态";
   container.appendChild(title);
 
   var subtitle = document.createElement("p");
-  subtitle.style.cssText = "margin:0 0 12px;font-size:11px;color:var(--text-muted);";
-  subtitle.textContent = "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。";
+  subtitle.style.cssText =
+    "margin:0 0 12px;font-size:11px;color:var(--text-muted);";
+  subtitle.textContent =
+    "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。";
   container.appendChild(subtitle);
 
   // 公司卡片列表
-  var companyIds = ["star_tech", "byte_dragon", "cloud_giant", "game_fun", "safe_fin"];
+  var companyIds = [
+    "star_tech",
+    "byte_dragon",
+    "cloud_giant",
+    "game_fun",
+    "safe_fin",
+  ];
   for (var ci = 0; ci < companyIds.length; ci++) {
     var cid = companyIds[ci];
     var summary = getCompanyFateSummary(cid, state);
     if (!summary) continue;
 
     var card = document.createElement("div");
-    card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;";
+    card.style.cssText =
+      "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;";
 
     // 公司名称行
     var headerRow = document.createElement("div");
-    headerRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;";
+    headerRow.style.cssText =
+      "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;";
     var nameSpan = document.createElement("span");
-    nameSpan.style.cssText = "font-size:14px;font-weight:bold;color:var(--text-primary);";
-    nameSpan.textContent = summary.knownToPlayer ? (summary.phaseIcon + " " + summary.name) : "❓ " + summary.name;
+    nameSpan.style.cssText =
+      "font-size:14px;font-weight:bold;color:var(--text-primary);";
+    nameSpan.textContent = summary.knownToPlayer
+      ? summary.phaseIcon + " " + summary.name
+      : "❓ " + summary.name;
     headerRow.appendChild(nameSpan);
 
     var phaseBadge = document.createElement("span");
-    phaseBadge.style.cssText = "font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;background:" + summary.phaseColor + ";";
+    phaseBadge.style.cssText =
+      "font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;background:" +
+      summary.phaseColor +
+      ";";
     phaseBadge.textContent = summary.phaseName;
     headerRow.appendChild(phaseBadge);
     card.appendChild(headerRow);
@@ -3125,7 +3178,8 @@ function renderEnterpriseFateTab(state, parent) {
     if (!summary.knownToPlayer) {
       // 未知公司：模糊显示
       var hiddenNote = document.createElement("p");
-      hiddenNote.style.cssText = "font-size:11px;color:var(--text-muted);font-style:italic;";
+      hiddenNote.style.cssText =
+        "font-size:11px;color:var(--text-muted);font-style:italic;";
       hiddenNote.textContent = "💡 就职或购买该公司股票后解锁详情";
       card.appendChild(hiddenNote);
       container.appendChild(card);
@@ -3134,7 +3188,15 @@ function renderEnterpriseFateTab(state, parent) {
 
     // 已知公司：显示详细数据
     // 健康度条
-    var healthRow = _escRow("健康度", summary.health, summary.health > 60 ? "#4a9e5c" : summary.health > 30 ? "#f39c12" : "#c4553d");
+    var healthRow = _escRow(
+      "健康度",
+      summary.health,
+      summary.health > 60
+        ? "#4a9e5c"
+        : summary.health > 30
+          ? "#f39c12"
+          : "#c4553d",
+    );
     card.appendChild(healthRow);
 
     // 市场份额条
@@ -3142,28 +3204,48 @@ function renderEnterpriseFateTab(state, parent) {
     card.appendChild(shareRow);
 
     // 市场情绪条
-    var sentimentRow = _escRow("市场情绪", summary.sentiment, summary.sentiment > 50 ? "#4a9e5c" : "#e67e22");
+    var sentimentRow = _escRow(
+      "市场情绪",
+      summary.sentiment,
+      summary.sentiment > 50 ? "#4a9e5c" : "#e67e22",
+    );
     card.appendChild(sentimentRow);
 
     // 趋势 + 行业
     var metaDiv = document.createElement("div");
-    metaDiv.style.cssText = "display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;";
-    var trendIcon = summary.trend === "up" ? "📈" : summary.trend === "down" ? "📉" : "➡️";
-    metaDiv.innerHTML = "<span>趋势: " + trendIcon + "</span><span>行业: " + summary.industry + "</span><span>产品力: " + summary.productScore + "</span>";
+    metaDiv.style.cssText =
+      "display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;";
+    var trendIcon =
+      summary.trend === "up" ? "📈" : summary.trend === "down" ? "📉" : "➡️";
+    metaDiv.innerHTML =
+      "<span>趋势: " +
+      trendIcon +
+      "</span><span>行业: " +
+      summary.industry +
+      "</span><span>产品力: " +
+      summary.productScore +
+      "</span>";
     card.appendChild(metaDiv);
 
     // 命运事件历史（最多5条）
     var history = getFateHistoryText(cid, state);
     if (history && history.length > 0) {
       var historyDiv = document.createElement("div");
-      historyDiv.style.cssText = "margin-top:8px;padding-top:6px;border-top:1px solid var(--border);";
+      historyDiv.style.cssText =
+        "margin-top:8px;padding-top:6px;border-top:1px solid var(--border);";
       var historyTitle = document.createElement("div");
-      historyTitle.style.cssText = "font-size:10px;color:var(--text-muted);margin-bottom:4px;";
+      historyTitle.style.cssText =
+        "font-size:10px;color:var(--text-muted);margin-bottom:4px;";
       historyTitle.textContent = "📜 命运事件记录";
       historyDiv.appendChild(historyTitle);
-      for (var hi = Math.max(0, history.length - 5); hi < history.length; hi++) {
+      for (
+        var hi = Math.max(0, history.length - 5);
+        hi < history.length;
+        hi++
+      ) {
         var hEntry = document.createElement("div");
-        hEntry.style.cssText = "font-size:10px;color:var(--text-secondary);padding:1px 0;";
+        hEntry.style.cssText =
+          "font-size:10px;color:var(--text-secondary);padding:1px 0;";
         hEntry.textContent = "第" + history[hi].day + "天 " + history[hi].text;
         historyDiv.appendChild(hEntry);
       }
@@ -3181,19 +3263,27 @@ function _escRow(label, value, color) {
   var row = document.createElement("div");
   row.style.cssText = "display:flex;align-items:center;margin:2px 0;";
   var labelSpan = document.createElement("span");
-  labelSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;";
+  labelSpan.style.cssText =
+    "font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;";
   labelSpan.textContent = label;
   row.appendChild(labelSpan);
 
   var barWrap = document.createElement("div");
-  barWrap.style.cssText = "flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 6px;";
+  barWrap.style.cssText =
+    "flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 6px;";
   var bar = document.createElement("div");
-  bar.style.cssText = "height:100%;width:" + Math.round(value) + "%;background:" + color + ";border-radius:4px;transition:width 0.3s;";
+  bar.style.cssText =
+    "height:100%;width:" +
+    Math.round(value) +
+    "%;background:" +
+    color +
+    ";border-radius:4px;transition:width 0.3s;";
   barWrap.appendChild(bar);
   row.appendChild(barWrap);
 
   var valSpan = document.createElement("span");
-  valSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:30px;text-align:right;";
+  valSpan.style.cssText =
+    "font-size:11px;color:var(--text-secondary);width:30px;text-align:right;";
   valSpan.textContent = Math.round(value) + "%";
   row.appendChild(valSpan);
   return row;
