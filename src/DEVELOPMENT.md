@@ -575,6 +575,28 @@ src/
 
 ## 变更记录
 
+### 2026-06-18 — P2#12 技能树与职业进阶
+
+- **新增** `src/js/core/skill_tree.js` — 技能天赋树核心：SKILL_BRANCHES 数据（10技能×21分支×63天赋节点）+ 全套逻辑函数（chooseSkillBranch/activateTalentNode/getBranchBonusFn 等）
+- **新增** `state.skillBranches` / `state.talentNodes` — 状态字段 + `importState` 旧档迁移
+- **新增** 分支选择机制：技能 Lv.30 可选择 2~3 个发展方向，AP+¥200 消耗，切换分支 ¥500+30AP
+- **新增** 天赋节点机制：3节点/分支（Lv.10/25/50），前置依赖，AP+¥300~¥1600激活
+- **新增** 15个分支解锁街头工作：食堂帮厨/仪器维修/手机改装/网页设计/服务器运维/网络安全/外贸助理/文档翻译/出租车/跟车助理/导购/采购/项目协调/审计助理/工厂电工/钢结构工人
+- **新增** `job.branchRequirement` 字段 — 工作按分支锁定，未选分支不可见
+- **新增** `renderSkillsTab` 重写：分支徽章/天赋节点迷你树/Lv.30选分支按钮
+- **新增** `showBranchSelectionModal()` 分支选择弹窗UI（含分支预览 + 天赋节点 + 解锁工作）
+- **新增** `daily_pipeline.js skill_tree_check` 步骤 — 每日检查天赋节点解锁状态并提示
+- **新增** `skill_bonuses.js` 分支感知函数 8 个：getBranchCookingDiscount/getBranchTravelApReduction 等
+- **新增** 天赋节点 XP 加成：grantJobSkillXp 中检测 `cookingXpMult` 等倍率
+- **新增** `getBranchCorpPromotionModifier()` — 晋升联动：编程→后端P7能力-5，管理→战略P8向上-5
+- **新增** `wiki.js` 技能天赋树百科条目（含21分支完整加成表）
+- **修改** `src/index.html` — 添加 skill_tree.js 脚本标签
+- **修改** `src/main.js` — 添加 handleChooseBranch/handleActivateTalentNode 处理器
+- **修改** `src/js/data/skills.js` — 添加 getSkillBranches/getSkillBranchById 查询助手
+- **修改** `src/js/data/jobs.js` — 新增 branchRequirement 字段支持
+- **修改** `src/js/phase2/promo.js` — 晋升检查引入分支加成修正
+- **累计** 154项改动
+
 ### 2026-06-18 — 新增每日收支报告功能
 
 - **新增** `src/js/ui/daily_report.js` — 每日收支报告弹窗模块（参考《大多数》《This War of Mine》《Stardew Valley》设计）
