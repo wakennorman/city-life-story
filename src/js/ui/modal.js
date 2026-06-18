@@ -562,6 +562,13 @@ function buyItemFromShop(itemId) {
     return;
   }
   state.resources.cash -= item.price;
+  addDailyTransaction(
+    state,
+    "expense",
+    "shopping",
+    item.price,
+    "购买" + (item.icon || "") + item.name,
+  );
   // 装备类（有slot）：放入 equipment 槽位
   if (item.slot) {
     if (!state.inventory.equipment) state.inventory.equipment = {};
@@ -998,6 +1005,19 @@ function executeScavengeRoute(routeId) {
 
   st.resources.cash += earned;
   st.resources.totalEarned += earned;
+  var routeNames = {
+    alley: "城中村小巷",
+    depot: "废品收购站",
+    factory: "工业区废料场",
+    zhou_channel: "老周专线",
+  };
+  addDailyTransaction(
+    st,
+    "income",
+    "scavenge",
+    earned,
+    "拾荒 - " + (routeNames[routeId] || "未知路线"),
+  );
   st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
   st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
 

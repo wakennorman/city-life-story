@@ -197,6 +197,7 @@ function createDefaultState() {
       gameOverReason: null,
       ageThisYear: false,
       seenNewsToday: [],
+      _dailyTransactions: [], // 当日收支流水记录 [{ type, category, amount, description }]
     },
 
     // --- 事件与消息 ---
@@ -341,4 +342,24 @@ const StateManager = new GameStateManager();
 // 使其在全局可访问（方便调试）
 if (typeof window !== "undefined") {
   window.StateManager = StateManager;
+}
+
+/**
+ * 添加一条当日收支记录
+ * @param {object} state - 游戏状态
+ * @param {"income"|"expense"} type - 收入或支出
+ * @param {string} category - 分类键（如 "job_income", "rent", "food"）
+ * @param {number} amount - 金额（正数）
+ * @param {string} description - 描述文本
+ */
+function addDailyTransaction(state, type, category, amount, description) {
+  if (!state.flags._dailyTransactions) {
+    state.flags._dailyTransactions = [];
+  }
+  state.flags._dailyTransactions.push({
+    type: type,
+    category: category,
+    amount: Math.round(amount),
+    description: description,
+  });
 }

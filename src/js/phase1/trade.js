@@ -112,6 +112,13 @@ function sellGood(goodId, qty) {
   // 加钱
   state.resources.cash += totalEarned;
   state.resources.totalEarned += totalEarned;
+  addDailyTransaction(
+    state,
+    "income",
+    "trade_profit",
+    totalEarned,
+    "卖出" + good.name + "×" + qty,
+  );
   // 追踪累计交易利润
   const avgBuy = getAvgBuyPrice(state, goodId);
   if (avgBuy > 0) {

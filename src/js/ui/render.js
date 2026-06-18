@@ -73,49 +73,11 @@ function renderHeader(state) {
   document.getElementById("header-age").textContent = p.age;
   document.getElementById("header-phase").textContent = phaseLabel;
 
-  // 构建轮播数据：现金 → 储蓄(if>0) → 欠村长(if>0) → 欠银行(if>0)
-  var carouselItems = [
-    {
-      label: "💰 现金",
-      value: "¥" + r.cash.toLocaleString(),
-      color: "var(--success)",
-    },
-  ];
-  var bankBalance = r.bankBalance || 0;
-  var villageDebt = r.villageDebt || r.debt || 0;
-  var bankDebt = r.bankDebt || 0;
-  if (bankBalance > 0) {
-    carouselItems.push({
-      label: "🏦 储蓄",
-      value: "¥" + bankBalance.toLocaleString(),
-      color: "#4fc3f7",
-    });
-  }
-  if (villageDebt > 0) {
-    carouselItems.push({
-      label: "🏘️ 欠村长",
-      value: "¥" + villageDebt.toLocaleString(),
-      color: "var(--danger)",
-    });
-  }
-  if (bankDebt > 0) {
-    carouselItems.push({
-      label: "🏦 欠银行",
-      value: "¥" + bankDebt.toLocaleString(),
-      color: "var(--warning)",
-    });
-  }
-  window._cashCarouselData = carouselItems;
-  // 若只有现金则直接显示，不需要轮播
-  if (carouselItems.length === 1) {
-    var labelEl = document.getElementById("header-cash-label");
-    var cashEl = document.getElementById("header-cash");
-    if (labelEl) labelEl.textContent = carouselItems[0].label;
-    if (cashEl) {
-      cashEl.textContent = carouselItems[0].value;
-      cashEl.style.color = carouselItems[0].color;
-    }
-  }
+  // ===== 资金（cash-label区域）：展示现金+储蓄，单资金静态/多资金温和轮播 =====
+  renderFundsHeader(state);
+
+  // ===== 债务：独立区域，单债务闪烁/多债务轮播闪烁 =====
+  renderDebtHeader(state);
 
   // 季节显示
   var seasonEl = document.getElementById("header-season-label");
@@ -141,29 +103,234 @@ function renderHeader(state) {
   }
 }
 
-/** 顶部现金/储蓄/债务轮播（页面初始化时调用一次） */
-function initCashCarousel() {
-  if (window._cashCarouselTimer) return; // 防止重复初始化
-  window._cashCarouselData = window._cashCarouselData || [];
-  window._cashCarouselIdx = 0;
-  window._cashCarouselTimer = setInterval(function () {
-    var data = window._cashCarouselData || [];
-    if (data.length <= 1) return; // 只有现金时不轮播
-    window._cashCarouselIdx = (window._cashCarouselIdx + 1) % data.length;
-    var item = data[window._cashCarouselIdx];
-    var labelEl = document.getElementById("header-cash-label");
-    var cashEl = document.getElementById("header-cash");
-    if (labelEl) labelEl.textContent = item.label;
-    if (cashEl) {
-      cashEl.style.opacity = "0";
-      cashEl.style.transition = "opacity 0.3s";
-      setTimeout(function () {
-        cashEl.textContent = item.value;
-        cashEl.style.color = item.color;
-        cashEl.style.opacity = "1";
-      }, 150);
+/**
+ * 资金头部渲染 — 展示现金+储蓄，温和滚动
+ *
+ * 设计参考：
+ * - 大多数 (The Most)：资产负债分栏，资金整洁展示
+ * - 王权 (Reigns)：资源固定独立槽位，互不干扰
+ * - 中国式家长：金钱展示不带警告感，数字干净直接
+ *
+ * 规则：
+ * - 只有现金 → 静态 "💰 ¥X,XXX"
+ * - 现金+储蓄 → 温和轮播（4s切换，纯文本更新，无闪烁）
+ * - 展示风格比债务低调（无闪烁、无脉冲背景）
+ */
+function renderFundsHeader(state) {
+  var labelEl = document.getElementById("header-cash-label");
+  var valueEl = document.getElementById("header-cash");
+  if (!labelEl || !valueEl) return;
+
+  var r = state.resources;
+  var cash = r.cash || 0;
+  var bankBalance = r.bankBalance || 0;
+
+  // 收集资金条目
+  var fundItems = [];
+  fundItems.push({
+    label: "💰",
+    value: "¥" + cash.toLocaleString(),
+    color: "var(--success)",
+  });
+  if (bankBalance > 0) {
+    fundItems.push({
+      label: "🏦",
+      value: "¥" + bankBalance.toLocaleString(),
+      color: "#4fc3f7",
+    });
+  }
+
+  if (fundItems.length === 1) {
+    // === 只有现金：静态展示（无动画） ===
+    if (window._fundsCarouselTimer) {
+      clearInterval(window._fundsCarouselTimer);
+      window._fundsCarouselTimer = null;
     }
-  }, 4000);
+    labelEl.textContent = fundItems[0].label;
+    valueEl.textContent = fundItems[0].value;
+    valueEl.style.color = fundItems[0].color;
+    valueEl.style.animation = "";
+    valueEl.className = "value cash";
+  } else {
+    // === 现金+储蓄：温和轮播（每4s，纯文字切换，无闪烁） ===
+    var areaEl = document.getElementById("header-cash-area");
+    if (areaEl) {
+      areaEl.className = "header-stat";
+      areaEl.style.cssText = "cursor: default; min-width: 100px;";
+    }
+
+    var fundCarouselData = fundItems.map(function (f) {
+      return { label: f.label, value: f.value, color: f.color };
+    });
+
+    if (!window._fundsCarouselTimer) {
+      // 首次启动
+      window._fundsCarouselIdx = 0;
+      var f0 = fundCarouselData[0];
+      labelEl.textContent = f0.label;
+      valueEl.textContent = f0.value;
+      valueEl.style.color = f0.color;
+      valueEl.className = "value cash";
+
+      window._fundsCarouselData = fundCarouselData;
+      window._fundsCarouselTimer = setInterval(function () {
+        var fdata = window._fundsCarouselData;
+        if (!fdata || fdata.length <= 1) return;
+        window._fundsCarouselIdx =
+          (window._fundsCarouselIdx + 1) % fdata.length;
+        var fnext = fdata[window._fundsCarouselIdx];
+        var fl = document.getElementById("header-cash-label");
+        var fv = document.getElementById("header-cash");
+        if (fl) fl.textContent = fnext.label;
+        if (fv) {
+          fv.textContent = fnext.value;
+          fv.style.color = fnext.color;
+          fv.className = "value cash";
+        }
+      }, 4000);
+    } else {
+      // 定时器已存在，刷新当前项（金额可能变化）
+      var idx2 = window._fundsCarouselIdx || 0;
+      if (fundCarouselData[idx2]) {
+        var fcur = fundCarouselData[idx2];
+        labelEl.textContent = fcur.label;
+        valueEl.textContent = fcur.value;
+        valueEl.style.color = fcur.color;
+        valueEl.className = "value cash";
+      }
+      window._fundsCarouselData = fundCarouselData;
+    }
+  }
+}
+
+/**
+ * 债务头部渲染 — 现金和债务彻底分离，独立槽位
+ *
+ * 设计参考：
+ * - 北京浮生记：债务红色独立警示，不混在资金栏
+ * - 大多数 (The Most)：资产负债分栏，债务用醒目警示色
+ * - 王权 (Reigns)：每种资源固定独立槽位，互不干扰
+ * - 中国式家长：面子/金钱分占不同视觉区域
+ *
+ * 规则：
+ * - 无债务 → 隐藏
+ * - 单种债务 → 静态闪烁（debt-blink）
+ * - 多种债务 → 轮播（3s切换）+ 每项闪烁
+ */
+function renderDebtHeader(state) {
+  var debtArea = document.getElementById("header-debt-area");
+  var debtLabel = document.getElementById("header-debt-label");
+  var debtValue = document.getElementById("header-debt");
+  if (!debtArea || !debtLabel || !debtValue) return;
+
+  var r = state.resources;
+  var villageDebt = r.villageDebt || r.debt || 0;
+  var bankDebt = r.bankDebt || 0;
+
+  // 收集非零债务
+  var debtItems = [];
+  if (villageDebt > 0) {
+    debtItems.push({
+      label: "🏘️ 欠村长",
+      value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (bankDebt > 0) {
+    debtItems.push({
+      label: "🏦 欠银行",
+      value: "¥" + bankDebt.toLocaleString(),
+      color: "var(--warning)",
+    });
+  }
+
+  if (debtItems.length === 0) {
+    // 无债务 → 隐藏区块，清除计时器
+    debtArea.style.display = "none";
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    debtArea.className = "header-stat";
+    return;
+  }
+
+  // 有债务 → 显示
+  debtArea.style.display = "";
+
+  if (debtItems.length === 1) {
+    // === 只有一种债务：静态显示 + 闪烁 ===
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    var item = debtItems[0];
+    debtLabel.textContent = item.label;
+    debtValue.textContent = item.value;
+    debtValue.style.color = item.color;
+    debtValue.className = "value debt single-debt-blink";
+    debtArea.className = "header-stat header-debt-active";
+  } else {
+    // === 多种债务：轮播（3s 切换）+ 每项闪烁 ===
+    debtArea.className = "header-stat header-debt-carousel-active";
+    var debtCarouselData = debtItems.map(function (d) {
+      return { label: d.label, value: d.value, color: d.color };
+    });
+
+    if (!window._debtCarouselTimer) {
+      // 首次启动
+      window._debtCarouselIdx = 0;
+      var first = debtCarouselData[0];
+      debtLabel.textContent = first.label;
+      debtValue.textContent = first.value;
+      debtValue.style.color = first.color;
+      debtValue.className = "value debt carousel-debt-blink debt-fade-in";
+      setTimeout(function () {
+        var dv = document.getElementById("header-debt");
+        if (dv) dv.className = "value debt carousel-debt-blink";
+      }, 400);
+
+      window._debtCarouselData = debtCarouselData;
+      window._debtCarouselTimer = setInterval(function () {
+        var data = window._debtCarouselData;
+        if (!data || data.length <= 1) return;
+        window._debtCarouselIdx = (window._debtCarouselIdx + 1) % data.length;
+        var next = data[window._debtCarouselIdx];
+        var dl = document.getElementById("header-debt-label");
+        var dv = document.getElementById("header-debt");
+        if (dl) dl.textContent = next.label;
+        if (dv) {
+          dv.textContent = next.value;
+          dv.style.color = next.color;
+          dv.className = "value debt carousel-debt-blink debt-fade-in";
+          setTimeout(function () {
+            var dv2 = document.getElementById("header-debt");
+            if (dv2) dv2.className = "value debt carousel-debt-blink";
+          }, 400);
+        }
+      }, 3000);
+    } else {
+      // 定时器已存在，刷新当前显示项（金额可能变化）
+      var idx = window._debtCarouselIdx || 0;
+      if (debtCarouselData[idx]) {
+        var cur = debtCarouselData[idx];
+        debtLabel.textContent = cur.label;
+        debtValue.textContent = cur.value;
+        debtValue.style.color = cur.color;
+        debtValue.className = "value debt carousel-debt-blink";
+      }
+      window._debtCarouselData = debtCarouselData;
+    }
+  }
+}
+
+/**
+ * 资金展示初始化（原现金轮播 → 现资金展示）
+ * 由 renderHeader → renderFundsHeader / renderDebtHeader 自动处理；
+ * 此函数保留仅用于向后兼容 main.js 的调用。
+ */
+function initCashCarousel() {
+  // 债务展示已在 renderDebtHeader 中自动初始化，无需额外操作
 }
 
 // ====== Sidebar 渲染 ======
@@ -691,6 +858,12 @@ function renderCurrentTab(state) {
       break;
     case "growth":
       renderGrowthTab(state, area);
+      break;
+    case "wiki":
+      if (typeof renderWikiTab === "function") renderWikiTab(state, area);
+      else
+        area.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">📖 百科系统加载中...</p>';
       break;
     default:
       area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';

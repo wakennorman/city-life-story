@@ -571,6 +571,13 @@ function settleDailyFinance(state) {
   var interest = Math.floor(bal * rate);
   if (interest > 0) {
     state.resources.bankBalance += interest;
+    addDailyTransaction(
+      state,
+      "income",
+      "bank_interest",
+      interest,
+      "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
+    );
     StateManager.addMessage(
       "🏦 银行利息 +¥" +
         interest +

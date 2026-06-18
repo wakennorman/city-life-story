@@ -123,6 +123,13 @@ function endQuarter() {
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
   state.resources.cash += salary;
   state.resources.totalEarned += salary;
+  addDailyTransaction(
+    state,
+    "income",
+    "salary",
+    salary,
+    "季度工资 - " + c.rank,
+  );
 
   StateManager.addMessage(
     `💰 Q${c.corpQuarter} 结束。工资到账 ¥${salary.toLocaleString()}。绩效: ${grade.grade}`,
@@ -136,6 +143,13 @@ function endQuarter() {
     const bonus = Math.round(rankData.baseSalary * bonusMultiplier);
     if (bonus > 0) {
       state.resources.cash += bonus;
+      addDailyTransaction(
+        state,
+        "income",
+        "salary",
+        bonus,
+        "年终奖 - 绩效" + grade.grade,
+      );
       StateManager.addMessage(
         `🎉 年终奖到账！绩效 ${grade.grade}，奖金 ¥${bonus.toLocaleString()}！`,
         "success",

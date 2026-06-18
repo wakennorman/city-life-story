@@ -906,6 +906,13 @@ function getAvailableActions(state) {
                 var pay = fjob.pay + Math.floor(Math.random() * 30);
                 state.resources.cash += pay;
                 state.resources.totalEarned += pay;
+                addDailyTransaction(
+                  state,
+                  "income",
+                  "job_income",
+                  pay,
+                  "节日打工 - " + fjob.name,
+                );
                 consumeAP(fjob.apCost || 20);
                 StateManager.addMessage(
                   curFest.icon +
@@ -943,6 +950,13 @@ function getAvailableActions(state) {
               50 + Math.floor(fame * 1.2) + Math.floor(Math.random() * 80);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
+            addDailyTransaction(
+              state,
+              "income",
+              "side_job",
+              earn,
+              "本地名人效应",
+            );
             state.status.fame = Math.min(100, state.status.fame + 3);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.commercialVip = true;
@@ -1053,6 +1067,13 @@ function getAvailableActions(state) {
               200 + Math.floor(fame * 2.5) + Math.floor(Math.random() * 150);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
+            addDailyTransaction(
+              state,
+              "income",
+              "side_job",
+              earn,
+              "科技论坛演讲嘉宾",
+            );
             state.status.fame = Math.min(100, state.status.fame + 8);
             state.player.mental = Math.min(100, state.player.mental + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
@@ -1173,6 +1194,13 @@ function getAvailableActions(state) {
           return;
         }
         st.resources.cash -= foodCost;
+        addDailyTransaction(
+          st,
+          "expense",
+          "food",
+          foodCost,
+          "吃饭" + (cookHint || ""),
+        );
         st.needs.hunger = Math.min(100, st.needs.hunger + 35);
         st.needs.happiness = Math.min(100, st.needs.happiness + 8);
         var saved = baseCost - foodCost;
@@ -1981,6 +2009,13 @@ function doStreetJob(job) {
 
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
+  addDailyTransaction(
+    state,
+    "income",
+    "job_income",
+    pay,
+    "工作收入 - " + (job.name || "临时工"),
+  );
 
   // === 城管检查（摆摊类工作）===
   const vendingJobs = [

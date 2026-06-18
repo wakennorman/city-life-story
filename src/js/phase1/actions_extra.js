@@ -35,6 +35,7 @@ function addStreetExtras(state, actions) {
       const earned = Math.floor(5 + Math.random() * 20 + (skill - 25) * 0.3);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
+      addDailyTransaction(st, "income", "side_job", earned, "街头卖唱");
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
       st.status.fame = Math.min(100, st.status.fame + 1);
       if (Math.random() < 0.2) {
@@ -66,6 +67,7 @@ function addStreetExtras(state, actions) {
       const earned = 1 + Math.floor(Math.random() * 5);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
+      addDailyTransaction(st, "income", "side_job", earned, "街头乞讨");
       st.needs.happiness = Math.max(0, st.needs.happiness - 12);
       st.status.fame = Math.max(0, st.status.fame - 2);
       st.flags._everBegged = true; // 成就追踪
@@ -92,9 +94,11 @@ function addStreetExtras(state, actions) {
         return;
       }
       st.resources.cash -= 50;
+      addDailyTransaction(st, "expense", "entertainment", 50, "赌博押注");
       if (Math.random() < 0.45) {
         st.resources.cash += 100;
         st.resources.totalEarned += 50;
+        addDailyTransaction(st, "income", "side_job", 100, "赌博赢钱");
         st.needs.happiness = Math.min(100, st.needs.happiness + 10);
         StateManager.addMessage("🎲 赢了！100 块到手！", "success");
       } else {
@@ -119,10 +123,12 @@ function addStreetExtras(state, actions) {
         return;
       }
       st.resources.cash -= 2;
+      addDailyTransaction(st, "expense", "misc", 2, "给家里打电话");
       st.needs.happiness = Math.min(100, st.needs.happiness + 15);
       st.needs.hunger = Math.max(0, st.needs.hunger - 3);
       if (Math.random() < 0.3) {
         st.resources.cash += 200; // 爸妈塞的钱
+        addDailyTransaction(st, "income", "gift", 200, "爸妈给的零花钱");
         StateManager.addMessage(
           "📞 妈妈在电话里哭了，让你注意身体，转了 200 块。",
           "success",
@@ -609,6 +615,7 @@ function addStreetExtras(state, actions) {
       if (earned > 0) {
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "side_job", earned, "摆摊收入");
       }
       // 销售技能经验
       if (xpGain > 0) {
@@ -702,6 +709,7 @@ function addStreetExtras(state, actions) {
         const earned = Math.floor(80 + lvl * 1.5 + Math.random() * 50);
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "job_income", earned, "编程外包");
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
         const xpGain =
@@ -807,6 +815,7 @@ function addStreetExtras(state, actions) {
         var fameGain = 3 + Math.floor(Math.random() * 5);
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "side_job", earned, "周末集市摆摊");
         st.status.fame = Math.min(100, st.status.fame + fameGain);
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         if (st.skills.sales) st.skills.sales.xp += 15;

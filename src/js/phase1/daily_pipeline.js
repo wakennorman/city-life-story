@@ -95,6 +95,13 @@ const DAILY_PIPELINE = [
         }
         if (state.resources.cash >= rentAmount) {
           state.resources.cash -= rentAmount;
+          addDailyTransaction(
+            state,
+            "expense",
+            "rent",
+            rentAmount,
+            house.name ? "房租 - " + house.name : "房租",
+          );
         } else {
           StateManager.addMessage(
             "⚠️ 付不起房租 ¥" + rentAmount + "！被赶回流落街头。",
@@ -113,6 +120,13 @@ const DAILY_PIPELINE = [
         var storageRent = state.housing.storageCapacity >= 500 ? 50 : 20;
         if (state.resources.cash >= storageRent) {
           state.resources.cash -= storageRent;
+          addDailyTransaction(
+            state,
+            "expense",
+            "rent",
+            storageRent,
+            "仓库租金",
+          );
         } else {
           StateManager.addMessage("⚠️ 付不起仓库租金，仓库被收回。", "danger");
           state.housing.storageRented = false;
@@ -386,6 +400,16 @@ const DAILY_PIPELINE = [
           state.flags._dayStartHappiness || 0,
         );
         StateManager.addMessage(summary, "hint");
+      }
+    },
+  },
+
+  // === 每日收支报告（阻塞弹窗）===
+  {
+    name: "daily_report",
+    fn: function (state) {
+      if (typeof showDailyReport === "function") {
+        showDailyReport(state);
       }
     },
   },

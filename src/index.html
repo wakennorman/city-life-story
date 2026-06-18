@@ -87,6 +87,15 @@
             <span class="label" id="header-cash-label">💰</span>
             <span class="value cash" id="header-cash">¥2,000</span>
           </div>
+          <!-- 债务展示区域（独立于现金） -->
+          <div
+            class="header-stat"
+            id="header-debt-area"
+            style="cursor: default; display: none"
+          >
+            <span class="label" id="header-debt-label">💸</span>
+            <span class="value debt" id="header-debt">¥0</span>
+          </div>
         </div>
 
         <div class="header-actions">
@@ -308,6 +317,7 @@
           <button class="tab-btn" data-tab="investment">💰 投资</button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
+          <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
 
         <!-- Content Area (dynamically rendered) -->
@@ -398,6 +408,8 @@
     <script src="js/ui/modal.js"></script>
     <script src="js/ui/tutorial.js"></script>
     <script src="js/ui/victory.js"></script>
+    <script src="js/ui/wiki.js"></script>
+    <script src="js/ui/daily_report.js"></script>
 
     <!-- Main -->
     <script src="js/main.js"></script>

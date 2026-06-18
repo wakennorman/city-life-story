@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>城市浮生记 — City Life Story</title>
-    <style> :root { --bg-primary: #f5f1e8; --bg-secondary: #faf7f0; --bg-card: #ffffff; --bg-card-hover: #f0f7f0; --bg-sidebar: #faf7f0; --bg-input: #f0ede4; --border: #d8d5c8; --border-light: #c5d5c0; --text-primary: #3d3a35; --text-secondary: #6b6760; --text-muted: #99958e; --accent: #4a9e5c; --accent-glow: rgba(74, 158, 92, 0.12); --accent-hover: #3a8048; --success: #4a9e5c; --success-bg: rgba(74, 158, 92, 0.1); --danger: #c4553d; --danger-bg: rgba(196, 85, 61, 0.08); --warning: #c49a3a; --warning-bg: rgba(196, 154, 58, 0.1); --info: #5a8ab4; --hair-color: #7ab8d8; --mental-color: #b8a0d4; --kpi-color: #d4a840; --risk-color: #c4553d; --physique-color: #c4803a; --intelligence-color: #5a8ab4; --agility-color: #5aaa5a; --mental-attrs-color: #9b74b8; --font-mono: "Consolas", "Courier New", monospace; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --sidebar-width: 280px; --header-height: 48px; --transition: 0.2s ease; } *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body { height: 100%; overflow: hidden; } body { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--text-primary); background: var(--bg-primary); -webkit-font-smoothing: antialiased; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); } #app { display: grid; grid-template-rows: var(--header-height) 1fr; grid-template-columns: var(--sidebar-width) 1fr; grid-template-areas: "header header" "sidebar main"; height: 100vh; max-height: 100vh; } #header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); z-index: 100; } .header-left { display: flex; align-items: center; gap: 12px; } .header-logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; } .header-logo span { color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px; } .header-stats { display: flex; align-items: center; gap: 20px; font-size: 13px; } .header-stat { display: flex; align-items: center; gap: 6px; } .header-stat .label { color: var(--text-muted); font-size: 11px; } .header-stat .value { color: var(--text-primary); font-weight: 600; } .header-stat .value.cash { color: var(--success); } .header-stat .value.age { color: var(--warning); } .festival-badge { color: #c4553d; font-weight: 700; font-size: 12px; background: rgba(196, 85, 61, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(196, 85, 61, 0.2); animation: festival-pulse 2s ease-in-out infinite; } @keyframes festival-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } } .header-actions { display: flex; align-items: center; gap: 8px; } #sidebar { grid-area: sidebar; background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; } .sidebar-section { background: var(--bg-card); border-radius: var(--radius-md); padding: 12px; border: 1px solid transparent; } .sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; } .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .stat-label { width: 65px; font-size: 12px; color: var(--text-secondary); text-align: right; flex-shrink: 0; } .stat-bar-wrap { flex: 1; height: 16px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); overflow: hidden; position: relative; } .stat-bar { height: 100%; border-radius: var(--radius-sm); transition: width 0.4s ease; position: relative; } .stat-bar.flash { animation: statFlash 0.6s ease; } @keyframes statFlash { 0% { filter: brightness(1); } 50% { filter: brightness(2.5); } 100% { filter: brightness(1); } } .stat-bar.hair { background: linear-gradient(90deg, #6b9cbe, var(--hair-color)); } .stat-bar.dignity { background: linear-gradient(90deg, #a48aca, var(--mental-color)); } .stat-bar.kpi { background: linear-gradient(90deg, #c9a442, var(--kpi-color)); } .stat-bar.risk { background: linear-gradient(90deg, #c87062, var(--risk-color)); } .stat-bar.physique { background: linear-gradient(90deg, #c48e4a, var(--physique-color)); } .stat-bar.intelligence { background: linear-gradient(90deg, #5a94ba, var(--intelligence-color)); } .stat-bar.agility { background: linear-gradient(90deg, #56a64e, var(--agility-color)); } .stat-bar.mental-bar { background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color)); } .stat-bar.hunger { background: linear-gradient(90deg, #c9a838, #dec054); } .stat-bar.fatigue { background: linear-gradient(90deg, #949a88, #b4baa2); } .stat-bar.hygiene { background: linear-gradient(90deg, #4a9490, #5ebeb2); } .stat-bar.happiness { background: linear-gradient(90deg, #cc7868, #e09080); } .stat-bar.health { background: linear-gradient(90deg, #d47058, #56b468); } .stat-bar.fame { background: linear-gradient(90deg, #9672b4, #c9a442); } .stat-bar.ap-bar { background: linear-gradient(90deg, #56a868, #62b868, #50b058); } .stat-value { width: 48px; font-size: 11px; color: var(--text-muted); text-align: right; flex-shrink: 0; font-family: var(--font-mono); } .location-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .location-name { font-size: 14px; font-weight: 600; color: var(--accent); } .location-desc { font-size: 11px; color: var(--text-muted); } #main { grid-area: main; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); } #tab-bar { display: flex; background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 12px; flex-shrink: 0; } .tab-btn { padding: 10px 20px; font-size: 13px; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all var(--transition); font-family: var(--font-sans); } .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); } .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); } #content-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; } #time-slot-indicator { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-card); border-radius: var(--radius-md); font-size: 13px; flex-shrink: 0; } .time-slot-badge { padding: 2px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; } .time-slot-badge.morning { background: rgba(243, 156, 18, 0.2); color: var(--warning); } .time-slot-badge.afternoon { background: rgba(74, 158, 92, 0.2); color: var(--warning); } .time-slot-badge.evening { background: rgba(155, 116, 184, 0.2); color: #9b74b8; } .action-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; } .action-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; cursor: pointer; transition: all var(--transition); } .action-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); } .action-card.disabled { opacity: 0.4; cursor: not-allowed; } .action-card.disabled:hover { border-color: var(--border); transform: none; box-shadow: none; } .action-card .card-icon { font-size: 24px; margin-bottom: 6px; } .action-card .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; } .action-card .card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; } .action-card .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; } .card-meta .ap-cost { color: var(--warning); font-weight: 600; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(243, 156, 18, 0.12); border: 1px solid rgba(243, 156, 18, 0.25); } .card-meta .pay-estimate { color: var(--success); font-weight: 600; } .card-meta .cost-estimate { color: var(--danger); font-weight: 600; } .card-meta .slot-tag { padding: 1px 6px; border-radius: var(--radius-sm); font-size: 10px; background: var(--accent-glow); color: var(--accent); } .card-meta .req-fail { color: var(--danger); font-size: 10px; } #message-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; max-height: 250px; overflow-y: auto; flex-shrink: 0; } #message-log h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; } .log-entry { padding: 3px 0; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease; } .log-entry .log-day { color: var(--text-muted); font-size: 10px; margin-right: 8px; font-family: var(--font-mono); } .log-entry.info { color: var(--text-secondary); } .log-entry.success { color: var(--success); } .log-entry.danger { color: var(--danger); } .log-entry.warning { color: var(--warning); } .log-entry.event { color: var(--accent); font-weight: 600; } .log-entry.hint { color: #27ae60; background: rgba(39, 174, 96, 0.06); border-left: 2px solid rgba(39, 174, 96, 0.35); padding-left: 6px; border-radius: 0 3px 3px 0; } .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .inventory-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; } .inventory-item .item-name { font-weight: 600; color: var(--text-primary); } .inventory-item .item-qty { color: var(--text-muted); font-size: 10px; } .inventory-item .item-effects { color: var(--success); font-size: 10px; } .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 13px; font-family: var(--font-sans); font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); background: var(--bg-card); color: var(--text-primary); white-space: nowrap; } .btn:hover { background: var(--bg-card-hover); border-color: var(--border-light); } .btn:active { transform: scale(0.97); } .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent-hover); } .btn-success { background: var(--success); border-color: var(--success); color: #fff; } .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; } .btn-sm { padding: 4px 10px; font-size: 11px; } .btn-lg { padding: 12px 24px; font-size: 15px; border-radius: var(--radius-md); } .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; } .modal-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; min-width: 360px; max-width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); animation: slideUp 0.2s ease; } .modal-box h2 { font-size: 18px; margin-bottom: 12px; color: var(--text-primary); } .modal-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; } .modal-actions { display: flex; gap: 8px; justify-content: flex-end; } .end-screen { text-align: center; } .end-screen .end-icon { font-size: 64px; margin-bottom: 16px; } .end-screen .end-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; } .end-screen .end-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; } .end-screen.victory .end-title { color: var(--success); } .end-screen.defeat .end-title { color: var(--danger); } .stats-summary { width: 100%; border-collapse: collapse; margin: 16px 0; } .stats-summary td { padding: 6px 12px; font-size: 13px; border-bottom: 1px solid var(--border); } .stats-summary td:first-child { color: var(--text-muted); } .stats-summary td:last-child { text-align: right; font-weight: 600; } .news-banner { background: linear-gradient(135deg, var(--bg-card), rgba(74, 158, 92, 0.08)); border: 1px solid var(--accent); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--accent); flex-shrink: 0; } .news-banner .news-icon { margin-right: 6px; } .event-box { min-width: 380px; max-width: 540px; border-top: 4px solid var(--accent); background: linear-gradient(180deg, var(--bg-secondary), var(--bg-card)); } .event-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); } .event-icon { font-size: 40px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(74, 158, 92, 0.15), transparent); border-radius: 50%; flex-shrink: 0; } .event-title { font-size: 18px; color: var(--accent); margin: 0; } .event-story { font-size: 13px; color: var(--text-primary); line-height: 1.7; margin-bottom: 16px; padding: 12px 14px; background: var(--bg-card); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); } .event-choices { display: flex; flex-direction: column; gap: 8px; } .event-choice { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; color: var(--text-primary); font-size: 13px; cursor: pointer; transition: all 0.15s ease; position: relative; } .event-choice:hover:not(.disabled) { background: var(--bg-card-hover, rgba(74, 158, 92, 0.08)); border-color: var(--accent); transform: translateX(2px); } .event-choice.disabled { opacity: 0.4; cursor: not-allowed; } .event-choice .choice-main { font-weight: 600; color: var(--text-primary); } .event-choice .choice-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; } @keyframes eventPop { 0% { transform: scale(0.85) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } } .event-overlay, .modal-overlay.event-modal { animation: fadeIn 0.2s ease; } .event-overlay .modal-box, .modal-overlay.event-modal .modal-box { animation: eventPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-warning { color: var(--warning); } .text-accent { color: var(--accent); } .text-muted { color: var(--text-muted); } .text-sm { font-size: 11px; } .text-lg { font-size: 16px; } .font-mono { font-family: var(--font-mono); } .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-2 { margin-bottom: 8px; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .pulse { animation: pulse 2s infinite; } .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 24px; text-align: center; } .welcome-title { font-size: 36px; font-weight: 700; color: var(--accent); letter-spacing: 1px; } .welcome-subtitle { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; } .welcome-buttons { display: flex; gap: 12px; } .tab-panel { display: none; } .tab-panel.active { display: block; } .city-map { position: relative; } .city-map .map-node { animation: mapFadeIn 0.4s ease backwards; } .city-map .map-node:nth-child(1) { animation-delay: 0.02s; } .city-map .map-node:nth-child(2) { animation-delay: 0.04s; } .city-map .map-node:nth-child(3) { animation-delay: 0.06s; } .city-map .map-node:nth-child(4) { animation-delay: 0.08s; } .city-map .map-node:nth-child(5) { animation-delay: 0.1s; } .city-map .map-node:nth-child(6) { animation-delay: 0.12s; } .city-map .map-node:nth-child(7) { animation-delay: 0.14s; } .city-map .map-node:nth-child(8) { animation-delay: 0.16s; } .city-map .map-node:nth-child(9) { animation-delay: 0.18s; } .city-map .map-node:nth-child(10) { animation-delay: 0.2s; } .city-map .map-node:nth-child(11) { animation-delay: 0.22s; } @keyframes mapFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } .nearby-loc-item { cursor: pointer; transition: all 0.2s ease; } .nearby-loc-item:hover { border-color: var(--accent) !important; background: var(--bg-card-hover) !important; transform: translateX(2px); } #location-services { min-height: 20px; } @media (max-width: 768px) { #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; } #sidebar { position: fixed; left: -100%; top: var(--header-height); bottom: 0; width: 280px; z-index: 200; transition: left 0.3s ease; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3); } #sidebar.open { left: 0; } .action-cards { grid-template-columns: 1fr; } .header-stats { gap: 10px; } .header-stat .label { display: none; } #mobile-menu-btn { display: flex !important; } .map-node { min-width: 70px !important; padding: 10px 14px !important; font-size: 12px !important; } .city-map { min-height: 400px !important; padding: 12px !important; } } #mobile-menu-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 4px; } @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } } .tutorial-overlay .modal-box { border: 2px solid var(--accent); box-shadow: 0 0 40px rgba(102, 126, 234, 0.3); } .tutorial-box { animation: fadeInUp 0.3s ease-out; } @keyframes tutorial-pulse { 0%, 100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.5), inset 0 0 25px rgba(102, 126, 234, 0.08); } 50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), inset 0 0 40px rgba(102, 126, 234, 0.15); } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } @keyframes ap-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } @keyframes ap-blink-border { 0%, 100% { box-shadow: 0 0 12px rgba(255, 152, 0, 0.4); } 50% { box-shadow: 0 0 24px rgba(255, 152, 0, 0.8); } } </style>
+    <style> :root { --bg-primary: #f5f1e8; --bg-secondary: #faf7f0; --bg-card: #ffffff; --bg-card-hover: #f0f7f0; --bg-sidebar: #faf7f0; --bg-input: #f0ede4; --border: #d8d5c8; --border-light: #c5d5c0; --text-primary: #3d3a35; --text-secondary: #6b6760; --text-muted: #99958e; --accent: #4a9e5c; --accent-glow: rgba(74, 158, 92, 0.12); --accent-hover: #3a8048; --success: #4a9e5c; --success-bg: rgba(74, 158, 92, 0.1); --danger: #c4553d; --danger-bg: rgba(196, 85, 61, 0.08); --warning: #c49a3a; --warning-bg: rgba(196, 154, 58, 0.1); --info: #5a8ab4; --hair-color: #7ab8d8; --mental-color: #b8a0d4; --kpi-color: #d4a840; --risk-color: #c4553d; --physique-color: #c4803a; --intelligence-color: #5a8ab4; --agility-color: #5aaa5a; --mental-attrs-color: #9b74b8; --font-mono: "Consolas", "Courier New", monospace; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --sidebar-width: 280px; --header-height: 48px; --transition: 0.2s ease; } *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body { height: 100%; overflow: hidden; } body { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--text-primary); background: var(--bg-primary); -webkit-font-smoothing: antialiased; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); } #app { display: grid; grid-template-rows: var(--header-height) 1fr; grid-template-columns: var(--sidebar-width) 1fr; grid-template-areas: "header header" "sidebar main"; height: 100vh; max-height: 100vh; } #header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); z-index: 100; } .header-left { display: flex; align-items: center; gap: 12px; } .header-logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; } .header-logo span { color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px; } .header-stats { display: flex; align-items: center; gap: 20px; font-size: 13px; } .header-stat { display: flex; align-items: center; gap: 6px; } .header-stat .label { color: var(--text-muted); font-size: 11px; } .header-stat .value { color: var(--text-primary); font-weight: 600; } .header-stat .value.cash { color: var(--success); } .header-stat .value.debt { color: var(--danger); font-weight: 700; } .header-stat .value.debt.single-debt-blink { animation: debt-blink 1.2s ease-in-out infinite; } .header-stat .value.debt.carousel-debt-blink { animation: debt-blink 0.9s ease-in-out infinite; } .header-debt-active { border: 1px solid rgba(196, 85, 61, 0.25) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.06) !important; animation: debt-pulse-bg 2s ease-in-out infinite; } .header-debt-carousel-active { border: 1px solid rgba(196, 85, 61, 0.3) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.10) !important; animation: debt-carousel-pulse 2.5s ease-in-out infinite; } @keyframes debt-blink { 0%, 100% { opacity: 1; text-shadow: 0 0 0 transparent; } 50% { opacity: 0.55; text-shadow: 0 0 6px rgba(196, 85, 61, 0.4); } } @keyframes debt-pulse-bg { 0%, 100% { background: rgba(196, 85, 61, 0.06); } 50% { background: rgba(196, 85, 61, 0.14); } } @keyframes debt-carousel-pulse { 0%, 100% { background: rgba(196, 85, 61, 0.10); border-color: rgba(196, 85, 61, 0.30); } 50% { background: rgba(196, 85, 61, 0.18); border-color: rgba(196, 85, 61, 0.50); } } @keyframes debt-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } } .debt-fade-in { animation: debt-fade-in 0.35s ease-out; } .header-stat .value.age { color: var(--warning); } .festival-badge { color: #c4553d; font-weight: 700; font-size: 12px; background: rgba(196, 85, 61, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(196, 85, 61, 0.2); animation: festival-pulse 2s ease-in-out infinite; } @keyframes festival-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } } .header-actions { display: flex; align-items: center; gap: 8px; } #sidebar { grid-area: sidebar; background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; } .sidebar-section { background: var(--bg-card); border-radius: var(--radius-md); padding: 12px; border: 1px solid transparent; } .sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; } .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .stat-label { width: 65px; font-size: 12px; color: var(--text-secondary); text-align: right; flex-shrink: 0; } .stat-bar-wrap { flex: 1; height: 16px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); overflow: hidden; position: relative; } .stat-bar { height: 100%; border-radius: var(--radius-sm); transition: width 0.4s ease; position: relative; } .stat-bar.flash { animation: statFlash 0.6s ease; } @keyframes statFlash { 0% { filter: brightness(1); } 50% { filter: brightness(2.5); } 100% { filter: brightness(1); } } .stat-bar.hair { background: linear-gradient(90deg, #6b9cbe, var(--hair-color)); } .stat-bar.dignity { background: linear-gradient(90deg, #a48aca, var(--mental-color)); } .stat-bar.kpi { background: linear-gradient(90deg, #c9a442, var(--kpi-color)); } .stat-bar.risk { background: linear-gradient(90deg, #c87062, var(--risk-color)); } .stat-bar.physique { background: linear-gradient(90deg, #c48e4a, var(--physique-color)); } .stat-bar.intelligence { background: linear-gradient(90deg, #5a94ba, var(--intelligence-color)); } .stat-bar.agility { background: linear-gradient(90deg, #56a64e, var(--agility-color)); } .stat-bar.mental-bar { background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color)); } .stat-bar.hunger { background: linear-gradient(90deg, #c9a838, #dec054); } .stat-bar.fatigue { background: linear-gradient(90deg, #949a88, #b4baa2); } .stat-bar.hygiene { background: linear-gradient(90deg, #4a9490, #5ebeb2); } .stat-bar.happiness { background: linear-gradient(90deg, #cc7868, #e09080); } .stat-bar.health { background: linear-gradient(90deg, #d47058, #56b468); } .stat-bar.fame { background: linear-gradient(90deg, #9672b4, #c9a442); } .stat-bar.ap-bar { background: linear-gradient(90deg, #56a868, #62b868, #50b058); } .stat-value { width: 48px; font-size: 11px; color: var(--text-muted); text-align: right; flex-shrink: 0; font-family: var(--font-mono); } .location-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .location-name { font-size: 14px; font-weight: 600; color: var(--accent); } .location-desc { font-size: 11px; color: var(--text-muted); } #main { grid-area: main; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); } #tab-bar { display: flex; background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 12px; flex-shrink: 0; } .tab-btn { padding: 10px 20px; font-size: 13px; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all var(--transition); font-family: var(--font-sans); } .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); } .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); } #content-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; } #time-slot-indicator { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-card); border-radius: var(--radius-md); font-size: 13px; flex-shrink: 0; } .time-slot-badge { padding: 2px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; } .time-slot-badge.morning { background: rgba(243, 156, 18, 0.2); color: var(--warning); } .time-slot-badge.afternoon { background: rgba(74, 158, 92, 0.2); color: var(--warning); } .time-slot-badge.evening { background: rgba(155, 116, 184, 0.2); color: #9b74b8; } .action-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; } .action-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; cursor: pointer; transition: all var(--transition); } .action-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); } .action-card.disabled { opacity: 0.4; cursor: not-allowed; } .action-card.disabled:hover { border-color: var(--border); transform: none; box-shadow: none; } .action-card .card-icon { font-size: 24px; margin-bottom: 6px; } .action-card .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; } .action-card .card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; } .action-card .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; } .card-meta .ap-cost { color: var(--warning); font-weight: 600; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(243, 156, 18, 0.12); border: 1px solid rgba(243, 156, 18, 0.25); } .card-meta .pay-estimate { color: var(--success); font-weight: 600; } .card-meta .cost-estimate { color: var(--danger); font-weight: 600; } .card-meta .slot-tag { padding: 1px 6px; border-radius: var(--radius-sm); font-size: 10px; background: var(--accent-glow); color: var(--accent); } .card-meta .req-fail { color: var(--danger); font-size: 10px; } #message-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; max-height: 250px; overflow-y: auto; flex-shrink: 0; } #message-log h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; } .log-entry { padding: 3px 0; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease; } .log-entry .log-day { color: var(--text-muted); font-size: 10px; margin-right: 8px; font-family: var(--font-mono); } .log-entry.info { color: var(--text-secondary); } .log-entry.success { color: var(--success); } .log-entry.danger { color: var(--danger); } .log-entry.warning { color: var(--warning); } .log-entry.event { color: var(--accent); font-weight: 600; } .log-entry.hint { color: #27ae60; background: rgba(39, 174, 96, 0.06); border-left: 2px solid rgba(39, 174, 96, 0.35); padding-left: 6px; border-radius: 0 3px 3px 0; } .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .inventory-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; } .inventory-item .item-name { font-weight: 600; color: var(--text-primary); } .inventory-item .item-qty { color: var(--text-muted); font-size: 10px; } .inventory-item .item-effects { color: var(--success); font-size: 10px; } .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 13px; font-family: var(--font-sans); font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); background: var(--bg-card); color: var(--text-primary); white-space: nowrap; } .btn:hover { background: var(--bg-card-hover); border-color: var(--border-light); } .btn:active { transform: scale(0.97); } .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent-hover); } .btn-success { background: var(--success); border-color: var(--success); color: #fff; } .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; } .btn-sm { padding: 4px 10px; font-size: 11px; } .btn-lg { padding: 12px 24px; font-size: 15px; border-radius: var(--radius-md); } .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; } .modal-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; min-width: 360px; max-width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); animation: slideUp 0.2s ease; } .modal-box h2 { font-size: 18px; margin-bottom: 12px; color: var(--text-primary); } .modal-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; } .modal-actions { display: flex; gap: 8px; justify-content: flex-end; } .end-screen { text-align: center; } .end-screen .end-icon { font-size: 64px; margin-bottom: 16px; } .end-screen .end-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; } .end-screen .end-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; } .end-screen.victory .end-title { color: var(--success); } .end-screen.defeat .end-title { color: var(--danger); } .stats-summary { width: 100%; border-collapse: collapse; margin: 16px 0; } .stats-summary td { padding: 6px 12px; font-size: 13px; border-bottom: 1px solid var(--border); } .stats-summary td:first-child { color: var(--text-muted); } .stats-summary td:last-child { text-align: right; font-weight: 600; } .news-banner { background: linear-gradient(135deg, var(--bg-card), rgba(74, 158, 92, 0.08)); border: 1px solid var(--accent); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--accent); flex-shrink: 0; } .news-banner .news-icon { margin-right: 6px; } .event-box { min-width: 380px; max-width: 540px; border-top: 4px solid var(--accent); background: linear-gradient(180deg, var(--bg-secondary), var(--bg-card)); } .event-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); } .event-icon { font-size: 40px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(74, 158, 92, 0.15), transparent); border-radius: 50%; flex-shrink: 0; } .event-title { font-size: 18px; color: var(--accent); margin: 0; } .event-story { font-size: 13px; color: var(--text-primary); line-height: 1.7; margin-bottom: 16px; padding: 12px 14px; background: var(--bg-card); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); } .event-choices { display: flex; flex-direction: column; gap: 8px; } .event-choice { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; color: var(--text-primary); font-size: 13px; cursor: pointer; transition: all 0.15s ease; position: relative; } .event-choice:hover:not(.disabled) { background: var(--bg-card-hover, rgba(74, 158, 92, 0.08)); border-color: var(--accent); transform: translateX(2px); } .event-choice.disabled { opacity: 0.4; cursor: not-allowed; } .event-choice .choice-main { font-weight: 600; color: var(--text-primary); } .event-choice .choice-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; } @keyframes eventPop { 0% { transform: scale(0.85) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } } .event-overlay, .modal-overlay.event-modal { animation: fadeIn 0.2s ease; } .event-overlay .modal-box, .modal-overlay.event-modal .modal-box { animation: eventPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-warning { color: var(--warning); } .text-accent { color: var(--accent); } .text-muted { color: var(--text-muted); } .text-sm { font-size: 11px; } .text-lg { font-size: 16px; } .font-mono { font-family: var(--font-mono); } .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-2 { margin-bottom: 8px; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .pulse { animation: pulse 2s infinite; } .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 24px; text-align: center; } .welcome-title { font-size: 36px; font-weight: 700; color: var(--accent); letter-spacing: 1px; } .welcome-subtitle { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; } .welcome-buttons { display: flex; gap: 12px; } .tab-panel { display: none; } .tab-panel.active { display: block; } .city-map { position: relative; } .city-map .map-node { animation: mapFadeIn 0.4s ease backwards; } .city-map .map-node:nth-child(1) { animation-delay: 0.02s; } .city-map .map-node:nth-child(2) { animation-delay: 0.04s; } .city-map .map-node:nth-child(3) { animation-delay: 0.06s; } .city-map .map-node:nth-child(4) { animation-delay: 0.08s; } .city-map .map-node:nth-child(5) { animation-delay: 0.1s; } .city-map .map-node:nth-child(6) { animation-delay: 0.12s; } .city-map .map-node:nth-child(7) { animation-delay: 0.14s; } .city-map .map-node:nth-child(8) { animation-delay: 0.16s; } .city-map .map-node:nth-child(9) { animation-delay: 0.18s; } .city-map .map-node:nth-child(10) { animation-delay: 0.2s; } .city-map .map-node:nth-child(11) { animation-delay: 0.22s; } @keyframes mapFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } .nearby-loc-item { cursor: pointer; transition: all 0.2s ease; } .nearby-loc-item:hover { border-color: var(--accent) !important; background: var(--bg-card-hover) !important; transform: translateX(2px); } #location-services { min-height: 20px; } @media (max-width: 768px) { #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; } #sidebar { position: fixed; left: -100%; top: var(--header-height); bottom: 0; width: 280px; z-index: 200; transition: left 0.3s ease; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3); } #sidebar.open { left: 0; } .action-cards { grid-template-columns: 1fr; } .header-stats { gap: 10px; } .header-stat .label { display: none; } #mobile-menu-btn { display: flex !important; } .map-node { min-width: 70px !important; padding: 10px 14px !important; font-size: 12px !important; } .city-map { min-height: 400px !important; padding: 12px !important; } } #mobile-menu-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 4px; } @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } } .tutorial-overlay .modal-box { border: 2px solid var(--accent); box-shadow: 0 0 40px rgba(102, 126, 234, 0.3); } .tutorial-box { animation: fadeInUp 0.3s ease-out; } @keyframes tutorial-pulse { 0%, 100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.5), inset 0 0 25px rgba(102, 126, 234, 0.08); } 50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), inset 0 0 40px rgba(102, 126, 234, 0.15); } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } @keyframes ap-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } @keyframes ap-blink-border { 0%, 100% { box-shadow: 0 0 12px rgba(255, 152, 0, 0.4); } 50% { box-shadow: 0 0 24px rgba(255, 152, 0, 0.8); } } .wiki-tab { display: flex; flex-direction: column; gap: 12px; } .wiki-header h2 { font-size: 18px; color: var(--accent); } .wiki-search { display: flex; gap: 8px; margin-top: 8px; } .wiki-search input { flex: 1; padding: 8px 12px; border: 1px solid #d8d3c5; border-radius: 8px; background: #fff; color: var(--text-primary); font-size: 13px; font-family: var(--font-sans); } .wiki-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74, 158, 92, 0.2); } .wiki-clear { padding: 8px 12px; background: #fff; border: 1px solid #d8d3c5; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 12px; } .wiki-clear:hover { border-color: var(--danger); color: var(--danger); } .wiki-layout { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: start; } .wiki-nav { display: flex; flex-direction: column; gap: 4px; background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 8px; position: sticky; top: 0; } .wiki-nav-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: transparent; border: none; border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; text-align: left; transition: all 0.15s; font-family: var(--font-sans); } .wiki-nav-btn:hover { background: #f5f1e8; color: var(--text-primary); } .wiki-nav-btn.active { background: rgba(74, 158, 92, 0.12); color: var(--accent); font-weight: 600; } .wiki-nav-ico { font-size: 14px; width: 18px; text-align: center; } .wiki-nav-name { flex: 1; } .wiki-nav-count { font-size: 10px; color: var(--text-muted); background: #f5f1e8; border-radius: 8px; padding: 1px 6px; min-width: 22px; text-align: center; } .wiki-nav-btn.active .wiki-nav-count { background: rgba(74, 158, 92, 0.2); color: var(--accent); } .wiki-content { background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 16px; min-height: 300px; } .wiki-list-header h3 { margin: 0 0 12px; font-size: 16px; color: var(--text-primary); } .wiki-count { font-size: 12px; color: var(--text-muted); font-weight: normal; } .wiki-empty { color: var(--text-muted); text-align: center; padding: 40px; } .wiki-entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; } .wiki-card { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; } .wiki-card:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); } .wiki-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .wiki-card-head h4 { margin: 0; font-size: 13px; color: var(--text-primary); flex: 1; } .wiki-card-ico { font-size: 16px; } .wiki-card-brief { margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .wiki-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; white-space: nowrap; } .wiki-badge.ok { background: rgba(74, 158, 92, 0.15); color: var(--accent); } .wiki-badge.warn { background: rgba(212, 160, 23, 0.15); color: #b08712; } .wiki-badge.info { background: rgba(52, 152, 219, 0.15); color: #2575b3; } .wiki-badge.bad { background: rgba(231, 76, 60, 0.15); color: var(--danger); } .wiki-badge.muted { background: #f0ebde; color: var(--text-muted); } .wiki-detail { position: relative; } .wiki-back { background: #f5f1e8; border: 1px solid #d8d3c5; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; margin-bottom: 12px; } .wiki-back:hover { border-color: var(--accent); color: var(--accent); } .wiki-detail-body h2 { font-size: 18px; margin: 0 0 8px; color: var(--text-primary); } .wiki-detail-body h3 { font-size: 14px; margin: 16px 0 8px; color: var(--accent); border-bottom: 1px solid #ece7d8; padding-bottom: 4px; } .wiki-detail-body p, .wiki-detail-body ul, .wiki-detail-body ol { font-size: 12px; color: var(--text-secondary); line-height: 1.7; } .wiki-detail-body code { background: #f5f1e8; border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono, monospace); font-size: 11px; } .wiki-desc { font-size: 13px !important; color: var(--text-secondary); margin: 0 0 12px; font-style: italic; } .wiki-attrs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; background: #fdfaf3; border-radius: 8px; padding: 10px; margin-bottom: 12px; } .wiki-attrs > div { font-size: 12px; color: var(--text-secondary); } .wiki-attrs b { color: var(--text-primary); margin-right: 6px; } .wiki-list { margin: 0 0 12px 16px; padding: 0; } .wiki-list li { margin-bottom: 4px; } .wiki-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 12px; } .wiki-table th, .wiki-table td { padding: 6px 8px; border: 1px solid #ece7d8; text-align: left; color: var(--text-secondary); } .wiki-table th { background: #fdfaf3; color: var(--text-primary); font-weight: 600; } .wiki-table tr:nth-child(even) td { background: #fdfaf3; } .wiki-link { color: var(--accent); text-decoration: none; font-weight: 500; border-bottom: 1px dashed rgba(74, 158, 92, 0.4); cursor: pointer; } .wiki-link:hover { border-bottom-style: solid; background: rgba(74, 158, 92, 0.06); } .wiki-links { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } .wiki-links .wiki-link { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 14px; padding: 4px 10px; border-bottom: 1px solid #e6e0d0; font-size: 11px; } .wiki-links .wiki-link:hover { border-color: var(--accent); background: rgba(74, 158, 92, 0.08); } .wiki-tip { background: rgba(74, 158, 92, 0.06); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); margin: 8px 0 12px; } .wiki-quote { background: #fdfaf3; border-left: 3px solid #d4a017; padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); font-style: italic; margin: 8px 0; } .wiki-pill { display: inline-block; background: #f5f1e8; border: 1px solid #e6e0d0; border-radius: 12px; padding: 2px 10px; font-size: 11px; color: var(--text-secondary); } @media (max-width: 760px) { .wiki-layout { grid-template-columns: 1fr; } .wiki-nav { flex-direction: row; overflow-x: auto; position: relative; } .wiki-nav-btn { flex: 0 0 auto; flex-direction: column; padding: 6px 8px; min-width: 60px; text-align: center; } .wiki-nav-btn .wiki-nav-name { font-size: 10px; } .wiki-nav-btn .wiki-nav-count { font-size: 9px; padding: 0 4px; } .wiki-entries { grid-template-columns: 1fr; } } </style>
     <style>
       /* 内联关键样式（防止FOUC） */
       body {
@@ -86,6 +86,15 @@
           >
             <span class="label" id="header-cash-label">💰</span>
             <span class="value cash" id="header-cash">¥2,000</span>
+          </div>
+          <!-- 债务展示区域（独立于现金） -->
+          <div
+            class="header-stat"
+            id="header-debt-area"
+            style="cursor: default; display: none;"
+          >
+            <span class="label" id="header-debt-label">💸</span>
+            <span class="value debt" id="header-debt">¥0</span>
           </div>
         </div>
 
@@ -308,6 +317,7 @@
           <button class="tab-btn" data-tab="investment">💰 投资</button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
+          <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
 
         <!-- Content Area (dynamically rendered) -->
@@ -5934,6 +5944,1481 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- 有梗世界事件：房地产开发商暴雷 ----
+  {
+    id: "developer_collapse",
+    phase: "street",
+    icon: "🏚️",
+    title: "楼盘暴雷了！",
+    story:
+      "你投资的楼盘开发商突然资金链断裂，宣布破产重组！工地停工，物业跑路，业主群炸了锅。这套房子…可能要烂尾了。",
+    conditions: function (st) {
+      var inv = st.investment || {};
+      return (
+        inv.properties &&
+        inv.properties.length > 0 &&
+        st.player.day > 100 &&
+        !st.flags._developerCollapseTriggered
+      );
+    },
+    choices: [
+      {
+        text: "💸 立刻低价出手，割肉止损",
+        hint: "到手55%",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._hasLostPropertyCollapse = true;
+          var inv = st.investment || {};
+          if (!inv.properties) return;
+          var total = 0;
+          for (var pi = 0; pi < inv.properties.length; pi++) {
+            total +=
+              inv.properties[pi].currentPrice || inv.properties[pi].buyPrice;
+          }
+          var proceeds = Math.round(total * 0.55);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          inv.properties = [];
+          st.needs.happiness = Math.max(0, st.needs.happiness - 20);
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage(
+            "🏚️ 忍痛割肉，以原价55折出手，回笼¥" +
+              proceeds.toLocaleString() +
+              "。心里堵得慌，但总比全砸进去强。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "✊ 加入业主维权团，去要说法",
+        hint: "花¥500，等结果",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._propertyRightsGroup = true;
+          st.flags._propertyCollapseDay = st.player.day;
+          st.resources.cash = Math.max(0, st.resources.cash - 500);
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "✊ 加入了业主维权团，交了¥500组织费，开始每周去工地讨说法。名气+5，路很长…",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤞 相信政府会托底，先等等",
+        hint: "不确定结果",
+        apply: function (st) {
+          st.flags._developerCollapseTriggered = true;
+          st.flags._waitingPropertyResolution = true;
+          st.flags._propertyCollapseDay = st.player.day;
+          StateManager.addMessage(
+            "🤞 新闻说政府在研究'保交楼'政策，先观望…内心不安，但还是选择相信。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：维权胜利结局 ----
+  {
+    id: "property_rights_win",
+    phase: "street",
+    icon: "✊",
+    title: "维权有结果了！",
+    story:
+      "历时数月的业主维权终于有了结果——银行接管开发商，承诺续建烂尾楼，业主获得延期赔偿。你们赢了！",
+    conditions: function (st) {
+      return (
+        !!st.flags._propertyRightsGroup &&
+        st.player.day >= (st.flags._propertyCollapseDay || 0) + 25 &&
+        !st.flags._propertyRightsResolved
+      );
+    },
+    choices: [
+      {
+        text: "🎉 接受赔偿，继续等交房",
+        hint: "补偿¥800+名气",
+        apply: function (st) {
+          st.flags._propertyRightsResolved = true;
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.status.fame = Math.min(100, st.status.fame + 8);
+          st.player.mental = Math.min(100, st.player.mental + 8);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "✊ 维权成功！获得赔偿¥800，房子续建中，预计延期2年交付。名气+8，心里终于松了口气。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 拿赔偿后转让房产",
+        hint: "套现离场",
+        apply: function (st) {
+          st.flags._propertyRightsResolved = true;
+          var inv = st.investment || {};
+          var total = 0;
+          if (inv.properties) {
+            for (var pi2 = 0; pi2 < inv.properties.length; pi2++) {
+              total +=
+                inv.properties[pi2].currentPrice ||
+                inv.properties[pi2].buyPrice;
+            }
+            inv.properties = [];
+          }
+          var proceeds = Math.round(total * 0.72) + 800;
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.status.fame = Math.min(100, st.status.fame + 5);
+          StateManager.addMessage(
+            "💰 拿了¥800赔偿，再以72折转让房产，共到手¥" +
+              proceeds.toLocaleString() +
+              "。彻底离场，心里反而轻松了。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第1段：加入窗口期） ----
+  {
+    id: "subsidy_war_join",
+    phase: "street",
+    icon: "🛵",
+    title: "补贴大战：骑手窗口期",
+    story:
+      "骑手群里炸锅了！某外卖平台宣布每单补贴+¥3，另一家立刻跟进——这是一年里骑手最好赚的时候。平台代理正在路边招人，注册就给¥60，补贴大战期间接单收益额外+30%。错过了这个窗口，下次不知道什么时候再有。",
+    conditions: function (st) {
+      var hasNews =
+        st.activeNews &&
+        st.activeNews.some(function (n) {
+          return n && n.id === "platform_subsidy_war";
+        });
+      return (
+        hasNews && !st.flags._subsidyWarJoinSeen && st.player.phase === "street"
+      );
+    },
+    choices: [
+      {
+        text: "📱 立刻注册骑手（加入窗口）",
+        hint: "注册奖励¥60，补贴期多接单",
+        apply: function (st) {
+          st.flags._subsidyWarRider = st.player.day;
+          st.flags._subsidyWarJoinSeen = true;
+          st.resources.cash += 60;
+          st.player.physique = Math.max(
+            0,
+            Math.min(100, (st.player.physique || 10) - 2),
+          );
+          StateManager.addMessage(
+            "🛵 成功注册为平台骑手！注册奖励¥60到手，补贴大战期间接单收益额外+30%。体力多消耗了一点，但值！",
+            "event",
+          );
+        },
+      },
+      {
+        text: "👀 不参与，继续本来的计划",
+        hint: "错过窗口，但省了体力",
+        apply: function (st) {
+          st.flags._subsidyWarJoinSeen = true;
+          st.flags._subsidyWarWatched = true;
+          StateManager.addMessage(
+            "💭 选择旁观。补贴大战是机会，但平台说变脸就变脸——还是做自己的事。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第2段：补贴战落幕） ----
+  {
+    id: "subsidy_war_crash",
+    phase: "street",
+    icon: "📉",
+    title: "补贴战落幕：平台变脸了",
+    story:
+      "骑手群突然安静了。昨晚平台悄悄改了规则：每单补贴砍掉¥2，还加了「差评扣款机制」。你算了一下，实际收入比刚注册时少了35%。几个老骑手已经愤而离职，另一些准备组团维权。你才跑了这几天——怎么办？",
+    conditions: function (st) {
+      var hasRiderWinter =
+        st.activeNews &&
+        st.activeNews.some(function (n) {
+          return n && n.id === "rider_winter";
+        });
+      return (
+        hasRiderWinter &&
+        !!st.flags._subsidyWarRider &&
+        !st.flags._subsidyWarCrashSeen
+      );
+    },
+    choices: [
+      {
+        text: "😤 直接退出，不干了",
+        hint: "结算余款¥30，拿经验走人",
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._subsidyWarLeft = true;
+          st.resources.cash += 30;
+          StateManager.addMessage(
+            "😤 退���了骑手平台，结清¥30余款。这波赚了点但也磨了体力——教训：补贴战是短期机会，别依赖平台。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📢 联合维权（要求恢复补贴）",
+        hint: "消耗¥50组织费，名气+5，15天后见结果",
+        cost: 50,
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._riderRightsComplaint = st.player.day;
+          st.resources.cash -= 50;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "📢 加入骑手维权团，花了¥50组织费，名气+5。平台已知晓，15天后看结果。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🍜 用攒的钱转型开摊（需¥500）",
+        hint: "花¥200启动摆摊，体质+3",
+        cost: 500,
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._exRiderVendor = true;
+          st.resources.cash -= 200;
+          st.player.physique = Math.min(100, (st.player.physique || 10) + 3);
+          StateManager.addMessage(
+            "🍜 用补贴大战攒的钱开了个摆摊！花掉¥200启动本钱，体质+3（骑手练出来的腿脚）。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第3段：维权结果） ----
+  {
+    id: "rider_rights_resolve",
+    phase: "street",
+    icon: "⚖️",
+    title: "骑手维权结果出炉",
+    story:
+      "维权团传来消息：经过多次谈判，平台同意象征性支付一次「和解金」，但拒绝恢复补贴，并向组织者发了封号警告。团队里分成两派——一派说拿钱走人，活该；另一派说继续上诉，这是原则问题。",
+    conditions: function (st) {
+      return (
+        !!st.flags._riderRightsComplaint &&
+        st.player.day >= (st.flags._riderRightsComplaint || 0) + 15 &&
+        !st.flags._riderRightsResolved
+      );
+    },
+    choices: [
+      {
+        text: "💰 接受和解金",
+        hint: "按天数结算，¥280+",
+        apply: function (st) {
+          var days = Math.min(
+            30,
+            st.player.day - (st.flags._riderRightsComplaint || st.player.day),
+          );
+          var payout = 280 + days * 3;
+          st.flags._riderRightsResolved = true;
+          st.resources.cash += payout;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "💰 接受和解，到手¥" +
+              payout +
+              "，名气+3。不多，但也算有个结果，总比拖着强。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "⚖️ 继续上诉，等法律途径",
+        hint: "名气+8，但结果不确定",
+        apply: function (st) {
+          st.flags._riderRightsResolved = true;
+          st.flags._riderRightsAppealing = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage(
+            "⚖️ 继续走法律途径，名气+8（被媒体关注）。心理压力+，但你觉得这是原则——也许是正义，也许是更久的等待。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：政府托底结局 ----
+  {
+    id: "property_govt_rescue",
+    phase: "street",
+    icon: "🏛️",
+    title: "政府出手保交楼",
+    story:
+      "等了这么久，终于等到消息：政府启动'保交楼'专项基金，接管你的楼盘续建。代价是交付时间推迟2年，但总归不会烂尾了。",
+    conditions: function (st) {
+      return (
+        !!st.flags._waitingPropertyResolution &&
+        st.player.day >= (st.flags._propertyCollapseDay || 0) + 20 &&
+        !st.flags._propertyGovtResolved
+      );
+    },
+    choices: [
+      {
+        text: "😮‍💨 接受现实，继续持有",
+        hint: "房产价值-25%，但保住了",
+        apply: function (st) {
+          st.flags._propertyGovtResolved = true;
+          var inv = st.investment || {};
+          if (inv.properties) {
+            for (var pi3 = 0; pi3 < inv.properties.length; pi3++) {
+              var p = inv.properties[pi3];
+              p.currentPrice = Math.round(
+                (p.currentPrice || p.buyPrice) * 0.75,
+              );
+            }
+          }
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          StateManager.addMessage(
+            "🏛️ 政府托底了。房产账面贬值25%，但终究没烂尾。等2年吧，也许还能涨回来。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏃 趁现在还能转让，赶紧出手",
+        hint: "70折卖出",
+        apply: function (st) {
+          st.flags._propertyGovtResolved = true;
+          var inv2 = st.investment || {};
+          var total2 = 0;
+          if (inv2.properties) {
+            for (var pi4 = 0; pi4 < inv2.properties.length; pi4++) {
+              total2 +=
+                inv2.properties[pi4].currentPrice ||
+                inv2.properties[pi4].buyPrice;
+            }
+            inv2.properties = [];
+          }
+          var out = Math.round(total2 * 0.7);
+          st.resources.cash += out;
+          st.resources.totalEarned += out;
+          StateManager.addMessage(
+            "🏃 以70折出手，到手¥" +
+              out.toLocaleString() +
+              "。政府是托底了，但这2年的等待成本太高，离场更划算。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ②：收购反噬（街头，3 段弧）
+  // 玩家攒够本钱收购小公司 → 经营不善 → 被竞争对手低价吞掉，
+  // 对手反而因此壮大成行业龙头。剧情完整闭环，不是惩罚玩家，
+  // 而是商业逻辑自然推演。参考 DEV.md 1.2 节"收购反噬"模板。
+  // ============================================================
+  {
+    id: "acquisition_chance",
+    phase: "street",
+    icon: "🏪",
+    title: "有人想把店转给你",
+    story:
+      "巷口“老李茶饮”贴了转让告示。老李说儿子留学，他要去陪读，店铺连带设备打包¥80,000。地段一般但有老客户，每月流水能跑个万把块。你掂量了下口袋：手头是有这个钱，可一旦砸下去，就是把家底押在一家小店上了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day > 100 &&
+        st.resources.cash >= 80000 &&
+        !st.flags._acquisitionTeaSeen
+      );
+    },
+    choices: [
+      {
+        text: "💰 接手茶饮店（¥80,000）",
+        hint: "成为小老板，月流水预期",
+        cost: 80000,
+        apply: function (st) {
+          st.flags._acquisitionTeaSeen = true;
+          st.flags._acquiredTeaStore = st.player.day;
+          st.flags._teaStoreCash = 80000;
+          st.resources.cash -= 80000;
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 4);
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "🏪 签约接手老李茶饮，¥80,000打了水漂——啊不，是投了下去。门口挂上你的名字，从今天起就是小老板了。名气+4，心智+3。",
+            "event",
+          );
+          if (typeof StateManager.markDirty === "function") {
+            StateManager.markDirty();
+          }
+        },
+      },
+      {
+        text: "🤔 看着不错但风险大，先放放",
+        hint: "保留现金，错过机会",
+        apply: function (st) {
+          st.flags._acquisitionTeaSeen = true;
+          st.flags._acquisitionTeaPassed = true;
+          StateManager.addMessage(
+            "🤔 算了，老李这店看着客流不行，砸进去八万怕是回不来。决定先观望——希望以后不会后悔。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "acquisition_struggle",
+    phase: "street",
+    icon: "📉",
+    title: "茶饮店难做啊…",
+    story:
+      "接手老李茶饮快一个月了。问题来了：原来稳定的老客户大半流失（觉得“换老板就变味”），新顾客又不来。每月房租水电¥2,500，上个月只赚¥800，倒贴¥1,700。隔壁新开的“星巴超”反倒生意火爆——同样卖茶，人家做出了网红奶茶概念，年轻人在门口排队。",
+    conditions: function (st) {
+      return (
+        !!st.flags._acquiredTeaStore &&
+        st.player.day >= (st.flags._acquiredTeaStore || 0) + 25 &&
+        !st.flags._acquisitionStruggleSeen
+      );
+    },
+    choices: [
+      {
+        text: "💸 立刻挂牌出售（亏损止损）",
+        hint: "原价 65 折出手",
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionDealtEarly = true;
+          st.flags._acquiredTeaStore = null;
+          var proceeds = Math.round(80000 * 0.65);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+          StateManager.addMessage(
+            "💸 挂牌一周就找到接盘的（应该是星巴超派人来谈的），原价65折成交，回笼¥" +
+              proceeds.toLocaleString() +
+              "。亏了¥28,000，但心里那块石头总算落地了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🔥 砸钱搞营销翻盘（¥15,000）",
+        hint: "一搏成败",
+        cost: 15000,
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionFighting = true;
+          st.flags._acquisitionFightDay = st.player.day;
+          st.resources.cash -= 15000;
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "🔥 砸¥15,000搞了波装修+网红打卡墙+小红书投放。现在就赌这20天能不能起来——心智-3，骰子已经掷下去了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🐢 慢慢熬，相信老客户会回来",
+        hint: "继续每月小亏，等市场",
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionEnduring = true;
+          st.flags._teaStoreCash = (st.flags._teaStoreCash || 80000) - 1700;
+          StateManager.addMessage(
+            "🐢 决定再熬熬。老李说前两年开店也亏过，老顾客认人不认招牌。一个月再亏¥1,700——但你相信时间会告诉你答案。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "acquisition_swallow",
+    phase: "street",
+    icon: "🦈",
+    title: "星巴超来收店了",
+    story:
+      "星巴超的人正式登门：他们要在这条街扩张，一口气收购周边7家店面，给你的报价是当初买入价的45%。代理人很客气：“王老板，您这店地段确实不错，但说实话——独立小店是熬不过我们这种连锁的。这价钱已经是给老李面子。”望着空荡荡的店面，你忽然意识到：自己这一年的折腾，不过是给对手培育了一片好地皮。",
+    conditions: function (st) {
+      var afterFight =
+        !!st.flags._acquisitionFighting &&
+        st.player.day >= (st.flags._acquisitionFightDay || 0) + 20;
+      var enduring = !!st.flags._acquisitionEnduring;
+      return (
+        (afterFight || enduring) &&
+        !st.flags._acquisitionSwallowSeen &&
+        !st.flags._acquisitionDealtEarly
+      );
+    },
+    choices: [
+      {
+        text: "🦈 接受收购（45 折，离场）",
+        hint: "回笼现金，对手做大",
+        apply: function (st) {
+          st.flags._acquisitionSwallowSeen = true;
+          st.flags._starbucksDominant = true;
+          st.flags._businessLessonLearned = true;
+          st.flags._acquiredTeaStore = null;
+          var proceeds = Math.round(80000 * 0.45);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.player.mental = Math.min(100, st.player.mental + 4);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          st.status.fame = Math.max(0, (st.status.fame || 0) - 3);
+          StateManager.addMessage(
+            "🦈 签字画押，到手¥" +
+              proceeds.toLocaleString() +
+              "。这一年的折腾换来¥" +
+              proceeds.toLocaleString() +
+              " + 智力+3 + 心智+4——你学到了：在独立小店和连锁巨头之间，独立小店没有规模护城河。星巴超借你的店面壮大成本街最大连锁，未来它可能会出现在股市上。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "✊ 死磕到底，绝不卖给他们",
+        hint: "保留店面，但每月小亏",
+        apply: function (st) {
+          st.flags._acquisitionSwallowSeen = true;
+          st.flags._teaStoreUnderdog = true;
+          st.player.mental = Math.min(100, st.player.mental + 8);
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 6);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "✊ 把代理人请出店门：“这店不卖。”心智+8，名气+6（街坊都知道有个倔脾气的小老板）。代价是每月还要继续亏¥1,700，但有些事比钱重要。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ③：黑马冲击（街头，3 段弧）
+  // 玩家深耕某行业（外卖/摆摊/废品/建筑/家教 之一）累计天数后，
+  // 新入局者用新模式 3 个月吃掉市场份额。玩家须转型/坚守/弃业。
+  // 参考 DEV.md 1.2 节"行业黑马冲击"模板。
+  // ============================================================
+  {
+    id: "industry_disruption_warning",
+    phase: "street",
+    icon: "⚡",
+    title: "新入局者来了",
+    story:
+      "刷短视频时刷到一条爆款：你做的这行，有个 90 后团队搞了个新模式——他们用「订阅制+数据派单」，把传统从业者效率提升了 40%，3 个月就吃掉了 15% 的市场。看着评论区那句“老一代再不转型就要被淘汰了”，你心里一紧——你做这行已经 30 多天，今天的单量明显比一个月前少。",
+    conditions: function (st) {
+      var jobStreaks = st.flags._jobStreaks || {};
+      var totalDays = 0;
+      for (var k in jobStreaks) {
+        if (Object.prototype.hasOwnProperty.call(jobStreaks, k)) {
+          var rec = jobStreaks[k];
+          var c = rec && typeof rec === "object" ? rec.count || 0 : rec || 0;
+          if (c > totalDays) totalDays = c;
+        }
+      }
+      return (
+        st.player.phase === "street" &&
+        st.player.day > 180 &&
+        totalDays >= 30 &&
+        !st.flags._disruptionSeen
+      );
+    },
+    choices: [
+      {
+        text: "📚 买课学新模式（¥800，10 天后看选择）",
+        hint: "技能 XP+，进入转型期",
+        cost: 800,
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionStudying = st.player.day;
+          st.resources.cash -= 800;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 2,
+          );
+          // 任意已有技能 +5 XP（增强当前职业）
+          if (st.skills) {
+            for (var sk in st.skills) {
+              if (Object.prototype.hasOwnProperty.call(st.skills, sk)) {
+                if ((st.skills[sk].exp || 0) > 0) {
+                  st.skills[sk].exp = (st.skills[sk].exp || 0) + 5;
+                  break;
+                }
+              }
+            }
+          }
+          StateManager.addMessage(
+            "📚 报名了¥800的“行业转型训练营”。智力+2，主力技能XP+5。10天后看你选什么道。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💪 不慌，靠老经验稳住（坚守）",
+        hint: "工作收入小幅下降",
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionHolding = st.player.day;
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "💪 嗤之以鼻——你这行的老门道不是几个 90 后看几集网课就能颠覆的。心智+3，但接下来一段时间收入可能会受冲击。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚪 这行不行了，趁早抽身",
+        hint: "立得名气补偿，但失去工作连击",
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionExited = true;
+          st.flags._jobStreaks = {}; // 清零所有连击
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 3);
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "🚪 决定放弃这行，转向新机会。所有工作连击清零（重头再来），名气+3（识时务），心智-3（承认自己跟不上时代不容易）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "industry_pivot_choice",
+    phase: "street",
+    icon: "🔀",
+    title: "训练营毕业了，怎么走？",
+    story:
+      "10 天的转型训练营结束。你学了“数据派单”逻辑，也认识了几个同期转型的人——有人做副业，有人 all-in 新模式。教练说：“旧行业的活儿还能干 6~12 个月，但每过一季度市场份额会少 5%。你现在转，是抄底；再等半年，可能连转的成本都凑不齐了。”",
+    conditions: function (st) {
+      return (
+        !!st.flags._disruptionStudying &&
+        st.player.day >= (st.flags._disruptionStudying || 0) + 10 &&
+        !st.flags._disruptionPivotSeen
+      );
+    },
+    choices: [
+      {
+        text: "🚀 All-in 新模式（清空连击，能力+15）",
+        hint: "主动转型，40 天后看结果",
+        apply: function (st) {
+          st.flags._disruptionPivotSeen = true;
+          st.flags._disruptionPivoted = st.player.day;
+          st.flags._jobStreaks = {};
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 5,
+          );
+          st.player.agility = Math.min(100, (st.player.agility || 10) + 3);
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          if (st.skills && st.skills.coding) {
+            st.skills.coding.exp = (st.skills.coding.exp || 0) + 30;
+          }
+          StateManager.addMessage(
+            "🚀 All-in 新模式！智力+5、敏捷+3、心智+5，编程XP+30（数据派单也是技术活）。连击清零，但你站到了浪头上。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🌗 副业兼职两边压（不舍弃老本行）",
+        hint: "收入两边小赚，AP 消耗略增",
+        apply: function (st) {
+          st.flags._disruptionPivotSeen = true;
+          st.flags._disruptionSidehustle = st.player.day;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          st.player.physique = Math.max(
+            0,
+            Math.min(100, (st.player.physique || 10) - 1),
+          );
+          StateManager.addMessage(
+            "🌗 决定两边都搞——白天老本行，晚上新模式接单。智力+3，体质-1（双线消耗）。稳是稳，但每件事都做不到极致。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "industry_aftermath",
+    phase: "street",
+    icon: "📊",
+    title: "行业洗牌结束了",
+    story:
+      "三个月过去了。新模式占了行业 40% 份额，老模式从业者中能转型的转了，转不了的去了别的行业。你回头看自己这阵子的选择，发现这行业的洗牌就像潮水——不是谁错了，是潮水在往哪个方向走。",
+    conditions: function (st) {
+      var pivoted =
+        !!st.flags._disruptionPivoted &&
+        st.player.day >= (st.flags._disruptionPivoted || 0) + 40;
+      var holding =
+        !!st.flags._disruptionHolding &&
+        st.player.day >= (st.flags._disruptionHolding || 0) + 50;
+      var sidehustle =
+        !!st.flags._disruptionSidehustle &&
+        st.player.day >= (st.flags._disruptionSidehustle || 0) + 40;
+      return (
+        (pivoted || holding || sidehustle) && !st.flags._disruptionAftermathSeen
+      );
+    },
+    choices: [
+      {
+        text: "📊 接受这个时代",
+        hint: "结算结果",
+        apply: function (st) {
+          st.flags._disruptionAftermathSeen = true;
+          var msg = "";
+          if (st.flags._disruptionPivoted) {
+            // 转型成功者
+            st.resources.cash += 3500;
+            st.resources.totalEarned += 3500;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 3,
+            );
+            st.status.fame = Math.min(100, (st.status.fame || 0) + 5);
+            st.flags._earlyAdopter = true;
+            msg =
+              "📊 转型那批人吃到了红利。新平台给早期入驻者发了¥3,500奖金，智力+3，名气+5。“早行动者”标签解锁——以后类似机会触发时优先看到。";
+          } else if (st.flags._disruptionSidehustle) {
+            // 副业派
+            st.resources.cash += 1800;
+            st.resources.totalEarned += 1800;
+            st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+            st.player.mental = Math.min(100, st.player.mental + 3);
+            msg =
+              "📊 两线作战的回报：累计副业收入¥1,800入账，体质-2（这阵子真累），心智+3（你扛过来了）。结论是不够极致，但没掉队。";
+          } else if (st.flags._disruptionHolding) {
+            // 坚守派
+            st.resources.cash = Math.max(0, st.resources.cash - 1200);
+            st.player.mental = Math.max(0, st.player.mental - 6);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            st.status.fame = Math.min(100, (st.status.fame || 0) + 4);
+            msg =
+              "📊 坚守的代价：行业萎缩，你这3个月少赚¥1,200，心智-6，心情-10。但街坊给你贴了“老把式”的标签（名气+4）——不是赢家，但是某种意义上的“守艺人”。";
+          }
+          StateManager.addMessage(msg, "event");
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ④：创始人回购（职场，3 段弧）
+  // 玩家在职场被资本清洗 → 30 天后留下当员工的屈辱期 →
+  // 45 天后老朋友筹钱让你买回主导权。参考 DEV.md 1.2 节模板。
+  // ============================================================
+  {
+    id: "founder_oust",
+    phase: "corporate",
+    icon: "🪑",
+    title: "投资人要换团队",
+    story:
+      "VC 召开闭门会议。新来的投资人代表语气客气但措辞冰冷：“业绩没达预期，我们要换打法——核心团队全部重组。” 你一愣——你是创始人之一啊。“我知道您的贡献，但下一个阶段需要更专业的运营。给您三个选择：留下来当核心员工、签离职协议拿遣散费、或者…我们也不强求。”",
+    conditions: function (st) {
+      var lvOk =
+        st.player.phase === "corporate" &&
+        st.corp &&
+        st.corp.level &&
+        st.corp.level >= 7;
+      // 模拟"接受过 VC 投资"：玩家有公司股份或高 KPI 期间发生
+      var vcCond =
+        !!st.flags._acceptedVCFunding ||
+        (st.corp && (st.player.corporate.kpi || 0) > 70 && st.player.day > 200);
+      return lvOk && vcCond && !st.flags._founderOustSeen;
+    },
+    choices: [
+      {
+        text: "🪑 留下来当核心员工（屈辱但留有翻身机会）",
+        hint: "30 天后看后续",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderStayed = st.player.day;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 50) - 25,
+            );
+            st.player.corporate.hair = Math.max(
+              0,
+              (st.player.corporate.hair || 80) - 15,
+            );
+            st.player.corporate.upwardMgmt = Math.max(
+              0,
+              (st.player.corporate.upwardMgmt || 50) - 10,
+            );
+          }
+          StateManager.addMessage(
+            "🪑 签了新合同，从联合创始人变成“产品总监”。尊严-25，发量-15，向上管理-10。但你想留着观察机会——也许还能东山再起。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💼 拿遣散费走人（¥150,000）",
+        hint: "干净离场，永久放弃公司",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderExited = true;
+          st.resources.cash += 150000;
+          st.resources.totalEarned += 150000;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 10,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 6);
+          StateManager.addMessage(
+            "💼 签字拿钱走人，到手¥150,000遣散费。尊严+10（你保住了体面），名气+6（业内都知道你是被资本清洗的创始人）。下一站去哪，再说。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💥 当场翻脸，公开抗议",
+        hint: "尊严+30，但 KPI 暴跌",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderRebelled = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 30,
+            );
+            st.player.corporate.kpi = Math.max(
+              0,
+              (st.player.corporate.kpi || 50) - 30,
+            );
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 25,
+            );
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 10,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 10);
+          StateManager.addMessage(
+            "💥 当场拍桌子：“这公司是我们一砖一瓦盖起来的，凭什么由你们说了算？”——尊严+30，名气+10，人缘+10（同事敬你是条汉子）。代价：KPI-30，埋雷+25（你被打上了“麻烦制造者”标签）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "founder_humiliation",
+    phase: "corporate",
+    icon: "📉",
+    title: "新 CEO 让你写 PPT",
+    story:
+      "新 CEO 上任一个月，你这位“前创始人”被分配的工作是——给一群空降高管讲解你当年定的产品逻辑，然后做成 PPT 让他们“参考”。你看着会议室里那些一年前还没听说过这家公司的人，对你的产品指指点点，心里冷笑：他们连用户名字都念不准。但下班路上，你还是去打了点酒。",
+    conditions: function (st) {
+      return (
+        !!st.flags._founderStayed &&
+        st.player.day >= (st.flags._founderStayed || 0) + 30 &&
+        !st.flags._founderHumiliationSeen
+      );
+    },
+    choices: [
+      {
+        text: "🎭 假装配合，暗中观察",
+        hint: "尊严-3，但保留 buyback 机会",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderObserving = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 30) - 3,
+            );
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 40) + 8,
+            );
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 50) + 3,
+            );
+          }
+          StateManager.addMessage(
+            "🎭 戴上面具，每天笑着开会。尊严-3（你恨自己），但向上管理+8、能力+3——你确实学到了一些“如何在不属于自己的局里生存”的东西。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📚 业余时间学新东西，攒下家私积蓄",
+        hint: "智力+8、能力+5，攒钱通道",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderRebuilding = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 8,
+          );
+          if (st.player && st.player.corporate) {
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 50) + 5,
+            );
+          }
+          if (st.skills && st.skills.management) {
+            st.skills.management.exp = (st.skills.management.exp || 0) + 50;
+          }
+          StateManager.addMessage(
+            "📚 上班划水，下班修炼。智力+8、能力+5，管理技能XP+50。你心里有了清晰的目标：等机会回来，把这地方再赢一次。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💢 受不了了，直接辞职",
+        hint: "失去回购机会，但解脱",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderQuitInRage = true;
+          st.flags._founderStayed = null; // 关闭后续 buyback
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 30) + 25,
+            );
+            st.player.corporate.hair = Math.min(
+              100,
+              (st.player.corporate.hair || 50) + 10,
+            );
+          }
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "💢 在工位上摔了键盘走人。尊严+25、发量+10、心情+15——这一刻你觉得自己又活过来了。回购的可能性永远关闭了，但有些东西比公司重要。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "founder_buyback",
+    phase: "corporate",
+    icon: "♟️",
+    title: "老朋友凑钱要帮你买回来",
+    story:
+      "深夜接到当年合伙人老陈的电话：“新 CEO 一年烧了 3 个亿，下个季度要不到融资就完蛋。投资人现在愿意 4 折出售他们手里的股份——总价 ¥800,000。我和老张能凑¥500,000，差¥300,000。如果你能掏出来，我们三个人就能拿回这家公司。” 你看着对面墙上自己当年挂的那张“再创业”的字，握着手机的手在抖。",
+    conditions: function (st) {
+      var hasObserved =
+        !!st.flags._founderObserving || !!st.flags._founderRebuilding;
+      var triggerDay = st.flags._founderStayed
+        ? st.flags._founderStayed + 75
+        : 99999;
+      return (
+        hasObserved &&
+        st.player.day >= triggerDay &&
+        st.resources.cash >= 100000 &&
+        !st.flags._founderBuybackSeen
+      );
+    },
+    choices: [
+      {
+        text: "♟️ 砸¥300,000买回来！",
+        hint: "重新做 CEO，恢复属性",
+        cost: 300000,
+        apply: function (st) {
+          st.flags._founderBuybackSeen = true;
+          st.flags._founderReclaimed = true;
+          st.resources.cash -= 300000;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 30) + 40,
+            );
+            st.player.corporate.hair = Math.min(
+              100,
+              (st.player.corporate.hair || 40) + 25,
+            );
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 60) + 10,
+            );
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 20,
+            );
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 40) + 30,
+            );
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 15,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 20);
+          st.player.mental = Math.min(100, st.player.mental + 20);
+          StateManager.addMessage(
+            "♟️ 砸下¥300,000——你回来了。尊严+40、发量+25、能力+10、KPI+20、向上管理+30、人缘+15、名气+20、心智+20。这次你知道：公司不是属于资本的，是属于愿意为它流血的人的。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 谢绝老陈，安心当员工",
+        hint: "心理松一口气",
+        apply: function (st) {
+          st.flags._founderBuybackSeen = true;
+          st.flags._founderDeclinedBuyback = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 30) - 5,
+            );
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 10,
+            );
+          }
+          st.player.mental = Math.min(100, st.player.mental + 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage(
+            "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // ============================================================
+  // 有梗世界事件链 ⑤：政策套利窗口（3 场景 × 2 阶段）
+  // 先知道的人暴富，后知道的人被套——模拟"信息差"与"时机判断"博弈。
+  // 参考 DEV.md 1.2 节"政策套利窗口"模板。
+  // 场景 A：科技园扩建征地（小美情报）— 提前囤周边房产
+  // 场景 B：外卖/摊贩持证上岗（张姐情报）— 提前考证占坑
+  // 场景 C：餐饮卫生新规（陈师傅情报）— 提前整改免罚+补贴
+  // ============================================================
+
+  // ---- 场景 A-1：科技园扩建征地内幕 ----
+  {
+    id: "arbitrage_techpark_tip",
+    phase: "street",
+    icon: "📐",
+    title: "小美的内幕消息：科技园要扩建",
+    story:
+      "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.xiao_mei;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 50 &&
+        st.player.day >= 40 &&
+        !st.flags._arbitrageTechparkTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "🏠 联系二手房东，谈下那片旧厂房（¥2000定金）",
+        hint: "赌一把：如果真扩建，租金暴涨",
+        cost: 2000,
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkActed = st.player.day;
+          st.resources.cash -= 2000;
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 2);
+          StateManager.addMessage(
+            "📐 你咬咬牙付了¥2000定金，以租代持谈下了一间旧厂房仓库的优先承租权。如果消息是真的，等科技园扩建公告一出，租金至少翻倍；如果是假的……¥2000打水漂。心智+2，赌局开始了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📈 先小仓位买入科技股（¥1000买HUAW/SMIC）",
+        hint: "温和布局，扩建利好科技板块",
+        cost: 1000,
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkModerate = st.player.day;
+          st.resources.cash -= 1000;
+          // 记入临时投资，政策兑现时模拟增值
+          st.flags._arbitrageTechparkInvest =
+            (st.flags._arbitrageTechparkInvest || 0) + 1000;
+          StateManager.addMessage(
+            "📈 你不敢all-in，但买了¥1000科技股。扩建利好整个板块，即使消息有误也不会亏太多。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤨 内幕交易是违法的，当没听过",
+        hint: "安全，但可能错过机会",
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkSkipped = true;
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🤨 你谢过小美，但没碰那名片。有些钱烫手，你知道。心智+3，心情+5——晚上睡得着比什么都重要。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 A-2：科技园扩建官宣兑现 ----
+  {
+    id: "arbitrage_techpark_payoff",
+    phase: "street",
+    icon: "🏗️",
+    title: "科技园扩建正式官宣！",
+    story:
+      "新闻推送弹出来：市政府正式公告科技园东区旧厂房改造项目立项，总投资80亿，预计带动周边3公里商业价值提升30%~50%。你记得两周前小美说的那番话——现在，到了看选择的时候了。",
+    conditions: function (st) {
+      return (
+        (!!st.flags._arbitrageTechparkActed ||
+          !!st.flags._arbitrageTechparkModerate) &&
+        !st.flags._arbitrageTechparkPayoffSeen &&
+        st.player.day >=
+          (st.flags._arbitrageTechparkActed ||
+            st.flags._arbitrageTechparkModerate ||
+            0) +
+            12
+      );
+    },
+    choices: [
+      {
+        text: "💰 把优先承租权转手（溢价300%！）",
+        hint: "空手套白狼，净赚¥5000~8000",
+        conditions: function (st) {
+          return !!st.flags._arbitrageTechparkActed;
+        },
+        apply: function (st) {
+          st.flags._arbitrageTechparkPayoffSeen = true;
+          var profit = 5000 + Math.floor(Math.random() * 3000);
+          st.resources.cash += profit;
+          st.resources.totalEarned += profit;
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
+          StateManager.addMessage(
+            "🏗️ 你以¥" +
+              profit +
+              "把优先承租权转手给了一家连锁便利店品牌，净赚¥" +
+              (profit - 2000) +
+              "！小美的消息比黄金还值钱。名气+8，心智+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📉 卖出科技股（获利+40%）",
+        hint: "见好就收",
+        conditions: function (st) {
+          return !!st.flags._arbitrageTechparkModerate;
+        },
+        apply: function (st) {
+          st.flags._arbitrageTechparkPayoffSeen = true;
+          var invest = st.flags._arbitrageTechparkInvest || 1000;
+          var ret = Math.round(invest * 1.4);
+          st.resources.cash += ret;
+          st.resources.totalEarned += ret;
+          StateManager.addMessage(
+            "📉 你卖掉了科技股，到手¥" +
+              ret +
+              "，收益¥" +
+              (ret - invest) +
+              "（+40%）。虽然不是暴富，但稳健也是一种胜利。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+
+  // ---- 场景 B-1：摊贩持证上岗新政内幕 ----
+  {
+    id: "arbitrage_license_tip",
+    phase: "street",
+    icon: "📋",
+    title: "张姐透露：摊贩要持证上岗了",
+    story:
+      "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.sister_zhang;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 45 &&
+        st.player.day >= 30 &&
+        !st.flags._arbitrageLicenseTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "✅ 立刻去办证（¥50 + 体检¥30）",
+        hint: "趁窗口期低价锁定资格",
+        cost: 80,
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseActed = true;
+          st.resources.cash -= 80;
+          st.flags._hasBusinessLicense = true; // 复用个体户执照标志
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 1);
+          StateManager.addMessage(
+            "✅ 你花¥80办了登记卡和健康证。虽然体检抽血有点疼，但心里踏实了——等新规一出，这证就是你的护身符。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💡 多办3张卡倒卖（¥240）",
+        hint: "黄牛操作，有风险",
+        cost: 240,
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseScalped = true;
+          st.resources.cash -= 240;
+          st.status.fame = Math.max(0, (st.status.fame || 0) - 3);
+          st.player.mental = Math.max(0, (st.player.mental || 10) - 2);
+          StateManager.addMessage(
+            "💡 你一口气办了4张卡（含自己的）。回来的路上有点心虚——但这城里谁不找点路子呢？名气-3（万一被查），心智-2。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🙄 应该不会查这么严吧",
+        hint: "赌一把，省钱但风险高",
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseIgnored = true;
+          StateManager.addMessage(
+            "🙄 你把体检表塞进兜里。这座城市的规定三天两头变，不一定查得到你头上……吧？",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 B-2：摊贩持证新规实施 ----
+  {
+    id: "arbitrage_license_payoff",
+    phase: "street",
+    icon: "🛂",
+    title: "城管突击检查！持证新规来了",
+    story:
+      "果然，新规说来就来。城管大队今天出现在街头，挨个检查登记卡。有证的摊贩照常营业，没证的被当场开罚单——¥200起步。你远远看着几个没证的同行跟城管吵起来，心里庆幸（或后悔）自己当初的选择。",
+    conditions: function (st) {
+      var tipDay = st.flags._arbitrageLicenseTipDay || 0;
+      return (
+        (st.flags._arbitrageLicenseActed ||
+          st.flags._arbitrageLicenseScalped ||
+          st.flags._arbitrageLicenseIgnored) &&
+        !st.flags._arbitrageLicensePayoffSeen &&
+        st.player.day >= tipDay + 12
+      );
+    },
+    choices: function (st) {
+      var choices = [];
+      if (st.flags._arbitrageLicenseActed) {
+        choices.push({
+          text: "🛡️ 亮出登记卡，合法营业",
+          hint: "无损失，安心",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
+            s.status.fame = Math.min(100, (s.status.fame || 0) + 3);
+            StateManager.addMessage(
+              "🛡️ 你从容亮出登记卡。城管点点头就走了。旁边几个没证的同行投来羡慕的眼神。心情+10，名气+3。当初那¥80花得太值了。",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageLicenseScalped) {
+        choices.push({
+          text: "💰 把多办的卡高价卖出（¥400/张）",
+          hint: "净赚¥960",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            var profit = 400 * 3;
+            s.resources.cash += profit;
+            s.resources.totalEarned += profit;
+            s.status.fame = Math.max(0, (s.status.fame || 0) + 5);
+            s.player.mental = Math.min(100, (s.player.mental || 10) + 2);
+            StateManager.addMessage(
+              "💰 你以¥400一张把3张卡卖给了急得跳脚的同行，净赚¥960！消息灵通就是生产力。名气+5（他们感谢你），心智+2。",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageLicenseIgnored) {
+        choices.push({
+          text: "😰 被罚¥200 + 今天不能出摊",
+          hint: "损失惨重",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 15);
+            s.player.mental = Math.max(0, (s.player.mental || 10) - 2);
+            StateManager.addMessage(
+              "😰 你被开了¥200罚单，今天还不能出摊。早知道当初花¥80办了……心情-15，心智-2。这座城市不给你第二次机会。",
+              "danger",
+            );
+          },
+        });
+      }
+      return choices;
+    },
+  },
+
+  // ---- 场景 C-1：餐饮卫生评级补贴内幕 ----
+  {
+    id: "arbitrage_hygiene_tip",
+    phase: "street",
+    icon: "🧹",
+    title: "陈师傅说：卫生评级有补贴",
+    story:
+      "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.chef_chen;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 40 &&
+        st.player.day >= 50 &&
+        !st.flags._arbitrageHygieneTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "🔧 花¥1500提前整改（赌能评A级）",
+        hint: "先投后收，长期回报",
+        cost: 1500,
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneInvested = st.player.day;
+          st.resources.cash -= 1500;
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+          StateManager.addMessage(
+            "🔧 你买了不锈钢灶台和灭蝇灯，花了两天把摊位彻底改造。¥1500见了底，但看着焕然一新的操作台，你觉得值。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🧹 小修小补（花¥300简单应付）",
+        hint: "可能评B级，补贴少但成本低",
+        cost: 300,
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneModerate = st.player.day;
+          st.resources.cash -= 300;
+          StateManager.addMessage(
+            "🧹 你买了灭蝇灯和新的围裙，灶台擦了又擦。花¥300做了表面功夫——评不上A级，但至少不会被罚。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤷 小本生意，折腾不起",
+        hint: "省钱但错过补贴",
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneSkipped = true;
+          StateManager.addMessage(
+            "🤷 你把整改清单塞进口袋。小本生意经不起折腾——先看看再说。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 C-2：餐饮卫生评级结果 ----
+  {
+    id: "arbitrage_hygiene_payoff",
+    phase: "street",
+    icon: "⭐",
+    title: "卫生星级评定结果出炉",
+    story:
+      "餐饮协会的公告贴出来了。你挤在人群里找自己的摊位号——评级结果直接决定了接下来一个季度你能拿多少补贴、上什么推荐榜单。",
+    conditions: function (st) {
+      return (
+        (st.flags._arbitrageHygieneInvested ||
+          st.flags._arbitrageHygieneModerate ||
+          st.flags._arbitrageHygieneSkipped) &&
+        !st.flags._arbitrageHygienePayoffSeen &&
+        st.player.day >=
+          (st.flags._arbitrageHygieneInvested ||
+            st.flags._arbitrageHygieneModerate ||
+            0) +
+            15
+      );
+    },
+    choices: function (st) {
+      var choices = [];
+      if (st.flags._arbitrageHygieneInvested) {
+        choices.push({
+          text: "⭐ A级！拿补贴¥2000 + 推荐榜单",
+          hint: "提前整改的回报",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.resources.cash += 2000;
+            s.resources.totalEarned += 2000;
+            s.status.fame = Math.min(100, (s.status.fame || 0) + 12);
+            s.player.mental = Math.min(100, (s.player.mental || 10) + 5);
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 20);
+            StateManager.addMessage(
+              "⭐ A级！你拿到了首批A级评定！补贴¥2000到手，你的摊位上了官方推荐榜——以后不愁客源了。名气+12，心智+5，心情+20。那¥1500花得真值！",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageHygieneModerate) {
+        choices.push({
+          text: "🥈 B级，补贴¥500 + 继续整改建议",
+          hint: "中等回报，有上升空间",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.resources.cash += 500;
+            s.resources.totalEarned += 500;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🥈 B级。补贴¥500到手，公告建议你升级灶台设备争取下季度评A。小修小补没白做，但也没赚大钱。",
+              "info",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageHygieneSkipped) {
+        choices.push({
+          text: "❌ C级，无补贴 + 被警告",
+          hint: "没投入就没回报",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 10);
+            StateManager.addMessage(
+              "❌ C级（最低档）。没有补贴，还被贴了整改警告。看着隔壁A级摊位排起长队，你有点后悔当初没听陈师傅的。心情-10。",
+              "warning",
+            );
+          },
+        });
+      }
+      return choices;
+    },
+  },
 ];
 
 /* =========================================================
@@ -6044,8 +7529,21 @@ function showEventModal(evt) {
   // 先卸掉任何旧弹窗
   document.querySelector(".modal-overlay")?.remove();
 
+  // 支持 choices 为函数（动态生成，如政策套利兑现事件）
+  var choicesArr = evt.choices;
+  if (typeof choicesArr === "function") {
+    choicesArr = choicesArr(StateManager.getState());
+    if (!choicesArr || !choicesArr.length) {
+      // 没有可用选项时自动跳过
+      var s = StateManager.getState();
+      s._pendingEvent = null;
+      s._pendingEventId = null;
+      return;
+    }
+  }
+
   // 构建选项HTML
-  const choicesHtml = evt.choices
+  const choicesHtml = choicesArr
     .map((ch, i) => {
       const hintStr = ch.hint
         ? `<div class="choice-hint">${ch.hint}</div>`
@@ -6088,7 +7586,7 @@ function showEventModal(evt) {
   overlay.querySelectorAll(".event-choice").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = parseInt(btn.dataset.idx);
-      const choice = evt.choices[idx];
+      const choice = choicesArr[idx];
       if (!choice) return;
       const state = StateManager.getState();
       try {
@@ -6495,6 +7993,24 @@ var FESTIVALS = [
     announceTxt:
       "🎉 国庆黄金周！全国欢庆，商场大促。电子产品和服装打折，但食品因人流量稍涨。",
   },
+  {
+    id: "shopping_festival",
+    name: "全民剁手节",
+    icon: "🛒",
+    startDay: 315,
+    duration: 2,
+    desc: "电商年度最大促销，零售品需求暴增，商业区人流爆炸，摆摊收益翻倍。",
+    priceMods: {
+      daily: 2.0,
+      clothing: 1.9,
+      electronics: 1.85,
+      food: 1.15,
+      luxury: 1.5,
+    },
+    moodBonus: 6,
+    announceTxt:
+      "🛒 全民剁手节开始！商业区人山人海，日用品/服装/电子需求暴涨——这是今年摆摊最赚的两天！准备好货了吗？",
+  },
 ];
 
 /** 根据游戏天数获取当前节日（无则返回null） */
@@ -6507,11 +8023,24 @@ function getCurrentFestival(day) {
   return null;
 }
 
-/** 获取节日对某商品分类的价格修正乘数（无节日=1.0） */
+/** 判断是否处于剁手节余震清仓期（节日结束后3天） */
+function isShoppingClearancePeriod(state) {
+  return !!(
+    state.flags._shoppingClearanceEndDay &&
+    state.player.day <= state.flags._shoppingClearanceEndDay
+  );
+}
+
+/** 获取节日对某商品分类的价格修正乘数（无节日=1.0，清仓期低于1.0） */
 function getFestivalPriceMod(state, category) {
   var f = getCurrentFestival(state.player.day);
-  if (!f || !f.priceMods || !f.priceMods[category]) return 1.0;
-  return f.priceMods[category];
+  if (f && f.priceMods && f.priceMods[category]) return f.priceMods[category];
+  // 剁手节余震清仓期：日用品/服装/电子便宜15-25%（买货好时机）
+  if (isShoppingClearancePeriod(state)) {
+    var clearMods = { daily: 0.82, clothing: 0.78, electronics: 0.8 };
+    if (clearMods[category]) return clearMods[category];
+  }
+  return 1.0;
 }
 
 /** 节日分类中文名 */
@@ -6529,14 +8058,51 @@ function getFestivalCategoryName(cat) {
 
 /**
  * 每日节日效果结算 — 加入 DAILY_PIPELINE
- * 节日第一天发布公告；节日期间每日心情加成
+ * 节日第一天发布公告；节日期间每日心情加成；
+ * 剁手节额外：3天预热公告 + 节日结束后清仓期
  */
 function checkFestivalDailyEffects(state) {
-  var f = getCurrentFestival(state.player.day);
-  if (!f) return;
-
   var doy = state.player.day % 365;
   var year = Math.floor(state.player.day / 365);
+
+  // === 剁手节专项：3天预热 + 余震清仓 ===
+  var shoppingFest = null;
+  for (var si = 0; si < FESTIVALS.length; si++) {
+    if (FESTIVALS[si].id === "shopping_festival") {
+      shoppingFest = FESTIVALS[si];
+      break;
+    }
+  }
+  if (shoppingFest) {
+    var daysToFest = shoppingFest.startDay - doy;
+    // 预热公告（3天前）
+    if (daysToFest === 3) {
+      var preKey = "_shopFestPre_y" + year;
+      if (!state.flags[preKey]) {
+        state.flags[preKey] = true;
+        StateManager.addMessage(
+          "📦【预热提醒】全民剁手节还有3天！现在去批发市场囤好日用品/服装，节日当天商业区摆摊收益可翻倍！早买早赚。",
+          "hint",
+        );
+      }
+    }
+    // 节日结束第1天：开启余震清仓期3天
+    if (doy === shoppingFest.startDay + shoppingFest.duration) {
+      var clearKey = "_shopFestClear_y" + year;
+      if (!state.flags[clearKey]) {
+        state.flags[clearKey] = true;
+        state.flags._shoppingClearanceEndDay = state.player.day + 3;
+        StateManager.addMessage(
+          "📉【剁手节余波】消费者买完了，日用品/服装/电子降价15-20%清仓中（还有3天），是囤货低吸的好时机！",
+          "info",
+        );
+      }
+    }
+  }
+
+  // === 普通节日效果 ===
+  var f = getCurrentFestival(state.player.day);
+  if (!f) return;
 
   // 节日第一天公告（每年触发一次）
   if (doy === f.startDay) {
@@ -6642,6 +8208,26 @@ var FESTIVAL_JOBS = {
       desc: "黄金周游客多，兼职景区向导，需要一定的智力",
     },
   ],
+  shopping_festival: [
+    {
+      id: "fest_shopping_vendor",
+      name: "🛒 剁手节爆款摊位",
+      icon: "🛒",
+      location: "commercialDist",
+      pay: 280,
+      apCost: 25,
+      desc: "剁手节商业区人流爆炸！摆摊卖热销品，收益是平时的5倍！",
+    },
+    {
+      id: "fest_shopping_warehouse",
+      name: "📦 节日仓库搬运",
+      icon: "📦",
+      location: "wholesaleMarket",
+      pay: 160,
+      apCost: 20,
+      desc: "双节备货旺季，批发仓库搬运需求激增，轻松赚体力钱",
+    },
+  ],
 };
 
 /** 获取节日NPC专属台词（返回字符串或null） */
@@ -6661,6 +8247,15 @@ function getFestivalNpcLine(npcId, state) {
 
 /** 获取节日价格修正说明文本（用于交易界面提示） */
 function getFestivalPriceNote(state) {
+  // 余震清仓期提示
+  if (isShoppingClearancePeriod(state)) {
+    var daysLeft2 = state.flags._shoppingClearanceEndDay - state.player.day;
+    return (
+      "📉 剁手节清仓（还剩" +
+      daysLeft2 +
+      "天）：日用品-18%, 服装-22%, 电子-20%（进货好时机）"
+    );
+  }
   var f = getCurrentFestival(state.player.day);
   if (!f || !f.priceMods) return "";
   var doy = state.player.day % 365;
@@ -9036,6 +10631,8 @@ const NEWS_EVENTS = [
       duration: 5,
     },
     type: "job",
+    followUpId: "rider_winter",
+    followUpDelay: 7,
   },
   {
     id: "urban_renewal_pilot",
@@ -9210,6 +10807,8 @@ const NEWS_EVENTS = [
       duration: 6,
     },
     type: "investment",
+    followUpId: "chip_domestic_rise",
+    followUpDelay: 5,
   },
   {
     id: "ai_boom",
@@ -9412,6 +11011,31 @@ var NEWS_FOLLOWUP = {
         { category: "贵金属", mul: 1.11 },
       ],
       duration: 2,
+    },
+  },
+  chip_domestic_rise: {
+    headline: "🇨🇳 国产替代加速崛起！国内芯片厂商订单爆满，多家宣布量产突破",
+    effects: {
+      investmentEffect: [
+        { symbols: ["SMIC", "HUAW"], mul: 1.22 },
+        { symbols: ["NVDA", "TSMC"], mul: 0.91 },
+        { industry: "科技", mul: 1.08 },
+      ],
+      jobBonus: ["coding_freelance", "data_analyst"],
+      jobMultiplier: 1.2,
+      duration: 5,
+    },
+  },
+  rider_winter: {
+    headline: "🛵 外卖平台补贴战偃旗息鼓，骑手单价悄然回落，接单量萎缩",
+    effects: {
+      investmentEffect: [
+        { symbols: ["MEIT", "DIDI"], mul: 0.93 },
+        { industry: "消费", mul: 0.97 },
+      ],
+      jobBonus: ["delivery_rider"],
+      jobMultiplier: 0.8,
+      duration: 4,
     },
   },
 };
@@ -12646,10 +14270,12 @@ function getVendingFootfallMod(locKey, state) {
   else if (weather === "snowy") base *= 0.5;
   else if (weather === "sunny") base *= 1.1;
 
-  // 节日修正（节日期间客流量+30%）
+  // 节日修正（普通节日+30%；全民剁手节人流爆炸×2.5）
   if (typeof getCurrentFestival === "function") {
     var festival = getCurrentFestival(state.player.day);
-    if (festival) base *= 1.3;
+    if (festival) {
+      base *= festival.id === "shopping_festival" ? 2.5 : 1.3;
+    }
   }
 
   // 周末修正（day%7=0或6时为"周末"，客流量+20%）
@@ -12986,36 +14612,13 @@ function addStreetExtras(state, actions) {
   // === 街头生存类（任何街头地点都行） ===
   actions.push({
     id: "scavenge_trash",
-    name: "🗑️ 翻垃圾桶找废品",
-    desc: "在巷子里翻垃圾桶找瓶瓶罐罐卖钱。脏但能赚点零花钱。",
-    icon: "🗑️",
-    apCost: 20,
-    payEstimate: "2~9",
+    name: "🗺️ 规划拾荒路线",
+    desc: "选择今天的拾荒区域：城中村小巷(稳)/废品站边缘(中)/工业区(高)/老周专线(⭐)。不同路线收益和风险各异。",
+    icon: "🗺️",
+    apCost: 15,
+    payEstimate: "2~65",
     handler: () => {
-      const st = StateManager.getState();
-      var base = 2 + Math.floor(Math.random() * 8);
-      var bonus = 0;
-      var bonusMsg = "";
-      // 老周好感30解锁：知道好地段，废品多+¥5-12
-      if (st.flags.oldZhouTips) {
-        bonus += 5 + Math.floor(Math.random() * 8);
-        bonusMsg = "（老周教的路线多翻了不少）";
-      }
-      // 老周好感80解锁：高价废品收购渠道，额外溢价
-      if (st.flags.oldZhouChannel) {
-        bonus += 8 + Math.floor(Math.random() * 12);
-        bonusMsg = "（老周的高价渠道又多卖了一点）";
-      }
-      const earned = base + bonus;
-      st.resources.cash += earned;
-      st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
-      st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-      st.resources.totalEarned += earned;
-      StateManager.addMessage(
-        `🗑️ 翻了半天垃圾桶，捡到 ¥${earned}${bonusMsg}，脏兮兮的。`,
-        "success",
-      );
-      consumeAP(20);
+      showScavengeRouteModal();
     },
   });
 
@@ -18775,49 +20378,11 @@ function renderHeader(state) {
   document.getElementById("header-age").textContent = p.age;
   document.getElementById("header-phase").textContent = phaseLabel;
 
-  // 构建轮播数据：现金 → 储蓄(if>0) → 欠村长(if>0) → 欠银行(if>0)
-  var carouselItems = [
-    {
-      label: "💰 现金",
-      value: "¥" + r.cash.toLocaleString(),
-      color: "var(--success)",
-    },
-  ];
-  var bankBalance = r.bankBalance || 0;
-  var villageDebt = r.villageDebt || r.debt || 0;
-  var bankDebt = r.bankDebt || 0;
-  if (bankBalance > 0) {
-    carouselItems.push({
-      label: "🏦 储蓄",
-      value: "¥" + bankBalance.toLocaleString(),
-      color: "#4fc3f7",
-    });
-  }
-  if (villageDebt > 0) {
-    carouselItems.push({
-      label: "🏘️ 欠村长",
-      value: "¥" + villageDebt.toLocaleString(),
-      color: "var(--danger)",
-    });
-  }
-  if (bankDebt > 0) {
-    carouselItems.push({
-      label: "🏦 欠银行",
-      value: "¥" + bankDebt.toLocaleString(),
-      color: "var(--warning)",
-    });
-  }
-  window._cashCarouselData = carouselItems;
-  // 若只有现金则直接显示，不需要轮播
-  if (carouselItems.length === 1) {
-    var labelEl = document.getElementById("header-cash-label");
-    var cashEl = document.getElementById("header-cash");
-    if (labelEl) labelEl.textContent = carouselItems[0].label;
-    if (cashEl) {
-      cashEl.textContent = carouselItems[0].value;
-      cashEl.style.color = carouselItems[0].color;
-    }
-  }
+  // ===== 资金（cash-label区域）：展示现金+储蓄，单资金静态/多资金温和轮播 =====
+  renderFundsHeader(state);
+
+  // ===== 债务：独立区域，单债务闪烁/多债务轮播闪烁 =====
+  renderDebtHeader(state);
 
   // 季节显示
   var seasonEl = document.getElementById("header-season-label");
@@ -18843,29 +20408,234 @@ function renderHeader(state) {
   }
 }
 
-/** 顶部现金/储蓄/债务轮播（页面初始化时调用一次） */
-function initCashCarousel() {
-  if (window._cashCarouselTimer) return; // 防止重复初始化
-  window._cashCarouselData = window._cashCarouselData || [];
-  window._cashCarouselIdx = 0;
-  window._cashCarouselTimer = setInterval(function () {
-    var data = window._cashCarouselData || [];
-    if (data.length <= 1) return; // 只有现金时不轮播
-    window._cashCarouselIdx = (window._cashCarouselIdx + 1) % data.length;
-    var item = data[window._cashCarouselIdx];
-    var labelEl = document.getElementById("header-cash-label");
-    var cashEl = document.getElementById("header-cash");
-    if (labelEl) labelEl.textContent = item.label;
-    if (cashEl) {
-      cashEl.style.opacity = "0";
-      cashEl.style.transition = "opacity 0.3s";
-      setTimeout(function () {
-        cashEl.textContent = item.value;
-        cashEl.style.color = item.color;
-        cashEl.style.opacity = "1";
-      }, 150);
+/**
+ * 资金头部渲染 — 展示现金+储蓄，温和滚动
+ *
+ * 设计参考：
+ * - 大多数 (The Most)：资产负债分栏，资金整洁展示
+ * - 王权 (Reigns)：资源固定独立槽位，互不干扰
+ * - 中国式家长：金钱展示不带警告感，数字干净直接
+ *
+ * 规则：
+ * - 只有现金 → 静态 "💰 ¥X,XXX"
+ * - 现金+储蓄 → 温和轮播（4s切换，纯文本更新，无闪烁）
+ * - 展示风格比债务低调（无闪烁、无脉冲背景）
+ */
+function renderFundsHeader(state) {
+  var labelEl = document.getElementById("header-cash-label");
+  var valueEl = document.getElementById("header-cash");
+  if (!labelEl || !valueEl) return;
+
+  var r = state.resources;
+  var cash = r.cash || 0;
+  var bankBalance = r.bankBalance || 0;
+
+  // 收集资金条目
+  var fundItems = [];
+  fundItems.push({
+    label: "💰",
+    value: "¥" + cash.toLocaleString(),
+    color: "var(--success)",
+  });
+  if (bankBalance > 0) {
+    fundItems.push({
+      label: "🏦",
+      value: "¥" + bankBalance.toLocaleString(),
+      color: "#4fc3f7",
+    });
+  }
+
+  if (fundItems.length === 1) {
+    // === 只有现金：静态展示（无动画） ===
+    if (window._fundsCarouselTimer) {
+      clearInterval(window._fundsCarouselTimer);
+      window._fundsCarouselTimer = null;
     }
-  }, 4000);
+    labelEl.textContent = fundItems[0].label;
+    valueEl.textContent = fundItems[0].value;
+    valueEl.style.color = fundItems[0].color;
+    valueEl.style.animation = "";
+    valueEl.className = "value cash";
+  } else {
+    // === 现金+储蓄：温和轮播（每4s，纯文字切换，无闪烁） ===
+    var areaEl = document.getElementById("header-cash-area");
+    if (areaEl) {
+      areaEl.className = "header-stat";
+      areaEl.style.cssText = "cursor: default; min-width: 100px;";
+    }
+
+    var fundCarouselData = fundItems.map(function (f) {
+      return { label: f.label, value: f.value, color: f.color };
+    });
+
+    if (!window._fundsCarouselTimer) {
+      // 首次启动
+      window._fundsCarouselIdx = 0;
+      var f0 = fundCarouselData[0];
+      labelEl.textContent = f0.label;
+      valueEl.textContent = f0.value;
+      valueEl.style.color = f0.color;
+      valueEl.className = "value cash";
+
+      window._fundsCarouselData = fundCarouselData;
+      window._fundsCarouselTimer = setInterval(function () {
+        var fdata = window._fundsCarouselData;
+        if (!fdata || fdata.length <= 1) return;
+        window._fundsCarouselIdx =
+          (window._fundsCarouselIdx + 1) % fdata.length;
+        var fnext = fdata[window._fundsCarouselIdx];
+        var fl = document.getElementById("header-cash-label");
+        var fv = document.getElementById("header-cash");
+        if (fl) fl.textContent = fnext.label;
+        if (fv) {
+          fv.textContent = fnext.value;
+          fv.style.color = fnext.color;
+          fv.className = "value cash";
+        }
+      }, 4000);
+    } else {
+      // 定时器已存在，刷新当前项（金额可能变化）
+      var idx2 = window._fundsCarouselIdx || 0;
+      if (fundCarouselData[idx2]) {
+        var fcur = fundCarouselData[idx2];
+        labelEl.textContent = fcur.label;
+        valueEl.textContent = fcur.value;
+        valueEl.style.color = fcur.color;
+        valueEl.className = "value cash";
+      }
+      window._fundsCarouselData = fundCarouselData;
+    }
+  }
+}
+
+/**
+ * 债务头部渲染 — 现金和债务彻底分离，独立槽位
+ *
+ * 设计参考：
+ * - 北京浮生记：债务红色独立警示，不混在资金栏
+ * - 大多数 (The Most)：资产负债分栏，债务用醒目警示色
+ * - 王权 (Reigns)：每种资源固定独立槽位，互不干扰
+ * - 中国式家长：面子/金钱分占不同视觉区域
+ *
+ * 规则：
+ * - 无债务 → 隐藏
+ * - 单种债务 → 静态闪烁（debt-blink）
+ * - 多种债务 → 轮播（3s切换）+ 每项闪烁
+ */
+function renderDebtHeader(state) {
+  var debtArea = document.getElementById("header-debt-area");
+  var debtLabel = document.getElementById("header-debt-label");
+  var debtValue = document.getElementById("header-debt");
+  if (!debtArea || !debtLabel || !debtValue) return;
+
+  var r = state.resources;
+  var villageDebt = r.villageDebt || r.debt || 0;
+  var bankDebt = r.bankDebt || 0;
+
+  // 收集非零债务
+  var debtItems = [];
+  if (villageDebt > 0) {
+    debtItems.push({
+      label: "🏘️ 欠村长",
+      value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (bankDebt > 0) {
+    debtItems.push({
+      label: "🏦 欠银行",
+      value: "¥" + bankDebt.toLocaleString(),
+      color: "var(--warning)",
+    });
+  }
+
+  if (debtItems.length === 0) {
+    // 无债务 → 隐藏区块，清除计时器
+    debtArea.style.display = "none";
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    debtArea.className = "header-stat";
+    return;
+  }
+
+  // 有债务 → 显示
+  debtArea.style.display = "";
+
+  if (debtItems.length === 1) {
+    // === 只有一种债务：静态显示 + 闪烁 ===
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    var item = debtItems[0];
+    debtLabel.textContent = item.label;
+    debtValue.textContent = item.value;
+    debtValue.style.color = item.color;
+    debtValue.className = "value debt single-debt-blink";
+    debtArea.className = "header-stat header-debt-active";
+  } else {
+    // === 多种债务：轮播（3s 切换）+ 每项闪烁 ===
+    debtArea.className = "header-stat header-debt-carousel-active";
+    var debtCarouselData = debtItems.map(function (d) {
+      return { label: d.label, value: d.value, color: d.color };
+    });
+
+    if (!window._debtCarouselTimer) {
+      // 首次启动
+      window._debtCarouselIdx = 0;
+      var first = debtCarouselData[0];
+      debtLabel.textContent = first.label;
+      debtValue.textContent = first.value;
+      debtValue.style.color = first.color;
+      debtValue.className = "value debt carousel-debt-blink debt-fade-in";
+      setTimeout(function () {
+        var dv = document.getElementById("header-debt");
+        if (dv) dv.className = "value debt carousel-debt-blink";
+      }, 400);
+
+      window._debtCarouselData = debtCarouselData;
+      window._debtCarouselTimer = setInterval(function () {
+        var data = window._debtCarouselData;
+        if (!data || data.length <= 1) return;
+        window._debtCarouselIdx = (window._debtCarouselIdx + 1) % data.length;
+        var next = data[window._debtCarouselIdx];
+        var dl = document.getElementById("header-debt-label");
+        var dv = document.getElementById("header-debt");
+        if (dl) dl.textContent = next.label;
+        if (dv) {
+          dv.textContent = next.value;
+          dv.style.color = next.color;
+          dv.className = "value debt carousel-debt-blink debt-fade-in";
+          setTimeout(function () {
+            var dv2 = document.getElementById("header-debt");
+            if (dv2) dv2.className = "value debt carousel-debt-blink";
+          }, 400);
+        }
+      }, 3000);
+    } else {
+      // 定时器已存在，刷新当前显示项（金额可能变化）
+      var idx = window._debtCarouselIdx || 0;
+      if (debtCarouselData[idx]) {
+        var cur = debtCarouselData[idx];
+        debtLabel.textContent = cur.label;
+        debtValue.textContent = cur.value;
+        debtValue.style.color = cur.color;
+        debtValue.className = "value debt carousel-debt-blink";
+      }
+      window._debtCarouselData = debtCarouselData;
+    }
+  }
+}
+
+/**
+ * 资金展示初始化（原现金轮播 → 现资金展示）
+ * 由 renderHeader → renderFundsHeader / renderDebtHeader 自动处理；
+ * 此函数保留仅用于向后兼容 main.js 的调用。
+ */
+function initCashCarousel() {
+  // 债务展示已在 renderDebtHeader 中自动初始化，无需额外操作
 }
 
 // ====== Sidebar 渲染 ======
@@ -19393,6 +21163,12 @@ function renderCurrentTab(state) {
       break;
     case "growth":
       renderGrowthTab(state, area);
+      break;
+    case "wiki":
+      if (typeof renderWikiTab === "function") renderWikiTab(state, area);
+      else
+        area.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">📖 百科系统加载中...</p>';
       break;
     default:
       area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
@@ -22817,6 +24593,288 @@ function showItemShopModal(locationId) {
   });
   document.body.appendChild(overlay);
 }
+
+// ====== 拾荒路线规划模态框 ======
+function showScavengeRouteModal() {
+  var st = StateManager.getState();
+  var loc = st.trade.currentLocation;
+  var day = st.player.day;
+  var ap = st.player.actionPoints;
+
+  var ROUTES = [
+    {
+      id: "alley",
+      name: "🏘️ 城中村小巷",
+      desc: "熟悉的街巷垃圾箱，稳定但没惊喜。有老周指路时收益更好。",
+      ap: 15,
+      yieldText: "¥2~9",
+      risk: "低",
+      riskColor: "#4a9e5c",
+      available: true,
+      lockHint: null,
+    },
+    {
+      id: "depot",
+      name: "🏭 废品收购站边缘",
+      desc: "收购站后巷偶有未收走的好货，需要爬围栏进去翻找。",
+      ap: 22,
+      yieldText: "¥8~22",
+      risk: "中",
+      riskColor: "#e6a817",
+      available: day >= 8 || st.player.physique >= 12,
+      lockHint: "第8天后 或 体质≥12",
+    },
+    {
+      id: "factory",
+      name: "🔧 工业区废料场",
+      desc: "工厂废弃零件和边角料，价值不低。需要熟悉工业区地形。",
+      ap: 30,
+      yieldText: "¥15~45",
+      risk: "中高",
+      riskColor: "#e67e22",
+      available: loc === "factoryZone" || !!st.flags.oldZhouTips,
+      lockHint: "在工业区 或 老周(好感≥30)指路",
+    },
+    {
+      id: "zhou_channel",
+      name: "⭐ 老周专线",
+      desc: "老周的内部渠道，废品站朋友提前留好货，稳定高收益。",
+      ap: 25,
+      yieldText: "¥25~65",
+      risk: "低",
+      riskColor: "#4a9e5c",
+      available: !!st.flags.oldZhouChannel,
+      lockHint: "老周好感≥80（开通高价渠道）",
+    },
+  ];
+
+  var overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  var box = document.createElement("div");
+  box.className = "modal-box";
+  box.style.maxWidth = "460px";
+
+  var title = document.createElement("h2");
+  title.textContent = "🗺️ 规划拾荒路线";
+  box.appendChild(title);
+
+  var hint = document.createElement("div");
+  hint.style.cssText =
+    "font-size:11px;color:var(--text-muted);margin-bottom:12px;";
+  hint.textContent =
+    "当前行动力：⚡" + ap + " | 选择路线，不同区域收益和风险各异";
+  box.appendChild(hint);
+
+  var cardContainer = document.createElement("div");
+  cardContainer.style.cssText =
+    "display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto;";
+
+  ROUTES.forEach(function (r) {
+    var apInsufficient = ap < r.ap;
+    var locked = !r.available;
+    var disabled = locked || apInsufficient;
+
+    var card = document.createElement("div");
+    card.style.cssText =
+      "border:1px solid " +
+      (disabled ? "#e0e0e0" : "var(--border)") +
+      ";border-radius:8px;padding:10px 12px;" +
+      "background:" +
+      (disabled ? "#f8f8f8" : "#fff") +
+      ";opacity:" +
+      (disabled ? "0.65" : "1");
+
+    var headerRow = document.createElement("div");
+    headerRow.style.cssText =
+      "display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;";
+
+    var nameEl = document.createElement("strong");
+    nameEl.style.fontSize = "13px";
+    nameEl.textContent = r.name;
+    headerRow.appendChild(nameEl);
+
+    var apBadge = document.createElement("span");
+    apBadge.style.cssText =
+      "background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;";
+    apBadge.textContent = "⚡" + r.ap + "AP";
+    card.appendChild(headerRow);
+    headerRow.appendChild(apBadge);
+
+    var descEl = document.createElement("div");
+    descEl.style.cssText =
+      "color:var(--text-secondary);font-size:12px;margin-bottom:6px;line-height:1.4;";
+    descEl.textContent = r.desc;
+    card.appendChild(descEl);
+
+    var statsRow = document.createElement("div");
+    statsRow.style.cssText =
+      "display:flex;gap:16px;font-size:12px;margin-bottom:6px;";
+    var yieldSpan = document.createElement("span");
+    yieldSpan.textContent = "💰 " + r.yieldText;
+    var riskSpan = document.createElement("span");
+    riskSpan.style.color = r.riskColor;
+    riskSpan.textContent = "⚠️ 风险：" + r.risk;
+    statsRow.appendChild(yieldSpan);
+    statsRow.appendChild(riskSpan);
+    card.appendChild(statsRow);
+
+    if (locked && r.lockHint) {
+      var lockEl = document.createElement("div");
+      lockEl.style.cssText = "color:#e74c3c;font-size:11px;margin-bottom:6px;";
+      lockEl.textContent = "🔒 需要：" + r.lockHint;
+      card.appendChild(lockEl);
+    } else if (apInsufficient) {
+      var apWarnEl = document.createElement("div");
+      apWarnEl.style.cssText =
+        "color:#e67e22;font-size:11px;margin-bottom:6px;";
+      apWarnEl.textContent = "⚡ 行动力不足（需要 " + r.ap + "AP）";
+      card.appendChild(apWarnEl);
+    }
+
+    var btn = document.createElement("button");
+    btn.className = "btn btn-sm" + (disabled ? "" : " btn-primary");
+    btn.style.cssText =
+      "width:100%;margin-top:2px;" +
+      (disabled ? "pointer-events:none;cursor:not-allowed;" : "");
+    btn.disabled = disabled;
+    btn.textContent = disabled
+      ? locked
+        ? "🔒 未解锁"
+        : "⚡ AP不足"
+      : "走这条路 →";
+
+    if (!disabled) {
+      (function (routeId) {
+        btn.addEventListener("click", function () {
+          document.body.removeChild(overlay);
+          executeScavengeRoute(routeId);
+        });
+      })(r.id);
+    }
+
+    card.appendChild(btn);
+    cardContainer.appendChild(card);
+  });
+
+  box.appendChild(cardContainer);
+
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn btn-sm";
+  cancelBtn.style.cssText = "margin-top:12px;width:100%;";
+  cancelBtn.textContent = "取消";
+  cancelBtn.addEventListener("click", function () {
+    document.body.removeChild(overlay);
+  });
+  box.appendChild(cancelBtn);
+
+  overlay.appendChild(box);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+  document.body.appendChild(overlay);
+}
+
+function executeScavengeRoute(routeId) {
+  var st = StateManager.getState();
+  var earned = 0;
+  var msg = "";
+  var hygieneCost = 0;
+  var fatigueCost = 0;
+  var apCost = 0;
+  var msgType = "success";
+
+  if (routeId === "alley") {
+    apCost = 15;
+    var base = 2 + Math.floor(Math.random() * 8);
+    var bonus = 0;
+    var bonusNote = "";
+    if (st.flags.oldZhouTips) {
+      bonus += 5 + Math.floor(Math.random() * 8);
+      bonusNote = "（老周教的路线多翻了些）";
+    }
+    if (st.flags.oldZhouChannel) {
+      bonus += 8 + Math.floor(Math.random() * 12);
+      bonusNote = "（老周渠道内部价又多赚了点）";
+    }
+    // 新人保护
+    if (st.player.day <= 15) bonus += 5;
+    earned = base + bonus;
+    hygieneCost = 5;
+    fatigueCost = 5;
+    msg =
+      "🏘️ 城中村小巷翻了一圈，捡到瓶瓶罐罐卖了 ¥" +
+      earned +
+      bonusNote +
+      "，手脏兮兮的。";
+  } else if (routeId === "depot") {
+    apCost = 22;
+    var base2 = 8 + Math.floor(Math.random() * 15);
+    earned = base2;
+    hygieneCost = 8;
+    fatigueCost = 8;
+    if (Math.random() < 0.3) {
+      var extra = 8 + Math.floor(Math.random() * 11);
+      earned += extra;
+      msg =
+        "🏭 废品收购站边缘翻到好货！废料多卖了 ¥" +
+        extra +
+        "，一共 ¥" +
+        earned +
+        "。爬围栏费了点力气。";
+    } else {
+      msg = "🏭 在废品收购站边缘转了一圈，收获 ¥" + earned + "，今天一般般。";
+    }
+    if (Math.random() < 0.08) {
+      var loss = Math.min(5, earned);
+      earned -= loss;
+      st.needs.health = Math.max(0, (st.needs.health || 100) - 3);
+      st.status.fame = Math.max(0, st.status.fame - 1);
+      msg += " 被城管看见了，追赶中丢了 ¥" + loss + "。";
+      msgType = "warning";
+    }
+  } else if (routeId === "factory") {
+    apCost = 30;
+    var base3 = 15 + Math.floor(Math.random() * 31);
+    earned = base3;
+    hygieneCost = 10;
+    fatigueCost = 12;
+    if (Math.random() < 0.4) {
+      var extra2 = 10 + Math.floor(Math.random() * 16);
+      earned += extra2;
+      msg =
+        "🔧 工业区废料场收获满满！废金属多卖了 ¥" +
+        extra2 +
+        "，到手 ¥" +
+        earned +
+        "。";
+    } else {
+      msg = "🔧 工业区废料场跑了一圈，卖了 ¥" + earned + "，今天废料不多。";
+    }
+    if (Math.random() < 0.15) {
+      earned = Math.floor(earned * 0.5);
+      fatigueCost += 10;
+      msg += " 被保安发现吓跑了，东西丢了一半，到手 ¥" + earned + "。";
+      msgType = "warning";
+    }
+  } else if (routeId === "zhou_channel") {
+    apCost = 25;
+    earned = 25 + Math.floor(Math.random() * 41);
+    hygieneCost = 5;
+    fatigueCost = 6;
+    msg =
+      "⭐ 按老周的专线走了一趟，废品站朋友给了内部价，卖了 ¥" +
+      earned +
+      "，稳稳的！";
+  }
+
+  st.resources.cash += earned;
+  st.resources.totalEarned += earned;
+  st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
+  st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
+
+  StateManager.addMessage(msg, msgType);
+  consumeAP(apCost);
+}
 </script>
     <script>/**
  * 新手引导系统
@@ -23390,6 +25448,2280 @@ if (typeof window !== "undefined") {
     checkVictoryPaths: checkVictoryPaths,
     triggerVictory: triggerVictory,
   });
+}
+</script>
+    <script>/**
+ * 游戏百科 (Wiki) 系统
+ *
+ * 设计参考：
+ * - 《文明 VI》Civilopedia：左侧分类树 + 右侧详情，跨条目跳转
+ * - 《Stardew Valley》Collection：已发现/未发现状态徽章
+ * - 《Terraria》Bestiary：图鉴形式
+ *
+ * 一站式游戏内查询：地点/工作/商品/装备/技能/证书/NPC/节日/天气/
+ * 投资/系统机制/世界叙事/胜利路线，13 个分类
+ *
+ * 模块对外暴露：
+ *   - WIKI_CATEGORIES, _wikiState
+ *   - renderWikiTab(state, parent)
+ *   - wikiNavigate(catId, entryId)  ← 供其他模块跳转用
+ */
+
+// ================================================================
+//  模块级状态（保留 Tab 切换之间的导航位置）
+// ================================================================
+var _wikiState = {
+  catId: "locations",
+  entryId: null,
+  query: "",
+};
+
+// ================================================================
+//  工具函数
+// ================================================================
+function _wkE(s) {
+  if (s === undefined || s === null) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// 数值估算：调用 payCalc 取样若干次得到 min/max
+function _wkSamplePay(job, state, n) {
+  if (typeof job.payCalc !== "function") return null;
+  var min = Infinity;
+  var max = -Infinity;
+  for (var i = 0; i < (n || 7); i++) {
+    try {
+      var v = job.payCalc(state) || 0;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    } catch (e) {
+      return null;
+    }
+  }
+  if (min === Infinity) return null;
+  return { min: Math.floor(min), max: Math.floor(max) };
+}
+
+// 跨模块跳转工具（暴露为全局）
+function wikiNavigate(catId, entryId) {
+  _wikiState.catId = catId;
+  _wikiState.entryId = entryId || null;
+  _wikiState.query = "";
+  if (typeof switchTab === "function") {
+    switchTab("wiki");
+    return;
+  }
+  if (typeof renderAll === "function") renderAll();
+}
+
+function _wikiBackToList() {
+  _wikiState.entryId = null;
+  _wikiState.query = "";
+  if (typeof renderAll === "function") renderAll();
+}
+
+function _wikiSwitchCat(catId) {
+  _wikiState.catId = catId;
+  _wikiState.entryId = null;
+  if (typeof renderAll === "function") renderAll();
+}
+
+function _wikiSetQuery(q) {
+  _wikiState.query = q || "";
+  _wikiState.entryId = null;
+  if (typeof renderAll === "function") renderAll();
+}
+
+// ================================================================
+//  分类列表数据
+// ================================================================
+var WIKI_CATEGORIES = [
+  { id: "locations", name: "地点", icon: "📍" },
+  { id: "jobs", name: "工作", icon: "💼" },
+  { id: "goods", name: "商品", icon: "📦" },
+  { id: "items", name: "装备", icon: "🎒" },
+  { id: "skills", name: "技能", icon: "📚" },
+  { id: "certs", name: "证书", icon: "📜" },
+  { id: "npcs", name: "居民", icon: "👥" },
+  { id: "festivals", name: "节日", icon: "🎭" },
+  { id: "weather", name: "天气", icon: "🌤️" },
+  { id: "invest", name: "投资", icon: "💰" },
+  { id: "mechanics", name: "系统", icon: "💡" },
+  { id: "narrative", name: "叙事", icon: "🌍" },
+  { id: "victory", name: "成就/胜利", icon: "🏆" },
+];
+
+// 列表条目（{id, name, icon, brief}）
+function _wikiListEntries(catId, state) {
+  var out = [];
+  switch (catId) {
+    case "locations":
+      if (typeof LOCATIONS !== "undefined") {
+        for (var k in LOCATIONS) {
+          var loc = LOCATIONS[k];
+          out.push({ id: loc.id, name: loc.name, icon: "📍", brief: loc.desc });
+        }
+      }
+      break;
+    case "jobs":
+      if (typeof STREET_JOBS !== "undefined") {
+        for (var i = 0; i < STREET_JOBS.length; i++) {
+          var j = STREET_JOBS[i];
+          out.push({
+            id: j.id,
+            name: j.name,
+            icon: j.icon || "💼",
+            brief: j.desc,
+          });
+        }
+      }
+      break;
+    case "goods":
+      if (typeof GOODS !== "undefined") {
+        for (var i2 = 0; i2 < GOODS.length; i2++) {
+          var g = GOODS[i2];
+          out.push({
+            id: g.id,
+            name: g.name,
+            icon: "📦",
+            brief:
+              "基础价 ¥" +
+              g.basePrice +
+              "/" +
+              g.unit +
+              " · " +
+              _goodCatLabel(g.category),
+          });
+        }
+      }
+      break;
+    case "items":
+      if (typeof ITEMS !== "undefined") {
+        for (var i3 = 0; i3 < ITEMS.length; i3++) {
+          var it = ITEMS[i3];
+          out.push({
+            id: it.id,
+            name: it.name,
+            icon: it.icon || "🎒",
+            brief: it.desc + " · ¥" + it.price,
+          });
+        }
+      }
+      break;
+    case "skills":
+      var skMap = [
+        { id: "cooking", name: "烹饪" },
+        { id: "sales", name: "销售" },
+        { id: "repair", name: "维修" },
+        { id: "english", name: "英语" },
+        { id: "driving", name: "驾驶" },
+        { id: "coding", name: "编程" },
+        { id: "management", name: "管理" },
+        { id: "accounting", name: "会计" },
+        { id: "electrician", name: "电工" },
+        { id: "welding", name: "焊接" },
+      ];
+      for (var i4 = 0; i4 < skMap.length; i4++) {
+        var sk = skMap[i4];
+        var lvl =
+          state && state.skills && state.skills[sk.id]
+            ? state.skills[sk.id].level
+            : 0;
+        out.push({
+          id: sk.id,
+          name: sk.name,
+          icon: "📚",
+          brief: "当前 Lv." + lvl + " · 衍生加成与解锁工作",
+        });
+      }
+      break;
+    case "certs":
+      if (typeof CERTIFICATES !== "undefined") {
+        for (var i5 = 0; i5 < CERTIFICATES.length; i5++) {
+          var c = CERTIFICATES[i5];
+          out.push({
+            id: c.id,
+            name: c.name,
+            icon: "📜",
+            brief: c.desc,
+          });
+        }
+      }
+      break;
+    case "npcs":
+      if (typeof NPCS !== "undefined") {
+        for (var i6 = 0; i6 < NPCS.length; i6++) {
+          var n = NPCS[i6];
+          out.push({
+            id: n.id,
+            name: n.name,
+            icon: "👤",
+            brief: n.role + " · " + (n.desc || ""),
+          });
+        }
+      }
+      break;
+    case "festivals":
+      if (typeof FESTIVALS !== "undefined") {
+        for (var i7 = 0; i7 < FESTIVALS.length; i7++) {
+          var f = FESTIVALS[i7];
+          out.push({
+            id: f.id,
+            name: f.name,
+            icon: f.icon || "🎭",
+            brief:
+              "Day " +
+              f.startDay +
+              " · " +
+              f.duration +
+              "天 · " +
+              (f.desc || ""),
+          });
+        }
+      }
+      break;
+    case "weather":
+      if (typeof WEATHER_TYPES !== "undefined") {
+        for (var i8 = 0; i8 < WEATHER_TYPES.length; i8++) {
+          var w = WEATHER_TYPES[i8];
+          out.push({
+            id: w.id,
+            name: w.name,
+            icon: w.icon || "🌤️",
+            brief:
+              "室外×" +
+              w.outdoorMod.toFixed(2) +
+              " · 心情" +
+              (w.happinessBonus >= 0 ? "+" : "") +
+              w.happinessBonus,
+          });
+        }
+      }
+      out.push({
+        id: "season",
+        name: "四季节奏",
+        icon: "🍃",
+        brief: "春夏秋冬：影响节日时序与天气分布",
+      });
+      break;
+    case "invest":
+      out.push({
+        id: "stocks",
+        name: "股票",
+        icon: "📈",
+        brief: "30 只本地化幽默股票",
+      });
+      out.push({
+        id: "btc",
+        name: "虚拟币",
+        icon: "💎",
+        brief: "20 种主流币 + 恐惧贪婪指数",
+      });
+      out.push({
+        id: "precious",
+        name: "贵金属",
+        icon: "🥇",
+        brief: "8 种：黄金/白银/铂金/钯金/铜/镍/铝/锂",
+      });
+      out.push({
+        id: "futures",
+        name: "期货",
+        icon: "🛢️",
+        brief: "16 种商品期货",
+      });
+      out.push({
+        id: "funds",
+        name: "基金",
+        icon: "📊",
+        brief: "12 种 ETF/固收产品",
+      });
+      out.push({
+        id: "property",
+        name: "房产",
+        icon: "🏠",
+        brief: "20 处可投/可住房产",
+      });
+      out.push({
+        id: "car",
+        name: "汽车",
+        icon: "🚗",
+        brief: "20 款代步/收藏汽车",
+      });
+      out.push({
+        id: "bank",
+        name: "银行储蓄/借贷",
+        icon: "🏦",
+        brief: "存款利息 vs 村长/银行欠款日息",
+      });
+      break;
+    case "mechanics":
+      out.push({
+        id: "ap",
+        name: "行动力 (AP)",
+        icon: "⚡",
+        brief: "100 AP/天，倍率系统，低 AP 预警",
+      });
+      out.push({
+        id: "stat_link",
+        name: "状态互联",
+        icon: "🔗",
+        brief: "饥饿/疲劳/心情多米诺，AP 倍率",
+      });
+      out.push({
+        id: "synergy",
+        name: "技能协同",
+        icon: "🔀",
+        brief: "6 种组合：餐饮/工匠/海外外包/跑单/商务/外贸",
+      });
+      out.push({
+        id: "streak",
+        name: "熟练工连击",
+        icon: "🔥",
+        brief: "连续 3/5/7 天同一工作 +5%/+10%/+15%",
+      });
+      out.push({
+        id: "city_pulse",
+        name: "城市脉搏",
+        icon: "🌆",
+        brief: "新闻 → 地点客流/工作收入实时联动",
+      });
+      out.push({
+        id: "intel",
+        name: "街头情报网",
+        icon: "📡",
+        brief: "高好感 NPC 提前透露新闻",
+      });
+      out.push({
+        id: "history",
+        name: "历史声誉",
+        icon: "📜",
+        brief: "道德选择 7 种 flag 长期影响",
+      });
+      out.push({
+        id: "edu",
+        name: "学历系统",
+        icon: "🎓",
+        brief: "大专 → 本科 → 研究生",
+      });
+      out.push({
+        id: "dream",
+        name: "梦想追踪",
+        icon: "💭",
+        brief: "5 类目标 × 5 里程碑",
+      });
+      out.push({
+        id: "festival_link",
+        name: "节日联动",
+        icon: "🎉",
+        brief: "价格修正/限定工作/NPC 台词",
+      });
+      out.push({
+        id: "weather_link",
+        name: "天气联动",
+        icon: "☂️",
+        brief: "室外工作/AP/心情",
+      });
+      out.push({
+        id: "npc_affinity",
+        name: "NPC 好感",
+        icon: "💕",
+        brief: "30/60/80 阈值奖励 + 委托 + 深度任务",
+      });
+      out.push({
+        id: "vending_footfall",
+        name: "摆摊客流",
+        icon: "🛒",
+        brief: "位置×天气×节日×周末综合修正",
+      });
+      out.push({
+        id: "fame_vip",
+        name: "名气 VIP",
+        icon: "⭐",
+        brief: "高名气解锁 5 种特殊行动",
+      });
+      break;
+    case "narrative":
+      out.push({
+        id: "news_4layer",
+        name: "四层新闻生态",
+        icon: "📰",
+        brief: "L1 国际/L2 国内/L3 城市/L4 街头",
+      });
+      out.push({
+        id: "news_cascade",
+        name: "新闻级联",
+        icon: "🪜",
+        brief: "L1 → L2 滚雪球（10 个事件）",
+      });
+      out.push({
+        id: "world_events",
+        name: "有梗世界事件",
+        icon: "🎬",
+        brief: "5 条事件链（补贴大战/收购反噬/黑马冲击/创始人回购/政策套利）",
+      });
+      out.push({
+        id: "moral",
+        name: "道德困境",
+        icon: "⚖️",
+        brief: "无绝对正确选项，长期影响声誉",
+      });
+      out.push({
+        id: "ng_plus",
+        name: "新游戏+ 继承",
+        icon: "🆕",
+        brief: "多周目积累：起始现金/技能/属性",
+      });
+      break;
+    case "victory":
+      out.push({
+        id: "v_p10",
+        name: "晋升 P10",
+        icon: "🏢",
+        brief: "成为合伙人，职场之巅",
+      });
+      out.push({
+        id: "v_wealth",
+        name: "财务自由",
+        icon: "💸",
+        brief: "累计 ¥2,000 万",
+      });
+      out.push({
+        id: "v_business",
+        name: "经商大亨",
+        icon: "🏪",
+        brief: "经商利润 ¥50 万",
+      });
+      out.push({
+        id: "v_fame",
+        name: "城市名人",
+        icon: "🌟",
+        brief: "名气达到 100",
+      });
+      out.push({
+        id: "v_skill",
+        name: "技能大师",
+        icon: "🥷",
+        brief: "全部 10 项技能 80 级",
+      });
+      out.push({
+        id: "v_invest",
+        name: "投资天才",
+        icon: "💎",
+        brief: "投资资产 ¥1,000 万",
+      });
+      out.push({
+        id: "fail",
+        name: "失败条件",
+        icon: "💀",
+        brief: "健康/债务/发量/尊严/绩效/年龄危机",
+      });
+      out.push({
+        id: "achievements",
+        name: "🏅 成就一览（22 个）",
+        icon: "🏅",
+        brief: "前往成就 Tab 查看完整成就",
+      });
+      break;
+  }
+  return out;
+}
+
+// 商品类别中文
+function _goodCatLabel(c) {
+  return (
+    {
+      daily: "日用",
+      food: "食品",
+      luxury: "奢侈",
+      clothing: "服装",
+      electronics: "电子",
+      scrap: "废品",
+    }[c] || c
+  );
+}
+
+// ================================================================
+//  主入口：渲染百科 Tab
+// ================================================================
+function renderWikiTab(state, parent) {
+  var box = document.createElement("div");
+  box.className = "wiki-tab";
+
+  // 顶部搜索 + 标题
+  box.innerHTML =
+    '<div class="wiki-header">' +
+    '<h2 style="margin:0;">📖 城市浮生记 · 游戏百科</h2>' +
+    '<p style="margin:6px 0 0;color:var(--text-muted);font-size:12px;">' +
+    "一站式查询：地点 / 工作 / 商品 / 装备 / 技能 / 证书 / NPC / 节日 / 天气 / 投资 / 系统机制 / 世界叙事 / 胜利路线" +
+    "</p>" +
+    '<div class="wiki-search">' +
+    '<input type="text" id="wiki-search-input" placeholder="🔍 搜索条目（名称/描述）..." value="' +
+    _wkE(_wikiState.query) +
+    '" />' +
+    (_wikiState.query
+      ? '<button class="wiki-clear" type="button">✕ 清除</button>'
+      : "") +
+    "</div>" +
+    "</div>";
+
+  // 主布局：左侧导航 + 右侧内容
+  var layout = document.createElement("div");
+  layout.className = "wiki-layout";
+
+  // ----- 左侧分类导航 -----
+  var nav = document.createElement("aside");
+  nav.className = "wiki-nav";
+  for (var i = 0; i < WIKI_CATEGORIES.length; i++) {
+    var c = WIKI_CATEGORIES[i];
+    var entries = _wikiListEntries(c.id, state);
+    var btn = document.createElement("button");
+    btn.className = "wiki-nav-btn";
+    if (c.id === _wikiState.catId && !_wikiState.query)
+      btn.className += " active";
+    btn.dataset.cat = c.id;
+    btn.innerHTML =
+      '<span class="wiki-nav-ico">' +
+      c.icon +
+      "</span>" +
+      '<span class="wiki-nav-name">' +
+      _wkE(c.name) +
+      "</span>" +
+      '<span class="wiki-nav-count">' +
+      entries.length +
+      "</span>";
+    btn.addEventListener("click", _wikiOnNavClick);
+    nav.appendChild(btn);
+  }
+  layout.appendChild(nav);
+
+  // ----- 右侧内容 -----
+  var content = document.createElement("section");
+  content.className = "wiki-content";
+
+  if (_wikiState.query) {
+    _wikiRenderSearchResults(state, content);
+  } else if (_wikiState.entryId) {
+    _wikiRenderDetail(state, content);
+  } else {
+    _wikiRenderEntryList(state, content);
+  }
+  layout.appendChild(content);
+
+  box.appendChild(layout);
+  parent.appendChild(box);
+
+  // 绑定搜索输入框（debounce 简易实现）
+  var input = box.querySelector("#wiki-search-input");
+  if (input) {
+    var timer = null;
+    input.addEventListener("input", function (e) {
+      var v = e.target.value;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(function () {
+        _wikiSetQuery(v);
+      }, 250);
+    });
+  }
+  var clr = box.querySelector(".wiki-clear");
+  if (clr)
+    clr.addEventListener("click", function () {
+      _wikiSetQuery("");
+    });
+}
+
+function _wikiOnNavClick(e) {
+  var btn = e.currentTarget;
+  _wikiSwitchCat(btn.dataset.cat);
+}
+
+// ================================================================
+//  列表视图
+// ================================================================
+function _wikiRenderEntryList(state, parent) {
+  var entries = _wikiListEntries(_wikiState.catId, state);
+  var cat = _wikiFindCat(_wikiState.catId);
+  var hd = document.createElement("div");
+  hd.className = "wiki-list-header";
+  hd.innerHTML =
+    "<h3>" +
+    (cat ? cat.icon + " " + _wkE(cat.name) : "条目") +
+    ' <span class="wiki-count">(' +
+    entries.length +
+    ")</span></h3>";
+  parent.appendChild(hd);
+
+  if (entries.length === 0) {
+    var empty = document.createElement("p");
+    empty.className = "wiki-empty";
+    empty.textContent = "暂无条目";
+    parent.appendChild(empty);
+    return;
+  }
+
+  var list = document.createElement("div");
+  list.className = "wiki-entries";
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var card = document.createElement("article");
+    card.className = "wiki-card";
+    card.dataset.cat = _wikiState.catId;
+    card.dataset.id = e.id;
+    var badge = _wikiStatusBadge(_wikiState.catId, e.id, state);
+    card.innerHTML =
+      '<div class="wiki-card-head">' +
+      '<span class="wiki-card-ico">' +
+      _wkE(e.icon || "•") +
+      "</span>" +
+      "<h4>" +
+      _wkE(e.name) +
+      "</h4>" +
+      (badge
+        ? '<span class="wiki-badge ' +
+          badge.cls +
+          '">' +
+          _wkE(badge.text) +
+          "</span>"
+        : "") +
+      "</div>" +
+      '<p class="wiki-card-brief">' +
+      _wkE(e.brief || "") +
+      "</p>";
+    card.addEventListener("click", _wikiOnCardClick);
+    list.appendChild(card);
+  }
+  parent.appendChild(list);
+}
+
+function _wikiOnCardClick(e) {
+  var card = e.currentTarget;
+  _wikiState.catId = card.dataset.cat;
+  _wikiState.entryId = card.dataset.id;
+  if (typeof renderAll === "function") renderAll();
+}
+
+function _wikiFindCat(id) {
+  for (var i = 0; i < WIKI_CATEGORIES.length; i++)
+    if (WIKI_CATEGORIES[i].id === id) return WIKI_CATEGORIES[i];
+  return null;
+}
+
+// 状态徽章（玩家相对的解锁/获得状态）
+function _wikiStatusBadge(catId, entryId, state) {
+  if (!state) return null;
+  switch (catId) {
+    case "skills":
+      var sk = state.skills && state.skills[entryId];
+      if (sk) return { cls: "ok", text: "Lv." + sk.level };
+      break;
+    case "certs":
+      if (state.certificates && state.certificates.indexOf(entryId) >= 0)
+        return { cls: "ok", text: "✅已获得" };
+      break;
+    case "items":
+      if (state.inventory && state.inventory.items) {
+        for (var i = 0; i < state.inventory.items.length; i++) {
+          if (state.inventory.items[i].id === entryId)
+            return { cls: "ok", text: "✅×" + state.inventory.items[i].qty };
+        }
+      }
+      // 装备槽
+      if (state.inventory && state.inventory.equipment) {
+        for (var sl in state.inventory.equipment) {
+          if (state.inventory.equipment[sl] === entryId)
+            return { cls: "ok", text: "🔱已装备" };
+        }
+      }
+      break;
+    case "npcs":
+      var rel = state.relationships && state.relationships[entryId];
+      if (rel && rel.met) {
+        var aff = rel.affinity || 0;
+        var c =
+          aff >= 70 ? "ok" : aff >= 40 ? "warn" : aff >= 0 ? "info" : "bad";
+        return { cls: c, text: "好感 " + aff };
+      }
+      return { cls: "muted", text: "未结识" };
+    case "locations":
+      if (state.trade && state.trade.currentLocation === entryId)
+        return { cls: "ok", text: "📍当前" };
+      break;
+    case "festivals":
+      if (typeof FESTIVALS !== "undefined" && state.player) {
+        var dayInYear = (state.player.day || 1) % 365;
+        for (var fi = 0; fi < FESTIVALS.length; fi++) {
+          if (FESTIVALS[fi].id !== entryId) continue;
+          var f = FESTIVALS[fi];
+          if (dayInYear >= f.startDay && dayInYear < f.startDay + f.duration)
+            return { cls: "ok", text: "进行中" };
+          var diff = f.startDay - dayInYear;
+          if (diff > 0 && diff <= 30)
+            return { cls: "warn", text: diff + " 天后" };
+        }
+      }
+      break;
+  }
+  return null;
+}
+
+// ================================================================
+//  搜索结果
+// ================================================================
+function _wikiRenderSearchResults(state, parent) {
+  var q = (_wikiState.query || "").trim().toLowerCase();
+  var hd = document.createElement("div");
+  hd.className = "wiki-list-header";
+  hd.innerHTML = "<h3>🔍 搜索结果：" + _wkE(q) + "</h3>";
+  parent.appendChild(hd);
+  if (!q) {
+    parent.appendChild(document.createElement("br"));
+    return;
+  }
+
+  var hits = [];
+  for (var i = 0; i < WIKI_CATEGORIES.length; i++) {
+    var c = WIKI_CATEGORIES[i];
+    var entries = _wikiListEntries(c.id, state);
+    for (var j = 0; j < entries.length; j++) {
+      var e = entries[j];
+      var hay = (e.name + " " + (e.brief || "")).toLowerCase();
+      if (hay.indexOf(q) >= 0) {
+        hits.push({
+          catId: c.id,
+          catName: c.name,
+          catIcon: c.icon,
+          entry: e,
+        });
+      }
+    }
+  }
+
+  if (hits.length === 0) {
+    var p = document.createElement("p");
+    p.className = "wiki-empty";
+    p.textContent = "未找到匹配条目，试试其他关键词。";
+    parent.appendChild(p);
+    return;
+  }
+
+  var list = document.createElement("div");
+  list.className = "wiki-entries";
+  for (var k = 0; k < hits.length; k++) {
+    var h = hits[k];
+    var card = document.createElement("article");
+    card.className = "wiki-card";
+    card.dataset.cat = h.catId;
+    card.dataset.id = h.entry.id;
+    card.innerHTML =
+      '<div class="wiki-card-head">' +
+      '<span class="wiki-card-ico">' +
+      _wkE(h.entry.icon || "•") +
+      "</span>" +
+      "<h4>" +
+      _wkE(h.entry.name) +
+      "</h4>" +
+      '<span class="wiki-badge muted">' +
+      _wkE(h.catIcon + " " + h.catName) +
+      "</span>" +
+      "</div>" +
+      '<p class="wiki-card-brief">' +
+      _wkE(h.entry.brief || "") +
+      "</p>";
+    card.addEventListener("click", _wikiOnCardClick);
+    list.appendChild(card);
+  }
+  parent.appendChild(list);
+}
+
+// ================================================================
+//  详情视图（dispatch）
+// ================================================================
+function _wikiRenderDetail(state, parent) {
+  var detail = document.createElement("div");
+  detail.className = "wiki-detail";
+
+  var backBtn = document.createElement("button");
+  backBtn.className = "wiki-back";
+  backBtn.textContent = "← 返回列表";
+  backBtn.addEventListener("click", _wikiBackToList);
+  detail.appendChild(backBtn);
+
+  var body = document.createElement("div");
+  body.className = "wiki-detail-body";
+
+  var html = "";
+  switch (_wikiState.catId) {
+    case "locations":
+      html = _wikiDetailLocation(state, _wikiState.entryId);
+      break;
+    case "jobs":
+      html = _wikiDetailJob(state, _wikiState.entryId);
+      break;
+    case "goods":
+      html = _wikiDetailGood(state, _wikiState.entryId);
+      break;
+    case "items":
+      html = _wikiDetailItem(state, _wikiState.entryId);
+      break;
+    case "skills":
+      html = _wikiDetailSkill(state, _wikiState.entryId);
+      break;
+    case "certs":
+      html = _wikiDetailCert(state, _wikiState.entryId);
+      break;
+    case "npcs":
+      html = _wikiDetailNpc(state, _wikiState.entryId);
+      break;
+    case "festivals":
+      html = _wikiDetailFestival(state, _wikiState.entryId);
+      break;
+    case "weather":
+      html = _wikiDetailWeather(state, _wikiState.entryId);
+      break;
+    case "invest":
+      html = _wikiDetailInvest(state, _wikiState.entryId);
+      break;
+    case "mechanics":
+      html = _wikiDetailMechanic(state, _wikiState.entryId);
+      break;
+    case "narrative":
+      html = _wikiDetailNarrative(state, _wikiState.entryId);
+      break;
+    case "victory":
+      html = _wikiDetailVictory(state, _wikiState.entryId);
+      break;
+  }
+  body.innerHTML = html || '<p class="wiki-empty">条目不存在</p>';
+  detail.appendChild(body);
+
+  // 绑定 wiki-link 跳转
+  var links = body.querySelectorAll(".wiki-link");
+  for (var i = 0; i < links.length; i++) {
+    links[i].addEventListener("click", function (e) {
+      e.preventDefault();
+      var a = e.currentTarget;
+      wikiNavigate(a.dataset.cat, a.dataset.id);
+    });
+  }
+
+  parent.appendChild(detail);
+}
+
+// 链接生成器：跨条目跳转按钮
+function _wkLink(catId, entryId, label, icon) {
+  return (
+    '<a class="wiki-link" href="#" data-cat="' +
+    _wkE(catId) +
+    '" data-id="' +
+    _wkE(entryId) +
+    '">' +
+    (icon ? _wkE(icon) + " " : "") +
+    _wkE(label) +
+    "</a>"
+  );
+}
+
+// ================================================================
+//  详情：地点
+// ================================================================
+function _wikiDetailLocation(state, id) {
+  if (typeof LOCATIONS === "undefined" || !LOCATIONS[id]) return "";
+  var loc = LOCATIONS[id];
+  var typeLabel =
+    {
+      residential: "居住区",
+      commercial: "商业区",
+      industrial: "工业区",
+      institutional: "机构",
+      corporate: "写字楼",
+      service: "服务",
+      recreation: "休闲",
+      education: "教育",
+    }[loc.type] || loc.type;
+
+  var stars = "";
+  if (typeof getFootfallStars === "function") {
+    try {
+      stars = getFootfallStars(loc.footfall || 1) || "";
+    } catch (e) {}
+  }
+
+  var html =
+    "<h2>📍 " +
+    _wkE(loc.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(loc.desc) +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>地点类型</b>" +
+    _wkE(typeLabel) +
+    "</div>" +
+    "<div><b>基础客流量</b>" +
+    (loc.footfall || 1).toFixed(2) +
+    " " +
+    _wkE(stars) +
+    "</div>" +
+    "<div><b>摆摊提示</b>" +
+    _wkE(loc.vendingNote || "—") +
+    "</div>" +
+    "</div>";
+
+  if (loc.jobs && loc.jobs.length > 0) {
+    html += '<h3>💼 在此可做的工作</h3><ul class="wiki-list">';
+    for (var i = 0; i < loc.jobs.length; i++) {
+      var jid = loc.jobs[i];
+      var job = typeof getJobById === "function" ? getJobById(jid) : null;
+      if (job) {
+        html +=
+          "<li>" +
+          _wkLink("jobs", job.id, job.name, job.icon) +
+          " — " +
+          _wkE((job.desc || "").slice(0, 40)) +
+          "...</li>";
+      } else {
+        html += "<li>" + _wkE(jid) + "</li>";
+      }
+    }
+    html += "</ul>";
+  }
+
+  if (loc.priceMod && Object.keys(loc.priceMod).length > 0) {
+    html +=
+      "<h3>📦 商品价格修正</h3>" +
+      '<table class="wiki-table"><tr><th>商品</th><th>修正</th><th>提示</th></tr>';
+    for (var gid in loc.priceMod) {
+      var mod = loc.priceMod[gid];
+      var good = typeof getGoodById === "function" ? getGoodById(gid) : null;
+      var hint = mod < 0.95 ? "✅适合进货" : mod > 1.1 ? "💰适合卖出" : "—";
+      html +=
+        "<tr><td>" +
+        (good ? _wkLink("goods", good.id, good.name) : _wkE(gid)) +
+        "</td><td>×" +
+        mod.toFixed(2) +
+        "</td><td>" +
+        _wkE(hint) +
+        "</td></tr>";
+    }
+    html += "</table>";
+  }
+
+  if (typeof TRAVEL_GRAPH !== "undefined" && TRAVEL_GRAPH[id]) {
+    html += '<h3>🗺️ 直达地点</h3><div class="wiki-links">';
+    for (var t = 0; t < TRAVEL_GRAPH[id].length; t++) {
+      var nb = LOCATIONS[TRAVEL_GRAPH[id][t]];
+      if (nb) html += _wkLink("locations", nb.id, nb.name, "📍") + " ";
+    }
+    html += "</div>";
+  }
+
+  if (typeof NPCS !== "undefined") {
+    var npcsHere = NPCS.filter(function (n) {
+      return n.location === id;
+    });
+    if (npcsHere.length > 0) {
+      html += '<h3>👥 在此的居民</h3><div class="wiki-links">';
+      for (var n = 0; n < npcsHere.length; n++) {
+        html += _wkLink("npcs", npcsHere[n].id, npcsHere[n].name, "👤") + " ";
+      }
+      html += "</div>";
+    }
+  }
+
+  // 在此可购买的装备
+  if (typeof ITEMS !== "undefined") {
+    var itHere = ITEMS.filter(function (it) {
+      return (it.buyLocations || []).indexOf(id) >= 0;
+    });
+    if (itHere.length > 0) {
+      html += '<h3>🎒 可购买装备</h3><div class="wiki-links">';
+      for (var ih = 0; ih < itHere.length; ih++) {
+        html +=
+          _wkLink("items", itHere[ih].id, itHere[ih].name, itHere[ih].icon) +
+          " ";
+      }
+      html += "</div>";
+    }
+  }
+
+  return html;
+}
+
+// ================================================================
+//  详情：工作
+// ================================================================
+function _wikiDetailJob(state, id) {
+  var job = typeof getJobById === "function" ? getJobById(id) : null;
+  if (!job) return "";
+  var loc = typeof LOCATIONS !== "undefined" ? LOCATIONS[job.location] : null;
+
+  var html =
+    "<h2>" +
+    _wkE(job.icon || "💼") +
+    " " +
+    _wkE(job.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(job.desc) +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>所在地点</b>" +
+    (loc ? _wkLink("locations", loc.id, loc.name) : _wkE(job.location)) +
+    "</div>";
+
+  var pay = state ? _wkSamplePay(job, state, 12) : null;
+  if (pay) {
+    html += "<div><b>当前收入区间</b>¥" + pay.min + " ~ ¥" + pay.max + "</div>";
+  }
+
+  if (job.startupCost) {
+    html += "<div><b>启动成本</b>¥" + job.startupCost + "</div>";
+  }
+
+  if (job.effects) {
+    var apCost = 20;
+    if (job.effects.fatigue)
+      apCost = Math.max(15, Math.min(45, job.effects.fatigue));
+    html += "<div><b>预估 AP</b>⚡" + apCost + "</div>";
+  }
+
+  if (job.risk && (job.risk.injury || job.risk.illness)) {
+    var risks = [];
+    if (job.risk.injury)
+      risks.push("受伤 " + Math.round(job.risk.injury * 100) + "%");
+    if (job.risk.illness)
+      risks.push("生病 " + Math.round(job.risk.illness * 100) + "%");
+    html += "<div><b>风险</b>" + _wkE(risks.join(" · ")) + "</div>";
+  }
+
+  html += "</div>";
+
+  if (job.requirements && Object.keys(job.requirements).length > 0) {
+    html += '<h3>🔒 前置条件</h3><ul class="wiki-list">';
+    var rq = job.requirements;
+    if (rq.minAge) html += "<li>年龄 ≥ " + rq.minAge + "</li>";
+    if (rq.maxAge) html += "<li>年龄 ≤ " + rq.maxAge + "</li>";
+    if (rq.physique) html += "<li>体质 ≥ " + rq.physique + "</li>";
+    if (rq.intelligence) html += "<li>智力 ≥ " + rq.intelligence + "</li>";
+    if (rq.agility) html += "<li>敏捷 ≥ " + rq.agility + "</li>";
+    if (rq.mental) html += "<li>心智 ≥ " + rq.mental + "</li>";
+    var skKeys = [
+      "cooking",
+      "sales",
+      "repair",
+      "english",
+      "driving",
+      "coding",
+      "management",
+      "accounting",
+      "electrician",
+      "welding",
+    ];
+    for (var sk = 0; sk < skKeys.length; sk++) {
+      if (rq[skKeys[sk]])
+        html +=
+          "<li>" +
+          _wkLink("skills", skKeys[sk], _skName(skKeys[sk])) +
+          " ≥ Lv." +
+          rq[skKeys[sk]] +
+          "</li>";
+    }
+    if (rq.certificate)
+      html += "<li>" + _wkLink("certs", rq.certificate, "需要证书") + "</li>";
+    if (job.educationRequired !== undefined) {
+      var eduLabel =
+        ["大专", "本科", "研究生"][job.educationRequired] || "未知";
+      html += "<li>学历 ≥ " + _wkE(eduLabel) + "</li>";
+    }
+    if (job.requiredFlag)
+      html +=
+        "<li>解锁标志：<code>" +
+        _wkE(job.requiredFlag) +
+        "</code>（来自 NPC 委托或剧情）</li>";
+    html += "</ul>";
+  }
+
+  if (job.effects) {
+    html += '<h3>📊 每次执行效果</h3><ul class="wiki-list">';
+    var eff = job.effects;
+    if (eff.fatigue) html += "<li>疲劳 +" + eff.fatigue + "</li>";
+    if (eff.hygiene)
+      html +=
+        "<li>卫生 " + (eff.hygiene > 0 ? "+" : "") + eff.hygiene + "</li>";
+    if (eff.happiness)
+      html +=
+        "<li>心情 " + (eff.happiness > 0 ? "+" : "") + eff.happiness + "</li>";
+    if (eff.physiqueXp) html += "<li>体质 EXP +" + eff.physiqueXp + "</li>";
+    if (eff.intelligenceXp)
+      html += "<li>智力 EXP +" + eff.intelligenceXp + "</li>";
+    if (eff.agilityXp) html += "<li>敏捷 EXP +" + eff.agilityXp + "</li>";
+    if (eff.mentalXp) html += "<li>心智 EXP +" + eff.mentalXp + "</li>";
+    var xpKeys = [
+      ["cookingXp", "烹饪"],
+      ["salesXp", "销售"],
+      ["repairXp", "维修"],
+      ["englishXp", "英语"],
+      ["drivingXp", "驾驶"],
+      ["managementXp", "管理"],
+      ["accountingXp", "会计"],
+      ["electricianXp", "电工"],
+      ["weldingXp", "焊接"],
+    ];
+    for (var x = 0; x < xpKeys.length; x++) {
+      if (eff[xpKeys[x][0]])
+        html += "<li>" + xpKeys[x][1] + " XP +" + eff[xpKeys[x][0]] + "</li>";
+    }
+    html += "</ul>";
+  }
+
+  if (typeof NPCS !== "undefined") {
+    var bonusNpcs = [];
+    for (var ni = 0; ni < NPCS.length; ni++) {
+      var npc = NPCS[ni];
+      if (!npc.presenceBonus) continue;
+      for (var pb = 0; pb < npc.presenceBonus.length; pb++) {
+        var rule = npc.presenceBonus[pb];
+        if (
+          rule.jobs &&
+          rule.jobs.indexOf(id) >= 0 &&
+          npc.location === job.location
+        ) {
+          bonusNpcs.push({
+            npc: npc,
+            threshold: rule.minAffinity,
+            mult: rule.multiplier,
+          });
+          break;
+        }
+      }
+    }
+    if (bonusNpcs.length > 0) {
+      html += '<h3>👥 NPC 在场加成</h3><ul class="wiki-list">';
+      for (var bi = 0; bi < bonusNpcs.length; bi++) {
+        var bn = bonusNpcs[bi];
+        html +=
+          "<li>" +
+          _wkLink("npcs", bn.npc.id, bn.npc.name) +
+          "（好感 ≥" +
+          bn.threshold +
+          "）：收入 ×" +
+          bn.mult.toFixed(2) +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  if (typeof SKILL_SYNERGIES !== "undefined") {
+    var synHits = [];
+    for (var si = 0; si < SKILL_SYNERGIES.length; si++) {
+      if (SKILL_SYNERGIES[si].jobs && SKILL_SYNERGIES[si].jobs.indexOf(id) >= 0)
+        synHits.push(SKILL_SYNERGIES[si]);
+    }
+    if (synHits.length > 0) {
+      html += '<h3>🔀 可激活的技能协同</h3><ul class="wiki-list">';
+      for (var sj = 0; sj < synHits.length; sj++) {
+        html +=
+          "<li>" +
+          _wkE(synHits[sj].label) +
+          " — " +
+          _wkE(synHits[sj].desc) +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  return html;
+}
+
+function _skName(k) {
+  return typeof getSkillChineseName === "function" ? getSkillChineseName(k) : k;
+}
+
+// ================================================================
+//  详情：商品
+// ================================================================
+function _wikiDetailGood(state, id) {
+  var good = typeof getGoodById === "function" ? getGoodById(id) : null;
+  if (!good) return "";
+
+  var html =
+    "<h2>📦 " +
+    _wkE(good.name) +
+    "</h2>" +
+    '<p class="wiki-desc">基础流通商品，可在不同地点低买高卖。</p>' +
+    '<div class="wiki-attrs">' +
+    "<div><b>类别</b>" +
+    _wkE(_goodCatLabel(good.category)) +
+    "</div>" +
+    "<div><b>基础价</b>¥" +
+    good.basePrice +
+    " / " +
+    _wkE(good.unit) +
+    "</div>" +
+    "</div>";
+
+  if (typeof LOCATIONS !== "undefined") {
+    html +=
+      "<h3>🌆 各地点价格修正</h3>" +
+      '<table class="wiki-table"><tr><th>地点</th><th>修正</th><th>预估价</th><th>提示</th></tr>';
+    var rows = [];
+    for (var lk in LOCATIONS) {
+      var loc = LOCATIONS[lk];
+      var mod = (loc.priceMod && loc.priceMod[id]) || 1.0;
+      rows.push({ loc: loc, mod: mod });
+    }
+    rows.sort(function (a, b) {
+      return a.mod - b.mod;
+    });
+    var minMod = rows[0].mod,
+      maxMod = rows[rows.length - 1].mod;
+    for (var ri = 0; ri < rows.length; ri++) {
+      var r = rows[ri];
+      var pred = (good.basePrice * r.mod).toFixed(2);
+      var hint =
+        r.mod === minMod && minMod < 1.0
+          ? "✅最低（适合进货）"
+          : r.mod === maxMod && maxMod > 1.0
+            ? "💰最高（适合卖出）"
+            : "—";
+      html +=
+        "<tr><td>" +
+        _wkLink("locations", r.loc.id, r.loc.name) +
+        "</td><td>×" +
+        r.mod.toFixed(2) +
+        "</td><td>¥" +
+        pred +
+        "</td><td>" +
+        _wkE(hint) +
+        "</td></tr>";
+    }
+    html += "</table>";
+
+    if (minMod < maxMod) {
+      var diff = (((maxMod - minMod) / minMod) * 100).toFixed(0);
+      html +=
+        '<p class="wiki-tip">💡 理论倒卖空间：约 ' +
+        diff +
+        "%（实际还要扣 5% 交易税与城管 heat）</p>";
+    }
+  }
+
+  return html;
+}
+
+// ================================================================
+//  详情：装备
+// ================================================================
+function _wikiDetailItem(state, id) {
+  if (typeof ITEMS === "undefined") return "";
+  var item = null;
+  for (var i = 0; i < ITEMS.length; i++)
+    if (ITEMS[i].id === id) {
+      item = ITEMS[i];
+      break;
+    }
+  if (!item) return "";
+
+  var slotLabel =
+    {
+      head: "头部",
+      body: "上身",
+      feet: "脚部",
+      hand: "手部",
+      accessory: "配饰",
+    }[item.slot] || item.slot;
+
+  var html =
+    "<h2>" +
+    _wkE(item.icon || "🎒") +
+    " " +
+    _wkE(item.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(item.desc) +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>装备槽</b>" +
+    _wkE(slotLabel) +
+    "</div>" +
+    "<div><b>价格</b>¥" +
+    item.price +
+    "</div>" +
+    "</div>";
+
+  // 数值化效果
+  if (item.effects) {
+    html += '<h3>📊 装备效果</h3><ul class="wiki-list">';
+    var ef = item.effects;
+    var labels = {
+      physique: "体质",
+      intelligence: "智力",
+      agility: "敏捷",
+      mental: "心智",
+      hygiene: "卫生",
+      happiness: "心情",
+      fame: "名气",
+      capacity: "背包容量",
+      injury: "受伤概率",
+      illness: "生病概率",
+      fatigue: "疲劳",
+      outdoor: "室外加成",
+    };
+    for (var k in ef) {
+      var lbl = labels[k] || k;
+      var v = ef[k];
+      var disp;
+      if (k === "injury" || k === "illness") {
+        disp = (v >= 0 ? "+" : "") + Math.round(v * 100) + "%";
+      } else if (v >= 0) {
+        disp = "+" + v;
+      } else {
+        disp = "" + v;
+      }
+      html += "<li>" + _wkE(lbl) + " " + _wkE(disp) + "</li>";
+    }
+    html += "</ul>";
+  }
+
+  if (item.buyLocations && item.buyLocations.length > 0) {
+    html += '<h3>🛒 购买地点</h3><div class="wiki-links">';
+    for (var b = 0; b < item.buyLocations.length; b++) {
+      var bl =
+        typeof LOCATIONS !== "undefined"
+          ? LOCATIONS[item.buyLocations[b]]
+          : null;
+      if (bl) html += _wkLink("locations", bl.id, bl.name, "📍") + " ";
+    }
+    html += "</div>";
+  }
+  return html;
+}
+
+// ================================================================
+//  详情：技能
+// ================================================================
+function _wikiDetailSkill(state, id) {
+  var sk = state && state.skills && state.skills[id] ? state.skills[id] : null;
+  var skName = _skName(id);
+  var html =
+    "<h2>📚 " +
+    _wkE(skName) +
+    "</h2>" +
+    '<p class="wiki-desc">技能等级影响相关工作收入、解锁特定行动，并产生衍生加成。</p>';
+
+  if (sk) {
+    html +=
+      '<div class="wiki-attrs">' +
+      "<div><b>当前等级</b>Lv." +
+      sk.level +
+      "</div>" +
+      "<div><b>当前 EXP</b>" +
+      sk.xp +
+      " / " +
+      (sk.level + 1) * 120 +
+      "</div>" +
+      "<div><b>训练消耗</b>⚡15 AP + ¥50</div>" +
+      "<div><b>每日上限</b>3 次/技能</div>" +
+      "</div>";
+  }
+
+  // 解锁的工作
+  if (typeof STREET_JOBS !== "undefined") {
+    var unlockedJobs = [];
+    for (var i = 0; i < STREET_JOBS.length; i++) {
+      var job = STREET_JOBS[i];
+      if (job.requirements && job.requirements[id]) {
+        unlockedJobs.push({ job: job, lv: job.requirements[id] });
+      }
+    }
+    if (unlockedJobs.length > 0) {
+      html += '<h3>🔓 该技能解锁的工作</h3><ul class="wiki-list">';
+      unlockedJobs.sort(function (a, b) {
+        return a.lv - b.lv;
+      });
+      for (var uj = 0; uj < unlockedJobs.length; uj++) {
+        var u = unlockedJobs[uj];
+        var ok = sk && sk.level >= u.lv;
+        html +=
+          "<li>" +
+          (ok ? "✅ " : "🔒 ") +
+          _wkLink("jobs", u.job.id, u.job.name, u.job.icon) +
+          " — 需 Lv." +
+          u.lv +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  // 衍生加成
+  var derivations = {
+    cooking: "🍚 自己做饭花费降低（最低¥5）",
+    sales:
+      "💰 买进折扣最高 15%、卖出溢价最高 15%；摆摊收益倍率（0级60%→100级125%）",
+    repair: "🛠️ 装备效果 +repair × 0.5%",
+    coding: "💻 职场能力 +2/10 级；街头：大学城/科技园解锁「网络外包单」",
+    english: "🇬🇧 家教收入 +english × 0.3；解锁外贸/客服协同",
+    driving: "🛵 出行 AP 减免：每 20 级 -1（最多 -5）",
+    management: "📋 职场向上管理 +1/10 级",
+    accounting: "🏦 银行存款日息 +accounting × 0.0005（最多+5%/年）",
+    electrician: "🔌 工厂工作收入 +electrician × 0.5%",
+    welding: "🔧 建筑工作收入 +welding × 0.8%",
+  };
+  if (derivations[id]) {
+    html += "<h3>✨ 衍生加成</h3><p>" + _wkE(derivations[id]) + "</p>";
+  }
+
+  // 关联协同
+  if (typeof SKILL_SYNERGIES !== "undefined") {
+    var related = [];
+    for (var si = 0; si < SKILL_SYNERGIES.length; si++) {
+      if (SKILL_SYNERGIES[si].skills && SKILL_SYNERGIES[si].skills[id])
+        related.push(SKILL_SYNERGIES[si]);
+    }
+    if (related.length > 0) {
+      html += '<h3>🔀 涉及的技能协同</h3><ul class="wiki-list">';
+      for (var ri = 0; ri < related.length; ri++) {
+        html +=
+          "<li>" +
+          _wkE(related[ri].label) +
+          " — " +
+          _wkE(related[ri].desc) +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  // 关联证书
+  if (typeof CERTIFICATES !== "undefined") {
+    var hits = CERTIFICATES.filter(function (c) {
+      return (
+        (c.effects && c.effects[id + "Xp"]) ||
+        (c.requirements && c.requirements[id])
+      );
+    });
+    if (hits.length > 0) {
+      html += '<h3>📜 相关证书</h3><div class="wiki-links">';
+      for (var hi = 0; hi < hits.length; hi++) {
+        html += _wkLink("certs", hits[hi].id, hits[hi].name, "📜") + " ";
+      }
+      html += "</div>";
+    }
+  }
+  return html;
+}
+
+// ================================================================
+//  详情：证书
+// ================================================================
+function _wikiDetailCert(state, id) {
+  if (typeof CERTIFICATES === "undefined") return "";
+  var cert = null;
+  for (var i = 0; i < CERTIFICATES.length; i++)
+    if (CERTIFICATES[i].id === id) {
+      cert = CERTIFICATES[i];
+      break;
+    }
+  if (!cert) return "";
+
+  var owned =
+    state && state.certificates && state.certificates.indexOf(id) >= 0;
+
+  var html =
+    "<h2>📜 " +
+    _wkE(cert.name) +
+    (owned ? ' <span class="wiki-badge ok">✅已获得</span>' : "") +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(cert.desc) +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>考试费用</b>¥" +
+    cert.requirements.cash +
+    "</div>" +
+    "<div><b>通过率</b>" +
+    Math.round(cert.examPassRate * 100) +
+    "%</div>" +
+    "</div>";
+
+  // 前置
+  html += '<h3>🔒 前置条件</h3><ul class="wiki-list">';
+  var rq = cert.requirements;
+  if (rq.intelligence) html += "<li>智力 ≥ " + rq.intelligence + "</li>";
+  if (rq.physique) html += "<li>体质 ≥ " + rq.physique + "</li>";
+  if (rq.agility) html += "<li>敏捷 ≥ " + rq.agility + "</li>";
+  if (rq.repair)
+    html +=
+      "<li>" +
+      _wkLink("skills", "repair", "维修") +
+      " ≥ Lv." +
+      rq.repair +
+      "</li>";
+  html += "<li>现金 ≥ ¥" + rq.cash + "</li>";
+  html += "</ul>";
+
+  // 效果
+  if (cert.effects) {
+    html += '<h3>📊 通过后效果</h3><ul class="wiki-list">';
+    var ef = cert.effects;
+    if (ef.intelligence) html += "<li>智力 +" + ef.intelligence + "</li>";
+    if (ef.physique) html += "<li>体质 +" + ef.physique + "</li>";
+    if (ef.agility) html += "<li>敏捷 +" + ef.agility + "</li>";
+    if (ef.repair) html += "<li>维修 +" + ef.repair + " 级</li>";
+    if (ef.injuryReduction)
+      html += "<li>受伤概率 ×" + (1 - ef.injuryReduction).toFixed(2) + "</li>";
+    var xpKeys = [
+      ["codingXp", "编程"],
+      ["accountingXp", "会计"],
+      ["weldingXp", "焊接"],
+      ["drivingXp", "驾驶"],
+      ["englishXp", "英语"],
+      ["electricianXp", "电工"],
+      ["managementXp", "管理"],
+    ];
+    for (var x = 0; x < xpKeys.length; x++) {
+      if (ef[xpKeys[x][0]])
+        html +=
+          "<li>" +
+          _wkLink("skills", xpKeys[x][0].replace("Xp", ""), xpKeys[x][1]) +
+          " XP +" +
+          ef[xpKeys[x][0]] +
+          "</li>";
+    }
+    html += "</ul>";
+  }
+
+  html +=
+    '<p class="wiki-tip">📍 在 ' +
+    _wkLink("locations", "trainingCenter", "培训中心") +
+    " 报名考取。</p>";
+  return html;
+}
+
+// ================================================================
+//  详情：NPC
+// ================================================================
+function _wikiDetailNpc(state, id) {
+  if (typeof NPCS === "undefined") return "";
+  var npc = null;
+  for (var i = 0; i < NPCS.length; i++)
+    if (NPCS[i].id === id) {
+      npc = NPCS[i];
+      break;
+    }
+  if (!npc) return "";
+
+  var rel = state && state.relationships && state.relationships[id];
+  var aff = rel ? rel.affinity || 0 : 0;
+  var met = rel && rel.met;
+
+  var html =
+    "<h2>👤 " +
+    _wkE(npc.name) +
+    ' <span class="wiki-badge ' +
+    (met ? (aff >= 70 ? "ok" : aff >= 40 ? "warn" : "info") : "muted") +
+    '">' +
+    (met ? "好感 " + aff : "未结识") +
+    "</span></h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(npc.desc || "") +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>角色</b>" +
+    _wkE(npc.role || "") +
+    "</div>" +
+    "<div><b>常驻地点</b>" +
+    (typeof LOCATIONS !== "undefined" && LOCATIONS[npc.location]
+      ? _wkLink("locations", npc.location, LOCATIONS[npc.location].name)
+      : _wkE(npc.location)) +
+    "</div>";
+  if (npc.birthday)
+    html += "<div><b>生日</b>第 " + npc.birthday + " 天（按 day%365）</div>";
+  html += "</div>";
+
+  // 礼物偏好
+  if (npc.giftPrefers && npc.giftPrefers.length > 0) {
+    html += '<h3>🎁 喜欢的礼物</h3><div class="wiki-links">';
+    for (var g = 0; g < npc.giftPrefers.length; g++) {
+      var goodId = npc.giftPrefers[g];
+      var good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+      if (good) html += _wkLink("goods", good.id, good.name, "📦") + " ";
+      else html += '<span class="wiki-pill">' + _wkE(goodId) + "</span> ";
+    }
+    html +=
+      '</div><p class="wiki-tip">送投其所好礼物 +15 好感（普通礼物 +5）；生日当天 ×2。</p>';
+  }
+
+  // 在场加成
+  if (npc.presenceBonus && npc.presenceBonus.length > 0) {
+    html += '<h3>✨ 在场加成（TA 在该地点时）</h3><ul class="wiki-list">';
+    for (var pi = 0; pi < npc.presenceBonus.length; pi++) {
+      var pb = npc.presenceBonus[pi];
+      var jobLabel = pb.jobs
+        ? pb.jobs
+            .map(function (jid) {
+              var job =
+                typeof getJobById === "function" ? getJobById(jid) : null;
+              return job ? job.name : jid;
+            })
+            .join(" / ")
+        : "所有相关工作";
+      html +=
+        "<li>好感 ≥" +
+        pb.minAffinity +
+        " · " +
+        _wkE(jobLabel) +
+        " 收入 ×" +
+        pb.multiplier.toFixed(2) +
+        "</li>";
+    }
+    html += "</ul>";
+  }
+
+  // 好感阈值奖励
+  if (npc.affinityRewards && npc.affinityRewards.length > 0) {
+    html += '<h3>💕 好感阈值奖励</h3><ul class="wiki-list">';
+    for (var ar = 0; ar < npc.affinityRewards.length; ar++) {
+      var rwd = npc.affinityRewards[ar];
+      var ok = aff >= rwd.threshold;
+      html +=
+        "<li>" +
+        (ok ? "✅ " : "🔒 ") +
+        "好感 " +
+        rwd.threshold +
+        ":" +
+        _wkE(rwd.desc) +
+        "</li>";
+    }
+    html += "</ul>";
+  }
+
+  // 委托
+  if (npc.favor) {
+    var favorDone = state && state.flags && state.flags["_npcFavor_" + id];
+    html +=
+      "<h3>📜 委托任务（好感 ≥30 解锁" +
+      (favorDone ? "，已完成" : "") +
+      "）</h3>" +
+      '<p class="wiki-quote">' +
+      _wkE(npc.favor.story) +
+      "</p>";
+  }
+
+  // 深度任务
+  if (npc.deepTask) {
+    var deepDone = state && state.flags && state.flags["_npcDeepTask_" + id];
+    html +=
+      "<h3>💌 深度任务（好感 ≥70 解锁" +
+      (deepDone ? "，已完成" : "") +
+      "）</h3>" +
+      '<p class="wiki-quote">' +
+      _wkE(npc.deepTask.story) +
+      "</p>";
+  }
+
+  // 节日台词
+  if (npc.festivalLines) {
+    html += '<h3>🎭 节日台词</h3><ul class="wiki-list">';
+    var festLabels = {
+      spring_festival: "春节",
+      labor_day: "劳动节",
+      dragon_boat: "端午",
+      mid_autumn: "中秋",
+      national_day: "国庆",
+      shopping_festival: "剁手节",
+    };
+    for (var fk in npc.festivalLines) {
+      html +=
+        "<li><b>" +
+        _wkE(festLabels[fk] || fk) +
+        "：</b>" +
+        _wkE(npc.festivalLines[fk]) +
+        "</li>";
+    }
+    html += "</ul>";
+  }
+
+  return html;
+}
+
+// ================================================================
+//  详情：节日
+// ================================================================
+function _wikiDetailFestival(state, id) {
+  if (typeof FESTIVALS === "undefined") return "";
+  var f = null;
+  for (var i = 0; i < FESTIVALS.length; i++)
+    if (FESTIVALS[i].id === id) {
+      f = FESTIVALS[i];
+      break;
+    }
+  if (!f) return "";
+
+  var html =
+    "<h2>" +
+    _wkE(f.icon || "🎭") +
+    " " +
+    _wkE(f.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(f.desc || "") +
+    "</p>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>开始日期</b>第 " +
+    f.startDay +
+    " 天（按 day%365）</div>" +
+    "<div><b>持续</b>" +
+    f.duration +
+    " 天</div>";
+  if (f.moodBonus) html += "<div><b>每日心情加成</b>+" + f.moodBonus + "</div>";
+  html += "</div>";
+
+  if (f.priceMods && Object.keys(f.priceMods).length > 0) {
+    html += '<h3>💰 商品价格修正</h3><ul class="wiki-list">';
+    var catNames = {
+      food: "食品",
+      luxury: "奢侈品",
+      daily: "日用品",
+      clothing: "服装",
+      electronics: "电子",
+    };
+    for (var c in f.priceMods) {
+      var pct = ((f.priceMods[c] - 1) * 100).toFixed(0);
+      var sign = pct >= 0 ? "+" : "";
+      html +=
+        "<li>" +
+        _wkE(catNames[c] || c) +
+        "：" +
+        _wkE(sign + pct + "%") +
+        "</li>";
+    }
+    html += "</ul>";
+  }
+
+  if (f.announceTxt) {
+    html +=
+      '<h3>📣 节日公告</h3><p class="wiki-quote">' +
+      _wkE(f.announceTxt) +
+      "</p>";
+  }
+
+  // 限定工作
+  if (typeof FESTIVAL_JOBS !== "undefined") {
+    var fjobs = FESTIVAL_JOBS[id];
+    if (fjobs && fjobs.length > 0) {
+      html += '<h3>🎪 节日限定工作</h3><ul class="wiki-list">';
+      for (var fj = 0; fj < fjobs.length; fj++) {
+        var fjob = fjobs[fj];
+        html +=
+          "<li>" + _wkE(fjob.name) + " — " + _wkE(fjob.desc || "") + "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  return html;
+}
+
+// ================================================================
+//  详情：天气
+// ================================================================
+function _wikiDetailWeather(state, id) {
+  if (id === "season") {
+    return (
+      "<h2>🍃 四季节奏</h2>" +
+      '<p class="wiki-desc">游戏中按 day 推演四季更替（春/夏/秋/冬），影响天气分布与节日时序。</p>' +
+      '<div class="wiki-attrs">' +
+      "<div><b>春</b>多雨多雷，温度回升</div>" +
+      "<div><b>夏</b>酷暑频发，户外疲劳加重</div>" +
+      "<div><b>秋</b>气温适中，最适合工作</div>" +
+      "<div><b>冬</b>大雪/严寒，AP 倍率上升</div>" +
+      "</div>" +
+      '<p class="wiki-tip">💡 在 ' +
+      _wkLink("mechanics", "weather_link", "天气联动机制") +
+      " 查看完整天气×AP×心情公式。</p>"
+    );
+  }
+
+  if (typeof WEATHER_TYPES === "undefined") return "";
+  var w = null;
+  for (var i = 0; i < WEATHER_TYPES.length; i++)
+    if (WEATHER_TYPES[i].id === id) {
+      w = WEATHER_TYPES[i];
+      break;
+    }
+  if (!w) return "";
+
+  var html =
+    "<h2>" +
+    _wkE(w.icon || "🌤️") +
+    " " +
+    _wkE(w.name) +
+    "</h2>" +
+    '<div class="wiki-attrs">' +
+    "<div><b>室外工作收入修正</b>×" +
+    w.outdoorMod.toFixed(2) +
+    "</div>" +
+    "<div><b>每日疲劳加成</b>+" +
+    w.fatigueBonus +
+    "</div>" +
+    "<div><b>每日心情加成</b>" +
+    (w.happinessBonus >= 0 ? "+" : "") +
+    w.happinessBonus +
+    "</div>" +
+    "</div>";
+
+  // 极端天气提示
+  var extreme = ["stormy", "snowy", "extreme_heat", "extreme_cold"];
+  if (extreme.indexOf(w.id) >= 0) {
+    html +=
+      '<p class="wiki-tip">⚠️ 极端天气会额外增加 AP 消耗倍率（+0.15~0.20），适合改室内行动。</p>';
+  }
+
+  html +=
+    '<p class="wiki-tip">💡 摆摊收入受 ' +
+    _wkLink("mechanics", "vending_footfall", "客流量") +
+    " 综合影响（位置×天气×节日×周末）。</p>";
+  return html;
+}
+
+// ================================================================
+//  详情：投资
+// ================================================================
+function _wikiDetailInvest(state, id) {
+  var html = "";
+  switch (id) {
+    case "stocks":
+      html =
+        "<h2>📈 股票（30 只）</h2>" +
+        '<p class="wiki-desc">幽默化映射现实企业，行业特征和股价波动参考真实市场。</p>' +
+        '<h3>📋 行业代表</h3><ul class="wiki-list">' +
+        "<li><b>互联网</b>阿里妈妈 / 腾飞控股 / 拼少少 / 美图秀（与现实大厂同行业波动相关）</li>" +
+        "<li><b>科技/芯片</b>恩威达 / 哥斯拉 / 苹果家 / 英特尔之家</li>" +
+        "<li><b>传统蓝筹</b>茅小台 / 招行国际 / 中石化双子</li>" +
+        "<li><b>新能源</b>宁德时代家 / 比亚仿（电池与车企）</li>" +
+        "</ul>" +
+        '<h3>📊 影响因素</h3><ul class="wiki-list">' +
+        "<li>📰 新闻事件按 industry/symbol 匹配（13+ 投资专项新闻）</li>" +
+        "<li>🪜 重大新闻有 L2 级联效果（详见 " +
+        _wkLink("narrative", "news_cascade", "新闻级联") +
+        "）</li>" +
+        "<li>📈 每日 tick 市场波动 + 季度财报</li>" +
+        "</ul>";
+      break;
+    case "btc":
+      html =
+        "<h2>💎 虚拟币（20 种）</h2>" +
+        '<p class="wiki-desc">BTC/ETH/DOGE/SOL/BNB/XRP/ADA/AVAX/MATIC/SHIB/DOT/LINK/UNI/LTC/TRX/TON/NEAR/APT/ARB/OP，受全局恐惧贪婪指数影响。</p>' +
+        '<h3>📊 关键机制</h3><ul class="wiki-list">' +
+        "<li>🌡️ 恐惧贪婪指数（0~100）：贪婪期波动放大，恐慌期下跌加速</li>" +
+        "<li>🪜 加密牛市/崩盘新闻有 L2 级联（5~7 天后再次冲击）</li>" +
+        "<li>📈 BTC 减半事件触发全市场上涨</li>" +
+        "</ul>";
+      break;
+    case "precious":
+      html =
+        "<h2>🥇 贵金属（8 种）</h2>" +
+        '<p class="wiki-desc">黄金 / 白银 / 铂金 / 钯金 / 铜 / 镍 / 铝 / 锂。受地缘政治、电动车需求、避险情绪影响。</p>' +
+        '<h3>📊 关键机制</h3><ul class="wiki-list">' +
+        "<li>🌍 地缘冲突 → 黄金/白银暴涨</li>" +
+        "<li>🔋 电动车需求 → 锂/镍/铜上行</li>" +
+        "<li>🏠 楼市低迷 → 铝/铜下行</li>" +
+        "</ul>";
+      break;
+    case "futures":
+      html =
+        "<h2>🛢️ 期货（16 种）</h2>" +
+        '<p class="wiki-desc">原油 / 天然气 / 玉米 / 大豆 / 小麦 / 咖啡 / 棉花 / 白糖 / 活牛 / 瘦肉猪 / 可可 / 橙汁 / 黄金期货 / 白银期货 / 铜期货 / 螺纹钢。</p>' +
+        '<p class="wiki-tip">⚠️ 期货波动大于现货，适合有经验的玩家短线。</p>';
+      break;
+    case "funds":
+      html =
+        "<h2>📊 基金（12 种）</h2>" +
+        '<p class="wiki-desc">国债基金 / 标普500ETF / 沪深300ETF / REITs / 纳斯达克100ETF / 恒生ETF / 日经ETF / 黄金ETF / 货币基金 / 国债逆回购 / 红利ETF / 科创50ETF。</p>' +
+        '<p class="wiki-tip">💡 货币基金/国债逆回购波动小，适合保本理财。</p>';
+      break;
+    case "property":
+      html =
+        "<h2>🏠 房产（20 处）</h2>" +
+        '<p class="wiki-desc">从城中村握手楼到迪拜投资房，每处独立市价 + 月租。Tier 4 豪华公寓可自住免日租。</p>' +
+        '<h3>📊 关键机制</h3><ul class="wiki-list">' +
+        "<li>📈 月度增值 ±0.5%~2%（受楼市新闻影响）</li>" +
+        "<li>💰 月租收入（自住时跳过）</li>" +
+        "<li>⚠️ 房地产暴雷事件可能让房产贬值 50%+</li>" +
+        "</ul>";
+      break;
+    case "car":
+      html =
+        "<h2>🚗 汽车（20 款）</h2>" +
+        '<p class="wiki-desc">电驴 / 五菱MINI / ... / 保时捷 / 劳斯莱斯幻影。每款独立折旧 + 维护费 + AP 加成。</p>' +
+        '<p class="wiki-tip">💡 高端车有名气加成（开劳斯莱斯出门 fame +）；电驴/MINI 实用主义。</p>';
+      break;
+    case "bank":
+      html =
+        "<h2>🏦 银行储蓄 / 借贷</h2>" +
+        '<p class="wiki-desc">城市浮生记的双层金融系统：低风险储蓄 vs 高息债务。</p>' +
+        '<h3>📊 利率</h3><ul class="wiki-list">' +
+        "<li>💰 银行存款日息 0.1%（约 4%/年）+ 会计技能加成（最多 5%/年）</li>" +
+        "<li>🚨 村长欠款日息 0.35%（约 12.8%/年），复利</li>" +
+        "<li>⚠️ 银行欠款日息略低于村长，但有还款日</li>" +
+        "</ul>" +
+        '<p class="wiki-tip">💡 持有大量村长债务时，可能触发「村长债务追讨」事件链。</p>';
+      break;
+  }
+  return html;
+}
+
+// ================================================================
+//  详情：系统机制
+// ================================================================
+function _wikiDetailMechanic(state, id) {
+  var pages = {
+    ap:
+      "<h2>⚡ 行动力 (AP) 系统</h2>" +
+      '<p class="wiki-desc">每天 100 AP（满）。所有行动消耗对应 AP（卡片右下显示），AP 耗尽自动 endDay。</p>' +
+      '<h3>📊 关键规则</h3><ul class="wiki-list">' +
+      "<li>大多数街头工作 ⚡15~38 AP</li>" +
+      "<li>训练技能、做饭、洗澡 ⚡10~15 AP</li>" +
+      "<li>跨地点出行 ⚡15 AP（驾驶 ≥20 级减免）</li>" +
+      "<li>极端状态（饿晕/过劳/病危）会跳过当天</li>" +
+      "<li>AP ≤ 20 时顶部和侧栏闪烁预警</li>" +
+      "</ul>" +
+      "<h3>🔢 AP 倍率</h3><p>实际 AP 消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
+      _wkLink("mechanics", "stat_link", "状态互联") +
+      "。</p>",
+
+    stat_link:
+      "<h2>🔗 状态互联系统</h2>" +
+      '<p class="wiki-desc">参考《这是我的战争》《模拟人生》：一个状态崩塌引发连锁反应。</p>' +
+      '<h3>🍞 状态多米诺（每日结算）</h3><ul class="wiki-list">' +
+      "<li>饥饿 &lt; 30 → +5 疲劳/天</li>" +
+      "<li>饥饿 &lt; 15 → +8 疲劳/天 + 心情 -5/天</li>" +
+      "<li>疲劳 &gt; 70 → 心情 -3/天</li>" +
+      "<li>疲劳 &gt; 85 → 心情 -5/天 + 卫生 -3/天</li>" +
+      "<li>卫生 &lt; 20 → 心情 -3/天</li>" +
+      "<li>心情 &lt; 20 → 睡眠效率 ×0.5</li>" +
+      "<li>生病 → +8 疲劳/天 + 心情 -5</li>" +
+      "</ul>" +
+      "<h3>📊 状态 → 属性修正（实时）</h3><p>例如：饥饿 &lt; 15 → 体质 ×0.85, 敏捷 ×0.75；健康 &lt; 30 → 全维度打折。详见侧边栏「实际有效值」。</p>" +
+      '<h3>⚡ AP 倍率加成</h3><ul class="wiki-list">' +
+      "<li>疲劳 70~85 +0.20；85~95 +0.45；&gt;95 +0.80</li>" +
+      "<li>饥饿 &lt; 20 +0.30；&lt; 10 +0.50</li>" +
+      "<li>生病 +0.50，受伤 +0.30</li>" +
+      "<li>极端天气 +0.15~0.20</li>" +
+      "<li>敏捷 &gt; 50 -0.10；&gt; 75 -0.20（最大减免）</li>" +
+      "</ul>",
+
+    synergy:
+      "<h2>🔀 技能协同增益</h2>" +
+      '<p class="wiki-desc">两个技能同时达到门槛时，相关工作收入持续提升。</p>' +
+      '<h3>📋 6 种协同组合</h3><ul class="wiki-list">' +
+      "<li>🍜 美食创业者：" +
+      _wkLink("skills", "cooking", "烹饪") +
+      " ≥10 + " +
+      _wkLink("skills", "sales", "销售") +
+      " ≥10 → 餐饮摆摊 +15%</li>" +
+      "<li>🔧 全能工匠：" +
+      _wkLink("skills", "repair", "维修") +
+      " ≥10 + " +
+      _wkLink("skills", "electrician", "电工") +
+      " ≥10 → 维修/建筑 +14%</li>" +
+      "<li>💻 海外外包专家：" +
+      _wkLink("skills", "coding", "编程") +
+      " ≥15 + " +
+      _wkLink("skills", "english", "英语") +
+      " ≥15 → 技术/教育 +22%</li>" +
+      "<li>🛵 跑单达人：销售 ≥8 + 驾驶 ≥8 → 配送 +12%</li>" +
+      "<li>📋 商务精英：管理 ≥15 + 会计 ≥15 → 仓储/商务 +18%</li>" +
+      "<li>🌐 外贸达人：英语 ≥12 + 销售 ≥12 → 教育/客服 +20%</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 多个协同可叠加。在 📚 技能 Tab 底部可查看激活情况。</p>',
+
+    streak:
+      "<h2>🔥 熟练工连击</h2>" +
+      '<p class="wiki-desc">连续 N 天做同一份工作，习得熟练度，收入递增。</p>' +
+      '<h3>📊 加成阶梯</h3><ul class="wiki-list">' +
+      "<li>连续 3 天 → +5%</li>" +
+      "<li>连续 5 天 → +10%</li>" +
+      "<li>连续 7 天 → +15%</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 中断当天就归零。在工作卡片下方的 tag 行可看到连击状态。</p>',
+
+    city_pulse:
+      "<h2>🌆 城市脉搏联动</h2>" +
+      '<p class="wiki-desc">活跃新闻派生为地点客流量、工作收入倍率和今日建议。新闻不再只是文字，而是"今天最优行动是什么"。</p>' +
+      '<h3>📋 主要规则（10+ 种）</h3><ul class="wiki-list">' +
+      "<li>🚨 城管严查 → 摆摊客流 -35%，外卖 +8%</li>" +
+      "<li>🛵 平台补贴 → 外卖骑手 +25%，餐饮摊 -8%</li>" +
+      "<li>🏚️ 旧改施工 → 工地/清运/维修需求暴涨</li>" +
+      "<li>🤖 AI 热潮 → 科技园数据/客服/写作 +12~18%</li>" +
+      "<li>🤒 流感高峰 → 医院护工 +35%，餐饮 -8%</li>" +
+      "<li>🎒 开学旺季 → 大学城快递/家教 +18%</li>" +
+      "<li>📈 通胀压力 → 批发周转/银行储蓄相对受益</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 在行动卡的 payTags 行可看到今天哪些维度在影响收入。</p>',
+
+    intel:
+      "<h2>📡 街头情报网</h2>" +
+      '<p class="wiki-desc">高好感 NPC 会向你透露即将发生的新闻，让你提前布局。</p>' +
+      '<h3>📋 工作流</h3><ol class="wiki-list">' +
+      "<li>NPC 好感 ≥30 → 解锁「向 TA 打听消息」行动</li>" +
+      "<li>不同 NPC 提供不同情报：王大婶（旧改/房产）、李工头（工地）、张姐（平台补贴）、老周（科技/废品）、小美（科技股/AI）、陈师傅（餐饮/医疗）</li>" +
+      "<li>情报写入 _pendingIntelNews，N 天后兑现成真实新闻</li>" +
+      "<li>心智越高，情报可信度展示越精确</li>" +
+      "</ol>" +
+      '<p class="wiki-tip">💡 信息差 = 钱。提前几天买入相关投资资产可大幅获利。</p>',
+
+    history:
+      "<h2>📜 历史声誉系统</h2>" +
+      '<p class="wiki-desc">道德选择不只是当下加减分，而是 7 种长期 flag 持续影响游戏。</p>' +
+      '<h3>📋 道德 flag 列表</h3><ul class="wiki-list">' +
+      "<li>💼 _walletKarmaGood：还回钱包 → 幸运 +5（避免某些坏事件）</li>" +
+      "<li>🤝 _helpedCoworker：帮过工友 → 工作收入 ×1.03</li>" +
+      "<li>🛡️ _refusedFakeGoods：拒绝假货 → 进货 9.8 折</li>" +
+      "<li>⚖️ _foughtWageTheft：维权欠薪 → 工作收入 ×1.04</li>" +
+      "<li>✨ _honestyCompound：综合声誉 → ×1.06 + 9.4 折 + 名声标签</li>" +
+      "<li>🚩 _laborOrganizer：劳工组织者 → 工作收入 ×1.08 + 好感 +2</li>" +
+      "<li>📋 _hasBusinessLicense：拿到执照 → 工作收入 ×1.10</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 侧边栏会动态显示已获声誉徽章。</p>',
+
+    edu:
+      "<h2>🎓 学历系统</h2>" +
+      '<p class="wiki-desc">大专（默认）→ 本科（自考）→ 研究生。学历是某些工作和职场入职的硬门槛。</p>' +
+      '<h3>📋 自考流程</h3><ol class="wiki-list">' +
+      "<li>📖 备考（⚡20 AP）：每次 +1 学习点，需要积累一定点数才能考试</li>" +
+      "<li>📝 参加考试（⚡30 AP）：通过率 = 40% + mental×0.4% + intelligence×0.1%</li>" +
+      "<li>🎓 考过 6 次 → 申请本科认证（在 " +
+      _wkLink("locations", "school", "大学城") +
+      "）</li>" +
+      "</ol>" +
+      "<h3>📊 学历影响的工作</h3><p>如：" +
+      _wkLink("jobs", "tutoring", "家教") +
+      " 需本科；科技园 4 个白领工作需本科起。</p>",
+
+    dream:
+      "<h2>💭 梦想追踪系统</h2>" +
+      '<p class="wiki-desc">5 类人生目标 × 5 个里程碑，每达成一个会触发专属叙事文本。</p>' +
+      '<h3>📋 5 类梦想</h3><ul class="wiki-list">' +
+      "<li>🍜 开一家餐馆（烹饪/存款/合规）</li>" +
+      "<li>🏠 买一套房（首付/房贷/还清）</li>" +
+      "<li>✈️ 出国看世界（英语/护照/启程）</li>" +
+      "<li>💰 投资达人（首笔/百万/千万）</li>" +
+      "<li>🌟 城市名人（名气/曝光/影响力）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 在街头阶段使用「确立人生目标」行动设定梦想；侧边栏显示当前进度。</p>',
+
+    festival_link:
+      "<h2>🎉 节日联动机制</h2>" +
+      '<p class="wiki-desc">6 个节日全方位影响游戏：价格 / 工作 / NPC 台词 / 心情 / 摆摊客流。</p>' +
+      '<h3>📋 联动维度</h3><ul class="wiki-list">' +
+      "<li>💰 价格修正：食品/奢侈品节日涨，电子/服装促销期降</li>" +
+      "<li>🎪 限定工作：年货推广员/月饼配送/景区导游等</li>" +
+      "<li>👥 NPC 节日台词：6 个 NPC × 5 个节日 = 30 条专属台词</li>" +
+      "<li>😊 心情加成：每日 +3~8</li>" +
+      "<li>🛒 客流量：剁手节 ×2.5，国庆 ×1.3</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 节日开始前 3 天会公告，可提前囤货/换工作。</p>',
+
+    weather_link:
+      "<h2>☂️ 天气联动机制</h2>" +
+      '<p class="wiki-desc">7 种天气全方位影响：室外工作收入 / 疲劳 / 心情 / AP 倍率。</p>' +
+      '<h3>📊 影响表</h3><ul class="wiki-list">' +
+      "<li>☀️ 晴天：室外 ×1.0，心情 +5</li>" +
+      "<li>⛅ 多云：室外 ×0.95</li>" +
+      "<li>🌧️ 小雨：室外 ×0.75，疲劳 +8，心情 -5</li>" +
+      "<li>⛈️ 暴雨：室外 ×0.40，疲劳 +15，AP 倍率 +0.15</li>" +
+      "<li>🌨️ 大雪：室外 ×0.50，AP 倍率 +0.15</li>" +
+      "<li>🥵 酷暑：AP 倍率 +0.20</li>" +
+      "<li>🥶 严寒：AP 倍率 +0.20</li>" +
+      "</ul>",
+
+    npc_affinity:
+      "<h2>💕 NPC 好感度系统</h2>" +
+      '<p class="wiki-desc">参考《Stardew Valley》Heart Events，每位 NPC 有 30/60/80 三档奖励 + 委托 + 深度任务。</p>' +
+      '<h3>📋 阈值奖励</h3><ul class="wiki-list">' +
+      "<li>30（熟人）：解锁特殊对话 + 小福利（带饭/废品 tips/提点工作）</li>" +
+      "<li>60（好友）：独家资源（房租折扣/秘密渠道/猎头）</li>" +
+      "<li>80（挚友）：稀有机会（介绍奖金/秘方/支教/天使投资）</li>" +
+      "</ul>" +
+      '<h3>📜 委托 vs 深度任务</h3><ul class="wiki-list">' +
+      "<li>📜 委托（好感 ≥30）：每个 NPC 一个一次性任务，奖励中等</li>" +
+      "<li>💌 深度任务（好感 ≥70）：叙事性更强的人生选择，奖励大</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 投其所好礼物 +15 好感，生日 ×2，节日 +5~10。</p>',
+
+    vending_footfall:
+      "<h2>🛒 摆摊客流量综合修正</h2>" +
+      '<p class="wiki-desc">摆摊收入 ∝ 基础客流 × 天气 × 节日 × 周末。</p>' +
+      '<h3>📊 影响因素</h3><ul class="wiki-list">' +
+      "<li>📍 地点基础客流：商业区 1.8（最高）→ 银行 0.4（最低）</li>" +
+      "<li>☀️ 天气：晴天/暴雨差异巨大</li>" +
+      "<li>🎉 节日：国庆 ×1.3，剁手节 ×2.5</li>" +
+      "<li>📅 周末：商业区/公园 +20% 客流</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 行动卡片上显示客流星级（⭐⭐⭐~⭐⭐⭐⭐⭐）。</p>',
+
+    fame_vip:
+      "<h2>⭐ 名气 VIP 行动系统</h2>" +
+      '<p class="wiki-desc">高名气解锁 5 种特殊行动（每天限 1 次）：</p>' +
+      '<ul class="wiki-list">' +
+      "<li>商业区 fame ≥25：本地名人效应（¥50+fame×1.2+随机）</li>" +
+      "<li>公园 fame ≥20：粉丝认出你（心情 +20）</li>" +
+      "<li>培训中心 fame ≥40：名人专属指导课（属性 +3）</li>" +
+      "<li>医院 fame ≥35：VIP 就诊通道（健康 +25）</li>" +
+      "<li>科技园 fame ≥50：科技论坛演讲（¥200+fame×2.5）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 可通过参加 NPC 委托/达成成就/解决重大事件提升名气。</p>',
+  };
+  return pages[id] || "";
+}
+
+// ================================================================
+//  详情：世界叙事
+// ================================================================
+function _wikiDetailNarrative(state, id) {
+  var pages = {
+    news_4layer:
+      "<h2>📰 四层新闻生态</h2>" +
+      '<p class="wiki-desc">新闻是世界与玩家对话的主渠道，从宏观到微观完整传导：</p>' +
+      '<table class="wiki-table"><tr><th>层级</th><th>类型</th><th>频率</th><th>影响</th></tr>' +
+      "<tr><td><b>L1 国际</b></td><td>地缘冲突/制裁/科技封锁</td><td>15~30 天</td><td>大宗商品/股市板块</td></tr>" +
+      "<tr><td><b>L2 国内</b></td><td>行业整顿/楼市调控/最低工资</td><td>10~20 天</td><td>工作收入/房产/职位开放</td></tr>" +
+      "<tr><td><b>L3 城市</b></td><td>拆迁/地铁/招商/节日季</td><td>5~10 天</td><td>地点客流/摆摊 heat/特定商品需求</td></tr>" +
+      "<tr><td><b>L4 街头</b></td><td>邻里纠纷/八卦/工友传言</td><td>1~3 天</td><td>NPC 好感/局部价格扰动</td></tr>" +
+      "</table>" +
+      '<p class="wiki-tip">💡 通过 ' +
+      _wkLink("mechanics", "city_pulse", "城市脉搏") +
+      " 系统，新闻实时影响行动收益。</p>",
+
+    news_cascade:
+      "<h2>🪜 新闻级联（L1 → L2）</h2>" +
+      '<p class="wiki-desc">10 个重大宏观事件会在 N 天后产生连锁后续：</p>' +
+      '<ul class="wiki-list">' +
+      "<li>📉 降息 → 楼市回暖（5 天后）</li>" +
+      "<li>📈 加息 → 楼市降温（5 天后）</li>" +
+      "<li>🌍 地缘危机 → 黄金/石油持续上涨（3 天后）</li>" +
+      "<li>🤖 AI 热潮 → 算力短缺溢价（4 天后）</li>" +
+      "<li>💎 加密牛市 → 山寨币轮动（3 天后）</li>" +
+      "<li>📉 加密崩盘 → 杠杆爆仓潮（2 天后）</li>" +
+      "<li>⚡ 能源危机 → 制造业成本上行（5 天后）</li>" +
+      "<li>🔥 黑天鹅 → 全市场恐慌（7 天后）</li>" +
+      "<li>💥 贸易战 → 国产替代崛起（10 天后）</li>" +
+      "<li>🛵 平台补贴大战 → 骑手寒冬（8 天后）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 提前预判 L2 后续，可以在投资市场上获得超额收益。</p>',
+
+    world_events:
+      "<h2>🎬 有梗世界事件</h2>" +
+      '<p class="wiki-desc">5 条多阶段事件链，每条都是一个完整的商业/人生故事：</p>' +
+      '<h3>📺 事件清单</h3><ul class="wiki-list">' +
+      "<li><b>🛒 网约车补贴大战</b>：临时工种收入暴增→骤降→平台合并</li>" +
+      "<li><b>💼 收购反噬</b>：花 ¥80k 收购茶饮 → 经营难 → 被星巴超连锁低价吞掉</li>" +
+      "<li><b>🐎 行业黑马冲击</b>：深耕 30 天后新模式来袭，All-in 转型 vs 副业 vs 坚守</li>" +
+      "<li><b>🔁 创始人回购</b>：被 VC 清洗 → 屈辱期 → 老朋友凑钱买回主导权</li>" +
+      "<li><b>🪟 政策套利窗口</b>：科技园扩建/摊贩持证/餐饮卫生评级，提前消息差</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 每条事件链需要不同的前置（NPC 好感/天数/资产/职级），多周目可触达不同结局。</p>',
+
+    moral:
+      "<h2>⚖️ 道德困境系统</h2>" +
+      '<p class="wiki-desc">参考《这是我的战争》：道德选择没有"绝对正确"，只有代价不同。</p>' +
+      '<h3>📋 5+ 经典两难</h3><ul class="wiki-list">' +
+      "<li>👶 巷子里的孩子（买饭/给钱/装没看见）</li>" +
+      "<li>🔥 工厂火警（冲进去/打 119/往后退）</li>" +
+      "<li>📁 工友的秘密（偷偷留证/告诉他/假装没见）</li>" +
+      "<li>👴 迷路老人（送过去/叫顺风车/指路走了）</li>" +
+      "<li>🎫 地上的彩票（去兑奖/等人来找）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 选择会设置 ' +
+      _wkLink("mechanics", "history", "道德 flag") +
+      "，长期影响后续事件触发与声誉。</p>",
+
+    ng_plus:
+      "<h2>🆕 新游戏+ 继承系统</h2>" +
+      '<p class="wiki-desc">胜利或失败后，可选择"新游戏+"继承部分进度：</p>' +
+      '<h3>📋 继承内容</h3><ul class="wiki-list">' +
+      "<li>💰 起始现金：总收入 × 1%（上限 ¥5,000）</li>" +
+      "<li>🎯 最高技能：水平 × 20%（上限 Lv.20）</li>" +
+      "<li>📊 最高属性：+10%（最多 +5）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 让多周目有累积感和新鲜感。</p>',
+  };
+  return pages[id] || "";
+}
+
+// ================================================================
+//  详情：成就/胜利
+// ================================================================
+function _wikiDetailVictory(state, id) {
+  var pages = {
+    v_p10:
+      "<h2>🏢 胜利：晋升 P10</h2>" +
+      '<p class="wiki-desc">从 P5 一路晋升到 P10（合伙人），成为职场金字塔尖。</p>' +
+      '<ul class="wiki-list">' +
+      "<li>晋升关键：每年 Q3 答辩，KPI/向上管理/能力综合评分</li>" +
+      "<li>P7+ 解锁团队管理</li>" +
+      "<li>P5→P6→P7→P8→P9→P10，约需 5~8 年</li>" +
+      "<li>关注：发量（勿归零）、风险（勿满 100）、人缘（勿低于 20）</li>" +
+      "</ul>",
+    v_wealth:
+      "<h2>💸 胜利：财务自由</h2>" +
+      '<p class="wiki-desc">累计 ¥2,000 万（现金 + 银行 + 投资市值 + 房产 + 汽车）。</p>' +
+      '<p class="wiki-tip">💡 投资 + 经商 + 职场组合，最快约 6~8 年达成。</p>',
+    v_business:
+      "<h2>🏪 胜利：经商大亨</h2>" +
+      '<p class="wiki-desc">trade.totalProfit ≥ ¥500,000（街头交易/摆摊累积净利润）。</p>' +
+      '<p class="wiki-tip">💡 找准批发地→零售地差价，配合 ' +
+      _wkLink("skills", "sales", "销售") +
+      " 技能加成。</p>",
+    v_fame:
+      "<h2>🌟 胜利：城市名人</h2>" +
+      '<p class="wiki-desc">名气达到 100。</p>' +
+      '<p class="wiki-tip">💡 名人 VIP 行动 + 道德正直选择 + 完成 NPC 委托快速涨名气。</p>',
+    v_skill:
+      "<h2>🥷 胜利：技能大师</h2>" +
+      '<p class="wiki-desc">10 项技能全部达到 Lv.80。</p>' +
+      '<p class="wiki-tip">💡 单技能从 0 到 80 约需 200+ 次行动；多技能并行最高效。</p>',
+    v_invest:
+      "<h2>💎 胜利：投资天才</h2>" +
+      '<p class="wiki-desc">投资资产（股票/虚拟币/期货/基金/房产/贵金属）累计市值 ≥ ¥1,000 万。</p>' +
+      '<p class="wiki-tip">💡 抓住 ' +
+      _wkLink("narrative", "news_cascade", "新闻级联") +
+      " 的 L2 机会，比单一持有更有效。</p>",
+    fail:
+      "<h2>💀 失败条件</h2>" +
+      '<ul class="wiki-list">' +
+      "<li>❤️ 健康归零</li>" +
+      "<li>💸 总债务 &gt; ¥50,000 且无力偿还</li>" +
+      "<li>🦲 发量归零（职场过劳）</li>" +
+      "<li>😔 尊严归零（职场崩溃）</li>" +
+      "<li>📉 连续 8 季度绩效 C（淘汰）</li>" +
+      "<li>⚠️ 风险值 100%（职场被开除）</li>" +
+      "<li>👴 年龄 ≥ 35 且职级 &lt; P8（35 岁危机）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 失败也可触发 ' +
+      _wkLink("narrative", "ng_plus", "新游戏+") +
+      " 继承下一周目。</p>",
+    achievements:
+      "<h2>🏅 成就系统</h2>" +
+      '<p class="wiki-desc">22 个成就 × 4 个分类，参考《Papers Please》隐藏成就的叙事化设计。</p>' +
+      '<h3>📋 类别</h3><ul class="wiki-list">' +
+      "<li>🌅 人生第一次（7 个）：第一桶金/第一份工作/第一次倒卖等</li>" +
+      "<li>🏆 里程碑（8 个）：月入 5000/三个月/存款 1 万/全 NPC 结识等</li>" +
+      "<li>📜 道德档案（4 个隐藏）：追踪帮助 vs 放弃选择</li>" +
+      "<li>🎁 隐藏（3 个）：流浪歌手/还是私吞/100 天坚韧</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。</p>',
+  };
+  return pages[id] || "";
 }
 </script>
 
