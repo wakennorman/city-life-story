@@ -5894,6 +5894,429 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+
+  // ============================================================
+  // 有梗世界事件链 ⑤：政策套利窗口（3 场景 × 2 阶段）
+  // 先知道的人暴富，后知道的人被套——模拟"信息差"与"时机判断"博弈。
+  // 参考 DEV.md 1.2 节"政策套利窗口"模板。
+  // 场景 A：科技园扩建征地（小美情报）— 提前囤周边房产
+  // 场景 B：外卖/摊贩持证上岗（张姐情报）— 提前考证占坑
+  // 场景 C：餐饮卫生新规（陈师傅情报）— 提前整改免罚+补贴
+  // ============================================================
+
+  // ---- 场景 A-1：科技园扩建征地内幕 ----
+  {
+    id: "arbitrage_techpark_tip",
+    phase: "street",
+    icon: "📐",
+    title: "小美的内幕消息：科技园要扩建",
+    story:
+      "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.xiao_mei;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 50 &&
+        st.player.day >= 40 &&
+        !st.flags._arbitrageTechparkTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "🏠 联系二手房东，谈下那片旧厂房（¥2000定金）",
+        hint: "赌一把：如果真扩建，租金暴涨",
+        cost: 2000,
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkActed = st.player.day;
+          st.resources.cash -= 2000;
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 2);
+          StateManager.addMessage(
+            "📐 你咬咬牙付了¥2000定金，以租代持谈下了一间旧厂房仓库的优先承租权。如果消息是真的，等科技园扩建公告一出，租金至少翻倍；如果是假的……¥2000打水漂。心智+2，赌局开始了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📈 先小仓位买入科技股（¥1000买HUAW/SMIC）",
+        hint: "温和布局，扩建利好科技板块",
+        cost: 1000,
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkModerate = st.player.day;
+          st.resources.cash -= 1000;
+          // 记入临时投资，政策兑现时模拟增值
+          st.flags._arbitrageTechparkInvest =
+            (st.flags._arbitrageTechparkInvest || 0) + 1000;
+          StateManager.addMessage(
+            "📈 你不敢all-in，但买了¥1000科技股。扩建利好整个板块，即使消息有误也不会亏太多。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤨 内幕交易是违法的，当没听过",
+        hint: "安全，但可能错过机会",
+        apply: function (st) {
+          st.flags._arbitrageTechparkTipSeen = true;
+          st.flags._arbitrageTechparkSkipped = true;
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🤨 你谢过小美，但没碰那名片。有些钱烫手，你知道。心智+3，心情+5——晚上睡得着比什么都重要。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 A-2：科技园扩建官宣兑现 ----
+  {
+    id: "arbitrage_techpark_payoff",
+    phase: "street",
+    icon: "🏗️",
+    title: "科技园扩建正式官宣！",
+    story:
+      "新闻推送弹出来：市政府正式公告科技园东区旧厂房改造项目立项，总投资80亿，预计带动周边3公里商业价值提升30%~50%。你记得两周前小美说的那番话——现在，到了看选择的时候了。",
+    conditions: function (st) {
+      return (
+        (!!st.flags._arbitrageTechparkActed ||
+          !!st.flags._arbitrageTechparkModerate) &&
+        !st.flags._arbitrageTechparkPayoffSeen &&
+        st.player.day >=
+          (st.flags._arbitrageTechparkActed ||
+            st.flags._arbitrageTechparkModerate ||
+            0) +
+            12
+      );
+    },
+    choices: [
+      {
+        text: "💰 把优先承租权转手（溢价300%！）",
+        hint: "空手套白狼，净赚¥5000~8000",
+        conditions: function (st) {
+          return !!st.flags._arbitrageTechparkActed;
+        },
+        apply: function (st) {
+          st.flags._arbitrageTechparkPayoffSeen = true;
+          var profit = 5000 + Math.floor(Math.random() * 3000);
+          st.resources.cash += profit;
+          st.resources.totalEarned += profit;
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
+          StateManager.addMessage(
+            "🏗️ 你以¥" +
+              profit +
+              "把优先承租权转手给了一家连锁便利店品牌，净赚¥" +
+              (profit - 2000) +
+              "！小美的消息比黄金还值钱。名气+8，心智+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📉 卖出科技股（获利+40%）",
+        hint: "见好就收",
+        conditions: function (st) {
+          return !!st.flags._arbitrageTechparkModerate;
+        },
+        apply: function (st) {
+          st.flags._arbitrageTechparkPayoffSeen = true;
+          var invest = st.flags._arbitrageTechparkInvest || 1000;
+          var ret = Math.round(invest * 1.4);
+          st.resources.cash += ret;
+          st.resources.totalEarned += ret;
+          StateManager.addMessage(
+            "📉 你卖掉了科技股，到手¥" +
+              ret +
+              "，收益¥" +
+              (ret - invest) +
+              "（+40%）。虽然不是暴富，但稳健也是一种胜利。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+
+  // ---- 场景 B-1：摊贩持证上岗新政内幕 ----
+  {
+    id: "arbitrage_license_tip",
+    phase: "street",
+    icon: "📋",
+    title: "张姐透露：摊贩要持证上岗了",
+    story:
+      "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.sister_zhang;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 45 &&
+        st.player.day >= 30 &&
+        !st.flags._arbitrageLicenseTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "✅ 立刻去办证（¥50 + 体检¥30）",
+        hint: "趁窗口期低价锁定资格",
+        cost: 80,
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseActed = true;
+          st.resources.cash -= 80;
+          st.flags._hasBusinessLicense = true; // 复用个体户执照标志
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 1);
+          StateManager.addMessage(
+            "✅ 你花¥80办了登记卡和健康证。虽然体检抽血有点疼，但心里踏实了——等新规一出，这证就是你的护身符。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💡 多办3张卡倒卖（¥240）",
+        hint: "黄牛操作，有风险",
+        cost: 240,
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseScalped = true;
+          st.resources.cash -= 240;
+          st.status.fame = Math.max(0, (st.status.fame || 0) - 3);
+          st.player.mental = Math.max(0, (st.player.mental || 10) - 2);
+          StateManager.addMessage(
+            "💡 你一口气办了4张卡（含自己的）。回来的路上有点心虚——但这城里谁不找点路子呢？名气-3（万一被查），心智-2。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🙄 应该不会查这么严吧",
+        hint: "赌一把，省钱但风险高",
+        apply: function (st) {
+          st.flags._arbitrageLicenseTipSeen = true;
+          st.flags._arbitrageLicenseTipDay = st.player.day;
+          st.flags._arbitrageLicenseIgnored = true;
+          StateManager.addMessage(
+            "🙄 你把体检表塞进兜里。这座城市的规定三天两头变，不一定查得到你头上……吧？",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 B-2：摊贩持证新规实施 ----
+  {
+    id: "arbitrage_license_payoff",
+    phase: "street",
+    icon: "🛂",
+    title: "城管突击检查！持证新规来了",
+    story:
+      "果然，新规说来就来。城管大队今天出现在街头，挨个检查登记卡。有证的摊贩照常营业，没证的被当场开罚单——¥200起步。你远远看着几个没证的同行跟城管吵起来，心里庆幸（或后悔）自己当初的选择。",
+    conditions: function (st) {
+      var tipDay = st.flags._arbitrageLicenseTipDay || 0;
+      return (
+        (st.flags._arbitrageLicenseActed ||
+          st.flags._arbitrageLicenseScalped ||
+          st.flags._arbitrageLicenseIgnored) &&
+        !st.flags._arbitrageLicensePayoffSeen &&
+        st.player.day >= tipDay + 12
+      );
+    },
+    choices: function (st) {
+      var choices = [];
+      if (st.flags._arbitrageLicenseActed) {
+        choices.push({
+          text: "🛡️ 亮出登记卡，合法营业",
+          hint: "无损失，安心",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
+            s.status.fame = Math.min(100, (s.status.fame || 0) + 3);
+            StateManager.addMessage(
+              "🛡️ 你从容亮出登记卡。城管点点头就走了。旁边几个没证的同行投来羡慕的眼神。心情+10，名气+3。当初那¥80花得太值了。",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageLicenseScalped) {
+        choices.push({
+          text: "💰 把多办的卡高价卖出（¥400/张）",
+          hint: "净赚¥960",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            var profit = 400 * 3;
+            s.resources.cash += profit;
+            s.resources.totalEarned += profit;
+            s.status.fame = Math.max(0, (s.status.fame || 0) + 5);
+            s.player.mental = Math.min(100, (s.player.mental || 10) + 2);
+            StateManager.addMessage(
+              "💰 你以¥400一张把3张卡卖给了急得跳脚的同行，净赚¥960！消息灵通就是生产力。名气+5（他们感谢你），心智+2。",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageLicenseIgnored) {
+        choices.push({
+          text: "😰 被罚¥200 + 今天不能出摊",
+          hint: "损失惨重",
+          apply: function (s) {
+            s.flags._arbitrageLicensePayoffSeen = true;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 15);
+            s.player.mental = Math.max(0, (s.player.mental || 10) - 2);
+            StateManager.addMessage(
+              "😰 你被开了¥200罚单，今天还不能出摊。早知道当初花¥80办了……心情-15，心智-2。这座城市不给你第二次机会。",
+              "danger",
+            );
+          },
+        });
+      }
+      return choices;
+    },
+  },
+
+  // ---- 场景 C-1：餐饮卫生评级补贴内幕 ----
+  {
+    id: "arbitrage_hygiene_tip",
+    phase: "street",
+    icon: "🧹",
+    title: "陈师傅说：卫生评级有补贴",
+    story:
+      "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.chef_chen;
+      var aff = rel ? rel.affinity || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        aff >= 40 &&
+        st.player.day >= 50 &&
+        !st.flags._arbitrageHygieneTipSeen
+      );
+    },
+    choices: [
+      {
+        text: "🔧 花¥1500提前整改（赌能评A级）",
+        hint: "先投后收，长期回报",
+        cost: 1500,
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneInvested = st.player.day;
+          st.resources.cash -= 1500;
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+          StateManager.addMessage(
+            "🔧 你买了不锈钢灶台和灭蝇灯，花了两天把摊位彻底改造。¥1500见了底，但看着焕然一新的操作台，你觉得值。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🧹 小修小补（花¥300简单应付）",
+        hint: "可能评B级，补贴少但成本低",
+        cost: 300,
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneModerate = st.player.day;
+          st.resources.cash -= 300;
+          StateManager.addMessage(
+            "🧹 你买了灭蝇灯和新的围裙，灶台擦了又擦。花¥300做了表面功夫——评不上A级，但至少不会被罚。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤷 小本生意，折腾不起",
+        hint: "省钱但错过补贴",
+        apply: function (st) {
+          st.flags._arbitrageHygieneTipSeen = true;
+          st.flags._arbitrageHygieneSkipped = true;
+          StateManager.addMessage(
+            "🤷 你把整改清单塞进口袋。小本生意经不起折腾——先看看再说。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 场景 C-2：餐饮卫生评级结果 ----
+  {
+    id: "arbitrage_hygiene_payoff",
+    phase: "street",
+    icon: "⭐",
+    title: "卫生星级评定结果出炉",
+    story:
+      "餐饮协会的公告贴出来了。你挤在人群里找自己的摊位号——评级结果直接决定了接下来一个季度你能拿多少补贴、上什么推荐榜单。",
+    conditions: function (st) {
+      return (
+        (st.flags._arbitrageHygieneInvested ||
+          st.flags._arbitrageHygieneModerate ||
+          st.flags._arbitrageHygieneSkipped) &&
+        !st.flags._arbitrageHygienePayoffSeen &&
+        st.player.day >=
+          (st.flags._arbitrageHygieneInvested ||
+            st.flags._arbitrageHygieneModerate ||
+            0) +
+            15
+      );
+    },
+    choices: function (st) {
+      var choices = [];
+      if (st.flags._arbitrageHygieneInvested) {
+        choices.push({
+          text: "⭐ A级！拿补贴¥2000 + 推荐榜单",
+          hint: "提前整改的回报",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.resources.cash += 2000;
+            s.resources.totalEarned += 2000;
+            s.status.fame = Math.min(100, (s.status.fame || 0) + 12);
+            s.player.mental = Math.min(100, (s.player.mental || 10) + 5);
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 20);
+            StateManager.addMessage(
+              "⭐ A级！你拿到了首批A级评定！补贴¥2000到手，你的摊位上了官方推荐榜——以后不愁客源了。名气+12，心智+5，心情+20。那¥1500花得真值！",
+              "success",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageHygieneModerate) {
+        choices.push({
+          text: "🥈 B级，补贴¥500 + 继续整改建议",
+          hint: "中等回报，有上升空间",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.resources.cash += 500;
+            s.resources.totalEarned += 500;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🥈 B级。补贴¥500到手，公告建议你升级灶台设备争取下季度评A。小修小补没白做，但也没赚大钱。",
+              "info",
+            );
+          },
+        });
+      }
+      if (st.flags._arbitrageHygieneSkipped) {
+        choices.push({
+          text: "❌ C级，无补贴 + 被警告",
+          hint: "没投入就没回报",
+          apply: function (s) {
+            s.flags._arbitrageHygienePayoffSeen = true;
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 10);
+            StateManager.addMessage(
+              "❌ C级（最低档）。没有补贴，还被贴了整改警告。看着隔壁A级摊位排起长队，你有点后悔当初没听陈师傅的。心情-10。",
+              "warning",
+            );
+          },
+        });
+      }
+      return choices;
+    },
+  },
 ];
 
 /* =========================================================
@@ -6004,8 +6427,21 @@ function showEventModal(evt) {
   // 先卸掉任何旧弹窗
   document.querySelector(".modal-overlay")?.remove();
 
+  // 支持 choices 为函数（动态生成，如政策套利兑现事件）
+  var choicesArr = evt.choices;
+  if (typeof choicesArr === "function") {
+    choicesArr = choicesArr(StateManager.getState());
+    if (!choicesArr || !choicesArr.length) {
+      // 没有可用选项时自动跳过
+      var s = StateManager.getState();
+      s._pendingEvent = null;
+      s._pendingEventId = null;
+      return;
+    }
+  }
+
   // 构建选项HTML
-  const choicesHtml = evt.choices
+  const choicesHtml = choicesArr
     .map((ch, i) => {
       const hintStr = ch.hint
         ? `<div class="choice-hint">${ch.hint}</div>`
@@ -6048,7 +6484,7 @@ function showEventModal(evt) {
   overlay.querySelectorAll(".event-choice").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = parseInt(btn.dataset.idx);
-      const choice = evt.choices[idx];
+      const choice = choicesArr[idx];
       if (!choice) return;
       const state = StateManager.getState();
       try {
