@@ -11,9 +11,9 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- 最近一次 commit：`b0774ef`（新增每日收支报告功能 — 14+收支点埋点 + 对账兜底 + 阻塞式弹窗，参考《大多数》《This War of Mine》《Stardew Valley》设计）
-- **无未提交改动**，代码干净
-- **P0/P1/P2 全优先级清单已完成**（累计138+项），有梗世界事件库5条完整事件链（补贴大战/收购反噬/黑马冲击/创始人回购/政策套利）
+- 最近一次工作：新增 📖 游戏百科 Tab（`src/js/ui/wiki.js` 1716 行 + style.css ~280 行 + index.html/render.js 接线），13 个分类一站式查询，跨条目 `wikiNavigate` 跳转，跨分类模糊搜索，状态徽章
+- **待提交改动**：`src/js/ui/wiki.js`（新）、`src/index.html`、`src/js/ui/render.js`、`src/css/style.css`、`src/DEVELOPMENT.md`、`CLAUDE.md`
+- **P0/P1/P2 全优先级清单已完成**（累计139项，含百科），有梗世界事件库5条完整事件链
 - **下一步方向**：
   1. **企业命运系统**（P2#11）— 玩家投资/就职/竞争过的公司随时间成长、合并、倒闭，形成可观察的商业生态变迁
   2. **多周目企业记忆**（P2#10）— 前一局让某公司倒闭，新一局该公司已不存在于地图上
@@ -33,6 +33,11 @@
 ### 必须操作
 
 - 每完成一个功能点，立即更新 `src/DEVELOPMENT.md` 变更记录
+- **新增/修改任何功能后必须同步更新游戏百科** `src/js/ui/wiki.js`：
+  - 新地点/工作/商品/装备/NPC/节日：通常列表会自动从数据源读取，但要确认 `_wikiDetail*()` 中新字段是否展示
+  - 新系统机制：在 `_wikiListEntries` 的 `mechanics` case 加条目 + 在 `_wikiDetailMechanic` pages 字典加详情
+  - 新世界事件/叙事：在 `_wikiListEntries` 的 `narrative` case 加条目 + 在 `_wikiDetailNarrative` pages 字典加详情
+  - 跨条目跳转用 `_wkLink(catId, entryId, label, icon)`，动态内容必须 `_wkE()` 转义
 - 每完成 3 个功能点，执行一次 `git add -A && git commit -m "..."` 存档
 - 上下文对话超过约 40 轮或感觉很长时，执行 `/compact` 再继续
 - token/额度接近耗尽时：先把所有改动写入 DEVELOPMENT.md，确保代码完整可运行，然后停止

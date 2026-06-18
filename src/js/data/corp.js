@@ -154,6 +154,74 @@ const COMPANIES = [
   },
 ];
 
+/**
+ * 企业生命周期阶段定义 — 用于企业命运系统 (P2#11)
+ */
+const CORP_LIFECYCLE_PHASES = {
+  startup: {
+    name: "初创期",
+    color: "#4fc3f7",
+    icon: "🚀",
+    desc: "高增长高风险的早期阶段",
+    growthMult: 1.5,
+    riskMult: 2.0,
+    healthDecay: 0.1,
+    recoveryRate: 0.3,
+  },
+  growth: {
+    name: "成长期",
+    color: "#4a9e5c",
+    icon: "📈",
+    desc: "高速成长，市场份额快速扩大",
+    growthMult: 1.2,
+    riskMult: 1.2,
+    healthDecay: 0.05,
+    recoveryRate: 0.2,
+  },
+  mature: {
+    name: "成熟期",
+    color: "#f39c12",
+    icon: "🏛️",
+    desc: "稳定经营，创新放缓",
+    growthMult: 0.8,
+    riskMult: 0.6,
+    healthDecay: 0.08,
+    recoveryRate: 0.1,
+  },
+  decline: {
+    name: "衰退期",
+    color: "#e67e22",
+    icon: "📉",
+    desc: "市场份额萎缩，经营困难",
+    growthMult: 0.4,
+    riskMult: 1.5,
+    healthDecay: 0.2,
+    recoveryRate: 0.05,
+  },
+  dying: {
+    name: "濒死期",
+    color: "#c4553d",
+    icon: "💀",
+    desc: "面临破产或收购",
+    growthMult: 0.1,
+    riskMult: 3.0,
+    healthDecay: 0.4,
+    recoveryRate: 0.02,
+  },
+};
+
+/**
+ * 公司→股票映射 — 每家公司对应的股票symbol列表
+ * 用于企业命运系统影响股价
+ */
+const CORP_STOCK_MAP = {
+  star_tech: ["BAID", "SMIC", "HUAW"],
+  byte_dragon: ["BYTE", "BILI", "KUAI"],
+  cloud_giant: ["HUAW", "BAID"],
+  game_fun: ["NETE", "TENC"],
+  safe_fin: ["SAFE", "PING", "ALIM"],
+};
+
 const CORP_ACTIONS = [
   {
     id: "project_work",

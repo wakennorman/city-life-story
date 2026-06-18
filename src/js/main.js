@@ -299,6 +299,11 @@ function startNewGame() {
   StateManager.newGame();
   initializePrices();
 
+  // 初始化企业命运系统
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(StateManager.getState());
+  }
+
   // P2.11 新游戏+：检查并应用上局继承加成
   var ngApplied = false;
   try {
@@ -382,6 +387,10 @@ function loadExistingGame(slot) {
   const saveData = loadGame(slot);
   if (saveData) {
     StateManager.importState(saveData);
+    // 兼容旧存档：初始化企业命运系统
+    if (typeof initEnterpriseFate === "function") {
+      initEnterpriseFate(StateManager.getState());
+    }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
     document.getElementById("app").style.display = "";

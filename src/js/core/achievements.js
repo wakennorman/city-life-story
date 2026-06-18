@@ -327,6 +327,56 @@ const ACHIEVEMENTS = [
       return st.player.day >= 100 && !(st.flags && st.flags._everBegged);
     },
   },
+
+  // === 企业命运成就（P2#11）===
+  {
+    id: "witness_fall",
+    name: "见证陨落",
+    desc: "亲眼见证一家公司走向倒闭。",
+    story: "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
+    icon: "💀",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
+        for (var i = 0; i < h.length; i++) {
+          if (h[i].eventType === "merger_acquire") return true;
+        }
+      }
+      return false;
+    },
+  },
+  {
+    id: "investor_eye",
+    name: "投资眼光",
+    desc: "投资的公司成长为市场领导者。",
+    story: "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
+    icon: "🔮",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (co && co.knownToPlayer && co.marketShare >= 30) return true;
+      }
+      return false;
+    },
+  },
+  {
+    id: "corp_killer",
+    name: "行业颠覆者",
+    desc: "你离开后，公司倒闭了。",
+    story: "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
+    icon: "⚡",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._formerCompanyCollapsed);
+    },
+  },
 ];
 
 /**

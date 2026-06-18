@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>城市浮生记 — City Life Story</title>
-    <style> :root { --bg-primary: #f5f1e8; --bg-secondary: #faf7f0; --bg-card: #ffffff; --bg-card-hover: #f0f7f0; --bg-sidebar: #faf7f0; --bg-input: #f0ede4; --border: #d8d5c8; --border-light: #c5d5c0; --text-primary: #3d3a35; --text-secondary: #6b6760; --text-muted: #99958e; --accent: #4a9e5c; --accent-glow: rgba(74, 158, 92, 0.12); --accent-hover: #3a8048; --success: #4a9e5c; --success-bg: rgba(74, 158, 92, 0.1); --danger: #c4553d; --danger-bg: rgba(196, 85, 61, 0.08); --warning: #c49a3a; --warning-bg: rgba(196, 154, 58, 0.1); --info: #5a8ab4; --hair-color: #7ab8d8; --mental-color: #b8a0d4; --kpi-color: #d4a840; --risk-color: #c4553d; --physique-color: #c4803a; --intelligence-color: #5a8ab4; --agility-color: #5aaa5a; --mental-attrs-color: #9b74b8; --font-mono: "Consolas", "Courier New", monospace; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --sidebar-width: 280px; --header-height: 48px; --transition: 0.2s ease; } *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body { height: 100%; overflow: hidden; } body { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--text-primary); background: var(--bg-primary); -webkit-font-smoothing: antialiased; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); } #app { display: grid; grid-template-rows: var(--header-height) 1fr; grid-template-columns: var(--sidebar-width) 1fr; grid-template-areas: "header header" "sidebar main"; height: 100vh; max-height: 100vh; } #header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); z-index: 100; } .header-left { display: flex; align-items: center; gap: 12px; } .header-logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; } .header-logo span { color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px; } .header-stats { display: flex; align-items: center; gap: 20px; font-size: 13px; } .header-stat { display: flex; align-items: center; gap: 6px; } .header-stat .label { color: var(--text-muted); font-size: 11px; } .header-stat .value { color: var(--text-primary); font-weight: 600; } .header-stat .value.cash { color: var(--success); } .header-stat .value.debt { color: var(--danger); font-weight: 700; } .header-stat .value.debt.single-debt-blink { animation: debt-blink 1.2s ease-in-out infinite; } .header-stat .value.debt.carousel-debt-blink { animation: debt-blink 0.9s ease-in-out infinite; } .header-debt-active { border: 1px solid rgba(196, 85, 61, 0.25) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.06) !important; animation: debt-pulse-bg 2s ease-in-out infinite; } .header-debt-carousel-active { border: 1px solid rgba(196, 85, 61, 0.3) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.10) !important; animation: debt-carousel-pulse 2.5s ease-in-out infinite; } @keyframes debt-blink { 0%, 100% { opacity: 1; text-shadow: 0 0 0 transparent; } 50% { opacity: 0.55; text-shadow: 0 0 6px rgba(196, 85, 61, 0.4); } } @keyframes debt-pulse-bg { 0%, 100% { background: rgba(196, 85, 61, 0.06); } 50% { background: rgba(196, 85, 61, 0.14); } } @keyframes debt-carousel-pulse { 0%, 100% { background: rgba(196, 85, 61, 0.10); border-color: rgba(196, 85, 61, 0.30); } 50% { background: rgba(196, 85, 61, 0.18); border-color: rgba(196, 85, 61, 0.50); } } @keyframes debt-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } } .debt-fade-in { animation: debt-fade-in 0.35s ease-out; } .header-stat .value.age { color: var(--warning); } .festival-badge { color: #c4553d; font-weight: 700; font-size: 12px; background: rgba(196, 85, 61, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(196, 85, 61, 0.2); animation: festival-pulse 2s ease-in-out infinite; } @keyframes festival-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } } .header-actions { display: flex; align-items: center; gap: 8px; } #sidebar { grid-area: sidebar; background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; } .sidebar-section { background: var(--bg-card); border-radius: var(--radius-md); padding: 12px; border: 1px solid transparent; } .sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; } .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .stat-label { width: 65px; font-size: 12px; color: var(--text-secondary); text-align: right; flex-shrink: 0; } .stat-bar-wrap { flex: 1; height: 16px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); overflow: hidden; position: relative; } .stat-bar { height: 100%; border-radius: var(--radius-sm); transition: width 0.4s ease; position: relative; } .stat-bar.flash { animation: statFlash 0.6s ease; } @keyframes statFlash { 0% { filter: brightness(1); } 50% { filter: brightness(2.5); } 100% { filter: brightness(1); } } .stat-bar.hair { background: linear-gradient(90deg, #6b9cbe, var(--hair-color)); } .stat-bar.dignity { background: linear-gradient(90deg, #a48aca, var(--mental-color)); } .stat-bar.kpi { background: linear-gradient(90deg, #c9a442, var(--kpi-color)); } .stat-bar.risk { background: linear-gradient(90deg, #c87062, var(--risk-color)); } .stat-bar.physique { background: linear-gradient(90deg, #c48e4a, var(--physique-color)); } .stat-bar.intelligence { background: linear-gradient(90deg, #5a94ba, var(--intelligence-color)); } .stat-bar.agility { background: linear-gradient(90deg, #56a64e, var(--agility-color)); } .stat-bar.mental-bar { background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color)); } .stat-bar.hunger { background: linear-gradient(90deg, #c9a838, #dec054); } .stat-bar.fatigue { background: linear-gradient(90deg, #949a88, #b4baa2); } .stat-bar.hygiene { background: linear-gradient(90deg, #4a9490, #5ebeb2); } .stat-bar.happiness { background: linear-gradient(90deg, #cc7868, #e09080); } .stat-bar.health { background: linear-gradient(90deg, #d47058, #56b468); } .stat-bar.fame { background: linear-gradient(90deg, #9672b4, #c9a442); } .stat-bar.ap-bar { background: linear-gradient(90deg, #56a868, #62b868, #50b058); } .stat-value { width: 48px; font-size: 11px; color: var(--text-muted); text-align: right; flex-shrink: 0; font-family: var(--font-mono); } .location-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .location-name { font-size: 14px; font-weight: 600; color: var(--accent); } .location-desc { font-size: 11px; color: var(--text-muted); } #main { grid-area: main; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); } #tab-bar { display: flex; background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 12px; flex-shrink: 0; } .tab-btn { padding: 10px 20px; font-size: 13px; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all var(--transition); font-family: var(--font-sans); } .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); } .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); } #content-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; } #time-slot-indicator { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-card); border-radius: var(--radius-md); font-size: 13px; flex-shrink: 0; } .time-slot-badge { padding: 2px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; } .time-slot-badge.morning { background: rgba(243, 156, 18, 0.2); color: var(--warning); } .time-slot-badge.afternoon { background: rgba(74, 158, 92, 0.2); color: var(--warning); } .time-slot-badge.evening { background: rgba(155, 116, 184, 0.2); color: #9b74b8; } .action-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; } .action-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; cursor: pointer; transition: all var(--transition); } .action-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); } .action-card.disabled { opacity: 0.4; cursor: not-allowed; } .action-card.disabled:hover { border-color: var(--border); transform: none; box-shadow: none; } .action-card .card-icon { font-size: 24px; margin-bottom: 6px; } .action-card .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; } .action-card .card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; } .action-card .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; } .card-meta .ap-cost { color: var(--warning); font-weight: 600; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(243, 156, 18, 0.12); border: 1px solid rgba(243, 156, 18, 0.25); } .card-meta .pay-estimate { color: var(--success); font-weight: 600; } .card-meta .cost-estimate { color: var(--danger); font-weight: 600; } .card-meta .slot-tag { padding: 1px 6px; border-radius: var(--radius-sm); font-size: 10px; background: var(--accent-glow); color: var(--accent); } .card-meta .req-fail { color: var(--danger); font-size: 10px; } #message-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; max-height: 250px; overflow-y: auto; flex-shrink: 0; } #message-log h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; } .log-entry { padding: 3px 0; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease; } .log-entry .log-day { color: var(--text-muted); font-size: 10px; margin-right: 8px; font-family: var(--font-mono); } .log-entry.info { color: var(--text-secondary); } .log-entry.success { color: var(--success); } .log-entry.danger { color: var(--danger); } .log-entry.warning { color: var(--warning); } .log-entry.event { color: var(--accent); font-weight: 600; } .log-entry.hint { color: #27ae60; background: rgba(39, 174, 96, 0.06); border-left: 2px solid rgba(39, 174, 96, 0.35); padding-left: 6px; border-radius: 0 3px 3px 0; } .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .inventory-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; } .inventory-item .item-name { font-weight: 600; color: var(--text-primary); } .inventory-item .item-qty { color: var(--text-muted); font-size: 10px; } .inventory-item .item-effects { color: var(--success); font-size: 10px; } .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 13px; font-family: var(--font-sans); font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); background: var(--bg-card); color: var(--text-primary); white-space: nowrap; } .btn:hover { background: var(--bg-card-hover); border-color: var(--border-light); } .btn:active { transform: scale(0.97); } .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent-hover); } .btn-success { background: var(--success); border-color: var(--success); color: #fff; } .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; } .btn-sm { padding: 4px 10px; font-size: 11px; } .btn-lg { padding: 12px 24px; font-size: 15px; border-radius: var(--radius-md); } .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; } .modal-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; min-width: 360px; max-width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); animation: slideUp 0.2s ease; } .modal-box h2 { font-size: 18px; margin-bottom: 12px; color: var(--text-primary); } .modal-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; } .modal-actions { display: flex; gap: 8px; justify-content: flex-end; } .end-screen { text-align: center; } .end-screen .end-icon { font-size: 64px; margin-bottom: 16px; } .end-screen .end-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; } .end-screen .end-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; } .end-screen.victory .end-title { color: var(--success); } .end-screen.defeat .end-title { color: var(--danger); } .stats-summary { width: 100%; border-collapse: collapse; margin: 16px 0; } .stats-summary td { padding: 6px 12px; font-size: 13px; border-bottom: 1px solid var(--border); } .stats-summary td:first-child { color: var(--text-muted); } .stats-summary td:last-child { text-align: right; font-weight: 600; } .news-banner { background: linear-gradient(135deg, var(--bg-card), rgba(74, 158, 92, 0.08)); border: 1px solid var(--accent); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--accent); flex-shrink: 0; } .news-banner .news-icon { margin-right: 6px; } .event-box { min-width: 380px; max-width: 540px; border-top: 4px solid var(--accent); background: linear-gradient(180deg, var(--bg-secondary), var(--bg-card)); } .event-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); } .event-icon { font-size: 40px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(74, 158, 92, 0.15), transparent); border-radius: 50%; flex-shrink: 0; } .event-title { font-size: 18px; color: var(--accent); margin: 0; } .event-story { font-size: 13px; color: var(--text-primary); line-height: 1.7; margin-bottom: 16px; padding: 12px 14px; background: var(--bg-card); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); } .event-choices { display: flex; flex-direction: column; gap: 8px; } .event-choice { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; color: var(--text-primary); font-size: 13px; cursor: pointer; transition: all 0.15s ease; position: relative; } .event-choice:hover:not(.disabled) { background: var(--bg-card-hover, rgba(74, 158, 92, 0.08)); border-color: var(--accent); transform: translateX(2px); } .event-choice.disabled { opacity: 0.4; cursor: not-allowed; } .event-choice .choice-main { font-weight: 600; color: var(--text-primary); } .event-choice .choice-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; } @keyframes eventPop { 0% { transform: scale(0.85) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } } .event-overlay, .modal-overlay.event-modal { animation: fadeIn 0.2s ease; } .event-overlay .modal-box, .modal-overlay.event-modal .modal-box { animation: eventPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-warning { color: var(--warning); } .text-accent { color: var(--accent); } .text-muted { color: var(--text-muted); } .text-sm { font-size: 11px; } .text-lg { font-size: 16px; } .font-mono { font-family: var(--font-mono); } .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-2 { margin-bottom: 8px; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .pulse { animation: pulse 2s infinite; } .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 24px; text-align: center; } .welcome-title { font-size: 36px; font-weight: 700; color: var(--accent); letter-spacing: 1px; } .welcome-subtitle { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; } .welcome-buttons { display: flex; gap: 12px; } .tab-panel { display: none; } .tab-panel.active { display: block; } .city-map { position: relative; } .city-map .map-node { animation: mapFadeIn 0.4s ease backwards; } .city-map .map-node:nth-child(1) { animation-delay: 0.02s; } .city-map .map-node:nth-child(2) { animation-delay: 0.04s; } .city-map .map-node:nth-child(3) { animation-delay: 0.06s; } .city-map .map-node:nth-child(4) { animation-delay: 0.08s; } .city-map .map-node:nth-child(5) { animation-delay: 0.1s; } .city-map .map-node:nth-child(6) { animation-delay: 0.12s; } .city-map .map-node:nth-child(7) { animation-delay: 0.14s; } .city-map .map-node:nth-child(8) { animation-delay: 0.16s; } .city-map .map-node:nth-child(9) { animation-delay: 0.18s; } .city-map .map-node:nth-child(10) { animation-delay: 0.2s; } .city-map .map-node:nth-child(11) { animation-delay: 0.22s; } @keyframes mapFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } .nearby-loc-item { cursor: pointer; transition: all 0.2s ease; } .nearby-loc-item:hover { border-color: var(--accent) !important; background: var(--bg-card-hover) !important; transform: translateX(2px); } #location-services { min-height: 20px; } @media (max-width: 768px) { #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; } #sidebar { position: fixed; left: -100%; top: var(--header-height); bottom: 0; width: 280px; z-index: 200; transition: left 0.3s ease; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3); } #sidebar.open { left: 0; } .action-cards { grid-template-columns: 1fr; } .header-stats { gap: 10px; } .header-stat .label { display: none; } #mobile-menu-btn { display: flex !important; } .map-node { min-width: 70px !important; padding: 10px 14px !important; font-size: 12px !important; } .city-map { min-height: 400px !important; padding: 12px !important; } } #mobile-menu-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 4px; } @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } } .tutorial-overlay .modal-box { border: 2px solid var(--accent); box-shadow: 0 0 40px rgba(102, 126, 234, 0.3); } .tutorial-box { animation: fadeInUp 0.3s ease-out; } @keyframes tutorial-pulse { 0%, 100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.5), inset 0 0 25px rgba(102, 126, 234, 0.08); } 50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), inset 0 0 40px rgba(102, 126, 234, 0.15); } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } @keyframes ap-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } @keyframes ap-blink-border { 0%, 100% { box-shadow: 0 0 12px rgba(255, 152, 0, 0.4); } 50% { box-shadow: 0 0 24px rgba(255, 152, 0, 0.8); } } .wiki-tab { display: flex; flex-direction: column; gap: 12px; } .wiki-header h2 { font-size: 18px; color: var(--accent); } .wiki-search { display: flex; gap: 8px; margin-top: 8px; } .wiki-search input { flex: 1; padding: 8px 12px; border: 1px solid #d8d3c5; border-radius: 8px; background: #fff; color: var(--text-primary); font-size: 13px; font-family: var(--font-sans); } .wiki-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74, 158, 92, 0.2); } .wiki-clear { padding: 8px 12px; background: #fff; border: 1px solid #d8d3c5; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 12px; } .wiki-clear:hover { border-color: var(--danger); color: var(--danger); } .wiki-layout { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: start; } .wiki-nav { display: flex; flex-direction: column; gap: 4px; background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 8px; position: sticky; top: 0; } .wiki-nav-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: transparent; border: none; border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; text-align: left; transition: all 0.15s; font-family: var(--font-sans); } .wiki-nav-btn:hover { background: #f5f1e8; color: var(--text-primary); } .wiki-nav-btn.active { background: rgba(74, 158, 92, 0.12); color: var(--accent); font-weight: 600; } .wiki-nav-ico { font-size: 14px; width: 18px; text-align: center; } .wiki-nav-name { flex: 1; } .wiki-nav-count { font-size: 10px; color: var(--text-muted); background: #f5f1e8; border-radius: 8px; padding: 1px 6px; min-width: 22px; text-align: center; } .wiki-nav-btn.active .wiki-nav-count { background: rgba(74, 158, 92, 0.2); color: var(--accent); } .wiki-content { background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 16px; min-height: 300px; } .wiki-list-header h3 { margin: 0 0 12px; font-size: 16px; color: var(--text-primary); } .wiki-count { font-size: 12px; color: var(--text-muted); font-weight: normal; } .wiki-empty { color: var(--text-muted); text-align: center; padding: 40px; } .wiki-entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; } .wiki-card { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; } .wiki-card:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); } .wiki-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .wiki-card-head h4 { margin: 0; font-size: 13px; color: var(--text-primary); flex: 1; } .wiki-card-ico { font-size: 16px; } .wiki-card-brief { margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .wiki-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; white-space: nowrap; } .wiki-badge.ok { background: rgba(74, 158, 92, 0.15); color: var(--accent); } .wiki-badge.warn { background: rgba(212, 160, 23, 0.15); color: #b08712; } .wiki-badge.info { background: rgba(52, 152, 219, 0.15); color: #2575b3; } .wiki-badge.bad { background: rgba(231, 76, 60, 0.15); color: var(--danger); } .wiki-badge.muted { background: #f0ebde; color: var(--text-muted); } .wiki-detail { position: relative; } .wiki-back { background: #f5f1e8; border: 1px solid #d8d3c5; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; margin-bottom: 12px; } .wiki-back:hover { border-color: var(--accent); color: var(--accent); } .wiki-detail-body h2 { font-size: 18px; margin: 0 0 8px; color: var(--text-primary); } .wiki-detail-body h3 { font-size: 14px; margin: 16px 0 8px; color: var(--accent); border-bottom: 1px solid #ece7d8; padding-bottom: 4px; } .wiki-detail-body p, .wiki-detail-body ul, .wiki-detail-body ol { font-size: 12px; color: var(--text-secondary); line-height: 1.7; } .wiki-detail-body code { background: #f5f1e8; border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono, monospace); font-size: 11px; } .wiki-desc { font-size: 13px !important; color: var(--text-secondary); margin: 0 0 12px; font-style: italic; } .wiki-attrs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; background: #fdfaf3; border-radius: 8px; padding: 10px; margin-bottom: 12px; } .wiki-attrs > div { font-size: 12px; color: var(--text-secondary); } .wiki-attrs b { color: var(--text-primary); margin-right: 6px; } .wiki-list { margin: 0 0 12px 16px; padding: 0; } .wiki-list li { margin-bottom: 4px; } .wiki-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 12px; } .wiki-table th, .wiki-table td { padding: 6px 8px; border: 1px solid #ece7d8; text-align: left; color: var(--text-secondary); } .wiki-table th { background: #fdfaf3; color: var(--text-primary); font-weight: 600; } .wiki-table tr:nth-child(even) td { background: #fdfaf3; } .wiki-link { color: var(--accent); text-decoration: none; font-weight: 500; border-bottom: 1px dashed rgba(74, 158, 92, 0.4); cursor: pointer; } .wiki-link:hover { border-bottom-style: solid; background: rgba(74, 158, 92, 0.06); } .wiki-links { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } .wiki-links .wiki-link { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 14px; padding: 4px 10px; border-bottom: 1px solid #e6e0d0; font-size: 11px; } .wiki-links .wiki-link:hover { border-color: var(--accent); background: rgba(74, 158, 92, 0.08); } .wiki-tip { background: rgba(74, 158, 92, 0.06); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); margin: 8px 0 12px; } .wiki-quote { background: #fdfaf3; border-left: 3px solid #d4a017; padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); font-style: italic; margin: 8px 0; } .wiki-pill { display: inline-block; background: #f5f1e8; border: 1px solid #e6e0d0; border-radius: 12px; padding: 2px 10px; font-size: 11px; color: var(--text-secondary); } @media (max-width: 760px) { .wiki-layout { grid-template-columns: 1fr; } .wiki-nav { flex-direction: row; overflow-x: auto; position: relative; } .wiki-nav-btn { flex: 0 0 auto; flex-direction: column; padding: 6px 8px; min-width: 60px; text-align: center; } .wiki-nav-btn .wiki-nav-name { font-size: 10px; } .wiki-nav-btn .wiki-nav-count { font-size: 9px; padding: 0 4px; } .wiki-entries { grid-template-columns: 1fr; } } </style>
+    <style> :root { --bg-primary: #f5f1e8; --bg-secondary: #faf7f0; --bg-card: #ffffff; --bg-card-hover: #f0f7f0; --bg-sidebar: #faf7f0; --bg-input: #f0ede4; --border: #d8d5c8; --border-light: #c5d5c0; --text-primary: #3d3a35; --text-secondary: #6b6760; --text-muted: #99958e; --accent: #4a9e5c; --accent-glow: rgba(74, 158, 92, 0.12); --accent-hover: #3a8048; --success: #4a9e5c; --success-bg: rgba(74, 158, 92, 0.1); --danger: #c4553d; --danger-bg: rgba(196, 85, 61, 0.08); --warning: #c49a3a; --warning-bg: rgba(196, 154, 58, 0.1); --info: #5a8ab4; --hair-color: #7ab8d8; --mental-color: #b8a0d4; --kpi-color: #d4a840; --risk-color: #c4553d; --physique-color: #c4803a; --intelligence-color: #5a8ab4; --agility-color: #5aaa5a; --mental-attrs-color: #9b74b8; --font-mono: "Consolas", "Courier New", monospace; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --sidebar-width: 280px; --header-height: 48px; --transition: 0.2s ease; } *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body { height: 100%; overflow: hidden; } body { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--text-primary); background: var(--bg-primary); -webkit-font-smoothing: antialiased; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); } #app { display: grid; grid-template-rows: var(--header-height) 1fr; grid-template-columns: var(--sidebar-width) 1fr; grid-template-areas: "header header" "sidebar main"; height: 100vh; max-height: 100vh; } #header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); z-index: 100; } .header-left { display: flex; align-items: center; gap: 12px; } .header-logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; } .header-logo span { color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px; } .header-stats { display: flex; align-items: center; gap: 20px; font-size: 13px; } .header-stat { display: flex; align-items: center; gap: 6px; } .header-stat .label { color: var(--text-muted); font-size: 11px; } .header-stat .value { color: var(--text-primary); font-weight: 600; } .header-stat .value.cash { color: var(--success); } .header-stat .value.debt { color: var(--danger); font-weight: 700; } .header-stat .value.debt.single-debt-blink { animation: debt-blink 1.2s ease-in-out infinite; } .header-stat .value.debt.carousel-debt-blink { animation: debt-blink 0.9s ease-in-out infinite; } .header-debt-active { border: 1px solid rgba(196, 85, 61, 0.25) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.06) !important; animation: debt-pulse-bg 2s ease-in-out infinite; } .header-debt-carousel-active { border: 1px solid rgba(196, 85, 61, 0.3) !important; border-radius: 6px !important; padding: 0 8px !important; background: rgba(196, 85, 61, 0.1) !important; animation: debt-carousel-pulse 2.5s ease-in-out infinite; } @keyframes debt-blink { 0%, 100% { opacity: 1; text-shadow: 0 0 0 transparent; } 50% { opacity: 0.55; text-shadow: 0 0 6px rgba(196, 85, 61, 0.4); } } @keyframes debt-pulse-bg { 0%, 100% { background: rgba(196, 85, 61, 0.06); } 50% { background: rgba(196, 85, 61, 0.14); } } @keyframes debt-carousel-pulse { 0%, 100% { background: rgba(196, 85, 61, 0.1); border-color: rgba(196, 85, 61, 0.3); } 50% { background: rgba(196, 85, 61, 0.18); border-color: rgba(196, 85, 61, 0.5); } } @keyframes debt-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } } .debt-fade-in { animation: debt-fade-in 0.35s ease-out; } .header-stat .value.age { color: var(--warning); } .festival-badge { color: #c4553d; font-weight: 700; font-size: 12px; background: rgba(196, 85, 61, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(196, 85, 61, 0.2); animation: festival-pulse 2s ease-in-out infinite; } @keyframes festival-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } } .header-actions { display: flex; align-items: center; gap: 8px; } #sidebar { grid-area: sidebar; background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; } .sidebar-section { background: var(--bg-card); border-radius: var(--radius-md); padding: 12px; border: 1px solid transparent; } .sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; } .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .stat-label { width: 65px; font-size: 12px; color: var(--text-secondary); text-align: right; flex-shrink: 0; } .stat-bar-wrap { flex: 1; height: 16px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); overflow: hidden; position: relative; } .stat-bar { height: 100%; border-radius: var(--radius-sm); transition: width 0.4s ease; position: relative; } .stat-bar.flash { animation: statFlash 0.6s ease; } @keyframes statFlash { 0% { filter: brightness(1); } 50% { filter: brightness(2.5); } 100% { filter: brightness(1); } } .stat-bar.hair { background: linear-gradient(90deg, #6b9cbe, var(--hair-color)); } .stat-bar.dignity { background: linear-gradient(90deg, #a48aca, var(--mental-color)); } .stat-bar.kpi { background: linear-gradient(90deg, #c9a442, var(--kpi-color)); } .stat-bar.risk { background: linear-gradient(90deg, #c87062, var(--risk-color)); } .stat-bar.physique { background: linear-gradient(90deg, #c48e4a, var(--physique-color)); } .stat-bar.intelligence { background: linear-gradient(90deg, #5a94ba, var(--intelligence-color)); } .stat-bar.agility { background: linear-gradient(90deg, #56a64e, var(--agility-color)); } .stat-bar.mental-bar { background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color)); } .stat-bar.hunger { background: linear-gradient(90deg, #c9a838, #dec054); } .stat-bar.fatigue { background: linear-gradient(90deg, #949a88, #b4baa2); } .stat-bar.hygiene { background: linear-gradient(90deg, #4a9490, #5ebeb2); } .stat-bar.happiness { background: linear-gradient(90deg, #cc7868, #e09080); } .stat-bar.health { background: linear-gradient(90deg, #d47058, #56b468); } .stat-bar.fame { background: linear-gradient(90deg, #9672b4, #c9a442); } .stat-bar.ap-bar { background: linear-gradient(90deg, #56a868, #62b868, #50b058); } .stat-value { width: 48px; font-size: 11px; color: var(--text-muted); text-align: right; flex-shrink: 0; font-family: var(--font-mono); } .location-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .location-name { font-size: 14px; font-weight: 600; color: var(--accent); } .location-desc { font-size: 11px; color: var(--text-muted); } #main { grid-area: main; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); } #tab-bar { display: flex; background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 12px; flex-shrink: 0; } .tab-btn { padding: 10px 20px; font-size: 13px; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all var(--transition); font-family: var(--font-sans); } .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); } .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); } #content-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; } #time-slot-indicator { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-card); border-radius: var(--radius-md); font-size: 13px; flex-shrink: 0; } .time-slot-badge { padding: 2px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; } .time-slot-badge.morning { background: rgba(243, 156, 18, 0.2); color: var(--warning); } .time-slot-badge.afternoon { background: rgba(74, 158, 92, 0.2); color: var(--warning); } .time-slot-badge.evening { background: rgba(155, 116, 184, 0.2); color: #9b74b8; } .action-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; } .action-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; cursor: pointer; transition: all var(--transition); } .action-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); } .action-card.disabled { opacity: 0.4; cursor: not-allowed; } .action-card.disabled:hover { border-color: var(--border); transform: none; box-shadow: none; } .action-card .card-icon { font-size: 24px; margin-bottom: 6px; } .action-card .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; } .action-card .card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; } .action-card .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; } .card-meta .ap-cost { color: var(--warning); font-weight: 600; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(243, 156, 18, 0.12); border: 1px solid rgba(243, 156, 18, 0.25); } .card-meta .pay-estimate { color: var(--success); font-weight: 600; } .card-meta .cost-estimate { color: var(--danger); font-weight: 600; } .card-meta .slot-tag { padding: 1px 6px; border-radius: var(--radius-sm); font-size: 10px; background: var(--accent-glow); color: var(--accent); } .card-meta .req-fail { color: var(--danger); font-size: 10px; } #message-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; max-height: 250px; overflow-y: auto; flex-shrink: 0; } #message-log h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; } .log-entry { padding: 3px 0; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); animation: fadeIn 0.3s ease; } .log-entry .log-day { color: var(--text-muted); font-size: 10px; margin-right: 8px; font-family: var(--font-mono); } .log-entry.info { color: var(--text-secondary); } .log-entry.success { color: var(--success); } .log-entry.danger { color: var(--danger); } .log-entry.warning { color: var(--warning); } .log-entry.event { color: var(--accent); font-weight: 600; } .log-entry.hint { color: #27ae60; background: rgba(39, 174, 96, 0.06); border-left: 2px solid rgba(39, 174, 96, 0.35); padding-left: 6px; border-radius: 0 3px 3px 0; } .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .inventory-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 12px; } .inventory-item .item-name { font-weight: 600; color: var(--text-primary); } .inventory-item .item-qty { color: var(--text-muted); font-size: 10px; } .inventory-item .item-effects { color: var(--success); font-size: 10px; } .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 13px; font-family: var(--font-sans); font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); background: var(--bg-card); color: var(--text-primary); white-space: nowrap; } .btn:hover { background: var(--bg-card-hover); border-color: var(--border-light); } .btn:active { transform: scale(0.97); } .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent-hover); } .btn-success { background: var(--success); border-color: var(--success); color: #fff; } .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; } .btn-sm { padding: 4px 10px; font-size: 11px; } .btn-lg { padding: 12px 24px; font-size: 15px; border-radius: var(--radius-md); } .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; } .modal-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; min-width: 360px; max-width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); animation: slideUp 0.2s ease; } .modal-box h2 { font-size: 18px; margin-bottom: 12px; color: var(--text-primary); } .modal-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; } .modal-actions { display: flex; gap: 8px; justify-content: flex-end; } .daily-report-box { max-width: 460px; min-width: 380px; padding: 20px 22px; } .daily-report-box .btn-lg { font-size: 15px; padding: 10px 24px; min-width: 180px; } .daily-report-item { display: flex; align-items: center; padding: 3px 0; font-size: 13px; border-bottom: 1px solid rgba(216, 213, 200, 0.3); } .daily-report-item:last-child { border-bottom: none; } .daily-report-item-icon { width: 20px; text-align: center; flex-shrink: 0; } .daily-report-item-cat { font-size: 10px; color: var(--text-muted); min-width: 32px; text-align: center; flex-shrink: 0; background: var(--bg-card); padding: 1px 4px; border-radius: 3px; margin: 0 6px; } .daily-report-item-desc { flex: 1; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; } .daily-report-item-amount { font-weight: 700; white-space: nowrap; text-align: right; min-width: 70px; } @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } } .end-screen { text-align: center; } .end-screen .end-icon { font-size: 64px; margin-bottom: 16px; } .end-screen .end-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; } .end-screen .end-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; } .end-screen.victory .end-title { color: var(--success); } .end-screen.defeat .end-title { color: var(--danger); } .stats-summary { width: 100%; border-collapse: collapse; margin: 16px 0; } .stats-summary td { padding: 6px 12px; font-size: 13px; border-bottom: 1px solid var(--border); } .stats-summary td:first-child { color: var(--text-muted); } .stats-summary td:last-child { text-align: right; font-weight: 600; } .news-banner { background: linear-gradient(135deg, var(--bg-card), rgba(74, 158, 92, 0.08)); border: 1px solid var(--accent); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--accent); flex-shrink: 0; } .news-banner .news-icon { margin-right: 6px; } .event-box { min-width: 380px; max-width: 540px; border-top: 4px solid var(--accent); background: linear-gradient(180deg, var(--bg-secondary), var(--bg-card)); } .event-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); } .event-icon { font-size: 40px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(74, 158, 92, 0.15), transparent); border-radius: 50%; flex-shrink: 0; } .event-title { font-size: 18px; color: var(--accent); margin: 0; } .event-story { font-size: 13px; color: var(--text-primary); line-height: 1.7; margin-bottom: 16px; padding: 12px 14px; background: var(--bg-card); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); } .event-choices { display: flex; flex-direction: column; gap: 8px; } .event-choice { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; color: var(--text-primary); font-size: 13px; cursor: pointer; transition: all 0.15s ease; position: relative; } .event-choice:hover:not(.disabled) { background: var(--bg-card-hover, rgba(74, 158, 92, 0.08)); border-color: var(--accent); transform: translateX(2px); } .event-choice.disabled { opacity: 0.4; cursor: not-allowed; } .event-choice .choice-main { font-weight: 600; color: var(--text-primary); } .event-choice .choice-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; } @keyframes eventPop { 0% { transform: scale(0.85) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } } .event-overlay, .modal-overlay.event-modal { animation: fadeIn 0.2s ease; } .event-overlay .modal-box, .modal-overlay.event-modal .modal-box { animation: eventPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-warning { color: var(--warning); } .text-accent { color: var(--accent); } .text-muted { color: var(--text-muted); } .text-sm { font-size: 11px; } .text-lg { font-size: 16px; } .font-mono { font-family: var(--font-mono); } .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-2 { margin-bottom: 8px; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .pulse { animation: pulse 2s infinite; } .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 24px; text-align: center; } .welcome-title { font-size: 36px; font-weight: 700; color: var(--accent); letter-spacing: 1px; } .welcome-subtitle { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; } .welcome-buttons { display: flex; gap: 12px; } .tab-panel { display: none; } .tab-panel.active { display: block; } .city-map { position: relative; } .city-map .map-node { animation: mapFadeIn 0.4s ease backwards; } .city-map .map-node:nth-child(1) { animation-delay: 0.02s; } .city-map .map-node:nth-child(2) { animation-delay: 0.04s; } .city-map .map-node:nth-child(3) { animation-delay: 0.06s; } .city-map .map-node:nth-child(4) { animation-delay: 0.08s; } .city-map .map-node:nth-child(5) { animation-delay: 0.1s; } .city-map .map-node:nth-child(6) { animation-delay: 0.12s; } .city-map .map-node:nth-child(7) { animation-delay: 0.14s; } .city-map .map-node:nth-child(8) { animation-delay: 0.16s; } .city-map .map-node:nth-child(9) { animation-delay: 0.18s; } .city-map .map-node:nth-child(10) { animation-delay: 0.2s; } .city-map .map-node:nth-child(11) { animation-delay: 0.22s; } @keyframes mapFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } .nearby-loc-item { cursor: pointer; transition: all 0.2s ease; } .nearby-loc-item:hover { border-color: var(--accent) !important; background: var(--bg-card-hover) !important; transform: translateX(2px); } #location-services { min-height: 20px; } @media (max-width: 768px) { #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; } #sidebar { position: fixed; left: -100%; top: var(--header-height); bottom: 0; width: 280px; z-index: 200; transition: left 0.3s ease; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3); } #sidebar.open { left: 0; } .action-cards { grid-template-columns: 1fr; } .header-stats { gap: 10px; } .header-stat .label { display: none; } #mobile-menu-btn { display: flex !important; } .map-node { min-width: 70px !important; padding: 10px 14px !important; font-size: 12px !important; } .city-map { min-height: 400px !important; padding: 12px !important; } } #mobile-menu-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 4px; } @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } } .tutorial-overlay .modal-box { border: 2px solid var(--accent); box-shadow: 0 0 40px rgba(102, 126, 234, 0.3); } .tutorial-box { animation: fadeInUp 0.3s ease-out; } @keyframes tutorial-pulse { 0%, 100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.5), inset 0 0 25px rgba(102, 126, 234, 0.08); } 50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), inset 0 0 40px rgba(102, 126, 234, 0.15); } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } @keyframes ap-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } @keyframes ap-blink-border { 0%, 100% { box-shadow: 0 0 12px rgba(255, 152, 0, 0.4); } 50% { box-shadow: 0 0 24px rgba(255, 152, 0, 0.8); } } .wiki-tab { display: flex; flex-direction: column; gap: 12px; } .wiki-header h2 { font-size: 18px; color: var(--accent); } .wiki-search { display: flex; gap: 8px; margin-top: 8px; } .wiki-search input { flex: 1; padding: 8px 12px; border: 1px solid #d8d3c5; border-radius: 8px; background: #fff; color: var(--text-primary); font-size: 13px; font-family: var(--font-sans); } .wiki-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74, 158, 92, 0.2); } .wiki-clear { padding: 8px 12px; background: #fff; border: 1px solid #d8d3c5; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 12px; } .wiki-clear:hover { border-color: var(--danger); color: var(--danger); } .wiki-layout { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: start; } .wiki-nav { display: flex; flex-direction: column; gap: 4px; background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 8px; position: sticky; top: 0; } .wiki-nav-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: transparent; border: none; border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; text-align: left; transition: all 0.15s; font-family: var(--font-sans); } .wiki-nav-btn:hover { background: #f5f1e8; color: var(--text-primary); } .wiki-nav-btn.active { background: rgba(74, 158, 92, 0.12); color: var(--accent); font-weight: 600; } .wiki-nav-ico { font-size: 14px; width: 18px; text-align: center; } .wiki-nav-name { flex: 1; } .wiki-nav-count { font-size: 10px; color: var(--text-muted); background: #f5f1e8; border-radius: 8px; padding: 1px 6px; min-width: 22px; text-align: center; } .wiki-nav-btn.active .wiki-nav-count { background: rgba(74, 158, 92, 0.2); color: var(--accent); } .wiki-content { background: #ffffff; border: 1px solid #e6e0d0; border-radius: 10px; padding: 16px; min-height: 300px; } .wiki-list-header h3 { margin: 0 0 12px; font-size: 16px; color: var(--text-primary); } .wiki-count { font-size: 12px; color: var(--text-muted); font-weight: normal; } .wiki-empty { color: var(--text-muted); text-align: center; padding: 40px; } .wiki-entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; } .wiki-card { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; } .wiki-card:hover { border-color: var(--accent); background: #fff; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); } .wiki-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .wiki-card-head h4 { margin: 0; font-size: 13px; color: var(--text-primary); flex: 1; } .wiki-card-ico { font-size: 16px; } .wiki-card-brief { margin: 0; font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .wiki-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; white-space: nowrap; } .wiki-badge.ok { background: rgba(74, 158, 92, 0.15); color: var(--accent); } .wiki-badge.warn { background: rgba(212, 160, 23, 0.15); color: #b08712; } .wiki-badge.info { background: rgba(52, 152, 219, 0.15); color: #2575b3; } .wiki-badge.bad { background: rgba(231, 76, 60, 0.15); color: var(--danger); } .wiki-badge.muted { background: #f0ebde; color: var(--text-muted); } .wiki-detail { position: relative; } .wiki-back { background: #f5f1e8; border: 1px solid #d8d3c5; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; margin-bottom: 12px; } .wiki-back:hover { border-color: var(--accent); color: var(--accent); } .wiki-detail-body h2 { font-size: 18px; margin: 0 0 8px; color: var(--text-primary); } .wiki-detail-body h3 { font-size: 14px; margin: 16px 0 8px; color: var(--accent); border-bottom: 1px solid #ece7d8; padding-bottom: 4px; } .wiki-detail-body p, .wiki-detail-body ul, .wiki-detail-body ol { font-size: 12px; color: var(--text-secondary); line-height: 1.7; } .wiki-detail-body code { background: #f5f1e8; border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono, monospace); font-size: 11px; } .wiki-desc { font-size: 13px !important; color: var(--text-secondary); margin: 0 0 12px; font-style: italic; } .wiki-attrs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; background: #fdfaf3; border-radius: 8px; padding: 10px; margin-bottom: 12px; } .wiki-attrs > div { font-size: 12px; color: var(--text-secondary); } .wiki-attrs b { color: var(--text-primary); margin-right: 6px; } .wiki-list { margin: 0 0 12px 16px; padding: 0; } .wiki-list li { margin-bottom: 4px; } .wiki-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 12px; } .wiki-table th, .wiki-table td { padding: 6px 8px; border: 1px solid #ece7d8; text-align: left; color: var(--text-secondary); } .wiki-table th { background: #fdfaf3; color: var(--text-primary); font-weight: 600; } .wiki-table tr:nth-child(even) td { background: #fdfaf3; } .wiki-link { color: var(--accent); text-decoration: none; font-weight: 500; border-bottom: 1px dashed rgba(74, 158, 92, 0.4); cursor: pointer; } .wiki-link:hover { border-bottom-style: solid; background: rgba(74, 158, 92, 0.06); } .wiki-links { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } .wiki-links .wiki-link { background: #fdfaf3; border: 1px solid #e6e0d0; border-radius: 14px; padding: 4px 10px; border-bottom: 1px solid #e6e0d0; font-size: 11px; } .wiki-links .wiki-link:hover { border-color: var(--accent); background: rgba(74, 158, 92, 0.08); } .wiki-tip { background: rgba(74, 158, 92, 0.06); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); margin: 8px 0 12px; } .wiki-quote { background: #fdfaf3; border-left: 3px solid #d4a017; padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px !important; color: var(--text-secondary); font-style: italic; margin: 8px 0; } .wiki-pill { display: inline-block; background: #f5f1e8; border: 1px solid #e6e0d0; border-radius: 12px; padding: 2px 10px; font-size: 11px; color: var(--text-secondary); } @media (max-width: 760px) { .wiki-layout { grid-template-columns: 1fr; } .wiki-nav { flex-direction: row; overflow-x: auto; position: relative; } .wiki-nav-btn { flex: 0 0 auto; flex-direction: column; padding: 6px 8px; min-width: 60px; text-align: center; } .wiki-nav-btn .wiki-nav-name { font-size: 10px; } .wiki-nav-btn .wiki-nav-count { font-size: 9px; padding: 0 4px; } .wiki-entries { grid-template-columns: 1fr; } } </style>
     <style>
       /* 内联关键样式（防止FOUC） */
       body {
@@ -91,7 +91,7 @@
           <div
             class="header-stat"
             id="header-debt-area"
-            style="cursor: default; display: none;"
+            style="cursor: default; display: none"
           >
             <span class="label" id="header-debt-label">💸</span>
             <span class="value debt" id="header-debt">¥0</span>
@@ -315,6 +315,7 @@
           <button class="tab-btn" data-tab="skills">📚 技能</button>
           <button class="tab-btn" data-tab="corp">🏢 职场</button>
           <button class="tab-btn" data-tab="investment">💰 投资</button>
+          <button class="tab-btn" data-tab="enterprise">🏭 企业</button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
@@ -540,6 +541,69 @@ function createDefaultState() {
       lastTickDay: 0,
     },
 
+    // --- 企业命运系统 (P2#11) ---
+    enterpriseFate: {
+      companies: {
+        star_tech: {
+          phase: "growth",
+          health: 82,
+          marketShare: 15,
+          sentiment: 60,
+          productScore: 72,
+          talentScore: 68,
+          trend: "up",
+          knownToPlayer: false,
+          fateEventHistory: [],
+        },
+        byte_dragon: {
+          phase: "growth",
+          health: 88,
+          marketShare: 22,
+          sentiment: 70,
+          productScore: 80,
+          talentScore: 75,
+          trend: "up",
+          knownToPlayer: false,
+          fateEventHistory: [],
+        },
+        cloud_giant: {
+          phase: "mature",
+          health: 78,
+          marketShare: 18,
+          sentiment: 55,
+          productScore: 65,
+          talentScore: 60,
+          trend: "stable",
+          knownToPlayer: false,
+          fateEventHistory: [],
+        },
+        game_fun: {
+          phase: "growth",
+          health: 75,
+          marketShare: 10,
+          sentiment: 65,
+          productScore: 70,
+          talentScore: 55,
+          trend: "up",
+          knownToPlayer: false,
+          fateEventHistory: [],
+        },
+        safe_fin: {
+          phase: "mature",
+          health: 85,
+          marketShare: 12,
+          sentiment: 50,
+          productScore: 60,
+          talentScore: 70,
+          trend: "stable",
+          knownToPlayer: false,
+          fateEventHistory: [],
+        },
+      },
+      fateEventCooldown: {},
+      lastFateTick: 0,
+    },
+
     // --- 天气 ---
     weather: {
       current: "sunny",
@@ -565,6 +629,7 @@ function createDefaultState() {
       gameOverReason: null,
       ageThisYear: false,
       seenNewsToday: [],
+      _dailyTransactions: [], // 当日收支流水记录 [{ type, category, amount, description }]
     },
 
     // --- 事件与消息 ---
@@ -709,6 +774,26 @@ const StateManager = new GameStateManager();
 // 使其在全局可访问（方便调试）
 if (typeof window !== "undefined") {
   window.StateManager = StateManager;
+}
+
+/**
+ * 添加一条当日收支记录
+ * @param {object} state - 游戏状态
+ * @param {"income"|"expense"} type - 收入或支出
+ * @param {string} category - 分类键（如 "job_income", "rent", "food"）
+ * @param {number} amount - 金额（正数）
+ * @param {string} description - 描述文本
+ */
+function addDailyTransaction(state, type, category, amount, description) {
+  if (!state.flags._dailyTransactions) {
+    state.flags._dailyTransactions = [];
+  }
+  state.flags._dailyTransactions.push({
+    type: type,
+    category: category,
+    amount: Math.round(amount),
+    description: description,
+  });
 }
 </script>
     <script>/**
@@ -9184,6 +9269,56 @@ const ACHIEVEMENTS = [
       return st.player.day >= 100 && !(st.flags && st.flags._everBegged);
     },
   },
+
+  // === 企业命运成就（P2#11）===
+  {
+    id: "witness_fall",
+    name: "见证陨落",
+    desc: "亲眼见证一家公司走向倒闭。",
+    story: "你入职时那家充满希望的公司，如今人去楼空。商海浮沉，你亲眼见证了一个时代的结束。",
+    icon: "💀",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
+        for (var i = 0; i < h.length; i++) {
+          if (h[i].eventType === "merger_acquire") return true;
+        }
+      }
+      return false;
+    },
+  },
+  {
+    id: "investor_eye",
+    name: "投资眼光",
+    desc: "投资的公司成长为市场领导者。",
+    story: "你在一家公司还不起眼的时候就看中了它。如今它站在行业之巅——你的眼光，没错。",
+    icon: "🔮",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+      for (var cid in st.enterpriseFate.companies) {
+        var co = st.enterpriseFate.companies[cid];
+        if (co && co.knownToPlayer && co.marketShare >= 30) return true;
+      }
+      return false;
+    },
+  },
+  {
+    id: "corp_killer",
+    name: "行业颠覆者",
+    desc: "你离开后，公司倒闭了。",
+    story: "有人说你命硬，有人说你运气好。只有你知道——你走的那天，就已经预感到了结局。",
+    icon: "⚡",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._formerCompanyCollapsed);
+    },
+  },
 ];
 
 /**
@@ -12864,6 +12999,74 @@ const COMPANIES = [
   },
 ];
 
+/**
+ * 企业生命周期阶段定义 — 用于企业命运系统 (P2#11)
+ */
+const CORP_LIFECYCLE_PHASES = {
+  startup: {
+    name: "初创期",
+    color: "#4fc3f7",
+    icon: "🚀",
+    desc: "高增长高风险的早期阶段",
+    growthMult: 1.5,
+    riskMult: 2.0,
+    healthDecay: 0.1,
+    recoveryRate: 0.3,
+  },
+  growth: {
+    name: "成长期",
+    color: "#4a9e5c",
+    icon: "📈",
+    desc: "高速成长，市场份额快速扩大",
+    growthMult: 1.2,
+    riskMult: 1.2,
+    healthDecay: 0.05,
+    recoveryRate: 0.2,
+  },
+  mature: {
+    name: "成熟期",
+    color: "#f39c12",
+    icon: "🏛️",
+    desc: "稳定经营，创新放缓",
+    growthMult: 0.8,
+    riskMult: 0.6,
+    healthDecay: 0.08,
+    recoveryRate: 0.1,
+  },
+  decline: {
+    name: "衰退期",
+    color: "#e67e22",
+    icon: "📉",
+    desc: "市场份额萎缩，经营困难",
+    growthMult: 0.4,
+    riskMult: 1.5,
+    healthDecay: 0.2,
+    recoveryRate: 0.05,
+  },
+  dying: {
+    name: "濒死期",
+    color: "#c4553d",
+    icon: "💀",
+    desc: "面临破产或收购",
+    growthMult: 0.1,
+    riskMult: 3.0,
+    healthDecay: 0.4,
+    recoveryRate: 0.02,
+  },
+};
+
+/**
+ * 公司→股票映射 — 每家公司对应的股票symbol列表
+ * 用于企业命运系统影响股价
+ */
+const CORP_STOCK_MAP = {
+  star_tech: ["BAID", "SMIC", "HUAW"],
+  byte_dragon: ["BYTE", "BILI", "KUAI"],
+  cloud_giant: ["HUAW", "BAID"],
+  game_fun: ["NETE", "TENC"],
+  safe_fin: ["SAFE", "PING", "ALIM"],
+};
+
 const CORP_ACTIONS = [
   {
     id: "project_work",
@@ -13109,6 +13312,13 @@ function sellGood(goodId, qty) {
   // 加钱
   state.resources.cash += totalEarned;
   state.resources.totalEarned += totalEarned;
+  addDailyTransaction(
+    state,
+    "income",
+    "trade_profit",
+    totalEarned,
+    "卖出" + good.name + "×" + qty,
+  );
   // 追踪累计交易利润
   const avgBuy = getAvgBuyPrice(state, goodId);
   if (avgBuy > 0) {
@@ -14405,6 +14615,13 @@ function settleDailyFinance(state) {
   var interest = Math.floor(bal * rate);
   if (interest > 0) {
     state.resources.bankBalance += interest;
+    addDailyTransaction(
+      state,
+      "income",
+      "bank_interest",
+      interest,
+      "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
+    );
     StateManager.addMessage(
       "🏦 银行利息 +¥" +
         interest +
@@ -14635,6 +14852,7 @@ function addStreetExtras(state, actions) {
       const earned = Math.floor(5 + Math.random() * 20 + (skill - 25) * 0.3);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
+      addDailyTransaction(st, "income", "side_job", earned, "街头卖唱");
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
       st.status.fame = Math.min(100, st.status.fame + 1);
       if (Math.random() < 0.2) {
@@ -14666,6 +14884,7 @@ function addStreetExtras(state, actions) {
       const earned = 1 + Math.floor(Math.random() * 5);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
+      addDailyTransaction(st, "income", "side_job", earned, "街头乞讨");
       st.needs.happiness = Math.max(0, st.needs.happiness - 12);
       st.status.fame = Math.max(0, st.status.fame - 2);
       st.flags._everBegged = true; // 成就追踪
@@ -14692,9 +14911,11 @@ function addStreetExtras(state, actions) {
         return;
       }
       st.resources.cash -= 50;
+      addDailyTransaction(st, "expense", "entertainment", 50, "赌博押注");
       if (Math.random() < 0.45) {
         st.resources.cash += 100;
         st.resources.totalEarned += 50;
+        addDailyTransaction(st, "income", "side_job", 100, "赌博赢钱");
         st.needs.happiness = Math.min(100, st.needs.happiness + 10);
         StateManager.addMessage("🎲 赢了！100 块到手！", "success");
       } else {
@@ -14719,10 +14940,12 @@ function addStreetExtras(state, actions) {
         return;
       }
       st.resources.cash -= 2;
+      addDailyTransaction(st, "expense", "misc", 2, "给家里打电话");
       st.needs.happiness = Math.min(100, st.needs.happiness + 15);
       st.needs.hunger = Math.max(0, st.needs.hunger - 3);
       if (Math.random() < 0.3) {
         st.resources.cash += 200; // 爸妈塞的钱
+        addDailyTransaction(st, "income", "gift", 200, "爸妈给的零花钱");
         StateManager.addMessage(
           "📞 妈妈在电话里哭了，让你注意身体，转了 200 块。",
           "success",
@@ -15209,6 +15432,7 @@ function addStreetExtras(state, actions) {
       if (earned > 0) {
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "side_job", earned, "摆摊收入");
       }
       // 销售技能经验
       if (xpGain > 0) {
@@ -15302,6 +15526,7 @@ function addStreetExtras(state, actions) {
         const earned = Math.floor(80 + lvl * 1.5 + Math.random() * 50);
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "job_income", earned, "编程外包");
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
         const xpGain =
@@ -15407,6 +15632,7 @@ function addStreetExtras(state, actions) {
         var fameGain = 3 + Math.floor(Math.random() * 5);
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
+        addDailyTransaction(st, "income", "side_job", earned, "周末集市摆摊");
         st.status.fame = Math.min(100, st.status.fame + fameGain);
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         if (st.skills.sales) st.skills.sales.xp += 15;
@@ -16040,6 +16266,13 @@ const DAILY_PIPELINE = [
         }
         if (state.resources.cash >= rentAmount) {
           state.resources.cash -= rentAmount;
+          addDailyTransaction(
+            state,
+            "expense",
+            "rent",
+            rentAmount,
+            house.name ? "房租 - " + house.name : "房租",
+          );
         } else {
           StateManager.addMessage(
             "⚠️ 付不起房租 ¥" + rentAmount + "！被赶回流落街头。",
@@ -16058,6 +16291,13 @@ const DAILY_PIPELINE = [
         var storageRent = state.housing.storageCapacity >= 500 ? 50 : 20;
         if (state.resources.cash >= storageRent) {
           state.resources.cash -= storageRent;
+          addDailyTransaction(
+            state,
+            "expense",
+            "rent",
+            storageRent,
+            "仓库租金",
+          );
         } else {
           StateManager.addMessage("⚠️ 付不起仓库租金，仓库被收回。", "danger");
           state.housing.storageRented = false;
@@ -16145,6 +16385,16 @@ const DAILY_PIPELINE = [
     name: "investment_tick",
     fn: function (state) {
       tickInvestmentDaily(state);
+    },
+  },
+
+  // === 企业命运tick ===
+  {
+    name: "enterprise_fate_tick",
+    fn: function (state) {
+      if (typeof tickEnterpriseFate === "function") {
+        tickEnterpriseFate(state);
+      }
     },
   },
 
@@ -16331,6 +16581,16 @@ const DAILY_PIPELINE = [
           state.flags._dayStartHappiness || 0,
         );
         StateManager.addMessage(summary, "hint");
+      }
+    },
+  },
+
+  // === 每日收支报告（阻塞弹窗）===
+  {
+    name: "daily_report",
+    fn: function (state) {
+      if (typeof showDailyReport === "function") {
+        showDailyReport(state);
       }
     },
   },
@@ -17521,6 +17781,13 @@ function endQuarter() {
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
   state.resources.cash += salary;
   state.resources.totalEarned += salary;
+  addDailyTransaction(
+    state,
+    "income",
+    "salary",
+    salary,
+    "季度工资 - " + c.rank,
+  );
 
   StateManager.addMessage(
     `💰 Q${c.corpQuarter} 结束。工资到账 ¥${salary.toLocaleString()}。绩效: ${grade.grade}`,
@@ -17534,6 +17801,13 @@ function endQuarter() {
     const bonus = Math.round(rankData.baseSalary * bonusMultiplier);
     if (bonus > 0) {
       state.resources.cash += bonus;
+      addDailyTransaction(
+        state,
+        "income",
+        "salary",
+        bonus,
+        "年终奖 - 绩效" + grade.grade,
+      );
       StateManager.addMessage(
         `🎉 年终奖到账！绩效 ${grade.grade}，奖金 ¥${bonus.toLocaleString()}！`,
         "success",
@@ -20302,6 +20576,487 @@ function renderCars(area, inv, state, parent) {
 }
 </script>
 
+    <!-- Enterprise Fate System -->
+    <script>/**
+ * 企业命运系统 — 动态商业生态变迁引擎
+ *
+ * P2#11：玩家投资/就职/竞争过的公司随时间成长、合并、倒闭，
+ * 形成可观察的商业生态变迁。5家公司各自经历生命周期阶段，
+ * 受自然漂移、命运事件、玩家行为三重影响。
+ *
+ * 设计理念（参考《Dwarf Fortress》历史记忆 + 《CK3》关系网络）：
+ * - 公司不是静态背景板，而是有生命周期的经济实体
+ * - 玩家的选择和表现切实影响公司命运
+ * - 命运事件生成新闻，新闻影响投资，投资反馈到公司
+ */
+
+// ====== 7 种命运事件模板 ======
+var FATE_EVENTS = [
+  {
+    id: "market_erosion",
+    label: "市场份额被蚕食",
+    icon: "🦈",
+    weight: 1.5,
+    condition: function(st, co) {
+      return co.trend === "down" && co.marketShare < 15;
+    },
+    apply: function(st, cid, co) {
+      co.health = Math.max(5, co.health - (10 + Math.floor(Math.random() * 11)));
+      co.marketShare = Math.max(1, co.marketShare - (2 + Math.floor(Math.random() * 4)));
+      co.sentiment = Math.max(5, co.sentiment - (15 + Math.floor(Math.random() * 11)));
+      return { stockMul: 0.94, msg: "市场份额持续萎缩，被竞争对手蚕食" };
+    },
+  },
+  {
+    id: "product_breakout",
+    label: "新产品爆发",
+    icon: "🚀",
+    weight: 1.2,
+    condition: function(st, co) {
+      return co.productScore > 65 && co.phase !== "decline" && co.phase !== "dying";
+    },
+    apply: function(st, cid, co) {
+      co.health = Math.min(100, co.health + (10 + Math.floor(Math.random() * 11)));
+      co.marketShare = Math.min(40, co.marketShare + (3 + Math.floor(Math.random() * 6)));
+      co.sentiment = Math.min(100, co.sentiment + (20 + Math.floor(Math.random() * 11)));
+      if (co.phase === "mature") co.trend = "up";
+      return { stockMul: 1.12, msg: "新产品引爆市场，订单暴增" };
+    },
+  },
+  {
+    id: "scandal",
+    label: "丑闻曝光",
+    icon: "📰",
+    weight: 1.0,
+    condition: function(st, co) {
+      return co.sentiment < 45 || (co.trend === "down" && co.health < 60);
+    },
+    apply: function(st, cid, co) {
+      co.health = Math.max(5, co.health - (15 + Math.floor(Math.random() * 11)));
+      co.sentiment = Math.max(5, co.sentiment - (25 + Math.floor(Math.random() * 11)));
+      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 6)));
+      return { stockMul: 0.90, msg: "管理层丑闻曝光，引发信任危机" };
+    },
+  },
+  {
+    id: "merger_acquire",
+    label: "收购/合并",
+    icon: "🤝",
+    weight: 0.5,
+    condition: function(st, co) {
+      // 濒死或高市场占有率成熟公司
+      return co.phase === "dying" || (co.phase === "mature" && co.marketShare > 25);
+    },
+    apply: function(st, cid, co) {
+      if (co.phase === "dying") {
+        // 濒死公司被收购——标记flag供事件系统使用
+        co.phase = "dying";
+        co.health = Math.max(3, co.health - 5);
+        co.marketShare = Math.max(1, Math.floor(co.marketShare * 0.5));
+        st.flags["_acquired_" + cid] = true;
+        return { stockMul: 0.85, msg: "经营不善，被竞争对手低价收购" };
+      } else {
+        // 强势公司并购
+        co.marketShare = Math.min(40, co.marketShare + 8);
+        co.health = Math.min(100, co.health + 5);
+        co.sentiment = Math.min(100, co.sentiment + 10);
+        return { stockMul: 1.08, msg: "宣布收购同业公司，行业格局重塑" };
+      }
+    },
+  },
+  {
+    id: "policy_tailwind",
+    label: "行业政策利好",
+    icon: "📋",
+    weight: 0.8,
+    condition: function(st, co) {
+      return co.health > 20; // 任何健康的公司都可能受益
+    },
+    apply: function(st, cid, co) {
+      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 11)));
+      co.sentiment = Math.min(100, co.sentiment + (15 + Math.floor(Math.random() * 11)));
+      co.trend = "up";
+      return { stockMul: 1.08, msg: "所在行业获重大政策利好，板块集体走强" };
+    },
+  },
+  {
+    id: "founder_return",
+    label: "创始人回归",
+    icon: "👑",
+    weight: 0.6,
+    condition: function(st, co) {
+      return co.phase === "decline" && co.sentiment < 35;
+    },
+    apply: function(st, cid, co) {
+      co.sentiment = Math.min(100, co.sentiment + (10 + Math.floor(Math.random() * 11)));
+      co.talentScore = Math.min(100, co.talentScore + (5 + Math.floor(Math.random() * 11)));
+      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 6)));
+      co.productScore = Math.min(100, co.productScore + 5);
+      if (co.health > 40) co.trend = "up";
+      return { stockMul: 1.06, msg: "创始人回归，启动重大战略重组" };
+    },
+  },
+  {
+    id: "cash_crisis",
+    label: "资金链断裂",
+    icon: "💸",
+    weight: 0.7,
+    condition: function(st, co) {
+      return co.phase === "decline" || co.phase === "dying";
+    },
+    apply: function(st, cid, co) {
+      co.health = Math.max(3, co.health - (20 + Math.floor(Math.random() * 11)));
+      co.sentiment = Math.max(5, co.sentiment - 20);
+      co.talentScore = Math.max(5, co.talentScore - (10 + Math.floor(Math.random() * 11)));
+      if (co.health < 10 && co.phase !== "dying") co.phase = "dying";
+      return { stockMul: 0.85, msg: "资金链断裂，大规模裁员自救" };
+    },
+  },
+];
+
+/**
+ * 获取公司名称（根据公司ID）
+ */
+function getCompanyNameById(cid) {
+  var names = {
+    star_tech: "星辰科技",
+    byte_dragon: "字节龙",
+    cloud_giant: "云巨人",
+    game_fun: "好玩游戏",
+    safe_fin: "安信金融科技",
+  };
+  return names[cid] || cid;
+}
+
+/**
+ * 获取公司行业标签
+ */
+function getCompanyIndustry(cid) {
+  var industries = {
+    star_tech: "AI/大模型",
+    byte_dragon: "短视频/推荐",
+    cloud_giant: "云计算/企业服务",
+    game_fun: "手游/出海",
+    safe_fin: "金融科技",
+  };
+  return industries[cid] || "";
+}
+
+/**
+ * 获取公司详情（从COMPANIES数组查找）
+ */
+function getCompanyDef(cid) {
+  if (typeof COMPANIES !== "undefined") {
+    for (var i = 0; i < COMPANIES.length; i++) {
+      if (COMPANIES[i].id === cid) return COMPANIES[i];
+    }
+  }
+  return null;
+}
+
+// ====== 核心函数 ======
+
+/**
+ * 初始化企业命运状态
+ * 基于各公司 growthRate 设定初始值
+ */
+function initEnterpriseFate(state) {
+  if (!state.enterpriseFate) {
+    // 兼容旧存档
+    state.enterpriseFate = {
+      companies: {},
+      fateEventCooldown: {},
+      lastFateTick: 0,
+    };
+  }
+  var fate = state.enterpriseFate;
+  if (!fate.companies) fate.companies = {};
+
+  var defaults = {
+    star_tech:  { phase: "growth",  health: 82, marketShare: 15, sentiment: 60, productScore: 72, talentScore: 68, trend: "up", knownToPlayer: false, fateEventHistory: [] },
+    byte_dragon: { phase: "growth",  health: 88, marketShare: 22, sentiment: 70, productScore: 80, talentScore: 75, trend: "up", knownToPlayer: false, fateEventHistory: [] },
+    cloud_giant: { phase: "mature",  health: 78, marketShare: 18, sentiment: 55, productScore: 65, talentScore: 60, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
+    game_fun:    { phase: "growth",  health: 75, marketShare: 10, sentiment: 65, productScore: 70, talentScore: 55, trend: "up", knownToPlayer: false, fateEventHistory: [] },
+    safe_fin:    { phase: "mature",  health: 85, marketShare: 12, sentiment: 50, productScore: 60, talentScore: 70, trend: "stable", knownToPlayer: false, fateEventHistory: [] },
+  };
+
+  for (var cid in defaults) {
+    if (!fate.companies[cid]) {
+      fate.companies[cid] = JSON.parse(JSON.stringify(defaults[cid]));
+    }
+  }
+}
+
+/**
+ * 企业命运每日结算 — 由 daily_pipeline 调用
+ */
+function tickEnterpriseFate(state) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies) return;
+
+  var fate = state.enterpriseFate;
+  var companies = fate.companies;
+  var hasStocks = typeof INV_STOCKS !== "undefined" && typeof CORP_STOCK_MAP !== "undefined";
+  var inv = state.investment;
+
+  for (var cid in companies) {
+    var co = companies[cid];
+    if (!co) continue;
+
+    // 1. 自然漂移
+    var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+
+    // health: 缓慢向中间值收敛
+    var healthDrift = (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
+    co.health = Math.max(1, Math.min(100, co.health + healthDrift));
+
+    // marketShare: 受阶段影响
+    var shareDrift = (Math.random() - 0.5) * 0.6 + ((co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0));
+    co.marketShare = Math.max(1, Math.min(45, co.marketShare + shareDrift));
+
+    // sentiment: 随机波动
+    co.sentiment = Math.max(5, Math.min(100, co.sentiment + (Math.random() - 0.5) * 4));
+
+    // 2. 阶段转换
+    if (co.health < 20 && co.phase !== "dying") {
+      co.phase = "dying";
+      co.trend = "down";
+    } else if (co.health < 45 && co.phase === "growth") {
+      co.phase = "decline";
+      co.trend = "down";
+    } else if (co.health > 65 && co.phase === "decline") {
+      co.phase = "mature";
+      co.trend = "stable";
+    } else if (co.health > 80 && co.phase === "startup") {
+      co.phase = "growth";
+      co.trend = "up";
+    }
+
+    // 更新trend
+    if (co.trend === "stable" && co.health > 70) co.trend = "up";
+    if (co.trend === "up" && co.health < 30) co.trend = "down";
+    if (co.trend === "down" && co.health > 75) co.trend = "up";
+
+    // 3. 标记 knownToPlayer（玩家已入职或持有股票）
+    if (!co.knownToPlayer) {
+      if (state.corporate && state.corporate.company === cid) {
+        co.knownToPlayer = true;
+      }
+      if (hasStocks && inv && inv.stockHoldings) {
+        var stockSymbols = CORP_STOCK_MAP[cid] || [];
+        for (var si = 0; si < inv.stockHoldings.length; si++) {
+          if (stockSymbols.indexOf(inv.stockHoldings[si].symbol) >= 0) {
+            co.knownToPlayer = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // 4. 股票价格牵引（温和拉向公司健康度方向）
+  if (hasStocks && inv && inv.stockMarket) {
+    for (var cid2 in CORP_STOCK_MAP) {
+      var co2 = companies[cid2];
+      if (!co2) continue;
+      var symbols = CORP_STOCK_MAP[cid2];
+      for (var si2 = 0; si2 < symbols.length; si2++) {
+        var mkt = inv.stockMarket[symbols[si2]];
+        if (!mkt) continue;
+        // 计算目标乘数: health + sentiment + marketShare 综合
+        var targetMul = 0.7 + (co2.health / 100) * 0.15 + (co2.sentiment / 100) * 0.1 + (co2.marketShare / 30) * 0.05;
+        // 温和牵引: 每次向目标移动0.5%
+        mkt.price = mkt.price * (1 - 0.005) + mkt.price * targetMul * 0.005;
+        mkt.price = Math.max(0.0001, Math.round(mkt.price * 10000) / 10000);
+      }
+    }
+  }
+
+  // 5. 命运事件触发
+  rollFateEvent(state);
+
+  fate.lastFateTick = state.player.day;
+}
+
+/**
+ * 命运事件触发判定
+ */
+function rollFateEvent(state) {
+  if (!state.enterpriseFate) return;
+  var fate = state.enterpriseFate;
+  var cooldown = fate.fateEventCooldown || {};
+  var today = state.player.day;
+
+  for (var cid in fate.companies) {
+    var co = fate.companies[cid];
+    if (!co) continue;
+
+    // 冷却期：每个公司至少10天
+    if (cooldown[cid] && today - cooldown[cid] < 10) continue;
+
+    // 基准概率 ~3%，濒死期提高
+    var baseProb = 0.03;
+    if (co.phase === "dying") baseProb += 0.06;
+    if (co.phase === "decline") baseProb += 0.03;
+    if (co.health < 30) baseProb += 0.04;
+
+    if (Math.random() < baseProb) {
+      // 筛选有效事件
+      var validEvents = [];
+      for (var ei = 0; ei < FATE_EVENTS.length; ei++) {
+        if (FATE_EVENTS[ei].condition(state, co)) {
+          validEvents.push(FATE_EVENTS[ei]);
+        }
+      }
+      if (validEvents.length > 0) {
+        // 按权重选取
+        var totalWeight = 0;
+        for (var vi = 0; vi < validEvents.length; vi++) {
+          totalWeight += (validEvents[vi].weight || 1);
+        }
+        var roll = Math.random() * totalWeight;
+        var picked = validEvents[0];
+        for (var vi2 = 0; vi2 < validEvents.length; vi2++) {
+          roll -= (validEvents[vi2].weight || 1);
+          if (roll <= 0) { picked = validEvents[vi2]; break; }
+        }
+
+        // 应用事件
+        var result = applyFateEvent(picked, cid, state);
+        if (result) {
+          cooldown[cid] = today;
+        }
+        return; // 每天最多一个命运事件
+      }
+    }
+  }
+}
+
+/**
+ * 应用命运事件效果
+ */
+function applyFateEvent(event, cid, state) {
+  var co = state.enterpriseFate.companies[cid];
+  if (!co) return null;
+
+  var result = event.apply(state, cid, co);
+  if (!result) return null;
+
+  // 记录历史（最多20条）
+  if (!co.fateEventHistory) co.fateEventHistory = [];
+  co.fateEventHistory.push({
+    day: state.player.day,
+    eventType: event.id,
+    icon: event.icon,
+    label: event.label,
+    description: result.msg,
+  });
+  if (co.fateEventHistory.length > 20) {
+    co.fateEventHistory = co.fateEventHistory.slice(-20);
+  }
+
+  // 更新趋势
+  if (result.stockMul > 1.05) co.trend = "up";
+  if (result.stockMul < 0.95) co.trend = "down";
+
+  // 生成新闻消息
+  var companyName = getCompanyNameById(cid);
+  var headline = event.icon + " 【" + companyName + "】" + result.msg;
+  StateManager.addMessage("🏭 " + headline, "event");
+
+  // 如果玩家已知该公司，应用股价冲击
+  if (co.knownToPlayer && state.investment && state.investment.stockMarket && typeof CORP_STOCK_MAP !== "undefined") {
+    var symbols = CORP_STOCK_MAP[cid] || [];
+    for (var si = 0; si < symbols.length; si++) {
+      var mkt = state.investment.stockMarket[symbols[si]];
+      if (mkt) {
+        mkt.price = Math.max(0.0001, Math.round(mkt.price * result.stockMul * 10000) / 10000);
+      }
+    }
+    StateManager.addMessage("📊 关联股票价格已调整", "info");
+  }
+
+  return result;
+}
+
+/**
+ * 获取公司命运摘要（用于UI显示）
+ */
+function getCompanyFateSummary(cid, state) {
+  if (!state.enterpriseFate || !state.enterpriseFate.companies) return null;
+  var co = state.enterpriseFate.companies[cid];
+  if (!co) return null;
+  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
+  return {
+    name: getCompanyNameById(cid),
+    industry: getCompanyIndustry(cid),
+    phase: co.phase,
+    phaseName: phaseDef.name,
+    phaseIcon: phaseDef.icon,
+    phaseColor: phaseDef.color,
+    health: Math.round(co.health),
+    marketShare: Math.round(co.marketShare),
+    sentiment: Math.round(co.sentiment),
+    productScore: Math.round(co.productScore || 50),
+    talentScore: Math.round(co.talentScore || 50),
+    trend: co.trend,
+    knownToPlayer: co.knownToPlayer,
+    history: co.fateEventHistory || [],
+  };
+}
+
+/**
+ * 获取玩家影响加成（工作表现/投资行为对公司健康度的影响）
+ */
+function getPlayerCompanyImpact(state) {
+  var impacts = {};
+  if (!state.enterpriseFate || !state.enterpriseFate.companies) return impacts;
+
+  for (var cid in state.enterpriseFate.companies) {
+    var co = state.enterpriseFate.companies[cid];
+    if (!co || !co.knownToPlayer) continue;
+
+    var impact = 0;
+
+    // 玩家就职该公司：KPI/能力影响
+    if (state.corporate && state.corporate.company === cid) {
+      var ability = state.corporate.ability || 30;
+      var kpi = state.corporate.kpi || 20;
+      impact += (ability - 30) * 0.02 + (kpi - 20) * 0.01;
+    }
+
+    // 玩家持有股票
+    if (state.investment && state.investment.stockHoldings) {
+      var stockSymbols = CORP_STOCK_MAP[cid] || [];
+      var totalShares = 0;
+      for (var si = 0; si < state.investment.stockHoldings.length; si++) {
+        if (stockSymbols.indexOf(state.investment.stockHoldings[si].symbol) >= 0) {
+          totalShares += state.investment.stockHoldings[si].shares || 0;
+        }
+      }
+      // 大量持仓暗示看好，小幅提升sentiment
+      if (totalShares > 50) impact += 0.05;
+      if (totalShares > 200) impact += 0.05;
+    }
+
+    if (impact !== 0) {
+      impacts[cid] = Math.round(impact * 100) / 100;
+    }
+  }
+  return impacts;
+}
+
+/**
+ * 获取命运事件历史文本（用于UI）
+ */
+function getFateHistoryText(cid, state) {
+  var co = state.enterpriseFate && state.enterpriseFate.companies && state.enterpriseFate.companies[cid];
+  if (!co || !co.fateEventHistory || !co.fateEventHistory.length) return [];
+  return co.fateEventHistory.slice(-10).map(function(e) {
+    return { day: e.day, text: e.icon + " " + e.label + "：" + e.description };
+  });
+}
+</script>
+
     <!-- UI -->
     <script>/**
  * 主渲染调度器
@@ -21157,6 +21912,13 @@ function renderCurrentTab(state) {
       else
         area.innerHTML =
           '<p style="color:var(--text-muted);text-align:center;padding:40px;">投资系统加载中...</p>';
+      break;
+    case "enterprise":
+      if (typeof renderEnterpriseFateTab === "function")
+        renderEnterpriseFateTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">企业生态加载中...</p>';
       break;
     case "achievements":
       renderAchievementsTab(state, area);
@@ -23374,6 +24136,129 @@ function renderCorpTab(state, parent) {
   parent.appendChild(div);
 }
 
+// ====== Enterprise Fate Tab ======
+function renderEnterpriseFateTab(state, parent) {
+  parent.innerHTML = "";
+  if (!state.enterpriseFate || typeof getCompanyFateSummary !== "function") {
+    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🏭 企业生态系统中...</p>';
+    return;
+  }
+
+  var container = document.createElement("div");
+  container.style.cssText = "padding:12px;";
+
+  // 标题
+  var title = document.createElement("h2");
+  title.style.cssText = "margin:0 0 4px;font-size:16px;color:var(--text-primary);";
+  title.textContent = "🏭 企业命运生态";
+  container.appendChild(title);
+
+  var subtitle = document.createElement("p");
+  subtitle.style.cssText = "margin:0 0 12px;font-size:11px;color:var(--text-muted);";
+  subtitle.textContent = "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。";
+  container.appendChild(subtitle);
+
+  // 公司卡片列表
+  var companyIds = ["star_tech", "byte_dragon", "cloud_giant", "game_fun", "safe_fin"];
+  for (var ci = 0; ci < companyIds.length; ci++) {
+    var cid = companyIds[ci];
+    var summary = getCompanyFateSummary(cid, state);
+    if (!summary) continue;
+
+    var card = document.createElement("div");
+    card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;";
+
+    // 公司名称行
+    var headerRow = document.createElement("div");
+    headerRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;";
+    var nameSpan = document.createElement("span");
+    nameSpan.style.cssText = "font-size:14px;font-weight:bold;color:var(--text-primary);";
+    nameSpan.textContent = summary.knownToPlayer ? (summary.phaseIcon + " " + summary.name) : "❓ " + summary.name;
+    headerRow.appendChild(nameSpan);
+
+    var phaseBadge = document.createElement("span");
+    phaseBadge.style.cssText = "font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;background:" + summary.phaseColor + ";";
+    phaseBadge.textContent = summary.phaseName;
+    headerRow.appendChild(phaseBadge);
+    card.appendChild(headerRow);
+
+    if (!summary.knownToPlayer) {
+      // 未知公司：模糊显示
+      var hiddenNote = document.createElement("p");
+      hiddenNote.style.cssText = "font-size:11px;color:var(--text-muted);font-style:italic;";
+      hiddenNote.textContent = "💡 就职或购买该公司股票后解锁详情";
+      card.appendChild(hiddenNote);
+      container.appendChild(card);
+      continue;
+    }
+
+    // 已知公司：显示详细数据
+    // 健康度条
+    var healthRow = _escRow("健康度", summary.health, summary.health > 60 ? "#4a9e5c" : summary.health > 30 ? "#f39c12" : "#c4553d");
+    card.appendChild(healthRow);
+
+    // 市场份额条
+    var shareRow = _escRow("市场份额", summary.marketShare, "#4fc3f7");
+    card.appendChild(shareRow);
+
+    // 市场情绪条
+    var sentimentRow = _escRow("市场情绪", summary.sentiment, summary.sentiment > 50 ? "#4a9e5c" : "#e67e22");
+    card.appendChild(sentimentRow);
+
+    // 趋势 + 行业
+    var metaDiv = document.createElement("div");
+    metaDiv.style.cssText = "display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;";
+    var trendIcon = summary.trend === "up" ? "📈" : summary.trend === "down" ? "📉" : "➡️";
+    metaDiv.innerHTML = "<span>趋势: " + trendIcon + "</span><span>行业: " + summary.industry + "</span><span>产品力: " + summary.productScore + "</span>";
+    card.appendChild(metaDiv);
+
+    // 命运事件历史（最多5条）
+    var history = getFateHistoryText(cid, state);
+    if (history && history.length > 0) {
+      var historyDiv = document.createElement("div");
+      historyDiv.style.cssText = "margin-top:8px;padding-top:6px;border-top:1px solid var(--border);";
+      var historyTitle = document.createElement("div");
+      historyTitle.style.cssText = "font-size:10px;color:var(--text-muted);margin-bottom:4px;";
+      historyTitle.textContent = "📜 命运事件记录";
+      historyDiv.appendChild(historyTitle);
+      for (var hi = Math.max(0, history.length - 5); hi < history.length; hi++) {
+        var hEntry = document.createElement("div");
+        hEntry.style.cssText = "font-size:10px;color:var(--text-secondary);padding:1px 0;";
+        hEntry.textContent = "第" + history[hi].day + "天 " + history[hi].text;
+        historyDiv.appendChild(hEntry);
+      }
+      card.appendChild(historyDiv);
+    }
+
+    container.appendChild(card);
+  }
+
+  parent.appendChild(container);
+}
+
+/** 内部工具：生成百分比条 */
+function _escRow(label, value, color) {
+  var row = document.createElement("div");
+  row.style.cssText = "display:flex;align-items:center;margin:2px 0;";
+  var labelSpan = document.createElement("span");
+  labelSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:70px;flex-shrink:0;";
+  labelSpan.textContent = label;
+  row.appendChild(labelSpan);
+
+  var barWrap = document.createElement("div");
+  barWrap.style.cssText = "flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 6px;";
+  var bar = document.createElement("div");
+  bar.style.cssText = "height:100%;width:" + Math.round(value) + "%;background:" + color + ";border-radius:4px;transition:width 0.3s;";
+  barWrap.appendChild(bar);
+  row.appendChild(barWrap);
+
+  var valSpan = document.createElement("span");
+  valSpan.style.cssText = "font-size:11px;color:var(--text-secondary);width:30px;text-align:right;";
+  valSpan.textContent = Math.round(value) + "%";
+  row.appendChild(valSpan);
+  return row;
+}
+
 // ====== Achievements Tab ======
 function renderAchievementsTab(state, parent) {
   parent.innerHTML = "";
@@ -24433,6 +25318,13 @@ function buyItemFromShop(itemId) {
     return;
   }
   state.resources.cash -= item.price;
+  addDailyTransaction(
+    state,
+    "expense",
+    "shopping",
+    item.price,
+    "购买" + (item.icon || "") + item.name,
+  );
   // 装备类（有slot）：放入 equipment 槽位
   if (item.slot) {
     if (!state.inventory.equipment) state.inventory.equipment = {};
@@ -24869,6 +25761,19 @@ function executeScavengeRoute(routeId) {
 
   st.resources.cash += earned;
   st.resources.totalEarned += earned;
+  var routeNames = {
+    alley: "城中村小巷",
+    depot: "废品收购站",
+    factory: "工业区废料场",
+    zhou_channel: "老周专线",
+  };
+  addDailyTransaction(
+    st,
+    "income",
+    "scavenge",
+    earned,
+    "拾荒 - " + (routeNames[routeId] || "未知路线"),
+  );
   st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
   st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
 
@@ -27724,6 +28629,414 @@ function _wikiDetailVictory(state, id) {
   return pages[id] || "";
 }
 </script>
+    <script>/**
+ * 每日收支报告模块
+ *
+ * 在每天结束时展示收入/支出明细弹窗，玩家必须点击"继续"才能进入下一天。
+ *
+ * 设计参考：
+ * - 《大多数》：收支持清晰分栏，净收入高亮
+ * - 《北京浮生记》：债务/房租红色警示
+ * - 《This War of Mine》：强制交互才能继续
+ * - 《Stardew Valley》：图标+分类汇总
+ */
+
+// ====== 分类标签映射 ======
+var CATEGORY_LABELS = {
+  // 收入
+  job_income: "外快",
+  salary: "工资",
+  trade_profit: "贸易",
+  scavenge: "拾荒",
+  side_job: "兼职",
+  investment_income: "投资",
+  bank_interest: "利息",
+  event_reward: "事件",
+  gift: "礼物",
+  loan: "贷款",
+  insurance: "保险",
+  // 支出
+  food: "饮食",
+  rent: "房租",
+  transport: "交通",
+  shopping: "购物",
+  training: "培训",
+  healthcare: "医疗",
+  debt_interest: "债息",
+  fine: "罚款",
+  entertainment: "娱乐",
+  misc: "其他",
+};
+
+var CATEGORY_ICONS = {
+  // 收入
+  job_income: "💰",
+  salary: "🏢",
+  trade_profit: "📦",
+  scavenge: "🔍",
+  side_job: "💼",
+  investment_income: "📈",
+  bank_interest: "🏦",
+  event_reward: "🏆",
+  gift: "🎁",
+  loan: "📝",
+  insurance: "🛡️",
+  // 支出
+  food: "🍔",
+  rent: "🏠",
+  transport: "🚌",
+  shopping: "🛒",
+  training: "📚",
+  healthcare: "🏥",
+  debt_interest: "💸",
+  fine: "⚠️",
+  entertainment: "🎵",
+  misc: "💬",
+};
+
+/** 获取分类的中文标签 */
+function getCategoryLabel(category) {
+  return CATEGORY_LABELS[category] || category;
+}
+
+/** 获取分类的图标 */
+function getCategoryIcon(category) {
+  return CATEGORY_ICONS[category] || "💰";
+}
+
+// ====== 对账兜底 ======
+/**
+ * 对比跟踪交易总额与实际现金变化，补充未记录条目。
+ * 确保收支报告永远平衡。
+ */
+function reconcileTransactions(state) {
+  var txs = state.flags._dailyTransactions || [];
+  var trackedDelta = 0;
+  for (var i = 0; i < txs.length; i++) {
+    trackedDelta += txs[i].type === "income" ? txs[i].amount : -txs[i].amount;
+  }
+
+  var startCash = state.flags._dayStartCash || 0;
+  var actualDelta = (state.resources.cash || 0) - startCash;
+  var discrepancy = Math.round((actualDelta - trackedDelta) * 100) / 100;
+
+  // 允许 ¥1 以内浮点误差
+  if (discrepancy > 1) {
+    txs.push({
+      type: "income",
+      category: "misc",
+      amount: Math.round(discrepancy),
+      description: "其他收入",
+    });
+  } else if (discrepancy < -1) {
+    txs.push({
+      type: "expense",
+      category: "misc",
+      amount: Math.round(Math.abs(discrepancy)),
+      description: "其他支出",
+    });
+  }
+}
+
+// ====== 构建报告 HTML ======
+/**
+ * 按类型分类交易并生成排序后的HTML
+ */
+function buildReportHTML(txs, state) {
+  var incomes = [];
+  var expenses = [];
+  for (var i = 0; i < txs.length; i++) {
+    var t = txs[i];
+    if (t.type === "income") {
+      incomes.push(t);
+    } else {
+      expenses.push(t);
+    }
+  }
+
+  var incomeTotal = 0;
+  var incomeHtml = "";
+  for (var j = 0; j < incomes.length; j++) {
+    var inc = incomes[j];
+    incomeTotal += inc.amount;
+    incomeHtml += buildItemRow(inc, "income");
+  }
+
+  var expenseTotal = 0;
+  var expenseHtml = "";
+  for (var k = 0; k < expenses.length; k++) {
+    var exp = expenses[k];
+    expenseTotal += exp.amount;
+    expenseHtml += buildItemRow(exp, "expense");
+  }
+
+  var netAmount = incomeTotal - expenseTotal;
+  var netClass =
+    netAmount > 0 ? "positive" : netAmount < 0 ? "negative" : "zero";
+  var netSign = netAmount >= 0 ? "+" : "";
+  var netStr = netSign + "¥" + netAmount.toLocaleString();
+
+  var reportDay = state.player.day - 1; // day_increment 已执行，减1得到实际报告日
+  var cash = state.resources.cash || 0;
+  var bank = state.resources.bankBalance || 0;
+
+  // 生成今日总结
+  var summaryText = generateDailyReportSummary(state, incomes, expenses);
+
+  // 如果没有交易记录
+  var hasIncome = incomes.length > 0;
+  var hasExpense = expenses.length > 0;
+
+  var bodyHtml = "";
+
+  // 标题
+  bodyHtml += '<div style="text-align:center;margin-bottom:16px;">';
+  bodyHtml +=
+    '<div style="font-size:20px;font-weight:700;color:var(--text-primary);">📊 第' +
+    reportDay +
+    "天收支报告</div>";
+  bodyHtml +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">● 收入 绿 · 支出 红 · 点击“继续”进入下一天</div>';
+  bodyHtml += "</div>";
+
+  // 收入区域
+  bodyHtml += '<div class="daily-report-section" style="margin-bottom:14px;">';
+  bodyHtml +=
+    '<div class="daily-report-section-title income" style="font-size:14px;font-weight:700;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid var(--success);color:var(--success);">🟢 收入</div>';
+  if (hasIncome) {
+    bodyHtml +=
+      '<div style="max-height:180px;overflow-y:auto;padding-right:4px;">';
+    bodyHtml += incomeHtml;
+    bodyHtml += "</div>";
+  } else {
+    bodyHtml +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;text-align:center;">今天没有收入</div>';
+  }
+  bodyHtml +=
+    '<div class="daily-report-section-total income" style="display:flex;justify-content:space-between;padding:5px 0 2px;margin-top:3px;border-top:1px dashed var(--border);font-weight:700;font-size:14px;color:var(--success);">';
+  bodyHtml +=
+    "<span>收入合计</span><span>+¥" + incomeTotal.toLocaleString() + "</span>";
+  bodyHtml += "</div>";
+  bodyHtml += "</div>";
+
+  // 支出区域
+  bodyHtml += '<div class="daily-report-section" style="margin-bottom:14px;">';
+  bodyHtml +=
+    '<div class="daily-report-section-title expense" style="font-size:14px;font-weight:700;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid var(--danger);color:var(--danger);">🔴 支出</div>';
+  if (hasExpense) {
+    bodyHtml +=
+      '<div style="max-height:180px;overflow-y:auto;padding-right:4px;">';
+    bodyHtml += expenseHtml;
+    bodyHtml += "</div>";
+  } else {
+    bodyHtml +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;text-align:center;">今天没有支出</div>';
+  }
+  bodyHtml +=
+    '<div class="daily-report-section-total expense" style="display:flex;justify-content:space-between;padding:5px 0 2px;margin-top:3px;border-top:1px dashed var(--border);font-weight:700;font-size:14px;color:var(--danger);">';
+  bodyHtml +=
+    "<span>支出合计</span><span>-¥" + expenseTotal.toLocaleString() + "</span>";
+  bodyHtml += "</div>";
+  bodyHtml += "</div>";
+
+  // 净收入
+  bodyHtml +=
+    '<div class="daily-report-net ' +
+    netClass +
+    '" style="text-align:center;padding:10px 0;margin:8px 0;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:18px;font-weight:700;">';
+  bodyHtml +=
+    '净收入: <span style="' +
+    (netAmount >= 0 ? "color:var(--success)" : "color:var(--danger)") +
+    '">' +
+    netStr +
+    "</span>";
+  bodyHtml += "</div>";
+
+  // 财富摘要
+  bodyHtml +=
+    '<div class="daily-report-wealth" style="display:flex;justify-content:center;gap:20px;font-size:13px;color:var(--text-secondary);margin-top:4px;margin-bottom:8px;">';
+  bodyHtml +=
+    '<span>💰 现金: <strong style="color:var(--text-primary);">¥' +
+    cash.toLocaleString() +
+    "</strong></span>";
+  bodyHtml +=
+    '<span>🏦 储蓄: <strong style="color:var(--text-primary);">¥' +
+    bank.toLocaleString() +
+    "</strong></span>";
+  bodyHtml += "</div>";
+
+  // 今日总结
+  bodyHtml +=
+    '<div class="daily-report-summary" style="font-size:12px;color:var(--text-secondary);text-align:center;padding:6px 0;font-style:italic;border-top:1px solid var(--border);">';
+  bodyHtml += summaryText;
+  bodyHtml += "</div>";
+
+  return bodyHtml;
+}
+
+/** 构建单条收支记录行 */
+function buildItemRow(tx, type) {
+  var sign = type === "income" ? "+" : "-";
+  var color = type === "income" ? "var(--success)" : "var(--danger)";
+  var icon = getCategoryIcon(tx.category);
+  var label = getCategoryLabel(tx.category);
+
+  return (
+    '<div class="daily-report-item" style="display:flex;align-items:center;padding:3px 0;font-size:13px;">' +
+    '<span class="daily-report-item-icon" style="width:20px;text-align:center;flex-shrink:0;">' +
+    icon +
+    "</span>" +
+    '<span class="daily-report-item-cat" style="font-size:10px;color:var(--text-muted);min-width:32px;text-align:center;flex-shrink:0;background:var(--bg-card);padding:1px 4px;border-radius:3px;margin:0 6px;">' +
+    label +
+    "</span>" +
+    '<span class="daily-report-item-desc" style="flex:1;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">' +
+    escapeHtml(tx.description) +
+    "</span>" +
+    '<span class="daily-report-item-amount" style="font-weight:700;white-space:nowrap;text-align:right;min-width:70px;color:' +
+    color +
+    ';">' +
+    sign +
+    "¥" +
+    tx.amount.toLocaleString() +
+    "</span>" +
+    "</div>"
+  );
+}
+
+/** 简单的HTML转义 */
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// ====== 今日总结 ======
+/**
+ * 沿用现有 generateDailySummary 的叙事风格，
+ * 从已记录的交易中提炼一句话总结。
+ */
+function generateDailyReportSummary(state, incomes, expenses) {
+  var incomeTotal = 0;
+  var expenseTotal = 0;
+  for (var i = 0; i < incomes.length; i++) {
+    incomeTotal += incomes[i].amount;
+  }
+  for (var j = 0; j < expenses.length; j++) {
+    expenseTotal += expenses[j].amount;
+  }
+
+  var net = incomeTotal - expenseTotal;
+  var reportDay = state.player.day - 1; // day_increment 已执行，减1得到实际报告日
+
+  var highlights = [];
+
+  if (net >= 1000) {
+    highlights.push("🎉 今天是个好日子，净赚了¥" + net.toLocaleString());
+  } else if (net >= 300) {
+    highlights.push("😊 今天赚了¥" + net.toLocaleString() + "，还不错");
+  } else if (net >= 50) {
+    highlights.push("😊 今天净入¥" + net.toLocaleString() + "，比昨天强点");
+  } else if (net >= 0) {
+    highlights.push("🧐 今天收支基本持平，活下来了");
+  } else if (net < -500) {
+    highlights.push(
+      "😭 今天支出不少，净亏了¥" + Math.abs(net).toLocaleString(),
+    );
+  } else if (net < 0) {
+    highlights.push(
+      "😅 今天支出略多，口袋瘦了¥" + Math.abs(net).toLocaleString(),
+    );
+  }
+
+  // 里程碑
+  if (reportDay === 7) highlights.push("🏫 来这座城市整整一周了");
+  else if (reportDay === 30) highlights.push("🎉 整整一个月，你还在");
+  else if (reportDay === 100) highlights.push("💪 百天了，城市没把你打倒");
+  else if (reportDay === 365) highlights.push("🌟 一年了，从头到今天");
+
+  if (!highlights.length) highlights.push("🌛 平凡的一天，活着就是赢了");
+
+  var summary = highlights.slice(0, 2).join("，") + "。";
+  return "📋 " + summary;
+}
+
+// ====== 主入口 ======
+/**
+ * 显示每日收支报告弹窗（阻塞式 — 必须点击"继续"才能关闭）
+ * 在 pipeline 的 daily_report 步骤中调用
+ */
+function showDailyReport(state) {
+  // 游戏结束/胜利时不显示（对应 modal 优先）
+  if (state.flags.gameOver || state.flags.victory) return;
+
+  // 对账：确保收支平衡（会在 _dailyTransactions 中追加对账条目）
+  reconcileTransactions(state);
+
+  // 保存当日交易记录快照，然后清除（为下一天做准备）
+  var txs = (state.flags._dailyTransactions || []).slice();
+  state.flags._dailyTransactions = [];
+
+  var bodyHtml = buildReportHTML(txs, state);
+
+  var overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.zIndex = "2000";
+
+  var box = document.createElement("div");
+  box.className = "modal-box daily-report-box";
+  box.style.maxWidth = "460px";
+
+  // 内容
+  var content = document.createElement("div");
+  content.innerHTML = bodyHtml;
+  box.appendChild(content);
+
+  // 按钮区
+  var btnRow = document.createElement("div");
+  btnRow.style.cssText =
+    "display:flex;justify-content:center;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);";
+
+  var continueBtn = document.createElement("button");
+  continueBtn.className = "btn btn-primary btn-lg";
+  continueBtn.textContent = "📋 继续";
+  continueBtn.style.cssText =
+    "min-width:180px;font-size:15px;padding:10px 24px;";
+  continueBtn.addEventListener("click", function () {
+    if (overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+  });
+  btnRow.appendChild(continueBtn);
+  box.appendChild(btnRow);
+
+  overlay.appendChild(box);
+
+  // 阻止点击背景关闭
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) {
+      // 轻微抖动提示必须点击按钮
+      box.style.animation = "shake 0.3s ease";
+      setTimeout(function () {
+        box.style.animation = "";
+      }, 300);
+    }
+  });
+
+  // 键盘支持：回车键继续
+  continueBtn.focus();
+  overlay.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      continueBtn.click();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+</script>
 
     <!-- Main -->
     <script>/**
@@ -28027,6 +29340,11 @@ function startNewGame() {
   StateManager.newGame();
   initializePrices();
 
+  // 初始化企业命运系统
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(StateManager.getState());
+  }
+
   // P2.11 新游戏+：检查并应用上局继承加成
   var ngApplied = false;
   try {
@@ -28110,6 +29428,10 @@ function loadExistingGame(slot) {
   const saveData = loadGame(slot);
   if (saveData) {
     StateManager.importState(saveData);
+    // 兼容旧存档：初始化企业命运系统
+    if (typeof initEnterpriseFate === "function") {
+      initEnterpriseFate(StateManager.getState());
+    }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
     document.getElementById("app").style.display = "";
@@ -28634,6 +29956,13 @@ function getAvailableActions(state) {
                 var pay = fjob.pay + Math.floor(Math.random() * 30);
                 state.resources.cash += pay;
                 state.resources.totalEarned += pay;
+                addDailyTransaction(
+                  state,
+                  "income",
+                  "job_income",
+                  pay,
+                  "节日打工 - " + fjob.name,
+                );
                 consumeAP(fjob.apCost || 20);
                 StateManager.addMessage(
                   curFest.icon +
@@ -28671,6 +30000,13 @@ function getAvailableActions(state) {
               50 + Math.floor(fame * 1.2) + Math.floor(Math.random() * 80);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
+            addDailyTransaction(
+              state,
+              "income",
+              "side_job",
+              earn,
+              "本地名人效应",
+            );
             state.status.fame = Math.min(100, state.status.fame + 3);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.commercialVip = true;
@@ -28781,6 +30117,13 @@ function getAvailableActions(state) {
               200 + Math.floor(fame * 2.5) + Math.floor(Math.random() * 150);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
+            addDailyTransaction(
+              state,
+              "income",
+              "side_job",
+              earn,
+              "科技论坛演讲嘉宾",
+            );
             state.status.fame = Math.min(100, state.status.fame + 8);
             state.player.mental = Math.min(100, state.player.mental + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
@@ -28901,6 +30244,13 @@ function getAvailableActions(state) {
           return;
         }
         st.resources.cash -= foodCost;
+        addDailyTransaction(
+          st,
+          "expense",
+          "food",
+          foodCost,
+          "吃饭" + (cookHint || ""),
+        );
         st.needs.hunger = Math.min(100, st.needs.hunger + 35);
         st.needs.happiness = Math.min(100, st.needs.happiness + 8);
         var saved = baseCost - foodCost;
@@ -29709,6 +31059,13 @@ function doStreetJob(job) {
 
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
+  addDailyTransaction(
+    state,
+    "income",
+    "job_income",
+    pay,
+    "工作收入 - " + (job.name || "临时工"),
+  );
 
   // === 城管检查（摆摊类工作）===
   const vendingJobs = [

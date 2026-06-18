@@ -217,6 +217,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 企业命运tick ===
+  {
+    name: "enterprise_fate_tick",
+    fn: function (state) {
+      if (typeof tickEnterpriseFate === "function") {
+        tickEnterpriseFate(state);
+      }
+    },
+  },
+
   // === 天气 ===
   {
     name: "weather",
