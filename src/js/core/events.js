@@ -4979,6 +4979,174 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第1段：加入窗口期） ----
+  {
+    id: "subsidy_war_join",
+    phase: "street",
+    icon: "🛵",
+    title: "补贴大战：骑手窗口期",
+    story:
+      "骑手群里炸锅了！某外卖平台宣布每单补贴+¥3，另一家立刻跟进——这是一年里骑手最好赚的时候。平台代理正在路边招人，注册就给¥60，补贴大战期间接单收益额外+30%。错过了这个窗口，下次不知道什么时候再有。",
+    conditions: function (st) {
+      var hasNews =
+        st.activeNews &&
+        st.activeNews.some(function (n) {
+          return n && n.id === "platform_subsidy_war";
+        });
+      return (
+        hasNews && !st.flags._subsidyWarJoinSeen && st.player.phase === "street"
+      );
+    },
+    choices: [
+      {
+        text: "📱 立刻注册骑手（加入窗口）",
+        hint: "注册奖励¥60，补贴期多接单",
+        apply: function (st) {
+          st.flags._subsidyWarRider = st.player.day;
+          st.flags._subsidyWarJoinSeen = true;
+          st.resources.cash += 60;
+          st.player.physique = Math.max(
+            0,
+            Math.min(100, (st.player.physique || 10) - 2),
+          );
+          StateManager.addMessage(
+            "🛵 成功注册为平台骑手！注册奖励¥60到手，补贴大战期间接单收益额外+30%。体力多消耗了一点，但值！",
+            "event",
+          );
+        },
+      },
+      {
+        text: "👀 不参与，继续本来的计划",
+        hint: "错过窗口，但省了体力",
+        apply: function (st) {
+          st.flags._subsidyWarJoinSeen = true;
+          st.flags._subsidyWarWatched = true;
+          StateManager.addMessage(
+            "💭 选择旁观。补贴大战是机会，但平台说变脸就变脸——还是做自己的事。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第2段：补贴战落幕） ----
+  {
+    id: "subsidy_war_crash",
+    phase: "street",
+    icon: "📉",
+    title: "补贴战落幕：平台变脸了",
+    story:
+      "骑手群突然安静了。昨晚平台悄悄改了规则：每单补贴砍掉¥2，还加了「差评扣款机制」。你算了一下，实际收入比刚注册时少了35%。几个老骑手已经愤而离职，另一些准备组团维权。你才跑了这几天——怎么办？",
+    conditions: function (st) {
+      var hasRiderWinter =
+        st.activeNews &&
+        st.activeNews.some(function (n) {
+          return n && n.id === "rider_winter";
+        });
+      return (
+        hasRiderWinter &&
+        !!st.flags._subsidyWarRider &&
+        !st.flags._subsidyWarCrashSeen
+      );
+    },
+    choices: [
+      {
+        text: "😤 直接退出，不干了",
+        hint: "结算余款¥30，拿经验走人",
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._subsidyWarLeft = true;
+          st.resources.cash += 30;
+          StateManager.addMessage(
+            "😤 退���了骑手平台，结清¥30余款。这波赚了点但也磨了体力——教训：补贴战是短期机会，别依赖平台。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📢 联合维权（要求恢复补贴）",
+        hint: "消耗¥50组织费，名气+5，15天后见结果",
+        cost: 50,
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._riderRightsComplaint = st.player.day;
+          st.resources.cash -= 50;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "📢 加入骑手维权团，花了¥50组织费，名气+5。平台已知晓，15天后看结果。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🍜 用攒的钱转型开摊（需¥500）",
+        hint: "花¥200启动摆摊，体质+3",
+        cost: 500,
+        apply: function (st) {
+          st.flags._subsidyWarCrashSeen = true;
+          st.flags._exRiderVendor = true;
+          st.resources.cash -= 200;
+          st.player.physique = Math.min(100, (st.player.physique || 10) + 3);
+          StateManager.addMessage(
+            "🍜 用补贴大战攒的钱开了个摆摊！花掉¥200启动本钱，体质+3（骑手练出来的腿脚）。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  // ---- 有梗世界事件：网约车补贴大战弧线（第3段：维权结果） ----
+  {
+    id: "rider_rights_resolve",
+    phase: "street",
+    icon: "⚖️",
+    title: "骑手维权结果出炉",
+    story:
+      "维权团传来消息：经过多次谈判，平台同意象征性支付一次「和解金」，但拒绝恢复补贴，并向组织者发了封号警告。团队里分成两派——一派说拿钱走人，活该；另一派说继续上诉，这是原则问题。",
+    conditions: function (st) {
+      return (
+        !!st.flags._riderRightsComplaint &&
+        st.player.day >= (st.flags._riderRightsComplaint || 0) + 15 &&
+        !st.flags._riderRightsResolved
+      );
+    },
+    choices: [
+      {
+        text: "💰 接受和解金",
+        hint: "按天数结算，¥280+",
+        apply: function (st) {
+          var days = Math.min(
+            30,
+            st.player.day - (st.flags._riderRightsComplaint || st.player.day),
+          );
+          var payout = 280 + days * 3;
+          st.flags._riderRightsResolved = true;
+          st.resources.cash += payout;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "💰 接受和解，到手¥" +
+              payout +
+              "，名气+3。不多，但也算有个结果，总比拖着强。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "⚖️ 继续上诉，等法律途径",
+        hint: "名气+8，但结果不确定",
+        apply: function (st) {
+          st.flags._riderRightsResolved = true;
+          st.flags._riderRightsAppealing = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          StateManager.addMessage(
+            "⚖️ 继续走法律途径，名气+8（被媒体关注）。心理压力+，但你觉得这是原则——也许是正义，也许是更久的等待。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
   // ---- 有梗世界事件：政府托底结局 ----
   {
     id: "property_govt_rescue",
@@ -5039,6 +5207,688 @@ const RANDOM_EVENTS = [
               out.toLocaleString() +
               "。政府是托底了，但这2年的等待成本太高，离场更划算。",
             "warning",
+          );
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ②：收购反噬（街头，3 段弧）
+  // 玩家攒够本钱收购小公司 → 经营不善 → 被竞争对手低价吞掉，
+  // 对手反而因此壮大成行业龙头。剧情完整闭环，不是惩罚玩家，
+  // 而是商业逻辑自然推演。参考 DEV.md 1.2 节"收购反噬"模板。
+  // ============================================================
+  {
+    id: "acquisition_chance",
+    phase: "street",
+    icon: "🏪",
+    title: "有人想把店转给你",
+    story:
+      "巷口“老李茶饮”贴了转让告示。老李说儿子留学，他要去陪读，店铺连带设备打包¥80,000。地段一般但有老客户，每月流水能跑个万把块。你掂量了下口袋：手头是有这个钱，可一旦砸下去，就是把家底押在一家小店上了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day > 100 &&
+        st.resources.cash >= 80000 &&
+        !st.flags._acquisitionTeaSeen
+      );
+    },
+    choices: [
+      {
+        text: "💰 接手茶饮店（¥80,000）",
+        hint: "成为小老板，月流水预期",
+        cost: 80000,
+        apply: function (st) {
+          st.flags._acquisitionTeaSeen = true;
+          st.flags._acquiredTeaStore = st.player.day;
+          st.flags._teaStoreCash = 80000;
+          st.resources.cash -= 80000;
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 4);
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "🏪 签约接手老李茶饮，¥80,000打了水漂——啊不，是投了下去。门口挂上你的名字，从今天起就是小老板了。名气+4，心智+3。",
+            "event",
+          );
+          if (typeof StateManager.markDirty === "function") {
+            StateManager.markDirty();
+          }
+        },
+      },
+      {
+        text: "🤔 看着不错但风险大，先放放",
+        hint: "保留现金，错过机会",
+        apply: function (st) {
+          st.flags._acquisitionTeaSeen = true;
+          st.flags._acquisitionTeaPassed = true;
+          StateManager.addMessage(
+            "🤔 算了，老李这店看着客流不行，砸进去八万怕是回不来。决定先观望——希望以后不会后悔。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "acquisition_struggle",
+    phase: "street",
+    icon: "📉",
+    title: "茶饮店难做啊…",
+    story:
+      "接手老李茶饮快一个月了。问题来了：原来稳定的老客户大半流失（觉得“换老板就变味”），新顾客又不来。每月房租水电¥2,500，上个月只赚¥800，倒贴¥1,700。隔壁新开的“星巴超”反倒生意火爆——同样卖茶，人家做出了网红奶茶概念，年轻人在门口排队。",
+    conditions: function (st) {
+      return (
+        !!st.flags._acquiredTeaStore &&
+        st.player.day >= (st.flags._acquiredTeaStore || 0) + 25 &&
+        !st.flags._acquisitionStruggleSeen
+      );
+    },
+    choices: [
+      {
+        text: "💸 立刻挂牌出售（亏损止损）",
+        hint: "原价 65 折出手",
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionDealtEarly = true;
+          st.flags._acquiredTeaStore = null;
+          var proceeds = Math.round(80000 * 0.65);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.player.mental = Math.max(0, st.player.mental - 5);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+          StateManager.addMessage(
+            "💸 挂牌一周就找到接盘的（应该是星巴超派人来谈的），原价65折成交，回笼¥" +
+              proceeds.toLocaleString() +
+              "。亏了¥28,000，但心里那块石头总算落地了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🔥 砸钱搞营销翻盘（¥15,000）",
+        hint: "一搏成败",
+        cost: 15000,
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionFighting = true;
+          st.flags._acquisitionFightDay = st.player.day;
+          st.resources.cash -= 15000;
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "🔥 砸¥15,000搞了波装修+网红打卡墙+小红书投放。现在就赌这20天能不能起来——心智-3，骰子已经掷下去了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🐢 慢慢熬，相信老客户会回来",
+        hint: "继续每月小亏，等市场",
+        apply: function (st) {
+          st.flags._acquisitionStruggleSeen = true;
+          st.flags._acquisitionEnduring = true;
+          st.flags._teaStoreCash = (st.flags._teaStoreCash || 80000) - 1700;
+          StateManager.addMessage(
+            "🐢 决定再熬熬。老李说前两年开店也亏过，老顾客认人不认招牌。一个月再亏¥1,700——但你相信时间会告诉你答案。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "acquisition_swallow",
+    phase: "street",
+    icon: "🦈",
+    title: "星巴超来收店了",
+    story:
+      "星巴超的人正式登门：他们要在这条街扩张，一口气收购周边7家店面，给你的报价是当初买入价的45%。代理人很客气：“王老板，您这店地段确实不错，但说实话——独立小店是熬不过我们这种连锁的。这价钱已经是给老李面子。”望着空荡荡的店面，你忽然意识到：自己这一年的折腾，不过是给对手培育了一片好地皮。",
+    conditions: function (st) {
+      var afterFight =
+        !!st.flags._acquisitionFighting &&
+        st.player.day >= (st.flags._acquisitionFightDay || 0) + 20;
+      var enduring = !!st.flags._acquisitionEnduring;
+      return (
+        (afterFight || enduring) &&
+        !st.flags._acquisitionSwallowSeen &&
+        !st.flags._acquisitionDealtEarly
+      );
+    },
+    choices: [
+      {
+        text: "🦈 接受收购（45 折，离场）",
+        hint: "回笼现金，对手做大",
+        apply: function (st) {
+          st.flags._acquisitionSwallowSeen = true;
+          st.flags._starbucksDominant = true;
+          st.flags._businessLessonLearned = true;
+          st.flags._acquiredTeaStore = null;
+          var proceeds = Math.round(80000 * 0.45);
+          st.resources.cash += proceeds;
+          st.resources.totalEarned += proceeds;
+          st.player.mental = Math.min(100, st.player.mental + 4);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          st.status.fame = Math.max(0, (st.status.fame || 0) - 3);
+          StateManager.addMessage(
+            "🦈 签字画押，到手¥" +
+              proceeds.toLocaleString() +
+              "。这一年的折腾换来¥" +
+              proceeds.toLocaleString() +
+              " + 智力+3 + 心智+4——你学到了：在独立小店和连锁巨头之间，独立小店没有规模护城河。星巴超借你的店面壮大成本街最大连锁，未来它可能会出现在股市上。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "✊ 死磕到底，绝不卖给他们",
+        hint: "保留店面，但每月小亏",
+        apply: function (st) {
+          st.flags._acquisitionSwallowSeen = true;
+          st.flags._teaStoreUnderdog = true;
+          st.player.mental = Math.min(100, st.player.mental + 8);
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 6);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "✊ 把代理人请出店门：“这店不卖。”心智+8，名气+6（街坊都知道有个倔脾气的小老板）。代价是每月还要继续亏¥1,700，但有些事比钱重要。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ③：黑马冲击（街头，3 段弧）
+  // 玩家深耕某行业（外卖/摆摊/废品/建筑/家教 之一）累计天数后，
+  // 新入局者用新模式 3 个月吃掉市场份额。玩家须转型/坚守/弃业。
+  // 参考 DEV.md 1.2 节"行业黑马冲击"模板。
+  // ============================================================
+  {
+    id: "industry_disruption_warning",
+    phase: "street",
+    icon: "⚡",
+    title: "新入局者来了",
+    story:
+      "刷短视频时刷到一条爆款：你做的这行，有个 90 后团队搞了个新模式——他们用「订阅制+数据派单」，把传统从业者效率提升了 40%，3 个月就吃掉了 15% 的市场。看着评论区那句“老一代再不转型就要被淘汰了”，你心里一紧——你做这行已经 30 多天，今天的单量明显比一个月前少。",
+    conditions: function (st) {
+      var jobStreaks = st.flags._jobStreaks || {};
+      var totalDays = 0;
+      for (var k in jobStreaks) {
+        if (Object.prototype.hasOwnProperty.call(jobStreaks, k)) {
+          var rec = jobStreaks[k];
+          var c = rec && typeof rec === "object" ? rec.count || 0 : rec || 0;
+          if (c > totalDays) totalDays = c;
+        }
+      }
+      return (
+        st.player.phase === "street" &&
+        st.player.day > 180 &&
+        totalDays >= 30 &&
+        !st.flags._disruptionSeen
+      );
+    },
+    choices: [
+      {
+        text: "📚 买课学新模式（¥800，10 天后看选择）",
+        hint: "技能 XP+，进入转型期",
+        cost: 800,
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionStudying = st.player.day;
+          st.resources.cash -= 800;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 2,
+          );
+          // 任意已有技能 +5 XP（增强当前职业）
+          if (st.skills) {
+            for (var sk in st.skills) {
+              if (Object.prototype.hasOwnProperty.call(st.skills, sk)) {
+                if ((st.skills[sk].exp || 0) > 0) {
+                  st.skills[sk].exp = (st.skills[sk].exp || 0) + 5;
+                  break;
+                }
+              }
+            }
+          }
+          StateManager.addMessage(
+            "📚 报名了¥800的“行业转型训练营”。智力+2，主力技能XP+5。10天后看你选什么道。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💪 不慌，靠老经验稳住（坚守）",
+        hint: "工作收入小幅下降",
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionHolding = st.player.day;
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          StateManager.addMessage(
+            "💪 嗤之以鼻——你这行的老门道不是几个 90 后看几集网课就能颠覆的。心智+3，但接下来一段时间收入可能会受冲击。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚪 这行不行了，趁早抽身",
+        hint: "立得名气补偿，但失去工作连击",
+        apply: function (st) {
+          st.flags._disruptionSeen = true;
+          st.flags._disruptionExited = true;
+          st.flags._jobStreaks = {}; // 清零所有连击
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 3);
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          StateManager.addMessage(
+            "🚪 决定放弃这行，转向新机会。所有工作连击清零（重头再来），名气+3（识时务），心智-3（承认自己跟不上时代不容易）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "industry_pivot_choice",
+    phase: "street",
+    icon: "🔀",
+    title: "训练营毕业了，怎么走？",
+    story:
+      "10 天的转型训练营结束。你学了“数据派单”逻辑，也认识了几个同期转型的人——有人做副业，有人 all-in 新模式。教练说：“旧行业的活儿还能干 6~12 个月，但每过一季度市场份额会少 5%。你现在转，是抄底；再等半年，可能连转的成本都凑不齐了。”",
+    conditions: function (st) {
+      return (
+        !!st.flags._disruptionStudying &&
+        st.player.day >= (st.flags._disruptionStudying || 0) + 10 &&
+        !st.flags._disruptionPivotSeen
+      );
+    },
+    choices: [
+      {
+        text: "🚀 All-in 新模式（清空连击，能力+15）",
+        hint: "主动转型，40 天后看结果",
+        apply: function (st) {
+          st.flags._disruptionPivotSeen = true;
+          st.flags._disruptionPivoted = st.player.day;
+          st.flags._jobStreaks = {};
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 5,
+          );
+          st.player.agility = Math.min(100, (st.player.agility || 10) + 3);
+          st.player.mental = Math.min(100, st.player.mental + 5);
+          if (st.skills && st.skills.coding) {
+            st.skills.coding.exp = (st.skills.coding.exp || 0) + 30;
+          }
+          StateManager.addMessage(
+            "🚀 All-in 新模式！智力+5、敏捷+3、心智+5，编程XP+30（数据派单也是技术活）。连击清零，但你站到了浪头上。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🌗 副业兼职两边压（不舍弃老本行）",
+        hint: "收入两边小赚，AP 消耗略增",
+        apply: function (st) {
+          st.flags._disruptionPivotSeen = true;
+          st.flags._disruptionSidehustle = st.player.day;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          st.player.physique = Math.max(
+            0,
+            Math.min(100, (st.player.physique || 10) - 1),
+          );
+          StateManager.addMessage(
+            "🌗 决定两边都搞——白天老本行，晚上新模式接单。智力+3，体质-1（双线消耗）。稳是稳，但每件事都做不到极致。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "industry_aftermath",
+    phase: "street",
+    icon: "📊",
+    title: "行业洗牌结束了",
+    story:
+      "三个月过去了。新模式占了行业 40% 份额，老模式从业者中能转型的转了，转不了的去了别的行业。你回头看自己这阵子的选择，发现这行业的洗牌就像潮水——不是谁错了，是潮水在往哪个方向走。",
+    conditions: function (st) {
+      var pivoted =
+        !!st.flags._disruptionPivoted &&
+        st.player.day >= (st.flags._disruptionPivoted || 0) + 40;
+      var holding =
+        !!st.flags._disruptionHolding &&
+        st.player.day >= (st.flags._disruptionHolding || 0) + 50;
+      var sidehustle =
+        !!st.flags._disruptionSidehustle &&
+        st.player.day >= (st.flags._disruptionSidehustle || 0) + 40;
+      return (
+        (pivoted || holding || sidehustle) && !st.flags._disruptionAftermathSeen
+      );
+    },
+    choices: [
+      {
+        text: "📊 接受这个时代",
+        hint: "结算结果",
+        apply: function (st) {
+          st.flags._disruptionAftermathSeen = true;
+          var msg = "";
+          if (st.flags._disruptionPivoted) {
+            // 转型成功者
+            st.resources.cash += 3500;
+            st.resources.totalEarned += 3500;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 3,
+            );
+            st.status.fame = Math.min(100, (st.status.fame || 0) + 5);
+            st.flags._earlyAdopter = true;
+            msg =
+              "📊 转型那批人吃到了红利。新平台给早期入驻者发了¥3,500奖金，智力+3，名气+5。“早行动者”标签解锁——以后类似机会触发时优先看到。";
+          } else if (st.flags._disruptionSidehustle) {
+            // 副业派
+            st.resources.cash += 1800;
+            st.resources.totalEarned += 1800;
+            st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+            st.player.mental = Math.min(100, st.player.mental + 3);
+            msg =
+              "📊 两线作战的回报：累计副业收入¥1,800入账，体质-2（这阵子真累），心智+3（你扛过来了）。结论是不够极致，但没掉队。";
+          } else if (st.flags._disruptionHolding) {
+            // 坚守派
+            st.resources.cash = Math.max(0, st.resources.cash - 1200);
+            st.player.mental = Math.max(0, st.player.mental - 6);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            st.status.fame = Math.min(100, (st.status.fame || 0) + 4);
+            msg =
+              "📊 坚守的代价：行业萎缩，你这3个月少赚¥1,200，心智-6，心情-10。但街坊给你贴了“老把式”的标签（名气+4）——不是赢家，但是某种意义上的“守艺人”。";
+          }
+          StateManager.addMessage(msg, "event");
+        },
+      },
+    ],
+  },
+  // ============================================================
+  // 有梗世界事件链 ④：创始人回购（职场，3 段弧）
+  // 玩家在职场被资本清洗 → 30 天后留下当员工的屈辱期 →
+  // 45 天后老朋友筹钱让你买回主导权。参考 DEV.md 1.2 节模板。
+  // ============================================================
+  {
+    id: "founder_oust",
+    phase: "corporate",
+    icon: "🪑",
+    title: "投资人要换团队",
+    story:
+      "VC 召开闭门会议。新来的投资人代表语气客气但措辞冰冷：“业绩没达预期，我们要换打法——核心团队全部重组。” 你一愣——你是创始人之一啊。“我知道您的贡献，但下一个阶段需要更专业的运营。给您三个选择：留下来当核心员工、签离职协议拿遣散费、或者…我们也不强求。”",
+    conditions: function (st) {
+      var lvOk =
+        st.player.phase === "corporate" &&
+        st.corp &&
+        st.corp.level &&
+        st.corp.level >= 7;
+      // 模拟"接受过 VC 投资"：玩家有公司股份或高 KPI 期间发生
+      var vcCond =
+        !!st.flags._acceptedVCFunding ||
+        (st.corp && (st.player.corporate.kpi || 0) > 70 && st.player.day > 200);
+      return lvOk && vcCond && !st.flags._founderOustSeen;
+    },
+    choices: [
+      {
+        text: "🪑 留下来当核心员工（屈辱但留有翻身机会）",
+        hint: "30 天后看后续",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderStayed = st.player.day;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 50) - 25,
+            );
+            st.player.corporate.hair = Math.max(
+              0,
+              (st.player.corporate.hair || 80) - 15,
+            );
+            st.player.corporate.upwardMgmt = Math.max(
+              0,
+              (st.player.corporate.upwardMgmt || 50) - 10,
+            );
+          }
+          StateManager.addMessage(
+            "🪑 签了新合同，从联合创始人变成“产品总监”。尊严-25，发量-15，向上管理-10。但你想留着观察机会——也许还能东山再起。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💼 拿遣散费走人（¥150,000）",
+        hint: "干净离场，永久放弃公司",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderExited = true;
+          st.resources.cash += 150000;
+          st.resources.totalEarned += 150000;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 10,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 6);
+          StateManager.addMessage(
+            "💼 签字拿钱走人，到手¥150,000遣散费。尊严+10（你保住了体面），名气+6（业内都知道你是被资本清洗的创始人）。下一站去哪，再说。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💥 当场翻脸，公开抗议",
+        hint: "尊严+30，但 KPI 暴跌",
+        apply: function (st) {
+          st.flags._founderOustSeen = true;
+          st.flags._founderRebelled = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 30,
+            );
+            st.player.corporate.kpi = Math.max(
+              0,
+              (st.player.corporate.kpi || 50) - 30,
+            );
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 25,
+            );
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 10,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 10);
+          StateManager.addMessage(
+            "💥 当场拍桌子：“这公司是我们一砖一瓦盖起来的，凭什么由你们说了算？”——尊严+30，名气+10，人缘+10（同事敬你是条汉子）。代价：KPI-30，埋雷+25（你被打上了“麻烦制造者”标签）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "founder_humiliation",
+    phase: "corporate",
+    icon: "📉",
+    title: "新 CEO 让你写 PPT",
+    story:
+      "新 CEO 上任一个月，你这位“前创始人”被分配的工作是——给一群空降高管讲解你当年定的产品逻辑，然后做成 PPT 让他们“参考”。你看着会议室里那些一年前还没听说过这家公司的人，对你的产品指指点点，心里冷笑：他们连用户名字都念不准。但下班路上，你还是去打了点酒。",
+    conditions: function (st) {
+      return (
+        !!st.flags._founderStayed &&
+        st.player.day >= (st.flags._founderStayed || 0) + 30 &&
+        !st.flags._founderHumiliationSeen
+      );
+    },
+    choices: [
+      {
+        text: "🎭 假装配合，暗中观察",
+        hint: "尊严-3，但保留 buyback 机会",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderObserving = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 30) - 3,
+            );
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 40) + 8,
+            );
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 50) + 3,
+            );
+          }
+          StateManager.addMessage(
+            "🎭 戴上面具，每天笑着开会。尊严-3（你恨自己），但向上管理+8、能力+3——你确实学到了一些“如何在不属于自己的局里生存”的东西。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📚 业余时间学新东西，攒下家私积蓄",
+        hint: "智力+8、能力+5，攒钱通道",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderRebuilding = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 8,
+          );
+          if (st.player && st.player.corporate) {
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 50) + 5,
+            );
+          }
+          if (st.skills && st.skills.management) {
+            st.skills.management.exp = (st.skills.management.exp || 0) + 50;
+          }
+          StateManager.addMessage(
+            "📚 上班划水，下班修炼。智力+8、能力+5，管理技能XP+50。你心里有了清晰的目标：等机会回来，把这地方再赢一次。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💢 受不了了，直接辞职",
+        hint: "失去回购机会，但解脱",
+        apply: function (st) {
+          st.flags._founderHumiliationSeen = true;
+          st.flags._founderQuitInRage = true;
+          st.flags._founderStayed = null; // 关闭后续 buyback
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 30) + 25,
+            );
+            st.player.corporate.hair = Math.min(
+              100,
+              (st.player.corporate.hair || 50) + 10,
+            );
+          }
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          StateManager.addMessage(
+            "💢 在工位上摔了键盘走人。尊严+25、发量+10、心情+15——这一刻你觉得自己又活过来了。回购的可能性永远关闭了，但有些东西比公司重要。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "founder_buyback",
+    phase: "corporate",
+    icon: "♟️",
+    title: "老朋友凑钱要帮你买回来",
+    story:
+      "深夜接到当年合伙人老陈的电话：“新 CEO 一年烧了 3 个亿，下个季度要不到融资就完蛋。投资人现在愿意 4 折出售他们手里的股份——总价 ¥800,000。我和老张能凑¥500,000，差¥300,000。如果你能掏出来，我们三个人就能拿回这家公司。” 你看着对面墙上自己当年挂的那张“再创业”的字，握着手机的手在抖。",
+    conditions: function (st) {
+      var hasObserved =
+        !!st.flags._founderObserving || !!st.flags._founderRebuilding;
+      var triggerDay = st.flags._founderStayed
+        ? st.flags._founderStayed + 75
+        : 99999;
+      return (
+        hasObserved &&
+        st.player.day >= triggerDay &&
+        st.resources.cash >= 100000 &&
+        !st.flags._founderBuybackSeen
+      );
+    },
+    choices: [
+      {
+        text: "♟️ 砸¥300,000买回来！",
+        hint: "重新做 CEO，恢复属性",
+        cost: 300000,
+        apply: function (st) {
+          st.flags._founderBuybackSeen = true;
+          st.flags._founderReclaimed = true;
+          st.resources.cash -= 300000;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 30) + 40,
+            );
+            st.player.corporate.hair = Math.min(
+              100,
+              (st.player.corporate.hair || 40) + 25,
+            );
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 60) + 10,
+            );
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 20,
+            );
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 40) + 30,
+            );
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 15,
+            );
+          }
+          st.status.fame = Math.min(100, (st.status.fame || 0) + 20);
+          st.player.mental = Math.min(100, st.player.mental + 20);
+          StateManager.addMessage(
+            "♟️ 砸下¥300,000——你回来了。尊严+40、发量+25、能力+10、KPI+20、向上管理+30、人缘+15、名气+20、心智+20。这次你知道：公司不是属于资本的，是属于愿意为它流血的人的。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 谢绝老陈，安心当员工",
+        hint: "心理松一口气",
+        apply: function (st) {
+          st.flags._founderBuybackSeen = true;
+          st.flags._founderDeclinedBuyback = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 30) - 5,
+            );
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 10,
+            );
+          }
+          st.player.mental = Math.min(100, st.player.mental + 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          StateManager.addMessage(
+            "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
+            "info",
           );
         },
       },
