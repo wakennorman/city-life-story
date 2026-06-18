@@ -540,7 +540,10 @@ function renderNeedsBars(state) {
   setStatBar("stat-hygiene", n.hygiene, "hygiene");
   setStatBar("stat-happiness", n.happiness, "happiness");
   setStatBar("stat-health", s.health, "health");
-  setStatBar("stat-fame", s.fame, "fame");
+  // fame: 游戏逻辑写入 status.fame，player.fame 为迁移遗留（v1.0→v1.1）
+  // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
+  var fameVal = (s && typeof s.fame === "number") ? s.fame : (p && typeof p.fame === "number") ? p.fame : 0;
+  setStatBar("stat-fame", fameVal, "fame");
   // 行动力
   const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
   setStatBar("stat-ap", apPct, "ap-bar");
@@ -555,7 +558,7 @@ function renderNeedsBars(state) {
   warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
   warnStatRow("stat-happiness", n.happiness, 10, "#cc7868");
   warnStatRow("stat-health", s.health, 20, "#cc7868");
-  warnStatRow("stat-fame", s.fame, 5, "#9b74b8");
+  warnStatRow("stat-fame", fameVal, 5, "#9b74b8");
   // AP≤20
   warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
 }
@@ -926,7 +929,8 @@ function renderGrowthTab(state, parent) {
     { label: "心智", value: p.mental, color: "#9b74b8" },
     {
       label: "名气",
-      value: (state.status && state.status.fame) || 0,
+      // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
+      value: (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0),
       color: "#d4a017",
     },
   ];
@@ -1050,7 +1054,7 @@ function renderGrowthTab(state, parent) {
         p.intelligence,
         p.agility,
         p.mental,
-        Math.min(100, (state.status && state.status.fame) || 0),
+        Math.min(100, (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0)),
       ],
       ["体质", "智力", "敏捷", "心智", "名气"],
       100,
@@ -2677,10 +2681,70 @@ function renderSkillsTab(state, parent) {
         ")</div>";
     }
 
+    // --- P2#12 分支徽章 ---
+    var branchLabel = "";
+    if (typeof getSkillBranchLabel === "function") {
+      var bl = getSkillBranchLabel(key, state);
+      if (bl) branchLabel = '<div style="font-size:10px;color:var(--accent);margin:2px 0 4px;">🌳 ' + bl + "</div>";
+    }
+
+    // --- P2#12 天赋节点迷你树 ---
+    var talentHtml = "";
+    if (typeof getChosenBranch === "function") {
+      var chosenBranch = getChosenBranch(key, state);
+      if (chosenBranch && chosenBranch.talentNodes) {
+        talentHtml = '<div style="margin:6px 0;display:flex;gap:4px;align-items:center;">';
+        for (var ti = 0; ti < chosenBranch.talentNodes.length; ti++) {
+          var nd = chosenBranch.talentNodes[ti];
+          var nk = key + "_" + chosenBranch.id + "_" + nd.id;
+          var activated = state.talentNodes && state.talentNodes[nk];
+          var canActivate = false;
+          if (typeof getUnlockedTalentNodes === "function") {
+            var unlockedArr = getUnlockedTalentNodes(key, state);
+            for (var ui = 0; ui < unlockedArr.length; ui++) {
+              if (unlockedArr[ui].id === nd.id) { canActivate = true; break; }
+            }
+          }
+          var nodeStyle = activated
+            ? "background:var(--accent);color:#fff;"
+            : canActivate
+              ? "background:rgba(255,200,50,0.2);color:var(--warning);cursor:pointer;border:1px solid var(--warning);"
+              : "background:rgba(255,255,255,0.05);color:var(--text-muted);";
+          var nodeTitle = nd.name + (activated ? " ✓" : " (" + nd.desc + ")");
+          talentHtml +=
+            '<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;' +
+            nodeStyle +
+            '" title="' +
+            nodeTitle +
+            '" data-node="' + nk + '">' +
+            (activated ? "★" : canActivate ? "☆" : "·") +
+            "</div>";
+          if (ti < chosenBranch.talentNodes.length - 1) {
+            talentHtml += '<div style="width:8px;height:1px;background:var(--border-color, rgba(255,255,255,0.1));"></div>';
+          }
+        }
+        talentHtml += "</div>";
+      }
+    }
+
+    // --- P2#12 分支选择按钮（Lv.30+未选择）---
+    var branchBtnHtml = "";
+    if (skill.level >= 30 && !(state.skillBranches && state.skillBranches[key])) {
+      var hasBranches = false;
+      if (typeof getSkillBranchDef === "function") {
+        hasBranches = getSkillBranchDef(key).length > 0;
+      }
+      if (hasBranches) {
+        branchBtnHtml =
+          '<div style="margin-top:6px;padding:4px 8px;background:var(--accent);color:#fff;border-radius:4px;font-size:10px;text-align:center;cursor:pointer;" data-branch-select="' + key + '">🌳 选择发展方向</div>';
+      }
+    }
+
     card.innerHTML =
       '<div class="card-title">' +
       name +
       "</div>" +
+      branchLabel +
       '<div class="card-desc">Lv.' +
       skill.level +
       " / 100</div>" +
@@ -2695,6 +2759,8 @@ function renderSkillsTab(state, parent) {
       "/" +
       xpNeeded +
       "</div>" +
+      talentHtml +
+      branchBtnHtml +
       jobHtml +
       '<div style="margin-top:8px;font-size:11px;color:var(--warning);font-weight:bold;">⚡ 点击训练</div>';
 
@@ -2829,6 +2895,44 @@ function renderSkillsTab(state, parent) {
     })(key);
 
     grid.appendChild(card);
+
+      // P2#12 分支选择按钮点击
+      (function (skillKey) {
+        var branchBtn = card.querySelector("[data-branch-select]");
+        if (branchBtn) {
+          branchBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (typeof showBranchSelectionModal === "function") {
+              showBranchSelectionModal(skillKey);
+            }
+          });
+        }
+        // 天赋节点点击激活
+        var nodeEls = card.querySelectorAll("[data-node]");
+        for (var ni = 0; ni < nodeEls.length; ni++) {
+          (function (el) {
+            el.addEventListener("click", function (e) {
+              e.stopPropagation();
+              var nk = el.getAttribute("data-node");
+              if (!nk) return;
+              var parts = nk.split("_");
+              if (parts.length < 3) return;
+              var sk = parts[0];
+              var branchId = state.skillBranches && state.skillBranches[sk];
+              if (!branchId) return;
+              var prefix = sk + "_" + branchId + "_";
+              var nodeId = nk.substring(prefix.length);
+              if (typeof handleActivateTalentNode === "function") {
+                handleActivateTalentNode(sk, nodeId);
+              } else if (typeof activateTalentNode === "function") {
+                var st = StateManager.getState();
+                activateTalentNode(sk, nodeId, st);
+                if (typeof renderAll === "function") renderAll(st);
+              }
+            });
+          })(nodeEls[ni]);
+        }
+      })(key);
   }
   div.appendChild(grid);
 
@@ -3367,5 +3471,146 @@ function renderAchievementsTab(state, parent) {
       section.appendChild(card);
     });
     parent.appendChild(section);
+  });
+}
+
+// ====== P2#12 技能分支选择弹窗 ======
+function showBranchSelectionModal(skillKey) {
+  if (typeof StateManager === "undefined") return;
+  var state = StateManager.getState();
+  var skill = state.skills[skillKey];
+  if (!skill) return;
+
+  var branches = [];
+  if (typeof getSkillBranchDef === "function") {
+    branches = getSkillBranchDef(skillKey);
+  }
+  if (branches.length === 0) return;
+
+  // 创建遮罩
+  var overlay = document.createElement("div");
+  overlay.style.cssText =
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;";
+
+  var modal = document.createElement("div");
+  modal.style.cssText =
+    "background:var(--bg-card,#1a1a2e);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;";
+
+  var skillName = "";
+  if (typeof getSkillChineseName === "function") {
+    skillName = getSkillChineseName(skillKey);
+  }
+
+  modal.innerHTML =
+    '<h3 style="color:var(--text-muted);margin-bottom:6px;">🌳 ' + skillName + ' — 选择发展方向</h3>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' + skill.level + '，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>' +
+    '<div style="margin-bottom:12px;">';
+
+  for (var bi = 0; bi < branches.length; bi++) {
+    var branch = branches[bi];
+    var branchDiv = document.createElement("div");
+    branchDiv.style.cssText =
+      "padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;transition:all 0.15s;";
+    branchDiv.setAttribute("data-branch-id", branch.id);
+
+    // 天赋节点预览
+    var nodePreview = "";
+    if (branch.talentNodes) {
+      nodePreview = '<div style="margin-top:6px;font-size:10px;color:var(--text-muted);">天赋节点：';
+      for (var ni = 0; ni < branch.talentNodes.length; ni++) {
+        var nd = branch.talentNodes[ni];
+        nodePreview += '<span style="margin-right:4px;">Lv.' + nd.requireLevel + ' ' + nd.name + '</span>';
+        if (ni < branch.talentNodes.length - 1) nodePreview += ' → ';
+      }
+      nodePreview += "</div>";
+    }
+
+    // 解锁工作预览
+    var jobPreview = "";
+    if (branch.jobBonuses && branch.jobBonuses.length > 0) {
+      jobPreview = '<div style="margin-top:4px;font-size:10px;color:var(--success);">解锁工作：';
+      if (typeof STREET_JOBS !== "undefined") {
+        for (var ji = 0; ji < branch.jobBonuses.length; ji++) {
+          for (var jqi = 0; jqi < STREET_JOBS.length; jqi++) {
+            if (STREET_JOBS[jqi].id === branch.jobBonuses[ji]) {
+              jobPreview += STREET_JOBS[jqi].icon + " " + STREET_JOBS[jqi].name + " ";
+              break;
+            }
+          }
+        }
+      }
+      jobPreview += "</div>";
+    }
+
+    branchDiv.innerHTML =
+      '<div style="font-size:14px;font-weight:bold;color:var(--accent);">' + branch.icon + " " + branch.name + "</div>" +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' + branch.desc + "</div>" +
+      nodePreview +
+      jobPreview;
+
+    // hover效果
+    branchDiv.addEventListener("mouseenter", function () {
+      this.style.borderColor = "var(--accent)";
+      this.style.background = "rgba(255,255,255,0.06)";
+    });
+    branchDiv.addEventListener("mouseleave", function () {
+      this.style.borderColor = "rgba(255,255,255,0.08)";
+      this.style.background = "rgba(255,255,255,0.03)";
+    });
+
+    // 选择确认
+    (function (bid) {
+      branchDiv.addEventListener("click", function () {
+        // 确认选择
+        var confirmDiv = document.createElement("div");
+        confirmDiv.style.cssText =
+          "margin-top:8px;display:flex;gap:8px;justify-content:center;";
+        confirmDiv.innerHTML =
+          '<button style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✅ 确认选择</button>' +
+          '<button style="padding:6px 16px;background:rgba(255,255,255,0.1);color:var(--text-muted);border:none;border-radius:6px;cursor:pointer;font-size:12px;">❌ 取消</button>';
+        this.appendChild(confirmDiv);
+
+        var self = this;
+        var confirmBtn = confirmDiv.querySelector("button:first-child");
+        var cancelBtn = confirmDiv.querySelector("button:last-child");
+
+        cancelBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          confirmDiv.remove();
+        });
+
+        confirmBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var st = StateManager.getState();
+          if (typeof chooseSkillBranch === "function") {
+            var result = chooseSkillBranch(skillKey, bid, st);
+            if (result && typeof renderAll === "function") {
+              renderAll(st);
+            }
+          }
+          overlay.remove();
+        });
+      });
+    })(branch.id);
+
+    modal.querySelector("div").appendChild(branchDiv);
+  }
+
+  // 关闭按钮
+  var closeBtn = document.createElement("div");
+  closeBtn.style.cssText =
+    "text-align:center;margin-top:8px;padding:8px;font-size:12px;color:var(--text-muted);cursor:pointer;";
+  closeBtn.textContent = "以后再选";
+  closeBtn.addEventListener("click", function () {
+    overlay.remove();
+  });
+  modal.appendChild(closeBtn);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // 点击遮罩外部关闭
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) overlay.remove();
   });
 }

@@ -315,7 +315,7 @@
           <button class="tab-btn" data-tab="skills">📚 技能</button>
           <button class="tab-btn" data-tab="corp">🏢 职场</button>
           <button class="tab-btn" data-tab="investment">💰 投资</button>
-          <button class="tab-btn" data-tab="enterprise">🏭 企业</button>
+          <button class="tab-btn" data-tab="enterprise" style="display:none;">🏭 企业</button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
@@ -379,7 +379,7 @@ function createDefaultState() {
   const now = Date.now();
   return {
     // --- 元数据 ---
-    version: "1.0.0",
+    version: "1.1.0",
     createdAt: now,
     lastPlayedAt: now,
     playTime: 0,
@@ -396,6 +396,7 @@ function createDefaultState() {
       intelligence: 20, // 智力
       agility: 24, // 敏捷
       mental: 26, // 心智
+      fame: 0, // 名气（基础第五维，从 status.fame 迁移而来）
 
       // 职场 7 维属性 (进入职场后初始化)
       corporate: {
@@ -445,10 +446,11 @@ function createDefaultState() {
     // --- 派生状态 ---
     status: {
       health: 100,
-      fame: 0,
+      fame: 0, // 名气（v1.0→v1.1 迁移到 player.fame，此处保留兼容旧逻辑写入）
       emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
-      sick: false,
-      injured: false,
+      sick: false, // 兼容旧字段（内部由 illnesses 数组派生）
+      injured: false, // 兼容旧字段
+      illnesses: [], // [{ id: "cold", contractedDay: 12, severity: 1, treated: false }]
     },
 
     // --- 技能 (level: 0-100, xp: 0-1000) ---
@@ -465,6 +467,8 @@ function createDefaultState() {
       welding: { level: 0, xp: 0 },
     },
     certificates: [],
+    skillBranches: {},   // { cooking: "home_chef", ... } 技能→已选分支ID
+    talentNodes: {},     // { "cooking_home_chef_knife": true, ... } 已激活的天赋节点
     // 兼容早期存档/误放字段；运行逻辑以 player.education 为准。
     education: 0,
     eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
@@ -630,6 +634,19 @@ function createDefaultState() {
       ageThisYear: false,
       seenNewsToday: [],
       _dailyTransactions: [], // 当日收支流水记录 [{ type, category, amount, description }]
+      // --- 状态危机/疾病系统 ---
+      _habits: {
+        junkFoodMeals: 0, // 累计垃圾食品次数
+        lowHungerStreak: 0, // 连续 hunger<25 天数
+        lowHygieneStreak: 0, // 连续 hygiene<30 天数
+        lowHappinessStreak: 0, // 连续 happiness<20 天数
+        highFatigueStreak: 0, // 连续 fatigue>80 天数
+        lateNightActions: 0, // 累计夜生活次数
+        stomach_inflammationCount: 0, // 已患肠胃炎次数
+      },
+      _deferred: {}, // { hunger: day, fatigue: day, ... } 当日延后过的临界维度
+      _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
+      _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
     },
 
     // --- 事件与消息 ---
@@ -733,6 +750,32 @@ class GameStateManager {
   importState(savedState) {
     this._state = savedState;
     this._state.lastPlayedAt = Date.now();
+    // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
+    var s = this._state;
+    if (s.status && typeof s.status.fame === "number") {
+      if (s.player) s.player.fame = s.status.fame;
+      delete s.status.fame;
+    }
+    if (s.player && typeof s.player.fame !== "number") {
+      s.player.fame = 0;
+    }
+    if (s.status && !s.status.illnesses) s.status.illnesses = [];
+    if (s.flags && !s.flags._habits) {
+      s.flags._habits = {
+        junkFoodMeals: 0,
+        lowHungerStreak: 0,
+        lowHygieneStreak: 0,
+        lowHappinessStreak: 0,
+        highFatigueStreak: 0,
+        lateNightActions: 0,
+        stomach_inflammationCount: 0,
+      };
+    }
+    if (s.flags && !s.flags._deferred) s.flags._deferred = {};
+    if (s.flags && !s.flags._amenityHabitCount) s.flags._amenityHabitCount = {};
+	    // v1.1 → v1.2 迁移：skillBranches + talentNodes
+	    if (!s.skillBranches) s.skillBranches = {};
+	    if (!s.talentNodes) s.talentNodes = {}
     this._markAllDirty();
     this._notify();
   }
@@ -3757,7 +3800,7 @@ const RANDOM_EVENTS = [
       '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
     conditions: function (st) {
       var rel = st.relationships && st.relationships["aunt_wang"];
-      return st.player.phase === "street" && rel && rel.affinity >= 20;
+      return st.player.phase === "street" && rel && rel.affinity >= 20 && (st.housing.tier || 0) >= 1;
     },
     choices: [
       {
@@ -3854,7 +3897,7 @@ const RANDOM_EVENTS = [
     story:
       "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
     conditions: function (st) {
-      return st.player.phase === "street";
+      return st.player.phase === "street" && (st.housing.tier || 0) >= 1;
     },
     choices: [
       {
@@ -3896,6 +3939,275 @@ const RANDOM_EVENTS = [
           StateManager.addMessage(
             "🚔 你找了楼管，装了监控，宿舍氛围变好了，心智+2。",
             "success",
+          );
+        },
+      },
+    ],
+  },
+
+  // === 露宿街头专属事件（housing.tier === 0）===
+  {
+    id: "homeless_bag_theft",
+    phase: "street",
+    icon: "🎒",
+    title: "桥洞下的背包被翻动了",
+    story:
+      "早上醒来，你放在桥洞下的背包被人翻过了。幸好现金还藏在鞋底的暗格里，但一些零碎物品不见了——包括那件冬天用来挡风的旧外套。周围几个同样露宿的人都在互相打量。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) === 0;
+    },
+    choices: [
+      {
+        text: "👀 盯着那个可疑的人",
+        hint: "对峙试试",
+        apply: function (st) {
+          if (st.player.agility >= 25 || st.player.physique >= 30) {
+            st.status.fame = Math.min(100, st.status.fame + 2);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage(
+              "你死死盯着那个可疑的人，对方心虚地移开目光，没敢再靠近。虽然没找回东西，但震慑住了对方。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            StateManager.addMessage(
+              "你对峙过去，对方反而冷笑一声：「看什么看？」周围人也没人帮你说话。只能忍了。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😮‍💨 算了，反正也没啥值钱的",
+        hint: "自认倒霉",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "你叹了口气，把剩下的东西收拾好。在这座城市，这种事每天都在发生。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🙏 问问其他人有没有看到",
+        hint: "收集线索",
+        apply: function (st) {
+          if (Math.random() < 0.4) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage(
+              "一个老流浪汉悄悄告诉你：「昨晚看到有个穿黑夹克的在你们那边转悠。」你记住了这个特征。",
+              "info",
+            );
+          } else {
+            StateManager.addMessage(
+              "没人愿意开口。在这地方，多一事不如少一事。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  },
+
+  // === 露宿街头专属事件（housing.tier === 0）续 ===
+  {
+    id: "homeless_rain_shelter",
+    phase: "street",
+    icon: "🌧️",
+    title: "暴雨前的争夺",
+    story:
+      "天气预报说今晚有暴雨。你平时躲雨的那个桥洞位置，已经被另一个人占了。他看着你，你也看着他。雨还有两小时就到。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) === 0;
+    },
+    choices: [
+      {
+        text: "🗣️ 商量轮流用",
+        hint: "和平协商",
+        apply: function (st) {
+          if (st.player.mental >= 25 || st.player.fame >= 10) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+            StateManager.addMessage(
+              "你们商量了一下，决定轮流守夜。虽然条件艰苦，但至少有人互相照应。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            st.needs.hygiene = Math.max(0, st.needs.hygiene - 15);
+            StateManager.addMessage(
+              "对方拒绝了。你只能在雨中找另一个更差的位置，浑身湿透地度过了一夜。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "💪 直接占位置",
+        hint: "强势争夺",
+        apply: function (st) {
+          if (st.player.physique >= 35) {
+            st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+            st.status.fame = Math.max(0, st.status.fame - 2);
+            StateManager.addMessage(
+              "你凭体格优势占了位置，对方没敢吭声。但你注意到他离开时看你的眼神很冷。",
+              "info",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            st.needs.hygiene = Math.max(0, st.needs.hygiene - 15);
+            StateManager.addMessage(
+              "你想抢位置，但对方也不示弱，两人推搡了几下，最后你还是没占到。淋了一夜雨。",
+              "danger",
+            );
+          }
+        },
+      },
+      {
+        text: "🚶 去找其他地方躲雨",
+        hint: "退一步",
+        apply: function (st) {
+          st.needs.hygiene = Math.max(0, st.needs.hygiene - 10);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          StateManager.addMessage(
+            "你找了个24小时快餐店的角落躲了一夜。虽然不舒服，但至少没淋雨。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "homeless_food_charity",
+    phase: "street",
+    icon: "🍲",
+    title: "慈善食堂今天排长队",
+    story:
+      "街角那家慈善食堂今天开门早，已经有十几个人在排队了。你肚子很饿，但排队至少要两小时。旁边有人小声说：「今天好像有肉。」",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) === 0 && st.needs.hunger < 40;
+    },
+    choices: [
+      {
+        text: "🍲 排！有肉吃",
+        hint: "花时间换食物",
+        apply: function (st) {
+          st.needs.hunger = Math.min(100, st.needs.hunger + 35);
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          StateManager.addMessage(
+            "排了两小时，终于吃上了一碗热腾腾的肉末面条。虽然环境嘈杂，但这顿饭让你感觉活过来了。饱腹+35，疲劳+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 花¥10买份快餐",
+        hint: "花钱省时间",
+        apply: function (st) {
+          if (st.resources.cash >= 10) {
+            st.resources.cash -= 10;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 25);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            StateManager.addMessage(
+              "你在旁边的小摊买了份快餐，花了10块钱。虽然不如食堂的分量足，但省了两个小时。",
+              "info",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "你摸了摸口袋，连10块钱都没有。只能继续排队。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🚶 先去找点零工",
+        hint: "赚钱优先",
+        apply: function (st) {
+          st.needs.hunger = Math.max(0, st.needs.hunger - 10);
+          if (Math.random() < 0.4) {
+            const earned = 20 + Math.floor(Math.random() * 30);
+            st.resources.cash += earned;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "你找到个临时活，赚了¥" + earned + "。用其中10块钱买了快餐填肚子。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "转了一圈没找到活。饿着肚子又回到了原地，慈善食堂的队已经散了一部分。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  },
+
+  {
+    id: "homeless_security_check",
+    phase: "street",
+    icon: "👮",
+    title: "城管清理露宿点",
+    story:
+      "早上醒来，几个城管正在挨个叫醒露宿的人：「这里不能住了，赶紧收拾东西走人！」你的东西还堆在桥洞下，还没整理好。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) === 0;
+    },
+    choices: [
+      {
+        text: "🏃 赶紧收拾跑",
+        hint: "保住所",
+        apply: function (st) {
+          if (st.player.agility >= 25) {
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+            StateManager.addMessage(
+              "你手脚麻利地收拾好东西，在城管过来前离开了。虽然狼狈，但东西都保住了。",
+              "success",
+            );
+          } else {
+            st.resources.cash = Math.max(0, st.resources.cash - 20);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            StateManager.addMessage(
+              "你收拾得太慢，被城管没收了部分东西，还罚了20块。剩下的东西散落在地上。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🗣️ 求情说没地方去",
+        hint: "试试软办法",
+        apply: function (st) {
+          if (st.player.mental >= 30 || st.player.age <= 22) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage(
+              "你说明了情况，其中一个城管叹了口气：「前面公园那边管得松点，去那儿吧。」你逃过一劫。",
+              "info",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            StateManager.addMessage(
+              "城管说：「大家都没地方去，按规定办事。」你还是得离开。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😮‍💨 默默收拾，不抵抗",
+        hint: "认命",
+        apply: function (st) {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "你默默收拾好所有东西，跟着人群离开了。桥洞再也不是你的临时住所了。",
+            "info",
           );
         },
       },
@@ -7515,11 +7827,16 @@ const RANDOM_EVENTS = [
     phase: "corporate",
     icon: "💀",
     title: "公司快不行了，你的选择是？",
-    story: "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
+    story:
+      "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
     conditions: function (st) {
-      if (st.player.phase !== "corporate" || !st.corporate.company) return false;
+      if (st.player.phase !== "corporate" || !st.corporate.company)
+        return false;
       var cid = st.corporate.company.id;
-      var co = st.enterpriseFate && st.enterpriseFate.companies && st.enterpriseFate.companies[cid];
+      var co =
+        st.enterpriseFate &&
+        st.enterpriseFate.companies &&
+        st.enterpriseFate.companies[cid];
       return co && co.phase === "dying" && !st.flags._fateCollapseSeen;
     },
     choices: [
@@ -7533,7 +7850,12 @@ const RANDOM_EVENTS = [
           st.resources.cash += severance;
           st.resources.totalEarned += severance;
           st.player.mental = Math.max(0, st.player.mental - 5);
-          StateManager.addMessage("💀 你签了离职协议，拿了¥" + severance.toLocaleString() + "赔偿金。离开公司的那一刻，你回头看了一眼——那里曾经是你的全部。心智-5。", "warning");
+          StateManager.addMessage(
+            "💀 你签了离职协议，拿了¥" +
+              severance.toLocaleString() +
+              "赔偿金。离开公司的那一刻，你回头看了一眼——那里曾经是你的全部。心智-5。",
+            "warning",
+          );
         },
       },
       {
@@ -7542,7 +7864,10 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.flags._fateCollapseSeen = true;
           st.player.mental = Math.min(100, st.player.mental + 5);
-          StateManager.addMessage("💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。", "event");
+          StateManager.addMessage(
+            "💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。",
+            "event",
+          );
         },
       },
       {
@@ -7552,7 +7877,10 @@ const RANDOM_EVENTS = [
           st.flags._fateCollapseSeen = true;
           st.player.mental = Math.min(100, st.player.mental + 2);
           st.flags._fateJobHunting = true;
-          StateManager.addMessage("🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。", "info");
+          StateManager.addMessage(
+            "🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。",
+            "info",
+          );
         },
       },
     ],
@@ -7564,15 +7892,32 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🚀",
     title: "内幕消息：你的持仓股要起飞",
-    story: "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
+    story:
+      "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
     conditions: function (st) {
-      if (st.player.phase !== "street" || !st.investment || !st.investment.stockHoldings || !st.investment.stockHoldings.length) return false;
+      if (
+        st.player.phase !== "street" ||
+        !st.investment ||
+        !st.investment.stockHoldings ||
+        !st.investment.stockHoldings.length
+      )
+        return false;
       if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
       for (var cid in st.enterpriseFate.companies) {
         var co = st.enterpriseFate.companies[cid];
-        if (co && co.knownToPlayer && co.fateEventHistory && co.fateEventHistory.length > 0) {
+        if (
+          co &&
+          co.knownToPlayer &&
+          co.fateEventHistory &&
+          co.fateEventHistory.length > 0
+        ) {
           var last = co.fateEventHistory[co.fateEventHistory.length - 1];
-          if (last && last.eventType === "product_breakout" && !st.flags._fateBoomSeen) return true;
+          if (
+            last &&
+            last.eventType === "product_breakout" &&
+            !st.flags._fateBoomSeen
+          )
+            return true;
         }
       }
       return false;
@@ -7585,9 +7930,13 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.flags._fateBoomSeen = true;
           st.resources.cash -= 5000;
-          st.flags._fateInsiderInvest = (st.flags._fateInsiderInvest || 0) + 5000;
+          st.flags._fateInsiderInvest =
+            (st.flags._fateInsiderInvest || 0) + 5000;
           st.player.mental = Math.max(0, st.player.mental - 2);
-          StateManager.addMessage("💰 你通过场外渠道加仓¥5000。等正式公告出来，这笔钱至少能变成¥7000。但心里有点虚——这算内幕交易吗？心智-2。", "warning");
+          StateManager.addMessage(
+            "💰 你通过场外渠道加仓¥5000。等正式公告出来，这笔钱至少能变成¥7000。但心里有点虚——这算内幕交易吗？心智-2。",
+            "warning",
+          );
         },
       },
       {
@@ -7596,7 +7945,10 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.flags._fateBoomSeen = true;
           st.flags._fateBoomSafe = true;
-          StateManager.addMessage("📊 你合上了手机。内幕交易是红线，碰不得。等公告出来再操作，赚少一点但睡得着。", "info");
+          StateManager.addMessage(
+            "📊 你合上了手机。内幕交易是红线，碰不得。等公告出来再操作，赚少一点但睡得着。",
+            "info",
+          );
         },
       },
     ],
@@ -7608,20 +7960,39 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📉",
     title: "你的股票大跳水！",
-    story: "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
+    story:
+      "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
     conditions: function (st) {
-      if (!st.investment || !st.investment.stockHoldings || !st.investment.stockHoldings.length) return false;
+      if (
+        !st.investment ||
+        !st.investment.stockHoldings ||
+        !st.investment.stockHoldings.length
+      )
+        return false;
       if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
       var hasEvent = false;
       for (var cid in st.enterpriseFate.companies) {
         var co = st.enterpriseFate.companies[cid];
-        if (co && co.knownToPlayer && co.fateEventHistory && co.fateEventHistory.length > 0) {
+        if (
+          co &&
+          co.knownToPlayer &&
+          co.fateEventHistory &&
+          co.fateEventHistory.length > 0
+        ) {
           var last = co.fateEventHistory[co.fateEventHistory.length - 1];
-          if (last && st.player.day - last.day <= 3 && (last.eventType === "scandal" || last.eventType === "cash_crisis" || last.eventType === "market_erosion")) {
+          if (
+            last &&
+            st.player.day - last.day <= 3 &&
+            (last.eventType === "scandal" ||
+              last.eventType === "cash_crisis" ||
+              last.eventType === "market_erosion")
+          ) {
             if (typeof CORP_STOCK_MAP !== "undefined") {
               var symbols = CORP_STOCK_MAP[cid] || [];
               for (var si = 0; si < st.investment.stockHoldings.length; si++) {
-                if (symbols.indexOf(st.investment.stockHoldings[si].symbol) >= 0) {
+                if (
+                  symbols.indexOf(st.investment.stockHoldings[si].symbol) >= 0
+                ) {
                   hasEvent = true;
                   break;
                 }
@@ -7642,7 +8013,8 @@ const RANDOM_EVENTS = [
           var holdings = st.investment.stockHoldings;
           for (var i = holdings.length - 1; i >= 0; i--) {
             var h = holdings[i];
-            var mkt = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            var mkt =
+              st.investment.stockMarket && st.investment.stockMarket[h.symbol];
             if (mkt) {
               var sellShares = Math.floor(h.shares * 0.5);
               if (sellShares > 0) {
@@ -7654,8 +8026,17 @@ const RANDOM_EVENTS = [
               }
             }
           }
-          st.investment.stockHoldings = st.investment.stockHoldings.filter(function (h) { return h.shares > 0; });
-          StateManager.addMessage("🏃 你紧急减仓，回笼¥" + soldTotal.toLocaleString() + "。虽然亏了一些，但至少保住了本金。", "warning");
+          st.investment.stockHoldings = st.investment.stockHoldings.filter(
+            function (h) {
+              return h.shares > 0;
+            },
+          );
+          StateManager.addMessage(
+            "🏃 你紧急减仓，回笼¥" +
+              soldTotal.toLocaleString() +
+              "。虽然亏了一些，但至少保住了本金。",
+            "warning",
+          );
         },
       },
       {
@@ -7664,7 +8045,251 @@ const RANDOM_EVENTS = [
         apply: function (st) {
           st.flags._fateMoverSeen = true;
           st.player.mental = Math.min(100, st.player.mental + 3);
-          StateManager.addMessage("🧘 你关掉了交易软件。好公司总会回来——你告诉自己。心智+3。", "info");
+          StateManager.addMessage(
+            "🧘 你关掉了交易软件。好公司总会回来——你告诉自己。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === 单间专属事件（housing.tier === 2）===
+  {
+    id: "single_room_noise",
+    phase: "street",
+    icon: "🔊",
+    title: "隔壁的噪音",
+    story:
+      "搬进单间后本以为能安静些，没想到隔壁是一对刚搬来的年轻情侣，半夜还在吵架摔东西。你敲了墙提醒，对方反而更大声了。明天还要早起打工，怎么办？",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) === 2;
+    },
+    choices: [
+      {
+        text: "🔨 再敲一次墙，严肃警告",
+        hint: "强硬态度",
+        apply: function (st) {
+          if (st.player.physique >= 30) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            StateManager.addMessage(
+              "你用力敲了几次墙，声音沉稳有力。隔壁安静了十几分钟，虽然没完全停止，但明显收敛了。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            StateManager.addMessage(
+              "你敲了墙，但对方似乎觉得你软弱可欺，反而更加肆无忌惮。你烦躁地躺了一夜。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏢 找房东投诉",
+        hint: "走正规途径",
+        apply: function (st) {
+          if (Math.random() < 0.5) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "房东去隔壁说了一下，当晚安静了。但房东暗示你：「别老投诉，人家交着房租呢。」",
+              "info",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "房东说会去说，但第二天一切照旧。你意识到在这地方，房东也不会太管这些事。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😮‍💨 戴上耳塞忍一晚",
+        hint: "省钱省事",
+        apply: function (st) {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "你戴上耳塞勉强睡了一晚，但睡眠质量很差，第二天精神不振。疲劳+15。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "single_room_delivery",
+    phase: "street",
+    icon: "📦",
+    title: "外卖放门口被偷了",
+    story:
+      "点了一份¥25的外卖，放在门口准备回去拿，出来时发现袋子不见了。楼道里有个陌生人正鬼鬼祟祟地走开。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) >= 2 && st.resources.cash >= 25;
+    },
+    choices: [
+      {
+        text: "🏃 追上去问清楚",
+        hint: "追回损失",
+        apply: function (st) {
+          if (Math.random() < 0.35 + (st.player.agility || 20) * 0.01) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "你追上去拦住了对方，对方慌慌张张地把外卖扔下跑了。虽然饭有点凉了，但至少没白花钱。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "你追了几步，对方跑得飞快，转眼就消失在巷子里。25块钱和一顿饭都没了。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😤 算了，再点一份",
+        hint: "花钱买省心",
+        apply: function (st) {
+          st.resources.cash -= 25;
+          st.needs.hunger = Math.min(100, st.needs.hunger + 25);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          StateManager.addMessage(
+            "你又点了一份，边吃边想：在这地方，这种事太常见了。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 去路边随便吃点",
+        hint: "不浪费",
+        apply: function (st) {
+          st.resources.cash -= 5;
+          st.needs.hunger = Math.min(100, st.needs.hunger + 15);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "你走到路边小摊花了5块钱买了个包子填肚子。20块钱算是交了学费。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === 一居室专属事件（housing.tier === 3）===
+  {
+    id: "apartment_borrow_money",
+    phase: "street",
+    icon: "💸",
+    title: "邻居来借钱",
+    story:
+      "住对门的那个独居中年男人来敲门，说家里急事要借¥200，明天就还。你们平时见面只是点头之交，但你注意到他神色慌张，手一直在抖。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) >= 3 && st.resources.cash >= 200;
+    },
+    choices: [
+      {
+        text: "💰 借给他",
+        hint: "帮一把",
+        apply: function (st) {
+          st.resources.cash -= 200;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          if (Math.random() < 0.6) {
+            st.resources.cash += 200;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "第二天他果然还了钱，还带了盒饼干：「谢谢啊，要不是你，我真不知道怎么办。」",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            StateManager.addMessage(
+              "第二天敲门没人应，问物业说这户人搬走了。200块钱打水漂了。",
+              "danger",
+            );
+          }
+        },
+      },
+      {
+        text: "🤔 先问问是什么事",
+        hint: "谨慎些",
+        apply: function (st) {
+          if (Math.random() < 0.5) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage(
+              "他支支吾吾说不清楚，只说「家里有事」。你更怀疑了，没借。他失望地走了。",
+              "info",
+            );
+          } else {
+            st.resources.cash -= 200;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "他说家人生病要买药。你信了，借了200。第二天他没说还钱的事，你也没好意思催。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🚪 说自己也困难，关上门",
+        hint: "明哲保身",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          StateManager.addMessage(
+            "你说自己最近也紧，关上了门。隔着门听到他叹了口气走了。心里有点不是滋味。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  {
+    id: "apartment_gym_chance",
+    phase: "street",
+    icon: "💪",
+    title: "小区健身房办卡优惠",
+    story:
+      "小区物业在门口发传单：「业主专享！健身房年卡¥300，原价¥800。」你住的一居室正好在这个小区里。健身对身体好，但300块也不便宜。",
+    conditions: function (st) {
+      return st.player.phase === "street" && (st.housing.tier || 0) >= 3 && st.resources.cash >= 300;
+    },
+    choices: [
+      {
+        text: "💪 办卡！投资健康",
+        hint: "长期收益",
+        apply: function (st) {
+          st.resources.cash -= 300;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          StateManager.addMessage(
+            "你办了健身卡。虽然300块不少，但想想能锻炼身体，值了。心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏃 先试试免费器械区",
+        hint: "省点钱",
+        apply: function (st) {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 8);
+          st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
+          StateManager.addMessage(
+            "你在小区免费器械区练了一周，虽然效果有限，但省了300块。体质+1，疲劳-8。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 不用了，跑步就行",
+        hint: "零成本",
+        apply: function (st) {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          StateManager.addMessage(
+            "你决定每天晨跑，零成本也能锻炼身体。省下的300块可以干别的。",
+            "info",
+          );
         },
       },
     ],
@@ -9554,6 +10179,7 @@ const LOCATIONS = {
     name: "城中村",
     desc: "鱼龙混杂的城中村，房租便宜，机会也多。",
     type: "residential",
+    wealthTier: 1, // 1=贫困区 2=中等 3=富裕区 — 影响 amenity 档次和旅行AP
     footfall: 0.6,
     vendingNote: "本地居民为主，消费力弱",
     jobs: ["waste_recycling", "street_vending_goods", "street_vending_food"],
@@ -9572,6 +10198,7 @@ const LOCATIONS = {
     name: "批发市场",
     desc: "各种商品批发的集散地，进货的天堂。",
     type: "commercial",
+    wealthTier: 2,
     footfall: 0.9,
     vendingNote: "批发商多，但也有零散买家",
     jobs: ["street_vending_goods", "warehouse_worker"],
@@ -9592,6 +10219,7 @@ const LOCATIONS = {
     name: "建筑工地",
     desc: "尘土飞扬的建筑工地，到处是钢筋水泥。",
     type: "industrial",
+    wealthTier: 1,
     footfall: 0.5,
     vendingNote: "工人偶尔消费，管理严格",
     jobs: [
@@ -9607,6 +10235,7 @@ const LOCATIONS = {
     name: "工业区",
     desc: "工厂聚集的工业区，机器轰鸣声不绝于耳。",
     type: "industrial",
+    wealthTier: 2,
     footfall: 1.0,
     vendingNote: "午休工人是主力消费群体",
     jobs: [
@@ -9630,6 +10259,7 @@ const LOCATIONS = {
     name: "大学城",
     desc: "高校云集的大学城，年轻人多，机会特殊。",
     type: "institutional",
+    wealthTier: 2,
     footfall: 1.2,
     vendingNote: "学生零食消费旺盛，均价稍低",
     jobs: [
@@ -9652,6 +10282,7 @@ const LOCATIONS = {
     name: "商业区",
     desc: "繁华的商业地段，人来人往，商机无限。",
     type: "commercial",
+    wealthTier: 3,
     footfall: 1.8,
     vendingNote: "主商圈，客流量最大，但城管也多",
     jobs: [
@@ -9681,6 +10312,7 @@ const LOCATIONS = {
     name: "科技园",
     desc: "互联网大厂的聚集地，高楼林立，精英云集。",
     type: "corporate",
+    wealthTier: 3,
     footfall: 0.7,
     vendingNote: "白领消费力强但习惯点外卖",
     jobs: [
@@ -9697,6 +10329,7 @@ const LOCATIONS = {
     name: "医院",
     desc: "看病治疗的地方。健康是革命的本钱。",
     type: "service",
+    wealthTier: 2,
     footfall: 0.8,
     vendingNote: "探病家属是主要客群",
     jobs: ["hospital_caregiver"],
@@ -9707,6 +10340,7 @@ const LOCATIONS = {
     name: "银行",
     desc: "存取款、办理贷款。",
     type: "service",
+    wealthTier: 2,
     footfall: 0.4,
     vendingNote: "人流稀少，不适合摆摊",
     jobs: [],
@@ -9717,6 +10351,7 @@ const LOCATIONS = {
     name: "公园",
     desc: "城市中的绿洲，可以放松身心。",
     type: "recreation",
+    wealthTier: 2,
     footfall: 1.0,
     vendingNote: "周末家庭聚集，工作日冷清",
     jobs: [
@@ -9732,6 +10367,7 @@ const LOCATIONS = {
     name: "培训中心",
     desc: "学习技能、考取证书的地方。投资自己。",
     type: "education",
+    wealthTier: 2,
     footfall: 0.7,
     vendingNote: "学员课间小消费",
     jobs: [],
@@ -9769,6 +10405,64 @@ function getJobsAtLocation(locKey) {
   const loc = LOCATIONS[locKey];
   if (!loc) return [];
   return loc.jobs || [];
+}
+
+/** BFS 计算两地最短跳数（同地=0，无连通=99） */
+function getLocationHops(fromKey, toKey) {
+  if (fromKey === toKey) return 0;
+  if (!TRAVEL_GRAPH[fromKey] || !LOCATIONS[toKey]) return 99;
+  var visited = {};
+  visited[fromKey] = 0;
+  var queue = [fromKey];
+  while (queue.length) {
+    var cur = queue.shift();
+    var dist = visited[cur];
+    var neighbors = TRAVEL_GRAPH[cur] || [];
+    for (var i = 0; i < neighbors.length; i++) {
+      var n = neighbors[i];
+      if (visited[n] !== undefined) continue;
+      visited[n] = dist + 1;
+      if (n === toKey) return dist + 1;
+      queue.push(n);
+    }
+  }
+  return 99; // 不可达
+}
+
+/**
+ * 计算从 from 到 to 的旅行AP消耗。
+ *   基础: 12 + (hops-1) × 4
+ *   富裕带间通行(tier3→tier3): -3
+ *   贫→富(tier1→tier3): +2 (穷富差距大)
+ *   驾驶技能减免、老周三轮车减免
+ *   保底 5 AP
+ */
+function getTravelApCost(fromKey, toKey, state) {
+  var hops = getLocationHops(fromKey, toKey);
+  if (hops <= 0) return 0;
+  if (hops >= 99) return 99; // 不连通
+
+  var base = 12 + (hops - 1) * 4;
+
+  var fromLoc = LOCATIONS[fromKey];
+  var toLoc = LOCATIONS[toKey];
+  var ft = (fromLoc && fromLoc.wealthTier) || 2;
+  var tt = (toLoc && toLoc.wealthTier) || 2;
+  if (ft === 3 && tt === 3) base -= 3; // 富区互通方便
+  if ((ft === 1 && tt === 3) || (ft === 3 && tt === 1)) base += 2; // 贫富两端跨区
+
+  // 驾驶技能减免
+  if (state && state.skills && state.skills.driving) {
+    var reduction =
+      typeof getTravelApReduction === "function"
+        ? getTravelApReduction(state.skills.driving.level || 0)
+        : 0;
+    base -= reduction;
+  }
+  // 老周三轮车
+  if (state && state.flags && state.flags.oldZhouTricycle) base -= 2;
+
+  return Math.max(5, base);
 }
 </script>
     <script>/**
@@ -10426,6 +11120,279 @@ const STREET_JOBS = [
     risk: {},
   },
 ];
+
+// ====== P2#12 技能树分支解锁工作 ======
+// 这些工作需要特定技能分支才能看到/执行
+(function() {
+  var BRANCH_JOBS = [
+    // === cooking → 家常大厨 ===
+    {
+      id: "cafeteria_worker",
+      name: "食堂帮厨",
+      desc: "在企事业单位食堂帮厨，切菜配菜打饭。稳定轻松，比街边摊环境好。",
+      icon: "🥘",
+      location: "commercialDist",
+      requirements: { cooking: 30, minAge: 18, maxAge: 55 },
+      branchRequirement: { skill: "cooking", branch: "home_chef" },
+      effects: { fatigue: 14, hygiene: -3, happiness: 5, cookingXp: 6 },
+      payCalc(state) {
+        var base = 70 + (state.skills.cooking.level || 0) * 1.0 + Math.random() * 35;
+        var branchBonus = 1.25;
+        if (typeof getBranchJobBonus === "function") {
+          branchBonus = getBranchJobBonus("cafeteria_worker", "cooking", state);
+        }
+        return Math.floor(base * branchBonus);
+      },
+      risk: {},
+    },
+    // === repair → 精密维修 ===
+    {
+      id: "instrument_repair",
+      name: "仪器仪表维修",
+      desc: "维修精密测量仪器、实验室设备。技术含量高，收入可观。",
+      icon: "🔬",
+      location: "techPark",
+      requirements: { repair: 35, intelligence: 30, minAge: 20, maxAge: 60 },
+      branchRequirement: { skill: "repair", branch: "precision_repair" },
+      effects: { fatigue: 12, repairXp: 8, happiness: 8, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 100 + (state.skills.repair.level || 0) * 2.5 + Math.random() * 50;
+        var branchBonus = typeof getBranchJobBonus === "function" ? getBranchJobBonus("instrument_repair", "repair", state) : 1.0;
+        return Math.floor(base * branchBonus);
+      },
+      risk: {},
+    },
+    // === repair → 改装达人 ===
+    {
+      id: "phone_modding",
+      name: "手机改装",
+      desc: "帮客户改装手机——换壳、扩容、改色。年轻客户多，利润不错。",
+      icon: "📱",
+      location: "commercialDist",
+      requirements: { repair: 30, agility: 20, minAge: 18, maxAge: 50 },
+      branchRequirement: { skill: "repair", branch: "modder" },
+      effects: { fatigue: 10, repairXp: 6, happiness: 10, salesXp: 2 },
+      payCalc(state) {
+        var base = 80 + (state.skills.repair.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("phone_modding", "repair", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 前端开发 ===
+    {
+      id: "web_designer",
+      name: "网页设计师",
+      desc: "帮小公司做网页设计制作。学了前端正好用上，按项目计酬。",
+      icon: "🎨",
+      location: "techPark",
+      requirements: { coding: 35, intelligence: 28, minAge: 18 },
+      branchRequirement: { skill: "coding", branch: "frontend_dev" },
+      effects: { fatigue: 10, codingXp: 8, happiness: 12, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 110 + (state.skills.coding.level || 0) * 2.0 + Math.random() * 55;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("web_designer", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 后端架构 ===
+    {
+      id: "server_ops",
+      name: "服务器运维",
+      desc: "维护公司服务器、数据库。夜班少，工作稳定，是技术岗的敲门砖。",
+      icon: "⚙️",
+      location: "techPark",
+      requirements: { coding: 40, intelligence: 32, minAge: 20 },
+      branchRequirement: { skill: "coding", branch: "backend_arch" },
+      effects: { fatigue: 12, codingXp: 10, happiness: 5, intelligenceXp: 3 },
+      payCalc(state) {
+        var base = 130 + (state.skills.coding.level || 0) * 2.5 + Math.random() * 50;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("server_ops", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 安全攻防 ===
+    {
+      id: "network_monitor",
+      name: "网络安全监控",
+      desc: "监控公司网络安全状况，排查异常流量。责任重大，薪资丰厚。",
+      icon: "🔒",
+      location: "techPark",
+      requirements: { coding: 35, intelligence: 30, mental: 25, minAge: 20 },
+      branchRequirement: { skill: "coding", branch: "security" },
+      effects: { fatigue: 14, codingXp: 8, happiness: 8, mental: 1 },
+      payCalc(state) {
+        var base = 120 + (state.skills.coding.level || 0) * 2.2 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("network_monitor", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === english → 商务英语 ===
+    {
+      id: "foreign_trade_assistant",
+      name: "外贸助理",
+      desc: "在外贸公司协助处理订单、邮件往来。英语好是核心竞争力。",
+      icon: "📦",
+      location: "commercialDist",
+      requirements: { english: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "english", branch: "business_english" },
+      effects: { fatigue: 14, englishXp: 7, happiness: 10, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 90 + (state.skills.english.level || 0) * 1.5 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("foreign_trade_assistant", "english", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === english → 翻译达人 ===
+    {
+      id: "document_translator",
+      name: "文档翻译",
+      desc: "接翻译公司的文档翻译单子。自由职业，在家也能做，时间灵活。",
+      icon: "📝",
+      location: "school",
+      requirements: { english: 35, intelligence: 28, minAge: 18 },
+      branchRequirement: { skill: "english", branch: "translation" },
+      effects: { fatigue: 8, englishXp: 8, happiness: 15, intelligenceXp: 1 },
+      payCalc(state) {
+        var base = 80 + (state.skills.english.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("document_translator", "english", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === driving → 客运驾驶 ===
+    {
+      id: "taxi_driver",
+      name: "出租车司机",
+      desc: "开出租拉客，多劳多得。驾龄越长路线越熟，赚得越多。",
+      icon: "🚕",
+      location: "commercialDist",
+      requirements: { driving: 30, minAge: 20, maxAge: 55 },
+      branchRequirement: { skill: "driving", branch: "passenger_transport" },
+      effects: { fatigue: 28, drivingXp: 6, happiness: 3, agilityXp: 2 },
+      payCalc(state) {
+        var base = 70 + (state.skills.driving.level || 0) * 1.2 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("taxi_driver", "driving", state) : 1.0));
+      },
+      risk: { injury: 0.03 },
+    },
+    // === driving → 货运驾驶 ===
+    {
+      id: "truck_assistant",
+      name: "跟车助理",
+      desc: "跟货车跑运输，负责装卸货和单据交接。体力活但收入稳定。",
+      icon: "🚚",
+      location: "factoryZone",
+      requirements: { driving: 25, physique: 20, minAge: 20, maxAge: 50 },
+      branchRequirement: { skill: "driving", branch: "freight" },
+      effects: { fatigue: 30, drivingXp: 5, physiqueXp: 3 },
+      payCalc(state) {
+        var base = 80 + (state.skills.driving.level || 0) * 1.0 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("truck_assistant", "driving", state) : 1.0));
+      },
+      risk: { injury: 0.05 },
+    },
+    // === sales → 门店销售 ===
+    {
+      id: "shop_assistant",
+      name: "导购员",
+      desc: "在商场门店做导购，底薪加提成。销售技巧越好收入越高。",
+      icon: "🏪",
+      location: "commercialDist",
+      requirements: { sales: 25, minAge: 18, maxAge: 45 },
+      branchRequirement: { skill: "sales", branch: "store_sales" },
+      effects: { fatigue: 16, salesXp: 6, happiness: 5 },
+      payCalc(state) {
+        var base = 55 + (state.skills.sales.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("shop_assistant", "sales", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === sales → 商务谈判 ===
+    {
+      id: "procurement_clerk",
+      name: "采购员",
+      desc: "为公司采购物资，谈价格比质量。嘴皮子和眼力见都要好。",
+      icon: "📋",
+      location: "commercialDist",
+      requirements: { sales: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "sales", branch: "biz_negotiation" },
+      effects: { fatigue: 14, salesXp: 7, happiness: 8, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 75 + (state.skills.sales.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("procurement_clerk", "sales", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === management → 团队管理 ===
+    {
+      id: "project_coordinator",
+      name: "项目协调员",
+      desc: "协调团队内部工作进度，做会议记录和任务追踪。管理入门岗。",
+      icon: "📊",
+      location: "techPark",
+      requirements: { management: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "management", branch: "team_mgmt" },
+      effects: { fatigue: 12, managementXp: 7, happiness: 8 },
+      payCalc(state) {
+        var base = 85 + (state.skills.management.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("project_coordinator", "management", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === accounting → 审计风控 ===
+    {
+      id: "audit_assistant",
+      name: "审计助理",
+      desc: "协助注册会计师做账目审计，核对票据和凭证。严谨细致是核心要求。",
+      icon: "🔍",
+      location: "techPark",
+      requirements: { accounting: 35, intelligence: 30, minAge: 20 },
+      branchRequirement: { skill: "accounting", branch: "audit_risk" },
+      effects: { fatigue: 14, accountingXp: 7, happiness: 5, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 95 + (state.skills.accounting.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("audit_assistant", "accounting", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === electrician → 强电工程 ===
+    {
+      id: "factory_electrician",
+      name: "工厂电工",
+      desc: "在工厂负责电气设备维护和检修。技术硬、责任大、工资高。",
+      icon: "⚡",
+      location: "factoryZone",
+      requirements: { electrician: 35, physique: 22, minAge: 20, maxAge: 55 },
+      branchRequirement: { skill: "electrician", branch: "industrial_electric" },
+      effects: { fatigue: 22, electricianXp: 7, physiqueXp: 2 },
+      payCalc(state) {
+        var base = 100 + (state.skills.electrician.level || 0) * 2.0 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("factory_electrician", "electrician", state) : 1.0));
+      },
+      risk: { injury: 0.06 },
+    },
+    // === welding → 结构焊接 ===
+    {
+      id: "steel_worker",
+      name: "钢结构工人",
+      desc: "在建筑工地做钢结构焊接和安装。高空作业，收入高但风险也高。",
+      icon: "🏗️",
+      location: "construction",
+      requirements: { welding: 35, physique: 28, minAge: 22, maxAge: 50 },
+      branchRequirement: { skill: "welding", branch: "structural_welding" },
+      effects: { fatigue: 32, weldingXp: 8, physiqueXp: 3, happiness: -5 },
+      payCalc(state) {
+        var base = 120 + (state.skills.welding.level || 0) * 2.5 + Math.random() * 55;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("steel_worker", "welding", state) : 1.0));
+      },
+      risk: { injury: 0.12 },
+    },
+  ];
+
+  // 将分支工作合并到 STREET_JOBS 中
+  for (var bi = 0; bi < BRANCH_JOBS.length; bi++) {
+    STREET_JOBS.push(BRANCH_JOBS[bi]);
+  }
+})();
 
 /** 根据 ID 获取工作定义 */
 function getJobById(jobId) {
@@ -11966,6 +12933,28 @@ const CERTIFICATES = [
 /** 获取证书定义 */
 function getCertificateById(certId) {
   return CERTIFICATES.find((c) => c.id === certId) || null;
+}
+
+/**
+ * 获取某个技能的分支定义（委托至 skill_tree.js 的 SKILL_BRANCHES）
+ * 如 SKILL_BRANCHES 未加载则返回空数组
+ */
+function getSkillBranches(skillKey) {
+  if (typeof SKILL_BRANCHES !== "undefined") {
+    return SKILL_BRANCHES[skillKey] || [];
+  }
+  return [];
+}
+
+/**
+ * 获取某个技能的特定分支对象
+ */
+function getSkillBranchById(skillKey, branchId) {
+  var branches = getSkillBranches(skillKey);
+  for (var i = 0; i < branches.length; i++) {
+    if (branches[i].id === branchId) return branches[i];
+  }
+  return null;
 }
 
 /** 获取玩家可考的证书 */
@@ -13781,16 +14770,14 @@ function checkNeedsThresholds(state) {
   }
 }
 
-/** 伤病每日结算 */
+/** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
 function tickHealthStatus(state) {
-  const st = state.status;
-  if (st.sick) {
-    st.health = Math.max(0, st.health - 3);
-    if (Math.random() < 0.12) {
-      st.sick = false;
-      StateManager.addMessage("🤒 病好了，身体恢复了。", "info");
-    }
+  // 新疾病系统：每日 tick illness（自然康复+症状结算+慢性病月费）
+  if (typeof tickIllnessDecay === "function") {
+    tickIllnessDecay(state);
   }
+  var st = state.status;
+  // 兼容：旧的 injured 字段（受伤还是单独保留，工作中可能受伤）
   if (st.injured) {
     st.health = Math.max(0, st.health - 2);
     if (Math.random() < 0.07) {
@@ -13798,8 +14785,8 @@ function tickHealthStatus(state) {
       StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
     }
   }
-  // 自然恢复
-  if (!st.sick && !st.injured && st.health < 100) {
+  // 自然恢复（无病无伤时）
+  if (!st.injured && (!st.illnesses || st.illnesses.length === 0) && st.health < 100) {
     st.health = Math.min(100, st.health + 1);
   }
 }
@@ -14276,6 +15263,88 @@ function getSalesTradePremium(salesLevel) {
   return Math.min(0.15, salesLevel * 0.002);
 }
 
+// ====== P2#12 技能树分支感知加成（调用原函数 + 叠加分支加成） ======
+
+/**
+ * 获取厨艺打折 + 分支加成（家常大厨额外减食材成本）
+ */
+function getBranchCookingDiscount(state) {
+  var base = getCookingDiscount((state.skills.cooking && state.skills.cooking.level) || 0);
+  if (!state.skillBranches || state.skillBranches.cooking !== "home_chef") return base;
+  var reduction = 0.15; // 家常大厨基础成本减免
+  if (typeof getTalentNodeEffects === "function") {
+    var eff = getTalentNodeEffects(state);
+    reduction += eff.foodCostReduction || 0;
+  }
+  return Math.min(0.8, base + reduction);
+}
+
+/**
+ * 获取旅行AP减免 + 分支加成（客运驾驶额外减免）
+ */
+function getBranchTravelApReduction(state) {
+  var base = getTravelApReduction((state.skills.driving && state.skills.driving.level) || 0);
+  if (!state.skillBranches || state.skillBranches.driving !== "passenger_transport") return base;
+  if (typeof getTalentNodeEffects === "function") {
+    var eff = getTalentNodeEffects(state);
+    return base + (eff.extraApReduction || 2);
+  }
+  return base + 1;
+}
+
+/**
+ * 获取家教加成 + 分支加成（商务英语额外+50%）
+ */
+function getBranchTutoringBonus(state) {
+  var base = getTutoringBonus((state.skills.english && state.skills.english.level) || 0);
+  if (!state.skillBranches || state.skillBranches.english !== "business_english") return base;
+  return base * 1.5;
+}
+
+/**
+ * 获取工厂加成 + 分支加成（强电工程翻倍）
+ */
+function getBranchFactoryBonus(state) {
+  var base = getFactoryBonus((state.skills.electrician && state.skills.electrician.level) || 0);
+  if (!state.skillBranches || state.skillBranches.electrician !== "industrial_electric") return base;
+  return base * 2.0;
+}
+
+/**
+ * 获取建筑加成 + 分支加成（结构焊接+50%）
+ */
+function getBranchConstructionBonus(state) {
+  var base = getConstructionBonus((state.skills.welding && state.skills.welding.level) || 0);
+  if (!state.skillBranches || state.skillBranches.welding !== "structural_welding") return base;
+  return base * 1.5;
+}
+
+/**
+ * 获取买入折扣 + 分支加成（门店销售上限提升到25%）
+ */
+function getBranchSalesDiscount(state) {
+  var base = getSalesTradeDiscount((state.skills.sales && state.skills.sales.level) || 0);
+  if (!state.skillBranches || state.skillBranches.sales !== "store_sales") return base;
+  var extra = 0;
+  if (typeof getTalentNodeEffects === "function") {
+    extra = getTalentNodeEffects(state).extraDiscount || 0;
+  }
+  return Math.min(0.25, base + 0.10 + extra);
+}
+
+/**
+ * 获取卖出溢价 + 分支加成（商务谈判上限提升到25%）
+ */
+function getBranchSalesPremium(state) {
+  var base = getSalesTradePremium((state.skills.sales && state.skills.sales.level) || 0);
+  if (!state.skillBranches || state.skillBranches.sales !== "biz_negotiation") return base;
+  var extra = 0;
+  if (typeof getTalentNodeEffects === "function") {
+    extra = getTalentNodeEffects(state).extraPremium || 0;
+  }
+  return Math.min(0.25, base + 0.10 + extra);
+}
+
 // 城市脉搏规则：把新闻从"提示文本"转成地点、工作和行动建议的即时变化。
 var CITY_PULSE_RULES = [
   {
@@ -14538,6 +15607,15 @@ function grantJobSkillXp(jobId, state) {
   var intBonus = Math.floor((state.player.intelligence || 0) / 30);
   xpGain += intBonus;
 
+  // 天赋节点XP加成（P2#12 技能树系统）
+  if (typeof getTalentNodeEffects === "function" && state.talentNodes) {
+    var nodeEff = getTalentNodeEffects(state);
+    var xpMultKey = entry.skill + "XpMult";
+    if (nodeEff[xpMultKey]) {
+      xpGain = Math.round(xpGain * nodeEff[xpMultKey]);
+    }
+  }
+
   sk.xp = (sk.xp || 0) + xpGain;
 
   // 检查升级
@@ -14572,6 +15650,19 @@ function applySkillLevelUpBonus(skillKey, state) {
   }
   if (agilitySkills.indexOf(skillKey) !== -1) {
     if (p.agility < 100) p.agility = Math.min(100, p.agility + 1);
+  }
+
+  // 天赋节点解锁提示（P2#12）
+  if (typeof getUnlockedTalentNodes === "function" && state.skillBranches) {
+    var unlocked = getUnlockedTalentNodes(skillKey, state);
+    for (var ni = 0; ni < unlocked.length; ni++) {
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🌟 可在技能页激活「" + unlocked[ni].name + "」天赋节点！",
+          "hint"
+        );
+      }
+    }
   }
 }
 
@@ -16566,6 +17657,31 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 技能天赋树检查（P2#12） ===
+  {
+    name: "skill_tree_check",
+    fn: function (state) {
+      if (!state.skillBranches || typeof getUnlockedTalentNodes !== "function") return;
+      if (!state.flags._checkedTalentNodes) state.flags._checkedTalentNodes = {};
+      for (var sk in state.skills) {
+        if (!state.skillBranches[sk]) continue;
+        var unlocked = getUnlockedTalentNodes(sk, state);
+        for (var ni = 0; ni < unlocked.length; ni++) {
+          var node = unlocked[ni];
+          var nodeKey = sk + "_" + state.skillBranches[sk] + "_" + node.id;
+          if (state.flags._checkedTalentNodes[nodeKey]) continue;
+          state.flags._checkedTalentNodes[nodeKey] = true;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              "🌟 " + getSkillChineseName(sk) + "天赋节点「" + node.name + "」可激活！",
+              "hint"
+            );
+          }
+        }
+      }
+    },
+  },
+
   // === 天气 ===
   {
     name: "weather",
@@ -17033,14 +18149,19 @@ function checkPromotion(state) {
   // 年龄检查
   if (state.player.age < rankData.minAge) return null;
 
-  // 能力
-  if (reqs.minAbility && c.ability < reqs.minAbility) return null;
-
-  // 向上管理
-  if (reqs.minUpward && c.upwardMgmt < reqs.minUpward) return null;
-
-  // 人缘
-  if (reqs.minPopularity && c.popularity < reqs.minPopularity) return null;
+  // 能力（含分支加成 P2#12）
+  var abilityReq = reqs.minAbility || 0;
+  var upwardReq = reqs.minUpward || 0;
+  var popularityReq = reqs.minPopularity || 0;
+  if (typeof getBranchCorpPromotionModifier === "function") {
+    var promoMod = getBranchCorpPromotionModifier(state);
+    abilityReq = Math.max(0, abilityReq - promoMod.abilityReduction);
+    upwardReq = Math.max(0, upwardReq - promoMod.upwardReduction);
+    popularityReq = Math.max(0, popularityReq - promoMod.popularityReduction);
+  }
+  if (abilityReq && c.ability < abilityReq) return null;
+  if (upwardReq && c.upwardMgmt < upwardReq) return null;
+  if (popularityReq && c.popularity < popularityReq) return null;
 
   // 绩效要求
   const recentPerfs = corp.perfHistory.slice(-3);
@@ -21355,6 +22476,1285 @@ function getFateHistoryText(cid, state) {
   });
 }
 </script>
+    <!-- Skill Tree System -->
+    <script>/**
+ * 技能天赋树系统（P2#12）
+ *
+ * 参考《中国式家长》天赋树设计：
+ * - 每项技能在Lv.30时可选择 2~3 个发展方向
+ * - 每个分支有 3 个天赋节点（Lv.10/25/50解锁），树状前置关系
+ * - 分支提供独特的被动加成，影响相关工作和收入
+ * - 特定分支影响职场晋升门槛
+ */
+
+// ====== 技能分支定义 ======
+
+var SKILL_BRANCHES = {
+  cooking: [
+    {
+      id: "home_chef",
+      name: "家常大厨",
+      icon: "👨‍🍳",
+      desc: "深耕家常菜系，餐馆帮厨收入+25%，降低食材成本",
+      jobBonuses: ["restaurant_assistant", "cafeteria_worker"],
+      incomeMult: 1.25,
+      costReduction: 0.15,
+      talentNodes: [
+        {
+          id: "cook_knife",
+          name: "刀工精进",
+          desc: "烹饪XP获取+30%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { cookingXpMult: 1.3 },
+        },
+        {
+          id: "cook_supply",
+          name: "食材渠道",
+          desc: "食材/吃饭成本-15%",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "cook_knife",
+          requireLevel: 25,
+          effects: { foodCostReduction: 0.15 },
+        },
+        {
+          id: "cook_management",
+          name: "后厨管理",
+          desc: "餐饮类工作收入+20%，解锁高级后厨管理",
+          apCost: 30,
+          cashCost: 1200,
+          prereq: "cook_supply",
+          requireLevel: 50,
+          effects: { kitchenIncomeBonus: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "street_foodie",
+      name: "街头美食家",
+      icon: "🌮",
+      desc: "专注街头美食，摆摊收入+30%，提升客流量",
+      jobBonuses: ["street_vending_food", "food_stall"],
+      incomeMult: 1.3,
+      footfallBonus: 0.15,
+      talentNodes: [
+        {
+          id: "street_flavor",
+          name: "独家配方",
+          desc: "摆摊小吃收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { vendingFoodBonus: 0.15 },
+        },
+        {
+          id: "street_marketing",
+          name: "口碑营销",
+          desc: "摆摊客流量+18%",
+          apCost: 25,
+          cashCost: 500,
+          prereq: "street_flavor",
+          requireLevel: 25,
+          effects: { footfallBonus: 0.18 },
+        },
+        {
+          id: "street_chain",
+          name: "美食档口",
+          desc: "解锁固定美食档口，每日被动收入+¥80",
+          apCost: 35,
+          cashCost: 1500,
+          prereq: "street_marketing",
+          requireLevel: 50,
+          effects: { passiveIncome: 80 },
+        },
+      ],
+    },
+  ],
+
+  repair: [
+    {
+      id: "precision_repair",
+      name: "精密维修",
+      icon: "🔬",
+      desc: "专修精密仪器，维修收入+25%，解锁仪器仪表维修工作",
+      jobBonuses: ["instrument_repair", "electronics_repair"],
+      incomeMult: 1.25,
+      talentNodes: [
+        {
+          id: "repair_tool",
+          name: "工具升级",
+          desc: "维修效果+15%，维修XP获取+20%",
+          apCost: 20,
+          cashCost: 400,
+          prereq: null,
+          requireLevel: 10,
+          effects: { repairEffectBonus: 0.15, repairXpMult: 1.2 },
+        },
+        {
+          id: "repair_precision",
+          name: "精密操作",
+          desc: "精密类工作收入+20%，解锁高级维修",
+          apCost: 25,
+          cashCost: 700,
+          prereq: "repair_tool",
+          requireLevel: 25,
+          effects: { precisionIncomeBonus: 0.2 },
+        },
+        {
+          id: "repair_master",
+          name: "维修大师",
+          desc: "所有维修工作收入+25%，装备维修损耗-30%",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "repair_precision",
+          requireLevel: 50,
+          effects: { allRepairBonus: 0.25, repairWearReduction: 0.3 },
+        },
+      ],
+    },
+    {
+      id: "modder",
+      name: "改装达人",
+      icon: "🛠️",
+      desc: "擅长改装升级，解锁改装工作，装备效果+20%",
+      jobBonuses: ["bike_customization", "phone_modding"],
+      equipmentBonus: 0.2,
+      talentNodes: [
+        {
+          id: "mod_basic",
+          name: "基础改装",
+          desc: "改装类工作解锁，收入+12%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { modIncomeBonus: 0.12 },
+        },
+        {
+          id: "mod_electronics",
+          name: "电子改装",
+          desc: "数码产品改装收入+20%，装备效果+10%",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "mod_basic",
+          requireLevel: 25,
+          effects: { electronicsModBonus: 0.2, equipmentBonusAdd: 0.1 },
+        },
+        {
+          id: "mod_custom",
+          name: "私人定制",
+          desc: "定制改装收入+30%，可制作特殊道具",
+          apCost: 35,
+          cashCost: 1400,
+          prereq: "mod_electronics",
+          requireLevel: 50,
+          effects: { customModBonus: 0.3 },
+        },
+      ],
+    },
+  ],
+
+  coding: [
+    {
+      id: "frontend_dev",
+      name: "前端开发",
+      icon: "🎨",
+      desc: "专注用户界面开发，职场能力加成+30%，解锁前端岗位",
+      jobBonuses: ["web_designer", "ui_assistant"],
+      corpAbilityMult: 1.3,
+      talentNodes: [
+        {
+          id: "frontend_html",
+          name: "页面基础",
+          desc: "编程XP获取+25%，解锁网页设计工作",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { codingXpMult: 1.25 },
+        },
+        {
+          id: "frontend_framework",
+          name: "框架精通",
+          desc: "职场能力额外+10，前端开发收入+18%",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "frontend_html",
+          requireLevel: 25,
+          effects: { abilityFlatBonus: 10, frontendIncomeBonus: 0.18 },
+        },
+        {
+          id: "frontend_arch",
+          name: "前端架构",
+          desc: "职场晋升能力要求-8，前端项目收入+25%",
+          apCost: 35,
+          cashCost: 1400,
+          prereq: "frontend_framework",
+          requireLevel: 50,
+          effects: { promoAbilityReduction: 8, frontendSeniorBonus: 0.25 },
+        },
+      ],
+    },
+    {
+      id: "backend_arch",
+      name: "后端架构",
+      icon: "⚙️",
+      desc: "专注服务端与架构，职场能力加成+50%，解锁后端运维岗位",
+      jobBonuses: ["server_ops", "database_clerk"],
+      corpAbilityMult: 1.5,
+      talentNodes: [
+        {
+          id: "backend_db",
+          name: "数据库基础",
+          desc: "编程XP获取+25%，解锁数据库相关工作",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { codingXpMult: 1.25 },
+        },
+        {
+          id: "backend_api",
+          name: "接口开发",
+          desc: "职场能力额外+15，后端工作收入+20%",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "backend_db",
+          requireLevel: 25,
+          effects: { abilityFlatBonus: 15, backendIncomeBonus: 0.2 },
+        },
+        {
+          id: "backend_system",
+          name: "系统架构",
+          desc: "职场晋升能力要求-10，解锁P7+快速通道",
+          apCost: 35,
+          cashCost: 1500,
+          prereq: "backend_api",
+          requireLevel: 50,
+          effects: { promoAbilityReduction: 10, backendSeniorBonus: 0.3 },
+        },
+      ],
+    },
+    {
+      id: "security",
+      name: "安全攻防",
+      icon: "🔒",
+      desc: "专注网络安全，解锁安全审计岗位，降低职场风险",
+      jobBonuses: ["network_monitor", "security_auditor"],
+      riskReduction: 0.3,
+      talentNodes: [
+        {
+          id: "sec_network",
+          name: "网络基础",
+          desc: "编程XP获取+25%，解锁网络安全相关工作",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { codingXpMult: 1.25 },
+        },
+        {
+          id: "sec_audit",
+          name: "安全审计",
+          desc: "职场风险-20%，安全类工作收入+20%",
+          apCost: 25,
+          cashCost: 700,
+          prereq: "sec_network",
+          requireLevel: 25,
+          effects: { riskReductionBonus: 0.2, secIncomeBonus: 0.2 },
+        },
+        {
+          id: "sec_expert",
+          name: "安全专家",
+          desc: "职场风险-40%，解锁高级安全顾问岗位",
+          apCost: 35,
+          cashCost: 1600,
+          prereq: "sec_audit",
+          requireLevel: 50,
+          effects: { riskReductionBonus: 0.4, secSeniorBonus: 0.25 },
+        },
+      ],
+    },
+  ],
+
+  english: [
+    {
+      id: "business_english",
+      name: "商务英语",
+      icon: "💼",
+      desc: "专注商务场景，家教/外贸收入+30%，解锁商务翻译工作",
+      jobBonuses: ["foreign_trade_assistant", "biz_translator"],
+      incomeMult: 1.3,
+      talentNodes: [
+        {
+          id: "eng_biz_writing",
+          name: "商务写作",
+          desc: "英语XP获取+25%，商务英语收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { englishXpMult: 1.25, bizWritingBonus: 0.15 },
+        },
+        {
+          id: "eng_negotiation",
+          name: "商务谈判",
+          desc: "外贸工作收入+20%，解锁外企相关机会",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "eng_biz_writing",
+          requireLevel: 25,
+          effects: { tradeIncomeBonus: 0.2 },
+        },
+        {
+          id: "eng_global",
+          name: "全球化视野",
+          desc: "所有教育/外语类收入+25%，外企职场亲和度+20",
+          apCost: 30,
+          cashCost: 1200,
+          prereq: "eng_negotiation",
+          requireLevel: 50,
+          effects: { globalIncomeBonus: 0.25, foreignAffinity: 20 },
+        },
+      ],
+    },
+    {
+      id: "translation",
+      name: "翻译达人",
+      icon: "📝",
+      desc: "专注文本翻译，解锁翻译类工作，内容创作收入+25%",
+      jobBonuses: ["document_translator", "subtitle_worker"],
+      incomeMult: 1.25,
+      talentNodes: [
+        {
+          id: "trans_doc",
+          name: "文档翻译",
+          desc: "英语XP获取+25%，翻译工作收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { englishXpMult: 1.25, transDocBonus: 0.15 },
+        },
+        {
+          id: "trans_consecutive",
+          name: "交替传译",
+          desc: "口译工作收入+25%，解锁内容创作加成",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "trans_doc",
+          requireLevel: 25,
+          effects: { interpretBonus: 0.25 },
+        },
+        {
+          id: "trans_master",
+          name: "翻译大师",
+          desc: "所有翻译/内容类收入+30%，可接高级翻译订单",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "trans_consecutive",
+          requireLevel: 50,
+          effects: { transMasterBonus: 0.3 },
+        },
+      ],
+    },
+  ],
+
+  driving: [
+    {
+      id: "passenger_transport",
+      name: "客运驾驶",
+      icon: "🚕",
+      desc: "专注载客运输，驾驶AP减免翻倍，解锁出租车工作",
+      jobBonuses: ["taxi_driver", "chauffeur"],
+      apReductionMult: 2.0,
+      talentNodes: [
+        {
+          id: "drive_passenger",
+          name: "载客服务",
+          desc: "驾驶XP获取+25%，客运收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { drivingXpMult: 1.25, passengerBonus: 0.15 },
+        },
+        {
+          id: "drive_navigation",
+          name: "路线精通",
+          desc: "旅行AP额外-2，客运收入+20%",
+          apCost: 25,
+          cashCost: 500,
+          prereq: "drive_passenger",
+          requireLevel: 25,
+          effects: { extraApReduction: 2, navBonus: 0.2 },
+        },
+        {
+          id: "drive_fleet",
+          name: "车队管理",
+          desc: "解锁车队调度，每日被动收入+¥60",
+          apCost: 30,
+          cashCost: 1200,
+          prereq: "drive_navigation",
+          requireLevel: 50,
+          effects: { fleetPassiveIncome: 60 },
+        },
+      ],
+    },
+    {
+      id: "freight",
+      name: "货运驾驶",
+      icon: "🚚",
+      desc: "专注货物运输，货运/配送收入+30%，解锁物流工作",
+      jobBonuses: ["truck_assistant", "warehouse_logistics"],
+      incomeMult: 1.3,
+      talentNodes: [
+        {
+          id: "freight_basic",
+          name: "货物装卸",
+          desc: "驾驶XP获取+25%，货运收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { drivingXpMult: 1.25, freightBonus: 0.15 },
+        },
+        {
+          id: "freight_route",
+          name: "路线优化",
+          desc: "货运效率+20%，解锁长途运输工作",
+          apCost: 25,
+          cashCost: 550,
+          prereq: "freight_basic",
+          requireLevel: 25,
+          effects: { routeBonus: 0.2 },
+        },
+        {
+          id: "freight_logistics",
+          name: "物流管理",
+          desc: "所有配送/物流收入+25%，解锁物流调度岗位",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "freight_route",
+          requireLevel: 50,
+          effects: { logisticsBonus: 0.25 },
+        },
+      ],
+    },
+  ],
+
+  sales: [
+    {
+      id: "store_sales",
+      name: "门店销售",
+      icon: "🏪",
+      desc: "专注门店零售，买入折扣上限提升至25%，解锁导购工作",
+      jobBonuses: ["shop_assistant", "promoter"],
+      discountCap: 0.25,
+      talentNodes: [
+        {
+          id: "sales_service",
+          name: "客户服务",
+          desc: "销售XP获取+25%，门店收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { salesXpMult: 1.25, storeBonus: 0.15 },
+        },
+        {
+          id: "sales_stock",
+          name: "库存管理",
+          desc: "买入折扣额外+5%，解锁批发渠道",
+          apCost: 25,
+          cashCost: 500,
+          prereq: "sales_service",
+          requireLevel: 25,
+          effects: { extraDiscount: 0.05 },
+        },
+        {
+          id: "sales_management",
+          name: "店长经验",
+          desc: "所有销售类收入+20%，可管理门店运营",
+          apCost: 30,
+          cashCost: 1100,
+          prereq: "sales_stock",
+          requireLevel: 50,
+          effects: { salesMgmtBonus: 0.2 },
+        },
+      ],
+    },
+    {
+      id: "biz_negotiation",
+      name: "商务谈判",
+      icon: "🤝",
+      desc: "擅长商务谈判，卖出溢价上限提升至25%，解锁采购工作",
+      jobBonuses: ["procurement_clerk", "biz_negotiator"],
+      premiumCap: 0.25,
+      talentNodes: [
+        {
+          id: "nego_basic",
+          name: "谈判基础",
+          desc: "销售XP获取+25%，谈判收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { salesXpMult: 1.25, negoBonus: 0.15 },
+        },
+        {
+          id: "nego_contract",
+          name: "合同管理",
+          desc: "卖出溢价额外+5%，解锁商务合同工作",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "nego_basic",
+          requireLevel: 25,
+          effects: { extraPremium: 0.05 },
+        },
+        {
+          id: "nego_master",
+          name: "谈判大师",
+          desc: "所有商务类收入+25%，可参与重大谈判",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "nego_contract",
+          requireLevel: 50,
+          effects: { negoMasterBonus: 0.25 },
+        },
+      ],
+    },
+  ],
+
+  management: [
+    {
+      id: "team_mgmt",
+      name: "团队管理",
+      icon: "👥",
+      desc: "专注团队建设，向上管理加成+50%，团队规模+2",
+      jobBonuses: ["team_lead", "project_coordinator"],
+      upwardMgmtMult: 1.5,
+      teamSizeBonus: 2,
+      talentNodes: [
+        {
+          id: "mgmt_communication",
+          name: "沟通技巧",
+          desc: "管理XP获取+25%，人缘成长+10%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { mgmtXpMult: 1.25, popularityBonus: 10 },
+        },
+        {
+          id: "mgmt_delegation",
+          name: "授权管理",
+          desc: "团队效率+15%，解锁项目管理",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "mgmt_communication",
+          requireLevel: 25,
+          effects: { delegationBonus: 0.15 },
+        },
+        {
+          id: "mgmt_leadership",
+          name: "领导力",
+          desc: "晋升人缘要求-10，团队规模+3",
+          apCost: 35,
+          cashCost: 1400,
+          prereq: "mgmt_delegation",
+          requireLevel: 50,
+          effects: { promoPopularityReduction: 10, teamSizeExtra: 3 },
+        },
+      ],
+    },
+    {
+      id: "strategy_planning",
+      name: "战略规划",
+      icon: "📊",
+      desc: "专注战略规划，向上管理加成+50%，解锁分析师岗位",
+      jobBonuses: ["analyst", "planning_assistant"],
+      upwardMgmtMult: 1.5,
+      talentNodes: [
+        {
+          id: "strategy_analysis",
+          name: "数据分析",
+          desc: "管理XP获取+25%，分析工作收入+15%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { mgmtXpMult: 1.25, analysisBonus: 0.15 },
+        },
+        {
+          id: "strategy_decision",
+          name: "决策支持",
+          desc: "向上管理额外+10，解锁战略决策参与",
+          apCost: 25,
+          cashCost: 700,
+          prereq: "strategy_analysis",
+          requireLevel: 25,
+          effects: { upwardFlatBonus: 10 },
+        },
+        {
+          id: "strategy_vision",
+          name: "战略视野",
+          desc: "晋升向上管理要求-10，解锁P8+快速通道",
+          apCost: 35,
+          cashCost: 1500,
+          prereq: "strategy_decision",
+          requireLevel: 50,
+          effects: { promoUpwardReduction: 10, strategySeniorBonus: 0.2 },
+        },
+      ],
+    },
+  ],
+
+  accounting: [
+    {
+      id: "tax_accounting",
+      name: "税务会计",
+      icon: "🧾",
+      desc: "专注税务处理，银行利率加成翻倍，解锁税务工作",
+      jobBonuses: ["tax_assistant", "bookkeeper"],
+      bankRateMult: 2.0,
+      talentNodes: [
+        {
+          id: "acct_tax_basic",
+          name: "税务基础",
+          desc: "会计XP获取+25%，税务工作收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { acctXpMult: 1.25, taxBonus: 0.15 },
+        },
+        {
+          id: "acct_tax_planning",
+          name: "税务筹划",
+          desc: "银行利率额外+2%/年，解锁税务筹划",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "acct_tax_basic",
+          requireLevel: 25,
+          effects: { extraBankRate: 0.02 },
+        },
+        {
+          id: "acct_tax_expert",
+          name: "税务专家",
+          desc: "财务类收入+25%，可处理复杂税务案件",
+          apCost: 30,
+          cashCost: 1200,
+          prereq: "acct_tax_planning",
+          requireLevel: 50,
+          effects: { financeBonus: 0.25 },
+        },
+      ],
+    },
+    {
+      id: "audit_risk",
+      name: "审计风控",
+      icon: "🔍",
+      desc: "专注审计风控，职场风险-30%，解锁审计工作",
+      jobBonuses: ["audit_assistant", "risk_controller"],
+      riskReduction: 0.3,
+      talentNodes: [
+        {
+          id: "audit_basic",
+          name: "审计基础",
+          desc: "会计XP获取+25%，审计工作收入+15%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { acctXpMult: 1.25, auditBonus: 0.15 },
+        },
+        {
+          id: "audit_compliance",
+          name: "合规审查",
+          desc: "职场风险额外-20%，解锁合规审查工作",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "audit_basic",
+          requireLevel: 25,
+          effects: { extraRiskReduction: 0.2 },
+        },
+        {
+          id: "audit_forensic",
+          name: "法务会计",
+          desc: "财务类收入+25%，职场风险-50%",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "audit_compliance",
+          requireLevel: 50,
+          effects: { forensicBonus: 0.25, forensicRiskReduction: 0.5 },
+        },
+      ],
+    },
+  ],
+
+  electrician: [
+    {
+      id: "industrial_electric",
+      name: "强电工程",
+      icon: "⚡",
+      desc: "专注工业强电，工厂收入加成翻倍，解锁电力维护工作",
+      jobBonuses: ["factory_electrician", "power_line_assistant"],
+      factoryBonusMult: 2.0,
+      talentNodes: [
+        {
+          id: "elec_industrial",
+          name: "工业配电",
+          desc: "电工XP获取+25%，工业电力工作收入+15%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { elecXpMult: 1.25, industrialBonus: 0.15 },
+        },
+        {
+          id: "elec_high_voltage",
+          name: "高压作业",
+          desc: "电力维护收入+25%，解锁高压作业资质",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "elec_industrial",
+          requireLevel: 25,
+          effects: { highVoltageBonus: 0.25 },
+        },
+        {
+          id: "elec_power_master",
+          name: "电力专家",
+          desc: "所有电工类收入+30%，可管理电力工程项目",
+          apCost: 35,
+          cashCost: 1400,
+          prereq: "elec_high_voltage",
+          requireLevel: 50,
+          effects: { powerMasterBonus: 0.3 },
+        },
+      ],
+    },
+    {
+      id: "smart_electric",
+      name: "弱电智能",
+      icon: "💡",
+      desc: "专注弱电智能化，解锁智能家居/网络布线工作",
+      jobBonuses: ["smart_home_tech", "network_cabling"],
+      incomeMult: 1.25,
+      talentNodes: [
+        {
+          id: "smart_network",
+          name: "网络布线",
+          desc: "电工XP获取+25%，弱电工作收入+15%",
+          apCost: 20,
+          cashCost: 300,
+          prereq: null,
+          requireLevel: 10,
+          effects: { elecXpMult: 1.25, smartBonus: 0.15 },
+        },
+        {
+          id: "smart_home",
+          name: "智能家居",
+          desc: "智能家居工作收入+25%，解锁智能设备安装",
+          apCost: 25,
+          cashCost: 600,
+          prereq: "smart_network",
+          requireLevel: 25,
+          effects: { homeBonus: 0.25 },
+        },
+        {
+          id: "smart_integration",
+          name: "系统集成",
+          desc: "所有弱电类收入+30%，可承接智能化项目",
+          apCost: 30,
+          cashCost: 1300,
+          prereq: "smart_home",
+          requireLevel: 50,
+          effects: { integrationBonus: 0.3 },
+        },
+      ],
+    },
+  ],
+
+  welding: [
+    {
+      id: "structural_welding",
+      name: "结构焊接",
+      icon: "🏗️",
+      desc: "专注建筑结构焊接，建筑收入加成+50%，解锁钢结构工作",
+      jobBonuses: ["steel_worker", "bridge_welder"],
+      constructionBonusMult: 1.5,
+      talentNodes: [
+        {
+          id: "weld_structural",
+          name: "结构基础",
+          desc: "焊接XP获取+25%，结构焊接收入+15%",
+          apCost: 20,
+          cashCost: 350,
+          prereq: null,
+          requireLevel: 10,
+          effects: { weldXpMult: 1.25, structureBonus: 0.15 },
+        },
+        {
+          id: "weld_heavy",
+          name: "重型焊接",
+          desc: "建筑类收入+20%，解锁重型钢结构工作",
+          apCost: 25,
+          cashCost: 650,
+          prereq: "weld_structural",
+          requireLevel: 25,
+          effects: { heavyWeldBonus: 0.2 },
+        },
+        {
+          id: "weld_master",
+          name: "焊接大师",
+          desc: "所有焊接类收入+30%，可担任焊接工程主管",
+          apCost: 35,
+          cashCost: 1400,
+          prereq: "weld_heavy",
+          requireLevel: 50,
+          effects: { weldMasterBonus: 0.3 },
+        },
+      ],
+    },
+    {
+      id: "precision_welding",
+      name: "精密焊接",
+      icon: "🔬",
+      desc: "专注精密器件焊接，解锁珠宝/电子焊接工作",
+      jobBonuses: ["jewelry_welder", "electronics_welder"],
+      incomeMult: 1.3,
+      talentNodes: [
+        {
+          id: "weld_precision",
+          name: "精密操作",
+          desc: "焊接XP获取+25%，精密焊接收入+18%",
+          apCost: 20,
+          cashCost: 400,
+          prereq: null,
+          requireLevel: 10,
+          effects: { weldXpMult: 1.25, precisionWeldBonus: 0.18 },
+        },
+        {
+          id: "weld_micro",
+          name: "微型焊接",
+          desc: "电子焊接收入+25%，解锁微型器件焊接",
+          apCost: 25,
+          cashCost: 700,
+          prereq: "weld_precision",
+          requireLevel: 25,
+          effects: { microWeldBonus: 0.25 },
+        },
+        {
+          id: "weld_artisan",
+          name: "工艺大师",
+          desc: "所有精细焊接收入+30%，可制作高端工艺品",
+          apCost: 30,
+          cashCost: 1500,
+          prereq: "weld_micro",
+          requireLevel: 50,
+          effects: { artisanBonus: 0.3 },
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * 获取某个技能的分支定义数组
+ */
+function getSkillBranchDef(skillKey) {
+  return SKILL_BRANCHES[skillKey] || [];
+}
+
+/**
+ * 获取某个技能的特定分支
+ */
+function getBranchById(skillKey, branchId) {
+  var branches = SKILL_BRANCHES[skillKey];
+  if (!branches) return null;
+  for (var i = 0; i < branches.length; i++) {
+    if (branches[i].id === branchId) return branches[i];
+  }
+  return null;
+}
+
+/**
+ * 获取技能可用的分支（已达Lv.30的）
+ */
+function getAvailableBranches(skillKey, state) {
+  var branches = SKILL_BRANCHES[skillKey];
+  if (!branches) return [];
+  var skill = state.skills[skillKey];
+  if (!skill) return [];
+  var available = [];
+  for (var i = 0; i < branches.length; i++) {
+    if (skill.level >= 30) {
+      available.push(branches[i]);
+    }
+  }
+  return available;
+}
+
+/**
+ * 获取天赋节点定义
+ */
+function getTalentNodeDef(skillKey, branchId, nodeId) {
+  var branch = getBranchById(skillKey, branchId);
+  if (!branch || !branch.talentNodes) return null;
+  for (var i = 0; i < branch.talentNodes.length; i++) {
+    if (branch.talentNodes[i].id === nodeId) return branch.talentNodes[i];
+  }
+  return null;
+}
+
+/**
+ * 获取该技能已选的分支（如未选返回null）
+ */
+function getChosenBranch(skillKey, state) {
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
+  if (!branchId) return null;
+  return getBranchById(skillKey, branchId);
+}
+
+/**
+ * 检查是否能选择分支
+ */
+function canChooseBranch(skillKey, state) {
+  var skill = state.skills[skillKey];
+  if (!skill) return { allowed: false, reason: "技能不存在" };
+  if (state.skillBranches && state.skillBranches[skillKey]) {
+    return { allowed: false, reason: "该技能已选择发展方向" };
+  }
+  if (skill.level < 30) {
+    return {
+      allowed: false,
+      reason: "需技能等级≥Lv.30（当前Lv." + skill.level + "）",
+    };
+  }
+  var branches = SKILL_BRANCHES[skillKey];
+  if (!branches || branches.length === 0) {
+    return { allowed: false, reason: "该技能暂无分支方向" };
+  }
+  return { allowed: true, reason: "" };
+}
+
+/**
+ * 选择技能分支（消耗 15AP + ¥200）
+ */
+function chooseSkillBranch(skillKey, branchId, state) {
+  var check = canChooseBranch(skillKey, state);
+  if (!check.allowed) {
+    StateManager.addMessage("⚠️ " + check.reason, "warning");
+    return false;
+  }
+  var branch = getBranchById(skillKey, branchId);
+  if (!branch) {
+    StateManager.addMessage("⚠️ 分支不存在", "warning");
+    return false;
+  }
+  if (state.player.actionPoints < 15) {
+    StateManager.addMessage("⚠️ 行动力不足，需要15AP选择发展方向", "warning");
+    return false;
+  }
+  if (state.resources.cash < 200) {
+    StateManager.addMessage("⚠️ 现金不足，选择发展方向需要¥200", "warning");
+    return false;
+  }
+
+  state.player.actionPoints -= 15;
+  state.resources.cash -= 200;
+  state.skillBranches[skillKey] = branchId;
+
+  StateManager.addMessage(
+    "🎯 确定了" + getSkillChineseName(skillKey) + "的发展方向：" + branch.icon + " " + branch.name + "！",
+    "success"
+  );
+  return true;
+}
+
+/**
+ * 切换技能分支（消耗 30AP + ¥500，保留天赋节点状态但清除旧分支节点）
+ */
+function switchSkillBranch(skillKey, newBranchId, state) {
+  if (!state.skillBranches || !state.skillBranches[skillKey]) {
+    return chooseSkillBranch(skillKey, newBranchId, state);
+  }
+  if (state.player.actionPoints < 30) {
+    StateManager.addMessage("⚠️ 切换发展方向需要30AP", "warning");
+    return false;
+  }
+  if (state.resources.cash < 500) {
+    StateManager.addMessage("⚠️ 切换发展方向需要¥500", "warning");
+    return false;
+  }
+
+  // 清除旧分支的节点激活记录
+  var oldBranchId = state.skillBranches[skillKey];
+  for (var nodeKey in state.talentNodes) {
+    if (nodeKey.indexOf(skillKey + "_" + oldBranchId) === 0) {
+      delete state.talentNodes[nodeKey];
+    }
+  }
+
+  state.player.actionPoints -= 30;
+  state.resources.cash -= 500;
+  state.skillBranches[skillKey] = newBranchId;
+
+  StateManager.addMessage(
+    "🔄 重新选择了" + getSkillChineseName(skillKey) + "的方向，旧天赋节点已重置",
+    "success"
+  );
+  return true;
+}
+
+/**
+ * 检查是否能激活天赋节点
+ */
+function canActivateTalentNode(skillKey, nodeId, state) {
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
+  if (!branchId) {
+    return { allowed: false, reason: "请先选择发展方向" };
+  }
+  var node = getTalentNodeDef(skillKey, branchId, nodeId);
+  if (!node) {
+    return { allowed: false, reason: "天赋节点不存在" };
+  }
+
+  // 生成全局唯一key（一致性）
+  var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
+  if (state.talentNodes && state.talentNodes[nodeKey]) {
+    return { allowed: false, reason: "该天赋节点已激活" };
+  }
+
+  var skill = state.skills[skillKey];
+  if (!skill || skill.level < node.requireLevel) {
+    return {
+      allowed: false,
+      reason: "需技能等级≥Lv." + node.requireLevel + "（当前Lv." + (skill ? skill.level : 0) + "）",
+    };
+  }
+
+  // 检查前置节点
+  if (node.prereq) {
+    var prereqKey = skillKey + "_" + branchId + "_" + node.prereq;
+    if (!state.talentNodes || !state.talentNodes[prereqKey]) {
+      var prereqNode = getTalentNodeDef(skillKey, branchId, node.prereq);
+      return {
+        allowed: false,
+        reason: "需要先激活前置节点「" + (prereqNode ? prereqNode.name : node.prereq) + "」",
+      };
+    }
+  }
+
+  if (state.player.actionPoints < (node.apCost || 0)) {
+    return {
+      allowed: false,
+      reason: "行动力不足，需要" + node.apCost + "AP",
+    };
+  }
+  if (state.resources.cash < (node.cashCost || 0)) {
+    return {
+      allowed: false,
+      reason: "现金不足，需要¥" + node.cashCost,
+    };
+  }
+
+  return { allowed: true, reason: "" };
+}
+
+/**
+ * 激活天赋节点
+ */
+function activateTalentNode(skillKey, nodeId, state) {
+  var check = canActivateTalentNode(skillKey, nodeId, state);
+  if (!check.allowed) {
+    StateManager.addMessage("⚠️ " + check.reason, "warning");
+    return false;
+  }
+
+  var branchId = state.skillBranches[skillKey];
+  var node = getTalentNodeDef(skillKey, branchId, nodeId);
+  var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
+
+  state.player.actionPoints -= node.apCost;
+  state.resources.cash -= node.cashCost;
+  state.talentNodes[nodeKey] = true;
+
+  StateManager.addMessage(
+    "⭐ 激活了天赋节点：「" + node.name + "」— " + node.desc,
+    "success"
+  );
+
+  // 被动收入立即生效
+  if (node.effects && node.effects.passiveIncome) {
+    state.resources.cash += node.effects.passiveIncome;
+    StateManager.addMessage(
+      "💰 天赋效果：获得 ¥" + node.effects.passiveIncome + " 被动收入",
+      "info"
+    );
+  }
+
+  return true;
+}
+
+/**
+ * 获取所有已激活天赋节点的累积效果
+ */
+function getTalentNodeEffects(state) {
+  var merged = {};
+  if (!state.talentNodes) return merged;
+
+  for (var nodeKey in state.talentNodes) {
+    if (!state.talentNodes[nodeKey]) continue;
+    // nodeKey format: "skillKey_branchId_nodeId"
+    var parts = nodeKey.split("_");
+    // 至少3部分：skill + branch + node
+    if (parts.length < 3) continue;
+    var skillKey = parts[0];
+    // branchId可能包含下划线，所以重组
+    // 简单方法：遍历所有可能分支来匹配
+    var branches = SKILL_BRANCHES[skillKey];
+    if (!branches) continue;
+    for (var bi = 0; bi < branches.length; bi++) {
+      var branch = branches[bi];
+      if (nodeKey.indexOf(skillKey + "_" + branch.id + "_") !== 0) continue;
+      var nodeId = nodeKey.substring((skillKey + "_" + branch.id + "_").length);
+      var node = getTalentNodeDef(skillKey, branch.id, nodeId);
+      if (node && node.effects) {
+        for (var eff in node.effects) {
+          merged[eff] = (merged[eff] || 0) + node.effects[eff];
+        }
+      }
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * 获取分支工作的收入加成倍数
+ */
+function getBranchJobBonus(jobId, skillKey, state) {
+  if (!state.skillBranches) return 1.0;
+  var branchId = state.skillBranches[skillKey];
+  if (!branchId) return 1.0;
+  var branch = getBranchById(skillKey, branchId);
+  if (!branch) return 1.0;
+
+  // 检查该工作是否在分支加成范围内
+  if (branch.jobBonuses && branch.jobBonuses.indexOf(jobId) >= 0) {
+    var mult = 1.0;
+    if (branch.incomeMult) mult = branch.incomeMult;
+    // 叠加天赋节点效果
+    var nodeEff = getTalentNodeEffects(state);
+    // 收集所有收入类加成
+    var totalBonus = 0;
+    for (var key in nodeEff) {
+      if (key.indexOf("Bonus") > 0 || key.indexOf("Income") > 0) {
+        totalBonus += nodeEff[key];
+      }
+    }
+    return mult + totalBonus;
+  }
+
+  return 1.0;
+}
+
+/**
+ * 获取分支对职场晋升的修正（返回 { abilityReduction, upwardReduction, popularityReduction }）
+ */
+function getBranchCorpPromotionModifier(state) {
+  var mod = { abilityReduction: 0, upwardReduction: 0, popularityReduction: 0 };
+
+  // coding → backend/frontend：能力要求降低
+  var codingBranch = state.skillBranches && state.skillBranches.coding;
+  if (codingBranch === "backend_arch" || codingBranch === "frontend_dev") {
+    var nodeEff = getTalentNodeEffects(state);
+    mod.abilityReduction += nodeEff.promoAbilityReduction || 0;
+    // 基础分支加成（Lv.30选择即有）
+    mod.abilityReduction += 5;
+  }
+
+  // management → strategy：向上管理要求降低
+  var mgmtBranch = state.skillBranches && state.skillBranches.management;
+  if (mgmtBranch === "strategy_planning") {
+    var nodeEff2 = getTalentNodeEffects(state);
+    mod.upwardReduction += nodeEff2.promoUpwardReduction || 0;
+    mod.upwardReduction += 5;
+  }
+
+  // management → team：人缘要求降低
+  if (mgmtBranch === "team_mgmt") {
+    var nodeEff3 = getTalentNodeEffects(state);
+    mod.popularityReduction += nodeEff3.promoPopularityReduction || 0;
+    mod.popularityReduction += 5;
+  }
+
+  return mod;
+}
+
+/**
+ * 获取某一技能的分支名称（用于UI展示）
+ */
+function getSkillBranchLabel(skillKey, state) {
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
+  if (!branchId) return null;
+  var branch = getBranchById(skillKey, branchId);
+  return branch ? branch.icon + " " + branch.name : null;
+}
+
+/**
+ * 检查技能是否刚达到天赋节点解锁等级，返回可解锁的节点
+ */
+function getUnlockedTalentNodes(skillKey, state) {
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
+  if (!branchId) return [];
+  var branch = getBranchById(skillKey, branchId);
+  if (!branch || !branch.talentNodes) return [];
+
+  var skill = state.skills[skillKey];
+  if (!skill) return [];
+
+  var unlocked = [];
+  for (var i = 0; i < branch.talentNodes.length; i++) {
+    var node = branch.talentNodes[i];
+    var nodeKey = skillKey + "_" + branchId + "_" + node.id;
+    if (state.talentNodes && state.talentNodes[nodeKey]) continue;
+    if (skill.level >= node.requireLevel) {
+      // 检查前置
+      if (node.prereq) {
+        var prereqKey = skillKey + "_" + branchId + "_" + node.prereq;
+        if (!state.talentNodes || !state.talentNodes[prereqKey]) continue;
+      }
+      unlocked.push(node);
+    }
+  }
+  return unlocked;
+}
+
+/**
+ * 获取技能中文名（本地引用，避免循环依赖）
+ */
+function getSkillChineseName(skillKey) {
+  var names = {
+    cooking: "烹饪",
+    repair: "维修",
+    coding: "编程",
+    english: "英语",
+    driving: "驾驶",
+    sales: "销售",
+    management: "管理",
+    accounting: "会计",
+    electrician: "电工",
+    welding: "焊接",
+  };
+  return names[skillKey] || skillKey;
+}</script>
 
     <!-- UI -->
     <script>/**
@@ -21899,7 +24299,10 @@ function renderNeedsBars(state) {
   setStatBar("stat-hygiene", n.hygiene, "hygiene");
   setStatBar("stat-happiness", n.happiness, "happiness");
   setStatBar("stat-health", s.health, "health");
-  setStatBar("stat-fame", s.fame, "fame");
+  // fame: 游戏逻辑写入 status.fame，player.fame 为迁移遗留（v1.0→v1.1）
+  // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
+  var fameVal = (s && typeof s.fame === "number") ? s.fame : (p && typeof p.fame === "number") ? p.fame : 0;
+  setStatBar("stat-fame", fameVal, "fame");
   // 行动力
   const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
   setStatBar("stat-ap", apPct, "ap-bar");
@@ -21914,7 +24317,7 @@ function renderNeedsBars(state) {
   warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
   warnStatRow("stat-happiness", n.happiness, 10, "#cc7868");
   warnStatRow("stat-health", s.health, 20, "#cc7868");
-  warnStatRow("stat-fame", s.fame, 5, "#9b74b8");
+  warnStatRow("stat-fame", fameVal, 5, "#9b74b8");
   // AP≤20
   warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
 }
@@ -22285,7 +24688,8 @@ function renderGrowthTab(state, parent) {
     { label: "心智", value: p.mental, color: "#9b74b8" },
     {
       label: "名气",
-      value: (state.status && state.status.fame) || 0,
+      // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
+      value: (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0),
       color: "#d4a017",
     },
   ];
@@ -22409,7 +24813,7 @@ function renderGrowthTab(state, parent) {
         p.intelligence,
         p.agility,
         p.mental,
-        Math.min(100, (state.status && state.status.fame) || 0),
+        Math.min(100, (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0)),
       ],
       ["体质", "智力", "敏捷", "心智", "名气"],
       100,
@@ -24036,10 +26440,70 @@ function renderSkillsTab(state, parent) {
         ")</div>";
     }
 
+    // --- P2#12 分支徽章 ---
+    var branchLabel = "";
+    if (typeof getSkillBranchLabel === "function") {
+      var bl = getSkillBranchLabel(key, state);
+      if (bl) branchLabel = '<div style="font-size:10px;color:var(--accent);margin:2px 0 4px;">🌳 ' + bl + "</div>";
+    }
+
+    // --- P2#12 天赋节点迷你树 ---
+    var talentHtml = "";
+    if (typeof getChosenBranch === "function") {
+      var chosenBranch = getChosenBranch(key, state);
+      if (chosenBranch && chosenBranch.talentNodes) {
+        talentHtml = '<div style="margin:6px 0;display:flex;gap:4px;align-items:center;">';
+        for (var ti = 0; ti < chosenBranch.talentNodes.length; ti++) {
+          var nd = chosenBranch.talentNodes[ti];
+          var nk = key + "_" + chosenBranch.id + "_" + nd.id;
+          var activated = state.talentNodes && state.talentNodes[nk];
+          var canActivate = false;
+          if (typeof getUnlockedTalentNodes === "function") {
+            var unlockedArr = getUnlockedTalentNodes(key, state);
+            for (var ui = 0; ui < unlockedArr.length; ui++) {
+              if (unlockedArr[ui].id === nd.id) { canActivate = true; break; }
+            }
+          }
+          var nodeStyle = activated
+            ? "background:var(--accent);color:#fff;"
+            : canActivate
+              ? "background:rgba(255,200,50,0.2);color:var(--warning);cursor:pointer;border:1px solid var(--warning);"
+              : "background:rgba(255,255,255,0.05);color:var(--text-muted);";
+          var nodeTitle = nd.name + (activated ? " ✓" : " (" + nd.desc + ")");
+          talentHtml +=
+            '<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;' +
+            nodeStyle +
+            '" title="' +
+            nodeTitle +
+            '" data-node="' + nk + '">' +
+            (activated ? "★" : canActivate ? "☆" : "·") +
+            "</div>";
+          if (ti < chosenBranch.talentNodes.length - 1) {
+            talentHtml += '<div style="width:8px;height:1px;background:var(--border-color, rgba(255,255,255,0.1));"></div>';
+          }
+        }
+        talentHtml += "</div>";
+      }
+    }
+
+    // --- P2#12 分支选择按钮（Lv.30+未选择）---
+    var branchBtnHtml = "";
+    if (skill.level >= 30 && !(state.skillBranches && state.skillBranches[key])) {
+      var hasBranches = false;
+      if (typeof getSkillBranchDef === "function") {
+        hasBranches = getSkillBranchDef(key).length > 0;
+      }
+      if (hasBranches) {
+        branchBtnHtml =
+          '<div style="margin-top:6px;padding:4px 8px;background:var(--accent);color:#fff;border-radius:4px;font-size:10px;text-align:center;cursor:pointer;" data-branch-select="' + key + '">🌳 选择发展方向</div>';
+      }
+    }
+
     card.innerHTML =
       '<div class="card-title">' +
       name +
       "</div>" +
+      branchLabel +
       '<div class="card-desc">Lv.' +
       skill.level +
       " / 100</div>" +
@@ -24054,6 +26518,8 @@ function renderSkillsTab(state, parent) {
       "/" +
       xpNeeded +
       "</div>" +
+      talentHtml +
+      branchBtnHtml +
       jobHtml +
       '<div style="margin-top:8px;font-size:11px;color:var(--warning);font-weight:bold;">⚡ 点击训练</div>';
 
@@ -24188,6 +26654,44 @@ function renderSkillsTab(state, parent) {
     })(key);
 
     grid.appendChild(card);
+
+      // P2#12 分支选择按钮点击
+      (function (skillKey) {
+        var branchBtn = card.querySelector("[data-branch-select]");
+        if (branchBtn) {
+          branchBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (typeof showBranchSelectionModal === "function") {
+              showBranchSelectionModal(skillKey);
+            }
+          });
+        }
+        // 天赋节点点击激活
+        var nodeEls = card.querySelectorAll("[data-node]");
+        for (var ni = 0; ni < nodeEls.length; ni++) {
+          (function (el) {
+            el.addEventListener("click", function (e) {
+              e.stopPropagation();
+              var nk = el.getAttribute("data-node");
+              if (!nk) return;
+              var parts = nk.split("_");
+              if (parts.length < 3) return;
+              var sk = parts[0];
+              var branchId = state.skillBranches && state.skillBranches[sk];
+              if (!branchId) return;
+              var prefix = sk + "_" + branchId + "_";
+              var nodeId = nk.substring(prefix.length);
+              if (typeof handleActivateTalentNode === "function") {
+                handleActivateTalentNode(sk, nodeId);
+              } else if (typeof activateTalentNode === "function") {
+                var st = StateManager.getState();
+                activateTalentNode(sk, nodeId, st);
+                if (typeof renderAll === "function") renderAll(st);
+              }
+            });
+          })(nodeEls[ni]);
+        }
+      })(key);
   }
   div.appendChild(grid);
 
@@ -24313,7 +26817,8 @@ function renderCorpTab(state, parent) {
 
   var summaryHtml =
     '<h3 style="color:var(--text-muted);margin-bottom:12px;">🏢 职场信息 — ' +
-    companyName + fateTag +
+    companyName +
+    fateTag +
     " | 入职第" +
     quartersTotal +
     "个季度</h3>" +
@@ -24446,13 +26951,27 @@ function renderCorpTab(state, parent) {
  * 同时被 renderCorpTab 和 corp_ui.js 使用
  */
 function _fateTag(state, companyId) {
-  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId) return "";
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId)
+    return "";
   var co = state.enterpriseFate.companies[companyId];
   if (!co) return "";
   var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
   if (!phaseDef) return "";
-  var healthColor = co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
-  return '<span style="margin-left:8px;font-size:10px;color:' + phaseDef.color + ';">' + phaseDef.icon + ' ' + phaseDef.name + ' · 健康度<span style="color:' + healthColor + ';">' + Math.round(co.health) + '</span></span>';
+  var healthColor =
+    co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return (
+    '<span style="margin-left:8px;font-size:10px;color:' +
+    phaseDef.color +
+    ';">' +
+    phaseDef.icon +
+    " " +
+    phaseDef.name +
+    ' · 健康度<span style="color:' +
+    healthColor +
+    ';">' +
+    Math.round(co.health) +
+    "</span></span>"
+  );
 }
 
 // ====== Enterprise Fate Tab ======
@@ -24713,6 +27232,147 @@ function renderAchievementsTab(state, parent) {
     parent.appendChild(section);
   });
 }
+
+// ====== P2#12 技能分支选择弹窗 ======
+function showBranchSelectionModal(skillKey) {
+  if (typeof StateManager === "undefined") return;
+  var state = StateManager.getState();
+  var skill = state.skills[skillKey];
+  if (!skill) return;
+
+  var branches = [];
+  if (typeof getSkillBranchDef === "function") {
+    branches = getSkillBranchDef(skillKey);
+  }
+  if (branches.length === 0) return;
+
+  // 创建遮罩
+  var overlay = document.createElement("div");
+  overlay.style.cssText =
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;";
+
+  var modal = document.createElement("div");
+  modal.style.cssText =
+    "background:var(--bg-card,#1a1a2e);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;";
+
+  var skillName = "";
+  if (typeof getSkillChineseName === "function") {
+    skillName = getSkillChineseName(skillKey);
+  }
+
+  modal.innerHTML =
+    '<h3 style="color:var(--text-muted);margin-bottom:6px;">🌳 ' + skillName + ' — 选择发展方向</h3>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' + skill.level + '，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>' +
+    '<div style="margin-bottom:12px;">';
+
+  for (var bi = 0; bi < branches.length; bi++) {
+    var branch = branches[bi];
+    var branchDiv = document.createElement("div");
+    branchDiv.style.cssText =
+      "padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;transition:all 0.15s;";
+    branchDiv.setAttribute("data-branch-id", branch.id);
+
+    // 天赋节点预览
+    var nodePreview = "";
+    if (branch.talentNodes) {
+      nodePreview = '<div style="margin-top:6px;font-size:10px;color:var(--text-muted);">天赋节点：';
+      for (var ni = 0; ni < branch.talentNodes.length; ni++) {
+        var nd = branch.talentNodes[ni];
+        nodePreview += '<span style="margin-right:4px;">Lv.' + nd.requireLevel + ' ' + nd.name + '</span>';
+        if (ni < branch.talentNodes.length - 1) nodePreview += ' → ';
+      }
+      nodePreview += "</div>";
+    }
+
+    // 解锁工作预览
+    var jobPreview = "";
+    if (branch.jobBonuses && branch.jobBonuses.length > 0) {
+      jobPreview = '<div style="margin-top:4px;font-size:10px;color:var(--success);">解锁工作：';
+      if (typeof STREET_JOBS !== "undefined") {
+        for (var ji = 0; ji < branch.jobBonuses.length; ji++) {
+          for (var jqi = 0; jqi < STREET_JOBS.length; jqi++) {
+            if (STREET_JOBS[jqi].id === branch.jobBonuses[ji]) {
+              jobPreview += STREET_JOBS[jqi].icon + " " + STREET_JOBS[jqi].name + " ";
+              break;
+            }
+          }
+        }
+      }
+      jobPreview += "</div>";
+    }
+
+    branchDiv.innerHTML =
+      '<div style="font-size:14px;font-weight:bold;color:var(--accent);">' + branch.icon + " " + branch.name + "</div>" +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' + branch.desc + "</div>" +
+      nodePreview +
+      jobPreview;
+
+    // hover效果
+    branchDiv.addEventListener("mouseenter", function () {
+      this.style.borderColor = "var(--accent)";
+      this.style.background = "rgba(255,255,255,0.06)";
+    });
+    branchDiv.addEventListener("mouseleave", function () {
+      this.style.borderColor = "rgba(255,255,255,0.08)";
+      this.style.background = "rgba(255,255,255,0.03)";
+    });
+
+    // 选择确认
+    (function (bid) {
+      branchDiv.addEventListener("click", function () {
+        // 确认选择
+        var confirmDiv = document.createElement("div");
+        confirmDiv.style.cssText =
+          "margin-top:8px;display:flex;gap:8px;justify-content:center;";
+        confirmDiv.innerHTML =
+          '<button style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✅ 确认选择</button>' +
+          '<button style="padding:6px 16px;background:rgba(255,255,255,0.1);color:var(--text-muted);border:none;border-radius:6px;cursor:pointer;font-size:12px;">❌ 取消</button>';
+        this.appendChild(confirmDiv);
+
+        var self = this;
+        var confirmBtn = confirmDiv.querySelector("button:first-child");
+        var cancelBtn = confirmDiv.querySelector("button:last-child");
+
+        cancelBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          confirmDiv.remove();
+        });
+
+        confirmBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var st = StateManager.getState();
+          if (typeof chooseSkillBranch === "function") {
+            var result = chooseSkillBranch(skillKey, bid, st);
+            if (result && typeof renderAll === "function") {
+              renderAll(st);
+            }
+          }
+          overlay.remove();
+        });
+      });
+    })(branch.id);
+
+    modal.querySelector("div").appendChild(branchDiv);
+  }
+
+  // 关闭按钮
+  var closeBtn = document.createElement("div");
+  closeBtn.style.cssText =
+    "text-align:center;margin-top:8px;padding:8px;font-size:12px;color:var(--text-muted);cursor:pointer;";
+  closeBtn.textContent = "以后再选";
+  closeBtn.addEventListener("click", function () {
+    overlay.remove();
+  });
+  modal.appendChild(closeBtn);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // 点击遮罩外部关闭
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) overlay.remove();
+  });
+}
 </script>
     <script>/**
  * 职场专用 UI 组件
@@ -24722,13 +27382,27 @@ function renderAchievementsTab(state, parent) {
  * 企业命运标签 — 在职场Tab公司名旁显示健康度+阶段
  */
 function _fateTag(state, companyId) {
-  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId) return "";
+  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId)
+    return "";
   var co = state.enterpriseFate.companies[companyId];
   if (!co) return "";
   var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
   if (!phaseDef) return "";
-  var healthColor = co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
-  return '<span style="margin-left:8px;font-size:10px;color:' + phaseDef.color + ';">' + phaseDef.icon + ' ' + phaseDef.name + ' · 健康度<span style="color:' + healthColor + ';">' + Math.round(co.health) + '</span></span>';
+  var healthColor =
+    co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
+  return (
+    '<span style="margin-left:8px;font-size:10px;color:' +
+    phaseDef.color +
+    ';">' +
+    phaseDef.icon +
+    " " +
+    phaseDef.name +
+    ' · 健康度<span style="color:' +
+    healthColor +
+    ';">' +
+    Math.round(co.health) +
+    "</span></span>"
+  );
 }
 
 /** 渲染职场面板（替代街头行动面板） */
@@ -29591,6 +32265,20 @@ function checkJobRequirements(job, state) {
     return `需要${eduNames[job.educationRequired] || "本科"}学历（大学城自考获取）`;
   }
 
+  // 分支要求检查（P2#12 技能天赋树）
+  if (job.branchRequirement) {
+    var br = job.branchRequirement;
+    var branchId = state.skillBranches && state.skillBranches[br.skill];
+    if (!branchId) return "需要选择" + getSkillChineseName(br.skill) + "的特定发展方向";
+    if (branchId !== br.branch) {
+      var branch = null;
+      if (typeof getBranchById === "function") {
+        branch = getBranchById(br.skill, br.branch);
+      }
+      return "需要选择" + (branch ? branch.name : br.branch) + "发展方向";
+    }
+  }
+
   return null; // 通过
 }
 
@@ -31817,6 +34505,55 @@ function init() {
   });
 
   console.log("🏙️ 城市浮生记 initialized.");
+}
+
+// ====== P2#12 技能树分支/节点事件处理 ======
+
+/**
+ * 处理技能分支选择（从弹窗回调调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} branchId - 分支ID
+ */
+function handleChooseBranch(skillKey, branchId) {
+  var st = StateManager.getState();
+  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+  if (typeof chooseSkillBranch === "function") {
+    chooseSkillBranch(skillKey, branchId, st);
+    if (typeof renderAll === "function") renderAll(st);
+  }
+}
+
+/**
+ * 处理天赋节点激活（从技能卡片圆点点击调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} nodeId - 天赋节点ID
+ */
+function handleActivateTalentNode(skillKey, nodeId) {
+  var st = StateManager.getState();
+  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+
+  // 检查资源并确认
+  var branchId = st.skillBranches && st.skillBranches[skillKey];
+  if (!branchId) { StateManager.addMessage("⚠️ 请先选择发展方向", "warning"); return; }
+
+  if (typeof activateTalentNode === "function") {
+    var result = activateTalentNode(skillKey, nodeId, st);
+    if (result && typeof renderAll === "function") renderAll(st);
+  }
+}
+
+/**
+ * 处理分支切换（从技能卡片的切换按钮调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} newBranchId - 新分支ID
+ */
+function handleSwitchBranch(skillKey, newBranchId) {
+  var st = StateManager.getState();
+  if (!st) return;
+  if (typeof switchSkillBranch === "function") {
+    switchSkillBranch(skillKey, newBranchId, st);
+    if (typeof renderAll === "function") renderAll(st);
+  }
 }
 
 // ====== 启动 ======

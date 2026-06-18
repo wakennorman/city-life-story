@@ -10,7 +10,7 @@ function createDefaultState() {
   const now = Date.now();
   return {
     // --- 元数据 ---
-    version: "1.0.0",
+    version: "1.1.0",
     createdAt: now,
     lastPlayedAt: now,
     playTime: 0,
@@ -27,6 +27,7 @@ function createDefaultState() {
       intelligence: 20, // 智力
       agility: 24, // 敏捷
       mental: 26, // 心智
+      fame: 0, // 名气（基础第五维，从 status.fame 迁移而来）
 
       // 职场 7 维属性 (进入职场后初始化)
       corporate: {
@@ -76,10 +77,11 @@ function createDefaultState() {
     // --- 派生状态 ---
     status: {
       health: 100,
-      fame: 0,
+      fame: 0, // 名气（v1.0→v1.1 迁移到 player.fame，此处保留兼容旧逻辑写入）
       emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
-      sick: false,
-      injured: false,
+      sick: false, // 兼容旧字段（内部由 illnesses 数组派生）
+      injured: false, // 兼容旧字段
+      illnesses: [], // [{ id: "cold", contractedDay: 12, severity: 1, treated: false }]
     },
 
     // --- 技能 (level: 0-100, xp: 0-1000) ---
@@ -96,6 +98,8 @@ function createDefaultState() {
       welding: { level: 0, xp: 0 },
     },
     certificates: [],
+    skillBranches: {},   // { cooking: "home_chef", ... } 技能→已选分支ID
+    talentNodes: {},     // { "cooking_home_chef_knife": true, ... } 已激活的天赋节点
     // 兼容早期存档/误放字段；运行逻辑以 player.education 为准。
     education: 0,
     eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
@@ -261,6 +265,19 @@ function createDefaultState() {
       ageThisYear: false,
       seenNewsToday: [],
       _dailyTransactions: [], // 当日收支流水记录 [{ type, category, amount, description }]
+      // --- 状态危机/疾病系统 ---
+      _habits: {
+        junkFoodMeals: 0, // 累计垃圾食品次数
+        lowHungerStreak: 0, // 连续 hunger<25 天数
+        lowHygieneStreak: 0, // 连续 hygiene<30 天数
+        lowHappinessStreak: 0, // 连续 happiness<20 天数
+        highFatigueStreak: 0, // 连续 fatigue>80 天数
+        lateNightActions: 0, // 累计夜生活次数
+        stomach_inflammationCount: 0, // 已患肠胃炎次数
+      },
+      _deferred: {}, // { hunger: day, fatigue: day, ... } 当日延后过的临界维度
+      _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
+      _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
     },
 
     // --- 事件与消息 ---
@@ -364,6 +381,32 @@ class GameStateManager {
   importState(savedState) {
     this._state = savedState;
     this._state.lastPlayedAt = Date.now();
+    // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
+    var s = this._state;
+    if (s.status && typeof s.status.fame === "number") {
+      if (s.player) s.player.fame = s.status.fame;
+      delete s.status.fame;
+    }
+    if (s.player && typeof s.player.fame !== "number") {
+      s.player.fame = 0;
+    }
+    if (s.status && !s.status.illnesses) s.status.illnesses = [];
+    if (s.flags && !s.flags._habits) {
+      s.flags._habits = {
+        junkFoodMeals: 0,
+        lowHungerStreak: 0,
+        lowHygieneStreak: 0,
+        lowHappinessStreak: 0,
+        highFatigueStreak: 0,
+        lateNightActions: 0,
+        stomach_inflammationCount: 0,
+      };
+    }
+    if (s.flags && !s.flags._deferred) s.flags._deferred = {};
+    if (s.flags && !s.flags._amenityHabitCount) s.flags._amenityHabitCount = {};
+	    // v1.1 → v1.2 迁移：skillBranches + talentNodes
+	    if (!s.skillBranches) s.skillBranches = {};
+	    if (!s.talentNodes) s.talentNodes = {}
     this._markAllDirty();
     this._notify();
   }

@@ -16,14 +16,19 @@ function checkPromotion(state) {
   // 年龄检查
   if (state.player.age < rankData.minAge) return null;
 
-  // 能力
-  if (reqs.minAbility && c.ability < reqs.minAbility) return null;
-
-  // 向上管理
-  if (reqs.minUpward && c.upwardMgmt < reqs.minUpward) return null;
-
-  // 人缘
-  if (reqs.minPopularity && c.popularity < reqs.minPopularity) return null;
+  // 能力（含分支加成 P2#12）
+  var abilityReq = reqs.minAbility || 0;
+  var upwardReq = reqs.minUpward || 0;
+  var popularityReq = reqs.minPopularity || 0;
+  if (typeof getBranchCorpPromotionModifier === "function") {
+    var promoMod = getBranchCorpPromotionModifier(state);
+    abilityReq = Math.max(0, abilityReq - promoMod.abilityReduction);
+    upwardReq = Math.max(0, upwardReq - promoMod.upwardReduction);
+    popularityReq = Math.max(0, popularityReq - promoMod.popularityReduction);
+  }
+  if (abilityReq && c.ability < abilityReq) return null;
+  if (upwardReq && c.upwardMgmt < upwardReq) return null;
+  if (popularityReq && c.popularity < popularityReq) return null;
 
   // 绩效要求
   const recentPerfs = corp.perfHistory.slice(-3);

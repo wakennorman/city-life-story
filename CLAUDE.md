@@ -11,13 +11,23 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次 commit**：`94c1c1f`（企业命运系统：enterprise_fate.js + 3个联动事件 + 3个成就）
-- **无未提交改动**，代码干净
-- **P0/P1/P2 全优先级清单已完成**（累计140项），有梗世界事件库5条完整事件链+企业命运系统(7种命运事件+3个联动事件+3个成就)
+- **最近一次工作**：P2#12 技能树与职业进阶 — 10技能×21分支×63天赋节点 + 15个分支新工作 + 职场晋升联动
+- **待提交改动**：
+  - `src/js/core/skill_tree.js`（新建 — SKILL_BRANCHES数据+分支/节点逻辑）
+  - `src/js/core/state.js`（skillBranches/talentNodes状态字段+迁移）
+  - `src/js/data/skills.js`（getSkillBranches/getSkillBranchById查询助手）
+  - `src/js/data/jobs.js`（15个分支解锁新工作+branchRequirement字段）
+  - `src/js/phase1/skill_bonuses.js`（XP天赋加成+分支感知加成函数）
+  - `src/js/phase1/daily_pipeline.js`（skill_tree_check步骤）
+  - `src/js/ui/render.js`（renderSkillsTab重写+showBranchSelectionModal弹窗）
+  - `src/js/ui/wiki.js`（技能天赋树百科条目）
+  - `src/js/phase2/promo.js`（分支晋升门槛降低）
+  - `src/js/main.js`（handleChooseBranch/handleActivateTalentNode处理器）
+  - `src/index.html`（skill_tree.js脚本加载）
+- **P0/P1/P2 全优先级清单已完成**（累计154项含技能树），有梗世界事件库5条完整事件链+企业命运系统+技能天赋树(21分支+63节点)
 - **下一步方向**：
-  1. **技能树与职业进阶** — 从线性技能到分支方向，参考《中国式家长》天赋树
-  2. **多周目企业记忆（P2#10）** — 前一局让某公司倒闭，新一局该公司已不存在于地图上
-  3. **数据可视化（P2#8）** — 收入曲线图、属性成长雷达图增强
+  1. **多周目企业记忆（P2#10）** — 前一局让某公司倒闭，新一局该公司已不存在于地图上
+  2. **数据可视化（P2#8）** — 收入曲线图、属性成长雷达图增强
 
 ## 自主运行规则
 

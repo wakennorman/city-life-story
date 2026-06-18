@@ -64,6 +64,88 @@ function getSalesTradePremium(salesLevel) {
   return Math.min(0.15, salesLevel * 0.002);
 }
 
+// ====== P2#12 技能树分支感知加成（调用原函数 + 叠加分支加成） ======
+
+/**
+ * 获取厨艺打折 + 分支加成（家常大厨额外减食材成本）
+ */
+function getBranchCookingDiscount(state) {
+  var base = getCookingDiscount((state.skills.cooking && state.skills.cooking.level) || 0);
+  if (!state.skillBranches || state.skillBranches.cooking !== "home_chef") return base;
+  var reduction = 0.15; // 家常大厨基础成本减免
+  if (typeof getTalentNodeEffects === "function") {
+    var eff = getTalentNodeEffects(state);
+    reduction += eff.foodCostReduction || 0;
+  }
+  return Math.min(0.8, base + reduction);
+}
+
+/**
+ * 获取旅行AP减免 + 分支加成（客运驾驶额外减免）
+ */
+function getBranchTravelApReduction(state) {
+  var base = getTravelApReduction((state.skills.driving && state.skills.driving.level) || 0);
+  if (!state.skillBranches || state.skillBranches.driving !== "passenger_transport") return base;
+  if (typeof getTalentNodeEffects === "function") {
+    var eff = getTalentNodeEffects(state);
+    return base + (eff.extraApReduction || 2);
+  }
+  return base + 1;
+}
+
+/**
+ * 获取家教加成 + 分支加成（商务英语额外+50%）
+ */
+function getBranchTutoringBonus(state) {
+  var base = getTutoringBonus((state.skills.english && state.skills.english.level) || 0);
+  if (!state.skillBranches || state.skillBranches.english !== "business_english") return base;
+  return base * 1.5;
+}
+
+/**
+ * 获取工厂加成 + 分支加成（强电工程翻倍）
+ */
+function getBranchFactoryBonus(state) {
+  var base = getFactoryBonus((state.skills.electrician && state.skills.electrician.level) || 0);
+  if (!state.skillBranches || state.skillBranches.electrician !== "industrial_electric") return base;
+  return base * 2.0;
+}
+
+/**
+ * 获取建筑加成 + 分支加成（结构焊接+50%）
+ */
+function getBranchConstructionBonus(state) {
+  var base = getConstructionBonus((state.skills.welding && state.skills.welding.level) || 0);
+  if (!state.skillBranches || state.skillBranches.welding !== "structural_welding") return base;
+  return base * 1.5;
+}
+
+/**
+ * 获取买入折扣 + 分支加成（门店销售上限提升到25%）
+ */
+function getBranchSalesDiscount(state) {
+  var base = getSalesTradeDiscount((state.skills.sales && state.skills.sales.level) || 0);
+  if (!state.skillBranches || state.skillBranches.sales !== "store_sales") return base;
+  var extra = 0;
+  if (typeof getTalentNodeEffects === "function") {
+    extra = getTalentNodeEffects(state).extraDiscount || 0;
+  }
+  return Math.min(0.25, base + 0.10 + extra);
+}
+
+/**
+ * 获取卖出溢价 + 分支加成（商务谈判上限提升到25%）
+ */
+function getBranchSalesPremium(state) {
+  var base = getSalesTradePremium((state.skills.sales && state.skills.sales.level) || 0);
+  if (!state.skillBranches || state.skillBranches.sales !== "biz_negotiation") return base;
+  var extra = 0;
+  if (typeof getTalentNodeEffects === "function") {
+    extra = getTalentNodeEffects(state).extraPremium || 0;
+  }
+  return Math.min(0.25, base + 0.10 + extra);
+}
+
 // 城市脉搏规则：把新闻从"提示文本"转成地点、工作和行动建议的即时变化。
 var CITY_PULSE_RULES = [
   {
@@ -326,6 +408,15 @@ function grantJobSkillXp(jobId, state) {
   var intBonus = Math.floor((state.player.intelligence || 0) / 30);
   xpGain += intBonus;
 
+  // 天赋节点XP加成（P2#12 技能树系统）
+  if (typeof getTalentNodeEffects === "function" && state.talentNodes) {
+    var nodeEff = getTalentNodeEffects(state);
+    var xpMultKey = entry.skill + "XpMult";
+    if (nodeEff[xpMultKey]) {
+      xpGain = Math.round(xpGain * nodeEff[xpMultKey]);
+    }
+  }
+
   sk.xp = (sk.xp || 0) + xpGain;
 
   // 检查升级
@@ -360,6 +451,19 @@ function applySkillLevelUpBonus(skillKey, state) {
   }
   if (agilitySkills.indexOf(skillKey) !== -1) {
     if (p.agility < 100) p.agility = Math.min(100, p.agility + 1);
+  }
+
+  // 天赋节点解锁提示（P2#12）
+  if (typeof getUnlockedTalentNodes === "function" && state.skillBranches) {
+    var unlocked = getUnlockedTalentNodes(skillKey, state);
+    for (var ni = 0; ni < unlocked.length; ni++) {
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🌟 可在技能页激活「" + unlocked[ni].name + "」天赋节点！",
+          "hint"
+        );
+      }
+    }
   }
 }
 

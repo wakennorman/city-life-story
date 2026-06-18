@@ -227,6 +227,31 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 技能天赋树检查（P2#12） ===
+  {
+    name: "skill_tree_check",
+    fn: function (state) {
+      if (!state.skillBranches || typeof getUnlockedTalentNodes !== "function") return;
+      if (!state.flags._checkedTalentNodes) state.flags._checkedTalentNodes = {};
+      for (var sk in state.skills) {
+        if (!state.skillBranches[sk]) continue;
+        var unlocked = getUnlockedTalentNodes(sk, state);
+        for (var ni = 0; ni < unlocked.length; ni++) {
+          var node = unlocked[ni];
+          var nodeKey = sk + "_" + state.skillBranches[sk] + "_" + node.id;
+          if (state.flags._checkedTalentNodes[nodeKey]) continue;
+          state.flags._checkedTalentNodes[nodeKey] = true;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              "🌟 " + getSkillChineseName(sk) + "天赋节点「" + node.name + "」可激活！",
+              "hint"
+            );
+          }
+        }
+      }
+    },
+  },
+
   // === 天气 ===
   {
     name: "weather",

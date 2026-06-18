@@ -531,6 +531,279 @@ const STREET_JOBS = [
   },
 ];
 
+// ====== P2#12 技能树分支解锁工作 ======
+// 这些工作需要特定技能分支才能看到/执行
+(function() {
+  var BRANCH_JOBS = [
+    // === cooking → 家常大厨 ===
+    {
+      id: "cafeteria_worker",
+      name: "食堂帮厨",
+      desc: "在企事业单位食堂帮厨，切菜配菜打饭。稳定轻松，比街边摊环境好。",
+      icon: "🥘",
+      location: "commercialDist",
+      requirements: { cooking: 30, minAge: 18, maxAge: 55 },
+      branchRequirement: { skill: "cooking", branch: "home_chef" },
+      effects: { fatigue: 14, hygiene: -3, happiness: 5, cookingXp: 6 },
+      payCalc(state) {
+        var base = 70 + (state.skills.cooking.level || 0) * 1.0 + Math.random() * 35;
+        var branchBonus = 1.25;
+        if (typeof getBranchJobBonus === "function") {
+          branchBonus = getBranchJobBonus("cafeteria_worker", "cooking", state);
+        }
+        return Math.floor(base * branchBonus);
+      },
+      risk: {},
+    },
+    // === repair → 精密维修 ===
+    {
+      id: "instrument_repair",
+      name: "仪器仪表维修",
+      desc: "维修精密测量仪器、实验室设备。技术含量高，收入可观。",
+      icon: "🔬",
+      location: "techPark",
+      requirements: { repair: 35, intelligence: 30, minAge: 20, maxAge: 60 },
+      branchRequirement: { skill: "repair", branch: "precision_repair" },
+      effects: { fatigue: 12, repairXp: 8, happiness: 8, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 100 + (state.skills.repair.level || 0) * 2.5 + Math.random() * 50;
+        var branchBonus = typeof getBranchJobBonus === "function" ? getBranchJobBonus("instrument_repair", "repair", state) : 1.0;
+        return Math.floor(base * branchBonus);
+      },
+      risk: {},
+    },
+    // === repair → 改装达人 ===
+    {
+      id: "phone_modding",
+      name: "手机改装",
+      desc: "帮客户改装手机——换壳、扩容、改色。年轻客户多，利润不错。",
+      icon: "📱",
+      location: "commercialDist",
+      requirements: { repair: 30, agility: 20, minAge: 18, maxAge: 50 },
+      branchRequirement: { skill: "repair", branch: "modder" },
+      effects: { fatigue: 10, repairXp: 6, happiness: 10, salesXp: 2 },
+      payCalc(state) {
+        var base = 80 + (state.skills.repair.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("phone_modding", "repair", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 前端开发 ===
+    {
+      id: "web_designer",
+      name: "网页设计师",
+      desc: "帮小公司做网页设计制作。学了前端正好用上，按项目计酬。",
+      icon: "🎨",
+      location: "techPark",
+      requirements: { coding: 35, intelligence: 28, minAge: 18 },
+      branchRequirement: { skill: "coding", branch: "frontend_dev" },
+      effects: { fatigue: 10, codingXp: 8, happiness: 12, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 110 + (state.skills.coding.level || 0) * 2.0 + Math.random() * 55;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("web_designer", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 后端架构 ===
+    {
+      id: "server_ops",
+      name: "服务器运维",
+      desc: "维护公司服务器、数据库。夜班少，工作稳定，是技术岗的敲门砖。",
+      icon: "⚙️",
+      location: "techPark",
+      requirements: { coding: 40, intelligence: 32, minAge: 20 },
+      branchRequirement: { skill: "coding", branch: "backend_arch" },
+      effects: { fatigue: 12, codingXp: 10, happiness: 5, intelligenceXp: 3 },
+      payCalc(state) {
+        var base = 130 + (state.skills.coding.level || 0) * 2.5 + Math.random() * 50;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("server_ops", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === coding → 安全攻防 ===
+    {
+      id: "network_monitor",
+      name: "网络安全监控",
+      desc: "监控公司网络安全状况，排查异常流量。责任重大，薪资丰厚。",
+      icon: "🔒",
+      location: "techPark",
+      requirements: { coding: 35, intelligence: 30, mental: 25, minAge: 20 },
+      branchRequirement: { skill: "coding", branch: "security" },
+      effects: { fatigue: 14, codingXp: 8, happiness: 8, mental: 1 },
+      payCalc(state) {
+        var base = 120 + (state.skills.coding.level || 0) * 2.2 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("network_monitor", "coding", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === english → 商务英语 ===
+    {
+      id: "foreign_trade_assistant",
+      name: "外贸助理",
+      desc: "在外贸公司协助处理订单、邮件往来。英语好是核心竞争力。",
+      icon: "📦",
+      location: "commercialDist",
+      requirements: { english: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "english", branch: "business_english" },
+      effects: { fatigue: 14, englishXp: 7, happiness: 10, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 90 + (state.skills.english.level || 0) * 1.5 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("foreign_trade_assistant", "english", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === english → 翻译达人 ===
+    {
+      id: "document_translator",
+      name: "文档翻译",
+      desc: "接翻译公司的文档翻译单子。自由职业，在家也能做，时间灵活。",
+      icon: "📝",
+      location: "school",
+      requirements: { english: 35, intelligence: 28, minAge: 18 },
+      branchRequirement: { skill: "english", branch: "translation" },
+      effects: { fatigue: 8, englishXp: 8, happiness: 15, intelligenceXp: 1 },
+      payCalc(state) {
+        var base = 80 + (state.skills.english.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("document_translator", "english", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === driving → 客运驾驶 ===
+    {
+      id: "taxi_driver",
+      name: "出租车司机",
+      desc: "开出租拉客，多劳多得。驾龄越长路线越熟，赚得越多。",
+      icon: "🚕",
+      location: "commercialDist",
+      requirements: { driving: 30, minAge: 20, maxAge: 55 },
+      branchRequirement: { skill: "driving", branch: "passenger_transport" },
+      effects: { fatigue: 28, drivingXp: 6, happiness: 3, agilityXp: 2 },
+      payCalc(state) {
+        var base = 70 + (state.skills.driving.level || 0) * 1.2 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("taxi_driver", "driving", state) : 1.0));
+      },
+      risk: { injury: 0.03 },
+    },
+    // === driving → 货运驾驶 ===
+    {
+      id: "truck_assistant",
+      name: "跟车助理",
+      desc: "跟货车跑运输，负责装卸货和单据交接。体力活但收入稳定。",
+      icon: "🚚",
+      location: "factoryZone",
+      requirements: { driving: 25, physique: 20, minAge: 20, maxAge: 50 },
+      branchRequirement: { skill: "driving", branch: "freight" },
+      effects: { fatigue: 30, drivingXp: 5, physiqueXp: 3 },
+      payCalc(state) {
+        var base = 80 + (state.skills.driving.level || 0) * 1.0 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("truck_assistant", "driving", state) : 1.0));
+      },
+      risk: { injury: 0.05 },
+    },
+    // === sales → 门店销售 ===
+    {
+      id: "shop_assistant",
+      name: "导购员",
+      desc: "在商场门店做导购，底薪加提成。销售技巧越好收入越高。",
+      icon: "🏪",
+      location: "commercialDist",
+      requirements: { sales: 25, minAge: 18, maxAge: 45 },
+      branchRequirement: { skill: "sales", branch: "store_sales" },
+      effects: { fatigue: 16, salesXp: 6, happiness: 5 },
+      payCalc(state) {
+        var base = 55 + (state.skills.sales.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("shop_assistant", "sales", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === sales → 商务谈判 ===
+    {
+      id: "procurement_clerk",
+      name: "采购员",
+      desc: "为公司采购物资，谈价格比质量。嘴皮子和眼力见都要好。",
+      icon: "📋",
+      location: "commercialDist",
+      requirements: { sales: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "sales", branch: "biz_negotiation" },
+      effects: { fatigue: 14, salesXp: 7, happiness: 8, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 75 + (state.skills.sales.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("procurement_clerk", "sales", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === management → 团队管理 ===
+    {
+      id: "project_coordinator",
+      name: "项目协调员",
+      desc: "协调团队内部工作进度，做会议记录和任务追踪。管理入门岗。",
+      icon: "📊",
+      location: "techPark",
+      requirements: { management: 30, intelligence: 25, minAge: 20 },
+      branchRequirement: { skill: "management", branch: "team_mgmt" },
+      effects: { fatigue: 12, managementXp: 7, happiness: 8 },
+      payCalc(state) {
+        var base = 85 + (state.skills.management.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("project_coordinator", "management", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === accounting → 审计风控 ===
+    {
+      id: "audit_assistant",
+      name: "审计助理",
+      desc: "协助注册会计师做账目审计，核对票据和凭证。严谨细致是核心要求。",
+      icon: "🔍",
+      location: "techPark",
+      requirements: { accounting: 35, intelligence: 30, minAge: 20 },
+      branchRequirement: { skill: "accounting", branch: "audit_risk" },
+      effects: { fatigue: 14, accountingXp: 7, happiness: 5, intelligenceXp: 2 },
+      payCalc(state) {
+        var base = 95 + (state.skills.accounting.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("audit_assistant", "accounting", state) : 1.0));
+      },
+      risk: {},
+    },
+    // === electrician → 强电工程 ===
+    {
+      id: "factory_electrician",
+      name: "工厂电工",
+      desc: "在工厂负责电气设备维护和检修。技术硬、责任大、工资高。",
+      icon: "⚡",
+      location: "factoryZone",
+      requirements: { electrician: 35, physique: 22, minAge: 20, maxAge: 55 },
+      branchRequirement: { skill: "electrician", branch: "industrial_electric" },
+      effects: { fatigue: 22, electricianXp: 7, physiqueXp: 2 },
+      payCalc(state) {
+        var base = 100 + (state.skills.electrician.level || 0) * 2.0 + Math.random() * 45;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("factory_electrician", "electrician", state) : 1.0));
+      },
+      risk: { injury: 0.06 },
+    },
+    // === welding → 结构焊接 ===
+    {
+      id: "steel_worker",
+      name: "钢结构工人",
+      desc: "在建筑工地做钢结构焊接和安装。高空作业，收入高但风险也高。",
+      icon: "🏗️",
+      location: "construction",
+      requirements: { welding: 35, physique: 28, minAge: 22, maxAge: 50 },
+      branchRequirement: { skill: "welding", branch: "structural_welding" },
+      effects: { fatigue: 32, weldingXp: 8, physiqueXp: 3, happiness: -5 },
+      payCalc(state) {
+        var base = 120 + (state.skills.welding.level || 0) * 2.5 + Math.random() * 55;
+        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("steel_worker", "welding", state) : 1.0));
+      },
+      risk: { injury: 0.12 },
+    },
+  ];
+
+  // 将分支工作合并到 STREET_JOBS 中
+  for (var bi = 0; bi < BRANCH_JOBS.length; bi++) {
+    STREET_JOBS.push(BRANCH_JOBS[bi]);
+  }
+})();
+
 /** 根据 ID 获取工作定义 */
 function getJobById(jobId) {
   return STREET_JOBS.find((j) => j.id === jobId) || null;

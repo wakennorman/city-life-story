@@ -75,6 +75,28 @@ function getCertificateById(certId) {
   return CERTIFICATES.find((c) => c.id === certId) || null;
 }
 
+/**
+ * 获取某个技能的分支定义（委托至 skill_tree.js 的 SKILL_BRANCHES）
+ * 如 SKILL_BRANCHES 未加载则返回空数组
+ */
+function getSkillBranches(skillKey) {
+  if (typeof SKILL_BRANCHES !== "undefined") {
+    return SKILL_BRANCHES[skillKey] || [];
+  }
+  return [];
+}
+
+/**
+ * 获取某个技能的特定分支对象
+ */
+function getSkillBranchById(skillKey, branchId) {
+  var branches = getSkillBranches(skillKey);
+  for (var i = 0; i < branches.length; i++) {
+    if (branches[i].id === branchId) return branches[i];
+  }
+  return null;
+}
+
 /** 获取玩家可考的证书 */
 function getAvailableCertificates(state) {
   return CERTIFICATES.filter((cert) => {

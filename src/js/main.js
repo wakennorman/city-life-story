@@ -163,6 +163,20 @@ function checkJobRequirements(job, state) {
     return `需要${eduNames[job.educationRequired] || "本科"}学历（大学城自考获取）`;
   }
 
+  // 分支要求检查（P2#12 技能天赋树）
+  if (job.branchRequirement) {
+    var br = job.branchRequirement;
+    var branchId = state.skillBranches && state.skillBranches[br.skill];
+    if (!branchId) return "需要选择" + getSkillChineseName(br.skill) + "的特定发展方向";
+    if (branchId !== br.branch) {
+      var branch = null;
+      if (typeof getBranchById === "function") {
+        branch = getBranchById(br.skill, br.branch);
+      }
+      return "需要选择" + (branch ? branch.name : br.branch) + "发展方向";
+    }
+  }
+
   return null; // 通过
 }
 
@@ -2389,6 +2403,55 @@ function init() {
   });
 
   console.log("🏙️ 城市浮生记 initialized.");
+}
+
+// ====== P2#12 技能树分支/节点事件处理 ======
+
+/**
+ * 处理技能分支选择（从弹窗回调调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} branchId - 分支ID
+ */
+function handleChooseBranch(skillKey, branchId) {
+  var st = StateManager.getState();
+  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+  if (typeof chooseSkillBranch === "function") {
+    chooseSkillBranch(skillKey, branchId, st);
+    if (typeof renderAll === "function") renderAll(st);
+  }
+}
+
+/**
+ * 处理天赋节点激活（从技能卡片圆点点击调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} nodeId - 天赋节点ID
+ */
+function handleActivateTalentNode(skillKey, nodeId) {
+  var st = StateManager.getState();
+  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+
+  // 检查资源并确认
+  var branchId = st.skillBranches && st.skillBranches[skillKey];
+  if (!branchId) { StateManager.addMessage("⚠️ 请先选择发展方向", "warning"); return; }
+
+  if (typeof activateTalentNode === "function") {
+    var result = activateTalentNode(skillKey, nodeId, st);
+    if (result && typeof renderAll === "function") renderAll(st);
+  }
+}
+
+/**
+ * 处理分支切换（从技能卡片的切换按钮调用）
+ * @param {string} skillKey - 技能ID
+ * @param {string} newBranchId - 新分支ID
+ */
+function handleSwitchBranch(skillKey, newBranchId) {
+  var st = StateManager.getState();
+  if (!st) return;
+  if (typeof switchSkillBranch === "function") {
+    switchSkillBranch(skillKey, newBranchId, st);
+    if (typeof renderAll === "function") renderAll(st);
+  }
 }
 
 // ====== 启动 ======
