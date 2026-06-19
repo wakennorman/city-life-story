@@ -100,6 +100,10 @@ function showHelpModal() {
 
 function showGameOverModal() {
   const state = StateManager.getState();
+  // 记录公司命运到多周目记忆
+  if (typeof recordPlaythroughEnd === "function") {
+    recordPlaythroughEnd(state);
+  }
   showModal({
     title: "💀 游戏结束",
     body: `
@@ -509,24 +513,56 @@ function showDeleteMenu() {
 }
 
 function showInterviewModal() {
-  let body =
+  // 过滤已倒闭公司（多周目系统）
+  var available =
+    typeof getAvailableCompanies === "function"
+      ? getAvailableCompanies()
+      : typeof COMPANIES !== "undefined"
+        ? COMPANIES
+        : [];
+  var deceasedList =
+    typeof getDeceasedCompanies === "function" ? getDeceasedCompanies() : [];
+
+  // 检查是否还有可选公司
+  if (available.length === 0) {
+    showModal({
+      title: "💼 无公司可选",
+      body: '<p style="color:var(--danger);">由于历史原因，所有科技公司都已倒闭……这个世界再也没有大厂可进了。</p><p>也许你更适合走其他路线致富？</p>',
+      buttons: [{ text: "回去再想想", cls: "", callback: () => {} }],
+    });
+    return;
+  }
+
+  var hasDeceased = deceasedList.length > 0;
+  var body =
     '<p style="color:var(--success);">🎉 你的能力获得了多家公司的面试机会！</p>';
+  if (hasDeceased) {
+    body +=
+      '<p style="font-size:11px;color:var(--text-muted);">📜 <em>前尘往事：有几家公司已在历史中倒闭……</em></p>';
+  }
   body += "<p>选择一家公司加入：</p>";
   body += '<div style="max-height:300px;overflow-y:auto;">';
-  for (const company of COMPANIES) {
-    body += `
-      <div class="company-card" data-company="${company.id}" style="padding:12px;margin:6px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong style="color:var(--accent);">${company.name}</strong>
-          <span style="font-size:11px;color:var(--text-muted);">${company.industry}</span>
-        </div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${company.culture}</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
-          薪资倍率:${company.salaryMod}x | 风险:${company.riskMod}x | 成长:${company.growthRate}x
-        </div>
-      </div>`;
+  for (var i = 0; i < available.length; i++) {
+    var company = available[i];
+    body += buildCompanyCardHtml(company);
   }
   body += "</div>";
+
+  // 显示已倒闭公司回顾
+  if (hasDeceased) {
+    body +=
+      '<div style="margin-top:12px;padding:8px;background:var(--bg-card);border:1px dashed var(--border);border-radius:6px;">';
+    body +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">⚰️ 已不存在的公司：</div>';
+    for (var di = 0; di < deceasedList.length; di++) {
+      var dc = deceasedList[di];
+      body +=
+        '<div style="font-size:10px;color:var(--text-muted);padding:2px 0;">▸ ' +
+        dc +
+        "</div>";
+    }
+    body += "</div>";
+  }
 
   showModal({
     title: "💼 选择公司",
@@ -534,21 +570,48 @@ function showInterviewModal() {
     buttons: [{ text: "再考虑考虑", cls: "", callback: () => {} }],
   });
 
-  setTimeout(() => {
-    document.querySelectorAll(".company-card").forEach((card) => {
-      card.onclick = () => {
+  setTimeout(function () {
+    document.querySelectorAll(".company-card").forEach(function (card) {
+      card.onclick = function () {
         document.querySelector(".modal-overlay")?.remove();
         if (typeof enterCorporatePhase === "function")
           enterCorporatePhase(card.dataset.company);
       };
-      card.onmouseover = () => {
+      card.onmouseover = function () {
         card.style.borderColor = "var(--accent)";
       };
-      card.onmouseout = () => {
+      card.onmouseout = function () {
         card.style.borderColor = "var(--border)";
       };
     });
   }, 50);
+}
+
+/** 生成公司卡片 HTML */
+function buildCompanyCardHtml(company) {
+  return (
+    '<div class="company-card" data-company="' +
+    company.id +
+    '" style="padding:12px;margin:6px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<strong style="color:var(--accent);">' +
+    company.name +
+    "</strong>" +
+    '<span style="font-size:11px;color:var(--text-muted);">' +
+    company.industry +
+    "</span></div>" +
+    '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' +
+    company.culture +
+    "</div>" +
+    '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' +
+    "薪资倍率:" +
+    company.salaryMod +
+    "x | 风险:" +
+    company.riskMod +
+    "x | 成长:" +
+    company.growthRate +
+    "x</div></div>"
+  );
 }
 
 // ====== 装备商店 ======
@@ -964,7 +1027,7 @@ function executeScavengeRoute(routeId) {
       var loss = Math.min(5, earned);
       earned -= loss;
       st.needs.health = Math.max(0, (st.needs.health || 100) - 3);
-      st.status.fame = Math.max(0, st.status.fame - 1);
+      st.player.fame = Math.max(0, st.player.fame - 1);
       msg += " 被城管看见了，追赶中丢了 ¥" + loss + "。";
       msgType = "warning";
     }
@@ -1023,4 +1086,116 @@ function executeScavengeRoute(routeId) {
 
   StateManager.addMessage(msg, msgType);
   consumeAP(apCost);
+}
+
+// ====== Phase 2: IPO 审核结果弹窗 ======
+function showIPOResultModal(state, approved) {
+  if (typeof processIPOResult === "function") {
+    processIPOResult(state, approved);
+  }
+  renderAll();
+}
+
+/** 显示 IPO 审核结果 */
+function showIPOResultModal(state) {
+  var startup = state.startup;
+  var company = startup.company;
+  if (!company) return;
+
+  // 简化：50% 通过率
+  var approved = Math.random() < 0.5;
+
+  showModal({
+    title: approved ? "🔔 IPO 审核结果" : "❌ IPO 审核未通过",
+    body: approved
+      ? "<div style='text-align:center;padding:20px;'>" +
+        "<p style='font-size:16px;margin-bottom:16px;'>恭喜你！「" +
+        company.name +
+        "」IPO 审核通过！</p>" +
+        "<p>公司将在港交所/纳斯达克挂牌上市。</p>" +
+        "<p style='color:var(--success);margin-top:16px;'>上市溢价：1.5-3 倍估值</p>" +
+        "<p>你持有的 " +
+        Math.round(company.equity.player) +
+        "% 股份将转化为巨额财富！</p>" +
+        "<p style='font-size:12px;color:var(--text-muted);margin-top:12px;'>系统正在自动计算上市结果...</p>"
+      : "<div style='text-align:center;padding:20px;'>" +
+        "<p style='font-size:16px;margin-bottom:16px;'>很遗憾，「" +
+        company.name +
+        "」IPO 审核未通过。</p>" +
+        "<p>原因：公司需要继续经营，达到更高的估值和盈利标准。</p>" +
+        "<p style='margin-top:16px;'>你可以继续发展公司，满足条件后再次申请 IPO。</p>" +
+        "<p style='font-size:12px;color:var(--text-muted);margin-top:12px;'>当前估值：¥" +
+        Math.round(company.valuation).toLocaleString() +
+        " | 需要估值：≥¥5 亿</p>",
+    buttons: [
+      {
+        text: approved ? "🎉 知道了" : "💼 继续经营",
+        cls: approved ? "btn-success" : "btn-primary",
+        callback: function () {
+          if (approved) {
+            showIPOResultModal(state, true);
+          } else {
+            showIPOResultModal(state, false);
+          }
+        },
+      },
+    ],
+  });
+}
+
+// ====== Phase 2: 收购要约弹窗 ======
+function showAcquisitionModal(state) {
+  if (typeof getAcquisitionOffer === "function") {
+    var offer = getAcquisitionOffer(state);
+    if (!offer) {
+      StateManager.addMessage("当前没有收购要约", "info");
+      return;
+    }
+
+    var company = state.startup.company;
+
+    showModal({
+      title: "🤝 收购要约",
+      body:
+        "<div style='padding:10px;'>" +
+        "<p><b>收购方</b>：「" +
+        offer.acquirerName +
+        "」</p>" +
+        "<p><b>收购价格</b>：¥" +
+        offer.offerValue.toLocaleString() +
+        "</p>" +
+        "<p><b>你的持股价值</b>：<span style='color:var(--success);font-size:16px;'>¥" +
+        offer.playerShareValue.toLocaleString() +
+        "</span></p>" +
+        "<p><b>公司当前估值</b>：¥" +
+        Math.round(company.valuation).toLocaleString() +
+        "</p>" +
+        "<p style='font-size:12px;color:var(--text-muted);margin-top:12px;'>接受收购后，公司将退出历史舞台，你获得一次性现金回报。</p>" +
+        "<p style='font-size:12px;color:var(--text-muted);'>拒绝收购可以继续经营，等待更好的机会或 IPO。</p>" +
+        "</div>",
+      buttons: [
+        {
+          text: "❌ 拒绝",
+          cls: "",
+          callback: function () {
+            StateManager.addMessage("拒绝了收购要约，继续经营公司", "info");
+            renderAll();
+          },
+        },
+        {
+          text: "🤝 接受",
+          cls: "btn-warning",
+          callback: function () {
+            if (typeof acceptAcquisition === "function") {
+              var result = acceptAcquisition(state, offer);
+              if (result.success) {
+                StateManager.addMessage("收购完成！", "success");
+              }
+            }
+            renderAll();
+          },
+        },
+      ],
+    });
+  }
 }

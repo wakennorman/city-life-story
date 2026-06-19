@@ -288,6 +288,28 @@ function buyStock(symbol, shares) {
     `📈 买入 ${symbol} ×${shares}股 @¥${market.price}，共 ¥${cost.toLocaleString()}`,
     "success",
   );
+
+  // Phase 2：记录交易日志（供内幕交易审查）
+  if (typeof logTrade === "function") {
+    var rumor = state.insiderTrading?.activeRumor;
+    var relatedRumorId = null;
+    if (rumor && !rumor.resolvedDay) {
+      // 检查当前交易是否与风声公司相关
+      if (CORP_STOCK_MAP) {
+        for (var cid in CORP_STOCK_MAP) {
+          if (
+            CORP_STOCK_MAP[cid].indexOf(symbol) >= 0 &&
+            cid === rumor.companyId
+          ) {
+            relatedRumorId = rumor.id;
+            break;
+          }
+        }
+      }
+    }
+    logTrade(state, symbol, "buy", shares, market.price, relatedRumorId);
+  }
+
   return true;
 }
 
@@ -322,6 +344,27 @@ function sellStock(symbol, shares) {
     `💰 卖出 ${symbol} ×${shares}股，¥${revenue.toLocaleString()}。${profitStr}`,
     profit >= 0 ? "success" : "warning",
   );
+
+  // Phase 2：记录交易日志（供内幕交易审查）
+  if (typeof logTrade === "function") {
+    var rumor = state.insiderTrading?.activeRumor;
+    var relatedRumorId = null;
+    if (rumor && !rumor.resolvedDay) {
+      if (CORP_STOCK_MAP) {
+        for (var cid in CORP_STOCK_MAP) {
+          if (
+            CORP_STOCK_MAP[cid].indexOf(symbol) >= 0 &&
+            cid === rumor.companyId
+          ) {
+            relatedRumorId = rumor.id;
+            break;
+          }
+        }
+      }
+    }
+    logTrade(state, symbol, "sell", shares, market.price, relatedRumorId);
+  }
+
   return true;
 }
 

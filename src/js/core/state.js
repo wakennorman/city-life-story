@@ -77,7 +77,6 @@ function createDefaultState() {
     // --- 派生状态 ---
     status: {
       health: 100,
-      fame: 0, // 名气（v1.0→v1.1 迁移到 player.fame，此处保留兼容旧逻辑写入）
       emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
       sick: false, // 兼容旧字段（内部由 illnesses 数组派生）
       injured: false, // 兼容旧字段
@@ -98,8 +97,8 @@ function createDefaultState() {
       welding: { level: 0, xp: 0 },
     },
     certificates: [],
-    skillBranches: {},   // { cooking: "home_chef", ... } 技能→已选分支ID
-    talentNodes: {},     // { "cooking_home_chef_knife": true, ... } 已激活的天赋节点
+    skillBranches: {}, // { cooking: "home_chef", ... } 技能→已选分支ID
+    talentNodes: {}, // { "cooking_home_chef_knife": true, ... } 已激活的天赋节点
     // 兼容早期存档/误放字段；运行逻辑以 player.education 为准。
     education: 0,
     eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
@@ -189,6 +188,8 @@ function createDefaultState() {
           trend: "up",
           knownToPlayer: false,
           fateEventHistory: [],
+          ceasedExistence: false,
+          ceasedAt: null,
         },
         byte_dragon: {
           phase: "growth",
@@ -200,6 +201,8 @@ function createDefaultState() {
           trend: "up",
           knownToPlayer: false,
           fateEventHistory: [],
+          ceasedExistence: false,
+          ceasedAt: null,
         },
         cloud_giant: {
           phase: "mature",
@@ -211,6 +214,8 @@ function createDefaultState() {
           trend: "stable",
           knownToPlayer: false,
           fateEventHistory: [],
+          ceasedExistence: false,
+          ceasedAt: null,
         },
         game_fun: {
           phase: "growth",
@@ -222,6 +227,8 @@ function createDefaultState() {
           trend: "up",
           knownToPlayer: false,
           fateEventHistory: [],
+          ceasedExistence: false,
+          ceasedAt: null,
         },
         safe_fin: {
           phase: "mature",
@@ -233,10 +240,57 @@ function createDefaultState() {
           trend: "stable",
           knownToPlayer: false,
           fateEventHistory: [],
+          ceasedExistence: false,
+          ceasedAt: null,
         },
       },
       fateEventCooldown: {},
       lastFateTick: 0,
+      // Phase 1 新增字段
+      mergedCompaniesMap: {}, // { targetCid: { absorbedBy, absorbedAt, mergedName, ... } }
+      industryIndex: {}, // { industryName: [companyIds] }
+      quarterlyReports: [], // 季度报告历史
+      // Phase 2 新增字段：风声 pending 事件队列
+      pendingEvents: [], // [{ companyId, event, triggerDay, rumorId }]
+    },
+
+    // --- 玩家创业系统 (Phase 2) ---
+    startup: {
+      status: "none", // 'none' | 'preparing' | 'seed' | 'growth' | 'ipo_preparing' | 'exited'
+      company: null, // 公司详情（注册后初始化）
+      flags: {
+        registered: false,
+        firstProductLaunched: false,
+        hasInvestors: false,
+        ipoFiled: false,
+        exited: false,
+        exitType: null, // 'ipo' | 'acquired' | 'bankrupt'
+        exitDay: null,
+        exitValue: 0,
+      },
+      history: {
+        foundedDay: null,
+        exitedDay: null,
+        exitType: null,
+        exitValue: 0,
+        peakValuation: 0,
+        totalRevenue: 0,
+        employeesHired: 0,
+      },
+    },
+
+    // --- 内幕交易系统 (Phase 2) ---
+    insiderTrading: {
+      activeRumor: null, // { id, companyId, eventType, detectedDay, confidence, channels, estimatedImpact, resolvedDay, playerTraded, playerProfit }
+      rumorHistory: [], // 风声历史
+      tradeLog: [], // [{ day, symbol, action, shares, price, relatedRumorId }]
+      audits: [], // [{ day, companyId, findings, profit, penalty, bannedDays }]
+      currentPenalty: {
+        tradingBanned: false,
+        tradingBanEndDay: 0,
+        fine: 0,
+        reputationDamage: 0,
+      },
     },
 
     // --- 天气 ---
@@ -278,6 +332,7 @@ function createDefaultState() {
       _deferred: {}, // { hunger: day, fatigue: day, ... } 当日延后过的临界维度
       _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
       _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
+      _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
     },
 
     // --- 事件与消息 ---
@@ -404,9 +459,89 @@ class GameStateManager {
     }
     if (s.flags && !s.flags._deferred) s.flags._deferred = {};
     if (s.flags && !s.flags._amenityHabitCount) s.flags._amenityHabitCount = {};
-	    // v1.1 → v1.2 迁移：skillBranches + talentNodes
-	    if (!s.skillBranches) s.skillBranches = {};
-	    if (!s.talentNodes) s.talentNodes = {}
+    // v1.1 → v1.2 迁移：skillBranches + talentNodes
+    if (!s.skillBranches) s.skillBranches = {};
+    if (!s.talentNodes) s.talentNodes = {};
+    // v1.2 → v1.3 迁移：企业命运 ceasedExistence
+    if (s.enterpriseFate && s.enterpriseFate.companies) {
+      for (var _cid in s.enterpriseFate.companies) {
+        var _co = s.enterpriseFate.companies[_cid];
+        if (_co && typeof _co.ceasedExistence === "undefined") {
+          _co.ceasedExistence = false;
+          _co.ceasedAt = null;
+        }
+      }
+    }
+    // v1.3 → v1.4 迁移：企业命运 Phase 1 新字段
+    if (s.enterpriseFate) {
+      if (!s.enterpriseFate.mergedCompaniesMap)
+        s.enterpriseFate.mergedCompaniesMap = {};
+      if (!s.enterpriseFate.industryIndex) s.enterpriseFate.industryIndex = {};
+      if (!s.enterpriseFate.quarterlyReports)
+        s.enterpriseFate.quarterlyReports = [];
+      // 为每家公司添加新字段（兼容旧存档）
+      for (var _cid2 in s.enterpriseFate.companies) {
+        var _co2 = s.enterpriseFate.companies[_cid2];
+        if (_co2) {
+          if (typeof _co2.ipoed === "undefined") _co2.ipoed = false;
+          if (typeof _co2.ipoDay === "undefined") _co2.ipoDay = null;
+          if (typeof _co2.absorbedBy === "undefined") _co2.absorbedBy = null;
+          if (typeof _co2.absorbedName === "undefined")
+            _co2.absorbedName = null;
+        }
+      }
+    }
+    // v1.4 → v1.5 迁移：创业系统 + 内幕交易系统
+    if (!s.startup) {
+      s.startup = {
+        status: "none",
+        company: null,
+        flags: {
+          registered: false,
+          firstProductLaunched: false,
+          hasInvestors: false,
+          ipoFiled: false,
+          exited: false,
+          exitType: null,
+          exitDay: null,
+          exitValue: 0,
+        },
+        history: {
+          foundedDay: null,
+          exitedDay: null,
+          exitType: null,
+          exitValue: 0,
+          peakValuation: 0,
+          totalRevenue: 0,
+          employeesHired: 0,
+        },
+      };
+    }
+    if (!s.insiderTrading) {
+      s.insiderTrading = {
+        activeRumor: null,
+        rumorHistory: [],
+        tradeLog: [],
+        audits: [],
+        currentPenalty: {
+          tradingBanned: false,
+          tradingBanEndDay: 0,
+          fine: 0,
+          reputationDamage: 0,
+        },
+      };
+    }
+    // enterpriseFate pendingEvents 字段
+    if (s.enterpriseFate && !s.enterpriseFate.pendingEvents) {
+      s.enterpriseFate.pendingEvents = [];
+    }
+    // v1.5 → v1.6 迁移：链式事件队列
+    if (s.flags && !s.flags._chainEventQueue) {
+      s.flags._chainEventQueue = [];
+    }
+    // 版本升级标记
+    if (!s.version) s.version = "1.0.0";
+    s.version = "1.5.0";
     this._markAllDirty();
     this._notify();
   }

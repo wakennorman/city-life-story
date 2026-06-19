@@ -319,7 +319,7 @@ const NPCS = [
             var reward = 300 + Math.floor(Math.random() * 200);
             st.resources.cash += reward;
             st.resources.totalEarned += reward;
-            st.status.fame = Math.min(100, st.status.fame + 8);
+            st.player.fame = Math.min(100, st.player.fame + 8);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 0) + 2,
@@ -437,7 +437,7 @@ const NPCS = [
             var pay = 80 + Math.floor(Math.random() * 60);
             st.resources.cash += pay;
             st.resources.totalEarned += pay;
-            st.status.fame = Math.min(100, st.status.fame + 5);
+            st.player.fame = Math.min(100, st.player.fame + 5);
             st.skills.sales && (st.skills.sales.xp += 20);
             if (!st.relationships.sister_zhang)
               st.relationships.sister_zhang = { affinity: 0, met: true };
@@ -486,7 +486,7 @@ const NPCS = [
             );
             st.resources.cash += 600;
             st.resources.totalEarned += 600;
-            st.status.fame = Math.min(100, st.status.fame + 10);
+            st.player.fame = Math.min(100, st.player.fame + 10);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             st.flags.zhangDeepReferred = true;
             StateManager.addMessage(
@@ -808,7 +808,7 @@ const NPCS = [
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            st.status.fame = Math.min(100, st.status.fame + 12);
+            st.player.fame = Math.min(100, st.player.fame + 12);
             st.flags.xiaoMeiSupport = true;
             StateManager.addMessage(
               "🏫 你们坐了两小时公交到城郊，十几个孩子在破旧教室等着。你帮小美维持秩序，给孩子们讲了一些城市里的事情。回来的路上，小美说：「谢谢你陪我。这比我想的重要很多。」心情+15，心智+5，名气+12，好感+10。",

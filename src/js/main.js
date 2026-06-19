@@ -167,7 +167,8 @@ function checkJobRequirements(job, state) {
   if (job.branchRequirement) {
     var br = job.branchRequirement;
     var branchId = state.skillBranches && state.skillBranches[br.skill];
-    if (!branchId) return "需要选择" + getSkillChineseName(br.skill) + "的特定发展方向";
+    if (!branchId)
+      return "需要选择" + getSkillChineseName(br.skill) + "的特定发展方向";
     if (branchId !== br.branch) {
       var branch = null;
       if (typeof getBranchById === "function") {
@@ -414,38 +415,352 @@ function loadExistingGame(slot) {
   }
 }
 
+/** 存档对比模式状态 */
+var _compareMode = false;
+var _compareSelected = [];
+
+/** 切换存档对比模式 */
+function toggleCompareMode() {
+  _compareMode = !_compareMode;
+  _compareSelected = [];
+  showLoadMenuOnWelcome();
+}
+
+/** 选择存档进行对比 */
+function selectForCompare(slot) {
+  if (_compareSelected.includes(slot)) {
+    _compareSelected = _compareSelected.filter(function (s) {
+      return s !== slot;
+    });
+  } else {
+    if (_compareSelected.length < 2) {
+      _compareSelected.push(slot);
+    }
+  }
+  if (_compareSelected.length === 2) {
+    showCompareResult();
+  } else {
+    showLoadMenuOnWelcome();
+  }
+}
+
+/** 显示存档对比结果 */
+function showCompareResult() {
+  var saves = [];
+  for (var i = 0; i < _compareSelected.length; i++) {
+    var data = loadGame(_compareSelected[i]);
+    if (data) saves.push(data);
+  }
+
+  if (saves.length < 2) return;
+
+  var s1 = saves[0];
+  var s2 = saves[1];
+
+  function diffVal(label, v1, v2, fmt) {
+    if (v1 === v2) {
+      return (
+        '<div class="compare-row"><span class="compare-label">' +
+        label +
+        '</span><span class="compare-same">' +
+        (fmt ? fmt(v1) : v1) +
+        "</span></div>"
+      );
+    }
+    var cls = v2 > v1 ? "compare-gain" : "compare-loss";
+    var arrow = v2 > v1 ? "↑" : "↓";
+    var diff = v2 - v1;
+    return (
+      '<div class="compare-row"><span class="compare-label">' +
+      label +
+      '</span><span class="compare-val old">' +
+      (fmt ? fmt(v1) : v1) +
+      '</span><span class="compare-arrow">' +
+      arrow +
+      '</span><span class="compare-val new ' +
+      cls +
+      '">' +
+      (fmt ? fmt(v2) : v2) +
+      '</span><span class="compare-diff ' +
+      cls +
+      '">(' +
+      (diff > 0 ? "+" : "") +
+      diff +
+      ")</span></div>"
+    );
+  }
+
+  function diffPct(label, v1, v2) {
+    if (v1 === v2) {
+      return (
+        '<div class="compare-row"><span class="compare-label">' +
+        label +
+        '</span><span class="compare-same">' +
+        v1 +
+        "%</span></div>"
+      );
+    }
+    var cls = v2 > v1 ? "compare-gain" : "compare-loss";
+    var arrow = v2 > v1 ? "↑" : "↓";
+    return (
+      '<div class="compare-row"><span class="compare-label">' +
+      label +
+      '</span><span class="compare-val old">' +
+      v1 +
+      '%</span><span class="compare-arrow">' +
+      arrow +
+      '</span><span class="compare-val new ' +
+      cls +
+      '">' +
+      v2 +
+      "%</span></div>"
+    );
+  }
+
+  var bodyHtml =
+    '<div class="compare-container">' +
+    '<div class="compare-header">' +
+    '<div class="compare-col"><strong>存档1</strong><br><small>' +
+    _compareSelected[0] +
+    "</small></div>" +
+    '<div class="compare-col"><strong>存档2</strong><br><small>' +
+    _compareSelected[1] +
+    "</small></div>" +
+    "</div>";
+
+  // 基本信息对比
+  bodyHtml +=
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">📋 基本信息</h4>' +
+    diffVal("天数", s1.player.day, s2.player.day, function (v) {
+      return "第" + v + "天";
+    }) +
+    diffVal("年龄", s1.player.age, s2.player.age, function (v) {
+      return v + "岁";
+    }) +
+    diffVal(
+      "现金",
+      s1.resources.cash || 0,
+      s2.resources.cash || 0,
+      function (v) {
+        return "¥" + v.toLocaleString();
+      },
+    ) +
+    diffVal(
+      "银行存款",
+      s1.resources.bankBalance || 0,
+      s2.resources.bankBalance || 0,
+      function (v) {
+        return "¥" + v.toLocaleString();
+      },
+    ) +
+    diffVal(
+      "总债务",
+      s1.resources.villageDebt || s1.resources.debt || 0,
+      s2.resources.villageDebt || s2.resources.debt || 0,
+      function (v) {
+        return "¥" + v.toLocaleString();
+      },
+    ) +
+    diffVal(
+      "总收入",
+      s1.resources.totalEarned || 0,
+      s2.resources.totalEarned || 0,
+      function (v) {
+        return "¥" + v.toLocaleString();
+      },
+    );
+
+  // 阶段对比
+  bodyHtml +=
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">📍 当前阶段</h4>';
+  var phase1 = s1.player.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
+  var phase2 = s2.player.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
+  if (phase1 === phase2) {
+    bodyHtml +=
+      '<div class="compare-row"><span class="compare-label">阶段</span><span class="compare-same">' +
+      phase1 +
+      "</span></div>";
+  } else {
+    bodyHtml +=
+      '<div class="compare-row"><span class="compare-label">阶段</span><span class="compare-val old">' +
+      phase1 +
+      '</span><span class="compare-arrow">→</span><span class="compare-val new ' +
+      (s2.player.phase === "corporate" ? "compare-gain" : "") +
+      '">' +
+      phase2 +
+      "</span></div>";
+  }
+
+  // 职场信息对比（如果都是职场阶段）
+  if (s1.player.phase === "corporate" && s2.player.phase === "corporate") {
+    bodyHtml +=
+      '<h4 style="margin:16px 0 8px;color:var(--text-muted);">🏢 职场状态</h4>' +
+      diffVal("职级", s1.corporate?.rank || "P5", s2.corporate?.rank || "P5") +
+      diffVal("KPI", s1.corporate?.kpi || 0, s2.corporate?.kpi || 0) +
+      diffVal("能力", s1.corporate?.ability || 0, s2.corporate?.ability || 0) +
+      diffVal("尊严", s1.corporate?.dignity || 0, s2.corporate?.dignity || 0) +
+      diffVal(
+        "人缘",
+        s1.corporate?.popularity || 0,
+        s2.corporate?.popularity || 0,
+      ) +
+      diffVal(
+        "向上管理",
+        s1.corporate?.upwardMgmt || 0,
+        s2.corporate?.upwardMgmt || 0,
+      ) +
+      diffVal("风险", s1.corporate?.risk || 0, s2.corporate?.risk || 0) +
+      diffVal("发量", s1.corporate?.hair || 100, s2.corporate?.hair || 100);
+  }
+
+  // 属性对比
+  bodyHtml +=
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">💪 基础属性</h4>' +
+    diffVal("体质", s1.player.physique || 0, s2.player.physique || 0) +
+    diffVal("智力", s1.player.intelligence || 0, s2.player.intelligence || 0) +
+    diffVal("敏捷", s1.player.agility || 0, s2.player.agility || 0) +
+    diffVal("心智", s1.player.mental || 0, s2.player.mental || 0) +
+    diffVal("名气", s1.player.fame || 0, s2.player.fame || 0);
+
+  // 需求状态对比
+  bodyHtml +=
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">📊 状态</h4>' +
+    diffPct("饥饱", s1.needs?.hunger || 0, s2.needs?.hunger || 0) +
+    diffPct("疲劳", s1.needs?.fatigue || 0, s2.needs?.fatigue || 0) +
+    diffPct("卫生", s1.needs?.hygiene || 0, s2.needs?.hygiene || 0) +
+    diffPct("心情", s1.needs?.happiness || 0, s2.needs?.happiness || 0) +
+    diffPct("健康", s1.status?.health || 100, s2.status?.health || 100);
+
+  bodyHtml += "</div>";
+
+  var buttons = [
+    { text: "关闭", cls: "", callback: function () {} },
+    {
+      text: "加载存档1",
+      cls: "btn-primary",
+      callback: function () {
+        loadExistingGame(_compareSelected[0]);
+      },
+    },
+    {
+      text: "加载存档2",
+      cls: "btn-primary",
+      callback: function () {
+        loadExistingGame(_compareSelected[1]);
+      },
+    },
+  ];
+
+  showModal({
+    title: "📊 存档对比",
+    body: bodyHtml,
+    buttons: buttons,
+  });
+}
+
 /** 欢迎界面上显示存档选择 */
 function showLoadMenuOnWelcome() {
-  const allSlots = getAllSlotsWithEmpty();
-  let bodyHtml = '<div style="max-height:400px;overflow-y:auto;">';
-  for (const s of allSlots) {
+  var allSlots = getAllSlotsWithEmpty();
+  var bodyHtml = "";
+
+  // 对比模式头部
+  if (_compareMode) {
+    bodyHtml +=
+      '<div style="padding:10px;margin-bottom:12px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;text-align:center;">' +
+      '<div style="font-size:13px;color:var(--accent);margin-bottom:8px;">📊 对比模式：选择两个存档</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);">已选：<strong style="color:var(--accent)">' +
+      _compareSelected.length +
+      "/2</strong></div>" +
+      "</div>";
+  }
+
+  bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
+  for (var i = 0; i < allSlots.length; i++) {
+    var s = allSlots[i];
     if (s.empty) {
-      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
+      bodyHtml +=
+        '<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">' +
+        s.label +
+        " — 空</div>";
     } else {
-      const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
-      bodyHtml += `
-        <div style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;"
-             onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"
-             onclick="document.querySelector('.modal-overlay')?.remove();loadExistingGame('${s.slot}')">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted)">${s.date}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString() || 0}
-            ${s.rank ? ` | 🏢 ${s.rank}` : ""}
-            ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
-          </div>
-        </div>
-      `;
+      var phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+      var isSelected = _compareSelected.includes(s.slot);
+      var clickHandler = _compareMode
+        ? "selectForCompare('" + s.slot + "')"
+        : "document.querySelector('.modal-overlay')?.remove();loadExistingGame('" +
+          s.slot +
+          "')";
+      var borderStyle = isSelected
+        ? "border:2px solid var(--accent);"
+        : "border:1px solid var(--border);";
+
+      bodyHtml +=
+        '<div style="padding:10px;margin:4px 0;background:var(--bg-card);border-radius:4px;cursor:pointer;transition:all 0.2s;' +
+        borderStyle +
+        '"' +
+        " onmouseover=\"this.style.borderColor='var(--accent)'\" onmouseout=\"this.style.borderColor='" +
+        (_compareMode ? "var(--accent)" : "var(--border)") +
+        "'\"" +
+        ' onclick="' +
+        clickHandler +
+        '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        "<strong>" +
+        s.label +
+        (isSelected ? " ✅" : "") +
+        "</strong>" +
+        '<span style="font-size:11px;color:var(--text-muted)">' +
+        s.date +
+        "</span>" +
+        "</div>" +
+        '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' +
+        phaseLabel +
+        " 第" +
+        s.day +
+        "天 | 年龄" +
+        s.age +
+        " | 💰 ¥" +
+        (s.cash?.toLocaleString() || 0) +
+        (s.rank ? " | 🏢 " + s.rank : "") +
+        (s.debt > 0 ? " | ⚠️ 欠款 ¥" + s.debt.toLocaleString() : "") +
+        "</div>" +
+        "</div>";
     }
   }
   bodyHtml += "</div>";
 
+  var buttons = [
+    {
+      text: "取消",
+      cls: "",
+      callback: function () {
+        _compareMode = false;
+        _compareSelected = [];
+      },
+    },
+  ];
+  if (_compareMode) {
+    buttons.push({
+      text: "完成对比",
+      cls: "btn-primary",
+      callback: function () {
+        if (_compareSelected.length === 2) {
+          showCompareResult();
+        }
+      },
+    });
+  } else {
+    buttons.push({
+      text: "📊 对比模式",
+      cls: "",
+      callback: toggleCompareMode,
+    });
+  }
+
   showModal({
     title: "📂 读取存档",
     body: bodyHtml,
-    buttons: [{ text: "取消", cls: "", callback: () => {} }],
+    buttons: buttons,
   });
 }
 
@@ -954,7 +1269,7 @@ function getAvailableActions(state) {
 
     // === 名气VIP行动（fame达到阈值后各地点解锁特殊选项）===
     {
-      const fame = (state.status && state.status.fame) || 0;
+      const fame = (state.status && state.player.fame) || 0;
       const fameFlag = state.flags._fameVipUsedToday || {};
 
       // 商业区 fame≥25：商家主动拉你代言/站台
@@ -980,7 +1295,7 @@ function getAvailableActions(state) {
               earn,
               "本地名人效应",
             );
-            state.status.fame = Math.min(100, state.status.fame + 3);
+            state.player.fame = Math.min(100, state.player.fame + 3);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.commercialVip = true;
             consumeAP(15);
@@ -1004,7 +1319,7 @@ function getAvailableActions(state) {
           handler: () => {
             state.needs.happiness = Math.min(100, state.needs.happiness + 20);
             state.player.mental = Math.min(100, state.player.mental + 2);
-            state.status.fame = Math.min(100, state.status.fame + 2);
+            state.player.fame = Math.min(100, state.player.fame + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.parkFan = true;
             consumeAP(5);
@@ -1097,7 +1412,7 @@ function getAvailableActions(state) {
               earn,
               "科技论坛演讲嘉宾",
             );
-            state.status.fame = Math.min(100, state.status.fame + 8);
+            state.player.fame = Math.min(100, state.player.fame + 8);
             state.player.mental = Math.min(100, state.player.mental + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.techTalkVip = true;
@@ -1120,11 +1435,14 @@ function getAvailableActions(state) {
       if (!dest) continue;
       const travelApCost = (() => {
         const st = StateManager.getState();
+        if (typeof getTravelApCost === "function") {
+          return getTravelApCost(locKey, destKey, st);
+        }
+        // 兜底：旧逻辑
         const reduction =
           typeof getTravelApReduction === "function"
             ? getTravelApReduction(st.skills.driving.level || 0)
             : 0;
-        // 老周好感60解锁三轮车：旅行AP再-2
         const tricycleBonus = st.flags.oldZhouTricycle ? 2 : 0;
         return Math.max(5, 15 - reduction - tricycleBonus);
       })();
@@ -1136,16 +1454,30 @@ function getAvailableActions(state) {
         apCost: travelApCost,
         handler: () => {
           const st = StateManager.getState();
-          const reduction =
-            typeof getTravelApReduction === "function"
-              ? getTravelApReduction(st.skills.driving.level || 0)
-              : 0;
-          const ap = Math.max(5, 15 - reduction);
+          const ap =
+            typeof getTravelApCost === "function"
+              ? getTravelApCost(locKey, destKey, st)
+              : 15;
           StateManager.update("trade.currentLocation", destKey);
-          const hint =
-            reduction > 0
-              ? `（驾驶Lv${st.skills.driving.level}省${reduction}AP）`
-              : "";
+          // 地点访问追踪（成就用）
+          if (st.flags) {
+            st.flags._visitedLocations = st.flags._visitedLocations || [];
+            if (st.flags._visitedLocations.indexOf(destKey) === -1) {
+              st.flags._visitedLocations.push(destKey);
+              if (
+                Object.keys(LOCATIONS).every(function (l) {
+                  return st.flags._visitedLocations.indexOf(l) !== -1;
+                })
+              ) {
+                st.flags._visitedAllLocations = true;
+              }
+            }
+          }
+          var hops =
+            typeof getLocationHops === "function"
+              ? getLocationHops(locKey, destKey)
+              : 1;
+          var hint = hops > 1 ? `（跨${hops}个地段）` : "";
           StateManager.addMessage(`🚶 你来到了${dest.name}。${hint}`, "info");
           consumeAP(ap);
         },
@@ -1471,6 +1803,66 @@ function getAvailableActions(state) {
           renderSidebar(StateManager.getState());
         },
       });
+    }
+  }
+
+  // --- 创业阶段行动 (Phase 2) ---
+  if (
+    state.startup &&
+    state.startup.status &&
+    state.startup.status !== "none" &&
+    state.startup.status !== "exited"
+  ) {
+    // 创业状态提示
+    var startupSummary = null;
+    if (typeof getStartupSummary === "function") {
+      startupSummary = getStartupSummary(state);
+    }
+    if (startupSummary) {
+      actions.push({
+        id: "startup_header",
+        name: "🏢 「" + startupSummary.name + "」创业中",
+        desc:
+          "阶段：" +
+          startupSummary.phase +
+          " | 估值：¥" +
+          startupSummary.valuation.toLocaleString() +
+          " | 团队：" +
+          startupSummary.employeeCount +
+          "人 | 现金：¥" +
+          startupSummary.cashReserve.toLocaleString(),
+        icon: STARTUP_INDUSTRIES?.[startupSummary.industry]?.icon || "💼",
+        disabled: true,
+      });
+
+      // 获取可执行行动
+      var startupActions = [];
+      if (typeof getAvailableStartupActions === "function") {
+        startupActions = getAvailableStartupActions(state);
+      }
+      for (var sa of startupActions) {
+        actions.push({
+          id: "startup_" + sa.id,
+          name: sa.name,
+          desc: sa.desc + (sa.meta ? "（可选：" + sa.meta + "）" : ""),
+          icon: sa.icon,
+          apCost: sa.apCost,
+          costEstimate: null,
+          disabled: !sa.available,
+          handler: function () {
+            if (typeof executeStartupAction === "function") {
+              var result = executeStartupAction(state, sa.id, {});
+              if (!result.success) {
+                StateManager.addMessage(
+                  result.message || "操作失败",
+                  "warning",
+                );
+              }
+              renderAll();
+            }
+          },
+        });
+      }
     }
   }
 
@@ -1954,9 +2346,9 @@ function doStreetJob(job) {
         Math.min(100, state.player.mental + job.effects.mental),
       );
     if (job.effects.fame)
-      state.status.fame = Math.max(
+      state.player.fame = Math.max(
         0,
-        Math.min(100, state.status.fame + job.effects.fame),
+        Math.min(100, state.player.fame + job.effects.fame),
       );
 
     // 技能经验
@@ -2127,6 +2519,11 @@ function doStreetJob(job) {
     "success",
   );
 
+  // ====== Phase 2: 工作后风声感知 ======
+  if (typeof checkRumorFromWork === "function") {
+    checkRumorFromWork(state);
+  }
+
   // 推进时间
   advanceTimeSlot();
 }
@@ -2227,6 +2624,11 @@ function getSkillPayBonus(jobId, state) {
 /** 消耗行动力，推进时间。每次行动调用此函数替代旧的 advanceTimeSlot() */
 function consumeAP(cost) {
   const state = StateManager.getState();
+  // === 临界状态强制选择窗（在任何 AP 消耗之前）===
+  // 弹窗后中断本次行动，玩家选完会重新点击行动按钮
+  if (typeof checkCriticalNeeds === "function" && checkCriticalNeeds(state)) {
+    return false;
+  }
   // 应用状态互联AP消耗倍率（饥饿/疲劳/伤病→效率降低→多耗AP）
   var actualCost = cost;
   if (typeof getApCostMultiplier === "function") {
@@ -2414,7 +2816,10 @@ function init() {
  */
 function handleChooseBranch(skillKey, branchId) {
   var st = StateManager.getState();
-  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+  if (!st) {
+    StateManager.addMessage("⚠️ 存档异常", "warning");
+    return;
+  }
   if (typeof chooseSkillBranch === "function") {
     chooseSkillBranch(skillKey, branchId, st);
     if (typeof renderAll === "function") renderAll(st);
@@ -2428,11 +2833,17 @@ function handleChooseBranch(skillKey, branchId) {
  */
 function handleActivateTalentNode(skillKey, nodeId) {
   var st = StateManager.getState();
-  if (!st) { StateManager.addMessage("⚠️ 存档异常", "warning"); return; }
+  if (!st) {
+    StateManager.addMessage("⚠️ 存档异常", "warning");
+    return;
+  }
 
   // 检查资源并确认
   var branchId = st.skillBranches && st.skillBranches[skillKey];
-  if (!branchId) { StateManager.addMessage("⚠️ 请先选择发展方向", "warning"); return; }
+  if (!branchId) {
+    StateManager.addMessage("⚠️ 请先选择发展方向", "warning");
+    return;
+  }
 
   if (typeof activateTalentNode === "function") {
     var result = activateTalentNode(skillKey, nodeId, st);

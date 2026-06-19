@@ -80,6 +80,17 @@ function getEffectiveStats(state) {
     mult.agility *= 0.7;
   }
 
+  // === 命名疾病额外属性 debuff（来自 illness.js）===
+  if (typeof getIllnessAttrDebuffs === "function") {
+    var ad = getIllnessAttrDebuffs(state);
+    // ad.physique 等是"扣多少有效点数"，转为乘数：扣10点≈打0.9折
+    if (ad.physique) mult.physique *= Math.max(0.3, 1 - ad.physique / 100);
+    if (ad.intelligence)
+      mult.intelligence *= Math.max(0.3, 1 - ad.intelligence / 100);
+    if (ad.agility) mult.agility *= Math.max(0.3, 1 - ad.agility / 100);
+    if (ad.mental) mult.mental *= Math.max(0.3, 1 - ad.mental / 100);
+  }
+
   // === 高基础属性正向反馈（好体魄抗压） ===
   if (p.agility > 50) mult.agility *= 1.05;
   if (p.mental > 50) mult.mental *= 1.05;
@@ -122,6 +133,12 @@ function getApCostMultiplier(state) {
   if (st.injured) mult += 0.3;
 
   if (n.happiness < 15) mult += 0.2;
+
+  // === 命名疾病额外 AP 倍率（来自 illness.js）===
+  if (typeof getIllnessAttrDebuffs === "function") {
+    var ad = getIllnessAttrDebuffs(state);
+    if (ad.apMult) mult += ad.apMult;
+  }
 
   // === 天气影响AP ===
   if (state.weather) {
@@ -182,6 +199,18 @@ function applyStatusInteractions(state) {
   if (st.injured) {
     n.fatigue = Math.min(100, n.fatigue + 5);
     n.happiness = Math.max(0, n.happiness - 3);
+  }
+
+  // --- 命名疾病的每日 needs 累加（来自 illness.js）---
+  if (typeof getIllnessNeedsImpact === "function") {
+    var ni = getIllnessNeedsImpact(state);
+    if (ni.hunger) n.hunger = Math.max(0, Math.min(100, n.hunger + ni.hunger));
+    if (ni.fatigue)
+      n.fatigue = Math.max(0, Math.min(100, n.fatigue + ni.fatigue));
+    if (ni.hygiene)
+      n.hygiene = Math.max(0, Math.min(100, n.hygiene + ni.hygiene));
+    if (ni.happiness)
+      n.happiness = Math.max(0, Math.min(100, n.happiness + ni.happiness));
   }
 
   // --- 高体质→减缓疲劳积累（身体底子好扛得住） ---

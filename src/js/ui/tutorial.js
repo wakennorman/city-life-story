@@ -232,6 +232,7 @@ function cleanupHighlight() {
  */
 
 var DYNAMIC_HINTS = [
+  // ===== 早期生存提示 =====
   {
     id: "first_hundred",
     trigger: function (st) {
@@ -253,12 +254,39 @@ var DYNAMIC_HINTS = [
       "💡 提示：现金不多了！废品回收是最稳定的收入，城中村和工厂区都能做，不挑天气。",
   },
   {
+    id: "first_earn_500",
+    trigger: function (st) {
+      return (
+        (st.resources.totalEarned || 0) >= 500 && !st.flags._hint_first_earn_500
+      );
+    },
+    message: "🎉 恭喜你！总收入突破500元！你已经找到了赚钱的门路，继续加油！",
+  },
+  {
+    id: "first_earn_1000",
+    trigger: function (st) {
+      return (
+        (st.resources.totalEarned || 0) >= 1000 &&
+        !st.flags._hint_first_earn_1000
+      );
+    },
+    message: "🎉 里程碑！总收入突破1000元！你在这座城市站稳了脚跟。",
+  },
+  {
     id: "first_injury",
     trigger: function (st) {
       return st.status && st.status.health < 70 && !st.flags._hint_first_injury;
     },
     message:
       "💡 提示：健康在下降！去🏥医院看病，也可以考虑买意外保险，防止突发大额医疗支出。",
+  },
+  {
+    id: "first_sick",
+    trigger: function (st) {
+      return st.status && st.status.illness && !st.flags._hint_first_sick;
+    },
+    message:
+      "🤒 你生病了！生病期间工作效率会降低，快去🏥医院治疗，或者在家休息几天。",
   },
   {
     id: "first_fatigue_high",
@@ -284,6 +312,13 @@ var DYNAMIC_HINTS = [
       "💡 提示：心情低落！去公园散步、找NPC聊天，或者喝杯奶茶都能改善心情，心情好干活效率更高。",
   },
   {
+    id: "first_hungry",
+    trigger: function (st) {
+      return st.needs && st.needs.hunger < 30 && !st.flags._hint_first_hungry;
+    },
+    message: "🍚 肚子饿了！去吃点东西吧，不吃饭会影响健康和工作效率。",
+  },
+  {
     id: "day10_tip",
     trigger: function (st) {
       return st.player.day >= 10 && !st.flags._hint_day10_tip;
@@ -304,6 +339,20 @@ var DYNAMIC_HINTS = [
     message:
       "💡 提示：现金够还村长的债了！日息0.3%每天都在涨，尽快还清能省不少利息。",
   },
+  {
+    id: "first_debt_paid",
+    trigger: function (st) {
+      return (
+        !st.resources.villageDebt &&
+        !st.resources.debt &&
+        (st.resources.totalEarned || 0) >= 5500 &&
+        !st.flags._hint_first_debt_paid
+      );
+    },
+    message: "🎉 无债一身轻！你还清了所有债务，终于可以自由地为自己赚钱了！",
+  },
+
+  // ===== 中期发展提示 =====
   {
     id: "first_5000",
     trigger: function (st) {
@@ -328,12 +377,39 @@ var DYNAMIC_HINTS = [
       "💡 提示：交易赚了200元！去📦批发市场可以租仓库增加库存量，更多商品→更大利润空间。",
   },
   {
+    id: "first_trade_profit_1000",
+    trigger: function (st) {
+      return (
+        st.trade &&
+        (st.trade.totalProfit || 0) >= 1000 &&
+        !st.flags._hint_first_trade_profit_1000
+      );
+    },
+    message: "💰 交易大师！你的累计交易利润突破1000元！倒买倒卖是一门好生意。",
+  },
+  {
     id: "first_intel_tip",
     trigger: function (st) {
       return st.player.intelligence >= 35 && !st.flags._hint_first_intel_tip;
     },
     message:
       "💡 提示：智力达到35！培训中心的课程学得更快了，再提升到45就能应聘互联网职场。",
+  },
+  {
+    id: "first_skill_30",
+    trigger: function (st) {
+      var skills = st.skills || {};
+      var reached30 = false;
+      for (var k in skills) {
+        if (skills[k] && skills[k].level >= 30) {
+          reached30 = true;
+          break;
+        }
+      }
+      return reached30 && !st.flags._hint_first_skill_30;
+    },
+    message:
+      "🎓 技能突破！某项技能达到30级！可以去培训中心选择专业发展方向，解锁更强力的天赋。",
   },
   {
     id: "first_npc_tip",
@@ -348,6 +424,32 @@ var DYNAMIC_HINTS = [
       "💡 提示：认识了NPC！多送礼提升好感度，好感度高的NPC会提供特殊帮助和奖励。",
   },
   {
+    id: "first_npc_50_affinity",
+    trigger: function (st) {
+      var rels = st.relationships || {};
+      var high = Object.values(rels).filter(function (r) {
+        return r && r.affinity >= 50;
+      }).length;
+      return high >= 1 && !st.flags._hint_first_npc_50_affinity;
+    },
+    message: "❤️ 你和一个NPC建立了深厚关系！好感度50+会解锁特殊对话和任务。",
+  },
+  {
+    id: "first_skill_cert",
+    trigger: function (st) {
+      var certs = st.certs || {};
+      var hasCert = false;
+      for (var c in certs) {
+        if (certs[c]) {
+          hasCert = true;
+          break;
+        }
+      }
+      return hasCert && !st.flags._hint_first_skill_cert;
+    },
+    message: "📜 你考到了第一张证书！证书能提升求职竞争力和收入。",
+  },
+  {
     id: "day30_dream_tip",
     trigger: function (st) {
       return (
@@ -359,6 +461,127 @@ var DYNAMIC_HINTS = [
     message:
       "💡 提示：在城市打拼一个月了！去公园或城中村可以「确立人生目标」，设定梦想让努力更有方向感。",
   },
+
+  // ===== 职场阶段提示 =====
+  {
+    id: "corporate_ready_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 60 &&
+        st.player.intelligence >= 40 &&
+        st.player.phase === "street" &&
+        !st.flags._hint_corporate_ready_tip
+      );
+    },
+    message:
+      "🏢 智力已达40，在城市打拼60天了！你已具备进入互联网职场的条件。去培训中心可以申请入职，开始新的人生阶段。",
+  },
+  {
+    id: "first_corp_day",
+    trigger: function (st) {
+      return (
+        st.player.phase === "corporate" &&
+        st.player.day >= 1 &&
+        !st.flags._hint_first_corp_day
+      );
+    },
+    message:
+      "🎉 欢迎来到互联网大厂！从今往后，你的战场从街头转移到了写字楼。KPI、加班、晋升——准备好了吗？",
+  },
+  {
+    id: "first_corp_kpi_a",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        st.corporate.lastPerfRating === "A" &&
+        !st.flags._hint_first_corp_kpi_a
+      );
+    },
+    message: "🌟 第一次拿到A绩效！老板对你刮目相看，晋升之路打开了。",
+  },
+  {
+    id: "first_corp_promo",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        st.corporate.rank === "P6" &&
+        !st.flags._hint_first_corp_promo
+      );
+    },
+    message: "🎉 恭喜晋升P6！你不再是新人了，开始承担更多责任吧。",
+  },
+  {
+    id: "first_corp_promo_p7",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        st.corporate.rank === "P7" &&
+        !st.flags._hint_first_corp_promo_p7
+      );
+    },
+    message: "🏆 P7了！分水岭已过，你现在是团队骨干，开始带人、做项目了。",
+  },
+  {
+    id: "first_corp_team",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        (st.corporate.teamSize || 0) >= 2 &&
+        !st.flags._hint_first_corp_team
+      );
+    },
+    message:
+      "👥 你开始带团队了！管理是一门新学问：如何分配任务、激励下属、向上汇报。",
+  },
+  {
+    id: "first_corp_stock",
+    trigger: function (st) {
+      return (
+        st.investment &&
+        st.investment.stockHoldings &&
+        st.investment.stockHoldings.length > 0 &&
+        !st.flags._hint_first_corp_stock
+      );
+    },
+    message: "📈 你开始投资股票了！钱生钱的游戏开始了，但要注意风险。",
+  },
+  {
+    id: "first_corp_overtime",
+    trigger: function (st) {
+      return (
+        st.needs &&
+        st.needs.fatigue >= 90 &&
+        st.player.phase === "corporate" &&
+        !st.flags._hint_first_corp_overtime
+      );
+    },
+    message: "😴 疲劳爆表！你在公司拼得太狠了。记得：发量是革命的本钱。",
+  },
+  {
+    id: "first_corp_dignity_low",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        st.corporate.dignity < 30 &&
+        !st.flags._hint_first_corp_dignity_low
+      );
+    },
+    message:
+      "⚠️ 尊严告急！被PUA太多次了。去公园放松、找朋友倾诉，或者考虑跳槽。",
+  },
+  {
+    id: "first_corp_risk_high",
+    trigger: function (st) {
+      return (
+        st.corporate &&
+        st.corporate.risk >= 50 &&
+        !st.flags._hint_first_corp_risk_high
+      );
+    },
+    message: "💣 风险值过高！你埋的雷快爆发了。建议排查风险，否则可能被开除。",
+  },
+
+  // ===== 节日与特殊事件 =====
   {
     id: "festival_job_tip",
     trigger: function (st) {
@@ -396,17 +619,41 @@ var DYNAMIC_HINTS = [
       "💰 你已经攒下2万块！是时候考虑投资了。行动页「投资中心」可以购买股票、比特币、贵金属，让钱为你打工！",
   },
   {
-    id: "corporate_ready_tip",
+    id: "first_company_fate",
     trigger: function (st) {
       return (
-        st.player.day >= 60 &&
-        st.player.intelligence >= 40 &&
-        st.player.phase === "street" &&
-        !st.flags._hint_corporate_ready_tip
+        st.enterpriseFate &&
+        st.enterpriseFate.fateEventHistory &&
+        st.enterpriseFate.fateEventHistory.length > 0 &&
+        !st.flags._hint_first_company_fate
       );
     },
     message:
-      "🏢 智力已达40，在城市打拼60天了！你已具备进入互联网职场的条件。去培训中心可以申请入职，开始新的人生阶段。",
+      "🏭 公司命运事件发生了！你所在的公司正在经历变化，关注新闻，把握机会。",
+  },
+  {
+    id: "first_insider_rumor",
+    trigger: function (st) {
+      return (
+        st.insiderTrading &&
+        st.insiderTrading.activeRumor &&
+        !st.flags._hint_first_insider_rumor
+      );
+    },
+    message:
+      "👂 你听到了一条风声！某家公司可能有大事发生。去多渠道验证可信度，再决定是否投资。",
+  },
+  {
+    id: "first_skill_tree",
+    trigger: function (st) {
+      return (
+        st.skillBranches &&
+        Object.keys(st.skillBranches).length > 0 &&
+        !st.flags._hint_first_skill_tree
+      );
+    },
+    message:
+      "🌳 你选择了技能发展方向！天赋树系统已激活，激活天赋节点能获得永久加成。",
   },
 ];
 

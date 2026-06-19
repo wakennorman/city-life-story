@@ -14,7 +14,7 @@ function _fateTag(state, companyId) {
   if (!phaseDef) return "";
   var healthColor =
     co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
-  return (
+  var tag =
     '<span style="margin-left:8px;font-size:10px;color:' +
     phaseDef.color +
     ';">' +
@@ -25,8 +25,36 @@ function _fateTag(state, companyId) {
     healthColor +
     ';">' +
     Math.round(co.health) +
-    "</span></span>"
-  );
+    "</span></span>";
+
+  // Phase 1#5：如果已IPO，添加上市标记
+  if (co.ipoed) {
+    tag +=
+      '<span style="margin-left:4px;font-size:9px;color:#f59e0b;">🔔 IPO</span>';
+  }
+
+  // Phase 1#4：如果同板块有公司出事，显示行业预警
+  if (co.knownToPlayer && state.enterpriseFate.industryIndex) {
+    var industry = getCompanyIndustryById && getCompanyIndustryById(companyId);
+    if (industry) {
+      // 检查同板块是否有危险公司
+      // (简化：在render中动态判断)
+    }
+  }
+
+  return tag;
+}
+
+/**
+ * 获取公司行业（从COMPANIES数组或行业映射）
+ */
+function getCompanyIndustryById(cid) {
+  if (typeof COMPANIES !== "undefined") {
+    for (var i = 0; i < COMPANIES.length; i++) {
+      if (COMPANIES[i].id === cid) return COMPANIES[i].industry;
+    }
+  }
+  return null;
 }
 
 /** 渲染职场面板（替代街头行动面板） */

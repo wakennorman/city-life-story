@@ -315,7 +315,17 @@
           <button class="tab-btn" data-tab="skills">📚 技能</button>
           <button class="tab-btn" data-tab="corp">🏢 职场</button>
           <button class="tab-btn" data-tab="investment">💰 投资</button>
-          <button class="tab-btn" data-tab="enterprise" style="display:none;">🏭 企业</button>
+          <button
+            class="tab-btn"
+            data-tab="startup"
+            id="tab-btn-startup"
+            style="display: none"
+          >
+            🚀 创业
+          </button>
+          <button class="tab-btn" data-tab="enterprise" style="display: none">
+            🏭 企业
+          </button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
@@ -386,11 +396,15 @@
     <script src="js/data/skills.js"></script>
     <script src="js/data/npcs.js"></script>
     <script src="js/data/corp.js"></script>
+    <script src="js/data/amenities.js"></script>
+    <script src="js/data/illnesses.js"></script>
 
     <!-- Phase 1 -->
     <script src="js/phase1/trade.js"></script>
     <script src="js/phase1/needs.js"></script>
     <script src="js/phase1/interactions.js"></script>
+    <script src="js/phase1/illness.js"></script>
+    <script src="js/phase1/critical.js"></script>
     <script src="js/phase1/skill_bonuses.js"></script>
     <script src="js/phase1/actions_extra.js"></script>
     <script src="js/phase1/daily_pipeline.js"></script>
@@ -402,9 +416,15 @@
     <script src="js/phase2/stock.js"></script>
     <script src="js/phase2/corp_ops.js"></script>
     <script src="js/phase2/investment.js"></script>
+    <script src="js/phase2/startup.js"></script>
 
     <!-- Enterprise Fate System -->
     <script src="js/core/enterprise_fate.js"></script>
+    <script src="js/core/multi_run_memory.js"></script>
+    <!-- Phase3: New Company Spawner -->
+    <script src="js/core/company_spawner.js"></script>
+    <!-- Phase3: Inheritance Chain -->
+    <script src="js/core/inheritance_chain.js"></script>
     <!-- Skill Tree System -->
     <script src="js/core/skill_tree.js"></script>
 
@@ -416,6 +436,8 @@
     <script src="js/ui/victory.js"></script>
     <script src="js/ui/wiki.js"></script>
     <script src="js/ui/daily_report.js"></script>
+    <!-- Data Visualization -->
+    <script src="js/ui/data_viz.js"></script>
 
     <!-- Main -->
     <script src="js/main.js"></script>

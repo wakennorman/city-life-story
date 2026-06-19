@@ -25,7 +25,7 @@ function checkVictoryPaths(state) {
   }
 
   // ⭐ 城市名人：名气 >= 100 持续 10 天
-  if (state.status.fame >= 100) {
+  if (state.player.fame >= 100) {
     state.status.fameDays = (state.status.fameDays || 0) + 1;
     if (state.status.fameDays >= 10) {
       triggerVictory(
@@ -118,6 +118,10 @@ function triggerVictory(state, type, title, desc) {
   state.flags.gameOver = true;
   state.flags.victoryTitle = title;
   state.flags.victoryDesc = desc;
+  // 记录公司命运到多周目记忆
+  if (typeof recordPlaythroughEnd === "function") {
+    recordPlaythroughEnd(state);
+  }
   if (typeof showVictoryModal === "function") showVictoryModal();
 }
 

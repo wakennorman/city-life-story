@@ -1374,6 +1374,74 @@ body {
   }
 }
 
+/* ====== 存档对比系统 ====== */
+.compare-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.compare-header {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.compare-header .compare-col {
+  text-align: center;
+}
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+}
+.compare-row:last-child {
+  border-bottom: none;
+}
+.compare-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.compare-same {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.compare-val {
+  font-weight: 600;
+}
+.compare-val.old {
+  color: var(--text-muted);
+}
+.compare-val.new {
+  min-width: 80px;
+  text-align: center;
+}
+.compare-gain {
+  color: var(--success) !important;
+}
+.compare-loss {
+  color: var(--danger) !important;
+}
+.compare-arrow {
+  color: var(--text-muted);
+  font-size: 12px;
+  width: 20px;
+  text-align: center;
+}
+.compare-diff {
+  font-size: 11px;
+  margin-left: 8px;
+}
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* 低行动力闪烁警告 */
 @keyframes ap-blink {
   0%,

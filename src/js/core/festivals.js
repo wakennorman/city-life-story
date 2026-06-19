@@ -10,8 +10,497 @@
  *   端午节 day 162-164 (3天) 食品略涨，粽子飘香
  *   中秋节 day 256-258 (3天) 食品/礼品涨价，心情大涨
  *   国庆节 day 273-280 (8天) 电子/服装促销，出行高峰
+ *
+ * 春节7天特殊活动：
+ *   除夕(20) - 年夜饭抉择（回家/留下）
+ *   初一(21) - 拜年收红包
+ *   初二(22) - 回娘家/走亲戚
+ *   初三(23) - 赤狗日（休息/学习加成）
+ *   初四(24) - 迎财神（投资/经商机会）
+ *   初五(25) - 破五开工（工作机会）
+ *   初六(26) - 送穷（清理债务机会）
+ *
+ * 季节性价格波动（春夏秋冬）：
+ *   春季(60-151)：电子产品跌（开学清仓），食品涨（春节余波）
+ *   夏季(152-243)：饮料/水涨（高温），服装跌（换季清仓）
+ *   秋季(244-334)：食品涨（中秋/国庆），电子产品涨（双十一预热）
+ *   冬季(335-59)：保暖用品涨，电子产品涨（双十二/年货节预热）
  */
 
+// ====== 春节7天特殊活动 ======
+var SPRING_FESTIVAL_EVENTS = [
+  {
+    dayOffset: 0, // 除夕
+    title: "除夕夜：回家还是留下？",
+    icon: "🏠",
+    desc: "除夕夜，城中村的出租屋里冷冷清清。手机里是爸妈发来的语音：'今年回来吗？'。但回去的路费要¥300，而且回去可能要面对亲戚的盘问。",
+    choices: [
+      {
+        text: "🎫 买票回家 (¥300)",
+        hint: "花路费但心情大好",
+        cost: 300,
+        effect: function (st) {
+          if (st.resources.cash < 300)
+            return { ok: false, msg: "钱不够买票！" };
+          st.resources.cash -= 300;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+          st.player.fame = Math.min(100, st.player.fame + 2);
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          st.flags._springFestivalHome = true;
+          return {
+            ok: true,
+            msg: "买了回家的票！除夕夜和家人团圆，心情+20，疲劳-10。",
+          };
+        },
+      },
+      {
+        text: "🍜 在城中村自己煮顿年夜饭",
+        hint: "省钱但孤独",
+        effect: function (st) {
+          st.resources.cash -= 30;
+          st.needs.hunger = Math.min(100, st.needs.hunger + 30);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          st.flags._springFestivalAlone = true;
+          return {
+            ok: true,
+            msg: "花¥30买了点食材，自己煮了一顿年夜饭。虽然简单，但也算过年。",
+          };
+        },
+      },
+      {
+        text: "🎲 去网吧通宵打游戏",
+        hint: "逃避现实",
+        cost: 50,
+        effect: function (st) {
+          if (st.resources.cash < 50) return { ok: false, msg: "钱不够！" };
+          st.resources.cash -= 50;
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          st.player.mental = Math.max(0, st.player.mental - 3);
+          return {
+            ok: true,
+            msg: "去网吧通宵打游戏，暂时忘了烦恼。但明天肯定很累...",
+          };
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 1, // 初一
+    title: "初一：拜年收红包",
+    icon: "🧧",
+    desc: "大年初一，街上到处都是拜年的人。你遇到几个老熟人，他们给你发了红包。但同时，你也得给别人发——人情往来。",
+    choices: [
+      {
+        text: "🧧 去给长辈拜年",
+        hint: "花小钱赚大钱",
+        cost: 100,
+        effect: function (st) {
+          if (st.resources.cash < 100)
+            return { ok: false, msg: "没钱买礼物！" };
+          st.resources.cash -= 100;
+          // 60% 概率收到更多红包
+          if (Math.random() < 0.6) {
+            const红包 = 150 + Math.floor(Math.random() * 100);
+            st.resources.cash += 红包;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.player.fame = Math.min(100, st.player.fame + 2);
+            return {
+              ok: true,
+              msg:
+                "给长辈拜年了！收到红包¥" +
+                红包 +
+                "，净赚¥" +
+                (红包 - 100) +
+                "！",
+            };
+          } else {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            return {
+              ok: true,
+              msg: "拜年了，但长辈给的红包不多。人情往来，心意到了就好。",
+            };
+          }
+        },
+      },
+      {
+        text: "😴 在家睡懒觉",
+        hint: "恢复疲劳",
+        effect: function (st) {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+          return {
+            ok: true,
+            msg: "大年初一睡懒觉，疲劳-15。过年嘛，休息最重要。",
+          };
+        },
+      },
+      {
+        text: "🏪 去商业区看看有没有临时工作",
+        hint: "过年不打烊",
+        effect: function (st) {
+          const 找到 = Math.random() < 0.4;
+          if (找到) {
+            const收入 = 80 + Math.floor(Math.random() * 40);
+            st.resources.cash += 收入;
+            st.resources.totalEarned += 收入;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            return {
+              ok: true,
+              msg: "商业区有临时促销！赚了¥" + 收入 + "。过年加班费不错。",
+            };
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            return {
+              ok: true,
+              msg: "商业区没什么临时工作。大年初一大家都休息，你也歇歇吧。",
+            };
+          }
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 2, // 初二
+    title: "初二：回娘家/走亲戚",
+    icon: "👨‍👩‍👧",
+    desc: "初二回娘家，街上到处都是带着礼品的年轻人。你遇到几个老同事，他们邀请你一起去走亲戚。",
+    choices: [
+      {
+        text: "🎁 跟同事一起去走亲戚",
+        hint: "花礼钱但涨人缘",
+        cost: 80,
+        effect: function (st) {
+          if (st.resources.cash < 80) return { ok: false, msg: "没钱买礼品！" };
+          st.resources.cash -= 80;
+          st.player.corporate = st.player.corporate || {};
+          st.player.corporate.popularity = Math.min(
+            100,
+            (st.player.corporate.popularity || 30) + 5,
+          );
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          return {
+            ok: true,
+            msg: "和同事一起走亲戚，人缘+5。过年就是用来维护关系的。",
+          };
+        },
+      },
+      {
+        text: "📱 给老家爸妈打视频电话",
+        hint: "远程拜年",
+        effect: function (st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          return {
+            ok: true,
+            msg: "给爸妈打了视频电话，聊了半小时。虽然没回家，但心里暖洋洋的。",
+          };
+        },
+      },
+      {
+        text: "🍜 去馆子吃顿好的",
+        hint: "犒劳自己",
+        cost: 60,
+        effect: function (st) {
+          if (st.resources.cash < 60) return { ok: false, msg: "钱不够！" };
+          st.resources.cash -= 60;
+          st.needs.hunger = Math.min(100, st.needs.hunger + 25);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          return {
+            ok: true,
+            msg: "去馆子吃了顿好的，花¥60。过年嘛，犒劳一下自己。",
+          };
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 3, // 初三 赤狗日
+    title: "初三：赤狗日（不宜外出）",
+    icon: "🔴",
+    desc: "初三赤狗日，老话说这天不宜外出拜年。正好可以休息、学习、或者处理一些私事。",
+    choices: [
+      {
+        text: "📚 在家学习技能",
+        hint: "学习效率翻倍",
+        effect: function (st) {
+          const skills = Object.keys(st.skills || {});
+          if (skills.length === 0) return { ok: false, msg: "没有技能可学！" };
+          const key = skills[0];
+          const xp = 20 + Math.floor(Math.random() * 10);
+          st.skills[key] = st.skills[key] || { level: 1, xp: 0 };
+          st.skills[key].xp += xp;
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          return {
+            ok: true,
+            msg:
+              "赤狗日在家学习《" + key + "》，效率翻倍！技能经验+" + xp + "。",
+          };
+        },
+      },
+      {
+        text: "😴 睡个懒觉",
+        hint: "恢复疲劳",
+        effect: function (st) {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 20);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+          return {
+            ok: true,
+            msg: "赤狗日睡懒觉，疲劳-20。这天气不宜外出，休息正好。",
+          };
+        },
+      },
+      {
+        text: "🧹 整理出租屋",
+        hint: "提升卫生",
+        effect: function (st) {
+          st.needs.hygiene = Math.min(100, st.needs.hygiene + 15);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          return {
+            ok: true,
+            msg: "花了一下午整理出租屋，卫生+15。干干净净过个年。",
+          };
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 4, // 初四 迎财神
+    title: "初四：迎财神",
+    icon: "💰",
+    desc: "初四迎财神！老话说这天迎财神最灵。你听说附近有个小庙在办迎财神活动，去拜一拜说不定有好运气。",
+    choices: [
+      {
+        text: "🙏 去庙里拜财神 (香火钱¥50)",
+        hint: "花小钱求好运",
+        cost: 50,
+        effect: function (st) {
+          if (st.resources.cash < 50)
+            return { ok: false, msg: "钱不够香火钱！" };
+          st.resources.cash -= 50;
+          // 30% 概率获得意外之财
+          if (Math.random() < 0.3) {
+            const 意外 = 100 + Math.floor(Math.random() * 200);
+            st.resources.cash += 意外;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            return {
+              ok: true,
+              msg: "拜了财神！居然捡到了¥" + 意外 + "！财神保佑！",
+            };
+          } else {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            st.player.mental = Math.min(100, st.player.mental + 2);
+            return {
+              ok: true,
+              msg: "拜了财神，心里踏实了不少。虽然没捡到钱，但心情好了。",
+            };
+          }
+        },
+      },
+      {
+        text: "📈 研究投资市场",
+        hint: "学习理财",
+        effect: function (st) {
+          st.investment = st.investment || {};
+          st.investment.knowledge = Math.min(
+            100,
+            (st.investment.knowledge || 0) + 5,
+          );
+          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          return {
+            ok: true,
+            msg: "研究了一下午投资市场，投资知识+5。迎财神不如学理财。",
+          };
+        },
+      },
+      {
+        text: "🚶 去公园散步",
+        hint: "放松心情",
+        effect: function (st) {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          return {
+            ok: true,
+            msg: "去公园散了散步，心情+8。迎财神不如迎好心情。",
+          };
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 5, // 初五 破五
+    title: "初五：破五开工",
+    icon: "🔨",
+    desc: "初五破五！老话说这天可以'破'掉之前的禁忌，各行各业开始开工。不少公司提前招人，是个找工作的机会。",
+    choices: [
+      {
+        text: "💼 去人才市场找临时工",
+        hint: "节日加班费高",
+        effect: function (st) {
+          const 找到 = Math.random() < 0.5;
+          if (找到) {
+            const收入 = 100 + Math.floor(Math.random() * 50);
+            st.resources.cash += 收入;
+            st.resources.totalEarned += 收入;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            return {
+              ok: true,
+              msg: "找到临时工！赚了¥" + 收入 + "。破五开工，第一桶金！",
+            };
+          } else {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            return {
+              ok: true,
+              msg: "人才市场人很多，没找到合适的。明年再来吧。",
+            };
+          }
+        },
+      },
+      {
+        text: "🏭 去工厂区问问有没有活",
+        hint: "体力活好找",
+        effect: function (st) {
+          const 找到 = Math.random() < 0.6;
+          if (找到) {
+            const收入 = 80 + Math.floor(Math.random() * 30);
+            st.resources.cash += 收入;
+            st.resources.totalEarned += 收入;
+            st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            return {
+              ok: true,
+              msg: "工厂区有临时工！赚了¥" + 收入 + "，体力+1。",
+            };
+          } else {
+            return {
+              ok: true,
+              msg: "工厂区暂时没招人。破五刚开工，还在筹备中。",
+            };
+          }
+        },
+      },
+      {
+        text: "📚 继续学习/休息",
+        hint: "不打工",
+        effect: function (st) {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          return {
+            ok: true,
+            msg: "选择继续休息。破五开工是别人的事，你慢慢来。",
+          };
+        },
+      },
+    ],
+  },
+  {
+    dayOffset: 6, // 初六 送穷
+    title: "初六：送穷神",
+    icon: "🗑️",
+    desc: "初六送穷神！老话说这天把'穷气'扫出去，一年都能财运亨通。你决定整理一下自己的财务状况，看看有没有可以优化的地方。",
+    choices: [
+      {
+        text: "🧹 大扫除+整理财务",
+        hint: "清理负面状态",
+        effect: function (st) {
+          st.needs.hygiene = Math.min(100, st.needs.hygiene + 10);
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          // 有机会清理一些负面flag
+          if (st.flags._hadMentalCrisis) {
+            st.flags._mentalRecoveryDone = true;
+            st.player.mental = Math.min(100, st.player.mental + 5);
+          }
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          return {
+            ok: true,
+            msg: "大扫除+整理财务，卫生+10，心情+5。送穷神，迎好运！",
+          };
+        },
+      },
+      {
+        text: "💰 还一部分债务",
+        hint: "减轻负担",
+        effect: function (st) {
+          const debt = st.resources.villageDebt || st.resources.debt || 0;
+          if (debt <= 0) return { ok: false, msg: "没有债务！" };
+          const还 = Math.min(st.resources.cash || 0, Math.floor(debt * 0.3));
+          if (还 <= 0) return { ok: false, msg: "钱不够还债！" };
+          st.resources.cash -= 还;
+          st.resources.villageDebt = Math.max(
+            0,
+            (st.resources.villageDebt || 0) - 还,
+          );
+          st.resources.debt = Math.max(0, (st.resources.debt || 0) - 还);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          st.player.mental = Math.min(100, st.player.mental + 3);
+          return {
+            ok: true,
+            msg:
+              "还了¥" + 还 + "的债！送穷神，先送掉一部分债务。心情+8，心智+3。",
+          };
+        },
+      },
+      {
+        text: "🎉 请朋友吃顿饭",
+        hint: "维护关系",
+        cost: 80,
+        effect: function (st) {
+          if (st.resources.cash < 80) return { ok: false, msg: "钱不够！" };
+          st.resources.cash -= 80;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          // 提升NPC好感
+          if (st.relationships) {
+            for (let k in st.relationships) {
+              if (st.relationships[k] && st.relationships[k].affinity < 100) {
+                st.relationships[k].affinity = Math.min(
+                  100,
+                  st.relationships[k].affinity + 2,
+                );
+              }
+            }
+          }
+          return {
+            ok: true,
+            msg: "请朋友吃了顿饭，花¥80。大家聚在一起送穷神，心情+10，所有NPC好感+2。",
+          };
+        },
+      },
+    ],
+  },
+];
+
+// ====== 季节性价格波动定义 ======
+var SEASONAL_PRICE_MODS = {
+  spring: {
+    electronics: 0.85, // 开学季清仓
+    food: 1.15, // 春节余波
+    clothing: 0.9, // 冬装清仓
+    daily: 1.05,
+  },
+  summer: {
+    water: 1.4, // 高温需求
+    drinks: 1.5, // 饮料需求
+    clothing: 0.8, // 换季清仓
+    electronics: 0.95,
+    food: 1.05,
+  },
+  autumn: {
+    food: 1.2, // 中秋/国庆
+    luxury: 1.15, // 礼品需求
+    electronics: 1.1, // 双十一预热
+    clothing: 1.05, // 秋装
+    daily: 1.05,
+  },
+  winter: {
+    clothing: 1.2, // 冬装
+    daily: 1.1, // 保暖用品
+    electronics: 1.15, // 双十二/年货节
+    food: 1.1,
+    luxury: 1.1,
+  },
+};
+
+// ====== 节日系统定义 ======
 var FESTIVALS = [
   {
     id: "spring_festival",
@@ -349,4 +838,191 @@ function getFestivalPriceNote(state) {
   return (
     f.icon + " " + f.name + "（还剩" + daysLeft + "天）：" + parts.join("，")
   );
+}
+
+// ====== 春节7天特殊活动调度 ======
+
+/**
+ * 获取春节当天的特殊活动（如果当天有）
+ * @param {number} dayOffset - 春节内的天偏移（0=除夕，1=初一，...6=初六）
+ * @returns {Object|null} 活动定义或null
+ */
+function getSpringFestivalEvent(dayOffset) {
+  for (var i = 0; i < SPRING_FESTIVAL_EVENTS.length; i++) {
+    if (SPRING_FESTIVAL_EVENTS[i].dayOffset === dayOffset) {
+      return SPRING_FESTIVAL_EVENTS[i];
+    }
+  }
+  return null;
+}
+
+/**
+ * 检查并触发春节特殊活动
+ * 在每日结算时调用（DAILY_PIPELINE）
+ */
+function checkSpringFestivalEvents(state) {
+  var f = getCurrentFestival(state.player.day);
+  if (!f || f.id !== "spring_festival") return;
+
+  var doy = state.player.day % 365;
+  var dayOffset = doy - f.startDay; // 0-6
+
+  if (dayOffset < 0 || dayOffset > 6) return;
+
+  var year = Math.floor(state.player.day / 365);
+  var flagKey = "_springFestEvent_" + dayOffset + "_y" + year;
+
+  if (state.flags[flagKey]) return; // 已触发过
+
+  var eventDef = getSpringFestivalEvent(dayOffset);
+  if (!eventDef) return;
+
+  state.flags[flagKey] = true;
+
+  // 调度为待弹事件
+  state._pendingEvent = {
+    id: "spring_fest_day" + dayOffset,
+    phase: state.player.phase,
+    icon: eventDef.icon,
+    title: eventDef.title,
+    story: eventDef.desc,
+    choices: eventDef.choices,
+    _isSpringFestivalEvent: true,
+  };
+  state._pendingEventId = "spring_fest_day" + dayOffset;
+
+  // 延迟弹窗
+  setTimeout(function () {
+    var s = StateManager.getState();
+    if (
+      s._pendingEvent &&
+      s._pendingEventId === "spring_fest_day" + dayOffset
+    ) {
+      if (typeof showEventModal === "function") {
+        showEventModal(s._pendingEvent);
+      }
+      if (typeof playSound === "function") playSound("event");
+    }
+  }, 50);
+
+  StateManager.addMessage(
+    eventDef.icon + " 【春节第" + (dayOffset + 1) + "天】" + eventDef.title,
+    "event",
+  );
+}
+
+// ====== 季节性价格波动 ======
+
+/**
+ * 获取当前季节的价格修正
+ * @param {Object} state - 游戏状态
+ * @returns {Object} 价格修正对象
+ */
+function getSeasonalPriceMod(state) {
+  var season = getCurrentSeason(state.player.day);
+  if (!season) return {};
+  return SEASONAL_PRICE_MODS[season.id] || {};
+}
+
+/**
+ * 获取商品分类的综合价格修正（节日 + 季节）
+ * @param {Object} state - 游戏状态
+ * @param {string} category - 商品分类
+ * @returns {number} 综合价格修正乘数
+ */
+function getCombinedPriceMod(state, category) {
+  var mod = 1.0;
+
+  // 节日修正
+  var festMod = getFestivalPriceMod(state, category);
+  mod *= festMod;
+
+  // 季节修正
+  var seasonMod = getSeasonalPriceMod(state)[category];
+  if (seasonMod) {
+    mod *= seasonMod;
+  }
+
+  return mod;
+}
+
+/**
+ * 获取季节名称
+ */
+function getSeasonName(day) {
+  var season = getCurrentSeason(day);
+  return season ? season.name : "冬季";
+}
+
+/**
+ * 获取季节图标
+ */
+function getSeasonIcon(day) {
+  var season = getCurrentSeason(day);
+  return season ? season.icon : "❄️";
+}
+
+/**
+ * 获取季节描述
+ */
+function getSeasonDesc(day) {
+  var season = getCurrentSeason(day);
+  if (!season) return "寒冬腊月";
+  var descs = {
+    spring: "春暖花开，万物复苏",
+    summer: "烈日炎炎，酷暑难耐",
+    autumn: "秋高气爽，丹桂飘香",
+    winter: "寒风凛冽，岁末年终",
+  };
+  return descs[season.id] || "";
+}
+
+// ====== 节日/季节综合提示 ======
+
+/**
+ * 获取当前节日+季节的综合提示文本（用于UI展示）
+ */
+function getSeasonFestivalTip(state) {
+  var season = getCurrentSeason(state.player.day);
+  var festival = getCurrentFestival(state.player.day);
+
+  var parts = [];
+
+  if (season) {
+    parts.push(
+      season.icon + " " + season.name + "：" + getSeasonDesc(state.player.day),
+    );
+  }
+
+  if (festival) {
+    parts.push(
+      festival.icon +
+        " " +
+        festival.name +
+        "（还剩" +
+        (festival.startDay + festival.duration - (state.player.day % 365)) +
+        "天）",
+    );
+  }
+
+  // 季节性价格提示
+  var seasonMods = getSeasonalPriceMod(state);
+  var hotBuy = [];
+  var hotSell = [];
+  for (var cat in seasonMods) {
+    if (seasonMods[cat] < 0.9) {
+      hotBuy.push(cat);
+    } else if (seasonMods[cat] > 1.1) {
+      hotSell.push(cat);
+    }
+  }
+
+  if (hotBuy.length > 0) {
+    parts.push("💡 进货好时机：" + hotBuy.join("、") + "降价中");
+  }
+  if (hotSell.length > 0) {
+    parts.push("💡 卖出好时机：" + hotSell.join("、") + "涨价中");
+  }
+
+  return parts.join(" | ");
 }

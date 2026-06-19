@@ -48,9 +48,16 @@ const DAILY_PIPELINE = [
       var house = getCurrentHousing(state);
       var recovery = house.fatigueRecovery;
       var penalty = state._fatigueRecoveryPenalty || 1.0;
+      // 命名疾病的疲劳恢复倍率叠加（失眠症等）
+      if (typeof getIllnessAttrDebuffs === "function") {
+        var ad = getIllnessAttrDebuffs(state);
+        if (ad.fatigueRecoveryMult && ad.fatigueRecoveryMult < 1) {
+          penalty *= ad.fatigueRecoveryMult;
+        }
+      }
       if (penalty < 1.0) {
         StateManager.addMessage(
-          "😢 心情低落，睡眠质量很差，疲劳恢复减半。",
+          "😢 睡眠质量很差，疲劳恢复打了" + Math.round(penalty * 100) + "%折。",
           "warning",
         );
       }
@@ -146,11 +153,38 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 习惯追踪 ===
+  {
+    name: "habit_tick",
+    fn: function (state) {
+      if (typeof tickHabits === "function") tickHabits(state);
+    },
+  },
+
+  // === 命名疾病掷骰 ===
+  {
+    name: "illness_roll",
+    fn: function (state) {
+      if (typeof rollDailyIllness === "function") rollDailyIllness(state);
+    },
+  },
+
   // === 需求阈值检查 ===
   {
     name: "needs_check",
     fn: function (state) {
       checkNeedsThresholds(state);
+    },
+  },
+
+  // === 临界值延期惩罚（在 extreme_check 之前）===
+  {
+    name: "critical_punish",
+    fn: function (state) {
+      if (typeof applyDeferredCriticalPunishments === "function") {
+        return applyDeferredCriticalPunishments(state);
+      }
+      return null;
     },
   },
 
@@ -231,8 +265,10 @@ const DAILY_PIPELINE = [
   {
     name: "skill_tree_check",
     fn: function (state) {
-      if (!state.skillBranches || typeof getUnlockedTalentNodes !== "function") return;
-      if (!state.flags._checkedTalentNodes) state.flags._checkedTalentNodes = {};
+      if (!state.skillBranches || typeof getUnlockedTalentNodes !== "function")
+        return;
+      if (!state.flags._checkedTalentNodes)
+        state.flags._checkedTalentNodes = {};
       for (var sk in state.skills) {
         if (!state.skillBranches[sk]) continue;
         var unlocked = getUnlockedTalentNodes(sk, state);
@@ -243,8 +279,12 @@ const DAILY_PIPELINE = [
           state.flags._checkedTalentNodes[nodeKey] = true;
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
-              "🌟 " + getSkillChineseName(sk) + "天赋节点「" + node.name + "」可激活！",
-              "hint"
+              "🌟 " +
+                getSkillChineseName(sk) +
+                "天赋节点「" +
+                node.name +
+                "」可激活！",
+              "hint",
             );
           }
         }
@@ -266,6 +306,10 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkFestivalDailyEffects === "function") {
         checkFestivalDailyEffects(state);
+      }
+      // 春节7天特殊活动
+      if (typeof checkSpringFestivalEvents === "function") {
+        checkSpringFestivalEvents(state);
       }
     },
   },
@@ -556,9 +600,9 @@ function runDailyPipeline(state) {
     var step = DAILY_PIPELINE[i];
 
     // 极端状态短路逻辑：
-    // extreme_check 步骤返回 'skip_day' 时，跳过后续非核心步骤
+    // extreme_check / critical_punish 返回 'skip_day' 时，跳过后续非核心步骤
     // 但 finance / autosave 始终执行（保证利息和存档不丢）
-    if (step.name === "extreme_check") {
+    if (step.name === "extreme_check" || step.name === "critical_punish") {
       var result = step.fn(state);
       if (result === "skip_day") {
         StateManager.addMessage(

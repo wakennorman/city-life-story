@@ -101,6 +101,13 @@ function renderHeader(state) {
       festStat.style.display = "none";
     }
   }
+
+  // 季节显示（在 header-season-label 旁边添加季节描述）
+  var seasonLabel = document.getElementById("header-season-label");
+  if (seasonLabel && typeof getSeasonDesc === "function") {
+    var seasonDesc = getSeasonDesc(p.day);
+    seasonLabel.title = seasonDesc; // 鼠标悬停显示季节描述
+  }
 }
 
 /**
@@ -540,10 +547,10 @@ function renderNeedsBars(state) {
   setStatBar("stat-hygiene", n.hygiene, "hygiene");
   setStatBar("stat-happiness", n.happiness, "happiness");
   setStatBar("stat-health", s.health, "health");
-  // fame: 游戏逻辑写入 status.fame，player.fame 为迁移遗留（v1.0→v1.1）
-  // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
-  var fameVal = (s && typeof s.fame === "number") ? s.fame : (p && typeof p.fame === "number") ? p.fame : 0;
-  setStatBar("stat-fame", fameVal, "fame");
+  // 名气：v1.1 起统一读 player.fame
+  setStatBar("stat-fame", (p && p.fame) || 0, "fame");
+  // 疾病列表（动态渲染到 stat-fame 之后）
+  renderIllnessRow(state);
   // 行动力
   const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
   setStatBar("stat-ap", apPct, "ap-bar");
@@ -558,7 +565,7 @@ function renderNeedsBars(state) {
   warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
   warnStatRow("stat-happiness", n.happiness, 10, "#cc7868");
   warnStatRow("stat-health", s.health, 20, "#cc7868");
-  warnStatRow("stat-fame", fameVal, 5, "#9b74b8");
+  warnStatRow("stat-fame", (p && p.fame) || 0, 5, "#9b74b8");
   // AP≤20
   warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
 }
@@ -805,6 +812,10 @@ function renderTabBar(state) {
       btn.style.display = "none";
     } else if (btn.dataset.tab === "trade" && state.player.phase !== "street") {
       btn.style.display = "none";
+    } else if (btn.dataset.tab === "enterprise") {
+      // 企业命运生态 — 后台系统，不单独显示Tab
+      // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
+      btn.style.display = "none";
     } else {
       btn.style.display = "";
     }
@@ -855,6 +866,12 @@ function renderCurrentTab(state) {
       else
         area.innerHTML =
           '<p style="color:var(--text-muted);text-align:center;padding:40px;">投资系统加载中...</p>';
+      break;
+    case "startup":
+      if (typeof renderStartupTab === "function") renderStartupTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">创业系统加载中...</p>';
       break;
     case "enterprise":
       if (typeof renderEnterpriseFateTab === "function")
@@ -927,12 +944,7 @@ function renderGrowthTab(state, parent) {
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
     { label: "心智", value: p.mental, color: "#9b74b8" },
-    {
-      label: "名气",
-      // 优先读 status.fame（游戏事件实际写入的地方），兼容旧存档读 player.fame
-      value: (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0),
-      color: "#d4a017",
-    },
+    { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
   ];
   stats.forEach(function (s) {
     var row = document.createElement("div");
@@ -1047,18 +1059,126 @@ function renderGrowthTab(state, parent) {
   setTimeout(function () {
     var history = (state.flags && state.flags._cashHistory) || [];
     drawAssetLineChart(lineCanvas, history);
-    drawRadarChart(
-      radarCanvas,
-      [
-        p.physique,
-        p.intelligence,
-        p.agility,
-        p.mental,
-        Math.min(100, (state.status && typeof state.status.fame === "number") ? state.status.fame : ((p && typeof p.fame === "number") ? p.fame : 0)),
-      ],
-      ["体质", "智力", "敏捷", "心智", "名气"],
-      100,
-    );
+
+    // 使用新的data_viz雷达图（支持职场属性）
+    if (typeof drawRadarChart === "function") {
+      drawRadarChart(
+        radarCanvas.getContext("2d"),
+        state,
+        0,
+        0,
+        radarCanvas.width,
+        radarCanvas.height,
+        p.phase,
+      );
+    } else {
+      drawRadarChart(
+        radarCanvas,
+        [
+          p.physique,
+          p.intelligence,
+          p.agility,
+          p.mental,
+          Math.min(100, (p && p.fame) || 0),
+        ],
+        ["体质", "智力", "敏捷", "心智", "名气"],
+        100,
+      );
+    }
+
+    // 如果有收入/支出历史，绘制收入曲线
+    if (typeof drawIncomeChart === "function") {
+      var incomeSection2 = document.createElement("div");
+      incomeSection2.style.cssText =
+        "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+      incomeSection2.innerHTML =
+        '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">💰 收入/支出曲线</h3>';
+      var incomeCanvas = document.createElement("canvas");
+      incomeCanvas.width = 520;
+      incomeCanvas.height = 160;
+      incomeCanvas.style.cssText = "width:100%;height:auto;display:block;";
+      incomeSection2.appendChild(incomeCanvas);
+      wrapper.insertBefore(incomeSection2, wrapper.firstChild);
+
+      setTimeout(function () {
+        var ctx = incomeCanvas.getContext("2d");
+        drawIncomeChart(
+          ctx,
+          state,
+          0,
+          0,
+          incomeCanvas.width,
+          incomeCanvas.height,
+        );
+      }, 10);
+    }
+
+    // 如果有技能成长历史，绘制技能成长图
+    if (typeof drawSkillGrowthChart === "function") {
+      var skills = state.skills || {};
+      var skillKeys = Object.keys(skills);
+      if (skillKeys.length > 0) {
+        var skillSection = document.createElement("div");
+        skillSection.style.cssText =
+          "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+        skillSection.innerHTML =
+          '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📚 技能成长</h3>';
+
+        var skillSelect = document.createElement("select");
+        skillSelect.style.cssText =
+          "margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);";
+        var skillNames = {
+          cooking: "烹饪",
+          repair: "维修",
+          coding: "编程",
+          english: "英语",
+          driving: "驾驶",
+          sales: "销售",
+          management: "管理",
+          accounting: "会计",
+          electrician: "电工",
+          welding: "焊接",
+        };
+        skillKeys.forEach(function (k) {
+          var opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent =
+            skillNames[k] || k + " (Lv." + (skills[k].level || 0) + ")";
+          if (skills[k].history && skills[k].history.length > 0) {
+            opt.selected = true;
+          }
+          skillSelect.appendChild(opt);
+        });
+        skillSection.appendChild(skillSelect);
+
+        var skillCanvas = document.createElement("canvas");
+        skillCanvas.width = 520;
+        skillCanvas.height = 160;
+        skillCanvas.style.cssText = "width:100%;height:auto;display:block;";
+        skillSection.appendChild(skillCanvas);
+        wrapper.appendChild(skillSection);
+
+        function renderSkillChart(sk) {
+          var ctx = skillCanvas.getContext("2d");
+          ctx.clearRect(0, 0, skillCanvas.width, skillCanvas.height);
+          drawSkillGrowthChart(
+            ctx,
+            state,
+            0,
+            0,
+            skillCanvas.width,
+            skillCanvas.height,
+            sk,
+          );
+        }
+
+        renderSkillChart(skillSelect.value);
+
+        skillSelect.addEventListener("change", function () {
+          renderSkillChart(this.value);
+        });
+      }
+    }
   }, 30);
 }
 
@@ -2305,6 +2425,37 @@ function renderTradeTab(state, parent) {
     }
   }
 
+  // 季节性价格波动提示横幅
+  if (typeof getSeasonalPriceMod === "function") {
+    var seasonMods = getSeasonalPriceMod(state);
+    if (Object.keys(seasonMods).length > 0) {
+      var hotBuy = [];
+      var hotSell = [];
+      for (var cat in seasonMods) {
+        if (seasonMods[cat] < 0.9) {
+          hotBuy.push(cat);
+        } else if (seasonMods[cat] > 1.1) {
+          hotSell.push(cat);
+        }
+      }
+      if (hotBuy.length > 0 || hotSell.length > 0) {
+        var seasonBanner = document.createElement("div");
+        seasonBanner.style.cssText =
+          "background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:6px;" +
+          "padding:6px 10px;margin-bottom:12px;font-size:12px;color:#667eea;";
+        var seasonTxt = [];
+        if (hotBuy.length > 0) {
+          seasonTxt.push("🟢 进货好时机：" + hotBuy.join("、") + "降价中");
+        }
+        if (hotSell.length > 0) {
+          seasonTxt.push("🔴 卖出好时机：" + hotSell.join("、") + "涨价中");
+        }
+        seasonBanner.textContent = seasonTxt.join(" | ");
+        parent.appendChild(seasonBanner);
+      }
+    }
+  }
+
   if (goodsList.length === 0) {
     parent.innerHTML +=
       '<p style="color:var(--text-muted)">商品数据加载中...</p>';
@@ -2381,12 +2532,27 @@ function renderTradeTab(state, parent) {
     const isLowest = lowest.location === locKey;
     const isHighest = highest.location === locKey;
 
+    // 季节性价格标签
+    var seasonTag = "";
+    if (typeof getSeasonalPriceMod === "function") {
+      var cat = good.category;
+      var seasonMod = getSeasonalPriceMod(state)[cat];
+      if (seasonMod && seasonMod < 0.85) {
+        seasonTag =
+          '<span style="color:var(--success);font-size:10px;margin-left:8px;">🟢 季节性低价</span>';
+      } else if (seasonMod && seasonMod > 1.15) {
+        seasonTag =
+          '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔴 季节性高价</span>';
+      }
+    }
+
     const card = document.createElement("div");
     card.className = "action-card";
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="card-title" style="margin:0;">${good.name}</div>
         <span class="slot-tag">${good.category}</span>
+        ${seasonTag}
       </div>
       <div class="card-desc" style="margin:4px 0;">
         基准: ¥${good.basePrice}/${good.unit}
@@ -2685,7 +2851,11 @@ function renderSkillsTab(state, parent) {
     var branchLabel = "";
     if (typeof getSkillBranchLabel === "function") {
       var bl = getSkillBranchLabel(key, state);
-      if (bl) branchLabel = '<div style="font-size:10px;color:var(--accent);margin:2px 0 4px;">🌳 ' + bl + "</div>";
+      if (bl)
+        branchLabel =
+          '<div style="font-size:10px;color:var(--accent);margin:2px 0 4px;">🌳 ' +
+          bl +
+          "</div>";
     }
 
     // --- P2#12 天赋节点迷你树 ---
@@ -2693,7 +2863,8 @@ function renderSkillsTab(state, parent) {
     if (typeof getChosenBranch === "function") {
       var chosenBranch = getChosenBranch(key, state);
       if (chosenBranch && chosenBranch.talentNodes) {
-        talentHtml = '<div style="margin:6px 0;display:flex;gap:4px;align-items:center;">';
+        talentHtml =
+          '<div style="margin:6px 0;display:flex;gap:4px;align-items:center;">';
         for (var ti = 0; ti < chosenBranch.talentNodes.length; ti++) {
           var nd = chosenBranch.talentNodes[ti];
           var nk = key + "_" + chosenBranch.id + "_" + nd.id;
@@ -2702,7 +2873,10 @@ function renderSkillsTab(state, parent) {
           if (typeof getUnlockedTalentNodes === "function") {
             var unlockedArr = getUnlockedTalentNodes(key, state);
             for (var ui = 0; ui < unlockedArr.length; ui++) {
-              if (unlockedArr[ui].id === nd.id) { canActivate = true; break; }
+              if (unlockedArr[ui].id === nd.id) {
+                canActivate = true;
+                break;
+              }
             }
           }
           var nodeStyle = activated
@@ -2716,11 +2890,14 @@ function renderSkillsTab(state, parent) {
             nodeStyle +
             '" title="' +
             nodeTitle +
-            '" data-node="' + nk + '">' +
+            '" data-node="' +
+            nk +
+            '">' +
             (activated ? "★" : canActivate ? "☆" : "·") +
             "</div>";
           if (ti < chosenBranch.talentNodes.length - 1) {
-            talentHtml += '<div style="width:8px;height:1px;background:var(--border-color, rgba(255,255,255,0.1));"></div>';
+            talentHtml +=
+              '<div style="width:8px;height:1px;background:var(--border-color, rgba(255,255,255,0.1));"></div>';
           }
         }
         talentHtml += "</div>";
@@ -2729,14 +2906,19 @@ function renderSkillsTab(state, parent) {
 
     // --- P2#12 分支选择按钮（Lv.30+未选择）---
     var branchBtnHtml = "";
-    if (skill.level >= 30 && !(state.skillBranches && state.skillBranches[key])) {
+    if (
+      skill.level >= 30 &&
+      !(state.skillBranches && state.skillBranches[key])
+    ) {
       var hasBranches = false;
       if (typeof getSkillBranchDef === "function") {
         hasBranches = getSkillBranchDef(key).length > 0;
       }
       if (hasBranches) {
         branchBtnHtml =
-          '<div style="margin-top:6px;padding:4px 8px;background:var(--accent);color:#fff;border-radius:4px;font-size:10px;text-align:center;cursor:pointer;" data-branch-select="' + key + '">🌳 选择发展方向</div>';
+          '<div style="margin-top:6px;padding:4px 8px;background:var(--accent);color:#fff;border-radius:4px;font-size:10px;text-align:center;cursor:pointer;" data-branch-select="' +
+          key +
+          '">🌳 选择发展方向</div>';
       }
     }
 
@@ -2896,43 +3078,43 @@ function renderSkillsTab(state, parent) {
 
     grid.appendChild(card);
 
-      // P2#12 分支选择按钮点击
-      (function (skillKey) {
-        var branchBtn = card.querySelector("[data-branch-select]");
-        if (branchBtn) {
-          branchBtn.addEventListener("click", function (e) {
+    // P2#12 分支选择按钮点击
+    (function (skillKey) {
+      var branchBtn = card.querySelector("[data-branch-select]");
+      if (branchBtn) {
+        branchBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (typeof showBranchSelectionModal === "function") {
+            showBranchSelectionModal(skillKey);
+          }
+        });
+      }
+      // 天赋节点点击激活
+      var nodeEls = card.querySelectorAll("[data-node]");
+      for (var ni = 0; ni < nodeEls.length; ni++) {
+        (function (el) {
+          el.addEventListener("click", function (e) {
             e.stopPropagation();
-            if (typeof showBranchSelectionModal === "function") {
-              showBranchSelectionModal(skillKey);
+            var nk = el.getAttribute("data-node");
+            if (!nk) return;
+            var parts = nk.split("_");
+            if (parts.length < 3) return;
+            var sk = parts[0];
+            var branchId = state.skillBranches && state.skillBranches[sk];
+            if (!branchId) return;
+            var prefix = sk + "_" + branchId + "_";
+            var nodeId = nk.substring(prefix.length);
+            if (typeof handleActivateTalentNode === "function") {
+              handleActivateTalentNode(sk, nodeId);
+            } else if (typeof activateTalentNode === "function") {
+              var st = StateManager.getState();
+              activateTalentNode(sk, nodeId, st);
+              if (typeof renderAll === "function") renderAll(st);
             }
           });
-        }
-        // 天赋节点点击激活
-        var nodeEls = card.querySelectorAll("[data-node]");
-        for (var ni = 0; ni < nodeEls.length; ni++) {
-          (function (el) {
-            el.addEventListener("click", function (e) {
-              e.stopPropagation();
-              var nk = el.getAttribute("data-node");
-              if (!nk) return;
-              var parts = nk.split("_");
-              if (parts.length < 3) return;
-              var sk = parts[0];
-              var branchId = state.skillBranches && state.skillBranches[sk];
-              if (!branchId) return;
-              var prefix = sk + "_" + branchId + "_";
-              var nodeId = nk.substring(prefix.length);
-              if (typeof handleActivateTalentNode === "function") {
-                handleActivateTalentNode(sk, nodeId);
-              } else if (typeof activateTalentNode === "function") {
-                var st = StateManager.getState();
-                activateTalentNode(sk, nodeId, st);
-                if (typeof renderAll === "function") renderAll(st);
-              }
-            });
-          })(nodeEls[ni]);
-        }
-      })(key);
+        })(nodeEls[ni]);
+      }
+    })(key);
   }
   div.appendChild(grid);
 
@@ -3502,8 +3684,12 @@ function showBranchSelectionModal(skillKey) {
   }
 
   modal.innerHTML =
-    '<h3 style="color:var(--text-muted);margin-bottom:6px;">🌳 ' + skillName + ' — 选择发展方向</h3>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' + skill.level + '，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>' +
+    '<h3 style="color:var(--text-muted);margin-bottom:6px;">🌳 ' +
+    skillName +
+    " — 选择发展方向</h3>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' +
+    skill.level +
+    "，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>" +
     '<div style="margin-bottom:12px;">';
 
   for (var bi = 0; bi < branches.length; bi++) {
@@ -3516,11 +3702,17 @@ function showBranchSelectionModal(skillKey) {
     // 天赋节点预览
     var nodePreview = "";
     if (branch.talentNodes) {
-      nodePreview = '<div style="margin-top:6px;font-size:10px;color:var(--text-muted);">天赋节点：';
+      nodePreview =
+        '<div style="margin-top:6px;font-size:10px;color:var(--text-muted);">天赋节点：';
       for (var ni = 0; ni < branch.talentNodes.length; ni++) {
         var nd = branch.talentNodes[ni];
-        nodePreview += '<span style="margin-right:4px;">Lv.' + nd.requireLevel + ' ' + nd.name + '</span>';
-        if (ni < branch.talentNodes.length - 1) nodePreview += ' → ';
+        nodePreview +=
+          '<span style="margin-right:4px;">Lv.' +
+          nd.requireLevel +
+          " " +
+          nd.name +
+          "</span>";
+        if (ni < branch.talentNodes.length - 1) nodePreview += " → ";
       }
       nodePreview += "</div>";
     }
@@ -3528,12 +3720,14 @@ function showBranchSelectionModal(skillKey) {
     // 解锁工作预览
     var jobPreview = "";
     if (branch.jobBonuses && branch.jobBonuses.length > 0) {
-      jobPreview = '<div style="margin-top:4px;font-size:10px;color:var(--success);">解锁工作：';
+      jobPreview =
+        '<div style="margin-top:4px;font-size:10px;color:var(--success);">解锁工作：';
       if (typeof STREET_JOBS !== "undefined") {
         for (var ji = 0; ji < branch.jobBonuses.length; ji++) {
           for (var jqi = 0; jqi < STREET_JOBS.length; jqi++) {
             if (STREET_JOBS[jqi].id === branch.jobBonuses[ji]) {
-              jobPreview += STREET_JOBS[jqi].icon + " " + STREET_JOBS[jqi].name + " ";
+              jobPreview +=
+                STREET_JOBS[jqi].icon + " " + STREET_JOBS[jqi].name + " ";
               break;
             }
           }
@@ -3543,8 +3737,14 @@ function showBranchSelectionModal(skillKey) {
     }
 
     branchDiv.innerHTML =
-      '<div style="font-size:14px;font-weight:bold;color:var(--accent);">' + branch.icon + " " + branch.name + "</div>" +
-      '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' + branch.desc + "</div>" +
+      '<div style="font-size:14px;font-weight:bold;color:var(--accent);">' +
+      branch.icon +
+      " " +
+      branch.name +
+      "</div>" +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' +
+      branch.desc +
+      "</div>" +
       nodePreview +
       jobPreview;
 
@@ -3613,4 +3813,71 @@ function showBranchSelectionModal(skillKey) {
   overlay.addEventListener("click", function (e) {
     if (e.target === overlay) overlay.remove();
   });
+}
+
+// ====== 疾病列表渲染 ======
+
+/**
+ * 在 stat-fame 行之后注入疾病列表（如有），点击可打开诊所弹窗。
+ * 每天疾病变化时自动刷新（StateManager 标记的 dirty 路径会触发 renderAll）。
+ */
+function renderIllnessRow(state) {
+  if (!state.status) return;
+  var illnesses = state.status.illnesses || [];
+  var injured = state.status.injured;
+
+  // 找/创建容器
+  var fameRow = document.getElementById("stat-fame");
+  if (!fameRow) return;
+  var box = document.getElementById("illness-row");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "illness-row";
+    box.style.cssText =
+      "margin-top:6px;padding:6px 8px;background:var(--bg-input);border-radius:4px;font-size:11px;line-height:1.6;display:none;";
+    fameRow.parentNode.insertBefore(box, fameRow.nextSibling);
+  }
+
+  if (illnesses.length === 0 && !injured) {
+    box.style.display = "none";
+    return;
+  }
+
+  var html =
+    '<div style="font-weight:600;color:var(--danger);margin-bottom:3px;">⚕️ 当前伤病</div>';
+  if (injured) {
+    html += '<div style="color:var(--text-secondary);">🩹 受伤（恢复中）</div>';
+  }
+  for (var i = 0; i < illnesses.length; i++) {
+    var inst = illnesses[i];
+    var ill = (typeof ILLNESSES !== "undefined" && ILLNESSES[inst.id]) || null;
+    if (!ill) continue;
+    var daysSince = (state.player.day || 0) - (inst.contractedDay || 0);
+    var status = inst.treated
+      ? '<span style="color:var(--success);">·药</span>'
+      : "";
+    html +=
+      '<div style="color:var(--text-secondary);">' +
+      (ill.icon || "🤒") +
+      " " +
+      ill.name +
+      ' <span style="color:var(--text-muted);">' +
+      daysSince +
+      "天" +
+      status +
+      "</span></div>";
+  }
+  if (
+    illnesses.length > 0 &&
+    state.trade &&
+    state.trade.currentLocation === "hospital"
+  ) {
+    html +=
+      '<div style="margin-top:4px;color:var(--accent);cursor:pointer;" onclick="openClinicModal()">点击看病 →</div>';
+  } else if (illnesses.length > 0) {
+    html +=
+      '<div style="margin-top:4px;color:var(--text-muted);font-size:10px;">去医院看病</div>';
+  }
+  box.innerHTML = html;
+  box.style.display = "block";
 }

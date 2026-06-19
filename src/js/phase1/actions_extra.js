@@ -37,7 +37,7 @@ function addStreetExtras(state, actions) {
       st.resources.totalEarned += earned;
       addDailyTransaction(st, "income", "side_job", earned, "街头卖唱");
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
-      st.status.fame = Math.min(100, st.status.fame + 1);
+      st.player.fame = Math.min(100, st.player.fame + 1);
       if (Math.random() < 0.2) {
         st.needs.happiness = Math.max(0, st.needs.happiness - 5);
         StateManager.addMessage(
@@ -69,7 +69,7 @@ function addStreetExtras(state, actions) {
       st.resources.totalEarned += earned;
       addDailyTransaction(st, "income", "side_job", earned, "街头乞讨");
       st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-      st.status.fame = Math.max(0, st.status.fame - 2);
+      st.player.fame = Math.max(0, st.player.fame - 2);
       st.flags._everBegged = true; // 成就追踪
       StateManager.addMessage(
         `🙏 跪了半小时，收到 ¥${earned}。心里五味杂陈。`,
@@ -100,6 +100,7 @@ function addStreetExtras(state, actions) {
         st.resources.totalEarned += 50;
         addDailyTransaction(st, "income", "side_job", 100, "赌博赢钱");
         st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+        st.flags._everWonGamble = true; // 成就追踪
         StateManager.addMessage("🎲 赢了！100 块到手！", "success");
       } else {
         st.needs.happiness = Math.max(0, st.needs.happiness - 8);
@@ -210,7 +211,7 @@ function addStreetExtras(state, actions) {
       st.resources.cash -= 10;
       st.needs.hygiene = Math.min(100, st.needs.hygiene + 25);
       st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-      st.status.fame = Math.min(100, st.status.fame + 1);
+      st.player.fame = Math.min(100, st.player.fame + 1);
       StateManager.addMessage(
         "💈 剪了个利索的短发！清爽多了，运气好像也好了点。",
         "success",
@@ -329,7 +330,7 @@ function addStreetExtras(state, actions) {
       st.resources.cash -= 35;
       st.needs.fatigue = Math.max(0, st.needs.fatigue - 8);
       st.needs.happiness = Math.min(100, st.needs.happiness + 18);
-      st.status.fame = Math.min(100, st.status.fame + 0.5);
+      st.player.fame = Math.min(100, st.player.fame + 0.5);
       StateManager.addMessage(
         "🎬 看了一部催泪电影，感动得稀里哗啦。心情大好！",
         "success",
@@ -356,7 +357,7 @@ function addStreetExtras(state, actions) {
       st.needs.happiness = Math.min(100, st.needs.happiness + 25);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
       st.needs.hunger = Math.max(0, st.needs.hunger - 8);
-      st.status.fame = Math.min(100, st.status.fame + 1);
+      st.player.fame = Math.min(100, st.player.fame + 1);
       StateManager.addMessage(
         "🎤 吼了 2 小时，嗓子都哑了！心情+25。",
         "success",
@@ -433,7 +434,7 @@ function addStreetExtras(state, actions) {
       st.resources.cash -= 80;
       st.needs.hygiene = Math.min(100, st.needs.hygiene + 10);
       st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-      st.status.fame = Math.min(100, st.status.fame + 1);
+      st.player.fame = Math.min(100, st.player.fame + 1);
       StateManager.addMessage(
         "👕 买了一件衬衫！看起来人模人样的。卫生+10，名气+1。",
         "success",
@@ -590,7 +591,7 @@ function addStreetExtras(state, actions) {
         // 大赚
         baseEarned = 150 + Math.floor(Math.random() * 200);
         xpGain = 8 + Math.floor(Math.random() * 7); // 8~14 XP
-        st.status.fame = Math.min(100, st.status.fame + 2);
+        st.player.fame = Math.min(100, st.player.fame + 2);
       } else if (luck < 0.7) {
         // 小赚
         baseEarned = 30 + Math.floor(Math.random() * 90);
@@ -816,7 +817,7 @@ function addStreetExtras(state, actions) {
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "side_job", earned, "周末集市摆摊");
-        st.status.fame = Math.min(100, st.status.fame + fameGain);
+        st.player.fame = Math.min(100, st.player.fame + fameGain);
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
         if (st.skills.sales) st.skills.sales.xp += 15;
         StateManager.addMessage(
@@ -1023,9 +1024,9 @@ function showRemitModal() {
             100,
             state.needs.happiness + (amt / 100) * 3,
           );
-          state.status.fame = Math.min(
+          state.player.fame = Math.min(
             100,
-            state.status.fame + (amt / 100) * 0.5,
+            state.player.fame + (amt / 100) * 0.5,
           );
           StateManager.addMessage(
             `💌 给家里汇了 ¥${amt.toLocaleString()}，爸妈很高兴。`,
@@ -1320,10 +1321,82 @@ function showGiftModal() {
   });
 }
 
+// ========== 状态恢复点（Amenity）行动 ==========
+
+/**
+ * 在当前地点的 amenities 全部加成行动列表。
+ * 玩家可以主动选择恢复某个状态，而不是等到临界值才被动选择。
+ */
+function addAmenityActions(state, actions) {
+  if (typeof getAmenitiesAtLoc !== "function") return;
+  var here = getAmenitiesAtLoc(state.trade.currentLocation);
+  for (var i = 0; i < here.length; i++) {
+    var a = here[i];
+    var primaryDesc = [];
+    if (a.primary) {
+      for (var k in a.primary) {
+        if (!a.primary.hasOwnProperty(k)) continue;
+        var amt = a.primary[k];
+        var label =
+          {
+            hunger: "饥饱",
+            fatigue: "疲劳",
+            hygiene: "卫生",
+            happiness: "心情",
+            physique: "体质",
+            intelligence: "智力",
+            agility: "敏捷",
+            mental: "心智",
+            fame: "名气",
+            health: "健康",
+          }[k] || k;
+        primaryDesc.push(label + (amt >= 0 ? "+" : "") + amt);
+      }
+    }
+    var typeName =
+      typeof getAmenityTypeName === "function"
+        ? getAmenityTypeName(a.type)
+        : a.type;
+    actions.push({
+      id: "amenity_" + a.id,
+      name: a.icon + " " + a.name,
+      desc: a.desc + " [" + primaryDesc.join(", ") + "]",
+      icon: a.icon,
+      apCost: a.ap || 0,
+      costEstimate: a.cost || 0,
+      category: "restore",
+      handler: (function (amenityId) {
+        return function () {
+          travelToAmenityAndUse(amenityId);
+        };
+      })(a.id),
+    });
+  }
+}
+
+/** 医院解锁的"看病"行动 */
+function addClinicAction(state, actions) {
+  if (state.trade.currentLocation !== "hospital") return;
+  var illCount = (state.status.illnesses && state.status.illnesses.length) || 0;
+  actions.push({
+    id: "see_doctor",
+    name: "🏥 看病" + (illCount ? "（你有 " + illCount + " 种疾病）" : ""),
+    desc: "由医生检查并选择治疗方案：药店/医院两档可选。",
+    icon: "🏥",
+    apCost: 5,
+    handler: function () {
+      if (typeof openClinicModal === "function") openClinicModal();
+      consumeAP(5);
+    },
+  });
+}
+
 /** 给 main.js 调用的统一入口 */
 function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
     addStreetExtras(state, actions);
+    addAmenityActions(state, actions);
+    addClinicAction(state, actions);
   }
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {

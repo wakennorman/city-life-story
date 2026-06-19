@@ -194,6 +194,35 @@ function endQuarter() {
     rollCorporateEvent(state);
   }
 
+  // ====== Phase 2: 季末内幕交易审查 ======
+  if (typeof auditInsiderTrading === "function") {
+    var auditResults = auditInsiderTrading(state);
+    if (auditResults && auditResults.length > 0) {
+      // 已在 auditInsiderTrading 中发送消息
+    }
+  }
+
+  // ====== Phase 2: 创业系统季度结算 ======
+  if (typeof tickStartup === "function") {
+    tickStartup(state);
+  }
+
+  // ====== Phase 2: 检查创业公司收购要约 ======
+  if (typeof getAcquisitionOffer === "function") {
+    var offer = getAcquisitionOffer(state);
+    if (offer) {
+      // 显示收购要约弹窗
+      if (typeof showAcquisitionModal === "function") {
+        showAcquisitionModal(state);
+      }
+    }
+  }
+
+  // ====== Phase 2: 检查交易处罚是否到期 ======
+  if (typeof checkTradingPenalty === "function") {
+    checkTradingPenalty(state);
+  }
+
   // 推进季度
   c.actionsUsed = 0;
   if (c.corpQuarter >= 4) {
@@ -221,6 +250,21 @@ function enterCorporatePhase(companyId) {
   const state = StateManager.getState();
   const p = state.player;
 
+  // 多周目保护：如果所选公司已倒闭，自动选一个活着的
+  if (typeof isCompanyDeceased === "function" && isCompanyDeceased(companyId)) {
+    var alive =
+      typeof getAvailableCompanies === "function"
+        ? getAvailableCompanies()
+        : COMPANIES;
+    if (alive.length > 0) {
+      companyId = alive[0].id;
+      StateManager.addMessage(
+        "⚠️ 你选择的公司已在历史中倒闭，自动转向" + alive[0].name,
+        "warning",
+      );
+    }
+  }
+
   const company =
     COMPANIES.find((c) => c.id === (companyId || "star_tech")) || COMPANIES[0];
 
@@ -245,7 +289,7 @@ function enterCorporatePhase(companyId) {
   p.corporate.risk = Math.min(100, 8 + Math.floor(Math.random() * 12));
   p.corporate.popularity = Math.min(
     100,
-    Math.round(state.status.fame * 0.5 + 25),
+    Math.round(state.player.fame * 0.5 + 25),
   );
 
   state.corporate.rank = "P5";

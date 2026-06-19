@@ -271,7 +271,7 @@ var DREAMS = [
         id: "cel_1",
         title: "街头初秀",
         condition: function (st) {
-          return st.status && st.status.fame >= 10;
+          return st.status && st.player.fame >= 10;
         },
         story:
           "名气达到10点。路过的人开始回头看你表演，有人还拍了段视频发朋友圈。微末之始，不过如此。",
@@ -280,7 +280,7 @@ var DREAMS = [
         id: "cel_2",
         title: "小有名气",
         condition: function (st) {
-          return st.status && st.status.fame >= 30;
+          return st.status && st.player.fame >= 30;
         },
         story:
           '名气30点。有人认出了你："哎，你就是那个经常在商业区唱歌的吧？"你笑着点头，心里暖洋洋的。',
@@ -302,7 +302,7 @@ var DREAMS = [
         id: "cel_4",
         title: "城区明星",
         condition: function (st) {
-          return st.status && st.status.fame >= 60;
+          return st.status && st.player.fame >= 60;
         },
         story:
           '名气60点。当地小报居然采访了你，问你"怎么在这座城市闯出名堂"。你想了想，说：靠的是认真。',
@@ -311,7 +311,7 @@ var DREAMS = [
         id: "cel_5",
         title: "一方名人",
         condition: function (st) {
-          return st.status && st.status.fame >= 85;
+          return st.status && st.player.fame >= 85;
         },
         story:
           "🎉 名气85点！你的名字，已经在这座城市的某个角落留了下来。不管明天如何，这段经历将永远属于你。",

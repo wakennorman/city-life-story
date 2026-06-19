@@ -380,6 +380,395 @@ const ACHIEVEMENTS = [
       return !!(st.flags && st.flags._formerCompanyCollapsed);
     },
   },
+
+  // ============================================================
+  // 新成就：事件链成就（追踪7条事件链的完成）
+  // ============================================================
+  {
+    id: "chain_re_gamble",
+    name: "拆迁赌局赢家",
+    desc: "完成房地产赌局事件链——从买私房到拆迁拿钱。",
+    story:
+      "你赌了一把拆迁，在推土机到来之前拿到了钱。有时候，命运青睐敢下注的人。",
+    icon: "🏗️",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.flags &&
+        (st.flags._reAccepted ||
+          st.flags._reCoalitionAccepted ||
+          st.flags._reFinalSettled)
+      );
+    },
+  },
+  {
+    id: "chain_startup_win",
+    name: "天使投资人",
+    desc: "你投资的创业公司被成功收购，获得了回报。",
+    story:
+      "从咖啡馆里的一张名片开始，到收购协议上的签名。你学会了：风险最大的路，有时候回报也最大。",
+    icon: "💎",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._startupWin);
+    },
+  },
+  {
+    id: "chain_startup_lose",
+    name: "风险第一课",
+    desc: "你投资的创业公司解散了，投资归零。",
+    story:
+      "钱没了，但你学到了一个道理：十个创业公司九个死——你用自己的钱包上了这一课。",
+    icon: "🔥",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._startupLose);
+    },
+  },
+  {
+    id: "chain_gray_testified",
+    name: "回头是岸",
+    desc: "你参与了灰产但最终选择坦白，获得了从轻处理。",
+    story: "那条路你走了一步，然后退了回来。不是每个人都有勇气回头的。",
+    icon: "⚖️",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._grayTestified);
+    },
+  },
+  {
+    id: "chain_gray_reported",
+    name: "正义举报",
+    desc: "你拒绝了灰产诱惑并选择了举报。",
+    story: "在所有人都沉默的时候，你说了出来。批发市场的老王头到现在还记得你。",
+    icon: "📢",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._grayReported);
+    },
+  },
+  {
+    id: "chain_insider_caught",
+    name: "内幕交易者",
+    desc: "你因内幕交易被证监会处罚。",
+    story: "那扇没关严的门、那份不该看的财报、那次不该下的单。你付出了代价。",
+    icon: "🔒",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.flags &&
+        (st.flags._insiderCaught || st.flags._insiderConfessed)
+      );
+    },
+  },
+  {
+    id: "chain_insider_resisted",
+    name: "守住底线",
+    desc: "你看到了内幕信息，但选择了关上那扇门。",
+    story:
+      "关上CFO办公室门的那一刻，你关上的还有一条不该走的路。没人知道你做了什么，但你知道。",
+    icon: "🚪",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._insiderResisted);
+    },
+  },
+  {
+    id: "chain_edu_arbitrage",
+    name: "政策套利者",
+    desc: "你在教培风暴中抓住了捡漏机会。",
+    story:
+      "双减落地，别人在哭你在捡课桌椅。危机永远有两面——你学会了看清另一面。",
+    icon: "📚",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.flags &&
+        (st.flags._eduBoughtAssets ||
+          st.flags._eduStudyRoom ||
+          st.flags._eduMiddleman)
+      );
+    },
+  },
+  {
+    id: "chain_ev_recovery",
+    name: "穿越牛熊",
+    desc: "你在新能源泡沫中坚持下来并获利。",
+    story:
+      "补贴退坡时所有人都在逃离，你留了下来。当潮水重新涨起时，你还在船上。",
+    icon: "📈",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._evRecoverySeen);
+    },
+  },
+  {
+    id: "chain_career_evidence",
+    name: "职场赢家",
+    desc: "你在职场陷阱中收集证据成功翻盘。",
+    story:
+      "当别人选择背锅或逃跑的时候，你选择了收集证据。在职场上，证据比情绪有用。",
+    icon: "♟️",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.flags &&
+        (st.flags._careerNailed || st.flags._careerEvidencePayoffSeen)
+      );
+    },
+  },
+  {
+    id: "chain_career_took_blame",
+    name: "替罪羊",
+    desc: "你替上级背了锅，但选择了沉默。",
+    story: "你抗下了本不属于你的错误。有些人说你傻，也有人说你仗义。",
+    icon: "😶",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._careerTookBlame);
+    },
+  },
+
+  // ============================================================
+  // 新成就：疾病与生存
+  // ============================================================
+  {
+    id: "survive_first_sick",
+    name: "病一场",
+    desc: "你在这座城市第一次生病。",
+    story:
+      "身体垮了才知道健康有多贵。躺在出租屋里，你盯着天花板发誓要照顾好自己。",
+    icon: "🤒",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._everGotSick);
+    },
+  },
+  {
+    id: "survive_chronic",
+    name: "慢性病缠身",
+    desc: "你患上了慢性疾病，每月需要固定支出医药费。",
+    story:
+      "有些病好了就是好了，有些病会一直跟着你——像这座城市给你的一个永久印记。",
+    icon: "💊",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.status &&
+        st.status.illnesses &&
+        st.status.illnesses.some(function (i) {
+          return i.chronic;
+        })
+      );
+    },
+  },
+  {
+    id: "survive_hospitalized",
+    name: "进过医院",
+    desc: "你的健康值曾跌到危险水平，被送进医院。",
+    story: "白色的天花板、消毒水的味道、缴费单上的数字——你不想再来第二次。",
+    icon: "🏥",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._everHospitalized);
+    },
+  },
+  {
+    id: "survive_collapsed",
+    name: "撑不住了",
+    desc: "你因极度疲劳晕倒过。",
+    story:
+      "身体到了极限，它替你做了决定。醒来的那一刻，你浑身酸痛，但至少还活着。",
+    icon: "😵",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._everCollapsed);
+    },
+  },
+
+  // ============================================================
+  // 新成就：深度里程碑
+  // ============================================================
+  {
+    id: "survive_365_days",
+    name: "一年",
+    desc: "在这座城市生存了整整一年。",
+    story:
+      "四季轮回，你熬过了第一个完整的年。这座城市没有赶你走，你也习惯了它的节奏。",
+    icon: "🎂",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.player.day || 0) >= 365;
+    },
+  },
+  {
+    id: "earn_1m",
+    name: "百万征程",
+    desc: "累计赚到了¥1,000,000。",
+    story:
+      "七位数。从第一天的¥1,500到今天的百万，你用了多久？只有你自己知道每一步的重量。",
+    icon: "💰",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.resources.totalEarned || 0) >= 1000000;
+    },
+  },
+  {
+    id: "all_skills_30",
+    name: "终身学习者",
+    desc: "所有技能都达到了30级。",
+    story:
+      "没有老师逼你学，没有考试要你过。你用时间证明了——你可以成为任何想成为的人。",
+    icon: "📖",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return Object.values(st.skills).every(function (s) {
+        return s.level >= 30;
+      });
+    },
+  },
+  {
+    id: "all_skills_50",
+    name: "技能大师",
+    desc: "所有技能都达到了50级。",
+    story:
+      "从门外汉到行家里手，你用了无数次练习。现在的你，不论到哪都能靠手艺吃饭。",
+    icon: "🏆",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return Object.values(st.skills).every(function (s) {
+        return s.level >= 50;
+      });
+    },
+  },
+  {
+    id: "max_fame",
+    name: "城市名人",
+    desc: "你的名气达到了100满值。",
+    story: "在这座城市里，提起你的名字，每个人都知道是谁。你不再是无名之辈。",
+    icon: "⭐",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return (st.player.fame || 0) >= 100;
+    },
+  },
+  {
+    id: "first_gamble_win",
+    name: "赌狗一时爽",
+    desc: "你在非法赌博中赢了一大笔钱。",
+    story: "骰子落下的时候，你赢了。但你知道——赌场永远是最赢的那个。",
+    icon: "🎲",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._everWonGamble);
+    },
+  },
+  {
+    id: "all_housing_max",
+    name: "安得广厦",
+    desc: "住上了最高级的住房。",
+    story: "从桥洞到单间，从单间到一居室，再到今天——你终于有了一个像样的家。",
+    icon: "🏡",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return (st.housing && st.housing.tier) >= 5;
+    },
+  },
+  {
+    id: "all_npc_80",
+    name: "人脉王",
+    desc: "所有NPC好感度都达到了80+。",
+    story: "每个人都是你的朋友。这座城市虽然冷酷，但你把温暖留给了值得的人。",
+    icon: "👥",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      if (!st.relationships) return false;
+      var npcIds = [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ];
+      return npcIds.every(function (id) {
+        return st.relationships[id] && st.relationships[id].affinity >= 80;
+      });
+    },
+  },
+  {
+    id: "all_npc_hated",
+    name: "孤家寡人",
+    desc: "所有NPC好感度都跌到了负数。",
+    story:
+      "你得罪了这座城市的每一个人。可能是你的选择，也可能是你的性格。孤独是自由的另一种形式。",
+    icon: "👻",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.relationships) return false;
+      var npcIds = [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ];
+      return npcIds.every(function (id) {
+        return st.relationships[id] && st.relationships[id].affinity < 0;
+      });
+    },
+  },
+  {
+    id: "visit_all_locations",
+    name: "城市足迹",
+    desc: "你踏遍了这座城市的每一个角落。",
+    story:
+      "每一个地方都有你的故事——你在工地搬过砖、在大学城学过习、在商业区摆过摊。这座城市的地图上，到处是你的脚印。",
+    icon: "🗺️",
+    category: "里程碑",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._visitedAllLocations);
+    },
+  },
+  {
+    id: "achievement_hunter_25",
+    name: "成就猎人",
+    desc: "解锁了25个成就。",
+    story:
+      "你不是在玩游戏，你是在记录旅途。每一个成就都是这座城市在你身上留下的痕迹。",
+    icon: "🎯",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._unlockedAchievements || []).length >= 25;
+    },
+  },
 ];
 
 /**

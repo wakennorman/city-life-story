@@ -9,6 +9,7 @@ const LOCATIONS = {
     name: "城中村",
     desc: "鱼龙混杂的城中村，房租便宜，机会也多。",
     type: "residential",
+    wealthTier: 1, // 1=贫困区 2=中等 3=富裕区 — 影响 amenity 档次和旅行AP
     footfall: 0.6,
     vendingNote: "本地居民为主，消费力弱",
     jobs: ["waste_recycling", "street_vending_goods", "street_vending_food"],
@@ -27,6 +28,7 @@ const LOCATIONS = {
     name: "批发市场",
     desc: "各种商品批发的集散地，进货的天堂。",
     type: "commercial",
+    wealthTier: 2,
     footfall: 0.9,
     vendingNote: "批发商多，但也有零散买家",
     jobs: ["street_vending_goods", "warehouse_worker"],
@@ -47,6 +49,7 @@ const LOCATIONS = {
     name: "建筑工地",
     desc: "尘土飞扬的建筑工地，到处是钢筋水泥。",
     type: "industrial",
+    wealthTier: 1,
     footfall: 0.5,
     vendingNote: "工人偶尔消费，管理严格",
     jobs: [
@@ -62,6 +65,7 @@ const LOCATIONS = {
     name: "工业区",
     desc: "工厂聚集的工业区，机器轰鸣声不绝于耳。",
     type: "industrial",
+    wealthTier: 2,
     footfall: 1.0,
     vendingNote: "午休工人是主力消费群体",
     jobs: [
@@ -85,6 +89,7 @@ const LOCATIONS = {
     name: "大学城",
     desc: "高校云集的大学城，年轻人多，机会特殊。",
     type: "institutional",
+    wealthTier: 2,
     footfall: 1.2,
     vendingNote: "学生零食消费旺盛，均价稍低",
     jobs: [
@@ -107,6 +112,7 @@ const LOCATIONS = {
     name: "商业区",
     desc: "繁华的商业地段，人来人往，商机无限。",
     type: "commercial",
+    wealthTier: 3,
     footfall: 1.8,
     vendingNote: "主商圈，客流量最大，但城管也多",
     jobs: [
@@ -136,6 +142,7 @@ const LOCATIONS = {
     name: "科技园",
     desc: "互联网大厂的聚集地，高楼林立，精英云集。",
     type: "corporate",
+    wealthTier: 3,
     footfall: 0.7,
     vendingNote: "白领消费力强但习惯点外卖",
     jobs: [
@@ -152,6 +159,7 @@ const LOCATIONS = {
     name: "医院",
     desc: "看病治疗的地方。健康是革命的本钱。",
     type: "service",
+    wealthTier: 2,
     footfall: 0.8,
     vendingNote: "探病家属是主要客群",
     jobs: ["hospital_caregiver"],
@@ -162,6 +170,7 @@ const LOCATIONS = {
     name: "银行",
     desc: "存取款、办理贷款。",
     type: "service",
+    wealthTier: 2,
     footfall: 0.4,
     vendingNote: "人流稀少，不适合摆摊",
     jobs: [],
@@ -172,6 +181,7 @@ const LOCATIONS = {
     name: "公园",
     desc: "城市中的绿洲，可以放松身心。",
     type: "recreation",
+    wealthTier: 2,
     footfall: 1.0,
     vendingNote: "周末家庭聚集，工作日冷清",
     jobs: [
@@ -187,6 +197,7 @@ const LOCATIONS = {
     name: "培训中心",
     desc: "学习技能、考取证书的地方。投资自己。",
     type: "education",
+    wealthTier: 2,
     footfall: 0.7,
     vendingNote: "学员课间小消费",
     jobs: [],
@@ -224,4 +235,62 @@ function getJobsAtLocation(locKey) {
   const loc = LOCATIONS[locKey];
   if (!loc) return [];
   return loc.jobs || [];
+}
+
+/** BFS 计算两地最短跳数（同地=0，无连通=99） */
+function getLocationHops(fromKey, toKey) {
+  if (fromKey === toKey) return 0;
+  if (!TRAVEL_GRAPH[fromKey] || !LOCATIONS[toKey]) return 99;
+  var visited = {};
+  visited[fromKey] = 0;
+  var queue = [fromKey];
+  while (queue.length) {
+    var cur = queue.shift();
+    var dist = visited[cur];
+    var neighbors = TRAVEL_GRAPH[cur] || [];
+    for (var i = 0; i < neighbors.length; i++) {
+      var n = neighbors[i];
+      if (visited[n] !== undefined) continue;
+      visited[n] = dist + 1;
+      if (n === toKey) return dist + 1;
+      queue.push(n);
+    }
+  }
+  return 99; // 不可达
+}
+
+/**
+ * 计算从 from 到 to 的旅行AP消耗。
+ *   基础: 12 + (hops-1) × 4
+ *   富裕带间通行(tier3→tier3): -3
+ *   贫→富(tier1→tier3): +2 (穷富差距大)
+ *   驾驶技能减免、老周三轮车减免
+ *   保底 5 AP
+ */
+function getTravelApCost(fromKey, toKey, state) {
+  var hops = getLocationHops(fromKey, toKey);
+  if (hops <= 0) return 0;
+  if (hops >= 99) return 99; // 不连通
+
+  var base = 12 + (hops - 1) * 4;
+
+  var fromLoc = LOCATIONS[fromKey];
+  var toLoc = LOCATIONS[toKey];
+  var ft = (fromLoc && fromLoc.wealthTier) || 2;
+  var tt = (toLoc && toLoc.wealthTier) || 2;
+  if (ft === 3 && tt === 3) base -= 3; // 富区互通方便
+  if ((ft === 1 && tt === 3) || (ft === 3 && tt === 1)) base += 2; // 贫富两端跨区
+
+  // 驾驶技能减免
+  if (state && state.skills && state.skills.driving) {
+    var reduction =
+      typeof getTravelApReduction === "function"
+        ? getTravelApReduction(state.skills.driving.level || 0)
+        : 0;
+    base -= reduction;
+  }
+  // 老周三轮车
+  if (state && state.flags && state.flags.oldZhouTricycle) base -= 2;
+
+  return Math.max(5, base);
 }

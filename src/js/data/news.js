@@ -206,47 +206,289 @@ const NEWS_EVENTS = [
     type: "job",
   },
 
-  // === 玩家个人事件 ===
+  // === 玩家个人事件（互动版）===
   {
     id: "found_money",
-    headline: "🍀 在路边捡到了50块钱！运气不错",
-    effects: { cashBonus: 50 },
+    headline: "🍀 在路边捡到了一个钱包",
+    story:
+      "路边有个黑色钱包，打开一看里面有¥50现金和一张身份证。失主看起来住在附近。",
+    choices: [
+      {
+        text: "💰 据为己有",
+        hint: "拿钱走人",
+        apply: (st) => {
+          st.resources.cash += 50;
+          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          st.flags._keptWallet = true;
+          StateManager.addMessage(
+            "💰 钱包里翻出了¥50，但心里有点虚...",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏛️ 交给派出所",
+        hint: "良心选择",
+        apply: (st) => {
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          st.player.fame = Math.min(100, st.player.fame + 2);
+          st.flags._returnedWallet = true;
+          StateManager.addMessage(
+            "🏛️ 钱包交给了警察，警察夸你拾金不昧！",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 当作没看见",
+        hint: "怕惹麻烦",
+        apply: (st) => {
+          StateManager.addMessage("🚶 你假装没看见走了过去。", "info");
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "pickpocket",
-    headline: "👛 在公交车上被偷了100块...注意保管财物",
-    effects: { cashLoss: 100 },
+    headline: "👛 在公交车上被偷了",
+    story:
+      "挤公交车时感觉有人在摸你的口袋。下车一摸，钱包不见了！里面大概有¥100。",
+    choices: [
+      {
+        text: "🚔 报警",
+        hint: "走正规渠道",
+        apply: (st) => {
+          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.player.fame = Math.min(100, st.player.fame + 1);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "🚔 报了警，但警察说这种小案子很难查。钱追不回来了。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 自认倒霉",
+        hint: "长个教训",
+        apply: (st) => {
+          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+          st.player.mental = Math.min(100, st.player.mental + 2);
+          StateManager.addMessage(
+            "😤 自认倒霉吧。下次坐公交要注意保管财物。",
+            "warning",
+          );
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "free_meal",
-    headline: "🍱 社区有免费午餐活动，吃了顿饱的",
-    effects: { hungerBonus: 30, cashLoss: 0 },
+    headline: "🍱 社区免费午餐活动",
+    story:
+      "社区在广场办免费午餐活动，志愿者说今天有米饭和菜，免费吃。但你得排队半小时。",
+    choices: [
+      {
+        text: "🍚 去排队吃",
+        hint: "省饭钱但花时间",
+        apply: (st) => {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+          st.needs.hunger = Math.min(100, st.needs.hunger + 30);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          StateManager.addMessage(
+            "🍚 排了半小时队吃了顿饱饭。虽然简单，但省了钱。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 没空，继续忙",
+        hint: "省时间",
+        apply: (st) => {
+          StateManager.addMessage("🚶 你摇摇头继续忙自己的事了。", "info");
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "rain_storm",
-    headline: "🌧️ 暴雨倾盆！今天不适合户外工作",
-    effects: { fatiguePenalty: 15 },
+    headline: "🌧️ 暴雨来袭",
+    story: "天气预报说今天有暴雨。你本来计划去户外工作，但现在得重新考虑了。",
+    choices: [
+      {
+        text: "🏠 在家休息",
+        hint: "恢复疲劳",
+        apply: (st) => {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+          StateManager.addMessage(
+            "🏠 暴雨天在家休息，疲劳-10。雨天适合躺平。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🌂 冒雨出门工作",
+        hint: "赚更多但健康风险",
+        apply: (st) => {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          st.status.health = Math.max(0, st.status.health - 5);
+          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          StateManager.addMessage(
+            "🌂 冒雨出门了。虽然赚了钱，但淋得够呛，健康-5。",
+            "warning",
+          );
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "good_sleep",
-    headline: "😴 昨晚睡得特别好，今天精神焕发",
-    effects: { fatigueBonus: 20, happinessBonus: 10 },
+    headline: "😴 昨晚睡得特别好",
+    story: "昨晚睡得特别香，今天醒来精神焕发。你决定好好利用这一天。",
+    choices: [
+      {
+        text: "💪 趁状态好去工作",
+        hint: "效率加倍",
+        apply: (st) => {
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          // 标记今日效率加成
+          st.flags._goodSleepToday = true;
+          StateManager.addMessage(
+            "💪 趁着精神好去工作，今天效率不错！",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😴 再睡个回笼觉",
+        hint: "进一步恢复",
+        apply: (st) => {
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          StateManager.addMessage("😴 又睡了个回笼觉，疲劳再-10。", "info");
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "friendly_neighbor",
-    headline: "👋 邻居送了些水果，心情不错",
-    effects: { happinessBonus: 15 },
+    headline: "👋 邻居送了些水果",
+    story:
+      "楼上的王大婶给你送了些自家种的水果，说是一点心意。你最近和她关系还不错。",
+    choices: [
+      {
+        text: "🙏 收下并道谢",
+        hint: "提升好感",
+        apply: (st) => {
+          st.needs.hunger = Math.min(100, st.needs.hunger + 10);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          if (st.relationships && st.relationships.auntWang) {
+            st.relationships.auntWang.affinity = Math.min(
+              100,
+              (st.relationships.auntWang.affinity || 0) + 3,
+            );
+          }
+          StateManager.addMessage(
+            "🙏 收下了水果，王大婶很开心。好感+3，饥饱+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💝 回送点小礼物",
+        hint: "花¥20维护关系",
+        cost: 20,
+        apply: (st) => {
+          if (st.resources.cash < 20) {
+            StateManager.addMessage("💝 钱不够买礼物！", "warning");
+            return;
+          }
+          st.resources.cash -= 20;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          if (st.relationships && st.relationships.auntWang) {
+            st.relationships.auntWang.affinity = Math.min(
+              100,
+              (st.relationships.auntWang.affinity || 0) + 5,
+            );
+          }
+          StateManager.addMessage(
+            "💝 回送了小礼物，王大婶更高兴了。好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 礼貌拒绝",
+        hint: "不想欠人情",
+        apply: (st) => {
+          st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+          if (st.relationships && st.relationships.auntWang) {
+            st.relationships.auntWang.affinity = Math.max(
+              0,
+              (st.relationships.auntWang.affinity || 0) - 3,
+            );
+          }
+          StateManager.addMessage(
+            "🚶 礼貌拒绝了。王大婶有点失望地走了。",
+            "info",
+          );
+        },
+      },
+    ],
     type: "personal",
   },
   {
     id: "skill_book",
-    headline: "📖 在二手书店淘到一本有用的教材",
-    effects: { skillXp: 30 },
+    headline: "📖 二手书店淘到教材",
+    story:
+      "在城中村二手书店，老板说有一本技能教材便宜卖。你看了看，内容还挺有用。",
+    choices: [
+      {
+        text: "📚 买下 (¥30)",
+        hint: "花小钱学技能",
+        cost: 30,
+        apply: (st) => {
+          if (st.resources.cash < 30) {
+            StateManager.addMessage("📚 钱不够买！", "warning");
+            return;
+          }
+          st.resources.cash -= 30;
+          var skills = Object.keys(st.skills || {});
+          if (skills.length > 0) {
+            var key = skills[Math.floor(Math.random() * skills.length)];
+            st.skills[key] = st.skills[key] || { level: 1, xp: 0 };
+            st.skills[key].xp += 30;
+            StateManager.addMessage(
+              "📚 买到了教材，翻了几页，" + key + "技能经验+30。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "📚 买到了教材，但还没有技能可学。先收着吧。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "👀 先看看再说",
+        hint: "不花钱",
+        apply: (st) => {
+          st.needs.intelligence = Math.min(
+            100,
+            (st.needs.intelligence || 0) + 2,
+          );
+          StateManager.addMessage("👀 翻了翻书，觉得还行，但先不买。", "info");
+        },
+      },
+    ],
     type: "personal",
   },
 

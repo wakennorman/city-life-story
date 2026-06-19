@@ -440,7 +440,7 @@ const STREET_JOBS = [
       return Math.floor(
         18 +
           state.player.mental * 0.2 +
-          state.status.fame * 0.3 +
+          state.player.fame * 0.3 +
           Math.random() * 42,
       );
     },
@@ -533,7 +533,7 @@ const STREET_JOBS = [
 
 // ====== P2#12 技能树分支解锁工作 ======
 // 这些工作需要特定技能分支才能看到/执行
-(function() {
+(function () {
   var BRANCH_JOBS = [
     // === cooking → 家常大厨 ===
     {
@@ -546,7 +546,8 @@ const STREET_JOBS = [
       branchRequirement: { skill: "cooking", branch: "home_chef" },
       effects: { fatigue: 14, hygiene: -3, happiness: 5, cookingXp: 6 },
       payCalc(state) {
-        var base = 70 + (state.skills.cooking.level || 0) * 1.0 + Math.random() * 35;
+        var base =
+          70 + (state.skills.cooking.level || 0) * 1.0 + Math.random() * 35;
         var branchBonus = 1.25;
         if (typeof getBranchJobBonus === "function") {
           branchBonus = getBranchJobBonus("cafeteria_worker", "cooking", state);
@@ -566,8 +567,12 @@ const STREET_JOBS = [
       branchRequirement: { skill: "repair", branch: "precision_repair" },
       effects: { fatigue: 12, repairXp: 8, happiness: 8, intelligenceXp: 2 },
       payCalc(state) {
-        var base = 100 + (state.skills.repair.level || 0) * 2.5 + Math.random() * 50;
-        var branchBonus = typeof getBranchJobBonus === "function" ? getBranchJobBonus("instrument_repair", "repair", state) : 1.0;
+        var base =
+          100 + (state.skills.repair.level || 0) * 2.5 + Math.random() * 50;
+        var branchBonus =
+          typeof getBranchJobBonus === "function"
+            ? getBranchJobBonus("instrument_repair", "repair", state)
+            : 1.0;
         return Math.floor(base * branchBonus);
       },
       risk: {},
@@ -583,8 +588,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "repair", branch: "modder" },
       effects: { fatigue: 10, repairXp: 6, happiness: 10, salesXp: 2 },
       payCalc(state) {
-        var base = 80 + (state.skills.repair.level || 0) * 1.8 + Math.random() * 40;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("phone_modding", "repair", state) : 1.0));
+        var base =
+          80 + (state.skills.repair.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("phone_modding", "repair", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -599,8 +610,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "coding", branch: "frontend_dev" },
       effects: { fatigue: 10, codingXp: 8, happiness: 12, intelligenceXp: 2 },
       payCalc(state) {
-        var base = 110 + (state.skills.coding.level || 0) * 2.0 + Math.random() * 55;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("web_designer", "coding", state) : 1.0));
+        var base =
+          110 + (state.skills.coding.level || 0) * 2.0 + Math.random() * 55;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("web_designer", "coding", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -615,8 +632,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "coding", branch: "backend_arch" },
       effects: { fatigue: 12, codingXp: 10, happiness: 5, intelligenceXp: 3 },
       payCalc(state) {
-        var base = 130 + (state.skills.coding.level || 0) * 2.5 + Math.random() * 50;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("server_ops", "coding", state) : 1.0));
+        var base =
+          130 + (state.skills.coding.level || 0) * 2.5 + Math.random() * 50;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("server_ops", "coding", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -631,8 +654,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "coding", branch: "security" },
       effects: { fatigue: 14, codingXp: 8, happiness: 8, mental: 1 },
       payCalc(state) {
-        var base = 120 + (state.skills.coding.level || 0) * 2.2 + Math.random() * 45;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("network_monitor", "coding", state) : 1.0));
+        var base =
+          120 + (state.skills.coding.level || 0) * 2.2 + Math.random() * 45;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("network_monitor", "coding", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -647,8 +676,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "english", branch: "business_english" },
       effects: { fatigue: 14, englishXp: 7, happiness: 10, intelligenceXp: 2 },
       payCalc(state) {
-        var base = 90 + (state.skills.english.level || 0) * 1.5 + Math.random() * 40;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("foreign_trade_assistant", "english", state) : 1.0));
+        var base =
+          90 + (state.skills.english.level || 0) * 1.5 + Math.random() * 40;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("foreign_trade_assistant", "english", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -663,8 +698,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "english", branch: "translation" },
       effects: { fatigue: 8, englishXp: 8, happiness: 15, intelligenceXp: 1 },
       payCalc(state) {
-        var base = 80 + (state.skills.english.level || 0) * 2.0 + Math.random() * 40;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("document_translator", "english", state) : 1.0));
+        var base =
+          80 + (state.skills.english.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("document_translator", "english", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -679,8 +720,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "driving", branch: "passenger_transport" },
       effects: { fatigue: 28, drivingXp: 6, happiness: 3, agilityXp: 2 },
       payCalc(state) {
-        var base = 70 + (state.skills.driving.level || 0) * 1.2 + Math.random() * 45;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("taxi_driver", "driving", state) : 1.0));
+        var base =
+          70 + (state.skills.driving.level || 0) * 1.2 + Math.random() * 45;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("taxi_driver", "driving", state)
+              : 1.0),
+        );
       },
       risk: { injury: 0.03 },
     },
@@ -695,8 +742,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "driving", branch: "freight" },
       effects: { fatigue: 30, drivingXp: 5, physiqueXp: 3 },
       payCalc(state) {
-        var base = 80 + (state.skills.driving.level || 0) * 1.0 + Math.random() * 35;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("truck_assistant", "driving", state) : 1.0));
+        var base =
+          80 + (state.skills.driving.level || 0) * 1.0 + Math.random() * 35;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("truck_assistant", "driving", state)
+              : 1.0),
+        );
       },
       risk: { injury: 0.05 },
     },
@@ -711,8 +764,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "sales", branch: "store_sales" },
       effects: { fatigue: 16, salesXp: 6, happiness: 5 },
       payCalc(state) {
-        var base = 55 + (state.skills.sales.level || 0) * 1.5 + Math.random() * 35;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("shop_assistant", "sales", state) : 1.0));
+        var base =
+          55 + (state.skills.sales.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("shop_assistant", "sales", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -727,8 +786,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "sales", branch: "biz_negotiation" },
       effects: { fatigue: 14, salesXp: 7, happiness: 8, intelligenceXp: 2 },
       payCalc(state) {
-        var base = 75 + (state.skills.sales.level || 0) * 1.8 + Math.random() * 40;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("procurement_clerk", "sales", state) : 1.0));
+        var base =
+          75 + (state.skills.sales.level || 0) * 1.8 + Math.random() * 40;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("procurement_clerk", "sales", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -743,8 +808,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "management", branch: "team_mgmt" },
       effects: { fatigue: 12, managementXp: 7, happiness: 8 },
       payCalc(state) {
-        var base = 85 + (state.skills.management.level || 0) * 1.5 + Math.random() * 35;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("project_coordinator", "management", state) : 1.0));
+        var base =
+          85 + (state.skills.management.level || 0) * 1.5 + Math.random() * 35;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("project_coordinator", "management", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -757,10 +828,21 @@ const STREET_JOBS = [
       location: "techPark",
       requirements: { accounting: 35, intelligence: 30, minAge: 20 },
       branchRequirement: { skill: "accounting", branch: "audit_risk" },
-      effects: { fatigue: 14, accountingXp: 7, happiness: 5, intelligenceXp: 2 },
+      effects: {
+        fatigue: 14,
+        accountingXp: 7,
+        happiness: 5,
+        intelligenceXp: 2,
+      },
       payCalc(state) {
-        var base = 95 + (state.skills.accounting.level || 0) * 2.0 + Math.random() * 40;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("audit_assistant", "accounting", state) : 1.0));
+        var base =
+          95 + (state.skills.accounting.level || 0) * 2.0 + Math.random() * 40;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("audit_assistant", "accounting", state)
+              : 1.0),
+        );
       },
       risk: {},
     },
@@ -772,11 +854,22 @@ const STREET_JOBS = [
       icon: "⚡",
       location: "factoryZone",
       requirements: { electrician: 35, physique: 22, minAge: 20, maxAge: 55 },
-      branchRequirement: { skill: "electrician", branch: "industrial_electric" },
+      branchRequirement: {
+        skill: "electrician",
+        branch: "industrial_electric",
+      },
       effects: { fatigue: 22, electricianXp: 7, physiqueXp: 2 },
       payCalc(state) {
-        var base = 100 + (state.skills.electrician.level || 0) * 2.0 + Math.random() * 45;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("factory_electrician", "electrician", state) : 1.0));
+        var base =
+          100 +
+          (state.skills.electrician.level || 0) * 2.0 +
+          Math.random() * 45;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("factory_electrician", "electrician", state)
+              : 1.0),
+        );
       },
       risk: { injury: 0.06 },
     },
@@ -791,8 +884,14 @@ const STREET_JOBS = [
       branchRequirement: { skill: "welding", branch: "structural_welding" },
       effects: { fatigue: 32, weldingXp: 8, physiqueXp: 3, happiness: -5 },
       payCalc(state) {
-        var base = 120 + (state.skills.welding.level || 0) * 2.5 + Math.random() * 55;
-        return Math.floor(base * (typeof getBranchJobBonus === "function" ? getBranchJobBonus("steel_worker", "welding", state) : 1.0));
+        var base =
+          120 + (state.skills.welding.level || 0) * 2.5 + Math.random() * 55;
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("steel_worker", "welding", state)
+              : 1.0),
+        );
       },
       risk: { injury: 0.12 },
     },

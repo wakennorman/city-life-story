@@ -992,8 +992,14 @@ function chooseSkillBranch(skillKey, branchId, state) {
   state.skillBranches[skillKey] = branchId;
 
   StateManager.addMessage(
-    "🎯 确定了" + getSkillChineseName(skillKey) + "的发展方向：" + branch.icon + " " + branch.name + "！",
-    "success"
+    "🎯 确定了" +
+      getSkillChineseName(skillKey) +
+      "的发展方向：" +
+      branch.icon +
+      " " +
+      branch.name +
+      "！",
+    "success",
   );
   return true;
 }
@@ -1027,8 +1033,10 @@ function switchSkillBranch(skillKey, newBranchId, state) {
   state.skillBranches[skillKey] = newBranchId;
 
   StateManager.addMessage(
-    "🔄 重新选择了" + getSkillChineseName(skillKey) + "的方向，旧天赋节点已重置",
-    "success"
+    "🔄 重新选择了" +
+      getSkillChineseName(skillKey) +
+      "的方向，旧天赋节点已重置",
+    "success",
   );
   return true;
 }
@@ -1056,7 +1064,12 @@ function canActivateTalentNode(skillKey, nodeId, state) {
   if (!skill || skill.level < node.requireLevel) {
     return {
       allowed: false,
-      reason: "需技能等级≥Lv." + node.requireLevel + "（当前Lv." + (skill ? skill.level : 0) + "）",
+      reason:
+        "需技能等级≥Lv." +
+        node.requireLevel +
+        "（当前Lv." +
+        (skill ? skill.level : 0) +
+        "）",
     };
   }
 
@@ -1067,7 +1080,10 @@ function canActivateTalentNode(skillKey, nodeId, state) {
       var prereqNode = getTalentNodeDef(skillKey, branchId, node.prereq);
       return {
         allowed: false,
-        reason: "需要先激活前置节点「" + (prereqNode ? prereqNode.name : node.prereq) + "」",
+        reason:
+          "需要先激活前置节点「" +
+          (prereqNode ? prereqNode.name : node.prereq) +
+          "」",
       };
     }
   }
@@ -1108,7 +1124,7 @@ function activateTalentNode(skillKey, nodeId, state) {
 
   StateManager.addMessage(
     "⭐ 激活了天赋节点：「" + node.name + "」— " + node.desc,
-    "success"
+    "success",
   );
 
   // 被动收入立即生效
@@ -1116,7 +1132,7 @@ function activateTalentNode(skillKey, nodeId, state) {
     state.resources.cash += node.effects.passiveIncome;
     StateManager.addMessage(
       "💰 天赋效果：获得 ¥" + node.effects.passiveIncome + " 被动收入",
-      "info"
+      "info",
     );
   }
 

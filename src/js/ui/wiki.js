@@ -96,6 +96,8 @@ var WIKI_CATEGORIES = [
   { id: "skills", name: "技能", icon: "📚" },
   { id: "certs", name: "证书", icon: "📜" },
   { id: "npcs", name: "居民", icon: "👥" },
+  { id: "amenities", name: "恢复点", icon: "🍚" },
+  { id: "illnesses", name: "疾病", icon: "🤒" },
   { id: "festivals", name: "节日", icon: "🎭" },
   { id: "weather", name: "天气", icon: "🌤️" },
   { id: "invest", name: "投资", icon: "💰" },
@@ -214,6 +216,52 @@ function _wikiListEntries(catId, state) {
         }
       }
       break;
+    case "amenities":
+      if (typeof AMENITIES !== "undefined") {
+        for (var ia = 0; ia < AMENITIES.length; ia++) {
+          var aa = AMENITIES[ia];
+          var locName =
+            aa.loc === "*selfLive"
+              ? "自住房"
+              : (typeof LOCATIONS !== "undefined" &&
+                  LOCATIONS[aa.loc] &&
+                  LOCATIONS[aa.loc].name) ||
+                aa.loc;
+          var typeNamez =
+            { food: "餐饮", bath: "沐浴", fun: "娱乐", rest: "休息" }[
+              aa.type
+            ] || aa.type;
+          out.push({
+            id: aa.id,
+            name: aa.name,
+            icon: aa.icon || "🍚",
+            brief:
+              locName +
+              " · " +
+              typeNamez +
+              " · ¥" +
+              (aa.cost || 0) +
+              " · " +
+              (aa.ap || 0) +
+              "AP",
+          });
+        }
+      }
+      break;
+    case "illnesses":
+      if (typeof ILLNESSES !== "undefined") {
+        for (var ik in ILLNESSES) {
+          if (!ILLNESSES.hasOwnProperty(ik)) continue;
+          var il = ILLNESSES[ik];
+          out.push({
+            id: il.id || ik,
+            name: il.name,
+            icon: il.icon || "🤒",
+            brief: "等级" + (il.severity || 1) + " · " + (il.desc || ""),
+          });
+        }
+      }
+      break;
     case "festivals":
       if (typeof FESTIVALS !== "undefined") {
         for (var i7 = 0; i7 < FESTIVALS.length; i7++) {
@@ -309,6 +357,18 @@ function _wikiListEntries(catId, state) {
       break;
     case "mechanics":
       out.push({
+        id: "critical_needs",
+        name: "状态危机系统",
+        icon: "⚠️",
+        brief: "饥饱/疲劳/卫生/心情低于阈值时强制选择，延期会昏倒/送医",
+      });
+      out.push({
+        id: "illness_system",
+        name: "疾病系统",
+        icon: "🤒",
+        brief: "长期不良习惯 → 命名疾病；药店/医院两档治疗",
+      });
+      out.push({
         id: "ap",
         name: "行动力 (AP)",
         icon: "⚡",
@@ -398,6 +458,24 @@ function _wikiListEntries(catId, state) {
         icon: "🌳",
         brief: "30级分支选择、天赋节点激活、职场联动",
       });
+      out.push({
+        id: "enterprise_fate",
+        name: "企业命运系统",
+        icon: "🏭",
+        brief: "公司生命周期/命运事件/零和博弈/行业传导",
+      });
+      out.push({
+        id: "startup_system",
+        name: "创业系统",
+        icon: "💼",
+        brief: "注册公司→招聘→融资→IPO/收购/破产",
+      });
+      out.push({
+        id: "insider_trading",
+        name: "内幕交易风险",
+        icon: "🔍",
+        brief: "风声期交易→季末审查→罚款禁入",
+      });
       break;
     case "narrative":
       out.push({
@@ -425,10 +503,34 @@ function _wikiListEntries(catId, state) {
         brief: "无绝对正确选项，长期影响声誉",
       });
       out.push({
+        id: "insider_trading",
+        name: "内幕交易风险",
+        icon: "🔍",
+        brief: "风声期交易→季末审查→罚款禁入",
+      });
+      out.push({
         id: "ng_plus",
         name: "新游戏+ 继承",
         icon: "🆕",
         brief: "多周目积累：起始现金/技能/属性",
+      });
+      out.push({
+        id: "event_real_estate",
+        name: "房地产赌局",
+        icon: "🏗️",
+        brief: "烂尾传闻→内幕赌局→成功/失败分支",
+      });
+      out.push({
+        id: "event_insider",
+        name: "内幕交易",
+        icon: "👂",
+        brief: "投资风声→验证→灰色交易→监管调查",
+      });
+      out.push({
+        id: "event_workplace",
+        name: "职场陷阱",
+        icon: "😡",
+        brief: "背锅甩锅→穿小鞋/谣言→跳槽/晋升抉择",
       });
       break;
     case "victory":
@@ -476,7 +578,7 @@ function _wikiListEntries(catId, state) {
       });
       out.push({
         id: "achievements",
-        name: "🏅 成就一览（22 个）",
+        name: "🏅 成就一览（53 个）",
         icon: "🏅",
         brief: "前往成就 Tab 查看完整成就",
       });
@@ -829,6 +931,12 @@ function _wikiRenderDetail(state, parent) {
       break;
     case "npcs":
       html = _wikiDetailNpc(state, _wikiState.entryId);
+      break;
+    case "amenities":
+      html = _wikiDetailAmenity(state, _wikiState.entryId);
+      break;
+    case "illnesses":
+      html = _wikiDetailIllness(state, _wikiState.entryId);
       break;
     case "festivals":
       html = _wikiDetailFestival(state, _wikiState.entryId);
@@ -1938,6 +2046,51 @@ function _wikiDetailInvest(state, id) {
 // ================================================================
 function _wikiDetailMechanic(state, id) {
   var pages = {
+    critical_needs:
+      "<h2>⚠️ 状态危机系统</h2>" +
+      '<p class="wiki-desc">参考《大多数》：四大状态（饥饱/疲劳/卫生/心情）跌破阈值时，游戏强制玩家做出选择，而非任你慢慢死。</p>' +
+      '<h3>📉 触发阈值</h3><ul class="wiki-list">' +
+      "<li>🍚 饥饱 ≤ 12 — 再不吃要饿晕</li>" +
+      "<li>😴 疲劳 ≥ 88 — 累得快倒下</li>" +
+      "<li>🛁 卫生 ≤ 10 — 脏到要生病</li>" +
+      "<li>😊 心情 ≤ 10 — 抑郁到崩溃</li>" +
+      "</ul>" +
+      "<h3>🪟 弹窗选项</h3><p>系统列出周边最近的 3 个对应类型 " +
+      _wkLink("amenities", null, "恢复点") +
+      '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+      "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
+      "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按概率触发昏倒/送医/路人施舍</li>" +
+      "</ul>" +
+      '<h3>🎲 延期惩罚（endDay 时按维度差异化掷骰）</h3><ul class="wiki-list">' +
+      "<li>🍚 饥饱临界：30%饿晕街头 / 20%送医院（¥300-1000）/ 30%路人施舍 / 20%硬撑</li>" +
+      "<li>😴 疲劳临界：40%过劳晕倒 / 20%引发疾病（过劳综合症或失眠）/ 40%效率惨淡</li>" +
+      "<li>🛁 卫生临界：50%生病（皮肤感染或感冒）/ 30%名气-2 / 20%没事</li>" +
+      "<li>😊 心情临界：30%累积抑郁 / 30%整夜失眠 / 20%借酒消愁 / 20%硬撑</li>" +
+      "</ul>" +
+      "<p>详见 " +
+      _wkLink("mechanics", "illness_system", "疾病系统") +
+      "。</p>",
+
+    illness_system:
+      "<h2>🤒 疾病系统</h2>" +
+      '<p class="wiki-desc">长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。</p>' +
+      '<h3>📊 习惯追踪器</h3><p>每日结算时根据 needs 更新计数器：</p><ul class="wiki-list">' +
+      "<li><code>junkFoodMeals</code>：累计垃圾食品次数</li>" +
+      "<li><code>lowHungerStreak</code>：连续饥饱 &lt;25 天数</li>" +
+      "<li><code>lowHygieneStreak</code>：连续卫生 &lt;30 天数</li>" +
+      "<li><code>lowHappinessStreak</code>：连续心情 &lt;20 天数</li>" +
+      "<li><code>highFatigueStreak</code>：连续疲劳 &gt;80 天数</li>" +
+      "<li><code>lateNightActions</code>：累计夜生活次数</li>" +
+      "</ul>" +
+      '<h3>💊 治疗</h3><p>去医院找“看病”行动，每种病有两档：</p><ul class="wiki-list">' +
+      "<li><strong>药店</strong>：便宜，标记 treated=true，自然康复时间减半</li>" +
+      "<li><strong>医院</strong>：贵，立即康复</li>" +
+      "<li><strong>慢性病</strong>（高血压）：必须按月持续付费才不发作</li>" +
+      "</ul>" +
+      "<p>查看具体病种：" +
+      _wkLink("illnesses", null, "疾病图鉴") +
+      "。</p>",
+
     ap:
       "<h2>⚡ 行动力 (AP) 系统</h2>" +
       '<p class="wiki-desc">每天 100 AP（满）。所有行动消耗对应 AP（卡片右下显示），AP 耗尽自动 endDay。</p>' +
@@ -2178,6 +2331,106 @@ function _wikiDetailMechanic(state, id) {
       "<li>结构焊接：建筑加成+50%，解锁钢结构</li>" +
       "<li>精密焊接：精密焊接收入+30%，解锁电子焊接</li>" +
       "</ul>",
+
+    enterprise_fate:
+      "<h2>🏭 企业命运系统</h2>" +
+      '<p class="wiki-desc">城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。</p>' +
+      '<h3>📊 生命周期阶段</h3><ul class="wiki-list">' +
+      "<li>🚀 初创期：高增长高风险，市场份额快速积累</li>" +
+      "<li>📈 成长期：高速成长，市场情绪高涨</li>" +
+      "<li>🏛️ 成熟期：稳定经营，创新放缓</li>" +
+      "<li>📉 衰退期：市场份额萎缩，人才开始流失</li>" +
+      "<li>💀 濒死期：面临破产或收购</li>" +
+      "</ul>" +
+      '<h3>🎲 命运事件</h3><ul class="wiki-list">' +
+      "<li>🦈 市场份额被蚕食：成长期公司互相争夺</li>" +
+      "<li>🚀 新产品爆发：高产品分公司引爆市场</li>" +
+      "<li>📰 丑闻曝光：管理层丑闻引发信任危机</li>" +
+      "<li>🤝 收购/合并：强势公司吞并弱势</li>" +
+      "<li>📋 行业政策利好：同板块公司集体走强</li>" +
+      "<li>👑 创始人回归：衰退期公司起死回生</li>" +
+      "<li>💸 资金链断裂：濒死公司裁员自救</li>" +
+      "<li>🔔 IPO上市：成长期公司成功挂牌</li>" +
+      "<li>👋 人才流失：核心研发团队集体离职</li>" +
+      "<li>⚖️ 专利诉讼战：高产品分公司互相攻击</li>" +
+      "</ul>" +
+      "<h3>🔗 零和博弈</h3>" +
+      "<p>总市场份额有上限（80%），一家公司增长时，从其他公司按比例抽取份额。这不是各自漂移，而是真正的竞争。</p>" +
+      "<h3>🔗 行业传导</h3>" +
+      "<p>同板块公司一个出事时，其他受到温和影响。例如：某AI公司丑闻曝光，整个AI/大模型板块受到波及。</p>" +
+      "<h3>📋 季度报告</h3>" +
+      "<p>每季度结束时，对玩家已知的公司发布汇总报告，包含健康度变化、主要事件回顾、股票评级。</p>" +
+      "<h3>💡 玩家影响</h3>" +
+      "<p>就职公司的KPI/能力表现、持有股票数量，都会影响公司命运事件的权重和结果。</p>",
+
+    startup_system:
+      "<h2>💼 创业系统</h2>" +
+      '<p class="wiki-desc">当你在街头/职场积累足够资源，可以注册公司，开启创业之路。创业与职场并行，可同时打工+创业。</p>' +
+      "<h3>📋 触发条件</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>街头阶段：day>200 且 cash>¥500,000</li>" +
+      "<li>职场阶段：P7+ 且 cash>¥1,000,000</li>" +
+      "</ul>" +
+      "<h3>📊 三阶段模型</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>种子期</b>：注册（¥50k启动资金）→ 开发MVP产品 → 找联合创始人 → 种子轮融资</li>" +
+      "<li><b>成长期</b>：招聘团队 → A轮/B轮融资 → 市场扩张 → 产品迭代</li>" +
+      "<li><b>退出期</b>：IPO上市 / 被收购 / 破产清算</li>" +
+      "</ul>" +
+      "<h3>👥 员工系统</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>6类员工：工程师(¥15k)、设计师(¥12k)、销售(¥10k)、市场(¥12k)、运营(¥8k)、财务(¥10k)</li>" +
+      "<li>忠诚度系统：现金流为负时忠诚度下降，低于20%可能离职</li>" +
+      "<li>每个员工分配0.5%期权</li>" +
+      "</ul>" +
+      "<h3>💰 融资轮次</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>种子轮：¥50万上限，出让10-20%股权</li>" +
+      "<li>A轮：¥300万上限，出让15-25%股权，需估值≥¥300万</li>" +
+      "<li>B轮：¥1000万上限，出让10-20%股权，需估值≥¥1500万</li>" +
+      "<li>C轮：¥3000万上限，出让5-15%股权，需估值≥¥5000万</li>" +
+      "</ul>" +
+      "<h3>🚀 退出方式</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>IPO</b>：估值最高，需估值≥¥5亿 + B轮 + 连续盈利，上市溢价1.5-3倍</li>" +
+      "<li><b>收购</b>：快速变现，大企业出价0.8-1.4倍估值</li>" +
+      "<li><b>破产</b>：Runway≤0时触发，资产回收30%，声誉受损</li>" +
+      "</ul>" +
+      "<h3>🔗 与企业命运联动</h3>" +
+      "<p>你创业的公司进入企业命运系统，与其他公司同场竞争，参与零和博弈、行业传导、合并事件。</p>",
+
+    insider_trading:
+      "<h2>🔍 内幕交易风险</h2>" +
+      '<p class="wiki-desc">就职公司的命运事件触发前3-5天，可通过日常行动获知风声。利用风声提前交易可获利，但季末有合规审查风险。</p>' +
+      "<h3>👂 风声感知渠道</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>工作表现</b>：KPI>80 或 能力>70 时听到风声（+8~20%可信度）</li>" +
+      "<li><b>向上社交</b>：职场行动获得内幕线索（+10~25%，每季度限2次）</li>" +
+      "<li><b>NPC对话</b>：高好感度NPC透露消息（+8~20%）</li>" +
+      "<li><b>新闻蛛丝马迹</b>：L1/L2新闻含关键词（+4~10%）</li>" +
+      "<li><b>行业报告</b>：看手机-行业报告（+3~8%，每周限1次）</li>" +
+      "</ul>" +
+      "<h3>⚖️ 合规审查</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>季末自动触发审查</li>" +
+      "<li>检查风声期+事件窗口内的异常交易</li>" +
+      "<li>获利越高，审查概率越高（10%~70%）</li>" +
+      "<li>触发后：罚款1-3倍获利 + 交易禁入30-180天</li>" +
+      "</ul>" +
+      "<h3>💸 处罚梯度</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>< ¥5万：罚款1倍，禁入30天</li>" +
+      "<li>¥5-20万：罚款1.5倍，禁入60天</li>" +
+      "<li>¥20-50万：罚款2倍，禁入90天</li>" +
+      "<li>≥ ¥50万：罚款3倍，禁入180天 + 声誉-30</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>风声可信度<50%时谨慎交易</li>" +
+      "<li>多渠道验证提升可信度</li>" +
+      "<li>获利控制在¥5万以内降低审查概率</li>" +
+      "<li>分散交易降低风险</li>" +
+      "</ul>",
   };
   return pages[id] || "";
 }
@@ -2252,6 +2505,63 @@ function _wikiDetailNarrative(state, id) {
       "<li>📊 最高属性：+10%（最多 +5）</li>" +
       "</ul>" +
       '<p class="wiki-tip">💡 让多周目有累积感和新鲜感。</p>',
+
+    // ===== 事件链详情 =====
+    event_real_estate:
+      "<h2>🏗️ 事件链：房地产赌局</h2>" +
+      '<p class="wiki-desc">参考现实房地产暴雷事件，一条关于"信息不对称"和"赌局抉择"的链式事件。</p>' +
+      "<h3>📋 事件流程</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><strong>L1 楼盘烂尾传闻</strong>：城中村听到工友议论，开发商资金链断裂</li>" +
+      "<li><strong>L2 内幕消息赌局</strong>：前财务透露项目将被低价收购，邀请你参与股票赌局</li>" +
+      "<li><strong>L3a 成功分支</strong>：收购消息公布，股票暴涨 → 财不外露，被陌生人盯上</li>" +
+      "<li><strong>L3b 失败分支</strong>：消息是假的 → 钱打水漂，村长债务雪上加霜</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>全押（¥2000）：60% 概率赚 ¥500~2000，40% 概率全损</li>" +
+      "<li>小试（¥500）：60% 概率赚 ¥200~700，风险可控</li>" +
+      "<li>拒绝：获得声誉徽章加成，但错过短期暴利</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 拒绝内幕交易是道德选择，长期来看声誉徽章会带来稳定加成。</p>',
+
+    event_insider:
+      "<h2>👂 事件链：内幕交易</h2>" +
+      '<p class="wiki-desc">职场阶段的灰色地带抉择，参考瑞幸咖啡/康美药业等真实案例。</p>' +
+      "<h3>📋 事件流程</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><strong>L1 投资圈风声</strong>：茶水间听到创业公司融资消息</li>" +
+      "<li><strong>L2 验证结果</strong>：确认消息属实，可通过场外期权参与（灰色地带）</li>" +
+      "<li><strong>L3a 成功分支</strong>：合作如期宣布，股价大涨 → 监管调查，需选择应对策略</li>" +
+      "<li><strong>L3b 失败分支</strong>：消息是假的 → 钱没了，提供者消失，可能卷入骗局</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>全仓（¥3000）：70% 概率赚 ¥1000~3000，但成功后面临监管调查</li>" +
+      "<li>小仓（¥1000）：70% 概率赚 ¥300~900，风险较低</li>" +
+      "<li>拒绝：安全，获得声誉徽章加成</li>" +
+      "<li>监管调查阶段：主动说明 > 装不知道 > 销毁记录（风险递减）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">⚠️ 内幕交易是违法行为，游戏中提供选择但不鼓励。拒绝是最稳妥的策略。</p>',
+
+    event_workplace:
+      "<h2>😡 事件链：职场陷阱</h2>" +
+      '<p class="wiki-desc">参考大厂甩锅文化和办公室政治，一条关于"尊严 vs 生存"的链式事件。</p>' +
+      "<h3>📋 事件流程</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><strong>L1 项目出bug被甩锅</strong>：老板点名批评，但你手上有邮件证据</li>" +
+      "<li><strong>L2a 老板记仇分支</strong>（举证/反驳成功）：核心项目被转走，边缘任务穿小鞋</li>" +
+      "<li><strong>L2b 同事谣言分支</strong>（忍气吞声）：办公室流言蜚语，同事疏远</li>" +
+      "<li><strong>L3 猎头offer</strong>：高薪跳槽 vs 内部晋升 vs 拖延决策</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>L1 选择：举证（看向上管理+能力）/ 忍气（尊严-15但向上管理+5）/ 硬刚（看能力）</li>" +
+      "<li>L2a 应对：把边缘项目做出彩（看能力+智力）/ 找HR（看人缘）/ 准备跳槽</li>" +
+      "<li>L2b 应对：公开澄清（看人缘）/ 用业绩证明 / 保持沉默（尊严-8）</li>" +
+      "<li>L3 抉择：跳槽（高薪但清零）/ 留下（晋升但尊严受损）</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 职场中尊严和KPI往往不可兼得，选择取决于你的长期目标。</p>',
   };
   return pages[id] || "";
 }
@@ -2320,4 +2630,252 @@ function _wikiDetailVictory(state, id) {
       '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。</p>',
   };
   return pages[id] || "";
+}
+
+// ================================================================
+//  详情：恢复点 (Amenity)
+// ================================================================
+function _wikiDetailAmenity(state, id) {
+  if (typeof AMENITIES === "undefined") return "";
+  var a = null;
+  for (var i = 0; i < AMENITIES.length; i++) {
+    if (AMENITIES[i].id === id) {
+      a = AMENITIES[i];
+      break;
+    }
+  }
+  if (!a) return "";
+
+  var locName =
+    a.loc === "*selfLive"
+      ? "自住房（任意地点，需先购买并设为自住）"
+      : (typeof LOCATIONS !== "undefined" &&
+          LOCATIONS[a.loc] &&
+          LOCATIONS[a.loc].name) ||
+        a.loc;
+  var typeName =
+    { food: "餐饮", bath: "沐浴", fun: "娱乐", rest: "休息" }[a.type] || a.type;
+
+  var html =
+    "<h2>" +
+    _wkE(a.icon || "🍚") +
+    " " +
+    _wkE(a.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(a.desc || "") +
+    "</p>" +
+    '<h3>📌 基本信息</h3><ul class="wiki-list">' +
+    "<li>类型：" +
+    _wkE(typeName) +
+    "（恢复 " +
+    { food: "饥饱", bath: "卫生", fun: "心情", rest: "疲劳" }[a.type] +
+    "）</li>" +
+    "<li>地点：" +
+    (a.loc === "*selfLive"
+      ? _wkE(locName)
+      : typeof LOCATIONS !== "undefined" && LOCATIONS[a.loc]
+        ? _wkLink("locations", a.loc, locName, "📍")
+        : _wkE(locName)) +
+    "</li>" +
+    "<li>档次：tier " +
+    (a.tier || 1) +
+    " （1=贫 / 2=中 / 3=富）</li>" +
+    "<li>消费：¥" +
+    (a.cost || 0) +
+    "</li>" +
+    "<li>消耗：" +
+    (a.ap || 0) +
+    " AP（不含旅行）</li>" +
+    "</ul>";
+
+  if (a.primary) {
+    html += '<h3>✨ 主效果</h3><ul class="wiki-list">';
+    for (var k in a.primary) {
+      if (!a.primary.hasOwnProperty(k)) continue;
+      var amt = a.primary[k];
+      var label =
+        {
+          hunger: "饥饱",
+          fatigue: "疲劳",
+          hygiene: "卫生",
+          happiness: "心情",
+          physique: "体质",
+          intelligence: "智力",
+          agility: "敏捷",
+          mental: "心智",
+          fame: "名气",
+          health: "健康",
+        }[k] || k;
+      html += "<li>" + label + (amt >= 0 ? " +" : " ") + amt + "</li>";
+    }
+    html += "</ul>";
+  }
+
+  if (a.bonusPool && a.bonusPool.length) {
+    html += '<h3>🎲 随机附加（每次真随机）</h3><ul class="wiki-list">';
+    for (var b = 0; b < a.bonusPool.length; b++) {
+      var bp = a.bonusPool[b];
+      var blabel =
+        {
+          hunger: "饥饱",
+          fatigue: "疲劳",
+          hygiene: "卫生",
+          happiness: "心情",
+          physique: "体质",
+          intelligence: "智力",
+          agility: "敏捷",
+          mental: "心智",
+          fame: "名气",
+          health: "健康",
+        }[bp.stat] || bp.stat;
+      html +=
+        "<li>" +
+        blabel +
+        " +" +
+        bp.amt +
+        "（" +
+        Math.round(bp.chance * 100) +
+        "% 概率）</li>";
+    }
+    html +=
+      '</ul><p class="wiki-desc">同一恢复点每用 5 次，所有概率 ×1.05（封顶 ×1.5）</p>';
+  }
+
+  var tags = [];
+  if (a.junkFood)
+    tags.push(
+      '<span style="color:var(--danger);">⚠️ 垃圾食品（累计 10 次易得肠胃炎）</span>',
+    );
+  if (a.nutritious)
+    tags.push(
+      '<span style="color:var(--success);">🌿 营养均衡（抵消垃圾食品计数）</span>',
+    );
+  if (a.lateNight)
+    tags.push(
+      '<span style="color:var(--warning);">🌙 夜生活（累计 8 次易失眠）</span>',
+    );
+  if (tags.length) html += "<h3>🏷️ 标签</h3><p>" + tags.join("<br>") + "</p>";
+
+  html +=
+    '<p class="wiki-desc">详见 ' +
+    _wkLink("mechanics", "critical_needs", "状态危机系统") +
+    "。</p>";
+  return html;
+}
+
+// ================================================================
+//  详情：疾病 (Illness)
+// ================================================================
+function _wikiDetailIllness(state, id) {
+  if (typeof ILLNESSES === "undefined" || !ILLNESSES[id]) return "";
+  var ill = ILLNESSES[id];
+
+  var html =
+    "<h2>" +
+    _wkE(ill.icon || "🤒") +
+    " " +
+    _wkE(ill.name) +
+    "</h2>" +
+    '<p class="wiki-desc">' +
+    _wkE(ill.desc || "") +
+    "</p>" +
+    '<h3>📊 等级与性质</h3><ul class="wiki-list">' +
+    "<li>严重度：" +
+    (ill.severity || 1) +
+    "/4</li>" +
+    "<li>" +
+    (ill.isChronic
+      ? "慢性病（不会自然好，需按月治疗）"
+      : "急性病（一段时间后可自然康复）") +
+    "</li>";
+  if (ill.naturalCureDays) {
+    html +=
+      "<li>自然康复时间：" +
+      ill.naturalCureDays[0] +
+      "~" +
+      ill.naturalCureDays[1] +
+      " 天</li>";
+  }
+  if (ill.requiresNutrition) {
+    html += "<li>⚠️ 需要营养均衡饮食配合（不停吃垃圾食品则不会康复）</li>";
+  }
+  html += "</ul>";
+
+  if (ill.triggerHabit) {
+    html += '<h3>🎯 触发条件</h3><ul class="wiki-list">';
+    var habitDesc = {
+      junkFoodMeals: "累计垃圾食品次数",
+      lowHungerStreak: "连续饥饱<25 天数",
+      lowHygieneStreak: "连续卫生<30 天数",
+      lowHappinessStreak: "连续心情<20 天数",
+      highFatigueStreak: "连续疲劳>80 天数",
+      lateNightActions: "累计夜间娱乐次数",
+      stomach_inflammationCount: "已患肠胃炎次数",
+      age: "年龄",
+    };
+    for (var hk in ill.triggerHabit) {
+      if (!ill.triggerHabit.hasOwnProperty(hk)) continue;
+      html +=
+        "<li>" + (habitDesc[hk] || hk) + " ≥ " + ill.triggerHabit[hk] + "</li>";
+    }
+    html +=
+      "<li>触发概率：" +
+      Math.round((ill.triggerChance || 0.5) * 100) +
+      "%</li>";
+    html += "</ul>";
+  }
+
+  if (ill.symptom) {
+    html += '<h3>🔥 症状（每日累加）</h3><ul class="wiki-list">';
+    var symLabel = {
+      health: "每日健康",
+      hunger: "每日饥饱",
+      fatigue: "每日疲劳",
+      hygiene: "每日卫生",
+      happiness: "每日心情",
+      physiqueDebuff: "体质有效值扣减",
+      mentalDebuff: "心智有效值扣减",
+      agilityDebuff: "敏捷有效值扣减",
+      intelligenceDebuff: "智力有效值扣减",
+      apMult: "AP 消耗倍率",
+      fatigueRecoveryMult: "睡眠疲劳恢复倍率",
+      randomFaintCh: "随机晕厥概率",
+    };
+    for (var sk in ill.symptom) {
+      if (!ill.symptom.hasOwnProperty(sk)) continue;
+      var sv = ill.symptom[sk];
+      var displayValue = sv;
+      if (sk === "fatigueRecoveryMult") displayValue = "×" + sv;
+      else if (sk === "randomFaintCh")
+        displayValue = (sv * 100).toFixed(2) + "%";
+      else if (sv > 0 && sk !== "apMult") displayValue = "+" + sv;
+      else if (sk === "apMult") displayValue = "+" + sv;
+      html += "<li>" + (symLabel[sk] || sk) + "：" + displayValue + "</li>";
+    }
+    html += "</ul>";
+  }
+
+  if (ill.treatCost) {
+    html += '<h3>💊 治疗（去医院找看病行动）</h3><ul class="wiki-list">';
+    if (ill.treatCost.pharmacy)
+      html +=
+        "<li>药店：¥" +
+        ill.treatCost.pharmacy +
+        "（标记治疗，康复时间减半）</li>";
+    if (ill.treatCost.hospital)
+      html += "<li>医院：¥" + ill.treatCost.hospital + "（立即康复）</li>";
+    if (ill.treatCost.hospital_monthly)
+      html +=
+        "<li>医院月费：¥" +
+        ill.treatCost.hospital_monthly +
+        "（每30天自动扣，不交则发作）</li>";
+    html += "</ul>";
+  }
+
+  html +=
+    '<p class="wiki-desc">详见 ' +
+    _wkLink("mechanics", "illness_system", "疾病系统") +
+    "。</p>";
+  return html;
 }

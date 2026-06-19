@@ -11,23 +11,44 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P2#12 技能树与职业进阶 — 10技能×21分支×63天赋节点 + 15个分支新工作 + 职场晋升联动
-- **待提交改动**：
-  - `src/js/core/skill_tree.js`（新建 — SKILL_BRANCHES数据+分支/节点逻辑）
-  - `src/js/core/state.js`（skillBranches/talentNodes状态字段+迁移）
-  - `src/js/data/skills.js`（getSkillBranches/getSkillBranchById查询助手）
-  - `src/js/data/jobs.js`（15个分支解锁新工作+branchRequirement字段）
-  - `src/js/phase1/skill_bonuses.js`（XP天赋加成+分支感知加成函数）
-  - `src/js/phase1/daily_pipeline.js`（skill_tree_check步骤）
-  - `src/js/ui/render.js`（renderSkillsTab重写+showBranchSelectionModal弹窗）
-  - `src/js/ui/wiki.js`（技能天赋树百科条目）
-  - `src/js/phase2/promo.js`（分支晋升门槛降低）
-  - `src/js/main.js`（handleChooseBranch/handleActivateTalentNode处理器）
-  - `src/index.html`（skill_tree.js脚本加载）
-- **P0/P1/P2 全优先级清单已完成**（累计154项含技能树），有梗世界事件库5条完整事件链+企业命运系统+技能天赋树(21分支+63节点)
-- **下一步方向**：
-  1. **多周目企业记忆（P2#10）** — 前一局让某公司倒闭，新一局该公司已不存在于地图上
-  2. **数据可视化（P2#8）** — 收入曲线图、属性成长雷达图增强
+- **最近一次工作**：P0#3 成就系统深度扩展 — 25个新成就(事件链/疾病/深度里程碑) + 5处追踪flag埋点
+- **待提交改动**：无（DEVELOPMENT.md 已更新）
+- **P0/P1全优先级清单已完成**（累计240+项含成就系统扩展），成就总数27→52（+25），事件总数165
+- **下一步方向（新）**：
+  1. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
+  2. **自住房食材库存联动** — 深化"在家做饭"为实际食材消耗系统
+  3. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
+  4. **企业命运系统 Phase 2** — CEO人格化/公司历史书/多周目企业记忆深化
+
+### ✅ 已完成但未在 CLAUDE.md 列出的更新
+
+1. **春节特殊事件链式系统**（`festivals.js`）
+   - `SPRING_FESTIVAL_EVENTS` 定义 7 天完整事件链（除夕→初六），每天独立事件+双/三选项
+   - `checkSpringFestivalEvents()` 在每日结算管线 `festival` 步骤中调度，通过 `state._pendingEvent` + `showEventModal()` 弹窗展示
+   - 事件含选择权重、资源消耗、属性影响、flag 追踪
+   - ⚠️ UI 待补充：弹窗由通用 `showEventModal()` 渲染，但春节事件特有样式/动画未做
+
+2. **节日价格提示 + 季节性价格波动**（`festivals.js` + `render.js`）
+   - `getFestivalPriceNote()`：节日/清仓期价格修正说明文本，已嵌入 Trade Tab（`renderTradeTab` 第 2416-2457 行）
+   - `getSeasonalPriceMod()`：春夏秋冬四季节价格修正，已嵌入 Trade Tab
+   - 剁手节专项：3天预热公告 + 节日结束后 3天余震清仓期
+   - `getCombined_priceMod()`：节日+季节综合价格修正乘数
+
+3. **公司历史书数据接口**（`enterprise_fate.js`）
+   - `getCompanyHistory(companyId)` 已就绪，返回公司历史事件/里程碑数据
+   - ⚠️ UI 待补充：需添加到 `render.js` 或新建 `companyHistory.js` 组件，绑定到企业 Tab
+
+4. **节日成就/里程碑追踪**
+   - ⚠️ 未开始：需扩展成就系统，在 `festivals.js` 中添加节日专属成就（如"春节红包达人""剁手节进货王"等）
+
+### 下一步方向
+
+1. **春节事件弹窗 UI 完善** — 为 `showEventModal()` 添加春节事件特有样式/动画
+2. **公司历史书 UI** — 在 `render.js` 企业 Tab 或新建组件中展示 `getCompanyHistory()` 数据
+3. **节日成就/里程碑** — 扩展成就系统，添加节日专属成就追踪
+4. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
+5. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
+6. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
 
 ## 自主运行规则
 

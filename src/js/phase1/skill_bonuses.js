@@ -70,8 +70,11 @@ function getSalesTradePremium(salesLevel) {
  * 获取厨艺打折 + 分支加成（家常大厨额外减食材成本）
  */
 function getBranchCookingDiscount(state) {
-  var base = getCookingDiscount((state.skills.cooking && state.skills.cooking.level) || 0);
-  if (!state.skillBranches || state.skillBranches.cooking !== "home_chef") return base;
+  var base = getCookingDiscount(
+    (state.skills.cooking && state.skills.cooking.level) || 0,
+  );
+  if (!state.skillBranches || state.skillBranches.cooking !== "home_chef")
+    return base;
   var reduction = 0.15; // 家常大厨基础成本减免
   if (typeof getTalentNodeEffects === "function") {
     var eff = getTalentNodeEffects(state);
@@ -84,8 +87,14 @@ function getBranchCookingDiscount(state) {
  * 获取旅行AP减免 + 分支加成（客运驾驶额外减免）
  */
 function getBranchTravelApReduction(state) {
-  var base = getTravelApReduction((state.skills.driving && state.skills.driving.level) || 0);
-  if (!state.skillBranches || state.skillBranches.driving !== "passenger_transport") return base;
+  var base = getTravelApReduction(
+    (state.skills.driving && state.skills.driving.level) || 0,
+  );
+  if (
+    !state.skillBranches ||
+    state.skillBranches.driving !== "passenger_transport"
+  )
+    return base;
   if (typeof getTalentNodeEffects === "function") {
     var eff = getTalentNodeEffects(state);
     return base + (eff.extraApReduction || 2);
@@ -97,8 +106,14 @@ function getBranchTravelApReduction(state) {
  * 获取家教加成 + 分支加成（商务英语额外+50%）
  */
 function getBranchTutoringBonus(state) {
-  var base = getTutoringBonus((state.skills.english && state.skills.english.level) || 0);
-  if (!state.skillBranches || state.skillBranches.english !== "business_english") return base;
+  var base = getTutoringBonus(
+    (state.skills.english && state.skills.english.level) || 0,
+  );
+  if (
+    !state.skillBranches ||
+    state.skillBranches.english !== "business_english"
+  )
+    return base;
   return base * 1.5;
 }
 
@@ -106,8 +121,14 @@ function getBranchTutoringBonus(state) {
  * 获取工厂加成 + 分支加成（强电工程翻倍）
  */
 function getBranchFactoryBonus(state) {
-  var base = getFactoryBonus((state.skills.electrician && state.skills.electrician.level) || 0);
-  if (!state.skillBranches || state.skillBranches.electrician !== "industrial_electric") return base;
+  var base = getFactoryBonus(
+    (state.skills.electrician && state.skills.electrician.level) || 0,
+  );
+  if (
+    !state.skillBranches ||
+    state.skillBranches.electrician !== "industrial_electric"
+  )
+    return base;
   return base * 2.0;
 }
 
@@ -115,8 +136,14 @@ function getBranchFactoryBonus(state) {
  * 获取建筑加成 + 分支加成（结构焊接+50%）
  */
 function getBranchConstructionBonus(state) {
-  var base = getConstructionBonus((state.skills.welding && state.skills.welding.level) || 0);
-  if (!state.skillBranches || state.skillBranches.welding !== "structural_welding") return base;
+  var base = getConstructionBonus(
+    (state.skills.welding && state.skills.welding.level) || 0,
+  );
+  if (
+    !state.skillBranches ||
+    state.skillBranches.welding !== "structural_welding"
+  )
+    return base;
   return base * 1.5;
 }
 
@@ -124,26 +151,32 @@ function getBranchConstructionBonus(state) {
  * 获取买入折扣 + 分支加成（门店销售上限提升到25%）
  */
 function getBranchSalesDiscount(state) {
-  var base = getSalesTradeDiscount((state.skills.sales && state.skills.sales.level) || 0);
-  if (!state.skillBranches || state.skillBranches.sales !== "store_sales") return base;
+  var base = getSalesTradeDiscount(
+    (state.skills.sales && state.skills.sales.level) || 0,
+  );
+  if (!state.skillBranches || state.skillBranches.sales !== "store_sales")
+    return base;
   var extra = 0;
   if (typeof getTalentNodeEffects === "function") {
     extra = getTalentNodeEffects(state).extraDiscount || 0;
   }
-  return Math.min(0.25, base + 0.10 + extra);
+  return Math.min(0.25, base + 0.1 + extra);
 }
 
 /**
  * 获取卖出溢价 + 分支加成（商务谈判上限提升到25%）
  */
 function getBranchSalesPremium(state) {
-  var base = getSalesTradePremium((state.skills.sales && state.skills.sales.level) || 0);
-  if (!state.skillBranches || state.skillBranches.sales !== "biz_negotiation") return base;
+  var base = getSalesTradePremium(
+    (state.skills.sales && state.skills.sales.level) || 0,
+  );
+  if (!state.skillBranches || state.skillBranches.sales !== "biz_negotiation")
+    return base;
   var extra = 0;
   if (typeof getTalentNodeEffects === "function") {
     extra = getTalentNodeEffects(state).extraPremium || 0;
   }
-  return Math.min(0.25, base + 0.10 + extra);
+  return Math.min(0.25, base + 0.1 + extra);
 }
 
 // 城市脉搏规则：把新闻从"提示文本"转成地点、工作和行动建议的即时变化。
@@ -460,7 +493,7 @@ function applySkillLevelUpBonus(skillKey, state) {
       if (typeof StateManager !== "undefined") {
         StateManager.addMessage(
           "🌟 可在技能页激活「" + unlocked[ni].name + "」天赋节点！",
-          "hint"
+          "hint",
         );
       }
     }
@@ -495,7 +528,7 @@ function grantActionStatGain(actionId, state) {
   Object.keys(entry).forEach(function (key) {
     var gain = entry[key];
     if (key === "fame") {
-      state.status.fame = (state.status.fame || 0) + gain;
+      state.player.fame = (state.player.fame || 0) + gain;
     } else if (p[key] !== undefined && p[key] < 100) {
       p[key] = Math.min(100, p[key] + gain);
     }

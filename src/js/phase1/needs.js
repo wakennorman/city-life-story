@@ -44,16 +44,14 @@ function checkNeedsThresholds(state) {
   }
 }
 
-/** 伤病每日结算 */
+/** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
 function tickHealthStatus(state) {
-  const st = state.status;
-  if (st.sick) {
-    st.health = Math.max(0, st.health - 3);
-    if (Math.random() < 0.12) {
-      st.sick = false;
-      StateManager.addMessage("🤒 病好了，身体恢复了。", "info");
-    }
+  // 新疾病系统：每日 tick illness（自然康复+症状结算+慢性病月费）
+  if (typeof tickIllnessDecay === "function") {
+    tickIllnessDecay(state);
   }
+  var st = state.status;
+  // 兼容：旧的 injured 字段（受伤还是单独保留，工作中可能受伤）
   if (st.injured) {
     st.health = Math.max(0, st.health - 2);
     if (Math.random() < 0.07) {
@@ -61,8 +59,12 @@ function tickHealthStatus(state) {
       StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
     }
   }
-  // 自然恢复
-  if (!st.sick && !st.injured && st.health < 100) {
+  // 自然恢复（无病无伤时）
+  if (
+    !st.injured &&
+    (!st.illnesses || st.illnesses.length === 0) &&
+    st.health < 100
+  ) {
     st.health = Math.min(100, st.health + 1);
   }
 }

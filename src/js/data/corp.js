@@ -298,6 +298,30 @@ const CORP_ACTIONS = [
   },
 ];
 
+/**
+ * 获取当前可用的公司列表（过滤已倒闭的公司 + 添加历史提示）
+ * 多周目系统：前一局倒闭的公司不再显示为可选雇主
+ */
+function getAvailableCompanies() {
+  if (typeof isCompanyDeceased !== "function") return COMPANIES;
+  return COMPANIES.filter(function (c) {
+    return !isCompanyDeceased(c.id);
+  });
+}
+
+/**
+ * 检查某公司ID是否在可用列表中
+ */
+function isCompanyAvailable(companyId) {
+  if (typeof isCompanyDeceased === "function" && isCompanyDeceased(companyId)) {
+    return false;
+  }
+  for (var i = 0; i < COMPANIES.length; i++) {
+    if (COMPANIES[i].id === companyId) return true;
+  }
+  return false;
+}
+
 const TEAM_MEMBERS = [
   {
     id: "geek_coder",
