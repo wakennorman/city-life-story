@@ -158,6 +158,8 @@ const DAILY_PIPELINE = [
     name: "habit_tick",
     fn: function (state) {
       if (typeof tickHabits === "function") tickHabits(state);
+      // 办公室工作天数追踪（职业病）
+      if (typeof tickOfficeWorkDays === "function") tickOfficeWorkDays(state);
     },
   },
 

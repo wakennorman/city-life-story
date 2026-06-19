@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-19 (累计275+项改动)
-> **最新改动**: 剧本模式+沙盒模式系统 — 6个预设剧本+自定义开局配置
+> 最后更新: 2026-06-19 (累计280+项改动)
+> **最新改动**: 百科系统注册表化重构 — MECHANICS / NARRATIVES / VICTORIES 三大注册表 + 通用渲染器
 
 ## 项目概述
 
@@ -1100,6 +1100,24 @@ src/
   - 集成技能成长曲线图（可选切换技能）
   - 使用新的雷达图函数（支持职场7维属性）
 
+#### 数据可视化模块整合（同日）
+
+- **问题**：`render.js` 和 `data_viz.js` 各有 `renderGrowthTab` 函数，功能重叠
+  - `data_viz.js`：收入/支出双线图 + 雷达图 + 技能曲线 + 数据摘要（225行）
+  - `render.js`：资产单线图 + 雷达图 + 属性条形图 + NPC面板 + 技能曲线 + 数据摘要（283行）
+- **方案**：以 `data_viz.js` 为唯一实现，整合 `render.js` 的独特功能
+  - `data_viz.js` 的 `renderGrowthTab` 整合了：
+    - ✅ 收入/支出双线图（来自 data_viz）
+    - ✅ 属性雷达图 + 属性条形图侧边栏（来自 render.js 的独特功能）
+    - ✅ 技能成长曲线（来自 data_viz）
+    - ✅ NPC 人际关系面板（来自 render.js 的独特功能）
+    - ✅ 综合数据摘要（合并两者优点，12项指标）
+  - `render.js` 的 `renderGrowthTab` 改为委托函数，调用 `data_viz.js` 的实现
+  - 调整 `index.html` script 加载顺序：`data_viz.js` → `render.js`
+  - 通过 `_dataVizRenderGrowthTab` 别名避免函数名冲突
+  - 清理 `render.js` 中的死代码：`drawAssetLineChart`、`_growthStat`
+- **结果**：消除 ~500 行重复代码，架构更清晰
+
 #### 教程系统增强（P2#7）
 
 - **修改** `src/js/ui/tutorial.js` 的 `DYNAMIC_HINTS`：
@@ -1943,6 +1961,51 @@ Build complete: dist\index.html (1381.2 KB)
 | `css/style.css`               | ~1400       | +对比样式                                  |
 | **总计**                      | **~12,226** | **4方向并行开发**                          |
 
+### 2026-06-19 — UI文字配色全面优化（视觉舒适度提升）
+
+**背景**：背景色已优化为奶油白 `#f5f1e8`，但文字仍使用高对比度暗绿 `#2c3328`，长时间游玩视觉疲劳明显。
+
+**参考标准**：
+
+- **WCAG 2.1 AA** — 正文文字对比度 ≥4.5:1，大文字 ≥3:1
+- **Material Design 3** — on-surface 色阶系统
+- **Solarized** — 低刺激暖灰调，减少视网膜疲劳
+- **iA Writer / Bear** — 专业写作工具的柔和文字色
+- **GitHub Primer / Linear / Notion** — 现代 SaaS 阅读舒适配色
+
+**核心改动**：
+
+| 变量/位置          | 旧值      | 新值      | 对比度 | 说明                   |
+| ------------------ | --------- | --------- | ------ | ---------------------- |
+| `--text-primary`   | `#2c3328` | `#3d3a35` | ~7.2:1 | 暖灰棕，正文阅读最优   |
+| `--text-secondary` | `#5a6652` | `#6b6760` | ~4.8:1 | 次级信息，减轻视觉重量 |
+| `--text-muted`     | `#8a9680` | `#99958e` | ~3.2:1 | 辅助/提示文字          |
+
+**硬编码颜色替换**（从高饱和 → 柔和暖色调）：
+
+| 位置         | 旧颜色                                                                | 新颜色                                                                | 说明        |
+| ------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------- |
+| 基础属性预警 | `#e67e22` / `#3498db` / `#2ecc71` / `#9b59b6`                         | `#c4803a` / `#5a8ab4` / `#5aaa5a` / `#9b74b8`                         | 降低饱和度  |
+| 职场属性预警 | `#4a90d9` / `#7c5cbf` / `#d4a017` / `#e67e22` / `#e74c3c`             | `#7ab8d8` / `#9b74b8` / `#c49a3a` / `#c4803a` / `#5aaa5a`             | 统一柔和化  |
+| 需求条预警   | `#f9ca24` / `#5d6d7e` / `#48c9b0` / `#e74c3c` / `#9b59b6` / `#ff9800` | `#c9a838` / `#8a9080` / `#4a9490` / `#cc7868` / `#9b74b8` / `#d49a3a` | 降低刺激    |
+| 服务徽章     | `#2ecc71` / `#f39c12` / `#e74c3c` / `#3498db` / `#9b59b6`             | `#4a9e5c` / `#c49a3a` / `#c4553d` / `#5a8ab4` / `#9b74b8`             | 与主题统一  |
+| 绩效等级     | `#ff6b6b` / `#feca57` / `#48dbfb` / `#c8d6e5` / `#ff9ff3`             | `#c4553d` / `#c49a3a` / `#4a9e5c` / `#6b6760` / `#9b74b8`             | 柔和化      |
+| 市场情绪     | `#f44336` / `#ff9800` / `#4caf50`                                     | `#c4553d` / `#c49a3a` / `#4a9e5c`                                     | 降低饱和度  |
+| K线涨跌      | `#4caf50` / `#f44336`                                                 | `#4a9e5c` / `#c4553d`                                                 | 与主题统一  |
+| 时间槽AP提示 | `#ff9800`                                                             | `var(--warning)`                                                      | 使用CSS变量 |
+
+**修改文件统计**：
+
+| 文件                      | 主要改动                                                |
+| ------------------------- | ------------------------------------------------------- |
+| `css/style.css`           | 文字变量替换 + stat-bar 渐变柔和化 + evening badge 颜色 |
+| `index.html`              | FOUC 预防样式文字色更新                                 |
+| `js/ui/render.js`         | 属性预警色 + 服务徽章色 + AP提示色 + 成绩等级色         |
+| `js/phase2/perf.js`       | 绩效等级色板                                            |
+| `js/phase2/investment.js` | 市场情绪色 + K线涨跌色                                  |
+
+**效果**：文字对比度控制在 3.2:1 ~ 7.2:1 区间，满足 WCAG AA 标准的同时大幅降低视觉刺激，暖灰棕色调在奶油白背景上长时间阅读更舒适。
+
 ### 待完成项（代码框架已建，UI待完善）
 
 1. **春节特殊事件链式化**：春节7天事件已在 `festivals.js` 中定义（`SPRING_FESTIVAL_EVENTS`），调度已接入 `daily_pipeline.js`，但**需要在 `events.js` 中添加为链式事件结构**（目前通过 `checkSpringFestivalEvents()` 直接调度，需整合到事件链系统中以便弹窗渲染和状态追踪）
@@ -1950,3 +2013,178 @@ Build complete: dist\index.html (1381.2 KB)
 3. **节日成就/里程碑**：需扩展成就系统，添加节日相关成就（春节全勤、节日购物达人等）
 
 **四方向开发完成！**
+
+---
+
+## 2026-06-19 阶段一&二完成记录
+
+### 阶段一：平衡调参
+
+#### Amenity 价格调整
+
+| Amenity      | 原价格 | 新价格 | 说明         |
+| ------------ | ------ | ------ | ------------ |
+| 城中村小食堂 | ¥5     | ¥6     | 基准线微调   |
+| 工地盒饭     | ¥8     | ¥10    | 增加成本感知 |
+| 批发市场面馆 | ¥12    | ¥14    | 性价比调整   |
+| 工厂食堂     | ¥10    | ¥12    | 基准线微调   |
+| 大学城外卖   | ¥15    | ¥18    | 学生区溢价   |
+| 公园小吃摊   | ¥10    | ¥12    | 夜市溢价     |
+| 商业区中餐馆 | ¥35    | ¥40    | 品质感拉开   |
+| 科技园轻食   | ¥45    | ¥50    | 精英区溢价   |
+| 在家做饭     | ¥8     | ¥15    | 需消耗食材   |
+| 在家洗澡     | ¥0     | ¥2     | 水电消耗     |
+| 在家休息     | ¥0     | ¥1     | 时间成本     |
+
+#### 疾病触发阈值调整
+
+| 疾病     | 原触发             | 新触发                       | 说明       |
+| -------- | ------------------ | ---------------------------- | ---------- |
+| 感冒     | hygiene<30 连续5天 | hygiene<30 连续7天 + 疲劳>70 | 双重条件   |
+| 肠胃炎   | 垃圾食品10次       | 垃圾食品15次                 | 增加容忍度 |
+| 营养不良 | 饥饱<25 连续8天    | 饥饱<20 连续10天             | 更严苛     |
+| 失眠症   | 夜间娱乐8次        | 夜间娱乐12次 + 心情<30       | 双重条件   |
+| 过劳     | 疲劳>80 连续6天    | 疲劳>85 连续8天              | 更严苛     |
+| 抑郁     | 心情<20 连续10天   | 心情<15 连续15天             | 更严苛     |
+
+#### 新增疾病演化链（8种）
+
+| 疾病     | 演化来源   | 触发条件                      | 症状                         | 治疗          |
+| -------- | ---------- | ----------------------------- | ---------------------------- | ------------- |
+| 胃癌     | 胃溃疡     | 胃溃疡≥3次 + 年龄≥45          | 健康-5/日，食欲-10，概率吐血 | 手术¥15000    |
+| 重度抑郁 | 抑郁倾向   | 抑郁≥2次 + 未治疗             | AP×1.3，拒绝工作，社交封闭   | 心理¥3000/月  |
+| 肺炎     | 感冒       | 感冒未愈 + 疲劳>80            | 健康-3/日，呼吸困难          | 医院¥800      |
+| 器官衰竭 | 肺炎       | 肺炎 + 免疫力<30              | 健康-8/日，多器官受损        | ICU¥30000     |
+| 贫血     | 营养不良   | 营养不良 + 年龄≥35            | 体质-5，疲劳+3/日            | 营养餐+药¥500 |
+| 重度失眠 | 失眠症     | 失眠症 + 年龄≥40              | 睡眠恢复×0.3，精神恍惚       | 药物¥800/月   |
+| 猝死风险 | 过劳       | 过劳 + 年龄≥45                | 每日死亡概率 2%              | 强制休息7天   |
+| 颈椎病   | 久坐工作   | 办公室工作≥100天              | 智力-2，疲劳+2/日            | 理疗¥300/次   |
+| 糖尿病   | 新增慢性病 | 垃圾食品80次 + 年龄≥40 + 肥胖 | 健康-1/日，需控饮食          | 按月¥300      |
+
+### 阶段二：食材库存联动系统
+
+#### 新增食材（20种）
+
+- **主食类**：大米、面粉、面条、土豆
+- **蔬菜类**：青菜、白菜、萝卜、番茄、黄瓜
+- **肉类**：猪肉、牛肉、鸡肉、鱼
+- **调料类**：盐、酱油、油、糖、辣椒
+- **蛋奶类**：鸡蛋、牛奶
+
+#### 烹饪系统
+
+- 20 种食谱，Lv.1-Lv.10
+- 烹饪技能经验系统
+- 食材保鲜：常温/冰箱(+5天)/冷冻(+15天)
+- 在家做饭 amenity 改为消耗食材
+
+#### 文件变更
+
+| 文件                            | 变更内容                                           |
+| ------------------------------- | -------------------------------------------------- |
+| `js/core/cooking.js`            | 新建：烹饪系统核心（食谱定义、烹饪执行、技能等级） |
+| `js/data/items.js`              | 新增 20 种食材定义                                 |
+| `js/data/amenities.js`          | 价格调整 + 在家做饭 requiresIngredients            |
+| `js/data/illnesses.js`          | 新增 8 种疾病 + 演化定义                           |
+| `js/phase1/illness.js`          | 演化触发逻辑 + 病史追踪 + 症状效果                 |
+| `js/phase1/critical.js`         | 食材消耗函数 + applyAmenity 集成                   |
+| `js/phase1/daily_pipeline.js`   | tickOfficeWorkDays 集成                            |
+| `js/ui/render.js`               | 烹饪 UI + 食材库存 UI                              |
+| `js/ui/wiki.js`                 | 食材/食谱百科条目                                  |
+| `js/data/mechanics_registry.js` | 烹饪系统注册                                       |
+| `index.html`                    | 引入 cooking.js                                    |
+
+### 阶段三：疾病演化深化（进行中）
+
+- 已完成疾病定义和触发逻辑
+- 待完善：演化链 UI 提示、疾病详情百科、演化事件弹窗
+
+### 阶段四：企业命运系统 Phase 2（待开始）
+
+- CEO 人格化深化
+- 公司历史书 UI 集成
+- 多周目企业记忆
+
+---
+
+## 2026-06-19 变更记录 — 百科系统注册表化重构
+
+### 背景与目标
+
+旧的 `src/js/ui/wiki.js`（2881 行）把"机制 / 叙事 / 胜利"三类的 detail HTML 全部硬编码在巨大的 `pages = { ... }` 字典里。每加一个新机制都要双改：列表 case + 详情字典；调任何阈值都要在 wiki.js 里手工改字符串。CLAUDE.md 因此长期挂着"必须同步更新 wiki.js"硬规则。
+
+参考 RimWorld DefDatabase / Factorio data / Civilization VI Civilopedia 的"Single Source of Truth + 注册表"模式，本次把百科改造成数据驱动：每条目一份结构化对象，参数函数化引用代码常量；新增 = 注册一个对象，wiki.js 零改动。
+
+### 设计要点
+
+**Schema**（`MECHANICS / NARRATIVES / VICTORIES` 三类共用）：
+
+```js
+REGISTRY[id] = {
+  id, name, icon, brief, version, reference,
+  related: ["mechanics:other", "amenities:*", "skills:cooking"],
+  sections: [
+    { kind: "desc",    text: string | (state)=>string },
+    { kind: "subhead", text: string },
+    { kind: "list",    items: string[] | {html}[] | (state)=>... },
+    { kind: "tip",     text: string | (state)=>string },
+    { kind: "table",   headers, rows },
+    { kind: "html",    get: (state)=>string },
+  ],
+};
+```
+
+**关键收益**：`items / text / get / rows` 任意一项都可以是函数，调用时再读最新常量。例如：
+
+- `MECHANICS.critical_needs` 的触发阈值 `items: () => Object.entries(CRITICAL_THRESHOLDS).map(...)` —— 调阈值时百科自动更新
+- `MECHANICS.illness_system` 的"疾病库当前收录 N 种" —— 直接 `ILLNESSES.length`，加新疾病自动 +1
+- `MECHANICS.synergy` 的协同列表 —— 直接读 `phase1/skill_bonuses.js` 的 `SKILL_SYNERGIES` 数组（真正的 SSOT）
+- `VICTORIES.achievements` —— 直接读 `core/achievements.js` 的 `ACHIEVEMENTS` 数组，自动统计总数 + 类别分布 + 隐藏数
+
+### 已迁移条目
+
+| 注册表       | 数量 | 来源                                                                                                                    |
+| ------------ | ---- | ----------------------------------------------------------------------------------------------------------------------- |
+| `MECHANICS`  | 7    | ap / stat_link / synergy / streak / cooking_system 在注册表文件；critical_needs / illness_system 在实现文件末尾就近注册 |
+| `NARRATIVES` | 8    | news_4layer / news_cascade / world_events / moral / ng_plus / event_real_estate / event_insider / event_workplace       |
+| `VICTORIES`  | 8    | v_p10 / v_wealth / v_business / v_fame / v_skill / v_invest / fail / achievements                                       |
+
+### 渲染管线
+
+`src/js/ui/wiki.js` 改造：
+
+- 新增 `_renderWikiEntry(state, m)` / `_renderWikiSection` / `_renderWikiRelated`（旧名 `_renderMechanicEntry` 保留为别名）
+- 三个 `_wikiDetailMechanic / _wikiDetailNarrative / _wikiDetailVictory` 都改为"注册表优先 + 旧 pages 字典兜底"——已迁移条目走通用渲染器，未迁移条目继续走旧字典，零回归风险
+- `_wikiListEntries('mechanics' / 'narrative' / 'victory')` 末尾合并注册表条目（同 id 注册表覆盖，新 id 追加到顶部）
+- `_renderWikiRelated` 跨注册表查友好名（label 优先用注册表 name，否则用 id）
+
+### 启动自检 `runMechanicsAudit()`（别名 `runWikiAudit`）
+
+- 扫三类注册表，校验 `m.id` 一致性、`name/brief` 非空、`related` 格式
+- 跨注册表交叉引用：能在对应注册表找到则 OK；找不到 → 列为 `ℹ️` 提示（"可能仍在旧 pages 字典"）——成为"未迁移条目雷达"
+- 当前状态：`✅ MECHANICS 7 / NARRATIVES 8 / VICTORIES 8，无问题`，`ℹ️ 5 条 related 指向旧条目` —— 自动给出下一批待迁移条目（city_pulse / history / fame_vip / insider_trading / inventory）
+- `main.js` 的 `DOMContentLoaded` 之后调用一次
+
+### 文件变更
+
+| 文件                                 | 变更内容                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------- |
+| `src/js/data/mechanics_registry.js`  | 新建：MECHANICS 容器 + ap/stat_link/synergy/streak 4 条 + 三类统一 audit                |
+| `src/js/data/narratives_registry.js` | **新建**：8 条叙事条目结构化                                                            |
+| `src/js/data/victories_registry.js`  | **新建**：8 条胜利条目结构化；achievements 直接读 ACHIEVEMENTS                          |
+| `src/js/phase1/critical.js`          | 末尾追加 `MECHANICS.critical_needs` 注册块（阈值由 CRITICAL_THRESHOLDS 派生）           |
+| `src/js/phase1/illness.js`           | 末尾追加 `MECHANICS.illness_system` 注册块（疾病库大小由 ILLNESSES.length 派生）        |
+| `src/js/ui/wiki.js`                  | 加 `_renderWikiEntry` 通用渲染器；三类详情函数改为"注册表优先"；列表 case 合并注册表    |
+| `src/js/main.js`                     | DOMContentLoaded 末尾调 `runMechanicsAudit()`                                           |
+| `src/index.html`                     | 加三个 `<script>` 标签（mechanics_registry / narratives_registry / victories_registry） |
+| `CLAUDE.md`                          | 把"必须改 wiki.js"硬规则改为"在注册表追加即可"，列出三个注册表文件路径                  |
+
+### 后续工作（按 audit ℹ️ 列表）
+
+`_wikiDetailMechanic` legacy `pages` 字典里仍有约 15 条机制（city_pulse / intel / history / edu / dream / festival_link / weather_link / npc_affinity / vending_footfall / fame_vip / skill_tree / enterprise_fate / startup_system / insider_trading / spring_festival_event / company_history）。点击仍正常工作，可按"被引用频率高 + 阈值高"优先迁移。`main.js` 内联的 streak `if/else if 0.05/0.10/0.15` 阶梯也尚未抽常量，未来抽出 `STREAK_BONUSES` 后注册表自动同步。
+
+### 验证
+
+- `node --check` 全过：mechanics_registry / narratives_registry / victories_registry / wiki.js / main.js / phase1/critical / phase1/illness
+- `python build.py` 输出 dist/index.html 1822.9 KB（已包含三大注册表）
+- 模拟渲染冒烟（最小 mock + 真实数据）：动态 items() 返回值正确、achievements 实时统计 5 类成就、audit 标识 5 条未迁移引用

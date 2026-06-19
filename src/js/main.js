@@ -1386,8 +1386,8 @@ function showCompareResult() {
     ) +
     diffVal(
       "总债务",
-      s1.resources.villageDebt || s1.resources.debt || 0,
-      s2.resources.villageDebt || s2.resources.debt || 0,
+      (s1.resources.villageDebt || 0) + (s1.resources.bankDebt || 0),
+      (s2.resources.villageDebt || 0) + (s2.resources.bankDebt || 0),
       function (v) {
         return "¥" + v.toLocaleString();
       },

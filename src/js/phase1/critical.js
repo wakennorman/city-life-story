@@ -295,6 +295,19 @@ function travelToAmenityAndUse(amenityId) {
  * 应用 amenity 效果：扣钱 + primary 主效果（按 tier 上限）+ bonusPool 真随机附加 + 标签习惯计数。
  */
 function applyAmenity(state, a) {
+  // === 食材消耗（在家做饭专用）===
+  if (a.requiresIngredients) {
+    var ingredientResult = consumeCookingIngredients(state, a);
+    if (!ingredientResult.success) {
+      StateManager.addMessage("🍳 " + ingredientResult.message, "warning");
+      return;
+    }
+    // 食材消耗成功，记录烹饪经验
+    if (typeof addCookingExp === "function") {
+      addCookingExp(state, 15);
+    }
+  }
+
   // 扣钱
   if (a.cost > 0) {
     state.resources.cash -= a.cost;
@@ -682,4 +695,82 @@ if (typeof window !== "undefined") {
       },
     ],
   };
+}
+
+// ====== 食材消耗（在家做饭）======
+
+/**
+ * 消耗烹饪食材：从库存中扣除所需食材
+ * @param {Object} state - 游戏状态
+ * @param {Object} amenity - amenity 定义（含 requiresIngredients: true）
+ * @returns {{success: boolean, message: string, consumed: Array}}
+ */
+function consumeCookingIngredients(state, amenity) {
+  var inv = (state.inventory = state.inventory || []);
+
+  // 默认食材消耗（在家做饭的基础食材组合）
+  var defaultIngredients = [
+    { itemId: "rice", amount: 1 },
+    { itemId: "egg", amount: 1 },
+    { itemId: "salt", amount: 1 },
+    { itemId: "cooking_oil", amount: 1 },
+  ];
+
+  // 如果有自定义食材需求，使用自定义
+  var ingredients = amenity.cookingIngredients || defaultIngredients;
+
+  // 检查食材
+  var missing = [];
+  for (var i = 0; i < ingredients.length; i++) {
+    var ing = ingredients[i];
+    var found = null;
+    for (var j = 0; j < inv.length; j++) {
+      if (inv[j].itemId === ing.itemId) {
+        found = inv[j];
+        break;
+      }
+    }
+    if (!found || found.quantity < ing.amount) {
+      var itemDef = getItemById && getItemById(ing.itemId);
+      missing.push({
+        itemId: ing.itemId,
+        itemName: itemDef ? itemDef.name : ing.itemId,
+        icon: itemDef ? itemDef.icon : "📦",
+        needed: ing.amount,
+        have: found ? found.quantity : 0,
+      });
+    }
+  }
+
+  if (missing.length > 0) {
+    var missingText = missing
+      .map(function (m) {
+        return m.icon + m.itemName + "(需" + m.needed + ", 有" + m.have + ")";
+      })
+      .join(", ");
+    return {
+      success: false,
+      message: "食材不足：" + missingText,
+      missing: missing,
+    };
+  }
+
+  // 消耗食材
+  var consumed = [];
+  for (var i = 0; i < ingredients.length; i++) {
+    var ing = ingredients[i];
+    for (var j = 0; j < inv.length; j++) {
+      if (inv[j].itemId === ing.itemId) {
+        inv[j].quantity -= ing.amount;
+        consumed.push({ itemId: ing.itemId, amount: ing.amount });
+        if (inv[j].quantity <= 0) {
+          inv.splice(j, 1);
+          j--;
+        }
+        break;
+      }
+    }
+  }
+
+  return { success: true, message: "食材消耗成功", consumed: consumed };
 }

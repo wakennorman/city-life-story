@@ -459,24 +459,43 @@ function drawSkillGrowthChart(ctx, state, x, y, w, h, skillKey) {
 }
 
 /**
- * 渲染Growth Tab内容
+ * 渲染Growth Tab内容（整合版）
+ * 整合了 render.js 和 data_viz.js 的所有功能：
+ * 1. 收入/支出曲线图
+ * 2. 属性雷达图（街头/职场）
+ * 3. 属性条形图侧边栏
+ * 4. 技能成长曲线
+ * 5. NPC 人际关系面板
+ * 6. 数据摘要
+ *
  * @param {object} state - 游戏状态
  * @param {HTMLElement} container - 容器元素
  */
 function renderGrowthTab(state, container) {
   container.innerHTML = "";
+  const p = state.player || {};
+  const isCorporate = p.phase === "corporate";
 
-  // 标题
-  const title = document.createElement("h2");
-  title.textContent = "📈 成长数据";
-  title.style.cssText =
-    "margin:0 0 16px;font-size:18px;color:var(--text-primary);";
-  container.appendChild(title);
+  // ---- 辅助函数 ----
+  function makeCard(html, opts = {}) {
+    const div = document.createElement("div");
+    div.style.cssText =
+      "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;";
+    if (opts.noMargin) div.style.marginBottom = "0";
+    div.innerHTML = html;
+    return div;
+  }
 
-  // 收入曲线图
-  const incomeSection = document.createElement("div");
-  incomeSection.style.cssText =
-    "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;";
+  function esc(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;");
+  }
+
+  // ---- 1. 收入/支出曲线图 ----
+  const incomeSection = makeCard(
+    '<h3 style="margin:0 0 10px;font-size:14px;color:var(--text-primary);">💰 收入/支出曲线</h3>',
+  );
   const incomeCanvas = document.createElement("canvas");
   incomeCanvas.width = 600;
   incomeCanvas.height = 250;
@@ -484,94 +503,108 @@ function renderGrowthTab(state, container) {
   incomeSection.appendChild(incomeCanvas);
   container.appendChild(incomeSection);
 
-  // 渲染收入图
-  setTimeout(() => {
-    const ctx = incomeCanvas.getContext("2d");
-    ctx.clearRect(0, 0, incomeCanvas.width, incomeCanvas.height);
-    drawIncomeChart(ctx, state, 0, 0, incomeCanvas.width, incomeCanvas.height);
-  }, 0);
+  // ---- 2. 属性雷达图 + 属性条形图侧边栏 ----
+  const radarSection = makeCard(
+    `<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">${
+      isCorporate ? "🏢 职场属性雷达" : "💪 基础属性雷达"
+    }</h3>`,
+    { noMargin: true },
+  );
+  radarSection.style.display = "flex";
+  radarSection.style.gap = "16px";
+  radarSection.style.alignItems = "flex-start";
 
-  // 属性雷达图（分街头/职场）
-  const radarSection = document.createElement("div");
-  radarSection.style.cssText =
-    "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;";
-
-  const radarTitle = document.createElement("h3");
-  radarTitle.textContent =
-    state.player.phase === "corporate" ? "🏢 职场属性雷达" : "💪 基础属性雷达";
-  radarTitle.style.cssText =
-    "margin:0 0 12px;font-size:15px;color:var(--text-primary);";
-  radarSection.appendChild(radarTitle);
-
+  const radarWrap = document.createElement("div");
+  radarWrap.style.cssText =
+    "flex:1;min-width:0;display:flex;justify-content:center;";
   const radarCanvas = document.createElement("canvas");
-  radarCanvas.width = 350;
-  radarCanvas.height = 300;
+  radarCanvas.width = 300;
+  radarCanvas.height = 280;
   radarCanvas.style.cssText = "max-width:100%;border-radius:8px;";
-  radarSection.appendChild(radarCanvas);
+  radarWrap.appendChild(radarCanvas);
+  radarSection.appendChild(radarWrap);
+
+  // 属性条形图侧边栏（来自 render.js 的独特功能）
+  const statSummary = document.createElement("div");
+  statSummary.style.cssText = "flex:1;min-width:0;padding-top:8px;";
+
+  let stats = [];
+  if (isCorporate) {
+    const c = state.corporate || {};
+    stats = [
+      { label: "发量", value: c.hair || 0, color: "#6b9cbe" },
+      { label: "尊严", value: c.dignity || 0, color: "#a48aca" },
+      { label: "KPI", value: Math.min(100, c.kpi || 0), color: "#c9a442" },
+      { label: "能力", value: c.ability || 0, color: "#5a94ba" },
+      { label: "向上", value: c.upward || 0, color: "#c48e4a" },
+      { label: "人缘", value: c.popularity || 0, color: "#cc7868" },
+      { label: "风险", value: Math.min(100, c.risk || 0), color: "#c87062" },
+    ];
+  } else {
+    stats = [
+      { label: "体质", value: p.physique || 0, color: "#c48e4a" },
+      { label: "智力", value: p.intelligence || 0, color: "#5a94ba" },
+      { label: "敏捷", value: p.agility || 0, color: "#56a64e" },
+      { label: "心智", value: p.mental || 0, color: "#9672b4" },
+      { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    ];
+  }
+
+  stats.forEach((s) => {
+    const row = document.createElement("div");
+    row.style.cssText =
+      "display:flex;align-items:center;gap:6px;margin-bottom:8px;";
+    row.innerHTML =
+      '<span style="width:32px;font-size:11px;color:var(--text-muted);">' +
+      esc(s.label) +
+      "</span>" +
+      '<div style="flex:1;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+      '<div style="width:' +
+      Math.min(100, s.value) +
+      "%;height:100%;background:" +
+      s.color +
+      ';border-radius:3px;"></div>' +
+      "</div>" +
+      '<span style="width:24px;font-size:11px;color:var(--text-secondary);text-align:right;">' +
+      s.value +
+      "</span>";
+    statSummary.appendChild(row);
+  });
+  radarSection.appendChild(statSummary);
   container.appendChild(radarSection);
 
-  // 渲染雷达图
-  setTimeout(() => {
-    const ctx = radarCanvas.getContext("2d");
-    ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
-    drawRadarChart(
-      ctx,
-      state,
-      0,
-      0,
-      radarCanvas.width,
-      radarCanvas.height,
-      state.player.phase,
-    );
-  }, 0);
-
-  // 技能成长（如果有技能）
+  // ---- 3. 技能成长曲线 ----
   const skills = state.skills || {};
   const skillKeys = Object.keys(skills);
   if (skillKeys.length > 0) {
-    const skillSection = document.createElement("div");
-    skillSection.style.cssText =
-      "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;";
-
-    const skillTitle = document.createElement("h3");
-    skillTitle.textContent = "📚 技能成长";
-    skillTitle.style.cssText =
-      "margin:0 0 12px;font-size:15px;color:var(--text-primary);";
-    skillSection.appendChild(skillTitle);
-
-    // 显示有历史数据的技能
     const skillsWithHistory = skillKeys.filter(
       (k) => skills[k].history && skills[k].history.length > 0,
     );
     if (skillsWithHistory.length > 0) {
+      const skillSection = makeCard("", { noMargin: true });
+      skillSection.innerHTML =
+        '<h3 style="margin:0 0 10px;font-size:14px;color:var(--text-primary);">📚 技能成长</h3>';
+
       const skillSelect = document.createElement("select");
       skillSelect.style.cssText =
         "margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);";
+      const skillNames = {
+        cooking: "烹饪",
+        repair: "维修",
+        coding: "编程",
+        english: "英语",
+        driving: "驾驶",
+        sales: "销售",
+        management: "管理",
+        accounting: "会计",
+        electrician: "电工",
+        welding: "焊接",
+      };
       skillsWithHistory.forEach((k) => {
         const opt = document.createElement("option");
         opt.value = k;
         opt.textContent =
-          k === "cooking"
-            ? "烹饪"
-            : k === "repair"
-              ? "维修"
-              : k === "coding"
-                ? "编程"
-                : k === "english"
-                  ? "英语"
-                  : k === "driving"
-                    ? "驾驶"
-                    : k === "sales"
-                      ? "销售"
-                      : k === "management"
-                        ? "管理"
-                        : k === "accounting"
-                          ? "会计"
-                          : k === "electrician"
-                            ? "电工"
-                            : k === "welding"
-                              ? "焊接"
-                              : k;
+          (skillNames[k] || k) + " (Lv." + (skills[k].level || 0) + ")";
         opt.selected = k === skillsWithHistory[0];
         skillSelect.appendChild(opt);
       });
@@ -582,9 +615,9 @@ function renderGrowthTab(state, container) {
       skillCanvas.height = 220;
       skillCanvas.style.cssText = "max-width:100%;border-radius:8px;";
       skillSection.appendChild(skillCanvas);
+      container.appendChild(skillSection);
 
-      // 渲染初始技能图
-      setTimeout(() => {
+      function renderSkillChart(sk) {
         const ctx = skillCanvas.getContext("2d");
         ctx.clearRect(0, 0, skillCanvas.width, skillCanvas.height);
         drawSkillGrowthChart(
@@ -594,58 +627,73 @@ function renderGrowthTab(state, container) {
           0,
           skillCanvas.width,
           skillCanvas.height,
-          skillSelect.value,
+          sk,
         );
-      }, 0);
+      }
 
-      // 切换技能时重绘
-      skillSelect.addEventListener("change", () => {
-        const ctx = skillCanvas.getContext("2d");
-        ctx.clearRect(0, 0, skillCanvas.width, skillCanvas.height);
-        drawSkillGrowthChart(
-          ctx,
-          state,
-          0,
-          0,
-          skillCanvas.width,
-          skillCanvas.height,
-          skillSelect.value,
-        );
-      });
-    } else {
-      const empty = document.createElement("p");
-      empty.textContent = "暂无技能成长数据，去培训中心学习技能吧！";
-      empty.style.cssText =
-        "color:var(--text-muted);font-size:13px;margin:16px 0;";
-      skillSection.appendChild(empty);
+      renderSkillChart(skillSelect.value);
+      skillSelect.addEventListener("change", () =>
+        renderSkillChart(skillSelect.value),
+      );
     }
-
-    container.appendChild(skillSection);
   }
 
-  // 统计数据摘要
-  const statsSection = document.createElement("div");
-  statsSection.style.cssText =
-    "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;";
+  // ---- 4. NPC 人际关系面板（render.js 独特功能）----
+  if (typeof NPCS !== "undefined" && state.relationships) {
+    const npcSection = makeCard("", { noMargin: true });
+    npcSection.innerHTML =
+      '<h3 style="margin:0 0 10px;font-size:14px;color:var(--text-primary);">🤝 人际关系</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">';
 
-  const statsTitle = document.createElement("h3");
-  statsTitle.textContent = "📊 数据摘要";
-  statsTitle.style.cssText =
-    "margin:0 0 12px;font-size:15px;color:var(--text-primary);";
-  statsSection.appendChild(statsTitle);
+    NPCS.forEach((npc) => {
+      const rel = state.relationships[npc.id];
+      if (!rel || !rel.met) return;
+      const aff = rel.affinity || 0;
+      const affLabel =
+        typeof getAffinityLabel === "function" ? getAffinityLabel(aff) : "";
+      const deepDone = !!(state.flags && state.flags["_npcDeepTask_" + npc.id]);
+      const favorDone = !!(state.flags && state.flags["_npcFavor_" + npc.id]);
+      const bar = Math.min(100, Math.max(0, aff));
+      const barColor =
+        aff >= 70 ? "#4caf50" : aff >= 40 ? "#ff9800" : "#2196f3";
 
+      npcSection.innerHTML +=
+        '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">' +
+        esc(npc.name) +
+        " " +
+        esc(affLabel) +
+        "</div>" +
+        '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
+        '<div style="width:' +
+        bar +
+        "%;height:100%;background:" +
+        barColor +
+        ';transition:width 0.3s;"></div>' +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        (favorDone ? "✅ 委托完成 " : "⬜ 委托未完 ") +
+        (deepDone ? "💌 深度对话" : aff >= 70 ? "💌 可对话" : "") +
+        "</div>" +
+        "</div>";
+    });
+    npcSection.innerHTML += "</div>";
+    container.appendChild(npcSection);
+  }
+
+  // ---- 5. 数据摘要（整合 render.js 和 data_viz.js 的优点）----
   const totalEarned = state.resources?.totalEarned || 0;
-  const totalDays = state.player?.day || 0;
+  const totalDays = p.day || 0;
   const avgIncome = totalDays > 0 ? Math.round(totalEarned / totalDays) : 0;
+  const totalAsset =
+    (state.resources?.cash || 0) + (state.resources?.bankBalance || 0);
+  const debt =
+    (state.resources?.villageDebt || 0) + (state.resources?.bankDebt || 0);
 
   const statsData = [
-    { label: "游戏天数", value: totalDays, icon: "📅" },
-    {
-      label: "终身总收入",
-      value: "¥" + totalEarned.toLocaleString(),
-      icon: "💰",
-    },
-    { label: "日均收入", value: "¥" + avgIncome, icon: "📈" },
+    { label: "游戏天数", value: "第" + totalDays + "天", icon: "📅" },
+    { label: "当前年龄", value: (p.age || 0) + "岁", icon: "🎂" },
+    { label: "总资产", value: "¥" + totalAsset.toLocaleString(), icon: "💰" },
     {
       label: "当前现金",
       value: "¥" + (state.resources?.cash || 0).toLocaleString(),
@@ -656,37 +704,96 @@ function renderGrowthTab(state, container) {
       value: "¥" + (state.resources?.bankBalance || 0).toLocaleString(),
       icon: "🏦",
     },
+    { label: "日均收入", value: "¥" + avgIncome, icon: "📈" },
+    {
+      label: "终身总收入",
+      value: "¥" + totalEarned.toLocaleString(),
+      icon: "💎",
+    },
+    debt > 0
+      ? {
+          label: "总负债",
+          value: "¥" + debt.toLocaleString(),
+          icon: "💸",
+          color: "#c4553d",
+        }
+      : null,
     {
       label: "当前职级",
-      value:
-        state.player.phase === "corporate"
-          ? state.corporate?.rank || "P5"
-          : "街头",
+      value: isCorporate ? state.corporate?.rank || "P5" : "街头",
       icon: "🏢",
     },
-  ];
+    {
+      label: "成就数",
+      value:
+        ((state.flags && state.flags._unlockedAchievements) || []).length +
+        "个",
+      icon: "🏅",
+    },
+    typeof getDreamProgress === "function"
+      ? { label: "梦想进度", value: getDreamProgress(state) + "%", icon: "🌟" }
+      : null,
+    state.trade?.totalProfit
+      ? {
+          label: "贸易总利润",
+          value: "¥" + (state.trade.totalProfit || 0).toLocaleString(),
+          icon: "📦",
+        }
+      : null,
+  ].filter(Boolean);
 
-  const statsGrid = document.createElement("div");
-  statsGrid.style.cssText =
-    "display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;";
+  const statsSection = makeCard("", { noMargin: true });
+  statsSection.innerHTML =
+    '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">📊 数据摘要</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">';
 
   statsData.forEach((stat) => {
-    const div = document.createElement("div");
-    div.style.cssText =
-      "background:var(--bg-secondary);border-radius:8px;padding:12px;text-align:center;";
-    div.innerHTML =
+    statsSection.innerHTML +=
+      '<div style="background:' +
+      (stat.color ? "rgba(196,85,51,0.08)" : "var(--bg-secondary)") +
+      ";border-radius:8px;padding:12px;text-align:center;" +
+      (stat.color ? "border:1px solid rgba(196,85,51,0.2);" : "") +
+      '">' +
       '<div style="font-size:20px;margin-bottom:4px;">' +
       stat.icon +
       '</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">' +
       stat.label +
-      '</div><div style="font-size:14px;font-weight:600;color:var(--text-primary);">' +
+      '</div><div style="font-size:14px;font-weight:600;color:' +
+      (stat.color || "var(--text-primary)") +
+      ';">' +
       stat.value +
-      "</div>";
-    statsGrid.appendChild(div);
+      "</div></div>";
   });
-
-  statsSection.appendChild(statsGrid);
+  statsSection.innerHTML += "</div>";
   container.appendChild(statsSection);
+
+  // ---- 异步绘制图表 ----
+  setTimeout(() => {
+    // 收入/支出曲线
+    const ctxIncome = incomeCanvas.getContext("2d");
+    ctxIncome.clearRect(0, 0, incomeCanvas.width, incomeCanvas.height);
+    drawIncomeChart(
+      ctxIncome,
+      state,
+      0,
+      0,
+      incomeCanvas.width,
+      incomeCanvas.height,
+    );
+
+    // 属性雷达图
+    const ctxRadar = radarCanvas.getContext("2d");
+    ctxRadar.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+    drawRadarChart(
+      ctxRadar,
+      state,
+      0,
+      0,
+      radarCanvas.width,
+      radarCanvas.height,
+      isCorporate ? "corp" : "street",
+    );
+  }, 0);
 }
 
 // 全局挂载
@@ -696,5 +803,7 @@ if (typeof window !== "undefined") {
     drawRadarChart,
     drawSkillGrowthChart,
     renderGrowthTab,
+    // 为 render.js 的委托机制提供独立引用（避免函数名冲突）
+    _dataVizRenderGrowthTab: renderGrowthTab,
   });
 }

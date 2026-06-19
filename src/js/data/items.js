@@ -1,8 +1,264 @@
 /**
- * 装备/道具定义
+ * 装备/道具/食材定义
+ *
+ * 食材分类（isIngredient: true）：
+ *   - 主食类：大米、面粉、面条、土豆
+ *   - 蔬菜类：青菜、白菜、萝卜、番茄、黄瓜
+ *   - 肉类：猪肉、牛肉、鸡肉、鱼
+ *   - 调料类：盐、酱油、油、糖、辣椒
+ *   - 蛋奶类：鸡蛋、牛奶
+ *
+ * 食材属性：
+ *   - price: 市场购买价格
+ *   - perishDays: 常温保鲜天数（冰箱+5天，冷冻+15天）
+ *   - isIngredient: 是否为食材（用于烹饪系统）
+ *   - ingredientType: 食材分类
  */
 
 const ITEMS = [
+  // ============================================================
+  // 食材 — 主食类
+  // ============================================================
+  {
+    id: "rice",
+    name: "大米",
+    icon: "🍚",
+    slot: null,
+    price: 5,
+    perishDays: 30,
+    isIngredient: true,
+    ingredientType: "主食",
+    desc: "基础主食，做饭必备。常温可存1个月。",
+  },
+  {
+    id: "flour",
+    name: "面粉",
+    icon: "🫓",
+    slot: null,
+    price: 4,
+    perishDays: 30,
+    isIngredient: true,
+    ingredientType: "主食",
+    desc: "可做面条、馒头、饺子皮。",
+  },
+  {
+    id: "noodles",
+    name: "面条",
+    icon: "🍜",
+    slot: null,
+    price: 3,
+    perishDays: 7,
+    isIngredient: true,
+    ingredientType: "主食",
+    desc: "速食面条，方便快捷。保质期较短。",
+  },
+  {
+    id: "potato",
+    name: "土豆",
+    icon: "🥔",
+    slot: null,
+    price: 2,
+    perishDays: 14,
+    isIngredient: true,
+    ingredientType: "主食",
+    desc: "万能食材，可炒可炖可炸。",
+  },
+
+  // ============================================================
+  // 食材 — 蔬菜类
+  // ============================================================
+  {
+    id: "bok_choy",
+    name: "青菜",
+    icon: "🥬",
+    slot: null,
+    price: 3,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "新鲜青菜，清炒或煮汤。保质期短。",
+  },
+  {
+    id: "cabbage",
+    name: "白菜",
+    icon: "🥬",
+    slot: null,
+    price: 2,
+    perishDays: 7,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "便宜大碗，炖菜必备。",
+  },
+  {
+    id: "radish",
+    name: "萝卜",
+    icon: "🥕",
+    slot: null,
+    price: 2,
+    perishDays: 10,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "萝卜炖肉，暖胃暖心。",
+  },
+  {
+    id: "tomato",
+    name: "番茄",
+    icon: "🍅",
+    slot: null,
+    price: 3,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "酸甜可口，可做汤或炒菜。",
+  },
+  {
+    id: "cucumber",
+    name: "黄瓜",
+    icon: "🥒",
+    slot: null,
+    price: 2,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "清爽可口，可凉拌可炒。",
+  },
+
+  // ============================================================
+  // 食材 — 肉类
+  // ============================================================
+  {
+    id: "pork",
+    name: "猪肉",
+    icon: "🥩",
+    slot: null,
+    price: 15,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "家常必备，可炒可炖。",
+  },
+  {
+    id: "beef",
+    name: "牛肉",
+    icon: "🥩",
+    slot: null,
+    price: 25,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "优质蛋白，红烧或炒牛肉。",
+  },
+  {
+    id: "chicken",
+    name: "鸡肉",
+    icon: "🍗",
+    slot: null,
+    price: 12,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "低脂高蛋白，炖汤或炒鸡丁。",
+  },
+  {
+    id: "fish",
+    name: "鱼",
+    icon: "🐟",
+    slot: null,
+    price: 18,
+    perishDays: 3,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "新鲜鱼类，清蒸或红烧。保质期很短。",
+  },
+
+  // ============================================================
+  // 食材 — 调料类
+  // ============================================================
+  {
+    id: "salt",
+    name: "盐",
+    icon: "🧂",
+    slot: null,
+    price: 1,
+    perishDays: 365,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "百味之首，做菜必备。",
+  },
+  {
+    id: "soy_sauce",
+    name: "酱油",
+    icon: "🫙",
+    slot: null,
+    price: 3,
+    perishDays: 180,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "提鲜上色，红烧必备。",
+  },
+  {
+    id: "cooking_oil",
+    name: "食用油",
+    icon: "🫙",
+    slot: null,
+    price: 5,
+    perishDays: 180,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "炒菜必备。",
+  },
+  {
+    id: "sugar",
+    name: "糖",
+    icon: "🍬",
+    slot: null,
+    price: 2,
+    perishDays: 365,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "调味或做甜点。",
+  },
+  {
+    id: "chili",
+    name: "辣椒",
+    icon: "🌶️",
+    slot: null,
+    price: 2,
+    perishDays: 7,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "增加辣味，开胃下饭。",
+  },
+
+  // ============================================================
+  // 食材 — 蛋奶类
+  // ============================================================
+  {
+    id: "egg",
+    name: "鸡蛋",
+    icon: "🥚",
+    slot: null,
+    price: 1,
+    perishDays: 7,
+    isIngredient: true,
+    ingredientType: "蛋奶",
+    desc: "万能食材，炒蛋、煮蛋、蒸蛋。",
+  },
+  {
+    id: "milk",
+    name: "牛奶",
+    icon: "🥛",
+    slot: null,
+    price: 3,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "蛋奶",
+    desc: "补充蛋白质和钙质。",
+  },
+
+  // ============================================================
+  // 装备/道具
+  // ============================================================
   {
     id: "straw_hat",
     name: "草帽",

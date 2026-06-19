@@ -11,14 +11,18 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：1.2节设计全面编码 — 33个蓝本事件 + 6个叙事模板 + L1-L4新闻生态系统
-- **待提交改动**：待 git add + commit
-- **P0/P1全优先级清单已完成**（累计270+项），事件总数202（+37），新闻事件79（+30），成就52
+- **最近一次工作**：百科系统注册表化重构 — `MECHANICS / NARRATIVES / VICTORIES` 三大注册表 + 通用渲染器 `_renderWikiEntry` + 启动自检 `runMechanicsAudit`
+  - 已迁移 23 条目（7 机制 + 8 叙事 + 8 胜利），调阈值 / 加新条目无需再碰 `wiki.js`
+  - `VICTORIES.achievements` 直接读 `ACHIEVEMENTS.length` + 类别分布 → 加新成就百科自动 +1
+  - audit 自动列出"未迁移条目"（当前 5 条 ℹ️：city_pulse / history / fame_vip / insider_trading / inventory），作为下一批迁移 TODO
+- **待提交改动**：待 git add + commit（含 3 个新注册表文件 + wiki.js / main.js / index.html / phase1/critical.js / phase1/illness.js / CLAUDE.md / DEVELOPMENT.md）
+- **P0/P1全优先级清单已完成**（累计280+项），事件总数202，新闻事件79，成就52
 - **下一步方向（新）**：
-  1. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
-  2. **自住房食材库存联动** — 深化"在家做饭"为实际食材消耗系统
-  3. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
-  4. **企业命运系统 Phase 2** — CEO人格化/公司历史书/多周目企业记忆深化
+  1. **继续迁移百科** — 按 audit ℹ️ 把剩余 ~15 条 mechanic（`_wikiDetailMechanic.pages` legacy 字典）搬进注册表
+  2. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
+  3. **自住房食材库存联动** — 深化"在家做饭"为实际食材消耗系统
+  4. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
+  5. **企业命运系统 Phase 2** — CEO人格化/公司历史书/多周目企业记忆深化
 
 ### ✅ 已完成但未在 CLAUDE.md 列出的更新
 
@@ -45,6 +49,12 @@
    - 25 个新节日成就：春节7（除夕团圆/红包达人/赤狗日学霸/迎财神/破五开工/送穷神/春节全勤）+ 剁手节2 + 劳动/中秋/国庆各1 + 节日综合1
    - 追踪 flag 埋点：春节事件选择/剁手节累计进货利润/劳动节工作/中秋节送礼/国庆节工作
    - 成就分类：`category: "节日"`，春节成就可见，有故事文案
+
+5. **UI文字配色全面优化**（`css/style.css` + `index.html` + `render.js` + `perf.js` + `investment.js`）
+   - CSS 变量：`text-primary` `#2c3328`→`#3d3a35`（~7.2:1）/ `text-secondary` `#5a6652`→`#6b6760`（~4.8:1）/ `text-muted` `#8a9680`→`#99958e`（~3.2:1）
+   - 暖灰棕色调替代暗绿调，降低蓝光刺激，长时间阅读更舒适
+   - 硬编码替换：属性预警色、服务徽章色、绩效等级色、市场情绪色、K线涨跌色、AP提示色等全部从高饱和 → 柔和暖色调
+   - 参考标准：WCAG 2.1 AA + Material Design 3 + Solarized + GitHub Primer / Linear / Notion
 
 ### 下一步方向
 
@@ -80,7 +90,8 @@
     - `related: ['mechanics:<id>', 'amenities:*', 'skills:cooking']` 自动渲染跨条目跳转
     - 跨文件/纯说明性机制（如 `ap` / `stat_link`）放在 `src/js/data/mechanics_registry.js`
     - 启动时 `runMechanicsAudit()` 控制台校验注册完整性 + related 引用
-  - 新世界事件/叙事：在 `_wikiListEntries` 的 `narrative` case 加条目 + 在 `_wikiDetailNarrative` pages 字典加详情（叙事注册表迁移留待后续）
+  - 新世界事件/叙事：在 `src/js/data/narratives_registry.js` 追加 `NARRATIVES.<id> = { ... }`（schema 与 MECHANICS 完全一致）
+  - 新胜利路线/成就汇总：在 `src/js/data/victories_registry.js` 追加 `VICTORIES.<id> = { ... }`；`achievements` 条目自动读 `ACHIEVEMENTS` 数组，新增成就只需改 `core/achievements.js`
   - 跨条目跳转用 `_wkLink(catId, entryId, label, icon)`，动态内容必须 `_wkE()` 转义
 - 每完成 3 个功能点，执行一次 `git add -A && git commit -m "..."` 存档
 - 上下文对话超过约 40 轮或感觉很长时，执行 `/compact` 再继续

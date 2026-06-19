@@ -216,50 +216,156 @@
   };
 
   // ============================================================
+  //  cooking_system — 烹饪系统
+  // ============================================================
+  MECHANICS.cooking_system = {
+    id: "cooking_system",
+    name: "烹饪系统",
+    icon: "🍳",
+    brief: "食材 → 菜品；烹饪技能Lv.1-10；菜品提供临时Buff",
+    version: "1.2.0",
+    reference: "《Stardew Valley》《模拟人生》",
+    related: ["items:ingredients", "mechanics:inventory"],
+    sections: [
+      {
+        kind: "desc",
+        text: "通过烹饪将食材转化为菜品，获得饱食恢复和临时效果。烹饪技能随烹饪次数提升，解锁更多食谱。",
+      },
+      { kind: "subhead", text: "📊 食材分类" },
+      {
+        kind: "list",
+        items: [
+          "主食类：大米、面粉、面条、土豆",
+          "蔬菜类：青菜、白菜、萝卜、番茄、黄瓜",
+          "肉类：猪肉、牛肉、鸡肉、鱼",
+          "调料类：盐、酱油、油、糖、辣椒",
+          "蛋奶类：鸡蛋、牛奶",
+        ],
+      },
+      { kind: "subhead", text: "🔄 食材保鲜" },
+      {
+        kind: "list",
+        items: [
+          "常温：按食材标注的天数",
+          "冰箱（自住房）：+5天",
+          "冷冻（自住房）：+15天",
+        ],
+      },
+      { kind: "subhead", text: "📈 烹饪技能" },
+      {
+        kind: "list",
+        items: [
+          "Lv.1：初始食谱（白米饭、番茄炒蛋等）",
+          "Lv.2-5：家常菜（红烧牛肉、鸡汤等）",
+          "Lv.6-8：高级料理（海鲜粥、火锅等）",
+          "Lv.9-10：满汉全席/人生盛宴（全属性Buff）",
+        ],
+      },
+      { kind: "subhead", text: "💡 提示" },
+      {
+        kind: "tip",
+        text: "在家做饭（amenity）会消耗食材。烹饪技能越高，解锁的食谱越强力。",
+      },
+    ],
+  };
+
+  // ============================================================
   //  自检：列出未命中的引用，给开发者一个早期警告
   // ============================================================
   // 暴露为全局，main.js 启动后调用一次
   window.runMechanicsAudit = function () {
-    if (typeof MECHANICS !== "object") return;
     var problems = [];
-    for (var id in MECHANICS) {
-      if (!MECHANICS.hasOwnProperty(id)) continue;
-      var m = MECHANICS[id];
-      if (m.id !== id) {
-        problems.push("[" + id + "] m.id 与 key 不一致：" + m.id);
-      }
-      if (!m.name || !m.brief) {
-        problems.push("[" + id + "] 缺少 name/brief");
-      }
-      if (m.related) {
-        for (var i = 0; i < m.related.length; i++) {
-          var ref = m.related[i];
-          var parts = ref.split(":");
-          var cat = parts[0],
-            rid = parts[1];
-          if (!cat) {
-            problems.push("[" + id + "] related 格式不对：" + ref);
-            continue;
-          }
-          if (rid && rid !== "*" && cat === "mechanics" && !MECHANICS[rid]) {
-            problems.push("[" + id + "] related 指向不存在的 mechanic：" + ref);
+    var hints = []; // 跨注册表引用未迁移条目 → 仅提示，不报错
+    var totals = {};
+
+    // 三类注册表共用同一套 schema → 共用一份审计
+    function _auditOne(label, registry) {
+      if (typeof registry !== "object" || !registry) return;
+      totals[label] = Object.keys(registry).length;
+      for (var id in registry) {
+        if (!registry.hasOwnProperty(id)) continue;
+        var m = registry[id];
+        if (m.id !== id) {
+          problems.push(
+            "[" + label + ":" + id + "] m.id 与 key 不一致：" + m.id,
+          );
+        }
+        if (!m.name || !m.brief) {
+          problems.push("[" + label + ":" + id + "] 缺少 name/brief");
+        }
+        if (m.related) {
+          for (var i = 0; i < m.related.length; i++) {
+            var ref = m.related[i];
+            var parts = ref.split(":");
+            var cat = parts[0],
+              rid = parts[1];
+            if (!cat) {
+              problems.push(
+                "[" + label + ":" + id + "] related 格式不对：" + ref,
+              );
+              continue;
+            }
+            if (!rid || rid === "*") continue;
+            // 跨注册表引用：能在对应注册表找到则 OK；否则记 hint
+            // （旧 _wikiDetailMechanic pages 字典里的条目尚未迁移，跳转仍可工作）
+            var ok = true;
+            if (cat === "mechanics") {
+              ok = typeof MECHANICS === "object" && !!MECHANICS[rid];
+            } else if (cat === "narrative") {
+              ok = typeof NARRATIVES === "object" && !!NARRATIVES[rid];
+            } else if (cat === "victory") {
+              ok = typeof VICTORIES === "object" && !!VICTORIES[rid];
+            }
+            if (!ok) {
+              hints.push(
+                "[" +
+                  label +
+                  ":" +
+                  id +
+                  "] related → " +
+                  ref +
+                  "（未在注册表，可能仍在旧 pages 字典）",
+              );
+            }
           }
         }
       }
     }
-    if (problems.length && typeof console !== "undefined") {
+
+    _auditOne("MECHANICS", typeof MECHANICS !== "undefined" ? MECHANICS : null);
+    _auditOne(
+      "NARRATIVES",
+      typeof NARRATIVES !== "undefined" ? NARRATIVES : null,
+    );
+    _auditOne("VICTORIES", typeof VICTORIES !== "undefined" ? VICTORIES : null);
+
+    if (typeof console === "undefined") return;
+    var summary = Object.keys(totals)
+      .map(function (k) {
+        return k + " " + totals[k];
+      })
+      .join(" / ");
+    if (problems.length) {
       console.warn(
-        "[mechanics-audit] " +
+        "[wiki-audit] " +
           problems.length +
-          " 个问题：\n  " +
+          " 个问题（" +
+          summary +
+          "）：\n  " +
           problems.join("\n  "),
       );
-    } else if (typeof console !== "undefined") {
+    } else {
+      console.log("[wiki-audit] ✅ " + summary + "，无问题");
+    }
+    if (hints.length) {
       console.log(
-        "[mechanics-audit] ✅ 已注册 " +
-          Object.keys(MECHANICS).length +
-          " 条机制，无问题",
+        "[wiki-audit] ℹ️ " +
+          hints.length +
+          " 条 related 指向旧条目（迁移完后会消失）：\n  " +
+          hints.join("\n  "),
       );
     }
   };
+  // 别名（main.js 已用 runMechanicsAudit）
+  window.runWikiAudit = window.runMechanicsAudit;
 })();

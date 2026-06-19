@@ -262,6 +262,48 @@ function _wikiListEntries(catId, state) {
         }
       }
       break;
+    case "ingredients":
+      if (typeof ITEMS !== "undefined") {
+        for (var ii = 0; ii < ITEMS.length; ii++) {
+          var it = ITEMS[ii];
+          if (it.isIngredient) {
+            out.push({
+              id: it.id,
+              name: it.name,
+              icon: it.icon || "📦",
+              brief:
+                "¥" +
+                it.price +
+                " · " +
+                it.perishDays +
+                "天保鲜 · " +
+                (it.ingredientType || "") +
+                " · " +
+                (it.desc || ""),
+            });
+          }
+        }
+      }
+      break;
+    case "recipes":
+      if (typeof COOKING_RECIPES !== "undefined") {
+        for (var ir = 0; ir < COOKING_RECIPES.length; ir++) {
+          var rc = COOKING_RECIPES[ir];
+          out.push({
+            id: rc.id,
+            name: rc.name,
+            icon: rc.icon || "🍳",
+            brief:
+              "Lv." +
+              rc.level +
+              " · 饱食+" +
+              rc.hungerRestore +
+              " · " +
+              (rc.desc || ""),
+          });
+        }
+      }
+      break;
     case "festivals":
       if (typeof FESTIVALS !== "undefined") {
         for (var i7 = 0; i7 < FESTIVALS.length; i7++) {
@@ -1018,6 +1060,12 @@ function _wikiRenderDetail(state, parent) {
       break;
     case "illnesses":
       html = _wikiDetailIllness(state, _wikiState.entryId);
+      break;
+    case "ingredients":
+      html = _wikiDetailIngredient(state, _wikiState.entryId);
+      break;
+    case "recipes":
+      html = _wikiDetailRecipe(state, _wikiState.entryId);
       break;
     case "festivals":
       html = _wikiDetailFestival(state, _wikiState.entryId);
@@ -2247,6 +2295,11 @@ function _renderMechanicRelated(refs) {
   return '<h3>🔗 相关</h3><p class="wiki-desc">' + links.join("，") + "</p>";
 }
 
+// 通用别名：narrative / victory 也用同一套渲染器
+var _renderWikiEntry = _renderMechanicEntry;
+var _renderWikiSection = _renderMechanicSection;
+var _renderWikiRelated = _renderMechanicRelated;
+
 function _wikiDetailMechanic(state, id) {
   // 1) 注册表优先：MECHANICS[id] 存在 → 通用渲染器
   if (typeof MECHANICS === "object" && MECHANICS && MECHANICS[id]) {
@@ -2701,6 +2754,11 @@ function _wikiDetailMechanic(state, id) {
 //  详情：世界叙事
 // ================================================================
 function _wikiDetailNarrative(state, id) {
+  // 1) 注册表优先
+  if (typeof NARRATIVES === "object" && NARRATIVES && NARRATIVES[id]) {
+    return _renderWikiEntry(state, NARRATIVES[id]);
+  }
+  // 2) 旧 pages 字典兜底（未迁移条目）
   var pages = {
     news_4layer:
       "<h2>📰 四层新闻生态</h2>" +
@@ -2876,6 +2934,11 @@ function _wikiDetailNarrative(state, id) {
 //  详情：成就/胜利
 // ================================================================
 function _wikiDetailVictory(state, id) {
+  // 1) 注册表优先
+  if (typeof VICTORIES === "object" && VICTORIES && VICTORIES[id]) {
+    return _renderWikiEntry(state, VICTORIES[id]);
+  }
+  // 2) 旧 pages 字典兜底（未迁移条目）
   var pages = {
     v_p10:
       "<h2>🏢 胜利：晋升 P10</h2>" +
@@ -3179,9 +3242,247 @@ function _wikiDetailIllness(state, id) {
     html += "</ul>";
   }
 
+  // === 演化链信息 ===
+  if (ill.isEvolution || ill.evolvesFrom || ill.evolvesTo) {
+    html += '<h3>🔄 疾病演化链</h3><ul class="wiki-list">';
+    if (ill.evolvesFrom && ill.evolvesFrom.length > 0) {
+      html += "<li><strong>演化来源：</strong>";
+      for (var ei = 0; ei < ill.evolvesFrom.length; ei++) {
+        var fromIll = ILLNESSES[ill.evolvesFrom[ei]];
+        if (fromIll) {
+          html +=
+            _wkLink(
+              "illnesses",
+              fromIll.id,
+              fromIll.icon + " " + fromIll.name,
+            ) + " ";
+        }
+      }
+      html += "</li>";
+    }
+    if (ill.evolvesTo && ill.evolvesTo.length > 0) {
+      html += "<li><strong>可演化为：</strong>";
+      for (var ei = 0; ei < ill.evolvesTo.length; ei++) {
+        var toIll = ILLNESSES[ill.evolvesTo[ei]];
+        if (toIll) {
+          html +=
+            _wkLink("illnesses", toIll.id, toIll.icon + " " + toIll.name) + " ";
+        }
+      }
+      html += "</li>";
+    }
+    if (ill.isEvolution) {
+      html +=
+        "<li><strong>⚠️ 演化疾病：</strong>由既往疾病演化而来，治疗难度更高</li>";
+    }
+    if (ill.isCritical) {
+      html += "<li><strong>🚨 危急重症：</strong>有生命危险，需立即治疗</li>";
+    }
+    html += "</ul>";
+  }
+
+  // 症状中的新字段
+  if (ill.symptom) {
+    var newSymLabel = {
+      randomVomitCh: "随机吐血概率",
+      hallucinationCh: "幻觉概率",
+      dailyDeathChance: "每日死亡概率",
+      dizzinessCh: "头晕概率",
+      breathingDifficulty: "呼吸困难",
+      workRefusalCh: "拒绝工作概率",
+      neckPain: "颈痛",
+      randomVisionBlur: "视力模糊概率",
+      multiOrganDamage: "多器官受损",
+    };
+    for (var sk2 in newSymLabel) {
+      if (ill.symptom[sk2]) {
+        html += '<p style="font-size:12px;color:var(--text-secondary);">';
+        if (
+          sk2 === "breathingDifficulty" ||
+          sk2 === "neckPain" ||
+          sk2 === "multiOrganDamage"
+        ) {
+          html += "⚠️ " + newSymLabel[sk2];
+        } else {
+          html +=
+            newSymLabel[sk2] + "：" + (ill.symptom[sk2] * 100).toFixed(1) + "%";
+        }
+        html += "</p>";
+      }
+    }
+  }
+
   html +=
     '<p class="wiki-desc">详见 ' +
     _wkLink("mechanics", "illness_system", "疾病系统") +
     "。</p>";
+  return html;
+}
+
+// ================================================================
+//  详情：食材 (Ingredient)
+// ================================================================
+function _wikiDetailIngredient(state, id) {
+  if (typeof ITEMS === "undefined") return "";
+  var item = null;
+  for (var i = 0; i < ITEMS.length; i++) {
+    if (ITEMS[i].id === id && ITEMS[i].isIngredient) {
+      item = ITEMS[i];
+      break;
+    }
+  }
+  if (!item) return "";
+
+  var html = "<h2>" + (item.icon || "📦") + " " + item.name + "</h2>";
+
+  html += '<div class="wiki-meta">';
+  html += "<span>食材 · " + (item.ingredientType || "其他") + "</span>";
+  html += '<span style="margin-left:12px;">¥' + item.price + "</span>";
+  html +=
+    '<span style="margin-left:12px;">保鲜' + item.perishDays + "天</span>";
+  html += "</div>";
+
+  html += '<div style="margin-top:16px;">';
+  html += "<p>" + (item.desc || "") + "</p>";
+
+  html += '<h3>📊 食材信息</h3><ul class="wiki-list">';
+  html += "<li>分类：" + (item.ingredientType || "其他") + "</li>";
+  html += "<li>市场价格：¥" + item.price + "</li>";
+  html += "<li>常温保鲜：" + item.perishDays + "天</li>";
+  html += "<li>冰箱保鲜：" + (item.perishDays + 5) + "天</li>";
+  html += "<li>冷冻保鲜：" + (item.perishDays + 15) + "天</li>";
+  html += "</ul>";
+
+  // 找出使用该食材的食谱
+  if (typeof COOKING_RECIPES !== "undefined") {
+    var usedInRecipes = [];
+    for (var j = 0; j < COOKING_RECIPES.length; j++) {
+      var recipe = COOKING_RECIPES[j];
+      for (var k = 0; k < recipe.ingredients.length; k++) {
+        if (recipe.ingredients[k].itemId === id) {
+          usedInRecipes.push(recipe);
+          break;
+        }
+      }
+    }
+    if (usedInRecipes.length > 0) {
+      html += '<h3>🍳 可用于制作</h3><ul class="wiki-list">';
+      for (var j = 0; j < usedInRecipes.length; j++) {
+        var recipe = usedInRecipes[j];
+        html +=
+          "<li>" +
+          recipe.icon +
+          " " +
+          recipe.name +
+          " (Lv." +
+          recipe.level +
+          ") — 需" +
+          recipe.ingredients.find(function (ing) {
+            return ing.itemId === id;
+          }).amount +
+          "个</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
+  html +=
+    '<p class="wiki-desc">详见 ' +
+    _wkLink("mechanics", "cooking_system", "烹饪系统") +
+    "。</p>";
+
+  return html;
+}
+
+// ================================================================
+//  详情：食谱 (Recipe)
+// ================================================================
+function _wikiDetailRecipe(state, id) {
+  if (typeof COOKING_RECIPES === "undefined") return "";
+  var recipe = null;
+  for (var i = 0; i < COOKING_RECIPES.length; i++) {
+    if (COOKING_RECIPES[i].id === id) {
+      recipe = COOKING_RECIPES[i];
+      break;
+    }
+  }
+  if (!recipe) return "";
+
+  var html = "<h2>" + (recipe.icon || "🍳") + " " + recipe.name + "</h2>";
+
+  html += '<div class="wiki-meta">';
+  html += "<span>烹饪 Lv." + recipe.level + "</span>";
+  html +=
+    '<span style="margin-left:12px;">饱食+' + recipe.hungerRestore + "</span>";
+  html += "</div>";
+
+  html += '<div style="margin-top:16px;">';
+  html += "<p>" + (recipe.desc || "") + "</p>";
+
+  html += '<h3>🥬 所需食材</h3><ul class="wiki-list">';
+  for (var i = 0; i < recipe.ingredients.length; i++) {
+    var ing = recipe.ingredients[i];
+    var itemDef = null;
+    if (typeof ITEMS !== "undefined") {
+      for (var j = 0; j < ITEMS.length; j++) {
+        if (ITEMS[j].id === ing.itemId) {
+          itemDef = ITEMS[j];
+          break;
+        }
+      }
+    }
+    html +=
+      "<li>" +
+      (itemDef ? itemDef.icon : "") +
+      " " +
+      (itemDef ? itemDef.name : ing.itemId) +
+      " ×" +
+      ing.amount +
+      "</li>";
+  }
+  html += "</ul>";
+
+  html += '<h3>✨ 效果</h3><ul class="wiki-list">';
+  html += "<li>饱食恢复：+" + recipe.hungerRestore + "</li>";
+  if (recipe.effects) {
+    for (var key in recipe.effects) {
+      if (recipe.effects.hasOwnProperty(key)) {
+        var label =
+          {
+            hunger: "饥饱",
+            fatigue: "疲劳",
+            hygiene: "卫生",
+            happiness: "心情",
+            health: "健康",
+            physique: "体质",
+            intelligence: "智力",
+            mental: "心智",
+            agility: "敏捷",
+          }[key] || key;
+        var val = recipe.effects[key];
+        if (key === "fatigue") val = "-" + val;
+        else if (key !== "health") val = "+" + val;
+        html += "<li>" + label + ": " + val + "</li>";
+      }
+    }
+  }
+  if (recipe.duration) {
+    if (recipe.duration.hours) {
+      html += "<li>持续时间：" + recipe.duration.hours + "小时</li>";
+    }
+    if (recipe.duration.days) {
+      html += "<li>持续时间：" + recipe.duration.days + "天</li>";
+    }
+    if (recipe.duration.effect) {
+      html += "<li>特殊效果：" + recipe.duration.effect + "</li>";
+    }
+  }
+  html += "</ul>";
+
+  html +=
+    '<p class="wiki-desc">详见 ' +
+    _wkLink("mechanics", "cooking_system", "烹饪系统") +
+    "。</p>";
+
   return html;
 }

@@ -30,6 +30,18 @@ function tickHabits(state) {
     highFatigueStreak: 0,
     lateNightActions: 0,
     stomach_inflammationCount: 0,
+    // 疾病演化追踪：每种病治愈/痊愈的次数
+    gastritisCount: 0,
+    depressionCount: 0,
+    coldCount: 0,
+    pneumoniaCount: 0,
+    malnutritionCount: 0,
+    insomniaCount: 0,
+    overworkCount: 0,
+    // 特殊习惯
+    officeWorkDays: 0,
+    hungerHighStreak: 0,
+    healthUnder30: 0,
   };
   var h = state.flags._habits;
 
@@ -48,6 +60,21 @@ function tickHabits(state) {
   // 连续高 fatigue
   if (n.fatigue > 80) h.highFatigueStreak = (h.highFatigueStreak || 0) + 1;
   else h.highFatigueStreak = 0;
+
+  // 连续高 hunger（肥胖风险）
+  if (n.hunger > 80) h.hungerHighStreak = (h.hungerHighStreak || 0) + 1;
+  else h.hungerHighStreak = 0;
+
+  // 健康<30 天数
+  if (state.status && state.status.health < 30)
+    h.healthUnder30 = (h.healthUnder30 || 0) + 1;
+  else h.healthUnder30 = 0;
+
+  // 办公室工作天数（由外部调用累加）
+  // tickOfficeWorkDays 在 daily_pipeline 中调用
+
+  // 疾病演化计数：已痊愈的疾病计入历史
+  // 在 tickIllnessDecay 中，当疾病自然康复时调用 recordIllnessCure
 }
 
 // ====== 每日患病判定 ======
@@ -120,16 +147,47 @@ function _addIllness(state, illnessId) {
   // 兼容旧字段（让现有代码能继续读 sick）
   state.status.sick = true;
 
-  StateManager.addMessage(
-    (ill.icon || "🤒") + " 你患上了" + ill.name + "！" + (ill.desc || ""),
-    "danger",
-  );
+  var msg = (ill.icon || "🤒") + " 你患上了" + ill.name + "！";
+  if (ill.isEvolution) {
+    msg += "（由既往疾病演化而来）";
+  }
+  if (ill.isCritical) {
+    msg += " ⚠️ 危急重症！";
+  }
+  msg += " " + (ill.desc || "");
 
+  StateManager.addMessage(msg, "danger");
+
+  // 追踪病史计数（用于演化链）
   if (illnessId === "stomach_inflammation") {
     state.flags._habits = state.flags._habits || {};
     state.flags._habits.stomach_inflammationCount =
       (state.flags._habits.stomach_inflammationCount || 0) + 1;
   }
+}
+
+/** 记录疾病痊愈（用于演化链追踪） */
+function recordIllnessCure(state, illnessId) {
+  var ill = ILLNESSES[illnessId];
+  if (!ill) return;
+  var h = (state.flags._habits = state.flags._habits || {});
+
+  // 将痊愈的疾病计入演化历史
+  if (illnessId === "cold") h.coldCount = (h.coldCount || 0) + 1;
+  else if (illnessId === "stomach_inflammation")
+    h.stomach_inflammationCount = (h.stomach_inflammationCount || 0) + 1;
+  else if (illnessId === "gastritis")
+    h.gastritisCount = (h.gastritisCount || 0) + 1;
+  else if (illnessId === "depression")
+    h.depressionCount = (h.depressionCount || 0) + 1;
+  else if (illnessId === "pneumonia")
+    h.pneumoniaCount = (h.pneumoniaCount || 0) + 1;
+  else if (illnessId === "malnutrition")
+    h.malnutritionCount = (h.malnutritionCount || 0) + 1;
+  else if (illnessId === "insomnia")
+    h.insomniaCount = (h.insomniaCount || 0) + 1;
+  else if (illnessId === "overwork")
+    h.overworkCount = (h.overworkCount || 0) + 1;
 }
 
 // ====== 每日疾病结算 ======
@@ -196,6 +254,53 @@ function tickIllnessDecay(state) {
           "warning",
         );
       }
+
+      // 随机吐血（胃癌）
+      if (
+        ill.symptom.randomVomitCh &&
+        Math.random() < ill.symptom.randomVomitCh
+      ) {
+        state.status.health = Math.max(0, state.status.health - 3);
+        StateManager.addMessage(
+          "🩸 " + ill.name + "发作，你吐了血，健康-3！",
+          "danger",
+        );
+      }
+
+      // 幻觉（重度失眠）
+      if (
+        ill.symptom.hallucinationCh &&
+        Math.random() < ill.symptom.hallucinationCh
+      ) {
+        StateManager.addMessage(
+          "👻 " + ill.name + "让你产生了幻觉，精神恍惚。",
+          "warning",
+        );
+      }
+
+      // 猝死风险检测
+      if (
+        ill.symptom.dailyDeathChance &&
+        Math.random() < ill.symptom.dailyDeathChance
+      ) {
+        StateManager.addMessage(
+          "💔 " + ill.name + "导致猝死！你的心脏停止了跳动。",
+          "danger",
+        );
+        state.player.alive = false;
+        state.status.health = 0;
+        // 游戏结束处理由外部接管
+        continue;
+      }
+
+      // 头晕（贫血）
+      if (ill.symptom.dizzinessCh && Math.random() < ill.symptom.dizzinessCh) {
+        state.needs.fatigue += 5;
+        StateManager.addMessage(
+          "😵 " + ill.name + "让你头晕目眩，疲劳+5。",
+          "warning",
+        );
+      }
     }
 
     // 自然康复判定
@@ -206,6 +311,8 @@ function tickIllnessDecay(state) {
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",
         );
+        // 记录痊愈，用于演化链追踪
+        recordIllnessCure(state, inst.id);
         continue; // 不放回 remaining
       }
     }
@@ -257,7 +364,7 @@ function _tickChronic(state, inst, ill) {
 
 /** 累计所有疾病症状对 needs/health 的每日影响（applyStatusInteractions 调用） */
 function getIllnessNeedsImpact(state) {
-  var impact = { hunger: 0, fatigue: 0, hygiene: 0, happiness: 0 };
+  var impact = { hunger: 0, fatigue: 0, hygiene: 0, happiness: 0, health: 0 };
   if (!state.status.illnesses) return impact;
   for (var i = 0; i < state.status.illnesses.length; i++) {
     var ill = ILLNESSES[state.status.illnesses[i].id];
@@ -266,6 +373,7 @@ function getIllnessNeedsImpact(state) {
     if (ill.symptom.fatigue) impact.fatigue += ill.symptom.fatigue;
     if (ill.symptom.hygiene) impact.hygiene += ill.symptom.hygiene;
     if (ill.symptom.happiness) impact.happiness += ill.symptom.happiness;
+    if (ill.symptom.health) impact.health += ill.symptom.health;
   }
   return impact;
 }
@@ -294,6 +402,18 @@ function getIllnessAttrDebuffs(state) {
       d.fatigueRecoveryMult *= ill.symptom.fatigueRecoveryMult;
   }
   return d;
+}
+
+/** 每日累加办公室工作天数（由 daily_pipeline 调用） */
+function tickOfficeWorkDays(state) {
+  if (state.corporate && state.corporate.company) {
+    var jobDef = getJobById && getJobById(state.corporate.jobId);
+    if (jobDef && (jobDef.type === "office" || jobDef.type === "corp")) {
+      state.flags._habits = state.flags._habits || {};
+      state.flags._habits.officeWorkDays =
+        (state.flags._habits.officeWorkDays || 0) + 1;
+    }
+  }
 }
 
 // ====== 治疗 UI ======
@@ -445,13 +565,13 @@ if (typeof window !== "undefined") {
     id: "illness_system",
     name: "疾病系统",
     icon: "🤒",
-    brief: "长期不良习惯 → 命名疾病；药店/医院两档治疗",
-    version: "1.1.0",
-    related: ["illnesses:*", "mechanics:critical_needs"],
+    brief: "长期不良习惯 → 命名疾病；疾病演化链；药店/医院两档治疗",
+    version: "1.2.0",
+    related: ["illnesses:*", "mechanics:critical_needs", "items:ingredients"],
     sections: [
       {
         kind: "desc",
-        text: "长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。",
+        text: "长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。部分疾病可演化进阶。",
       },
       {
         kind: "html",
@@ -479,6 +599,23 @@ if (typeof window !== "undefined") {
           { html: "<code>lowHappinessStreak</code>：连续心情 &lt;20 天数" },
           { html: "<code>highFatigueStreak</code>：连续疲劳 &gt;80 天数" },
           { html: "<code>lateNightActions</code>：累计夜生活次数" },
+          { html: "<code>officeWorkDays</code>：累计办公室工作天数（职业病）" },
+          {
+            html: "<code>hungerHighStreak</code>：连续饥饱 &gt;80 天数（肥胖风险）",
+          },
+          { html: "<code>healthUnder30</code>：连续健康 &lt;30 天数" },
+        ],
+      },
+      { kind: "subhead", text: "🔄 疾病演化链" },
+      {
+        kind: "list",
+        items: [
+          "肠胃炎 → 胃溃疡 → 胃癌（反复患病 + 年龄增长）",
+          "抑郁倾向 → 重度抑郁（反复患病）",
+          "感冒 → 肺炎 → 器官衰竭（未及时治疗 + 疲劳累积）",
+          "营养不良 → 贫血（年龄增长）",
+          "失眠症 → 重度失眠（年龄增长）",
+          "过劳 → 猝死风险（年龄增长 + 未治疗）",
         ],
       },
       { kind: "subhead", text: "💊 治疗" },
@@ -487,12 +624,12 @@ if (typeof window !== "undefined") {
         items: [
           "药店：便宜，标记 treated=true，自然康复时间减半",
           "医院：贵，立即康复",
-          "慢性病（如高血压）：必须按月持续付费才不发作",
+          "慢性病（如高血压、糖尿病）：必须按月持续付费才不发作",
         ],
       },
       {
         kind: "tip",
-        text: "在医院触发「看病」行动可一站式选病种 + 选档次。",
+        text: "在医院触发「看病」行动可一站式选病种 + 选档次。疾病演化后治疗费用大幅上升。",
       },
     ],
   };
