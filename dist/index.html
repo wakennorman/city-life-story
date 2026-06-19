@@ -29810,7 +29810,8 @@ function consumeCookingIngredients(state, amenity) {
   //   2) state.inventory = { items: [{ id, qty }], capacity } (实际 state 格式)
   var inv = state.inventory;
   var isOldFormat = Array.isArray(inv);
-  if (!inv) inv = state.inventory = (isOldFormat ? [] : { items: [], capacity: 20 });
+  if (!inv)
+    inv = state.inventory = isOldFormat ? [] : { items: [], capacity: 20 };
   if (!isOldFormat && !inv.items) inv.items = [];
 
   // 如果食谱指定了要 cookRecipe，就走全食谱流程（显示食谱选择）
@@ -29836,15 +29837,22 @@ function consumeCookingIngredients(state, amenity) {
     var found = null;
     if (isOldFormat) {
       for (var j = 0; j < inv.length; j++) {
-        if (inv[j].itemId === ing.itemId) { found = inv[j]; break; }
+        if (inv[j].itemId === ing.itemId) {
+          found = inv[j];
+          break;
+        }
       }
     } else {
       for (var j = 0; j < inv.items.length; j++) {
-        if (inv.items[j].id === ing.itemId) { found = inv.items[j]; break; }
+        if (inv.items[j].id === ing.itemId) {
+          found = inv.items[j];
+          break;
+        }
       }
     }
     if (!found || found.quantity < ing.amount) {
-      var itemDef = typeof getItemById === "function" && getItemById(ing.itemId);
+      var itemDef =
+        typeof getItemById === "function" && getItemById(ing.itemId);
       missing.push({
         itemId: ing.itemId,
         itemName: itemDef ? itemDef.name : ing.itemId,
@@ -29877,7 +29885,10 @@ function consumeCookingIngredients(state, amenity) {
         if (inv[j].itemId === ing.itemId) {
           inv[j].quantity -= ing.amount;
           consumed.push({ itemId: ing.itemId, amount: ing.amount });
-          if (inv[j].quantity <= 0) { inv.splice(j, 1); j--; }
+          if (inv[j].quantity <= 0) {
+            inv.splice(j, 1);
+            j--;
+          }
           break;
         }
       }
@@ -29886,7 +29897,10 @@ function consumeCookingIngredients(state, amenity) {
         if (inv.items[j].id === ing.itemId) {
           inv.items[j].qty -= ing.amount;
           consumed.push({ itemId: ing.itemId, amount: ing.amount });
-          if (inv.items[j].qty <= 0) { inv.items.splice(j, 1); j--; }
+          if (inv.items[j].qty <= 0) {
+            inv.items.splice(j, 1);
+            j--;
+          }
           break;
         }
       }
@@ -29911,9 +29925,12 @@ function _canCookRecipeByState(state, recipe) {
     for (var j = 0; j < items.length; j++) {
       // 兼容两种 key 名：id / itemId
       var fid = items[j].id || items[j].itemId;
-      if (fid === ing.itemId) { found = items[j]; break; }
+      if (fid === ing.itemId) {
+        found = items[j];
+        break;
+      }
     }
-    var qty = found ? (found.qty || found.quantity || 0) : 0;
+    var qty = found ? found.qty || found.quantity || 0 : 0;
     if (qty < ing.amount) return false;
   }
   return true;
@@ -29932,7 +29949,8 @@ function _consumeIngredientsFromState(state, recipe) {
       var fid = items[j].id || items[j].itemId;
       if (fid === ing.itemId) {
         if (items[j].qty !== undefined) items[j].qty -= ing.amount;
-        else if (items[j].quantity !== undefined) items[j].quantity -= ing.amount;
+        else if (items[j].quantity !== undefined)
+          items[j].quantity -= ing.amount;
         if ((items[j].qty || items[j].quantity || 0) <= 0) {
           items.splice(j, 1);
           j--;
@@ -29959,9 +29977,12 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
   }
 
   // 获取可解锁的食谱
-  var recipes = typeof getRecipesByLevel === "function"
-    ? getRecipesByLevel(cookLevel)
-    : (typeof COOKING_RECIPES !== "undefined" ? COOKING_RECIPES : []);
+  var recipes =
+    typeof getRecipesByLevel === "function"
+      ? getRecipesByLevel(cookLevel)
+      : typeof COOKING_RECIPES !== "undefined"
+        ? COOKING_RECIPES
+        : [];
 
   if (!recipes || recipes.length === 0) {
     if (typeof StateManager !== "undefined") {
@@ -29973,8 +29994,8 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
   var html = '<div class="cooking-modal">';
   html += '<h2 style="margin:0 0 8px;font-size:16px;">🍳 在家做饭</h2>';
   html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
-  html += '烹饪 Lv.' + cookLevel + ' · 可用食谱 ' + recipes.length + ' 道';
-  html += ' · 消耗 ' + (totalAp || 10) + ' AP</p>';
+  html += "烹饪 Lv." + cookLevel + " · 可用食谱 " + recipes.length + " 道";
+  html += " · 消耗 " + (totalAp || 10) + " AP</p>";
   html += '<div style="max-height:400px;overflow-y:auto;">';
 
   for (var i = 0; i < recipes.length; i++) {
@@ -29984,7 +30005,8 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
     var ingHtml = [];
     for (var j = 0; j < r.ingredients.length; j++) {
       var ing = r.ingredients[j];
-      var itemDef = typeof getItemById === "function" ? getItemById(ing.itemId) : null;
+      var itemDef =
+        typeof getItemById === "function" ? getItemById(ing.itemId) : null;
       var itemName = itemDef ? itemDef.name : ing.itemId;
       var itemIcon = itemDef ? itemDef.icon : "📦";
       // 检查玩家有多少
@@ -29999,39 +30021,70 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
       }
       var enough = haveQty >= ing.amount;
       ingHtml.push(
-        (enough ? "✅" : "❌") + itemIcon + itemName + "×" + ing.amount +
-        " <span style='color:" + (enough ? "var(--success)" : "var(--danger)") + ";font-size:10px;'>" +
-        "有" + haveQty + "</span>"
+        (enough ? "✅" : "❌") +
+          itemIcon +
+          itemName +
+          "×" +
+          ing.amount +
+          " <span style='color:" +
+          (enough ? "var(--success)" : "var(--danger)") +
+          ";font-size:10px;'>" +
+          "有" +
+          haveQty +
+          "</span>",
       );
     }
 
     var buffDesc = [];
     if (r.hungerRestore) buffDesc.push("饱食+" + r.hungerRestore);
     if (r.effects) {
-      var effLabels = { happiness: "心情", physique: "体质", intelligence: "智力",
-        mental: "心智", agility: "敏捷", hygiene: "卫生", fatigue: "疲劳", health: "健康" };
+      var effLabels = {
+        happiness: "心情",
+        physique: "体质",
+        intelligence: "智力",
+        mental: "心智",
+        agility: "敏捷",
+        hygiene: "卫生",
+        fatigue: "疲劳",
+        health: "健康",
+      };
       for (var ek in r.effects) {
-        if (effLabels[ek]) buffDesc.push(effLabels[ek] + (r.effects[ek] >= 0 ? "+" : "") + r.effects[ek]);
+        if (effLabels[ek])
+          buffDesc.push(
+            effLabels[ek] + (r.effects[ek] >= 0 ? "+" : "") + r.effects[ek],
+          );
       }
     }
 
-    html += '<div style="border:1px solid ' + (canCook ? 'var(--success)' : 'var(--border)') +
-      ';border-radius:8px;padding:10px;margin-bottom:8px;' +
-      (canCook ? 'cursor:pointer;' : 'opacity:0.6;') +
-      '" data-recipe="' + r.id + '" class="cooking-recipe-card"' +
-      (canCook ? ' onclick="executeCookingRecipe(\'' + r.id + '\')"' : '') + '>';
+    html +=
+      '<div style="border:1px solid ' +
+      (canCook ? "var(--success)" : "var(--border)") +
+      ";border-radius:8px;padding:10px;margin-bottom:8px;" +
+      (canCook ? "cursor:pointer;" : "opacity:0.6;") +
+      '" data-recipe="' +
+      r.id +
+      '" class="cooking-recipe-card"' +
+      (canCook ? " onclick=\"executeCookingRecipe('" + r.id + "')\"" : "") +
+      ">";
     html += '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">';
-    html += r.icon + ' ' + r.name;
-    html += ' <span style="font-size:11px;color:var(--text-muted);font-weight:400;">Lv.' + r.level + '</span>';
-    html += '</div>';
-    html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">';
-    html += r.desc + (buffDesc.length ? ' · ' + buffDesc.join(" ") : '');
-    html += '</div>';
-    html += '<div style="font-size:10px;color:var(--text-muted);">' + ingHtml.join(" | ") + '</div>';
-    html += '</div>';
+    html += r.icon + " " + r.name;
+    html +=
+      ' <span style="font-size:11px;color:var(--text-muted);font-weight:400;">Lv.' +
+      r.level +
+      "</span>";
+    html += "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">';
+    html += r.desc + (buffDesc.length ? " · " + buffDesc.join(" ") : "");
+    html += "</div>";
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);">' +
+      ingHtml.join(" | ") +
+      "</div>";
+    html += "</div>";
   }
 
-  html += '</div>'; // scrollable div
+  html += "</div>"; // scrollable div
 
   // 如果模式窗存在就使用，否则用 alert
   if (typeof showModal === "function") {
@@ -30047,7 +30100,7 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
       html +
       '<div style="text-align:center;margin-top:12px;">' +
       '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">取消</button>' +
-      '</div></div>';
+      "</div></div>";
     document.body.appendChild(overlay);
   }
 }
@@ -30056,10 +30109,12 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
  * 执行已选的食谱
  */
 function executeCookingRecipe(recipeId) {
-  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  var state =
+    typeof StateManager !== "undefined" ? StateManager.getState() : null;
   if (!state) return;
 
-  var recipe = typeof getRecipeById === "function" ? getRecipeById(recipeId) : null;
+  var recipe =
+    typeof getRecipeById === "function" ? getRecipeById(recipeId) : null;
   if (!recipe) {
     StateManager.addMessage("❌ 食谱不存在。", "danger");
     return;
@@ -30067,7 +30122,10 @@ function executeCookingRecipe(recipeId) {
 
   // 检查食材
   if (!_canCookRecipeByState(state, recipe)) {
-    StateManager.addMessage("❌ 食材不足，无法制作「" + recipe.name + "」。", "warning");
+    StateManager.addMessage(
+      "❌ 食材不足，无法制作「" + recipe.name + "」。",
+      "warning",
+    );
     return;
   }
 
@@ -30076,26 +30134,48 @@ function executeCookingRecipe(recipeId) {
 
   // 应用效果
   if (recipe.hungerRestore) {
-    state.needs.hunger = Math.min(100, state.needs.hunger + recipe.hungerRestore);
+    state.needs.hunger = Math.min(
+      100,
+      state.needs.hunger + recipe.hungerRestore,
+    );
   }
   if (recipe.effects) {
     for (var key in recipe.effects) {
       if (!recipe.effects.hasOwnProperty(key)) continue;
       var val = recipe.effects[key];
-      if (key === "happiness") state.needs.happiness = Math.min(100, state.needs.happiness + val);
-      else if (key === "fatigue") state.needs.fatigue = Math.max(0, state.needs.fatigue + val);
-      else if (key === "health") state.status.health = Math.min(100, Math.max(0, state.status.health + val));
-      else if (key === "physique") state.player.physique = Math.min(100, (state.player.physique || 0) + val);
-      else if (key === "intelligence") state.player.intelligence = Math.min(100, (state.player.intelligence || 0) + val);
-      else if (key === "mental") state.player.mental = Math.min(100, (state.player.mental || 0) + val);
-      else if (key === "agility") state.player.agility = Math.min(100, (state.player.agility || 0) + val);
-      else if (key === "hygiene") state.needs.hygiene = Math.min(100, state.needs.hygiene + val);
+      if (key === "happiness")
+        state.needs.happiness = Math.min(100, state.needs.happiness + val);
+      else if (key === "fatigue")
+        state.needs.fatigue = Math.max(0, state.needs.fatigue + val);
+      else if (key === "health")
+        state.status.health = Math.min(
+          100,
+          Math.max(0, state.status.health + val),
+        );
+      else if (key === "physique")
+        state.player.physique = Math.min(
+          100,
+          (state.player.physique || 0) + val,
+        );
+      else if (key === "intelligence")
+        state.player.intelligence = Math.min(
+          100,
+          (state.player.intelligence || 0) + val,
+        );
+      else if (key === "mental")
+        state.player.mental = Math.min(100, (state.player.mental || 0) + val);
+      else if (key === "agility")
+        state.player.agility = Math.min(100, (state.player.agility || 0) + val);
+      else if (key === "hygiene")
+        state.needs.hygiene = Math.min(100, state.needs.hygiene + val);
     }
   }
 
   // 记录烹饪经验和习惯
-  if (typeof addCookingExp === "function") addCookingExp(state, 10 + recipe.level * 5);
-  if (typeof onCookingCompleted === "function") onCookingCompleted(state, recipe);
+  if (typeof addCookingExp === "function")
+    addCookingExp(state, 10 + recipe.level * 5);
+  if (typeof onCookingCompleted === "function")
+    onCookingCompleted(state, recipe);
   state.flags._cookingCount = (state.flags._cookingCount || 0) + 1;
 
   // 清除延期标记
@@ -30108,12 +30188,17 @@ function executeCookingRecipe(recipeId) {
 
   // 营养均衡标记
   state.flags._habits = state.flags._habits || {};
-  state.flags._habits.junkFoodMeals = Math.max(0, (state.flags._habits.junkFoodMeals || 0) - 2);
+  state.flags._habits.junkFoodMeals = Math.max(
+    0,
+    (state.flags._habits.junkFoodMeals || 0) - 2,
+  );
 
   StateManager.addMessage(
-    "🍳 你烹饪了「" + recipe.name + "」！" +
-    (recipe.hungerRestore ? "饱食+" + recipe.hungerRestore : ""),
-    "success"
+    "🍳 你烹饪了「" +
+      recipe.name +
+      "」！" +
+      (recipe.hungerRestore ? "饱食+" + recipe.hungerRestore : ""),
+    "success",
   );
 
   // 关闭弹窗
@@ -32458,13 +32543,20 @@ function addIngredientShoppingActions(state, actions) {
   var locPriceMod = 1.0;
   if (typeof LOCATIONS !== "undefined" && LOCATIONS[here]) {
     var priceMods = LOCATIONS[here].priceMod || {};
-    var totalMod = 0, count = 0;
+    var totalMod = 0,
+      count = 0;
     for (var gid in priceMods) {
       var good = null;
       for (var gi = 0; gi < ingredientGoods.length; gi++) {
-        if (ingredientGoods[gi].id === gid) { good = ingredientGoods[gi]; break; }
+        if (ingredientGoods[gi].id === gid) {
+          good = ingredientGoods[gi];
+          break;
+        }
       }
-      if (good) { totalMod += priceMods[gid]; count++; }
+      if (good) {
+        totalMod += priceMods[gid];
+        count++;
+      }
     }
     if (count > 0) locPriceMod = totalMod / count;
   }
@@ -32472,7 +32564,9 @@ function addIngredientShoppingActions(state, actions) {
   actions.push({
     id: "buy_ingredients",
     name: "🛒 买菜/食材",
-    desc: "采购烹饪食材（大米/蔬菜/肉类/调料等）。当前市场价 ×" + locPriceMod.toFixed(2),
+    desc:
+      "采购烹饪食材（大米/蔬菜/肉类/调料等）。当前市场价 ×" +
+      locPriceMod.toFixed(2),
     icon: "🛒",
     apCost: 5,
     category: "shopping",
@@ -32487,15 +32581,18 @@ function showIngredientShopModal() {
   var state = StateManager.getState();
   var here = state.trade.currentLocation;
   var cash = state.resources.cash || 0;
-  var capacity = state.inventory ? (state.inventory.capacity || 20) : 20;
-  var usedSlots = state.inventory && state.inventory.items
-    ? state.inventory.items.reduce(function (s, it) { return s + (it.qty || 0); }, 0)
-    : 0;
+  var capacity = state.inventory ? state.inventory.capacity || 20 : 20;
+  var usedSlots =
+    state.inventory && state.inventory.items
+      ? state.inventory.items.reduce(function (s, it) {
+          return s + (it.qty || 0);
+        }, 0)
+      : 0;
 
   var html = '<div class="ingredient-shop-modal">';
   html += '<h2 style="margin:0 0 8px;font-size:16px;">🛒 购买食材</h2>';
   html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
-  html += '现金 ¥' + cash + ' · 背包 ' + usedSlots + '/' + capacity + '</p>';
+  html += "现金 ¥" + cash + " · 背包 " + usedSlots + "/" + capacity + "</p>";
   html += '<div style="max-height:420px;overflow-y:auto;">';
 
   var ingredientGoods = [];
@@ -32506,14 +32603,15 @@ function showIngredientShopModal() {
   }
 
   // 按类别分组
-  var cats = { "主食": [], "蔬菜": [], "肉类": [], "调料": [], "蛋奶": [] };
-  var catIcons = { "主食": "🍚", "蔬菜": "🥬", "肉类": "🥩", "调料": "🧂", "蛋奶": "🥛" };
+  var cats = { 主食: [], 蔬菜: [], 肉类: [], 调料: [], 蛋奶: [] };
+  var catIcons = { 主食: "🍚", 蔬菜: "🥬", 肉类: "🥩", 调料: "🧂", 蛋奶: "🥛" };
 
   // 从 items.js 获取食材类型
   for (var i = 0; i < ingredientGoods.length; i++) {
     var g = ingredientGoods[i];
     var itemDef = typeof getItemById === "function" ? getItemById(g.id) : null;
-    var ingType = itemDef && itemDef.ingredientType ? itemDef.ingredientType : "其他";
+    var ingType =
+      itemDef && itemDef.ingredientType ? itemDef.ingredientType : "其他";
     if (!cats[ingType]) cats[ingType] = [];
     cats[ingType].push({ good: g, itemDef: itemDef });
   }
@@ -32521,8 +32619,12 @@ function showIngredientShopModal() {
   for (var catName in cats) {
     var list = cats[catName];
     if (list.length === 0) continue;
-    html += '<h3 style="margin:8px 0 4px;font-size:13px;">' +
-      (catIcons[catName] || "📦") + ' ' + catName + '</h3>';
+    html +=
+      '<h3 style="margin:8px 0 4px;font-size:13px;">' +
+      (catIcons[catName] || "📦") +
+      " " +
+      catName +
+      "</h3>";
 
     for (var j = 0; j < list.length; j++) {
       var g = list[j].good;
@@ -32531,41 +32633,64 @@ function showIngredientShopModal() {
       // 本地价格
       var priceMod = 1.0;
       if (typeof LOCATIONS !== "undefined" && LOCATIONS[here]) {
-        priceMod = (LOCATIONS[here].priceMod && LOCATIONS[here].priceMod[g.id]) || 1.0;
+        priceMod =
+          (LOCATIONS[here].priceMod && LOCATIONS[here].priceMod[g.id]) || 1.0;
       }
       var price = Math.round(g.basePrice * priceMod * 100) / 100;
 
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;' +
+      html +=
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;' +
         'border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">';
-      html += '<span style="font-size:18px;">' + icon + '</span>';
+      html += '<span style="font-size:18px;">' + icon + "</span>";
       html += '<div style="flex:1;">';
-      html += '<div style="font-size:13px;font-weight:500;">' + g.name + '</div>';
-      html += '<div style="font-size:10px;color:var(--text-muted);">¥' + price + '/' + g.unit;
+      html +=
+        '<div style="font-size:13px;font-weight:500;">' + g.name + "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);">¥' +
+        price +
+        "/" +
+        g.unit;
       if (itemDef && itemDef.perishDays) {
-        html += ' · 保鲜' + itemDef.perishDays + '天';
+        html += " · 保鲜" + itemDef.perishDays + "天";
       }
-      html += '</div></div>';
+      html += "</div></div>";
       html += '<div style="display:flex;gap:4px;align-items:center;">';
       // 数量选择器
-      html += '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' + g.id + '\', -1)" style="width:24px;height:24px;padding:0;">−</button>';
-      html += '<span id="ing_qty_' + g.id + '" style="min-width:20px;text-align:center;font-size:13px;">0</span>';
-      html += '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' + g.id + '\', 1)" style="width:24px;height:24px;padding:0;">+</button>';
-      html += '<button class="btn btn-primary btn-sm" onclick="ingredientBuyConfirm(\'' + g.id + '\',' + price + ')" style="padding:4px 10px;">买</button>';
-      html += '</div></div>';
+      html +=
+        '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' +
+        g.id +
+        '\', -1)" style="width:24px;height:24px;padding:0;">−</button>';
+      html +=
+        '<span id="ing_qty_' +
+        g.id +
+        '" style="min-width:20px;text-align:center;font-size:13px;">0</span>';
+      html +=
+        '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' +
+        g.id +
+        '\', 1)" style="width:24px;height:24px;padding:0;">+</button>';
+      html +=
+        '<button class="btn btn-primary btn-sm" onclick="ingredientBuyConfirm(\'' +
+        g.id +
+        "'," +
+        price +
+        ')" style="padding:4px 10px;">买</button>';
+      html += "</div></div>";
     }
   }
 
-  html += '</div>'; // scrollable
+  html += "</div>"; // scrollable
   html += '<div style="text-align:center;margin-top:12px;">';
-  html += '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">关闭</button>';
-  html += '</div></div>';
+  html +=
+    '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">关闭</button>';
+  html += "</div></div>";
 
   if (typeof showModal === "function") {
     showModal(html);
   } else {
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
-    overlay.innerHTML = '<div class="modal-box" style="max-width:520px;">' + html + '</div>';
+    overlay.innerHTML =
+      '<div class="modal-box" style="max-width:520px;">' + html + "</div>";
     document.body.appendChild(overlay);
   }
 }
@@ -32584,46 +32709,63 @@ function ingredientBuyConfirm(goodId, unitPrice) {
   var span = document.getElementById("ing_qty_" + goodId);
   if (!span) return;
   var qty = parseInt(span.textContent) || 0;
-  if (qty <= 0) { StateManager.addMessage("⚠️ 请先选择数量。", "warning"); return; }
+  if (qty <= 0) {
+    StateManager.addMessage("⚠️ 请先选择数量。", "warning");
+    return;
+  }
 
   var state = StateManager.getState();
   var totalCost = qty * unitPrice;
 
   if ((state.resources.cash || 0) < totalCost) {
-    StateManager.addMessage("💸 现金不足！需要 ¥" + totalCost.toFixed(2), "warning");
+    StateManager.addMessage(
+      "💸 现金不足！需要 ¥" + totalCost.toFixed(2),
+      "warning",
+    );
     return;
   }
 
   // 检查背包容量
-  var capacity = state.inventory ? (state.inventory.capacity || 20) : 20;
-  var usedSlots = state.inventory && state.inventory.items
-    ? state.inventory.items.reduce(function (s, it) { return s + (it.qty || 0); }, 0)
-    : 0;
+  var capacity = state.inventory ? state.inventory.capacity || 20 : 20;
+  var usedSlots =
+    state.inventory && state.inventory.items
+      ? state.inventory.items.reduce(function (s, it) {
+          return s + (it.qty || 0);
+        }, 0)
+      : 0;
   if (usedSlots + qty > capacity) {
-    StateManager.addMessage("🎒 背包空间不足！可用 " + (capacity - usedSlots) + " 格。", "warning");
+    StateManager.addMessage(
+      "🎒 背包空间不足！可用 " + (capacity - usedSlots) + " 格。",
+      "warning",
+    );
     return;
   }
 
   // 扣钱
   state.resources.cash -= totalCost;
 
-  // 加库存
-  if (typeof addToInventory === "function") {
-    // 如果 trade.js 有 addToInventory
-    for (var i = 0; i < qty; i++) {
-      addToInventory(goodId);
+  // 加库存（带购买日用于保鲜）
+  state.inventory = state.inventory || { items: [], capacity: 20 };
+  var existing = null;
+  for (var i = 0; i < state.inventory.items.length; i++) {
+    if (state.inventory.items[i].id === goodId) {
+      existing = state.inventory.items[i];
+      break;
     }
+  }
+  if (existing) {
+    existing.qty += qty;
   } else {
-    state.inventory = state.inventory || { items: [], capacity: 20 };
-    var existing = null;
-    for (var i = 0; i < state.inventory.items.length; i++) {
-      if (state.inventory.items[i].id === goodId) {
-        existing = state.inventory.items[i];
-        break;
-      }
-    }
-    if (existing) existing.qty += qty;
-    else state.inventory.items.push({ id: goodId, qty: qty });
+    state.inventory.items.push({
+      id: goodId,
+      qty: qty,
+      boughtDay: state.player.day || 0,
+      perishDays: (function () {
+        var def =
+          typeof getItemById === "function" ? getItemById(goodId) : null;
+        return def ? def.perishDays : 7;
+      })(),
+    });
   }
 
   // 添加购买记录
@@ -32633,7 +32775,7 @@ function ingredientBuyConfirm(goodId, unitPrice) {
 
   StateManager.addMessage(
     "🛒 购买了 " + qty + " 份食材。花费 ¥" + totalCost.toFixed(2),
-    "success"
+    "success",
   );
 
   // 刷新弹窗
@@ -33236,6 +33378,43 @@ const DAILY_PIPELINE = [
           state.flags._dayStartHappiness || 0,
         );
         StateManager.addMessage(summary, "hint");
+      }
+    },
+  },
+
+  // === 食材过期检查 ===
+  {
+    name: "ingredient_perish",
+    after: ["day_increment"],
+    fn: function (state) {
+      if (!state.inventory || !state.inventory.items) return;
+      var currentDay = state.player.day;
+      var spoiled = [];
+      var items = state.inventory.items;
+      for (var i = items.length - 1; i >= 0; i--) {
+        var item = items[i];
+        if (!item.boughtDay || !item.perishDays) continue;
+        // 检查食材是否在 items.js 中有 isIngredient 标记
+        var itemDef =
+          typeof getItemById === "function" ? getItemById(item.id) : null;
+        if (!itemDef || !itemDef.isIngredient) continue;
+        var age = currentDay - item.boughtDay;
+        if (age >= item.perishDays) {
+          spoiled.push({
+            name: itemDef.name,
+            icon: itemDef.icon || "📦",
+            qty: item.qty || 1,
+          });
+          items.splice(i, 1);
+        }
+      }
+      if (spoiled.length > 0) {
+        var msg = "🥀 食材过期：";
+        for (var si = 0; si < spoiled.length; si++) {
+          msg +=
+            spoiled[si].icon + spoiled[si].name + "×" + spoiled[si].qty + " ";
+        }
+        StateManager.addMessage(msg + "已变质扔掉。", "warning");
       }
     },
   },
