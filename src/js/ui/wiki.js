@@ -2576,8 +2576,8 @@ function _wikiDetailMechanic(state, id) {
       '<p class="wiki-desc">当你在街头/职场积累足够资源，可以注册公司，开启创业之路。创业与职场并行，可同时打工+创业。</p>' +
       "<h3>📋 触发条件</h3>" +
       '<ul class="wiki-list">' +
-      "<li>街头阶段：day>200 且 cash>¥500,000</li>" +
-      "<li>职场阶段：P7+ 且 cash>¥1,000,000</li>" +
+      "<li>街头阶段：💰 注册费 ¥50,000（不限阶段）</li>" +
+      "<li>职场阶段：📊 各剧本推荐储备不同</li>" +
       "</ul>" +
       "<h3>📊 三阶段模型</h3>" +
       '<ul class="wiki-list">' +

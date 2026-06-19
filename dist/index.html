@@ -33419,7 +33419,157 @@ function _startupGenerateCoFounder(index) {
   };
 }
 
-// ====== 核心：注册新公司 ======
+/**
+ * 获取创业系统触发条件（剧本感知）
+ * 去除硬编码 day>200，改为按剧本设置不同的资金/职级门槛
+ */
+function getStartupTriggerConditions(state) {
+  var scenarioId = state.flags && state.flags._scenarioId;
+  var phase = state.player && state.player.phase;
+  var cash = state.resources && state.resources.cash || 0;
+
+  // 各剧本触发条件
+  var conditions = {
+    classic: {
+      street: { cash: 50000, label: "街头发家" },
+      corporate: { rank: "P5", cash: 50000, label: "职场攒够启动金" },
+    },
+    laid_off: {
+      street: { cash: 30000, label: "摆摊/零工攒够本钱" },
+      corporate: { rank: "P5", cash: 30000, label: "技术岗转创业" },
+    },
+    small_town_grinder: {
+      street: { cash: 50000, label: "白领工作积累" },
+      corporate: { rank: "P5", cash: 50000, label: "大厂经验+启动金" },
+    },
+    foreign_worker: {
+      street: { cash: 20000, label: "省吃俭用攒下第一桶金" },
+      corporate: { rank: "P5", cash: 20000, label: "技术移民转创业" },
+    },
+    second_gen: {
+      street: { cash: 100000, label: "家里支持启动资金" },
+      corporate: { rank: "P5", cash: 100000, label: "家里支持启动资金" },
+    },
+    midlife_crisis: {
+      street: { cash: 80000, label: "补偿金/积蓄转型" },
+      corporate: { rank: "P6", cash: 80000, label: "P6+管理经验转型" },
+    },
+    fresh_grad: {
+      street: { cash: 30000, label: "实习+兼职攒钱" },
+      corporate: { rank: "P5", cash: 30000, label: "职场新人创业梦" },
+    },
+  };
+
+  var cond = conditions[scenarioId];
+  if (!cond) cond = conditions.classic;
+  var pc = cond[phase] || cond.street;
+  var rankMet = true;
+  if (phase === "corporate" && pc.rank) {
+    var rankNames = ["P5", "P6", "P7", "P8", "P9", "P10"];
+    var reqIdx = rankNames.indexOf(pc.rank);
+    var playerRank = state.corporate && state.corporate.rank;
+    var pIdx = rankNames.indexOf(playerRank);
+    rankMet = pIdx >= reqIdx;
+  }
+  return {
+    cashRequired: pc.cash || 50000,
+    rankRequired: pc.rank || null,
+    label: pc.label || "资源积累",
+    cashOk: cash >= (pc.cash || 50000),
+    rankOk: rankMet,
+    canRegister: cash >= 50000, // 注册硬门槛（启动金）
+    met: cash >= (pc.cash || 50000) && rankMet,
+  };
+}
+
+/** 打开注册公司弹窗 */
+function showStartupRegisterModal() {
+  var state = StateManager.getState();
+  var cash = state.resources && state.resources.cash || 0;
+  if (cash < 50000) {
+    StateManager.addMessage("⚠️ 注册公司需要 ¥50,000 启动资金。", "warning");
+    return;
+  }
+
+  // 构建行业选择 HTML
+  var industryHtml = "";
+  for (var indKey in STARTUP_INDUSTRIES) {
+    if (STARTUP_INDUSTRIES.hasOwnProperty(indKey)) {
+      var ind = STARTUP_INDUSTRIES[indKey];
+      industryHtml +=
+        '<label style="display:block;padding:6px 8px;margin:2px 0;border:1px solid var(--border);border-radius:4px;cursor:pointer;">' +
+        '<input type="radio" name="startup-industry" value="' +
+        indKey +
+        '"> ' +
+        ind.icon +
+        " <strong>" +
+        ind.name +
+        "</strong> — " +
+        ind.desc +
+        "</label>";
+    }
+  }
+
+  var bodyHtml =
+    '<div style="font-size:13px;">' +
+    "<p>注册公司需缴纳 <strong>¥50,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
+    '<div style="margin:12px 0;">' +
+    "<label style=\"font-weight:600;font-size:12px;\">🏢 公司名称</label>" +
+    '<input id="startup-name-input" type="text" placeholder="输入公司名（可选）" maxlength="16" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
+    "</div>" +
+    '<div style="margin:12px 0;">' +
+    "<label style=\"font-weight:600;font-size:12px;\">📋 选择行业</label>" +
+    '<div style="margin-top:4px;">' +
+    industryHtml +
+    "</div>" +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">当前现金：¥' +
+    cash.toLocaleString() +
+    " | 注册后剩余：¥" +
+    (cash - 50000).toLocaleString() +
+    "</div>" +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🚀 注册公司",
+    body: bodyHtml,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "✅ 确认注册",
+        cls: "btn-primary",
+        callback: function () {
+          var nameInput = document.getElementById("startup-name-input");
+          var name = nameInput ? nameInput.value.trim() : "";
+          // 找选中的行业
+          var selected = document.querySelector(
+            'input[name="startup-industry"]:checked',
+          );
+          if (!selected) {
+            StateManager.addMessage("⚠️ 请选择一个行业。", "warning");
+            return;
+          }
+          var industry = selected.value;
+          var result = registerStartup(state, name || null, industry, "");
+          if (result.success) {
+            StateManager.addMessage(result.message || "公司注册成功！", "success");
+            if (typeof renderAll === "function") renderAll();
+            // 切换到创业Tab
+            if (typeof switchTab === "function") switchTab("startup");
+          } else {
+            StateManager.addMessage(
+              result.message || "注册失败",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+}
+
+/** 注册新公司 */
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
   const cash = state.resources.cash;
@@ -34467,8 +34617,48 @@ function renderStartupTab(state, parent) {
 
   var startup = state.startup;
   if (!startup || startup.status === "none") {
+    // 剧本感知的触发条件
+    var stc = getStartupTriggerConditions(state);
+    var cashLabel = "¥" + stc.cashRequired.toLocaleString();
+    var rankLabel = stc.rankRequired ? stc.rankRequired + "+" : "不限";
+    var phaseLabel =
+      state.player && state.player.phase === "corporate" ? "职场" : "街头";
+    var cashNow = state.resources && state.resources.cash || 0;
+    var cashColor = cashNow >= stc.cashRequired ? "var(--success)" : "var(--danger)";
+    var cashStatus = cashNow >= stc.cashRequired ? "✅" : "⚠️";
+
     parent.innerHTML =
-      '<div style="padding:40px;text-align:center;color:var(--text-muted);"><h3>🚀 创业系统</h3><p>你还没有注册公司。</p><p>触发条件：day>200 且 cash>¥500,000（街头阶段），或 P7+ 且 cash>¥1,000,000（职场阶段）</p></div>';
+      '<div style="padding:30px 20px;text-align:center;color:var(--text-muted);">' +
+      "<h3>🚀 创业系统</h3>" +
+      '<p style="font-size:13px;color:var(--text-secondary);">你还没有注册公司。注册后可以招聘、融资、做产品。</p>' +
+      '<div style="margin:16px auto;padding:14px;max-width:360px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);text-align:left;font-size:12px;">' +
+      '<div style="font-weight:600;margin-bottom:10px;color:var(--text-primary);">📋 ' +
+      (stc.label || "注册条件") +
+      "</div>" +
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>阶段</span><span>' +
+      phaseLabel +
+      "</span></div>" +
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>💰 最低现金</span><span style="color:' +
+      cashColor +
+      ';">' +
+      cashStatus +
+      " " +
+      cashLabel +
+      "（当前¥" +
+      cashNow.toLocaleString() +
+      "）</span></div>" +
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>🏢 职级要求</span><span>' +
+      rankLabel +
+      "</span></div>" +
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>¥50,000</span></div>' +
+      "</div>" +
+      '<button class="btn btn-lg btn-primary" onclick="showStartupRegisterModal()" ' +
+      (cashNow >= 50000 ? "" : 'style="opacity:0.5;" disabled') +
+      ">" +
+      (cashNow >= 50000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
+      "</button>" +
+      '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);">注册费 ¥50,000，不限阶段和天数，随时可注册</div>' +
+      "</div>";
     return;
   }
 
@@ -48538,8 +48728,8 @@ function _wikiDetailMechanic(state, id) {
       '<p class="wiki-desc">当你在街头/职场积累足够资源，可以注册公司，开启创业之路。创业与职场并行，可同时打工+创业。</p>' +
       "<h3>📋 触发条件</h3>" +
       '<ul class="wiki-list">' +
-      "<li>街头阶段：day>200 且 cash>¥500,000</li>" +
-      "<li>职场阶段：P7+ 且 cash>¥1,000,000</li>" +
+      "<li>街头阶段：💰 注册费 ¥50,000（不限阶段）</li>" +
+      "<li>职场阶段：📊 各剧本推荐储备不同</li>" +
       "</ul>" +
       "<h3>📊 三阶段模型</h3>" +
       '<ul class="wiki-list">' +
