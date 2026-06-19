@@ -18,10 +18,10 @@
   </head>
   <body>
     <!-- ====== 模式选择界面 ====== -->
-    <div id="mode-select-screen" class="welcome-screen" style="display:none;">
+    <div id="mode-select-screen" class="welcome-screen" style="display: none">
       <div style="font-size: 48px; margin-bottom: 8px">🎮</div>
       <div class="welcome-title">选择游戏模式</div>
-      <div class="welcome-subtitle" style="margin-bottom: 20px;">
+      <div class="welcome-subtitle" style="margin-bottom: 20px">
         不同的开始，不同的故事
       </div>
       <div class="mode-grid">
@@ -31,48 +31,101 @@
           <div class="mode-card-brief">原版开局，城中村起步</div>
           <div class="mode-card-diff">难度：★★☆</div>
         </div>
-        <div class="mode-card" data-mode="scenario" onclick="showScenarioSelect()">
+        <div
+          class="mode-card"
+          data-mode="scenario"
+          onclick="showScenarioSelect()"
+        >
           <div class="mode-card-icon">📜</div>
           <div class="mode-card-title">剧本模式</div>
           <div class="mode-card-brief">选择预设角色，体验不同人生</div>
           <div class="mode-card-diff">6种剧本</div>
         </div>
-        <div class="mode-card" data-mode="sandbox" onclick="showSandboxConfig()">
+        <div
+          class="mode-card"
+          data-mode="sandbox"
+          onclick="showSandboxConfig()"
+        >
           <div class="mode-card-icon">⚙️</div>
           <div class="mode-card-title">沙盒模式</div>
           <div class="mode-card-brief">自由设定属性、资金、年龄</div>
           <div class="mode-card-diff">完全自定义</div>
         </div>
       </div>
-      <button class="btn btn-sm" onclick="showWelcome()" style="margin-top: 16px;">← 返回</button>
+      <button
+        class="btn btn-sm"
+        onclick="showWelcome()"
+        style="margin-top: 16px"
+      >
+        ← 返回
+      </button>
     </div>
 
     <!-- ====== 剧本选择界面 ====== -->
-    <div id="scenario-select-screen" class="welcome-screen" style="display:none;">
+    <div
+      id="scenario-select-screen"
+      class="welcome-screen"
+      style="display: none"
+    >
       <div style="font-size: 48px; margin-bottom: 8px">📜</div>
       <div class="welcome-title">剧本模式</div>
-      <div class="welcome-subtitle" style="margin-bottom: 16px;">
+      <div class="welcome-subtitle" style="margin-bottom: 16px">
         选择一个角色，进入属于他/她的故事
       </div>
-      <div id="scenario-list" class="scenario-grid" style="max-height: 60vh; overflow-y: auto; padding: 0 8px;">
+      <div
+        id="scenario-list"
+        class="scenario-grid"
+        style="max-height: 60vh; overflow-y: auto; padding: 0 8px"
+      >
         <!-- 由 JS 动态生成 -->
       </div>
-      <button class="btn btn-sm" onclick="showModeSelect()" style="margin-top: 12px;">← 返回模式选择</button>
+      <button
+        class="btn btn-sm"
+        onclick="showModeSelect()"
+        style="margin-top: 12px"
+      >
+        ← 返回模式选择
+      </button>
     </div>
 
     <!-- ====== 沙盒配置界面 ====== -->
-    <div id="sandbox-screen" class="welcome-screen" style="display:none;">
+    <div id="sandbox-screen" class="welcome-screen" style="display: none">
       <div style="font-size: 48px; margin-bottom: 4px">⚙️</div>
       <div class="welcome-title">沙盒模式 — 自定义开局</div>
-      <div class="welcome-subtitle" style="margin-bottom: 12px;font-size:13px;">
+      <div
+        class="welcome-subtitle"
+        style="margin-bottom: 12px; font-size: 13px"
+      >
         自由分配你的起始条件。属性称号由总和决定。
       </div>
-      <div id="sandbox-config" style="max-height: 65vh; overflow-y: auto; text-align: left; max-width: 500px; margin: 0 auto; padding: 0 12px;">
+      <div
+        id="sandbox-config"
+        style="
+          max-height: 65vh;
+          overflow-y: auto;
+          text-align: left;
+          max-width: 500px;
+          margin: 0 auto;
+          padding: 0 12px;
+        "
+      >
         <!-- 由 JS 动态生成 -->
       </div>
-      <div style="margin-top: 10px;">
-        <button id="btn-start-sandbox" class="btn btn-primary btn-lg" onclick="startSandboxGame()">🚀 开始游戏</button>
-        <button class="btn btn-sm" onclick="showModeSelect()" style="margin-left: 8px;">← 返回</button>
+      <div style="margin-top: 10px">
+        <button
+          id="btn-start-sandbox"
+          class="btn btn-primary btn-lg"
+          onclick="startSandboxGame()"
+        >
+          🚀 开始游戏
+        </button>
+        <button
+          class="btn btn-sm"
+          onclick="showModeSelect()"
+          style="margin-left: 8px"
+        >
+          ← 返回
+        </button>
       </div>
     </div>
 
@@ -138,7 +191,7 @@
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
-          <div class="header-stat" id="header-mode-stat" style="display:none;">
+          <div class="header-stat" id="header-mode-stat" style="display: none">
             <span class="label">🎮</span>
             <span class="value" id="header-mode"></span>
           </div>
@@ -1322,6 +1375,12 @@ function getSlotInfo(slot) {
       if (!raw) return null;
       try {
         const data = JSON.parse(raw);
+        var autoMode = "";
+        if (data.flags && data.flags._isScenarioMode) {
+          autoMode = "📜" + (data.flags._scenarioName || "剧本");
+        } else if (data.flags && data.flags._isSandboxMode) {
+          autoMode = "⚙️沙盒";
+        }
         return {
           day: data.player?.day || 1,
           phase: data.player?.phase || "street",
@@ -1333,6 +1392,7 @@ function getSlotInfo(slot) {
           rank:
             data.player?.phase === "corporate" ? data.corporate?.rank : null,
           savedAt: data.lastPlayedAt || data.createdAt,
+          mode: autoMode,
         };
       } catch (e) {
         return null;
@@ -1364,6 +1424,7 @@ function getSlotInfo(slot) {
     rank: meta.rank,
     date: date.toLocaleString("zh-CN"),
     savedAt: meta.savedAt,
+    mode: meta.mode,
   };
 }
 
@@ -13703,32 +13764,74 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🎵",
     title: "最后一棒",
-    story: "这条街上掀起了一股网红脆皮五花肉的热潮——第一家店门口排了30米长队。第二家在对面开张。现在这条街上有8家同款。第一家店的老板已经开始贴转让广告了。",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day >= 30 && !st.flags._lastBatonSeen;
+    story:
+      "这条街上掀起了一股网红脆皮五花肉的热潮——第一家店门口排了30米长队。第二家在对面开张。现在这条街上有8家同款。第一家店的老板已经开始贴转让广告了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 30 &&
+        !st.flags._lastBatonSeen
+      );
     },
     choices: [
-      { text: "🥠 趁现在还赚钱开一家", hint: "¥5000投入，可能血本无归", apply: function(st) {
-        st.flags._lastBatonSeen = true;
-        if (st.resources.cash >= 5000) {
-          st.resources.cash -= 5000;
-          var luck = Math.random();
-          if (luck < 0.25) { st.resources.cash += 12000; StateManager.addMessage("生意火爆赚了¥12000！但满街模仿者让你不安。", "event"); }
-          else if (luck < 0.6) { st.resources.cash += 2000; StateManager.addMessage("不赚不亏。风口来得快去得也快。", "info"); }
-          else { StateManager.addMessage("开业太晚，整条街在打折甩卖。打水漂了。", "warning"); }
-        } else { StateManager.addMessage("连启动资金都不够。", "info"); }
-      }},
-      { text: "💲 给第一家店供货", hint: "赚快钱，¥2000进货", apply: function(st) {
-        st.flags._lastBatonSeen = true;
-        if (st.resources.cash >= 2000) { st.resources.cash -= 2000; st.resources.cash += 3500; StateManager.addMessage("供了三天货，赚了¥1500。", "success"); }
-        else { StateManager.addMessage("想供货连本钱都没有。", "info"); }
-      }},
-      { text: "🔍 什么都不做", hint: "等待泡沫破裂", apply: function(st) {
-        st.flags._lastBatonSeen = true;
-        st.flags._lastBatonWise = true;
-        st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 3);
-        StateManager.addMessage("你看着这条街从风口变成闹剧。三个月后8家关了6家。", "success");
-      }},
+      {
+        text: "🥠 趁现在还赚钱开一家",
+        hint: "¥5000投入，可能血本无归",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          if (st.resources.cash >= 5000) {
+            st.resources.cash -= 5000;
+            var luck = Math.random();
+            if (luck < 0.25) {
+              st.resources.cash += 12000;
+              StateManager.addMessage(
+                "生意火爆赚了¥12000！但满街模仿者让你不安。",
+                "event",
+              );
+            } else if (luck < 0.6) {
+              st.resources.cash += 2000;
+              StateManager.addMessage("不赚不亏。风口来得快去得也快。", "info");
+            } else {
+              StateManager.addMessage(
+                "开业太晚，整条街在打折甩卖。打水漂了。",
+                "warning",
+              );
+            }
+          } else {
+            StateManager.addMessage("连启动资金都不够。", "info");
+          }
+        },
+      },
+      {
+        text: "💲 给第一家店供货",
+        hint: "赚快钱，¥2000进货",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          if (st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            st.resources.cash += 3500;
+            StateManager.addMessage("供了三天货，赚了¥1500。", "success");
+          } else {
+            StateManager.addMessage("想供货连本钱都没有。", "info");
+          }
+        },
+      },
+      {
+        text: "🔍 什么都不做",
+        hint: "等待泡沫破裂",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          st.flags._lastBatonWise = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          StateManager.addMessage(
+            "你看着这条街从风口变成闹剧。三个月后8家关了6家。",
+            "success",
+          );
+        },
+      },
     ],
   },
   {
@@ -13736,33 +13839,72 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "🎰",
     title: "沉没成本",
-    story: "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day >= 60 && !st.flags._sunkCostSeen && st.resources.cash >= 50000;
+    story:
+      "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 60 &&
+        !st.flags._sunkCostSeen &&
+        st.resources.cash >= 50000
+      );
     },
     choices: [
-      { text: "💰 追加投资", hint: "投¥10万，50%可能翻盘", apply: function(st) {
-        st.flags._sunkCostSeen = true;
-        if (st.resources.cash >= 100000) {
-          st.resources.cash -= 100000;
-          var luck = Math.random();
-          if (luck < 0.45) { st.resources.cash += 300000; StateManager.addMessage("赌对了！项目被收购，拿回¥30万。", "event"); }
-          else { StateManager.addMessage("又赔了。合伙人联系不上了。总共亏了¥15万。", "danger"); }
-        } else { StateManager.addMessage("想追加但钱不够。也许是好事。", "info"); }
-      }},
-      { text: "✋ 止损", hint: "认了", apply: function(st) {
-        st.flags._sunkCostSeen = true;
-        st.flags._sunkCostStopped = true;
-        st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-        StateManager.addMessage("你说不。合伙人在电话里骂了你。但挂了电话反而轻松了。", "success");
-      }},
-      { text: "🤝 找其他投资人接盘", hint: "名声≥30才能脱身", apply: function(st) {
-        st.flags._sunkCostSeen = true;
-        if ((st.player.fame || 0) >= 30) {
-          st.flags._sunkCostBailed = true; st.resources.cash -= 5000;
-          StateManager.addMessage("通过关系找到接盘侠。亏了¥5万中介费——比全亏好。", "event");
-        } else { StateManager.addMessage("没人愿意接——你名声不够。", "warning"); }
-      }},
+      {
+        text: "💰 追加投资",
+        hint: "投¥10万，50%可能翻盘",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          if (st.resources.cash >= 100000) {
+            st.resources.cash -= 100000;
+            var luck = Math.random();
+            if (luck < 0.45) {
+              st.resources.cash += 300000;
+              StateManager.addMessage(
+                "赌对了！项目被收购，拿回¥30万。",
+                "event",
+              );
+            } else {
+              StateManager.addMessage(
+                "又赔了。合伙人联系不上了。总共亏了¥15万。",
+                "danger",
+              );
+            }
+          } else {
+            StateManager.addMessage("想追加但钱不够。也许是好事。", "info");
+          }
+        },
+      },
+      {
+        text: "✋ 止损",
+        hint: "认了",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          st.flags._sunkCostStopped = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "你说不。合伙人在电话里骂了你。但挂了电话反而轻松了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 找其他投资人接盘",
+        hint: "名声≥30才能脱身",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          if ((st.player.fame || 0) >= 30) {
+            st.flags._sunkCostBailed = true;
+            st.resources.cash -= 5000;
+            StateManager.addMessage(
+              "通过关系找到接盘侠。亏了¥5万中介费——比全亏好。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage("没人愿意接——你名声不够。", "warning");
+          }
+        },
+      },
     ],
   },
   {
@@ -13770,25 +13912,57 @@ const RANDOM_EVENTS = [
     phase: "corporate",
     icon: "🏰",
     title: "围城反转",
-    story: "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
-    conditions: function(st) {
-      return st.player.phase === "corporate" && st.player.day >= 80 && !st.flags._siegeReversalSeen;
+    story:
+      "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "corporate" &&
+        st.player.day >= 80 &&
+        !st.flags._siegeReversalSeen
+      );
     },
     choices: [
-      { text: "🔍 低调观察", hint: "智力+3，收集信息", apply: function(st) {
-        st.flags._siegeReversalSeen = true; st.flags._siegeObserved = true;
-        st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 3);
-        StateManager.addMessage("你搞清了格局——核心业务线稳，边缘部门人人自危。", "event");
-      }},
-      { text: "📢 找领导表忠心", hint: "降低被裁概率，但开始卷", apply: function(st) {
-        st.flags._siegeReversalSeen = true; st.flags._siegeKpiMode = true;
-        st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-        StateManager.addMessage("主动接了大项目。领导满意——但你每天加班到11点。", "info");
-      }},
-      { text: "👨‍💻 更新简历面试", hint: "骑驴找马", apply: function(st) {
-        st.flags._siegeReversalSeen = true; st.flags._siegeJobHunting = true;
-        StateManager.addMessage("偷偷更新了简历。外面机会不少但待遇都比这里差。", "info");
-      }},
+      {
+        text: "🔍 低调观察",
+        hint: "智力+3，收集信息",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeObserved = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          StateManager.addMessage(
+            "你搞清了格局——核心业务线稳，边缘部门人人自危。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📢 找领导表忠心",
+        hint: "降低被裁概率，但开始卷",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeKpiMode = true;
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          StateManager.addMessage(
+            "主动接了大项目。领导满意——但你每天加班到11点。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👨‍💻 更新简历面试",
+        hint: "骑驴找马",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeJobHunting = true;
+          StateManager.addMessage(
+            "偷偷更新了简历。外面机会不少但待遇都比这里差。",
+            "info",
+          );
+        },
+      },
     ],
   },
   {
@@ -13796,29 +13970,68 @@ const RANDOM_EVENTS = [
     phase: "corporate",
     icon: "📉",
     title: "做空自己公司",
-    story: "作为辰光网络的P8员工，你看到了Q3内部数据——新增用户连续下滑，最大客户没续签，CFO悄悄减持。你知道股价三个月内必跌。一个念头冒出来：做空自己公司。",
-    conditions: function(st) {
-      return st.player.phase === "corporate" && st.player.day >= 100 && !st.flags._shortSelfSeen;
+    story:
+      "作为辰光网络的P8员工，你看到了Q3内部数据——新增用户连续下滑，最大客户没续签，CFO悄悄减持。你知道股价三个月内必跌。一个念头冒出来：做空自己公司。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "corporate" &&
+        st.player.day >= 100 &&
+        !st.flags._shortSelfSeen
+      );
     },
     choices: [
-      { text: "💰 做空公司股票", hint: "¥50000保证金，合法但职业风险", apply: function(st) {
-        st.flags._shortSelfSeen = true;
-        if (st.resources.cash >= 50000) {
-          st.resources.cash -= 50000; st.flags._shortedOwnCompany = true; st.flags._shortDay = st.player.day;
-          if (typeof scheduleChainEvent === "function") { scheduleChainEvent(st, "short_self_settle", 30, "corporate"); }
-          StateManager.addMessage("建立了做空仓位。上班看同事认真工作的样子——你有点分裂。", "event");
-        } else { StateManager.addMessage("做空需要¥50000保证金。你连做空自己都不够格。", "info"); }
-      }},
-      { text: "⚠️ 报告合规部", hint: "保护自己", apply: function(st) {
-        st.flags._shortSelfSeen = true; st.flags._shortReported = true;
-        st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-        StateManager.addMessage("你匿名报告了CFO的减持。没说自己也有做空的念头。", "event");
-      }},
-      { text: "📝 记录数据但不交易", hint: "留证据", apply: function(st) {
-        st.flags._shortSelfSeen = true;
-        st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 2);
-        StateManager.addMessage("你默默截了图。不是为了交易——是万一被裁了有谈判筹码。", "info");
-      }},
+      {
+        text: "💰 做空公司股票",
+        hint: "¥50000保证金，合法但职业风险",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          if (st.resources.cash >= 50000) {
+            st.resources.cash -= 50000;
+            st.flags._shortedOwnCompany = true;
+            st.flags._shortDay = st.player.day;
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "short_self_settle", 30, "corporate");
+            }
+            StateManager.addMessage(
+              "建立了做空仓位。上班看同事认真工作的样子——你有点分裂。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage(
+              "做空需要¥50000保证金。你连做空自己都不够格。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "⚠️ 报告合规部",
+        hint: "保护自己",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          st.flags._shortReported = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "你匿名报告了CFO的减持。没说自己也有做空的念头。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📝 记录数据但不交易",
+        hint: "留证据",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 2,
+          );
+          StateManager.addMessage(
+            "你默默截了图。不是为了交易——是万一被裁了有谈判筹码。",
+            "info",
+          );
+        },
+      },
     ],
   },
   {
@@ -13826,29 +14039,61 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "📄",
     title: "灰色地带合法化",
-    story: "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day >= 90 && !st.flags._grayToLegitSeen;
+    story:
+      "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 90 &&
+        !st.flags._grayToLegitSeen
+      );
     },
     choices: [
-      { text: "💼 申请正规牌照", hint: "¥20000办牌照，合法经营", apply: function(st) {
-        st.flags._grayToLegitSeen = true;
-        if (st.resources.cash >= 20000) {
-          st.resources.cash -= 20000; st.flags._grayLegitBiz = true; st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
-          StateManager.addMessage("拿到牌照。以前偷偷摸摸的事现在光明正大了。", "event");
-        } else { StateManager.addMessage("连办牌照的钱都不够。", "info"); }
-      }},
-      { text: "🏠 低调退出", hint: "功成身退", apply: function(st) {
-        st.flags._grayToLegitSeen = true; st.flags._grayRetired = true;
-        st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-        StateManager.addMessage("清空了灰色历史。以前的路不正——但你出来了。", "event");
-      }},
-      { text: "👤 帮同行转正", hint: "名声+5", apply: function(st) {
-        st.flags._grayToLegitSeen = true; st.flags._grayHelpedOthers = true;
-        st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-        st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
-        StateManager.addMessage("帮三个朋友办了正规手续。第一次干干净净吃饭。", "success");
-      }},
+      {
+        text: "💼 申请正规牌照",
+        hint: "¥20000办牌照，合法经营",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          if (st.resources.cash >= 20000) {
+            st.resources.cash -= 20000;
+            st.flags._grayLegitBiz = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+            StateManager.addMessage(
+              "拿到牌照。以前偷偷摸摸的事现在光明正大了。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage("连办牌照的钱都不够。", "info");
+          }
+        },
+      },
+      {
+        text: "🏠 低调退出",
+        hint: "功成身退",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          st.flags._grayRetired = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "清空了灰色历史。以前的路不正——但你出来了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "👤 帮同行转正",
+        hint: "名声+5",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          st.flags._grayHelpedOthers = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+          StateManager.addMessage(
+            "帮三个朋友办了正规手续。第一次干干净净吃饭。",
+            "success",
+          );
+        },
+      },
     ],
   },
   {
@@ -13856,33 +14101,78 @@ const RANDOM_EVENTS = [
     phase: "street",
     icon: "💨",
     title: "从天而降",
-    story: "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
-    conditions: function(st) {
-      return st.player.phase === "street" && st.player.day >= 50 && !st.flags._classRollbackSeen && (st.flags._demolitionGambled || st.resources.cash >= 50000);
+    story:
+      "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 50 &&
+        !st.flags._classRollbackSeen &&
+        (st.flags._demolitionGambled || st.resources.cash >= 50000)
+      );
     },
     choices: [
-      { text: "🏦 买房变资产", hint: "¥150万买房，月供¥5000", apply: function(st) {
-        st.flags._classRollbackSeen = true; st.flags._rollbackBoughtHouse = true; st.resources.cash -= 1500000;
-        if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
-        StateManager.addMessage("买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。", "event");
-      }},
-      { text: "💰 存银行吃利息", hint: "¥200万大额存单3.5%", apply: function(st) {
-        st.flags._classRollbackSeen = true; st.flags._rollbackSaved = true; st.resources.cash -= 2000000; st.flags._rollbackDay = st.player.day;
-        StateManager.addMessage("存了¥200万。月利息¥5800——比打工强，但越来越不值钱。", "event");
-      }},
-      { text: "🎓 投资自己开公司", hint: "花¥50万学技能+注册", apply: function(st) {
-        st.flags._classRollbackSeen = true; st.flags._rollbackStartedBiz = true; st.resources.cash -= 500000;
-        st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 10);
-        StateManager.addMessage("报了MBA，注册了公司。有人笑你是暴发户——你没理。", "event");
-      }},
-      { text: "🍺 继续高消费", hint: "爽一时，钱会花完", apply: function(st) {
-        st.flags._classRollbackSeen = true; st.flags._rollbackBurned = true; st.resources.cash -= 50000;
-        st.needs.happiness = Math.min(100, st.needs.happiness + 25);
-        StateManager.addMessage("租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。", "event");
-      }},
+      {
+        text: "🏦 买房变资产",
+        hint: "¥150万买房，月供¥5000",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackBoughtHouse = true;
+          st.resources.cash -= 1500000;
+          if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
+          StateManager.addMessage(
+            "买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💰 存银行吃利息",
+        hint: "¥200万大额存单3.5%",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackSaved = true;
+          st.resources.cash -= 2000000;
+          st.flags._rollbackDay = st.player.day;
+          StateManager.addMessage(
+            "存了¥200万。月利息¥5800——比打工强，但越来越不值钱。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🎓 投资自己开公司",
+        hint: "花¥50万学技能+注册",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackStartedBiz = true;
+          st.resources.cash -= 500000;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 10,
+          );
+          StateManager.addMessage(
+            "报了MBA，注册了公司。有人笑你是暴发户——你没理。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🍺 继续高消费",
+        hint: "爽一时，钱会花完",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackBurned = true;
+          st.resources.cash -= 50000;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 25);
+          StateManager.addMessage(
+            "租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。",
+            "event",
+          );
+        },
+      },
     ],
   },
-
 ];
 
 /* =========================================================
@@ -20230,7 +20520,7 @@ function cleanupExpiredNews(state) {
   }
 }
 </script>
-	    <script>/**
+    <script>/**
  * 新闻生态系统 — L1~L4 四层新闻分类 + 传导机制
  *
  * L1 国际新闻：地缘冲突、贸易制裁、货币危机、科技封锁、大国商战
@@ -20502,7 +20792,7 @@ const NEWS_L1_L4 = [
       jobBonus: ["construction_worker", "demolition_worker"],
       jobMultiplier: 1.3,
       jobPenalty: ["street_vending_food"],
-      
+
       duration: 10,
     },
     conduit: { targetLevel: "L4", delayRange: [1, 3], chance: 0.4 },
@@ -20703,8 +20993,11 @@ function checkNewsConduit(state) {
     if (candidates.length === 0) continue;
 
     var targetNews = candidates[Math.floor(Math.random() * candidates.length)];
-    var delay = conduit.delayRange[0] +
-      Math.floor(Math.random() * (conduit.delayRange[1] - conduit.delayRange[0] + 1));
+    var delay =
+      conduit.delayRange[0] +
+      Math.floor(
+        Math.random() * (conduit.delayRange[1] - conduit.delayRange[0] + 1),
+      );
 
     scheduleNewsConduit(state, targetNews, delay);
   }
@@ -20823,7 +21116,8 @@ if (typeof window !== "undefined") {
     id: "news_system",
     name: "L1-L4 新闻生态系统",
     icon: "🌐",
-    brief: "四层新闻分类 + 国际→国内→城市→街头的传导链，新闻不只是背景而是决策依据",
+    brief:
+      "四层新闻分类 + 国际→国内→城市→街头的传导链，新闻不只是背景而是决策依据",
     version: "1.0.0",
     related: ["mechanics:critical_needs", "mechanics:investment"],
     sections: [
@@ -20864,7 +21158,16 @@ if (typeof window !== "undefined") {
         kind: "subhead",
         text: "📡 新闻影响范围",
       },
-      { kind: "list", items: ["商品价格波动（+20%~-30%）", "工作收入和可用性", "投资市场（股票/期货/币圈）", "玩家心情和日常开销", "NPC对话内容和态度"] },
+      {
+        kind: "list",
+        items: [
+          "商品价格波动（+20%~-30%）",
+          "工作收入和可用性",
+          "投资市场（股票/期货/币圈）",
+          "玩家心情和日常开销",
+          "NPC对话内容和态度",
+        ],
+      },
     ],
   };
 }
@@ -22087,7 +22390,12 @@ const SCENARIOS = [
     difficulty: "★★★★",
     difficultyLabel: "困难",
     stats: { physique: 45, intelligence: 18, agility: 22, mental: 30 },
-    resources: { cash: 8000, bankBalance: 2000, villageDebt: 0, bankDebt: 3000 },
+    resources: {
+      cash: 8000,
+      bankBalance: 2000,
+      villageDebt: 0,
+      bankDebt: 3000,
+    },
     age: 38,
     skills: {
       cooking: { level: 5, xp: 0 },
@@ -22131,7 +22439,12 @@ const SCENARIOS = [
     difficulty: "★★★",
     difficultyLabel: "中等",
     stats: { physique: 14, intelligence: 42, agility: 16, mental: 35 },
-    resources: { cash: 3000, bankBalance: 500, villageDebt: 12000, bankDebt: 8000 },
+    resources: {
+      cash: 3000,
+      bankBalance: 500,
+      villageDebt: 12000,
+      bankDebt: 8000,
+    },
     age: 23,
     skills: {
       cooking: { level: 2, xp: 0 },
@@ -22219,7 +22532,12 @@ const SCENARIOS = [
     difficulty: "★★☆",
     difficultyLabel: "偏易",
     stats: { physique: 18, intelligence: 25, agility: 15, mental: 22 },
-    resources: { cash: 50000, bankBalance: 100000, villageDebt: 0, bankDebt: 0 },
+    resources: {
+      cash: 50000,
+      bankBalance: 100000,
+      villageDebt: 0,
+      bankDebt: 0,
+    },
     age: 22,
     skills: {
       cooking: { level: 0, xp: 0 },
@@ -22263,7 +22581,12 @@ const SCENARIOS = [
     difficulty: "★★★",
     difficultyLabel: "中等",
     stats: { physique: 16, intelligence: 38, agility: 14, mental: 28 },
-    resources: { cash: 15000, bankBalance: 80000, villageDebt: 0, bankDebt: 50000 },
+    resources: {
+      cash: 15000,
+      bankBalance: 80000,
+      villageDebt: 0,
+      bankDebt: 50000,
+    },
     age: 35,
     skills: {
       cooking: { level: 5, xp: 0 },
@@ -22307,7 +22630,12 @@ const SCENARIOS = [
     difficulty: "★★☆",
     difficultyLabel: "适中",
     stats: { physique: 18, intelligence: 32, agility: 20, mental: 30 },
-    resources: { cash: 2000, bankBalance: 0, villageDebt: 8000, bankDebt: 15000 },
+    resources: {
+      cash: 2000,
+      bankBalance: 0,
+      villageDebt: 8000,
+      bankDebt: 15000,
+    },
     age: 22,
     skills: {
       cooking: { level: 3, xp: 0 },
@@ -43951,7 +44279,7 @@ function showSaveMenu() {
       bodyHtml += `
         <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--warning);">${s.label}</strong>
+            <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
             <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
@@ -50237,7 +50565,7 @@ function showWelcome() {
           latest.day +
           "天, ¥" +
           (latest.cash ? latest.cash.toLocaleString() : 0) +
-          ')</button>' +
+          ")</button>" +
           '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
         document.getElementById("btn-load-latest").onclick = function () {
           loadExistingGame(latest.slot);
@@ -50320,7 +50648,7 @@ function buildScenarioCard(scenario, isDefault) {
   return (
     '<div class="scenario-card" onclick="selectScenario(\'' +
     scenario.id +
-    '\')">' +
+    "')\">" +
     '<div class="scenario-card-icon">' +
     scenario.icon +
     "</div>" +
@@ -50364,12 +50692,13 @@ function showScenarioDetail(scenarioId) {
   for (var key in s.stats) {
     if (s.stats.hasOwnProperty(key)) {
       var val = s.stats[key];
-      var color = val >= 35 ? "var(--success)" : val >= 20 ? "" : "var(--danger)";
+      var color =
+        val >= 35 ? "var(--success)" : val >= 20 ? "" : "var(--danger)";
       statsHtml +=
         '<div class="scenario-detail-stat">' +
         '<span class="scenario-detail-stat-label">' +
         (statNames[key] || key) +
-        '</span>' +
+        "</span>" +
         '<span class="scenario-detail-stat-val" style="color:' +
         color +
         '">' +
@@ -50547,10 +50876,7 @@ function startScenarioGame(scenarioId) {
     msg = "📜 剧本模式「" + scenario.name + "」开始。祝你好运！";
   }
   StateManager.addMessage(msg, "event");
-  StateManager.addMessage(
-    '💡 提示：点击"🗺️ 地图"标签可查看城市全景。',
-    "info",
-  );
+  StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
   StateManager.addMessage(
     '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。',
     "info",
@@ -50642,22 +50968,22 @@ function renderSandboxConfig() {
     '<div class="sandbox-section">' +
     '<div class="sandbox-section-title">📋 基本信息</div>' +
     '<div class="sandbox-row">' +
-    '<label>姓名</label>' +
+    "<label>姓名</label>" +
     '<input type="text" id="sandbox-name" value="' +
     cfg.name +
     '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxConfig(\'name\', this.value)">' +
     "</div>" +
     '<div class="sandbox-row">' +
-    '<label>年龄</label>' +
+    "<label>年龄</label>" +
     '<input type="range" min="16" max="50" value="' +
     cfg.age +
-    '" oninput="updateSandboxConfig(\'age\', parseInt(this.value));document.getElementById(\'sandbox-age-val\').textContent=this.value">' +
+    "\" oninput=\"updateSandboxConfig('age', parseInt(this.value));document.getElementById('sandbox-age-val').textContent=this.value\">" +
     '<span class="sandbox-val" id="sandbox-age-val">' +
     cfg.age +
     '</span><span style="font-size:11px;color:var(--text-muted)">岁</span>' +
     "</div>" +
     '<div class="sandbox-row">' +
-    '<label>性别</label>' +
+    "<label>性别</label>" +
     '<select class="sandbox-select" onchange="updateSandboxConfig(\'gender\', this.value)">' +
     '<option value="male"' +
     (cfg.gender === "male" ? " selected" : "") +
@@ -50668,7 +50994,7 @@ function renderSandboxConfig() {
     "</select>" +
     "</div>" +
     '<div class="sandbox-row">' +
-    '<label>学历</label>' +
+    "<label>学历</label>" +
     '<select class="sandbox-select" onchange="updateSandboxConfig(\'education\', parseInt(this.value))">' +
     '<option value="0"' +
     (cfg.education === 0 ? " selected" : "") +
@@ -50679,7 +51005,7 @@ function renderSandboxConfig() {
     "</select>" +
     "</div>" +
     '<div class="sandbox-row">' +
-    '<label>起始地点</label>' +
+    "<label>起始地点</label>" +
     '<select class="sandbox-select" onchange="updateSandboxConfig(\'startLocation\', this.value)">' +
     '<option value="slum"' +
     (cfg.startLocation === "slum" ? " selected" : "") +
@@ -50699,7 +51025,7 @@ function renderSandboxConfig() {
     "</select>" +
     "</div>" +
     '<div class="sandbox-row">' +
-    '<label>住所</label>' +
+    "<label>住所</label>" +
     '<select class="sandbox-select" onchange="updateSandboxConfig(\'housingTier\', parseInt(this.value))">' +
     '<option value="0"' +
     (cfg.housingTier === 0 ? " selected" : "") +
@@ -50745,7 +51071,7 @@ function renderSandboxConfig() {
     "<label>现金</label>" +
     '<input type="range" min="0" max="100000" step="500" value="' +
     cfg.cash +
-    '" oninput="updateSandboxConfig(\'cash\', parseInt(this.value));document.getElementById(\'sandbox-cash-val\').textContent=\'¥\'+parseInt(this.value).toLocaleString()">' +
+    "\" oninput=\"updateSandboxConfig('cash', parseInt(this.value));document.getElementById('sandbox-cash-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
     '<span class="sandbox-val" id="sandbox-cash-val">¥' +
     cfg.cash.toLocaleString() +
     "</span>" +
@@ -50754,7 +51080,7 @@ function renderSandboxConfig() {
     "<label>存款</label>" +
     '<input type="range" min="0" max="200000" step="1000" value="' +
     cfg.bankBalance +
-    '" oninput="updateSandboxConfig(\'bankBalance\', parseInt(this.value));document.getElementById(\'sandbox-bank-val\').textContent=\'¥\'+parseInt(this.value).toLocaleString()">' +
+    "\" oninput=\"updateSandboxConfig('bankBalance', parseInt(this.value));document.getElementById('sandbox-bank-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
     '<span class="sandbox-val" id="sandbox-bank-val">¥' +
     cfg.bankBalance.toLocaleString() +
     "</span>" +
@@ -50763,7 +51089,7 @@ function renderSandboxConfig() {
     "<label>欠村长</label>" +
     '<input type="range" min="0" max="50000" step="500" value="' +
     cfg.villageDebt +
-    '" oninput="updateSandboxConfig(\'villageDebt\', parseInt(this.value));document.getElementById(\'sandbox-debt-val\').textContent=\'¥\'+parseInt(this.value).toLocaleString()">' +
+    "\" oninput=\"updateSandboxConfig('villageDebt', parseInt(this.value));document.getElementById('sandbox-debt-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
     '<span class="sandbox-val" id="sandbox-debt-val">¥' +
     cfg.villageDebt.toLocaleString() +
     "</span>" +
@@ -50772,7 +51098,7 @@ function renderSandboxConfig() {
     "<label>欠银行</label>" +
     '<input type="range" min="0" max="50000" step="1000" value="' +
     cfg.bankDebt +
-    '" oninput="updateSandboxConfig(\'bankDebt\', parseInt(this.value));document.getElementById(\'sandbox-bankdebt-val\').textContent=\'¥\'+parseInt(this.value).toLocaleString()">' +
+    "\" oninput=\"updateSandboxConfig('bankDebt', parseInt(this.value));document.getElementById('sandbox-bankdebt-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
     '<span class="sandbox-val" id="sandbox-bankdebt-val">¥' +
     cfg.bankDebt.toLocaleString() +
     "</span>" +
@@ -50785,7 +51111,7 @@ function renderSandboxConfig() {
     "<label>健康</label>" +
     '<input type="range" min="30" max="100" value="' +
     cfg.health +
-    '" oninput="updateSandboxConfig(\'health\', parseInt(this.value));document.getElementById(\'sandbox-health-val\').textContent=this.value">' +
+    "\" oninput=\"updateSandboxConfig('health', parseInt(this.value));document.getElementById('sandbox-health-val').textContent=this.value\">" +
     '<span class="sandbox-val" id="sandbox-health-val">' +
     cfg.health +
     "</span>" +
@@ -50794,7 +51120,7 @@ function renderSandboxConfig() {
     "<label>名气</label>" +
     '<input type="range" min="0" max="50" value="' +
     cfg.fame +
-    '" oninput="updateSandboxConfig(\'fame\', parseInt(this.value));document.getElementById(\'sandbox-fame-val\').textContent=this.value">' +
+    "\" oninput=\"updateSandboxConfig('fame', parseInt(this.value));document.getElementById('sandbox-fame-val').textContent=this.value\">" +
     '<span class="sandbox-val" id="sandbox-fame-val">' +
     cfg.fame +
     "</span>" +
@@ -50834,7 +51160,7 @@ function renderSandboxConfig() {
         "-val').textContent=this.value\">" +
         '<span class="sandbox-val" id="sandbox-' +
         sk +
-        "-val\">" +
+        '-val">' +
         skVal +
         "</span>" +
         "</div>";
@@ -50874,7 +51200,8 @@ function renderSandboxConfig() {
 function createSandboxStatSlider(key, label, value, remaining) {
   var min = 10;
   var max = Math.min(50, min + 10 + Math.max(0, remaining));
-  var color = value >= 35 ? "var(--success)" : value >= 20 ? "" : "var(--danger)";
+  var color =
+    value >= 35 ? "var(--success)" : value >= 20 ? "" : "var(--danger)";
   return (
     '<div class="sandbox-row">' +
     "<label>" +
@@ -50909,7 +51236,8 @@ function updateSandboxConfig(key, value) {
 
 /** 应用沙盒预设 */
 function applySandboxPreset(preset) {
-  if (!_sandboxConfig) _sandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
+  if (!_sandboxConfig)
+    _sandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
   switch (preset) {
     case "balanced":
       _sandboxConfig.physique = 22;
@@ -51055,10 +51383,7 @@ function startSandboxGame() {
         : ""),
     "event",
   );
-  StateManager.addMessage(
-    '💡 提示：点击"🗺️ 地图"标签可查看城市全景。',
-    "info",
-  );
+  StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
 
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";

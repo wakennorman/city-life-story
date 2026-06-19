@@ -273,12 +273,12 @@ function getSlotInfo(slot) {
       if (!raw) return null;
       try {
         const data = JSON.parse(raw);
-tvar autoMode = "";
-	if (data.flags && data.flags._isScenarioMode) {
-	  autoMode = "📜" + (data.flags._scenarioName || "剧本");
-	} else if (data.flags && data.flags._isSandboxMode) {
-	  autoMode = "⚙️沙盒";
-	}
+        var autoMode = "";
+        if (data.flags && data.flags._isScenarioMode) {
+          autoMode = "📜" + (data.flags._scenarioName || "剧本");
+        } else if (data.flags && data.flags._isSandboxMode) {
+          autoMode = "⚙️沙盒";
+        }
         return {
           day: data.player?.day || 1,
           phase: data.player?.phase || "street",
