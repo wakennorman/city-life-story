@@ -553,6 +553,12 @@ function _wikiListEntries(catId, state) {
         icon: "😡",
         brief: "背锅甩锅→穿小鞋/谣言→跳槽/晋升抉择",
       });
+      out.push({
+        id: "spring_festival_event",
+        name: "春节七天乐",
+        icon: "🧨",
+        brief: "除夕→初六，连续7天特殊事件链，每天一个抉择",
+      });
       break;
     case "victory":
       out.push({
@@ -2065,6 +2071,114 @@ function _wikiDetailInvest(state, id) {
 // ================================================================
 //  详情：系统机制
 // ================================================================
+// ================================================================
+//  详情：系统机制 — 通用渲染器（注册表 → HTML）
+// ================================================================
+function _renderMechanicEntry(state, m) {
+  var html =
+    "<h2>" + (m.icon ? _wkE(m.icon) + " " : "") + _wkE(m.name) + "</h2>";
+  if (m.version) {
+    html +=
+      '<p class="wiki-tip" style="display:inline-block;background:var(--bg-input);padding:2px 8px;border-radius:10px;font-size:11px;">v' +
+      _wkE(m.version) +
+      " 新增</p>";
+  }
+  if (m.reference) {
+    html +=
+      '<p class="wiki-desc" style="opacity:0.75;font-size:12px;">📖 参考：' +
+      _wkE(m.reference) +
+      "</p>";
+  }
+  var sections = m.sections || [];
+  for (var i = 0; i < sections.length; i++) {
+    html += _renderMechanicSection(state, sections[i]);
+  }
+  if (m.related && m.related.length) {
+    html += _renderMechanicRelated(m.related);
+  }
+  return html;
+}
+
+function _renderMechanicSection(state, s) {
+  if (!s || !s.kind) return "";
+  switch (s.kind) {
+    case "desc":
+      var t = typeof s.text === "function" ? s.text(state) : s.text;
+      return '<p class="wiki-desc">' + _wkE(t) + "</p>";
+    case "subhead":
+      return "<h3>" + _wkE(s.text) + "</h3>";
+    case "list":
+      var items = typeof s.items === "function" ? s.items(state) : s.items;
+      if (!items || !items.length) return "";
+      var lis = "";
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (typeof it === "string") {
+          lis += "<li>" + _wkE(it) + "</li>";
+        } else if (it && typeof it.html === "string") {
+          lis += "<li>" + it.html + "</li>";
+        }
+      }
+      return '<ul class="wiki-list">' + lis + "</ul>";
+    case "tip":
+      var tip = typeof s.text === "function" ? s.text(state) : s.text;
+      return '<p class="wiki-tip">💡 ' + _wkE(tip) + "</p>";
+    case "html":
+      return typeof s.get === "function" ? s.get(state) || "" : s.html || "";
+    case "table":
+      var rows = typeof s.rows === "function" ? s.rows(state) : s.rows || [];
+      var headers = s.headers || [];
+      var thead = "<tr>";
+      for (var h = 0; h < headers.length; h++)
+        thead += "<th>" + _wkE(headers[h]) + "</th>";
+      thead += "</tr>";
+      var tbody = "";
+      for (var r = 0; r < rows.length; r++) {
+        tbody += "<tr>";
+        for (var c = 0; c < rows[r].length; c++)
+          tbody += "<td>" + _wkE(rows[r][c]) + "</td>";
+        tbody += "</tr>";
+      }
+      return '<table class="wiki-table">' + thead + tbody + "</table>";
+  }
+  return "";
+}
+
+function _renderMechanicRelated(refs) {
+  // refs: ['mechanics:illness_system','amenities:*','skills:cooking']
+  var links = [];
+  for (var i = 0; i < refs.length; i++) {
+    var parts = String(refs[i]).split(":");
+    var cat = parts[0],
+      eid = parts[1];
+    if (!cat) continue;
+    if (!eid || eid === "*") {
+      // 整个分类
+      var catObj = null;
+      for (var ci = 0; ci < WIKI_CATEGORIES.length; ci++) {
+        if (WIKI_CATEGORIES[ci].id === cat) {
+          catObj = WIKI_CATEGORIES[ci];
+          break;
+        }
+      }
+      links.push(_wkLink(cat, null, catObj ? catObj.name : cat));
+    } else {
+      // 具体条目；机制类别下若注册表有名字直接用，否则用 id
+      var label = eid;
+      if (
+        cat === "mechanics" &&
+        typeof MECHANICS === "object" &&
+        MECHANICS &&
+        MECHANICS[eid]
+      ) {
+        label = MECHANICS[eid].name;
+      }
+      links.push(_wkLink(cat, eid, label));
+    }
+  }
+  return '<h3>🔗 相关</h3><p class="wiki-desc">' + links.join("，") + "</p>";
+}
+
 function _wikiDetailMechanic(state, id) {
   // 1) 注册表优先：MECHANICS[id] 存在 → 通用渲染器
   if (typeof MECHANICS === "object" && MECHANICS && MECHANICS[id]) {
@@ -2457,6 +2571,29 @@ function _wikiDetailMechanic(state, id) {
       "<li>获利控制在¥5万以内降低审查概率</li>" +
       "<li>分散交易降低风险</li>" +
       "</ul>",
+
+    // ===== 节日事件 =====
+    spring_festival_event:
+      "<h2>🧨 节日事件：春节七天乐</h2>" +
+      '<p class="wiki-desc">每年春节（第20-27天），连续7天触发特殊事件链，每天一个道德/生存抉择。</p>' +
+      "<h3>📋 事件流程</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🏠 除夕</b>：回家还是留下？路费¥300换心情+20，或独自在城中村煮年夜饭</li>" +
+      "<li><b>🧧 初一</b>：拜年收红包。花礼钱博更大红包，或在家睡懒觉</li>" +
+      "<li><b>👨‍👩‍👧 初二</b>：回娘家/走亲戚。维护人缘 vs 远程视频 vs 下馆子</li>" +
+      "<li><b>🔴 初三</b>：赤狗日（不宜外出）。在家学习效率翻倍 / 睡懒觉 / 整理出租屋</li>" +
+      "<li><b>💰 初四</b>：迎财神。拜财神博意外之财（30%概率）/ 研究投资 / 散步</li>" +
+      "<li><b>🔨 初五</b>：破五开工。找临时工 / 工厂区问活 / 继续休息</li>" +
+      "<li><b>🗑️ 初六</b>：送穷神。大扫除 / 还债 / 请朋友吃饭</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>除夕回家：心情+20 + 疲劳-10，但花¥300（适合现金充裕时）</li>" +
+      "<li>初三学习：技能经验翻倍，适合有技能可提升的玩家</li>" +
+      "<li>初四拜财神：30%概率意外之财¥100-300，但香火钱¥50</li>" +
+      "<li>初六还债：可还掉30%的村长/村债，减轻长期负担</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 春节事件每年只触发一次，通过弹窗进度条可看到当前是第几天（共7天）。事件选项含资源消耗和属性影响，选择需谨慎。</p>',
   };
   return pages[id] || "";
 }

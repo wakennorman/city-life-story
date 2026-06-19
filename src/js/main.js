@@ -2866,4 +2866,14 @@ function handleSwitchBranch(skillKey, newBranchId) {
 }
 
 // ====== 启动 ======
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", function () {
+  init();
+  // 百科自检：列出未命中的引用、缺字段等
+  if (typeof runMechanicsAudit === "function") {
+    try {
+      runMechanicsAudit();
+    } catch (e) {
+      console.warn("[mechanics-audit] 异常：", e);
+    }
+  }
+});
