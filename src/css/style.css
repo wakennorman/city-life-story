@@ -816,6 +816,40 @@ body {
   justify-content: flex-end;
 }
 
+/* ====== Inheritance Summary Modal ====== */
+.inheritance-summary {
+  max-width: 500px;
+}
+
+.inheritance-summary .badge-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.inheritance-summary .badge-icon {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.inheritance-summary .cash-highlight {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.inheritance-summary .narrative-text {
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(76,175,80,0.1), rgba(33,150,243,0.1));
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+  font-size: 13px;
+  font-style: italic;
+}
+
 /* ====== Daily Report Modal ====== */
 .daily-report-box {
   max-width: 460px;

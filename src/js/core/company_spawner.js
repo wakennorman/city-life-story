@@ -488,11 +488,192 @@ function getAllIndustries() {
   return INDUSTRY_DEFS;
 }
 
+/**
+ * Phase 3: 从"废墟"中生成新公司
+ * 继承已倒闭公司的部分参数，保持商业生态新陈代谢
+ * @param {object} state 游戏状态
+ * @param {object} deceasedCompany 已倒闭公司数据
+ * @returns {object|null} 生成的新公司，失败返回null
+ */
+function spawnFromRuins(state, deceasedCompany) {
+  if (!deceasedCompany || !deceasedCompany.industry) return null;
+
+  var industry = deceasedCompany.industry;
+  var industryDef = INDUSTRY_DEFS[industry];
+  if (!industryDef) return null;
+
+  var culture = CULTURE_TAGS[Math.floor(Math.random() * CULTURE_TAGS.length)];
+
+  var companyId = "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+  var companyName = generateCompanyName();
+  var stockSymbol = generateStockSymbol();
+
+  // 健康度：倒闭公司最终健康度 × 0.3 + 随机波动
+  var baseHealth = (deceasedCompany.health || 50) * 0.3 + 30 + (Math.random() - 0.5) * 20;
+  var health = Math.max(40, Math.min(95, baseHealth));
+
+  // 产品分数：倒闭公司最终 productScore × 0.5 + 随机波动
+  var productScore = Math.round(
+    (deceasedCompany.productScore || 50) * 0.5 + 15 + (Math.random() - 0.5) * 20
+  );
+  productScore = Math.max(30, Math.min(80, productScore));
+
+  // 人才分数：倒闭公司最终 talentScore × 0.4 + 随机波动
+  var talentScore = Math.round(
+    (deceasedCompany.talentScore || 50) * 0.4 + 15 + (Math.random() - 0.5) * 20
+  );
+  talentScore = Math.max(25, Math.min(70, talentScore));
+
+  // 市场份额：2-5%
+  var marketShare = Math.round((2 + Math.random() * 3) * 100) / 100;
+
+  var newCompany = {
+    id: companyId,
+    name: companyName,
+    industry: industry,
+    culture: culture.id,
+    cultureIcon: culture.icon,
+    cultureDesc: culture.desc,
+    cultureMods: culture.mods,
+    color: industryDef.color,
+    icon: industryDef.icon,
+    stockSymbol: stockSymbol,
+    phase: "startup",
+    health: health,
+    marketShare: marketShare,
+    sentiment: 45 + Math.floor(Math.random() * 20),
+    productScore: productScore,
+    talentScore: talentScore,
+    trend: Math.random() < 0.5 ? "up" : "stable",
+    knownToPlayer: false,
+    ceasedExistence: false,
+    ceasedAt: null,
+    ipoed: false,
+    growthRate: industryDef.growthRate * (0.8 + Math.random() * 0.4),
+    minIntelligenceReq: industryDef.minIntelligence,
+    skillReqs: industryDef.skillReq,
+    stockPrice: 10 + Math.random() * 30,
+    equity: { player: 0 },
+    valuation: 3000000 + Math.random() * 10000000,
+    // 遗产标记
+    fromRuins: true,
+    ruinsSourceId: deceasedCompany.id,
+    ruinsSourceName: deceasedCompany.name,
+    ruinsSpawnDay: state.player.day,
+    // 历史
+    history: [
+      {
+        day: state.player.day,
+        event: "spawned_from_ruins",
+        desc: "从「" + (deceasedCompany.name || "未知公司") + "」的废墟中重生，继承其技术遗产",
+      },
+    ],
+    fateEventHistory: [],
+    founder: {
+      name: ["李总", "王总", "张总", "陈总", "刘总"][Math.floor(Math.random() * 5)],
+      background: "原公司技术骨干创业，继承部分专利和人脉",
+    },
+    benefits: {
+      insurance: Math.random() < 0.7,
+      housingFund: Math.random() < 0.6,
+      stockOptions: Math.random() < 0.5,
+      freeMeals: Math.random() < 0.4,
+      gym: Math.random() < 0.3,
+    },
+    salaryRange: {
+      min: 8000 + Math.floor(Math.random() * 8000),
+      max: 16000 + Math.floor(Math.random() * 15000),
+    },
+    ceoTrait: CEO_TRAITS[Math.floor(Math.random() * CEO_TRAITS.length)].id,
+    ceoBio: generateCeoBio(),
+  };
+
+  // 加入企业命运
+  var fate = state.enterpriseFate;
+  if (!fate) state.enterpriseFate = { companies: {}, fateEventCooldown: {}, lastFateTick: 0 };
+  if (!fate.companies) fate.companies = {};
+  fate.companies[companyId] = newCompany;
+
+  // 加入股票市场
+  if (state.investment && state.investment.stockMarket) {
+    state.investment.stockMarket[stockSymbol] = {
+      price: newCompany.stockPrice,
+      company: companyId,
+      history: [newCompany.stockPrice],
+    };
+  }
+
+  // 加入COMPANIES数组
+  if (typeof COMPANIES !== "undefined") {
+    COMPANIES.push({
+      id: companyId,
+      name: companyName,
+      industry: industry,
+      stockSymbol: stockSymbol,
+    });
+  }
+
+  // 更新行业格局
+  if (typeof updateIndustryEvolution === "function") {
+    updateIndustryEvolution(industry, "company_spawned");
+  }
+
+  return newCompany;
+}
+
+/**
+ * 检查并生成从废墟中诞生的新公司
+ * 每180天（半年）触发一次，50%概率生成
+ * @param {object} state 游戏状态
+ * @returns {Array} 生成的新公司列表
+ */
+function checkAndSpawnFromRuins(state) {
+  var fate = state.enterpriseFate;
+  if (!fate || !fate.companies) return [];
+
+  // 获取所有已倒闭公司
+  var deceasedCompanies = [];
+  for (var cid in fate.companies) {
+    var co = fate.companies[cid];
+    if (co && co.ceasedExistence) {
+      deceasedCompanies.push(co);
+    }
+  }
+
+  if (deceasedCompanies.length === 0) return [];
+
+  // 检查是否需要触发（每180天）
+  if (!fate.lastRuinsSpawn) fate.lastRuinsSpawn = 0;
+  if (state.player.day - fate.lastRuinsSpawn < 180) return [];
+
+  // 50%概率
+  if (Math.random() >= 0.5) return [];
+
+  // 随机选择一个倒闭公司
+  var source = deceasedCompanies[Math.floor(Math.random() * deceasedCompanies.length)];
+  var newCompany = spawnFromRuins(state, source);
+
+  fate.lastRuinsSpawn = state.player.day;
+
+  if (newCompany) {
+    StateManager.addMessage(
+      "🌱 「" + newCompany.name + "」从「" + source.name + "」的废墟中诞生，" +
+      "带着" + source.industry + "行业的技术遗产重新出发！",
+      "info"
+    );
+    return [newCompany];
+  }
+
+  return [];
+}
+
 // 全局挂载
 if (typeof window !== "undefined") {
   Object.assign(window, {
     generateNewCompany,
     checkAndSpawnNewCompanies,
+    spawnFromRuins,
+    checkAndSpawnFromRuins,
     getCultureTag,
     getIndustryDef,
     getAllCultureTags,

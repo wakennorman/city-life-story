@@ -1520,7 +1520,11 @@ function showIngredientShopModal() {
   html += '</div></div>';
 
   if (typeof showModal === "function") {
-    showModal(html);
+    showModal({
+      title: "🛒 购买食材",
+      body: html,
+      buttons: [],
+    });
   } else {
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";

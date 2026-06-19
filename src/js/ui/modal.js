@@ -100,10 +100,59 @@ function showHelpModal() {
 
 function showGameOverModal() {
   const state = StateManager.getState();
-  // 记录公司命运到多周目记忆
-  if (typeof recordPlaythroughEnd === "function") {
-    recordPlaythroughEnd(state);
+
+  // Phase 3: 记录多周目记忆 + 生成遗产数据
+  if (typeof recordPlaythroughEndEnhanced === "function") {
+    recordPlaythroughEndEnhanced(state);
   }
+
+  // 计算声誉徽章
+  var badges = [];
+  if (typeof calculateReputationBadges === "function") {
+    badges = calculateReputationBadges(state);
+  }
+
+  // 构建遗产数据（供下局继承）
+  var inheritanceData = {
+    badges: badges,
+    badgeCount: badges.length,
+    relationshipCount: Object.keys(state.relationships || {}).filter(function (npcId) {
+      var r = state.relationships[npcId];
+      return r && r.met && (r.affinity || 0) >= 30;
+    }).length,
+    itemCount: (state.inventory || []).filter(function (item) {
+      return item.legendary || item.achievement || item.unique;
+    }).length,
+    dreamProgress: state.flags?._dreamId ? {
+      dreamId: state.flags._dreamId,
+      completedMilestones: state.flags._dreamMilestone || 0,
+    } : null,
+    skillTree: {
+      branches: state.skillBranches || {},
+      nodes: state.talentNodes || {},
+    },
+    cashInfo: null, // 将在下面计算
+    narrative: "",
+    prevState: state, // 完整上局状态
+  };
+
+  // 计算继承现金
+  if (typeof calculateInheritanceCash === "function") {
+    inheritanceData.cashInfo = calculateInheritanceCash(state, badges);
+  }
+
+  // 生成叙事文案
+  if (typeof generateInheritanceNarrative === "function") {
+    inheritanceData.narrative = generateInheritanceNarrative(state, badges, inheritanceData.cashInfo);
+  }
+
+  // 保存到 localStorage（供下局继承）
+  try {
+    localStorage.setItem("_lastGameInheritance", JSON.stringify(inheritanceData));
+  } catch (e) {
+    console.error("保存遗产数据失败:", e);
+  }
+
   showModal({
     title: "💀 游戏结束",
     body: `
@@ -115,6 +164,7 @@ function showGameOverModal() {
         <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
         <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
       </table>
+      ${badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + ' 枚声誉徽章，下局可继承加成</p>' : ''}
     `,
     buttons: [
       { text: "重新开始", cls: "btn-primary", callback: () => startNewGame() },
@@ -1693,5 +1743,122 @@ function showVendingLocationAdviceModal() {
     title: "🛒 摆摊选址建议",
     body: html,
     buttons: [{ text: "知道了", cls: "btn-primary" }],
+  });
+}
+
+/**
+ * Phase 3: 显示继承摘要弹窗
+ * 新游戏开始时展示上局遗产继承详情
+ */
+function showInheritanceSummaryModal(inheritanceData) {
+  if (!inheritanceData) return;
+
+  var badges = inheritanceData.badges || [];
+  var cashInfo = inheritanceData.cashInfo;
+  var relCount = inheritanceData.relationshipCount || 0;
+  var itemCount = inheritanceData.itemCount || 0;
+  var dreamProgress = inheritanceData.dreamProgress;
+  var skillTree = inheritanceData.skillTree;
+  var narrative = inheritanceData.narrative || "";
+
+  // 构建徽章HTML
+  var badgeHtml = "";
+  if (badges.length > 0) {
+    badgeHtml = '<div style="margin-bottom:12px;">';
+    badgeHtml += '<div style="font-size:14px;font-weight:bold;margin-bottom:6px;color:var(--text-primary);">🏅 声誉徽章</div>';
+    badgeHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    for (var bi = 0; bi < badges.length; bi++) {
+      var b = badges[bi];
+      badgeHtml += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;text-align:center;">';
+      badgeHtml += '<div style="font-size:20px;">' + (b.icon || "🏅") + '</div>';
+      badgeHtml += '<div style="font-weight:bold;color:var(--text-primary);margin-top:2px;">' + b.name + '</div>';
+      badgeHtml += '<div style="color:var(--text-secondary);font-size:11px;margin-top:1px;">' + b.effect + '</div>';
+      badgeHtml += '</div>';
+    }
+    badgeHtml += '</div></div>';
+  } else {
+    badgeHtml = '<div style="margin-bottom:12px;color:var(--text-secondary);font-size:13px;">未获得声誉徽章</div>';
+  }
+
+  // 构建现金信息
+  var cashHtml = "";
+  if (cashInfo) {
+    cashHtml = '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
+    cashHtml += '<div style="font-size:14px;font-weight:bold;color:var(--text-primary);margin-bottom:4px;">💰 遗产现金</div>';
+    cashHtml += '<div style="font-size:12px;color:var(--text-secondary);">';
+    cashHtml += '基础: ¥' + (cashInfo.base || 0).toLocaleString();
+    if (cashInfo.bonus > 0) {
+      cashHtml += ' + 声誉加成: ¥' + cashInfo.bonus.toLocaleString() + ' (+' + cashInfo.bonusPercent + '%)';
+    }
+    cashHtml += ' <strong style="color:#4caf50;">= ¥' + cashInfo.total.toLocaleString() + '</strong>';
+    cashHtml += '</div></div>';
+  }
+
+  // 构建关系信息
+  var relHtml = "";
+  if (relCount > 0) {
+    relHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);">';
+    relHtml += '❤️ 继承了 ' + relCount + ' 位NPC的旧识关系（好感度衰减保留）';
+    relHtml += '</div>';
+  }
+
+  // 构建物品信息
+  var itemHtml = "";
+  if (itemCount > 0) {
+    itemHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);">';
+    itemHtml += '🎒 继承了 ' + itemCount + ' 件传奇/成就物品';
+    itemHtml += '</div>';
+  }
+
+  // 构建梦想进度
+  var dreamHtml = "";
+  if (dreamProgress) {
+    dreamHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);">';
+    dreamHtml += '🌟 梦想进度已继承（已完成 ' + dreamProgress.completedMilestones + ' 个里程碑）';
+    dreamHtml += '</div>';
+  }
+
+  // 构建技能树信息
+  var skillHtml = "";
+  if (skillTree && skillTree.nodes) {
+    var activeCount = Object.keys(skillTree.nodes).length;
+    if (activeCount > 0) {
+      skillHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);">';
+      skillHtml += '🎓 继承了 ' + activeCount + ' 个已激活天赋节点';
+      skillHtml += '</div>';
+    }
+  }
+
+  // 叙事文案
+  var narrativeHtml = "";
+  if (narrative) {
+    narrativeHtml = '<div style="margin:12px 0;padding:10px 12px;background:linear-gradient(135deg, rgba(76,175,80,0.1), rgba(33,150,243,0.1));border-radius:6px;border-left:3px solid #4caf50;font-size:13px;color:var(--text-primary);font-style:italic;">';
+    narrativeHtml += narrative;
+    narrativeHtml += '</div>';
+  }
+
+  var html = '';
+  html += '<div class="inheritance-summary">';
+  html += narrativeHtml;
+  html += badgeHtml;
+  html += cashHtml;
+  html += relHtml;
+  html += itemHtml;
+  html += dreamHtml;
+  html += skillHtml;
+  html += '</div>';
+
+  showModal({
+    title: "🔄 继承上局遗产",
+    body: html,
+    buttons: [
+      {
+        text: "开始新旅程",
+        cls: "btn-primary",
+        callback: function () {
+          // 关闭弹窗，进入游戏
+        },
+      },
+    ],
   });
 }

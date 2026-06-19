@@ -452,7 +452,12 @@ function _attrLabel(k) {
   );
 }
 
-// ====== 延期惩罚（endDay 调用） ======
+// ====== 延期惩罚（endDay 调用）=====
+// 阶梯式惩罚：延期次数越多，惩罚越重
+// 第1次延期：轻度警告 + 小额健康/心情损失
+// 第2次延期：中度惩罚 + 概率患病
+// 第3次延期：重度惩罚 + 强制昏倒/送医
+// 第4次+延期：极端后果（健康暴跌/强制住院/解雇风险）
 
 function applyDeferredCriticalPunishments(state) {
   if (!state.flags._deferred) return null;
@@ -461,12 +466,25 @@ function applyDeferredCriticalPunishments(state) {
   var keys = Object.keys(state.flags._deferred);
   for (var i = 0; i < keys.length; i++) {
     var need = keys[i];
-    var deferDay = state.flags._deferred[need];
-    if (deferDay !== state.player.day) continue; // 不是当日延期则跳过
+    var deferInfo = state.flags._deferred[need];
+
+    // 兼容旧格式：{ hunger: day } → 转为新格式
+    if (typeof deferInfo === "number") {
+      deferInfo = { count: 1, lastDay: deferInfo };
+      state.flags._deferred[need] = deferInfo;
+    }
+
+    // 检查是否是连续延期（同一天内不重复罚）
+    if (deferInfo.lastDay === state.player.day) continue;
+
     if (!isCriticalNeed(state, need)) continue; // 已经回血了不用罚
 
-    var rolled = _punishByNeed(state, need);
-    if (rolled === "skip_day") skipDay = true;
+    // 递增延期次数
+    deferInfo.count = (deferInfo.count || 0) + 1;
+    deferInfo.lastDay = state.player.day;
+
+    var result = _punishByNeed阶梯式(state, need, deferInfo.count);
+    if (result === "skip_day") skipDay = true;
   }
 
   // 清空当日延期标记（无论是否处罚）
@@ -475,20 +493,41 @@ function applyDeferredCriticalPunishments(state) {
   return skipDay ? "skip_day" : null;
 }
 
-function _punishByNeed(state, need) {
-  var r = Math.random();
+function _punishByNeed阶梯式(state, need, deferCount) {
+  // deferCount: 第几次延期（1=轻度, 2=中度, 3=重度, 4+=极端）
+  var skipDay = false;
+
   if (need === "hunger") {
-    if (r < 0.2) {
-      // 饿晕街头
-      state.status.health = Math.max(0, state.status.health - 10);
-      state.needs.hunger = 8;
+    if (deferCount === 1) {
+      // 第1次延期：轻度 — 健康-3，饥饱降至15
+      state.status.health = Math.max(0, state.status.health - 3);
+      state.needs.hunger = Math.max(0, state.needs.hunger - 5);
       StateManager.addMessage(
-        "💀 你饿晕在街头！醒来已是深夜，健康-10。",
+        "😣 强忍饥饿撑过了一天，健康-3，肚子更难受了。",
+        "warning",
+      );
+    } else if (deferCount === 2) {
+      // 第2次延期：中度 — 健康-8，饥饱-10，概率得肠胃炎
+      state.status.health = Math.max(0, state.status.health - 8);
+      state.needs.hunger = Math.max(0, state.needs.hunger - 10);
+      if (Math.random() < 0.4) {
+        _contractIllness(state, "stomach_inflammation");
+      }
+      StateManager.addMessage(
+        "🤢 连续两天挨饿，健康-8，肠胃开始抗议...",
         "danger",
       );
-      return "skip_day";
-    } else if (r < 0.35) {
-      // 晕送医院
+    } else if (deferCount === 3) {
+      // 第3次延期：重度 — 饿晕，健康-15，饥饱重置为8
+      state.status.health = Math.max(0, state.status.health - 15);
+      state.needs.hunger = 8;
+      StateManager.addMessage(
+        "💀 你饿晕在街头！醒来已是深夜，健康-15。",
+        "danger",
+      );
+      skipDay = true;
+    } else {
+      // 第4次+延期：极端 — 送医急救或路人施舍
       var fee = 300 + Math.floor(Math.random() * 700);
       if (state.resources.cash >= fee) {
         state.resources.cash -= fee;
@@ -501,66 +540,109 @@ function _punishByNeed(state, need) {
           (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
       }
       state.needs.hunger = 30;
-      state.status.health = Math.max(0, state.status.health - 5);
-      state.flags._everHospitalized = true; // 成就追踪
+      state.status.health = Math.max(0, state.status.health - 10);
+      state.flags._everHospitalized = true;
       StateManager.addMessage(
-        "🏥 你饿晕被送进医院！花了¥" + fee + "急救费。明天醒来。",
+        "🏥 连续多日挨饿，你被送进医院急救！花了¥" + fee + "。",
         "danger",
       );
-      return "skip_day";
-    } else if (r < 0.75) {
-      // 路人施舍
-      state.needs.hunger = Math.min(100, state.needs.hunger + 20);
-      state.needs.happiness = Math.min(100, state.needs.happiness + 8);
-      StateManager.addMessage(
-        "🥺 一位好心阿姨给了你两个馒头和一瓶水，饥饱+20，心情+8。",
-        "info",
-      );
-    } else {
-      state.needs.hunger = Math.max(0, state.needs.hunger - 5);
-      StateManager.addMessage("😣 强忍饥饿撑过了一天，但更虚了。", "warning");
+      skipDay = true;
     }
   } else if (need === "fatigue") {
-    if (r < 0.3) {
-      // 过劳晕倒
+    if (deferCount === 1) {
+      // 第1次延期：轻度 — 疲劳+5，心情-3
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 5);
+      state.needs.happiness = Math.max(0, state.needs.happiness - 3);
+      StateManager.addMessage(
+        "🥱 强撑了一天，疲劳+5，心情更差了。",
+        "warning",
+      );
+    } else if (deferCount === 2) {
+      // 第2次延期：中度 — 疲劳+15，概率过劳/失眠
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 15);
+      state.needs.happiness = Math.max(0, state.needs.happiness - 8);
+      if (Math.random() < 0.35) {
+        _contractIllness(state, Math.random() < 0.5 ? "overwork" : "insomnia");
+      }
+      StateManager.addMessage(
+        "🥵 连续两天过度疲劳，身体发出警告...",
+        "danger",
+      );
+    } else if (deferCount === 3) {
+      // 第3次延期：重度 — 过劳晕倒
       state.needs.fatigue = 20;
       state.needs.happiness = Math.max(0, state.needs.happiness - 15);
-      state.status.health = Math.max(0, state.status.health - 5);
-      state.flags._everCollapsed = true; // 成就追踪
+      state.status.health = Math.max(0, state.status.health - 8);
+      state.flags._everCollapsed = true;
       StateManager.addMessage(
         "😵 你累倒在路边！睡了一觉，疲劳重置但心情和健康受损。",
         "danger",
       );
-      return "skip_day";
-    } else if (r < 0.45) {
-      // 引发疾病（过劳综合症 or 失眠）
-      _contractIllness(state, Math.random() < 0.5 ? "overwork" : "insomnia");
+      skipDay = true;
     } else {
-      state.needs.fatigue = Math.min(100, state.needs.fatigue);
+      // 第4次+延期：极端 — 强制住院
+      state.needs.fatigue = 10;
+      state.status.health = Math.max(0, state.status.health - 15);
+      state.flags._everHospitalized = true;
       StateManager.addMessage(
-        "🥱 强撑了一天，但效率惨淡，明天的状态会更糟。",
-        "warning",
+        "🏥 连续多日过劳，你被强制送医治疗！健康-15。",
+        "danger",
       );
+      skipDay = true;
     }
   } else if (need === "hygiene") {
-    if (r < 0.35) {
-      _contractIllness(state, Math.random() < 0.5 ? "skin_infection" : "cold");
-    } else if (r < 0.6) {
-      state.needs.happiness = Math.max(0, state.needs.happiness - 10);
-      state.player.fame = Math.max(0, (state.player.fame || 0) - 2);
+    if (deferCount === 1) {
+      // 第1次延期：轻度 — 心情-3，卫生-5
+      state.needs.happiness = Math.max(0, state.needs.happiness - 3);
+      state.needs.hygiene = Math.max(0, state.needs.hygiene - 5);
       StateManager.addMessage(
-        "🦠 路人捂鼻避让，你听到嘲笑，心情-10、名气-2。",
+        "🦠 卫生告急但暂无大碍，心情-3，明天一定要洗澡了。",
         "warning",
       );
-    } else {
+    } else if (deferCount === 2) {
+      // 第2次延期：中度 — 概率患病，心情-8，名气-1
+      state.needs.happiness = Math.max(0, state.needs.happiness - 8);
+      state.player.fame = Math.max(0, (state.player.fame || 0) - 1);
+      if (Math.random() < 0.4) {
+        _contractIllness(state, Math.random() < 0.5 ? "skin_infection" : "cold");
+      }
       StateManager.addMessage(
-        "🦠 卫生告急但暂无大碍，明天一定要洗澡了。",
+        "🦠 连续两天卫生差，路人捂鼻避让，你可能生病了...",
         "warning",
+      );
+    } else if (deferCount === 3) {
+      // 第3次延期：重度 — 强制患病
+      _contractIllness(state, "skin_infection");
+      state.needs.happiness = Math.max(0, state.needs.happiness - 10);
+      state.player.fame = Math.max(0, (state.player.fame || 0) - 3);
+      StateManager.addMessage(
+        "🤒 卫生长期不达标，你得了皮肤病！心情-10，名气-3。",
+        "danger",
+      );
+    } else {
+      // 第4次+延期：极端 — 多重感染
+      _contractIllness(state, "skin_infection");
+      if (Math.random() < 0.5) _contractIllness(state, "cold");
+      state.needs.happiness = Math.max(0, state.needs.happiness - 15);
+      state.status.health = Math.max(0, state.status.health - 10);
+      StateManager.addMessage(
+        "🤒 长期卫生极差，多重感染爆发！健康-10。",
+        "danger",
       );
     }
   } else if (need === "happiness") {
-    if (r < 0.3) {
-      // 累积抑郁
+    if (deferCount === 1) {
+      // 第1次延期：轻度 — 心情-5，疲劳+10
+      state.needs.happiness = Math.max(0, state.needs.happiness - 5);
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 10);
+      StateManager.addMessage(
+        "😔 又熬过了一个难熬的夜，心情-5，失眠让你更累了。",
+        "warning",
+      );
+    } else if (deferCount === 2) {
+      // 第2次延期：中度 — 心情-10，疲劳+20，累积抑郁计数
+      state.needs.happiness = Math.max(0, state.needs.happiness - 10);
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 20);
       state.flags._habits = state.flags._habits || {};
       state.flags._habits.lowHappinessStreak =
         (state.flags._habits.lowHappinessStreak || 0) + 3;
@@ -568,12 +650,13 @@ function _punishByNeed(state, need) {
         "🌧️ 心情持续低落，抑郁的种子在心里发芽...",
         "danger",
       );
-    } else if (r < 0.6) {
-      // 整夜失眠
+    } else if (deferCount === 3) {
+      // 第3次延期：重度 — 整夜失眠，疲劳+30
       state.needs.fatigue = Math.min(100, state.needs.fatigue + 30);
+      state.needs.happiness = Math.max(0, state.needs.happiness - 10);
       StateManager.addMessage("😴 整夜失眠，疲劳+30，明天会很难受。", "danger");
-    } else if (r < 0.8) {
-      // 借酒消愁
+    } else {
+      // 第4次+延期：极端 — 借酒消愁 + 概率重度抑郁
       var spend = Math.min(50, state.resources.cash);
       if (spend > 0) {
         state.resources.cash -= spend;
@@ -588,19 +671,21 @@ function _punishByNeed(state, need) {
         }
       }
       state.needs.hunger = Math.max(0, state.needs.hunger - 10);
-      state.needs.happiness = Math.min(100, state.needs.happiness + 10);
+      state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 15);
+      if (Math.random() < 0.3) {
+        _contractIllness(state, "depression");
+      }
       StateManager.addMessage(
-        "🍶 你买了瓶酒一个人喝，花¥" + spend + "，饥饱-10但心情好了点。",
-        "warning",
-      );
-    } else {
-      StateManager.addMessage(
-        "😔 又熬过了一个难熬的夜，但伤痕累积。",
+        "🍶 你买了瓶酒一个人喝，花¥" +
+          spend +
+          "，但抑郁的风险在累积...",
         "warning",
       );
     }
   }
-  return null;
+
+  return skipDay ? "skip_day" : null;
 }
 
 /** 让玩家患上疾病（复用，避免重复实现） */
@@ -640,7 +725,7 @@ if (typeof window !== "undefined") {
     id: "critical_needs",
     name: "状态危机系统",
     icon: "⚠️",
-    brief: "饥饱/疲劳/卫生/心情低于阈值时强制选择，延期会昏倒/送医",
+    brief: "饥饱/疲劳/卫生/心情低于阈值时强制选择，延期按阶梯式累积惩罚",
     version: "1.1.0",
     reference: "《大多数》生存张力",
     related: ["mechanics:illness_system", "mechanics:ap", "amenities:*"],
@@ -681,22 +766,22 @@ if (typeof window !== "undefined") {
             _wkLink("amenities", null, "恢复点") +
             '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
             "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
-            "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按概率触发昏倒/送医/路人施舍</li>" +
+            "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
             "</ul>"
           );
         },
       },
       {
         kind: "subhead",
-        text: "🎲 延期惩罚（endDay 时按维度差异化掷骰）",
+        text: "📊 延期惩罚阶梯（1.2 起改为阶梯式，非随机掷骰）",
       },
       {
         kind: "list",
         items: [
-          "🍚 饥饱临界：20% 饿晕街头 / 15% 送医院（¥300-1000）/ 40% 路人施舍 / 25% 硬撑",
-          "😴 疲劳临界：30% 过劳晕倒 / 15% 引发疾病（过劳综合症或失眠）/ 55% 效率惨淡",
-          "🛁 卫生临界：35% 生病（皮肤感染或感冒）/ 25% 名气-2 / 40% 没事",
-          "😊 心情临界：30% 累积抑郁 / 30% 整夜失眠 / 20% 借酒消愁 / 20% 硬撑",
+          "🍚 **饥饱**：第1次健康-3 / 第2次健康-8+概率肠胃炎 / 第3次饿晕（健康-15） / 第4次+送医急救",
+          "😴 **疲劳**：第1次疲劳+5 / 第2次疲劳+15+概率过劳/失眠 / 第3次过劳晕倒 / 第4次+强制住院",
+          "🛁 **卫生**：第1次心情-3 / 第2次概率患病+名气-1 / 第3次强制患病 / 第4次+多重感染",
+          "😊 **心情**：第1次心情-5+疲劳+10 / 第2次心情-10+抑郁计数+3 / 第3次整夜失眠 / 第4次+概率重度抑郁",
         ],
       },
     ],
@@ -995,7 +1080,11 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
 
   // 如果模式窗存在就使用，否则用 alert
   if (typeof showModal === "function") {
-    showModal(html);
+    showModal({
+      title: "📋 重要提示",
+      body: html,
+      buttons: [],
+    });
   } else if (typeof showCustomModal === "function") {
     showCustomModal(html);
   } else {

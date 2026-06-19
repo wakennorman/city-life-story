@@ -1154,62 +1154,43 @@ function startNewGame() {
     initEnterpriseFate(StateManager.getState());
   }
 
-  // P2.11 新游戏+：检查并应用上局继承加成
-  var ngApplied = false;
+  // Phase 3: 多周目继承系统 — 检查并应用上局遗产
+  var inheritanceApplied = false;
   try {
-    var ngRaw = localStorage.getItem("_ngPlusData");
-    if (ngRaw) {
-      var ngData = JSON.parse(ngRaw);
+    // 读取上局遗产数据（从 localStorage 的 _lastGameInheritance 键）
+    var inheritanceRaw = localStorage.getItem("_lastGameInheritance");
+    if (inheritanceRaw) {
+      var inheritanceData = JSON.parse(inheritanceRaw);
       var state = StateManager.getState();
-      if (ngData.startCash > 0) {
-        state.resources.cash += ngData.startCash;
-      }
-      if (
-        ngData.inheritSkill &&
-        ngData.inheritSkillLevel > 0 &&
-        state.skills[ngData.inheritSkill]
-      ) {
-        state.skills[ngData.inheritSkill].level = ngData.inheritSkillLevel;
-      }
-      if (ngData.statBonus > 0) {
-        state.player.intelligence = Math.min(
-          100,
-          (state.player.intelligence || 0) + ngData.statBonus,
-        );
-        state.player.mental = Math.min(
-          100,
-          (state.player.mental || 0) + ngData.statBonus,
-        );
-      }
-      // 携带声誉种子（未来事件可感知）
-      if (ngData.reputationLabel) {
-        state.flags._ngPlusReputation = ngData.reputationLabel;
-      }
-      state.flags._isNgPlus = true;
-      localStorage.removeItem("_ngPlusData");
-      ngApplied = true;
-      var bonus =
-        ngData.startCash > 0 ? "额外¥" + ngData.startCash + "启动资金" : "";
-      var skillTxt = ngData.inheritSkill
-        ? "、" +
-          ngData.inheritSkill +
-          "技能Lv." +
-          ngData.inheritSkillLevel +
-          "起步"
-        : "";
-      StateManager.addMessage(
-        "🌟 新游戏+！你带着上局的经验重新出发：" +
-          bonus +
-          skillTxt +
-          "。城市依然在等你。",
-        "event",
-      );
-    }
-  } catch (e) {}
 
-  if (!ngApplied) {
+      // 应用继承数据
+      if (typeof applyInheritance === "function") {
+        applyInheritance(state, inheritanceData.prevState, inheritanceData);
+        inheritanceApplied = true;
+
+        // 显示继承摘要弹窗
+        if (typeof showInheritanceSummaryModal === "function") {
+          setTimeout(function () {
+            showInheritanceSummaryModal(inheritanceData);
+          }, 500);
+        }
+
+        // 清除遗产数据（只继承一次）
+        localStorage.removeItem("_lastGameInheritance");
+      }
+    }
+  } catch (e) {
+    console.error("继承系统错误:", e);
+  }
+
+  if (!inheritanceApplied) {
     StateManager.addMessage(
       "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
+      "event",
+    );
+  } else {
+    StateManager.addMessage(
+      "🔄 带着上局的遗产重新出发。城市依然在等你，但有些东西已经不一样了。",
       "event",
     );
   }

@@ -104,7 +104,7 @@ const AMENITIES = [
     tier: 3,
     name: "商业区中餐馆",
     icon: "🍽️",
-    cost: 30,
+    cost: 35,
     ap: 8,
     primary: { hunger: 65, happiness: 10 },
     bonusPool: [
@@ -138,7 +138,7 @@ const AMENITIES = [
     tier: 3,
     name: "在家做饭",
     icon: "🍳",
-    cost: 15,
+    cost: 12,
     ap: 10,
     primary: { hunger: 55, happiness: 5 },
     bonusPool: [

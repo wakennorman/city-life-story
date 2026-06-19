@@ -60,6 +60,7 @@ function getMultiRunMemory() {
     mergerHistory: {}, // 合并历史
     legendaryCompanies: [], // 传奇企业
     industryEvolution: {}, // 行业格局变迁
+    legacyEvents: [], // 倒闭遗产事件
     firstSeenAt: Date.now(),
   };
 }
@@ -232,7 +233,49 @@ function resetMultiRunMemory() {
     mergerHistory: {},
     legendaryCompanies: [],
     industryEvolution: {},
+    legacyEvents: [],
     firstSeenAt: Date.now(),
+  });
+}
+
+/**
+ * 记录倒闭遗产事件 — 由企业命运系统调用
+ * @param {object} aftermath 遗产事件数据
+ * @param {object} state 游戏状态
+ */
+function recordLegacyEventToMemory(aftermath, state) {
+  var memory = getMultiRunMemory();
+  if (!memory.legacyEvents) memory.legacyEvents = [];
+
+  var event = {
+    day: state.player.day,
+    type: aftermath.type,
+    sourceCompanyId: aftermath.sourceCompanyId || aftermath.newCompanyId || aftermath.targetCompanyId,
+    sourceCompanyName: aftermath.sourceCompanyName || aftermath.newCompanyName || aftermath.targetCompanyName,
+    details: aftermath,
+    playthrough: memory.totalPlaythroughs + 1,
+  };
+
+  memory.legacyEvents.push(event);
+  saveMultiRunMemory(memory);
+  return event;
+}
+
+/**
+ * 获取所有遗产事件
+ */
+function getLegacyEvents() {
+  var memory = getMultiRunMemory();
+  return memory.legacyEvents || [];
+}
+
+/**
+ * 获取某公司的遗产事件
+ */
+function getLegacyEventsBySource(sourceCompanyId) {
+  var memory = getMultiRunMemory();
+  return (memory.legacyEvents || []).filter(function (e) {
+    return e.sourceCompanyId === sourceCompanyId;
   });
 }
 
@@ -366,6 +409,9 @@ function updateIndustryEvolution(industry, action) {
   if (action === "company_died") data.companiesDied++;
   else if (action === "company_ipo") data.companiesIpo++;
   else if (action === "company_merged") data.companiesMerged++;
+  else if (action === "company_spawned") data.companiesStarted++;
+  else if (action === "patent_acquired") data.patentAcquisitions = (data.patentAcquisitions || 0) + 1;
+  else if (action === "talent_dispersion") data.talentDispersions = (data.talentDispersions || 0) + 1;
 
   data.lastUpdated = Date.now();
 
@@ -467,6 +513,10 @@ if (typeof window !== "undefined") {
     getIndustryEvolution: getIndustryEvolution,
     getMultiRunMemorySummary: getMultiRunMemorySummary,
     recordPlaythroughEndEnhanced: recordPlaythroughEndEnhanced,
+    // Phase 3: 遗产链
+    recordLegacyEventToMemory: recordLegacyEventToMemory,
+    getLegacyEvents: getLegacyEvents,
+    getLegacyEventsBySource: getLegacyEventsBySource,
     MULTIVERSE_KEY: MULTIVERSE_KEY,
   });
 }

@@ -375,6 +375,61 @@ function downgradeToStreet(state, reason) {
 
 function showVictoryModal() {
   const state = StateManager.getState();
+
+  // Phase 3: 记录多周目记忆 + 生成遗产数据
+  if (typeof recordPlaythroughEndEnhanced === "function") {
+    recordPlaythroughEndEnhanced(state);
+  }
+
+  // 计算声誉徽章
+  var badges = [];
+  if (typeof calculateReputationBadges === "function") {
+    badges = calculateReputationBadges(state);
+  }
+
+  // 构建遗产数据
+  var inheritanceData = {
+    badges: badges,
+    badgeCount: badges.length,
+    relationshipCount: Object.keys(state.relationships || {}).filter(function (npcId) {
+      var r = state.relationships[npcId];
+      return r && r.met && (r.affinity || 0) >= 30;
+    }).length,
+    itemCount: (state.inventory || []).filter(function (item) {
+      return item.legendary || item.achievement || item.unique;
+    }).length,
+    dreamProgress: state.flags?._dreamId ? {
+      dreamId: state.flags._dreamId,
+      completedMilestones: state.flags._dreamMilestone || 0,
+    } : null,
+    skillTree: {
+      branches: state.skillBranches || {},
+      nodes: state.talentNodes || {},
+    },
+    cashInfo: null,
+    narrative: "",
+    prevState: state,
+    victory: true,
+    victoryType: state.flags.victoryType || "normal",
+  };
+
+  // 计算继承现金
+  if (typeof calculateInheritanceCash === "function") {
+    inheritanceData.cashInfo = calculateInheritanceCash(state, badges);
+  }
+
+  // 生成叙事文案
+  if (typeof generateInheritanceNarrative === "function") {
+    inheritanceData.narrative = generateInheritanceNarrative(state, badges, inheritanceData.cashInfo);
+  }
+
+  // 保存到 localStorage
+  try {
+    localStorage.setItem("_lastGameInheritance", JSON.stringify(inheritanceData));
+  } catch (e) {
+    console.error("保存遗产数据失败:", e);
+  }
+
   // 优先使用新的胜利字段
   const title =
     state.flags.victoryTitle ||
@@ -384,6 +439,9 @@ function showVictoryModal() {
     (state.flags.victoryType === "p10"
       ? "你成功晋升到了P10合伙人级别，站在了职场金字塔的顶端！"
       : "你积累了2000万财富，实现了财务自由。不再为钱发愁的人生，开始了！");
+
+  // 构建徽章文本
+  var badgeText = badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + ' 枚声誉徽章，下局可继承加成</p>' : '';
 
   showModal({
     title,
@@ -399,17 +457,13 @@ function showVictoryModal() {
           <tr><td>现金</td><td>¥${state.resources.cash.toLocaleString()}</td></tr>
           <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
         </table>
+        ${badgeText}
       </div>`,
     buttons: [
       {
         text: "🔄 新游戏+ (继承加成)",
         cls: "btn-primary",
         callback: () => {
-          // P2.11 新游戏+：保存继承数据到 localStorage
-          var ngData = buildNgPlusData(state);
-          try {
-            localStorage.setItem("_ngPlusData", JSON.stringify(ngData));
-          } catch (e) {}
           location.reload();
         },
       },
@@ -417,6 +471,7 @@ function showVictoryModal() {
         text: "🔄 全新开始",
         cls: "btn-secondary",
         callback: () => {
+          localStorage.removeItem("_lastGameInheritance");
           location.reload();
         },
       },
