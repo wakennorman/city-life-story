@@ -1252,6 +1252,14 @@ function getAvailableActions(state) {
                   "节日打工 - " + fjob.name,
                 );
                 consumeAP(fjob.apCost || 20);
+
+                // 节日成就追踪
+                if (curFest.id === "labor_day") {
+                  state.flags._laborDayAchieveWork = true;
+                } else if (curFest.id === "national_day") {
+                  state.flags._nationalDayAchieveWork = true;
+                }
+
                 StateManager.addMessage(
                   curFest.icon +
                     " 节日打工「" +

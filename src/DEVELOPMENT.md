@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-19 (累计250+项改动)
-> **最新改动**: P1 公司历史书 UI — 弹窗式公司历史展示 + 里程碑时间线 + 事件档案 + 游戏百科
+> 最后更新: 2026-06-19 (累计270+项改动)
+> **最新改动**: P1 节日成就系统 — 25个新成就(春节7+剁手节2+劳动/中秋/国庆各1+节日综合) + 追踪flag埋点
 
 ## 项目概述
 
@@ -847,6 +847,47 @@ src/
    - `SPRING_FESTIVAL_EVENTS` 定义 7 天事件链（除夕→初六），每天 3 个选项
    - `checkSpringFestivalEvents()` 在 `daily_pipeline.js` 的 `festival` 步骤中调度
    - 事件通过 `state._pendingEvent` + `showEventModal()` 弹窗展示
+
+---
+
+### 2026-06-19 — 节日成就系统（P1 节日系统扩展）
+
+**核心改动**：
+
+1. **春节成就追踪**（`festivals.js`）
+   - 在 SPRING_FESTIVAL_EVENTS 的每个事件选择中埋入成就 flag：
+     - `_springFestivalAchieveHome`：除夕买票回家 → 成就"除夕团圆"
+     - `_springFestivalAchieveRedPacket`：初一拜年净赚 → 成就"红包达人"
+     - `_springFestivalAchieveStudy`：初三在家学习 → 成就"赤狗日学霸"
+     - `_springFestivalAchieveWorship`：初四拜财神 → 成就"迎财神"
+     - `_springFestivalAchieveWork`：初五找临时工 → 成就"破五开工"
+     - `_springFestivalAchievePayDebt`：初六还债 → 成就"送穷神"
+   - `_springFestDaysParticipated`：追踪春节参与天数，满7天解锁"春节全勤"
+
+2. **剁手节成就追踪**（`festivals.js` + `trade.js`）
+   - `checkFestivalDailyEffects()` 节日结束时检查累计进货/利润
+   - `buyGood()` / `buyWholesale()`：节日当天累计进货金额 → `_shoppingFestTotalStockup`
+   - `sellGood()`：节日当天累计销售额 → `_shoppingFestTotalProfit`
+   - 阈值：进货≥¥5000 → "剁手节进货王"；销售额≥¥3000 → "剁手节清空购物车"
+
+3. **劳动节成就**（`main.js`）
+   - 节日限定工作 handler 中埋入 `_laborDayAchieveWork` flag
+
+4. **中秋节成就**（`actions_extra.js`）
+   - 送礼 callback 中埋入 `_midAutumnAchieveGift` flag
+
+5. **国庆节成就**（`main.js`）
+   - 节日限定工作 handler 中埋入 `_nationalDayAchieveWork` flag
+
+6. **成就定义**（`achievements.js`）
+   - 新增 25 个节日成就（春节7 + 剁手节2 + 劳动1 + 中秋1 + 国庆1 + 节日综合1）
+   - 分类：`category: "节日"`
+   - 春节成就：可见（hidden: false），有故事文案
+   - 节日综合成就：检查多个节日参与情况
+
+7. **游戏百科**（`wiki.js`）
+   - 叙事分类新增"节日成就"条目
+   - 详情页面：所有节日成就清单 + 策略建议
 
 ---
 

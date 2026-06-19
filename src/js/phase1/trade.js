@@ -72,6 +72,16 @@ function buyGood(goodId, qty) {
     "success",
   );
   if (typeof playSound === "function") playSound("buy");
+
+  // 剁手节进货成就追踪
+  if (typeof getCurrentFestival === "function") {
+    var fest = getCurrentFestival(state.player.day);
+    if (fest && fest.id === "shopping_festival") {
+      state.flags._shoppingFestTotalStockup =
+        (state.flags._shoppingFestTotalStockup || 0) + totalCost;
+    }
+  }
+
   return true;
 }
 
@@ -163,6 +173,16 @@ function sellGood(goodId, qty) {
     "success",
   );
   if (typeof playSound === "function") playSound("sell");
+
+  // 剁手节利润成就追踪
+  if (typeof getCurrentFestival === "function") {
+    var fest2 = getCurrentFestival(state.player.day);
+    if (fest2 && fest2.id === "shopping_festival") {
+      state.flags._shoppingFestTotalProfit =
+        (state.flags._shoppingFestTotalProfit || 0) + totalEarned;
+    }
+  }
+
   return true;
 }
 
@@ -237,6 +257,16 @@ function buyWholesale(goodId, qty) {
     "success",
   );
   if (typeof playSound === "function") playSound("buy");
+
+  // 剁手节进货成就追踪（批发也算）
+  if (typeof getCurrentFestival === "function") {
+    var fest3 = getCurrentFestival(state.player.day);
+    if (fest3 && fest3.id === "shopping_festival") {
+      state.flags._shoppingFestTotalStockup =
+        (state.flags._shoppingFestTotalStockup || 0) + totalCost;
+    }
+  }
+
   return true;
 }
 

@@ -1266,6 +1266,14 @@ function showGiftModal() {
           rel.affinity = Math.min(100, rel.affinity + bonus);
           rel.met = true;
           st.flags[todayKey] = st.player.day;
+
+          // 中秋节送礼成就追踪
+          if (typeof getCurrentFestival === "function") {
+            var fest = getCurrentFestival(st.player.day);
+            if (fest && fest.id === "mid_autumn") {
+              st.flags._midAutumnAchieveGift = true;
+            }
+          }
           var goodDef =
             typeof GOODS !== "undefined"
               ? GOODS.find(function (g) {

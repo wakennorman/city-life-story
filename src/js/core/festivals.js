@@ -47,6 +47,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.player.fame = Math.min(100, st.player.fame + 2);
           st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
           st.flags._springFestivalHome = true;
+          st.flags._springFestivalAchieveHome = true; // 成就：除夕团圆
           return {
             ok: true,
             msg: "买了回家的票！除夕夜和家人团圆，心情+20，疲劳-10。",
@@ -105,6 +106,7 @@ var SPRING_FESTIVAL_EVENTS = [
             st.resources.cash += 红包;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             st.player.fame = Math.min(100, st.player.fame + 2);
+            st.flags._springFestivalAchieveRedPacket = true; // 成就：红包达人
             return {
               ok: true,
               msg:
@@ -231,6 +233,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.skills[key] = st.skills[key] || { level: 1, xp: 0 };
           st.skills[key].xp += xp;
           st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+          st.flags._springFestivalAchieveStudy = true; // 成就：赤狗日学霸
           return {
             ok: true,
             msg:
@@ -278,6 +281,7 @@ var SPRING_FESTIVAL_EVENTS = [
           if (st.resources.cash < 50)
             return { ok: false, msg: "钱不够香火钱！" };
           st.resources.cash -= 50;
+          st.flags._springFestivalAchieveWorship = true; // 成就：迎财神
           // 30% 概率获得意外之财
           if (Math.random() < 0.3) {
             const 意外 = 100 + Math.floor(Math.random() * 200);
@@ -343,6 +347,7 @@ var SPRING_FESTIVAL_EVENTS = [
             st.resources.cash += 收入;
             st.resources.totalEarned += 收入;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            st.flags._springFestivalAchieveWork = true; // 成就：破五开工
             return {
               ok: true,
               msg: "找到临时工！赚了¥" + 收入 + "。破五开工，第一桶金！",
@@ -367,6 +372,7 @@ var SPRING_FESTIVAL_EVENTS = [
             st.resources.totalEarned += 收入;
             st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            st.flags._springFestivalAchieveWork = true; // 成就：破五开工
             return {
               ok: true,
               msg: "工厂区有临时工！赚了¥" + 收入 + "，体力+1。",
@@ -433,6 +439,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.resources.debt = Math.max(0, (st.resources.debt || 0) - 还);
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
           st.player.mental = Math.min(100, st.player.mental + 3);
+          st.flags._springFestivalAchievePayDebt = true; // 成就：送穷神
           return {
             ok: true,
             msg:
@@ -661,6 +668,16 @@ function checkFestivalDailyEffects(state) {
       if (!state.flags[clearKey]) {
         state.flags[clearKey] = true;
         state.flags._shoppingClearanceEndDay = state.player.day + 3;
+        // 剁手节期间累计进货成就检查
+        var stockupAmount = state.flags._shoppingFestTotalStockup || 0;
+        if (stockupAmount >= 5000) {
+          state.flags._shoppingFestAchieveStockup = true;
+        }
+        // 剁手节期间累计利润成就检查
+        var festivalProfit = state.flags._shoppingFestTotalProfit || 0;
+        if (festivalProfit >= 3000) {
+          state.flags._shoppingFestAchieveProfit = true;
+        }
         StateManager.addMessage(
           "📉【剁手节余波】消费者买完了，日用品/服装/电子降价15-20%清仓中（还有3天），是囤货低吸的好时机！",
           "info",
@@ -688,6 +705,27 @@ function checkFestivalDailyEffects(state) {
       100,
       (state.needs.happiness || 50) + f.moodBonus,
     );
+  }
+
+  // === 节日成就追踪 ===
+  // 劳动节：节日第一天标记参与
+  if (f.id === "labor_day" && doy === f.startDay) {
+    state.flags._laborDayParticipated = true;
+  }
+
+  // 中秋节：节日第一天标记参与
+  if (f.id === "mid_autumn" && doy === f.startDay) {
+    state.flags._midAutumnParticipated = true;
+  }
+
+  // 国庆节：节日第一天标记参与
+  if (f.id === "national_day" && doy === f.startDay) {
+    state.flags._nationalDayParticipated = true;
+  }
+
+  // 剁手节：节日第一天标记参与
+  if (f.id === "shopping_festival" && doy === f.startDay) {
+    state.flags._shoppingFestParticipated = true;
   }
 }
 
@@ -909,6 +947,19 @@ function checkSpringFestivalEvents(state) {
     eventDef.icon + " 【春节第" + (dayOffset + 1) + "天】" + eventDef.title,
     "event",
   );
+
+  // 追踪春节参与天数（用于成就：春节全勤）
+  var participatedKey = "_springFestDaysParticipated_y" + year;
+  if (!state.flags[participatedKey]) {
+    state.flags[participatedKey] = 0;
+  }
+  state.flags[participatedKey] = Math.min(
+    7,
+    (state.flags[participatedKey] || 0) + 1,
+  );
+  if (state.flags[participatedKey] >= 7) {
+    state.flags._springFestivalAchieveFullAttendance = true; // 成就：春节全勤
+  }
 }
 
 // ====== 季节性价格波动 ======

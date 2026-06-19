@@ -769,6 +769,188 @@ const ACHIEVEMENTS = [
       return (st.flags._unlockedAchievements || []).length >= 25;
     },
   },
+
+  // === 节日成就 ===
+  // --- 春节 ---
+  {
+    id: "spring_fest_home",
+    name: "除夕团圆",
+    desc: "除夕夜选择买票回家，与家人团圆。",
+    story:
+      "除夕夜的火车票很贵，但你还是买了。推开家门的那一刻，你知道这¥300花得值。",
+    icon: "🏠",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveHome);
+    },
+  },
+  {
+    id: "spring_fest_redpacket",
+    name: "红包达人",
+    desc: "大年初一去拜年，收到红包净赚。",
+    story: "花¥100买礼物，回来时兜里多了¥200。人情往来，有时候也是门生意。",
+    icon: "🧧",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveRedPacket);
+    },
+  },
+  {
+    id: "spring_fest_study",
+    name: "赤狗日学霸",
+    desc: "初三赤狗日选择在家学习技能。",
+    story:
+      "别人出门拜年，你在家啃书。赤狗日不宜外出，但宜学习。效率翻倍的感觉真好。",
+    icon: "📚",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveStudy);
+    },
+  },
+  {
+    id: "spring_fest_worship",
+    name: "迎财神",
+    desc: "初四去庙里拜财神，求好运。",
+    story: "香火钱¥50，心里默念着今年的愿望。虽然没捡到钱，但心里踏实了不少。",
+    icon: "💰",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveWorship);
+    },
+  },
+  {
+    id: "spring_fest_work",
+    name: "破五开工",
+    desc: "初五破五选择找临时工开工。",
+    story: "破五开工，第一桶金。别人还在睡懒觉，你已经去人才市场了。",
+    icon: "🔨",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveWork);
+    },
+  },
+  {
+    id: "spring_fest_paydebt",
+    name: "送穷神",
+    desc: "初六选择还债，减轻财务负担。",
+    story: "送穷神，先送掉一部分债务。¥3000还掉了，心里轻松了不少。",
+    icon: "🗑️",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchievePayDebt);
+    },
+  },
+  {
+    id: "spring_fest_full",
+    name: "春节全勤",
+    desc: "春节7天全部参与事件。",
+    story:
+      "除夕到初六，七天七天，你一天都没落下。这座城市的新年，你完整地走过了一遍。",
+    icon: "🧨",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._springFestivalAchieveFullAttendance);
+    },
+  },
+
+  // --- 剁手节 ---
+  {
+    id: "shopping_fest_stockup",
+    name: "剁手节进货王",
+    desc: "剁手节期间大量进货（累计购买超过¥5000）。",
+    story:
+      "剁手节清仓期，日用品-18%、服装-22%、电子-20%。你一口气进了¥5000的货，等着节日当天翻倍卖。",
+    icon: "📦",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._shoppingFestAchieveStockup);
+    },
+  },
+  {
+    id: "shopping_fest_profit",
+    name: "剁手节清空购物车",
+    desc: "剁手节期间通过摆摊赚取超过¥3000利润。",
+    story:
+      "剁手节商业区人流爆炸，你摆的摊位一天就赚了¥3000。这大概是全年最赚的两天。",
+    icon: "🛒",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._shoppingFestAchieveProfit);
+    },
+  },
+
+  // --- 劳动节 ---
+  {
+    id: "labor_day_work",
+    name: "劳动节加班王",
+    desc: "劳动节当天选择工作。",
+    story:
+      "劳动节，别人在休息，你在干活。商场促销，你帮发传单摆摊台，赚了¥80。",
+    icon: "🔨",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._laborDayAchieveWork);
+    },
+  },
+
+  // --- 中秋节 ---
+  {
+    id: "midautumn_gift",
+    name: "月圆人团圆",
+    desc: "中秋节当天给NPC送礼。",
+    story: "中秋节，月饼香气弥漫街道。你给王阿姨他们送了个月饼，好感大涨。",
+    icon: "🥮",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._midAutumnAchieveGift);
+    },
+  },
+
+  // --- 国庆节 ---
+  {
+    id: "national_day_work",
+    name: "黄金周导游",
+    desc: "国庆节当天在公园做导游志愿者工作。",
+    story: "国庆黄金周游客多，你兼职景区向导，赚了¥120。",
+    icon: "🎉",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._nationalDayAchieveWork);
+    },
+  },
+
+  // --- 节日综合 ---
+  {
+    id: "festival_master",
+    name: "节日达人",
+    desc: "参与过至少3个不同节日的活动。",
+    story:
+      "春节、劳动节、中秋节、国庆节、剁手节——你参与了这座城市的大部分节日。",
+    icon: "🎭",
+    category: "节日",
+    hidden: false,
+    check: function (st) {
+      var count = 0;
+      if (st.flags && st.flags._springFestivalAchieveHome) count++;
+      if (st.flags && st.flags._laborDayAchieveWork) count++;
+      if (st.flags && st.flags._midAutumnAchieveGift) count++;
+      if (st.flags && st.flags._nationalDayAchieveWork) count++;
+      if (st.flags && st.flags._shoppingFestAchieveStockup) count++;
+      return count >= 3;
+    },
+  },
 ];
 
 /**

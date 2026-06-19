@@ -565,6 +565,33 @@ function _wikiListEntries(catId, state) {
         icon: "📖",
         brief: "记录企业命运变迁：里程碑时间线 + 事件档案",
       });
+      out.push({
+        id: "festival_achievements",
+        name: "节日成就",
+        icon: "🎭",
+        brief: "春节/劳动节/中秋/国庆/剁手节专属成就",
+      });
+      // ── 注册表覆盖：同 id 以 NARRATIVES 为准 ──
+      if (typeof NARRATIVES === "object" && NARRATIVES) {
+        var _nReg = [];
+        var _nIds = {};
+        for (var _nk in NARRATIVES) {
+          if (!NARRATIVES.hasOwnProperty(_nk)) continue;
+          var _nm = NARRATIVES[_nk];
+          _nReg.push({
+            id: _nm.id,
+            name: _nm.name,
+            icon: _nm.icon || "🌍",
+            brief: _nm.brief || "",
+          });
+          _nIds[_nm.id] = true;
+        }
+        out = _nReg.concat(
+          out.filter(function (e) {
+            return !_nIds[e.id];
+          }),
+        );
+      }
       break;
     case "victory":
       out.push({
@@ -615,6 +642,27 @@ function _wikiListEntries(catId, state) {
         icon: "🏅",
         brief: "前往成就 Tab 查看完整成就",
       });
+      // ── 注册表覆盖：同 id 以 VICTORIES 为准 ──
+      if (typeof VICTORIES === "object" && VICTORIES) {
+        var _vReg = [];
+        var _vIds = {};
+        for (var _vk in VICTORIES) {
+          if (!VICTORIES.hasOwnProperty(_vk)) continue;
+          var _vm = VICTORIES[_vk];
+          _vReg.push({
+            id: _vm.id,
+            name: _vm.name,
+            icon: _vm.icon || "🏆",
+            brief: _vm.brief || "",
+          });
+          _vIds[_vm.id] = true;
+        }
+        out = _vReg.concat(
+          out.filter(function (e) {
+            return !_vIds[e.id];
+          }),
+        );
+      }
       break;
   }
   return out;
@@ -2169,7 +2217,7 @@ function _renderMechanicRelated(refs) {
       }
       links.push(_wkLink(cat, null, catObj ? catObj.name : cat));
     } else {
-      // 具体条目；机制类别下若注册表有名字直接用，否则用 id
+      // 具体条目；按类别从对应注册表查友好名
       var label = eid;
       if (
         cat === "mechanics" &&
@@ -2178,6 +2226,20 @@ function _renderMechanicRelated(refs) {
         MECHANICS[eid]
       ) {
         label = MECHANICS[eid].name;
+      } else if (
+        cat === "narrative" &&
+        typeof NARRATIVES === "object" &&
+        NARRATIVES &&
+        NARRATIVES[eid]
+      ) {
+        label = NARRATIVES[eid].name;
+      } else if (
+        cat === "victory" &&
+        typeof VICTORIES === "object" &&
+        VICTORIES &&
+        VICTORIES[eid]
+      ) {
+        label = VICTORIES[eid].name;
       }
       links.push(_wkLink(cat, eid, label));
     }
@@ -2762,6 +2824,50 @@ function _wikiDetailNarrative(state, id) {
       "<li>L3 抉择：跳槽（高薪但清零）/ 留下（晋升但尊严受损）</li>" +
       "</ul>" +
       '<p class="wiki-tip">💡 职场中尊严和KPI往往不可兼得，选择取决于你的长期目标。</p>',
+
+    // ===== 节日成就 =====
+    festival_achievements:
+      "<h2>🎭 节日成就系统</h2>" +
+      '<p class="wiki-desc">参与城市节日活动解锁专属成就，记录你在每个节日里的选择和经历。</p>' +
+      "<h3>🧨 春节成就（除夕→初六）</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🏠 除夕团圆</b>：除夕夜买票回家，与家人团圆</li>" +
+      "<li><b>🧧 红包达人</b>：大年初一去拜年，收到红包净赚</li>" +
+      "<li><b>📚 赤狗日学霸</b>：初三赤狗日选择在家学习技能</li>" +
+      "<li><b>💰 迎财神</b>：初四去庙里拜财神，求好运</li>" +
+      "<li><b>🔨 破五开工</b>：初五选择找临时工开工</li>" +
+      "<li><b>🗑️ 送穷神</b>：初六选择还债，减轻财务负担</li>" +
+      "<li><b>🧨 春节全勤</b>：春节7天全部参与事件</li>" +
+      "</ul>" +
+      "<h3>🛒 剁手节成就</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>📦 剁手节进货王</b>：剁手节期间累计进货超过¥5000</li>" +
+      "<li><b>🛒 剁手节清空购物车</b>：剁手节期间通过摆摊赚取超过¥3000</li>" +
+      "</ul>" +
+      "<h3>🔨 劳动节成就</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🔨 劳动节加班王</b>：劳动节当天选择工作（节日促销员）</li>" +
+      "</ul>" +
+      "<h3>🥮 中秋节成就</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🥮 月圆人团圆</b>：中秋节当天给NPC送礼</li>" +
+      "</ul>" +
+      "<h3>🎉 国庆节成就</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🎉 黄金周导游</b>：国庆节当天在公园做导游志愿者工作</li>" +
+      "</ul>" +
+      "<h3>🎭 节日综合成就</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><b>🎭 节日达人</b>：参与过至少3个不同节日的活动</li>" +
+      "</ul>" +
+      "<h3>💡 策略建议</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>春节成就需逐天参与，建议提前准备现金（回家¥300、拜年¥100、拜财神¥50）</li>" +
+      "<li>剁手节：预热期（3天前）去批发市场囤货，节日当天去商业区摆摊</li>" +
+      "<li>中秋节：提前准备月饼等礼品，节日当天找NPC送礼</li>" +
+      "<li>劳动节/国庆节：节日限定工作收入高，适合缺钱时选择</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 节日成就每年只触发一次，错过要等下一年。成就解锁后永久记录在成就档案中。</p>',
   };
   return pages[id] || "";
 }
