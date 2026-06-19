@@ -122,6 +122,35 @@
 8. **数据可视化**：收入曲线图、属性成长雷达图（参考《大多数》的成长感）
 9. **存档快照**：存档时记录当天状态快照，读档界面显示"那时候你..."回忆文案
 
+## 多窗口开发安全规则（重要！）
+
+**问题**：当多个 Claude 窗口同时开发时，窗口 A 提交后 HEAD 前进，但窗口 B 不知道仍在旧代码上提交 → 覆盖窗口 A 的改动。
+
+**每次窗口启动时必须执行：**
+
+```bash
+# 1. 检查是否落后于其他窗口的提交
+LAST_KNOWN=$(cat .claude/last_known_head 2>/dev/null)
+CURRENT_HEAD=$(git rev-parse HEAD)
+if [ "$LAST_KNOWN" != "$CURRENT_HEAD" ]; then
+  echo "⚠️ 其他窗口已提交了新代码！正在合并..."
+  git stash
+  git checkout .
+  git stash pop
+fi
+# 2. 更新记录文件
+git rev-parse HEAD > .claude/last_known_head
+```
+
+**每次提交前（已配置 pre-commit 钩子自动执行）：**
+
+- pre-commit 钩子自动检测 HEAD 是否有变化
+- 如果有，阻止提交并提示手动合并
+
+**永远不要执行：**
+
+- 禁止 `git commit --no-verify`（绕过 pre-commit 钩子）
+
 ## 改进参考（调研结论）
 
 ### 《大多数》经验迁移
