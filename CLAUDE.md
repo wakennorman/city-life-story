@@ -11,8 +11,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P1-1 街头特色玩法完善 — 拾荒路线规划（已完成）+ 摆摊选址建议（新增智能推荐系统）+ P2-1 教程升级（动态提示系统已完整）
-- **待提交改动**：`modal.js` / `actions_extra.js` / `DEVELOPMENT.md` / `CLAUDE.md`
+- **最近一次工作**：重大 Bug 修复 + 多窗口安全机制建立
+  - Bug: render.js 被误删 3000+ 行（tab 渲染函数全丢失），从 `bd32329` 恢复完整版（28个函数）
+  - Bug: `renderIllnessRow` / `renderTimeSlot` / `renderActiveNews` 缺失→已补
+  - Bug: 新游戏流程模式选择界面遮挡游戏界面→已修（main.js screen cleanup）
+  - Bug: Header "确认新游戏" 应回欢迎界面→已修（改为 `showWelcome()`）
+  - 安全: 多窗口防覆盖机制（SessionStart钩子 + pre-commit钩子 + HEAD追踪）
+- **待提交改动**：均已提交（3 个 commit：恢复 render.js + 安全机制 v1 + 安全机制 v2）
 - **P0/P1全优先级清单已完成**（累计280+项），事件总数202，新闻事件79，成就52
 - **阶段三疾病演化深化**：✅ 已完成
 - **阶段四企业命运 Phase 2**：✅ 已完成（CEO人格化 + 多周目记忆 + 新事件 + 历史书UI）
