@@ -7,7 +7,7 @@ function applyNeedsDecay(state) {
   const n = state.needs;
   n.hunger = Math.max(0, n.hunger - 18);
   n.hygiene = Math.max(0, n.hygiene - 8);
-  n.happiness = Math.max(0, n.happiness - 3);
+  n.happiness = Math.max(0, n.happiness - 5);
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 
@@ -16,7 +16,7 @@ function checkNeedsThresholds(state) {
   const n = state.needs;
   const msgs = [];
 
-  if (n.hunger < 15) {
+  if (n.hunger < 10) {
     state.status.health = Math.max(0, state.status.health - 5);
     if (n.hunger <= 0) state.flags._everStarved = true; // 成就追踪
     msgs.push("⚠️ 极度饥饿！健康-5。赶紧吃点什么！");
@@ -25,17 +25,17 @@ function checkNeedsThresholds(state) {
     msgs.push("🍞 肚子饿了，工作效率下降。");
   }
 
-  if (n.hygiene < 15) {
+  if (n.hygiene < 10) {
     state.status.health = Math.max(0, state.status.health - 3);
     msgs.push("🦠 卫生极差！容易生病。去洗个澡吧。");
   }
 
-  if (n.fatigue > 85) {
+  if (n.fatigue > 90) {
     state.status.health = Math.max(0, state.status.health - 3);
     msgs.push("😵 极度疲劳！需要休息或睡眠。");
   }
 
-  if (n.happiness < 15) {
+  if (n.happiness < 10) {
     msgs.push("😢 心情极度低落，做什么都提不起劲。");
   }
 

@@ -11,12 +11,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：数据可视化深化 — Growth Tab 重写（整合新旧版）+ 数据管线修复 + Retina 高清 + 平滑曲线 + 历史对比
-  - `data_viz.js`：新增 setupCanvas()（Retina）、drawSmoothPath()、drawAssetLineChart()；drawIncomeChart/drawRadarChart/drawSkillGrowthChart 全部增强
-  - `render.js`：renderGrowthTab 委托给 data_viz 新版，旧版保留为降级
-  - `state.js`：新增顶层 history 默认值 {income, expense}
-  - `daily_pipeline.js`：快照步骤新增收入/支出汇总 + 每7天属性快照（供雷达历史对比）
-  - 参考同类游戏（《大多数》、《中国式家长》、Stardew Valley）优化平滑曲线 + 历史对比雷达 + 总资产变化率
+- **最近一次工作**：全面平衡调参 — amenity 价格/关键阈值/延期惩罚/疾病触发阈值
+  - `amenities.js`：三级设施价格下调（commercial_restaurant ¥40→¥30, techpark_brunch ¥50→¥35, commercial_spa ¥80→¥50, bar ¥100→¥70 等 10 处调整），效果小幅提升
+  - `critical.js`：CRITICAL_THRESHOLDS 对齐（hunger ≤12→≤10, fatigue ≥88→≥90），延期惩罚概率缓和（饥饿 skip_day 50%→35%，疲劳 40%→30%，卫生生病 50%→35%）
+  - `needs.js`：日常心情衰减 -3/天→-5/天，checkNeedsThresholds 警告阈值全部对齐
+  - `illnesses.js`：感冒触发条件放宽（hygieneStreak 7→5, fatigueStreak 3→2），抑郁触发缩短（15→10 天）
 - **P0/P1全优先级清单已完成**（累计300+项），事件总数202，新闻事件79，成就52
 - **阶段三疾病演化深化**：✅ 已完成
 - **阶段四企业命运 Phase 2**：✅ 已完成（CEO人格化 + 多周目记忆 + 新事件 + 历史书UI）
@@ -27,7 +26,6 @@
 - **食材库存联动**：✅ **已完成**（食谱选择 + 食材购买 + 库存消耗 + 过期保鲜）
 - **下一步方向**：
   1. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
-  2. **百科迁移剩余条目** — 按 audit ℹ️ 把剩余 ~15 条 mechanic 搬进注册表
 
 ### ✅ 已完成但未在 CLAUDE.md 列出的更新
 
@@ -66,7 +64,6 @@
 1. **阶段四企业命运 Phase 2** — CEO人格化/公司历史书深化/多周目企业记忆
 2. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
 3. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
-4. **继续迁移百科** — 按 audit ℹ️ 把剩余 ~15 条 mechanic 搬进注册表
 
 ## 自主运行规则
 

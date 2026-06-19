@@ -1,7 +1,68 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
 > 最后更新: 2026-06-20 (累计295+项改动)
-> **最新改动**: 数据可视化深化 — Growth Tab 收入/支出曲线 + 总资产曲线 + 属性雷达历史对比 + Retina高清
+> **最新改动**: 全面平衡调参 — amenity 价格/关键阈值/延期惩罚/疾病触发阈值
+
+### 2026-06-20 — 全面平衡调参（P0 优先）
+
+**核心改动**：
+
+1. **Amenity 价格重构**（`amenities.js`，10 处调整）
+   - 三级餐饮：commercial_restaurant ¥40→¥30（效果 65→60），techpark_brunch ¥50→¥35（效果 60→55），selfhome_cook hunger+55
+   - 三级洗浴：commercial_spa ¥80→¥50，techpark_gymshower ¥30→¥20，factory_shower ¥5→¥8（性价比微调）
+   - 三级娱乐：commercial_cinema ¥60→¥45（happy+45, fatigue-10），commercial_bar ¥100→¥70（happy+50）
+   - 二级娱乐：school_arcade ¥25→¥18，factory_karaoke ¥40→¥25
+   - 一级休息：slum_napshop ¥15→¥10
+   - 三级休息：techpark_napcapsule ¥30→¥20（fatigue-40）
+   - 目标：三级设施性价比从 4-10x 断层压缩到 2-3x，让高等级恢复点真正可及
+
+2. **关键阈值对齐**（`critical.js` + `needs.js`）
+   - CRITICAL_THRESHOLDS：hunger ≤12→≤10, fatigue ≥88→≥90（对齐其他需求）
+   - checkNeedsThresholds 警告阈值全面对齐：hunger<15→<10, hygiene<15→<10, fatigue>85→>90, happiness<15→<10
+   - 日常心情衰减 -3/天→-5/天
+
+3. **延期惩罚概率缓和**（`critical.js`）
+   - 饥饿 skip_day：50%→35%（饿晕 30%→20%，送医 20%→15%，路人施舍 30%→40%）
+   - 疲劳 skip_day：40%→30%（过劳晕倒 40%→30%，引发疾病 20%→15%）
+   - 卫生生病：50%→35%（名气-2 30%→25%，没事 20%→40%）
+
+4. **疾病触发阈值微调**（`illnesses.js`）
+   - 感冒：lowHygieneStreak≥7→≥5, highFatigueStreak≥3→≥2
+   - 抑郁倾向：lowHappinessStreak≥15→≥10
+
+**文件变更**：
+
+- `src/js/data/amenities.js` — 10 处价格/效果调整
+- `src/js/phase1/critical.js` — 阈值对齐 + 惩罚概率调整 + 百科注释同步
+- `src/js/phase1/needs.js` — 日常衰减 + 警告阈值对齐
+- `src/js/data/illnesses.js` — 感冒/抑郁触发阈值
+
+**验证**：`node --check` 通过全部 4 个修改文件 ✅
+
+### 2026-06-20 — 语法错误修复（紧急修复）
+
+**问题**：
+
+- `Uncaught SyntaxError: Unexpected identifier '看病'` / `'中国版的医疗AI'` — JavaScript 字符串内双引号未转义
+- `buttons is not iterable` — showModal 函数缺少 buttons 默认值
+
+**根因分析**：
+
+- `src/js/core/enterprise_fate.js` 中 CEO_BIOS 的 5 位 CEO 传记文本包含大量中文引号（如 `"中国版的医疗AI"`、`"内容疯子"`、`"猎手"` 等），在 JS 字符串中未转义，导致字符串提前结束，语法解析失败
+- `src/js/ui/modal.js` 的 `showModal({ title, body, buttons })` 在调用方未传 buttons 参数时，`buttons` 为 `undefined`，`for...of` 循环报错
+
+**修复**：
+
+- `enterprise_fate.js`：将所有传记字符串内的双引号改为 `\"` 转义（共修复 57 处），同时修正了 2 处中文逗号误用
+- `modal.js`：给 buttons 参数添加默认空数组 `buttons = []`
+
+**经验教训**：
+
+1. **字符串内嵌引号必须转义**：JS 字符串内若包含双引号，必须写成 `\"`。中文引号（`"` `"`）在 JS 中同样会破坏字符串边界，因为 JS 解析器不区分中英文引号
+2. **解构参数务必设默认值**：`{ buttons = [] }` 可避免调用方遗漏参数时的运行时错误
+3. **build.py 构建后必须刷新浏览器**：dist 目录覆盖后，浏览器缓存可能仍加载旧文件，需硬刷新（Ctrl+Shift+R）
+
+---
 
 ### 2026-06-20 — 数据可视化深化（P2#8 增强版）
 
