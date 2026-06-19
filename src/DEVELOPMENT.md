@@ -1790,6 +1790,62 @@ Build complete: dist\index.html (1381.2 KB)
 
 实现了3条完整的链式事件（共12个新事件节点），覆盖街头生存、职场斗争、投资灰色地带三大主题。
 
+---
+
+## 2026-06-19 变更记录（后续修复）— 债务剧本化 + 创业条件优化
+
+### 问题背景
+
+1. **「欠村长钱」硬编码到所有模式**：只有经典模式（城市务工者）应该有村长债务设定，其他剧本各有不同的负债结构，但"还村长钱"按钮、每日结算中的村长债务提示、教程引导等均无差别展示。
+2. **创业系统 `day>200` 硬条件**：所有玩家必须熬到第200天才能注册公司，与角色叙事无关，且实际代码中 `registerStartup()` 只检查 ¥50,000 现金——条件显示和实际逻辑不一致。
+
+### 改动详情
+
+#### 债务剧本化（9个文件修改）
+
+- **"还村长钱"按钮** → 仅当 `villageDebt > 0` 时显示（9→3行的条件简化）
+- **`showRepayVillageModal()`** → 开头增加早期退出（villageDebt <= 0 直接返回）
+- **`renderDebtInfo()`** → 改为只读取 `villageDebt`，不再 fallback 到 `debt`（`debt` 含银行债务）
+- **`daily_pipeline.js` 每日总结** → 村长债务提示仅在 `villageDebt > 0` 时出现
+- **`tutorial.js` 还款引导** → 条件改为只检查 `villageDebt`
+- **`festivals.js` 节日还款选项** → 改为只处理 `villageDebt`
+- **`save.js` 存档叙事** → `debt = villageDebt + bankDebt` 精确计算
+- **`data_viz.js` / `main.js` 对比函数** → 修复 `villageDebt || debt` 的兜底bug
+
+#### 创业系统触发条件优化（3个文件修改）
+
+- **删除 `day>200` 硬条件** — 不限天数、不限阶段，随时可注册
+- **新增 `getStartupTriggerConditions()`** — 7个剧本各自的门槛：
+
+| 剧本               | 建议储备金 | 职级要求 | 设计逻辑           |
+| ------------------ | ---------- | -------- | ------------------ |
+| 经典（城市务工者） | ¥50,000    | P5       | 基线               |
+| 下岗再就业者       | ¥30,000    | P5       | 技能实用，门槛偏低 |
+| 小镇做题家         | ¥50,000    | P5       | 白领路线           |
+| 外来打工者         | ¥20,000    | P5       | 最低门槛           |
+| 二代创业者         | ¥100,000   | P5       | 家里支持需证明     |
+| 中年危机职场人     | ¥80,000    | **P6+**  | 管理经验型创业     |
+| 应届毕业生         | ¥30,000    | P5       | 低门槛起步         |
+
+- **`renderStartupTab()`** → 新增实时条件面板（现金/职级达标状态打勾或警告） + **「注册公司」按钮**
+- **`showStartupRegisterModal()`** → 新弹窗：公司名输入 + 行业选择（科技/消费/金融科技/医疗/教育/制造）
+- **游戏百科更新** → 删除 `day>200` 描述，改为"注册费 ¥50,000（不限阶段、不限天数）"
+
+### 文件变更汇总
+
+| 文件                              | 变更                                                                                           |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/js/phase2/startup.js`        | 新增 `getStartupTriggerConditions()` / `showStartupRegisterModal()`，修改 `renderStartupTab()` |
+| `src/js/ui/wiki.js`               | 删除 `day>200` 描述                                                                            |
+| `src/js/main.js`                  | "还村长钱"按钮条件简化，对比函数债务计算修复                                                   |
+| `src/js/ui/modal.js`              | `showRepayVillageModal()` 早期退出 + 纯villageDebt判断                                         |
+| `src/js/ui/render.js`             | `renderDebtInfo()` 修复                                                                        |
+| `src/js/ui/tutorial.js`           | `debt` → `villageDebt`                                                                         |
+| `src/js/ui/data_viz.js`           | 债务计算修复                                                                                   |
+| `src/js/phase1/daily_pipeline.js` | 每日总结条件                                                                                   |
+| `src/js/core/save.js`             | 存档叙事 debt 精确计算                                                                         |
+| `src/js/core/festivals.js`        | 节日还款选项                                                                                   |
+
 ### 新增事件链
 
 #### 事件链1：房地产赌局（4节点）
