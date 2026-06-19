@@ -617,7 +617,8 @@ function _wikiListEntries(catId, state) {
         id: "company_aftermath",
         name: "倒闭遗产链",
         icon: "🏭",
-        brief: "公司倒闭后生成1-3个遗产事件（高管开新公司/专利被收购/员工散布）",
+        brief:
+          "公司倒闭后生成1-3个遗产事件（高管开新公司/专利被收购/员工散布）",
       });
       out.push({
         id: "ruins_spawn",
@@ -629,7 +630,8 @@ function _wikiListEntries(catId, state) {
         id: "inheritance_system",
         name: "多周目继承",
         icon: "🔄",
-        brief: "9种声誉徽章 + 遗产现金 + NPC关系 + 传奇物品 + 梦想进度 + 技能树",
+        brief:
+          "9种声誉徽章 + 遗产现金 + NPC关系 + 传奇物品 + 梦想进度 + 技能树",
       });
       out.push({
         id: "festival_achievements",

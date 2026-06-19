@@ -102,51 +102,67 @@ var CEO_BIOS = {
     name: "林振宇",
     age: 38,
     background: "清华计算机博士，曾在硅谷大厂工作8年，2018年回国创业。",
-    personality: "技术理想主义者，坚信AI能改变世界。性格内敛但执行力极强，对技术细节有近乎偏执的追求。",
-    story: "林振宇的创业之路始于一次深夜的顿悟。2017年，他在斯坦福做访问学者时，目睹了AI在医疗影像诊断上的突破，决心回国做“中国版的医疗AI”。回国后他卖掉硅谷的别墅，在科技园租了个80平的办公室，带着3个同学开始了星辰科技的征程。第一年，他们连工资都发不出来，林振宇靠刷信用卡撑过最艰难的时刻。第三年，他们的医疗影像AI产品获得了首轮融资，如今星辰科技已成为国内AI大模型的领军企业。",
+    personality:
+      "技术理想主义者，坚信AI能改变世界。性格内敛但执行力极强，对技术细节有近乎偏执的追求。",
+    story:
+      "林振宇的创业之路始于一次深夜的顿悟。2017年，他在斯坦福做访问学者时，目睹了AI在医疗影像诊断上的突破，决心回国做“中国版的医疗AI”。回国后他卖掉硅谷的别墅，在科技园租了个80平的办公室，带着3个同学开始了星辰科技的征程。第一年，他们连工资都发不出来，林振宇靠刷信用卡撑过最艰难的时刻。第三年，他们的医疗影像AI产品获得了首轮融资，如今星辰科技已成为国内AI大模型的领军企业。",
     quote: "技术没有捷径，只有死磕。",
     weakness: "不善管理，常常亲自写代码到凌晨；对商业变现不够敏感",
-    relationshipWithPlayer: "如果玩家就职星辰科技且表现优异，林振宇会亲自带教，传授技术心得。",
+    relationshipWithPlayer:
+      "如果玩家就职星辰科技且表现优异，林振宇会亲自带教，传授技术心得。",
   },
   byte_dragon: {
     name: "苏晴",
     age: 32,
     background: "北大中文系毕业，曾在字节跳动做内容运营3年，2020年离职创业。",
-    personality: "敏锐的内容嗅觉，擅长捕捉用户情绪。性格外向、社交能力强，是典型的“内容疯子”。",
-    story: "苏晴是内容界的“猎手”。在字节跳动期间，她主导的多个爆款视频播放量破10亿，被内部称为“爆款制造机”。2020年疫情爆发，她敏锐地察觉到短视频出海的机会，辞职创办字节龙，专注做东南亚市场的短视频平台。起步时只有5个人，靠给本地商家做短视频代运营养活团队。两年后，字节龙的日活突破5000万，成为东南亚最大的短视频平台之一。苏晴常说：“内容是有生命的，你得懂用户的心。”",
+    personality:
+      "敏锐的内容嗅觉，擅长捕捉用户情绪。性格外向、社交能力强，是典型的“内容疯子”。",
+    story:
+      "苏晴是内容界的“猎手”。在字节跳动期间，她主导的多个爆款视频播放量破10亿，被内部称为“爆款制造机”。2020年疫情爆发，她敏锐地察觉到短视频出海的机会，辞职创办字节龙，专注做东南亚市场的短视频平台。起步时只有5个人，靠给本地商家做短视频代运营养活团队。两年后，字节龙的日活突破5000万，成为东南亚最大的短视频平台之一。苏晴常说：“内容是有生命的，你得懂用户的心。”",
     quote: "流量是表象，人心才是本质。",
     weakness: "过度追求流量，有时忽视内容质量；对竞争对手过于激进",
-    relationshipWithPlayer: "如果玩家在传媒/内容行业工作，苏晴可能会邀请你加入字节龙的内容团队。",
+    relationshipWithPlayer:
+      "如果玩家在传媒/内容行业工作，苏晴可能会邀请你加入字节龙的内容团队。",
   },
   cloud_giant: {
     name: "陈建国",
     age: 52,
     background: "中科院计算所硕士，曾在华为工作15年，2015年创立云巨人。",
-    personality: "稳健务实的企业家，信奉“慢就是快”。性格沉稳，做事有条不紊，是业界公认的“老派实干家”。",
-    story: "陈建国是典型的“技术老兵”。在华为的15年里，他从一名普通工程师做到产品线总经理，亲历了中国通信产业的崛起。2015年，他看到云计算的浪潮，毅然离开华为创办云巨人。起步时，他选择了最“笨”的路——自建数据中心，而不是轻资产的云服务。这个决定当时被同行嘲笑“过时了”，但三年后，当多家云服务商因数据安全问题被监管调查时，云巨人凭借自有的基础设施赢得了大客户信任。如今，云巨人是国内最大的企业级云服务商之一。",
+    personality:
+      "稳健务实的企业家，信奉“慢就是快”。性格沉稳，做事有条不紊，是业界公认的“老派实干家”。",
+    story:
+      "陈建国是典型的“技术老兵”。在华为的15年里，他从一名普通工程师做到产品线总经理，亲历了中国通信产业的崛起。2015年，他看到云计算的浪潮，毅然离开华为创办云巨人。起步时，他选择了最“笨”的路——自建数据中心，而不是轻资产的云服务。这个决定当时被同行嘲笑“过时了”，但三年后，当多家云服务商因数据安全问题被监管调查时，云巨人凭借自有的基础设施赢得了大客户信任。如今，云巨人是国内最大的企业级云服务商之一。",
     quote: "做企业就像建房子，地基打牢了，楼才能盖高。",
     weakness: "过于保守，错失了一些创新机会；对年轻一代的需求理解不足",
-    relationshipWithPlayer: "如果玩家在云计算/企业软件行业工作，陈建国可能会欣赏你的务实态度。",
+    relationshipWithPlayer:
+      "如果玩家在云计算/企业软件行业工作，陈建国可能会欣赏你的务实态度。",
   },
   game_fun: {
     name: "王浩然",
     age: 29,
-    background: "浙大游戏设计专业，大学期间做过3款独立游戏，2021年创办好玩游戏。",
-    personality: "创意爆棚的游戏狂热者，性格活泼、脑洞大开。对游戏有近乎痴迷的热爱，是“为游戏而生”的典型。",
-    story: "王浩然是“游戏界的极客”。大学时他做的第一款独立游戏《逃离宿舍》在Steam上获得了10万销量，让他一举成名。毕业后他没有选择去大厂，而是和两个室友在宿舍里创办了好玩游戏。他们的第一款手游《像素大乱斗》凭借独特的像素风格和创新的玩法，在TapTap上获得了9.2的高分。如今，好玩游戏已成为国内知名的独立游戏发行商，代理了超过30款精品独立游戏。王浩然常说：“游戏是第九艺术，我们要让玩家感受到创作的灵魂。”",
+    background:
+      "浙大游戏设计专业，大学期间做过3款独立游戏，2021年创办好玩游戏。",
+    personality:
+      "创意爆棚的游戏狂热者，性格活泼、脑洞大开。对游戏有近乎痴迷的热爱，是“为游戏而生”的典型。",
+    story:
+      "王浩然是“游戏界的极客”。大学时他做的第一款独立游戏《逃离宿舍》在Steam上获得了10万销量，让他一举成名。毕业后他没有选择去大厂，而是和两个室友在宿舍里创办了好玩游戏。他们的第一款手游《像素大乱斗》凭借独特的像素风格和创新的玩法，在TapTap上获得了9.2的高分。如今，好玩游戏已成为国内知名的独立游戏发行商，代理了超过30款精品独立游戏。王浩然常说：“游戏是第九艺术，我们要让玩家感受到创作的灵魂。”",
     quote: "每一款游戏都是一个世界，我们要做的，是建造最有趣的那个。",
     weakness: "过度追求创意，有时忽视商业回报；团队管理较为松散",
-    relationshipWithPlayer: "如果玩家对游戏行业感兴趣，王浩然会热情地和你聊游戏设计，甚至邀请你参与游戏测试。",
+    relationshipWithPlayer:
+      "如果玩家对游戏行业感兴趣，王浩然会热情地和你聊游戏设计，甚至邀请你参与游戏测试。",
   },
   safe_fin: {
     name: "张敏",
     age: 41,
     background: "北大光华MBA，曾在支付宝工作10年，2019年创立安信金融科技。",
-    personality: "精明的金融从业者，理性冷静，对风险有极高的敏感度。性格严谨，做事一丝不苟。",
-    story: "张敏是“金融科技界的守门人”。在支付宝的10年里，她亲历了中国移动支付从0到1的全过程，负责过风控、合规、产品设计等多个核心岗位。2019年，她看到中小金融机构数字化转型的机会，创办安信金融科技，专注做智能风控系统。起步时，她选择了最“难”的路——为银行做定制化的风控方案，而不是标准化的SaaS产品。这个决定让安信科技在头两年收入增长缓慢，但积累了深厚的行业know-how。如今，安信科技已为超过200家金融机构提供了风控服务。",
+    personality:
+      "精明的金融从业者，理性冷静，对风险有极高的敏感度。性格严谨，做事一丝不苟。",
+    story:
+      "张敏是“金融科技界的守门人”。在支付宝的10年里，她亲历了中国移动支付从0到1的全过程，负责过风控、合规、产品设计等多个核心岗位。2019年，她看到中小金融机构数字化转型的机会，创办安信金融科技，专注做智能风控系统。起步时，她选择了最“难”的路——为银行做定制化的风控方案，而不是标准化的SaaS产品。这个决定让安信科技在头两年收入增长缓慢，但积累了深厚的行业know-how。如今，安信科技已为超过200家金融机构提供了风控服务。",
     quote: "金融的本质是风险管理，技术只是工具。",
     weakness: "过于谨慎，错失了一些快速增长的机会；对新兴技术接受度较低",
-    relationshipWithPlayer: "如果玩家在金融行业工作，张敏可能会给你一些风控方面的专业建议。",
+    relationshipWithPlayer:
+      "如果玩家在金融行业工作，张敏可能会给你一些风控方面的专业建议。",
   },
 };
 
@@ -502,18 +518,27 @@ var FATE_EVENTS = [
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
       varceoName = ceoBio ? ceoBio.name : "CEO";
 
-      co.sentiment = Math.min(100, co.sentiment + (5 + Math.floor(Math.random() * 10)));
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (5 + Math.floor(Math.random() * 10)),
+      );
       co.health = Math.max(5, co.health - (3 + Math.floor(Math.random() * 5)));
 
       // 可能引发管理层动荡
       if (Math.random() < 0.4) {
-        co.talentScore = Math.max(10, co.talentScore - (5 + Math.floor(Math.random() * 8)));
-        co.productScore = Math.max(10, co.productScore - (3 + Math.floor(Math.random() * 6)));
+        co.talentScore = Math.max(
+          10,
+          co.talentScore - (5 + Math.floor(Math.random() * 8)),
+        );
+        co.productScore = Math.max(
+          10,
+          co.productScore - (3 + Math.floor(Math.random() * 6)),
+        );
       }
 
-      var msg = CEO_BIOS ?
-        ceoName + "宣布退休，公司进入管理层交接期" :
-        "公司CEO宣布退休，引发管理层动荡";
+      var msg = CEO_BIOS
+        ? ceoName + "宣布退休，公司进入管理层交接期"
+        : "公司CEO宣布退休，引发管理层动荡";
 
       return { stockMul: 0.96, msg: msg };
     },
@@ -535,14 +560,26 @@ var FATE_EVENTS = [
       if (Math.random() < 0.5) {
         // 受益：获得市场份额
         co.marketShare = Math.min(45, co.marketShare + impact);
-        co.health = Math.min(100, co.health + (3 + Math.floor(Math.random() * 5)));
-        co.sentiment = Math.min(100, co.sentiment + (8 + Math.floor(Math.random() * 12)));
+        co.health = Math.min(
+          100,
+          co.health + (3 + Math.floor(Math.random() * 5)),
+        );
+        co.sentiment = Math.min(
+          100,
+          co.sentiment + (8 + Math.floor(Math.random() * 12)),
+        );
         return { stockMul: 1.15, msg: "行业洗牌，公司趁势扩张市场份额" };
       } else {
         // 受损：失去市场份额
         co.marketShare = Math.max(1, co.marketShare - impact * 1.5);
-        co.health = Math.max(10, co.health - (5 + Math.floor(Math.random() * 8)));
-        co.sentiment = Math.max(10, co.sentiment - (10 + Math.floor(Math.random() * 15)));
+        co.health = Math.max(
+          10,
+          co.health - (5 + Math.floor(Math.random() * 8)),
+        );
+        co.sentiment = Math.max(
+          10,
+          co.sentiment - (10 + Math.floor(Math.random() * 15)),
+        );
         return { stockMul: 0.82, msg: "行业洗牌冲击，公司市场份额大幅流失" };
       }
     },
@@ -554,21 +591,35 @@ var FATE_EVENTS = [
     weight: 0.3,
     condition: function (st, co) {
       // 高产品分数的公司可能迎来技术突破
-      return co.productScore > 70 && co.phase !== "dying" && !co.ceasedExistence;
+      return (
+        co.productScore > 70 && co.phase !== "dying" && !co.ceasedExistence
+      );
     },
     apply: function (st, cid, co) {
       // 技术革命：产品分数大幅提升，可能引发行业变革
-      co.productScore = Math.min(100, co.productScore + (8 + Math.floor(Math.random() * 12)));
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 8)));
-      co.marketShare = Math.min(45, co.marketShare + (2 + Math.floor(Math.random() * 4)));
-      co.sentiment = Math.min(100, co.sentiment + (12 + Math.floor(Math.random() * 18)));
+      co.productScore = Math.min(
+        100,
+        co.productScore + (8 + Math.floor(Math.random() * 12)),
+      );
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 8)),
+      );
+      co.marketShare = Math.min(
+        45,
+        co.marketShare + (2 + Math.floor(Math.random() * 4)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (12 + Math.floor(Math.random() * 18)),
+      );
 
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
       varceoName = ceoBio ? ceoBio.name : "公司";
 
-      var msg = CEO_BIOS ?
-        ceoName + "团队取得重大技术突破，新产品引发行业震动" :
-        "公司取得重大技术突破，新产品引发行业震动";
+      var msg = CEO_BIOS
+        ? ceoName + "团队取得重大技术突破，新产品引发行业震动"
+        : "公司取得重大技术突破，新产品引发行业震动";
 
       return { stockMul: 1.22, msg: msg };
     },
@@ -584,21 +635,33 @@ var FATE_EVENTS = [
     },
     apply: function (st, cid, co) {
       // 监管风暴：健康度、sentiment、市场份额都受损
-      co.health = Math.max(10, co.health - (8 + Math.floor(Math.random() * 12)));
-      co.sentiment = Math.max(5, co.sentiment - (15 + Math.floor(Math.random() * 20)));
-      co.marketShare = Math.max(1, co.marketShare - (3 + Math.floor(Math.random() * 5)));
+      co.health = Math.max(
+        10,
+        co.health - (8 + Math.floor(Math.random() * 12)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (15 + Math.floor(Math.random() * 20)),
+      );
+      co.marketShare = Math.max(
+        1,
+        co.marketShare - (3 + Math.floor(Math.random() * 5)),
+      );
 
       // 可能引发罚款
       if (Math.random() < 0.6) {
-        co.talentScore = Math.max(5, co.talentScore - (5 + Math.floor(Math.random() * 10)));
+        co.talentScore = Math.max(
+          5,
+          co.talentScore - (5 + Math.floor(Math.random() * 10)),
+        );
       }
 
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
       varceoName = ceoBio ? ceoBio.name : "公司";
 
-      var msg = CEO_BIOS ?
-        ceoName + "遭遇监管调查，面临巨额罚款和整改要求" :
-        "公司遭遇监管调查，面临巨额罚款和整改要求";
+      var msg = CEO_BIOS
+        ? ceoName + "遭遇监管调查，面临巨额罚款和整改要求"
+        : "公司遭遇监管调查，面临巨额罚款和整改要求";
 
       return { stockMul: 0.75, msg: msg };
     },
@@ -614,13 +677,25 @@ var FATE_EVENTS = [
     },
     apply: function (st, cid, co) {
       // 战略合作：健康度和sentiment提升
-      co.health = Math.min(100, co.health + (5 + Math.floor(Math.random() * 8)));
-      co.sentiment = Math.min(100, co.sentiment + (10 + Math.floor(Math.random() * 15)));
-      co.marketShare = Math.min(45, co.marketShare + (1 + Math.floor(Math.random() * 3)));
+      co.health = Math.min(
+        100,
+        co.health + (5 + Math.floor(Math.random() * 8)),
+      );
+      co.sentiment = Math.min(
+        100,
+        co.sentiment + (10 + Math.floor(Math.random() * 15)),
+      );
+      co.marketShare = Math.min(
+        45,
+        co.marketShare + (1 + Math.floor(Math.random() * 3)),
+      );
 
       // 可能解锁新的产品线
       if (Math.random() < 0.5) {
-        co.productScore = Math.min(100, co.productScore + (3 + Math.floor(Math.random() * 6)));
+        co.productScore = Math.min(
+          100,
+          co.productScore + (3 + Math.floor(Math.random() * 6)),
+        );
       }
 
       return { stockMul: 1.12, msg: "宣布重要战略合作，业务版图进一步扩展" };
@@ -633,15 +708,29 @@ var FATE_EVENTS = [
     weight: 0.35,
     condition: function (st, co) {
       // 任何公司都可能遭遇产品危机
-      return co.phase !== "dying" && !co.ceasedExistence && Math.random() < 0.25;
+      return (
+        co.phase !== "dying" && !co.ceasedExistence && Math.random() < 0.25
+      );
     },
     apply: function (st, cid, co) {
       // 产品危机：健康度、sentiment受损
-      co.health = Math.max(10, co.health - (6 + Math.floor(Math.random() * 10)));
-      co.sentiment = Math.max(5, co.sentiment - (12 + Math.floor(Math.random() * 18)));
-      co.productScore = Math.max(15, co.productScore - (5 + Math.floor(Math.random() * 8)));
+      co.health = Math.max(
+        10,
+        co.health - (6 + Math.floor(Math.random() * 10)),
+      );
+      co.sentiment = Math.max(
+        5,
+        co.sentiment - (12 + Math.floor(Math.random() * 18)),
+      );
+      co.productScore = Math.max(
+        15,
+        co.productScore - (5 + Math.floor(Math.random() * 8)),
+      );
 
-      return { stockMul: 0.85, msg: "核心产品出现重大质量问题，引发用户信任危机" };
+      return {
+        stockMul: 0.85,
+        msg: "核心产品出现重大质量问题，引发用户信任危机",
+      };
     },
   },
 ];
@@ -2223,7 +2312,10 @@ function generateCompanyAftermath(state, deceasedCid, deceasedCo) {
   for (var i = 0; i < eventCount; i++) {
     var totalWeight = 0;
     for (var wi = 0; wi < availableTypes.length; wi++) {
-      if (selectedTypes.indexOf(availableTypes[wi].type) === -1 || eventCount > 2) {
+      if (
+        selectedTypes.indexOf(availableTypes[wi].type) === -1 ||
+        eventCount > 2
+      ) {
         totalWeight += availableTypes[wi].weight;
       }
     }
@@ -2284,15 +2376,26 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
   if (!newCo) return null;
 
   // 继承原公司的产品分数（60% + 波动）
-  var inheritedProductScore = (deceasedCo.productScore || 50) * 0.6 + (Math.random() - 0.5) * 20;
-  newCo.productScore = Math.max(30, Math.min(80, Math.round(inheritedProductScore)));
+  var inheritedProductScore =
+    (deceasedCo.productScore || 50) * 0.6 + (Math.random() - 0.5) * 20;
+  newCo.productScore = Math.max(
+    30,
+    Math.min(80, Math.round(inheritedProductScore)),
+  );
 
   // 继承原公司的人才分数（50% + 波动）
-  var inheritedTalentScore = (deceasedCo.talentScore || 50) * 0.5 + (Math.random() - 0.5) * 20;
-  newCo.talentScore = Math.max(25, Math.min(70, Math.round(inheritedTalentScore)));
+  var inheritedTalentScore =
+    (deceasedCo.talentScore || 50) * 0.5 + (Math.random() - 0.5) * 20;
+  newCo.talentScore = Math.max(
+    25,
+    Math.min(70, Math.round(inheritedTalentScore)),
+  );
 
   // 健康度基于原公司最终健康度
-  newCo.health = Math.max(45, Math.min(85, Math.round((deceasedCo.health || 50) * 0.4 + 40)));
+  newCo.health = Math.max(
+    45,
+    Math.min(85, Math.round((deceasedCo.health || 50) * 0.4 + 40)),
+  );
 
   // 市场份额：3-8%
   newCo.marketShare = Math.round((3 + Math.random() * 5) * 100) / 100;
@@ -2306,7 +2409,12 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
 
   // 加入企业命运
   var fate = state.enterpriseFate;
-  if (!fate) state.enterpriseFate = { companies: {}, fateEventCooldown: {}, lastFateTick: 0 };
+  if (!fate)
+    state.enterpriseFate = {
+      companies: {},
+      fateEventCooldown: {},
+      lastFateTick: 0,
+    };
   if (!fate.companies) fate.companies = {};
   fate.companies[newCo.id] = newCo;
 
@@ -2340,9 +2448,19 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
   // 生成新闻
   var positions = ["CTO", "技术总监", "联合创始人", "首席科学家", "产品副总裁"];
   var position = positions[Math.floor(Math.random() * positions.length)];
-  var execName = ["李总", "王总", "张总", "陈总", "刘总"][Math.floor(Math.random() * 5)];
-  var msg = position + " " + execName + "宣布创立「" + newCo.name + "」，" +
-    "带着原公司未公开的核心专利技术，目标在" + industry + "领域重起炉灶";
+  var execName = ["李总", "王总", "张总", "陈总", "刘总"][
+    Math.floor(Math.random() * 5)
+  ];
+  var msg =
+    position +
+    " " +
+    execName +
+    "宣布创立「" +
+    newCo.name +
+    "」，" +
+    "带着原公司未公开的核心专利技术，目标在" +
+    industry +
+    "领域重起炉灶";
 
   StateManager.addMessage("🏭 " + msg, "event");
 
@@ -2392,16 +2510,23 @@ function _patentAcquisitionAftermath(state, deceasedCid, deceasedCo) {
   candidates.sort(function (a, b) {
     return (b.co.productScore || 0) - (a.co.productScore || 0);
   });
-  var picked = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
+  var picked =
+    candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
   var targetCo = picked.co;
 
   // 提升产品分数
   var productBoost = 5 + Math.floor(Math.random() * 10);
-  targetCo.productScore = Math.min(100, (targetCo.productScore || 50) + productBoost);
+  targetCo.productScore = Math.min(
+    100,
+    (targetCo.productScore || 50) + productBoost,
+  );
 
   // 提升人才分数
   var talentBoost = 3 + Math.floor(Math.random() * 7);
-  targetCo.talentScore = Math.min(100, (targetCo.talentScore || 50) + talentBoost);
+  targetCo.talentScore = Math.min(
+    100,
+    (targetCo.talentScore || 50) + talentBoost,
+  );
 
   // 提升市场份额
   var shareBoost = Math.round((1 + Math.random() * 2) * 100) / 100;
@@ -2418,8 +2543,15 @@ function _patentAcquisitionAftermath(state, deceasedCid, deceasedCo) {
     desc: "收购了" + deceasedCo.name + "的核心专利，技术实力大幅增强",
   });
 
-  var msg = "「" + targetCo.name + "」宣布以" + Math.round(500 + Math.random() * 2000) + "万" +
-    "收购" + deceasedCo.name + "的核心专利组合，技术实力跃升";
+  var msg =
+    "「" +
+    targetCo.name +
+    "」宣布以" +
+    Math.round(500 + Math.random() * 2000) +
+    "万" +
+    "收购" +
+    deceasedCo.name +
+    "的核心专利组合，技术实力跃升";
 
   StateManager.addMessage("💡 " + msg, "event");
 
@@ -2474,7 +2606,12 @@ function _talentDispersionAftermath(state, deceasedCid, deceasedCo) {
     if (!co || co.ceasedExistence || cid === deceasedCid) continue;
     // 同/相关行业优先
     var coIndustry = co.industry || getCompanyIndustry(cid);
-    var affinity = (coIndustry === deceasedIndustry) ? 1.0 : (_isRelatedIndustry(coIndustry, deceasedIndustry) ? 0.6 : 0.3);
+    var affinity =
+      coIndustry === deceasedIndustry
+        ? 1.0
+        : _isRelatedIndustry(coIndustry, deceasedIndustry)
+          ? 0.6
+          : 0.3;
     candidates.push({ cid: cid, co: co, affinity: affinity });
   }
 
@@ -2497,7 +2634,10 @@ function _talentDispersionAftermath(state, deceasedCid, deceasedCo) {
     // 少量产品分数提升
     var productGain = Math.floor(Math.random() * 3);
     if (productGain > 0) {
-      rec.co.productScore = Math.min(100, (rec.co.productScore || 50) + productGain);
+      rec.co.productScore = Math.min(
+        100,
+        (rec.co.productScore || 50) + productGain,
+      );
     }
 
     // 记录历史
@@ -2509,8 +2649,14 @@ function _talentDispersionAftermath(state, deceasedCid, deceasedCo) {
     });
   }
 
-  var msg = deceasedCo.name + "解散后，" + recipients.length + "家公司吸纳了其资深员工团队，" +
-    "共计" + totalTalent + "点人才经验流入行业";
+  var msg =
+    deceasedCo.name +
+    "解散后，" +
+    recipients.length +
+    "家公司吸纳了其资深员工团队，" +
+    "共计" +
+    totalTalent +
+    "点人才经验流入行业";
 
   StateManager.addMessage("👥 " + msg, "info");
 

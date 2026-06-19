@@ -280,7 +280,10 @@
     reference: "《大多数》",
     related: ["amenities:*", "mechanics:illness_system"],
     sections: [
-      { kind: "desc", text: "四大状态（饥饱/疲劳/卫生/心情）跌破阈值时，游戏强制玩家做出选择，而非任你慢慢死。" },
+      {
+        kind: "desc",
+        text: "四大状态（饥饱/疲劳/卫生/心情）跌破阈值时，游戏强制玩家做出选择，而非任你慢慢死。",
+      },
       { kind: "subhead", text: "📉 触发阈值" },
       {
         kind: "list",
@@ -306,7 +309,10 @@
           );
         },
       },
-      { kind: "subhead", text: "📊 延期惩罚阶梯（1.2 起改为阶梯式，非随机掷骰）" },
+      {
+        kind: "subhead",
+        text: "📊 延期惩罚阶梯（1.2 起改为阶梯式，非随机掷骰）",
+      },
       {
         kind: "list",
         items: [
@@ -319,7 +325,11 @@
       {
         kind: "html",
         get: function () {
-          return "<p>详见 " + _wkLink("mechanics", "illness_system", "疾病系统") + "。</p>";
+          return (
+            "<p>详见 " +
+            _wkLink("mechanics", "illness_system", "疾病系统") +
+            "。</p>"
+          );
         },
       },
     ],
@@ -335,7 +345,10 @@
     brief: "长期不良习惯 → 命名疾病；药店/医院两档治疗",
     related: ["illnesses:*", "mechanics:critical_needs"],
     sections: [
-      { kind: "desc", text: "长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。" },
+      {
+        kind: "desc",
+        text: "长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。",
+      },
       { kind: "subhead", text: "📊 习惯追踪器" },
       {
         kind: "desc",
@@ -368,7 +381,11 @@
       {
         kind: "html",
         get: function () {
-          return "<p>查看具体病种：" + _wkLink("illnesses", null, "疾病图鉴") + "。</p>";
+          return (
+            "<p>查看具体病种：" +
+            _wkLink("illnesses", null, "疾病图鉴") +
+            "。</p>"
+          );
         },
       },
     ],
@@ -400,7 +417,10 @@
           "📈 通胀压力 → 批发周转/银行储蓄相对受益",
         ],
       },
-      { kind: "tip", text: "在行动卡的 payTags 行可看到今天哪些维度在影响收入。" },
+      {
+        kind: "tip",
+        text: "在行动卡的 payTags 行可看到今天哪些维度在影响收入。",
+      },
     ],
   };
 
@@ -414,7 +434,10 @@
     brief: "高好感 NPC 提前透露新闻",
     related: ["mechanics:npc_affinity"],
     sections: [
-      { kind: "desc", text: "高好感 NPC 会向你透露即将发生的新闻，让你提前布局。" },
+      {
+        kind: "desc",
+        text: "高好感 NPC 会向你透露即将发生的新闻，让你提前布局。",
+      },
       { kind: "subhead", text: "📋 工作流" },
       {
         kind: "list",
@@ -425,7 +448,10 @@
           "心智越高，情报可信度展示越精确",
         ],
       },
-      { kind: "tip", text: "信息差 = 钱。提前几天买入相关投资资产可大幅获利。" },
+      {
+        kind: "tip",
+        text: "信息差 = 钱。提前几天买入相关投资资产可大幅获利。",
+      },
     ],
   };
 
@@ -438,7 +464,10 @@
     icon: "📜",
     brief: "道德选择 7 种 flag 长期影响",
     sections: [
-      { kind: "desc", text: "道德选择不只是当下加减分，而是 7 种长期 flag 持续影响游戏。" },
+      {
+        kind: "desc",
+        text: "道德选择不只是当下加减分，而是 7 种长期 flag 持续影响游戏。",
+      },
       { kind: "subhead", text: "📋 道德 flag 列表" },
       {
         kind: "list",
@@ -466,7 +495,10 @@
     brief: "大专 → 本科 → 研究生",
     related: ["jobs:tutoring"],
     sections: [
-      { kind: "desc", text: "大专（默认）→ 本科（自考）→ 研究生。学历是某些工作和职场入职的硬门槛。" },
+      {
+        kind: "desc",
+        text: "大专（默认）→ 本科（自考）→ 研究生。学历是某些工作和职场入职的硬门槛。",
+      },
       { kind: "subhead", text: "📋 自考流程" },
       {
         kind: "list",
@@ -481,7 +513,7 @@
         kind: "html",
         get: function () {
           return (
-            '<p>如：' +
+            "<p>如：" +
             _wkLink("jobs", "tutoring", "家教") +
             " 需本科；科技园 4 个白领工作需本科起。</p>"
           );
@@ -499,7 +531,10 @@
     icon: "💭",
     brief: "5 类目标 × 5 里程碑",
     sections: [
-      { kind: "desc", text: "5 类人生目标 × 5 个里程碑，每达成一个会触发专属叙事文本。" },
+      {
+        kind: "desc",
+        text: "5 类人生目标 × 5 个里程碑，每达成一个会触发专属叙事文本。",
+      },
       { kind: "subhead", text: "📋 5 类梦想" },
       {
         kind: "list",
@@ -511,7 +546,10 @@
           "🌟 城市名人（名气/曝光/影响力）",
         ],
       },
-      { kind: "tip", text: '在街头阶段使用「确立人生目标」行动设定梦想；侧边栏显示当前进度。' },
+      {
+        kind: "tip",
+        text: "在街头阶段使用「确立人生目标」行动设定梦想；侧边栏显示当前进度。",
+      },
     ],
   };
 
@@ -525,7 +563,10 @@
     brief: "价格修正/限定工作/NPC 台词",
     related: ["festivals:*"],
     sections: [
-      { kind: "desc", text: "6 个节日全方位影响游戏：价格 / 工作 / NPC 台词 / 心情 / 摆摊客流。" },
+      {
+        kind: "desc",
+        text: "6 个节日全方位影响游戏：价格 / 工作 / NPC 台词 / 心情 / 摆摊客流。",
+      },
       { kind: "subhead", text: "📋 联动维度" },
       {
         kind: "list",
@@ -550,7 +591,10 @@
     icon: "☂️",
     brief: "室外工作/AP/心情 受天气影响",
     sections: [
-      { kind: "desc", text: "7 种天气全方位影响：室外工作收入 / 疲劳 / 心情 / AP 倍率。" },
+      {
+        kind: "desc",
+        text: "7 种天气全方位影响：室外工作收入 / 疲劳 / 心情 / AP 倍率。",
+      },
       { kind: "subhead", text: "📊 影响表" },
       {
         kind: "list",
@@ -577,7 +621,10 @@
     brief: "30/60/80 阈值奖励 + 委托 + 深度任务",
     reference: "《Stardew Valley》",
     sections: [
-      { kind: "desc", text: "每位 NPC 有 30/60/80 三档奖励 + 委托 + 深度任务。" },
+      {
+        kind: "desc",
+        text: "每位 NPC 有 30/60/80 三档奖励 + 委托 + 深度任务。",
+      },
       { kind: "subhead", text: "📋 阈值奖励" },
       {
         kind: "list",
@@ -644,7 +691,10 @@
           "科技园 fame ≥50：科技论坛演讲（¥200+fame×2.5）",
         ],
       },
-      { kind: "tip", text: "可通过参加 NPC 委托/达成成就/解决重大事件提升名气。" },
+      {
+        kind: "tip",
+        text: "可通过参加 NPC 委托/达成成就/解决重大事件提升名气。",
+      },
     ],
   };
 
@@ -658,7 +708,10 @@
     brief: "30级分支选择、天赋节点激活、职场联动",
     reference: "《中国式家长》",
     sections: [
-      { kind: "desc", text: "每项技能达到 Lv.30 后可选择 2~3 个发展方向，每个分支内嵌 3 个天赋节点。" },
+      {
+        kind: "desc",
+        text: "每项技能达到 Lv.30 后可选择 2~3 个发展方向，每个分支内嵌 3 个天赋节点。",
+      },
       { kind: "subhead", text: "📋 分支选择" },
       {
         kind: "list",
@@ -727,7 +780,10 @@
     icon: "🏭",
     brief: "公司生命周期/命运事件/零和博弈/行业传导",
     sections: [
-      { kind: "desc", text: "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。" },
+      {
+        kind: "desc",
+        text: "城市中的企业并非静止不变。你投资、就职过的公司会随时间成长、合并或倒闭，形成动态的商业世界。",
+      },
       { kind: "subhead", text: "📊 生命周期阶段" },
       {
         kind: "list",
@@ -756,11 +812,20 @@
         ],
       },
       { kind: "subhead", text: "🔗 零和博弈" },
-      { kind: "desc", text: "总市场份额有上限（80%），一家公司增长时从其他公司按比例抽取份额。这不是各自漂移，而是真正的竞争。" },
+      {
+        kind: "desc",
+        text: "总市场份额有上限（80%），一家公司增长时从其他公司按比例抽取份额。这不是各自漂移，而是真正的竞争。",
+      },
       { kind: "subhead", text: "🔗 行业传导" },
-      { kind: "desc", text: "同板块公司一个出事时，其他受到温和影响。例如：某AI公司丑闻曝光，整个AI/大模型板块受到波及。" },
+      {
+        kind: "desc",
+        text: "同板块公司一个出事时，其他受到温和影响。例如：某AI公司丑闻曝光，整个AI/大模型板块受到波及。",
+      },
       { kind: "subhead", text: "💡 玩家影响" },
-      { kind: "desc", text: "就职公司的 KPI/能力表现、持有股票数量，都会影响公司命运事件的权重和结果。" },
+      {
+        kind: "desc",
+        text: "就职公司的 KPI/能力表现、持有股票数量，都会影响公司命运事件的权重和结果。",
+      },
     ],
   };
 
@@ -774,7 +839,10 @@
     brief: "注册公司→招聘→融资→IPO/收购/破产",
     related: ["mechanics:enterprise_fate"],
     sections: [
-      { kind: "desc", text: "当你在街头/职场积累足够资源，可以注册公司开启创业之路。创业与职场并行，可同时打工+创业。" },
+      {
+        kind: "desc",
+        text: "当你在街头/职场积累足够资源，可以注册公司开启创业之路。创业与职场并行，可同时打工+创业。",
+      },
       { kind: "subhead", text: "📋 触发条件" },
       {
         kind: "list",
@@ -821,7 +889,10 @@
         ],
       },
       { kind: "subhead", text: "🔗 与企业命运联动" },
-      { kind: "desc", text: "你创业的公司进入企业命运系统，与其他公司同场竞争，参与零和博弈、行业传导、合并事件。" },
+      {
+        kind: "desc",
+        text: "你创业的公司进入企业命运系统，与其他公司同场竞争，参与零和博弈、行业传导、合并事件。",
+      },
     ],
   };
 
@@ -834,7 +905,10 @@
     icon: "🔍",
     brief: "风声期交易→季末审查→罚款禁入",
     sections: [
-      { kind: "desc", text: "就职公司的命运事件触发前3-5天，可通过日常行动获知风声。利用风声提前交易可获利，但季末有合规审查风险。" },
+      {
+        kind: "desc",
+        text: "就职公司的命运事件触发前3-5天，可通过日常行动获知风声。利用风声提前交易可获利，但季末有合规审查风险。",
+      },
       { kind: "subhead", text: "👂 风声感知渠道" },
       {
         kind: "list",

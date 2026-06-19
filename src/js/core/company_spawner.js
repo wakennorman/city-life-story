@@ -504,23 +504,27 @@ function spawnFromRuins(state, deceasedCompany) {
 
   var culture = CULTURE_TAGS[Math.floor(Math.random() * CULTURE_TAGS.length)];
 
-  var companyId = "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+  var companyId =
+    "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
   var companyName = generateCompanyName();
   var stockSymbol = generateStockSymbol();
 
   // 健康度：倒闭公司最终健康度 × 0.3 + 随机波动
-  var baseHealth = (deceasedCompany.health || 50) * 0.3 + 30 + (Math.random() - 0.5) * 20;
+  var baseHealth =
+    (deceasedCompany.health || 50) * 0.3 + 30 + (Math.random() - 0.5) * 20;
   var health = Math.max(40, Math.min(95, baseHealth));
 
   // 产品分数：倒闭公司最终 productScore × 0.5 + 随机波动
   var productScore = Math.round(
-    (deceasedCompany.productScore || 50) * 0.5 + 15 + (Math.random() - 0.5) * 20
+    (deceasedCompany.productScore || 50) * 0.5 +
+      15 +
+      (Math.random() - 0.5) * 20,
   );
   productScore = Math.max(30, Math.min(80, productScore));
 
   // 人才分数：倒闭公司最终 talentScore × 0.4 + 随机波动
   var talentScore = Math.round(
-    (deceasedCompany.talentScore || 50) * 0.4 + 15 + (Math.random() - 0.5) * 20
+    (deceasedCompany.talentScore || 50) * 0.4 + 15 + (Math.random() - 0.5) * 20,
   );
   talentScore = Math.max(25, Math.min(70, talentScore));
 
@@ -565,12 +569,17 @@ function spawnFromRuins(state, deceasedCompany) {
       {
         day: state.player.day,
         event: "spawned_from_ruins",
-        desc: "从「" + (deceasedCompany.name || "未知公司") + "」的废墟中重生，继承其技术遗产",
+        desc:
+          "从「" +
+          (deceasedCompany.name || "未知公司") +
+          "」的废墟中重生，继承其技术遗产",
       },
     ],
     fateEventHistory: [],
     founder: {
-      name: ["李总", "王总", "张总", "陈总", "刘总"][Math.floor(Math.random() * 5)],
+      name: ["李总", "王总", "张总", "陈总", "刘总"][
+        Math.floor(Math.random() * 5)
+      ],
       background: "原公司技术骨干创业，继承部分专利和人脉",
     },
     benefits: {
@@ -590,7 +599,12 @@ function spawnFromRuins(state, deceasedCompany) {
 
   // 加入企业命运
   var fate = state.enterpriseFate;
-  if (!fate) state.enterpriseFate = { companies: {}, fateEventCooldown: {}, lastFateTick: 0 };
+  if (!fate)
+    state.enterpriseFate = {
+      companies: {},
+      fateEventCooldown: {},
+      lastFateTick: 0,
+    };
   if (!fate.companies) fate.companies = {};
   fate.companies[companyId] = newCompany;
 
@@ -650,16 +664,23 @@ function checkAndSpawnFromRuins(state) {
   if (Math.random() >= 0.5) return [];
 
   // 随机选择一个倒闭公司
-  var source = deceasedCompanies[Math.floor(Math.random() * deceasedCompanies.length)];
+  var source =
+    deceasedCompanies[Math.floor(Math.random() * deceasedCompanies.length)];
   var newCompany = spawnFromRuins(state, source);
 
   fate.lastRuinsSpawn = state.player.day;
 
   if (newCompany) {
     StateManager.addMessage(
-      "🌱 「" + newCompany.name + "」从「" + source.name + "」的废墟中诞生，" +
-      "带着" + source.industry + "行业的技术遗产重新出发！",
-      "info"
+      "🌱 「" +
+        newCompany.name +
+        "」从「" +
+        source.name +
+        "」的废墟中诞生，" +
+        "带着" +
+        source.industry +
+        "行业的技术遗产重新出发！",
+      "info",
     );
     return [newCompany];
   }

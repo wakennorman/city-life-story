@@ -391,17 +391,21 @@ function showVictoryModal() {
   var inheritanceData = {
     badges: badges,
     badgeCount: badges.length,
-    relationshipCount: Object.keys(state.relationships || {}).filter(function (npcId) {
-      var r = state.relationships[npcId];
-      return r && r.met && (r.affinity || 0) >= 30;
-    }).length,
+    relationshipCount: Object.keys(state.relationships || {}).filter(
+      function (npcId) {
+        var r = state.relationships[npcId];
+        return r && r.met && (r.affinity || 0) >= 30;
+      },
+    ).length,
     itemCount: (state.inventory || []).filter(function (item) {
       return item.legendary || item.achievement || item.unique;
     }).length,
-    dreamProgress: state.flags?._dreamId ? {
-      dreamId: state.flags._dreamId,
-      completedMilestones: state.flags._dreamMilestone || 0,
-    } : null,
+    dreamProgress: state.flags?._dreamId
+      ? {
+          dreamId: state.flags._dreamId,
+          completedMilestones: state.flags._dreamMilestone || 0,
+        }
+      : null,
     skillTree: {
       branches: state.skillBranches || {},
       nodes: state.talentNodes || {},
@@ -420,12 +424,19 @@ function showVictoryModal() {
 
   // 生成叙事文案
   if (typeof generateInheritanceNarrative === "function") {
-    inheritanceData.narrative = generateInheritanceNarrative(state, badges, inheritanceData.cashInfo);
+    inheritanceData.narrative = generateInheritanceNarrative(
+      state,
+      badges,
+      inheritanceData.cashInfo,
+    );
   }
 
   // 保存到 localStorage
   try {
-    localStorage.setItem("_lastGameInheritance", JSON.stringify(inheritanceData));
+    localStorage.setItem(
+      "_lastGameInheritance",
+      JSON.stringify(inheritanceData),
+    );
   } catch (e) {
     console.error("保存遗产数据失败:", e);
   }
@@ -441,7 +452,12 @@ function showVictoryModal() {
       : "你积累了2000万财富，实现了财务自由。不再为钱发愁的人生，开始了！");
 
   // 构建徽章文本
-  var badgeText = badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + ' 枚声誉徽章，下局可继承加成</p>' : '';
+  var badgeText =
+    badges.length > 0
+      ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' +
+        badges.length +
+        " 枚声誉徽章，下局可继承加成</p>"
+      : "";
 
   showModal({
     title,

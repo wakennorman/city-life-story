@@ -553,10 +553,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       // 第1次延期：轻度 — 疲劳+5，心情-3
       state.needs.fatigue = Math.min(100, state.needs.fatigue + 5);
       state.needs.happiness = Math.max(0, state.needs.happiness - 3);
-      StateManager.addMessage(
-        "🥱 强撑了一天，疲劳+5，心情更差了。",
-        "warning",
-      );
+      StateManager.addMessage("🥱 强撑了一天，疲劳+5，心情更差了。", "warning");
     } else if (deferCount === 2) {
       // 第2次延期：中度 — 疲劳+15，概率过劳/失眠
       state.needs.fatigue = Math.min(100, state.needs.fatigue + 15);
@@ -564,10 +561,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       if (Math.random() < 0.35) {
         _contractIllness(state, Math.random() < 0.5 ? "overwork" : "insomnia");
       }
-      StateManager.addMessage(
-        "🥵 连续两天过度疲劳，身体发出警告...",
-        "danger",
-      );
+      StateManager.addMessage("🥵 连续两天过度疲劳，身体发出警告...", "danger");
     } else if (deferCount === 3) {
       // 第3次延期：重度 — 过劳晕倒
       state.needs.fatigue = 20;
@@ -604,7 +598,10 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.happiness = Math.max(0, state.needs.happiness - 8);
       state.player.fame = Math.max(0, (state.player.fame || 0) - 1);
       if (Math.random() < 0.4) {
-        _contractIllness(state, Math.random() < 0.5 ? "skin_infection" : "cold");
+        _contractIllness(
+          state,
+          Math.random() < 0.5 ? "skin_infection" : "cold",
+        );
       }
       StateManager.addMessage(
         "🦠 连续两天卫生差，路人捂鼻避让，你可能生病了...",
@@ -677,9 +674,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
         _contractIllness(state, "depression");
       }
       StateManager.addMessage(
-        "🍶 你买了瓶酒一个人喝，花¥" +
-          spend +
-          "，但抑郁的风险在累积...",
+        "🍶 你买了瓶酒一个人喝，花¥" + spend + "，但抑郁的风险在累积...",
         "warning",
       );
     }

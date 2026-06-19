@@ -250,8 +250,14 @@ function recordLegacyEventToMemory(aftermath, state) {
   var event = {
     day: state.player.day,
     type: aftermath.type,
-    sourceCompanyId: aftermath.sourceCompanyId || aftermath.newCompanyId || aftermath.targetCompanyId,
-    sourceCompanyName: aftermath.sourceCompanyName || aftermath.newCompanyName || aftermath.targetCompanyName,
+    sourceCompanyId:
+      aftermath.sourceCompanyId ||
+      aftermath.newCompanyId ||
+      aftermath.targetCompanyId,
+    sourceCompanyName:
+      aftermath.sourceCompanyName ||
+      aftermath.newCompanyName ||
+      aftermath.targetCompanyName,
     details: aftermath,
     playthrough: memory.totalPlaythroughs + 1,
   };
@@ -410,8 +416,10 @@ function updateIndustryEvolution(industry, action) {
   else if (action === "company_ipo") data.companiesIpo++;
   else if (action === "company_merged") data.companiesMerged++;
   else if (action === "company_spawned") data.companiesStarted++;
-  else if (action === "patent_acquired") data.patentAcquisitions = (data.patentAcquisitions || 0) + 1;
-  else if (action === "talent_dispersion") data.talentDispersions = (data.talentDispersions || 0) + 1;
+  else if (action === "patent_acquired")
+    data.patentAcquisitions = (data.patentAcquisitions || 0) + 1;
+  else if (action === "talent_dispersion")
+    data.talentDispersions = (data.talentDispersions || 0) + 1;
 
   data.lastUpdated = Date.now();
 
