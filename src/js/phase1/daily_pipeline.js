@@ -559,7 +559,7 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
     highlights.push("今天过得不太开心，明天找找乐子");
   }
 
-  // 村长债务提示（隐形压力）
+  // 村长债务提示（仅经典模式/有 villageDebt 的剧本）
   if ((state.resources.villageDebt || 0) > 0 && highlights.length < 2) {
     highlights.push(
       "村长那¥" +

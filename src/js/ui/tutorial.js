@@ -329,7 +329,7 @@ var DYNAMIC_HINTS = [
   {
     id: "first_repay_ready",
     trigger: function (st) {
-      var debt = st.resources.villageDebt || st.resources.debt || 0;
+      var debt = st.resources.villageDebt || 0;
       return (
         debt > 0 &&
         (st.resources.cash || 0) >= debt &&

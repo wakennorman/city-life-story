@@ -37,7 +37,7 @@ function generateSaveNarrative(state) {
   var r = state.resources;
   var day = p.day;
   var cash = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = r.villageDebt || r.debt || 0;
+  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
 
   var locNames = {
     slum: "城中村",

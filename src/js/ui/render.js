@@ -499,7 +499,7 @@ function renderDreamSection(state) {
 function renderDebtInfo(state) {
   const debtSection = document.getElementById("debt-section");
   if (!debtSection) return;
-  const villageDebt = state.resources.villageDebt || state.resources.debt || 0;
+  const villageDebt = state.resources.villageDebt || 0;
   const villageInterest = state.resources.villageDebtInterest || 0;
   const bankDebt = state.resources.bankDebt || 0;
   let html = "";

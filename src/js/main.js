@@ -2343,20 +2343,19 @@ function getAvailableActions(state) {
     });
 
     // 还村长钱 — 随时可还（不限定地点）
-    actions.push({
-      id: "repay_village",
-      name: "🏘️ 还村长钱",
-      desc: "随时还一部分或全部村长的账，无债一身轻。",
-      icon: "🏘️",
-      disabled:
-        (state.resources.villageDebt || state.resources.debt) <= 0 ||
-        state.resources.cash <= 0
-          ? true
-          : false,
-      handler: () => {
-        showRepayVillageModal();
-      },
-    });
+    // 仅经典/有 villageDebt 的剧本显示此选项
+    if ((state.resources.villageDebt || 0) > 0) {
+      actions.push({
+        id: "repay_village",
+        name: "🏘️ 还村长钱",
+        desc: "随时还一部分或全部村长的账，无债一身轻。",
+        icon: "🏘️",
+        disabled: state.resources.cash <= 0 ? true : false,
+        handler: () => {
+          showRepayVillageModal();
+        },
+      });
+    }
 
     actions.push({
       id: "eat",

@@ -427,7 +427,7 @@ var SPRING_FESTIVAL_EVENTS = [
         text: "💰 还一部分债务",
         hint: "减轻负担",
         effect: function (st) {
-          const debt = st.resources.villageDebt || st.resources.debt || 0;
+          const debt = st.resources.villageDebt || 0;
           if (debt <= 0) return { ok: false, msg: "没有债务！" };
           const还 = Math.min(st.resources.cash || 0, Math.floor(debt * 0.3));
           if (还 <= 0) return { ok: false, msg: "钱不够还债！" };

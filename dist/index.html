@@ -1139,7 +1139,7 @@ function generateSaveNarrative(state) {
   var r = state.resources;
   var day = p.day;
   var cash = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = r.villageDebt || r.debt || 0;
+  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
 
   var locNames = {
     slum: "城中村",
@@ -15245,7 +15245,7 @@ var SPRING_FESTIVAL_EVENTS = [
         text: "💰 还一部分债务",
         hint: "减轻负担",
         effect: function (st) {
-          const debt = st.resources.villageDebt || st.resources.debt || 0;
+          const debt = st.resources.villageDebt || 0;
           if (debt <= 0) return { ok: false, msg: "没有债务！" };
           const还 = Math.min(st.resources.cash || 0, Math.floor(debt * 0.3));
           if (还 <= 0) return { ok: false, msg: "钱不够还债！" };
@@ -29057,7 +29057,7 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
     highlights.push("今天过得不太开心，明天找找乐子");
   }
 
-  // 村长债务提示（隐形压力）
+  // 村长债务提示（仅经典模式/有 villageDebt 的剧本）
   if ((state.resources.villageDebt || 0) > 0 && highlights.length < 2) {
     highlights.push(
       "村长那¥" +
@@ -40045,7 +40045,7 @@ function renderDreamSection(state) {
 function renderDebtInfo(state) {
   const debtSection = document.getElementById("debt-section");
   if (!debtSection) return;
-  const villageDebt = state.resources.villageDebt || state.resources.debt || 0;
+  const villageDebt = state.resources.villageDebt || 0;
   const villageInterest = state.resources.villageDebtInterest || 0;
   const bankDebt = state.resources.bankDebt || 0;
   let html = "";
@@ -44210,7 +44210,11 @@ function showRepayModal() {
 /** 还村长钱的模态框 */
 function showRepayVillageModal() {
   const state = StateManager.getState();
-  const villageDebt = state.resources.villageDebt || state.resources.debt || 0;
+  const villageDebt = state.resources.villageDebt || 0;
+  if (villageDebt <= 0) {
+    StateManager.addMessage("✅ 你并不欠村长钱。", "info");
+    return;
+  }
   const interestAccumulated = state.resources.villageDebtInterest || 0;
   showModal({
     title: "🏘️ 还村长钱",
@@ -44234,14 +44238,14 @@ function showRepayVillageModal() {
           } else {
             state.resources.debt -= amt;
           }
-          if ((state.resources.villageDebt || state.resources.debt) <= 0) {
+          if (state.resources.villageDebt <= 0) {
             StateManager.addMessage(
               "🎉 终于还清了村长的钱！无债一身轻！",
               "success",
             );
           } else {
             StateManager.addMessage(
-              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.villageDebt || state.resources.debt).toLocaleString()}。`,
+              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.villageDebt.toLocaleString()}。`,
               "success",
             );
           }
@@ -45462,7 +45466,7 @@ var DYNAMIC_HINTS = [
   {
     id: "first_repay_ready",
     trigger: function (st) {
-      var debt = st.resources.villageDebt || st.resources.debt || 0;
+      var debt = st.resources.villageDebt || 0;
       return (
         debt > 0 &&
         (st.resources.cash || 0) >= debt &&
@@ -52601,20 +52605,19 @@ function getAvailableActions(state) {
     });
 
     // 还村长钱 — 随时可还（不限定地点）
-    actions.push({
-      id: "repay_village",
-      name: "🏘️ 还村长钱",
-      desc: "随时还一部分或全部村长的账，无债一身轻。",
-      icon: "🏘️",
-      disabled:
-        (state.resources.villageDebt || state.resources.debt) <= 0 ||
-        state.resources.cash <= 0
-          ? true
-          : false,
-      handler: () => {
-        showRepayVillageModal();
-      },
-    });
+    // 仅经典/有 villageDebt 的剧本显示此选项
+    if ((state.resources.villageDebt || 0) > 0) {
+      actions.push({
+        id: "repay_village",
+        name: "🏘️ 还村长钱",
+        desc: "随时还一部分或全部村长的账，无债一身轻。",
+        icon: "🏘️",
+        disabled: state.resources.cash <= 0 ? true : false,
+        handler: () => {
+          showRepayVillageModal();
+        },
+      });
+    }
 
     actions.push({
       id: "eat",

@@ -280,7 +280,11 @@ function showRepayModal() {
 /** 还村长钱的模态框 */
 function showRepayVillageModal() {
   const state = StateManager.getState();
-  const villageDebt = state.resources.villageDebt || state.resources.debt || 0;
+  const villageDebt = state.resources.villageDebt || 0;
+  if (villageDebt <= 0) {
+    StateManager.addMessage("✅ 你并不欠村长钱。", "info");
+    return;
+  }
   const interestAccumulated = state.resources.villageDebtInterest || 0;
   showModal({
     title: "🏘️ 还村长钱",
@@ -304,14 +308,14 @@ function showRepayVillageModal() {
           } else {
             state.resources.debt -= amt;
           }
-          if ((state.resources.villageDebt || state.resources.debt) <= 0) {
+          if (state.resources.villageDebt <= 0) {
             StateManager.addMessage(
               "🎉 终于还清了村长的钱！无债一身轻！",
               "success",
             );
           } else {
             StateManager.addMessage(
-              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.villageDebt || state.resources.debt).toLocaleString()}。`,
+              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.villageDebt.toLocaleString()}。`,
               "success",
             );
           }
