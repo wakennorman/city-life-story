@@ -915,10 +915,13 @@ function renderCurrentTab(state) {
   }
 }
 
-// ====== Growth Tab — 成长数据可视化 ======
+// ====== Growth Tab — 委托到 data_viz.js 新版 ======
 function renderGrowthTab(state, parent) {
+  if (typeof _dataVizRenderGrowthTab === "function") {
+    _dataVizRenderGrowthTab(state, parent);
+    return;
+  }
   parent.innerHTML = "";
-
   var p = state.player;
   var wrapper = document.createElement("div");
   wrapper.style.cssText = "padding:12px;";

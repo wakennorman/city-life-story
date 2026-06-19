@@ -230,6 +230,7 @@ const DAILY_PIPELINE = [
   {
     name: "snapshot",
     fn: function (state) {
+      // 1. 总资产快照
       if (!state.flags._cashHistory) state.flags._cashHistory = [];
       var totalAsset =
         (state.resources.cash || 0) + (state.resources.bankBalance || 0);
@@ -239,6 +240,46 @@ const DAILY_PIPELINE = [
       });
       if (state.flags._cashHistory.length > 90) {
         state.flags._cashHistory = state.flags._cashHistory.slice(-90);
+      }
+
+      // 2. 收入/支出历史（供 incomeChart 使用）
+      if (!state.history) state.history = { income: [], expense: [] };
+      var txs = state.flags._dailyTransactions || [];
+      var dailyIncome = 0,
+        dailyExpense = 0;
+      for (var ti = 0; ti < txs.length; ti++) {
+        var t = txs[ti];
+        if (t.type === "income") dailyIncome += t.amount || 0;
+        else if (t.type === "expense") dailyExpense += t.amount || 0;
+      }
+      state.history.income.push(dailyIncome);
+      state.history.expense.push(dailyExpense);
+      if (state.history.income.length > 90) {
+        state.history.income = state.history.income.slice(-90);
+        state.history.expense = state.history.expense.slice(-90);
+      }
+
+      // 3. 属性快照（每 7 天记录一次，供雷达图历史对比）
+      if (!state.history.stats) state.history.stats = [];
+      var p = state.player || {};
+      var lastStat = state.history.stats[state.history.stats.length - 1];
+      if (
+        !lastStat ||
+        state.player.day - lastStat.day >= 7 ||
+        state.history.stats.length === 0
+      ) {
+        state.history.stats.push({
+          day: state.player.day,
+          physique: p.physique || 0,
+          intelligence: p.intelligence || 0,
+          agility: p.agility || 0,
+          mental: p.mental || 0,
+          fame: p.fame || 0,
+        });
+        if (state.history.stats.length > 12) {
+          // 保留最近 12 次 = 约 84 天
+          state.history.stats = state.history.stats.slice(-12);
+        }
       }
     },
   },

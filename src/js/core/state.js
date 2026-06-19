@@ -68,6 +68,12 @@ function createDefaultState() {
       totalEarned: 0, // 终身总收入
     },
 
+    // --- 历史记录（用于图表/可视化） ---
+    history: {
+      income: [], // 每日收入数组（索引=天数-1）
+      expense: [], // 每日支出数组
+    },
+
     // --- 基本需求 (0-100) ---
     needs: {
       hunger: 70,

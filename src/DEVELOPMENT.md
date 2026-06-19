@@ -1,7 +1,43 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-19 (累计280+项改动)
-> **最新改动**: P1-1 街头特色玩法完善 — 拾荒路线规划（已完成）+ 摆摊选址建议（新增智能推荐系统）+ P2-1 教程升级（动态提示系统已完整）
+> 最后更新: 2026-06-20 (累计295+项改动)
+> **最新改动**: 数据可视化深化 — Growth Tab 收入/支出曲线 + 总资产曲线 + 属性雷达历史对比 + Retina高清
+
+### 2026-06-20 — 数据可视化深化（P2#8 增强版）
+
+**问题诊断**：
+
+- `data_viz.js` 的 `renderGrowthTab` 被 `render.js` 同名函数覆盖，实际运行的仍是旧版
+- `state.history.income/expense` 从未被记录，新版收入图表永远"数据不足"
+- 旧版的总资产曲线（`drawAssetLineChart`）和新版各自独立，互相不整合
+
+**改动内容**：
+
+#### 数据管线修复
+
+- `state.js`: 默认状态增加 `history: { income: [], expense: [] }` 顶层字段
+- `daily_pipeline.js`: 快照步骤新增收入/支出汇总 + 每7天属性快照（`history.stats`）
+
+#### data_viz.js 增强
+
+- 新增 `setupCanvas()` — Retina 高清支持（devicePixelRatio 适配）
+- 新增 `drawSmoothPath()` — 二次贝塞尔平滑曲线（替代硬折线）
+- `drawIncomeChart()` 重写：平滑曲线、范围自适应、千分位标记
+- 新增 `drawAssetLineChart()` — 总资产曲线（含变化率 + 金额标注），从 `render.js` 旧版合并
+- `drawRadarChart()` 新增 `overlayAttrs` 参数 — 灰色虚线显示历史属性对比（约7天前快照）
+- `drawSkillGrowthChart()` 新增平滑曲线支持
+- `renderGrowthTab()` 重写：增加总资产曲线小节、所有 Canvas 改用 `setupCanvas`、雷达图传入历史对比数据
+- 所有 `const/let` 改为 `var` 保持与旧代码风格一致
+
+#### render.js 精简
+
+- `renderGrowthTab()` 改为先委托给 `_dataVizRenderGrowthTab`，失败才走旧版降级
+
+#### 同类游戏参考
+
+- 《大多数》— 平滑折线图、总资产曲线
+- 《中国式家长》— 属性历史对比
+- Stardew Valley — 技能成长可视化
 
 ## 项目概述
 
@@ -824,6 +860,38 @@ src/
 5. **修改后** 更新本 DEVELOPEMENT.md 的变更记录
 
 ## 变更记录
+
+### 2026-06-20 — 百科迁移完成：全部 19 条旧 pages 迁入注册表
+
+**核心改动**：
+
+1. **mechanics_registry.js 新增 16 条注册条目**
+   - critical_needs（状态危机系统）：触发阈值 + 延期惩罚概率
+   - illness_system（疾病系统）：习惯追踪器 + 两档治疗
+   - city_pulse（城市脉搏联动）：10+ 种新闻×地点联动规则
+   - intel（街头情报网）：6 个 NPC 情报源 + 情报兑现流程
+   - history（历史声誉）：7 种道德 flag + 长期影响
+   - edu（学历系统）：自考流程 + 考试通过率公式
+   - dream（梦想追踪）：5 类目标 × 5 里程碑
+   - festival_link（节日联动）：价格修正/限定工作/NPC 台词
+   - weather_link（天气联动）：7 种天气 × 室外/AP/心情
+   - npc_affinity（NPC 好感）：30/60/80 阈值奖励 + 委托/深度任务
+   - vending_footfall（摆摊客流）：位置×天气×节日×周末综合修正
+   - fame_vip（名气 VIP）：5 种特殊行动
+   - skill_tree（技能天赋树）：20 个分支加成 + 职场联动
+   - enterprise_fate（企业命运系统）：生命周期/命运事件/零和博弈
+   - startup_system（创业系统）：三阶段模型/员工/融资/退出
+   - insider_trading（内幕交易风险）：风声渠道/合规审查/处罚梯度
+
+2. **narratives_registry.js 新增 3 条注册条目**
+   - spring_festival_event（春节七天乐）：除夕→初六事件链 + 策略建议
+   - company_history（公司历史书）：展示内容/颜色标记/策略价值
+   - festival_achievements（节日成就）：7 个春节 + 2 个剁手节 + 劳动节/中秋/国庆/综合
+
+3. **旧兜底代码保留**：wiki.js 中的 `_wikiDetailMechanic` / `_wikiDetailNarrative` pages 字典保留为死代码（注册表优先，永不命中）
+
+4. **下一步顺序变更**：百科迁移已完成，下一步方向顺序调整为：
+   ① 食材库存联动 → ② 数据可视化深化 → ③ 平衡调参
 
 ### 2026-06-19 — 投资板块完善：股票整股约束 + 银行贷款动态评估
 

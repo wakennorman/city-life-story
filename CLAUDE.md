@@ -11,23 +11,23 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：重大 Bug 修复 + 多窗口安全机制建立
-  - Bug: render.js 被误删 3000+ 行（tab 渲染函数全丢失），从 `bd32329` 恢复完整版（28个函数）
-  - Bug: `renderIllnessRow` / `renderTimeSlot` / `renderActiveNews` 缺失→已补
-  - Bug: 新游戏流程模式选择界面遮挡游戏界面→已修（main.js screen cleanup）
-  - Bug: Header "确认新游戏" 应回欢迎界面→已修（改为 `showWelcome()`）
-  - 安全: 多窗口防覆盖机制（SessionStart钩子 + pre-commit钩子 + HEAD追踪）
-- **待提交改动**：均已提交（3 个 commit：恢复 render.js + 安全机制 v1 + 安全机制 v2）
-- **P0/P1全优先级清单已完成**（累计280+项），事件总数202，新闻事件79，成就52
+- **最近一次工作**：数据可视化深化 — Growth Tab 重写（整合新旧版）+ 数据管线修复 + Retina 高清 + 平滑曲线 + 历史对比
+  - `data_viz.js`：新增 setupCanvas()（Retina）、drawSmoothPath()、drawAssetLineChart()；drawIncomeChart/drawRadarChart/drawSkillGrowthChart/drawRadarChart 全部增强
+  - `render.js`：renderGrowthTab 委托给 data_viz 新版，旧版保留为降级
+  - `state.js`：新增顶层 history 默认值 {income, expense}
+  - `daily_pipeline.js`：快照步骤新增收入/支出汇总 + 每7天属性快照
+  - 参考同类游戏（《大多数》、《中国式家长》、Stardew Valley）优化平滑曲线 + 历史对比雷达 + 总资产变化率
+- **P0/P1全优先级清单已完成**（累计295+项），事件总数202，新闻事件79，成就52
 - **阶段三疾病演化深化**：✅ 已完成
 - **阶段四企业命运 Phase 2**：✅ 已完成（CEO人格化 + 多周目记忆 + 新事件 + 历史书UI）
 - **P1-1 街头特色玩法**：✅ 已完成（拾荒路线规划 + 摆摊选址建议）
 - **P2-1 教程升级**：✅ 已完成（动态提示系统 30+ 条情境提示）
+- **百科迁移**：✅ **已完成**（全部 19 条从旧 pages 迁入注册表，wiki.js 旧兜底代码保留为死代码）
+- **P2-8 数据可视化**：✅ **已完成**（收入/支出曲线 + 总资产曲线 + 属性雷达历史对比 + Retina + 平滑曲线）
 - **下一步方向**：
-  1. **继续迁移百科** — 按 audit ℹ️ 把剩余 ~15 条 mechanic 搬进注册表
+  1. **自住房食材库存联动** — 深化"在家做饭"为实际食材消耗系统
   2. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
-  3. **自住房食材库存联动** — 深化"在家做饭"为实际食材消耗系统
-  4. **数据可视化深化** — 收入曲线图/属性成长雷达图完善
+  3. **百科迁移剩余条目** — 按 audit ℹ️ 把剩余 ~15 条 mechanic 搬进注册表
 
 ### ✅ 已完成但未在 CLAUDE.md 列出的更新
 
