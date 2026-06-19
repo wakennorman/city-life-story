@@ -2337,3 +2337,245 @@ body {
 .ch-history-btn:active {
   transform: translateY(0);
 }
+
+/* ====== 模式选择 ====== */
+.mode-grid {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.mode-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  width: 170px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.mode-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(74, 158, 92, 0.15);
+}
+
+.mode-card-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.mode-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.mode-card-brief {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.mode-card-diff {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 剧本卡片网格 */
+.scenario-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.scenario-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.scenario-card:hover {
+  border-color: var(--accent);
+  transform: translateX(3px);
+  box-shadow: 0 3px 12px rgba(74, 158, 92, 0.10);
+}
+
+.scenario-card-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.scenario-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.scenario-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scenario-card-brief {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+.scenario-card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.scenario-card-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(74, 158, 92, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(74, 158, 92, 0.15);
+}
+
+.scenario-card-diff {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 沙盒配置 */
+.sandbox-section {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.sandbox-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sandbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.sandbox-row label {
+  width: 70px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.sandbox-row input[type="range"] {
+  flex: 1;
+  max-width: 180px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.sandbox-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-card);
+}
+
+.sandbox-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-card);
+}
+
+.sandbox-row .sandbox-val {
+  width: 40px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.sandbox-points-left {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.sandbox-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  background: rgba(74, 158, 92, 0.06);
+  border-radius: 6px;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.sandbox-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.sandbox-select:focus {
+  border-color: var(--accent);
+}
+
+/* 剧本详情弹窗 */
+.scenario-detail-icon { font-size: 48px; text-align: center; margin-bottom: 8px; }
+.scenario-detail-name { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.scenario-detail-diff { text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.scenario-detail-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 12px; padding: 0 8px; }
+.scenario-detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 12px; margin-bottom: 12px; }
+.scenario-detail-stat { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); }
+.scenario-detail-stat-label { color: var(--text-secondary); }
+.scenario-detail-stat-val { font-weight: 600; color: var(--text-primary); }
+.scenario-detail-start { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 8px; }

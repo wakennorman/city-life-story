@@ -276,38 +276,869 @@ function estimateJobPayDetailed(job, state) {
 }
 
 // ====== 欢迎界面 ======
-function showWelcome() {
-  document.getElementById("app").style.display = "none";
-  const welcome = document.getElementById("welcome-screen");
-  welcome.style.display = "flex";
+// ====== 模式选择 ======
 
-  // 更新继续游戏按钮区域
-  const loadSection = document.getElementById("load-section");
-  if (loadSection) {
-    const allSlots = getAllSlots();
-    if (allSlots.length > 0) {
-      // 找最新存档
-      allSlots.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
-      const latest = allSlots[0];
-      loadSection.style.display = "";
-      loadSection.innerHTML = `
-        <button id="btn-load-latest" class="btn btn-lg">📂 继续游戏 (第${latest.day}天, ¥${latest.cash?.toLocaleString() || 0})</button>
-        <button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>
-      `;
-      document.getElementById("btn-load-latest").onclick = () =>
-        loadExistingGame(latest.slot);
-      document.getElementById("btn-load-menu").onclick = () =>
-        showLoadMenuOnWelcome();
-    } else {
-      loadSection.style.display = "none";
+/** 返回欢迎界面 */
+function showWelcome() {
+  var screen = document.getElementById("welcome-screen");
+  var modeSelect = document.getElementById("mode-select-screen");
+  var scenarioSelect = document.getElementById("scenario-select-screen");
+  var sandboxScreen = document.getElementById("sandbox-screen");
+  [modeSelect, scenarioSelect, sandboxScreen].forEach(function (el) {
+    if (el) el.style.display = "none";
+  });
+  if (screen) {
+    screen.style.display = "flex";
+    // 刷新存档信息
+    var loadSection = document.getElementById("load-section");
+    if (loadSection) {
+      var allSlots = getAllSlots();
+      if (allSlots.length > 0) {
+        allSlots.sort(function (a, b) {
+          return (b.savedAt || 0) - (a.savedAt || 0);
+        });
+        var latest = allSlots[0];
+        loadSection.style.display = "";
+        var modeTag = latest.mode ? " " + latest.mode : "";
+        loadSection.innerHTML =
+          '<button id="btn-load-latest" class="btn btn-lg">📂 继续游戏' +
+          modeTag +
+          " (第" +
+          latest.day +
+          "天, ¥" +
+          (latest.cash ? latest.cash.toLocaleString() : 0) +
+          ")</button>" +
+          '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
+        document.getElementById("btn-load-latest").onclick = function () {
+          loadExistingGame(latest.slot);
+        };
+        document.getElementById("btn-load-menu").onclick = function () {
+          showLoadMenuOnWelcome();
+        };
+      } else {
+        loadSection.style.display = "none";
+      }
+    }
+    document.getElementById("btn-new-game").onclick = showModeSelect;
+    document.getElementById("btn-skip-tutorial").onclick = showModeSelect;
+  }
+}
+
+/** 显示模式选择界面 */
+function showModeSelect() {
+  ["welcome-screen", "scenario-select-screen", "sandbox-screen"].forEach(
+    function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = "none";
+      el && id === "welcome-screen" && (el.style.display = "none");
+    },
+  );
+  var screen = document.getElementById("mode-select-screen");
+  if (screen) {
+    screen.style.display = "flex";
+    screen.style.flexDirection = "column";
+    screen.style.alignItems = "center";
+    screen.style.justifyContent = "center";
+    screen.style.minHeight = "100vh";
+  }
+}
+
+/** 显示剧本选择界面 */
+function showScenarioSelect() {
+  var modeScreen = document.getElementById("mode-select-screen");
+  if (modeScreen) modeScreen.style.display = "none";
+  var sandboxScreen = document.getElementById("sandbox-screen");
+  if (sandboxScreen) sandboxScreen.style.display = "none";
+  var scenarioScreen = document.getElementById("scenario-select-screen");
+  if (!scenarioScreen) return;
+  scenarioScreen.style.display = "flex";
+  scenarioScreen.style.flexDirection = "column";
+  scenarioScreen.style.alignItems = "center";
+  scenarioScreen.style.justifyContent = "center";
+  scenarioScreen.style.minHeight = "100vh";
+
+  // 渲染剧本列表
+  var listEl = document.getElementById("scenario-list");
+  if (!listEl) return;
+  var html = "";
+  // 默认模式单独显示
+  var defaultScenario = getScenarioById("classic");
+  if (defaultScenario) {
+    html += buildScenarioCard(defaultScenario, true);
+  }
+  html +=
+    '<div style="font-size:11px;color:var(--text-muted);padding:4px 0 2px 6px;font-weight:600;">📜 剧本模式</div>';
+  var scenarioScenarios = SCENARIOS.filter(function (s) {
+    return s.category === "scenario";
+  });
+  for (var i = 0; i < scenarioScenarios.length; i++) {
+    html += buildScenarioCard(scenarioScenarios[i], false);
+  }
+  listEl.innerHTML = html;
+}
+
+/** 构建单个剧本卡片 HTML */
+function buildScenarioCard(scenario, isDefault) {
+  var tagsHtml = "";
+  if (scenario.tags) {
+    for (var t = 0; t < scenario.tags.length; t++) {
+      tagsHtml +=
+        '<span class="scenario-card-tag">' + scenario.tags[t] + "</span>";
+    }
+  }
+  var modeLabel = isDefault ? "（默认）" : "";
+  return (
+    '<div class="scenario-card" onclick="selectScenario(\'' +
+    scenario.id +
+    "')\">" +
+    '<div class="scenario-card-icon">' +
+    scenario.icon +
+    "</div>" +
+    '<div class="scenario-card-body">' +
+    '<div class="scenario-card-title">' +
+    scenario.name +
+    ' <span style="font-size:11px;color:var(--text-muted)">' +
+    scenario.difficultyLabel +
+    " " +
+    scenario.difficulty +
+    modeLabel +
+    "</span></div>" +
+    '<div class="scenario-card-brief">' +
+    scenario.brief +
+    "</div>" +
+    '<div class="scenario-card-tags">' +
+    tagsHtml +
+    "</div>" +
+    "</div>" +
+    "</div>"
+  );
+}
+
+/** 选择剧本 */
+function selectScenario(scenarioId) {
+  showScenarioDetail(scenarioId);
+}
+
+/** 显示剧本详情弹窗 */
+function showScenarioDetail(scenarioId) {
+  var s = getScenarioById(scenarioId);
+  if (!s) return;
+
+  var statNames = {
+    physique: "体质",
+    intelligence: "智力",
+    agility: "敏捷",
+    mental: "心智",
+  };
+  var statsHtml = "";
+  for (var key in s.stats) {
+    if (s.stats.hasOwnProperty(key)) {
+      var val = s.stats[key];
+      var color =
+        val >= 35 ? "var(--success)" : val >= 20 ? "" : "var(--danger)";
+      statsHtml +=
+        '<div class="scenario-detail-stat">' +
+        '<span class="scenario-detail-stat-label">' +
+        (statNames[key] || key) +
+        "</span>" +
+        '<span class="scenario-detail-stat-val" style="color:' +
+        color +
+        '">' +
+        val +
+        "</span>" +
+        "</div>";
     }
   }
 
-  document.getElementById("btn-new-game").onclick = () => startNewGame();
-  document.getElementById("btn-skip-tutorial").onclick = () => {
-    if (typeof markTutorialDone === "function") markTutorialDone();
+  var resourceLines = "";
+  resourceLines +=
+    '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💰 现金</span><span class="scenario-detail-stat-val" style="color:' +
+    (s.resources.cash >= 5000 ? "var(--success)" : "") +
+    '">¥' +
+    s.resources.cash.toLocaleString() +
+    "</span></div>";
+  if (s.resources.bankBalance > 0) {
+    resourceLines +=
+      '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">🏦 存款</span><span class="scenario-detail-stat-val" style="color:var(--success)">¥' +
+      s.resources.bankBalance.toLocaleString() +
+      "</span></div>";
+  }
+  if ((s.resources.villageDebt || 0) + (s.resources.bankDebt || 0) > 0) {
+    resourceLines +=
+      '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💸 负债</span><span class="scenario-detail-stat-val" style="color:var(--danger)">¥' +
+      (
+        (s.resources.villageDebt || 0) + (s.resources.bankDebt || 0)
+      ).toLocaleString() +
+      "</span></div>";
+  }
+  resourceLines +=
+    '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">🎂 年龄</span><span class="scenario-detail-stat-val">' +
+    s.age +
+    "岁</span></div>";
+  resourceLines +=
+    '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">🎓 学历</span><span class="scenario-detail-stat-val">' +
+    (s.education >= 1 ? "本科" : "大专") +
+    "</span></div>";
+
+  var body =
+    '<div class="scenario-detail-icon">' +
+    s.icon +
+    "</div>" +
+    '<div class="scenario-detail-name">' +
+    s.name +
+    "</div>" +
+    '<div class="scenario-detail-diff">' +
+    s.difficulty +
+    " " +
+    s.difficultyLabel +
+    "</div>" +
+    '<div class="scenario-detail-desc">' +
+    s.description +
+    "</div>" +
+    '<div class="scenario-detail-stats">' +
+    statsHtml +
+    resourceLines +
+    "</div>";
+
+  if (s.startEvent) {
+    body +=
+      '<div class="scenario-detail-start">📖 ' +
+      s.startEvent.title +
+      "：" +
+      s.startEvent.text.slice(0, 60) +
+      "…</div>";
+  }
+
+  showModal({
+    title: "📜 确认选择",
+    body: body,
+    buttons: [
+      {
+        text: "← 返回",
+        cls: "",
+        callback: function () {},
+      },
+      {
+        text: "🚀 开始这个剧本",
+        cls: "btn-primary",
+        callback: function () {
+          startScenarioGame(scenarioId);
+        },
+      },
+    ],
+  });
+}
+
+/** 经典模式（原版开局） */
+function startClassicGame() {
+  startNewGame();
+}
+
+/** 剧本模式开局 */
+function startScenarioGame(scenarioId) {
+  var scenario = getScenarioById(scenarioId);
+  if (!scenario) {
     startNewGame();
+    return;
+  }
+  StateManager.newGame();
+  initializePrices();
+
+  // 应用剧本配置
+  var state = StateManager.getState();
+
+  // --- 基础属性 ---
+  state.player.physique = scenario.stats.physique || 22;
+  state.player.intelligence = scenario.stats.intelligence || 20;
+  state.player.agility = scenario.stats.agility || 24;
+  state.player.mental = scenario.stats.mental || 26;
+  state.player.age = scenario.age || 20;
+  state.player.fame = scenario.fame || 0;
+  state.player.education = scenario.education || 0;
+  state.player.eduProgress =
+    scenario.education >= 1
+      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
+      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+
+  // --- 资源 ---
+  state.resources.cash = scenario.resources.cash || 1500;
+  state.resources.bankBalance = scenario.resources.bankBalance || 0;
+  state.resources.villageDebt = scenario.resources.villageDebt || 0;
+  state.resources.bankDebt = scenario.resources.bankDebt || 0;
+  state.resources.debt =
+    (scenario.resources.villageDebt || 0) + (scenario.resources.bankDebt || 0);
+  state.resources.loanPrincipal = scenario.resources.villageDebt || 0;
+  state.resources.loanDay = 0;
+
+  // --- 技能 ---
+  if (scenario.skills) {
+    for (var skillKey in scenario.skills) {
+      if (scenario.skills.hasOwnProperty(skillKey) && state.skills[skillKey]) {
+        state.skills[skillKey].level = scenario.skills[skillKey].level || 0;
+        state.skills[skillKey].xp = scenario.skills[skillKey].xp || 0;
+      }
+    }
+  }
+
+  // --- 需求 ---
+  if (scenario.needs) {
+    state.needs.hunger = scenario.needs.hunger || 70;
+    state.needs.fatigue = scenario.needs.fatigue || 15;
+    state.needs.hygiene = scenario.needs.hygiene || 75;
+    state.needs.happiness = scenario.needs.happiness || 55;
+  }
+
+  // --- 健康 ---
+  state.status.health = scenario.health || 100;
+
+  // --- 住所 ---
+  state.housing.tier = scenario.housingTier || 0;
+  state.housing.rentedDay = state.player.day;
+  state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
+
+  // --- 起始地点 ---
+  if (scenario.startLocation) {
+    state.trade.currentLocation = scenario.startLocation;
+  }
+
+  // --- 剧本标记 ---
+  state.flags._scenarioId = scenarioId;
+  state.flags._scenarioName = scenario.name;
+  state.flags._scenarioTags = scenario.narrativeTags || [];
+  state.flags._isScenarioMode = true;
+
+  // --- 初始化企业命运系统 ---
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(state);
+  }
+
+  // --- 开场消息 ---
+  var msg = scenario.startingMessage;
+  if (!msg) {
+    msg = "📜 剧本模式「" + scenario.name + "」开始。祝你好运！";
+  }
+  StateManager.addMessage(msg, "event");
+  StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+  StateManager.addMessage(
+    '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。',
+    "info",
+  );
+
+  // --- 开场特殊事件 ---
+  if (scenario.startEvent) {
+    var evt = scenario.startEvent;
+    StateManager.addMessage("📖 " + evt.title + " " + evt.text, "event");
+    if (evt.effects) {
+      for (var effKey in evt.effects) {
+        if (
+          evt.effects.hasOwnProperty(effKey) &&
+          typeof state.player[effKey] === "number"
+        ) {
+          state.player[effKey] = Math.max(
+            0,
+            Math.min(100, state.player[effKey] + evt.effects[effKey]),
+          );
+        }
+      }
+    }
+  }
+
+  // --- 进入游戏 ---
+  document.getElementById("mode-select-screen").style.display = "none";
+  document.getElementById("scenario-select-screen").style.display = "none";
+  document.getElementById("welcome-screen").style.display = "none";
+  document.getElementById("app").style.display = "";
+  gameStarted = true;
+  renderAll();
+  if (typeof initCashCarousel === "function") initCashCarousel();
+  if (typeof startTutorial === "function") {
+    setTimeout(function () {
+      startTutorial();
+    }, 300);
+  }
+}
+
+// ====== 沙盒模式 ======
+
+/** 沙盒模式当前配置数据 */
+var _sandboxConfig = null;
+
+/** 显示沙盒配置界面 */
+function showSandboxConfig() {
+  var modeScreen = document.getElementById("mode-select-screen");
+  if (modeScreen) modeScreen.style.display = "none";
+  var scenarioScreen = document.getElementById("scenario-select-screen");
+  if (scenarioScreen) scenarioScreen.style.display = "none";
+  var sbScreen = document.getElementById("sandbox-screen");
+  if (!sbScreen) return;
+  sbScreen.style.display = "flex";
+  sbScreen.style.flexDirection = "column";
+  sbScreen.style.alignItems = "center";
+  sbScreen.style.justifyContent = "center";
+  sbScreen.style.minHeight = "100vh";
+
+  // 初始化默认配置
+  _sandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
+
+  renderSandboxConfig();
+}
+
+/** 渲染沙盒配置表单 */
+function renderSandboxConfig() {
+  var sbScreen = document.getElementById("sandbox-config");
+  if (!sbScreen || !_sandboxConfig) return;
+  var cfg = _sandboxConfig;
+
+  // 计算剩余"天赋点"
+  var totalStatPoints =
+    cfg.physique + cfg.intelligence + cfg.agility + cfg.mental;
+  var remaining = SANDBOX_MAX_TOTAL_STAT_POINTS - totalStatPoints;
+  var statPointsUsed =
+    (cfg.physique - 10 > 0 ? cfg.physique - 10 : 0) +
+    (cfg.intelligence - 10 > 0 ? cfg.intelligence - 10 : 0) +
+    (cfg.agility - 10 > 0 ? cfg.agility - 10 : 0) +
+    (cfg.mental - 10 > 0 ? cfg.mental - 10 : 0);
+  var talentRemaining = SANDBOX_INITIAL_TALENT_POINTS - statPointsUsed;
+
+  // 称号
+  var title = "⚪ 初来乍到";
+  if (totalStatPoints >= 100) title = "🟣 天选之人";
+  else if (totalStatPoints >= 80) title = "🟠 城市精英";
+  else if (totalStatPoints >= 60) title = "🟢 潜力新星";
+
+  var html =
+    '<div class="sandbox-section">' +
+    '<div class="sandbox-section-title">📋 基本信息</div>' +
+    '<div class="sandbox-row">' +
+    "<label>姓名</label>" +
+    '<input type="text" id="sandbox-name" value="' +
+    cfg.name +
+    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxConfig(\'name\', this.value)">' +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>年龄</label>" +
+    '<input type="range" min="16" max="50" value="' +
+    cfg.age +
+    "\" oninput=\"updateSandboxConfig('age', parseInt(this.value));document.getElementById('sandbox-age-val').textContent=this.value\">" +
+    '<span class="sandbox-val" id="sandbox-age-val">' +
+    cfg.age +
+    '</span><span style="font-size:11px;color:var(--text-muted)">岁</span>' +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>性别</label>" +
+    '<select class="sandbox-select" onchange="updateSandboxConfig(\'gender\', this.value)">' +
+    '<option value="male"' +
+    (cfg.gender === "male" ? " selected" : "") +
+    ">男</option>" +
+    '<option value="female"' +
+    (cfg.gender === "female" ? " selected" : "") +
+    ">女</option>" +
+    "</select>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>学历</label>" +
+    '<select class="sandbox-select" onchange="updateSandboxConfig(\'education\', parseInt(this.value))">' +
+    '<option value="0"' +
+    (cfg.education === 0 ? " selected" : "") +
+    ">大专</option>" +
+    '<option value="1"' +
+    (cfg.education === 1 ? " selected" : "") +
+    ">本科</option>" +
+    "</select>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>起始地点</label>" +
+    '<select class="sandbox-select" onchange="updateSandboxConfig(\'startLocation\', this.value)">' +
+    '<option value="slum"' +
+    (cfg.startLocation === "slum" ? " selected" : "") +
+    ">城中村</option>" +
+    '<option value="commercialDist"' +
+    (cfg.startLocation === "commercialDist" ? " selected" : "") +
+    ">商业区</option>" +
+    '<option value="techPark"' +
+    (cfg.startLocation === "techPark" ? " selected" : "") +
+    ">科技园</option>" +
+    '<option value="school"' +
+    (cfg.startLocation === "school" ? " selected" : "") +
+    ">大学城</option>" +
+    '<option value="factoryZone"' +
+    (cfg.startLocation === "factoryZone" ? " selected" : "") +
+    ">工业区</option>" +
+    "</select>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>住所</label>" +
+    '<select class="sandbox-select" onchange="updateSandboxConfig(\'housingTier\', parseInt(this.value))">' +
+    '<option value="0"' +
+    (cfg.housingTier === 0 ? " selected" : "") +
+    ">露宿街头</option>" +
+    '<option value="1"' +
+    (cfg.housingTier === 1 ? " selected" : "") +
+    ">合租床位</option>" +
+    '<option value="2"' +
+    (cfg.housingTier === 2 ? " selected" : "") +
+    ">单间</option>" +
+    "</select>" +
+    "</div>" +
+    "</div>" +
+    // 属性
+    '<div class="sandbox-section">' +
+    '<div class="sandbox-section-title">💪 基础属性 <span class="sandbox-points-left" id="sandbox-talent-pts">天赋点剩余：' +
+    talentRemaining +
+    "</span></div>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">四项总和上限' +
+    SANDBOX_MAX_TOTAL_STAT_POINTS +
+    "，当前" +
+    totalStatPoints +
+    "，余" +
+    remaining +
+    "。每项最低10，超出部分消耗天赋点。</div>" +
+    createSandboxStatSlider("physique", "💪 体质", cfg.physique, remaining) +
+    createSandboxStatSlider(
+      "intelligence",
+      "🧠 智力",
+      cfg.intelligence,
+      remaining,
+    ) +
+    createSandboxStatSlider("agility", "🏃 敏捷", cfg.agility, remaining) +
+    createSandboxStatSlider("mental", "🧘 心智", cfg.mental, remaining) +
+    '<div style="font-size:13px;font-weight:600;margin-top:4px;">称号：' +
+    title +
+    "</div>" +
+    "</div>" +
+    // 资金
+    '<div class="sandbox-section">' +
+    '<div class="sandbox-section-title">💰 资金</div>' +
+    '<div class="sandbox-row">' +
+    "<label>现金</label>" +
+    '<input type="range" min="0" max="100000" step="500" value="' +
+    cfg.cash +
+    "\" oninput=\"updateSandboxConfig('cash', parseInt(this.value));document.getElementById('sandbox-cash-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
+    '<span class="sandbox-val" id="sandbox-cash-val">¥' +
+    cfg.cash.toLocaleString() +
+    "</span>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>存款</label>" +
+    '<input type="range" min="0" max="200000" step="1000" value="' +
+    cfg.bankBalance +
+    "\" oninput=\"updateSandboxConfig('bankBalance', parseInt(this.value));document.getElementById('sandbox-bank-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
+    '<span class="sandbox-val" id="sandbox-bank-val">¥' +
+    cfg.bankBalance.toLocaleString() +
+    "</span>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>欠村长</label>" +
+    '<input type="range" min="0" max="50000" step="500" value="' +
+    cfg.villageDebt +
+    "\" oninput=\"updateSandboxConfig('villageDebt', parseInt(this.value));document.getElementById('sandbox-debt-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
+    '<span class="sandbox-val" id="sandbox-debt-val">¥' +
+    cfg.villageDebt.toLocaleString() +
+    "</span>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>欠银行</label>" +
+    '<input type="range" min="0" max="50000" step="1000" value="' +
+    cfg.bankDebt +
+    "\" oninput=\"updateSandboxConfig('bankDebt', parseInt(this.value));document.getElementById('sandbox-bankdebt-val').textContent='¥'+parseInt(this.value).toLocaleString()\">" +
+    '<span class="sandbox-val" id="sandbox-bankdebt-val">¥' +
+    cfg.bankDebt.toLocaleString() +
+    "</span>" +
+    "</div>" +
+    "</div>" +
+    // 健康/名气
+    '<div class="sandbox-section">' +
+    '<div class="sandbox-section-title">📊 其他状态</div>' +
+    '<div class="sandbox-row">' +
+    "<label>健康</label>" +
+    '<input type="range" min="30" max="100" value="' +
+    cfg.health +
+    "\" oninput=\"updateSandboxConfig('health', parseInt(this.value));document.getElementById('sandbox-health-val').textContent=this.value\">" +
+    '<span class="sandbox-val" id="sandbox-health-val">' +
+    cfg.health +
+    "</span>" +
+    "</div>" +
+    '<div class="sandbox-row">' +
+    "<label>名气</label>" +
+    '<input type="range" min="0" max="50" value="' +
+    cfg.fame +
+    "\" oninput=\"updateSandboxConfig('fame', parseInt(this.value));document.getElementById('sandbox-fame-val').textContent=this.value\">" +
+    '<span class="sandbox-val" id="sandbox-fame-val">' +
+    cfg.fame +
+    "</span>" +
+    "</div>" +
+    "</div>";
+
+  // 技能
+  var skillNames = {
+    cooking: "🍳 烹饪",
+    repair: "🔧 维修",
+    coding: "💻 编程",
+    english: "📖 英语",
+    driving: "🚗 驾驶",
+    sales: "📋 销售",
+    management: "👥 管理",
+    accounting: "📊 会计",
+    electrician: "⚡ 电工",
+    welding: "🔥 焊接",
   };
+  html += '<div class="sandbox-section">';
+  html +=
+    '<div class="sandbox-section-title">📚 技能 <span style="font-size:11px;color:var(--text-muted);font-weight:400;">（等级0-20，消耗有限不宜过高）</span></div>';
+  for (var sk in skillNames) {
+    if (skillNames.hasOwnProperty(sk)) {
+      var skVal = cfg[sk] || 0;
+      html +=
+        '<div class="sandbox-row">' +
+        "<label>" +
+        skillNames[sk] +
+        "</label>" +
+        '<input type="range" min="0" max="20" value="' +
+        skVal +
+        '" oninput="updateSandboxConfig(\'' +
+        sk +
+        "', parseInt(this.value));document.getElementById('sandbox-" +
+        sk +
+        "-val').textContent=this.value\">" +
+        '<span class="sandbox-val" id="sandbox-' +
+        sk +
+        '-val">' +
+        skVal +
+        "</span>" +
+        "</div>";
+    }
+  }
+  html += "</div>";
+
+  // 快速预设
+  html +=
+    '<div class="sandbox-section">' +
+    '<div class="sandbox-section-title">⚡ 快速预设</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'balanced\')">⚖️ 均衡型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'strong\')">💪 体力型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'smart\')">🧠 智力型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'rich\')">💰 富裕型</button>' +
+    "</div>" +
+    "</div>" +
+    // 摘要信息
+    '<div class="sandbox-summary" id="sandbox-summary">' +
+    "📋 " +
+    cfg.name +
+    "，" +
+    cfg.age +
+    "岁 · 现金¥" +
+    cfg.cash.toLocaleString() +
+    " · 属性" +
+    totalStatPoints +
+    "点 · 称号：" +
+    title +
+    "</div>";
+
+  sbScreen.innerHTML = html;
+}
+
+/** 创建属性滑条 */
+function createSandboxStatSlider(key, label, value, remaining) {
+  var min = 10;
+  var max = Math.min(50, min + 10 + Math.max(0, remaining));
+  var color =
+    value >= 35 ? "var(--success)" : value >= 20 ? "" : "var(--danger)";
+  return (
+    '<div class="sandbox-row">' +
+    "<label>" +
+    label +
+    "</label>" +
+    '<input type="range" min="' +
+    min +
+    '" max="' +
+    max +
+    '" value="' +
+    value +
+    '" oninput="updateSandboxConfig(\'' +
+    key +
+    "', parseInt(this.value))\">" +
+    '<span class="sandbox-val" style="color:' +
+    color +
+    '" id="sandbox-stat-' +
+    key +
+    '-val">' +
+    value +
+    "</span>" +
+    "</div>"
+  );
+}
+
+/** 更新沙盒配置字段 */
+function updateSandboxConfig(key, value) {
+  if (!_sandboxConfig) return;
+  _sandboxConfig[key] = value;
+  renderSandboxConfig();
+}
+
+/** 应用沙盒预设 */
+function applySandboxPreset(preset) {
+  if (!_sandboxConfig)
+    _sandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
+  switch (preset) {
+    case "balanced":
+      _sandboxConfig.physique = 22;
+      _sandboxConfig.intelligence = 22;
+      _sandboxConfig.agility = 22;
+      _sandboxConfig.mental = 22;
+      _sandboxConfig.cash = 5000;
+      _sandboxConfig.villageDebt = 3000;
+      _sandboxConfig.bankDebt = 0;
+      break;
+    case "strong":
+      _sandboxConfig.physique = 40;
+      _sandboxConfig.intelligence = 15;
+      _sandboxConfig.agility = 25;
+      _sandboxConfig.mental = 18;
+      _sandboxConfig.cash = 3000;
+      _sandboxConfig.villageDebt = 5000;
+      _sandboxConfig.bankDebt = 0;
+      break;
+    case "smart":
+      _sandboxConfig.physique = 12;
+      _sandboxConfig.intelligence = 45;
+      _sandboxConfig.agility = 15;
+      _sandboxConfig.mental = 28;
+      _sandboxConfig.cash = 4000;
+      _sandboxConfig.villageDebt = 8000;
+      _sandboxConfig.bankDebt = 5000;
+      _sandboxConfig.education = 1;
+      break;
+    case "rich":
+      _sandboxConfig.physique = 18;
+      _sandboxConfig.intelligence = 22;
+      _sandboxConfig.agility = 16;
+      _sandboxConfig.mental = 20;
+      _sandboxConfig.cash = 50000;
+      _sandboxConfig.bankBalance = 80000;
+      _sandboxConfig.villageDebt = 0;
+      _sandboxConfig.bankDebt = 0;
+      _sandboxConfig.housingTier = 2;
+      break;
+  }
+  renderSandboxConfig();
+}
+
+/** 启动沙盒模式 */
+function startSandboxGame() {
+  if (!_sandboxConfig) {
+    startNewGame();
+    return;
+  }
+  var cfg = _sandboxConfig;
+
+  StateManager.newGame();
+  initializePrices();
+
+  var state = StateManager.getState();
+
+  // --- 身份 ---
+  state.player.name = cfg.name || "无名";
+  state.player.gender = cfg.gender || "male";
+  state.player.age = cfg.age || 20;
+  state.player.fame = cfg.fame || 0;
+
+  // --- 属性 ---
+  state.player.physique = Math.max(10, Math.min(100, cfg.physique || 22));
+  state.player.intelligence = Math.max(
+    10,
+    Math.min(100, cfg.intelligence || 22),
+  );
+  state.player.agility = Math.max(10, Math.min(100, cfg.agility || 22));
+  state.player.mental = Math.max(10, Math.min(100, cfg.mental || 22));
+
+  // --- 资源 ---
+  state.resources.cash = cfg.cash || 5000;
+  state.resources.bankBalance = cfg.bankBalance || 0;
+  state.resources.villageDebt = cfg.villageDebt || 0;
+  state.resources.bankDebt = cfg.bankDebt || 0;
+  state.resources.debt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+  state.resources.loanPrincipal = cfg.villageDebt || 0;
+  state.resources.loanDay = 0;
+
+  // --- 学历 ---
+  state.player.education = cfg.education || 0;
+  state.education = cfg.education || 0;
+  state.player.eduProgress =
+    cfg.education >= 1
+      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
+      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+
+  // --- 技能 ---
+  var skillKeys = [
+    "cooking",
+    "repair",
+    "coding",
+    "english",
+    "driving",
+    "sales",
+    "management",
+    "accounting",
+    "electrician",
+    "welding",
+  ];
+  for (var i = 0; i < skillKeys.length; i++) {
+    var sk = skillKeys[i];
+    if (state.skills[sk]) {
+      var lvl = Math.max(0, Math.min(100, cfg[sk] || 0));
+      state.skills[sk].level = lvl;
+      state.skills[sk].xp = 0;
+    }
+  }
+
+  // --- 健康 ---
+  state.status.health = cfg.health || 100;
+
+  // --- 住所 ---
+  state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
+  state.housing.rentedDay = state.player.day;
+  state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
+
+  // --- 起始地点 ---
+  if (cfg.startLocation) {
+    state.trade.currentLocation = cfg.startLocation;
+  }
+
+  // --- 需求 ---
+  state.needs.hunger = 70;
+  state.needs.fatigue = 15;
+  state.needs.hygiene = 75;
+  state.needs.happiness = 55;
+
+  // --- 沙盒标记 ---
+  state.flags._isSandboxMode = true;
+
+  // --- 企业命运 ---
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(state);
+  }
+
+  StateManager.addMessage(
+    "⚙️ 沙盒模式开始！你自定义了开局条件。" +
+      (cfg.villageDebt > 0
+        ? "欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息0.35%。"
+        : ""),
+    "event",
+  );
+  StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+
+  document.getElementById("sandbox-screen").style.display = "none";
+  document.getElementById("mode-select-screen").style.display = "none";
+  document.getElementById("welcome-screen").style.display = "none";
+  document.getElementById("app").style.display = "";
+  gameStarted = true;
+  renderAll();
+  if (typeof initCashCarousel === "function") initCashCarousel();
+  if (typeof startTutorial === "function") {
+    setTimeout(function () {
+      startTutorial();
+    }, 300);
+  }
 }
 
 function startNewGame() {

@@ -349,7 +349,7 @@ function showSaveMenu() {
       bodyHtml += `
         <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--warning);">${s.label}</strong>
+            <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
             <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
@@ -414,10 +414,11 @@ function showLoadMenu() {
     } else {
       hasAnySave = true;
       const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+      const modeTag = s.mode ? s.mode + " " : "";
       bodyHtml += `
         <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color 0.15s;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${s.label}</strong>
+            <strong>${modeTag}${s.label}</strong>
             <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">

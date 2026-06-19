@@ -319,6 +319,13 @@ const DAILY_PIPELINE = [
     name: "news",
     fn: function (state) {
       rollDailyNews(state);
+      // L1-L4 新闻传导链检查
+      if (typeof checkNewsConduit === "function") {
+        checkNewsConduit(state);
+      }
+      if (typeof applyPendingConduitNews === "function") {
+        applyPendingConduitNews(state);
+      }
     },
   },
 

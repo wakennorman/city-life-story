@@ -17,7 +17,119 @@
     </style>
   </head>
   <body>
-    <!-- ====== 欢迎界面 ====== -->
+    <!-- ====== 模式选择界面 ====== -->
+    <div id="mode-select-screen" class="welcome-screen" style="display: none">
+      <div style="font-size: 48px; margin-bottom: 8px">🎮</div>
+      <div class="welcome-title">选择游戏模式</div>
+      <div class="welcome-subtitle" style="margin-bottom: 20px">
+        不同的开始，不同的故事
+      </div>
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="classic" onclick="startClassicGame()">
+          <div class="mode-card-icon">🎯</div>
+          <div class="mode-card-title">经典模式</div>
+          <div class="mode-card-brief">原版开局，城中村起步</div>
+          <div class="mode-card-diff">难度：★★☆</div>
+        </div>
+        <div
+          class="mode-card"
+          data-mode="scenario"
+          onclick="showScenarioSelect()"
+        >
+          <div class="mode-card-icon">📜</div>
+          <div class="mode-card-title">剧本模式</div>
+          <div class="mode-card-brief">选择预设角色，体验不同人生</div>
+          <div class="mode-card-diff">6种剧本</div>
+        </div>
+        <div
+          class="mode-card"
+          data-mode="sandbox"
+          onclick="showSandboxConfig()"
+        >
+          <div class="mode-card-icon">⚙️</div>
+          <div class="mode-card-title">沙盒模式</div>
+          <div class="mode-card-brief">自由设定属性、资金、年龄</div>
+          <div class="mode-card-diff">完全自定义</div>
+        </div>
+      </div>
+      <button
+        class="btn btn-sm"
+        onclick="showWelcome()"
+        style="margin-top: 16px"
+      >
+        ← 返回
+      </button>
+    </div>
+
+    <!-- ====== 剧本选择界面 ====== -->
+    <div
+      id="scenario-select-screen"
+      class="welcome-screen"
+      style="display: none"
+    >
+      <div style="font-size: 48px; margin-bottom: 8px">📜</div>
+      <div class="welcome-title">剧本模式</div>
+      <div class="welcome-subtitle" style="margin-bottom: 16px">
+        选择一个角色，进入属于他/她的故事
+      </div>
+      <div
+        id="scenario-list"
+        class="scenario-grid"
+        style="max-height: 60vh; overflow-y: auto; padding: 0 8px"
+      >
+        <!-- 由 JS 动态生成 -->
+      </div>
+      <button
+        class="btn btn-sm"
+        onclick="showModeSelect()"
+        style="margin-top: 12px"
+      >
+        ← 返回模式选择
+      </button>
+    </div>
+
+    <!-- ====== 沙盒配置界面 ====== -->
+    <div id="sandbox-screen" class="welcome-screen" style="display: none">
+      <div style="font-size: 48px; margin-bottom: 4px">⚙️</div>
+      <div class="welcome-title">沙盒模式 — 自定义开局</div>
+      <div
+        class="welcome-subtitle"
+        style="margin-bottom: 12px; font-size: 13px"
+      >
+        自由分配你的起始条件。属性称号由总和决定。
+      </div>
+      <div
+        id="sandbox-config"
+        style="
+          max-height: 65vh;
+          overflow-y: auto;
+          text-align: left;
+          max-width: 500px;
+          margin: 0 auto;
+          padding: 0 12px;
+        "
+      >
+        <!-- 由 JS 动态生成 -->
+      </div>
+      <div style="margin-top: 10px">
+        <button
+          id="btn-start-sandbox"
+          class="btn btn-primary btn-lg"
+          onclick="startSandboxGame()"
+        >
+          🚀 开始游戏
+        </button>
+        <button
+          class="btn btn-sm"
+          onclick="showModeSelect()"
+          style="margin-left: 8px"
+        >
+          ← 返回
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== 原有的欢迎界面（改为模式选择入口） ====== -->
     <div id="welcome-screen" class="welcome-screen">
       <div style="font-size: 64px; margin-bottom: 8px">🏙️</div>
       <div class="welcome-title">城市浮生记</div>
@@ -78,6 +190,10 @@
           <div class="header-stat">
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
+          </div>
+          <div class="header-stat" id="header-mode-stat" style="display: none">
+            <span class="label">🎮</span>
+            <span class="value" id="header-mode"></span>
           </div>
           <div
             class="header-stat"
@@ -393,8 +509,10 @@
     <script src="js/data/goods.js"></script>
     <script src="js/data/items.js"></script>
     <script src="js/data/news.js"></script>
+    <script src="js/core/news_system.js"></script>
     <script src="js/data/skills.js"></script>
     <script src="js/data/npcs.js"></script>
+    <script src="js/data/scenarios.js"></script>
     <script src="js/data/corp.js"></script>
     <script src="js/data/amenities.js"></script>
     <script src="js/data/illnesses.js"></script>

@@ -73,6 +73,24 @@ function renderHeader(state) {
   document.getElementById("header-age").textContent = p.age;
   document.getElementById("header-phase").textContent = phaseLabel;
 
+  // 模式指示器
+  var modeEl = document.getElementById("header-mode");
+  var modeStat = document.getElementById("header-mode-stat");
+  if (modeEl && modeStat) {
+    var modeLabel = "";
+    if (state.flags && state.flags._isScenarioMode) {
+      modeLabel = "📜 " + (state.flags._scenarioName || "剧本模式");
+    } else if (state.flags && state.flags._isSandboxMode) {
+      modeLabel = "⚙️ 沙盒模式";
+    }
+    if (modeLabel) {
+      modeEl.textContent = modeLabel;
+      modeStat.style.display = "";
+    } else {
+      modeStat.style.display = "none";
+    }
+  }
+
   // ===== 资金（cash-label区域）：展示现金+储蓄，单资金静态/多资金温和轮播 =====
   renderFundsHeader(state);
 

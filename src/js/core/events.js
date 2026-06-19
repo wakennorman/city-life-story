@@ -12254,6 +12254,421 @@ const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- ⑥ 叙事模板事件（6个） ----
+  {
+    id: "last_baton",
+    phase: "street",
+    icon: "🎵",
+    title: "最后一棒",
+    story:
+      "这条街上掀起了一股网红脆皮五花肉的热潮——第一家店门口排了30米长队。第二家在对面开张。现在这条街上有8家同款。第一家店的老板已经开始贴转让广告了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 30 &&
+        !st.flags._lastBatonSeen
+      );
+    },
+    choices: [
+      {
+        text: "🥠 趁现在还赚钱开一家",
+        hint: "¥5000投入，可能血本无归",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          if (st.resources.cash >= 5000) {
+            st.resources.cash -= 5000;
+            var luck = Math.random();
+            if (luck < 0.25) {
+              st.resources.cash += 12000;
+              StateManager.addMessage(
+                "生意火爆赚了¥12000！但满街模仿者让你不安。",
+                "event",
+              );
+            } else if (luck < 0.6) {
+              st.resources.cash += 2000;
+              StateManager.addMessage("不赚不亏。风口来得快去得也快。", "info");
+            } else {
+              StateManager.addMessage(
+                "开业太晚，整条街在打折甩卖。打水漂了。",
+                "warning",
+              );
+            }
+          } else {
+            StateManager.addMessage("连启动资金都不够。", "info");
+          }
+        },
+      },
+      {
+        text: "💲 给第一家店供货",
+        hint: "赚快钱，¥2000进货",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          if (st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            st.resources.cash += 3500;
+            StateManager.addMessage("供了三天货，赚了¥1500。", "success");
+          } else {
+            StateManager.addMessage("想供货连本钱都没有。", "info");
+          }
+        },
+      },
+      {
+        text: "🔍 什么都不做",
+        hint: "等待泡沫破裂",
+        apply: function (st) {
+          st.flags._lastBatonSeen = true;
+          st.flags._lastBatonWise = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          StateManager.addMessage(
+            "你看着这条街从风口变成闹剧。三个月后8家关了6家。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "sunk_cost_trap",
+    phase: "street",
+    icon: "🎰",
+    title: "沉没成本",
+    story:
+      "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 60 &&
+        !st.flags._sunkCostSeen &&
+        st.resources.cash >= 50000
+      );
+    },
+    choices: [
+      {
+        text: "💰 追加投资",
+        hint: "投¥10万，50%可能翻盘",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          if (st.resources.cash >= 100000) {
+            st.resources.cash -= 100000;
+            var luck = Math.random();
+            if (luck < 0.45) {
+              st.resources.cash += 300000;
+              StateManager.addMessage(
+                "赌对了！项目被收购，拿回¥30万。",
+                "event",
+              );
+            } else {
+              StateManager.addMessage(
+                "又赔了。合伙人联系不上了。总共亏了¥15万。",
+                "danger",
+              );
+            }
+          } else {
+            StateManager.addMessage("想追加但钱不够。也许是好事。", "info");
+          }
+        },
+      },
+      {
+        text: "✋ 止损",
+        hint: "认了",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          st.flags._sunkCostStopped = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "你说不。合伙人在电话里骂了你。但挂了电话反而轻松了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 找其他投资人接盘",
+        hint: "名声≥30才能脱身",
+        apply: function (st) {
+          st.flags._sunkCostSeen = true;
+          if ((st.player.fame || 0) >= 30) {
+            st.flags._sunkCostBailed = true;
+            st.resources.cash -= 5000;
+            StateManager.addMessage(
+              "通过关系找到接盘侠。亏了¥5万中介费——比全亏好。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage("没人愿意接——你名声不够。", "warning");
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: "siege_reversal",
+    phase: "corporate",
+    icon: "🏰",
+    title: "围城反转",
+    story:
+      "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
+    conditions: function (st) {
+      return (
+        st.player.phase === "corporate" &&
+        st.player.day >= 80 &&
+        !st.flags._siegeReversalSeen
+      );
+    },
+    choices: [
+      {
+        text: "🔍 低调观察",
+        hint: "智力+3，收集信息",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeObserved = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          StateManager.addMessage(
+            "你搞清了格局——核心业务线稳，边缘部门人人自危。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📢 找领导表忠心",
+        hint: "降低被裁概率，但开始卷",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeKpiMode = true;
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          StateManager.addMessage(
+            "主动接了大项目。领导满意——但你每天加班到11点。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👨‍💻 更新简历面试",
+        hint: "骑驴找马",
+        apply: function (st) {
+          st.flags._siegeReversalSeen = true;
+          st.flags._siegeJobHunting = true;
+          StateManager.addMessage(
+            "偷偷更新了简历。外面机会不少但待遇都比这里差。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "short_self",
+    phase: "corporate",
+    icon: "📉",
+    title: "做空自己公司",
+    story:
+      "作为辰光网络的P8员工，你看到了Q3内部数据——新增用户连续下滑，最大客户没续签，CFO悄悄减持。你知道股价三个月内必跌。一个念头冒出来：做空自己公司。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "corporate" &&
+        st.player.day >= 100 &&
+        !st.flags._shortSelfSeen
+      );
+    },
+    choices: [
+      {
+        text: "💰 做空公司股票",
+        hint: "¥50000保证金，合法但职业风险",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          if (st.resources.cash >= 50000) {
+            st.resources.cash -= 50000;
+            st.flags._shortedOwnCompany = true;
+            st.flags._shortDay = st.player.day;
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "short_self_settle", 30, "corporate");
+            }
+            StateManager.addMessage(
+              "建立了做空仓位。上班看同事认真工作的样子——你有点分裂。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage(
+              "做空需要¥50000保证金。你连做空自己都不够格。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "⚠️ 报告合规部",
+        hint: "保护自己",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          st.flags._shortReported = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "你匿名报告了CFO的减持。没说自己也有做空的念头。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "📝 记录数据但不交易",
+        hint: "留证据",
+        apply: function (st) {
+          st.flags._shortSelfSeen = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 2,
+          );
+          StateManager.addMessage(
+            "你默默截了图。不是为了交易——是万一被裁了有谈判筹码。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "gray_to_legit",
+    phase: "street",
+    icon: "📄",
+    title: "灰色地带合法化",
+    story:
+      "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 90 &&
+        !st.flags._grayToLegitSeen
+      );
+    },
+    choices: [
+      {
+        text: "💼 申请正规牌照",
+        hint: "¥20000办牌照，合法经营",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          if (st.resources.cash >= 20000) {
+            st.resources.cash -= 20000;
+            st.flags._grayLegitBiz = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+            StateManager.addMessage(
+              "拿到牌照。以前偷偷摸摸的事现在光明正大了。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage("连办牌照的钱都不够。", "info");
+          }
+        },
+      },
+      {
+        text: "🏠 低调退出",
+        hint: "功成身退",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          st.flags._grayRetired = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "清空了灰色历史。以前的路不正——但你出来了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "👤 帮同行转正",
+        hint: "名声+5",
+        apply: function (st) {
+          st.flags._grayToLegitSeen = true;
+          st.flags._grayHelpedOthers = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+          StateManager.addMessage(
+            "帮三个朋友办了正规手续。第一次干干净净吃饭。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "class_rollback",
+    phase: "street",
+    icon: "💨",
+    title: "从天而降",
+    story:
+      "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 50 &&
+        !st.flags._classRollbackSeen &&
+        (st.flags._demolitionGambled || st.resources.cash >= 50000)
+      );
+    },
+    choices: [
+      {
+        text: "🏦 买房变资产",
+        hint: "¥150万买房，月供¥5000",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackBoughtHouse = true;
+          st.resources.cash -= 1500000;
+          if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
+          StateManager.addMessage(
+            "买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "💰 存银行吃利息",
+        hint: "¥200万大额存单3.5%",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackSaved = true;
+          st.resources.cash -= 2000000;
+          st.flags._rollbackDay = st.player.day;
+          StateManager.addMessage(
+            "存了¥200万。月利息¥5800——比打工强，但越来越不值钱。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🎓 投资自己开公司",
+        hint: "花¥50万学技能+注册",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackStartedBiz = true;
+          st.resources.cash -= 500000;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 10,
+          );
+          StateManager.addMessage(
+            "报了MBA，注册了公司。有人笑你是暴发户——你没理。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🍺 继续高消费",
+        hint: "爽一时，钱会花完",
+        apply: function (st) {
+          st.flags._classRollbackSeen = true;
+          st.flags._rollbackBurned = true;
+          st.resources.cash -= 50000;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 25);
+          StateManager.addMessage(
+            "租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。",
+            "event",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 /* =========================================================
@@ -12685,13 +13100,17 @@ function rollDailyNews(state) {
 /** 每日结束时的清理 */
 function dailyCleanup(state) {
   cleanupExpiredNews(state);
-  // 清理链式事件队列中已过期的条目（超过触发日30天的视为过期未触发，清理防堆积）
+  // 清理链式事件队列中已过期的条目
   if (state.flags._chainEventQueue && state.flags._chainEventQueue.length > 0) {
     state.flags._chainEventQueue = state.flags._chainEventQueue.filter(
       function (entry) {
         return state.player.day < entry.triggerDay + 30;
       },
     );
+  }
+  // 清理 L1-L4 新闻传导队列
+  if (typeof cleanupConduitQueue === "function") {
+    cleanupConduitQueue(state);
   }
 }
 

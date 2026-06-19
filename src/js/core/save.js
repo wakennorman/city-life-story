@@ -164,6 +164,11 @@ function saveGame(slot) {
       rank: state.player.phase === "corporate" ? state.corporate.rank : null,
       savedAt: Date.now(),
       narrative: generateSaveNarrative(state),
+      mode: state.flags._isScenarioMode
+        ? "📜" + (state.flags._scenarioName || "剧本")
+        : state.flags._isSandboxMode
+          ? "⚙️沙盒"
+          : "🎯经典",
     };
     setSaveIndex(index);
 
@@ -268,6 +273,12 @@ function getSlotInfo(slot) {
       if (!raw) return null;
       try {
         const data = JSON.parse(raw);
+tvar autoMode = "";
+	if (data.flags && data.flags._isScenarioMode) {
+	  autoMode = "📜" + (data.flags._scenarioName || "剧本");
+	} else if (data.flags && data.flags._isSandboxMode) {
+	  autoMode = "⚙️沙盒";
+	}
         return {
           day: data.player?.day || 1,
           phase: data.player?.phase || "street",
@@ -279,6 +290,7 @@ function getSlotInfo(slot) {
           rank:
             data.player?.phase === "corporate" ? data.corporate?.rank : null,
           savedAt: data.lastPlayedAt || data.createdAt,
+          mode: autoMode,
         };
       } catch (e) {
         return null;
@@ -310,6 +322,7 @@ function getSlotInfo(slot) {
     rank: meta.rank,
     date: date.toLocaleString("zh-CN"),
     savedAt: meta.savedAt,
+    mode: meta.mode,
   };
 }
 
