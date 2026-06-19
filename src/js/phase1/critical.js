@@ -610,3 +610,76 @@ function _contractIllness(state, illnessId) {
       (state.flags._habits.stomach_inflammationCount || 0) + 1;
   }
 }
+
+// ================================================================
+//  百科自更新：参数从 CRITICAL_THRESHOLDS 自动派生
+//  调阈值时无需手动改 wiki.js
+// ================================================================
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.critical_needs = {
+    id: "critical_needs",
+    name: "状态危机系统",
+    icon: "⚠️",
+    brief: "饥饱/疲劳/卫生/心情低于阈值时强制选择，延期会昏倒/送医",
+    version: "1.1.0",
+    reference: "《大多数》生存张力",
+    related: ["mechanics:illness_system", "mechanics:ap", "amenities:*"],
+    sections: [
+      {
+        kind: "desc",
+        text: "四大状态（饥饱/疲劳/卫生/心情）跌破阈值时，游戏强制玩家做出选择，而非任你慢慢死。",
+      },
+      {
+        kind: "subhead",
+        text: "📉 触发阈值（直接读 CRITICAL_THRESHOLDS）",
+      },
+      {
+        kind: "list",
+        items: function () {
+          var out = [];
+          for (var k in CRITICAL_THRESHOLDS) {
+            if (!CRITICAL_THRESHOLDS.hasOwnProperty(k)) continue;
+            var c = CRITICAL_THRESHOLDS[k];
+            out.push(
+              c.icon +
+                " " +
+                c.label +
+                " " +
+                (c.type === "low" ? "≤ " : "≥ ") +
+                c.value,
+            );
+          }
+          return out;
+        },
+      },
+      { kind: "subhead", text: "🪟 弹窗选项" },
+      {
+        kind: "html",
+        get: function () {
+          return (
+            "<p>系统列出周边最近的 3 个对应类型 " +
+            _wkLink("amenities", null, "恢复点") +
+            '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+            "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
+            "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按概率触发昏倒/送医/路人施舍</li>" +
+            "</ul>"
+          );
+        },
+      },
+      {
+        kind: "subhead",
+        text: "🎲 延期惩罚（endDay 时按维度差异化掷骰）",
+      },
+      {
+        kind: "list",
+        items: [
+          "🍚 饥饱临界：30% 饿晕街头 / 20% 送医院（¥300-1000）/ 30% 路人施舍 / 20% 硬撑",
+          "😴 疲劳临界：40% 过劳晕倒 / 20% 引发疾病（过劳综合症或失眠）/ 40% 效率惨淡",
+          "🛁 卫生临界：50% 生病（皮肤感染或感冒）/ 30% 名气-2 / 20% 没事",
+          "😊 心情临界：30% 累积抑郁 / 30% 整夜失眠 / 20% 借酒消愁 / 20% 硬撑",
+        ],
+      },
+    ],
+  };
+}

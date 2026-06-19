@@ -22,11 +22,11 @@
 
 ### ✅ 已完成但未在 CLAUDE.md 列出的更新
 
-1. **春节特殊事件链式系统**（`festivals.js`）
+1. **春节特殊事件链式系统**（`festivals.js` + `events.js` + `style.css`）
    - `SPRING_FESTIVAL_EVENTS` 定义 7 天完整事件链（除夕→初六），每天独立事件+双/三选项
    - `checkSpringFestivalEvents()` 在每日结算管线 `festival` 步骤中调度，通过 `state._pendingEvent` + `showEventModal()` 弹窗展示
    - 事件含选择权重、资源消耗、属性影响、flag 追踪
-   - ⚠️ UI 待补充：弹窗由通用 `showEventModal()` 渲染，但春节事件特有样式/动画未做
+   - ✅ UI 已完成：春节专属弹窗样式（红色/金色主题 + 7天进度指示器 + 灯笼装饰 + 弹性入场动画）
 
 2. **节日价格提示 + 季节性价格波动**（`festivals.js` + `render.js`）
    - `getFestivalPriceNote()`：节日/清仓期价格修正说明文本，已嵌入 Trade Tab（`renderTradeTab` 第 2416-2457 行）
@@ -43,12 +43,11 @@
 
 ### 下一步方向
 
-1. **春节事件弹窗 UI 完善** — 为 `showEventModal()` 添加春节事件特有样式/动画
-2. **公司历史书 UI** — 在 `render.js` 企业 Tab 或新建组件中展示 `getCompanyHistory()` 数据
-3. **节日成就/里程碑** — 扩展成就系统，添加节日专属成就追踪
-4. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
-5. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
-6. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
+1. **公司历史书 UI** — 在 `render.js` 企业 Tab 或新建组件中展示 `getCompanyHistory()` 数据
+2. **节日成就/里程碑** — 扩展成就系统，添加节日专属成就追踪
+3. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
+4. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
+5. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
 
 ## 自主运行规则
 

@@ -10206,6 +10206,49 @@ function showEventModal(evt) {
     }
   }
 
+  // ====== 春节事件专属检测 ======
+  var isSpringFest = !!evt._isSpringFestivalEvent;
+  var springFestClass = isSpringFest ? "spring-fest-modal" : "";
+  var springFestProgressHtml = "";
+  var springFestDecorHtml = "";
+
+  if (isSpringFest) {
+    // 进度指示器：春节7天（除夕→初六）
+    var dayNames = ["除夕", "初一", "初二", "初三", "初四", "初五", "初六"];
+    var dayIcons = ["🏠", "🧧", "👨‍👩‍👧", "🔴", "💰", "🔨", "🗑️"];
+    var currentDay = evt.id
+      ? parseInt(evt.id.replace("spring_fest_day", ""))
+      : 0;
+    currentDay = Math.max(0, Math.min(6, currentDay));
+
+    var dotsHtml = "";
+    for (var d = 0; d < 7; d++) {
+      var dotClass = "spring-fest-progress-dot";
+      if (d === currentDay) dotClass += " active";
+      else if (d < currentDay) dotClass += " passed";
+      dotsHtml += '<div class="' + dotClass + '"></div>';
+    }
+
+    springFestProgressHtml =
+      '<div class="spring-fest-progress">' +
+      '<span class="spring-fest-progress-label">🧨 春节</span>' +
+      '<div class="spring-fest-progress-dots">' +
+      dotsHtml +
+      "</div>" +
+      '<span class="spring-fest-progress-label" style="margin-left:4px;">第' +
+      (currentDay + 1) +
+      "/7天 · " +
+      dayNames[currentDay] +
+      "</span>" +
+      "</div>";
+
+    // 春节装饰元素
+    springFestDecorHtml =
+      '<span class="spring-fest-decor lantern-left">🏮</span>' +
+      '<span class="spring-fest-decor lantern-right">🏮</span>' +
+      '<span class="spring-fest-decor coin-bottom">💰</span>';
+  }
+
   // 构建选项HTML
   const choicesHtml = choicesArr
     .map((ch, i) => {
@@ -10230,17 +10273,19 @@ function showEventModal(evt) {
     .join("");
 
   const overlay = document.createElement("div");
-  overlay.className = "modal-overlay event-modal";
+  overlay.className = "modal-overlay event-modal " + springFestClass;
   overlay.innerHTML = `
-    <div class="modal-box event-box">
+    <div class="modal-box event-box ${springFestClass}">
+      ${springFestDecorHtml}
+      ${springFestProgressHtml}
       <div class="event-header">
         <div class="event-icon">${evt.icon}</div>
         <h2 class="event-title">${evt.title}</h2>
       </div>
-      <p class="event-story">${evt.story}</p>
+      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">
-        ⚡ 请选择一个选项继续
+        ${isSpringFest ? "🧨 做出你的选择，迎接新的一年" : "⚡ 请选择一个选项继续"}
       </div>
     </div>
   `;

@@ -476,6 +476,27 @@ function _wikiListEntries(catId, state) {
         icon: "🔍",
         brief: "风声期交易→季末审查→罚款禁入",
       });
+      // ── 注册表覆盖：同 id 以 MECHANICS 为准；新 id 追加到顶部 ──
+      if (typeof MECHANICS === "object" && MECHANICS) {
+        var _regList = [];
+        var _regIds = {};
+        for (var _mk in MECHANICS) {
+          if (!MECHANICS.hasOwnProperty(_mk)) continue;
+          var _mm = MECHANICS[_mk];
+          _regList.push({
+            id: _mm.id,
+            name: _mm.name,
+            icon: _mm.icon || "💡",
+            brief: _mm.brief || "",
+          });
+          _regIds[_mm.id] = true;
+        }
+        out = _regList.concat(
+          out.filter(function (e) {
+            return !_regIds[e.id];
+          }),
+        );
+      }
       break;
     case "narrative":
       out.push({
@@ -2045,6 +2066,11 @@ function _wikiDetailInvest(state, id) {
 //  详情：系统机制
 // ================================================================
 function _wikiDetailMechanic(state, id) {
+  // 1) 注册表优先：MECHANICS[id] 存在 → 通用渲染器
+  if (typeof MECHANICS === "object" && MECHANICS && MECHANICS[id]) {
+    return _renderMechanicEntry(state, MECHANICS[id]);
+  }
+  // 2) 旧 pages 字典兜底（未迁移条目）
   var pages = {
     critical_needs:
       "<h2>⚠️ 状态危机系统</h2>" +

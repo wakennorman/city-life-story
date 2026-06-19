@@ -1844,3 +1844,130 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ====== 春节事件弹窗专属样式 ====== */
+.spring-fest-modal .modal-box {
+  border: 2px solid rgba(231, 76, 60, 0.5);
+  background: linear-gradient(180deg, rgba(196, 85, 61, 0.08), var(--bg-secondary));
+  border-top: 4px solid #e74c3c;
+}
+
+.spring-fest-modal .event-header {
+  border-bottom-color: rgba(231, 76, 60, 0.3);
+}
+
+.spring-fest-modal .event-icon {
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.2), transparent);
+}
+
+.spring-fest-modal .event-title {
+  color: #e74c3c;
+}
+
+/* 春节进度指示器 */
+.spring-fest-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  background: rgba(231, 76, 60, 0.06);
+  border-radius: 20px;
+}
+
+.spring-fest-progress-label {
+  font-size: 10px;
+  color: #e74c3c;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.spring-fest-progress-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.spring-fest-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.2);
+  transition: all 0.3s ease;
+}
+
+.spring-fest-progress-dot.active {
+  background: #e74c3c;
+  box-shadow: 0 0 6px rgba(231, 76, 60, 0.6);
+}
+
+.spring-fest-progress-dot.passed {
+  background: #c0392b;
+}
+
+/* 春节选项按钮增强 */
+.spring-fest-modal .event-choice {
+  border-color: rgba(231, 76, 60, 0.15);
+}
+
+.spring-fest-modal .event-choice:hover:not(.disabled) {
+  border-color: #e74c3c;
+  background: linear-gradient(90deg, rgba(231, 76, 60, 0.08), var(--bg-card-hover));
+}
+
+.spring-fest-modal .event-choice .choice-main {
+  color: #e74c3c;
+}
+
+/* 春节装饰元素 */
+.spring-fest-decor {
+  position: absolute;
+  font-size: 14px;
+  opacity: 0.15;
+  pointer-events: none;
+  animation: springFestFloat 3s ease-in-out infinite;
+}
+
+.spring-fest-decor.lantern-left {
+  top: 10px;
+  left: 10px;
+}
+
+.spring-fest-decor.lantern-right {
+  top: 10px;
+  right: 10px;
+  animation-delay: 0.5s;
+}
+
+.spring-fest-decor.coin-bottom {
+  bottom: 10px;
+  right: 15px;
+  animation-delay: 1s;
+}
+
+@keyframes springFestFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 春节弹窗入场动画增强 */
+.spring-fest-modal .modal-box {
+  animation: springFestPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes springFestPop {
+  0% {
+    transform: scale(0.8) translateY(-30px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 春节事件故事文本高亮关键词 */
+.spring-fest-story .highlight {
+  color: #e74c3c;
+  font-weight: 600;
+}

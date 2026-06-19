@@ -435,3 +435,65 @@ function treatIllness(illnessId, tier) {
   // 更新派生兼容字段
   state.status.sick = state.status.illnesses.length > 0;
 }
+
+// ================================================================
+//  百科自更新：疾病库大小自动反映；新增疾病无需碰 wiki.js
+// ================================================================
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.illness_system = {
+    id: "illness_system",
+    name: "疾病系统",
+    icon: "🤒",
+    brief: "长期不良习惯 → 命名疾病；药店/医院两档治疗",
+    version: "1.1.0",
+    related: ["illnesses:*", "mechanics:critical_needs"],
+    sections: [
+      {
+        kind: "desc",
+        text: "长期不良习惯 → 命名疾病。每种病有触发条件、症状、治疗方式，可同时患多种。",
+      },
+      {
+        kind: "html",
+        get: function () {
+          var n =
+            typeof ILLNESSES === "object" && ILLNESSES
+              ? Object.keys(ILLNESSES).length
+              : 0;
+          return (
+            "<p>📚 疾病库当前收录 <b>" +
+            n +
+            "</b> 种命名疾病（前往 " +
+            _wkLink("illnesses", null, "🤒 疾病图鉴") +
+            " 查看完整列表）。</p>"
+          );
+        },
+      },
+      { kind: "subhead", text: "📊 习惯追踪器（state.flags._habits）" },
+      {
+        kind: "list",
+        items: [
+          { html: "<code>junkFoodMeals</code>：累计垃圾食品次数" },
+          { html: "<code>lowHungerStreak</code>：连续饥饱 &lt;25 天数" },
+          { html: "<code>lowHygieneStreak</code>：连续卫生 &lt;30 天数" },
+          { html: "<code>lowHappinessStreak</code>：连续心情 &lt;20 天数" },
+          { html: "<code>highFatigueStreak</code>：连续疲劳 &gt;80 天数" },
+          { html: "<code>lateNightActions</code>：累计夜生活次数" },
+        ],
+      },
+      { kind: "subhead", text: "💊 治疗" },
+      {
+        kind: "list",
+        items: [
+          "药店：便宜，标记 treated=true，自然康复时间减半",
+          "医院：贵，立即康复",
+          "慢性病（如高血压）：必须按月持续付费才不发作",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "在医院触发「看病」行动可一站式选病种 + 选档次。",
+      },
+    ],
+  };
+}
