@@ -3538,6 +3538,19 @@ function renderEnterpriseFateTab(state, parent) {
       card.appendChild(historyDiv);
     }
 
+    // 查看历史书按钮
+    var historyBtn = document.createElement("button");
+    historyBtn.className = "ch-history-btn";
+    historyBtn.textContent = "📖 查看公司历史书";
+    historyBtn.addEventListener("click", function () {
+      if (typeof showCompanyHistory === "function") {
+        showCompanyHistory(cid, state);
+      } else {
+        StateManager.addMessage("📖 公司历史书功能加载中...", "hint");
+      }
+    });
+    card.appendChild(historyBtn);
+
     container.appendChild(card);
   }
 

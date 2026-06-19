@@ -559,6 +559,12 @@ function _wikiListEntries(catId, state) {
         icon: "🧨",
         brief: "除夕→初六，连续7天特殊事件链，每天一个抉择",
       });
+      out.push({
+        id: "company_history",
+        name: "公司历史书",
+        icon: "📖",
+        brief: "记录企业命运变迁：里程碑时间线 + 事件档案",
+      });
       break;
     case "victory":
       out.push({
@@ -2594,6 +2600,37 @@ function _wikiDetailMechanic(state, id) {
       "<li>初六还债：可还掉30%的村长/村债，减轻长期负担</li>" +
       "</ul>" +
       '<p class="wiki-tip">💡 春节事件每年只触发一次，通过弹窗进度条可看到当前是第几天（共7天）。事件选项含资源消耗和属性影响，选择需谨慎。</p>',
+
+    // ===== 公司历史书 =====
+    company_history:
+      "<h2>📖 公司历史书</h2>" +
+      '<p class="wiki-desc">企业命运系统的核心组件：记录城市中每家公司的完整历史，从创立到IPO或倒闭，形成动态的商业世界。</p>' +
+      "<h3>📋 功能入口</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>在 🏭 企业命运 Tab 中，点击任意公司的 <strong>「📖 查看公司历史书」</strong> 按钮</li>" +
+      "<li>弹窗展示该公司的完整历史档案</li>" +
+      "</ul>" +
+      "<h3>📋 展示内容</h3>" +
+      '<ul class="wiki-list">' +
+      "<li><strong>基本信息</strong>：创始人、CEO特质、企业文化、CEO传记</li>" +
+      "<li><strong>当前状态</strong>：健康度、市场份额、股价、事件总数</li>" +
+      "<li><strong>里程碑时间线</strong>：公司成立、IPO上市、裁员潮、倒闭等关键节点</li>" +
+      "<li><strong>命运事件记录</strong>：产品发布、收购、危机、转型等事件档案</li>" +
+      "</ul>" +
+      "<h3>🎨 颜色标记</h3>" +
+      '<ul class="wiki-list">' +
+      '<li><span style="color:#4caf50">🟢 绿色</span>：IPO上市 / 成长里程碑</li>' +
+      '<li><span style="color:#e74c3c">🔴 红色</span>：倒闭 / 危机事件</li>' +
+      '<li><span style="color:#ff9800">🟡 黄色</span>：并购 / 转型</li>' +
+      '<li><span style="color:#4fc3f7">🔵 蓝色</span>：常规事件</li>' +
+      "</ul>" +
+      "<h3>💡 策略价值</h3>" +
+      '<ul class="wiki-list">' +
+      "<li>了解公司历史有助于投资决策（健康度+趋势判断）</li>" +
+      "<li>就职前了解公司文化，判断是否适合自己</li>" +
+      "<li>多周目继承：已倒闭公司的历史依然可查</li>" +
+      "</ul>" +
+      '<p class="wiki-tip">💡 只有就职过或购买过股票的公司才会解锁详情，否则显示模糊信息。</p>',
   };
   return pages[id] || "";
 }

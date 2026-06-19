@@ -34,20 +34,22 @@
    - 剁手节专项：3天预热公告 + 节日结束后 3天余震清仓期
    - `getCombined_priceMod()`：节日+季节综合价格修正乘数
 
-3. **公司历史书数据接口**（`enterprise_fate.js`）
-   - `getCompanyHistory(companyId)` 已就绪，返回公司历史事件/里程碑数据
-   - ⚠️ UI 待补充：需添加到 `render.js` 或新建 `companyHistory.js` 组件，绑定到企业 Tab
+3. **公司历史书 UI**（`components/companyHistory.js` + `render.js` + `wiki.js`）
+   - `showCompanyHistory(companyId)` 弹窗组件：基本信息 + 当前状态 + 里程碑时间线 + 命运事件记录
+   - 里程碑颜色标记：IPO绿色 / 倒闭红色 / 并购黄色 / 常规蓝色
+   - 企业 Tab 集成：每个公司卡片添加"📖 查看公司历史书"按钮
+   - 游戏百科新增"公司历史书"条目（叙事分类）
+   - 降级支持：`getCompanyHistory()` 不可用时直接从 state 读取
 
 4. **节日成就/里程碑追踪**
    - ⚠️ 未开始：需扩展成就系统，在 `festivals.js` 中添加节日专属成就（如"春节红包达人""剁手节进货王"等）
 
 ### 下一步方向
 
-1. **公司历史书 UI** — 在 `render.js` 企业 Tab 或新建组件中展示 `getCompanyHistory()` 数据
-2. **节日成就/里程碑** — 扩展成就系统，添加节日专属成就追踪
-3. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
-4. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
-5. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
+1. **节日成就/里程碑** — 扩展成就系统，添加节日专属成就追踪
+2. **平衡调参** — amenity 价格 / illness 触发阈值 / 延期惩罚概率需实测后微调
+3. **自住房食材库存联动** — 当前简化版直接解锁"在家做饭"，可深化为消耗实际食材
+4. **疾病演化深化** — 胃溃疡→胃癌、抑郁→重度抑郁等多级演化分支
 
 ## 自主运行规则
 
@@ -63,10 +65,20 @@
 ### 必须操作
 
 - 每完成一个功能点，立即更新 `src/DEVELOPMENT.md` 变更记录
-- **新增/修改任何功能后必须同步更新游戏百科** `src/js/ui/wiki.js`：
-  - 新地点/工作/商品/装备/NPC/节日：通常列表会自动从数据源读取，但要确认 `_wikiDetail*()` 中新字段是否展示
-  - 新系统机制：在 `_wikiListEntries` 的 `mechanics` case 加条目 + 在 `_wikiDetailMechanic` pages 字典加详情
-  - 新世界事件/叙事：在 `_wikiListEntries` 的 `narrative` case 加条目 + 在 `_wikiDetailNarrative` pages 字典加详情
+- **新增/修改任何功能后必须同步更新游戏百科**（v1.2 起改为注册表驱动，不再硬编码）：
+  - 新地点/工作/商品/装备/NPC/节日/疾病：列表自动从数据源 `LOCATIONS / STREET_JOBS / GOODS / ITEMS / NPCS / FESTIVALS / ILLNESSES` 读出，仅需确认 `_wikiDetail*()` 是否展示了新字段
+  - **新系统机制**：在该机制的实现文件末尾追加注册块（**无需碰 `wiki.js`**）：
+    ```js
+    if (typeof window !== 'undefined') {
+      window.MECHANICS = window.MECHANICS || {};
+      MECHANICS.<id> = { id, name, icon, brief, version, related, sections: [...] };
+    }
+    ```
+    - sections 支持 `desc / subhead / list / tip / table / html`；参数尽量用 `items: () => CONST.map(...)` 引用代码常量，调阈值时百科自动更新
+    - `related: ['mechanics:<id>', 'amenities:*', 'skills:cooking']` 自动渲染跨条目跳转
+    - 跨文件/纯说明性机制（如 `ap` / `stat_link`）放在 `src/js/data/mechanics_registry.js`
+    - 启动时 `runMechanicsAudit()` 控制台校验注册完整性 + related 引用
+  - 新世界事件/叙事：在 `_wikiListEntries` 的 `narrative` case 加条目 + 在 `_wikiDetailNarrative` pages 字典加详情（叙事注册表迁移留待后续）
   - 跨条目跳转用 `_wkLink(catId, entryId, label, icon)`，动态内容必须 `_wkE()` 转义
 - 每完成 3 个功能点，执行一次 `git add -A && git commit -m "..."` 存档
 - 上下文对话超过约 40 轮或感觉很长时，执行 `/compact` 再继续

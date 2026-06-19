@@ -1971,3 +1971,369 @@ body {
   color: #e74c3c;
   font-weight: 600;
 }
+
+/* ====== 公司历史书弹窗样式 ====== */
+.company-history-modal .modal-box {
+  max-width: 720px;
+  min-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-top: 4px solid #4a9e5c;
+  background: linear-gradient(180deg, rgba(74, 158, 92, 0.06), var(--bg-secondary));
+}
+
+.company-history-modal .modal-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.company-history-modal .modal-box::-webkit-scrollbar-thumb {
+  background: rgba(74, 158, 92, 0.3);
+  border-radius: 3px;
+}
+
+/* 头部 */
+.ch-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ch-icon {
+  font-size: 48px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(74, 158, 92, 0.15), transparent);
+  border-radius: 12px;
+}
+
+.ch-titles {
+  flex: 1;
+}
+
+.ch-name {
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.ch-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ch-industry {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.ch-status {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.ch-status.ipo {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.ch-status.ceased {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+.ch-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.ch-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+/* 通用区块 */
+.ch-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ch-section:first-of-type {
+  margin-top: 12px;
+}
+
+.ch-section-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+/* 基本信息 */
+.ch-basic-info {
+  background: rgba(74, 158, 92, 0.04);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.ch-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.ch-info-row:last-child {
+  border-bottom: none;
+}
+
+.ch-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ch-value {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+}
+
+.ch-bio {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* 当前状态 */
+.ch-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ch-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ch-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ch-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ch-stat-bar {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ch-stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a9e5c, #66bb6a);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 时间线 */
+.ch-timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.ch-timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(74, 158, 92, 0.3), rgba(74, 158, 92, 0.05));
+}
+
+.ch-timeline-item {
+  position: relative;
+  padding: 8px 0 8px 16px;
+}
+
+.ch-timeline-dot {
+  position: absolute;
+  left: -22px;
+  top: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid rgba(74, 158, 92, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 1;
+}
+
+/* 里程碑颜色分类 */
+.ch-milestone-ipo .ch-timeline-dot {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+.ch-milestone-death .ch-timeline-dot {
+  border-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.15);
+  box-shadow: 0 0 8px rgba(231, 76, 60, 0.4);
+}
+
+.ch-milestone-merge .ch-timeline-dot {
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.15);
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+}
+
+.ch-timeline-day {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.ch-timeline-desc {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* 事件记录 */
+.ch-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.ch-events-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ch-events-list::-webkit-scrollbar-thumb {
+  background: rgba(74, 158, 92, 0.2);
+  border-radius: 2px;
+}
+
+.ch-event-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.ch-event-day {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  min-width: 36px;
+}
+
+.ch-event-icon {
+  font-size: 14px;
+  min-width: 18px;
+}
+
+.ch-event-desc {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* 事件颜色分类 */
+.ch-event-ipo {
+  border-left: 3px solid #4caf50;
+}
+
+.ch-event-crisis {
+  border-left: 3px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.ch-event-merge {
+  border-left: 3px solid #ff9800;
+}
+
+/* 空状态 */
+.ch-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 16px;
+  font-size: 12px;
+}
+
+/* 弹窗入场动画 */
+.company-history-modal .modal-box {
+  animation: companyHistoryPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes companyHistoryPop {
+  0% {
+    transform: scale(0.85) translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 企业 Tab 中的"查看历史书"按钮 */
+.ch-history-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, rgba(74, 158, 92, 0.1), rgba(74, 158, 92, 0.05));
+  border: 1px solid rgba(74, 158, 92, 0.25);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.ch-history-btn:hover {
+  background: linear-gradient(90deg, rgba(74, 158, 92, 0.18), rgba(74, 158, 92, 0.1));
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.ch-history-btn:active {
+  transform: translateY(0);
+}

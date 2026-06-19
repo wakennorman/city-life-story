@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-19 (累计240+项改动)
-> **最新改动**: P0#3 成就系统深度扩展 — 20个新成就(事件链/疾病/深度里程碑) + 5个成就追踪flag埋点
+> 最后更新: 2026-06-19 (累计250+项改动)
+> **最新改动**: P1 公司历史书 UI — 弹窗式公司历史展示 + 里程碑时间线 + 事件档案 + 游戏百科
 
 ## 项目概述
 
@@ -847,6 +847,40 @@ src/
    - `SPRING_FESTIVAL_EVENTS` 定义 7 天事件链（除夕→初六），每天 3 个选项
    - `checkSpringFestivalEvents()` 在 `daily_pipeline.js` 的 `festival` 步骤中调度
    - 事件通过 `state._pendingEvent` + `showEventModal()` 弹窗展示
+
+---
+
+### 2026-06-19 — 公司历史书 UI（P1 企业命运系统 Phase 2）
+
+**核心改动**：
+
+1. **新组件文件**（`src/js/components/companyHistory.js`）
+   - `showCompanyHistory(companyId, state)` — 弹窗式渲染公司历史书
+   - 降级支持：当 `getCompanyHistory()` 不可用时，直接从 `state.enterpriseFate.companies` 读取
+   - 内容结构：
+     - **基本信息卡片**：创始人、CEO特质、企业文化、CEO传记
+     - **当前状态面板**：健康度条、市场份额条、股价、事件总数
+     - **里程碑时间线**：垂直时间线，圆点标记，颜色分类（IPO绿色/倒闭红色/并购黄色/常规蓝色）
+     - **命运事件记录**：可滚动列表，左侧颜色条标记事件类型
+
+2. **CSS 样式**（`style.css`）
+   - `.company-history-modal` 专属弹窗样式：绿色主题 + 720px 宽
+   - 时间线样式：垂直线 + 圆点 + 阴影效果
+   - 里程碑颜色分类：`.ch-milestone-ipo` / `.ch-milestone-death` / `.ch-milestone-merge`
+   - 事件记录颜色分类：`.ch-event-ipo` / `.ch-event-crisis` / `.ch-event-merge`
+   - 弹性入场动画 `companyHistoryPop`
+
+3. **企业 Tab 集成**（`render.js`）
+   - `renderEnterpriseFateTab()` 中每个公司卡片添加"📖 查看公司历史书"按钮
+   - 点击按钮调用 `showCompanyHistory(cid, state)` 弹窗
+   - 按钮悬停效果：渐变背景 + 边框高亮 + 上移动画
+
+4. **游戏百科**（`wiki.js`）
+   - 叙事分类新增"公司历史书"条目（📖 图标）
+   - 详情页面：功能入口、展示内容、颜色标记说明、策略价值
+
+5. **脚本加载**（`index.html`）
+   - 在 Enterprise Fate System 区块后添加 `js/components/companyHistory.js`
 
 ---
 
