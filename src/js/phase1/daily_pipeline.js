@@ -541,6 +541,37 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 食材过期检查 ===
+  {
+    name: "ingredient_perish",
+    after: ["day_increment"],
+    fn: function (state) {
+      if (!state.inventory || !state.inventory.items) return;
+      var currentDay = state.player.day;
+      var spoiled = [];
+      var items = state.inventory.items;
+      for (var i = items.length - 1; i >= 0; i--) {
+        var item = items[i];
+        if (!item.boughtDay || !item.perishDays) continue;
+        // 检查食材是否在 items.js 中有 isIngredient 标记
+        var itemDef = typeof getItemById === "function" ? getItemById(item.id) : null;
+        if (!itemDef || !itemDef.isIngredient) continue;
+        var age = currentDay - item.boughtDay;
+        if (age >= item.perishDays) {
+          spoiled.push({ name: itemDef.name, icon: itemDef.icon || "📦", qty: item.qty || 1 });
+          items.splice(i, 1);
+        }
+      }
+      if (spoiled.length > 0) {
+        var msg = "🥀 食材过期：";
+        for (var si = 0; si < spoiled.length; si++) {
+          msg += spoiled[si].icon + spoiled[si].name + "×" + spoiled[si].qty + " ";
+        }
+        StateManager.addMessage(msg + "已变质扔掉。", "warning");
+      }
+    },
+  },
+
   // === 每日收支报告（阻塞弹窗）===
   {
     name: "daily_report",

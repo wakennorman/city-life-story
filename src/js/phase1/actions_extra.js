@@ -1397,6 +1397,217 @@ function addAmenityActions(state, actions) {
   }
 }
 
+/** 买菜行动（批发市场 + 城中村小卖部 + 商业区超市） */
+function addIngredientShoppingActions(state, actions) {
+  var here = state.trade.currentLocation;
+  var shoppingLocs = ["wholesaleMarket", "slum", "commercialDist"];
+  if (shoppingLocs.indexOf(here) < 0) return;
+
+  // 收集可买的食材
+  var ingredientGoods = [];
+  if (typeof GOODS !== "undefined") {
+    for (var i = 0; i < GOODS.length; i++) {
+      if (GOODS[i].isIngredient) ingredientGoods.push(GOODS[i]);
+    }
+  }
+
+  if (ingredientGoods.length === 0) return;
+
+  // 加一个"买菜"快捷入口 — 弹出食材购买弹窗
+  var locPriceMod = 1.0;
+  if (typeof LOCATIONS !== "undefined" && LOCATIONS[here]) {
+    var priceMods = LOCATIONS[here].priceMod || {};
+    var totalMod = 0, count = 0;
+    for (var gid in priceMods) {
+      var good = null;
+      for (var gi = 0; gi < ingredientGoods.length; gi++) {
+        if (ingredientGoods[gi].id === gid) { good = ingredientGoods[gi]; break; }
+      }
+      if (good) { totalMod += priceMods[gid]; count++; }
+    }
+    if (count > 0) locPriceMod = totalMod / count;
+  }
+
+  actions.push({
+    id: "buy_ingredients",
+    name: "🛒 买菜/食材",
+    desc: "采购烹饪食材（大米/蔬菜/肉类/调料等）。当前市场价 ×" + locPriceMod.toFixed(2),
+    icon: "🛒",
+    apCost: 5,
+    category: "shopping",
+    handler: function () {
+      showIngredientShopModal();
+    },
+  });
+}
+
+/** 食材购买弹窗 */
+function showIngredientShopModal() {
+  var state = StateManager.getState();
+  var here = state.trade.currentLocation;
+  var cash = state.resources.cash || 0;
+  var capacity = state.inventory ? (state.inventory.capacity || 20) : 20;
+  var usedSlots = state.inventory && state.inventory.items
+    ? state.inventory.items.reduce(function (s, it) { return s + (it.qty || 0); }, 0)
+    : 0;
+
+  var html = '<div class="ingredient-shop-modal">';
+  html += '<h2 style="margin:0 0 8px;font-size:16px;">🛒 购买食材</h2>';
+  html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
+  html += '现金 ¥' + cash + ' · 背包 ' + usedSlots + '/' + capacity + '</p>';
+  html += '<div style="max-height:420px;overflow-y:auto;">';
+
+  var ingredientGoods = [];
+  if (typeof GOODS !== "undefined") {
+    for (var i = 0; i < GOODS.length; i++) {
+      if (GOODS[i].isIngredient) ingredientGoods.push(GOODS[i]);
+    }
+  }
+
+  // 按类别分组
+  var cats = { "主食": [], "蔬菜": [], "肉类": [], "调料": [], "蛋奶": [] };
+  var catIcons = { "主食": "🍚", "蔬菜": "🥬", "肉类": "🥩", "调料": "🧂", "蛋奶": "🥛" };
+
+  // 从 items.js 获取食材类型
+  for (var i = 0; i < ingredientGoods.length; i++) {
+    var g = ingredientGoods[i];
+    var itemDef = typeof getItemById === "function" ? getItemById(g.id) : null;
+    var ingType = itemDef && itemDef.ingredientType ? itemDef.ingredientType : "其他";
+    if (!cats[ingType]) cats[ingType] = [];
+    cats[ingType].push({ good: g, itemDef: itemDef });
+  }
+
+  for (var catName in cats) {
+    var list = cats[catName];
+    if (list.length === 0) continue;
+    html += '<h3 style="margin:8px 0 4px;font-size:13px;">' +
+      (catIcons[catName] || "📦") + ' ' + catName + '</h3>';
+
+    for (var j = 0; j < list.length; j++) {
+      var g = list[j].good;
+      var itemDef = list[j].itemDef;
+      var icon = itemDef ? itemDef.icon : "📦";
+      // 本地价格
+      var priceMod = 1.0;
+      if (typeof LOCATIONS !== "undefined" && LOCATIONS[here]) {
+        priceMod = (LOCATIONS[here].priceMod && LOCATIONS[here].priceMod[g.id]) || 1.0;
+      }
+      var price = Math.round(g.basePrice * priceMod * 100) / 100;
+
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;' +
+        'border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">';
+      html += '<span style="font-size:18px;">' + icon + '</span>';
+      html += '<div style="flex:1;">';
+      html += '<div style="font-size:13px;font-weight:500;">' + g.name + '</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);">¥' + price + '/' + g.unit;
+      if (itemDef && itemDef.perishDays) {
+        html += ' · 保鲜' + itemDef.perishDays + '天';
+      }
+      html += '</div></div>';
+      html += '<div style="display:flex;gap:4px;align-items:center;">';
+      // 数量选择器
+      html += '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' + g.id + '\', -1)" style="width:24px;height:24px;padding:0;">−</button>';
+      html += '<span id="ing_qty_' + g.id + '" style="min-width:20px;text-align:center;font-size:13px;">0</span>';
+      html += '<button class="btn btn-sm" onclick="ingredientBuyQty(\'' + g.id + '\', 1)" style="width:24px;height:24px;padding:0;">+</button>';
+      html += '<button class="btn btn-primary btn-sm" onclick="ingredientBuyConfirm(\'' + g.id + '\',' + price + ')" style="padding:4px 10px;">买</button>';
+      html += '</div></div>';
+    }
+  }
+
+  html += '</div>'; // scrollable
+  html += '<div style="text-align:center;margin-top:12px;">';
+  html += '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">关闭</button>';
+  html += '</div></div>';
+
+  if (typeof showModal === "function") {
+    showModal(html);
+  } else {
+    var overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = '<div class="modal-box" style="max-width:520px;">' + html + '</div>';
+    document.body.appendChild(overlay);
+  }
+}
+
+/** 食材数量调节 */
+function ingredientBuyQty(goodId, delta) {
+  var span = document.getElementById("ing_qty_" + goodId);
+  if (!span) return;
+  var cur = parseInt(span.textContent) || 0;
+  cur = Math.max(0, cur + delta);
+  span.textContent = cur;
+}
+
+/** 食材购买确认 */
+function ingredientBuyConfirm(goodId, unitPrice) {
+  var span = document.getElementById("ing_qty_" + goodId);
+  if (!span) return;
+  var qty = parseInt(span.textContent) || 0;
+  if (qty <= 0) { StateManager.addMessage("⚠️ 请先选择数量。", "warning"); return; }
+
+  var state = StateManager.getState();
+  var totalCost = qty * unitPrice;
+
+  if ((state.resources.cash || 0) < totalCost) {
+    StateManager.addMessage("💸 现金不足！需要 ¥" + totalCost.toFixed(2), "warning");
+    return;
+  }
+
+  // 检查背包容量
+  var capacity = state.inventory ? (state.inventory.capacity || 20) : 20;
+  var usedSlots = state.inventory && state.inventory.items
+    ? state.inventory.items.reduce(function (s, it) { return s + (it.qty || 0); }, 0)
+    : 0;
+  if (usedSlots + qty > capacity) {
+    StateManager.addMessage("🎒 背包空间不足！可用 " + (capacity - usedSlots) + " 格。", "warning");
+    return;
+  }
+
+  // 扣钱
+  state.resources.cash -= totalCost;
+
+  // 加库存（带购买日用于保鲜）
+  state.inventory = state.inventory || { items: [], capacity: 20 };
+  var existing = null;
+  for (var i = 0; i < state.inventory.items.length; i++) {
+    if (state.inventory.items[i].id === goodId) {
+      existing = state.inventory.items[i];
+      break;
+    }
+  }
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    state.inventory.items.push({
+      id: goodId,
+      qty: qty,
+      boughtDay: state.player.day || 0,
+      perishDays: (function () {
+        var def = typeof getItemById === "function" ? getItemById(goodId) : null;
+        return def ? def.perishDays : 7;
+      })(),
+    });
+  }
+
+  // 添加购买记录
+  if (typeof addDailyTransaction === "function") {
+    addDailyTransaction(state, "expense", "ingredient", totalCost, goodId);
+  }
+
+  StateManager.addMessage(
+    "🛒 购买了 " + qty + " 份食材。花费 ¥" + totalCost.toFixed(2),
+    "success"
+  );
+
+  // 刷新弹窗
+  var overlay = document.querySelector(".modal-overlay");
+  if (overlay) overlay.remove();
+
+  // 重新打开购物窗口
+  showIngredientShopModal();
+  if (typeof renderAll === "function") renderAll();
+}
+
 /** 医院解锁的"看病"行动 */
 function addClinicAction(state, actions) {
   if (state.trade.currentLocation !== "hospital") return;
@@ -1420,6 +1631,7 @@ function addExtraActions(state, actions) {
     addStreetExtras(state, actions);
     addAmenityActions(state, actions);
     addClinicAction(state, actions);
+    addIngredientShoppingActions(state, actions);
   }
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {

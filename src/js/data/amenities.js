@@ -148,6 +148,7 @@ const AMENITIES = [
     nutritious: true,
     desc: "自己买菜下厨，干净卫生，省钱又健康。（需消耗食材）",
     requiresIngredients: true,
+    useRecipeSelection: true,
   },
 
   // ============================================================

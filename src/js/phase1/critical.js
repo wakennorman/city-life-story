@@ -273,6 +273,12 @@ function travelToAmenityAndUse(amenityId) {
     return;
   }
 
+  // 食谱选择模式（在家做饭 → 弹出食谱选择界面）
+  if (a.useRecipeSelection && typeof showCookingRecipeModal === "function") {
+    showCookingRecipeModal(state, a, totalAp, cost);
+    return;
+  }
+
   // 执行旅行
   if (actualLoc !== curLoc) {
     StateManager.update("trade.currentLocation", actualLoc);
@@ -706,7 +712,18 @@ if (typeof window !== "undefined") {
  * @returns {{success: boolean, message: string, consumed: Array}}
  */
 function consumeCookingIngredients(state, amenity) {
-  var inv = (state.inventory = state.inventory || []);
+  // 兼容两种库存格式：
+  //   1) state.inventory = [{ itemId, quantity }] (cooking.js 格式)
+  //   2) state.inventory = { items: [{ id, qty }], capacity } (实际 state 格式)
+  var inv = state.inventory;
+  var isOldFormat = Array.isArray(inv);
+  if (!inv) inv = state.inventory = (isOldFormat ? [] : { items: [], capacity: 20 });
+  if (!isOldFormat && !inv.items) inv.items = [];
+
+  // 如果食谱指定了要 cookRecipe，就走全食谱流程（显示食谱选择）
+  if (amenity.useRecipeSelection) {
+    return { success: true, message: "打开食谱选择", useRecipeSelection: true };
+  }
 
   // 默认食材消耗（在家做饭的基础食材组合）
   var defaultIngredients = [
@@ -724,14 +741,17 @@ function consumeCookingIngredients(state, amenity) {
   for (var i = 0; i < ingredients.length; i++) {
     var ing = ingredients[i];
     var found = null;
-    for (var j = 0; j < inv.length; j++) {
-      if (inv[j].itemId === ing.itemId) {
-        found = inv[j];
-        break;
+    if (isOldFormat) {
+      for (var j = 0; j < inv.length; j++) {
+        if (inv[j].itemId === ing.itemId) { found = inv[j]; break; }
+      }
+    } else {
+      for (var j = 0; j < inv.items.length; j++) {
+        if (inv.items[j].id === ing.itemId) { found = inv.items[j]; break; }
       }
     }
     if (!found || found.quantity < ing.amount) {
-      var itemDef = getItemById && getItemById(ing.itemId);
+      var itemDef = typeof getItemById === "function" && getItemById(ing.itemId);
       missing.push({
         itemId: ing.itemId,
         itemName: itemDef ? itemDef.name : ing.itemId,
@@ -759,18 +779,259 @@ function consumeCookingIngredients(state, amenity) {
   var consumed = [];
   for (var i = 0; i < ingredients.length; i++) {
     var ing = ingredients[i];
-    for (var j = 0; j < inv.length; j++) {
-      if (inv[j].itemId === ing.itemId) {
-        inv[j].quantity -= ing.amount;
-        consumed.push({ itemId: ing.itemId, amount: ing.amount });
-        if (inv[j].quantity <= 0) {
-          inv.splice(j, 1);
+    if (isOldFormat) {
+      for (var j = 0; j < inv.length; j++) {
+        if (inv[j].itemId === ing.itemId) {
+          inv[j].quantity -= ing.amount;
+          consumed.push({ itemId: ing.itemId, amount: ing.amount });
+          if (inv[j].quantity <= 0) { inv.splice(j, 1); j--; }
+          break;
+        }
+      }
+    } else {
+      for (var j = 0; j < inv.items.length; j++) {
+        if (inv.items[j].id === ing.itemId) {
+          inv.items[j].qty -= ing.amount;
+          consumed.push({ itemId: ing.itemId, amount: ing.amount });
+          if (inv.items[j].qty <= 0) { inv.items.splice(j, 1); j--; }
+          break;
+        }
+      }
+    }
+  }
+
+  return { success: true, message: "食材消耗成功", consumed: consumed };
+}
+
+// ====== 食谱选择界面 ======
+
+/**
+ * 检查玩家是否有足够食材做某个食谱（适配 state.inventory.items 格式）
+ */
+function _canCookRecipeByState(state, recipe) {
+  var inv = state.inventory;
+  if (!inv) return false;
+  var items = inv.items || (Array.isArray(inv) ? inv : []);
+  for (var i = 0; i < recipe.ingredients.length; i++) {
+    var ing = recipe.ingredients[i];
+    var found = null;
+    for (var j = 0; j < items.length; j++) {
+      // 兼容两种 key 名：id / itemId
+      var fid = items[j].id || items[j].itemId;
+      if (fid === ing.itemId) { found = items[j]; break; }
+    }
+    var qty = found ? (found.qty || found.quantity || 0) : 0;
+    if (qty < ing.amount) return false;
+  }
+  return true;
+}
+
+/**
+ * 从 state.inventory.items 格式消耗食材
+ */
+function _consumeIngredientsFromState(state, recipe) {
+  var inv = state.inventory;
+  if (!inv) return false;
+  var items = inv.items || (Array.isArray(inv) ? inv : []);
+  for (var i = 0; i < recipe.ingredients.length; i++) {
+    var ing = recipe.ingredients[i];
+    for (var j = 0; j < items.length; j++) {
+      var fid = items[j].id || items[j].itemId;
+      if (fid === ing.itemId) {
+        if (items[j].qty !== undefined) items[j].qty -= ing.amount;
+        else if (items[j].quantity !== undefined) items[j].quantity -= ing.amount;
+        if ((items[j].qty || items[j].quantity || 0) <= 0) {
+          items.splice(j, 1);
           j--;
         }
         break;
       }
     }
   }
+  return true;
+}
 
-  return { success: true, message: "食材消耗成功", consumed: consumed };
+/**
+ * 显示食谱选择弹窗（在家做饭）
+ * @param {Object} state
+ * @param {Object} amenity - selfhome_cook amenity 定义
+ * @param {number} totalAp - 已计算的 AP 消耗
+ * @param {number} cost - 现金消耗
+ */
+function showCookingRecipeModal(state, amenity, totalAp, cost) {
+  // 获取烹饪等级
+  var cookLevel = 1;
+  if (typeof getCookingLevel === "function") {
+    cookLevel = getCookingLevel(state);
+  }
+
+  // 获取可解锁的食谱
+  var recipes = typeof getRecipesByLevel === "function"
+    ? getRecipesByLevel(cookLevel)
+    : (typeof COOKING_RECIPES !== "undefined" ? COOKING_RECIPES : []);
+
+  if (!recipes || recipes.length === 0) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("🍳 暂无可用食谱，请提升烹饪技能。", "warning");
+    }
+    return;
+  }
+
+  var html = '<div class="cooking-modal">';
+  html += '<h2 style="margin:0 0 8px;font-size:16px;">🍳 在家做饭</h2>';
+  html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
+  html += '烹饪 Lv.' + cookLevel + ' · 可用食谱 ' + recipes.length + ' 道';
+  html += ' · 消耗 ' + (totalAp || 10) + ' AP</p>';
+  html += '<div style="max-height:400px;overflow-y:auto;">';
+
+  for (var i = 0; i < recipes.length; i++) {
+    var r = recipes[i];
+    var canCook = _canCookRecipeByState(state, r);
+    // 食材清单
+    var ingHtml = [];
+    for (var j = 0; j < r.ingredients.length; j++) {
+      var ing = r.ingredients[j];
+      var itemDef = typeof getItemById === "function" ? getItemById(ing.itemId) : null;
+      var itemName = itemDef ? itemDef.name : ing.itemId;
+      var itemIcon = itemDef ? itemDef.icon : "📦";
+      // 检查玩家有多少
+      var haveQty = 0;
+      var invItems = (state.inventory && state.inventory.items) || [];
+      for (var k = 0; k < invItems.length; k++) {
+        var fid = invItems[k].id || invItems[k].itemId;
+        if (fid === ing.itemId) {
+          haveQty = invItems[k].qty || invItems[k].quantity || 0;
+          break;
+        }
+      }
+      var enough = haveQty >= ing.amount;
+      ingHtml.push(
+        (enough ? "✅" : "❌") + itemIcon + itemName + "×" + ing.amount +
+        " <span style='color:" + (enough ? "var(--success)" : "var(--danger)") + ";font-size:10px;'>" +
+        "有" + haveQty + "</span>"
+      );
+    }
+
+    var buffDesc = [];
+    if (r.hungerRestore) buffDesc.push("饱食+" + r.hungerRestore);
+    if (r.effects) {
+      var effLabels = { happiness: "心情", physique: "体质", intelligence: "智力",
+        mental: "心智", agility: "敏捷", hygiene: "卫生", fatigue: "疲劳", health: "健康" };
+      for (var ek in r.effects) {
+        if (effLabels[ek]) buffDesc.push(effLabels[ek] + (r.effects[ek] >= 0 ? "+" : "") + r.effects[ek]);
+      }
+    }
+
+    html += '<div style="border:1px solid ' + (canCook ? 'var(--success)' : 'var(--border)') +
+      ';border-radius:8px;padding:10px;margin-bottom:8px;' +
+      (canCook ? 'cursor:pointer;' : 'opacity:0.6;') +
+      '" data-recipe="' + r.id + '" class="cooking-recipe-card"' +
+      (canCook ? ' onclick="executeCookingRecipe(\'' + r.id + '\')"' : '') + '>';
+    html += '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">';
+    html += r.icon + ' ' + r.name;
+    html += ' <span style="font-size:11px;color:var(--text-muted);font-weight:400;">Lv.' + r.level + '</span>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">';
+    html += r.desc + (buffDesc.length ? ' · ' + buffDesc.join(" ") : '');
+    html += '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted);">' + ingHtml.join(" | ") + '</div>';
+    html += '</div>';
+  }
+
+  html += '</div>'; // scrollable div
+
+  // 如果模式窗存在就使用，否则用 alert
+  if (typeof showModal === "function") {
+    showModal(html);
+  } else if (typeof showCustomModal === "function") {
+    showCustomModal(html);
+  } else {
+    // 兜底：直接追加到 body
+    var overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML =
+      '<div class="modal-box" style="max-width:520px;">' +
+      html +
+      '<div style="text-align:center;margin-top:12px;">' +
+      '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">取消</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+  }
+}
+
+/**
+ * 执行已选的食谱
+ */
+function executeCookingRecipe(recipeId) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
+
+  var recipe = typeof getRecipeById === "function" ? getRecipeById(recipeId) : null;
+  if (!recipe) {
+    StateManager.addMessage("❌ 食谱不存在。", "danger");
+    return;
+  }
+
+  // 检查食材
+  if (!_canCookRecipeByState(state, recipe)) {
+    StateManager.addMessage("❌ 食材不足，无法制作「" + recipe.name + "」。", "warning");
+    return;
+  }
+
+  // 消耗食材
+  _consumeIngredientsFromState(state, recipe);
+
+  // 应用效果
+  if (recipe.hungerRestore) {
+    state.needs.hunger = Math.min(100, state.needs.hunger + recipe.hungerRestore);
+  }
+  if (recipe.effects) {
+    for (var key in recipe.effects) {
+      if (!recipe.effects.hasOwnProperty(key)) continue;
+      var val = recipe.effects[key];
+      if (key === "happiness") state.needs.happiness = Math.min(100, state.needs.happiness + val);
+      else if (key === "fatigue") state.needs.fatigue = Math.max(0, state.needs.fatigue + val);
+      else if (key === "health") state.status.health = Math.min(100, Math.max(0, state.status.health + val));
+      else if (key === "physique") state.player.physique = Math.min(100, (state.player.physique || 0) + val);
+      else if (key === "intelligence") state.player.intelligence = Math.min(100, (state.player.intelligence || 0) + val);
+      else if (key === "mental") state.player.mental = Math.min(100, (state.player.mental || 0) + val);
+      else if (key === "agility") state.player.agility = Math.min(100, (state.player.agility || 0) + val);
+      else if (key === "hygiene") state.needs.hygiene = Math.min(100, state.needs.hygiene + val);
+    }
+  }
+
+  // 记录烹饪经验和习惯
+  if (typeof addCookingExp === "function") addCookingExp(state, 10 + recipe.level * 5);
+  if (typeof onCookingCompleted === "function") onCookingCompleted(state, recipe);
+  state.flags._cookingCount = (state.flags._cookingCount || 0) + 1;
+
+  // 清除延期标记
+  if (state.flags._deferred) delete state.flags._deferred.hunger;
+
+  // 消耗 AP
+  if (typeof consumeAP === "function") {
+    consumeAP(10);
+  }
+
+  // 营养均衡标记
+  state.flags._habits = state.flags._habits || {};
+  state.flags._habits.junkFoodMeals = Math.max(0, (state.flags._habits.junkFoodMeals || 0) - 2);
+
+  StateManager.addMessage(
+    "🍳 你烹饪了「" + recipe.name + "」！" +
+    (recipe.hungerRestore ? "饱食+" + recipe.hungerRestore : ""),
+    "success"
+  );
+
+  // 关闭弹窗
+  var overlay = document.querySelector(".modal-overlay");
+  if (overlay) overlay.remove();
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+// 全局挂载
+if (typeof window !== "undefined") {
+  window.showCookingRecipeModal = showCookingRecipeModal;
+  window.executeCookingRecipe = executeCookingRecipe;
 }
