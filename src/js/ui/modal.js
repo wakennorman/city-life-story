@@ -213,68 +213,311 @@ function showWithdrawModal() {
 
 function showLoanModal() {
   const state = StateManager.getState();
-  const maxLoan = 10000;
+  const capacity =
+    typeof calculateLoanCapacity === "function"
+      ? calculateLoanCapacity(state)
+      : {
+          maxLoan: 0,
+          monthlyRepayment: 0,
+          interestRate: 0.003,
+          reasons: [],
+          canLoan: false,
+        };
+
+  // 构建评估因子 HTML
+  let reasonsHtml = "";
+  if (capacity.reasons && capacity.reasons.length > 0) {
+    reasonsHtml =
+      '<div style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.15);border-radius:6px;">';
+    reasonsHtml +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">📋 贷款评估因子：</div>';
+    for (const r of capacity.reasons) {
+      const icon =
+        r.status === "ok"
+          ? "✅"
+          : r.status === "warn"
+            ? "⚠️"
+            : r.status === "fail"
+              ? "❌"
+              : "ℹ️";
+      const color =
+        r.status === "ok"
+          ? "var(--success)"
+          : r.status === "warn"
+            ? "var(--warning)"
+            : r.status === "fail"
+              ? "var(--danger)"
+              : "var(--text-muted)";
+      reasonsHtml += `<div style="font-size:10px;color:${color};margin:2px 0;">${icon} ${r.text}</div>`;
+    }
+    reasonsHtml += "</div>";
+  }
+
+  // 利率说明
+  const dailyRatePct = (capacity.interestRate * 100).toFixed(2);
+  const annualRatePct = (
+    (Math.pow(1 + capacity.interestRate, 365) - 1) *
+    100
+  ).toFixed(0);
+
+  // 推荐贷款额（可贷额度的 30%，便于分期还款）
+  const recommendedLoan = capacity.canLoan
+    ? Math.floor((capacity.maxLoan * 0.3) / 1000) * 1000
+    : 0;
+
+  let body = "";
+  if (!capacity.canLoan) {
+    // 不能贷款的情况
+    body = `<div style="padding:12px;background:rgba(231,76,60,0.08);border-radius:6px;border-left:3px solid var(--danger);">`;
+    body += `<p style="font-size:11px;color:var(--danger);margin:0 0 8px 0;">❌ 银行拒绝贷款</p>`;
+    body += `<p style="font-size:10px;color:var(--text-secondary);margin:0;">`;
+    const failReasons = capacity.reasons.filter((r) => r.status === "fail");
+    body +=
+      failReasons.length > 0
+        ? failReasons.map((r) => r.text).join("；")
+        : "当前条件不满足贷款要求";
+    body += `</p></div>`;
+    body += reasonsHtml;
+  } else {
+    // 可贷款
+    body = `<div style="display:flex;gap:8px;margin-bottom:10px;">`;
+    body += `<div style="flex:1;padding:10px;background:rgba(46,204,113,0.08);border-radius:6px;text-align:center;">`;
+    body += `<div style="font-size:10px;color:var(--text-muted);">可贷额度</div>`;
+    body += `<div style="font-size:18px;font-weight:bold;color:var(--success);">¥${capacity.maxLoan.toLocaleString()}</div>`;
+    body += `</div>`;
+    body += `<div style="flex:1;padding:10px;background:rgba(241,196,15,0.08);border-radius:6px;text-align:center;">`;
+    body += `<div style="font-size:10px;color:var(--text-muted);">日利率</div>`;
+    body += `<div style="font-size:18px;font-weight:bold;color:var(--warning);">${dailyRatePct}%</div>`;
+    body += `<div style="font-size:8px;color:var(--text-muted);margin-top:2px;">（年化约 ${annualRatePct}%）</div>`;
+    body += `</div>`;
+    body += `</div>`;
+
+    body += `<div style="display:flex;gap:8px;margin-bottom:10px;">`;
+    body += `<div style="flex:1;padding:8px;background:var(--bg-card);border-radius:6px;">`;
+    body += `<div style="font-size:10px;color:var(--text-muted);">建议月供</div>`;
+    body += `<div style="font-size:14px;font-weight:bold;">¥${capacity.monthlyRepayment.toLocaleString()}</div>`;
+    body += `</div>`;
+    body += `<div style="flex:1;padding:8px;background:var(--bg-card);border-radius:6px;">`;
+    body += `<div style="font-size:10px;color:var(--text-muted);">最长还款期</div>`;
+    body += `<div style="font-size:14px;font-weight:bold;">${capacity.maxMonths} 个月</div>`;
+    body += `</div>`;
+    body += `</div>`;
+
+    body += `<div style="padding:8px;background:rgba(231,76,60,0.05);border-radius:4px;margin-bottom:8px;">`;
+    body += `<p style="font-size:10px;color:var(--danger);margin:0;">⚠️ 日息 ${dailyRatePct}%（复利），年化约 ${annualRatePct}%。这是紧急贷款，利率远高于银行正常贷款，请谨慎使用！</p>`;
+    body += `</div>`;
+
+    body += `<div style="margin-bottom:8px;">`;
+    body += `<label style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:4px;">贷款金额：</label>`;
+    body += `<input id="loan-amount-input" type="number" min="1000" max="${capacity.maxLoan}" value="${Math.min(recommendedLoan, capacity.maxLoan)}" step="1000" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:14px;">`;
+    body += `<div id="loan-amount-hint" style="font-size:10px;margin-top:4px;color:var(--text-muted);">建议贷款 ¥${recommendedLoan.toLocaleString()}（可贷额度的 30%，便于分期还款）</div>`;
+    body += `</div>`;
+
+    body += reasonsHtml;
+  }
+
   showModal({
-    title: "📝 贷款",
-    body: `<p>可贷金额: ¥${maxLoan.toLocaleString()}</p>
-           <p style="color:var(--danger)">⚠️ 日息 0.3%（复利），请谨慎！</p>
-           <p>当前欠款: ¥${state.resources.debt.toLocaleString()}</p>`,
-    buttons: [
-      { text: "取消", cls: "", callback: () => {} },
-      {
-        text: "贷款 ¥3,000",
-        cls: "btn-warning",
-        callback: () => {
-          state.resources.cash += 3000;
-          state.resources.debt += 3000;
-          StateManager.addMessage(
-            "📝 贷款 ¥3,000，日息0.3%。记得按时还款！",
-            "warning",
-          );
-          renderAll();
-        },
-      },
-      {
-        text: "贷款 ¥5,000",
-        cls: "btn-warning",
-        callback: () => {
-          state.resources.cash += 5000;
-          state.resources.debt += 5000;
-          StateManager.addMessage("📝 贷款 ¥5,000。", "warning");
-          renderAll();
-        },
-      },
-    ],
+    title: "📝 银行贷款",
+    body: body,
+    buttons: capacity.canLoan
+      ? [
+          { text: "取消", cls: "", callback: () => {} },
+          {
+            text: `贷款 ¥${recommendedLoan.toLocaleString()}`,
+            cls: "btn-warning",
+            callback: () => {
+              if (typeof grantLoan === "function") {
+                grantLoan(state, recommendedLoan);
+                renderAll();
+              }
+            },
+          },
+          {
+            text: "自定义金额",
+            cls: "btn-primary",
+            callback: () => {
+              const input = document.getElementById("loan-amount-input");
+              const amount = input ? parseInt(input.value) : 0;
+              if (typeof grantLoan === "function") {
+                grantLoan(state, amount);
+                renderAll();
+              }
+            },
+          },
+        ]
+      : [{ text: "知道了", cls: "", callback: () => {} }],
   });
+
+  // 绑定输入框实时校验
+  if (capacity.canLoan) {
+    setTimeout(() => {
+      const input = document.getElementById("loan-amount-input");
+      if (input) {
+        input.addEventListener("input", function () {
+          const val = parseInt(this.value) || 0;
+          const hintEl = document.getElementById("loan-amount-hint");
+          const btns = document.querySelectorAll(".modal-actions .btn");
+
+          if (val > capacity.maxLoan) {
+            this.style.borderColor = "var(--danger)";
+            this.style.borderWidth = "2px";
+            if (hintEl)
+              hintEl.textContent =
+                "❌ 超过可贷额度 ¥" + capacity.maxLoan.toLocaleString();
+            if (hintEl) hintEl.style.color = "var(--danger)";
+            // 禁用自定义金额按钮
+            for (const btn of btns) {
+              if (btn.textContent.includes("自定义")) {
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+              }
+            }
+          } else if (val > 0) {
+            this.style.borderColor = "var(--success)";
+            this.style.borderWidth = "2px";
+            if (hintEl) hintEl.textContent = "✅ 在可贷额度内";
+            if (hintEl) hintEl.style.color = "var(--success)";
+            for (const btn of btns) {
+              if (btn.textContent.includes("自定义")) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+              }
+            }
+          } else {
+            this.style.borderColor = "var(--border)";
+            this.style.borderWidth = "1px";
+            if (hintEl) hintEl.textContent = "请输入贷款金额";
+            if (hintEl) hintEl.style.color = "var(--text-muted)";
+          }
+        });
+
+        // 触发一次校验
+        input.dispatchEvent(new Event("input"));
+      }
+    }, 50);
+  }
 }
 
 function showRepayModal() {
   const state = StateManager.getState();
   const bankDebt = state.resources.bankDebt || 0;
+  const cash = state.resources.cash || 0;
+
+  // 计算已产生利息（简化：日息 × 天数 × 本金）
+  let accumulatedInterest = 0;
+  let loanDays = 0;
+  if (bankDebt > 0 && state.resources.bankDebtDay > 0) {
+    loanDays = state.player.day - state.resources.bankDebtDay;
+    // 复利计算：本金 × (1 + 日息)^天数 - 本金
+    const dailyRate = 0.003;
+    accumulatedInterest =
+      Math.round(bankDebt * (Math.pow(1 + dailyRate, loanDays) - 1) * 100) /
+      100;
+  }
+
+  const totalOwed = bankDebt + accumulatedInterest;
+
+  // 构建还款信息
+  let body = "";
+
+  // 债务概览
+  body += `<div style="display:flex;gap:8px;margin-bottom:10px;">`;
+  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+  body += `<div style="font-size:10px;color:var(--text-muted);">剩余本金</div>`;
+  body += `<div style="font-size:16px;font-weight:bold;color:var(--danger);">¥${bankDebt.toLocaleString()}</div>`;
+  body += `</div>`;
+  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+  body += `<div style="font-size:10px;color:var(--text-muted);">累计利息</div>`;
+  body += `<div style="font-size:16px;font-weight:bold;color:var(--warning);">¥${accumulatedInterest.toLocaleString()}</div>`;
+  body += `<div style="font-size:8px;color:var(--text-muted);margin-top:2px;">（已产生 ${loanDays} 天）</div>`;
+  body += `</div>`;
+  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+  body += `<div style="font-size:10px;color:var(--text-muted);">当前总欠</div>`;
+  body += `<div style="font-size:16px;font-weight:bold;">¥${totalOwed.toLocaleString()}</div>`;
+  body += `</div>`;
+  body += `</div>`;
+
+  // 还款输入
+  body += `<div style="margin-bottom:8px;">`;
+  body += `<label style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:4px;">还款金额：</label>`;
+  const maxRepay = Math.min(cash, bankDebt);
+  body += `<input id="repay-loan-amount" type="number" min="100" max="${maxRepay}" value="${maxRepay}" step="100" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:14px;">`;
+  body += `<div style="font-size:10px;margin-top:4px;color:var(--text-muted);">💡 提前还款无违约金，还完后信贷记录更新 ✅</div>`;
+  body += `</div>`;
+
+  // 当前现金
+  body += `<p style="font-size:10px;color:var(--text-secondary);margin:6px 0 0 0;">💰 当前现金: ¥${cash.toLocaleString()}${cash < bankDebt ? `（不足以还清全部）` : `（可还清全部 ¥${bankDebt.toLocaleString()}）`}</p>`;
+
   showModal({
-    title: "🏦 还银行贷款",
-    body: `<p>当前欠银行: ¥${bankDebt.toLocaleString()}</p>
-           <p>现金: ¥${state.resources.cash.toLocaleString()}</p>`,
+    title: "🏦 偿还银行贷款",
+    body: body,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
-        text: "能还多少还多少",
+        text:
+          bankDebt > 0 && cash >= bankDebt
+            ? `还清全部 ¥${bankDebt.toLocaleString()}`
+            : "能还多少还多少",
+        cls: "btn-success",
+        callback: () => {
+          const repayAmount = bankDebt;
+          if (typeof repayLoan === "function") {
+            repayLoan(state, repayAmount);
+            renderAll();
+          }
+        },
+      },
+      {
+        text: "确认还款",
         cls: "btn-primary",
         callback: () => {
-          const amt = Math.min(state.resources.cash, bankDebt);
-          state.resources.cash -= amt;
-          state.resources.bankDebt -= amt;
-          state.resources.debt =
-            (state.resources.villageDebt || 0) + state.resources.bankDebt;
-          StateManager.addMessage(
-            `🏦 还银行贷款 ¥${amt.toLocaleString()}。${state.resources.bankDebt > 0 ? `还剩 ¥${state.resources.bankDebt.toLocaleString()}。` : "银行贷款已还清！"}`,
-            "success",
-          );
-          renderAll();
+          const input = document.getElementById("repay-loan-amount");
+          const amount = input ? parseInt(input.value) : 0;
+          if (typeof repayLoan === "function") {
+            repayLoan(state, amount);
+            renderAll();
+          }
         },
       },
     ],
   });
+
+  // 绑定输入框实时校验
+  setTimeout(() => {
+    const input = document.getElementById("repay-loan-amount");
+    if (input) {
+      input.addEventListener("input", function () {
+        const val = parseInt(this.value) || 0;
+        const confirmBtns = document.querySelectorAll(".modal-actions .btn");
+
+        if (val > maxRepay) {
+          this.style.borderColor = "var(--danger)";
+          this.style.borderWidth = "2px";
+          for (const btn of confirmBtns) {
+            if (btn.textContent === "确认还款") {
+              btn.disabled = true;
+              btn.style.opacity = "0.5";
+            }
+          }
+        } else if (val > 0) {
+          this.style.borderColor = "var(--success)";
+          this.style.borderWidth = "2px";
+          for (const btn of confirmBtns) {
+            if (btn.textContent === "确认还款") {
+              btn.disabled = false;
+              btn.style.opacity = "1";
+            }
+          }
+        } else {
+          this.style.borderColor = "var(--border)";
+          this.style.borderWidth = "1px";
+        }
+      });
+
+      // 触发一次校验
+      input.dispatchEvent(new Event("input"));
+    }
+  }, 50);
 }
 
 /** 还村长钱的模态框 */
@@ -1203,4 +1446,252 @@ function showAcquisitionModal(state) {
       ],
     });
   }
+}
+
+// ====== 摆摊选址建议系统（P1-1 街头特色玩法） ======
+
+/**
+ * 获取摆摊地点推荐（考虑天气、节日、周末、客流量等因素）
+ */
+function getVendingLocationAdvice(state) {
+  var loc = state.trade.currentLocation;
+  var weather = state.weather;
+  var day = state.player.day;
+  var isWeekend = day % 7 >= 5; // 简化：每 7 天一个周期，后两天为周末
+
+  // 各地点摆摊收益评估
+  var locations = [
+    {
+      id: "slum",
+      name: "城中村",
+      baseFootfall: 0.6,
+      bestFor: ["food", "daily"],
+      weatherMod: 1.0,
+      weekendMod: 0.8,
+    },
+    {
+      id: "wholesaleMarket",
+      name: "批发市场",
+      baseFootfall: 0.9,
+      bestFor: ["goods", "food"],
+      weatherMod: 0.7,
+      weekendMod: 1.2,
+    },
+    {
+      id: "construction",
+      name: "建筑工地",
+      baseFootfall: 0.5,
+      bestFor: ["food"],
+      weatherMod: 0.5,
+      weekendMod: 0.3,
+    },
+    {
+      id: "factoryZone",
+      name: "工业区",
+      baseFootfall: 1.0,
+      bestFor: ["food", "goods"],
+      weatherMod: 0.8,
+      weekendMod: 0.4,
+    },
+    {
+      id: "school",
+      name: "大学城",
+      baseFootfall: 1.2,
+      bestFor: ["food", "goods", "snacks"],
+      weatherMod: 0.9,
+      weekendMod: 1.5,
+    },
+    {
+      id: "commercialDist",
+      name: "商业区",
+      baseFootfall: 1.8,
+      bestFor: ["food", "goods", "electronics", "clothing"],
+      weatherMod: 1.0,
+      weekendMod: 1.3,
+    },
+    {
+      id: "techPark",
+      name: "科技园",
+      baseFootfall: 0.7,
+      bestFor: ["food", "snacks"],
+      weatherMod: 0.8,
+      weekendMod: 0.5,
+    },
+    {
+      id: "hospital",
+      name: "医院",
+      baseFootfall: 0.6,
+      bestFor: ["food", "daily"],
+      weatherMod: 0.9,
+      weekendMod: 0.8,
+    },
+    {
+      id: "park",
+      name: "公园",
+      baseFootfall: 0.4,
+      bestFor: ["food", "snacks"],
+      weatherMod: 0.4,
+      weekendMod: 1.8,
+    },
+    {
+      id: "trainingCenter",
+      name: "培训中心",
+      baseFootfall: 0.5,
+      bestFor: ["food"],
+      weatherMod: 1.0,
+      weekendMod: 1.4,
+    },
+  ];
+
+  // 天气修正
+  var weatherMod = 1.0;
+  var weatherAdvice = "";
+  if (weather) {
+    if (weather.type === "stormy" || weather.type === "snowy") {
+      weatherMod = 0.4;
+      weatherAdvice = "⚠️ 恶劣天气，室外摆摊客流锐减，建议室内行动或休息";
+    } else if (weather.type === "rainy") {
+      weatherMod = 0.7;
+      weatherAdvice = "💡 小雨天气，建议去有遮蔽的地方（批发市场/培训中心）";
+    } else if (weather.type === "sunny") {
+      weatherMod = 1.1;
+      weatherAdvice = "☀️ 晴天，室外摆摊最佳时机！";
+    } else if (weather.type === "cloudy") {
+      weatherMod = 1.0;
+    }
+  }
+
+  // 节日修正
+  var festivalMod = 1.0;
+  var festivalAdvice = "";
+  // 简化：检查是否在节日期内
+  var festivalDays = [20, 21, 22, 23, 24, 25, 26, 27]; // 春节
+  if (festivalDays.indexOf(day % 365) >= 0) {
+    festivalMod = 1.5;
+    festivalAdvice = "🧨 春节期间，客流量大增，建议去商业区/公园！";
+  }
+
+  // 计算各地点综合得分
+  var scores = locations.map(function (l) {
+    var score =
+      l.baseFootfall *
+      weatherMod *
+      (isWeekend ? l.weekendMod : 1.0) *
+      festivalMod;
+    return { ...l, score: score };
+  });
+
+  // 排序
+  scores.sort(function (a, b) {
+    return b.score - a.score;
+  });
+
+  // 生成建议
+  var best = scores[0];
+  var second = scores[1];
+  var third = scores[2];
+
+  return {
+    bestLocation: best,
+    top3: scores.slice(0, 3),
+    weatherAdvice: weatherAdvice,
+    festivalAdvice: festivalAdvice,
+    isWeekend: isWeekend,
+    weatherMod: weatherMod,
+    festivalMod: festivalMod,
+  };
+}
+
+/**
+ * 显示摆摊选址建议弹窗
+ */
+function showVendingLocationAdviceModal() {
+  var st = StateManager.getState();
+  var advice = getVendingLocationAdvice(st);
+
+  var html = '<div style="font-size:13px;line-height:1.6;">';
+
+  // 天气/节日提示
+  if (advice.weatherAdvice) {
+    html +=
+      '<div style="padding:8px 12px;background:var(--bg-input);border-radius:6px;margin-bottom:12px;">';
+    html += advice.weatherAdvice;
+    html += "</div>";
+  }
+  if (advice.festivalAdvice) {
+    html +=
+      '<div style="padding:8px 12px;background:#fff3cd;border-radius:6px;margin-bottom:12px;color:#856404;">';
+    html += advice.festivalAdvice;
+    html += "</div>";
+  }
+
+  // 最佳地点推荐
+  var best = advice.bestLocation;
+  html +=
+    '<div style="text-align:center;padding:12px;background:linear-gradient(135deg,#4a9e5c20,#4a9e5c10);border-radius:8px;margin-bottom:12px;border:2px solid #4a9e5c;">';
+  html +=
+    '<div style="font-size:16px;font-weight:700;color:#4a9e5c;">🏆 最佳摆摊地点</div>';
+  html += '<div style="font-size:18px;margin-top:6px;">' + best.name + "</div>";
+  html +=
+    '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">综合得分：' +
+    best.score.toFixed(2) +
+    "</div>";
+  html += "</div>";
+
+  // TOP3 排名
+  html +=
+    '<h3 style="margin:12px 0 8px;font-size:14px;">📊 今日摆摊地点排名</h3>';
+  html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+
+  var medalIcons = ["🥇", "🥈", "🥉"];
+  advice.top3.forEach(function (loc, idx) {
+    var isBest = idx === 0;
+    html +=
+      '<div style="display:flex;align-items:center;padding:8px 10px;border-radius:6px;background:' +
+      (isBest ? "#4a9e5c15" : "var(--bg-input)") +
+      '">';
+    html +=
+      '<span style="font-size:16px;margin-right:8px;">' +
+      medalIcons[idx] +
+      "</span>";
+    html += '<div style="flex:1;">';
+    html += "<strong>" + loc.name + "</strong>";
+    html +=
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">得分 ' +
+      loc.score.toFixed(2) +
+      "</span>";
+    html += "</div>";
+    html +=
+      '<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:' +
+      (isBest ? "#4a9e5c" : "var(--bg-card)") +
+      ";color:" +
+      (isBest ? "#fff" : "var(--text-primary)") +
+      '">×' +
+      loc.score.toFixed(1) +
+      "</span>";
+    html += "</div>";
+  });
+
+  html += "</div>";
+
+  // 小贴士
+  html +=
+    '<div style="margin-top:12px;padding:10px 12px;background:var(--bg-card);border-radius:6px;font-size:12px;color:var(--text-secondary);">';
+  html += "<strong>💡 摆摊小贴士：</strong>";
+  html += '<ul style="margin:6px 0 0;padding-left:16px;">';
+  html += "<li>晴天/周末是摆摊黄金时间，客流+30%~80%</li>";
+  html += "<li>恶劣天气（暴雨/大雪）建议室内行动或休息</li>";
+  html += "<li>大学城周末客流暴涨，适合卖零食/小商品</li>";
+  html += "<li>商业区客流最大但城管也最多，注意风险</li>";
+  html += "<li>工业区午休时间（12:00-13:00）是食品摊黄金时段</li>";
+  html += "</ul>";
+  html += "</div>";
+
+  html += "</div>";
+
+  showModal({
+    title: "🛒 摆摊选址建议",
+    body: html,
+    buttons: [{ text: "知道了", cls: "btn-primary" }],
+  });
 }

@@ -171,6 +171,14 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 疾病演化风险检查 ===
+  {
+    name: "illness_evolution_check",
+    fn: function (state) {
+      if (typeof checkEvolutionRisk === "function") checkEvolutionRisk(state);
+    },
+  },
+
   // === 需求阈值检查 ===
   {
     name: "needs_check",

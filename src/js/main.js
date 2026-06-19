@@ -284,11 +284,14 @@ function showWelcome() {
   var modeSelect = document.getElementById("mode-select-screen");
   var scenarioSelect = document.getElementById("scenario-select-screen");
   var sandboxScreen = document.getElementById("sandbox-screen");
-  [modeSelect, scenarioSelect, sandboxScreen].forEach(function (el) {
+  var app = document.getElementById("app");
+  [modeSelect, scenarioSelect, sandboxScreen, app].forEach(function (el) {
     if (el) el.style.display = "none";
   });
   if (screen) {
     screen.style.display = "flex";
+    // 重置游戏状态标记，回到欢迎界面
+    gameStarted = false;
     // 刷新存档信息
     var loadSection = document.getElementById("load-section");
     if (loadSection) {
@@ -647,6 +650,7 @@ function startScenarioGame(scenarioId) {
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("scenario-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
+  document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("app").style.display = "";
   gameStarted = true;
   renderAll();
@@ -1218,6 +1222,9 @@ function startNewGame() {
     "info",
   );
   document.getElementById("welcome-screen").style.display = "none";
+  document.getElementById("mode-select-screen").style.display = "none";
+  document.getElementById("scenario-select-screen").style.display = "none";
+  document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("app").style.display = "";
   gameStarted = true;
   renderAll();
@@ -2459,7 +2466,7 @@ function getAvailableActions(state) {
       actions.push({
         id: "loan",
         name: "贷款",
-        desc: "向银行贷款（日息0.3%），解燃眉之急。",
+        desc: "向银行贷款（动态额度评估，日息0.3%复利），解燃眉之急。",
         icon: "📝",
         handler: () => {
           showLoanModal();
@@ -3630,7 +3637,7 @@ function init() {
             {
               text: "确认新游戏",
               cls: "btn-danger",
-              callback: () => startNewGame(),
+              callback: () => showWelcome(),
             },
           ],
         });

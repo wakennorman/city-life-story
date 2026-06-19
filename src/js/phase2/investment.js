@@ -1119,10 +1119,25 @@ function tickInvestmentDaily(state) {
 }
 
 function buyInvStock(symbol, shares) {
+  // 根据资产类别区分交易规则
+  // 股票（A股）：最小交易单位1股，强制整股
+  // 虚拟币/贵金属/期货/基金：支持小数交易
+  var def = INV_STOCKS.find(function (s) {
+    return s.symbol === symbol;
+  });
+  if (def && def.category === "股票") {
+    shares = Math.floor(shares);
+  }
+  // 其他类别保留小数（虚拟币精确到小数位，贵金属按g/kg可小数，期货/基金按份/桶可小数）
+
   var state = StateManager.getState();
   var inv = state.investment;
   var m = inv.stockMarket[symbol];
   if (!m) return;
+  if (shares <= 0) {
+    StateManager.addMessage("⚠️ 至少买入1个单位。", "warning");
+    return;
+  }
   var cost = Math.round(m.price * shares * 100) / 100;
   if (state.resources.cash < cost) {
     StateManager.addMessage("现金不足", "danger");
@@ -1143,10 +1158,27 @@ function buyInvStock(symbol, shares) {
       shares: shares,
       avgPrice: m.price,
     });
-  StateManager.addMessage("买入 " + symbol + " " + shares + "股", "success");
+  StateManager.addMessage(
+    "买入 " +
+      symbol +
+      " " +
+      shares +
+      (def && def.category === "股票" ? "股" : " " + (def?.unit || "")),
+    "success",
+  );
 }
 
 function sellInvStock(symbol, shares) {
+  // 根据资产类别区分交易规则
+  // 股票（A股）：最小交易单位1股，强制整股
+  // 虚拟币/贵金属/期货/基金：支持小数交易
+  var def = INV_STOCKS.find(function (s) {
+    return s.symbol === symbol;
+  });
+  if (def && def.category === "股票") {
+    shares = Math.floor(shares);
+  }
+
   var state = StateManager.getState();
   var inv = state.investment;
   var h = inv.stockHoldings.find(function (s) {
@@ -1154,6 +1186,10 @@ function sellInvStock(symbol, shares) {
   });
   if (!h || h.shares < shares) {
     StateManager.addMessage("持仓不足", "danger");
+    return;
+  }
+  if (shares <= 0) {
+    StateManager.addMessage("⚠️ 至少卖出1个单位。", "warning");
     return;
   }
   var m = inv.stockMarket[symbol];

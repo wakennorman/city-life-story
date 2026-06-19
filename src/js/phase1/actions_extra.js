@@ -23,6 +23,21 @@ function addStreetExtras(state, actions) {
   });
 
   actions.push({
+    id: "vending_advice",
+    name: "🛒 摆摊选址建议",
+    desc: "根据天气、节日、周末等因素，智能推荐今日最佳摆摊地点。",
+    icon: "📍",
+    apCost: 5,
+    handler: () => {
+      if (typeof showVendingLocationAdviceModal === "function") {
+        showVendingLocationAdviceModal();
+      } else {
+        StateManager.addMessage("功能暂未加载", "warning");
+      }
+    },
+  });
+
+  actions.push({
     id: "busking",
     name: "🎤 街头卖唱",
     desc: "在地铁口或天桥上唱歌赚打赏。需要胆子大。",

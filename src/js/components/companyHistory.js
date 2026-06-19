@@ -82,12 +82,36 @@ function showCompanyHistory(companyId, state) {
         <button class="ch-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
       </div>
 
+      <!-- CEO 人格化卡片 -->
+      ${
+        historyData.ceoName
+          ? `
+      <div class="ch-section ch-ceo-profile">
+        <h3 class="ch-section-title">👤 CEO档案：${_esc(historyData.ceoName)}</h3>
+        <div class="ch-ceo-grid">
+          <div class="ch-ceo-main">
+            <div class="ch-ceo-header">
+              <div class="ch-ceo-avatar">${historyData.ceoAge ? '<span class="ch-ceo-age">' + historyData.ceoAge + "岁</span>" : ""}</div>
+              <div class="ch-ceo-info">
+                ${historyData.ceoBackground ? '<div class="ch-ceo-bg">' + _esc(historyData.ceoBackground) + "</div>" : ""}
+                ${historyData.ceoPersonality ? '<div class="ch-ceo-personality">' + _esc(historyData.ceoPersonality) + "</div>" : ""}
+              </div>
+            </div>
+            ${historyData.ceoBio ? '<div class="ch-ceo-story">' + _esc(historyData.ceoBio) + "</div>" : ""}
+            ${historyData.ceoQuote ? '<div class="ch-ceo-quote">" ' + _esc(historyData.ceoQuote) + ' "</div>' : ""}
+          </div>
+          ${historyData.ceoWeakness ? '<div class="ch-ceo-weakness"><strong>⚠️ 性格弱点</strong><p>' + _esc(historyData.ceoWeakness) + "</p></div>" : ""}
+        </div>
+      </div>
+      `
+          : ""
+      }
+
       <!-- 基本信息卡片 -->
       <div class="ch-section ch-basic-info">
-        ${historyData.founder ? '<div class="ch-info-row"><span class="ch-label">👤 创始人</span><span class="ch-value">' + _esc(historyData.founder) + "</span></div>" : ""}
+        ${historyData.founder ? '<div class="ch-info-row"><span class="ch-label">🏢 创始人</span><span class="ch-value">' + _esc(historyData.founder) + "</span></div>" : ""}
         ${historyData.ceoTrait ? '<div class="ch-info-row"><span class="ch-label">💼 CEO特质</span><span class="ch-value">' + _esc(historyData.ceoTrait) + "</span></div>" : ""}
         ${historyData.culture ? '<div class="ch-info-row"><span class="ch-label">🌟 企业文化</span><span class="ch-value">' + _esc(historyData.culture) + "</span></div>" : ""}
-        ${historyData.ceoBio ? '<div class="ch-info-row"><span class="ch-label">📖 CEO传记</span><span class="ch-value ch-bio">' + _esc(historyData.ceoBio) + "</span></div>" : ""}
       </div>
 
       <!-- 当前状态 -->

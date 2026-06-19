@@ -26,7 +26,7 @@
  */
 
 const MULTIVERSE_KEY = "city_life_story_multiverse";
-const MULTIVERSE_VERSION = "1.0";
+const MULTIVERSE_VERSION = "2.0";
 
 /** 公司中文名映射（本地副本，避免循环依赖） */
 function _coName(cid) {
@@ -56,6 +56,11 @@ function getMultiRunMemory() {
     totalPlaythroughs: 0,
     lastUpdated: Date.now(),
     deceasedCompanies: {},
+    ipoHistory: [], // IPO 历史
+    mergerHistory: {}, // 合并历史
+    legendaryCompanies: [], // 传奇企业
+    industryEvolution: {}, // 行业格局变迁
+    firstSeenAt: Date.now(),
   };
 }
 
@@ -223,7 +228,222 @@ function resetMultiRunMemory() {
     totalPlaythroughs: 0,
     lastUpdated: Date.now(),
     deceasedCompanies: {},
+    ipoHistory: [],
+    mergerHistory: {},
+    legendaryCompanies: [],
+    industryEvolution: {},
+    firstSeenAt: Date.now(),
   });
+}
+
+// ====== 增强功能：IPO 历史 ======
+
+/**
+ * 记录 IPO 历史
+ * @param {string} cid 公司ID
+ * @param {object} state 游戏状态
+ * @param {number} valuation 估值
+ */
+function recordIpoHistory(cid, state, valuation) {
+  var memory = getMultiRunMemory();
+  var name = _coName(cid);
+  var industry =
+    typeof getCompanyIndustry === "function" ? getCompanyIndustry(cid) : "未知";
+
+  memory.ipoHistory.push({
+    cid: cid,
+    name: name,
+    industry: industry,
+    ipoDay: state.player.day,
+    ipoRun: memory.totalPlaythroughs + 1,
+    valuation: valuation,
+    recordedAt: Date.now(),
+  });
+
+  // 标记为传奇企业
+  _addLegendaryCompany(memory, cid, name, industry, "IPO上市");
+
+  saveMultiRunMemory(memory);
+}
+
+// ====== 增强功能：合并历史 ======
+
+/**
+ * 记录公司合并
+ * @param {string} acquirerCid 收购方ID
+ * @param {string} targetCid 被收购方ID
+ * @param {string} mergedName 合并后名称
+ * @param {object} state 游戏状态
+ */
+function recordMergerHistory(acquirerCid, targetCid, mergedName, state) {
+  var memory = getMultiRunMemory();
+  var key = targetCid + "_merged_" + acquirerCid;
+
+  memory.mergerHistory[key] = {
+    acquirerId: acquirerCid,
+    acquirerName: _coName(acquirerCid),
+    targetId: targetCid,
+    targetName: _coName(targetCid),
+    mergedName: mergedName,
+    mergedDay: state.player.day,
+    mergedRun: memory.totalPlaythroughs + 1,
+    recordedAt: Date.now(),
+  };
+
+  saveMultiRunMemory(memory);
+}
+
+// ====== 增强功能：传奇企业 ======
+
+/**
+ * 添加传奇企业
+ */
+function _addLegendaryCompany(memory, cid, name, industry, reason) {
+  // 检查是否已存在
+  for (var i = 0; i < memory.legendaryCompanies.length; i++) {
+    if (memory.legendaryCompanies[i].cid === cid) {
+      memory.legendaryCompanies[i].achievements.push({
+        reason: reason,
+        day: new Date().toISOString(),
+      });
+      return;
+    }
+  }
+
+  memory.legendaryCompanies.push({
+    cid: cid,
+    name: name,
+    industry: industry,
+    achievements: [{ reason: reason, day: new Date().toISOString() }],
+    firstSeenRun: memory.totalPlaythroughs + 1,
+  });
+}
+
+/**
+ * 获取传奇企业列表
+ */
+function getLegendaryCompanies() {
+  var memory = getMultiRunMemory();
+  return memory.legendaryCompanies || [];
+}
+
+/**
+ * 获取 IPO 历史
+ */
+function getIpoHistory() {
+  var memory = getMultiRunMemory();
+  return memory.ipoHistory || [];
+}
+
+/**
+ * 获取合并历史
+ */
+function getMergerHistory() {
+  var memory = getMultiRunMemory();
+  return memory.mergerHistory || {};
+}
+
+// ====== 增强功能：行业格局变迁 ======
+
+/**
+ * 更新行业格局
+ * @param {string} industry 行业名
+ * @param {string} action 动作：company_died / company_ipo / company_merged
+ */
+function updateIndustryEvolution(industry, action) {
+  var memory = getMultiRunMemory();
+  if (!memory.industryEvolution[industry]) {
+    memory.industryEvolution[industry] = {
+      companiesStarted: 0,
+      companiesDied: 0,
+      companiesIpo: 0,
+      companiesMerged: 0,
+      lastUpdated: 0,
+    };
+  }
+
+  var data = memory.industryEvolution[industry];
+  if (action === "company_died") data.companiesDied++;
+  else if (action === "company_ipo") data.companiesIpo++;
+  else if (action === "company_merged") data.companiesMerged++;
+
+  data.lastUpdated = Date.now();
+
+  saveMultiRunMemory(memory);
+}
+
+/**
+ * 获取行业格局变迁
+ */
+function getIndustryEvolution() {
+  var memory = getMultiRunMemory();
+  return memory.industryEvolution || {};
+}
+
+/**
+ * 获取多周目记忆摘要（用于UI）
+ */
+function getMultiRunMemorySummary() {
+  var memory = getMultiRunMemory();
+  if (!memory || memory.totalPlaythroughs === 0) {
+    return {
+      totalRuns: 0,
+      hasMemory: false,
+      message: "🆕 这是你的第一个周目，企业记忆将从本周目开始积累。",
+    };
+  }
+
+  var deceasedCount = Object.keys(memory.deceasedCompanies || {}).length;
+  var ipoCount = (memory.ipoHistory || []).length;
+  var legendaryCount = (memory.legendaryCompanies || []).length;
+  var mergerCount = Object.keys(memory.mergerHistory || {}).length;
+
+  var msg = "📊 已进行 <b>" + memory.totalPlaythroughs + "</b> 周目";
+  if (memory.totalPlaythroughs > 1) {
+    msg += "，记录了 <b>" + deceasedCount + "</b> 家倒闭企业";
+    msg += "、<b>" + ipoCount + "</b> 次 IPO";
+    msg += "、<b>" + legendaryCount + "</b> 家传奇企业";
+    if (mergerCount > 0) msg += "、<b>" + mergerCount + "</b> 次合并";
+  }
+
+  return {
+    totalRuns: memory.totalPlaythroughs,
+    hasMemory: true,
+    deceasedCount: deceasedCount,
+    ipoCount: ipoCount,
+    legendaryCount: legendaryCount,
+    mergerCount: mergerCount,
+    message: msg,
+    memory: memory,
+  };
+}
+
+/**
+ * 周目结束：更新周目历史
+ */
+function recordPlaythroughEndEnhanced(state) {
+  var memory = getMultiRunMemory();
+  memory.totalPlaythroughs++;
+
+  // 检查传奇企业（市场份额>35%）
+  if (state.enterpriseFate && state.enterpriseFate.companies) {
+    for (var cid in state.enterpriseFate.companies) {
+      var co = state.enterpriseFate.companies[cid];
+      if (co && co.marketShare > 35 && !co.ceasedExistence) {
+        _addLegendaryCompany(
+          memory,
+          cid,
+          _coName(cid),
+          typeof getCompanyIndustry === "function"
+            ? getCompanyIndustry(cid)
+            : "未知",
+          "市场份额>" + Math.round(co.marketShare) + "%",
+        );
+      }
+    }
+  }
+
+  saveMultiRunMemory(memory);
 }
 
 // 全局挂载
@@ -237,6 +457,16 @@ if (typeof window !== "undefined") {
     recordPlaythroughEnd: recordPlaythroughEnd,
     getDeceasedCompanyEpitaphs: getDeceasedCompanyEpitaphs,
     resetMultiRunMemory: resetMultiRunMemory,
+    // 增强功能
+    recordIpoHistory: recordIpoHistory,
+    recordMergerHistory: recordMergerHistory,
+    getLegendaryCompanies: getLegendaryCompanies,
+    getIpoHistory: getIpoHistory,
+    getMergerHistory: getMergerHistory,
+    updateIndustryEvolution: updateIndustryEvolution,
+    getIndustryEvolution: getIndustryEvolution,
+    getMultiRunMemorySummary: getMultiRunMemorySummary,
+    recordPlaythroughEndEnhanced: recordPlaythroughEndEnhanced,
     MULTIVERSE_KEY: MULTIVERSE_KEY,
   });
 }

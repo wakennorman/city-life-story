@@ -253,11 +253,17 @@ function _wikiListEntries(catId, state) {
         for (var ik in ILLNESSES) {
           if (!ILLNESSES.hasOwnProperty(ik)) continue;
           var il = ILLNESSES[ik];
+          var brief = "等级" + (il.severity || 1);
+          if (il.isEvolution) brief += " · 🔄演化疾病";
+          if (il.isChronic) brief += " · ⏳慢性病";
+          if (il.isCritical) brief += " · 🚨危急重症";
+          if (il.isOccupational) brief += " · 💼职业病";
+          brief += " · " + (il.desc || "");
           out.push({
             id: il.id || ik,
             name: il.name,
             icon: il.icon || "🤒",
-            brief: "等级" + (il.severity || 1) + " · " + (il.desc || ""),
+            brief: brief,
           });
         }
       }
@@ -928,6 +934,21 @@ function _wikiStatusBadge(catId, entryId, state) {
     case "locations":
       if (state.trade && state.trade.currentLocation === entryId)
         return { cls: "ok", text: "📍当前" };
+      break;
+    case "illnesses":
+      // 检查玩家是否当前患有该疾病
+      if (state.status && state.status.illnesses) {
+        for (var illIdx = 0; illIdx < state.status.illnesses.length; illIdx++) {
+          if (state.status.illnesses[illIdx].id === entryId) {
+            var inst = state.status.illnesses[illIdx];
+            var illData = ILLNESSES[entryId];
+            var text = "🤒已患病";
+            if (inst.treated) text = "✅已治疗";
+            if (illData && illData.isCritical) text = "🚨危急";
+            return { cls: inst.treated ? "ok" : "warn", text: text };
+          }
+        }
+      }
       break;
     case "festivals":
       if (typeof FESTIVALS !== "undefined" && state.player) {

@@ -158,11 +158,21 @@ function _addIllness(state, illnessId) {
 
   StateManager.addMessage(msg, "danger");
 
-  // 追踪病史计数（用于演化链）
-  if (illnessId === "stomach_inflammation") {
-    state.flags._habits = state.flags._habits || {};
-    state.flags._habits.stomach_inflammationCount =
-      (state.flags._habits.stomach_inflammationCount || 0) + 1;
+  // 追踪病史计数（用于演化链）- 患病时计数
+  state.flags._habits = state.flags._habits || {};
+  var evolutionCountMap = {
+    cold: "coldCount",
+    stomach_inflammation: "stomach_inflammationCount",
+    gastritis: "gastritisCount",
+    depression: "depressionCount",
+    pneumonia: "pneumoniaCount",
+    malnutrition: "malnutritionCount",
+    insomnia: "insomniaCount",
+    overwork: "overworkCount",
+  };
+  if (evolutionCountMap[illnessId]) {
+    var countKey = evolutionCountMap[illnessId];
+    state.flags._habits[countKey] = (state.flags._habits[countKey] || 0) + 1;
   }
 }
 
@@ -556,6 +566,235 @@ function treatIllness(illnessId, tier) {
   state.status.sick = state.status.illnesses.length > 0;
 }
 
+// ====== 疾病演化提示 ======
+
+/** 检查疾病演化风险（每日结算时调用） */
+function checkEvolutionRisk(state) {
+  if (!ILLNESSES || !state.status || !state.status.illnesses) return;
+  var illnesses = state.status.illnesses;
+  var warnedEvolution = state.flags._evolutionWarningShown || {};
+
+  for (var i = 0; i < illnesses.length; i++) {
+    var inst = illnesses[i];
+    var ill = ILLNESSES[inst.id];
+    if (!ill || !ill.evolvesTo || ill.evolvesTo.length === 0) continue;
+
+    // 检查演化条件是否接近满足
+    var h = state.flags._habits || {};
+    for (var ei = 0; ei < ill.evolvesTo.length; ei++) {
+      var targetId = ill.evolvesTo[ei];
+      var targetIll = ILLNESSES[targetId];
+      if (!targetIll || !targetIll.triggerHabit) continue;
+
+      // 检查每个触发条件
+      var riskLevel = 0; // 0=无风险, 1=低风险, 2=中风险, 3=高风险
+      var maxThreshold = 0;
+      var closestHabit = null;
+
+      for (var hk in targetIll.triggerHabit) {
+        if (!targetIll.triggerHabit.hasOwnProperty(hk)) continue;
+        var threshold = targetIll.triggerHabit[hk];
+        var actual = h[hk] || 0;
+        if (hk === "age") actual = state.player.age || 20;
+
+        maxThreshold = Math.max(maxThreshold, threshold);
+        var ratio = actual / threshold;
+
+        if (ratio >= 0.7) riskLevel = Math.max(riskLevel, 3);
+        else if (ratio >= 0.5) riskLevel = Math.max(riskLevel, 2);
+        else if (ratio >= 0.3) riskLevel = Math.max(riskLevel, 1);
+
+        if (ratio >= 0.3 && (!closestHabit || ratio > closestHabit.ratio)) {
+          closestHabit = {
+            habit: hk,
+            actual: actual,
+            threshold: threshold,
+            ratio: ratio,
+          };
+        }
+      }
+
+      // 只显示高风险提示（避免刷屏）
+      if (riskLevel >= 2 && !warnedEvolution[inst.id + "_" + targetId]) {
+        warnedEvolution[inst.id + "_" + targetId] = true;
+        state.flags._evolutionWarningShown = warnedEvolution;
+
+        var riskLabel = riskLevel === 3 ? "🚨 高危" : "⚠️ 中危";
+        var habitLabel =
+          {
+            junkFoodMeals: "垃圾食品",
+            lowHungerStreak: "长期饥饿",
+            lowHygieneStreak: "卫生极差",
+            lowHappinessStreak: "心情低落",
+            highFatigueStreak: "过度疲劳",
+            lateNightActions: "夜生活",
+            stomach_inflammationCount: "肠胃炎",
+            coldCount: "感冒",
+            pneumoniaCount: "肺炎",
+            malnutritionCount: "营养不良",
+            insomniaCount: "失眠",
+            depressionCount: "抑郁",
+            officeWorkDays: "办公室工作",
+            hungerHighStreak: "过度饱食",
+            healthUnder30: "健康低下",
+            age: "年龄",
+          }[closestHabit?.habit || "unknown"] ||
+          closestHabit?.habit ||
+          "未知习惯";
+
+        var msg =
+          riskLabel +
+          "：你的" +
+          ill.name +
+          "有演化成" +
+          targetIll.name +
+          "的风险！" +
+          "当前" +
+          habitLabel +
+          "（" +
+          closestHabit.actual +
+          "/" +
+          closestHabit.threshold +
+          "）接近阈值。" +
+          "建议尽快治疗！";
+
+        StateManager.addMessage(msg, riskLevel === 3 ? "danger" : "warning");
+
+        // 首次高危演化风险时弹出提示弹窗
+        if (riskLevel === 3 && !state.flags._evolutionModalShown) {
+          state.flags._evolutionModalShown = {};
+          _showEvolutionWarningModal(state, ill, targetIll, closestHabit);
+        }
+      }
+    }
+  }
+}
+
+/** 显示演化警告弹窗 */
+function _showEvolutionWarningModal(
+  state,
+  currentIll,
+  targetIll,
+  closestHabit,
+) {
+  var habitLabel =
+    {
+      junkFoodMeals: "累计吃垃圾食品",
+      lowHungerStreak: "连续饥饿天数",
+      lowHygieneStreak: "连续卫生极差天数",
+      lowHappinessStreak: "连续心情低落天数",
+      highFatigueStreak: "连续过度疲劳天数",
+      lateNightActions: "夜生活次数",
+      stomach_inflammationCount: "得过肠胃炎次数",
+      coldCount: "得过感冒次数",
+      pneumoniaCount: "得过肺炎次数",
+      malnutritionCount: "得过营养不良次数",
+      insomniaCount: "得过失眠次数",
+      depressionCount: "得过抑郁次数",
+      officeWorkDays: "办公室工作天数",
+      hungerHighStreak: "连续过度饱食天数",
+      healthUnder30: "健康<30天数",
+      age: "年龄",
+    }[closestHabit?.habit || "unknown"] ||
+    closestHabit?.habit ||
+    "未知习惯";
+
+  var html =
+    '<div style="font-size:14px;line-height:1.8;">' +
+    '<div style="text-align:center;padding:15px;background:linear-gradient(135deg,#ff4444,#cc0000);border-radius:8px;color:white;margin-bottom:15px;">' +
+    '<div style="font-size:32px;">🚨</div>' +
+    '<div style="font-weight:700;font-size:16px;margin-top:8px;">疾病演化高危预警</div>' +
+    "</div>" +
+    "<p>你目前患有 <strong>" +
+    currentIll.name +
+    "</strong>，如果不及时治疗，有极高风险演化成：</p>" +
+    '<div style="background:#fff3f3;border-left:4px solid #cc0000;padding:12px;margin:10px 0;border-radius:4px;">' +
+    '<div style="font-size:18px;font-weight:700;color:#cc0000;">' +
+    (targetIll.icon || "☠️") +
+    " " +
+    targetIll.name +
+    "</div>" +
+    '<div style="font-size:12px;color:#666;margin-top:4px;">' +
+    (targetIll.desc || "") +
+    "</div>" +
+    "</div>" +
+    '<p style="font-size:13px;">⚠️ 触发条件接近：</p>' +
+    '<ul style="font-size:13px;">' +
+    "<li><strong>" +
+    habitLabel +
+    "</strong>：当前 <strong>" +
+    closestHabit.actual +
+    "</strong> / 阈值 <strong>" +
+    closestHabit.threshold +
+    "</strong></li>" +
+    "<li>演化概率：<strong>" +
+    Math.round((targetIll.triggerChance || 0.5) * 100) +
+    "%</strong></li>" +
+    "</ul>" +
+    '<p style="font-size:13px;color:#666;">💡 建议立即前往医院治疗，避免病情恶化！</p>' +
+    "</div>";
+
+  if (typeof showModal === "function") {
+    showModal({
+      title: "⚠️ 疾病演化预警",
+      body: html,
+      buttons: [
+        {
+          text: "立即治疗",
+          cls: "btn-danger",
+          onClick: function () {
+            if (typeof openClinicModal === "function") {
+              openClinicModal();
+            }
+          },
+        },
+        { text: "知道了", cls: "btn-primary" },
+      ],
+    });
+  }
+}
+
+/** 获取疾病演化链（用于百科展示） */
+function getEvolutionChain(illnessId) {
+  if (!ILLNESSES || !ILLNESSES[illnessId]) return null;
+  var ill = ILLNESSES[illnessId];
+  var chain = { current: ill, evolvesFrom: [], evolvesTo: [] };
+
+  // 追溯演化来源
+  if (ill.evolvesFrom) {
+    for (var i = 0; i < ill.evolvesFrom.length; i++) {
+      var fromId = ill.evolvesFrom[i];
+      var fromIll = ILLNESSES[fromId];
+      if (fromIll) {
+        chain.evolvesFrom.push({
+          id: fromIll.id,
+          name: fromIll.name,
+          icon: fromIll.icon,
+          severity: fromIll.severity,
+        });
+      }
+    }
+  }
+
+  // 前瞻演化目标
+  if (ill.evolvesTo) {
+    for (var j = 0; j < ill.evolvesTo.length; j++) {
+      var toId = ill.evolvesTo[j];
+      var toIll = ILLNESSES[toId];
+      if (toIll) {
+        chain.evolvesTo.push({
+          id: toIll.id,
+          name: toIll.name,
+          icon: toIll.icon,
+          severity: toIll.severity,
+        });
+      }
+    }
+  }
+
+  return chain;
+}
+
 // ================================================================
 //  百科自更新：疾病库大小自动反映；新增疾病无需碰 wiki.js
 // ================================================================
@@ -608,15 +847,80 @@ if (typeof window !== "undefined") {
       },
       { kind: "subhead", text: "🔄 疾病演化链" },
       {
-        kind: "list",
-        items: [
-          "肠胃炎 → 胃溃疡 → 胃癌（反复患病 + 年龄增长）",
-          "抑郁倾向 → 重度抑郁（反复患病）",
-          "感冒 → 肺炎 → 器官衰竭（未及时治疗 + 疲劳累积）",
-          "营养不良 → 贫血（年龄增长）",
-          "失眠症 → 重度失眠（年龄增长）",
-          "过劳 → 猝死风险（年龄增长 + 未治疗）",
-        ],
+        kind: "html",
+        get: function () {
+          var chains = [
+            {
+              from: "stomach_inflammation",
+              mid: "gastritis",
+              to: "stomach_cancer",
+              label: "消化系统",
+            },
+            {
+              from: "depression",
+              mid: null,
+              to: "major_depression",
+              label: "心理健康",
+            },
+            {
+              from: "cold",
+              mid: "pneumonia",
+              to: "organ_failure",
+              label: "呼吸系统",
+            },
+            {
+              from: "malnutrition",
+              mid: null,
+              to: "anemia",
+              label: "营养代谢",
+            },
+            {
+              from: "insomnia",
+              mid: null,
+              to: "severe_insomnia",
+              label: "睡眠障碍",
+            },
+            {
+              from: "overwork",
+              mid: null,
+              to: "sudden_death_risk",
+              label: "过劳猝死",
+            },
+          ];
+          var html =
+            '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+          for (var ci = 0; ci < chains.length; ci++) {
+            var ch = chains[ci];
+            var fromIll = ILLNESSES[ch.from];
+            var toIll = ILLNESSES[ch.to];
+            var midIll = ch.mid ? ILLNESSES[ch.mid] : null;
+            html +=
+              '<div style="background:var(--bg-input);padding:8px;border-radius:6px;font-size:12px;">';
+            html +=
+              '<div style="font-weight:600;margin-bottom:4px;">📌 ' +
+              ch.label +
+              "</div>";
+            html += '<div style="line-height:1.6;">';
+            if (fromIll) html += fromIll.icon + " " + fromIll.name + " → ";
+            if (midIll)
+              html +=
+                '<span style="color:#ff9800;">' +
+                midIll.icon +
+                " " +
+                midIll.name +
+                " → </span>";
+            if (toIll)
+              html +=
+                '<span style="color:#cc0000;font-weight:600;">' +
+                toIll.icon +
+                " " +
+                toIll.name +
+                "</span>";
+            html += "</div></div>";
+          }
+          html += "</div>";
+          return html;
+        },
       },
       { kind: "subhead", text: "💊 治疗" },
       {

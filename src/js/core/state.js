@@ -60,6 +60,8 @@ function createDefaultState() {
       villageDebt: 5500, // 欠村长的钱
       villageDebtInterest: 0, // 累计村长利息
       bankDebt: 0, // 欠银行的钱
+      bankDebtDay: 0, // 最近一笔银行贷款发放日
+      bankCreditHistory: [], // 信贷记录 [{ day, amount, repaid, rating }]
       loanPrincipal: 5500, // 原始借款额
       loanDay: 0, // 借款日
       dailyInterest: 0.0035, // 日息 0.3%

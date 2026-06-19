@@ -42,6 +42,7 @@ const ILLNESSES = {
     symptom: { health: -1, fatigue: 5 },
     treatCost: { pharmacy: 80, hospital: 300 },
     desc: "鼻塞咳嗽，没力气干活。卫生不好+疲劳就容易着凉。",
+    evolvesTo: ["pneumonia"],
   },
   stomach_inflammation: {
     id: "stomach_inflammation",
@@ -54,6 +55,7 @@ const ILLNESSES = {
     symptom: { health: -2, hunger: -3 },
     treatCost: { pharmacy: 150, hospital: 600 },
     desc: "肚子绞痛、拉肚子，吃啥都没胃口。垃圾食品吃多了。",
+    evolvesTo: ["gastritis"],
   },
   malnutrition: {
     id: "malnutrition",
@@ -67,6 +69,7 @@ const ILLNESSES = {
     treatCost: { pharmacy: 200, hospital: 800 },
     requiresNutrition: true,
     desc: "脸黄面瘦，气血两亏。需要营养餐+治疗双管齐下。",
+    evolvesTo: ["anemia"],
   },
   insomnia: {
     id: "insomnia",
@@ -79,6 +82,7 @@ const ILLNESSES = {
     symptom: { fatigueRecoveryMult: 0.6, mentalDebuff: 5 },
     treatCost: { pharmacy: 100, hospital: 400 },
     desc: "翻来覆去睡不着，第二天精神涣散。夜生活太多+心情差。",
+    evolvesTo: ["severe_insomnia"],
   },
   skin_infection: {
     id: "skin_infection",
@@ -105,6 +109,7 @@ const ILLNESSES = {
     symptom: { mentalDebuff: 8, fatigue: 5, apMult: 0.15 },
     treatCost: { hospital: 1200 },
     desc: "头晕乏力、注意力涣散，做啥效率都低。该停下来歇歇了。",
+    evolvesTo: ["sudden_death_risk"],
   },
   depression: {
     id: "depression",
@@ -117,6 +122,7 @@ const ILLNESSES = {
     symptom: { mentalDebuff: 15, apMult: 0.2, happiness: -3 },
     treatCost: { hospital: 1500 },
     desc: "什么都没意思，连床都不想下。走出来需要时间和帮助。",
+    evolvesTo: ["major_depression"],
   },
 
   // ========== 慢性进阶疾病 ==========
@@ -131,6 +137,7 @@ const ILLNESSES = {
     symptom: { health: -3, hunger: -5, physiqueDebuff: 4 },
     treatCost: { hospital: 3000 },
     desc: "肠胃炎反复拖出来的慢性病。烧心反酸不停。",
+    evolvesTo: ["stomach_cancer"],
   },
   hypertension: {
     id: "hypertension",
@@ -204,6 +211,7 @@ const ILLNESSES = {
     desc: "感冒未及时治疗+疲劳累积，发展成肺炎。呼吸困难，健康持续下降。",
     isEvolution: true,
     evolvesFrom: ["cold"],
+    evolvesTo: ["organ_failure"],
   },
 
   organ_failure: {
