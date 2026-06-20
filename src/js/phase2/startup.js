@@ -9,6 +9,19 @@
  *   退出期：IPO上市 / 被收购 / 破产清算
  */
 
+// ====== 工具函数 ======
+
+/** 转义 HTML 特殊字符 */
+function _esc(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ====== 行业定义 ======
 const STARTUP_INDUSTRIES = {
   tech: {
@@ -986,8 +999,13 @@ function raiseFunding(state, roundId) {
   };
 }
 
-// ====== 核心：季度运营 ======
-function tickStartup(state) {
+// ====== 核心：公司运营（每日/季度）======
+/**
+ * @param {Object} state - 游戏状态
+ * @param {string} tickType - 'daily' | 'quarterly' 调用类型
+ */
+function tickStartup(state, tickType) {
+  tickType = tickType || "quarterly"; // 默认季度（兼容旧调用）
   const startup = state.startup;
   if (!startup || startup.status === "none" || startup.flags.exited) return;
 
@@ -996,17 +1014,33 @@ function tickStartup(state) {
 
   const day = state.player.day;
 
+  // 时间倍率：daily=1, quarterly=90（天）
+  const timeMult = tickType === "daily" ? 1 : 90;
+  // 每日基础参数
+  const DAILY_BASE_REVENUE = 180; // ~¥180/天/产品 → ~¥16,200/季度
+  const DAILY_SALARY_DIV = 30; // 月薪÷30 = 日薪
+  const DAILY_RENT_BASE = 180; // ~¥180/天 → ~¥5,400/季度
+  const DAILY_RENT_PER_EMP = 33; // ~¥33/天/人 → ~¥1,000/季度
+  const DAILY_RD = 180; // ~¥180/天/产品 → ~¥16,200/季度
+  const DAILY_MARKETING_BASE = 120; // ~¥120/天 → ~¥3,600/季度
+  const DAILY_MARKETING_RATIO = 0.05 / 90; // 日营收比例
+  const DAILY_LOYALTY_DECAY_BAD = 0.12; // ~3.6/季度
+  const DAILY_LOYALTY_DECAY_GOOD = 0.02; // ~0.6/季度
+  const DAILY_FIRE_PROB = 0.003; // ~0.3%/天 → ~2.7%/季度
+  const DAILY_WORD_OF_MOUTH_PROB = 0.003; // ~0.3%/天 → ~2.7%/季度
+  const DAILY_BASE_GROWTH = 0.0008; // ~0.08%/天 → ~7%/季度
+  const DAILY_CHURN_BASE = 0.002; // ~0.2%/天 → ~18%/季度
+
   // 1. 收入计算
   let totalRevenue = 0;
   for (const product of company.products) {
     if (product.status === "launched") {
-      // 产品收入 = 基础收入 × 技术分 × 市场分 × 行业系数
-      const baseRevenue = 5000;
+      const baseRevenue = DAILY_BASE_REVENUE * timeMult;
       const techMod = product.technologyScore / 100;
       const marketMod = product.marketScore / 100;
       const industryMod =
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
-      const growthMod = 1 + (company.revenue > 0 ? 0.01 : 0); // 轻微增长
+      const growthMod = 1 + (company.revenue > 0 ? 0.003 : 0);
 
       product.revenue = Math.round(
         baseRevenue *
@@ -1022,19 +1056,24 @@ function tickStartup(state) {
 
   // 2. 支出计算
   let totalExpenses = 0;
-  // 员工工资
+  // 员工工资（日薪 × 天数）
   for (const emp of company.employees) {
-    totalExpenses += emp.salary;
+    totalExpenses += Math.round((emp.salary / DAILY_SALARY_DIV) * timeMult);
   }
-  // 办公租金（按团队规模）
-  const rent = 5000 + company.employees.length * 1000;
+  // 办公租金
+  const rent =
+    Math.round(DAILY_RENT_BASE * timeMult) +
+    company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
   totalExpenses += rent;
   // 研发成本
   const rAndD =
-    company.products.filter((p) => p.status === "developing").length * 5000;
+    company.products.filter((p) => p.status === "developing").length *
+    Math.round(DAILY_RD * timeMult);
   totalExpenses += rAndD;
   // 营销
-  const marketing = 3000 + company.revenue * 0.05;
+  const marketing =
+    Math.round(DAILY_MARKETING_BASE * timeMult) +
+    Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
   totalExpenses += marketing;
 
   company.revenue = totalRevenue;
@@ -1047,13 +1086,16 @@ function tickStartup(state) {
   // 4. 烧钱率 & runway
   company.burnRate = Math.max(0, totalExpenses - totalRevenue);
   company.monthsOfRunway =
-    company.burnRate > 0 ? company.cashReserve / company.burnRate : 999;
+    company.burnRate > 0 ? company.cashReserve / (company.burnRate / 30) : 999;
 
   // 5. 估值漂移
+  const valuationUpMod = tickType === "daily" ? 0.0003 : 0.02;
+  const valuationDownMod = tickType === "daily" ? 0.0002 : 0.01;
   if (netCash > 0) {
-    company.valuation *= 1 + 0.02 + Math.random() * 0.03;
+    company.valuation *= 1 + valuationUpMod + Math.random() * valuationUpMod;
   } else if (netCash < 0) {
-    company.valuation *= 1 - 0.01 - Math.random() * 0.02;
+    company.valuation *=
+      1 - valuationDownMod - Math.random() * valuationDownMod;
   }
   company.valuation = Math.round(company.valuation);
 
@@ -1064,9 +1106,14 @@ function tickStartup(state) {
 
   // 6. 团队忠诚度衰减
   for (const emp of company.employees) {
-    emp.loyalty = Math.max(0, emp.loyalty - (netCash < 0 ? 3 : 0.5));
+    emp.loyalty = Math.max(
+      0,
+      emp.loyalty -
+        (netCash < 0 ? DAILY_LOYALTY_DECAY_BAD : DAILY_LOYALTY_DECAY_GOOD) *
+          timeMult,
+    );
     // 低忠诚度可能离职
-    if (emp.loyalty < 20 && Math.random() < 0.1) {
+    if (emp.loyalty < 20 && Math.random() < DAILY_FIRE_PROB * timeMult) {
       StateManager.addMessage(
         "⚠️ 「" + emp.name + "」因不满公司状况离职！",
         "danger",
@@ -1077,9 +1124,7 @@ function tickStartup(state) {
 
   // 7. 破产检测
   if (company.monthsOfRunway <= 0 && company.fundingRounds.length >= 2) {
-    // 尝试最后融资
     StateManager.addMessage("⚠️ 资金链告急！尝试紧急融资...", "warning");
-    // 简化：直接破产
   }
 
   if (company.monthsOfRunway <= 0) {
@@ -1091,6 +1136,84 @@ function tickStartup(state) {
     company.phase = "growth";
     state.startup.status = "growth";
     StateManager.addMessage("📈 团队扩大，公司进入成长期！", "success");
+  }
+
+  // 9. 产品运营 — 用户增长 + 口碑传播
+  for (const product of company.products) {
+    if (product.status === "launched") {
+      const wordOfMouth =
+        Math.random() < DAILY_WORD_OF_MOUTH_PROB * timeMult ? 0.05 : 0;
+      const baseGrowth = DAILY_BASE_GROWTH * timeMult;
+      const productFactor =
+        (product.technologyScore + product.marketScore) / 200;
+      const growthRate = baseGrowth * productFactor + wordOfMouth;
+
+      if (!product.users) product.users = 100;
+      product.users = Math.round(product.users * (1 + growthRate));
+
+      // 口碑评分
+      if (!product.rating) product.rating = 3.5;
+      const ratingChange =
+        ((product.technologyScore / 100 - 0.5) * 0.2) / timeMult +
+        ((Math.random() - 0.5) * 0.1) / timeMult;
+      product.rating = Math.max(1, Math.min(5, product.rating + ratingChange));
+
+      // 用户留存
+      const churnRate =
+        DAILY_CHURN_BASE * timeMult + (1 - product.rating / 5) * 0.1;
+      const retained = Math.floor(
+        product.users * (1 - Math.min(churnRate, 0.5)),
+      );
+      const lost = product.users - retained;
+
+      if (wordOfMouth > 0) {
+        StateManager.addMessage(
+          "🔥 「" +
+            product.name +
+            "」口碑爆发！新增用户 +" +
+            Math.round(product.users * growthRate) +
+            "，当前用户 " +
+            product.users +
+            "，评分 " +
+            product.rating.toFixed(1) +
+            "★",
+          "success",
+        );
+      }
+
+      if (lost > 0 && Math.random() < 0.2 / timeMult) {
+        StateManager.addMessage(
+          "📉 「" +
+            product.name +
+            "」流失 " +
+            lost +
+            " 用户（留存率 " +
+            (100 - Math.min(churnRate, 0.5) * 100).toFixed(0) +
+            "%）",
+          "warning",
+        );
+      }
+    }
+  }
+
+  // 10. 检查收购要约（仅季度调用时检查，避免每日都弹）
+  if (
+    tickType !== "daily" &&
+    !startup.flags._acquisitionOfferExpired &&
+    !startup.flags.ipoFiled
+  ) {
+    const offer = getAcquisitionOffer(state);
+    if (offer) {
+      state.startup.pendingAcquisitionOffer = offer;
+      StateManager.addMessage(
+        "🤝 「" +
+          offer.acquirerName +
+          "」向你提出收购要约！估值 " +
+          offer.offerMultiplier.toFixed(2) +
+          "x，前往创业Tab查看详情",
+        "event",
+      );
+    }
   }
 }
 
@@ -1184,10 +1307,10 @@ function getAcquisitionOffer(state) {
   const startup = state.startup;
   const company = startup.company;
   if (!company) return null;
+  if (company.phase !== "growth" && company.phase !== "mature") return null;
 
-  // 检查是否有收购要约
-  // 大企业可能收购玩家公司
-  const offerProb = 0.05; // 5%概率
+  // 检查是否有收购要约 - 成长期/成熟期公司才有机会
+  const offerProb = company.phase === "mature" ? 0.08 : 0.03;
   if (Math.random() > offerProb) return null;
 
   // 生成收购方（从企业命运系统中选择健康度高的公司）
@@ -1206,12 +1329,30 @@ function getAcquisitionOffer(state) {
   const acquirerCid = candidates[0].cid;
   const acquirerName = getCompanyNameById(acquirerCid);
 
-  // 生成收购报价
-  const offerMultiplier = 0.8 + Math.random() * 0.6; // 0.8-1.4倍估值
+  // 生成收购报价 - 考虑公司表现
+  let offerMultiplier = 0.8 + Math.random() * 0.6; // 基础 0.8-1.4倍
+  // 表现好加成
+  if (company.revenue > company.expenses) offerMultiplier += 0.15;
+  if (company.reputation > 60) offerMultiplier += 0.1;
+  if (company.employees.length > 10) offerMultiplier += 0.05;
+  // 表现差减成
+  if (company.monthsOfRunway < 3) offerMultiplier -= 0.1;
+  offerMultiplier = Math.max(0.5, Math.min(2.0, offerMultiplier));
+
   const offerValue = Math.round(company.valuation * offerMultiplier);
   const playerShareValue = Math.round(
     (company.equity.player / 100) * offerValue,
   );
+
+  // 生成收购方评语
+  const评语 = [
+    "对你们的产品方向很感兴趣",
+    "看好团队的技术实力",
+    "希望整合你们的市场渠道",
+    "对我们的用户增长数据印象深刻",
+    "想补充他们在该领域的布局",
+  ];
+  const acquirerComment = 评语[Math.floor(Math.random() * 评语.length)];
 
   return {
     acquirerCid: acquirerCid,
@@ -1219,7 +1360,164 @@ function getAcquisitionOffer(state) {
     offerValue: offerValue,
     playerShareValue: playerShareValue,
     offerDay: state.player.day,
+    offerMultiplier: offerMultiplier,
+    acquirerComment: acquirerComment,
+    pending: true, // 待玩家决策
   };
+}
+
+/** 显示收购要约弹窗 */
+function showAcquisitionModal(state, offer) {
+  if (!offer) return;
+
+  const startup = state.startup;
+  const company = startup.company;
+  const industryInfo = STARTUP_INDUSTRIES[company.industry];
+
+  if (typeof showModal !== "function") return;
+
+  const bodyHtml = `
+    <div style="font-size:14px;">
+      <div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:8px;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">🤝 收购要约</div>
+        <div style="font-size:16px;font-weight:bold;color:var(--text-primary);">
+          「${company.name}」将被「${offer.acquirerName}」收购
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">
+          ${offer.acquirerComment}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="padding:12px;background:var(--bg-card);border-radius:6px;">
+          <div style="font-size:11px;color:var(--text-muted);">收购方</div>
+          <div style="font-size:14px;font-weight:bold;color:var(--text-primary);">${offer.acquirerName}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg-card);border-radius:6px;">
+          <div style="font-size:11px;color:var(--text-muted);">报价倍数</div>
+          <div style="font-size:14px;font-weight:bold;color:var(--accent);">${offer.offerMultiplier.toFixed(2)}x 估值</div>
+        </div>
+        <div style="padding:12px;background:var(--bg-card);border-radius:6px;">
+          <div style="font-size:11px;color:var(--text-muted);">公司总估值</div>
+          <div style="font-size:14px;font-weight:bold;color:var(--success);">¥${offer.offerValue.toLocaleString()}</div>
+        </div>
+        <div style="padding:12px;background:var(--bg-card);border-radius:6px;">
+          <div style="font-size:11px;color:var(--text-muted);">你获得（${Math.round(company.equity.player)}%股份）</div>
+          <div style="font-size:16px;font-weight:bold;color:var(--success);">¥${offer.playerShareValue.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:rgba(245,158,11,0.1);border-radius:6px;border:1px solid rgba(245,158,11,0.3);margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--text-secondary);">
+          ⚠️ 接受收购后公司将退出历史舞台，你获得现金但失去创业身份。
+          建议在公司估值较高（产品成功、团队稳定、盈利）时接受。
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-muted);">
+        当前公司状态：估值¥${Math.round(company.valuation).toLocaleString()} |
+        月收入¥${Math.round(company.revenue).toLocaleString()} |
+        团队${company.employees.length}人 |
+        Runway ${Math.round(company.monthsOfRunway)}月
+      </div>
+    </div>
+  `;
+
+  showModal({
+    title: "🤝 收购要约",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "💰 接受收购",
+        cls: "btn-success",
+        callback: function () {
+          const result = acceptAcquisition(state, offer);
+          if (result.success) {
+            if (typeof renderAll === "function") renderAll();
+          }
+        },
+      },
+      {
+        text: "📊 还价",
+        cls: "btn-primary",
+        callback: function () {
+          // 还价逻辑
+          const counterOfferMultiplier =
+            offer.offerMultiplier + 0.2 + Math.random() * 0.3;
+          const counterOfferValue = Math.round(
+            company.valuation * counterOfferMultiplier,
+          );
+          const counterPlayerShare = Math.round(
+            (company.equity.player / 100) * counterOfferValue,
+          );
+
+          if (typeof showModal !== "function") return;
+
+          showModal({
+            title: "💰 还价",
+            body: `
+              <div style="font-size:14px;">
+                <p style="margin-bottom:12px;">你提出反报价：<strong style="color:var(--accent);">¥${counterOfferValue.toLocaleString()}</strong>（${counterOfferMultiplier.toFixed(2)}x 估值）</p>
+                <p style="font-size:12px;color:var(--text-muted);">
+                  对方有 ${Math.round(30 + Math.random() * 40)}% 的概率接受。
+                  如果拒绝，原报价将失效，下次收购要约需等待更久。
+                </p>
+              </div>
+            `,
+            buttons: [
+              {
+                text: "确认还价",
+                cls: "btn-primary",
+                callback: function () {
+                  const accepted = Math.random() < 0.3 + Math.random() * 0.4;
+                  if (accepted) {
+                    StateManager.addMessage(
+                      "🎉 「" +
+                        offer.acquirerName +
+                        "」接受了你的还价！收购价提升至 ¥" +
+                        counterOfferValue.toLocaleString(),
+                      "success",
+                    );
+                    offer.offerValue = counterOfferValue;
+                    offer.playerShareValue = counterPlayerShare;
+                    acceptAcquisition(state, offer);
+                    if (typeof renderAll === "function") renderAll();
+                  } else {
+                    StateManager.addMessage(
+                      "❌ 「" +
+                        offer.acquirerName +
+                        "」拒绝了你的还价，收购谈判破裂。",
+                      "danger",
+                    );
+                    // 标记收购要约已失效
+                    startup.flags._acquisitionOfferExpired = true;
+                    if (typeof renderAll === "function") renderAll();
+                  }
+                },
+              },
+              {
+                text: "取消",
+                cls: "",
+                callback: function () {},
+              },
+            ],
+          });
+        },
+      },
+      {
+        text: "❌ 拒绝",
+        cls: "btn-danger",
+        callback: function () {
+          StateManager.addMessage(
+            "你拒绝了收购要约，决定继续经营公司。",
+            "warning",
+          );
+          startup.flags._acquisitionOfferExpired = true;
+          if (typeof renderAll === "function") renderAll();
+        },
+      },
+    ],
+  });
 }
 
 function acceptAcquisition(state, offer) {
@@ -1457,6 +1755,488 @@ function getAvailableStartupActions(state) {
   return actions;
 }
 
+// ====== 深度交互弹窗 ======
+
+/** 见投资人弹窗 — 多渠道验证 + 投资人关系管理 */
+function showMeetInvestorModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  // 生成投资人反馈
+  const investorFeedback = generateInvestorFeedback(state);
+
+  if (typeof showModal !== "function") return { success: true };
+
+  const bodyHtml = `
+    <div style="font-size:13px;">
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">💰 投资人会面</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">投资人类型：${investorFeedback.investorType}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">关注领域：${investorFeedback.focusArea}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">关系度：
+          <span style="color:${getRelationshipColor(investorFeedback.relationship)};">${"★".repeat(Math.floor(investorFeedback.relationship / 20))}${"☆".repeat(5 - Math.floor(investorFeedback.relationship / 20))} ${investorFeedback.relationship}%</span>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:rgba(74,158,92,0.1);border-radius:6px;margin-bottom:12px;border:1px solid rgba(74,158,92,0.2);">
+        <div style="font-size:12px;font-weight:bold;color:var(--success);margin-bottom:6px;">✅ 投资人看好</div>
+        <div style="font-size:11px;color:var(--text-secondary);">${investorFeedback.positive}</div>
+      </div>
+
+      <div style="padding:12px;background:rgba(243,156,18,0.1);border-radius:6px;margin-bottom:12px;border:1px solid rgba(243,156,18,0.2);">
+        <div style="font-size:12px;font-weight:bold;color:var(--warning);margin-bottom:6px;">⚠️ 关注风险</div>
+        <div style="font-size:11px;color:var(--text-secondary);">${investorFeedback.concerns}</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);">
+        💡 建议：${investorFeedback.advice}
+      </div>
+    </div>
+  `;
+
+  showModal({
+    title: "💰 投资人会面",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "📅 约定下次会面",
+        cls: "btn-primary",
+        callback: function () {
+          // 增加关系度
+          company.investorRelationship = Math.min(
+            100,
+            (company.investorRelationship || 0) + investorFeedback.gain,
+          );
+          StateManager.addMessage(
+            "与投资人关系度提升至 " +
+              Math.round(company.investorRelationship) +
+              "%",
+            "success",
+          );
+          if (typeof renderAll === "function") renderAll();
+        },
+      },
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+/** 生成投资人反馈 */
+function generateInvestorFeedback(state) {
+  const company = state.startup.company;
+  const phase = company.phase;
+
+  const investorTypes = [
+    "天使投资人",
+    "VC机构",
+    "企业风投",
+    "家族办公室",
+    "产业基金",
+  ];
+  const focusAreas = [
+    "产品创新",
+    "市场增长",
+    "团队能力",
+    "技术壁垒",
+    "商业模式",
+  ];
+
+  const investorType =
+    investorTypes[Math.floor(Math.random() * investorTypes.length)];
+  const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
+  const relationship =
+    (company.investorRelationship || 30) +
+    (10 + Math.floor(Math.random() * 20));
+
+  let positive, concerns, advice;
+
+  if (phase === "seed") {
+    positive = "产品方向清晰，团队执行力强，种子用户反馈积极";
+    concerns = "市场规模待验证，商业模式需要进一步打磨，现金流压力较大";
+    advice = "建议先做出MVP验证市场需求，再寻求A轮融资";
+  } else if (phase === "growth") {
+    positive = "用户增长数据亮眼，产品迭代速度快，团队结构完整";
+    concerns = "竞争加剧风险，需要建立护城河，盈利模式需要验证";
+    advice = "建议加速市场扩张，同时建立产品壁垒";
+  } else {
+    positive = "市场份额稳定，盈利模式清晰，团队成熟度高";
+    concerns = "增长放缓，需要寻找第二增长曲线，IPO准备需要时间";
+    advice = "建议考虑并购机会或加速IPO准备";
+  }
+
+  // 表现加成
+  if (company.revenue > company.expenses) {
+    positive += "，已实现盈利";
+    concerns = concerns.replace("盈利模式需要验证", "盈利可持续性强");
+  }
+  if (company.reputation > 60) {
+    positive += "，行业口碑良好";
+  }
+
+  return {
+    investorType,
+    focusArea,
+    relationship,
+    gain: Math.floor(5 + Math.random() * 15),
+    positive,
+    concerns,
+    advice,
+  };
+}
+
+function getRelationshipColor(val) {
+  if (val >= 70) return "#2ecc71";
+  if (val >= 40) return "#f39c12";
+  return "#e74c3c";
+}
+
+/** 市场推广弹窗 — 多渠道选择 */
+function showMarketingModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const channels = [
+    {
+      id: "social_media",
+      name: "社交媒体营销",
+      icon: "📱",
+      cost: 5000,
+      desc: "抖音/小红书/微博推广，快速提升知名度",
+      effect: "市场分+3，用户增长+5%",
+      risk: "效果波动大，需持续投入",
+    },
+    {
+      id: "offline_event",
+      name: "线下活动",
+      icon: "🎪",
+      cost: 15000,
+      desc: "行业展会/发布会/沙龙，建立行业影响力",
+      effect: "市场分+5，声誉+3，获得媒体曝光",
+      risk: "成本高，效果依赖活动质量",
+    },
+    {
+      id: "kol_collab",
+      name: "KOL合作",
+      icon: "⭐",
+      cost: 20000,
+      desc: "与行业KOL/博主合作推广",
+      effect: "市场分+4，用户增长+8%，口碑传播",
+      risk: "KOL选择风险，需评估真实性",
+    },
+    {
+      id: "advertising",
+      name: "广告投放",
+      icon: "📺",
+      cost: 30000,
+      desc: "信息流广告/搜索引擎营销",
+      effect: "市场分+6，用户增长+10%，直接转化",
+      risk: "成本高，ROI不稳定",
+    },
+    {
+      id: "content_marketing",
+      name: "内容营销",
+      icon: "📝",
+      cost: 3000,
+      desc: "博客/视频/白皮书，建立专业形象",
+      effect: "市场分+2，声誉+2，长期价值",
+      risk: "见效慢，需持续产出",
+    },
+  ];
+
+  const bodyHtml = `
+    <div style="font-size:13px;">
+      <p style="margin-bottom:12px;color:var(--text-secondary);">
+        选择推广渠道，提升市场知名度和用户增长。不同渠道成本效果不同。
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${channels
+          .map(
+            (ch) => `
+          <div style="padding:10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);cursor:pointer;marketing-channel="${ch.id}" onclick="this.style.background='var(--bg-secondary)';this.style.borderColor='var(--accent)';">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <div style="font-size:13px;font-weight:bold;">${ch.icon} ${ch.name}</div>
+              <div style="font-size:12px;color:var(--danger);">¥${ch.cost.toLocaleString()}</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:2px;">${ch.desc}</div>
+            <div style="font-size:10px;color:var(--success);">效果：${ch.effect}</div>
+            <div style="font-size:10px;color:var(--warning);">风险：${ch.risk}</div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  showModal({
+    title: "📢 市场推广",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "✅ 确认执行",
+        cls: "btn-primary",
+        callback: function () {
+          const selected = document.querySelector(
+            '[marketing-channel][style*="var(--bg-secondary)"]',
+          );
+          if (!selected) {
+            StateManager.addMessage("请选择一个推广渠道", "warning");
+            return;
+          }
+          const channelId = selected.getAttribute("marketing-channel");
+          const channel = channels.find((c) => c.id === channelId);
+          if (!channel) return;
+
+          if (company.cashReserve < channel.cost) {
+            StateManager.addMessage(
+              "现金不足，需要¥" + channel.cost.toLocaleString(),
+              "danger",
+            );
+            return;
+          }
+
+          // 执行推广
+          company.cashReserve -= channel.cost;
+          company.marketScore = Math.min(
+            100,
+            company.marketScore +
+              Math.floor(channel.effect.match(/\+(\d+)/)[1] / 2),
+          );
+
+          // 随机效果波动
+          const effectiveness = 0.7 + Math.random() * 0.6;
+          const userGrowth = Math.floor(5 * effectiveness);
+
+          StateManager.addMessage(
+            "📢 「" +
+              channel.name +
+              "」推广完成！市场分提升，用户增长 +" +
+              userGrowth +
+              "%",
+            "success",
+          );
+
+          if (typeof renderAll === "function") renderAll();
+        },
+      },
+      {
+        text: "取消",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+/** 查看财报弹窗 — 完整财务报表 */
+function showFinancialReportModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const monthlyRevenue = company.revenue || 0;
+  const monthlyExpenses = company.expenses || 0;
+  const netIncome = monthlyRevenue - monthlyExpenses;
+  const profitMargin =
+    monthlyRevenue > 0 ? (netIncome / monthlyRevenue) * 100 : 0;
+
+  const bodyHtml = `
+    <div style="font-size:13px;">
+      <!-- 损益表 -->
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 损益表（月度）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);">月收入</div>
+            <div style="font-size:14px;font-weight:bold;color:var(--success);">¥${monthlyRevenue.toLocaleString()}</div>
+          </div>
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);">月支出</div>
+            <div style="font-size:14px;font-weight:bold;color:var(--danger);">¥${monthlyExpenses.toLocaleString()}</div>
+          </div>
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);">净利润</div>
+            <div style="font-size:14px;font-weight:bold;color:${netIncome >= 0 ? "var(--success)" : "var(--danger)"};">¥${netIncome.toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:6px;background:${profitMargin >= 0 ? "rgba(74,158,92,0.1)" : "rgba(231,76,60,0.1)"};border-radius:4px;font-size:11px;text-align:center;">
+          利润率：${profitMargin.toFixed(1)}% ${profitMargin >= 0 ? "✅ 盈利" : "❌ 亏损"}
+        </div>
+      </div>
+
+      <!-- 资产负债表 -->
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">💼 资产负债表</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;">
+            <div style="font-size:10px;color:var(--text-muted);">现金储备</div>
+            <div style="font-size:14px;font-weight:bold;">¥${Math.round(company.cashReserve).toLocaleString()}</div>
+          </div>
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;">
+            <div style="font-size:10px;color:var(--text-muted);">公司估值</div>
+            <div style="font-size:14px;font-weight:bold;color:var(--accent);">¥${Math.round(company.valuation).toLocaleString()}</div>
+          </div>
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;">
+            <div style="font-size:10px;color:var(--text-muted);">Runway</div>
+            <div style="font-size:14px;font-weight:bold;color:${company.monthsOfRunway > 3 ? "var(--success)" : "var(--danger)"};">${Math.round(company.monthsOfRunway)} 月</div>
+          </div>
+          <div style="padding:8px;background:var(--bg-secondary);border-radius:4px;">
+            <div style="font-size:10px;color:var(--text-muted);">团队规模</div>
+            <div style="font-size:14px;font-weight:bold;">${company.employees.length} 人</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 股权分布 -->
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📈 股权分布</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;">
+          <div style="padding:4px 8px;background:var(--bg-secondary);border-radius:4px;">你：${Math.round(company.equity.player)}%</div>
+          <div style="padding:4px 8px;background:var(--bg-secondary);border-radius:4px;">联合创始人：${Math.round(company.equity.coFounders)}%</div>
+          <div style="padding:4px 8px;background:var(--bg-secondary);border-radius:4px;">员工期权：${Math.round(company.equity.employees)}%</div>
+          <div style="padding:4px 8px;background:var(--bg-secondary);border-radius:4px;">投资人：${Math.round(company.equity.investors)}%</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  showModal({
+    title: "📊 财务报表",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+/** 团队管理弹窗 — 深度团队管理 */
+function showTeamManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const actions = [
+    {
+      id: "team_building",
+      name: "团队建设",
+      icon: "🎉",
+      cost: 5000,
+      desc: "组织团建活动，提升团队凝聚力",
+      effect: "全员忠诚度+8，满意度+5",
+    },
+    {
+      id: "training",
+      name: "技能培训",
+      icon: "📚",
+      cost: 10000,
+      desc: "安排专业技能培训",
+      effect: "全员技能+3，生产力+5%",
+    },
+    {
+      id: "one_on_one",
+      name: "一对一谈话",
+      icon: "💬",
+      cost: 0,
+      desc: "与关键员工一对一沟通",
+      effect: "选择1名员工忠诚度+15",
+    },
+    {
+      id: "performance_review",
+      name: "绩效面谈",
+      icon: "📋",
+      cost: 0,
+      desc: "进行季度绩效评估",
+      effect: "显示员工绩效，可调整薪资",
+    },
+    {
+      id: "salary_adjustment",
+      name: "调薪",
+      icon: "💰",
+      cost: 0,
+      desc: "为表现优秀的员工调薪",
+      effect: "提升员工满意度和留存率",
+    },
+  ];
+
+  const bodyHtml = `
+    <div style="font-size:13px;">
+      <p style="margin-bottom:12px;color:var(--text-secondary);">
+        选择团队管理行动。团队管理是创业成功的关键！
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${actions
+          .map(
+            (act) => `
+          <div style="padding:10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <div style="font-size:13px;font-weight:bold;">${act.icon} ${act.name}</div>
+              <div style="font-size:12px;color:${act.cost > 0 ? "var(--danger)" : "var(--success)"};">${act.cost > 0 ? "¥" + act.cost.toLocaleString() : "免费"}</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:2px;">${act.desc}</div>
+            <div style="font-size:10px;color:var(--success);">效果：${act.effect}</div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  showModal({
+    title: "🎯 团队管理",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "执行团队管理",
+        cls: "btn-primary",
+        callback: function () {
+          // 简化：默认执行团队建设
+          if (company.cashReserve >= 5000) {
+            company.cashReserve -= 5000;
+            for (const emp of company.employees) {
+              emp.loyalty = Math.min(100, emp.loyalty + 8);
+              if (emp.satisfaction === undefined) emp.satisfaction = 50;
+              emp.satisfaction = Math.min(100, emp.satisfaction + 5);
+            }
+            StateManager.addMessage(
+              "🎉 团队建设完成！全员忠诚度+8，满意度+5",
+              "success",
+            );
+            if (typeof renderAll === "function") renderAll();
+          } else {
+            StateManager.addMessage("现金不足，需要¥5,000", "warning");
+          }
+        },
+      },
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
 // ====== 执行创业行动 ======
 function executeStartupAction(state, actionId, params) {
   params = params || {};
@@ -1488,48 +2268,19 @@ function executeStartupAction(state, actionId, params) {
       return hireEmployee(state, params.role || "engineer", params.salary);
 
     case "meet_investor":
-      // 简化：直接增加融资可能性
-      StateManager.addMessage(
-        "💼 与投资人会面，对方对公司的" +
-          (state.startup.company?.phase === "growth"
-            ? "成长潜力"
-            : "创新产品") +
-          "表示兴趣",
-        "info",
-      );
-      return { success: true };
+      return showMeetInvestorModal(state);
 
     case "raise_funding":
       return raiseFunding(state, params.round || "seed");
 
     case "marketing":
-      {
-        const company = state.startup.company;
-        const spend = params.spend || 5000;
-        if (company.cashReserve < spend) {
-          return { success: false, message: "现金不足" };
-        }
-        company.cashReserve -= spend;
-        company.marketScore = Math.min(100, company.marketScore + 2);
-        company.revenue = Math.round(company.revenue * (1 + 0.02));
-        StateManager.addMessage("📢 市场推广完成，市场分+2", "info");
-        return { success: true };
-      }
-      break;
+      return showMarketingModal(state);
 
     case "review_financials":
-      return { success: true, summary: getStartupSummary(state) };
+      return showFinancialReportModal(state);
 
     case "manage_team":
-      {
-        const company = state.startup.company;
-        for (const emp of company.employees) {
-          emp.loyalty = Math.min(100, emp.loyalty + 5);
-        }
-        StateManager.addMessage("🎯 团队管理完成，全员忠诚度+5", "info");
-        return { success: true };
-      }
-      break;
+      return showTeamManagementModal(state);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -1900,6 +2651,31 @@ function renderStartupTab(state, parent) {
       '<span style="color:var(--warning);">🔔 IPO 审核中，等待监管结果（通常 3-5 天）</span>';
     parent.appendChild(ipoWaitDiv);
   }
+
+  // 收购要约
+  if (startup.pendingAcquisitionOffer && !startup.flags.exited) {
+    var offer = startup.pendingAcquisitionOffer;
+    var offerDiv = document.createElement("div");
+    offerDiv.style.cssText =
+      "margin-top:16px;padding:12px;background:rgba(46,204,113,0.1);border-radius:6px;border:1px solid rgba(46,204,113,0.3);";
+    offerDiv.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      "<div>" +
+      '<span style="color:var(--success);font-weight:bold;">🤝 「' +
+      _esc(offer.acquirerName) +
+      "」提出收购要约</span>" +
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">报价 ¥' +
+      offer.offerValue.toLocaleString() +
+      "（" +
+      offer.offerMultiplier.toFixed(2) +
+      "x 估值）| 你获得 ¥" +
+      offer.playerShareValue.toLocaleString() +
+      "</span>" +
+      "</div>" +
+      '<button class="btn btn-sm btn-success" onclick="showAcquisitionModal(StateManager.getState(), startup.pendingAcquisitionOffer);">查看/决策</button>' +
+      "</div>";
+    parent.appendChild(offerDiv);
+  }
 }
 
 // ====== 导出 ======
@@ -1923,10 +2699,17 @@ if (typeof module !== "undefined" && module.exports) {
     processIPOResult,
     getAcquisitionOffer,
     acceptAcquisition,
+    showAcquisitionModal,
     bankrupt,
     getStartupSummary,
     getAvailableStartupActions,
     executeStartupAction,
     renderStartupTab,
+    // 深度交互弹窗
+    showMeetInvestorModal,
+    showMarketingModal,
+    showFinancialReportModal,
+    showTeamManagementModal,
+    generateInvestorFeedback,
   };
 }

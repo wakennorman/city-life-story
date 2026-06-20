@@ -58,8 +58,14 @@ function buyGood(goodId, qty) {
   if (existing) {
     existing.qty += qty;
     existing.boughtAt = locKey;
+    existing.boughtDay = state.player.day;
   } else {
-    state.inventory.items.push({ id: goodId, qty, boughtAt: locKey });
+    state.inventory.items.push({
+      id: goodId,
+      qty,
+      boughtAt: locKey,
+      boughtDay: state.player.day,
+    });
   }
 
   // 买入后该商品在当地微涨 0.2~0.5%
@@ -241,6 +247,7 @@ function buyWholesale(goodId, qty) {
     const newTotal = wholesalePrice * qty;
     existing.qty += qty;
     existing.boughtAt = locKey;
+    existing.boughtDay = state.player.day;
     existing.avgBuyPrice =
       Math.round(((oldTotal + newTotal) / existing.qty) * 100) / 100;
   } else {
@@ -249,6 +256,7 @@ function buyWholesale(goodId, qty) {
       qty,
       avgBuyPrice: wholesalePrice,
       boughtAt: locKey,
+      boughtDay: state.player.day,
     });
   }
 

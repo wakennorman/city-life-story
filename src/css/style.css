@@ -2710,3 +2710,147 @@ body {
 .scenario-detail-stat-label { color: var(--text-secondary); }
 .scenario-detail-stat-val { font-weight: 600; color: var(--text-primary); }
 .scenario-detail-start { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 8px; }
+
+/* ====== 创业系统 UI 样式 ====== */
+
+/* 收购要约弹窗 */
+.acquisition-modal .modal-box {
+  max-width: 600px;
+  border-top: 4px solid #2ecc71;
+}
+
+.acquisition-stat {
+  padding: 10px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.acquisition-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.acquisition-stat-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+/* 市场推广渠道选择 */
+.marketing-channel {
+  padding: 10px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.marketing-channel:hover {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.marketing-channel.selected {
+  border-color: var(--accent);
+  background: rgba(74, 158, 92, 0.08);
+}
+
+/* 投资人关系度 */
+.investor-relationship-bar {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.investor-relationship-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+/* 团队管理 */
+.team-management-action {
+  padding: 10px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+
+.team-management-action:hover {
+  border-color: var(--accent);
+}
+
+/* 财报弹窗 */
+.financial-report-modal .modal-box {
+  max-width: 640px;
+  border-top: 4px solid #3498db;
+}
+
+.financial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.financial-table th {
+  text-align: left;
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border);
+}
+
+.financial-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.financial-table tr:hover {
+  background: rgba(74, 158, 92, 0.04);
+}
+
+/* 员工满意度 */
+.employee-satisfaction-bar {
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.employee-satisfaction-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* 产品运营数据 */
+.product-ops-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.product-ops-stat {
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.product-ops-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.product-ops-stat-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-top: 2px;
+}

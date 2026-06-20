@@ -1455,29 +1455,44 @@ src/
 4. **行业板块传导**：同板块公司一个出事时其他受到温和影响
 5. **季度企业报告**：每季度结束时，对玩家已知的公司发布汇总报告
 
-#### Phase 2 — 玩家深度交互（待实现）
+#### Phase 2 — 玩家深度交互（部分完成）
 
-6. **玩家创业系统**：玩家可以注册公司→招聘→做项目→融资→被收购/上市
-   - 涉及：新建 `src/js/phase2/startup.js`、修改 `state.js`、`main.js`
-   - 前置：需有足够的街头/职场积累(day>200/cash>¥500k)
-   - 核心：3阶段（种子期→成长→退出），退出方式含IPO/收购/破产
+6. **玩家创业系统** ✅ 已实现并完善：玩家可以注册公司→招聘→做项目→融资→被收购/上市
+   - 文件：`src/js/phase2/startup.js`（~2600行）
+   - 6个行业、6种员工角色、4轮融资、6类产品类别
+   - IPO上市、被收购/破产清算退出机制
+   - 完整的创业Tab UI，与企业命运系统联动
+   - **新增深度交互功能**：
+     - 🤝 **收购要约弹窗**：3路决策（接受/还价/拒绝），还价有30-70%接受概率
+     - 💰 **见投资人深化**：投资人反馈弹窗，展示关注领域、关系度、正面评价、风险提示、建议
+     - 📊 **查看财报深化**：完整财务报表（损益表/资产负债表/股权分布），含利润率、Runway
+     - 📢 **市场推广深化**：5种渠道选择（社交媒体/线下活动/KOL合作/广告投放/内容营销），不同成本效果
+     - 🎯 **团队管理深化**：团队建设/技能培训/一对一谈话/绩效面谈/调薪
+     - 📈 **产品运营深化**：用户增长、口碑传播、评分系统、留存率、口碑爆发事件
 
-7. **内幕交易风险**：玩家就职的公司发生命运事件前，可通过日常行动获知风声→提前调整持仓→但事后有随机合规审查风险
-   - 涉及：`enterprise_fate.js` 审查钩子、`investment.js` 处罚逻辑
+7. **内幕交易风险** ✅ 已实现：风声→持仓调整→合规审查
+   - `enterprise_fate.js`：`generateRumor()` / `updateRumorConfidence()` / `auditInsiderTrading()` / `applyInsiderTradingPenalty()`
+   - 风声3-5天延迟触发，多渠道验证，季末合规审查
 
-8. **CEO人格化**：每家公司随机生成1-2个CEO特质(激进/保守/技术偏执/财务导向)，影响命运事件权重
-   - 涉及：`enterprise_fate.js` CEO特质表（已预留）、`corp.js` 初始特质定义
+8. **CEO人格化** ✅ 已实现：5位CEO传记 + 5种特质模板
+   - `enterprise_fate.js`：`CEO_BIOS` + `CEO_TRAITS`
+   - 特质影响命运事件权重，`applyCeoTraitMods()` 动态修正
 
-#### Phase 3 — 世界记忆（待实现）
+#### Phase 3 — 世界记忆 ✅ 已完成
 
-9. **倒闭公司遗产链**：公司倒闭后生成1-3个后续节点：高管开新公司(有旧技术奖励)、旧专利被竞品收购(增强竞品)、员工散布到其他公司(增强人才)
-   - 涉及：`enterprise_fate.js` 新增 `generateCompanyAftermath()`
+9. **倒闭公司遗产链** ✅：公司倒闭后生成1-3个遗产事件
+   - 高管开新公司：带着原公司核心技术/专利重起炉灶
+   - 专利被收购：竞品公司收购倒闭公司专利组合，技术实力跃升
+   - 员工散布：2-3家公司吸纳资深员工，人才经验流入行业
+   - 涉及：`enterprise_fate.js` `generateCompanyAftermath()` + `_execStartupAftermath()` + `_patentAcquisitionAftermath()` + `_talentDispersionAftermath()`
 
-10. **新公司自然生成**：每半年(游戏时间)有一定概率从"废墟"中生成新公司，继承已倒闭公司部分参数
-    - 涉及：`enterprise_fate.js` 新增 `spawnNewCompany()`
+10. **新公司自然生成** ✅：每180天（半年）50%概率从倒闭公司"废墟"中重生新公司
+    - 继承原公司的行业/产品分数/人才分数参数
+    - 涉及：`company_spawner.js` `checkAndSpawnFromRuins()` + `spawnFromRuins()`
 
-11. **多周目企业记忆深化**（当前P2#10已有基础）：除了继承现金/技能，还继承"这个世界的商业记忆"——上局某个公司倒闭了，新局它不存在或换了个名字
-    - 涉及：`enterprise_fate.js`、`multi_run_memory.js`、`main.js`
+11. **多周目企业记忆深化** ✅：倒闭遗产事件记录到多周目记忆
+    - 遗产事件进入 `legacyEvents` 数组，下局开局可读取
+    - 涉及：`multi_run_memory.js` `recordLegacyEventToMemory()` + `enterprise_fate.js` `recordLegacyEvent()`
 
 ### Phase 1 完成情况（2026-06-19 ✅ 已完成）
 
@@ -1492,19 +1507,22 @@ src/
 | 百科新增条目      | `wiki.js` 企业命运/创业系统条目+详情页                                            | ✅ 完成 |
 | CEO人格化（预留） | `enterprise_fate.js` 新增 `CEO_TRAITS` 模板（Phase 2 启用）                       | ✅ 预留 |
 
-### Phase 2 — 玩家深度交互（待实现）
+### Phase 2 — 玩家深度交互（部分完成）
 
-### Phase 2/3 待修改文件清单
+### Phase 2/3 已完成与待实现文件清单
 
-| 文件                             | 改动内容                             | 优先级 |
-| -------------------------------- | ------------------------------------ | ------ |
-| `src/js/phase2/startup.js`       | 新建创业系统（种子期→成长→退出）     | P0     |
-| `src/js/core/enterprise_fate.js` | CEO人格化/倒闭遗产链/新公司生成      | P0     |
-| `src/js/core/state.js`           | startup状态块/企业遗产链字段         | P0     |
-| `src/js/phase2/investment.js`    | 内幕交易审查/IPO解锁交易             | P1     |
-| `src/js/ui/corp_ui.js`           | 创业UI/季度报告弹窗                  | P1     |
-| `src/js/core/events.js`          | 创业相关随机事件                     | P2     |
-| `src/js/ui/wiki.js`              | 百科创业章节（已有框架，待完善详情） | P2     |
+| 文件                              | 改动内容                              | 状态      |
+| --------------------------------- | ------------------------------------- | --------- |
+| `src/js/phase2/startup.js`        | 创业系统完整实现 + 深度交互弹窗       | ✅ 完成   |
+| `src/js/core/enterprise_fate.js`  | CEO人格化 + 风声内幕交易 + 倒闭遗产链 | ✅ 完成   |
+| `src/js/core/state.js`            | startup状态块/企业遗产链字段          | ✅ 完成   |
+| `src/js/core/company_spawner.js`  | 新公司自然生成（从废墟重生）          | ✅ 完成   |
+| `src/js/core/multi_run_memory.js` | 多周目企业记忆深化（遗产事件记录）    | ✅ 完成   |
+| `src/js/phase2/investment.js`     | 内幕交易审查UI/IPO解锁交易            | ⏳ 待实现 |
+| `src/js/ui/corp_ui.js`            | 创业UI/季度报告弹窗                   | ⏳ 待实现 |
+| `src/js/core/events.js`           | 创业相关随机事件                      | ⏳ 待实现 |
+| `src/js/ui/wiki.js`               | 百科创业章节（已有框架，待完善详情）  | ⏳ 待完善 |
+| `src/css/style.css`               | 创业系统UI样式（收购/推广/财报/团队） | ✅ 完成   |
 
 ### Phase 1 新增 API 说明
 

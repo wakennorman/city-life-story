@@ -475,7 +475,7 @@ function addStreetExtras(state, actions) {
       }
       st.resources.cash -= 2;
       const roll = Math.random();
-      if (roll < 0.0005) {
+      if (roll < 0.00005) {
         st.resources.cash += 500000;
         st.resources.totalEarned += 500000;
         st.needs.happiness = Math.min(100, st.needs.happiness + 50);
@@ -483,7 +483,7 @@ function addStreetExtras(state, actions) {
           "🎰🎉🎉🎉 中了头奖！¥500,000 到账！财务自由就在眼前！",
           "success",
         );
-      } else if (roll < 0.05) {
+      } else if (roll < 0.005) {
         const prize = 50 + Math.floor(Math.random() * 200);
         st.resources.cash += prize;
         st.resources.totalEarned += prize;

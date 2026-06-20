@@ -302,6 +302,27 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 创业公司每日运营tick ===
+  {
+    name: "startup_tick",
+    fn: function (state) {
+      // 仅在注册了公司且未退出时执行
+      if (
+        state.startup &&
+        state.startup.company &&
+        !state.startup.flags?.exited
+      ) {
+        if (typeof tickStartup === "function") {
+          tickStartup(state, "daily");
+        }
+        // 每日随机创业事件（概率8%）
+        if (Math.random() < 0.08 && typeof triggerStartupEvent === "function") {
+          triggerStartupEvent(state);
+        }
+      }
+    },
+  },
+
   // === 企业命运tick ===
   {
     name: "enterprise_fate_tick",

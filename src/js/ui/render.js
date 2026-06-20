@@ -834,6 +834,17 @@ function renderTabBar(state) {
       // 企业命运生态 — 后台系统，不单独显示Tab
       // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
       btn.style.display = "none";
+    } else if (btn.dataset.tab === "startup") {
+      // 创业Tab：注册了公司才显示
+      if (
+        !state.startup ||
+        state.startup.status === "none" ||
+        !state.startup.company
+      ) {
+        btn.style.display = "none";
+      } else {
+        btn.style.display = "";
+      }
     } else {
       btn.style.display = "";
     }
@@ -3388,6 +3399,24 @@ function renderCorpTab(state, parent) {
 
   div.innerHTML = summaryHtml;
   parent.appendChild(div);
+
+  // === 公司历史书入口 ===
+  if (c.company && typeof renderCompanyHistory === "function") {
+    var historyBtnArea = document.createElement("div");
+    historyBtnArea.style.cssText =
+      "margin-top:16px;padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center;";
+    var historyBtn = document.createElement("button");
+    historyBtn.className = "btn btn-secondary";
+    historyBtn.textContent = "📖 查看公司历史书";
+    historyBtn.style.cssText = "cursor:pointer;";
+    historyBtn.addEventListener("click", function () {
+      if (typeof renderCompanyHistory === "function") {
+        renderCompanyHistory(state);
+      }
+    });
+    historyBtnArea.appendChild(historyBtn);
+    parent.appendChild(historyBtnArea);
+  }
 }
 
 /**
@@ -3403,7 +3432,7 @@ function _fateTag(state, companyId) {
   if (!phaseDef) return "";
   var healthColor =
     co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
-  return (
+  var tag =
     '<span style="margin-left:8px;font-size:10px;color:' +
     phaseDef.color +
     ';">' +
@@ -3414,8 +3443,15 @@ function _fateTag(state, companyId) {
     healthColor +
     ';">' +
     Math.round(co.health) +
-    "</span></span>"
-  );
+    "</span></span>";
+
+  // 如果已IPO，添加上市标记
+  if (co.ipoed) {
+    tag +=
+      '<span style="margin-left:4px;font-size:9px;color:#f59e0b;">🔔 IPO</span>';
+  }
+
+  return tag;
 }
 
 // ====== Enterprise Fate Tab ======

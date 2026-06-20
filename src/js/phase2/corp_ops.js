@@ -202,12 +202,9 @@ function endQuarter() {
     }
   }
 
-  // ====== Phase 2: 创业系统季度结算 ======
-  if (typeof tickStartup === "function") {
-    tickStartup(state);
-  }
+  // ====== Phase 2: 创业系统季度结算（已移至每日管线 tickStartup(daily)）======
 
-  // ====== Phase 2: 检查创业公司收购要约 ======
+  // ====== Phase 2: 检查创业公司收购要约（季度检查）======
   if (typeof getAcquisitionOffer === "function") {
     var offer = getAcquisitionOffer(state);
     if (offer) {

@@ -374,13 +374,14 @@ function getRecipeById(id) {
 
 /** 检查是否有足够食材 */
 function canCookRecipe(recipe, inventory) {
-  if (!inventory) return false;
+  if (!inventory || !inventory.items) return false;
+  var items = inventory.items;
   for (var i = 0; i < recipe.ingredients.length; i++) {
     var ing = recipe.ingredients[i];
     var itemInInventory = null;
-    for (var j = 0; j < inventory.length; j++) {
-      if (inventory[j].itemId === ing.itemId) {
-        itemInInventory = inventory[j];
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].itemId === ing.itemId) {
+        itemInInventory = items[j];
         break;
       }
     }
@@ -396,7 +397,8 @@ function cookRecipe(state, recipeId) {
   var recipe = getRecipeById(recipeId);
   if (!recipe) return { success: false, message: "食谱不存在" };
 
-  var inv = (state.inventory = state.inventory || []);
+  var inv = state.inventory || {};
+  var items = inv.items || [];
 
   // 检查食材
   if (!canCookRecipe(recipe, inv)) {
@@ -406,11 +408,11 @@ function cookRecipe(state, recipeId) {
   // 消耗食材
   for (var i = 0; i < recipe.ingredients.length; i++) {
     var ing = recipe.ingredients[i];
-    for (var j = 0; j < inv.length; j++) {
-      if (inv[j].itemId === ing.itemId) {
-        inv[j].quantity -= ing.amount;
-        if (inv[j].quantity <= 0) {
-          inv.splice(j, 1);
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].itemId === ing.itemId) {
+        items[j].quantity -= ing.amount;
+        if (items[j].quantity <= 0) {
+          items.splice(j, 1);
           j--;
         }
         break;

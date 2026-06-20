@@ -2,48 +2,7 @@
  * 职场专用 UI 组件
  */
 
-/**
- * 企业命运标签 — 在职场Tab公司名旁显示健康度+阶段
- */
-function _fateTag(state, companyId) {
-  if (!state.enterpriseFate || !state.enterpriseFate.companies || !companyId)
-    return "";
-  var co = state.enterpriseFate.companies[companyId];
-  if (!co) return "";
-  var phaseDef = CORP_LIFECYCLE_PHASES[co.phase];
-  if (!phaseDef) return "";
-  var healthColor =
-    co.health > 60 ? "#4a9e5c" : co.health > 30 ? "#f39c12" : "#c4553d";
-  var tag =
-    '<span style="margin-left:8px;font-size:10px;color:' +
-    phaseDef.color +
-    ';">' +
-    phaseDef.icon +
-    " " +
-    phaseDef.name +
-    ' · 健康度<span style="color:' +
-    healthColor +
-    ';">' +
-    Math.round(co.health) +
-    "</span></span>";
-
-  // Phase 1#5：如果已IPO，添加上市标记
-  if (co.ipoed) {
-    tag +=
-      '<span style="margin-left:4px;font-size:9px;color:#f59e0b;">🔔 IPO</span>';
-  }
-
-  // Phase 1#4：如果同板块有公司出事，显示行业预警
-  if (co.knownToPlayer && state.enterpriseFate.industryIndex) {
-    var industry = getCompanyIndustryById && getCompanyIndustryById(companyId);
-    if (industry) {
-      // 检查同板块是否有危险公司
-      // (简化：在render中动态判断)
-    }
-  }
-
-  return tag;
-}
+// [已清理] _fateTag 已合并到 render.js 统一版本（含 IPO 标记），此处删除死代码
 
 /**
  * 获取公司行业（从COMPANIES数组或行业映射）
@@ -501,6 +460,319 @@ function showVictoryModal() {
       },
     ],
   });
+}
+
+/**
+ * 玩家个人职场历史书（P0 - 公司历史书 UI）
+ *
+ * 显示：入职时间线、绩效历史表格、完成项目列表、团队成员变动、历史统计
+ * 可折叠/展开，职场Tab有「查看公司历史」按钮
+ */
+function renderCompanyHistory(state) {
+  var area = document.getElementById("content-area");
+  if (!area) return;
+
+  var corp = state.corporate || {};
+  var p = state.player || {};
+  var rankData = CORP_RANKS[corp.rank] || {};
+
+  // ====== 头部信息 ======
+  var headerHtml = "";
+  if (corp.company) {
+    headerHtml =
+      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;border-left:4px solid var(--accent);">' +
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">' +
+      '<span style="font-size:32px;">🏢</span>' +
+      '<div>' +
+      '<h2 style="margin:0;font-size:18px;color:var(--text-primary);">' +
+      _esc(corp.company.name || "未知公司") +
+      "</h2>" +
+      '<div style="font-size:12px;color:var(--text-secondary);">' +
+      (corp.company.industry || "未知行业") +
+      " · " +
+      (corp.company.culture || "") +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      '<div style="display:flex;gap:24px;font-size:11px;color:var(--text-muted);">' +
+      '<span>📅 入职第 ' +
+      (p.corpYear || 0) +
+      "年 Q" +
+      (p.corpQuarter || 1) +
+      "</span>" +
+      '<span>🏷️ 当前职级 <strong style="color:var(--accent);">' +
+      (corp.rank || "P5") +
+      "</strong></span>" +
+      '<span>💼 行动力 ' +
+      (corp.actionsUsed || 0) +
+      "/" +
+      (rankData.maxActions || 3) +
+      "</span>" +
+      "</div>" +
+      "</div>";
+  }
+
+  // ====== 入职时间线 ======
+  var timelineHtml = "";
+  var milestones = [];
+
+  // 入职
+  milestones.push({
+    day: p.day - (p.corpYear * 365 + (p.corpQuarter - 1) * 90) + 1 || 1,
+    label: "入职",
+    desc: "第一天进入 " + (corp.company?.name || "公司"),
+    icon: "🚪",
+    color: "ch-milestone-normal",
+  });
+
+  // 晋升历史
+  if (corp.promotionHistory && corp.promotionHistory.length > 0) {
+    for (var i = 0; i < corp.promotionHistory.length; i++) {
+      var prom = corp.promotionHistory[i];
+      milestones.push({
+        day: prom.day,
+        label: "晋升 " + prom.toRank,
+        desc: "从 " + (prom.fromRank || "?") + " 晋升到 " + prom.toRank,
+        icon: "🚀",
+        color: "ch-milestone-ipo",
+      });
+    }
+  }
+
+  // IPO（如果公司上市了）
+  if (corp.company?.ipoed) {
+    milestones.push({
+      day: corp.company.ipoDay || p.day,
+      label: "公司IPO",
+      desc: corp.company.name + " 成功上市！",
+      icon: "📈",
+      color: "ch-milestone-ipo",
+    });
+  }
+
+  // 当前
+  milestones.push({
+    day: p.day,
+    label: "当前",
+    desc: "在职中 · " + (corp.rank || "P5"),
+    icon: "📍",
+    color: "ch-milestone-normal",
+  });
+
+  timelineHtml =
+    '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+    '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">📅 入职时间线</h3>' +
+    '<div class="ch-timeline" style="position:relative;padding-left:20px;">' +
+    '<div style="position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);"></div>';
+
+  for (var j = 0; j < milestones.length; j++) {
+    var m = milestones[j];
+    timelineHtml +=
+      '<div class="ch-timeline-item ' +
+      (m.color || "ch-milestone-normal") +
+      '" style="position:relative;padding-left:16px;margin-bottom:12px;">' +
+      '<div class="ch-timeline-dot" style="position:absolute;left:-16px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-card);z-index:1;">' +
+      (m.icon || "📍") +
+      "</div>" +
+      '<div class="ch-timeline-day" style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">第' +
+      (m.day || 0) +
+      "天 · " +
+      (m.label || "") +
+      "</div>" +
+      '<div class="ch-timeline-desc" style="font-size:12px;color:var(--text-secondary);">' +
+      (m.desc || "") +
+      "</div>" +
+      "</div>";
+  }
+
+  timelineHtml += "</div></div>";
+
+  // ====== 绩效历史表格 ======
+  var perfHtml = "";
+  if (corp.perfHistory && corp.perfHistory.length > 0) {
+    var perfTable =
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+      '<thead><tr style="background:var(--bg-secondary);">' +
+      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">季度</th>' +
+      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">绩效</th>' +
+      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">KPI</th>' +
+      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">能力</th>' +
+      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">备注</th>' +
+      "</tr></thead><tbody>";
+
+    for (var k = 0; k < corp.perfHistory.length; k++) {
+      var perf = corp.perfHistory[k];
+      var perfColor =
+        perf.grade === "S+"
+          ? "#2ecc71"
+          : perf.grade === "S"
+            ? "#27ae60"
+            : perf.grade === "A"
+              ? "#3498db"
+              : perf.grade === "B"
+                ? "#f39c12"
+                : "#e74c3c";
+      perfTable +=
+        '<tr style="border-bottom:1px solid var(--border);">' +
+        '<td style="padding:8px;">Q' +
+        (perf.quarter || "?") +
+        "</td>" +
+        '<td style="padding:8px;"><span style="font-weight:bold;color:' +
+        perfColor +
+        ';">' +
+        (perf.grade || "?") +
+        "</span></td>" +
+        '<td style="padding:8px;">' +
+        (perf.kpi || 0) +
+        "</td>" +
+        '<td style="padding:8px;">' +
+        (perf.ability || 0) +
+        "</td>" +
+        '<td style="padding:8px;color:var(--text-muted);">' +
+        (perf.note || "") +
+        "</td>" +
+        "</tr>";
+    }
+
+    perfTable += "</tbody></table>";
+    perfHtml =
+      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+      '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">📊 绩效历史</h3>' +
+      '<div style="overflow-x:auto;">' +
+      perfTable +
+      "</div>" +
+      "</div>";
+  }
+
+  // ====== 完成项目列表 ======
+  var projectHtml = "";
+  if (corp.completedProjects && corp.completedProjects.length > 0) {
+    var projList =
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">';
+    for (var l = 0; l < corp.completedProjects.length; l++) {
+      var proj = corp.completedProjects[l];
+      projList +=
+        '<div style="padding:12px;background:var(--bg-secondary);border-radius:6px;">' +
+        '<div style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:4px;">' +
+        (proj.name || "未知项目") +
+        "</div>" +
+        '<div style="font-size:11px;color:var(--text-secondary);">' +
+        (proj.desc || "") +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
+        "完成于第" +
+        (proj.day || "?") +
+        "天 · 贡献度" +
+        (proj.contribution || 0) +
+        "</div>" +
+        "</div>";
+    }
+    projList += "</div>";
+
+    projectHtml =
+      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+      '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">✅ 完成项目</h3>' +
+      projList +
+      "</div>";
+  }
+
+  // ====== 团队成员变动 ======
+  var teamHtml = "";
+  if (corp.teamHistory && corp.teamHistory.length > 0) {
+    var teamList = "";
+    for (var m_idx = 0; m_idx < corp.teamHistory.length; m_idx++) {
+      var th = corp.teamHistory[m_idx];
+      var actionIcon = th.action === "hire" ? "👤" : th.action === "fire" ? "🚪" : "🔄";
+      teamList +=
+        '<div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">' +
+        '<span style="color:var(--text-muted);font-size:10px;">第' +
+        (th.day || "?") +
+        "天</span> ' +
+        actionIcon +
+        ' <strong>' +
+        _esc(th.name || "未知") +
+        "</strong> " +
+        (th.action === "hire" ? "加入团队" : th.action === "fire" ? "被解雇" : "变动") +
+        " · " +
+        (th.role || "") +
+        (th.reason ? " · " + _esc(th.reason) : "") +
+        "</div>";
+    }
+
+    teamHtml =
+      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+      '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">👥 团队成员变动</h3>' +
+      teamList +
+      "</div>";
+  }
+
+  // ====== 历史统计 ======
+  var statsHtml = "";
+  var totalProjects = (corp.completedProjects || []).length;
+  var totalPerf = (corp.perfHistory || []).length;
+  var totalTeam = (corp.team || []).length;
+  var avgKpi = 0;
+  if (corp.perfHistory && corp.perfHistory.length > 0) {
+    var sumKpi = 0;
+    for (var n = 0; n < corp.perfHistory.length; n++) {
+      sumKpi += corp.perfHistory[n].kpi || 0;
+    }
+    avgKpi = Math.round(sumKpi / corp.perfHistory.length);
+  }
+
+  statsHtml =
+    '<div style="padding:16px;background:var(--bg-card);border-radius:8px;">' +
+    '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">📈 职场统计</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">' +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    (p.corpYear || 0) +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">在职年数</div>' +
+    "</div>" +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    totalPerf +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">绩效评审次数</div>' +
+    "</div>" +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    totalProjects +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">完成项目</div>' +
+    "</div>" +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    avgKpi +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">平均KPI</div>' +
+    "</div>" +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    (corp.rank || "P5") +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">当前职级</div>' +
+    "</div>" +
+    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+    '<div style="font-size:24px;font-weight:bold;color:var(--accent);">' +
+    totalTeam +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);">当前团队</div>' +
+    "</div>" +
+    "</div>" +
+    "</div>";
+
+  // ====== 组合输出 ======
+  area.innerHTML =
+    '<div class="company-history-page">' +
+    headerHtml +
+    timelineHtml +
+    statsHtml +
+    perfHtml +
+    projectHtml +
+    teamHtml +
+    '</div>';
 }
 
 /** P2.11 计算新游戏+继承内容 */

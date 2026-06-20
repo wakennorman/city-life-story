@@ -336,16 +336,16 @@ function tickIllnessDecay(state) {
 
 function _tickChronic(state, inst, ill) {
   // 慢性病按月（30天）扣费；不交则发作
-  var lastPaid = state.flags._hypertensionMonthlyPaid || inst.contractedDay;
+  var lastPaid = state.flags._chronicMonthlyPaid || inst.contractedDay;
   var due = state.player.day - lastPaid >= 30;
   if (due) {
     var monthly =
-      ill.treatCost && ill.treatCost.hospital_monthly
-        ? ill.treatCost.hospital_monthly
-        : 200;
+      (typeof ill.treatCostMonthly === "number" && ill.treatCostMonthly) ||
+      (ill.treatCost && ill.treatCost.hospital_monthly) ||
+      200;
     if (state.resources.cash >= monthly) {
       state.resources.cash -= monthly;
-      state.flags._hypertensionMonthlyPaid = state.player.day;
+      state.flags._chronicMonthlyPaid = state.player.day;
       if (typeof addDailyTransaction === "function") {
         addDailyTransaction(
           state,

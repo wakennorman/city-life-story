@@ -204,7 +204,7 @@ const ILLNESSES = {
     icon: "🫁",
     severity: 4,
     naturalCureDays: [10, 20],
-    triggerHabit: { coldCount: 1, highFatigueStreak: 3, healthLow: 1 },
+    triggerHabit: { coldCount: 1, highFatigueStreak: 3, healthUnder30: 1 },
     triggerChance: 0.35,
     symptom: { health: -3, fatigue: 8, breathingDifficulty: true },
     treatCost: { pharmacy: 300, hospital: 800 },

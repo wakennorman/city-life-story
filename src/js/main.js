@@ -1220,6 +1220,13 @@ function startNewGame() {
 function loadExistingGame(slot) {
   const saveData = loadGame(slot);
   if (saveData) {
+    // 显示读档回忆文案（P1 - 存档快照）
+    if (saveData._snapshot && typeof getLoadMemoryText === "function") {
+      var memoryText = getLoadMemoryText(saveData._snapshot);
+      if (memoryText) {
+        StateManager.addMessage("📖 读档记忆：" + memoryText, "event");
+      }
+    }
     StateManager.importState(saveData);
     // 兼容旧存档：初始化企业命运系统
     if (typeof initEnterpriseFate === "function") {
@@ -2374,6 +2381,16 @@ function getAvailableActions(state) {
           StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
           return;
         }
+        var saved = baseCost - foodCost;
+        var cookHint = "";
+        if (recipeDiscount > 0 && discount > 0) {
+          cookHint = `（烹饪Lv${cookingLvl}+陈师傅秘方共省¥${saved}）`;
+        } else if (recipeDiscount > 0) {
+          cookHint = `（陈师傅秘方省¥${saved}）`;
+        } else if (discount > 0) {
+          cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
+        }
+
         st.resources.cash -= foodCost;
         addDailyTransaction(
           st,
@@ -2384,15 +2401,6 @@ function getAvailableActions(state) {
         );
         st.needs.hunger = Math.min(100, st.needs.hunger + 35);
         st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-        var saved = baseCost - foodCost;
-        var cookHint = "";
-        if (recipeDiscount > 0 && discount > 0) {
-          cookHint = `（烹饪Lv${cookingLvl}+陈师傅秘方共省¥${saved}）`;
-        } else if (recipeDiscount > 0) {
-          cookHint = `（陈师傅秘方省¥${saved}）`;
-        } else if (discount > 0) {
-          cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
-        }
         StateManager.addMessage(
           `🍚 你花¥${foodCost}吃了顿饭，肚子饱了。${cookHint}`,
           "success",
