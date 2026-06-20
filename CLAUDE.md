@@ -31,20 +31,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：住房系统全面改造 ✅（2026-06-21 14:00）
-  - **HOUSING_TIERS 增强**：每级加 canCook/canBathe/canRest/homeType
-  - **家居设施修复**：`getHomeLocationKey`/`getHomeAmenities` 使在家做饭/洗澡/休息对租房者（tier 2+）和自住房主均可用
-  - **回住所行动**：Action Tab「🏠 回住所」按钮，根据距离扣AP，弹窗选择家居活动
-  - **侧边栏修复**：硬编码数组改为动态 HOUSING_TIERS 读取，显示🍳🚿🛏️指示器
-  - **sell自住房 Bug 修复**：卖出时重置状态，降级到合租床位
-  - **扩展口**：properties 数组预留 `rooms`/`rentedRooms`/`roomRent` 字段注释
-  - **涉及的7个文件**：items / amenities / actions_extra / critical / render / investment / daily_pipeline
-  - **Phase 1 Bug修复**：创业Tab显示/每日运营管线/注册引导
-  - **Phase 2 事件系统**：30+创业事件（种子期8/成长期10/成熟期8/行业专属6）
-  - **Phase 3 产品深化**：15+产品类别 + 15个功能模块 + 竞争力评分
-  - **Phase 4 市场竞争**：竞争对手AI + 市场份额 + 品牌等级 + 市场情报
-  - **Phase 5 创业成就**：17个创业专属成就
-  - **Phase 6 辅助系统**：办公地点(5级) + 企业文化(3种) + 品牌声誉(6级)
+- **最近一次工作**：投资Tab涨跌颜色标准化 + 全买按钮红色化 ✅（2026-06-21 17:00）
+  - **全买按钮**：`btn-warning`（无CSS定义实际白色）→ `btn-danger`（红色）
+  - **颜色标准**：全线统一采用中国市场标准 **红涨绿跌**（之前为国际标准绿涨红跌）
+  - **颜色提示**：投资Tab头部添加「📈 涨 🔴 红 / 📉 跌 🟢 绿 · 中国市场标准」
+  - **12处颜色映射**：drawPriceChart涨跌幅%、持仓盈亏、卡片边框/价格、卡片方向指示等全部交换
+  - **颜色注释**：drawPriceChart上方添加完整颜色标准说明块
+  - **涉及文件**：`src/js/phase2/investment.js`（12处颜色 + 全买按钮 + 提示 + 注释）
+  - **设计依据**：中国股市标准（深交所/上交所）+ 同花顺/东方财富/雪球 + 本土游戏惯例
+  - **构建&文档**：`python build.py` 成功，DEVELOPMENT.md 新增完整变更记录
 
 ### 创业系统完整功能一览
 

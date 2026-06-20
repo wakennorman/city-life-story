@@ -1408,6 +1408,10 @@ function buyCar(carId) {
 
 // ============================================================
 //  Canvas 涨跌曲线图
+//  颜色标准：中国市场标准（红涨绿跌）
+//  🔴 红色 = 涨（up/gain）→ var(--danger)
+//  🟢 绿色 = 跌（down/loss）→ var(--success)
+//  与欧美市场（绿涨红跌）相反
 // ============================================================
 function drawPriceChart(canvasId, priceData, color) {
   var canvas =
@@ -1525,7 +1529,7 @@ function drawPriceChart(canvasId, priceData, color) {
   ctx.textAlign = "left";
   ctx.fillText(lastPrice.toFixed(2), padL + 2, padT + 10);
 
-  ctx.fillStyle = chg >= 0 ? "#4a9e5c" : "#c4553d";
+  ctx.fillStyle = chg >= 0 ? "#c4553d" : "#4a9e5c";
   ctx.font = "9px sans-serif";
   ctx.fillText(chgText, padL + 2, padT + 21);
 }
@@ -1598,7 +1602,7 @@ function renderMarketSentiment(state, inv) {
           '<span style="margin-right:6px;">' +
           d.direction +
           '<span style="' +
-          (d.avgMul > 1 ? "color:var(--success);" : "color:var(--danger);") +
+          (d.avgMul > 1 ? "color:var(--danger);" : "color:var(--success);") +
           '">' +
           (d.avgMul > 1 ? "+" : "") +
           d.strength +
@@ -1751,6 +1755,14 @@ function renderInvestmentTab(state, parent) {
     summaryCard("汽车", carVal) +
     "</div>" +
     renderMarketSentiment(state, inv) +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
+    "<span>📈 涨</span>" +
+    '<span style="color:#c4553d;font-weight:bold;">🔴 红</span>' +
+    '<span style="color:var(--text-muted);">/</span>' +
+    "<span>📉 跌</span>" +
+    '<span style="color:#4a9e5c;font-weight:bold;">🟢 绿</span>' +
+    '<span style="color:var(--text-muted);">· 中国市场标准（红涨绿跌）</span>' +
+    "</div>" +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
     '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
     '<button class="btn btn-sm sub-tab" data-stab="crypto">虚拟币</button>' +
@@ -1827,7 +1839,7 @@ function stdInvBtns(sym, price, h, qty1, qty2, lbl1, lbl2, decimals) {
     var actCls = isBuy ? "ibuy" : "isell";
     var allLbl = isBuy ? "全买" : "全卖";
     var allAttr = isBuy
-      ? ' class="btn btn-sm btn-warning ibuy-all" data-s="' +
+      ? ' class="btn btn-sm btn-danger ibuy-all" data-s="' +
         sym +
         '" data-p="' +
         price.toFixed(4) +
@@ -2166,7 +2178,7 @@ function renderStocks(area, inv, state, parent) {
         h.avgPrice > 0 ? ((curPx - h.avgPrice) / h.avgPrice) * 100 : 0;
       totalPL += pl;
       totalValue += val;
-      var plClr = pl >= 0 ? "var(--success)" : "var(--danger)";
+      var plClr = pl >= 0 ? "var(--danger)" : "var(--success)";
       var plSign = pl >= 0 ? "+" : "";
       // Find stock name
       var stkName = h.symbol;
@@ -2188,7 +2200,7 @@ function renderStocks(area, inv, state, parent) {
           <span style="min-width:45px;text-align:right;color:${plClr};font-size:10px;">${plSign}${plPct.toFixed(1)}%</span>
         </div>`;
     }
-    var totalClr = totalPL >= 0 ? "var(--success)" : "var(--danger)";
+    var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
     var totalSign = totalPL >= 0 ? "+" : "";
     portfolioDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -2223,7 +2235,7 @@ function renderStocks(area, inv, state, parent) {
       m.history.length >= 2
         ? m.price - m.history[m.history.length - 2].price
         : 0;
-    var clr = chg >= 0 ? "var(--success)" : "var(--danger)";
+    var clr = chg >= 0 ? "var(--danger)" : "var(--success)";
 
     // Canvas ID
     var cid = "chart-" + s.symbol;
@@ -2362,7 +2374,7 @@ function renderBtc(area, inv, state, parent) {
       m.history.length >= 2
         ? m.price - m.history[m.history.length - 2].price
         : 0;
-    var clr = chg >= 0 ? "var(--success)" : "var(--danger)";
+    var clr = chg >= 0 ? "var(--danger)" : "var(--success)";
     var unit = s.unit || "个";
     var cid = "chart-" + s.symbol;
 
@@ -2499,7 +2511,7 @@ function renderPrecious(area, inv, state, parent) {
       m.history.length >= 2
         ? m.price - m.history[m.history.length - 2].price
         : 0;
-    var clr = chg >= 0 ? "var(--success)" : "var(--danger)";
+    var clr = chg >= 0 ? "var(--danger)" : "var(--success)";
     var unit = s.unit || "g";
     var cid = "chart-" + sym;
 
@@ -2617,7 +2629,7 @@ function renderFutures(area, inv, state, parent) {
       m.history.length >= 2
         ? m.price - m.history[m.history.length - 2].price
         : 0;
-    var clr = chg >= 0 ? "var(--success)" : "var(--danger)";
+    var clr = chg >= 0 ? "var(--danger)" : "var(--success)";
     var unit = s.unit || "份";
     var cid = "chart-" + sym;
 
@@ -2857,7 +2869,7 @@ function renderProperties(area, inv, state, parent) {
       var buyP = p.buyPrice;
       var diff = cur - buyP;
       var pct = ((diff / buyP) * 100).toFixed(1);
-      var clr = diff >= 0 ? "var(--success)" : "var(--danger)";
+      var clr = diff >= 0 ? "var(--danger)" : "var(--success)";
       var sign = diff >= 0 ? "+" : "";
       totalPropVal += cur;
       totalPropPL += diff;
@@ -2875,7 +2887,7 @@ function renderProperties(area, inv, state, parent) {
           <button class="btn btn-sm btn-danger sell-prop" data-id="${p.id}" style="font-size:10px;">出售</button>
         </div>`;
     }
-    var tClr = totalPropPL >= 0 ? "var(--success)" : "var(--danger)";
+    var tClr = totalPropPL >= 0 ? "var(--danger)" : "var(--success)";
     var tSign = totalPropPL >= 0 ? "+" : "";
     holdingsDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -3022,7 +3034,7 @@ function renderCars(area, inv, state, parent) {
       var buyP = c.buyPrice;
       var diff = cur - buyP;
       var pct = ((diff / buyP) * 100).toFixed(1);
-      var clr = diff >= 0 ? "var(--success)" : "var(--danger)";
+      var clr = diff >= 0 ? "var(--danger)" : "var(--success)";
       var sign = diff >= 0 ? "+" : "";
       totalCarVal += cur;
       totalCarPL += diff;
@@ -3035,7 +3047,7 @@ function renderCars(area, inv, state, parent) {
           <span style="min-width:60px;text-align:right;font-size:10px;">月维护 ¥${c.maintenance || 0}</span>
         </div>`;
     }
-    var tClr = totalCarPL >= 0 ? "var(--success)" : "var(--danger)";
+    var tClr = totalCarPL >= 0 ? "var(--danger)" : "var(--success)";
     var tSign = totalCarPL >= 0 ? "+" : "";
     holdingsDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
