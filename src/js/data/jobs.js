@@ -141,7 +141,7 @@ const STREET_JOBS = [
   },
   {
     id: "premium_engineering",
-    name: "🏗️ 正规工程队（李工头推荐）",
+    name: "正规工程队（李工头推荐）",
     desc: "李工头介绍的正规建筑公司，工资两倍、有工伤险，活儿也相对规范。",
     icon: "🏗️",
     location: "construction",
@@ -171,7 +171,7 @@ const STREET_JOBS = [
   },
   {
     id: "restaurant_assistant",
-    name: "🍳 帮陈师傅打下手",
+    name: "帮陈师傅打下手",
     desc: "在陈师傅餐厅打下手，学做菜的同时赚点辛苦钱。",
     icon: "🍳",
     location: "commercialDist",

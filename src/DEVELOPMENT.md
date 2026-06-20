@@ -1,13 +1,26 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-20 (累计288+项改动)
-> **最新改动**: P0 新闻→投资价格传导桥梁 — news_investment_bridge.js 连接30+条新闻的 investmentEffect 数据到实际价格更新
+> 最后更新: 2026-06-21
+> **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
 ## 项目概述
 
 一款融合《北京浮生记》《大多数》《互联网大厂模拟器》玩法的综合性文字模拟经营网页游戏。玩家从城中村一无所有开始，通过废品回收、打工、倒买倒卖等方式在城市生存，最终进入互联网职场，从P5晋升到P10实现财务自由。
 
 **技术栈**: 纯 HTML5 + CSS + Vanilla JS（零框架依赖），localStorage 存档，模块化开发 → 构建内联为单文件部署。
+
+## 构建说明
+
+项目根目录有 `build.py`，它将 `src/` 下的所有代码内联打包为 `dist/index.html`（可独立部署的单文件）。
+
+```bash
+# 每次修改 src/ 后必须执行
+python build.py
+```
+
+- **开发/调试**: 直接打开 `src/index.html`（浏览器加载外部 CSS/JS）
+- **测试/游玩**: 打开 `dist/index.html`（单文件，所有代码已内联）
+- **git 提交**: `src/` 和 `dist/` 都会提交，确保 dist 与 src 一致
 
 ---
 
@@ -2686,3 +2699,50 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 - 多条新闻叠加乘数连乘（如科技利好×芯片利好→+34.2%）
 - 新闻过期后（cleanupExpiredNews 清理 activeNews），价格回到随机游走
 - 投资Tab可看到新闻标签 + 市场驱动百分比指示
+
+---
+
+## ✅ 2026-06-21 — UI全面优化：中文化/去重图标/布局规范
+
+### P0 UI Bugs 修复
+
+1. **英文→中文**（`festivals.js` + `render.js`）：
+   - 季节性价格提示中的 `clothing`/`electronics` 等英文ID → 中文"服装"/"电子"
+   - 交易Tab商品分类标签从英文ID → 中文名称
+   - 季节波动横幅中 `hotBuy`/`hotSell` 数组使用中文名而非ID
+
+2. **重复图标清理**（`actions_extra.js` + `main.js`）：
+   - 统一规则：`action.icon` 负责卡片大图标，`action.name` 只保留文字（去除非纯文本 emoji 前缀）
+   - 受影响：街头生存/社交/学习/生活/投资/梦想/ amenities/诊所等全部行动
+   - 修复后所有卡片统一：一个图标 + 纯文字标题
+
+3. **"转到交易Tab"提示优化**（`main.js`）：
+   - 批发进货/买卖商品名称中去掉冗余的"（转到交易Tab）"
+   - 提示效果保留在描述文本中（"点击后自动切换到交易Tab"）
+
+4. **消息记录框缩小**（`style.css`）：
+   - `max-height`: 250px → 150px，`padding` 缩减
+   - 小标题 `font-size`: 11px → 10px，`letter-spacing` 缩减
+
+5. **投资Tab按钮标准化**（`investment.js`）：
+   - 新增 `stdInvBtns()` 辅助函数统一生成按钮组样式
+   - 四个子Tab（股票/虚拟币/贵金属/期货基金）按钮格式统一：
+     - 买入：`买N` | `买N*10` | `全买` → 分隔线 → `卖N` | `卖N*10` | `全卖`
+   - 移除按钮上的单位后缀（"克"、"手"等），由价格上下文暗示
+
+6. **全局卡片样式微调**（`style.css`）：
+   - `.action-card`：padding 14px→12px，添加 flex column 布局
+   - `.card-icon`：统一 min-height + flex 对齐
+   - `.card-title`：font-size 14px→13px
+   - `#content-area`：gap 16px→12px，padding 调整
+
+### 文件变更
+
+| 文件                             | 变更内容                                                 |
+| -------------------------------- | -------------------------------------------------------- |
+| `src/js/core/festivals.js`       | hotBuy/hotSell中文化（使用CATEGORY_NAMES映射）           |
+| `src/js/ui/render.js`            | 季节横幅+商品分类标签中文化                              |
+| `src/js/phase1/actions_extra.js` | 32处行动名称去重图标                                     |
+| `src/js/main.js`                 | 批发进货/买卖商品名称精简+NPC/住所/仓储/装备商店去重图标 |
+| `src/css/style.css`              | 消息日志缩小+卡片样式标准化+content-area间距调整         |
+| `src/js/phase2/investment.js`    | stdInvBtns辅助函数+4个子Tab按钮标准化                    |

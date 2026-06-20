@@ -931,7 +931,7 @@ var FESTIVAL_JOBS = {
   shopping_festival: [
     {
       id: "fest_shopping_vendor",
-      name: "🛒 剁手节爆款摊位",
+      name: "剁手节爆款摊位",
       icon: "🛒",
       location: "commercialDist",
       pay: 280,
@@ -940,7 +940,7 @@ var FESTIVAL_JOBS = {
     },
     {
       id: "fest_shopping_warehouse",
-      name: "📦 节日仓库搬运",
+      name: "节日仓库搬运",
       icon: "📦",
       location: "wholesaleMarket",
       pay: 160,
@@ -1174,10 +1174,11 @@ function getSeasonFestivalTip(state) {
   var hotBuy = [];
   var hotSell = [];
   for (var cat in seasonMods) {
+    var catName = getFestivalCategoryName(cat);
     if (seasonMods[cat] < 0.9) {
-      hotBuy.push(cat);
+      hotBuy.push(catName);
     } else if (seasonMods[cat] > 1.1) {
-      hotSell.push(cat);
+      hotSell.push(catName);
     }
   }
 

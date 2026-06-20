@@ -12,7 +12,7 @@ function addStreetExtras(state, actions) {
   // === 街头生存类（任何街头地点都行） ===
   actions.push({
     id: "scavenge_trash",
-    name: "🗺️ 规划拾荒路线",
+    name: "规划拾荒路线",
     desc: "选择今天的拾荒区域：城中村小巷(稳)/废品站边缘(中)/工业区(高)/老周专线(⭐)。不同路线收益和风险各异。",
     icon: "🗺️",
     apCost: 15,
@@ -24,7 +24,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "vending_advice",
-    name: "🛒 摆摊选址建议",
+    name: "摆摊选址建议",
     desc: "根据天气、节日、周末等因素，智能推荐今日最佳摆摊地点。",
     icon: "📍",
     apCost: 5,
@@ -39,7 +39,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "busking",
-    name: "🎤 街头卖唱",
+    name: "街头卖唱",
     desc: "在地铁口或天桥上唱歌赚打赏。需要胆子大。",
     icon: "🎤",
     apCost: 20,
@@ -72,7 +72,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "beg",
-    name: "🙏 街头乞讨",
+    name: "街头乞讨",
     desc: "放下尊严，跪地要饭。（有尊严损失）",
     icon: "🙏",
     apCost: 20,
@@ -96,7 +96,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "play_dice",
-    name: "🎲 路边赌骰子",
+    name: "路边赌骰子",
     desc: "和地摊小贩玩骰子，押 50 赢了翻倍，输了打水漂。",
     icon: "🎲",
     costEstimate: 50,
@@ -128,7 +128,7 @@ function addStreetExtras(state, actions) {
   // === 社交 / 家庭类 ===
   actions.push({
     id: "call_home",
-    name: "📞 给家里打电话",
+    name: "给家里打电话",
     desc: "用公用电话给爸妈报平安，听听唠叨。",
     icon: "📞",
     costEstimate: 2,
@@ -162,7 +162,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "remit_home",
-    name: "💌 给家里汇款",
+    name: "给家里汇款",
     desc: "把一部分钱寄回老家。",
     icon: "💌",
     costEstimate: "200~1000",
@@ -173,7 +173,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "internet_bar",
-    name: "💻 网吧上网",
+    name: "网吧上网",
     desc: "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
     icon: "💻",
     costEstimate: 5,
@@ -204,7 +204,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "salon_chat",
-    name: "💈 路边理发店聊天",
+    name: "路边理发店聊天",
     desc: "花 10 块剪个头发，顺便听听老板吹牛。需要敏捷≥18才能帮上忙。",
     icon: "💈",
     costEstimate: 10,
@@ -238,7 +238,7 @@ function addStreetExtras(state, actions) {
   // === 学习类 ===
   actions.push({
     id: "self_study",
-    name: "📖 图书馆自习",
+    name: "图书馆自习",
     desc: "去图书馆（商业区旁）安静看书。",
     icon: "📖",
     apCost: 20,
@@ -266,7 +266,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "night_school",
-    name: "🌃 上夜校",
+    name: "上夜校",
     desc: "晚上上夜校，提升智力+相关技能。需要 ¥50 学费，智力≥25。",
     icon: "🌃",
     costEstimate: 50,
@@ -302,7 +302,7 @@ function addStreetExtras(state, actions) {
   // === 生活类 ===
   actions.push({
     id: "gym",
-    name: "🏋️ 办健身卡锻炼",
+    name: "办健身卡锻炼",
     desc: "去健身房办月卡，提升体质和敏捷。",
     icon: "🏋️",
     costEstimate: 200,
@@ -330,7 +330,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "movie",
-    name: "🎬 看场电影",
+    name: "看场电影",
     desc: "去影院看场电影放松一下。",
     icon: "🎬",
     costEstimate: 35,
@@ -356,7 +356,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "ktv",
-    name: "🎤 KTV 唱歌",
+    name: "KTV 唱歌",
     desc: "约朋友去 KTV 吼两小时。",
     icon: "🎤",
     costEstimate: 80,
@@ -383,7 +383,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "pharmacy",
-    name: "💊 买药/买营养品",
+    name: "买药/买营养品",
     desc: "去药房买维生素、补品等。需要 ¥30~80。",
     icon: "💊",
     costEstimate: 30,
@@ -408,7 +408,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "supermarket",
-    name: "🛒 去超市采购",
+    name: "去超市采购",
     desc: "去超市买点吃的用的。需要 ¥30~60。",
     icon: "🛒",
     costEstimate: 30,
@@ -434,7 +434,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "clothing",
-    name: "👕 买件新衣服",
+    name: "买件新衣服",
     desc: "去服装店买件像样的衣服，提升卫生/心情/名气。",
     icon: "👕",
     costEstimate: 80,
@@ -461,7 +461,7 @@ function addStreetExtras(state, actions) {
   // === 投资 / 理财类 ===
   actions.push({
     id: "lottery",
-    name: "🎰 买张彩票",
+    name: "买张彩票",
     desc: "花 2 块买注彩票，搏一搏单车变摩托。",
     icon: "🎰",
     costEstimate: 2,
@@ -499,7 +499,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "yu_e_bao",
-    name: "💰 买余额宝理财",
+    name: "买余额宝理财",
     desc: "把闲钱存进余额宝，每天 0.01% 收益。",
     icon: "💰",
     costEstimate: "100起",
@@ -512,7 +512,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "buy_insurance",
-    name: "🛡️ 买保险",
+    name: "买保险",
     desc: "花 200 买份意外险，下次受伤/生病能赔 500。",
     icon: "🛡️",
     costEstimate: 200,
@@ -536,7 +536,7 @@ function addStreetExtras(state, actions) {
   // === 梦想 / 自我实现类 ===
   actions.push({
     id: "diary",
-    name: "📓 写日记",
+    name: "写日记",
     desc: "记录今天的心情。回顾一下，反思成长。",
     icon: "📓",
     handler: () => {
@@ -554,7 +554,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "meditation",
-    name: "🧘 冥想打坐",
+    name: "冥想打坐",
     desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
     icon: "🧘",
     handler: () => {
@@ -572,7 +572,7 @@ function addStreetExtras(state, actions) {
 
   actions.push({
     id: "start_business",
-    name: "🏪 摆地摊创业",
+    name: "摆地摊创业",
     desc:
       "去批发市场进点货，到商业区摆摊卖。销售技能影响收益（当前：" +
       (state.skills.sales.level > 0
@@ -686,7 +686,7 @@ function addStreetExtras(state, actions) {
   if (npcsHere.length > 0 && invGoods.length > 0) {
     actions.push({
       id: "gift_npc",
-      name: "🎁 送礼联络感情",
+      name: "送礼联络感情",
       desc: "将背包里的商品送给附近的NPC。送对口的礼物好感+15，普通礼物好感+5。每天每人限一次。",
       icon: "🎁",
       apCost: 10,
@@ -707,7 +707,7 @@ function addStreetExtras(state, actions) {
     const estMax = 130 + Math.floor(codingLvl * 1.5);
     actions.push({
       id: "freelance_coding",
-      name: "💻 接网络外包单",
+      name: "接网络外包单",
       desc:
         "在网吧或咖啡厅接网络开发单子。编程Lv." +
         codingLvl +
@@ -763,7 +763,7 @@ function addStreetExtras(state, actions) {
   if (!hasDream && atRestfulLoc) {
     actions.push({
       id: "set_dream",
-      name: "💭 确立人生目标",
+      name: "确立人生目标",
       desc: "在这座城市，你想要什么？选定一个方向，脚踏实地去努力。",
       icon: "🌟",
       apCost: 5,
@@ -786,7 +786,7 @@ function addStreetExtras(state, actions) {
           : "";
       actions.push({
         id: "view_dream",
-        name: dream.icon + " 梦想：" + dream.name,
+        name: "梦想：" + dream.name,
         desc: "进度 " + progress + "% · 当前里程碑：" + curTitle,
         icon: "🌟",
         apCost: 0,
@@ -809,7 +809,7 @@ function addStreetExtras(state, actions) {
   if (isWeekend && atMarketLoc && !state.flags[weekendMarketDoneKey]) {
     actions.push({
       id: "weekend_market",
-      name: "🏪 周末集市摆摊",
+      name: "周末集市摆摊",
       desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
       icon: "🏪",
       apCost: 25,
@@ -853,7 +853,7 @@ function addStreetExtras(state, actions) {
   if (dayOfWeek === 1 && !state.flags[mondayInfoKey]) {
     actions.push({
       id: "monday_job_board",
-      name: "📋 打听本周零工机会",
+      name: "打听本周零工机会",
       desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
       icon: "📋",
       apCost: 10,
@@ -1382,7 +1382,7 @@ function addAmenityActions(state, actions) {
         : a.type;
     actions.push({
       id: "amenity_" + a.id,
-      name: a.icon + " " + a.name,
+      name: a.name,
       desc: a.desc + " [" + primaryDesc.join(", ") + "]",
       icon: a.icon,
       apCost: a.ap || 0,
@@ -1437,7 +1437,7 @@ function addIngredientShoppingActions(state, actions) {
 
   actions.push({
     id: "buy_ingredients",
-    name: "🛒 买菜/食材",
+    name: "买菜/食材",
     desc:
       "采购烹饪食材（大米/蔬菜/肉类/调料等）。当前市场价 ×" +
       locPriceMod.toFixed(2),
@@ -1671,7 +1671,7 @@ function addClinicAction(state, actions) {
   var illCount = (state.status.illnesses && state.status.illnesses.length) || 0;
   actions.push({
     id: "see_doctor",
-    name: "🏥 看病" + (illCount ? "（你有 " + illCount + " 种疾病）" : ""),
+    name: "看病" + (illCount ? "（你有 " + illCount + " 种疾病）" : ""),
     desc: "由医生检查并选择治疗方案：药店/医院两档可选。",
     icon: "🏥",
     apCost: 5,

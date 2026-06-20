@@ -21,7 +21,8 @@
 
 ## 项目信息
 
-- 入口: `src/index.html`
+- 入口: `src/index.html`（开发）/ `dist/index.html`（部署）
+- **构建**: 每次修改 `src/` 后必须 `python build.py` 重新打包 `dist/`
 - 开发文档: `src/DEVELOPMENT.md`（每次改动必须同步更新）
 - 技术栈: 纯 HTML5 + CSS + Vanilla JS，零框架，无 npm 构建步骤
 - 所有 JS 文件通过 `<script src="...">` 在 index.html 中按序加载，**禁止改变 script 标签顺序**
@@ -211,7 +212,7 @@
   - 新世界事件/叙事：在 `src/js/data/narratives_registry.js` 追加 `NARRATIVES.<id> = { ... }`（schema 与 MECHANICS 完全一致）
   - 新胜利路线/成就汇总：在 `src/js/data/victories_registry.js` 追加 `VICTORIES.<id> = { ... }`；`achievements` 条目自动读 `ACHIEVEMENTS` 数组，新增成就只需改 `core/achievements.js`
   - 跨条目跳转用 `_wkLink(catId, entryId, label, icon)`，动态内容必须 `_wkE()` 转义
-- 每完成 3 个功能点，执行一次 `git add -A && git commit -m "..."` 存档
+- 每完成 1 个功能点，执行一次 `git add -A && git commit -m "..."` 存档（功能点粒度：一个独立的改动，如"修复XXX bug"、"新增XXX功能"、"清理XXX"）
 - 上下文对话超过约 40 轮或感觉很长时，执行 `/compact` 再继续
 - token/额度接近耗尽时：先把所有改动写入 DEVELOPMENT.md，确保代码完整可运行，然后停止
 

@@ -2504,11 +2504,20 @@ function renderTradeTab(state, parent) {
     if (Object.keys(seasonMods).length > 0) {
       var hotBuy = [];
       var hotSell = [];
+      var CATEGORY_NAMES_TRADE = {
+        daily: "日用品",
+        luxury: "奢侈品",
+        food: "食品",
+        clothing: "服装",
+        electronics: "电子",
+        scrap: "废品",
+      };
       for (var cat in seasonMods) {
+        var catName = CATEGORY_NAMES_TRADE[cat] || cat;
         if (seasonMods[cat] < 0.9) {
-          hotBuy.push(cat);
+          hotBuy.push(catName);
         } else if (seasonMods[cat] > 1.1) {
-          hotSell.push(cat);
+          hotSell.push(catName);
         }
       }
       if (hotBuy.length > 0 || hotSell.length > 0) {
@@ -2624,7 +2633,7 @@ function renderTradeTab(state, parent) {
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="card-title" style="margin:0;">${good.name}</div>
-        <span class="slot-tag">${good.category}</span>
+        <span class="slot-tag">${{ daily: "日用品", luxury: "奢侈品", food: "食品", clothing: "服装", electronics: "电子", scrap: "废品" }[good.category] || good.category}</span>
         ${seasonTag}
       </div>
       <div class="card-desc" style="margin:4px 0;">

@@ -1785,6 +1785,67 @@ function summaryCard(label, value) {
 }
 
 // ---- 子tab渲染：股票 ----
+/**
+ * 标准投资按钮组 — 所有子tab统一使用此样式
+ * @param {string} sym    股票/币种代号
+ * @param {number} price  当前价格
+ * @param {object|null} h 持仓对象 {shares, avgPrice} 或 null
+ * @param {string} qty1   第一档数量（如 "1", "10", "0.001"）
+ * @param {string} qty2   第二档数量
+ * @param {string} lbl1   按钮标签1（如 "买1", "买10"）
+ * @param {string} lbl2   按钮标签2
+ * @param {number} decimals 全买计算的小数位数
+ */
+function stdInvBtns(sym, price, h, qty1, qty2, lbl1, lbl2, decimals) {
+  var shares = h ? h.shares : 0;
+  var decAttr = decimals != null ? ' data-dec="' + decimals + '"' : "";
+  return (
+    '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;align-items:center;">' +
+    '<button class="btn btn-sm btn-success ibuy" data-s="' +
+    sym +
+    '" data-q="' +
+    qty1 +
+    '">' +
+    lbl1 +
+    "</button>" +
+    '<button class="btn btn-sm btn-success ibuy" data-s="' +
+    sym +
+    '" data-q="' +
+    qty2 +
+    '">' +
+    lbl2 +
+    "</button>" +
+    '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
+    sym +
+    '" data-p="' +
+    price.toFixed(4) +
+    '"' +
+    decAttr +
+    ">全买</button>" +
+    '<span style="color:var(--border);margin:0 4px;font-size:11px;">|</span>' +
+    '<button class="btn btn-sm btn-danger isell" data-s="' +
+    sym +
+    '" data-q="' +
+    qty1 +
+    '">' +
+    lbl1.replace("买", "卖") +
+    "</button>" +
+    '<button class="btn btn-sm btn-danger isell" data-s="' +
+    sym +
+    '" data-q="' +
+    qty2 +
+    '">' +
+    lbl2.replace("买", "卖") +
+    "</button>" +
+    '<button class="btn btn-sm btn-danger isell" data-s="' +
+    sym +
+    '" data-q="' +
+    shares +
+    '">全卖</button>' +
+    "</div>"
+  );
+}
+
 function renderStocks(area, inv, state, parent) {
   // === 📊 我的持仓汇总 ===
   var holdings = inv.stockHoldings || [];
@@ -1903,27 +1964,7 @@ function renderStocks(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      s.symbol +
-      '" data-q="10">买10</button>' +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      s.symbol +
-      '" data-q="100">买100</button>' +
-      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
-      s.symbol +
-      '" data-p="' +
-      m.price.toFixed(4) +
-      '">全买</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      s.symbol +
-      '" data-q="10">卖10</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      s.symbol +
-      '" data-q="' +
-      (h ? h.shares : 0) +
-      '">全卖</button>' +
-      "</div>" +
+      stdInvBtns(s.symbol, m.price, h, "10", "100", "买10", "买100") +
       '<canvas id="' +
       cid +
       '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
@@ -2059,30 +2100,23 @@ function renderBtc(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      s.symbol +
-      '" data-q="' +
-      (s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10) +
-      '">买</button>' +
-      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
-      s.symbol +
-      '" data-p="' +
-      m.price.toFixed(6) +
-      '" data-dec="' +
-      (s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0) +
-      '">全买</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      s.symbol +
-      '" data-q="' +
-      (s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10) +
-      '">卖</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      s.symbol +
-      '" data-q="' +
-      (h ? h.shares : 0) +
-      '">全卖</button>' +
-      "</div>" +
+      (function () {
+        var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
+        var bq2 = s.basePrice > 1000 ? 0.01 : s.basePrice > 100 ? 1 : 100;
+        var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
+        var qtyLabel = bq < 1 ? bq.toString() : Math.round(bq).toString();
+        var qtyLabel2 = bq2 < 1 ? bq2.toString() : Math.round(bq2).toString();
+        return stdInvBtns(
+          s.symbol,
+          m.price,
+          h,
+          bq.toString(),
+          bq2.toString(),
+          "买" + qtyLabel,
+          "买" + qtyLabel2,
+          dec,
+        );
+      })() +
       '<canvas id="' +
       cid +
       '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
@@ -2201,33 +2235,7 @@ function renderPrecious(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      sym +
-      '" data-q="10">买10' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      sym +
-      '" data-q="100">买100' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
-      sym +
-      '" data-p="' +
-      m.price.toFixed(4) +
-      '">全买</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      sym +
-      '" data-q="10">卖10' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      sym +
-      '" data-q="' +
-      (h ? h.shares : 0) +
-      '">全卖</button>' +
-      "</div>" +
+      stdInvBtns(sym, m.price, h, "10", "100", "买10", "买100") +
       '<canvas id="' +
       cid +
       '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
@@ -2343,33 +2351,7 @@ function renderFutures(area, inv, state, parent) {
           "</span>" +
           "</div>"
         : "") +
-      '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">' +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      sym +
-      '" data-q="1">买1' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-success ibuy" data-s="' +
-      sym +
-      '" data-q="10">买10' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
-      sym +
-      '" data-p="' +
-      m.price.toFixed(4) +
-      '">全买</button>' +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      sym +
-      '" data-q="1">卖1' +
-      unit +
-      "</button>" +
-      '<button class="btn btn-sm btn-danger isell" data-s="' +
-      sym +
-      '" data-q="' +
-      (h ? h.shares : 0) +
-      '">全卖</button>' +
-      "</div>" +
+      stdInvBtns(sym, m.price, h, "1", "10", "买1", "买10") +
       '<canvas id="' +
       cid +
       '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
