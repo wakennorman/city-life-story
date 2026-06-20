@@ -1,5 +1,24 @@
 # 城市浮生记 — 自主开发护栏规则
 
+## ✅ 版本迁移已完成（2026-06-21）
+
+> **旧版 `../src/` 的所有独特内容已全部迁移到当前版本。**
+> 当前 `city-life-story/src/` 是唯一活跃开发版本。
+
+### 路径规则
+
+所有文件路径使用 `city-life-story/` 前缀：
+
+| 正确 ✅                          | 注意         |
+| -------------------------------- | ------------ |
+| `city-life-story/src/js/main.js` | 当前开发版本 |
+| `city-life-story/src/index.html` | 项目入口     |
+
+### 新文件规则
+
+- 新 JS 模块 → 放在 `city-life-story/src/js/` 下
+- 必须在 `city-life-story/src/index.html` 中注册加载
+
 ## 项目信息
 
 - 入口: `src/index.html`

@@ -373,6 +373,7 @@ function renderSidebar(state) {
   renderDreamSection(state);
   renderEduSection(state);
   renderReputationBadge(state);
+  renderMoralStatus(state);
   renderLocation(state);
 }
 
@@ -416,6 +417,46 @@ function renderReputationBadge(state) {
         luck +
         "</div>"
       : "");
+}
+
+/** 道德状态显示 */
+function renderMoralStatus(state) {
+  var moral = state.flags.moral;
+  if (!moral || !moral.actions || moral.actions.length === 0) return;
+  var score = moral.score || 0;
+  var el = document.getElementById("moral-status");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "moral-status";
+    el.style.cssText = "font-size:11px;margin-bottom:4px;margin-top:-4px;";
+    var dreamEl = document.getElementById("dream-section");
+    var parent = dreamEl ? dreamEl.parentNode : null;
+    if (parent) parent.insertBefore(el, dreamEl ? dreamEl.nextSibling : null);
+    else return;
+  }
+  var emoji = typeof getMoralEmoji === "function" ? getMoralEmoji(score) : "😐";
+  var level =
+    typeof getMoralLevelName === "function" ? getMoralLevelName(score) : "";
+  var color =
+    score >= 50
+      ? "var(--success)"
+      : score >= 20
+        ? "var(--accent)"
+        : score >= -10
+          ? "var(--text-secondary)"
+          : score >= -40
+            ? "var(--warning)"
+            : "var(--danger)";
+  el.innerHTML =
+    emoji +
+    " " +
+    level +
+    " <span style='color:" +
+    color +
+    ";font-weight:bold;'>(" +
+    (score > 0 ? "+" : "") +
+    score +
+    ")</span>";
 }
 
 function renderEduSection(state) {

@@ -294,6 +294,15 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 市场事件（供需随机波动）===
+  {
+    name: "pricing_market",
+    fn: function (state) {
+      if (typeof checkMarketEvents === "function") checkMarketEvents(state);
+      if (typeof decaySupplyDemand === "function") decaySupplyDemand(state);
+    },
+  },
+
   // === 投资tick ===
   {
     name: "investment_tick",
@@ -369,6 +378,16 @@ const DAILY_PIPELINE = [
     name: "weather",
     fn: function (state) {
       rollWeather(state);
+    },
+  },
+
+  // === 天气每日效果（温度/舒适度/健康影响）===
+  {
+    name: "weather_daily_effects",
+    fn: function (state) {
+      if (typeof applyWeatherDailyEffects === "function") {
+        applyWeatherDailyEffects(state);
+      }
     },
   },
 
@@ -599,6 +618,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 交易商品变质（非食材：水果/蔬菜等易腐贸易品）===
+  {
+    name: "carry_perish",
+    fn: function (state) {
+      if (typeof tickPerishableGoods === "function") {
+        tickPerishableGoods(state);
+      }
+    },
+  },
+
   // === 每日收支报告（阻塞弹窗）===
   {
     name: "daily_report",
@@ -615,6 +644,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof runDailyNpcBridge === "function") {
         runDailyNpcBridge(state);
+      }
+    },
+  },
+
+  // === 道德后果检查 ===
+  {
+    name: "moral_consequences",
+    fn: function (state) {
+      if (typeof checkMoralConsequences === "function") {
+        checkMoralConsequences(state);
       }
     },
   },

@@ -341,6 +341,13 @@ function createDefaultState() {
       _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
       _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
+
+      // --- 道德系统 ---
+      moral: {
+        score: 0, // 累计道德分 (-100 ~ 100)
+        actions: [], // [{ id, choice, score, day }] — 道德选择历史
+        pendingConsequences: [], // [{ eventId, dueDay, actionId }]
+      },
     },
 
     // --- 事件与消息 ---

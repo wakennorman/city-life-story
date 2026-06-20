@@ -3267,7 +3267,72 @@ function doStreetJob(job) {
     "street_vending_goods",
     "food_stall",
   ];
-  if (vendingJobs.includes(job.id) && state.chengguan) {
+  if (vendingJobs.includes(job.id)) {
+    // === 🌤️ 天气→客流量→摆摊收益闭环 ===
+    if (typeof getWeatherFootTrafficMod === "function") {
+      const trafficMod = getWeatherFootTrafficMod(state);
+      if (trafficMod < 1.0) {
+        // 下雨/下雪天客流量下降
+        const lost = Math.floor(pay * (1 - trafficMod));
+        // 需求商品可部分抵消客流损失
+        let demandComp = 1.0;
+        if (typeof getWeatherDemandBonus === "function") {
+          const wId = state.weather?.current;
+          const inventory = state.inventory?.items || [];
+          let bonusCount = 0;
+          let bonusTotal = 0;
+          for (const item of inventory) {
+            const db = getWeatherDemandBonus(wId, item.id);
+            if (db > 1.0) {
+              bonusTotal += db;
+              bonusCount++;
+            }
+          }
+          if (bonusCount > 0) demandComp = bonusTotal / bonusCount;
+        }
+        const effective = Math.min(1.0, trafficMod + (demandComp - 1.0) * 0.5);
+        const actualLoss = Math.floor(pay * (1 - effective));
+        if (actualLoss > 5) {
+          pay -= actualLoss;
+          // 检查是否有高需求商品
+          let demandNames = [];
+          if (typeof getWeatherDemandBonus === "function") {
+            const inventory = state.inventory?.items || [];
+            for (const item of inventory) {
+              const db = getWeatherDemandBonus(state.weather?.current, item.id);
+              if (db > 1.0 && typeof getGoodById === "function") {
+                const g = getGoodById(item.id);
+                if (g) demandNames.push(g.name);
+              }
+            }
+          }
+          if (demandNames.length > 0 && trafficMod < 0.7) {
+            StateManager.addMessage(
+              `🌤️ 客流偏少(↓${Math.round((1 - effective) * 100)}%)，但${demandNames.slice(0, 2).join("、")}还算好卖。`,
+              "event",
+            );
+          } else {
+            StateManager.addMessage(
+              `🌧️ 天气影响客流(↓${Math.round((1 - effective) * 100)}%)，摆摊少赚约¥${actualLoss}。`,
+              "warning",
+            );
+          }
+        }
+      } else if (trafficMod > 1.0) {
+        const bonus = Math.floor(pay * (trafficMod - 1.0));
+        if (bonus > 0) {
+          pay += bonus;
+          if (Math.random() < 0.3) {
+            StateManager.addMessage(
+              "☀️ 天气好客流量大，多赚了¥" + bonus + "！",
+              "success",
+            );
+          }
+        }
+      }
+    }
+
+    // 城管检查
     state.chengguan.heat = Math.min(
       100,
       state.chengguan.heat + 3 + Random.int(0, 4),
@@ -3485,6 +3550,13 @@ function consumeAP(cost) {
     if (Random.chance(0.06)) {
       if (typeof queueRandomEvent === "function")
         queueRandomEvent(state, phase);
+    }
+  }
+
+  // 道德事件判定（3%概率，每日最多一次，用showModal展示选择）
+  if (!state._pendingEvent && typeof triggerMoralEvent === "function") {
+    if (Random.chance(0.03)) {
+      triggerMoralEvent(state);
     }
   }
 
