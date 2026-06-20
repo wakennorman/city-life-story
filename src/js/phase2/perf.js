@@ -48,7 +48,7 @@ function calculatePerfScore(state) {
   }
 
   // 随机方差 ±8%
-  score += (Math.random() - 0.5) * score * 0.16;
+  score += Random.float(-score * 0.08, score * 0.08);
   score = Math.max(0, Math.min(100, score));
 
   return { score: Math.round(score) };
@@ -59,7 +59,7 @@ function assignGrade(rawScore, state) {
   const peerScores = [];
   const base = rawScore;
   for (let i = 0; i < 20; i++) {
-    let ps = base + (Math.random() - 0.5) * 35;
+    let ps = base + Random.float(-17.5, 17.5);
     ps = Math.max(5, Math.min(100, ps));
     peerScores.push(Math.round(ps));
   }

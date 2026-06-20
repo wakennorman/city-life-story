@@ -143,10 +143,10 @@ function rollWeather(state) {
   state.weather.season = season.id;
 
   // 25%概率天气变化
-  if (Math.random() < 0.25 || !state.weather.current) {
+  if (Random.chance(0.25) || !state.weather.current) {
     const weights = season.weatherWeights;
     const total = Object.values(weights).reduce((a, b) => a + b, 0);
-    let roll = Math.random() * total;
+    let roll = Random.float(0, total);
     let newWeather = "sunny";
     for (const [wid, wgt] of Object.entries(weights)) {
       roll -= wgt;
@@ -164,7 +164,7 @@ function rollWeather(state) {
   const weatherDef = WEATHER_TYPES.find((w) => w.id === state.weather.current);
   const tempBase = (tMin + tMax) / 2;
   const weatherOffset = weatherDef ? (weatherDef.outdoorMod - 1) * 10 : 0;
-  const noise = (Math.random() - 0.5) * 6;
+  const noise = Random.float(-3, 3);
   state.weather.temperature = Math.round(
     Math.max(-15, Math.min(45, tempBase + weatherOffset + noise)),
   );

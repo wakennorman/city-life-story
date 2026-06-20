@@ -272,26 +272,14 @@ const INDUSTRY_DEFS = {
 
 /** 生成随机公司名称 */
 function generateCompanyName() {
-  const useVariant = Math.random() < 0.4;
+  const useVariant = Random.chance(0.4);
   if (useVariant) {
-    const prefix =
-      COMPANY_NAME_VARIANTS[
-        Math.floor(Math.random() * COMPANY_NAME_VARIANTS.length)
-      ];
-    const suffix =
-      COMPANY_NAME_SUFFIXES[
-        Math.floor(Math.random() * COMPANY_NAME_SUFFIXES.length)
-      ];
+    const prefix = Random.fromArray(COMPANY_NAME_VARIANTS);
+    const suffix = Random.fromArray(COMPANY_NAME_SUFFIXES);
     return prefix + suffix;
   }
-  const prefix =
-    COMPANY_NAME_PREFIXES[
-      Math.floor(Math.random() * COMPANY_NAME_PREFIXES.length)
-    ];
-  const suffix =
-    COMPANY_NAME_SUFFIXES[
-      Math.floor(Math.random() * COMPANY_NAME_SUFFIXES.length)
-    ];
+  const prefix = Random.fromArray(COMPANY_NAME_PREFIXES);
+  const suffix = Random.fromArray(COMPANY_NAME_SUFFIXES);
   return prefix + suffix;
 }
 
@@ -300,7 +288,7 @@ function generateStockSymbol() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let symbol = "";
   for (let i = 0; i < 4; i++) {
-    symbol += letters[Math.floor(Math.random() * letters.length)];
+    symbol += letters[Random.int(0, letters.length - 1)];
   }
   return symbol;
 }
@@ -308,12 +296,9 @@ function generateStockSymbol() {
 /** 生成新公司 */
 function generateNewCompany(industryOverride) {
   const industry =
-    industryOverride ||
-    Object.keys(INDUSTRY_DEFS)[
-      Math.floor(Math.random() * Object.keys(INDUSTRY_DEFS).length)
-    ];
+    industryOverride || Random.fromArray(Object.keys(INDUSTRY_DEFS));
   const industryDef = INDUSTRY_DEFS[industry];
-  const culture = CULTURE_TAGS[Math.floor(Math.random() * CULTURE_TAGS.length)];
+  const culture = Random.fromArray(CULTURE_TAGS);
 
   const companyId =
     "comp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
@@ -321,15 +306,15 @@ function generateNewCompany(industryOverride) {
   const stockSymbol = generateStockSymbol();
 
   // 初创公司：健康度随机，有波动
-  const baseHealth = industryDef.baseHealth + (Math.random() - 0.5) * 20;
+  const baseHealth = industryDef.baseHealth + Random.float(-10, 10);
   const health = Math.max(40, Math.min(95, baseHealth));
 
   // 市场份额：新公司从较小份额开始
-  const marketShare = 2 + Math.random() * 5;
+  const marketShare = Random.float(2, 7);
 
   // 产品/人才分数
-  const productScore = 45 + Math.random() * 25;
-  const talentScore = 40 + Math.random() * 30;
+  const productScore = Random.float(45, 70);
+  const talentScore = Random.float(40, 70);
 
   return {
     id: companyId,
@@ -345,47 +330,54 @@ function generateNewCompany(industryOverride) {
     phase: "startup",
     health: Math.round(health),
     marketShare: Math.round(marketShare * 100) / 100,
-    sentiment: 50 + Math.floor(Math.random() * 20),
+    sentiment: 50 + Random.int(0, 19),
     productScore: Math.round(productScore),
     talentScore: Math.round(talentScore),
-    trend: Math.random() < 0.6 ? "up" : "stable",
+    trend: Random.chance(0.6) ? "up" : "stable",
     knownToPlayer: false,
     ceasedExistence: false,
     ceasedAt: null,
     ipoed: false,
-    growthRate: industryDef.growthRate * (0.8 + Math.random() * 0.4),
+    growthRate: industryDef.growthRate * Random.float(0.8, 1.2),
     minIntelligenceReq: industryDef.minIntelligence,
     skillReqs: industryDef.skillReq,
-    stockPrice: 10 + Math.random() * 30,
+    stockPrice: Random.float(10, 40),
     equity: { player: 0 }, // 玩家持股比例
-    valuation: 5000000 + Math.random() * 15000000, // 估值500万-2000万
+    valuation: Random.float(5000000, 20000000), // 估值500万-2000万
     history: [],
     fateEventHistory: [],
     founder: {
-      name: ["李总", "王总", "张总", "陈总", "刘总", "赵总", "周总", "吴总"][
-        Math.floor(Math.random() * 8)
-      ],
-      background: [
+      name: Random.fromArray([
+        "李总",
+        "王总",
+        "张总",
+        "陈总",
+        "刘总",
+        "赵总",
+        "周总",
+        "吴总",
+      ]),
+      background: Random.fromArray([
         "海归创业",
         "大厂出来创业",
         "连续创业者",
         "技术大牛创业",
         "投资人孵化",
-      ][Math.floor(Math.random() * 5)],
+      ]),
     },
     benefits: {
-      insurance: Math.random() < 0.7,
-      housingFund: Math.random() < 0.6,
-      stockOptions: Math.random() < 0.5,
-      freeMeals: Math.random() < 0.4,
-      gym: Math.random() < 0.3,
+      insurance: Random.chance(0.7),
+      housingFund: Random.chance(0.6),
+      stockOptions: Random.chance(0.5),
+      freeMeals: Random.chance(0.4),
+      gym: Random.chance(0.3),
     },
     salaryRange: {
-      min: 8000 + Math.floor(Math.random() * 8000),
-      max: 16000 + Math.floor(Math.random() * 15000),
+      min: 8000 + Random.int(0, 7999),
+      max: 16000 + Random.int(0, 14999),
     },
     // CEO 特质（影响命运事件权重）
-    ceoTrait: CEO_TRAITS[Math.floor(Math.random() * CEO_TRAITS.length)].id,
+    ceoTrait: Random.fromArray(CEO_TRAITS).id,
     ceoBio: generateCeoBio(),
   };
 }
@@ -401,7 +393,7 @@ function generateCeoBio() {
   };
   var traitDescs = traits["aggressive"]; // 默认
   // 随机选一个
-  var idx = Math.floor(Math.random() * traitDescs.length);
+  var idx = Random.int(0, traitDescs.length - 1);
   return traitDescs[idx];
 }
 
@@ -553,10 +545,10 @@ function spawnFromRuins(state, deceasedCompany) {
     ceasedExistence: false,
     ceasedAt: null,
     ipoed: false,
-    growthRate: industryDef.growthRate * (0.8 + Math.random() * 0.4),
+    growthRate: industryDef.growthRate * Random.float(0.8, 1.2),
     minIntelligenceReq: industryDef.minIntelligence,
     skillReqs: industryDef.skillReq,
-    stockPrice: 10 + Math.random() * 30,
+    stockPrice: Random.float(10, 40),
     equity: { player: 0 },
     valuation: 3000000 + Math.random() * 10000000,
     // 遗产标记
@@ -583,17 +575,17 @@ function spawnFromRuins(state, deceasedCompany) {
       background: "原公司技术骨干创业，继承部分专利和人脉",
     },
     benefits: {
-      insurance: Math.random() < 0.7,
-      housingFund: Math.random() < 0.6,
-      stockOptions: Math.random() < 0.5,
-      freeMeals: Math.random() < 0.4,
-      gym: Math.random() < 0.3,
+      insurance: Random.chance(0.7),
+      housingFund: Random.chance(0.6),
+      stockOptions: Random.chance(0.5),
+      freeMeals: Random.chance(0.4),
+      gym: Random.chance(0.3),
     },
     salaryRange: {
-      min: 8000 + Math.floor(Math.random() * 8000),
-      max: 16000 + Math.floor(Math.random() * 15000),
+      min: 8000 + Random.int(0, 7999),
+      max: 16000 + Random.int(0, 14999),
     },
-    ceoTrait: CEO_TRAITS[Math.floor(Math.random() * CEO_TRAITS.length)].id,
+    ceoTrait: Random.fromArray(CEO_TRAITS).id,
     ceoBio: generateCeoBio(),
   };
 

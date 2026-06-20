@@ -54,7 +54,7 @@ function tickHealthStatus(state) {
   // 兼容：旧的 injured 字段（受伤还是单独保留，工作中可能受伤）
   if (st.injured) {
     st.health = Math.max(0, st.health - 2);
-    if (Math.random() < 0.07) {
+    if (Random.chance(0.07)) {
       st.injured = false;
       StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
     }

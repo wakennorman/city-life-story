@@ -234,14 +234,19 @@ const INVESTOR_TYPES = {
   },
 };
 
-// ====== 产品类别 ======
+// ====== 产品类别（15+类别，每类有独特机制）======
 const PRODUCT_CATEGORIES = {
+  // === 基础6类（原有）===
   app: {
     name: "移动应用",
     icon: "📱",
-    baseDevTime: 60, // 天
+    baseDevTime: 60,
     baseCost: 50000,
     revenueModel: "订阅/广告/内购",
+    features: ["用户系统", "推送通知", "应用内购买", "社交分享"],
+    growthFactor: 1.0,
+    churnRate: 0.05,
+    description: "iOS/Android应用，用户基数大但竞争激烈",
   },
   saas: {
     name: "SaaS平台",
@@ -249,6 +254,10 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 90,
     baseCost: 100000,
     revenueModel: "订阅制",
+    features: ["多租户", "API接口", "数据看板", "权限管理"],
+    growthFactor: 1.2,
+    churnRate: 0.03,
+    description: "企业级软件服务，高留存高LTV",
   },
   hardware: {
     name: "智能硬件",
@@ -256,6 +265,10 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 120,
     baseCost: 200000,
     revenueModel: "销售",
+    features: ["供应链管理", "质量控制", "售后服务", "渠道分销"],
+    growthFactor: 0.8,
+    churnRate: 0.02,
+    description: "IoT设备/智能产品，重资产但壁垒高",
   },
   content: {
     name: "内容平台",
@@ -263,6 +276,10 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 45,
     baseCost: 30000,
     revenueModel: "广告/订阅",
+    features: ["内容审核", "推荐算法", "创作者激励", "付费墙"],
+    growthFactor: 1.5,
+    churnRate: 0.08,
+    description: "图文/视频内容社区，增长快但变现难",
   },
   marketplace: {
     name: "交易平台",
@@ -270,6 +287,10 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 80,
     baseCost: 80000,
     revenueModel: "佣金",
+    features: ["双边市场", "支付结算", "信用体系", "纠纷处理"],
+    growthFactor: 1.3,
+    churnRate: 0.04,
+    description: "C2C/B2C交易撮合，网络效应强",
   },
   ai_service: {
     name: "AI服务",
@@ -277,6 +298,166 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 100,
     baseCost: 150000,
     revenueModel: "API调用/订阅",
+    features: ["模型训练", "API网关", "数据标注", "算力优化"],
+    growthFactor: 1.8,
+    churnRate: 0.03,
+    description: "AI能力输出，高增长高壁垒",
+  },
+
+  // === 新增9类 ===
+  social: {
+    name: "社交应用",
+    icon: "💬",
+    baseDevTime: 70,
+    baseCost: 60000,
+    revenueModel: "广告/虚拟物品/会员",
+    features: ["即时通讯", "动态发布", "群组功能", "直播"],
+    growthFactor: 2.0,
+    churnRate: 0.1,
+    description: "社交网络/即时通讯，病毒传播强但留存挑战大",
+  },
+  game: {
+    name: "游戏",
+    icon: "🎮",
+    baseDevTime: 150,
+    baseCost: 120000,
+    revenueModel: "内购/广告/订阅",
+    features: ["游戏引擎", "匹配系统", "反作弊", "运营活动"],
+    growthFactor: 1.6,
+    churnRate: 0.12,
+    description: "手游/页游，爆款效应明显但失败率高",
+  },
+  ecommerce: {
+    name: "电商",
+    icon: "🛍️",
+    baseDevTime: 100,
+    baseCost: 150000,
+    revenueModel: "商品差价/平台佣金",
+    features: ["商品管理", "物流系统", "客服系统", "营销活动"],
+    growthFactor: 1.1,
+    churnRate: 0.03,
+    description: "垂直电商/综合电商，供应链是核心壁垒",
+  },
+  edtech: {
+    name: "在线教育",
+    icon: "📚",
+    baseDevTime: 80,
+    baseCost: 70000,
+    revenueModel: "课程销售/订阅",
+    features: ["直播课堂", "录播系统", "作业批改", "学习数据分析"],
+    growthFactor: 1.0,
+    churnRate: 0.06,
+    description: "K12/职业教育/兴趣教育，政策敏感但需求稳定",
+  },
+  healthtech: {
+    name: "医疗AI/健康科技",
+    icon: "🏥",
+    baseDevTime: 180,
+    baseCost: 200000,
+    revenueModel: "服务订阅/按次收费",
+    features: ["医疗数据", "合规认证", "远程诊疗", "健康管理"],
+    growthFactor: 1.4,
+    churnRate: 0.02,
+    description: "数字健康/远程医疗，监管严格但壁垒极高",
+  },
+  autopilot: {
+    name: "自动驾驶/智能出行",
+    icon: "🚗",
+    baseDevTime: 200,
+    baseCost: 300000,
+    revenueModel: "技术服务费/授权费",
+    features: ["传感器融合", "高精地图", "仿真测试", "法规合规"],
+    growthFactor: 1.5,
+    churnRate: 0.01,
+    description: "自动驾驶技术/出行服务，重研发但天花板高",
+  },
+  blockchain: {
+    name: "区块链/Web3",
+    icon: "⛓️",
+    baseDevTime: 120,
+    baseCost: 100000,
+    revenueModel: "交易手续费/Token经济",
+    features: ["智能合约", "去中心化存储", "跨链", "DAO治理"],
+    growthFactor: 2.5,
+    churnRate: 0.15,
+    description: "DeFi/NFT/元宇宙，波动极大但想象空间大",
+  },
+  metaverse: {
+    name: "元宇宙/VR",
+    icon: "🥽",
+    baseDevTime: 160,
+    baseCost: 180000,
+    revenueModel: "虚拟物品/订阅/广告",
+    features: ["3D引擎", "VR交互", "虚拟经济", "社交空间"],
+    growthFactor: 1.8,
+    churnRate: 0.1,
+    description: "虚拟世界/沉浸式体验，技术门槛高但前景广阔",
+  },
+  green_tech: {
+    name: "新能源/绿色科技",
+    icon: "🌱",
+    baseDevTime: 140,
+    baseCost: 200000,
+    revenueModel: "设备销售/服务费",
+    features: ["储能技术", "能源管理", "碳追踪", "政策补贴"],
+    growthFactor: 1.3,
+    churnRate: 0.02,
+    description: "新能源/碳中和相关，政策驱动但市场空间大",
+  },
+  agritech: {
+    name: "农业科技",
+    icon: "🌾",
+    baseDevTime: 100,
+    baseCost: 80000,
+    revenueModel: "设备销售/数据服务",
+    features: ["精准农业", "无人机", "物联网监测", "供应链溯源"],
+    growthFactor: 0.9,
+    churnRate: 0.02,
+    description: "智慧农业/农产品溯源，市场教育成本高但竞争少",
+  },
+  logitech: {
+    name: "物流科技",
+    icon: "📦",
+    baseDevTime: 90,
+    baseCost: 100000,
+    revenueModel: "SaaS订阅/按单收费",
+    features: ["路径优化", "仓储管理", "运力匹配", "实时追踪"],
+    growthFactor: 1.1,
+    churnRate: 0.03,
+    description: "智慧物流/供应链优化，B端需求稳定",
+  },
+  creator_tool: {
+    name: "内容创作工具",
+    icon: "🎨",
+    baseDevTime: 60,
+    baseCost: 40000,
+    revenueModel: "订阅/按量付费",
+    features: ["AI生成", "模板库", "协作编辑", "多平台发布"],
+    growthFactor: 1.7,
+    churnRate: 0.05,
+    description: "AI写作/设计/视频工具，创作者经济爆发",
+  },
+  enterprise: {
+    name: "企业服务",
+    icon: "🏢",
+    baseDevTime: 100,
+    baseCost: 120000,
+    revenueModel: "SaaS订阅/定制开发",
+    features: ["CRM", "ERP", "HR系统", "数据分析"],
+    growthFactor: 1.0,
+    churnRate: 0.02,
+    description: "B端管理软件，销售周期长但客户价值高",
+  },
+  fintech_pay: {
+    name: "支付/金融科技",
+    icon: "💳",
+    baseDevTime: 120,
+    baseCost: 150000,
+    revenueModel: "交易手续费",
+    features: ["支付网关", "风控系统", "清结算", "合规牌照"],
+    growthFactor: 1.2,
+    churnRate: 0.02,
+    description: "支付/借贷/理财科技，牌照是核心壁垒",
   },
 };
 
@@ -618,6 +799,15 @@ function registerStartup(state, name, industry, description) {
     };
   }
 
+  // 初始化竞争对手（Phase 4）
+  if (typeof generateCompetitors === "function") {
+    state.startup.competitors = generateCompetitors(state, company);
+    StateManager.addMessage(
+      "👀 市场上出现了" + state.startup.competitors.length + "家竞争对手",
+      "info",
+    );
+  }
+
   StateManager.addMessage(
     "🏢 公司「" +
       companyName +
@@ -646,18 +836,26 @@ function createProduct(state, name, category) {
     return { success: false, message: "无效的产品类别" };
   }
 
+  const categoryInfo = PRODUCT_CATEGORIES[category];
   const product = {
     id: _startupGenerateId(),
     name: name || company.name + "产品" + (company.products.length + 1),
     category: category,
     description: "",
     developmentProgress: 0,
-    targetDay: state.player.day + PRODUCT_CATEGORIES[category].baseDevTime,
+    targetDay: state.player.day + categoryInfo.baseDevTime,
     launchDay: null,
     technologyScore: 0,
     marketScore: 0,
     revenue: 0,
     status: "developing",
+    // 功能模块（产品竞争力来源）
+    features: [],
+    // 用户数据
+    users: 0,
+    rating: 3.5,
+    // 竞争力评分（0-100）
+    competitiveness: 0,
   };
 
   company.products.push(product);
@@ -787,6 +985,272 @@ function launchProduct(state, productId) {
   );
 
   return { success: true, product: product, marketReaction: marketReaction };
+}
+
+// ====== 产品功能模块系统 ======
+
+/** 通用功能模块定义 */
+const FEATURE_MODULES = {
+  user_system: {
+    name: "用户系统",
+    icon: "👤",
+    cost: 10000,
+    devTime: 15,
+    techBonus: 5,
+    marketBonus: 3,
+    desc: "注册/登录/个人资料，产品的基础设施",
+  },
+  payment: {
+    name: "支付系统",
+    icon: "💳",
+    cost: 20000,
+    devTime: 20,
+    techBonus: 8,
+    marketBonus: 5,
+    desc: "支持多种支付方式，变现的基础",
+  },
+  analytics: {
+    name: "数据看板",
+    icon: "📊",
+    cost: 15000,
+    devTime: 15,
+    techBonus: 6,
+    marketBonus: 2,
+    desc: "用户行为分析/业务指标监控",
+  },
+  social_share: {
+    name: "社交分享",
+    icon: "🔗",
+    cost: 8000,
+    devTime: 10,
+    techBonus: 2,
+    marketBonus: 6,
+    desc: "一键分享到社交平台，病毒传播",
+  },
+  push_notification: {
+    name: "推送通知",
+    icon: "🔔",
+    cost: 10000,
+    devTime: 12,
+    techBonus: 3,
+    marketBonus: 5,
+    desc: "提升用户活跃度和留存率",
+  },
+  api_gateway: {
+    name: "API网关",
+    icon: "🔌",
+    cost: 25000,
+    devTime: 25,
+    techBonus: 10,
+    marketBonus: 2,
+    desc: "开放API接口，构建生态系统",
+  },
+  ai_recommend: {
+    name: "AI推荐引擎",
+    icon: "🧠",
+    cost: 40000,
+    devTime: 30,
+    techBonus: 12,
+    marketBonus: 8,
+    desc: "个性化推荐，提升用户粘性",
+  },
+  live_stream: {
+    name: "直播功能",
+    icon: "📹",
+    cost: 35000,
+    devTime: 35,
+    techBonus: 8,
+    marketBonus: 10,
+    desc: "实时互动，提升用户参与度",
+  },
+  search: {
+    name: "智能搜索",
+    icon: "🔍",
+    cost: 12000,
+    devTime: 15,
+    techBonus: 5,
+    marketBonus: 4,
+    desc: "全文搜索/智能推荐/搜索结果优化",
+  },
+  multi_platform: {
+    name: "多平台支持",
+    icon: "📱",
+    cost: 30000,
+    devTime: 30,
+    techBonus: 7,
+    marketBonus: 6,
+    desc: "iOS/Android/Web多端同步",
+  },
+  security: {
+    name: "安全加固",
+    icon: "🔒",
+    cost: 15000,
+    devTime: 15,
+    techBonus: 8,
+    marketBonus: 2,
+    desc: "数据加密/风控/防攻击",
+  },
+  customer_support: {
+    name: "客服系统",
+    icon: "💬",
+    cost: 10000,
+    devTime: 12,
+    techBonus: 2,
+    marketBonus: 5,
+    desc: "在线客服/工单系统/FAQ",
+  },
+  membership: {
+    name: "会员体系",
+    icon: "⭐",
+    cost: 18000,
+    devTime: 20,
+    techBonus: 3,
+    marketBonus: 7,
+    desc: "等级/权益/积分体系，提升LTV",
+  },
+  marketplace_integration: {
+    name: "市场对接",
+    icon: "🏪",
+    cost: 25000,
+    devTime: 25,
+    techBonus: 4,
+    marketBonus: 8,
+    desc: "对接第三方市场/平台",
+  },
+  cloud_scale: {
+    name: "云扩展",
+    icon: "☁️",
+    cost: 20000,
+    devTime: 20,
+    techBonus: 10,
+    marketBonus: 1,
+    desc: "弹性伸缩/高可用架构",
+  },
+};
+
+/** 获取产品可用的功能模块 */
+function getProductAvailableFeatures(product) {
+  const category = PRODUCT_CATEGORIES[product.category];
+  if (!category || !category.features) return [];
+
+  const available = [];
+  for (const featName of category.features) {
+    // 查找对应的功能模块定义
+    for (const [key, def] of Object.entries(FEATURE_MODULES)) {
+      if (def.name.includes(featName) || featName.includes(def.name)) {
+        if (!product.features.find((f) => f.key === key)) {
+          available.push({ key, ...def });
+        }
+      }
+    }
+  }
+  return available;
+}
+
+/** 开发功能模块 */
+function developFeature(state, productId, featureKey) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find((p) => p.id === productId);
+  if (!product) return { success: false, message: "产品不存在" };
+
+  const feature = FEATURE_MODULES[featureKey];
+  if (!feature) return { success: false, message: "功能模块不存在" };
+
+  // 检查是否已开发
+  if (product.features.find((f) => f.key === featureKey)) {
+    return { success: false, message: "该功能已开发完成" };
+  }
+
+  // 检查现金
+  if (company.cashReserve < feature.cost) {
+    return {
+      success: false,
+      message: "现金不足，需要¥" + feature.cost.toLocaleString(),
+    };
+  }
+
+  // 扣除现金，开始开发
+  company.cashReserve -= feature.cost;
+  company.expenses += feature.cost;
+
+  // 添加开发中的功能
+  product.features.push({
+    key: featureKey,
+    name: feature.name,
+    status: "developing",
+    progress: 0,
+    targetDay: state.player.day + feature.devTime,
+  });
+
+  StateManager.addMessage(
+    "🔧 「" + feature.name + "」开始开发，预计" + feature.devTime + "天完成",
+    "info",
+  );
+
+  return { success: true, feature: feature };
+}
+
+/** 完成功能开发（每日管线中检查） */
+function checkFeatureCompletion(state) {
+  const startup = state.startup;
+  if (!startup || !startup.company) return;
+
+  const company = startup.company;
+  const day = state.player.day;
+
+  for (const product of company.products) {
+    if (product.status !== "launched" && product.status !== "ready_to_launch")
+      continue;
+
+    for (let i = product.features.length - 1; i >= 0; i--) {
+      const feat = product.features[i];
+      if (feat.status === "developing" && day >= feat.targetDay) {
+        feat.status = "completed";
+        const featDef = FEATURE_MODULES[feat.key];
+        if (featDef) {
+          product.technologyScore = Math.min(
+            100,
+            product.technologyScore + featDef.techBonus,
+          );
+          product.marketScore = Math.min(
+            100,
+            product.marketScore + featDef.marketBonus,
+          );
+          StateManager.addMessage(
+            "✅ 「" +
+              feat.name +
+              "」开发完成！技术分+" +
+              featDef.techBonus +
+              "，市场分+" +
+              featDef.marketBonus,
+            "success",
+          );
+        }
+      }
+    }
+  }
+}
+
+/** 计算产品竞争力 */
+function calculateProductCompetitiveness(product) {
+  const category = PRODUCT_CATEGORIES[product.category];
+  if (!category) return 0;
+
+  let score = 0;
+  // 基础分
+  score += product.technologyScore * 0.4;
+  score += product.marketScore * 0.3;
+  // 功能模块加成
+  score += product.features.length * 5;
+  // 用户规模加成
+  score += Math.min(20, (product.users || 0) / 1000);
+  // 评分加成
+  score += (product.rating || 3.5) * 4;
+
+  product.competitiveness = Math.round(Math.min(100, score));
+  return product.competitiveness;
 }
 
 // ====== 核心：招聘员工 ======
@@ -1213,6 +1677,21 @@ function tickStartup(state, tickType) {
           "x，前往创业Tab查看详情",
         "event",
       );
+    }
+  }
+
+  // 11. 检查功能模块开发完成
+  checkFeatureCompletion(state);
+
+  // 12. 更新产品竞争力
+  for (const product of company.products) {
+    calculateProductCompetitiveness(product);
+  }
+
+  // 13. 竞争对手演化（每日）
+  if (state.startup.competitors && state.startup.competitors.length > 0) {
+    if (typeof tickCompetitors === "function") {
+      tickCompetitors(state, state.startup.competitors);
     }
   }
 }
@@ -2290,6 +2769,243 @@ function executeStartupAction(state, actionId, params) {
   }
 }
 
+// ====== 功能模块开发弹窗 ======
+function showFeatureDevelopmentModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  // 找已发布的产品
+  const launchedProducts = company.products.filter(
+    (p) => p.status === "launched",
+  );
+  if (launchedProducts.length === 0) {
+    StateManager.addMessage("没有已发布的产品", "warning");
+    return;
+  }
+
+  // 构建弹窗内容
+  let html = '<div style="font-size:13px;max-height:60vh;overflow-y:auto;">';
+
+  for (const product of launchedProducts) {
+    const prodCategory = PRODUCT_CATEGORIES[product.category];
+    const availableFeatures = getProductAvailableFeatures(product);
+
+    html +=
+      '<div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">';
+    html +=
+      '<div style="font-weight:bold;color:var(--accent);margin-bottom:8px;">📦 ' +
+      _esc(product.name) +
+      ' <span style="font-size:10px;color:var(--text-muted);">(' +
+      (prodCategory ? prodCategory.name : product.category) +
+      ")</span></div>";
+
+    if (availableFeatures.length === 0) {
+      html +=
+        '<div style="font-size:11px;color:var(--text-muted);">所有功能已开发完成 ✅</div>';
+    } else {
+      html +=
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+      for (const feat of availableFeatures) {
+        const canAfford = company.cashReserve >= feat.cost;
+        const onClick = canAfford
+          ? "showDevelopFeatureConfirm('" +
+            product.id +
+            "','" +
+            feat.key +
+            "','" +
+            feat.name +
+            "'," +
+            feat.cost +
+            "," +
+            feat.devTime +
+            ")"
+          : "";
+        html +=
+          '<div style="padding:8px;background:' +
+          (canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.1)") +
+          ";border:1px solid " +
+          (canAfford ? "var(--border)" : "#ccc") +
+          ";border-radius:4px;" +
+          (canAfford ? "cursor:pointer;transition:all 0.2s;" : "opacity:0.5;") +
+          (canAfford
+            ? "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\""
+            : "") +
+          (onClick ? 'onclick="' + onClick + '"' : "") +
+          ">" +
+          '<div style="font-weight:bold;font-size:12px;">' +
+          (feat.icon || "") +
+          " " +
+          _esc(feat.name) +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);margin:2px 0;">' +
+          _esc(feat.desc) +
+          "</div>" +
+          '<div style="font-size:10px;">💰 ¥' +
+          feat.cost.toLocaleString() +
+          " | ⏱ " +
+          feat.devTime +
+          "天 | 技术+" +
+          feat.techBonus +
+          " 市场+" +
+          feat.marketBonus +
+          "</div>" +
+          "</div>";
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+  }
+
+  html += "</div>";
+
+  if (typeof showModal !== "function") return;
+
+  showModal({
+    title: "🔧 开发功能模块",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 市场调研弹窗 */
+function showMarketResearchModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  let html =
+    '<div style="font-size:13px;">' +
+    '<p style="color:var(--text-secondary);margin-bottom:12px;">选择调研深度，获取竞争对手情报和市场洞察。</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+
+  const actions =
+    typeof MARKET_INTELLIGENCE_ACTIONS !== "undefined"
+      ? MARKET_INTELLIGENCE_ACTIONS
+      : [];
+  for (const action of actions) {
+    const canAfford = company.cashReserve >= action.cost;
+    html +=
+      '<div style="padding:10px;background:' +
+      (canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.1)") +
+      ";border:1px solid " +
+      (canAfford ? "var(--border)" : "#ccc") +
+      ";border-radius:6px;" +
+      (canAfford ? "cursor:pointer;transition:all 0.2s;" : "opacity:0.5;") +
+      'onclick="' +
+      (canAfford ? "performMarketResearchClick('" + action.id + "')" : "") +
+      '" onmouseover="' +
+      (canAfford ? "this.style.borderColor='var(--accent)';" : "") +
+      '" onmouseout="' +
+      (canAfford ? "this.style.borderColor='var(--border)';" : "") +
+      '">' +
+      '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
+      _esc(action.name) +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">' +
+      _esc(action.desc) +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--danger);">💰 ¥' +
+      action.cost.toLocaleString() +
+      "</div>" +
+      '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;">获得：' +
+      action.info.join(", ") +
+      "</div>" +
+      "</div>";
+  }
+
+  html += "</div></div>";
+
+  if (typeof showModal !== "function") return;
+
+  showModal({
+    title: "📊 市场调研",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 执行市场调研（从弹窗调用） */
+function performMarketResearchClick(actionId) {
+  const state = StateManager.getState();
+  const result =
+    typeof performMarketResearch === "function"
+      ? performMarketResearch(state, actionId)
+      : { success: false, message: "功能未加载" };
+
+  if (result.success) {
+    StateManager.addMessage("✅ 市场调研完成", "success");
+    // 显示报告
+    if (typeof showModal !== "function") return;
+    showModal({
+      title: "📋 调研报告",
+      body:
+        '<div style="font-size:13px;max-height:50vh;overflow-y:auto;">' +
+        '<div style="padding:12px;background:var(--bg-secondary);border-radius:6px;font-size:12px;line-height:1.6;">' +
+        _esc(result.report) +
+        "</div>" +
+        '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">花费：¥' +
+        (result.action ? result.action.cost.toLocaleString() : "0") +
+        "</div>" +
+        "</div>",
+      buttons: [
+        { text: "知道了", cls: "btn-primary", callback: function () {} },
+      ],
+    });
+    renderAll();
+  } else {
+    StateManager.addMessage("⚠️ " + result.message, "warning");
+  }
+}
+
+/** 显示功能开发确认弹窗 */
+function showDevelopFeatureConfirm(
+  productId,
+  featureKey,
+  featureName,
+  cost,
+  devTime,
+) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+
+  if (typeof showModal !== "function") return;
+
+  showModal({
+    title: "确认开发功能",
+    body:
+      '<div style="font-size:13px;">' +
+      "<p>确定要开发 <strong>" +
+      _esc(featureName) +
+      "</strong> 吗？</p>" +
+      '<div style="padding:8px;background:var(--bg-secondary);border-radius:4px;margin:8px 0;font-size:11px;">' +
+      "💰 费用：¥" +
+      cost.toLocaleString() +
+      "<br>" +
+      "⏱ 开发周期：" +
+      devTime +
+      "天<br>" +
+      "💡 完成后：技术分+5~12，市场分+2~10" +
+      "</div>" +
+      '<p style="font-size:11px;color:var(--text-muted);">开发期间无法修改或取消。</p>' +
+      "</div>",
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "确认开发",
+        cls: "btn-primary",
+        callback: function () {
+          const result = developFeature(state, productId, featureKey);
+          if (result.success) {
+            StateManager.addMessage("✅ " + result.message, "success");
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
 // ====== UI: 渲染创业Tab ======
 function renderStartupTab(state, parent) {
   parent.innerHTML = "";
@@ -2514,15 +3230,68 @@ function renderStartupTab(state, parent) {
           "</div>" +
           "</div>";
       } else if (product.status === "launched") {
+        // 竞争力评分
+        const compScore = product.competitiveness || 0;
+        const compColor =
+          compScore >= 70
+            ? "var(--success)"
+            : compScore >= 40
+              ? "var(--warning)"
+              : "var(--danger)";
+
         prodCard.innerHTML +=
           '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">' +
           "技术分：" +
           product.technologyScore +
           " | 市场分：" +
           product.marketScore +
+          " | 竞争力：" +
+          '<strong style="color:' +
+          compColor +
+          '">' +
+          compScore +
+          "</strong>" +
+          " | 用户：" +
+          (product.users || 0).toLocaleString() +
+          " | 评分：" +
+          (product.rating || 3.5).toFixed(1) +
+          "★" +
           " | 月收入：¥" +
           Math.round(product.revenue).toLocaleString() +
           "</div>";
+
+        // 功能模块列表
+        if (product.features && product.features.length > 0) {
+          let featuresHtml =
+            '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">';
+          for (const feat of product.features) {
+            const featDef = FEATURE_MODULES[feat.key];
+            const featName = featDef ? featDef.name : feat.name;
+            const featIcon = featDef ? featDef.icon : "";
+            const featColor =
+              feat.status === "completed" ? "var(--success)" : "var(--warning)";
+            const featText =
+              feat.status === "completed"
+                ? "已完成"
+                : "开发中" +
+                  Math.round(
+                    (1 - (feat.targetDay - state.player.day) / 15) * 100,
+                  ) +
+                  "%";
+            featuresHtml +=
+              '<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,0.2);color:' +
+              featColor +
+              '">' +
+              (featIcon || "") +
+              " " +
+              featName +
+              " " +
+              featText +
+              "</span>";
+          }
+          featuresHtml += "</div>";
+          prodCard.innerHTML += featuresHtml;
+        }
       }
 
       productsDiv.appendChild(prodCard);
@@ -2606,6 +3375,77 @@ function renderStartupTab(state, parent) {
     parent.appendChild(fundingDiv);
   }
 
+  // 竞争对手情报（Phase 4）
+  if (state.startup.competitors && state.startup.competitors.length > 0) {
+    var compDiv = document.createElement("div");
+    compDiv.style.cssText = "margin-bottom:20px;";
+    compDiv.innerHTML = '<h4 style="margin:12px 0 8px;">👥 竞争对手</h4>';
+
+    // 市场份额
+    var marketShare =
+      typeof calculateMarketShare === "function"
+        ? calculateMarketShare(state, company, state.startup.competitors)
+        : 0;
+    var brandLevel =
+      typeof getBrandLevel === "function"
+        ? getBrandLevel(company.reputation)
+        : null;
+
+    compDiv.innerHTML +=
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">' +
+      '<div style="background:var(--bg-card);padding:10px;border-radius:6px;text-align:center;">' +
+      '<div style="font-size:10px;color:var(--text-muted);">市场份额</div>' +
+      '<div style="font-size:18px;font-weight:bold;color:var(--accent);">' +
+      marketShare +
+      "%</div>" +
+      "</div>" +
+      '<div style="background:var(--bg-card);padding:10px;border-radius:6px;text-align:center;">' +
+      '<div style="font-size:10px;color:var(--text-muted);">品牌等级</div>' +
+      '<div style="font-size:18px;font-weight:bold;color:var(--success);">' +
+      (brandLevel ? brandLevel.icon + brandLevel.name : "未知") +
+      "</div>" +
+      "</div>" +
+      "</div>";
+
+    for (var ci = 0; ci < state.startup.competitors.length; ci++) {
+      var comp = state.startup.competitors[ci];
+      var compCard = document.createElement("div");
+      compCard.style.cssText =
+        "background:var(--bg-card);padding:10px;margin-bottom:6px;border-radius:6px;font-size:13px;border-left:3px solid " +
+        (comp.trend === "up" ? "var(--success)" : "var(--border)");
+      compCard.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        "<div>" +
+        "<strong>" +
+        _esc(comp.name) +
+        "</strong>" +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">· ' +
+        (comp.focus || "") +
+        "</span>" +
+        "</div>" +
+        '<span style="font-size:10px;color:' +
+        (comp.trend === "up" ? "var(--success)" : "var(--text-muted)") +
+        ';">' +
+        (comp.trend === "up" ? "📈" : "➡️") +
+        "</span>" +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
+        "估值：¥" +
+        Math.round(comp.valuation).toLocaleString() +
+        " | 团队：" +
+        comp.employees +
+        "人" +
+        " | 技术：" +
+        Math.round(comp.technologyScore) +
+        " | 市场：" +
+        Math.round(comp.marketScore) +
+        "</div>";
+      compDiv.appendChild(compCard);
+    }
+
+    parent.appendChild(compDiv);
+  }
+
   // 行动按钮区域
   var actionsDiv = document.createElement("div");
   actionsDiv.style.cssText =
@@ -2637,6 +3477,34 @@ function renderStartupTab(state, parent) {
       };
     })(action);
     actionsDiv.appendChild(actionBtn);
+  }
+
+  // 开发功能模块按钮
+  if (company.products.some((p) => p.status === "launched")) {
+    var featBtn = document.createElement("button");
+    featBtn.className = "btn btn-sm btn-primary";
+    featBtn.style.cssText = "margin-right:8px;margin-bottom:8px;";
+    featBtn.innerHTML = "🔧 开发功能模块";
+    featBtn.onclick = function () {
+      showFeatureDevelopmentModal(state);
+      renderStartupTab(state, parent);
+      renderSidebar(state);
+    };
+    actionsDiv.appendChild(featBtn);
+  }
+
+  // 市场调研按钮
+  if (state.startup.competitors && state.startup.competitors.length > 0) {
+    var researchBtn = document.createElement("button");
+    researchBtn.className = "btn btn-sm btn-warning";
+    researchBtn.style.cssText = "margin-right:8px;margin-bottom:8px;";
+    researchBtn.innerHTML = "📊 市场调研";
+    researchBtn.onclick = function () {
+      showMarketResearchModal(state);
+      renderStartupTab(state, parent);
+      renderSidebar(state);
+    };
+    actionsDiv.appendChild(researchBtn);
   }
 
   parent.appendChild(actionsDiv);

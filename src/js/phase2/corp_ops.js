@@ -190,7 +190,7 @@ function endQuarter() {
   }
 
   // 职场随机事件
-  if (Math.random() < 0.2) {
+  if (Random.chance(0.2)) {
     rollCorporateEvent(state);
   }
 
@@ -283,7 +283,7 @@ function enterCorporatePhase(companyId) {
     100,
     Math.round(p.intelligence * 0.8 + state.skills.coding.level * 0.5 + 10),
   );
-  p.corporate.risk = Math.min(100, 8 + Math.floor(Math.random() * 12));
+  p.corporate.risk = Math.min(100, 8 + Random.int(0, 11));
   p.corporate.popularity = Math.min(
     100,
     Math.round(state.player.fame * 0.5 + 25),

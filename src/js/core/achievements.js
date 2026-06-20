@@ -951,6 +951,252 @@ const ACHIEVEMENTS = [
       return count >= 3;
     },
   },
+
+  // ====== 创业成就 ======
+  {
+    id: "startup_first_company",
+    name: "从零到一",
+    desc: "注册了第一家公司。",
+    story:
+      "你迈出了创业的第一步，从打工者变成了老板。这条路不好走，但你开始了。",
+    icon: "🚀",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      return !!(st.startup && st.startup.flags && st.startup.flags.registered);
+    },
+  },
+  {
+    id: "startup_first_product",
+    name: "产品上线",
+    desc: "第一个产品成功发布。",
+    story:
+      "从0到1是最难的，但你做到了。第一个产品上线了，虽然可能不完美，但它是你的孩子。",
+    icon: "📱",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.flags) return false;
+      return !!st.startup.flags.firstProductLaunched;
+    },
+  },
+  {
+    id: "startup_first_funding",
+    name: "拿到投资",
+    desc: "完成了第一次融资。",
+    story: "投资人认可了你的项目，钱到账了。但别忘了，每一分钱都是股权换来的。",
+    icon: "💰",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return (
+        st.startup.company.fundingRounds &&
+        st.startup.company.fundingRounds.length >= 1
+      );
+    },
+  },
+  {
+    id: "startup_series_a",
+    name: "A轮玩家",
+    desc: "完成了A轮融资。",
+    story: "A轮意味着你的产品被市场验证了。现在你有钱扩张了，但压力也更大了。",
+    icon: "📈",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return (
+        st.startup.company.fundingRounds &&
+        st.startup.company.fundingRounds.some((r) => r.round === "A")
+      );
+    },
+  },
+  {
+    id: "startup_series_b",
+    name: "B轮大佬",
+    desc: "完成了B轮融资。",
+    story:
+      "B轮意味着你已经是行业内的知名玩家了。估值过千万，但你离真正的成功还有距离。",
+    icon: "🚀",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return (
+        st.startup.company.fundingRounds &&
+        st.startup.company.fundingRounds.some((r) => r.round === "B")
+      );
+    },
+  },
+  {
+    id: "startup_team_10",
+    name: "十人团队",
+    desc: "团队规模达到10人。",
+    story: "从一个人到十个人，你开始真正管理一个团队了。管人比管事更难。",
+    icon: "👥",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return (
+        st.startup.company.employees &&
+        st.startup.company.employees.length >= 10
+      );
+    },
+  },
+  {
+    id: "startup_team_50",
+    name: "五十人公司",
+    desc: "团队规模达到50人。",
+    story: "五十人的公司，已经是一家正经的企业了。你需要建立制度、流程、文化。",
+    icon: "🏢",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return (
+        st.startup.company.employees &&
+        st.startup.company.employees.length >= 50
+      );
+    },
+  },
+  {
+    id: "startup_profitable",
+    name: "首次盈利",
+    desc: "公司首次实现月度盈利（收入>支出）。",
+    story: "终于盈利了！虽然可能只是微利，但这是从烧钱到自造血的关键一步。",
+    icon: "💵",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return st.startup.company.revenue > st.startup.company.expenses;
+    },
+  },
+  {
+    id: "startup_valuation_1m",
+    name: "估值百万",
+    desc: "公司估值达到100万。",
+    story: "你的公司值100万了。虽然离独角兽还很远，但已经超过了90%的创业者。",
+    icon: "📊",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return st.startup.company.valuation >= 1000000;
+    },
+  },
+  {
+    id: "startup_valuation_10m",
+    name: "估值千万",
+    desc: "公司估值达到1000万。",
+    story: "估值千万，你已经是一家有分量的公司了。投资人开始主动找你。",
+    icon: "🏆",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return st.startup.company.valuation >= 10000000;
+    },
+  },
+  {
+    id: "startup_valuation_100m",
+    name: "估值过亿",
+    desc: "公司估值达到1亿。",
+    story: "估值过亿，你是真正的独角兽预备役了。但估值不等于现金，别高兴太早。",
+    icon: "🦄",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return st.startup.company.valuation >= 100000000;
+    },
+  },
+  {
+    id: "startup_ipo",
+    name: "成功上市",
+    desc: "公司成功IPO上市。",
+    story:
+      "你做到了！从0到IPO，这条路你走了很久。现在你站在敲钟台上，台下是闪光灯和掌声。",
+    icon: "🔔",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.flags) return false;
+      return st.startup.flags.exitType === "ipo";
+    },
+  },
+  {
+    id: "startup_acquired",
+    name: "被收购",
+    desc: "公司被大公司收购。",
+    story:
+      "收购不是失败，是另一种成功。你获得了现金回报，公司也获得了更大的平台。",
+    icon: "🤝",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.flags) return false;
+      return st.startup.flags.exitType === "acquired";
+    },
+  },
+  {
+    id: "startup_bankrupt",
+    name: "创业失败",
+    desc: "公司破产清算。",
+    story:
+      "创业九死一生，你经历了其中一次死亡。但失败不是终点，收拾心情，再来一次。",
+    icon: "💀",
+    category: "创业",
+    hidden: true,
+    check: function (st) {
+      if (!st.startup || !st.startup.flags) return false;
+      return st.startup.flags.exitType === "bankrupt";
+    },
+  },
+  {
+    id: "startup_revenue_1m",
+    name: "月入百万",
+    desc: "月收入突破100万。",
+    story: "月入百万，你已经是行业头部玩家了。但别忘了，收入不等于利润。",
+    icon: "💎",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      return st.startup.company.revenue >= 1000000;
+    },
+  },
+  {
+    id: "startup_user_1m",
+    name: "用户破百万",
+    desc: "产品用户数突破100万。",
+    story: "100万用户，你的产品影响了这么多人。每一个用户都是一个故事。",
+    icon: "👥",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.company) return false;
+      for (const p of st.startup.company.products) {
+        if ((p.users || 0) >= 1000000) return true;
+      }
+      return false;
+    },
+  },
+  {
+    id: "startup_exit_success",
+    name: "成功退出",
+    desc: "通过IPO或被收购成功退出（获得现金回报≥100万）。",
+    story: "创业的最终目标不是把公司做大，而是获得回报。你做到了，恭喜。",
+    icon: "🎯",
+    category: "创业",
+    hidden: false,
+    check: function (st) {
+      if (!st.startup || !st.startup.flags) return false;
+      return (st.startup.flags.exitValue || 0) >= 1000000;
+    },
+  },
 ];
 
 /**

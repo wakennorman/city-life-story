@@ -69,7 +69,7 @@ function buyGood(goodId, qty) {
   }
 
   // 买入后该商品在当地微涨 0.2~0.5%
-  const buyDelta = 0.002 + Math.random() * 0.003;
+  const buyDelta = Random.float(0.002, 0.005);
   adjustPriceAfterTrade(locKey, goodId, buyDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
 

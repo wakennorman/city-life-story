@@ -462,7 +462,7 @@ const NEWS_EVENTS = [
           st.resources.cash -= 30;
           var skills = Object.keys(st.skills || {});
           if (skills.length > 0) {
-            var key = skills[Math.floor(Math.random() * skills.length)];
+            var key = Random.fromArray(skills);
             st.skills[key] = st.skills[key] || { level: 1, xp: 0 };
             st.skills[key].xp += 30;
             StateManager.addMessage(
@@ -1024,7 +1024,7 @@ function askNpcForIntel(npcId, state) {
   var mental = (state.player && state.player.mental) || 0;
   var reliabilityBonus =
     Math.min(18, Math.floor(affinity / 8)) + Math.floor(mental / 12);
-  var pickIndex = Math.floor(Math.random() * candidates.length);
+  var pickIndex = Random.int(0, candidates.length - 1);
   var intel = candidates[pickIndex];
   var confidence = Math.max(
     45,

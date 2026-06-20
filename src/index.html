@@ -492,6 +492,8 @@
     </script>
 
     <!-- ====== Scripts (开发阶段独立加载) ====== -->
+    <!-- Random（必须最先加载，所有模块都可能使用 Random.* API） -->
+    <script src="js/core/random.js"></script>
     <!-- Core -->
     <script src="js/core/state.js"></script>
     <script src="js/core/finance.js"></script>
@@ -541,6 +543,7 @@
     <script src="js/phase2/investment.js"></script>
     <script src="js/phase2/startup.js"></script>
     <script src="js/data/startup_events.js"></script>
+    <script src="js/data/startup_competition.js"></script>
 
     <!-- Enterprise Fate System -->
     <script src="js/core/enterprise_fate.js"></script>
