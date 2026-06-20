@@ -662,6 +662,7 @@ function showStartupRegisterModal() {
         text: "✅ 确认注册",
         cls: "btn-primary",
         callback: function () {
+          // 在弹窗关闭前获取选中的行业值
           var nameInput = document.getElementById("startup-name-input");
           var name = nameInput ? nameInput.value.trim() : "";
           // 找选中的行业
@@ -670,7 +671,8 @@ function showStartupRegisterModal() {
           );
           if (!selected) {
             StateManager.addMessage("⚠️ 请选择一个行业。", "warning");
-            return;
+            // 返回 false 保持弹窗打开
+            return false;
           }
           var industry = selected.value;
           var result = registerStartup(state, name || null, industry, "");
@@ -682,8 +684,12 @@ function showStartupRegisterModal() {
             if (typeof renderAll === "function") renderAll();
             // 切换到创业Tab
             if (typeof switchTab === "function") switchTab("startup");
+            // 返回 true 关闭弹窗（默认行为）
+            return true;
           } else {
             StateManager.addMessage(result.message || "注册失败", "warning");
+            // 返回 false 保持弹窗打开，让用户修改
+            return false;
           }
         },
       },

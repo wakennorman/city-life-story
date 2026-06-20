@@ -71,7 +71,7 @@ const NPCS = [
         id: "aunt_wang_80",
         desc: "王大婶介绍可靠工作，每月额外收入",
         effect: function (st) {
-          const bonus = 500 + Math.floor(Math.random() * 300);
+          const bonus = 500 + Random.int(0, 299);
           st.resources.cash += bonus;
           st.resources.totalEarned += bonus;
           StateManager.addMessage(
@@ -263,7 +263,7 @@ const NPCS = [
           text: "💪 行，我来顶",
           apply: function (st) {
             st.flags._npcFavor_boss_li = true;
-            var reward = 150 + Math.floor(Math.random() * 100);
+            var reward = 150 + Random.int(0, 99);
             st.resources.cash += reward;
             st.resources.totalEarned += reward;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
@@ -316,7 +316,7 @@ const NPCS = [
               100,
               st.relationships.boss_li.affinity + 10,
             );
-            var reward = 300 + Math.floor(Math.random() * 200);
+            var reward = 300 + Random.int(0, 199);
             st.resources.cash += reward;
             st.resources.totalEarned += reward;
             st.player.fame = Math.min(100, st.player.fame + 8);
@@ -389,7 +389,7 @@ const NPCS = [
         id: "sister_zhang_30",
         desc: "张姐透露内部招聘信息",
         effect: function (st) {
-          const bonus = 200 + Math.floor(Math.random() * 300);
+          const bonus = 200 + Random.int(0, 299);
           st.resources.cash += bonus;
           st.resources.totalEarned += bonus;
           StateManager.addMessage(
@@ -434,7 +434,7 @@ const NPCS = [
           text: "📋 帮忙！正好认识更多人",
           apply: function (st) {
             st.flags._npcFavor_sister_zhang = true;
-            var pay = 80 + Math.floor(Math.random() * 60);
+            var pay = 80 + Random.int(0, 59);
             st.resources.cash += pay;
             st.resources.totalEarned += pay;
             st.player.fame = Math.min(100, st.player.fame + 5);
@@ -914,7 +914,7 @@ const NPCS = [
           text: "🥕 帮你买！我正好去批发市场",
           apply: function (st) {
             st.flags._npcFavor_chef_chen = true;
-            var pay = 60 + Math.floor(Math.random() * 40);
+            var pay = 60 + Random.int(0, 39);
             st.resources.cash += pay;
             st.resources.totalEarned += pay;
             st.skills.cooking && (st.skills.cooking.xp += 50);

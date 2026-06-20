@@ -1077,7 +1077,7 @@ function triggerStartupEvent(state) {
   if (candidates.length === 0) return;
 
   // 随机选一个
-  const event = candidates[Math.floor(Math.random() * candidates.length)];
+  const event = Random.fromArray(candidates);
 
   // 标记已触发
   if (!startup.flags._eventTriggered) startup.flags._eventTriggered = {};

@@ -1006,11 +1006,11 @@ function initInvestment(state) {
     var s = INV_STOCKS[i];
     if (!inv.stockMarket[s.symbol]) {
       initialized = true;
-      var mPrice = s.basePrice * (0.85 + Math.random() * 0.3);
+      var mPrice = s.basePrice * Random.float(0.85, 1.15);
       var history = [];
       // 回溯生成 5-8 个历史数据点，保证首日就有小曲线
-      var seedPrice = mPrice * (0.9 + Math.random() * 0.2);
-      var numPoints = 5 + Math.floor(Math.random() * 4);
+      var seedPrice = mPrice * Random.float(0.9, 1.1);
+      var numPoints = 5 + Random.int(0, 3);
       for (var k = 0; k < numPoints; k++) {
         seedPrice =
           seedPrice * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility);

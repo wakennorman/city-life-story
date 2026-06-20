@@ -1106,7 +1106,7 @@ function getRandomNewsEvent() {
   };
   var total = 0;
   for (var k in weights) total += weights[k];
-  var roll = Math.random() * total;
+  var roll = Random.float(0, total);
 
   for (var type in weights) {
     roll -= weights[type];
@@ -1114,10 +1114,10 @@ function getRandomNewsEvent() {
       var typeEvents = NEWS_EVENTS.filter(function (e) {
         return e.type === type;
       });
-      return typeEvents[Math.floor(Math.random() * typeEvents.length)];
+      return Random.fromArray(typeEvents);
     }
   }
-  return NEWS_EVENTS[Math.floor(Math.random() * NEWS_EVENTS.length)];
+  return Random.fromArray(NEWS_EVENTS);
 }
 
 /** 应用新闻效果 */
@@ -1192,7 +1192,7 @@ function applyNewsEffect(news, state) {
   // 技能经验
   if (effects.skillXp) {
     var skillKeys = Object.keys(state.skills);
-    var key = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+    var key = Random.fromArray(skillKeys);
     state.skills[key].xp += effects.skillXp;
   }
 

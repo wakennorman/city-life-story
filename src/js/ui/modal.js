@@ -6,32 +6,73 @@
 
 // ====== 模态对话框 ======
 function showModal({ title, body, buttons }) {
+  // 先清理旧的 modal-overlay，避免叠加
+  const oldOverlay = document.querySelector(".modal-overlay");
+  if (oldOverlay) {
+    try {
+      document.body.removeChild(oldOverlay);
+    } catch (e) {
+      console.warn("移除旧弹窗失败:", e);
+    }
+  }
+
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
 
   const box = document.createElement("div");
   box.className = "modal-box";
-  box.innerHTML = `
-    <h2>${title}</h2>
-    <div class="modal-body">${body}</div>
-    <div class="modal-actions"></div>
-  `;
 
-  const actionsDiv = box.querySelector(".modal-actions");
+  // 用安全方式构建 HTML，避免模板字符串注入问题
+  const titleEl = document.createElement("h2");
+  titleEl.textContent = title;
+  box.appendChild(titleEl);
+
+  const bodyDiv = document.createElement("div");
+  bodyDiv.className = "modal-body";
+  bodyDiv.innerHTML = body; // body 是纯 HTML 字符串，安全
+  box.appendChild(bodyDiv);
+
+  const actionsDiv = document.createElement("div");
+  actionsDiv.className = "modal-actions";
   for (const btn of buttons) {
     const btnEl = document.createElement("button");
     btnEl.className = "btn " + (btn.cls || "btn-primary");
     btnEl.textContent = btn.text;
-    btnEl.addEventListener("click", () => {
-      document.body.removeChild(overlay);
-      if (btn.callback) btn.callback();
+    btnEl.addEventListener("click", function (e) {
+      e.preventDefault();
+      // 先调用回调，让回调有机会读取弹窗中的元素
+      var shouldClose = true;
+      if (btn.callback) {
+        var ret = btn.callback();
+        // 如果回调返回 false，不关闭弹窗
+        if (ret === false) {
+          shouldClose = false;
+        }
+      }
+      // 默认关闭弹窗（除非回调返回 false）
+      if (shouldClose) {
+        try {
+          if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+        } catch (err) {
+          // 忽略
+        }
+      }
     });
     actionsDiv.appendChild(btnEl);
   }
+  box.appendChild(actionsDiv);
 
   overlay.appendChild(box);
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) document.body.removeChild(overlay);
+    if (e.target === overlay) {
+      try {
+        document.body.removeChild(overlay);
+      } catch (err) {
+        // 忽略
+      }
+    }
   });
   document.body.appendChild(overlay);
 }

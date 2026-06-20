@@ -168,7 +168,7 @@ function sellGood(goodId, qty) {
   }
 
   // 卖出后该商品在当地微降 0.2~0.5%
-  const sellDelta = -(0.002 + Math.random() * 0.003);
+  const sellDelta = -Random.float(0.002, 0.005);
   adjustPriceAfterTrade(locKey, goodId, sellDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
   const priceMsg =
@@ -385,7 +385,7 @@ function updateAllPrices(state) {
       }
 
       // 2. 随机波动 ±4%（极小差价，倒卖基本不赚钱）
-      const fluctuation = 0.96 + Math.random() * 0.08;
+      const fluctuation = Random.float(0.96, 1.04);
       price *= fluctuation;
 
       // 3. 均值回归（10%向旧价格靠拢）
