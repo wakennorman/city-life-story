@@ -275,8 +275,13 @@ const ITEMS = [
     icon: "🧤",
     slot: "hand",
     effects: { physique: 3, injury: -0.02 },
+    jobBonuses: {
+      waste_recycling: { incomeMultiplier: 1.05 },
+      manual_labor_construction: { incomeMultiplier: 1.08 },
+      skilled_labor_construction: { incomeMultiplier: 1.05 },
+    },
     price: 15,
-    desc: "体质+3，受伤概率-2%",
+    desc: "体质+3，受伤概率-2%。建筑/废品回收工作收入+5%~8%",
     buyLocations: ["wholesaleMarket", "construction"],
   },
   {
@@ -295,8 +300,13 @@ const ITEMS = [
     icon: "👟",
     slot: "feet",
     effects: { agility: 3, fatigue: -5 },
+    jobBonuses: {
+      delivery_rider: { incomeMultiplier: 1.1 },
+      package_delivery: { incomeMultiplier: 1.08 },
+      street_vending_food: { incomeMultiplier: 1.05 },
+    },
     price: 25,
-    desc: "敏捷+3，每日疲劳减少5",
+    desc: "敏捷+3，每日疲劳减少5。配送/外卖工作收入+5%~10%",
     buyLocations: ["wholesaleMarket", "slum"],
   },
   {
@@ -315,8 +325,13 @@ const ITEMS = [
     icon: "👔",
     slot: "body",
     effects: { hygiene: 3, fame: 2 },
+    jobBonuses: {
+      cleaning_service: { incomeMultiplier: 1.1 },
+      security_guard: { incomeMultiplier: 1.08 },
+      restaurant_assistant: { incomeMultiplier: 1.06 },
+    },
     price: 35,
-    desc: "卫生+3，名气+2，工作加成",
+    desc: "卫生+3，名气+2，服务业/体力工作收入+6%~10%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
   {
@@ -325,8 +340,19 @@ const ITEMS = [
     icon: "⛑️",
     slot: "head",
     effects: { injury: -0.05 },
+    jobBonuses: {
+      manual_labor_construction: {
+        incomeMultiplier: 1.06,
+        riskReduction: 0.03,
+      },
+      skilled_labor_construction: {
+        incomeMultiplier: 1.06,
+        riskReduction: 0.03,
+      },
+      premium_engineering: { incomeMultiplier: 1.04, riskReduction: 0.02 },
+    },
     price: 20,
-    desc: "工地受伤概率-5%",
+    desc: "工地受伤概率-5%。工地工作收入+4%~6%，额外降低受伤风险",
     buyLocations: ["construction", "wholesaleMarket"],
   },
   {
@@ -335,8 +361,14 @@ const ITEMS = [
     icon: "📱",
     slot: "accessory",
     effects: { intelligence: 2, fame: 3 },
+    jobBonuses: {
+      delivery_rider: { incomeMultiplier: 1.12 },
+      data_entry: { incomeMultiplier: 1.08 },
+      customer_service_tech: { incomeMultiplier: 1.1 },
+      content_writing: { incomeMultiplier: 1.05 },
+    },
     price: 500,
-    desc: "智力+2，名气+3，拓宽视野",
+    desc: "智力+2，名气+3。骑手/数据/客服工作收入+5%~12%",
     buyLocations: ["commercialDist", "techPark", "school"],
   },
   {
@@ -345,8 +377,13 @@ const ITEMS = [
     icon: "🚲",
     slot: null,
     effects: { agility: 5, fatigue_reduction: 10 },
+    jobBonuses: {
+      delivery_rider: { incomeMultiplier: 1.2 },
+      package_delivery: { incomeMultiplier: 1.15 },
+      courier_gig: { incomeMultiplier: 1.18 },
+    },
     price: 200,
-    desc: "敏捷+5，每日减疲劳10",
+    desc: "敏捷+5，每日减疲劳10。配送/快递/跑腿收入+15%~20%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
   {

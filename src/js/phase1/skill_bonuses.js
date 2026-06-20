@@ -907,3 +907,27 @@ function getStatChineseName(key) {
   };
   return names[key] || key;
 }
+
+/**
+ * 获取当前装备对特定工作的收入加成倍率
+ * 遍历玩家已装备物品，返回 jobBonuses 中匹配的倍率
+ * @param {string} jobId 工作ID
+ * @param {object} state 游戏状态
+ * @returns {number} 收入加成倍率（1.0 = 无加成）
+ */
+function getItemJobBonus(jobId, state) {
+  var multiplier = 1.0;
+  if (!state || !state.equipment || !state.inventory) return multiplier;
+
+  for (var slotKey in state.equipment) {
+    var equippedId = state.equipment[slotKey];
+    if (!equippedId) continue;
+    var item = getItemById(equippedId);
+    if (!item || !item.jobBonuses) continue;
+    var bonus = item.jobBonuses[jobId];
+    if (bonus && bonus.incomeMultiplier) {
+      multiplier *= bonus.incomeMultiplier;
+    }
+  }
+  return multiplier;
+}

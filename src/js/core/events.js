@@ -205,6 +205,13 @@ const RANDOM_EVENTS = [
             st.resources.cash += reward;
             st.player.fame = Math.min(100, st.player.fame + 2);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            // 类似老周的性格，帮忙后老周好感微量提升
+            if (st.relationships && st.relationships["old_zhou"]) {
+              st.relationships["old_zhou"].affinity = Math.min(
+                100,
+                st.relationships["old_zhou"].affinity + 1,
+              );
+            }
             StateManager.addMessage(
               `🤝 老大爷非要给你 ¥${reward}，还夸你是个好孩子！`,
               "success",
@@ -12756,10 +12763,32 @@ function queueRandomEvent(state, phase) {
   if (pool.length === 0) return;
 
   // 过滤掉不满足条件的事件
-  const eligible = pool.filter((e) => !e.conditions || e.conditions(state));
+  var eligible = pool.filter(function (e) {
+    return !e.conditions || e.conditions(state);
+  });
   if (eligible.length === 0) return;
 
-  const evt = eligible[Math.floor(Math.random() * eligible.length)];
+  // 新闻桥接加权：活跃新闻提升特定事件的触发权重
+  var weights = eligible.map(function (e) {
+    var w = 1.0;
+    if (typeof getNewsBonusWeight === "function") {
+      w += getNewsBonusWeight(e.id, state);
+    }
+    return Math.max(0.1, w);
+  });
+  var totalWeight = weights.reduce(function (a, b) {
+    return a + b;
+  }, 0);
+  var roll = Math.random() * totalWeight;
+  var cursor = 0;
+  var evt = eligible[0];
+  for (var wi = 0; wi < eligible.length; wi++) {
+    cursor += weights[wi];
+    if (roll <= cursor) {
+      evt = eligible[wi];
+      break;
+    }
+  }
   // 使用唯一事件ID替代引用比较，避免引用失效导致事件卡住
   state._pendingEvent = evt;
   state._pendingEventId = evt.id;
@@ -12894,6 +12923,10 @@ function showEventModal(evt) {
       try {
         if (typeof choice.apply === "function") {
           choice.apply(state);
+          // NPC事件桥接：事件结算后自动触发NPC好感变化
+          if (typeof afterEventApplied === "function") {
+            afterEventApplied(evt.id, state);
+          }
         }
       } catch (e) {
         console.error("Event choice apply error:", e);

@@ -608,6 +608,26 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === NPC桥接（事件后NPC回响 + 日常互动）===
+  {
+    name: "npc_bridge",
+    fn: function (state) {
+      if (typeof runDailyNpcBridge === "function") {
+        runDailyNpcBridge(state);
+      }
+    },
+  },
+
+  // === 新闻桥接（新闻→事件权重 + 价格情绪）===
+  {
+    name: "news_bridge",
+    fn: function (state) {
+      if (typeof runDailyNewsBridge === "function") {
+        runDailyNewsBridge(state);
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */

@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-19 (累计280+项改动)
-> **最新改动**: P1-1 街头特色玩法完善 — 拾荒路线规划（已完成）+ 摆摊选址建议（新增智能推荐系统）+ P2-1 教程升级（动态提示系统已完整）
+> 最后更新: 2026-06-20 (累计285+项改动)
+> **最新改动**: 百科注册表修复 — 3条悬空引用修复 + 3个新百科条目创建（背包/投资/新游戏+）
 
 ## 项目概述
 
@@ -2303,6 +2303,67 @@ REGISTRY[id] = {
 
 ---
 
+## 2026-06-20 变更记录 — 百科注册表修复与完善
+
+### 修复：3条悬空 `related` 引用
+
+**问题**：`runMechanicsAudit()` 检测到3条 `related` 字段指向不存在的注册表条目：
+
+| 来源条目         | 指向                      | 问题                                   | 修复                     |
+| ---------------- | ------------------------- | -------------------------------------- | ------------------------ |
+| `cooking_system` | `mechanics:inventory`     | 游戏无独立"库存"百科条目               | 删除该引用               |
+| `news_system`    | `mechanics:investment`    | 游戏无独立"投资"百科条目               | 删除该引用               |
+| `scenario_mode`  | `mechanics:new_game_plus` | 类别错误（实际是 `narrative:ng_plus`） | 改为 `narrative:ng_plus` |
+
+**文件变更**：
+
+- `src/js/core/cooking.js` — `related` 移除 `mechanics:inventory`
+- `src/js/core/news_system.js` — `related` 移除 `mechanics:investment`
+- `src/js/data/scenarios.js` — `related` 改为 `narrative:ng_plus`
+- `src/js/data/mechanics_registry.js` — 同上修复（注册表内 duplicate 定义）
+
+### 新增：`MECHANICS.inventory` 百科条目
+
+**内容**：背包与装备系统完整百科（参考《This War of Mine》《暗黑破坏神》）
+
+- 物品栏容量升级（20→50→100→200）
+- 5装备槽（head/body/feet/hand/accessory）
+- 装备效果（属性加成/工作加成/特殊效果/耐久磨损）
+- 策略建议
+
+**文件变更**：
+
+- `src/js/data/mechanics_registry.js` — 新增 `MECHANICS.inventory` 注册块
+
+### 新增：`MECHANICS.investment` 百科条目
+
+**内容**：投资系统完整百科（参考真实金融市场 + 《模拟城市》经济系统）
+
+- 五类资产总览（30股票/9虚拟币/9贵金属/7期货/5基金）
+- 股票行业分布（科技/新能源/消费/金融）
+- 新闻联动（L2新闻如何影响各板块）
+- 投资策略建议
+
+**文件变更**：
+
+- `src/js/data/mechanics_registry.js` — 新增 `MECHANICS.investment` 注册块
+
+### 完善：`NARRATIVES.ng_plus` 百科条目
+
+**内容**：从基础3行扩展到完整遗产链百科（参考《哈迪斯》《死亡细胞》NG+系统）
+
+- 基础继承（现金/技能/属性）
+- 9种声誉徽章（诚信商人/热心邻居/理财高手/职场之星/技能大师/社交达人/生存专家/道德罗盘/城市传奇）
+- NPC关系继承（好感度衰减规则）
+- 特殊物品继承（传奇物品/装备/证书/梦想进度）
+- 声誉加成叠加规则
+
+**文件变更**：
+
+- `src/js/data/narratives_registry.js` — 重写 `NARRATIVES.ng_plus` 注册块
+
+---
+
 ## 2026-06-19 变更记录 — Bug Fix: 模式选择/新游戏流程修复
 
 ### Bug 1 & 2: `startNewGame()` 未隐藏模式选择界面
@@ -2514,3 +2575,70 @@ REGISTRY[id] = {
 | -------------------------------- | --------------------------------------------------------------------------------------- |
 | `src/js/ui/modal.js`             | 新增 `getVendingLocationAdvice()` / `showVendingLocationAdviceModal()` 摆摊选址建议弹窗 |
 | `src/js/phase1/actions_extra.js` | 新增 `vending_advice` 行动（⚡5 AP，智能推荐最佳摆摊地点）                              |
+
+---
+
+## 2026-06-20 变更记录 — 内容连接密度审计与修复（标准1.4/2.1）
+
+### 背景
+
+DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定以来从未被系统执行过。本次进行全面审计并修复发现的缺口。
+
+### 审计发现
+
+对全部11个数据文件+208个事件+35条新闻+82个成就的逐项检查：
+
+| 缺口 | 严重度 | 问题                                                             | 涉及文件              |
+| ---- | ------ | ---------------------------------------------------------------- | --------------------- |
+| G1   | 🔴 P0  | 208个事件中只有~8%引用NPC（friendly_neighbor引用auntWang且拼错） | events.js             |
+| G2   | 🔴 P0  | 新闻与事件零联动——新闻改变市场但不触发任何事件弹窗               | news.js, events.js    |
+| G3   | 🟠 P1  | 装备无技能/工作特定加成                                          | items.js              |
+| G4   | 🟠 P1  | 事件不检查玩家位置                                               | events.js             |
+| G5   | 🟠 P1  | 疾病与工作无交互                                                 | illnesses.js, jobs.js |
+| G6   | 🟡 P2  | 节日活动缺NPC参与                                                | festivals.js          |
+| G7   | 🟡 P2  | 新闻中16条无NPC情报链接                                          | news.js               |
+
+### 修复方案（搭桥而非改旧）
+
+**设计决策**：不直接修改13,000行的events.js（风险高），改为创建桥接系统：
+
+1. **NPC事件桥接**（`npc_event_bridge.js`）：
+   - 事件→NPC好感映射表（12个事件有NPC回响）
+   - 每日NPC随机回响（好感度分级对话，6个NPC各5档）
+   - 新闻→NPC评论（关键词匹配，6个NPC各有新闻敏感词）
+   - 位置感知NPC互动（4个地点有NPC偶遇）
+   - 在daily_pipeline中注册为 `npc_bridge` 步骤
+
+2. **新闻事件桥接**（`news_event_bridge.js`）：
+   - 新闻→事件权重加成（8条新闻提升相关事件触发率）
+   - 新闻价格情绪传导（新闻后1-2天价格向目标漂移）
+   - 新闻工作热力图（新闻影响工作可见性和收益）
+   - 在daily_pipeline中注册为 `news_bridge` 步骤
+
+3. **装备工作加成**（`items.js` + `skill_bonuses.js`）：
+   - 6件装备新增 `jobBonuses` 字段（劳保手套/解放鞋/安全帽/工作服/智能手机/自行车）
+   - 新增 `getItemJobBonus()` 函数在skill_bonuses.js
+
+4. **事件系统接入**（`events.js`）：
+   - `queueRandomEvent` 改为加权选择（新闻权重影响）
+   - `showEventModal` 中choice.apply后触发 `afterEventApplied()` NPC桥接
+
+### 文件变更
+
+| 文件                                | 变更内容                                                      |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `src/js/phase1/npc_event_bridge.js` | **新建** — NPC桥接系统（事件回响/日常对话/新闻评论/位置互动） |
+| `src/js/core/news_event_bridge.js`  | **新建** — 新闻桥接系统（事件权重/价格情绪/工作热力图）       |
+| `audit_connections.js`              | **新建** — 连接密度审计工具（检查1.4/2.1标准合规）            |
+| `src/js/data/items.js`              | 6件装备新增 `jobBonuses` 字段（工作特定收入加成）             |
+| `src/js/phase1/skill_bonuses.js`    | 新增 `getItemJobBonus()` 函数                                 |
+| `src/js/phase1/daily_pipeline.js`   | 新增 `npc_bridge` + `news_bridge` 两个管线步骤                |
+| `src/js/core/events.js`             | `queueRandomEvent` 加权选择 + `showEventModal` 触发NPC桥接    |
+| `src/index.html`                    | 加载 `news_event_bridge.js` + `npc_event_bridge.js`           |
+
+### 验证
+
+- 运行 `node audit_connections.js` 可输出连接密度报告
+- NPC日常对话：每天在消息区随机出现NPC根据好感度级别的对话
+- 新闻NPC评论：新闻弹幕出现时有15%~30%概率NPC发表评论
+- 装备工作加成：装备对应装备后，相关工作收入增加（如自行车+20%骑手收入）
