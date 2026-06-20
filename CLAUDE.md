@@ -11,7 +11,7 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：创业系统完善 — Phase 1-6 全部完成 ✅
+- **最近一次工作**：P0 新闻→投资价格传导桥梁 ✅（2026-06-20 14:00）
   - **Phase 1 Bug修复**：创业Tab显示/每日运营管线/注册引导
   - **Phase 2 事件系统**：30+创业事件（种子期8/成长期10/成熟期8/行业专属6）
   - **Phase 3 产品深化**：15+产品类别 + 15个功能模块 + 竞争力评分
@@ -148,11 +148,19 @@
    - 硬编码替换：属性预警色、服务徽章色、绩效等级色、市场情绪色、K线涨跌色、AP提示色等全部从高饱和 → 柔和暖色调
    - 参考标准：WCAG 2.1 AA + Material Design 3 + Solarized + GitHub Primer / Linear / Notion
 
+### ✅ 2026-06-20 14:00 — P0 新闻→投资价格传导桥梁（系统融合 #1）
+
+- **发现**：30+条新闻的 `investmentEffect` 数据（industry/category/symbols/allStocks/btc + mul 乘数）自创建以来从未被任何代码消费
+- **新建** `src/js/core/news_investment_bridge.js` — 5个核心函数（getNewsEffectForInvestment/getNewsEffectForBtc/getNewsEffectForProperty/getNewsInvestmentSummary/hasStrongNewsEffect）
+- **修改** `investment.js::tickInvestmentDaily()` — 股票/BTC/房产价格随机游走时叠加活跃新闻乘数，多条新闻连乘
+- **修改** `investment.js::renderMarketSentiment()` — 新闻列表增加 `[科技·NVDA·BTC]` 行业标签 + 市场驱动强度指示器
+- **修改** `src/index.html` — 加载桥接脚本
+
 ### 下一步方向
 
-1. **企业命运 Phase 2** — CEO人格化深化/公司历史书UI绑定（数据接口就绪，UI已集成）
-2. **自住房食材联动深化** — 可深化"在家做饭"为食材采购→消耗→烹饪完整循环
-3. **新系统扩展** — 节日成就、技能树、梦想追踪等
+1. **P0 #2 道德flag→后续事件** — 已有flag追踪埋点，需扩充10+个后续道德事件
+2. **P0 #3 NPC在场隐性加成** — NPC在场时附近行动有隐性加成/惩罚
+3. **P0 #4 天气→客流量→摆摊收益闭环** — 已部分实现，需完整传导
 
 ## 自主运行规则
 

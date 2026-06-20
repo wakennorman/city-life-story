@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-20 (累计285+项改动)
-> **最新改动**: 百科注册表修复 — 3条悬空引用修复 + 3个新百科条目创建（背包/投资/新游戏+）
+> 最后更新: 2026-06-20 (累计288+项改动)
+> **最新改动**: P0 新闻→投资价格传导桥梁 — news_investment_bridge.js 连接30+条新闻的 investmentEffect 数据到实际价格更新
 
 ## 项目概述
 
@@ -2642,3 +2642,47 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 - NPC日常对话：每天在消息区随机出现NPC根据好感度级别的对话
 - 新闻NPC评论：新闻弹幕出现时有15%~30%概率NPC发表评论
 - 装备工作加成：装备对应装备后，相关工作收入增加（如自行车+20%骑手收入）
+
+---
+
+## 2026-06-20 变更记录 — 新闻→投资价格传导桥梁（P0 #1 系统融合）
+
+### 发现
+
+新闻数据的 `investmentEffect` 字段（定义30+条新闻，含 industry/category/symbols/allStocks/btc 五类匹配 + mul 乘数）自创建以来**从未被任何代码消费**。`tickInvestmentDaily` 仅做随机游走，不读取 `activeNews`。数据定义与价格更新之间存在完全的空白。
+
+### 修复方案
+
+创建 `news_investment_bridge.js` 桥梁系统：
+
+1. **核心函数**：
+   - `getNewsEffectForInvestment(symbol, industry, category, state)` — 按 symbol/industry/category 三级匹配活跃新闻乘数，多条新闻连乘
+   - `getNewsEffectForBtc(state)` — 比特币专用乘数
+   - `getNewsEffectForProperty(state)` — 房产专用乘数（通过 ESTATE 标的 + 房地产行业）
+   - `getNewsInvestmentSummary(state)` — 生成市场驱动摘要（方向+强度百分比）
+   - `hasStrongNewsEffect(state)` — 检测是否 ≥15% 强冲击
+
+2. **tickInvestmentDaily 改造**：
+   - 股票循环：`price *= baseChange * newsMul`
+   - Bitcoin：`price *= (1 + random * 0.08 + greed * 0.02) * btcNewsMul`
+   - 房产：`price *= (1 + appreciation + random * 0.002) * propertyNewsMul`
+   - 强冲击时每日输出一条市场驱动消息
+
+3. **投资Tab UI 增强**（renderMarketSentiment）：
+   - 新闻列表增加行业标签：`[科技·NVDA·BTC]`
+   - 新增市场驱动指示器：`📊 市场驱动：📈+8% 📉-12%`
+
+### 文件变更
+
+| 文件                                    | 变更内容                                                                   |
+| --------------------------------------- | -------------------------------------------------------------------------- |
+| `src/js/core/news_investment_bridge.js` | **新建** — 新闻→投资桥梁函数库（5个核心函数）                              |
+| `src/js/phase2/investment.js`           | `tickInvestmentDaily` 集成新闻乘数 + `renderMarketSentiment` 增强标签/驱动 |
+| `src/index.html`                        | 加载 `news_investment_bridge.js`                                           |
+
+### 验证
+
+- 新闻触发后，相关股票/比特币/房产价格在有效期每日受乘数影响
+- 多条新闻叠加乘数连乘（如科技利好×芯片利好→+34.2%）
+- 新闻过期后（cleanupExpiredNews 清理 activeNews），价格回到随机游走
+- 投资Tab可看到新闻标签 + 市场驱动百分比指示
