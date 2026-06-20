@@ -1805,6 +1805,7 @@ function summaryCard(label, value) {
 // ---- 子tab渲染：股票 ----
 /**
  * 标准投资按钮组 — 所有子tab统一使用此样式
+ * 买（绿色）3个按钮一行，卖（红色）3个按钮一行，每行末尾加 ✏️ 自定义数量
  * @param {string} sym    股票/币种代号
  * @param {number} price  当前价格
  * @param {object|null} h 持仓对象 {shares, avgPrice} 或 null
@@ -1817,51 +1818,330 @@ function summaryCard(label, value) {
 function stdInvBtns(sym, price, h, qty1, qty2, lbl1, lbl2, decimals) {
   var shares = h ? h.shares : 0;
   var decAttr = decimals != null ? ' data-dec="' + decimals + '"' : "";
+  var step = decimals > 0 ? Math.pow(10, -decimals) : 1;
+
+  // 构建一行按钮：买行（3绿 + ✏️ + 隐藏数量面板）
+  function buildRow(className, qA, qB, labelA, labelB, showAll, side, allQty) {
+    var isBuy = side === "buy";
+    var btnCls = isBuy ? "btn-success" : "btn-danger";
+    var actCls = isBuy ? "ibuy" : "isell";
+    var allLbl = isBuy ? "全买" : "全卖";
+    var allAttr = isBuy
+      ? ' class="btn btn-sm btn-warning ibuy-all" data-s="' +
+        sym +
+        '" data-p="' +
+        price.toFixed(4) +
+        '"' +
+        decAttr
+      : ' class="btn btn-sm btn-danger isell" data-s="' +
+        sym +
+        '" data-q="' +
+        allQty +
+        '"';
+    return (
+      '<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center;">' +
+      '<button class="btn btn-sm ' +
+      btnCls +
+      " " +
+      actCls +
+      '" data-s="' +
+      sym +
+      '" data-q="' +
+      qA +
+      '">' +
+      labelA +
+      "</button>" +
+      '<button class="btn btn-sm ' +
+      btnCls +
+      " " +
+      actCls +
+      '" data-s="' +
+      sym +
+      '" data-q="' +
+      qB +
+      '">' +
+      labelB +
+      "</button>" +
+      "<button" +
+      allAttr +
+      ">" +
+      allLbl +
+      "</button>" +
+      '<button class="qty-toggle-btn" data-sym="' +
+      sym +
+      '" data-side="' +
+      side +
+      '" title="自定义数量">✏️</button>' +
+      '<div class="qty-input-group" data-sym="' +
+      sym +
+      '" data-side="' +
+      side +
+      '" style="display:none;">' +
+      '<button class="qty-step-btn" data-sym="' +
+      sym +
+      '" data-dir="-1">−</button>' +
+      '<input type="number" class="qty-num-input" value="' +
+      qA +
+      '" min="' +
+      step +
+      '" step="' +
+      step +
+      '" data-sym="' +
+      sym +
+      '" data-dec="' +
+      (decimals || 0) +
+      '">' +
+      '<button class="qty-step-btn" data-sym="' +
+      sym +
+      '" data-dir="1">+</button>' +
+      '<button class="btn btn-sm ' +
+      btnCls +
+      ' qty-inv-btn" data-sym="' +
+      sym +
+      '" data-side="' +
+      side +
+      '">' +
+      (isBuy ? "买" : "卖") +
+      "</button>" +
+      "</div>" +
+      "</div>"
+    );
+  }
+
+  var sellAllQty = shares > 0 ? shares : 0;
   return (
-    '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;align-items:center;">' +
-    '<button class="btn btn-sm btn-success ibuy" data-s="' +
-    sym +
-    '" data-q="' +
-    qty1 +
-    '">' +
-    lbl1 +
-    "</button>" +
-    '<button class="btn btn-sm btn-success ibuy" data-s="' +
-    sym +
-    '" data-q="' +
-    qty2 +
-    '">' +
-    lbl2 +
-    "</button>" +
-    '<button class="btn btn-sm btn-warning ibuy-all" data-s="' +
-    sym +
-    '" data-p="' +
-    price.toFixed(4) +
-    '"' +
-    decAttr +
-    ">全买</button>" +
-    '<span style="color:var(--border);margin:0 4px;font-size:11px;">|</span>' +
-    '<button class="btn btn-sm btn-danger isell" data-s="' +
-    sym +
-    '" data-q="' +
-    qty1 +
-    '">' +
-    lbl1.replace("买", "卖") +
-    "</button>" +
-    '<button class="btn btn-sm btn-danger isell" data-s="' +
-    sym +
-    '" data-q="' +
-    qty2 +
-    '">' +
-    lbl2.replace("买", "卖") +
-    "</button>" +
-    '<button class="btn btn-sm btn-danger isell" data-s="' +
-    sym +
-    '" data-q="' +
-    shares +
-    '">全卖</button>' +
+    '<div class="inv-btn-group" style="margin-top:4px;">' +
+    buildRow("buy-row", qty1, qty2, lbl1, lbl2, true, "buy", "0") +
+    buildRow(
+      "sell-row",
+      qty1,
+      qty2,
+      lbl1.replace("买", "卖"),
+      lbl2.replace("买", "卖"),
+      true,
+      "sell",
+      sellAllQty,
+    ) +
     "</div>"
   );
+}
+
+// ---- 投资面板自定义数量输入事件绑定（所有子tab共享） ----
+function bindInvQtyHandlers(area, state, parent, tabFn) {
+  if (!area) return;
+
+  // 展开/收起 ✏️
+  area.querySelectorAll(".qty-toggle-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var sym = this.dataset.sym;
+      var side = this.dataset.side;
+      var group = area.querySelector(
+        '.qty-input-group[data-sym="' + sym + '"][data-side="' + side + '"]',
+      );
+      if (!group) return;
+      var isHidden = group.style.display === "none";
+      group.style.display = isHidden ? "inline-flex" : "none";
+      this.style.opacity = isHidden ? "0.7" : "1";
+      this.style.background = isHidden ? "var(--accent-glow)" : "transparent";
+      if (isHidden) {
+        var input = group.querySelector(".qty-num-input");
+        if (input) {
+          var s = StateManager.getState();
+          // 卖侧：上限 = 持有量；买侧：上限 = 现金/价格
+          if (side === "sell") {
+            var holding = null;
+            for (
+              var i = 0;
+              i < (s.investment.stockHoldings || []).length;
+              i++
+            ) {
+              if (s.investment.stockHoldings[i].symbol === sym) {
+                holding = s.investment.stockHoldings[i];
+                break;
+              }
+            }
+            if (holding) {
+              input.max = holding.shares;
+              input.value = Math.max(
+                parseFloat(input.step) || 1,
+                Math.floor(
+                  (holding.shares / 2) * (1 / (parseFloat(input.step) || 1)),
+                ) * (parseFloat(input.step) || 1),
+              );
+            }
+          } else {
+            var def = null;
+            for (var i = 0; i < INV_STOCKS.length; i++) {
+              if (INV_STOCKS[i].symbol === sym) {
+                def = INV_STOCKS[i];
+                break;
+              }
+            }
+            var mkt = s.investment.stockMarket[sym];
+            if (mkt && mkt.price > 0) {
+              var maxQ =
+                Math.floor(
+                  (s.resources.cash / mkt.price) *
+                    (1 / (parseFloat(input.step) || 1)),
+                ) * (parseFloat(input.step) || 1);
+              if (def && def.category === "股票") maxQ = Math.floor(maxQ);
+              input.max = Math.max(
+                parseFloat(input.step) || 1,
+                maxQ || parseFloat(input.step) || 1,
+              );
+            }
+          }
+          input.focus();
+          input.select();
+        }
+      }
+    });
+  });
+
+  // 步进按钮
+  area.querySelectorAll(".qty-step-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var sym = this.dataset.sym;
+      var dir = parseInt(this.dataset.dir) || 0;
+      var group = this.closest(".qty-input-group");
+      if (!group) return;
+      var input = group.querySelector(".qty-num-input");
+      if (!input) return;
+      var step = parseFloat(input.step) || 1;
+      var max = parseFloat(input.max) || 999999;
+      var val = parseFloat(input.value) || step;
+      val = Math.max(step, Math.min(max, val + (dir > 0 ? step : -step)));
+      // 按step对齐
+      val = Math.round(val / step) * step;
+      // 保留正确的小数位数
+      var dec = parseInt(input.dataset.dec) || 0;
+      input.value = val.toFixed(dec);
+    });
+  });
+
+  // 数量输入校验
+  area.querySelectorAll(".qty-num-input").forEach(function (input) {
+    input.addEventListener("change", function () {
+      var step = parseFloat(this.step) || 1;
+      var max = parseFloat(this.max) || 999999;
+      var dec = parseInt(this.dataset.dec) || 0;
+      var val = parseFloat(this.value) || step;
+      if (val < step) val = step;
+      if (val > max) val = max;
+      val = Math.round(val / step) * step;
+      this.value = val.toFixed(dec);
+    });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        var group = this.closest(".qty-input-group");
+        if (!group) return;
+        var actionBtn = group.querySelector(".qty-inv-btn");
+        if (actionBtn) actionBtn.click();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        var group = this.closest(".qty-input-group");
+        if (!group) return;
+        group.style.display = "none";
+        var sym = this.dataset.sym;
+        var side = group.dataset.side;
+        var toggle = area.querySelector(
+          '.qty-toggle-btn[data-sym="' + sym + '"][data-side="' + side + '"]',
+        );
+        if (toggle) {
+          toggle.style.opacity = "";
+          toggle.style.background = "";
+        }
+      }
+    });
+  });
+
+  // 自定义数量买/卖
+  area.querySelectorAll(".qty-inv-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var sym = this.dataset.sym;
+      var side = this.dataset.side;
+      var group = area.querySelector(
+        '.qty-input-group[data-sym="' + sym + '"][data-side="' + side + '"]',
+      );
+      if (!group) return;
+      var input = group.querySelector(".qty-num-input");
+      if (!input) return;
+      var step = parseFloat(input.step) || 1;
+      var dec = parseInt(input.dataset.dec) || 0;
+      var qty = parseFloat(input.value) || step;
+      if (qty < step) qty = step;
+      qty = Math.round(qty / step) * step;
+      input.value = qty.toFixed(dec);
+
+      // 校验上限
+      if (side === "buy") {
+        var s = StateManager.getState();
+        var mkt = s.investment.stockMarket[sym];
+        if (mkt && mkt.price > 0) {
+          var maxQ = Math.floor(s.resources.cash / mkt.price / step) * step;
+          var def = null;
+          for (var i = 0; i < INV_STOCKS.length; i++) {
+            if (INV_STOCKS[i].symbol === sym) {
+              def = INV_STOCKS[i];
+              break;
+            }
+          }
+          if (def && def.category === "股票") maxQ = Math.floor(maxQ);
+          if (qty > maxQ) {
+            if (maxQ <= 0) {
+              StateManager.addMessage("⚠️ 现金不足以购买。", "danger");
+              return;
+            }
+            qty = maxQ;
+            input.value = qty.toFixed(dec);
+            StateManager.addMessage(
+              "ℹ️ 现金不足，调整为 " + qty + "。",
+              "info",
+            );
+          }
+        }
+        buyInvStock(sym, qty);
+      } else {
+        var s = StateManager.getState();
+        var holding = null;
+        for (var i = 0; i < (s.investment.stockHoldings || []).length; i++) {
+          if (s.investment.stockHoldings[i].symbol === sym) {
+            holding = s.investment.stockHoldings[i];
+            break;
+          }
+        }
+        var maxSell = holding ? holding.shares : 0;
+        if (qty > maxSell) {
+          if (maxSell <= 0) {
+            StateManager.addMessage("⚠️ 没有持仓可卖。", "danger");
+            return;
+          }
+          qty = maxSell;
+          input.value = qty.toFixed(dec);
+        }
+        sellInvStock(sym, qty);
+      }
+
+      // 收起面板
+      group.style.display = "none";
+      var toggle = area.querySelector(
+        '.qty-toggle-btn[data-sym="' + sym + '"][data-side="' + side + '"]',
+      );
+      if (toggle) {
+        toggle.style.opacity = "";
+        toggle.style.background = "";
+      }
+
+      // 刷新
+      if (typeof tabFn === "function") tabFn(state, parent);
+      else renderInvestmentTab(state, parent);
+    });
+  });
 }
 
 function renderStocks(area, inv, state, parent) {
@@ -2027,6 +2307,8 @@ function renderStocks(area, inv, state, parent) {
         renderInvestmentTab(state, parent);
       };
     });
+    // 自定义数量事件绑定
+    bindInvQtyHandlers(area, state, parent, null);
   }, 0);
 }
 
@@ -2179,6 +2461,8 @@ function renderBtc(area, inv, state, parent) {
         renderInvestmentTab(state, parent);
       };
     });
+    // 自定义数量事件绑定
+    bindInvQtyHandlers(area, state, parent, null);
   }, 0);
 }
 
@@ -2294,6 +2578,8 @@ function renderPrecious(area, inv, state, parent) {
         renderInvestmentTab(state, parent);
       };
     });
+    // 自定义数量事件绑定
+    bindInvQtyHandlers(area, state, parent, null);
   }, 0);
 }
 
@@ -2410,6 +2696,8 @@ function renderFutures(area, inv, state, parent) {
         renderInvestmentTab(state, parent);
       };
     });
+    // 自定义数量事件绑定
+    bindInvQtyHandlers(area, state, parent, null);
   }, 0);
 }
 
