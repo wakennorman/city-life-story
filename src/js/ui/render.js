@@ -3044,7 +3044,7 @@ function renderSkillsTab(state, parent) {
         st.player.actionPoints -= 15;
         st.resources.cash -= 50;
         // 训练EXP（大幅降低，技能学习变难）
-        var baseGain = 5 + Math.floor(Math.random() * 8); // 5~12
+        var baseGain = 5 + Random.int(0, 7); // 5~12
         var intBonus = Math.floor((st.player.intelligence || 0) / 20) * 2; // 智力加成减半
         var xpGain = baseGain + intBonus;
         // 心情加成

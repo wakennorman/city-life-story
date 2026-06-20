@@ -1334,15 +1334,15 @@ function executeScavengeRoute(routeId) {
 
   if (routeId === "alley") {
     apCost = 15;
-    var base = 2 + Math.floor(Math.random() * 8);
+    var base = 2 + Random.int(0, 7);
     var bonus = 0;
     var bonusNote = "";
     if (st.flags.oldZhouTips) {
-      bonus += 5 + Math.floor(Math.random() * 8);
+      bonus += 5 + Random.int(0, 7);
       bonusNote = "（老周教的路线多翻了些）";
     }
     if (st.flags.oldZhouChannel) {
-      bonus += 8 + Math.floor(Math.random() * 12);
+      bonus += 8 + Random.int(0, 11);
       bonusNote = "（老周渠道内部价又多赚了点）";
     }
     // 新人保护
@@ -1357,12 +1357,12 @@ function executeScavengeRoute(routeId) {
       "，手脏兮兮的。";
   } else if (routeId === "depot") {
     apCost = 22;
-    var base2 = 8 + Math.floor(Math.random() * 15);
+    var base2 = 8 + Random.int(0, 14);
     earned = base2;
     hygieneCost = 8;
     fatigueCost = 8;
-    if (Math.random() < 0.3) {
-      var extra = 8 + Math.floor(Math.random() * 11);
+    if (Random.chance(0.3)) {
+      var extra = 8 + Random.int(0, 10);
       earned += extra;
       msg =
         "🏭 废品收购站边缘翻到好货！废料多卖了 ¥" +
@@ -1373,7 +1373,7 @@ function executeScavengeRoute(routeId) {
     } else {
       msg = "🏭 在废品收购站边缘转了一圈，收获 ¥" + earned + "，今天一般般。";
     }
-    if (Math.random() < 0.08) {
+    if (Random.chance(0.08)) {
       var loss = Math.min(5, earned);
       earned -= loss;
       st.needs.health = Math.max(0, (st.needs.health || 100) - 3);
@@ -1383,12 +1383,12 @@ function executeScavengeRoute(routeId) {
     }
   } else if (routeId === "factory") {
     apCost = 30;
-    var base3 = 15 + Math.floor(Math.random() * 31);
+    var base3 = 15 + Random.int(0, 30);
     earned = base3;
     hygieneCost = 10;
     fatigueCost = 12;
-    if (Math.random() < 0.4) {
-      var extra2 = 10 + Math.floor(Math.random() * 16);
+    if (Random.chance(0.4)) {
+      var extra2 = 10 + Random.int(0, 15);
       earned += extra2;
       msg =
         "🔧 工业区废料场收获满满！废金属多卖了 ¥" +
@@ -1399,7 +1399,7 @@ function executeScavengeRoute(routeId) {
     } else {
       msg = "🔧 工业区废料场跑了一圈，卖了 ¥" + earned + "，今天废料不多。";
     }
-    if (Math.random() < 0.15) {
+    if (Random.chance(0.15)) {
       earned = Math.floor(earned * 0.5);
       fatigueCost += 10;
       msg += " 被保安发现吓跑了，东西丢了一半，到手 ¥" + earned + "。";
@@ -1407,7 +1407,7 @@ function executeScavengeRoute(routeId) {
     }
   } else if (routeId === "zhou_channel") {
     apCost = 25;
-    earned = 25 + Math.floor(Math.random() * 41);
+    earned = 25 + Random.int(0, 40);
     hygieneCost = 5;
     fatigueCost = 6;
     msg =
@@ -1453,7 +1453,7 @@ function showIPOResultModal(state) {
   if (!company) return;
 
   // 简化：50% 通过率
-  var approved = Math.random() < 0.5;
+  var approved = Random.chance(0.5);
 
   showModal({
     title: approved ? "🔔 IPO 审核结果" : "❌ IPO 审核未通过",

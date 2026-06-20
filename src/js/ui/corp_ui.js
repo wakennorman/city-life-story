@@ -279,7 +279,7 @@ function downgradeToStreet(state, reason) {
 
   // 保留遣散费：季度工资的1-3倍
   const severance =
-    rankData.baseSalary * 3 * (1 + Math.floor(Math.random() * 3));
+    rankData.baseSalary * 3 * (1 + Random.int(0, 2));
   state.resources.cash += severance;
 
   // 保留职场期间累积的投资

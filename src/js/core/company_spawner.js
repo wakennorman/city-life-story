@@ -416,7 +416,7 @@ function checkAndSpawnNewCompanies(state) {
   for (const industry of Object.keys(INDUSTRY_DEFS)) {
     if (!activeIndustries[industry]) {
       // 50%概率生成新公司（不是100%，保持稀缺感）
-      if (Math.random() < 0.5) {
+      if (Random.chance(0.5)) {
         const newCompany = generateNewCompany(industry);
         fate.companies[newCompany.id] = newCompany;
 
@@ -494,7 +494,7 @@ function spawnFromRuins(state, deceasedCompany) {
   var industryDef = INDUSTRY_DEFS[industry];
   if (!industryDef) return null;
 
-  var culture = CULTURE_TAGS[Math.floor(Math.random() * CULTURE_TAGS.length)];
+  var culture = Random.fromArray(CULTURE_TAGS);
 
   var companyId =
     "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
@@ -503,25 +503,23 @@ function spawnFromRuins(state, deceasedCompany) {
 
   // 健康度：倒闭公司最终健康度 × 0.3 + 随机波动
   var baseHealth =
-    (deceasedCompany.health || 50) * 0.3 + 30 + (Math.random() - 0.5) * 20;
+    (deceasedCompany.health || 50) * 0.3 + 30 + Random.float(-10, 10);
   var health = Math.max(40, Math.min(95, baseHealth));
 
   // 产品分数：倒闭公司最终 productScore × 0.5 + 随机波动
   var productScore = Math.round(
-    (deceasedCompany.productScore || 50) * 0.5 +
-      15 +
-      (Math.random() - 0.5) * 20,
+    (deceasedCompany.productScore || 50) * 0.5 + 15 + Random.float(-10, 10),
   );
   productScore = Math.max(30, Math.min(80, productScore));
 
   // 人才分数：倒闭公司最终 talentScore × 0.4 + 随机波动
   var talentScore = Math.round(
-    (deceasedCompany.talentScore || 50) * 0.4 + 15 + (Math.random() - 0.5) * 20,
+    (deceasedCompany.talentScore || 50) * 0.4 + 15 + Random.float(-10, 10),
   );
   talentScore = Math.max(25, Math.min(70, talentScore));
 
   // 市场份额：2-5%
-  var marketShare = Math.round((2 + Math.random() * 3) * 100) / 100;
+  var marketShare = Math.round(Random.float(2, 5) * 100) / 100;
 
   var newCompany = {
     id: companyId,
@@ -537,10 +535,10 @@ function spawnFromRuins(state, deceasedCompany) {
     phase: "startup",
     health: health,
     marketShare: marketShare,
-    sentiment: 45 + Math.floor(Math.random() * 20),
+    sentiment: 45 + Random.int(0, 19),
     productScore: productScore,
     talentScore: talentScore,
-    trend: Math.random() < 0.5 ? "up" : "stable",
+    trend: Random.chance(0.5) ? "up" : "stable",
     knownToPlayer: false,
     ceasedExistence: false,
     ceasedAt: null,
@@ -550,7 +548,7 @@ function spawnFromRuins(state, deceasedCompany) {
     skillReqs: industryDef.skillReq,
     stockPrice: Random.float(10, 40),
     equity: { player: 0 },
-    valuation: 3000000 + Math.random() * 10000000,
+    valuation: Random.float(3000000, 13000000),
     // 遗产标记
     fromRuins: true,
     ruinsSourceId: deceasedCompany.id,
@@ -569,9 +567,7 @@ function spawnFromRuins(state, deceasedCompany) {
     ],
     fateEventHistory: [],
     founder: {
-      name: ["李总", "王总", "张总", "陈总", "刘总"][
-        Math.floor(Math.random() * 5)
-      ],
+      name: Random.fromArray(["李总", "王总", "张总", "陈总", "刘总"]),
       background: "原公司技术骨干创业，继承部分专利和人脉",
     },
     benefits: {
@@ -653,11 +649,10 @@ function checkAndSpawnFromRuins(state) {
   if (state.player.day - fate.lastRuinsSpawn < 180) return [];
 
   // 50%概率
-  if (Math.random() >= 0.5) return [];
+  if (!Random.chance(0.5)) return [];
 
   // 随机选择一个倒闭公司
-  var source =
-    deceasedCompanies[Math.floor(Math.random() * deceasedCompanies.length)];
+  var source = Random.fromArray(deceasedCompanies);
   var newCompany = spawnFromRuins(state, source);
 
   fate.lastRuinsSpawn = state.player.day;

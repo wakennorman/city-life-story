@@ -177,18 +177,9 @@ var FATE_EVENTS = [
       return co.trend === "down" && co.marketShare < 15;
     },
     apply: function (st, cid, co) {
-      co.health = Math.max(
-        5,
-        co.health - (10 + Math.floor(Math.random() * 11)),
-      );
-      co.marketShare = Math.max(
-        1,
-        co.marketShare - (2 + Math.floor(Math.random() * 4)),
-      );
-      co.sentiment = Math.max(
-        5,
-        co.sentiment - (15 + Math.floor(Math.random() * 11)),
-      );
+      co.health = Math.max(5, co.health - (10 + Random.int(0, 10)));
+      co.marketShare = Math.max(1, co.marketShare - (2 + Random.int(0, 3)));
+      co.sentiment = Math.max(5, co.sentiment - (15 + Random.int(0, 10)));
       return { stockMul: 0.94, msg: "市场份额持续萎缩，被竞争对手蚕食" };
     },
   },
@@ -203,18 +194,9 @@ var FATE_EVENTS = [
       );
     },
     apply: function (st, cid, co) {
-      co.health = Math.min(
-        100,
-        co.health + (10 + Math.floor(Math.random() * 11)),
-      );
-      co.marketShare = Math.min(
-        40,
-        co.marketShare + (3 + Math.floor(Math.random() * 6)),
-      );
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (20 + Math.floor(Math.random() * 11)),
-      );
+      co.health = Math.min(100, co.health + (10 + Random.int(0, 10)));
+      co.marketShare = Math.min(40, co.marketShare + (3 + Random.int(0, 5)));
+      co.sentiment = Math.min(100, co.sentiment + (20 + Random.int(0, 10)));
       if (co.phase === "mature") co.trend = "up";
       return { stockMul: 1.12, msg: "新产品引爆市场，订单暴增" };
     },
@@ -228,18 +210,9 @@ var FATE_EVENTS = [
       return co.sentiment < 45 || (co.trend === "down" && co.health < 60);
     },
     apply: function (st, cid, co) {
-      co.health = Math.max(
-        5,
-        co.health - (15 + Math.floor(Math.random() * 11)),
-      );
-      co.sentiment = Math.max(
-        5,
-        co.sentiment - (25 + Math.floor(Math.random() * 11)),
-      );
-      co.talentScore = Math.max(
-        5,
-        co.talentScore - (10 + Math.floor(Math.random() * 6)),
-      );
+      co.health = Math.max(5, co.health - (15 + Random.int(0, 10)));
+      co.sentiment = Math.max(5, co.sentiment - (25 + Random.int(0, 10)));
+      co.talentScore = Math.max(5, co.talentScore - (10 + Random.int(0, 5)));
       return { stockMul: 0.9, msg: "管理层丑闻曝光，引发信任危机" };
     },
   },
@@ -291,14 +264,8 @@ var FATE_EVENTS = [
       return co.health > 20; // 任何健康的公司都可能受益
     },
     apply: function (st, cid, co) {
-      co.health = Math.min(
-        100,
-        co.health + (5 + Math.floor(Math.random() * 11)),
-      );
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (15 + Math.floor(Math.random() * 11)),
-      );
+      co.health = Math.min(100, co.health + (5 + Random.int(0, 10)));
+      co.sentiment = Math.min(100, co.sentiment + (15 + Random.int(0, 10)));
       co.trend = "up";
       return { stockMul: 1.08, msg: "所在行业获重大政策利好，板块集体走强" };
     },
@@ -312,18 +279,9 @@ var FATE_EVENTS = [
       return co.phase === "decline" && co.sentiment < 35;
     },
     apply: function (st, cid, co) {
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (10 + Math.floor(Math.random() * 11)),
-      );
-      co.talentScore = Math.min(
-        100,
-        co.talentScore + (5 + Math.floor(Math.random() * 11)),
-      );
-      co.health = Math.min(
-        100,
-        co.health + (5 + Math.floor(Math.random() * 6)),
-      );
+      co.sentiment = Math.min(100, co.sentiment + (10 + Random.int(0, 10)));
+      co.talentScore = Math.min(100, co.talentScore + (5 + Random.int(0, 10)));
+      co.health = Math.min(100, co.health + (5 + Random.int(0, 5)));
       co.productScore = Math.min(100, co.productScore + 5);
       if (co.health > 40) co.trend = "up";
       return { stockMul: 1.06, msg: "创始人回归，启动重大战略重组" };
@@ -338,15 +296,9 @@ var FATE_EVENTS = [
       return co.phase === "decline" || co.phase === "dying";
     },
     apply: function (st, cid, co) {
-      co.health = Math.max(
-        3,
-        co.health - (20 + Math.floor(Math.random() * 11)),
-      );
+      co.health = Math.max(3, co.health - (20 + Random.int(0, 10)));
       co.sentiment = Math.max(5, co.sentiment - 20);
-      co.talentScore = Math.max(
-        5,
-        co.talentScore - (10 + Math.floor(Math.random() * 11)),
-      );
+      co.talentScore = Math.max(5, co.talentScore - (10 + Random.int(0, 10)));
       if (co.health < 10 && co.phase !== "dying") co.phase = "dying";
       return { stockMul: 0.85, msg: "资金链断裂，大规模裁员自救" };
     },
@@ -408,6 +360,7 @@ var FATE_EVENTS = [
       var msg =
         "成功在港交所/纳斯达克挂牌上市，首日市值突破" +
         (100 + Math.floor(Math.random() * 200)) +
+        Random.int(100, 299) +
         "亿";
       return { stockMul: 1.25, msg: msg };
     },
@@ -428,18 +381,12 @@ var FATE_EVENTS = [
       // 人才流失：productScore和talentScore暴跌
       co.productScore = Math.max(
         10,
-        co.productScore - (10 + Math.floor(Math.random() * 11)),
+        co.productScore - (10 + Random.int(0, 10)),
       );
-      co.talentScore = Math.max(
-        5,
-        co.talentScore - (15 + Math.floor(Math.random() * 16)),
-      );
-      co.sentiment = Math.max(
-        10,
-        co.sentiment - (10 + Math.floor(Math.random() * 11)),
-      );
+      co.talentScore = Math.max(5, co.talentScore - (15 + Random.int(0, 15)));
+      co.sentiment = Math.max(10, co.sentiment - (10 + Random.int(0, 10)));
       // 可能引发连锁反应：健康度下降
-      co.health = Math.max(5, co.health - (5 + Math.floor(Math.random() * 6)));
+      co.health = Math.max(5, co.health - (5 + Random.int(0, 5)));
       // 如果talentScore极低，可能加速进入衰退
       if (co.talentScore < 25 && co.phase === "mature") co.phase = "decline";
       return {
@@ -474,28 +421,22 @@ var FATE_EVENTS = [
         }
       }
       // 双方互相消耗
-      co.productScore = Math.max(
-        20,
-        co.productScore - (5 + Math.floor(Math.random() * 6)),
-      );
-      co.health = Math.max(10, co.health - (8 + Math.floor(Math.random() * 8)));
-      co.sentiment = Math.max(
-        10,
-        co.sentiment - (10 + Math.floor(Math.random() * 11)),
-      );
+      co.productScore = Math.max(20, co.productScore - (5 + Random.int(0, 5)));
+      co.health = Math.max(10, co.health - (8 + Random.int(0, 7)));
+      co.sentiment = Math.max(10, co.sentiment - (10 + Random.int(0, 10)));
       if (targetCid && companies[targetCid]) {
         var targetCo = companies[targetCid];
         targetCo.productScore = Math.max(
           20,
-          targetCo.productScore - (5 + Math.floor(Math.random() * 6)),
+          targetCo.productScore - (5 + Random.int(0, 5)),
         );
         targetCo.health = Math.max(
           10,
-          targetCo.health - (5 + Math.floor(Math.random() * 6)),
+          targetCo.health - (5 + Random.int(0, 5)),
         );
         targetCo.sentiment = Math.max(
           10,
-          targetCo.sentiment - (8 + Math.floor(Math.random() * 9)),
+          targetCo.sentiment - (8 + Random.int(0, 8)),
         );
       }
       return {
@@ -512,27 +453,21 @@ var FATE_EVENTS = [
     weight: 0.3,
     condition: function (st, co) {
       // 成熟期或衰退期，健康度较高但CEO年龄因素
-      return co.phase === "mature" && co.health > 50 && Math.random() < 0.15;
+      return co.phase === "mature" && co.health > 50 && Random.chance(0.15);
     },
     apply: function (st, cid, co) {
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
       varceoName = ceoBio ? ceoBio.name : "CEO";
 
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (5 + Math.floor(Math.random() * 10)),
-      );
-      co.health = Math.max(5, co.health - (3 + Math.floor(Math.random() * 5)));
+      co.sentiment = Math.min(100, co.sentiment + (5 + Random.int(0, 9)));
+      co.health = Math.max(5, co.health - (3 + Random.int(0, 4)));
 
       // 可能引发管理层动荡
-      if (Math.random() < 0.4) {
-        co.talentScore = Math.max(
-          10,
-          co.talentScore - (5 + Math.floor(Math.random() * 8)),
-        );
+      if (Random.chance(0.4)) {
+        co.talentScore = Math.max(10, co.talentScore - (5 + Random.int(0, 7)));
         co.productScore = Math.max(
           10,
-          co.productScore - (3 + Math.floor(Math.random() * 6)),
+          co.productScore - (3 + Random.int(0, 5)),
         );
       }
 
@@ -554,32 +489,20 @@ var FATE_EVENTS = [
     },
     apply: function (st, cid, co) {
       // 行业洗牌：市场份额重新分配
-      var impact = 0.5 + Math.random() * 1.5;
+      var impact = Random.float(0.5, 2.0);
 
       // 随机决定是受益还是受损
-      if (Math.random() < 0.5) {
+      if (Random.chance(0.5)) {
         // 受益：获得市场份额
         co.marketShare = Math.min(45, co.marketShare + impact);
-        co.health = Math.min(
-          100,
-          co.health + (3 + Math.floor(Math.random() * 5)),
-        );
-        co.sentiment = Math.min(
-          100,
-          co.sentiment + (8 + Math.floor(Math.random() * 12)),
-        );
+        co.health = Math.min(100, co.health + (3 + Random.int(0, 4)));
+        co.sentiment = Math.min(100, co.sentiment + (8 + Random.int(0, 11)));
         return { stockMul: 1.15, msg: "行业洗牌，公司趁势扩张市场份额" };
       } else {
         // 受损：失去市场份额
         co.marketShare = Math.max(1, co.marketShare - impact * 1.5);
-        co.health = Math.max(
-          10,
-          co.health - (5 + Math.floor(Math.random() * 8)),
-        );
-        co.sentiment = Math.max(
-          10,
-          co.sentiment - (10 + Math.floor(Math.random() * 15)),
-        );
+        co.health = Math.max(10, co.health - (5 + Random.int(0, 7)));
+        co.sentiment = Math.max(10, co.sentiment - (10 + Random.int(0, 14)));
         return { stockMul: 0.82, msg: "行业洗牌冲击，公司市场份额大幅流失" };
       }
     },
@@ -599,20 +522,11 @@ var FATE_EVENTS = [
       // 技术革命：产品分数大幅提升，可能引发行业变革
       co.productScore = Math.min(
         100,
-        co.productScore + (8 + Math.floor(Math.random() * 12)),
+        co.productScore + (8 + Random.int(0, 11)),
       );
-      co.health = Math.min(
-        100,
-        co.health + (5 + Math.floor(Math.random() * 8)),
-      );
-      co.marketShare = Math.min(
-        45,
-        co.marketShare + (2 + Math.floor(Math.random() * 4)),
-      );
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (12 + Math.floor(Math.random() * 18)),
-      );
+      co.health = Math.min(100, co.health + (5 + Random.int(0, 7)));
+      co.marketShare = Math.min(45, co.marketShare + (2 + Random.int(0, 3)));
+      co.sentiment = Math.min(100, co.sentiment + (12 + Random.int(0, 17)));
 
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
       varceoName = ceoBio ? ceoBio.name : "公司";
@@ -635,25 +549,13 @@ var FATE_EVENTS = [
     },
     apply: function (st, cid, co) {
       // 监管风暴：健康度、sentiment、市场份额都受损
-      co.health = Math.max(
-        10,
-        co.health - (8 + Math.floor(Math.random() * 12)),
-      );
-      co.sentiment = Math.max(
-        5,
-        co.sentiment - (15 + Math.floor(Math.random() * 20)),
-      );
-      co.marketShare = Math.max(
-        1,
-        co.marketShare - (3 + Math.floor(Math.random() * 5)),
-      );
+      co.health = Math.max(10, co.health - (8 + Random.int(0, 11)));
+      co.sentiment = Math.max(5, co.sentiment - (15 + Random.int(0, 19)));
+      co.marketShare = Math.max(1, co.marketShare - (3 + Random.int(0, 4)));
 
       // 可能引发罚款
-      if (Math.random() < 0.6) {
-        co.talentScore = Math.max(
-          5,
-          co.talentScore - (5 + Math.floor(Math.random() * 10)),
-        );
+      if (Random.chance(0.6)) {
+        co.talentScore = Math.max(5, co.talentScore - (5 + Random.int(0, 9)));
       }
 
       varceoBio = CEO_BIOS && CEO_BIOS[cid];
@@ -677,24 +579,15 @@ var FATE_EVENTS = [
     },
     apply: function (st, cid, co) {
       // 战略合作：健康度和sentiment提升
-      co.health = Math.min(
-        100,
-        co.health + (5 + Math.floor(Math.random() * 8)),
-      );
-      co.sentiment = Math.min(
-        100,
-        co.sentiment + (10 + Math.floor(Math.random() * 15)),
-      );
-      co.marketShare = Math.min(
-        45,
-        co.marketShare + (1 + Math.floor(Math.random() * 3)),
-      );
+      co.health = Math.min(100, co.health + (5 + Random.int(0, 7)));
+      co.sentiment = Math.min(100, co.sentiment + (10 + Random.int(0, 14)));
+      co.marketShare = Math.min(45, co.marketShare + (1 + Random.int(0, 2)));
 
       // 可能解锁新的产品线
-      if (Math.random() < 0.5) {
+      if (Random.chance(0.5)) {
         co.productScore = Math.min(
           100,
-          co.productScore + (3 + Math.floor(Math.random() * 6)),
+          co.productScore + (3 + Random.int(0, 5)),
         );
       }
 
@@ -708,24 +601,13 @@ var FATE_EVENTS = [
     weight: 0.35,
     condition: function (st, co) {
       // 任何公司都可能遭遇产品危机
-      return (
-        co.phase !== "dying" && !co.ceasedExistence && Math.random() < 0.25
-      );
+      return co.phase !== "dying" && !co.ceasedExistence && Random.chance(0.25);
     },
     apply: function (st, cid, co) {
       // 产品危机：健康度、sentiment受损
-      co.health = Math.max(
-        10,
-        co.health - (6 + Math.floor(Math.random() * 10)),
-      );
-      co.sentiment = Math.max(
-        5,
-        co.sentiment - (12 + Math.floor(Math.random() * 18)),
-      );
-      co.productScore = Math.max(
-        15,
-        co.productScore - (5 + Math.floor(Math.random() * 8)),
-      );
+      co.health = Math.max(10, co.health - (6 + Random.int(0, 9)));
+      co.sentiment = Math.max(5, co.sentiment - (12 + Random.int(0, 17)));
+      co.productScore = Math.max(15, co.productScore - (5 + Random.int(0, 7)));
 
       return {
         stockMul: 0.85,
@@ -889,13 +771,12 @@ function tickEnterpriseFate(state) {
       CORP_LIFECYCLE_PHASES[co.phase] || CORP_LIFECYCLE_PHASES.mature;
 
     // health: 缓慢向中间值收敛
-    var healthDrift =
-      (Math.random() - 0.5) * 2 * (phaseDef.recoveryRate || 0.1);
+    var healthDrift = Random.float(-1, 1) * (phaseDef.recoveryRate || 0.1);
     co.health = Math.max(1, Math.min(100, co.health + healthDrift));
 
     // marketShare: 受阶段影响
     var shareDrift =
-      (Math.random() - 0.5) * 0.6 +
+      Random.float(-0.3, 0.3) +
       (co.trend === "up" ? 0.15 : co.trend === "down" ? -0.15 : 0);
     co.marketShare = Math.max(1, Math.min(45, co.marketShare + shareDrift));
 

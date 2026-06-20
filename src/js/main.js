@@ -1602,7 +1602,7 @@ function initializePrices() {
         price *= loc.priceMod[good.id];
       }
       // 随机波动 ±6%（现实级初始差价）
-      price *= 0.94 + Math.random() * 0.12;
+      price *= Random.float(0.94, 1.06);
       price = Math.round(price * 100) / 100;
       state.trade.goodsPrices[locKey][good.id] = price;
     }
@@ -1954,7 +1954,7 @@ function getAvailableActions(state) {
               state.player.eduProgress.studyPoints =
                 (state.player.eduProgress.studyPoints || 0) + studyAdd;
               consumeAP(20);
-              if (Math.random() < 0.1) {
+              if (Random.chance(0.1)) {
                 state.player.intelligence = Math.min(
                   100,
                   (state.player.intelligence || 0) + 1,
@@ -2002,7 +2002,7 @@ function getAvailableActions(state) {
                 (state.player.mental || 0) * 0.4 +
                 (state.player.intelligence || 0) * 0.1,
             );
-            if (Math.random() * 100 < rate) {
+            if (Random.chance(rate / 100)) {
               state.player.eduProgress.examsPassed =
                 (state.player.eduProgress.examsPassed || 0) + 1;
               state.player.eduProgress.studyPoints = 0;
@@ -2067,7 +2067,7 @@ function getAvailableActions(state) {
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
-                var pay = fjob.pay + Math.floor(Math.random() * 30);
+                var pay = fjob.pay + Random.int(0, 29);
                 state.resources.cash += pay;
                 state.resources.totalEarned += pay;
                 addDailyTransaction(
@@ -2118,8 +2118,7 @@ function getAvailableActions(state) {
           desc: `名气${fame}点，商家请你站台推广，收现金并涨粉。(每天一次)`,
           ap: 15,
           handler: () => {
-            var earn =
-              50 + Math.floor(fame * 1.2) + Math.floor(Math.random() * 80);
+            var earn = 50 + Math.floor(fame * 1.2) + Random.int(0, 79);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
             addDailyTransaction(
@@ -2179,7 +2178,7 @@ function getAvailableActions(state) {
           handler: () => {
             // 随机提升一项属性或技能
             var targets = ["physique", "intelligence", "agility", "mental"];
-            var attr = targets[Math.floor(Math.random() * targets.length)];
+            var attr = Random.fromArray(targets);
             state.player[attr] = Math.min(100, (state.player[attr] || 0) + 3);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.trainingVip = true;
@@ -2235,8 +2234,7 @@ function getAvailableActions(state) {
           desc: `名气${fame}点，主办方邀请你做嘉宾分享，演讲费+名气暴增。(每天一次)`,
           ap: 25,
           handler: () => {
-            var earn =
-              200 + Math.floor(fame * 2.5) + Math.floor(Math.random() * 150);
+            var earn = 200 + Math.floor(fame * 2.5) + Random.int(0, 149);
             state.resources.cash += earn;
             state.resources.totalEarned += earn;
             addDailyTransaction(
@@ -2329,7 +2327,7 @@ function getAvailableActions(state) {
         const state = StateManager.getState();
         const isNewbie = state.player.day <= 10;
         const baseRecovery = isNewbie ? 22 : 18;
-        const recovery = baseRecovery + Math.floor(Math.random() * 12);
+        const recovery = baseRecovery + Random.int(0, 11);
         state.needs.fatigue = Math.max(0, state.needs.fatigue - recovery);
         state.needs.happiness = Math.min(100, state.needs.happiness + 5);
         StateManager.addMessage(`😴 你休息了一会，疲劳-${recovery}。`, "info");
@@ -2510,8 +2508,8 @@ function getAvailableActions(state) {
           const st = StateManager.getState();
           // 随机提升一个技能
           const skillKeys = Object.keys(st.skills);
-          const key = skillKeys[Math.floor(Math.random() * skillKeys.length)];
-          st.skills[key].xp += 20 + Math.floor(Math.random() * 30);
+          const key = Random.fromArray(skillKeys);
+          st.skills[key].xp += 20 + Random.int(0, 29);
           // 检查升级
           const skill = st.skills[key];
           const xpNeeded = (skill.level + 1) * 100;
@@ -2718,7 +2716,7 @@ function getAvailableActions(state) {
         disabled: !canAfford,
         reqFail: !canAfford ? `需 ¥${cert.requirements.cash}` : null,
         handler: () => {
-          if (Math.random() < cert.examPassRate) {
+          if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
             state.resources.cash -= cert.requirements.cash;
             if (cert.effects.codingXp)
@@ -2790,27 +2788,24 @@ function getAvailableActions(state) {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
           const affinityGain =
-            (isBirthday
-              ? 10 + Math.floor(Math.random() * 5)
-              : 5 + Math.floor(Math.random() * 5)) + _histNpcBonus;
+            (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
+            _histNpcBonus;
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
           if (!isBirthday && typeof getFestivalNpcLine === "function") {
             var candidate = getFestivalNpcLine(npc.id, state);
-            if (candidate && Math.random() < 0.65) festLine = candidate;
+            if (candidate && Random.chance(0.65)) festLine = candidate;
           }
           // 投资持仓态度变化（P1.6）：非节日/生日时35%概率触发
           var investLine = null;
-          if (!isBirthday && !festLine && Math.random() < 0.35) {
+          if (!isBirthday && !festLine && Random.chance(0.35)) {
             investLine = getInvestmentContextLine(npc.id, state);
           }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine
-              : festLine ||
-                investLine ||
-                npc.talkLines[Math.floor(Math.random() * npc.talkLines.length)];
+              : festLine || investLine || Random.fromArray(npc.talkLines);
           const bdTag = isBirthday ? " 🎂" : "";
           StateManager.addMessage(
             `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})`,
@@ -3059,7 +3054,7 @@ function doStreetJob(job) {
       pay = Math.floor(pay * npcMult);
       // 偶尔显示提示
       if (
-        Math.random() < 0.25 &&
+        Random.chance(0.25) &&
         typeof getNpcPresenceBonusDesc === "function"
       ) {
         var npcDesc = getNpcPresenceBonusDesc(
@@ -3089,7 +3084,7 @@ function doStreetJob(job) {
       var synPay = Math.floor(pay * synBonus);
       if (synPay > 0) {
         pay += synPay;
-        if (Math.random() < 0.3) {
+        if (Random.chance(0.3)) {
           StateManager.addMessage(
             "✨ 技能协同加成 +" + synPay + "（技能组合效果）",
             "info",
@@ -3275,15 +3270,15 @@ function doStreetJob(job) {
   if (vendingJobs.includes(job.id) && state.chengguan) {
     state.chengguan.heat = Math.min(
       100,
-      state.chengguan.heat + 3 + Math.floor(Math.random() * 5),
+      state.chengguan.heat + 3 + Random.int(0, 4),
     );
     const raidChance = (state.chengguan.heat / 100) * 0.35;
-    if (Math.random() < raidChance) {
+    if (Random.chance(raidChance)) {
       state.chengguan.lastRaid = state.player.day;
       state.chengguan.heat = Math.max(0, state.chengguan.heat - 25);
       if (state.chengguan.warnings >= 2 || state.chengguan.relationship < -30) {
         // 没收货物+罚款
-        const fine = 80 + Math.floor(Math.random() * 200);
+        const fine = 80 + Random.int(0, 199);
         state.resources.cash = Math.max(0, state.resources.cash - fine);
         state.chengguan.warnings = 0;
         StateManager.addMessage(
@@ -3312,7 +3307,7 @@ function doStreetJob(job) {
         : 1.0;
     if (
       job.risk.injury &&
-      Math.random() < Math.min(1, job.risk.injury * riskMod * certReduction)
+      Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
     ) {
       state.status.injured = true;
       state.status.health = Math.max(0, state.status.health - 15);
@@ -3324,7 +3319,7 @@ function doStreetJob(job) {
     }
     if (
       job.risk.illness &&
-      Math.random() < Math.min(1, (job.risk.illness || 0) * riskMod)
+      Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
     ) {
       state.status.sick = true;
       state.status.health = Math.max(0, state.status.health - 10);
@@ -3482,7 +3477,7 @@ function consumeAP(cost) {
   // Per-action 随机事件判定 (6%基础概率)
   if (!state._pendingEvent) {
     const phase = state.player.phase === "corporate" ? "corporate" : "street";
-    if (Math.random() < 0.06) {
+    if (Random.chance(0.06)) {
       if (typeof queueRandomEvent === "function")
         queueRandomEvent(state, phase);
     }
@@ -3517,7 +3512,7 @@ function triggerRandomEvent(state) {
     { text: "天气突然变冷，街上的行人少了", type: "info" },
     { text: "邻居抱怨最近废品价格又跌了", type: "warning" },
   ];
-  const evt = events[Math.floor(Math.random() * events.length)];
+  const evt = Random.fromArray(events);
   StateManager.addMessage(`📰 ${evt.text}`, evt.type);
 }
 
