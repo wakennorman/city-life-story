@@ -22308,6 +22308,10 @@ const HOUSING_TIERS = [
     icon: "🌃",
     hygieneBonus: 0,
     happinessBonus: 0,
+    canCook: false,
+    canBathe: false,
+    canRest: false,
+    homeType: "none",
   },
   {
     tier: 1,
@@ -22320,6 +22324,10 @@ const HOUSING_TIERS = [
     desc: "城中村合租屋的一个床位，好歹有个遮风挡雨的地方。",
     icon: "🛏️",
     happinessBonus: 0,
+    canCook: false,
+    canBathe: false,
+    canRest: true,
+    homeType: "shared",
   },
   {
     tier: 2,
@@ -22332,6 +22340,10 @@ const HOUSING_TIERS = [
     happinessBonus: 5,
     desc: "独立小单间，有床有柜子，私密多了。",
     icon: "🚪",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "single",
   },
   {
     tier: 3,
@@ -22344,6 +22356,10 @@ const HOUSING_TIERS = [
     happinessBonus: 10,
     desc: "正经的一室一厅，独立卫浴，生活质量质的飞跃。",
     icon: "🏠",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "full",
   },
   {
     tier: 4,
@@ -22356,6 +22372,10 @@ const HOUSING_TIERS = [
     happinessBonus: 20,
     desc: "市中心高档公寓，健身房、游泳池一应俱全，人上人的住所。",
     icon: "🏙️",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "luxury",
   },
 ];
 
@@ -26687,6 +26707,7 @@ const AMENITIES = [
     desc: "自己买菜下厨，干净卫生，省钱又健康。（需消耗食材）",
     requiresIngredients: true,
     useRecipeSelection: true,
+    homeOnly: true,
   },
 
   // ============================================================
@@ -26773,6 +26794,7 @@ const AMENITIES = [
     primary: { hygiene: 50, happiness: 4 },
     bonusPool: [{ stat: "happiness", chance: 0.15, amt: 3 }],
     desc: "自家浴室，热水自由，泡到舒服为止。（水电费¥2）",
+    homeOnly: true,
   },
 
   // ============================================================
@@ -26937,12 +26959,13 @@ const AMENITIES = [
     primary: { fatigue: -32, happiness: 3 },
     bonusPool: [{ stat: "mental", chance: 0.1, amt: 0.3 }],
     desc: "自家床铺，躺到不想起。（水电费¥1）",
+    homeOnly: true,
   },
 ];
 
 // ====== 查询/工具函数 ======
 
-/** 获取自住房所在地点 key（无自住房则返回 null） */
+/** 获取自住房所在地点 key（无自住房则返回 null）—— 旧接口，兼容保留 */
 function getSelfLiveLocKey(state) {
   if (!state || !state.investment) return null;
   var pid = state.investment.selfLivePropertyId;
@@ -26954,6 +26977,51 @@ function getSelfLiveLocKey(state) {
     }
   }
   return null;
+}
+
+/**
+ * 获取玩家住所所在地点 key（租房/自住统一）
+ * - tier 0 → null（无家可归）
+ * - 自住房存了 loc 字段 → 该地点
+ * - 其他 → "slum"（城中村，默认住所区域）
+ */
+function getHomeLocationKey(state) {
+  if (!state || !state.housing) return null;
+  var tier = state.housing.tier || 0;
+  if (tier <= 0) return null;
+
+  // 自住房优先
+  var selfLoc = getSelfLiveLocKey(state);
+  if (selfLoc) return selfLoc;
+
+  // 默认住所位置
+  return "slum";
+}
+
+/**
+ * 获取玩家可用的家居设施（按住所等级过滤）
+ * @returns {Array} 可用的家居 amenity 列表
+ */
+function getHomeAmenities(state) {
+  if (!state || !state.housing) return [];
+  var tier = state.housing.tier || 0;
+  var house =
+    (typeof HOUSING_TIERS !== "undefined" && HOUSING_TIERS[tier]) || null;
+  if (!house) return [];
+
+  var result = [];
+  for (var i = 0; i < AMENITIES.length; i++) {
+    var a = AMENITIES[i];
+    if (!a.homeOnly) continue;
+    if (a.loc !== "*selfLive") continue;
+    // 按 tier 能力过滤
+    if (a.type === "food" && !house.canCook) continue;
+    if (a.type === "bath" && !house.canBathe) continue;
+    if (a.type === "rest" && !house.canRest) continue;
+    // 休息总是可用，不用过滤
+    result.push(a);
+  }
+  return result;
 }
 
 /** 获取在指定地点可用的 amenities（按 type 过滤可选） */
@@ -26982,14 +27050,15 @@ function getNearestAmenitiesByType(state, type, limit) {
   limit = limit || 3;
   var curLoc = (state && state.trade && state.trade.currentLocation) || "slum";
   var selfLoc = getSelfLiveLocKey(state);
+  var homeLoc = getHomeLocationKey(state);
 
   // 收集所有候选 + 计算距离
   var candidates = [];
   for (var i = 0; i < AMENITIES.length; i++) {
     var a = AMENITIES[i];
     if (a.type !== type) continue;
-    var actualLoc = a.loc === "*selfLive" ? selfLoc : a.loc;
-    if (!actualLoc) continue; // 自住房未拥有则跳过
+    var actualLoc = a.loc === "*selfLive" ? selfLoc || homeLoc : a.loc;
+    if (!actualLoc) continue;
     var hops =
       typeof getLocationHops === "function"
         ? getLocationHops(curLoc, actualLoc)
@@ -32352,8 +32421,12 @@ function travelToAmenityAndUse(amenityId) {
   var actualLoc = a.loc;
   if (a.loc === "*selfLive") {
     actualLoc = getSelfLiveLocKey(state);
+    // 无自住房时尝试普通住所定位（租房也能做饭/洗澡）
+    if (!actualLoc && typeof getHomeLocationKey === "function") {
+      actualLoc = getHomeLocationKey(state);
+    }
     if (!actualLoc) {
-      StateManager.addMessage("❌ 你还没有自住房。", "warning");
+      StateManager.addMessage("❌ 你还没有住所。", "warning");
       return;
     }
   }
@@ -35934,6 +36007,7 @@ function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
     addStreetExtras(state, actions);
     addAmenityActions(state, actions);
+    addHomeActions(state, actions);
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
   }
@@ -35962,6 +36036,98 @@ function addExtraActions(state, actions) {
   if (!state.status.injured && !state.status.sick) {
     state.flags._insurancePaidThisCycle = false;
   }
+}
+
+// ========== 家居行动（回住所做饭/洗澡/休息） ==========
+
+/**
+ * 添加「回住所」家居行动到 action 列表。
+ * 根据住所等级显示可用的做饭/洗澡/休息选项。
+ * 旅行AP = 从当前位置到住所位置的路径花费。
+ */
+function addHomeActions(state, actions) {
+  var tier = state.housing ? state.housing.tier || 0 : 0;
+  if (tier <= 0) return;
+
+  var homeLoc = typeof getHomeLocationKey === "function" ? getHomeLocationKey(state) : null;
+  if (!homeLoc) return;
+
+  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  if (homeAmenities.length === 0) return;
+
+  var curLoc = state.trade.currentLocation;
+  var travelAp = typeof getTravelApCost === "function"
+    ? getTravelApCost(curLoc, homeLoc, state)
+    : curLoc === homeLoc ? 0 : 10;
+  var isAtHome = curLoc === homeLoc;
+
+  var cookingAvail = homeAmenities.some(function (a) { return a.id.indexOf("cook") >= 0; });
+  var bathAvail = homeAmenities.some(function (a) { return a.id.indexOf("bath") >= 0; });
+  var restAvail = homeAmenities.some(function (a) { return a.id.indexOf("nap") >= 0; });
+  var icons = [];
+  if (cookingAvail) icons.push("🍳");
+  if (bathAvail) icons.push("🚿");
+  if (restAvail) icons.push("🛏️");
+
+  actions.push({
+    id: "go_home",
+    name: "🏠 回住所",
+    icon: "🏠",
+    desc: (isAtHome ? "在家中" : "回到住所") + " — " + icons.join(" ") +
+      " | " + (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "AP回家"),
+    apCost: travelAp,
+    category: "restore",
+    handler: function () {
+      var s = StateManager.getState();
+      showHomeActionsModal(s);
+    },
+  });
+}
+
+/** 显示家居设施选择弹窗 */
+function showHomeActionsModal(state) {
+  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  if (homeAmenities.length === 0) {
+    StateManager.addMessage("🏠 住所没有可用的设施。", "info");
+    return;
+  }
+  var html = '<div style="font-size:13px;margin-bottom:10px;color:var(--text-secondary);">选择一项居家活动：</div>';
+  for (var i = 0; i < homeAmenities.length; i++) {
+    var a = homeAmenities[i];
+    var pd = [];
+    if (a.primary) {
+      for (var k in a.primary) {
+        if (!a.primary.hasOwnProperty(k)) continue;
+        var amt = a.primary[k];
+        var lb = { hunger: "饥饱", fatigue: "疲劳", hygiene: "卫生", happiness: "心情" }[k] || k;
+        pd.push(lb + (amt >= 0 ? "+" : "") + amt);
+      }
+    }
+    html += '<div class="action-card" style="margin-bottom:8px;padding:10px;cursor:pointer;border:1px solid var(--border);border-radius:8px;" data-amenity-id="' + a.id + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<span style="font-weight:600;">' + (a.icon || "🏠") + " " + a.name + "</span>" +
+      '<span style="font-size:11px;color:var(--text-muted);">⚡' + (a.ap || 0) + "AP | " + (a.cost > 0 ? "¥" + a.cost : "免费") + "</span></div>" +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + pd.join(" → ") + "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' + a.desc + "</div></div>';
+  }
+  showModal({ title: "🏠 在住所", body: html, buttons: [{ text: "出门", cls: "", callback: function () {} }] });
+  setTimeout(function () {
+    var ov = document.querySelector(".modal-overlay");
+    if (!ov) return;
+    for (var j = 0; j < homeAmenities.length; j++) {
+      (function (aid) {
+        var el = ov.querySelector('[data-amenity-id="' + aid + '"]');
+        if (el) {
+          el.addEventListener("click", function () {
+            var o = document.querySelector(".modal-overlay");
+            if (o && o.parentNode) o.parentNode.removeChild(o);
+            if (typeof travelToAmenityAndUse === "function") travelToAmenityAndUse(aid);
+            else if (typeof useAmenity === "function") useAmenity(aid);
+          });
+        }
+      })(homeAmenities[j].id);
+    }
+  }, 50);
 }
 </script>
     <script>/**
@@ -36104,7 +36270,11 @@ const DAILY_PIPELINE = [
           StateManager.addMessage("⚠️ 付不起仓库租金，仓库被收回。", "danger");
           state.housing.storageRented = false;
           state.housing.storageCapacity = 0;
-          var baseCap = [20, 50, 100, 200][state.housing.tier || 0];
+          var houseInfo =
+            typeof getCurrentHousing === "function"
+              ? getCurrentHousing(state)
+              : null;
+          var baseCap = houseInfo ? houseInfo.capacity : 20;
           state.inventory.capacity = baseCap;
         }
       }
@@ -40999,10 +41169,28 @@ function sellProperty(propId) {
   }
   if (idx < 0) return;
   var prop = inv.properties[idx];
+
+  // 如果卖的是自住房，重置自住状态
+  var wasSelfLived = inv.selfLivePropertyId === prop.id;
+  if (wasSelfLived) {
+    inv.selfLivePropertyId = null;
+    // 降级住所到 tier 1（合租床位），日租恢复
+    if (typeof HOUSING_TIERS !== "undefined") {
+      state.housing.tier = 1;
+      state.inventory.capacity =
+        (HOUSING_TIERS[1] ? HOUSING_TIERS[1].capacity : 50) +
+        (state.housing.storageCapacity || 0);
+    }
+    StateManager.addMessage("🏠 你卖掉了自住房，搬回合租床位。", "warning");
+  }
+
   var net = prop.currentPrice - Math.round(prop.currentPrice * 0.05);
   state.resources.cash += net;
   inv.properties.splice(idx, 1);
-  StateManager.addMessage("出售" + prop.name + " 到手" + net, "success");
+  StateManager.addMessage(
+    "出售" + prop.name + " 到手¥" + net.toLocaleString(),
+    "success",
+  );
 }
 
 function buyCar(carId) {
@@ -42055,7 +42243,7 @@ function renderProperties(area, inv, state, parent) {
   tipDiv.style.cssText =
     "font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 10px;margin-bottom:10px;";
   tipDiv.textContent =
-    "💡 租房 = 日常居住开销（在城中村升级住所）；买房 = 投资出租/自住，持有后可切换「自住」免日租并升格住所。";
+    "💡 租房 = 日常居住开销（在城中村升级住所）；买房 = 投资，可切换「自住」模式免日租并提升生活品质。自住房不产生租金，其他房产照常收租。";
   area.appendChild(tipDiv);
 
   // === 🏡 高档租赁区（供玩家作为租客升格到更高tier） ===
@@ -42215,7 +42403,7 @@ function renderProperties(area, inv, state, parent) {
           <span style="min-width:70px;text-align:right;">买入 ¥${buyP.toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${clr};">现值 ¥${cur.toLocaleString()}</span>
           <span style="min-width:80px;text-align:right;color:${clr};font-weight:600;">${sign}¥${Math.round(diff).toLocaleString()} (${sign}${pct}%)</span>
-          <span style="min-width:55px;text-align:right;font-size:10px;">${isSelf ? '<span style="color:var(--info,#3498db);">免日租</span>' : "月租 ¥" + monthlyRent.toLocaleString()}</span>
+          <span style="min-width:55px;text-align:right;font-size:10px;">${isSelf ? '<span style="color:var(--info,#3498db);">自住(无租金)</span>' : "月租 ¥" + monthlyRent.toLocaleString()}</span>
           <button class="btn btn-sm ${isSelf ? "btn-secondary" : "btn-info"} toggle-self-live" data-id="${p.id}" style="font-size:10px;">${isSelf ? "改出租" : "自住"}</button>
           <button class="btn btn-sm btn-danger sell-prop" data-id="${p.id}" style="font-size:10px;">出售</button>
         </div>`;
@@ -55319,20 +55507,44 @@ function renderLocation(state) {
         '<span style="font-size:11px;color:var(--text-muted);">没有可通行路线</span>';
     }
   }
-  const HOUSING_NAMES = ["🌃 露宿街头", "🛏️ 合租床位", "🚪 单间", "🏠 一居室"];
-  const houseName = HOUSING_NAMES[state.housing?.tier || 0] || HOUSING_NAMES[0];
-  const houseEl = document.getElementById("housing-info");
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData
+    ? houseData.icon + " " + houseData.name
+    : "🌃 露宿街头";
+  var curRent = houseData ? houseData.rent : 0;
+  var houseEl = document.getElementById("housing-info");
   if (houseEl) {
     const totalCap = state.inventory.capacity;
     const itemCount = (state.inventory.items || []).reduce(
       (s, i) => s + i.qty,
       0,
     );
-    const HOUSING_RENTS = [0, 12, 25, 50];
-    const curRent = HOUSING_RENTS[state.housing?.tier || 0] || 0;
+    // 家居设施指示
+    var homeIndicators = "";
+    if (houseData) {
+      var homeIcons = [];
+      if (houseData.canCook) homeIcons.push("🍳");
+      if (houseData.canBathe) homeIcons.push("🚿");
+      if (houseData.canRest && state.housing.tier >= 1) homeIcons.push("🛏️");
+      if (homeIcons.length > 0) {
+        homeIndicators =
+          '<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">' +
+          homeIcons.join("") +
+          "</span>";
+      }
+    }
+    // 自住房提示
+    var selfLiveNote = "";
+    if (state.investment && state.investment.selfLivePropertyId != null) {
+      selfLiveNote =
+        '<span style="font-size:10px;color:var(--info,#3498db);margin-left:4px;">🏠自住</span>';
+    }
     houseEl.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-size:12px;">${houseName}</span>
+        <span style="font-size:12px;">${houseName}${selfLiveNote}${homeIndicators}</span>
         ${curRent > 0 ? `<span style="font-size:10px;color:var(--warning);">日租¥${curRent}</span>` : ""}
       </div>
       <div style="font-size:11px;color:var(--text-muted);">

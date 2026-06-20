@@ -2746,3 +2746,81 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 | `src/js/main.js`                 | 批发进货/买卖商品名称精简+NPC/住所/仓储/装备商店去重图标 |
 | `src/css/style.css`              | 消息日志缩小+卡片样式标准化+content-area间距调整         |
 | `src/js/phase2/investment.js`    | stdInvBtns辅助函数+4个子Tab按钮标准化                    |
+
+## 2026-06-21 变更记录 — 住房系统全面改造（买房可住 + 做饭系统）
+
+### 改造背景
+
+1. **自住房与租房关系混乱**：买的房只能选「住」或「租」的二元切换，无混合模式
+2. **家居设施完全不可用**：`*selfLive` 定位因房产无 `loc` 字段永远返回 null，在家做饭/洗澡/休息功能从未实际生效
+3. **侧边栏硬编码数组缺少 tier 4**：`HOUSING_NAMES`/`HOUSING_RENTS` 只到 tier 3，豪华公寓的日租¥150 不显示
+
+### 设计方案
+
+| 决策         | 结论                                                            |
+| ------------ | --------------------------------------------------------------- |
+| 家居行动入口 | Action Tab「🏠 回住所」按钮，根据距离扣AP                       |
+| 自住房收入   | 零收入（已留扩展口：`rooms`/`rentedRooms`/`roomRent` 字段注释） |
+| 合租能否做饭 | ❌ 不能（tier 1），需 tier 2+ 单间以上                          |
+| 家居扣AP模式 | 由现有 `travelToAmenityAndUse` 统一处理旅行AP+行动AP            |
+
+### 修改文件
+
+**`src/js/data/items.js`** — HOUSING_TIERS 增强
+
+- 每级新增 `canCook`/`canBathe`/`canRest`/`homeType` 字段
+- Tier 0: 全部 false, homeType:none
+- Tier 1: canRest:true 其余false, homeType:shared
+- Tier 2-4: 全部 true, homeType:single/full/luxury
+
+**`src/js/data/amenities.js`** — 住所定位 + 家居设施注册
+
+- 新增 `getHomeLocationKey(state)`：tier0→null, 自住房→loc, 默认→"slum"
+- 新增 `getHomeAmenities(state)`：按 canCook/canBathe/canRest 过滤 `*selfLive` 设施
+- 给 `selfhome_cook`/`selfhome_bath`/`selfhome_nap` 加 `homeOnly: true` 标签
+- `getNearestAmenitiesByType` 增加 `getHomeLocationKey` 回退
+
+**`src/js/phase1/actions_extra.js`** — 家居行动生成
+
+- 新增 `addHomeActions(state, actions)`：计算旅行AP，添加「回住所」行动卡
+- 新增 `showHomeActionsModal(state)`：弹窗展示可用家居设施列表
+- 在 `addExtraActions` 中调用
+
+**`src/js/phase1/critical.js`** — 家居设施使用
+
+- `useAmenity` 中 `*selfLive` 定位增加 `getHomeLocationKey` 回退
+- 租房者（tier 2+）也可使用在家做饭/洗澡/休息
+
+**`src/js/ui/render.js`** — 侧边栏 Bug 修复
+
+- 硬编码 `HOUSING_NAMES`/`HOUSING_RENTS` 数组替换为动态 `HOUSING_TIERS` 读取
+- 侧边栏增加 🍳🚿🛏️ 家居设施可用性指示器
+- 自住房显示「🏠自住」标签
+
+**`src/js/phase2/investment.js`** — 自住销售 Bug 修复
+
+- `sellProperty()`：卖出自住房时重置 `selfLivePropertyId = null`，降级住所到 tier 1
+- `renderProperties()`：自住标签改为「自住(无租金)」
+
+**`src/js/phase1/daily_pipeline.js`** — 硬编码数组修复
+
+- 仓库收回时容量计算改为 `getCurrentHousing(state).capacity`
+
+### 扩展口说明
+
+```js
+// state.investment.properties[] 预留字段（本次未实现）：
+// rooms: 3,        // 总房间数
+// rentedRooms: 0,  // 已出租间数
+// roomRent: 800,   // 单间月租
+```
+
+### 验证
+
+- tier 0：Action Tab 无「回住所」按钮
+- tier 1：只有「在家休息」可用，无做饭/洗澡
+- tier 2+：做饭/洗澡/休息全部可用
+- 在城中村时回家AP = 0
+- 买房子设自住 → 日租免了，侧边栏显示房子名+自住标签
+- 卖掉自住房 → 状态重置，搬回合租床位
+- 侧边栏显示 tier 4 豪华公寓名字和日租¥150

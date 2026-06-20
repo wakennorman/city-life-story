@@ -475,6 +475,10 @@ const HOUSING_TIERS = [
     icon: "🌃",
     hygieneBonus: 0,
     happinessBonus: 0,
+    canCook: false,
+    canBathe: false,
+    canRest: false,
+    homeType: "none",
   },
   {
     tier: 1,
@@ -487,6 +491,10 @@ const HOUSING_TIERS = [
     desc: "城中村合租屋的一个床位，好歹有个遮风挡雨的地方。",
     icon: "🛏️",
     happinessBonus: 0,
+    canCook: false,
+    canBathe: false,
+    canRest: true,
+    homeType: "shared",
   },
   {
     tier: 2,
@@ -499,6 +507,10 @@ const HOUSING_TIERS = [
     happinessBonus: 5,
     desc: "独立小单间，有床有柜子，私密多了。",
     icon: "🚪",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "single",
   },
   {
     tier: 3,
@@ -511,6 +523,10 @@ const HOUSING_TIERS = [
     happinessBonus: 10,
     desc: "正经的一室一厅，独立卫浴，生活质量质的飞跃。",
     icon: "🏠",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "full",
   },
   {
     tier: 4,
@@ -523,6 +539,10 @@ const HOUSING_TIERS = [
     happinessBonus: 20,
     desc: "市中心高档公寓，健身房、游泳池一应俱全，人上人的住所。",
     icon: "🏙️",
+    canCook: true,
+    canBathe: true,
+    canRest: true,
+    homeType: "luxury",
   },
 ];
 

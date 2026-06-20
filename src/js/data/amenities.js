@@ -149,6 +149,7 @@ const AMENITIES = [
     desc: "自己买菜下厨，干净卫生，省钱又健康。（需消耗食材）",
     requiresIngredients: true,
     useRecipeSelection: true,
+    homeOnly: true,
   },
 
   // ============================================================
@@ -235,6 +236,7 @@ const AMENITIES = [
     primary: { hygiene: 50, happiness: 4 },
     bonusPool: [{ stat: "happiness", chance: 0.15, amt: 3 }],
     desc: "自家浴室，热水自由，泡到舒服为止。（水电费¥2）",
+    homeOnly: true,
   },
 
   // ============================================================
@@ -399,12 +401,13 @@ const AMENITIES = [
     primary: { fatigue: -32, happiness: 3 },
     bonusPool: [{ stat: "mental", chance: 0.1, amt: 0.3 }],
     desc: "自家床铺，躺到不想起。（水电费¥1）",
+    homeOnly: true,
   },
 ];
 
 // ====== 查询/工具函数 ======
 
-/** 获取自住房所在地点 key（无自住房则返回 null） */
+/** 获取自住房所在地点 key（无自住房则返回 null）—— 旧接口，兼容保留 */
 function getSelfLiveLocKey(state) {
   if (!state || !state.investment) return null;
   var pid = state.investment.selfLivePropertyId;
@@ -416,6 +419,51 @@ function getSelfLiveLocKey(state) {
     }
   }
   return null;
+}
+
+/**
+ * 获取玩家住所所在地点 key（租房/自住统一）
+ * - tier 0 → null（无家可归）
+ * - 自住房存了 loc 字段 → 该地点
+ * - 其他 → "slum"（城中村，默认住所区域）
+ */
+function getHomeLocationKey(state) {
+  if (!state || !state.housing) return null;
+  var tier = state.housing.tier || 0;
+  if (tier <= 0) return null;
+
+  // 自住房优先
+  var selfLoc = getSelfLiveLocKey(state);
+  if (selfLoc) return selfLoc;
+
+  // 默认住所位置
+  return "slum";
+}
+
+/**
+ * 获取玩家可用的家居设施（按住所等级过滤）
+ * @returns {Array} 可用的家居 amenity 列表
+ */
+function getHomeAmenities(state) {
+  if (!state || !state.housing) return [];
+  var tier = state.housing.tier || 0;
+  var house =
+    (typeof HOUSING_TIERS !== "undefined" && HOUSING_TIERS[tier]) || null;
+  if (!house) return [];
+
+  var result = [];
+  for (var i = 0; i < AMENITIES.length; i++) {
+    var a = AMENITIES[i];
+    if (!a.homeOnly) continue;
+    if (a.loc !== "*selfLive") continue;
+    // 按 tier 能力过滤
+    if (a.type === "food" && !house.canCook) continue;
+    if (a.type === "bath" && !house.canBathe) continue;
+    if (a.type === "rest" && !house.canRest) continue;
+    // 休息总是可用，不用过滤
+    result.push(a);
+  }
+  return result;
 }
 
 /** 获取在指定地点可用的 amenities（按 type 过滤可选） */
@@ -444,14 +492,15 @@ function getNearestAmenitiesByType(state, type, limit) {
   limit = limit || 3;
   var curLoc = (state && state.trade && state.trade.currentLocation) || "slum";
   var selfLoc = getSelfLiveLocKey(state);
+  var homeLoc = getHomeLocationKey(state);
 
   // 收集所有候选 + 计算距离
   var candidates = [];
   for (var i = 0; i < AMENITIES.length; i++) {
     var a = AMENITIES[i];
     if (a.type !== type) continue;
-    var actualLoc = a.loc === "*selfLive" ? selfLoc : a.loc;
-    if (!actualLoc) continue; // 自住房未拥有则跳过
+    var actualLoc = a.loc === "*selfLive" ? selfLoc || homeLoc : a.loc;
+    if (!actualLoc) continue;
     var hops =
       typeof getLocationHops === "function"
         ? getLocationHops(curLoc, actualLoc)

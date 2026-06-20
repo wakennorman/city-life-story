@@ -1687,6 +1687,7 @@ function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
     addStreetExtras(state, actions);
     addAmenityActions(state, actions);
+    addHomeActions(state, actions);
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
   }
@@ -1715,4 +1716,96 @@ function addExtraActions(state, actions) {
   if (!state.status.injured && !state.status.sick) {
     state.flags._insurancePaidThisCycle = false;
   }
+}
+
+// ========== 家居行动（回住所做饭/洗澡/休息） ==========
+
+/**
+ * 添加「回住所」家居行动到 action 列表。
+ * 根据住所等级显示可用的做饭/洗澡/休息选项。
+ * 旅行AP = 从当前位置到住所位置的路径花费。
+ */
+function addHomeActions(state, actions) {
+  var tier = state.housing ? state.housing.tier || 0 : 0;
+  if (tier <= 0) return;
+
+  var homeLoc = typeof getHomeLocationKey === "function" ? getHomeLocationKey(state) : null;
+  if (!homeLoc) return;
+
+  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  if (homeAmenities.length === 0) return;
+
+  var curLoc = state.trade.currentLocation;
+  var travelAp = typeof getTravelApCost === "function"
+    ? getTravelApCost(curLoc, homeLoc, state)
+    : curLoc === homeLoc ? 0 : 10;
+  var isAtHome = curLoc === homeLoc;
+
+  var cookingAvail = homeAmenities.some(function (a) { return a.id.indexOf("cook") >= 0; });
+  var bathAvail = homeAmenities.some(function (a) { return a.id.indexOf("bath") >= 0; });
+  var restAvail = homeAmenities.some(function (a) { return a.id.indexOf("nap") >= 0; });
+  var icons = [];
+  if (cookingAvail) icons.push("🍳");
+  if (bathAvail) icons.push("🚿");
+  if (restAvail) icons.push("🛏️");
+
+  actions.push({
+    id: "go_home",
+    name: "🏠 回住所",
+    icon: "🏠",
+    desc: (isAtHome ? "在家中" : "回到住所") + " — " + icons.join(" ") +
+      " | " + (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "AP回家"),
+    apCost: travelAp,
+    category: "restore",
+    handler: function () {
+      var s = StateManager.getState();
+      showHomeActionsModal(s);
+    },
+  });
+}
+
+/** 显示家居设施选择弹窗 */
+function showHomeActionsModal(state) {
+  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  if (homeAmenities.length === 0) {
+    StateManager.addMessage("🏠 住所没有可用的设施。", "info");
+    return;
+  }
+  var html = '<div style="font-size:13px;margin-bottom:10px;color:var(--text-secondary);">选择一项居家活动：</div>';
+  for (var i = 0; i < homeAmenities.length; i++) {
+    var a = homeAmenities[i];
+    var pd = [];
+    if (a.primary) {
+      for (var k in a.primary) {
+        if (!a.primary.hasOwnProperty(k)) continue;
+        var amt = a.primary[k];
+        var lb = { hunger: "饥饱", fatigue: "疲劳", hygiene: "卫生", happiness: "心情" }[k] || k;
+        pd.push(lb + (amt >= 0 ? "+" : "") + amt);
+      }
+    }
+    html += '<div class="action-card" style="margin-bottom:8px;padding:10px;cursor:pointer;border:1px solid var(--border);border-radius:8px;" data-amenity-id="' + a.id + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<span style="font-weight:600;">' + (a.icon || "🏠") + " " + a.name + "</span>" +
+      '<span style="font-size:11px;color:var(--text-muted);">⚡' + (a.ap || 0) + "AP | " + (a.cost > 0 ? "¥" + a.cost : "免费") + "</span></div>" +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + pd.join(" → ") + "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' + a.desc + "</div></div>';
+  }
+  showModal({ title: "🏠 在住所", body: html, buttons: [{ text: "出门", cls: "", callback: function () {} }] });
+  setTimeout(function () {
+    var ov = document.querySelector(".modal-overlay");
+    if (!ov) return;
+    for (var j = 0; j < homeAmenities.length; j++) {
+      (function (aid) {
+        var el = ov.querySelector('[data-amenity-id="' + aid + '"]');
+        if (el) {
+          el.addEventListener("click", function () {
+            var o = document.querySelector(".modal-overlay");
+            if (o && o.parentNode) o.parentNode.removeChild(o);
+            if (typeof travelToAmenityAndUse === "function") travelToAmenityAndUse(aid);
+            else if (typeof useAmenity === "function") useAmenity(aid);
+          });
+        }
+      })(homeAmenities[j].id);
+    }
+  }, 50);
 }

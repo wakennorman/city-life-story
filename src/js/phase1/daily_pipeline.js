@@ -138,7 +138,11 @@ const DAILY_PIPELINE = [
           StateManager.addMessage("⚠️ 付不起仓库租金，仓库被收回。", "danger");
           state.housing.storageRented = false;
           state.housing.storageCapacity = 0;
-          var baseCap = [20, 50, 100, 200][state.housing.tier || 0];
+          var houseInfo =
+            typeof getCurrentHousing === "function"
+              ? getCurrentHousing(state)
+              : null;
+          var baseCap = houseInfo ? houseInfo.capacity : 20;
           state.inventory.capacity = baseCap;
         }
       }

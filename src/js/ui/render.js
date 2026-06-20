@@ -744,20 +744,44 @@ function renderLocation(state) {
         '<span style="font-size:11px;color:var(--text-muted);">没有可通行路线</span>';
     }
   }
-  const HOUSING_NAMES = ["🌃 露宿街头", "🛏️ 合租床位", "🚪 单间", "🏠 一居室"];
-  const houseName = HOUSING_NAMES[state.housing?.tier || 0] || HOUSING_NAMES[0];
-  const houseEl = document.getElementById("housing-info");
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData
+    ? houseData.icon + " " + houseData.name
+    : "🌃 露宿街头";
+  var curRent = houseData ? houseData.rent : 0;
+  var houseEl = document.getElementById("housing-info");
   if (houseEl) {
     const totalCap = state.inventory.capacity;
     const itemCount = (state.inventory.items || []).reduce(
       (s, i) => s + i.qty,
       0,
     );
-    const HOUSING_RENTS = [0, 12, 25, 50];
-    const curRent = HOUSING_RENTS[state.housing?.tier || 0] || 0;
+    // 家居设施指示
+    var homeIndicators = "";
+    if (houseData) {
+      var homeIcons = [];
+      if (houseData.canCook) homeIcons.push("🍳");
+      if (houseData.canBathe) homeIcons.push("🚿");
+      if (houseData.canRest && state.housing.tier >= 1) homeIcons.push("🛏️");
+      if (homeIcons.length > 0) {
+        homeIndicators =
+          '<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">' +
+          homeIcons.join("") +
+          "</span>";
+      }
+    }
+    // 自住房提示
+    var selfLiveNote = "";
+    if (state.investment && state.investment.selfLivePropertyId != null) {
+      selfLiveNote =
+        '<span style="font-size:10px;color:var(--info,#3498db);margin-left:4px;">🏠自住</span>';
+    }
     houseEl.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-size:12px;">${houseName}</span>
+        <span style="font-size:12px;">${houseName}${selfLiveNote}${homeIndicators}</span>
         ${curRent > 0 ? `<span style="font-size:10px;color:var(--warning);">日租¥${curRent}</span>` : ""}
       </div>
       <div style="font-size:11px;color:var(--text-muted);">

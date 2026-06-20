@@ -246,8 +246,12 @@ function travelToAmenityAndUse(amenityId) {
   var actualLoc = a.loc;
   if (a.loc === "*selfLive") {
     actualLoc = getSelfLiveLocKey(state);
+    // 无自住房时尝试普通住所定位（租房也能做饭/洗澡）
+    if (!actualLoc && typeof getHomeLocationKey === "function") {
+      actualLoc = getHomeLocationKey(state);
+    }
     if (!actualLoc) {
-      StateManager.addMessage("❌ 你还没有自住房。", "warning");
+      StateManager.addMessage("❌ 你还没有住所。", "warning");
       return;
     }
   }

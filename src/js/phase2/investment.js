@@ -1348,10 +1348,28 @@ function sellProperty(propId) {
   }
   if (idx < 0) return;
   var prop = inv.properties[idx];
+
+  // 如果卖的是自住房，重置自住状态
+  var wasSelfLived = inv.selfLivePropertyId === prop.id;
+  if (wasSelfLived) {
+    inv.selfLivePropertyId = null;
+    // 降级住所到 tier 1（合租床位），日租恢复
+    if (typeof HOUSING_TIERS !== "undefined") {
+      state.housing.tier = 1;
+      state.inventory.capacity =
+        (HOUSING_TIERS[1] ? HOUSING_TIERS[1].capacity : 50) +
+        (state.housing.storageCapacity || 0);
+    }
+    StateManager.addMessage("🏠 你卖掉了自住房，搬回合租床位。", "warning");
+  }
+
   var net = prop.currentPrice - Math.round(prop.currentPrice * 0.05);
   state.resources.cash += net;
   inv.properties.splice(idx, 1);
-  StateManager.addMessage("出售" + prop.name + " 到手" + net, "success");
+  StateManager.addMessage(
+    "出售" + prop.name + " 到手¥" + net.toLocaleString(),
+    "success",
+  );
 }
 
 function buyCar(carId) {
@@ -2404,7 +2422,7 @@ function renderProperties(area, inv, state, parent) {
   tipDiv.style.cssText =
     "font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 10px;margin-bottom:10px;";
   tipDiv.textContent =
-    "💡 租房 = 日常居住开销（在城中村升级住所）；买房 = 投资出租/自住，持有后可切换「自住」免日租并升格住所。";
+    "💡 租房 = 日常居住开销（在城中村升级住所）；买房 = 投资，可切换「自住」模式免日租并提升生活品质。自住房不产生租金，其他房产照常收租。";
   area.appendChild(tipDiv);
 
   // === 🏡 高档租赁区（供玩家作为租客升格到更高tier） ===
@@ -2564,7 +2582,7 @@ function renderProperties(area, inv, state, parent) {
           <span style="min-width:70px;text-align:right;">买入 ¥${buyP.toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${clr};">现值 ¥${cur.toLocaleString()}</span>
           <span style="min-width:80px;text-align:right;color:${clr};font-weight:600;">${sign}¥${Math.round(diff).toLocaleString()} (${sign}${pct}%)</span>
-          <span style="min-width:55px;text-align:right;font-size:10px;">${isSelf ? '<span style="color:var(--info,#3498db);">免日租</span>' : "月租 ¥" + monthlyRent.toLocaleString()}</span>
+          <span style="min-width:55px;text-align:right;font-size:10px;">${isSelf ? '<span style="color:var(--info,#3498db);">自住(无租金)</span>' : "月租 ¥" + monthlyRent.toLocaleString()}</span>
           <button class="btn btn-sm ${isSelf ? "btn-secondary" : "btn-info"} toggle-self-live" data-id="${p.id}" style="font-size:10px;">${isSelf ? "改出租" : "自住"}</button>
           <button class="btn btn-sm btn-danger sell-prop" data-id="${p.id}" style="font-size:10px;">出售</button>
         </div>`;

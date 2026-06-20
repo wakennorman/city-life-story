@@ -31,7 +31,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P0 新闻→投资价格传导桥梁 ✅（2026-06-20 14:00）
+- **最近一次工作**：住房系统全面改造 ✅（2026-06-21 14:00）
+  - **HOUSING_TIERS 增强**：每级加 canCook/canBathe/canRest/homeType
+  - **家居设施修复**：`getHomeLocationKey`/`getHomeAmenities` 使在家做饭/洗澡/休息对租房者（tier 2+）和自住房主均可用
+  - **回住所行动**：Action Tab「🏠 回住所」按钮，根据距离扣AP，弹窗选择家居活动
+  - **侧边栏修复**：硬编码数组改为动态 HOUSING_TIERS 读取，显示🍳🚿🛏️指示器
+  - **sell自住房 Bug 修复**：卖出时重置状态，降级到合租床位
+  - **扩展口**：properties 数组预留 `rooms`/`rentedRooms`/`roomRent` 字段注释
+  - **涉及的7个文件**：items / amenities / actions_extra / critical / render / investment / daily_pipeline
   - **Phase 1 Bug修复**：创业Tab显示/每日运营管线/注册引导
   - **Phase 2 事件系统**：30+创业事件（种子期8/成长期10/成熟期8/行业专属6）
   - **Phase 3 产品深化**：15+产品类别 + 15个功能模块 + 竞争力评分
