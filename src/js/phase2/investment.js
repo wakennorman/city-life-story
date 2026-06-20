@@ -1055,15 +1055,31 @@ function tickInvestmentDaily(state) {
   if (!inv || inv.lastTickDay >= state.player.day) return;
   inv.lastTickDay = state.player.day;
 
+  // ================================================================
+  // 新闻→投资价格传导：计算活跃新闻对各标的的综合影响
+  // ================================================================
+  var newsSummary =
+    typeof getNewsInvestmentSummary === "function"
+      ? getNewsInvestmentSummary(state)
+      : [];
+  var hasNewsDrivers = newsSummary.length > 0;
+
   // 股票/贵金属/期货/基金每日波动
   for (var i = 0; i < INV_STOCKS.length; i++) {
     var s = INV_STOCKS[i];
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
-    m.price = Math.max(
-      0.01,
-      m.price * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility),
-    );
+
+    // 基础随机游走
+    var baseChange = 1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility;
+
+    // 新闻效应乘数
+    var newsMul =
+      typeof getNewsEffectForInvestment === "function"
+        ? getNewsEffectForInvestment(s.symbol, s.industry, s.category, state)
+        : 1.0;
+
+    m.price = Math.max(0.01, m.price * baseChange * newsMul);
     m.price = Math.round(m.price * 100) / 100;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
@@ -1075,13 +1091,18 @@ function tickInvestmentDaily(state) {
       5,
       Math.min(95, (inv.btcFearGreed || 50) + (Math.random() - 0.5) * 10),
     );
+    var btcNewsMul =
+      typeof getNewsEffectForBtc === "function"
+        ? getNewsEffectForBtc(state)
+        : 1.0;
     inv.btcPrice = Math.max(
       1000,
       Math.round(
         inv.btcPrice *
           (1 +
             (Math.random() - 0.5) * 0.08 +
-            ((inv.btcFearGreed - 50) / 50) * 0.02),
+            ((inv.btcFearGreed - 50) / 50) * 0.02) *
+          btcNewsMul,
       ),
     );
     if (!inv.btcHistory) inv.btcHistory = [];
@@ -1095,19 +1116,24 @@ function tickInvestmentDaily(state) {
     }
   }
 
-  // 房产
+  // 房产（受房地产/金融类新闻影响）
+  var propertyNewsMul =
+    typeof getNewsEffectForProperty === "function"
+      ? getNewsEffectForProperty(state)
+      : 1.0;
   for (var p = 0; p < (inv.properties || []).length; p++) {
     var prop = inv.properties[p];
     prop.currentPrice = Math.round(
       (prop.currentPrice || prop.buyPrice) *
-        (1 + prop.appreciation + (Math.random() - 0.5) * 0.002),
+        (1 + prop.appreciation + (Math.random() - 0.5) * 0.002) *
+        propertyNewsMul,
     );
     var isSelfLived = inv.selfLivePropertyId === prop.id;
     if (state.player.day % 30 === 0 && !isSelfLived)
       state.resources.cash += prop.rent || 0;
   }
 
-  // 汽车
+  // 汽车（不受新闻直接影响，维持原状）
   for (var c = 0; c < (inv.cars || []).length; c++) {
     var car = inv.cars[c];
     car.currentPrice = Math.round(
@@ -1115,6 +1141,39 @@ function tickInvestmentDaily(state) {
     );
     if (state.player.day % 30 === 0 && state.resources.cash >= car.maintenance)
       state.resources.cash -= car.maintenance;
+  }
+
+  // ================================================================
+  // 新闻驱动市场消息（仅在强冲击时通知玩家）
+  // ================================================================
+  if (
+    hasNewsDrivers &&
+    typeof hasStrongNewsEffect === "function" &&
+    hasStrongNewsEffect(state)
+  ) {
+    // 只输出最强的一条驱动消息（每日最多一次）
+    if (
+      !state.flags._newsMarketMsgDay ||
+      state.flags._newsMarketMsgDay < state.player.day
+    ) {
+      state.flags._newsMarketMsgDay = state.player.day;
+      // 按强度排序
+      newsSummary.sort(function (a, b) {
+        return b.strength - a.strength;
+      });
+      var top = newsSummary[0];
+      var changeText = top.avgMul > 1 ? "利好推高" : "利空打压";
+      StateManager.addMessage(
+        "📊 市场 " +
+          top.direction +
+          " " +
+          top.headline.slice(0, 20) +
+          "… " +
+          changeText +
+          "相关资产价格",
+        top.avgMul > 1 ? "hint" : "warning",
+      );
+    }
   }
 }
 
@@ -1505,7 +1564,33 @@ function renderMarketSentiment(state, inv) {
     "/100</span>";
   html += "</div>";
 
-  // 当前活跃新闻（最多3条）
+  // 市场驱动摘要
+  if (typeof getNewsInvestmentSummary === "function") {
+    var drivers = getNewsInvestmentSummary(state);
+    if (drivers.length > 0) {
+      // 只显示前2个最强驱动
+      drivers.sort(function (a, b) {
+        return b.strength - a.strength;
+      });
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场驱动：';
+      for (var di = 0; di < Math.min(drivers.length, 2); di++) {
+        var d = drivers[di];
+        html +=
+          '<span style="margin-right:6px;">' +
+          d.direction +
+          '<span style="' +
+          (d.avgMul > 1 ? "color:var(--success);" : "color:var(--danger);") +
+          '">' +
+          (d.avgMul > 1 ? "+" : "") +
+          d.strength +
+          "%</span></span>";
+      }
+      html += "</div>";
+    }
+  }
+
+  // 当前活跃新闻（最多3条）+ 市场驱动指示
   var shownNews = 0;
   for (var k = 0; k < activeNews.length && shownNews < 3; k++) {
     var news = activeNews[k];
@@ -1514,10 +1599,46 @@ function renderMarketSentiment(state, inv) {
       ((news.effects && news.effects.duration) || 5) -
       state.player.day;
     if (daysLeft <= 0) continue;
+
+    // 计算该新闻影响的行业标签
+    var invEffs = (news.effects || {}).investmentEffect || [];
+    var tags = [];
+    for (var te = 0; te < invEffs.length; te++) {
+      var e = invEffs[te];
+      if (e.allStocks) {
+        tags.push("全市场");
+        break;
+      }
+      if (e.btc) {
+        if (tags.indexOf("BTC") < 0) tags.push("BTC");
+        continue;
+      }
+      if (e.industry) {
+        if (tags.indexOf(e.industry) < 0) tags.push(e.industry);
+      }
+      if (e.category) {
+        if (tags.indexOf(e.category) < 0) tags.push(e.category);
+      }
+      if (e.symbols) {
+        for (var si = 0; si < e.symbols.length; si++) {
+          var sym = e.symbols[si];
+          if (tags.indexOf(sym) < 0 && sym.length <= 6) tags.push(sym);
+        }
+      }
+    }
+    var tagHtml =
+      tags.length > 0
+        ? ' <span style="font-size:9px;color:var(--text-muted);">[' +
+          tags.slice(0, 3).join("·") +
+          (tags.length > 3 ? "…" : "") +
+          "]</span>"
+        : "";
+
     html +=
       '<div style="font-size:10px;color:var(--text-light);padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">';
     html +=
       news.headline +
+      tagHtml +
       ' <span style="color:var(--text-muted);">(' +
       daysLeft +
       "天)</span>";
