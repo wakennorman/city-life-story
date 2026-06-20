@@ -1408,10 +1408,10 @@ function buyCar(carId) {
 
 // ============================================================
 //  Canvas 涨跌曲线图
-//  颜色标准：中国市场标准（红涨绿跌）
-//  🔴 红色 = 涨（up/gain）→ var(--danger)
-//  🟢 绿色 = 跌（down/loss）→ var(--success)
-//  与欧美市场（绿涨红跌）相反
+//  颜色标准：沿袭股票板块规则（国际标准 绿涨红跌）
+//  🟢 绿色 = 涨（up/gain）→ var(--success) = #4a9e5c
+//  🔴 红色 = 跌（down/loss）→ var(--danger) = #c4553d
+//  曲线颜色、填充色、涨跌幅数值颜色均与 stock.js renderKLine 一致
 // ============================================================
 function drawPriceChart(canvasId, priceData, color) {
   var canvas =
@@ -1425,7 +1425,7 @@ function drawPriceChart(canvasId, priceData, color) {
   var data = (priceData || []).slice(-20);
   if (data.length < 2) {
     // 无历史数据时：画一条水平线 + 首日上市提示
-    ctx.strokeStyle = color || "#888";
+    ctx.strokeStyle = "#888";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(4, H / 2);
@@ -1439,7 +1439,7 @@ function drawPriceChart(canvasId, priceData, color) {
     var curPrice = null;
     if (priceData && priceData.length === 1) curPrice = priceData[0].price;
     if (curPrice !== null) {
-      ctx.fillStyle = color || "#4fc3f7";
+      ctx.fillStyle = "#4a9e5c";
       ctx.font = "bold 11px sans-serif";
       ctx.fillText("¥" + curPrice.toFixed(2), W / 2, H / 2 + 18);
     }
@@ -1448,6 +1448,15 @@ function drawPriceChart(canvasId, priceData, color) {
 
   var prices = [];
   for (var i = 0; i < data.length; i++) prices.push(data[i].price);
+
+  // 取整体趋势方向：首尾比较，与 stock.js renderKLine 一致
+  var firstPrice = prices[0];
+  var lastPrice = prices[prices.length - 1];
+  var trendUp = lastPrice >= firstPrice;
+
+  // 颜色：绿涨红跌（国际/美股标准），与 stock.js renderKLine 完全一致
+  var lineColor = trendUp ? "var(--success)" : "var(--danger)";
+  var fillColor = trendUp ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)";
 
   var minP = prices[0],
     maxP = prices[0];
@@ -1465,20 +1474,17 @@ function drawPriceChart(canvasId, priceData, color) {
   var chartH = H - padT - padB;
 
   // 网格线
-  if (ctx.strokeStyle) {
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 0.5;
-    for (var i = 0; i < 4; i++) {
-      var y = padT + (chartH / 4) * i;
-      ctx.beginPath();
-      ctx.moveTo(padL, y);
-      ctx.lineTo(W - padR, y);
-      ctx.stroke();
-    }
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 0.5;
+  for (var i = 0; i < 4; i++) {
+    var y = padT + (chartH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(W - padR, y);
+    ctx.stroke();
   }
 
   // 折线
-  var lineColor = color || "#4fc3f7";
   ctx.beginPath();
   ctx.strokeStyle = lineColor;
   ctx.lineWidth = 1.5;
@@ -1500,11 +1506,8 @@ function drawPriceChart(canvasId, priceData, color) {
   }
   ctx.stroke();
 
-  // 渐变填充
-  var grad = ctx.createLinearGradient(0, padT, 0, H - padB);
-  grad.addColorStop(0, lineColor + "30");
-  grad.addColorStop(1, lineColor + "02");
-  ctx.fillStyle = grad;
+  // 渐变填充（与 stock.js renderKLine 的 fillColor 一致）
+  ctx.fillStyle = fillColor;
   ctx.beginPath();
   ctx.moveTo(firstX, H - padB);
   for (var i = 0; i < prices.length; i++) {
@@ -1517,19 +1520,19 @@ function drawPriceChart(canvasId, priceData, color) {
   ctx.closePath();
   ctx.fill();
 
-  // 当前价格
-  var lastPrice = prices[prices.length - 1];
+  // 当前价格 & 涨跌幅
   var prevPrice = prices.length >= 2 ? prices[prices.length - 2] : lastPrice;
   var chg = lastPrice - prevPrice;
   var chgPct = prevPrice !== 0 ? ((chg / prevPrice) * 100).toFixed(2) : "0.00";
   var chgText = (chg >= 0 ? "+" : "") + chgPct + "%";
+  var dayColor = chg >= 0 ? "var(--success)" : "var(--danger)";
 
   ctx.fillStyle = lineColor;
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(lastPrice.toFixed(2), padL + 2, padT + 10);
 
-  ctx.fillStyle = chg >= 0 ? "#c4553d" : "#4a9e5c";
+  ctx.fillStyle = dayColor;
   ctx.font = "9px sans-serif";
   ctx.fillText(chgText, padL + 2, padT + 21);
 }
@@ -1602,7 +1605,7 @@ function renderMarketSentiment(state, inv) {
           '<span style="margin-right:6px;">' +
           d.direction +
           '<span style="' +
-          (d.avgMul > 1 ? "color:var(--danger);" : "color:var(--success);") +
+          (d.avgMul > 1 ? "color:var(--success);" : "color:var(--danger);") +
           '">' +
           (d.avgMul > 1 ? "+" : "") +
           d.strength +
@@ -1757,11 +1760,11 @@ function renderInvestmentTab(state, parent) {
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
     "<span>📈 涨</span>" +
-    '<span style="color:#c4553d;font-weight:bold;">🔴 红</span>' +
+    '<span style="color:var(--success);font-weight:bold;">🟢 绿</span>' +
     '<span style="color:var(--text-muted);">/</span>' +
     "<span>📉 跌</span>" +
-    '<span style="color:#4a9e5c;font-weight:bold;">🟢 绿</span>' +
-    '<span style="color:var(--text-muted);">· 中国市场标准（红涨绿跌）</span>' +
+    '<span style="color:var(--danger);font-weight:bold;">🔴 红</span>' +
+    '<span style="color:var(--text-muted);">· 国际标准（绿涨红跌）· 与股票板块一致</span>' +
     "</div>" +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
     '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
@@ -2277,19 +2280,19 @@ function renderStocks(area, inv, state, parent) {
       stdInvBtns(s.symbol, m.price, h, "10", "100", "买10", "买100") +
       '<canvas id="' +
       cid +
-      '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
     grid.appendChild(card);
   }
 
   area.appendChild(grid);
 
   setTimeout(function () {
-    // Draw charts
+    // Draw charts（颜色由 drawPriceChart 方向判定，不再传固定色）
     for (var i = 0; i < INV_STOCKS.length; i++) {
       var s = INV_STOCKS[i];
       if (s.category !== "股票") continue;
       var m = inv.stockMarket[s.symbol];
-      if (m) drawPriceChart("chart-" + s.symbol, m.history, "#4fc3f7");
+      if (m) drawPriceChart("chart-" + s.symbol, m.history);
     }
     // Bind buy/sell
     area.querySelectorAll(".ibuy").forEach(function (b) {
@@ -2431,7 +2434,7 @@ function renderBtc(area, inv, state, parent) {
       })() +
       '<canvas id="' +
       cid +
-      '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
     grid.appendChild(card);
   }
 
@@ -2440,7 +2443,7 @@ function renderBtc(area, inv, state, parent) {
   setTimeout(function () {
     for (var i = 0; i < cryptos.length; i++) {
       var m = inv.stockMarket[cryptos[i].symbol];
-      if (m) drawPriceChart("chart-" + cryptos[i].symbol, m.history, "#f7931a");
+      if (m) drawPriceChart("chart-" + cryptos[i].symbol, m.history);
     }
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
@@ -2552,7 +2555,7 @@ function renderPrecious(area, inv, state, parent) {
       stdInvBtns(sym, m.price, h, "10", "100", "买10", "买100") +
       '<canvas id="' +
       cid +
-      '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
     grid.appendChild(card);
   }
 
@@ -2561,7 +2564,7 @@ function renderPrecious(area, inv, state, parent) {
   setTimeout(function () {
     for (var i = 0; i < metals.length; i++) {
       var m = inv.stockMarket[metals[i]];
-      if (m) drawPriceChart("chart-" + metals[i], m.history, "#ffd54f");
+      if (m) drawPriceChart("chart-" + metals[i], m.history);
     }
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
@@ -2670,7 +2673,7 @@ function renderFutures(area, inv, state, parent) {
       stdInvBtns(sym, m.price, h, "1", "10", "买1", "买10") +
       '<canvas id="' +
       cid +
-      '" width="200" height="60" style="width:200px;height:60px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
     grid.appendChild(card);
   }
 
@@ -2679,7 +2682,7 @@ function renderFutures(area, inv, state, parent) {
   setTimeout(function () {
     for (var i = 0; i < items.length; i++) {
       var m = inv.stockMarket[items[i]];
-      if (m) drawPriceChart("chart-" + items[i], m.history, "#81c784");
+      if (m) drawPriceChart("chart-" + items[i], m.history);
     }
     area.querySelectorAll(".ibuy").forEach(function (b) {
       b.onclick = function () {
