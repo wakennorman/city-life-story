@@ -12927,6 +12927,13 @@ function showEventModal(evt) {
           if (typeof afterEventApplied === "function") {
             afterEventApplied(evt.id, state);
           }
+        } else if (typeof choice.effect === "function") {
+          // 兼容春节活动事件的 effect 模式（返回 {ok, msg}）
+          var result = choice.effect(state);
+          if (result && result.ok === false) {
+            // 效果失败（如钱不够），不关闭弹窗
+            return;
+          }
         }
       } catch (e) {
         console.error("Event choice apply error:", e);

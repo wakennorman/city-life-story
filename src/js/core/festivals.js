@@ -84,6 +84,25 @@ var SPRING_FESTIVAL_EVENTS = [
           };
         },
       },
+      {
+        text: "🥟 去王大婶家蹭年夜饭",
+        hint: "需好感≥20",
+        effect: function (st) {
+          var rel = st.relationships && st.relationships.aunt_wang;
+          if (!rel || rel.affinity < 20) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            return { ok: false, msg: "和王大婶还不够熟，不好意思去蹭饭。" };
+          }
+          st.needs.hunger = Math.min(100, st.needs.hunger + 35);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+          rel.affinity = Math.min(100, rel.affinity + 3);
+          st.flags._springFestivalAlone = false;
+          return {
+            ok: true,
+            msg: "王大婶热情地拉你坐下，桌上摆着饺子和红烧肉。她说：'一个人在外面不容易，来，多吃点！'饥饱+35，心情+12，好感+3。",
+          };
+        },
+      },
     ],
   },
   {
@@ -158,6 +177,23 @@ var SPRING_FESTIVAL_EVENTS = [
               msg: "商业区没什么临时工作。大年初一大家都休息，你也歇歇吧。",
             };
           }
+        },
+      },
+      {
+        text: "👴 去给老周拜年",
+        hint: "老周喜欢热闹",
+        effect: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (!rel || rel.affinity < 10) {
+            return { ok: false, msg: "你和老周还不熟，冒昧去拜年有点尴尬。" };
+          }
+          st.resources.cash -= 20;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          rel.affinity = Math.min(100, rel.affinity + 4);
+          return {
+            ok: true,
+            msg: "老周看到你来拜年，高兴地拿出花生瓜子招待你。他说：'这城里有个人说说话真好。'心情+8，好感+4。",
+          };
         },
       },
     ],
@@ -329,6 +365,29 @@ var SPRING_FESTIVAL_EVENTS = [
           };
         },
       },
+      {
+        text: "🍽️ 去陈师傅店里吃顿好的",
+        hint: "需好感≥15",
+        effect: function (st) {
+          var rel = st.relationships && st.relationships.chef_chen;
+          if (!rel || rel.affinity < 15) {
+            st.resources.cash -= 40;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 30);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            return { ok: true, msg: "陈师傅的店初四就开了。花¥40吃了顿好饭，饥饱+30。" };
+          }
+          st.resources.cash -= 25;
+          st.needs.hunger = Math.min(100, st.needs.hunger + 40);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+          st.player.fame = Math.min(100, st.player.fame + 1);
+          rel.affinity = Math.min(100, rel.affinity + 3);
+          st.flags._newYearChefMeal = true;
+          return {
+            ok: true,
+            msg: "陈师傅看到你来特别高兴，做了好几个拿手菜，还给你打了折！他说：'过年嘛，吃得开心最重要！'饥饱+40，心情+10，好感+3，名气+1。",
+          };
+        },
+      },
     ],
   },
   {
@@ -397,6 +456,27 @@ var SPRING_FESTIVAL_EVENTS = [
           };
         },
       },
+      {
+        text: "👷 跟李工头去工地看看",
+        hint: "需好感≥25",
+        effect: function (st) {
+          var rel = st.relationships && st.relationships.boss_li;
+          if (!rel || rel.affinity < 25) {
+            return { ok: false, msg: "你和李工头还不熟，不太好意思主动找他要活。" };
+          }
+          var报酬 = 120 + Math.floor(Math.random() * 60);
+          st.resources.cash += 报酬;
+          st.resources.totalEarned += 报酬;
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
+          rel.affinity = Math.min(100, rel.affinity + 3);
+          st.flags._springFestivalAchieveWork = true;
+          return {
+            ok: true,
+            msg: "李工头看到你来了很意外：'破五就来干活？好样的！'带你去了工地，干了半天赚了¥" + 报酬 + "。体质+1，好感+3。",
+          };
+        },
+      },
     ],
   },
   {
@@ -420,6 +500,27 @@ var SPRING_FESTIVAL_EVENTS = [
           return {
             ok: true,
             msg: "大扫除+整理财务，卫生+10，心情+5。送穷神，迎好运！",
+          };
+        },
+      },
+      {
+        text: "🗑️ 帮老周整理废品站",
+        hint: "需好感≥15",
+        effect: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (!rel || rel.affinity < 15) {
+            return { ok: false, msg: "和老周还不太熟，贸然帮忙有点奇怪。" };
+          }
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+          st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
+          rel.affinity = Math.min(100, rel.affinity + 5);
+          var废品收入 = 40 + Math.floor(Math.random() * 30);
+          st.resources.cash += 废品收入;
+          st.resources.totalEarned += 废品收入;
+          st.flags._springFestivalAlone = false;
+          return {
+            ok: true,
+            msg: "老周没想到你会来帮忙。你们一起整理了一上午的废品，他教了你几个挑货的诀窍，最后硬塞给你¥" + 废品收入 + "。体质+1，好感+5。",
           };
         },
       },

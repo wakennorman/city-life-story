@@ -839,6 +839,12 @@ var NPC_INTEL_RULES = {
       text: "王大婶说楼里好几户都发烧，医院和陪诊护工可能很快忙起来。",
       confidence: 78,
     },
+    {
+      newsId: "black_swan",
+      delay: 2,
+      text: "王大婶压低声音说小区里几个做生意的邻居都在抛东西变现，像是闻到什么风声了。",
+      confidence: 60,
+    },
   ],
   boss_li: [
     {
@@ -858,6 +864,18 @@ var NPC_INTEL_RULES = {
       delay: 2,
       text: "李工头说几个工地突然停了招工，楼市风向可能不太对。",
       confidence: 70,
+    },
+    {
+      newsId: "factory_boom",
+      delay: 2,
+      text: "李工头说工业区那边劳务中介在疯狂招人，好几个厂都开出了加班翻倍的价。",
+      confidence: 76,
+    },
+    {
+      newsId: "ev_subsidy",
+      delay: 3,
+      text: "李工头说电池厂的活最近多了不少，像是国家又要出新能源车补贴政策了。",
+      confidence: 68,
     },
   ],
   sister_zhang: [
@@ -879,6 +897,18 @@ var NPC_INTEL_RULES = {
       text: "张姐提醒互联网大厂最近法务会特别多，平台股和科技岗位要谨慎。",
       confidence: 64,
     },
+    {
+      newsId: "rate_cut",
+      delay: 2,
+      text: "张姐说银行那边朋友透露上面在吹风降息，信贷可能要松。",
+      confidence: 72,
+    },
+    {
+      newsId: "rate_hike",
+      delay: 2,
+      text: "张姐说同行群在传贷款利率要涨，让她赶紧先办了几笔业务。",
+      confidence: 70,
+    },
   ],
   old_zhou: [
     {
@@ -898,6 +928,18 @@ var NPC_INTEL_RULES = {
       delay: 2,
       text: "老周说旧衣回收价抬头，北方寒潮可能快到。",
       confidence: 73,
+    },
+    {
+      newsId: "geopolitical_crisis",
+      delay: 3,
+      text: "老周盯着手机新闻皱眉头：'中东一打仗，金属就涨价，废铁怕是也要跟。'",
+      confidence: 75,
+    },
+    {
+      newsId: "energy_crisis",
+      delay: 2,
+      text: "老周说塑料回收价最近波动大，像是能源价格在作怪。",
+      confidence: 68,
     },
   ],
   xiao_mei: [
@@ -925,6 +967,18 @@ var NPC_INTEL_RULES = {
       text: "小美说校园群里快递和家教信息暴增，开学季快到了。",
       confidence: 80,
     },
+    {
+      newsId: "crypto_bull",
+      delay: 2,
+      text: "小美说室友最近在宿舍炒币赚了点，群里全在聊这一波能走多久。",
+      confidence: 70,
+    },
+    {
+      newsId: "crypto_crash",
+      delay: 1,
+      text: "小美紧张地发消息说币圈突然暴跌，好几个同学爆仓了，今天课都没去上。",
+      confidence: 76,
+    },
   ],
   chef_chen: [
     {
@@ -944,6 +998,24 @@ var NPC_INTEL_RULES = {
       delay: 2,
       text: "陈师傅说外卖平台业务员突然上门谈补贴，骑手和餐饮都会被影响。",
       confidence: 72,
+    },
+    {
+      newsId: "crackdown",
+      delay: 1,
+      text: "陈师傅说街口几家小吃摊被查了，最近风头紧，摆摊的要小心。",
+      confidence: 78,
+    },
+    {
+      newsId: "cigarette_ban",
+      delay: 2,
+      text: "陈师傅说餐厅里抽烟的客人少了，但生意好像也淡了点，像是有风声说禁烟要加严。",
+      confidence: 66,
+    },
+    {
+      newsId: "energy_crisis",
+      delay: 2,
+      text: "陈师傅抱怨燃气和食用油进货价涨了，食材成本怕是撑不住。",
+      confidence: 74,
     },
   ],
 };

@@ -3353,6 +3353,11 @@ function doStreetJob(job) {
     checkRumorFromWork(state);
   }
 
+  // 疾病-工作交互：跟踪工作对疾病风险的影响
+  if (typeof trackJobDiseaseRisk === "function") {
+    trackJobDiseaseRisk(job.id, state);
+  }
+
   // 推进时间
   advanceTimeSlot();
 }

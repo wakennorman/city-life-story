@@ -938,3 +938,79 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+/**
+ * 疾病-工作交互系统 — 不同工作对疾病风险的影响
+ * 在 doStreetJob 末尾调用。
+ */
+function trackJobDiseaseRisk(jobId, state) {
+  if (!state || !state.flags) return;
+  state.flags._habits = state.flags._habits || {};
+  var h = state.flags._habits;
+
+  var jobRiskMap = {
+    // 高体力消耗 → 过劳风险
+    manual_labor_construction: { hf: 2, lh: 1, pb: 1 },
+    skilled_labor_construction: { hf: 1, lh: 1, pb: 1 },
+    factory_overtime: { hf: 3, md: 1, pb: 1 },
+    warehouse_worker: { hf: 2, pb: 1 },
+    delivery_rider: { hf: 1 },
+    // 脏活 → 卫生下降
+    waste_recycling: { lh: 2, pb: 1 },
+    cleaning_service: { lh: 1, pb: 1 },
+    // 久坐 → 颈椎病
+    data_entry: { ow: 2, md: 1 },
+    customer_service_tech: { ow: 2, md: 2 },
+    content_writing: { ow: 1, md: 1 },
+    junior_analyst: { ow: 2, md: 1 },
+    // 餐饮 → 烹饪增益
+    food_stall: { jf: 1 },
+    street_vending_food: { jf: 1 },
+    // 高压力
+    factory_work_assembly: { md: 1 },
+    // 破旧险→体质增强
+    premium_engineering: { pb: 1, lh: 1 },
+  };
+
+  var risks = jobRiskMap[jobId];
+  if (!risks) return;
+
+  if (risks.hf) {
+    h._jobFatigueAccum = (h._jobFatigueAccum || 0) + risks.hf;
+    if (h._jobFatigueAccum >= 5) {
+      h.highFatigueStreak = (h.highFatigueStreak || 0) + 1;
+      h._jobFatigueAccum = 0;
+    }
+  }
+  if (risks.lh) {
+    h._jobHygieneAccum = (h._jobHygieneAccum || 0) + risks.lh;
+    if (h._jobHygieneAccum >= 3) {
+      h.lowHygieneStreak = (h.lowHygieneStreak || 0) + 1;
+      h._jobHygieneAccum = 0;
+    }
+  }
+  if (risks.md) {
+    h._jobMentalAccum = (h._jobMentalAccum || 0) + risks.md;
+    if (h._jobMentalAccum >= 5) {
+      h.lowHappinessStreak = (h.lowHappinessStreak || 0) + 1;
+      h._jobMentalAccum = 0;
+    }
+  }
+  if (risks.jf) {
+    h._jobJunkAccum = (h._jobJunkAccum || 0) + risks.jf;
+    if (h._jobJunkAccum >= 5) {
+      h.junkFoodMeals = (h.junkFoodMeals || 0) + 1;
+      h._jobJunkAccum = 0;
+    }
+  }
+  if (risks.ow) {
+    h._jobOfficeAccum = (h._jobOfficeAccum || 0) + risks.ow;
+    if (h._jobOfficeAccum >= 3) {
+      h.officeWorkDays = (h.officeWorkDays || 0) + 1;
+      h._jobOfficeAccum = 0;
+    }
+  }
+  if (risks.pb) {
+    h._totalPhysiqueBuild = (h._totalPhysiqueBuild || 0) + risks.pb;
+  }
+}
