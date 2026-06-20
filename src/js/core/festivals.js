@@ -374,7 +374,10 @@ var SPRING_FESTIVAL_EVENTS = [
             st.resources.cash -= 40;
             st.needs.hunger = Math.min(100, st.needs.hunger + 30);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-            return { ok: true, msg: "陈师傅的店初四就开了。花¥40吃了顿好饭，饥饱+30。" };
+            return {
+              ok: true,
+              msg: "陈师傅的店初四就开了。花¥40吃了顿好饭，饥饱+30。",
+            };
           }
           st.resources.cash -= 25;
           st.needs.hunger = Math.min(100, st.needs.hunger + 40);
@@ -462,7 +465,10 @@ var SPRING_FESTIVAL_EVENTS = [
         effect: function (st) {
           var rel = st.relationships && st.relationships.boss_li;
           if (!rel || rel.affinity < 25) {
-            return { ok: false, msg: "你和李工头还不熟，不太好意思主动找他要活。" };
+            return {
+              ok: false,
+              msg: "你和李工头还不熟，不太好意思主动找他要活。",
+            };
           }
           var报酬 = 120 + Math.floor(Math.random() * 60);
           st.resources.cash += 报酬;
@@ -473,7 +479,10 @@ var SPRING_FESTIVAL_EVENTS = [
           st.flags._springFestivalAchieveWork = true;
           return {
             ok: true,
-            msg: "李工头看到你来了很意外：'破五就来干活？好样的！'带你去了工地，干了半天赚了¥" + 报酬 + "。体质+1，好感+3。",
+            msg:
+              "李工头看到你来了很意外：'破五就来干活？好样的！'带你去了工地，干了半天赚了¥" +
+              报酬 +
+              "。体质+1，好感+3。",
           };
         },
       },
@@ -520,7 +529,10 @@ var SPRING_FESTIVAL_EVENTS = [
           st.flags._springFestivalAlone = false;
           return {
             ok: true,
-            msg: "老周没想到你会来帮忙。你们一起整理了一上午的废品，他教了你几个挑货的诀窍，最后硬塞给你¥" + 废品收入 + "。体质+1，好感+5。",
+            msg:
+              "老周没想到你会来帮忙。你们一起整理了一上午的废品，他教了你几个挑货的诀窍，最后硬塞给你¥" +
+              废品收入 +
+              "。体质+1，好感+5。",
           };
         },
       },
