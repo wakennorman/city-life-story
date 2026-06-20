@@ -2600,11 +2600,18 @@ function renderTradeTab(state, parent) {
         <div class="card-desc" style="margin:4px 0;">
           买入均价: ¥${item.avgBuyPrice || "?"} | 当前价: ¥${price.toFixed(1)}
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
           <span style="font-size:11px;">${profitInfo}</span>
-          <div style="display:flex;gap:4px;">
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-left:auto;">
             <button class="btn btn-sm btn-danger sell-one-btn" data-good="${good.id}">卖1</button>
             <button class="btn btn-sm btn-danger sell-all-btn" data-good="${good.id}">全卖</button>
+            <button class="qty-toggle-btn" data-good="${good.id}" data-side="sell" title="自定义数量">✏️</button>
+            <div class="qty-input-group" data-good="${good.id}" data-side="sell" style="display:none;">
+              <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
+              <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
+              <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
+              <button class="btn btn-sm btn-danger qty-action-btn" data-good="${good.id}" data-side="sell">卖</button>
+            </div>
           </div>
         </div>
       `;
@@ -2668,10 +2675,17 @@ function renderTradeTab(state, parent) {
         当前零售价: <strong style="color:${isLowest ? "var(--success)" : isHighest ? "var(--danger)" : "var(--text-primary)"}">¥${price.toFixed(1)}</strong>
         ${isLowest ? " 🟢 全城最低" : ""}${isHighest ? " 🔴 全城最高" : ""}
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
         <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
         ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批发×10</button>` : ""}
+        <button class="qty-toggle-btn" data-good="${good.id}" data-side="buy" title="自定义数量">✏️</button>
+        <div class="qty-input-group" data-good="${good.id}" data-side="buy" style="display:none;">
+          <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
+          <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
+          <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
+          <button class="btn btn-sm btn-success qty-action-btn" data-good="${good.id}" data-side="buy">买</button>
+        </div>
       </div>
     `;
     grid.appendChild(card);
@@ -2777,6 +2791,198 @@ function renderTradeTab(state, parent) {
           renderHeader(StateManager.getState());
           renderMessageLog(StateManager.getState());
         }
+      });
+    });
+
+    // --- 自定义数量输入：展开/收起 ---
+    parent.querySelectorAll(".qty-toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const side = btn.dataset.side; // "buy" or "sell"
+        const group = parent.querySelector(
+          `.qty-input-group[data-good="${goodId}"][data-side="${side}"]`,
+        );
+        if (!group) return;
+        const isHidden = group.style.display === "none";
+        group.style.display = isHidden ? "inline-flex" : "none";
+        btn.style.opacity = isHidden ? "0.7" : "1";
+        btn.style.background = isHidden ? "var(--accent-glow)" : "transparent";
+        if (isHidden) {
+          const input = group.querySelector(".qty-num-input");
+          if (input) {
+            // 初始化：买侧默认1，卖侧默认持有数量的一半（向下取整）
+            if (side === "sell") {
+              const item = StateManager.getState().inventory.items.find(
+                (i) => i.id === goodId,
+              );
+              if (item) {
+                input.max = item.qty;
+                input.value = Math.max(1, Math.floor(item.qty / 2));
+              }
+              if (item && parseInt(input.value) > item.qty)
+                input.value = Math.min(1, item.qty);
+            } else {
+              const state = StateManager.getState();
+              const locKey = state.trade.currentLocation;
+              const cash = state.resources.cash;
+              const price = getCurrentPrice(locKey, goodId);
+              // 批发市场按批发价计算最大可买数量
+              const effectivePrice =
+                locKey === "wholesaleMarket" ? price * 0.95 : price;
+              if (effectivePrice > 0) {
+                input.max = Math.floor(cash / effectivePrice) || 1;
+                // 批发市场默认最少5件
+                if (locKey === "wholesaleMarket" && input.max >= 5) {
+                  input.value = 5;
+                }
+              }
+            }
+            input.focus();
+            input.select();
+          }
+        }
+      });
+    });
+
+    // --- 步进按钮 ---
+    parent.querySelectorAll(".qty-step-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const dir = parseInt(btn.dataset.dir) || 0;
+        const group = btn.closest(".qty-input-group");
+        if (!group) return;
+        const input = group.querySelector(".qty-num-input");
+        if (!input) return;
+        let val = parseInt(input.value) || 1;
+        const max = parseInt(input.max) || 999;
+        const step = Math.abs(dir) >= 10 ? Math.abs(dir) : 1;
+        val = Math.max(1, Math.min(max, val + (dir > 0 ? step : -step)));
+        input.value = val;
+      });
+    });
+
+    // --- 数量输入实时校验 ---
+    parent.querySelectorAll(".qty-num-input").forEach((input) => {
+      input.addEventListener("change", () => {
+        let val = parseInt(input.value) || 1;
+        const max = parseInt(input.max) || 999;
+        if (val < 1) val = 1;
+        if (val > max) val = max;
+        input.value = val;
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const goodId = input.dataset.good;
+          const group = input.closest(".qty-input-group");
+          if (!group) return;
+          const side = group.dataset.side || "buy";
+          const actionBtn = group.querySelector(".qty-action-btn");
+          if (actionBtn) actionBtn.click();
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          const group = input.closest(".qty-input-group");
+          if (group) group.style.display = "none";
+          // 同时恢复 toggle 按钮样式
+          const goodId = input.dataset.good;
+          const side = group.dataset.side;
+          const toggle = parent.querySelector(
+            `.qty-toggle-btn[data-good="${goodId}"][data-side="${side}"]`,
+          );
+          if (toggle) {
+            toggle.style.opacity = "";
+            toggle.style.background = "";
+          }
+        }
+      });
+    });
+
+    // --- 自定义数量购买/卖出 ---
+    parent.querySelectorAll(".qty-action-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const side = btn.dataset.side; // "buy" or "sell"
+        const group = parent.querySelector(
+          `.qty-input-group[data-good="${goodId}"][data-side="${side}"]`,
+        );
+        if (!group) return;
+        const input = group.querySelector(".qty-num-input");
+        if (!input) return;
+        let qty = parseInt(input.value) || 1;
+        if (qty < 1) qty = 1;
+
+        if (side === "buy") {
+          // 用现金做最终校验
+          const state = StateManager.getState();
+          const locKey = state.trade.currentLocation;
+          const isWholesaleLoc = locKey === "wholesaleMarket";
+          const price = getCurrentPrice(locKey, goodId);
+          const maxBuy =
+            price > 0 ? Math.floor(state.resources.cash / price) : 0;
+          if (qty > maxBuy) {
+            if (maxBuy <= 0) {
+              StateManager.addMessage("⚠️ 现金不足以购买任何数量。", "danger");
+              return;
+            }
+            qty = maxBuy;
+            input.value = qty;
+            StateManager.addMessage(
+              `ℹ️ 现金不足，调整为购买 ${qty} 件。`,
+              "info",
+            );
+          }
+          // 批发市场自定义数量走批发通道（最低5件起，buyWholesale内部校验）
+          if (
+            isWholesaleLoc &&
+            qty >= 5 &&
+            typeof buyWholesale === "function"
+          ) {
+            buyWholesale(goodId, qty);
+          } else if (typeof buyGood === "function") {
+            if (isWholesaleLoc && qty < 5) {
+              StateManager.addMessage(
+                "ℹ️ 批发市场自定义数量≥5件走批发价，＜5件走零售价。",
+                "info",
+              );
+            }
+            buyGood(goodId, qty);
+          }
+        } else {
+          // sell
+          const item = StateManager.getState().inventory.items.find(
+            (i) => i.id === goodId,
+          );
+          const maxSell = item ? item.qty : 0;
+          if (qty > maxSell) {
+            if (maxSell <= 0) {
+              StateManager.addMessage("⚠️ 没有该商品可卖出。", "danger");
+              return;
+            }
+            qty = maxSell;
+            input.value = qty;
+          }
+          if (typeof sellGood === "function") {
+            sellGood(goodId, qty);
+          }
+        }
+        // 成功后收起面板
+        group.style.display = "none";
+        const toggle = parent.querySelector(
+          `.qty-toggle-btn[data-good="${goodId}"][data-side="${side}"]`,
+        );
+        if (toggle) {
+          toggle.style.opacity = "";
+          toggle.style.background = "";
+        }
+
+        renderCurrentTab(StateManager.getState(), parent.parentElement);
+        renderSidebar(StateManager.getState());
+        renderHeader(StateManager.getState());
+        renderMessageLog(StateManager.getState());
       });
     });
   }, 0);
