@@ -1174,34 +1174,25 @@ function renderGrowthTab(state, parent) {
 
   // ---- 绘制图表（DOM插入后） ----
   setTimeout(function () {
-    var history = (state.flags && state.flags._cashHistory) || [];
-    drawAssetLineChart(lineCanvas, history);
+    drawAssetLineChart(
+      lineCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      lineCanvas.width,
+      lineCanvas.height,
+    );
 
-    // 使用新的data_viz雷达图（支持职场属性）
-    if (typeof drawRadarChart === "function") {
-      drawRadarChart(
-        radarCanvas.getContext("2d"),
-        state,
-        0,
-        0,
-        radarCanvas.width,
-        radarCanvas.height,
-        p.phase,
-      );
-    } else {
-      drawRadarChart(
-        radarCanvas,
-        [
-          p.physique,
-          p.intelligence,
-          p.agility,
-          p.mental,
-          Math.min(100, (p && p.fame) || 0),
-        ],
-        ["体质", "智力", "敏捷", "心智", "名气"],
-        100,
-      );
-    }
+    // 使用data_viz雷达图（支持职场属性 + 历史对比）
+    drawRadarChart(
+      radarCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      radarCanvas.width,
+      radarCanvas.height,
+      p.phase,
+    );
 
     // 如果有收入/支出历史，绘制收入曲线
     if (typeof drawIncomeChart === "function") {
@@ -1314,179 +1305,7 @@ function _growthStat(label, value, color) {
   );
 }
 
-/** 资产折线图 (Canvas) */
-function drawAssetLineChart(canvas, data) {
-  var ctx = canvas.getContext("2d");
-  var W = canvas.width,
-    H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  var pad = { t: 18, r: 10, b: 24, l: 52 };
-  var cw = W - pad.l - pad.r,
-    ch = H - pad.t - pad.b;
-
-  if (!data || data.length < 2) {
-    ctx.fillStyle = "#aaa";
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("数据积累中（每天结束后记录一次）", W / 2, H / 2);
-    return;
-  }
-
-  var values = data.map(function (d) {
-    return d.value;
-  });
-  var maxV = Math.max.apply(null, values) * 1.15 || 1000;
-  var minV = Math.min(0, Math.min.apply(null, values) * 0.9);
-
-  function tx(i) {
-    return pad.l + (i / (data.length - 1)) * cw;
-  }
-  function ty(v) {
-    return pad.t + (1 - (v - minV) / (maxV - minV)) * ch;
-  }
-
-  // Grid & Y-axis labels
-  ctx.font = "9px sans-serif";
-  ctx.textAlign = "right";
-  for (var g = 0; g <= 4; g++) {
-    var gy = pad.t + (g / 4) * ch;
-    ctx.strokeStyle = "rgba(0,0,0,0.07)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad.l, gy);
-    ctx.lineTo(W - pad.r, gy);
-    ctx.stroke();
-    var lv = maxV - (g / 4) * (maxV - minV);
-    ctx.fillStyle = "#999";
-    ctx.fillText(
-      "¥" + (lv >= 1000 ? (lv / 1000).toFixed(1) + "k" : Math.round(lv)),
-      pad.l - 4,
-      gy + 3,
-    );
-  }
-
-  // Area fill
-  ctx.beginPath();
-  ctx.moveTo(tx(0), ty(data[0].value));
-  data.forEach(function (d, i) {
-    ctx.lineTo(tx(i), ty(d.value));
-  });
-  ctx.lineTo(tx(data.length - 1), pad.t + ch);
-  ctx.lineTo(tx(0), pad.t + ch);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(74,158,92,0.12)";
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  data.forEach(function (d, i) {
-    if (i === 0) ctx.moveTo(tx(0), ty(d.value));
-    else ctx.lineTo(tx(i), ty(d.value));
-  });
-  ctx.strokeStyle = "#4a9e5c";
-  ctx.lineWidth = 2;
-  ctx.lineJoin = "round";
-  ctx.stroke();
-
-  // Last point dot
-  var last = data[data.length - 1];
-  ctx.beginPath();
-  ctx.arc(tx(data.length - 1), ty(last.value), 4, 0, Math.PI * 2);
-  ctx.fillStyle = "#4a9e5c";
-  ctx.fill();
-
-  // X-axis day labels
-  var step = Math.max(1, Math.ceil(data.length / 7));
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#aaa";
-  data.forEach(function (d, i) {
-    if (i % step === 0 || i === data.length - 1) {
-      ctx.fillText("D" + d.day, tx(i), H - 5);
-    }
-  });
-}
-
 /** 属性雷达图 (Canvas) */
-function drawRadarChart(canvas, values, labels, maxVal) {
-  var ctx = canvas.getContext("2d");
-  var W = canvas.width,
-    H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  var cx = W / 2,
-    cy = H / 2;
-  var r = Math.min(cx, cy) - 28;
-  var n = values.length;
-  var colors = ["#c4803a", "#5a8ab4", "#5aaa5a", "#9b74b8", "#d4a017"];
-
-  function pt(i, radius) {
-    var angle = (i / n) * 2 * Math.PI - Math.PI / 2;
-    return {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
-  }
-
-  // Grid rings
-  [0.25, 0.5, 0.75, 1.0].forEach(function (f) {
-    ctx.beginPath();
-    for (var i = 0; i < n; i++) {
-      var p = pt(i, r * f);
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = "rgba(0,0,0,0.09)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  });
-
-  // Axis lines
-  for (var i = 0; i < n; i++) {
-    var ep = pt(i, r);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(ep.x, ep.y);
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // Data polygon
-  ctx.beginPath();
-  values.forEach(function (v, i) {
-    var p = pt(i, r * Math.min(v / maxVal, 1));
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  });
-  ctx.closePath();
-  ctx.fillStyle = "rgba(74,158,92,0.18)";
-  ctx.fill();
-  ctx.strokeStyle = "#4a9e5c";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Data points
-  values.forEach(function (v, i) {
-    var dp = pt(i, r * Math.min(v / maxVal, 1));
-    ctx.beginPath();
-    ctx.arc(dp.x, dp.y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = colors[i] || "#4a9e5c";
-    ctx.fill();
-  });
-
-  // Labels
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  labels.forEach(function (lbl, i) {
-    var lp = pt(i, r + 16);
-    ctx.fillStyle = colors[i] || "#666";
-    ctx.fillText(lbl, lp.x, lp.y);
-  });
-}
-
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",

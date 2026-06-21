@@ -32,15 +32,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P1-7 公关/媒体系统 — 完整实现 ✅（2026-06-21）
-  - **数据常量**（`startup.js`）：`MEDIA_TYPES`（4种媒体）、`PR_EVENT_TEMPLATES`（6正面+6危机）、`CRISIS_RESPONSE_OPTIONS`（24种应对）、`MEDIA_RELATION_ACTIONS`（6种行动）、`MEDIA_RELATION_LEVELS`（6级）、`CRISIS_LEVELS`（5级）
-  - **公司字段**（`registerStartup`）：`mediaRelations`、`mediaRelationLevel`、`prEvents`、`pendingCrisisEvent`、`crisisLevel`、`crisisPrepLevel`、`mediaTrainingLevel`、`sentimentScore` 等
-  - **核心函数**：媒体关系评估、危机概率触发、危机应对执行、公关活动执行、媒体关系管理
-  - **UI 弹窗**：`showPRManagementModal`（公关管理面板）、`showCrisisResponseModal`（危机应对）
-  - **tickStartup 集成**：季度媒体关系评估 + 危机概率评估 + 待处理危机处理
-  - **行动列表**：`pr_management`（10 AP）、`pr_event`、`media_relation_action`、`crisis_response`
-  - **构建**：已 `python build.py`（2838.1 KB）
-  - **下一步**：P1-8 法律/合规风险系统
+- **最近一次工作**：P1-8 法律/合规风险系统 — 完整实现 ✅（2026-06-21）
+  - **数据常量**（`startup.js`）：`LEGAL_RISK_TYPES`（6种风险类型）、`PATENT_TYPES`（5种专利）、`LEGAL_EVENT_TEMPLATES`（19种事件）、`LEGAL_RESPONSE_OPTIONS`（48种应对）、`LEGAL_CHECKLIST`（8项检查）、`LEGAL_RISK_LEVELS`（5级）、`COMPLIANCE_LEVELS`（5级）
+  - **公司字段**（`registerStartup`）：`legalRisk`、`legalRiskLevel`、`complianceLevel`、`complianceGrade`、`legalBudget`、`patents`、`legalCases`、`legalInsurance`、`regulatoryRelationship` 等
+  - **核心函数**：法律风险评估、法律事件概率触发、法律应对执行、合规检查、专利申请、法律保险购买、监管沟通
+  - **UI 弹窗**：`showLegalComplianceModal`（法律/合规管理面板）、`showLegalResponseModal`（法律事件应对）
+  - **tickStartup 集成**：季度法律风险评估 + 法律事件概率评估 + 待处理法律事件处理
+  - **行动列表**：`legal_compliance`（10 AP）、`legal_checklist`、`apply_patent`、`buy_legal_insurance`、`regulatory_communication`、`legal_response`
+  - **构建**：已 `python build.py`（2901.0 KB）
+  - **下一步**：P1-9 竞争对手策略应对系统
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

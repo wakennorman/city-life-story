@@ -189,12 +189,12 @@ function checkPhaseTransition(state) {
     transitionPropertyPhase(state, "boom");
     return;
   }
-  if (phase !== "bust" && heat <= 0.80 && daysInPhase >= 10) {
+  if (phase !== "bust" && heat <= 0.8 && daysInPhase >= 10) {
     // 行业热度极低→转向萧条
     transitionPropertyPhase(state, "bust");
     return;
   }
-  if (phase === "stable" && heat <= 0.90 && daysInPhase >= 10) {
+  if (phase === "stable" && heat <= 0.9 && daysInPhase >= 10) {
     // 热度小幅低于正常→降温
     transitionPropertyPhase(state, "cooling");
     return;
@@ -233,10 +233,7 @@ function checkNewsDrivenTransition(state, currentPhase) {
       return true;
     }
     // 强刺激新闻：强制转向火爆（除非已在火爆）
-    if (
-      n.id === "property_stimulus" &&
-      currentPhase !== "boom"
-    ) {
+    if (n.id === "property_stimulus" && currentPhase !== "boom") {
       transitionPropertyPhase(state, "boom");
       return true;
     }
@@ -268,7 +265,8 @@ function transitionPropertyPhase(state, forcedPhase) {
   inv.propertyPhaseDuration = getRandomPhaseDuration(newPhase);
 
   // 发送转换消息
-  var msg = PHASE_TRANSITION_MSGS[newPhase] || "🏠 房产市场进入" + newPhase + "阶段。";
+  var msg =
+    PHASE_TRANSITION_MSGS[newPhase] || "🏠 房产市场进入" + newPhase + "阶段。";
   var msgType = "info";
   if (newPhase === "boom") msgType = "warning";
   if (newPhase === "bust") msgType = "danger";
@@ -330,8 +328,10 @@ function pickNextPhase(state, currentPhase) {
     if (currentPhase === "boom" && target === "stable") weights[target] += 15;
     if (currentPhase === "bust" && target === "cooling") weights[target] += 15;
     if (currentPhase === "cooling" && target === "bust") weights[target] += 10;
-    if (currentPhase === "cooling" && target === "stable") weights[target] += 10;
-    if (currentPhase === "stable" && target === "cooling") weights[target] += 10;
+    if (currentPhase === "cooling" && target === "stable")
+      weights[target] += 10;
+    if (currentPhase === "stable" && target === "cooling")
+      weights[target] += 10;
     if (currentPhase === "stable" && target === "boom") weights[target] += 10;
 
     // 保底权重为正
@@ -375,9 +375,10 @@ function calculatePropertyDailyChange(prop, propDef, state) {
   var sectorDrift = 0;
   if (typeof getSectorHeat === "function") {
     var heat = getSectorHeat("房地产");
-    var zoneWeight = (propDef && propDef.zoneWeight) || prop.zoneWeight || {
-      sectorHeat: 0.8,
-    };
+    var zoneWeight = (propDef && propDef.zoneWeight) ||
+      prop.zoneWeight || {
+        sectorHeat: 0.8,
+      };
     sectorDrift = (heat - 1.0) * 0.05 * (zoneWeight.sectorHeat || 0.8);
   }
 
@@ -398,8 +399,7 @@ function calculatePropertyDailyChange(prop, propDef, state) {
         : 0.0;
 
   // 5. 每日噪声
-  var vol =
-    (propDef && propDef.volatility) || prop.volatility || 0.004;
+  var vol = (propDef && propDef.volatility) || prop.volatility || 0.004;
   var noise = (Math.random() - 0.5) * 2 * vol;
 
   // 6. 新闻乘数
@@ -435,7 +435,10 @@ function getCycleDrift(phase) {
 function getRandomPhaseDuration(phase) {
   var def = PROPERTY_PHASES[phase];
   if (!def) return 30;
-  return def.minDuration + Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1));
+  return (
+    def.minDuration +
+    Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1))
+  );
 }
 
 // ====== UI 辅助函数 ======
@@ -468,7 +471,7 @@ function renderPropertyPhaseBanner(state) {
   return (
     '<div style="padding:8px 12px;margin-bottom:12px;background:rgba(255,255,255,0.03);border:1px solid ' +
     def.color +
-    ";border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center;\">" +
+    ';border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">' +
     '<span><strong style="color:' +
     def.color +
     ';">' +
@@ -479,7 +482,7 @@ function renderPropertyPhaseBanner(state) {
     " <span style='color:var(--text-muted);font-size:10px;'>(已持续" +
     daysInPhase +
     "天)</span></span>" +
-    '<span style="color:var(--text-muted);">行业热度 " +
+    '<span style="color:var(--text-muted);">行业热度 ' +
     heatArrow +
     " " +
     (heat * 100).toFixed(0) +
@@ -520,7 +523,11 @@ if (typeof window !== "undefined") {
     brief:
       "房产价格不再固定增值，而是随市场周期、行业热度、政策调控和新闻事件真实波动",
     version: "1.0.0",
-    related: ["mechanics:world_params", "mechanics:investment", "mechanics:news_system"],
+    related: [
+      "mechanics:world_params",
+      "mechanics:investment",
+      "mechanics:news_system",
+    ],
     sections: [
       {
         kind: "desc",

@@ -16,63 +16,294 @@ const HOBBY_CATEGORIES = {
     name: "运动健身",
     icon: "🏃",
     hobbies: [
-      { id: "running", name: "跑步", icon: "🏃", baseCost: 0, baseAP: 10, benefits: ["健康+2", "压力-3", "身材+1"] },
-      { id: "gym", name: "健身房", icon: "🏋️", baseCost: 100, baseAP: 15, benefits: ["身材+3", "健康+1", "压力-2"] },
-      { id: "yoga", name: "瑜伽", icon: "🧘", baseCost: 80, baseAP: 12, benefits: ["身心平衡+3", "压力-5", "健康+1"] },
-      { id: "swimming", name: "游泳", icon: "🏊", baseCost: 50, baseAP: 15, benefits: ["健康+3", "压力-4", "身材+2"] },
-      { id: "basketball", name: "篮球", icon: "🏀", baseCost: 0, baseAP: 20, benefits: ["健康+2", "社交+2", "压力-3"] },
-      { id: "tennis", name: "网球", icon: "🎾", baseCost: 150, baseAP: 20, benefits: ["健康+2", "社交+3", "身材+2"] },
-      { id: "cycling", name: "骑行", icon: "🚴", baseCost: 0, baseAP: 15, benefits: ["健康+2", "压力-3", "视野+1"] },
-      { id: "hiking", name: "徒步", icon: "🥾", baseCost: 50, baseAP: 25, benefits: ["健康+2", "压力-5", "视野+2"] },
+      {
+        id: "running",
+        name: "跑步",
+        icon: "🏃",
+        baseCost: 0,
+        baseAP: 10,
+        benefits: ["健康+2", "压力-3", "身材+1"],
+      },
+      {
+        id: "gym",
+        name: "健身房",
+        icon: "🏋️",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["身材+3", "健康+1", "压力-2"],
+      },
+      {
+        id: "yoga",
+        name: "瑜伽",
+        icon: "🧘",
+        baseCost: 80,
+        baseAP: 12,
+        benefits: ["身心平衡+3", "压力-5", "健康+1"],
+      },
+      {
+        id: "swimming",
+        name: "游泳",
+        icon: "🏊",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["健康+3", "压力-4", "身材+2"],
+      },
+      {
+        id: "basketball",
+        name: "篮球",
+        icon: "🏀",
+        baseCost: 0,
+        baseAP: 20,
+        benefits: ["健康+2", "社交+2", "压力-3"],
+      },
+      {
+        id: "tennis",
+        name: "网球",
+        icon: "🎾",
+        baseCost: 150,
+        baseAP: 20,
+        benefits: ["健康+2", "社交+3", "身材+2"],
+      },
+      {
+        id: "cycling",
+        name: "骑行",
+        icon: "🚴",
+        baseCost: 0,
+        baseAP: 15,
+        benefits: ["健康+2", "压力-3", "视野+1"],
+      },
+      {
+        id: "hiking",
+        name: "徒步",
+        icon: "🥾",
+        baseCost: 50,
+        baseAP: 25,
+        benefits: ["健康+2", "压力-5", "视野+2"],
+      },
     ],
   },
   arts: {
     name: "艺术文化",
     icon: "🎨",
     hobbies: [
-      { id: "reading", name: "阅读", icon: "📚", baseCost: 30, baseAP: 10, benefits: ["智力+2", "视野+2", "压力-2"] },
-      { id: "painting", name: "绘画", icon: "🎨", baseCost: 100, baseAP: 15, benefits: ["创造力+3", "压力-4", "审美+2"] },
-      { id: "music", name: "音乐", icon: "🎵", baseCost: 80, baseAP: 12, benefits: ["审美+2", "压力-5", "心情+2"] },
-      { id: "photography", name: "摄影", icon: "📷", baseCost: 150, baseAP: 15, benefits: ["审美+3", "创造力+2", "社交+1"] },
-      { id: "writing", name: "写作", icon: "✍️", baseCost: 20, baseAP: 15, benefits: ["智力+2", "创造力+2", "表达+2"] },
-      { id: "calligraphy", name: "书法", icon: "🖌️", baseCost: 50, baseAP: 12, benefits: ["审美+2", "耐心+3", "压力-3"] },
-      { id: "dance", name: "舞蹈", icon: "💃", baseCost: 100, baseAP: 18, benefits: ["身材+2", "审美+2", "自信+2"] },
-      { id: "acting", name: "表演", icon: "🎭", baseCost: 120, baseAP: 20, benefits: ["表达+3", "自信+3", "社交+2"] },
+      {
+        id: "reading",
+        name: "阅读",
+        icon: "📚",
+        baseCost: 30,
+        baseAP: 10,
+        benefits: ["智力+2", "视野+2", "压力-2"],
+      },
+      {
+        id: "painting",
+        name: "绘画",
+        icon: "🎨",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["创造力+3", "压力-4", "审美+2"],
+      },
+      {
+        id: "music",
+        name: "音乐",
+        icon: "🎵",
+        baseCost: 80,
+        baseAP: 12,
+        benefits: ["审美+2", "压力-5", "心情+2"],
+      },
+      {
+        id: "photography",
+        name: "摄影",
+        icon: "📷",
+        baseCost: 150,
+        baseAP: 15,
+        benefits: ["审美+3", "创造力+2", "社交+1"],
+      },
+      {
+        id: "writing",
+        name: "写作",
+        icon: "✍️",
+        baseCost: 20,
+        baseAP: 15,
+        benefits: ["智力+2", "创造力+2", "表达+2"],
+      },
+      {
+        id: "calligraphy",
+        name: "书法",
+        icon: "🖌️",
+        baseCost: 50,
+        baseAP: 12,
+        benefits: ["审美+2", "耐心+3", "压力-3"],
+      },
+      {
+        id: "dance",
+        name: "舞蹈",
+        icon: "💃",
+        baseCost: 100,
+        baseAP: 18,
+        benefits: ["身材+2", "审美+2", "自信+2"],
+      },
+      {
+        id: "acting",
+        name: "表演",
+        icon: "🎭",
+        baseCost: 120,
+        baseAP: 20,
+        benefits: ["表达+3", "自信+3", "社交+2"],
+      },
     ],
   },
   learning: {
     name: "学习提升",
     icon: "📖",
     hobbies: [
-      { id: "coding", name: "编程学习", icon: "💻", baseCost: 50, baseAP: 20, benefits: ["技能+3", "智力+2", "收入潜力+1"] },
-      { id: "english", name: "英语学习", icon: "🌐", baseCost: 80, baseAP: 15, benefits: ["技能+2", "视野+2", "收入潜力+1"] },
-      { id: "finance", name: "金融学习", icon: "📈", baseCost: 100, baseAP: 15, benefits: ["投资能力+3", "智力+1", "收入潜力+2"] },
-      { id: "cooking_class", name: "烹饪课", icon: "🍳", baseCost: 150, baseAP: 15, benefits: ["生活技能+3", "心情+2", "健康+1"] },
-      { id: "public_speaking", name: "演讲", icon: "🎤", baseCost: 100, baseAP: 15, benefits: ["表达+3", "自信+3", "职场+2"] },
-      { id: "management", name: "管理课程", icon: "👔", baseCost: 200, baseAP: 15, benefits: ["领导力+3", "职场+2", "收入潜力+1"] },
+      {
+        id: "coding",
+        name: "编程学习",
+        icon: "💻",
+        baseCost: 50,
+        baseAP: 20,
+        benefits: ["技能+3", "智力+2", "收入潜力+1"],
+      },
+      {
+        id: "english",
+        name: "英语学习",
+        icon: "🌐",
+        baseCost: 80,
+        baseAP: 15,
+        benefits: ["技能+2", "视野+2", "收入潜力+1"],
+      },
+      {
+        id: "finance",
+        name: "金融学习",
+        icon: "📈",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["投资能力+3", "智力+1", "收入潜力+2"],
+      },
+      {
+        id: "cooking_class",
+        name: "烹饪课",
+        icon: "🍳",
+        baseCost: 150,
+        baseAP: 15,
+        benefits: ["生活技能+3", "心情+2", "健康+1"],
+      },
+      {
+        id: "public_speaking",
+        name: "演讲",
+        icon: "🎤",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["表达+3", "自信+3", "职场+2"],
+      },
+      {
+        id: "management",
+        name: "管理课程",
+        icon: "👔",
+        baseCost: 200,
+        baseAP: 15,
+        benefits: ["领导力+3", "职场+2", "收入潜力+1"],
+      },
     ],
   },
   social: {
     name: "社交娱乐",
     icon: "🎉",
     hobbies: [
-      { id: "board_games", name: "桌游", icon: "🎲", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
-      { id: "cards", name: "扑克", icon: "🃏", baseCost: 30, baseAP: 10, benefits: ["社交+2", "智力+1", "心情+1"] },
-      { id: "mahjong", name: "麻将", icon: "🀄", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
-      { id: "chess", name: "棋类", icon: "♟️", baseCost: 30, baseAP: 12, benefits: ["智力+3", "耐心+2", "压力-2"] },
-      { id: "gaming", name: "游戏", icon: "🎮", baseCost: 50, baseAP: 10, benefits: ["心情+3", "压力-5", "社交+1"] },
-      { id: "travel", name: "旅行", icon: "✈️", baseCost: 1000, baseAP: 30, benefits: ["视野+5", "心情+5", "压力-5"] },
+      {
+        id: "board_games",
+        name: "桌游",
+        icon: "🎲",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["社交+3", "智力+1", "心情+2"],
+      },
+      {
+        id: "cards",
+        name: "扑克",
+        icon: "🃏",
+        baseCost: 30,
+        baseAP: 10,
+        benefits: ["社交+2", "智力+1", "心情+1"],
+      },
+      {
+        id: "mahjong",
+        name: "麻将",
+        icon: "🀄",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["社交+3", "智力+1", "心情+2"],
+      },
+      {
+        id: "chess",
+        name: "棋类",
+        icon: "♟️",
+        baseCost: 30,
+        baseAP: 12,
+        benefits: ["智力+3", "耐心+2", "压力-2"],
+      },
+      {
+        id: "gaming",
+        name: "游戏",
+        icon: "🎮",
+        baseCost: 50,
+        baseAP: 10,
+        benefits: ["心情+3", "压力-5", "社交+1"],
+      },
+      {
+        id: "travel",
+        name: "旅行",
+        icon: "✈️",
+        baseCost: 1000,
+        baseAP: 30,
+        benefits: ["视野+5", "心情+5", "压力-5"],
+      },
     ],
   },
   wellness: {
     name: "身心健康",
     icon: "🧘",
     hobbies: [
-      { id: "meditation", name: "冥想", icon: "🧘", baseCost: 0, baseAP: 10, benefits: ["压力-5", "焦虑-3", "身心平衡+3"] },
-      { id: "spa", name: "SPA", icon: "💆", baseCost: 300, baseAP: 15, benefits: ["压力-5", "心情+3", "形象+1"] },
-      { id: "massage", name: "按摩", icon: "💆‍♂️", baseCost: 200, baseAP: 12, benefits: ["疲劳-5", "压力-3", "健康+1"] },
-      { id: "therapy", name: "心理咨询", icon: "👂", baseCost: 500, baseAP: 20, benefits: ["焦虑-5", "抑郁-5", "心理+5"] },
-      { id: "sleep_therapy", name: "睡眠改善", icon: "😴", baseCost: 100, baseAP: 5, benefits: ["疲劳-5", "健康+2", "心情+1"] },
+      {
+        id: "meditation",
+        name: "冥想",
+        icon: "🧘",
+        baseCost: 0,
+        baseAP: 10,
+        benefits: ["压力-5", "焦虑-3", "身心平衡+3"],
+      },
+      {
+        id: "spa",
+        name: "SPA",
+        icon: "💆",
+        baseCost: 300,
+        baseAP: 15,
+        benefits: ["压力-5", "心情+3", "形象+1"],
+      },
+      {
+        id: "massage",
+        name: "按摩",
+        icon: "💆‍♂️",
+        baseCost: 200,
+        baseAP: 12,
+        benefits: ["疲劳-5", "压力-3", "健康+1"],
+      },
+      {
+        id: "therapy",
+        name: "心理咨询",
+        icon: "👂",
+        baseCost: 500,
+        baseAP: 20,
+        benefits: ["焦虑-5", "抑郁-5", "心理+5"],
+      },
+      {
+        id: "sleep_therapy",
+        name: "睡眠改善",
+        icon: "😴",
+        baseCost: 100,
+        baseAP: 5,
+        benefits: ["疲劳-5", "健康+2", "心情+1"],
+      },
     ],
   },
 };
@@ -113,13 +344,55 @@ const HEALTH_INDICATORS = {
 
 // ====== 心理状态 ======
 const PSYCHOLOGICAL_STATES = {
-  excellent: { name: "状态极佳", icon: "🌟", stress: [0, 20], anxiety: [0, 20], depression: [0, 10] },
-  good: { name: "状态良好", icon: "🙂", stress: [20, 40], anxiety: [20, 35], depression: [10, 20] },
-  normal: { name: "状态正常", icon: "😐", stress: [40, 60], anxiety: [35, 50], depression: [20, 35] },
-  stressed: { name: "压力较大", icon: "😰", stress: [60, 80], anxiety: [50, 70], depression: [35, 50] },
-  anxious: { name: "焦虑状态", icon: "😟", stress: [70, 90], anxiety: [70, 90], depression: [40, 65] },
-  depressed: { name: "抑郁倾向", icon: "😔", stress: [75, 100], anxiety: [60, 90], depression: [65, 85] },
-  critical: { name: "心理危机", icon: "🚨", stress: [85, 100], anxiety: [80, 100], depression: [85, 100] },
+  excellent: {
+    name: "状态极佳",
+    icon: "🌟",
+    stress: [0, 20],
+    anxiety: [0, 20],
+    depression: [0, 10],
+  },
+  good: {
+    name: "状态良好",
+    icon: "🙂",
+    stress: [20, 40],
+    anxiety: [20, 35],
+    depression: [10, 20],
+  },
+  normal: {
+    name: "状态正常",
+    icon: "😐",
+    stress: [40, 60],
+    anxiety: [35, 50],
+    depression: [20, 35],
+  },
+  stressed: {
+    name: "压力较大",
+    icon: "😰",
+    stress: [60, 80],
+    anxiety: [50, 70],
+    depression: [35, 50],
+  },
+  anxious: {
+    name: "焦虑状态",
+    icon: "😟",
+    stress: [70, 90],
+    anxiety: [70, 90],
+    depression: [40, 65],
+  },
+  depressed: {
+    name: "抑郁倾向",
+    icon: "😔",
+    stress: [75, 100],
+    anxiety: [60, 90],
+    depression: [65, 85],
+  },
+  critical: {
+    name: "心理危机",
+    icon: "🚨",
+    stress: [85, 100],
+    anxiety: [80, 100],
+    depression: [85, 100],
+  },
 };
 
 // ====== 个人形象维度 ======
@@ -243,7 +516,7 @@ function practiceHobby(state, hobbyId) {
   let hobby = null;
   let categoryKey = null;
   for (const [catKey, cat] of Object.entries(HOBBY_CATEGORIES)) {
-    const found = cat.hobbies.find(h => h.id === hobbyId);
+    const found = cat.hobbies.find((h) => h.id === hobbyId);
     if (found) {
       hobby = found;
       categoryKey = catKey;
@@ -261,7 +534,8 @@ function practiceHobby(state, hobbyId) {
   }
 
   // 检查费用
-  const cost = hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
+  const cost =
+    hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
   if (state.resources.cash < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
@@ -290,13 +564,19 @@ function practiceHobby(state, hobbyId) {
   if (hobbyState.exp >= expToNextLevel) {
     hobbyState.level++;
     hobbyState.exp -= expToNextLevel;
-    StateManager.addMessage(`🎉 ${hobby.name}等级提升到${hobbyState.level}级！`, "success");
+    StateManager.addMessage(
+      `🎉 ${hobby.name}等级提升到${hobbyState.level}级！`,
+      "success",
+    );
   }
 
   // 应用爱好效果
   applyHobbyBenefits(state, hobby);
 
-  StateManager.addMessage(`🎨 练习${hobby.icon} ${hobby.name}（Lv.${hobbyState.level}），${hobby.benefits.join("、")}`, "info");
+  StateManager.addMessage(
+    `🎨 练习${hobby.icon} ${hobby.name}（Lv.${hobbyState.level}），${hobby.benefits.join("、")}`,
+    "info",
+  );
 
   return { success: true, level: hobbyState.level, exp: hobbyState.exp };
 }
@@ -329,7 +609,8 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("社交")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.popularity = Math.min(100, p.corporate.popularity + value);
+      if (p.corporate)
+        p.corporate.popularity = Math.min(100, p.corporate.popularity + value);
     }
     if (benefit.includes("心情")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -343,9 +624,14 @@ function applyHobbyBenefits(state, hobby) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
       // 根据爱好类型增加对应技能
       if (hobby.id === "coding") {
-        if (p.skills && p.skills.coding) p.skills.coding.level = Math.min(100, p.skills.coding.level + value);
+        if (p.skills && p.skills.coding)
+          p.skills.coding.level = Math.min(100, p.skills.coding.level + value);
       } else if (hobby.id === "english") {
-        if (p.skills && p.skills.english) p.skills.english.level = Math.min(100, p.skills.english.level + value);
+        if (p.skills && p.skills.english)
+          p.skills.english.level = Math.min(
+            100,
+            p.skills.english.level + value,
+          );
       }
     }
     if (benefit.includes("收入潜力")) {
@@ -362,7 +648,8 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("表达")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.skills && p.skills.sales) p.skills.sales.level = Math.min(100, p.skills.sales.level + value);
+      if (p.skills && p.skills.sales)
+        p.skills.sales.level = Math.min(100, p.skills.sales.level + value);
     }
     if (benefit.includes("自信")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -370,15 +657,18 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("领导力")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.ability = Math.min(100, p.corporate.ability + value);
+      if (p.corporate)
+        p.corporate.ability = Math.min(100, p.corporate.ability + value);
     }
     if (benefit.includes("职场")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + value);
+      if (p.corporate)
+        p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + value);
     }
     if (benefit.includes("生活技能")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.skills && p.skills.cooking) p.skills.cooking.level = Math.min(100, p.skills.cooking.level + value);
+      if (p.skills && p.skills.cooking)
+        p.skills.cooking.level = Math.min(100, p.skills.cooking.level + value);
     }
     if (benefit.includes("耐心")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -395,7 +685,10 @@ function applyHobbyBenefits(state, hobby) {
     if (benefit.includes("身心平衡")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
       pg.psychology.stress = Math.max(0, pg.psychology.stress - value);
-      pg.psychology.mood = Math.min(100, pg.psychology.mood + Math.floor(value / 2));
+      pg.psychology.mood = Math.min(
+        100,
+        pg.psychology.mood + Math.floor(value / 2),
+      );
     }
     if (benefit.includes("疲劳")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -440,9 +733,15 @@ function healthCheckup(state) {
   pg.health.checkupHistory.push(report);
 
   // 保存并生成报告
-  const issueText = report.issues.length > 0 ? ` ⚠️ 发现${report.issues.length}项需要关注：${report.issues.join("、")}` : " ✅ 各项指标正常";
+  const issueText =
+    report.issues.length > 0
+      ? ` ⚠️ 发现${report.issues.length}项需要关注：${report.issues.join("、")}`
+      : " ✅ 各项指标正常";
 
-  StateManager.addMessage(`🏥 体检完成！身体${report.physical} 心理${report.mental} 代谢${report.metabolic}${issueText}`, "info");
+  StateManager.addMessage(
+    `🏥 体检完成！身体${report.physical} 心理${report.mental} 代谢${report.metabolic}${issueText}`,
+    "info",
+  );
 
   return { success: true, report: report };
 }
@@ -450,7 +749,7 @@ function healthCheckup(state) {
 /**
  * 心理咨询
  */
-function心理咨询(state) {
+function 心理咨询(state) {
   const cost = 500;
   if (state.resources.cash < cost) {
     return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
@@ -465,7 +764,10 @@ function心理咨询(state) {
   pg.psychology.mood = Math.min(100, pg.psychology.mood + 5);
   pg.psychology.lastTherapy = state.player.day;
 
-  StateManager.addMessage(`👂 心理咨询结束，压力-10，焦虑-8，抑郁-5`, "success");
+  StateManager.addMessage(
+    `👂 心理咨询结束，压力-10，焦虑-8，抑郁-5`,
+    "success",
+  );
 
   return { success: true };
 }
@@ -477,7 +779,14 @@ function improveImage(state, dimension, method) {
   const pg = state.personalGrowth;
   const dimValue = pg.image[dimension];
 
-  if (!dimValue && dimension !== "appearance" && dimension !== "style" && dimension !== "grooming" && dimension !== "fitness" && dimension !== "charisma") {
+  if (
+    !dimValue &&
+    dimension !== "appearance" &&
+    dimension !== "style" &&
+    dimension !== "grooming" &&
+    dimension !== "fitness" &&
+    dimension !== "charisma"
+  ) {
     return { success: false, message: "不存在的形象维度" };
   }
 
@@ -503,7 +812,10 @@ function improveImage(state, dimension, method) {
 
   pg.image[dimension] = Math.min(100, dimValue + methodData.gain);
 
-  StateManager.addMessage(`✨ ${methodData.desc}，${IMAGE_DIMENSIONS[dimension].name}+${methodData.gain}`, "success");
+  StateManager.addMessage(
+    `✨ ${methodData.desc}，${IMAGE_DIMENSIONS[dimension].name}+${methodData.gain}`,
+    "success",
+  );
 
   return { success: true, value: pg.image[dimension] };
 }
@@ -515,7 +827,11 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
   const pg = state.personalGrowth;
 
   const goal = {
-    id: "goal_" + state.player.day + "_" + Math.random().toString(36).substr(2, 9),
+    id:
+      "goal_" +
+      state.player.day +
+      "_" +
+      Math.random().toString(36).substr(2, 9),
     category: category,
     description: description,
     targetValue: targetValue,
@@ -526,7 +842,10 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
   };
 
   pg.lifeGoals.active.push(goal);
-  StateManager.addMessage(`🎯 设定人生目标：${description}（${category}）`, "success");
+  StateManager.addMessage(
+    `🎯 设定人生目标：${description}（${category}）`,
+    "success",
+  );
 
   return { success: true, goal: goal };
 }
@@ -536,11 +855,14 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
  */
 function updateGoalProgress(state, goalId, progressChange) {
   const pg = state.personalGrowth;
-  const goal = pg.lifeGoals.active.find(g => g.id === goalId);
+  const goal = pg.lifeGoals.active.find((g) => g.id === goalId);
   if (!goal) return { success: false, message: "目标不存在" };
 
-  goal.currentValue = Math.min(goal.targetValue, goal.currentValue + progressChange);
-  goal.progress = Math.round(goal.currentValue / goal.targetValue * 100);
+  goal.currentValue = Math.min(
+    goal.targetValue,
+    goal.currentValue + progressChange,
+  );
+  goal.progress = Math.round((goal.currentValue / goal.targetValue) * 100);
 
   // 检查是否完成
   if (goal.currentValue >= goal.targetValue) {
@@ -558,7 +880,7 @@ function completeGoal(state, goal) {
   const pg = state.personalGrowth;
 
   // 从进行中移除
-  pg.lifeGoals.active = pg.lifeGoals.active.filter(g => g.id !== goal.id);
+  pg.lifeGoals.active = pg.lifeGoals.active.filter((g) => g.id !== goal.id);
 
   // 加入已完成
   goal.completedDay = state.player.day;
@@ -654,7 +976,10 @@ function checkPsychologicalCrisis(state) {
     if (!state.flags) state.flags = {};
     state.flags.forceRest = true;
   } else if (psy.stress > 75 || psy.anxiety > 70 || psy.depression > 70) {
-    StateManager.addMessage("⚠️ 心理状态需要关注，建议休息或寻求心理咨询", "warning");
+    StateManager.addMessage(
+      "⚠️ 心理状态需要关注，建议休息或寻求心理咨询",
+      "warning",
+    );
   }
 }
 
@@ -667,10 +992,25 @@ function getPersonalGrowthSummary(state) {
 
   return {
     hobbyCount: Object.keys(pg.hobbies).length,
-    maxHobbyLevel: Math.max(0, ...Object.values(pg.hobbies).map(h => h.level)),
-    healthStatus: pg.health.physical >= 70 ? "良好" : pg.health.physical >= 50 ? "一般" : "需要关注",
+    maxHobbyLevel: Math.max(
+      0,
+      ...Object.values(pg.hobbies).map((h) => h.level),
+    ),
+    healthStatus:
+      pg.health.physical >= 70
+        ? "良好"
+        : pg.health.physical >= 50
+          ? "一般"
+          : "需要关注",
     psychologicalState: getPsychologicalStateLabel(pg.psychology),
-    imageScore: Math.round((pg.image.appearance + pg.image.style + pg.image.grooming + pg.image.fitness + pg.image.charisma) / 5),
+    imageScore: Math.round(
+      (pg.image.appearance +
+        pg.image.style +
+        pg.image.grooming +
+        pg.image.fitness +
+        pg.image.charisma) /
+        5,
+    ),
     activeGoals: pg.lifeGoals.active.length,
     completedGoals: pg.lifeGoals.completed.length,
     booksRead: pg.reading.booksRead,

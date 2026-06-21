@@ -38117,21 +38117,32 @@ function addHomeActions(state, actions) {
   var tier = state.housing ? state.housing.tier || 0 : 0;
   if (tier <= 0) return;
 
-  var homeLoc = typeof getHomeLocationKey === "function" ? getHomeLocationKey(state) : null;
+  var homeLoc =
+    typeof getHomeLocationKey === "function" ? getHomeLocationKey(state) : null;
   if (!homeLoc) return;
 
-  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  var homeAmenities =
+    typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
   if (homeAmenities.length === 0) return;
 
   var curLoc = state.trade.currentLocation;
-  var travelAp = typeof getTravelApCost === "function"
-    ? getTravelApCost(curLoc, homeLoc, state)
-    : curLoc === homeLoc ? 0 : 10;
+  var travelAp =
+    typeof getTravelApCost === "function"
+      ? getTravelApCost(curLoc, homeLoc, state)
+      : curLoc === homeLoc
+        ? 0
+        : 10;
   var isAtHome = curLoc === homeLoc;
 
-  var cookingAvail = homeAmenities.some(function (a) { return a.id.indexOf("cook") >= 0; });
-  var bathAvail = homeAmenities.some(function (a) { return a.id.indexOf("bath") >= 0; });
-  var restAvail = homeAmenities.some(function (a) { return a.id.indexOf("nap") >= 0; });
+  var cookingAvail = homeAmenities.some(function (a) {
+    return a.id.indexOf("cook") >= 0;
+  });
+  var bathAvail = homeAmenities.some(function (a) {
+    return a.id.indexOf("bath") >= 0;
+  });
+  var restAvail = homeAmenities.some(function (a) {
+    return a.id.indexOf("nap") >= 0;
+  });
   var icons = [];
   if (cookingAvail) icons.push("🍳");
   if (bathAvail) icons.push("🚿");
@@ -38141,8 +38152,12 @@ function addHomeActions(state, actions) {
     id: "go_home",
     name: "🏠 回住所",
     icon: "🏠",
-    desc: (isAtHome ? "在家中" : "回到住所") + " — " + icons.join(" ") +
-      " | " + (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "AP回家"),
+    desc:
+      (isAtHome ? "在家中" : "回到住所") +
+      " — " +
+      icons.join(" ") +
+      " | " +
+      (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "AP回家"),
     apCost: travelAp,
     category: "restore",
     handler: function () {
@@ -38154,12 +38169,14 @@ function addHomeActions(state, actions) {
 
 /** 显示家居设施选择弹窗 */
 function showHomeActionsModal(state) {
-  var homeAmenities = typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
+  var homeAmenities =
+    typeof getHomeAmenities === "function" ? getHomeAmenities(state) : [];
   if (homeAmenities.length === 0) {
     StateManager.addMessage("🏠 住所没有可用的设施。", "info");
     return;
   }
-  var html = '<div style="font-size:13px;margin-bottom:10px;color:var(--text-secondary);">选择一项居家活动：</div>';
+  var html =
+    '<div style="font-size:13px;margin-bottom:10px;color:var(--text-secondary);">选择一项居家活动：</div>';
   for (var i = 0; i < homeAmenities.length; i++) {
     var a = homeAmenities[i];
     var pd = [];
@@ -38167,18 +38184,43 @@ function showHomeActionsModal(state) {
       for (var k in a.primary) {
         if (!a.primary.hasOwnProperty(k)) continue;
         var amt = a.primary[k];
-        var lb = { hunger: "饥饱", fatigue: "疲劳", hygiene: "卫生", happiness: "心情" }[k] || k;
+        var lb =
+          {
+            hunger: "饥饱",
+            fatigue: "疲劳",
+            hygiene: "卫生",
+            happiness: "心情",
+          }[k] || k;
         pd.push(lb + (amt >= 0 ? "+" : "") + amt);
       }
     }
-    html += '<div class="action-card" style="margin-bottom:8px;padding:10px;cursor:pointer;border:1px solid var(--border);border-radius:8px;" data-amenity-id="' + a.id + '">' +
+    html +=
+      '<div class="action-card" style="margin-bottom:8px;padding:10px;cursor:pointer;border:1px solid var(--border);border-radius:8px;" data-amenity-id="' +
+      a.id +
+      '">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<span style="font-weight:600;">' + (a.icon || "🏠") + " " + a.name + "</span>" +
-      '<span style="font-size:11px;color:var(--text-muted);">⚡' + (a.ap || 0) + "AP | " + (a.cost > 0 ? "¥" + a.cost : "免费") + "</span></div>" +
-      '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + pd.join(" → ") + "</div>" +
-      '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' + a.desc + "</div></div>';
+      '<span style="font-weight:600;">' +
+      (a.icon || "🏠") +
+      " " +
+      a.name +
+      "</span>" +
+      '<span style="font-size:11px;color:var(--text-muted);">⚡' +
+      (a.ap || 0) +
+      "AP | " +
+      (a.cost > 0 ? "¥" + a.cost : "免费") +
+      "</span></div>" +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
+      pd.join(" → ") +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' +
+      a.desc +
+      "</div></div>";
   }
-  showModal({ title: "🏠 在住所", body: html, buttons: [{ text: "出门", cls: "", callback: function () {} }] });
+  showModal({
+    title: "🏠 在住所",
+    body: html,
+    buttons: [{ text: "出门", cls: "", callback: function () {} }],
+  });
   setTimeout(function () {
     var ov = document.querySelector(".modal-overlay");
     if (!ov) return;
@@ -38189,7 +38231,8 @@ function showHomeActionsModal(state) {
           el.addEventListener("click", function () {
             var o = document.querySelector(".modal-overlay");
             if (o && o.parentNode) o.parentNode.removeChild(o);
-            if (typeof travelToAmenityAndUse === "function") travelToAmenityAndUse(aid);
+            if (typeof travelToAmenityAndUse === "function")
+              travelToAmenityAndUse(aid);
             else if (typeof useAmenity === "function") useAmenity(aid);
           });
         }
@@ -45385,12 +45428,12 @@ function checkPhaseTransition(state) {
     transitionPropertyPhase(state, "boom");
     return;
   }
-  if (phase !== "bust" && heat <= 0.80 && daysInPhase >= 10) {
+  if (phase !== "bust" && heat <= 0.8 && daysInPhase >= 10) {
     // 行业热度极低→转向萧条
     transitionPropertyPhase(state, "bust");
     return;
   }
-  if (phase === "stable" && heat <= 0.90 && daysInPhase >= 10) {
+  if (phase === "stable" && heat <= 0.9 && daysInPhase >= 10) {
     // 热度小幅低于正常→降温
     transitionPropertyPhase(state, "cooling");
     return;
@@ -45429,10 +45472,7 @@ function checkNewsDrivenTransition(state, currentPhase) {
       return true;
     }
     // 强刺激新闻：强制转向火爆（除非已在火爆）
-    if (
-      n.id === "property_stimulus" &&
-      currentPhase !== "boom"
-    ) {
+    if (n.id === "property_stimulus" && currentPhase !== "boom") {
       transitionPropertyPhase(state, "boom");
       return true;
     }
@@ -45464,7 +45504,8 @@ function transitionPropertyPhase(state, forcedPhase) {
   inv.propertyPhaseDuration = getRandomPhaseDuration(newPhase);
 
   // 发送转换消息
-  var msg = PHASE_TRANSITION_MSGS[newPhase] || "🏠 房产市场进入" + newPhase + "阶段。";
+  var msg =
+    PHASE_TRANSITION_MSGS[newPhase] || "🏠 房产市场进入" + newPhase + "阶段。";
   var msgType = "info";
   if (newPhase === "boom") msgType = "warning";
   if (newPhase === "bust") msgType = "danger";
@@ -45526,8 +45567,10 @@ function pickNextPhase(state, currentPhase) {
     if (currentPhase === "boom" && target === "stable") weights[target] += 15;
     if (currentPhase === "bust" && target === "cooling") weights[target] += 15;
     if (currentPhase === "cooling" && target === "bust") weights[target] += 10;
-    if (currentPhase === "cooling" && target === "stable") weights[target] += 10;
-    if (currentPhase === "stable" && target === "cooling") weights[target] += 10;
+    if (currentPhase === "cooling" && target === "stable")
+      weights[target] += 10;
+    if (currentPhase === "stable" && target === "cooling")
+      weights[target] += 10;
     if (currentPhase === "stable" && target === "boom") weights[target] += 10;
 
     // 保底权重为正
@@ -45571,9 +45614,10 @@ function calculatePropertyDailyChange(prop, propDef, state) {
   var sectorDrift = 0;
   if (typeof getSectorHeat === "function") {
     var heat = getSectorHeat("房地产");
-    var zoneWeight = (propDef && propDef.zoneWeight) || prop.zoneWeight || {
-      sectorHeat: 0.8,
-    };
+    var zoneWeight = (propDef && propDef.zoneWeight) ||
+      prop.zoneWeight || {
+        sectorHeat: 0.8,
+      };
     sectorDrift = (heat - 1.0) * 0.05 * (zoneWeight.sectorHeat || 0.8);
   }
 
@@ -45594,8 +45638,7 @@ function calculatePropertyDailyChange(prop, propDef, state) {
         : 0.0;
 
   // 5. 每日噪声
-  var vol =
-    (propDef && propDef.volatility) || prop.volatility || 0.004;
+  var vol = (propDef && propDef.volatility) || prop.volatility || 0.004;
   var noise = (Math.random() - 0.5) * 2 * vol;
 
   // 6. 新闻乘数
@@ -45631,7 +45674,10 @@ function getCycleDrift(phase) {
 function getRandomPhaseDuration(phase) {
   var def = PROPERTY_PHASES[phase];
   if (!def) return 30;
-  return def.minDuration + Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1));
+  return (
+    def.minDuration +
+    Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1))
+  );
 }
 
 // ====== UI 辅助函数 ======
@@ -45664,7 +45710,7 @@ function renderPropertyPhaseBanner(state) {
   return (
     '<div style="padding:8px 12px;margin-bottom:12px;background:rgba(255,255,255,0.03);border:1px solid ' +
     def.color +
-    ";border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center;\">" +
+    ';border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">' +
     '<span><strong style="color:' +
     def.color +
     ';">' +
@@ -45675,7 +45721,7 @@ function renderPropertyPhaseBanner(state) {
     " <span style='color:var(--text-muted);font-size:10px;'>(已持续" +
     daysInPhase +
     "天)</span></span>" +
-    '<span style="color:var(--text-muted);">行业热度 " +
+    '<span style="color:var(--text-muted);">行业热度 ' +
     heatArrow +
     " " +
     (heat * 100).toFixed(0) +
@@ -45716,7 +45762,11 @@ if (typeof window !== "undefined") {
     brief:
       "房产价格不再固定增值，而是随市场周期、行业热度、政策调控和新闻事件真实波动",
     version: "1.0.0",
-    related: ["mechanics:world_params", "mechanics:investment", "mechanics:news_system"],
+    related: [
+      "mechanics:world_params",
+      "mechanics:investment",
+      "mechanics:news_system",
+    ],
     sections: [
       {
         kind: "desc",
@@ -45754,7 +45804,8 @@ if (typeof window !== "undefined") {
       },
     ],
   };
-}</script>
+}
+</script>
     <script>/**
  * 玩家创业系统 — 从0到1再到退出的完整创业模拟
  *
@@ -46718,6 +46769,665 @@ const CRISIS_LEVELS = [
   { level: 4, name: "危急", icon: "🚨", color: "#dc2626", threshold: 8 },
 ];
 
+// ====== P1-8: 法律/合规风险系统数据常量 ======
+
+/** 法律风险类型 */
+const LEGAL_RISK_TYPES = {
+  patent: {
+    name: "专利/知识产权",
+    icon: "📜",
+    description: "专利申请、侵权纠纷、专利战",
+    industries: ["tech", "manufacturing", "healthcare"],
+    severityBase: "medium",
+  },
+  data_compliance: {
+    name: "数据合规",
+    icon: "🔒",
+    description: "GDPR/个人信息保护/数据泄露/跨境传输",
+    industries: ["tech", "finance", "healthcare"],
+    severityBase: "high",
+  },
+  labor: {
+    name: "劳动法风险",
+    icon: "⚖️",
+    description: "加班纠纷/裁员补偿/劳动仲裁/社保合规",
+    industries: ["consumer", "tech", "manufacturing"],
+    severityBase: "medium",
+  },
+  antitrust: {
+    name: "反垄断",
+    icon: "🏛️",
+    description: "市场支配地位/价格垄断/排他性协议",
+    industries: ["tech", "finance"],
+    severityBase: "high",
+  },
+  advertising: {
+    name: "广告/宣传合规",
+    icon: "📢",
+    description: "虚假宣传/夸大功效/违规广告",
+    industries: ["consumer", "healthcare", "tech"],
+    severityBase: "low",
+  },
+  financial: {
+    name: "财务/税务合规",
+    icon: "💰",
+    description: "税务稽查/财务造假/融资合规",
+    industries: ["finance", "tech"],
+    severityBase: "high",
+  },
+};
+
+/** 专利系统常量 */
+const PATENT_TYPES = {
+  invention: {
+    name: "发明专利",
+    icon: "💡",
+    protectionYears: 20,
+    cost: 50000,
+    description: "核心技术/算法/方法，保护力度最强",
+    categories: ["tech", "healthcare", "manufacturing"],
+  },
+  utility_model: {
+    name: "实用新型专利",
+    icon: "🔧",
+    protectionYears: 10,
+    cost: 15000,
+    description: "产品结构/外观设计，申请周期短",
+    categories: ["manufacturing", "hardware"],
+  },
+  software_copyright: {
+    name: "软件著作权",
+    icon: "💻",
+    protectionYears: 50,
+    cost: 5000,
+    description: "源代码/软件作品，自动保护",
+    categories: ["tech", "saas", "app"],
+  },
+  trademark: {
+    name: "商标",
+    icon: "®️",
+    protectionYears: 10,
+    cost: 3000,
+    description: "品牌名称/Logo，防止仿冒",
+    categories: ["consumer", "tech", "all"],
+  },
+  design_patent: {
+    name: "外观设计专利",
+    icon: "🎨",
+    protectionYears: 15,
+    cost: 10000,
+    description: "产品外观设计",
+    categories: ["manufacturing", "hardware", "consumer"],
+  },
+};
+
+/** 法律事件模板 */
+const LEGAL_EVENT_TEMPLATES = {
+  // === 专利相关 ===
+  patent_application: {
+    id: "patent_application",
+    name: "专利申请",
+    icon: "📜",
+    type: "opportunity",
+    cost: 30000,
+    duration: 30,
+    riskType: "patent",
+    effects: { patents: +1, legalRisk: -5, technologyScore: +3 },
+    desc: "为公司核心技术申请专利保护",
+    successChance: 0.70,
+  },
+  patent_infringement_suit: {
+    id: "patent_infringement_suit",
+    name: "专利侵权诉讼（被诉）",
+    icon: "⚖️",
+    type: "crisis",
+    severity: "high",
+    riskType: "patent",
+    effects: { reputation: -15, legalRisk: +30, financialLoss: 200000 },
+    triggerChance: 0.008,
+    descTemplate: "被竞争对手/专利流氓起诉专利侵权",
+    responseOptions: ["settle_patent", "fight_patent", "design_around", "invalid_patent"],
+  },
+  patent_attack: {
+    id: "patent_attack",
+    name: "专利攻击（主动）",
+    icon: "🗡️",
+    type: "strategy",
+    cost: 80000,
+    riskType: "patent",
+    effects: { reputation: -5, marketShare: -5, competitorDamage: +10 },
+    desc: "利用专利组合攻击竞争对手",
+    successChance: 0.55,
+  },
+
+  // === 数据合规相关 ===
+  data_audit: {
+    id: "data_audit",
+    name: "数据合规审计",
+    icon: "🔍",
+    type: "opportunity",
+    cost: 50000,
+    duration: 14,
+    riskType: "data_compliance",
+    effects: { complianceLevel: +15, legalRisk: -10 },
+    desc: "聘请第三方进行数据合规审计",
+    successChance: 0.90,
+  },
+  data_breach_regulatory: {
+    id: "data_breach_regulatory",
+    name: "数据泄露监管处罚",
+    icon: "🔒",
+    type: "crisis",
+    severity: "high",
+    riskType: "data_compliance",
+    effects: { reputation: -20, legalRisk: +40, financialLoss: 500000 },
+    triggerChance: 0.005,
+    descTemplate: "因数据泄露/违规收集被监管机构处罚",
+    responseOptions: ["pay_fine", "appeal", "remediate", "cooperate"],
+  },
+  gdpr_violation: {
+    id: "gdpr_violation",
+    name: "跨境数据传输违规",
+    icon: "🌐",
+    type: "crisis",
+    severity: "high",
+    riskType: "data_compliance",
+    effects: { reputation: -15, legalRisk: +35, financialLoss: 300000 },
+    triggerChance: 0.003,
+    descTemplate: "跨境数据传输违反GDPR/个人信息保护法",
+    responseOptions: ["comply_transfer", "localize_data", "settle", "appeal"],
+  },
+
+  // === 劳动法相关 ===
+  labor_arbitration: {
+    id: "labor_arbitration",
+    name: "劳动仲裁",
+    icon: "⚖️",
+    type: "crisis",
+    severity: "medium",
+    riskType: "labor",
+    effects: { reputation: -10, legalRisk: +15, financialLoss: 100000, employeeMorale: -10 },
+    triggerChance: 0.01,
+    descTemplate: "员工提起劳动仲裁（加班/裁员/薪资纠纷）",
+    responseOptions: ["settle_labor", "fight_labor", "negotiate", "comply"],
+  },
+  labor_inspection: {
+    id: "labor_inspection",
+    name: "劳动监察",
+    icon: "👮",
+    type: "crisis",
+    severity: "medium",
+    riskType: "labor",
+    effects: { reputation: -8, legalRisk: +20, financialLoss: 50000 },
+    triggerChance: 0.006,
+    descTemplate: "劳动监察部门对公司展开调查",
+    responseOptions: ["cooperate_inspection", "remediate_labor", "legal_defense", "settle_inspection"],
+  },
+  mass_layoff_dispute: {
+    id: "mass_layoff_dispute",
+    name: "大规模裁员纠纷",
+    icon: "😢",
+    type: "crisis",
+    severity: "high",
+    riskType: "labor",
+    effects: { reputation: -25, legalRisk: +25, financialLoss: 300000, employeeMorale: -30 },
+    triggerChance: 0.004,
+    descTemplate: "大规模裁员引发员工集体维权/诉讼",
+    responseOptions: ["increase_severance", "negotiate_collective", "legal_defense", "public_apology"],
+  },
+
+  // === 反垄断相关 ===
+  antitrust_investigation: {
+    id: "antitrust_investigation",
+    name: "反垄断调查",
+    icon: "🏛️",
+    type: "crisis",
+    severity: "high",
+    riskType: "antitrust",
+    effects: { reputation: -20, legalRisk: +40, financialLoss: 1000000, marketShare: -5 },
+    triggerChance: 0.002,
+    descTemplate: "监管机构对公司展开反垄断调查",
+    responseOptions: ["cooperate_antitrust", "legal_defense_antitrust", "settle_antitrust", "divest"],
+  },
+
+  // === 广告/宣传合规 ===
+  false_advertising: {
+    id: "false_advertising",
+    name: "虚假宣传处罚",
+    icon: "📢",
+    type: "crisis",
+    severity: "low",
+    riskType: "advertising",
+    effects: { reputation: -10, legalRisk: +10, financialLoss: 30000 },
+    triggerChance: 0.015,
+    descTemplate: "广告/宣传内容被认定为虚假宣传",
+    responseOptions: ["correct_ad", "pay_fine_ad", "apologize_ad", "settle_ad"],
+  },
+
+  // === 财务/税务合规 ===
+  tax_audit: {
+    id: "tax_audit",
+    name: "税务稽查",
+    icon: "💰",
+    type: "crisis",
+    severity: "high",
+    riskType: "financial",
+    effects: { reputation: -15, legalRisk: +30, financialLoss: 200000 },
+    triggerChance: 0.005,
+    descTemplate: "税务部门对公司展开稽查",
+    responseOptions: ["cooperate_tax", "legal_defense_tax", "settle_tax", "remediate_tax"],
+  },
+  financial_misstatement: {
+    id: "financial_misstatement",
+    name: "财务信息披露违规",
+    icon: "📊",
+    type: "crisis",
+    severity: "high",
+    riskType: "financial",
+    effects: { reputation: -25, legalRisk: +35, financialLoss: 500000, investorTrust: -20 },
+    triggerChance: 0.003,
+    descTemplate: "财报/融资信息被认定为虚假披露",
+    responseOptions: ["correct_financial", "legal_defense_financial", "settle_financial", "restate"],
+  },
+};
+
+/** 法律事件应对选项 */
+const LEGAL_RESPONSE_OPTIONS = {
+  // === 专利诉讼应对 ===
+  settle_patent: {
+    label: "和解",
+    cost: 150000,
+    effect: { reputation: +3, legalRisk: -15, financialLoss: 150000 },
+    desc: "与原告达成和解，支付许可费",
+    risk: "财务损失，但快速解决",
+  },
+  fight_patent: {
+    label: "抗辩",
+    cost: 300000,
+    effect: { reputation: +5, legalRisk: -10 },
+    desc: "聘请律师团队积极抗辩",
+    risk: "高成本，长期诉讼",
+  },
+  design_around: {
+    label: "绕开设计",
+    cost: 100000,
+    effect: { reputation: +2, legalRisk: -5, technologyScore: -3 },
+    desc: "修改产品设计以绕开专利",
+    risk: "产品需要重新设计",
+  },
+  invalid_patent: {
+    label: "专利无效化",
+    cost: 200000,
+    effect: { reputation: +8, legalRisk: -20 },
+    desc: "挑战对方专利有效性",
+    risk: "高风险高回报",
+  },
+
+  // === 数据泄露监管处罚应对 ===
+  pay_fine: {
+    label: "缴纳罚款",
+    cost: 500000,
+    effect: { reputation: -5, legalRisk: -25 },
+    desc: "接受处罚，缴纳罚款",
+    risk: "高额罚款",
+  },
+  appeal: {
+    label: "提起上诉",
+    cost: 100000,
+    effect: { reputation: 0, legalRisk: -5 },
+    desc: "对处罚决定提起行政复议/诉讼",
+    risk: "结果不确定",
+  },
+  remediate: {
+    label: "整改",
+    cost: 200000,
+    effect: { reputation: +5, legalRisk: -20 },
+    desc: "全面整改数据合规体系",
+    risk: "需要时间和资源投入",
+  },
+  cooperate: {
+    label: "配合调查",
+    cost: 50000,
+    effect: { reputation: +3, legalRisk: -15 },
+    desc: "主动配合监管机构调查",
+    risk: "可能面临更重处罚",
+  },
+
+  // === 跨境数据传输违规应对 ===
+  comply_transfer: {
+    label: "合规传输",
+    cost: 150000,
+    effect: { reputation: +3, legalRisk: -20 },
+    desc: "建立合规的跨境数据传输机制",
+    risk: "需要技术投入",
+  },
+  localize_data: {
+    label: "数据本地化",
+    cost: 300000,
+    effect: { reputation: +5, legalRisk: -25, operationalCost: +20000 },
+    desc: "将数据完全本地化存储",
+    risk: "高成本，影响海外业务",
+  },
+  settle_data: {
+    label: "和解",
+    cost: 300000,
+    effect: { reputation: 0, legalRisk: -20 },
+    desc: "与监管机构达成和解",
+    risk: "高额和解金",
+  },
+  appeal_data: {
+    label: "上诉",
+    cost: 80000,
+    effect: { reputation: 0, legalRisk: -5 },
+    desc: "对处罚提起行政诉讼",
+    risk: "结果不确定",
+  },
+
+  // === 劳动仲裁应对 ===
+  settle_labor: {
+    label: "和解赔偿",
+    cost: 100000,
+    effect: { reputation: +2, legalRisk: -15, employeeMorale: +5 },
+    desc: "与员工达成和解，支付补偿",
+    risk: "财务损失，但快速解决",
+  },
+  fight_labor: {
+    label: "抗辩",
+    cost: 50000,
+    effect: { reputation: -3, legalRisk: -5, employeeMorale: -5 },
+    desc: "通过法律途径抗辩",
+    risk: "员工关系恶化",
+  },
+  negotiate: {
+    label: "协商",
+    cost: 20000,
+    effect: { reputation: +3, legalRisk: -10, employeeMorale: +3 },
+    desc: "与员工/工会协商解决方案",
+    risk: "需要时间",
+  },
+  comply_labor: {
+    label: "接受裁决",
+    cost: 80000,
+    effect: { reputation: +5, legalRisk: -15, employeeMorale: +8 },
+    desc: "接受仲裁裁决并执行",
+    risk: "财务损失",
+  },
+
+  // === 劳动监察应对 ===
+  cooperate_inspection: {
+    label: "配合检查",
+    cost: 20000,
+    effect: { reputation: +3, legalRisk: -15 },
+    desc: "主动配合劳动监察部门检查",
+    risk: "可能发现更多问题",
+  },
+  remediate_labor: {
+    label: "整改",
+    cost: 80000,
+    effect: { reputation: +5, legalRisk: -20 },
+    desc: "全面整改劳动合规问题",
+    risk: "需要时间和资源",
+  },
+  legal_defense_labor: {
+    label: "法律抗辩",
+    cost: 100000,
+    effect: { reputation: 0, legalRisk: -10 },
+    desc: "聘请律师进行抗辩",
+    risk: "高成本",
+  },
+  settle_inspection: {
+    label: "和解",
+    cost: 50000,
+    effect: { reputation: +2, legalRisk: -15 },
+    desc: "与监察部门达成和解",
+    risk: "财务损失",
+  },
+
+  // === 大规模裁员纠纷应对 ===
+  increase_severance: {
+    label: "提高补偿",
+    cost: 300000,
+    effect: { reputation: +10, legalRisk: -20, employeeMorale: +15 },
+    desc: "大幅提高裁员补偿标准",
+    risk: "高财务成本",
+  },
+  negotiate_collective: {
+    label: "集体协商",
+    cost: 50000,
+    effect: { reputation: +5, legalRisk: -10, employeeMorale: +5 },
+    desc: "与员工代表/工会集体协商",
+    risk: "需要谈判技巧",
+  },
+  legal_defense_layoff: {
+    label: "法律抗辩",
+    cost: 150000,
+    effect: { reputation: -5, legalRisk: -5, employeeMorale: -10 },
+    desc: "通过法律途径抗辩",
+    risk: "员工关系严重恶化",
+  },
+  public_apology: {
+    label: "公开道歉",
+    cost: 0,
+    effect: { reputation: +3, legalRisk: 0, employeeMorale: +5 },
+    desc: "CEO公开道歉，承诺改进",
+    risk: "效果有限",
+  },
+
+  // === 反垄断调查应对 ===
+  cooperate_antitrust: {
+    label: "配合调查",
+    cost: 100000,
+    effect: { reputation: +3, legalRisk: -20 },
+    desc: "主动配合反垄断调查",
+    risk: "可能面临重罚",
+  },
+  legal_defense_antitrust: {
+    label: "法律抗辩",
+    cost: 500000,
+    effect: { reputation: 0, legalRisk: -10 },
+    desc: "聘请顶级反垄断律师团队",
+    risk: "极高成本",
+  },
+  settle_antitrust: {
+    label: "和解",
+    cost: 1000000,
+    effect: { reputation: -5, legalRisk: -30, marketShare: -3 },
+    desc: "与监管机构达成和解",
+    risk: "巨额罚款+业务限制",
+  },
+  divest: {
+    label: "剥离资产",
+    cost: 2000000,
+    effect: { reputation: -10, legalRisk: -40, marketShare: -10 },
+    desc: "剥离部分业务/资产以消除垄断嫌疑",
+    risk: "重大战略损失",
+  },
+
+  // === 虚假宣传处罚应对 ===
+  correct_ad: {
+    label: "更正广告",
+    cost: 20000,
+    effect: { reputation: +3, legalRisk: -10 },
+    desc: "立即更正/下架违规广告",
+    risk: "营销中断",
+  },
+  pay_fine_ad: {
+    label: "缴纳罚款",
+    cost: 30000,
+    effect: { reputation: -2, legalRisk: -15 },
+    desc: "接受处罚，缴纳罚款",
+    risk: "财务损失",
+  },
+  apologize_ad: {
+    label: "公开道歉",
+    cost: 0,
+    effect: { reputation: +2, legalRisk: -5 },
+    desc: "公开道歉并承诺整改",
+    risk: "效果有限",
+  },
+  settle_ad: {
+    label: "和解",
+    cost: 20000,
+    effect: { reputation: +1, legalRisk: -10 },
+    desc: "与监管部门达成和解",
+    risk: "财务损失",
+  },
+
+  // === 税务稽查应对 ===
+  cooperate_tax: {
+    label: "配合稽查",
+    cost: 30000,
+    effect: { reputation: +3, legalRisk: -15 },
+    desc: "主动配合税务部门稽查",
+    risk: "可能发现更多问题",
+  },
+  legal_defense_tax: {
+    label: "法律抗辩",
+    cost: 150000,
+    effect: { reputation: 0, legalRisk: -10 },
+    desc: "聘请税务律师抗辩",
+    risk: "高成本",
+  },
+  settle_tax: {
+    label: "和解",
+    cost: 200000,
+    effect: { reputation: -2, legalRisk: -20 },
+    desc: "与税务部门达成和解",
+    risk: "财务损失",
+  },
+  remediate_tax: {
+    label: "整改",
+    cost: 100000,
+    effect: { reputation: +5, legalRisk: -25 },
+    desc: "全面整改税务合规问题",
+    risk: "需要时间和资源",
+  },
+
+  // === 财务信息披露违规应对 ===
+  correct_financial: {
+    label: "更正披露",
+    cost: 50000,
+    effect: { reputation: +3, legalRisk: -10, investorTrust: +5 },
+    desc: "发布更正后的财务信息",
+    risk: "市场信心受损",
+  },
+  legal_defense_financial: {
+    label: "法律抗辩",
+    cost: 300000,
+    effect: { reputation: -5, legalRisk: -5, investorTrust: -10 },
+    desc: "通过法律途径抗辩",
+    risk: "投资者信心进一步受损",
+  },
+  settle_financial: {
+    label: "和解",
+    cost: 500000,
+    effect: { reputation: -10, legalRisk: -20, investorTrust: -5 },
+    desc: "与监管机构/投资者达成和解",
+    risk: "高额和解金+声誉损失",
+  },
+  restate: {
+    label: "重述财报",
+    cost: 100000,
+    effect: { reputation: -5, legalRisk: -15, investorTrust: +3 },
+    desc: "重述过往财报，全面披露",
+    risk: "市场信心短期受损",
+  },
+};
+
+/** 法律合规检查清单 */
+const LEGAL_CHECKLIST = {
+  patent_filing: {
+    id: "patent_filing",
+    name: "核心专利申请",
+    icon: "📜",
+    category: "patent",
+    cost: 50000,
+    benefit: { legalRisk: -10, technologyScore: +2 },
+    description: "为至少1项核心技术申请专利",
+  },
+  data_compliance_audit: {
+    id: "data_compliance_audit",
+    name: "数据合规审计",
+    icon: "🔍",
+    category: "data_compliance",
+    cost: 50000,
+    benefit: { legalRisk: -15, complianceLevel: +20 },
+    description: "完成数据合规第三方审计",
+  },
+  labor_contract_review: {
+    id: "labor_contract_review",
+    name: "劳动合同审查",
+    icon: "📄",
+    category: "labor",
+    cost: 10000,
+    benefit: { legalRisk: -5, employeeMorale: +3 },
+    description: "审查所有劳动合同合规性",
+  },
+  privacy_policy_update: {
+    id: "privacy_policy_update",
+    name: "隐私政策更新",
+    icon: "🔒",
+    category: "data_compliance",
+    cost: 5000,
+    benefit: { legalRisk: -3, complianceLevel: +5 },
+    description: "更新隐私政策符合最新法规",
+  },
+  tax_compliance_check: {
+    id: "tax_compliance_check",
+    name: "税务合规检查",
+    icon: "💰",
+    category: "financial",
+    cost: 30000,
+    benefit: { legalRisk: -8, financialRisk: -5 },
+    description: "聘请税务师进行合规检查",
+  },
+  employment_handbook: {
+    id: "employment_handbook",
+    name: "员工手册更新",
+    icon: "📖",
+    category: "labor",
+    cost: 5000,
+    benefit: { legalRisk: -3, employeeMorale: +2 },
+    description: "更新员工手册符合最新劳动法",
+  },
+  ip_assignment: {
+    id: "ip_assignment",
+    name: "知识产权归属协议",
+    icon: "💼",
+    category: "patent",
+    cost: 10000,
+    benefit: { legalRisk: -5 },
+    description: "与所有员工签署IP归属协议",
+  },
+  advertising_review: {
+    id: "advertising_review",
+    name: "广告内容审查",
+    icon: "📢",
+    category: "advertising",
+    cost: 10000,
+    benefit: { legalRisk: -5, reputation: +2 },
+    description: "审查所有广告内容合规性",
+  },
+};
+
+/** 法律风险等级 */
+const LEGAL_RISK_LEVELS = [
+  { level: 0, name: "健康", icon: "✅", color: "var(--success)", threshold: 0, description: "法律风险极低，合规状况良好" },
+  { level: 1, name: "低", icon: "🟢", color: "#22c55e", threshold: 10, description: "法律风险较低，注意日常合规" },
+  { level: 2, name: "中", icon: "🟡", color: "var(--warning)", threshold: 25, description: "法律风险中等，需要加强合规" },
+  { level: 3, name: "高", icon: "🟠", color: "#f97316", description: "法律风险较高，需要立即行动", threshold: 45 },
+  { level: 4, name: "危急", icon: "🔴", color: "var(--danger)", threshold: 65, description: "法律风险极高，面临重大威胁" },
+];
+
+/** 公司合规等级 */
+const COMPLIANCE_LEVELS = [
+  { level: 0, name: "无合规体系", icon: "⚠️", color: "var(--danger)", threshold: 0, description: "没有任何合规措施，风险极高" },
+  { level: 1, name: "基础合规", icon: "📋", color: "var(--warning)", threshold: 15, description: "有基础合规意识，但体系不完善" },
+  { level: 2, name: "合规框架", icon: "📄", color: "#f59e0b", threshold: 35, description: "有合规框架，但执行不到位" },
+  { level: 3, name: "合规体系", icon: "✅", color: "#22c55e", threshold: 55, description: "有完整的合规体系，运行良好" },
+  { level: 4, name: "合规标杆", icon: "🏆", color: "var(--primary)", threshold: 75, description: "行业合规标杆，风险极低" },
+];
+
 // ====== 产品类别（15+类别，每类有独特机制）======
 const PRODUCT_CATEGORIES = {
   // === 基础6类（原有）===
@@ -47291,6 +48001,28 @@ function registerStartup(state, name, industry, description) {
     negativeNewsCount: 0, // 近期负面新闻计数
     brandMentions: 0, // 品牌提及次数
     sentimentScore: 50, // 媒体情绪分 -100~100
+    // ====== P1-8: 法律/合规风险系统 ======
+    legalRisk: 0, // 法律风险值 0-100（越高越危险）
+    legalRiskHistory: [], // 法律风险历史 [{day, change, reason}]
+    legalRiskLevel: 0, // 当前法律风险等级 0-4
+    complianceLevel: 0, // 合规水平 0-100
+    complianceLevelHistory: [], // 合规水平历史 [{day, change, reason}]
+    complianceGrade: 0, // 合规等级 0-4
+    legalBudget: 100000, // 法律预算（初始10万）
+    legalSpent: 0, // 已花费法律费用
+    patents: [], // 已申请专利 [{id, type, name, applyDay, grantDay, status, protectionYears}]
+    patentCount: 0, // 专利数量
+    legalCases: [], // 法律案件 [{id, type, eventTemplateId, triggeredDay, status, response, outcome, financialImpact}]
+    legalCasesActive: 0, // 活跃法律案件数
+    legalHistory: [], // 法律事件历史 [{day, type, severity, outcome, financialImpact}]
+    pendingLegalEvent: null, // 待处理的法律事件 {id, event, deadline}
+    legalChecklist: {}, // 合规检查清单完成情况 {checklistId: completedDay}
+    legalRiskFlags: {}, // 法律风险标记 {riskType: true/false}
+    lastLegalAction: null, // 上次法律行动 {actionId, day, cost}
+    legalInsurance: false, // 是否购买法律保险
+    legalInsuranceLevel: 0, // 法律保险等级 0-3
+    regulatoryRelationship: 0, // 监管机构关系 0-100
+    industryComplianceRank: 0, // 行业合规排名 0-100
   };
 
   // 生成1-2个联合创始人
@@ -49045,6 +49777,559 @@ function tickStartup(state, tickType) {
     _updateMediaRelationLevel(company);
     _evaluateCrisisProbability(state, company);
   }
+
+  // ====== P1-8: 法律/合规风险系统季度评估 ======
+  if (tickType === "quarterly") {
+    _evaluateLegalRisk(state, company);
+    _updateLegalRiskLevel(company);
+    _updateComplianceGrade(company);
+    _processPendingLegalEvent(state, company);
+    _evaluateLegalEventProbability(state, company);
+  }
+}
+
+// ====== P1-8: 法律/合规风险系统核心函数 ======
+
+/** 评估法律风险 */
+function _evaluateLegalRisk(state, company) {
+  // 法律风险自然衰减（每季度 -3，最低 0）
+  const decay = Math.max(0, company.legalRisk - 3);
+  company.legalRisk = decay;
+
+  // 合规水平高降低风险
+  if (company.complianceGrade >= 3) {
+    company.legalRisk = Math.max(0, company.legalRisk - 5);
+  } else if (company.complianceGrade <= 1) {
+    company.legalRisk = Math.min(100, company.legalRisk + 3);
+  }
+
+  // 专利数量高降低风险
+  if (company.patentCount >= 3) {
+    company.legalRisk = Math.max(0, company.legalRisk - 3);
+  }
+
+  // 活跃案件增加风险
+  company.legalRisk = Math.min(100, company.legalRisk + company.legalCasesActive * 5);
+
+  // 记录历史
+  company.legalRiskHistory.push({
+    day: state.player.day,
+    change: company.legalRisk - decay,
+    reason: "季度评估",
+    complianceGrade: company.complianceGrade,
+    activeCases: company.legalCasesActive,
+  });
+
+  // 清理历史（保留最近 20 条）
+  if (company.legalRiskHistory.length > 20) {
+    company.legalRiskHistory = company.legalRiskHistory.slice(-20);
+  }
+
+  // 合规水平自然增长（每季度 +2，最高 100）
+  company.complianceLevel = Math.min(100, company.complianceLevel + 2);
+  company.complianceLevelHistory.push({
+    day: state.player.day,
+    change: 2,
+    reason: "季度自然增长",
+  });
+  if (company.complianceLevelHistory.length > 20) {
+    company.complianceLevelHistory = company.complianceLevelHistory.slice(-20);
+  }
+
+  // 监管关系衰减
+  company.regulatoryRelationship = Math.max(0, company.regulatoryRelationship - 2);
+}
+
+/** 更新法律风险等级 */
+function _updateLegalRiskLevel(company) {
+  const newLevel = LEGAL_RISK_LEVELS.findLast(l => company.legalRisk >= l.threshold) || LEGAL_RISK_LEVELS[0];
+  if (newLevel.level !== company.legalRiskLevel) {
+    const oldLevel = LEGAL_RISK_LEVELS.find(l => l.level === company.legalRiskLevel) || LEGAL_RISK_LEVELS[0];
+    StateManager.addMessage(
+      `⚖️ 法律风险等级变化：${oldLevel.name} → ${newLevel.name}（${newLevel.icon}）${newLevel.description ? ` · ${newLevel.description}` : ""}`,
+      "event"
+    );
+    company.legalRiskLevel = newLevel.level;
+  }
+}
+
+/** 更新合规等级 */
+function _updateComplianceGrade(company) {
+  const newGrade = COMPLIANCE_LEVELS.findLast(l => company.complianceLevel >= l.threshold) || COMPLIANCE_LEVELS[0];
+  if (newGrade.level !== company.complianceGrade) {
+    const oldGrade = COMPLIANCE_LEVELS.find(l => l.level === company.complianceGrade) || COMPLIANCE_LEVELS[0];
+    StateManager.addMessage(
+      `📋 合规等级变化：${oldGrade.name} → ${newGrade.name}（${newGrade.icon}）${newGrade.description ? ` · ${newGrade.description}` : ""}`,
+      "event"
+    );
+    company.complianceGrade = newGrade.level;
+  }
+}
+
+/** 处理待处理的法律事件 */
+function _processPendingLegalEvent(state, company) {
+  if (!company.pendingLegalEvent) return;
+
+  const legalEvent = company.pendingLegalEvent;
+  const daysRemaining = legalEvent.deadline - state.player.day;
+
+  if (daysRemaining <= 0) {
+    // 超时未处理，法律风险增加
+    _resolveLegalEvent(state, company, -1);
+    return;
+  }
+
+  // 法律风险随时间增加
+  if (daysRemaining <= 14 && company.legalRiskLevel < 4) {
+    company.legalRiskLevel = Math.min(4, company.legalRiskLevel + 1);
+    StateManager.addMessage(
+      `⚖️ 法律事件倒计时：${daysRemaining}天内必须处理「${legalEvent.event.name}」！`,
+      "warning"
+    );
+  }
+}
+
+/** 评估法律事件触发概率 */
+function _evaluateLegalEventProbability(state, company) {
+  // 基础触发概率
+  let baseChance = 0.003; // 0.3%/天
+
+  // 合规等级低增加触发概率
+  if (company.complianceGrade <= 1) {
+    baseChance *= 2.0;
+  } else if (company.complianceGrade >= 3) {
+    baseChance *= 0.5;
+  }
+
+  // 法律风险高增加触发概率
+  if (company.legalRiskLevel >= 3) {
+    baseChance *= 1.5;
+  }
+
+  // 行业因素
+  const industry = company.industry;
+  if (industry === "finance" || industry === "tech") {
+    baseChance *= 1.3; // 金融/科技行业风险更高
+  }
+
+  // 活跃案件增加触发概率
+  if (company.legalCasesActive > 0) {
+    baseChance *= (1 + company.legalCasesActive * 0.3);
+  }
+
+  // 法律保险降低触发概率
+  if (company.legalInsurance) {
+    baseChance *= 0.7;
+  }
+
+  // 随机触发
+  if (Math.random() < baseChance) {
+    _triggerLegalEvent(state, company);
+  }
+}
+
+/** 触发法律事件 */
+function _triggerLegalEvent(state, company) {
+  // 选择风险类型
+  const riskTypes = Object.keys(LEGAL_RISK_TYPES);
+  const industry = company.industry;
+
+  // 根据行业筛选可用风险类型
+  const availableRiskTypes = riskTypes.filter(riskType => {
+    const typeInfo = LEGAL_RISK_TYPES[riskType];
+    return typeInfo.industries.includes(industry) || typeInfo.industries.includes("all");
+  });
+
+  if (availableRiskTypes.length === 0) return;
+
+  const selectedRiskType = availableRiskTypes[Math.floor(Math.random() * availableRiskTypes.length)];
+
+  // 筛选该风险类型的事件模板
+  const eventTemplates = Object.values(LEGAL_EVENT_TEMPLATES).filter(
+    e => e.riskType === selectedRiskType && e.type === "crisis"
+  );
+
+  if (eventTemplates.length === 0) return;
+
+  const eventTemplate = eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+
+  // 生成事件
+  const eventId = _startupGenerateId();
+  const event = {
+    id: eventId,
+    eventTemplateId: eventTemplate.id,
+    type: eventTemplate.type,
+    severity: eventTemplate.severity,
+    riskType: selectedRiskType,
+    title: eventTemplate.descTemplate ? eventTemplate.descTemplate.replace("公司", company.name) : eventTemplate.name,
+    name: eventTemplate.name,
+    triggeredDay: state.player.day,
+    deadline: state.player.day + (eventTemplate.severity === "high" ? 14 : eventTemplate.severity === "medium" ? 21 : 30),
+    resolved: false,
+    response: null,
+    financialImpact: 0,
+  };
+
+  company.pendingLegalEvent = event;
+  company.legalRisk = Math.min(100, company.legalRisk + (eventTemplate.effects?.legalRisk || 5));
+
+  StateManager.addMessage(
+    `⚖️ 法律事件：${event.title}（${LEGAL_RISK_TYPES[selectedRiskType].name}）`,
+    "warning"
+  );
+}
+
+/** 解决法律事件 */
+function _resolveLegalEvent(state, company, responseIndex) {
+  if (!company.pendingLegalEvent) return;
+
+  const event = company.pendingLegalEvent;
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[event.eventTemplateId];
+
+  if (responseIndex === -1) {
+    // 超时未处理
+    event.resolved = true;
+    event.response = "timeout";
+    event.outcome = "failed";
+    event.financialImpact = (eventTemplate.effects?.financialLoss || 0) * 1.5;
+    company.legalRisk = Math.min(100, company.legalRisk + 10);
+    company.legalRiskLevel = Math.min(4, company.legalRiskLevel + 1);
+    StateManager.addMessage(
+      `⚖️ 法律事件超时：「${event.name}」未及时处理，风险升级！`,
+      "danger"
+    );
+  } else {
+    // 有响应
+    const responseKey = eventTemplate.responseOptions[responseIndex];
+    const response = LEGAL_RESPONSE_OPTIONS[responseKey];
+
+    if (!response) return;
+
+    event.resolved = true;
+    event.response = responseKey;
+    event.outcome = "resolved";
+
+    // 计算效果
+    const effectiveness = _calculateLegalResponseEffectiveness(company, response);
+    const actualFinancialLoss = response.cost * (1 - effectiveness * 0.3);
+
+    // 应用效果
+    if (response.effect) {
+      for (const [key, value] of Object.entries(response.effect)) {
+        if (key === "financialLoss") {
+          event.financialImpact = actualFinancialLoss;
+          company.legalBudget = Math.max(0, company.legalBudget - actualFinancialLoss);
+          company.legalSpent += actualFinancialLoss;
+        } else if (key === "legalRisk") {
+          company.legalRisk = Math.max(0, company.legalRisk + value);
+        } else if (key === "reputation") {
+          company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+        } else if (key === "employeeMorale") {
+          // 员工士气影响通过员工系统处理
+        }
+      }
+    }
+
+    // 合规水平提升
+    if (effectiveness > 0.5) {
+      company.complianceLevel = Math.min(100, company.complianceLevel + 5);
+    }
+
+    StateManager.addMessage(
+      `⚖️ 法律事件处理：${response.label}，${effectiveness > 0.5 ? "成功" : "部分成功"}`,
+      effectiveness > 0.5 ? "success" : "warning"
+    );
+  }
+
+  // 记录历史
+  company.legalHistory.push({
+    day: state.player.day,
+    type: event.riskType,
+    severity: event.severity,
+    outcome: event.outcome,
+    financialImpact: event.financialImpact,
+  });
+  if (company.legalHistory.length > 20) {
+    company.legalHistory = company.legalHistory.slice(-20);
+  }
+
+  // 清除待处理事件
+  company.pendingLegalEvent = null;
+  company.legalCasesActive = Math.max(0, company.legalCasesActive - 1);
+
+  // 记录案件
+  company.legalCases.push({
+    ...event,
+    resolvedDay: state.player.day,
+  });
+}
+
+/** 计算法律事件应对效果 */
+function _calculateLegalResponseEffectiveness(company, response) {
+  // 基础效果
+  let effectiveness = 0.5;
+
+  // 合规等级加成
+  effectiveness += company.complianceGrade * 0.05; // 每级 +5%
+
+  // 法律风险等级惩罚
+  effectiveness -= company.legalRiskLevel * 0.03; // 每级 -3%
+
+  // 专利数量加成（专利相关事件）
+  if (response.effect?.legalRisk && company.patentCount > 0) {
+    effectiveness += Math.min(0.1, company.patentCount * 0.02);
+  }
+
+  // 监管关系加成
+  if (company.regulatoryRelationship > 50) {
+    effectiveness += 0.1;
+  }
+
+  // 法律保险加成
+  if (company.legalInsurance) {
+    effectiveness += 0.05;
+  }
+
+  return Math.max(0, Math.min(1, effectiveness));
+}
+
+/** 执行法律合规检查 */
+function executeLegalChecklistAction(state, checklistId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有可运营的公司" };
+
+  const checklist = LEGAL_CHECKLIST[checklistId];
+  if (!checklist) return { success: false, message: "无效的检查项" };
+
+  // 检查是否已完成
+  if (company.legalChecklist[checklistId]) {
+    return { success: false, message: "该项已完成" };
+  }
+
+  // 检查预算
+  if (company.legalBudget < checklist.cost) {
+    return { success: false, message: `法律预算不足，需要 ¥${checklist.cost.toLocaleString()}` };
+  }
+
+  // 检查行业匹配
+  const industry = company.industry;
+  if (!checklist.categories || !checklist.categories.includes(industry) && checklist.categories?.includes("all") === false) {
+    // 部分检查项对所有行业可用
+  }
+
+  // 执行检查
+  company.legalBudget -= checklist.cost;
+  company.legalSpent += checklist.cost;
+  company.legalChecklist[checklistId] = state.player.day;
+
+  // 应用效果
+  if (checklist.benefit) {
+    for (const [key, value] of Object.entries(checklist.benefit)) {
+      if (key === "legalRisk") {
+        company.legalRisk = Math.max(0, company.legalRisk + value);
+      } else if (key === "technologyScore" && company.technologyScore !== undefined) {
+        company.technologyScore = Math.min(100, company.technologyScore + value);
+      } else if (key === "complianceLevel") {
+        company.complianceLevel = Math.min(100, company.complianceLevel + value);
+      } else if (key === "employeeMorale" && company.employeeMorale !== undefined) {
+        company.employeeMorale = Math.max(0, Math.min(100, company.employeeMorale + value));
+      } else if (key === "financialRisk") {
+        // 财务风险降低
+      } else if (key === "reputation") {
+        company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+      }
+    }
+  }
+
+  StateManager.addMessage(
+    `✅ 法律合规检查：${checklist.name} 完成，法律风险降低`,
+    "success"
+  );
+
+  return { success: true, message: `${checklist.name} 完成！` };
+}
+
+/** 申请专利 */
+function applyPatent(state, patentTypeId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有可运营的公司" };
+
+  const patentType = PATENT_TYPES[patentTypeId];
+  if (!patentType) return { success: false, message: "无效的专利类型" };
+
+  // 检查行业匹配
+  const industry = company.industry;
+  if (!patentType.categories.includes(industry) && !patentType.categories.includes("all")) {
+    return { success: false, message: `该专利类型不适用于${STARTUP_INDUSTRIES[industry].name}行业` };
+  }
+
+  // 检查预算
+  if (company.legalBudget < patentType.cost) {
+    return { success: false, message: `法律预算不足，需要 ¥${patentType.cost.toLocaleString()}` };
+  }
+
+  // 生成专利
+  const patentId = _startupGenerateId();
+  const patent = {
+    id: patentId,
+    type: patentTypeId,
+    typeName: patentType.name,
+    name: company.name + "核心专利" + (company.patents.length + 1),
+    applyDay: state.player.day,
+    grantDay: null,
+    status: "pending", // pending/granted/expired/rejected
+    protectionYears: patentType.protectionYears,
+    cost: patentType.cost,
+  };
+
+  company.patents.push(patent);
+  company.patentCount = company.patents.length;
+  company.legalBudget -= patentType.cost;
+  company.legalSpent += patentType.cost;
+  company.legalRisk = Math.max(0, company.legalRisk - 5);
+
+  StateManager.addMessage(
+    `📜 已申请 ${patentType.name}：${patent.name}，预计 ${patentType.protectionYears} 年保护期`,
+    "success"
+  );
+
+  return { success: true, message: `专利申请成功！`, patent };
+}
+
+/** 购买法律保险 */
+function buyLegalInsurance(state, level) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有可运营的公司" };
+
+  const insuranceCosts = [0, 50000, 150000, 300000];
+  const cost = insuranceCosts[level] || 0;
+
+  if (level <= company.legalInsuranceLevel) {
+    return { success: false, message: "已拥有该等级或更高等级保险" };
+  }
+
+  if (company.legalBudget < cost) {
+    return { success: false, message: `法律预算不足，需要 ¥${cost.toLocaleString()}` };
+  }
+
+  company.legalInsurance = true;
+  company.legalInsuranceLevel = level;
+  company.legalBudget -= cost;
+  company.legalSpent += cost;
+
+  StateManager.addMessage(
+    `🛡️ 已购买法律保险（${level === 1 ? "基础" : level === 2 ? "标准" : "高级"}）`,
+    "success"
+  );
+
+  return { success: true, message: `法律保险购买成功！` };
+}
+
+/** 与监管机构沟通 */
+function regulatoryCommunication(state, actionType) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有可运营的公司" };
+
+  const actions = {
+    build_relation: { cost: 30000, effect: +15 },
+    compliance_report: { cost: 20000, effect: +10 },
+    consultation: { cost: 10000, effect: +5 },
+    lobby: { cost: 100000, effect: +25 },
+  };
+
+  const action = actions[actionType];
+  if (!action) return { success: false, message: "无效的行动类型" };
+
+  if (company.legalBudget < action.cost) {
+    return { success: false, message: `法律预算不足，需要 ¥${action.cost.toLocaleString()}` };
+  }
+
+  company.legalBudget -= action.cost;
+  company.legalSpent += action.cost;
+  company.regulatoryRelationship = Math.min(100, company.regulatoryRelationship + action.effect);
+  company.legalRisk = Math.max(0, company.legalRisk - action.effect * 0.3);
+
+  StateManager.addMessage(
+    `🏛️ 与监管机构沟通：${actionType === "lobby" ? "游说" : actionType === "compliance_report" ? "合规报告" : "建立关系"}，监管关系提升`,
+    "success"
+  );
+
+  return { success: true, message: "监管关系提升！" };
+}
+
+/** 获取法律风险等级信息 */
+function getLegalRiskLevelInfo(level) {
+  return LEGAL_RISK_LEVELS.find(l => l.level === level) || LEGAL_RISK_LEVELS[0];
+}
+
+/** 获取合规等级信息 */
+function getComplianceGradeInfo(level) {
+  return COMPLIANCE_LEVELS.find(l => l.level === level) || COMPLIANCE_LEVELS[0];
+}
+
+/** 获取法律事件摘要 */
+function getLegalEventSummary(eventId) {
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[eventId];
+  if (!eventTemplate) return null;
+
+  return {
+    id: eventTemplate.id,
+    name: eventTemplate.name,
+    icon: eventTemplate.icon,
+    type: eventTemplate.type,
+    severity: eventTemplate.severity,
+    riskType: eventTemplate.riskType,
+    desc: eventTemplate.descTemplate || eventTemplate.desc,
+    cost: eventTemplate.cost,
+    successChance: eventTemplate.successChance,
+  };
+}
+
+/** 获取可用法律事件 */
+function getAvailableLegalEvents(state) {
+  const company = state.startup.company;
+  if (!company) return [];
+
+  const industry = company.industry;
+  return Object.values(LEGAL_EVENT_TEMPLATES).filter(event => {
+    if (event.type !== "opportunity") return false;
+    const typeInfo = LEGAL_RISK_TYPES[event.riskType];
+    return typeInfo.industries.includes(industry) || typeInfo.industries.includes("all");
+  });
+}
+
+/** 获取可用法律应对选项 */
+function getAvailableLegalResponses(eventId) {
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[eventId];
+  if (!eventTemplate || !eventTemplate.responseOptions) return [];
+
+  return eventTemplate.responseOptions.map(optKey => ({
+    key: optKey,
+    ...LEGAL_RESPONSE_OPTIONS[optKey],
+  }));
+}
+
+/** 获取法律检查清单进度 */
+function getLegalChecklistProgress(state) {
+  const company = state.startup.company;
+  if (!company) return [];
+
+  return Object.values(LEGAL_CHECKLIST).map(checklist => ({
+    ...checklist,
+    completed: !!company.legalChecklist[checklist.id],
+    completedDay: company.legalChecklist[checklist.id],
+  }));
+}
+
+/** 获取专利列表 */
+function getPatentList(state) {
+  const company = state.startup.company;
+  if (!company) return [];
+  return company.patents.map(p => ({
+    ...p,
+    typeName: PATENT_TYPES[p.type]?.name || p.type,
+    typeInfo: PATENT_TYPES[p.type],
+  }));
 }
 
 // ====== P1-7: 公关/媒体系统核心函数 ======
@@ -49407,7 +50692,7 @@ function executePREvent(state, eventId) {
   _updateMediaRelationLevel(company);
 
   StateManager.addMessage(
-    `${success ? "✅" : "🔶"} 【${eventTemplate.name}】${success ? "成功举办" : "效果一般"}，${Object.entries(eventTemplate.effects).map(([k, v]) => `${k} +${Math.round(v * multiplier)}）。${success ? "" : "(效果减半)"}`,
+    `${success ? "✅" : "🔶"} 【${eventTemplate.name}】${success ? "成功举办" : "效果一般"}，${Object.entries(eventTemplate.effects).map(([k, v]) => `${k} +${Math.round(v * multiplier)}）。${success ? "" : "(效果减半)"}`)}`,
     success ? "success" : "event"
   );
 
@@ -51710,6 +52995,16 @@ function getAvailableStartupActions(state) {
     available: true,
   });
 
+  // P1-8: 法律/合规管理
+  actions.push({
+    id: "legal_compliance",
+    name: "法律/合规",
+    icon: "⚖️",
+    apCost: 10,
+    desc: "管理法律风险、申请专利、合规检查、处理法律事件",
+    available: true,
+  });
+
   // IPO准备
   if (company.phase === "growth" && company.fundingRounds.length >= 2) {
     actions.push({
@@ -52669,6 +53964,356 @@ function showCrisisResponseModal(crisisId) {
   });
 }
 
+// ====== P1-8: 法律/合规管理弹窗 ======
+
+/** 显示法律/合规管理面板 */
+function showLegalComplianceModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  // 法律风险摘要
+  const legalRiskInfo = getLegalRiskLevelInfo(company.legalRiskLevel);
+  const complianceInfo = getComplianceGradeInfo(company.complianceGrade);
+
+  // 法律风险等级显示
+  const legalRiskHtml = `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">⚖️ 法律风险</div>
+        <div style="font-size:11px;color:${legalRiskInfo.color};font-weight:bold;">${legalRiskInfo.icon} ${legalRiskInfo.name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${company.legalRisk}%;background:${legalRiskInfo.color};border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:14px;font-weight:bold;color:${legalRiskInfo.color};">${company.legalRisk}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${legalRiskInfo.description}</div>
+    </div>
+  `;
+
+  // 合规等级显示
+  const complianceHtml = `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">📋 合规等级</div>
+        <div style="font-size:11px;color:${complianceInfo.color};font-weight:bold;">${complianceInfo.icon} ${complianceInfo.name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${company.complianceLevel}%;background:${complianceInfo.color};border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:14px;font-weight:bold;color:${complianceInfo.color};">${company.complianceLevel}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${complianceInfo.description}</div>
+    </div>
+  `;
+
+  // 法律预算
+  const legalBudgetHtml = `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:13px;font-weight:bold;">💰 法律预算</div>
+        <div style="font-size:12px;color:var(--accent);">¥${company.legalBudget.toLocaleString()}</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">已花费：¥${company.legalSpent.toLocaleString()} | 专利数：${company.patentCount} | 活跃案件：${company.legalCasesActive}</div>
+    </div>
+  `;
+
+  // 待处理法律事件
+  let pendingLegalHtml = "";
+  if (company.pendingLegalEvent) {
+    const legalEvent = company.pendingLegalEvent;
+    const daysRemaining = Math.max(0, legalEvent.deadline - state.player.day);
+    const urgencyColor = daysRemaining <= 14 ? "var(--danger)" : daysRemaining <= 21 ? "var(--warning)" : "var(--text-secondary)";
+    const riskTypeInfo = LEGAL_RISK_TYPES[legalEvent.riskType];
+
+    pendingLegalHtml = `
+      <div style="padding:12px;margin-bottom:12px;background:var(--bg-warning);border-radius:8px;border-left:4px solid var(--danger);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:bold;color:var(--danger);">${riskTypeInfo?.icon || "⚖️"} 【待处理法律事件】${legalEvent.name}</div>
+          <div style="font-size:11px;color:${urgencyColor};font-weight:bold;">剩余${daysRemaining}天</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-secondary);">类型：${riskTypeInfo?.name || legalEvent.riskType} | 严重程度：${legalEvent.severity === "high" ? "🔴 严重" : legalEvent.severity === "medium" ? "🟡 中等" : "🟢 轻微"}</div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="showLegalResponseModal('${legalEvent.id}')">处理法律事件</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 专利列表
+  let patentsHtml = "";
+  if (company.patents && company.patents.length > 0) {
+    patentsHtml = '<div style="margin-bottom:12px;">';
+    patentsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 已申请专利</div>';
+    patentsHtml += '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
+
+    for (const patent of company.patents) {
+      const statusColor = patent.status === "granted" ? "var(--success)" : patent.status === "pending" ? "var(--warning)" : "var(--text-muted)";
+      const statusIcon = patent.status === "granted" ? "✅" : patent.status === "pending" ? "⏳" : "❌";
+
+      patentsHtml += `
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid ${statusColor}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:11px;font-weight:bold;">${statusIcon} ${patent.typeName}：${patent.name}</div>
+            <div style="font-size:9px;color:var(--text-muted);">${patent.protectionYears}年</div>
+          </div>
+          <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">申请日：第${patent.applyDay}天${patent.grantDay ? ` | 授权日：第${patent.grantDay}天` : ""}</div>
+        </div>
+      `;
+    }
+    patentsHtml += "</div></div>";
+  }
+
+  // 合规检查清单
+  let checklistHtml = "";
+  const checklistItems = getLegalChecklistProgress(state);
+  if (checklistItems.length > 0) {
+    checklistHtml = '<div style="margin-bottom:12px;">';
+    checklistHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">✅ 合规检查清单</div>';
+    checklistHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    for (const item of checklistItems) {
+      const completed = item.completed;
+      const canAfford = company.legalBudget >= item.cost;
+      const disabled = completed || !canAfford;
+
+      checklistHtml += `
+        <div style="padding:8px;background:${completed ? 'rgba(34,197,94,0.1)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${completed ? 'var(--success)' : 'var(--border)'};opacity:${disabled ? 0.6 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalChecklistActionFromModal('${item.id}')"`: ""}>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;font-weight:bold;">${item.icon} ${item.name}</div>
+              <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${item.description}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:bold;color:${completed ? 'var(--success)' : (canAfford ? 'var(--accent)' : 'var(--danger)')};">${completed ? "✅ 已完成" : "¥" + item.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:var(--text-muted);margin-top:2px;">${completed ? "第" + item.completedDay + "天完成" : (canAfford ? "可执行" : "预算不足")}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    checklistHtml += "</div></div>";
+  }
+
+  // 法律事件列表（机会类）
+  let legalEventsHtml = "";
+  const availableLegalEvents = getAvailableLegalEvents(state);
+  if (availableLegalEvents.length > 0) {
+    legalEventsHtml = '<div style="margin-bottom:12px;">';
+    legalEventsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 法律合规行动</div>';
+    legalEventsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    for (const event of availableLegalEvents) {
+      const canAfford = company.legalBudget >= event.cost;
+      const disabled = !canAfford;
+
+      legalEventsHtml += `
+        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalEventActionFromModal('${event.id}')"`: ""}>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;font-weight:bold;">${event.icon} ${event.name}</div>
+              <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${event.desc}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${event.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    legalEventsHtml += "</div></div>";
+  }
+
+  // 专利申请选项
+  let patentAppsHtml = "";
+  const industry = company.industry;
+  const applicablePatents = Object.entries(PATENT_TYPES).filter(([key, type]) => {
+    return type.categories.includes(industry) || type.categories.includes("all");
+  });
+
+  if (applicablePatents.length > 0) {
+    patentAppsHtml = '<div style="margin-bottom:12px;">';
+    patentAppsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">💡 申请专利</div>';
+    patentAppsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    for (const [key, type] of applicablePatents) {
+      const canAfford = company.legalBudget >= type.cost;
+      const disabled = !canAfford;
+
+      patentAppsHtml += `
+        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="applyPatentFromModal('${key}')"`: ""}>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;font-weight:bold;">${type.icon} ${type.name}</div>
+              <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${type.description} · ${type.protectionYears}年保护</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${type.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可申请" : "❌ 预算不足"}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    patentAppsHtml += "</div></div>";
+  }
+
+  // 法律保险选项
+  let insuranceHtml = "";
+  if (!company.legalInsurance) {
+    insuranceHtml = '<div style="margin-bottom:12px;">';
+    insuranceHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🛡️ 法律保险</div>';
+    insuranceHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    const insuranceLevels = [
+      { level: 1, name: "基础保险", cost: 50000, desc: "覆盖基础法律咨询" },
+      { level: 2, name: "标准保险", cost: 150000, desc: "覆盖诉讼费用50%" },
+      { level: 3, name: "高级保险", cost: 300000, desc: "覆盖诉讼费用80%" },
+    ];
+
+    for (const ins of insuranceLevels) {
+      const canAfford = company.legalBudget >= ins.cost;
+      const disabled = !canAfford;
+
+      insuranceHtml += `
+        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="buyLegalInsuranceFromModal(${ins.level})"` : ""}>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;font-weight:bold;">🛡️ ${ins.name}</div>
+              <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${ins.desc}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${ins.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可购买" : "❌ 预算不足"}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    insuranceHtml += "</div></div>";
+  } else {
+    insuranceHtml = `
+      <div style="padding:8px;margin-bottom:12px;background:var(--bg-success);border-radius:6px;">
+        <div style="font-size:11px;font-weight:bold;color:var(--success);">🛡️ 已购买法律保险（${company.legalInsuranceLevel === 1 ? "基础" : company.legalInsuranceLevel === 2 ? "标准" : "高级"}）</div>
+      </div>
+    `;
+  }
+
+  // 监管机构关系
+  let regulatoryHtml = "";
+  if (company.regulatoryRelationship > 0) {
+    regulatoryHtml = `
+      <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:bold;">🏛️ 监管机构关系</div>
+          <div style="font-size:11px;color:var(--accent);">${company.regulatoryRelationship}%</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${company.regulatoryRelationship}%;background:var(--accent);border-radius:4px;transition:width 0.3s;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const bodyHtml = `
+    <div style="font-size:13px;max-height:70vh;overflow-y:auto;">
+      ${legalRiskHtml}
+      ${complianceHtml}
+      ${legalBudgetHtml}
+      ${pendingLegalHtml}
+      ${checklistHtml}
+      ${legalEventsHtml}
+      ${patentAppsHtml}
+      ${patentsHtml}
+      ${insuranceHtml}
+      ${regulatoryHtml}
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  showModal({
+    title: "⚖️ 法律/合规管理",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+/** 显示法律事件应对弹窗 */
+function showLegalResponseModal(eventId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company || !company.pendingLegalEvent) return;
+
+  const legalEvent = company.pendingLegalEvent;
+  if (legalEvent.id !== eventId) return;
+
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[legalEvent.eventTemplateId];
+  if (!eventTemplate || !eventTemplate.responseOptions) return;
+
+  const options = getAvailableLegalResponses(eventTemplate.id);
+
+  let html = '<div style="font-size:13px;">';
+  html += '<p style="color:var(--text-secondary);margin-bottom:12px;">';
+  html += `${eventTemplate.icon} <strong>${legalEvent.name}</strong>`;
+  html += `（类型：${LEGAL_RISK_TYPES[legalEvent.riskType]?.name || legalEvent.riskType} | 严重程度：${legalEvent.severity === "high" ? "🔴 严重" : legalEvent.severity === "medium" ? "🟡 中等" : "🟢 轻微"}）`;
+  html += "</p>";
+  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+  for (let i = 0; i < options.length; i++) {
+    const opt = options[i];
+    const canAfford = company.legalBudget >= opt.cost;
+
+    html += `
+      <div style="padding:12px;background:${canAfford ? 'var(--bg-card)' : 'rgba(0,0,0,0.05)'};border-radius:8px;border:1px solid ${canAfford ? 'var(--border)' : 'var(--border)'};opacity:${canAfford ? 1 : 0.5};${canAfford ? 'cursor:pointer;transition:all 0.2s;' : ''} ${canAfford ? 'onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'rgba(0,0,0,0.05)\';"' : ''} onclick="${canAfford ? `resolveLegalActionFromModal(${i})` : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${opt.desc}</div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">风险：${opt.risk}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">${opt.cost > 0 ? '¥' + opt.cost.toLocaleString() : '免费'}</div>
+            <div style="font-size:9px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(opt.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>
+      </div>
+    `;
+  }
+
+  html += "</div></div>";
+
+  if (typeof showModal !== "function") return;
+
+  const daysRemaining = legalEvent.deadline - state.player.day;
+
+  showModal({
+    title: `${eventTemplate.icon} 【法律事件应对】${legalEvent.name}`,
+    body: html,
+    buttons: [
+      {
+        text: `关闭（剩余${daysRemaining}天）`,
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+}
+
 // ====== 执行创业行动 ======
 function executeStartupAction(state, actionId, params) {
   params = params || {};
@@ -52738,6 +54383,28 @@ function executeStartupAction(state, actionId, params) {
 
     case "crisis_response":
       return resolveCrisisEvent(state, params.optionIndex);
+
+    // P1-8: 法律/合规管理
+    case "legal_compliance":
+      return showLegalComplianceModal(state);
+
+    case "legal_checklist":
+      return executeLegalChecklistAction(state, params.checklistId);
+
+    case "apply_patent":
+      return applyPatent(state, params.patentTypeId);
+
+    case "buy_legal_insurance":
+      return buyLegalInsurance(state, params.level);
+
+    case "regulatory_communication":
+      return regulatoryCommunication(state, params.actionType);
+
+    case "legal_event":
+      return executeLegalEvent(state, params.eventId);
+
+    case "legal_response":
+      return resolveLegalEvent(state, params.optionIndex);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -53866,7 +55533,7 @@ function handleVersionUpdate(productId, versionType) {
   const budgetPrompt =
     '<div style="font-size:13px;">' +
     '<p>选择投入预算（¥' + config.costRange[0].toLocaleString() + '~¥' + config.costRange[1].toLocaleString() + '）：</p>' +
-    '<input type="range" id="versionBudget" min="' + config.costRange[0]" max="' + config.costRange[1]" step="5000" value="' + config.costRange[0]" style="width:100%;margin:12px 0;">' +
+    '<input type="range" id="versionBudget" min="' + config.costRange[0] + '" max="' + config.costRange[1] + '" step="5000" value="' + config.costRange[0] + '" style="width:100%;margin:12px 0;">' +
     '<div id="budgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥' + config.costRange[0].toLocaleString() + '</div>' +
     '<script>' +
     'document.getElementById("versionBudget").oninput = function() {' +
@@ -54084,6 +55751,29 @@ if (typeof module !== "undefined" && module.exports) {
     MEDIA_RELATION_ACTIONS,
     MEDIA_RELATION_LEVELS,
     CRISIS_LEVELS,
+    // P1-8: 法律/合规风险系统
+    showLegalComplianceModal,
+    showLegalResponseModal,
+    executeLegalChecklistAction,
+    applyPatent,
+    buyLegalInsurance,
+    regulatoryCommunication,
+    resolveLegalEvent,
+    getAvailableLegalEvents,
+    getAvailableLegalResponses,
+    getLegalChecklistProgress,
+    getPatentList,
+    getLegalRiskLevelInfo,
+    getComplianceGradeInfo,
+    getLegalEventSummary,
+    // P1-8: 数据常量
+    LEGAL_RISK_TYPES,
+    PATENT_TYPES,
+    LEGAL_EVENT_TEMPLATES,
+    LEGAL_RESPONSE_OPTIONS,
+    LEGAL_CHECKLIST,
+    LEGAL_RISK_LEVELS,
+    COMPLIANCE_LEVELS,
   };
 }
 
@@ -54545,6 +56235,81 @@ function showAdBudgetModal(productId, channel) {
       };
     }
   }, 100);
+}
+
+// ====== P1-8: 模态框内联 action 包装函数 ======
+
+function executeLegalChecklistActionFromModal(checklistId) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const result = executeLegalChecklistAction(state, checklistId);
+  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
+  else { StateManager.addMessage(result.message, "warning"); }
+}
+
+function applyPatentFromModal(patentTypeId) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const result = applyPatent(state, patentTypeId);
+  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
+  else { StateManager.addMessage(result.message, "warning"); }
+}
+
+function buyLegalInsuranceFromModal(level) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const result = buyLegalInsurance(state, level);
+  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
+  else { StateManager.addMessage(result.message, "warning"); }
+}
+
+function executeLegalEventActionFromModal(eventId) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const company = state.startup.company;
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[eventId];
+  if (!eventTemplate || eventTemplate.type !== "opportunity") { StateManager.addMessage("无效的法律行动", "warning"); return; }
+  if (company.legalBudget < eventTemplate.cost) { StateManager.addMessage("法律预算不足", "warning"); return; }
+  company.legalBudget -= eventTemplate.cost;
+  company.legalSpent += eventTemplate.cost;
+  if (eventTemplate.effects) {
+    for (const [key, value] of Object.entries(eventTemplate.effects)) {
+      if (key === "complianceLevel") company.complianceLevel = Math.min(100, company.complianceLevel + value);
+      else if (key === "legalRisk") company.legalRisk = Math.max(0, company.legalRisk + value);
+    }
+  }
+  StateManager.addMessage(eventTemplate.icon + " " + eventTemplate.name + " 完成！", "success");
+  renderAll();
+}
+
+function resolveLegalActionFromModal(optionIndex) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const company = state.startup.company;
+  if (!company || !company.pendingLegalEvent) return;
+  const legalEvent = company.pendingLegalEvent;
+  const eventTemplate = LEGAL_EVENT_TEMPLATES[legalEvent.eventTemplateId];
+  if (!eventTemplate) return;
+  const optionKey = eventTemplate.responseOptions[optionIndex];
+  const response = LEGAL_RESPONSE_OPTIONS[optionKey];
+  if (!response) return;
+  if (company.legalBudget < response.cost) { StateManager.addMessage("法律预算不足", "warning"); return; }
+  company.legalBudget -= response.cost;
+  company.legalSpent += response.cost;
+  const effectiveness = _calculateLegalResponseEffectiveness(company, response);
+  if (response.effect) {
+    for (const [key, value] of Object.entries(response.effect)) {
+      if (key === "legalRisk") company.legalRisk = Math.max(0, company.legalRisk + value);
+      else if (key === "reputation" && company.reputation !== undefined) company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+    }
+  }
+  if (effectiveness > 0.5) company.complianceLevel = Math.min(100, company.complianceLevel + 5);
+  company.legalHistory.push({ day: state.player.day, type: legalEvent.riskType, severity: legalEvent.severity, outcome: "resolved", financialImpact: response.cost });
+  if (company.legalHistory.length > 20) company.legalHistory = company.legalHistory.slice(-20);
+  StateManager.addMessage("法律事件处理：" + response.label + "，" + (effectiveness > 0.5 ? "成功" : "部分成功"), effectiveness > 0.5 ? "success" : "warning");
+  company.pendingLegalEvent = null;
+  company.legalCasesActive = Math.max(0, company.legalCasesActive - 1);
+  renderAll();
 }
 </script>
     <script>/**
@@ -59455,63 +61220,294 @@ const HOBBY_CATEGORIES = {
     name: "运动健身",
     icon: "🏃",
     hobbies: [
-      { id: "running", name: "跑步", icon: "🏃", baseCost: 0, baseAP: 10, benefits: ["健康+2", "压力-3", "身材+1"] },
-      { id: "gym", name: "健身房", icon: "🏋️", baseCost: 100, baseAP: 15, benefits: ["身材+3", "健康+1", "压力-2"] },
-      { id: "yoga", name: "瑜伽", icon: "🧘", baseCost: 80, baseAP: 12, benefits: ["身心平衡+3", "压力-5", "健康+1"] },
-      { id: "swimming", name: "游泳", icon: "🏊", baseCost: 50, baseAP: 15, benefits: ["健康+3", "压力-4", "身材+2"] },
-      { id: "basketball", name: "篮球", icon: "🏀", baseCost: 0, baseAP: 20, benefits: ["健康+2", "社交+2", "压力-3"] },
-      { id: "tennis", name: "网球", icon: "🎾", baseCost: 150, baseAP: 20, benefits: ["健康+2", "社交+3", "身材+2"] },
-      { id: "cycling", name: "骑行", icon: "🚴", baseCost: 0, baseAP: 15, benefits: ["健康+2", "压力-3", "视野+1"] },
-      { id: "hiking", name: "徒步", icon: "🥾", baseCost: 50, baseAP: 25, benefits: ["健康+2", "压力-5", "视野+2"] },
+      {
+        id: "running",
+        name: "跑步",
+        icon: "🏃",
+        baseCost: 0,
+        baseAP: 10,
+        benefits: ["健康+2", "压力-3", "身材+1"],
+      },
+      {
+        id: "gym",
+        name: "健身房",
+        icon: "🏋️",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["身材+3", "健康+1", "压力-2"],
+      },
+      {
+        id: "yoga",
+        name: "瑜伽",
+        icon: "🧘",
+        baseCost: 80,
+        baseAP: 12,
+        benefits: ["身心平衡+3", "压力-5", "健康+1"],
+      },
+      {
+        id: "swimming",
+        name: "游泳",
+        icon: "🏊",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["健康+3", "压力-4", "身材+2"],
+      },
+      {
+        id: "basketball",
+        name: "篮球",
+        icon: "🏀",
+        baseCost: 0,
+        baseAP: 20,
+        benefits: ["健康+2", "社交+2", "压力-3"],
+      },
+      {
+        id: "tennis",
+        name: "网球",
+        icon: "🎾",
+        baseCost: 150,
+        baseAP: 20,
+        benefits: ["健康+2", "社交+3", "身材+2"],
+      },
+      {
+        id: "cycling",
+        name: "骑行",
+        icon: "🚴",
+        baseCost: 0,
+        baseAP: 15,
+        benefits: ["健康+2", "压力-3", "视野+1"],
+      },
+      {
+        id: "hiking",
+        name: "徒步",
+        icon: "🥾",
+        baseCost: 50,
+        baseAP: 25,
+        benefits: ["健康+2", "压力-5", "视野+2"],
+      },
     ],
   },
   arts: {
     name: "艺术文化",
     icon: "🎨",
     hobbies: [
-      { id: "reading", name: "阅读", icon: "📚", baseCost: 30, baseAP: 10, benefits: ["智力+2", "视野+2", "压力-2"] },
-      { id: "painting", name: "绘画", icon: "🎨", baseCost: 100, baseAP: 15, benefits: ["创造力+3", "压力-4", "审美+2"] },
-      { id: "music", name: "音乐", icon: "🎵", baseCost: 80, baseAP: 12, benefits: ["审美+2", "压力-5", "心情+2"] },
-      { id: "photography", name: "摄影", icon: "📷", baseCost: 150, baseAP: 15, benefits: ["审美+3", "创造力+2", "社交+1"] },
-      { id: "writing", name: "写作", icon: "✍️", baseCost: 20, baseAP: 15, benefits: ["智力+2", "创造力+2", "表达+2"] },
-      { id: "calligraphy", name: "书法", icon: "🖌️", baseCost: 50, baseAP: 12, benefits: ["审美+2", "耐心+3", "压力-3"] },
-      { id: "dance", name: "舞蹈", icon: "💃", baseCost: 100, baseAP: 18, benefits: ["身材+2", "审美+2", "自信+2"] },
-      { id: "acting", name: "表演", icon: "🎭", baseCost: 120, baseAP: 20, benefits: ["表达+3", "自信+3", "社交+2"] },
+      {
+        id: "reading",
+        name: "阅读",
+        icon: "📚",
+        baseCost: 30,
+        baseAP: 10,
+        benefits: ["智力+2", "视野+2", "压力-2"],
+      },
+      {
+        id: "painting",
+        name: "绘画",
+        icon: "🎨",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["创造力+3", "压力-4", "审美+2"],
+      },
+      {
+        id: "music",
+        name: "音乐",
+        icon: "🎵",
+        baseCost: 80,
+        baseAP: 12,
+        benefits: ["审美+2", "压力-5", "心情+2"],
+      },
+      {
+        id: "photography",
+        name: "摄影",
+        icon: "📷",
+        baseCost: 150,
+        baseAP: 15,
+        benefits: ["审美+3", "创造力+2", "社交+1"],
+      },
+      {
+        id: "writing",
+        name: "写作",
+        icon: "✍️",
+        baseCost: 20,
+        baseAP: 15,
+        benefits: ["智力+2", "创造力+2", "表达+2"],
+      },
+      {
+        id: "calligraphy",
+        name: "书法",
+        icon: "🖌️",
+        baseCost: 50,
+        baseAP: 12,
+        benefits: ["审美+2", "耐心+3", "压力-3"],
+      },
+      {
+        id: "dance",
+        name: "舞蹈",
+        icon: "💃",
+        baseCost: 100,
+        baseAP: 18,
+        benefits: ["身材+2", "审美+2", "自信+2"],
+      },
+      {
+        id: "acting",
+        name: "表演",
+        icon: "🎭",
+        baseCost: 120,
+        baseAP: 20,
+        benefits: ["表达+3", "自信+3", "社交+2"],
+      },
     ],
   },
   learning: {
     name: "学习提升",
     icon: "📖",
     hobbies: [
-      { id: "coding", name: "编程学习", icon: "💻", baseCost: 50, baseAP: 20, benefits: ["技能+3", "智力+2", "收入潜力+1"] },
-      { id: "english", name: "英语学习", icon: "🌐", baseCost: 80, baseAP: 15, benefits: ["技能+2", "视野+2", "收入潜力+1"] },
-      { id: "finance", name: "金融学习", icon: "📈", baseCost: 100, baseAP: 15, benefits: ["投资能力+3", "智力+1", "收入潜力+2"] },
-      { id: "cooking_class", name: "烹饪课", icon: "🍳", baseCost: 150, baseAP: 15, benefits: ["生活技能+3", "心情+2", "健康+1"] },
-      { id: "public_speaking", name: "演讲", icon: "🎤", baseCost: 100, baseAP: 15, benefits: ["表达+3", "自信+3", "职场+2"] },
-      { id: "management", name: "管理课程", icon: "👔", baseCost: 200, baseAP: 15, benefits: ["领导力+3", "职场+2", "收入潜力+1"] },
+      {
+        id: "coding",
+        name: "编程学习",
+        icon: "💻",
+        baseCost: 50,
+        baseAP: 20,
+        benefits: ["技能+3", "智力+2", "收入潜力+1"],
+      },
+      {
+        id: "english",
+        name: "英语学习",
+        icon: "🌐",
+        baseCost: 80,
+        baseAP: 15,
+        benefits: ["技能+2", "视野+2", "收入潜力+1"],
+      },
+      {
+        id: "finance",
+        name: "金融学习",
+        icon: "📈",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["投资能力+3", "智力+1", "收入潜力+2"],
+      },
+      {
+        id: "cooking_class",
+        name: "烹饪课",
+        icon: "🍳",
+        baseCost: 150,
+        baseAP: 15,
+        benefits: ["生活技能+3", "心情+2", "健康+1"],
+      },
+      {
+        id: "public_speaking",
+        name: "演讲",
+        icon: "🎤",
+        baseCost: 100,
+        baseAP: 15,
+        benefits: ["表达+3", "自信+3", "职场+2"],
+      },
+      {
+        id: "management",
+        name: "管理课程",
+        icon: "👔",
+        baseCost: 200,
+        baseAP: 15,
+        benefits: ["领导力+3", "职场+2", "收入潜力+1"],
+      },
     ],
   },
   social: {
     name: "社交娱乐",
     icon: "🎉",
     hobbies: [
-      { id: "board_games", name: "桌游", icon: "🎲", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
-      { id: "cards", name: "扑克", icon: "🃏", baseCost: 30, baseAP: 10, benefits: ["社交+2", "智力+1", "心情+1"] },
-      { id: "mahjong", name: "麻将", icon: "🀄", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
-      { id: "chess", name: "棋类", icon: "♟️", baseCost: 30, baseAP: 12, benefits: ["智力+3", "耐心+2", "压力-2"] },
-      { id: "gaming", name: "游戏", icon: "🎮", baseCost: 50, baseAP: 10, benefits: ["心情+3", "压力-5", "社交+1"] },
-      { id: "travel", name: "旅行", icon: "✈️", baseCost: 1000, baseAP: 30, benefits: ["视野+5", "心情+5", "压力-5"] },
+      {
+        id: "board_games",
+        name: "桌游",
+        icon: "🎲",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["社交+3", "智力+1", "心情+2"],
+      },
+      {
+        id: "cards",
+        name: "扑克",
+        icon: "🃏",
+        baseCost: 30,
+        baseAP: 10,
+        benefits: ["社交+2", "智力+1", "心情+1"],
+      },
+      {
+        id: "mahjong",
+        name: "麻将",
+        icon: "🀄",
+        baseCost: 50,
+        baseAP: 15,
+        benefits: ["社交+3", "智力+1", "心情+2"],
+      },
+      {
+        id: "chess",
+        name: "棋类",
+        icon: "♟️",
+        baseCost: 30,
+        baseAP: 12,
+        benefits: ["智力+3", "耐心+2", "压力-2"],
+      },
+      {
+        id: "gaming",
+        name: "游戏",
+        icon: "🎮",
+        baseCost: 50,
+        baseAP: 10,
+        benefits: ["心情+3", "压力-5", "社交+1"],
+      },
+      {
+        id: "travel",
+        name: "旅行",
+        icon: "✈️",
+        baseCost: 1000,
+        baseAP: 30,
+        benefits: ["视野+5", "心情+5", "压力-5"],
+      },
     ],
   },
   wellness: {
     name: "身心健康",
     icon: "🧘",
     hobbies: [
-      { id: "meditation", name: "冥想", icon: "🧘", baseCost: 0, baseAP: 10, benefits: ["压力-5", "焦虑-3", "身心平衡+3"] },
-      { id: "spa", name: "SPA", icon: "💆", baseCost: 300, baseAP: 15, benefits: ["压力-5", "心情+3", "形象+1"] },
-      { id: "massage", name: "按摩", icon: "💆‍♂️", baseCost: 200, baseAP: 12, benefits: ["疲劳-5", "压力-3", "健康+1"] },
-      { id: "therapy", name: "心理咨询", icon: "👂", baseCost: 500, baseAP: 20, benefits: ["焦虑-5", "抑郁-5", "心理+5"] },
-      { id: "sleep_therapy", name: "睡眠改善", icon: "😴", baseCost: 100, baseAP: 5, benefits: ["疲劳-5", "健康+2", "心情+1"] },
+      {
+        id: "meditation",
+        name: "冥想",
+        icon: "🧘",
+        baseCost: 0,
+        baseAP: 10,
+        benefits: ["压力-5", "焦虑-3", "身心平衡+3"],
+      },
+      {
+        id: "spa",
+        name: "SPA",
+        icon: "💆",
+        baseCost: 300,
+        baseAP: 15,
+        benefits: ["压力-5", "心情+3", "形象+1"],
+      },
+      {
+        id: "massage",
+        name: "按摩",
+        icon: "💆‍♂️",
+        baseCost: 200,
+        baseAP: 12,
+        benefits: ["疲劳-5", "压力-3", "健康+1"],
+      },
+      {
+        id: "therapy",
+        name: "心理咨询",
+        icon: "👂",
+        baseCost: 500,
+        baseAP: 20,
+        benefits: ["焦虑-5", "抑郁-5", "心理+5"],
+      },
+      {
+        id: "sleep_therapy",
+        name: "睡眠改善",
+        icon: "😴",
+        baseCost: 100,
+        baseAP: 5,
+        benefits: ["疲劳-5", "健康+2", "心情+1"],
+      },
     ],
   },
 };
@@ -59552,13 +61548,55 @@ const HEALTH_INDICATORS = {
 
 // ====== 心理状态 ======
 const PSYCHOLOGICAL_STATES = {
-  excellent: { name: "状态极佳", icon: "🌟", stress: [0, 20], anxiety: [0, 20], depression: [0, 10] },
-  good: { name: "状态良好", icon: "🙂", stress: [20, 40], anxiety: [20, 35], depression: [10, 20] },
-  normal: { name: "状态正常", icon: "😐", stress: [40, 60], anxiety: [35, 50], depression: [20, 35] },
-  stressed: { name: "压力较大", icon: "😰", stress: [60, 80], anxiety: [50, 70], depression: [35, 50] },
-  anxious: { name: "焦虑状态", icon: "😟", stress: [70, 90], anxiety: [70, 90], depression: [40, 65] },
-  depressed: { name: "抑郁倾向", icon: "😔", stress: [75, 100], anxiety: [60, 90], depression: [65, 85] },
-  critical: { name: "心理危机", icon: "🚨", stress: [85, 100], anxiety: [80, 100], depression: [85, 100] },
+  excellent: {
+    name: "状态极佳",
+    icon: "🌟",
+    stress: [0, 20],
+    anxiety: [0, 20],
+    depression: [0, 10],
+  },
+  good: {
+    name: "状态良好",
+    icon: "🙂",
+    stress: [20, 40],
+    anxiety: [20, 35],
+    depression: [10, 20],
+  },
+  normal: {
+    name: "状态正常",
+    icon: "😐",
+    stress: [40, 60],
+    anxiety: [35, 50],
+    depression: [20, 35],
+  },
+  stressed: {
+    name: "压力较大",
+    icon: "😰",
+    stress: [60, 80],
+    anxiety: [50, 70],
+    depression: [35, 50],
+  },
+  anxious: {
+    name: "焦虑状态",
+    icon: "😟",
+    stress: [70, 90],
+    anxiety: [70, 90],
+    depression: [40, 65],
+  },
+  depressed: {
+    name: "抑郁倾向",
+    icon: "😔",
+    stress: [75, 100],
+    anxiety: [60, 90],
+    depression: [65, 85],
+  },
+  critical: {
+    name: "心理危机",
+    icon: "🚨",
+    stress: [85, 100],
+    anxiety: [80, 100],
+    depression: [85, 100],
+  },
 };
 
 // ====== 个人形象维度 ======
@@ -59682,7 +61720,7 @@ function practiceHobby(state, hobbyId) {
   let hobby = null;
   let categoryKey = null;
   for (const [catKey, cat] of Object.entries(HOBBY_CATEGORIES)) {
-    const found = cat.hobbies.find(h => h.id === hobbyId);
+    const found = cat.hobbies.find((h) => h.id === hobbyId);
     if (found) {
       hobby = found;
       categoryKey = catKey;
@@ -59700,7 +61738,8 @@ function practiceHobby(state, hobbyId) {
   }
 
   // 检查费用
-  const cost = hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
+  const cost =
+    hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
   if (state.resources.cash < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
@@ -59729,13 +61768,19 @@ function practiceHobby(state, hobbyId) {
   if (hobbyState.exp >= expToNextLevel) {
     hobbyState.level++;
     hobbyState.exp -= expToNextLevel;
-    StateManager.addMessage(`🎉 ${hobby.name}等级提升到${hobbyState.level}级！`, "success");
+    StateManager.addMessage(
+      `🎉 ${hobby.name}等级提升到${hobbyState.level}级！`,
+      "success",
+    );
   }
 
   // 应用爱好效果
   applyHobbyBenefits(state, hobby);
 
-  StateManager.addMessage(`🎨 练习${hobby.icon} ${hobby.name}（Lv.${hobbyState.level}），${hobby.benefits.join("、")}`, "info");
+  StateManager.addMessage(
+    `🎨 练习${hobby.icon} ${hobby.name}（Lv.${hobbyState.level}），${hobby.benefits.join("、")}`,
+    "info",
+  );
 
   return { success: true, level: hobbyState.level, exp: hobbyState.exp };
 }
@@ -59768,7 +61813,8 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("社交")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.popularity = Math.min(100, p.corporate.popularity + value);
+      if (p.corporate)
+        p.corporate.popularity = Math.min(100, p.corporate.popularity + value);
     }
     if (benefit.includes("心情")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -59782,9 +61828,14 @@ function applyHobbyBenefits(state, hobby) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
       // 根据爱好类型增加对应技能
       if (hobby.id === "coding") {
-        if (p.skills && p.skills.coding) p.skills.coding.level = Math.min(100, p.skills.coding.level + value);
+        if (p.skills && p.skills.coding)
+          p.skills.coding.level = Math.min(100, p.skills.coding.level + value);
       } else if (hobby.id === "english") {
-        if (p.skills && p.skills.english) p.skills.english.level = Math.min(100, p.skills.english.level + value);
+        if (p.skills && p.skills.english)
+          p.skills.english.level = Math.min(
+            100,
+            p.skills.english.level + value,
+          );
       }
     }
     if (benefit.includes("收入潜力")) {
@@ -59801,7 +61852,8 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("表达")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.skills && p.skills.sales) p.skills.sales.level = Math.min(100, p.skills.sales.level + value);
+      if (p.skills && p.skills.sales)
+        p.skills.sales.level = Math.min(100, p.skills.sales.level + value);
     }
     if (benefit.includes("自信")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -59809,15 +61861,18 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("领导力")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.ability = Math.min(100, p.corporate.ability + value);
+      if (p.corporate)
+        p.corporate.ability = Math.min(100, p.corporate.ability + value);
     }
     if (benefit.includes("职场")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.corporate) p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + value);
+      if (p.corporate)
+        p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + value);
     }
     if (benefit.includes("生活技能")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      if (p.skills && p.skills.cooking) p.skills.cooking.level = Math.min(100, p.skills.cooking.level + value);
+      if (p.skills && p.skills.cooking)
+        p.skills.cooking.level = Math.min(100, p.skills.cooking.level + value);
     }
     if (benefit.includes("耐心")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -59834,7 +61889,10 @@ function applyHobbyBenefits(state, hobby) {
     if (benefit.includes("身心平衡")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
       pg.psychology.stress = Math.max(0, pg.psychology.stress - value);
-      pg.psychology.mood = Math.min(100, pg.psychology.mood + Math.floor(value / 2));
+      pg.psychology.mood = Math.min(
+        100,
+        pg.psychology.mood + Math.floor(value / 2),
+      );
     }
     if (benefit.includes("疲劳")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -59879,9 +61937,15 @@ function healthCheckup(state) {
   pg.health.checkupHistory.push(report);
 
   // 保存并生成报告
-  const issueText = report.issues.length > 0 ? ` ⚠️ 发现${report.issues.length}项需要关注：${report.issues.join("、")}` : " ✅ 各项指标正常";
+  const issueText =
+    report.issues.length > 0
+      ? ` ⚠️ 发现${report.issues.length}项需要关注：${report.issues.join("、")}`
+      : " ✅ 各项指标正常";
 
-  StateManager.addMessage(`🏥 体检完成！身体${report.physical} 心理${report.mental} 代谢${report.metabolic}${issueText}`, "info");
+  StateManager.addMessage(
+    `🏥 体检完成！身体${report.physical} 心理${report.mental} 代谢${report.metabolic}${issueText}`,
+    "info",
+  );
 
   return { success: true, report: report };
 }
@@ -59889,7 +61953,7 @@ function healthCheckup(state) {
 /**
  * 心理咨询
  */
-function心理咨询(state) {
+function 心理咨询(state) {
   const cost = 500;
   if (state.resources.cash < cost) {
     return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
@@ -59904,7 +61968,10 @@ function心理咨询(state) {
   pg.psychology.mood = Math.min(100, pg.psychology.mood + 5);
   pg.psychology.lastTherapy = state.player.day;
 
-  StateManager.addMessage(`👂 心理咨询结束，压力-10，焦虑-8，抑郁-5`, "success");
+  StateManager.addMessage(
+    `👂 心理咨询结束，压力-10，焦虑-8，抑郁-5`,
+    "success",
+  );
 
   return { success: true };
 }
@@ -59916,7 +61983,14 @@ function improveImage(state, dimension, method) {
   const pg = state.personalGrowth;
   const dimValue = pg.image[dimension];
 
-  if (!dimValue && dimension !== "appearance" && dimension !== "style" && dimension !== "grooming" && dimension !== "fitness" && dimension !== "charisma") {
+  if (
+    !dimValue &&
+    dimension !== "appearance" &&
+    dimension !== "style" &&
+    dimension !== "grooming" &&
+    dimension !== "fitness" &&
+    dimension !== "charisma"
+  ) {
     return { success: false, message: "不存在的形象维度" };
   }
 
@@ -59942,7 +62016,10 @@ function improveImage(state, dimension, method) {
 
   pg.image[dimension] = Math.min(100, dimValue + methodData.gain);
 
-  StateManager.addMessage(`✨ ${methodData.desc}，${IMAGE_DIMENSIONS[dimension].name}+${methodData.gain}`, "success");
+  StateManager.addMessage(
+    `✨ ${methodData.desc}，${IMAGE_DIMENSIONS[dimension].name}+${methodData.gain}`,
+    "success",
+  );
 
   return { success: true, value: pg.image[dimension] };
 }
@@ -59954,7 +62031,11 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
   const pg = state.personalGrowth;
 
   const goal = {
-    id: "goal_" + state.player.day + "_" + Math.random().toString(36).substr(2, 9),
+    id:
+      "goal_" +
+      state.player.day +
+      "_" +
+      Math.random().toString(36).substr(2, 9),
     category: category,
     description: description,
     targetValue: targetValue,
@@ -59965,7 +62046,10 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
   };
 
   pg.lifeGoals.active.push(goal);
-  StateManager.addMessage(`🎯 设定人生目标：${description}（${category}）`, "success");
+  StateManager.addMessage(
+    `🎯 设定人生目标：${description}（${category}）`,
+    "success",
+  );
 
   return { success: true, goal: goal };
 }
@@ -59975,11 +62059,14 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
  */
 function updateGoalProgress(state, goalId, progressChange) {
   const pg = state.personalGrowth;
-  const goal = pg.lifeGoals.active.find(g => g.id === goalId);
+  const goal = pg.lifeGoals.active.find((g) => g.id === goalId);
   if (!goal) return { success: false, message: "目标不存在" };
 
-  goal.currentValue = Math.min(goal.targetValue, goal.currentValue + progressChange);
-  goal.progress = Math.round(goal.currentValue / goal.targetValue * 100);
+  goal.currentValue = Math.min(
+    goal.targetValue,
+    goal.currentValue + progressChange,
+  );
+  goal.progress = Math.round((goal.currentValue / goal.targetValue) * 100);
 
   // 检查是否完成
   if (goal.currentValue >= goal.targetValue) {
@@ -59997,7 +62084,7 @@ function completeGoal(state, goal) {
   const pg = state.personalGrowth;
 
   // 从进行中移除
-  pg.lifeGoals.active = pg.lifeGoals.active.filter(g => g.id !== goal.id);
+  pg.lifeGoals.active = pg.lifeGoals.active.filter((g) => g.id !== goal.id);
 
   // 加入已完成
   goal.completedDay = state.player.day;
@@ -60093,7 +62180,10 @@ function checkPsychologicalCrisis(state) {
     if (!state.flags) state.flags = {};
     state.flags.forceRest = true;
   } else if (psy.stress > 75 || psy.anxiety > 70 || psy.depression > 70) {
-    StateManager.addMessage("⚠️ 心理状态需要关注，建议休息或寻求心理咨询", "warning");
+    StateManager.addMessage(
+      "⚠️ 心理状态需要关注，建议休息或寻求心理咨询",
+      "warning",
+    );
   }
 }
 
@@ -60106,10 +62196,25 @@ function getPersonalGrowthSummary(state) {
 
   return {
     hobbyCount: Object.keys(pg.hobbies).length,
-    maxHobbyLevel: Math.max(0, ...Object.values(pg.hobbies).map(h => h.level)),
-    healthStatus: pg.health.physical >= 70 ? "良好" : pg.health.physical >= 50 ? "一般" : "需要关注",
+    maxHobbyLevel: Math.max(
+      0,
+      ...Object.values(pg.hobbies).map((h) => h.level),
+    ),
+    healthStatus:
+      pg.health.physical >= 70
+        ? "良好"
+        : pg.health.physical >= 50
+          ? "一般"
+          : "需要关注",
     psychologicalState: getPsychologicalStateLabel(pg.psychology),
-    imageScore: Math.round((pg.image.appearance + pg.image.style + pg.image.grooming + pg.image.fitness + pg.image.charisma) / 5),
+    imageScore: Math.round(
+      (pg.image.appearance +
+        pg.image.style +
+        pg.image.grooming +
+        pg.image.fitness +
+        pg.image.charisma) /
+        5,
+    ),
     activeGoals: pg.lifeGoals.active.length,
     completedGoals: pg.lifeGoals.completed.length,
     booksRead: pg.reading.booksRead,
@@ -60198,7 +62303,8 @@ if (typeof window !== "undefined") {
       },
     ],
   };
-}</script>
+}
+</script>
 
     <!-- Enterprise Fate System -->
     <script>/**
@@ -68289,34 +70395,25 @@ function renderGrowthTab(state, parent) {
 
   // ---- 绘制图表（DOM插入后） ----
   setTimeout(function () {
-    var history = (state.flags && state.flags._cashHistory) || [];
-    drawAssetLineChart(lineCanvas, history);
+    drawAssetLineChart(
+      lineCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      lineCanvas.width,
+      lineCanvas.height,
+    );
 
-    // 使用新的data_viz雷达图（支持职场属性）
-    if (typeof drawRadarChart === "function") {
-      drawRadarChart(
-        radarCanvas.getContext("2d"),
-        state,
-        0,
-        0,
-        radarCanvas.width,
-        radarCanvas.height,
-        p.phase,
-      );
-    } else {
-      drawRadarChart(
-        radarCanvas,
-        [
-          p.physique,
-          p.intelligence,
-          p.agility,
-          p.mental,
-          Math.min(100, (p && p.fame) || 0),
-        ],
-        ["体质", "智力", "敏捷", "心智", "名气"],
-        100,
-      );
-    }
+    // 使用data_viz雷达图（支持职场属性 + 历史对比）
+    drawRadarChart(
+      radarCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      radarCanvas.width,
+      radarCanvas.height,
+      p.phase,
+    );
 
     // 如果有收入/支出历史，绘制收入曲线
     if (typeof drawIncomeChart === "function") {
@@ -68429,179 +70526,7 @@ function _growthStat(label, value, color) {
   );
 }
 
-/** 资产折线图 (Canvas) */
-function drawAssetLineChart(canvas, data) {
-  var ctx = canvas.getContext("2d");
-  var W = canvas.width,
-    H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  var pad = { t: 18, r: 10, b: 24, l: 52 };
-  var cw = W - pad.l - pad.r,
-    ch = H - pad.t - pad.b;
-
-  if (!data || data.length < 2) {
-    ctx.fillStyle = "#aaa";
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("数据积累中（每天结束后记录一次）", W / 2, H / 2);
-    return;
-  }
-
-  var values = data.map(function (d) {
-    return d.value;
-  });
-  var maxV = Math.max.apply(null, values) * 1.15 || 1000;
-  var minV = Math.min(0, Math.min.apply(null, values) * 0.9);
-
-  function tx(i) {
-    return pad.l + (i / (data.length - 1)) * cw;
-  }
-  function ty(v) {
-    return pad.t + (1 - (v - minV) / (maxV - minV)) * ch;
-  }
-
-  // Grid & Y-axis labels
-  ctx.font = "9px sans-serif";
-  ctx.textAlign = "right";
-  for (var g = 0; g <= 4; g++) {
-    var gy = pad.t + (g / 4) * ch;
-    ctx.strokeStyle = "rgba(0,0,0,0.07)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad.l, gy);
-    ctx.lineTo(W - pad.r, gy);
-    ctx.stroke();
-    var lv = maxV - (g / 4) * (maxV - minV);
-    ctx.fillStyle = "#999";
-    ctx.fillText(
-      "¥" + (lv >= 1000 ? (lv / 1000).toFixed(1) + "k" : Math.round(lv)),
-      pad.l - 4,
-      gy + 3,
-    );
-  }
-
-  // Area fill
-  ctx.beginPath();
-  ctx.moveTo(tx(0), ty(data[0].value));
-  data.forEach(function (d, i) {
-    ctx.lineTo(tx(i), ty(d.value));
-  });
-  ctx.lineTo(tx(data.length - 1), pad.t + ch);
-  ctx.lineTo(tx(0), pad.t + ch);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(74,158,92,0.12)";
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  data.forEach(function (d, i) {
-    if (i === 0) ctx.moveTo(tx(0), ty(d.value));
-    else ctx.lineTo(tx(i), ty(d.value));
-  });
-  ctx.strokeStyle = "#4a9e5c";
-  ctx.lineWidth = 2;
-  ctx.lineJoin = "round";
-  ctx.stroke();
-
-  // Last point dot
-  var last = data[data.length - 1];
-  ctx.beginPath();
-  ctx.arc(tx(data.length - 1), ty(last.value), 4, 0, Math.PI * 2);
-  ctx.fillStyle = "#4a9e5c";
-  ctx.fill();
-
-  // X-axis day labels
-  var step = Math.max(1, Math.ceil(data.length / 7));
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#aaa";
-  data.forEach(function (d, i) {
-    if (i % step === 0 || i === data.length - 1) {
-      ctx.fillText("D" + d.day, tx(i), H - 5);
-    }
-  });
-}
-
 /** 属性雷达图 (Canvas) */
-function drawRadarChart(canvas, values, labels, maxVal) {
-  var ctx = canvas.getContext("2d");
-  var W = canvas.width,
-    H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  var cx = W / 2,
-    cy = H / 2;
-  var r = Math.min(cx, cy) - 28;
-  var n = values.length;
-  var colors = ["#c4803a", "#5a8ab4", "#5aaa5a", "#9b74b8", "#d4a017"];
-
-  function pt(i, radius) {
-    var angle = (i / n) * 2 * Math.PI - Math.PI / 2;
-    return {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
-  }
-
-  // Grid rings
-  [0.25, 0.5, 0.75, 1.0].forEach(function (f) {
-    ctx.beginPath();
-    for (var i = 0; i < n; i++) {
-      var p = pt(i, r * f);
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = "rgba(0,0,0,0.09)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  });
-
-  // Axis lines
-  for (var i = 0; i < n; i++) {
-    var ep = pt(i, r);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(ep.x, ep.y);
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // Data polygon
-  ctx.beginPath();
-  values.forEach(function (v, i) {
-    var p = pt(i, r * Math.min(v / maxVal, 1));
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  });
-  ctx.closePath();
-  ctx.fillStyle = "rgba(74,158,92,0.18)";
-  ctx.fill();
-  ctx.strokeStyle = "#4a9e5c";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Data points
-  values.forEach(function (v, i) {
-    var dp = pt(i, r * Math.min(v / maxVal, 1));
-    ctx.beginPath();
-    ctx.arc(dp.x, dp.y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = colors[i] || "#4a9e5c";
-    ctx.fill();
-  });
-
-  // Labels
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  labels.forEach(function (lbl, i) {
-    var lp = pt(i, r + 16);
-    ctx.fillStyle = colors[i] || "#666";
-    ctx.fillText(lbl, lp.x, lp.y);
-  });
-}
-
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",
@@ -71904,8 +73829,7 @@ function downgradeToStreet(state, reason) {
   const rankData = CORP_RANKS[state.corporate.rank] || CORP_RANKS.P5;
 
   // 保留遣散费：季度工资的1-3倍
-  const severance =
-    rankData.baseSalary * 3 * (1 + Random.int(0, 2));
+  const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
   state.resources.cash += severance;
 
   // 保留职场期间累积的投资
@@ -72109,7 +74033,7 @@ function renderCompanyHistory(state) {
       '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;border-left:4px solid var(--accent);">' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">' +
       '<span style="font-size:32px;">🏢</span>' +
-      '<div>' +
+      "<div>" +
       '<h2 style="margin:0;font-size:18px;color:var(--text-primary);">' +
       _esc(corp.company.name || "未知公司") +
       "</h2>" +
@@ -72121,7 +74045,7 @@ function renderCompanyHistory(state) {
       "</div>" +
       "</div>" +
       '<div style="display:flex;gap:24px;font-size:11px;color:var(--text-muted);">' +
-      '<span>📅 入职第 ' +
+      "<span>📅 入职第 " +
       (p.corpYear || 0) +
       "年 Q" +
       (p.corpQuarter || 1) +
@@ -72129,7 +74053,7 @@ function renderCompanyHistory(state) {
       '<span>🏷️ 当前职级 <strong style="color:var(--accent);">' +
       (corp.rank || "P5") +
       "</strong></span>" +
-      '<span>💼 行动力 ' +
+      "<span>💼 行动力 " +
       (corp.actionsUsed || 0) +
       "/" +
       (rankData.maxActions || 3) +
@@ -72308,17 +74232,22 @@ function renderCompanyHistory(state) {
     var teamList = "";
     for (var m_idx = 0; m_idx < corp.teamHistory.length; m_idx++) {
       var th = corp.teamHistory[m_idx];
-      var actionIcon = th.action === "hire" ? "👤" : th.action === "fire" ? "🚪" : "🔄";
+      var actionIcon =
+        th.action === "hire" ? "👤" : th.action === "fire" ? "🚪" : "🔄";
       teamList +=
         '<div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">' +
         '<span style="color:var(--text-muted);font-size:10px;">第' +
         (th.day || "?") +
-        "天</span> ' +
+        "天</span> " +
         actionIcon +
-        ' <strong>' +
+        " <strong>" +
         _esc(th.name || "未知") +
         "</strong> " +
-        (th.action === "hire" ? "加入团队" : th.action === "fire" ? "被解雇" : "变动") +
+        (th.action === "hire"
+          ? "加入团队"
+          : th.action === "fire"
+            ? "被解雇"
+            : "变动") +
         " · " +
         (th.role || "") +
         (th.reason ? " · " + _esc(th.reason) : "") +
@@ -72398,7 +74327,7 @@ function renderCompanyHistory(state) {
     perfHtml +
     projectHtml +
     teamHtml +
-    '</div>';
+    "</div>";
 }
 
 /** P2.11 计算新游戏+继承内容 */

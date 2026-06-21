@@ -936,6 +936,76 @@ src/
 
 ---
 
+### 2026-06-21 — P1-8 法律/合规风险系统：专利/数据合规/劳动法/反垄断
+
+**核心改动**：
+
+1. **数据常量扩建**（`startup.js`）
+   - `LEGAL_RISK_TYPES`：6种法律风险类型（专利/数据合规/劳动法/反垄断/广告合规/财务合规），各有行业适用范围和基础严重程度
+   - `PATENT_TYPES`：5种专利类型（发明专利20年/实用新型10年/软件著作权50年/商标10年/外观设计15年），各有成本和行业适用性
+   - `LEGAL_EVENT_TEMPLATES`：19种法律事件（3种机会类+16种危机类），涵盖专利侵权诉讼/数据泄露处罚/劳动仲裁/反垄断调查/税务稽查等
+   - `LEGAL_RESPONSE_OPTIONS`：48种法律应对方案，各有成本/效果/风险描述
+   - `LEGAL_CHECKLIST`：8项合规检查清单（专利申请/数据审计/劳动合同审查/隐私政策/税务检查/员工手册/IP归属/广告审查）
+   - `LEGAL_RISK_LEVELS`：5级法律风险等级（健康→低→中→高→危急）
+   - `COMPLIANCE_LEVELS`：5级合规等级（无合规体系→基础合规→合规框架→合规体系→合规标杆）
+
+2. **公司数据结构扩展**（`registerStartup`）
+   - `legalRisk`（0-100）：法律风险值
+   - `legalRiskLevel`（0-4）：法律风险等级
+   - `legalRiskHistory`：法律风险变化历史
+   - `complianceLevel`（0-100）：合规水平
+   - `complianceGrade`（0-4）：合规等级
+   - `legalBudget`：法律预算（初始10万）
+   - `legalSpent`：已花费法律费用
+   - `patents`：已申请专利列表
+   - `patentCount`：专利数量
+   - `legalCases`：法律案件历史
+   - `legalCasesActive`：活跃法律案件数
+   - `legalHistory`：法律事件历史
+   - `pendingLegalEvent`：待处理法律事件
+   - `legalChecklist`：合规检查清单完成情况
+   - `legalRiskFlags`：法律风险标记
+   - `legalInsurance` / `legalInsuranceLevel`：法律保险
+   - `regulatoryRelationship`（0-100）：监管机构关系
+   - `industryComplianceRank`（0-100）：行业合规排名
+
+3. **核心逻辑函数**
+   - `_evaluateLegalRisk()`：季度法律风险评估（自然衰减 + 合规等级影响 + 专利数量影响 + 活跃案件影响）
+   - `_updateLegalRiskLevel()`：法律风险等级转换通知
+   - `_updateComplianceGrade()`：合规等级转换通知
+   - `_processPendingLegalEvent()`：待处理法律事件倒计时处理
+   - `_evaluateLegalEventProbability()`：法律事件触发概率评估（合规等级/法律风险/行业/活跃案件/法律保险影响）
+   - `_triggerLegalEvent()`：随机法律事件触发（按行业筛选可用事件类型）
+   - `resolveLegalEvent()`：法律事件应对执行（费用检查/效果应用/结果记录）
+   - `_calculateLegalResponseEffectiveness()`：法律应对效果计算（合规等级/法律风险/专利数量/监管关系/法律保险加成）
+   - `executeLegalChecklistAction()`：合规检查清单行动执行
+   - `applyPatent()`：专利申请
+   - `buyLegalInsurance()`：购买法律保险
+   - `regulatoryCommunication()`：与监管机构沟通
+
+4. **UI 弹窗**
+   - `showLegalComplianceModal()`：法律/合规管理面板（法律风险/合规等级/法律预算/待处理事件/合规检查清单/法律行动/专利申请/专利列表/法律保险/监管关系）
+   - `showLegalResponseModal()`：法律事件应对弹窗（选择应对方案/费用检查/效果预览）
+
+5. **tickStartup 集成**
+   - 季度评估：法律风险衰减 + 合规等级影响 + 法律事件概率评估 + 待处理法律事件处理
+
+6. **行动列表**
+   - `legal_compliance`：法律/合规管理入口（10 AP）
+   - `legal_checklist`：执行合规检查
+   - `apply_patent`：申请专利
+   - `buy_legal_insurance`：购买法律保险
+   - `regulatory_communication`：与监管机构沟通
+   - `legal_event`：执行法律事件
+   - `legal_response`：处理法律事件
+
+7. **模态框内联 action 包装函数**
+   - `executeLegalChecklistActionFromModal()` / `applyPatentFromModal()` / `buyLegalInsuranceFromModal()` / `executeLegalEventActionFromModal()` / `resolveLegalActionFromModal()`
+
+**设计参考**：《Democracy 4》监管系统、《Capitalism Lab》法律系统、真实法律案例（专利战/数据泄露罚款/劳动仲裁/反垄断处罚）
+
+---
+
 ### 2026-06-22 — 房产市场波动系统 v2：告别固定增值，引入市场周期+新闻+政策联动
 
 **核心改动**：

@@ -278,8 +278,7 @@ function downgradeToStreet(state, reason) {
   const rankData = CORP_RANKS[state.corporate.rank] || CORP_RANKS.P5;
 
   // 保留遣散费：季度工资的1-3倍
-  const severance =
-    rankData.baseSalary * 3 * (1 + Random.int(0, 2));
+  const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
   state.resources.cash += severance;
 
   // 保留职场期间累积的投资
@@ -483,7 +482,7 @@ function renderCompanyHistory(state) {
       '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;border-left:4px solid var(--accent);">' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">' +
       '<span style="font-size:32px;">🏢</span>' +
-      '<div>' +
+      "<div>" +
       '<h2 style="margin:0;font-size:18px;color:var(--text-primary);">' +
       _esc(corp.company.name || "未知公司") +
       "</h2>" +
@@ -495,7 +494,7 @@ function renderCompanyHistory(state) {
       "</div>" +
       "</div>" +
       '<div style="display:flex;gap:24px;font-size:11px;color:var(--text-muted);">' +
-      '<span>📅 入职第 ' +
+      "<span>📅 入职第 " +
       (p.corpYear || 0) +
       "年 Q" +
       (p.corpQuarter || 1) +
@@ -503,7 +502,7 @@ function renderCompanyHistory(state) {
       '<span>🏷️ 当前职级 <strong style="color:var(--accent);">' +
       (corp.rank || "P5") +
       "</strong></span>" +
-      '<span>💼 行动力 ' +
+      "<span>💼 行动力 " +
       (corp.actionsUsed || 0) +
       "/" +
       (rankData.maxActions || 3) +
@@ -682,17 +681,22 @@ function renderCompanyHistory(state) {
     var teamList = "";
     for (var m_idx = 0; m_idx < corp.teamHistory.length; m_idx++) {
       var th = corp.teamHistory[m_idx];
-      var actionIcon = th.action === "hire" ? "👤" : th.action === "fire" ? "🚪" : "🔄";
+      var actionIcon =
+        th.action === "hire" ? "👤" : th.action === "fire" ? "🚪" : "🔄";
       teamList +=
         '<div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">' +
         '<span style="color:var(--text-muted);font-size:10px;">第' +
         (th.day || "?") +
-        "天</span> ' +
+        "天</span> " +
         actionIcon +
-        ' <strong>' +
+        " <strong>" +
         _esc(th.name || "未知") +
         "</strong> " +
-        (th.action === "hire" ? "加入团队" : th.action === "fire" ? "被解雇" : "变动") +
+        (th.action === "hire"
+          ? "加入团队"
+          : th.action === "fire"
+            ? "被解雇"
+            : "变动") +
         " · " +
         (th.role || "") +
         (th.reason ? " · " + _esc(th.reason) : "") +
@@ -772,7 +776,7 @@ function renderCompanyHistory(state) {
     perfHtml +
     projectHtml +
     teamHtml +
-    '</div>';
+    "</div>";
 }
 
 /** P2.11 计算新游戏+继承内容 */
