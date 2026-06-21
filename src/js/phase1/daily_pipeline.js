@@ -347,6 +347,36 @@ const DAILY_PIPELINE = [
   },
 
   // === 技能天赋树检查（P2#12） ===
+  // === Phase 2 职场社交每日 tick ===
+  {
+    name: "workplace_social_tick",
+    fn: function (state) {
+      if (typeof tickWorkplaceSocialDaily === "function") {
+        tickWorkplaceSocialDaily(state);
+      }
+    },
+  },
+
+  // === Phase 2 家庭每日 tick ===
+  {
+    name: "family_daily",
+    fn: function (state) {
+      if (typeof tickFamilyDaily === "function") {
+        tickFamilyDaily(state);
+      }
+    },
+  },
+
+  // === Phase 2 个人成长每日 tick ===
+  {
+    name: "personal_growth_daily",
+    fn: function (state) {
+      if (typeof tickPersonalGrowthDaily === "function") {
+        tickPersonalGrowthDaily(state);
+      }
+    },
+  },
+
   {
     name: "skill_tree_check",
     fn: function (state) {

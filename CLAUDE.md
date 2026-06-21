@@ -32,7 +32,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
+- **最近一次工作**：Phase 2 玩家深度交互 — 引擎集成完成 ✅（2026-06-21）
+  - **状态字段注入**（`state.js`）：添加 `workplaceSocial`（同事/导师/办公室政治/人脉）、`family`（婚恋/子女/父母/房贷）、`personalGrowth`（爱好/健康/形象/目标/学习）三个状态对象
+  - **管线接入**（`daily_pipeline.js`）：添加 `workplace_social_tick`、`family_daily`、`personal_growth_daily` 3 个 tick 步骤
+  - **UI 渲染**（`render.js`）：添加 `renderWorkplaceSocialTab`、`renderFamilyTab`、`renderPersonalGrowthTab` 3 个渲染函数 + Tab switch case
+  - **交互入口**（`render.js`）：在 Actions Tab 底部添加 Phase 2 入口按钮组（3 个 Tab 按钮）
+  - **记忆文件**：`memory/phase2-player-interaction.md` 已更新
+  - **下一步**：在 `workplace_social.js`、`family_life.js`、`personal_growth.js` 中添加 `tick*Daily` 函数实现每日逻辑
+
+- **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动
   - **新建** `src/js/phase2/property_market.js` — 房产市场周期引擎（4 阶段：火爆/平稳/降温/萧条）
     - 阶段转换由 `sectorHeat["房地产"]` 阈值 + 新闻驱动 + 随机概率控制

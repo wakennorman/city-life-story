@@ -324,6 +324,54 @@ function createDefaultState() {
       relationship: 0, // -100~100 与城管的关系
     },
 
+    // --- Phase 2 玩家深度交互 ---
+    workplaceSocial: {
+      colleagues: [], // [{ id, name, role, relationship, affinity, mentor, ally, rival, ... }]
+      mentorship: null, // { mentorId, level, startedDay }
+      officePoliticsLog: [], // [{ day, eventType, outcome, ... }]
+      network: { weak: [], strong: [], crossIndustry: [] }, // 人脉网络
+    },
+
+    family: {
+      relationshipStage: "stranger", // stranger|acquaintance|friend|good_friend|crush|dating|engaged|married
+      partner: null, // { type, name, income, companionship, traits, ... }
+      children: [], // [{ id, age, stage, education, expenses, ... }]
+      parents: {
+        father: {
+          health: "healthy",
+          age: 50,
+          companionship: 10,
+          medicalCost: 0,
+        },
+        mother: {
+          health: "healthy",
+          age: 48,
+          companionship: 10,
+          medicalCost: 0,
+        },
+      },
+      mortgage: null, // { monthlyPayment, remainingDays, ... }
+      activities: [], // 家庭活动历史
+    },
+
+    personalGrowth: {
+      hobbies: {}, // { hobbyId: { level: 0, xp: 0, hours: 0, ... } }
+      health: {
+        physical: { score: 50, lastCheckup: 0 },
+        mental: {
+          score: 50,
+          stress: 0,
+          anxiety: 0,
+          depression: 0,
+          lastTherapy: 0,
+        },
+        metabolic: { score: 50, bmi: 22, lastCheckup: 0 },
+      },
+      image: { style: 30, skincare: 30, fitness: 30, plastic: 0 }, // 形象各维度 0-100
+      goals: [], // [{ id, category, description, targetValue, currentValue, deadline, completed }]
+      learning: { booksRead: 0, courses: [], certificates: [] },
+    },
+
     // --- 标志位 ---
     flags: {
       tutorialCompleted: false,

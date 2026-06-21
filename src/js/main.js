@@ -193,6 +193,12 @@ function estimateJobPay(job, state) {
     if (state._allJobsBonus && state._allJobsBonus !== 1) {
       pay = Math.floor(pay * state._allJobsBonus);
     }
+    if (typeof getItemJobBonus === "function") {
+      var equipMulti = getItemJobBonus(job.id, state);
+      if (equipMulti !== 1.0) {
+        pay = Math.floor(pay * equipMulti);
+      }
+    }
     if (typeof getNewsJobMultiplier === "function") {
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
     }
@@ -256,6 +262,14 @@ function estimateJobPayDetailed(job, state) {
     if (hm.earningsBonus > 1.0) {
       tags.push("🏅+" + Math.round((hm.earningsBonus - 1) * 100) + "%");
       base = Math.floor(base * hm.earningsBonus);
+    }
+  }
+  // 装备加成
+  if (typeof getItemJobBonus === "function") {
+    var equipMulti = getItemJobBonus(job.id, state);
+    if (equipMulti !== 1.0) {
+      tags.push("🎒+" + Math.round((equipMulti - 1) * 100) + "%");
+      base = Math.floor(base * equipMulti);
     }
   }
   // 连击加成
@@ -3016,13 +3030,25 @@ function doStreetJob(job) {
     state.resources.cash -= job.startupCost;
   }
 
-  // 计算收入（含新闻+情绪修正）
+  // 计算收入（含新闻+装备+情绪修正）
   let pay = job.payCalc(state);
   if (state._jobMultipliers && state._jobMultipliers[job.id]) {
     pay = Math.floor(pay * state._jobMultipliers[job.id]);
   }
   if (state._allJobsBonus && state._allJobsBonus !== 1) {
     pay = Math.floor(pay * state._allJobsBonus);
+  }
+  // 装备加成（getItemJobBonus 遍历已装备物品的 jobBonuses）
+  if (typeof getItemJobBonus === "function") {
+    var equipMulti = getItemJobBonus(job.id, state);
+    if (equipMulti !== 1.0) {
+      var oldPay = pay;
+      pay = Math.floor(pay * equipMulti);
+      StateManager.addMessage(
+        "🎒 装备加成：+" + Math.round((equipMulti - 1) * 100) + "%",
+        "success",
+      );
+    }
   }
   if (typeof getNewsJobMultiplier === "function") {
     var newsJobMult = getNewsJobMultiplier(job.id, state);

@@ -444,6 +444,13 @@
           </button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="growth">📈 成长</button>
+          <button class="tab-btn" data-tab="workplace_social">
+            👥 职场社交
+          </button>
+          <button class="tab-btn" data-tab="family">👨‍👩‍👧 家庭</button>
+          <button class="tab-btn" data-tab="personal_growth">
+            🌱 个人成长
+          </button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
 
@@ -1236,6 +1243,54 @@ function createDefaultState() {
       lastRaid: 0,
       warnings: 0,
       relationship: 0, // -100~100 与城管的关系
+    },
+
+    // --- Phase 2 玩家深度交互 ---
+    workplaceSocial: {
+      colleagues: [], // [{ id, name, role, relationship, affinity, mentor, ally, rival, ... }]
+      mentorship: null, // { mentorId, level, startedDay }
+      officePoliticsLog: [], // [{ day, eventType, outcome, ... }]
+      network: { weak: [], strong: [], crossIndustry: [] }, // 人脉网络
+    },
+
+    family: {
+      relationshipStage: "stranger", // stranger|acquaintance|friend|good_friend|crush|dating|engaged|married
+      partner: null, // { type, name, income, companionship, traits, ... }
+      children: [], // [{ id, age, stage, education, expenses, ... }]
+      parents: {
+        father: {
+          health: "healthy",
+          age: 50,
+          companionship: 10,
+          medicalCost: 0,
+        },
+        mother: {
+          health: "healthy",
+          age: 48,
+          companionship: 10,
+          medicalCost: 0,
+        },
+      },
+      mortgage: null, // { monthlyPayment, remainingDays, ... }
+      activities: [], // 家庭活动历史
+    },
+
+    personalGrowth: {
+      hobbies: {}, // { hobbyId: { level: 0, xp: 0, hours: 0, ... } }
+      health: {
+        physical: { score: 50, lastCheckup: 0 },
+        mental: {
+          score: 50,
+          stress: 0,
+          anxiety: 0,
+          depression: 0,
+          lastTherapy: 0,
+        },
+        metabolic: { score: 50, bmi: 22, lastCheckup: 0 },
+      },
+      image: { style: 30, skincare: 30, fitness: 30, plastic: 0 }, // 形象各维度 0-100
+      goals: [], // [{ id, category, description, targetValue, currentValue, deadline, completed }]
+      learning: { booksRead: 0, courses: [], certificates: [] },
     },
 
     // --- 标志位 ---
@@ -22120,8 +22175,13 @@ const ITEMS = [
     icon: "👒",
     slot: "head",
     effects: { hygiene: 2 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.05 },
+      street_vending_goods: { incomeMultiplier: 1.05 },
+      manual_labor_construction: { incomeMultiplier: 1.03 },
+    },
     price: 10,
-    desc: "防晒遮雨，摆摊必备",
+    desc: "防晒遮雨，摆摊/室外工作收入+3%~5%",
     buyLocations: ["slum", "wholesaleMarket"],
   },
   {
@@ -22145,8 +22205,13 @@ const ITEMS = [
     icon: "😷",
     slot: "head",
     effects: { hygiene: 5, illness: -0.03 },
+    jobBonuses: {
+      hospital_caregiver: { incomeMultiplier: 1.06, riskReduction: 0.02 },
+      cleaning_service: { incomeMultiplier: 1.04 },
+      street_vending_food: { incomeMultiplier: 1.03 },
+    },
     price: 5,
-    desc: "卫生+5，生病概率-3%",
+    desc: "卫生+5，生病概率-3%。护工工作收入+6%，降低感染风险",
     buyLocations: ["slum", "wholesaleMarket", "commercialDist"],
   },
   {
@@ -22170,8 +22235,13 @@ const ITEMS = [
     icon: "🎒",
     slot: "accessory",
     effects: { capacity: 10 },
+    jobBonuses: {
+      courier_gig: { incomeMultiplier: 1.08 },
+      package_delivery: { incomeMultiplier: 1.06 },
+      waste_recycling: { incomeMultiplier: 1.05 },
+    },
     price: 40,
-    desc: "背包容量+10kg",
+    desc: "背包容量+10kg。跑腿/快递/废品回收收入+5%~8%",
     buyLocations: ["wholesaleMarket"],
   },
   {
@@ -22287,8 +22357,14 @@ const ITEMS = [
     icon: "🧥",
     slot: "body",
     effects: { coldProtection: 20, comfort: 5 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.08 },
+      street_vending_goods: { incomeMultiplier: 1.08 },
+      manual_labor_construction: { incomeMultiplier: 1.06 },
+      hospital_caregiver: { incomeMultiplier: 1.08 },
+    },
     price: 80,
-    desc: "防寒+20，舒适度+5，冬天必备",
+    desc: "防寒+20，舒适度+5，冬天必备。室外工作收入+6%~8%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
   {
@@ -22297,8 +22373,14 @@ const ITEMS = [
     icon: "🧴",
     slot: "accessory",
     effects: { heatProtection: 15, hygiene: 3 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.06 },
+      delivery_rider: { incomeMultiplier: 1.05 },
+      manual_labor_construction: { incomeMultiplier: 1.05 },
+      courier_gig: { incomeMultiplier: 1.05 },
+    },
     price: 25,
-    desc: "防暑+15，夏天减少高温损耗",
+    desc: "防暑+15，夏天减少高温损耗。室外工作收入+5%~6%",
     buyLocations: ["commercialDist", "slum"],
   },
   {
@@ -22307,14 +22389,102 @@ const ITEMS = [
     icon: "☕",
     slot: "accessory",
     effects: { fatigue: -3, hunger: 2 },
+    jobBonuses: {
+      manual_labor_construction: { incomeMultiplier: 1.04 },
+      delivery_rider: { incomeMultiplier: 1.04 },
+      waste_recycling: { incomeMultiplier: 1.03 },
+      courier_gig: { incomeMultiplier: 1.04 },
+      food_stall: { incomeMultiplier: 1.03 },
+    },
     price: 45,
-    desc: "每日减疲劳3，维持体力",
+    desc: "每日减疲劳3，维持体力。体力工作收入+3%~4%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 ];
 
 function getItemById(itemId) {
   return ITEMS.find((i) => i.id === itemId) || null;
+}
+
+/**
+ * 判断特定装备/道具是否符合某个NPC的礼物偏好
+ * @param {string} itemId 道具ID
+ * @param {string} npcId NPC ID（来自 npcs.js）
+ * @returns {boolean} 该NPC是否喜欢这个礼物
+ */
+function isItemNpcGift(itemId, npcId) {
+  var item = getItemById(itemId);
+  if (!item) return false;
+
+  // 装备→礼物分类映射
+  var EQUIPMENT_GIFT_MAP = {
+    straw_hat: ["daily_use", "clothing"],
+    work_gloves: ["daily_use"],
+    mask: ["daily_use"],
+    sturdy_shoes: ["daily_use", "clothing"],
+    backpack: ["daily_use"],
+    work_uniform: ["clothing"],
+    safety_helmet: ["daily_use"],
+    smartphone: ["daily_use"],
+    bicycle: ["daily_use"],
+    cert_exam_book: ["daily_use"],
+    backpack_basic: ["daily_use"],
+    backpack_large: ["daily_use"],
+    backpack_pro: ["daily_use"],
+    warm_coat: ["clothing", "daily_use"],
+    sunscreen: ["daily_use"],
+    thermos: ["daily_use"],
+  };
+
+  // 食材→礼物分类映射
+  var INGREDIENT_GIFT_MAP = {
+    rice: ["daily_use"],
+    flour: ["daily_use"],
+    noodles: ["instant_noodles", "daily_use"],
+    potato: ["vegetables", "daily_use"],
+    bok_choy: ["vegetables"],
+    cabbage: ["vegetables"],
+    radish: ["vegetables"],
+    tomato: ["vegetables", "fruits"],
+    cucumber: ["vegetables"],
+    pork: ["daily_use"],
+    beef: ["daily_use"],
+    chicken: ["daily_use"],
+    fish: ["daily_use"],
+    salt: ["daily_use"],
+    soy_sauce: ["daily_use"],
+    cooking_oil: ["daily_use"],
+    sugar: ["daily_use"],
+    chili: ["daily_use"],
+    egg: ["daily_use"],
+    milk: ["daily_use"],
+  };
+
+  // 查找NPC的礼物偏好（需要全局 NPC 数组）
+  var npcPrefers = [];
+  if (typeof NPCS !== "undefined") {
+    var npc = NPCS.find(function (n) {
+      return n.id === npcId;
+    });
+    if (npc && npc.giftPrefers) {
+      npcPrefers = npc.giftPrefers;
+    }
+  }
+
+  // 如果NPC没有偏好或没有NPCS数组，默认允许赠送
+  if (npcPrefers.length === 0) return true;
+
+  var giftCategories = item.isIngredient
+    ? INGREDIENT_GIFT_MAP[item.id] || ["daily_use"]
+    : EQUIPMENT_GIFT_MAP[item.id] || ["daily_use"];
+
+  // 检查是否有重叠类别
+  for (var i = 0; i < giftCategories.length; i++) {
+    for (var j = 0; j < npcPrefers.length; j++) {
+      if (giftCategories[i] === npcPrefers[j]) return true;
+    }
+  }
+  return false;
 }
 
 // ====== 住所层级定义 ======
@@ -23180,8 +23350,8 @@ const NEWS_EVENTS = [
     headline: "📜 二线城市全面放开落户！购房门槛降低，新市民购房需求释放",
     effects: {
       investmentEffect: [
-        { industry: "房地产", mul: 1.10 },
-        { symbols: ["ESTATE"], mul: 1.10 },
+        { industry: "房地产", mul: 1.1 },
+        { symbols: ["ESTATE"], mul: 1.1 },
         { industry: "消费", mul: 1.03 },
       ],
       duration: 6,
@@ -37304,6 +37474,36 @@ const DAILY_PIPELINE = [
   },
 
   // === 技能天赋树检查（P2#12） ===
+  // === Phase 2 职场社交每日 tick ===
+  {
+    name: "workplace_social_tick",
+    fn: function (state) {
+      if (typeof tickWorkplaceSocialDaily === "function") {
+        tickWorkplaceSocialDaily(state);
+      }
+    },
+  },
+
+  // === Phase 2 家庭每日 tick ===
+  {
+    name: "family_daily",
+    fn: function (state) {
+      if (typeof tickFamilyDaily === "function") {
+        tickFamilyDaily(state);
+      }
+    },
+  },
+
+  // === Phase 2 个人成长每日 tick ===
+  {
+    name: "personal_growth_daily",
+    fn: function (state) {
+      if (typeof tickPersonalGrowthDaily === "function") {
+        tickPersonalGrowthDaily(state);
+      }
+    },
+  },
+
   {
     name: "skill_tree_check",
     fn: function (state) {
@@ -41863,9 +42063,7 @@ function tickInvestmentDaily(state) {
       var prop = inv.properties[p];
       prop.currentPrice = Math.round(
         (prop.currentPrice || prop.buyPrice) *
-          (1 +
-            (prop.appreciation || 0.0001) +
-            (Math.random() - 0.5) * 0.002) *
+          (1 + (prop.appreciation || 0.0001) + (Math.random() - 0.5) * 0.002) *
           propertyNewsMulFallback,
       );
       var isSelfLived = inv.selfLivePropertyId === prop.id;
@@ -49663,6 +49861,3995 @@ if (typeof module !== "undefined" && module.exports) {
   };
 }
 </script>
+
+    <!-- Phase 2: Deep Interaction Modules -->
+    <script>/**
+ * 职场社交深度系统 — Phase 2 核心交互
+ *
+ * 包含：
+ * 1. 同事关系网 — 好感度、八卦传播、小团体
+ * 2. 办公室政治 — 站队、甩锅、抢功、背刺
+ * 3. 导师系统 — 带新人、收徒弟、人脉传承
+ * 4. 人脉网络 — 弱连接、强连接、跨界人脉
+ * 5. 社交事件 — 团建、聚餐、私下交流
+ */
+
+// ====== 同事关系定义 ======
+const COLLEAGUE_ROLES = {
+  mentor: { name: "导师", icon: "👨‍🏫", bonus: "能力+5%/月", risk: "被甩锅风险" },
+  ally: { name: "盟友", icon: "🤝", bonus: "绩效互助", risk: "站队风险" },
+  rival: { name: "竞争对手", icon: "⚔️", bonus: "激励成长", risk: "明争暗斗" },
+  frenemy: { name: "塑料同事", icon: "🎭", bonus: "无", risk: "随时背刺" },
+  neutral: { name: "普通同事", icon: "👤", bonus: "信息交换", risk: "低" },
+  subordinate: {
+    name: "下属",
+    icon: "👥",
+    bonus: "团队产出",
+    risk: "管理负担",
+  },
+};
+
+// ====== 办公室政治事件模板 ======
+const OFFICE_POLITICS_EVENTS = {
+  // 甩锅类
+  blame_shifting: {
+    name: "甩锅",
+    icon: "🍠",
+    desc: "有人想把项目失败的责任推给你",
+    triggerConditions: { projectFailed: true, lowPopularity: true },
+    options: [
+      { text: "硬刚到底", effect: "尊严+10，人缘-15，风险+10", weight: 30 },
+      {
+        text: "默默背锅",
+        effect: "尊严-15，KPI+5（老板觉得你顾全大局）",
+        weight: 40,
+      },
+      {
+        text: "反咬一口",
+        effect: "需要证据，成功则对方人缘-20，失败则双输",
+        weight: 20,
+      },
+      { text: "找导师求助", effect: "需要导师关系≥60，成功则化解", weight: 10 },
+    ],
+  },
+  // 抢功类
+  credit_stealing: {
+    name: "抢功",
+    icon: "💼",
+    desc: "你的成果被同事抢先汇报给老板",
+    triggerConditions: { completedProject: true, lowUpwardMgmt: true },
+    options: [
+      {
+        text: "公开澄清",
+        effect: "需要证据链，成功则声誉+10，失败则显得斤斤计较",
+        weight: 30,
+      },
+      {
+        text: "私下沟通",
+        effect: "需要对方人缘≥40，成功则对方道歉并分享功劳",
+        weight: 40,
+      },
+      {
+        text: "向上管理补救",
+        effect: "下次汇报时强调自己的贡献，需要向上管理≥50",
+        weight: 20,
+      },
+      { text: "忍气吞声", effect: "尊严-10，但避免冲突", weight: 10 },
+    ],
+  },
+  // 站队类
+  faction_conflict: {
+    name: "站队危机",
+    icon: "⚖️",
+    desc: "两个派系在斗争，需要你选边站",
+    triggerConditions: { corpLevel: "P6+", departmentConflict: true },
+    options: [
+      {
+        text: "加入A派",
+        effect: "A派好感+30，B派好感-30，风险：A派失败则受牵连",
+        weight: 35,
+      },
+      {
+        text: "加入B派",
+        effect: "B派好感+30，A派好感-30，风险：B派失败则受牵连",
+        weight: 35,
+      },
+      { text: "保持中立", effect: "两边好感都不涨，但安全", weight: 20 },
+      {
+        text: "两边都不得罪",
+        effect: "需要高情商（智力≥70），成功则两边都满意，失败则两边都讨厌",
+        weight: 10,
+      },
+    ],
+  },
+  // 八卦传播类
+  gossip_spread: {
+    name: "八卦风波",
+    icon: "👂",
+    desc: "关于你的八卦在办公室传播",
+    triggerConditions: { random: true },
+    options: [
+      {
+        text: "澄清辟谣",
+        effect: "需要证据，成功则声誉恢复，失败则越描越黑",
+        weight: 30,
+      },
+      { text: "冷处理", effect: "随时间淡化，但需要3-5天", weight: 40 },
+      { text: "反八卦", effect: "转移注意力到别人身上，道德风险", weight: 20 },
+      {
+        text: "找传播源头",
+        effect: "需要人脉网络≥50，成功则找到源头并制止",
+        weight: 10,
+      },
+    ],
+  },
+  // 邀功类
+  credit_claiming: {
+    name: "邀功",
+    icon: "🏆",
+    desc: "会议上有人把你的想法说成是他的",
+    triggerConditions: { meetingPresented: true },
+    options: [
+      {
+        text: "当场指出",
+        effect: "需要证据，成功则挽回声誉，失败则显得不专业",
+        weight: 30,
+      },
+      {
+        text: "会后找老板",
+        effect: "需要向上管理≥60，成功则老板了解真相",
+        weight: 40,
+      },
+      {
+        text: "下次更充分准备",
+        effect: "下次汇报时更详细地展示过程",
+        weight: 20,
+      },
+      { text: "忍了", effect: "尊严-5，但避免冲突升级", weight: 10 },
+    ],
+  },
+};
+
+// ====== 导师系统 ======
+const MENTORSHIP_LEVELS = {
+  stranger: { name: "陌生人", icon: "❓", level: 0, benefits: [] },
+  acquaintance: { name: "认识", icon: "👋", level: 20, benefits: ["信息交换"] },
+  friendly: {
+    name: "友好",
+    icon: "🙂",
+    level: 40,
+    benefits: ["信息交换", "小忙帮忙"],
+  },
+  trusted: {
+    name: "信任",
+    icon: "🤝",
+    level: 60,
+    benefits: ["信息交换", "帮忙", "引荐"],
+  },
+  mentor: {
+    name: "导师",
+    icon: "👨‍🏫",
+    level: 80,
+    benefits: ["全方位指导", "晋升推荐", "危机保护"],
+  },
+  master: {
+    name: "恩师",
+    icon: "🙏",
+    level: 95,
+    benefits: ["全方位指导", "晋升推荐", "危机保护", "人脉传承"],
+  },
+};
+
+/**
+ * 初始化同事关系网
+ */
+function initColleagueNetwork(state) {
+  if (!state.corporate) state.corporate = {};
+  if (!state.corporate.colleagues) {
+    state.corporate.colleagues = {
+      network: [],
+      factions: [],
+      gossipNetwork: {},
+      mentorship: null,
+      mentees: [],
+    };
+  }
+}
+
+/**
+ * 生成随机同事
+ */
+function generateColleague(state, company) {
+  const names = [
+    "老王",
+    "小张",
+    "小李",
+    "小王",
+    "小刘",
+    "小陈",
+    "小赵",
+    "小周",
+    "小吴",
+    "小郑",
+    "小孙",
+    "小徐",
+    "小朱",
+    "小高",
+    "小林",
+    "小何",
+    "小罗",
+    "小梁",
+    "小谢",
+    "小邓",
+  ];
+  const personalities = [
+    { type: "热心肠", trait: "helpful", bonus: "愿意帮忙", risk: "容易被利用" },
+    { type: "老油条", trait: "cynical", bonus: "经验丰富", risk: "甩锅高手" },
+    {
+      type: "卷王",
+      trait: "competitive",
+      bonus: "工作能力强",
+      risk: "抢功狂魔",
+    },
+    {
+      type: "和事佬",
+      trait: "diplomatic",
+      bonus: "调解能力",
+      risk: "两边不讨好",
+    },
+    { type: "八卦王", trait: "gossipy", bonus: "信息灵通", risk: "传播八卦" },
+    { type: "老实人", trait: "honest", bonus: "可靠", risk: "容易被欺负" },
+    { type: "社交达人", trait: "social", bonus: "人脉广", risk: "浅交多" },
+    { type: "技术宅", trait: "technical", bonus: "技术强", risk: "不善言辞" },
+  ];
+
+  const name = names[Math.floor(Math.random() * names.length)];
+  const personality =
+    personalities[Math.floor(Math.random() * personalities.length)];
+  const roleKeys = Object.keys(COLLEAGUE_ROLES);
+  const roleKey = roleKeys[Math.floor(Math.random() * roleKeys.length)];
+
+  return {
+    id:
+      "colleague_" +
+      state.player.day +
+      "_" +
+      Math.random().toString(36).substr(2, 9),
+    name: name,
+    role: roleKey,
+    personality: personality,
+    relationship: Math.floor(Math.random() * 40) + 20, // 20-60 初始
+    trust: Math.floor(Math.random() * 30) + 20, // 20-50 初始信任
+    faction: null, // 所属派系
+    favors: [], // 欠你的人情
+    secrets: [], // 知道你的秘密
+    lastInteraction: state.player.day,
+  };
+}
+
+/**
+ * 增加同事好感度
+ */
+function increaseColleagueRelationship(state, colleagueId, amount, reason) {
+  const colleagues = state.corporate.colleagues.network;
+  const colleague = colleagues.find((c) => c.id === colleagueId);
+  if (!colleague) return false;
+
+  const oldRelationship = colleague.relationship;
+  colleague.relationship = Math.min(100, colleague.relationship + amount);
+  colleague.lastInteraction = state.player.day;
+
+  // 关系升级事件
+  if (oldRelationship < 40 && colleague.relationship >= 40) {
+    StateManager.addMessage(
+      `🤝 你和${colleague.name}的关系升级为"友好"！`,
+      "success",
+    );
+  }
+  if (oldRelationship < 60 && colleague.relationship >= 60) {
+    StateManager.addMessage(
+      `🤝 你和${colleague.name}的关系升级为"信任"！`,
+      "success",
+    );
+  }
+  if (oldRelationship < 80 && colleague.relationship >= 80) {
+    StateManager.addMessage(
+      `👨‍🏫 你和${colleague.name}的关系升级为"导师"级别！`,
+      "success",
+    );
+  }
+
+  StateManager.addMessage(
+    `${reason} → ${colleague.name}好感度 +${amount}`,
+    "info",
+  );
+  return true;
+}
+
+/**
+ * 降低同事好感度
+ */
+function decreaseColleagueRelationship(state, colleagueId, amount, reason) {
+  const colleagues = state.corporate.colleagues.network;
+  const colleague = colleagues.find((c) => c.id === colleagueId);
+  if (!colleague) return false;
+
+  const oldRelationship = colleague.relationship;
+  colleague.relationship = Math.max(0, colleague.relationship - amount);
+  colleague.lastInteraction = state.player.day;
+
+  // 关系降级事件
+  if (oldRelationship >= 60 && colleague.relationship < 60) {
+    StateManager.addMessage(
+      `⚠️ 你和${colleague.name}的关系降级了...`,
+      "warning",
+    );
+  }
+  if (oldRelationship >= 40 && colleague.relationship < 40) {
+    StateManager.addMessage(
+      `⚠️ 你和${colleague.name}的关系变得疏远了...`,
+      "warning",
+    );
+  }
+
+  StateManager.addMessage(
+    `${reason} → ${colleague.name}好感度 -${amount}`,
+    "warning",
+  );
+  return true;
+}
+
+/**
+ * 建立导师关系
+ */
+function establishMentorship(state, mentorId) {
+  const colleagues = state.corporate.colleagues.network;
+  const mentor = colleagues.find((c) => c.id === mentorId);
+  if (!mentor) return { success: false, message: "找不到该同事" };
+
+  if (mentor.relationship < 80) {
+    return {
+      success: false,
+      message: `需要和${mentor.name}的关系达到80（信任级）才能拜师`,
+    };
+  }
+
+  if (state.corporate.colleagues.mentorship) {
+    return { success: false, message: "你已经有导师了，先解除现有导师关系" };
+  }
+
+  state.corporate.colleagues.mentorship = {
+    mentorId: mentor.id,
+    mentorName: mentor.name,
+    startedDay: state.player.day,
+    level: 80,
+    benefitsReceived: [],
+  };
+
+  mentor.role = "mentor";
+  mentor.relationship = Math.min(100, mentor.relationship + 5);
+
+  StateManager.addMessage(
+    `👨‍🏫 你拜${mentor.name}为师了！他将为你提供指导和保护。`,
+    "success",
+  );
+  return { success: true, mentor: mentor };
+}
+
+/**
+ * 解除导师关系
+ */
+function endMentorship(state) {
+  if (!state.corporate.colleagues.mentorship) {
+    return { success: false, message: "你目前没有导师" };
+  }
+
+  const mentor = state.corporate.colleagues.network.find(
+    (c) => c.id === state.corporate.colleagues.mentorship.mentorId,
+  );
+  if (mentor) {
+    mentor.role = "ally";
+    mentor.relationship = Math.max(40, mentor.relationship - 20);
+  }
+
+  const mentorName = state.corporate.colleagues.mentorship.mentorName;
+  state.corporate.colleagues.mentorship = null;
+
+  StateManager.addMessage(`👋 你结束了和${mentorName}的导师关系。`, "warning");
+  return { success: true };
+}
+
+/**
+ * 收徒弟
+ */
+function takeMentee(state, menteeId) {
+  const colleagues = state.corporate.colleagues.network;
+  const mentee = colleagues.find((c) => c.id === menteeId);
+  if (!mentee) return { success: false, message: "找不到该同事" };
+
+  if (mentee.relationship < 60) {
+    return {
+      success: false,
+      message: `需要和${mentee.name}的关系达到60（信任级）才能收徒`,
+    };
+  }
+
+  if (!state.corporate.colleagues.mentees) {
+    state.corporate.colleagues.mentees = [];
+  }
+
+  if (state.corporate.colleagues.mentees.length >= 3) {
+    return { success: false, message: "最多同时带3个徒弟" };
+  }
+
+  state.corporate.colleagues.mentees.push({
+    menteeId: mentee.id,
+    menteeName: mentee.name,
+    startedDay: state.player.day,
+    progress: 0,
+  });
+
+  mentee.role = "subordinate";
+  mentee.relationship = Math.min(100, mentee.relationship + 5);
+
+  StateManager.addMessage(`👥 你收${mentee.name}为徒了！`, "success");
+  return { success: true, mentee: mentee };
+}
+
+/**
+ * 每日同事关系更新
+ */
+function tickColleagueRelationships(state) {
+  const colleagues = state.corporate.colleagues.network;
+  if (!colleagues || colleagues.length === 0) return;
+
+  const day = state.player.day;
+
+  for (const colleague of colleagues) {
+    // 自然衰减（不互动的话关系会慢慢下降）
+    if (day - colleague.lastInteraction > 30) {
+      colleague.relationship = Math.max(0, colleague.relationship - 2);
+    } else if (day - colleague.lastInteraction > 60) {
+      colleague.relationship = Math.max(0, colleague.relationship - 5);
+    }
+
+    // 导师每日指导
+    if (
+      state.corporate.colleagues.mentorship &&
+      colleague.id === state.corporate.colleagues.mentorship.mentorId
+    ) {
+      const mentorship = state.corporate.colleagues.mentorship;
+      mentorship.level = Math.min(100, mentorship.level + 0.5);
+
+      // 每日小指导
+      if (Math.random() < 0.3) {
+        const benefits = ["能力+1", "KPI+2", "向上管理+1", "人缘+1", "风险-1"];
+        const benefit = benefits[Math.floor(Math.random() * benefits.length)];
+        StateManager.addMessage(
+          `👨‍🏫 ${colleague.name}今天给了你一点指导：${benefit}`,
+          "hint",
+        );
+      }
+    }
+
+    // 徒弟成长
+    if (state.corporate.colleagues.mentees) {
+      for (const mentee of state.corporate.colleagues.mentees) {
+        if (mentee.menteeId === colleague.id) {
+          mentee.progress = Math.min(100, mentee.progress + 1);
+          if (mentee.progress >= 100) {
+            StateManager.addMessage(`🎉 ${colleague.name}出师了！`, "success");
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * 触发办公室政治事件
+ */
+function triggerOfficePoliticsEvent(state, eventType) {
+  const event = OFFICE_POLITICS_EVENTS[eventType];
+  if (!event) return;
+
+  const options = event.options;
+  const body = `
+    <div style="font-size:13px;">
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;margin-bottom:12px;border-left:4px solid var(--warning);">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">${event.icon} ${event.name}</div>
+        <div style="font-size:11px;color:var(--text-secondary);">${event.desc}</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">选择你的应对方式：</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${options
+          .map(
+            (opt, i) => `
+          <div style="padding:10px;background:var(--bg-secondary);border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="handlePoliticsChoice('${eventType}', ${i})">
+            <div style="font-size:12px;font-weight:bold;margin-bottom:4px;">${opt.text}</div>
+            <div style="font-size:10px;color:var(--text-muted);">${opt.effect}</div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:4px;">概率: ${opt.weight}%</div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  showModal({
+    title: `🏢 办公室政治：${event.name}`,
+    body: body,
+    buttons: [{ text: "取消", cls: "", callback: () => {} }],
+  });
+
+  // 存储当前事件供选择处理
+  state._pendingPoliticsEvent = { type: eventType, options: options };
+}
+
+/**
+ * 处理办公室政治事件选择
+ */
+function handlePoliticsChoice(eventType, optionIndex) {
+  const state = StateManager.getState();
+  const pending = state._pendingPoliticsEvent;
+  if (!pending) return;
+
+  const option = pending.options[optionIndex];
+  const event = OFFICE_POLITICS_EVENTS[eventType];
+
+  // 解析效果
+  const effects = parseEffectString(option.effect);
+
+  // 应用效果
+  applyPoliticsEffects(state, effects);
+
+  StateManager.addMessage(
+    `🏢 ${event.icon} ${event.name}：${option.text} → ${option.effect}`,
+    "info",
+  );
+
+  // 关闭弹窗
+  document.querySelector(".modal-overlay")?.remove();
+  state._pendingPoliticsEvent = null;
+
+  renderAll();
+}
+
+/**
+ * 解析效果字符串
+ */
+function parseEffectString(effectStr) {
+  const effects = {};
+  const pairs = effectStr.split("，");
+  for (const pair of pairs) {
+    const match = pair.match(/([^\s，]+)([+-]\d+)/);
+    if (match) {
+      effects[match[1]] = parseInt(match[2]);
+    }
+  }
+  return effects;
+}
+
+/**
+ * 应用政治事件效果
+ */
+function applyPoliticsEffects(state, effects) {
+  const p = state.player.corporate;
+
+  for (const [key, value] of Object.entries(effects)) {
+    if (key === "尊严" && p.hasOwnProperty("dignity"))
+      p.dignity = Math.max(0, Math.min(100, p.dignity + value));
+    if (key === "人缘" && p.hasOwnProperty("popularity"))
+      p.popularity = Math.max(0, Math.min(100, p.popularity + value));
+    if (key === "KPI" && p.hasOwnProperty("kpi"))
+      p.kpi = Math.max(0, Math.min(150, p.kpi + value));
+    if (key === "能力" && p.hasOwnProperty("ability"))
+      p.ability = Math.max(0, Math.min(100, p.ability + value));
+    if (key === "向上管理" && p.hasOwnProperty("upwardMgmt"))
+      p.upwardMgmt = Math.max(0, Math.min(100, p.upwardMgmt + value));
+    if (key === "风险" && p.hasOwnProperty("risk"))
+      p.risk = Math.max(0, Math.min(100, p.risk + value));
+    if (key === "声誉" && state.player.hasOwnProperty("fame"))
+      state.player.fame = Math.max(0, state.player.fame + value);
+  }
+}
+
+/**
+ * 社交行动：请同事吃饭
+ */
+function treatColleagueMeal(state, colleagueId, tier) {
+  const colleagues = state.corporate.colleagues.network;
+  const colleague = colleagues.find((c) => c.id === colleagueId);
+  if (!colleague) return { success: false, message: "找不到该同事" };
+
+  const costs = { cheap: 50, normal: 150, fancy: 500 };
+  const cost = costs[tier] || costs.normal;
+
+  if (state.resources.cash < cost) {
+    return { success: false, message: "现金不足" };
+  }
+
+  state.resources.cash -= cost;
+
+  // 根据消费档次和关系度计算效果
+  const baseBonus = { cheap: 3, normal: 5, fancy: 8 };
+  const relationshipMod = colleague.relationship / 100;
+  const bonus = Math.round((baseBonus[tier] || 5) * (0.5 + relationshipMod));
+
+  increaseColleagueRelationship(
+    state,
+    colleagueId,
+    bonus,
+    `请${colleague.name}吃${tier === "fancy" ? "高档" : tier === "normal" ? "普通" : "便"}饭`,
+  );
+
+  return { success: true, message: `请${colleague.name}吃饭，关系+${bonus}` };
+}
+
+/**
+ * 社交行动：私下聊天
+ */
+function chatWithColleague(state, colleagueId) {
+  const colleagues = state.corporate.colleagues.network;
+  const colleague = colleagues.find((c) => c.id === colleagueId);
+  if (!colleague) return { success: false, message: "找不到该同事" };
+
+  const AP_COST = 10;
+  if (state.player.actionPoints < AP_COST) {
+    return { success: false, message: "行动力不足" };
+  }
+
+  state.player.actionPoints -= AP_COST;
+
+  // 随机聊天内容
+  const topics = [
+    { topic: "行业八卦", effect: "获得内幕信息", bonus: 2 },
+    { topic: "工作经验", effect: "能力提升", bonus: 1 },
+    { topic: "生活琐事", effect: "关系拉近", bonus: 3 },
+    { topic: "吐槽老板", effect: "风险+5，但关系+5", bonus: -5, risk: 5 },
+    { topic: "闲聊", effect: "关系+1", bonus: 1 },
+  ];
+
+  const topic = topics[Math.floor(Math.random() * topics.length)];
+  const bonus = topic.bonus;
+
+  increaseColleagueRelationship(
+    state,
+    colleagueId,
+    Math.abs(bonus),
+    `和${colleague.name}聊${topic.topic}`,
+  );
+
+  if (topic.risk) {
+    state.player.corporate.risk = Math.min(
+      100,
+      state.player.corporate.risk + topic.risk,
+    );
+    StateManager.addMessage(
+      `⚠️ 和${colleague.name}聊${topic.topic}，风险+${topic.risk}`,
+      "warning",
+    );
+  }
+
+  StateManager.addMessage(
+    `💬 和${colleague.name}聊${topic.topic} → 关系+${Math.abs(bonus)}`,
+    "info",
+  );
+
+  colleague.lastInteraction = state.player.day;
+  return { success: true };
+}
+
+/**
+ * 获取同事关系摘要
+ */
+function getColleagueSummary(state) {
+  const colleagues = state.corporate.colleagues.network;
+  if (!colleagues || colleagues.length === 0) return null;
+
+  const mentor = state.corporate.colleagues.mentorship;
+  const mentees = state.corporate.colleagues.mentees || [];
+
+  return {
+    total: colleagues.length,
+    mentor: mentor ? colleagues.find((c) => c.id === mentor.mentorId) : null,
+    menteeCount: mentees.length,
+    avgRelationship: Math.round(
+      colleagues.reduce((s, c) => s + c.relationship, 0) / colleagues.length,
+    ),
+    highTrustCount: colleagues.filter((c) => c.relationship >= 60).length,
+    factions: state.corporate.colleagues.factions.length,
+  };
+}
+
+/**
+ * 百科注册
+ */
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.workplace_social = {
+    id: "workplace_social",
+    name: "职场社交网络",
+    icon: "🏢",
+    brief: "同事关系网、办公室政治、导师系统、人脉网络深度交互",
+    version: "1.0.0",
+    related: ["mechanics:corp_ops", "mechanics:perf", "mechanics:promo"],
+    sections: [
+      {
+        kind: "desc",
+        text: "职场不是简单的打卡上班，而是一个充满人情世故的微型社会。你的每个决策都可能在同事关系中产生涟漪效应。",
+      },
+      {
+        kind: "subhead",
+        text: "👥 同事关系等级",
+      },
+      {
+        kind: "list",
+        items: [
+          "❓ 陌生人（0-19）：初次见面，互不了解",
+          "👋 认识（20-39）：点头之交，可以交换信息",
+          "🙂 友好（40-59）：关系不错，愿意互相帮忙",
+          "🤝 信任（60-79）：可以托付小事，引荐人脉",
+          "👨‍🏫 导师（80-94）：全方位指导，晋升推荐，危机保护",
+          "🙏 恩师（95-100）：人脉传承，终身受益",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "⚔️ 办公室政治类型",
+      },
+      {
+        kind: "list",
+        items: [
+          "🍠 甩锅：有人想把责任推给你",
+          "💼 抢功：你的成果被同事抢先汇报",
+          "⚖️ 站队危机：派系斗争需要你选边",
+          "👂 八卦风波：关于你的谣言在传播",
+          "🏆 邀功：会议上有人把你的想法说成是他的",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡  tip：和导师关系≥80才能获得晋升推荐；徒弟出师后会成为你的人脉；办公室政治事件需要权衡利弊，有时候忍一时风平浪静",
+      },
+    ],
+  };
+}
+</script>
+    <script>/**
+ * 投资分析工具 — Phase 2 深度交互
+ *
+ * 包含：
+ * 1. 技术分析指标 — MA、MACD、RSI、布林带
+ * 2. 投资组合分析 — 资产配置、风险分散、夏普比率
+ * 3. 止损止盈系统 — 自动止损、移动止盈、追踪止损
+ * 4. 杠杆交易系统 — 保证金、爆仓风险、杠杆倍数
+ * 5. 市场情绪分析 — 恐贪指数、成交量分析、资金流向
+ */
+
+// ====== 技术分析指标 ======
+const TECHNICAL_INDICATORS = {
+  ma: {
+    name: "移动平均线",
+    icon: "📈",
+    desc: "MA5/MA7/MA20，判断趋势方向",
+    calc: "average of last N prices",
+  },
+  macd: {
+    name: "MACD",
+    icon: "📊",
+    desc: "快线-慢线+柱状图，判断买卖点",
+    calc: "EMA12 - EMA26 + signal line",
+  },
+  rsi: {
+    name: "RSI",
+    icon: "📉",
+    desc: "相对强弱指标，判断超买超卖",
+    calc: "100 - 100/(1+RS), RS=平均涨幅/平均跌幅",
+  },
+  bollinger: {
+    name: "布林带",
+    icon: "🔵",
+    desc: "上下轨+中轨，判断价格区间",
+    calc: "MA20 ± 2×标准差",
+  },
+  kdj: {
+    name: "KDJ",
+    icon: "📈",
+    desc: "随机指标，判断超买超卖和拐点",
+    calc: "K/D/J三值，J=3K-2D",
+  },
+};
+
+// ====== 资产配置建议 ======
+const ASSET_ALLOCATION_STRATEGIES = {
+  conservative: {
+    name: "保守型",
+    icon: "🛡️",
+    riskLevel: "低",
+    allocation: {
+      stocks: 20,
+      bonds: 40,
+      precious: 20,
+      crypto: 0,
+      realEstate: 20,
+    },
+    expectedReturn: "4-6%/年",
+    maxDrawdown: "10-15%",
+    desc: "保本为主，适合风险厌恶者",
+  },
+  balanced: {
+    name: "平衡型",
+    icon: "⚖️",
+    riskLevel: "中",
+    allocation: {
+      stocks: 40,
+      bonds: 25,
+      precious: 10,
+      crypto: 5,
+      realEstate: 20,
+    },
+    expectedReturn: "8-12%/年",
+    maxDrawdown: "20-30%",
+    desc: "攻守兼备，适合大多数投资者",
+  },
+  aggressive: {
+    name: "进取型",
+    icon: "🚀",
+    riskLevel: "高",
+    allocation: {
+      stocks: 55,
+      bonds: 10,
+      precious: 5,
+      crypto: 15,
+      realEstate: 15,
+    },
+    expectedReturn: "15-25%/年",
+    maxDrawdown: "40-50%",
+    desc: "追求高收益，能承受较大波动",
+  },
+  speculative: {
+    name: "投机型",
+    icon: "🎲",
+    riskLevel: "极高",
+    allocation: {
+      stocks: 30,
+      bonds: 0,
+      precious: 5,
+      crypto: 40,
+      realEstate: 25,
+    },
+    expectedReturn: "30-50%/年",
+    maxDrawdown: "60-80%",
+    desc: "高风险高回报，可能血本无归",
+  },
+};
+
+// ====== 止损止盈策略 ======
+const STOP_LOSS_STRATEGIES = {
+  fixed_percent: {
+    name: "固定百分比止损",
+    icon: "🛑",
+    desc: "亏损达到X%时自动卖出",
+    params: { threshold: [5, 10, 15, 20] },
+    pros: "简单明了，执行果断",
+    cons: "可能错过反弹机会",
+  },
+  trailing_stop: {
+    name: "移动止损",
+    icon: "📍",
+    desc: "价格从最高点回落X%时卖出",
+    params: { trailingPercent: [5, 10, 15] },
+    pros: "能锁定利润，让盈利奔跑",
+    cons: "震荡市中容易被洗出",
+  },
+  support_break: {
+    name: "支撑位止损",
+    icon: "🔻",
+    desc: "跌破关键支撑位时卖出",
+    params: { supportLevels: ["MA20", "MA60", "前期低点"] },
+    pros: "技术面依据充分",
+    cons: "需要判断支撑位，有主观性",
+  },
+  time_based: {
+    name: "时间止损",
+    icon: "⏰",
+    desc: "持有X天后无论盈亏都卖出",
+    params: { holdDays: [7, 14, 30, 60] },
+    pros: "避免资金长期占用",
+    cons: "可能卖在最低点",
+  },
+  fundamental_change: {
+    name: "基本面止损",
+    icon: "📉",
+    desc: "买入逻辑消失时卖出",
+    params: { triggers: ["公司暴雷", "行业政策变化", "业绩不及预期"] },
+    pros: "逻辑驱动，理性决策",
+    cons: "需要持续跟踪基本面",
+  },
+};
+
+// ====== 杠杆交易配置 ======
+const LEVERAGE_SETTINGS = {
+  stock_margin: {
+    name: "股票融资融券",
+    icon: "💳",
+    maxLeverage: 2,
+    marginRate: 0.06, // 6% 年化利率
+    maintenanceMargin: 0.3, // 维持保证金30%
+    liquidationThreshold: 0.2, // 20% 强平线
+    desc: "最高2倍杠杆，年化利息6%",
+  },
+  crypto_futures: {
+    name: "加密货币期货",
+    icon: "⚡",
+    maxLeverage: 100,
+    marginRate: 0.0, // 无利息
+    maintenanceMargin: 0.005, // 0.5% 维持保证金
+    liquidationThreshold: 0.0, // 归零强平
+    desc: "最高100倍杠杆，无利息但爆仓风险极高",
+  },
+  options: {
+    name: "期权",
+    icon: "🎫",
+    maxLeverage: 10,
+    marginRate: 0.0,
+    maintenanceMargin: 0.0,
+    liquidationThreshold: 0.0, // 期权买方最大损失权利金
+    desc: "买方有限损失，卖方无限风险",
+  },
+};
+
+// ====== 技术分析计算函数 ======
+
+/**
+ * 计算移动平均线
+ */
+function calculateMA(prices, period) {
+  if (prices.length < period) return null;
+  const slice = prices.slice(-period);
+  const sum = slice.reduce((a, b) => a + b.price, 0);
+  return sum / period;
+}
+
+/**
+ * 计算EMA（指数移动平均）
+ */
+function calculateEMA(prices, period) {
+  if (prices.length < period) return null;
+  const k = 2 / (period + 1);
+  let ema = prices[0].price;
+  for (let i = 1; i < prices.length; i++) {
+    ema = prices[i].price * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+/**
+ * 计算MACD
+ */
+function calculateMACD(prices) {
+  if (prices.length < 26) return null;
+
+  const ema12 = calculateEMA(prices, 12);
+  const ema26 = calculateEMA(prices, 26);
+  if (!ema12 || !ema26) return null;
+
+  const macdLine = ema12 - ema26;
+
+  // 简化：用最近7天的MACD线平均值作为signal
+  const macdHistory = [];
+  for (let i = 25; i < prices.length; i++) {
+    const e12 = calculateEMA(prices.slice(0, i + 1), 12);
+    const e26 = calculateEMA(prices.slice(0, i + 1), 26);
+    if (e12 && e26) macdHistory.push(e12 - e26);
+  }
+
+  const signalLine =
+    macdHistory.length >= 9
+      ? macdHistory.slice(-9).reduce((a, b) => a + b, 0) / 9
+      : macdLine;
+
+  const histogram = macdLine - signalLine;
+
+  return {
+    macd: Math.round(macdLine * 100) / 100,
+    signal: Math.round(signalLine * 100) / 100,
+    histogram: Math.round(histogram * 100) / 100,
+    signal: histogram > 0 ? "买入信号" : histogram < -0.5 ? "卖出信号" : "中性",
+  };
+}
+
+/**
+ * 计算RSI
+ */
+function calculateRSI(prices, period = 14) {
+  if (prices.length < period + 1) return null;
+
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = prices.length - period; i < prices.length; i++) {
+    const change = prices[i].price - prices[i - 1].price;
+    if (change > 0) gains += change;
+    else losses += Math.abs(change);
+  }
+
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+
+  if (avgLoss === 0) return 100;
+
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - 100 / (1 + rs);
+
+  return {
+    value: Math.round(rsi * 100) / 100,
+    signal:
+      rsi > 70 ? "超买（考虑卖出）" : rsi < 30 ? "超卖（考虑买入）" : "中性",
+  };
+}
+
+/**
+ * 计算布林带
+ */
+function calculateBollinger(prices, period = 20, multiplier = 2) {
+  if (prices.length < period) return null;
+
+  const slice = prices.slice(-period);
+  const ma = slice.reduce((a, b) => a + b.price, 0) / period;
+
+  const variance =
+    slice.reduce((sum, p) => sum + Math.pow(p.price - ma, 2), 0) / period;
+  const stdDev = Math.sqrt(variance);
+
+  return {
+    upper: Math.round((ma + multiplier * stdDev) * 100) / 100,
+    middle: Math.round(ma * 100) / 100,
+    lower: Math.round((ma - multiplier * stdDev) * 100) / 100,
+    width: Math.round(((2 * multiplier * stdDev) / ma) * 100) / 100,
+    position: "未知", // 会在调用时计算
+  };
+}
+
+/**
+ * 分析单只股票的技术面
+ */
+function analyzeStockTechnicals(symbol, state) {
+  const inv = state.investment;
+  if (!inv || !inv.stockMarket || !inv.stockMarket[symbol]) return null;
+
+  const market = inv.stockMarket[symbol];
+  const history = market.history;
+
+  if (!history || history.length < 20) {
+    return { error: "数据不足，需要至少20个交易日的数据" };
+  }
+
+  const ma5 = calculateMA(history, 5);
+  const ma7 = calculateMA(history, 7);
+  const ma20 = calculateMA(history, 20);
+  const macd = calculateMACD(history);
+  const rsi = calculateRSI(history);
+  const bollinger = calculateBollinger(history);
+
+  // 判断价格在布林带中的位置
+  const currentPrice = history[history.length - 1].price;
+  if (bollinger) {
+    if (currentPrice >= bollinger.upper)
+      bollinger.position = "触及上轨（超买）";
+    else if (currentPrice <= bollinger.lower)
+      bollinger.position = "触及下轨（超卖）";
+    else if (currentPrice > bollinger.middle) bollinger.position = "中轨上方";
+    else bollinger.position = "中轨下方";
+  }
+
+  // 综合判断
+  let trend = "未知";
+  let strength = 0;
+
+  // MA排列
+  if (ma5 && ma7 && ma20) {
+    if (ma5 > ma7 && ma7 > ma20) {
+      trend = "多头排列（强势上涨）";
+      strength += 3;
+    } else if (ma5 < ma7 && ma7 < ma20) {
+      trend = "空头排列（强势下跌）";
+      strength -= 3;
+    } else if (ma5 > ma7 && ma7 > ma20) {
+      trend = "多头排列";
+      strength += 2;
+    } else trend = "纠缠震荡";
+  }
+
+  // MACD
+  if (macd) {
+    if (macd.histogram > 0) strength += 1;
+    else strength -= 1;
+  }
+
+  // RSI
+  if (rsi) {
+    if (rsi.value > 70)
+      strength -= 1; // 超买可能回调
+    else if (rsi.value < 30) strength += 1; // 超卖可能反弹
+  }
+
+  // 综合评级
+  let rating;
+  if (strength >= 4) rating = "强烈买入 🟢";
+  else if (strength >= 2) rating = "买入 🟢";
+  else if (strength >= 0) rating = "持有 🟡";
+  else if (strength >= -2) rating = "卖出 🔴";
+  else rating = "强烈卖出 🔴";
+
+  return {
+    symbol: symbol,
+    currentPrice: currentPrice,
+    trend: trend,
+    rating: rating,
+    strength: strength,
+    indicators: {
+      ma: {
+        ma5: Math.round(ma5 * 100) / 100,
+        ma7: Math.round(ma7 * 100) / 100,
+        ma20: Math.round(ma20 * 100) / 100,
+      },
+      macd: macd,
+      rsi: rsi,
+      bollinger: bollinger,
+    },
+    summary: generateTechnicalSummary(symbol, currentPrice, trend, rating, {
+      ma5,
+      ma7,
+      ma20,
+      macd,
+      rsi,
+      bollinger,
+    }),
+  };
+}
+
+/**
+ * 生成技术面分析摘要
+ */
+function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
+  const lines = [];
+  lines.push(`📊 【${symbol}】技术面分析`);
+  lines.push(`当前价格：¥${price.toFixed(2)}`);
+  lines.push(`趋势判断：${trend}`);
+  lines.push(`综合评级：${rating}`);
+  lines.push("");
+  lines.push("指标详情：");
+
+  if (indicators.ma) {
+    const { ma5, ma7, ma20 } = indicators.ma;
+    lines.push(`  MA5: ¥${ma5} | MA7: ¥${ma7} | MA20: ¥${ma20}`);
+    if (ma5 > ma7 && ma7 > ma20) lines.push("  ✅ 均线多头排列，上涨趋势明确");
+    else if (ma5 < ma7 && ma7 < ma20)
+      lines.push("  ❌ 均线空头排列，下跌趋势明确");
+    else lines.push("  ⚖️ 均线纠缠，方向不明");
+  }
+
+  if (indicators.macd) {
+    const { macd, signal, histogram } = indicators.macd;
+    lines.push(`  MACD: ${macd} | 信号线: ${signal} | 柱状图: ${histogram}`);
+    lines.push(`  ${histogram > 0 ? "🟢 动能正向" : "🔴 动能负向"}`);
+  }
+
+  if (indicators.rsi) {
+    const { value, signal: rsiSignal } = indicators.rsi;
+    lines.push(`  RSI(14): ${value} → ${rsiSignal}`);
+  }
+
+  if (indicators.bollinger) {
+    const { upper, middle, lower, position } = indicators.bollinger;
+    lines.push(`  布林带: 上轨¥${upper} | 中轨¥${middle} | 下轨¥${lower}`);
+    lines.push(`  位置: ${position}`);
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 分析投资组合
+ */
+function analyzePortfolio(state) {
+  const inv = state.investment;
+  if (!inv) return null;
+
+  const holdings = inv.stockHoldings || [];
+  const properties = inv.properties || [];
+  const cars = inv.cars || [];
+
+  // 计算各类资产市值
+  let stockValue = 0;
+  let stockCost = 0;
+  for (const h of holdings) {
+    const m = inv.stockMarket[h.symbol];
+    if (m) {
+      stockValue += m.price * h.shares;
+      stockCost += h.avgPrice * h.shares;
+    }
+  }
+
+  let propertyValue = 0;
+  for (const p of properties) {
+    propertyValue += p.currentPrice || p.buyPrice;
+  }
+
+  let carValue = 0;
+  for (const c of cars) {
+    carValue += c.currentPrice || c.buyPrice;
+  }
+
+  const btcValue = (inv.btcHoldings || 0) * (inv.btcPrice || 0);
+
+  const totalValue = stockValue + propertyValue + carValue + btcValue;
+  if (totalValue === 0) return { error: "没有任何投资持仓" };
+
+  // 资产配置比例
+  const allocation = {
+    stocks: Math.round((stockValue / totalValue) * 100),
+    properties: Math.round((propertyValue / totalValue) * 100),
+    cars: Math.round((carValue / totalValue) * 100),
+    crypto: Math.round((btcValue / totalValue) * 100),
+  };
+
+  // 计算盈亏
+  const stockPnL = stockValue - stockCost;
+  const stockPnLPct = stockCost > 0 ? (stockPnL / stockCost) * 100 : 0;
+
+  // 计算风险集中度（单一资产占比过高）
+  const maxSingleAsset = Math.max(
+    allocation.stocks,
+    allocation.properties,
+    allocation.crypto,
+  );
+  let concentrationRisk = "低";
+  if (maxSingleAsset > 60) concentrationRisk = "高";
+  else if (maxSingleAsset > 40) concentrationRisk = "中";
+
+  // 建议配置
+  let recommendation;
+  if (concentrationRisk === "高") {
+    recommendation = `⚠️ 资产过于集中（${maxSingleAsset}%），建议分散投资`;
+  } else if (allocation.crypto > 30) {
+    recommendation = "⚠️ 虚拟币占比过高，波动风险大，建议降低至20%以下";
+  } else if (allocation.stocks < 20 && allocation.properties < 20) {
+    recommendation = "💡 股票和房产占比偏低，可以考虑增加权益类资产配置";
+  } else {
+    recommendation = "✅ 资产配置相对均衡，继续保持";
+  }
+
+  return {
+    totalValue: Math.round(totalValue),
+    allocation: allocation,
+    stockPnL: Math.round(stockPnL),
+    stockPnLPct: Math.round(stockPnLPct * 100) / 100,
+    concentrationRisk: concentrationRisk,
+    recommendation: recommendation,
+    holdings: holdings.length,
+    properties: properties.length,
+    cars: cars.length,
+  };
+}
+
+/**
+ * 设置止损止盈
+ */
+function setStopLoss(state, symbol, type, params) {
+  const inv = state.investment;
+  if (!inv) return { success: false, message: "投资系统未初始化" };
+
+  const holding = inv.stockHoldings.find((h) => h.symbol === symbol);
+  if (!holding) return { success: false, message: "没有该股票的持仓" };
+
+  if (!inv.stopLossOrders) inv.stopLossOrders = [];
+
+  const order = {
+    symbol: symbol,
+    type: type,
+    params: params,
+    createdDay: state.player.day,
+    triggered: false,
+    triggerPrice: null,
+  };
+
+  inv.stopLossOrders.push(order);
+  StateManager.addMessage(
+    `🛑 已设置${symbol}的${STOP_LOSS_STRATEGIES[type]?.name || type}止损`,
+    "success",
+  );
+  return { success: true, order: order };
+}
+
+/**
+ * 检查止损止盈是否触发
+ */
+function checkStopLoss(state) {
+  const inv = state.investment;
+  if (!inv || !inv.stopLossOrders) return;
+
+  const today = state.player.day;
+  const triggeredOrders = [];
+
+  for (const order of inv.stopLossOrders) {
+    if (order.triggered) continue;
+
+    const market = inv.stockMarket[order.symbol];
+    if (!market) continue;
+
+    const currentPrice = market.price;
+    const holding = inv.stockHoldings.find((h) => h.symbol === order.symbol);
+    if (!holding) continue;
+
+    const buyPrice = holding.avgPrice;
+    let shouldTrigger = false;
+    let triggerPrice = null;
+
+    switch (order.type) {
+      case "fixed_percent":
+        const lossPercent = ((buyPrice - currentPrice) / buyPrice) * 100;
+        if (lossPercent >= order.params.threshold) {
+          shouldTrigger = true;
+          triggerPrice = currentPrice;
+        }
+        break;
+
+      case "trailing_stop":
+        const highSinceBuy = holding.highSinceBuy || buyPrice;
+        const dropFromHigh =
+          ((highSinceBuy - currentPrice) / highSinceBuy) * 100;
+        if (dropFromHigh >= order.params.trailingPercent) {
+          shouldTrigger = true;
+          triggerPrice = currentPrice;
+        }
+        // 更新最高点
+        if (currentPrice > highSinceBuy) {
+          holding.highSinceBuy = currentPrice;
+        }
+        break;
+
+      case "time_based":
+        if (today - holding.buyDay >= order.params.holdDays) {
+          shouldTrigger = true;
+          triggerPrice = currentPrice;
+        }
+        break;
+    }
+
+    if (shouldTrigger) {
+      order.triggered = true;
+      order.triggerPrice = triggerPrice;
+      triggeredOrders.push(order);
+
+      // 执行卖出
+      const sharesToSell = holding.shares;
+      sellInvStock(order.symbol, sharesToSell);
+
+      StateManager.addMessage(
+        `🛑 ${order.symbol}止损触发！在¥${triggerPrice.toFixed(2)}卖出${sharesToSell}股`,
+        "danger",
+      );
+    }
+  }
+
+  return triggeredOrders;
+}
+
+/**
+ * 计算夏普比率（简化版）
+ */
+function calculateSharpeRatio(prices, riskFreeRate = 0.03) {
+  if (prices.length < 30) return null;
+
+  // 计算日收益率
+  const returns = [];
+  for (let i = 1; i < prices.length; i++) {
+    const ret = (prices[i].price - prices[i - 1].price) / prices[i - 1].price;
+    returns.push(ret);
+  }
+
+  // 平均日收益率
+  const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+
+  // 日收益率标准差
+  const variance =
+    returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) /
+    returns.length;
+  const stdDev = Math.sqrt(variance);
+
+  // 年化收益率和标准差
+  const annualReturn = avgReturn * 365;
+  const annualStdDev = stdDev * Math.sqrt(365);
+
+  // 夏普比率
+  const sharpe =
+    annualStdDev > 0 ? (annualReturn - riskFreeRate) / annualStdDev : 0;
+
+  return {
+    sharpe: Math.round(sharpe * 100) / 100,
+    annualReturn: Math.round(annualReturn * 10000) / 100,
+    annualVolatility: Math.round(annualStdDev * 10000) / 100,
+    rating:
+      sharpe > 2 ? "优秀" : sharpe > 1 ? "良好" : sharpe > 0 ? "一般" : "较差",
+  };
+}
+
+/**
+ * 获取市场情绪指标
+ */
+function getMarketSentimentIndicator(state) {
+  const inv = state.investment;
+  if (!inv) return null;
+
+  // 计算牛熊分数
+  let bullScore = 0,
+    bearScore = 0;
+
+  // 新闻影响
+  const activeNews = state.activeNews || [];
+  for (const news of activeNews) {
+    const effs = (news.effects || {}).investmentEffect || [];
+    for (const eff of effs) {
+      const mul = eff.mul || 1;
+      if (mul > 1) bullScore += (mul - 1) * 10;
+      else bearScore += (1 - mul) * 10;
+    }
+  }
+
+  // BTC恐贪指数
+  const btcFearGreed = inv.btcFearGreed || 50;
+  if (btcFearGreed > 65) bullScore += (btcFearGreed - 65) * 2;
+  else if (btcFearGreed < 35) bearScore += (35 - btcFearGreed) * 2;
+
+  // 计算综合分数（0-100）
+  const total = bullScore + bearScore;
+  let sentimentIndex = 50;
+  if (total > 0) {
+    sentimentIndex = Math.round(50 + ((bullScore - bearScore) / total) * 50);
+  }
+
+  let sentimentLabel;
+  let sentimentColor;
+  if (sentimentIndex >= 80) {
+    sentimentLabel = "极度贪婪";
+    sentimentColor = "var(--danger)";
+  } else if (sentimentIndex >= 60) {
+    sentimentLabel = "贪婪";
+    sentimentColor = "#e67e22";
+  } else if (sentimentIndex >= 40) {
+    sentimentLabel = "中性";
+    sentimentColor = "var(--accent)";
+  } else if (sentimentIndex >= 20) {
+    sentimentLabel = "恐惧";
+    sentimentColor = "#27ae60";
+  } else {
+    sentimentLabel = "极度恐惧";
+    sentimentColor = "var(--success)";
+  }
+
+  return {
+    index: sentimentIndex,
+    label: sentimentLabel,
+    color: sentimentColor,
+    bullScore: bullScore,
+    bearScore: bearScore,
+    btcFearGreed: btcFearGreed,
+    interpretation: getSentimentInterpretation(sentimentIndex),
+  };
+}
+
+/**
+ * 获取情绪解读
+ */
+function getSentimentInterpretation(index) {
+  if (index >= 80) return "🔥 市场极度狂热，可能是顶部信号，考虑减仓";
+  if (index >= 60) return "📈 市场情绪乐观，但需警惕回调风险";
+  if (index >= 40) return "⚖️ 市场情绪中性，观望为主";
+  if (index >= 20) return "📉 市场情绪悲观，可能是买入机会";
+  return "🚑 市场极度恐慌，往往是底部信号，可以考虑抄底";
+}
+
+/**
+ * 百科注册
+ */
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.investment_analysis = {
+    id: "investment_analysis",
+    name: "投资分析工具",
+    icon: "📊",
+    brief: "技术分析指标、投资组合分析、止损止盈、杠杆交易、市场情绪分析",
+    version: "1.0.0",
+    related: [
+      "mechanics:investment",
+      "mechanics:stock",
+      "mechanics:property_market",
+    ],
+    sections: [
+      {
+        kind: "desc",
+        text: "工欲善其事，必先利其器。专业的投资分析工具帮助你做出更理性的决策。",
+      },
+      {
+        kind: "subhead",
+        text: "📈 技术分析指标",
+      },
+      {
+        kind: "list",
+        items: [
+          "📈 MA（移动平均线）：MA5/MA7/MA20，判断趋势方向",
+          "📊 MACD：快线-慢线+柱状图，判断买卖点",
+          "📉 RSI：相对强弱指标，判断超买超卖（>70超买，<30超卖）",
+          "🔵 布林带：上下轨+中轨，判断价格区间",
+          "📈 KDJ：随机指标，判断拐点和超买超卖",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "🛑 止损止盈策略",
+      },
+      {
+        kind: "list",
+        items: [
+          "🛑 固定百分比止损：亏损达X%自动卖出",
+          "📍 移动止损：从最高点回落X%卖出，能锁定利润",
+          "⏰ 时间止损：持有X天后无论盈亏都卖出",
+          "📉 基本面止损：买入逻辑消失时卖出",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "⚖️ 资产配置策略",
+      },
+      {
+        kind: "list",
+        items: [
+          "🛡️ 保守型：股票20%、债券40%、贵金属20%、房产20%",
+          "⚖️ 平衡型：股票40%、债券25%、贵金属10%、虚拟币5%、房产20%",
+          "🚀 进取型：股票55%、债券10%、贵金属5%、虚拟币15%、房产15%",
+          "🎲 投机型：股票30%、贵金属5%、虚拟币40%、房产25%",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：技术分析是辅助工具，不是预测水晶球。结合基本面、消息面、市场情绪综合判断。设置止损是保护本金的必要手段。",
+      },
+    ],
+  };
+}
+</script>
+    <script>/**
+ * 创业危机事件系统 — Phase 2 深度交互
+ *
+ * 包含：
+ * 1. 资金链危机 — 现金流断裂、紧急融资、资产变现
+ * 2. 团队危机 — 核心员工离职、团队内讧、集体罢工
+ * 3. 产品危机 — 重大BUG、用户流失、竞品碾压
+ * 4. 公关危机 — 负面舆情、媒体曝光、用户维权
+ * 5. 法律危机 — 诉讼纠纷、知识产权、合规问题
+ * 6. 竞争危机 — 巨头入场、价格战、人才挖角
+ */
+
+// ====== 危机事件定义 ======
+const STARTUP_CRISIS_EVENTS = {
+  // 资金链危机
+  cash_crunch: {
+    id: "cash_crunch",
+    name: "资金链告急",
+    icon: "💸",
+    severity: ["warning", "danger", "critical"],
+    trigger: { monthsOfRunway: 2, probability: 0.15 },
+    desc: "公司现金流只够维持不到2个月，必须尽快找到资金",
+    options: [
+      {
+        text: "紧急融资",
+        effect: "需要估值≥500万，成功则获得资金但稀释股权，失败则声誉受损",
+        cost: 0,
+        risk: "高",
+        successChance: 0.5,
+      },
+      {
+        text: "裁员降本",
+        effect: "裁员30%，现金消耗减少40%，但团队忠诚度-30，声誉-15",
+        cost: 0,
+        risk: "中",
+        successChance: 1.0,
+      },
+      {
+        text: "变卖资产",
+        effect: "卖掉办公设备/房产，获得现金但影响运营",
+        cost: 0,
+        risk: "中",
+        successChance: 1.0,
+      },
+      {
+        text: "创始人自掏腰包",
+        effect: "从个人现金注入公司，需要个人现金≥10万",
+        cost: "个人现金",
+        risk: "低",
+        successChance: 1.0,
+      },
+      {
+        text: "借高利贷",
+        effect: "快速获得资金，但月利息10%，后续麻烦不断",
+        cost: 0,
+        risk: "极高",
+        successChance: 0.8,
+      },
+    ],
+  },
+
+  // 核心员工离职
+  key_employee_leaving: {
+    id: "key_employee_leaving",
+    name: "核心员工离职",
+    icon: "👋",
+    severity: ["warning", "danger"],
+    trigger: { employeeCount: 5, loyaltyLow: true, probability: 0.1 },
+    desc: "核心技术人员/销售骨干收到竞品offer，准备离职",
+    options: [
+      {
+        text: "加薪挽留",
+        effect: "薪资+50%，该员工忠诚度+40，但其他员工期望加薪",
+        cost: "薪资成本+50%",
+        risk: "中",
+        successChance: 0.7,
+      },
+      {
+        text: "给期权",
+        effect: "授予期权（稀释0.5-1%），忠诚度+30，员工感受到重视",
+        cost: "股权稀释",
+        risk: "低",
+        successChance: 0.6,
+      },
+      {
+        text: "谈心了解诉求",
+        effect: "需要该员工忠诚度≥40，成功则了解真实原因并针对性解决",
+        cost: 0,
+        risk: "低",
+        successChance: 0.5,
+      },
+      {
+        text: "放人",
+        effect: "该员工离开，技术分/市场分-10，但避免内耗",
+        cost: "能力-10",
+        risk: "低",
+        successChance: 1.0,
+      },
+    ],
+  },
+
+  // 重大BUG
+  major_bug: {
+    id: "major_bug",
+    name: "重大产品BUG",
+    icon: "🐛",
+    severity: ["warning", "danger", "critical"],
+    trigger: { productLaunched: true, userCount: 1000, probability: 0.08 },
+    desc: "产品出现严重BUG，影响大量用户，投诉激增",
+    options: [
+      {
+        text: "紧急修复",
+        effect: "需要工程师团队，2-3天修复，用户满意度短期下降",
+        cost: "工程师时间",
+        risk: "中",
+        successChance: 0.8,
+      },
+      {
+        text: "发布公告道歉",
+        effect: "坦诚沟通，用户理解度+20，但需要后续快速修复",
+        cost: 0,
+        risk: "低",
+        successChance: 0.9,
+      },
+      {
+        text: "补偿用户",
+        effect: "给受影响用户发放优惠券/退款，成本较高但挽回口碑",
+        cost: "¥5000-20000",
+        risk: "低",
+        successChance: 0.85,
+      },
+      {
+        text: "冷处理",
+        effect: "不回应，风险极大，可能被媒体曝光放大",
+        cost: 0,
+        risk: "极高",
+        successChance: 0.2,
+      },
+    ],
+  },
+
+  // 负面舆情
+  negative_pr: {
+    id: "negative_pr",
+    name: "负面舆情爆发",
+    icon: "📰",
+    severity: ["danger", "critical"],
+    trigger: { reputation: 50, probability: 0.05 },
+    desc: "媒体/大V曝光公司负面新闻，舆论发酵中",
+    options: [
+      {
+        text: "官方回应",
+        effect: "需要事实清晰，成功则平息舆论，失败则越描越黑",
+        cost: 0,
+        risk: "中",
+        successChance: 0.5,
+      },
+      {
+        text: "找媒体公关",
+        effect: "花费¥20000-50000，转移舆论焦点",
+        cost: "¥20000-50000",
+        risk: "中",
+        successChance: 0.6,
+      },
+      {
+        text: "法律手段",
+        effect: "起诉造谣者，需要证据确凿，成功则震慑但耗时",
+        cost: "法律费用",
+        risk: "中",
+        successChance: 0.4,
+      },
+      {
+        text: "沉默应对",
+        effect: "冷处理，舆论可能自然消退，也可能持续发酵",
+        cost: 0,
+        risk: "高",
+        successChance: 0.3,
+      },
+    ],
+  },
+
+  // 巨头入场
+  giant_enters: {
+    id: "giant_enters",
+    name: "巨头进入赛道",
+    icon: "🦄",
+    severity: ["warning", "danger"],
+    trigger: { marketScore: 30, probability: 0.06 },
+    desc: "行业巨头宣布进入你的赛道，资源碾压式的竞争",
+    options: [
+      {
+        text: "差异化竞争",
+        effect: "聚焦细分市场，需要产品有独特优势，成功则稳住用户",
+        cost: 0,
+        risk: "中",
+        successChance: 0.4,
+      },
+      {
+        text: "价格战",
+        effect: "降价抢用户，需要资金充足，否则撑不住",
+        cost: "利润损失",
+        risk: "高",
+        successChance: 0.3,
+      },
+      {
+        text: "寻求被收购",
+        effect: "主动找巨头谈收购，可能获得不错报价",
+        cost: 0,
+        risk: "低",
+        successChance: 0.5,
+      },
+      {
+        text: "转型其他赛道",
+        effect: "放弃当前方向，需要快速调整，风险高",
+        cost: "前期投入沉没",
+        risk: "极高",
+        successChance: 0.2,
+      },
+    ],
+  },
+
+  // 数据泄露
+  data_breach: {
+    id: "data_breach",
+    name: "用户数据泄露",
+    icon: "🔓",
+    severity: ["danger", "critical"],
+    trigger: { userCount: 5000, probability: 0.03 },
+    desc: "公司用户数据被黑客攻击泄露，涉及大量个人信息",
+    options: [
+      {
+        text: "立即公告",
+        effect: "坦诚告知用户，建议用户修改密码，配合调查",
+        cost: 0,
+        risk: "低",
+        successChance: 0.7,
+      },
+      {
+        text: "聘请安全团队",
+        effect: "花费¥50000+，全面排查漏洞，修复安全问题",
+        cost: "¥50000+",
+        risk: "低",
+        successChance: 0.8,
+      },
+      {
+        text: "掩盖真相",
+        effect: "风险极高，一旦曝光公司将万劫不复",
+        cost: 0,
+        risk: "极高",
+        successChance: 0.1,
+      },
+    ],
+  },
+
+  // 投资人撤资
+  investor_withdraw: {
+    id: "investor_withdraw",
+    name: "投资人要求撤资",
+    icon: "📉",
+    severity: ["danger", "critical"],
+    trigger: { fundingRounds: 1, performancePoor: true, probability: 0.04 },
+    desc: "投资人对公司表现不满，要求提前退出或减少后续投资",
+    options: [
+      {
+        text: "说服继续投资",
+        effect: "需要展示增长潜力和清晰规划，成功则留住投资",
+        cost: 0,
+        risk: "中",
+        successChance: 0.4,
+      },
+      {
+        text: "找新投资人",
+        effect: "紧急接触新投资人接盘，需要估值有吸引力",
+        cost: 0,
+        risk: "高",
+        successChance: 0.3,
+      },
+      {
+        text: "回购股份",
+        effect: "用公司现金回购投资人股份，需要资金充足",
+        cost: "大量现金",
+        risk: "高",
+        successChance: 1.0,
+      },
+      {
+        text: "接受撤资",
+        effect: "投资人退出，公司失去重要支持，声誉-20",
+        cost: "声誉-20，资金减少",
+        risk: "高",
+        successChance: 1.0,
+      },
+    ],
+  },
+
+  // 知识产权纠纷
+  ip_dispute: {
+    id: "ip_dispute",
+    name: "知识产权纠纷",
+    icon: "⚖️",
+    severity: ["warning", "danger"],
+    trigger: { technologyScore: 30, probability: 0.05 },
+    desc: "被指控侵犯他人专利权/著作权，面临诉讼风险",
+    options: [
+      {
+        text: "和解",
+        effect: "支付赔偿金¥50000-200000，换取撤诉",
+        cost: "¥50000-200000",
+        risk: "低",
+        successChance: 0.9,
+      },
+      {
+        text: "应诉到底",
+        effect: "聘请律师团队，胜诉则无损，败诉则赔偿+声誉受损",
+        cost: "法律费用",
+        risk: "高",
+        successChance: 0.4,
+      },
+      {
+        text: "技术规避",
+        effect: "修改产品绕过专利，需要技术团队能力足够",
+        cost: "开发时间",
+        risk: "中",
+        successChance: 0.5,
+      },
+    ],
+  },
+};
+
+/**
+ * 检查并触发创业危机
+ */
+function checkStartupCrises(state) {
+  const startup = state.startup;
+  if (!startup || !startup.company) return null;
+
+  const company = startup.company;
+  const day = state.player.day;
+
+  // 随机触发
+  for (const [crisisId, crisis] of Object.entries(STARTUP_CRISIS_EVENTS)) {
+    if (Math.random() > crisis.trigger.probability) continue;
+
+    // 检查触发条件
+    if (!checkCrisisTriggerConditions(crisis, company)) continue;
+
+    // 检查冷却期（同一危机30天内不重复触发）
+    if (company.lastCrisisDay && day - company.lastCrisisDay < 30) continue;
+
+    company.lastCrisisDay = day;
+    return { crisisId, crisis };
+  }
+
+  return null;
+}
+
+/**
+ * 检查危机触发条件
+ */
+function checkCrisisTriggerConditions(crisis, company) {
+  const trigger = crisis.trigger;
+
+  if (
+    trigger.monthsOfRunway !== undefined &&
+    company.monthsOfRunway > trigger.monthsOfRunway
+  )
+    return false;
+  if (
+    trigger.employeeCount !== undefined &&
+    company.employees.length < trigger.employeeCount
+  )
+    return false;
+  if (trigger.userCount !== undefined) {
+    const maxUsers = Math.max(
+      0,
+      ...(company.products || []).map((p) => p.users || 0),
+    );
+    if (maxUsers < trigger.userCount) return false;
+  }
+  if (
+    trigger.reputation !== undefined &&
+    company.reputation > trigger.reputation
+  )
+    return false;
+  if (
+    trigger.technologyScore !== undefined &&
+    company.technologyScore < trigger.technologyScore
+  )
+    return false;
+
+  return true;
+}
+
+/**
+ * 显示危机弹窗
+ */
+function showCrisisModal(state, crisisId, crisis) {
+  const company = state.startup.company;
+
+  // 确定严重程度
+  let severityIndex = 0;
+  if (company.monthsOfRunway < 1) severityIndex = 2;
+  else if (company.monthsOfRunway < 2) severityIndex = 1;
+
+  const severity =
+    crisis.severity[Math.min(severityIndex, crisis.severity.length - 1)];
+
+  const body = `
+    <div style="font-size:13px;">
+      <div style="padding:16px;background:var(--bg-card);border-radius:8px;margin-bottom:12px;border-left:4px solid var(--${severity});">
+        <div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:var(--${severity});">
+          ${crisis.icon} ${crisis.name}
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+          ${crisis.desc}
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">
+          当前状态：Runway ${Math.round(company.monthsOfRunway)}月 | 估值 ¥${Math.round(company.valuation).toLocaleString()} | 团队 ${company.employees.length}人
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">选择应对方案：</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${crisis.options
+          .map(
+            (opt, i) => `
+          <div style="padding:10px;background:var(--bg-secondary);border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="handleCrisisChoice('${crisisId}', ${i})">
+            <div style="font-size:12px;font-weight:bold;margin-bottom:4px;">${opt.text}</div>
+            <div style="font-size:10px;color:var(--text-muted);">效果：${opt.effect}</div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:4px;">
+              成本：${opt.cost} | 风险：${opt.risk} | 成功率：${Math.round(opt.successChance * 100)}%
+            </div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  showModal({
+    title: `${crisis.icon} 创业危机：${crisis.name}`,
+    body: body,
+    buttons: [{ text: "取消", cls: "", callback: () => {} }],
+  });
+
+  state._pendingCrisis = { crisisId, crisis };
+}
+
+/**
+ * 处理危机选择
+ */
+function handleCrisisChoice(crisisId, optionIndex) {
+  const state = StateManager.getState();
+  const pending = state._pendingCrisis;
+  if (!pending) return;
+
+  const { crisis, crisisId: pendingCrisisId } = pending;
+  const option = crisis.options[optionIndex];
+
+  // 执行选择
+  applyCrisisChoice(state, pendingCrisisId, option);
+
+  document.querySelector(".modal-overlay")?.remove();
+  state._pendingCrisis = null;
+
+  renderAll();
+}
+
+/**
+ * 应用危机选择效果
+ */
+function applyCrisisChoice(state, crisisId, option) {
+  const startup = state.startup;
+  const company = startup.company;
+
+  // 计算成功率
+  const success = Math.random() < option.successChance;
+
+  if (success) {
+    // 成功效果
+    StateManager.addMessage(`✅ 危机应对成功：${option.text}`, "success");
+
+    // 根据选项类型应用效果
+    if (option.text.includes("融资")) {
+      const raiseAmount = Math.round(company.valuation * 0.1);
+      const dilution = 0.1 + Math.random() * 0.1;
+      company.cashReserve += raiseAmount;
+      company.valuation = Math.round(
+        company.valuation + raiseAmount / dilution,
+      );
+      company.equity.investors += dilution * 100;
+      company.equity.player = Math.round(
+        company.equity.player * (1 - dilution),
+      );
+    }
+
+    if (option.text.includes("裁员")) {
+      const toFire = Math.min(
+        company.employees.length,
+        Math.ceil(company.employees.length * 0.3),
+      );
+      for (let i = 0; i < toFire; i++) {
+        company.employees.pop();
+      }
+      company.cashReserve += 5000 * toFire; // 节省薪资
+      company.reputation = Math.max(0, company.reputation - 15);
+    }
+
+    if (option.text.includes("变卖")) {
+      company.cashReserve += Math.round(company.cashReserve * 0.3);
+      company.marketScore = Math.max(0, company.marketScore - 10);
+    }
+
+    if (option.text.includes("自掏")) {
+      const injectAmount = Math.min(state.resources.cash, 100000);
+      state.resources.cash -= injectAmount;
+      company.cashReserve += injectAmount;
+    }
+
+    if (option.text.includes("加薪")) {
+      for (const emp of company.employees) {
+        emp.salary = Math.round(emp.salary * 1.5);
+        emp.loyalty = Math.min(100, emp.loyalty + 40);
+      }
+      company.burnRate = Math.round(company.burnRate * 1.3);
+    }
+
+    if (option.text.includes("期权")) {
+      company.equity.employees += 0.5;
+      company.equity.player = Math.max(0, company.equity.player - 0.5);
+      for (const emp of company.employees) {
+        emp.loyalty = Math.min(100, emp.loyalty + 30);
+      }
+    }
+
+    if (option.text.includes("公告")) {
+      company.reputation = Math.min(100, company.reputation + 10);
+    }
+
+    if (option.text.includes("补偿")) {
+      const cost = 5000 + Math.floor(Math.random() * 15000);
+      company.cashReserve = Math.max(0, company.cashReserve - cost);
+      company.reputation = Math.min(100, company.reputation + 15);
+    }
+
+    if (option.text.includes("公关")) {
+      const cost = 20000 + Math.floor(Math.random() * 30000);
+      company.cashReserve = Math.max(0, company.cashReserve - cost);
+      company.reputation = Math.min(100, company.reputation + 20);
+    }
+
+    if (option.text.includes("和解")) {
+      const cost = 50000 + Math.floor(Math.random() * 150000);
+      company.cashReserve = Math.max(0, company.cashReserve - cost);
+      company.reputation = Math.max(0, company.reputation - 5);
+    }
+
+    // 记录危机历史
+    if (!company.crisisHistory) company.crisisHistory = [];
+    company.crisisHistory.push({
+      crisisId: crisisId,
+      day: state.player.day,
+      choice: option.text,
+      success: true,
+    });
+  } else {
+    // 失败效果
+    StateManager.addMessage(
+      `❌ 危机应对失败：${option.text}，情况恶化`,
+      "danger",
+    );
+
+    if (option.text.includes("融资")) {
+      company.reputation = Math.max(0, company.reputation - 20);
+    }
+
+    if (option.text.includes("应诉")) {
+      company.cashReserve = Math.max(0, company.cashReserve - 100000);
+      company.reputation = Math.max(0, company.reputation - 20);
+    }
+
+    if (option.text.includes("冷处理")) {
+      company.reputation = Math.max(0, company.reputation - 30);
+    }
+
+    // 记录危机历史
+    if (!company.crisisHistory) company.crisisHistory = [];
+    company.crisisHistory.push({
+      crisisId: crisisId,
+      day: state.player.day,
+      choice: option.text,
+      success: false,
+    });
+  }
+
+  // 检查是否破产
+  if (company.cashReserve <= 0 && company.monthsOfRunway <= 0) {
+    if (typeof bankrupt === "function") {
+      bankrupt(state);
+    }
+  }
+}
+
+/**
+ * 获取危机摘要
+ */
+function getCrisisSummary(company) {
+  if (!company.crisisHistory || company.crisisHistory.length === 0) {
+    return { total: 0, survived: 0, failed: 0 };
+  }
+
+  const total = company.crisisHistory.length;
+  const survived = company.crisisHistory.filter((c) => c.success).length;
+  const failed = total - survived;
+
+  return {
+    total,
+    survived,
+    failed,
+    survivalRate: Math.round((survived / total) * 100),
+  };
+}
+
+/**
+ * 百科注册
+ */
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.startup_crisis = {
+    id: "startup_crisis",
+    name: "创业危机事件",
+    icon: "🚨",
+    brief: "资金链危机、团队危机、产品危机、公关危机、法律危机、竞争危机",
+    version: "1.0.0",
+    related: ["mechanics:startups", "mechanics:corp_ops"],
+    sections: [
+      {
+        kind: "desc",
+        text: "创业路上危机四伏，每一次危机都是对创始人决策能力和心理素质的考验。",
+      },
+      {
+        kind: "subhead",
+        text: "🚨 危机类型",
+      },
+      {
+        kind: "list",
+        items: [
+          "💸 资金链告急：现金流断裂，需要紧急融资或降本",
+          "👋 核心员工离职：技术/销售骨干被挖角",
+          "🐛 重大产品BUG：影响大量用户，投诉激增",
+          "📰 负面舆情爆发：媒体曝光，舆论发酵",
+          "🦄 巨头进入赛道：资源碾压式竞争",
+          "🔓 用户数据泄露：黑客攻击，隐私曝光",
+          "📉 投资人撤资：对表现不满要求退出",
+          "⚖️ 知识产权纠纷：专利/著作权诉讼",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：危机应对没有完美方案，每个选择都有代价。提前储备现金、维护团队忠诚度、建立良好公关关系可以降低危机发生概率。",
+      },
+    ],
+  };
+}
+</script>
+    <script>/**
+ * 家庭与生活系统 — Phase 2 深度交互
+ *
+ * 包含：
+ * 1. 婚恋系统 — 约会、表白、恋爱、结婚
+ * 2. 子女教育 — 出生、成长、升学、就业
+ * 3. 父母养老 — 健康、医疗、陪伴、赡养
+ * 4. 家庭生活 — 房贷、日常开销、家庭活动
+ * 5. 人际关系 — 亲戚、朋友、邻居、社区
+ */
+
+// ====== 婚恋阶段 ======
+const RELATIONSHIP_STAGES = {
+  stranger: { name: "陌生人", icon: "❓", level: 0, interactions: ["偶遇"] },
+  acquaintance: {
+    name: "认识",
+    icon: "👋",
+    level: 20,
+    interactions: ["聊天", "加微信"],
+  },
+  friend: {
+    name: "朋友",
+    icon: "🙂",
+    level: 40,
+    interactions: ["聊天", "吃饭", "看电影"],
+  },
+  good_friend: {
+    name: "好朋友",
+    icon: "👫",
+    level: 60,
+    interactions: ["聊天", "吃饭", "看电影", "约会"],
+  },
+  crush: {
+    name: "暧昧",
+    icon: "💕",
+    level: 75,
+    interactions: ["聊天", "吃饭", "看电影", "约会", "表白"],
+  },
+  dating: {
+    name: "恋爱中",
+    icon: "💑",
+    level: 85,
+    interactions: ["聊天", "吃饭", "看电影", "约会", "见家长"],
+  },
+  engaged: { name: "订婚", icon: "💍", level: 95, interactions: ["筹备婚礼"] },
+  married: {
+    name: "结婚",
+    icon: "💒",
+    level: 100,
+    interactions: ["共同生活", "生育"],
+  },
+};
+
+// ====== 配偶/伴侣类型 ======
+const PARTNER_TYPES = {
+  career_driven: {
+    name: "事业型",
+    icon: "💼",
+    desc: "职场精英，收入高但忙碌",
+    income: 20000,
+    companionship: 20,
+    traits: ["独立", "上进", "强势"],
+  },
+  gentle_home: {
+    name: "温柔顾家",
+    icon: "🏠",
+    desc: "性格温和，擅长持家",
+    income: 5000,
+    companionship: 80,
+    traits: ["温柔", "体贴", "传统"],
+  },
+  romantic: {
+    name: "浪漫型",
+    icon: "🌹",
+    desc: "注重仪式感，情感丰富",
+    income: 8000,
+    companionship: 70,
+    traits: ["浪漫", "感性", "依赖"],
+  },
+  intellectual: {
+    name: "知性型",
+    icon: "📚",
+    desc: "学历高，谈吐优雅",
+    income: 15000,
+    companionship: 50,
+    traits: ["知性", "理性", "独立"],
+  },
+  energetic: {
+    name: "活力型",
+    icon: "⚡",
+    desc: "性格开朗，热爱运动",
+    income: 6000,
+    companionship: 60,
+    traits: ["阳光", "活力", "直率"],
+  },
+  mysterious: {
+    name: "神秘型",
+    icon: "🌙",
+    desc: "性格内敛，有故事",
+    income: 10000,
+    companionship: 40,
+    traits: ["神秘", "敏感", "独特"],
+  },
+};
+
+// ====== 子女成长阶段 ======
+const CHILD_STAGES = {
+  infant: {
+    name: "婴儿",
+    icon: "👶",
+    age: [0, 2],
+    needs: ["奶粉", "尿布", "陪伴"],
+    education: "早教启蒙",
+  },
+  toddler: {
+    name: "幼儿",
+    icon: "🧒",
+    age: [3, 5],
+    needs: ["玩具", "绘本", "陪伴"],
+    education: "幼儿园",
+  },
+  primary: {
+    name: "小学生",
+    icon: "📚",
+    age: [6, 11],
+    needs: ["学费", "课外班", "零花钱"],
+    education: "小学",
+  },
+  middle: {
+    name: "初中生",
+    icon: "📖",
+    age: [12, 14],
+    needs: ["学费", "补习班", "零花钱"],
+    education: "初中",
+  },
+  high: {
+    name: "高中生",
+    icon: "📝",
+    age: [15, 17],
+    needs: ["学费", "补习班", "生活费"],
+    education: "高中",
+  },
+  university: {
+    name: "大学生",
+    icon: "🎓",
+    age: [18, 22],
+    needs: ["学费", "生活费"],
+    education: "大学",
+  },
+  adult: {
+    name: "成年人",
+    icon: "👨",
+    age: [23, 100],
+    needs: ["独立"],
+    education: "已独立",
+  },
+};
+
+// ====== 父母健康状态 ======
+const PARENT_HEALTH_STATES = {
+  healthy: {
+    name: "健康",
+    icon: "✅",
+    ageRange: [0, 60],
+    medicalCost: 0,
+    companionshipNeed: 10,
+  },
+  minor_illness: {
+    name: "小病",
+    icon: "🤒",
+    ageRange: [55, 70],
+    medicalCost: 500,
+    companionshipNeed: 30,
+  },
+  chronic_illness: {
+    name: "慢性病",
+    icon: "💊",
+    ageRange: [65, 80],
+    medicalCost: 3000,
+    companionshipNeed: 50,
+  },
+  serious_illness: {
+    name: "重病",
+    icon: "🏥",
+    ageRange: [70, 90],
+    medicalCost: 30000,
+    companionshipNeed: 80,
+  },
+  critical: {
+    name: "危重",
+    icon: "🚨",
+    ageRange: [75, 100],
+    medicalCost: 100000,
+    companionshipNeed: 100,
+  },
+};
+
+// ====== 约会/恋爱事件 ======
+const DATING_EVENTS = {
+  first_meal: {
+    name: "第一次吃饭",
+    icon: "🍽️",
+    cost: [100, 300],
+    successChance: 0.7,
+    relationshipGain: 5,
+    desc: "第一次单独约会吃饭，紧张又期待",
+  },
+  movie_date: {
+    name: "看电影",
+    icon: "🎬",
+    cost: [60, 120],
+    successChance: 0.75,
+    relationshipGain: 8,
+    desc: "一起看电影，享受二人世界",
+  },
+  park_walk: {
+    name: "公园散步",
+    icon: "🌳",
+    cost: [0, 20],
+    successChance: 0.8,
+    relationshipGain: 6,
+    desc: "牵手漫步，感受微风",
+  },
+  cafe_chat: {
+    name: "咖啡馆聊天",
+    icon: "☕",
+    cost: [50, 100],
+    successChance: 0.85,
+    relationshipGain: 10,
+    desc: "安静地聊天，了解彼此",
+  },
+  trip: {
+    name: "短途旅行",
+    icon: "✈️",
+    cost: [1000, 3000],
+    successChance: 0.6,
+    relationshipGain: 20,
+    desc: "一起旅行，增进感情",
+  },
+  meet_parents: {
+    name: "见家长",
+    icon: "👨‍👩‍👧",
+    cost: [500, 2000],
+    successChance: 0.5,
+    relationshipGain: 15,
+    desc: "见对方父母，关系更进一步",
+  },
+  confession: {
+    name: "表白",
+    icon: "💌",
+    cost: [200, 1000],
+    successChance: 0.4,
+    relationshipGain: 30,
+    desc: "鼓起勇气表白，等待回应",
+  },
+};
+
+/**
+ * 初始化家庭系统
+ */
+function initFamilySystem(state) {
+  if (!state.family) {
+    state.family = {
+      relationship: null,
+      spouse: null,
+      children: [],
+      parents: {
+        father: { age: 55, health: "healthy", name: "父亲" },
+        mother: { age: 53, health: "healthy", name: "母亲" },
+      },
+      expenses: {
+        monthlyMortgage: 0,
+        monthlyLiving: 3000,
+        monthlyChildren: 0,
+        monthlyParents: 0,
+      },
+      events: [],
+    };
+  }
+}
+
+/**
+ * 寻找约会对象
+ */
+function findDatingTarget(state, location) {
+  const locations = {
+    workplace: { pool: "同事", probability: 0.3 },
+    social: { pool: "社交活动", probability: 0.4 },
+    online: { pool: "社交软件", probability: 0.5 },
+    friend_intro: { pool: "朋友介绍", probability: 0.6 },
+    random: { pool: "偶遇", probability: 0.2 },
+  };
+
+  const loc = locations[location] || locations.random;
+
+  if (Math.random() > loc.probability) {
+    StateManager.addMessage(`在${loc.pool}没有遇到合适的人...`, "hint");
+    return null;
+  }
+
+  const names = [
+    "小雅",
+    "小晴",
+    "小雯",
+    "小琳",
+    "小婷",
+    "小慧",
+    "小蕾",
+    "小琪",
+    "小欣",
+    "小怡",
+    "小萱",
+    "小颖",
+    "小菲",
+    "小静",
+    "小美",
+    "小丽",
+    "小娜",
+    "小燕",
+    "小萍",
+    "小芳",
+  ];
+  const partnerTypeKeys = Object.keys(PARTNER_TYPES);
+  const typeKey =
+    partnerTypeKeys[Math.floor(Math.random() * partnerTypeKeys.length)];
+  const partnerType = PARTNER_TYPES[typeKey];
+  const name = names[Math.floor(Math.random() * names.length)];
+
+  const target = {
+    id:
+      "target_" +
+      state.player.day +
+      "_" +
+      Math.random().toString(36).substr(2, 9),
+    name: name,
+    type: typeKey,
+    typeData: partnerType,
+    relationship: 20, // 初始认识
+    stage: "acquaintance",
+    lastInteraction: state.player.day,
+    favoriteActivities: ["cafe_chat", "movie_date", "park_walk"],
+  };
+
+  state.family.datingTarget = target;
+  StateManager.addMessage(
+    `💕 在${loc.pool}认识了${name}（${partnerType.name}型）`,
+    "success",
+  );
+
+  return target;
+}
+
+/**
+ * 进行约会
+ */
+function goDating(state, eventId) {
+  const target = state.family.datingTarget;
+  if (!target) {
+    return { success: false, message: "还没有约会对象" };
+  }
+
+  const event = DATING_EVENTS[eventId];
+  if (!event) {
+    return { success: false, message: "不存在的约会事件" };
+  }
+
+  // 检查阶段是否允许
+  const stageOrder = [
+    "acquaintance",
+    "friend",
+    "good_friend",
+    "crush",
+    "dating",
+    "engaged",
+    "married",
+  ];
+  const allowedStages = {
+    first_meal: ["acquaintance", "friend", "good_friend"],
+    movie_date: ["friend", "good_friend", "crush", "dating"],
+    park_walk: ["friend", "good_friend", "crush", "dating"],
+    cafe_chat: ["acquaintance", "friend", "good_friend", "crush", "dating"],
+    trip: ["good_friend", "crush", "dating"],
+    meet_parents: ["dating"],
+    confession: ["crush"],
+  };
+
+  if (!allowedStages[eventId].includes(target.stage)) {
+    return { success: false, message: `当前关系阶段还不适合${event.name}` };
+  }
+
+  // 检查费用
+  const cost =
+    event.cost[0] + Math.floor(Math.random() * (event.cost[1] - event.cost[0]));
+  if (state.resources.cash < cost) {
+    return { success: false, message: `现金不足，需要¥${cost}` };
+  }
+
+  state.resources.cash -= cost;
+
+  // 计算成功率（基础成功率 + 关系加成）
+  const relationshipBonus = (target.relationship / 100) * 0.3;
+  const successChance = Math.min(0.95, event.successChance + relationshipBonus);
+
+  if (Math.random() < successChance) {
+    // 成功
+    target.relationship = Math.min(
+      100,
+      target.relationship + event.relationshipGain,
+    );
+    target.lastInteraction = state.player.day;
+
+    // 检查阶段升级
+    checkRelationshipStage(target);
+
+    StateManager.addMessage(
+      `✅ ${event.icon} ${event.name}很成功！关系+${event.relationshipGain}`,
+      "success",
+    );
+
+    // 检查是否进入下一阶段
+    if (eventId === "confession" && target.relationship >= 85) {
+      target.stage = "dating";
+      StateManager.addMessage(`💑 你和${target.name}正式在一起了！`, "success");
+    }
+
+    return {
+      success: true,
+      relationship: target.relationship,
+      stage: target.stage,
+    };
+  } else {
+    // 失败
+    target.relationship = Math.max(0, target.relationship - 5);
+    StateManager.addMessage(
+      `❌ ${event.icon} ${event.name}不太顺利...关系-5`,
+      "warning",
+    );
+    return { success: false, relationship: target.relationship };
+  }
+}
+
+/**
+ * 检查关系阶段升级
+ */
+function checkRelationshipStage(target) {
+  const oldStage = target.stage;
+
+  if (target.relationship >= 100) target.stage = "married";
+  else if (target.relationship >= 95) target.stage = "engaged";
+  else if (target.relationship >= 85) target.stage = "dating";
+  else if (target.relationship >= 75) target.stage = "crush";
+  else if (target.relationship >= 60) target.stage = "good_friend";
+  else if (target.relationship >= 40) target.stage = "friend";
+  else if (target.relationship >= 20) target.stage = "acquaintance";
+  else target.stage = "stranger";
+
+  if (oldStage !== target.stage) {
+    const stageData = RELATIONSHIP_STAGES[target.stage];
+    StateManager.addMessage(`💕 关系升级为「${stageData.name}」！`, "success");
+  }
+}
+
+/**
+ * 结婚
+ */
+function getMarried(state) {
+  const target = state.family.datingTarget;
+  if (!target || target.stage !== "engaged") {
+    return { success: false, message: "需要先订婚" };
+  }
+
+  const weddingCost = 50000 + Math.floor(Math.random() * 100000);
+  if (state.resources.cash < weddingCost) {
+    return { success: false, message: `婚礼需要¥${weddingCost}，现金不足` };
+  }
+
+  state.resources.cash -= weddingCost;
+
+  state.family.spouse = {
+    name: target.name,
+    type: target.type,
+    typeData: target.typeData,
+    age: 25 + Math.floor(Math.random() * 5),
+    income: target.typeData.income,
+    relationship: 100,
+    children: [],
+    happiness: 80,
+  };
+
+  state.family.datingTarget = null;
+  state.family.relationship = null;
+
+  StateManager.addMessage(`💒 你和${target.name}结婚了！`, "success");
+
+  // 更新家庭支出
+  state.family.expenses.monthlyLiving += 2000; // 婚后生活成本增加
+
+  return { success: true };
+}
+
+/**
+ * 生育子女
+ */
+function haveChild(state) {
+  const spouse = state.family.spouse;
+  if (!spouse) {
+    return { success: false, message: "需要先结婚" };
+  }
+
+  const birthCost = 5000 + Math.floor(Math.random() * 10000);
+  if (state.resources.cash < birthCost) {
+    return { success: false, message: `生育需要¥${birthCost}，现金不足` };
+  }
+
+  state.resources.cash -= birthCost;
+
+  const names = [
+    "宝宝",
+    "小宝贝",
+    "小天使",
+    "小星星",
+    "小阳光",
+    "小花朵",
+    "小可爱",
+    "小宝贝",
+  ];
+  const genders = ["男", "女"];
+  const gender = genders[Math.floor(Math.random() * genders.length)];
+  const name = names[Math.floor(Math.random() * names.length)];
+
+  const child = {
+    id:
+      "child_" +
+      state.player.day +
+      "_" +
+      Math.random().toString(36).substr(2, 9),
+    name: name,
+    gender: gender,
+    birthDay: state.player.day,
+    age: 0,
+    stage: "infant",
+    intelligence: 50 + Math.floor(Math.random() * 30),
+    personality: ["活泼", "安静", "内向", "外向", "敏感", "乐观"][
+      Math.floor(Math.random() * 6)
+    ],
+    happiness: 80,
+    health: 90,
+    educationLevel: 0,
+    interests: [],
+  };
+
+  state.family.children.push(child);
+  spouse.children.push(child.id);
+
+  // 更新家庭支出
+  updateChildExpenses(state);
+
+  StateManager.addMessage(
+    `👶 你有了${gender === "男" ? "儿子" : "女儿"}${name}！`,
+    "success",
+  );
+
+  return { success: true, child: child };
+}
+
+/**
+ * 更新子女支出
+ */
+function updateChildExpenses(state) {
+  let monthlyTotal = 0;
+
+  for (const child of state.family.children) {
+    const stage = getChildStage(child.age);
+    if (stage) {
+      monthlyTotal += getStageMonthlyCost(stage);
+    }
+  }
+
+  state.family.expenses.monthlyChildren = monthlyTotal;
+}
+
+/**
+ * 获取子女阶段
+ */
+function getChildStage(age) {
+  for (const [key, stage] of Object.entries(CHILD_STAGES)) {
+    if (age >= stage.age[0] && age <= stage.age[1]) {
+      return key;
+    }
+  }
+  return "adult";
+}
+
+/**
+ * 获取阶段月花费
+ */
+function getStageMonthlyCost(stageKey) {
+  const costs = {
+    infant: 2000,
+    toddler: 1500,
+    primary: 1000,
+    middle: 2000,
+    high: 3000,
+    university: 4000,
+    adult: 0,
+  };
+  return costs[stageKey] || 0;
+}
+
+/**
+ * 每日家庭更新
+ */
+function tickFamilyDaily(state) {
+  const day = state.player.day;
+  const family = state.family;
+
+  if (!family) return;
+
+  // 更新子女年龄
+  for (const child of family.children) {
+    const oldAge = child.age;
+    child.age = (day - child.birthDay) / 365;
+
+    if (oldAge < 1 && child.age >= 1) {
+      StateManager.addMessage(`🎂 ${child.name}满1岁了！`, "event");
+    }
+
+    // 更新阶段
+    const stageKey = getChildStage(Math.floor(child.age));
+    if (stageKey !== child.stage) {
+      child.stage = stageKey;
+      const stage = CHILD_STAGES[stageKey];
+      StateManager.addMessage(
+        `📚 ${child.name}进入${stage.name}阶段（${stage.education}）`,
+        "info",
+      );
+    }
+
+    // 随机成长事件
+    if (Math.random() < 0.05) {
+      child.intelligence = Math.min(100, child.intelligence + 1);
+      StateManager.addMessage(`📈 ${child.name}又聪明了一点（智力+1）`, "hint");
+    }
+  }
+
+  // 更新父母健康
+  if (family.parents) {
+    const parents = family.parents;
+
+    // 父母年龄增长
+    parents.father.age++;
+    parents.mother.age++;
+
+    // 根据年龄更新健康状态
+    updateParentHealth(parents.father);
+    updateParentHealth(parents.mother);
+
+    // 随机健康事件
+    if (Math.random() < 0.02) {
+      const parentKey = Math.random() < 0.5 ? "father" : "mother";
+      const parent = parents[parentKey];
+      StateManager.addMessage(
+        `⚠️ ${parent.name}身体不太舒服，需要关注`,
+        "warning",
+      );
+    }
+  }
+
+  // 更新配偶关系
+  if (family.spouse) {
+    const spouse = family.spouse;
+
+    // 自然衰减（不互动的情况下）
+    if (day - spouse.lastInteraction > 7) {
+      spouse.relationship = Math.max(0, spouse.relationship - 1);
+    }
+
+    // 月度收入
+    state.resources.cash += spouse.income;
+    state.resources.totalEarned += spouse.income;
+  }
+
+  // 月度家庭支出
+  if (day % 30 === 0) {
+    const expenses = family.expenses;
+    const totalMonthly =
+      expenses.monthlyMortgage +
+      expenses.monthlyLiving +
+      expenses.monthlyChildren +
+      expenses.monthlyParents;
+
+    if (state.resources.cash >= totalMonthly) {
+      state.resources.cash -= totalMonthly;
+      StateManager.addMessage(
+        `📊 本月家庭支出¥${totalMonthly.toLocaleString()}`,
+        "hint",
+      );
+    } else {
+      StateManager.addMessage(
+        `⚠️ 家庭支出¥${totalMonthly.toLocaleString()}，现金不足！`,
+        "warning",
+      );
+    }
+  }
+}
+
+/**
+ * 更新父母健康状态
+ */
+function updateParentHealth(parent) {
+  const age = parent.age;
+
+  if (age < 55) {
+    parent.health = "healthy";
+  } else if (age < 65) {
+    parent.health = Math.random() < 0.3 ? "minor_illness" : "healthy";
+  } else if (age < 75) {
+    const rand = Math.random();
+    if (rand < 0.3) parent.health = "healthy";
+    else if (rand < 0.7) parent.health = "chronic_illness";
+    else parent.health = "serious_illness";
+  } else {
+    const rand = Math.random();
+    if (rand < 0.2) parent.health = "chronic_illness";
+    else if (rand < 0.6) parent.health = "serious_illness";
+    else parent.health = "critical";
+  }
+}
+
+/**
+ * 陪伴父母
+ */
+function accompanyParents(state, parentKey) {
+  const parents = state.family.parents;
+  const parent = parents[parentKey];
+  if (!parent) return { success: false, message: "父母信息不存在" };
+
+  const AP_COST = 15;
+  if (state.player.actionPoints < AP_COST) {
+    return { success: false, message: "行动力不足" };
+  }
+
+  state.player.actionPoints -= AP_COST;
+
+  const healthState = PARENT_HEALTH_STATES[parent.health];
+  parent.companionshipDays = (parent.companionshipDays || 0) + 1;
+
+  StateManager.addMessage(
+    `👨‍👦 陪伴${parent.name}，${healthState.name}状态，需要更多关心`,
+    "info",
+  );
+
+  return { success: true };
+}
+
+/**
+ * 带父母看病
+ */
+function takeParentToHospital(state, parentKey) {
+  const parents = state.family.parents;
+  const parent = parents[parentKey];
+  if (!parent) return { success: false, message: "父母信息不存在" };
+
+  const healthState = PARENT_HEALTH_STATES[parent.health];
+  const cost = healthState.medicalCost;
+
+  if (state.resources.cash < cost) {
+    return {
+      success: false,
+      message: `治疗需要¥${cost.toLocaleString()}，现金不足`,
+    };
+  }
+
+  state.resources.cash -= cost;
+
+  // 治疗成功，健康改善
+  const healthOrder = [
+    "healthy",
+    "minor_illness",
+    "chronic_illness",
+    "serious_illness",
+    "critical",
+  ];
+  const currentIndex = healthOrder.indexOf(parent.health);
+  if (currentIndex > 0) {
+    parent.health = healthOrder[currentIndex - 1];
+    StateManager.addMessage(
+      `🏥 带${parent.name}看病，健康从${healthState.name}改善到${PARENT_HEALTH_STATES[parent.health].name}`,
+      "success",
+    );
+  } else {
+    StateManager.addMessage(
+      `✅ ${parent.name}身体健康，定期检查很有必要`,
+      "hint",
+    );
+  }
+
+  return { success: true };
+}
+
+/**
+ * 设置房贷
+ */
+function setMortgage(state, monthlyPayment) {
+  state.family.expenses.monthlyMortgage = monthlyPayment;
+  StateManager.addMessage(
+    `🏠 房贷设置为每月¥${monthlyPayment.toLocaleString()}`,
+    "info",
+  );
+  return { success: true };
+}
+
+/**
+ * 家庭活动
+ */
+const FAMILY_ACTIVITIES = {
+  family_dinner: {
+    name: "家庭聚餐",
+    icon: "🍲",
+    cost: [200, 500],
+    apCost: 20,
+    happinessGain: 10,
+    desc: "一家人一起吃顿好的",
+  },
+  park_outing: {
+    name: "公园游玩",
+    icon: "🌳",
+    cost: [50, 150],
+    apCost: 15,
+    happinessGain: 8,
+    desc: "带家人去公园散步游玩",
+  },
+  movie_night: {
+    name: "家庭电影夜",
+    icon: "🎬",
+    cost: [100, 200],
+    apCost: 10,
+    happinessGain: 6,
+    desc: "一起看部电影",
+  },
+  travel: {
+    name: "家庭旅行",
+    icon: "✈️",
+    cost: [3000, 10000],
+    apCost: 50,
+    happinessGain: 25,
+    desc: "带家人出去旅行",
+  },
+  home_renovate: {
+    name: "家居改造",
+    icon: "🔨",
+    cost: [5000, 20000],
+    apCost: 30,
+    happinessGain: 15,
+    desc: "装修房子，提升居住品质",
+  },
+};
+
+function doFamilyActivity(state, activityId) {
+  const activity = FAMILY_ACTIVITIES[activityId];
+  if (!activity) return { success: false, message: "不存在的家庭活动" };
+
+  // 检查行动力
+  if (state.player.actionPoints < activity.apCost) {
+    return { success: false, message: `需要${activity.apCost}点行动力` };
+  }
+
+  // 检查费用
+  const cost =
+    activity.cost[0] +
+    Math.floor(Math.random() * (activity.cost[1] - activity.cost[0]));
+  if (state.resources.cash < cost) {
+    return { success: false, message: `需要¥${cost}，现金不足` };
+  }
+
+  state.player.actionPoints -= activity.apCost;
+  state.resources.cash -= cost;
+
+  // 应用效果
+  if (state.family.spouse) {
+    state.family.spouse.happiness = Math.min(
+      100,
+      (state.family.spouse.happiness || 80) + activity.happinessGain,
+    );
+  }
+
+  for (const child of state.family.children) {
+    child.happiness = Math.min(100, child.happiness + activity.happinessGain);
+  }
+
+  StateManager.addMessage(
+    `👨‍👩‍👧‍👦 ${activity.icon} ${activity.name}！家人很开心`,
+    "success",
+  );
+
+  return { success: true };
+}
+
+/**
+ * 获取家庭摘要
+ */
+function getFamilySummary(state) {
+  const family = state.family;
+  if (!family) return null;
+
+  const summary = {
+    hasSpouse: !!family.spouse,
+    spouseName: family.spouse?.name || null,
+    childCount: family.children.length,
+    parentsAlive: 0,
+    parentsHealthy: 0,
+    monthlyExpenses: 0,
+  };
+
+  if (family.parents) {
+    for (const key of ["father", "mother"]) {
+      const parent = family.parents[key];
+      if (parent.age < 100) {
+        summary.parentsAlive++;
+        if (parent.health === "healthy") summary.parentsHealthy++;
+      }
+    }
+  }
+
+  summary.monthlyExpenses =
+    family.expenses.monthlyMortgage +
+    family.expenses.monthlyLiving +
+    family.expenses.monthlyChildren +
+    family.expenses.monthlyParents;
+
+  return summary;
+}
+
+/**
+ * 百科注册
+ */
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.family_life = {
+    id: "family_life",
+    name: "家庭与生活",
+    icon: "👨‍👩‍👧",
+    brief: "婚恋系统、子女教育、父母养老、家庭生活、人际关系",
+    version: "1.0.0",
+    related: ["mechanics:main", "mechanics:needs"],
+    sections: [
+      {
+        kind: "desc",
+        text: "人生不只是奋斗，还有家人。家庭系统让你体验从单身到结婚、从二人世界到三口之家的完整人生旅程。",
+      },
+      {
+        kind: "subhead",
+        text: "💕 关系发展阶段",
+      },
+      {
+        kind: "list",
+        items: [
+          "❓ 陌生人 → 👋 认识 → 🙂 朋友 → 👫 好朋友 → 💕 暧昧 → 💑 恋爱 → 💍 订婚 → 💒 结婚",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "👶 子女成长阶段",
+      },
+      {
+        kind: "list",
+        items: [
+          "👶 婴儿（0-2岁）：奶粉、尿布、陪伴",
+          "🧒 幼儿（3-5岁）：幼儿园、玩具、绘本",
+          "📚 小学生（6-11岁）：学费、课外班",
+          "📖 初中生（12-14岁）：补习班、青春期",
+          "📝 高中生（15-17岁）：高考压力、补习",
+          "🎓 大学生（18-22岁）：学费、生活费",
+          "👨 成年人（23岁+）：独立生活",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "👴 父母健康等级",
+      },
+      {
+        kind: "list",
+        items: [
+          "✅ 健康：无需特别照顾",
+          "🤒 小病：偶尔感冒发烧，花费¥500",
+          "💊 慢性病：高血压/糖尿病等，花费¥3000/月",
+          "🏥 重病：需要住院治疗，花费¥30000+",
+          "🚨 危重：生命垂危，花费¥100000+",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：陪伴是最长情的告白。多花时间陪伴家人，定期带父母体检，关注子女成长。家庭幸福是人生的重要组成部分。",
+      },
+    ],
+  };
+}
+</script>
+    <script>/**
+ * 个人成长系统 — Phase 2 深度交互
+ *
+ * 包含：
+ * 1. 兴趣爱好 — 技能学习、等级提升、社交圈子
+ * 2. 健康管理 — 运动、饮食、睡眠、体检
+ * 3. 心理状态 — 压力、焦虑、抑郁、心理咨询
+ * 4. 个人形象 — 穿搭、护肤、健身、整容
+ * 5. 终身学习 — 读书、课程、考证、游学
+ * 6. 人生目标 — 梦想追踪、里程碑、成就反馈
+ */
+
+// ====== 兴趣爱好定义 ======
+const HOBBY_CATEGORIES = {
+  sports: {
+    name: "运动健身",
+    icon: "🏃",
+    hobbies: [
+      { id: "running", name: "跑步", icon: "🏃", baseCost: 0, baseAP: 10, benefits: ["健康+2", "压力-3", "身材+1"] },
+      { id: "gym", name: "健身房", icon: "🏋️", baseCost: 100, baseAP: 15, benefits: ["身材+3", "健康+1", "压力-2"] },
+      { id: "yoga", name: "瑜伽", icon: "🧘", baseCost: 80, baseAP: 12, benefits: ["身心平衡+3", "压力-5", "健康+1"] },
+      { id: "swimming", name: "游泳", icon: "🏊", baseCost: 50, baseAP: 15, benefits: ["健康+3", "压力-4", "身材+2"] },
+      { id: "basketball", name: "篮球", icon: "🏀", baseCost: 0, baseAP: 20, benefits: ["健康+2", "社交+2", "压力-3"] },
+      { id: "tennis", name: "网球", icon: "🎾", baseCost: 150, baseAP: 20, benefits: ["健康+2", "社交+3", "身材+2"] },
+      { id: "cycling", name: "骑行", icon: "🚴", baseCost: 0, baseAP: 15, benefits: ["健康+2", "压力-3", "视野+1"] },
+      { id: "hiking", name: "徒步", icon: "🥾", baseCost: 50, baseAP: 25, benefits: ["健康+2", "压力-5", "视野+2"] },
+    ],
+  },
+  arts: {
+    name: "艺术文化",
+    icon: "🎨",
+    hobbies: [
+      { id: "reading", name: "阅读", icon: "📚", baseCost: 30, baseAP: 10, benefits: ["智力+2", "视野+2", "压力-2"] },
+      { id: "painting", name: "绘画", icon: "🎨", baseCost: 100, baseAP: 15, benefits: ["创造力+3", "压力-4", "审美+2"] },
+      { id: "music", name: "音乐", icon: "🎵", baseCost: 80, baseAP: 12, benefits: ["审美+2", "压力-5", "心情+2"] },
+      { id: "photography", name: "摄影", icon: "📷", baseCost: 150, baseAP: 15, benefits: ["审美+3", "创造力+2", "社交+1"] },
+      { id: "writing", name: "写作", icon: "✍️", baseCost: 20, baseAP: 15, benefits: ["智力+2", "创造力+2", "表达+2"] },
+      { id: "calligraphy", name: "书法", icon: "🖌️", baseCost: 50, baseAP: 12, benefits: ["审美+2", "耐心+3", "压力-3"] },
+      { id: "dance", name: "舞蹈", icon: "💃", baseCost: 100, baseAP: 18, benefits: ["身材+2", "审美+2", "自信+2"] },
+      { id: "acting", name: "表演", icon: "🎭", baseCost: 120, baseAP: 20, benefits: ["表达+3", "自信+3", "社交+2"] },
+    ],
+  },
+  learning: {
+    name: "学习提升",
+    icon: "📖",
+    hobbies: [
+      { id: "coding", name: "编程学习", icon: "💻", baseCost: 50, baseAP: 20, benefits: ["技能+3", "智力+2", "收入潜力+1"] },
+      { id: "english", name: "英语学习", icon: "🌐", baseCost: 80, baseAP: 15, benefits: ["技能+2", "视野+2", "收入潜力+1"] },
+      { id: "finance", name: "金融学习", icon: "📈", baseCost: 100, baseAP: 15, benefits: ["投资能力+3", "智力+1", "收入潜力+2"] },
+      { id: "cooking_class", name: "烹饪课", icon: "🍳", baseCost: 150, baseAP: 15, benefits: ["生活技能+3", "心情+2", "健康+1"] },
+      { id: "public_speaking", name: "演讲", icon: "🎤", baseCost: 100, baseAP: 15, benefits: ["表达+3", "自信+3", "职场+2"] },
+      { id: "management", name: "管理课程", icon: "👔", baseCost: 200, baseAP: 15, benefits: ["领导力+3", "职场+2", "收入潜力+1"] },
+    ],
+  },
+  social: {
+    name: "社交娱乐",
+    icon: "🎉",
+    hobbies: [
+      { id: "board_games", name: "桌游", icon: "🎲", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
+      { id: "cards", name: "扑克", icon: "🃏", baseCost: 30, baseAP: 10, benefits: ["社交+2", "智力+1", "心情+1"] },
+      { id: "mahjong", name: "麻将", icon: "🀄", baseCost: 50, baseAP: 15, benefits: ["社交+3", "智力+1", "心情+2"] },
+      { id: "chess", name: "棋类", icon: "♟️", baseCost: 30, baseAP: 12, benefits: ["智力+3", "耐心+2", "压力-2"] },
+      { id: "gaming", name: "游戏", icon: "🎮", baseCost: 50, baseAP: 10, benefits: ["心情+3", "压力-5", "社交+1"] },
+      { id: "travel", name: "旅行", icon: "✈️", baseCost: 1000, baseAP: 30, benefits: ["视野+5", "心情+5", "压力-5"] },
+    ],
+  },
+  wellness: {
+    name: "身心健康",
+    icon: "🧘",
+    hobbies: [
+      { id: "meditation", name: "冥想", icon: "🧘", baseCost: 0, baseAP: 10, benefits: ["压力-5", "焦虑-3", "身心平衡+3"] },
+      { id: "spa", name: "SPA", icon: "💆", baseCost: 300, baseAP: 15, benefits: ["压力-5", "心情+3", "形象+1"] },
+      { id: "massage", name: "按摩", icon: "💆‍♂️", baseCost: 200, baseAP: 12, benefits: ["疲劳-5", "压力-3", "健康+1"] },
+      { id: "therapy", name: "心理咨询", icon: "👂", baseCost: 500, baseAP: 20, benefits: ["焦虑-5", "抑郁-5", "心理+5"] },
+      { id: "sleep_therapy", name: "睡眠改善", icon: "😴", baseCost: 100, baseAP: 5, benefits: ["疲劳-5", "健康+2", "心情+1"] },
+    ],
+  },
+};
+
+// ====== 健康指标 ======
+const HEALTH_INDICATORS = {
+  physical: {
+    name: "身体健康",
+    icon: "💪",
+    factors: ["体重", "血压", "血糖", "血脂", "心肺功能"],
+    checkFrequency: 365, // 每年检查
+  },
+  mental: {
+    name: "心理健康",
+    icon: "🧠",
+    factors: ["压力", "焦虑", "抑郁", "情绪稳定", "睡眠质量"],
+    checkFrequency: 180, // 每半年
+  },
+  metabolic: {
+    name: "代谢健康",
+    icon: "⚖️",
+    factors: ["BMI", "体脂率", "腰围", "基础代谢"],
+    checkFrequency: 180,
+  },
+  dental: {
+    name: "口腔健康",
+    icon: "🦷",
+    factors: ["牙齿", "牙龈", "口气"],
+    checkFrequency: 180,
+  },
+  vision: {
+    name: "视力健康",
+    icon: "👁️",
+    factors: ["近视", "散光", "眼压"],
+    checkFrequency: 365,
+  },
+};
+
+// ====== 心理状态 ======
+const PSYCHOLOGICAL_STATES = {
+  excellent: { name: "状态极佳", icon: "🌟", stress: [0, 20], anxiety: [0, 20], depression: [0, 10] },
+  good: { name: "状态良好", icon: "🙂", stress: [20, 40], anxiety: [20, 35], depression: [10, 20] },
+  normal: { name: "状态正常", icon: "😐", stress: [40, 60], anxiety: [35, 50], depression: [20, 35] },
+  stressed: { name: "压力较大", icon: "😰", stress: [60, 80], anxiety: [50, 70], depression: [35, 50] },
+  anxious: { name: "焦虑状态", icon: "😟", stress: [70, 90], anxiety: [70, 90], depression: [40, 65] },
+  depressed: { name: "抑郁倾向", icon: "😔", stress: [75, 100], anxiety: [60, 90], depression: [65, 85] },
+  critical: { name: "心理危机", icon: "🚨", stress: [85, 100], anxiety: [80, 100], depression: [85, 100] },
+};
+
+// ====== 个人形象维度 ======
+const IMAGE_DIMENSIONS = {
+  appearance: {
+    name: "外貌",
+    icon: "✨",
+    factors: ["五官", "皮肤", "发型", "身材"],
+    maxLevel: 100,
+  },
+  style: {
+    name: "穿搭",
+    icon: "👔",
+    factors: ["品味", "搭配", "品牌", "场合适配"],
+    maxLevel: 100,
+  },
+  grooming: {
+    name: "仪容",
+    icon: "💇",
+    factors: ["发型", "胡须", "指甲", "气味"],
+    maxLevel: 100,
+  },
+  fitness: {
+    name: "身材",
+    icon: "💪",
+    factors: ["肌肉", "体脂", "体态", "健康"],
+    maxLevel: 100,
+  },
+  charisma: {
+    name: "气质",
+    icon: "🌟",
+    factors: ["自信", "谈吐", "风度", "魅力"],
+    maxLevel: 100,
+  },
+};
+
+// ====== 人生目标/梦想 ======
+const LIFE_GOAL_CATEGORIES = {
+  career: {
+    name: "事业成就",
+    icon: "💼",
+    examples: ["成为CEO", "创业成功", "财务自由", "行业专家"],
+  },
+  wealth: {
+    name: "财富积累",
+    icon: "💰",
+    examples: ["存款100万", "存款1000万", "被动收入覆盖支出", "投资获利"],
+  },
+  family: {
+    name: "家庭幸福",
+    icon: "👨‍👩‍👧",
+    examples: ["结婚", "生子", "买房", "父母安享晚年"],
+  },
+  personal: {
+    name: "个人成长",
+    icon: "🌱",
+    examples: ["读完100本书", "学会3门外语", "环游世界", "学会乐器"],
+  },
+  health: {
+    name: "健康生活",
+    icon: "🏃",
+    examples: ["跑马拉松", "减重10公斤", "体检全优", "戒烟戒酒"],
+  },
+  contribution: {
+    name: "社会贡献",
+    icon: "🌍",
+    examples: ["做慈善", "帮助100人", "环保行动", "知识分享"],
+  },
+};
+
+/**
+ * 初始化个人成长系统
+ */
+function initPersonalGrowth(state) {
+  if (!state.personalGrowth) {
+    state.personalGrowth = {
+      hobbies: {}, // { hobbyId: { level: 1, exp: 0, lastPracticed: day } }
+      health: {
+        physical: 80,
+        mental: 70,
+        metabolic: 75,
+        dental: 85,
+        vision: 70,
+        lastCheckup: state.player.day,
+        checkupHistory: [],
+      },
+      psychology: {
+        stress: 30,
+        anxiety: 25,
+        depression: 15,
+        mood: 70,
+        sleepQuality: 70,
+        lastTherapy: null,
+      },
+      image: {
+        appearance: 60,
+        style: 50,
+        grooming: 65,
+        fitness: 55,
+        charisma: 50,
+      },
+      lifeGoals: {
+        active: [], // { id, category, description, targetValue, currentValue, deadline }
+        completed: [],
+      },
+      reading: {
+        booksRead: 0,
+        booksThisYear: 0,
+        readingList: [],
+        currentBook: null,
+      },
+    };
+  }
+}
+
+/**
+ * 练习爱好
+ */
+function practiceHobby(state, hobbyId) {
+  // 查找爱好
+  let hobby = null;
+  let categoryKey = null;
+  for (const [catKey, cat] of Object.entries(HOBBY_CATEGORIES)) {
+    const found = cat.hobbies.find(h => h.id === hobbyId);
+    if (found) {
+      hobby = found;
+      categoryKey = catKey;
+      break;
+    }
+  }
+
+  if (!hobby) {
+    return { success: false, message: "不存在的爱好" };
+  }
+
+  // 检查行动力
+  if (state.player.actionPoints < hobby.baseAP) {
+    return { success: false, message: `需要${hobby.baseAP}点行动力` };
+  }
+
+  // 检查费用
+  const cost = hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
+  if (state.resources.cash < cost) {
+    return { success: false, message: `需要¥${cost}，现金不足` };
+  }
+
+  state.player.actionPoints -= hobby.baseAP;
+  state.resources.cash -= cost;
+
+  // 更新爱好等级
+  if (!state.personalGrowth.hobbies[hobbyId]) {
+    state.personalGrowth.hobbies[hobbyId] = {
+      level: 1,
+      exp: 0,
+      lastPracticed: state.player.day,
+      totalSessions: 0,
+    };
+  }
+
+  const hobbyState = state.personalGrowth.hobbies[hobbyId];
+  const expGain = 10 + Math.floor(Math.random() * 10);
+  hobbyState.exp += expGain;
+  hobbyState.lastPracticed = state.player.day;
+  hobbyState.totalSessions++;
+
+  // 升级检查
+  const expToNextLevel = hobbyState.level * 50;
+  if (hobbyState.exp >= expToNextLevel) {
+    hobbyState.level++;
+    hobbyState.exp -= expToNextLevel;
+    StateManager.addMessage(`🎉 ${hobby.name}等级提升到${hobbyState.level}级！`, "success");
+  }
+
+  // 应用爱好效果
+  applyHobbyBenefits(state, hobby);
+
+  StateManager.addMessage(`🎨 练习${hobby.icon} ${hobby.name}（Lv.${hobbyState.level}），${hobby.benefits.join("、")}`, "info");
+
+  return { success: true, level: hobbyState.level, exp: hobbyState.exp };
+}
+
+/**
+ * 应用爱好效果
+ */
+function applyHobbyBenefits(state, hobby) {
+  const pg = state.personalGrowth;
+  const p = state.player;
+  const needs = state.needs;
+
+  for (const benefit of hobby.benefits) {
+    if (benefit.includes("健康")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.health.physical = Math.min(100, pg.health.physical + value);
+    }
+    if (benefit.includes("压力")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.stress = Math.max(0, pg.psychology.stress + value);
+      needs.happiness = Math.min(100, needs.happiness - value);
+    }
+    if (benefit.includes("智力")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      p.intelligence = Math.min(100, p.intelligence + value);
+    }
+    if (benefit.includes("身材")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.image.fitness = Math.min(100, pg.image.fitness + value);
+    }
+    if (benefit.includes("社交")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      if (p.corporate) p.corporate.popularity = Math.min(100, p.corporate.popularity + value);
+    }
+    if (benefit.includes("心情")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      needs.happiness = Math.min(100, needs.happiness + value);
+    }
+    if (benefit.includes("视野")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      p.fame = Math.min(100, p.fame + Math.floor(value / 2));
+    }
+    if (benefit.includes("技能")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      // 根据爱好类型增加对应技能
+      if (hobby.id === "coding") {
+        if (p.skills && p.skills.coding) p.skills.coding.level = Math.min(100, p.skills.coding.level + value);
+      } else if (hobby.id === "english") {
+        if (p.skills && p.skills.english) p.skills.english.level = Math.min(100, p.skills.english.level + value);
+      }
+    }
+    if (benefit.includes("收入潜力")) {
+      // 隐性加成，不直接显示
+    }
+    if (benefit.includes("审美")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.image.appearance = Math.min(100, pg.image.appearance + value);
+      pg.image.style = Math.min(100, pg.image.style + value);
+    }
+    if (benefit.includes("创造力")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      p.intelligence = Math.min(100, p.intelligence + Math.floor(value / 2));
+    }
+    if (benefit.includes("表达")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      if (p.skills && p.skills.sales) p.skills.sales.level = Math.min(100, p.skills.sales.level + value);
+    }
+    if (benefit.includes("自信")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.mood = Math.min(100, pg.psychology.mood + value);
+    }
+    if (benefit.includes("领导力")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      if (p.corporate) p.corporate.ability = Math.min(100, p.corporate.ability + value);
+    }
+    if (benefit.includes("职场")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      if (p.corporate) p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + value);
+    }
+    if (benefit.includes("生活技能")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      if (p.skills && p.skills.cooking) p.skills.cooking.level = Math.min(100, p.skills.cooking.level + value);
+    }
+    if (benefit.includes("耐心")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.stress = Math.max(0, pg.psychology.stress - value);
+    }
+    if (benefit.includes("焦虑")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.anxiety = Math.max(0, pg.psychology.anxiety + value);
+    }
+    if (benefit.includes("抑郁")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.depression = Math.max(0, pg.psychology.depression + value);
+    }
+    if (benefit.includes("身心平衡")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      pg.psychology.stress = Math.max(0, pg.psychology.stress - value);
+      pg.psychology.mood = Math.min(100, pg.psychology.mood + Math.floor(value / 2));
+    }
+    if (benefit.includes("疲劳")) {
+      const value = parseInt(benefit.match(/[\d-]+/)[0]);
+      needs.fatigue = Math.max(0, needs.fatigue + value);
+    }
+  }
+}
+
+/**
+ * 进行体检
+ */
+function healthCheckup(state) {
+  const cost = 500 + Math.floor(Math.random() * 500);
+  if (state.resources.cash < cost) {
+    return { success: false, message: `体检需要¥${cost}，现金不足` };
+  }
+
+  state.resources.cash -= cost;
+
+  const pg = state.personalGrowth;
+  const day = state.player.day;
+
+  // 生成体检报告
+  const report = {
+    day: day,
+    physical: pg.health.physical + Math.floor(Math.random() * 10) - 5,
+    mental: pg.health.mental + Math.floor(Math.random() * 10) - 5,
+    metabolic: pg.health.metabolic + Math.floor(Math.random() * 10) - 5,
+    dental: pg.health.dental + Math.floor(Math.random() * 10) - 5,
+    vision: pg.health.vision + Math.floor(Math.random() * 10) - 5,
+    issues: [],
+  };
+
+  // 检查是否有健康问题
+  if (report.physical < 60) report.issues.push("身体健康需要关注");
+  if (report.mental < 50) report.issues.push("心理健康需要关注");
+  if (report.metabolic < 60) report.issues.push("代谢指标异常，注意饮食");
+  if (report.dental < 70) report.issues.push("牙齿需要护理");
+  if (report.vision < 60) report.issues.push("视力下降，注意用眼");
+
+  pg.health.lastCheckup = day;
+  pg.health.checkupHistory.push(report);
+
+  // 保存并生成报告
+  const issueText = report.issues.length > 0 ? ` ⚠️ 发现${report.issues.length}项需要关注：${report.issues.join("、")}` : " ✅ 各项指标正常";
+
+  StateManager.addMessage(`🏥 体检完成！身体${report.physical} 心理${report.mental} 代谢${report.metabolic}${issueText}`, "info");
+
+  return { success: true, report: report };
+}
+
+/**
+ * 心理咨询
+ */
+function心理咨询(state) {
+  const cost = 500;
+  if (state.resources.cash < cost) {
+    return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
+  }
+
+  state.resources.cash -= cost;
+
+  const pg = state.personalGrowth;
+  pg.psychology.stress = Math.max(0, pg.psychology.stress - 10);
+  pg.psychology.anxiety = Math.max(0, pg.psychology.anxiety - 8);
+  pg.psychology.depression = Math.max(0, pg.psychology.depression - 5);
+  pg.psychology.mood = Math.min(100, pg.psychology.mood + 5);
+  pg.psychology.lastTherapy = state.player.day;
+
+  StateManager.addMessage(`👂 心理咨询结束，压力-10，焦虑-8，抑郁-5`, "success");
+
+  return { success: true };
+}
+
+/**
+ * 形象提升
+ */
+function improveImage(state, dimension, method) {
+  const pg = state.personalGrowth;
+  const dimValue = pg.image[dimension];
+
+  if (!dimValue && dimension !== "appearance" && dimension !== "style" && dimension !== "grooming" && dimension !== "fitness" && dimension !== "charisma") {
+    return { success: false, message: "不存在的形象维度" };
+  }
+
+  const methods = {
+    shopping: { cost: 500, gain: 5, desc: "购买新衣服/配饰" },
+    haircut: { cost: 100, gain: 3, desc: "理发/造型" },
+    skincare: { cost: 300, gain: 4, desc: "护肤护理" },
+    gym: { cost: 100, gain: 3, desc: "健身塑形" },
+    style_consult: { cost: 800, gain: 6, desc: "形象顾问" },
+    makeup: { cost: 200, gain: 3, desc: "化妆/造型" },
+  };
+
+  const methodData = methods[method];
+  if (!methodData) {
+    return { success: false, message: "不存在的提升方法" };
+  }
+
+  if (state.resources.cash < methodData.cost) {
+    return { success: false, message: `需要¥${methodData.cost}，现金不足` };
+  }
+
+  state.resources.cash -= methodData.cost;
+
+  pg.image[dimension] = Math.min(100, dimValue + methodData.gain);
+
+  StateManager.addMessage(`✨ ${methodData.desc}，${IMAGE_DIMENSIONS[dimension].name}+${methodData.gain}`, "success");
+
+  return { success: true, value: pg.image[dimension] };
+}
+
+/**
+ * 设定人生目标
+ */
+function setLifeGoal(state, category, description, targetValue, deadline) {
+  const pg = state.personalGrowth;
+
+  const goal = {
+    id: "goal_" + state.player.day + "_" + Math.random().toString(36).substr(2, 9),
+    category: category,
+    description: description,
+    targetValue: targetValue,
+    currentValue: 0,
+    deadline: deadline,
+    createdDay: state.player.day,
+    progress: 0,
+  };
+
+  pg.lifeGoals.active.push(goal);
+  StateManager.addMessage(`🎯 设定人生目标：${description}（${category}）`, "success");
+
+  return { success: true, goal: goal };
+}
+
+/**
+ * 更新目标进度
+ */
+function updateGoalProgress(state, goalId, progressChange) {
+  const pg = state.personalGrowth;
+  const goal = pg.lifeGoals.active.find(g => g.id === goalId);
+  if (!goal) return { success: false, message: "目标不存在" };
+
+  goal.currentValue = Math.min(goal.targetValue, goal.currentValue + progressChange);
+  goal.progress = Math.round(goal.currentValue / goal.targetValue * 100);
+
+  // 检查是否完成
+  if (goal.currentValue >= goal.targetValue) {
+    completeGoal(state, goal);
+    return { success: true, completed: true, progress: 100 };
+  }
+
+  return { success: true, progress: goal.progress };
+}
+
+/**
+ * 完成目标
+ */
+function completeGoal(state, goal) {
+  const pg = state.personalGrowth;
+
+  // 从进行中移除
+  pg.lifeGoals.active = pg.lifeGoals.active.filter(g => g.id !== goal.id);
+
+  // 加入已完成
+  goal.completedDay = state.player.day;
+  pg.lifeGoals.completed.push(goal);
+
+  StateManager.addMessage(`🎉 目标达成：${goal.description}！`, "success");
+
+  // 给予奖励
+  const reward = 1000 + Math.floor(Math.random() * 2000);
+  state.resources.cash += reward;
+  state.player.fame = Math.min(100, state.player.fame + 5);
+
+  StateManager.addMessage(`💰 目标达成奖励：¥${reward}，名气+5`, "success");
+}
+
+/**
+ * 读书
+ */
+function readBook(state, bookTitle) {
+  const pg = state.personalGrowth;
+
+  if (state.player.actionPoints < 15) {
+    return { success: false, message: "需要15点行动力" };
+  }
+
+  state.player.actionPoints -= 15;
+
+  pg.reading.booksRead++;
+  pg.reading.booksThisYear++;
+
+  // 智力提升
+  state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+
+  // 压力减轻
+  pg.psychology.stress = Math.max(0, pg.psychology.stress - 2);
+  state.needs.happiness = Math.min(100, state.needs.happiness + 2);
+
+  StateManager.addMessage(`📚 读完《${bookTitle}》，智力+1，压力-2`, "info");
+
+  return { success: true, booksRead: pg.reading.booksRead };
+}
+
+/**
+ * 每日个人成长更新
+ */
+function tickPersonalGrowthDaily(state) {
+  const pg = state.personalGrowth;
+  const day = state.player.day;
+
+  if (!pg) return;
+
+  // 自然衰减（不练习的爱好会遗忘）
+  for (const [hobbyId, hobbyState] of Object.entries(pg.hobbies)) {
+    if (day - hobbyState.lastPracticed > 90) {
+      hobbyState.level = Math.max(1, hobbyState.level - 1);
+      StateManager.addMessage(`📉 ${hobbyId}因长期未练习，等级-1`, "hint");
+    }
+  }
+
+  // 心理压力自然恢复
+  pg.psychology.stress = Math.max(0, pg.psychology.stress - 0.5);
+  pg.psychology.anxiety = Math.max(0, pg.psychology.anxiety - 0.3);
+  pg.psychology.depression = Math.max(0, pg.psychology.depression - 0.2);
+
+  // 睡眠影响
+  if (state.needs && state.needs.fatigue < 30) {
+    pg.psychology.stress = Math.min(100, pg.psychology.stress + 2);
+    pg.psychology.mood = Math.max(0, pg.psychology.mood - 2);
+  }
+
+  // 年度重置读书统计
+  if (state.player.day % 365 === 0) {
+    pg.reading.booksThisYear = 0;
+  }
+
+  // 检查心理危机
+  checkPsychologicalCrisis(state);
+}
+
+/**
+ * 检查心理危机
+ */
+function checkPsychologicalCrisis(state) {
+  const pg = state.personalGrowth;
+  if (!pg) return;
+
+  const psy = pg.psychology;
+
+  if (psy.stress > 85 && psy.anxiety > 80 && psy.depression > 85) {
+    StateManager.addMessage("🚨 心理危机预警！建议立即寻求专业帮助", "danger");
+
+    // 触发游戏机制：强制休息
+    if (!state.flags) state.flags = {};
+    state.flags.forceRest = true;
+  } else if (psy.stress > 75 || psy.anxiety > 70 || psy.depression > 70) {
+    StateManager.addMessage("⚠️ 心理状态需要关注，建议休息或寻求心理咨询", "warning");
+  }
+}
+
+/**
+ * 获取个人成长摘要
+ */
+function getPersonalGrowthSummary(state) {
+  const pg = state.personalGrowth;
+  if (!pg) return null;
+
+  return {
+    hobbyCount: Object.keys(pg.hobbies).length,
+    maxHobbyLevel: Math.max(0, ...Object.values(pg.hobbies).map(h => h.level)),
+    healthStatus: pg.health.physical >= 70 ? "良好" : pg.health.physical >= 50 ? "一般" : "需要关注",
+    psychologicalState: getPsychologicalStateLabel(pg.psychology),
+    imageScore: Math.round((pg.image.appearance + pg.image.style + pg.image.grooming + pg.image.fitness + pg.image.charisma) / 5),
+    activeGoals: pg.lifeGoals.active.length,
+    completedGoals: pg.lifeGoals.completed.length,
+    booksRead: pg.reading.booksRead,
+    lastCheckup: pg.health.lastCheckup,
+  };
+}
+
+/**
+ * 获取心理状态标签
+ */
+function getPsychologicalStateLabel(psy) {
+  const stress = psy.stress;
+  const anxiety = psy.anxiety;
+  const depression = psy.depression;
+
+  if (stress > 85 || anxiety > 80 || depression > 85) return "🚨 危机";
+  if (stress > 75 || anxiety > 70 || depression > 70) return "😟 焦虑";
+  if (stress > 60 || anxiety > 50 || depression > 50) return "😰 压力";
+  if (stress > 40 || anxiety > 35 || depression > 35) return "😐 正常";
+  if (stress > 20 || anxiety > 20 || depression > 20) return "🙂 良好";
+  return "🌟 极佳";
+}
+
+/**
+ * 百科注册
+ */
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.personal_growth = {
+    id: "personal_growth",
+    name: "个人成长",
+    icon: "🌱",
+    brief: "兴趣爱好、健康管理、心理状态、个人形象、终身学习、人生目标",
+    version: "1.0.0",
+    related: ["mechanics:main", "mechanics:needs", "mechanics:family_life"],
+    sections: [
+      {
+        kind: "desc",
+        text: "人生不止眼前的苟且，还有诗和远方。个人成长系统让你体验从技能提升到身心健康、从形象塑造到人生目标实现的完整成长旅程。",
+      },
+      {
+        kind: "subhead",
+        text: "🎨 爱好分类",
+      },
+      {
+        kind: "list",
+        items: [
+          "🏃 运动健身：跑步、健身房、瑜伽、游泳、篮球、网球、骑行、徒步",
+          "🎨 艺术文化：阅读、绘画、音乐、摄影、写作、书法、舞蹈、表演",
+          "📖 学习提升：编程、英语、金融、烹饪、演讲、管理",
+          "🎉 社交娱乐：桌游、扑克、麻将、棋类、游戏、旅行",
+          "🧘 身心健康：冥想、SPA、按摩、心理咨询、睡眠改善",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "🏥 健康检查",
+      },
+      {
+        kind: "list",
+        items: [
+          "💪 身体健康：体重、血压、血糖、血脂、心肺功能",
+          "🧠 心理健康：压力、焦虑、抑郁、情绪稳定、睡眠质量",
+          "⚖️ 代谢健康：BMI、体脂率、腰围、基础代谢",
+          "🦷 口腔健康：牙齿、牙龈、口气",
+          "👁️ 视力健康：近视、散光、眼压",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "✨ 形象维度",
+      },
+      {
+        kind: "list",
+        items: [
+          "✨ 外貌：五官、皮肤、发型、身材",
+          "👔 穿搭：品味、搭配、品牌、场合适配",
+          "💇 仪容：发型、胡须、指甲、气味",
+          "💪 身材：肌肉、体脂、体态、健康",
+          "🌟 气质：自信、谈吐、风度、魅力",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：爱好需要持续练习才能保持等级；定期体检很重要；心理健康和身体健康同等重要；设定并追求人生目标让生命更有意义。",
+      },
+    ],
+  };
+}</script>
 
     <!-- Enterprise Fate System -->
     <script>/**
@@ -57559,6 +61746,26 @@ function renderCurrentTab(state) {
     case "growth":
       renderGrowthTab(state, area);
       break;
+    case "workplace_social":
+      if (typeof renderWorkplaceSocialTab === "function")
+        renderWorkplaceSocialTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">职场社交系统加载中...</p>';
+      break;
+    case "family":
+      if (typeof renderFamilyTab === "function") renderFamilyTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">家庭系统加载中...</p>';
+      break;
+    case "personal_growth":
+      if (typeof renderPersonalGrowthTab === "function")
+        renderPersonalGrowthTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">个人成长系统加载中...</p>';
+      break;
     case "wiki":
       if (typeof renderWikiTab === "function") renderWikiTab(state, area);
       else
@@ -58746,6 +62953,25 @@ function renderActionsTab(state, parent) {
       cards.appendChild(createActionCard(action, state));
     }
     parent.appendChild(cards);
+  }
+
+  // === Phase 2 深度交互入口 ===
+  {
+    const phase2Box = document.createElement("div");
+    phase2Box.style.cssText =
+      "margin-top:20px;padding:16px;background:linear-gradient(135deg, rgba(142,119,217,0.08), rgba(255,255,255,0.02));border:1px solid rgba(142,119,217,0.2);border-radius:var(--radius-md);";
+    phase2Box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h4 style="color:var(--accent);margin:0;font-size:14px;">🌟 Phase 2 深度交互</h4>
+        <span style="font-size:9px;color:var(--text-muted);">点击打开新系统</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
+        <button onclick="switchTab('workplace_social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
+        <button onclick="switchTab('family')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
+        <button onclick="switchTab('personal_growth')" class="btn btn-sm" style="padding:8px 12px;">🌱 个人成长</button>
+      </div>
+    `;
+    parent.appendChild(phase2Box);
   }
 }
 
@@ -60809,6 +65035,244 @@ function renderIllnessRow(state) {
   }
   box.innerHTML = html;
   box.style.display = "block";
+}
+
+// ====== Phase 2 新 Tab 渲染函数 ======
+
+function renderWorkplaceSocialTab(state, parent) {
+  const ws = state.workplaceSocial || {};
+  const html = `
+    <div class="tab-content">
+      <h2>👥 职场社交</h2>
+      ${
+        ws.colleagues && ws.colleagues.length > 0
+          ? `
+        <div class="section">
+          <h3>同事关系网</h3>
+          ${ws.colleagues
+            .map(
+              (c) => `
+            <div class="card" style="margin:8px 0;padding:12px;">
+              <div><strong>${c.name}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
+              <div style="margin-top:6px;">好感度: <span class="affinity">${c.affinity || 0}</span></div>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      `
+          : '<p style="color:var(--text-muted);">暂无同事关系数据</p>'
+      }
+      ${
+        ws.mentorship
+          ? `
+        <div class="section">
+          <h3>👨‍🏫 导师关系</h3>
+          <p>当前导师: ${ws.mentorship.mentorId} (等级: ${ws.mentorship.level || "初级"})</p>
+        </div>
+      `
+          : ""
+      }
+      ${
+        ws.officePoliticsLog && ws.officePoliticsLog.length > 0
+          ? `
+        <div class="section">
+          <h3>📋 办公室政治记录</h3>
+          ${ws.officePoliticsLog
+            .slice(-5)
+            .reverse()
+            .map(
+              (e) => `
+            <div style="font-size:12px;color:var(--text-muted);margin:4px 0;">第${e.day}天: ${e.eventType} → ${e.outcome || "未知"}</div>
+          `,
+            )
+            .join("")}
+        </div>
+      `
+          : ""
+      }
+    </div>
+  `;
+  parent.innerHTML = html;
+}
+
+function renderFamilyTab(state, parent) {
+  const fam = state.family || {};
+  const html = `
+    <div class="tab-content">
+      <h2>👨‍👩‍👧 家庭与生活</h2>
+      
+      <div class="section">
+        <h3>婚恋状态</h3>
+        <p>当前阶段: <strong>${fam.relationshipStage || "陌生人"}</strong></p>
+        ${
+          fam.partner
+            ? `
+          <div class="card" style="margin-top:8px;padding:12px;">
+            <div><strong>${fam.partner.name || "伴侣"}</strong> <span class="tag">${fam.partner.type || "未知类型"}</span></div>
+            <div>收入: ¥${fam.partner.income || 0}/月 | 陪伴值: ${fam.partner.companionship || 0}</div>
+          </div>
+        `
+            : '<p style="color:var(--text-muted);">尚未建立伴侣关系</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>👶 子女</h3>
+        ${
+          fam.children && fam.children.length > 0
+            ? fam.children
+                .map(
+                  (c) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${c.name || "孩子"}</strong> — ${c.age || 0}岁 (${c.stage || "未知"})</div>
+            <div>教育: ${c.education || "未入学"} | 月支出: ¥${c.expenses || 0}</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无子女</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>👴 父母养老</h3>
+        ${
+          fam.parents
+            ? `
+          <div style="display:flex;gap:16px;">
+            <div class="card" style="flex:1;padding:12px;">
+              <div><strong>父亲</strong> ${fam.parents.father?.age || 50}岁</div>
+              <div>健康: <span class="tag">${fam.parents.father?.health || "健康"}</span></div>
+              <div>陪伴需求: ${fam.parents.father?.companionship || 0}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div><strong>母亲</strong> ${fam.parents.mother?.age || 48}岁</div>
+              <div>健康: <span class="tag">${fam.parents.mother?.health || "健康"}</span></div>
+              <div>陪伴需求: ${fam.parents.mother?.companionship || 0}</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>🏠 房贷</h3>
+        ${
+          fam.mortgage
+            ? `
+          <p>月供: ¥${fam.mortgage.monthlyPayment || 0} | 剩余: ${fam.mortgage.remainingDays || 0}天</p>
+        `
+            : '<p style="color:var(--text-muted);">无房贷</p>'
+        }
+      </div>
+    </div>
+  `;
+  parent.innerHTML = html;
+}
+
+function renderPersonalGrowthTab(state, parent) {
+  const pg = state.personalGrowth || {};
+  const html = `
+    <div class="tab-content">
+      <h2>🌱 个人成长</h2>
+
+      <div class="section">
+        <h3>🏃 兴趣爱好</h3>
+        ${
+          pg.hobbies && Object.keys(pg.hobbies).length > 0
+            ? Object.entries(pg.hobbies)
+                .map(
+                  ([id, h]) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${h.name || id}</strong> — 等级: ${h.level || 0} | XP: ${h.xp || 0}</div>
+            <div>累计时长: ${h.hours || 0}小时</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无爱好记录</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>💪 健康指标</h3>
+        ${
+          pg.health
+            ? `
+          <div style="display:flex;gap:12px;">
+            <div class="card" style="flex:1;padding:12px;">
+              <div>💪 身体健康</div>
+              <div>评分: ${pg.health.physical?.score || 50}</div>
+              <div>上次体检: ${pg.health.physical?.lastCheckup ? "第" + pg.health.physical.lastCheckup + "天" : "未体检"}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div>🧠 心理健康</div>
+              <div>评分: ${pg.health.mental?.score || 50}</div>
+              <div>压力: ${pg.health.mental?.stress || 0} | 焦虑: ${pg.health.mental?.anxiety || 0} | 抑郁: ${pg.health.mental?.depression || 0}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div>⚖️ 代谢健康</div>
+              <div>评分: ${pg.health.metabolic?.score || 50}</div>
+              <div>BMI: ${pg.health.metabolic?.bmi || 22}</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>👔 个人形象</h3>
+        ${
+          pg.image
+            ? `
+          <div style="display:flex;gap:12px;">
+            <div>穿搭: ${pg.image.style || 0}</div>
+            <div>护肤: ${pg.image.skincare || 0}</div>
+            <div>健身: ${pg.image.fitness || 0}</div>
+            <div>整容: ${pg.image.plastic || 0}</div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>🎯 人生目标</h3>
+        ${
+          pg.goals && pg.goals.length > 0
+            ? pg.goals
+                .map(
+                  (g) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${g.category || "目标"}</strong>: ${g.description || ""}</div>
+            <div>进度: ${g.currentValue || 0} / ${g.targetValue || 0} (${g.completed ? "✅ 已完成" : Math.round(((g.currentValue || 0) / (g.targetValue || 1)) * 100) + "%"})</div>
+            <div>截止日期: ${g.deadline ? "第" + g.deadline + "天" : "未设定"}</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无人生目标</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>📚 终身学习</h3>
+        ${
+          pg.learning
+            ? `
+          <p>已读书: ${pg.learning.booksRead || 0}本</p>
+          <p>课程: ${(pg.learning.courses || []).length || 0}门</p>
+          <p>证书: ${(pg.learning.certificates || []).length || 0}个</p>
+        `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+  parent.innerHTML = html;
 }
 </script>
     <script>/**
@@ -68611,6 +73075,12 @@ function estimateJobPay(job, state) {
     if (state._allJobsBonus && state._allJobsBonus !== 1) {
       pay = Math.floor(pay * state._allJobsBonus);
     }
+    if (typeof getItemJobBonus === "function") {
+      var equipMulti = getItemJobBonus(job.id, state);
+      if (equipMulti !== 1.0) {
+        pay = Math.floor(pay * equipMulti);
+      }
+    }
     if (typeof getNewsJobMultiplier === "function") {
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
     }
@@ -68674,6 +73144,14 @@ function estimateJobPayDetailed(job, state) {
     if (hm.earningsBonus > 1.0) {
       tags.push("🏅+" + Math.round((hm.earningsBonus - 1) * 100) + "%");
       base = Math.floor(base * hm.earningsBonus);
+    }
+  }
+  // 装备加成
+  if (typeof getItemJobBonus === "function") {
+    var equipMulti = getItemJobBonus(job.id, state);
+    if (equipMulti !== 1.0) {
+      tags.push("🎒+" + Math.round((equipMulti - 1) * 100) + "%");
+      base = Math.floor(base * equipMulti);
     }
   }
   // 连击加成
@@ -71434,13 +75912,25 @@ function doStreetJob(job) {
     state.resources.cash -= job.startupCost;
   }
 
-  // 计算收入（含新闻+情绪修正）
+  // 计算收入（含新闻+装备+情绪修正）
   let pay = job.payCalc(state);
   if (state._jobMultipliers && state._jobMultipliers[job.id]) {
     pay = Math.floor(pay * state._jobMultipliers[job.id]);
   }
   if (state._allJobsBonus && state._allJobsBonus !== 1) {
     pay = Math.floor(pay * state._allJobsBonus);
+  }
+  // 装备加成（getItemJobBonus 遍历已装备物品的 jobBonuses）
+  if (typeof getItemJobBonus === "function") {
+    var equipMulti = getItemJobBonus(job.id, state);
+    if (equipMulti !== 1.0) {
+      var oldPay = pay;
+      pay = Math.floor(pay * equipMulti);
+      StateManager.addMessage(
+        "🎒 装备加成：+" + Math.round((equipMulti - 1) * 100) + "%",
+        "success",
+      );
+    }
   }
   if (typeof getNewsJobMultiplier === "function") {
     var newsJobMult = getNewsJobMultiplier(job.id, state);

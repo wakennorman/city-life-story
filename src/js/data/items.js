@@ -265,8 +265,13 @@ const ITEMS = [
     icon: "👒",
     slot: "head",
     effects: { hygiene: 2 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.05 },
+      street_vending_goods: { incomeMultiplier: 1.05 },
+      manual_labor_construction: { incomeMultiplier: 1.03 },
+    },
     price: 10,
-    desc: "防晒遮雨，摆摊必备",
+    desc: "防晒遮雨，摆摊/室外工作收入+3%~5%",
     buyLocations: ["slum", "wholesaleMarket"],
   },
   {
@@ -290,8 +295,13 @@ const ITEMS = [
     icon: "😷",
     slot: "head",
     effects: { hygiene: 5, illness: -0.03 },
+    jobBonuses: {
+      hospital_caregiver: { incomeMultiplier: 1.06, riskReduction: 0.02 },
+      cleaning_service: { incomeMultiplier: 1.04 },
+      street_vending_food: { incomeMultiplier: 1.03 },
+    },
     price: 5,
-    desc: "卫生+5，生病概率-3%",
+    desc: "卫生+5，生病概率-3%。护工工作收入+6%，降低感染风险",
     buyLocations: ["slum", "wholesaleMarket", "commercialDist"],
   },
   {
@@ -315,8 +325,13 @@ const ITEMS = [
     icon: "🎒",
     slot: "accessory",
     effects: { capacity: 10 },
+    jobBonuses: {
+      courier_gig: { incomeMultiplier: 1.08 },
+      package_delivery: { incomeMultiplier: 1.06 },
+      waste_recycling: { incomeMultiplier: 1.05 },
+    },
     price: 40,
-    desc: "背包容量+10kg",
+    desc: "背包容量+10kg。跑腿/快递/废品回收收入+5%~8%",
     buyLocations: ["wholesaleMarket"],
   },
   {
@@ -432,8 +447,14 @@ const ITEMS = [
     icon: "🧥",
     slot: "body",
     effects: { coldProtection: 20, comfort: 5 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.08 },
+      street_vending_goods: { incomeMultiplier: 1.08 },
+      manual_labor_construction: { incomeMultiplier: 1.06 },
+      hospital_caregiver: { incomeMultiplier: 1.08 },
+    },
     price: 80,
-    desc: "防寒+20，舒适度+5，冬天必备",
+    desc: "防寒+20，舒适度+5，冬天必备。室外工作收入+6%~8%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
   {
@@ -442,8 +463,14 @@ const ITEMS = [
     icon: "🧴",
     slot: "accessory",
     effects: { heatProtection: 15, hygiene: 3 },
+    jobBonuses: {
+      street_vending_food: { incomeMultiplier: 1.06 },
+      delivery_rider: { incomeMultiplier: 1.05 },
+      manual_labor_construction: { incomeMultiplier: 1.05 },
+      courier_gig: { incomeMultiplier: 1.05 },
+    },
     price: 25,
-    desc: "防暑+15，夏天减少高温损耗",
+    desc: "防暑+15，夏天减少高温损耗。室外工作收入+5%~6%",
     buyLocations: ["commercialDist", "slum"],
   },
   {
@@ -452,14 +479,102 @@ const ITEMS = [
     icon: "☕",
     slot: "accessory",
     effects: { fatigue: -3, hunger: 2 },
+    jobBonuses: {
+      manual_labor_construction: { incomeMultiplier: 1.04 },
+      delivery_rider: { incomeMultiplier: 1.04 },
+      waste_recycling: { incomeMultiplier: 1.03 },
+      courier_gig: { incomeMultiplier: 1.04 },
+      food_stall: { incomeMultiplier: 1.03 },
+    },
     price: 45,
-    desc: "每日减疲劳3，维持体力",
+    desc: "每日减疲劳3，维持体力。体力工作收入+3%~4%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 ];
 
 function getItemById(itemId) {
   return ITEMS.find((i) => i.id === itemId) || null;
+}
+
+/**
+ * 判断特定装备/道具是否符合某个NPC的礼物偏好
+ * @param {string} itemId 道具ID
+ * @param {string} npcId NPC ID（来自 npcs.js）
+ * @returns {boolean} 该NPC是否喜欢这个礼物
+ */
+function isItemNpcGift(itemId, npcId) {
+  var item = getItemById(itemId);
+  if (!item) return false;
+
+  // 装备→礼物分类映射
+  var EQUIPMENT_GIFT_MAP = {
+    straw_hat: ["daily_use", "clothing"],
+    work_gloves: ["daily_use"],
+    mask: ["daily_use"],
+    sturdy_shoes: ["daily_use", "clothing"],
+    backpack: ["daily_use"],
+    work_uniform: ["clothing"],
+    safety_helmet: ["daily_use"],
+    smartphone: ["daily_use"],
+    bicycle: ["daily_use"],
+    cert_exam_book: ["daily_use"],
+    backpack_basic: ["daily_use"],
+    backpack_large: ["daily_use"],
+    backpack_pro: ["daily_use"],
+    warm_coat: ["clothing", "daily_use"],
+    sunscreen: ["daily_use"],
+    thermos: ["daily_use"],
+  };
+
+  // 食材→礼物分类映射
+  var INGREDIENT_GIFT_MAP = {
+    rice: ["daily_use"],
+    flour: ["daily_use"],
+    noodles: ["instant_noodles", "daily_use"],
+    potato: ["vegetables", "daily_use"],
+    bok_choy: ["vegetables"],
+    cabbage: ["vegetables"],
+    radish: ["vegetables"],
+    tomato: ["vegetables", "fruits"],
+    cucumber: ["vegetables"],
+    pork: ["daily_use"],
+    beef: ["daily_use"],
+    chicken: ["daily_use"],
+    fish: ["daily_use"],
+    salt: ["daily_use"],
+    soy_sauce: ["daily_use"],
+    cooking_oil: ["daily_use"],
+    sugar: ["daily_use"],
+    chili: ["daily_use"],
+    egg: ["daily_use"],
+    milk: ["daily_use"],
+  };
+
+  // 查找NPC的礼物偏好（需要全局 NPC 数组）
+  var npcPrefers = [];
+  if (typeof NPCS !== "undefined") {
+    var npc = NPCS.find(function (n) {
+      return n.id === npcId;
+    });
+    if (npc && npc.giftPrefers) {
+      npcPrefers = npc.giftPrefers;
+    }
+  }
+
+  // 如果NPC没有偏好或没有NPCS数组，默认允许赠送
+  if (npcPrefers.length === 0) return true;
+
+  var giftCategories = item.isIngredient
+    ? INGREDIENT_GIFT_MAP[item.id] || ["daily_use"]
+    : EQUIPMENT_GIFT_MAP[item.id] || ["daily_use"];
+
+  // 检查是否有重叠类别
+  for (var i = 0; i < giftCategories.length; i++) {
+    for (var j = 0; j < npcPrefers.length; j++) {
+      if (giftCategories[i] === npcPrefers[j]) return true;
+    }
+  }
+  return false;
 }
 
 // ====== 住所层级定义 ======

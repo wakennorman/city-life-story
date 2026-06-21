@@ -980,6 +980,26 @@ function renderCurrentTab(state) {
     case "growth":
       renderGrowthTab(state, area);
       break;
+    case "workplace_social":
+      if (typeof renderWorkplaceSocialTab === "function")
+        renderWorkplaceSocialTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">职场社交系统加载中...</p>';
+      break;
+    case "family":
+      if (typeof renderFamilyTab === "function") renderFamilyTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">家庭系统加载中...</p>';
+      break;
+    case "personal_growth":
+      if (typeof renderPersonalGrowthTab === "function")
+        renderPersonalGrowthTab(state, area);
+      else
+        area.innerHTML =
+          '<p style="color:var(--text-muted);text-align:center;padding:40px;">个人成长系统加载中...</p>';
+      break;
     case "wiki":
       if (typeof renderWikiTab === "function") renderWikiTab(state, area);
       else
@@ -2167,6 +2187,25 @@ function renderActionsTab(state, parent) {
       cards.appendChild(createActionCard(action, state));
     }
     parent.appendChild(cards);
+  }
+
+  // === Phase 2 深度交互入口 ===
+  {
+    const phase2Box = document.createElement("div");
+    phase2Box.style.cssText =
+      "margin-top:20px;padding:16px;background:linear-gradient(135deg, rgba(142,119,217,0.08), rgba(255,255,255,0.02));border:1px solid rgba(142,119,217,0.2);border-radius:var(--radius-md);";
+    phase2Box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h4 style="color:var(--accent);margin:0;font-size:14px;">🌟 Phase 2 深度交互</h4>
+        <span style="font-size:9px;color:var(--text-muted);">点击打开新系统</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
+        <button onclick="switchTab('workplace_social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
+        <button onclick="switchTab('family')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
+        <button onclick="switchTab('personal_growth')" class="btn btn-sm" style="padding:8px 12px;">🌱 个人成长</button>
+      </div>
+    `;
+    parent.appendChild(phase2Box);
   }
 }
 
@@ -4230,4 +4269,242 @@ function renderIllnessRow(state) {
   }
   box.innerHTML = html;
   box.style.display = "block";
+}
+
+// ====== Phase 2 新 Tab 渲染函数 ======
+
+function renderWorkplaceSocialTab(state, parent) {
+  const ws = state.workplaceSocial || {};
+  const html = `
+    <div class="tab-content">
+      <h2>👥 职场社交</h2>
+      ${
+        ws.colleagues && ws.colleagues.length > 0
+          ? `
+        <div class="section">
+          <h3>同事关系网</h3>
+          ${ws.colleagues
+            .map(
+              (c) => `
+            <div class="card" style="margin:8px 0;padding:12px;">
+              <div><strong>${c.name}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
+              <div style="margin-top:6px;">好感度: <span class="affinity">${c.affinity || 0}</span></div>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      `
+          : '<p style="color:var(--text-muted);">暂无同事关系数据</p>'
+      }
+      ${
+        ws.mentorship
+          ? `
+        <div class="section">
+          <h3>👨‍🏫 导师关系</h3>
+          <p>当前导师: ${ws.mentorship.mentorId} (等级: ${ws.mentorship.level || "初级"})</p>
+        </div>
+      `
+          : ""
+      }
+      ${
+        ws.officePoliticsLog && ws.officePoliticsLog.length > 0
+          ? `
+        <div class="section">
+          <h3>📋 办公室政治记录</h3>
+          ${ws.officePoliticsLog
+            .slice(-5)
+            .reverse()
+            .map(
+              (e) => `
+            <div style="font-size:12px;color:var(--text-muted);margin:4px 0;">第${e.day}天: ${e.eventType} → ${e.outcome || "未知"}</div>
+          `,
+            )
+            .join("")}
+        </div>
+      `
+          : ""
+      }
+    </div>
+  `;
+  parent.innerHTML = html;
+}
+
+function renderFamilyTab(state, parent) {
+  const fam = state.family || {};
+  const html = `
+    <div class="tab-content">
+      <h2>👨‍👩‍👧 家庭与生活</h2>
+      
+      <div class="section">
+        <h3>婚恋状态</h3>
+        <p>当前阶段: <strong>${fam.relationshipStage || "陌生人"}</strong></p>
+        ${
+          fam.partner
+            ? `
+          <div class="card" style="margin-top:8px;padding:12px;">
+            <div><strong>${fam.partner.name || "伴侣"}</strong> <span class="tag">${fam.partner.type || "未知类型"}</span></div>
+            <div>收入: ¥${fam.partner.income || 0}/月 | 陪伴值: ${fam.partner.companionship || 0}</div>
+          </div>
+        `
+            : '<p style="color:var(--text-muted);">尚未建立伴侣关系</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>👶 子女</h3>
+        ${
+          fam.children && fam.children.length > 0
+            ? fam.children
+                .map(
+                  (c) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${c.name || "孩子"}</strong> — ${c.age || 0}岁 (${c.stage || "未知"})</div>
+            <div>教育: ${c.education || "未入学"} | 月支出: ¥${c.expenses || 0}</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无子女</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>👴 父母养老</h3>
+        ${
+          fam.parents
+            ? `
+          <div style="display:flex;gap:16px;">
+            <div class="card" style="flex:1;padding:12px;">
+              <div><strong>父亲</strong> ${fam.parents.father?.age || 50}岁</div>
+              <div>健康: <span class="tag">${fam.parents.father?.health || "健康"}</span></div>
+              <div>陪伴需求: ${fam.parents.father?.companionship || 0}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div><strong>母亲</strong> ${fam.parents.mother?.age || 48}岁</div>
+              <div>健康: <span class="tag">${fam.parents.mother?.health || "健康"}</span></div>
+              <div>陪伴需求: ${fam.parents.mother?.companionship || 0}</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>🏠 房贷</h3>
+        ${
+          fam.mortgage
+            ? `
+          <p>月供: ¥${fam.mortgage.monthlyPayment || 0} | 剩余: ${fam.mortgage.remainingDays || 0}天</p>
+        `
+            : '<p style="color:var(--text-muted);">无房贷</p>'
+        }
+      </div>
+    </div>
+  `;
+  parent.innerHTML = html;
+}
+
+function renderPersonalGrowthTab(state, parent) {
+  const pg = state.personalGrowth || {};
+  const html = `
+    <div class="tab-content">
+      <h2>🌱 个人成长</h2>
+
+      <div class="section">
+        <h3>🏃 兴趣爱好</h3>
+        ${
+          pg.hobbies && Object.keys(pg.hobbies).length > 0
+            ? Object.entries(pg.hobbies)
+                .map(
+                  ([id, h]) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${h.name || id}</strong> — 等级: ${h.level || 0} | XP: ${h.xp || 0}</div>
+            <div>累计时长: ${h.hours || 0}小时</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无爱好记录</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>💪 健康指标</h3>
+        ${
+          pg.health
+            ? `
+          <div style="display:flex;gap:12px;">
+            <div class="card" style="flex:1;padding:12px;">
+              <div>💪 身体健康</div>
+              <div>评分: ${pg.health.physical?.score || 50}</div>
+              <div>上次体检: ${pg.health.physical?.lastCheckup ? "第" + pg.health.physical.lastCheckup + "天" : "未体检"}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div>🧠 心理健康</div>
+              <div>评分: ${pg.health.mental?.score || 50}</div>
+              <div>压力: ${pg.health.mental?.stress || 0} | 焦虑: ${pg.health.mental?.anxiety || 0} | 抑郁: ${pg.health.mental?.depression || 0}</div>
+            </div>
+            <div class="card" style="flex:1;padding:12px;">
+              <div>⚖️ 代谢健康</div>
+              <div>评分: ${pg.health.metabolic?.score || 50}</div>
+              <div>BMI: ${pg.health.metabolic?.bmi || 22}</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>👔 个人形象</h3>
+        ${
+          pg.image
+            ? `
+          <div style="display:flex;gap:12px;">
+            <div>穿搭: ${pg.image.style || 0}</div>
+            <div>护肤: ${pg.image.skincare || 0}</div>
+            <div>健身: ${pg.image.fitness || 0}</div>
+            <div>整容: ${pg.image.plastic || 0}</div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="section">
+        <h3>🎯 人生目标</h3>
+        ${
+          pg.goals && pg.goals.length > 0
+            ? pg.goals
+                .map(
+                  (g) => `
+          <div class="card" style="margin:8px 0;padding:12px;">
+            <div><strong>${g.category || "目标"}</strong>: ${g.description || ""}</div>
+            <div>进度: ${g.currentValue || 0} / ${g.targetValue || 0} (${g.completed ? "✅ 已完成" : Math.round(((g.currentValue || 0) / (g.targetValue || 1)) * 100) + "%"})</div>
+            <div>截止日期: ${g.deadline ? "第" + g.deadline + "天" : "未设定"}</div>
+          </div>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无人生目标</p>'
+        }
+      </div>
+
+      <div class="section">
+        <h3>📚 终身学习</h3>
+        ${
+          pg.learning
+            ? `
+          <p>已读书: ${pg.learning.booksRead || 0}本</p>
+          <p>课程: ${(pg.learning.courses || []).length || 0}门</p>
+          <p>证书: ${(pg.learning.certificates || []).length || 0}个</p>
+        `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+  parent.innerHTML = html;
 }
