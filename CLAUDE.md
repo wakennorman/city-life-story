@@ -32,15 +32,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P1-9 竞争对手策略应对系统 — 完整实现 ✅（2026-06-21）
-  - **数据常量**（`startup_competition.js`）：`COMPETITOR_ATTACK_TYPES`（4种攻击）、`COMPETITOR_EVENT_TEMPLATES`（9种事件）、`PRICE_WAR_RESPONSES`（5种）、`TALENT_POACHING_RESPONSES`（6种）、`MARKETING_WAR_RESPONSES`（6种）、`TECH_COMPETITION_RESPONSES`（6种）
-  - **公司字段**（`registerStartup`）：`activeCompetitorAttacks`、`competitorAttackHistory`、`competitorDefenseLevel`、`marketShareTrend`、`brandDefenseBudget`、`talentRetentionFund`、`techDefensePatents`、`competitiveIntelligence`
-  - **核心函数**：攻击检测（每日tick）、攻击效果应用、应对方案选择与执行、防御等级更新
-  - **UI 弹窗**：`showCompetitorDefenseModal`（竞争防御面板，含攻击列表/应对方案/防御投资/市场份额趋势）
-  - **tickStartup 集成**：每日竞争对手演化 + 攻击检测 + 市场份额趋势更新 + 防御等级更新
-  - **行动列表**：`competitor_defense`（10 AP）入口 + 4个子行动
-  - **构建**：已 `python build.py`（2946.6 KB）
-  - **下一步**：P1-10 危机事件系统
+- **最近一次工作**：P1-10 危机事件系统 — 完整实现 ✅（2026-06-21）
+  - **数据常量**（`startup_competition.js`）：`CRISIS_EVENT_TYPES`（4种危机）、`OPERATIONAL_CRISIS_TEMPLATES`（12种事件）、`CRISIS_RESPONSE_TEMPLATES`（27种应对方案）
+  - **公司字段**（`registerStartup`）：`activeCrisisEvents`、`crisisEventHistory`、`crisisResilienceLevel`、`crisisPreparationLevel`、`crisisInsuranceLevel`、`crisisResponseTeam`、`crisisCommunicationPlan`、`lastCrisisDay`、`crisisFreeDays`
+  - **核心函数**：危机检测（每日tick）、危机效果应用、应对方案选择与执行、危机韧性等级更新
+  - **UI 弹窗**：`showCrisisManagementModal`（危机管理面板，含危机列表/应对方案/危机准备投资/危机历史）
+  - **tickStartup 集成**：每日危机检测 + 无危机天数更新 + 危机韧性等级更新
+  - **行动列表**：`crisis_management`（10 AP）入口 + 3个子行动
+  - **构建**：已 `python build.py`（3007.2 KB）
+  - **下一步**：P2-11 办公地点升级（或 P2-12 企业文化选择）
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

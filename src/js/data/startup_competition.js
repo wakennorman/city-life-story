@@ -1229,6 +1229,1006 @@ function getCompetitorAttackSummary(attack) {
   };
 }
 
+// ====== P1-10: 危机事件系统 ======
+
+/**
+ * 危机事件类型分类
+ * 四种类型：产品故障、数据泄露、高管丑闻、供应链中断
+ */
+const CRISIS_EVENT_TYPES = {
+  product_failure: {
+    id: "product_failure",
+    name: "产品故障",
+    icon: "🔧",
+    description: "产品出现重大故障或服务中断",
+    severityBase: 3,
+    impactCategories: ["reputation", "userTrust", "revenue"],
+  },
+  data_breach: {
+    id: "data_breach",
+    name: "数据泄露",
+    icon: "🔒",
+    description: "用户数据泄露或被黑客攻击",
+    severityBase: 5,
+    impactCategories: ["reputation", "legalRisk", "userTrust", "regulatory"],
+  },
+  executive_scandal: {
+    id: "executive_scandal",
+    name: "高管丑闻",
+    icon: "🎭",
+    description: "高管个人丑闻或突然离职",
+    severityBase: 4,
+    impactCategories: ["reputation", "investorTrust", "employeeMorale"],
+  },
+  supply_chain: {
+    id: "supply_chain",
+    name: "供应链中断",
+    icon: "📦",
+    description: "供应商倒闭或物流中断",
+    severityBase: 4,
+    impactCategories: ["revenue", "productDelivery", "cashFlow"],
+  },
+};
+
+/**
+ * 危机事件模板
+ */
+const OPERATIONAL_CRISIS_TEMPLATES = {
+  // === 产品故障类 ===
+  server_outage: {
+    id: "server_outage",
+    name: "服务器宕机",
+    crisisType: "product_failure",
+    icon: "🔥",
+    title: "服务器大规模宕机",
+    description:
+      "核心服务器发生宕机，{affectedPercent}%的用户无法正常使用产品。客服系统被投诉淹没，社交媒体上负面情绪激增。",
+    severity: 4,
+    urgency: "critical",
+    durationDays: 7,
+    effects: {
+      reputation: -15,
+      userTrust: -20,
+      revenue: -0.1,
+      customerChurn: +0.05,
+    },
+    detectionTrigger: { serverUptimeDrop: 0.05, errorRateSpike: 0.1 },
+    responseOptions: [
+      "rapid_fix",
+      "public_apology",
+      "compensate",
+      "cold_treatment",
+    ],
+  },
+  feature_bug: {
+    id: "feature_bug",
+    name: "重大功能缺陷",
+    crisisType: "product_failure",
+    icon: "🐛",
+    title: "产品核心功能出现严重缺陷",
+    description:
+      "新版本发布后，{featureName}功能出现严重缺陷，导致用户无法正常{affectedAction}。大量用户投诉，应用商店评分急剧下降。",
+    severity: 3,
+    urgency: "high",
+    durationDays: 14,
+    effects: {
+      reputation: -10,
+      userTrust: -15,
+      revenue: -0.05,
+      appStoreRating: -1.0,
+    },
+    detectionTrigger: { bugReportSpike: 0.15, appStoreRatingDrop: 0.3 },
+    responseOptions: ["rollback", "hotfix", "compensate", "ignore"],
+  },
+  data_loss: {
+    id: "data_loss",
+    name: "用户数据丢失",
+    crisisType: "product_failure",
+    icon: "💾",
+    title: "用户数据丢失事故",
+    description:
+      "由于{cause}，导致{affectedCount}名用户的数据丢失（包括{dataTypes}）。用户愤怒，要求赔偿。",
+    severity: 5,
+    urgency: "critical",
+    durationDays: 21,
+    effects: {
+      reputation: -25,
+      userTrust: -35,
+      legalRisk: +20,
+      revenue: -0.08,
+    },
+    detectionTrigger: { dataLossEvent: true, backupFailure: true },
+    responseOptions: [
+      "restore_backup",
+      "compensate_heavy",
+      "public_apology",
+      "legal_defense",
+    ],
+  },
+
+  // === 数据泄露类 ===
+  user_data_leak: {
+    id: "user_data_leak",
+    name: "用户信息泄露",
+    crisisType: "data_breach",
+    icon: "🔓",
+    title: "用户敏感信息泄露",
+    description:
+      "黑客攻击导致{leakType}泄露，涉及{leakCount}名用户。媒体开始报道，监管机构介入调查。",
+    severity: 5,
+    urgency: "critical",
+    durationDays: 30,
+    effects: {
+      reputation: -20,
+      userTrust: -30,
+      legalRisk: +30,
+      regulatoryInvestigation: true,
+    },
+    detectionTrigger: { hackAttemptSuccess: true, dataLeakDetected: true },
+    responseOptions: [
+      "cooperate_authorities",
+      "hire_security",
+      "notify_users",
+      "settle",
+    ],
+  },
+  internal_leak: {
+    id: "internal_leak",
+    name: "内部数据泄露",
+    crisisType: "data_breach",
+    icon: "🕵️",
+    title: "内部员工泄露数据",
+    description:
+      "内部员工将{leakType}出售给竞争对手/媒体，涉及{leakCount}条记录。公司数据安全制度受到质疑。",
+    severity: 4,
+    urgency: "high",
+    durationDays: 21,
+    effects: {
+      reputation: -15,
+      userTrust: -20,
+      legalRisk: +15,
+      employeeMorale: -10,
+    },
+    detectionTrigger: { internalLeakDetected: true, employeeMisconduct: true },
+    responseOptions: [
+      "fire_employee",
+      "legal_action",
+      "strengthen_security",
+      "public_statement",
+    ],
+  },
+  regulatory_fine: {
+    id: "regulatory_fine",
+    name: "监管罚款",
+    crisisType: "data_breach",
+    icon: "⚖️",
+    title: "数据合规违规被罚款",
+    description:
+      "监管机构认定公司违反{regulation}，处以¥{fineAmount}罚款，并要求{remediation}。",
+    severity: 4,
+    urgency: "high",
+    durationDays: 14,
+    effects: {
+      reputation: -10,
+      legalRisk: +25,
+      revenue: -0.03,
+      complianceLevel: -15,
+    },
+    detectionTrigger: { regulatoryAuditFail: true, complianceViolation: true },
+    responseOptions: ["pay_fine", "appeal", "remediate", "cooperate"],
+  },
+
+  // === 高管丑闻类 ===
+  ceo_scandal: {
+    id: "ceo_scandal",
+    name: "CEO丑闻",
+    crisisType: "executive_scandal",
+    icon: "👔",
+    title: "CEO个人丑闻曝光",
+    description:
+      "CEO的{scandalType}被媒体曝光，引发公众愤怒。投资人要求解释，员工士气受挫。",
+    severity: 5,
+    urgency: "critical",
+    durationDays: 30,
+    effects: {
+      reputation: -25,
+      investorTrust: -20,
+      employeeMorale: -15,
+      stockPrice: -0.1,
+    },
+    detectionTrigger: { executiveScandalDetected: true, mediaExposure: true },
+    responseOptions: [
+      "suspend_exec",
+      "legal_action",
+      "public_statement",
+      "wait",
+    ],
+  },
+  cto_resignation: {
+    id: "cto_resignation",
+    name: "CTO突然离职",
+    crisisType: "executive_scandal",
+    icon: "🚪",
+    title: "CTO突然宣布离职",
+    description:
+      "CTO在没有交接的情况下突然宣布离职，带走了{keyTech}。产品开发陷入混乱，投资人担忧技术连续性。",
+    severity: 4,
+    urgency: "high",
+    durationDays: 21,
+    effects: {
+      reputation: -10,
+      technologyScore: -0.08,
+      investorTrust: -15,
+      employeeMorale: -10,
+    },
+    detectionTrigger: { keyExecutiveResignation: true, noHandover: true },
+    responseOptions: [
+      "find_replacement",
+      "retain_tech",
+      "public_statement",
+      "restructure",
+    ],
+  },
+  cfo_misconduct: {
+    id: "cfo_misconduct",
+    name: "CFO不当行为",
+    crisisType: "executive_scandal",
+    icon: "💰",
+    title: "CFO财务不当行为被曝光",
+    description:
+      "CFO被指控{misconductType}，涉及金额¥{amount}。审计机构介入，IPO计划可能推迟。",
+    severity: 5,
+    urgency: "critical",
+    durationDays: 45,
+    effects: {
+      reputation: -20,
+      investorTrust: -25,
+      legalRisk: +20,
+      ipoProgress: -0.2,
+    },
+    detectionTrigger: { financialMisconduct: true, auditIssue: true },
+    responseOptions: [
+      "fire_cfo",
+      "external_audit",
+      "public_disclosure",
+      "legal_action",
+    ],
+  },
+
+  // === 供应链中断类 ===
+  supplier_bankruptcy: {
+    id: "supplier_bankruptcy",
+    name: "核心供应商倒闭",
+    crisisType: "supply_chain",
+    icon: "🏭",
+    title: "核心供应商破产",
+    description:
+      "主要供应商「{supplierName}」突然破产，{productPart}供应中断。库存仅够{daysLeft}天，需要紧急寻找替代供应商。",
+    severity: 4,
+    urgency: "critical",
+    durationDays: 30,
+    effects: {
+      revenue: -0.15,
+      productDelivery: -0.2,
+      cashFlow: -0.1,
+      customerChurn: +0.03,
+    },
+    detectionTrigger: { supplierBankruptcy: true, inventoryCritical: true },
+    responseOptions: [
+      "find_alternative",
+      "increase_inventory",
+      "negotiate",
+      "product_pivot",
+    ],
+  },
+  logistics_disruption: {
+    id: "logistics_disruption",
+    name: "物流中断",
+    crisisType: "supply_chain",
+    icon: "🚚",
+    title: "物流系统瘫痪",
+    description:
+      "由于{cause}，物流系统瘫痪，{pendingOrders}订单无法按时交付。客户投诉激增，退款请求增加。",
+    severity: 3,
+    urgency: "high",
+    durationDays: 14,
+    effects: {
+      revenue: -0.08,
+      customerSatisfaction: -15,
+      refundRate: +0.05,
+      reputation: -5,
+    },
+    detectionTrigger: { logisticsFailure: true, deliveryDelay: 0.2 },
+    responseOptions: [
+      "switch_logistics",
+      "compensate_customers",
+      "partial_delivery",
+      "wait",
+    ],
+  },
+  quality_recall: {
+    id: "quality_recall",
+    name: "产品召回",
+    crisisType: "supply_chain",
+    icon: "⚠️",
+    title: "产品质量问题需要召回",
+    description:
+      "发现{defectType}缺陷，需要召回{affectedUnits}件产品。召回成本高昂，品牌声誉受损。",
+    severity: 4,
+    urgency: "high",
+    durationDays: 21,
+    effects: {
+      revenue: -0.12,
+      reputation: -15,
+      cashFlow: -0.08,
+      legalRisk: +10,
+    },
+    detectionTrigger: { qualityDefectFound: true, safetyIssue: true },
+    responseOptions: [
+      "full_recall",
+      "partial_recall",
+      "compensate",
+      "legal_defense",
+    ],
+  },
+};
+
+/**
+ * 危机应对方案模板
+ */
+const CRISIS_RESPONSE_TEMPLATES = {
+  // === 产品故障应对 ===
+  rapid_fix: {
+    id: "rapid_fix",
+    name: "快速修复",
+    icon: "🔧",
+    desc: "集中所有技术力量快速修复问题",
+    costMult: 0.3,
+    successChance: 0.65,
+    effect: { reputation: +5, userTrust: +10, downtime: -0.5 },
+    risk: "可能修复不彻底",
+  },
+  public_apology: {
+    id: "public_apology",
+    name: "公开道歉",
+    icon: "📢",
+    desc: "发布公开声明道歉并说明情况",
+    costMult: 0.05,
+    successChance: 0.5,
+    effect: { reputation: +3, userTrust: +5, mediaRelations: +5 },
+    risk: "仅缓解舆论，不解决根本问题",
+  },
+  compensate: {
+    id: "compensate",
+    name: "用户补偿",
+    icon: "🎁",
+    desc: "为受影响用户提供补偿/退款",
+    costMult: 0.4,
+    successChance: 0.7,
+    effect: { userTrust: +15, revenue: -0.05, customerChurn: -0.02 },
+    risk: "成本高，但用户满意度提升明显",
+  },
+  cold_treatment: {
+    id: "cold_treatment",
+    name: "冷处理",
+    icon: "❄️",
+    desc: "不主动回应，等待舆论自然平息",
+    costMult: 0,
+    successChance: 0.25,
+    effect: { reputation: -10, userTrust: -15 },
+    risk: "高风险，舆论可能进一步发酵",
+  },
+  rollback: {
+    id: "rollback",
+    name: "版本回滚",
+    icon: "⏪",
+    desc: "回滚到上一个稳定版本",
+    costMult: 0.1,
+    successChance: 0.8,
+    effect: { userTrust: +10, reputation: +5, featureLoss: -0.05 },
+    risk: "失去新功能，但恢复稳定性",
+  },
+  hotfix: {
+    id: "hotfix",
+    name: "紧急热修复",
+    icon: "🚑",
+    desc: "发布紧急热修复补丁",
+    costMult: 0.15,
+    successChance: 0.55,
+    effect: { userTrust: +8, reputation: +3, bugRisk: +0.05 },
+    risk: "热修复可能引入新bug",
+  },
+  restore_backup: {
+    id: "restore_backup",
+    name: "恢复备份",
+    icon: "💾",
+    desc: "从备份恢复丢失的数据",
+    costMult: 0.1,
+    successChance: 0.6,
+    effect: { userTrust: +15, reputation: +5, dataLoss: -0.8 },
+    risk: "备份可能不完整",
+  },
+  compensate_heavy: {
+    id: "compensate_heavy",
+    name: "高额赔偿",
+    icon: "💰",
+    desc: "为数据丢失用户提供高额赔偿",
+    costMult: 0.6,
+    successChance: 0.75,
+    effect: { userTrust: +20, revenue: -0.1, legalRisk: -10 },
+    risk: "成本极高",
+  },
+
+  // === 数据泄露应对 ===
+  cooperate_authorities: {
+    id: "cooperate_authorities",
+    name: "配合调查",
+    icon: "🤝",
+    desc: "全力配合监管机构和执法部门调查",
+    costMult: 0.1,
+    successChance: 0.7,
+    effect: { legalRisk: -15, reputation: +5, regulatoryRelations: +10 },
+    risk: "可能暴露更多问题",
+  },
+  hire_security: {
+    id: "hire_security",
+    name: "聘请安全团队",
+    icon: "🛡️",
+    desc: "聘请专业网络安全团队进行应急响应",
+    costMult: 0.3,
+    successChance: 0.65,
+    effect: { userTrust: +10, reputation: +5, securityLevel: +15 },
+    risk: "成本高",
+  },
+  notify_users: {
+    id: "notify_users",
+    name: "通知用户",
+    icon: "📧",
+    desc: "主动通知受影响用户并提供保护",
+    costMult: 0.15,
+    successChance: 0.6,
+    effect: { userTrust: +8, reputation: +3, customerChurn: -0.02 },
+    risk: "可能引发更多投诉",
+  },
+  settle: {
+    id: "settle",
+    name: "和解",
+    icon: "🤝",
+    desc: "与受影响用户/机构达成和解",
+    costMult: 0.35,
+    successChance: 0.55,
+    effect: { legalRisk: -10, revenue: -0.05, reputation: +2 },
+    risk: "和解金额不确定",
+  },
+  fire_employee: {
+    id: "fire_employee",
+    name: "开除涉事员工",
+    icon: "🚫",
+    desc: "立即开除涉事员工并报警",
+    costMult: 0.05,
+    successChance: 0.6,
+    effect: { reputation: +5, employeeMorale: -5, legalRisk: -5 },
+    risk: "可能引发其他员工不安",
+  },
+  strengthen_security: {
+    id: "strengthen_security",
+    name: "加强安全措施",
+    icon: "🔒",
+    desc: "全面升级数据安全制度和技术",
+    costMult: 0.25,
+    successChance: 0.7,
+    effect: { securityLevel: +20, userTrust: +10, complianceLevel: +10 },
+    risk: "见效慢",
+  },
+
+  // === 高管丑闻应对 ===
+  suspend_exec: {
+    id: "suspend_exec",
+    name: "暂停职务",
+    icon: "⏸️",
+    desc: "立即暂停涉事高管职务",
+    costMult: 0,
+    successChance: 0.65,
+    effect: { reputation: +8, investorTrust: +5, employeeMorale: +3 },
+    risk: "可能影响公司运营",
+  },
+  legal_action_exec: {
+    id: "legal_action_exec",
+    name: "法律行动",
+    icon: "⚖️",
+    desc: "对涉事高管采取法律行动",
+    costMult: 0.15,
+    successChance: 0.5,
+    effect: { reputation: +5, legalRisk: -5, investorTrust: +3 },
+    risk: "法律成本高，结果不确定",
+  },
+  public_statement_exec: {
+    id: "public_statement_exec",
+    name: "发布声明",
+    icon: "📰",
+    desc: "发布公司立场声明",
+    costMult: 0.02,
+    successChance: 0.45,
+    effect: { reputation: +2, mediaRelations: +3 },
+    risk: "声明不当可能加剧危机",
+  },
+  wait_exec: {
+    id: "wait_exec",
+    name: "等待事态发展",
+    icon: "⏳",
+    desc: "不主动干预，等待舆论自然平息",
+    costMult: 0,
+    successChance: 0.2,
+    effect: { reputation: -15, investorTrust: -10 },
+    risk: "极高风险",
+  },
+  find_replacement: {
+    id: "find_replacement",
+    name: "寻找接替者",
+    icon: "🔍",
+    desc: "紧急寻找合适的接替者",
+    costMult: 0.2,
+    successChance: 0.55,
+    effect: { investorTrust: +5, technologyScore: -0.02, stability: +0.1 },
+    risk: "接替者可能不合适",
+  },
+  external_audit_exec: {
+    id: "external_audit_exec",
+    name: "外部审计",
+    icon: "🔍",
+    desc: "聘请外部审计机构全面审查",
+    costMult: 0.25,
+    successChance: 0.6,
+    effect: { investorTrust: +10, reputation: +5, legalRisk: -5 },
+    risk: "成本高，可能发现更多问题",
+  },
+
+  // === 供应链中断应对 ===
+  find_alternative: {
+    id: "find_alternative",
+    name: "寻找替代供应商",
+    icon: "🔄",
+    desc: "紧急寻找替代供应商",
+    costMult: 0.25,
+    successChance: 0.5,
+    effect: { productDelivery: +0.15, revenue: +0.05, supplierCost: +0.08 },
+    risk: "新供应商质量可能不稳定",
+  },
+  increase_inventory: {
+    id: "increase_inventory",
+    name: "增加库存",
+    icon: "📦",
+    desc: "提前采购增加安全库存",
+    costMult: 0.3,
+    successChance: 0.7,
+    effect: { inventoryLevel: +0.2, cashFlow: -0.08, riskResilience: +0.1 },
+    risk: "占用现金流",
+  },
+  negotiate_supplier: {
+    id: "negotiate_supplier",
+    name: "与供应商谈判",
+    icon: "🤝",
+    desc: "尝试与供应商重新谈判合作条件",
+    costMult: 0.05,
+    successChance: 0.35,
+    effect: { supplierRelations: +5, revenue: -0.02 },
+    risk: "成功率低",
+  },
+  product_pivot: {
+    id: "product_pivot",
+    name: "产品调整",
+    icon: "🔄",
+    desc: "调整产品设计以绕过供应瓶颈",
+    costMult: 0.2,
+    successChance: 0.45,
+    effect: { productDiversity: +0.05, developmentTime: +0.1, revenue: -0.03 },
+    risk: "影响产品定位",
+  },
+  switch_logistics: {
+    id: "switch_logistics",
+    name: "切换物流商",
+    icon: "🚚",
+    desc: "紧急切换至其他物流服务商",
+    costMult: 0.15,
+    successChance: 0.6,
+    effect: { deliverySpeed: +0.1, revenue: +0.03, logisticsCost: +0.05 },
+    risk: "新物流商服务质量不确定",
+  },
+  compensate_customers: {
+    id: "compensate_customers",
+    name: "补偿客户",
+    icon: "🎁",
+    desc: "为延迟交付客户提供补偿",
+    costMult: 0.2,
+    successChance: 0.65,
+    effect: { customerSatisfaction: +10, revenue: -0.03, customerChurn: -0.01 },
+    risk: "增加成本",
+  },
+  full_recall: {
+    id: "full_recall",
+    name: "全面召回",
+    icon: "🔄",
+    desc: "召回所有受影响产品",
+    costMult: 0.5,
+    successChance: 0.75,
+    effect: { reputation: +10, userTrust: +15, revenue: -0.15 },
+    risk: "成本极高",
+  },
+  partial_recall: {
+    id: "partial_recall",
+    name: "部分召回",
+    icon: "📦",
+    desc: "仅召回高风险批次",
+    costMult: 0.2,
+    successChance: 0.5,
+    effect: { reputation: +3, revenue: -0.05, legalRisk: -5 },
+    risk: "可能遗漏问题产品",
+  },
+};
+
+/**
+ * 检测运营危机事件
+ */
+function detectOperationalCrisis(state, company) {
+  if (!company) return null;
+
+  const day = state.player.day;
+  const crises = [];
+
+  // 检查是否已有活跃危机
+  if (company.activeCrisisEvents && company.activeCrisisEvents.length > 0) {
+    for (const crisis of company.activeCrisisEvents) {
+      crisis.remainingDays--;
+      if (crisis.remainingDays <= 0) {
+        crisis.resolved = true;
+        crisis.resolvedDay = day;
+      }
+    }
+    company.activeCrisisEvents = company.activeCrisisEvents.filter(
+      (c) => !c.resolved,
+    );
+  }
+
+  // 产品故障检测
+  if (company.products && company.products.length > 0) {
+    for (const product of company.products) {
+      if (product.status === "launched") {
+        // 服务器宕机：基于技术债和运行天数
+        if (
+          product.technicalDebt &&
+          product.technicalDebt > 60 &&
+          Math.random() < 0.015
+        ) {
+          crises.push({
+            ...OPERATIONAL_CRISIS_TEMPLATES.server_outage,
+            affectedPercent: Math.floor(30 + Math.random() * 50),
+            startedDay: day,
+            remainingDays:
+              OPERATIONAL_CRISIS_TEMPLATES.server_outage.durationDays,
+            resolved: false,
+          });
+        }
+        // 功能缺陷：新版本刚发布
+        if (
+          product.lastVersionUpdate &&
+          day - product.lastVersionUpdate < 7 &&
+          Math.random() < 0.02
+        ) {
+          const features = ["支付", "登录", "数据同步", "消息推送", "文件上传"];
+          crises.push({
+            ...OPERATIONAL_CRISIS_TEMPLATES.feature_bug,
+            featureName: features[Math.floor(Math.random() * features.length)],
+            affectedAction: [
+              "完成交易",
+              "登录账户",
+              "保存数据",
+              "接收消息",
+              "上传文件",
+            ][Math.floor(Math.random() * 5)],
+            startedDay: day,
+            remainingDays:
+              OPERATIONAL_CRISIS_TEMPLATES.feature_bug.durationDays,
+            resolved: false,
+          });
+        }
+      }
+    }
+  }
+
+  // 数据泄露检测
+  if (company.complianceLevel < 40 && Math.random() < 0.008) {
+    const leakTypes = [
+      "用户手机号和邮箱",
+      "用户支付信息",
+      "用户身份信息",
+      "用户行为数据",
+    ];
+    crises.push({
+      ...OPERATIONAL_CRISIS_TEMPLATES.user_data_leak,
+      leakType: leakTypes[Math.floor(Math.random() * leakTypes.length)],
+      leakCount: Math.floor(1000 + Math.random() * 50000),
+      startedDay: day,
+      remainingDays: OPERATIONAL_CRISIS_TEMPLATES.user_data_leak.durationDays,
+      resolved: false,
+    });
+  }
+
+  // 内部泄露
+  if (
+    company.employeeMorale &&
+    company.employeeMorale < 50 &&
+    Math.random() < 0.005
+  ) {
+    crises.push({
+      ...OPERATIONAL_CRISIS_TEMPLATES.internal_leak,
+      leakType: ["客户名单", "技术文档", "商业计划", "财务数据"][
+        Math.floor(Math.random() * 4)
+      ],
+      leakCount: Math.floor(100 + Math.random() * 5000),
+      startedDay: day,
+      remainingDays: OPERATIONAL_CRISIS_TEMPLATES.internal_leak.durationDays,
+      resolved: false,
+    });
+  }
+
+  // 高管丑闻检测
+  if (
+    company.coFounders &&
+    company.coFounders.length > 0 &&
+    Math.random() < 0.003
+  ) {
+    const scandalTypes = ["不当言论", "财务问题", "个人生活丑闻", "违法行为"];
+    crises.push({
+      ...OPERATIONAL_CRISIS_TEMPLATES.ceo_scandal,
+      scandalType:
+        scandalTypes[Math.floor(Math.random() * scandalTypes.length)],
+      startedDay: day,
+      remainingDays: OPERATIONAL_CRISIS_TEMPLATES.ceo_scandal.durationDays,
+      resolved: false,
+    });
+  }
+
+  // CTO离职
+  if (company.employees && company.employees.length > 5) {
+    const keyEngineers = company.employees.filter(
+      (e) => e.role === "engineer" && e.loyalty < 40,
+    );
+    if (keyEngineers.length > 0 && Math.random() < 0.01) {
+      crises.push({
+        ...OPERATIONAL_CRISIS_TEMPLATES.cto_resignation,
+        keyTech: ["核心算法", "系统架构", "源代码", "技术文档"][
+          Math.floor(Math.random() * 4)
+        ],
+        startedDay: day,
+        remainingDays:
+          OPERATIONAL_CRISIS_TEMPLATES.cto_resignation.durationDays,
+        resolved: false,
+      });
+    }
+  }
+
+  // 供应链中断检测（仅硬件/制造行业）
+  if (company.industry === "manufacturing" || company.industry === "tech") {
+    if (Math.random() < 0.006) {
+      const suppliers = [
+        "芯片供应商",
+        "显示屏供应商",
+        "电池供应商",
+        "组装代工厂",
+      ];
+      crises.push({
+        ...OPERATIONAL_CRISIS_TEMPLATES.supplier_bankruptcy,
+        supplierName: suppliers[Math.floor(Math.random() * suppliers.length)],
+        productPart: ["核心元器件", "关键组件", "原材料", "半成品"][
+          Math.floor(Math.random() * 4)
+        ],
+        daysLeft: Math.floor(5 + Math.random() * 15),
+        startedDay: day,
+        remainingDays:
+          OPERATIONAL_CRISIS_TEMPLATES.supplier_bankruptcy.durationDays,
+        resolved: false,
+      });
+    }
+  }
+
+  // 产品召回
+  if (
+    company.products &&
+    company.products.some(
+      (p) => p.category === "hardware" || p.category === "smart_device",
+    )
+  ) {
+    if (Math.random() < 0.004) {
+      const defects = ["电池过热", "屏幕缺陷", "材料过敏", "安全隐患"];
+      crises.push({
+        ...OPERATIONAL_CRISIS_TEMPLATES.quality_recall,
+        defectType: defects[Math.floor(Math.random() * defects.length)],
+        affectedUnits: Math.floor(1000 + Math.random() * 50000),
+        startedDay: day,
+        remainingDays: OPERATIONAL_CRISIS_TEMPLATES.quality_recall.durationDays,
+        resolved: false,
+      });
+    }
+  }
+
+  return crises.length > 0 ? crises : null;
+}
+
+/**
+ * 应用危机效果
+ */
+function applyCrisisEffects(state, company, crisis) {
+  const effects = crisis.effects;
+  if (!effects) return;
+
+  for (const [key, value] of Object.entries(effects)) {
+    if (company[key] !== undefined) {
+      company[key] = company[key] + value;
+    }
+  }
+
+  // 记录危机事件
+  if (!company.crisisEventHistory) {
+    company.crisisEventHistory = [];
+  }
+  company.crisisEventHistory.push({
+    ...crisis,
+    resolvedDay: null,
+    response: null,
+  });
+}
+
+/**
+ * 获取危机应对方案
+ */
+function getAvailableCrisisResponses(crisisId) {
+  const template = OPERATIONAL_CRISIS_TEMPLATES[crisisId];
+  if (!template || !template.responseOptions) return {};
+
+  const responses = {};
+  for (const respId of template.responseOptions) {
+    if (CRISIS_RESPONSE_TEMPLATES[respId]) {
+      responses[respId] = CRISIS_RESPONSE_TEMPLATES[respId];
+    }
+  }
+  return responses;
+}
+
+/**
+ * 执行危机应对
+ */
+function executeCrisisResponse(state, crisis, responseId) {
+  const company = state.startup.company;
+  if (!company || !crisis) return { success: false, message: "无效操作" };
+
+  const response = CRISIS_RESPONSE_TEMPLATES[responseId];
+  if (!response) return { success: false, message: "无效应对方案" };
+
+  // 计算成本（基于月收入）
+  const baseCost =
+    company.revenue > 0 ? company.revenue * response.costMult : 10000;
+
+  if (company.cashReserve < baseCost) {
+    return {
+      success: false,
+      message: "现金不足，需要¥" + Math.round(baseCost).toLocaleString(),
+    };
+  }
+
+  // 消耗现金
+  company.cashReserve -= baseCost;
+  company.expenses += baseCost;
+
+  // 成功率判定
+  const success = Math.random() < response.successChance;
+  const multiplier = success ? 1 : 0.4;
+
+  // 应用效果
+  const results = {};
+  for (const [key, value] of Object.entries(response.effect)) {
+    if (company[key] !== undefined) {
+      const adjustedValue = value * multiplier;
+      const oldValue = company[key];
+      company[key] = company[key] + adjustedValue;
+      results[key] = {
+        from: oldValue,
+        to: company[key],
+        change: adjustedValue,
+      };
+    }
+  }
+
+  // 更新危机状态
+  const crisisRecord = company.crisisEventHistory.find(
+    (c) => c.id === crisis.id && !c.resolved,
+  );
+  if (crisisRecord) {
+    crisisRecord.resolved = true;
+    crisisRecord.resolvedDay = state.player.day;
+    crisisRecord.response = responseId;
+    crisisRecord.success = success;
+    crisisRecord.cost = Math.round(baseCost);
+    crisisRecord.outcome = results;
+  }
+
+  // 从活跃危机中移除
+  if (company.activeCrisisEvents) {
+    company.activeCrisisEvents = company.activeCrisisEvents.filter(
+      (c) => c.id !== crisis.id,
+    );
+  }
+
+  if (
+    company.pendingCrisisEvent &&
+    company.pendingCrisisEvent.id === crisis.id
+  ) {
+    company.pendingCrisisEvent = null;
+  }
+
+  return {
+    success: true,
+    response: response,
+    successRate: response.successChance,
+    actualSuccess: success,
+    outcomes: results,
+    cost: Math.round(baseCost),
+    message: success
+      ? `✅ 应对成功！${response.desc}，效果显著。`
+      : `🔶 应对效果一般。${response.desc}，但危机影响仍在。`,
+  };
+}
+
+/**
+ * 危机严重程度颜色
+ */
+function getCrisisSeverityColor(severity) {
+  if (severity >= 5) return "var(--danger)";
+  if (severity >= 4) return "#e67e22";
+  if (severity >= 3) return "#f39c12";
+  return "var(--accent)";
+}
+
+/**
+ * 危机紧急程度颜色
+ */
+function getCrisisUrgencyColor(urgency) {
+  if (urgency === "critical") return "var(--danger)";
+  if (urgency === "high") return "#e67e22";
+  return "#f39c12";
+}
+
+/**
+ * 获取危机类型信息
+ */
+function getCrisisTypeInfo(crisisType) {
+  return (
+    CRISIS_EVENT_TYPES[crisisType] || {
+      name: "未知危机",
+      icon: "❓",
+      description: "未知类型的危机事件",
+    }
+  );
+}
+
+/**
+ * 获取危机摘要
+ */
+function getCrisisSummary(crisis) {
+  const typeInfo = CRISIS_EVENT_TYPES[crisis.crisisType];
+  return {
+    id: crisis.id,
+    name: crisis.name,
+    icon: crisis.icon,
+    crisisType: crisis.crisisType,
+    crisisTypeName: typeInfo ? typeInfo.name : "未知",
+    severity: crisis.severity,
+    urgency: crisis.urgency,
+    remainingDays: crisis.remainingDays,
+    description: crisis.description,
+    effects: crisis.effects,
+  };
+}
+
 // ====== 导出 ======
 if (typeof window !== "undefined") {
   window.OFFICE_LOCATIONS = OFFICE_LOCATIONS;
@@ -1254,6 +2254,18 @@ if (typeof window !== "undefined") {
   window.getAttackSeverityColor = getAttackSeverityColor;
   window.getAttackUrgencyColor = getAttackUrgencyColor;
   window.getCompetitorAttackSummary = getCompetitorAttackSummary;
+  // P1-10: 危机事件系统
+  window.CRISIS_EVENT_TYPES = CRISIS_EVENT_TYPES;
+  window.OPERATIONAL_CRISIS_TEMPLATES = OPERATIONAL_CRISIS_TEMPLATES;
+  window.CRISIS_RESPONSE_TEMPLATES = CRISIS_RESPONSE_TEMPLATES;
+  window.detectOperationalCrisis = detectOperationalCrisis;
+  window.applyCrisisEffects = applyCrisisEffects;
+  window.getAvailableCrisisResponses = getAvailableCrisisResponses;
+  window.executeCrisisResponse = executeCrisisResponse;
+  window.getCrisisSeverityColor = getCrisisSeverityColor;
+  window.getCrisisUrgencyColor = getCrisisUrgencyColor;
+  window.getCrisisTypeInfo = getCrisisTypeInfo;
+  window.getCrisisSummary = getCrisisSummary;
 }
 
 if (typeof module !== "undefined" && module.exports) {
@@ -1281,5 +2293,17 @@ if (typeof module !== "undefined" && module.exports) {
     getAttackSeverityColor,
     getAttackUrgencyColor,
     getCompetitorAttackSummary,
+    // P1-10
+    CRISIS_EVENT_TYPES,
+    OPERATIONAL_CRISIS_TEMPLATES,
+    CRISIS_RESPONSE_TEMPLATES,
+    detectOperationalCrisis,
+    applyCrisisEffects,
+    getAvailableCrisisResponses,
+    executeCrisisResponse,
+    getCrisisSeverityColor,
+    getCrisisUrgencyColor,
+    getCrisisTypeInfo,
+    getCrisisSummary,
   };
 }

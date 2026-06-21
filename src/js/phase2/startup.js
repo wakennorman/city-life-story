@@ -2483,6 +2483,17 @@ function registerStartup(state, name, industry, description) {
     talentRetentionFund: 0, // 人才留任基金
     techDefensePatents: [], // 防御性专利 [{patentId, filedDay, status}]
     competitiveIntelligence: 0, // 竞争情报等级 0-100
+    // ====== P1-10: 危机事件系统 ======
+    activeCrisisEvents: [], // 活跃危机事件 [{id, crisisType, name, severity, urgency, remainingDays, effects, startedDay, resolved}]
+    pendingCrisisEvent: null, // 待处理危机 {id, event, deadline}
+    crisisEventHistory: [], // 危机历史 [{id, crisisType, name, severity, response, success, cost, outcome, startedDay, resolvedDay}]
+    crisisResilienceLevel: 0, // 危机韧性等级 0-100
+    crisisPreparationLevel: 0, // 危机准备度 0-100
+    crisisInsuranceLevel: 0, // 危机保险等级 0-3
+    crisisResponseTeam: [], // 危机应对团队 [{role, name, expertise, availability}]
+    crisisCommunicationPlan: null, // 危机沟通计划
+    lastCrisisDay: null, // 上次危机发生日
+    crisisFreeDays: 0, // 无危机天数
   };
 
   // 生成1-2个联合创始人
@@ -4495,6 +4506,41 @@ function tickStartup(state, tickType) {
     if (typeof _updateCompetitorDefenseLevel === "function") {
       _updateCompetitorDefenseLevel(state, company);
     }
+
+    // P1-10: 检测运营危机事件（每日）
+    if (typeof detectOperationalCrisis === "function") {
+      const newCrises = detectOperationalCrisis(state, company);
+      if (newCrises && newCrises.length > 0) {
+        for (const crisis of newCrises) {
+          // 添加到活跃危机
+          company.activeCrisisEvents.push({
+            ...crisis,
+            startedDay: crisis.startedDay || day,
+            remainingDays: crisis.durationDays,
+            resolved: false,
+          });
+          // 应用初始效果
+          applyCrisisEffects(state, company, crisis);
+          // 更新记录
+          company.lastCrisisDay = day;
+          company.crisisFreeDays = 0;
+          // 通知玩家
+          const crisisType = CRISIS_EVENT_TYPES[crisis.crisisType];
+          StateManager.addMessage(
+            `${crisis.icon} 【${crisis.name}】${crisisType ? crisisType.name : "危机"}发生！严重程度${crisis.severity}/5，紧急度${crisis.urgency}。剩余${crisis.durationDays}天。前往创业Tab应对`,
+            crisis.severity >= 4 ? "warning" : "event",
+          );
+        }
+      } else {
+        // 无新危机，增加无危机天数
+        company.crisisFreeDays = (company.crisisFreeDays || 0) + 1;
+      }
+    }
+
+    // P1-10: 更新危机韧性等级
+    if (typeof _updateCrisisResilienceLevel === "function") {
+      _updateCrisisResilienceLevel(state, company);
+    }
   }
 
   // ====== P0-5: 季末 OKR 评估 ======
@@ -5939,6 +5985,50 @@ function _updateCompetitorDefenseLevel(state, company) {
   }
 
   company.competitorDefenseLevel = Math.max(0, Math.min(100, defense));
+}
+
+// ====== P1-10: 危机事件系统辅助函数 ======
+
+/** 更新危机韧性等级 */
+function _updateCrisisResilienceLevel(state, company) {
+  let resilience = 0;
+
+  // 无危机天数加成（连续无危机时间越长，韧性越高）
+  resilience += Math.min(30, (company.crisisFreeDays || 0) / 10);
+
+  // 危机准备度加成
+  resilience += (company.crisisPreparationLevel || 0) * 0.4;
+
+  // 危机保险等级加成
+  resilience += (company.crisisInsuranceLevel || 0) * 10;
+
+  // 危机应对团队加成
+  if (company.crisisResponseTeam && company.crisisResponseTeam.length > 0) {
+    resilience += Math.min(20, company.crisisResponseTeam.length * 5);
+  }
+
+  // 危机沟通计划加成
+  if (company.crisisCommunicationPlan) {
+    resilience += 10;
+  }
+
+  // 历史危机处理经验（处理过的危机越多，韧性越高）
+  if (company.crisisEventHistory && company.crisisEventHistory.length > 0) {
+    const successfulResponses = company.crisisEventHistory.filter(
+      (c) => c.success,
+    ).length;
+    resilience += Math.min(20, successfulResponses * 2);
+  }
+
+  // 媒体关系加成（好的媒体关系有助于危机公关）
+  resilience += Math.min(10, (company.mediaRelations || 0) * 0.1);
+
+  // 法律保险加成
+  if (company.legalInsurance) {
+    resilience += 5;
+  }
+
+  company.crisisResilienceLevel = Math.max(0, Math.min(100, resilience));
 }
 
 // ====== P0-4: 员工满意度/倦怠系统 ======
@@ -8260,6 +8350,16 @@ function getAvailableStartupActions(state) {
     available: true,
   });
 
+  // P1-10: 危机管理
+  actions.push({
+    id: "crisis_management",
+    name: "危机管理",
+    icon: "🚨",
+    apCost: 10,
+    desc: "应对危机事件、投资危机准备、购买危机保险",
+    available: true,
+  });
+
   // IPO准备
   if (company.phase === "growth" && company.fundingRounds.length >= 2) {
     actions.push({
@@ -10086,6 +10186,344 @@ function buyCompetitiveIntelligence(state, level) {
   return { success: true, message: "购买竞争情报成功，情报等级 +" + bonus };
 }
 
+// ====== P1-10: 危机事件管理弹窗 ======
+
+/** 显示危机管理面板 */
+function showCrisisManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const activeCrises = company.activeCrisisEvents || [];
+  const resilienceInfo = getCrisisResilienceLevelInfo(
+    company.crisisResilienceLevel,
+  );
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 危机韧性等级
+  html += `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">🛡️ 危机韧性等级</div>
+        <div style="font-size:11px;color:${resilienceInfo.color};font-weight:bold;">${resilienceInfo.icon} ${resilienceInfo.name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${company.crisisResilienceLevel}%;background:${resilienceInfo.color};border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:14px;font-weight:bold;color:${resilienceInfo.color};">${company.crisisResilienceLevel}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${resilienceInfo.description}</div>
+    </div>
+  `;
+
+  // 无危机天数
+  html += `
+    <div style="padding:8px;margin-bottom:12px;background:var(--bg-secondary);border-radius:6px;">
+      <div style="font-size:11px;">连续无危机天数：<strong style="color:var(--success);">${company.crisisFreeDays || 0}</strong> 天</div>
+      <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">上次危机：${company.lastCrisisDay ? "第" + company.lastCrisisDay + "天" : "从未"}</div>
+    </div>
+  `;
+
+  // 活跃危机
+  if (activeCrises.length > 0) {
+    html += '<div style="margin-bottom:12px;">';
+    html +=
+      '<div style="font-size:13px;font-weight:bold;margin-bottom:8px;">⚠️ 活跃危机（' +
+      activeCrises.length +
+      "个）</div>";
+    html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+    for (let i = 0; i < activeCrises.length; i++) {
+      const crisis = activeCrises[i];
+      const crisisType = CRISIS_EVENT_TYPES[crisis.crisisType];
+      const severityColor = getCrisisSeverityColor(crisis.severity);
+      const urgencyColor = getCrisisUrgencyColor(crisis.urgency);
+
+      html += `
+        <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:13px;font-weight:bold;">${crisis.icon} ${crisis.name}</div>
+            <div style="font-size:10px;">
+              <span style="color:${severityColor};margin-right:6px;">严重程度：${crisis.severity}/5</span>
+              <span style="color:${urgencyColor};">紧急度：${crisis.urgency === "critical" ? "🔴 紧急" : crisis.urgency === "high" ? "🟠 高" : "🟡 中"}</span>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px;">
+            类型：${crisisType ? crisisType.name : "未知"} | 剩余：${crisis.remainingDays}天
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+            ${crisis.description}
+          </div>
+          <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;">
+            影响：${Object.entries(crisis.effects || {})
+              .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+              .join(", ")}
+          </div>
+          <div style="font-size:11px;font-weight:bold;margin-bottom:6px;">应对方案：</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+      `;
+
+      const responses = getAvailableCrisisResponses(crisis.id);
+      let firstResponseId = null;
+
+      for (const [respId, resp] of Object.entries(responses)) {
+        if (!firstResponseId) firstResponseId = respId;
+        const cost =
+          company.revenue > 0 ? company.revenue * resp.costMult : 10000;
+        const canAfford = company.cashReserve >= cost;
+        html += `
+          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} onclick="${canAfford ? `handleCrisisResponse(${i}, '${respId}')` : ""}">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:11px;font-weight:bold;">${resp.icon} ${resp.name}</div>
+              <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅" : "❌"}</div>
+            </div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${resp.desc}</div>
+            <div style="font-size:8px;color:var(--text-muted);margin-top:2px;">成功率：${Math.round(resp.successChance * 100)}% | 成本：¥${Math.round(cost).toLocaleString()}</div>
+          </div>
+        `;
+      }
+
+      html += "</div>";
+
+      // 快速应对按钮
+      if (firstResponseId) {
+        const firstResp = CRISIS_RESPONSE_TEMPLATES[firstResponseId];
+        const cost =
+          company.revenue > 0 ? company.revenue * firstResp.costMult : 10000;
+        if (company.cashReserve >= cost) {
+          html += `
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+              <button class="btn btn-primary" style="font-size:10px;padding:4px 12px;" onclick="handleCrisisResponse(${i}, '${firstResponseId}')">
+                快速应对：${firstResp.name}（¥${Math.round(cost).toLocaleString()}）
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      html += "</div>";
+    }
+
+    html += "</div></div>";
+  } else {
+    html += `
+      <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="font-size:13px;font-weight:bold;color:var(--success);">✅ 暂无活跃危机</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">公司运营稳定，暂无重大危机</div>
+      </div>
+    `;
+  }
+
+  // 危机准备投资
+  html += `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="font-size:13px;font-weight:bold;margin-bottom:8px;">💰 危机准备投资</div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;">
+        提升危机准备度和韧性，降低危机发生概率和影响。
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investCrisisPreparationFromModal(10000)">
+          危机预案 ¥10,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investCrisisPreparationFromModal(50000)">
+          危机预案 ¥50,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="buyCrisisInsuranceFromModal(1)">
+          危机保险 ¥20,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="buyCrisisInsuranceFromModal(2)">
+          危机保险 ¥50,000
+        </button>
+      </div>
+    </div>
+  `;
+
+  // 危机历史
+  if (company.crisisEventHistory && company.crisisEventHistory.length > 0) {
+    html += `
+      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="font-size:13px;font-weight:bold;margin-bottom:8px;">📜 危机历史（${company.crisisEventHistory.length}次）</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+    `;
+    const recentCrises = company.crisisEventHistory.slice(-5).reverse();
+    for (const c of recentCrises) {
+      const successIcon = c.success ? "✅" : "🔶";
+      html += `
+        <div style="font-size:10px;padding:4px 8px;background:rgba(0,0,0,0.1);border-radius:4px;">
+          ${successIcon} ${c.icon} ${c.name} | 第${c.startedDay}天 | ${c.response ? "已应对" : "未应对"} | 花费¥${c.cost ? c.cost.toLocaleString() : "0"}
+        </div>
+      `;
+    }
+    html += "</div></div>";
+  }
+
+  html += "</div>";
+
+  if (typeof showModal !== "function") return;
+
+  showModal({
+    title: "🚨 危机管理",
+    body: html,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  // 绑定全局函数
+  window.handleCrisisResponse = function (crisisIndex, responseId) {
+    const state = StateManager.getState();
+    const crisis = activeCrises[crisisIndex];
+    if (!crisis) {
+      StateManager.addMessage("危机已不存在", "warning");
+      return;
+    }
+    const result = executeCrisisResponse(state, crisis, responseId);
+    if (result.success) {
+      StateManager.addMessage(
+        result.message +
+          (result.actualSuccess ? " 效果显著！" : " 效果一般。") +
+          " 花费 ¥" +
+          result.cost.toLocaleString(),
+        result.actualSuccess ? "success" : "event",
+      );
+      renderAll();
+    } else {
+      StateManager.addMessage(result.message, "warning");
+    }
+  };
+
+  window.investCrisisPreparationFromModal = function (amount) {
+    const state = StateManager.getState();
+    const company = state.startup.company;
+    if (company.cashReserve < amount) {
+      StateManager.addMessage("现金不足", "warning");
+      return;
+    }
+    company.cashReserve -= amount;
+    company.expenses += amount;
+    company.crisisPreparationLevel = Math.min(
+      100,
+      (company.crisisPreparationLevel || 0) + Math.floor(amount / 5000),
+    );
+    StateManager.addMessage(
+      `✅ 危机准备投资 ¥${amount.toLocaleString()}，准备度 +${Math.floor(amount / 5000)}`,
+      "success",
+    );
+    renderAll();
+  };
+
+  window.buyCrisisInsuranceFromModal = function (level) {
+    const costs = { 1: 20000, 2: 50000 };
+    const cost = costs[level];
+    const state = StateManager.getState();
+    const company = state.startup.company;
+    if (company.cashReserve < cost) {
+      StateManager.addMessage("现金不足", "warning");
+      return;
+    }
+    company.cashReserve -= cost;
+    company.expenses += cost;
+    company.crisisInsuranceLevel = Math.min(
+      3,
+      (company.crisisInsuranceLevel || 0) + level,
+    );
+    StateManager.addMessage(
+      `✅ 购买危机保险（等级${company.crisisInsuranceLevel}），花费 ¥${cost.toLocaleString()}`,
+      "success",
+    );
+    renderAll();
+  };
+}
+
+/** 获取危机韧性等级信息 */
+function getCrisisResilienceLevelInfo(level) {
+  if (level >= 80)
+    return {
+      name: "坚如磐石",
+      icon: "🏰",
+      color: "var(--success)",
+      description: "公司具备极强的危机应对能力",
+    };
+  if (level >= 60)
+    return {
+      name: "准备充分",
+      icon: "🛡️",
+      color: "#27ae60",
+      description: "能有效应对大部分危机事件",
+    };
+  if (level >= 40)
+    return {
+      name: "有一定准备",
+      icon: "⚠️",
+      color: "#f39c12",
+      description: "能部分应对危机，但仍有改进空间",
+    };
+  if (level >= 20)
+    return {
+      name: "准备不足",
+      icon: "🔧",
+      color: "#e67e22",
+      description: "危机应对能力薄弱",
+    };
+  return {
+    name: "毫无准备",
+    icon: "❌",
+    color: "var(--danger)",
+    description: "完全暴露在危机风险中",
+  };
+}
+
+/** 从行动列表执行危机应对 */
+function executeCrisisResponseFromAction(state, crisisIndex, responseId) {
+  const company = state.startup.company;
+  if (
+    !company ||
+    !company.activeCrisisEvents ||
+    !company.activeCrisisEvents[crisisIndex]
+  ) {
+    return { success: false, message: "没有活跃危机" };
+  }
+  const crisis = company.activeCrisisEvents[crisisIndex];
+  return executeCrisisResponse(state, crisis, responseId);
+}
+
+/** 投资危机准备 */
+function investCrisisPreparation(state, amount) {
+  const company = state.startup.company;
+  if (!company || company.cashReserve < amount) {
+    return { success: false, message: "现金不足" };
+  }
+  company.cashReserve -= amount;
+  company.expenses += amount;
+  company.crisisPreparationLevel = Math.min(
+    100,
+    (company.crisisPreparationLevel || 0) + Math.floor(amount / 5000),
+  );
+  return { success: true, message: "危机准备投资成功" };
+}
+
+/** 购买危机保险 */
+function buyCrisisInsurance(state, level) {
+  const company = state.startup.company;
+  const costs = { 1: 20000, 2: 50000 };
+  const cost = costs[level];
+  if (!company || company.cashReserve < cost) {
+    return { success: false, message: "现金不足" };
+  }
+  company.cashReserve -= cost;
+  company.expenses += cost;
+  company.crisisInsuranceLevel = Math.min(
+    3,
+    (company.crisisInsuranceLevel || 0) + level,
+  );
+  return { success: true, message: "购买危机保险成功，等级 +" + level };
+}
+
 // ====== 执行创业行动 ======
 function executeStartupAction(state, actionId, params) {
   params = params || {};
@@ -10197,6 +10635,23 @@ function executeStartupAction(state, actionId, params) {
 
     case "competitive_intel":
       return buyCompetitiveIntelligence(state, params.level);
+
+    // P1-10: 危机事件管理
+    case "crisis_management":
+      return showCrisisManagementModal(state);
+
+    case "crisis_response":
+      return executeCrisisResponseFromAction(
+        state,
+        params.crisisIndex,
+        params.responseId,
+      );
+
+    case "crisis_prep_invest":
+      return investCrisisPreparation(state, params.amount);
+
+    case "crisis_insurance":
+      return buyCrisisInsurance(state, params.level);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -11831,6 +12286,18 @@ if (typeof module !== "undefined" && module.exports) {
     TALENT_POACHING_RESPONSES,
     MARKETING_WAR_RESPONSES,
     TECH_COMPETITION_RESPONSES,
+    // P1-10: 危机事件系统
+    showCrisisManagementModal,
+    executeCrisisResponseFromAction,
+    investCrisisPreparation,
+    buyCrisisInsurance,
+    getCrisisSummary,
+    getCrisisResilienceLevelInfo,
+    getCrisisTypeInfo,
+    // P1-10: 数据常量
+    CRISIS_EVENT_TYPES,
+    OPERATIONAL_CRISIS_TEMPLATES,
+    CRISIS_RESPONSE_TEMPLATES,
   };
 }
 
