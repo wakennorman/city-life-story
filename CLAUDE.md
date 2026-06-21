@@ -31,7 +31,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：修复投资板块折线图文字模糊 ✅（2026-06-21 21:00）
+- **最近一次工作**：统一涨跌颜色为中国标准 红涨绿跌 ✅（2026-06-21 21:30）
+  - **问题**：公司股票板块（stock.js）使用国际标准（绿涨红跌），与投资板块（investment.js）的中国标准不一致
+  - **修复1 — stock.js K线/卡片颜色**：5处颜色逻辑从 `--success(绿)`/`--danger(红)` 翻转为 `--danger(红)`/`--success(绿)`，含折线、填充、涨跌幅文字、PnL盈亏色
+  - **修复2 — investment.js 色值硬编码**：`drawPriceChart` 移除 `_cssVar()` 依赖，改用硬编码 `LINE_UP="#c4553d"` / `LINE_DOWN="#4a9e5c"`，杜绝 Canvas 下 CSS 变量解析异常
+  - **清理**：删除不再使用的 `_cssVar()` 辅助函数
   - **问题**：Canvas 2D API 不支持 CSS `var()` 语法，`ctx.fillStyle="var(--success)"` 静默回退黑色，在深色背景上不可见
   - **修复1 — CSS变量解析**：新增 `_cssVar()` 辅助函数（`getComputedStyle`），`_cssVar('--success')` 返回 `#4a9e5c`
   - **修复2 — Retina支持**：`drawPriceChart` 开头检测 `devicePixelRatio`，物理像素按 dpr 缩放（160×40→320×80），`setTransform` 缩放坐标系

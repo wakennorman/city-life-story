@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-21（+ 交易自定义数量输入系统）
+> 最后更新: 2026-06-21（+ stock.js 涨跌颜色改为中国标准 + investment.js 涨跌色硬编码防CSS解析异常）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
 ## 项目概述
@@ -3085,3 +3085,27 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 | Retina 支持  | ❌ 无缩放，低 DPI 拉伸模糊      | ✅ `ctx.setTransform(dpr, 0, 0, dpr, 0, 0)` |
 | 价格字号     | 11px                            | 12px                                        |
 | 涨跌幅字号   | 9px                             | 10px                                        |
+
+---
+
+### 2026-06-21 — 涨跌颜色统一为中国标准 红涨绿跌（stock.js + investment.js）
+
+#### 问题
+
+公司股票板块（stock.js）的 K 线折线图和股票卡片价格文字使用国际标准（绿涨红跌），与投资板块（investment.js）的中国标准（红涨绿跌）不一致。
+
+#### 改动内容
+
+1. **stock.js `renderKLine()`**：折线颜色 `lastPrice >= firstPrice ? "var(--success)" : "var(--danger)"` → `lastPrice >= firstPrice ? "var(--danger)" : "var(--success)"`，填充色同步改为对应 rgb 值
+2. **stock.js `renderStockCard()`**：涨跌文字色 `todayChange >= 0 ? "var(--success)" : "var(--danger)"` → `todayChange >= 0 ? "var(--danger)" : "var(--success)"`
+3. **stock.js `renderStockCard()` PnL 色**：`pnl >= 0 ? "var(--success)" : "var(--danger)"` → `pnl >= 0 ? "var(--danger)" : "var(--success)"`
+4. **stock.js `totalPnL` 色**：同上，盈利红/亏损绿
+5. **stock.js `renderKLine()` 填充色**：`rgba(46,204,113,0.12)`→`rgba(196,85,61,0.12)`（涨红），`rgba(231,76,60,0.12)`→`rgba(74,158,92,0.12)`（跌绿）
+6. **investment.js `drawPriceChart()`**：移除 `_cssVar()` 依赖，改用硬编码色值 `LINE_UP="#c4553d"` / `LINE_DOWN="#4a9e5c"`，消除 Canvas 环境下 CSS 变量解析异常风险
+7. **删除 investment.js 中不再使用的 `_cssVar()` 辅助函数**
+
+#### 涉及文件
+
+- **`src/js/phase2/stock.js`** — 5 处颜色逻辑修改
+- **`src/js/phase2/investment.js`** — drawPriceChart 色值硬编码 + 清理 \_cssVar()
+- **`dist/index.html`** — 构建产物

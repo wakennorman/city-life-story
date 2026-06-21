@@ -404,10 +404,12 @@ function renderKLine(history, currentPrice) {
 
   const firstPrice = history[0].price;
   const lastPrice = history[history.length - 1].price;
+  // 折线颜色：红涨绿跌（中国/A股标准）
+  // --danger=红(涨) #c4553d, --success=绿(跌) #4a9e5c
   const lineColor =
-    lastPrice >= firstPrice ? "var(--success)" : "var(--danger)";
+    lastPrice >= firstPrice ? "var(--danger)" : "var(--success)";
   const fillColor =
-    lastPrice >= firstPrice ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)";
+    lastPrice >= firstPrice ? "rgba(196,85,61,0.12)" : "rgba(74,158,92,0.12)";
 
   // 构造一个 polygon 用于填充
   const fillPoints = `0,${h} ${points} ${w},${h}`;
@@ -449,8 +451,10 @@ function renderStockCard(stock, state) {
   const pnlPct = holding
     ? ((price - holding.avgPrice) / holding.avgPrice) * 100
     : 0;
-  const pnlColor = pnl >= 0 ? "var(--success)" : "var(--danger)";
-  const trendColor = todayChange >= 0 ? "var(--success)" : "var(--danger)";
+  // PnL颜色：中国/A股标准 — 盈利红/亏损绿（涨红跌绿）
+  const pnlColor = pnl >= 0 ? "var(--danger)" : "var(--success)";
+  // 涨跌颜色：红涨绿跌（中国/A股标准）
+  const trendColor = todayChange >= 0 ? "var(--danger)" : "var(--success)";
   const trendIcon = todayChange >= 0 ? "▲" : "▼";
 
   // 全买/全卖能买多少
@@ -519,7 +523,7 @@ function showStockTradeModal() {
     0,
   );
   const totalPnL = Math.round(totalStockValue - totalCost);
-  const pnlColor = totalPnL >= 0 ? "var(--success)" : "var(--danger)";
+  const pnlColor = totalPnL >= 0 ? "var(--danger)" : "var(--success)";
 
   let body = `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;">

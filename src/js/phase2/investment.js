@@ -1408,20 +1408,12 @@ function buyCar(carId) {
 
 // ============================================================
 //  Canvas 涨跌曲线图
-//  颜色标准：沿袭股票板块规则（国际标准 绿涨红跌）
-//  🟢 绿色 = 涨（up/gain）→ var(--success) = #4a9e5c
-//  🔴 红色 = 跌（down/loss）→ var(--danger) = #c4553d
-//  曲线颜色、填充色、涨跌幅数值颜色均与 stock.js renderKLine 一致
+//  颜色标准：中国/A股标准 红涨绿跌
+//  🔴 #c4553d = 涨 = 红色（同 var(--danger)）
+//  🟢 #4a9e5c = 跌 = 绿色（同 var(--success)）
+//  注意：与投资Tab中持仓盈亏颜色（红涨绿跌）保持一致
+//  Canvas 不支持 CSS var()，直接用硬编码色值
 // ============================================================
-/**
- * 解析 CSS 自定义属性值（用于 Canvas，因为 ctx.fillStyle 不支持 var() 语法）
- */
-function _cssVar(name) {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-}
-
 function drawPriceChart(canvasId, priceData, color) {
   var canvas =
     typeof canvasId === "string" ? document.getElementById(canvasId) : canvasId;
@@ -1481,9 +1473,14 @@ function drawPriceChart(canvasId, priceData, color) {
   var lastPrice = prices[prices.length - 1];
   var trendUp = lastPrice >= firstPrice;
 
-  // 颜色：绿涨红跌（国际/美股标准），与 stock.js renderKLine 完全一致
-  var lineColor = trendUp ? _cssVar("--success") : _cssVar("--danger");
-  var fillColor = trendUp ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)";
+  // 颜色：红涨绿跌（中国/A股标准），与持仓盈亏颜色保持一致
+  // 改用硬编码色值而非 _cssVar()，避免 Canvas 环境下 CSS 变量解析异常
+  var LINE_UP = "#c4553d"; // 涨→红色（同 var(--danger)）
+  var LINE_DOWN = "#4a9e5c"; // 跌→绿色（同 var(--success)）
+  var FILL_UP = "rgba(196,85,61,0.12)";
+  var FILL_DOWN = "rgba(74,158,92,0.12)";
+  var lineColor = trendUp ? LINE_UP : LINE_DOWN;
+  var fillColor = trendUp ? FILL_UP : FILL_DOWN;
 
   var minP = prices[0],
     maxP = prices[0];
@@ -1552,7 +1549,7 @@ function drawPriceChart(canvasId, priceData, color) {
   var chg = lastPrice - prevPrice;
   var chgPct = prevPrice !== 0 ? ((chg / prevPrice) * 100).toFixed(2) : "0.00";
   var chgText = (chg >= 0 ? "+" : "") + chgPct + "%";
-  var dayColor = chg >= 0 ? _cssVar("--success") : _cssVar("--danger");
+  var dayColor = chg >= 0 ? LINE_UP : LINE_DOWN;
 
   ctx.fillStyle = lineColor;
   ctx.font = "bold 12px sans-serif";
@@ -1789,9 +1786,9 @@ function renderInvestmentTab(state, parent) {
     "<span>📈 涨</span>" +
     '<span style="color:var(--success);font-weight:bold;">🟢 绿</span>' +
     '<span style="color:var(--text-muted);">/</span>' +
-    "<span>📉 跌</span>" +
+    "<span>📈 涨</span>" +
     '<span style="color:var(--danger);font-weight:bold;">🔴 红</span>' +
-    '<span style="color:var(--text-muted);">· 国际标准（绿涨红跌）· 与股票板块一致</span>' +
+    '<span style="color:var(--text-muted);">· 中国标准（红涨绿跌）· 与持仓盈亏一致</span>' +
     "</div>" +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
     '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
