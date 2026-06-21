@@ -431,12 +431,7 @@
           <button class="tab-btn" data-tab="skills">📚 技能</button>
           <button class="tab-btn" data-tab="corp">🏢 职场</button>
           <button class="tab-btn" data-tab="investment">💰 投资</button>
-          <button
-            class="tab-btn"
-            data-tab="startup"
-            id="tab-btn-startup"
-            style="display: none"
-          >
+          <button class="tab-btn" data-tab="startup" id="tab-btn-startup">
             🚀 创业
           </button>
           <button class="tab-btn" data-tab="enterprise" style="display: none">
@@ -30700,7 +30695,11 @@ function hasIllness(state, illnessId) {
     icon: "🌟",
     brief: "日循环结算、属性系统、AP 行动力、需求与状态管理",
     reference: "《大多数》《中国式家长》",
-    related: ["mechanics:ap", "mechanics:critical_needs", "mechanics:stat_link"],
+    related: [
+      "mechanics:ap",
+      "mechanics:critical_needs",
+      "mechanics:stat_link",
+    ],
     sections: [
       {
         kind: "desc",
@@ -50339,7 +50338,7 @@ function tickStartup(state, tickType) {
   if (company.officeLocation && OFFICE_LOCATIONS[company.officeLocation]) {
     // 使用办公地点的月租
     const officeCost = OFFICE_LOCATIONS[company.officeLocation].cost;
-    rent = Math.round(officeCost * timeMult / 90); // 月租转日租
+    rent = Math.round((officeCost * timeMult) / 90); // 月租转日租
   } else {
     // 默认基础租金
     rent =
@@ -50705,19 +50704,28 @@ function tickStartup(state, tickType) {
     if (office.techBonus) {
       for (const product of company.products) {
         if (product.status === "launched") {
-          product.technologyScore = Math.min(100, product.technologyScore + office.techBonus / timeMult);
+          product.technologyScore = Math.min(
+            100,
+            product.technologyScore + office.techBonus / timeMult,
+          );
         }
       }
     }
     if (office.marketBonus) {
       for (const product of company.products) {
         if (product.status === "launched") {
-          product.marketScore = Math.min(100, product.marketScore + office.marketBonus / timeMult);
+          product.marketScore = Math.min(
+            100,
+            product.marketScore + office.marketBonus / timeMult,
+          );
         }
       }
     }
     if (office.imageBonus) {
-      company.reputation = Math.min(100, company.reputation + office.imageBonus / 30 * timeMult);
+      company.reputation = Math.min(
+        100,
+        company.reputation + (office.imageBonus / 30) * timeMult,
+      );
     }
   }
 
@@ -50727,12 +50735,21 @@ function tickStartup(state, tickType) {
 
     // 每日提升文化适应度（+1%/天，最高100%）
     if (company.cultureAdoptionProgress < 100) {
-      company.cultureAdoptionProgress = Math.min(100, company.cultureAdoptionProgress + 1 * timeMult / 90);
+      company.cultureAdoptionProgress = Math.min(
+        100,
+        company.cultureAdoptionProgress + (1 * timeMult) / 90,
+      );
     }
 
     // 适应度达标后降低文化冲突
-    if (company.cultureAdoptionProgress >= 100 && company.cultureConflictLevel > 0) {
-      company.cultureConflictLevel = Math.max(0, company.cultureConflictLevel - 0.1 * timeMult / 90);
+    if (
+      company.cultureAdoptionProgress >= 100 &&
+      company.cultureConflictLevel > 0
+    ) {
+      company.cultureConflictLevel = Math.max(
+        0,
+        company.cultureConflictLevel - (0.1 * timeMult) / 90,
+      );
     }
 
     // 应用文化对员工的影响（每日）
@@ -50741,12 +50758,14 @@ function tickStartup(state, tickType) {
 
     for (const emp of company.employees) {
       // 忠诚度影响
-      const loyaltyMod = (culture.loyaltyMod || 0) * adoptionFactor * conflictFactor * timeMult;
+      const loyaltyMod =
+        (culture.loyaltyMod || 0) * adoptionFactor * conflictFactor * timeMult;
       emp.loyalty = Math.max(0, Math.min(100, emp.loyalty + loyaltyMod));
 
       // 生产力影响（体现在产出上）
       if (emp.productivity === undefined) emp.productivity = 1.0;
-      const productivityMod = (culture.productivityMod || 1.0) * adoptionFactor * conflictFactor;
+      const productivityMod =
+        (culture.productivityMod || 1.0) * adoptionFactor * conflictFactor;
       emp.productivity = productivityMod;
     }
   }
@@ -54587,7 +54606,7 @@ function getAvailableStartupActions(state) {
     icon: "💰",
     apCost: 10,
     desc: "调整产品价格，A/B测试，切换定价策略",
-    available: company.products.some(p => p.status === "launched"),
+    available: company.products.some((p) => p.status === "launched"),
   });
 
   // P2-15: 供应链管理
@@ -54597,7 +54616,12 @@ function getAvailableStartupActions(state) {
     icon: "📦",
     apCost: 10,
     desc: "管理供应商，监控库存，降低供应链风险",
-    available: company.industry === "manufacturing" || company.industry === "tech" || company.products.some(p => p.category === "hardware" || p.category === "smart_device"),
+    available:
+      company.industry === "manufacturing" ||
+      company.industry === "tech" ||
+      company.products.some(
+        (p) => p.category === "hardware" || p.category === "smart_device",
+      ),
   });
 
   return actions;
@@ -56776,7 +56800,8 @@ function executeStartupAction(state, actionId, params) {
       break;
 
     case "create_product":
-      return createProduct(state, params.name, params.category || "app");
+      showCreateProductModal(state);
+      return { success: true, message: "" };
 
     case "hire_employee":
       return hireEmployee(state, params.role || "engineer", params.salary);
@@ -56906,6 +56931,74 @@ function executeStartupAction(state, actionId, params) {
     default:
       return { success: false, message: "未知行动：" + actionId };
   }
+}
+
+// ====== 创建新产品弹窗（支持自定义产品名） ======
+function showCreateProductModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  // 产品类别选择列表
+  const catKeys = Object.keys(PRODUCT_CATEGORIES).slice(0, 6);
+  let catHtml = catKeys
+    .map(
+      (k) =>
+        `<label style="display:inline-block;margin:4px 6px 4px 0;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;background:var(--bg-card);">
+          <input type="radio" name="prod-category" value="${k}" ${k === "app" ? "checked" : ""} style="margin-right:4px;">
+          ${PRODUCT_CATEGORIES[k].icon} ${PRODUCT_CATEGORIES[k].name}
+        </label>`,
+    )
+    .join("");
+
+  var bodyHtml =
+    '<div style="font-size:13px;">' +
+    "<p>启动新产品的开发计划。给你的产品取个名字吧！</p>" +
+    '<div style="margin:12px 0;">' +
+    '<label style="font-weight:600;font-size:12px;">📝 产品名称</label>' +
+    '<input id="new-product-name" type="text" placeholder="输入产品名称（可选）" maxlength="20" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
+    "</div>" +
+    '<div style="margin:12px 0;">' +
+    '<label style="font-weight:600;font-size:12px;">📋 产品类别</label>' +
+    '<div style="margin-top:6px;">' + catHtml + "</div>" +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗 AP（行动力）和开发周期，确定后会立即开始开发。</div>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🆕 创建新产品",
+    body: bodyHtml,
+    width: "420px",
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "✅ 开始开发",
+        cls: "btn-primary",
+        callback: function () {
+          var nameInput = document.getElementById("new-product-name");
+          var name = nameInput ? nameInput.value.trim() : "";
+          var selected = document.querySelector(
+            'input[name="prod-category"]:checked',
+          );
+          var category = selected ? selected.value : "app";
+          var result = createProduct(state, name || null, category);
+          if (result.success) {
+            StateManager.addMessage(
+              result.message || "产品开始开发！",
+              "success",
+            );
+            if (typeof renderAll === "function") renderAll();
+            if (typeof renderStartupTab === "function")
+              renderStartupTab(state, document.getElementById("startup-content"));
+            return true;
+          } else {
+            StateManager.addMessage(result.message || "创建失败", "warning");
+            return false;
+          }
+        },
+      },
+    ],
+  });
 }
 
 // ====== 功能模块开发弹窗 ======
@@ -57854,8 +57947,12 @@ function renderStartupTab(state, parent) {
   // 竞争对手情报（Phase 4）
   if (state.startup.competitors && state.startup.competitors.length > 0) {
     var compDiv = document.createElement("div");
-    compDiv.style.cssText = "margin-bottom:20px;";
-    compDiv.innerHTML = '<h4 style="margin:12px 0 8px;">👥 竞争对手</h4>';
+    compDiv.style.cssText = "margin-bottom:20px;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg-secondary);";
+    compDiv.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+      '<h4 style="margin:0;font-size:13px;">👥 竞争对手 <span style="font-weight:normal;font-size:11px;color:var(--text-muted);">（同赛道其他公司）</span></h4>' +
+      '<span style="font-size:10px;color:var(--text-muted);">共' + state.startup.competitors.length + '家</span>' +
+      "</div>";
 
     // 市场份额
     var marketShare =
@@ -59412,7 +59509,11 @@ function downgradeOffice(state, targetLevel) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const result = downgradeOfficeLocation(company, targetLevel, state.player.day);
+  const result = downgradeOfficeLocation(
+    company,
+    targetLevel,
+    state.player.day,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, "success");
     renderAll();
@@ -59433,31 +59534,41 @@ function showOfficeManagementModal(state) {
   let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
 
   // 当前办公地点
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
   html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentOffice.icon} 当前办公地点</div>`;
   html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentOffice.name} — ${currentOffice.desc}</div>`;
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;">';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;">';
   html += `<div>💰 月租: ¥${currentOffice.cost.toLocaleString()}</div>`;
-  if (currentOffice.imageBonus) html += `<div>🏆 形象加成: ${currentOffice.imageBonus > 0 ? '+' : ''}${currentOffice.imageBonus}</div>`;
-  if (currentOffice.recruitMod) html += `<div>👥 招聘修正: ${(currentOffice.recruitMod > 0 ? '+' : '') + (currentOffice.recruitMod * 100).toFixed(0)}%</div>`;
-  if (currentOffice.loyaltyMod) html += `<div>💚 忠诚度修正: ${(currentOffice.loyaltyMod > 0 ? '+' : '') + (currentOffice.loyaltyMod * 100).toFixed(0)}%</div>`;
-  if (currentOffice.techBonus) html += `<div>🔬 技术加成: +${currentOffice.techBonus}</div>`;
-  if (currentOffice.marketBonus) html += `<div>📈 市场加成: +${currentOffice.marketBonus}</div>`;
-  html += '</div>';
-  html += '</div>';
+  if (currentOffice.imageBonus)
+    html += `<div>🏆 形象加成: ${currentOffice.imageBonus > 0 ? "+" : ""}${currentOffice.imageBonus}</div>`;
+  if (currentOffice.recruitMod)
+    html += `<div>👥 招聘修正: ${(currentOffice.recruitMod > 0 ? "+" : "") + (currentOffice.recruitMod * 100).toFixed(0)}%</div>`;
+  if (currentOffice.loyaltyMod)
+    html += `<div>💚 忠诚度修正: ${(currentOffice.loyaltyMod > 0 ? "+" : "") + (currentOffice.loyaltyMod * 100).toFixed(0)}%</div>`;
+  if (currentOffice.techBonus)
+    html += `<div>🔬 技术加成: +${currentOffice.techBonus}</div>`;
+  if (currentOffice.marketBonus)
+    html += `<div>📈 市场加成: +${currentOffice.marketBonus}</div>`;
+  html += "</div>";
+  html += "</div>";
 
   // 升级建议
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
   html += `<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 升级建议</div>`;
   if (suggestion.canUpgrade) {
     html += `<div style="color:var(--success);margin-bottom:8px;">${suggestion.suggestion}</div>`;
     if (nextLevel && OFFICE_LOCATIONS[nextLevel]) {
       const nextOffice = OFFICE_LOCATIONS[nextLevel];
-      html += '<div style="font-size:12px;color:var(--text-muted);">下一级：</div>';
+      html +=
+        '<div style="font-size:12px;color:var(--text-muted);">下一级：</div>';
       html += `<div style="padding:8px;background:var(--background);border-radius:4px;">${nextOffice.icon} ${nextOffice.name}</div>`;
-      html += '<div style="margin-top:8px;display:grid;grid-template-columns:1fr auto;gap:8px;">';
+      html +=
+        '<div style="margin-top:8px;display:grid;grid-template-columns:1fr auto;gap:8px;">';
       html += `<button class="btn btn-success" onclick="upgradeOffice(StateManager.getState(),'${nextLevel}')">升级 (¥${nextOffice.cost.toLocaleString()})</button>`;
-      html += '</div>';
+      html += "</div>";
     }
   } else {
     html += `<div style="color:var(--warning);">${suggestion.suggestion}</div>`;
@@ -59466,31 +59577,38 @@ function showOfficeManagementModal(state) {
       html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">下一级：${nextOffice.icon} ${nextOffice.name}（月租¥${nextOffice.cost.toLocaleString()}）</div>`;
     }
   }
-  html += '</div>';
+  html += "</div>";
 
   // 所有办公地点对比
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏢 所有办公地点</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏢 所有办公地点</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
   for (const levelId of OFFICE_UPGRADE_PATH) {
     const office = OFFICE_LOCATIONS[levelId];
     const isCurrent = levelId === company.officeLocation;
-    const canUpgrade = OFFICE_UPGRADE_PATH.indexOf(levelId) === OFFICE_UPGRADE_PATH.indexOf(company.officeLocation) + 1;
-    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? 'var(--accent-bg)' : 'var(--background)'};border:${isCurrent ? '2px solid var(--accent)' : '1px solid var(--border)'};opacity:${!isCurrent && !canUpgrade ? '0.7' : '1'}">`;
-    html += `<div style="font-weight:bold;font-size:12px;">${office.icon} ${office.name}${isCurrent ? ' ✓' : ''}</div>`;
+    const canUpgrade =
+      OFFICE_UPGRADE_PATH.indexOf(levelId) ===
+      OFFICE_UPGRADE_PATH.indexOf(company.officeLocation) + 1;
+    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? "var(--accent-bg)" : "var(--background)"};border:${isCurrent ? "2px solid var(--accent)" : "1px solid var(--border)"};opacity:${!isCurrent && !canUpgrade ? "0.7" : "1"}">`;
+    html += `<div style="font-weight:bold;font-size:12px;">${office.icon} ${office.name}${isCurrent ? " ✓" : ""}</div>`;
     html += `<div style="font-size:11px;color:var(--text-muted);">${office.desc}</div>`;
     html += `<div style="font-size:11px;margin-top:4px;">💰 ¥${office.cost.toLocaleString()}/月</div>`;
-    html += '</div>';
+    html += "</div>";
   }
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   StateManager.showModal({
-    title: '🏢 办公地点管理',
+    title: "🏢 办公地点管理",
     body: html,
-    buttons: [{ text: '关闭', style: 'secondary', onClick: 'StateManager.hideModal()' }],
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
   });
 }
 
@@ -59504,7 +59622,12 @@ function changeCulture(state, cultureId, reason) {
     return { success: false, message: "无效的企业文化" };
   }
 
-  const result = changeCompanyCulture(company, cultureId, state.player.day, reason);
+  const result = changeCompanyCulture(
+    company,
+    cultureId,
+    state.player.day,
+    reason,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, "success");
     renderAll();
@@ -59520,7 +59643,10 @@ function improveCultureAdoptionAction(state, amount) {
 
   const result = improveCultureAdoption(company, state.player.day, amount);
   if (result.success) {
-    StateManager.addMessage(`文化适应度提升：${result.oldProgress.toFixed(1)}% → ${result.newProgress.toFixed(1)}%`, "success");
+    StateManager.addMessage(
+      `文化适应度提升：${result.oldProgress.toFixed(1)}% → ${result.newProgress.toFixed(1)}%`,
+      "success",
+    );
     renderAll();
   }
   return result;
@@ -59536,42 +59662,54 @@ function showCultureManagementModal(state) {
   let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
 
   // 当前文化
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
   html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentCulture.icon} 当前企业文化</div>`;
   html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentCulture.name} — ${currentCulture.desc}</div>`;
 
   // 文化效果
-  html += '<div style="font-size:12px;margin-bottom:8px;color:var(--text-secondary);">文化效果：</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:11px;">';
-  if (currentCulture.loyaltyMod) html += `<div>💚 忠诚度修正: ${(currentCulture.loyaltyMod > 0 ? '+' : '') + (currentCulture.loyaltyMod * 100).toFixed(0)}%</div>`;
-  if (currentCulture.turnoverMod) html += `<div>📉 流失率修正: ${(currentCulture.turnoverMod < 1 ? '-' : '+') + ((currentCulture.turnoverMod - 1) * 100).toFixed(0)}%</div>`;
-  if (currentCulture.productivityMod) html += `<div>⚡ 生产力修正: ${(currentCulture.productivityMod > 1 ? '+' : '') + ((currentCulture.productivityMod - 1) * 100).toFixed(0)}%</div>`;
-  if (currentCulture.innovationMod) html += `<div>💡 创新修正: ${(currentCulture.innovationMod > 1 ? '+' : '') + ((currentCulture.innovationMod - 1) * 100).toFixed(0)}%</div>`;
-  if (currentCulture.recruitMod) html += `<div>👥 招聘修正: ${(currentCulture.recruitMod > 0 ? '+' : '') + (currentCulture.recruitMod * 100).toFixed(0)}%</div>`;
-  html += '</div>';
+  html +=
+    '<div style="font-size:12px;margin-bottom:8px;color:var(--text-secondary);">文化效果：</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:11px;">';
+  if (currentCulture.loyaltyMod)
+    html += `<div>💚 忠诚度修正: ${(currentCulture.loyaltyMod > 0 ? "+" : "") + (currentCulture.loyaltyMod * 100).toFixed(0)}%</div>`;
+  if (currentCulture.turnoverMod)
+    html += `<div>📉 流失率修正: ${(currentCulture.turnoverMod < 1 ? "-" : "+") + ((currentCulture.turnoverMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.productivityMod)
+    html += `<div>⚡ 生产力修正: ${(currentCulture.productivityMod > 1 ? "+" : "") + ((currentCulture.productivityMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.innovationMod)
+    html += `<div>💡 创新修正: ${(currentCulture.innovationMod > 1 ? "+" : "") + ((currentCulture.innovationMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.recruitMod)
+    html += `<div>👥 招聘修正: ${(currentCulture.recruitMod > 0 ? "+" : "") + (currentCulture.recruitMod * 100).toFixed(0)}%</div>`;
+  html += "</div>";
 
   // 适应度和冲突
-  html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">';
+  html +=
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">';
   html += `<div style="margin-bottom:8px;">`;
   html += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">`;
   html += `<span>📊 文化适应度</span><span>${company.cultureAdoptionProgress.toFixed(0)}%</span>`;
-  html += '</div>';
+  html += "</div>";
   html += `<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">`;
   html += `<div style="width:${company.cultureAdoptionProgress}%;height:100%;background:var(--success);"></div>`;
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
   html += `<div style="display:flex;justify-content:space-between;font-size:12px;">`;
-  html += `<span>⚠️ 文化冲突等级</span><span style="color:${company.cultureConflictLevel >= 3 ? 'var(--danger)' : company.cultureConflictLevel >= 1 ? 'var(--warning)' : 'var(--success)'}">${company.cultureConflictLevel.toFixed(1)}/4</span>`;
-  html += '</div>';
-  html += '</div>';
+  html += `<span>⚠️ 文化冲突等级</span><span style="color:${company.cultureConflictLevel >= 3 ? "var(--danger)" : company.cultureConflictLevel >= 1 ? "var(--warning)" : "var(--success)"}">${company.cultureConflictLevel.toFixed(1)}/4</span>`;
+  html += "</div>";
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   // 文化切换
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换文化</div>';
-  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">切换文化需要¥50,000，并重置适应度</div>';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换文化</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">切换文化需要¥50,000，并重置适应度</div>';
 
   for (const culture of suggestion.availableCultures) {
     const canChange = culture.canChange;
@@ -59579,41 +59717,47 @@ function showCultureManagementModal(state) {
     html += `<div>`;
     html += `<div style="font-weight:bold;font-size:12px;">${culture.icon} ${culture.name}</div>`;
     html += `<div style="font-size:11px;color:var(--text-muted);">${culture.desc}</div>`;
-    html += '</div>';
+    html += "</div>";
     if (canChange) {
       html += `<button class="btn btn-primary" onclick="changeCulture(StateManager.getState(),'${culture.key}','主动切换')">切换</button>`;
     } else {
       html += `<span style="font-size:11px;color:var(--warning);">${culture.reason}</span>`;
     }
-    html += '</div>';
+    html += "</div>";
   }
-  html += '</div>';
+  html += "</div>";
 
   // 文化对比
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 文化对比</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 文化对比</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
   for (const [key, culture] of Object.entries(COMPANY_CULTURES)) {
     const isCurrent = key === company.companyCulture;
-    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? 'var(--accent-bg)' : 'var(--background)'};border:${isCurrent ? '2px solid var(--accent)' : '1px solid var(--border)'};">`;
+    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? "var(--accent-bg)" : "var(--background)"};border:${isCurrent ? "2px solid var(--accent)" : "1px solid var(--border)"};">`;
     html += `<div style="font-weight:bold;font-size:12px;text-align:center;">${culture.icon} ${culture.name}</div>`;
-    html += '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px;">';
-    html += `忠诚 ${(culture.loyaltyMod > 0 ? '+' : '') + (culture.loyaltyMod * 100).toFixed(0)}% | `;
-    html += `流失 ${(culture.turnoverMod < 1 ? '-' : '+') + ((culture.turnoverMod - 1) * 100).toFixed(0)}% | `;
-    html += `生产 ${(culture.productivityMod > 1 ? '+' : '') + ((culture.productivityMod - 1) * 100).toFixed(0)}% | `;
-    html += `创新 ${(culture.innovationMod > 1 ? '+' : '') + ((culture.innovationMod - 1) * 100).toFixed(0)}%`;
-    html += '</div>';
-    html += '</div>';
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px;">';
+    html += `忠诚 ${(culture.loyaltyMod > 0 ? "+" : "") + (culture.loyaltyMod * 100).toFixed(0)}% | `;
+    html += `流失 ${(culture.turnoverMod < 1 ? "-" : "+") + ((culture.turnoverMod - 1) * 100).toFixed(0)}% | `;
+    html += `生产 ${(culture.productivityMod > 1 ? "+" : "") + ((culture.productivityMod - 1) * 100).toFixed(0)}% | `;
+    html += `创新 ${(culture.innovationMod > 1 ? "+" : "") + ((culture.innovationMod - 1) * 100).toFixed(0)}%`;
+    html += "</div>";
+    html += "</div>";
   }
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   StateManager.showModal({
-    title: '🏛️ 企业文化管理',
+    title: "🏛️ 企业文化管理",
     body: html,
-    buttons: [{ text: '关闭', style: 'secondary', onClick: 'StateManager.hideModal()' }],
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
   });
 }
 
@@ -59626,60 +59770,75 @@ function showPartnerManagementModal(state) {
   let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
 
   // 合作伙伴列表
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🤝 合作伙伴</div>';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🤝 合作伙伴</div>';
 
   if (!company.partners || company.partners.length === 0) {
-    html += '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无合作伙伴，点击下方按钮招募</div>';
+    html +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无合作伙伴，点击下方按钮招募</div>';
   } else {
     for (const partner of company.partners) {
       const typeInfo = PARTNER_TYPES[partner.type];
-      const trustColor = partner.trust >= 70 ? 'var(--success)' : partner.trust >= 50 ? 'var(--warning)' : 'var(--danger)';
-      const statusColor = partner.status === 'active' ? 'var(--success)' : 'var(--text-muted)';
+      const trustColor =
+        partner.trust >= 70
+          ? "var(--success)"
+          : partner.trust >= 50
+            ? "var(--warning)"
+            : "var(--danger)";
+      const statusColor =
+        partner.status === "active" ? "var(--success)" : "var(--text-muted)";
 
       html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;border-left:4px solid ${trustColor}">`;
       html += `<div style="display:flex;justify-content:space-between;align-items:center;">`;
-      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : '❓'} ${partner.name}</div>`;
-      html += `<div style="font-size:11px;color:${statusColor};">${partner.status === 'active' ? '✅ 活跃' : '🚪 已终止'}</div>`;
-      html += '</div>';
+      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : "❓"} ${partner.name}</div>`;
+      html += `<div style="font-size:11px;color:${statusColor};">${partner.status === "active" ? "✅ 活跃" : "🚪 已终止"}</div>`;
+      html += "</div>";
       html += `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">类型：${typeInfo ? typeInfo.name : partner.type} | 专注：${partner.focus}</div>`;
       html += `<div style="font-size:11px;margin-top:4px;">`;
       html += `信任度：<span style="color:${trustColor};font-weight:bold;">${partner.trust.toFixed(0)}%</span> | `;
       html += `合作级别：${partner.cooperationLevel.toFixed(1)} | `;
       html += `收入分成：${(partner.revenueShare * 100).toFixed(0)}%`;
-      html += '</div>';
+      html += "</div>";
 
       // 信任度操作
-      if (partner.status === 'active') {
+      if (partner.status === "active") {
         html += '<div style="margin-top:8px;display:flex;gap:6px;">';
         html += `<button class="btn btn-small" onclick="improvePartnerTrustAction(StateManager.getState(),'${partner.id}',20,30000)">提升信任 (¥30k)</button>`;
         html += `<button class="btn btn-small btn-warning" onclick="terminatePartnerAction(StateManager.getState(),'${partner.id}','主动终止')">终止合作</button>`;
-        html += '</div>';
+        html += "</div>";
       }
-      html += '</div>';
+      html += "</div>";
     }
   }
 
   // 招募新伙伴
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 招募新伙伴</div>';
-  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">招募合作伙伴需要¥20,000，初始信任度50-70%</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 招募新伙伴</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">招募合作伙伴需要¥20,000，初始信任度50-70%</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
 
   for (const [key, type] of Object.entries(PARTNER_TYPES)) {
     html += `<button class="btn btn-small" onclick="recruitPartnerAction(StateManager.getState(),'${key}')">`;
     html += `${type.icon} ${type.name}`;
-    html += '</button>';
+    html += "</button>";
   }
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   StateManager.showModal({
-    title: '🤝 合作伙伴管理',
+    title: "🤝 合作伙伴管理",
     body: html,
-    buttons: [{ text: '关闭', style: 'secondary', onClick: 'StateManager.hideModal()' }],
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
   });
 }
 
@@ -59696,7 +59855,10 @@ function recruitPartnerAction(state, partnerType) {
   company.cashReserve -= recruitCost;
   const partner = createPartner(company, partnerType, state.player.day);
 
-  StateManager.addMessage(`🤝 成功招募合作伙伴「${partner.name}」（${PARTNER_TYPES[partnerType].name}），初始信任度${partner.trust.toFixed(0)}%`, "success");
+  StateManager.addMessage(
+    `🤝 成功招募合作伙伴「${partner.name}」（${PARTNER_TYPES[partnerType].name}），初始信任度${partner.trust.toFixed(0)}%`,
+    "success",
+  );
   renderAll();
 
   return { success: true, partner: getPartnerSummary(partner) };
@@ -59706,7 +59868,13 @@ function improvePartnerTrustAction(state, partnerId, amount, cost) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const result = improvePartnerTrust(company, partnerId, state.player.day, amount, cost);
+  const result = improvePartnerTrust(
+    company,
+    partnerId,
+    state.player.day,
+    amount,
+    cost,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, "success");
     renderAll();
@@ -59739,62 +59907,78 @@ function showPricingManagementModal(state) {
   let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
 
   // 当前定价策略
-  const currentPricing = PRICING_MODELS[company.pricingStrategy] || PRICING_MODELS.tiered;
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  const currentPricing =
+    PRICING_MODELS[company.pricingStrategy] || PRICING_MODELS.tiered;
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
   html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentPricing.icon} 当前定价策略</div>`;
   html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentPricing.name} — ${currentPricing.desc}</div>`;
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;">';
-  html += `<div>📊 收入稳定性: ${(currentPricing.revenueStability >= 1 ? '+' : '') + (currentPricing.revenueStability - 1).toFixed(1)}x</div>`;
-  html += `<div>🚀 增长潜力: ${(currentPricing.growthPotential >= 1 ? '+' : '') + (currentPricing.growthPotential - 1).toFixed(1)}x</div>`;
-  html += '</div>';
-  html += '</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;">';
+  html += `<div>📊 收入稳定性: ${(currentPricing.revenueStability >= 1 ? "+" : "") + (currentPricing.revenueStability - 1).toFixed(1)}x</div>`;
+  html += `<div>🚀 增长潜力: ${(currentPricing.growthPotential >= 1 ? "+" : "") + (currentPricing.growthPotential - 1).toFixed(1)}x</div>`;
+  html += "</div>";
+  html += "</div>";
 
   // 产品定价
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📱 产品定价</div>';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📱 产品定价</div>';
 
-  for (const product of company.products.filter(p => p.status === 'launched')) {
+  for (const product of company.products.filter(
+    (p) => p.status === "launched",
+  )) {
     const category = PRODUCT_CATEGORIES[product.category];
     const elasticity = getPriceElasticity(product);
-    const optimal = calculateOptimalPrice(product, company, state.startup.competitors || []);
+    const optimal = calculateOptimalPrice(
+      product,
+      company,
+      state.startup.competitors || [],
+    );
 
     html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;">`;
-    html += `<div style="font-weight:bold;font-size:12px;">${category ? category.icon : '📦'} ${product.name}</div>`;
+    html += `<div style="font-weight:bold;font-size:12px;">${category ? category.icon : "📦"} ${product.name}</div>`;
     html += `<div style="font-size:11px;color:var(--text-muted);">`;
     html += `当前价格: ¥${(product.currentPrice || 0).toLocaleString()} | `;
     html += `建议价格: ¥${optimal.optimalPrice.toLocaleString()} | `;
     html += `弹性: ${elasticity.interpretation}（${elasticity.elasticity.toFixed(2)}）`;
-    html += '</div>';
+    html += "</div>";
 
     // 价格调整
     html += '<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
     html += `<button class="btn btn-small" onclick="adjustProductPrice(StateManager.getState(),'${product.id}',${optimal.optimalPrice},'建议调整')">调整至建议价</button>`;
     html += `<button class="btn btn-small" onclick="runProductABTest(StateManager.getState(),'${product.id}')">A/B测试</button>`;
-    html += '</div>';
-    html += '</div>';
+    html += "</div>";
+    html += "</div>";
   }
-  html += '</div>';
+  html += "</div>";
 
   // 切换定价策略
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换定价策略</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换定价策略</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
 
   for (const [key, model] of Object.entries(PRICING_MODELS)) {
     const isCurrent = key === company.pricingStrategy;
-    html += `<button class="btn btn-small" style="${isCurrent ? 'background:var(--accent);color:white;' : ''}" onclick="switchPricingStrategy(StateManager.getState(),'${key}')">`;
+    html += `<button class="btn btn-small" style="${isCurrent ? "background:var(--accent);color:white;" : ""}" onclick="switchPricingStrategy(StateManager.getState(),'${key}')">`;
     html += `${model.icon} ${model.name}`;
-    html += '</button>';
+    html += "</button>";
   }
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   StateManager.showModal({
-    title: '💰 产品定价管理',
+    title: "💰 产品定价管理",
     body: html,
-    buttons: [{ text: '关闭', style: 'secondary', onClick: 'StateManager.hideModal()' }],
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
   });
 }
 
@@ -59802,7 +59986,7 @@ function adjustProductPrice(state, productId, newPrice, reason) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return { success: false, message: "产品不存在" };
 
   const result = applyPriceChange(product, newPrice, state.player.day, reason);
@@ -59827,7 +60011,7 @@ function runProductABTest(state, productId) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return { success: false, message: "产品不存在" };
 
   const currentPrice = product.currentPrice || 100;
@@ -59835,7 +60019,13 @@ function runProductABTest(state, productId) {
   const priceB = Math.round(currentPrice * 1.1);
   const sampleSize = 1000;
 
-  const result = runABTest(product, priceA, priceB, sampleSize, state.player.day);
+  const result = runABTest(
+    product,
+    priceA,
+    priceB,
+    sampleSize,
+    state.player.day,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, "success");
     if (!company.abTestHistory) company.abTestHistory = [];
@@ -59857,7 +60047,10 @@ function switchPricingStrategy(state, strategy) {
   const oldStrategy = company.pricingStrategy;
   company.pricingStrategy = strategy;
 
-  StateManager.addMessage(`🔄 定价策略从「${PRICING_MODELS[oldStrategy].name}」切换到「${PRICING_MODELS[strategy].name}」`, "success");
+  StateManager.addMessage(
+    `🔄 定价策略从「${PRICING_MODELS[oldStrategy].name}」切换到「${PRICING_MODELS[strategy].name}」`,
+    "success",
+  );
   renderAll();
 
   return { success: true, oldStrategy: oldStrategy, newStrategy: strategy };
@@ -59874,75 +60067,99 @@ function showSupplyChainManagementModal(state) {
   let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
 
   // 供应链风险
-  const riskColor = risk.level === 'critical' ? 'var(--danger)' : risk.level === 'high' ? 'var(--warning)' : risk.level === 'medium' ? '#f39c12' : 'var(--success)';
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  const riskColor =
+    risk.level === "critical"
+      ? "var(--danger)"
+      : risk.level === "high"
+        ? "var(--warning)"
+        : risk.level === "medium"
+          ? "#f39c12"
+          : "var(--success)";
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
   html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">📦 供应链风险</div>`;
   html += `<div style="display:flex;align-items:center;gap:12px;">`;
   html += `<div style="font-size:32px;font-weight:bold;color:${riskColor};">${risk.risk}%</div>`;
   html += `<div>`;
   html += `<div style="font-size:12px;color:var(--text-muted);">风险等级：<span style="color:${riskColor};font-weight:bold;">${risk.level.toUpperCase()}</span></div>`;
   html += `<div style="font-size:11px;color:var(--text-muted);">活跃供应商：${risk.suppliers}家</div>`;
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
   // 风险进度条
-  html += '<div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;">';
+  html +=
+    '<div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;">';
   html += `<div style="width:${risk.risk}%;height:100%;background:${riskColor};"></div>`;
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
   // 供应商列表
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏭 供应商</div>';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏭 供应商</div>';
 
   if (!company.suppliers || company.suppliers.length === 0) {
-    html += '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无供应商，点击下方按钮添加</div>';
+    html +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无供应商，点击下方按钮添加</div>';
   } else {
     for (const supplier of company.suppliers) {
-      if (supplier.status !== 'active') continue;
+      if (supplier.status !== "active") continue;
 
       const typeInfo = SUPPLIER_TYPES[supplier.type];
-      const qualityColor = supplier.quality >= 80 ? 'var(--success)' : supplier.quality >= 60 ? 'var(--warning)' : 'var(--danger)';
+      const qualityColor =
+        supplier.quality >= 80
+          ? "var(--success)"
+          : supplier.quality >= 60
+            ? "var(--warning)"
+            : "var(--danger)";
 
       html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;">`;
       html += `<div style="display:flex;justify-content:space-between;align-items:center;">`;
-      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : '❓'} ${supplier.name}</div>`;
+      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : "❓"} ${supplier.name}</div>`;
       html += `<div style="font-size:11px;color:var(--text-muted);">${supplier.type}</div>`;
-      html += '</div>';
+      html += "</div>";
       html += `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">专注：${supplier.focus}</div>`;
       html += `<div style="font-size:11px;margin-top:4px;">`;
       html += `质量: <span style="color:${qualityColor};font-weight:bold;">${supplier.quality.toFixed(0)}%</span> | `;
       html += `可靠性: ${supplier.reliability.toFixed(0)}% | `;
       html += `交期: ${supplier.leadTime}天 | `;
       html += `价格: ¥${Math.round(supplier.price).toLocaleString()}`;
-      html += '</div>';
+      html += "</div>";
 
       // 质量调整
-      html += '<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
+      html +=
+        '<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
       html += `<button class="btn btn-small" onclick="updateSupplierQualityAction(StateManager.getState(),'${supplier.id}',5,'质量提升')">提升质量</button>`;
       html += `<button class="btn btn-small btn-warning" onclick="updateSupplierQualityAction(StateManager.getState(),'${supplier.id}',-5,'质量下降')">降低质量</button>`;
-      html += '</div>';
-      html += '</div>';
+      html += "</div>";
+      html += "</div>";
     }
   }
 
   // 添加供应商
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 添加供应商</div>';
-  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">添加供应商需要¥50,000初始投入</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 添加供应商</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">添加供应商需要¥50,000初始投入</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
 
   for (const [key, type] of Object.entries(SUPPLIER_TYPES)) {
     html += `<button class="btn btn-small" onclick="addSupplierAction(StateManager.getState(),'${key}')">`;
     html += `${type.icon} ${type.name}`;
-    html += '</button>';
+    html += "</button>";
   }
-  html += '</div>';
-  html += '</div>';
+  html += "</div>";
+  html += "</div>";
 
   // 库存管理
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
-  html += '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📦 库存管理</div>';
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📦 库存管理</div>';
 
   for (const [typeKey, typeInfo] of Object.entries(INVENTORY_TYPES)) {
     const inv = company.inventory[typeKey] || { quantity: 0, value: 0 };
@@ -59952,25 +60169,27 @@ function showSupplyChainManagementModal(state) {
     html += `<div>`;
     html += `<div style="font-weight:bold;font-size:12px;">${typeInfo.icon} ${typeInfo.name}</div>`;
     html += `<div style="font-size:11px;color:var(--text-muted);">`;
-    html += `数量: <span style="color:${isCritical ? 'var(--danger)' : 'var(--success)'}">${inv.quantity}</span> | `;
+    html += `数量: <span style="color:${isCritical ? "var(--danger)" : "var(--success)"}">${inv.quantity}</span> | `;
     html += `价值: ¥${inv.value.toLocaleString()} | `;
     html += `警戒线: ${typeInfo.criticalLevel}`;
-    html += '</div>';
-    html += '</div>';
+    html += "</div>";
+    html += "</div>";
     html += `<div style="display:flex;gap:4px;">`;
     html += `<button class="btn btn-small" onclick="manageInventoryAction(StateManager.getState(),'${typeKey}','add',50)">+50</button>`;
     html += `<button class="btn btn-small" onclick="manageInventoryAction(StateManager.getState(),'${typeKey}','consume',50)">-50</button>`;
-    html += '</div>';
-    html += '</div>';
+    html += "</div>";
+    html += "</div>";
   }
-  html += '</div>';
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
 
   StateManager.showModal({
-    title: '📦 供应链管理',
+    title: "📦 供应链管理",
     body: html,
-    buttons: [{ text: '关闭', style: 'secondary', onClick: 'StateManager.hideModal()' }],
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
   });
 }
 
@@ -59987,7 +60206,10 @@ function addSupplierAction(state, supplierType) {
   company.cashReserve -= addCost;
   const supplier = createSupplier(company, supplierType, state.player.day);
 
-  StateManager.addMessage(`🏭 成功添加供应商「${supplier.name}」（${SUPPLIER_TYPES[supplierType].name}），质量${supplier.quality.toFixed(0)}%`, "success");
+  StateManager.addMessage(
+    `🏭 成功添加供应商「${supplier.name}」（${SUPPLIER_TYPES[supplierType].name}），质量${supplier.quality.toFixed(0)}%`,
+    "success",
+  );
   renderAll();
 
   return { success: true, supplier: supplier };
@@ -59997,7 +60219,13 @@ function updateSupplierQualityAction(state, supplierId, change, reason) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const result = updateSupplierQuality(company, supplierId, state.player.day, change, reason);
+  const result = updateSupplierQuality(
+    company,
+    supplierId,
+    state.player.day,
+    change,
+    reason,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, change > 0 ? "success" : "warning");
     renderAll();
@@ -60011,7 +60239,13 @@ function manageInventoryAction(state, inventoryType, action, amount) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const result = manageInventory(company, inventoryType, action, amount, state.player.day);
+  const result = manageInventory(
+    company,
+    inventoryType,
+    action,
+    amount,
+    state.player.day,
+  );
   if (result.success) {
     StateManager.addMessage(result.message, "success");
     renderAll();
@@ -63468,7 +63702,13 @@ function getCrisisSummary(crisis) {
 // ====== P2-11: 办公地点系统 ======
 
 /** 办公地点等级顺序 */
-const OFFICE_UPGRADE_PATH = ["shared", "normal", "techPark", "headquarters", "campus"];
+const OFFICE_UPGRADE_PATH = [
+  "shared",
+  "normal",
+  "techPark",
+  "headquarters",
+  "campus",
+];
 
 /**
  * 获取当前办公地点的下一级
@@ -63706,10 +63946,7 @@ function changeCompanyCulture(company, targetCulture, day, reason) {
   company.cashReserve -= switchCost;
   company.companyCulture = targetCulture;
   company.cultureAdoptionProgress = 0; // 重置适应度
-  company.cultureConflictLevel = Math.min(
-    4,
-    company.cultureConflictLevel + 1,
-  ); // 增加冲突等级
+  company.cultureConflictLevel = Math.min(4, company.cultureConflictLevel + 1); // 增加冲突等级
 
   // 记录变更历史
   company.cultureChangeHistory.push({
@@ -63733,18 +63970,29 @@ function changeCompanyCulture(company, targetCulture, day, reason) {
  */
 function improveCultureAdoption(company, day, amount) {
   const oldProgress = company.cultureAdoptionProgress;
-  company.cultureAdoptionProgress = Math.min(100, company.cultureAdoptionProgress + amount);
+  company.cultureAdoptionProgress = Math.min(
+    100,
+    company.cultureAdoptionProgress + amount,
+  );
 
   // 适应度提升降低文化冲突
-  if (company.cultureAdoptionProgress >= 100 && company.cultureConflictLevel > 0) {
-    company.cultureConflictLevel = Math.max(0, company.cultureConflictLevel - 1);
+  if (
+    company.cultureAdoptionProgress >= 100 &&
+    company.cultureConflictLevel > 0
+  ) {
+    company.cultureConflictLevel = Math.max(
+      0,
+      company.cultureConflictLevel - 1,
+    );
   }
 
   return {
     success: true,
     oldProgress: oldProgress,
     newProgress: company.cultureAdoptionProgress,
-    conflictReduced: company.cultureAdoptionProgress >= 100 && company.cultureConflictLevel < company.cultureConflictLevel,
+    conflictReduced:
+      company.cultureAdoptionProgress >= 100 &&
+      company.cultureConflictLevel < company.cultureConflictLevel,
   };
 }
 
@@ -63758,7 +64006,7 @@ function getCultureChangeSuggestion(company) {
   }
 
   const availableCultures = Object.keys(COMPANY_CULTURES).filter(
-    (key) => key !== company.companyCulture
+    (key) => key !== company.companyCulture,
   );
 
   const suggestions = availableCultures.map((key) => {
@@ -63993,7 +64241,8 @@ const PARTNER_EVENT_TEMPLATES = {
     name: "深度合作机会",
     icon: "🤝",
     title: "合作伙伴提出深度合作",
-    description: "「{partnerName}」希望与你进行更深度的合作，包括{cooperationType}。这将带来显著收益，但需要投入资源。",
+    description:
+      "「{partnerName}」希望与你进行更深度的合作，包括{cooperationType}。这将带来显著收益，但需要投入资源。",
     triggerCondition: { trust: 70, days: 60 },
     options: [
       {
@@ -64024,7 +64273,8 @@ const PARTNER_EVENT_TEMPLATES = {
     name: "信任危机",
     icon: "⚠️",
     title: "合作伙伴信任度下降",
-    description: "「{partnerName}」对你的合作满意度下降，原因可能是{reason}。需要采取行动挽回信任。",
+    description:
+      "「{partnerName}」对你的合作满意度下降，原因可能是{reason}。需要采取行动挽回信任。",
     triggerCondition: { trust: 40 },
     options: [
       {
@@ -64055,7 +64305,8 @@ const PARTNER_EVENT_TEMPLATES = {
     name: "联合项目",
     icon: "🚀",
     title: "联合开发项目",
-    description: "「{partnerName}」提议联合开发{projectType}，预计投入{investment}，收益共享。",
+    description:
+      "「{partnerName}」提议联合开发{projectType}，预计投入{investment}，收益共享。",
     triggerCondition: { trust: 60, phase: "growth" },
     options: [
       {
@@ -64086,7 +64337,8 @@ const PARTNER_EVENT_TEMPLATES = {
     name: "合作伙伴退出",
     icon: "🚪",
     title: "合作伙伴提出退出",
-    description: "「{partnerName}」因{reason}提出终止合作。你可以尝试挽留或接受退出。",
+    description:
+      "「{partnerName}」因{reason}提出终止合作。你可以尝试挽留或接受退出。",
     triggerCondition: { trust: 30 },
     options: [
       {
@@ -64109,14 +64361,17 @@ const PARTNER_EVENT_TEMPLATES = {
 
 /** 生成合作伙伴 */
 function createPartner(company, partnerType, day) {
-  const templates = PARTNER_TEMPLATES[company.industry] || PARTNER_TEMPLATES.tech;
+  const templates =
+    PARTNER_TEMPLATES[company.industry] || PARTNER_TEMPLATES.tech;
   const template = templates[Math.floor(Math.random() * templates.length)];
   const partnerTemplate = PARTNER_TYPES[partnerType];
 
   const partner = {
     id: "partner_" + company.id + "_" + Date.now(),
     type: partnerType,
-    name: template.namePrefix + (["科技", "集团", "控股", "股份"][Math.floor(Math.random() * 4)]),
+    name:
+      template.namePrefix +
+      ["科技", "集团", "控股", "股份"][Math.floor(Math.random() * 4)],
     focus: template.focus,
     trust: 50 + Math.random() * 20, // 初始信任度50-70
     joinedDay: day,
@@ -64144,7 +64399,7 @@ function createPartner(company, partnerType, day) {
 
 /** 终止合作 */
 function terminatePartner(company, partnerId, day, reason) {
-  const partner = company.partners.find(p => p.id === partnerId);
+  const partner = company.partners.find((p) => p.id === partnerId);
   if (!partner) return { success: false, reason: "合作伙伴不存在" };
 
   partner.status = "terminated";
@@ -64152,7 +64407,9 @@ function terminatePartner(company, partnerId, day, reason) {
   partner.terminationReason = reason;
 
   // 计算违约金（根据信任度和合作级别）
-  const penalty = Math.floor(50000 * (1 + partner.cooperationLevel * 0.2) * (1 - partner.trust / 100));
+  const penalty = Math.floor(
+    50000 * (1 + partner.cooperationLevel * 0.2) * (1 - partner.trust / 100),
+  );
 
   if (company.cashReserve >= penalty) {
     company.cashReserve -= penalty;
@@ -64180,7 +64437,7 @@ function terminatePartner(company, partnerId, day, reason) {
 
 /** 提升合作伙伴信任度 */
 function improvePartnerTrust(company, partnerId, day, amount, cost) {
-  const partner = company.partners.find(p => p.id === partnerId);
+  const partner = company.partners.find((p) => p.id === partnerId);
   if (!partner || partner.status !== "active") {
     return { success: false, reason: "合作伙伴不存在或已终止" };
   }
@@ -64219,11 +64476,15 @@ function getPartnerSummary(partner) {
     typeName: typeInfo ? typeInfo.name : "未知",
     icon: typeInfo ? typeInfo.icon : "❓",
     trust: partner.trust,
-    trustLevel: partner.trust >= 70 ? "high" : partner.trust >= 50 ? "medium" : "low",
+    trustLevel:
+      partner.trust >= 70 ? "high" : partner.trust >= 50 ? "medium" : "low",
     cooperationLevel: partner.cooperationLevel,
     revenueShare: partner.revenueShare,
     status: partner.status,
-    daysRemaining: Math.max(0, partner.contractExpiryDay - (new Date().getDate())),
+    daysRemaining: Math.max(
+      0,
+      partner.contractExpiryDay - new Date().getDate(),
+    ),
   };
 }
 
@@ -64327,13 +64588,17 @@ function calculateOptimalPrice(product, company, competitors) {
   const marketMod = 1 + (product.marketScore || 10) / 100;
 
   // 品牌等级加成
-  const brandLevel = company.reputation ? Math.min(5, Math.floor(company.reputation / 20)) : 0;
+  const brandLevel = company.reputation
+    ? Math.min(5, Math.floor(company.reputation / 20))
+    : 0;
   const brandMod = 1 + brandLevel * 0.1;
 
   // 竞品价格参考
   let competitorPriceAvg = 0;
   if (competitors && competitors.length > 0) {
-    competitorPriceAvg = competitors.reduce((sum, c) => sum + (c.avgPrice || 0), 0) / competitors.length;
+    competitorPriceAvg =
+      competitors.reduce((sum, c) => sum + (c.avgPrice || 0), 0) /
+      competitors.length;
   }
 
   // 计算最优价格
@@ -64391,7 +64656,7 @@ function applyPriceChange(product, newPrice, day, reason) {
     newPrice: newPrice,
     changePercent: changePercent,
     userGrowthMod: userGrowthMod,
-    message: `💰 产品价格从 ¥${oldPrice.toLocaleString()} 调整为 ¥${newPrice.toLocaleString()}（${changePercent > 0 ? '+' : ''}${(changePercent * 100).toFixed(1)}%）`,
+    message: `💰 产品价格从 ¥${oldPrice.toLocaleString()} 调整为 ¥${newPrice.toLocaleString()}（${changePercent > 0 ? "+" : ""}${(changePercent * 100).toFixed(1)}%）`,
   };
 }
 
@@ -64406,8 +64671,11 @@ function runABTest(product, priceA, priceB, sampleSize, day) {
   const revenueA = priceA * sampleSize * conversionA;
   const revenueB = priceB * sampleSize * conversionB;
 
-  const winner = revenueA > revenueB ? 'A' : 'B';
-  const confidence = Math.min(95, 50 + Math.abs(revenueA - revenueB) / Math.max(revenueA, revenueB) * 50);
+  const winner = revenueA > revenueB ? "A" : "B";
+  const confidence = Math.min(
+    95,
+    50 + (Math.abs(revenueA - revenueB) / Math.max(revenueA, revenueB)) * 50,
+  );
 
   const test = {
     id: "abtest_" + product.id + "_" + day,
@@ -64431,8 +64699,8 @@ function runABTest(product, priceA, priceB, sampleSize, day) {
   return {
     success: true,
     test: test,
-    recommendation: winner === 'A' ? priceA : priceB,
-    message: `📊 A/B测试完成：方案${winner}胜出（置信度${confidence.toFixed(0)}%），建议价格¥${winner === 'A' ? priceA : priceB.toLocaleString()}`,
+    recommendation: winner === "A" ? priceA : priceB,
+    message: `📊 A/B测试完成：方案${winner}胜出（置信度${confidence.toFixed(0)}%），建议价格¥${winner === "A" ? priceA : priceB.toLocaleString()}`,
   };
 }
 
@@ -64443,7 +64711,9 @@ function getPriceElasticity(product) {
   }
 
   const category = PRODUCT_CATEGORIES[product.category];
-  const baseElasticity = category.growthFactor ? 1 / category.growthFactor : 1.0;
+  const baseElasticity = category.growthFactor
+    ? 1 / category.growthFactor
+    : 1.0;
 
   // 品牌等级降低弹性（品牌越强，用户对价格越不敏感）
   const brandElasticityMod = 1 - (product.brandLevel || 0) * 0.05;
@@ -64451,7 +64721,8 @@ function getPriceElasticity(product) {
   return {
     elasticity: baseElasticity * brandElasticityMod,
     category: product.category,
-    interpretation: baseElasticity * brandElasticityMod > 1 ? "价格敏感" : "价格不敏感",
+    interpretation:
+      baseElasticity * brandElasticityMod > 1 ? "价格敏感" : "价格不敏感",
   };
 }
 
@@ -64562,18 +64833,32 @@ const INVENTORY_TYPES = {
 
 /** 生成供应商 */
 function createSupplier(company, supplierType, day) {
-  const templates = SUPPLIER_TEMPLATES[company.industry] || SUPPLIER_TEMPLATES.tech;
+  const templates =
+    SUPPLIER_TEMPLATES[company.industry] || SUPPLIER_TEMPLATES.tech;
   const template = templates[Math.floor(Math.random() * templates.length)];
-  const supplierTemplate = SUPPLIER_TYPES[supplierType] || SUPPLIER_TYPES.component;
+  const supplierTemplate =
+    SUPPLIER_TYPES[supplierType] || SUPPLIER_TYPES.component;
 
-  const quality = supplierTemplate.qualityRange[0] + Math.random() * (supplierTemplate.qualityRange[1] - supplierTemplate.qualityRange[0]);
-  const price = supplierTemplate.priceRange[0] + Math.random() * (supplierTemplate.priceRange[1] - supplierTemplate.priceRange[0]);
-  const leadTime = Math.floor(supplierTemplate.leadTimeDays[0] + Math.random() * (supplierTemplate.leadTimeDays[1] - supplierTemplate.leadTimeDays[0]));
+  const quality =
+    supplierTemplate.qualityRange[0] +
+    Math.random() *
+      (supplierTemplate.qualityRange[1] - supplierTemplate.qualityRange[0]);
+  const price =
+    supplierTemplate.priceRange[0] +
+    Math.random() *
+      (supplierTemplate.priceRange[1] - supplierTemplate.priceRange[0]);
+  const leadTime = Math.floor(
+    supplierTemplate.leadTimeDays[0] +
+      Math.random() *
+        (supplierTemplate.leadTimeDays[1] - supplierTemplate.leadTimeDays[0]),
+  );
 
   const supplier = {
     id: "supplier_" + company.id + "_" + Date.now(),
     type: supplierType,
-    name: template.namePrefix + (["科技", "实业", "集团", "材料"][Math.floor(Math.random() * 4)]),
+    name:
+      template.namePrefix +
+      ["科技", "实业", "集团", "材料"][Math.floor(Math.random() * 4)],
     focus: template.focus,
     quality: quality,
     price: price,
@@ -64603,14 +64888,23 @@ function createSupplier(company, supplierType, day) {
 }
 
 /** 更新供应商质量 */
-function updateSupplierQuality(company, supplierId, day, qualityChange, reason) {
-  const supplier = company.suppliers.find(s => s.id === supplierId);
+function updateSupplierQuality(
+  company,
+  supplierId,
+  day,
+  qualityChange,
+  reason,
+) {
+  const supplier = company.suppliers.find((s) => s.id === supplierId);
   if (!supplier || supplier.status !== "active") {
     return { success: false, reason: "供应商不存在或已终止" };
   }
 
   const oldQuality = supplier.quality;
-  supplier.quality = Math.max(0, Math.min(100, supplier.quality + qualityChange));
+  supplier.quality = Math.max(
+    0,
+    Math.min(100, supplier.quality + qualityChange),
+  );
   supplier.lastDeliveryDay = day;
 
   // 记录质量历史
@@ -64640,7 +64934,11 @@ function updateSupplierQuality(company, supplierId, day, qualityChange, reason) 
 function manageInventory(company, inventoryType, action, amount, day) {
   if (!company.inventory) company.inventory = {};
 
-  const current = company.inventory[inventoryType] || { quantity: 0, value: 0, lastUpdated: day };
+  const current = company.inventory[inventoryType] || {
+    quantity: 0,
+    value: 0,
+    lastUpdated: day,
+  };
 
   if (action === "add") {
     current.quantity += amount;
@@ -64648,7 +64946,10 @@ function manageInventory(company, inventoryType, action, amount, day) {
     current.lastUpdated = day;
   } else if (action === "consume") {
     if (current.quantity < amount) {
-      return { success: false, reason: `库存不足，当前${current.quantity}，需要${amount}` };
+      return {
+        success: false,
+        reason: `库存不足，当前${current.quantity}，需要${amount}`,
+      };
     }
     current.quantity -= amount;
     current.lastUpdated = day;
@@ -64703,12 +65004,14 @@ function getSupplyChainRisk(company) {
     risk: Math.min(100, Math.round(avgRisk)),
     level: level,
     suppliers: activeCount,
-    details: company.suppliers.filter(s => s.status === "active").map(s => ({
-      name: s.name,
-      quality: s.quality,
-      reliability: s.reliability,
-      leadTime: s.leadTime,
-    })),
+    details: company.suppliers
+      .filter((s) => s.status === "active")
+      .map((s) => ({
+        name: s.name,
+        quality: s.quality,
+        reliability: s.reliability,
+        leadTime: s.leadTime,
+      })),
   };
 }
 
@@ -64722,14 +65025,21 @@ function tickSupplyChain(state, company) {
     if (supplier.status !== "active") continue;
 
     // 质量自然波动（±2%/天）
-    supplier.quality = Math.max(0, Math.min(100, supplier.quality + (Math.random() - 0.5) * 4));
+    supplier.quality = Math.max(
+      0,
+      Math.min(100, supplier.quality + (Math.random() - 0.5) * 4),
+    );
 
     // 可靠性衰减（每季度 -3，最低 0）
     supplier.reliability = Math.max(0, supplier.reliability - 0.03);
 
     // 合同到期检测
     if (day >= supplier.contractExpiryDay) {
-      if (supplier.quality >= 75 && supplier.reliability >= 60 && Math.random() < 0.6) {
+      if (
+        supplier.quality >= 75 &&
+        supplier.reliability >= 60 &&
+        Math.random() < 0.6
+      ) {
         supplier.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
         company.supplyChainHistory.push({
           action: "supplier_contract_renewed",
@@ -64741,7 +65051,10 @@ function tickSupplyChain(state, company) {
         // 供应商退出
         supplier.status = "terminated";
         supplier.terminatedDay = day;
-        company.supplyChainRisk = Math.min(100, (company.supplyChainRisk || 0) + 10);
+        company.supplyChainRisk = Math.min(
+          100,
+          (company.supplyChainRisk || 0) + 10,
+        );
         company.supplyChainHistory.push({
           action: "supplier_terminated",
           supplierId: supplier.id,
@@ -69032,7 +69345,11 @@ if (typeof window !== "undefined") {
     icon: "🌱",
     brief: "兴趣爱好、健康管理、心理状态、个人形象、终身学习、人生目标",
     version: "1.0.0",
-    related: ["mechanics:main", "mechanics:critical_needs", "mechanics:family_life"],
+    related: [
+      "mechanics:main",
+      "mechanics:critical_needs",
+      "mechanics:family_life",
+    ],
     sections: [
       {
         kind: "desc",
@@ -76904,16 +77221,8 @@ function renderTabBar(state) {
       // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
       btn.style.display = "none";
     } else if (btn.dataset.tab === "startup") {
-      // 创业Tab：注册了公司才显示
-      if (
-        !state.startup ||
-        state.startup.status === "none" ||
-        !state.startup.company
-      ) {
-        btn.style.display = "none";
-      } else {
-        btn.style.display = "";
-      }
+      // 创业Tab：一直可见（未注册时显示注册入口，已注册后显示管理面板）
+      btn.style.display = "";
     } else {
       btn.style.display = "";
     }

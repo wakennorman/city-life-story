@@ -10740,7 +10740,8 @@ function executeStartupAction(state, actionId, params) {
       break;
 
     case "create_product":
-      return createProduct(state, params.name, params.category || "app");
+      showCreateProductModal(state);
+      return { success: true, message: "" };
 
     case "hire_employee":
       return hireEmployee(state, params.role || "engineer", params.salary);
@@ -10870,6 +10871,79 @@ function executeStartupAction(state, actionId, params) {
     default:
       return { success: false, message: "未知行动：" + actionId };
   }
+}
+
+// ====== 创建新产品弹窗（支持自定义产品名） ======
+function showCreateProductModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  // 产品类别选择列表
+  const catKeys = Object.keys(PRODUCT_CATEGORIES).slice(0, 6);
+  let catHtml = catKeys
+    .map(
+      (k) =>
+        `<label style="display:inline-block;margin:4px 6px 4px 0;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;background:var(--bg-card);">
+          <input type="radio" name="prod-category" value="${k}" ${k === "app" ? "checked" : ""} style="margin-right:4px;">
+          ${PRODUCT_CATEGORIES[k].icon} ${PRODUCT_CATEGORIES[k].name}
+        </label>`,
+    )
+    .join("");
+
+  var bodyHtml =
+    '<div style="font-size:13px;">' +
+    "<p>启动新产品的开发计划。给你的产品取个名字吧！</p>" +
+    '<div style="margin:12px 0;">' +
+    '<label style="font-weight:600;font-size:12px;">📝 产品名称</label>' +
+    '<input id="new-product-name" type="text" placeholder="输入产品名称（可选）" maxlength="20" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
+    "</div>" +
+    '<div style="margin:12px 0;">' +
+    '<label style="font-weight:600;font-size:12px;">📋 产品类别</label>' +
+    '<div style="margin-top:6px;">' +
+    catHtml +
+    "</div>" +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗 AP（行动力）和开发周期，确定后会立即开始开发。</div>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🆕 创建新产品",
+    body: bodyHtml,
+    width: "420px",
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "✅ 开始开发",
+        cls: "btn-primary",
+        callback: function () {
+          var nameInput = document.getElementById("new-product-name");
+          var name = nameInput ? nameInput.value.trim() : "";
+          var selected = document.querySelector(
+            'input[name="prod-category"]:checked',
+          );
+          var category = selected ? selected.value : "app";
+          var result = createProduct(state, name || null, category);
+          if (result.success) {
+            StateManager.addMessage(
+              result.message || "产品开始开发！",
+              "success",
+            );
+            if (typeof renderAll === "function") renderAll();
+            if (typeof renderStartupTab === "function")
+              renderStartupTab(
+                state,
+                document.getElementById("startup-content"),
+              );
+            return true;
+          } else {
+            StateManager.addMessage(result.message || "创建失败", "warning");
+            return false;
+          }
+        },
+      },
+    ],
+  });
 }
 
 // ====== 功能模块开发弹窗 ======
@@ -11818,8 +11892,15 @@ function renderStartupTab(state, parent) {
   // 竞争对手情报（Phase 4）
   if (state.startup.competitors && state.startup.competitors.length > 0) {
     var compDiv = document.createElement("div");
-    compDiv.style.cssText = "margin-bottom:20px;";
-    compDiv.innerHTML = '<h4 style="margin:12px 0 8px;">👥 竞争对手</h4>';
+    compDiv.style.cssText =
+      "margin-bottom:20px;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg-secondary);";
+    compDiv.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+      '<h4 style="margin:0;font-size:13px;">👥 竞争对手 <span style="font-weight:normal;font-size:11px;color:var(--text-muted);">（同赛道其他公司）</span></h4>' +
+      '<span style="font-size:10px;color:var(--text-muted);">共' +
+      state.startup.competitors.length +
+      "家</span>" +
+      "</div>";
 
     // 市场份额
     var marketShare =
