@@ -921,6 +921,32 @@ function switchTab(tabName) {
   renderAll();
 }
 
+// ====== Tab 渲染函数注册表 ======
+// 新增标签页只需在这里加一行，无需修改 renderCurrentTab
+const TAB_RENDERERS = {
+  actions: renderActionsTab,
+  map: renderMapTab,
+  trade: renderTradeTab,
+  inventory: renderInventoryTab,
+  skills: { fn: renderSkillsTab, fallback: "📚 技能系统加载中..." },
+  corp: renderCorpTab,
+  investment: { fn: renderInvestmentTab, fallback: "投资系统加载中..." },
+  startup: { fn: renderStartupTab, fallback: "创业系统加载中..." },
+  enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
+  achievements: renderAchievementsTab,
+  growth: renderGrowthTab,
+  workplace_social: {
+    fn: renderWorkplaceSocialTab,
+    fallback: "职场社交系统加载中...",
+  },
+  family: { fn: renderFamilyTab, fallback: "家庭系统加载中..." },
+  personal_growth: {
+    fn: renderPersonalGrowthTab,
+    fallback: "个人成长系统加载中...",
+  },
+  wiki: { fn: renderWikiTab, fallback: "📖 百科系统加载中..." },
+};
+
 // ====== Tab Content 渲染 ======
 function renderCurrentTab(state) {
   const area = document.getElementById("content-area");
@@ -932,82 +958,18 @@ function renderCurrentTab(state) {
   // 活跃新闻
   renderActiveNews(state, area);
 
-  switch (currentTab) {
-    case "actions":
-      renderActionsTab(state, area);
-      break;
-    case "map":
-      renderMapTab(state, area);
-      break;
-    case "trade":
-      renderTradeTab(state, area);
-      break;
-    case "inventory":
-      renderInventoryTab(state, area);
-      break;
-    case "skills":
-      if (typeof renderSkillsTab === "function") renderSkillsTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">📚 技能系统加载中...</p>';
-      break;
-    case "corp":
-      renderCorpTab(state, area);
-      break;
-    case "investment":
-      if (typeof renderInvestmentTab === "function")
-        renderInvestmentTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">投资系统加载中...</p>';
-      break;
-    case "startup":
-      if (typeof renderStartupTab === "function") renderStartupTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">创业系统加载中...</p>';
-      break;
-    case "enterprise":
-      if (typeof renderEnterpriseFateTab === "function")
-        renderEnterpriseFateTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">企业生态加载中...</p>';
-      break;
-    case "achievements":
-      renderAchievementsTab(state, area);
-      break;
-    case "growth":
-      renderGrowthTab(state, area);
-      break;
-    case "workplace_social":
-      if (typeof renderWorkplaceSocialTab === "function")
-        renderWorkplaceSocialTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">职场社交系统加载中...</p>';
-      break;
-    case "family":
-      if (typeof renderFamilyTab === "function") renderFamilyTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">家庭系统加载中...</p>';
-      break;
-    case "personal_growth":
-      if (typeof renderPersonalGrowthTab === "function")
-        renderPersonalGrowthTab(state, area);
-      else
-        area.innerHTML =
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">个人成长系统加载中...</p>';
-      break;
-    case "wiki":
-      if (typeof renderWikiTab === "function") renderWikiTab(state, area);
-      else
-        area.innerHTML +=
-          '<p style="color:var(--text-muted);text-align:center;padding:40px;">📖 百科系统加载中...</p>';
-      break;
-    default:
-      area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
+  const renderer = TAB_RENDERERS[currentTab];
+  if (typeof renderer === "function") {
+    renderer(state, area);
+  } else if (renderer && renderer.fn) {
+    if (typeof renderer.fn === "function") renderer.fn(state, area);
+    else
+      area.innerHTML +=
+        '<p style="color:var(--text-muted);text-align:center;padding:40px;">' +
+        (renderer.fallback || "开发中...") +
+        "</p>";
+  } else {
+    area.innerHTML += '<p style="color:var(--text-muted)">📌 开发中...</p>';
   }
 }
 

@@ -52,7 +52,7 @@ const RELATIONSHIP_STAGES = {
 };
 
 // ====== 配偶/伴侣类型 ======
-const PARTNER_TYPES = {
+const SPOUSE_TYPES = {
   career_driven: {
     name: "事业型",
     icon: "💼",
@@ -320,10 +320,10 @@ function findDatingTarget(state, location) {
     "小萍",
     "小芳",
   ];
-  const partnerTypeKeys = Object.keys(PARTNER_TYPES);
+  const partnerTypeKeys = Object.keys(SPOUSE_TYPES);
   const typeKey =
     partnerTypeKeys[Math.floor(Math.random() * partnerTypeKeys.length)];
-  const partnerType = PARTNER_TYPES[typeKey];
+  const partnerType = SPOUSE_TYPES[typeKey];
   const name = names[Math.floor(Math.random() * names.length)];
 
   const target = {

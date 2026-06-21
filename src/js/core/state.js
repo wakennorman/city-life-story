@@ -415,6 +415,35 @@ function createDefaultState() {
   };
 }
 
+// ====== 顶层命名空间白名单（防止路径 typo 静默创建新顶层字段）======
+var _VALID_TOP_KEYS = null;
+function _ensureTopKeys() {
+  if (!_VALID_TOP_KEYS) {
+    _VALID_TOP_KEYS = new Set(Object.keys(createDefaultState()));
+  }
+}
+
+/**
+ * 校验路径的第一段是否在已知的顶层 key 中
+ * @param {string} path - 点号路径，如 "player.age"
+ * @returns {boolean} 合法返回 true，否则警告并返回 false
+ */
+function _validateStatePath(path) {
+  _ensureTopKeys();
+  var topKey = path.split(".")[0];
+  if (!_VALID_TOP_KEYS.has(topKey)) {
+    console.warn(
+      "[StateManager] ⚠️ 未知的顶层状态路径: '" +
+        path +
+        "'，topKey '" +
+        topKey +
+        "' 不在 createDefaultState() 中。请检查是否是拼写错误。",
+    );
+    return false;
+  }
+  return true;
+}
+
 // ====== 状态管理器 ======
 class GameStateManager {
   constructor() {
@@ -458,6 +487,7 @@ class GameStateManager {
    */
   update(path, value) {
     const parts = path.split(".");
+    if (parts.length >= 1) _validateStatePath(path);
     const state = this.getState();
 
     // 导航到父对象
@@ -478,6 +508,7 @@ class GameStateManager {
   batchUpdate(updates) {
     for (const [path, value] of Object.entries(updates)) {
       const parts = path.split(".");
+      if (parts.length >= 1) _validateStatePath(path);
       const state = this.getState();
       let parent = state;
       for (let i = 0; i < parts.length - 1; i++) {
