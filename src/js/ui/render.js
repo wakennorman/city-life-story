@@ -1809,7 +1809,7 @@ function getDailyActionTips(state) {
 }
 
 function renderActionsTab(state, parent) {
-  const actions = getAvailableActions(state);
+  var actions = getAvailableActions(state);
 
   // === 地点氛围描写（每日轮换，让城市有生命感）===
   if (typeof getLocationFlavor === "function") {
