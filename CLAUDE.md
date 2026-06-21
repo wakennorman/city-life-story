@@ -32,22 +32,20 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：行业反馈设计修正 — 移除玩家直接改变行业热度 ✅（2026-06-22 02:22）
-  - **修正** `src/js/core/world_params.js` — 重写 `applySectorFeedback()`
-    - ❌ **移除**：普通职业/散户持股直接影响行业热度（上班族不改变行业）
-    - ⭐ **新增**：随机日漂移（主力波动来源，每个行业每日 -0.015~+0.0225 随机变化）
-    - 🔒 **新增**：高影响力门槛（仅财富/名气≥4级时产生 0.003 边际影响）
-    - 🏢 **新增**：CEO公司联动（市场份额>30%→0.005，>15%→0.003，B轮+→0.002）
-    - 更新百科说明，同步修正设计文档
-  - **设计参考**：Capitalism Lab（员工不改变市场）、Democracy 4（影响力通过系统杠杆传递）
-  - **问题根源**：v1.6 最初实现时，`applySectorFeedback()` 让普通员工/散户影响行业热度——这违反直觉
-    - `stock.js` `renderKLine()` 折线/填充色**比较整个20天window首尾**，不是今日涨跌 → 跌的股票若window总体涨仍显示红色
-    - `investment.js` `drawPriceChart()` 同样用首尾比较
-    - `drawPriceChart()` 价格数字用 lineColor（首尾趋势），涨跌幅文字用 dayColor（今日涨跌）→ 两数颜色可能不同
-    - "全买"按钮误用 `btn-danger`（红色）
-    - 市场情绪 牛市→绿/熊市→红 与红涨绿跌相反；市场驱动利好→绿/利空→红 相反
-    - 颜色图例文字"📈涨🟢绿"标反
-  - **修复清单（9项）**：
+- **最近一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
+  - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动
+  - **新建** `src/js/phase2/property_market.js` — 房产市场周期引擎（4 阶段：火爆/平稳/降温/萧条）
+    - 阶段转换由 `sectorHeat["房地产"]` 阈值 + 新闻驱动 + 随机概率控制
+    - 新增政策趋紧度 `_propertyPolicyTightness`（-1~+1），新闻自动调整，每日 2% 衰减
+  - **重构** `src/js/phase2/investment.js`：PROPERTIES 移除 `appreciation`，改 `zoneWeight/volatility/baseAppreciation`
+    - 价格公式：`日变化率 = cycleDrift + sectorDrift×权重 + policyDrift + baseAppreciation + noise`
+    - 海外房产 `sectorHeat` 权重仅 0.2，基本不受国内周期影响
+    - 替换内联 tick → `tickPropertyMarket(state)` 调用
+  - **新闻扩展**：7 条新房地产新闻 + 现有新闻补 `industry: "房地产"` 标签 + 政策趋紧度反馈
+  - **世界参数**：房地产行业初始范围从 `0.85~1.15` 扩大到 `0.70~1.30`
+  - **UI 增强**：市场阶段横幅 + 波动率标签替代固定年增值 + 阶段转换消息通知
+  - **存档兼容**：`initPropertyMarket()` 自动迁移旧存档，保留 `currentPrice`
+  - **设计参考**：中国房地产真实周期（2014-2024）、Capitalism Lab、Democracy 4
     1. `stock.js renderKLine` — 折线/填充色改为**今日涨跌比较**（最后两个点）
     2. `stock.js card` — 7日均线emoji交换（高于均线=涨→🔴红）
     3. `stock.js card` — "全部买入"按钮 `btn-primary`→`btn-success`（绿色）

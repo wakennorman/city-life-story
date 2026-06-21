@@ -618,197 +618,262 @@ const INV_STOCKS = [
 ];
 
 const PROPERTIES = [
-  // === 住宅类（10处） ===
+  // === 住宅类（10处）===
+  // 移除固定 appreciation，改为 volatility + baseAppreciation + zoneWeight 波动系统
   {
     id: "apt_cv",
     name: "城中村握手楼",
     type: "住宅",
     price: 80000,
-    appreciation: 0.0001,
     rent: 500,
     desc: "入门级,拆迁赌注",
+    zone: "urban_village",
+    volatility: 0.005,
+    baseAppreciation: 0.0,
+    zoneWeight: { sectorHeat: 0.6, policy: 1.2, cycle: 0.8 },
   },
   {
     id: "apt_old",
     name: "老破小学区",
     type: "住宅",
     price: 500000,
-    appreciation: 0.0003,
     rent: 1500,
     desc: "学区光环,硬通货",
+    zone: "old_city",
+    volatility: 0.003,
+    baseAppreciation: -0.0001,
+    zoneWeight: { sectorHeat: 0.5, policy: 1.5, cycle: 0.7 },
   },
   {
     id: "apt_suburb",
     name: "郊区经济房",
     type: "住宅",
     price: 250000,
-    appreciation: 0.0002,
     rent: 900,
     desc: "地铁规划中",
+    zone: "suburb",
+    volatility: 0.004,
+    baseAppreciation: 0.0001,
+    zoneWeight: { sectorHeat: 0.7, policy: 1.3, cycle: 0.8 },
   },
   {
     id: "apt_new",
     name: "精装两居室",
     type: "住宅",
     price: 1500000,
-    appreciation: 0.0005,
     rent: 4000,
     desc: "CBD白领最爱",
+    zone: "city_center",
+    volatility: 0.003,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.8, policy: 1.0, cycle: 0.9 },
   },
   {
     id: "apt_loft",
     name: "Loft挑高公寓",
     type: "住宅",
     price: 600000,
-    appreciation: 0.0004,
     rent: 2000,
     desc: "年轻人第一套房",
+    zone: "city_center",
+    volatility: 0.005,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.8, policy: 0.9, cycle: 0.9 },
   },
   {
     id: "apt_garden",
     name: "花园洋房",
     type: "住宅",
     price: 3000000,
-    appreciation: 0.0006,
     rent: 8000,
     desc: "中产改善",
+    zone: "suburb",
+    volatility: 0.003,
+    baseAppreciation: 0.0003,
+    zoneWeight: { sectorHeat: 0.9, policy: 0.8, cycle: 1.0 },
   },
   {
     id: "luxury",
     name: "江景大平层",
     type: "住宅",
     price: 5000000,
-    appreciation: 0.0008,
     rent: 12000,
     desc: "CEO标配",
+    zone: "city_center",
+    volatility: 0.004,
+    baseAppreciation: 0.0004,
+    zoneWeight: { sectorHeat: 1.0, policy: 0.7, cycle: 1.1 },
   },
   {
     id: "villa",
     name: "山水别墅",
     type: "住宅",
     price: 8000000,
-    appreciation: 0.0007,
     rent: 20000,
     desc: "终极住房梦",
+    zone: "suburb",
+    volatility: 0.004,
+    baseAppreciation: 0.0004,
+    zoneWeight: { sectorHeat: 1.0, policy: 0.7, cycle: 1.1 },
   },
   {
     id: "apt_sea",
     name: "海景度假屋",
     type: "住宅",
     price: 3500000,
-    appreciation: 0.0006,
     rent: 10000,
     desc: "三亚/北海概念",
+    zone: "tourist",
+    volatility: 0.005,
+    baseAppreciation: 0.0003,
+    zoneWeight: { sectorHeat: 0.9, policy: 0.5, cycle: 0.9 },
   },
   {
     id: "apt_oldtown",
     name: "古城四合院",
     type: "住宅",
     price: 12000000,
-    appreciation: 0.0012,
     rent: 35000,
     desc: "文化溢价,稀缺品",
+    zone: "old_city",
+    volatility: 0.006,
+    baseAppreciation: 0.0006,
+    zoneWeight: { sectorHeat: 1.1, policy: 1.0, cycle: 1.2 },
   },
-  // === 商业地产（8处） ===
+  // === 商业地产（8处）===
   {
     id: "shop_street",
     name: "街边早餐铺",
     type: "商铺",
     price: 120000,
-    appreciation: 0.0003,
     rent: 1500,
     desc: "现金牛,门槛低",
+    zone: "urban_village",
+    volatility: 0.006,
+    baseAppreciation: 0.0001,
+    zoneWeight: { sectorHeat: 0.7, policy: 0.8, cycle: 0.8 },
   },
   {
     id: "shop",
     name: "社区底商",
     type: "商铺",
     price: 800000,
-    appreciation: 0.0006,
     rent: 5000,
     desc: "人流稳定",
+    zone: "city_center",
+    volatility: 0.005,
+    baseAppreciation: 0.0003,
+    zoneWeight: { sectorHeat: 0.8, policy: 0.7, cycle: 0.9 },
   },
   {
     id: "shop_mall",
     name: "商场内铺",
     type: "商铺",
     price: 2000000,
-    appreciation: 0.0005,
     rent: 12000,
     desc: "品牌效应",
+    zone: "city_center",
+    volatility: 0.006,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.9, policy: 0.6, cycle: 0.9 },
   },
   {
     id: "office",
     name: "写字间隔断",
     type: "写字楼",
     price: 2000000,
-    appreciation: 0.0004,
     rent: 8000,
     desc: "企业租户多",
+    zone: "city_center",
+    volatility: 0.005,
+    baseAppreciation: 0.0001,
+    zoneWeight: { sectorHeat: 0.8, policy: 0.8, cycle: 0.8 },
   },
   {
     id: "office_floor",
     name: "整层写字楼",
     type: "写字楼",
     price: 8000000,
-    appreciation: 0.0005,
     rent: 35000,
     desc: "大厂分部最爱",
+    zone: "city_center",
+    volatility: 0.005,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.9, policy: 0.7, cycle: 0.9 },
   },
   {
     id: "warehouse",
     name: "物流仓库",
     type: "工业",
     price: 1500000,
-    appreciation: 0.0003,
     rent: 10000,
     desc: "电商红利",
+    zone: "industrial",
+    volatility: 0.007,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.6, policy: 0.6, cycle: 0.7 },
   },
   {
     id: "parking",
     name: "地下车位",
     type: "车位",
     price: 80000,
-    appreciation: 0.0004,
     rent: 400,
     desc: "车位比车贵",
+    zone: "city_center",
+    volatility: 0.003,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.5, policy: 1.0, cycle: 0.6 },
   },
   {
     id: "hotel_room",
     name: "酒店式公寓",
     type: "商住",
     price: 500000,
-    appreciation: 0.0005,
     rent: 3000,
     desc: "日租模式",
+    zone: "tourist",
+    volatility: 0.005,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.8, policy: 0.8, cycle: 0.8 },
   },
-  // === 海外地产（3处） ===
+  // === 海外地产（3处）===
+  // 海外房产 sectorHeat 权重仅 0.2，基本不受中国房地产周期影响
   {
     id: "apt_tokyo",
     name: "东京小公寓",
     type: "海外",
     price: 1200000,
-    appreciation: 0.0003,
     rent: 5000,
     desc: "日元贬值机会",
+    zone: "overseas",
+    volatility: 0.004,
+    baseAppreciation: 0.0001,
+    zoneWeight: { sectorHeat: 0.2, policy: 0.2, cycle: 0.5 },
   },
   {
     id: "apt_bangkok",
     name: "曼谷公寓",
     type: "海外",
     price: 350000,
-    appreciation: 0.0004,
     rent: 2000,
     desc: "东南亚热点",
+    zone: "overseas",
+    volatility: 0.004,
+    baseAppreciation: 0.0002,
+    zoneWeight: { sectorHeat: 0.2, policy: 0.2, cycle: 0.5 },
   },
   {
     id: "apt_dubai",
     name: "迪拜投资房",
     type: "海外",
     price: 2000000,
-    appreciation: 0.0006,
     rent: 10000,
     desc: "免税天堂",
+    zone: "overseas",
+    volatility: 0.006,
+    baseAppreciation: 0.0003,
+    zoneWeight: { sectorHeat: 0.2, policy: 0.2, cycle: 0.5 },
   },
 ];
 
@@ -1048,6 +1113,11 @@ function initInvestment(state) {
     if (inv.btcHistory.length > 30) inv.btcHistory.shift();
   }
   inv.lastTickDay = state.player.day;
+
+  // 房产市场 v2 初始化/迁移
+  if (typeof initPropertyMarket === "function") {
+    initPropertyMarket(state);
+  }
 }
 
 function tickInvestmentDaily(state) {
@@ -1124,21 +1194,26 @@ function tickInvestmentDaily(state) {
     }
   }
 
-  // 房产（受房地产/金融类新闻影响）
-  var propertyNewsMul =
-    typeof getNewsEffectForProperty === "function"
-      ? getNewsEffectForProperty(state)
-      : 1.0;
-  for (var p = 0; p < (inv.properties || []).length; p++) {
-    var prop = inv.properties[p];
-    prop.currentPrice = Math.round(
-      (prop.currentPrice || prop.buyPrice) *
-        (1 + prop.appreciation + (Math.random() - 0.5) * 0.002) *
-        propertyNewsMul,
-    );
-    var isSelfLived = inv.selfLivePropertyId === prop.id;
-    if (state.player.day % 30 === 0 && !isSelfLived)
-      state.resources.cash += prop.rent || 0;
+  // 房产（v2 波动系统：委托 property_market.js 引擎）
+  if (typeof tickPropertyMarket === "function") {
+    tickPropertyMarket(state);
+  } else {
+    // 降级：维持旧逻辑（防止 property_market.js 未加载时崩溃）
+    var propertyNewsMulFallback =
+      typeof getNewsEffectForProperty === "function"
+        ? getNewsEffectForProperty(state)
+        : 1.0;
+    for (var p = 0; p < (inv.properties || []).length; p++) {
+      var prop = inv.properties[p];
+      prop.currentPrice = Math.round(
+        (prop.currentPrice || prop.buyPrice) *
+          (1 + (prop.appreciation || 0.0001) + (Math.random() - 0.5) * 0.002) *
+          propertyNewsMulFallback,
+      );
+      var isSelfLived = inv.selfLivePropertyId === prop.id;
+      if (state.player.day % 30 === 0 && !isSelfLived)
+        state.resources.cash += prop.rent || 0;
+    }
   }
 
   // 汽车（不受新闻直接影响，维持原状）
@@ -1335,7 +1410,10 @@ function buyProperty(propId) {
     id: prop.id,
     name: prop.name,
     type: prop.type,
-    appreciation: prop.appreciation,
+    zone: prop.zone || "general",
+    zoneWeight: prop.zoneWeight || { sectorHeat: 0.8, policy: 0.8, cycle: 0.8 },
+    volatility: prop.volatility || 0.004,
+    baseAppreciation: prop.baseAppreciation || 0.0,
     rent: prop.rent,
     buyPrice: prop.price,
     currentPrice: prop.price,
@@ -2827,6 +2905,17 @@ function renderProperties(area, inv, state, parent) {
     }
   }
 
+  // === 📊 市场阶段横幅（v2 波动系统） ===
+  if (typeof renderPropertyPhaseBanner === "function") {
+    var bannerHtml = renderPropertyPhaseBanner(state);
+    if (bannerHtml) {
+      var bannerDiv = document.createElement("div");
+      bannerDiv.innerHTML = bannerHtml;
+      var bannerNode = bannerDiv.firstChild;
+      if (bannerNode) area.appendChild(bannerNode);
+    }
+  }
+
   // === 🏠 可购买房产市场 ===
   var marketDiv = document.createElement("div");
   marketDiv.style.cssText = "margin-bottom:12px;";
@@ -2865,9 +2954,11 @@ function renderProperties(area, inv, state, parent) {
       "</strong> | 月租: ¥" +
       propDef.rent.toLocaleString() +
       "</div>" +
-      '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
-      (propDef.appreciation * 365 * 100).toFixed(1) +
-      "%</div>" +
+      (typeof getPropertyVolatilityLabel === "function"
+        ? getPropertyVolatilityLabel(propDef)
+        : '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
+          ((propDef.appreciation || 0.0001) * 365 * 100).toFixed(1) +
+          "%</div>") +
       (owned
         ? '<div style="font-size:10px;color:var(--success);margin-top:4px;">✅ 已持有</div>'
         : '<button class="btn btn-sm btn-success buy-prop-btn" data-id="' +

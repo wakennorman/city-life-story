@@ -537,6 +537,7 @@ const NEWS_EVENTS = [
     effects: {
       investmentEffect: [
         { symbols: ["ESTATE"], mul: 0.8 },
+        { industry: "房地产", mul: 0.8 },
         { industry: "金融", mul: 0.95 },
         { category: "贵金属", mul: 1.05 },
       ],
@@ -550,6 +551,7 @@ const NEWS_EVENTS = [
     effects: {
       investmentEffect: [
         { symbols: ["ESTATE"], mul: 1.25 },
+        { industry: "房地产", mul: 1.25 },
         { industry: "金融", mul: 1.08 },
         { category: "贵金属", mul: 0.97 },
       ],
@@ -684,6 +686,97 @@ const NEWS_EVENTS = [
         { industry: "金融", mul: 0.96 },
       ],
       duration: 5,
+    },
+    type: "investment",
+  },
+
+  // ====== 房地产新闻（v2 波动系统） ======
+  {
+    id: "mortgage_rate_cut",
+    headline: "🏦 央行下调房贷利率！首套利率降至3.5%，月供减少上千元",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.15 },
+        { industry: "金融", mul: 1.05 },
+        { symbols: ["ESTATE"], mul: 1.15 },
+      ],
+      duration: 7,
+    },
+    type: "investment",
+  },
+  {
+    id: "property_tax_pilot",
+    headline: "📋 房产税试点扩围！多套房持有成本大幅上升，投资客抛售潮",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 0.82 },
+        { symbols: ["ESTATE"], mul: 0.82 },
+      ],
+      duration: 10,
+    },
+    type: "investment",
+  },
+  {
+    id: "developer_default",
+    headline: "🏗️ 某千亿房企债务违约！行业信用危机蔓延，楼市恐慌加剧",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 0.78 },
+        { symbols: ["ESTATE"], mul: 0.78 },
+        { industry: "金融", mul: 0.93 },
+        { category: "贵金属", mul: 1.08 },
+      ],
+      duration: 6,
+    },
+    type: "investment",
+  },
+  {
+    id: "city_infrastructure",
+    headline: "🚇 地铁新线路获批！沿线房价预期升温，土拍市场抢先反应",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.08 },
+        { symbols: ["ESTATE"], mul: 1.08 },
+      ],
+      duration: 5,
+    },
+    type: "investment",
+  },
+  {
+    id: "population_inflow",
+    headline: "🏙️ 一线城市人口净流入创新高！住房需求旺盛，租金持续上涨",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.12 },
+        { symbols: ["ESTATE"], mul: 1.12 },
+        { industry: "消费", mul: 1.05 },
+      ],
+      duration: 8,
+    },
+    type: "investment",
+  },
+  {
+    id: "vacant_housing_survey",
+    headline: "🔍 全国空置房调查启动！存量房市场承压，二手房挂牌量激增",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 0.88 },
+        { symbols: ["ESTATE"], mul: 0.88 },
+      ],
+      duration: 4,
+    },
+    type: "investment",
+  },
+  {
+    id: "relaxed_hukou",
+    headline: "📜 二线城市全面放开落户！购房门槛降低，新市民购房需求释放",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.1 },
+        { symbols: ["ESTATE"], mul: 1.1 },
+        { industry: "消费", mul: 1.03 },
+      ],
+      duration: 6,
     },
     type: "investment",
   },

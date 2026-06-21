@@ -84,7 +84,46 @@ function getNewsEffectForBtc(state) {
 
 /** 获取活跃新闻对房产的综合乘数（通过匹配 industry="房地产" 或 symbol="ESTATE"） */
 function getNewsEffectForProperty(state) {
-  return getNewsEffectForInvestment("ESTATE", "房地产", "股票", state);
+  // 原有逻辑：通过 getNewsEffectForInvestment 匹配
+  var baseMul = getNewsEffectForInvestment("ESTATE", "房地产", "股票", state);
+
+  // 新增：从活跃新闻中提取政策趋紧度影响
+  var activeNews = state.activeNews || [];
+  var inv = state.investment;
+  if (!inv) return baseMul;
+
+  for (var ni = 0; ni < activeNews.length; ni++) {
+    var n = activeNews[ni];
+
+    // 利空/调控类新闻 → 政策趋紧（+0.15）
+    if (
+      n.id === "property_cooling" ||
+      n.id === "property_tax_pilot" ||
+      n.id === "developer_default" ||
+      n.id === "vacant_housing_survey"
+    ) {
+      inv._propertyPolicyTightness = Math.min(
+        1.0,
+        (inv._propertyPolicyTightness || 0) + 0.15,
+      );
+    }
+
+    // 利好/刺激类新闻 → 政策宽松（-0.15）
+    if (
+      n.id === "property_stimulus" ||
+      n.id === "mortgage_rate_cut" ||
+      n.id === "relaxed_hukou" ||
+      n.id === "city_infrastructure" ||
+      n.id === "population_inflow"
+    ) {
+      inv._propertyPolicyTightness = Math.max(
+        -1.0,
+        (inv._propertyPolicyTightness || 0) - 0.15,
+      );
+    }
+  }
+
+  return baseMul;
 }
 
 /** 生成今日市场驱动摘要文本（用于投资Tab展示） */

@@ -884,6 +884,57 @@ src/
 
 ## 变更记录
 
+### 2026-06-22 — 房产市场波动系统 v2：告别固定增值，引入市场周期+新闻+政策联动
+
+**核心改动**：
+
+1. **房产市场周期引擎**（新建 `property_market.js`）
+   - 4个市场阶段：火爆(boom) +0.0008~+0.0025/天 / 平稳(stable) ±0.0005 / 降温(cooling) -0.0015~-0.0003 / 萧条(bust) -0.003~-0.0008
+   - 阶段转换：sectorHeat 阈值触发、新闻驱动、随机提前结束，禁止跳级（boom↔bust）
+   - 政策趋紧度 `_propertyPolicyTightness`（-1~+1）：新闻自动调整，每日 2% 衰减
+
+2. **PROPERTIES 数据重构**（`investment.js`）
+   - 移除所有 `appreciation` 固定增值字段
+   - 新增 `zone`、`volatility`、`baseAppreciation`（可为负）、`zoneWeight.sectorHeat/policy/cycle`
+   - 海外房产 `zoneWeight.sectorHeat=0.2`，基本不受国内周期影响
+   - 购买时存储新字段到房产对象
+
+3. **价格计算新公式**
+   - `日变化率 = cycleDrift + sectorDrift×权重 + policyDrift + baseAppreciation + noise`
+   - `新价格 = 当前价格 × (1+日变化率) × newsMul`
+   - 新增保底价（买入价 10%），防止归零
+
+4. **新闻系统扩建**（`news.js` + `news_investment_bridge.js`）
+   - 新增 7 条房地产新闻：mortgage_rate_cut / property_tax_pilot / developer_default / city_infrastructure / population_inflow / vacant_housing_survey / relaxed_hukou
+   - 现有 `property_cooling` 和 `property_stimulus` 补上 `industry: "房地产"` 标签
+   - 新闻→政策趋紧度自动反馈
+
+5. **世界参数调整**（`world_params.js`）
+   - 房地产行业初始范围从 0.85~1.15 扩大到 0.70~1.30
+   - 离线回退模式同样处理
+
+6. **UI 增强**
+   - 房产 Tab 顶部添加市场阶段横幅（🔥火爆/➡️平稳/❄️降温/💥萧条）
+   - 市场卡片移除固定"年增值"，改为波动率+结构趋势展示
+   - 阶段转换时弹消息通知
+
+7. **存档迁移**
+   - `initPropertyMarket()` 在 `initInvestment()` 末尾调用
+   - 旧存档已持有房产保留 `currentPrice`，自动补 v2 字段
+   - 一次性提示："房产市场系统已升级至v2：价格将随市场波动，不再固定增值。"
+
+**文件变更**：
+
+- `src/js/phase2/property_market.js` — 新建（市场引擎）
+- `src/js/phase2/investment.js` — PROPERTIES 重构 + tick 替换 + buyProperty 增强 + UI 横幅
+- `src/js/data/news.js` — 7 条新房地产新闻 + 现有新闻补标签
+- `src/js/core/news_investment_bridge.js` — 新闻→政策趋紧度反馈
+- `src/js/core/world_params.js` — 房地产初始范围扩大
+- `src/js/core/state.js` — 新增 5 个房产市场状态字段
+- `src/index.html` — 注册 property_market.js
+
+**设计参考**：Capitalism Lab（CEO 影响市场）、中国房地产真实周期（2014-2024）、Democracy 4（政策传导）
+
 ### 2026-06-19 — 投资板块完善：股票整股约束 + 银行贷款动态评估
 
 **核心改动**：

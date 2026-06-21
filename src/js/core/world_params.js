@@ -166,8 +166,17 @@ function seedWorldFromReality(state) {
                   params.marketMood === "bearish" ? 0.9 : 1.05;
                 break;
               case "房地产":
-                params.initialSectorBias[sec] =
-                  params.marketMood === "bearish" ? 0.85 : 1.0;
+                // 房地产波动范围更宽（0.70-1.30），反映真实市场大起大落
+                switch (params.marketMood) {
+                  case "bullish":
+                    params.initialSectorBias[sec] = 1.0 + Math.random() * 0.3;
+                    break;
+                  case "bearish":
+                    params.initialSectorBias[sec] = 0.7 + Math.random() * 0.2;
+                    break;
+                  default:
+                    params.initialSectorBias[sec] = 0.8 + Math.random() * 0.4;
+                }
                 break;
               case "医药":
                 params.initialSectorBias[sec] = 1.02;
@@ -212,7 +221,12 @@ function seedWorldFromReality(state) {
 
     for (var si2 = 0; si2 < WORLD_SECTORS.length; si2++) {
       var sec2 = WORLD_SECTORS[si2];
-      params.initialSectorBias[sec2] = 0.85 + Math.random() * 0.3;
+      // 房地产行业波动范围更宽（0.70-1.30），其余行业范围较窄（0.85-1.15）
+      if (sec2 === "房地产") {
+        params.initialSectorBias[sec2] = 0.7 + Math.random() * 0.6;
+      } else {
+        params.initialSectorBias[sec2] = 0.85 + Math.random() * 0.3;
+      }
       params.sectorHeat[sec2] = params.initialSectorBias[sec2];
     }
 

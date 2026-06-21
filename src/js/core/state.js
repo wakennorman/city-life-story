@@ -181,6 +181,13 @@ function createDefaultState() {
       selfLivePropertyId: null,
       cars: [],
       lastTickDay: 0,
+
+      // --- 房产市场 v2 状态（波动系统） ---
+      propertyMarketPhase: "stable", // "boom" | "stable" | "cooling" | "bust"
+      propertyPhaseStartDay: 0, // 当前阶段开始天
+      propertyPhaseDuration: 30, // 当前阶段持续期
+      _propertyPolicyTightness: 0, // -1~+1 政策趋紧度
+      _propertySystemV2: true, // 标记已升级（新游戏直接标记）
     },
 
     // --- 企业命运系统 (P2#11) ---
