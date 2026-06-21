@@ -12774,6 +12774,10 @@ function queueRandomEvent(state, phase) {
     if (typeof getNewsBonusWeight === "function") {
       w += getNewsBonusWeight(e.id, state);
     }
+    // 世界参数反馈环：行业热度高的领域相关事件更易触发
+    if (typeof getSectorEventWeightMod === "function" && e.sector) {
+      w *= getSectorEventWeightMod(e.sector);
+    }
     return Math.max(0.1, w);
   });
   var totalWeight = weights.reduce(function (a, b) {

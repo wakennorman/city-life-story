@@ -1166,7 +1166,7 @@ function getActiveIntelTips(state, limit) {
   return typeof limit === "number" ? tips.slice(0, limit) : tips;
 }
 
-/** 获取随机新闻事件 */
+/** 获取随机新闻事件（根据世界参数加权） */
 function getRandomNewsEvent() {
   // 按类型加权：价格35%，工作20%，个人20%，政策10%，投资15%
   var weights = {
@@ -1176,6 +1176,27 @@ function getRandomNewsEvent() {
     policy: 10,
     investment: 15,
   };
+
+  // 世界参数反馈环：市场情绪影响新闻类型概率
+  if (typeof getMarketMood === "function") {
+    var mood = getMarketMood();
+    if (mood === "bullish" || mood === "bearish") {
+      weights.investment += 10; // 牛/熊市 → 投资类新闻更活跃
+      weights.price += 5;
+      weights.policy -= 5;
+      weights.personal -= 5;
+    } else if (mood === "volatile") {
+      weights.price += 10; // 震荡期 → 价格变动新闻多
+      weights.investment += 5;
+      weights.policy -= 3;
+    }
+  }
+
+  // 保证各类型至少保留最低权重
+  for (var _wt in weights) {
+    weights[_wt] = Math.max(5, weights[_wt]);
+  }
+
   var total = 0;
   for (var k in weights) total += weights[k];
   var roll = Random.float(0, total);

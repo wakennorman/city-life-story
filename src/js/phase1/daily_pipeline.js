@@ -377,6 +377,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 世界参数反馈环（在天气和新闻之前，确保参数最新） ===
+  {
+    name: "world_params_tick",
+    fn: function (state) {
+      if (typeof tickWorldParams === "function") {
+        tickWorldParams(state);
+      }
+    },
+  },
+
   // === 天气 ===
   {
     name: "weather",

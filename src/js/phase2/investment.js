@@ -1070,8 +1070,16 @@ function tickInvestmentDaily(state) {
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
 
-    // 基础随机游走
+    // 基础随机游走 + 世界参数行业热度偏置
     var baseChange = 1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility;
+    if (typeof getSectorHeat === "function") {
+      var heat = getSectorHeat(s.industry);
+      if (heat && heat !== 1.0) {
+        // heat 偏离 1.0 的 10% 转化为每日趋势偏移
+        // 如 heat=1.10 → 每日约 +1% 额外偏上
+        baseChange *= 1 + (heat - 1.0) * 0.1;
+      }
+    }
 
     // 新闻效应乘数
     var newsMul =

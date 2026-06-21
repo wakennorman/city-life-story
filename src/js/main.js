@@ -1154,6 +1154,11 @@ function startNewGame() {
     initEnterpriseFate(StateManager.getState());
   }
 
+  // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
+  if (typeof seedWorldFromReality === "function") {
+    seedWorldFromReality(StateManager.getState());
+  }
+
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产
   var inheritanceApplied = false;
   try {

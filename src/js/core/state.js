@@ -350,6 +350,9 @@ function createDefaultState() {
       },
     },
 
+    // --- 世界参数反馈环 ---
+    _worldParams: null, // 由 world_params.js 的 tickWorldParams 在首次调用时惰性初始化
+
     // --- 事件与消息 ---
     activeNews: [],
     newsHistory: [],
@@ -554,9 +557,17 @@ class GameStateManager {
     if (s.flags && !s.flags._chainEventQueue) {
       s.flags._chainEventQueue = [];
     }
+    // v1.5 → v1.6 迁移：世界参数反馈环
+    if (!s._worldParams) {
+      if (typeof createDefaultWorldParams === "function") {
+        s._worldParams = createDefaultWorldParams();
+      } else {
+        s._worldParams = null;
+      }
+    }
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.5.0";
+    s.version = "1.6.0";
     this._markAllDirty();
     this._notify();
   }
