@@ -1197,6 +1197,44 @@ const ACHIEVEMENTS = [
       return (st.startup.flags.exitValue || 0) >= 1000000;
     },
   },
+  {
+    id: "news_intel_collector",
+    name: "消息灵通",
+    desc: "从NPC处累计获取10条情报。消息就是财富。",
+    story:
+      "你通过和街坊邻居聊天，获得了一条又一条有价值的情报——在这个城市里，信息差就是钱。",
+    icon: "📡",
+    category: "新闻",
+    hidden: false,
+    check: function (st) {
+      return (st.flags._intelReceivedCount || 0) >= 10;
+    },
+  },
+  {
+    id: "news_prophet",
+    name: "先知先觉",
+    desc: "依靠情报提前布局投资，累计获利超过¥10万。",
+    story:
+      "别人还在看新闻的时候，你已经提前布局好了一切。你是在正确的时间做正确的事。",
+    icon: "🔮",
+    category: "新闻",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._intelProfit || 0) >= 100000;
+    },
+  },
+  {
+    id: "news_commentator",
+    name: "新闻评论员",
+    desc: "累计触发20次NPC对新闻的评论。",
+    story: "每条新闻你都能听到街坊们的看法——你越来越懂这个城市的脉动了。",
+    icon: "🎙️",
+    category: "新闻",
+    hidden: false,
+    check: function (st) {
+      return (st.flags._npcNewsComments || 0) >= 20;
+    },
+  },
 ];
 
 /**

@@ -190,6 +190,129 @@ function getNewsJobBoost(jobId, state) {
 }
 
 // ============================================================
+// 第五层：新闻长尾效应 — 让新闻对世界产生持续性影响
+// ============================================================
+
+/** 新闻长尾影响映射 */
+var NEWS_LONGTAIL_EFFECTS = {
+  crackdown: {
+    type: "policy",
+    duration: 14,
+    effects: function (state) {
+      if (!state.flags._longtailCrackdown) state.flags._longtailCrackdown = 0;
+      state.flags._longtailCrackdown = 14;
+    },
+  },
+  min_wage: {
+    type: "policy",
+    duration: 30,
+    effects: function (state) {
+      if (typeof updateWorldParams === "function") {
+        var wp = state._worldParams;
+        if (!wp) return;
+        if (!wp._wageShift) wp._wageShift = 1.0;
+        wp._wageShift = 1.05;
+        StateManager.addMessage(
+          "📋 最低工资调整生效，所有工作收入+5%",
+          "success",
+        );
+      }
+    },
+  },
+  rate_cut: {
+    type: "monetary",
+    duration: 30,
+    effects: function (state) {
+      var wp = state._worldParams;
+      if (!wp) return;
+      if (!wp._rateEnv) wp._rateEnv = 0;
+      wp._rateEnv = -0.03;
+    },
+  },
+  rate_hike: {
+    type: "monetary",
+    duration: 30,
+    effects: function (state) {
+      var wp = state._worldParams;
+      if (!wp) return;
+      if (!wp._rateEnv) wp._rateEnv = 0;
+      wp._rateEnv = 0.03;
+    },
+  },
+  property_tax_pilot: {
+    type: "policy",
+    duration: 60,
+    effects: function (state) {
+      if (typeof updateWorldParams === "function") {
+        var wp = state._worldParams;
+        if (!wp) return;
+        if (!wp._housingPressure) wp._housingPressure = 0;
+        wp._housingPressure = 0.15;
+        StateManager.addMessage(
+          "🏠 房产税风声影响：租金小幅上涨，多套房持有者开始抛售。",
+          "info",
+        );
+      }
+    },
+  },
+  trade_war_chip: {
+    type: "geopolitical",
+    duration: 21,
+    effects: function (state) {
+      if (state._worldParams && state._worldParams.sectorHeat) {
+        state._worldParams.sectorHeat["科技"] -= 0.08;
+      }
+    },
+  },
+  ev_subsidy: {
+    type: "industrial",
+    duration: 30,
+    effects: function (state) {
+      if (state._worldParams && state._worldParams.sectorHeat) {
+        state._worldParams.sectorHeat["新能源"] =
+          (state._worldParams.sectorHeat["新能源"] || 1.0) + 0.12;
+        StateManager.addMessage(
+          "🚗 新能源补贴政策落地，行业热度上升！",
+          "success",
+        );
+      }
+    },
+  },
+};
+
+/**
+ * 应用新闻长尾影响 — 新闻过期后仍有持续效果
+ */
+function applyNewsLongTail(state) {
+  if (!state || !state.flags) return;
+  if (!state.flags._newsLongtail) state.flags._newsLongtail = {};
+
+  var activeNews = state.activeNews || [];
+
+  for (var ni = 0; ni < activeNews.length; ni++) {
+    var news = activeNews[ni];
+    var tailDef = NEWS_LONGTAIL_EFFECTS[news.id];
+    if (!tailDef) continue;
+
+    var key = "_tail_" + news.id;
+    if (!state.flags._newsLongtail[key]) {
+      state.flags._newsLongtail[key] = state.player.day + tailDef.duration;
+      if (typeof tailDef.effects === "function") {
+        tailDef.effects(state);
+      }
+    }
+  }
+
+  // 清理过期长尾
+  for (var tailKey in state.flags._newsLongtail) {
+    if (!state.flags._newsLongtail.hasOwnProperty(tailKey)) continue;
+    if (state.player.day > state.flags._newsLongtail[tailKey]) {
+      delete state.flags._newsLongtail[tailKey];
+    }
+  }
+}
+
+// ============================================================
 // 第四层：桥接管线的全量执行
 // ============================================================
 
@@ -203,13 +326,17 @@ function runDailyNewsBridge(state) {
   // 2. 新闻价格情绪传导（仅新闻后1-2天）
   applyNewsPriceSentiment(state);
 
-  // 3. NPC对新闻的反馈（已由 npc_event_bridge.js 处理，这里补充新闻专属消息）
+  // 3. 新闻长尾影响
+  applyNewsLongTail(state);
+
+  // 4. NPC对新闻的反馈
   var activeNews = state.activeNews || [];
   if (activeNews.length > 0 && Math.random() < 0.15) {
     var latest = activeNews[activeNews.length - 1];
     var trigger = NEWS_TRIGGERED_EVENTS[latest.id];
     if (trigger && trigger.npcMsg) {
       StateManager.addMessage("💬 " + trigger.npcMsg, "info");
+      state.flags._npcNewsComments = (state.flags._npcNewsComments || 0) + 1;
     }
   }
 }

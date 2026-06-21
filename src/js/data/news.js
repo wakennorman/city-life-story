@@ -938,6 +938,30 @@ var NPC_INTEL_RULES = {
       text: "王大婶压低声音说小区里几个做生意的邻居都在抛东西变现，像是闻到什么风声了。",
       confidence: 60,
     },
+    {
+      newsId: "mortgage_rate_cut",
+      delay: 3,
+      text: "王大婶说银行那边有人放风，房贷利率很快要降，让她先别急着提前还贷。",
+      confidence: 72,
+    },
+    {
+      newsId: "property_tax_pilot",
+      delay: 3,
+      text: "王大婶说房东群里吵翻了，好像房产税试点真的要来了，好几个房东在盘算卖房。",
+      confidence: 65,
+    },
+    {
+      newsId: "developer_default",
+      delay: 2,
+      text: "王大婶说隔壁楼盘的承建商半年没发工资了，开发商怕是要出事。",
+      confidence: 70,
+    },
+    {
+      newsId: "vacant_housing_survey",
+      delay: 2,
+      text: "王大婶说社区居委会在统计空置房，不知道是不是要收房税。",
+      confidence: 68,
+    },
   ],
   boss_li: [
     {
@@ -957,6 +981,18 @@ var NPC_INTEL_RULES = {
       delay: 2,
       text: "李工头说几个工地突然停了招工，楼市风向可能不太对。",
       confidence: 70,
+    },
+    {
+      newsId: "city_infrastructure",
+      delay: 3,
+      text: "李工头说市政那边有批道路翻新和管网改造工程要招标，工地活会多起来。",
+      confidence: 76,
+    },
+    {
+      newsId: "developer_default",
+      delay: 2,
+      text: "李工头压低声音说某大地产商欠了上游一堆材料款，好几个工地已经停了，千万别去那几家干。",
+      confidence: 72,
     },
     {
       newsId: "factory_boom",
@@ -988,6 +1024,24 @@ var NPC_INTEL_RULES = {
       newsId: "antitrust_investigation",
       delay: 2,
       text: "张姐提醒互联网大厂最近法务会特别多，平台股和科技岗位要谨慎。",
+      confidence: 64,
+    },
+    {
+      newsId: "population_inflow",
+      delay: 3,
+      text: "张姐说人才市场那边简历和岗位都多了，像是外地来打工的人在增加。",
+      confidence: 74,
+    },
+    {
+      newsId: "mortgage_rate_cut",
+      delay: 2,
+      text: "张姐说银行按揭部的朋友暗示房贷利率快了要降，让她先等等再签合同。",
+      confidence: 68,
+    },
+    {
+      newsId: "property_tax_pilot",
+      delay: 3,
+      text: "张姐说中介群在传房产税试点城市清单，几个大中介已经在做预案了。",
       confidence: 64,
     },
     {
@@ -1071,6 +1125,18 @@ var NPC_INTEL_RULES = {
       delay: 1,
       text: "小美紧张地发消息说币圈突然暴跌，好几个同学爆仓了，今天课都没去上。",
       confidence: 76,
+    },
+    {
+      newsId: "skill_book",
+      delay: 2,
+      text: "小美说图书馆新进了一批自考教材和考证资料，准备去借来复印一份。",
+      confidence: 78,
+    },
+    {
+      newsId: "relaxed_hukou",
+      delay: 3,
+      text: "小美说她们导员在群里发了落户新政通知，好像外地人落户条件放宽了。",
+      confidence: 66,
     },
   ],
   chef_chen: [
@@ -1222,6 +1288,7 @@ function askNpcForIntel(npcId, state) {
     text: intel.text,
   });
   state.flags._npcIntelAskedDay[npcId] = state.player.day;
+  state.flags._intelReceivedCount = (state.flags._intelReceivedCount || 0) + 1;
 
   return {
     ok: true,

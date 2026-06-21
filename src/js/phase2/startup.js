@@ -246,6 +246,7 @@ const PRODUCT_CATEGORIES = {
     features: ["用户系统", "推送通知", "应用内购买", "社交分享"],
     growthFactor: 1.0,
     churnRate: 0.05,
+    baseArpu: 0.5, // 元/天/用户
     description: "iOS/Android应用，用户基数大但竞争激烈",
   },
   saas: {
@@ -257,6 +258,7 @@ const PRODUCT_CATEGORIES = {
     features: ["多租户", "API接口", "数据看板", "权限管理"],
     growthFactor: 1.2,
     churnRate: 0.03,
+    baseArpu: 2.0, // B端用户价值高
     description: "企业级软件服务，高留存高LTV",
   },
   hardware: {
@@ -268,6 +270,7 @@ const PRODUCT_CATEGORIES = {
     features: ["供应链管理", "质量控制", "售后服务", "渠道分销"],
     growthFactor: 0.8,
     churnRate: 0.02,
+    baseArpu: 0.3, // 硬件一次性购买，后续收入低
     description: "IoT设备/智能产品，重资产但壁垒高",
   },
   content: {
@@ -279,6 +282,7 @@ const PRODUCT_CATEGORIES = {
     features: ["内容审核", "推荐算法", "创作者激励", "付费墙"],
     growthFactor: 1.5,
     churnRate: 0.08,
+    baseArpu: 0.4, // 内容平台广告收入为主
     description: "图文/视频内容社区，增长快但变现难",
   },
   marketplace: {
@@ -290,6 +294,7 @@ const PRODUCT_CATEGORIES = {
     features: ["双边市场", "支付结算", "信用体系", "纠纷处理"],
     growthFactor: 1.3,
     churnRate: 0.04,
+    baseArpu: 0.8, // 交易佣金收入
     description: "C2C/B2C交易撮合，网络效应强",
   },
   ai_service: {
@@ -301,6 +306,7 @@ const PRODUCT_CATEGORIES = {
     features: ["模型训练", "API网关", "数据标注", "算力优化"],
     growthFactor: 1.8,
     churnRate: 0.03,
+    baseArpu: 1.5, // API调用按量付费
     description: "AI能力输出，高增长高壁垒",
   },
 
@@ -314,6 +320,7 @@ const PRODUCT_CATEGORIES = {
     features: ["即时通讯", "动态发布", "群组功能", "直播"],
     growthFactor: 2.0,
     churnRate: 0.1,
+    baseArpu: 0.6, // 社交广告+虚拟物品
     description: "社交网络/即时通讯，病毒传播强但留存挑战大",
   },
   game: {
@@ -325,6 +332,7 @@ const PRODUCT_CATEGORIES = {
     features: ["游戏引擎", "匹配系统", "反作弊", "运营活动"],
     growthFactor: 1.6,
     churnRate: 0.12,
+    baseArpu: 1.0, // 游戏内购收入高但波动大
     description: "手游/页游，爆款效应明显但失败率高",
   },
   ecommerce: {
@@ -336,6 +344,7 @@ const PRODUCT_CATEGORIES = {
     features: ["商品管理", "物流系统", "客服系统", "营销活动"],
     growthFactor: 1.1,
     churnRate: 0.03,
+    baseArpu: 0.7, // 电商交易佣金
     description: "垂直电商/综合电商，供应链是核心壁垒",
   },
   edtech: {
@@ -347,6 +356,7 @@ const PRODUCT_CATEGORIES = {
     features: ["直播课堂", "录播系统", "作业批改", "学习数据分析"],
     growthFactor: 1.0,
     churnRate: 0.06,
+    baseArpu: 0.8, // 课程订阅收入
     description: "K12/职业教育/兴趣教育，政策敏感但需求稳定",
   },
   healthtech: {
@@ -358,6 +368,7 @@ const PRODUCT_CATEGORIES = {
     features: ["医疗数据", "合规认证", "远程诊疗", "健康管理"],
     growthFactor: 1.4,
     churnRate: 0.02,
+    baseArpu: 1.2, // 医疗健康服务价值高
     description: "数字健康/远程医疗，监管严格但壁垒极高",
   },
   autopilot: {
@@ -369,6 +380,7 @@ const PRODUCT_CATEGORIES = {
     features: ["传感器融合", "高精地图", "仿真测试", "法规合规"],
     growthFactor: 1.5,
     churnRate: 0.01,
+    baseArpu: 1.5, // B端授权费高
     description: "自动驾驶技术/出行服务，重研发但天花板高",
   },
   blockchain: {
@@ -380,6 +392,7 @@ const PRODUCT_CATEGORIES = {
     features: ["智能合约", "去中心化存储", "跨链", "DAO治理"],
     growthFactor: 2.5,
     churnRate: 0.15,
+    baseArpu: 0.5, // 交易手续费波动大
     description: "DeFi/NFT/元宇宙，波动极大但想象空间大",
   },
   metaverse: {
@@ -391,6 +404,7 @@ const PRODUCT_CATEGORIES = {
     features: ["3D引擎", "VR交互", "虚拟经济", "社交空间"],
     growthFactor: 1.8,
     churnRate: 0.1,
+    baseArpu: 0.6, // 虚拟物品收入
     description: "虚拟世界/沉浸式体验，技术门槛高但前景广阔",
   },
   green_tech: {
@@ -402,6 +416,7 @@ const PRODUCT_CATEGORIES = {
     features: ["储能技术", "能源管理", "碳追踪", "政策补贴"],
     growthFactor: 1.3,
     churnRate: 0.02,
+    baseArpu: 0.4, // 设备销售为主
     description: "新能源/碳中和相关，政策驱动但市场空间大",
   },
   agritech: {
@@ -413,6 +428,7 @@ const PRODUCT_CATEGORIES = {
     features: ["精准农业", "无人机", "物联网监测", "供应链溯源"],
     growthFactor: 0.9,
     churnRate: 0.02,
+    baseArpu: 0.3, // B端数据服务
     description: "智慧农业/农产品溯源，市场教育成本高但竞争少",
   },
   logitech: {
@@ -424,6 +440,7 @@ const PRODUCT_CATEGORIES = {
     features: ["路径优化", "仓储管理", "运力匹配", "实时追踪"],
     growthFactor: 1.1,
     churnRate: 0.03,
+    baseArpu: 0.6, // SaaS订阅
     description: "智慧物流/供应链优化，B端需求稳定",
   },
   creator_tool: {
@@ -432,6 +449,7 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 60,
     baseCost: 40000,
     revenueModel: "订阅/按量付费",
+    baseArpu: 0.5, // 订阅制
     features: ["AI生成", "模板库", "协作编辑", "多平台发布"],
     growthFactor: 1.7,
     churnRate: 0.05,
@@ -443,6 +461,7 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 100,
     baseCost: 120000,
     revenueModel: "SaaS订阅/定制开发",
+    baseArpu: 1.8, // B端高价值
     features: ["CRM", "ERP", "HR系统", "数据分析"],
     growthFactor: 1.0,
     churnRate: 0.02,
@@ -454,6 +473,7 @@ const PRODUCT_CATEGORIES = {
     baseDevTime: 120,
     baseCost: 150000,
     revenueModel: "交易手续费",
+    baseArpu: 1.0, // 交易手续费收入
     features: ["支付网关", "风控系统", "清结算", "合规牌照"],
     growthFactor: 1.2,
     churnRate: 0.02,
@@ -877,6 +897,64 @@ function createProduct(state, name, category) {
     retireDay: null, // 退市日期
     retireReason: "", // 退市原因
     versionIterationCount: 0, // 版本迭代次数
+    // ====== P0-2: AARRR 用户增长漏斗 ======
+    // Acquisition (获客)
+    newUsersToday: 0, // 今日新增用户
+    acquisitionChannel: "organic", // 主要获客渠道
+    cac: 0, // 获客成本（元/用户）
+    adSpend: 0, // 今日广告投入
+    // Activation (激活)
+    activationRate: 0.3, // 激活率（注册用户→激活用户）
+    activatedUsers: 0, // 激活用户数
+    onboardingCompleteRate: 0.5, // 新手引导完成率
+    // Retention (留存)
+    dau: 0, // 日活跃用户
+    wau: 0, // 周活跃用户
+    mau: 0, // 月活跃用户
+    retentionD1: 0.4, // 次日留存率
+    retentionD7: 0.25, // 7日留存率
+    retentionD30: 0.15, // 30日留存率
+    retentionHistory: [], // 留存率历史 [{day, d1, d7, d30}]
+    // Revenue (变现)
+    arpu: 0, // 每用户平均收入（元/天）
+    arppu: 0, // 每付费用户平均收入
+    payRate: 0.05, // 付费率
+    payingUsers: 0, // 付费用户数
+    ltv: 0, // 用户生命周期价值
+    // Referral (推荐)
+    kFactor: 0, // 病毒系数（每个用户带来多少新用户）
+    referralRate: 0.02, // 分享率
+    referralConversion: 0.1, // 推荐转化率
+    viralCycleTime: 7, // 病毒传播周期（天）
+    // 漏斗数据
+    funnelData: {
+      impressions: 0, // 曝光量
+      clicks: 0, // 点击量
+      registrations: 0, // 注册量
+      activated: 0, // 激活量
+      retainedD7: 0, // 7日留存
+      retainedD30: 0, // 30日留存
+      paying: 0, // 付费用户
+      referred: 0, // 推荐用户
+    },
+    funnelHistory: [], // 漏斗历史数据
+    // ====== P0-3: 技术债务系统 ======
+    technicalDebt: 0, // 技术债指数（0-100，越高越严重）
+    techDebtHistory: [], // 技术债历史 [{day, debt, cause}]
+    bugRate: 0, // 当前 bug 率（每千用户每日 bug 数）
+    bugHistory: [], // bug 历史
+    lastRefactorDay: 0, // 上次重构日期
+    refactorBonus: 0, // 重构带来的临时效率加成
+    techDebtCrisis: false, // 是否发生技术债危机
+    crisisHistory: [], // 危机历史 [{day, type, impact}]
+    // 技术债来源标记
+    techDebtSources: {
+      rushDevelopment: 0, // 赶工积累
+      skippedTests: 0, // 跳过测试
+      cutFeatures: 0, // 砍需求
+      quickFixes: 0, // 临时修复
+      legacyCode: 0, // 遗留代码
+    },
   };
 
   company.products.push(product);
@@ -922,6 +1000,13 @@ function developProduct(state, productId, effort) {
   const devCost = 1000 * effort;
   company.cashReserve = Math.max(0, company.cashReserve - devCost);
   company.expenses += devCost;
+
+  // P0-3: 高强度开发积累技术债（effort=3 时）
+  if (effort >= 3) {
+    // 赶工积累技术债：基础0.5 + 随机0~1
+    const debtGain = 0.5 + Math.random() * 1;
+    recordTechDebtEvent(state, productId, "rush", debtGain);
+  }
 
   // 检查是否完成
   if (product.developmentProgress >= 100) {
@@ -984,6 +1069,42 @@ function launchProduct(state, productId) {
   product.retireDay = null;
   product.retireReason = "";
   product.versionIterationCount = 0;
+  // P0-2: 初始化 AARRR 字段
+  product.newUsersToday = 0;
+  product.acquisitionChannel = "organic";
+  product.cac = 0;
+  product.adSpend = 0;
+  product.activationRate = 0.3;
+  product.activatedUsers = 0;
+  product.onboardingCompleteRate = 0.5;
+  product.dau = 0;
+  product.wau = 0;
+  product.mau = 0;
+  product.retentionD1 = 0.4;
+  product.retentionD7 = 0.25;
+  product.retentionD30 = 0.15;
+  product.retentionHistory = [];
+  product.arpu = 0;
+  product.arppu = 0;
+  product.payRate = 0.05;
+  product.payingUsers = 0;
+  product.ltv = 0;
+  product.kFactor = 0;
+  product.referralRate = 0.02;
+  product.referralConversion = 0.1;
+  product.viralCycleTime = 7;
+  product.funnelData = { impressions: 0, clicks: 0, registrations: 0, activated: 0, retainedD7: 0, retainedD30: 0, paying: 0, referred: 0 };
+  product.funnelHistory = [];
+  // P0-3: 初始化技术债字段
+  product.technicalDebt = 0;
+  product.techDebtHistory = [];
+  product.bugRate = 0;
+  product.bugHistory = [];
+  product.lastRefactorDay = state.player.day;
+  product.refactorBonus = 0;
+  product.techDebtCrisis = false;
+  product.crisisHistory = [];
+  product.techDebtSources = { rushDevelopment: 0, skippedTests: 0, cutFeatures: 0, quickFixes: 0, legacyCode: 0 };
 
   // 计算市场反响
   const productScore = techScore * 0.6 + marketScore * 0.4;
@@ -1182,7 +1303,8 @@ function getProductAvailableFeatures(product) {
 }
 
 /** 开发功能模块 */
-function developFeature(state, productId, featureKey) {
+function developFeature(state, productId, featureKey, skipTests) {
+  // skipTests: 是否跳过测试（会积累技术债）
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
@@ -1218,10 +1340,20 @@ function developFeature(state, productId, featureKey) {
     targetDay: state.player.day + feature.devTime,
   });
 
-  StateManager.addMessage(
-    "🔧 「" + feature.name + "」开始开发，预计" + feature.devTime + "天完成",
-    "info",
-  );
+  // P0-3: 跳过测试积累技术债
+  if (skipTests) {
+    const debtGain = 2 + Math.random() * 3;
+    recordTechDebtEvent(state, productId, "skip_test", debtGain);
+    StateManager.addMessage(
+      "⚠️ 跳过测试开发「" + feature.name + "」，技术债+" + debtGain.toFixed(0),
+      "warning"
+    );
+  } else {
+    StateManager.addMessage(
+      "🔧 「" + feature.name + "」开始开发，预计" + feature.devTime + "天完成",
+      "info",
+    );
+  }
 
   return { success: true, feature: feature };
 }
@@ -1290,6 +1422,13 @@ function calculateProductCompetitiveness(product) {
     decline: -10, // 衰退期 -10
   };
   score += stageBonuses[product.lifecycleStage] || 0;
+  // P0-3: 技术债惩罚
+  const techDebtPenalty = (product.technicalDebt || 0) * 0.15; // 技术债每10点惩罚1.5分
+  score -= techDebtPenalty;
+  // 重构加成
+  if (product.refactorBonus > 0) {
+    score += product.refactorBonus;
+  }
 
   product.competitiveness = Math.round(Math.min(100, Math.max(0, score)));
   return product.competitiveness;
@@ -1742,6 +1881,12 @@ function tickStartup(state, tickType) {
           _checkProductRetirement(state, product);
         }
       }
+
+      // ====== P0-2: AARRR 用户增长漏斗演化 ======
+      _tickAARRRFunnel(state, product, timeMult);
+
+      // ====== P0-3: 技术债务演化 ======
+      _tickTechnicalDebt(state, product, timeMult);
     }
   }
 
@@ -1914,7 +2059,535 @@ function _calculateMarketShare(state, product) {
   return Math.min(100, (product.competitiveness / totalCompetitiveness) * 100);
 }
 
-/** 更新产品版本（版本迭代） */
+// ====== P0-3: 技术债务系统 ======
+/** 每日技术债演化 */
+function _tickTechnicalDebt(state, product, timeMult) {
+  if (product.retired) return;
+
+  const debt = product.technicalDebt || 0;
+  const day = state.player.day;
+
+  // === 技术债自然积累 ===
+  // 基础积累：随着产品复杂度增加，技术债自然增长
+  const complexityFactor = 1 + (product.features.length || 0) * 0.05 + (product.versionIterationCount || 0) * 0.02;
+  const naturalAccumulation = 0.02 * complexityFactor * timeMult;
+
+  product.technicalDebt = Math.min(100, debt + naturalAccumulation);
+
+  // === Bug 率计算 ===
+  // bug 率与技术债正相关，评分负相关
+  const baseBugRate = 0.5; // 基础 bug 率（每千用户每日）
+  const debtBugMultiplier = 1 + debt / 20; // 技术债越高，bug 越多
+  const ratingFactor = 1 - (product.rating || 3.5) / 10; // 评分越低，bug 越多
+  product.bugRate = baseBugRate * debtBugMultiplier * (0.5 + ratingFactor) * (0.8 + Math.random() * 0.4);
+
+  // === 技术债危机判定 ===
+  if (debt >= 80 && !product.techDebtCrisis) {
+    _triggerTechDebtCrisis(state, product, "critical");
+  } else if (debt >= 60 && !product.techDebtCrisis && Math.random() < 0.01 * timeMult) {
+    _triggerTechDebtCrisis(state, product, "moderate");
+  }
+
+  // === 重构加成衰减 ===
+  if (product.refactorBonus > 0) {
+    product.refactorBonus = Math.max(0, product.refactorBonus - 0.01 * timeMult);
+  }
+
+  // === 记录历史（每周）===
+  if (day % 7 === 0 || timeMult >= 90) {
+    product.techDebtHistory.push({
+      day: day,
+      debt: product.technicalDebt,
+      bugRate: product.bugRate,
+      sources: { ...product.techDebtSources },
+    });
+    product.bugHistory.push({
+      day: day,
+      bugRate: product.bugRate,
+      usersAffected: Math.round(product.users * product.bugRate / 1000),
+    });
+    if (product.techDebtHistory.length > 52) product.techDebtHistory.shift();
+    if (product.bugHistory.length > 52) product.bugHistory.shift();
+  }
+}
+
+/** 触发技术债危机 */
+function _triggerTechDebtCrisis(state, product, severity) {
+  product.techDebtCrisis = true;
+
+  const crisisTypes = {
+    critical: {
+      name: "严重技术故障",
+      impact: "产品核心功能崩溃，大量用户流失",
+      userLoss: 0.15, // 15% 用户流失
+      reputationLoss: -15,
+      revenueLoss: 0.3, // 30% 收入下降
+      duration: 7, // 恢复天数
+    },
+    moderate: {
+      name: "频繁故障",
+      impact: "产品间歇性故障，用户体验下降",
+      userLoss: 0.05,
+      reputationLoss: -8,
+      revenueLoss: 0.15,
+      duration: 3,
+    },
+  };
+
+  const crisis = crisisTypes[severity];
+  const company = state.startup.company;
+
+  StateManager.addMessage(
+    `💥 「${product.name}」${crisis.name}！技术债爆表（${product.technicalDebt.toFixed(0)}）\n${crisis.impact}`,
+    "danger"
+  );
+
+  // 记录危机历史
+  product.crisisHistory.push({
+    day: state.player.day,
+    type: crisis.name,
+    severity: severity,
+    impact: crisis.impact,
+  });
+
+  // 立即影响
+  const userLoss = Math.round(product.users * crisis.userLoss);
+  product.users = Math.max(0, product.users - userLoss);
+  company.reputation = Math.max(0, company.reputation + crisis.reputationLoss);
+
+  // 设置恢复标记
+  product._crisisRecoveryDays = crisis.duration;
+  product._crisisRecoveryStarted = state.player.day;
+
+  // 危机期间 bug 率暴增
+  product.bugRate *= 3;
+}
+
+/** 重构代码（偿还技术债） */
+function refactorProduct(state, productId, scope) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    return { success: false, message: "产品不存在或未发布" };
+  }
+
+  const scopes = {
+    minor: {
+      name: "小范围重构",
+      cost: 15000,
+      debtReduction: [5, 10],
+      time: 7,
+      desc: "重构部分模块，修复明显代码异味",
+    },
+    major: {
+      name: "全面重构",
+      cost: 50000,
+      debtReduction: [15, 30],
+      time: 14,
+      desc: "系统级重构，优化架构，补充测试",
+    },
+    emergency: {
+      name: "紧急修复",
+      cost: 30000,
+      debtReduction: [3, 8],
+      time: 3,
+      desc: "快速修复关键 bug，稳定系统",
+    },
+  };
+
+  const scopeConfig = scopes[scope];
+  if (!scopeConfig) {
+    return { success: false, message: "无效的重构范围" };
+  }
+
+  if (company.cashReserve < scopeConfig.cost) {
+    return { success: false, message: `现金不足，需要¥${scopeConfig.cost.toLocaleString()}` };
+  }
+
+  // 执行重构
+  company.cashReserve -= scopeConfig.cost;
+  company.expenses += scopeConfig.cost;
+
+  const debtReduction = Math.round(
+    scopeConfig.debtReduction[0] +
+    Math.random() * (scopeConfig.debtReduction[1] - scopeConfig.debtReduction[0])
+  );
+
+  product.technicalDebt = Math.max(0, product.technicalDebt - debtReduction);
+  product.lastRefactorDay = state.player.day;
+  product.refactorBonus = 5; // 重构后短期效率提升
+
+  // 清除危机状态
+  if (product.techDebtCrisis) {
+    product.techDebtCrisis = false;
+    product.bugRate = product.bugRate / 3; // 恢复基准
+  }
+
+  // 清除部分技术债来源
+  const sourceKeys = Object.keys(product.techDebtSources);
+  for (const key of sourceKeys) {
+    product.techDebtSources[key] = Math.max(0, product.techDebtSources[key] - debtReduction * 0.2);
+  }
+
+  StateManager.addMessage(
+    `🔧 「${product.name}」${scopeConfig.name}完成！技术债-${debtReduction}，当前${product.technicalDebt.toFixed(0)}`,
+    "success"
+  );
+
+  return {
+    success: true,
+    debtReduction: debtReduction,
+    newDebt: product.technicalDebt,
+    cost: scopeConfig.cost,
+  };
+}
+
+/** 记录技术债积累事件 */
+function recordTechDebtEvent(state, productId, cause, amount) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  product.technicalDebt = Math.min(100, product.technicalDebt + amount);
+
+  // 记录来源
+  if (cause === "rush") {
+    product.techDebtSources.rushDevelopment += amount;
+  } else if (cause === "skip_test") {
+    product.techDebtSources.skippedTests += amount;
+  } else if (cause === "cut_feature") {
+    product.techDebtSources.cutFeatures += amount;
+  } else if (cause === "quick_fix") {
+    product.techDebtSources.quickFixes += amount;
+  }
+
+  product.techDebtHistory.push({
+    day: state.player.day,
+    debt: product.technicalDebt,
+    cause: cause,
+    amount: amount,
+  });
+
+  // 技术债过高警告
+  if (product.technicalDebt >= 70 && product.technicalDebt - amount < 70) {
+    StateManager.addMessage(
+      `⚠️ 「${product.name}」技术债达到${product.technicalDebt.toFixed(0)}，建议尽快重构！`,
+      "warning"
+    );
+  }
+}
+
+// ====== P0-2: AARRR 用户增长漏斗演化 ======
+/** 每日 AARRR 漏斗演化 */
+function _tickAARRRFunnel(state, product, timeMult) {
+  const users = product.users || 0;
+  if (users <= 0) return;
+
+  // === A: Acquisition (获客) ===
+  // 自然增长 + 广告获客 + 病毒传播
+  const organicGrowth = Math.round(users * 0.001 * timeMult); // 自然增长 0.1%/天
+  const adGrowth = _calculateAdGrowth(state, product, timeMult);
+  const viralGrowth = _calculateViralGrowth(product, timeMult);
+
+  product.newUsersToday = organicGrowth + adGrowth + viralGrowth;
+
+  // 计算获客成本
+  if (product.adSpend > 0) {
+    product.cac = adGrowth > 0 ? product.adSpend / adGrowth : 0;
+  } else {
+    product.cac = 0;
+  }
+
+  // === A: Activation (激活) ===
+  // 激活率受产品评分、新手引导影响
+  const newActivated = Math.round(product.newUsersToday * product.activationRate);
+  product.activatedUsers = newActivated;
+
+  // 新手引导完成率影响激活率
+  if (product.onboardingCompleteRate < 0.8 && Math.random() < 0.05) {
+    product.onboardingCompleteRate = Math.min(0.95, product.onboardingCompleteRate + 0.02);
+    product.activationRate = Math.min(0.6, product.activationRate + 0.01);
+  }
+
+  // === R: Retention (留存) ===
+  // 日活/周活/月活计算
+  product.dau = Math.round(users * (0.3 + product.rating / 5 * 0.3)); // 30%-60% 日活
+  product.wau = Math.round(users * (0.5 + product.rating / 5 * 0.3)); // 50%-80% 周活
+  product.mau = Math.round(users * (0.7 + product.rating / 5 * 0.25)); // 70%-90% 月活
+
+  // 留存率演化：评分高→留存提升，评分低→留存下降
+  const ratingFactor = product.rating / 5;
+  const retentionChange = (ratingFactor - 0.5) * 0.002 * timeMult;
+
+  product.retentionD1 = Math.max(0.1, Math.min(0.8, product.retentionD1 + retentionChange));
+  product.retentionD7 = Math.max(0.05, Math.min(0.6, product.retentionD7 + retentionChange * 0.7));
+  product.retentionD30 = Math.max(0.02, Math.min(0.4, product.retentionD30 + retentionChange * 0.4));
+
+  // 记录留存历史
+  if (state.player.day % 7 === 0 || timeMult >= 90) {
+    product.retentionHistory.push({
+      day: state.player.day,
+      d1: product.retentionD1,
+      d7: product.retentionD7,
+      d30: product.retentionD30,
+      dau: product.dau,
+      mau: product.mau,
+    });
+    // 限制历史记录长度
+    if (product.retentionHistory.length > 52) {
+      product.retentionHistory.shift();
+    }
+  }
+
+  // === R: Revenue (变现) ===
+  // 付费率演化
+  const payRateChange = (product.rating - 3.5) * 0.001 * timeMult;
+  product.payRate = Math.max(0.01, Math.min(0.3, product.payRate + payRateChange));
+
+  product.payingUsers = Math.round(users * product.payRate);
+
+  // ARPU 计算（基于产品类别）
+  const categoryInfo = PRODUCT_CATEGORIES[product.category];
+  const baseArpu = categoryInfo?.baseArpu || 0.5; // 元/天/用户
+  const arpuMultiplier = product.rating / 3.5 * (1 + product.features.length * 0.05);
+  product.arpu = baseArpu * arpuMultiplier;
+
+  // ARPPU（每付费用户平均收入）
+  if (product.payingUsers > 0) {
+    product.arppu = product.arpu * users / product.payingUsers;
+  }
+
+  // LTV 计算：ARPU × 平均留存天数
+  const avgLifetime = 1 / (1 - product.retentionD30); // 简化模型
+  product.ltv = product.arpu * avgLifetime * 30; // 月度 LTV
+
+  // === R: Referral (推荐) ===
+  // 病毒系数 K = 分享率 × 推荐转化率 × 分享次数
+  const shareRate = product.rating >= 4 ? 0.05 : product.rating >= 3.5 ? 0.02 : 0.01;
+  product.referralRate = shareRate;
+  product.kFactor = shareRate * product.referralConversion * 3; // 每个用户平均分享3次
+
+  // 病毒传播
+  const viralNewUsers = Math.round(users * product.kFactor / product.viralCycleTime * timeMult);
+  product.viralNewUsers = viralNewUsers;
+
+  // === 漏斗数据记录 ===
+  product.funnelData.impressions += product.newUsersToday * 10 * timeMult; // 曝光量 ≈ 新增×10
+  product.funnelData.clicks += Math.round(product.funnelData.impressions * 0.1);
+  product.funnelData.registrations += product.newUsersToday;
+  product.funnelData.activated += newActivated;
+  product.funnelData.retainedD7 += Math.round(users * product.retentionD7);
+  product.funnelData.retainedD30 += Math.round(users * product.retentionD30);
+  product.funnelData.paying += product.payingUsers;
+  product.funnelData.referred += viralNewUsers;
+
+  // 记录漏斗历史（每周）
+  if (state.player.day % 7 === 0 || timeMult >= 90) {
+    product.funnelHistory.push({
+      day: state.player.day,
+      funnel: { ...product.funnelData },
+      cac: product.cac,
+      ltv: product.ltv,
+      kFactor: product.kFactor,
+    });
+    if (product.funnelHistory.length > 52) {
+      product.funnelHistory.shift();
+    }
+  }
+
+  // === LTV/CAC 比率检查 ===
+  if (product.cac > 0 && product.ltv > 0) {
+    const ltvcacRatio = product.ltv / product.cac;
+    if (ltvcacRatio < 1 && timeMult >= 90) {
+      StateManager.addMessage(
+        `⚠️ 「${product.name}」LTV/CAC < 1（${ltvcacRatio.toFixed(1)}），获客成本超过用户价值！`,
+        "warning"
+      );
+    } else if (ltvcacRatio > 3 && timeMult >= 90) {
+      StateManager.addMessage(
+        `📈 「${product.name}」LTV/CAC = ${ltvcacRatio.toFixed(1)}，获客效率优秀！`,
+        "success"
+      );
+    }
+  }
+
+  // === 病毒爆发通知 ===
+  if (product.kFactor > 1 && viralNewUsers > product.newUsersToday * 0.3) {
+    StateManager.addMessage(
+      `🚀 「${product.name}」病毒传播爆发！K因子=${product.kFactor.toFixed(2)}，今日推荐带来+${viralNewUsers}用户`,
+      "success"
+    );
+  }
+}
+
+/** 计算广告获客 */
+function _calculateAdGrowth(state, product, timeMult) {
+  if (product.adSpend <= 0) return 0;
+
+  // 广告效果：基于投入金额 + 产品竞争力
+  const baseEfficiency = 50; // 每元广告费带来多少曝光
+  const efficiencyMult = 0.8 + (product.competitiveness / 100) * 0.4;
+  const clickRate = 0.05; // 5% 点击率
+  const installRate = 0.2; // 20% 安装率
+
+  const impressions = product.adSpend * baseEfficiency * efficiencyMult;
+  const clicks = Math.round(impressions * clickRate);
+  const installs = Math.round(clicks * installRate);
+
+  return Math.max(0, installs * timeMult / 90); // 按天分摊
+}
+
+/** 计算病毒传播 */
+function _calculateViralGrowth(product, timeMult) {
+  if (product.kFactor <= 0) return 0;
+  const users = product.users || 0;
+  return Math.round(users * product.kFactor / product.viralCycleTime * timeMult);
+}
+
+/** 更新产品变现参数（通过运营活动） */
+function updateProductMonetization(state, productId, action, params) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    return { success: false, message: "产品不存在或未发布" };
+  }
+
+  if (action === "improve_onboarding") {
+    // 优化新手引导
+    const cost = params.cost || 10000;
+    if (company.cashReserve < cost) {
+      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+    }
+
+    product.onboardingCompleteRate = Math.min(0.95, product.onboardingCompleteRate + 0.1);
+    product.activationRate = Math.min(0.6, product.activationRate + 0.05);
+    company.cashReserve -= cost;
+    company.expenses += cost;
+
+    StateManager.addMessage(
+      `✅ 「${product.name}」优化新手引导！激活率提升至${(product.activationRate * 100).toFixed(0)}%`,
+      "success"
+    );
+    return { success: true, activationRate: product.activationRate };
+  }
+
+  if (action === "increase_payrate") {
+    // 提高付费转化
+    const cost = params.cost || 20000;
+    if (company.cashReserve < cost) {
+      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+    }
+
+    product.payRate = Math.min(0.25, product.payRate + 0.02);
+    company.cashReserve -= cost;
+    company.expenses += cost;
+
+    StateManager.addMessage(
+      `💰 「${product.name}」优化付费转化！付费率提升至${(product.payRate * 100).toFixed(1)}%`,
+      "success"
+    );
+    return { success: true, payRate: product.payRate };
+  }
+
+  if (action === "improve_retention") {
+    // 提升留存
+    const cost = params.cost || 15000;
+    if (company.cashReserve < cost) {
+      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+    }
+
+    product.retentionD1 = Math.min(0.85, product.retentionD1 + 0.02);
+    product.retentionD7 = Math.min(0.65, product.retentionD7 + 0.02);
+    product.retentionD30 = Math.min(0.45, product.retentionD30 + 0.02);
+    company.cashReserve -= cost;
+    company.expenses += cost;
+
+    StateManager.addMessage(
+      `📈 「${product.name}」提升留存体验！D1留存提升至${(product.retentionD1 * 100).toFixed(0)}%`,
+      "success"
+    );
+    return { success: true, retentionD1: product.retentionD1 };
+  }
+
+  if (action === "boost_viral") {
+    // 病毒传播优化
+    const cost = params.cost || 25000;
+    if (company.cashReserve < cost) {
+      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+    }
+
+    product.referralRate = Math.min(0.1, product.referralRate + 0.02);
+    product.referralConversion = Math.min(0.2, product.referralConversion + 0.03);
+    product.kFactor = product.referralRate * product.referralConversion * 3;
+    company.cashReserve -= cost;
+    company.expenses += cost;
+
+    StateManager.addMessage(
+      `🚀 「${product.name}」优化病毒传播！K因子提升至${product.kFactor.toFixed(2)}`,
+      "success"
+    );
+    return { success: true, kFactor: product.kFactor };
+  }
+
+  return { success: false, message: "无效的运营动作" };
+}
+
+/** 投放广告（获客） */
+function runAdCampaign(state, productId, channel, budget) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    return { success: false, message: "产品不存在或未发布" };
+  }
+
+  if (company.cashReserve < budget) {
+    return { success: false, message: `现金不足，需要¥${budget.toLocaleString()}` };
+  }
+
+  // 渠道效果差异
+  const channelEfficiency = {
+    social: { name: "社交媒体", multiplier: 1.2, cac: 15 },
+    search: { name: "搜索广告", multiplier: 1.0, cac: 25 },
+    video: { name: "视频平台", multiplier: 1.3, cac: 20 },
+    influencer: { name: "KOL合作", multiplier: 1.5, cac: 35 },
+    programmatic: { name: "程序化投放", multiplier: 0.9, cac: 12 },
+  };
+
+  const channelData = channelEfficiency[channel];
+  if (!channelData) {
+    return { success: false, message: "无效的广告渠道" };
+  }
+
+  company.cashReserve -= budget;
+  product.adSpend = budget;
+
+  // 计算获客
+  const estimatedUsers = _calculateAdGrowth(state, product, 90);
+  const actualGrowth = Math.round(estimatedUsers * (0.8 + Math.random() * 0.4));
+
+  StateManager.addMessage(
+    `📢 「${product.name}」投放${channelData.name}广告¥${budget.toLocaleString()}，预计带来${actualGrowth}新用户（CAC≈¥${(budget / actualGrowth).toFixed(0)}）`,
+    "info"
+  );
+
+  return {
+    success: true,
+    channel: channelData.name,
+    budget: budget,
+    estimatedUsers: actualGrowth,
+    cac: budget / actualGrowth,
+  };
+}
+
+// ====== 更新产品版本（版本迭代） ======
 function updateProductVersion(state, productId, versionType, budget) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
@@ -3683,6 +4356,42 @@ function renderStartupTab(state, parent) {
             "</div>";
         }
 
+        // P0-2: AARRR 数据面板
+        var arpuText = product.arpu > 0 ? " | ARPU:¥" + product.arpu.toFixed(2) + "/天" : "";
+        var ltvText = product.ltv > 0 ? " | LTV:¥" + Math.round(product.ltv).toLocaleString() : "";
+        var cacText = product.cac > 0 ? " | CAC:¥" + product.cac.toFixed(0) : "";
+        var payRateText = " | 付费率:" + (product.payRate * 100).toFixed(1) + "%";
+        var kFactorText = " | K因子:" + product.kFactor.toFixed(2);
+        var dauText = " | DAU:" + (product.dau || 0).toLocaleString();
+        var retentionText = " | 留存:D1:" + (product.retentionD1 * 100).toFixed(0) + "% D7:" + (product.retentionD7 * 100).toFixed(0) + "% D30:" + (product.retentionD30 * 100).toFixed(0) + "%";
+
+        // LTV/CAC 比率颜色
+        var ltvcacRatio = product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
+        var ltvcacColor = ltvcacRatio >= 3 ? "var(--success)" : ltvcacRatio >= 1 ? "var(--warning)" : ltvcacRatio > 0 ? "var(--danger)" : "var(--text-muted)";
+        var ltvcacText = product.cac > 0 ? " | LTV/CAC:<strong style='color:" + ltvcacColor + "'>" + ltvcacRatio.toFixed(1) + "x</strong>" : "";
+
+        detailHtml +=
+          '<div style="margin-top:6px;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px;font-size:10px;color:var(--text-secondary);">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+          '<span>📊 活跃</span><span>' + dauText + ' MAU:' + (product.mau || 0).toLocaleString() + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+          '<span>💰 变现</span><span>' + arpuText + ltvText + payRateText + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+          '<span>📢 获客</span><span>' + cacText + ' 新增:' + (product.newUsersToday || 0).toLocaleString() + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+          '<span>🔄 留存</span><span>' + retentionText + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;">' +
+          '<span>🚀 病毒</span><span>' + kFactorText + '</span>' +
+          '</div>' +
+          '</div>' +
+          '<div style="margin-top:4px;font-size:10px;text-align:center;color:' + ltvcacColor + ';">' +
+          "💡 单位经济模型：" + ltvcacText +
+          "</div>";
+
         prodCard.innerHTML += detailHtml;
 
         // 功能模块列表
@@ -3729,6 +4438,51 @@ function renderStartupTab(state, parent) {
             "🔄 版本迭代" +
             "</button>";
           prodCard.appendChild(versionBtn);
+        }
+
+        // P0-2: AARRR 数据按钮
+        if (typeof showAARRRDashboard === "function") {
+          const ararBtn = document.createElement("div");
+          ararBtn.style.cssText = "margin-top:4px;";
+          ararBtn.innerHTML =
+            '<button class="btn btn-sm btn-warning" onclick="showAARRRDashboard(\'' +
+            product.id +
+            '\')" style="font-size:11px;padding:4px 10px;">' +
+            "📊 增长漏斗" +
+            "</button>";
+          prodCard.appendChild(ararBtn);
+        }
+
+        // P0-3: 技术债状态显示
+        if (product.technicalDebt > 0 || typeof showTechDebtModal === "function") {
+          const techDebtDiv = document.createElement("div");
+          const debtLevel = product.technicalDebt >= 70 ? "danger" : product.technicalDebt >= 40 ? "warning" : "success";
+          const debtColor = debtLevel === "danger" ? "var(--danger)" : debtLevel === "warning" ? "var(--warning)" : "var(--success)";
+          const debtIcon = debtLevel === "danger" ? "🔴" : debtLevel === "warning" ? "🟡" : "🟢";
+
+          techDebtDiv.style.cssText = "margin-top:6px;";
+          techDebtDiv.innerHTML =
+            '<div style="display:flex;align-items:center;font-size:10px;">' +
+            '<span style="color:' + debtColor + ';">' + debtIcon + ' 技术债:' + product.technicalDebt.toFixed(0) + '</span>' +
+            '<div style="flex:1;margin:0 8px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
+            '<div style="height:100%;width:' + product.technicalDebt + '%;background:' + debtColor + ';border-radius:2px;"></div>' +
+            "</div>" +
+            '<span style="color:var(--text-muted);">Bug率:' + product.bugRate.toFixed(2) + '/千用户</span>' +
+            "</div>";
+          prodCard.appendChild(techDebtDiv);
+        }
+
+        // P0-3: 重构按钮（技术债>30时显示）
+        if ((product.technicalDebt || 0) > 30 && typeof showTechDebtModal === "function") {
+          const refactorBtn = document.createElement("div");
+          refactorBtn.style.cssText = "margin-top:4px;";
+          refactorBtn.innerHTML =
+            '<button class="btn btn-sm btn-success" onclick="showTechDebtModal(\'' +
+            product.id +
+            '\')" style="font-size:11px;padding:4px 10px;">' +
+            "🔧 重构代码" +
+            "</button>";
+          prodCard.appendChild(refactorBtn);
         }
 
         // P0-1: 退市按钮（衰退期产品）
@@ -4316,5 +5070,477 @@ if (typeof module !== "undefined" && module.exports) {
     showRetireProductModal,
     retireProduct,
     updateProductVersion,
+    // P0-2: AARRR 数据面板
+    showAARRRDashboard,
+    runAdCampaign,
+    updateProductMonetization,
+    // P0-3: 技术债弹窗
+    showTechDebtModal,
+    showRefactorConfirm,
+    refactorProduct,
+    recordTechDebtEvent,
   };
+}
+
+// ====== 修复：移除多余的 */ ======
+// (上面代码块末尾的 */ 已被移除)
+
+// ====== P0-3: 技术债详情弹窗 ======
+/** 显示技术债详情弹窗 */
+function showTechDebtModal(productId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  const debt = product.technicalDebt || 0;
+  const debtLevel = debt >= 70 ? "危险" : debt >= 40 ? "警告" : debt > 0 ? "正常" : "健康";
+  const debtColor = debt >= 70 ? "var(--danger)" : debt >= 40 ? "var(--warning)" : "var(--success)";
+
+  // 技术债来源分布
+  const sources = product.techDebtSources || {};
+  const totalSources = Object.values(sources).reduce((a, b) => a + b, 0);
+
+  let sourcesHtml = '';
+  const sourceIcons = { rushDevelopment: "🏃", skippedTests: "⚠️", cutFeatures: "✂️", quickFixes: "🔨", legacyCode: "🗄️" };
+  const sourceNames = { rushDevelopment: "赶工", skippedTests: "跳过测试", cutFeatures: "砍需求", quickFixes: "临时修复", legacyCode: "遗留代码" };
+
+  for (const [key, value] of Object.entries(sources)) {
+    if (value > 0) {
+      const pct = totalSources > 0 ? (value / totalSources * 100) : 0;
+      sourcesHtml +=
+        '<div style="display:flex;align-items:center;margin-bottom:4px;">' +
+        '<span style="font-size:10px;width:60px;">' + (sourceIcons[key] || "") + ' ' + sourceNames[key] + '</span>' +
+        '<div style="flex:1;height:12px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + debtColor + ';border-radius:2px;"></div>' +
+        "</div>" +
+        '<span style="font-size:10px;color:var(--text-muted);width:30px;text-align:right;">' + value.toFixed(0) + '</span>' +
+        "</div>";
+    }
+  }
+
+  // 技术债历史趋势
+  let historyHtml = '';
+  if (product.techDebtHistory && product.techDebtHistory.length > 0) {
+    const last5 = product.techDebtHistory.slice(-10);
+    historyHtml = '<div style="margin-top:12px;">' +
+      '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">📈 技术债趋势</div>' +
+      '<div style="display:flex;align-items:flex-end;height:60px;gap:2px;">';
+    const maxDebt = Math.max(...last5.map(h => h.debt), 1);
+    for (const h of last5) {
+      const barH = (h.debt / maxDebt) * 50;
+      const barColor = h.debt >= 70 ? "var(--danger)" : h.debt >= 40 ? "var(--warning)" : "var(--success)";
+      historyHtml += '<div style="flex:1;background:' + barColor + ';height:' + barH + 'px;border-radius:2px 2px 0 0;" title="第" + h.day + "天: " + h.debt.toFixed(0) + '"></div>';
+    }
+    historyHtml += "</div></div>";
+  }
+
+  // Bug 率历史
+  let bugHistoryHtml = '';
+  if (product.bugHistory && product.bugHistory.length > 0) {
+    const last5 = product.bugHistory.slice(-10);
+    bugHistoryHtml = '<div style="margin-top:8px;">' +
+      '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">🐛 Bug 率趋势</div>' +
+      '<div style="display:flex;align-items:flex-end;height:40px;gap:2px;">';
+    const maxBug = Math.max(...last5.map(h => h.bugRate), 0.1);
+    for (const h of last5) {
+      const barH = (h.bugRate / maxBug) * 30;
+      bugHistoryHtml += '<div style="flex:1;background:var(--danger);height:' + barH + 'px;border-radius:2px 2px 0 0;" title="第" + h.day + "天: " + h.bugRate.toFixed(2) + '"></div>';
+    }
+    bugHistoryHtml += "</div></div>";
+  }
+
+  const html =
+    '<div style="font-size:12px;max-height:60vh;overflow-y:auto;">' +
+
+    // 当前状态
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">' +
+    _metricCard("🔧 技术债", debt.toFixed(0), debtLevel, debtColor) +
+    _metricCard("🐛 Bug率", product.bugRate.toFixed(2) + "/千用户", "每千用户每日bug数") +
+    _metricCard("📅 上次重构", "第" + product.lastRefactorDay + "天", "") +
+    _metricCard("⚡ 重构加成", product.refactorBonus > 0 ? "+" + product.refactorBonus.toFixed(0) : "无", product.refactorBonus > 0 ? "短期效率提升" : "") +
+    "</div>" +
+
+    // 技术债来源
+    '<div style="margin-bottom:12px;">' +
+    '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">📊 技术债来源</div>' +
+    '<div style="font-size:10px;">' + sourcesHtml + '</div>' +
+    "</div>" +
+
+    // 趋势图
+    historyHtml + bugHistoryHtml +
+
+    // 危机历史
+    (product.crisisHistory && product.crisisHistory.length > 0 ?
+      '<div style="margin-top:12px;">' +
+      '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;color:var(--danger);">💥 危机历史</div>' +
+      '<div style="font-size:10px;color:var(--text-muted);">' +
+      product.crisisHistory.map(c => c.type + '（第' + c.day + '天）').join(' | ') +
+      "</div></div>" : '') +
+
+    // 重构操作
+    '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
+    '<div style="font-size:12px;font-weight:bold;margin-bottom:12px;">🔧 重构操作</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' + product.id + '\',\'minor\')" style="font-size:11px;">小范围重构 ¥15k<br><span style="font-size:9px;color:var(--text-muted);">技术债-5~10</span></button>' +
+    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' + product.id + '\',\'major\')" style="font-size:11px;">全面重构 ¥50k<br><span style="font-size:9px;color:var(--text-muted);">技术债-15~30</span></button>' +
+    '<button class="btn btn-sm btn-warning" onclick="showRefactorConfirm(\'' + product.id + '\',\'emergency\')" style="font-size:11px;">紧急修复 ¥30k<br><span style="font-size:9px;color:var(--text-muted);">技术债-3~8</span></button>' +
+    "</div>" +
+    '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);">' +
+    '💡 重构可降低技术债，提升产品质量和开发效率。技术债越高，bug率越高，竞争力越低。' +
+    "</div>" +
+    "</div>" +
+
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🔧 「" + product.name + "」技术债",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 显示重构确认弹窗 */
+function showRefactorConfirm(productId, scope) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  const scopes = {
+    minor: { name: "小范围重构", cost: 15000, debtReduction: "5~10", time: "7天" },
+    major: { name: "全面重构", cost: 50000, debtReduction: "15~30", time: "14天" },
+    emergency: { name: "紧急修复", cost: 30000, debtReduction: "3~8", time: "3天" },
+  };
+
+  const s = scopes[scope];
+  if (!s) return;
+
+  const html =
+    '<div style="font-size:13px;">' +
+    '<p>确定要对 <strong>「' + product.name + '」</strong> 执行 <strong>' + s.name + '</strong> 吗？</p>' +
+    '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;margin:12px 0;font-size:11px;">' +
+    "💰 费用：¥" + s.cost.toLocaleString() + "<br>" +
+    "📉 技术债减少：~" + s.debtReduction + "<br>" +
+    "⏱ 开发周期：约" + s.time + "<br>" +
+    "💡 当前现金：¥" + Math.round(company.cashReserve).toLocaleString() +
+    "</div>" +
+    '<div style="font-size:10px;color:var(--text-muted);">' +
+    "⚠️ 重构期间无法进行其他开发操作，但可继续正常运营。" +
+    "</div>" +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🔧 重构确认",
+    body: html,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "确认重构",
+        cls: "btn-success",
+        callback: function () {
+          const result = refactorProduct(state, productId, scope);
+          if (result.success) {
+            StateManager.addMessage("✅ " + result.message, "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+}
+
+// ====== P0-2: AARRR 数据面板弹窗 ======
+/** 显示 AARRR 增长漏斗数据面板 */
+function showAARRRDashboard(productId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    StateManager.addMessage("产品不存在", "warning");
+    return;
+  }
+
+  // LTV/CAC 比率
+  const ltvcacRatio = product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
+  const ltvcacColor = ltvcacRatio >= 3 ? "var(--success)" : ltvcacRatio >= 1 ? "var(--warning)" : ltvcacRatio > 0 ? "var(--danger)" : "var(--text-muted)";
+
+  // 漏斗可视化
+  const funnel = product.funnelData || {};
+  const funnelMax = Math.max(1, funnel.impressions, funnel.clicks, funnel.registrations, funnel.activated, funnel.paying);
+
+  const html =
+    '<div style="font-size:12px;max-height:70vh;overflow-y:auto;">' +
+
+    // 漏斗标题
+    '<div style="text-align:center;margin-bottom:16px;">' +
+    '<h4 style="margin:0 0 8px;">📊 「' + product.name + '」增长漏斗</h4>' +
+    '<div style="font-size:10px;color:var(--text-muted);">累计数据（产品发布至今）</div>' +
+    "</div>" +
+
+    // 漏斗图
+    '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">' +
+    _renderFunnelBar("曝光", funnel.impressions, funnelMax, 100) +
+    _renderFunnelBar("点击", funnel.clicks, funnelMax, 80) +
+    _renderFunnelBar("注册", funnel.registrations, funnelMax, 60) +
+    _renderFunnelBar("激活", funnel.activated, funnelMax, 45) +
+    _renderFunnelBar("7日留存", funnel.retainedD7, funnelMax, 35) +
+    _renderFunnelBar("30日留存", funnel.retainedD30, funnelMax, 25) +
+    _renderFunnelBar("付费", funnel.paying, funnelMax, 15) +
+    _renderFunnelBar("推荐", funnel.referred, funnelMax, 10) +
+    "</div>" +
+
+    // 关键指标
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;">' +
+    _metricCard("💰 ARPU", "¥" + product.arpu.toFixed(2) + "/天", "每用户日均收入") +
+    _metricCard("💎 LTV", "¥" + Math.round(product.ltv).toLocaleString(), "用户生命周期价值") +
+    _metricCard("📢 CAC", product.cac > 0 ? "¥" + product.cac.toFixed(0) : "—", "获客成本") +
+    _metricCard("📈 LTV/CAC", ltvcacRatio > 0 ? ltvcacRatio.toFixed(1) + "x" : "—", ltvcacRatio >= 3 ? "优秀" : ltvcacRatio >= 1 ? "健康" : "需优化", ltvcacColor) +
+    _metricCard("🚀 K因子", product.kFactor.toFixed(2), product.kFactor >= 1 ? "病毒传播" : "自然增长") +
+    _metricCard("💳 付费率", (product.payRate * 100).toFixed(1) + "%", "付费用户占比") +
+    "</div>" +
+
+    // 留存数据
+    '<div style="margin-bottom:16px;">' +
+    '<div style="font-weight:bold;margin-bottom:8px;font-size:12px;">📈 留存率</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+    _metricCard("次日 D1", (product.retentionD1 * 100).toFixed(0) + "%", "") +
+    _metricCard("7日 D7", (product.retentionD7 * 100).toFixed(0) + "%", "") +
+    _metricCard("30日 D30", (product.retentionD30 * 100).toFixed(0) + "%", "") +
+    "</div>" +
+    "</div>" +
+
+    // 活跃用户
+    '<div style="margin-bottom:16px;">' +
+    '<div style="font-weight:bold;margin-bottom:8px;font-size:12px;">👥 活跃用户</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+    _metricCard("DAU", (product.dau || 0).toLocaleString(), "日活") +
+    _metricCard("WAU", (product.wau || 0).toLocaleString(), "周活") +
+    _metricCard("MAU", (product.mau || 0).toLocaleString(), "月活") +
+    "</div>" +
+    "</div>" +
+
+    // 运营操作
+    '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
+    '<div style="font-weight:bold;margin-bottom:12px;font-size:12px;">⚡ 运营操作</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'improve_onboarding\')" style="font-size:11px;">🎯 优化新手引导 ¥10k</button>' +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'increase_payrate\')" style="font-size:11px;">💰 提升付费转化 ¥20k</button>' +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'improve_retention\')" style="font-size:11px;">🔄 提升留存体验 ¥15k</button>' +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'boost_viral\')" style="font-size:11px;">🚀 病毒传播优化 ¥25k</button>' +
+    "</div>" +
+    '<div style="margin-top:8px;">' +
+    '<button class="btn btn-sm btn-warning" onclick="showAdCampaignModal(\'' + product.id + '\')" style="font-size:11px;">📢 投放广告获客</button>' +
+    "</div>" +
+    "</div>" +
+
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "📊 AARRR 增长漏斗",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 渲染漏斗条形图 */
+function _renderFunnelBar(label, value, max, widthPercent) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  const color = pct > 50 ? "var(--success)" : pct > 20 ? "var(--warning)" : "var(--danger)";
+  return (
+    '<div style="display:flex;align-items:center;margin-bottom:4px;">' +
+    '<div style="width:60px;font-size:11px;text-align:right;margin-right:8px;">' + label + '</div>' +
+    '<div style="width:' + widthPercent + '%;height:18px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">' +
+    '<div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:3px;transition:width 0.3s;"></div>' +
+    "</div>" +
+    '<div style="width:70px;font-size:11px;text-align:left;margin-left:8px;color:var(--text-secondary);">' +
+    (value || 0).toLocaleString() +
+    "</div>" +
+    "</div>"
+  );
+}
+
+/** 渲染指标卡片 */
+function _metricCard(title, value, subtitle, color) {
+  color = color || "var(--text-primary)";
+  return (
+    '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;text-align:center;">' +
+    '<div style="font-size:10px;color:var(--text-muted);">' + title + '</div>' +
+    '<div style="font-size:14px;font-weight:bold;color:' + color + ';margin:2px 0;">' + value + '</div>' +
+    (subtitle ? '<div style="font-size:9px;color:var(--text-muted);">' + subtitle + '</div>' : '') +
+    "</div>"
+  );
+}
+
+/** 显示运营操作确认弹窗 */
+function showMonetizationActionModal(productId, action) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  const actions = {
+    improve_onboarding: { name: "优化新手引导", cost: 10000, desc: "提升新手引导完成率，增加激活率" },
+    increase_payrate: { name: "提升付费转化", cost: 20000, desc: "优化付费点设计，提高付费率" },
+    improve_retention: { name: "提升留存体验", cost: 15000, desc: "增加用户粘性功能，提升各阶段留存" },
+    boost_viral: { name: "病毒传播优化", cost: 25000, desc: "优化分享机制，提升K因子" },
+  };
+
+  const act = actions[action];
+  if (!act) return;
+
+  const html =
+    '<div style="font-size:13px;">' +
+    '<p>确定要执行 <strong>' + act.name + '</strong> 吗？</p>' +
+    '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;margin:12px 0;font-size:11px;">' +
+    "💰 费用：¥" + act.cost.toLocaleString() + "<br>" +
+    "📝 " + act.desc + "<br>" +
+    "💡 当前现金：¥" + Math.round(company.cashReserve).toLocaleString() +
+    "</div>" +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "⚡ 运营操作确认",
+    body: html,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "确认执行",
+        cls: "btn-primary",
+        callback: function () {
+          const result = updateProductMonetization(state, productId, action, { cost: act.cost });
+          if (result.success) {
+            StateManager.addMessage("✅ " + result.message, "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+}
+
+/** 显示广告投放弹窗 */
+function showAdCampaignModal(productId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  const channels = [
+    { key: "social", name: "社交媒体", desc: "微信/微博/抖音，适合大众产品", multiplier: 1.2, cac: 15 },
+    { key: "search", name: "搜索广告", desc: "百度/谷歌，精准获客", multiplier: 1.0, cac: 25 },
+    { key: "video", name: "视频平台", desc: "B站/优酷/爱奇艺，年轻用户", multiplier: 1.3, cac: 20 },
+    { key: "influencer", name: "KOL合作", desc: "网红/博主推荐，信任度高", multiplier: 1.5, cac: 35 },
+    { key: "programmatic", name: "程序化投放", desc: "自动优化，成本最低", multiplier: 0.9, cac: 12 },
+  ];
+
+  let html =
+    '<div style="font-size:13px;">' +
+    '<p style="color:var(--text-secondary);margin-bottom:12px;">选择广告渠道和预算：</p>' +
+    '<div style="display:grid;grid-template-columns:1fr;gap:8px;">';
+
+  for (const ch of channels) {
+    const canAfford = company.cashReserve >= ch.cac * 1000;
+    html +=
+      '<div style="padding:10px;background:' +
+      (canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.1)") +
+      ";border:1px solid " +
+      (canAfford ? "var(--border)" : "#ccc") +
+      ";border-radius:6px;cursor:pointer;transition:all 0.2s;" +
+      (canAfford ? 'onclick="showAdBudgetModal(\'' + productId + '\',\'' + ch.key + '\')"' : "opacity:0.5;") +
+      '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<strong>' + ch.name + '</strong>' +
+      '<span style="font-size:11px;color:' + (canAfford ? "var(--success)" : "var(--danger)") + ';">预估CAC¥' + ch.cac + '</span>' +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + ch.desc + '</div>' +
+      "</div>";
+  }
+
+  html += "</div></div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "📢 投放广告",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 显示广告预算输入弹窗 */
+function showAdBudgetModal(productId, channel) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+
+  const channelNames = {
+    social: "社交媒体",
+    search: "搜索广告",
+    video: "视频平台",
+    influencer: "KOL合作",
+    programmatic: "程序化投放",
+  };
+
+  const html =
+    '<div style="font-size:13px;">' +
+    '<p>投放渠道：<strong>' + (channelNames[channel] || channel) + '</strong></p>' +
+    '<p>预算范围：¥1,000 ~ ¥100,000</p>' +
+    '<input type="range" id="adBudget" min="1000" max="100000" step="1000" value="5000" style="width:100%;margin:12px 0;">' +
+    '<div id="adBudgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥5,000</div>' +
+    '<script>' +
+    'document.getElementById("adBudget").oninput = function() {' +
+    '  document.getElementById("adBudgetValue").textContent = "¥" + parseInt(this.value).toLocaleString();' +
+    '};' +
+    '</script>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "广告预算",
+    body: html,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "投放",
+        cls: "btn-warning",
+        callback: function () {
+          const budget = parseInt(document.getElementById("adBudget").value);
+          const result = runAdCampaign(state, productId, channel, budget);
+          if (result.success) {
+            StateManager.addMessage("📢 " + result.channel + "广告已投放，预计带来" + result.estimatedUsers + "新用户", "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+
+  setTimeout(() => {
+    const slider = document.getElementById("adBudget");
+    const valueDisplay = document.getElementById("adBudgetValue");
+    if (slider && valueDisplay) {
+      slider.oninput = function () {
+        valueDisplay.textContent = "¥" + parseInt(this.value).toLocaleString();
+      };
+    }
+  }, 100);
 }
