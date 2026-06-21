@@ -32,13 +32,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：Phase 2 玩家深度交互 — 引擎集成完成 ✅（2026-06-21）
-  - **状态字段注入**（`state.js`）：添加 `workplaceSocial`（同事/导师/办公室政治/人脉）、`family`（婚恋/子女/父母/房贷）、`personalGrowth`（爱好/健康/形象/目标/学习）三个状态对象
-  - **管线接入**（`daily_pipeline.js`）：添加 `workplace_social_tick`、`family_daily`、`personal_growth_daily` 3 个 tick 步骤
-  - **UI 渲染**（`render.js`）：添加 `renderWorkplaceSocialTab`、`renderFamilyTab`、`renderPersonalGrowthTab` 3 个渲染函数 + Tab switch case
-  - **交互入口**（`render.js`）：在 Actions Tab 底部添加 Phase 2 入口按钮组（3 个 Tab 按钮）
-  - **记忆文件**：`memory/phase2-player-interaction.md` 已更新
-  - **下一步**：在 `workplace_social.js`、`family_life.js`、`personal_growth.js` 中添加 `tick*Daily` 函数实现每日逻辑
+- **最近一次工作**：P1-7 公关/媒体系统 — 完整实现 ✅（2026-06-21）
+  - **数据常量**（`startup.js`）：`MEDIA_TYPES`（4种媒体）、`PR_EVENT_TEMPLATES`（6正面+6危机）、`CRISIS_RESPONSE_OPTIONS`（24种应对）、`MEDIA_RELATION_ACTIONS`（6种行动）、`MEDIA_RELATION_LEVELS`（6级）、`CRISIS_LEVELS`（5级）
+  - **公司字段**（`registerStartup`）：`mediaRelations`、`mediaRelationLevel`、`prEvents`、`pendingCrisisEvent`、`crisisLevel`、`crisisPrepLevel`、`mediaTrainingLevel`、`sentimentScore` 等
+  - **核心函数**：媒体关系评估、危机概率触发、危机应对执行、公关活动执行、媒体关系管理
+  - **UI 弹窗**：`showPRManagementModal`（公关管理面板）、`showCrisisResponseModal`（危机应对）
+  - **tickStartup 集成**：季度媒体关系评估 + 危机概率评估 + 待处理危机处理
+  - **行动列表**：`pr_management`（10 AP）、`pr_event`、`media_relation_action`、`crisis_response`
+  - **构建**：已 `python build.py`（2838.1 KB）
+  - **下一步**：P1-8 法律/合规风险系统
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

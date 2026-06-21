@@ -884,6 +884,58 @@ src/
 
 ## 变更记录
 
+### 2026-06-21 — P1-7 公关/媒体系统：媒体关系管理 + 危机事件系统
+
+**核心改动**：
+
+1. **数据常量扩建**（`startup.js`）
+   - `MEDIA_TYPES`：4种媒体类型（科技媒体/商业媒体/社交媒体/行业媒体），各有影响力权重和受众
+   - `PR_EVENT_TEMPLATES`：6种正面公关活动（新闻发布会/高管专访/行业峰会/CSR/奖项/白皮书）+ 6种危机事件（产品故障/数据泄露/高管丑闻/用户投诉/竞争对手抹黑/监管调查）
+   - `CRISIS_RESPONSE_OPTIONS`：24种危机应对方案，各有成本/效果/风险
+   - `MEDIA_RELATION_ACTIONS`：6种媒体关系管理行动（建立关系/独家专访/媒体参访/午餐会/危机演练/媒体培训）
+   - `MEDIA_RELATION_LEVELS`：6级媒体关系等级（无关系→陌生→认识→友好→信任→伙伴）
+   - `CRISIS_LEVELS`：5级危机等级（平稳→轻微→中等→严重→危急）
+
+2. **公司数据结构扩展**（`registerStartup`）
+   - `mediaRelations`（0-100）：媒体关系度
+   - `mediaRelationLevel`（0-5）：媒体关系等级
+   - `mediaRelationHistory`：媒体关系变化历史
+   - `prEvents`：公关事件队列
+   - `pendingCrisisEvent`：待处理危机事件
+   - `crisisLevel`（0-4）：危机等级
+   - `crisisHistory`：危机事件历史
+   - `crisisPrepLevel`（0-100）：危机准备度
+   - `mediaTrainingLevel`（0-100）：媒体培训水平
+   - `sentimentScore`（-100~100）：媒体情绪分
+
+3. **核心逻辑函数**
+   - `_evaluateMediaRelationships()`：季度媒体关系评估（自然衰减 + 新闻影响）
+   - `_updateMediaRelationLevel()`：媒体关系等级转换通知
+   - `_processPendingCrisisEvents()`：待处理危机倒计时处理
+   - `_evaluateCrisisProbability()`：危机触发概率评估（媒体关系/危机准备度/媒体培训/品牌等级影响）
+   - `_triggerRandomCrisis()`：随机危机事件触发（按权重选择危机类型）
+   - `resolveCrisisEvent()`：危机应对执行（费用检查/效果应用/结果记录）
+   - `_calculateCrisisResponseEffectiveness()`：危机应对效果计算（媒体关系/危机准备度/特定应对加成）
+   - `executePREvent()`：公关活动执行（触发条件检查/成功率/效果应用）
+   - `executeMediaRelationAction()`：媒体关系管理行动执行
+
+4. **UI 弹窗**
+   - `showPRManagementModal()`：公关管理面板（媒体关系/危机等级/公关活动/媒体行动/近期事件）
+   - `showCrisisResponseModal()`：危机应对弹窗（选择应对方案/费用检查/效果预览）
+
+5. **tickStartup 集成**
+   - 季度评估：媒体关系衰减 + 新闻影响 + 危机概率评估 + 待处理危机处理
+
+6. **行动列表**
+   - `pr_management`：公关管理入口（10 AP）
+   - `pr_event`：执行公关活动
+   - `media_relation_action`：执行媒体关系管理行动
+   - `crisis_response`：处理危机事件
+
+**设计参考**：《Prison Architect》危机系统、《Democracy 4》舆论管理、《This War of Mine》媒体事件、真实公关危机案例（数据泄露/产品故障/高管丑闻）
+
+---
+
 ### 2026-06-22 — 房产市场波动系统 v2：告别固定增值，引入市场周期+新闻+政策联动
 
 **核心改动**：
@@ -3410,3 +3462,113 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 
 **涉及文件**：`src/js/phase2/startup.js`（约+400行）
 **构建**：已 `python build.py` ✅
+
+---
+
+### 2026-06-21 — P0-5 KPI/OKR 目标系统 ✅ 已完成
+
+**背景**：创业公司缺乏目标管理和绩效追踪机制，季度运营缺乏目标导向。
+
+**实现内容**：
+
+| 功能             | 说明                                     |
+| ---------------- | ---------------------------------------- |
+| **季度 OKR**     | 目标 + 关键结果（权重分配），进度追踪    |
+| **OKR 进度更新** | 每日/每周更新，里程碑通知（25%/50%/75%） |
+| **季末评估**     | OKR 完成度评分，奖金发放，满意度影响     |
+| **团队目标**     | 按团队设定目标，期限追踪                 |
+| **个人目标**     | 为单个员工设定目标，达成奖励忠诚度       |
+| **KPI 历史**     | 季度评分记录，平均完成率统计             |
+
+**关键函数**：
+
+- `setQuarterlyOkr()` — 设定季度 OKR
+- `evaluateQuarterlyOkr()` — 季末评估（集成到 `tickStartup` 季度 tick）
+- `setTeamGoal()` / `setEmployeeGoal()` — 目标设定
+- `showKpiDashboard()` — KPI/OKR 数据面板弹窗
+- `showSetOkrModal()` / `showTeamGoalModal()` — 设定弹窗
+
+**季末评估逻辑**：
+
+- ≥80% → 优秀，全员满意度+5，奖金池+¥10k
+- 60-80% → 达标，奖金池+¥5k
+- 40-60% → 未达标，奖金池+¥2k
+- <40% → 严重未达标，全员满意度-5
+
+**涉及文件**：`src/js/phase2/startup.js`（约+500行）
+**构建**：已 `python build.py` ✅
+
+---
+
+## ✅ P0 全部完成（2026-06-21）
+
+| #    | 功能                  | 状态 |
+| ---- | --------------------- | ---- |
+| P0-1 | 产品生命周期管理      | ✅   |
+| P0-2 | 用户增长漏斗（AARRR） | ✅   |
+| P0-3 | 技术债务系统          | ✅   |
+| P0-4 | 员工满意度/倦怠系统   | ✅   |
+| P0-5 | KPI/OKR 目标系统      | ✅   |
+
+**总代码量**：`startup.js` 增加约 1900 行，构建后 `dist/index.html` 约 2749KB
+
+---
+
+## ✅ P1-6 董事会/股东压力系统（2026-06-21）
+
+**核心机制**：
+
+- **董事会成员** — 融资后投资人派代表进入董事会（7种投资人类型，不同性格/耐心/关注领域）
+- **季度KPI评估** — 根据融资轮次自动设定KPI目标（种子轮/A轮/B轮/C轮），考核营收/增长率/市场份额/团队等指标
+- **董事会压力等级** — 0-4级（无压力→温和提醒→正式警告→紧急会议→最后通牒），连续未达标/Runway过低/股东满意度低都会加重
+- **压力事件决策** — 4级压力事件（温和提醒/正式警告/紧急会议/最后通牒），各有3个决策选项（含费用/效果）
+- **股东沟通行动** — 5种沟通行动（季度财报¥5k/投资人面对面¥10k/董事会务虚会¥30k/路演¥50k/危机公关¥20k）
+
+**数据结构**：
+
+- `company.boardMembers[]` — 董事会成员（满意度/信任度/关注领域/耐心值）
+- `company.boardPressureLevel` — 压力等级 0-4
+- `company.shareholderSatisfaction` — 股东满意度 0-100
+- `company.shareholderTrust` — 股东信任度 0-100
+- `company.boardAlignment` — 战略一致性 0-100
+- `company.boardKPIHistory[]` — KPI完成历史
+- `company.pendingBoardAction` — 待处理压力事件
+
+**关键函数**：
+
+- `_addBoardMemberAfterFunding()` — 融资后添加董事会成员
+- `_calculateQuarterlyKPIScore()` — 计算季度KPI完成率
+- `evaluateBoardPerformance()` — 季度董事会评估（集成到 `tickStartup` 季度 tick）
+- `_calculateBoardPressureLevel()` — 计算压力等级
+- `_triggerBoardPressureEvent()` — 触发压力事件
+- `resolveBoardPressureAction()` — 处理压力事件决策
+- `executeShareholderCommunication()` — 执行股东沟通行动
+- `showBoardManagementModal()` — 董事会管理面板弹窗
+
+**KPI目标示例**：
+| 轮次 | 营收目标 | 增长率 | 市场份额 | 团队规模 | 通过阈值 |
+|------|----------|--------|----------|----------|----------|
+| 种子轮 | ¥50k/季 | 5%/天 | - | 留存85% | 60% |
+| A轮 | ¥300k/季 | 20%/季 | 5% | 10人 | 65% |
+| B轮 | ¥1.5M/季 | 15%/季 | 10% | 30人 | 70% |
+| C轮 | ¥6M/季 | 10%/季 | 15% | 80人 | 75% |
+
+**涉及文件**：`src/js/phase2/startup.js`（约+800行）
+**构建**：已 `python build.py` ✅（2791.1 KB）
+
+---
+
+## 📊 当前进度
+
+| 优先级 | 任务                  | 状态 |
+| ------ | --------------------- | ---- |
+| P0-1   | 产品生命周期管理      | ✅   |
+| P0-2   | 用户增长漏斗（AARRR） | ✅   |
+| P0-3   | 技术债务系统          | ✅   |
+| P0-4   | 员工满意度/倦怠系统   | ✅   |
+| P0-5   | KPI/OKR 目标系统      | ✅   |
+| P1-6   | 董事会/股东压力系统   | ✅   |
+| P1-7   | 公关/媒体系统         | ⏳   |
+| P1-8   | 法律/合规风险系统     | ⏳   |
+| P1-9   | 竞争对手策略应对系统  | ⏳   |
+| P1-10  | 危机事件系统          | ⏳   |

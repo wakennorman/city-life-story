@@ -234,6 +234,733 @@ const INVESTOR_TYPES = {
   },
 };
 
+// ====== P1-6: 董事会成员定义 ======
+const BOARD_MEMBER_TEMPLATES = {
+  angel: {
+    role: "观察员",
+    icon: "👼",
+    personality: "宽容",
+    patience: 80,
+    focusAreas: ["团队稳定性", "产品方向"],
+    pressureTolerance: "高",
+    desc: "天使投资人更看重创始人潜力，容忍度较高",
+  },
+  family_office: {
+    role: "董事",
+    icon: "🏛️",
+    personality: "稳健",
+    patience: 70,
+    focusAreas: ["现金流", "风险控制"],
+    pressureTolerance: "中高",
+    desc: "家族办公室偏好稳健增长，关注长期回报",
+  },
+  vc: {
+    role: "董事",
+    icon: "💰",
+    personality: "激进",
+    patience: 40,
+    focusAreas: ["增长率", "市场份额", "估值提升"],
+    pressureTolerance: "低",
+    desc: "VC追求高增长高回报，对业绩要求严格",
+  },
+  cvc: {
+    role: "董事",
+    icon: "🏢",
+    personality: "战略",
+    patience: 50,
+    focusAreas: ["战略协同", "技术壁垒"],
+    pressureTolerance: "中",
+    desc: "企业风投关注战略价值，对短期业绩容忍度中等",
+  },
+  pe: {
+    role: "董事",
+    icon: "🦈",
+    personality: "苛刻",
+    patience: 30,
+    focusAreas: ["净利润", "现金流", "对赌条款"],
+    pressureTolerance: "极低",
+    desc: "私募股权要求严格对赌，业绩不达标触发回购",
+  },
+  soe: {
+    role: "董事",
+    icon: "🇨🇳",
+    personality: "保守",
+    patience: 60,
+    focusAreas: ["合规性", "就业贡献", "政策目标"],
+    pressureTolerance: "中",
+    desc: "国资基金关注政策合规，业绩压力中等",
+  },
+  strategic: {
+    role: "董事",
+    icon: "🤝",
+    personality: "务实",
+    patience: 45,
+    focusAreas: ["业务整合", "渠道协同"],
+    pressureTolerance: "中低",
+    desc: "战略投资人关注业务协同，对整合进度有要求",
+  },
+};
+
+// ====== P1-6: 董事会KPI要求 ======
+const BOARD_KPI_REQUIREMENTS = {
+  seed: {
+    // 种子轮 KPI（较宽松）
+    revenue: { target: 50000, weight: 0.25, desc: "季度营收" },
+    userGrowth: { target: 0.05, targetDesc: "5%/天", weight: 0.25, desc: "用户增长率" },
+    productMilestone: { target: 0.8, targetDesc: "80%进度", weight: 0.25, desc: "产品开发进度" },
+    teamStability: { target: 0.85, targetDesc: "85%留存", weight: 0.25, desc: "核心团队成员留存率" },
+    totalWeight: 1.0,
+    passThreshold: 0.6, // 60%通过
+    warningThreshold: 0.4, // 40%警告
+  },
+  A: {
+    // A轮 KPI（增长导向）
+    revenue: { target: 300000, weight: 0.30, desc: "季度营收" },
+    revenueGrowth: { target: 0.20, targetDesc: "20%/季度", weight: 0.25, desc: "营收增长率" },
+    userGrowth: { target: 0.08, targetDesc: "8%/天", weight: 0.20, desc: "用户增长率" },
+    marketShare: { target: 0.05, targetDesc: "5%市场份额", weight: 0.15, desc: "市场份额" },
+    teamGrowth: { target: 10, targetDesc: "10人", weight: 0.10, desc: "团队规模" },
+    totalWeight: 1.0,
+    passThreshold: 0.65,
+    warningThreshold: 0.45,
+  },
+  B: {
+    // B轮 KPI（规模化）
+    revenue: { target: 1500000, weight: 0.30, desc: "季度营收" },
+    revenueGrowth: { target: 0.15, targetDesc: "15%/季度", weight: 0.25, desc: "营收增长率" },
+    profitability: { target: 0.0, targetDesc: "盈亏平衡", weight: 0.20, desc: "净现金流" },
+    marketShare: { target: 0.10, targetDesc: "10%市场份额", weight: 0.15, desc: "市场份额" },
+    teamScale: { target: 30, targetDesc: "30人", weight: 0.10, desc: "团队规模" },
+    totalWeight: 1.0,
+    passThreshold: 0.70,
+    warningThreshold: 0.50,
+  },
+  C: {
+    // C轮 KPI（IPO前冲刺）
+    revenue: { target: 6000000, weight: 0.30, desc: "季度营收" },
+    revenueGrowth: { target: 0.10, targetDesc: "10%/季度", weight: 0.20, desc: "营收增长率" },
+    profitability: { target: 0.05, targetDesc: "5%利润率", weight: 0.25, desc: "净利润率" },
+    marketShare: { target: 0.15, targetDesc: "15%市场份额", weight: 0.15, desc: "市场份额" },
+    teamScale: { target: 80, targetDesc: "80人", weight: 0.10, desc: "团队规模" },
+    valuationGrowth: { target: 0.15, targetDesc: "15%/季度", weight: 0.10, desc: "估值增长率" },
+    totalWeight: 1.0,
+    passThreshold: 0.75,
+    warningThreshold: 0.55,
+  },
+};
+
+// ====== P1-6: 董事会压力事件 ======
+const BOARD_PRESSURE_EVENTS = {
+  mild_warning: {
+    icon: "⚠️",
+    title: "董事会温和提醒",
+    severity: 1,
+    trigger: "KPI完成率 45-60%",
+    options: [
+      {
+        text: "召开董事会汇报，展示增长计划",
+        cost: 0,
+        effects: { satisfaction: -5, trust: +10 },
+        feedback: "坦诚沟通，投资人理解阶段性困难",
+      },
+      {
+        text: "提交书面报告，承诺下季度改善",
+        cost: 0,
+        effects: { satisfaction: -10, trust: +5 },
+        feedback: "书面承诺增加了压力，但暂时稳住",
+      },
+      {
+        text: "邀请投资人参与产品发布会",
+        cost: 15000,
+        effects: { satisfaction: +5, trust: +15 },
+        feedback: "展示产品进展，投资人信心回升",
+      },
+    ],
+  },
+  moderate_warning: {
+    icon: "🔶",
+    title: "董事会正式警告",
+    severity: 2,
+    trigger: "KPI完成率 30-45% 或连续2季未达标",
+    options: [
+      {
+        text: "调整战略方向，聚焦核心业务",
+        cost: 50000,
+        effects: { satisfaction: +10, trust: +5, revenue: -20000 },
+        feedback: "战略收缩获得董事会认可，但短期收入下降",
+      },
+      {
+        text: "引入新的战略合作伙伴",
+        cost: 30000,
+        effects: { satisfaction: +15, trust: +10 },
+        feedback: "战略伙伴注入资源，董事会态度缓和",
+      },
+      {
+        text: "承诺对赌条款，设定业绩底线",
+        cost: 0,
+        effects: { satisfaction: -20, trust: -10, risk: +25 },
+        feedback: "对赌条款增加了未来压力，但暂时过关",
+      },
+    ],
+  },
+  severe_warning: {
+    icon: "🔴",
+    title: "董事会紧急会议",
+    severity: 3,
+    trigger: "KPI完成率 <30% 或连续3季未达标",
+    options: [
+      {
+        text: "CEO主动降薪，与团队共渡难关",
+        cost: 0,
+        effects: { satisfaction: +20, trust: +15, employeeMorale: +10 },
+        feedback: "CEO表率作用感动团队和董事会",
+      },
+      {
+        text: "更换CEO（玩家让位给联合创始人）",
+        cost: 0,
+        effects: { satisfaction: -30, trust: -20, leadershipChange: true },
+        feedback: "被迫让出CEO职位，但公司可能起死回生",
+      },
+      {
+        text: "接受强制融资条款（高利息过桥贷款）",
+        cost: 100000,
+        effects: { satisfaction: +5, trust: +5, debt: +100000, interestRate: 0.15 },
+        feedback: "高息过桥贷款暂时缓解现金流，但债务负担加重",
+      },
+    ],
+  },
+  ultimatum: {
+    icon: "💀",
+    title: "董事会最后通牒",
+    severity: 4,
+    trigger: "KPI完成率 <20% 或 Runway < 3个月",
+    options: [
+      {
+        text: "接受投资人接管，降为COO",
+        cost: 0,
+        effects: { satisfaction: -50, trust: -30, playerRoleChange: "COO" },
+        feedback: "失去CEO职位，但仍留在公司",
+      },
+      {
+        text: "寻找白衣骑士（紧急融资）",
+        cost: 50000,
+        effects: { satisfaction: +10, trust: +10, dilution: 0.20 },
+        feedback: "紧急出让20%股权引入新投资人",
+      },
+      {
+        text: "拒绝所有条件，独自承担风险",
+        cost: 0,
+        effects: { satisfaction: -80, trust: -50, boardRevolt: true },
+        feedback: "董事会威胁启动罢免程序",
+      },
+    ],
+  },
+};
+
+// ====== P1-6: 股东沟通行动 ======
+const SHAREHOLDER_COMMUNICATION_ACTIONS = {
+  quarterly_report: {
+    id: "quarterly_report",
+    name: "季度财报汇报",
+    icon: "📊",
+    cost: 5000,
+    desc: "准备详细的季度财报，向董事会展示业绩",
+    effects: { satisfaction: +8, trust: +5 },
+    requiresRank: null,
+  },
+  investor_meeting: {
+    id: "investor_meeting",
+    name: "投资人面对面",
+    icon: "🤝",
+    cost: 10000,
+    desc: "邀请主要投资人参加闭门会议，深度沟通",
+    effects: { satisfaction: +12, trust: +15 },
+    requiresRank: null,
+  },
+  board_retreat: {
+    id: "board_retreat",
+    name: "董事会务虚会",
+    icon: "🏖️",
+    cost: 30000,
+    desc: "组织董事会务虚会，统一战略方向",
+    effects: { satisfaction: +20, trust: +25, alignment: +15 },
+    requiresRank: null,
+  },
+  roadshow: {
+    id: "roadshow",
+    name: "投资人路演",
+    icon: "🎤",
+    cost: 50000,
+    desc: "举办大型路演活动，展示公司愿景和规划",
+    effects: { satisfaction: +25, trust: +30, reputation: +10 },
+    requiresRank: null,
+  },
+  crisis_communication: {
+    id: "crisis_communication",
+    name: "危机公关沟通",
+    icon: "🚨",
+    cost: 20000,
+    desc: "在危机时刻主动与投资人沟通，争取理解",
+    effects: { satisfaction: +10, trust: +10, crisisMitigation: true },
+    requiresRank: null,
+  },
+};
+
+// ====== P1-7: 公关/媒体系统数据常量 ======
+
+/** 媒体关系类型 */
+const MEDIA_TYPES = {
+  tech_media: {
+    name: "科技媒体",
+    icon: "💻",
+    examples: ["36Kr", "虎嗅", "钛媒体", "品玩", "创业邦"],
+    influenceWeight: 0.35,
+    audience: "科技从业者/投资人",
+    coverageBias: "产品/技术",
+  },
+  business_media: {
+    name: "商业媒体",
+    icon: "📰",
+    examples: ["财经", "第一财经", "界面", "彭博社", "路透社"],
+    influenceWeight: 0.30,
+    audience: "商业人士/投资者",
+    coverageBias: "融资/业绩",
+  },
+  social_media: {
+    name: "社交媒体",
+    icon: "📱",
+    examples: ["微博", "抖音", "小红书", "B站", "知乎"],
+    influenceWeight: 0.25,
+    audience: "大众用户",
+    coverageBias: "用户故事/品牌",
+  },
+  industry_media: {
+    name: "行业媒体",
+    icon: "🏭",
+    examples: ["行业垂直媒体", "行业协会刊物", "行业峰会报道"],
+    influenceWeight: 0.10,
+    audience: "行业从业者",
+    coverageBias: "行业动态",
+  },
+};
+
+/** 公关活动类型 */
+const PR_EVENT_TEMPLATES = {
+  // === 正面公关活动 ===
+  press_conference: {
+    id: "press_conference",
+    name: "新闻发布会",
+    icon: "🎤",
+    type: "positive",
+    cost: 50000,
+    duration: 7,
+    mediaTypes: ["tech_media", "business_media"],
+    effects: { reputation: +15, mediaRelations: +20, brandAwareness: +10 },
+    triggerConditions: { rank: "registered", minRevenue: 100000 },
+    desc: "举办产品发布会或公司重大里程碑发布会",
+    successChance: 0.75,
+  },
+  media_interview: {
+    id: "media_interview",
+    name: "高管专访",
+    icon: "🎙️",
+    type: "positive",
+    cost: 15000,
+    duration: 3,
+    mediaTypes: ["tech_media", "business_media"],
+    effects: { reputation: +8, mediaRelations: +15, trust: +5 },
+    triggerConditions: { rank: "registered" },
+    desc: "安排CEO/CTO接受主流媒体专访",
+    successChance: 0.85,
+  },
+  industry_summit: {
+    id: "industry_summit",
+    name: "行业峰会演讲",
+    icon: "🏛️",
+    type: "positive",
+    cost: 30000,
+    duration: 5,
+    mediaTypes: ["industry_media", "tech_media"],
+    effects: { reputation: +10, mediaRelations: +12, industryInfluence: +8 },
+    triggerConditions: { rank: "registered", minRevenue: 50000 },
+    desc: "参加行业峰会并发表主题演讲",
+    successChance: 0.80,
+  },
+  csr_activity: {
+    id: "csr_activity",
+    name: "企业社会责任活动",
+    icon: "❤️",
+    type: "positive",
+    cost: 20000,
+    duration: 4,
+    mediaTypes: ["social_media", "business_media"],
+    effects: { reputation: +12, mediaRelations: +10, brandLoyalty: +5 },
+    triggerConditions: { rank: "registered", minRevenue: 30000 },
+    desc: "组织公益活动/环保行动/教育捐赠等CSR活动",
+    successChance: 0.90,
+  },
+  award_submission: {
+    id: "award_submission",
+    name: "申报行业奖项",
+    icon: "🏆",
+    type: "positive",
+    cost: 10000,
+    duration: 14,
+    mediaTypes: ["industry_media", "tech_media"],
+    effects: { reputation: +8, mediaRelations: +8, brandPrestige: +5 },
+    triggerConditions: { rank: "registered", minRevenue: 20000 },
+    desc: "申报创业大赛/创新奖/行业评选等",
+    successChance: 0.60,
+  },
+  thought_leadership: {
+    id: "thought_leadership",
+    name: "发布行业白皮书",
+    icon: "📄",
+    type: "positive",
+    cost: 40000,
+    duration: 21,
+    mediaTypes: ["tech_media", "business_media", "industry_media"],
+    effects: { reputation: +15, mediaRelations: +18, industryInfluence: +12, brandPrestige: +8 },
+    triggerConditions: { rank: "established", minRevenue: 200000 },
+    desc: "联合研究机构发布行业趋势白皮书",
+    successChance: 0.70,
+  },
+
+  // === 负面事件/危机 ===
+  product_failure: {
+    id: "product_failure",
+    name: "产品故障/质量危机",
+    icon: "⚠️",
+    type: "crisis",
+    severity: "medium",
+    mediaTypes: ["tech_media", "social_media"],
+    effects: { reputation: -15, mediaRelations: -10, userTrust: -20 },
+    triggerChance: 0.02, // 2%概率触发
+    descTemplate: "产品出现重大故障/质量问题，引发用户投诉和媒体关注",
+    responseOptions: ["recall", "compensate", "apologize", "ignore"],
+  },
+  data_breach: {
+    id: "data_breach",
+    name: "数据泄露事件",
+    icon: "🔒",
+    type: "crisis",
+    severity: "high",
+    mediaTypes: ["tech_media", "business_media", "social_media"],
+    effects: { reputation: -25, mediaRelations: -15, userTrust: -30, legalRisk: +20 },
+    triggerChance: 0.01,
+    descTemplate: "用户数据泄露/黑客攻击/内部泄露，引发监管和用户担忧",
+    responseOptions: ["notify_users", "hire_security", "cooperate_authorities", "settle"],
+  },
+  executive_scandal: {
+    id: "executive_scandal",
+    name: "高管丑闻",
+    icon: "😱",
+    type: "crisis",
+    severity: "high",
+    mediaTypes: ["social_media", "business_media"],
+    effects: { reputation: -20, mediaRelations: -10, employeeMorale: -15 },
+    triggerChance: 0.008,
+    descTemplate: "CEO/高管个人丑闻曝光，影响公司声誉",
+    responseOptions: ["suspend_exec", "public_statement", "legal_action", "wait"],
+  },
+  customer_complaint: {
+    id: "customer_complaint",
+    name: "用户投诉发酵",
+    icon: "😤",
+    type: "crisis",
+    severity: "low",
+    mediaTypes: ["social_media"],
+    effects: { reputation: -8, mediaRelations: -5, userTrust: -10 },
+    triggerChance: 0.03,
+    descTemplate: "用户投诉在社交媒体发酵，形成负面舆论",
+    responseOptions: ["respond_publicly", "private_settlement", "improve_service", "ignore"],
+  },
+  competitor_attack: {
+    id: "competitor_attack",
+    name: "竞争对手抹黑",
+    icon: "⚔️",
+    type: "crisis",
+    severity: "medium",
+    mediaTypes: ["tech_media", "industry_media"],
+    effects: { reputation: -10, mediaRelations: -5, marketShare: -3 },
+    triggerChance: 0.015,
+    descTemplate: "竞争对手通过媒体/社交网络散布负面信息",
+    responseOptions: ["counter_statement", "legal_action", "ignore", "focus_product"],
+  },
+  regulatory_investigation: {
+    id: "regulatory_investigation",
+    name: "监管调查",
+    icon: "👮",
+    type: "crisis",
+    severity: "high",
+    mediaTypes: ["business_media", "tech_media"],
+    effects: { reputation: -20, mediaRelations: -15, legalRisk: +25, stockImpact: -10 },
+    triggerChance: 0.005,
+    descTemplate: "监管机构对公司展开调查（数据合规/反垄断/劳动等）",
+    responseOptions: ["cooperate", "legal_defense", "settle", "lobby"],
+  },
+};
+
+/** 危机应对选项 */
+const CRISIS_RESPONSE_OPTIONS = {
+  // 产品故障应对
+  recall: {
+    label: "召回产品",
+    cost: 100000,
+    effect: { reputation: +10, userTrust: +15, mediaRelations: +5 },
+    desc: "立即召回问题产品，全额退款，展现负责任态度",
+    risk: "财务损失大，但赢得用户信任",
+  },
+  compensate: {
+    label: "赔偿用户",
+    cost: 50000,
+    effect: { reputation: +5, userTrust: +10, mediaRelations: +3 },
+    desc: "对受影响用户进行赔偿，修复关系",
+    risk: "中等财务损失",
+  },
+  apologize: {
+    label: "公开道歉",
+    cost: 0,
+    effect: { reputation: +3, userTrust: +5, mediaRelations: +2 },
+    desc: "CEO公开道歉，承诺改进",
+    risk: "成本低但效果有限",
+  },
+  ignore: {
+    label: "冷处理",
+    cost: 0,
+    effect: { reputation: -10, userTrust: -15, mediaRelations: -5 },
+    desc: "不回应，等待舆论自然消散",
+    risk: "声誉持续受损，可能发酵",
+  },
+
+  // 数据泄露应对
+  notify_users: {
+    label: "通知用户",
+    cost: 20000,
+    effect: { reputation: +5, userTrust: +10, legalRisk: -5 },
+    desc: "主动通知受影响用户，提供保护建议",
+    risk: "短期负面但展现透明度",
+  },
+  hire_security: {
+    label: "聘请安全团队",
+    cost: 100000,
+    effect: { reputation: +8, mediaRelations: +5, legalRisk: -10 },
+    desc: "聘请顶级网络安全公司调查和修复",
+    risk: "高成本但专业处理",
+  },
+  cooperate_authorities: {
+    label: "配合调查",
+    cost: 30000,
+    effect: { reputation: +10, legalRisk: -15, mediaRelations: +3 },
+    desc: "主动配合监管机构调查，展现合规态度",
+    risk: "可能面临罚款但减轻处罚",
+  },
+  settle: {
+    label: "和解",
+    cost: 200000,
+    effect: { reputation: +5, legalRisk: -20, mediaRelations: +2 },
+    desc: "与受影响用户/机构达成和解",
+    risk: "高额和解金但快速解决",
+  },
+
+  // 高管丑闻应对
+  suspend_exec: {
+    label: "暂停高管职务",
+    cost: 0,
+    effect: { reputation: +8, employeeMorale: +5, mediaRelations: +3 },
+    desc: "立即暂停涉事高管职务，展开内部调查",
+    risk: "可能影响公司运营",
+  },
+  public_statement: {
+    label: "发布声明",
+    cost: 0,
+    effect: { reputation: +3, mediaRelations: +2 },
+    desc: "发布官方声明，表明公司立场",
+    risk: "效果有限",
+  },
+  legal_action: {
+    label: "法律行动",
+    cost: 50000,
+    effect: { reputation: +5, mediaRelations: +3 },
+    desc: "对不实报道/诽谤采取法律行动",
+    risk: "可能激化矛盾",
+  },
+  wait: {
+    label: "等待澄清",
+    cost: 0,
+    effect: { reputation: -5, mediaRelations: -3 },
+    desc: "等待事实澄清后再处理",
+    risk: "舆论可能发酵",
+  },
+
+  // 用户投诉应对
+  respond_publicly: {
+    label: "公开回应",
+    cost: 0,
+    effect: { reputation: +5, userTrust: +8, mediaRelations: +3 },
+    desc: "在社交媒体公开回应，展现重视态度",
+    risk: "需要快速响应",
+  },
+  private_settlement: {
+    label: "私下和解",
+    cost: 10000,
+    effect: { reputation: +2, userTrust: +5 },
+    desc: "与投诉用户私下沟通解决",
+    risk: "可能无法阻止发酵",
+  },
+  improve_service: {
+    label: "改进服务",
+    cost: 20000,
+    effect: { reputation: +8, userTrust: +10, mediaRelations: +5 },
+    desc: "借机改进服务，变危机为转机",
+    risk: "需要实际改进",
+  },
+  ignore_crisis: {
+    label: "冷处理",
+    cost: 0,
+    effect: { reputation: -5, userTrust: -8 },
+    desc: "不回应，等待舆论自然消散",
+    risk: "可能发酵成更大危机",
+  },
+
+  // 竞争对手抹黑应对
+  counter_statement: {
+    label: "反驳声明",
+    cost: 10000,
+    effect: { reputation: +5, mediaRelations: +3, marketShare: +2 },
+    desc: "发布事实澄清声明，反驳不实信息",
+    risk: "可能引发公关战",
+  },
+  legal_action_competitor: {
+    label: "法律诉讼",
+    cost: 100000,
+    effect: { reputation: +8, mediaRelations: +5, marketShare: +3 },
+    desc: "对竞争对手提起不正当竞争诉讼",
+    risk: "高成本，结果不确定",
+  },
+  ignore_competitor: {
+    label: "无视",
+    cost: 0,
+    effect: { reputation: -3, mediaRelations: -2 },
+    desc: "不回应，专注产品",
+    risk: "市场份额可能受损",
+  },
+  focus_product: {
+    label: "专注产品",
+    cost: 50000,
+    effect: { reputation: +10, mediaRelations: +5, marketShare: +5 },
+    desc: "发布新版本/新功能，用产品力反击",
+    risk: "需要快速迭代",
+  },
+
+  // 监管调查应对
+  cooperate_regulatory: {
+    label: "全力配合",
+    cost: 50000,
+    effect: { reputation: +10, legalRisk: -20, mediaRelations: +5 },
+    desc: "主动配合监管，展现合规诚意",
+    risk: "可能面临处罚但减轻",
+  },
+  legal_defense: {
+    label: "法律抗辩",
+    cost: 200000,
+    effect: { reputation: +5, legalRisk: -10 },
+    desc: "聘请顶级律师团队抗辩",
+    risk: "高成本，长期拉锯",
+  },
+  settle_regulatory: {
+    label: "和解",
+    cost: 500000,
+    effect: { reputation: +3, legalRisk: -25 },
+    desc: "与监管机构达成和解，支付罚款",
+    risk: "高额罚款但快速解决",
+  },
+  lobby: {
+    label: "游说",
+    cost: 300000,
+    effect: { reputation: -5, legalRisk: -15, mediaRelations: -10 },
+    desc: "通过行业协会/政府关系影响调查",
+    risk: "可能引发更大关注",
+  },
+};
+
+/** 媒体关系管理行动 */
+const MEDIA_RELATION_ACTIONS = {
+  build_relationship: {
+    id: "build_relationship",
+    name: "建立媒体关系",
+    icon: "🤝",
+    cost: 10000,
+    desc: "邀请媒体记者/编辑参加公司活动，建立初步关系",
+    effect: { mediaRelations: +10, reputation: +3 },
+    cooldown: 30,
+  },
+  exclusive_interview: {
+    id: "exclusive_interview",
+    name: "独家专访",
+    icon: "🎙️",
+    cost: 25000,
+    desc: "安排高管接受特定媒体独家专访",
+    effect: { mediaRelations: +15, reputation: +8, brandAwareness: +5 },
+    cooldown: 60,
+  },
+  press_trip: {
+    id: "press_trip",
+    name: "媒体参访",
+    icon: "🏢",
+    cost: 40000,
+    desc: "组织媒体记者参观公司，深度了解业务",
+    effect: { mediaRelations: +20, reputation: +10, brandAwareness: +8 },
+    cooldown: 90,
+  },
+  media_luncheon: {
+    id: "media_luncheon",
+    name: "媒体午餐会",
+    icon: "🍽️",
+    cost: 15000,
+    desc: "举办媒体午餐会，非正式交流",
+    effect: { mediaRelations: +8, reputation: +3 },
+    cooldown: 45,
+  },
+  crisis_prep: {
+    id: "crisis_prep",
+    name: "危机公关演练",
+    icon: "🛡️",
+    cost: 30000,
+    desc: "聘请公关公司进行危机应对培训和演练",
+    effect: { crisisPrepLevel: +15, reputation: +2 },
+    cooldown: 180,
+  },
+  media_training: {
+    id: "media_training",
+    name: "高管媒体培训",
+    icon: "📚",
+    cost: 20000,
+    desc: "为CEO/高管提供媒体采访技巧培训",
+    effect: { mediaTrainingLevel: +10, crisisPrepLevel: +5 },
+    cooldown: 120,
+  },
+};
+
+/** 媒体关系等级 */
+const MEDIA_RELATION_LEVELS = [
+  { level: 0, name: "无关系", icon: "⚪", threshold: 0, bonus: "无" },
+  { level: 1, name: "陌生", icon: "👤", threshold: 20, bonus: "基础报道" },
+  { level: 2, name: "认识", icon: "🤝", threshold: 40, bonus: "正面报道+5%" },
+  { level: 3, name: "友好", icon: "😊", threshold: 60, bonus: "正面报道+10%，危机缓冲" },
+  { level: 4, name: "信任", icon: "🤝", threshold: 80, bonus: "正面报道+15%，优先报道" },
+  { level: 5, name: "伙伴", icon: "🌟", threshold: 100, bonus: "正面报道+20%，主动推荐" },
+];
+
+/** 公关危机等级 */
+const CRISIS_LEVELS = [
+  { level: 0, name: "平稳", icon: "✅", color: "var(--success)", threshold: 0 },
+  { level: 1, name: "轻微", icon: "⚠️", color: "var(--warning)", threshold: 1 },
+  { level: 2, name: "中等", icon: "🔶", color: "#f59e0b", threshold: 3 },
+  { level: 3, name: "严重", icon: "🔴", color: "var(--danger)", threshold: 5 },
+  { level: 4, name: "危急", icon: "🚨", color: "#dc2626", threshold: 8 },
+];
+
 // ====== 产品类别（15+类别，每类有独特机制）======
 const PRODUCT_CATEGORIES = {
   // === 基础6类（原有）===
@@ -779,6 +1506,34 @@ function registerStartup(state, name, industry, description) {
     employeeGoals: [], // 个人目标 [{employeeId, goal, target, progress}]
     quarterlyBonusPool: 0, // 季度奖金池
     okrCompletionRate: 0, // OKR 完成率（历史平均）
+    // ====== P1-6: 董事会/股东压力系统 ======
+    boardMembers: [], // 董事会成员 [{name, investorType, role, personality, joinedDay, satisfaction, trust, pressureLevel, lastEvaluation}]
+    boardPressureLevel: 0, // 董事会压力等级 0-4 (0=无压力, 4=最后通牒)
+    boardPressureHistory: [], // 压力事件历史 [{quarter, year, level, event, resolved}]
+    lastBoardEvaluation: null, // 上次董事会评估 {quarter, year, score, passed, details}
+    boardKPIHistory: [], // KPI 完成历史 [{quarter, year, scores: {}, totalScore, passed}]
+    shareholderSatisfaction: 50, // 股东满意度 0-100
+    shareholderTrust: 50, // 股东信任度 0-100
+    boardAlignment: 50, // 董事会战略一致性 0-100
+    pendingBoardAction: null, // 待处理的董事会行动 {type, deadline, options}
+    CEOReplaced: false, // CEO是否被更换过
+    forcedFinancing: false, // 是否接受过强制融资
+    // ====== P1-7: 公关/媒体系统 ======
+    mediaRelations: 0, // 媒体关系度 0-100
+    mediaRelationHistory: [], // 媒体关系历史 [{day, change, reason}]
+    mediaRelationLevel: 0, // 当前媒体关系等级 0-5
+    mediaContacts: [], // 媒体联系人 [{name, outlet, type, relationship, lastContact}]
+    prEvents: [], // 公关事件队列 [{id, type, severity, title, desc, triggeredDay, deadline, resolved, response}]
+    pendingCrisisEvent: null, // 待处理的危机事件 {id, event, deadline}
+    crisisLevel: 0, // 危机等级 0-4
+    crisisHistory: [], // 危机事件历史 [{day, type, severity, response, outcome}]
+    crisisPrepLevel: 0, // 危机准备度 0-100
+    mediaTrainingLevel: 0, // 媒体培训水平 0-100
+    lastMediaAction: null, // 上次媒体行动 {actionId, day}
+    positiveNewsCount: 0, // 近期正面新闻计数
+    negativeNewsCount: 0, // 近期负面新闻计数
+    brandMentions: 0, // 品牌提及次数
+    sentimentScore: 50, // 媒体情绪分 -100~100
   };
 
   // 生成1-2个联合创始人
@@ -1659,6 +2414,9 @@ function raiseFunding(state, roundId) {
     "success",
   );
 
+  // ====== P1-6: 融资后添加董事会成员 ======
+  _addBoardMemberAfterFunding(state, roundId, investorType);
+
   return {
     success: true,
     round: roundDef,
@@ -1666,6 +2424,553 @@ function raiseFunding(state, roundId) {
     equityDilution: equityDilution,
     investor: investorType,
   };
+}
+
+// ====== P1-6: 董事会/股东压力系统核心函数 ======
+
+/** 融资后添加董事会成员 */
+function _addBoardMemberAfterFunding(state, roundId, investorType) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const template = BOARD_MEMBER_TEMPLATES[investorType.key || Object.keys(BOARD_MEMBER_TEMPLATES).find(k => BOARD_MEMBER_TEMPLATES[k].name === investorType.name)];
+  if (!template) return;
+
+  // 生成董事会成员名字
+  const names = ["张总", "李总", "王总", "陈总", "刘总", "赵总", "周总", "吴总", "孙总", "郑总"];
+  const name = names[Math.floor(Math.random() * names.length)] || investorType.name;
+
+  const boardMember = {
+    id: _startupGenerateId(),
+    name: name,
+    investorType: investorType.name,
+    investorKey: investorType.key || Object.keys(BOARD_MEMBER_TEMPLATES).find(k => BOARD_MEMBER_TEMPLATES[k].name === investorType.name),
+    role: template.role,
+    personality: template.personality,
+    patience: template.patience,
+    focusAreas: [...template.focusAreas],
+    pressureTolerance: template.pressureTolerance,
+    joinedDay: state.player.day,
+    satisfaction: 60 + Math.floor(Math.random() * 20), // 初始满意度 60-80
+    trust: 50 + Math.floor(Math.random() * 20), // 初始信任度 50-70
+    lastEvaluation: null,
+    concerns: [], // 当前关注的问题
+  };
+
+  company.boardMembers.push(boardMember);
+
+  // 根据融资轮次调整初始满意度
+  if (roundId === "seed") {
+    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 15);
+    company.shareholderTrust = Math.min(100, company.shareholderTrust + 10);
+  } else if (roundId === "A") {
+    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 10);
+    company.shareholderTrust = Math.min(100, company.shareholderTrust + 15);
+  } else if (roundId === "B") {
+    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderTrust = Math.min(100, company.shareholderTrust + 10);
+  } else if (roundId === "C") {
+    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderTrust = Math.min(100, company.shareholderTrust + 5);
+    // C轮后董事会压力更大
+    company.boardAlignment = Math.max(0, company.boardAlignment - 10);
+  }
+
+  StateManager.addMessage(
+    `📋 ${investorType.name}派${template.role}「${name}」进入董事会（${template.personality}型，耐心${template.patience}%）`,
+    "event",
+  );
+}
+
+/** 计算季度KPI完成率 */
+function _calculateQuarterlyKPIScore(state, company) {
+  const quarter = Math.floor((state.player.day - company.foundedDay) / 90) + 1;
+  const fundingRound = company.phase === "seed" ? "seed" :
+    company.fundingRounds.length >= 3 ? "C" :
+    company.fundingRounds.length >= 2 ? "B" :
+    company.fundingRounds.length >= 1 ? "A" : "seed";
+
+  const kpiDef = BOARD_KPI_REQUIREMENTS[fundingRound];
+  if (!kpiDef) return { score: 0, details: {}, passed: false };
+
+  const scores = {};
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
+
+  // 营收考核
+  if (kpiDef.revenue) {
+    const revenueScore = Math.min(1.0, company.revenue / kpiDef.revenue.target);
+    scores.revenue = { achieved: company.revenue, target: kpiDef.revenue.target, score: revenueScore };
+    totalWeightedScore += revenueScore * kpiDef.revenue.weight;
+    totalWeight += kpiDef.revenue.weight;
+  }
+
+  // 营收增长率
+  if (kpiDef.revenueGrowth && company.kpiHistory.length > 0) {
+    const lastRevenue = company.kpiHistory[company.kpiHistory.length - 1].revenue || 0;
+    const growthRate = lastRevenue > 0 ? (company.revenue - lastRevenue) / lastRevenue : 0;
+    const growthScore = Math.min(1.0, Math.max(0, growthRate / kpiDef.revenueGrowth.target));
+    scores.revenueGrowth = { achieved: growthRate, target: kpiDef.revenueGrowth.target, score: growthScore };
+    totalWeightedScore += growthScore * kpiDef.revenueGrowth.weight;
+    totalWeight += kpiDef.revenueGrowth.weight;
+  }
+
+  // 用户增长率
+  if (kpiDef.userGrowth) {
+    const avgGrowthRate = _calculateAvgUserGrowthRate(company);
+    const userScore = Math.min(1.0, Math.max(0, avgGrowthRate / kpiDef.userGrowth.target));
+    scores.userGrowth = { achieved: avgGrowthRate, target: kpiDef.userGrowth.target, score: userScore };
+    totalWeightedScore += userScore * kpiDef.userGrowth.weight;
+    totalWeight += kpiDef.userGrowth.weight;
+  }
+
+  // 产品开发进度
+  if (kpiDef.productMilestone) {
+    const developingProducts = company.products.filter(p => p.status === "developing");
+    if (developingProducts.length > 0) {
+      const avgProgress = developingProducts.reduce((sum, p) => sum + (p.developmentProgress || 0), 0) / developingProducts.length;
+      const prodScore = Math.min(1.0, avgProgress / 100);
+      scores.productMilestone = { achieved: avgProgress, target: kpiDef.productMilestone.target * 100, score: prodScore };
+      totalWeightedScore += prodScore * kpiDef.productMilestone.weight;
+      totalWeight += kpiDef.productMilestone.weight;
+    } else {
+      scores.productMilestone = { achieved: 100, target: kpiDef.productMilestone.target * 100, score: 1.0 };
+      totalWeightedScore += 1.0 * kpiDef.productMilestone.weight;
+      totalWeight += kpiDef.productMilestone.weight;
+    }
+  }
+
+  // 团队稳定性/规模
+  if (kpiDef.teamStability) {
+    const totalHired = company.employees.length + (company.coFounders?.length || 0);
+    const retained = company.employees.length;
+    const stabilityRate = totalHired > 0 ? retained / totalHired : 1.0;
+    const teamScore = Math.min(1.0, stabilityRate / kpiDef.teamStability.target);
+    scores.teamStability = { achieved: stabilityRate, target: kpiDef.teamStability.target, score: teamScore };
+    totalWeightedScore += teamScore * kpiDef.teamStability.weight;
+    totalWeight += kpiDef.teamStability.weight;
+  }
+
+  if (kpiDef.teamGrowth) {
+    const teamScore = Math.min(1.0, company.employees.length / kpiDef.teamGrowth.target);
+    scores.teamGrowth = { achieved: company.employees.length, target: kpiDef.teamGrowth.target, score: teamScore };
+    totalWeightedScore += teamScore * kpiDef.teamGrowth.weight;
+    totalWeight += kpiDef.teamGrowth.weight;
+  }
+
+  if (kpiDef.teamScale) {
+    const teamScore = Math.min(1.0, company.employees.length / kpiDef.teamScale.target);
+    scores.teamScale = { achieved: company.employees.length, target: kpiDef.teamScale.target, score: teamScore };
+    totalWeightedScore += teamScore * kpiDef.teamScale.weight;
+    totalWeight += kpiDef.teamScale.weight;
+  }
+
+  // 市场份额
+  if (kpiDef.marketShare) {
+    const marketShare = _calculateMarketShare(state, company.products[0] || {});
+    const msScore = Math.min(1.0, marketShare / kpiDef.marketShare.target);
+    scores.marketShare = { achieved: marketShare, target: kpiDef.marketShare.target, score: msScore };
+    totalWeightedScore += msScore * kpiDef.marketShare.weight;
+    totalWeight += kpiDef.marketShare.weight;
+  }
+
+  // 盈利能力/净现金流
+  if (kpiDef.profitability) {
+    const netCash = company.cashReserve - (company.burnRate || 0) * 30;
+    const profitScore = kpiDef.profitability.target <= 0
+      ? Math.min(1.0, Math.max(0, (netCash + Math.abs(kpiDef.profitability.target * company.valuation)) / (kpiDef.profitability.target * company.valuation * 2)))
+      : Math.min(1.0, Math.max(0, netCash / (kpiDef.profitability.target * company.valuation)));
+    scores.profitability = { achieved: netCash, target: kpiDef.profitability.targetDesc, score: profitScore };
+    totalWeightedScore += profitScore * kpiDef.profitability.weight;
+    totalWeight += kpiDef.profitability.weight;
+  }
+
+  // 估值增长率
+  if (kpiDef.valuationGrowth && company.kpiHistory.length > 0) {
+    const lastValuation = company.kpiHistory[company.kpiHistory.length - 1].valuation || company.valuation;
+    const valGrowth = lastValuation > 0 ? (company.valuation - lastValuation) / lastValuation : 0;
+    const valScore = Math.min(1.0, Math.max(0, valGrowth / kpiDef.valuationGrowth.target));
+    scores.valuationGrowth = { achieved: valGrowth, target: kpiDef.valuationGrowth.target, score: valScore };
+    totalWeightedScore += valScore * kpiDef.valuationGrowth.weight;
+    totalWeight += kpiDef.valuationGrowth.weight;
+  }
+
+  const finalScore = totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
+  const passed = finalScore >= kpiDef.passThreshold;
+
+  return {
+    score: Math.round(finalScore * 100) / 100,
+    details: scores,
+    passed,
+    threshold: kpiDef.passThreshold,
+    warningThreshold: kpiDef.warningThreshold,
+    fundingRound: fundingRound,
+  };
+}
+
+/** 计算平均用户增长率 */
+function _calculateAvgUserGrowthRate(company) {
+  if (!company.products || company.products.length === 0) return 0;
+  let totalGrowth = 0;
+  let count = 0;
+  for (const p of company.products) {
+    if (p.status === "launched" && p.userGrowthRate !== undefined) {
+      totalGrowth += p.userGrowthRate || 0;
+      count++;
+    }
+  }
+  return count > 0 ? totalGrowth / count : 0;
+}
+
+/** 季度董事会评估 */
+function evaluateBoardPerformance(state) {
+  const company = state.startup.company;
+  if (!company || !company.boardMembers || company.boardMembers.length === 0) return null;
+
+  const evalResult = _calculateQuarterlyKPIScore(state, company);
+
+  // 记录KPI历史
+  const quarter = Math.floor((state.player.day - company.foundedDay) / 90) + 1;
+  const year = Math.floor((state.player.day - 1) / 365) + 1;
+
+  company.kpiHistory.push({
+    quarter,
+    year,
+    revenue: company.revenue,
+    valuation: company.valuation,
+    kpi: evalResult.score,
+    passed: evalResult.passed,
+    details: evalResult.details,
+  });
+
+  company.boardKPIHistory.push({
+    quarter,
+    year,
+    scores: evalResult.details,
+    totalScore: evalResult.score,
+    passed: evalResult.passed,
+    fundingRound: evalResult.fundingRound,
+  });
+
+  company.lastBoardEvaluation = {
+    quarter,
+    year,
+    score: evalResult.score,
+    passed: evalResult.passed,
+    details: evalResult.details,
+  };
+
+  // 更新股东满意度和信任度
+  if (evalResult.passed) {
+    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderTrust = Math.min(100, company.shareholderTrust + 3);
+  } else {
+    company.shareholderSatisfaction = Math.max(0, company.shareholderSatisfaction - 8);
+    company.shareholderTrust = Math.max(0, company.shareholderTrust - 5);
+  }
+
+  // 更新每个董事会成员的满意度
+  for (const member of company.boardMembers) {
+    const memberFocusBonus = _getMemberFocusBonus(member, evalResult.details);
+    if (evalResult.passed) {
+      member.satisfaction = Math.min(100, member.satisfaction + 3 + memberFocusBonus);
+      member.trust = Math.min(100, member.trust + 2);
+    } else {
+      member.satisfaction = Math.max(0, member.satisfaction - 5 - memberFocusBonus);
+      member.trust = Math.max(0, member.trust - 3);
+    }
+    member.lastEvaluation = { quarter, year, score: evalResult.score };
+  }
+
+  // 计算董事会压力等级
+  const newPressureLevel = _calculateBoardPressureLevel(state, company, evalResult);
+  const pressureChanged = newPressureLevel !== company.boardPressureLevel;
+  company.boardPressureLevel = newPressureLevel;
+
+  // 压力等级变化时触发事件
+  if (pressureChanged && newPressureLevel > 0) {
+    _triggerBoardPressureEvent(state, company, newPressureLevel);
+  }
+
+  // 检查连续未达标
+  const consecutiveFailures = _countConsecutiveFailures(company.kpiHistory);
+  if (consecutiveFailures >= 2) {
+    company.shareholderTrust = Math.max(0, company.shareholderTrust - 5);
+    for (const member of company.boardMembers) {
+      member.concerns = ["连续未达标"];
+    }
+  }
+
+  return {
+    score: evalResult.score,
+    passed: evalResult.passed,
+    threshold: evalResult.threshold,
+    pressureLevel: newPressureLevel,
+    consecutiveFailures,
+    details: evalResult.details,
+  };
+}
+
+/** 获取董事会成员关注领域加成 */
+function _getMemberFocusBonus(member, kpiDetails) {
+  let bonus = 0;
+  for (const area of member.focusAreas) {
+    const areaKey = area === "增长率" ? "revenueGrowth" :
+      area === "市场份额" ? "marketShare" :
+      area === "现金流" ? "profitability" :
+      area === "团队稳定性" ? "teamStability" :
+      area === "团队规模" ? "teamScale" :
+      area === "产品方向" ? "productMilestone" :
+      area === "战略协同" ? "marketShare" :
+      area === "技术壁垒" ? "productMilestone" :
+      area === "对赌条款" ? "profitability" :
+      area === "合规性" ? "productMilestone" :
+      area === "就业贡献" ? "teamScale" :
+      area === "业务整合" ? "marketShare" : null;
+
+    if (areaKey && kpiDetails[areaKey] && kpiDetails[areaKey].score >= 0.8) {
+      bonus += 2;
+    } else if (areaKey && kpiDetails[areaKey] && kpiDetails[areaKey].score < 0.5) {
+      bonus -= 2;
+    }
+  }
+  return Math.max(-3, Math.min(3, bonus));
+}
+
+/** 计算董事会压力等级 */
+function _calculateBoardPressureLevel(state, company, evalResult) {
+  // 基础压力来自KPI完成率
+  let basePressure = 0;
+  if (evalResult.score < 0.2) basePressure = 4;
+  else if (evalResult.score < 0.3) basePressure = 3;
+  else if (evalResult.score < 0.45) basePressure = 2;
+  else if (evalResult.score < 0.6) basePressure = 1;
+  else basePressure = 0;
+
+  // 连续未达标加重
+  const consecutiveFailures = _countConsecutiveFailures(company.kpiHistory);
+  if (consecutiveFailures >= 3) basePressure = Math.min(4, basePressure + 1);
+
+  // Runway过低加重
+  if (company.monthsOfRunway < 3) basePressure = Math.min(4, basePressure + 1);
+  else if (company.monthsOfRunway < 6) basePressure = Math.max(1, basePressure);
+
+  // 股东满意度低加重
+  if (company.shareholderSatisfaction < 30) basePressure = Math.min(4, basePressure + 1);
+
+  // 董事会成员平均满意度
+  if (company.boardMembers.length > 0) {
+    const avgMemberSatisfaction = company.boardMembers.reduce((s, m) => s + m.satisfaction, 0) / company.boardMembers.length;
+    if (avgMemberSatisfaction < 30) basePressure = Math.min(4, basePressure + 1);
+  }
+
+  // 激进型投资人（VC/PE）加重
+  for (const member of company.boardMembers) {
+    if (member.pressureTolerance === "低" || member.pressureTolerance === "极低") {
+      if (evalResult.score < member.patience / 100) {
+        basePressure = Math.min(4, basePressure + 1);
+      }
+    }
+  }
+
+  return Math.min(4, Math.max(0, basePressure));
+}
+
+/** 统计连续未达标次数 */
+function _countConsecutiveFailures(kpiHistory) {
+  if (!kpiHistory || kpiHistory.length === 0) return 0;
+  let count = 0;
+  for (let i = kpiHistory.length - 1; i >= 0; i--) {
+    if (!kpiHistory[i].passed) count++;
+    else break;
+  }
+  return count;
+}
+
+/** 触发董事会压力事件 */
+function _triggerBoardPressureEvent(state, company, pressureLevel) {
+  const eventKey = pressureLevel >= 4 ? "ultimatum" :
+    pressureLevel === 3 ? "severe_warning" :
+    pressureLevel === 2 ? "moderate_warning" : "mild_warning";
+
+  const event = BOARD_PRESSURE_EVENTS[eventKey];
+  if (!event) return;
+
+  company.pendingBoardAction = {
+    type: eventKey,
+    deadline: state.player.day + 30, // 30天内必须处理
+    event,
+    pressureLevel,
+  };
+
+  StateManager.addMessage(
+    `${event.icon} 【${event.title}】KPI完成率${Math.round((company.boardKPIHistory[company.boardKPIHistory.length - 1]?.totalScore || 0) * 100)}%，${event.trigger}，请在30天内做出决策！`,
+    pressureLevel >= 3 ? "warning" : "event",
+  );
+}
+
+/** 处理董事会压力事件选择 */
+function resolveBoardPressureAction(state, optionIndex) {
+  const company = state.startup.company;
+  if (!company || !company.pendingBoardAction) return { success: false, message: "没有待处理的董事会行动" };
+
+  const action = company.pendingBoardAction;
+  const event = action.event;
+  const option = event.options[optionIndex];
+  if (!option) return { success: false, message: "无效选项" };
+
+  // 检查费用
+  if (company.cashReserve < option.cost) {
+    return { success: false, message: `现金不足，需要¥${option.cost}` };
+  }
+
+  // 扣费
+  company.cashReserve -= option.cost;
+
+  // 应用效果
+  if (option.effects) {
+    for (const [key, value] of Object.entries(option.effects)) {
+      if (key === "satisfaction") {
+        company.shareholderSatisfaction = Math.max(0, Math.min(100, company.shareholderSatisfaction + value));
+      } else if (key === "trust") {
+        company.shareholderTrust = Math.max(0, Math.min(100, company.shareholderTrust + value));
+      } else if (key === "alignment") {
+        company.boardAlignment = Math.max(0, Math.min(100, company.boardAlignment + value));
+      } else if (key === "revenue") {
+        company.revenue = Math.max(0, company.revenue + value);
+      } else if (key === "employeeMorale") {
+        for (const emp of company.employees) {
+          emp.satisfaction = Math.max(0, Math.min(100, emp.satisfaction + value));
+        }
+      } else if (key === "risk") {
+        // 风险标记
+        company._boardRisk = (company._boardRisk || 0) + value;
+      } else if (key === "debt") {
+        // 新增债务
+        company.boardDebt = (company.boardDebt || 0) + value;
+        company.boardInterestRate = Math.max(company.boardInterestRate || 0, value / 1000);
+      } else if (key === "interestRate") {
+        company.boardInterestRate = Math.max(company.boardInterestRate || 0, value);
+      } else if (key === "dilution") {
+        // 股权稀释
+        company.equity.player = Math.max(0, company.equity.player - value * 100);
+        company.equity.investors += value * 100;
+      } else if (key === "leadershipChange") {
+        company.CEOReplaced = true;
+        state.startup.flags.ceoReplaced = true;
+      } else if (key === "crisisMitigation") {
+        state.flags.boardCrisisResolved = true;
+      } else if (key === "boardRevolt") {
+        state.flags.boardRevolt = true;
+      } else if (key === "playerRoleChange") {
+        state.player.corporate?.rank && (company.CEOReplaced = true);
+      }
+    }
+  }
+
+  // 更新董事会成员满意度
+  for (const member of company.boardMembers) {
+    member.satisfaction = Math.max(0, Math.min(100, member.satisfaction + (option.effects?.satisfaction || 0) / 2));
+    member.trust = Math.max(0, Math.min(100, member.trust + (option.effects?.trust || 0) / 2));
+  }
+
+  // 记录压力事件历史
+  company.boardPressureHistory.push({
+    quarter: Math.floor((state.player.day - company.foundedDay) / 90) + 1,
+    year: Math.floor((state.player.day - 1) / 365) + 1,
+    level: action.pressureLevel,
+    event: eventKey,
+    resolved: true,
+    choice: option.text,
+    day: state.player.day,
+  });
+
+  // 清除待处理行动
+  company.pendingBoardAction = null;
+
+  // 降低压力等级
+  company.boardPressureLevel = Math.max(0, company.boardPressureLevel - 1);
+
+  StateManager.addMessage(
+    `✅ 董事会决策：${option.text} → ${option.feedback}`,
+    "success",
+  );
+
+  return { success: true, feedback: option.feedback };
+}
+
+/** 股东沟通行动 */
+function executeShareholderCommunication(state, actionId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const action = SHAREHOLDER_COMMUNICATION_ACTIONS[actionId];
+  if (!action) return { success: false, message: "无效行动" };
+
+  // 检查费用
+  if (company.cashReserve < action.cost) {
+    return { success: false, message: `现金不足，需要¥${action.cost}` };
+  }
+
+  // 扣费
+  company.cashReserve -= action.cost;
+
+  // 应用效果
+  if (action.effects) {
+    for (const [key, value] of Object.entries(action.effects)) {
+      if (key === "satisfaction") {
+        company.shareholderSatisfaction = Math.max(0, Math.min(100, company.shareholderSatisfaction + value));
+      } else if (key === "trust") {
+        company.shareholderTrust = Math.max(0, Math.min(100, company.shareholderTrust + value));
+      } else if (key === "alignment") {
+        company.boardAlignment = Math.max(0, Math.min(100, company.boardAlignment + value));
+      } else if (key === "reputation") {
+        company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+      }
+    }
+  }
+
+  // 更新董事会成员
+  for (const member of company.boardMembers) {
+    member.satisfaction = Math.max(0, Math.min(100, member.satisfaction + Math.round(action.effects?.satisfaction / 2)));
+    member.trust = Math.max(0, Math.min(100, member.trust + Math.round(action.effects?.trust / 2)));
+  }
+
+  StateManager.addMessage(
+    `📋 ${action.name}：${action.desc} → 股东满意度${Math.round(company.shareholderSatisfaction)}%，信任度${Math.round(company.shareholderTrust)}%`,
+    "success",
+  );
+
+  return { success: true };
+}
+
+/** 获取可用的股东沟通行动 */
+function getAvailableShareholderActions() {
+  return Object.values(SHAREHOLDER_COMMUNICATION_ACTIONS);
+}
+
+/** 获取董事会压力等级文本 */
+function getPressureLevelText(level) {
+  const texts = {
+    0: "无压力 ✅",
+    1: "温和提醒 ⚠️",
+    2: "正式警告 🔶",
+    3: "紧急会议 🔴",
+    4: "最后通牒 💀",
+  };
+  return texts[level] || "未知";
+}
+
+/** 获取董事会压力等级颜色 */
+function getPressureLevelColor(level) {
+  const colors = {
+    0: "var(--success)",
+    1: "var(--warning)",
+    2: "#e6a23c",
+    3: "var(--danger)",
+    4: "#901717",
+  };
+  return colors[level] || "#999";
 }
 
 // ====== 核心：公司运营（每日/季度）======
@@ -1956,6 +3261,496 @@ function tickStartup(state, tickType) {
   if (tickType === "quarterly" && typeof evaluateQuarterlyOkr === "function") {
     evaluateQuarterlyOkr(state);
   }
+
+  // ====== P1-6: 季末董事会评估 ======
+  if (tickType === "quarterly") {
+    const boardResult = evaluateBoardPerformance(state);
+    if (boardResult) {
+      const scorePct = Math.round(boardResult.score * 100);
+      if (boardResult.passed) {
+        StateManager.addMessage(
+          `📋 董事会评估通过！KPI完成率 ${scorePct}%（目标≥${Math.round(boardResult.threshold * 100)}%），股东满意度${Math.round(company.shareholderSatisfaction)}%`,
+          "success",
+        );
+      } else {
+        StateManager.addMessage(
+          `⚠️ 董事会评估未通过！KPI完成率 ${scorePct}%（目标≥${Math.round(boardResult.threshold * 100)}%），股东满意度${Math.round(company.shareholderSatisfaction)}%，压力等级：${getPressureLevelText(company.boardPressureLevel)}`,
+          boardResult.pressureLevel >= 3 ? "warning" : "event",
+        );
+      }
+    }
+  }
+
+  // ====== P1-7: 公关/媒体系统季度评估 ======
+  if (tickType === "quarterly") {
+    _evaluateMediaRelationships(state, company);
+    _processPendingCrisisEvents(state, company);
+    _updateMediaRelationLevel(company);
+    _evaluateCrisisProbability(state, company);
+  }
+}
+
+// ====== P1-7: 公关/媒体系统核心函数 ======
+
+/** 评估媒体关系 */
+function _evaluateMediaRelationships(state, company) {
+  // 媒体关系自然衰减（每季度 -5，最低 0）
+  const decay = Math.max(0, company.mediaRelations - 5);
+  company.mediaRelations = decay;
+
+  // 根据正面/负面新闻调整
+  if (company.positiveNewsCount > company.negativeNewsCount) {
+    company.mediaRelations = Math.min(100, company.mediaRelations + 5);
+    company.sentimentScore = Math.min(100, company.sentimentScore + 3);
+  } else if (company.negativeNewsCount > company.positiveNewsCount) {
+    company.mediaRelations = Math.max(0, company.mediaRelations - 5);
+    company.sentimentScore = Math.max(-100, company.sentimentScore - 3);
+  }
+
+  // 记录历史
+  company.mediaRelationHistory.push({
+    day: state.player.day,
+    change: company.mediaRelations - decay,
+    reason: "季度评估",
+    positiveNews: company.positiveNewsCount,
+    negativeNews: company.negativeNewsCount,
+  });
+
+  // 清理历史（保留最近 20 条）
+  if (company.mediaRelationHistory.length > 20) {
+    company.mediaRelationHistory = company.mediaRelationHistory.slice(-20);
+  }
+
+  // 重置新闻计数
+  company.positiveNewsCount = 0;
+  company.negativeNewsCount = 0;
+
+  // 更新媒体关系等级
+  _updateMediaRelationLevel(company);
+}
+
+/** 更新媒体关系等级 */
+function _updateMediaRelationLevel(company) {
+  const newLevel = MEDIA_RELATION_LEVELS.findLast(l => company.mediaRelations >= l.threshold) || MEDIA_RELATION_LEVELS[0];
+  if (newLevel.level !== company.mediaRelationLevel) {
+    const oldLevel = MEDIA_RELATION_LEVELS.find(l => l.level === company.mediaRelationLevel) || MEDIA_RELATION_LEVELS[0];
+    StateManager.addMessage(
+      `📰 媒体关系等级变化：${oldLevel.name} → ${newLevel.name}（${newLevel.icon}）${newLevel.bonus ? ` · ${newLevel.bonus}` : ""}`,
+      "event"
+    );
+    company.mediaRelationLevel = newLevel.level;
+  }
+}
+
+/** 处理待处理的危机事件 */
+function _processPendingCrisisEvents(state, company) {
+  if (!company.pendingCrisisEvent) return;
+
+  const crisis = company.pendingCrisisEvent;
+  const daysRemaining = crisis.deadline - state.player.day;
+
+  if (daysRemaining <= 0) {
+    // 超时未处理，危机升级
+    _resolveCrisisEvent(state, company, -1); // -1 表示超时未处理
+    return;
+  }
+
+  // 危机等级随时间增加
+  if (daysRemaining <= 7 && company.crisisLevel < 4) {
+    company.crisisLevel = Math.min(4, company.crisisLevel + 1);
+    StateManager.addMessage(
+      `🚨 危机倒计时：${daysRemaining}天内必须处理「${crisis.event.title}」！`,
+      "warning"
+    );
+  }
+}
+
+/** 评估危机触发概率 */
+function _evaluateCrisisProbability(state, company) {
+  // 基础触发概率
+  let baseChance = 0.005; // 0.5%/天
+
+  // 媒体关系低增加危机概率
+  if (company.mediaRelationLevel < 2) {
+    baseChance *= 1.5;
+  } else if (company.mediaRelationLevel >= 4) {
+    baseChance *= 0.5;
+  }
+
+  // 危机准备度降低危机概率
+  baseChance *= (1 - company.crisisPrepLevel / 200);
+
+  // 媒体培训水平降低危机概率
+  baseChance *= (1 - company.mediaTrainingLevel / 200);
+
+  // 品牌等级高降低危机概率
+  const brandLevel = _getCompanyBrandLevel(company);
+  if (brandLevel >= 4) {
+    baseChance *= 0.7;
+  }
+
+  // 随机触发
+  if (Math.random() < baseChance) {
+    _triggerRandomCrisis(state, company);
+  }
+}
+
+/** 触发随机危机事件 */
+function _triggerRandomCrisis(state, company) {
+  // 根据公司发展阶段选择危机类型
+  const phase = company.phase || "seed";
+  const availableCrisisTypes = [];
+
+  // 所有危机类型都有基础概率
+  for (const [key, template] of Object.entries(PR_EVENT_TEMPLATES)) {
+    if (template.type !== "crisis") continue;
+
+    // 某些危机在特定阶段概率更高
+    let weight = template.triggerChance || 0.01;
+
+    // 数据泄露在 A 轮后更常见
+    if (key === "data_breach" && phase === "A") weight *= 2;
+    if (key === "data_breach" && phase === "B") weight *= 3;
+    if (key === "data_breach" && phase === "C") weight *= 4;
+
+    // 监管调查在 C 轮/IPO 前更常见
+    if (key === "regulatory_investigation" && phase === "C") weight *= 3;
+    if (key === "regulatory_investigation" && phase === "IPO") weight *= 5;
+
+    // 高管丑闻在有一定规模后更常见
+    if (key === "executive_scandal" && company.employees.length < 5) weight *= 0.3;
+
+    // 用户投诉在产品发布后更常见
+    if (key === "customer_complaint" && company.products.some(p => p.status === "launched")) weight *= 2;
+
+    availableCrisisTypes.push({ key, weight, template });
+  }
+
+  // 按权重选择
+  const totalWeight = availableCrisisTypes.reduce((sum, c) => sum + c.weight, 0);
+  let random = Math.random() * totalWeight;
+  let selected = availableCrisisTypes[0];
+
+  for (const crisis of availableCrisisTypes) {
+    random -= crisis.weight;
+    if (random <= 0) {
+      selected = crisis;
+      break;
+    }
+  }
+
+  // 生成危机事件
+  const crisisId = _startupGenerateId();
+  const crisisEvent = {
+    id: crisisId,
+    type: selected.key,
+    severity: selected.template.severity,
+    title: selected.template.descTemplate,
+    icon: selected.template.icon,
+    triggeredDay: state.player.day,
+    deadline: state.player.day + 14, // 14天处理期限
+    resolved: false,
+    response: null,
+    outcome: null,
+  };
+
+  company.prEvents.push(crisisEvent);
+  company.pendingCrisisEvent = {
+    id: crisisId,
+    event: crisisEvent,
+    deadline: crisisEvent.deadline,
+  };
+
+  // 增加危机等级
+  company.crisisLevel = Math.min(4, company.crisisLevel + (selected.template.severity === "high" ? 2 : selected.template.severity === "medium" ? 1 : 0));
+
+  StateManager.addMessage(
+    `${crisisEvent.icon} 【危机事件】${crisisEvent.title}，请在14天内做出决策！`,
+    selected.template.severity === "high" ? "danger" : "warning"
+  );
+}
+
+/** 执行危机应对 */
+function resolveCrisisEvent(state, optionIndex) {
+  const company = state.startup.company;
+  if (!company || !company.pendingCrisisEvent) return { success: false, message: "没有待处理的危机事件" };
+
+  const crisis = company.pendingCrisisEvent;
+  const eventTemplate = PR_EVENT_TEMPLATES[crisis.event.type];
+  if (!eventTemplate) return { success: false, message: "无效危机类型" };
+
+  const options = eventTemplate.responseOptions;
+  const optionKey = options[optionIndex];
+  if (!optionKey) return { success: false, message: "无效选项" };
+
+  const option = CRISIS_RESPONSE_OPTIONS[optionKey];
+  if (!option) return { success: false, message: "无效应对方案" };
+
+  // 检查费用
+  if (company.cashReserve < option.cost) {
+    return { success: false, message: `现金不足，需要¥${option.cost.toLocaleString()}` };
+  }
+
+  // 执行应对
+  company.cashReserve -= option.cost;
+
+  // 应用效果
+  for (const [key, value] of Object.entries(option.effect)) {
+    if (company[key] !== undefined) {
+      company[key] = Math.max(0, Math.min(100, company[key] + value));
+    }
+  }
+
+  // 媒体关系影响
+  if (company.mediaRelations) {
+    const mediaBonus = company.mediaRelationLevel >= 3 ? 0.2 : 0; // 高媒体关系有 20% 缓冲
+    company.mediaRelations = Math.max(0, Math.min(100, company.mediaRelations + (option.effect.mediaRelations || 0) * (1 - mediaBonus)));
+  }
+
+  // 记录结果
+  crisis.resolved = true;
+  crisis.response = optionKey;
+  crisis.outcome = {
+    cost: option.cost,
+    effects: option.effect,
+    resolvedDay: state.player.day,
+  };
+
+  // 记录危机历史
+  company.crisisHistory.push({
+    day: state.player.day,
+    type: crisis.event.type,
+    severity: crisis.event.severity,
+    response: optionKey,
+    outcome: option.effect,
+    cost: option.cost,
+  });
+
+  // 清理待处理事件
+  company.pendingCrisisEvent = null;
+
+  // 根据应对效果调整声誉
+  const effectiveness = _calculateCrisisResponseEffectiveness(crisis.event.type, optionKey, company);
+  if (effectiveness > 0.7) {
+    StateManager.addMessage(
+      `✅ 危机处理成功！${option.desc}，声誉+${Math.round(effectiveness * 10)}，${Object.entries(option.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
+      "success"
+    );
+  } else if (effectiveness > 0.4) {
+    StateManager.addMessage(
+      `🔶 危机处理一般，${option.desc}，${Object.entries(option.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
+      "event"
+    );
+  } else {
+    StateManager.addMessage(
+      `❌ 危机处理不理想，${option.desc}，声誉继续受损`,
+      "warning"
+    );
+  }
+
+  // 重置危机等级（根据处理效果）
+  company.crisisLevel = Math.max(0, company.crisisLevel - (effectiveness > 0.7 ? 2 : effectiveness > 0.4 ? 1 : 0));
+
+  return { success: true, outcome: option.effect, effectiveness };
+}
+
+/** 计算危机应对效果 */
+function _calculateCrisisResponseEffectiveness(crisisType, responseKey, company) {
+  let baseEffectiveness = 0.5;
+
+  // 媒体关系加成
+  baseEffectiveness += company.mediaRelationLevel * 0.03;
+
+  // 危机准备度加成
+  baseEffectiveness += company.crisisPrepLevel * 0.003;
+
+  // 媒体培训加成
+  baseEffectiveness += company.mediaTrainingLevel * 0.002;
+
+  // 特定应对的效果加成
+  const effectivenessBonuses = {
+    // 产品故障：召回 > 赔偿 > 道歉 > 冷处理
+    product_failure: { recall: 0.3, compensate: 0.15, apologize: 0.05, ignore: -0.3 },
+    // 数据泄露：配合调查 > 聘请安全 > 通知用户 > 和解
+    data_breach: { cooperate_authorities: 0.3, hire_security: 0.2, notify_users: 0.1, settle: 0.05 },
+    // 高管丑闻：暂停职务 > 法律行动 > 发布声明 > 等待
+    executive_scandal: { suspend_exec: 0.25, legal_action: 0.1, public_statement: 0.05, wait: -0.1 },
+    // 用户投诉：公开回应 > 改进服务 > 私下和解 > 冷处理
+    customer_complaint: { respond_publicly: 0.2, improve_service: 0.15, private_settlement: 0.05, ignore_crisis: -0.2 },
+    // 竞争对手抹黑：专注产品 > 法律诉讼 > 反驳声明 > 无视
+    competitor_attack: { focus_product: 0.25, legal_action_competitor: 0.15, counter_statement: 0.05, ignore_competitor: -0.1 },
+    // 监管调查：全力配合 > 和解 > 法律抗辩 > 游说
+    regulatory_investigation: { cooperate_regulatory: 0.3, settle_regulatory: 0.15, legal_defense: 0.05, lobby: -0.2 },
+  };
+
+  const bonuses = effectivenessBonuses[crisisType] || {};
+  baseEffectiveness += bonuses[responseKey] || 0;
+
+  return Math.max(0, Math.min(1, baseEffectiveness));
+}
+
+/** 执行公关活动 */
+function executePREvent(state, eventId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const eventTemplate = PR_EVENT_TEMPLATES[eventId];
+  if (!eventTemplate || eventTemplate.type !== "positive") {
+    return { success: false, message: "无效的公关活动" };
+  }
+
+  // 检查触发条件
+  if (eventTemplate.triggerConditions) {
+    if (eventTemplate.triggerConditions.minRevenue && company.revenue < eventTemplate.triggerConditions.minRevenue) {
+      return { success: false, message: `需要月收入¥${eventTemplate.triggerConditions.minRevenue.toLocaleString()}才能举办` };
+    }
+  }
+
+  // 检查费用
+  if (company.cashReserve < eventTemplate.cost) {
+    return { success: false, message: `现金不足，需要¥${eventTemplate.cost.toLocaleString()}` };
+  }
+
+  // 检查冷却
+  if (company.lastMediaAction && company.lastMediaAction.actionId === eventId) {
+    const daysSinceLast = state.player.day - company.lastMediaAction.day;
+    const actionTemplate = MEDIA_RELATION_ACTIONS[eventId];
+    if (actionTemplate && daysSinceLast < actionTemplate.cooldown) {
+      return { success: false, message: `该活动冷却中，还需${actionTemplate.cooldown - daysSinceLast}天` };
+    }
+  }
+
+  // 执行活动
+  company.cashReserve -= eventTemplate.cost;
+  company.lastMediaAction = { actionId: eventId, day: state.player.day };
+
+  // 应用效果（成功率影响）
+  const success = Math.random() < eventTemplate.successChance;
+  const multiplier = success ? 1 : 0.5; // 失败时效果减半
+
+  for (const [key, value] of Object.entries(eventTemplate.effects)) {
+    if (company[key] !== undefined) {
+      const adjustedValue = Math.round(value * multiplier);
+      company[key] = Math.max(0, Math.min(100, company[key] + adjustedValue));
+    }
+  }
+
+  // 记录公关事件
+  company.prEvents.push({
+    id: _startupGenerateId(),
+    type: "positive",
+    title: eventTemplate.name,
+    triggeredDay: state.player.day,
+    resolved: true,
+    success: success,
+    outcome: eventTemplate.effects,
+  });
+
+  // 更新媒体关系等级
+  _updateMediaRelationLevel(company);
+
+  StateManager.addMessage(
+    `${success ? "✅" : "🔶"} 【${eventTemplate.name}】${success ? "成功举办" : "效果一般"}，${Object.entries(eventTemplate.effects).map(([k, v]) => `${k} +${Math.round(v * multiplier)}）。${success ? "" : "(效果减半)"}`,
+    success ? "success" : "event"
+  );
+
+  return { success: true, outcome: eventTemplate.effects, successRate: eventTemplate.successChance };
+}
+
+/** 执行媒体关系管理行动 */
+function executeMediaRelationAction(state, actionId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const action = MEDIA_RELATION_ACTIONS[actionId];
+  if (!action) return { success: false, message: "无效行动" };
+
+  // 检查费用
+  if (company.cashReserve < action.cost) {
+    return { success: false, message: `现金不足，需要¥${action.cost.toLocaleString()}` };
+  }
+
+  // 检查冷却
+  if (company.lastMediaAction && company.lastMediaAction.actionId === actionId) {
+    const daysSinceLast = state.player.day - company.lastMediaAction.day;
+    if (daysSinceLast < action.cooldown) {
+      return { success: false, message: `该行动冷却中，还需${action.cooldown - daysSinceLast}天` };
+    }
+  }
+
+  // 执行行动
+  company.cashReserve -= action.cost;
+  company.lastMediaAction = { actionId, day: state.player.day };
+
+  // 应用效果
+  for (const [key, value] of Object.entries(action.effect)) {
+    if (company[key] !== undefined) {
+      company[key] = Math.max(0, Math.min(100, company[key] + value));
+    }
+  }
+
+  // 更新媒体关系等级
+  _updateMediaRelationLevel(company);
+
+  StateManager.addMessage(
+    `🤝 【${action.name}】${action.desc}，${Object.entries(action.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
+    "success"
+  );
+
+  return { success: true, outcome: action.effect };
+}
+
+/** 获取可用公关活动 */
+function getAvailablePREvents() {
+  return Object.values(PR_EVENT_TEMPLATES).filter(e => e.type === "positive");
+}
+
+/** 获取可用危机应对选项 */
+function getAvailableCrisisResponses(crisisType) {
+  const template = PR_EVENT_TEMPLATES[crisisType];
+  if (!template || !template.responseOptions) return [];
+  return template.responseOptions.map(optKey => ({
+    key: optKey,
+    ...CRISIS_RESPONSE_OPTIONS[optKey],
+  }));
+}
+
+/** 获取媒体关系等级信息 */
+function getMediaRelationLevelInfo(level) {
+  return MEDIA_RELATION_LEVELS.find(l => l.level === level) || MEDIA_RELATION_LEVELS[0];
+}
+
+/** 获取危机等级信息 */
+function getCrisisLevelInfo(level) {
+  return CRISIS_LEVELS.find(l => l.level === level) || CRISIS_LEVELS[0];
+}
+
+/** 获取公关事件摘要 */
+function getPREventSummary(state) {
+  const company = state.startup.company;
+  if (!company) return null;
+
+  const recentEvents = company.prEvents.slice(-10);
+  const positiveCount = recentEvents.filter(e => e.type === "positive" && e.success).length;
+  const crisisCount = recentEvents.filter(e => e.type === "crisis" && e.resolved).length;
+  const pendingCrisis = company.pendingCrisisEvent ? 1 : 0;
+
+  return {
+    mediaRelations: company.mediaRelations,
+    mediaRelationLevel: company.mediaRelationLevel,
+    crisisLevel: company.crisisLevel,
+    positiveNews: positiveCount,
+    crisisEvents: crisisCount,
+    pendingCrisis,
+    sentimentScore: company.sentimentScore,
+    recentEvents: recentEvents.map(e => ({
+      type: e.type,
+      title: e.title,
+      day: e.triggeredDay,
+      success: e.success,
+      severity: e.severity,
+    })),
+  };
 }
 
 // ====== P0-1: 产品生命周期管理 ======
@@ -4128,6 +5923,36 @@ function getAvailableStartupActions(state) {
     available: company.employees.length > 0,
   });
 
+  // P0-5: KPI/OKR 目标管理
+  actions.push({
+    id: "kpi_dashboard",
+    name: "目标管理",
+    icon: "📊",
+    apCost: 10,
+    desc: "设定和追踪季度 OKR、团队/个人目标",
+    available: true,
+  });
+
+  // P1-6: 董事会管理
+  actions.push({
+    id: "board_management",
+    name: "董事会管理",
+    icon: "📋",
+    apCost: 10,
+    desc: "查看董事会成员、KPI完成情况和股东沟通",
+    available: true,
+  });
+
+  // P1-7: 公关/媒体管理
+  actions.push({
+    id: "pr_management",
+    name: "公关管理",
+    icon: "📰",
+    apCost: 10,
+    desc: "管理媒体关系、处理危机事件、举办公关活动",
+    available: true,
+  });
+
   // IPO准备
   if (company.phase === "growth" && company.fundingRounds.length >= 2) {
     actions.push({
@@ -4665,6 +6490,428 @@ function showTeamManagementModal(state) {
   return { success: true };
 }
 
+// ====== P1-6: 董事会管理弹窗 ======
+/** 显示董事会管理面板 */
+function showBoardManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  // 董事会成员列表
+  let boardMembersHtml = "";
+  if (company.boardMembers && company.boardMembers.length > 0) {
+    boardMembersHtml = '<div style="margin-bottom:12px;">';
+    for (const member of company.boardMembers) {
+      const satisfactionColor = member.satisfaction >= 60 ? "var(--success)" :
+        member.satisfaction >= 40 ? "var(--warning)" : "var(--danger)";
+      const trustColor = member.trust >= 60 ? "var(--success)" :
+        member.trust >= 40 ? "var(--warning)" : "var(--danger)";
+      const pressureColor = getPressureLevelColor(member.pressureTolerance === "极低" ? 3 :
+        member.pressureTolerance === "低" ? 2 : 1);
+
+      boardMembersHtml += `
+        <div style="padding:8px;margin-bottom:6px;background:var(--bg-secondary);border-radius:6px;border-left:3px solid ${pressureColor}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:bold;">${member.icon || "📋"} ${member.name} <span style="font-size:10px;color:var(--text-muted);">(${member.investorType} · ${member.role})</span></div>
+            <div style="font-size:10px;color:var(--text-muted);">${member.personality}型</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;">
+            <div>满意度: <span style="color:${satisfactionColor};font-weight:bold;">${member.satisfaction}%</span></div>
+            <div>信任度: <span style="color:${trustColor};font-weight:bold;">${member.trust}%</span></div>
+            <div>耐心: ${member.patience}%</div>
+            <div>关注: ${member.focusAreas.slice(0, 2).join(", ")}</div>
+          </div>
+          ${member.concerns && member.concerns.length > 0 ?
+            `<div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 关注：${member.concerns.join(", ")}</div>` : ""
+          }
+        </div>`;
+    }
+    boardMembersHtml += "</div>";
+  } else {
+    boardMembersHtml = '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:12px;">尚未有董事会成员（融资后投资人派代表进入董事会）</div>';
+  }
+
+  // KPI完成情况
+  let kpiHistoryHtml = "";
+  if (company.boardKPIHistory && company.boardKPIHistory.length > 0) {
+    kpiHistoryHtml = '<div style="margin-bottom:12px;">';
+    kpiHistoryHtml += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">KPI完成历史</div>';
+    kpiHistoryHtml += '<div style="display:flex;gap:4px;overflow-x:auto;">';
+    for (const record of company.boardKPIHistory.slice(-8)) {
+      const scoreColor = record.passed ? "var(--success)" : "var(--danger)";
+      const scorePct = Math.round(record.totalScore * 100);
+      kpiHistoryHtml += `
+        <div style="min-width:50px;padding:4px 6px;background:var(--bg-secondary);border-radius:4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);">Y${record.year}Q${record.quarter}</div>
+          <div style="font-size:14px;font-weight:bold;color:${scoreColor};">${scorePct}%</div>
+          <div style="font-size:9px;color:${record.passed ? "var(--success)" : "var(--danger)"};">${record.passed ? "✅" : "❌"}</div>
+        </div>`;
+    }
+    kpiHistoryHtml += "</div></div>";
+  }
+
+  // 当前压力等级
+  const pressureText = getPressureLevelText(company.boardPressureLevel);
+  const pressureColor = getPressureLevelColor(company.boardPressureLevel);
+
+  // 待处理行动
+  let pendingActionHtml = "";
+  if (company.pendingBoardAction) {
+    const action = company.pendingBoardAction;
+    const daysLeft = Math.ceil((action.deadline - state.player.day) / 30);
+    pendingActionHtml = `
+      <div style="padding:10px;background:var(--bg-warning);border-radius:6px;margin-bottom:12px;border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:bold;color:var(--danger);margin-bottom:6px;">${action.event.icon} ${action.event.title}</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;">${action.event.trigger} · 剩余${daysLeft}个季度</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${action.event.options.map((opt, i) => `
+            <button class="btn" style="font-size:11px;padding:6px 10px;text-align:left;" onclick="resolveBoardPressureActionFromModal('${Object.keys(BOARD_PRESSURE_EVENTS).find(k => BOARD_PRESSURE_EVENTS[k] === action.event)}', ${i})">
+              ${opt.text} ${opt.cost > 0 ? `(¥${opt.cost.toLocaleString()})` : ""}
+            </button>
+          `).join("")}
+        </div>
+      </div>`;
+  }
+
+  // 股东沟通行动
+  const commActions = getAvailableShareholderActions();
+  let commActionsHtml = commActions.map(act => `
+    <div style="padding:8px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;font-weight:bold;">${act.icon} ${act.name}</div>
+        <div style="font-size:11px;color:${act.cost > 0 ? "var(--danger)" : "var(--success)"};">${act.cost > 0 ? "¥" + act.cost.toLocaleString() : "免费"}</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${act.desc}</div>
+    </div>
+  `).join("");
+
+  const bodyHtml = `
+    <div style="font-size:13px;max-height:70vh;overflow-y:auto;">
+      <!-- 概览 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;padding:8px;background:var(--bg-secondary);border-radius:6px;">
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);">董事会压力</div>
+          <div style="font-size:16px;font-weight:bold;color:${pressureColor};">${pressureText}</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);">股东满意度</div>
+          <div style="font-size:16px;font-weight:bold;color:${company.shareholderSatisfaction >= 60 ? "var(--success)" : company.shareholderSatisfaction >= 40 ? "var(--warning)" : "var(--danger)"};">${Math.round(company.shareholderSatisfaction)}%</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);">股东信任度</div>
+          <div style="font-size:16px;font-weight:bold;color:${company.shareholderTrust >= 60 ? "var(--success)" : company.shareholderTrust >= 40 ? "var(--warning)" : "var(--danger)"};">${Math.round(company.shareholderTrust)}%</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);">战略一致性</div>
+          <div style="font-size:16px;font-weight:bold;color:${company.boardAlignment >= 60 ? "var(--success)" : company.boardAlignment >= 40 ? "var(--warning)" : "var(--danger)"};">${Math.round(company.boardAlignment)}%</div>
+        </div>
+      </div>
+
+      ${kpiHistoryHtml}
+
+      <!-- 待处理行动 -->
+      ${pendingActionHtml}
+
+      <!-- 董事会成员 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:bold;margin-bottom:6px;">📋 董事会成员</div>
+        ${boardMembersHtml}
+      </div>
+
+      <!-- 股东沟通行动 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:bold;margin-bottom:6px;">🤝 股东沟通行动</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${commActionsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  // 绑定全局函数供按钮调用
+  window.resolveBoardPressureActionFromModal = function(eventKey, optionIndex) {
+    const result = resolveBoardPressureAction(state, optionIndex);
+    if (result.success) {
+      // 重新渲染
+      if (typeof renderAll === "function") renderAll();
+    }
+  };
+
+  showModal({
+    title: "📋 董事会管理",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+// ====== P1-7: 公关/媒体管理弹窗 ======
+
+/** 显示公关管理面板 */
+function showPRManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  // 媒体关系摘要
+  const mediaInfo = getMediaRelationLevelInfo(company.mediaRelationLevel);
+  const crisisInfo = getCrisisLevelInfo(company.crisisLevel);
+
+  // 媒体关系等级显示
+  const mediaLevelHtml = `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">📰 媒体关系</div>
+        <div style="font-size:11px;color:var(--text-muted);">${mediaInfo.icon} ${mediaInfo.name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${company.mediaRelations}%;background:var(--accent);border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:14px;font-weight:bold;color:var(--accent);">${company.mediaRelations}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${mediaInfo.bonus}</div>
+    </div>
+  `;
+
+  // 危机等级显示
+  const crisisHtml = `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">${crisisInfo.icon} 危机等级</div>
+        <div style="font-size:11px;color:${crisisInfo.color};font-weight:bold;">${crisisInfo.name}</div>
+      </div>
+      <div style="display:flex;gap:4px;">
+        ${CRISIS_LEVELS.map(l => `
+          <div style="flex:1;height:6px;background:${company.crisisLevel >= l.level ? l.color : 'var(--bg-tertiary)'};border-radius:3px;"></div>
+        `).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">危机准备度: ${company.crisisPrepLevel}% | 媒体培训: ${company.mediaTrainingLevel}%</div>
+    </div>
+  `;
+
+  // 待处理危机
+  let pendingCrisisHtml = "";
+  if (company.pendingCrisisEvent) {
+    const crisis = company.pendingCrisisEvent.event;
+    const daysRemaining = Math.max(0, crisis.deadline - state.player.day);
+    const urgencyColor = daysRemaining <= 7 ? "var(--danger)" : daysRemaining <= 14 ? "var(--warning)" : "var(--text-secondary)";
+
+    pendingCrisisHtml = `
+      <div style="padding:12px;margin-bottom:12px;background:var(--bg-warning);border-radius:8px;border-left:4px solid var(--danger);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:bold;color:var(--danger);">${crisis.icon} 【待处理危机】${crisis.title}</div>
+          <div style="font-size:11px;color:${urgencyColor};font-weight:bold;">剩余${daysRemaining}天</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-secondary);">严重程度: ${crisis.severity === "high" ? "🔴 严重" : crisis.severity === "medium" ? "🟡 中等" : "🟢 轻微"}</div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="showCrisisResponseModal('${crisis.id}')">处理危机</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 近期公关事件
+  let recentEventsHtml = "";
+  const recentEvents = company.prEvents.slice(-8).reverse();
+  if (recentEvents.length > 0) {
+    recentEventsHtml = '<div style="margin-bottom:12px;">';
+    recentEventsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 近期公关事件</div>';
+    recentEventsHtml += '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
+
+    for (const event of recentEvents) {
+      const eventColor = event.type === "positive" ? (event.success ? "var(--success)" : "var(--warning)") :
+        event.severity === "high" ? "var(--danger)" : event.severity === "medium" ? "var(--warning)" : "#f59e0b";
+      const eventIcon = event.type === "positive" ? (event.success ? "✅" : "🔶") : event.icon || "⚠️";
+
+      recentEventsHtml += `
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid ${eventColor}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:11px;font-weight:bold;">${eventIcon} ${event.title}</div>
+            <div style="font-size:9px;color:var(--text-muted);">${_formatDayAgo(state.player.day - event.triggeredDay)}</div>
+          </div>
+          ${event.outcome ? `<div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${Object.entries(event.outcome).map(([k, v]) => `${k}: ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>` : ""}
+        </div>
+      `;
+    }
+    recentEventsHtml += "</div></div>";
+  }
+
+  // 公关活动列表
+  let prActionsHtml = "";
+  const prEvents = getAvailablePREvents();
+  if (prEvents.length > 0) {
+    prActionsHtml = '<div style="margin-bottom:12px;">';
+    prActionsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 公关活动</div>';
+    prActionsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    for (const event of prEvents) {
+      const canAfford = company.cashReserve >= event.cost;
+      const meetsConditions = !event.triggerConditions ||
+        (event.triggerConditions.minRevenue && company.revenue >= event.triggerConditions.minRevenue);
+
+      const disabled = !canAfford || !meetsConditions;
+      const btnClass = disabled ? "" : 'onclick="executePRActionFromModal(\'' + event.id + '\')" onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"';
+
+      prActionsHtml += `
+        <div style="padding:10px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${disabled ? '' : 'cursor:pointer;transition:all 0.2s;'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:12px;font-weight:bold;">${event.icon} ${event.name}</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${event.desc}</div>
+              <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">成功率: ${Math.round(event.successChance * 100)}% | 持续时间: ${event.duration}天</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${event.cost.toLocaleString()}</div>
+              <div style="font-size:9px;color:${meetsConditions ? 'var(--success)' : 'var(--danger)'};">${meetsConditions ? "✅ 可执行" : "❌ 条件不足"}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    prActionsHtml += "</div></div>";
+  }
+
+  // 媒体关系管理行动
+  let mediaActionsHtml = "";
+  if (MEDIA_RELATION_ACTIONS) {
+    mediaActionsHtml = '<div style="margin-bottom:12px;">';
+    mediaActionsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🤝 媒体关系管理</div>';
+    mediaActionsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+
+    for (const [key, action] of Object.entries(MEDIA_RELATION_ACTIONS)) {
+      const canAfford = company.cashReserve >= action.cost;
+
+      // 检查冷却
+      let cooldownText = "";
+      let cooldownActive = false;
+      if (company.lastMediaAction && company.lastMediaAction.actionId === key) {
+        const daysSinceLast = state.player.day - company.lastMediaAction.day;
+        if (daysSinceLast < action.cooldown) {
+          cooldownActive = true;
+          cooldownText = `冷却中 (${action.cooldown - daysSinceLast}天)`;
+        }
+      }
+
+      const disabled = !canAfford || cooldownActive;
+      const btnClass = disabled ? "" : 'onclick="executeMediaRelationActionFromModal(\'' + key + '\')" onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"';
+
+      mediaActionsHtml += `
+        <div style="padding:10px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${disabled ? '' : 'cursor:pointer;transition:all 0.2s;'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:12px;font-weight:bold;">${action.icon} ${action.name}</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${action.desc}</div>
+              ${cooldownText ? `<div style="font-size:9px;color:var(--warning);margin-top:2px;">⏰ ${cooldownText}</div>` : ""}
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${action.cost.toLocaleString()}</div>
+              <div style="font-size:9px;color:${disabled ? 'var(--danger)' : 'var(--success)'};">${cooldownText || (canAfford ? "✅ 可执行" : "❌ 现金不足")}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    mediaActionsHtml += "</div></div>";
+  }
+
+  const bodyHtml = `
+    <div style="font-size:13px;max-height:70vh;overflow-y:auto;">
+      ${mediaLevelHtml}
+      ${crisisHtml}
+      ${pendingCrisisHtml}
+      ${prActionsHtml}
+      ${mediaActionsHtml}
+      ${recentEventsHtml}
+    </div>
+  `;
+
+  if (typeof showModal !== "function") return { success: true };
+
+  showModal({
+    title: "📰 公关/媒体管理",
+    body: bodyHtml,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  return { success: true };
+}
+
+/** 显示危机应对弹窗 */
+function showCrisisResponseModal(crisisId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company || !company.pendingCrisisEvent) return;
+
+  const crisis = company.pendingCrisisEvent;
+  if (crisis.id !== crisisId) return;
+
+  const eventTemplate = PR_EVENT_TEMPLATES[crisis.event.type];
+  if (!eventTemplate) return;
+
+  const options = getAvailableCrisisResponses(crisis.event.type);
+
+  let html = '<div style="font-size:13px;">';
+  html += '<p style="color:var(--text-secondary);margin-bottom:12px;">';
+  html += `${crisis.event.icon} <strong>${crisis.event.title}</strong>`;
+  html += `（严重程度：${crisis.event.severity === "high" ? "🔴 严重" : crisis.event.severity === "medium" ? "🟡 中等" : "🟢 轻微"}）`;
+  html += "</p>";
+  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+  for (let i = 0; i < options.length; i++) {
+    const opt = options[i];
+    const canAfford = company.cashReserve >= opt.cost;
+
+    html += `
+      <div style="padding:12px;background:${canAfford ? 'var(--bg-card)' : 'rgba(0,0,0,0.05)'};border-radius:8px;border:1px solid ${canAfford ? 'var(--border)' : 'var(--border)'};opacity:${canAfford ? 1 : 0.5};${canAfford ? 'cursor:pointer;transition:all 0.2s;' : ''} ${canAfford ? 'onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'rgba(0,0,0,0.05)\';"' : ''} onclick="${canAfford ? `resolveCrisisActionFromModal(${i})` : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${opt.desc}</div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">风险：${opt.risk}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">${opt.cost > 0 ? '¥' + opt.cost.toLocaleString() : '免费'}</div>
+            <div style="font-size:9px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 现金不足"}</div>
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(opt.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>
+      </div>
+    `;
+  }
+
+  html += "</div></div>";
+
+  if (typeof showModal !== "function") return;
+
+  const daysRemaining = crisis.deadline - state.player.day;
+
+  showModal({
+    title: `${crisis.event.icon} 【危机应对】${crisis.event.title}`,
+    body: html,
+    buttons: [
+      {
+        text: `关闭（剩余${daysRemaining}天）`,
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+}
+
 // ====== 执行创业行动 ======
 function executeStartupAction(state, actionId, params) {
   params = params || {};
@@ -4713,6 +6960,27 @@ function executeStartupAction(state, actionId, params) {
     // P0-4: 满意度提升操作
     case "improve_satisfaction":
       return improveEmployeeSatisfaction(state, params.action, params);
+
+    // P0-5: KPI/OKR 目标管理
+    case "kpi_dashboard":
+      return showKpiDashboard(state);
+
+    // P1-6: 董事会管理
+    case "board_management":
+      return showBoardManagementModal(state);
+
+    // P1-7: 公关/媒体管理
+    case "pr_management":
+      return showPRManagementModal(state);
+
+    case "pr_event":
+      return executePREvent(state, params.eventId);
+
+    case "media_relation_action":
+      return executeMediaRelationAction(state, params.actionId);
+
+    case "crisis_response":
+      return resolveCrisisEvent(state, params.optionIndex);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -6028,6 +8296,37 @@ if (typeof module !== "undefined" && module.exports) {
     showKpiDashboard,
     showSetOkrModal,
     showTeamGoalModal,
+    // P1-6: 董事会/股东压力系统
+    showBoardManagementModal,
+    evaluateBoardPerformance,
+    resolveBoardPressureAction,
+    executeShareholderCommunication,
+    getAvailableShareholderActions,
+    getPressureLevelText,
+    getPressureLevelColor,
+    // P1-6: 数据常量
+    BOARD_MEMBER_TEMPLATES,
+    BOARD_KPI_REQUIREMENTS,
+    BOARD_PRESSURE_EVENTS,
+    SHAREHOLDER_COMMUNICATION_ACTIONS,
+    // P1-7: 公关/媒体系统
+    showPRManagementModal,
+    showCrisisResponseModal,
+    executePREvent,
+    executeMediaRelationAction,
+    resolveCrisisEvent,
+    getAvailablePREvents,
+    getAvailableCrisisResponses,
+    getMediaRelationLevelInfo,
+    getCrisisLevelInfo,
+    getPREventSummary,
+    // P1-7: 数据常量
+    MEDIA_TYPES,
+    PR_EVENT_TEMPLATES,
+    CRISIS_RESPONSE_OPTIONS,
+    MEDIA_RELATION_ACTIONS,
+    MEDIA_RELATION_LEVELS,
+    CRISIS_LEVELS,
   };
 }
 
