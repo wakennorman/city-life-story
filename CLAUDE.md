@@ -25,35 +25,22 @@
 - **构建**: 每次修改 `src/` 后必须 `python build.py` 重新打包 `dist/`
 - 开发文档: `src/DEVELOPMENT.md`（每次改动必须同步更新）
 - 技术栈: 纯 HTML5 + CSS + Vanilla JS，零框架，无 npm 构建步骤
-- **核心架构: 世界参数反馈环（v1.6）** — `src/js/core/world_params.js` 定义统一的 `_worldParams` 状态，将行业热度/市场情绪/财富等级纳入单一反馈闭环。玩家行为 → 世界参数 → 事件概率，三大反馈环（财富/行业/传导）每日迭代，所有参数以 2%/天向基线衰减
+- **核心架构: 世界参数反馈环（v1.6）** — `src/js/core/world_params.js` 定义统一的 `_worldParams` 状态，将行业热度/市场情绪/财富等级纳入单一反馈闭环。行业热度由随机漂移+传导+新闻驱动（玩家个人不直接影响），财富反馈由玩家总资产决定，所有参数以 2%/天向基线衰减
 - 所有 JS 文件通过 `<script src="...">` 在 index.html 中按序加载，**禁止改变 script 标签顺序**
 
 ## 当前状态
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：世界参数反馈环 v1.6 — 统一反馈闭环核心架构 ✅（2026-06-21 23:30）
-  - **新建** `src/js/core/world_params.js` — 世界参数反馈环统一管理（~580行）
-    - `_worldParams`：sectorHeat（行业热度）/ marketMood（市场情绪）/ playerWealthLevel（0~5）/ playerFameLevel（0~5）
-    - `seedWorldFromReality()`：开局拉取 Yahoo Finance 上证指数5日走势 → 设置市场情绪+波动率+行业初始偏移；网络失败回退随机种子
-    - `tickWorldParams()`：每日管线中更新，5步编排（财富反馈→行业反馈→传导反馈→衰减→重算情绪）
-    - `getSectorHeat(industry)` / `getMarketMood()` / `getSectorEventWeightMod()` / `getWorldParamSummary()`：供其他系统读取
-    - 百科自更新注册 `MECHANICS.world_params`
-  - **修改** `src/js/core/state.js` — 新增 `_worldParams: null` 状态字段 + v1.6迁移兼容
-  - **修改** `src/js/phase1/daily_pipeline.js` — 新增 `world_params_tick` 步骤（在 weather 之前）
-  - **修改** `src/js/main.js` — `startNewGame()` 中调用 `seedWorldFromReality()`
-  - **修改** `src/js/phase2/investment.js` — `tickInvestmentDaily()` 中 `getSectorHeat()` 影响股价趋势偏置
-  - **修改** `src/js/core/events.js` — `queueRandomEvent()` 中 `getSectorEventWeightMod()` 影响事件权重
-  - **修改** `src/js/data/news.js` — `getRandomNewsEvent()` 中 `getMarketMood()` 影响新闻类型概率
-  - **修改** `src/index.html` — 加载 `js/core/world_params.js`（在 news_investment_bridge 之后）
-  - **构建**：已 `python build.py`
-  - **三大反馈环**：
-    1. 财富反馈：总资产映射财富等级（0~5），影响NPC态度/银行利率/购房选项
-    2. 行业反馈：玩家职业/持股 → sectorHeat → 新闻/事件概率 → 股票趋势
-    3. 传导反馈：行业关联传导矩阵（科技热→新能源热，金融热→房地产热）
-  - **平衡机制**：所有参数每天 2% 向基线衰减，约35天消除50%偏移，115天消除90%
-  - **现实种子**：Yahoo Finance 免费API，只取方向性参数（涨/跌/震荡），不存储玩家数据
-  - **问题根源**：股票系统存在9处颜色不一致：
+- **最近一次工作**：行业反馈设计修正 — 移除玩家直接改变行业热度 ✅（2026-06-22 02:22）
+  - **修正** `src/js/core/world_params.js` — 重写 `applySectorFeedback()`
+    - ❌ **移除**：普通职业/散户持股直接影响行业热度（上班族不改变行业）
+    - ⭐ **新增**：随机日漂移（主力波动来源，每个行业每日 -0.015~+0.0225 随机变化）
+    - 🔒 **新增**：高影响力门槛（仅财富/名气≥4级时产生 0.003 边际影响）
+    - 🏢 **新增**：CEO公司联动（市场份额>30%→0.005，>15%→0.003，B轮+→0.002）
+    - 更新百科说明，同步修正设计文档
+  - **设计参考**：Capitalism Lab（员工不改变市场）、Democracy 4（影响力通过系统杠杆传递）
+  - **问题根源**：v1.6 最初实现时，`applySectorFeedback()` 让普通员工/散户影响行业热度——这违反直觉
     - `stock.js` `renderKLine()` 折线/填充色**比较整个20天window首尾**，不是今日涨跌 → 跌的股票若window总体涨仍显示红色
     - `investment.js` `drawPriceChart()` 同样用首尾比较
     - `drawPriceChart()` 价格数字用 lineColor（首尾趋势），涨跌幅文字用 dayColor（今日涨跌）→ 两数颜色可能不同

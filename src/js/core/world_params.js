@@ -320,53 +320,88 @@ function applyWealthFeedback(state) {
 }
 
 /**
- * Loop 2: 玩家行为 → 行业热度
+ * Loop 2: 行业热度驱动
  *
- * 玩家在某个行业工作/投资/交易 → 该行业热度提升。
- * 玩家的 action 通过 employment.currentJob 和 investment.stockHoldings 追踪。
+ * ⚠️ 设计原则：普通玩家的个人行为不改变行业热度。
+ *   一个上班族在哪工作、散户买哪只股票——这些微观行为
+ *   在宏观层面没有任何可测量的影响。
+ *
+ * 行业热度的真正驱动力（按影响力排序）：
+ *   1. 随机日漂移 —— 市场自然的每日噪声（主力驱动）
+ *   2. 行业关联传导 —— 上游行业热 → 下游升温（applyMarketFeedback）
+ *   3. 重大新闻/事件 —— news.js 中已有投资影响（news_investment_bridge）
+ *   4. 高影响力玩家 —— 财富/名气 ≥ 4 级时产生微弱边际影响
+ *   5. CEO公司 —— 创业系统中有市场份额的大公司才有关联
+ *
+ * 参考游戏设计：
+ *   - Capitalism Lab：员工不影响市场，CEO决策改变行业格局
+ *   - Democracy 4：影响力通过系统杠杆传递，个人不直接影响宏观
+ *   - 大多数：世界是独立环境，玩家在其中适应而非改变
  */
 function applySectorFeedback(state) {
   var params = state._worldParams;
-  var job = state.employment && state.employment.currentJob;
+  if (!params) return;
+  var vol = params.baseVolatility || 1.0;
 
-  // 从玩家当前职业推断所属行业，提升对应行业热度
-  if (job && typeof getJobSector === "function") {
-    var sector = getJobSector(job);
-    if (sector && WORLD_SECTORS.indexOf(sector) >= 0) {
-      params.sectorHeat[sector] = (params.sectorHeat[sector] || 1.0) + 0.005;
-    }
+  // ====== 1. 随机日漂移（主力行业波动来源） ======
+  // 每个行业每日有微小随机波动，模拟市场自然噪声。
+  // 漂移中心化偏正（0.4 偏移 → 约 60% 概率小幅上涨），
+  // 模拟经济长期温和增长。漂移幅度受 baseVolatility 放大。
+  // 日漂移范围约：-0.015 ~ +0.0225（vol=1.0时）
+  // 年化约：-5.5% ~ +8.2% —— 和真实市场长期趋势一致
+  for (var si = 0; si < WORLD_SECTORS.length; si++) {
+    var sec = WORLD_SECTORS[si];
+    var drift = (Math.random() - 0.4) * 0.025 * vol;
+    params.sectorHeat[sec] = (params.sectorHeat[sec] || 1.0) + drift;
   }
 
-  // 玩家持有股票 → 轻微提升相关行业热度
-  var holdings = state.investment && state.investment.stockHoldings;
-  if (holdings && holdings.length > 0 && typeof INV_STOCKS !== "undefined") {
-    for (var hi = 0; hi < holdings.length; hi++) {
-      var holding = holdings[hi];
-      for (var si = 0; si < INV_STOCKS.length; si++) {
-        var stk = INV_STOCKS[si];
-        if (
-          stk.symbol === holding.symbol &&
-          WORLD_SECTORS.indexOf(stk.industry) >= 0
-        ) {
-          // 持仓比例越高，影响越大（但上限0.01）
-          var totalValue = 0;
-          var holdingValue = 0;
-          var inv = state.investment;
-          var mkt = inv.stockMarket && inv.stockMarket[holding.symbol];
-          if (mkt) {
-            holdingValue = mkt.price * holding.shares;
-          }
-          var cash = state.resources.cash || 0;
-          var bank = state.resources.bankBalance || 0;
-          totalValue = holdingValue + cash + bank;
-          var ratio = totalValue > 0 ? holdingValue / totalValue : 0;
-          var boost = Math.min(0.01, ratio * 0.02);
-          params.sectorHeat[stk.industry] =
-            (params.sectorHeat[stk.industry] || 1.0) + boost;
-        }
+  // ====== 2. 高影响力玩家门槛效应 ======
+  // 只有财富等级 ≥ 4（¥50k+）或名气等级 ≥ 4（名声显赫）时，
+  // 玩家的存在才会对所在行业产生边际影响（≈普通日漂移的一半）。
+  //
+  // 设计意图：给高成就玩家「世界因我而动」的成就感，
+  // 但影响力微弱到不会破坏平衡——一个行业要持续升温，
+  // 仍需外部新闻/事件的配合。
+  if (params.playerWealthLevel >= 4 || params.playerFameLevel >= 4) {
+    var job = state.employment && state.employment.currentJob;
+    if (job && typeof getJobSector === "function") {
+      var sector = getJobSector(job);
+      if (sector && WORLD_SECTORS.indexOf(sector) >= 0) {
+        // 影响力仅相当于一次日漂移的 ~20%
+        params.sectorHeat[sector] = (params.sectorHeat[sector] || 1.0) + 0.003;
       }
     }
   }
+
+  // ====== 3. CEO 公司影响（创业系统联动） ======
+  // 玩家经营一家成功的公司 → 公司所处的行业获得微量加持。
+  // 公司影响力取决于市场份额（市场占有率越高，行业影响力越大）。
+  // 设计参考：Capitalism Lab 中巨头公司改变行业格局。
+  if (
+    state.enterprise &&
+    state.enterprise.company &&
+    state.enterprise.company.industry
+  ) {
+    var company = state.enterprise.company;
+    var ceoEffect = 0;
+
+    if (company.marketShare && company.marketShare > 30) {
+      ceoEffect = 0.005; // 行业巨头（30%+市场份额）
+    } else if (company.marketShare && company.marketShare > 15) {
+      ceoEffect = 0.003; // 行业领军（15%+）
+    } else if (company.stage && company.stage >= 3) {
+      ceoEffect = 0.002; // B轮+ 有影响力的新锐
+    }
+
+    if (ceoEffect > 0 && WORLD_SECTORS.indexOf(company.industry) >= 0) {
+      params.sectorHeat[company.industry] =
+        (params.sectorHeat[company.industry] || 1.0) + ceoEffect;
+    }
+  }
+  // ====== 明确移除的逻辑 ======
+  // ❌ 普通职业影响（上班族不改变行业）
+  // ❌ 散户持股影响（零售投资者不改变市场方向）
+  // ❌ 小额交易影响（¥10k以下资金流无宏观影响力）
 }
 
 /**
@@ -574,7 +609,8 @@ if (typeof window !== "undefined") {
         kind: "list",
         items: [
           "财富反馈：玩家总资产决定财富等级 → NPC态度、银行利率、购房选项受此影响",
-          "行业反馈：玩家在某个行业工作/投资 → 该行业热度上升 → 相关新闻/事件更频繁",
+          "行业热度：每日随机漂移+行业传导+新闻事件驱动，普通玩家不直接影响行业",
+          "高影响力门槛：财富/名气≥4级或身为CEO时，才产生微弱边际影响",
           "传导反馈：一个行业热度升高 → 通过关联矩阵传导到相关行业",
         ],
       },
