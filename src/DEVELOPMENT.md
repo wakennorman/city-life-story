@@ -3109,3 +3109,23 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 - **`src/js/phase2/stock.js`** — 5 处颜色逻辑修改
 - **`src/js/phase2/investment.js`** — drawPriceChart 色值硬编码 + 清理 \_cssVar()
 - **`dist/index.html`** — 构建产物
+
+---
+
+### 2026-06-21 — 新增"任务后复盘"惯例（token 节约进化）
+
+本次修复消耗约 **35k tokens**，其中一半以上浪费在反复读 `investment.js` 的 `drawPriceChart` 上——该函数实际上已经是正确的中国标准（红涨绿跌），但我花了大量精力在"为什么代码对了用户还说错"上绕圈，却没有第一时间去查同功能的 `stock.js`。
+
+#### 教训
+
+详见记忆库文件 `bug-search-strategy.md` 和 `post-task-reflection.md`，核心三条：
+
+1. **扇面展开搜索**：先用宽泛关键词命中所有相关文件，再逐文件评估，不钻单文件
+2. **有另一个就要查另一个**：文件 A 代码已对 → 立即查功能相近的文件 B
+3. **3 步未证即换向**：一个方向的排查走了 3 步还没证据就放弃
+
+#### 涉及文件
+
+- `memory/bug-search-strategy.md` — 新建
+- `memory/post-task-reflection.md` — 新建
+- `memory/MEMORY.md` — 新增 2 条索引
