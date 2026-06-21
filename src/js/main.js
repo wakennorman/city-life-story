@@ -285,6 +285,17 @@ function estimateJobPayDetailed(job, state) {
     tags.push("🔥+" + Math.round(streakRate * 100) + "%");
     base = Math.floor(base * (1 + streakRate));
   }
+  // 职业称号加成
+  if (state.flags && state.flags._jobTitles && state.flags._jobTitles[job.id]) {
+    var titleTier = state.flags._jobTitles[job.id];
+    if (titleTier >= 3) {
+      tags.push("👑+15%");
+      base = Math.floor(base * 1.15);
+    } else if (titleTier >= 2) {
+      tags.push("🎖️+8%");
+      base = Math.floor(base * 1.08);
+    }
+  }
 
   return { estimated: base, tags: tags };
 }
@@ -3182,6 +3193,36 @@ function doStreetJob(job) {
   }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
+
+  // 职业称号系统：同一工作累计天数解锁称号加成
+  if (!state.flags._jobTitles) state.flags._jobTitles = {};
+  var totalShifts = state.employment.completedShifts[job.id];
+  var currentTitle = state.flags._jobTitles[job.id] || 0;
+  if (totalShifts >= 100 && currentTitle < 3) {
+    state.flags._jobTitles[job.id] = 3;
+    pay = Math.floor(pay * 1.15);
+    StateManager.addMessage(
+      "👑 职业大师！" + job.name + "累计100天，收入永久+15%！",
+      "success",
+    );
+  } else if (totalShifts >= 30 && currentTitle < 2) {
+    state.flags._jobTitles[job.id] = 2;
+    pay = Math.floor(pay * 1.08);
+    StateManager.addMessage(
+      "🎖️ 熟练老手！" + job.name + "累计30天，收入永久+8%！",
+      "success",
+    );
+  } else if (totalShifts >= 7 && currentTitle < 1) {
+    state.flags._jobTitles[job.id] = 1;
+    StateManager.addMessage(
+      "📋 入门新人期已过，" + job.name + "工作已上手。",
+      "hint",
+    );
+  }
+  // 已获称号加成持续生效
+  var titleBonus = state.flags._jobTitles[job.id] || 0;
+  if (titleBonus === 2) pay = Math.floor(pay * 1.08);
+  else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
   // 应用效果
   if (job.effects) {

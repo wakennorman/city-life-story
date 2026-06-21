@@ -372,6 +372,73 @@ const STREET_JOBS = [
     risk: { illness: 0.08 },
   },
 
+  // ====== NPC关联升级工作 ======
+  {
+    id: "old_zhou_recycling",
+    name: "老周介绍·正规回收站",
+    desc: "老周引荐你去了城西正规废品回收站，分类更细、称重公道、收入翻倍。",
+    icon: "♻️",
+    location: "slum",
+    requirements: { physique: 15, minAge: 18, maxAge: 60 },
+    requiredFlag: "oldZhouReferred",
+    effects: {
+      fatigue: 18,
+      hygiene: -8,
+      physiqueXp: 3,
+      repairXp: 2,
+    },
+    payCalc(state) {
+      return Math.floor(
+        55 +
+          state.player.physique * 0.6 +
+          state.skills.sales.level * 0.5 +
+          Random.float(0, 30),
+      );
+    },
+    risk: { injury: 0.02 },
+  },
+  {
+    id: "sister_zhang_vending",
+    name: "张姐介绍·黄金摊位",
+    desc: "张姐帮你弄到了商业区步行街口的好摊位，客流量大，生意兴隆。",
+    icon: "🏪",
+    location: "commercialDist",
+    requirements: { sales: 15, minAge: 18, maxAge: 55 },
+    requiredFlag: "sisterZhangReferred",
+    effects: { fatigue: 12, hygiene: -3, happiness: 8, salesXp: 5 },
+    payCalc(state) {
+      var footfall =
+        typeof getVendingFootfallMod === "function"
+          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          : 1.0;
+      return Math.floor(
+        (80 + state.skills.sales.level * 1.2 + Random.float(0, 35)) *
+          Math.min(footfall * 1.3, 3.0),
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "xiao_mei_tutoring",
+    name: "小美推荐·精英家教",
+    desc: "小美把你的联系方式推荐给了她导师开的补习机构，时薪比普通家教高出一大截。",
+    icon: "🎓",
+    location: "school",
+    requirements: { intelligence: 35, english: 20, minAge: 18 },
+    educationRequired: 1,
+    requiredFlag: "xiaoMeiReferred",
+    effects: { fatigue: 10, intelligenceXp: 5, englishXp: 3, happiness: 12 },
+    payCalc(state) {
+      return Math.floor(
+        100 +
+          state.player.intelligence * 0.8 +
+          state.skills.english.level * 0.6 +
+          Random.float(0, 45),
+      );
+    },
+    risk: {},
+  },
+
   // ====== 大学城 ======
   {
     id: "school_maintenance",

@@ -3252,4 +3252,36 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 
 **涉及文件**：`src/js/phase2/stock.js`, `src/js/phase2/investment.js`
 **构建**：已 `python build.py`
+
+---
+
+### 2026-06-21 — P0-1 产品生命周期管理 ✅ 已完成
+
+**背景**：创业板块产品系统只有简单的 `developing → ready_to_launch → launched` 状态，缺乏版本迭代、生命周期演化、退市机制。
+
+**实现内容**：
+
+| 功能                 | 说明                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **产品数据结构扩展** | 新增 `version`、`versionHistory`、`lifecycleStage`、`marketShare`、`userGrowthRate`、`churnRate`、`retired` 等字段 |
+| **生命周期阶段演化** | introduction → growth → maturity → decline，基于用户增长率、市场份额、流失率自动转换                               |
+| **版本迭代系统**     | 小版本(v1.0→v1.1)、大版本(v1.x→v2.0)、革命性升级(v.x→v3.0+)，投入预算提升技术/市场分                               |
+| **产品退市机制**     | 自动退市（连续60天用户<100或90天收入<¥1000）+ 手动退市（选择原因）                                                 |
+| **生命周期加成**     | 成长期竞争力+5、成熟期+8、衰退期-10，影响产品竞争力评分                                                            |
+| **UI 展示**          | 产品卡片显示版本徽章、生命周期徽章、市场份额、增长率、流失率、峰值记录                                             |
+| **交互弹窗**         | 版本迭代弹窗（预算滑块选择）、退市确认弹窗（选择原因）                                                             |
+
+**关键函数**：
+
+- `_evolveProductLifecycle()` — 生命周期阶段转换逻辑
+- `_checkProductRetirement()` — 退市条件检查
+- `_retireProductInternal()` — 执行退市（员工流失、声誉影响）
+- `_calculateMarketShare()` — 市场份额计算
+- `updateProductVersion()` — 版本迭代（投入预算→技术/市场分提升）
+- `retireProduct()` — 手动退市
+- `showVersionUpdateModal()` — 版本迭代弹窗 UI
+- `showRetireProductModal()` — 退市确认弹窗 UI
+
+**涉及文件**：`src/js/phase2/startup.js`（约+500行）
+**构建**：已 `python build.py` ✅
 **记忆**：`memory/investment-color-convention.md` 已修订

@@ -416,11 +416,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "sister_zhang_80",
-        desc: "张姐帮你内推进入初级职场（加速进入P5）",
+        desc: "张姐帮你找到商业区黄金摊位+内推初级职场",
         effect: function (st) {
           st.flags.zhangReferred = true;
+          st.flags.sisterZhangReferred = true;
           StateManager.addMessage(
-            "❤️ 张姐：「我认识个猎头，帮你递了简历，面试机会来了！进职场的路近了。」",
+            "❤️ 张姐：「我帮你在步行街口弄了个好摊位，客流量大得很！另外我还认识个猎头，帮你递了简历。」",
             "success",
           );
         },
@@ -571,11 +572,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "old_zhou_80",
-        desc: "老周把废品站关系介绍给你（解锁高价收购渠道）",
+        desc: "老周把废品站关系介绍给你（解锁高价收购渠道+正规回收站工作）",
         effect: function (st) {
           st.flags.oldZhouChannel = true;
+          st.flags.oldZhouReferred = true;
           StateManager.addMessage(
-            "❤️ 老周：「我干了三十年了，以后废品直接走我的渠道，价格比外面高三成。」",
+            "❤️ 老周：「我干了三十年了，以后废品直接走我的渠道，价格比外面高三成。城西回收站也在招人，我跟他们打过招呼了。」",
             "success",
           );
         },
@@ -739,11 +741,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "xiao_mei_80",
-        desc: "小美帮你联系大厂实习机会",
+        desc: "小美帮你联系大厂实习+精英家教机会",
         effect: function (st) {
           st.flags.xiaomeiInternship = true;
+          st.flags.xiaoMeiReferred = true;
           StateManager.addMessage(
-            "❤️ 小美：「我室友在字节做了实习，我把你推荐给她了，有机会进大厂了！」",
+            "❤️ 小美：「我室友在字节做了实习，我把你推荐给她了！另外我导师的补习机构也在招家教，时薪很高的～」",
             "success",
           );
         },

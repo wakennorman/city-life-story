@@ -21110,6 +21110,66 @@ const STREET_JOBS = [
     risk: { illness: 0.08 },
   },
 
+  // ====== NPC关联升级工作 ======
+  {
+    id: "old_zhou_recycling",
+    name: "老周介绍·正规回收站",
+    desc: "老周引荐你去了城西正规废品回收站，分类更细、称重公道、收入翻倍。",
+    icon: "♻️",
+    location: "slum",
+    requirements: { physique: 15, minAge: 18, maxAge: 60 },
+    requiredFlag: "oldZhouReferred",
+    effects: {
+      fatigue: 18,
+      hygiene: -8,
+      physiqueXp: 3,
+      repairXp: 2,
+    },
+    payCalc(state) {
+      return Math.floor(
+        55 + state.player.physique * 0.6 + state.skills.sales.level * 0.5 + Random.float(0, 30),
+      );
+    },
+    risk: { injury: 0.02 },
+  },
+  {
+    id: "sister_zhang_vending",
+    name: "张姐介绍·黄金摊位",
+    desc: "张姐帮你弄到了商业区步行街口的好摊位，客流量大，生意兴隆。",
+    icon: "🏪",
+    location: "commercialDist",
+    requirements: { sales: 15, minAge: 18, maxAge: 55 },
+    requiredFlag: "sisterZhangReferred",
+    effects: { fatigue: 12, hygiene: -3, happiness: 8, salesXp: 5 },
+    payCalc(state) {
+      var footfall =
+        typeof getVendingFootfallMod === "function"
+          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          : 1.0;
+      return Math.floor(
+        (80 + state.skills.sales.level * 1.2 + Random.float(0, 35)) * Math.min(footfall * 1.3, 3.0),
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "xiao_mei_tutoring",
+    name: "小美推荐·精英家教",
+    desc: "小美把你的联系方式推荐给了她导师开的补习机构，时薪比普通家教高出一大截。",
+    icon: "🎓",
+    location: "school",
+    requirements: { intelligence: 35, english: 20, minAge: 18 },
+    educationRequired: 1,
+    requiredFlag: "xiaoMeiReferred",
+    effects: { fatigue: 10, intelligenceXp: 5, englishXp: 3, happiness: 12 },
+    payCalc(state) {
+      return Math.floor(
+        100 + state.player.intelligence * 0.8 + state.skills.english.level * 0.6 + Random.float(0, 45),
+      );
+    },
+    risk: {},
+  },
+
   // ====== 大学城 ======
   {
     id: "school_maintenance",
@@ -26131,11 +26191,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "sister_zhang_80",
-        desc: "张姐帮你内推进入初级职场（加速进入P5）",
+        desc: "张姐帮你找到商业区黄金摊位+内推初级职场",
         effect: function (st) {
           st.flags.zhangReferred = true;
+          st.flags.sisterZhangReferred = true;
           StateManager.addMessage(
-            "❤️ 张姐：「我认识个猎头，帮你递了简历，面试机会来了！进职场的路近了。」",
+            "❤️ 张姐：「我帮你在步行街口弄了个好摊位，客流量大得很！另外我还认识个猎头，帮你递了简历。」",
             "success",
           );
         },
@@ -26286,11 +26347,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "old_zhou_80",
-        desc: "老周把废品站关系介绍给你（解锁高价收购渠道）",
+        desc: "老周把废品站关系介绍给你（解锁高价收购渠道+正规回收站工作）",
         effect: function (st) {
           st.flags.oldZhouChannel = true;
+          st.flags.oldZhouReferred = true;
           StateManager.addMessage(
-            "❤️ 老周：「我干了三十年了，以后废品直接走我的渠道，价格比外面高三成。」",
+            "❤️ 老周：「我干了三十年了，以后废品直接走我的渠道，价格比外面高三成。城西回收站也在招人，我跟他们打过招呼了。」",
             "success",
           );
         },
@@ -26454,11 +26516,12 @@ const NPCS = [
       {
         threshold: 80,
         id: "xiao_mei_80",
-        desc: "小美帮你联系大厂实习机会",
+        desc: "小美帮你联系大厂实习+精英家教机会",
         effect: function (st) {
           st.flags.xiaomeiInternship = true;
+          st.flags.xiaoMeiReferred = true;
           StateManager.addMessage(
-            "❤️ 小美：「我室友在字节做了实习，我把你推荐给她了，有机会进大厂了！」",
+            "❤️ 小美：「我室友在字节做了实习，我把你推荐给她了！另外我导师的补习机构也在招家教，时薪很高的～」",
             "success",
           );
         },
@@ -45472,6 +45535,21 @@ function createProduct(state, name, category) {
     rating: 3.5,
     // 竞争力评分（0-100）
     competitiveness: 0,
+    // ====== P0-1: 产品生命周期管理新增字段 ======
+    version: "v1.0",
+    versionHistory: [], // [{version, date, day, changes, techScore, marketScore}]
+    lifecycleStage: "introduction", // introduction/growth/maturity/decline
+    marketShare: 0, // 市场份额 0-100
+    userGrowthRate: 0, // 用户增长率
+    churnRate: 0, // 用户流失率
+    consecutiveGrowthDays: 0, // 连续增长天数（用于判断进入成长期）
+    consecutiveDeclineDays: 0, // 连续衰退天数（用于判断进入衰退期）
+    peakUsers: 0, // 历史最高用户数
+    peakRevenue: 0, // 历史最高收入
+    retired: false, // 是否已退市
+    retireDay: null, // 退市日期
+    retireReason: "", // 退市原因
+    versionIterationCount: 0, // 版本迭代次数
   };
 
   company.products.push(product);
@@ -45566,6 +45644,19 @@ function launchProduct(state, productId) {
   product.marketScore = Math.round(marketScore);
   product.launchDay = state.player.day;
   product.status = "launched";
+  // P0-1: 初始化生命周期字段
+  product.lifecycleStage = "introduction";
+  product.marketShare = 0;
+  product.userGrowthRate = 0;
+  product.churnRate = 0;
+  product.consecutiveGrowthDays = 0;
+  product.consecutiveDeclineDays = 0;
+  product.peakUsers = 0;
+  product.peakRevenue = 0;
+  product.retired = false;
+  product.retireDay = null;
+  product.retireReason = "";
+  product.versionIterationCount = 0;
 
   // 计算市场反响
   const productScore = techScore * 0.6 + marketScore * 0.4;
@@ -45864,8 +45955,16 @@ function calculateProductCompetitiveness(product) {
   score += Math.min(20, (product.users || 0) / 1000);
   // 评分加成
   score += (product.rating || 3.5) * 4;
+  // P0-1: 生命周期阶段加成
+  const stageBonuses = {
+    introduction: 0, // 引入期无加成
+    growth: 5, // 成长期 +5
+    maturity: 8, // 成熟期 +8
+    decline: -10, // 衰退期 -10
+  };
+  score += stageBonuses[product.lifecycleStage] || 0;
 
-  product.competitiveness = Math.round(Math.min(100, score));
+  product.competitiveness = Math.round(Math.min(100, Math.max(0, score)));
   return product.competitiveness;
 }
 
@@ -46273,6 +46372,49 @@ function tickStartup(state, tickType) {
           "warning",
         );
       }
+
+      // ====== P0-1: 产品生命周期演化 ======
+      // 计算今日增长率和流失率
+      const prevUsers = product.usersBeforeTick || product.users;
+      product.usersBeforeTick = product.users; // 保存供下一天比较
+      const userChange = product.users - prevUsers;
+      product.userGrowthRate = prevUsers > 0 ? (userChange / prevUsers) * 100 : 0;
+      product.churnRate = churnRate * 100; // 转换为百分比
+
+      // 更新峰值记录
+      if (product.users > product.peakUsers) product.peakUsers = product.users;
+      if (product.revenue > product.peakRevenue) product.peakRevenue = product.revenue;
+
+      // 计算市场份额（基于公司总收入占所有活跃公司总收入的比例）
+      if (typeof _calculateMarketShare === "function") {
+        product.marketShare = _calculateMarketShare(state, product);
+      }
+
+      // 生命周期阶段转换
+      const oldStage = product.lifecycleStage;
+      _evolveProductLifecycle(state, product, timeMult);
+
+      // 阶段转换通知
+      if (oldStage !== product.lifecycleStage) {
+        const stageNames = {
+          introduction: "引入期",
+          growth: "成长期",
+          maturity: "成熟期",
+          decline: "衰退期",
+        };
+        StateManager.addMessage(
+          `🔄 「${product.name}」进入${stageNames[product.lifecycleStage]}！`,
+          product.lifecycleStage === "growth" ? "success" :
+          product.lifecycleStage === "decline" ? "danger" : "info"
+        );
+      }
+
+      // 衰退期产品可能退市
+      if (product.lifecycleStage === "decline" && product.retired === false) {
+        if (typeof _checkProductRetirement === "function") {
+          _checkProductRetirement(state, product);
+        }
+      }
     }
   }
 
@@ -46310,6 +46452,284 @@ function tickStartup(state, tickType) {
       tickCompetitors(state, state.startup.competitors);
     }
   }
+}
+
+// ====== P0-1: 产品生命周期管理 ======
+/** 产品生命周期演化 */
+function _evolveProductLifecycle(state, product, timeMult) {
+  const stage = product.lifecycleStage;
+
+  // 引入期 → 成长期：用户增长率 > 5%/天 持续7天
+  if (stage === "introduction") {
+    if (product.userGrowthRate > 5) {
+      product.consecutiveGrowthDays++;
+      product.consecutiveDeclineDays = 0;
+    } else {
+      product.consecutiveGrowthDays = 0;
+    }
+
+    if (product.consecutiveGrowthDays >= 7) {
+      product.lifecycleStage = "growth";
+    }
+  }
+
+  // 成长期 → 成熟期：增长率 < 1% 且市场份额 > 15%
+  else if (stage === "growth") {
+    if (product.userGrowthRate < 1 && product.marketShare > 15) {
+      product.lifecycleStage = "maturity";
+    }
+    // 也可能直接跌入衰退期（被竞品打击）
+    if (product.userGrowthRate < -3 && product.consecutiveDeclineDays >= 14) {
+      product.lifecycleStage = "decline";
+    }
+  }
+
+  // 成熟期 → 衰退期：流失率 > 3%/天 持续14天 或 被新技术替代
+  else if (stage === "maturity") {
+    if (product.churnRate > 3 && product.consecutiveDeclineDays >= 14) {
+      product.lifecycleStage = "decline";
+    }
+    // 随机技术替代概率（每年约5%）
+    if (Math.random() < 0.0006) { // 0.06%/天 ≈ 5%/年
+      product.lifecycleStage = "decline";
+      StateManager.addMessage(
+        `⚡ 「${product.name}」遭遇技术颠覆！行业出现替代方案`,
+        "danger"
+      );
+    }
+  }
+
+  // 衰退期：持续流失，可能退市
+  else if (stage === "decline") {
+    if (product.userGrowthRate < 0) {
+      product.consecutiveDeclineDays++;
+    } else {
+      product.consecutiveDeclineDays = 0;
+    }
+  }
+}
+
+/** 检查产品是否应退市 */
+function _checkProductRetirement(state, product) {
+  // 退市条件：连续60天用户<100 或 连续90天收入<¥1000
+  if (product.users < 100 && product.consecutiveDeclineDays >= 60) {
+    _retireProductInternal(state, product, "market_decline", "用户基数过低，市场自然淘汰");
+    return;
+  }
+
+  if (product.revenue < 1000 && product.consecutiveDeclineDays >= 90) {
+    _retireProductInternal(state, product, "market_decline", "收入持续低迷，无法覆盖成本");
+    return;
+  }
+
+  // 主动退市判定：产品收入占比 < 1% 且连续30天负增长
+  const totalRevenue = state.startup.company?.revenue || 1;
+  if (product.revenue / totalRevenue < 0.01 && product.userGrowthRate < -1 && product.consecutiveDeclineDays >= 30) {
+    // 自动建议退市（不强制，只是标记）
+    product._retirementRecommended = true;
+  }
+}
+
+/** 执行产品退市 */
+function _retireProductInternal(state, product, reason, reasonText) {
+  product.retired = true;
+  product.retireDay = state.player.day;
+  product.retireReason = reasonText;
+
+  const stageNames = {
+    replaced_by_new: "被新产品替代",
+    market_decline: "市场萎缩",
+    strategic_pivot: "战略调整",
+    failure: "产品失败",
+  };
+
+  StateManager.addMessage(
+    `💀 「${product.name}」正式退市（${stageNames[reason] || reason}）`,
+    "danger"
+  );
+
+  // 退市影响
+  // 1. 员工流失概率增加
+  const company = state.startup.company;
+  if (company && company.employees.length > 0) {
+    const fireChance = reason === "failure" ? 0.3 : 0.1;
+    for (const emp of company.employees) {
+      if (Math.random() < fireChance) {
+        StateManager.addMessage(`⚠️ 「${emp.name}」因「${product.name}」退市离职`, "warning");
+        fireEmployee(state, emp.id);
+      }
+    }
+  }
+
+  // 2. 公司声誉影响
+  const repImpact = reason === "failure" ? -10 : -3;
+  company.reputation = Math.max(0, company.reputation + repImpact);
+
+  // 3. 技术/专利可被新产品继承（标记）
+  product._inheritableTech = product.technologyScore * 0.3;
+}
+
+/** 计算产品市场份额 */
+function _calculateMarketShare(state, product) {
+  // 简化：基于产品竞争力评分占所有已发布产品的比例
+  const company = state.startup.company;
+  if (!company) return 0;
+
+  let totalCompetitiveness = 0;
+  for (const p of company.products) {
+    if (p.status === "launched" && !p.retired) {
+      totalCompetitiveness += p.competitiveness || 0;
+    }
+  }
+
+  if (totalCompetitiveness <= 0) return 0;
+
+  return Math.min(100, (product.competitiveness / totalCompetitiveness) * 100);
+}
+
+/** 更新产品版本（版本迭代） */
+function updateProductVersion(state, productId, versionType, budget) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    return { success: false, message: "产品不存在或未发布" };
+  }
+
+  // 版本类型配置
+  const versionConfigs = {
+    minor: {
+      name: "小版本迭代",
+      costRange: [5000, 20000],
+      techBonus: [2, 5],
+      marketBonus: [1, 3],
+      desc: "v1.0 → v1.1，修复bug，小幅优化",
+    },
+    major: {
+      name: "大版本更新",
+      costRange: [50000, 200000],
+      techBonus: [8, 15],
+      marketBonus: [5, 10],
+      desc: "v1.x → v2.0，新功能，体验升级",
+    },
+    revolutionary: {
+      name: "革命性升级",
+      costRange: [200000, 1000000],
+      techBonus: [15, 30],
+      marketBonus: [10, 20],
+      desc: "v.x → v3.0+，重构核心，颠覆创新",
+    },
+  };
+
+  const config = versionConfigs[versionType];
+  if (!config) {
+    return { success: false, message: "无效的版本类型" };
+  }
+
+  // 预算检查
+  const minCost = config.costRange[0];
+  const maxCost = config.costRange[1];
+  if (budget < minCost) {
+    return { success: false, message: `预算不足，${config.name}至少需要¥${minCost.toLocaleString()}` };
+  }
+
+  const actualCost = Math.min(budget, maxCost);
+  if (company.cashReserve < actualCost) {
+    return { success: false, message: `现金不足，需要¥${actualCost.toLocaleString()}` };
+  }
+
+  // 计算实际效果（基于预算投入比例）
+  const投入比例 = actualCost / maxCost;
+  const techGain = Math.round((config.techBonus[0] + (config.techBonus[1] - config.techBonus[0]) * 投入比例) * (0.8 + Math.random() * 0.4));
+  const marketGain = Math.round((config.marketBonus[0] + (config.marketBonus[1] - config.marketBonus[0]) * 投入比例) * (0.8 + Math.random() * 0.4));
+
+  // 应用效果
+  product.technologyScore = Math.min(100, product.technologyScore + techGain);
+  product.marketScore = Math.min(100, product.marketScore + marketGain);
+
+  // 生成新版本号
+  const versionParts = product.version.replace("v", "").split(".").map(Number);
+  product.versionIterationCount++;
+
+  let newVersion;
+  if (versionType === "minor") {
+    versionParts[1] = (versionParts[1] || 0) + 1;
+    newVersion = `v${versionParts[0]}.${versionParts[1]}`;
+  } else if (versionType === "major") {
+    versionParts[0]++;
+    versionParts[1] = 0;
+    newVersion = `v${versionParts[0]}.${versionParts[1]}`;
+  } else {
+    // revolutionary: 跳到3.0或更高
+    versionParts[0] = Math.max(3, versionParts[0] + 1);
+    versionParts[1] = 0;
+    newVersion = `v${versionParts[0]}.${versionParts[1]}+`;
+  }
+
+  // 记录版本历史
+  product.versionHistory.push({
+    version: newVersion,
+    date: new Date().toISOString().split("T")[0],
+    day: state.player.day,
+    changes: config.desc,
+    techScore: product.technologyScore,
+    marketScore: product.marketScore,
+    cost: actualCost,
+    type: versionType,
+  });
+
+  // 扣费
+  company.cashReserve -= actualCost;
+  company.expenses += actualCost;
+
+  // 更新当前版本
+  product.version = newVersion;
+
+  // 版本发布通知
+  StateManager.addMessage(
+    `🚀 「${product.name}」发布 ${config.name} → ${newVersion}！\n` +
+    `投入¥${actualCost.toLocaleString()}，技术分+${techGain}，市场分+${marketGain}`,
+    "success"
+  );
+
+  // 版本发布可能触发生命周期阶段回调（衰退期产品通过大版本更新可能回到成熟期）
+  if (product.lifecycleStage === "decline" && versionType === "major") {
+    // 大版本更新有30%概率让产品重获新生
+    if (Math.random() < 0.3) {
+      product.lifecycleStage = "maturity";
+      product.consecutiveDeclineDays = 0;
+      StateManager.addMessage(`✨ 「${product.name}」通过大版本更新重获新生！回到成熟期`, "success");
+    }
+  }
+
+  return { success: true, product: product, newVersion: newVersion, techGain: techGain, marketGain: marketGain, cost: actualCost };
+}
+
+/** 手动退市产品 */
+function retireProduct(state, productId, reason) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    return { success: false, message: "产品不存在或已退市" };
+  }
+
+  const reasonKeys = ["replaced_by_new", "market_decline", "strategic_pivot", "failure"];
+  if (!reasonKeys.includes(reason)) {
+    return { success: false, message: "无效的退市原因" };
+  }
+
+  const reasonTexts = {
+    replaced_by_new: "被新产品替代",
+    market_decline: "市场萎缩",
+    strategic_pivot: "战略调整",
+    failure: "产品失败",
+  };
+
+  _retireProductInternal(state, product, reason, reasonTexts[reason]);
+  return { success: true, product: product };
 }
 
 // ====== 核心：IPO准备 ======
@@ -47846,6 +48266,18 @@ function renderStartupTab(state, parent) {
           "</div>" +
           "</div>";
       } else if (product.status === "launched") {
+        // P0-1: 生命周期阶段徽章
+        const stageIcons = { introduction: "🌱", growth: "📈", maturity: "💎", decline: "📉" };
+        const stageColors = {
+          introduction: "#f59e0b", // 黄色
+          growth: "#22c55e", // 绿色
+          maturity: "#3b82f6", // 蓝色
+          decline: "#ef4444", // 红色
+        };
+        const stageNames = { introduction: "引入期", growth: "成长期", maturity: "成熟期", decline: "衰退期" };
+        const stageIcon = stageIcons[product.lifecycleStage] || "🌱";
+        const stageColor = stageColors[product.lifecycleStage] || "#f59e0b";
+
         // 竞争力评分
         const compScore = product.competitiveness || 0;
         const compColor =
@@ -47855,7 +48287,41 @@ function renderStartupTab(state, parent) {
               ? "var(--warning)"
               : "var(--danger)";
 
-        prodCard.innerHTML +=
+        // P0-1: 版本标签
+        const versionBadge = `<span style="font-size:10px;padding:2px 6px;background:var(--bg-secondary);border-radius:3px;color:var(--text-secondary);margin-left:6px;">${product.version || "v1.0"}</span>`;
+
+        // P0-1: 生命周期徽章
+        const lifecycleBadge = `<span style="font-size:10px;padding:2px 6px;border-radius:3px;color:#fff;margin-left:6px;background:${stageColor};">🔄${stageNames[product.lifecycleStage]}</span>`;
+
+        // P0-1: 市场份额和用户增长率
+        const marketShareText = product.marketShare > 0 ? ` | 份额:${product.marketShare.toFixed(1)}%` : "";
+        const growthRateColor = product.userGrowthRate > 0 ? "var(--success)" : product.userGrowthRate < 0 ? "var(--danger)" : "var(--text-muted)";
+        const growthRateText = ` | 增长率:${product.userGrowthRate > 0 ? "+" : ""}${product.userGrowthRate.toFixed(1)}%`;
+        const churnRateText = product.churnRate > 0 ? ` | 流失:${product.churnRate.toFixed(1)}%` : "";
+
+        prodCard.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          "<div>" +
+          "<strong>" +
+          stageIcon +
+          " " +
+          product.name +
+          versionBadge +
+          lifecycleBadge +
+          "</strong>" +
+          '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">' +
+          (prodCategory ? prodCategory.name : product.category) +
+          "</span>" +
+          "</div>" +
+          '<span style="font-size:11px;color:' +
+          stageColor +
+          ';">' +
+          statusText +
+          "</span>" +
+          "</div>";
+
+        // 详细数据行
+        let detailHtml =
           '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);">' +
           "技术分：" +
           product.technologyScore +
@@ -47874,7 +48340,23 @@ function renderStartupTab(state, parent) {
           "★" +
           " | 月收入：¥" +
           Math.round(product.revenue).toLocaleString() +
+          marketShareText +
+          growthRateText +
+          churnRateText +
           "</div>";
+
+        // P0-1: 峰值记录
+        if (product.peakUsers > 0 || product.peakRevenue > 0) {
+          detailHtml +=
+            '<div style="margin-top:4px;font-size:10px;color:var(--text-muted);">' +
+            "📊 峰值：用户" +
+            (product.peakUsers || 0).toLocaleString() +
+            " | 月收入¥" +
+            Math.round(product.peakRevenue).toLocaleString() +
+            "</div>";
+        }
+
+        prodCard.innerHTML += detailHtml;
 
         // 功能模块列表
         if (product.features && product.features.length > 0) {
@@ -47907,6 +48389,32 @@ function renderStartupTab(state, parent) {
           }
           featuresHtml += "</div>";
           prodCard.innerHTML += featuresHtml;
+        }
+
+        // P0-1: 版本迭代按钮（已发布产品）
+        if (typeof showVersionUpdateModal === "function") {
+          const versionBtn = document.createElement("div");
+          versionBtn.style.cssText = "margin-top:8px;";
+          versionBtn.innerHTML =
+            '<button class="btn btn-sm btn-primary" onclick="showVersionUpdateModal(\'' +
+            product.id +
+            '\')" style="font-size:11px;padding:4px 10px;">' +
+            "🔄 版本迭代" +
+            "</button>";
+          prodCard.appendChild(versionBtn);
+        }
+
+        // P0-1: 退市按钮（衰退期产品）
+        if (product.lifecycleStage === "decline" && typeof showRetireProductModal === "function") {
+          const retireBtn = document.createElement("div");
+          retireBtn.style.cssText = "margin-top:4px;";
+          retireBtn.innerHTML =
+            '<button class="btn btn-sm btn-danger" onclick="showRetireProductModal(\'' +
+            product.id +
+            '\')" style="font-size:11px;padding:4px 10px;">' +
+            "💀 手动退市" +
+            "</button>";
+          prodCard.appendChild(retireBtn);
         }
       }
 
@@ -48189,12 +48697,298 @@ if (typeof module !== "undefined" && module.exports) {
     getAvailableStartupActions,
     executeStartupAction,
     renderStartupTab,
+    // P0-1: 版本迭代弹窗
+    showVersionUpdateModal,
+    // P0-1: 退市弹窗
+    showRetireProductModal,
+  };
+}
+
+// ====== P0-1: 版本迭代弹窗 ======
+/** 显示版本迭代弹窗 */
+function showVersionUpdateModal(productId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.status !== "launched" || product.retired) {
+    StateManager.addMessage("产品不存在或不可升级", "warning");
+    return;
+  }
+
+  const versionConfigs = {
+    minor: {
+      name: "小版本迭代",
+      costRange: [5000, 20000],
+      techBonus: [2, 5],
+      marketBonus: [1, 3],
+      desc: "v1.0 → v1.1，修复bug，小幅优化",
+      current: "v" + (product.version?.split(".")[1] ? parseInt(product.version.split(".")[1]) + 1 : 1) + ".0",
+    },
+    major: {
+      name: "大版本更新",
+      costRange: [50000, 200000],
+      techBonus: [8, 15],
+      marketBonus: [5, 10],
+      desc: "v1.x → v2.0，新功能，体验升级",
+      current: "v" + (product.version?.split(".")[0] ? parseInt(product.version.split(".")[0]) + 1 : 2) + ".0",
+    },
+    revolutionary: {
+      name: "革命性升级",
+      costRange: [200000, 1000000],
+      techBonus: [15, 30],
+      marketBonus: [10, 20],
+      desc: "v.x → v3.0+，重构核心，颠覆创新",
+      current: "v" + Math.max(3, product.version?.split(".")[0] ? parseInt(product.version.split(".")[0]) + 1 : 3) + ".0+",
+    },
+  };
+
+  const html =
+    '<div style="font-size:13px;">' +
+    '<p style="color:var(--text-secondary);margin-bottom:12px;">' +
+    "当前版本：<strong>" + (product.version || "v1.0") + "</strong> | " +
+    "技术分：" + product.technologyScore + " | 市场分：" + product.marketScore +
+    "</p>" +
+    '<div style="display:grid;grid-template-columns:1fr;gap:12px;">';
+
+  for (const [key, config] of Object.entries(versionConfigs)) {
+    const canAffordMin = company.cashReserve >= config.costRange[0];
+    html +=
+      '<div style="padding:12px;background:' +
+      (canAffordMin ? "var(--bg-card)" : "rgba(0,0,0,0.1)") +
+      ";border:1px solid " +
+      (canAffordMin ? "var(--border)" : "#ccc") +
+      ";border-radius:8px;cursor:pointer;transition:all 0.2s;" +
+      (canAffordMin ? "" : "opacity:0.6;") +
+      '" +
+      (canAffordMin ? 'onclick="handleVersionUpdate(\'' + productId + '\',\'' + key + '\')"' : "") +
+      '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+      '<strong style="font-size:13px;">' + config.name + ' → ' + config.current + '</strong>' +
+      '<span style="font-size:11px;color:' + (canAffordMin ? "var(--success)" : "var(--danger)") + ';">¥' + config.costRange[0].toLocaleString() + '~¥' + config.costRange[1].toLocaleString() + '</span>' +
+      "</div>" +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">' + config.desc + '</div>' +
+      '<div style="font-size:10px;">' +
+      '🔧 技术分+' + config.techBonus[0] + '~+' + config.techBonus[1] +
+      ' | 📈 市场分+' + config.marketBonus[0] + '~+' + config.marketBonus[1] +
+      "</div>" +
+      '</div>';
+  }
+
+  html += "</div>";
+
+  // 版本历史
+  if (product.versionHistory && product.versionHistory.length > 0) {
+    html +=
+      '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 版本历史</div>' +
+      '<div style="font-size:10px;color:var(--text-muted);max-height:120px;overflow-y:auto;">';
+    for (let i = product.versionHistory.length - 1; i >= 0; i--) {
+      const v = product.versionHistory[i];
+      html +=
+        '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+        '<strong>' + v.version + '</strong> (' + v.date + ') — ' + v.changes +
+        ' | 技术分' + v.techScore + ' 市场分' + v.marketScore +
+        '</div>';
+    }
+    html += "</div></div>";
+  }
+
+  html += "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🔄 「" + product.name + "」版本迭代",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 处理版本迭代点击 */
+function handleVersionUpdate(productId, versionType) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product) return;
+
+  const config = {
+    minor: { costRange: [5000, 20000] },
+    major: { costRange: [50000, 200000] },
+    revolutionary: { costRange: [200000, 1000000] },
+  }[versionType];
+
+  if (!config) return;
+
+  // 显示预算输入弹窗
+  const budgetPrompt =
+    '<div style="font-size:13px;">' +
+    '<p>选择投入预算（¥' + config.costRange[0].toLocaleString() + '~¥' + config.costRange[1].toLocaleString() + '）：</p>' +
+    '<input type="range" id="versionBudget" min="' + config.costRange[0]" max="' + config.costRange[1]" step="5000" value="' + config.costRange[0]" style="width:100%;margin:12px 0;">' +
+    '<div id="budgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥' + config.costRange[0].toLocaleString() + '</div>' +
+    '<script>' +
+    'document.getElementById("versionBudget").oninput = function() {' +
+    '  document.getElementById("budgetValue").textContent = "¥" + parseInt(this.value).toLocaleString();' +
+    '};' +
+    '</script>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "投入预算",
+    body: budgetPrompt,
+    buttons: [
+      {
+        text: "取消",
+        cls: "",
+        callback: function () {},
+      },
+      {
+        text: "确认",
+        cls: "btn-primary",
+        callback: function () {
+          const budget = parseInt(document.getElementById("versionBudget").value);
+          const result = updateProductVersion(state, productId, versionType, budget);
+          if (result.success) {
+            StateManager.addMessage("✅ " + result.message, "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+
+  // 绑定滑块值显示
+  setTimeout(() => {
+    const slider = document.getElementById("versionBudget");
+    const valueDisplay = document.getElementById("budgetValue");
+    if (slider && valueDisplay) {
+      slider.oninput = function () {
+        valueDisplay.textContent = "¥" + parseInt(this.value).toLocaleString();
+      };
+    }
+  }, 100);
+}
+
+// ====== P0-1: 退市弹窗 ======
+/** 显示退市确认弹窗 */
+function showRetireProductModal(productId) {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const product = company.products.find(p => p.id === productId);
+  if (!product || product.retired) return;
+
+  const reasons = [
+    { key: "replaced_by_new", label: "被新产品替代", desc: "已有更好的产品接替，旧产品自然退市" },
+    { key: "market_decline", label: "市场萎缩", desc: "市场需求下降，继续运营不划算" },
+    { key: "strategic_pivot", label: "战略调整", desc: "公司战略方向改变，需要聚焦其他产品" },
+    { key: "failure", label: "产品失败", desc: "产品表现不佳，及时止损" },
+  ];
+
+  let html =
+    '<div style="font-size:13px;">' +
+    '<p style="color:var(--text-secondary);margin-bottom:12px;">' +
+    "确定要退市 <strong>「" + product.name + "」</strong> 吗？" +
+    "</p>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">' +
+    "当前用户：" + (product.users || 0).toLocaleString() +
+    " | 月收入：¥" + Math.round(product.revenue).toLocaleString() +
+    " | 生命周期：" + product.lifecycleStage +
+    "</div>" +
+    '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">选择退市原因：</div>' +
+    '<div style="display:grid;grid-template-columns:1fr;gap:8px;">';
+
+  for (const reason of reasons) {
+    html +=
+      '<label style="display:flex;align-items:center;padding:10px;background:var(--bg-secondary);border-radius:6px;cursor:pointer;">' +
+      '<input type="radio" name="retireReason" value="' + reason.key + '" style="margin-right:8px;">' +
+      '<div>' +
+      '<strong>' + reason.label + '</strong>' +
+      '<div style="font-size:10px;color:var(--text-muted);">' + reason.desc + '</div>' +
+      "</div>" +
+      "</label>";
+  }
+
+  html += "</div></div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "💀 退市确认",
+    body: html,
+    buttons: [
+      {
+        text: "取消",
+        cls: "",
+        callback: function () {},
+      },
+      {
+        text: "确认退市",
+        cls: "btn-danger",
+        callback: function () {
+          const selected = document.querySelector('input[name="retireReason"]:checked');
+          if (!selected) {
+            StateManager.addMessage("请选择退市原因", "warning");
+            return;
+          }
+          const result = retireProduct(state, productId, selected.value);
+          if (result.success) {
+            StateManager.addMessage("💀 「" + product.name + "」已退市", "danger");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+}
+
+// ====== 导出 ======
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    STARTUP_INDUSTRIES,
+    EMPLOYEE_ROLES,
+    FUNDING_ROUNDS,
+    INVESTOR_TYPES,
+    PRODUCT_CATEGORIES,
+    registerStartup,
+    createProduct,
+    developProduct,
+    launchProduct,
+    hireEmployee,
+    fireEmployee,
+    getEligibleRounds,
+    raiseFunding,
+    tickStartup,
+    prepareIPO,
+    processIPOResult,
+    getAcquisitionOffer,
+    acceptAcquisition,
+    showAcquisitionModal,
+    bankrupt,
+    getStartupSummary,
+    getAvailableStartupActions,
+    executeStartupAction,
+    renderStartupTab,
     // 深度交互弹窗
     showMeetInvestorModal,
     showMarketingModal,
     showFinancialReportModal,
     showTeamManagementModal,
     generateInvestorFeedback,
+    // P0-1: 版本迭代弹窗
+    showVersionUpdateModal,
+    handleVersionUpdate,
+    // P0-1: 退市弹窗
+    showRetireProductModal,
+    retireProduct,
+    updateProductVersion,
   };
 }
 </script>
@@ -73167,6 +73961,17 @@ function estimateJobPayDetailed(job, state) {
     tags.push("🔥+" + Math.round(streakRate * 100) + "%");
     base = Math.floor(base * (1 + streakRate));
   }
+  // 职业称号加成
+  if (state.flags && state.flags._jobTitles && state.flags._jobTitles[job.id]) {
+    var titleTier = state.flags._jobTitles[job.id];
+    if (titleTier >= 3) {
+      tags.push("👑+15%");
+      base = Math.floor(base * 1.15);
+    } else if (titleTier >= 2) {
+      tags.push("🎖️+8%");
+      base = Math.floor(base * 1.08);
+    }
+  }
 
   return { estimated: base, tags: tags };
 }
@@ -76064,6 +76869,36 @@ function doStreetJob(job) {
   }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
+
+  // 职业称号系统：同一工作累计天数解锁称号加成
+  if (!state.flags._jobTitles) state.flags._jobTitles = {};
+  var totalShifts = state.employment.completedShifts[job.id];
+  var currentTitle = state.flags._jobTitles[job.id] || 0;
+  if (totalShifts >= 100 && currentTitle < 3) {
+    state.flags._jobTitles[job.id] = 3;
+    pay = Math.floor(pay * 1.15);
+    StateManager.addMessage(
+      "👑 职业大师！" + job.name + "累计100天，收入永久+15%！",
+      "success",
+    );
+  } else if (totalShifts >= 30 && currentTitle < 2) {
+    state.flags._jobTitles[job.id] = 2;
+    pay = Math.floor(pay * 1.08);
+    StateManager.addMessage(
+      "🎖️ 熟练老手！" + job.name + "累计30天，收入永久+8%！",
+      "success",
+    );
+  } else if (totalShifts >= 7 && currentTitle < 1) {
+    state.flags._jobTitles[job.id] = 1;
+    StateManager.addMessage(
+      "📋 入门新人期已过，" + job.name + "工作已上手。",
+      "hint",
+    );
+  }
+  // 已获称号加成持续生效
+  var titleBonus = state.flags._jobTitles[job.id] || 0;
+  if (titleBonus === 2) pay = Math.floor(pay * 1.08);
+  else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
   // 应用效果
   if (job.effects) {
