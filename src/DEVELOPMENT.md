@@ -3054,3 +3054,34 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 
 - 用户明确要求「与股票板块一致」，确保游戏内涨跌颜色标准统一，不因板块不同而混淆
 - 绿涨红跌是国际通用标准（美股/港股的配色），中国大陆玩家也通过美股交易APP广泛接触该标准
+
+## 2026-06-21 变更记录 — 修复投资板块折线图文字模糊（CSS变量+Retina+字体增大）
+
+#### 问题
+
+投资板块所有子标签（股票/加密货币/贵金属/期货基金）折线图上的数字文字「太淡、太模糊」，三个根本原因：
+
+1. **CSS 变量未解析**：`ctx.fillStyle = "var(--success)"` 是 CSS 字符串，Canvas 2D API 不支持，静默回退为黑色 #000，在深色背景 `rgba(0,0,0,0.15)` 上几乎不可见
+2. **无 Retina/HiDPI 支持**：Canvas 物理像素 = CSS 像素 = 160×40，高 DPI 屏幕（DPR≥2）被拉伸后文字模糊
+3. **字体偏小**：价格 11px、涨跌幅 9px
+
+#### 改动内容
+
+1. **新增 `_cssVar()` 辅助函数**（`investment.js` 第 1419 行）：用 `getComputedStyle` 解析 CSS 自定义属性为实际颜色值，供 Canvas 使用
+2. **Retina/HiDPI 支持**（`drawPriceChart` 开头）：读取 `devicePixelRatio`，将 Canvas 物理尺寸设为 `cssW * dpr` × `cssH * dpr`，用 `setTransform(dpr, 0, 0, dpr, 0, 0)` 缩放坐标系，保持绘制代码按 CSS 像素坐标工作
+3. **修复 `lineColor` / `dayColor`**：`"var(--success)"` → `_cssVar('--success')`，`"var(--danger)"` → `_cssVar('--danger')`
+4. **增大字体**：价格 `bold 11px` → `bold 12px`，涨跌幅 `9px` → `10px`
+
+#### 涉及文件
+
+- **`src/js/phase2/investment.js`** — 新增 `_cssVar()`、重写 `drawPriceChart` 开头（Retina 支持）、修复 2 处 CSS 变量、增大 2 处字体
+- **`dist/index.html`** — 构建产物
+
+#### 修复前/修复后对比
+
+| 问题         | 修复前                          | 修复后                                      |
+| ------------ | ------------------------------- | ------------------------------------------- |
+| CSS 变量解析 | ❌ `var(--success)` → 黑色 #000 | ✅ `_cssVar('--success')` → `#4a9e5c`       |
+| Retina 支持  | ❌ 无缩放，低 DPI 拉伸模糊      | ✅ `ctx.setTransform(dpr, 0, 0, dpr, 0, 0)` |
+| 价格字号     | 11px                            | 12px                                        |
+| 涨跌幅字号   | 9px                             | 10px                                        |

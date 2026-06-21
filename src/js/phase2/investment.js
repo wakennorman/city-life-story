@@ -1413,14 +1413,41 @@ function buyCar(carId) {
 //  🔴 红色 = 跌（down/loss）→ var(--danger) = #c4553d
 //  曲线颜色、填充色、涨跌幅数值颜色均与 stock.js renderKLine 一致
 // ============================================================
+/**
+ * 解析 CSS 自定义属性值（用于 Canvas，因为 ctx.fillStyle 不支持 var() 语法）
+ */
+function _cssVar(name) {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
+
 function drawPriceChart(canvasId, priceData, color) {
   var canvas =
     typeof canvasId === "string" ? document.getElementById(canvasId) : canvasId;
   if (!canvas) return;
+
+  // Retina/HiDPI 支持（与 data_viz.js setupCanvas 一致）
+  var dpr = window.devicePixelRatio || 1;
+  var cssW = canvas.style.width
+    ? parseInt(canvas.style.width)
+    : canvas.width / dpr;
+  var cssH = canvas.style.height
+    ? parseInt(canvas.style.height)
+    : canvas.height / dpr;
+  // 仅在物理像素与 CSS 像素 × DPR 不匹配时重新设置
+  if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+  }
   var ctx = canvas.getContext("2d");
-  var W = canvas.width,
-    H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  // 清空全部物理像素
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 缩放至 CSS 像素坐标系，后续所有绘制使用 cssW / cssH
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var W = cssW,
+    H = cssH;
 
   var data = (priceData || []).slice(-20);
   if (data.length < 2) {
@@ -1455,7 +1482,7 @@ function drawPriceChart(canvasId, priceData, color) {
   var trendUp = lastPrice >= firstPrice;
 
   // 颜色：绿涨红跌（国际/美股标准），与 stock.js renderKLine 完全一致
-  var lineColor = trendUp ? "var(--success)" : "var(--danger)";
+  var lineColor = trendUp ? _cssVar("--success") : _cssVar("--danger");
   var fillColor = trendUp ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)";
 
   var minP = prices[0],
@@ -1525,15 +1552,15 @@ function drawPriceChart(canvasId, priceData, color) {
   var chg = lastPrice - prevPrice;
   var chgPct = prevPrice !== 0 ? ((chg / prevPrice) * 100).toFixed(2) : "0.00";
   var chgText = (chg >= 0 ? "+" : "") + chgPct + "%";
-  var dayColor = chg >= 0 ? "var(--success)" : "var(--danger)";
+  var dayColor = chg >= 0 ? _cssVar("--success") : _cssVar("--danger");
 
   ctx.fillStyle = lineColor;
-  ctx.font = "bold 11px sans-serif";
+  ctx.font = "bold 12px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(lastPrice.toFixed(2), padL + 2, padT + 10);
 
   ctx.fillStyle = dayColor;
-  ctx.font = "9px sans-serif";
+  ctx.font = "10px sans-serif";
   ctx.fillText(chgText, padL + 2, padT + 21);
 }
 

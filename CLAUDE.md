@@ -31,13 +31,12 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：投资板块涨跌图颜色/大小与股票板块一致化 ✅（2026-06-21 18:30）
-  - **折线颜色**：从固定分类色(蓝/橙/黄/绿) → 方向判定绿涨红跌，与 `stock.js::renderKLine` 一致
-  - **涨跌幅文字**：↑ 红 → ↑ 绿（改 `var(--success)` / `var(--danger)`），匹配股票板块
-  - **Canvas尺寸**：200×60 → 160×40，更紧凑接近股票板块 140×40
-  - **颜色提示**：从「中国市场标准（红涨绿跌）」→「国际标准（绿涨红跌）· 与股票板块一致」
-  - **市场驱动色**：也同步为绿涨红跌
-  - **涉及文件**：`src/js/phase2/investment.js`（drawPriceChart重写+4处画布修改+颜色提示+驱动色）
+- **最近一次工作**：修复投资板块折线图文字模糊 ✅（2026-06-21 21:00）
+  - **问题**：Canvas 2D API 不支持 CSS `var()` 语法，`ctx.fillStyle="var(--success)"` 静默回退黑色，在深色背景上不可见
+  - **修复1 — CSS变量解析**：新增 `_cssVar()` 辅助函数（`getComputedStyle`），`_cssVar('--success')` 返回 `#4a9e5c`
+  - **修复2 — Retina支持**：`drawPriceChart` 开头检测 `devicePixelRatio`，物理像素按 dpr 缩放（160×40→320×80），`setTransform` 缩放坐标系
+  - **修复3 — 字体增大**：价格 11px→12px bold，涨跌幅 9px→10px
+  - **涉及文件**：`src/js/phase2/investment.js`（新增 \_cssVar + Retina缩放 + 2处CSS变量修复 + 2处字体增大）
 
 ### 创业系统完整功能一览
 
