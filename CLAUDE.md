@@ -32,15 +32,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：P1-10 危机事件系统 — 完整实现 ✅（2026-06-21）
-  - **数据常量**（`startup_competition.js`）：`CRISIS_EVENT_TYPES`（4种危机）、`OPERATIONAL_CRISIS_TEMPLATES`（12种事件）、`CRISIS_RESPONSE_TEMPLATES`（27种应对方案）
-  - **公司字段**（`registerStartup`）：`activeCrisisEvents`、`crisisEventHistory`、`crisisResilienceLevel`、`crisisPreparationLevel`、`crisisInsuranceLevel`、`crisisResponseTeam`、`crisisCommunicationPlan`、`lastCrisisDay`、`crisisFreeDays`
-  - **核心函数**：危机检测（每日tick）、危机效果应用、应对方案选择与执行、危机韧性等级更新
-  - **UI 弹窗**：`showCrisisManagementModal`（危机管理面板，含危机列表/应对方案/危机准备投资/危机历史）
-  - **tickStartup 集成**：每日危机检测 + 无危机天数更新 + 危机韧性等级更新
-  - **行动列表**：`crisis_management`（10 AP）入口 + 3个子行动
-  - **构建**：已 `python build.py`（3007.2 KB）
-  - **下一步**：P2-11 办公地点升级（或 P2-12 企业文化选择）
+- **最近一次工作**：P2-11~P2-15 丰富度功能全部完成 ✅（2026-06-22）
+  - **P2-11 办公地点升级**：5级办公地点（共享→写字楼→科技园→总部→自建园区），升级条件（资金/声誉/员工数），每日加成（忠诚度/技术/市场/声誉）
+  - **P2-12 企业文化**：3种文化（狼性/工程师/家文化），文化切换（¥50k），适应度系统，文化冲突等级
+  - **P2-13 合作伙伴**：5种伙伴类型（技术/渠道/战略/供应链/营销），信任度演化，合同到期，联合项目事件
+  - **P2-14 产品定价**：5种定价模式（固定/分级/订阅/免费增值/动态），最优价格计算，A/B测试，价格弹性
+  - **P2-15 供应链**：5种供应商（元器件/原材料/代工/物流/质检），库存管理（原材料/元器件/在制品/成品），供应链风险等级
+  - **构建**：已 `python build.py`（3094.0 KB）
+  - **全部P0/P1/P2完成**（共15项），创业系统功能完善
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

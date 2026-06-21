@@ -1045,7 +1045,11 @@ if (typeof window !== "undefined") {
     icon: "🌱",
     brief: "兴趣爱好、健康管理、心理状态、个人形象、终身学习、人生目标",
     version: "1.0.0",
-    related: ["mechanics:main", "mechanics:needs", "mechanics:family_life"],
+    related: [
+      "mechanics:main",
+      "mechanics:critical_needs",
+      "mechanics:family_life",
+    ],
     sections: [
       {
         kind: "desc",

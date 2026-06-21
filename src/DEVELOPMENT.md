@@ -3786,6 +3786,151 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 
 ---
 
+## ✅ 2026-06-22 — P2-11~P2-15 丰富度功能全部完成
+
+### P2-11 办公地点升级系统集成
+
+#### 实现内容
+
+- **数据常量**（startup_competition.js）：`OFFICE_LOCATIONS`（5级）、`OFFICE_UPGRADE_PATH`
+- **公司字段**（registerStartup）：`officeLocation`、`officeUpgradeHistory[]`、`officeUnlockDay{}`
+- **核心函数**：
+  - `checkOfficeUpgradeCondition()` — 检查升级条件（资金/声誉/员工数）
+  - `upgradeOfficeLocation()` — 执行升级
+  - `downgradeOfficeLocation()` — 执行降级（退还30%）
+  - `getOfficeUpgradeSuggestion()` — 获取升级建议
+- **tick集成**：每日应用办公地点加成（忠诚度/技术/市场/声誉）
+- **租金计算**：基于办公地点等级的实际月租替代固定租金
+- **UI弹窗**：`showOfficeManagementModal()` — 办公地点管理面板
+- **行动列表**：`office_management`（10 AP）+ `office_upgrade` / `office_downgrade`
+
+#### 办公地点等级
+
+| 等级         | 名称         | 月租    | 形象加成 | 招聘修正 | 忠诚度修正 | 技术加成 | 市场加成 |
+| ------------ | ------------ | ------- | -------- | -------- | ---------- | -------- | -------- |
+| shared       | 共享办公空间 | ¥3,000  | -5       | -20%     | -5%        | -        | -        |
+| normal       | 普通写字楼   | ¥8,000  | 0        | 0        | 0          | -        | -        |
+| techPark     | 科技园       | ¥15,000 | +5       | +15%     | +5%        | +2       | -        |
+| headquarters | 总部大楼     | ¥30,000 | +15      | +30%     | +10%       | +3       | +3       |
+| campus       | 自建园区     | ¥60,000 | +25      | +50%     | +20%       | +5       | +5       |
+
+---
+
+### P2-12 企业文化系统集成
+
+#### 实现内容
+
+- **数据常量**（startup_competition.js）：`COMPANY_CULTURES`（3种）
+- **公司字段**（registerStartup）：`companyCulture`、`cultureChangeHistory[]`、`cultureAdoptionProgress`、`cultureConflictLevel`
+- **核心函数**：
+  - `checkCultureChangeCondition()` — 检查切换条件（适应度/冲突/资金）
+  - `changeCompanyCulture()` — 执行文化切换（¥50,000，重置适应度）
+  - `improveCultureAdoption()` — 提升文化适应度
+  - `getCultureChangeSuggestion()` — 获取切换建议
+- **tick集成**：每日提升文化适应度（+1%/天），应用文化对员工的影响
+- **UI弹窗**：`showCultureManagementModal()` — 企业文化管理面板
+- **行动列表**：`culture_management`（10 AP）+ `culture_change` / `culture_adoption`
+
+#### 企业文化对比
+
+| 文化       | 忠诚度 | 流失率 | 生产力 | 创新 | 招聘 |
+| ---------- | ------ | ------ | ------ | ---- | ---- |
+| 狼性文化   | -10%   | +50%   | +30%   | +20% | -10% |
+| 工程师文化 | +5%    | -10%   | 0%     | +50% | +10% |
+| 家文化     | +20%   | -30%   | -10%   | -20% | +15% |
+
+---
+
+### P2-13 合作伙伴/渠道商系统
+
+#### 实现内容
+
+- **数据常量**（startup_competition.js）：`PARTNER_TYPES`（5种）、`PARTNER_TEMPLATES`（按行业）、`PARTNER_EVENT_TEMPLATES`（4种事件）
+- **公司字段**（registerStartup）：`partners[]`、`partnerHistory[]`、`partnerTrustLevel`
+- **核心函数**：
+  - `createPartner()` — 招募合作伙伴（¥20,000）
+  - `terminatePartner()` — 终止合作（支付违约金）
+  - `improvePartnerTrust()` — 提升信任度
+  - `getPartnerSummary()` — 获取合作伙伴摘要
+  - `tickPartners()` — 每日演化（信任衰减/合同到期/事件检测）
+- **UI弹窗**：`showPartnerManagementModal()` — 合作伙伴管理面板
+- **行动列表**：`partner_management`（10 AP）+ `recruit_partner` / `improve_trust` / `terminate_partner`
+
+#### 合作伙伴类型
+
+| 类型      | 名称         | 信任加成 | 收入分成 | 核心收益               |
+| --------- | ------------ | -------- | -------- | ---------------------- |
+| tech      | 技术合作伙伴 | +15      | 15%      | 技术+2%，创新+10%      |
+| channel   | 渠道合作伙伴 | +12      | 20%      | 市场+3%，收入+5%       |
+| strategic | 战略投资者   | +20      | 10%      | 声誉+2%，估值+5%       |
+| supply    | 供应链伙伴   | +10      | 5%       | 成本-8%，供应链风险-5% |
+| marketing | 营销合作伙伴 | +8       | 25%      | 市场+2%，品牌价值+3%   |
+
+---
+
+### P2-14 产品定价策略系统
+
+#### 实现内容
+
+- **数据常量**（startup_competition.js）：`PRICING_MODELS`（5种）
+- **公司字段**（registerStartup）：`pricingStrategy`、`priceHistory[]`、`abTestHistory[]`
+- **产品字段扩展**：`currentPrice`、`priceHistory[]`、`abTests[]`
+- **核心函数**：
+  - `calculateOptimalPrice()` — 计算最优价格（基于技术分/市场分/品牌/竞品）
+  - `applyPriceChange()` — 应用价格变更
+  - `runABTest()` — A/B测试定价
+  - `getPriceElasticity()` — 获取价格弹性
+- **UI弹窗**：`showPricingManagementModal()` — 产品定价管理面板
+- **行动列表**：`pricing_management`（10 AP）+ `adjust_price` / `ab_test` / `switch_strategy`
+
+#### 定价模式
+
+| 模式         | 名称     | 收入稳定性 | 增长潜力 |
+| ------------ | -------- | ---------- | -------- |
+| fixed        | 固定定价 | 1.0x       | 0.8x     |
+| tiered       | 分级定价 | 1.2x       | 1.3x     |
+| subscription | 订阅制   | 1.5x       | 1.1x     |
+| freemium     | 免费增值 | 0.7x       | 1.8x     |
+| dynamic      | 动态定价 | 0.9x       | 1.5x     |
+
+---
+
+### P2-15 供应链系统
+
+#### 实现内容
+
+- **数据常量**（startup_competition.js）：`SUPPLIER_TYPES`（5种）、`SUPPLIER_TEMPLATES`（按行业）、`INVENTORY_TYPES`（4种）
+- **公司字段**（registerStartup）：`suppliers[]`、`inventory{}`、`supplyChainRisk`、`supplyChainHistory[]`、`leadTime`
+- **核心函数**：
+  - `createSupplier()` — 添加供应商（¥50,000）
+  - `updateSupplierQuality()` — 更新供应商质量
+  - `manageInventory()` — 管理库存（添加/消耗）
+  - `getSupplyChainRisk()` — 获取供应链风险
+  - `tickSupplyChain()` — 每日演化（质量波动/可靠性衰减/合同到期）
+- **UI弹窗**：`showSupplyChainManagementModal()` — 供应链管理面板
+- **行动列表**：`supply_chain_management`（10 AP）+ `add_supplier` / `update_quality` / `manage_inventory`
+
+#### 供应商类型
+
+| 类型          | 名称         | 质量范围 | 价格范围  | 交期    | 核心影响                 |
+| ------------- | ------------ | -------- | --------- | ------- | ------------------------ |
+| component     | 元器件供应商 | 70-95%   | ¥10k-50k  | 14-30天 | 产品质量+10%，成本-5%    |
+| material      | 原材料供应商 | 60-90%   | ¥5k-20k   | 7-21天  | 生产成本-8%，交付速度+2% |
+| manufacturing | 代工厂       | 65-95%   | ¥30k-100k | 21-45天 | 产品质量+15%，产能+10%   |
+| logistics     | 物流供应商   | 70-90%   | ¥3k-15k   | 3-10天  | 交付速度+10%，满意度+5%  |
+| quality       | 质检服务商   | 80-98%   | ¥5k-25k   | 5-14天  | 缺陷率-2%，品牌价值+3%   |
+
+#### 库存类型
+
+| 类型         | 名称       | 保质期 | 警戒线 |
+| ------------ | ---------- | ------ | ------ |
+| raw_material | 原材料库存 | 180天  | 100件  |
+| component    | 元器件库存 | 365天  | 50件   |
+| wip          | 在制品库存 | 30天   | 30件   |
+| finished     | 成品库存   | 90天   | 20件   |
+
+---
+
 ## 📊 当前进度
 
 | 优先级 | 任务                  | 状态 |
@@ -3800,8 +3945,8 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 | P1-8   | 法律/合规风险系统     | ✅   |
 | P1-9   | 竞争对手策略应对系统  | ✅   |
 | P1-10  | 危机事件系统          | ✅   |
-| P2-11  | 办公地点升级          | ⏳   |
-| P2-12  | 企业文化选择          | ⏳   |
-| P2-13  | 合作伙伴/渠道商       | ⏳   |
-| P2-14  | 产品定价策略          | ⏳   |
-| P2-15  | 供应链系统            | ⏳   |
+| P2-11  | 办公地点升级          | ✅   |
+| P2-12  | 企业文化选择          | ✅   |
+| P2-13  | 合作伙伴/渠道商       | ✅   |
+| P2-14  | 产品定价策略          | ✅   |
+| P2-15  | 供应链系统            | ✅   |

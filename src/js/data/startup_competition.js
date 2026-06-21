@@ -2229,6 +2229,335 @@ function getCrisisSummary(crisis) {
   };
 }
 
+// ====== P2-11: 办公地点系统 ======
+
+/** 办公地点等级顺序 */
+const OFFICE_UPGRADE_PATH = [
+  "shared",
+  "normal",
+  "techPark",
+  "headquarters",
+  "campus",
+];
+
+/**
+ * 获取当前办公地点的下一级
+ */
+function getNextOfficeLevel(currentLevel) {
+  const idx = OFFICE_UPGRADE_PATH.indexOf(currentLevel);
+  if (idx >= 0 && idx < OFFICE_UPGRADE_PATH.length - 1) {
+    return OFFICE_UPGRADE_PATH[idx + 1];
+  }
+  return null;
+}
+
+/**
+ * 获取当前办公地点的上一级（降级）
+ */
+function getPrevOfficeLevel(currentLevel) {
+  const idx = OFFICE_UPGRADE_PATH.indexOf(currentLevel);
+  if (idx > 0) {
+    return OFFICE_UPGRADE_PATH[idx - 1];
+  }
+  return null;
+}
+
+/**
+ * 检查办公地点升级条件
+ */
+function checkOfficeUpgradeCondition(company, targetLevel) {
+  const officeInfo = OFFICE_LOCATIONS[targetLevel];
+  if (!officeInfo) return { canUpgrade: false, reason: "无效的办公地点" };
+
+  const currentIdx = OFFICE_UPGRADE_PATH.indexOf(company.officeLocation);
+  const targetIdx = OFFICE_UPGRADE_PATH.indexOf(targetLevel);
+
+  if (targetIdx <= currentIdx) {
+    return { canUpgrade: false, reason: "需要升级到更高级别的办公地点" };
+  }
+
+  // 检查资金（需要至少3倍月租的现金储备）
+  const requiredCash = officeInfo.cost * 3;
+  if (company.cashReserve < requiredCash) {
+    return {
+      canUpgrade: false,
+      reason: `资金不足，需要至少¥${requiredCash.toLocaleString()}（3倍月租）`,
+    };
+  }
+
+  // 检查声誉（每个级别有最低声誉要求）
+  const reputationRequirements = {
+    shared: 0,
+    normal: 20,
+    techPark: 40,
+    headquarters: 60,
+    campus: 80,
+  };
+  const requiredReputation = reputationRequirements[targetLevel];
+  if (company.reputation < requiredReputation) {
+    return {
+      canUpgrade: false,
+      reason: `声誉不足，需要${requiredReputation}分（当前${company.reputation}分）`,
+    };
+  }
+
+  // 检查公司规模（员工数要求）
+  const employeeRequirements = {
+    shared: 0,
+    normal: 3,
+    techPark: 10,
+    headquarters: 30,
+    campus: 100,
+  };
+  const requiredEmployees = employeeRequirements[targetLevel];
+  if (company.employees.length < requiredEmployees) {
+    return {
+      canUpgrade: false,
+      reason: `团队规模不足，需要${requiredEmployees}人（当前${company.employees.length}人）`,
+    };
+  }
+
+  return { canUpgrade: true, cost: officeInfo.cost };
+}
+
+/**
+ * 执行办公地点升级
+ */
+function upgradeOfficeLocation(company, targetLevel, day) {
+  const result = checkOfficeUpgradeCondition(company, targetLevel);
+  if (!result.canUpgrade) {
+    return { success: false, reason: result.reason };
+  }
+
+  const oldLevel = company.officeLocation;
+  const upgradeCost = OFFICE_LOCATIONS[targetLevel].cost;
+
+  if (company.cashReserve < upgradeCost) {
+    return {
+      success: false,
+      reason: `现金不足，升级需要¥${upgradeCost.toLocaleString()}`,
+    };
+  }
+
+  // 执行升级
+  company.cashReserve -= upgradeCost;
+  company.officeLocation = targetLevel;
+  company.officeUnlockDay[targetLevel] = day;
+
+  // 记录升级历史
+  company.officeUpgradeHistory.push({
+    from: oldLevel,
+    to: targetLevel,
+    day: day,
+    cost: upgradeCost,
+  });
+
+  return {
+    success: true,
+    oldLevel: oldLevel,
+    newLevel: targetLevel,
+    cost: upgradeCost,
+    message: `🏢 办公地点升级成功！从「${OFFICE_LOCATIONS[oldLevel].name}」升级到「${OFFICE_LOCATIONS[targetLevel].name}」，花费¥${upgradeCost.toLocaleString()}。`,
+  };
+}
+
+/**
+ * 执行办公地点降级
+ */
+function downgradeOfficeLocation(company, targetLevel, day) {
+  const currentIdx = OFFICE_UPGRADE_PATH.indexOf(company.officeLocation);
+  const targetIdx = OFFICE_UPGRADE_PATH.indexOf(targetLevel);
+
+  if (targetIdx >= currentIdx) {
+    return { success: false, reason: "只能降级到更低级别的办公地点" };
+  }
+
+  const oldLevel = company.officeLocation;
+  const refund = Math.floor(OFFICE_LOCATIONS[oldLevel].cost * 0.3); // 降级退还30%
+
+  company.officeLocation = targetLevel;
+  company.cashReserve += refund;
+
+  company.officeUpgradeHistory.push({
+    from: oldLevel,
+    to: targetLevel,
+    day: day,
+    cost: -refund, // 负成本=退款
+  });
+
+  return {
+    success: true,
+    oldLevel: oldLevel,
+    newLevel: targetLevel,
+    refund: refund,
+    message: `📉 办公地点降级，退还¥${refund.toLocaleString()}。`,
+  };
+}
+
+/**
+ * 获取办公地点升级建议
+ */
+function getOfficeUpgradeSuggestion(company) {
+  const nextLevel = getNextOfficeLevel(company.officeLocation);
+  if (!nextLevel) {
+    return { suggestion: "已达最高级别", canUpgrade: false };
+  }
+
+  const condition = checkOfficeUpgradeCondition(company, nextLevel);
+  if (condition.canUpgrade) {
+    return {
+      suggestion: `可以升级到「${OFFICE_LOCATIONS[nextLevel].name}」，花费¥${OFFICE_LOCATIONS[nextLevel].cost.toLocaleString()}`,
+      canUpgrade: true,
+      nextLevel: nextLevel,
+    };
+  }
+
+  return {
+    suggestion: condition.reason,
+    canUpgrade: false,
+    nextLevel: nextLevel,
+  };
+}
+
+// ====== P2-12: 企业文化系统 ======
+
+/**
+ * 检查企业文化切换条件
+ */
+function checkCultureChangeCondition(company, targetCulture) {
+  const cultureInfo = COMPANY_CULTURES[targetCulture];
+  if (!cultureInfo) return { canChange: false, reason: "无效的企业文化" };
+
+  if (company.companyCulture === targetCulture) {
+    return { canChange: false, reason: "已经是当前文化" };
+  }
+
+  // 检查文化适应度（需要100%才能切换）
+  if (company.cultureAdoptionProgress < 100) {
+    return {
+      canChange: false,
+      reason: `当前文化尚未完全适应（适应度${company.cultureAdoptionProgress}%），请先完成适应`,
+    };
+  }
+
+  // 检查文化冲突等级（冲突高时不能切换）
+  if (company.cultureConflictLevel >= 3) {
+    return {
+      canChange: false,
+      reason: `文化冲突等级过高（${company.cultureConflictLevel}级），请先解决冲突`,
+    };
+  }
+
+  // 检查资金（切换文化需要投入）
+  const switchCost = 50000; // 文化切换基础成本
+  if (company.cashReserve < switchCost) {
+    return {
+      canChange: false,
+      reason: `资金不足，文化切换需要¥${switchCost.toLocaleString()}`,
+    };
+  }
+
+  return { canChange: true, cost: switchCost };
+}
+
+/**
+ * 执行企业文化切换
+ */
+function changeCompanyCulture(company, targetCulture, day, reason) {
+  const result = checkCultureChangeCondition(company, targetCulture);
+  if (!result.canChange) {
+    return { success: false, reason: result.reason };
+  }
+
+  const oldCulture = company.companyCulture;
+  const switchCost = result.cost;
+
+  // 消耗资金
+  company.cashReserve -= switchCost;
+  company.companyCulture = targetCulture;
+  company.cultureAdoptionProgress = 0; // 重置适应度
+  company.cultureConflictLevel = Math.min(4, company.cultureConflictLevel + 1); // 增加冲突等级
+
+  // 记录变更历史
+  company.cultureChangeHistory.push({
+    from: oldCulture,
+    to: targetCulture,
+    day: day,
+    reason: reason || "主动切换",
+  });
+
+  return {
+    success: true,
+    oldCulture: oldCulture,
+    newCulture: targetCulture,
+    cost: switchCost,
+    message: `🔄 企业文化切换成功！从「${COMPANY_CULTURES[oldCulture].name}」切换到「${COMPANY_CULTURES[targetCulture].name}」，花费¥${switchCost.toLocaleString()}。当前适应度0%，需要逐步提升。`,
+  };
+}
+
+/**
+ * 提升文化适应度
+ */
+function improveCultureAdoption(company, day, amount) {
+  const oldProgress = company.cultureAdoptionProgress;
+  company.cultureAdoptionProgress = Math.min(
+    100,
+    company.cultureAdoptionProgress + amount,
+  );
+
+  // 适应度提升降低文化冲突
+  if (
+    company.cultureAdoptionProgress >= 100 &&
+    company.cultureConflictLevel > 0
+  ) {
+    company.cultureConflictLevel = Math.max(
+      0,
+      company.cultureConflictLevel - 1,
+    );
+  }
+
+  return {
+    success: true,
+    oldProgress: oldProgress,
+    newProgress: company.cultureAdoptionProgress,
+    conflictReduced:
+      company.cultureAdoptionProgress >= 100 &&
+      company.cultureConflictLevel < company.cultureConflictLevel,
+  };
+}
+
+/**
+ * 文化切换建议
+ */
+function getCultureChangeSuggestion(company) {
+  const currentCulture = COMPANY_CULTURES[company.companyCulture];
+  if (!currentCulture) {
+    return { suggestion: "未知文化", availableCultures: [] };
+  }
+
+  const availableCultures = Object.keys(COMPANY_CULTURES).filter(
+    (key) => key !== company.companyCulture,
+  );
+
+  const suggestions = availableCultures.map((key) => {
+    const culture = COMPANY_CULTURES[key];
+    const condition = checkCultureChangeCondition(company, key);
+    return {
+      key,
+      name: culture.name,
+      icon: culture.icon,
+      desc: culture.desc,
+      canChange: condition.canChange,
+      reason: condition.reason,
+    };
+  });
+
+  return {
+    currentCulture: currentCulture,
+    availableCultures: suggestions,
+  };
+}
+
 // ====== 导出 ======
 if (typeof window !== "undefined") {
   window.OFFICE_LOCATIONS = OFFICE_LOCATIONS;
@@ -2266,6 +2595,18 @@ if (typeof window !== "undefined") {
   window.getCrisisUrgencyColor = getCrisisUrgencyColor;
   window.getCrisisTypeInfo = getCrisisTypeInfo;
   window.getCrisisSummary = getCrisisSummary;
+  // P2-11: 办公地点系统
+  window.getNextOfficeLevel = getNextOfficeLevel;
+  window.getPrevOfficeLevel = getPrevOfficeLevel;
+  window.checkOfficeUpgradeCondition = checkOfficeUpgradeCondition;
+  window.upgradeOfficeLocation = upgradeOfficeLocation;
+  window.downgradeOfficeLocation = downgradeOfficeLocation;
+  window.getOfficeUpgradeSuggestion = getOfficeUpgradeSuggestion;
+  // P2-12: 企业文化系统
+  window.checkCultureChangeCondition = checkCultureChangeCondition;
+  window.changeCompanyCulture = changeCompanyCulture;
+  window.improveCultureAdoption = improveCultureAdoption;
+  window.getCultureChangeSuggestion = getCultureChangeSuggestion;
 }
 
 if (typeof module !== "undefined" && module.exports) {
@@ -2297,6 +2638,19 @@ if (typeof module !== "undefined" && module.exports) {
     CRISIS_EVENT_TYPES,
     OPERATIONAL_CRISIS_TEMPLATES,
     CRISIS_RESPONSE_TEMPLATES,
+    // P2-11: 办公地点系统
+    OFFICE_UPGRADE_PATH,
+    getNextOfficeLevel,
+    getPrevOfficeLevel,
+    checkOfficeUpgradeCondition,
+    upgradeOfficeLocation,
+    downgradeOfficeLocation,
+    getOfficeUpgradeSuggestion,
+    // P2-12: 企业文化系统
+    checkCultureChangeCondition,
+    changeCompanyCulture,
+    improveCultureAdoption,
+    getCultureChangeSuggestion,
     detectOperationalCrisis,
     applyCrisisEffects,
     getAvailableCrisisResponses,
@@ -2305,5 +2659,944 @@ if (typeof module !== "undefined" && module.exports) {
     getCrisisUrgencyColor,
     getCrisisTypeInfo,
     getCrisisSummary,
+    // P2-13: 合作伙伴系统
+    PARTNER_TYPES,
+    PARTNER_TEMPLATES,
+    PARTNER_EVENT_TEMPLATES,
+    createPartner,
+    terminatePartner,
+    improvePartnerTrust,
+    getPartnerSummary,
+    // P2-14: 产品定价策略
+    PRICING_MODELS,
+    calculateOptimalPrice,
+    applyPriceChange,
+    runABTest,
+    getPriceElasticity,
+    // P2-15: 供应链系统
+    SUPPLIER_TYPES,
+    SUPPLIER_TEMPLATES,
+    INVENTORY_TYPES,
+    createSupplier,
+    updateSupplierQuality,
+    manageInventory,
+    getSupplyChainRisk,
   };
+}
+
+// ====== P2-13: 合作伙伴/渠道商系统 ======
+
+/** 合作伙伴类型 */
+const PARTNER_TYPES = {
+  tech: {
+    id: "tech",
+    name: "技术合作伙伴",
+    icon: "🔧",
+    desc: "联合开发技术，共享知识产权",
+    trustBonusBase: 15,
+    revenueShare: 0.15,
+    benefit: { technologyScore: +0.02, innovationMod: +0.1 },
+  },
+  channel: {
+    id: "channel",
+    name: "渠道合作伙伴",
+    icon: "🔗",
+    desc: "帮助销售产品，拓展市场覆盖",
+    trustBonusBase: 12,
+    revenueShare: 0.2,
+    benefit: { marketScore: +0.03, revenue: +0.05 },
+  },
+  strategic: {
+    id: "strategic",
+    name: "战略投资者",
+    icon: "🤝",
+    desc: "提供资金+资源，参与战略决策",
+    trustBonusBase: 20,
+    revenueShare: 0.1,
+    benefit: { reputation: +0.02, valuation: +0.05 },
+  },
+  supply: {
+    id: "supply",
+    name: "供应链伙伴",
+    icon: "📦",
+    desc: "稳定供应原材料/元器件，降低成本",
+    trustBonusBase: 10,
+    revenueShare: 0.05,
+    benefit: { costReduction: +0.08, supplyChainRisk: -0.05 },
+  },
+  marketing: {
+    id: "marketing",
+    name: "营销合作伙伴",
+    icon: "📢",
+    desc: "联合营销推广，扩大品牌影响力",
+    trustBonusBase: 8,
+    revenueShare: 0.25,
+    benefit: { marketScore: +0.02, brandValue: +0.03 },
+  },
+};
+
+/** 合作伙伴模板（按行业） */
+const PARTNER_TEMPLATES = {
+  tech: [
+    { namePrefix: "智云", focus: "AI/大数据" },
+    { namePrefix: "极客", focus: "开发工具" },
+    { namePrefix: "深链", focus: "区块链" },
+  ],
+  consumer: [
+    { namePrefix: "优购", focus: "电商平台" },
+    { namePrefix: "快送", focus: "物流配送" },
+  ],
+  finance: [
+    { namePrefix: "安付", focus: "支付系统" },
+    { namePrefix: "易贷", focus: "金融服务" },
+  ],
+  healthcare: [
+    { namePrefix: "康护", focus: "医疗服务" },
+    { namePrefix: "健宝", focus: "健康管理" },
+  ],
+  education: [
+    { namePrefix: "启学", focus: "在线教育" },
+    { namePrefix: "智学", focus: "教育科技" },
+  ],
+  manufacturing: [
+    { namePrefix: "精工", focus: "智能制造" },
+    { namePrefix: "创科", focus: "工业4.0" },
+  ],
+};
+
+/** 合作伙伴事件模板 */
+const PARTNER_EVENT_TEMPLATES = {
+  deep_cooperation: {
+    id: "deep_cooperation",
+    name: "深度合作机会",
+    icon: "🤝",
+    title: "合作伙伴提出深度合作",
+    description:
+      "「{partnerName}」希望与你进行更深度的合作，包括{cooperationType}。这将带来显著收益，但需要投入资源。",
+    triggerCondition: { trust: 70, days: 60 },
+    options: [
+      {
+        id: "accept_deep",
+        label: "接受深度合作",
+        cost: 100000,
+        effect: { trust: +15, revenue: +0.1, technologyScore: +0.03 },
+        successChance: 0.7,
+      },
+      {
+        id: "negotiate",
+        label: "协商条件",
+        cost: 30000,
+        effect: { trust: +5, revenue: +0.05 },
+        successChance: 0.5,
+      },
+      {
+        id: "decline",
+        label: "婉拒",
+        cost: 0,
+        effect: { trust: -10 },
+        successChance: 1.0,
+      },
+    ],
+  },
+  trust_crisis: {
+    id: "trust_crisis",
+    name: "信任危机",
+    icon: "⚠️",
+    title: "合作伙伴信任度下降",
+    description:
+      "「{partnerName}」对你的合作满意度下降，原因可能是{reason}。需要采取行动挽回信任。",
+    triggerCondition: { trust: 40 },
+    options: [
+      {
+        id: "improve_communication",
+        label: "加强沟通",
+        cost: 20000,
+        effect: { trust: +10 },
+        successChance: 0.6,
+      },
+      {
+        id: "offer_benefit",
+        label: "提供额外利益",
+        cost: 80000,
+        effect: { trust: +20, revenueShare: +0.05 },
+        successChance: 0.8,
+      },
+      {
+        id: "terminate",
+        label: "终止合作",
+        cost: 50000,
+        effect: { trust: 0, reputation: -5 },
+        successChance: 1.0,
+      },
+    ],
+  },
+  joint_project: {
+    id: "joint_project",
+    name: "联合项目",
+    icon: "🚀",
+    title: "联合开发项目",
+    description:
+      "「{partnerName}」提议联合开发{projectType}，预计投入{investment}，收益共享。",
+    triggerCondition: { trust: 60, phase: "growth" },
+    options: [
+      {
+        id: "accept_project",
+        label: "接受项目",
+        cost: 150000,
+        effect: { technologyScore: +0.05, marketScore: +0.03, revenue: +0.08 },
+        successChance: 0.65,
+      },
+      {
+        id: "partial",
+        label: "部分参与",
+        cost: 50000,
+        effect: { technologyScore: +0.02, revenue: +0.03 },
+        successChance: 0.7,
+      },
+      {
+        id: "pass",
+        label: "暂不参与",
+        cost: 0,
+        effect: { trust: -5 },
+        successChance: 1.0,
+      },
+    ],
+  },
+  partner_exit: {
+    id: "partner_exit",
+    name: "合作伙伴退出",
+    icon: "🚪",
+    title: "合作伙伴提出退出",
+    description:
+      "「{partnerName}」因{reason}提出终止合作。你可以尝试挽留或接受退出。",
+    triggerCondition: { trust: 30 },
+    options: [
+      {
+        id: "retain",
+        label: "尝试挽留",
+        cost: 100000,
+        effect: { trust: +25 },
+        successChance: 0.4,
+      },
+      {
+        id: "accept_exit",
+        label: "接受退出",
+        cost: 30000,
+        effect: { reputation: -3, revenue: -0.02 },
+        successChance: 1.0,
+      },
+    ],
+  },
+};
+
+/** 生成合作伙伴 */
+function createPartner(company, partnerType, day) {
+  const templates =
+    PARTNER_TEMPLATES[company.industry] || PARTNER_TEMPLATES.tech;
+  const template = templates[Math.floor(Math.random() * templates.length)];
+  const partnerTemplate = PARTNER_TYPES[partnerType];
+
+  const partner = {
+    id: "partner_" + company.id + "_" + Date.now(),
+    type: partnerType,
+    name:
+      template.namePrefix +
+      ["科技", "集团", "控股", "股份"][Math.floor(Math.random() * 4)],
+    focus: template.focus,
+    trust: 50 + Math.random() * 20, // 初始信任度50-70
+    joinedDay: day,
+    revenueShare: partnerTemplate.revenueShare,
+    status: "active",
+    lastInteractionDay: day,
+    cooperationLevel: 1, // 1-5级合作深度
+    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90), // 6-9个月合同
+  };
+
+  if (!company.partners) company.partners = [];
+  company.partners.push(partner);
+
+  if (!company.partnerHistory) company.partnerHistory = [];
+  company.partnerHistory.push({
+    action: "created",
+    partnerId: partner.id,
+    partnerName: partner.name,
+    type: partnerType,
+    day: day,
+  });
+
+  return partner;
+}
+
+/** 终止合作 */
+function terminatePartner(company, partnerId, day, reason) {
+  const partner = company.partners.find((p) => p.id === partnerId);
+  if (!partner) return { success: false, reason: "合作伙伴不存在" };
+
+  partner.status = "terminated";
+  partner.terminatedDay = day;
+  partner.terminationReason = reason;
+
+  // 计算违约金（根据信任度和合作级别）
+  const penalty = Math.floor(
+    50000 * (1 + partner.cooperationLevel * 0.2) * (1 - partner.trust / 100),
+  );
+
+  if (company.cashReserve >= penalty) {
+    company.cashReserve -= penalty;
+  }
+
+  // 声誉影响
+  company.reputation = Math.max(0, company.reputation - 3);
+
+  company.partnerHistory.push({
+    action: "terminated",
+    partnerId: partnerId,
+    partnerName: partner.name,
+    type: partner.type,
+    day: day,
+    reason: reason,
+    penalty: penalty,
+  });
+
+  return {
+    success: true,
+    penalty: penalty,
+    message: `🚪 与「${partner.name}」终止合作，支付违约金¥${penalty.toLocaleString()}，声誉-3。`,
+  };
+}
+
+/** 提升合作伙伴信任度 */
+function improvePartnerTrust(company, partnerId, day, amount, cost) {
+  const partner = company.partners.find((p) => p.id === partnerId);
+  if (!partner || partner.status !== "active") {
+    return { success: false, reason: "合作伙伴不存在或已终止" };
+  }
+
+  if (company.cashReserve < cost) {
+    return { success: false, reason: "资金不足" };
+  }
+
+  company.cashReserve -= cost;
+  partner.trust = Math.min(100, partner.trust + amount);
+  partner.lastInteractionDay = day;
+
+  company.partnerHistory.push({
+    action: "trust_improved",
+    partnerId: partnerId,
+    partnerName: partner.name,
+    trustChange: +amount,
+    cost: cost,
+    day: day,
+  });
+
+  return {
+    success: true,
+    newTrust: partner.trust,
+    message: `🤝 与「${partner.name}」的信任度提升至 ${partner.trust.toFixed(0)}%`,
+  };
+}
+
+/** 获取合作伙伴摘要 */
+function getPartnerSummary(partner) {
+  const typeInfo = PARTNER_TYPES[partner.type];
+  return {
+    id: partner.id,
+    name: partner.name,
+    type: partner.type,
+    typeName: typeInfo ? typeInfo.name : "未知",
+    icon: typeInfo ? typeInfo.icon : "❓",
+    trust: partner.trust,
+    trustLevel:
+      partner.trust >= 70 ? "high" : partner.trust >= 50 ? "medium" : "low",
+    cooperationLevel: partner.cooperationLevel,
+    revenueShare: partner.revenueShare,
+    status: partner.status,
+    daysRemaining: Math.max(
+      0,
+      partner.contractExpiryDay - new Date().getDate(),
+    ),
+  };
+}
+
+/** 每日合作伙伴演化 */
+function tickPartners(state, company) {
+  if (!company || !company.partners) return;
+
+  const day = state.player.day;
+
+  for (const partner of company.partners) {
+    if (partner.status !== "active") continue;
+
+    // 信任度自然衰减（每季度 -2，最低 0）
+    partner.trust = Math.max(0, partner.trust - 0.02);
+
+    // 合同到期检测
+    if (day >= partner.contractExpiryDay) {
+      // 自动续约概率
+      if (partner.trust >= 60 && Math.random() < 0.7) {
+        partner.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+        partner.cooperationLevel = Math.min(5, partner.cooperationLevel + 0.2);
+        company.partnerHistory.push({
+          action: "contract_renewed",
+          partnerId: partner.id,
+          partnerName: partner.name,
+          day: day,
+        });
+      } else if (partner.trust < 40 || Math.random() < 0.3) {
+        // 合作伙伴退出
+        terminatePartner(company, partner.id, day, "合同到期未续约");
+      }
+    }
+
+    // 信任度事件检测
+    if (partner.trust < 40 && Math.random() < 0.05) {
+      // 触发信任危机事件
+      // 由外部事件系统处理
+    }
+  }
+}
+
+// ====== P2-14: 产品定价策略系统 ======
+
+/** 定价模式 */
+const PRICING_MODELS = {
+  fixed: {
+    id: "fixed",
+    name: "固定定价",
+    icon: "💰",
+    desc: "单一价格，简单明了",
+    revenueStability: 1.0,
+    growthPotential: 0.8,
+  },
+  tiered: {
+    id: "tiered",
+    name: "分级定价",
+    icon: "📊",
+    desc: "基础版/专业版/企业版",
+    revenueStability: 1.2,
+    growthPotential: 1.3,
+  },
+  subscription: {
+    id: "subscription",
+    name: "订阅制",
+    icon: "🔄",
+    desc: "按月/年订阅，稳定收入",
+    revenueStability: 1.5,
+    growthPotential: 1.1,
+  },
+  freemium: {
+    id: "freemium",
+    name: "免费增值",
+    icon: "🆓",
+    desc: "基础功能免费，高级功能收费",
+    revenueStability: 0.7,
+    growthPotential: 1.8,
+  },
+  dynamic: {
+    id: "dynamic",
+    name: "动态定价",
+    icon: "📈",
+    desc: "根据市场需求实时调整",
+    revenueStability: 0.9,
+    growthPotential: 1.5,
+  },
+};
+
+/** 计算最优价格 */
+function calculateOptimalPrice(product, company, competitors) {
+  if (!product || !PRODUCT_CATEGORIES[product.category]) {
+    return { optimalPrice: 0, elasticity: 0 };
+  }
+
+  const category = PRODUCT_CATEGORIES[product.category];
+  const baseValue = category.baseArpu * 30 * 30; // 月ARPU * 30天 * 30倍估值倍数
+
+  // 技术分加成
+  const techMod = 1 + (product.technologyScore || 20) / 100;
+
+  // 市场分加成
+  const marketMod = 1 + (product.marketScore || 10) / 100;
+
+  // 品牌等级加成
+  const brandLevel = company.reputation
+    ? Math.min(5, Math.floor(company.reputation / 20))
+    : 0;
+  const brandMod = 1 + brandLevel * 0.1;
+
+  // 竞品价格参考
+  let competitorPriceAvg = 0;
+  if (competitors && competitors.length > 0) {
+    competitorPriceAvg =
+      competitors.reduce((sum, c) => sum + (c.avgPrice || 0), 0) /
+      competitors.length;
+  }
+
+  // 计算最优价格
+  let optimalPrice = baseValue * techMod * marketMod * brandMod;
+
+  // 竞品价格影响（±20%）
+  if (competitorPriceAvg > 0) {
+    const priceRatio = optimalPrice / competitorPriceAvg;
+    if (priceRatio > 1.2) {
+      optimalPrice *= 0.95; // 比竞品贵，需要降价
+    } else if (priceRatio < 0.8) {
+      optimalPrice *= 1.05; // 比竞品便宜，可以涨价
+    }
+  }
+
+  // 价格弹性（基于产品类别）
+  const elasticity = category.growthFactor ? 1 / category.growthFactor : 1.0;
+
+  return {
+    optimalPrice: Math.round(optimalPrice),
+    elasticity: elasticity,
+    recommendedChange: optimalPrice - (product.currentPrice || 0),
+  };
+}
+
+/** 应用价格变更 */
+function applyPriceChange(product, newPrice, day, reason) {
+  if (!product) return { success: false, reason: "产品不存在" };
+
+  const oldPrice = product.currentPrice || 0;
+  const changePercent = oldPrice > 0 ? (newPrice - oldPrice) / oldPrice : 0;
+
+  product.currentPrice = newPrice;
+  if (!product.priceHistory) product.priceHistory = [];
+  product.priceHistory.push({
+    price: newPrice,
+    day: day,
+    reason: reason,
+    changePercent: changePercent,
+  });
+
+  // 价格变更影响用户增长
+  let userGrowthMod = 1.0;
+  if (changePercent > 0.1) {
+    // 涨价超过10%，用户流失
+    userGrowthMod = 0.8;
+  } else if (changePercent < -0.1) {
+    // 降价超过10%，用户增长
+    userGrowthMod = 1.3;
+  }
+
+  return {
+    success: true,
+    oldPrice: oldPrice,
+    newPrice: newPrice,
+    changePercent: changePercent,
+    userGrowthMod: userGrowthMod,
+    message: `💰 产品价格从 ¥${oldPrice.toLocaleString()} 调整为 ¥${newPrice.toLocaleString()}（${changePercent > 0 ? "+" : ""}${(changePercent * 100).toFixed(1)}%）`,
+  };
+}
+
+/** A/B测试定价 */
+function runABTest(product, priceA, priceB, sampleSize, day) {
+  if (!product) return { success: false, reason: "产品不存在" };
+
+  // 模拟测试结果
+  const conversionA = 0.05 + Math.random() * 0.05; // 5-10%转化率
+  const conversionB = 0.05 + Math.random() * 0.05;
+
+  const revenueA = priceA * sampleSize * conversionA;
+  const revenueB = priceB * sampleSize * conversionB;
+
+  const winner = revenueA > revenueB ? "A" : "B";
+  const confidence = Math.min(
+    95,
+    50 + (Math.abs(revenueA - revenueB) / Math.max(revenueA, revenueB)) * 50,
+  );
+
+  const test = {
+    id: "abtest_" + product.id + "_" + day,
+    productId: product.id,
+    priceA: priceA,
+    priceB: priceB,
+    sampleSize: sampleSize,
+    conversionA: conversionA,
+    conversionB: conversionB,
+    revenueA: revenueA,
+    revenueB: revenueB,
+    winner: winner,
+    confidence: confidence,
+    day: day,
+    status: "completed",
+  };
+
+  if (!product.abTests) product.abTests = [];
+  product.abTests.push(test);
+
+  return {
+    success: true,
+    test: test,
+    recommendation: winner === "A" ? priceA : priceB,
+    message: `📊 A/B测试完成：方案${winner}胜出（置信度${confidence.toFixed(0)}%），建议价格¥${winner === "A" ? priceA : priceB.toLocaleString()}`,
+  };
+}
+
+/** 获取价格弹性 */
+function getPriceElasticity(product) {
+  if (!product || !PRODUCT_CATEGORIES[product.category]) {
+    return { elasticity: 1.0, category: "unknown" };
+  }
+
+  const category = PRODUCT_CATEGORIES[product.category];
+  const baseElasticity = category.growthFactor
+    ? 1 / category.growthFactor
+    : 1.0;
+
+  // 品牌等级降低弹性（品牌越强，用户对价格越不敏感）
+  const brandElasticityMod = 1 - (product.brandLevel || 0) * 0.05;
+
+  return {
+    elasticity: baseElasticity * brandElasticityMod,
+    category: product.category,
+    interpretation:
+      baseElasticity * brandElasticityMod > 1 ? "价格敏感" : "价格不敏感",
+  };
+}
+
+// ====== P2-15: 供应链系统 ======
+
+/** 供应商类型 */
+const SUPPLIER_TYPES = {
+  component: {
+    id: "component",
+    name: "元器件供应商",
+    icon: "🔌",
+    desc: "提供核心元器件/芯片/模块",
+    qualityRange: [70, 95],
+    priceRange: [10000, 50000],
+    leadTimeDays: [14, 30],
+    impact: { productQuality: +0.1, cost: -0.05 },
+  },
+  material: {
+    id: "material",
+    name: "原材料供应商",
+    icon: "🧱",
+    desc: "提供基础原材料",
+    qualityRange: [60, 90],
+    priceRange: [5000, 20000],
+    leadTimeDays: [7, 21],
+    impact: { productionCost: -0.08, deliverySpeed: +0.02 },
+  },
+  manufacturing: {
+    id: "manufacturing",
+    name: "代工厂",
+    icon: "🏭",
+    desc: "负责产品生产和组装",
+    qualityRange: [65, 95],
+    priceRange: [30000, 100000],
+    leadTimeDays: [21, 45],
+    impact: { productQuality: +0.15, productionCapacity: +0.1 },
+  },
+  logistics: {
+    id: "logistics",
+    name: "物流供应商",
+    icon: "🚚",
+    desc: "负责产品运输和配送",
+    qualityRange: [70, 90],
+    priceRange: [3000, 15000],
+    leadTimeDays: [3, 10],
+    impact: { deliverySpeed: +0.1, customerSatisfaction: +0.05 },
+  },
+  quality: {
+    id: "quality",
+    name: "质检服务商",
+    icon: "✅",
+    desc: "提供质量检测和认证服务",
+    qualityRange: [80, 98],
+    priceRange: [5000, 25000],
+    leadTimeDays: [5, 14],
+    impact: { defectRate: -0.02, brandValue: +0.03 },
+  },
+};
+
+/** 供应商模板（按行业） */
+const SUPPLIER_TEMPLATES = {
+  tech: [
+    { namePrefix: "芯联", type: "component", focus: "芯片/传感器" },
+    { namePrefix: "智造", type: "manufacturing", focus: "SMT代工" },
+    { namePrefix: "速达", type: "logistics", focus: "快递配送" },
+  ],
+  manufacturing: [
+    { namePrefix: "精工", type: "material", focus: "金属/塑料" },
+    { namePrefix: "宏达", type: "manufacturing", focus: "精密加工" },
+  ],
+  hardware: [
+    { namePrefix: "光电", type: "component", focus: "显示屏/电池" },
+    { namePrefix: "组装", type: "manufacturing", focus: "整机组装" },
+  ],
+};
+
+/** 库存类型 */
+const INVENTORY_TYPES = {
+  raw_material: {
+    id: "raw_material",
+    name: "原材料库存",
+    icon: "📦",
+    decayDays: 180,
+    criticalLevel: 100,
+  },
+  component: {
+    id: "component",
+    name: "元器件库存",
+    icon: "🔌",
+    decayDays: 365,
+    criticalLevel: 50,
+  },
+  wip: {
+    id: "wip",
+    name: "在制品库存",
+    icon: "🔧",
+    decayDays: 30,
+    criticalLevel: 30,
+  },
+  finished: {
+    id: "finished",
+    name: "成品库存",
+    icon: "✅",
+    decayDays: 90,
+    criticalLevel: 20,
+  },
+};
+
+/** 生成供应商 */
+function createSupplier(company, supplierType, day) {
+  const templates =
+    SUPPLIER_TEMPLATES[company.industry] || SUPPLIER_TEMPLATES.tech;
+  const template = templates[Math.floor(Math.random() * templates.length)];
+  const supplierTemplate =
+    SUPPLIER_TYPES[supplierType] || SUPPLIER_TYPES.component;
+
+  const quality =
+    supplierTemplate.qualityRange[0] +
+    Math.random() *
+      (supplierTemplate.qualityRange[1] - supplierTemplate.qualityRange[0]);
+  const price =
+    supplierTemplate.priceRange[0] +
+    Math.random() *
+      (supplierTemplate.priceRange[1] - supplierTemplate.priceRange[0]);
+  const leadTime = Math.floor(
+    supplierTemplate.leadTimeDays[0] +
+      Math.random() *
+        (supplierTemplate.leadTimeDays[1] - supplierTemplate.leadTimeDays[0]),
+  );
+
+  const supplier = {
+    id: "supplier_" + company.id + "_" + Date.now(),
+    type: supplierType,
+    name:
+      template.namePrefix +
+      ["科技", "实业", "集团", "材料"][Math.floor(Math.random() * 4)],
+    focus: template.focus,
+    quality: quality,
+    price: price,
+    leadTime: leadTime,
+    reliability: 70 + Math.random() * 20, // 可靠性70-90
+    joinedDay: day,
+    status: "active",
+    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90),
+    lastDeliveryDay: day,
+    deliveryHistory: [],
+    qualityHistory: [],
+  };
+
+  if (!company.suppliers) company.suppliers = [];
+  company.suppliers.push(supplier);
+
+  if (!company.supplyChainHistory) company.supplyChainHistory = [];
+  company.supplyChainHistory.push({
+    action: "supplier_added",
+    supplierId: supplier.id,
+    supplierName: supplier.name,
+    type: supplierType,
+    day: day,
+  });
+
+  return supplier;
+}
+
+/** 更新供应商质量 */
+function updateSupplierQuality(
+  company,
+  supplierId,
+  day,
+  qualityChange,
+  reason,
+) {
+  const supplier = company.suppliers.find((s) => s.id === supplierId);
+  if (!supplier || supplier.status !== "active") {
+    return { success: false, reason: "供应商不存在或已终止" };
+  }
+
+  const oldQuality = supplier.quality;
+  supplier.quality = Math.max(
+    0,
+    Math.min(100, supplier.quality + qualityChange),
+  );
+  supplier.lastDeliveryDay = day;
+
+  // 记录质量历史
+  supplier.qualityHistory.push({
+    day: day,
+    quality: supplier.quality,
+    change: qualityChange,
+    reason: reason,
+  });
+
+  // 质量变化影响供应链风险
+  if (supplier.quality < 60) {
+    company.supplyChainRisk = Math.min(100, (company.supplyChainRisk || 0) + 5);
+  } else if (supplier.quality >= 80) {
+    company.supplyChainRisk = Math.max(0, (company.supplyChainRisk || 0) - 2);
+  }
+
+  return {
+    success: true,
+    oldQuality: oldQuality,
+    newQuality: supplier.quality,
+    message: `📊 「${supplier.name}」质量从 ${oldQuality.toFixed(0)}% 调整为 ${supplier.quality.toFixed(0)}%`,
+  };
+}
+
+/** 管理库存 */
+function manageInventory(company, inventoryType, action, amount, day) {
+  if (!company.inventory) company.inventory = {};
+
+  const current = company.inventory[inventoryType] || {
+    quantity: 0,
+    value: 0,
+    lastUpdated: day,
+  };
+
+  if (action === "add") {
+    current.quantity += amount;
+    current.value += amount * 100; // 简化：假设单位价值¥100
+    current.lastUpdated = day;
+  } else if (action === "consume") {
+    if (current.quantity < amount) {
+      return {
+        success: false,
+        reason: `库存不足，当前${current.quantity}，需要${amount}`,
+      };
+    }
+    current.quantity -= amount;
+    current.lastUpdated = day;
+  } else if (action === "check") {
+    // 仅检查
+  }
+
+  company.inventory[inventoryType] = current;
+
+  return {
+    success: true,
+    type: inventoryType,
+    quantity: current.quantity,
+    value: current.value,
+    message: `📦 ${INVENTORY_TYPES[inventoryType]?.name || inventoryType}：${current.quantity}件，价值¥${current.value.toLocaleString()}`,
+  };
+}
+
+/** 获取供应链风险 */
+function getSupplyChainRisk(company) {
+  if (!company.suppliers || company.suppliers.length === 0) {
+    return { risk: 100, level: "critical", suppliers: 0 };
+  }
+
+  let totalRisk = 0;
+  let activeCount = 0;
+
+  for (const supplier of company.suppliers) {
+    if (supplier.status !== "active") continue;
+    activeCount++;
+
+    // 质量风险（质量越低风险越高）
+    const qualityRisk = (100 - supplier.quality) * 0.5;
+
+    // 可靠性风险
+    const reliabilityRisk = (100 - supplier.reliability) * 0.3;
+
+    // 交期风险（交期越长风险越高）
+    const leadTimeRisk = Math.min(30, supplier.leadTime * 0.5);
+
+    totalRisk += qualityRisk + reliabilityRisk + leadTimeRisk;
+  }
+
+  const avgRisk = totalRisk / activeCount;
+
+  let level = "low";
+  if (avgRisk >= 60) level = "critical";
+  else if (avgRisk >= 40) level = "high";
+  else if (avgRisk >= 20) level = "medium";
+
+  return {
+    risk: Math.min(100, Math.round(avgRisk)),
+    level: level,
+    suppliers: activeCount,
+    details: company.suppliers
+      .filter((s) => s.status === "active")
+      .map((s) => ({
+        name: s.name,
+        quality: s.quality,
+        reliability: s.reliability,
+        leadTime: s.leadTime,
+      })),
+  };
+}
+
+/** 每日供应链演化 */
+function tickSupplyChain(state, company) {
+  if (!company || !company.suppliers) return;
+
+  const day = state.player.day;
+
+  for (const supplier of company.suppliers) {
+    if (supplier.status !== "active") continue;
+
+    // 质量自然波动（±2%/天）
+    supplier.quality = Math.max(
+      0,
+      Math.min(100, supplier.quality + (Math.random() - 0.5) * 4),
+    );
+
+    // 可靠性衰减（每季度 -3，最低 0）
+    supplier.reliability = Math.max(0, supplier.reliability - 0.03);
+
+    // 合同到期检测
+    if (day >= supplier.contractExpiryDay) {
+      if (
+        supplier.quality >= 75 &&
+        supplier.reliability >= 60 &&
+        Math.random() < 0.6
+      ) {
+        supplier.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+        company.supplyChainHistory.push({
+          action: "supplier_contract_renewed",
+          supplierId: supplier.id,
+          supplierName: supplier.name,
+          day: day,
+        });
+      } else if (Math.random() < 0.4) {
+        // 供应商退出
+        supplier.status = "terminated";
+        supplier.terminatedDay = day;
+        company.supplyChainRisk = Math.min(
+          100,
+          (company.supplyChainRisk || 0) + 10,
+        );
+        company.supplyChainHistory.push({
+          action: "supplier_terminated",
+          supplierId: supplier.id,
+          supplierName: supplier.name,
+          day: day,
+          reason: "合同到期未续约",
+        });
+      }
+    }
+  }
+
+  // 更新供应链风险
+  const risk = getSupplyChainRisk(company);
+  company.supplyChainRisk = risk.risk;
 }

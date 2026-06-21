@@ -633,7 +633,7 @@ if (typeof window !== "undefined") {
     icon: "🚨",
     brief: "资金链危机、团队危机、产品危机、公关危机、法律危机、竞争危机",
     version: "1.0.0",
-    related: ["mechanics:startups", "mechanics:corp_ops"],
+    related: ["mechanics:startup_system", "mechanics:corp_ops"],
     sections: [
       {
         kind: "desc",

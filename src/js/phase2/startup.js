@@ -2494,6 +2494,29 @@ function registerStartup(state, name, industry, description) {
     crisisCommunicationPlan: null, // 危机沟通计划
     lastCrisisDay: null, // 上次危机发生日
     crisisFreeDays: 0, // 无危机天数
+    // ====== P2-11: 办公地点系统 ======
+    officeLocation: "shared", // 当前办公地点 ID (shared/normal/techPark/headquarters/campus)
+    officeUpgradeHistory: [], // 升级历史 [{from, to, day, cost}]
+    officeUnlockDay: {}, // 各等级解锁日 {shared: foundedDay, normal: day, ...}
+    // ====== P2-12: 企业文化系统 ======
+    companyCulture: "engineer", // 当前企业文化 ID (wolf/engineer/family)
+    cultureChangeHistory: [], // 文化变更历史 [{from, to, day, reason}]
+    cultureAdoptionProgress: 100, // 文化适应度 0-100
+    cultureConflictLevel: 0, // 文化冲突等级 0-4
+    // ====== P2-13: 合作伙伴/渠道商系统 ======
+    partners: [], // 合作伙伴列表 [{id, type, name, focus, trust, joinedDay, revenueShare, status, lastInteractionDay, cooperationLevel, contractExpiryDay}]
+    partnerHistory: [], // 伙伴历史 [{action, partnerId, partnerName, type, day, ...}]
+    partnerTrustLevel: 0, // 整体伙伴信任等级 0-100
+    // ====== P2-14: 产品定价策略系统 ======
+    pricingStrategy: "tiered", // 整体定价策略 (fixed/tiered/subscription/freemium/dynamic)
+    priceHistory: [], // 价格变更历史 [{productId, oldPrice, newPrice, day, reason}]
+    abTestHistory: [], // A/B测试历史
+    // ====== P2-15: 供应链系统 ======
+    suppliers: [], // 供应商列表 [{id, type, name, focus, quality, price, leadTime, reliability, joinedDay, status, contractExpiryDay, lastDeliveryDay, qualityHistory[]}]
+    inventory: {}, // 库存 {raw_material: {quantity, value}, component: {...}, ...}
+    supplyChainRisk: 0, // 供应链风险等级 0-100
+    supplyChainHistory: [], // 供应链历史 [{action, supplierId, supplierName, type, day, ...}]
+    leadTime: 30, // 平均交期（天）
   };
 
   // 生成1-2个联合创始人
@@ -2522,6 +2545,17 @@ function registerStartup(state, name, industry, description) {
     status: "developing",
   };
   company.products.push(initialProduct);
+
+  // ====== P2-11: 初始化办公地点（从共享办公开始） ======
+  company.officeLocation = "shared";
+  company.officeUnlockDay = {
+    shared: day,
+  };
+
+  // ====== P2-12: 初始化企业文化（默认工程师文化） ======
+  company.companyCulture = "engineer";
+  company.cultureAdoptionProgress = 100;
+  company.cultureConflictLevel = 0;
 
   // 更新状态
   state.startup.status = "seed";
@@ -4239,10 +4273,20 @@ function tickStartup(state, tickType) {
   for (const emp of company.employees) {
     totalExpenses += Math.round((emp.salary / DAILY_SALARY_DIV) * timeMult);
   }
-  // 办公租金
-  const rent =
-    Math.round(DAILY_RENT_BASE * timeMult) +
-    company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
+  // 办公租金（P2-11：基于办公地点等级）
+  let rent = 0;
+  if (company.officeLocation && OFFICE_LOCATIONS[company.officeLocation]) {
+    // 使用办公地点的月租
+    const officeCost = OFFICE_LOCATIONS[company.officeLocation].cost;
+    rent = Math.round((officeCost * timeMult) / 90); // 月租转日租
+  } else {
+    // 默认基础租金
+    rent =
+      Math.round(DAILY_RENT_BASE * timeMult) +
+      company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
+  }
+  // 员工空间租金（每人额外）
+  rent += company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
   totalExpenses += rent;
   // 研发成本
   const rAndD =
@@ -4582,6 +4626,98 @@ function tickStartup(state, tickType) {
     _updateComplianceGrade(company);
     _processPendingLegalEvent(state, company);
     _evaluateLegalEventProbability(state, company);
+  }
+
+  // ====== P2-11: 办公地点系统每日效果 ======
+  if (company.officeLocation && OFFICE_LOCATIONS[company.officeLocation]) {
+    const office = OFFICE_LOCATIONS[company.officeLocation];
+
+    // 应用办公地点加成（每日）
+    if (office.loyaltyMod) {
+      for (const emp of company.employees) {
+        emp.loyalty = Math.min(100, emp.loyalty + office.loyaltyMod * timeMult);
+      }
+    }
+    if (office.recruitMod && company.phase !== "seed") {
+      // 招聘加成在员工入职时应用
+    }
+    if (office.techBonus) {
+      for (const product of company.products) {
+        if (product.status === "launched") {
+          product.technologyScore = Math.min(
+            100,
+            product.technologyScore + office.techBonus / timeMult,
+          );
+        }
+      }
+    }
+    if (office.marketBonus) {
+      for (const product of company.products) {
+        if (product.status === "launched") {
+          product.marketScore = Math.min(
+            100,
+            product.marketScore + office.marketBonus / timeMult,
+          );
+        }
+      }
+    }
+    if (office.imageBonus) {
+      company.reputation = Math.min(
+        100,
+        company.reputation + (office.imageBonus / 30) * timeMult,
+      );
+    }
+  }
+
+  // ====== P2-12: 企业文化系统每日效果 ======
+  if (company.companyCulture && COMPANY_CULTURES[company.companyCulture]) {
+    const culture = COMPANY_CULTURES[company.companyCulture];
+
+    // 每日提升文化适应度（+1%/天，最高100%）
+    if (company.cultureAdoptionProgress < 100) {
+      company.cultureAdoptionProgress = Math.min(
+        100,
+        company.cultureAdoptionProgress + (1 * timeMult) / 90,
+      );
+    }
+
+    // 适应度达标后降低文化冲突
+    if (
+      company.cultureAdoptionProgress >= 100 &&
+      company.cultureConflictLevel > 0
+    ) {
+      company.cultureConflictLevel = Math.max(
+        0,
+        company.cultureConflictLevel - (0.1 * timeMult) / 90,
+      );
+    }
+
+    // 应用文化对员工的影响（每日）
+    const adoptionFactor = company.cultureAdoptionProgress / 100; // 适应度因子 0-1
+    const conflictFactor = 1 - company.cultureConflictLevel / 4; // 冲突因子 0-1
+
+    for (const emp of company.employees) {
+      // 忠诚度影响
+      const loyaltyMod =
+        (culture.loyaltyMod || 0) * adoptionFactor * conflictFactor * timeMult;
+      emp.loyalty = Math.max(0, Math.min(100, emp.loyalty + loyaltyMod));
+
+      // 生产力影响（体现在产出上）
+      if (emp.productivity === undefined) emp.productivity = 1.0;
+      const productivityMod =
+        (culture.productivityMod || 1.0) * adoptionFactor * conflictFactor;
+      emp.productivity = productivityMod;
+    }
+  }
+
+  // ====== P2-13: 合作伙伴系统每日演化 ======
+  if (typeof tickPartners === "function") {
+    tickPartners(state, company);
+  }
+
+  // ====== P2-15: 供应链系统每日演化 ======
+  if (typeof tickSupplyChain === "function") {
+    tickSupplyChain(state, company);
   }
 }
 
@@ -8373,6 +8509,61 @@ function getAvailableStartupActions(state) {
     });
   }
 
+  // P2-11: 办公地点管理
+  actions.push({
+    id: "office_management",
+    name: "办公地点",
+    icon: "🏢",
+    apCost: 10,
+    desc: "升级/降级办公地点，查看各等级加成",
+    available: true,
+  });
+
+  // P2-12: 企业文化管理
+  actions.push({
+    id: "culture_management",
+    name: "企业文化",
+    icon: "🏛️",
+    apCost: 10,
+    desc: "切换企业文化，提升文化适应度",
+    available: true,
+  });
+
+  // P2-13: 合作伙伴管理
+  actions.push({
+    id: "partner_management",
+    name: "合作伙伴",
+    icon: "🤝",
+    apCost: 10,
+    desc: "招募/管理合作伙伴，提升信任度",
+    available: true,
+  });
+
+  // P2-14: 产品定价管理
+  actions.push({
+    id: "pricing_management",
+    name: "产品定价",
+    icon: "💰",
+    apCost: 10,
+    desc: "调整产品价格，A/B测试，切换定价策略",
+    available: company.products.some((p) => p.status === "launched"),
+  });
+
+  // P2-15: 供应链管理
+  actions.push({
+    id: "supply_chain_management",
+    name: "供应链",
+    icon: "📦",
+    apCost: 10,
+    desc: "管理供应商，监控库存，降低供应链风险",
+    available:
+      company.industry === "manufacturing" ||
+      company.industry === "tech" ||
+      company.products.some(
+        (p) => p.category === "hardware" || p.category === "smart_device",
+      ),
+  });
+
   return actions;
 }
 
@@ -10653,6 +10844,26 @@ function executeStartupAction(state, actionId, params) {
     case "crisis_insurance":
       return buyCrisisInsurance(state, params.level);
 
+    // P2-11: 办公地点系统
+    case "office_upgrade":
+      return upgradeOffice(state, params.targetLevel);
+
+    case "office_downgrade":
+      return downgradeOffice(state, params.targetLevel);
+
+    case "office_management":
+      return showOfficeManagementModal(state);
+
+    // P2-12: 企业文化系统
+    case "culture_change":
+      return changeCulture(state, params.cultureId, params.reason);
+
+    case "culture_adoption":
+      return improveCultureAdoptionAction(state, params.amount);
+
+    case "culture_management":
+      return showCultureManagementModal(state);
+
     case "ipo_prep":
       return prepareIPO(state);
 
@@ -12298,6 +12509,33 @@ if (typeof module !== "undefined" && module.exports) {
     CRISIS_EVENT_TYPES,
     OPERATIONAL_CRISIS_TEMPLATES,
     CRISIS_RESPONSE_TEMPLATES,
+    // P2-11: 办公地点系统
+    upgradeOffice,
+    downgradeOffice,
+    showOfficeManagementModal,
+    OFFICE_UPGRADE_PATH,
+    // P2-12: 企业文化系统
+    changeCulture,
+    improveCultureAdoptionAction,
+    showCultureManagementModal,
+    // P2-13: 合作伙伴系统
+    showPartnerManagementModal,
+    recruitPartnerAction,
+    improvePartnerTrustAction,
+    terminatePartnerAction,
+    getPartnerSummary,
+    // P2-14: 产品定价策略
+    showPricingManagementModal,
+    adjustProductPrice,
+    runProductABTest,
+    switchPricingStrategy,
+    getPriceElasticity,
+    // P2-15: 供应链系统
+    showSupplyChainManagementModal,
+    addSupplierAction,
+    updateSupplierQualityAction,
+    manageInventoryAction,
+    getSupplyChainRisk,
   };
 }
 
@@ -13112,4 +13350,774 @@ function resolveLegalActionFromModal(optionIndex) {
   company.pendingLegalEvent = null;
   company.legalCasesActive = Math.max(0, company.legalCasesActive - 1);
   renderAll();
+}
+
+// ====== P2-11: 办公地点系统 Action Handlers ======
+
+function upgradeOffice(state, targetLevel) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  if (!OFFICE_LOCATIONS[targetLevel]) {
+    return { success: false, message: "无效的办公地点" };
+  }
+
+  const result = upgradeOfficeLocation(company, targetLevel, state.player.day);
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+function downgradeOffice(state, targetLevel) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = downgradeOfficeLocation(
+    company,
+    targetLevel,
+    state.player.day,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+function showOfficeManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const currentOffice = OFFICE_LOCATIONS[company.officeLocation];
+  const suggestion = getOfficeUpgradeSuggestion(company);
+  const nextLevel = getNextOfficeLevel(company.officeLocation);
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 当前办公地点
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentOffice.icon} 当前办公地点</div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentOffice.name} — ${currentOffice.desc}</div>`;
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;">';
+  html += `<div>💰 月租: ¥${currentOffice.cost.toLocaleString()}</div>`;
+  if (currentOffice.imageBonus)
+    html += `<div>🏆 形象加成: ${currentOffice.imageBonus > 0 ? "+" : ""}${currentOffice.imageBonus}</div>`;
+  if (currentOffice.recruitMod)
+    html += `<div>👥 招聘修正: ${(currentOffice.recruitMod > 0 ? "+" : "") + (currentOffice.recruitMod * 100).toFixed(0)}%</div>`;
+  if (currentOffice.loyaltyMod)
+    html += `<div>💚 忠诚度修正: ${(currentOffice.loyaltyMod > 0 ? "+" : "") + (currentOffice.loyaltyMod * 100).toFixed(0)}%</div>`;
+  if (currentOffice.techBonus)
+    html += `<div>🔬 技术加成: +${currentOffice.techBonus}</div>`;
+  if (currentOffice.marketBonus)
+    html += `<div>📈 市场加成: +${currentOffice.marketBonus}</div>`;
+  html += "</div>";
+  html += "</div>";
+
+  // 升级建议
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html += `<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 升级建议</div>`;
+  if (suggestion.canUpgrade) {
+    html += `<div style="color:var(--success);margin-bottom:8px;">${suggestion.suggestion}</div>`;
+    if (nextLevel && OFFICE_LOCATIONS[nextLevel]) {
+      const nextOffice = OFFICE_LOCATIONS[nextLevel];
+      html +=
+        '<div style="font-size:12px;color:var(--text-muted);">下一级：</div>';
+      html += `<div style="padding:8px;background:var(--background);border-radius:4px;">${nextOffice.icon} ${nextOffice.name}</div>`;
+      html +=
+        '<div style="margin-top:8px;display:grid;grid-template-columns:1fr auto;gap:8px;">';
+      html += `<button class="btn btn-success" onclick="upgradeOffice(StateManager.getState(),'${nextLevel}')">升级 (¥${nextOffice.cost.toLocaleString()})</button>`;
+      html += "</div>";
+    }
+  } else {
+    html += `<div style="color:var(--warning);">${suggestion.suggestion}</div>`;
+    if (nextLevel && OFFICE_LOCATIONS[nextLevel]) {
+      const nextOffice = OFFICE_LOCATIONS[nextLevel];
+      html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">下一级：${nextOffice.icon} ${nextOffice.name}（月租¥${nextOffice.cost.toLocaleString()}）</div>`;
+    }
+  }
+  html += "</div>";
+
+  // 所有办公地点对比
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏢 所有办公地点</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+  for (const levelId of OFFICE_UPGRADE_PATH) {
+    const office = OFFICE_LOCATIONS[levelId];
+    const isCurrent = levelId === company.officeLocation;
+    const canUpgrade =
+      OFFICE_UPGRADE_PATH.indexOf(levelId) ===
+      OFFICE_UPGRADE_PATH.indexOf(company.officeLocation) + 1;
+    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? "var(--accent-bg)" : "var(--background)"};border:${isCurrent ? "2px solid var(--accent)" : "1px solid var(--border)"};opacity:${!isCurrent && !canUpgrade ? "0.7" : "1"}">`;
+    html += `<div style="font-weight:bold;font-size:12px;">${office.icon} ${office.name}${isCurrent ? " ✓" : ""}</div>`;
+    html += `<div style="font-size:11px;color:var(--text-muted);">${office.desc}</div>`;
+    html += `<div style="font-size:11px;margin-top:4px;">💰 ¥${office.cost.toLocaleString()}/月</div>`;
+    html += "</div>";
+  }
+  html += "</div>";
+  html += "</div>";
+
+  html += "</div>";
+
+  StateManager.showModal({
+    title: "🏢 办公地点管理",
+    body: html,
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
+  });
+}
+
+// ====== P2-12: 企业文化系统 Action Handlers ======
+
+function changeCulture(state, cultureId, reason) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  if (!COMPANY_CULTURES[cultureId]) {
+    return { success: false, message: "无效的企业文化" };
+  }
+
+  const result = changeCompanyCulture(
+    company,
+    cultureId,
+    state.player.day,
+    reason,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+function improveCultureAdoptionAction(state, amount) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = improveCultureAdoption(company, state.player.day, amount);
+  if (result.success) {
+    StateManager.addMessage(
+      `文化适应度提升：${result.oldProgress.toFixed(1)}% → ${result.newProgress.toFixed(1)}%`,
+      "success",
+    );
+    renderAll();
+  }
+  return result;
+}
+
+function showCultureManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const currentCulture = COMPANY_CULTURES[company.companyCulture];
+  const suggestion = getCultureChangeSuggestion(company);
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 当前文化
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentCulture.icon} 当前企业文化</div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentCulture.name} — ${currentCulture.desc}</div>`;
+
+  // 文化效果
+  html +=
+    '<div style="font-size:12px;margin-bottom:8px;color:var(--text-secondary);">文化效果：</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:11px;">';
+  if (currentCulture.loyaltyMod)
+    html += `<div>💚 忠诚度修正: ${(currentCulture.loyaltyMod > 0 ? "+" : "") + (currentCulture.loyaltyMod * 100).toFixed(0)}%</div>`;
+  if (currentCulture.turnoverMod)
+    html += `<div>📉 流失率修正: ${(currentCulture.turnoverMod < 1 ? "-" : "+") + ((currentCulture.turnoverMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.productivityMod)
+    html += `<div>⚡ 生产力修正: ${(currentCulture.productivityMod > 1 ? "+" : "") + ((currentCulture.productivityMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.innovationMod)
+    html += `<div>💡 创新修正: ${(currentCulture.innovationMod > 1 ? "+" : "") + ((currentCulture.innovationMod - 1) * 100).toFixed(0)}%</div>`;
+  if (currentCulture.recruitMod)
+    html += `<div>👥 招聘修正: ${(currentCulture.recruitMod > 0 ? "+" : "") + (currentCulture.recruitMod * 100).toFixed(0)}%</div>`;
+  html += "</div>";
+
+  // 适应度和冲突
+  html +=
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">';
+  html += `<div style="margin-bottom:8px;">`;
+  html += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">`;
+  html += `<span>📊 文化适应度</span><span>${company.cultureAdoptionProgress.toFixed(0)}%</span>`;
+  html += "</div>";
+  html += `<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">`;
+  html += `<div style="width:${company.cultureAdoptionProgress}%;height:100%;background:var(--success);"></div>`;
+  html += "</div>";
+  html += "</div>";
+
+  html += `<div style="display:flex;justify-content:space-between;font-size:12px;">`;
+  html += `<span>⚠️ 文化冲突等级</span><span style="color:${company.cultureConflictLevel >= 3 ? "var(--danger)" : company.cultureConflictLevel >= 1 ? "var(--warning)" : "var(--success)"}">${company.cultureConflictLevel.toFixed(1)}/4</span>`;
+  html += "</div>";
+  html += "</div>";
+
+  html += "</div>";
+
+  // 文化切换
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换文化</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">切换文化需要¥50,000，并重置适应度</div>';
+
+  for (const culture of suggestion.availableCultures) {
+    const canChange = culture.canChange;
+    html += `<div style="padding:8px;background:var(--background);border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">`;
+    html += `<div>`;
+    html += `<div style="font-weight:bold;font-size:12px;">${culture.icon} ${culture.name}</div>`;
+    html += `<div style="font-size:11px;color:var(--text-muted);">${culture.desc}</div>`;
+    html += "</div>";
+    if (canChange) {
+      html += `<button class="btn btn-primary" onclick="changeCulture(StateManager.getState(),'${culture.key}','主动切换')">切换</button>`;
+    } else {
+      html += `<span style="font-size:11px;color:var(--warning);">${culture.reason}</span>`;
+    }
+    html += "</div>";
+  }
+  html += "</div>";
+
+  // 文化对比
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📊 文化对比</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+  for (const [key, culture] of Object.entries(COMPANY_CULTURES)) {
+    const isCurrent = key === company.companyCulture;
+    html += `<div style="padding:8px;border-radius:4px;background:${isCurrent ? "var(--accent-bg)" : "var(--background)"};border:${isCurrent ? "2px solid var(--accent)" : "1px solid var(--border)"};">`;
+    html += `<div style="font-weight:bold;font-size:12px;text-align:center;">${culture.icon} ${culture.name}</div>`;
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px;">';
+    html += `忠诚 ${(culture.loyaltyMod > 0 ? "+" : "") + (culture.loyaltyMod * 100).toFixed(0)}% | `;
+    html += `流失 ${(culture.turnoverMod < 1 ? "-" : "+") + ((culture.turnoverMod - 1) * 100).toFixed(0)}% | `;
+    html += `生产 ${(culture.productivityMod > 1 ? "+" : "") + ((culture.productivityMod - 1) * 100).toFixed(0)}% | `;
+    html += `创新 ${(culture.innovationMod > 1 ? "+" : "") + ((culture.innovationMod - 1) * 100).toFixed(0)}%`;
+    html += "</div>";
+    html += "</div>";
+  }
+  html += "</div>";
+  html += "</div>";
+
+  html += "</div>";
+
+  StateManager.showModal({
+    title: "🏛️ 企业文化管理",
+    body: html,
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
+  });
+}
+
+// ====== P2-13: 合作伙伴系统 Action Handlers ======
+
+function showPartnerManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 合作伙伴列表
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🤝 合作伙伴</div>';
+
+  if (!company.partners || company.partners.length === 0) {
+    html +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无合作伙伴，点击下方按钮招募</div>';
+  } else {
+    for (const partner of company.partners) {
+      const typeInfo = PARTNER_TYPES[partner.type];
+      const trustColor =
+        partner.trust >= 70
+          ? "var(--success)"
+          : partner.trust >= 50
+            ? "var(--warning)"
+            : "var(--danger)";
+      const statusColor =
+        partner.status === "active" ? "var(--success)" : "var(--text-muted)";
+
+      html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;border-left:4px solid ${trustColor}">`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;">`;
+      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : "❓"} ${partner.name}</div>`;
+      html += `<div style="font-size:11px;color:${statusColor};">${partner.status === "active" ? "✅ 活跃" : "🚪 已终止"}</div>`;
+      html += "</div>";
+      html += `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">类型：${typeInfo ? typeInfo.name : partner.type} | 专注：${partner.focus}</div>`;
+      html += `<div style="font-size:11px;margin-top:4px;">`;
+      html += `信任度：<span style="color:${trustColor};font-weight:bold;">${partner.trust.toFixed(0)}%</span> | `;
+      html += `合作级别：${partner.cooperationLevel.toFixed(1)} | `;
+      html += `收入分成：${(partner.revenueShare * 100).toFixed(0)}%`;
+      html += "</div>";
+
+      // 信任度操作
+      if (partner.status === "active") {
+        html += '<div style="margin-top:8px;display:flex;gap:6px;">';
+        html += `<button class="btn btn-small" onclick="improvePartnerTrustAction(StateManager.getState(),'${partner.id}',20,30000)">提升信任 (¥30k)</button>`;
+        html += `<button class="btn btn-small btn-warning" onclick="terminatePartnerAction(StateManager.getState(),'${partner.id}','主动终止')">终止合作</button>`;
+        html += "</div>";
+      }
+      html += "</div>";
+    }
+  }
+
+  // 招募新伙伴
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 招募新伙伴</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">招募合作伙伴需要¥20,000，初始信任度50-70%</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+
+  for (const [key, type] of Object.entries(PARTNER_TYPES)) {
+    html += `<button class="btn btn-small" onclick="recruitPartnerAction(StateManager.getState(),'${key}')">`;
+    html += `${type.icon} ${type.name}`;
+    html += "</button>";
+  }
+  html += "</div>";
+  html += "</div>";
+
+  html += "</div>";
+
+  StateManager.showModal({
+    title: "🤝 合作伙伴管理",
+    body: html,
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
+  });
+}
+
+function recruitPartnerAction(state, partnerType) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const recruitCost = 20000;
+  if (company.cashReserve < recruitCost) {
+    StateManager.addMessage("资金不足，招募合作伙伴需要¥20,000", "warning");
+    return { success: false, reason: "资金不足" };
+  }
+
+  company.cashReserve -= recruitCost;
+  const partner = createPartner(company, partnerType, state.player.day);
+
+  StateManager.addMessage(
+    `🤝 成功招募合作伙伴「${partner.name}」（${PARTNER_TYPES[partnerType].name}），初始信任度${partner.trust.toFixed(0)}%`,
+    "success",
+  );
+  renderAll();
+
+  return { success: true, partner: getPartnerSummary(partner) };
+}
+
+function improvePartnerTrustAction(state, partnerId, amount, cost) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = improvePartnerTrust(
+    company,
+    partnerId,
+    state.player.day,
+    amount,
+    cost,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+function terminatePartnerAction(state, partnerId, reason) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = terminatePartner(company, partnerId, state.player.day, reason);
+  if (result.success) {
+    StateManager.addMessage(result.message, "warning");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+// ====== P2-14: 产品定价策略 Action Handlers ======
+
+function showPricingManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 当前定价策略
+  const currentPricing =
+    PRICING_MODELS[company.pricingStrategy] || PRICING_MODELS.tiered;
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">${currentPricing.icon} 当前定价策略</div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${currentPricing.name} — ${currentPricing.desc}</div>`;
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;">';
+  html += `<div>📊 收入稳定性: ${(currentPricing.revenueStability >= 1 ? "+" : "") + (currentPricing.revenueStability - 1).toFixed(1)}x</div>`;
+  html += `<div>🚀 增长潜力: ${(currentPricing.growthPotential >= 1 ? "+" : "") + (currentPricing.growthPotential - 1).toFixed(1)}x</div>`;
+  html += "</div>";
+  html += "</div>";
+
+  // 产品定价
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📱 产品定价</div>';
+
+  for (const product of company.products.filter(
+    (p) => p.status === "launched",
+  )) {
+    const category = PRODUCT_CATEGORIES[product.category];
+    const elasticity = getPriceElasticity(product);
+    const optimal = calculateOptimalPrice(
+      product,
+      company,
+      state.startup.competitors || [],
+    );
+
+    html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;">`;
+    html += `<div style="font-weight:bold;font-size:12px;">${category ? category.icon : "📦"} ${product.name}</div>`;
+    html += `<div style="font-size:11px;color:var(--text-muted);">`;
+    html += `当前价格: ¥${(product.currentPrice || 0).toLocaleString()} | `;
+    html += `建议价格: ¥${optimal.optimalPrice.toLocaleString()} | `;
+    html += `弹性: ${elasticity.interpretation}（${elasticity.elasticity.toFixed(2)}）`;
+    html += "</div>";
+
+    // 价格调整
+    html += '<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
+    html += `<button class="btn btn-small" onclick="adjustProductPrice(StateManager.getState(),'${product.id}',${optimal.optimalPrice},'建议调整')">调整至建议价</button>`;
+    html += `<button class="btn btn-small" onclick="runProductABTest(StateManager.getState(),'${product.id}')">A/B测试</button>`;
+    html += "</div>";
+    html += "</div>";
+  }
+  html += "</div>";
+
+  // 切换定价策略
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🔄 切换定价策略</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+
+  for (const [key, model] of Object.entries(PRICING_MODELS)) {
+    const isCurrent = key === company.pricingStrategy;
+    html += `<button class="btn btn-small" style="${isCurrent ? "background:var(--accent);color:white;" : ""}" onclick="switchPricingStrategy(StateManager.getState(),'${key}')">`;
+    html += `${model.icon} ${model.name}`;
+    html += "</button>";
+  }
+  html += "</div>";
+  html += "</div>";
+
+  html += "</div>";
+
+  StateManager.showModal({
+    title: "💰 产品定价管理",
+    body: html,
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
+  });
+}
+
+function adjustProductPrice(state, productId, newPrice, reason) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find((p) => p.id === productId);
+  if (!product) return { success: false, message: "产品不存在" };
+
+  const result = applyPriceChange(product, newPrice, state.player.day, reason);
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    if (!company.priceHistory) company.priceHistory = [];
+    company.priceHistory.push({
+      productId: productId,
+      productName: product.name,
+      oldPrice: result.oldPrice,
+      newPrice: result.newPrice,
+      changePercent: result.changePercent,
+      day: state.player.day,
+      reason: reason,
+    });
+    renderAll();
+  }
+  return result;
+}
+
+function runProductABTest(state, productId) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const product = company.products.find((p) => p.id === productId);
+  if (!product) return { success: false, message: "产品不存在" };
+
+  const currentPrice = product.currentPrice || 100;
+  const priceA = Math.round(currentPrice * 0.9);
+  const priceB = Math.round(currentPrice * 1.1);
+  const sampleSize = 1000;
+
+  const result = runABTest(
+    product,
+    priceA,
+    priceB,
+    sampleSize,
+    state.player.day,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    if (!company.abTestHistory) company.abTestHistory = [];
+    company.abTestHistory.push(result.test);
+    renderAll();
+  }
+  return result;
+}
+
+function switchPricingStrategy(state, strategy) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  if (!PRICING_MODELS[strategy]) {
+    StateManager.addMessage("无效的定价策略", "warning");
+    return { success: false, reason: "无效策略" };
+  }
+
+  const oldStrategy = company.pricingStrategy;
+  company.pricingStrategy = strategy;
+
+  StateManager.addMessage(
+    `🔄 定价策略从「${PRICING_MODELS[oldStrategy].name}」切换到「${PRICING_MODELS[strategy].name}」`,
+    "success",
+  );
+  renderAll();
+
+  return { success: true, oldStrategy: oldStrategy, newStrategy: strategy };
+}
+
+// ====== P2-15: 供应链系统 Action Handlers ======
+
+function showSupplyChainManagementModal(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const risk = getSupplyChainRisk(company);
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 供应链风险
+  const riskColor =
+    risk.level === "critical"
+      ? "var(--danger)"
+      : risk.level === "high"
+        ? "var(--warning)"
+        : risk.level === "medium"
+          ? "#f39c12"
+          : "var(--success)";
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html += `<div style="font-size:16px;font-weight:bold;margin-bottom:8px;">📦 供应链风险</div>`;
+  html += `<div style="display:flex;align-items:center;gap:12px;">`;
+  html += `<div style="font-size:32px;font-weight:bold;color:${riskColor};">${risk.risk}%</div>`;
+  html += `<div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);">风险等级：<span style="color:${riskColor};font-weight:bold;">${risk.level.toUpperCase()}</span></div>`;
+  html += `<div style="font-size:11px;color:var(--text-muted);">活跃供应商：${risk.suppliers}家</div>`;
+  html += "</div>";
+  html += "</div>";
+
+  // 风险进度条
+  html +=
+    '<div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;">';
+  html += `<div style="width:${risk.risk}%;height:100%;background:${riskColor};"></div>`;
+  html += "</div>";
+  html += "</div>";
+
+  // 供应商列表
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-bottom:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🏭 供应商</div>';
+
+  if (!company.suppliers || company.suppliers.length === 0) {
+    html +=
+      '<div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;">暂无供应商，点击下方按钮添加</div>';
+  } else {
+    for (const supplier of company.suppliers) {
+      if (supplier.status !== "active") continue;
+
+      const typeInfo = SUPPLIER_TYPES[supplier.type];
+      const qualityColor =
+        supplier.quality >= 80
+          ? "var(--success)"
+          : supplier.quality >= 60
+            ? "var(--warning)"
+            : "var(--danger)";
+
+      html += `<div style="padding:10px;background:var(--background);border-radius:6px;margin-bottom:8px;">`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;">`;
+      html += `<div style="font-weight:bold;font-size:13px;">${typeInfo ? typeInfo.icon : "❓"} ${supplier.name}</div>`;
+      html += `<div style="font-size:11px;color:var(--text-muted);">${supplier.type}</div>`;
+      html += "</div>";
+      html += `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">专注：${supplier.focus}</div>`;
+      html += `<div style="font-size:11px;margin-top:4px;">`;
+      html += `质量: <span style="color:${qualityColor};font-weight:bold;">${supplier.quality.toFixed(0)}%</span> | `;
+      html += `可靠性: ${supplier.reliability.toFixed(0)}% | `;
+      html += `交期: ${supplier.leadTime}天 | `;
+      html += `价格: ¥${Math.round(supplier.price).toLocaleString()}`;
+      html += "</div>";
+
+      // 质量调整
+      html +=
+        '<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
+      html += `<button class="btn btn-small" onclick="updateSupplierQualityAction(StateManager.getState(),'${supplier.id}',5,'质量提升')">提升质量</button>`;
+      html += `<button class="btn btn-small btn-warning" onclick="updateSupplierQualityAction(StateManager.getState(),'${supplier.id}',-5,'质量下降')">降低质量</button>`;
+      html += "</div>";
+      html += "</div>";
+    }
+  }
+
+  // 添加供应商
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;margin-top:12px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">🆕 添加供应商</div>';
+  html +=
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">添加供应商需要¥50,000初始投入</div>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+
+  for (const [key, type] of Object.entries(SUPPLIER_TYPES)) {
+    html += `<button class="btn btn-small" onclick="addSupplierAction(StateManager.getState(),'${key}')">`;
+    html += `${type.icon} ${type.name}`;
+    html += "</button>";
+  }
+  html += "</div>";
+  html += "</div>";
+
+  // 库存管理
+  html +=
+    '<div style="padding:12px;background:var(--surface);border-radius:8px;">';
+  html +=
+    '<div style="font-size:14px;font-weight:bold;margin-bottom:8px;">📦 库存管理</div>';
+
+  for (const [typeKey, typeInfo] of Object.entries(INVENTORY_TYPES)) {
+    const inv = company.inventory[typeKey] || { quantity: 0, value: 0 };
+    const isCritical = inv.quantity < typeInfo.criticalLevel;
+
+    html += `<div style="padding:8px;background:var(--background);border-radius:4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">`;
+    html += `<div>`;
+    html += `<div style="font-weight:bold;font-size:12px;">${typeInfo.icon} ${typeInfo.name}</div>`;
+    html += `<div style="font-size:11px;color:var(--text-muted);">`;
+    html += `数量: <span style="color:${isCritical ? "var(--danger)" : "var(--success)"}">${inv.quantity}</span> | `;
+    html += `价值: ¥${inv.value.toLocaleString()} | `;
+    html += `警戒线: ${typeInfo.criticalLevel}`;
+    html += "</div>";
+    html += "</div>";
+    html += `<div style="display:flex;gap:4px;">`;
+    html += `<button class="btn btn-small" onclick="manageInventoryAction(StateManager.getState(),'${typeKey}','add',50)">+50</button>`;
+    html += `<button class="btn btn-small" onclick="manageInventoryAction(StateManager.getState(),'${typeKey}','consume',50)">-50</button>`;
+    html += "</div>";
+    html += "</div>";
+  }
+  html += "</div>";
+
+  html += "</div>";
+
+  StateManager.showModal({
+    title: "📦 供应链管理",
+    body: html,
+    buttons: [
+      { text: "关闭", style: "secondary", onClick: "StateManager.hideModal()" },
+    ],
+  });
+}
+
+function addSupplierAction(state, supplierType) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const addCost = 50000;
+  if (company.cashReserve < addCost) {
+    StateManager.addMessage("资金不足，添加供应商需要¥50,000", "warning");
+    return { success: false, reason: "资金不足" };
+  }
+
+  company.cashReserve -= addCost;
+  const supplier = createSupplier(company, supplierType, state.player.day);
+
+  StateManager.addMessage(
+    `🏭 成功添加供应商「${supplier.name}」（${SUPPLIER_TYPES[supplierType].name}），质量${supplier.quality.toFixed(0)}%`,
+    "success",
+  );
+  renderAll();
+
+  return { success: true, supplier: supplier };
+}
+
+function updateSupplierQualityAction(state, supplierId, change, reason) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = updateSupplierQuality(
+    company,
+    supplierId,
+    state.player.day,
+    change,
+    reason,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, change > 0 ? "success" : "warning");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
+}
+
+function manageInventoryAction(state, inventoryType, action, amount) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const result = manageInventory(
+    company,
+    inventoryType,
+    action,
+    amount,
+    state.player.day,
+  );
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.reason, "warning");
+  }
+  return result;
 }

@@ -942,7 +942,7 @@ if (typeof window !== "undefined") {
     icon: "👨‍👩‍👧",
     brief: "婚恋系统、子女教育、父母养老、家庭生活、人际关系",
     version: "1.0.0",
-    related: ["mechanics:main", "mechanics:needs"],
+    related: ["mechanics:main", "mechanics:critical_needs"],
     sections: [
       {
         kind: "desc",

@@ -608,7 +608,7 @@ if (typeof window !== "undefined") {
     related: [
       "mechanics:news_system",
       "mechanics:investment",
-      "mechanics:startup",
+      "mechanics:startup_system",
     ],
     sections: [
       {
