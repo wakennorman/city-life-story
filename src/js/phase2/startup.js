@@ -1462,6 +1462,22 @@ function hireEmployee(state, role, salary) {
     skillFocus: EMPLOYEE_ROLES[role].skillFocus,
     skillLevel: 30 + Math.floor(Math.random() * 30),
     joinedDay: state.player.day,
+    // ====== P0-4: 员工满意度/倦怠系统 ======
+    satisfaction: 50 + Math.floor(Math.random() * 30), // 综合满意度（0-100）
+    satisfactionDetails: {
+      salary: 50 + Math.floor(Math.random() * 30), // 薪资满意度
+      workload: 60 + Math.floor(Math.random() * 20), // 工作强度满意度
+      growth: 40 + Math.floor(Math.random() * 40), // 成长空间满意度
+      atmosphere: 50 + Math.floor(Math.random() * 30), // 团队氛围满意度
+    },
+    burnoutRisk: 0, // 倦怠风险指数（0-100）
+    burnoutLevel: 0, // 倦怠等级（0=正常, 1=轻度, 2=中度, 3=重度）
+    stressLevel: 30 + Math.floor(Math.random() * 30), // 压力水平
+    overtimeDays: 0, // 连续加班天数
+    lastWorkDay: state.player.day, // 最后工作日
+    health: 80 + Math.floor(Math.random() * 20), // 健康值
+    _satisfactionHistory: [], // 满意度历史
+    _burnoutHistory: [], // 倦怠历史
   };
 
   company.employees.push(employee);
@@ -1765,6 +1781,9 @@ function tickStartup(state, tickType) {
       );
       fireEmployee(state, emp.id);
     }
+
+    // P0-4: 员工满意度/倦怠演化
+    _tickEmployeeSatisfaction(state, emp, company, netCash, timeMult);
   }
 
   // 7. 破产检测
@@ -2057,6 +2076,248 @@ function _calculateMarketShare(state, product) {
   if (totalCompetitiveness <= 0) return 0;
 
   return Math.min(100, (product.competitiveness / totalCompetitiveness) * 100);
+}
+
+// ====== P0-4: 员工满意度/倦怠系统 ======
+/** 每日员工满意度/倦怠演化 */
+function _tickEmployeeSatisfaction(state, emp, company, netCash, timeMult) {
+  if (emp.burnoutLevel >= 3) return; // 重度倦怠员工不演化（已请假/离职中）
+
+  const day = state.player.day;
+  const sat = emp.satisfactionDetails;
+  const roleInfo = EMPLOYEE_ROLES[emp.role];
+
+  // === 薪资满意度 ===
+  // 薪资 vs 行业基准比较
+  const roleBaseSalary = roleInfo ? roleInfo.baseSalary : 15000;
+  const salaryRatio = emp.salary / roleBaseSalary;
+  const targetSalarySat = Math.min(80, 30 + salaryRatio * 25);
+  sat.salary = sat.salary + (targetSalarySat - sat.salary) * 0.02 * timeMult;
+
+  // === 工作强度满意度 ===
+  // 公司现金流差 → 加班多 → 工作强度满意度下降
+  if (netCash < 0) {
+    emp.overtimeDays++;
+    sat.workload = Math.max(10, sat.workload - 0.3 * timeMult);
+    emp.stressLevel = Math.min(100, emp.stressLevel + 0.5 * timeMult);
+  } else {
+    emp.overtimeDays = Math.max(0, emp.overtimeDays - 0.1 * timeMult);
+    sat.workload = Math.min(90, sat.workload + 0.1 * timeMult);
+    emp.stressLevel = Math.max(20, emp.stressLevel - 0.2 * timeMult);
+  }
+
+  // === 成长空间满意度 ===
+  // 公司技术/市场分数增长 → 成长空间提升
+  const companyGrowth = (company.technologyScore + company.marketScore) / 200;
+  const targetGrowthSat = 30 + companyGrowth * 40;
+  sat.growth = sat.growth + (targetGrowthSat - sat.growth) * 0.01 * timeMult;
+
+  // === 团队氛围满意度 ===
+  // 员工总数多 → 氛围复杂 → 满意度略降
+  const teamSizeFactor = Math.max(0, 1 - company.employees.length * 0.01);
+  const targetAtmosphere = 40 + teamSizeFactor * 40;
+  sat.atmosphere = sat.atmosphere + (targetAtmosphere - sat.atmosphere) * 0.015 * timeMult;
+
+  // === 综合满意度 ===
+  emp.satisfaction = Math.round(
+    sat.salary * 0.35 + sat.workload * 0.25 + sat.growth * 0.25 + sat.atmosphere * 0.15
+  );
+
+  // === 倦怠风险计算 ===
+  // 连续加班、低满意度、高压力 → 倦怠风险增加
+  let burnoutFactor = 0;
+  burnoutFactor += emp.overtimeDays * 2; // 连续加班
+  burnoutFactor += (100 - emp.satisfaction) * 0.3; // 低满意度
+  burnoutFactor += emp.stressLevel * 0.4; // 高压力
+  burnoutFactor += (100 - sat.workload) * 0.3; // 工作强度不满
+
+  emp.burnoutRisk = Math.min(100, burnoutFactor);
+
+  // === 倦怠等级判定 ===
+  const oldBurnout = emp.burnoutLevel;
+  if (emp.burnoutRisk >= 80) {
+    emp.burnoutLevel = 3; // 重度倦怠
+  } else if (emp.burnoutRisk >= 60) {
+    emp.burnoutLevel = 2; // 中度倦怠
+  } else if (emp.burnoutRisk >= 40) {
+    emp.burnoutLevel = 1; // 轻度倦怠
+  } else {
+    emp.burnoutLevel = 0; // 正常
+  }
+
+  // === 健康值衰减 ===
+  if (emp.burnoutLevel >= 2) {
+    emp.health = Math.max(20, emp.health - 0.3 * timeMult);
+  } else if (emp.burnoutLevel === 1) {
+    emp.health = Math.max(30, emp.health - 0.1 * timeMult);
+  } else {
+    emp.health = Math.min(100, emp.health + 0.05 * timeMult);
+  }
+
+  // === 倦怠爆发判定 ===
+  if (emp.burnoutLevel >= 2 && !emp._burnoutTriggered) {
+    _triggerBurnout(state, emp, company);
+  }
+
+  // === 记录历史（每周）===
+  if (day % 7 === 0 || timeMult >= 90) {
+    emp._satisfactionHistory.push({
+      day: day,
+      satisfaction: emp.satisfaction,
+      salary: sat.salary,
+      workload: sat.workload,
+      growth: sat.growth,
+      atmosphere: sat.atmosphere,
+      burnoutRisk: emp.burnoutRisk,
+      burnoutLevel: emp.burnoutLevel,
+    });
+    if (emp._satisfactionHistory.length > 52) emp._satisfactionHistory.shift();
+  }
+
+  // === 倦怠恢复（如果情况好转）===
+  if (emp.burnoutRisk < 30 && emp.burnoutLevel > 0) {
+    emp.burnoutLevel = 0;
+    emp._burnoutTriggered = false;
+  }
+}
+
+/** 触发员工倦怠 */
+function _triggerBurnout(state, emp, company) {
+  emp._burnoutTriggered = true;
+
+  const burnoutTypes = {
+    1: { name: "轻度倦怠", impact: "工作效率下降", productivityLoss: 0.1 },
+    2: { name: "中度倦怠", impact: "频繁请假，效率大降", productivityLoss: 0.3 },
+    3: { name: "重度倦怠", impact: "可能离职或健康受损", productivityLoss: 0.5 },
+  };
+
+  const burnout = burnoutTypes[emp.burnoutLevel];
+  emp.productivity = Math.max(0.3, emp.productivity * (1 - burnout.productivityLoss));
+
+  StateManager.addMessage(
+    `😟 「${emp.name}」${burnout.name}！${burnout.impact}（倦怠风险${emp.burnoutRisk.toFixed(0)}）`,
+    emp.burnoutLevel >= 2 ? "danger" : "warning"
+  );
+
+  emp._burnoutHistory.push({
+    day: state.player.day,
+    level: emp.burnoutLevel,
+    type: burnout.name,
+    impact: burnout.impact,
+  });
+
+  // 重度倦怠可能离职
+  if (emp.burnoutLevel >= 3 && Math.random() < 0.3) {
+    StateManager.addMessage(
+      `💔 「${emp.name}」因重度倦怠离职！`,
+      "danger"
+    );
+    fireEmployee(state, emp.id);
+  }
+}
+
+/** 提升员工满意度（团建/调薪/培训等） */
+function improveEmployeeSatisfaction(state, action, params) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const actions = {
+    team_building: {
+      name: "团队建设",
+      cost: 5000,
+      effect: { satisfaction: 8, workload: 5, atmosphere: 10 },
+      desc: "组织团建活动，缓解工作压力",
+    },
+    salary_adjustment: {
+      name: "薪资调整",
+      cost: 15000,
+      effect: { salary: 15, satisfaction: 10 },
+      desc: "为全员调薪，提升薪资满意度",
+    },
+    training: {
+      name: "技能培训",
+      cost: 8000,
+      effect: { growth: 12, satisfaction: 5 },
+      desc: "安排培训课程，增加成长空间",
+    },
+    flexible_work: {
+      name: "弹性工作",
+      cost: 3000,
+      effect: { workload: 10, atmosphere: 5, satisfaction: 5 },
+      desc: "推行弹性工作制，减少加班",
+    },
+    health_check: {
+      name: "健康检查",
+      cost: 6000,
+      effect: { health: 10, workload: 3, satisfaction: 3 },
+      desc: "安排体检，关注员工健康",
+    },
+    oneOnOne: {
+      name: "一对一沟通",
+      cost: 2000,
+      effect: { atmosphere: 8, growth: 5, satisfaction: 5 },
+      desc: "管理者与员工一对一沟通，了解需求",
+    },
+  };
+
+  const act = actions[action];
+  if (!act) return { success: false, message: "无效的操作" };
+
+  if (company.cashReserve < act.cost) {
+    return { success: false, message: `现金不足，需要¥${act.cost.toLocaleString()}` };
+  }
+
+  company.cashReserve -= act.cost;
+  company.expenses += act.cost;
+
+  // 应用效果到所有员工
+  let totalSatisfactionGain = 0;
+  for (const emp of company.employees) {
+    if (act.effect.salary) emp.satisfactionDetails.salary = Math.min(100, emp.satisfactionDetails.salary + act.effect.salary);
+    if (act.effect.workload) emp.satisfactionDetails.workload = Math.min(100, emp.satisfactionDetails.workload + act.effect.workload);
+    if (act.effect.growth) emp.satisfactionDetails.growth = Math.min(100, emp.satisfactionDetails.growth + act.effect.growth);
+    if (act.effect.atmosphere) emp.satisfactionDetails.atmosphere = Math.min(100, emp.satisfactionDetails.atmosphere + act.effect.atmosphere);
+    if (act.effect.satisfaction) emp.satisfaction = Math.min(100, emp.satisfaction + act.effect.satisfaction);
+    if (act.effect.health) emp.health = Math.min(100, emp.health + act.effect.health);
+
+    // 倦怠风险降低
+    emp.burnoutRisk = Math.max(0, emp.burnoutRisk - 5);
+    totalSatisfactionGain += emp.satisfaction;
+  }
+
+  const avgSatisfaction = (totalSatisfactionGain / company.employees.length).toFixed(0);
+
+  StateManager.addMessage(
+    `✅ ${act.name}完成！全员满意度提升至平均${avgSatisfaction}分，${act.desc}`,
+    "success"
+  );
+
+  return { success: true, action: action, avgSatisfaction: avgSatisfaction };
+}
+
+/** 获取员工满意度详情 */
+function getEmployeeSatisfactionSummary(company) {
+  if (!company || company.employees.length === 0) return null;
+
+  let totalSat = 0, totalBurnout = 0, totalHealth = 0;
+  let burnoutCount = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
+  for (const emp of company.employees) {
+    totalSat += emp.satisfaction || 50;
+    totalBurnout += emp.burnoutRisk || 0;
+    totalHealth += emp.health || 80;
+    burnoutCount[emp.burnoutLevel] = (burnoutCount[emp.burnoutLevel] || 0) + 1;
+  }
+
+  const n = company.employees.length;
+  return {
+    avgSatisfaction: Math.round(totalSat / n),
+    avgBurnoutRisk: Math.round(totalBurnout / n),
+    avgHealth: Math.round(totalHealth / n),
+    burnoutDistribution: burnoutCount,
+    totalEmployees: n,
+    atRiskCount: burnoutCount[2] + burnoutCount[3], // 中重度倦怠人数
+  };
 }
 
 // ====== P0-3: 技术债务系统 ======
@@ -3646,6 +3907,9 @@ function showTeamManagementModal(state) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
+  // P0-4: 获取满意度汇总
+  const satSummary = typeof getEmployeeSatisfactionSummary === "function" ? getEmployeeSatisfactionSummary(company) : null;
+
   const actions = [
     {
       id: "team_building",
@@ -3687,10 +3951,41 @@ function showTeamManagementModal(state) {
       desc: "为表现优秀的员工调薪",
       effect: "提升员工满意度和留存率",
     },
+    // P0-4: 新增满意度提升操作
+    {
+      id: "flexible_work",
+      name: "弹性工作",
+      icon: "⏰",
+      cost: 3000,
+      desc: "推行弹性工作制，减少加班压力",
+      effect: "工作强度满意度+10，氛围+5",
+    },
+    {
+      id: "health_check",
+      name: "健康检查",
+      icon: "🏥",
+      cost: 6000,
+      desc: "安排全员体检，关注健康",
+      effect: "健康值+10，倦怠风险-5",
+    },
   ];
+
+  // P0-4: 满意度汇总HTML
+  var satSummaryHtml = "";
+  if (satSummary) {
+    var atRiskColor = satSummary.atRiskCount > 0 ? "var(--danger)" : "var(--success)";
+    satSummaryHtml =
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;padding:8px;background:var(--bg-secondary);border-radius:6px;">' +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均满意度</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' + satSummary.avgSatisfaction + '%</div></div>' +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均健康</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' + satSummary.avgHealth + '%</div></div>' +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">倦怠风险</div><div style="font-size:16px;font-weight:bold;color:' + (satSummary.avgBurnoutRisk > 40 ? "var(--danger)" : "var(--success)") + ';">' + satSummary.avgBurnoutRisk + '%</div></div>' +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">⚠️ 风险员工</div><div style="font-size:16px;font-weight:bold;color:' + atRiskColor + ';">' + satSummary.atRiskCount + '/' + satSummary.totalEmployees + '</div></div>' +
+      "</div>";
+  }
 
   const bodyHtml = `
     <div style="font-size:13px;">
+      ${satSummaryHtml ? '<div style="margin-bottom:12px;">' + satSummaryHtml + '</div>' : ''}
       <p style="margin-bottom:12px;color:var(--text-secondary);">
         选择团队管理行动。团队管理是创业成功的关键！
       </p>
@@ -3730,6 +4025,11 @@ function showTeamManagementModal(state) {
               emp.loyalty = Math.min(100, emp.loyalty + 8);
               if (emp.satisfaction === undefined) emp.satisfaction = 50;
               emp.satisfaction = Math.min(100, emp.satisfaction + 5);
+              if (emp.satisfactionDetails) {
+                emp.satisfactionDetails.workload = Math.min(100, emp.satisfactionDetails.workload + 5);
+                emp.satisfactionDetails.atmosphere = Math.min(100, emp.satisfactionDetails.atmosphere + 5);
+              }
+              emp.burnoutRisk = Math.max(0, emp.burnoutRisk - 5);
             }
             StateManager.addMessage(
               "🎉 团队建设完成！全员忠诚度+8，满意度+5",
@@ -3796,6 +4096,10 @@ function executeStartupAction(state, actionId, params) {
 
     case "manage_team":
       return showTeamManagementModal(state);
+
+    // P0-4: 满意度提升操作
+    case "improve_satisfaction":
+      return improveEmployeeSatisfaction(state, params.action, params);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -4520,10 +4824,18 @@ function renderStartupTab(state, parent) {
       var loyaltyColor =
         emp.loyalty > 60 ? "#4a9e5c" : emp.loyalty > 30 ? "#f59e0b" : "#ef4444";
 
+      // P0-4: 满意度/倦怠状态
+      var sat = emp.satisfactionDetails || {};
+      var burnoutLevel = emp.burnoutLevel || 0;
+      var burnoutIcon = burnoutLevel >= 3 ? "🔴" : burnoutLevel >= 2 ? "🟠" : burnoutLevel >= 1 ? "🟡" : "🟢";
+      var burnoutText = burnoutLevel >= 3 ? "重度倦怠" : burnoutLevel >= 2 ? "中度倦怠" : burnoutLevel >= 1 ? "轻度倦怠" : "正常";
+      var burnoutColor = burnoutLevel >= 3 ? "var(--danger)" : burnoutLevel >= 2 ? "#f59e0b" : burnoutLevel >= 1 ? "#fbbf24" : "var(--success)";
+
       var empCard = document.createElement("div");
       empCard.style.cssText =
-        "background:var(--bg-card);padding:8px 12px;margin-bottom:6px;border-radius:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;";
+        "background:var(--bg-card);padding:8px 12px;margin-bottom:6px;border-radius:6px;font-size:13px;";
       empCard.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
         "<span>" +
         (empRole ? empRole.icon : "") +
         " " +
@@ -4531,14 +4843,23 @@ function renderStartupTab(state, parent) {
         "（" +
         (empRole ? empRole.name : emp.role) +
         "）</span>" +
-        '<span style="font-size:11px;color:var(--text-muted);">月薪¥' +
-        emp.salary.toLocaleString() +
-        "</span>" +
-        '<span style="font-size:11px;color:' +
-        loyaltyColor +
-        ';">忠诚度 ' +
-        Math.round(emp.loyalty) +
-        "%</span>";
+        '<span style="font-size:11px;color:' + burnoutColor + ';">' + burnoutIcon + ' ' + burnoutText + '</span>' +
+        "</div>" +
+        '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;">' +
+        '<span style="color:var(--text-muted);">月薪¥' + emp.salary.toLocaleString() + '</span>' +
+        '<span style="color:' + loyaltyColor + ';">忠诚度 ' + Math.round(emp.loyalty) + '%</span>' +
+        "</div>" +
+        '<div style="margin-top:4px;font-size:10px;color:var(--text-secondary);">' +
+        '📊 满意度:' + Math.round(emp.satisfaction || 50) + '% ' +
+        '| 薪资:' + Math.round(sat.salary || 50) + '% ' +
+        '| 工作:' + Math.round(sat.workload || 60) + '% ' +
+        '| 成长:' + Math.round(sat.growth || 40) + '% ' +
+        '</div>' +
+        '<div style="margin-top:4px;font-size:10px;color:var(--text-secondary);">' +
+        '💪 健康:' + Math.round(emp.health || 80) + '% ' +
+        '| 压力:' + Math.round(emp.stressLevel || 30) + '% ' +
+        '| 倦怠风险:' + Math.round(emp.burnoutRisk || 0) + '% ' +
+        '</div>';
 
       teamDiv.appendChild(empCard);
     }
@@ -5061,6 +5382,10 @@ if (typeof module !== "undefined" && module.exports) {
     showMeetInvestorModal,
     showMarketingModal,
     showFinancialReportModal,
+    showTeamManagementModal,
+    // P0-4: 员工满意度系统
+    improveEmployeeSatisfaction,
+    getEmployeeSatisfactionSummary,
     showTeamManagementModal,
     generateInvestorFeedback,
     // P0-1: 版本迭代弹窗

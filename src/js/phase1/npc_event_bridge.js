@@ -102,6 +102,75 @@ const EVENT_NPC_MAP = {
       boss_li: { change: 4, msg: "李工头看你帮受伤工友，竖了个大拇指。" },
     },
   },
+  // === 第二阶段扩展：覆盖更多事件 ===
+  food_poisoning: {
+    npcs: {
+      chef_chen: {
+        change: -2,
+        msg: "陈师傅皱眉：'吃坏肚子了？街边摊不干净，以后来我这儿吃。'",
+      },
+      aunt_wang: {
+        change: 1,
+        msg: "王大婶给你送来了黄连素：'吃坏了吧？我这儿有药。'",
+      },
+    },
+  },
+  rainy_day_dilemma: {
+    npcs: {
+      aunt_wang: { change: 2, msg: "王大婶递了把伞：'拿着，别淋坏了。'" },
+    },
+  },
+  wholesale_bargain: {
+    npcs: {
+      old_zhou: { change: 1, msg: "老周听说你进到便宜货：'会过日子！'" },
+      sister_zhang: { change: 1, msg: "张姐点头：'进价低就是赚，有眼光。'" },
+    },
+  },
+  sick_desperate: {
+    npcs: {
+      xiao_mei: {
+        change: 3,
+        msg: "小美发来消息：'听说你病了？我帮你带了药和粥，放楼下了。'",
+      },
+      chef_chen: {
+        change: 2,
+        msg: "陈师傅托人带了碗热粥：'病了别扛着，喝点热的。'",
+      },
+    },
+  },
+  market_crash_news: {
+    npcs: {
+      sister_zhang: {
+        change: -1,
+        msg: "张姐愁眉苦脸：'股市跌惨了，我买的基金也亏了不少。'",
+      },
+      old_zhou: {
+        change: 1,
+        msg: "老周淡定：'涨涨跌跌正常的，废品价格从来不跌。'",
+      },
+    },
+  },
+  integrity_reward: {
+    npcs: {
+      aunt_wang: { change: 3, msg: "王大婶听说了你的善举：'好人一定有好报！'" },
+      sister_zhang: {
+        change: 2,
+        msg: "张姐竖起大拇指：'你这样的年轻人不多了。'",
+      },
+    },
+  },
+  mental_breakdown_edge: {
+    npcs: {
+      xiao_mei: {
+        change: 5,
+        msg: "小美担心地看着你：'你还好吗？要不要聊聊？我随时都在。'",
+      },
+      chef_chen: {
+        change: 3,
+        msg: "陈师傅拉你坐下：'心里有事就说出来，别憋着。'",
+      },
+    },
+  },
 };
 
 /**
@@ -403,4 +472,9 @@ function runDailyNpcBridge(state) {
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
 function afterEventApplied(eventId, state) {
   applyEventNpcEcho(eventId, state);
+
+  // 追踪事件遭遇次数（用于事件多样性）
+  if (!state.flags._eventEncounters) state.flags._eventEncounters = {};
+  state.flags._eventEncounters[eventId] =
+    (state.flags._eventEncounters[eventId] || 0) + 1;
 }
