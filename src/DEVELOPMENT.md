@@ -3129,3 +3129,30 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 - `memory/bug-search-strategy.md` — 新建
 - `memory/post-task-reflection.md` — 新建
 - `memory/MEMORY.md` — 新增 2 条索引
+
+---
+
+### 2026-06-21 22:30 — 股票/投资板块颜色系统全面统一（9项修复）
+
+**问题根源**：股票价格图表的折线/填充颜色判定使用了"整个历史窗口首尾比较"，而非"今日 vs 昨日"比较。这导致：一只股票若20天前更低，即使今天暴跌11%，折线仍显示红色（涨）。
+
+**修复涉及两个文件中9处颜色逻辑**：
+
+| #   | 文件            | 函数/位置                 | 改动                                                |
+| --- | --------------- | ------------------------- | --------------------------------------------------- |
+| 1   | `stock.js`      | `renderKLine()`           | 折线颜色 `last≥first` → `last≥secondLast`           |
+| 2   | `stock.js`      | `renderKLine()`           | 填充色同上                                          |
+| 3   | `stock.js`      | `renderStockCard()`       | 7日均线emoji交换（高于均线=涨→🔴红）                |
+| 4   | `stock.js`      | `renderStockCard()`       | "全部买入"按钮 `btn-primary`→`btn-success`          |
+| 5   | `investment.js` | `drawPriceChart()`        | 折线颜色 `last≥first` → `last≥secondLast`           |
+| 6   | `investment.js` | `drawPriceChart()`        | 填充色同上 + 价格文字用 `dayColor` 而非 `lineColor` |
+| 7   | `investment.js` | `stdInvBtns()`            | "全买"按钮 `btn-danger`→`btn-success`               |
+| 8   | `investment.js` | `renderMarketSentiment()` | 牛市→红/熊市→绿；利好→红/利空→绿                    |
+| 9   | `investment.js` | `renderInvestmentTab()`   | 颜色图例修正为"📉跌 🟢绿 / 📈涨 🔴红"               |
+
+**教训**：两个并行系统（stock.js + investment.js）实现相似功能，修复一个时必须同时检查另一个是否有相同bug。
+本次并非新bug，而是2026-06-21 18:30颜色规范变更时只改了方向色值（绿↔红互换）但**没有改比较基准（首尾→最后两天）**，导致颜色值对了但逻辑上还是用20天趋势而非每日变化。
+
+**涉及文件**：`src/js/phase2/stock.js`, `src/js/phase2/investment.js`
+**构建**：已 `python build.py`
+**记忆**：`memory/investment-color-convention.md` 已修订

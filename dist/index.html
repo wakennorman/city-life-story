@@ -39260,7 +39260,8 @@ function renderKLine(history, currentPrice) {
   const firstPrice = history[0].price;
   const lastPrice = history[history.length - 1].price;
   // 今日涨跌 vs 昨日（与卡片内的 todayChange 一致）
-  const prevPx = history.length >= 2 ? history[history.length - 2].price : firstPrice;
+  const prevPx =
+    history.length >= 2 ? history[history.length - 2].price : firstPrice;
   const todayUp = lastPrice >= prevPx;
   // 折线/填充颜色：中国A股标准 红涨绿跌
   // --danger=红(涨) #c4553d, --success=绿(跌) #4a9e5c
@@ -41411,11 +41412,11 @@ function renderMarketSentiment(state, inv) {
 
   var sentiment, sentColor;
   if (bullScore > bearScore + 1.5) {
-        sentiment = "🐂 牛市氛围";
-        sentColor = "var(--danger)";
-      } else if (bearScore > bullScore + 1.5) {
-        sentiment = "🐻 熊市氛围";
-        sentColor = "var(--success)";
+    sentiment = "🐂 牛市氛围";
+    sentColor = "var(--danger)";
+  } else if (bearScore > bullScore + 1.5) {
+    sentiment = "🐻 熊市氛围";
+    sentColor = "var(--success)";
   } else {
     sentiment = "⚖️ 震荡市";
     sentColor = "var(--accent)";
