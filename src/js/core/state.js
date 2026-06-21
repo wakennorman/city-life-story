@@ -74,6 +74,12 @@ function createDefaultState() {
       expense: [], // 每日支出数组
     },
 
+    // --- 玩家行为统计（用于智能排序等） ---
+    stats: {
+      actionFreq: {}, // { actionId: 累计点击次数 }
+      actionFirstUse: {}, // { actionId: 首次点击天数 }
+    },
+
     // --- 基本需求 (0-100) ---
     needs: {
       hunger: 70,
@@ -651,9 +657,13 @@ class GameStateManager {
         s._worldParams = null;
       }
     }
+    // v1.6 → v1.7 迁移：行动频次统计
+    if (!s.stats) {
+      s.stats = { actionFreq: {}, actionFirstUse: {} };
+    }
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.6.0";
+    s.version = "1.7.0";
     this._markAllDirty();
     this._notify();
   }

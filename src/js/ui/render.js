@@ -1864,6 +1864,37 @@ function renderActionsTab(state, parent) {
     }
   }
 
+  // === 频次追踪 + 智能排序 ===
+  if (typeof ActionSort !== "undefined" && ActionSort.sortActions) {
+    // 包装所有行动的 handler，记录点击频次
+    var freq =
+      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
+    var firstUse =
+      state.stats && state.stats.actionFirstUse
+        ? state.stats.actionFirstUse
+        : {};
+
+    for (var _ai = 0; _ai < actions.length; _ai++) {
+      (function (_act) {
+        if (_act.id && !_act.disabled && typeof _act.handler === "function") {
+          var _orig = _act.handler;
+          var _aid = _act.id;
+          _act.handler = function () {
+            if (typeof freq[_aid] === "undefined") {
+              freq[_aid] = 0;
+              if (state && state.player) firstUse[_aid] = state.player.day;
+            }
+            freq[_aid]++;
+            return _orig.apply(this, arguments);
+          };
+        }
+      })(actions[_ai]);
+    }
+
+    // 多层排序
+    actions = ActionSort.sortActions(actions, state);
+  }
+
   // 分离出行和其他行动
   const travelActions = actions.filter((a) => a.id.startsWith("travel_"));
   const housingActions = actions.filter(
@@ -1904,7 +1935,17 @@ function renderActionsTab(state, parent) {
           ? badges
               .map(
                 (b) =>
-                  `<span style="font-size:9px;padding:2px 5px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`,
+                  '<span style="font-size:9px;padding:2px 5px;border-radius:3px;background:' +
+                  b.bg +
+                  ";color:" +
+                  b.color +
+                  ";border:1px solid " +
+                  b.color +
+                  ';">' +
+                  b.icon +
+                  " " +
+                  b.label +
+                  "</span>",
               )
               .join(" ")
           : "";
@@ -1918,11 +1959,11 @@ function renderActionsTab(state, parent) {
           const curPrice =
             state.trade.goodsPrices[state.trade.currentLocation]?.[good.id];
           if (destPrice && curPrice && destPrice > curPrice * 1.3) {
-            opportunities.push(`${good.name}📈`);
+            opportunities.push(good.name + "📈");
           }
         }
         if (opportunities.length > 0)
-          tradeHint = `<br>🤑 可卖: ${opportunities.slice(0, 2).join(" ")}`;
+          tradeHint = "<br>🪩 可卖: " + opportunities.slice(0, 2).join(" ");
       }
 
       const card = document.createElement("div");
@@ -1930,18 +1971,23 @@ function renderActionsTab(state, parent) {
       card.style.borderColor = "var(--accent)";
       card.style.background =
         "linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.05))";
-      card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="card-title" style="font-size:15px;color:var(--accent);">${dest ? dest.name : destKey}</div>
-          <span style="font-size:10px;color:var(--text-muted);">🚶 前往</span>
-        </div>
-        <div class="card-desc" style="font-size:11px;margin:4px 0;">
-          ${dest ? dest.desc : ""}
-          ${jobCount > 0 ? `<br>💼 ${jobCount}种工作机会` : ""}
-          ${tradeHint}
-        </div>
-        ${badgeStr ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">${badgeStr}</div>` : ""}
-      `;
+      card.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div class="card-title" style="font-size:15px;color:var(--accent);">' +
+        (dest ? dest.name : destKey) +
+        "</div>" +
+        '<span style="font-size:10px;color:var(--text-muted);">🚶 前往</span>' +
+        "</div>" +
+        '<div class="card-desc" style="font-size:11px;margin:4px 0;">' +
+        (dest ? dest.desc : "") +
+        (jobCount > 0 ? "<br>💼 " + jobCount + "种工作机会" : "") +
+        tradeHint +
+        "</div>" +
+        (badgeStr
+          ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">' +
+            badgeStr +
+            "</div>"
+          : "");
       card.addEventListener("click", () => {
         action.handler();
         renderAll();
@@ -1970,20 +2016,51 @@ function renderActionsTab(state, parent) {
     parent.appendChild(houseSection);
   }
 
-  // === 其他行动 ===
-  if (otherActions.length > 0) {
-    const otherLabel = document.createElement("h3");
-    otherLabel.style.cssText =
-      "color:var(--text-muted);margin-bottom:6px;font-size:13px;";
-    otherLabel.textContent = "⚡ 行动";
-    parent.appendChild(otherLabel);
+  // === 分类行动（取代旧平铺“其他行动”） ===
+  if (otherActions.length > 0 && typeof ActionSort !== "undefined") {
+    var groups = ActionSort.groupActionsByCategory(otherActions, state);
+    var cats = ActionSort.CATEGORIES || [];
 
-    const cards = document.createElement("div");
-    cards.className = "action-cards";
-    for (const action of otherActions) {
-      cards.appendChild(createActionCard(action, state));
+    // 按分类顺序渲染
+    for (var _ci = 0; _ci < cats.length; _ci++) {
+      var catId = cats[_ci].id;
+      var catActions = groups[catId];
+      if (!catActions || catActions.length === 0) continue;
+
+      // 分类标题
+      var catHeader = document.createElement("div");
+      catHeader.className = "action-category-header";
+      catHeader.innerHTML =
+        cats[_ci].icon +
+        " " +
+        cats[_ci].name +
+        '<span class="cat-count">' +
+        catActions.length +
+        "</span>";
+      parent.appendChild(catHeader);
+
+      // 分类内行动卡片网格
+      var catGrid = document.createElement("div");
+      catGrid.className = "action-cards";
+      for (var _aj = 0; _aj < catActions.length; _aj++) {
+        catGrid.appendChild(createActionCard(catActions[_aj], state));
+      }
+      parent.appendChild(catGrid);
     }
-    parent.appendChild(cards);
+  } else if (otherActions.length > 0) {
+    // 兜底：如果 ActionSort 未加载，保持旧平铺模式
+    var fallbackLabel = document.createElement("h3");
+    fallbackLabel.style.cssText =
+      "color:var(--text-muted);margin-bottom:6px;font-size:13px;";
+    fallbackLabel.textContent = "⚡ 行动";
+    parent.appendChild(fallbackLabel);
+
+    var fallbackCards = document.createElement("div");
+    fallbackCards.className = "action-cards";
+    for (var _ak = 0; _ak < otherActions.length; _ak++) {
+      fallbackCards.appendChild(createActionCard(otherActions[_ak], state));
+    }
+    parent.appendChild(fallbackCards);
   }
 
   // === Phase 2 深度交互入口 ===
