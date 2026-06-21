@@ -3628,6 +3628,81 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 
 ---
 
+### 2026-06-21 — P1-9 竞争对手策略应对系统
+
+#### 概述
+
+实现竞争对手主动攻击检测和玩家应对系统，涵盖四种攻击类型（价格战/人才挖角/营销战/技术竞争），每种攻击有 4-6 种应对方案，形成完整的竞争博弈闭环。
+
+#### 核心机制
+
+**攻击检测模型**（每日 tick）：
+
+- 基于竞争对手趋势 + 技术/市场/声誉差距 + 随机概率触发
+- 攻击有持续时间（15-120天），过期自动结束
+- 攻击期间持续产生负面效果
+- 玩家可主动应对或等待攻击自然结束
+
+**四种攻击类型**：
+
+| 攻击类型 | 触发条件                       | 持续时间 | 严重程度 | 应对方案数 |
+| -------- | ------------------------------ | -------- | -------- | ---------- |
+| 价格战   | 竞争对手技术分接近且市场增长快 | 45-60天  | 2-3      | 5种        |
+| 人才挖角 | 竞争对手市场分高于玩家         | 15-30天  | 4-5      | 6种        |
+| 营销战   | 竞争对手声誉高且广告投入大     | 30-60天  | 2-4      | 6种        |
+| 技术竞争 | 竞争对手技术分领先10+          | 60-120天 | 4-5      | 6种        |
+
+**应对方案模型**：
+
+- 每种方案有成本倍数（基于月收入）、成功率、效果影响
+- 成本 = 月收入 × costMult
+- 成功率 40%-80% 不等
+- 成功时效果 100%，失败时效果 30%-50%
+
+**防御投资系统**：
+
+- 品牌防御预算 → 降低营销战/价格战效果
+- 人才留任基金 → 降低人才挖角成功率
+- 防御性专利 → 降低技术竞争威胁
+- 竞争情报等级 → 提前预警，降低攻击触发概率
+
+#### 数据结构
+
+- `company.activeCompetitorAttacks[]` — 活跃攻击列表
+- `company.competitorAttackHistory[]` — 攻击历史
+- `company.competitorDefenseLevel` — 防御等级 0-100
+- `company.marketShareTrend[]` — 市场份额30天趋势
+- `company.brandDefenseBudget` — 品牌防御预算
+- `company.talentRetentionFund` — 人才留任基金
+- `company.techDefensePatents[]` — 防御性专利
+- `company.competitiveIntelligence` — 竞争情报等级 0-100
+
+#### 涉及文件
+
+- **`src/js/data/startup_competition.js`** — 新增数据常量 + 核心函数（约+600行）
+- **`src/js/phase2/startup.js`** — 字段扩展 + tick集成 + UI弹窗 + action handlers（约+500行）
+- **`dist/index.html`** — 构建产物（2946.6 KB）
+
+#### 涉及数据常量
+
+- `COMPETITOR_ATTACK_TYPES` — 4种攻击类型定义
+- `COMPETITOR_EVENT_TEMPLATES` — 9种攻击事件模板
+- `PRICE_WAR_RESPONSES` — 5种价格战应对
+- `TALENT_POACHING_RESPONSES` — 6种人才挖角应对
+- `MARKETING_WAR_RESPONSES` — 6种营销战应对
+- `TECH_COMPETITION_RESPONSES` — 6种技术竞争应对
+
+#### 关键函数
+
+- `detectCompetitorAttack()` — 检测新攻击
+- `applyCompetitorAttackEffects()` — 应用攻击效果
+- `getAvailableCompetitorResponses()` — 获取应对方案
+- `executeCompetitorResponse()` — 执行应对
+- `showCompetitorDefenseModal()` — 防御面板弹窗
+- `_updateCompetitorDefenseLevel()` — 更新防御等级
+
+---
+
 ## 📊 当前进度
 
 | 优先级 | 任务                  | 状态 |
@@ -3638,7 +3713,7 @@ DEVELOPMENT.md 的 1.4 世界自洽性标准和 2.1 联动密度标准自制定�
 | P0-4   | 员工满意度/倦怠系统   | ✅   |
 | P0-5   | KPI/OKR 目标系统      | ✅   |
 | P1-6   | 董事会/股东压力系统   | ✅   |
-| P1-7   | 公关/媒体系统         | ⏳   |
-| P1-8   | 法律/合规风险系统     | ⏳   |
-| P1-9   | 竞争对手策略应对系统  | ⏳   |
+| P1-7   | 公关/媒体系统         | ✅   |
+| P1-8   | 法律/合规风险系统     | ✅   |
+| P1-9   | 竞争对手策略应对系统  | ✅   |
 | P1-10  | 危机事件系统          | ⏳   |

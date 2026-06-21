@@ -306,43 +306,123 @@ const BOARD_KPI_REQUIREMENTS = {
   seed: {
     // 种子轮 KPI（较宽松）
     revenue: { target: 50000, weight: 0.25, desc: "季度营收" },
-    userGrowth: { target: 0.05, targetDesc: "5%/天", weight: 0.25, desc: "用户增长率" },
-    productMilestone: { target: 0.8, targetDesc: "80%进度", weight: 0.25, desc: "产品开发进度" },
-    teamStability: { target: 0.85, targetDesc: "85%留存", weight: 0.25, desc: "核心团队成员留存率" },
+    userGrowth: {
+      target: 0.05,
+      targetDesc: "5%/天",
+      weight: 0.25,
+      desc: "用户增长率",
+    },
+    productMilestone: {
+      target: 0.8,
+      targetDesc: "80%进度",
+      weight: 0.25,
+      desc: "产品开发进度",
+    },
+    teamStability: {
+      target: 0.85,
+      targetDesc: "85%留存",
+      weight: 0.25,
+      desc: "核心团队成员留存率",
+    },
     totalWeight: 1.0,
     passThreshold: 0.6, // 60%通过
     warningThreshold: 0.4, // 40%警告
   },
   A: {
     // A轮 KPI（增长导向）
-    revenue: { target: 300000, weight: 0.30, desc: "季度营收" },
-    revenueGrowth: { target: 0.20, targetDesc: "20%/季度", weight: 0.25, desc: "营收增长率" },
-    userGrowth: { target: 0.08, targetDesc: "8%/天", weight: 0.20, desc: "用户增长率" },
-    marketShare: { target: 0.05, targetDesc: "5%市场份额", weight: 0.15, desc: "市场份额" },
-    teamGrowth: { target: 10, targetDesc: "10人", weight: 0.10, desc: "团队规模" },
+    revenue: { target: 300000, weight: 0.3, desc: "季度营收" },
+    revenueGrowth: {
+      target: 0.2,
+      targetDesc: "20%/季度",
+      weight: 0.25,
+      desc: "营收增长率",
+    },
+    userGrowth: {
+      target: 0.08,
+      targetDesc: "8%/天",
+      weight: 0.2,
+      desc: "用户增长率",
+    },
+    marketShare: {
+      target: 0.05,
+      targetDesc: "5%市场份额",
+      weight: 0.15,
+      desc: "市场份额",
+    },
+    teamGrowth: {
+      target: 10,
+      targetDesc: "10人",
+      weight: 0.1,
+      desc: "团队规模",
+    },
     totalWeight: 1.0,
     passThreshold: 0.65,
     warningThreshold: 0.45,
   },
   B: {
     // B轮 KPI（规模化）
-    revenue: { target: 1500000, weight: 0.30, desc: "季度营收" },
-    revenueGrowth: { target: 0.15, targetDesc: "15%/季度", weight: 0.25, desc: "营收增长率" },
-    profitability: { target: 0.0, targetDesc: "盈亏平衡", weight: 0.20, desc: "净现金流" },
-    marketShare: { target: 0.10, targetDesc: "10%市场份额", weight: 0.15, desc: "市场份额" },
-    teamScale: { target: 30, targetDesc: "30人", weight: 0.10, desc: "团队规模" },
+    revenue: { target: 1500000, weight: 0.3, desc: "季度营收" },
+    revenueGrowth: {
+      target: 0.15,
+      targetDesc: "15%/季度",
+      weight: 0.25,
+      desc: "营收增长率",
+    },
+    profitability: {
+      target: 0.0,
+      targetDesc: "盈亏平衡",
+      weight: 0.2,
+      desc: "净现金流",
+    },
+    marketShare: {
+      target: 0.1,
+      targetDesc: "10%市场份额",
+      weight: 0.15,
+      desc: "市场份额",
+    },
+    teamScale: {
+      target: 30,
+      targetDesc: "30人",
+      weight: 0.1,
+      desc: "团队规模",
+    },
     totalWeight: 1.0,
-    passThreshold: 0.70,
-    warningThreshold: 0.50,
+    passThreshold: 0.7,
+    warningThreshold: 0.5,
   },
   C: {
     // C轮 KPI（IPO前冲刺）
-    revenue: { target: 6000000, weight: 0.30, desc: "季度营收" },
-    revenueGrowth: { target: 0.10, targetDesc: "10%/季度", weight: 0.20, desc: "营收增长率" },
-    profitability: { target: 0.05, targetDesc: "5%利润率", weight: 0.25, desc: "净利润率" },
-    marketShare: { target: 0.15, targetDesc: "15%市场份额", weight: 0.15, desc: "市场份额" },
-    teamScale: { target: 80, targetDesc: "80人", weight: 0.10, desc: "团队规模" },
-    valuationGrowth: { target: 0.15, targetDesc: "15%/季度", weight: 0.10, desc: "估值增长率" },
+    revenue: { target: 6000000, weight: 0.3, desc: "季度营收" },
+    revenueGrowth: {
+      target: 0.1,
+      targetDesc: "10%/季度",
+      weight: 0.2,
+      desc: "营收增长率",
+    },
+    profitability: {
+      target: 0.05,
+      targetDesc: "5%利润率",
+      weight: 0.25,
+      desc: "净利润率",
+    },
+    marketShare: {
+      target: 0.15,
+      targetDesc: "15%市场份额",
+      weight: 0.15,
+      desc: "市场份额",
+    },
+    teamScale: {
+      target: 80,
+      targetDesc: "80人",
+      weight: 0.1,
+      desc: "团队规模",
+    },
+    valuationGrowth: {
+      target: 0.15,
+      targetDesc: "15%/季度",
+      weight: 0.1,
+      desc: "估值增长率",
+    },
     totalWeight: 1.0,
     passThreshold: 0.75,
     warningThreshold: 0.55,
@@ -424,7 +504,12 @@ const BOARD_PRESSURE_EVENTS = {
       {
         text: "接受强制融资条款（高利息过桥贷款）",
         cost: 100000,
-        effects: { satisfaction: +5, trust: +5, debt: +100000, interestRate: 0.15 },
+        effects: {
+          satisfaction: +5,
+          trust: +5,
+          debt: +100000,
+          interestRate: 0.15,
+        },
         feedback: "高息过桥贷款暂时缓解现金流，但债务负担加重",
       },
     ],
@@ -444,7 +529,7 @@ const BOARD_PRESSURE_EVENTS = {
       {
         text: "寻找白衣骑士（紧急融资）",
         cost: 50000,
-        effects: { satisfaction: +10, trust: +10, dilution: 0.20 },
+        effects: { satisfaction: +10, trust: +10, dilution: 0.2 },
         feedback: "紧急出让20%股权引入新投资人",
       },
       {
@@ -522,7 +607,7 @@ const MEDIA_TYPES = {
     name: "商业媒体",
     icon: "📰",
     examples: ["财经", "第一财经", "界面", "彭博社", "路透社"],
-    influenceWeight: 0.30,
+    influenceWeight: 0.3,
     audience: "商业人士/投资者",
     coverageBias: "融资/业绩",
   },
@@ -538,7 +623,7 @@ const MEDIA_TYPES = {
     name: "行业媒体",
     icon: "🏭",
     examples: ["行业垂直媒体", "行业协会刊物", "行业峰会报道"],
-    influenceWeight: 0.10,
+    influenceWeight: 0.1,
     audience: "行业从业者",
     coverageBias: "行业动态",
   },
@@ -584,7 +669,7 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: +10, mediaRelations: +12, industryInfluence: +8 },
     triggerConditions: { rank: "registered", minRevenue: 50000 },
     desc: "参加行业峰会并发表主题演讲",
-    successChance: 0.80,
+    successChance: 0.8,
   },
   csr_activity: {
     id: "csr_activity",
@@ -597,7 +682,7 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: +12, mediaRelations: +10, brandLoyalty: +5 },
     triggerConditions: { rank: "registered", minRevenue: 30000 },
     desc: "组织公益活动/环保行动/教育捐赠等CSR活动",
-    successChance: 0.90,
+    successChance: 0.9,
   },
   award_submission: {
     id: "award_submission",
@@ -610,7 +695,7 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: +8, mediaRelations: +8, brandPrestige: +5 },
     triggerConditions: { rank: "registered", minRevenue: 20000 },
     desc: "申报创业大赛/创新奖/行业评选等",
-    successChance: 0.60,
+    successChance: 0.6,
   },
   thought_leadership: {
     id: "thought_leadership",
@@ -620,10 +705,15 @@ const PR_EVENT_TEMPLATES = {
     cost: 40000,
     duration: 21,
     mediaTypes: ["tech_media", "business_media", "industry_media"],
-    effects: { reputation: +15, mediaRelations: +18, industryInfluence: +12, brandPrestige: +8 },
+    effects: {
+      reputation: +15,
+      mediaRelations: +18,
+      industryInfluence: +12,
+      brandPrestige: +8,
+    },
     triggerConditions: { rank: "established", minRevenue: 200000 },
     desc: "联合研究机构发布行业趋势白皮书",
-    successChance: 0.70,
+    successChance: 0.7,
   },
 
   // === 负面事件/危机 ===
@@ -646,10 +736,20 @@ const PR_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "high",
     mediaTypes: ["tech_media", "business_media", "social_media"],
-    effects: { reputation: -25, mediaRelations: -15, userTrust: -30, legalRisk: +20 },
+    effects: {
+      reputation: -25,
+      mediaRelations: -15,
+      userTrust: -30,
+      legalRisk: +20,
+    },
     triggerChance: 0.01,
     descTemplate: "用户数据泄露/黑客攻击/内部泄露，引发监管和用户担忧",
-    responseOptions: ["notify_users", "hire_security", "cooperate_authorities", "settle"],
+    responseOptions: [
+      "notify_users",
+      "hire_security",
+      "cooperate_authorities",
+      "settle",
+    ],
   },
   executive_scandal: {
     id: "executive_scandal",
@@ -661,7 +761,12 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: -20, mediaRelations: -10, employeeMorale: -15 },
     triggerChance: 0.008,
     descTemplate: "CEO/高管个人丑闻曝光，影响公司声誉",
-    responseOptions: ["suspend_exec", "public_statement", "legal_action", "wait"],
+    responseOptions: [
+      "suspend_exec",
+      "public_statement",
+      "legal_action",
+      "wait",
+    ],
   },
   customer_complaint: {
     id: "customer_complaint",
@@ -673,7 +778,12 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: -8, mediaRelations: -5, userTrust: -10 },
     triggerChance: 0.03,
     descTemplate: "用户投诉在社交媒体发酵，形成负面舆论",
-    responseOptions: ["respond_publicly", "private_settlement", "improve_service", "ignore"],
+    responseOptions: [
+      "respond_publicly",
+      "private_settlement",
+      "improve_service",
+      "ignore",
+    ],
   },
   competitor_attack: {
     id: "competitor_attack",
@@ -685,7 +795,12 @@ const PR_EVENT_TEMPLATES = {
     effects: { reputation: -10, mediaRelations: -5, marketShare: -3 },
     triggerChance: 0.015,
     descTemplate: "竞争对手通过媒体/社交网络散布负面信息",
-    responseOptions: ["counter_statement", "legal_action", "ignore", "focus_product"],
+    responseOptions: [
+      "counter_statement",
+      "legal_action",
+      "ignore",
+      "focus_product",
+    ],
   },
   regulatory_investigation: {
     id: "regulatory_investigation",
@@ -694,7 +809,12 @@ const PR_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "high",
     mediaTypes: ["business_media", "tech_media"],
-    effects: { reputation: -20, mediaRelations: -15, legalRisk: +25, stockImpact: -10 },
+    effects: {
+      reputation: -20,
+      mediaRelations: -15,
+      legalRisk: +25,
+      stockImpact: -10,
+    },
     triggerChance: 0.005,
     descTemplate: "监管机构对公司展开调查（数据合规/反垄断/劳动等）",
     responseOptions: ["cooperate", "legal_defense", "settle", "lobby"],
@@ -947,9 +1067,27 @@ const MEDIA_RELATION_LEVELS = [
   { level: 0, name: "无关系", icon: "⚪", threshold: 0, bonus: "无" },
   { level: 1, name: "陌生", icon: "👤", threshold: 20, bonus: "基础报道" },
   { level: 2, name: "认识", icon: "🤝", threshold: 40, bonus: "正面报道+5%" },
-  { level: 3, name: "友好", icon: "😊", threshold: 60, bonus: "正面报道+10%，危机缓冲" },
-  { level: 4, name: "信任", icon: "🤝", threshold: 80, bonus: "正面报道+15%，优先报道" },
-  { level: 5, name: "伙伴", icon: "🌟", threshold: 100, bonus: "正面报道+20%，主动推荐" },
+  {
+    level: 3,
+    name: "友好",
+    icon: "😊",
+    threshold: 60,
+    bonus: "正面报道+10%，危机缓冲",
+  },
+  {
+    level: 4,
+    name: "信任",
+    icon: "🤝",
+    threshold: 80,
+    bonus: "正面报道+15%，优先报道",
+  },
+  {
+    level: 5,
+    name: "伙伴",
+    icon: "🌟",
+    threshold: 100,
+    bonus: "正面报道+20%，主动推荐",
+  },
 ];
 
 /** 公关危机等级 */
@@ -1066,7 +1204,7 @@ const LEGAL_EVENT_TEMPLATES = {
     riskType: "patent",
     effects: { patents: +1, legalRisk: -5, technologyScore: +3 },
     desc: "为公司核心技术申请专利保护",
-    successChance: 0.70,
+    successChance: 0.7,
   },
   patent_infringement_suit: {
     id: "patent_infringement_suit",
@@ -1078,7 +1216,12 @@ const LEGAL_EVENT_TEMPLATES = {
     effects: { reputation: -15, legalRisk: +30, financialLoss: 200000 },
     triggerChance: 0.008,
     descTemplate: "被竞争对手/专利流氓起诉专利侵权",
-    responseOptions: ["settle_patent", "fight_patent", "design_around", "invalid_patent"],
+    responseOptions: [
+      "settle_patent",
+      "fight_patent",
+      "design_around",
+      "invalid_patent",
+    ],
   },
   patent_attack: {
     id: "patent_attack",
@@ -1103,7 +1246,7 @@ const LEGAL_EVENT_TEMPLATES = {
     riskType: "data_compliance",
     effects: { complianceLevel: +15, legalRisk: -10 },
     desc: "聘请第三方进行数据合规审计",
-    successChance: 0.90,
+    successChance: 0.9,
   },
   data_breach_regulatory: {
     id: "data_breach_regulatory",
@@ -1138,7 +1281,12 @@ const LEGAL_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "medium",
     riskType: "labor",
-    effects: { reputation: -10, legalRisk: +15, financialLoss: 100000, employeeMorale: -10 },
+    effects: {
+      reputation: -10,
+      legalRisk: +15,
+      financialLoss: 100000,
+      employeeMorale: -10,
+    },
     triggerChance: 0.01,
     descTemplate: "员工提起劳动仲裁（加班/裁员/薪资纠纷）",
     responseOptions: ["settle_labor", "fight_labor", "negotiate", "comply"],
@@ -1153,7 +1301,12 @@ const LEGAL_EVENT_TEMPLATES = {
     effects: { reputation: -8, legalRisk: +20, financialLoss: 50000 },
     triggerChance: 0.006,
     descTemplate: "劳动监察部门对公司展开调查",
-    responseOptions: ["cooperate_inspection", "remediate_labor", "legal_defense", "settle_inspection"],
+    responseOptions: [
+      "cooperate_inspection",
+      "remediate_labor",
+      "legal_defense",
+      "settle_inspection",
+    ],
   },
   mass_layoff_dispute: {
     id: "mass_layoff_dispute",
@@ -1162,10 +1315,20 @@ const LEGAL_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "high",
     riskType: "labor",
-    effects: { reputation: -25, legalRisk: +25, financialLoss: 300000, employeeMorale: -30 },
+    effects: {
+      reputation: -25,
+      legalRisk: +25,
+      financialLoss: 300000,
+      employeeMorale: -30,
+    },
     triggerChance: 0.004,
     descTemplate: "大规模裁员引发员工集体维权/诉讼",
-    responseOptions: ["increase_severance", "negotiate_collective", "legal_defense", "public_apology"],
+    responseOptions: [
+      "increase_severance",
+      "negotiate_collective",
+      "legal_defense",
+      "public_apology",
+    ],
   },
 
   // === 反垄断相关 ===
@@ -1176,10 +1339,20 @@ const LEGAL_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "high",
     riskType: "antitrust",
-    effects: { reputation: -20, legalRisk: +40, financialLoss: 1000000, marketShare: -5 },
+    effects: {
+      reputation: -20,
+      legalRisk: +40,
+      financialLoss: 1000000,
+      marketShare: -5,
+    },
     triggerChance: 0.002,
     descTemplate: "监管机构对公司展开反垄断调查",
-    responseOptions: ["cooperate_antitrust", "legal_defense_antitrust", "settle_antitrust", "divest"],
+    responseOptions: [
+      "cooperate_antitrust",
+      "legal_defense_antitrust",
+      "settle_antitrust",
+      "divest",
+    ],
   },
 
   // === 广告/宣传合规 ===
@@ -1207,7 +1380,12 @@ const LEGAL_EVENT_TEMPLATES = {
     effects: { reputation: -15, legalRisk: +30, financialLoss: 200000 },
     triggerChance: 0.005,
     descTemplate: "税务部门对公司展开稽查",
-    responseOptions: ["cooperate_tax", "legal_defense_tax", "settle_tax", "remediate_tax"],
+    responseOptions: [
+      "cooperate_tax",
+      "legal_defense_tax",
+      "settle_tax",
+      "remediate_tax",
+    ],
   },
   financial_misstatement: {
     id: "financial_misstatement",
@@ -1216,10 +1394,20 @@ const LEGAL_EVENT_TEMPLATES = {
     type: "crisis",
     severity: "high",
     riskType: "financial",
-    effects: { reputation: -25, legalRisk: +35, financialLoss: 500000, investorTrust: -20 },
+    effects: {
+      reputation: -25,
+      legalRisk: +35,
+      financialLoss: 500000,
+      investorTrust: -20,
+    },
     triggerChance: 0.003,
     descTemplate: "财报/融资信息被认定为虚假披露",
-    responseOptions: ["correct_financial", "legal_defense_financial", "settle_financial", "restate"],
+    responseOptions: [
+      "correct_financial",
+      "legal_defense_financial",
+      "settle_financial",
+      "restate",
+    ],
   },
 };
 
@@ -1604,20 +1792,90 @@ const LEGAL_CHECKLIST = {
 
 /** 法律风险等级 */
 const LEGAL_RISK_LEVELS = [
-  { level: 0, name: "健康", icon: "✅", color: "var(--success)", threshold: 0, description: "法律风险极低，合规状况良好" },
-  { level: 1, name: "低", icon: "🟢", color: "#22c55e", threshold: 10, description: "法律风险较低，注意日常合规" },
-  { level: 2, name: "中", icon: "🟡", color: "var(--warning)", threshold: 25, description: "法律风险中等，需要加强合规" },
-  { level: 3, name: "高", icon: "🟠", color: "#f97316", description: "法律风险较高，需要立即行动", threshold: 45 },
-  { level: 4, name: "危急", icon: "🔴", color: "var(--danger)", threshold: 65, description: "法律风险极高，面临重大威胁" },
+  {
+    level: 0,
+    name: "健康",
+    icon: "✅",
+    color: "var(--success)",
+    threshold: 0,
+    description: "法律风险极低，合规状况良好",
+  },
+  {
+    level: 1,
+    name: "低",
+    icon: "🟢",
+    color: "#22c55e",
+    threshold: 10,
+    description: "法律风险较低，注意日常合规",
+  },
+  {
+    level: 2,
+    name: "中",
+    icon: "🟡",
+    color: "var(--warning)",
+    threshold: 25,
+    description: "法律风险中等，需要加强合规",
+  },
+  {
+    level: 3,
+    name: "高",
+    icon: "🟠",
+    color: "#f97316",
+    description: "法律风险较高，需要立即行动",
+    threshold: 45,
+  },
+  {
+    level: 4,
+    name: "危急",
+    icon: "🔴",
+    color: "var(--danger)",
+    threshold: 65,
+    description: "法律风险极高，面临重大威胁",
+  },
 ];
 
 /** 公司合规等级 */
 const COMPLIANCE_LEVELS = [
-  { level: 0, name: "无合规体系", icon: "⚠️", color: "var(--danger)", threshold: 0, description: "没有任何合规措施，风险极高" },
-  { level: 1, name: "基础合规", icon: "📋", color: "var(--warning)", threshold: 15, description: "有基础合规意识，但体系不完善" },
-  { level: 2, name: "合规框架", icon: "📄", color: "#f59e0b", threshold: 35, description: "有合规框架，但执行不到位" },
-  { level: 3, name: "合规体系", icon: "✅", color: "#22c55e", threshold: 55, description: "有完整的合规体系，运行良好" },
-  { level: 4, name: "合规标杆", icon: "🏆", color: "var(--primary)", threshold: 75, description: "行业合规标杆，风险极低" },
+  {
+    level: 0,
+    name: "无合规体系",
+    icon: "⚠️",
+    color: "var(--danger)",
+    threshold: 0,
+    description: "没有任何合规措施，风险极高",
+  },
+  {
+    level: 1,
+    name: "基础合规",
+    icon: "📋",
+    color: "var(--warning)",
+    threshold: 15,
+    description: "有基础合规意识，但体系不完善",
+  },
+  {
+    level: 2,
+    name: "合规框架",
+    icon: "📄",
+    color: "#f59e0b",
+    threshold: 35,
+    description: "有合规框架，但执行不到位",
+  },
+  {
+    level: 3,
+    name: "合规体系",
+    icon: "✅",
+    color: "#22c55e",
+    threshold: 55,
+    description: "有完整的合规体系，运行良好",
+  },
+  {
+    level: 4,
+    name: "合规标杆",
+    icon: "🏆",
+    color: "var(--primary)",
+    threshold: 75,
+    description: "行业合规标杆，风险极低",
+  },
 ];
 
 // ====== 产品类别（15+类别，每类有独特机制）======
@@ -2215,6 +2473,16 @@ function registerStartup(state, name, industry, description) {
     legalInsuranceLevel: 0, // 法律保险等级 0-3
     regulatoryRelationship: 0, // 监管机构关系 0-100
     industryComplianceRank: 0, // 行业合规排名 0-100
+    // ====== P1-9: 竞争对手策略应对系统 ======
+    activeCompetitorAttacks: [], // 活跃竞争对手攻击 [{id, attackType, name, competitorName, severity, urgency, remainingDays, effects, startedDay, resolved}]
+    pendingCompetitorAttack: null, // 待处理攻击 {id, event, deadline}
+    competitorAttackHistory: [], // 攻击历史 [{id, attackType, name, competitorName, severity, response, success, cost, outcome, startedDay, resolvedDay}]
+    competitorDefenseLevel: 0, // 竞争防御等级 0-100
+    marketShareTrend: [], // 市场份额趋势 [7天历史]
+    brandDefenseBudget: 0, // 品牌防御预算
+    talentRetentionFund: 0, // 人才留任基金
+    techDefensePatents: [], // 防御性专利 [{patentId, filedDay, status}]
+    competitiveIntelligence: 0, // 竞争情报等级 0-100
   };
 
   // 生成1-2个联合创始人
@@ -2537,7 +2805,16 @@ function launchProduct(state, productId) {
   product.referralRate = 0.02;
   product.referralConversion = 0.1;
   product.viralCycleTime = 7;
-  product.funnelData = { impressions: 0, clicks: 0, registrations: 0, activated: 0, retainedD7: 0, retainedD30: 0, paying: 0, referred: 0 };
+  product.funnelData = {
+    impressions: 0,
+    clicks: 0,
+    registrations: 0,
+    activated: 0,
+    retainedD7: 0,
+    retainedD30: 0,
+    paying: 0,
+    referred: 0,
+  };
   product.funnelHistory = [];
   // P0-3: 初始化技术债字段
   product.technicalDebt = 0;
@@ -2548,7 +2825,13 @@ function launchProduct(state, productId) {
   product.refactorBonus = 0;
   product.techDebtCrisis = false;
   product.crisisHistory = [];
-  product.techDebtSources = { rushDevelopment: 0, skippedTests: 0, cutFeatures: 0, quickFixes: 0, legacyCode: 0 };
+  product.techDebtSources = {
+    rushDevelopment: 0,
+    skippedTests: 0,
+    cutFeatures: 0,
+    quickFixes: 0,
+    legacyCode: 0,
+  };
 
   // 计算市场反响
   const productScore = techScore * 0.6 + marketScore * 0.4;
@@ -2790,7 +3073,7 @@ function developFeature(state, productId, featureKey, skipTests) {
     recordTechDebtEvent(state, productId, "skip_test", debtGain);
     StateManager.addMessage(
       "⚠️ 跳过测试开发「" + feature.name + "」，技术债+" + debtGain.toFixed(0),
-      "warning"
+      "warning",
     );
   } else {
     StateManager.addMessage(
@@ -3114,18 +3397,40 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
   const company = state.startup.company;
   if (!company) return;
 
-  const template = BOARD_MEMBER_TEMPLATES[investorType.key || Object.keys(BOARD_MEMBER_TEMPLATES).find(k => BOARD_MEMBER_TEMPLATES[k].name === investorType.name)];
+  const template =
+    BOARD_MEMBER_TEMPLATES[
+      investorType.key ||
+        Object.keys(BOARD_MEMBER_TEMPLATES).find(
+          (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
+        )
+    ];
   if (!template) return;
 
   // 生成董事会成员名字
-  const names = ["张总", "李总", "王总", "陈总", "刘总", "赵总", "周总", "吴总", "孙总", "郑总"];
-  const name = names[Math.floor(Math.random() * names.length)] || investorType.name;
+  const names = [
+    "张总",
+    "李总",
+    "王总",
+    "陈总",
+    "刘总",
+    "赵总",
+    "周总",
+    "吴总",
+    "孙总",
+    "郑总",
+  ];
+  const name =
+    names[Math.floor(Math.random() * names.length)] || investorType.name;
 
   const boardMember = {
     id: _startupGenerateId(),
     name: name,
     investorType: investorType.name,
-    investorKey: investorType.key || Object.keys(BOARD_MEMBER_TEMPLATES).find(k => BOARD_MEMBER_TEMPLATES[k].name === investorType.name),
+    investorKey:
+      investorType.key ||
+      Object.keys(BOARD_MEMBER_TEMPLATES).find(
+        (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
+      ),
     role: template.role,
     personality: template.personality,
     patience: template.patience,
@@ -3142,16 +3447,28 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 
   // 根据融资轮次调整初始满意度
   if (roundId === "seed") {
-    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 15);
+    company.shareholderSatisfaction = Math.min(
+      100,
+      company.shareholderSatisfaction + 15,
+    );
     company.shareholderTrust = Math.min(100, company.shareholderTrust + 10);
   } else if (roundId === "A") {
-    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 10);
+    company.shareholderSatisfaction = Math.min(
+      100,
+      company.shareholderSatisfaction + 10,
+    );
     company.shareholderTrust = Math.min(100, company.shareholderTrust + 15);
   } else if (roundId === "B") {
-    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderSatisfaction = Math.min(
+      100,
+      company.shareholderSatisfaction + 5,
+    );
     company.shareholderTrust = Math.min(100, company.shareholderTrust + 10);
   } else if (roundId === "C") {
-    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderSatisfaction = Math.min(
+      100,
+      company.shareholderSatisfaction + 5,
+    );
     company.shareholderTrust = Math.min(100, company.shareholderTrust + 5);
     // C轮后董事会压力更大
     company.boardAlignment = Math.max(0, company.boardAlignment - 10);
@@ -3166,10 +3483,16 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 /** 计算季度KPI完成率 */
 function _calculateQuarterlyKPIScore(state, company) {
   const quarter = Math.floor((state.player.day - company.foundedDay) / 90) + 1;
-  const fundingRound = company.phase === "seed" ? "seed" :
-    company.fundingRounds.length >= 3 ? "C" :
-    company.fundingRounds.length >= 2 ? "B" :
-    company.fundingRounds.length >= 1 ? "A" : "seed";
+  const fundingRound =
+    company.phase === "seed"
+      ? "seed"
+      : company.fundingRounds.length >= 3
+        ? "C"
+        : company.fundingRounds.length >= 2
+          ? "B"
+          : company.fundingRounds.length >= 1
+            ? "A"
+            : "seed";
 
   const kpiDef = BOARD_KPI_REQUIREMENTS[fundingRound];
   if (!kpiDef) return { score: 0, details: {}, passed: false };
@@ -3181,17 +3504,30 @@ function _calculateQuarterlyKPIScore(state, company) {
   // 营收考核
   if (kpiDef.revenue) {
     const revenueScore = Math.min(1.0, company.revenue / kpiDef.revenue.target);
-    scores.revenue = { achieved: company.revenue, target: kpiDef.revenue.target, score: revenueScore };
+    scores.revenue = {
+      achieved: company.revenue,
+      target: kpiDef.revenue.target,
+      score: revenueScore,
+    };
     totalWeightedScore += revenueScore * kpiDef.revenue.weight;
     totalWeight += kpiDef.revenue.weight;
   }
 
   // 营收增长率
   if (kpiDef.revenueGrowth && company.kpiHistory.length > 0) {
-    const lastRevenue = company.kpiHistory[company.kpiHistory.length - 1].revenue || 0;
-    const growthRate = lastRevenue > 0 ? (company.revenue - lastRevenue) / lastRevenue : 0;
-    const growthScore = Math.min(1.0, Math.max(0, growthRate / kpiDef.revenueGrowth.target));
-    scores.revenueGrowth = { achieved: growthRate, target: kpiDef.revenueGrowth.target, score: growthScore };
+    const lastRevenue =
+      company.kpiHistory[company.kpiHistory.length - 1].revenue || 0;
+    const growthRate =
+      lastRevenue > 0 ? (company.revenue - lastRevenue) / lastRevenue : 0;
+    const growthScore = Math.min(
+      1.0,
+      Math.max(0, growthRate / kpiDef.revenueGrowth.target),
+    );
+    scores.revenueGrowth = {
+      achieved: growthRate,
+      target: kpiDef.revenueGrowth.target,
+      score: growthScore,
+    };
     totalWeightedScore += growthScore * kpiDef.revenueGrowth.weight;
     totalWeight += kpiDef.revenueGrowth.weight;
   }
@@ -3199,23 +3535,44 @@ function _calculateQuarterlyKPIScore(state, company) {
   // 用户增长率
   if (kpiDef.userGrowth) {
     const avgGrowthRate = _calculateAvgUserGrowthRate(company);
-    const userScore = Math.min(1.0, Math.max(0, avgGrowthRate / kpiDef.userGrowth.target));
-    scores.userGrowth = { achieved: avgGrowthRate, target: kpiDef.userGrowth.target, score: userScore };
+    const userScore = Math.min(
+      1.0,
+      Math.max(0, avgGrowthRate / kpiDef.userGrowth.target),
+    );
+    scores.userGrowth = {
+      achieved: avgGrowthRate,
+      target: kpiDef.userGrowth.target,
+      score: userScore,
+    };
     totalWeightedScore += userScore * kpiDef.userGrowth.weight;
     totalWeight += kpiDef.userGrowth.weight;
   }
 
   // 产品开发进度
   if (kpiDef.productMilestone) {
-    const developingProducts = company.products.filter(p => p.status === "developing");
+    const developingProducts = company.products.filter(
+      (p) => p.status === "developing",
+    );
     if (developingProducts.length > 0) {
-      const avgProgress = developingProducts.reduce((sum, p) => sum + (p.developmentProgress || 0), 0) / developingProducts.length;
+      const avgProgress =
+        developingProducts.reduce(
+          (sum, p) => sum + (p.developmentProgress || 0),
+          0,
+        ) / developingProducts.length;
       const prodScore = Math.min(1.0, avgProgress / 100);
-      scores.productMilestone = { achieved: avgProgress, target: kpiDef.productMilestone.target * 100, score: prodScore };
+      scores.productMilestone = {
+        achieved: avgProgress,
+        target: kpiDef.productMilestone.target * 100,
+        score: prodScore,
+      };
       totalWeightedScore += prodScore * kpiDef.productMilestone.weight;
       totalWeight += kpiDef.productMilestone.weight;
     } else {
-      scores.productMilestone = { achieved: 100, target: kpiDef.productMilestone.target * 100, score: 1.0 };
+      scores.productMilestone = {
+        achieved: 100,
+        target: kpiDef.productMilestone.target * 100,
+        score: 1.0,
+      };
       totalWeightedScore += 1.0 * kpiDef.productMilestone.weight;
       totalWeight += kpiDef.productMilestone.weight;
     }
@@ -3223,25 +3580,47 @@ function _calculateQuarterlyKPIScore(state, company) {
 
   // 团队稳定性/规模
   if (kpiDef.teamStability) {
-    const totalHired = company.employees.length + (company.coFounders?.length || 0);
+    const totalHired =
+      company.employees.length + (company.coFounders?.length || 0);
     const retained = company.employees.length;
     const stabilityRate = totalHired > 0 ? retained / totalHired : 1.0;
-    const teamScore = Math.min(1.0, stabilityRate / kpiDef.teamStability.target);
-    scores.teamStability = { achieved: stabilityRate, target: kpiDef.teamStability.target, score: teamScore };
+    const teamScore = Math.min(
+      1.0,
+      stabilityRate / kpiDef.teamStability.target,
+    );
+    scores.teamStability = {
+      achieved: stabilityRate,
+      target: kpiDef.teamStability.target,
+      score: teamScore,
+    };
     totalWeightedScore += teamScore * kpiDef.teamStability.weight;
     totalWeight += kpiDef.teamStability.weight;
   }
 
   if (kpiDef.teamGrowth) {
-    const teamScore = Math.min(1.0, company.employees.length / kpiDef.teamGrowth.target);
-    scores.teamGrowth = { achieved: company.employees.length, target: kpiDef.teamGrowth.target, score: teamScore };
+    const teamScore = Math.min(
+      1.0,
+      company.employees.length / kpiDef.teamGrowth.target,
+    );
+    scores.teamGrowth = {
+      achieved: company.employees.length,
+      target: kpiDef.teamGrowth.target,
+      score: teamScore,
+    };
     totalWeightedScore += teamScore * kpiDef.teamGrowth.weight;
     totalWeight += kpiDef.teamGrowth.weight;
   }
 
   if (kpiDef.teamScale) {
-    const teamScore = Math.min(1.0, company.employees.length / kpiDef.teamScale.target);
-    scores.teamScale = { achieved: company.employees.length, target: kpiDef.teamScale.target, score: teamScore };
+    const teamScore = Math.min(
+      1.0,
+      company.employees.length / kpiDef.teamScale.target,
+    );
+    scores.teamScale = {
+      achieved: company.employees.length,
+      target: kpiDef.teamScale.target,
+      score: teamScore,
+    };
     totalWeightedScore += teamScore * kpiDef.teamScale.weight;
     totalWeight += kpiDef.teamScale.weight;
   }
@@ -3250,7 +3629,11 @@ function _calculateQuarterlyKPIScore(state, company) {
   if (kpiDef.marketShare) {
     const marketShare = _calculateMarketShare(state, company.products[0] || {});
     const msScore = Math.min(1.0, marketShare / kpiDef.marketShare.target);
-    scores.marketShare = { achieved: marketShare, target: kpiDef.marketShare.target, score: msScore };
+    scores.marketShare = {
+      achieved: marketShare,
+      target: kpiDef.marketShare.target,
+      score: msScore,
+    };
     totalWeightedScore += msScore * kpiDef.marketShare.weight;
     totalWeight += kpiDef.marketShare.weight;
   }
@@ -3258,20 +3641,51 @@ function _calculateQuarterlyKPIScore(state, company) {
   // 盈利能力/净现金流
   if (kpiDef.profitability) {
     const netCash = company.cashReserve - (company.burnRate || 0) * 30;
-    const profitScore = kpiDef.profitability.target <= 0
-      ? Math.min(1.0, Math.max(0, (netCash + Math.abs(kpiDef.profitability.target * company.valuation)) / (kpiDef.profitability.target * company.valuation * 2)))
-      : Math.min(1.0, Math.max(0, netCash / (kpiDef.profitability.target * company.valuation)));
-    scores.profitability = { achieved: netCash, target: kpiDef.profitability.targetDesc, score: profitScore };
+    const profitScore =
+      kpiDef.profitability.target <= 0
+        ? Math.min(
+            1.0,
+            Math.max(
+              0,
+              (netCash +
+                Math.abs(kpiDef.profitability.target * company.valuation)) /
+                (kpiDef.profitability.target * company.valuation * 2),
+            ),
+          )
+        : Math.min(
+            1.0,
+            Math.max(
+              0,
+              netCash / (kpiDef.profitability.target * company.valuation),
+            ),
+          );
+    scores.profitability = {
+      achieved: netCash,
+      target: kpiDef.profitability.targetDesc,
+      score: profitScore,
+    };
     totalWeightedScore += profitScore * kpiDef.profitability.weight;
     totalWeight += kpiDef.profitability.weight;
   }
 
   // 估值增长率
   if (kpiDef.valuationGrowth && company.kpiHistory.length > 0) {
-    const lastValuation = company.kpiHistory[company.kpiHistory.length - 1].valuation || company.valuation;
-    const valGrowth = lastValuation > 0 ? (company.valuation - lastValuation) / lastValuation : 0;
-    const valScore = Math.min(1.0, Math.max(0, valGrowth / kpiDef.valuationGrowth.target));
-    scores.valuationGrowth = { achieved: valGrowth, target: kpiDef.valuationGrowth.target, score: valScore };
+    const lastValuation =
+      company.kpiHistory[company.kpiHistory.length - 1].valuation ||
+      company.valuation;
+    const valGrowth =
+      lastValuation > 0
+        ? (company.valuation - lastValuation) / lastValuation
+        : 0;
+    const valScore = Math.min(
+      1.0,
+      Math.max(0, valGrowth / kpiDef.valuationGrowth.target),
+    );
+    scores.valuationGrowth = {
+      achieved: valGrowth,
+      target: kpiDef.valuationGrowth.target,
+      score: valScore,
+    };
     totalWeightedScore += valScore * kpiDef.valuationGrowth.weight;
     totalWeight += kpiDef.valuationGrowth.weight;
   }
@@ -3306,7 +3720,8 @@ function _calculateAvgUserGrowthRate(company) {
 /** 季度董事会评估 */
 function evaluateBoardPerformance(state) {
   const company = state.startup.company;
-  if (!company || !company.boardMembers || company.boardMembers.length === 0) return null;
+  if (!company || !company.boardMembers || company.boardMembers.length === 0)
+    return null;
 
   const evalResult = _calculateQuarterlyKPIScore(state, company);
 
@@ -3343,10 +3758,16 @@ function evaluateBoardPerformance(state) {
 
   // 更新股东满意度和信任度
   if (evalResult.passed) {
-    company.shareholderSatisfaction = Math.min(100, company.shareholderSatisfaction + 5);
+    company.shareholderSatisfaction = Math.min(
+      100,
+      company.shareholderSatisfaction + 5,
+    );
     company.shareholderTrust = Math.min(100, company.shareholderTrust + 3);
   } else {
-    company.shareholderSatisfaction = Math.max(0, company.shareholderSatisfaction - 8);
+    company.shareholderSatisfaction = Math.max(
+      0,
+      company.shareholderSatisfaction - 8,
+    );
     company.shareholderTrust = Math.max(0, company.shareholderTrust - 5);
   }
 
@@ -3354,17 +3775,27 @@ function evaluateBoardPerformance(state) {
   for (const member of company.boardMembers) {
     const memberFocusBonus = _getMemberFocusBonus(member, evalResult.details);
     if (evalResult.passed) {
-      member.satisfaction = Math.min(100, member.satisfaction + 3 + memberFocusBonus);
+      member.satisfaction = Math.min(
+        100,
+        member.satisfaction + 3 + memberFocusBonus,
+      );
       member.trust = Math.min(100, member.trust + 2);
     } else {
-      member.satisfaction = Math.max(0, member.satisfaction - 5 - memberFocusBonus);
+      member.satisfaction = Math.max(
+        0,
+        member.satisfaction - 5 - memberFocusBonus,
+      );
       member.trust = Math.max(0, member.trust - 3);
     }
     member.lastEvaluation = { quarter, year, score: evalResult.score };
   }
 
   // 计算董事会压力等级
-  const newPressureLevel = _calculateBoardPressureLevel(state, company, evalResult);
+  const newPressureLevel = _calculateBoardPressureLevel(
+    state,
+    company,
+    evalResult,
+  );
   const pressureChanged = newPressureLevel !== company.boardPressureLevel;
   company.boardPressureLevel = newPressureLevel;
 
@@ -3396,22 +3827,40 @@ function evaluateBoardPerformance(state) {
 function _getMemberFocusBonus(member, kpiDetails) {
   let bonus = 0;
   for (const area of member.focusAreas) {
-    const areaKey = area === "增长率" ? "revenueGrowth" :
-      area === "市场份额" ? "marketShare" :
-      area === "现金流" ? "profitability" :
-      area === "团队稳定性" ? "teamStability" :
-      area === "团队规模" ? "teamScale" :
-      area === "产品方向" ? "productMilestone" :
-      area === "战略协同" ? "marketShare" :
-      area === "技术壁垒" ? "productMilestone" :
-      area === "对赌条款" ? "profitability" :
-      area === "合规性" ? "productMilestone" :
-      area === "就业贡献" ? "teamScale" :
-      area === "业务整合" ? "marketShare" : null;
+    const areaKey =
+      area === "增长率"
+        ? "revenueGrowth"
+        : area === "市场份额"
+          ? "marketShare"
+          : area === "现金流"
+            ? "profitability"
+            : area === "团队稳定性"
+              ? "teamStability"
+              : area === "团队规模"
+                ? "teamScale"
+                : area === "产品方向"
+                  ? "productMilestone"
+                  : area === "战略协同"
+                    ? "marketShare"
+                    : area === "技术壁垒"
+                      ? "productMilestone"
+                      : area === "对赌条款"
+                        ? "profitability"
+                        : area === "合规性"
+                          ? "productMilestone"
+                          : area === "就业贡献"
+                            ? "teamScale"
+                            : area === "业务整合"
+                              ? "marketShare"
+                              : null;
 
     if (areaKey && kpiDetails[areaKey] && kpiDetails[areaKey].score >= 0.8) {
       bonus += 2;
-    } else if (areaKey && kpiDetails[areaKey] && kpiDetails[areaKey].score < 0.5) {
+    } else if (
+      areaKey &&
+      kpiDetails[areaKey] &&
+      kpiDetails[areaKey].score < 0.5
+    ) {
       bonus -= 2;
     }
   }
@@ -3437,17 +3886,24 @@ function _calculateBoardPressureLevel(state, company, evalResult) {
   else if (company.monthsOfRunway < 6) basePressure = Math.max(1, basePressure);
 
   // 股东满意度低加重
-  if (company.shareholderSatisfaction < 30) basePressure = Math.min(4, basePressure + 1);
+  if (company.shareholderSatisfaction < 30)
+    basePressure = Math.min(4, basePressure + 1);
 
   // 董事会成员平均满意度
   if (company.boardMembers.length > 0) {
-    const avgMemberSatisfaction = company.boardMembers.reduce((s, m) => s + m.satisfaction, 0) / company.boardMembers.length;
-    if (avgMemberSatisfaction < 30) basePressure = Math.min(4, basePressure + 1);
+    const avgMemberSatisfaction =
+      company.boardMembers.reduce((s, m) => s + m.satisfaction, 0) /
+      company.boardMembers.length;
+    if (avgMemberSatisfaction < 30)
+      basePressure = Math.min(4, basePressure + 1);
   }
 
   // 激进型投资人（VC/PE）加重
   for (const member of company.boardMembers) {
-    if (member.pressureTolerance === "低" || member.pressureTolerance === "极低") {
+    if (
+      member.pressureTolerance === "低" ||
+      member.pressureTolerance === "极低"
+    ) {
       if (evalResult.score < member.patience / 100) {
         basePressure = Math.min(4, basePressure + 1);
       }
@@ -3470,9 +3926,14 @@ function _countConsecutiveFailures(kpiHistory) {
 
 /** 触发董事会压力事件 */
 function _triggerBoardPressureEvent(state, company, pressureLevel) {
-  const eventKey = pressureLevel >= 4 ? "ultimatum" :
-    pressureLevel === 3 ? "severe_warning" :
-    pressureLevel === 2 ? "moderate_warning" : "mild_warning";
+  const eventKey =
+    pressureLevel >= 4
+      ? "ultimatum"
+      : pressureLevel === 3
+        ? "severe_warning"
+        : pressureLevel === 2
+          ? "moderate_warning"
+          : "mild_warning";
 
   const event = BOARD_PRESSURE_EVENTS[eventKey];
   if (!event) return;
@@ -3493,7 +3954,8 @@ function _triggerBoardPressureEvent(state, company, pressureLevel) {
 /** 处理董事会压力事件选择 */
 function resolveBoardPressureAction(state, optionIndex) {
   const company = state.startup.company;
-  if (!company || !company.pendingBoardAction) return { success: false, message: "没有待处理的董事会行动" };
+  if (!company || !company.pendingBoardAction)
+    return { success: false, message: "没有待处理的董事会行动" };
 
   const action = company.pendingBoardAction;
   const event = action.event;
@@ -3512,16 +3974,28 @@ function resolveBoardPressureAction(state, optionIndex) {
   if (option.effects) {
     for (const [key, value] of Object.entries(option.effects)) {
       if (key === "satisfaction") {
-        company.shareholderSatisfaction = Math.max(0, Math.min(100, company.shareholderSatisfaction + value));
+        company.shareholderSatisfaction = Math.max(
+          0,
+          Math.min(100, company.shareholderSatisfaction + value),
+        );
       } else if (key === "trust") {
-        company.shareholderTrust = Math.max(0, Math.min(100, company.shareholderTrust + value));
+        company.shareholderTrust = Math.max(
+          0,
+          Math.min(100, company.shareholderTrust + value),
+        );
       } else if (key === "alignment") {
-        company.boardAlignment = Math.max(0, Math.min(100, company.boardAlignment + value));
+        company.boardAlignment = Math.max(
+          0,
+          Math.min(100, company.boardAlignment + value),
+        );
       } else if (key === "revenue") {
         company.revenue = Math.max(0, company.revenue + value);
       } else if (key === "employeeMorale") {
         for (const emp of company.employees) {
-          emp.satisfaction = Math.max(0, Math.min(100, emp.satisfaction + value));
+          emp.satisfaction = Math.max(
+            0,
+            Math.min(100, emp.satisfaction + value),
+          );
         }
       } else if (key === "risk") {
         // 风险标记
@@ -3529,12 +4003,21 @@ function resolveBoardPressureAction(state, optionIndex) {
       } else if (key === "debt") {
         // 新增债务
         company.boardDebt = (company.boardDebt || 0) + value;
-        company.boardInterestRate = Math.max(company.boardInterestRate || 0, value / 1000);
+        company.boardInterestRate = Math.max(
+          company.boardInterestRate || 0,
+          value / 1000,
+        );
       } else if (key === "interestRate") {
-        company.boardInterestRate = Math.max(company.boardInterestRate || 0, value);
+        company.boardInterestRate = Math.max(
+          company.boardInterestRate || 0,
+          value,
+        );
       } else if (key === "dilution") {
         // 股权稀释
-        company.equity.player = Math.max(0, company.equity.player - value * 100);
+        company.equity.player = Math.max(
+          0,
+          company.equity.player - value * 100,
+        );
         company.equity.investors += value * 100;
       } else if (key === "leadershipChange") {
         company.CEOReplaced = true;
@@ -3551,8 +4034,17 @@ function resolveBoardPressureAction(state, optionIndex) {
 
   // 更新董事会成员满意度
   for (const member of company.boardMembers) {
-    member.satisfaction = Math.max(0, Math.min(100, member.satisfaction + (option.effects?.satisfaction || 0) / 2));
-    member.trust = Math.max(0, Math.min(100, member.trust + (option.effects?.trust || 0) / 2));
+    member.satisfaction = Math.max(
+      0,
+      Math.min(
+        100,
+        member.satisfaction + (option.effects?.satisfaction || 0) / 2,
+      ),
+    );
+    member.trust = Math.max(
+      0,
+      Math.min(100, member.trust + (option.effects?.trust || 0) / 2),
+    );
   }
 
   // 记录压力事件历史
@@ -3600,21 +4092,42 @@ function executeShareholderCommunication(state, actionId) {
   if (action.effects) {
     for (const [key, value] of Object.entries(action.effects)) {
       if (key === "satisfaction") {
-        company.shareholderSatisfaction = Math.max(0, Math.min(100, company.shareholderSatisfaction + value));
+        company.shareholderSatisfaction = Math.max(
+          0,
+          Math.min(100, company.shareholderSatisfaction + value),
+        );
       } else if (key === "trust") {
-        company.shareholderTrust = Math.max(0, Math.min(100, company.shareholderTrust + value));
+        company.shareholderTrust = Math.max(
+          0,
+          Math.min(100, company.shareholderTrust + value),
+        );
       } else if (key === "alignment") {
-        company.boardAlignment = Math.max(0, Math.min(100, company.boardAlignment + value));
+        company.boardAlignment = Math.max(
+          0,
+          Math.min(100, company.boardAlignment + value),
+        );
       } else if (key === "reputation") {
-        company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+        company.reputation = Math.max(
+          0,
+          Math.min(100, company.reputation + value),
+        );
       }
     }
   }
 
   // 更新董事会成员
   for (const member of company.boardMembers) {
-    member.satisfaction = Math.max(0, Math.min(100, member.satisfaction + Math.round(action.effects?.satisfaction / 2)));
-    member.trust = Math.max(0, Math.min(100, member.trust + Math.round(action.effects?.trust / 2)));
+    member.satisfaction = Math.max(
+      0,
+      Math.min(
+        100,
+        member.satisfaction + Math.round(action.effects?.satisfaction / 2),
+      ),
+    );
+    member.trust = Math.max(
+      0,
+      Math.min(100, member.trust + Math.round(action.effects?.trust / 2)),
+    );
   }
 
   StateManager.addMessage(
@@ -3857,12 +4370,14 @@ function tickStartup(state, tickType) {
       const prevUsers = product.usersBeforeTick || product.users;
       product.usersBeforeTick = product.users; // 保存供下一天比较
       const userChange = product.users - prevUsers;
-      product.userGrowthRate = prevUsers > 0 ? (userChange / prevUsers) * 100 : 0;
+      product.userGrowthRate =
+        prevUsers > 0 ? (userChange / prevUsers) * 100 : 0;
       product.churnRate = churnRate * 100; // 转换为百分比
 
       // 更新峰值记录
       if (product.users > product.peakUsers) product.peakUsers = product.users;
-      if (product.revenue > product.peakRevenue) product.peakRevenue = product.revenue;
+      if (product.revenue > product.peakRevenue)
+        product.peakRevenue = product.revenue;
 
       // 计算市场份额（基于公司总收入占所有活跃公司总收入的比例）
       if (typeof _calculateMarketShare === "function") {
@@ -3883,8 +4398,11 @@ function tickStartup(state, tickType) {
         };
         StateManager.addMessage(
           `🔄 「${product.name}」进入${stageNames[product.lifecycleStage]}！`,
-          product.lifecycleStage === "growth" ? "success" :
-          product.lifecycleStage === "decline" ? "danger" : "info"
+          product.lifecycleStage === "growth"
+            ? "success"
+            : product.lifecycleStage === "decline"
+              ? "danger"
+              : "info",
         );
       }
 
@@ -3935,6 +4453,47 @@ function tickStartup(state, tickType) {
   if (state.startup.competitors && state.startup.competitors.length > 0) {
     if (typeof tickCompetitors === "function") {
       tickCompetitors(state, state.startup.competitors);
+    }
+
+    // P1-9: 检测竞争对手攻击（每日）
+    if (typeof detectCompetitorAttack === "function") {
+      const newAttacks = detectCompetitorAttack(
+        state,
+        company,
+        state.startup.competitors,
+      );
+      if (newAttacks && newAttacks.length > 0) {
+        for (const attack of newAttacks) {
+          // 添加到活跃攻击
+          company.activeCompetitorAttacks.push({
+            ...attack,
+            startedDay: attack.startedDay || day,
+            remainingDays: attack.durationDays,
+            resolved: false,
+          });
+          // 应用初始效果
+          applyCompetitorAttackEffects(state, company, attack);
+          // 通知玩家
+          StateManager.addMessage(
+            `${attack.icon} 【${attack.name}】「${attack.competitorName}」发起${attack.attackType.replace("_", "/")}攻击！剩余${attack.durationDays}天。前往创业Tab应对`,
+            attack.severity >= 4 ? "warning" : "event",
+          );
+        }
+      }
+    }
+
+    // P1-9: 更新市场份额趋势
+    if (!company.marketShareTrend) company.marketShareTrend = [];
+    const currentShare =
+      typeof calculateMarketShare === "function"
+        ? calculateMarketShare(state, company, state.startup.competitors)
+        : 0;
+    company.marketShareTrend.push(currentShare);
+    if (company.marketShareTrend.length > 30) company.marketShareTrend.shift();
+
+    // P1-9: 更新竞争防御等级
+    if (typeof _updateCompetitorDefenseLevel === "function") {
+      _updateCompetitorDefenseLevel(state, company);
     }
   }
 
@@ -4001,7 +4560,10 @@ function _evaluateLegalRisk(state, company) {
   }
 
   // 活跃案件增加风险
-  company.legalRisk = Math.min(100, company.legalRisk + company.legalCasesActive * 5);
+  company.legalRisk = Math.min(
+    100,
+    company.legalRisk + company.legalCasesActive * 5,
+  );
 
   // 记录历史
   company.legalRiskHistory.push({
@@ -4029,17 +4591,24 @@ function _evaluateLegalRisk(state, company) {
   }
 
   // 监管关系衰减
-  company.regulatoryRelationship = Math.max(0, company.regulatoryRelationship - 2);
+  company.regulatoryRelationship = Math.max(
+    0,
+    company.regulatoryRelationship - 2,
+  );
 }
 
 /** 更新法律风险等级 */
 function _updateLegalRiskLevel(company) {
-  const newLevel = LEGAL_RISK_LEVELS.findLast(l => company.legalRisk >= l.threshold) || LEGAL_RISK_LEVELS[0];
+  const newLevel =
+    LEGAL_RISK_LEVELS.findLast((l) => company.legalRisk >= l.threshold) ||
+    LEGAL_RISK_LEVELS[0];
   if (newLevel.level !== company.legalRiskLevel) {
-    const oldLevel = LEGAL_RISK_LEVELS.find(l => l.level === company.legalRiskLevel) || LEGAL_RISK_LEVELS[0];
+    const oldLevel =
+      LEGAL_RISK_LEVELS.find((l) => l.level === company.legalRiskLevel) ||
+      LEGAL_RISK_LEVELS[0];
     StateManager.addMessage(
       `⚖️ 法律风险等级变化：${oldLevel.name} → ${newLevel.name}（${newLevel.icon}）${newLevel.description ? ` · ${newLevel.description}` : ""}`,
-      "event"
+      "event",
     );
     company.legalRiskLevel = newLevel.level;
   }
@@ -4047,12 +4616,16 @@ function _updateLegalRiskLevel(company) {
 
 /** 更新合规等级 */
 function _updateComplianceGrade(company) {
-  const newGrade = COMPLIANCE_LEVELS.findLast(l => company.complianceLevel >= l.threshold) || COMPLIANCE_LEVELS[0];
+  const newGrade =
+    COMPLIANCE_LEVELS.findLast((l) => company.complianceLevel >= l.threshold) ||
+    COMPLIANCE_LEVELS[0];
   if (newGrade.level !== company.complianceGrade) {
-    const oldGrade = COMPLIANCE_LEVELS.find(l => l.level === company.complianceGrade) || COMPLIANCE_LEVELS[0];
+    const oldGrade =
+      COMPLIANCE_LEVELS.find((l) => l.level === company.complianceGrade) ||
+      COMPLIANCE_LEVELS[0];
     StateManager.addMessage(
       `📋 合规等级变化：${oldGrade.name} → ${newGrade.name}（${newGrade.icon}）${newGrade.description ? ` · ${newGrade.description}` : ""}`,
-      "event"
+      "event",
     );
     company.complianceGrade = newGrade.level;
   }
@@ -4076,7 +4649,7 @@ function _processPendingLegalEvent(state, company) {
     company.legalRiskLevel = Math.min(4, company.legalRiskLevel + 1);
     StateManager.addMessage(
       `⚖️ 法律事件倒计时：${daysRemaining}天内必须处理「${legalEvent.event.name}」！`,
-      "warning"
+      "warning",
     );
   }
 }
@@ -4106,7 +4679,7 @@ function _evaluateLegalEventProbability(state, company) {
 
   // 活跃案件增加触发概率
   if (company.legalCasesActive > 0) {
-    baseChance *= (1 + company.legalCasesActive * 0.3);
+    baseChance *= 1 + company.legalCasesActive * 0.3;
   }
 
   // 法律保险降低触发概率
@@ -4127,23 +4700,28 @@ function _triggerLegalEvent(state, company) {
   const industry = company.industry;
 
   // 根据行业筛选可用风险类型
-  const availableRiskTypes = riskTypes.filter(riskType => {
+  const availableRiskTypes = riskTypes.filter((riskType) => {
     const typeInfo = LEGAL_RISK_TYPES[riskType];
-    return typeInfo.industries.includes(industry) || typeInfo.industries.includes("all");
+    return (
+      typeInfo.industries.includes(industry) ||
+      typeInfo.industries.includes("all")
+    );
   });
 
   if (availableRiskTypes.length === 0) return;
 
-  const selectedRiskType = availableRiskTypes[Math.floor(Math.random() * availableRiskTypes.length)];
+  const selectedRiskType =
+    availableRiskTypes[Math.floor(Math.random() * availableRiskTypes.length)];
 
   // 筛选该风险类型的事件模板
   const eventTemplates = Object.values(LEGAL_EVENT_TEMPLATES).filter(
-    e => e.riskType === selectedRiskType && e.type === "crisis"
+    (e) => e.riskType === selectedRiskType && e.type === "crisis",
   );
 
   if (eventTemplates.length === 0) return;
 
-  const eventTemplate = eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+  const eventTemplate =
+    eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
 
   // 生成事件
   const eventId = _startupGenerateId();
@@ -4153,21 +4731,32 @@ function _triggerLegalEvent(state, company) {
     type: eventTemplate.type,
     severity: eventTemplate.severity,
     riskType: selectedRiskType,
-    title: eventTemplate.descTemplate ? eventTemplate.descTemplate.replace("公司", company.name) : eventTemplate.name,
+    title: eventTemplate.descTemplate
+      ? eventTemplate.descTemplate.replace("公司", company.name)
+      : eventTemplate.name,
     name: eventTemplate.name,
     triggeredDay: state.player.day,
-    deadline: state.player.day + (eventTemplate.severity === "high" ? 14 : eventTemplate.severity === "medium" ? 21 : 30),
+    deadline:
+      state.player.day +
+      (eventTemplate.severity === "high"
+        ? 14
+        : eventTemplate.severity === "medium"
+          ? 21
+          : 30),
     resolved: false,
     response: null,
     financialImpact: 0,
   };
 
   company.pendingLegalEvent = event;
-  company.legalRisk = Math.min(100, company.legalRisk + (eventTemplate.effects?.legalRisk || 5));
+  company.legalRisk = Math.min(
+    100,
+    company.legalRisk + (eventTemplate.effects?.legalRisk || 5),
+  );
 
   StateManager.addMessage(
     `⚖️ 法律事件：${event.title}（${LEGAL_RISK_TYPES[selectedRiskType].name}）`,
-    "warning"
+    "warning",
   );
 }
 
@@ -4188,7 +4777,7 @@ function _resolveLegalEvent(state, company, responseIndex) {
     company.legalRiskLevel = Math.min(4, company.legalRiskLevel + 1);
     StateManager.addMessage(
       `⚖️ 法律事件超时：「${event.name}」未及时处理，风险升级！`,
-      "danger"
+      "danger",
     );
   } else {
     // 有响应
@@ -4202,7 +4791,10 @@ function _resolveLegalEvent(state, company, responseIndex) {
     event.outcome = "resolved";
 
     // 计算效果
-    const effectiveness = _calculateLegalResponseEffectiveness(company, response);
+    const effectiveness = _calculateLegalResponseEffectiveness(
+      company,
+      response,
+    );
     const actualFinancialLoss = response.cost * (1 - effectiveness * 0.3);
 
     // 应用效果
@@ -4210,12 +4802,18 @@ function _resolveLegalEvent(state, company, responseIndex) {
       for (const [key, value] of Object.entries(response.effect)) {
         if (key === "financialLoss") {
           event.financialImpact = actualFinancialLoss;
-          company.legalBudget = Math.max(0, company.legalBudget - actualFinancialLoss);
+          company.legalBudget = Math.max(
+            0,
+            company.legalBudget - actualFinancialLoss,
+          );
           company.legalSpent += actualFinancialLoss;
         } else if (key === "legalRisk") {
           company.legalRisk = Math.max(0, company.legalRisk + value);
         } else if (key === "reputation") {
-          company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+          company.reputation = Math.max(
+            0,
+            Math.min(100, company.reputation + value),
+          );
         } else if (key === "employeeMorale") {
           // 员工士气影响通过员工系统处理
         }
@@ -4229,7 +4827,7 @@ function _resolveLegalEvent(state, company, responseIndex) {
 
     StateManager.addMessage(
       `⚖️ 法律事件处理：${response.label}，${effectiveness > 0.5 ? "成功" : "部分成功"}`,
-      effectiveness > 0.5 ? "success" : "warning"
+      effectiveness > 0.5 ? "success" : "warning",
     );
   }
 
@@ -4300,12 +4898,19 @@ function executeLegalChecklistAction(state, checklistId) {
 
   // 检查预算
   if (company.legalBudget < checklist.cost) {
-    return { success: false, message: `法律预算不足，需要 ¥${checklist.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `法律预算不足，需要 ¥${checklist.cost.toLocaleString()}`,
+    };
   }
 
   // 检查行业匹配
   const industry = company.industry;
-  if (!checklist.categories || !checklist.categories.includes(industry) && checklist.categories?.includes("all") === false) {
+  if (
+    !checklist.categories ||
+    (!checklist.categories.includes(industry) &&
+      checklist.categories?.includes("all") === false)
+  ) {
     // 部分检查项对所有行业可用
   }
 
@@ -4319,23 +4924,41 @@ function executeLegalChecklistAction(state, checklistId) {
     for (const [key, value] of Object.entries(checklist.benefit)) {
       if (key === "legalRisk") {
         company.legalRisk = Math.max(0, company.legalRisk + value);
-      } else if (key === "technologyScore" && company.technologyScore !== undefined) {
-        company.technologyScore = Math.min(100, company.technologyScore + value);
+      } else if (
+        key === "technologyScore" &&
+        company.technologyScore !== undefined
+      ) {
+        company.technologyScore = Math.min(
+          100,
+          company.technologyScore + value,
+        );
       } else if (key === "complianceLevel") {
-        company.complianceLevel = Math.min(100, company.complianceLevel + value);
-      } else if (key === "employeeMorale" && company.employeeMorale !== undefined) {
-        company.employeeMorale = Math.max(0, Math.min(100, company.employeeMorale + value));
+        company.complianceLevel = Math.min(
+          100,
+          company.complianceLevel + value,
+        );
+      } else if (
+        key === "employeeMorale" &&
+        company.employeeMorale !== undefined
+      ) {
+        company.employeeMorale = Math.max(
+          0,
+          Math.min(100, company.employeeMorale + value),
+        );
       } else if (key === "financialRisk") {
         // 财务风险降低
       } else if (key === "reputation") {
-        company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+        company.reputation = Math.max(
+          0,
+          Math.min(100, company.reputation + value),
+        );
       }
     }
   }
 
   StateManager.addMessage(
     `✅ 法律合规检查：${checklist.name} 完成，法律风险降低`,
-    "success"
+    "success",
   );
 
   return { success: true, message: `${checklist.name} 完成！` };
@@ -4351,13 +4974,22 @@ function applyPatent(state, patentTypeId) {
 
   // 检查行业匹配
   const industry = company.industry;
-  if (!patentType.categories.includes(industry) && !patentType.categories.includes("all")) {
-    return { success: false, message: `该专利类型不适用于${STARTUP_INDUSTRIES[industry].name}行业` };
+  if (
+    !patentType.categories.includes(industry) &&
+    !patentType.categories.includes("all")
+  ) {
+    return {
+      success: false,
+      message: `该专利类型不适用于${STARTUP_INDUSTRIES[industry].name}行业`,
+    };
   }
 
   // 检查预算
   if (company.legalBudget < patentType.cost) {
-    return { success: false, message: `法律预算不足，需要 ¥${patentType.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `法律预算不足，需要 ¥${patentType.cost.toLocaleString()}`,
+    };
   }
 
   // 生成专利
@@ -4382,7 +5014,7 @@ function applyPatent(state, patentTypeId) {
 
   StateManager.addMessage(
     `📜 已申请 ${patentType.name}：${patent.name}，预计 ${patentType.protectionYears} 年保护期`,
-    "success"
+    "success",
   );
 
   return { success: true, message: `专利申请成功！`, patent };
@@ -4401,7 +5033,10 @@ function buyLegalInsurance(state, level) {
   }
 
   if (company.legalBudget < cost) {
-    return { success: false, message: `法律预算不足，需要 ¥${cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `法律预算不足，需要 ¥${cost.toLocaleString()}`,
+    };
   }
 
   company.legalInsurance = true;
@@ -4411,7 +5046,7 @@ function buyLegalInsurance(state, level) {
 
   StateManager.addMessage(
     `🛡️ 已购买法律保险（${level === 1 ? "基础" : level === 2 ? "标准" : "高级"}）`,
-    "success"
+    "success",
   );
 
   return { success: true, message: `法律保险购买成功！` };
@@ -4433,17 +5068,23 @@ function regulatoryCommunication(state, actionType) {
   if (!action) return { success: false, message: "无效的行动类型" };
 
   if (company.legalBudget < action.cost) {
-    return { success: false, message: `法律预算不足，需要 ¥${action.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `法律预算不足，需要 ¥${action.cost.toLocaleString()}`,
+    };
   }
 
   company.legalBudget -= action.cost;
   company.legalSpent += action.cost;
-  company.regulatoryRelationship = Math.min(100, company.regulatoryRelationship + action.effect);
+  company.regulatoryRelationship = Math.min(
+    100,
+    company.regulatoryRelationship + action.effect,
+  );
   company.legalRisk = Math.max(0, company.legalRisk - action.effect * 0.3);
 
   StateManager.addMessage(
     `🏛️ 与监管机构沟通：${actionType === "lobby" ? "游说" : actionType === "compliance_report" ? "合规报告" : "建立关系"}，监管关系提升`,
-    "success"
+    "success",
   );
 
   return { success: true, message: "监管关系提升！" };
@@ -4451,12 +5092,16 @@ function regulatoryCommunication(state, actionType) {
 
 /** 获取法律风险等级信息 */
 function getLegalRiskLevelInfo(level) {
-  return LEGAL_RISK_LEVELS.find(l => l.level === level) || LEGAL_RISK_LEVELS[0];
+  return (
+    LEGAL_RISK_LEVELS.find((l) => l.level === level) || LEGAL_RISK_LEVELS[0]
+  );
 }
 
 /** 获取合规等级信息 */
 function getComplianceGradeInfo(level) {
-  return COMPLIANCE_LEVELS.find(l => l.level === level) || COMPLIANCE_LEVELS[0];
+  return (
+    COMPLIANCE_LEVELS.find((l) => l.level === level) || COMPLIANCE_LEVELS[0]
+  );
 }
 
 /** 获取法律事件摘要 */
@@ -4483,10 +5128,13 @@ function getAvailableLegalEvents(state) {
   if (!company) return [];
 
   const industry = company.industry;
-  return Object.values(LEGAL_EVENT_TEMPLATES).filter(event => {
+  return Object.values(LEGAL_EVENT_TEMPLATES).filter((event) => {
     if (event.type !== "opportunity") return false;
     const typeInfo = LEGAL_RISK_TYPES[event.riskType];
-    return typeInfo.industries.includes(industry) || typeInfo.industries.includes("all");
+    return (
+      typeInfo.industries.includes(industry) ||
+      typeInfo.industries.includes("all")
+    );
   });
 }
 
@@ -4495,7 +5143,7 @@ function getAvailableLegalResponses(eventId) {
   const eventTemplate = LEGAL_EVENT_TEMPLATES[eventId];
   if (!eventTemplate || !eventTemplate.responseOptions) return [];
 
-  return eventTemplate.responseOptions.map(optKey => ({
+  return eventTemplate.responseOptions.map((optKey) => ({
     key: optKey,
     ...LEGAL_RESPONSE_OPTIONS[optKey],
   }));
@@ -4506,7 +5154,7 @@ function getLegalChecklistProgress(state) {
   const company = state.startup.company;
   if (!company) return [];
 
-  return Object.values(LEGAL_CHECKLIST).map(checklist => ({
+  return Object.values(LEGAL_CHECKLIST).map((checklist) => ({
     ...checklist,
     completed: !!company.legalChecklist[checklist.id],
     completedDay: company.legalChecklist[checklist.id],
@@ -4517,7 +5165,7 @@ function getLegalChecklistProgress(state) {
 function getPatentList(state) {
   const company = state.startup.company;
   if (!company) return [];
-  return company.patents.map(p => ({
+  return company.patents.map((p) => ({
     ...p,
     typeName: PATENT_TYPES[p.type]?.name || p.type,
     typeInfo: PATENT_TYPES[p.type],
@@ -4565,12 +5213,18 @@ function _evaluateMediaRelationships(state, company) {
 
 /** 更新媒体关系等级 */
 function _updateMediaRelationLevel(company) {
-  const newLevel = MEDIA_RELATION_LEVELS.findLast(l => company.mediaRelations >= l.threshold) || MEDIA_RELATION_LEVELS[0];
+  const newLevel =
+    MEDIA_RELATION_LEVELS.findLast(
+      (l) => company.mediaRelations >= l.threshold,
+    ) || MEDIA_RELATION_LEVELS[0];
   if (newLevel.level !== company.mediaRelationLevel) {
-    const oldLevel = MEDIA_RELATION_LEVELS.find(l => l.level === company.mediaRelationLevel) || MEDIA_RELATION_LEVELS[0];
+    const oldLevel =
+      MEDIA_RELATION_LEVELS.find(
+        (l) => l.level === company.mediaRelationLevel,
+      ) || MEDIA_RELATION_LEVELS[0];
     StateManager.addMessage(
       `📰 媒体关系等级变化：${oldLevel.name} → ${newLevel.name}（${newLevel.icon}）${newLevel.bonus ? ` · ${newLevel.bonus}` : ""}`,
-      "event"
+      "event",
     );
     company.mediaRelationLevel = newLevel.level;
   }
@@ -4594,7 +5248,7 @@ function _processPendingCrisisEvents(state, company) {
     company.crisisLevel = Math.min(4, company.crisisLevel + 1);
     StateManager.addMessage(
       `🚨 危机倒计时：${daysRemaining}天内必须处理「${crisis.event.title}」！`,
-      "warning"
+      "warning",
     );
   }
 }
@@ -4612,10 +5266,10 @@ function _evaluateCrisisProbability(state, company) {
   }
 
   // 危机准备度降低危机概率
-  baseChance *= (1 - company.crisisPrepLevel / 200);
+  baseChance *= 1 - company.crisisPrepLevel / 200;
 
   // 媒体培训水平降低危机概率
-  baseChance *= (1 - company.mediaTrainingLevel / 200);
+  baseChance *= 1 - company.mediaTrainingLevel / 200;
 
   // 品牌等级高降低危机概率
   const brandLevel = _getCompanyBrandLevel(company);
@@ -4652,16 +5306,24 @@ function _triggerRandomCrisis(state, company) {
     if (key === "regulatory_investigation" && phase === "IPO") weight *= 5;
 
     // 高管丑闻在有一定规模后更常见
-    if (key === "executive_scandal" && company.employees.length < 5) weight *= 0.3;
+    if (key === "executive_scandal" && company.employees.length < 5)
+      weight *= 0.3;
 
     // 用户投诉在产品发布后更常见
-    if (key === "customer_complaint" && company.products.some(p => p.status === "launched")) weight *= 2;
+    if (
+      key === "customer_complaint" &&
+      company.products.some((p) => p.status === "launched")
+    )
+      weight *= 2;
 
     availableCrisisTypes.push({ key, weight, template });
   }
 
   // 按权重选择
-  const totalWeight = availableCrisisTypes.reduce((sum, c) => sum + c.weight, 0);
+  const totalWeight = availableCrisisTypes.reduce(
+    (sum, c) => sum + c.weight,
+    0,
+  );
   let random = Math.random() * totalWeight;
   let selected = availableCrisisTypes[0];
 
@@ -4696,18 +5358,27 @@ function _triggerRandomCrisis(state, company) {
   };
 
   // 增加危机等级
-  company.crisisLevel = Math.min(4, company.crisisLevel + (selected.template.severity === "high" ? 2 : selected.template.severity === "medium" ? 1 : 0));
+  company.crisisLevel = Math.min(
+    4,
+    company.crisisLevel +
+      (selected.template.severity === "high"
+        ? 2
+        : selected.template.severity === "medium"
+          ? 1
+          : 0),
+  );
 
   StateManager.addMessage(
     `${crisisEvent.icon} 【危机事件】${crisisEvent.title}，请在14天内做出决策！`,
-    selected.template.severity === "high" ? "danger" : "warning"
+    selected.template.severity === "high" ? "danger" : "warning",
   );
 }
 
 /** 执行危机应对 */
 function resolveCrisisEvent(state, optionIndex) {
   const company = state.startup.company;
-  if (!company || !company.pendingCrisisEvent) return { success: false, message: "没有待处理的危机事件" };
+  if (!company || !company.pendingCrisisEvent)
+    return { success: false, message: "没有待处理的危机事件" };
 
   const crisis = company.pendingCrisisEvent;
   const eventTemplate = PR_EVENT_TEMPLATES[crisis.event.type];
@@ -4722,7 +5393,10 @@ function resolveCrisisEvent(state, optionIndex) {
 
   // 检查费用
   if (company.cashReserve < option.cost) {
-    return { success: false, message: `现金不足，需要¥${option.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${option.cost.toLocaleString()}`,
+    };
   }
 
   // 执行应对
@@ -4738,7 +5412,14 @@ function resolveCrisisEvent(state, optionIndex) {
   // 媒体关系影响
   if (company.mediaRelations) {
     const mediaBonus = company.mediaRelationLevel >= 3 ? 0.2 : 0; // 高媒体关系有 20% 缓冲
-    company.mediaRelations = Math.max(0, Math.min(100, company.mediaRelations + (option.effect.mediaRelations || 0) * (1 - mediaBonus)));
+    company.mediaRelations = Math.max(
+      0,
+      Math.min(
+        100,
+        company.mediaRelations +
+          (option.effect.mediaRelations || 0) * (1 - mediaBonus),
+      ),
+    );
   }
 
   // 记录结果
@@ -4764,32 +5445,50 @@ function resolveCrisisEvent(state, optionIndex) {
   company.pendingCrisisEvent = null;
 
   // 根据应对效果调整声誉
-  const effectiveness = _calculateCrisisResponseEffectiveness(crisis.event.type, optionKey, company);
+  const effectiveness = _calculateCrisisResponseEffectiveness(
+    crisis.event.type,
+    optionKey,
+    company,
+  );
   if (effectiveness > 0.7) {
     StateManager.addMessage(
-      `✅ 危机处理成功！${option.desc}，声誉+${Math.round(effectiveness * 10)}，${Object.entries(option.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
-      "success"
+      `✅ 危机处理成功！${option.desc}，声誉+${Math.round(effectiveness * 10)}，${Object.entries(
+        option.effect,
+      )
+        .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+        .join(", ")}`,
+      "success",
     );
   } else if (effectiveness > 0.4) {
     StateManager.addMessage(
-      `🔶 危机处理一般，${option.desc}，${Object.entries(option.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
-      "event"
+      `🔶 危机处理一般，${option.desc}，${Object.entries(option.effect)
+        .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+        .join(", ")}`,
+      "event",
     );
   } else {
     StateManager.addMessage(
       `❌ 危机处理不理想，${option.desc}，声誉继续受损`,
-      "warning"
+      "warning",
     );
   }
 
   // 重置危机等级（根据处理效果）
-  company.crisisLevel = Math.max(0, company.crisisLevel - (effectiveness > 0.7 ? 2 : effectiveness > 0.4 ? 1 : 0));
+  company.crisisLevel = Math.max(
+    0,
+    company.crisisLevel -
+      (effectiveness > 0.7 ? 2 : effectiveness > 0.4 ? 1 : 0),
+  );
 
   return { success: true, outcome: option.effect, effectiveness };
 }
 
 /** 计算危机应对效果 */
-function _calculateCrisisResponseEffectiveness(crisisType, responseKey, company) {
+function _calculateCrisisResponseEffectiveness(
+  crisisType,
+  responseKey,
+  company,
+) {
   let baseEffectiveness = 0.5;
 
   // 媒体关系加成
@@ -4804,17 +5503,47 @@ function _calculateCrisisResponseEffectiveness(crisisType, responseKey, company)
   // 特定应对的效果加成
   const effectivenessBonuses = {
     // 产品故障：召回 > 赔偿 > 道歉 > 冷处理
-    product_failure: { recall: 0.3, compensate: 0.15, apologize: 0.05, ignore: -0.3 },
+    product_failure: {
+      recall: 0.3,
+      compensate: 0.15,
+      apologize: 0.05,
+      ignore: -0.3,
+    },
     // 数据泄露：配合调查 > 聘请安全 > 通知用户 > 和解
-    data_breach: { cooperate_authorities: 0.3, hire_security: 0.2, notify_users: 0.1, settle: 0.05 },
+    data_breach: {
+      cooperate_authorities: 0.3,
+      hire_security: 0.2,
+      notify_users: 0.1,
+      settle: 0.05,
+    },
     // 高管丑闻：暂停职务 > 法律行动 > 发布声明 > 等待
-    executive_scandal: { suspend_exec: 0.25, legal_action: 0.1, public_statement: 0.05, wait: -0.1 },
+    executive_scandal: {
+      suspend_exec: 0.25,
+      legal_action: 0.1,
+      public_statement: 0.05,
+      wait: -0.1,
+    },
     // 用户投诉：公开回应 > 改进服务 > 私下和解 > 冷处理
-    customer_complaint: { respond_publicly: 0.2, improve_service: 0.15, private_settlement: 0.05, ignore_crisis: -0.2 },
+    customer_complaint: {
+      respond_publicly: 0.2,
+      improve_service: 0.15,
+      private_settlement: 0.05,
+      ignore_crisis: -0.2,
+    },
     // 竞争对手抹黑：专注产品 > 法律诉讼 > 反驳声明 > 无视
-    competitor_attack: { focus_product: 0.25, legal_action_competitor: 0.15, counter_statement: 0.05, ignore_competitor: -0.1 },
+    competitor_attack: {
+      focus_product: 0.25,
+      legal_action_competitor: 0.15,
+      counter_statement: 0.05,
+      ignore_competitor: -0.1,
+    },
     // 监管调查：全力配合 > 和解 > 法律抗辩 > 游说
-    regulatory_investigation: { cooperate_regulatory: 0.3, settle_regulatory: 0.15, legal_defense: 0.05, lobby: -0.2 },
+    regulatory_investigation: {
+      cooperate_regulatory: 0.3,
+      settle_regulatory: 0.15,
+      legal_defense: 0.05,
+      lobby: -0.2,
+    },
   };
 
   const bonuses = effectivenessBonuses[crisisType] || {};
@@ -4835,14 +5564,23 @@ function executePREvent(state, eventId) {
 
   // 检查触发条件
   if (eventTemplate.triggerConditions) {
-    if (eventTemplate.triggerConditions.minRevenue && company.revenue < eventTemplate.triggerConditions.minRevenue) {
-      return { success: false, message: `需要月收入¥${eventTemplate.triggerConditions.minRevenue.toLocaleString()}才能举办` };
+    if (
+      eventTemplate.triggerConditions.minRevenue &&
+      company.revenue < eventTemplate.triggerConditions.minRevenue
+    ) {
+      return {
+        success: false,
+        message: `需要月收入¥${eventTemplate.triggerConditions.minRevenue.toLocaleString()}才能举办`,
+      };
     }
   }
 
   // 检查费用
   if (company.cashReserve < eventTemplate.cost) {
-    return { success: false, message: `现金不足，需要¥${eventTemplate.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${eventTemplate.cost.toLocaleString()}`,
+    };
   }
 
   // 检查冷却
@@ -4850,7 +5588,10 @@ function executePREvent(state, eventId) {
     const daysSinceLast = state.player.day - company.lastMediaAction.day;
     const actionTemplate = MEDIA_RELATION_ACTIONS[eventId];
     if (actionTemplate && daysSinceLast < actionTemplate.cooldown) {
-      return { success: false, message: `该活动冷却中，还需${actionTemplate.cooldown - daysSinceLast}天` };
+      return {
+        success: false,
+        message: `该活动冷却中，还需${actionTemplate.cooldown - daysSinceLast}天`,
+      };
     }
   }
 
@@ -4885,10 +5626,14 @@ function executePREvent(state, eventId) {
 
   StateManager.addMessage(
     `${success ? "✅" : "🔶"} 【${eventTemplate.name}】${success ? "成功举办" : "效果一般"}，${Object.entries(eventTemplate.effects).map(([k, v]) => `${k} +${Math.round(v * multiplier)}）。${success ? "" : "(效果减半)"}`)}`,
-    success ? "success" : "event"
+    success ? "success" : "event",
   );
 
-  return { success: true, outcome: eventTemplate.effects, successRate: eventTemplate.successChance };
+  return {
+    success: true,
+    outcome: eventTemplate.effects,
+    successRate: eventTemplate.successChance,
+  };
 }
 
 /** 执行媒体关系管理行动 */
@@ -4901,14 +5646,23 @@ function executeMediaRelationAction(state, actionId) {
 
   // 检查费用
   if (company.cashReserve < action.cost) {
-    return { success: false, message: `现金不足，需要¥${action.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${action.cost.toLocaleString()}`,
+    };
   }
 
   // 检查冷却
-  if (company.lastMediaAction && company.lastMediaAction.actionId === actionId) {
+  if (
+    company.lastMediaAction &&
+    company.lastMediaAction.actionId === actionId
+  ) {
     const daysSinceLast = state.player.day - company.lastMediaAction.day;
     if (daysSinceLast < action.cooldown) {
-      return { success: false, message: `该行动冷却中，还需${action.cooldown - daysSinceLast}天` };
+      return {
+        success: false,
+        message: `该行动冷却中，还需${action.cooldown - daysSinceLast}天`,
+      };
     }
   }
 
@@ -4927,8 +5681,10 @@ function executeMediaRelationAction(state, actionId) {
   _updateMediaRelationLevel(company);
 
   StateManager.addMessage(
-    `🤝 【${action.name}】${action.desc}，${Object.entries(action.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}`,
-    "success"
+    `🤝 【${action.name}】${action.desc}，${Object.entries(action.effect)
+      .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+      .join(", ")}`,
+    "success",
   );
 
   return { success: true, outcome: action.effect };
@@ -4936,14 +5692,14 @@ function executeMediaRelationAction(state, actionId) {
 
 /** 获取可用公关活动 */
 function getAvailablePREvents() {
-  return Object.values(PR_EVENT_TEMPLATES).filter(e => e.type === "positive");
+  return Object.values(PR_EVENT_TEMPLATES).filter((e) => e.type === "positive");
 }
 
 /** 获取可用危机应对选项 */
 function getAvailableCrisisResponses(crisisType) {
   const template = PR_EVENT_TEMPLATES[crisisType];
   if (!template || !template.responseOptions) return [];
-  return template.responseOptions.map(optKey => ({
+  return template.responseOptions.map((optKey) => ({
     key: optKey,
     ...CRISIS_RESPONSE_OPTIONS[optKey],
   }));
@@ -4951,12 +5707,15 @@ function getAvailableCrisisResponses(crisisType) {
 
 /** 获取媒体关系等级信息 */
 function getMediaRelationLevelInfo(level) {
-  return MEDIA_RELATION_LEVELS.find(l => l.level === level) || MEDIA_RELATION_LEVELS[0];
+  return (
+    MEDIA_RELATION_LEVELS.find((l) => l.level === level) ||
+    MEDIA_RELATION_LEVELS[0]
+  );
 }
 
 /** 获取危机等级信息 */
 function getCrisisLevelInfo(level) {
-  return CRISIS_LEVELS.find(l => l.level === level) || CRISIS_LEVELS[0];
+  return CRISIS_LEVELS.find((l) => l.level === level) || CRISIS_LEVELS[0];
 }
 
 /** 获取公关事件摘要 */
@@ -4965,8 +5724,12 @@ function getPREventSummary(state) {
   if (!company) return null;
 
   const recentEvents = company.prEvents.slice(-10);
-  const positiveCount = recentEvents.filter(e => e.type === "positive" && e.success).length;
-  const crisisCount = recentEvents.filter(e => e.type === "crisis" && e.resolved).length;
+  const positiveCount = recentEvents.filter(
+    (e) => e.type === "positive" && e.success,
+  ).length;
+  const crisisCount = recentEvents.filter(
+    (e) => e.type === "crisis" && e.resolved,
+  ).length;
   const pendingCrisis = company.pendingCrisisEvent ? 1 : 0;
 
   return {
@@ -4977,7 +5740,7 @@ function getPREventSummary(state) {
     crisisEvents: crisisCount,
     pendingCrisis,
     sentimentScore: company.sentimentScore,
-    recentEvents: recentEvents.map(e => ({
+    recentEvents: recentEvents.map((e) => ({
       type: e.type,
       title: e.title,
       day: e.triggeredDay,
@@ -5023,11 +5786,12 @@ function _evolveProductLifecycle(state, product, timeMult) {
       product.lifecycleStage = "decline";
     }
     // 随机技术替代概率（每年约5%）
-    if (Math.random() < 0.0006) { // 0.06%/天 ≈ 5%/年
+    if (Math.random() < 0.0006) {
+      // 0.06%/天 ≈ 5%/年
       product.lifecycleStage = "decline";
       StateManager.addMessage(
         `⚡ 「${product.name}」遭遇技术颠覆！行业出现替代方案`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -5046,18 +5810,32 @@ function _evolveProductLifecycle(state, product, timeMult) {
 function _checkProductRetirement(state, product) {
   // 退市条件：连续60天用户<100 或 连续90天收入<¥1000
   if (product.users < 100 && product.consecutiveDeclineDays >= 60) {
-    _retireProductInternal(state, product, "market_decline", "用户基数过低，市场自然淘汰");
+    _retireProductInternal(
+      state,
+      product,
+      "market_decline",
+      "用户基数过低，市场自然淘汰",
+    );
     return;
   }
 
   if (product.revenue < 1000 && product.consecutiveDeclineDays >= 90) {
-    _retireProductInternal(state, product, "market_decline", "收入持续低迷，无法覆盖成本");
+    _retireProductInternal(
+      state,
+      product,
+      "market_decline",
+      "收入持续低迷，无法覆盖成本",
+    );
     return;
   }
 
   // 主动退市判定：产品收入占比 < 1% 且连续30天负增长
   const totalRevenue = state.startup.company?.revenue || 1;
-  if (product.revenue / totalRevenue < 0.01 && product.userGrowthRate < -1 && product.consecutiveDeclineDays >= 30) {
+  if (
+    product.revenue / totalRevenue < 0.01 &&
+    product.userGrowthRate < -1 &&
+    product.consecutiveDeclineDays >= 30
+  ) {
     // 自动建议退市（不强制，只是标记）
     product._retirementRecommended = true;
   }
@@ -5078,7 +5856,7 @@ function _retireProductInternal(state, product, reason, reasonText) {
 
   StateManager.addMessage(
     `💀 「${product.name}」正式退市（${stageNames[reason] || reason}）`,
-    "danger"
+    "danger",
   );
 
   // 退市影响
@@ -5088,7 +5866,10 @@ function _retireProductInternal(state, product, reason, reasonText) {
     const fireChance = reason === "failure" ? 0.3 : 0.1;
     for (const emp of company.employees) {
       if (Math.random() < fireChance) {
-        StateManager.addMessage(`⚠️ 「${emp.name}」因「${product.name}」退市离职`, "warning");
+        StateManager.addMessage(
+          `⚠️ 「${emp.name}」因「${product.name}」退市离职`,
+          "warning",
+        );
         fireEmployee(state, emp.id);
       }
     }
@@ -5118,6 +5899,46 @@ function _calculateMarketShare(state, product) {
   if (totalCompetitiveness <= 0) return 0;
 
   return Math.min(100, (product.competitiveness / totalCompetitiveness) * 100);
+}
+
+// ====== P1-9: 竞争对手策略应对辅助函数 ======
+
+/** 更新竞争防御等级 */
+function _updateCompetitorDefenseLevel(state, company) {
+  let defense = 0;
+
+  // 基础：有活跃攻击时防御等级提升
+  if (
+    company.activeCompetitorAttacks &&
+    company.activeCompetitorAttacks.length > 0
+  ) {
+    defense += company.activeCompetitorAttacks.length * 10;
+  }
+
+  // 品牌防御预算加成
+  defense += Math.min(30, company.brandDefenseBudget / 10000);
+
+  // 人才留任基金加成
+  defense += Math.min(20, company.talentRetentionFund / 5000);
+
+  // 防御性专利加成
+  if (company.techDefensePatents && company.techDefensePatents.length > 0) {
+    defense += company.techDefensePatents.length * 5;
+  }
+
+  // 竞争情报等级加成
+  defense += company.competitiveIntelligence * 0.2;
+
+  // 市场份额趋势稳定加成
+  if (company.marketShareTrend && company.marketShareTrend.length >= 7) {
+    const recent = company.marketShareTrend.slice(-7);
+    const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const variance =
+      recent.reduce((a, b) => a + Math.abs(b - avg), 0) / recent.length;
+    if (variance < 2) defense += 10; // 市场份额稳定
+  }
+
+  company.competitorDefenseLevel = Math.max(0, Math.min(100, defense));
 }
 
 // ====== P0-4: 员工满意度/倦怠系统 ======
@@ -5158,11 +5979,15 @@ function _tickEmployeeSatisfaction(state, emp, company, netCash, timeMult) {
   // 员工总数多 → 氛围复杂 → 满意度略降
   const teamSizeFactor = Math.max(0, 1 - company.employees.length * 0.01);
   const targetAtmosphere = 40 + teamSizeFactor * 40;
-  sat.atmosphere = sat.atmosphere + (targetAtmosphere - sat.atmosphere) * 0.015 * timeMult;
+  sat.atmosphere =
+    sat.atmosphere + (targetAtmosphere - sat.atmosphere) * 0.015 * timeMult;
 
   // === 综合满意度 ===
   emp.satisfaction = Math.round(
-    sat.salary * 0.35 + sat.workload * 0.25 + sat.growth * 0.25 + sat.atmosphere * 0.15
+    sat.salary * 0.35 +
+      sat.workload * 0.25 +
+      sat.growth * 0.25 +
+      sat.atmosphere * 0.15,
   );
 
   // === 倦怠风险计算 ===
@@ -5229,16 +6054,27 @@ function _triggerBurnout(state, emp, company) {
 
   const burnoutTypes = {
     1: { name: "轻度倦怠", impact: "工作效率下降", productivityLoss: 0.1 },
-    2: { name: "中度倦怠", impact: "频繁请假，效率大降", productivityLoss: 0.3 },
-    3: { name: "重度倦怠", impact: "可能离职或健康受损", productivityLoss: 0.5 },
+    2: {
+      name: "中度倦怠",
+      impact: "频繁请假，效率大降",
+      productivityLoss: 0.3,
+    },
+    3: {
+      name: "重度倦怠",
+      impact: "可能离职或健康受损",
+      productivityLoss: 0.5,
+    },
   };
 
   const burnout = burnoutTypes[emp.burnoutLevel];
-  emp.productivity = Math.max(0.3, emp.productivity * (1 - burnout.productivityLoss));
+  emp.productivity = Math.max(
+    0.3,
+    emp.productivity * (1 - burnout.productivityLoss),
+  );
 
   StateManager.addMessage(
     `😟 「${emp.name}」${burnout.name}！${burnout.impact}（倦怠风险${emp.burnoutRisk.toFixed(0)}）`,
-    emp.burnoutLevel >= 2 ? "danger" : "warning"
+    emp.burnoutLevel >= 2 ? "danger" : "warning",
   );
 
   emp._burnoutHistory.push({
@@ -5250,10 +6086,7 @@ function _triggerBurnout(state, emp, company) {
 
   // 重度倦怠可能离职
   if (emp.burnoutLevel >= 3 && Math.random() < 0.3) {
-    StateManager.addMessage(
-      `💔 「${emp.name}」因重度倦怠离职！`,
-      "danger"
-    );
+    StateManager.addMessage(`💔 「${emp.name}」因重度倦怠离职！`, "danger");
     fireEmployee(state, emp.id);
   }
 }
@@ -5306,7 +6139,10 @@ function improveEmployeeSatisfaction(state, action, params) {
   if (!act) return { success: false, message: "无效的操作" };
 
   if (company.cashReserve < act.cost) {
-    return { success: false, message: `现金不足，需要¥${act.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${act.cost.toLocaleString()}`,
+    };
   }
 
   company.cashReserve -= act.cost;
@@ -5315,23 +6151,46 @@ function improveEmployeeSatisfaction(state, action, params) {
   // 应用效果到所有员工
   let totalSatisfactionGain = 0;
   for (const emp of company.employees) {
-    if (act.effect.salary) emp.satisfactionDetails.salary = Math.min(100, emp.satisfactionDetails.salary + act.effect.salary);
-    if (act.effect.workload) emp.satisfactionDetails.workload = Math.min(100, emp.satisfactionDetails.workload + act.effect.workload);
-    if (act.effect.growth) emp.satisfactionDetails.growth = Math.min(100, emp.satisfactionDetails.growth + act.effect.growth);
-    if (act.effect.atmosphere) emp.satisfactionDetails.atmosphere = Math.min(100, emp.satisfactionDetails.atmosphere + act.effect.atmosphere);
-    if (act.effect.satisfaction) emp.satisfaction = Math.min(100, emp.satisfaction + act.effect.satisfaction);
-    if (act.effect.health) emp.health = Math.min(100, emp.health + act.effect.health);
+    if (act.effect.salary)
+      emp.satisfactionDetails.salary = Math.min(
+        100,
+        emp.satisfactionDetails.salary + act.effect.salary,
+      );
+    if (act.effect.workload)
+      emp.satisfactionDetails.workload = Math.min(
+        100,
+        emp.satisfactionDetails.workload + act.effect.workload,
+      );
+    if (act.effect.growth)
+      emp.satisfactionDetails.growth = Math.min(
+        100,
+        emp.satisfactionDetails.growth + act.effect.growth,
+      );
+    if (act.effect.atmosphere)
+      emp.satisfactionDetails.atmosphere = Math.min(
+        100,
+        emp.satisfactionDetails.atmosphere + act.effect.atmosphere,
+      );
+    if (act.effect.satisfaction)
+      emp.satisfaction = Math.min(
+        100,
+        emp.satisfaction + act.effect.satisfaction,
+      );
+    if (act.effect.health)
+      emp.health = Math.min(100, emp.health + act.effect.health);
 
     // 倦怠风险降低
     emp.burnoutRisk = Math.max(0, emp.burnoutRisk - 5);
     totalSatisfactionGain += emp.satisfaction;
   }
 
-  const avgSatisfaction = (totalSatisfactionGain / company.employees.length).toFixed(0);
+  const avgSatisfaction = (
+    totalSatisfactionGain / company.employees.length
+  ).toFixed(0);
 
   StateManager.addMessage(
     `✅ ${act.name}完成！全员满意度提升至平均${avgSatisfaction}分，${act.desc}`,
-    "success"
+    "success",
   );
 
   return { success: true, action: action, avgSatisfaction: avgSatisfaction };
@@ -5341,7 +6200,9 @@ function improveEmployeeSatisfaction(state, action, params) {
 function getEmployeeSatisfactionSummary(company) {
   if (!company || company.employees.length === 0) return null;
 
-  let totalSat = 0, totalBurnout = 0, totalHealth = 0;
+  let totalSat = 0,
+    totalBurnout = 0,
+    totalHealth = 0;
   let burnoutCount = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
   for (const emp of company.employees) {
@@ -5372,9 +6233,14 @@ function setQuarterlyOkr(state, objective, keyResults) {
   const quarter = state.player.corpQuarter || 1;
 
   // 检查是否已有当前季度 OKR
-  const existing = company.okrs.find(o => o.year === year && o.quarter === quarter);
+  const existing = company.okrs.find(
+    (o) => o.year === year && o.quarter === quarter,
+  );
   if (existing) {
-    return { success: false, message: "本季度已设定 OKR，请先完成或放弃当前 OKR" };
+    return {
+      success: false,
+      message: "本季度已设定 OKR，请先完成或放弃当前 OKR",
+    };
   }
 
   // 生成 OKR ID
@@ -5382,9 +6248,9 @@ function setQuarterlyOkr(state, objective, keyResults) {
 
   // 处理关键结果
   const processedKR = [];
-  for (const kr of (keyResults || [])) {
+  for (const kr of keyResults || []) {
     processedKR.push({
-      id: kr.id || ("kr_" + processedKR.length),
+      id: kr.id || "kr_" + processedKR.length,
       description: kr.description,
       target: kr.target, // 目标值
       unit: kr.unit || "", // 单位
@@ -5411,8 +6277,8 @@ function setQuarterlyOkr(state, objective, keyResults) {
   company.currentQuarterOkr = okrId;
 
   StateManager.addMessage(
-    `🎯 设定 Q${quarter} 目标：「${objective}」\n关键结果：${processedKR.map(k => k.description + ' → ' + k.target + k.unit).join(' | ')}`,
-    "success"
+    `🎯 设定 Q${quarter} 目标：「${objective}」\n关键结果：${processedKR.map((k) => k.description + " → " + k.target + k.unit).join(" | ")}`,
+    "success",
   );
 
   return { success: true, okr: okr };
@@ -5423,7 +6289,7 @@ function updateOkrProgress(state, okrId, updates) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const okr = company.okrs.find(o => o.id === okrId);
+  const okr = company.okrs.find((o) => o.id === okrId);
   if (!okr || okr.status !== "active") {
     return { success: false, message: "OKR 不存在或未激活" };
   }
@@ -5444,17 +6310,29 @@ function updateOkrProgress(state, okrId, updates) {
   // 计算整体进度
   if (okr.keyResults.length > 0) {
     const totalWeight = okr.keyResults.reduce((sum, kr) => sum + kr.weight, 0);
-    const weightedProgress = okr.keyResults.reduce((sum, kr) => sum + kr.progress * kr.weight, 0);
+    const weightedProgress = okr.keyResults.reduce(
+      (sum, kr) => sum + kr.progress * kr.weight,
+      0,
+    );
     okr.progress = Math.round(weightedProgress / totalWeight);
   }
 
   // 进度里程碑通知
   if (updated && okr.progress >= 25 && okr.progress < 50) {
-    StateManager.addMessage(`📊 「${okr.objective}」进度 25%，稳步推进`, "info");
+    StateManager.addMessage(
+      `📊 「${okr.objective}」进度 25%，稳步推进`,
+      "info",
+    );
   } else if (updated && okr.progress >= 50 && okr.progress < 75) {
-    StateManager.addMessage(`📈 「${okr.objective}」进度 50%，进展良好`, "info");
+    StateManager.addMessage(
+      `📈 「${okr.objective}」进度 50%，进展良好`,
+      "info",
+    );
   } else if (updated && okr.progress >= 75) {
-    StateManager.addMessage(`🚀 「${okr.objective}」进度 75%，接近完成！`, "success");
+    StateManager.addMessage(
+      `🚀 「${okr.objective}」进度 75%，接近完成！`,
+      "success",
+    );
   }
 
   return { success: true, okr: okr };
@@ -5469,7 +6347,9 @@ function evaluateQuarterlyOkr(state) {
   const quarter = state.player.corpQuarter || 1;
 
   // 找到当前季度 OKR
-  const okr = company.okrs.find(o => o.year === year && o.quarter === quarter && o.status === "active");
+  const okr = company.okrs.find(
+    (o) => o.year === year && o.quarter === quarter && o.status === "active",
+  );
   if (!okr) {
     StateManager.addMessage("⚠️ 本季度未设定 OKR，跳过评估", "warning");
     return { success: false, message: "本季度未设定 OKR" };
@@ -5496,7 +6376,7 @@ function evaluateQuarterlyOkr(state) {
     kpi: okr.objective,
     score: okr.score,
     completionRate: completionRate,
-    keyResults: okr.keyResults.map(k => ({
+    keyResults: okr.keyResults.map((k) => ({
       description: k.description,
       target: k.target,
       current: k.current,
@@ -5505,10 +6385,10 @@ function evaluateQuarterlyOkr(state) {
   });
 
   // 更新历史完成率
-  const completedOkr = company.kpiHistory.filter(k => k.score !== undefined);
+  const completedOkr = company.kpiHistory.filter((k) => k.score !== undefined);
   if (completedOkr.length > 0) {
     company.okrCompletionRate = Math.round(
-      completedOkr.reduce((sum, k) => sum + k.score, 0) / completedOkr.length
+      completedOkr.reduce((sum, k) => sum + k.score, 0) / completedOkr.length,
     );
   }
 
@@ -5516,34 +6396,42 @@ function evaluateQuarterlyOkr(state) {
   let bonus = 0;
   if (okr.score >= 80) {
     bonus = 10000 * (okr.score / 100);
-    company.employees.forEach(emp => {
+    company.employees.forEach((emp) => {
       emp.satisfaction = Math.min(100, emp.satisfaction + 5);
-      if (emp.satisfactionDetails) emp.satisfactionDetails.growth = Math.min(100, emp.satisfactionDetails.growth + 3);
+      if (emp.satisfactionDetails)
+        emp.satisfactionDetails.growth = Math.min(
+          100,
+          emp.satisfactionDetails.growth + 3,
+        );
     });
     StateManager.addMessage(
       `🎉 Q${quarter} OKR 完成度 ${okr.score}%！优秀！全员满意度+5，奖金池+¥${bonus.toLocaleString()}`,
-      "success"
+      "success",
     );
   } else if (okr.score >= 60) {
     bonus = 5000 * (okr.score / 100);
     StateManager.addMessage(
       `✅ Q${quarter} OKR 完成度 ${okr.score}%，达标。奖金池+¥${bonus.toLocaleString()}`,
-      "info"
+      "info",
     );
   } else if (okr.score >= 40) {
     bonus = 2000 * (okr.score / 100);
     StateManager.addMessage(
       `⚠️ Q${quarter} OKR 完成度 ${okr.score}%，未达标。奖金池+¥${bonus.toLocaleString()}`,
-      "warning"
+      "warning",
     );
   } else {
     StateManager.addMessage(
       `💀 Q${quarter} OKR 完成度 ${okr.score}%，严重未达标。团队士气受挫。`,
-      "danger"
+      "danger",
     );
-    company.employees.forEach(emp => {
+    company.employees.forEach((emp) => {
       emp.satisfaction = Math.max(0, emp.satisfaction - 5);
-      if (emp.satisfactionDetails) emp.satisfactionDetails.growth = Math.max(0, emp.satisfactionDetails.growth - 3);
+      if (emp.satisfactionDetails)
+        emp.satisfactionDetails.growth = Math.max(
+          0,
+          emp.satisfactionDetails.growth - 3,
+        );
     });
   }
 
@@ -5590,7 +6478,7 @@ function setTeamGoal(state, team, target, deadlineDays) {
 
   StateManager.addMessage(
     `👥 「${teamInfo.name}」目标设定：${target}（期限：${deadlineDays || 30}天）`,
-    "info"
+    "info",
   );
 
   return { success: true, goal: goal };
@@ -5601,21 +6489,27 @@ function updateTeamGoalProgress(state, goalId, progress) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const goal = company.teamGoals.find(g => g.id === goalId);
+  const goal = company.teamGoals.find((g) => g.id === goalId);
   if (!goal || goal.status !== "active") {
     return { success: false, message: "目标不存在或未激活" };
   }
 
   goal.progress = Math.max(0, Math.min(100, progress));
-  goal.current = Math.round(goal.target * progress / 100);
+  goal.current = Math.round((goal.target * progress) / 100);
 
   // 检查是否到期
   if (state.player.day >= goal.deadline) {
     goal.status = "completed";
     if (goal.progress >= 80) {
-      StateManager.addMessage(`✅ 「${goal.teamName}」目标达成！进度${goal.progress}%`, "success");
+      StateManager.addMessage(
+        `✅ 「${goal.teamName}」目标达成！进度${goal.progress}%`,
+        "success",
+      );
     } else {
-      StateManager.addMessage(`⚠️ 「${goal.teamName}」目标未达成。进度${goal.progress}%`, "warning");
+      StateManager.addMessage(
+        `⚠️ 「${goal.teamName}」目标未达成。进度${goal.progress}%`,
+        "warning",
+      );
     }
   }
 
@@ -5627,7 +6521,7 @@ function setEmployeeGoal(state, employeeId, goalDescription, target) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const emp = company.employees.find(e => e.id === employeeId);
+  const emp = company.employees.find((e) => e.id === employeeId);
   if (!emp) return { success: false, message: "员工不存在" };
 
   const goalId = "eg_" + Date.now();
@@ -5646,7 +6540,7 @@ function setEmployeeGoal(state, employeeId, goalDescription, target) {
 
   StateManager.addMessage(
     `👤 「${emp.name}」个人目标：${goalDescription}（目标：${target}）`,
-    "info"
+    "info",
   );
 
   return { success: true, goal: goal };
@@ -5657,21 +6551,24 @@ function updateEmployeeGoalProgress(state, goalId, progress) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const goal = company.employeeGoals.find(g => g.id === goalId);
+  const goal = company.employeeGoals.find((g) => g.id === goalId);
   if (!goal || goal.status !== "active") {
     return { success: false, message: "目标不存在或未激活" };
   }
 
   goal.progress = Math.max(0, Math.min(100, progress));
-  goal.current = Math.round(goal.target * progress / 100);
+  goal.current = Math.round((goal.target * progress) / 100);
 
   // 目标达成奖励
   if (goal.progress >= 100) {
-    const emp = company.employees.find(e => e.id === goal.employeeId);
+    const emp = company.employees.find((e) => e.id === goal.employeeId);
     if (emp) {
       emp.loyalty = Math.min(100, emp.loyalty + 5);
       emp.satisfaction = Math.min(100, emp.satisfaction + 3);
-      StateManager.addMessage(`🎉 「${goal.employeeName}」个人目标达成！忠诚度+5`, "success");
+      StateManager.addMessage(
+        `🎉 「${goal.employeeName}」个人目标达成！忠诚度+5`,
+        "success",
+      );
     }
     goal.status = "completed";
   }
@@ -5683,21 +6580,23 @@ function updateEmployeeGoalProgress(state, goalId, progress) {
 function getKpiSummary(company) {
   if (!company) return null;
 
-  const activeOkr = company.okrs.find(o => o.status === "active");
+  const activeOkr = company.okrs.find((o) => o.status === "active");
   const completedOkr = company.kpiHistory;
 
   return {
-    currentOkr: activeOkr ? {
-      objective: activeOkr.objective,
-      progress: activeOkr.progress,
-      keyResults: activeOkr.keyResults.map(k => ({
-        description: k.description,
-        progress: k.progress,
-        target: k.target,
-        current: k.current,
-      })),
-    } : null,
-    history: completedOkr.map(k => ({
+    currentOkr: activeOkr
+      ? {
+          objective: activeOkr.objective,
+          progress: activeOkr.progress,
+          keyResults: activeOkr.keyResults.map((k) => ({
+            description: k.description,
+            progress: k.progress,
+            target: k.target,
+            current: k.current,
+          })),
+        }
+      : null,
+    history: completedOkr.map((k) => ({
       quarter: "Q" + k.quarter + "/" + k.year,
       kpi: k.kpi,
       score: k.score,
@@ -5705,8 +6604,11 @@ function getKpiSummary(company) {
     })),
     avgCompletion: company.okrCompletionRate,
     bonusPool: company.quarterlyBonusPool || 0,
-    teamGoalsActive: company.teamGoals.filter(g => g.status === "active").length,
-    employeeGoalsActive: company.employeeGoals.filter(g => g.status === "active").length,
+    teamGoalsActive: company.teamGoals.filter((g) => g.status === "active")
+      .length,
+    employeeGoalsActive: company.employeeGoals.filter(
+      (g) => g.status === "active",
+    ).length,
   };
 }
 
@@ -5725,32 +6627,53 @@ function showKpiDashboard(state) {
       '<div style="margin-bottom:16px;">' +
       '<div style="font-weight:bold;margin-bottom:8px;font-size:13px;">🎯 当前季度 OKR</div>' +
       '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;">' +
-      '<div style="font-size:12px;font-weight:bold;margin-bottom:6px;">' + summary.currentOkr.objective + '</div>' +
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:6px;">' +
+      summary.currentOkr.objective +
+      "</div>" +
       '<div style="height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:6px;">' +
-      '<div style="height:100%;width:' + summary.currentOkr.progress + '%;background:var(--success);border-radius:4px;"></div>' +
-      '</div>' +
-      '<div style="font-size:10px;color:var(--text-muted);">整体进度：' + summary.currentOkr.progress + '%</div>' +
+      '<div style="height:100%;width:' +
+      summary.currentOkr.progress +
+      '%;background:var(--success);border-radius:4px;"></div>' +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);">整体进度：' +
+      summary.currentOkr.progress +
+      "%</div>" +
       '<div style="margin-top:6px;font-size:10px;">';
     for (const kr of summary.currentOkr.keyResults) {
-      const krColor = kr.progress >= 80 ? "var(--success)" : kr.progress >= 50 ? "var(--warning)" : "var(--danger)";
+      const krColor =
+        kr.progress >= 80
+          ? "var(--success)"
+          : kr.progress >= 50
+            ? "var(--warning)"
+            : "var(--danger)";
       html +=
         '<div style="margin-bottom:4px;">' +
         '<div style="display:flex;justify-content:space-between;font-size:10px;">' +
-        '<span>' + kr.description + '</span>' +
-        '<span style="color:' + krColor + ';">' + kr.progress + '%</span>' +
-        '</div>' +
+        "<span>" +
+        kr.description +
+        "</span>" +
+        '<span style="color:' +
+        krColor +
+        ';">' +
+        kr.progress +
+        "%</span>" +
+        "</div>" +
         '<div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
-        '<div style="height:100%;width:' + kr.progress + '%;background:' + krColor + ';border-radius:2px;"></div>' +
-        '</div>' +
-        '</div>';
+        '<div style="height:100%;width:' +
+        kr.progress +
+        "%;background:" +
+        krColor +
+        ';border-radius:2px;"></div>' +
+        "</div>" +
+        "</div>";
     }
-    html += '</div></div></div>';
+    html += "</div></div></div>";
   } else {
     html +=
       '<div style="margin-bottom:16px;padding:16px;text-align:center;color:var(--text-muted);border:2px dashed var(--border);border-radius:8px;">' +
-      '📋 本季度未设定 OKR<br>' +
+      "📋 本季度未设定 OKR<br>" +
       '<button class="btn btn-sm btn-primary" onclick="showSetOkrModal()" style="margin-top:8px;">设定季度 OKR</button>' +
-      '</div>';
+      "</div>";
   }
 
   // 历史 KPI
@@ -5760,15 +6683,29 @@ function showKpiDashboard(state) {
       '<div style="font-weight:bold;margin-bottom:8px;font-size:13px;">📊 KPI 历史</div>' +
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
     for (const h of summary.history) {
-      const scoreColor = h.score >= 80 ? "var(--success)" : h.score >= 60 ? "var(--warning)" : "var(--danger)";
+      const scoreColor =
+        h.score >= 80
+          ? "var(--success)"
+          : h.score >= 60
+            ? "var(--warning)"
+            : "var(--danger)";
       html +=
         '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
-        '<div style="font-size:10px;color:var(--text-muted);">' + h.quarter + '</div>' +
-        '<div style="font-size:11px;margin:2px 0;">' + h.kpi.substring(0, 15) + (h.kpi.length > 15 ? '...' : '') + '</div>' +
-        '<div style="font-size:14px;font-weight:bold;color:' + scoreColor + ';">' + h.score + '%</div>' +
-        '</div>';
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        h.quarter +
+        "</div>" +
+        '<div style="font-size:11px;margin:2px 0;">' +
+        h.kpi.substring(0, 15) +
+        (h.kpi.length > 15 ? "..." : "") +
+        "</div>" +
+        '<div style="font-size:14px;font-weight:bold;color:' +
+        scoreColor +
+        ';">' +
+        h.score +
+        "%</div>" +
+        "</div>";
     }
-    html += '</div></div>';
+    html += "</div></div>";
   }
 
   // 汇总统计
@@ -5777,17 +6714,25 @@ function showKpiDashboard(state) {
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;">' +
       '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
       '<div style="font-size:10px;color:var(--text-muted);">平均完成率</div>' +
-      '<div style="font-size:16px;font-weight:bold;color:var(--success);">' + summary.avgCompletion + '%</div>' +
-      '</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:var(--success);">' +
+      summary.avgCompletion +
+      "%</div>" +
+      "</div>" +
       '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
       '<div style="font-size:10px;color:var(--text-muted);">奖金池</div>' +
-      '<div style="font-size:16px;font-weight:bold;color:var(--success);">¥' + (summary.bonusPool || 0).toLocaleString() + '</div>' +
-      '</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:var(--success);">¥' +
+      (summary.bonusPool || 0).toLocaleString() +
+      "</div>" +
+      "</div>" +
       '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
       '<div style="font-size:10px;color:var(--text-muted);">活跃目标</div>' +
-      '<div style="font-size:16px;font-weight:bold;">' + summary.teamGoalsActive + '/' + summary.employeeGoalsActive + '</div>' +
-      '</div>' +
-      '</div>';
+      '<div style="font-size:16px;font-weight:bold;">' +
+      summary.teamGoalsActive +
+      "/" +
+      summary.employeeGoalsActive +
+      "</div>" +
+      "</div>" +
+      "</div>";
   }
 
   // 操作按钮
@@ -5795,8 +6740,8 @@ function showKpiDashboard(state) {
     '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' +
     '<button class="btn btn-sm btn-primary" onclick="showSetOkrModal()" style="font-size:11px;">🎯 设定 OKR</button>' +
     '<button class="btn btn-sm btn-warning" onclick="showTeamGoalModal()" style="font-size:11px;">👥 团队目标</button>' +
-    '</div>' +
-    '</div>';
+    "</div>" +
+    "</div>";
 
   if (typeof showModal !== "function") return;
   showModal({
@@ -5817,21 +6762,24 @@ function showSetOkrModal() {
     '<div style="margin-bottom:12px;">' +
     '<label style="display:block;margin-bottom:4px;font-weight:bold;">🎯 季度目标（Objective）</label>' +
     '<input type="text" id="okrObjective" placeholder="例如：打造行业领先的用户体验" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
-    '</div>' +
+    "</div>" +
     '<div style="margin-bottom:12px;">' +
     '<div style="font-weight:bold;margin-bottom:6px;">📋 关键结果（Key Results，至少 2 个）</div>' +
     '<div id="okrKeyResults">' +
     _renderKrInput("") +
     _renderKrInput("") +
-    '</div>' +
+    "</div>" +
     '<button class="btn btn-sm btn-secondary" onclick="addKrInput()" style="margin-top:6px;font-size:11px;">+ 添加关键结果</button>' +
-    '</div>' +
-    '<script>' +
-    'function addKrInput() {' +
+    "</div>" +
+    "<script>" +
+    "function addKrInput() {" +
     '  const container = document.getElementById("okrKeyResults");' +
-    '  container.insertAdjacentHTML("beforeend", ' + _esc(_renderKrInput("")).replace(/'/g, "\\'") + ');' +
-    '}' +
-    '</script>' +
+    '  container.insertAdjacentHTML("beforeend", ' +
+    _esc(_renderKrInput("")).replace(/'/g, "\\'") +
+    ");" +
+    "}" +
+    "</scr" +
+    "ipt>" +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -5844,7 +6792,9 @@ function showSetOkrModal() {
         text: "设定 OKR",
         cls: "btn-primary",
         callback: function () {
-          const objective = document.getElementById("okrObjective").value.trim();
+          const objective = document
+            .getElementById("okrObjective")
+            .value.trim();
           if (!objective) {
             StateManager.addMessage("请输入季度目标", "warning");
             return;
@@ -5858,7 +6808,12 @@ function showSetOkrModal() {
             const target = parseFloat(input.querySelector(".kr-target").value);
             const unit = input.querySelector(".kr-unit").value.trim();
             if (desc && !isNaN(target)) {
-              keyResults.push({ description: desc, target: target, unit: unit, weight: 1 });
+              keyResults.push({
+                description: desc,
+                target: target,
+                unit: unit,
+                weight: 1,
+              });
             }
           }
 
@@ -5892,7 +6847,7 @@ function _renderKrInput(value) {
     '<input type="text" class="kr-unit" placeholder="人" style="width:100%;padding:4px;font-size:11px;border-radius:4px;border:1px solid var(--border);"></div>' +
     '<div style="padding-bottom:4px;">' +
     '<button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()" style="font-size:10px;padding:4px 8px;">✕</button>' +
-    '</div>' +
+    "</div>" +
     "</div>"
   );
 }
@@ -5917,17 +6872,19 @@ function showTeamGoalModal() {
     '<div style="margin-bottom:12px;">' +
     '<label style="display:block;margin-bottom:4px;font-weight:bold;">选择团队</label>' +
     '<select id="goalTeam" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
-    teams.map(t => '<option value="' + t.key + '">' + t.name + '</option>').join("") +
+    teams
+      .map((t) => '<option value="' + t.key + '">' + t.name + "</option>")
+      .join("") +
     "</select>" +
-    '</div>' +
+    "</div>" +
     '<div style="margin-bottom:12px;">' +
     '<label style="display:block;margin-bottom:4px;font-weight:bold;">目标描述</label>' +
     '<input type="text" id="goalTarget" placeholder="例如：完成用户系统重构" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
-    '</div>' +
+    "</div>" +
     '<div style="margin-bottom:12px;">' +
     '<label style="display:block;margin-bottom:4px;font-weight:bold;">期限（天）</label>' +
     '<input type="number" id="goalDeadline" value="30" min="7" max="90" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
-    '</div>' +
+    "</div>" +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -5942,7 +6899,9 @@ function showTeamGoalModal() {
         callback: function () {
           const team = document.getElementById("goalTeam").value;
           const target = document.getElementById("goalTarget").value.trim();
-          const deadline = parseInt(document.getElementById("goalDeadline").value);
+          const deadline = parseInt(
+            document.getElementById("goalDeadline").value,
+          );
 
           if (!target) {
             StateManager.addMessage("请输入目标描述", "warning");
@@ -5972,7 +6931,10 @@ function _tickTechnicalDebt(state, product, timeMult) {
 
   // === 技术债自然积累 ===
   // 基础积累：随着产品复杂度增加，技术债自然增长
-  const complexityFactor = 1 + (product.features.length || 0) * 0.05 + (product.versionIterationCount || 0) * 0.02;
+  const complexityFactor =
+    1 +
+    (product.features.length || 0) * 0.05 +
+    (product.versionIterationCount || 0) * 0.02;
   const naturalAccumulation = 0.02 * complexityFactor * timeMult;
 
   product.technicalDebt = Math.min(100, debt + naturalAccumulation);
@@ -5982,18 +6944,29 @@ function _tickTechnicalDebt(state, product, timeMult) {
   const baseBugRate = 0.5; // 基础 bug 率（每千用户每日）
   const debtBugMultiplier = 1 + debt / 20; // 技术债越高，bug 越多
   const ratingFactor = 1 - (product.rating || 3.5) / 10; // 评分越低，bug 越多
-  product.bugRate = baseBugRate * debtBugMultiplier * (0.5 + ratingFactor) * (0.8 + Math.random() * 0.4);
+  product.bugRate =
+    baseBugRate *
+    debtBugMultiplier *
+    (0.5 + ratingFactor) *
+    (0.8 + Math.random() * 0.4);
 
   // === 技术债危机判定 ===
   if (debt >= 80 && !product.techDebtCrisis) {
     _triggerTechDebtCrisis(state, product, "critical");
-  } else if (debt >= 60 && !product.techDebtCrisis && Math.random() < 0.01 * timeMult) {
+  } else if (
+    debt >= 60 &&
+    !product.techDebtCrisis &&
+    Math.random() < 0.01 * timeMult
+  ) {
     _triggerTechDebtCrisis(state, product, "moderate");
   }
 
   // === 重构加成衰减 ===
   if (product.refactorBonus > 0) {
-    product.refactorBonus = Math.max(0, product.refactorBonus - 0.01 * timeMult);
+    product.refactorBonus = Math.max(
+      0,
+      product.refactorBonus - 0.01 * timeMult,
+    );
   }
 
   // === 记录历史（每周）===
@@ -6007,7 +6980,7 @@ function _tickTechnicalDebt(state, product, timeMult) {
     product.bugHistory.push({
       day: day,
       bugRate: product.bugRate,
-      usersAffected: Math.round(product.users * product.bugRate / 1000),
+      usersAffected: Math.round((product.users * product.bugRate) / 1000),
     });
     if (product.techDebtHistory.length > 52) product.techDebtHistory.shift();
     if (product.bugHistory.length > 52) product.bugHistory.shift();
@@ -6042,7 +7015,7 @@ function _triggerTechDebtCrisis(state, product, severity) {
 
   StateManager.addMessage(
     `💥 「${product.name}」${crisis.name}！技术债爆表（${product.technicalDebt.toFixed(0)}）\n${crisis.impact}`,
-    "danger"
+    "danger",
   );
 
   // 记录危机历史
@@ -6071,7 +7044,7 @@ function refactorProduct(state, productId, scope) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     return { success: false, message: "产品不存在或未发布" };
   }
@@ -6106,7 +7079,10 @@ function refactorProduct(state, productId, scope) {
   }
 
   if (company.cashReserve < scopeConfig.cost) {
-    return { success: false, message: `现金不足，需要¥${scopeConfig.cost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${scopeConfig.cost.toLocaleString()}`,
+    };
   }
 
   // 执行重构
@@ -6115,7 +7091,8 @@ function refactorProduct(state, productId, scope) {
 
   const debtReduction = Math.round(
     scopeConfig.debtReduction[0] +
-    Math.random() * (scopeConfig.debtReduction[1] - scopeConfig.debtReduction[0])
+      Math.random() *
+        (scopeConfig.debtReduction[1] - scopeConfig.debtReduction[0]),
   );
 
   product.technicalDebt = Math.max(0, product.technicalDebt - debtReduction);
@@ -6131,12 +7108,15 @@ function refactorProduct(state, productId, scope) {
   // 清除部分技术债来源
   const sourceKeys = Object.keys(product.techDebtSources);
   for (const key of sourceKeys) {
-    product.techDebtSources[key] = Math.max(0, product.techDebtSources[key] - debtReduction * 0.2);
+    product.techDebtSources[key] = Math.max(
+      0,
+      product.techDebtSources[key] - debtReduction * 0.2,
+    );
   }
 
   StateManager.addMessage(
     `🔧 「${product.name}」${scopeConfig.name}完成！技术债-${debtReduction}，当前${product.technicalDebt.toFixed(0)}`,
-    "success"
+    "success",
   );
 
   return {
@@ -6152,7 +7132,7 @@ function recordTechDebtEvent(state, productId, cause, amount) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   product.technicalDebt = Math.min(100, product.technicalDebt + amount);
@@ -6179,7 +7159,7 @@ function recordTechDebtEvent(state, productId, cause, amount) {
   if (product.technicalDebt >= 70 && product.technicalDebt - amount < 70) {
     StateManager.addMessage(
       `⚠️ 「${product.name}」技术债达到${product.technicalDebt.toFixed(0)}，建议尽快重构！`,
-      "warning"
+      "warning",
     );
   }
 }
@@ -6207,28 +7187,42 @@ function _tickAARRRFunnel(state, product, timeMult) {
 
   // === A: Activation (激活) ===
   // 激活率受产品评分、新手引导影响
-  const newActivated = Math.round(product.newUsersToday * product.activationRate);
+  const newActivated = Math.round(
+    product.newUsersToday * product.activationRate,
+  );
   product.activatedUsers = newActivated;
 
   // 新手引导完成率影响激活率
   if (product.onboardingCompleteRate < 0.8 && Math.random() < 0.05) {
-    product.onboardingCompleteRate = Math.min(0.95, product.onboardingCompleteRate + 0.02);
+    product.onboardingCompleteRate = Math.min(
+      0.95,
+      product.onboardingCompleteRate + 0.02,
+    );
     product.activationRate = Math.min(0.6, product.activationRate + 0.01);
   }
 
   // === R: Retention (留存) ===
   // 日活/周活/月活计算
-  product.dau = Math.round(users * (0.3 + product.rating / 5 * 0.3)); // 30%-60% 日活
-  product.wau = Math.round(users * (0.5 + product.rating / 5 * 0.3)); // 50%-80% 周活
-  product.mau = Math.round(users * (0.7 + product.rating / 5 * 0.25)); // 70%-90% 月活
+  product.dau = Math.round(users * (0.3 + (product.rating / 5) * 0.3)); // 30%-60% 日活
+  product.wau = Math.round(users * (0.5 + (product.rating / 5) * 0.3)); // 50%-80% 周活
+  product.mau = Math.round(users * (0.7 + (product.rating / 5) * 0.25)); // 70%-90% 月活
 
   // 留存率演化：评分高→留存提升，评分低→留存下降
   const ratingFactor = product.rating / 5;
   const retentionChange = (ratingFactor - 0.5) * 0.002 * timeMult;
 
-  product.retentionD1 = Math.max(0.1, Math.min(0.8, product.retentionD1 + retentionChange));
-  product.retentionD7 = Math.max(0.05, Math.min(0.6, product.retentionD7 + retentionChange * 0.7));
-  product.retentionD30 = Math.max(0.02, Math.min(0.4, product.retentionD30 + retentionChange * 0.4));
+  product.retentionD1 = Math.max(
+    0.1,
+    Math.min(0.8, product.retentionD1 + retentionChange),
+  );
+  product.retentionD7 = Math.max(
+    0.05,
+    Math.min(0.6, product.retentionD7 + retentionChange * 0.7),
+  );
+  product.retentionD30 = Math.max(
+    0.02,
+    Math.min(0.4, product.retentionD30 + retentionChange * 0.4),
+  );
 
   // 记录留存历史
   if (state.player.day % 7 === 0 || timeMult >= 90) {
@@ -6249,19 +7243,23 @@ function _tickAARRRFunnel(state, product, timeMult) {
   // === R: Revenue (变现) ===
   // 付费率演化
   const payRateChange = (product.rating - 3.5) * 0.001 * timeMult;
-  product.payRate = Math.max(0.01, Math.min(0.3, product.payRate + payRateChange));
+  product.payRate = Math.max(
+    0.01,
+    Math.min(0.3, product.payRate + payRateChange),
+  );
 
   product.payingUsers = Math.round(users * product.payRate);
 
   // ARPU 计算（基于产品类别）
   const categoryInfo = PRODUCT_CATEGORIES[product.category];
   const baseArpu = categoryInfo?.baseArpu || 0.5; // 元/天/用户
-  const arpuMultiplier = product.rating / 3.5 * (1 + product.features.length * 0.05);
+  const arpuMultiplier =
+    (product.rating / 3.5) * (1 + product.features.length * 0.05);
   product.arpu = baseArpu * arpuMultiplier;
 
   // ARPPU（每付费用户平均收入）
   if (product.payingUsers > 0) {
-    product.arppu = product.arpu * users / product.payingUsers;
+    product.arppu = (product.arpu * users) / product.payingUsers;
   }
 
   // LTV 计算：ARPU × 平均留存天数
@@ -6270,12 +7268,15 @@ function _tickAARRRFunnel(state, product, timeMult) {
 
   // === R: Referral (推荐) ===
   // 病毒系数 K = 分享率 × 推荐转化率 × 分享次数
-  const shareRate = product.rating >= 4 ? 0.05 : product.rating >= 3.5 ? 0.02 : 0.01;
+  const shareRate =
+    product.rating >= 4 ? 0.05 : product.rating >= 3.5 ? 0.02 : 0.01;
   product.referralRate = shareRate;
   product.kFactor = shareRate * product.referralConversion * 3; // 每个用户平均分享3次
 
   // 病毒传播
-  const viralNewUsers = Math.round(users * product.kFactor / product.viralCycleTime * timeMult);
+  const viralNewUsers = Math.round(
+    ((users * product.kFactor) / product.viralCycleTime) * timeMult,
+  );
   product.viralNewUsers = viralNewUsers;
 
   // === 漏斗数据记录 ===
@@ -6308,12 +7309,12 @@ function _tickAARRRFunnel(state, product, timeMult) {
     if (ltvcacRatio < 1 && timeMult >= 90) {
       StateManager.addMessage(
         `⚠️ 「${product.name}」LTV/CAC < 1（${ltvcacRatio.toFixed(1)}），获客成本超过用户价值！`,
-        "warning"
+        "warning",
       );
     } else if (ltvcacRatio > 3 && timeMult >= 90) {
       StateManager.addMessage(
         `📈 「${product.name}」LTV/CAC = ${ltvcacRatio.toFixed(1)}，获客效率优秀！`,
-        "success"
+        "success",
       );
     }
   }
@@ -6322,7 +7323,7 @@ function _tickAARRRFunnel(state, product, timeMult) {
   if (product.kFactor > 1 && viralNewUsers > product.newUsersToday * 0.3) {
     StateManager.addMessage(
       `🚀 「${product.name}」病毒传播爆发！K因子=${product.kFactor.toFixed(2)}，今日推荐带来+${viralNewUsers}用户`,
-      "success"
+      "success",
     );
   }
 }
@@ -6341,14 +7342,16 @@ function _calculateAdGrowth(state, product, timeMult) {
   const clicks = Math.round(impressions * clickRate);
   const installs = Math.round(clicks * installRate);
 
-  return Math.max(0, installs * timeMult / 90); // 按天分摊
+  return Math.max(0, (installs * timeMult) / 90); // 按天分摊
 }
 
 /** 计算病毒传播 */
 function _calculateViralGrowth(product, timeMult) {
   if (product.kFactor <= 0) return 0;
   const users = product.users || 0;
-  return Math.round(users * product.kFactor / product.viralCycleTime * timeMult);
+  return Math.round(
+    ((users * product.kFactor) / product.viralCycleTime) * timeMult,
+  );
 }
 
 /** 更新产品变现参数（通过运营活动） */
@@ -6356,7 +7359,7 @@ function updateProductMonetization(state, productId, action, params) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     return { success: false, message: "产品不存在或未发布" };
   }
@@ -6365,17 +7368,23 @@ function updateProductMonetization(state, productId, action, params) {
     // 优化新手引导
     const cost = params.cost || 10000;
     if (company.cashReserve < cost) {
-      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+      return {
+        success: false,
+        message: `现金不足，需要¥${cost.toLocaleString()}`,
+      };
     }
 
-    product.onboardingCompleteRate = Math.min(0.95, product.onboardingCompleteRate + 0.1);
+    product.onboardingCompleteRate = Math.min(
+      0.95,
+      product.onboardingCompleteRate + 0.1,
+    );
     product.activationRate = Math.min(0.6, product.activationRate + 0.05);
     company.cashReserve -= cost;
     company.expenses += cost;
 
     StateManager.addMessage(
       `✅ 「${product.name}」优化新手引导！激活率提升至${(product.activationRate * 100).toFixed(0)}%`,
-      "success"
+      "success",
     );
     return { success: true, activationRate: product.activationRate };
   }
@@ -6384,7 +7393,10 @@ function updateProductMonetization(state, productId, action, params) {
     // 提高付费转化
     const cost = params.cost || 20000;
     if (company.cashReserve < cost) {
-      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+      return {
+        success: false,
+        message: `现金不足，需要¥${cost.toLocaleString()}`,
+      };
     }
 
     product.payRate = Math.min(0.25, product.payRate + 0.02);
@@ -6393,7 +7405,7 @@ function updateProductMonetization(state, productId, action, params) {
 
     StateManager.addMessage(
       `💰 「${product.name}」优化付费转化！付费率提升至${(product.payRate * 100).toFixed(1)}%`,
-      "success"
+      "success",
     );
     return { success: true, payRate: product.payRate };
   }
@@ -6402,7 +7414,10 @@ function updateProductMonetization(state, productId, action, params) {
     // 提升留存
     const cost = params.cost || 15000;
     if (company.cashReserve < cost) {
-      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+      return {
+        success: false,
+        message: `现金不足，需要¥${cost.toLocaleString()}`,
+      };
     }
 
     product.retentionD1 = Math.min(0.85, product.retentionD1 + 0.02);
@@ -6413,7 +7428,7 @@ function updateProductMonetization(state, productId, action, params) {
 
     StateManager.addMessage(
       `📈 「${product.name}」提升留存体验！D1留存提升至${(product.retentionD1 * 100).toFixed(0)}%`,
-      "success"
+      "success",
     );
     return { success: true, retentionD1: product.retentionD1 };
   }
@@ -6422,18 +7437,24 @@ function updateProductMonetization(state, productId, action, params) {
     // 病毒传播优化
     const cost = params.cost || 25000;
     if (company.cashReserve < cost) {
-      return { success: false, message: `现金不足，需要¥${cost.toLocaleString()}` };
+      return {
+        success: false,
+        message: `现金不足，需要¥${cost.toLocaleString()}`,
+      };
     }
 
     product.referralRate = Math.min(0.1, product.referralRate + 0.02);
-    product.referralConversion = Math.min(0.2, product.referralConversion + 0.03);
+    product.referralConversion = Math.min(
+      0.2,
+      product.referralConversion + 0.03,
+    );
     product.kFactor = product.referralRate * product.referralConversion * 3;
     company.cashReserve -= cost;
     company.expenses += cost;
 
     StateManager.addMessage(
       `🚀 「${product.name}」优化病毒传播！K因子提升至${product.kFactor.toFixed(2)}`,
-      "success"
+      "success",
     );
     return { success: true, kFactor: product.kFactor };
   }
@@ -6446,13 +7467,16 @@ function runAdCampaign(state, productId, channel, budget) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     return { success: false, message: "产品不存在或未发布" };
   }
 
   if (company.cashReserve < budget) {
-    return { success: false, message: `现金不足，需要¥${budget.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${budget.toLocaleString()}`,
+    };
   }
 
   // 渠道效果差异
@@ -6478,7 +7502,7 @@ function runAdCampaign(state, productId, channel, budget) {
 
   StateManager.addMessage(
     `📢 「${product.name}」投放${channelData.name}广告¥${budget.toLocaleString()}，预计带来${actualGrowth}新用户（CAC≈¥${(budget / actualGrowth).toFixed(0)}）`,
-    "info"
+    "info",
   );
 
   return {
@@ -6495,7 +7519,7 @@ function updateProductVersion(state, productId, versionType, budget) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     return { success: false, message: "产品不存在或未发布" };
   }
@@ -6534,18 +7558,32 @@ function updateProductVersion(state, productId, versionType, budget) {
   const minCost = config.costRange[0];
   const maxCost = config.costRange[1];
   if (budget < minCost) {
-    return { success: false, message: `预算不足，${config.name}至少需要¥${minCost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `预算不足，${config.name}至少需要¥${minCost.toLocaleString()}`,
+    };
   }
 
   const actualCost = Math.min(budget, maxCost);
   if (company.cashReserve < actualCost) {
-    return { success: false, message: `现金不足，需要¥${actualCost.toLocaleString()}` };
+    return {
+      success: false,
+      message: `现金不足，需要¥${actualCost.toLocaleString()}`,
+    };
   }
 
   // 计算实际效果（基于预算投入比例）
   const投入比例 = actualCost / maxCost;
-  const techGain = Math.round((config.techBonus[0] + (config.techBonus[1] - config.techBonus[0]) * 投入比例) * (0.8 + Math.random() * 0.4));
-  const marketGain = Math.round((config.marketBonus[0] + (config.marketBonus[1] - config.marketBonus[0]) * 投入比例) * (0.8 + Math.random() * 0.4));
+  const techGain = Math.round(
+    (config.techBonus[0] +
+      (config.techBonus[1] - config.techBonus[0]) * 投入比例) *
+      (0.8 + Math.random() * 0.4),
+  );
+  const marketGain = Math.round(
+    (config.marketBonus[0] +
+      (config.marketBonus[1] - config.marketBonus[0]) * 投入比例) *
+      (0.8 + Math.random() * 0.4),
+  );
 
   // 应用效果
   product.technologyScore = Math.min(100, product.technologyScore + techGain);
@@ -6592,8 +7630,8 @@ function updateProductVersion(state, productId, versionType, budget) {
   // 版本发布通知
   StateManager.addMessage(
     `🚀 「${product.name}」发布 ${config.name} → ${newVersion}！\n` +
-    `投入¥${actualCost.toLocaleString()}，技术分+${techGain}，市场分+${marketGain}`,
-    "success"
+      `投入¥${actualCost.toLocaleString()}，技术分+${techGain}，市场分+${marketGain}`,
+    "success",
   );
 
   // 版本发布可能触发生命周期阶段回调（衰退期产品通过大版本更新可能回到成熟期）
@@ -6602,11 +7640,21 @@ function updateProductVersion(state, productId, versionType, budget) {
     if (Math.random() < 0.3) {
       product.lifecycleStage = "maturity";
       product.consecutiveDeclineDays = 0;
-      StateManager.addMessage(`✨ 「${product.name}」通过大版本更新重获新生！回到成熟期`, "success");
+      StateManager.addMessage(
+        `✨ 「${product.name}」通过大版本更新重获新生！回到成熟期`,
+        "success",
+      );
     }
   }
 
-  return { success: true, product: product, newVersion: newVersion, techGain: techGain, marketGain: marketGain, cost: actualCost };
+  return {
+    success: true,
+    product: product,
+    newVersion: newVersion,
+    techGain: techGain,
+    marketGain: marketGain,
+    cost: actualCost,
+  };
 }
 
 /** 手动退市产品 */
@@ -6614,12 +7662,17 @@ function retireProduct(state, productId, reason) {
   const company = state.startup.company;
   if (!company) return { success: false, message: "没有公司" };
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     return { success: false, message: "产品不存在或已退市" };
   }
 
-  const reasonKeys = ["replaced_by_new", "market_decline", "strategic_pivot", "failure"];
+  const reasonKeys = [
+    "replaced_by_new",
+    "market_decline",
+    "strategic_pivot",
+    "failure",
+  ];
   if (!reasonKeys.includes(reason)) {
     return { success: false, message: "无效的退市原因" };
   }
@@ -7197,6 +8250,16 @@ function getAvailableStartupActions(state) {
     available: true,
   });
 
+  // P1-9: 竞争对手防御
+  actions.push({
+    id: "competitor_defense",
+    name: "竞争防御",
+    icon: "🛡️",
+    apCost: 10,
+    desc: "应对竞争对手攻击、投资防御能力、购买竞争情报",
+    available: true,
+  });
+
   // IPO准备
   if (company.phase === "growth" && company.fundingRounds.length >= 2) {
     actions.push({
@@ -7590,7 +8653,10 @@ function showTeamManagementModal(state) {
   if (!company) return { success: false, message: "没有公司" };
 
   // P0-4: 获取满意度汇总
-  const satSummary = typeof getEmployeeSatisfactionSummary === "function" ? getEmployeeSatisfactionSummary(company) : null;
+  const satSummary =
+    typeof getEmployeeSatisfactionSummary === "function"
+      ? getEmployeeSatisfactionSummary(company)
+      : null;
 
   const actions = [
     {
@@ -7655,19 +8721,34 @@ function showTeamManagementModal(state) {
   // P0-4: 满意度汇总HTML
   var satSummaryHtml = "";
   if (satSummary) {
-    var atRiskColor = satSummary.atRiskCount > 0 ? "var(--danger)" : "var(--success)";
+    var atRiskColor =
+      satSummary.atRiskCount > 0 ? "var(--danger)" : "var(--success)";
     satSummaryHtml =
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;padding:8px;background:var(--bg-secondary);border-radius:6px;">' +
-      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均满意度</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' + satSummary.avgSatisfaction + '%</div></div>' +
-      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均健康</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' + satSummary.avgHealth + '%</div></div>' +
-      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">倦怠风险</div><div style="font-size:16px;font-weight:bold;color:' + (satSummary.avgBurnoutRisk > 40 ? "var(--danger)" : "var(--success)") + ';">' + satSummary.avgBurnoutRisk + '%</div></div>' +
-      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">⚠️ 风险员工</div><div style="font-size:16px;font-weight:bold;color:' + atRiskColor + ';">' + satSummary.atRiskCount + '/' + satSummary.totalEmployees + '</div></div>' +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均满意度</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' +
+      satSummary.avgSatisfaction +
+      "%</div></div>" +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">平均健康</div><div style="font-size:16px;font-weight:bold;color:var(--success);">' +
+      satSummary.avgHealth +
+      "%</div></div>" +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">倦怠风险</div><div style="font-size:16px;font-weight:bold;color:' +
+      (satSummary.avgBurnoutRisk > 40 ? "var(--danger)" : "var(--success)") +
+      ';">' +
+      satSummary.avgBurnoutRisk +
+      "%</div></div>" +
+      '<div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);">⚠️ 风险员工</div><div style="font-size:16px;font-weight:bold;color:' +
+      atRiskColor +
+      ';">' +
+      satSummary.atRiskCount +
+      "/" +
+      satSummary.totalEmployees +
+      "</div></div>" +
       "</div>";
   }
 
   const bodyHtml = `
     <div style="font-size:13px;">
-      ${satSummaryHtml ? '<div style="margin-bottom:12px;">' + satSummaryHtml + '</div>' : ''}
+      ${satSummaryHtml ? '<div style="margin-bottom:12px;">' + satSummaryHtml + "</div>" : ""}
       <p style="margin-bottom:12px;color:var(--text-secondary);">
         选择团队管理行动。团队管理是创业成功的关键！
       </p>
@@ -7708,8 +8789,14 @@ function showTeamManagementModal(state) {
               if (emp.satisfaction === undefined) emp.satisfaction = 50;
               emp.satisfaction = Math.min(100, emp.satisfaction + 5);
               if (emp.satisfactionDetails) {
-                emp.satisfactionDetails.workload = Math.min(100, emp.satisfactionDetails.workload + 5);
-                emp.satisfactionDetails.atmosphere = Math.min(100, emp.satisfactionDetails.atmosphere + 5);
+                emp.satisfactionDetails.workload = Math.min(
+                  100,
+                  emp.satisfactionDetails.workload + 5,
+                );
+                emp.satisfactionDetails.atmosphere = Math.min(
+                  100,
+                  emp.satisfactionDetails.atmosphere + 5,
+                );
               }
               emp.burnoutRisk = Math.max(0, emp.burnoutRisk - 5);
             }
@@ -7745,12 +8832,25 @@ function showBoardManagementModal(state) {
   if (company.boardMembers && company.boardMembers.length > 0) {
     boardMembersHtml = '<div style="margin-bottom:12px;">';
     for (const member of company.boardMembers) {
-      const satisfactionColor = member.satisfaction >= 60 ? "var(--success)" :
-        member.satisfaction >= 40 ? "var(--warning)" : "var(--danger)";
-      const trustColor = member.trust >= 60 ? "var(--success)" :
-        member.trust >= 40 ? "var(--warning)" : "var(--danger)";
-      const pressureColor = getPressureLevelColor(member.pressureTolerance === "极低" ? 3 :
-        member.pressureTolerance === "低" ? 2 : 1);
+      const satisfactionColor =
+        member.satisfaction >= 60
+          ? "var(--success)"
+          : member.satisfaction >= 40
+            ? "var(--warning)"
+            : "var(--danger)";
+      const trustColor =
+        member.trust >= 60
+          ? "var(--success)"
+          : member.trust >= 40
+            ? "var(--warning)"
+            : "var(--danger)";
+      const pressureColor = getPressureLevelColor(
+        member.pressureTolerance === "极低"
+          ? 3
+          : member.pressureTolerance === "低"
+            ? 2
+            : 1,
+      );
 
       boardMembersHtml += `
         <div style="padding:8px;margin-bottom:6px;background:var(--bg-secondary);border-radius:6px;border-left:3px solid ${pressureColor}">
@@ -7764,21 +8864,25 @@ function showBoardManagementModal(state) {
             <div>耐心: ${member.patience}%</div>
             <div>关注: ${member.focusAreas.slice(0, 2).join(", ")}</div>
           </div>
-          ${member.concerns && member.concerns.length > 0 ?
-            `<div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 关注：${member.concerns.join(", ")}</div>` : ""
+          ${
+            member.concerns && member.concerns.length > 0
+              ? `<div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 关注：${member.concerns.join(", ")}</div>`
+              : ""
           }
         </div>`;
     }
     boardMembersHtml += "</div>";
   } else {
-    boardMembersHtml = '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:12px;">尚未有董事会成员（融资后投资人派代表进入董事会）</div>';
+    boardMembersHtml =
+      '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:12px;">尚未有董事会成员（融资后投资人派代表进入董事会）</div>';
   }
 
   // KPI完成情况
   let kpiHistoryHtml = "";
   if (company.boardKPIHistory && company.boardKPIHistory.length > 0) {
     kpiHistoryHtml = '<div style="margin-bottom:12px;">';
-    kpiHistoryHtml += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">KPI完成历史</div>';
+    kpiHistoryHtml +=
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">KPI完成历史</div>';
     kpiHistoryHtml += '<div style="display:flex;gap:4px;overflow-x:auto;">';
     for (const record of company.boardKPIHistory.slice(-8)) {
       const scoreColor = record.passed ? "var(--success)" : "var(--danger)";
@@ -7807,18 +8911,24 @@ function showBoardManagementModal(state) {
         <div style="font-size:12px;font-weight:bold;color:var(--danger);margin-bottom:6px;">${action.event.icon} ${action.event.title}</div>
         <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;">${action.event.trigger} · 剩余${daysLeft}个季度</div>
         <div style="display:flex;flex-direction:column;gap:4px;">
-          ${action.event.options.map((opt, i) => `
-            <button class="btn" style="font-size:11px;padding:6px 10px;text-align:left;" onclick="resolveBoardPressureActionFromModal('${Object.keys(BOARD_PRESSURE_EVENTS).find(k => BOARD_PRESSURE_EVENTS[k] === action.event)}', ${i})">
+          ${action.event.options
+            .map(
+              (opt, i) => `
+            <button class="btn" style="font-size:11px;padding:6px 10px;text-align:left;" onclick="resolveBoardPressureActionFromModal('${Object.keys(BOARD_PRESSURE_EVENTS).find((k) => BOARD_PRESSURE_EVENTS[k] === action.event)}', ${i})">
               ${opt.text} ${opt.cost > 0 ? `(¥${opt.cost.toLocaleString()})` : ""}
             </button>
-          `).join("")}
+          `,
+            )
+            .join("")}
         </div>
       </div>`;
   }
 
   // 股东沟通行动
   const commActions = getAvailableShareholderActions();
-  let commActionsHtml = commActions.map(act => `
+  let commActionsHtml = commActions
+    .map(
+      (act) => `
     <div style="padding:8px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="font-size:12px;font-weight:bold;">${act.icon} ${act.name}</div>
@@ -7826,7 +8936,9 @@ function showBoardManagementModal(state) {
       </div>
       <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${act.desc}</div>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 
   const bodyHtml = `
     <div style="font-size:13px;max-height:70vh;overflow-y:auto;">
@@ -7874,7 +8986,10 @@ function showBoardManagementModal(state) {
   if (typeof showModal !== "function") return { success: true };
 
   // 绑定全局函数供按钮调用
-  window.resolveBoardPressureActionFromModal = function(eventKey, optionIndex) {
+  window.resolveBoardPressureActionFromModal = function (
+    eventKey,
+    optionIndex,
+  ) {
     const result = resolveBoardPressureAction(state, optionIndex);
     if (result.success) {
       // 重新渲染
@@ -7933,9 +9048,11 @@ function showPRManagementModal(state) {
         <div style="font-size:11px;color:${crisisInfo.color};font-weight:bold;">${crisisInfo.name}</div>
       </div>
       <div style="display:flex;gap:4px;">
-        ${CRISIS_LEVELS.map(l => `
-          <div style="flex:1;height:6px;background:${company.crisisLevel >= l.level ? l.color : 'var(--bg-tertiary)'};border-radius:3px;"></div>
-        `).join('')}
+        ${CRISIS_LEVELS.map(
+          (l) => `
+          <div style="flex:1;height:6px;background:${company.crisisLevel >= l.level ? l.color : "var(--bg-tertiary)"};border-radius:3px;"></div>
+        `,
+        ).join("")}
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">危机准备度: ${company.crisisPrepLevel}% | 媒体培训: ${company.mediaTrainingLevel}%</div>
     </div>
@@ -7946,7 +9063,12 @@ function showPRManagementModal(state) {
   if (company.pendingCrisisEvent) {
     const crisis = company.pendingCrisisEvent.event;
     const daysRemaining = Math.max(0, crisis.deadline - state.player.day);
-    const urgencyColor = daysRemaining <= 7 ? "var(--danger)" : daysRemaining <= 14 ? "var(--warning)" : "var(--text-secondary)";
+    const urgencyColor =
+      daysRemaining <= 7
+        ? "var(--danger)"
+        : daysRemaining <= 14
+          ? "var(--warning)"
+          : "var(--text-secondary)";
 
     pendingCrisisHtml = `
       <div style="padding:12px;margin-bottom:12px;background:var(--bg-warning);border-radius:8px;border-left:4px solid var(--danger);">
@@ -7967,13 +9089,28 @@ function showPRManagementModal(state) {
   const recentEvents = company.prEvents.slice(-8).reverse();
   if (recentEvents.length > 0) {
     recentEventsHtml = '<div style="margin-bottom:12px;">';
-    recentEventsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 近期公关事件</div>';
-    recentEventsHtml += '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
+    recentEventsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 近期公关事件</div>';
+    recentEventsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
 
     for (const event of recentEvents) {
-      const eventColor = event.type === "positive" ? (event.success ? "var(--success)" : "var(--warning)") :
-        event.severity === "high" ? "var(--danger)" : event.severity === "medium" ? "var(--warning)" : "#f59e0b";
-      const eventIcon = event.type === "positive" ? (event.success ? "✅" : "🔶") : event.icon || "⚠️";
+      const eventColor =
+        event.type === "positive"
+          ? event.success
+            ? "var(--success)"
+            : "var(--warning)"
+          : event.severity === "high"
+            ? "var(--danger)"
+            : event.severity === "medium"
+              ? "var(--warning)"
+              : "#f59e0b";
+      const eventIcon =
+        event.type === "positive"
+          ? event.success
+            ? "✅"
+            : "🔶"
+          : event.icon || "⚠️";
 
       recentEventsHtml += `
         <div style="padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid ${eventColor}">
@@ -7981,7 +9118,15 @@ function showPRManagementModal(state) {
             <div style="font-size:11px;font-weight:bold;">${eventIcon} ${event.title}</div>
             <div style="font-size:9px;color:var(--text-muted);">${_formatDayAgo(state.player.day - event.triggeredDay)}</div>
           </div>
-          ${event.outcome ? `<div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${Object.entries(event.outcome).map(([k, v]) => `${k}: ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>` : ""}
+          ${
+            event.outcome
+              ? `<div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${Object.entries(
+                  event.outcome,
+                )
+                  .map(([k, v]) => `${k}: ${v > 0 ? "+" : ""}${v}`)
+                  .join(", ")}</div>`
+              : ""
+          }
         </div>
       `;
     }
@@ -7993,19 +9138,27 @@ function showPRManagementModal(state) {
   const prEvents = getAvailablePREvents();
   if (prEvents.length > 0) {
     prActionsHtml = '<div style="margin-bottom:12px;">';
-    prActionsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 公关活动</div>';
-    prActionsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    prActionsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 公关活动</div>';
+    prActionsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     for (const event of prEvents) {
       const canAfford = company.cashReserve >= event.cost;
-      const meetsConditions = !event.triggerConditions ||
-        (event.triggerConditions.minRevenue && company.revenue >= event.triggerConditions.minRevenue);
+      const meetsConditions =
+        !event.triggerConditions ||
+        (event.triggerConditions.minRevenue &&
+          company.revenue >= event.triggerConditions.minRevenue);
 
       const disabled = !canAfford || !meetsConditions;
-      const btnClass = disabled ? "" : 'onclick="executePRActionFromModal(\'' + event.id + '\')" onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"';
+      const btnClass = disabled
+        ? ""
+        : "onclick=\"executePRActionFromModal('" +
+          event.id +
+          "')\" onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"";
 
       prActionsHtml += `
-        <div style="padding:10px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${disabled ? '' : 'cursor:pointer;transition:all 0.2s;'}">
+        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:12px;font-weight:bold;">${event.icon} ${event.name}</div>
@@ -8013,8 +9166,8 @@ function showPRManagementModal(state) {
               <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">成功率: ${Math.round(event.successChance * 100)}% | 持续时间: ${event.duration}天</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${event.cost.toLocaleString()}</div>
-              <div style="font-size:9px;color:${meetsConditions ? 'var(--success)' : 'var(--danger)'};">${meetsConditions ? "✅ 可执行" : "❌ 条件不足"}</div>
+              <div style="font-size:12px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${event.cost.toLocaleString()}</div>
+              <div style="font-size:9px;color:${meetsConditions ? "var(--success)" : "var(--danger)"};">${meetsConditions ? "✅ 可执行" : "❌ 条件不足"}</div>
             </div>
           </div>
         </div>
@@ -8027,8 +9180,10 @@ function showPRManagementModal(state) {
   let mediaActionsHtml = "";
   if (MEDIA_RELATION_ACTIONS) {
     mediaActionsHtml = '<div style="margin-bottom:12px;">';
-    mediaActionsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🤝 媒体关系管理</div>';
-    mediaActionsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    mediaActionsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🤝 媒体关系管理</div>';
+    mediaActionsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     for (const [key, action] of Object.entries(MEDIA_RELATION_ACTIONS)) {
       const canAfford = company.cashReserve >= action.cost;
@@ -8045,10 +9200,14 @@ function showPRManagementModal(state) {
       }
 
       const disabled = !canAfford || cooldownActive;
-      const btnClass = disabled ? "" : 'onclick="executeMediaRelationActionFromModal(\'' + key + '\')" onmouseover="this.style.borderColor=\'var(--accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';"';
+      const btnClass = disabled
+        ? ""
+        : "onclick=\"executeMediaRelationActionFromModal('" +
+          key +
+          "')\" onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"";
 
       mediaActionsHtml += `
-        <div style="padding:10px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${disabled ? '' : 'cursor:pointer;transition:all 0.2s;'}">
+        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:12px;font-weight:bold;">${action.icon} ${action.name}</div>
@@ -8056,8 +9215,8 @@ function showPRManagementModal(state) {
               ${cooldownText ? `<div style="font-size:9px;color:var(--warning);margin-top:2px;">⏰ ${cooldownText}</div>` : ""}
             </div>
             <div style="text-align:right;">
-              <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${action.cost.toLocaleString()}</div>
-              <div style="font-size:9px;color:${disabled ? 'var(--danger)' : 'var(--success)'};">${cooldownText || (canAfford ? "✅ 可执行" : "❌ 现金不足")}</div>
+              <div style="font-size:12px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${action.cost.toLocaleString()}</div>
+              <div style="font-size:9px;color:${disabled ? "var(--danger)" : "var(--success)"};">${cooldownText || (canAfford ? "✅ 可执行" : "❌ 现金不足")}</div>
             </div>
           </div>
         </div>
@@ -8120,7 +9279,7 @@ function showCrisisResponseModal(crisisId) {
     const canAfford = company.cashReserve >= opt.cost;
 
     html += `
-      <div style="padding:12px;background:${canAfford ? 'var(--bg-card)' : 'rgba(0,0,0,0.05)'};border-radius:8px;border:1px solid ${canAfford ? 'var(--border)' : 'var(--border)'};opacity:${canAfford ? 1 : 0.5};${canAfford ? 'cursor:pointer;transition:all 0.2s;' : ''} ${canAfford ? 'onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'rgba(0,0,0,0.05)\';"' : ''} onclick="${canAfford ? `resolveCrisisActionFromModal(${i})` : ''}">
+      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-accent)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='rgba(0,0,0,0.05)';\"" : ""} onclick="${canAfford ? `resolveCrisisActionFromModal(${i})` : ""}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
@@ -8128,11 +9287,15 @@ function showCrisisResponseModal(crisisId) {
             <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">风险：${opt.risk}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">${opt.cost > 0 ? '¥' + opt.cost.toLocaleString() : '免费'}</div>
-            <div style="font-size:9px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 现金不足"}</div>
+            <div style="font-size:12px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">${opt.cost > 0 ? "¥" + opt.cost.toLocaleString() : "免费"}</div>
+            <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅ 可执行" : "❌ 现金不足"}</div>
           </div>
         </div>
-        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(opt.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>
+        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(
+          opt.effect,
+        )
+          .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+          .join(", ")}</div>
       </div>
     `;
   }
@@ -8217,7 +9380,12 @@ function showLegalComplianceModal(state) {
   if (company.pendingLegalEvent) {
     const legalEvent = company.pendingLegalEvent;
     const daysRemaining = Math.max(0, legalEvent.deadline - state.player.day);
-    const urgencyColor = daysRemaining <= 14 ? "var(--danger)" : daysRemaining <= 21 ? "var(--warning)" : "var(--text-secondary)";
+    const urgencyColor =
+      daysRemaining <= 14
+        ? "var(--danger)"
+        : daysRemaining <= 21
+          ? "var(--warning)"
+          : "var(--text-secondary)";
     const riskTypeInfo = LEGAL_RISK_TYPES[legalEvent.riskType];
 
     pendingLegalHtml = `
@@ -8238,12 +9406,24 @@ function showLegalComplianceModal(state) {
   let patentsHtml = "";
   if (company.patents && company.patents.length > 0) {
     patentsHtml = '<div style="margin-bottom:12px;">';
-    patentsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 已申请专利</div>';
-    patentsHtml += '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
+    patentsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📜 已申请专利</div>';
+    patentsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">';
 
     for (const patent of company.patents) {
-      const statusColor = patent.status === "granted" ? "var(--success)" : patent.status === "pending" ? "var(--warning)" : "var(--text-muted)";
-      const statusIcon = patent.status === "granted" ? "✅" : patent.status === "pending" ? "⏳" : "❌";
+      const statusColor =
+        patent.status === "granted"
+          ? "var(--success)"
+          : patent.status === "pending"
+            ? "var(--warning)"
+            : "var(--text-muted)";
+      const statusIcon =
+        patent.status === "granted"
+          ? "✅"
+          : patent.status === "pending"
+            ? "⏳"
+            : "❌";
 
       patentsHtml += `
         <div style="padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid ${statusColor}">
@@ -8263,8 +9443,10 @@ function showLegalComplianceModal(state) {
   const checklistItems = getLegalChecklistProgress(state);
   if (checklistItems.length > 0) {
     checklistHtml = '<div style="margin-bottom:12px;">';
-    checklistHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">✅ 合规检查清单</div>';
-    checklistHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    checklistHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">✅ 合规检查清单</div>';
+    checklistHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     for (const item of checklistItems) {
       const completed = item.completed;
@@ -8272,15 +9454,15 @@ function showLegalComplianceModal(state) {
       const disabled = completed || !canAfford;
 
       checklistHtml += `
-        <div style="padding:8px;background:${completed ? 'rgba(34,197,94,0.1)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${completed ? 'var(--success)' : 'var(--border)'};opacity:${disabled ? 0.6 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalChecklistActionFromModal('${item.id}')"`: ""}>
+        <div style="padding:8px;background:${completed ? "rgba(34,197,94,0.1)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${completed ? "var(--success)" : "var(--border)"};opacity:${disabled ? 0.6 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalChecklistActionFromModal('${item.id}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${item.icon} ${item.name}</div>
               <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${item.description}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:11px;font-weight:bold;color:${completed ? 'var(--success)' : (canAfford ? 'var(--accent)' : 'var(--danger)')};">${completed ? "✅ 已完成" : "¥" + item.cost.toLocaleString()}</div>
-              <div style="font-size:8px;color:var(--text-muted);margin-top:2px;">${completed ? "第" + item.completedDay + "天完成" : (canAfford ? "可执行" : "预算不足")}</div>
+              <div style="font-size:11px;font-weight:bold;color:${completed ? "var(--success)" : canAfford ? "var(--accent)" : "var(--danger)"};">${completed ? "✅ 已完成" : "¥" + item.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:var(--text-muted);margin-top:2px;">${completed ? "第" + item.completedDay + "天完成" : canAfford ? "可执行" : "预算不足"}</div>
             </div>
           </div>
         </div>
@@ -8294,23 +9476,25 @@ function showLegalComplianceModal(state) {
   const availableLegalEvents = getAvailableLegalEvents(state);
   if (availableLegalEvents.length > 0) {
     legalEventsHtml = '<div style="margin-bottom:12px;">';
-    legalEventsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 法律合规行动</div>';
-    legalEventsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    legalEventsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🎯 法律合规行动</div>';
+    legalEventsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     for (const event of availableLegalEvents) {
       const canAfford = company.legalBudget >= event.cost;
       const disabled = !canAfford;
 
       legalEventsHtml += `
-        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalEventActionFromModal('${event.id}')"`: ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalEventActionFromModal('${event.id}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${event.icon} ${event.name}</div>
               <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${event.desc}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${event.cost.toLocaleString()}</div>
-              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${event.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
             </div>
           </div>
         </div>
@@ -8322,29 +9506,35 @@ function showLegalComplianceModal(state) {
   // 专利申请选项
   let patentAppsHtml = "";
   const industry = company.industry;
-  const applicablePatents = Object.entries(PATENT_TYPES).filter(([key, type]) => {
-    return type.categories.includes(industry) || type.categories.includes("all");
-  });
+  const applicablePatents = Object.entries(PATENT_TYPES).filter(
+    ([key, type]) => {
+      return (
+        type.categories.includes(industry) || type.categories.includes("all")
+      );
+    },
+  );
 
   if (applicablePatents.length > 0) {
     patentAppsHtml = '<div style="margin-bottom:12px;">';
-    patentAppsHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">💡 申请专利</div>';
-    patentAppsHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    patentAppsHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">💡 申请专利</div>';
+    patentAppsHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     for (const [key, type] of applicablePatents) {
       const canAfford = company.legalBudget >= type.cost;
       const disabled = !canAfford;
 
       patentAppsHtml += `
-        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="applyPatentFromModal('${key}')"`: ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="applyPatentFromModal('${key}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${type.icon} ${type.name}</div>
               <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${type.description} · ${type.protectionYears}年保护</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${type.cost.toLocaleString()}</div>
-              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可申请" : "❌ 预算不足"}</div>
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${type.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅ 可申请" : "❌ 预算不足"}</div>
             </div>
           </div>
         </div>
@@ -8357,8 +9547,10 @@ function showLegalComplianceModal(state) {
   let insuranceHtml = "";
   if (!company.legalInsurance) {
     insuranceHtml = '<div style="margin-bottom:12px;">';
-    insuranceHtml += '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🛡️ 法律保险</div>';
-    insuranceHtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    insuranceHtml +=
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">🛡️ 法律保险</div>';
+    insuranceHtml +=
+      '<div style="display:flex;flex-direction:column;gap:4px;">';
 
     const insuranceLevels = [
       { level: 1, name: "基础保险", cost: 50000, desc: "覆盖基础法律咨询" },
@@ -8371,15 +9563,15 @@ function showLegalComplianceModal(state) {
       const disabled = !canAfford;
 
       insuranceHtml += `
-        <div style="padding:8px;background:${disabled ? 'rgba(0,0,0,0.05)' : 'var(--bg-card)'};border-radius:6px;border:1px solid ${disabled ? 'var(--border)' : 'transparent'};opacity:${disabled ? 0.5 : 1};${!disabled ? 'cursor:pointer;transition:all 0.2s;' : ''}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="buyLegalInsuranceFromModal(${ins.level})"` : ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="buyLegalInsuranceFromModal(${ins.level})"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">🛡️ ${ins.name}</div>
               <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">${ins.desc}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:11px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">¥${ins.cost.toLocaleString()}</div>
-              <div style="font-size:8px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可购买" : "❌ 预算不足"}</div>
+              <div style="font-size:11px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${ins.cost.toLocaleString()}</div>
+              <div style="font-size:8px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅ 可购买" : "❌ 预算不足"}</div>
             </div>
           </div>
         </div>
@@ -8470,7 +9662,7 @@ function showLegalResponseModal(eventId) {
     const canAfford = company.legalBudget >= opt.cost;
 
     html += `
-      <div style="padding:12px;background:${canAfford ? 'var(--bg-card)' : 'rgba(0,0,0,0.05)'};border-radius:8px;border:1px solid ${canAfford ? 'var(--border)' : 'var(--border)'};opacity:${canAfford ? 1 : 0.5};${canAfford ? 'cursor:pointer;transition:all 0.2s;' : ''} ${canAfford ? 'onmouseover="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg-accent)\';" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'rgba(0,0,0,0.05)\';"' : ''} onclick="${canAfford ? `resolveLegalActionFromModal(${i})` : ''}">
+      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-accent)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='rgba(0,0,0,0.05)';\"" : ""} onclick="${canAfford ? `resolveLegalActionFromModal(${i})` : ""}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
@@ -8478,11 +9670,15 @@ function showLegalResponseModal(eventId) {
             <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">风险：${opt.risk}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:12px;font-weight:bold;color:${canAfford ? 'var(--accent)' : 'var(--danger)'};">${opt.cost > 0 ? '¥' + opt.cost.toLocaleString() : '免费'}</div>
-            <div style="font-size:9px;color:${canAfford ? 'var(--success)' : 'var(--danger)'};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
+            <div style="font-size:12px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">${opt.cost > 0 ? "¥" + opt.cost.toLocaleString() : "免费"}</div>
+            <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅ 可执行" : "❌ 预算不足"}</div>
           </div>
         </div>
-        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(opt.effect).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ")}</div>
+        <div style="font-size:9px;color:var(--success);margin-top:4px;">效果：${Object.entries(
+          opt.effect,
+        )
+          .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+          .join(", ")}</div>
       </div>
     `;
   }
@@ -8504,6 +9700,390 @@ function showLegalResponseModal(eventId) {
       },
     ],
   });
+}
+
+// ====== P1-9: 竞争对手策略应对弹窗 ======
+
+/** 显示竞争对手防御面板 */
+function showCompetitorDefenseModal(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const competitors = state.startup.competitors || [];
+  const activeAttacks = company.activeCompetitorAttacks || [];
+  const defenseInfo = getCompetitorDefenseLevelInfo(
+    company.competitorDefenseLevel,
+  );
+
+  let html = '<div style="font-size:13px;max-height:70vh;overflow-y:auto;">';
+
+  // 防御等级
+  html += `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:bold;">🛡️ 竞争防御等级</div>
+        <div style="font-size:11px;color:${defenseInfo.color};font-weight:bold;">${defenseInfo.icon} ${defenseInfo.name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${company.competitorDefenseLevel}%;background:${defenseInfo.color};border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:14px;font-weight:bold;color:${defenseInfo.color};">${company.competitorDefenseLevel}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${defenseInfo.description}</div>
+    </div>
+  `;
+
+  // 活跃攻击
+  if (activeAttacks.length > 0) {
+    html += '<div style="margin-bottom:12px;">';
+    html +=
+      '<div style="font-size:13px;font-weight:bold;margin-bottom:8px;">⚔️ 活跃攻击（' +
+      activeAttacks.length +
+      "个）</div>";
+    html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+    for (let i = 0; i < activeAttacks.length; i++) {
+      const attack = activeAttacks[i];
+      const attackType = COMPETITOR_ATTACK_TYPES[attack.attackType];
+      const severityColor = getAttackSeverityColor(attack.severity);
+      const urgencyColor = getAttackUrgencyColor(attack.urgency);
+
+      html += `
+        <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:13px;font-weight:bold;">${attack.icon} ${attack.name}</div>
+            <div style="font-size:10px;">
+              <span style="color:${severityColor};margin-right:6px;">严重程度：${attack.severity}/5</span>
+              <span style="color:${urgencyColor};">紧急度：${attack.urgency === "critical" ? "🔴 紧急" : attack.urgency === "high" ? "🟠 高" : "🟡 中"}</span>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px;">
+            来自：「${attack.competitorName}」 | 剩余：${attack.remainingDays}天
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+            ${attack.description}
+          </div>
+          <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;">
+            影响：${Object.entries(attack.effects || {})
+              .map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`)
+              .join(", ")}
+          </div>
+          <div style="font-size:11px;font-weight:bold;margin-bottom:6px;">应对方案：</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+      `;
+
+      const responses = getAvailableCompetitorResponses(attack.attackType);
+      let firstResponseId = null;
+
+      for (const [respId, resp] of Object.entries(responses)) {
+        if (!firstResponseId) firstResponseId = respId;
+        const canAfford =
+          company.cashReserve >=
+          (company.revenue > 0 ? company.revenue * resp.costMult : 10000);
+        html += `
+          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} onclick="${canAfford ? `handleCompetitorResponse(${i}, '${respId}')` : ""}">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:11px;font-weight:bold;">${resp.icon} ${resp.name}</div>
+              <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅" : "❌"}</div>
+            </div>
+            <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${resp.desc}</div>
+            <div style="font-size:8px;color:var(--text-muted);margin-top:2px;">成功率：${Math.round(resp.successChance * 100)}%</div>
+          </div>
+        `;
+      }
+
+      html += "</div>";
+
+      // 快速应对按钮（选择第一个可承受的方案）
+      if (firstResponseId) {
+        const firstResp = responses[firstResponseId];
+        const cost =
+          company.revenue > 0 ? company.revenue * firstResp.costMult : 10000;
+        if (company.cashReserve >= cost) {
+          html += `
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+              <button class="btn btn-primary" style="font-size:10px;padding:4px 12px;" onclick="handleCompetitorResponse(${i}, '${firstResponseId}')">
+                快速应对：${firstResp.name}（¥${Math.round(cost).toLocaleString()}）
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      html += "</div>";
+    }
+
+    html += "</div></div>";
+  } else {
+    html += `
+      <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="font-size:13px;font-weight:bold;color:var(--success);">✅ 暂无活跃攻击</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">竞争对手暂时处于观望状态</div>
+      </div>
+    `;
+  }
+
+  // 竞争情报
+  html += `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="font-size:13px;font-weight:bold;margin-bottom:8px;">📊 竞争情报（等级 ${company.competitiveIntelligence}/100）</div>
+      <div style="font-size:10px;color:var(--text-secondary);">
+        情报等级越高，越能提前预警竞争对手动向，降低攻击成功率。
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 16px;" onclick="buyCompetitiveIntelligenceFromModal(1)">
+          购买情报 ¥5,000（+5）
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 16px;margin-left:8px;" onclick="buyCompetitiveIntelligenceFromModal(2)">
+          深度调研 ¥20,000（+15）
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 16px;margin-left:8px;" onclick="buyCompetitiveIntelligenceFromModal(3)">
+          专家咨询 ¥50,000（+30）
+        </button>
+      </div>
+    </div>
+  `;
+
+  // 防御投资
+  html += `
+    <div style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;">
+      <div style="font-size:13px;font-weight:bold;margin-bottom:8px;">💰 防御投资</div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;">
+        投入资金提升防御等级，降低攻击效果。
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investBrandDefenseFromModal(10000)">
+          品牌防御 ¥10,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investBrandDefenseFromModal(50000)">
+          品牌防御 ¥50,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investTalentRetentionFromModal(10000)">
+          人才留任 ¥10,000
+        </button>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;" onclick="investTalentRetentionFromModal(50000)">
+          人才留任 ¥50,000
+        </button>
+      </div>
+      <div style="font-size:9px;color:var(--text-muted);margin-top:8px;">
+        品牌防御：¥${(company.brandDefenseBudget || 0).toLocaleString()} | 人才留任：¥${(company.talentRetentionFund || 0).toLocaleString()}
+      </div>
+    </div>
+  `;
+
+  // 市场份额趋势
+  if (company.marketShareTrend && company.marketShareTrend.length > 0) {
+    html += `
+      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="font-size:13px;font-weight:bold;margin-bottom:8px;">📈 市场份额趋势（近${company.marketShareTrend.length}天）</div>
+        <div style="display:flex;align-items:flex-end;height:40px;gap:1px;">
+    `;
+    const maxShare = Math.max(...company.marketShareTrend, 1);
+    for (let i = 0; i < company.marketShareTrend.length; i++) {
+      const h = (company.marketShareTrend[i] / maxShare) * 30;
+      const color =
+        i >= company.marketShareTrend.length - 2
+          ? company.marketShareTrend[i] > company.marketShareTrend[i - 1]
+            ? "var(--success)"
+            : "var(--danger)"
+          : "var(--text-muted)";
+      html += `<div style="flex:1;background:${color};height:${h}px;border-radius:1px 1px 0 0;" title="第${state.player.day - company.marketShareTrend.length + i + 1}天: ${company.marketShareTrend[i].toFixed(1)}%"></div>`;
+    }
+    html += `</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">当前：${company.marketShareTrend[company.marketShareTrend.length - 1].toFixed(1)}%</div></div>`;
+  }
+
+  html += "</div>";
+
+  if (typeof showModal !== "function") return;
+
+  showModal({
+    title: "🛡️ 竞争对手防御",
+    body: html,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: function () {},
+      },
+    ],
+  });
+
+  // 绑定全局函数
+  window.handleCompetitorResponse = function (attackIndex, responseId) {
+    const state = StateManager.getState();
+    const attack = activeAttacks[attackIndex];
+    if (!attack) {
+      StateManager.addMessage("攻击已不存在", "warning");
+      return;
+    }
+    const result = executeCompetitorResponse(state, attack, responseId);
+    if (result.success) {
+      StateManager.addMessage(
+        result.message +
+          (result.actualSuccess ? " 效果显著！" : " 效果一般。") +
+          " 花费 ¥" +
+          result.cost.toLocaleString(),
+        result.actualSuccess ? "success" : "event",
+      );
+      renderAll();
+    } else {
+      StateManager.addMessage(result.message, "warning");
+    }
+  };
+
+  window.buyCompetitiveIntelligenceFromModal = function (level) {
+    const costs = { 1: 5000, 2: 20000, 3: 50000 };
+    const bonuses = { 1: 5, 2: 15, 3: 30 };
+    const cost = costs[level];
+    const bonus = bonuses[level];
+    const state = StateManager.getState();
+    const company = state.startup.company;
+    if (company.cashReserve < cost) {
+      StateManager.addMessage("现金不足", "warning");
+      return;
+    }
+    company.cashReserve -= cost;
+    company.expenses += cost;
+    company.competitiveIntelligence = Math.min(
+      100,
+      company.competitiveIntelligence + bonus,
+    );
+    StateManager.addMessage(
+      `✅ 购买竞争情报 +${bonus}，花费 ¥${cost.toLocaleString()}`,
+      "success",
+    );
+    renderAll();
+  };
+
+  window.investBrandDefenseFromModal = function (amount) {
+    const state = StateManager.getState();
+    const company = state.startup.company;
+    if (company.cashReserve < amount) {
+      StateManager.addMessage("现金不足", "warning");
+      return;
+    }
+    company.cashReserve -= amount;
+    company.expenses += amount;
+    company.brandDefenseBudget = (company.brandDefenseBudget || 0) + amount;
+    StateManager.addMessage(
+      `✅ 品牌防御投资 ¥${amount.toLocaleString()}`,
+      "success",
+    );
+    renderAll();
+  };
+
+  window.investTalentRetentionFromModal = function (amount) {
+    const state = StateManager.getState();
+    const company = state.startup.company;
+    if (company.cashReserve < amount) {
+      StateManager.addMessage("现金不足", "warning");
+      return;
+    }
+    company.cashReserve -= amount;
+    company.expenses += amount;
+    company.talentRetentionFund = (company.talentRetentionFund || 0) + amount;
+    StateManager.addMessage(
+      `✅ 人才留任基金 ¥${amount.toLocaleString()}`,
+      "success",
+    );
+    renderAll();
+  };
+}
+
+/** 获取竞争防御等级信息 */
+function getCompetitorDefenseLevelInfo(level) {
+  if (level >= 80)
+    return {
+      name: "坚不可摧",
+      icon: "🛡️",
+      color: "var(--success)",
+      description: "竞争对手难以对你造成有效伤害",
+    };
+  if (level >= 60)
+    return {
+      name: "防御坚固",
+      icon: "🔒",
+      color: "#27ae60",
+      description: "能有效抵御大部分竞争对手攻击",
+    };
+  if (level >= 40)
+    return {
+      name: "有一定防御",
+      icon: "⚔️",
+      color: "#f39c12",
+      description: "能部分抵御攻击，但仍需加强",
+    };
+  if (level >= 20)
+    return {
+      name: "防御薄弱",
+      icon: "🛡️",
+      color: "#e67e22",
+      description: "容易被竞争对手突破",
+    };
+  return {
+    name: "无防御",
+    icon: "❌",
+    color: "var(--danger)",
+    description: "完全暴露在竞争对手面前",
+  };
+}
+
+/** 从行动列表执行竞争对手应对 */
+function executeCompetitorResponseFromAction(state, attackIndex, responseId) {
+  const company = state.startup.company;
+  if (
+    !company ||
+    !company.activeCompetitorAttacks ||
+    !company.activeCompetitorAttacks[attackIndex]
+  ) {
+    return { success: false, message: "没有活跃攻击" };
+  }
+  const attack = company.activeCompetitorAttacks[attackIndex];
+  return executeCompetitorResponse(state, attack, responseId);
+}
+
+/** 投资品牌防御 */
+function investBrandDefense(state, amount) {
+  const company = state.startup.company;
+  if (!company || company.cashReserve < amount) {
+    return { success: false, message: "现金不足" };
+  }
+  company.cashReserve -= amount;
+  company.expenses += amount;
+  company.brandDefenseBudget = (company.brandDefenseBudget || 0) + amount;
+  return { success: true, message: "品牌防御投资成功" };
+}
+
+/** 投资人才留任 */
+function investTalentRetention(state, amount) {
+  const company = state.startup.company;
+  if (!company || company.cashReserve < amount) {
+    return { success: false, message: "现金不足" };
+  }
+  company.cashReserve -= amount;
+  company.expenses += amount;
+  company.talentRetentionFund = (company.talentRetentionFund || 0) + amount;
+  return { success: true, message: "人才留任基金投资成功" };
+}
+
+/** 购买竞争情报 */
+function buyCompetitiveIntelligence(state, level) {
+  const company = state.startup.company;
+  const costs = { 1: 5000, 2: 20000, 3: 50000 };
+  const bonuses = { 1: 5, 2: 15, 3: 30 };
+  const cost = costs[level];
+  const bonus = bonuses[level];
+  if (!company || company.cashReserve < cost) {
+    return { success: false, message: "现金不足" };
+  }
+  company.cashReserve -= cost;
+  company.expenses += cost;
+  company.competitiveIntelligence = Math.min(
+    100,
+    company.competitiveIntelligence + bonus,
+  );
+  return { success: true, message: "购买竞争情报成功，情报等级 +" + bonus };
 }
 
 // ====== 执行创业行动 ======
@@ -8597,6 +10177,26 @@ function executeStartupAction(state, actionId, params) {
 
     case "legal_response":
       return resolveLegalEvent(state, params.optionIndex);
+
+    // P1-9: 竞争对手策略应对
+    case "competitor_defense":
+      return showCompetitorDefenseModal(state);
+
+    case "competitor_response":
+      return executeCompetitorResponseFromAction(
+        state,
+        params.attackIndex,
+        params.responseId,
+      );
+
+    case "brand_defense_invest":
+      return investBrandDefense(state, params.amount);
+
+    case "talent_retention_invest":
+      return investTalentRetention(state, params.amount);
+
+    case "competitive_intel":
+      return buyCompetitiveIntelligence(state, params.level);
 
     case "ipo_prep":
       return prepareIPO(state);
@@ -9068,14 +10668,24 @@ function renderStartupTab(state, parent) {
           "</div>";
       } else if (product.status === "launched") {
         // P0-1: 生命周期阶段徽章
-        const stageIcons = { introduction: "🌱", growth: "📈", maturity: "💎", decline: "📉" };
+        const stageIcons = {
+          introduction: "🌱",
+          growth: "📈",
+          maturity: "💎",
+          decline: "📉",
+        };
         const stageColors = {
           introduction: "#f59e0b", // 黄色
           growth: "#22c55e", // 绿色
           maturity: "#3b82f6", // 蓝色
           decline: "#ef4444", // 红色
         };
-        const stageNames = { introduction: "引入期", growth: "成长期", maturity: "成熟期", decline: "衰退期" };
+        const stageNames = {
+          introduction: "引入期",
+          growth: "成长期",
+          maturity: "成熟期",
+          decline: "衰退期",
+        };
         const stageIcon = stageIcons[product.lifecycleStage] || "🌱";
         const stageColor = stageColors[product.lifecycleStage] || "#f59e0b";
 
@@ -9095,10 +10705,21 @@ function renderStartupTab(state, parent) {
         const lifecycleBadge = `<span style="font-size:10px;padding:2px 6px;border-radius:3px;color:#fff;margin-left:6px;background:${stageColor};">🔄${stageNames[product.lifecycleStage]}</span>`;
 
         // P0-1: 市场份额和用户增长率
-        const marketShareText = product.marketShare > 0 ? ` | 份额:${product.marketShare.toFixed(1)}%` : "";
-        const growthRateColor = product.userGrowthRate > 0 ? "var(--success)" : product.userGrowthRate < 0 ? "var(--danger)" : "var(--text-muted)";
+        const marketShareText =
+          product.marketShare > 0
+            ? ` | 份额:${product.marketShare.toFixed(1)}%`
+            : "";
+        const growthRateColor =
+          product.userGrowthRate > 0
+            ? "var(--success)"
+            : product.userGrowthRate < 0
+              ? "var(--danger)"
+              : "var(--text-muted)";
         const growthRateText = ` | 增长率:${product.userGrowthRate > 0 ? "+" : ""}${product.userGrowthRate.toFixed(1)}%`;
-        const churnRateText = product.churnRate > 0 ? ` | 流失:${product.churnRate.toFixed(1)}%` : "";
+        const churnRateText =
+          product.churnRate > 0
+            ? ` | 流失:${product.churnRate.toFixed(1)}%`
+            : "";
 
         prodCard.innerHTML =
           '<div style="display:flex;justify-content:space-between;align-items:center;">' +
@@ -9158,39 +10779,86 @@ function renderStartupTab(state, parent) {
         }
 
         // P0-2: AARRR 数据面板
-        var arpuText = product.arpu > 0 ? " | ARPU:¥" + product.arpu.toFixed(2) + "/天" : "";
-        var ltvText = product.ltv > 0 ? " | LTV:¥" + Math.round(product.ltv).toLocaleString() : "";
-        var cacText = product.cac > 0 ? " | CAC:¥" + product.cac.toFixed(0) : "";
-        var payRateText = " | 付费率:" + (product.payRate * 100).toFixed(1) + "%";
+        var arpuText =
+          product.arpu > 0 ? " | ARPU:¥" + product.arpu.toFixed(2) + "/天" : "";
+        var ltvText =
+          product.ltv > 0
+            ? " | LTV:¥" + Math.round(product.ltv).toLocaleString()
+            : "";
+        var cacText =
+          product.cac > 0 ? " | CAC:¥" + product.cac.toFixed(0) : "";
+        var payRateText =
+          " | 付费率:" + (product.payRate * 100).toFixed(1) + "%";
         var kFactorText = " | K因子:" + product.kFactor.toFixed(2);
         var dauText = " | DAU:" + (product.dau || 0).toLocaleString();
-        var retentionText = " | 留存:D1:" + (product.retentionD1 * 100).toFixed(0) + "% D7:" + (product.retentionD7 * 100).toFixed(0) + "% D30:" + (product.retentionD30 * 100).toFixed(0) + "%";
+        var retentionText =
+          " | 留存:D1:" +
+          (product.retentionD1 * 100).toFixed(0) +
+          "% D7:" +
+          (product.retentionD7 * 100).toFixed(0) +
+          "% D30:" +
+          (product.retentionD30 * 100).toFixed(0) +
+          "%";
 
         // LTV/CAC 比率颜色
-        var ltvcacRatio = product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
-        var ltvcacColor = ltvcacRatio >= 3 ? "var(--success)" : ltvcacRatio >= 1 ? "var(--warning)" : ltvcacRatio > 0 ? "var(--danger)" : "var(--text-muted)";
-        var ltvcacText = product.cac > 0 ? " | LTV/CAC:<strong style='color:" + ltvcacColor + "'>" + ltvcacRatio.toFixed(1) + "x</strong>" : "";
+        var ltvcacRatio =
+          product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
+        var ltvcacColor =
+          ltvcacRatio >= 3
+            ? "var(--success)"
+            : ltvcacRatio >= 1
+              ? "var(--warning)"
+              : ltvcacRatio > 0
+                ? "var(--danger)"
+                : "var(--text-muted)";
+        var ltvcacText =
+          product.cac > 0
+            ? " | LTV/CAC:<strong style='color:" +
+              ltvcacColor +
+              "'>" +
+              ltvcacRatio.toFixed(1) +
+              "x</strong>"
+            : "";
 
         detailHtml +=
           '<div style="margin-top:6px;padding:6px;background:rgba(0,0,0,0.15);border-radius:4px;font-size:10px;color:var(--text-secondary);">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-          '<span>📊 活跃</span><span>' + dauText + ' MAU:' + (product.mau || 0).toLocaleString() + '</span>' +
-          '</div>' +
+          "<span>📊 活跃</span><span>" +
+          dauText +
+          " MAU:" +
+          (product.mau || 0).toLocaleString() +
+          "</span>" +
+          "</div>" +
           '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-          '<span>💰 变现</span><span>' + arpuText + ltvText + payRateText + '</span>' +
-          '</div>' +
+          "<span>💰 变现</span><span>" +
+          arpuText +
+          ltvText +
+          payRateText +
+          "</span>" +
+          "</div>" +
           '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-          '<span>📢 获客</span><span>' + cacText + ' 新增:' + (product.newUsersToday || 0).toLocaleString() + '</span>' +
-          '</div>' +
+          "<span>📢 获客</span><span>" +
+          cacText +
+          " 新增:" +
+          (product.newUsersToday || 0).toLocaleString() +
+          "</span>" +
+          "</div>" +
           '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-          '<span>🔄 留存</span><span>' + retentionText + '</span>' +
-          '</div>' +
+          "<span>🔄 留存</span><span>" +
+          retentionText +
+          "</span>" +
+          "</div>" +
           '<div style="display:flex;justify-content:space-between;">' +
-          '<span>🚀 病毒</span><span>' + kFactorText + '</span>' +
-          '</div>' +
-          '</div>' +
-          '<div style="margin-top:4px;font-size:10px;text-align:center;color:' + ltvcacColor + ';">' +
-          "💡 单位经济模型：" + ltvcacText +
+          "<span>🚀 病毒</span><span>" +
+          kFactorText +
+          "</span>" +
+          "</div>" +
+          "</div>" +
+          '<div style="margin-top:4px;font-size:10px;text-align:center;color:' +
+          ltvcacColor +
+          ';">' +
+          "💡 单位经济模型：" +
+          ltvcacText +
           "</div>";
 
         prodCard.innerHTML += detailHtml;
@@ -9255,26 +10923,59 @@ function renderStartupTab(state, parent) {
         }
 
         // P0-3: 技术债状态显示
-        if (product.technicalDebt > 0 || typeof showTechDebtModal === "function") {
+        if (
+          product.technicalDebt > 0 ||
+          typeof showTechDebtModal === "function"
+        ) {
           const techDebtDiv = document.createElement("div");
-          const debtLevel = product.technicalDebt >= 70 ? "danger" : product.technicalDebt >= 40 ? "warning" : "success";
-          const debtColor = debtLevel === "danger" ? "var(--danger)" : debtLevel === "warning" ? "var(--warning)" : "var(--success)";
-          const debtIcon = debtLevel === "danger" ? "🔴" : debtLevel === "warning" ? "🟡" : "🟢";
+          const debtLevel =
+            product.technicalDebt >= 70
+              ? "danger"
+              : product.technicalDebt >= 40
+                ? "warning"
+                : "success";
+          const debtColor =
+            debtLevel === "danger"
+              ? "var(--danger)"
+              : debtLevel === "warning"
+                ? "var(--warning)"
+                : "var(--success)";
+          const debtIcon =
+            debtLevel === "danger"
+              ? "🔴"
+              : debtLevel === "warning"
+                ? "🟡"
+                : "🟢";
 
           techDebtDiv.style.cssText = "margin-top:6px;";
           techDebtDiv.innerHTML =
             '<div style="display:flex;align-items:center;font-size:10px;">' +
-            '<span style="color:' + debtColor + ';">' + debtIcon + ' 技术债:' + product.technicalDebt.toFixed(0) + '</span>' +
+            '<span style="color:' +
+            debtColor +
+            ';">' +
+            debtIcon +
+            " 技术债:" +
+            product.technicalDebt.toFixed(0) +
+            "</span>" +
             '<div style="flex:1;margin:0 8px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
-            '<div style="height:100%;width:' + product.technicalDebt + '%;background:' + debtColor + ';border-radius:2px;"></div>' +
+            '<div style="height:100%;width:' +
+            product.technicalDebt +
+            "%;background:" +
+            debtColor +
+            ';border-radius:2px;"></div>' +
             "</div>" +
-            '<span style="color:var(--text-muted);">Bug率:' + product.bugRate.toFixed(2) + '/千用户</span>' +
+            '<span style="color:var(--text-muted);">Bug率:' +
+            product.bugRate.toFixed(2) +
+            "/千用户</span>" +
             "</div>";
           prodCard.appendChild(techDebtDiv);
         }
 
         // P0-3: 重构按钮（技术债>30时显示）
-        if ((product.technicalDebt || 0) > 30 && typeof showTechDebtModal === "function") {
+        if (
+          (product.technicalDebt || 0) > 30 &&
+          typeof showTechDebtModal === "function"
+        ) {
           const refactorBtn = document.createElement("div");
           refactorBtn.style.cssText = "margin-top:4px;";
           refactorBtn.innerHTML =
@@ -9287,7 +10988,10 @@ function renderStartupTab(state, parent) {
         }
 
         // P0-1: 退市按钮（衰退期产品）
-        if (product.lifecycleStage === "decline" && typeof showRetireProductModal === "function") {
+        if (
+          product.lifecycleStage === "decline" &&
+          typeof showRetireProductModal === "function"
+        ) {
           const retireBtn = document.createElement("div");
           retireBtn.style.cssText = "margin-top:4px;";
           retireBtn.innerHTML =
@@ -9324,9 +11028,30 @@ function renderStartupTab(state, parent) {
       // P0-4: 满意度/倦怠状态
       var sat = emp.satisfactionDetails || {};
       var burnoutLevel = emp.burnoutLevel || 0;
-      var burnoutIcon = burnoutLevel >= 3 ? "🔴" : burnoutLevel >= 2 ? "🟠" : burnoutLevel >= 1 ? "🟡" : "🟢";
-      var burnoutText = burnoutLevel >= 3 ? "重度倦怠" : burnoutLevel >= 2 ? "中度倦怠" : burnoutLevel >= 1 ? "轻度倦怠" : "正常";
-      var burnoutColor = burnoutLevel >= 3 ? "var(--danger)" : burnoutLevel >= 2 ? "#f59e0b" : burnoutLevel >= 1 ? "#fbbf24" : "var(--success)";
+      var burnoutIcon =
+        burnoutLevel >= 3
+          ? "🔴"
+          : burnoutLevel >= 2
+            ? "🟠"
+            : burnoutLevel >= 1
+              ? "🟡"
+              : "🟢";
+      var burnoutText =
+        burnoutLevel >= 3
+          ? "重度倦怠"
+          : burnoutLevel >= 2
+            ? "中度倦怠"
+            : burnoutLevel >= 1
+              ? "轻度倦怠"
+              : "正常";
+      var burnoutColor =
+        burnoutLevel >= 3
+          ? "var(--danger)"
+          : burnoutLevel >= 2
+            ? "#f59e0b"
+            : burnoutLevel >= 1
+              ? "#fbbf24"
+              : "var(--success)";
 
       var empCard = document.createElement("div");
       empCard.style.cssText =
@@ -9340,23 +11065,49 @@ function renderStartupTab(state, parent) {
         "（" +
         (empRole ? empRole.name : emp.role) +
         "）</span>" +
-        '<span style="font-size:11px;color:' + burnoutColor + ';">' + burnoutIcon + ' ' + burnoutText + '</span>' +
+        '<span style="font-size:11px;color:' +
+        burnoutColor +
+        ';">' +
+        burnoutIcon +
+        " " +
+        burnoutText +
+        "</span>" +
         "</div>" +
         '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;">' +
-        '<span style="color:var(--text-muted);">月薪¥' + emp.salary.toLocaleString() + '</span>' +
-        '<span style="color:' + loyaltyColor + ';">忠诚度 ' + Math.round(emp.loyalty) + '%</span>' +
+        '<span style="color:var(--text-muted);">月薪¥' +
+        emp.salary.toLocaleString() +
+        "</span>" +
+        '<span style="color:' +
+        loyaltyColor +
+        ';">忠诚度 ' +
+        Math.round(emp.loyalty) +
+        "%</span>" +
         "</div>" +
         '<div style="margin-top:4px;font-size:10px;color:var(--text-secondary);">' +
-        '📊 满意度:' + Math.round(emp.satisfaction || 50) + '% ' +
-        '| 薪资:' + Math.round(sat.salary || 50) + '% ' +
-        '| 工作:' + Math.round(sat.workload || 60) + '% ' +
-        '| 成长:' + Math.round(sat.growth || 40) + '% ' +
-        '</div>' +
+        "📊 满意度:" +
+        Math.round(emp.satisfaction || 50) +
+        "% " +
+        "| 薪资:" +
+        Math.round(sat.salary || 50) +
+        "% " +
+        "| 工作:" +
+        Math.round(sat.workload || 60) +
+        "% " +
+        "| 成长:" +
+        Math.round(sat.growth || 40) +
+        "% " +
+        "</div>" +
         '<div style="margin-top:4px;font-size:10px;color:var(--text-secondary);">' +
-        '💪 健康:' + Math.round(emp.health || 80) + '% ' +
-        '| 压力:' + Math.round(emp.stressLevel || 30) + '% ' +
-        '| 倦怠风险:' + Math.round(emp.burnoutRisk || 0) + '% ' +
-        '</div>';
+        "💪 健康:" +
+        Math.round(emp.health || 80) +
+        "% " +
+        "| 压力:" +
+        Math.round(emp.stressLevel || 30) +
+        "% " +
+        "| 倦怠风险:" +
+        Math.round(emp.burnoutRisk || 0) +
+        "% " +
+        "</div>";
 
       teamDiv.appendChild(empCard);
     }
@@ -9610,7 +11361,7 @@ function showVersionUpdateModal(productId) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     StateManager.addMessage("产品不存在或不可升级", "warning");
     return;
@@ -9623,7 +11374,12 @@ function showVersionUpdateModal(productId) {
       techBonus: [2, 5],
       marketBonus: [1, 3],
       desc: "v1.0 → v1.1，修复bug，小幅优化",
-      current: "v" + (product.version?.split(".")[1] ? parseInt(product.version.split(".")[1]) + 1 : 1) + ".0",
+      current:
+        "v" +
+        (product.version?.split(".")[1]
+          ? parseInt(product.version.split(".")[1]) + 1
+          : 1) +
+        ".0",
     },
     major: {
       name: "大版本更新",
@@ -9631,7 +11387,12 @@ function showVersionUpdateModal(productId) {
       techBonus: [8, 15],
       marketBonus: [5, 10],
       desc: "v1.x → v2.0，新功能，体验升级",
-      current: "v" + (product.version?.split(".")[0] ? parseInt(product.version.split(".")[0]) + 1 : 2) + ".0",
+      current:
+        "v" +
+        (product.version?.split(".")[0]
+          ? parseInt(product.version.split(".")[0]) + 1
+          : 2) +
+        ".0",
     },
     revolutionary: {
       name: "革命性升级",
@@ -9639,15 +11400,28 @@ function showVersionUpdateModal(productId) {
       techBonus: [15, 30],
       marketBonus: [10, 20],
       desc: "v.x → v3.0+，重构核心，颠覆创新",
-      current: "v" + Math.max(3, product.version?.split(".")[0] ? parseInt(product.version.split(".")[0]) + 1 : 3) + ".0+",
+      current:
+        "v" +
+        Math.max(
+          3,
+          product.version?.split(".")[0]
+            ? parseInt(product.version.split(".")[0]) + 1
+            : 3,
+        ) +
+        ".0+",
     },
   };
 
   const html =
     '<div style="font-size:13px;">' +
     '<p style="color:var(--text-secondary);margin-bottom:12px;">' +
-    "当前版本：<strong>" + (product.version || "v1.0") + "</strong> | " +
-    "技术分：" + product.technologyScore + " | 市场分：" + product.marketScore +
+    "当前版本：<strong>" +
+    (product.version || "v1.0") +
+    "</strong> | " +
+    "技术分：" +
+    product.technologyScore +
+    " | 市场分：" +
+    product.marketScore +
     "</p>" +
     '<div style="display:grid;grid-template-columns:1fr;gap:12px;">';
 
@@ -9661,18 +11435,38 @@ function showVersionUpdateModal(productId) {
       ";border-radius:8px;cursor:pointer;transition:all 0.2s;" +
       (canAffordMin ? "" : "opacity:0.6;") +
       '"' +
-      (canAffordMin ? 'onclick="handleVersionUpdate(\'' + productId + '\',\'' + key + '\')"' : "") +
+      (canAffordMin
+        ? "onclick=\"handleVersionUpdate('" + productId + "','" + key + "')\""
+        : "") +
       '">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-      '<strong style="font-size:13px;">' + config.name + ' → ' + config.current + '</strong>' +
-      '<span style="font-size:11px;color:' + (canAffordMin ? "var(--success)" : "var(--danger)") + ';">¥' + config.costRange[0].toLocaleString() + '~¥' + config.costRange[1].toLocaleString() + '</span>' +
+      '<strong style="font-size:13px;">' +
+      config.name +
+      " → " +
+      config.current +
+      "</strong>" +
+      '<span style="font-size:11px;color:' +
+      (canAffordMin ? "var(--success)" : "var(--danger)") +
+      ';">¥' +
+      config.costRange[0].toLocaleString() +
+      "~¥" +
+      config.costRange[1].toLocaleString() +
+      "</span>" +
       "</div>" +
-      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">' + config.desc + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">' +
+      config.desc +
+      "</div>" +
       '<div style="font-size:10px;">' +
-      '🔧 技术分+' + config.techBonus[0] + '~+' + config.techBonus[1] +
-      ' | 📈 市场分+' + config.marketBonus[0] + '~+' + config.marketBonus[1] +
+      "🔧 技术分+" +
+      config.techBonus[0] +
+      "~+" +
+      config.techBonus[1] +
+      " | 📈 市场分+" +
+      config.marketBonus[0] +
+      "~+" +
+      config.marketBonus[1] +
       "</div>" +
-      '</div>';
+      "</div>";
   }
 
   html += "</div>";
@@ -9687,9 +11481,17 @@ function showVersionUpdateModal(productId) {
       const v = product.versionHistory[i];
       html +=
         '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
-        '<strong>' + v.version + '</strong> (' + v.date + ') — ' + v.changes +
-        ' | 技术分' + v.techScore + ' 市场分' + v.marketScore +
-        '</div>';
+        "<strong>" +
+        v.version +
+        "</strong> (" +
+        v.date +
+        ") — " +
+        v.changes +
+        " | 技术分" +
+        v.techScore +
+        " 市场分" +
+        v.marketScore +
+        "</div>";
     }
     html += "</div></div>";
   }
@@ -9710,7 +11512,7 @@ function handleVersionUpdate(productId, versionType) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   const config = {
@@ -9724,14 +11526,27 @@ function handleVersionUpdate(productId, versionType) {
   // 显示预算输入弹窗
   const budgetPrompt =
     '<div style="font-size:13px;">' +
-    '<p>选择投入预算（¥' + config.costRange[0].toLocaleString() + '~¥' + config.costRange[1].toLocaleString() + '）：</p>' +
-    '<input type="range" id="versionBudget" min="' + config.costRange[0] + '" max="' + config.costRange[1] + '" step="5000" value="' + config.costRange[0] + '" style="width:100%;margin:12px 0;">' +
-    '<div id="budgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥' + config.costRange[0].toLocaleString() + '</div>' +
-    '<script>' +
+    "<p>选择投入预算（¥" +
+    config.costRange[0].toLocaleString() +
+    "~¥" +
+    config.costRange[1].toLocaleString() +
+    "）：</p>" +
+    '<input type="range" id="versionBudget" min="' +
+    config.costRange[0] +
+    '" max="' +
+    config.costRange[1] +
+    '" step="5000" value="' +
+    config.costRange[0] +
+    '" style="width:100%;margin:12px 0;">' +
+    '<div id="budgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥' +
+    config.costRange[0].toLocaleString() +
+    "</div>" +
+    "<script>" +
     'document.getElementById("versionBudget").oninput = function() {' +
     '  document.getElementById("budgetValue").textContent = "¥" + parseInt(this.value).toLocaleString();' +
-    '};' +
-    '</script>' +
+    "};" +
+    "</scr" +
+    "ipt>" +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -9748,8 +11563,15 @@ function handleVersionUpdate(productId, versionType) {
         text: "确认",
         cls: "btn-primary",
         callback: function () {
-          const budget = parseInt(document.getElementById("versionBudget").value);
-          const result = updateProductVersion(state, productId, versionType, budget);
+          const budget = parseInt(
+            document.getElementById("versionBudget").value,
+          );
+          const result = updateProductVersion(
+            state,
+            productId,
+            versionType,
+            budget,
+          );
           if (result.success) {
             StateManager.addMessage("✅ " + result.message, "success");
             renderAll();
@@ -9780,25 +11602,42 @@ function showRetireProductModal(productId) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.retired) return;
 
   const reasons = [
-    { key: "replaced_by_new", label: "被新产品替代", desc: "已有更好的产品接替，旧产品自然退市" },
-    { key: "market_decline", label: "市场萎缩", desc: "市场需求下降，继续运营不划算" },
-    { key: "strategic_pivot", label: "战略调整", desc: "公司战略方向改变，需要聚焦其他产品" },
+    {
+      key: "replaced_by_new",
+      label: "被新产品替代",
+      desc: "已有更好的产品接替，旧产品自然退市",
+    },
+    {
+      key: "market_decline",
+      label: "市场萎缩",
+      desc: "市场需求下降，继续运营不划算",
+    },
+    {
+      key: "strategic_pivot",
+      label: "战略调整",
+      desc: "公司战略方向改变，需要聚焦其他产品",
+    },
     { key: "failure", label: "产品失败", desc: "产品表现不佳，及时止损" },
   ];
 
   let html =
     '<div style="font-size:13px;">' +
     '<p style="color:var(--text-secondary);margin-bottom:12px;">' +
-    "确定要退市 <strong>「" + product.name + "」</strong> 吗？" +
+    "确定要退市 <strong>「" +
+    product.name +
+    "」</strong> 吗？" +
     "</p>" +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">' +
-    "当前用户：" + (product.users || 0).toLocaleString() +
-    " | 月收入：¥" + Math.round(product.revenue).toLocaleString() +
-    " | 生命周期：" + product.lifecycleStage +
+    "当前用户：" +
+    (product.users || 0).toLocaleString() +
+    " | 月收入：¥" +
+    Math.round(product.revenue).toLocaleString() +
+    " | 生命周期：" +
+    product.lifecycleStage +
     "</div>" +
     '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">选择退市原因：</div>' +
     '<div style="display:grid;grid-template-columns:1fr;gap:8px;">';
@@ -9806,10 +11645,16 @@ function showRetireProductModal(productId) {
   for (const reason of reasons) {
     html +=
       '<label style="display:flex;align-items:center;padding:10px;background:var(--bg-secondary);border-radius:6px;cursor:pointer;">' +
-      '<input type="radio" name="retireReason" value="' + reason.key + '" style="margin-right:8px;">' +
-      '<div>' +
-      '<strong>' + reason.label + '</strong>' +
-      '<div style="font-size:10px;color:var(--text-muted);">' + reason.desc + '</div>' +
+      '<input type="radio" name="retireReason" value="' +
+      reason.key +
+      '" style="margin-right:8px;">' +
+      "<div>" +
+      "<strong>" +
+      reason.label +
+      "</strong>" +
+      '<div style="font-size:10px;color:var(--text-muted);">' +
+      reason.desc +
+      "</div>" +
       "</div>" +
       "</label>";
   }
@@ -9830,14 +11675,19 @@ function showRetireProductModal(productId) {
         text: "确认退市",
         cls: "btn-danger",
         callback: function () {
-          const selected = document.querySelector('input[name="retireReason"]:checked');
+          const selected = document.querySelector(
+            'input[name="retireReason"]:checked',
+          );
           if (!selected) {
             StateManager.addMessage("请选择退市原因", "warning");
             return;
           }
           const result = retireProduct(state, productId, selected.value);
           if (result.success) {
-            StateManager.addMessage("💀 「" + product.name + "」已退市", "danger");
+            StateManager.addMessage(
+              "💀 「" + product.name + "」已退市",
+              "danger",
+            );
             renderAll();
           } else {
             StateManager.addMessage("⚠️ " + result.message, "warning");
@@ -9966,6 +11816,21 @@ if (typeof module !== "undefined" && module.exports) {
     LEGAL_CHECKLIST,
     LEGAL_RISK_LEVELS,
     COMPLIANCE_LEVELS,
+    // P1-9: 竞争对手策略应对系统
+    showCompetitorDefenseModal,
+    executeCompetitorResponseFromAction,
+    investBrandDefense,
+    investTalentRetention,
+    buyCompetitiveIntelligence,
+    getCompetitorAttackSummary,
+    getCompetitorDefenseLevelInfo,
+    // P1-9: 数据常量
+    COMPETITOR_ATTACK_TYPES,
+    COMPETITOR_EVENT_TEMPLATES,
+    PRICE_WAR_RESPONSES,
+    TALENT_POACHING_RESPONSES,
+    MARKETING_WAR_RESPONSES,
+    TECH_COMPETITION_RESPONSES,
   };
 }
 
@@ -9976,107 +11841,172 @@ function showTechDebtModal(productId) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   const debt = product.technicalDebt || 0;
-  const debtLevel = debt >= 70 ? "危险" : debt >= 40 ? "警告" : debt > 0 ? "正常" : "健康";
-  const debtColor = debt >= 70 ? "var(--danger)" : debt >= 40 ? "var(--warning)" : "var(--success)";
+  const debtLevel =
+    debt >= 70 ? "危险" : debt >= 40 ? "警告" : debt > 0 ? "正常" : "健康";
+  const debtColor =
+    debt >= 70
+      ? "var(--danger)"
+      : debt >= 40
+        ? "var(--warning)"
+        : "var(--success)";
 
   // 技术债来源分布
   const sources = product.techDebtSources || {};
   const totalSources = Object.values(sources).reduce((a, b) => a + b, 0);
 
-  let sourcesHtml = '';
-  const sourceIcons = { rushDevelopment: "🏃", skippedTests: "⚠️", cutFeatures: "✂️", quickFixes: "🔨", legacyCode: "🗄️" };
-  const sourceNames = { rushDevelopment: "赶工", skippedTests: "跳过测试", cutFeatures: "砍需求", quickFixes: "临时修复", legacyCode: "遗留代码" };
+  let sourcesHtml = "";
+  const sourceIcons = {
+    rushDevelopment: "🏃",
+    skippedTests: "⚠️",
+    cutFeatures: "✂️",
+    quickFixes: "🔨",
+    legacyCode: "🗄️",
+  };
+  const sourceNames = {
+    rushDevelopment: "赶工",
+    skippedTests: "跳过测试",
+    cutFeatures: "砍需求",
+    quickFixes: "临时修复",
+    legacyCode: "遗留代码",
+  };
 
   for (const [key, value] of Object.entries(sources)) {
     if (value > 0) {
-      const pct = totalSources > 0 ? (value / totalSources * 100) : 0;
+      const pct = totalSources > 0 ? (value / totalSources) * 100 : 0;
       sourcesHtml +=
         '<div style="display:flex;align-items:center;margin-bottom:4px;">' +
-        '<span style="font-size:10px;width:60px;">' + (sourceIcons[key] || "") + ' ' + sourceNames[key] + '</span>' +
+        '<span style="font-size:10px;width:60px;">' +
+        (sourceIcons[key] || "") +
+        " " +
+        sourceNames[key] +
+        "</span>" +
         '<div style="flex:1;height:12px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
-        '<div style="height:100%;width:' + pct + '%;background:' + debtColor + ';border-radius:2px;"></div>' +
+        '<div style="height:100%;width:' +
+        pct +
+        "%;background:" +
+        debtColor +
+        ';border-radius:2px;"></div>' +
         "</div>" +
-        '<span style="font-size:10px;color:var(--text-muted);width:30px;text-align:right;">' + value.toFixed(0) + '</span>' +
+        '<span style="font-size:10px;color:var(--text-muted);width:30px;text-align:right;">' +
+        value.toFixed(0) +
+        "</span>" +
         "</div>";
     }
   }
 
   // 技术债历史趋势
-  let historyHtml = '';
+  let historyHtml = "";
   if (product.techDebtHistory && product.techDebtHistory.length > 0) {
     const last5 = product.techDebtHistory.slice(-10);
-    historyHtml = '<div style="margin-top:12px;">' +
+    historyHtml =
+      '<div style="margin-top:12px;">' +
       '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">📈 技术债趋势</div>' +
       '<div style="display:flex;align-items:flex-end;height:60px;gap:2px;">';
-    const maxDebt = Math.max(...last5.map(h => h.debt), 1);
+    const maxDebt = Math.max(...last5.map((h) => h.debt), 1);
     for (const h of last5) {
       const barH = (h.debt / maxDebt) * 50;
-      const barColor = h.debt >= 70 ? "var(--danger)" : h.debt >= 40 ? "var(--warning)" : "var(--success)";
-      historyHtml += '<div style="flex:1;background:' + barColor + ';height:' + barH + 'px;border-radius:2px 2px 0 0;" title="第" + h.day + "天: " + h.debt.toFixed(0) + '"></div>';
+      const barColor =
+        h.debt >= 70
+          ? "var(--danger)"
+          : h.debt >= 40
+            ? "var(--warning)"
+            : "var(--success)";
+      historyHtml +=
+        '<div style="flex:1;background:' +
+        barColor +
+        ";height:" +
+        barH +
+        'px;border-radius:2px 2px 0 0;" title="第' +
+        h.day +
+        "天: " +
+        h.debt.toFixed(0) +
+        '"></div>';
     }
     historyHtml += "</div></div>";
   }
 
   // Bug 率历史
-  let bugHistoryHtml = '';
+  let bugHistoryHtml = "";
   if (product.bugHistory && product.bugHistory.length > 0) {
     const last5 = product.bugHistory.slice(-10);
-    bugHistoryHtml = '<div style="margin-top:8px;">' +
+    bugHistoryHtml =
+      '<div style="margin-top:8px;">' +
       '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">🐛 Bug 率趋势</div>' +
       '<div style="display:flex;align-items:flex-end;height:40px;gap:2px;">';
-    const maxBug = Math.max(...last5.map(h => h.bugRate), 0.1);
+    const maxBug = Math.max(...last5.map((h) => h.bugRate), 0.1);
     for (const h of last5) {
       const barH = (h.bugRate / maxBug) * 30;
-      bugHistoryHtml += '<div style="flex:1;background:var(--danger);height:' + barH + 'px;border-radius:2px 2px 0 0;" title="第" + h.day + "天: " + h.bugRate.toFixed(2) + '"></div>';
+      bugHistoryHtml +=
+        '<div style="flex:1;background:var(--danger);height:' +
+        barH +
+        'px;border-radius:2px 2px 0 0;" title="第' +
+        h.day +
+        "天: " +
+        h.bugRate.toFixed(2) +
+        '"></div>';
     }
     bugHistoryHtml += "</div></div>";
   }
 
   const html =
     '<div style="font-size:12px;max-height:60vh;overflow-y:auto;">' +
-
     // 当前状态
     '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">' +
     _metricCard("🔧 技术债", debt.toFixed(0), debtLevel, debtColor) +
-    _metricCard("🐛 Bug率", product.bugRate.toFixed(2) + "/千用户", "每千用户每日bug数") +
+    _metricCard(
+      "🐛 Bug率",
+      product.bugRate.toFixed(2) + "/千用户",
+      "每千用户每日bug数",
+    ) +
     _metricCard("📅 上次重构", "第" + product.lastRefactorDay + "天", "") +
-    _metricCard("⚡ 重构加成", product.refactorBonus > 0 ? "+" + product.refactorBonus.toFixed(0) : "无", product.refactorBonus > 0 ? "短期效率提升" : "") +
+    _metricCard(
+      "⚡ 重构加成",
+      product.refactorBonus > 0 ? "+" + product.refactorBonus.toFixed(0) : "无",
+      product.refactorBonus > 0 ? "短期效率提升" : "",
+    ) +
     "</div>" +
-
     // 技术债来源
     '<div style="margin-bottom:12px;">' +
     '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;">📊 技术债来源</div>' +
-    '<div style="font-size:10px;">' + sourcesHtml + '</div>' +
+    '<div style="font-size:10px;">' +
+    sourcesHtml +
     "</div>" +
-
+    "</div>" +
     // 趋势图
-    historyHtml + bugHistoryHtml +
-
+    historyHtml +
+    bugHistoryHtml +
     // 危机历史
-    (product.crisisHistory && product.crisisHistory.length > 0 ?
-      '<div style="margin-top:12px;">' +
-      '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;color:var(--danger);">💥 危机历史</div>' +
-      '<div style="font-size:10px;color:var(--text-muted);">' +
-      product.crisisHistory.map(c => c.type + '（第' + c.day + '天）').join(' | ') +
-      "</div></div>" : '') +
-
+    (product.crisisHistory && product.crisisHistory.length > 0
+      ? '<div style="margin-top:12px;">' +
+        '<div style="font-size:11px;font-weight:bold;margin-bottom:6px;color:var(--danger);">💥 危机历史</div>' +
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        product.crisisHistory
+          .map((c) => c.type + "（第" + c.day + "天）")
+          .join(" | ") +
+        "</div></div>"
+      : "") +
     // 重构操作
     '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
     '<div style="font-size:12px;font-weight:bold;margin-bottom:12px;">🔧 重构操作</div>' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
-    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' + product.id + '\',\'minor\')" style="font-size:11px;">小范围重构 ¥15k<br><span style="font-size:9px;color:var(--text-muted);">技术债-5~10</span></button>' +
-    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' + product.id + '\',\'major\')" style="font-size:11px;">全面重构 ¥50k<br><span style="font-size:9px;color:var(--text-muted);">技术债-15~30</span></button>' +
-    '<button class="btn btn-sm btn-warning" onclick="showRefactorConfirm(\'' + product.id + '\',\'emergency\')" style="font-size:11px;">紧急修复 ¥30k<br><span style="font-size:9px;color:var(--text-muted);">技术债-3~8</span></button>' +
+    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' +
+    product.id +
+    '\',\'minor\')" style="font-size:11px;">小范围重构 ¥15k<br><span style="font-size:9px;color:var(--text-muted);">技术债-5~10</span></button>' +
+    '<button class="btn btn-sm btn-success" onclick="showRefactorConfirm(\'' +
+    product.id +
+    '\',\'major\')" style="font-size:11px;">全面重构 ¥50k<br><span style="font-size:9px;color:var(--text-muted);">技术债-15~30</span></button>' +
+    '<button class="btn btn-sm btn-warning" onclick="showRefactorConfirm(\'' +
+    product.id +
+    '\',\'emergency\')" style="font-size:11px;">紧急修复 ¥30k<br><span style="font-size:9px;color:var(--text-muted);">技术债-3~8</span></button>' +
     "</div>" +
     '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);">' +
-    '💡 重构可降低技术债，提升产品质量和开发效率。技术债越高，bug率越高，竞争力越低。' +
+    "💡 重构可降低技术债，提升产品质量和开发效率。技术债越高，bug率越高，竞争力越低。" +
     "</div>" +
     "</div>" +
-
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -10093,13 +12023,28 @@ function showRefactorConfirm(productId, scope) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   const scopes = {
-    minor: { name: "小范围重构", cost: 15000, debtReduction: "5~10", time: "7天" },
-    major: { name: "全面重构", cost: 50000, debtReduction: "15~30", time: "14天" },
-    emergency: { name: "紧急修复", cost: 30000, debtReduction: "3~8", time: "3天" },
+    minor: {
+      name: "小范围重构",
+      cost: 15000,
+      debtReduction: "5~10",
+      time: "7天",
+    },
+    major: {
+      name: "全面重构",
+      cost: 50000,
+      debtReduction: "15~30",
+      time: "14天",
+    },
+    emergency: {
+      name: "紧急修复",
+      cost: 30000,
+      debtReduction: "3~8",
+      time: "3天",
+    },
   };
 
   const s = scopes[scope];
@@ -10107,12 +12052,23 @@ function showRefactorConfirm(productId, scope) {
 
   const html =
     '<div style="font-size:13px;">' +
-    '<p>确定要对 <strong>「' + product.name + '」</strong> 执行 <strong>' + s.name + '</strong> 吗？</p>' +
+    "<p>确定要对 <strong>「" +
+    product.name +
+    "」</strong> 执行 <strong>" +
+    s.name +
+    "</strong> 吗？</p>" +
     '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;margin:12px 0;font-size:11px;">' +
-    "💰 费用：¥" + s.cost.toLocaleString() + "<br>" +
-    "📉 技术债减少：~" + s.debtReduction + "<br>" +
-    "⏱ 开发周期：约" + s.time + "<br>" +
-    "💡 当前现金：¥" + Math.round(company.cashReserve).toLocaleString() +
+    "💰 费用：¥" +
+    s.cost.toLocaleString() +
+    "<br>" +
+    "📉 技术债减少：~" +
+    s.debtReduction +
+    "<br>" +
+    "⏱ 开发周期：约" +
+    s.time +
+    "<br>" +
+    "💡 当前现金：¥" +
+    Math.round(company.cashReserve).toLocaleString() +
     "</div>" +
     '<div style="font-size:10px;color:var(--text-muted);">' +
     "⚠️ 重构期间无法进行其他开发操作，但可继续正常运营。" +
@@ -10149,29 +12105,44 @@ function showAARRRDashboard(productId) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product || product.status !== "launched" || product.retired) {
     StateManager.addMessage("产品不存在", "warning");
     return;
   }
 
   // LTV/CAC 比率
-  const ltvcacRatio = product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
-  const ltvcacColor = ltvcacRatio >= 3 ? "var(--success)" : ltvcacRatio >= 1 ? "var(--warning)" : ltvcacRatio > 0 ? "var(--danger)" : "var(--text-muted)";
+  const ltvcacRatio =
+    product.cac > 0 && product.ltv > 0 ? product.ltv / product.cac : 0;
+  const ltvcacColor =
+    ltvcacRatio >= 3
+      ? "var(--success)"
+      : ltvcacRatio >= 1
+        ? "var(--warning)"
+        : ltvcacRatio > 0
+          ? "var(--danger)"
+          : "var(--text-muted)";
 
   // 漏斗可视化
   const funnel = product.funnelData || {};
-  const funnelMax = Math.max(1, funnel.impressions, funnel.clicks, funnel.registrations, funnel.activated, funnel.paying);
+  const funnelMax = Math.max(
+    1,
+    funnel.impressions,
+    funnel.clicks,
+    funnel.registrations,
+    funnel.activated,
+    funnel.paying,
+  );
 
   const html =
     '<div style="font-size:12px;max-height:70vh;overflow-y:auto;">' +
-
     // 漏斗标题
     '<div style="text-align:center;margin-bottom:16px;">' +
-    '<h4 style="margin:0 0 8px;">📊 「' + product.name + '」增长漏斗</h4>' +
+    '<h4 style="margin:0 0 8px;">📊 「' +
+    product.name +
+    "」增长漏斗</h4>" +
     '<div style="font-size:10px;color:var(--text-muted);">累计数据（产品发布至今）</div>' +
     "</div>" +
-
     // 漏斗图
     '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">' +
     _renderFunnelBar("曝光", funnel.impressions, funnelMax, 100) +
@@ -10183,17 +12154,40 @@ function showAARRRDashboard(productId) {
     _renderFunnelBar("付费", funnel.paying, funnelMax, 15) +
     _renderFunnelBar("推荐", funnel.referred, funnelMax, 10) +
     "</div>" +
-
     // 关键指标
     '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;">' +
-    _metricCard("💰 ARPU", "¥" + product.arpu.toFixed(2) + "/天", "每用户日均收入") +
-    _metricCard("💎 LTV", "¥" + Math.round(product.ltv).toLocaleString(), "用户生命周期价值") +
-    _metricCard("📢 CAC", product.cac > 0 ? "¥" + product.cac.toFixed(0) : "—", "获客成本") +
-    _metricCard("📈 LTV/CAC", ltvcacRatio > 0 ? ltvcacRatio.toFixed(1) + "x" : "—", ltvcacRatio >= 3 ? "优秀" : ltvcacRatio >= 1 ? "健康" : "需优化", ltvcacColor) +
-    _metricCard("🚀 K因子", product.kFactor.toFixed(2), product.kFactor >= 1 ? "病毒传播" : "自然增长") +
-    _metricCard("💳 付费率", (product.payRate * 100).toFixed(1) + "%", "付费用户占比") +
+    _metricCard(
+      "💰 ARPU",
+      "¥" + product.arpu.toFixed(2) + "/天",
+      "每用户日均收入",
+    ) +
+    _metricCard(
+      "💎 LTV",
+      "¥" + Math.round(product.ltv).toLocaleString(),
+      "用户生命周期价值",
+    ) +
+    _metricCard(
+      "📢 CAC",
+      product.cac > 0 ? "¥" + product.cac.toFixed(0) : "—",
+      "获客成本",
+    ) +
+    _metricCard(
+      "📈 LTV/CAC",
+      ltvcacRatio > 0 ? ltvcacRatio.toFixed(1) + "x" : "—",
+      ltvcacRatio >= 3 ? "优秀" : ltvcacRatio >= 1 ? "健康" : "需优化",
+      ltvcacColor,
+    ) +
+    _metricCard(
+      "🚀 K因子",
+      product.kFactor.toFixed(2),
+      product.kFactor >= 1 ? "病毒传播" : "自然增长",
+    ) +
+    _metricCard(
+      "💳 付费率",
+      (product.payRate * 100).toFixed(1) + "%",
+      "付费用户占比",
+    ) +
     "</div>" +
-
     // 留存数据
     '<div style="margin-bottom:16px;">' +
     '<div style="font-weight:bold;margin-bottom:8px;font-size:12px;">📈 留存率</div>' +
@@ -10203,7 +12197,6 @@ function showAARRRDashboard(productId) {
     _metricCard("30日 D30", (product.retentionD30 * 100).toFixed(0) + "%", "") +
     "</div>" +
     "</div>" +
-
     // 活跃用户
     '<div style="margin-bottom:16px;">' +
     '<div style="font-weight:bold;margin-bottom:8px;font-size:12px;">👥 活跃用户</div>' +
@@ -10213,21 +12206,29 @@ function showAARRRDashboard(productId) {
     _metricCard("MAU", (product.mau || 0).toLocaleString(), "月活") +
     "</div>" +
     "</div>" +
-
     // 运营操作
     '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
     '<div style="font-weight:bold;margin-bottom:12px;font-size:12px;">⚡ 运营操作</div>' +
     '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' +
-    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'improve_onboarding\')" style="font-size:11px;">🎯 优化新手引导 ¥10k</button>' +
-    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'increase_payrate\')" style="font-size:11px;">💰 提升付费转化 ¥20k</button>' +
-    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'improve_retention\')" style="font-size:11px;">🔄 提升留存体验 ¥15k</button>' +
-    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' + product.id + '\', \'boost_viral\')" style="font-size:11px;">🚀 病毒传播优化 ¥25k</button>' +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' +
+    product.id +
+    "', 'improve_onboarding')\" style=\"font-size:11px;\">🎯 优化新手引导 ¥10k</button>" +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' +
+    product.id +
+    "', 'increase_payrate')\" style=\"font-size:11px;\">💰 提升付费转化 ¥20k</button>" +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' +
+    product.id +
+    "', 'improve_retention')\" style=\"font-size:11px;\">🔄 提升留存体验 ¥15k</button>" +
+    '<button class="btn btn-sm btn-primary" onclick="showMonetizationActionModal(\'' +
+    product.id +
+    "', 'boost_viral')\" style=\"font-size:11px;\">🚀 病毒传播优化 ¥25k</button>" +
     "</div>" +
     '<div style="margin-top:8px;">' +
-    '<button class="btn btn-sm btn-warning" onclick="showAdCampaignModal(\'' + product.id + '\')" style="font-size:11px;">📢 投放广告获客</button>' +
+    '<button class="btn btn-sm btn-warning" onclick="showAdCampaignModal(\'' +
+    product.id +
+    '\')" style="font-size:11px;">📢 投放广告获客</button>' +
     "</div>" +
     "</div>" +
-
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -10241,12 +12242,21 @@ function showAARRRDashboard(productId) {
 /** 渲染漏斗条形图 */
 function _renderFunnelBar(label, value, max, widthPercent) {
   const pct = max > 0 ? (value / max) * 100 : 0;
-  const color = pct > 50 ? "var(--success)" : pct > 20 ? "var(--warning)" : "var(--danger)";
+  const color =
+    pct > 50 ? "var(--success)" : pct > 20 ? "var(--warning)" : "var(--danger)";
   return (
     '<div style="display:flex;align-items:center;margin-bottom:4px;">' +
-    '<div style="width:60px;font-size:11px;text-align:right;margin-right:8px;">' + label + '</div>' +
-    '<div style="width:' + widthPercent + '%;height:18px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">' +
-    '<div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:3px;transition:width 0.3s;"></div>' +
+    '<div style="width:60px;font-size:11px;text-align:right;margin-right:8px;">' +
+    label +
+    "</div>" +
+    '<div style="width:' +
+    widthPercent +
+    '%;height:18px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">' +
+    '<div style="width:' +
+    pct +
+    "%;height:100%;background:" +
+    color +
+    ';border-radius:3px;transition:width 0.3s;"></div>' +
     "</div>" +
     '<div style="width:70px;font-size:11px;text-align:left;margin-left:8px;color:var(--text-secondary);">' +
     (value || 0).toLocaleString() +
@@ -10260,9 +12270,19 @@ function _metricCard(title, value, subtitle, color) {
   color = color || "var(--text-primary)";
   return (
     '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;text-align:center;">' +
-    '<div style="font-size:10px;color:var(--text-muted);">' + title + '</div>' +
-    '<div style="font-size:14px;font-weight:bold;color:' + color + ';margin:2px 0;">' + value + '</div>' +
-    (subtitle ? '<div style="font-size:9px;color:var(--text-muted);">' + subtitle + '</div>' : '') +
+    '<div style="font-size:10px;color:var(--text-muted);">' +
+    title +
+    "</div>" +
+    '<div style="font-size:14px;font-weight:bold;color:' +
+    color +
+    ';margin:2px 0;">' +
+    value +
+    "</div>" +
+    (subtitle
+      ? '<div style="font-size:9px;color:var(--text-muted);">' +
+        subtitle +
+        "</div>"
+      : "") +
     "</div>"
   );
 }
@@ -10273,14 +12293,30 @@ function showMonetizationActionModal(productId, action) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   const actions = {
-    improve_onboarding: { name: "优化新手引导", cost: 10000, desc: "提升新手引导完成率，增加激活率" },
-    increase_payrate: { name: "提升付费转化", cost: 20000, desc: "优化付费点设计，提高付费率" },
-    improve_retention: { name: "提升留存体验", cost: 15000, desc: "增加用户粘性功能，提升各阶段留存" },
-    boost_viral: { name: "病毒传播优化", cost: 25000, desc: "优化分享机制，提升K因子" },
+    improve_onboarding: {
+      name: "优化新手引导",
+      cost: 10000,
+      desc: "提升新手引导完成率，增加激活率",
+    },
+    increase_payrate: {
+      name: "提升付费转化",
+      cost: 20000,
+      desc: "优化付费点设计，提高付费率",
+    },
+    improve_retention: {
+      name: "提升留存体验",
+      cost: 15000,
+      desc: "增加用户粘性功能，提升各阶段留存",
+    },
+    boost_viral: {
+      name: "病毒传播优化",
+      cost: 25000,
+      desc: "优化分享机制，提升K因子",
+    },
   };
 
   const act = actions[action];
@@ -10288,11 +12324,18 @@ function showMonetizationActionModal(productId, action) {
 
   const html =
     '<div style="font-size:13px;">' +
-    '<p>确定要执行 <strong>' + act.name + '</strong> 吗？</p>' +
+    "<p>确定要执行 <strong>" +
+    act.name +
+    "</strong> 吗？</p>" +
     '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;margin:12px 0;font-size:11px;">' +
-    "💰 费用：¥" + act.cost.toLocaleString() + "<br>" +
-    "📝 " + act.desc + "<br>" +
-    "💡 当前现金：¥" + Math.round(company.cashReserve).toLocaleString() +
+    "💰 费用：¥" +
+    act.cost.toLocaleString() +
+    "<br>" +
+    "📝 " +
+    act.desc +
+    "<br>" +
+    "💡 当前现金：¥" +
+    Math.round(company.cashReserve).toLocaleString() +
     "</div>" +
     "</div>";
 
@@ -10306,7 +12349,9 @@ function showMonetizationActionModal(productId, action) {
         text: "确认执行",
         cls: "btn-primary",
         callback: function () {
-          const result = updateProductMonetization(state, productId, action, { cost: act.cost });
+          const result = updateProductMonetization(state, productId, action, {
+            cost: act.cost,
+          });
           if (result.success) {
             StateManager.addMessage("✅ " + result.message, "success");
             renderAll();
@@ -10325,15 +12370,45 @@ function showAdCampaignModal(productId) {
   const company = state.startup.company;
   if (!company) return;
 
-  const product = company.products.find(p => p.id === productId);
+  const product = company.products.find((p) => p.id === productId);
   if (!product) return;
 
   const channels = [
-    { key: "social", name: "社交媒体", desc: "微信/微博/抖音，适合大众产品", multiplier: 1.2, cac: 15 },
-    { key: "search", name: "搜索广告", desc: "百度/谷歌，精准获客", multiplier: 1.0, cac: 25 },
-    { key: "video", name: "视频平台", desc: "B站/优酷/爱奇艺，年轻用户", multiplier: 1.3, cac: 20 },
-    { key: "influencer", name: "KOL合作", desc: "网红/博主推荐，信任度高", multiplier: 1.5, cac: 35 },
-    { key: "programmatic", name: "程序化投放", desc: "自动优化，成本最低", multiplier: 0.9, cac: 12 },
+    {
+      key: "social",
+      name: "社交媒体",
+      desc: "微信/微博/抖音，适合大众产品",
+      multiplier: 1.2,
+      cac: 15,
+    },
+    {
+      key: "search",
+      name: "搜索广告",
+      desc: "百度/谷歌，精准获客",
+      multiplier: 1.0,
+      cac: 25,
+    },
+    {
+      key: "video",
+      name: "视频平台",
+      desc: "B站/优酷/爱奇艺，年轻用户",
+      multiplier: 1.3,
+      cac: 20,
+    },
+    {
+      key: "influencer",
+      name: "KOL合作",
+      desc: "网红/博主推荐，信任度高",
+      multiplier: 1.5,
+      cac: 35,
+    },
+    {
+      key: "programmatic",
+      name: "程序化投放",
+      desc: "自动优化，成本最低",
+      multiplier: 0.9,
+      cac: 12,
+    },
   ];
 
   let html =
@@ -10349,13 +12424,23 @@ function showAdCampaignModal(productId) {
       ";border:1px solid " +
       (canAfford ? "var(--border)" : "#ccc") +
       ";border-radius:6px;cursor:pointer;transition:all 0.2s;" +
-      (canAfford ? 'onclick="showAdBudgetModal(\'' + productId + '\',\'' + ch.key + '\')"' : "opacity:0.5;") +
+      (canAfford
+        ? "onclick=\"showAdBudgetModal('" + productId + "','" + ch.key + "')\""
+        : "opacity:0.5;") +
       '">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<strong>' + ch.name + '</strong>' +
-      '<span style="font-size:11px;color:' + (canAfford ? "var(--success)" : "var(--danger)") + ';">预估CAC¥' + ch.cac + '</span>' +
+      "<strong>" +
+      ch.name +
+      "</strong>" +
+      '<span style="font-size:11px;color:' +
+      (canAfford ? "var(--success)" : "var(--danger)") +
+      ';">预估CAC¥' +
+      ch.cac +
+      "</span>" +
       "</div>" +
-      '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + ch.desc + '</div>' +
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
+      ch.desc +
+      "</div>" +
       "</div>";
   }
 
@@ -10384,15 +12469,18 @@ function showAdBudgetModal(productId, channel) {
 
   const html =
     '<div style="font-size:13px;">' +
-    '<p>投放渠道：<strong>' + (channelNames[channel] || channel) + '</strong></p>' +
-    '<p>预算范围：¥1,000 ~ ¥100,000</p>' +
+    "<p>投放渠道：<strong>" +
+    (channelNames[channel] || channel) +
+    "</strong></p>" +
+    "<p>预算范围：¥1,000 ~ ¥100,000</p>" +
     '<input type="range" id="adBudget" min="1000" max="100000" step="1000" value="5000" style="width:100%;margin:12px 0;">' +
     '<div id="adBudgetValue" style="font-size:16px;font-weight:bold;color:var(--accent);text-align:center;">¥5,000</div>' +
-    '<script>' +
+    "<script>" +
     'document.getElementById("adBudget").oninput = function() {' +
     '  document.getElementById("adBudgetValue").textContent = "¥" + parseInt(this.value).toLocaleString();' +
-    '};' +
-    '</script>' +
+    "};" +
+    "</scr" +
+    "ipt>" +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -10408,7 +12496,14 @@ function showAdBudgetModal(productId, channel) {
           const budget = parseInt(document.getElementById("adBudget").value);
           const result = runAdCampaign(state, productId, channel, budget);
           if (result.success) {
-            StateManager.addMessage("📢 " + result.channel + "广告已投放，预计带来" + result.estimatedUsers + "新用户", "success");
+            StateManager.addMessage(
+              "📢 " +
+                result.channel +
+                "广告已投放，预计带来" +
+                result.estimatedUsers +
+                "新用户",
+              "success",
+            );
             renderAll();
           } else {
             StateManager.addMessage("⚠️ " + result.message, "warning");
@@ -10435,24 +12530,36 @@ function executeLegalChecklistActionFromModal(checklistId) {
   const state = StateManager.getState();
   if (!state) return;
   const result = executeLegalChecklistAction(state, checklistId);
-  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
-  else { StateManager.addMessage(result.message, "warning"); }
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.message, "warning");
+  }
 }
 
 function applyPatentFromModal(patentTypeId) {
   const state = StateManager.getState();
   if (!state) return;
   const result = applyPatent(state, patentTypeId);
-  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
-  else { StateManager.addMessage(result.message, "warning"); }
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.message, "warning");
+  }
 }
 
 function buyLegalInsuranceFromModal(level) {
   const state = StateManager.getState();
   if (!state) return;
   const result = buyLegalInsurance(state, level);
-  if (result.success) { StateManager.addMessage(result.message, "success"); renderAll(); }
-  else { StateManager.addMessage(result.message, "warning"); }
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(result.message, "warning");
+  }
 }
 
 function executeLegalEventActionFromModal(eventId) {
@@ -10460,17 +12567,31 @@ function executeLegalEventActionFromModal(eventId) {
   if (!state) return;
   const company = state.startup.company;
   const eventTemplate = LEGAL_EVENT_TEMPLATES[eventId];
-  if (!eventTemplate || eventTemplate.type !== "opportunity") { StateManager.addMessage("无效的法律行动", "warning"); return; }
-  if (company.legalBudget < eventTemplate.cost) { StateManager.addMessage("法律预算不足", "warning"); return; }
+  if (!eventTemplate || eventTemplate.type !== "opportunity") {
+    StateManager.addMessage("无效的法律行动", "warning");
+    return;
+  }
+  if (company.legalBudget < eventTemplate.cost) {
+    StateManager.addMessage("法律预算不足", "warning");
+    return;
+  }
   company.legalBudget -= eventTemplate.cost;
   company.legalSpent += eventTemplate.cost;
   if (eventTemplate.effects) {
     for (const [key, value] of Object.entries(eventTemplate.effects)) {
-      if (key === "complianceLevel") company.complianceLevel = Math.min(100, company.complianceLevel + value);
-      else if (key === "legalRisk") company.legalRisk = Math.max(0, company.legalRisk + value);
+      if (key === "complianceLevel")
+        company.complianceLevel = Math.min(
+          100,
+          company.complianceLevel + value,
+        );
+      else if (key === "legalRisk")
+        company.legalRisk = Math.max(0, company.legalRisk + value);
     }
   }
-  StateManager.addMessage(eventTemplate.icon + " " + eventTemplate.name + " 完成！", "success");
+  StateManager.addMessage(
+    eventTemplate.icon + " " + eventTemplate.name + " 完成！",
+    "success",
+  );
   renderAll();
 }
 
@@ -10485,20 +12606,42 @@ function resolveLegalActionFromModal(optionIndex) {
   const optionKey = eventTemplate.responseOptions[optionIndex];
   const response = LEGAL_RESPONSE_OPTIONS[optionKey];
   if (!response) return;
-  if (company.legalBudget < response.cost) { StateManager.addMessage("法律预算不足", "warning"); return; }
+  if (company.legalBudget < response.cost) {
+    StateManager.addMessage("法律预算不足", "warning");
+    return;
+  }
   company.legalBudget -= response.cost;
   company.legalSpent += response.cost;
   const effectiveness = _calculateLegalResponseEffectiveness(company, response);
   if (response.effect) {
     for (const [key, value] of Object.entries(response.effect)) {
-      if (key === "legalRisk") company.legalRisk = Math.max(0, company.legalRisk + value);
-      else if (key === "reputation" && company.reputation !== undefined) company.reputation = Math.max(0, Math.min(100, company.reputation + value));
+      if (key === "legalRisk")
+        company.legalRisk = Math.max(0, company.legalRisk + value);
+      else if (key === "reputation" && company.reputation !== undefined)
+        company.reputation = Math.max(
+          0,
+          Math.min(100, company.reputation + value),
+        );
     }
   }
-  if (effectiveness > 0.5) company.complianceLevel = Math.min(100, company.complianceLevel + 5);
-  company.legalHistory.push({ day: state.player.day, type: legalEvent.riskType, severity: legalEvent.severity, outcome: "resolved", financialImpact: response.cost });
-  if (company.legalHistory.length > 20) company.legalHistory = company.legalHistory.slice(-20);
-  StateManager.addMessage("法律事件处理：" + response.label + "，" + (effectiveness > 0.5 ? "成功" : "部分成功"), effectiveness > 0.5 ? "success" : "warning");
+  if (effectiveness > 0.5)
+    company.complianceLevel = Math.min(100, company.complianceLevel + 5);
+  company.legalHistory.push({
+    day: state.player.day,
+    type: legalEvent.riskType,
+    severity: legalEvent.severity,
+    outcome: "resolved",
+    financialImpact: response.cost,
+  });
+  if (company.legalHistory.length > 20)
+    company.legalHistory = company.legalHistory.slice(-20);
+  StateManager.addMessage(
+    "法律事件处理：" +
+      response.label +
+      "，" +
+      (effectiveness > 0.5 ? "成功" : "部分成功"),
+    effectiveness > 0.5 ? "success" : "warning",
+  );
   company.pendingLegalEvent = null;
   company.legalCasesActive = Math.max(0, company.legalCasesActive - 1);
   renderAll();
