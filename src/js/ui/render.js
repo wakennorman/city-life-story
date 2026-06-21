@@ -923,6 +923,10 @@ function switchTab(tabName) {
 
 // ====== Tab 渲染函数注册表 ======
 // 新增标签页只需在这里加一行，无需修改 renderCurrentTab
+//
+// 注意：对于定义在其他 JS 文件中的函数（跨文件），
+// 不能直接用引用（const 创建时函数尚未加载），
+// 要用 fnName 字符串 + 运行时 window[fnName] 动态查找。
 const TAB_RENDERERS = {
   actions: renderActionsTab,
   map: renderMapTab,
@@ -930,8 +934,10 @@ const TAB_RENDERERS = {
   inventory: renderInventoryTab,
   skills: { fn: renderSkillsTab, fallback: "📚 技能系统加载中..." },
   corp: renderCorpTab,
-  investment: { fn: renderInvestmentTab, fallback: "投资系统加载中..." },
-  startup: { fn: renderStartupTab, fallback: "创业系统加载中..." },
+  // renderInvestmentTab 在 investment.js 中定义（跨文件）
+  investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
+  // renderStartupTab 在 startup.js 中定义（跨文件）
+  startup: { fnName: "renderStartupTab", fallback: "创业系统加载中..." },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
   achievements: renderAchievementsTab,
   growth: renderGrowthTab,
@@ -944,7 +950,8 @@ const TAB_RENDERERS = {
     fn: renderPersonalGrowthTab,
     fallback: "个人成长系统加载中...",
   },
-  wiki: { fn: renderWikiTab, fallback: "📖 百科系统加载中..." },
+  // renderWikiTab 在 wiki.js 中定义（跨文件）
+  wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
 };
 
 // ====== Tab Content 渲染 ======
@@ -961,13 +968,22 @@ function renderCurrentTab(state) {
   const renderer = TAB_RENDERERS[currentTab];
   if (typeof renderer === "function") {
     renderer(state, area);
-  } else if (renderer && renderer.fn) {
-    if (typeof renderer.fn === "function") renderer.fn(state, area);
-    else
+  } else if (renderer) {
+    // 尝试获取渲染函数：优先用 fn 引用，否则通过 fnName 动态查找
+    var actualFn =
+      typeof renderer.fn === "function"
+        ? renderer.fn
+        : typeof renderer.fnName === "string"
+          ? window[renderer.fnName]
+          : null;
+    if (typeof actualFn === "function") {
+      actualFn(state, area);
+    } else {
       area.innerHTML +=
         '<p style="color:var(--text-muted);text-align:center;padding:40px;">' +
         (renderer.fallback || "开发中...") +
         "</p>";
+    }
   } else {
     area.innerHTML += '<p style="color:var(--text-muted)">📌 开发中...</p>';
   }
