@@ -771,6 +771,14 @@ function registerStartup(state, name, industry, description) {
     technologyScore: 20,
     marketScore: 10,
     coFounders: [],
+    // ====== P0-5: KPI/OKR 目标系统 ======
+    okrs: [], // 季度 OKR 列表 [{id, quarter, year, objective, keyResults: [], status, progress}]
+    currentQuarterOkr: null, // 当前季度正在执行的 OKR
+    kpiHistory: [], // KPI 历史 [{quarter, year, kpi, score, bonus}]
+    teamGoals: [], // 团队目标 [{id, team, target, progress, deadline}]
+    employeeGoals: [], // 个人目标 [{employeeId, goal, target, progress}]
+    quarterlyBonusPool: 0, // 季度奖金池
+    okrCompletionRate: 0, // OKR 完成率（历史平均）
   };
 
   // 生成1-2个联合创始人
@@ -1943,6 +1951,11 @@ function tickStartup(state, tickType) {
       tickCompetitors(state, state.startup.competitors);
     }
   }
+
+  // ====== P0-5: 季末 OKR 评估 ======
+  if (tickType === "quarterly" && typeof evaluateQuarterlyOkr === "function") {
+    evaluateQuarterlyOkr(state);
+  }
 }
 
 // ====== P0-1: 产品生命周期管理 ======
@@ -2318,6 +2331,606 @@ function getEmployeeSatisfactionSummary(company) {
     totalEmployees: n,
     atRiskCount: burnoutCount[2] + burnoutCount[3], // 中重度倦怠人数
   };
+}
+
+// ====== P0-5: KPI/OKR 目标系统 ======
+/** 设定季度 OKR */
+function setQuarterlyOkr(state, objective, keyResults) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const year = state.player.corpYear || 1;
+  const quarter = state.player.corpQuarter || 1;
+
+  // 检查是否已有当前季度 OKR
+  const existing = company.okrs.find(o => o.year === year && o.quarter === quarter);
+  if (existing) {
+    return { success: false, message: "本季度已设定 OKR，请先完成或放弃当前 OKR" };
+  }
+
+  // 生成 OKR ID
+  const okrId = "okr_" + year + "q" + quarter + "_" + Date.now();
+
+  // 处理关键结果
+  const processedKR = [];
+  for (const kr of (keyResults || [])) {
+    processedKR.push({
+      id: kr.id || ("kr_" + processedKR.length),
+      description: kr.description,
+      target: kr.target, // 目标值
+      unit: kr.unit || "", // 单位
+      current: 0, // 当前值
+      weight: kr.weight || 1, // 权重
+      progress: 0, // 进度 0-100
+    });
+  }
+
+  const okr = {
+    id: okrId,
+    year: year,
+    quarter: quarter,
+    objective: objective,
+    keyResults: processedKR,
+    status: "active", // active / completed / abandoned
+    progress: 0,
+    createdDay: state.player.day,
+    completedDay: null,
+    score: 0, // 最终评分
+  };
+
+  company.okrs.push(okr);
+  company.currentQuarterOkr = okrId;
+
+  StateManager.addMessage(
+    `🎯 设定 Q${quarter} 目标：「${objective}」\n关键结果：${processedKR.map(k => k.description + ' → ' + k.target + k.unit).join(' | ')}`,
+    "success"
+  );
+
+  return { success: true, okr: okr };
+}
+
+/** 更新 OKR 进度（每日/每周调用） */
+function updateOkrProgress(state, okrId, updates) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const okr = company.okrs.find(o => o.id === okrId);
+  if (!okr || okr.status !== "active") {
+    return { success: false, message: "OKR 不存在或未激活" };
+  }
+
+  let updated = false;
+
+  // 更新关键结果
+  for (const kr of okr.keyResults) {
+    if (updates[kr.id]) {
+      kr.current = Math.max(0, updates[kr.id]);
+      // 计算进度
+      const progress = Math.min(100, (kr.current / kr.target) * 100);
+      kr.progress = Math.round(progress);
+      updated = true;
+    }
+  }
+
+  // 计算整体进度
+  if (okr.keyResults.length > 0) {
+    const totalWeight = okr.keyResults.reduce((sum, kr) => sum + kr.weight, 0);
+    const weightedProgress = okr.keyResults.reduce((sum, kr) => sum + kr.progress * kr.weight, 0);
+    okr.progress = Math.round(weightedProgress / totalWeight);
+  }
+
+  // 进度里程碑通知
+  if (updated && okr.progress >= 25 && okr.progress < 50) {
+    StateManager.addMessage(`📊 「${okr.objective}」进度 25%，稳步推进`, "info");
+  } else if (updated && okr.progress >= 50 && okr.progress < 75) {
+    StateManager.addMessage(`📈 「${okr.objective}」进度 50%，进展良好`, "info");
+  } else if (updated && okr.progress >= 75) {
+    StateManager.addMessage(`🚀 「${okr.objective}」进度 75%，接近完成！`, "success");
+  }
+
+  return { success: true, okr: okr };
+}
+
+/** 季末评估 OKR 完成度 */
+function evaluateQuarterlyOkr(state) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const year = state.player.corpYear || 1;
+  const quarter = state.player.corpQuarter || 1;
+
+  // 找到当前季度 OKR
+  const okr = company.okrs.find(o => o.year === year && o.quarter === quarter && o.status === "active");
+  if (!okr) {
+    StateManager.addMessage("⚠️ 本季度未设定 OKR，跳过评估", "warning");
+    return { success: false, message: "本季度未设定 OKR" };
+  }
+
+  // 计算完成度评分
+  let totalScore = 0;
+  let totalWeight = 0;
+  for (const kr of okr.keyResults) {
+    const score = kr.progress / 100; // 0-1
+    totalScore += score * kr.weight;
+    totalWeight += kr.weight;
+  }
+
+  const completionRate = totalWeight > 0 ? totalScore / totalWeight : 0;
+  okr.score = Math.round(completionRate * 100);
+  okr.status = "completed";
+  okr.completedDay = state.player.day;
+
+  // 记录历史
+  company.kpiHistory.push({
+    quarter: quarter,
+    year: year,
+    kpi: okr.objective,
+    score: okr.score,
+    completionRate: completionRate,
+    keyResults: okr.keyResults.map(k => ({
+      description: k.description,
+      target: k.target,
+      current: k.current,
+      progress: k.progress,
+    })),
+  });
+
+  // 更新历史完成率
+  const completedOkr = company.kpiHistory.filter(k => k.score !== undefined);
+  if (completedOkr.length > 0) {
+    company.okrCompletionRate = Math.round(
+      completedOkr.reduce((sum, k) => sum + k.score, 0) / completedOkr.length
+    );
+  }
+
+  // 发放季度奖金
+  let bonus = 0;
+  if (okr.score >= 80) {
+    bonus = 10000 * (okr.score / 100);
+    company.employees.forEach(emp => {
+      emp.satisfaction = Math.min(100, emp.satisfaction + 5);
+      if (emp.satisfactionDetails) emp.satisfactionDetails.growth = Math.min(100, emp.satisfactionDetails.growth + 3);
+    });
+    StateManager.addMessage(
+      `🎉 Q${quarter} OKR 完成度 ${okr.score}%！优秀！全员满意度+5，奖金池+¥${bonus.toLocaleString()}`,
+      "success"
+    );
+  } else if (okr.score >= 60) {
+    bonus = 5000 * (okr.score / 100);
+    StateManager.addMessage(
+      `✅ Q${quarter} OKR 完成度 ${okr.score}%，达标。奖金池+¥${bonus.toLocaleString()}`,
+      "info"
+    );
+  } else if (okr.score >= 40) {
+    bonus = 2000 * (okr.score / 100);
+    StateManager.addMessage(
+      `⚠️ Q${quarter} OKR 完成度 ${okr.score}%，未达标。奖金池+¥${bonus.toLocaleString()}`,
+      "warning"
+    );
+  } else {
+    StateManager.addMessage(
+      `💀 Q${quarter} OKR 完成度 ${okr.score}%，严重未达标。团队士气受挫。`,
+      "danger"
+    );
+    company.employees.forEach(emp => {
+      emp.satisfaction = Math.max(0, emp.satisfaction - 5);
+      if (emp.satisfactionDetails) emp.satisfactionDetails.growth = Math.max(0, emp.satisfactionDetails.growth - 3);
+    });
+  }
+
+  company.quarterlyBonusPool += bonus;
+
+  // 清除当前 OKR
+  company.currentQuarterOkr = null;
+
+  return { success: true, okr: okr, bonus: bonus, score: okr.score };
+}
+
+/** 设定团队目标 */
+function setTeamGoal(state, team, target, deadlineDays) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const teams = {
+    engineering: { name: "技术团队", roles: ["engineer"] },
+    product: { name: "产品团队", roles: ["designer", "product_manager"] },
+    sales: { name: "销售团队", roles: ["sales"] },
+    marketing: { name: "市场团队", roles: ["marketing"] },
+    operations: { name: "运营团队", roles: ["operations"] },
+    finance: { name: "财务团队", roles: ["finance"] },
+  };
+
+  const teamInfo = teams[team];
+  if (!teamInfo) {
+    return { success: false, message: "无效的团队" };
+  }
+
+  const goalId = "tg_" + Date.now();
+  const goal = {
+    id: goalId,
+    team: team,
+    teamName: teamInfo.name,
+    target: target,
+    progress: 0,
+    current: 0,
+    deadline: state.player.day + (deadlineDays || 30),
+    status: "active",
+  };
+
+  company.teamGoals.push(goal);
+
+  StateManager.addMessage(
+    `👥 「${teamInfo.name}」目标设定：${target}（期限：${deadlineDays || 30}天）`,
+    "info"
+  );
+
+  return { success: true, goal: goal };
+}
+
+/** 更新团队目标进度 */
+function updateTeamGoalProgress(state, goalId, progress) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const goal = company.teamGoals.find(g => g.id === goalId);
+  if (!goal || goal.status !== "active") {
+    return { success: false, message: "目标不存在或未激活" };
+  }
+
+  goal.progress = Math.max(0, Math.min(100, progress));
+  goal.current = Math.round(goal.target * progress / 100);
+
+  // 检查是否到期
+  if (state.player.day >= goal.deadline) {
+    goal.status = "completed";
+    if (goal.progress >= 80) {
+      StateManager.addMessage(`✅ 「${goal.teamName}」目标达成！进度${goal.progress}%`, "success");
+    } else {
+      StateManager.addMessage(`⚠️ 「${goal.teamName}」目标未达成。进度${goal.progress}%`, "warning");
+    }
+  }
+
+  return { success: true, goal: goal };
+}
+
+/** 设定员工个人目标 */
+function setEmployeeGoal(state, employeeId, goalDescription, target) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const emp = company.employees.find(e => e.id === employeeId);
+  if (!emp) return { success: false, message: "员工不存在" };
+
+  const goalId = "eg_" + Date.now();
+  const goal = {
+    id: goalId,
+    employeeId: employeeId,
+    employeeName: emp.name,
+    goal: goalDescription,
+    target: target,
+    progress: 0,
+    current: 0,
+    status: "active",
+  };
+
+  company.employeeGoals.push(goal);
+
+  StateManager.addMessage(
+    `👤 「${emp.name}」个人目标：${goalDescription}（目标：${target}）`,
+    "info"
+  );
+
+  return { success: true, goal: goal };
+}
+
+/** 更新员工目标进度 */
+function updateEmployeeGoalProgress(state, goalId, progress) {
+  const company = state.startup.company;
+  if (!company) return { success: false, message: "没有公司" };
+
+  const goal = company.employeeGoals.find(g => g.id === goalId);
+  if (!goal || goal.status !== "active") {
+    return { success: false, message: "目标不存在或未激活" };
+  }
+
+  goal.progress = Math.max(0, Math.min(100, progress));
+  goal.current = Math.round(goal.target * progress / 100);
+
+  // 目标达成奖励
+  if (goal.progress >= 100) {
+    const emp = company.employees.find(e => e.id === goal.employeeId);
+    if (emp) {
+      emp.loyalty = Math.min(100, emp.loyalty + 5);
+      emp.satisfaction = Math.min(100, emp.satisfaction + 3);
+      StateManager.addMessage(`🎉 「${goal.employeeName}」个人目标达成！忠诚度+5`, "success");
+    }
+    goal.status = "completed";
+  }
+
+  return { success: true, goal: goal };
+}
+
+/** 获取 OKR/KPI 汇总 */
+function getKpiSummary(company) {
+  if (!company) return null;
+
+  const activeOkr = company.okrs.find(o => o.status === "active");
+  const completedOkr = company.kpiHistory;
+
+  return {
+    currentOkr: activeOkr ? {
+      objective: activeOkr.objective,
+      progress: activeOkr.progress,
+      keyResults: activeOkr.keyResults.map(k => ({
+        description: k.description,
+        progress: k.progress,
+        target: k.target,
+        current: k.current,
+      })),
+    } : null,
+    history: completedOkr.map(k => ({
+      quarter: "Q" + k.quarter + "/" + k.year,
+      kpi: k.kpi,
+      score: k.score,
+      completionRate: Math.round(k.completionRate * 100) + "%",
+    })),
+    avgCompletion: company.okrCompletionRate,
+    bonusPool: company.quarterlyBonusPool || 0,
+    teamGoalsActive: company.teamGoals.filter(g => g.status === "active").length,
+    employeeGoalsActive: company.employeeGoals.filter(g => g.status === "active").length,
+  };
+}
+
+/** 显示 OKR/KPI 面板弹窗 */
+function showKpiDashboard(state) {
+  const company = state.startup.company;
+  if (!company) return;
+
+  const summary = getKpiSummary(company);
+
+  let html = '<div style="font-size:12px;max-height:65vh;overflow-y:auto;">';
+
+  // 当前 OKR
+  if (summary && summary.currentOkr) {
+    html +=
+      '<div style="margin-bottom:16px;">' +
+      '<div style="font-weight:bold;margin-bottom:8px;font-size:13px;">🎯 当前季度 OKR</div>' +
+      '<div style="padding:10px;background:var(--bg-secondary);border-radius:6px;">' +
+      '<div style="font-size:12px;font-weight:bold;margin-bottom:6px;">' + summary.currentOkr.objective + '</div>' +
+      '<div style="height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:6px;">' +
+      '<div style="height:100%;width:' + summary.currentOkr.progress + '%;background:var(--success);border-radius:4px;"></div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text-muted);">整体进度：' + summary.currentOkr.progress + '%</div>' +
+      '<div style="margin-top:6px;font-size:10px;">';
+    for (const kr of summary.currentOkr.keyResults) {
+      const krColor = kr.progress >= 80 ? "var(--success)" : kr.progress >= 50 ? "var(--warning)" : "var(--danger)";
+      html +=
+        '<div style="margin-bottom:4px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:10px;">' +
+        '<span>' + kr.description + '</span>' +
+        '<span style="color:' + krColor + ';">' + kr.progress + '%</span>' +
+        '</div>' +
+        '<div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;">' +
+        '<div style="height:100%;width:' + kr.progress + '%;background:' + krColor + ';border-radius:2px;"></div>' +
+        '</div>' +
+        '</div>';
+    }
+    html += '</div></div></div>';
+  } else {
+    html +=
+      '<div style="margin-bottom:16px;padding:16px;text-align:center;color:var(--text-muted);border:2px dashed var(--border);border-radius:8px;">' +
+      '📋 本季度未设定 OKR<br>' +
+      '<button class="btn btn-sm btn-primary" onclick="showSetOkrModal()" style="margin-top:8px;">设定季度 OKR</button>' +
+      '</div>';
+  }
+
+  // 历史 KPI
+  if (summary && summary.history && summary.history.length > 0) {
+    html +=
+      '<div style="margin-bottom:16px;">' +
+      '<div style="font-weight:bold;margin-bottom:8px;font-size:13px;">📊 KPI 历史</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">';
+    for (const h of summary.history) {
+      const scoreColor = h.score >= 80 ? "var(--success)" : h.score >= 60 ? "var(--warning)" : "var(--danger)";
+      html +=
+        '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
+        '<div style="font-size:10px;color:var(--text-muted);">' + h.quarter + '</div>' +
+        '<div style="font-size:11px;margin:2px 0;">' + h.kpi.substring(0, 15) + (h.kpi.length > 15 ? '...' : '') + '</div>' +
+        '<div style="font-size:14px;font-weight:bold;color:' + scoreColor + ';">' + h.score + '%</div>' +
+        '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // 汇总统计
+  if (summary) {
+    html +=
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;">' +
+      '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
+      '<div style="font-size:10px;color:var(--text-muted);">平均完成率</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:var(--success);">' + summary.avgCompletion + '%</div>' +
+      '</div>' +
+      '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
+      '<div style="font-size:10px;color:var(--text-muted);">奖金池</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:var(--success);">¥' + (summary.bonusPool || 0).toLocaleString() + '</div>' +
+      '</div>' +
+      '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;text-align:center;">' +
+      '<div style="font-size:10px;color:var(--text-muted);">活跃目标</div>' +
+      '<div style="font-size:16px;font-weight:bold;">' + summary.teamGoalsActive + '/' + summary.employeeGoalsActive + '</div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  // 操作按钮
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' +
+    '<button class="btn btn-sm btn-primary" onclick="showSetOkrModal()" style="font-size:11px;">🎯 设定 OKR</button>' +
+    '<button class="btn btn-sm btn-warning" onclick="showTeamGoalModal()" style="font-size:11px;">👥 团队目标</button>' +
+    '</div>' +
+    '</div>';
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "📊 KPI/OKR 目标管理",
+    body: html,
+    buttons: [{ text: "关闭", cls: "", callback: function () {} }],
+  });
+}
+
+/** 显示设定 OKR 弹窗 */
+function showSetOkrModal() {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const html =
+    '<div style="font-size:13px;">' +
+    '<div style="margin-bottom:12px;">' +
+    '<label style="display:block;margin-bottom:4px;font-weight:bold;">🎯 季度目标（Objective）</label>' +
+    '<input type="text" id="okrObjective" placeholder="例如：打造行业领先的用户体验" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
+    '</div>' +
+    '<div style="margin-bottom:12px;">' +
+    '<div style="font-weight:bold;margin-bottom:6px;">📋 关键结果（Key Results，至少 2 个）</div>' +
+    '<div id="okrKeyResults">' +
+    _renderKrInput("") +
+    _renderKrInput("") +
+    '</div>' +
+    '<button class="btn btn-sm btn-secondary" onclick="addKrInput()" style="margin-top:6px;font-size:11px;">+ 添加关键结果</button>' +
+    '</div>' +
+    '<script>' +
+    'function addKrInput() {' +
+    '  const container = document.getElementById("okrKeyResults");' +
+    '  container.insertAdjacentHTML("beforeend", ' + _esc(_renderKrInput("")).replace(/'/g, "\\'") + ');' +
+    '}' +
+    '</script>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🎯 设定季度 OKR",
+    body: html,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "设定 OKR",
+        cls: "btn-primary",
+        callback: function () {
+          const objective = document.getElementById("okrObjective").value.trim();
+          if (!objective) {
+            StateManager.addMessage("请输入季度目标", "warning");
+            return;
+          }
+
+          // 收集关键结果
+          const krInputs = document.querySelectorAll("#okrKeyResults > div");
+          const keyResults = [];
+          for (const input of krInputs) {
+            const desc = input.querySelector(".kr-desc").value.trim();
+            const target = parseFloat(input.querySelector(".kr-target").value);
+            const unit = input.querySelector(".kr-unit").value.trim();
+            if (desc && !isNaN(target)) {
+              keyResults.push({ description: desc, target: target, unit: unit, weight: 1 });
+            }
+          }
+
+          if (keyResults.length < 2) {
+            StateManager.addMessage("请至少填写 2 个关键结果", "warning");
+            return;
+          }
+
+          const result = setQuarterlyOkr(state, objective, keyResults);
+          if (result.success) {
+            StateManager.addMessage("✅ OKR 设定成功", "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
+}
+
+/** 渲染关键结果输入框 */
+function _renderKrInput(value) {
+  return (
+    '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:4px;margin-bottom:4px;align-items:end;">' +
+    '<div><label style="font-size:10px;color:var(--text-muted);">描述</label>' +
+    '<input type="text" class="kr-desc" placeholder="例如：日活用户数" style="width:100%;padding:4px;font-size:11px;border-radius:4px;border:1px solid var(--border);"></div>' +
+    '<div><label style="font-size:10px;color:var(--text-muted);">目标值</label>' +
+    '<input type="number" class="kr-target" placeholder="10000" style="width:100%;padding:4px;font-size:11px;border-radius:4px;border:1px solid var(--border);"></div>' +
+    '<div><label style="font-size:10px;color:var(--text-muted);">单位</label>' +
+    '<input type="text" class="kr-unit" placeholder="人" style="width:100%;padding:4px;font-size:11px;border-radius:4px;border:1px solid var(--border);"></div>' +
+    '<div style="padding-bottom:4px;">' +
+    '<button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()" style="font-size:10px;padding:4px 8px;">✕</button>' +
+    '</div>' +
+    "</div>"
+  );
+}
+
+/** 显示团队目标弹窗 */
+function showTeamGoalModal() {
+  const state = StateManager.getState();
+  const company = state.startup.company;
+  if (!company) return;
+
+  const teams = [
+    { key: "engineering", name: "技术团队" },
+    { key: "product", name: "产品团队" },
+    { key: "sales", name: "销售团队" },
+    { key: "marketing", name: "市场团队" },
+    { key: "operations", name: "运营团队" },
+    { key: "finance", name: "财务团队" },
+  ];
+
+  let html =
+    '<div style="font-size:13px;">' +
+    '<div style="margin-bottom:12px;">' +
+    '<label style="display:block;margin-bottom:4px;font-weight:bold;">选择团队</label>' +
+    '<select id="goalTeam" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
+    teams.map(t => '<option value="' + t.key + '">' + t.name + '</option>').join("") +
+    "</select>" +
+    '</div>' +
+    '<div style="margin-bottom:12px;">' +
+    '<label style="display:block;margin-bottom:4px;font-weight:bold;">目标描述</label>' +
+    '<input type="text" id="goalTarget" placeholder="例如：完成用户系统重构" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
+    '</div>' +
+    '<div style="margin-bottom:12px;">' +
+    '<label style="display:block;margin-bottom:4px;font-weight:bold;">期限（天）</label>' +
+    '<input type="number" id="goalDeadline" value="30" min="7" max="90" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--border);">' +
+    '</div>' +
+    "</div>";
+
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "👥 设定团队目标",
+    body: html,
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      {
+        text: "设定目标",
+        cls: "btn-warning",
+        callback: function () {
+          const team = document.getElementById("goalTeam").value;
+          const target = document.getElementById("goalTarget").value.trim();
+          const deadline = parseInt(document.getElementById("goalDeadline").value);
+
+          if (!target) {
+            StateManager.addMessage("请输入目标描述", "warning");
+            return;
+          }
+
+          const result = setTeamGoal(state, team, target, deadline);
+          if (result.success) {
+            StateManager.addMessage("✅ 团队目标设定成功", "success");
+            renderAll();
+          } else {
+            StateManager.addMessage("⚠️ " + result.message, "warning");
+          }
+        },
+      },
+    ],
+  });
 }
 
 // ====== P0-3: 技术债务系统 ======
@@ -5383,10 +5996,6 @@ if (typeof module !== "undefined" && module.exports) {
     showMarketingModal,
     showFinancialReportModal,
     showTeamManagementModal,
-    // P0-4: 员工满意度系统
-    improveEmployeeSatisfaction,
-    getEmployeeSatisfactionSummary,
-    showTeamManagementModal,
     generateInvestorFeedback,
     // P0-1: 版本迭代弹窗
     showVersionUpdateModal,
@@ -5404,11 +6013,23 @@ if (typeof module !== "undefined" && module.exports) {
     showRefactorConfirm,
     refactorProduct,
     recordTechDebtEvent,
+    // P0-4: 员工满意度系统
+    improveEmployeeSatisfaction,
+    getEmployeeSatisfactionSummary,
+    // P0-5: KPI/OKR 目标系统
+    setQuarterlyOkr,
+    updateOkrProgress,
+    evaluateQuarterlyOkr,
+    setTeamGoal,
+    updateTeamGoalProgress,
+    setEmployeeGoal,
+    updateEmployeeGoalProgress,
+    getKpiSummary,
+    showKpiDashboard,
+    showSetOkrModal,
+    showTeamGoalModal,
   };
 }
-
-// ====== 修复：移除多余的 */ ======
-// (上面代码块末尾的 */ 已被移除)
 
 // ====== P0-3: 技术债详情弹窗 ======
 /** 显示技术债详情弹窗 */
