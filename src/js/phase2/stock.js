@@ -404,12 +404,14 @@ function renderKLine(history, currentPrice) {
 
   const firstPrice = history[0].price;
   const lastPrice = history[history.length - 1].price;
-  // 折线颜色：红涨绿跌（中国/A股标准）
+  // 今日涨跌 vs 昨日（与卡片内的 todayChange 一致）
+  const prevPx =
+    history.length >= 2 ? history[history.length - 2].price : firstPrice;
+  const todayUp = lastPrice >= prevPx;
+  // 折线/填充颜色：中国A股标准 红涨绿跌
   // --danger=红(涨) #c4553d, --success=绿(跌) #4a9e5c
-  const lineColor =
-    lastPrice >= firstPrice ? "var(--danger)" : "var(--success)";
-  const fillColor =
-    lastPrice >= firstPrice ? "rgba(196,85,61,0.12)" : "rgba(74,158,92,0.12)";
+  const lineColor = todayUp ? "var(--danger)" : "var(--success)";
+  const fillColor = todayUp ? "rgba(196,85,61,0.12)" : "rgba(74,158,92,0.12)";
 
   // 构造一个 polygon 用于填充
   const fillPoints = `0,${h} ${points} ${w},${h}`;
@@ -475,7 +477,7 @@ function renderStockCard(stock, state) {
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0;font-size:10px;color:var(--text-muted);">
-        <span>7日均 ¥${avg7.toFixed(2)} ${aboveAvg7 ? "🟢" : "🔴"}</span>
+        <span>7日均 ¥${avg7.toFixed(2)} ${aboveAvg7 ? "🔴" : "🟢"}</span>
         <span>20日高 ¥${market.high20.toFixed(2)}</span>
         <span>20日低 ¥${market.low20.toFixed(2)}</span>
       </div>
@@ -498,7 +500,7 @@ function renderStockCard(stock, state) {
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-sm btn-success stock-buy" data-sym="${stock.symbol}" data-qty="10">买10</button>
         <button class="btn btn-sm btn-success stock-buy" data-sym="${stock.symbol}" data-qty="100">买100</button>
-        <button class="btn btn-sm btn-primary stock-buy-all" data-sym="${stock.symbol}" ${maxBuy === 0 ? "disabled" : ""} title="用所有现金按当前价买入">📦 全部买入 (${maxBuy})</button>
+        <button class="btn btn-sm btn-success stock-buy-all" data-sym="${stock.symbol}" ${maxBuy === 0 ? "disabled" : ""} title="用所有现金按当前价买入">📦 全部买入 (${maxBuy})</button>
         <button class="btn btn-sm btn-danger stock-sell" data-sym="${stock.symbol}" data-qty="10" ${shares === 0 ? "disabled" : ""}>卖10</button>
         <button class="btn btn-sm btn-danger stock-sell-all" data-sym="${stock.symbol}" ${shares === 0 ? "disabled" : ""} title="卖出全部持仓">💰 全部卖出 (${shares})</button>
       </div>

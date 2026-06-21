@@ -31,17 +31,26 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：统一涨跌颜色为中国标准 红涨绿跌 + 新增任务后复盘惯例 ✅（2026-06-21 22:00）
-  - **问题**：公司股票板块（stock.js）使用国际标准（绿涨红跌），与投资板块（investment.js）的中国标准不一致
-  - **修复1 — stock.js K线/卡片颜色**：5处颜色逻辑从 `--success(绿)`/`--danger(红)` 翻转为 `--danger(红)`/`--success(绿)`，含折线、填充、涨跌幅文字、PnL盈亏色
-  - **修复2 — investment.js 色值硬编码**：`drawPriceChart` 移除 `_cssVar()` 依赖，改用硬编码 `LINE_UP="#c4553d"` / `LINE_DOWN="#4a9e5c"`，杜绝 Canvas 下 CSS 变量解析异常
-  - **清理**：删除不再使用的 `_cssVar()` 辅助函数
-  - **复盘**：新建 `bug-search-strategy.md`(查bug三原则) + `post-task-reflection.md`(任务后复盘惯例)，写入DEVELOPMENT.md
-  - **问题**：Canvas 2D API 不支持 CSS `var()` 语法，`ctx.fillStyle="var(--success)"` 静默回退黑色，在深色背景上不可见
-  - **修复1 — CSS变量解析**：新增 `_cssVar()` 辅助函数（`getComputedStyle`），`_cssVar('--success')` 返回 `#4a9e5c`
-  - **修复2 — Retina支持**：`drawPriceChart` 开头检测 `devicePixelRatio`，物理像素按 dpr 缩放（160×40→320×80），`setTransform` 缩放坐标系
-  - **修复3 — 字体增大**：价格 11px→12px bold，涨跌幅 9px→10px
-  - **涉及文件**：`src/js/phase2/investment.js`（新增 \_cssVar + Retina缩放 + 2处CSS变量修复 + 2处字体增大）
+- **最近一次工作**：股票/投资板块颜色系统全面统一为中国A股红涨绿跌 ✅（2026-06-21 22:30）
+  - **问题根源**：股票系统存在9处颜色不一致：
+    - `stock.js` `renderKLine()` 折线/填充色**比较整个20天window首尾**，不是今日涨跌 → 跌的股票若window总体涨仍显示红色
+    - `investment.js` `drawPriceChart()` 同样用首尾比较
+    - `drawPriceChart()` 价格数字用 lineColor（首尾趋势），涨跌幅文字用 dayColor（今日涨跌）→ 两数颜色可能不同
+    - "全买"按钮误用 `btn-danger`（红色）
+    - 市场情绪 牛市→绿/熊市→红 与红涨绿跌相反；市场驱动利好→绿/利空→红 相反
+    - 颜色图例文字"📈涨🟢绿"标反
+  - **修复清单（9项）**：
+    1. `stock.js renderKLine` — 折线/填充色改为**今日涨跌比较**（最后两个点）
+    2. `stock.js card` — 7日均线emoji交换（高于均线=涨→🔴红）
+    3. `stock.js card` — "全部买入"按钮 `btn-primary`→`btn-success`（绿色）
+    4. `investment.js drawPriceChart` — 折线/填充色改为今日涨跌比较
+    5. `investment.js drawPriceChart` — 价格文字改用 `dayColor`（今日涨跌）
+    6. `investment.js stdInvBtns` — "全买"按钮 `btn-danger`→`btn-success`
+    7. `investment.js renderMarketSentiment` — 牛市→`var(--danger)`红 / 熊市→`var(--success)`绿
+    8. `investment.js renderMarketSentiment` — 市场驱动 利好→红 / 利空→绿
+    9. `investment.js renderInvestmentTab` — 颜色图例修正为 "📉跌 🟢绿 / 📈涨 🔴红"
+  - **涉及文件**：`src/js/phase2/stock.js` + `src/js/phase2/investment.js`
+  - **构建**：已 `python build.py`
 
 ### 创业系统完整功能一览
 

@@ -1468,10 +1468,10 @@ function drawPriceChart(canvasId, priceData, color) {
   var prices = [];
   for (var i = 0; i < data.length; i++) prices.push(data[i].price);
 
-  // 取整体趋势方向：首尾比较，与 stock.js renderKLine 一致
-  var firstPrice = prices[0];
+  // 取今日涨跌方向（最后两个点比较，与卡片内 chg 一致），而非整窗口首尾
   var lastPrice = prices[prices.length - 1];
-  var trendUp = lastPrice >= firstPrice;
+  var prevPx = prices.length >= 2 ? prices[prices.length - 2] : prices[0];
+  var trendUp = lastPrice >= prevPx;
 
   // 颜色：红涨绿跌（中国/A股标准），与持仓盈亏颜色保持一致
   // 改用硬编码色值而非 _cssVar()，避免 Canvas 环境下 CSS 变量解析异常
@@ -1551,7 +1551,7 @@ function drawPriceChart(canvasId, priceData, color) {
   var chgText = (chg >= 0 ? "+" : "") + chgPct + "%";
   var dayColor = chg >= 0 ? LINE_UP : LINE_DOWN;
 
-  ctx.fillStyle = lineColor;
+  ctx.fillStyle = dayColor;
   ctx.font = "bold 12px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(lastPrice.toFixed(2), padL + 2, padT + 10);
@@ -1586,10 +1586,10 @@ function renderMarketSentiment(state, inv) {
   var sentiment, sentColor;
   if (bullScore > bearScore + 1.5) {
     sentiment = "🐂 牛市氛围";
-    sentColor = "var(--success)";
+    sentColor = "var(--danger)";
   } else if (bearScore > bullScore + 1.5) {
     sentiment = "🐻 熊市氛围";
-    sentColor = "var(--danger)";
+    sentColor = "var(--success)";
   } else {
     sentiment = "⚖️ 震荡市";
     sentColor = "var(--accent)";
@@ -1629,7 +1629,7 @@ function renderMarketSentiment(state, inv) {
           '<span style="margin-right:6px;">' +
           d.direction +
           '<span style="' +
-          (d.avgMul > 1 ? "color:var(--success);" : "color:var(--danger);") +
+          (d.avgMul > 1 ? "color:var(--danger);" : "color:var(--success);") +
           '">' +
           (d.avgMul > 1 ? "+" : "") +
           d.strength +
@@ -1783,7 +1783,7 @@ function renderInvestmentTab(state, parent) {
     "</div>" +
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
-    "<span>📈 涨</span>" +
+    "<span>📉 跌</span>" +
     '<span style="color:var(--success);font-weight:bold;">🟢 绿</span>' +
     '<span style="color:var(--text-muted);">/</span>' +
     "<span>📈 涨</span>" +
@@ -1866,7 +1866,7 @@ function stdInvBtns(sym, price, h, qty1, qty2, lbl1, lbl2, decimals) {
     var actCls = isBuy ? "ibuy" : "isell";
     var allLbl = isBuy ? "全买" : "全卖";
     var allAttr = isBuy
-      ? ' class="btn btn-sm btn-danger ibuy-all" data-s="' +
+      ? ' class="btn btn-sm btn-success ibuy-all" data-s="' +
         sym +
         '" data-p="' +
         price.toFixed(4) +
