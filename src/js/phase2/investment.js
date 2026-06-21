@@ -1468,19 +1468,11 @@ function drawPriceChart(canvasId, priceData, color) {
   var prices = [];
   for (var i = 0; i < data.length; i++) prices.push(data[i].price);
 
-  // 取今日涨跌方向（最后两个点比较，与卡片内 chg 一致），而非整窗口首尾
+  // 折线/填充使用固定色（信息蓝 #5a8ab4），不随涨跌方向变化
   var lastPrice = prices[prices.length - 1];
-  var prevPx = prices.length >= 2 ? prices[prices.length - 2] : prices[0];
-  var trendUp = lastPrice >= prevPx;
-
-  // 颜色：红涨绿跌（中国/A股标准），与持仓盈亏颜色保持一致
-  // 改用硬编码色值而非 _cssVar()，避免 Canvas 环境下 CSS 变量解析异常
-  var LINE_UP = "#c4553d"; // 涨→红色（同 var(--danger)）
-  var LINE_DOWN = "#4a9e5c"; // 跌→绿色（同 var(--success)）
-  var FILL_UP = "rgba(196,85,61,0.12)";
-  var FILL_DOWN = "rgba(74,158,92,0.12)";
-  var lineColor = trendUp ? LINE_UP : LINE_DOWN;
-  var fillColor = trendUp ? FILL_UP : FILL_DOWN;
+  // 方向信息由价格数字和涨跌幅文字（红涨绿跌）负责
+  var lineColor = "#5a8ab4";
+  var fillColor = "rgba(90,138,180,0.12)";
 
   var minP = prices[0],
     maxP = prices[0];
@@ -1549,7 +1541,7 @@ function drawPriceChart(canvasId, priceData, color) {
   var chg = lastPrice - prevPrice;
   var chgPct = prevPrice !== 0 ? ((chg / prevPrice) * 100).toFixed(2) : "0.00";
   var chgText = (chg >= 0 ? "+" : "") + chgPct + "%";
-  var dayColor = chg >= 0 ? LINE_UP : LINE_DOWN;
+  var dayColor = chg >= 0 ? "#c4553d" : "#4a9e5c";
 
   ctx.fillStyle = dayColor;
   ctx.font = "bold 12px sans-serif";
@@ -1788,8 +1780,7 @@ function renderInvestmentTab(state, parent) {
     '<span style="color:var(--text-muted);">/</span>' +
     "<span>📈 涨</span>" +
     '<span style="color:var(--danger);font-weight:bold;">🔴 红</span>' +
-    '<span style="color:var(--text-muted);">· 中国标准（红涨绿跌）· 与持仓盈亏一致</span>' +
-    "</div>" +
+    '<span style="color:var(--text-muted);">· 折线固定蓝色 · 价格/涨跌幅 红涨绿跌</span>' +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
     '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
     '<button class="btn btn-sm sub-tab" data-stab="crypto">虚拟币</button>' +

@@ -402,16 +402,10 @@ function renderKLine(history, currentPrice) {
     })
     .join(" ");
 
-  const firstPrice = history[0].price;
-  const lastPrice = history[history.length - 1].price;
-  // 今日涨跌 vs 昨日（与卡片内的 todayChange 一致）
-  const prevPx =
-    history.length >= 2 ? history[history.length - 2].price : firstPrice;
-  const todayUp = lastPrice >= prevPx;
-  // 折线/填充颜色：中国A股标准 红涨绿跌
-  // --danger=红(涨) #c4553d, --success=绿(跌) #4a9e5c
-  const lineColor = todayUp ? "var(--danger)" : "var(--success)";
-  const fillColor = todayUp ? "rgba(196,85,61,0.12)" : "rgba(74,158,92,0.12)";
+  // 折线/填充使用固定色（信息蓝），不随涨跌方向变化
+  // 方向信息由价格数字和涨跌幅文字（红涨绿跌）负责
+  const lineColor = "var(--info)";
+  const fillColor = "rgba(90,138,180,0.12)";
 
   // 构造一个 polygon 用于填充
   const fillPoints = `0,${h} ${points} ${w},${h}`;
