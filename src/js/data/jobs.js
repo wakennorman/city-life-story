@@ -967,6 +967,85 @@ const STREET_JOBS = [
       },
       risk: { injury: 0.12 },
     },
+
+    // ============================================================
+    // 待完成：新增地点专属工作 — 参考《大多数》工作系统
+    // 实现提示：在 BRANCH_JOBS 数组中追加，注意 location 字段对应 locations.js
+    // ============================================================
+    // TODO: 待实现 - 公园工作
+    // {
+    //   id: "busking",
+    //   name: "街头表演",
+    //   desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+    //   icon: "🎸",
+    //   location: "park",
+    //   requirements: { mental: 30, minAge: 16, maxAge: 60 },
+    //   effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+    //   payCalc(state) {
+    //     return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
+    //   },
+    //   risk: {},
+    // },
+    // TODO: 待实现 - 公园保安
+    // TODO: 待实现 - 公园清洁
+    // TODO: 待实现 - 医院保洁
+    // TODO: 待实现 - 医院配送
+    // TODO: 待实现 - 银行保安
+    // TODO: 待实现 - 银行大堂助理
+    // TODO: 待实现 - 培训辅导
+    // TODO: 待实现 - 培训中心保洁
+    // TODO: 待实现 - 批发配送
+    // TODO: 待实现 - 货物分拣
+    // TODO: 待实现 - 实验室助理
+
+    // ============================================================
+    // 待完成：新增节日/季节性工作 — 参考真实节日经济
+    // ============================================================
+    // TODO: 待实现
+    // {
+    //   id: "fest_spring_couplet",
+    //   name: "写春联",
+    //   desc: "春节前帮人写春联，按幅收费。",
+    //   icon: "🧧",
+    //   location: "commercialDist",
+    //   requirements: { intelligence: 20 },
+    //   effects: { fatigue: 8, happiness: 5, intelligenceXp: 2 },
+    //   payCalc(state) {
+    //     return Math.floor(60 + state.skills.coding.level * 2 + Random.float(0, 40));
+    //   },
+    //   risk: {},
+    //   seasonal: { festival: "spring_festival", daysBefore: 7, daysAfter: 0 },
+    // },
+    // TODO: 待实现 - 做月饼（中秋节前5天）
+    // TODO: 待实现 - 包粽子（端午节前3天）
+    // TODO: 待实现 - 卖冬装（冬季12-2月）
+    // TODO: 待实现 - 卖冷饮（夏季6-8月）
+    // TODO: 待实现 - 开学季布置（每学期初）
+    // TODO: 待实现 - 情人节卖花（2月14日前3天）
+    // TODO: 待实现 - 七夕卖礼物（七夕前5天）
+
+    // ============================================================
+    // 待完成：新增自由职业工作 — 参考《自由职业模拟器》
+    // ============================================================
+    // TODO: 待实现
+    // {
+    //   id: "freelance_design",
+    //   name: "自由设计接单",
+    //   desc: "接平面设计、LOGO设计、海报设计等单子。",
+    //   icon: "🎨",
+    //   location: "techPark",
+    //   requirements: { design: 20, intelligence: 25 },
+    //   effects: { fatigue: 15, intelligenceXp: 3, happiness: 2 },
+    //   payCalc(state) {
+    //     return Math.floor(80 + state.skills.design.level * 5 + Random.float(0, 220));
+    //   },
+    //   risk: {},
+    // },
+    // TODO: 待实现 - 自由写作接单
+    // TODO: 待实现 - 自由翻译接单
+    // TODO: 待实现 - 自由摄影接单
+    // TODO: 待实现 - 自由咨询接单
+    // TODO: 待实现 - 线上家教
   ];
 
   // 将分支工作合并到 STREET_JOBS 中

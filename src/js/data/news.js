@@ -780,6 +780,502 @@ const NEWS_EVENTS = [
     },
     type: "investment",
   },
+
+  // ============================================================
+  // 待完成：新增价格影响事件 — 参考真实新闻 + 《资本家模拟器》
+  // 实现提示：在 NEWS_EVENTS 数组中追加，注意 investmentEffect 格式
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "tech_layoff",
+  //   headline: "科技大厂裁员潮！二手电子产品价格暴跌",
+  //   effects: {
+  //     priceMod: { electronics: 0.5, daily_use: 0.8 },
+  //     investmentEffect: [{ industry: "科技", mul: 0.85 }],
+  //     duration: 7,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "food_safety",
+  //   headline: "食品安全事件曝光！外卖需求骤降，在家做饭需求上升",
+  //   effects: {
+  //     priceMod: { vegetables: 1.3, rice: 1.2, instant_noodles: 0.8 },
+  //     jobMultiplier: 0.6,
+  //     jobPenalty: ["delivery_rider", "food_stall"],
+  //     duration: 5,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "gas_price_surge",
+  //   headline: "国际油价暴涨！打车/配送成本飙升",
+  //   effects: {
+  //     priceMod: { water: 1.1, snacks: 1.15 },
+  //     jobMultiplier: 0.85,
+  //     jobPenalty: ["delivery_rider", "package_delivery"],
+  //     investmentEffect: [{ symbols: ["CL", "NG"], mul: 1.3 }],
+  //     duration: 6,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "luxury_boom",
+  //   headline: "富豪消费回暖！奢侈品/高端商品需求激增",
+  //   effects: {
+  //     priceMod: { clothing: 1.8, electronics: 1.5 },
+  //     duration: 5,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "education_crackdown",
+  //   headline: "\"双减\"政策加码！课外辅导行业受冲击",
+  //   effects: {
+  //     jobMultiplier: 0.5,
+  //     jobPenalty: ["tutoring"],
+  //     investmentEffect: [{ industry: "教育", mul: 0.7 }],
+  //     duration: 10,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "tourism_revival",
+  //   headline: "旅游市场复苏！景区/酒店/交通需求爆发",
+  //   effects: {
+  //     priceMod: { clothing: 1.2, electronics: 1.1 },
+  //     jobBonus: ["delivery_rider", "street_vending_goods"],
+  //     jobMultiplier: 1.2,
+  //     duration: 8,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "winter_heating",
+  //   headline: "北方供暖需求激增！煤炭/暖气价格上涨",
+  //   effects: {
+  //     priceMod: { daily_use: 1.3 },
+  //     investmentEffect: [{ symbols: ["CL", "NG"], mul: 1.4 }],
+  //     duration: 4,
+  //   },
+  //   type: "price",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "e_commerce_festival",
+  //   headline: "电商大促节！物流爆单，快递需求翻倍",
+  //   effects: {
+  //     jobBonus: ["delivery_rider", "package_delivery", "courier_gig"],
+  //     jobMultiplier: 1.5,
+  //     duration: 3,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "rental_crisis",
+  //   headline: "租房市场紧张！租金全面上涨",
+  //   effects: {
+  //     housingRentMod: 1.3,
+  //     jobBonus: ["cleaning_service", "repair_service"],
+  //     duration: 14,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "second_hand_boom",
+  //   headline: "二手经济爆发！闲鱼/转转交易量翻倍",
+  //   effects: {
+  //     priceMod: { clothing: 1.5, electronics: 1.3, scrap_metal: 1.2, scrap_paper: 1.2 },
+  //     duration: 6,
+  //   },
+  //   type: "price",
+  // },
+
+  // ============================================================
+  // 待完成：新增工作影响事件 — 目标 8 条
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "platform_ban",
+  //   headline: "某外卖平台被封！骑手大规模转行",
+  //   effects: {
+  //     jobMultiplier: 0.4,
+  //     jobPenalty: ["delivery_rider"],
+  //     jobBonus: ["package_delivery", "courier_gig"],
+  //     duration: 5,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "factory_shortage",
+  //   headline: "工厂用工荒！加班费涨至平日3倍",
+  //   effects: {
+  //     jobBonus: ["factory_work_assembly", "factory_overtime"],
+  //     jobMultiplier: 3.0,
+  //     fatigueMod: 1.5,
+  //     duration: 4,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "delivery_boom",
+  //   headline: "双11物流爆仓！快递小哥日入过千",
+  //   effects: {
+  //     jobBonus: ["delivery_rider", "package_delivery"],
+  //     jobMultiplier: 2.5,
+  //     apCostMod: 1.2,
+  //     duration: 7,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "construction_delay",
+  //   headline: "工地停工整顿！建筑工人临时失业",
+  //   effects: {
+  //     jobPenalty: ["manual_labor_construction", "skilled_labor_construction"],
+  //     jobMultiplier: 0,
+  //     jobBonus: ["waste_recycling"],
+  //     duration: 6,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "retail_holiday",
+  //   headline: "节假日零售旺季！商场招临时促销员",
+  //   effects: {
+  //     jobBonus: ["street_vending_goods", "street_vending_food"],
+  //     jobMultiplier: 1.8,
+  //     duration: 5,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "gig_economy",
+  //   headline: "零工经济爆发！自由职业机会激增",
+  //   effects: {
+  //     jobBonus: ["freelance_coding", "freelance_design", "freelance_writing"],
+  //     jobMultiplier: 1.5,
+  //     duration: 10,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "healthcare_demand",
+  //   headline: "医疗需求上升！护工/陪诊紧缺",
+  //   effects: {
+  //     jobBonus: ["hospital_caregiver"],
+  //     jobMultiplier: 1.6,
+  //     investmentEffect: [{ industry: "医药", mul: 1.1 }],
+  //     duration: 8,
+  //   },
+  //   type: "job",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "content_creator",
+  //   headline: "短视频风口！内容创作者收入翻倍",
+  //   effects: {
+  //     jobBonus: ["content_writing"],
+  //     jobMultiplier: 2.0,
+  //     competitionMod: 1.5,
+  //     duration: 12,
+  //   },
+  //   type: "job",
+  // },
+
+  // ============================================================
+  // 待完成：新增个人互动事件（道德困境风格）— 参考《This War of Mine》
+  // 实现提示：type: "personal"，含 choices 数组
+  // ============================================================
+  // TODO: 待实现（15条）
+  // {
+  //   id: "lost_wallet_2",
+  //   headline: "捡到手机",
+  //   story: "路边捡到一部手机，里面有联系人和支付软件。",
+  //   choices: [
+  //     { text: "归还（+幸福/+名声）", apply: ... },
+  //     { text: "据为己有（+现金/-道德）", apply: ... },
+  //     { text: "卖掉（+现金/-名声）", apply: ... },
+  //   ],
+  //   type: "personal",
+  // },
+  // TODO: 待实现 - 街头乞丐
+  // TODO: 待实现 - 老板要求做假账
+  // TODO: 待实现 - 朋友借钱不还
+  // TODO: 待实现 - 发现同事偷公司
+  // TODO: 待实现 - 路人突发疾病
+  // TODO: 待实现 - 涨价卖高价
+  // TODO: 待实现 - 有人邀你举报公司
+  // TODO: 待实现 - 有人卖来路不明的货
+  // TODO: 待实现 - 发现项目数据造假
+  // TODO: 待实现 - 慈善募捐
+  // TODO: 待实现 - 家人生病需要钱
+  // TODO: 待实现 - 加班还是回家
+  // TODO: 待实现 - 不道德的工作机会
+  // TODO: 待实现 - 社区需要志愿者
+
+  // ============================================================
+  // 待完成：新增政策事件 — 目标 8 条
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "hukou_reform",
+  //   headline: "户籍制度改革！非本地户口享受同等公共服务",
+  //   effects: {
+  //     npcAffinityMod: 0.1,
+  //     housingRestrictionRelaxed: true,
+  //     duration: 999, // 永久
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "minimum_wage_raise",
+  //   headline: "最低工资再上调至¥2500",
+  //   effects: {
+  //     allJobsBonus: 1.15,
+  //     someJobsDisappear: true,
+  //     duration: 999,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "social_security",
+  //   headline: "社保全覆盖！强制缴纳五险一金",
+  //   effects: {
+  //     incomeTaxMod: 0.9,
+  //     illnessProtection: 0.3,
+  //     unemploymentProtection: 0.3,
+  //     duration: 999,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "housing_restriction",
+  //   headline: "限购令升级！每人限买一套房",
+  //   effects: {
+  //     investmentEffect: [{ industry: "房地产", mul: 0.6 }],
+  //     priceMod: { clothing: 1.2 },
+  //     duration: 999,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "education_equality",
+  //   headline: "教育资源均衡化！免费职业教育推广",
+  //   effects: {
+  //     trainingDiscount: 0.5,
+  //     skillXpBonus: 0.2,
+  //     duration: 999,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "tax_cut",
+  //   headline: "个人所得税减免！年收入<10万免税",
+  //   effects: {
+  //     incomeTaxFreeThreshold: 100000,
+  //     duration: 30,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "green_energy",
+  //   headline: "新能源补贴延续！电动车/光伏产业受益",
+  //   effects: {
+  //     investmentEffect: [{ industry: "新能源", mul: 1.2 }],
+  //     duration: 15,
+  //   },
+  //   type: "policy",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "anti_monopoly_2",
+  //   headline: "反垄断二期！平台经济监管加强",
+  //   effects: {
+  //     investmentEffect: [{ industry: "科技", mul: 0.75 }, { industry: "金融", mul: 1.1 }],
+  //     duration: 20,
+  //   },
+  //   type: "policy",
+  // },
+
+  // ============================================================
+  // 待完成：新增投资专项事件 — 目标 12 条
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "interest_rate_cut_2",
+  //   headline: "央行再次降息！流动性进一步宽松",
+  //   effects: {
+  //     investmentEffect: [
+  //       { allStocks: true, mul: 1.06 },
+  //       { btc: true, mul: 1.1 },
+  //       { category: "贵金属", mul: 1.03 },
+  //     ],
+  //     duration: 7,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "tech_sanction",
+  //   headline: "美国追加技术制裁！半导体产业链受冲击",
+  //   effects: {
+  //     investmentEffect: [
+  //       { symbols: ["SMIC", "HUAW"], mul: 0.7 },
+  //       { industry: "科技", mul: 0.85 },
+  //     ],
+  //     duration: 10,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "property_bubble",
+  //   headline: "房地产泡沫破裂预警！多城房价下跌",
+  //   effects: {
+  //     investmentEffect: [
+  //       { symbols: ["ESTATE"], mul: 0.65 },
+  //       { industry: "房地产", mul: 0.65 },
+  //       { industry: "金融", mul: 0.85 },
+  //     ],
+  //     duration: 12,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "crypto_regulation",
+  //   headline: "加密货币监管收紧！交易所受限",
+  //   effects: {
+  //     investmentEffect: [
+  //       { btc: true, mul: 0.6 },
+  //       { category: "虚拟币", mul: 0.5 },
+  //     ],
+  //     duration: 8,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "oil_price_crash",
+  //   headline: "油价暴跌！OPEC+减产失败",
+  //   effects: {
+  //     investmentEffect: [
+  //       { symbols: ["CL", "NG"], mul: 0.6 },
+  //       { industry: "新能源", mul: 1.15 },
+  //     ],
+  //     duration: 5,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "gold_rush",
+  //   headline: "避险情绪升温！黄金价格创历史新高",
+  //   effects: {
+  //     investmentEffect: [
+  //       { category: "贵金属", mul: 1.25 },
+  //       { allStocks: true, mul: 0.9 },
+  //     ],
+  //     duration: 6,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "ai_investment",
+  //   headline: "全球AI投资热潮！算力/模型/应用全线爆发",
+  //   effects: {
+  //     investmentEffect: [
+  //       { industry: "科技", mul: 1.3 },
+  //       { symbols: ["NVDA", "BYTE", "BAID"], mul: 1.5 },
+  //     ],
+  //     duration: 10,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "healthcare_boom",
+  //   headline: "生物医药突破！创新药获批上市",
+  //   effects: {
+  //     investmentEffect: [
+  //       { industry: "医药", mul: 1.2 },
+  //     ],
+  //     duration: 7,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "consumer_upgrade",
+  //   headline: "消费升级趋势！高端消费品牌受益",
+  //   effects: {
+  //     investmentEffect: [
+  //       { industry: "消费", mul: 1.15 },
+  //     ],
+  //     duration: 9,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "infrastructure_plan",
+  //   headline: "万亿基建计划！新基建投资启动",
+  //   effects: {
+  //     investmentEffect: [
+  //       { symbols: ["ESTATE"], mul: 1.2 },
+  //     ],
+  //     duration: 14,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "currency_devaluation",
+  //   headline: "人民币贬值！出口企业受益",
+  //   effects: {
+  //     investmentEffect: [
+  //       { industry: "科技", mul: 1.1 },
+  //       { industry: "制造", mul: 1.05 },
+  //     ],
+  //     duration: 8,
+  //   },
+  //   type: "investment",
+  // },
+  // TODO: 待实现
+  // {
+  //   id: "market_crash_warning",
+  //   headline: "股市系统性风险预警！监管层提示风险",
+  //   effects: {
+  //     investmentEffect: [
+  //       { allStocks: true, mul: 0.8 },
+  //       { category: "贵金属", mul: 1.15 },
+  //     ],
+  //     duration: 5,
+  //   },
+  //   type: "investment",
+  // },
 ];
 
 /** 级联后续新闻（L2层：由L1大事件自动触发，N天后出现） */

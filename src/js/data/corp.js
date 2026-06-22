@@ -373,4 +373,145 @@ const TEAM_MEMBERS = [
     loyalty: 10,
     salary: 28000,
   },
+
+  // ============================================================
+  // 待完成：新增公司 — 参考真实互联网企业
+  // 实现提示：在 COMPANIES 数组中追加
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "neo_finance",
+  //   name: "新金融集团",
+  //   industry: "金融科技",
+  //   culture: "稳健合规，流程严谨",
+  //   salaryMod: 1.1,
+  //   riskMod: 0.7,
+  //   growthRate: 0.9,
+  // },
+  // {
+  //   id: "green_tech",
+  //   name: "绿源科技",
+  //   industry: "新能源",
+  //   culture: "理想主义，环保驱动",
+  //   salaryMod: 0.95,
+  //   riskMod: 1.2,
+  //   growthRate: 1.5,
+  // },
+  // {
+  //   id: "media_hub",
+  //   name: "传媒中心",
+  //   industry: "媒体/内容",
+  //   culture: "创意自由，节奏快",
+  //   salaryMod: 1.0,
+  //   riskMod: 1.3,
+  //   growthRate: 1.1,
+  // },
+  // {
+  //   id: "bio_innovate",
+  //   name: "生物创新",
+  //   industry: "生物医药",
+  //   culture: "科研导向，长期投入",
+  //   salaryMod: 1.15,
+  //   riskMod: 0.8,
+  //   growthRate: 0.8,
+  // },
+  // {
+  //   id: "edu_future",
+  //   name: "未来教育",
+  //   industry: "教育科技",
+  //   culture: "以人为本，教学优先",
+  //   salaryMod: 0.9,
+  //   riskMod: 0.9,
+  //   growthRate: 1.0,
+  // },
+
+  // ============================================================
+  // 待完成：新增职场行动 — 参考《互联网大厂模拟器》
+  // 实现提示：在 CORP_ACTIONS 数组中追加
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "mentor_junior",
+  //   name: "指导新人",
+  //   icon: "👨‍🏫",
+  //   desc: "带新人，传帮带。提升团队整体水平。",
+  //   effects: { popularity: 5, ability: 2, kpi: -2 },
+  //   requiresRank: "P6",
+  // },
+  // {
+  //   id: "cross_dept_collab",
+  //   name: "跨部门协作",
+  //   icon: "🤝",
+  //   desc: "拉通对齐，跨部门推进项目。",
+  //   effects: { popularity: 8, fatigue: 10, kpi: 5 },
+  //   requiresRank: "P7",
+  // },
+  // {
+  //   id: "innovation_proposal",
+  //   name: "提出创新方案",
+  //   icon: "💡",
+  //   desc: "写方案、提建议。可能改变产品方向。",
+  //   effects: { ability: 8, risk: 5, kpi: 3 },
+  //   requirements: { intelligence: 50 },
+  // },
+  // {
+  //   id: "office_politics",
+  //   name: "办公室政治",
+  //   icon: "🎭",
+  //   desc: "站队、拉帮结派。短期有利，长期有风险。",
+  //   effects: { popularity: -5, upwardMgmt: 10, dignity: -3 },
+  //   requirements: { mental: 40 },
+  // },
+  // {
+  //   id: "work_from_home",
+  //   name: "远程办公",
+  //   icon: "🏠",
+  //   desc: "申请在家办公。恢复身心，但KPI受影响。",
+  //   effects: { fatigue: -10, kpi: -5, happiness: 8 },
+  //   requiresRank: "P6",
+  // },
+  // {
+  //   id: "side_project",
+  //   name: "接私活",
+  //   icon: "💰",
+  //   desc: "下班后接私活赚钱。收入可观，但影响主业。",
+  //   effects: { cash: Random.int(200, 500), fatigue: 20, kpi: -8 },
+  //   requirements: { coding: 30 },
+  // },
+
+  // ============================================================
+  // 待完成：新增团队角色 — 参考真实职场人物
+  // 实现提示：在 TEAM_MEMBERS 数组中追加
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "burnout_coder",
+  //   name: "倦怠程序员",
+  //   role: "疲惫的老员工",
+  //   skill: "coding",
+  //   desc: "干了5年，累了。产出低但不出错。",
+  //   productivity: 3,
+  //   loyalty: 2,
+  //   salary: 15000,
+  // },
+  // {
+  //   id: "office_diplomat",
+  //   name: "职场外交官",
+  //   role: "关系大师",
+  //   skill: "politics",
+  //   desc: "什么都懂，什么都能说。跨部门协调神器。",
+  //   productivity: 5,
+  //   loyalty: 7,
+  //   salary: 30000,
+  // },
+  // {
+  //   id: "jack_of_all_trades",
+  //   name: "多面手",
+  //   role: "什么都能干",
+  //   skill: "general",
+  //   desc: "不精但啥都会。团队里的万能胶。",
+  //   productivity: 5,
+  //   loyalty: 6,
+  //   salary: 15000,
+  // },
 ];

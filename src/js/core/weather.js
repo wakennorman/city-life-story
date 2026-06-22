@@ -61,6 +61,58 @@ const WEATHER_TYPES = [
     fatigueBonus: 3,
     happinessBonus: -5,
   },
+
+  // ============================================================
+  // 待完成：新增天气类型 — 参考真实气象 + 《大多数》天气系统
+  // 实现提示：在 WEATHER_TYPES 数组中追加，并在 SEASONS 的 weatherWeights 中配置权重
+  // ============================================================
+  // TODO: 待实现 - 高温预警
+  // {
+  //   id: "heatwave",
+  //   name: "高温预警",
+  //   icon: "🥵",
+  //   outdoorMod: 0.6,
+  //   fatigueBonus: 10,
+  //   happinessBonus: -8,
+  //   healthMod: -2,
+  //   desc: "室外工作疲劳+10，卫生-5，水价格×1.5",
+  // },
+  // TODO: 待实现 - 寒潮
+  // {
+  //   id: "cold_snap",
+  //   name: "寒潮",
+  //   icon: "🥶",
+  //   outdoorMod: 0.5,
+  //   fatigueBonus: 8,
+  //   happinessBonus: -5,
+  //   healthMod: -3,
+  //   desc: "室外工作疲劳+8，健康-3，衣物价格×1.3",
+  // },
+  // TODO: 待实现 - 重度雾霾
+  // {
+  //   id: "heavy_smog",
+  //   name: "重度雾霾",
+  //   icon: "😷",
+  //   outdoorMod: 0.5,
+  //   fatigueBonus: 5,
+  //   happinessBonus: -8,
+  //   healthMod: -2,
+  //   respiratoryDiseaseBonus: 0.15,
+  //   desc: "所有工作健康-2，呼吸系统疾病概率+15%",
+  // },
+  // TODO: 待实现 - 台风
+  // {
+  //   id: "typhoon",
+  //   name: "台风",
+  //   icon: "🌀",
+  //   outdoorMod: 0,
+  //   fatigueBonus: 20,
+  //   happinessBonus: -15,
+  //   healthMod: -2,
+  //   outdoorJobsBlocked: true,
+  //   indoorJobIncomeMod: 0.8,
+  //   desc: "所有室外工作不可用，室内工作收入-20%",
+  // },
 ];
 
 const SEASONS = [

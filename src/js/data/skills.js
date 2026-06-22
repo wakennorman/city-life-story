@@ -68,6 +68,65 @@ const CERTIFICATES = [
     effects: { managementXp: 50, intelligence: 3 },
     examPassRate: 0.5,
   },
+
+  // ============================================================
+  // 待完成：新增证书 — 参考《大多数》证书系统 + 真实职业资格
+  // 实现提示：在 CERTIFICATES 数组中追加
+  // ============================================================
+  // TODO: 待实现 - 护理证
+  // {
+  //   id: "nursing_cert",
+  //   name: "护理证",
+  //   desc: "可以从事护工/护理工作，收入稳定。",
+  //   requirements: { cash: 400, mental: 25 },
+  //   effects: { caregiverXp: 30, illnessRiskReduction: 0.1 },
+  //   examPassRate: 0.75,
+  // },
+  // TODO: 待实现 - 食品健康证
+  // {
+  //   id: "food_health_cert",
+  //   name: "食品健康证",
+  //   desc: "从事餐饮行业的必要条件，食品安全事件免疫。",
+  //   requirements: { cash: 200, hygiene: 15 },
+  //   effects: { foodJobIncomeBonus: 0.1, foodSafetyImmune: true },
+  //   examPassRate: 0.9,
+  // },
+  // TODO: 待实现 - 消防证
+  // {
+  //   id: "fire_safety_cert",
+  //   name: "消防证",
+  //   desc: "工地/工厂工作的安全证书，受伤概率-15%。",
+  //   requirements: { cash: 300, physique: 20 },
+  //   effects: { injuryReduction: 0.15 },
+  //   examPassRate: 0.8,
+  // },
+  // TODO: 待实现 - IT支持证
+  // {
+  //   id: "it_support_cert",
+  //   name: "IT支持证",
+  //   desc: "可以从事IT客服/技术支持工作，收入+20%。",
+  //   requirements: { cash: 600, intelligence: 30, coding: 10 },
+  //   effects: { itJobIncomeBonus: 0.2, codingXp: 30 },
+  //   examPassRate: 0.6,
+  // },
+  // TODO: 待实现 - 理财顾问证
+  // {
+  //   id: "financial_advisor_cert",
+  //   name: "理财顾问证",
+  //   desc: "可以从事理财咨询工作，投资收入+10%。",
+  //   requirements: { cash: 800, intelligence: 40, accounting: 20 },
+  //   effects: { investmentIncomeBonus: 0.1, accountingXp: 40 },
+  //   examPassRate: 0.5,
+  // },
+  // TODO: 待实现 - 教师资格证
+  // {
+  //   id: "teaching_cert",
+  //   name: "教师资格证",
+  //   desc: "可以从事家教/培训讲师工作，收入+25%。",
+  //   requirements: { cash: 500, intelligence: 45, english: 25 },
+  //   effects: { teachingJobIncomeBonus: 0.25, intelligence: 3 },
+  //   examPassRate: 0.55,
+  // },
 ];
 
 /** 获取证书定义 */

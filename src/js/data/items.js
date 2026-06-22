@@ -490,6 +490,106 @@ const ITEMS = [
     desc: "每日减疲劳3，维持体力。体力工作收入+3%~4%",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
+
+  // ============================================================
+  // 待完成：新增装备 — 参考《大多数》装备系统 + 《Stardew Valley》工具
+  // 实现提示：在 ITEMS 数组中追加，注意 slot 字段（head/hand/feet/body/accessory/null）
+  // ============================================================
+  // TODO: 待实现 - 保暖内衣（冬天防寒+15，室外工作疲劳-3）
+  // {
+  //   id: "thermal_underwear",
+  //   name: "保暖内衣",
+  //   icon: "👕",
+  //   slot: "body",
+  //   effects: { coldProtection: 15, fatigue: -3 },
+  //   jobBonuses: {
+  //     manual_labor_construction: { incomeMultiplier: 1.05 },
+  //     waste_recycling: { incomeMultiplier: 1.05 },
+  //   },
+  //   price: 60,
+  //   desc: "防寒+15，冬天必备。室外工作疲劳减少。",
+  //   buyLocations: ["wholesaleMarket"],
+  // },
+  // TODO: 待实现 - 雨衣（雨天卫生-0，疲劳-5）
+  // TODO: 待实现 - 充电宝（智能手机不耗电，配送效率+5%）
+  // TODO: 待实现 - 急救包（受伤时自动治疗，生病概率-10%）
+  // TODO: 待实现 - 电脑包（智力+1，科技类工作收入+5%）
+  // TODO: 待实现 - 劳保靴（体质+2，工地受伤概率-8%）
+  // TODO: 待实现 - 反光背心（夜间工作收入+8%）
+  // TODO: 待实现 - 维生素片（每日健康+1，连续服用7天额外+5）
+  // TODO: 待实现 - 眼药水（智力工作疲劳-2）
+  // TODO: 待实现 - 按摩仪（每日疲劳-5，体质恢复+3）
+  // TODO: 待实现 - 记事本（学习技能XP+10%）
+  // TODO: 待实现 - 手电筒（夜间工作收入+5%，夜间探索AP-1）
+  // TODO: 待实现 - 雨伞（雨天卫生-0，出行AP-1）
+  // TODO: 待实现 - 智能手表（健康监控，疲劳恢复+5%）
+  // TODO: 待实现 - 降噪耳机（学习环境效率+15%，疲劳-3）
+
+  // ============================================================
+  // 待完成：装备品质系统 — 参考《暗黑破坏神》《魔兽世界》
+  // 实现提示：在 ITEMS 数组中每项追加 quality 字段
+  // ============================================================
+  // TODO: 待实现
+  // 品质等级定义：
+  // {
+  //   quality: "common", // common / rare / epic / legendary
+  //   qualityMods: {     // 品质加成（由品质决定）
+  //     priceMultiplier: 1.0,  // common=1.0, rare=1.3, epic=1.8, legendary=2.5
+  //     effectMultiplier: 1.0, // common=1.0, rare=1.1, epic=1.2, legendary=1.5
+  //   },
+  //   enchantments: [], // 随机附魔（0-2个）
+  // }
+  //
+  // 附魔特效：
+  // { id: "lucky", effect: { incomeBonus: 0.05 }, desc: "幸运：收入+5%" }
+  // { id: "endurance", effect: { fatigueRecoveryBonus: 0.1 }, desc: "耐力：疲劳恢复+10%" }
+  // { id: "wisdom", effect: { skillXpBonus: 0.1 }, desc: "智慧：学习XP+10%" }
+  // { id: "vitality", effect: { healthRecoveryBonus: 0.1 }, desc: "活力：健康恢复+10%" }
+  // { id: "agility_up", effect: { agility: 2 }, desc: "敏捷+2" }
+  // { id: "strength_up", effect: { physique: 2 }, desc: "力量+2" }
+  //
+  // 品质出现概率：common 70%, rare 20%, epic 8%, legendary 2%
+  // 来源：普通购买（common为主）、抽奖/活动（rare+）、NPC赠送（随机）
+
+  // ============================================================
+  // 待完成：新增住所等级 — 参考《模拟人生》住房系统
+  // 实现提示：在 HOUSING_TIERS 数组中追加 tier 5 和 tier 6
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   tier: 5,
+  //   name: "别墅",
+  //   cost: 50000,
+  //   rent: 500,
+  //   capacity: 1000,
+  //   fatigueRecovery: 100,
+  //   desc: "郊区独立别墅，花园、车库、书房一应俱全。真正的成功人士住所。",
+  //   icon: "🏡",
+  //   hygieneBonus: 40,
+  //   happinessBonus: 30,
+  //   canCook: true,
+  //   canBathe: true,
+  //   canRest: true,
+  //   homeType: "villa",
+  //   extraFeatures: { canHostNPC: true, garden: true, garage: true },
+  // },
+  // {
+  //   tier: 6,
+  //   name: "豪宅",
+  //   cost: 200000,
+  //   rent: 1000,
+  //   capacity: 2000,
+  //   fatigueRecovery: 150,
+  //   desc: "市中心顶级豪宅，私人电梯、空中花园、270度江景。站在顶层俯瞰这座城市。",
+  //   icon: "🏰",
+  //   hygieneBonus: 60,
+  //   happinessBonus: 50,
+  //   canCook: true,
+  //   canBathe: true,
+  //   canRest: true,
+  //   homeType: "mansion",
+  //   extraFeatures: { canHostNPC: true, party: true, view: "panoramic", staff: true },
+  // },
 ];
 
 function getItemById(itemId) {

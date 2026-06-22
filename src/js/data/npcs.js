@@ -1064,6 +1064,144 @@ const NPCS = [
       ],
     },
   },
+
+  // ============================================================
+  // 待完成：新增 NPC — 刘叔（退休老教师）
+  // 参考：《Stardew Valley》刘易斯镇长 / 《动物森友会》岛民
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "uncle_liu",
+  //   name: "刘叔",
+  //   role: "退休老教师",
+  //   location: "park",
+  //   birthday: 180,
+  //   desc: "退休语文老师，喜欢下棋、教孩子写字。能帮你提升智力，给你讲过去的故事。",
+  //   birthdayLine: "哎呀，你还记得我生日？我这把老骨头又老了一岁喽。",
+  //   festivalLines: {
+  //     spring_festival: "过年好！我这把老骨头就喜欢热闹，你过年回家不？",
+  //     mid_autumn: "中秋节啊，我年轻时在师范教书，学生们每年都给我送月饼。",
+  //     dragon_boat: "端午嘛，我最爱吃咸蛋黄粽子，甜的那是小孩子吃的。",
+  //     labor_day: "劳动节？我们那代人天天都是劳动节，哪有什么休息日。",
+  //     national_day: "国庆好啊，我年轻时参加过国庆游行，那时候国旗比现在新。",
+  //   },
+  //   talkLines: [
+  //     "现在的孩子，书读得多了，字写得少了。",
+  //     "下棋啊，讲究的是耐心。你太急，棋就输了。",
+  //     "我教了一辈子书，现在看着这些孩子，就像看着当年的自己。",
+  //   ],
+  //   giftPrefers: ["daily_use", "fruits"],
+  //   tradeInfo: {
+  //     expertise: ["daily", "food"],
+  //     infoTypes: {
+  //       price_level: { label: "日用品价格水平", threshold: 30, cost: 30 },
+  //       category_lowest: { label: "全城日用品哪最便宜", threshold: 60, cost: 15 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["tutoring", "content_writing", "data_entry"],
+  //       multiplier: 1.08,
+  //     },
+  //     { minAffinity: 60, jobs: null, multiplier: 1.03 },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "uncle_liu_30", desc: "刘叔教你下棋（心智+5）", effect: function(st) { st.player.mental = Math.min(100, st.player.mental + 5); StateManager.addMessage("💕 刘叔教你下了一盘棋，你学到了耐心。心智+5。", "success"); } },
+  //     { threshold: 60, id: "uncle_liu_60", desc: "刘叔给你推荐学习资源（智力学习速度+15%）", effect: function(st) { st.flags.liuStudyBonus = true; StateManager.addMessage("💕 刘叔给了你几本他珍藏的旧书，学习效率大增！", "success"); } },
+  //     { threshold: 80, id: "uncle_liu_80", desc: "刘叔帮你辅导自考（智力XP+100）", effect: function(st) { st.skills.intelligence = st.skills.intelligence || { level: 0, xp: 0 }; st.skills.intelligence.xp += 100; StateManager.addMessage("❤️ 刘叔亲自给你补课，你感觉脑子都亮了。智力XP+100。", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "刘叔愁眉苦脸：「我孙子下个月要中考了，英语一塌糊涂。你能不能帮帮他？我这把老骨头教不了英语了。」",
+  //     choices: [
+  //       { text: "📚 我来教！我英语还行", apply: function(st) { st.flags._npcFavor_uncle_liu = true; st.skills.english = st.skills.english || { level: 0, xp: 0 }; st.skills.english.xp += 20; if (!st.relationships.uncle_liu) st.relationships.uncle_liu = { affinity: 0, met: true }; st.relationships.uncle_liu.affinity = Math.min(100, st.relationships.uncle_liu.affinity + 15); StateManager.addMessage("📚 你给刘叔的孙子补了三天课，英语XP+20。刘叔高兴得直夸你。", "success"); } },
+  //       { text: "😅 我英语也不太好", apply: function(st) { st.flags._npcFavor_uncle_liu = true; if (!st.relationships.uncle_liu) st.relationships.uncle_liu = { affinity: 0, met: true }; st.relationships.uncle_liu.affinity = Math.min(100, st.relationships.uncle_liu.affinity + 5); StateManager.addMessage("😅 刘叔点点头：「没事，那我再想想别的办法。」", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "刘叔看着公园里的孩子们，沉默了很久：「我教了一辈子书，看着他们一个个长大、离开。现在退休了，有时候会觉得……我这辈子就这么过去了。你年轻，有想法。你觉得，我这辈子算成功吗？」",
+  //     choices: [
+  //       { text: "💪 您教了一辈子书，改变了无数孩子的命运，这当然是成功", hint: "好感+10，刘叔获得慰藉", apply: function(st) { st.flags._npcDeepTask_uncle_liu = true; if (!st.relationships.uncle_liu) st.relationships.uncle_liu = { affinity: 0, met: true }; st.relationships.uncle_liu.affinity = Math.min(100, st.relationships.uncle_liu.affinity + 10); st.needs.happiness = Math.min(100, st.needs.happiness + 10); StateManager.addMessage("💕 刘叔眼眶红了：「谢谢你，年轻人。你这句话，比我教了半辈子书都管用。」好感+10，心情+10。", "success"); } },
+  //       { text: "🤷 成功是什么？您觉得呢", hint: "好感+5，开启哲学对话", apply: function(st) { st.flags._npcDeepTask_uncle_liu = true; if (!st.relationships.uncle_liu) st.relationships.uncle_liu = { affinity: 0, met: true }; st.relationships.uncle_liu.affinity = Math.min(100, st.relationships.uncle_liu.affinity + 5); StateManager.addMessage("🤷 刘叔笑了笑：「也是，成功是什么，每个人都有自己的答案。来，咱们下盘棋。」好感+5。", "info"); } },
+  //     ],
+  //   },
+  // }
+
+  // ============================================================
+  // 待完成：新增 NPC — 吴姐（美容院老板）
+  // 参考：《模拟人生》NPC / 《大多数》美容院事件
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "sister_wu",
+  //   name: "吴姐",
+  //   role: "美容院老板",
+  //   location: "commercialDist",
+  //   birthday: 200,
+  //   desc: "美容院老板娘，认识各种人，能介绍美容/时尚相关工作。",
+  //   // ... 完整配置（生日/节日/对话/礼物/情报/在场加成/好感奖励/求助/深度任务）
+  // }
+
+  // ============================================================
+  // 待完成：新增 NPC — 阿黄（快递站长）
+  // 参考：《快递小哥模拟器》
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "brother_huang",
+  //   name: "阿黄",
+  //   role: "快递站长",
+  //   location: "commercialDist",
+  //   birthday: 250,
+  //   desc: "快递站点站长，管理几十个骑手，能介绍配送工作。",
+  //   // ... 完整配置
+  // }
+
+  // ============================================================
+  // 待完成：新增 NPC — 林阿姨（菜市场摊主）
+  // 参考：《菜市场模拟器》
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "auntie_lin",
+  //   name: "林阿姨",
+  //   role: "菜市场摊主",
+  //   location: "wholesaleMarket",
+  //   birthday: 150,
+  //   desc: "菜市场卖菜的老摊主，知道食材价格门道，能介绍餐饮工作。",
+  //   // ... 完整配置
+  // }
+
+  // ============================================================
+  // 待完成：新增 NPC — 赵师傅（修车师傅）
+  // 参考：《修车模拟器》
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "master_zhao",
+  //   name: "赵师傅",
+  //   role: "修车师傅",
+  //   location: "factoryZone",
+  //   birthday: 280,
+  //   desc: "修车铺老板，懂机械维修，能介绍维修/驾驶相关工作。",
+  //   // ... 完整配置
+  // }
+
+  // ============================================================
+  // 待完成：新增 NPC — 小丽（网红/主播）
+  // 参考：《网红模拟器》
+  // ============================================================
+  // TODO: 待实现
+  // {
+  //   id: "xiaoli",
+  //   name: "小丽",
+  //   role: "网红/主播",
+  //   location: "techPark",
+  //   birthday: 300,
+  //   desc: "短视频主播，粉丝几万，能介绍内容创作/直播相关工作。",
+  //   // ... 完整配置
+  // }
 ];
 
 /** 获取NPC */
