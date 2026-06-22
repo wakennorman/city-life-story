@@ -719,6 +719,15 @@ function addStreetExtras(state, actions) {
       icon: "💻",
       apCost: 30,
       payEstimate: estMin + "~" + estMax,
+      pricePreview:
+        typeof buildCodingPreview === "function"
+          ? buildCodingPreview(state, {
+              name: "网络外包单",
+              budget: Math.round((estMin + estMax) / 2),
+              complexity: Math.ceil(codingLvl / 30) + 1,
+              deadline: 3,
+            })
+          : "",
       handler: function () {
         const st = StateManager.getState();
         const lvl = st.skills.coding.level || 0;

@@ -1065,6 +1065,13 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
       '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">';
     html += r.desc + (buffDesc.length ? " · " + buffDesc.join(" ") : "");
     html += "</div>";
+    // 烹饪技能门控：价格预览
+    if (typeof buildCookingPreview === "function") {
+      var cookingPreview = buildCookingPreview(state, r);
+      if (cookingPreview) {
+        html += cookingPreview;
+      }
+    }
     html +=
       '<div style="font-size:10px;color:var(--text-muted);">' +
       ingHtml.join(" | ") +

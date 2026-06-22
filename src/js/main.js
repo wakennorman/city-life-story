@@ -2428,6 +2428,10 @@ function getAvailableActions(state) {
         desc: dest.desc,
         icon: "🚶",
         apCost: travelApCost,
+        pricePreview:
+          typeof buildDrivingPreview === "function"
+            ? buildDrivingPreview(state, locKey, destKey, travelApCost)
+            : "",
         handler: () => {
           const st = StateManager.getState();
           const ap =

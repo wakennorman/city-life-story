@@ -374,6 +374,7 @@ function renderSidebar(state) {
   renderEduSection(state);
   renderReputationBadge(state);
   renderMoralStatus(state);
+  renderAccountingIntel(state);
   renderLocation(state);
 }
 
@@ -457,6 +458,35 @@ function renderMoralStatus(state) {
     (score > 0 ? "+" : "") +
     score +
     ")</span>";
+}
+
+/** 会计情报（技能门控，Lv.20+侧边栏显示） */
+function renderAccountingIntel(state) {
+  var el = document.getElementById("accounting-intel");
+  if (!el) return;
+  var lvl =
+    (state.skills &&
+      state.skills.accounting &&
+      state.skills.accounting.level) ||
+    0;
+  if (lvl < 20) {
+    el.style.display = "none";
+    return;
+  }
+  el.style.display = "block";
+  var html = '<h3 style="font-size:12px;margin-bottom:4px;">🧾 财务情报</h3>';
+  var preview = buildAccountingPreview(state, "bank");
+  if (preview) {
+    html +=
+      '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">' +
+      preview +
+      "</div>";
+  }
+  html +=
+    '<div style="font-size:9px;color:var(--text-muted);margin-top:3px;">📊 会计 Lv.' +
+    lvl +
+    "</div>";
+  el.innerHTML = html;
 }
 
 function renderEduSection(state) {
@@ -3253,11 +3283,21 @@ function renderInventoryTab(state, parent) {
         : null;
     const card = document.createElement("div");
     card.className = "action-card";
+    var repairHtml = "";
+    if (itemDef && typeof buildRepairPreview === "function") {
+      var rp = buildRepairPreview(state, itemDef);
+      if (rp)
+        repairHtml =
+          '<div style="font-size:9px;color:var(--text-muted);margin-top:3px;">' +
+          rp +
+          "</div>";
+    }
     card.innerHTML = `
       <div style="font-size:11px;color:var(--text-muted)">${slot.icon} ${slot.name}</div>
       <div style="font-size:12px;color:${itemDef ? "var(--success)" : "var(--text-muted)"}">
         ${itemDef ? itemDef.name : "(空)"}
       </div>
+      ${repairHtml}
     `;
     equipGrid.appendChild(card);
   }

@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（交易 Action Card 价格预览：技能门控价格信息直显在行动卡上）
+> 最后更新: 2026-06-22（5 大技能情报系统：会计/烹饪/维修/驾驶/编程 技能门控信息可见度）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
 ## 项目概述
@@ -286,3 +286,46 @@ Sales >= 60 → "📊 N种商品 · 🏆商品名全城最低"
 - `src/js/ui/render.js` — `createActionCard()` 新增 pricePreview 渲染
 - `src/css/style.css` — 新增 `.price-preview` 样式
 - `dist/index.html` — `python build.py` 重新打包
+
+---
+
+## 2026-06-22 — 技能情报系统 v1.0（5 大技能 × 3 档价格/价值信息可见度）
+
+### 改动动机
+
+继交易情报（销售技能门控价格对比）之后，将同样的「技能等级决定信息可见度」模式扩展到更多技能——会计、烹饪、维修、驾驶、编程各获得 3 档信息可见度，让技能升级带来更立体的感知回报。
+
+### 核心设计
+
+**新建 `src/js/core/skill_intel.js`** — 统一情报模块（~350 行）：
+
+| 技能    | Lv.20        | Lv.40         | Lv.60        |
+| ------- | ------------ | ------------- | ------------ |
+| 🧾 会计 | 侧边栏日收支 | 投资回报率    | 闲钱理财提示 |
+| 🍳 烹饪 | 食材成本估算 | vs 外卖性价比 | 食材价格波动 |
+| 🔧 维修 | 装备品质评级 | 月维护成本    | 二手估值     |
+| 🚗 驾驶 | AP成本明细   | 配送费合理性  | 路线建议     |
+| 💻 编程 | 外包工时估算 | 报价合理性    | 后续维护费   |
+
+### 集成点
+
+| 技能 | 集成入口      | 位置                                                 |
+| ---- | ------------- | ---------------------------------------------------- |
+| 会计 | 侧边栏        | `render.js` → `renderAccountingIntel()`              |
+| 烹饪 | 食谱选择弹窗  | `critical.js` → 每个食谱卡片                         |
+| 维修 | 装备栏        | `render.js` → 装备卡片下方                           |
+| 驾驶 | 旅行 action   | `main.js` → travel action `pricePreview`             |
+| 编程 | 外包单 action | `actions_extra.js` → freelance_coding `pricePreview` |
+
+### 修改文件
+
+| 文件                                | 操作     | 说明                                                    |
+| ----------------------------------- | -------- | ------------------------------------------------------- |
+| `src/js/core/skill_intel.js`        | **新建** | 5 技能 × 3 档阈值函数 + build\*Preview 函数             |
+| `src/index.html`                    | 修改     | 注册 skill_intel.js（trade_intel.js 之后）              |
+| `src/js/ui/render.js`               | 修改     | 新增 `renderAccountingIntel()` + 装备卡片 repairPreview |
+| `src/js/main.js`                    | 修改     | travel action 添加 drivingPreview                       |
+| `src/js/phase1/critical.js`         | 修改     | 烹饪食谱卡片添加 cookingPreview                         |
+| `src/js/phase1/actions_extra.js`    | 修改     | 编程外包单添加 codingPreview                            |
+| `src/js/data/mechanics_registry.js` | 修改     | 新增 skill_intel 条目                                   |
+| `src/DEVELOPMENT.md`                | 修改     | 本文档                                                  |
