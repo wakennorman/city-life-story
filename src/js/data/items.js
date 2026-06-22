@@ -766,59 +766,6 @@ const ITEMS = [
   // 品质出现概率：common 70%, rare 20%, epic 8%, legendary 2%
   // 来源：普通购买（common为主）、抽奖/活动（rare+）、NPC赠送（随机）、隐藏商店（epic+）
   // 实现提示：在 buyItem() 函数中新增品质判定，在 renderEquipment() 中显示品质颜色
-
-  // ============================================================
-  // 待完成：新增住所等级 — 参考《模拟人生》住房系统《大多数》住所
-  // 实现提示：在 HOUSING_TIERS 数组中追加 tier 5 和 tier 6
-  // 参考来源：《模拟人生》住房系统、《大多数》住所系统、真实中国住房市场
-  // ============================================================
-  // TODO: 待实现 - 别墅（成功人士住所）
-  // {
-  //   tier: 5,
-  //   name: "别墅",
-  //   cost: 50000,
-  //   rent: 500,
-  //   capacity: 1000,
-  //   fatigueRecovery: 100,
-  //   desc: "郊区独立别墅，花园、车库、书房一应俱全。真正的成功人士住所。",
-  //   icon: "🏡",
-  //   hygieneBonus: 40,
-  //   happinessBonus: 30,
-  //   canCook: true,
-  //   canBathe: true,
-  //   canRest: true,
-  //   homeType: "villa",
-  //   extraFeatures: { canHostNPC: true, garden: true, garage: true },
-  //   effects: {
-  //     healthRecovery: 5,
-  //     skillStudyBonus: 0.1,
-  //     npcVisitBonus: 0.1,
-  //   },
-  // },
-  // TODO: 待实现 - 豪宅（顶级住所）
-  // {
-  //   tier: 6,
-  //   name: "豪宅",
-  //   cost: 200000,
-  //   rent: 1000,
-  //   capacity: 2000,
-  //   fatigueRecovery: 150,
-  //   desc: "市中心顶级豪宅，私人电梯、空中花园、270度江景。站在顶层俯瞰这座城市。",
-  //   icon: "🏰",
-  //   hygieneBonus: 60,
-  //   happinessBonus: 50,
-  //   canCook: true,
-  //   canBathe: true,
-  //   canRest: true,
-  //   homeType: "mansion",
-  //   extraFeatures: { canHostNPC: true, party: true, view: "panoramic", staff: true },
-  //   effects: {
-  //     healthRecovery: 10,
-  //     skillStudyBonus: 0.2,
-  //     npcVisitBonus: 0.2,
-  //     fameGain: 0.1,
-  //   },
-  // },
 ];
 
 function getItemById(itemId) {
