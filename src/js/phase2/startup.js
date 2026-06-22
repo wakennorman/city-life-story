@@ -2127,7 +2127,9 @@ const PRODUCT_CATEGORIES = {
 
 // ====== 生成唯一ID ======
 function _startupGenerateId() {
-  return "sid_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+  return (
+    "sid_" + Date.now() + "_" + Random.float(0, 1).toString(36).substr(2, 9)
+  );
 }
 
 // ====== 生成公司名 ======
@@ -2153,9 +2155,8 @@ function _startupGenerateCompanyName(industry) {
     "天成",
   ];
   const industryPrefixes = prefixes[industry] || prefixes.tech;
-  const prefix =
-    industryPrefixes[Math.floor(Math.random() * industryPrefixes.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  const prefix = Random.fromArray(industryPrefixes);
+  const suffix = Random.fromArray(suffixes);
   return prefix + suffix;
 }
 
@@ -2188,20 +2189,19 @@ function _startupGenerateCoFounder(index) {
   ];
 
   const name = names[index % names.length];
-  const skill = skills[Math.floor(Math.random() * skills.length)];
-  const personality =
-    personalities[Math.floor(Math.random() * personalities.length)];
-  const equityReq = 5 + Math.floor(Math.random() * 15);
+  const skill = Random.fromArray(skills);
+  const personality = Random.fromArray(personalities);
+  const equityReq = Random.int(5, 19);
 
   return {
     id: "cofounder_" + index,
     name: name,
     skill: skill,
-    skillLevel: 50 + Math.floor(Math.random() * 30),
+    skillLevel: Random.int(50, 79),
     personality: personality,
     equityRequest: equityReq,
     joinedDay: null,
-    loyalty: 70 + Math.floor(Math.random() * 20),
+    loyalty: Random.int(70, 89),
   };
 }
 
@@ -2520,7 +2520,7 @@ function registerStartup(state, name, industry, description) {
   };
 
   // 生成1-2个联合创始人
-  const numCoFounders = Math.random() < 0.6 ? 1 : 2;
+  const numCoFounders = Random.chance(0.6) ? 1 : 2;
   for (let i = 0; i < numCoFounders; i++) {
     const cofounder = _startupGenerateCoFounder(i);
     // 扣除玩家股权
@@ -2743,7 +2743,7 @@ function developProduct(state, productId, effort) {
   const intelligenceBonus = playerIntelligence / 20;
   const codingBonus = playerCoding / 50;
   const teamBonus = teamTechScore / 100;
-  const randomFactor = 0.8 + Math.random() * 0.4;
+  const randomFactor = Random.float(0.8, 1.2);
 
   const progressGain =
     (baseProgress + intelligenceBonus + codingBonus + teamBonus) * randomFactor;
@@ -2761,7 +2761,7 @@ function developProduct(state, productId, effort) {
   // P0-3: 高强度开发积累技术债（effort=3 时）
   if (effort >= 3) {
     // 赶工积累技术债：基础0.5 + 随机0~1
-    const debtGain = 0.5 + Math.random() * 1;
+    const debtGain = Random.float(0.5, 1.5);
     recordTechDebtEvent(state, productId, "rush", debtGain);
   }
 
@@ -3114,7 +3114,7 @@ function developFeature(state, productId, featureKey, skipTests) {
 
   // P0-3: 跳过测试积累技术债
   if (skipTests) {
-    const debtGain = 2 + Math.random() * 3;
+    const debtGain = Random.float(2, 5);
     recordTechDebtEvent(state, productId, "skip_test", debtGain);
     StateManager.addMessage(
       "⚠️ 跳过测试开发「" + feature.name + "」，技术债+" + debtGain.toFixed(0),
@@ -3230,24 +3230,24 @@ function hireEmployee(state, role, salary) {
     name: "员工" + (company.employees.length + 1),
     salary: actualSalary,
     productivity: EMPLOYEE_ROLES[role].baseProductivity,
-    loyalty: 60 + Math.floor(Math.random() * 30),
+    loyalty: Random.int(60, 89),
     skillFocus: EMPLOYEE_ROLES[role].skillFocus,
-    skillLevel: 30 + Math.floor(Math.random() * 30),
+    skillLevel: Random.int(30, 59),
     joinedDay: state.player.day,
     // ====== P0-4: 员工满意度/倦怠系统 ======
-    satisfaction: 50 + Math.floor(Math.random() * 30), // 综合满意度（0-100）
+    satisfaction: Random.int(50, 79), // 综合满意度（0-100）
     satisfactionDetails: {
-      salary: 50 + Math.floor(Math.random() * 30), // 薪资满意度
-      workload: 60 + Math.floor(Math.random() * 20), // 工作强度满意度
-      growth: 40 + Math.floor(Math.random() * 40), // 成长空间满意度
-      atmosphere: 50 + Math.floor(Math.random() * 30), // 团队氛围满意度
+      salary: Random.int(50, 79), // 薪资满意度
+      workload: Random.int(60, 79), // 工作强度满意度
+      growth: Random.int(40, 79), // 成长空间满意度
+      atmosphere: Random.int(50, 79), // 团队氛围满意度
     },
     burnoutRisk: 0, // 倦怠风险指数（0-100）
     burnoutLevel: 0, // 倦怠等级（0=正常, 1=轻度, 2=中度, 3=重度）
-    stressLevel: 30 + Math.floor(Math.random() * 30), // 压力水平
+    stressLevel: Random.int(30, 59), // 压力水平
     overtimeDays: 0, // 连续加班天数
     lastWorkDay: state.player.day, // 最后工作日
-    health: 80 + Math.floor(Math.random() * 20), // 健康值
+    health: Random.int(80, 99), // 健康值
     _satisfactionHistory: [], // 满意度历史
     _burnoutHistory: [], // 倦怠历史
   };
@@ -3357,17 +3357,13 @@ function raiseFunding(state, roundId) {
   // 生成投资人谈判
   const investorType =
     INVESTOR_TYPES[
-      roundDef.investorTypes[
-        Math.floor(Math.random() * roundDef.investorTypes.length)
-      ]
+      roundDef.investorTypes[Random.int(0, roundDef.investorTypes.length - 1)]
     ];
 
-  const raiseAmount = Math.floor(
-    roundDef.maxRaise * (0.5 + Math.random() * 0.5),
-  );
+  const raiseAmount = Math.floor(roundDef.maxRaise * Random.float(0.5, 1.0));
   const equityDilution =
     roundDef.equityDilution[0] +
-    Math.random() * (roundDef.equityDilution[1] - roundDef.equityDilution[0]);
+    Random.float(0, roundDef.equityDilution[1] - roundDef.equityDilution[0]);
 
   // 更新股权
   const oldPlayerEquity = company.equity.player;
@@ -3464,8 +3460,7 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
     "孙总",
     "郑总",
   ];
-  const name =
-    names[Math.floor(Math.random() * names.length)] || investorType.name;
+  const name = Random.fromArray(names) || investorType.name;
 
   const boardMember = {
     id: _startupGenerateId(),
@@ -3482,8 +3477,8 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
     focusAreas: [...template.focusAreas],
     pressureTolerance: template.pressureTolerance,
     joinedDay: state.player.day,
-    satisfaction: 60 + Math.floor(Math.random() * 20), // 初始满意度 60-80
-    trust: 50 + Math.floor(Math.random() * 20), // 初始信任度 50-70
+    satisfaction: Random.int(60, 79), // 初始满意度 60-80
+    trust: Random.int(50, 69), // 初始信任度 50-70
     lastEvaluation: null,
     concerns: [], // 当前关注的问题
   };
@@ -4261,7 +4256,7 @@ function tickStartup(state, tickType) {
           marketMod *
           industryMod *
           growthMod *
-          (1 + Math.random() * 0.2 - 0.1),
+          Random.float(0.9, 1.2),
       );
       totalRevenue += product.revenue;
     }
@@ -4315,10 +4310,10 @@ function tickStartup(state, tickType) {
   const valuationUpMod = tickType === "daily" ? 0.0003 : 0.02;
   const valuationDownMod = tickType === "daily" ? 0.0002 : 0.01;
   if (netCash > 0) {
-    company.valuation *= 1 + valuationUpMod + Math.random() * valuationUpMod;
+    company.valuation *= 1 + valuationUpMod + Random.float(0, valuationUpMod);
   } else if (netCash < 0) {
     company.valuation *=
-      1 - valuationDownMod - Math.random() * valuationDownMod;
+      1 - valuationDownMod - Random.float(0, valuationDownMod);
   }
   company.valuation = Math.round(company.valuation);
 
@@ -4336,7 +4331,7 @@ function tickStartup(state, tickType) {
           timeMult,
     );
     // 低忠诚度可能离职
-    if (emp.loyalty < 20 && Math.random() < DAILY_FIRE_PROB * timeMult) {
+    if (emp.loyalty < 20 && Random.chance(DAILY_FIRE_PROB * timeMult)) {
       StateManager.addMessage(
         "⚠️ 「" + emp.name + "」因不满公司状况离职！",
         "danger",
@@ -4367,8 +4362,9 @@ function tickStartup(state, tickType) {
   // 9. 产品运营 — 用户增长 + 口碑传播
   for (const product of company.products) {
     if (product.status === "launched") {
-      const wordOfMouth =
-        Math.random() < DAILY_WORD_OF_MOUTH_PROB * timeMult ? 0.05 : 0;
+      const wordOfMouth = Random.chance(DAILY_WORD_OF_MOUTH_PROB * timeMult)
+        ? 0.05
+        : 0;
       const baseGrowth = DAILY_BASE_GROWTH * timeMult;
       const productFactor =
         (product.technologyScore + product.marketScore) / 200;
@@ -4381,7 +4377,7 @@ function tickStartup(state, tickType) {
       if (!product.rating) product.rating = 3.5;
       const ratingChange =
         ((product.technologyScore / 100 - 0.5) * 0.2) / timeMult +
-        ((Math.random() - 0.5) * 0.1) / timeMult;
+        Random.float(-0.05, 0.05) / timeMult;
       product.rating = Math.max(1, Math.min(5, product.rating + ratingChange));
 
       // 用户留存
@@ -4407,7 +4403,7 @@ function tickStartup(state, tickType) {
         );
       }
 
-      if (lost > 0 && Math.random() < 0.2 / timeMult) {
+      if (lost > 0 && Random.chance(0.2 / timeMult)) {
         StateManager.addMessage(
           "📉 「" +
             product.name +
@@ -4870,7 +4866,7 @@ function _evaluateLegalEventProbability(state, company) {
   }
 
   // 随机触发
-  if (Math.random() < baseChance) {
+  if (Random.chance(baseChance)) {
     _triggerLegalEvent(state, company);
   }
 }
@@ -4892,8 +4888,7 @@ function _triggerLegalEvent(state, company) {
 
   if (availableRiskTypes.length === 0) return;
 
-  const selectedRiskType =
-    availableRiskTypes[Math.floor(Math.random() * availableRiskTypes.length)];
+  const selectedRiskType = Random.fromArray(availableRiskTypes);
 
   // 筛选该风险类型的事件模板
   const eventTemplates = Object.values(LEGAL_EVENT_TEMPLATES).filter(
@@ -4902,8 +4897,7 @@ function _triggerLegalEvent(state, company) {
 
   if (eventTemplates.length === 0) return;
 
-  const eventTemplate =
-    eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+  const eventTemplate = Random.fromArray(eventTemplates);
 
   // 生成事件
   const eventId = _startupGenerateId();
@@ -5460,7 +5454,7 @@ function _evaluateCrisisProbability(state, company) {
   }
 
   // 随机触发
-  if (Math.random() < baseChance) {
+  if (Random.chance(baseChance)) {
     _triggerRandomCrisis(state, company);
   }
 }
@@ -5506,7 +5500,7 @@ function _triggerRandomCrisis(state, company) {
     (sum, c) => sum + c.weight,
     0,
   );
-  let random = Math.random() * totalWeight;
+  let random = Random.float(0, totalWeight);
   let selected = availableCrisisTypes[0];
 
   for (const crisis of availableCrisisTypes) {
@@ -5782,7 +5776,7 @@ function executePREvent(state, eventId) {
   company.lastMediaAction = { actionId: eventId, day: state.player.day };
 
   // 应用效果（成功率影响）
-  const success = Math.random() < eventTemplate.successChance;
+  const success = Random.chance(eventTemplate.successChance);
   const multiplier = success ? 1 : 0.5; // 失败时效果减半
 
   for (const [key, value] of Object.entries(eventTemplate.effects)) {
@@ -5968,7 +5962,7 @@ function _evolveProductLifecycle(state, product, timeMult) {
       product.lifecycleStage = "decline";
     }
     // 随机技术替代概率（每年约5%）
-    if (Math.random() < 0.0006) {
+    if (Random.chance(0.0006)) {
       // 0.06%/天 ≈ 5%/年
       product.lifecycleStage = "decline";
       StateManager.addMessage(
@@ -6047,7 +6041,7 @@ function _retireProductInternal(state, product, reason, reasonText) {
   if (company && company.employees.length > 0) {
     const fireChance = reason === "failure" ? 0.3 : 0.1;
     for (const emp of company.employees) {
-      if (Math.random() < fireChance) {
+      if (Random.chance(fireChance)) {
         StateManager.addMessage(
           `⚠️ 「${emp.name}」因「${product.name}」退市离职`,
           "warning",
@@ -6311,7 +6305,7 @@ function _triggerBurnout(state, emp, company) {
   });
 
   // 重度倦怠可能离职
-  if (emp.burnoutLevel >= 3 && Math.random() < 0.3) {
+  if (emp.burnoutLevel >= 3 && Random.chance(0.3)) {
     StateManager.addMessage(`💔 「${emp.name}」因重度倦怠离职！`, "danger");
     fireEmployee(state, emp.id);
   }
@@ -7174,7 +7168,7 @@ function _tickTechnicalDebt(state, product, timeMult) {
     baseBugRate *
     debtBugMultiplier *
     (0.5 + ratingFactor) *
-    (0.8 + Math.random() * 0.4);
+    Random.float(0.8, 1.2);
 
   // === 技术债危机判定 ===
   if (debt >= 80 && !product.techDebtCrisis) {
@@ -7182,7 +7176,7 @@ function _tickTechnicalDebt(state, product, timeMult) {
   } else if (
     debt >= 60 &&
     !product.techDebtCrisis &&
-    Math.random() < 0.01 * timeMult
+    Random.chance(0.01 * timeMult)
   ) {
     _triggerTechDebtCrisis(state, product, "moderate");
   }
@@ -7315,10 +7309,9 @@ function refactorProduct(state, productId, scope) {
   company.cashReserve -= scopeConfig.cost;
   company.expenses += scopeConfig.cost;
 
-  const debtReduction = Math.round(
-    scopeConfig.debtReduction[0] +
-      Math.random() *
-        (scopeConfig.debtReduction[1] - scopeConfig.debtReduction[0]),
+  const debtReduction = Random.int(
+    scopeConfig.debtReduction[0],
+    scopeConfig.debtReduction[1],
   );
 
   product.technicalDebt = Math.max(0, product.technicalDebt - debtReduction);
@@ -7419,7 +7412,7 @@ function _tickAARRRFunnel(state, product, timeMult) {
   product.activatedUsers = newActivated;
 
   // 新手引导完成率影响激活率
-  if (product.onboardingCompleteRate < 0.8 && Math.random() < 0.05) {
+  if (product.onboardingCompleteRate < 0.8 && Random.chance(0.05)) {
     product.onboardingCompleteRate = Math.min(
       0.95,
       product.onboardingCompleteRate + 0.02,
@@ -7724,7 +7717,7 @@ function runAdCampaign(state, productId, channel, budget) {
 
   // 计算获客
   const estimatedUsers = _calculateAdGrowth(state, product, 90);
-  const actualGrowth = Math.round(estimatedUsers * (0.8 + Math.random() * 0.4));
+  const actualGrowth = Math.round(estimatedUsers * Random.float(0.8, 1.2));
 
   StateManager.addMessage(
     `📢 「${product.name}」投放${channelData.name}广告¥${budget.toLocaleString()}，预计带来${actualGrowth}新用户（CAC≈¥${(budget / actualGrowth).toFixed(0)}）`,
@@ -7803,12 +7796,12 @@ function updateProductVersion(state, productId, versionType, budget) {
   const techGain = Math.round(
     (config.techBonus[0] +
       (config.techBonus[1] - config.techBonus[0]) * 投入比例) *
-      (0.8 + Math.random() * 0.4),
+      Random.float(0.8, 1.2),
   );
   const marketGain = Math.round(
     (config.marketBonus[0] +
       (config.marketBonus[1] - config.marketBonus[0]) * 投入比例) *
-      (0.8 + Math.random() * 0.4),
+      Random.float(0.8, 1.2),
   );
 
   // 应用效果
@@ -7863,7 +7856,7 @@ function updateProductVersion(state, productId, versionType, budget) {
   // 版本发布可能触发生命周期阶段回调（衰退期产品通过大版本更新可能回到成熟期）
   if (product.lifecycleStage === "decline" && versionType === "major") {
     // 大版本更新有30%概率让产品重获新生
-    if (Math.random() < 0.3) {
+    if (Random.chance(0.3)) {
       product.lifecycleStage = "maturity";
       product.consecutiveDeclineDays = 0;
       StateManager.addMessage(
@@ -7965,7 +7958,7 @@ function processIPOResult(state, approved) {
 
   if (approved) {
     // IPO成功
-    const ipoValuation = company.valuation * (1.5 + Math.random() * 1.5); // 上市溢价
+    const ipoValuation = company.valuation * Random.float(1.5, 3.0); // 上市溢价
     company.valuation = Math.round(ipoValuation);
 
     startup.flags.exited = true;
@@ -8008,7 +8001,7 @@ function getAcquisitionOffer(state) {
 
   // 检查是否有收购要约 - 成长期/成熟期公司才有机会
   const offerProb = company.phase === "mature" ? 0.08 : 0.03;
-  if (Math.random() > offerProb) return null;
+  if (!Random.chance(offerProb)) return null;
 
   // 生成收购方（从企业命运系统中选择健康度高的公司）
   const companies = state.enterpriseFate?.companies || {};
@@ -8027,7 +8020,7 @@ function getAcquisitionOffer(state) {
   const acquirerName = getCompanyNameById(acquirerCid);
 
   // 生成收购报价 - 考虑公司表现
-  let offerMultiplier = 0.8 + Math.random() * 0.6; // 基础 0.8-1.4倍
+  let offerMultiplier = Random.float(0.8, 1.4); // 基础 0.8-1.4倍
   // 表现好加成
   if (company.revenue > company.expenses) offerMultiplier += 0.15;
   if (company.reputation > 60) offerMultiplier += 0.1;
@@ -8049,7 +8042,7 @@ function getAcquisitionOffer(state) {
     "对我们的用户增长数据印象深刻",
     "想补充他们在该领域的布局",
   ];
-  const acquirerComment = 评语[Math.floor(Math.random() * 评语.length)];
+  const acquirerComment = 评语[Random.fromArray(评语)];
 
   return {
     acquirerCid: acquirerCid,
@@ -8140,7 +8133,7 @@ function showAcquisitionModal(state, offer) {
         callback: function () {
           // 还价逻辑
           const counterOfferMultiplier =
-            offer.offerMultiplier + 0.2 + Math.random() * 0.3;
+            offer.offerMultiplier + Random.float(0.2, 0.5);
           const counterOfferValue = Math.round(
             company.valuation * counterOfferMultiplier,
           );
@@ -8156,7 +8149,7 @@ function showAcquisitionModal(state, offer) {
               <div style="font-size:14px;">
                 <p style="margin-bottom:12px;">你提出反报价：<strong style="color:var(--accent);">¥${counterOfferValue.toLocaleString()}</strong>（${counterOfferMultiplier.toFixed(2)}x 估值）</p>
                 <p style="font-size:12px;color:var(--text-muted);">
-                  对方有 ${Math.round(30 + Math.random() * 40)}% 的概率接受。
+                  对方有 ${Random.int(30, 70)}% 的概率接受。
                   如果拒绝，原报价将失效，下次收购要约需等待更久。
                 </p>
               </div>
@@ -8166,7 +8159,7 @@ function showAcquisitionModal(state, offer) {
                 text: "确认还价",
                 cls: "btn-primary",
                 callback: function () {
-                  const accepted = Math.random() < 0.3 + Math.random() * 0.4;
+                  const accepted = Random.chance(0.3 + Random.float(0, 0.4));
                   if (accepted) {
                     StateManager.addMessage(
                       "🎉 「" +
@@ -8659,12 +8652,10 @@ function generateInvestorFeedback(state) {
     "商业模式",
   ];
 
-  const investorType =
-    investorTypes[Math.floor(Math.random() * investorTypes.length)];
-  const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
+  const investorType = Random.fromArray(investorTypes);
+  const focusArea = Random.fromArray(focusAreas);
   const relationship =
-    (company.investorRelationship || 30) +
-    (10 + Math.floor(Math.random() * 20));
+    (company.investorRelationship || 30) + Random.int(10, 29);
 
   let positive, concerns, advice;
 
@@ -8695,7 +8686,7 @@ function generateInvestorFeedback(state) {
     investorType,
     focusArea,
     relationship,
-    gain: Math.floor(5 + Math.random() * 15),
+    gain: Random.int(5, 19),
     positive,
     concerns,
     advice,
@@ -8824,7 +8815,7 @@ function showMarketingModal(state) {
           );
 
           // 随机效果波动
-          const effectiveness = 0.7 + Math.random() * 0.6;
+          const effectiveness = Random.float(0.7, 1.3);
           const userGrowth = Math.floor(5 * effectiveness);
 
           StateManager.addMessage(

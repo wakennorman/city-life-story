@@ -31,7 +31,7 @@
           hint: "加班加成",
           cost: 0,
           apply: function (st) {
-            st.resources.cash += 150 + Math.floor(Math.random() * 100);
+            st.resources.cash += Random.int(150, 249);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             StateManager.addMessage(
               "🌸 开春招工旺季，你多打了几份工，收入不错。",
@@ -77,7 +77,7 @@
           text: "💦 忍忍继续干",
           hint: "收入正常但疲劳翻倍",
           apply: function (st) {
-            st.resources.cash += 80 + Math.floor(Math.random() * 50);
+            st.resources.cash += Random.int(80, 129);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 30);
             st.needs.health = Math.max(0, st.needs.health - 3);
             StateManager.addMessage(
@@ -136,7 +136,7 @@
           text: "📦 倒卖换季商品",
           hint: "薄利但稳妥",
           apply: function (st) {
-            var profit = 40 + Math.floor(Math.random() * 50);
+            var profit = Random.int(40, 89);
             st.resources.cash += profit;
             StateManager.addMessage(
               "🍂 你倒卖了一批换季商品，净赚¥" + profit + "。",
@@ -169,9 +169,9 @@
           text: "💰 硬扛着去工作",
           hint: "高风险高回报",
           apply: function (st) {
-            st.resources.cash += 120 + Math.floor(Math.random() * 60);
+            st.resources.cash += Random.int(120, 179);
             st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
-            if (Math.random() < 0.3) {
+            if (Random.chance(0.3)) {
               st.flags._everSick = true;
               StateManager.addMessage(
                 "❄️ 你在严寒中工作了一天，但好像着凉了。",
@@ -199,7 +199,7 @@
           text: "🚣 蹚水送外卖",
           hint: "溢价但危险",
           apply: function (st) {
-            st.resources.cash += 130 + Math.floor(Math.random() * 80);
+            st.resources.cash += Random.int(130, 209);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
             StateManager.addMessage(
               "🌧️ 你在暴雨中奋力送货，收到了不少小费！",
@@ -260,7 +260,7 @@
           text: "🤝 上楼去调解",
           hint: "可能有用或碰钉子",
           apply: function (st) {
-            if (Math.random() < 0.6) {
+            if (Random.chance(0.6)) {
               if (st.relationships.aunt_wang)
                 st.relationships.aunt_wang.affinity = Math.min(
                   100,
@@ -302,9 +302,9 @@
           text: "💪 干！私活赚钱多",
           hint: "收入高但无保障",
           apply: function (st) {
-            st.resources.cash += 300 + Math.floor(Math.random() * 100);
+            st.resources.cash += Random.int(300, 399);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
-            if (Math.random() < 0.1) {
+            if (Random.chance(0.1)) {
               st.flags._everInjured = true;
               StateManager.addMessage(
                 "🔨 院子翻新出了点意外，你受了轻伤，但钱拿到了。",
@@ -313,7 +313,7 @@
             } else {
               StateManager.addMessage(
                 "🔨 你和李工头干了两天私活，分到了¥" +
-                  (300 + Math.floor(Math.random() * 100)) +
+                  Random.int(300, 399) +
                   "！",
                 "success",
               );
@@ -406,7 +406,7 @@
           text: "📱 帮老周挂二手平台",
           hint: "分你一半",
           apply: function (st) {
-            var profit = 80 + Math.floor(Math.random() * 120);
+            var profit = Random.int(80, 199);
             st.resources.cash += profit;
             if (st.relationships.old_zhou)
               st.relationships.old_zhou.affinity = Math.min(
@@ -423,7 +423,7 @@
           text: "📖 先看看有没有自己有用的",
           hint: "可能学到技能",
           apply: function (st) {
-            var skillGain = Math.floor(Math.random() * 15) + 5;
+            var skillGain = Random.int(5, 19);
             for (var sk in st.skills) {
               st.skills[sk].xp += skillGain;
               break;
@@ -688,8 +688,8 @@
           text: "🎣 逗逗骗子玩",
           hint: "可能反套路？",
           apply: function (st) {
-            if (Math.random() < 0.3) {
-              st.resources.cash += Math.floor(Math.random() * 100);
+            if (Random.chance(0.3)) {
+              st.resources.cash += Random.int(0, 99);
               StateManager.addMessage(
                 "🚨 你反套路了骗子，居然套出了对方的一些信息！",
                 "success",
@@ -724,7 +724,7 @@
         "你的关键装备出了问题——工作用的手套磨破了底，鞋底也快掉了。没有趁手的工具，接下来的工作效率会大打折扣。",
       conditions: function (st) {
         return (
-          Object.keys(st.equipment || {}).length > 0 && Math.random() < 0.03
+          Object.keys(st.equipment || {}).length > 0 && Random.chance(0.03)
         );
       },
       choices: [

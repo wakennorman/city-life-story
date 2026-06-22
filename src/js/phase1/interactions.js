@@ -260,7 +260,7 @@ function checkExtremeConditions(state) {
       "danger",
     );
     st.health = Math.max(0, st.health - 10);
-    if (Math.random() < 0.4) st.sick = true; // 40%概率过劳生病
+    if (Random.chance(0.4)) st.sick = true; // 40%概率过劳生病
     return "skip_day";
   }
 

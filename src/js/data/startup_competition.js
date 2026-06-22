@@ -231,32 +231,29 @@ function generateCompetitors(state, playerCompany) {
   const competitors = [];
   for (let i = 0; i < numCompetitors; i++) {
     const template = templates[i % templates.length];
-    const suffix =
-      template.suffixes[Math.floor(Math.random() * template.suffixes.length)];
+    const suffix = Random.fromArray(template.suffixes);
     const name = (template.namePrefix || "") + suffix;
 
     competitors.push({
       id: "competitor_" + playerCompany.id + "_" + i,
       name: name,
       industry: industry,
-      valuation: playerCompany.valuation * (0.3 + Math.random() * 0.7),
+      valuation: playerCompany.valuation * Random.float(0.3, 1.0),
       employees: Math.max(
         1,
-        Math.floor(
-          playerCompany.employees.length * (0.3 + Math.random() * 0.8),
-        ),
+        Math.floor(playerCompany.employees.length * Random.float(0.3, 1.1)),
       ),
       technologyScore: Math.min(
         100,
-        playerCompany.technologyScore * (0.5 + Math.random() * 0.6),
+        playerCompany.technologyScore * Random.float(0.5, 1.1),
       ),
       marketScore: Math.min(
         100,
-        playerCompany.marketScore * (0.5 + Math.random() * 0.6),
+        playerCompany.marketScore * Random.float(0.5, 1.1),
       ),
       reputation: Math.min(
         100,
-        playerCompany.reputation * (0.4 + Math.random() * 0.7),
+        playerCompany.reputation * Random.float(0.4, 1.1),
       ),
       focus: template.focus,
       phase: playerCompany.phase,
@@ -266,17 +263,11 @@ function generateCompetitors(state, playerCompany) {
       products: playerCompany.products.map((p) => ({
         name: p.name + "竞品",
         category: p.category,
-        technologyScore: Math.max(
-          0,
-          p.technologyScore - 5 + Math.floor(Math.random() * 15),
-        ),
-        marketScore: Math.max(
-          0,
-          p.marketScore - 5 + Math.floor(Math.random() * 15),
-        ),
+        technologyScore: Math.max(0, p.technologyScore - 5 + Random.int(0, 14)),
+        marketScore: Math.max(0, p.marketScore - 5 + Random.int(0, 14)),
         status: "launched",
       })),
-      trend: Math.random() > 0.5 ? "up" : "stable",
+      trend: Random.chance(0.5) ? "up" : "stable",
     });
   }
 
@@ -289,7 +280,7 @@ function tickCompetitors(state, competitors) {
 
   for (const comp of competitors) {
     // 随机演化
-    const growth = (Math.random() - 0.4) * 5; // 轻微负偏（玩家有优势）
+    const growth = Random.float(-2, 3); // 轻微负偏（玩家有优势）
     comp.technologyScore = Math.max(
       0,
       Math.min(100, comp.technologyScore + growth),
@@ -298,7 +289,7 @@ function tickCompetitors(state, competitors) {
     comp.reputation = Math.max(0, Math.min(100, comp.reputation + growth));
 
     // 随机事件
-    if (Math.random() < 0.05) {
+    if (Random.chance(0.05)) {
       const events = [
         "融资成功",
         "产品发布",
@@ -306,7 +297,7 @@ function tickCompetitors(state, competitors) {
         "获得大客户",
         "技术突破",
       ];
-      const event = events[Math.floor(Math.random() * events.length)];
+      const event = Random.fromArray(events);
       comp.trend = "up";
       if (event === "融资成功") comp.valuation *= 1.2;
       if (event === "技术突破") comp.technologyScore += 5;
@@ -951,11 +942,10 @@ function detectCompetitorAttack(state, company, competitors) {
 
     // 1. 价格战检测：竞争对手技术分接近且市场分增长快
     if (compTrend === "up" && Math.abs(techGap) < 10 && marketGap < 5) {
-      if (Math.random() < 0.03) {
-        const template =
-          Math.random() < 0.6
-            ? COMPETITOR_EVENT_TEMPLATES.price_war_aggressive
-            : COMPETITOR_EVENT_TEMPLATES.price_war_subtle;
+      if (Random.chance(0.03)) {
+        const template = Random.chance(0.6)
+          ? COMPETITOR_EVENT_TEMPLATES.price_war_aggressive
+          : COMPETITOR_EVENT_TEMPLATES.price_war_subtle;
         attacks.push({
           ...template,
           competitorId: comp.id,
@@ -964,14 +954,14 @@ function detectCompetitorAttack(state, company, competitors) {
           remainingDays: template.durationDays,
           resolved: false,
           // 动态填充模板变量
-          discount: Math.floor(15 + Math.random() * 25),
-          percent: Math.floor(30 + Math.random() * 40),
+          discount: Random.int(15, 39),
+          percent: Random.int(30, 69),
         });
       }
     }
 
     // 2. 人才挖角检测：竞争对手市场分高于玩家
-    if (comp.marketScore > company.marketScore && Math.random() < 0.02) {
+    if (comp.marketScore > company.marketScore && Random.chance(0.02)) {
       const template =
         company.employees.length > 10
           ? COMPETITOR_EVENT_TEMPLATES.talent_poaching_bulk
@@ -989,9 +979,9 @@ function detectCompetitorAttack(state, company, competitors) {
           ? EMPLOYEE_ROLES[keyEmployee.role]?.name || "员工"
           : "员工",
         employeeName: keyEmployee ? keyEmployee.name : "某员工",
-        salaryIncrease: Math.floor(20 + Math.random() * 40),
+        salaryIncrease: Random.int(20, 59),
         leftCount: Math.floor(
-          company.employees.length * (0.1 + Math.random() * 0.2),
+          company.employees.length * Random.float(0.1, 0.3),
         ),
       });
     }
@@ -1000,14 +990,14 @@ function detectCompetitorAttack(state, company, competitors) {
     if (
       comp.reputation > company.reputation &&
       compTrend === "up" &&
-      Math.random() < 0.025
+      Random.chance(0.025)
     ) {
       const templates = [
         COMPETITOR_EVENT_TEMPLATES.marketing_war_ad,
         COMPETITOR_EVENT_TEMPLATES.marketing_war_pr,
         COMPETITOR_EVENT_TEMPLATES.marketing_war_channel,
       ];
-      const template = templates[Math.floor(Math.random() * templates.length)];
+      const template = Random.fromArray(templates);
       attacks.push({
         ...template,
         competitorId: comp.id,
@@ -1015,10 +1005,10 @@ function detectCompetitorAttack(state, company, competitors) {
         startedDay: day,
         remainingDays: template.durationDays,
         resolved: false,
-        adRatio: Math.floor(1.5 + Math.random() * 3),
+        adRatio: Random.int(1, 4),
         issue:
           template.id === "marketing_war_pr"
-            ? ["质量", "安全", "服务"][Math.floor(Math.random() * 3)]
+            ? Random.fromArray(["质量", "安全", "服务"])
             : "",
       });
     }
@@ -1026,14 +1016,14 @@ function detectCompetitorAttack(state, company, competitors) {
     // 4. 技术竞争检测：竞争对手技术分高于玩家
     if (
       comp.technologyScore > company.technologyScore + 10 &&
-      Math.random() < 0.02
+      Random.chance(0.02)
     ) {
       const templates = [
         COMPETITOR_EVENT_TEMPLATES.tech_competition_breakthrough,
         COMPETITOR_EVENT_TEMPLATES.tech_competition_patent_block,
         COMPETITOR_EVENT_TEMPLATES.tech_competition_open_source,
       ];
-      const template = templates[Math.floor(Math.random() * templates.length)];
+      const template = Random.fromArray(templates);
       const technologies = [
         "AI算法",
         "数据处理",
@@ -1049,9 +1039,8 @@ function detectCompetitorAttack(state, company, competitors) {
         startedDay: day,
         remainingDays: template.durationDays,
         resolved: false,
-        technology:
-          technologies[Math.floor(Math.random() * technologies.length)],
-        gap: Math.floor(10 + Math.random() * 30),
+        technology: Random.fromArray(technologies),
+        gap: Random.int(10, 39),
       });
     }
   }
@@ -1129,7 +1118,7 @@ function executeCompetitorResponse(state, attack, responseId) {
   company.expenses += baseCost;
 
   // 成功率判定
-  const success = Math.random() < response.successChance;
+  const success = Random.chance(response.successChance);
   const multiplier = success ? 1 : attack.severity >= 4 ? 0.3 : 0.5;
 
   // 应用效果
@@ -1897,11 +1886,11 @@ function detectOperationalCrisis(state, company) {
         if (
           product.technicalDebt &&
           product.technicalDebt > 60 &&
-          Math.random() < 0.015
+          Random.chance(0.015)
         ) {
           crises.push({
             ...OPERATIONAL_CRISIS_TEMPLATES.server_outage,
-            affectedPercent: Math.floor(30 + Math.random() * 50),
+            affectedPercent: Random.int(30, 79),
             startedDay: day,
             remainingDays:
               OPERATIONAL_CRISIS_TEMPLATES.server_outage.durationDays,
@@ -1912,19 +1901,19 @@ function detectOperationalCrisis(state, company) {
         if (
           product.lastVersionUpdate &&
           day - product.lastVersionUpdate < 7 &&
-          Math.random() < 0.02
+          Random.chance(0.02)
         ) {
           const features = ["支付", "登录", "数据同步", "消息推送", "文件上传"];
           crises.push({
             ...OPERATIONAL_CRISIS_TEMPLATES.feature_bug,
-            featureName: features[Math.floor(Math.random() * features.length)],
-            affectedAction: [
+            featureName: Random.fromArray(features),
+            affectedAction: Random.fromArray([
               "完成交易",
               "登录账户",
               "保存数据",
               "接收消息",
               "上传文件",
-            ][Math.floor(Math.random() * 5)],
+            ]),
             startedDay: day,
             remainingDays:
               OPERATIONAL_CRISIS_TEMPLATES.feature_bug.durationDays,
@@ -1936,7 +1925,7 @@ function detectOperationalCrisis(state, company) {
   }
 
   // 数据泄露检测
-  if (company.complianceLevel < 40 && Math.random() < 0.008) {
+  if (company.complianceLevel < 40 && Random.chance(0.008)) {
     const leakTypes = [
       "用户手机号和邮箱",
       "用户支付信息",
@@ -1945,8 +1934,8 @@ function detectOperationalCrisis(state, company) {
     ];
     crises.push({
       ...OPERATIONAL_CRISIS_TEMPLATES.user_data_leak,
-      leakType: leakTypes[Math.floor(Math.random() * leakTypes.length)],
-      leakCount: Math.floor(1000 + Math.random() * 50000),
+      leakType: Random.fromArray(leakTypes),
+      leakCount: Random.int(1000, 50999),
       startedDay: day,
       remainingDays: OPERATIONAL_CRISIS_TEMPLATES.user_data_leak.durationDays,
       resolved: false,
@@ -1957,14 +1946,17 @@ function detectOperationalCrisis(state, company) {
   if (
     company.employeeMorale &&
     company.employeeMorale < 50 &&
-    Math.random() < 0.005
+    Random.chance(0.005)
   ) {
     crises.push({
       ...OPERATIONAL_CRISIS_TEMPLATES.internal_leak,
-      leakType: ["客户名单", "技术文档", "商业计划", "财务数据"][
-        Math.floor(Math.random() * 4)
-      ],
-      leakCount: Math.floor(100 + Math.random() * 5000),
+      leakType: Random.fromArray([
+        "客户名单",
+        "技术文档",
+        "商业计划",
+        "财务数据",
+      ]),
+      leakCount: Random.int(100, 5099),
       startedDay: day,
       remainingDays: OPERATIONAL_CRISIS_TEMPLATES.internal_leak.durationDays,
       resolved: false,
@@ -1975,13 +1967,12 @@ function detectOperationalCrisis(state, company) {
   if (
     company.coFounders &&
     company.coFounders.length > 0 &&
-    Math.random() < 0.003
+    Random.chance(0.003)
   ) {
     const scandalTypes = ["不当言论", "财务问题", "个人生活丑闻", "违法行为"];
     crises.push({
       ...OPERATIONAL_CRISIS_TEMPLATES.ceo_scandal,
-      scandalType:
-        scandalTypes[Math.floor(Math.random() * scandalTypes.length)],
+      scandalType: Random.fromArray(scandalTypes),
       startedDay: day,
       remainingDays: OPERATIONAL_CRISIS_TEMPLATES.ceo_scandal.durationDays,
       resolved: false,
@@ -1993,12 +1984,15 @@ function detectOperationalCrisis(state, company) {
     const keyEngineers = company.employees.filter(
       (e) => e.role === "engineer" && e.loyalty < 40,
     );
-    if (keyEngineers.length > 0 && Math.random() < 0.01) {
+    if (keyEngineers.length > 0 && Random.chance(0.01)) {
       crises.push({
         ...OPERATIONAL_CRISIS_TEMPLATES.cto_resignation,
-        keyTech: ["核心算法", "系统架构", "源代码", "技术文档"][
-          Math.floor(Math.random() * 4)
-        ],
+        keyTech: Random.fromArray([
+          "核心算法",
+          "系统架构",
+          "源代码",
+          "技术文档",
+        ]),
         startedDay: day,
         remainingDays:
           OPERATIONAL_CRISIS_TEMPLATES.cto_resignation.durationDays,
@@ -2009,7 +2003,7 @@ function detectOperationalCrisis(state, company) {
 
   // 供应链中断检测（仅硬件/制造行业）
   if (company.industry === "manufacturing" || company.industry === "tech") {
-    if (Math.random() < 0.006) {
+    if (Random.chance(0.006)) {
       const suppliers = [
         "芯片供应商",
         "显示屏供应商",
@@ -2018,11 +2012,14 @@ function detectOperationalCrisis(state, company) {
       ];
       crises.push({
         ...OPERATIONAL_CRISIS_TEMPLATES.supplier_bankruptcy,
-        supplierName: suppliers[Math.floor(Math.random() * suppliers.length)],
-        productPart: ["核心元器件", "关键组件", "原材料", "半成品"][
-          Math.floor(Math.random() * 4)
-        ],
-        daysLeft: Math.floor(5 + Math.random() * 15),
+        supplierName: Random.fromArray(suppliers),
+        productPart: Random.fromArray([
+          "核心元器件",
+          "关键组件",
+          "原材料",
+          "半成品",
+        ]),
+        daysLeft: Random.int(5, 19),
         startedDay: day,
         remainingDays:
           OPERATIONAL_CRISIS_TEMPLATES.supplier_bankruptcy.durationDays,
@@ -2038,12 +2035,12 @@ function detectOperationalCrisis(state, company) {
       (p) => p.category === "hardware" || p.category === "smart_device",
     )
   ) {
-    if (Math.random() < 0.004) {
+    if (Random.chance(0.004)) {
       const defects = ["电池过热", "屏幕缺陷", "材料过敏", "安全隐患"];
       crises.push({
         ...OPERATIONAL_CRISIS_TEMPLATES.quality_recall,
-        defectType: defects[Math.floor(Math.random() * defects.length)],
-        affectedUnits: Math.floor(1000 + Math.random() * 50000),
+        defectType: Random.fromArray(defects),
+        affectedUnits: Random.int(1000, 50999),
         startedDay: day,
         remainingDays: OPERATIONAL_CRISIS_TEMPLATES.quality_recall.durationDays,
         resolved: false,
@@ -2120,7 +2117,7 @@ function executeCrisisResponse(state, crisis, responseId) {
   company.expenses += baseCost;
 
   // 成功率判定
-  const success = Math.random() < response.successChance;
+  const success = Random.chance(response.successChance);
   const multiplier = success ? 1 : 0.4;
 
   // 应用效果
@@ -2893,23 +2890,22 @@ const PARTNER_EVENT_TEMPLATES = {
 function createPartner(company, partnerType, day) {
   const templates =
     PARTNER_TEMPLATES[company.industry] || PARTNER_TEMPLATES.tech;
-  const template = templates[Math.floor(Math.random() * templates.length)];
+  const template = Random.fromArray(templates);
   const partnerTemplate = PARTNER_TYPES[partnerType];
 
   const partner = {
     id: "partner_" + company.id + "_" + Date.now(),
     type: partnerType,
     name:
-      template.namePrefix +
-      ["科技", "集团", "控股", "股份"][Math.floor(Math.random() * 4)],
+      template.namePrefix + Random.fromArray(["科技", "集团", "控股", "股份"]),
     focus: template.focus,
-    trust: 50 + Math.random() * 20, // 初始信任度50-70
+    trust: Random.float(50, 70), // 初始信任度50-70
     joinedDay: day,
     revenueShare: partnerTemplate.revenueShare,
     status: "active",
     lastInteractionDay: day,
     cooperationLevel: 1, // 1-5级合作深度
-    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90), // 6-9个月合同
+    contractExpiryDay: day + 180 + Random.int(0, 89), // 6-9个月合同
   };
 
   if (!company.partners) company.partners = [];
@@ -3033,8 +3029,8 @@ function tickPartners(state, company) {
     // 合同到期检测
     if (day >= partner.contractExpiryDay) {
       // 自动续约概率
-      if (partner.trust >= 60 && Math.random() < 0.7) {
-        partner.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+      if (partner.trust >= 60 && Random.chance(0.7)) {
+        partner.contractExpiryDay = day + 180 + Random.int(0, 89);
         partner.cooperationLevel = Math.min(5, partner.cooperationLevel + 0.2);
         company.partnerHistory.push({
           action: "contract_renewed",
@@ -3042,14 +3038,14 @@ function tickPartners(state, company) {
           partnerName: partner.name,
           day: day,
         });
-      } else if (partner.trust < 40 || Math.random() < 0.3) {
+      } else if (partner.trust < 40 || Random.chance(0.3)) {
         // 合作伙伴退出
         terminatePartner(company, partner.id, day, "合同到期未续约");
       }
     }
 
     // 信任度事件检测
-    if (partner.trust < 40 && Math.random() < 0.05) {
+    if (partner.trust < 40 && Random.chance(0.05)) {
       // 触发信任危机事件
       // 由外部事件系统处理
     }
@@ -3195,8 +3191,8 @@ function runABTest(product, priceA, priceB, sampleSize, day) {
   if (!product) return { success: false, reason: "产品不存在" };
 
   // 模拟测试结果
-  const conversionA = 0.05 + Math.random() * 0.05; // 5-10%转化率
-  const conversionB = 0.05 + Math.random() * 0.05;
+  const conversionA = Random.float(0.05, 0.1); // 5-10%转化率
+  const conversionB = Random.float(0.05, 0.1);
 
   const revenueA = priceA * sampleSize * conversionA;
   const revenueB = priceB * sampleSize * conversionB;
@@ -3365,38 +3361,36 @@ const INVENTORY_TYPES = {
 function createSupplier(company, supplierType, day) {
   const templates =
     SUPPLIER_TEMPLATES[company.industry] || SUPPLIER_TEMPLATES.tech;
-  const template = templates[Math.floor(Math.random() * templates.length)];
+  const template = Random.fromArray(templates);
   const supplierTemplate =
     SUPPLIER_TYPES[supplierType] || SUPPLIER_TYPES.component;
 
-  const quality =
-    supplierTemplate.qualityRange[0] +
-    Math.random() *
-      (supplierTemplate.qualityRange[1] - supplierTemplate.qualityRange[0]);
-  const price =
-    supplierTemplate.priceRange[0] +
-    Math.random() *
-      (supplierTemplate.priceRange[1] - supplierTemplate.priceRange[0]);
-  const leadTime = Math.floor(
-    supplierTemplate.leadTimeDays[0] +
-      Math.random() *
-        (supplierTemplate.leadTimeDays[1] - supplierTemplate.leadTimeDays[0]),
+  const quality = Random.float(
+    supplierTemplate.qualityRange[0],
+    supplierTemplate.qualityRange[1],
+  );
+  const price = Random.float(
+    supplierTemplate.priceRange[0],
+    supplierTemplate.priceRange[1],
+  );
+  const leadTime = Random.int(
+    supplierTemplate.leadTimeDays[0],
+    supplierTemplate.leadTimeDays[1] - 1,
   );
 
   const supplier = {
     id: "supplier_" + company.id + "_" + Date.now(),
     type: supplierType,
     name:
-      template.namePrefix +
-      ["科技", "实业", "集团", "材料"][Math.floor(Math.random() * 4)],
+      template.namePrefix + Random.fromArray(["科技", "实业", "集团", "材料"]),
     focus: template.focus,
     quality: quality,
     price: price,
     leadTime: leadTime,
-    reliability: 70 + Math.random() * 20, // 可靠性70-90
+    reliability: Random.float(70, 90), // 可靠性70-90
     joinedDay: day,
     status: "active",
-    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90),
+    contractExpiryDay: day + 180 + Random.int(0, 89),
     lastDeliveryDay: day,
     deliveryHistory: [],
     qualityHistory: [],
@@ -3557,7 +3551,7 @@ function tickSupplyChain(state, company) {
     // 质量自然波动（±2%/天）
     supplier.quality = Math.max(
       0,
-      Math.min(100, supplier.quality + (Math.random() - 0.5) * 4),
+      Math.min(100, supplier.quality + Random.float(-2, 2)),
     );
 
     // 可靠性衰减（每季度 -3，最低 0）
@@ -3568,16 +3562,16 @@ function tickSupplyChain(state, company) {
       if (
         supplier.quality >= 75 &&
         supplier.reliability >= 60 &&
-        Math.random() < 0.6
+        Random.chance(0.6)
       ) {
-        supplier.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+        supplier.contractExpiryDay = day + 180 + Random.int(0, 89);
         company.supplyChainHistory.push({
           action: "supplier_contract_renewed",
           supplierId: supplier.id,
           supplierName: supplier.name,
           day: day,
         });
-      } else if (Math.random() < 0.4) {
+      } else if (Random.chance(0.4)) {
         // 供应商退出
         supplier.status = "terminated";
         supplier.terminatedDay = day;

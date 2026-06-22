@@ -427,8 +427,7 @@ function grantJobSkillXp(jobId, state) {
   var sk = state.skills[entry.skill];
   if (!sk) return "";
 
-  var xpGain =
-    entry.min + Math.floor(Math.random() * (entry.max - entry.min + 1));
+  var xpGain = Random.int(entry.min, entry.max);
 
   // 情绪加成技能XP（happy时1.5倍，depressed时0.3倍）
   var emoMod =
@@ -512,7 +511,7 @@ function grantActionStatGain(actionId, state) {
     street_performer: { mental: 0.1, fame: 1 },
     busking: { mental: 0.1, fame: 0.5 },
     tutoring: { intelligence: 0.1 },
-    gym: { physique: 0.5 + Math.random() * 0.5 },
+    gym: { physique: Random.float(0.5, 1.0) },
     night_school: { intelligence: 0.2 },
     meditation: { mental: 0.3 },
     diary: { mental: 0.1 },

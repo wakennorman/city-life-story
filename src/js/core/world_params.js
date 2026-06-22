@@ -169,13 +169,13 @@ function seedWorldFromReality(state) {
                 // 房地产波动范围更宽（0.70-1.30），反映真实市场大起大落
                 switch (params.marketMood) {
                   case "bullish":
-                    params.initialSectorBias[sec] = 1.0 + Math.random() * 0.3;
+                    params.initialSectorBias[sec] = Random.float(1.0, 1.3);
                     break;
                   case "bearish":
-                    params.initialSectorBias[sec] = 0.7 + Math.random() * 0.2;
+                    params.initialSectorBias[sec] = Random.float(0.7, 0.9);
                     break;
                   default:
-                    params.initialSectorBias[sec] = 0.8 + Math.random() * 0.4;
+                    params.initialSectorBias[sec] = Random.float(0.8, 1.2);
                 }
                 break;
               case "医药":
@@ -215,17 +215,17 @@ function seedWorldFromReality(state) {
   if (!success) {
     // ====== 离线/网络失败回退：随机种子 ======
     params.marketMood = ["bullish", "bearish", "neutral", "volatile"][
-      Math.floor(Math.random() * 4)
+      Random.int(0, 3)
     ];
-    params.baseVolatility = 0.8 + Math.random() * 0.8;
+    params.baseVolatility = Random.float(0.8, 1.6);
 
     for (var si2 = 0; si2 < WORLD_SECTORS.length; si2++) {
       var sec2 = WORLD_SECTORS[si2];
       // 房地产行业波动范围更宽（0.70-1.30），其余行业范围较窄（0.85-1.15）
       if (sec2 === "房地产") {
-        params.initialSectorBias[sec2] = 0.7 + Math.random() * 0.6;
+        params.initialSectorBias[sec2] = Random.float(0.7, 1.3);
       } else {
-        params.initialSectorBias[sec2] = 0.85 + Math.random() * 0.3;
+        params.initialSectorBias[sec2] = Random.float(0.85, 1.15);
       }
       params.sectorHeat[sec2] = params.initialSectorBias[sec2];
     }
@@ -365,7 +365,7 @@ function applySectorFeedback(state) {
   // 年化约：-5.5% ~ +8.2% —— 和真实市场长期趋势一致
   for (var si = 0; si < WORLD_SECTORS.length; si++) {
     var sec = WORLD_SECTORS[si];
-    var drift = (Math.random() - 0.4) * 0.025 * vol;
+    var drift = Random.float(-0.4, 0.6) * 0.025 * vol;
     params.sectorHeat[sec] = (params.sectorHeat[sec] || 1.0) + drift;
   }
 

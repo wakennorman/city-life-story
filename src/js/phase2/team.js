@@ -33,8 +33,8 @@ function hireTeamMember(memberTypeId) {
   // 创建成员（加入随机性）
   const member = {
     ...template,
-    productivity: template.productivity + Math.floor(Math.random() * 4) - 2,
-    loyalty: template.loyalty + Math.floor(Math.random() * 10) - 5,
+    productivity: template.productivity + Random.int(-2, 1),
+    loyalty: template.loyalty + Random.int(-5, 4),
     hiredDay: state.player.day,
   };
 

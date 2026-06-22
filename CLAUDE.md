@@ -32,16 +32,20 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：行动选项分类排序系统 v1.7 ✅（2026-06-22）
-  - **问题**：50+种行动在"其他行动"区平铺排列，无分类无排序，随着内容增加越来越难导航
-  - **方案**：分类分组 + 多层排序（参考《大多数》《中国式家长》《Stardew Valley》）
-  - **新建** `src/js/core/action_sort.js` — 8个分类定义、ID→分类映射（精确+前缀）、多层排序函数、分组函数
-  - **修改** `src/js/ui/render.js` — `renderActionsTab()` 新增频次追踪 + 分类渲染逻辑，替换旧平铺
-  - **修改** `src/js/core/state.js` — 新增 `stats` 字段（`actionFreq/actionFirstUse`）+ v1.7存档迁移
-  - **修改** `src/index.html` — 注册 `action_sort.js`（state.js之后）
-  - **修改** `src/css/style.css` — 新增 `.action-category-header` / `.cat-count` 样式
+- **最近一次工作**：交易情报系统 v1.8 ✅（2026-06-22）
+  - **核心变化**：打破"全地图全商品价格一览无余"，价格信息可见度由 **销售技能 + 区域记忆 + NPC好感** 三重门控
+  - **5 档技能门槛**：0→仅看本地 / 20→可对比已访区域(红绿) / 40→已访区域极端值 / 60→全城极端值(需跑完全城) / 80→趋势预测箭头
+  - **双重记忆**：今日精确（精确到分）+ 前3日模糊（偏高/正常/偏低），每日滚动
+  - **区域商品概率**：11 区域各有特产(必出)+每日刷新随机商品
+  - **NPC 情报系统**：6 个 NPC × 好感门控(30/60/80) × 专业领域，可花钱买信息，好感高免费
+  - **新建** `src/js/phase1/trade_intel.js`（核心模块 730 行）
+  - **修改** locations.js / npcs.js / trade.js / state.js / render.js / daily_pipeline.js / index.html
+  - **销售技能扩展**：交易实战 2~5 XP/次(日上限30) + NPC情报 +5~10 XP
+  - **构建**：已 `python build.py`（3158.5 KB）
+  - **问题**：16 个静态行动 ID 未在 EXACT*MAP 注册，掉到"other"兜底分类（包括 `trade_header`/`wholesale_header`/`freelance_coding`/`supermarket`/`clothing`/`lottery`/`yu_e_bao`/`buy_insurance`/`start_business`/`gift_npc`/`weekend_market`/`monday_job_board`/`repay` 等）；`pharmacy` 键被 `shopping` 覆盖；`fest*\*` 节日工作无前缀规则
+  - **修改** `src/js/core/action_sort.js` — EXACT*MAP 新增 17 条映射，删除 `pharmacy` 重复，新增 `^fest*`前缀规则，新增 IN_CATEGORY_PRIORITY 条目，新增`runAudit()` 运行时审计函数
   - **排序层级**：分类顺序 > 同类优先级 > 点击频次 > AP消耗 > 名称
-  - **构建**：已 `python build.py`（3110.4 KB）
+  - **构建**：已 `python build.py`（3127.4 KB）
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

@@ -77,7 +77,7 @@ const DAILY_PIPELINE = [
       // 王大婶好感30解锁每日带饭（饥饱+15）
       if (state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);
-        if (Math.random() < 0.3) {
+        if (Random.chance(0.3)) {
           StateManager.addMessage(
             "🍱 早上发现门口有王大婶留的饭菜，暖心。",
             "info",
@@ -329,7 +329,7 @@ const DAILY_PIPELINE = [
           tickStartup(state, "daily");
         }
         // 每日随机创业事件（概率8%）
-        if (Math.random() < 0.08 && typeof triggerStartupEvent === "function") {
+        if (Random.chance(0.08) && typeof triggerStartupEvent === "function") {
           triggerStartupEvent(state);
         }
       }
@@ -471,7 +471,7 @@ const DAILY_PIPELINE = [
       if (state.chengguan) {
         state.chengguan.heat = Math.max(
           0,
-          state.chengguan.heat - 5 - Math.floor(Math.random() * 5),
+          state.chengguan.heat - 5 - Random.int(0, 4),
         );
       }
     },
@@ -708,6 +708,27 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof runDailyNewsBridge === "function") {
         runDailyNewsBridge(state);
+      }
+    },
+  },
+
+  // === NPC 主动分享交易情报 ===
+  {
+    name: "npc_trade_info_share",
+    fn: function (state) {
+      if (typeof tryTriggerNPCInfoShare !== "function") return;
+      // 遍历所有NPC，看是否有主动分享
+      for (var npcId in NPC_TRADE_INFO) {
+        if (!NPC_TRADE_INFO.hasOwnProperty(npcId)) continue;
+        var infoText = tryTriggerNPCInfoShare(npcId, state);
+        if (infoText) {
+          var npc = getNpcById(npcId);
+          var nameStr = npc ? npc.name : npcId;
+          StateManager.addMessage(
+            "💬 " + nameStr + "告诉你：" + infoText,
+            "info",
+          );
+        }
       }
     },
   },

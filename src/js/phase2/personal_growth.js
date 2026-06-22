@@ -535,7 +535,7 @@ function practiceHobby(state, hobbyId) {
 
   // 检查费用
   const cost =
-    hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
+    hobby.baseCost + Math.floor(Random.float(0, hobby.baseCost * 0.5));
   if (state.resources.cash < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
@@ -554,7 +554,7 @@ function practiceHobby(state, hobbyId) {
   }
 
   const hobbyState = state.personalGrowth.hobbies[hobbyId];
-  const expGain = 10 + Math.floor(Math.random() * 10);
+  const expGain = Random.int(10, 19);
   hobbyState.exp += expGain;
   hobbyState.lastPracticed = state.player.day;
   hobbyState.totalSessions++;
@@ -701,7 +701,7 @@ function applyHobbyBenefits(state, hobby) {
  * 进行体检
  */
 function healthCheckup(state) {
-  const cost = 500 + Math.floor(Math.random() * 500);
+  const cost = Random.int(500, 999);
   if (state.resources.cash < cost) {
     return { success: false, message: `体检需要¥${cost}，现金不足` };
   }
@@ -714,11 +714,11 @@ function healthCheckup(state) {
   // 生成体检报告
   const report = {
     day: day,
-    physical: pg.health.physical + Math.floor(Math.random() * 10) - 5,
-    mental: pg.health.mental + Math.floor(Math.random() * 10) - 5,
-    metabolic: pg.health.metabolic + Math.floor(Math.random() * 10) - 5,
-    dental: pg.health.dental + Math.floor(Math.random() * 10) - 5,
-    vision: pg.health.vision + Math.floor(Math.random() * 10) - 5,
+    physical: pg.health.physical + Random.int(-5, 4),
+    mental: pg.health.mental + Random.int(-5, 4),
+    metabolic: pg.health.metabolic + Random.int(-5, 4),
+    dental: pg.health.dental + Random.int(-5, 4),
+    vision: pg.health.vision + Random.int(-5, 4),
     issues: [],
   };
 
@@ -831,7 +831,7 @@ function setLifeGoal(state, category, description, targetValue, deadline) {
       "goal_" +
       state.player.day +
       "_" +
-      Math.random().toString(36).substr(2, 9),
+      Random.float(0, 1).toString(36).substr(2, 9),
     category: category,
     description: description,
     targetValue: targetValue,
@@ -889,7 +889,7 @@ function completeGoal(state, goal) {
   StateManager.addMessage(`🎉 目标达成：${goal.description}！`, "success");
 
   // 给予奖励
-  const reward = 1000 + Math.floor(Math.random() * 2000);
+  const reward = Random.int(1000, 2999);
   state.resources.cash += reward;
   state.player.fame = Math.min(100, state.player.fame + 5);
 

@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（行动选项分类排序系统 v1.7）
+> 最后更新: 2026-06-22（交易情报系统 v1.8：技能驱动价格信息+区域商品概率+NPC情报）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
 ## 项目概述
@@ -63,6 +63,36 @@ python build.py
 
 - 新增 `state.stats` 字段，自动序列化
 - `importState()` 中有 `v1.6 → v1.7` 迁移（如旧存档无 `stats` 则创建）
+
+---
+
+## 2026-06-22 — 行动排序系统 v1.7.1（完整性审计修复）
+
+### 审计发现
+
+对照 `getAvailableActions()` 全部 49 个静态 ID + ~100 个动态 ID 逐一检查：
+
+| 问题                           | 数量      | 说明                                                                                                                                                                                                                                     |
+| ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 掉到"other"的分类遗漏       | **16** 个 | `trade_header`/`wholesale_header`/`freelance_coding`/`supermarket`/`clothing`/`lottery`/`yu_e_bao`/`buy_insurance`/`start_business`/`gift_npc`/`weekend_market`/`monday_job_board`/`repay`/`set_dream`/`view_dream`/`diary`/`meditation` |
+| 🟡 `pharmacy` 键冲突           | **1** 处  | 在 EXACT_MAP 中同时被 `survival` 和 `shopping` 定义，后者覆盖前者                                                                                                                                                                        |
+| 🟡 `fest_*` 节日工作无前缀规则 | **7** 个  | `fest_spring_promo` 等节日工作 ID 以 `fest_` 开头，但规则只匹配 `festival_job_`                                                                                                                                                          |
+
+### 修复内容
+
+- **`action_sort.js`**：EXACT*MAP 新增 17 条映射（含 `deposit`/`withdraw`/`loan` 显式声明），删除 `pharmacy` 重复项，新增 `^fest*` 前缀规则
+- **`action_sort.js`**：IN_CATEGORY_PRIORITY 新增优先级排序，确保 `freelance_coding`(30) > `trade_header`(40) > `scavenge_trash`(55) 等合理梯度
+- **`action_sort.js`**：新增 `runAudit()` 函数（`ActionSort.runAudit(actions)` 控制台调用）
+- **注意**：`pharmacy` 最终归类为"生存必需"(survival)而非"购物装备"(shopping)
+
+### 修复后效果
+
+- `trade_header` 和 `wholesale_header` 出现在"💼 赚钱谋生"分类下（原为"其他"）
+- 所有 7 个节日工作出现在"💼 赚钱谋生"分类下
+- 「买彩票」「余额宝」「买保险」出现在"💳 金融理财"（原为"其他"）
+- 「去超市采购」「买件新衣服」出现在"🛒 购物装备"
+- 「摆地摊创业」出现在"🏢 职业发展"（街头→创业的跳板）
+- 所有 ~150 个行动不再有意外掉到"其他"的情况
 
 ---
 
@@ -163,3 +193,56 @@ const TAB_RENDERERS = {
 | 🔴 高（已修复） | render.js 大 switch                | ✅ 已改为注册表模式                  |
 | 🔴 高（已预防） | 状态路径误写                       | ✅ 已加入命名空间白名单校验          |
 | 🔴 待处理       | 全局作用域（78 个文件共享 window） | 引入 ES modules 性价比不高，当前保持 |
+
+---
+
+## 变更日志
+
+### 2026-06-22 — 交易情报系统 v1.8（技能驱动价格信息+区域商品概率+NPC情报）
+
+**目标**：打破"全地图全商品价格一览无余"的局面，让销售技能、区域探索、NPC好感度都真正影响交易体验。
+
+**核心设计**：
+
+1. **价格信息可见度 = 销售技能 + 区域记忆**
+   - 销售 0~19 级：只看得到当前区域价格
+   - 销售 20~39 级：能对比已访问区域价格（红/绿标记）
+   - 销售 40~59 级：能看到"已访问区域中"最低/最高价
+   - 销售 60~79 级：能看到全城最低/最高（需当天跑完全城）
+   - 销售 80+ 级：能看到价格走势预测箭头（↑↓→）
+
+2. **双重记忆系统**
+   - 清晰记忆：今天访问过的区域 → 精确到分的价格对比
+   - 模糊记忆：自动保留前 3 日的价格区间（偏高/正常/偏低），每日滚动清除
+   - 次日精确记忆自动归档为模糊记忆
+
+3. **区域特色商品概率**
+   - 每个区域有特产（100%出现）+ 日常必需品（永远有）
+   - 非特产商品按日刷新概率出现（确定性随机，同一天内一致）
+   - 批发市场例外：所有商品永远可买
+
+4. **NPC 价格情报系统**
+   - 6 个 NPC 各有专业领域（王大婶→日用品/食品、李工头→废品、张姐→服装/电子等）
+   - 好感门控：30 解锁基础情报，60 解锁高级情报
+   - 情报价格随好感递减（30→原价、60→6折、80→免费）
+   - NPC 每日结算时有 30% 概率主动分享情报（好感≥60）
+
+5. **销售技能获取渠道扩展**
+   - 培训（主力）：30~50 XP/次
+   - 交易实战（持续）：2~5 XP/次，每日上限 30 XP
+   - NPC 情报互动（小爆发）：每次买入情报 +5 XP
+   - NPC 主动分享（稀有）：+10 XP
+
+**新建文件**：
+
+- `src/js/phase1/trade_intel.js` — 核心模块（~730 行）
+
+**修改文件**：
+
+- `src/js/data/locations.js` — 每个区域增加 specialties/dailyProbability/specialCategory
+- `src/js/data/npcs.js` — 6 个 NPC 增加 tradeInfo 字段
+- `src/js/phase1/trade.js` — 新增 getAvailableGoodsAtLocation() + gainTradeXp()
+- `src/js/core/state.js` — 新增 visitedToday/priceMemory/\_todayTradeXp + v1.8 迁移
+- `src/js/ui/render.js` — 替换旧全表为技能门控价格展示+NPC情报入口
+- `src/js/phase1/daily_pipeline.js` — 新增 npc_trade_info_share 步骤
+- `src/index.html` — 注册 trade_intel.js

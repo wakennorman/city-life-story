@@ -2408,16 +2408,24 @@ function renderTradeTab(state, parent) {
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
-  const goodsList = typeof GOODS !== "undefined" ? GOODS : [];
+  const goodsList =
+    typeof getAvailableGoodsAtLocation === "function"
+      ? getAvailableGoodsAtLocation(locKey, state)
+      : typeof GOODS !== "undefined"
+        ? GOODS
+        : [];
 
   // 标题区
   const headerDiv = document.createElement("div");
   headerDiv.style.cssText =
     "display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;";
   headerDiv.innerHTML = `
-    <h3 style="color:var(--text-muted);margin:0;">
-      📦 ${loc ? loc.name : "当前地点"} — ${isWholesale ? "批发市场（进货价低）" : "零售市场"}
-    </h3>
+    <div>
+      <h3 style="color:var(--text-muted);margin:0;">
+        📦 ${loc ? loc.name : "当前地点"} — ${isWholesale ? "批发市场（进货价低）" : "零售市场"}
+      </h3>
+      ${skillTag}
+    </div>
     <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
   `;
   parent.appendChild(headerDiv);
@@ -2473,6 +2481,63 @@ function renderTradeTab(state, parent) {
         parent.appendChild(seasonBanner);
       }
     }
+  }
+
+  // 记录今日已访问地点（用于价格对比记忆）
+  if (typeof recordLocationVisit === "function") {
+    recordLocationVisit(state, locKey);
+  }
+  // 重置每日交易XP计数器
+  if (typeof resetDailyTradeXp === "function") {
+    resetDailyTradeXp(state);
+  }
+
+  // 已访问区域数量提示
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  var canCompare =
+    typeof canSeePriceMarkers === "function"
+      ? canSeePriceMarkers(state)
+      : false;
+
+  // 技能等级标签
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
+
+  // 模糊记忆提示条
+  var memoryHints =
+    typeof getPriceMemoryHints === "function"
+      ? getPriceMemoryHints(state, locKey)
+      : [];
+  if (memoryHints.length > 0) {
+    var memoryBanner = document.createElement("div");
+    memoryBanner.style.cssText =
+      "background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.15);border-radius:6px;" +
+      "padding:5px 10px;margin-bottom:10px;font-size:11px;color:#667eea;";
+    memoryBanner.innerHTML =
+      "💭 模糊记忆：<br>" +
+      memoryHints
+        .map(function (h) {
+          return "· " + h;
+        })
+        .join("<br>");
+    parent.appendChild(memoryBanner);
   }
 
   if (goodsList.length === 0) {
@@ -2552,11 +2617,47 @@ function renderTradeTab(state, parent) {
       ? Math.round(price * 0.7 * 100) / 100
       : null;
 
-    // 价格对比：最低价和最高价
-    const lowest = getLowestPrice(good.id);
-    const highest = getHighestPrice(good.id);
-    const isLowest = lowest.location === locKey;
-    const isHighest = highest.location === locKey;
+    // 价格标记：技能驱动的红绿 + 极端值
+    var priceMarker =
+      typeof getPriceMarker === "function"
+        ? getPriceMarker(state, locKey, good.id, price)
+        : { direction: null, label: "" };
+    var visitedExtreme =
+      typeof getVisitedExtreme === "function"
+        ? getVisitedExtreme(state, locKey, good.id)
+        : { isVisitedLowest: false, isVisitedHighest: false, label: "" };
+    var cityExtreme =
+      typeof getCityExtreme === "function"
+        ? getCityExtreme(state, locKey, good.id)
+        : { isCityLowest: false, isCityHighest: false, label: "" };
+    var trendArrow =
+      typeof getPriceTrend === "function"
+        ? getPriceTrend(state, locKey, good.id)
+        : "";
+
+    // 价格颜色：红绿基于已访问区域对比
+    var priceColor = "var(--text-primary)";
+    if (priceMarker.direction === "down") priceColor = "var(--success)";
+    else if (priceMarker.direction === "up") priceColor = "var(--danger)";
+    // 全城极端值覆盖颜色（更高优先级）
+    if (cityExtreme.isCityLowest) priceColor = "var(--success)";
+    else if (cityExtreme.isCityHighest) priceColor = "var(--danger)";
+    // 已访问极端值（如果没有全城数据）
+    else if (visitedExtreme.isVisitedLowest) priceColor = "var(--success)";
+    else if (visitedExtreme.isVisitedHighest) priceColor = "var(--danger)";
+
+    // 价格标签文本
+    var priceLabel = "";
+    if (cityExtreme.label) priceLabel = " " + cityExtreme.label;
+    else if (visitedExtreme.label) priceLabel = " " + visitedExtreme.label;
+    else if (priceMarker.label) priceLabel = " " + priceMarker.label;
+
+    // 趋势箭头
+    var trendHtml = trendArrow
+      ? '<span style="font-size:14px;margin-left:4px;" title="趋势预测">' +
+        trendArrow +
+        "</span>"
+      : "";
 
     // 季节性价格标签
     var seasonTag = "";
@@ -2585,8 +2686,8 @@ function renderTradeTab(state, parent) {
         ${wholesalePrice ? `<br>批发价: <strong style="color:var(--success)">¥${wholesalePrice.toFixed(1)}</strong>/件 (零售 ¥${price.toFixed(1)})` : ""}
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
-        当前零售价: <strong style="color:${isLowest ? "var(--success)" : isHighest ? "var(--danger)" : "var(--text-primary)"}">¥${price.toFixed(1)}</strong>
-        ${isLowest ? " 🟢 全城最低" : ""}${isHighest ? " 🔴 全城最高" : ""}
+        当前零售价: <strong style="color:${priceColor}">¥${price.toFixed(1)}</strong>${trendHtml}
+        ${priceLabel}
       </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
@@ -2605,41 +2706,199 @@ function renderTradeTab(state, parent) {
   }
   parent.appendChild(grid);
 
-  // 价格对比速查表
-  const compareDiv = document.createElement("div");
-  compareDiv.style.marginTop = "20px";
-  compareDiv.innerHTML =
-    '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 各地价格对比</h4>';
+  // ====== 价格对比（仅已访问区域 + 技能门控） ======
+  var canExtremes =
+    typeof canSeeCityExtremes === "function"
+      ? canSeeCityExtremes(state)
+      : false;
+  var visitedLocs2 =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var allLocKeys = Object.keys(LOCATIONS);
 
-  const compareTable = document.createElement("div");
-  compareTable.style.cssText = "overflow-x:auto;font-size:11px;";
-  let tableHtml =
-    '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
-  for (const lk of Object.keys(LOCATIONS)) {
-    const l = LOCATIONS[lk];
-    tableHtml += `<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">${l.name.substring(0, 2)}</th>`;
-  }
-  tableHtml += "</tr></thead><tbody>";
+  if (canCompare && visitedLocs2.length >= 2) {
+    // 有技能 + 至少访问过2个区域 → 显示已访区域对比
+    var compareDiv = document.createElement("div");
+    compareDiv.style.marginTop = "20px";
+    compareDiv.innerHTML =
+      '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 已访区域价格对比 <span style="font-size:11px;font-weight:normal;">（' +
+      visitedLocs2.length +
+      "/" +
+      allLocKeys.length +
+      "个区域）</span></h4>";
 
-  for (const good of goodsList) {
-    tableHtml += `<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">${good.name}</td>`;
-    for (const lk of Object.keys(LOCATIONS)) {
-      const p = (state.trade.goodsPrices[lk] || {})[good.id] || good.basePrice;
-      const isLow = getLowestPrice(good.id).location === lk;
-      const isHigh = getHighestPrice(good.id).location === lk;
-      const cellStyle = isLow
-        ? "color:var(--success);font-weight:bold;"
-        : isHigh
-          ? "color:var(--danger);"
-          : "color:var(--text-secondary);";
-      tableHtml += `<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);${cellStyle}">${p.toFixed(1)}</td>`;
+    var compareTable = document.createElement("div");
+    compareTable.style.cssText = "overflow-x:auto;font-size:11px;";
+    var tableHtml =
+      '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
+
+    for (var vi = 0; vi < visitedLocs2.length; vi++) {
+      var vlk = visitedLocs2[vi];
+      var vl = LOCATIONS[vlk];
+      tableHtml +=
+        '<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">' +
+        (vl ? vl.name.substring(0, 3) : vlk.substring(0, 2)) +
+        "</th>";
     }
-    tableHtml += "</tr>";
+    tableHtml += "</tr></thead><tbody>";
+
+    // 只对比当前可见的商品
+    var compareGoods = goodsList;
+    for (var gi = 0; gi < compareGoods.length; gi++) {
+      var gd = compareGoods[gi];
+      tableHtml +=
+        '<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
+        gd.name +
+        "</td>";
+
+      // 收集已访问区域中该商品的所有价格
+      var visitedPrices = [];
+      for (var vj = 0; vj < visitedLocs2.length; vj++) {
+        var vlk2 = visitedLocs2[vj];
+        var snap =
+          (state.trade.visitedToday &&
+            state.trade.visitedToday[vlk2] &&
+            state.trade.visitedToday[vlk2].prices) ||
+          {};
+        var p = snap[gd.id];
+        if (p !== undefined) {
+          visitedPrices.push({ loc: vlk2, price: p });
+        } else {
+          // fallback to goodsPrices
+          p = (state.trade.goodsPrices[vlk2] || {})[gd.id] || gd.basePrice;
+          visitedPrices.push({ loc: vlk2, price: p });
+        }
+      }
+
+      for (var vk = 0; vk < visitedLocs2.length; vk++) {
+        var curLk = visitedLocs2[vk];
+        // 找到该商品在当前区域的精确价格
+        var curPrice = gd.basePrice;
+        for (var pi = 0; pi < visitedPrices.length; pi++) {
+          if (visitedPrices[pi].loc === curLk) {
+            curPrice = visitedPrices[pi].price;
+            break;
+          }
+        }
+
+        // 判断是否为已访区域最低/最高
+        var isVisLow = true;
+        var isVisHigh = true;
+        for (var qi = 0; qi < visitedPrices.length; qi++) {
+          if (visitedPrices[qi].price < curPrice) isVisLow = false;
+          if (visitedPrices[qi].price > curPrice) isVisHigh = false;
+        }
+
+        // 如果是全城跑完且销售>=60，判断全城极端值
+        var cellStyle = "color:var(--text-secondary);";
+        if (canExtremes) {
+          if (typeof getLowestPrice === "function") {
+            var cityLow = getLowestPrice(gd.id);
+            if (cityLow.location === curLk) {
+              cellStyle = "color:var(--success);font-weight:bold;";
+            }
+          }
+          if (typeof getHighestPrice === "function") {
+            var cityHigh = getHighestPrice(gd.id);
+            if (
+              cityHigh.location === curLk &&
+              cellStyle.indexOf("success") === -1
+            ) {
+              cellStyle = "color:var(--danger);";
+            }
+          }
+        } else if (isVisLow) {
+          cellStyle = "color:var(--success);";
+        } else if (isVisHigh) {
+          cellStyle = "color:var(--danger);";
+        }
+        tableHtml +=
+          '<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);' +
+          cellStyle +
+          '">' +
+          curPrice.toFixed(1) +
+          "</td>";
+      }
+      tableHtml += "</tr>";
+    }
+    tableHtml += "</tbody></table>";
+    compareTable.innerHTML = tableHtml;
+    compareDiv.appendChild(compareTable);
+    parent.appendChild(compareDiv);
+  } else if (visitedLocs2.length < 2) {
+    // 还没跑够2个区域 → 提示探索
+    var exploreHint = document.createElement("div");
+    exploreHint.style.cssText =
+      "margin-top:16px;padding:10px;background:rgba(102,126,234,0.06);border-radius:6px;font-size:12px;color:var(--text-muted);text-align:center;";
+    var remainCount = allLocKeys.length - visitedLocs2.length;
+    exploreHint.innerHTML =
+      "🧭 已访问 " +
+      visitedLocs2.length +
+      "/" +
+      allLocKeys.length +
+      " 个区域。再逛 " +
+      remainCount +
+      " 个区域就能解锁价格对比！（需销售≥20级）";
+    parent.appendChild(exploreHint);
   }
-  tableHtml += "</tbody></table>";
-  compareTable.innerHTML = tableHtml;
-  compareDiv.appendChild(compareTable);
-  parent.appendChild(compareDiv);
+
+  // ====== NPC 交易情报入口（仅当该区域有NPC且好感足够时显示） ======
+  var locNpcs =
+    typeof getNpcsAtLocation === "function" ? getNpcsAtLocation(locKey) : [];
+  var hasTradeInfo = false;
+  for (var ni = 0; ni < locNpcs.length; ni++) {
+    if (locNpcs[ni].tradeInfo) {
+      hasTradeInfo = true;
+      break;
+    }
+  }
+  if (hasTradeInfo && typeof getNPCTradeInfo === "function") {
+    var npcInfoDiv = document.createElement("div");
+    npcInfoDiv.style.cssText =
+      "margin-top:16px;padding:10px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:8px;";
+    npcInfoDiv.innerHTML =
+      '<h4 style="color:var(--text-muted);margin:0 0 8px 0;">💬 当地情报</h4>';
+
+    var hasAnyInfo = false;
+    for (var ni2 = 0; ni2 < locNpcs.length; ni2++) {
+      var npcData = locNpcs[ni2];
+      var info = getNPCTradeInfo(npcData.id, state);
+      if (info && info.availableInfo.length > 0) {
+        hasAnyInfo = true;
+        var npcLine = document.createElement("div");
+        npcLine.style.cssText =
+          "margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;";
+        npcLine.innerHTML =
+          '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
+          npcData.name +
+          "（" +
+          npcData.role +
+          "）</div>";
+
+        for (var ai = 0; ai < info.availableInfo.length; ai++) {
+          var aiData = info.availableInfo[ai];
+          var costStr = aiData.free ? "免费" : "¥" + aiData.currentCost;
+          var btnHtml =
+            '<button class="btn btn-sm npc-info-btn" data-npc="' +
+            npcData.id +
+            '" data-info="' +
+            aiData.id +
+            '" style="margin:2px 4px 2px 0;">' +
+            aiData.label +
+            "（" +
+            costStr +
+            "）</button>";
+          npcLine.innerHTML += btnHtml;
+        }
+        npcInfoDiv.appendChild(npcLine);
+      }
+    }
+
+    if (hasAnyInfo) {
+      parent.appendChild(npcInfoDiv);
+    }
+  }
 
   // 绑定事件（延迟执行，等 DOM 插入完成）
   setTimeout(() => {
@@ -2896,6 +3155,30 @@ function renderTradeTab(state, parent) {
         renderSidebar(StateManager.getState());
         renderHeader(StateManager.getState());
         renderMessageLog(StateManager.getState());
+      });
+    });
+
+    // --- NPC 情报按钮 ---
+    parent.querySelectorAll(".npc-info-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        var npcId = btn.dataset.npc;
+        var infoTypeId = btn.dataset.info;
+        if (typeof buyInfoFromNpc === "function") {
+          var result = buyInfoFromNpc(
+            npcId,
+            infoTypeId,
+            StateManager.getState(),
+          );
+          StateManager.addMessage(
+            result.message,
+            result.success ? "success" : "warning",
+          );
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
       });
     });
   }, 0);

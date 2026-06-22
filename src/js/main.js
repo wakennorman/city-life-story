@@ -3394,7 +3394,7 @@ function doStreetJob(job) {
         const bonus = Math.floor(pay * (trafficMod - 1.0));
         if (bonus > 0) {
           pay += bonus;
-          if (Math.random() < 0.3) {
+          if (Random.chance(0.3)) {
             StateManager.addMessage(
               "☀️ 天气好客流量大，多赚了¥" + bonus + "！",
               "success",

@@ -31,6 +31,18 @@ const NPCS = [
       "年轻人要有志气，别一辈子收废品。",
     ],
     giftPrefers: ["fruits", "daily_use"],
+    // 交易情报：专业领域和好感门控信息
+    tradeInfo: {
+      expertise: ["daily", "food"],
+      infoTypes: {
+        price_level: { label: "日用品价格水平", threshold: 30, cost: 50 },
+        category_lowest: {
+          label: "全城日用品哪最便宜",
+          threshold: 60,
+          cost: 20,
+        },
+      },
+    },
     // 在场加成：王大婶在城中村时，废品回收/送餐/跑腿效率提升
     presenceBonus: [
       {
@@ -199,6 +211,14 @@ const NPCS = [
     },
     talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
     giftPrefers: ["cigarettes", "beer"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["scrap"],
+      infoTypes: {
+        price_level: { label: "废品行情走势", threshold: 30, cost: 50 },
+        good_highest: { label: "哪收废品价最高", threshold: 60, cost: 30 },
+      },
+    },
     // 在场加成：李工头在工地时，建筑类工作工资提升
     presenceBonus: [
       {
@@ -369,6 +389,18 @@ const NPCS = [
       "多考几个证，好工作不愁。",
     ],
     giftPrefers: ["clothing", "snacks"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["clothing", "electronics", "luxury"],
+      infoTypes: {
+        price_level: { label: "商业区价格资讯", threshold: 30, cost: 60 },
+        category_highest: {
+          label: "哪卖服装电子最贵",
+          threshold: 60,
+          cost: 30,
+        },
+      },
+    },
     // 在场加成：张姐在商业区时，摆摊和销售类收入提升
     presenceBonus: [
       {
@@ -531,6 +563,14 @@ const NPCS = [
       "年轻人脑子活，学学怎么挑好货。",
     ],
     giftPrefers: ["beer", "instant_noodles"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["scrap"],
+      infoTypes: {
+        good_highest: { label: "废品全城最高价", threshold: 30, cost: 40 },
+        category_lowest: { label: "全城废品回收比价", threshold: 60, cost: 20 },
+      },
+    },
     // 在场加成：老周分享经验，废品回收效率大幅提升
     presenceBonus: [
       {
@@ -701,6 +741,14 @@ const NPCS = [
       "毕业后想去大厂，得先积累经验。",
     ],
     giftPrefers: ["fruits", "snacks"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["daily", "food", "clothing"],
+      infoTypes: {
+        price_level: { label: "平价商品情报", threshold: 30, cost: 30 },
+        category_lowest: { label: "哪买东西最便宜", threshold: 60, cost: 10 },
+      },
+    },
     // 在场加成：小美在大学城时，学习效率提升（通过studyBonus标志）
     presenceBonus: [
       {
@@ -856,6 +904,14 @@ const NPCS = [
       "你有点天分，要不要学两手？",
     ],
     giftPrefers: ["beer", "vegetables"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["food"],
+      infoTypes: {
+        price_level: { label: "食材价格行情", threshold: 30, cost: 40 },
+        category_lowest: { label: "哪买菜最便宜", threshold: 60, cost: 15 },
+      },
+    },
     // 在场加成：陈师傅在场时，餐饮/食品摊位收入提升
     presenceBonus: [
       {

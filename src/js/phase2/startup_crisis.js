@@ -338,7 +338,7 @@ function checkStartupCrises(state) {
 
   // 随机触发
   for (const [crisisId, crisis] of Object.entries(STARTUP_CRISIS_EVENTS)) {
-    if (Math.random() > crisis.trigger.probability) continue;
+    if (!Random.chance(crisis.trigger.probability)) continue;
 
     // 检查触发条件
     if (!checkCrisisTriggerConditions(crisis, company)) continue;
@@ -475,7 +475,7 @@ function applyCrisisChoice(state, crisisId, option) {
   const company = startup.company;
 
   // 计算成功率
-  const success = Math.random() < option.successChance;
+  const success = Random.chance(option.successChance);
 
   if (success) {
     // 成功效果
@@ -484,7 +484,7 @@ function applyCrisisChoice(state, crisisId, option) {
     // 根据选项类型应用效果
     if (option.text.includes("融资")) {
       const raiseAmount = Math.round(company.valuation * 0.1);
-      const dilution = 0.1 + Math.random() * 0.1;
+      const dilution = Random.float(0.1, 0.2);
       company.cashReserve += raiseAmount;
       company.valuation = Math.round(
         company.valuation + raiseAmount / dilution,
@@ -539,19 +539,19 @@ function applyCrisisChoice(state, crisisId, option) {
     }
 
     if (option.text.includes("补偿")) {
-      const cost = 5000 + Math.floor(Math.random() * 15000);
+      const cost = Random.int(5000, 19999);
       company.cashReserve = Math.max(0, company.cashReserve - cost);
       company.reputation = Math.min(100, company.reputation + 15);
     }
 
     if (option.text.includes("公关")) {
-      const cost = 20000 + Math.floor(Math.random() * 30000);
+      const cost = Random.int(20000, 49999);
       company.cashReserve = Math.max(0, company.cashReserve - cost);
       company.reputation = Math.min(100, company.reputation + 20);
     }
 
     if (option.text.includes("和解")) {
-      const cost = 50000 + Math.floor(Math.random() * 150000);
+      const cost = Random.int(50000, 199999);
       company.cashReserve = Math.max(0, company.cashReserve - cost);
       company.reputation = Math.max(0, company.reputation - 5);
     }

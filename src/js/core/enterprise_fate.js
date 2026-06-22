@@ -359,7 +359,6 @@ var FATE_EVENTS = [
       var companyName = getCompanyNameById(cid);
       var msg =
         "成功在港交所/纳斯达克挂牌上市，首日市值突破" +
-        (100 + Math.floor(Math.random() * 200)) +
         Random.int(100, 299) +
         "亿";
       return { stockMul: 1.25, msg: msg };
@@ -783,7 +782,7 @@ function tickEnterpriseFate(state) {
     // sentiment: 随机波动
     co.sentiment = Math.max(
       5,
-      Math.min(100, co.sentiment + (Math.random() - 0.5) * 4),
+      Math.min(100, co.sentiment + Random.float(-2, 2)),
     );
 
     // 2. 阶段转换
@@ -969,7 +968,7 @@ function rollFateEvent(state) {
     if (co.phase === "decline") baseProb += 0.03;
     if (co.health < 30) baseProb += 0.04;
 
-    if (Math.random() < baseProb) {
+    if (Random.chance(baseProb)) {
       // 筛选有效事件
       var validEvents = [];
       for (var ei = 0; ei < FATE_EVENTS.length; ei++) {
@@ -990,7 +989,7 @@ function rollFateEvent(state) {
           totalWeight += weight;
           evt._effectiveWeight = weight;
         }
-        var roll = Math.random() * totalWeight;
+        var roll = Random.float(0, totalWeight);
         var picked = validEvents[0];
         for (var vi2 = 0; vi2 < validEvents.length; vi2++) {
           roll -= validEvents[vi2]._effectiveWeight || 1;
@@ -1316,7 +1315,7 @@ function generateMergedCompanyName(nameA, nameB) {
     "联合",
     "合纵",
   ];
-  var suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  var suffix = Random.fromArray(suffixes);
   return a + b + suffix;
 }
 
@@ -1472,8 +1471,8 @@ tickEnterpriseFate = function (state) {
     var co = fate.companies[cid];
     if (!co || co.ceasedExistence) continue;
     // 健康度高且趋势上行的公司获得市场份额
-    if (co.health > 70 && co.trend === "up" && Math.random() < 0.15) {
-      var gain = 0.3 + Math.random() * 0.5;
+    if (co.health > 70 && co.trend === "up" && Random.chance(0.15)) {
+      var gain = Random.float(0.3, 0.8);
       applyZeroSumMarketShare(state, cid, gain);
     }
   }
@@ -1482,7 +1481,7 @@ tickEnterpriseFate = function (state) {
   for (var cid2 in fate.companies) {
     var co2 = fate.companies[cid2];
     if (!co2 || co2.ceasedExistence || co2.phase !== "dying") continue;
-    if (Math.random() < 0.08) {
+    if (Random.chance(0.08)) {
       // 找最强公司作为收购方
       var strongestCid = null;
       var maxHealth = 0;
@@ -1540,7 +1539,10 @@ function generateRumor(state, companyId, eventType) {
   if (!fate) return null;
 
   var rumorId =
-    "rumor_" + state.player.day + "_" + Math.random().toString(36).substr(2, 9);
+    "rumor_" +
+    state.player.day +
+    "_" +
+    Random.float(0, 1).toString(36).substr(2, 9);
   var co = fate.companies[companyId];
   if (!co) return null;
 
@@ -1554,16 +1556,16 @@ function generateRumor(state, companyId, eventType) {
         eventType === "cash_crisis" ||
         eventType === "talent_exodus"
       ) {
-        estimatedImpact = 0.15 + Math.random() * 0.1;
+        estimatedImpact = Random.float(0.15, 0.25);
       } else if (
         eventType === "product_breakout" ||
         eventType === "ipo_listing"
       ) {
-        estimatedImpact = 0.12 + Math.random() * 0.13;
+        estimatedImpact = Random.float(0.12, 0.25);
       } else if (eventType === "merger_acquire") {
-        estimatedImpact = 0.08 + Math.random() * 0.07;
+        estimatedImpact = Random.float(0.08, 0.15);
       } else {
-        estimatedImpact = 0.05 + Math.random() * 0.08;
+        estimatedImpact = Random.float(0.05, 0.13);
       }
       break;
     }
@@ -1574,13 +1576,13 @@ function generateRumor(state, companyId, eventType) {
     companyId: companyId,
     eventType: eventType,
     detectedDay: state.player.day,
-    confidence: 30 + Math.floor(Math.random() * 40), // 30-70%
+    confidence: Random.int(30, 69), // 30-70%
     channels: [], // 通过什么渠道感知
     estimatedImpact: estimatedImpact,
     resolvedDay: null,
     playerTraded: false,
     playerProfit: 0,
-    triggerDay: state.player.day + 3 + Math.floor(Math.random() * 3), // 3-5天后触发
+    triggerDay: state.player.day + Random.int(3, 5), // 3-5天后触发
   };
 
   // 存入 pendingEvents
@@ -1622,11 +1624,11 @@ function updateRumorConfidence(state, rumorId, channel, infoQuality) {
   if (!rumor || rumor.resolvedDay) return null;
 
   var confidenceGain = 0;
-  if (channel === "work") confidenceGain = 8 + Math.random() * 12;
-  else if (channel === "social") confidenceGain = 10 + Math.random() * 15;
-  else if (channel === "npc") confidenceGain = 8 + Math.random() * 12;
-  else if (channel === "news") confidenceGain = 4 + Math.random() * 8;
-  else if (channel === "report") confidenceGain = 3 + Math.random() * 6;
+  if (channel === "work") confidenceGain = Random.float(8, 20);
+  else if (channel === "social") confidenceGain = Random.float(10, 25);
+  else if (channel === "npc") confidenceGain = Random.float(8, 20);
+  else if (channel === "news") confidenceGain = Random.float(4, 12);
+  else if (channel === "report") confidenceGain = Random.float(3, 9);
 
   rumor.confidence = Math.min(
     100,
@@ -1696,7 +1698,7 @@ function tickPendingEvents(state) {
           state.startup.company.id === pending.companyId
         ) {
           // 玩家公司 IPO 审核：50% 通过率
-          var approved = Math.random() < 0.5;
+          var approved = Random.chance(0.5);
           if (approved) {
             // IPO 成功：应用事件效果
             for (var ei = 0; ei < FATE_EVENTS.length; ei++) {
@@ -1903,10 +1905,10 @@ function auditInsiderTrading(state) {
 
       // 判定审查概率
       var auditProb = 0.1 + Math.min(0.6, profit / 500000);
-      if (Math.random() < auditProb) {
+      if (Random.chance(auditProb)) {
         // 触发处罚
-        var penalty = profit * (1 + Math.random()); // 1-2倍罚款
-        var bannedDays = 30 + Math.floor(Math.random() * 60); // 30-90天
+        var penalty = profit * Random.float(1, 2); // 1-2倍罚款
+        var bannedDays = Random.int(30, 89); // 30-90天
 
         var auditRecord = {
           day: state.player.day,
@@ -1938,8 +1940,7 @@ function applyInsiderTradingPenalty(state, auditRecord) {
   state.insiderTrading.currentPenalty.tradingBanEndDay =
     state.player.day + auditRecord.bannedDays;
   state.insiderTrading.currentPenalty.fine = auditRecord.penalty;
-  state.insiderTrading.currentPenalty.reputationDamage =
-    10 + Math.floor(Math.random() * 20);
+  state.insiderTrading.currentPenalty.reputationDamage = Random.int(10, 29);
 
   // 扣钱
   if (state.resources) {
@@ -2176,8 +2177,8 @@ function generateCompanyAftermath(state, deceasedCid, deceasedCo) {
   var scale = deceasedCo.marketShare || 10;
   var eventCount;
   if (scale >= 25) eventCount = 3;
-  else if (scale >= 15) eventCount = 2 + (Math.random() < 0.5 ? 1 : 0);
-  else eventCount = 1 + (Math.random() < 0.3 ? 1 : 0);
+  else if (scale >= 15) eventCount = 2 + (Random.chance(0.5) ? 1 : 0);
+  else eventCount = 1 + (Random.chance(0.3) ? 1 : 0);
 
   // 遗产类型池
   var availableTypes = [];
@@ -2202,7 +2203,7 @@ function generateCompanyAftermath(state, deceasedCid, deceasedCo) {
     }
     if (totalWeight <= 0) break;
 
-    var roll = Math.random() * totalWeight;
+    var roll = Random.float(0, totalWeight);
     for (var ai = 0; ai < availableTypes.length; ai++) {
       var at = availableTypes[ai];
       if (selectedTypes.indexOf(at.type) !== -1 && eventCount <= 2) continue;
@@ -2258,7 +2259,7 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
 
   // 继承原公司的产品分数（60% + 波动）
   var inheritedProductScore =
-    (deceasedCo.productScore || 50) * 0.6 + (Math.random() - 0.5) * 20;
+    (deceasedCo.productScore || 50) * 0.6 + Random.float(-10, 10);
   newCo.productScore = Math.max(
     30,
     Math.min(80, Math.round(inheritedProductScore)),
@@ -2266,7 +2267,7 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
 
   // 继承原公司的人才分数（50% + 波动）
   var inheritedTalentScore =
-    (deceasedCo.talentScore || 50) * 0.5 + (Math.random() - 0.5) * 20;
+    (deceasedCo.talentScore || 50) * 0.5 + Random.float(-10, 10);
   newCo.talentScore = Math.max(
     25,
     Math.min(70, Math.round(inheritedTalentScore)),
@@ -2279,7 +2280,7 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
   );
 
   // 市场份额：3-8%
-  newCo.marketShare = Math.round((3 + Math.random() * 5) * 100) / 100;
+  newCo.marketShare = Math.round(Random.float(3, 8) * 100) / 100;
 
   // 添加遗产标记
   newCo.fromAftermath = true;
@@ -2328,10 +2329,8 @@ function _execStartupAftermath(state, deceasedCid, deceasedCo) {
 
   // 生成新闻
   var positions = ["CTO", "技术总监", "联合创始人", "首席科学家", "产品副总裁"];
-  var position = positions[Math.floor(Math.random() * positions.length)];
-  var execName = ["李总", "王总", "张总", "陈总", "刘总"][
-    Math.floor(Math.random() * 5)
-  ];
+  var position = Random.fromArray(positions);
+  var execName = Random.fromArray(["李总", "王总", "张总", "陈总", "刘总"]);
   var msg =
     position +
     " " +
@@ -2391,26 +2390,25 @@ function _patentAcquisitionAftermath(state, deceasedCid, deceasedCo) {
   candidates.sort(function (a, b) {
     return (b.co.productScore || 0) - (a.co.productScore || 0);
   });
-  var picked =
-    candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
+  var picked = Random.fromArray(candidates.slice(0, 3));
   var targetCo = picked.co;
 
   // 提升产品分数
-  var productBoost = 5 + Math.floor(Math.random() * 10);
+  var productBoost = Random.int(5, 14);
   targetCo.productScore = Math.min(
     100,
     (targetCo.productScore || 50) + productBoost,
   );
 
   // 提升人才分数
-  var talentBoost = 3 + Math.floor(Math.random() * 7);
+  var talentBoost = Random.int(3, 9);
   targetCo.talentScore = Math.min(
     100,
     (targetCo.talentScore || 50) + talentBoost,
   );
 
   // 提升市场份额
-  var shareBoost = Math.round((1 + Math.random() * 2) * 100) / 100;
+  var shareBoost = Math.round(Random.float(1, 3) * 100) / 100;
   targetCo.marketShare = Math.min(45, (targetCo.marketShare || 0) + shareBoost);
 
   // 提升健康度
@@ -2428,7 +2426,7 @@ function _patentAcquisitionAftermath(state, deceasedCid, deceasedCo) {
     "「" +
     targetCo.name +
     "」宣布以" +
-    Math.round(500 + Math.random() * 2000) +
+    Math.round(Random.float(500, 2500)) +
     "万" +
     "收购" +
     deceasedCo.name +
@@ -2508,12 +2506,12 @@ function _talentDispersionAftermath(state, deceasedCid, deceasedCo) {
 
   for (var ri = 0; ri < recipients.length; ri++) {
     var rec = recipients[ri];
-    var talentGain = 3 + Math.floor(Math.random() * 6);
+    var talentGain = Random.int(3, 8);
     rec.co.talentScore = Math.min(100, (rec.co.talentScore || 50) + talentGain);
     totalTalent += talentGain;
 
     // 少量产品分数提升
-    var productGain = Math.floor(Math.random() * 3);
+    var productGain = Random.int(0, 2);
     if (productGain > 0) {
       rec.co.productScore = Math.min(
         100,

@@ -22,7 +22,7 @@
           text: "💰 据为己有",
           hint: "拿钱走人",
           apply: (st) => {
-            const cash = 80 + Math.floor(Math.random() * 200);
+            const cash = Random.int(80, 279);
             st.resources.cash += cash;
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
             st.flags._keptWallet = true;
@@ -81,7 +81,7 @@
           text: "🏃 撒腿就跑",
           hint: "考验敏捷",
           apply: (st) => {
-            if (Math.random() < 0.5 + (st.player.agility - 20) * 0.02) {
+            if (Random.chance(0.5 + (st.player.agility - 20) * 0.02)) {
               StateManager.addMessage(
                 "🏃 你转身就跑，甩开了混混，逃过一劫！",
                 "success",
@@ -101,7 +101,7 @@
           text: "📱 假装打电话报警",
           hint: "虚张声势",
           apply: (st) => {
-            if (Math.random() < 0.4) {
+            if (Random.chance(0.4)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
               StateManager.addMessage(
                 "📱 混混看你报警，一哄而散。你真聪明！",
@@ -140,8 +140,8 @@
             }
             st.resources.cash -= 500;
             // 50% 概率赚一倍，50% 概率打水漂
-            if (Math.random() < 0.4) {
-              const profit = 300 + Math.floor(Math.random() * 400);
+            if (Random.chance(0.4)) {
+              const profit = Random.int(300, 699);
               st.resources.cash += profit;
               StateManager.addMessage(
                 `💰 消息是真的！赚了 ¥${profit - 500}。`,
@@ -192,8 +192,8 @@
           hint: "可能有好报",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
-            if (Math.random() < 0.5) {
-              const reward = 50 + Math.floor(Math.random() * 80);
+            if (Random.chance(0.5)) {
+              const reward = Random.int(50, 129);
               st.resources.cash += reward;
               st.player.fame = Math.min(100, st.player.fame + 2);
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -292,8 +292,8 @@
             }
             st.resources.cash -= 50;
             const skills = Object.keys(st.skills);
-            const key = skills[Math.floor(Math.random() * skills.length)];
-            st.skills[key].xp += 40 + Math.floor(Math.random() * 30);
+            const key = Random.fromArray(skills);
+            st.skills[key].xp += Random.int(40, 69);
             StateManager.addMessage(
               `🛍️ 买到了《${key}入门》，翻了几页，受益匪浅。`,
               "success",
@@ -350,7 +350,7 @@
           text: "🧠 理智劝和",
           hint: "考验智力",
           apply: (st) => {
-            if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+            if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               st.player.fame = Math.min(100, st.player.fame + 3);
               StateManager.addMessage(
@@ -504,9 +504,9 @@
             st.resources.cash -= 2000;
             // 60% 概率成功：收购消息公布，股票翻倍
             // 40% 概率失败：消息是假的/收购失败
-            const success = Math.random() < 0.6;
+            const success = Random.chance(0.6);
             if (success) {
-              const profit = 2000 + Math.floor(Math.random() * 1500) + 500;
+              const profit = Random.int(2500, 3999);
               st.resources.cash += profit;
               st.player.fame = Math.min(100, st.player.fame + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -555,9 +555,9 @@
               return;
             }
             st.resources.cash -= 500;
-            const success = Math.random() < 0.6;
+            const success = Random.chance(0.6);
             if (success) {
-              const profit = 500 + Math.floor(Math.random() * 500) + 200;
+              const profit = Random.int(700, 1199);
               st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               st.flags._realEstateGambleWon = true;
@@ -619,7 +619,7 @@
           text: "👊 硬刚回去",
           hint: "看体质",
           apply: (st) => {
-            const win = Math.random() < 0.3 + (st.player.physique - 20) * 0.02;
+            const win = Random.chance(0.3 + (st.player.physique - 20) * 0.02);
             if (win) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
               st.player.fame = Math.min(100, st.player.fame + 3);
@@ -683,7 +683,7 @@
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 当天额外收入
-            const extra = 30 + Math.floor(Math.random() * 40);
+            const extra = Random.int(30, 69);
             st.resources.cash += extra;
             st.resources.totalEarned += extra;
             StateManager.addMessage(
@@ -696,7 +696,7 @@
           text: "😤 跟村长求情延期",
           hint: "看面子",
           apply: (st) => {
-            const success = Math.random() < 0.3 + st.player.fame * 0.01;
+            const success = Random.chance(0.3 + st.player.fame * 0.01);
             if (success) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
               StateManager.addMessage(
@@ -765,7 +765,7 @@
           text: "💰 逆势抄底",
           hint: "赌一把",
           apply: function (st) {
-            var buyAmt = 500 + Math.floor(Math.random() * 1500);
+            var buyAmt = Random.int(500, 1999);
             if (st.resources.cash >= buyAmt) {
               st.resources.cash -= buyAmt;
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
@@ -803,8 +803,8 @@
           apply: function (st) {
             st.resources.cash -= 800;
             var goods = ["electronics", "daily_use", "clothing", "beer"];
-            var g = goods[Math.floor(Math.random() * goods.length)];
-            var qty = 10 + Math.floor(Math.random() * 20);
+            var g = Random.fromArray(goods);
+            var qty = Random.int(10, 29);
             var exist = st.inventory.items.find(function (x) {
               return x.id === g;
             });
@@ -848,8 +848,8 @@
           apply: function (st) {
             if (st.resources.cash >= 20) {
               st.resources.cash -= 20;
-              if (Math.random() < 0.15) {
-                var win = 200 + Math.floor(Math.random() * 500);
+              if (Random.chance(0.15)) {
+                var win = Random.int(200, 699);
                 st.resources.cash += win;
                 st.needs.happiness = Math.min(100, st.needs.happiness + 15);
                 StateManager.addMessage(
@@ -871,16 +871,16 @@
           apply: function (st) {
             if (st.resources.cash >= 200) {
               st.resources.cash -= 200;
-              if (Math.random() < 0.1) {
-                var win = 5000 + Math.floor(Math.random() * 15000);
+              if (Random.chance(0.1)) {
+                var win = Random.int(5000, 19999);
                 st.resources.cash += win;
                 st.needs.happiness = Math.min(100, st.needs.happiness + 30);
                 StateManager.addMessage(
                   "🎰 中了¥" + win + "！激动到手抖！",
                   "success",
                 );
-              } else if (Math.random() < 0.3) {
-                var win2 = 100 + Math.floor(Math.random() * 400);
+              } else if (Random.chance(0.3)) {
+                var win2 = Random.int(100, 499);
                 st.resources.cash += win2;
                 StateManager.addMessage(
                   "🎰 中了¥" + win2 + "，回了点本。",
@@ -1024,7 +1024,7 @@
           apply: function (st) {
             if (st.resources.cash >= 50) {
               st.resources.cash -= 50;
-              if (Math.random() < 0.4) {
+              if (Random.chance(0.4)) {
                 st.status.sick = false;
                 st.status.health = Math.min(100, st.status.health + 30);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -1161,7 +1161,7 @@
               st.resources.cash -= 500;
               var skillScore =
                 st.skills.sales.level + st.skills.management.level;
-              if (Math.random() < 0.2 + skillScore * 0.005) {
+              if (Random.chance(0.2 + skillScore * 0.005)) {
                 st.resources.cash += 50000;
                 st.player.fame = Math.min(100, st.player.fame + 20);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 30);
@@ -1207,8 +1207,8 @@
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.fame = Math.min(100, st.player.fame + 5);
-            if (Math.random() < 0.15) {
-              const fine = 300 + Math.floor(Math.random() * 200);
+            if (Random.chance(0.15)) {
+              const fine = Random.int(300, 499);
               st.resources.cash = Math.max(0, st.resources.cash - fine);
               StateManager.addMessage(
                 "🧓 你扶起了老人，对方家属却说你撞倒了他，赔了 ¥" +
@@ -1326,10 +1326,10 @@
           text: "😈 继续卖，买者自负",
           hint: "损失已发生，捞回来",
           apply: function (st) {
-            const earned = 400 + Math.floor(Math.random() * 300);
+            const earned = Random.int(400, 699);
             st.resources.cash += earned;
             st.resources.totalEarned += earned;
-            if (Math.random() < 0.3) {
+            if (Random.chance(0.3)) {
               st.player.fame = Math.max(0, st.player.fame - 10);
               StateManager.addMessage(
                 "😈 卖出去了，但被客户投诉，名气-10。赚了 ¥" + earned + "。",
@@ -1361,8 +1361,8 @@
           text: "↩️ 去找批发商理论退货",
           hint: "据理力争",
           apply: function (st) {
-            if (Math.random() < 0.5) {
-              const refund = 400 + Math.floor(Math.random() * 200);
+            if (Random.chance(0.5)) {
+              const refund = Random.int(400, 599);
               st.resources.cash += refund;
               StateManager.addMessage(
                 "↩️ 死缠烂打两小时，批发商退了 ¥" +
@@ -1395,7 +1395,7 @@
           text: "🎪 去听听，搞不好是机会",
           hint: "好奇心驱使",
           apply: function (st) {
-            const loss = 500 + Math.floor(Math.random() * 500);
+            const loss = Random.int(500, 999);
             if (st.resources.cash >= loss) {
               st.resources.cash -= loss;
               st.needs.happiness = Math.max(0, st.needs.happiness - 30);
@@ -1457,14 +1457,14 @@
           text: "⏳ 忍着等，年底再说",
           hint: "赌一把",
           apply: function (st) {
-            if (Math.random() < 0.45) {
+            if (Random.chance(0.45)) {
               StateManager.addMessage(
                 "⏳ 年底工头跑路了。那两个月的工钱就这么没了。",
                 "danger",
               );
               st.needs.happiness = Math.max(0, st.needs.happiness - 25);
             } else {
-              const paid = 1200 + Math.floor(Math.random() * 800);
+              const paid = Random.int(1200, 1999);
               st.resources.cash += paid;
               st.resources.totalEarned += paid;
               StateManager.addMessage(
@@ -1480,7 +1480,7 @@
           text: "🏛️ 去劳动局投诉",
           hint: "用法律维权",
           apply: function (st) {
-            const recovered = 600 + Math.floor(Math.random() * 400);
+            const recovered = Random.int(600, 999);
             st.resources.cash += recovered;
             st.resources.totalEarned += recovered;
             st.needs.happiness = Math.min(100, st.needs.happiness + 12);
@@ -1527,7 +1527,7 @@
                 "😤 凭借你的销售口才，把涨幅砍到¥50，王大婶勉强答应了。",
                 "success",
               );
-            } else if (Math.random() < 0.4) {
+            } else if (Random.chance(0.4)) {
               StateManager.addMessage(
                 "😤 磨了半小时，王大婶松口涨¥100，妥协了。",
                 "info",
@@ -1594,8 +1594,8 @@
           text: "💼 留下联系方式深入谈",
           hint: "可能是机遇",
           apply: function (st) {
-            if (Math.random() < 0.6) {
-              const bonus = 800 + Math.floor(Math.random() * 1200);
+            if (Random.chance(0.6)) {
+              const bonus = Random.int(800, 1999);
               st.resources.cash += bonus;
               st.resources.totalEarned += bonus;
               st.player.fame = Math.min(100, st.player.fame + 8);
@@ -1639,7 +1639,7 @@
           text: "📱 买下来，以后跑外卖用",
           hint: "投资装备",
           apply: function (st) {
-            if (Math.random() < 0.7) {
+            if (Random.chance(0.7)) {
               st.resources.cash -= 150;
               st.player.fame = Math.min(100, st.player.fame + 2);
               StateManager.addMessage(
@@ -1664,7 +1664,7 @@
               100,
               st.player.intelligence + 0.3,
             );
-            const price = 100 + Math.floor(Math.random() * 80);
+            const price = Random.int(100, 179);
             st.resources.cash -= price;
             StateManager.addMessage(
               "🔍 你仔细测试了30分钟，砍价到¥" + price + "成交，没有暗病。",
@@ -1702,9 +1702,9 @@
             if (st.resources.cash >= 10) {
               st.resources.cash -= 10;
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
-              const tip = Math.random();
+              const tip = Random.float(0, 1);
               if (tip < 0.4) {
-                const cash = 200 + Math.floor(Math.random() * 300);
+                const cash = Random.int(200, 499);
                 st.resources.cash += cash;
                 StateManager.addMessage(
                   "🤗 聊得投机，他给你介绍了个短期活，赚了 ¥" +
@@ -1755,7 +1755,7 @@
           text: "🏃 扔下生意去收摊",
           hint: "保住货物",
           apply: function (st) {
-            const saved = 100 + Math.floor(Math.random() * 200);
+            const saved = Random.int(100, 299);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
             st.needs.hygiene = Math.max(0, st.needs.hygiene - 10);
             StateManager.addMessage(
@@ -1768,8 +1768,8 @@
           text: "💰 谈完生意再说",
           hint: "生意优先",
           apply: function (st) {
-            if (Math.random() < 0.5) {
-              const deal = 150 + Math.floor(Math.random() * 200);
+            if (Random.chance(0.5)) {
+              const deal = Random.int(150, 349);
               st.resources.cash += deal;
               st.resources.totalEarned += deal;
               StateManager.addMessage(
@@ -1891,7 +1891,7 @@
           text: "🤝 打听消息，提前和城管疏通",
           hint: "走关系",
           apply: function (st) {
-            const bribe = 100 + Math.floor(Math.random() * 100);
+            const bribe = Random.int(100, 199);
             if (st.resources.cash >= bribe) {
               st.resources.cash -= bribe;
               if (st.chengguan)
@@ -1944,7 +1944,7 @@
           text: "👍 去！一天300值了",
           hint: "抓住机会",
           apply: function (st) {
-            const earned = 250 + Math.floor(Math.random() * 150);
+            const earned = Random.int(250, 399);
             st.resources.cash += earned;
             st.resources.totalEarned += earned;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 30);
@@ -1998,10 +1998,10 @@
                 : 0;
             var bonus =
               affinity >= 50
-                ? 500 + Math.floor(Math.random() * 300)
+                ? Random.int(500, 799)
                 : affinity >= 20
-                  ? 200 + Math.floor(Math.random() * 200)
-                  : 50 + Math.floor(Math.random() * 100);
+                  ? Random.int(200, 399)
+                  : Random.int(50, 149);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             StateManager.addMessage(
@@ -2014,7 +2014,7 @@
           text: "😌 低调，不争",
           hint: "随缘",
           apply: function (st) {
-            const small = 50 + Math.floor(Math.random() * 80);
+            const small = Random.int(50, 129);
             st.resources.cash += small;
             st.resources.totalEarned += small;
             StateManager.addMessage(
@@ -2040,7 +2040,7 @@
           text: "🗣️ 说出你看到的情况",
           hint: "仗义执言",
           apply: function (st) {
-            if (Math.random() < 0.6) {
+            if (Random.chance(0.6)) {
               st.player.fame = Math.min(100, st.player.fame + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               StateManager.addMessage(
@@ -2126,7 +2126,7 @@
           text: "🙏 问问其他人有没有看到",
           hint: "收集线索",
           apply: function (st) {
-            if (Math.random() < 0.4) {
+            if (Random.chance(0.4)) {
               st.needs.happiness = Math.max(0, st.needs.happiness - 2);
               StateManager.addMessage(
                 "一个老流浪汉悄悄告诉你：「昨晚看到有个穿黑夹克的在你们那边转悠。」你记住了这个特征。",
@@ -2263,8 +2263,8 @@
           hint: "赚钱优先",
           apply: function (st) {
             st.needs.hunger = Math.max(0, st.needs.hunger - 10);
-            if (Math.random() < 0.4) {
-              const earned = 20 + Math.floor(Math.random() * 30);
+            if (Random.chance(0.4)) {
+              const earned = Random.int(20, 49);
               st.resources.cash += earned;
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
@@ -2364,7 +2364,7 @@
           text: "🌙 接！钱要紧",
           hint: "赚快钱",
           apply: function (st) {
-            var earned = 120 + Math.floor(Math.random() * 60);
+            var earned = Random.int(120, 179);
             st.resources.cash += earned;
             st.resources.totalEarned += earned;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 40);
@@ -2392,8 +2392,8 @@
           text: "💬 问能不能做两三次就走",
           hint: "试探谈条件",
           apply: function (st) {
-            if (Math.random() < 0.5) {
-              var earned2 = 100 + Math.floor(Math.random() * 50);
+            if (Random.chance(0.5)) {
+              var earned2 = Random.int(100, 149);
               st.resources.cash += earned2;
               st.resources.totalEarned += earned2;
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
@@ -2428,8 +2428,8 @@
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.fame = Math.min(100, st.player.fame + 8);
-            if (Math.random() < 0.6) {
-              var reward = 200 + Math.floor(Math.random() * 300);
+            if (Random.chance(0.6)) {
+              var reward = Random.int(200, 499);
               st.resources.cash += reward;
               StateManager.addMessage(
                 "📞 失主找来了，感激地塞给你¥" +
@@ -2450,7 +2450,7 @@
           text: "💰 卖给二手机商",
           hint: "换现金",
           apply: function (st) {
-            var earn = 600 + Math.floor(Math.random() * 400);
+            var earn = Random.int(600, 999);
             st.resources.cash += earn;
             st.resources.totalEarned += earn;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
@@ -2468,7 +2468,7 @@
               100,
               st.player.intelligence + 0.5,
             );
-            var rewardB = 100 + Math.floor(Math.random() * 200);
+            var rewardB = Random.int(100, 299);
             st.resources.cash += rewardB;
             st.resources.totalEarned += rewardB;
             st.player.fame = Math.min(100, st.player.fame + 4);
@@ -2546,8 +2546,8 @@
           text: "🚑 立刻上前扶起，打120",
           hint: "救人第一",
           apply: function (st) {
-            if (Math.random() < 0.2) {
-              var cost = 200 + Math.floor(Math.random() * 200);
+            if (Random.chance(0.2)) {
+              var cost = Random.int(200, 399);
               if (st.resources.cash >= cost) st.resources.cash -= cost;
               st.needs.happiness = Math.max(0, st.needs.happiness - 5);
               StateManager.addMessage(
@@ -2766,7 +2766,7 @@
             st.flags._milestone90 = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 30);
             st.player.mental = Math.min(100, st.player.mental + 5);
-            var remit = 200 + Math.floor(Math.random() * 200);
+            var remit = Random.int(200, 399);
             st.resources.cash += remit;
             st.resources.totalEarned += remit;
             StateManager.addMessage(
@@ -2798,7 +2798,7 @@
           text: "💪 接！认识新朋友",
           hint: "人情就是资本",
           apply: function (st) {
-            var pay = 300 + Math.floor(Math.random() * 200);
+            var pay = Random.int(300, 499);
             st.resources.cash += pay;
             st.resources.totalEarned += pay;
             st.player.physique = Math.min(100, st.player.physique + 2);
@@ -2843,7 +2843,7 @@
           text: "😰 坦白承认，还钱",
           hint: "归还钱包里的钱",
           apply: function (st) {
-            var repaid = 100 + Math.floor(Math.random() * 80);
+            var repaid = Random.int(100, 179);
             st.resources.cash = Math.max(0, st.resources.cash - repaid);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.fame = Math.min(100, st.player.fame + 8);
@@ -2890,7 +2890,7 @@
           text: "🤝 合作！建立长期供货关系",
           hint: "打开批发渠道",
           apply: function (st) {
-            var bonus = 500 + Math.floor(Math.random() * 300);
+            var bonus = Random.int(500, 799);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             st.player.fame = Math.min(100, st.player.fame + 10);
@@ -2935,7 +2935,7 @@
           text: "🎤 接受采访，公开发声",
           hint: "名气暴增，但会树敌",
           apply: function (st) {
-            var award = 200 + Math.floor(Math.random() * 100);
+            var award = Random.int(200, 299);
             st.resources.cash += award;
             st.resources.totalEarned += award;
             st.player.fame = Math.min(100, st.player.fame + 18);
@@ -2952,7 +2952,7 @@
           text: "🏆 领奖就好，不接受采访",
           hint: "低调处理",
           apply: function (st) {
-            var award = 200 + Math.floor(Math.random() * 100);
+            var award = Random.int(200, 299);
             st.resources.cash += award;
             st.resources.totalEarned += award;
             st.player.fame = Math.min(100, st.player.fame + 8);
@@ -3051,7 +3051,7 @@
           text: "✅ 接单！智力变现",
           hint: "每周+¥160",
           apply: function (st) {
-            const earned = 160 + Math.floor(Math.random() * 80);
+            const earned = Random.int(160, 239);
             st.resources.cash += earned;
             st.resources.totalEarned += earned;
             st.skills.english && (st.skills.english.xp += 15);
@@ -3095,7 +3095,7 @@
           apply: function (st) {
             st.flags._oldLiuAdvance = true;
             st.flags._liuPartner = true;
-            var bonus = 600 + Math.floor(Math.random() * 400);
+            var bonus = Random.int(600, 999);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             st.player.physique = Math.min(100, st.player.physique + 3);
@@ -3307,7 +3307,7 @@
           hint: "获得工厂正式工作机会",
           apply: function (st) {
             st.flags._walletKarmaGood = true;
-            var bonus = 400 + Math.floor(Math.random() * 300);
+            var bonus = Random.int(400, 699);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             st.player.intelligence = Math.min(100, st.player.intelligence + 2);
@@ -4862,7 +4862,7 @@
           },
           apply: function (st) {
             st.flags._arbitrageTechparkPayoffSeen = true;
-            var profit = 5000 + Math.floor(Math.random() * 3000);
+            var profit = Random.int(5000, 7999);
             st.resources.cash += profit;
             st.resources.totalEarned += profit;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
@@ -5376,7 +5376,7 @@
           text: "🏢 找房东投诉",
           hint: "走正规途径",
           apply: function (st) {
-            if (Math.random() < 0.5) {
+            if (Random.chance(0.5)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
                 "房东去隔壁说了一下，当晚安静了。但房东暗示你：「别老投诉，人家交着房租呢。」",
@@ -5424,7 +5424,7 @@
           text: "🏃 追上去问清楚",
           hint: "追回损失",
           apply: function (st) {
-            if (Math.random() < 0.35 + (st.player.agility || 20) * 0.01) {
+            if (Random.chance(0.35 + (st.player.agility || 20) * 0.01)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
                 "你追上去拦住了对方，对方慌慌张张地把外卖扔下跑了。虽然饭有点凉了，但至少没白花钱。",
@@ -5488,7 +5488,7 @@
           apply: function (st) {
             st.resources.cash -= 200;
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-            if (Math.random() < 0.6) {
+            if (Random.chance(0.6)) {
               st.resources.cash += 200;
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
@@ -5508,7 +5508,7 @@
           text: "🤔 先问问是什么事",
           hint: "谨慎些",
           apply: function (st) {
-            if (Math.random() < 0.5) {
+            if (Random.chance(0.5)) {
               st.needs.happiness = Math.max(0, st.needs.happiness - 2);
               StateManager.addMessage(
                 "他支支吾吾说不清楚，只说「家里有事」。你更怀疑了，没借。他失望地走了。",
@@ -5735,7 +5735,7 @@
           apply: function (st) {
             st.flags._reSettleSeen = true;
             st.flags._reStartedBusiness = true;
-            var bonus = 60000 + Math.floor(Math.random() * 80000);
+            var bonus = Random.int(60000, 139999);
             st.resources.cash -= 80000;
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
@@ -5999,8 +5999,7 @@
             st.flags._startupWin = true;
             var multi = st.flags._startupBurning ? 3.5 : 1.8;
             var base = st.flags._startupAmount || 30000;
-            var payout =
-              Math.round(base * multi) + Math.floor(Math.random() * 50000);
+            var payout = Math.round(base * multi) + Random.int(0, 49999);
             st.resources.cash += payout;
             st.resources.totalEarned += payout;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 12);
@@ -6331,7 +6330,7 @@
           hint: "¥5,000→¥12,000",
           apply: function (st) {
             st.flags._eduAftermathSeen = true;
-            var earn = 7000 + Math.floor(Math.random() * 3000);
+            var earn = Random.int(7000, 9999);
             st.resources.cash += earn;
             StateManager.addMessage(
               "♻️ 净赚¥" + earn.toLocaleString() + "。",
@@ -6358,7 +6357,7 @@
           apply: function (st) {
             st.flags._eduAftermathSeen = true;
             st.flags._eduMiddleman = true;
-            var income = 3000 + Math.floor(Math.random() * 5000);
+            var income = Random.int(3000, 7999);
             st.resources.cash += income;
             StateManager.addMessage(
               "🤝 月中介收入¥" +
@@ -6496,7 +6495,7 @@
           hint: "利润最大化",
           apply: function (st) {
             st.flags._evRecoverySeen = true;
-            var reward = 25000 + Math.floor(Math.random() * 25000);
+            var reward = Random.int(25000, 49999);
             st.resources.cash += reward;
             st.player.intelligence = Math.min(
               100,
@@ -6513,7 +6512,7 @@
           hint: "锁定利润",
           apply: function (st) {
             st.flags._evRecoverySeen = true;
-            var reward2 = 30000 + Math.floor(Math.random() * 10000);
+            var reward2 = Random.int(30000, 39999);
             st.resources.cash += reward2;
             st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
             StateManager.addMessage(
@@ -6567,7 +6566,7 @@
           apply: function (st) {
             st.flags._communityGroupBuySeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-            var earn = 200 + Math.floor(Math.random() * 100);
+            var earn = Random.int(200, 299);
             st.resources.cash += earn;
             StateManager.addMessage(
               "😞 帮王婶拉微信群配送，抽成¥" + earn.toLocaleString() + "。",
@@ -6636,7 +6635,7 @@
           apply: function (st) {
             st.flags._liveStreamSeen = true;
             st.resources.cash -= 200;
-            if (Math.random() < 0.3) {
+            if (Random.chance(0.3)) {
               st.resources.cash += 800;
               StateManager.addMessage("📱 第三天卖了¥800！有搞头。", "success");
             } else {
@@ -6649,7 +6648,7 @@
           hint: "确定性收入",
           apply: function (st) {
             st.flags._liveStreamSeen = true;
-            var earn = 400 + Math.floor(Math.random() * 200);
+            var earn = Random.int(400, 599);
             st.resources.cash += earn;
             StateManager.addMessage(
               "💼 日结¥" + earn.toLocaleString() + "。",
@@ -6719,7 +6718,7 @@
           cost: 3000,
           apply: function (st) {
             st.flags._stallLocationSeen = true;
-            var earn = 3000 + Math.floor(Math.random() * 2000);
+            var earn = Random.int(3000, 4999);
             st.resources.cash += earn;
             st.resources.totalEarned += earn;
             StateManager.addMessage(
@@ -6767,7 +6766,7 @@
           cost: 800,
           apply: function (st) {
             st.flags._templeEconomySeen = true;
-            var earn = 1200 + Math.floor(Math.random() * 800);
+            var earn = Random.int(1200, 1999);
             st.resources.cash += earn;
             StateManager.addMessage(
               "🩧 开光手串赚了¥" + earn.toLocaleString() + "。",
@@ -6780,7 +6779,7 @@
           hint: "年轻人喜欢",
           apply: function (st) {
             st.flags._templeEconomySeen = true;
-            var earn2 = 800 + Math.floor(Math.random() * 400);
+            var earn2 = Random.int(800, 1199);
             st.resources.cash += earn2;
             StateManager.addMessage(
               "\u2615 三轮车咖啡摊赚了¥" + earn2.toLocaleString() + "。",
@@ -6810,7 +6809,7 @@
           hint: "用证据反击",
           apply: function (st) {
             st.flags._viralHarassmentSeen = true;
-            if (Math.random() < 0.5) {
+            if (Random.chance(0.5)) {
               st.resources.cash += 2000;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
               StateManager.addMessage("📱 舆论反转！你涨了2,000粉。", "event");
@@ -6865,7 +6864,7 @@
           hint: "质胜量",
           apply: function (st) {
             st.flags._deliveryPriceSeen = true;
-            var earn = 300 + Math.floor(Math.random() * 300);
+            var earn = Random.int(300, 599);
             st.resources.cash += earn;
             StateManager.addMessage(
               "\u26a1 跑腿高价单多赚¥" + earn.toLocaleString() + "。",
@@ -6948,7 +6947,7 @@
           cost: 1000,
           apply: function (st) {
             st.flags._nearExpirySeen = true;
-            var earn = 1500 + Math.floor(Math.random() * 800);
+            var earn = Random.int(1500, 2299);
             st.resources.cash += earn;
             StateManager.addMessage(
               "📦 夜市赚了¥" + earn.toLocaleString() + "。",
@@ -7030,7 +7029,7 @@
           cost: 9999,
           apply: function (st) {
             st.flags._knowledgePaySeen = true;
-            if (Math.random() < 0.15) {
+            if (Random.chance(0.15)) {
               st.resources.cash += 30000;
               st.player.intelligence = Math.min(
                 100,
@@ -7218,7 +7217,7 @@
           apply: function (st) {
             st.flags._sharingEconomySeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
-            var earn = 200 + Math.floor(Math.random() * 200);
+            var earn = Random.int(200, 399);
             st.resources.cash += earn;
             st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
             StateManager.addMessage(
@@ -9017,7 +9016,7 @@
           apply: function (st) {
             st.flags._shortVideoSeen = true;
             st.flags._triedShortVideo = true;
-            var luck = Math.random();
+            var luck = Random.float(0, 1);
             if (luck < 0.15) {
               st.flags._shortVideoWentViral = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
@@ -9173,7 +9172,7 @@
             st.flags._healthScamSeen = true;
             st.flags._scamWhistleblower = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            var danger = Math.random();
+            var danger = Random.float(0, 1);
             if (danger < 0.3) {
               st.status.health = Math.max(0, st.status.health - 5);
               StateManager.addMessage(
@@ -9238,7 +9237,7 @@
             st.flags._lastBatonSeen = true;
             if (st.resources.cash >= 5000) {
               st.resources.cash -= 5000;
-              var luck = Math.random();
+              var luck = Random.float(0, 1);
               if (luck < 0.25) {
                 st.resources.cash += 12000;
                 StateManager.addMessage(
@@ -9317,7 +9316,7 @@
             st.flags._sunkCostSeen = true;
             if (st.resources.cash >= 100000) {
               st.resources.cash -= 100000;
-              var luck = Math.random();
+              var luck = Random.float(0, 1);
               if (luck < 0.45) {
                 st.resources.cash += 300000;
                 StateManager.addMessage(

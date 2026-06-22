@@ -12,6 +12,9 @@ const LOCATIONS = {
     wealthTier: 1, // 1=贫困区 2=中等 3=富裕区 — 影响 amenity 档次和旅行AP
     footfall: 0.6,
     vendingNote: "本地居民为主，消费力弱",
+    specialties: ["scrap_metal", "scrap_paper", "scrap_plastic"], // 区域特产（必出）
+    dailyProbability: 0.4, // 非特产商品出现概率
+    specialCategory: ["scrap"], // 此类别商品额外+0.3概率
     jobs: ["waste_recycling", "street_vending_goods", "street_vending_food"],
     priceMod: {
       water: 0.9,
@@ -31,6 +34,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.9,
     vendingNote: "批发商多，但也有零散买家",
+    specialties: [], // 批发市场：所有商品由 getDailyGoodsForLocation 特殊处理
+    dailyProbability: 1.0, // 批发市场所有商品都会出现
+    specialCategory: [],
     jobs: ["street_vending_goods", "warehouse_worker"],
     priceMod: {
       water: 0.8,
@@ -52,6 +58,9 @@ const LOCATIONS = {
     wealthTier: 1,
     footfall: 0.5,
     vendingNote: "工人偶尔消费，管理严格",
+    specialties: ["water", "beer", "cigarettes", "instant_noodles"],
+    dailyProbability: 0.3,
+    specialCategory: ["luxury", "food"],
     jobs: [
       "manual_labor_construction",
       "skilled_labor_construction",
@@ -68,14 +77,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.0,
     vendingNote: "午休工人是主力消费群体",
-    jobs: [
-      "factory_work_assembly",
-      "factory_overtime",
-      "security_guard",
-      "warehouse_worker",
-      "street_vending_food",
-      "street_vending_goods",
-    ],
+    specialties: ["beer", "cigarettes", "water", "instant_noodles"],
+    dailyProbability: 0.5,
+    specialCategory: ["food", "daily"],
     priceMod: {
       water: 1.1,
       snacks: 1.0,
@@ -92,6 +96,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.2,
     vendingNote: "学生零食消费旺盛，均价稍低",
+    specialties: ["fruits", "vegetables", "snacks"],
+    dailyProbability: 0.5,
+    specialCategory: ["food", "clothing"],
     jobs: [
       "school_maintenance",
       "package_delivery",
@@ -115,6 +122,9 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 1.8,
     vendingNote: "主商圈，客流量最大，但城管也多",
+    specialties: ["clothing", "electronics", "beer", "cigarettes", "fruits"],
+    dailyProbability: 0.6,
+    specialCategory: ["clothing", "electronics", "luxury"],
     jobs: [
       "street_vending_food",
       "food_stall",
@@ -145,6 +155,9 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 0.7,
     vendingNote: "白领消费力强但习惯点外卖",
+    specialties: ["electronics", "daily_use", "snacks"],
+    dailyProbability: 0.4,
+    specialCategory: ["electronics"],
     jobs: [
       "street_vending_food",
       "data_entry",
@@ -162,6 +175,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.8,
     vendingNote: "探病家属是主要客群",
+    specialties: ["fruits", "water", "snacks"],
+    dailyProbability: 0.3,
+    specialCategory: ["food"],
     jobs: ["hospital_caregiver"],
     priceMod: {},
   },
@@ -173,6 +189,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.4,
     vendingNote: "人流稀少，不适合摆摊",
+    specialties: [],
+    dailyProbability: 0.2,
+    specialCategory: [],
     jobs: [],
     priceMod: {},
   },
@@ -184,6 +203,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.0,
     vendingNote: "周末家庭聚集，工作日冷清",
+    specialties: ["snacks", "water", "fruits"],
+    dailyProbability: 0.5,
+    specialCategory: ["food"],
     jobs: [
       "street_vending_food",
       "street_vending_goods",
@@ -200,6 +222,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.7,
     vendingNote: "学员课间小消费",
+    specialties: ["daily_use", "snacks", "water"],
+    dailyProbability: 0.3,
+    specialCategory: [],
     jobs: [],
     priceMod: {},
   },

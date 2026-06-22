@@ -48,8 +48,9 @@
           text: "📊 自己研究一下",
           hint: "看智力",
           apply: (st) => {
-            const found =
-              Math.random() < 0.4 + (st.player.intelligence - 30) * 0.02;
+            const found = Random.chance(
+              0.4 + (st.player.intelligence - 30) * 0.02,
+            );
             if (found) {
               // 调度后续：验证成功
               if (typeof scheduleChainEvent === "function") {
@@ -105,9 +106,9 @@
               return;
             }
             st.resources.cash -= 3000;
-            const success = Math.random() < 0.7;
+            const success = Random.chance(0.7);
             if (success) {
-              const profit = 3000 + Math.floor(Math.random() * 2000) + 1000;
+              const profit = Random.int(4000, 5999);
               st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 12);
               st.flags._insiderTradingWon = true;
@@ -153,9 +154,9 @@
               return;
             }
             st.resources.cash -= 1000;
-            const success = Math.random() < 0.7;
+            const success = Random.chance(0.7);
             if (success) {
-              const profit = 1000 + Math.floor(Math.random() * 600) + 300;
+              const profit = Random.int(1300, 1899);
               st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 6);
               StateManager.addMessage(
@@ -204,7 +205,7 @@
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
             st.player.mental = Math.max(0, st.player.mental - 8);
             // 80% 概率没事，20% 被盯上
-            const safe = Math.random() < 0.8;
+            const safe = Random.chance(0.8);
             if (safe) {
               StateManager.addMessage(
                 "😰 你赶紧撤了所有记录。目前来看没事，但心里一直悬着...",
@@ -229,7 +230,7 @@
             st.player.mental = Math.min(100, st.player.mental + 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 60% 没事，40% 被警告
-            const ok = Math.random() < 0.6;
+            const ok = Random.chance(0.6);
             if (ok) {
               StateManager.addMessage(
                 "🙋 你主动说明了情况，调查组说你只是小角色，不予追究。心里石头落地。",
@@ -251,7 +252,7 @@
           text: "😤 装不知道",
           hint: "赌运气",
           apply: (st) => {
-            const safe = Math.random() < 0.5;
+            const safe = Random.chance(0.5);
             if (safe) {
               StateManager.addMessage(
                 "😤 你装作不知道。目前来看平安无事。",
@@ -286,9 +287,9 @@
           apply: (st) => {
             st.player.fame = Math.min(100, st.player.fame + 2);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            const recovered = Math.random() < 0.15;
+            const recovered = Random.chance(0.15);
             if (recovered) {
-              const back = 300 + Math.floor(Math.random() * 200);
+              const back = Random.int(300, 499);
               st.resources.cash += back;
               StateManager.addMessage(
                 `🚔 警察立案了！居然追回了 ¥${back}，真是意外之喜。`,
@@ -319,7 +320,7 @@
               100,
               st.player.corporate.risk + 5,
             );
-            const extra = 50 + Math.floor(Math.random() * 50);
+            const extra = Random.int(50, 99);
             st.resources.cash += extra;
             st.resources.totalEarned += extra;
             StateManager.addMessage(
@@ -385,7 +386,7 @@
           text: "😴 装病请假",
           hint: "需要演技",
           apply: (st) => {
-            if (Math.random() < 0.5) {
+            if (Random.chance(0.5)) {
               st.player.corporate.upwardMgmt = Math.max(
                 0,
                 st.player.corporate.upwardMgmt - 8,
@@ -540,7 +541,7 @@
           text: "📋 摆事实讲道理",
           hint: "考验智力",
           apply: (st) => {
-            if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+            if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
               st.player.corporate.kpi = Math.min(
                 150,
                 st.player.corporate.kpi + 3,
@@ -599,7 +600,7 @@
           text: "💼 去面试看看",
           hint: "了解一下行情",
           apply: (st) => {
-            if (Math.random() < 0.5) {
+            if (Random.chance(0.5)) {
               const offer = Math.round(
                 (st.resources.totalEarned /
                   Math.max(1, st.player.corpYear * 4)) *
@@ -695,7 +696,7 @@
           text: "🤖 用AI生成",
           hint: "省力但有风险",
           apply: (st) => {
-            if (Math.random() < 0.55) {
+            if (Random.chance(0.55)) {
               st.player.corporate.ability = Math.min(
                 100,
                 st.player.corporate.ability + 2,
@@ -779,7 +780,7 @@
           text: "🫥 假装不知道",
           hint: "看运气",
           apply: (st) => {
-            if (Math.random() < 0.4) {
+            if (Random.chance(0.4)) {
               st.player.corporate.upwardMgmt = Math.max(
                 0,
                 st.player.corporate.upwardMgmt - 15,
@@ -878,7 +879,7 @@
           text: "🎰 就等着抽奖",
           hint: "碰运气",
           apply: (st) => {
-            const roll = Math.random();
+            const roll = Random.float(0, 1);
             if (roll < 0.05) {
               st.resources.cash += 10000;
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -996,15 +997,15 @@
           apply: function (st) {
             if (st.resources.cash >= 5000) {
               st.resources.cash -= 5000;
-              if (Math.random() < 0.3) {
-                st.resources.cash += 8000 + Math.floor(Math.random() * 15000);
+              if (Random.chance(0.3)) {
+                st.resources.cash += Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
                 );
-              } else if (Math.random() < 0.5) {
-                st.resources.cash += 3000 + Math.floor(Math.random() * 4000);
+              } else if (Random.chance(0.5)) {
+                st.resources.cash += Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
                 st.needs.happiness = Math.max(0, st.needs.happiness - 25);
@@ -1150,7 +1151,7 @@
           hint: "逆势布局",
           apply: function (st) {
             var inv = st.investment || {};
-            var cost = 1000 + Math.floor(Math.random() * 3000);
+            var cost = Random.int(1000, 3999);
             if (st.resources.cash >= cost) {
               st.resources.cash -= cost;
               inv.stockHoldings = inv.stockHoldings || [];
@@ -1619,7 +1620,7 @@
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
             st.flags._formerCompanyCollapsed = true;
-            var severance = 50000 + Math.floor(Math.random() * 20000);
+            var severance = Random.int(50000, 69999);
             st.resources.cash += severance;
             st.resources.totalEarned += severance;
             st.player.mental = Math.max(0, st.player.mental - 5);
@@ -1670,11 +1671,11 @@
           text: "📧 拿出邮件证据",
           hint: "据理力争",
           apply: (st) => {
-            const success =
-              Math.random() <
+            const success = Random.chance(
               0.3 +
                 (st.player.corporate.upwardMgmt - 20) * 0.015 +
-                (st.player.corporate.ability - 30) * 0.01;
+                (st.player.corporate.ability - 30) * 0.01,
+            );
             if (success) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -1742,8 +1743,9 @@
           text: "💬 当场反驳",
           hint: "硬刚",
           apply: (st) => {
-            const success =
-              Math.random() < 0.25 + (st.player.corporate.ability - 30) * 0.02;
+            const success = Random.chance(
+              0.25 + (st.player.corporate.ability - 30) * 0.02,
+            );
             if (success) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -1798,11 +1800,11 @@
           hint: "用实力说话",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-            const success =
-              Math.random() <
+            const success = Random.chance(
               0.3 +
                 (st.player.corporate.ability - 30) * 0.02 +
-                (st.player.intelligence - 30) * 0.01;
+                (st.player.intelligence - 30) * 0.01,
+            );
             if (success) {
               st.player.corporate.ability = Math.min(
                 100,
@@ -1842,9 +1844,9 @@
           hint: "寻求保护",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            const success =
-              Math.random() <
-              0.4 + (st.player.corporate.popularity - 30) * 0.01;
+            const success = Random.chance(
+              0.4 + (st.player.corporate.popularity - 30) * 0.01,
+            );
             if (success) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -1905,9 +1907,9 @@
           text: "🗣️ 公开澄清",
           hint: "正面应对",
           apply: (st) => {
-            const success =
-              Math.random() <
-              0.35 + (st.player.corporate.popularity - 20) * 0.015;
+            const success = Random.chance(
+              0.35 + (st.player.corporate.popularity - 20) * 0.015,
+            );
             if (success) {
               st.player.corporate.popularity = Math.min(
                 100,
@@ -2168,7 +2170,7 @@
           apply: function (st) {
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderQuickSell = true;
-            var profit = 150000 + Math.floor(Math.random() * 20000);
+            var profit = Random.int(150000, 169999);
             st.resources.cash += profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
@@ -2186,7 +2188,7 @@
           apply: function (st) {
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderSlowSell = true;
-            var profit = 80000 + Math.floor(Math.random() * 40000);
+            var profit = Random.int(80000, 119999);
             st.resources.cash += profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
@@ -2236,7 +2238,7 @@
           apply: function (st) {
             st.flags._insiderInvestigationSeen = true;
             st.flags._insiderDenied = true;
-            if (Math.random() < 0.35) {
+            if (Random.chance(0.35)) {
               st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
               StateManager.addMessage(
                 "🤥 三个月后证据不足结案。你保住了钱但活在阴影里。",

@@ -156,7 +156,7 @@ const STOCK_NEWS_TEMPLATES = [
 function initStockMarket(state) {
   for (const stock of STOCK_LIST) {
     state.corporate.stockMarket[stock.symbol] = {
-      price: stock.basePrice * (0.85 + Math.random() * 0.3),
+      price: stock.basePrice * Random.float(0.85, 1.15),
       history: [], // [{ day, price }]
       high20: stock.basePrice,
       low20: stock.basePrice,
@@ -175,9 +175,10 @@ function bootstrapStockHistory(state) {
     if (!market._initialized) {
       market._initialized = true;
       // 倒推 20 天历史
-      let p = market.price / (0.85 + Math.random() * 0.3);
+      let p = market.price / Random.float(0.85, 1.15);
       for (let i = 0; i < 20; i++) {
-        const change = 1 + (Math.random() - 0.5) * def.volatility;
+        const change =
+          1 + Random.float(-def.volatility / 2, def.volatility / 2);
         p = p * change;
         market.history.push({ day: state.player.day - (20 - i), price: p });
       }
@@ -197,7 +198,7 @@ function updateStockPrices(state, forceNews = false) {
     // 1) 基础趋势（每日漂移）
     const trend = stock.baseTrend;
     // 2) 随机扰动（正态分布近似）
-    const noise = (Math.random() - 0.5) * 2 * stock.volatility;
+    const noise = Random.float(-stock.volatility, stock.volatility);
     // 3) 均值回归（偏离20日均价过远时拉回一些）
     let meanReversion = 0;
     if (market.history.length >= 5) {
@@ -210,15 +211,13 @@ function updateStockPrices(state, forceNews = false) {
     market.price = Math.round(market.price * 100) / 100;
 
     // 4) 新闻冲击（5% 概率触发）
-    if (forceNews || Math.random() < 0.05) {
+    if (forceNews || Random.chance(0.05)) {
       const newsPool = STOCK_NEWS_TEMPLATES.find(
         (n) => n.symbol === stock.symbol,
       );
       if (newsPool && state.player.day - market.lastNewsDay > 3) {
         const news =
-          newsPool.headlines[
-            Math.floor(Math.random() * newsPool.headlines.length)
-          ];
+          newsPool.headlines[Random.int(0, newsPool.headlines.length - 1)];
         market.price = Math.max(0.5, market.price * (1 + news.impact));
         market.price = Math.round(market.price * 100) / 100;
         market.lastNewsDay = state.player.day;

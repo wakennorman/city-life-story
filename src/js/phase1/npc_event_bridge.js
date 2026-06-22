@@ -224,7 +224,7 @@ function applyEventNpcEcho(eventId, state) {
 function rollDailyNpcEcho(state) {
   if (!state.relationships) return;
   // 每天20%概率触发一个NPC回响
-  if (Math.random() > 0.2) return;
+  if (!Random.chance(0.2)) return;
 
   // 只选择已经认识的NPC
   var knownNpcs = [];
@@ -238,7 +238,7 @@ function rollDailyNpcEcho(state) {
   var totalWeight = knownNpcs.reduce(function (sum, n) {
     return sum + Math.max(1, n.affinity + 20);
   }, 0);
-  var roll = Math.random() * totalWeight;
+  var roll = Random.float(0, totalWeight);
   var selected = knownNpcs[0];
   var cursor = 0;
   for (var i = 0; i < knownNpcs.length; i++) {
@@ -348,7 +348,7 @@ function rollNewsNpcComment(state, newsHeadline) {
   // 三条活跃新闻以上不叠加NPC评论（避免刷屏）
   if ((state.activeNews || []).length > 3) return;
   // 30%概率触发
-  if (Math.random() > 0.3) return;
+  if (!Random.chance(0.3)) return;
 
   // 根据新闻关键词选择相关NPC
   var keywords = {
@@ -435,7 +435,7 @@ function rollLocationNpcInteraction(state, locationKey) {
   if (!state.relationships) return;
   var locData = LOCATION_NPC_MESSAGES[locationKey];
   if (!locData) return;
-  if (Math.random() > locData.chance) return;
+  if (!Random.chance(locData.chance)) return;
   var rel = state.relationships[locData.npcId];
   if (!rel || !rel.met || rel.affinity < locData.minAffinity) return;
 

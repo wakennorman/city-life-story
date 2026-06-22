@@ -301,7 +301,7 @@ function generateNewCompany(industryOverride) {
   const culture = Random.fromArray(CULTURE_TAGS);
 
   const companyId =
-    "comp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+    "comp_" + Date.now() + "_" + Random.int(0, 0xffffff).toString(36);
   const companyName = generateCompanyName();
   const stockSymbol = generateStockSymbol();
 
@@ -497,7 +497,7 @@ function spawnFromRuins(state, deceasedCompany) {
   var culture = Random.fromArray(CULTURE_TAGS);
 
   var companyId =
-    "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+    "comp_ruins_" + Date.now() + "_" + Random.int(0, 0xffffff).toString(36);
   var companyName = generateCompanyName();
   var stockSymbol = generateStockSymbol();
 

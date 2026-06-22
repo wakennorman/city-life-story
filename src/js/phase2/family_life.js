@@ -293,7 +293,7 @@ function findDatingTarget(state, location) {
 
   const loc = locations[location] || locations.random;
 
-  if (Math.random() > loc.probability) {
+  if (!Random.chance(loc.probability)) {
     StateManager.addMessage(`在${loc.pool}没有遇到合适的人...`, "hint");
     return null;
   }
@@ -322,16 +322,16 @@ function findDatingTarget(state, location) {
   ];
   const partnerTypeKeys = Object.keys(SPOUSE_TYPES);
   const typeKey =
-    partnerTypeKeys[Math.floor(Math.random() * partnerTypeKeys.length)];
+  const typeKey = Random.fromArray(partnerTypeKeys);
   const partnerType = SPOUSE_TYPES[typeKey];
-  const name = names[Math.floor(Math.random() * names.length)];
+  const name = Random.fromArray(names);
 
   const target = {
     id:
       "target_" +
       state.player.day +
       "_" +
-      Math.random().toString(36).substr(2, 9),
+      Random.float(0, 1).toString(36).substr(2, 9),
     name: name,
     type: typeKey,
     typeData: partnerType,
@@ -390,7 +390,7 @@ function goDating(state, eventId) {
 
   // 检查费用
   const cost =
-    event.cost[0] + Math.floor(Math.random() * (event.cost[1] - event.cost[0]));
+    Random.int(event.cost[0], event.cost[1] - 1);
   if (state.resources.cash < cost) {
     return { success: false, message: `现金不足，需要¥${cost}` };
   }
@@ -401,7 +401,7 @@ function goDating(state, eventId) {
   const relationshipBonus = (target.relationship / 100) * 0.3;
   const successChance = Math.min(0.95, event.successChance + relationshipBonus);
 
-  if (Math.random() < successChance) {
+  if (Random.chance(successChance)) {
     // 成功
     target.relationship = Math.min(
       100,
@@ -469,7 +469,7 @@ function getMarried(state) {
     return { success: false, message: "需要先订婚" };
   }
 
-  const weddingCost = 50000 + Math.floor(Math.random() * 100000);
+  const weddingCost = Random.int(50000, 149999);
   if (state.resources.cash < weddingCost) {
     return { success: false, message: `婚礼需要¥${weddingCost}，现金不足` };
   }
@@ -480,7 +480,7 @@ function getMarried(state) {
     name: target.name,
     type: target.type,
     typeData: target.typeData,
-    age: 25 + Math.floor(Math.random() * 5),
+    age: Random.int(25, 29),
     income: target.typeData.income,
     relationship: 100,
     children: [],
@@ -507,7 +507,7 @@ function haveChild(state) {
     return { success: false, message: "需要先结婚" };
   }
 
-  const birthCost = 5000 + Math.floor(Math.random() * 10000);
+  const birthCost = Random.int(5000, 14999);
   if (state.resources.cash < birthCost) {
     return { success: false, message: `生育需要¥${birthCost}，现金不足` };
   }
@@ -525,24 +525,22 @@ function haveChild(state) {
     "小宝贝",
   ];
   const genders = ["男", "女"];
-  const gender = genders[Math.floor(Math.random() * genders.length)];
-  const name = names[Math.floor(Math.random() * names.length)];
+  const gender = Random.fromArray(genders);
+  const name = Random.fromArray(names);
 
   const child = {
     id:
       "child_" +
       state.player.day +
       "_" +
-      Math.random().toString(36).substr(2, 9),
+      Random.float(0, 1).toString(36).substr(2, 9),
     name: name,
     gender: gender,
     birthDay: state.player.day,
     age: 0,
     stage: "infant",
-    intelligence: 50 + Math.floor(Math.random() * 30),
-    personality: ["活泼", "安静", "内向", "外向", "敏感", "乐观"][
-      Math.floor(Math.random() * 6)
-    ],
+    intelligence: Random.int(50, 79),
+    personality: Random.fromArray(["活泼", "安静", "内向", "外向", "敏感", "乐观"]),
     happiness: 80,
     health: 90,
     educationLevel: 0,
@@ -637,7 +635,7 @@ function tickFamilyDaily(state) {
     }
 
     // 随机成长事件
-    if (Math.random() < 0.05) {
+    if (Random.chance(0.05)) {
       child.intelligence = Math.min(100, child.intelligence + 1);
       StateManager.addMessage(`📈 ${child.name}又聪明了一点（智力+1）`, "hint");
     }
@@ -656,8 +654,8 @@ function tickFamilyDaily(state) {
     updateParentHealth(parents.mother);
 
     // 随机健康事件
-    if (Math.random() < 0.02) {
-      const parentKey = Math.random() < 0.5 ? "father" : "mother";
+    if (Random.chance(0.02)) {
+      const parentKey = Random.chance(0.5) ? "father" : "mother";
       const parent = parents[parentKey];
       StateManager.addMessage(
         `⚠️ ${parent.name}身体不太舒服，需要关注`,
@@ -713,14 +711,14 @@ function updateParentHealth(parent) {
   if (age < 55) {
     parent.health = "healthy";
   } else if (age < 65) {
-    parent.health = Math.random() < 0.3 ? "minor_illness" : "healthy";
+    parent.health = Random.chance(0.3) ? "minor_illness" : "healthy";
   } else if (age < 75) {
-    const rand = Math.random();
+    const rand = Random.float(0, 1);
     if (rand < 0.3) parent.health = "healthy";
     else if (rand < 0.7) parent.health = "chronic_illness";
     else parent.health = "serious_illness";
   } else {
-    const rand = Math.random();
+    const rand = Random.float(0, 1);
     if (rand < 0.2) parent.health = "chronic_illness";
     else if (rand < 0.6) parent.health = "serious_illness";
     else parent.health = "critical";
@@ -868,7 +866,7 @@ function doFamilyActivity(state, activityId) {
   // 检查费用
   const cost =
     activity.cost[0] +
-    Math.floor(Math.random() * (activity.cost[1] - activity.cost[0]));
+    Random.int(activity.cost[0], activity.cost[1] - 1);
   if (state.resources.cash < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }

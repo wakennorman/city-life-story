@@ -205,7 +205,7 @@ function checkPhaseTransition(state) {
   if (newsDriven) return;
 
   // 条件D：随机提前结束（每日 10% 概率，需至少持续 10 天）
-  if (!shouldTransition && daysInPhase >= 10 && Math.random() < 0.1) {
+  if (!shouldTransition && daysInPhase >= 10 && Random.chance(0.1)) {
     shouldTransition = true;
   }
 
@@ -344,7 +344,7 @@ function pickNextPhase(state, currentPhase) {
 
   if (totalWeight <= 0) return "stable";
 
-  var r = Math.random() * totalWeight;
+  var r = Random.float(0, totalWeight);
   var cumulative = 0;
   for (var pi = 0; pi < phases.length; pi++) {
     var p = phases[pi];
@@ -400,7 +400,7 @@ function calculatePropertyDailyChange(prop, propDef, state) {
 
   // 5. 每日噪声
   var vol = (propDef && propDef.volatility) || prop.volatility || 0.004;
-  var noise = (Math.random() - 0.5) * 2 * vol;
+  var noise = Random.float(-vol, vol);
 
   // 6. 新闻乘数
   var newsMul = 1.0;
@@ -426,7 +426,7 @@ function calculatePropertyDailyChange(prop, propDef, state) {
 function getCycleDrift(phase) {
   var def = PROPERTY_PHASES[phase];
   if (!def) return 0;
-  return def.driftMin + Math.random() * (def.driftMax - def.driftMin);
+  return Random.float(def.driftMin, def.driftMax);
 }
 
 /**
@@ -435,10 +435,7 @@ function getCycleDrift(phase) {
 function getRandomPhaseDuration(phase) {
   var def = PROPERTY_PHASES[phase];
   if (!def) return 30;
-  return (
-    def.minDuration +
-    Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1))
-  );
+  return def.minDuration + Random.int(0, def.maxDuration - def.minDuration);
 }
 
 // ====== UI 辅助函数 ======

@@ -112,7 +112,7 @@ function rollDailyIllness(state) {
 
     // 概率掷骰
     var ch = ill.triggerChance || 0.5;
-    if (Math.random() >= ch) continue;
+    if (!Random.chance(ch)) continue;
 
     // 患病！
     _addIllness(state, key);
@@ -256,7 +256,7 @@ function tickIllnessDecay(state) {
       // 随机晕厥（高血压）
       if (
         ill.symptom.randomFaintCh &&
-        Math.random() < ill.symptom.randomFaintCh
+        Random.chance(ill.symptom.randomFaintCh)
       ) {
         state.needs.fatigue = Math.min(100, state.needs.fatigue + 20);
         StateManager.addMessage(
@@ -268,7 +268,7 @@ function tickIllnessDecay(state) {
       // 随机吐血（胃癌）
       if (
         ill.symptom.randomVomitCh &&
-        Math.random() < ill.symptom.randomVomitCh
+        Random.chance(ill.symptom.randomVomitCh)
       ) {
         state.status.health = Math.max(0, state.status.health - 3);
         StateManager.addMessage(
@@ -280,7 +280,7 @@ function tickIllnessDecay(state) {
       // 幻觉（重度失眠）
       if (
         ill.symptom.hallucinationCh &&
-        Math.random() < ill.symptom.hallucinationCh
+        Random.chance(ill.symptom.hallucinationCh)
       ) {
         StateManager.addMessage(
           "👻 " + ill.name + "让你产生了幻觉，精神恍惚。",
@@ -291,7 +291,7 @@ function tickIllnessDecay(state) {
       // 猝死风险检测
       if (
         ill.symptom.dailyDeathChance &&
-        Math.random() < ill.symptom.dailyDeathChance
+        Random.chance(ill.symptom.dailyDeathChance)
       ) {
         StateManager.addMessage(
           "💔 " + ill.name + "导致猝死！你的心脏停止了跳动。",
@@ -304,7 +304,7 @@ function tickIllnessDecay(state) {
       }
 
       // 头晕（贫血）
-      if (ill.symptom.dizzinessCh && Math.random() < ill.symptom.dizzinessCh) {
+      if (ill.symptom.dizzinessCh && Random.chance(ill.symptom.dizzinessCh)) {
         state.needs.fatigue += 5;
         StateManager.addMessage(
           "😵 " + ill.name + "让你头晕目眩，疲劳+5。",
@@ -316,7 +316,7 @@ function tickIllnessDecay(state) {
     // 自然康复判定
     if (daysSince >= minDays) {
       var cureChance = (daysSince - minDays + 1) / (maxDays - minDays + 1);
-      if (Math.random() < cureChance) {
+      if (Random.chance(cureChance)) {
         StateManager.addMessage(
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",

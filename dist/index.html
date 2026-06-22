@@ -1069,6 +1069,12 @@ function createDefaultState() {
       goodsPrices: {}, // { locationKey: { goodId: price } }
       priceTrends: {},
       lastPriceUpdate: 0,
+      // 交易情报系统 v1.8
+      visitedToday: {}, // { locKey: { visitDay, prices: { goodId: price } } }
+      _visitedDay: null, // 今日天数（用于每日重置）
+      priceMemory: [], // [{ day, locKey, goodId, tier }] 前N日模糊记忆
+      _todayTradeXp: 0, // 通过交易获得的每日销售XP累计
+      _xpResetDay: null, // 上次XP重置天数
     },
 
     // --- 就业 ---
@@ -1582,9 +1588,16 @@ class GameStateManager {
     if (!s.stats) {
       s.stats = { actionFreq: {}, actionFirstUse: {} };
     }
+    // v1.7 → v1.8 迁移：交易情报系统
+    if (!s.trade) s.trade = {};
+    if (!s.trade.visitedToday) s.trade.visitedToday = {};
+    if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
+    if (!s.trade.priceMemory) s.trade.priceMemory = [];
+    if (typeof s.trade._todayTradeXp === "undefined") s.trade._todayTradeXp = 0;
+    if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.7.0";
+    s.version = "1.8.0";
     this._markAllDirty();
     this._notify();
   }
@@ -1693,6 +1706,7 @@ function addDailyTransaction(state, type, category, amount, description) {
   var PREFIX_RULES = [
     { pattern: /^job_/, category: "work" },
     { pattern: /^festival_job_/, category: "work" },
+    { pattern: /^fest_/, category: "work" },
     { pattern: /^npc_/, category: "social" },
     { pattern: /^intel_/, category: "social" },
     { pattern: /^favor_/, category: "social" },
@@ -1713,24 +1727,35 @@ function addDailyTransaction(state, type, category, amount, description) {
 
   // 精确ID匹配（优先级高于前缀规则）
   var EXACT_MAP = {
+    // === 生存必需 ===
     eat: "survival",
     rest: "survival",
     shower: "survival",
     heal: "survival",
     see_doctor: "survival",
     relax_park: "survival",
-    pharmacy: "survival",
     go_home: "survival",
+    pharmacy: "survival",
 
+    // === 赚钱谋生 ===
     scavenge_trash: "work",
     busking: "work",
     beg: "work",
     vending_advice: "work",
     play_dice: "work",
     apply_job: "work",
+    trade_header: "work",
+    wholesale_header: "work",
+    freelance_coding: "work",
+    weekend_market: "work",
+    monday_job_board: "work",
+
+    // === 职业发展 ===
     corpteam_view: "career",
     corp_team_view: "career",
+    start_business: "career",
 
+    // === 社交休闲 ===
     call_home: "social",
     remit_home: "social",
     salon_chat: "social",
@@ -1738,15 +1763,31 @@ function addDailyTransaction(state, type, category, amount, description) {
     movie: "social",
     ktv: "social",
     gym: "social",
+    gift_npc: "social",
+    diary: "social",
+    meditation: "social",
 
+    // === 学习提升 ===
     self_study: "education",
     night_school: "education",
     study: "education",
+    set_dream: "education",
+    view_dream: "education",
 
+    // === 购物装备 ===
     buy_ingredients: "shopping",
-    pharmacy: "shopping",
+    supermarket: "shopping",
+    clothing: "shopping",
 
+    // === 金融理财 ===
     repay_village: "finance",
+    deposit: "finance",
+    withdraw: "finance",
+    loan: "finance",
+    repay: "finance",
+    lottery: "finance",
+    yu_e_bao: "finance",
+    buy_insurance: "finance",
   };
 
   // 处理 buy_backpack_* → shopping 的精确前缀
@@ -1764,41 +1805,65 @@ function addDailyTransaction(state, type, category, amount, description) {
     shower: 12,
     heal: 13,
     see_doctor: 14,
+    pharmacy: 15,
     relax_park: 20,
-    pharmacy: 25,
     go_home: 30,
+
     // 赚钱谋生：正规工作优先
     apply_job: 10, // 求职（职场入口）
     // job_* 前缀的保持默认50，排在 apply_job 之后
-    scavenge_trash: 55, // 拾荒（替代性收入）
+    freelance_coding: 30, // 技能型收入
+    weekend_market: 35,
+    monday_job_board: 36,
+    trade_header: 40, // 零售买卖（导航桩）
+    wholesale_header: 41, // 批发进货（导航桩）
+    scavenge_trash: 55,
     vending_advice: 56,
     busking: 60,
     play_dice: 65,
     beg: 70,
+
     // 学习提升：系统学习优先
-    study: 10, // 培训中心学习
-    self_study: 15, // 图书馆自习
-    night_school: 20, // 夜校
+    study: 10,
+    self_study: 15,
+    night_school: 20,
+    set_dream: 25, // 确立人生目标
+    view_dream: 26,
     // edu_study 由前缀 ^edu_ 匹配，设默认50
     // edu_exam
     // edu_cert
+
     // 社交休闲：NPC互动优先
     call_home: 10,
     remit_home: 12,
+    gift_npc: 14,
     // npc_* 前缀的保持默认50
     salon_chat: 55,
     internet_bar: 60,
     movie: 65,
     ktv: 70,
-    gym: 50, // 健身归于成长
+    gym: 50,
+    diary: 75,
+    meditation: 76,
+
     // 购物装备：食材采购优先
     buy_ingredients: 10,
+    supermarket: 15,
+    clothing: 20,
     // buy_* 前缀（背包升级等）保持默认50
+
     // 金融理财
     deposit: 10,
     withdraw: 15,
     repay_village: 16,
+    repay: 17,
+    yu_e_bao: 30,
+    lottery: 35,
+    buy_insurance: 40,
+    // loan 保持默认50
+
     // 职业发展
+    start_business: 10, // 摆地摊创业（街头→创业的跳板）
     // corp_* 和 startup_* 保持默认50
   };
 
@@ -1935,6 +2000,84 @@ function addDailyTransaction(state, type, category, amount, description) {
   // getActionCategory 对它们依然返回各自分类（travel→other, housing→other）
   // 因此分离逻辑必须发生在 sort 之前
 
+  // ====== 运行时审计（控制台调用） ======
+  /**
+   * 在游戏启动后调用，打印所有已注册的 action_sort 映射摘要
+   * 用法：ActionSort.runAudit()
+   *       或从 getAvailableActions() 传入 actions 数组运行完整审计
+   */
+  function runAudit(actions) {
+    var totalExact = 0,
+      totalPrefix = 0,
+      totalOther = 0;
+    var lines = ["===== ActionSort 审计 ====="];
+    lines.push("分类数: " + CATEGORIES.length);
+    for (var ai = 0; ai < CATEGORIES.length; ai++) {
+      var c = CATEGORIES[ai];
+      lines.push(
+        "  " + c.order + ". " + c.icon + " " + c.name + " (id:" + c.id + ")",
+      );
+    }
+    lines.push("");
+    lines.push(
+      "精确映射 (EXACT_MAP): " + Object.keys(EXACT_MAP).length + " 条",
+    );
+    lines.push("前缀规则 (PREFIX_RULES): " + PREFIX_RULES.length + " 条");
+    lines.push(
+      "同类优先级 (IN_CATEGORY_PRIORITY): " +
+        Object.keys(IN_CATEGORY_PRIORITY).length +
+        " 条",
+    );
+
+    if (actions && actions.length > 0) {
+      lines.push("");
+      lines.push("行动审计 (" + actions.length + " 个行动):");
+      var auditMap = {};
+      for (var ai2 = 0; ai2 < actions.length; ai2++) {
+        var act = actions[ai2];
+        if (!act || !act.id) continue;
+        var cat = getActionCategory(act.id);
+        if (!auditMap[cat]) auditMap[cat] = [];
+        auditMap[cat].push(act.id + "(" + (act.name || "") + ")");
+        if (cat === "other") totalOther++;
+        else if (EXACT_MAP.hasOwnProperty(act.id)) totalExact++;
+        else totalPrefix++;
+      }
+      for (var ci2 = 0; ci2 < CATEGORIES.length; ci2++) {
+        var catId2 = CATEGORIES[ci2].id;
+        var items = auditMap[catId2];
+        if (items && items.length > 0) {
+          lines.push(
+            "  " +
+              CATEGORIES[ci2].icon +
+              " " +
+              CATEGORIES[ci2].name +
+              " (" +
+              items.length +
+              "):",
+          );
+          lines.push("    " + items.join(", "));
+        }
+      }
+      lines.push("");
+      lines.push(
+        "精确匹配: " +
+          totalExact +
+          " | 前缀匹配: " +
+          totalPrefix +
+          " | 兜底(other): " +
+          totalOther,
+      );
+    }
+    lines.push("===== 审计结束 =====");
+    console.log(lines.join("\n"));
+    return {
+      totalExact: totalExact,
+      totalPrefix: totalPrefix,
+      totalOther: totalOther,
+    };
+  }
+
   // ====== 全局注册 ======
   window.ActionSort = {
     CATEGORIES: CATEGORIES,
@@ -1943,6 +2086,7 @@ function addDailyTransaction(state, type, category, amount, description) {
     getActionPriority: getActionPriority,
     sortActions: sortActions,
     groupActionsByCategory: groupActionsByCategory,
+    runAudit: runAudit,
   };
 })();
 </script>
@@ -21107,6 +21251,9 @@ const LOCATIONS = {
     wealthTier: 1, // 1=贫困区 2=中等 3=富裕区 — 影响 amenity 档次和旅行AP
     footfall: 0.6,
     vendingNote: "本地居民为主，消费力弱",
+    specialties: ["scrap_metal", "scrap_paper", "scrap_plastic"], // 区域特产（必出）
+    dailyProbability: 0.4, // 非特产商品出现概率
+    specialCategory: ["scrap"], // 此类别商品额外+0.3概率
     jobs: ["waste_recycling", "street_vending_goods", "street_vending_food"],
     priceMod: {
       water: 0.9,
@@ -21126,6 +21273,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.9,
     vendingNote: "批发商多，但也有零散买家",
+    specialties: [], // 批发市场：所有商品由 getDailyGoodsForLocation 特殊处理
+    dailyProbability: 1.0, // 批发市场所有商品都会出现
+    specialCategory: [],
     jobs: ["street_vending_goods", "warehouse_worker"],
     priceMod: {
       water: 0.8,
@@ -21147,6 +21297,9 @@ const LOCATIONS = {
     wealthTier: 1,
     footfall: 0.5,
     vendingNote: "工人偶尔消费，管理严格",
+    specialties: ["water", "beer", "cigarettes", "instant_noodles"],
+    dailyProbability: 0.3,
+    specialCategory: ["luxury", "food"],
     jobs: [
       "manual_labor_construction",
       "skilled_labor_construction",
@@ -21163,14 +21316,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.0,
     vendingNote: "午休工人是主力消费群体",
-    jobs: [
-      "factory_work_assembly",
-      "factory_overtime",
-      "security_guard",
-      "warehouse_worker",
-      "street_vending_food",
-      "street_vending_goods",
-    ],
+    specialties: ["beer", "cigarettes", "water", "instant_noodles"],
+    dailyProbability: 0.5,
+    specialCategory: ["food", "daily"],
     priceMod: {
       water: 1.1,
       snacks: 1.0,
@@ -21187,6 +21335,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.2,
     vendingNote: "学生零食消费旺盛，均价稍低",
+    specialties: ["fruits", "vegetables", "snacks"],
+    dailyProbability: 0.5,
+    specialCategory: ["food", "clothing"],
     jobs: [
       "school_maintenance",
       "package_delivery",
@@ -21210,6 +21361,9 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 1.8,
     vendingNote: "主商圈，客流量最大，但城管也多",
+    specialties: ["clothing", "electronics", "beer", "cigarettes", "fruits"],
+    dailyProbability: 0.6,
+    specialCategory: ["clothing", "electronics", "luxury"],
     jobs: [
       "street_vending_food",
       "food_stall",
@@ -21240,6 +21394,9 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 0.7,
     vendingNote: "白领消费力强但习惯点外卖",
+    specialties: ["electronics", "daily_use", "snacks"],
+    dailyProbability: 0.4,
+    specialCategory: ["electronics"],
     jobs: [
       "street_vending_food",
       "data_entry",
@@ -21257,6 +21414,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.8,
     vendingNote: "探病家属是主要客群",
+    specialties: ["fruits", "water", "snacks"],
+    dailyProbability: 0.3,
+    specialCategory: ["food"],
     jobs: ["hospital_caregiver"],
     priceMod: {},
   },
@@ -21268,6 +21428,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.4,
     vendingNote: "人流稀少，不适合摆摊",
+    specialties: [],
+    dailyProbability: 0.2,
+    specialCategory: [],
     jobs: [],
     priceMod: {},
   },
@@ -21279,6 +21442,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.0,
     vendingNote: "周末家庭聚集，工作日冷清",
+    specialties: ["snacks", "water", "fruits"],
+    dailyProbability: 0.5,
+    specialCategory: ["food"],
     jobs: [
       "street_vending_food",
       "street_vending_goods",
@@ -21295,6 +21461,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.7,
     vendingNote: "学员课间小消费",
+    specialties: ["daily_use", "snacks", "water"],
+    dailyProbability: 0.3,
+    specialCategory: [],
     jobs: [],
     priceMod: {},
   },
@@ -26657,6 +26826,18 @@ const NPCS = [
       "年轻人要有志气，别一辈子收废品。",
     ],
     giftPrefers: ["fruits", "daily_use"],
+    // 交易情报：专业领域和好感门控信息
+    tradeInfo: {
+      expertise: ["daily", "food"],
+      infoTypes: {
+        price_level: { label: "日用品价格水平", threshold: 30, cost: 50 },
+        category_lowest: {
+          label: "全城日用品哪最便宜",
+          threshold: 60,
+          cost: 20,
+        },
+      },
+    },
     // 在场加成：王大婶在城中村时，废品回收/送餐/跑腿效率提升
     presenceBonus: [
       {
@@ -26825,6 +27006,14 @@ const NPCS = [
     },
     talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
     giftPrefers: ["cigarettes", "beer"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["scrap"],
+      infoTypes: {
+        price_level: { label: "废品行情走势", threshold: 30, cost: 50 },
+        good_highest: { label: "哪收废品价最高", threshold: 60, cost: 30 },
+      },
+    },
     // 在场加成：李工头在工地时，建筑类工作工资提升
     presenceBonus: [
       {
@@ -26995,6 +27184,18 @@ const NPCS = [
       "多考几个证，好工作不愁。",
     ],
     giftPrefers: ["clothing", "snacks"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["clothing", "electronics", "luxury"],
+      infoTypes: {
+        price_level: { label: "商业区价格资讯", threshold: 30, cost: 60 },
+        category_highest: {
+          label: "哪卖服装电子最贵",
+          threshold: 60,
+          cost: 30,
+        },
+      },
+    },
     // 在场加成：张姐在商业区时，摆摊和销售类收入提升
     presenceBonus: [
       {
@@ -27157,6 +27358,14 @@ const NPCS = [
       "年轻人脑子活，学学怎么挑好货。",
     ],
     giftPrefers: ["beer", "instant_noodles"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["scrap"],
+      infoTypes: {
+        good_highest: { label: "废品全城最高价", threshold: 30, cost: 40 },
+        category_lowest: { label: "全城废品回收比价", threshold: 60, cost: 20 },
+      },
+    },
     // 在场加成：老周分享经验，废品回收效率大幅提升
     presenceBonus: [
       {
@@ -27327,6 +27536,14 @@ const NPCS = [
       "毕业后想去大厂，得先积累经验。",
     ],
     giftPrefers: ["fruits", "snacks"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["daily", "food", "clothing"],
+      infoTypes: {
+        price_level: { label: "平价商品情报", threshold: 30, cost: 30 },
+        category_lowest: { label: "哪买东西最便宜", threshold: 60, cost: 10 },
+      },
+    },
     // 在场加成：小美在大学城时，学习效率提升（通过studyBonus标志）
     presenceBonus: [
       {
@@ -27482,6 +27699,14 @@ const NPCS = [
       "你有点天分，要不要学两手？",
     ],
     giftPrefers: ["beer", "vegetables"],
+    // 交易情报
+    tradeInfo: {
+      expertise: ["food"],
+      infoTypes: {
+        price_level: { label: "食材价格行情", threshold: 30, cost: 40 },
+        category_lowest: { label: "哪买菜最便宜", threshold: 60, cost: 15 },
+      },
+    },
     // 在场加成：陈师傅在场时，餐饮/食品摊位收入提升
     presenceBonus: [
       {
@@ -32484,6 +32709,11 @@ function buyGood(goodId, qty) {
   adjustPriceAfterTrade(locKey, goodId, buyDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
 
+  // 交易获得销售经验
+  if (typeof gainTradeXp === "function") {
+    gainTradeXp(state);
+  }
+
   StateManager.addMessage(
     `🛒 购买了 ${qty}${good.unit}${good.name}，单价 ¥${price.toFixed(1)}，共 ¥${totalCost.toFixed(1)}。${newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : ""}`,
     "success",
@@ -32565,7 +32795,7 @@ function sellGood(goodId, qty) {
   }
 
   // 低买高卖时显示利润
-  const buyPrice = getAvgBuyPrice(state, goodId); // 估算买入价
+  const buyPrice = getAvgBuyPrice(state, goodId);
   let profitMsg = "";
   if (sameLocationPenalty) {
     profitMsg = " ⚠️ 同地转卖，贬值严重！";
@@ -32582,6 +32812,12 @@ function sellGood(goodId, qty) {
   const sellDelta = -Random.float(0.002, 0.005);
   adjustPriceAfterTrade(locKey, goodId, sellDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
+
+  // 交易获得销售经验
+  if (typeof gainTradeXp === "function") {
+    gainTradeXp(state);
+  }
+
   const priceMsg =
     newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : "";
 
@@ -32814,6 +33050,1014 @@ function updateAllPrices(state) {
     }
   }
   state.trade.lastPriceUpdate = state.player.day;
+}
+
+/**
+ * 获取某地点今日可交易的商品列表
+ * 委托至 trade_intel.js 的 getDailyGoodsForLocation
+ * @param {string} locKey - 地点 ID
+ * @param {object} state - 游戏状态
+ * @returns {Array} 可用商品列表
+ */
+function getAvailableGoodsAtLocation(locKey, state) {
+  if (typeof getDailyGoodsForLocation === "function") {
+    return getDailyGoodsForLocation(locKey, state);
+  }
+  // 降级：如果没有 trade_intel.js，返回全部商品
+  return GOODS.slice();
+}
+</script>
+    <script>/**
+ * 交易情报系统 — 技能驱动的价格信息可见度 + 区域商品概率 + NPC情报
+ *
+ * 核心原则：
+ *   1. 销售技能决定价格信息可见度（技能越高，看到越多）
+ *   2. 今日访问过的区域才能对比价格（"记忆"机制，次日清空精确记忆）
+ *   3. 前3日保留模糊印象（"偏低/正常/偏高"），不显示精确数字
+ *   4. NPC在好感足够时可分享专业领域价格情报
+ *   5. 每个区域有特产（必出）+ 随机商品（按概率）+ 日常（必出）
+ *
+ * 依赖: locations.js, goods.js, npcs.js, state.js
+ * 在 index.html 中位于 trade.js 之后加载
+ */
+
+// ====== 销售技能等级门槛 ======
+var SALES_SKILL_THRESHOLDS = {
+  LOCAL_ONLY: 0, // 只能看当前地点价格
+  CAN_COMPARE: 20, // 可以对比已访问区域（红/绿）
+  CAN_SEE_VISITED_EXTREMES: 40, // 可以看到"已访问区域中"最低/最高
+  CAN_SEE_CITY_EXTREMES: 60, // 可以看到全城最低/最高（需今日跑完全城）
+  CAN_PREDICT_TREND: 80, // 可以看到下个周期价格走势箭头
+};
+
+// ====== 模糊记忆等级（前几日） ======
+var PRICE_TIER_LABELS = {
+  low: "偏低",
+  mid: "正常",
+  high: "偏高",
+};
+
+/** 前3日模糊记忆保留天数 */
+var MEMORY_RETENTION_DAYS = 3;
+
+/**
+ * 获取某商品的模糊价格区间
+ * @param {number} price - [current price
+ * @param {number} basePrice - base price of the good
+ * @returns {"low"|"mid"|"high"} 模糊等级
+ */
+function getPriceTier(price, basePrice) {
+  var ratio = price / basePrice;
+  if (ratio < 0.85) return "low";
+  if (ratio > 1.15) return "high";
+  return "mid";
+}
+
+/**
+ * 记录玩家访问某个区域（今日价格快照）
+ * 调用时机：玩家进入某地点并打开交易页时
+ * @param {object} state - 游戏状态
+ * @param {string} locKey - 地点 ID
+ */
+function recordLocationVisit(state, locKey) {
+  var today = state.player && state.player.day ? state.player.day : 1;
+  var visited = state.trade.visitedToday || {};
+
+  // 如果今天是新的一天，重置 visitedToday（保留 visitedTodayPrices）
+  if (state.trade._visitedDay !== today) {
+    // 将昨日 visitedToday 转入模糊记忆
+    archiveYesterdayMemory(state);
+    state.trade.visitedToday = {};
+    state.trade._visitedDay = today;
+    visited = {};
+  }
+
+  // 如果该地点今日已访问过，不重复记录
+  if (visited[locKey]) return;
+
+  // 快照当前价格
+  var prices = state.trade.goodsPrices[locKey] || {};
+  var snapshot = {};
+  for (var gid in prices) {
+    if (prices.hasOwnProperty(gid)) {
+      snapshot[gid] = prices[gid];
+    }
+  }
+  visited[locKey] = {
+    visitDay: today,
+    prices: snapshot,
+  };
+  state.trade.visitedToday = visited;
+  state.trade._visitedDay = today;
+}
+
+/**
+ * 将昨日精确记忆归档为模糊记忆（滚动保留3天）
+ */
+function archiveYesterdayMemory(state) {
+  var yesterday = state.trade._visitedDay;
+  if (!yesterday) return;
+
+  var visited = state.trade.visitedToday || {};
+  var memory = state.trade.priceMemory || [];
+
+  for (var locKey in visited) {
+    if (!visited.hasOwnProperty(locKey)) continue;
+    var snap = visited[locKey].prices;
+    for (var gid in snap) {
+      if (!snap.hasOwnProperty(gid)) continue;
+      var price = snap[gid];
+      var good = getGoodById(gid);
+      if (!good) continue;
+      memory.push({
+        day: yesterday,
+        locKey: locKey,
+        goodId: gid,
+        tier: getPriceTier(price, good.basePrice),
+      });
+    }
+  }
+
+  // 只保留最近 MEMORY_RETENTION_DAYS 天
+  var cutoff = yesterday - MEMORY_RETENTION_DAYS;
+  memory = memory.filter(function (m) {
+    return m.day >= cutoff;
+  });
+
+  state.trade.priceMemory = memory;
+}
+
+/**
+ * 获取今日已访问的地点列表
+ * @param {object} state
+ * @returns {string[]} 地点 ID 数组
+ */
+function getRememberedLocations(state) {
+  var visited = state.trade.visitedToday || {};
+  return Object.keys(visited);
+}
+
+/**
+ * 判断销售技能是否达到"可对比已访问区域价格"的门槛
+ * 门槛: 销售 >= 20
+ * @param {object} state
+ * @returns {boolean}
+ */
+function canSeePriceMarkers(state) {
+  var salesLvl =
+    (state.skills && state.skills.sales && state.skills.sales.level) || 0;
+  return salesLvl >= SALES_SKILL_THRESHOLDS.CAN_COMPARE;
+}
+
+/**
+ * 判断销售技能是否达到"可看到已访问区域中最低/最高"的门槛
+ * 门槛: 销售 >= 40
+ * @param {object} state
+ * @returns {boolean}
+ */
+function canSeeVisitedExtremes(state) {
+  var salesLvl =
+    (state.skills && state.skills.sales && state.skills.sales.level) || 0;
+  return salesLvl >= SALES_SKILL_THRESHOLDS.CAN_SEE_VISITED_EXTREMES;
+}
+
+/**
+ * 判断能否看到全城最低/最高
+ * 条件：销售 >= 60 + 今日已跑完全城所有地点
+ * @param {object} state
+ * @returns {boolean}
+ */
+function canSeeCityExtremes(state) {
+  var salesLvl =
+    (state.skills && state.skills.sales && state.skills.sales.level) || 0;
+  if (salesLvl < SALES_SKILL_THRESHOLDS.CAN_SEE_CITY_EXTREMES) return false;
+
+  var visited = getRememberedLocations(state);
+  var allLocs = Object.keys(LOCATIONS);
+  // 检查是否所有地点都访问过
+  for (var i = 0; i < allLocs.length; i++) {
+    if (visited.indexOf(allLocs[i]) === -1) return false;
+  }
+  return true;
+}
+
+/**
+ * 判断能否看到价格趋势箭头（↑↓→）
+ * 门槛: 销售 >= 80
+ * @param {object} state
+ * @returns {boolean}
+ */
+function canPredictTrend(state) {
+  var salesLvl =
+    (state.skills && state.skills.sales && state.skills.sales.level) || 0;
+  return salesLvl >= SALES_SKILL_THRESHOLDS.CAN_PREDICT_TREND;
+}
+
+/**
+ * 获取前几日的价格模糊记忆提示
+ * @param {object} state
+ * @param {string} locKey - 可选，过滤某个地点
+ * @returns {string[]} 提示文本数组
+ */
+function getPriceMemoryHints(state, locKey) {
+  var memory = state.trade.priceMemory || [];
+  var hints = [];
+
+  // 过滤
+  var filtered = locKey
+    ? memory.filter(function (m) {
+        return m.locKey === locKey;
+      })
+    : memory;
+
+  // 按天分组去重（同一天同一地点同一商品只保留一条）
+  var seen = {};
+  filtered = filtered.filter(function (m) {
+    var key = m.day + "_" + m.locKey + "_" + m.goodId;
+    if (seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+
+  for (var i = 0; i < filtered.length; i++) {
+    var m = filtered[i];
+    var loc = getLocation(m.locKey);
+    var good = getGoodById(m.goodId);
+    if (!loc || !good) continue;
+    var tierLabel = PRICE_TIER_LABELS[m.tier] || "正常";
+    var dayDiff = (state.player.day || 1) - m.day;
+    var dayStr =
+      dayDiff === 0 ? "今天" : dayDiff === 1 ? "昨天" : dayDiff + "天前";
+    hints.push(dayStr + loc.name + "的" + good.name + "价格" + tierLabel);
+  }
+
+  // 最多返回 5 条
+  return hints.slice(0, 5);
+}
+
+/**
+ * 检查某个商品在当前地点是否需要显示红/绿价格标记
+ *
+ * 规则：
+ *   - 销售 < 20：不显示任何标记
+ *   - 销售 >= 20：对比已访问区域，比已访问均价低→绿，高→红
+ *
+ * @param {object} state
+ * @param {string} locKey - 当前地点
+ * @param {string} goodId - 商品 ID
+ * @param {number} price - 当前价格
+ * @returns {{ direction: "up"|"down"|null, label: string }}
+ */
+function getPriceMarker(state, locKey, goodId, price) {
+  var result = { direction: null, label: "" };
+  if (!canSeePriceMarkers(state)) return result;
+
+  var visited = state.trade.visitedToday || {};
+  var comparePrices = [];
+
+  for (var vLocKey in visited) {
+    if (!visited.hasOwnProperty(vLocKey)) continue;
+    if (vLocKey === locKey) continue; // 不和自己比
+    var snap = visited[vLocKey].prices;
+    if (snap && snap[goodId] !== undefined) {
+      comparePrices.push(snap[goodId]);
+    }
+  }
+
+  if (comparePrices.length === 0) return result;
+
+  var avg =
+    comparePrices.reduce(function (a, b) {
+      return a + b;
+    }, 0) / comparePrices.length;
+
+  if (price < avg * 0.98) {
+    result.direction = "down";
+    result.label = "🟢 低于已访区域均价";
+  } else if (price > avg * 1.02) {
+    result.direction = "up";
+    result.label = "🔴 高于已访区域均价";
+  }
+
+  return result;
+}
+
+/**
+ * 检查某商品在当前地点是否是"已访问区域中的最低/最高"
+ * @param {object} state
+ * @param {string} locKey - 当前地点
+ * @param {string} goodId - 商品 ID
+ * @returns {{ isVisitedLowest: boolean, isVisitedHighest: boolean, label: string }}
+ */
+function getVisitedExtreme(state, locKey, goodId) {
+  var result = { isVisitedLowest: false, isVisitedHighest: false, label: "" };
+  if (!canSeeVisitedExtremes(state)) return result;
+
+  var visited = state.trade.visitedToday || {};
+  var allPrices = [];
+
+  for (var vLocKey in visited) {
+    if (!visited.hasOwnProperty(vLocKey)) continue;
+    var snap = visited[vLocKey].prices;
+    if (snap && snap[goodId] !== undefined) {
+      allPrices.push({ loc: vLocKey, price: snap[goodId] });
+    }
+  }
+
+  if (allPrices.length < 2) return result;
+
+  var currentPrice = 0;
+  for (var i = 0; i < allPrices.length; i++) {
+    if (allPrices[i].loc === locKey) {
+      currentPrice = allPrices[i].price;
+      break;
+    }
+  }
+  if (!currentPrice) return result;
+
+  var min = Infinity,
+    max = -Infinity;
+  for (var j = 0; j < allPrices.length; j++) {
+    if (allPrices[j].price < min) min = allPrices[j].price;
+    if (allPrices[j].price > max) max = allPrices[j].price;
+  }
+
+  if (currentPrice <= min) {
+    result.isVisitedLowest = true;
+  }
+  if (currentPrice >= max) {
+    result.isVisitedHighest = true;
+  }
+
+  if (result.isVisitedLowest && result.isVisitedHighest) {
+    result.label = "🟡 唯一价格（仅访问过1处）";
+  } else if (result.isVisitedLowest) {
+    result.label = "🟢 已访区域最低";
+  } else if (result.isVisitedHighest) {
+    result.label = "🔴 已访区域最高";
+  }
+
+  return result;
+}
+
+/**
+ * 检查是否全城最低/全城最高（需销售>=60+跑完全城）
+ * @param {object} state
+ * @param {string} locKey
+ * @param {string} goodId
+ * @returns {{ isCityLowest: boolean, isCityHighest: boolean, label: string }}
+ */
+function getCityExtreme(state, locKey, goodId) {
+  var result = { isCityLowest: false, isCityHighest: false, label: "" };
+  if (!canSeeCityExtremes(state)) return result;
+
+  var lowest = getLowestPrice(goodId);
+  var highest = getHighestPrice(goodId);
+
+  if (lowest.location === locKey) {
+    result.isCityLowest = true;
+    result.label = "🏆 全城最低！";
+  }
+  if (highest.location === locKey) {
+    result.isCityHighest = true;
+    result.label = result.isCityLowest ? "🏆 全城最低！" : "📈 全城最高";
+  }
+
+  return result;
+}
+
+/**
+ * 获取价格趋势预测箭头
+ * @param {object} state
+ * @param {string} locKey
+ * @param {string} goodId
+ * @returns {string} "↑" | "↓" | "→" | ""
+ */
+function getPriceTrend(state, locKey, goodId) {
+  if (!canPredictTrend(state)) return "";
+
+  // 基于历史价格趋势判断（看过去3天的模糊记忆）
+  var memory = state.trade.priceMemory || [];
+  var relevant = memory.filter(function (m) {
+    return m.locKey === locKey && m.goodId === goodId;
+  });
+
+  if (relevant.length < 2) return "→";
+
+  // 按天排序
+  relevant.sort(function (a, b) {
+    return a.day - b.day;
+  });
+
+  var tiers = relevant.map(function (m) {
+    return m.tier;
+  });
+  var recent = tiers.slice(-3);
+
+  var lowCount = 0,
+    highCount = 0;
+  for (var i = 0; i < recent.length; i++) {
+    if (recent[i] === "low") lowCount++;
+    if (recent[i] === "high") highCount++;
+  }
+
+  // 连续低价→可能涨
+  if (lowCount >= 2) return "↑";
+  // 连续高价→可能跌
+  if (highCount >= 2) return "↓";
+  return "→";
+}
+
+// ====== NPC 价格情报系统 ======
+
+/**
+ * NPC价格情报专业领域定义
+ * 每个NPC可以透露的信息由其职业/背景决定
+ */
+var NPC_TRADE_INFO = {
+  // 王大婶 — 房东，最懂柴米油盐
+  aunt_wang: {
+    expertise: ["daily", "food"],
+    infoTypes: {
+      price_level: { label: "日用品价格水平", threshold: 30, cost: 50 },
+      category_lowest: { label: "全城日用品哪最便宜", threshold: 60, cost: 20 },
+    },
+  },
+  // 李工头 — 包工头，懂废品/建材
+  boss_li: {
+    expertise: ["scrap"],
+    infoTypes: {
+      price_level: { label: "废品行情走势", threshold: 30, cost: 50 },
+      good_highest: { label: "哪收废品价最高", threshold: 60, cost: 30 },
+    },
+  },
+  // 张姐 — 中介，消息灵通
+  sister_zhang: {
+    expertise: ["clothing", "electronics", "luxury"],
+    infoTypes: {
+      price_level: { label: "商业区价格资讯", threshold: 30, cost: 60 },
+      category_highest: { label: "哪卖服装电子最贵", threshold: 60, cost: 30 },
+    },
+  },
+  // 老周 — 收废品老人，废品行家
+  old_zhou: {
+    expertise: ["scrap"],
+    infoTypes: {
+      good_highest: { label: "废品全城最高价", threshold: 30, cost: 40 },
+      category_lowest: { label: "全城废品回收比价", threshold: 60, cost: 20 },
+    },
+  },
+  // 小美 — 大学生，懂二手/平价商品
+  xiao_mei: {
+    expertise: ["daily", "food", "clothing"],
+    infoTypes: {
+      price_level: { label: "平价商品情报", threshold: 30, cost: 30 },
+      category_lowest: { label: "哪买东西最便宜", threshold: 60, cost: 10 },
+    },
+  },
+  // 陈师傅 — 大厨，懂食材
+  chef_chen: {
+    expertise: ["food"],
+    infoTypes: {
+      price_level: { label: "食材价格行情", threshold: 30, cost: 40 },
+      category_lowest: { label: "哪买菜最便宜", threshold: 60, cost: 15 },
+    },
+  },
+};
+
+/**
+ * 获取某NPC可提供的交易情报（基于好感度过滤）
+ * @param {string} npcId
+ * @param {object} state
+ * @returns {object|null} { expertise, availableInfo: [...] }
+ */
+function getNPCTradeInfo(npcId, state) {
+  var infoDef = NPC_TRADE_INFO[npcId];
+  if (!infoDef) return null;
+
+  var rel = state.relationships && state.relationships[npcId];
+  var affinity = rel ? rel.affinity : 0;
+  var met = rel ? rel.met : false;
+  if (!met) return null;
+
+  var availableInfo = [];
+  var types = infoDef.infoTypes;
+  for (var typeId in types) {
+    if (!types.hasOwnProperty(typeId)) continue;
+    var typeDef = types[typeId];
+    if (affinity >= typeDef.threshold) {
+      availableInfo.push({
+        id: typeId,
+        label: typeDef.label,
+        threshold: typeDef.threshold,
+        baseCost: typeDef.cost,
+        // 好感越高价格越低
+        currentCost: getInfoCost(typeDef.cost, affinity),
+        free: affinity >= 80,
+      });
+    }
+  }
+
+  return {
+    expertise: infoDef.expertise,
+    availableInfo: availableInfo,
+  };
+}
+
+/**
+ * 根据好感度计算情报价格
+ * 好感30: 原价
+ * 好感30~59: 原价 ~ 6折 线性递减
+ * 好感60~79: 6折 ~ 3折 线性递减
+ * 好感80+: 免费
+ */
+function getInfoCost(baseCost, affinity) {
+  if (affinity >= 80) return 0;
+  if (affinity >= 60) {
+    // 60→0.6x, 79→0.3x
+    var t = (affinity - 60) / 19;
+    return Math.round(baseCost * (0.6 - t * 0.3));
+  }
+  if (affinity >= 30) {
+    // 30→1.0x, 59→0.6x
+    var t2 = (affinity - 30) / 29;
+    return Math.round(baseCost * (1.0 - t2 * 0.4));
+  }
+  return baseCost;
+}
+
+/**
+ * 从NPC购买情报
+ * @param {string} npcId
+ * @param {string} infoTypeId
+ * @param {object} state
+ * @returns {{ success: boolean, message: string, info?: string }}
+ */
+function buyInfoFromNpc(npcId, infoTypeId, state) {
+  var npc = getNpcById(npcId);
+  if (!npc) return { success: false, message: "⚠️ 找不到该NPC。" };
+
+  var infoData = getNPCTradeInfo(npcId, state);
+  if (!infoData) return { success: false, message: "⚠️ 该NPC没有情报可提供。" };
+
+  var foundInfo = null;
+  for (var i = 0; i < infoData.availableInfo.length; i++) {
+    if (infoData.availableInfo[i].id === infoTypeId) {
+      foundInfo = infoData.availableInfo[i];
+      break;
+    }
+  }
+  if (!foundInfo) {
+    return {
+      success: false,
+      message: "⚠️ 好感度不够，该NPC还不愿意分享这项情报。",
+    };
+  }
+
+  var cost = foundInfo.currentCost;
+  var rel = state.relationships && state.relationships[npcId];
+  if (!rel) return { success: false, message: "⚠️ 还不认识该NPC。" };
+
+  // 好感80+免费
+  if (foundInfo.free) {
+    rel.affinity = Math.min(100, rel.affinity + 2);
+    return {
+      success: true,
+      message:
+        "💬 " +
+        npc.name +
+        "主动告诉你：" +
+        generateInfoText(npcId, infoTypeId, state),
+      info: generateInfoText(npcId, infoTypeId, state),
+    };
+  }
+
+  if (state.resources.cash < cost) {
+    return {
+      success: false,
+      message: "⚠️ 钱不够，需要 ¥" + cost + "。",
+    };
+  }
+
+  state.resources.cash -= cost;
+
+  // 销售技能微量增长
+  if (state.skills && state.skills.sales) {
+    state.skills.sales.xp += 5;
+  }
+
+  // 好感微量增加
+  rel.affinity = Math.min(100, rel.affinity + 1);
+
+  return {
+    success: true,
+    message:
+      "💰 花了 ¥" +
+      cost +
+      " 从" +
+      npc.name +
+      "那里打听情报：" +
+      generateInfoText(npcId, infoTypeId, state),
+    info: generateInfoText(npcId, infoTypeId, state),
+  };
+}
+
+/**
+ * 生成NPC情报的具体内容文本
+ */
+function generateInfoText(npcId, infoTypeId, state) {
+  var infoDef = NPC_TRADE_INFO[npcId];
+  if (!infoDef) return "";
+
+  var expertise = infoDef.expertise || [];
+
+  switch (infoTypeId) {
+    case "price_level": {
+      // 告诉某类商品整体价格水平
+      var cat = expertise[0] || "daily";
+      var catLabel =
+        {
+          daily: "日用品",
+          food: "食品",
+          scrap: "废品",
+          clothing: "服装",
+          electronics: "电子",
+          luxury: "奢侈品",
+        }[cat] || cat;
+      var locs = Object.keys(state.trade.goodsPrices || {});
+      var cheapLocs = [];
+      for (var i = 0; i < locs.length; i++) {
+        var lk = locs[i];
+        var loc = getLocation(lk);
+        if (!loc) continue;
+        var prices = state.trade.goodsPrices[lk] || {};
+        var catGoods = GOODS.filter(function (g) {
+          return g.category === cat;
+        });
+        var total = 0,
+          count = 0;
+        for (var j = 0; j < catGoods.length; j++) {
+          if (prices[catGoods[j].id] !== undefined) {
+            total += prices[catGoods[j].id];
+            count++;
+          }
+        }
+        if (count > 0) {
+          cheapLocs.push({ loc: loc.name, avg: total / count });
+        }
+      }
+      cheapLocs.sort(function (a, b) {
+        return a.avg - b.avg;
+      });
+      if (cheapLocs.length >= 2) {
+        return (
+          "最近" +
+          catLabel +
+          "整体行情，" +
+          cheapLocs[0].loc +
+          "最便宜（均¥" +
+          cheapLocs[0].avg.toFixed(1) +
+          "），" +
+          cheapLocs[cheapLocs.length - 1].loc +
+          "最贵（均¥" +
+          cheapLocs[cheapLocs.length - 1].avg.toFixed(1) +
+          "）。"
+        );
+      }
+      return "最近" + catLabel + "价格还算平稳。";
+    }
+    case "category_lowest": {
+      var cat2 = expertise[0] || "daily";
+      var catLabel2 =
+        {
+          daily: "日用品",
+          food: "食品",
+          scrap: "废品",
+          clothing: "服装",
+          electronics: "电子",
+          luxury: "奢侈品",
+        }[cat2] || cat2;
+      var lowest = null;
+      var lowestPrice = Infinity;
+      for (var lk2 in state.trade.goodsPrices) {
+        var prices2 = state.trade.goodsPrices[lk2] || {};
+        var catGoods2 = GOODS.filter(function (g) {
+          return g.category === cat2;
+        });
+        for (var k = 0; k < catGoods2.length; k++) {
+          var gid = catGoods2[k].id;
+          if (prices2[gid] !== undefined && prices2[gid] < lowestPrice) {
+            lowestPrice = prices2[gid];
+            var locObj = getLocation(lk2);
+            lowest = locObj ? locObj.name : lk2;
+          }
+        }
+      }
+      if (lowest) {
+        return (
+          "据我所知，今天" +
+          catLabel2 +
+          "最便宜的是" +
+          lowest +
+          "，" +
+          catLabel2 +
+          "最低价 ¥" +
+          lowestPrice.toFixed(1) +
+          "！"
+        );
+      }
+      return "今天" + catLabel2 + "的价格我不太确定。";
+    }
+    case "category_highest": {
+      var cat3 = expertise[0] || "clothing";
+      var catLabel3 =
+        {
+          daily: "日用品",
+          food: "食品",
+          scrap: "废品",
+          clothing: "服装",
+          electronics: "电子",
+          luxury: "奢侈品",
+        }[cat3] || cat3;
+      var highest = null;
+      var highestPrice = 0;
+      for (var lk3 in state.trade.goodsPrices) {
+        var prices3 = state.trade.goodsPrices[lk3] || {};
+        var catGoods3 = GOODS.filter(function (g) {
+          return g.category === cat3;
+        });
+        for (var m = 0; m < catGoods3.length; m++) {
+          var gid2 = catGoods3[m].id;
+          if (prices3[gid2] !== undefined && prices3[gid2] > highestPrice) {
+            highestPrice = prices3[gid2];
+            var locObj2 = getLocation(lk3);
+            highest = locObj2 ? locObj2.name : lk3;
+          }
+        }
+      }
+      if (highest) {
+        return (
+          "听说今天" +
+          catLabel3 +
+          "卖价最高的是" +
+          highest +
+          "，" +
+          catLabel3 +
+          "最高到 ¥" +
+          highestPrice.toFixed(1) +
+          "！去那边卖准没错。"
+        );
+      }
+      return "今天" + catLabel3 + "的价格我不太确定。";
+    }
+    case "good_highest": {
+      // 告诉某个具体类目哪收价最高（针对废品：老周/李工头）
+      var scrapGoods = GOODS.filter(function (g) {
+        return g.category === "scrap";
+      });
+      if (scrapGoods.length === 0) return "今天废品行情一般。";
+      var randomGood =
+        scrapGoods[Math.floor(Math.random() * scrapGoods.length)];
+      var bestLoc = null;
+      var bestPrice2 = 0;
+      for (var lk4 in state.trade.goodsPrices) {
+        var p = (state.trade.goodsPrices[lk4] || {})[randomGood.id];
+        if (p && p > bestPrice2) {
+          bestPrice2 = p;
+          var locObj3 = getLocation(lk4);
+          bestLoc = locObj3 ? locObj3.name : lk4;
+        }
+      }
+      if (bestLoc) {
+        return (
+          randomGood.name +
+          "今天" +
+          bestLoc +
+          "收得最高，¥" +
+          bestPrice2.toFixed(1) +
+          "/" +
+          randomGood.unit +
+          "！"
+        );
+      }
+      return "今天废品行情一般，再看看。";
+    }
+    default:
+      return "暂时没什么特别的消息。";
+  }
+}
+
+/**
+ * 尝试触发NPC主动分享情报（每日结算时调用）
+ * 条件：好感>=60，且今日玩家在该NPC所在地点交易过
+ * @param {string} npcId
+ * @param {object} state
+ * @returns {string|null} 情报文本，如果没有则返回 null
+ */
+function tryTriggerNPCInfoShare(npcId, state) {
+  var rel = state.relationships && state.relationships[npcId];
+  if (!rel || !rel.met) return null;
+  if (rel.affinity < 60) return null;
+
+  var npc = getNpcById(npcId);
+  if (!npc) return null;
+
+  // 30%概率触发
+  if (Math.random() > 0.3) return null;
+
+  var infoDef = NPC_TRADE_INFO[npcId];
+  if (!infoDef) return null;
+
+  var types = Object.keys(infoDef.infoTypes);
+  if (types.length === 0) return null;
+
+  // 选一个好感足够的类型
+  var availableTypes = [];
+  for (var i = 0; i < types.length; i++) {
+    var t = infoDef.infoTypes[types[i]];
+    if (rel.affinity >= t.threshold) {
+      availableTypes.push(types[i]);
+    }
+  }
+  if (availableTypes.length === 0) return null;
+
+  var chosenType =
+    availableTypes[Math.floor(Math.random() * availableTypes.length)];
+  var infoText = generateInfoText(npcId, chosenType, state);
+
+  // 微量销售XP
+  if (state.skills && state.skills.sales) {
+    state.skills.sales.xp += 10;
+  }
+
+  return infoText;
+}
+
+// ====== 区域商品概率系统 ======
+
+/**
+ * 获取某个地点今日可交易的商品列表
+ *
+ * 规则：
+ *   1. 日常必需品（水、方便面、零食、日用品）每个区域必有
+ *   2. 区域特产（specialties）100%出现
+ *   3. 其他商品按 dailyProbability 概率出现
+ *   4. 每日刷新（由 state 的 _goodsSeed 决定，每天不同）
+ *
+ * @param {string} locKey - 地点 ID
+ * @param {object} state - 游戏状态
+ * @returns {Array} 可用商品列表
+ */
+function getDailyGoodsForLocation(locKey, state) {
+  var loc = getLocation(locKey);
+  if (!loc) return [];
+
+  // 批发市场特殊处理：所有商品都可交易
+  if (locKey === "wholesaleMarket") {
+    return GOODS.slice(); // 返回全部商品
+  }
+
+  // 构建天的确定性种子（每天不同，保证当天内一致）
+  var day = state.player && state.player.day ? state.player.day : 1;
+  var seed = day * 7 + locKey.length * 13 + 3;
+  var rng = createSeededRandom(seed);
+
+  // 1. 日常必需品（每个区域必有）
+  var dailyEssentials = ["water", "instant_noodles", "snacks", "daily_use"];
+
+  // 2. 区域特产（100%出现）
+  var specialties = loc.specialties || [];
+
+  // 3. 其他商品按概率出现
+  var dailyProb = loc.dailyProbability || 0.5; // 默认 50%
+  var otherGoods = [];
+
+  for (var i = 0; i < GOODS.length; i++) {
+    var g = GOODS[i];
+    // 跳过必需品和特产
+    if (dailyEssentials.indexOf(g.id) !== -1) continue;
+    if (specialties.indexOf(g.id) !== -1) continue;
+
+    // 用确定性随机判断
+    var goodSeed = seed + g.id.length * 3;
+    var prob = rng(); // 0~1
+    var threshold = dailyProb;
+    // 如果该商品的 category 在 loc.specialCategory 中，提高概率
+    if (loc.specialCategory && loc.specialCategory.indexOf(g.category) !== -1) {
+      threshold = Math.min(1.0, threshold + 0.3);
+    }
+
+    if (prob < threshold) {
+      otherGoods.push(g);
+    }
+  }
+
+  // 合并结果（去重）
+  var resultIds = [];
+  var resultMap = {};
+
+  // 日常必需品
+  for (var d = 0; d < dailyEssentials.length; d++) {
+    var gid = dailyEssentials[d];
+    if (!resultMap[gid]) {
+      resultMap[gid] = true;
+      resultIds.push(gid);
+    }
+  }
+  // 特产
+  for (var s = 0; s < specialties.length; s++) {
+    var sid = specialties[s];
+    if (!resultMap[sid]) {
+      resultMap[sid] = true;
+      resultIds.push(sid);
+    }
+  }
+  // 其他
+  for (var o = 0; o < otherGoods.length; o++) {
+    var og = otherGoods[o];
+    if (!resultMap[og.id]) {
+      resultMap[og.id] = true;
+      resultIds.push(og.id);
+    }
+  }
+
+  // 按原始 GOODS 顺序排序
+  var orderMap = {};
+  for (var idx = 0; idx < GOODS.length; idx++) {
+    orderMap[GOODS[idx].id] = idx;
+  }
+  resultIds.sort(function (a, b) {
+    return (orderMap[a] || 999) - (orderMap[b] || 999);
+  });
+
+  return resultIds
+    .map(function (id) {
+      return getGoodById(id);
+    })
+    .filter(Boolean);
+}
+
+/**
+ * 创建一个确定性随机数生成器（mulberry32）
+ * 用于每日商品刷新，保证同一天内结果一致
+ */
+function createSeededRandom(seed) {
+  var s = seed >>> 0;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    var t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * 检查某商品在当前地点今日是否可交易
+ */
+function isGoodAvailableToday(locKey, goodId, state) {
+  var available = getDailyGoodsForLocation(locKey, state);
+  for (var i = 0; i < available.length; i++) {
+    if (available[i].id === goodId) return true;
+  }
+  return false;
+}
+
+// ====== 每日交易销售XP增长 ======
+var DAILY_TRADE_XP_LIMIT = 30; // 每天通过交易获得的销售XP上限
+
+/**
+ * 交易后获得销售经验（买卖双方都调用）
+ * @param {object} state
+ * @param {number} amount - 交易金额（用于计算，但实际限制每日上限）
+ */
+function gainTradeXp(state) {
+  if (!state.skills || !state.skills.sales) return;
+  if (!state.trade) return;
+
+  var todayXp = state.trade._todayTradeXp || 0;
+  if (todayXp >= DAILY_TRADE_XP_LIMIT) return;
+
+  var gain = Math.min(5, DAILY_TRADE_XP_LIMIT - todayXp); // 每次2~5, 不超过上限
+  state.skills.sales.xp += gain;
+  state.trade._todayTradeXp = (state.trade._todayTradeXp || 0) + gain;
+}
+
+/**
+ * 每日重置交易XP计数器（每天第一次调用时执行）
+ */
+function resetDailyTradeXp(state) {
+  var today = state.player && state.player.day ? state.player.day : 1;
+  if (state.trade._xpResetDay !== today) {
+    state.trade._todayTradeXp = 0;
+    state.trade._xpResetDay = today;
+  }
+}
+
+// ====== NPCTradeInfo 注册到全局（供Wiki引用） ======
+if (typeof window !== "undefined") {
+  window.NPC_TRADE_INFO = NPC_TRADE_INFO;
+  window.SALES_SKILL_THRESHOLDS = SALES_SKILL_THRESHOLDS;
 }
 </script>
     <script>/**
@@ -39045,6 +40289,27 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof runDailyNewsBridge === "function") {
         runDailyNewsBridge(state);
+      }
+    },
+  },
+
+  // === NPC 主动分享交易情报 ===
+  {
+    name: "npc_trade_info_share",
+    fn: function (state) {
+      if (typeof tryTriggerNPCInfoShare !== "function") return;
+      // 遍历所有NPC，看是否有主动分享
+      for (var npcId in NPC_TRADE_INFO) {
+        if (!NPC_TRADE_INFO.hasOwnProperty(npcId)) continue;
+        var infoText = tryTriggerNPCInfoShare(npcId, state);
+        if (infoText) {
+          var npc = getNpcById(npcId);
+          var nameStr = npc ? npc.name : npcId;
+          StateManager.addMessage(
+            "💬 " + nameStr + "告诉你：" + infoText,
+            "info",
+          );
+        }
       }
     },
   },
@@ -78555,16 +79820,24 @@ function renderTradeTab(state, parent) {
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
-  const goodsList = typeof GOODS !== "undefined" ? GOODS : [];
+  const goodsList =
+    typeof getAvailableGoodsAtLocation === "function"
+      ? getAvailableGoodsAtLocation(locKey, state)
+      : typeof GOODS !== "undefined"
+        ? GOODS
+        : [];
 
   // 标题区
   const headerDiv = document.createElement("div");
   headerDiv.style.cssText =
     "display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;";
   headerDiv.innerHTML = `
-    <h3 style="color:var(--text-muted);margin:0;">
-      📦 ${loc ? loc.name : "当前地点"} — ${isWholesale ? "批发市场（进货价低）" : "零售市场"}
-    </h3>
+    <div>
+      <h3 style="color:var(--text-muted);margin:0;">
+        📦 ${loc ? loc.name : "当前地点"} — ${isWholesale ? "批发市场（进货价低）" : "零售市场"}
+      </h3>
+      ${skillTag}
+    </div>
     <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
   `;
   parent.appendChild(headerDiv);
@@ -78620,6 +79893,63 @@ function renderTradeTab(state, parent) {
         parent.appendChild(seasonBanner);
       }
     }
+  }
+
+  // 记录今日已访问地点（用于价格对比记忆）
+  if (typeof recordLocationVisit === "function") {
+    recordLocationVisit(state, locKey);
+  }
+  // 重置每日交易XP计数器
+  if (typeof resetDailyTradeXp === "function") {
+    resetDailyTradeXp(state);
+  }
+
+  // 已访问区域数量提示
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  var canCompare =
+    typeof canSeePriceMarkers === "function"
+      ? canSeePriceMarkers(state)
+      : false;
+
+  // 技能等级标签
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
+
+  // 模糊记忆提示条
+  var memoryHints =
+    typeof getPriceMemoryHints === "function"
+      ? getPriceMemoryHints(state, locKey)
+      : [];
+  if (memoryHints.length > 0) {
+    var memoryBanner = document.createElement("div");
+    memoryBanner.style.cssText =
+      "background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.15);border-radius:6px;" +
+      "padding:5px 10px;margin-bottom:10px;font-size:11px;color:#667eea;";
+    memoryBanner.innerHTML =
+      "💭 模糊记忆：<br>" +
+      memoryHints
+        .map(function (h) {
+          return "· " + h;
+        })
+        .join("<br>");
+    parent.appendChild(memoryBanner);
   }
 
   if (goodsList.length === 0) {
@@ -78699,11 +80029,47 @@ function renderTradeTab(state, parent) {
       ? Math.round(price * 0.7 * 100) / 100
       : null;
 
-    // 价格对比：最低价和最高价
-    const lowest = getLowestPrice(good.id);
-    const highest = getHighestPrice(good.id);
-    const isLowest = lowest.location === locKey;
-    const isHighest = highest.location === locKey;
+    // 价格标记：技能驱动的红绿 + 极端值
+    var priceMarker =
+      typeof getPriceMarker === "function"
+        ? getPriceMarker(state, locKey, good.id, price)
+        : { direction: null, label: "" };
+    var visitedExtreme =
+      typeof getVisitedExtreme === "function"
+        ? getVisitedExtreme(state, locKey, good.id)
+        : { isVisitedLowest: false, isVisitedHighest: false, label: "" };
+    var cityExtreme =
+      typeof getCityExtreme === "function"
+        ? getCityExtreme(state, locKey, good.id)
+        : { isCityLowest: false, isCityHighest: false, label: "" };
+    var trendArrow =
+      typeof getPriceTrend === "function"
+        ? getPriceTrend(state, locKey, good.id)
+        : "";
+
+    // 价格颜色：红绿基于已访问区域对比
+    var priceColor = "var(--text-primary)";
+    if (priceMarker.direction === "down") priceColor = "var(--success)";
+    else if (priceMarker.direction === "up") priceColor = "var(--danger)";
+    // 全城极端值覆盖颜色（更高优先级）
+    if (cityExtreme.isCityLowest) priceColor = "var(--success)";
+    else if (cityExtreme.isCityHighest) priceColor = "var(--danger)";
+    // 已访问极端值（如果没有全城数据）
+    else if (visitedExtreme.isVisitedLowest) priceColor = "var(--success)";
+    else if (visitedExtreme.isVisitedHighest) priceColor = "var(--danger)";
+
+    // 价格标签文本
+    var priceLabel = "";
+    if (cityExtreme.label) priceLabel = " " + cityExtreme.label;
+    else if (visitedExtreme.label) priceLabel = " " + visitedExtreme.label;
+    else if (priceMarker.label) priceLabel = " " + priceMarker.label;
+
+    // 趋势箭头
+    var trendHtml = trendArrow
+      ? '<span style="font-size:14px;margin-left:4px;" title="趋势预测">' +
+        trendArrow +
+        "</span>"
+      : "";
 
     // 季节性价格标签
     var seasonTag = "";
@@ -78732,8 +80098,8 @@ function renderTradeTab(state, parent) {
         ${wholesalePrice ? `<br>批发价: <strong style="color:var(--success)">¥${wholesalePrice.toFixed(1)}</strong>/件 (零售 ¥${price.toFixed(1)})` : ""}
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
-        当前零售价: <strong style="color:${isLowest ? "var(--success)" : isHighest ? "var(--danger)" : "var(--text-primary)"}">¥${price.toFixed(1)}</strong>
-        ${isLowest ? " 🟢 全城最低" : ""}${isHighest ? " 🔴 全城最高" : ""}
+        当前零售价: <strong style="color:${priceColor}">¥${price.toFixed(1)}</strong>${trendHtml}
+        ${priceLabel}
       </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
@@ -78752,41 +80118,199 @@ function renderTradeTab(state, parent) {
   }
   parent.appendChild(grid);
 
-  // 价格对比速查表
-  const compareDiv = document.createElement("div");
-  compareDiv.style.marginTop = "20px";
-  compareDiv.innerHTML =
-    '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 各地价格对比</h4>';
+  // ====== 价格对比（仅已访问区域 + 技能门控） ======
+  var canExtremes =
+    typeof canSeeCityExtremes === "function"
+      ? canSeeCityExtremes(state)
+      : false;
+  var visitedLocs2 =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var allLocKeys = Object.keys(LOCATIONS);
 
-  const compareTable = document.createElement("div");
-  compareTable.style.cssText = "overflow-x:auto;font-size:11px;";
-  let tableHtml =
-    '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
-  for (const lk of Object.keys(LOCATIONS)) {
-    const l = LOCATIONS[lk];
-    tableHtml += `<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">${l.name.substring(0, 2)}</th>`;
-  }
-  tableHtml += "</tr></thead><tbody>";
+  if (canCompare && visitedLocs2.length >= 2) {
+    // 有技能 + 至少访问过2个区域 → 显示已访区域对比
+    var compareDiv = document.createElement("div");
+    compareDiv.style.marginTop = "20px";
+    compareDiv.innerHTML =
+      '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 已访区域价格对比 <span style="font-size:11px;font-weight:normal;">（' +
+      visitedLocs2.length +
+      "/" +
+      allLocKeys.length +
+      "个区域）</span></h4>";
 
-  for (const good of goodsList) {
-    tableHtml += `<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">${good.name}</td>`;
-    for (const lk of Object.keys(LOCATIONS)) {
-      const p = (state.trade.goodsPrices[lk] || {})[good.id] || good.basePrice;
-      const isLow = getLowestPrice(good.id).location === lk;
-      const isHigh = getHighestPrice(good.id).location === lk;
-      const cellStyle = isLow
-        ? "color:var(--success);font-weight:bold;"
-        : isHigh
-          ? "color:var(--danger);"
-          : "color:var(--text-secondary);";
-      tableHtml += `<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);${cellStyle}">${p.toFixed(1)}</td>`;
+    var compareTable = document.createElement("div");
+    compareTable.style.cssText = "overflow-x:auto;font-size:11px;";
+    var tableHtml =
+      '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
+
+    for (var vi = 0; vi < visitedLocs2.length; vi++) {
+      var vlk = visitedLocs2[vi];
+      var vl = LOCATIONS[vlk];
+      tableHtml +=
+        '<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">' +
+        (vl ? vl.name.substring(0, 3) : vlk.substring(0, 2)) +
+        "</th>";
     }
-    tableHtml += "</tr>";
+    tableHtml += "</tr></thead><tbody>";
+
+    // 只对比当前可见的商品
+    var compareGoods = goodsList;
+    for (var gi = 0; gi < compareGoods.length; gi++) {
+      var gd = compareGoods[gi];
+      tableHtml +=
+        '<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
+        gd.name +
+        "</td>";
+
+      // 收集已访问区域中该商品的所有价格
+      var visitedPrices = [];
+      for (var vj = 0; vj < visitedLocs2.length; vj++) {
+        var vlk2 = visitedLocs2[vj];
+        var snap =
+          (state.trade.visitedToday &&
+            state.trade.visitedToday[vlk2] &&
+            state.trade.visitedToday[vlk2].prices) ||
+          {};
+        var p = snap[gd.id];
+        if (p !== undefined) {
+          visitedPrices.push({ loc: vlk2, price: p });
+        } else {
+          // fallback to goodsPrices
+          p = (state.trade.goodsPrices[vlk2] || {})[gd.id] || gd.basePrice;
+          visitedPrices.push({ loc: vlk2, price: p });
+        }
+      }
+
+      for (var vk = 0; vk < visitedLocs2.length; vk++) {
+        var curLk = visitedLocs2[vk];
+        // 找到该商品在当前区域的精确价格
+        var curPrice = gd.basePrice;
+        for (var pi = 0; pi < visitedPrices.length; pi++) {
+          if (visitedPrices[pi].loc === curLk) {
+            curPrice = visitedPrices[pi].price;
+            break;
+          }
+        }
+
+        // 判断是否为已访区域最低/最高
+        var isVisLow = true;
+        var isVisHigh = true;
+        for (var qi = 0; qi < visitedPrices.length; qi++) {
+          if (visitedPrices[qi].price < curPrice) isVisLow = false;
+          if (visitedPrices[qi].price > curPrice) isVisHigh = false;
+        }
+
+        // 如果是全城跑完且销售>=60，判断全城极端值
+        var cellStyle = "color:var(--text-secondary);";
+        if (canExtremes) {
+          if (typeof getLowestPrice === "function") {
+            var cityLow = getLowestPrice(gd.id);
+            if (cityLow.location === curLk) {
+              cellStyle = "color:var(--success);font-weight:bold;";
+            }
+          }
+          if (typeof getHighestPrice === "function") {
+            var cityHigh = getHighestPrice(gd.id);
+            if (
+              cityHigh.location === curLk &&
+              cellStyle.indexOf("success") === -1
+            ) {
+              cellStyle = "color:var(--danger);";
+            }
+          }
+        } else if (isVisLow) {
+          cellStyle = "color:var(--success);";
+        } else if (isVisHigh) {
+          cellStyle = "color:var(--danger);";
+        }
+        tableHtml +=
+          '<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);' +
+          cellStyle +
+          '">' +
+          curPrice.toFixed(1) +
+          "</td>";
+      }
+      tableHtml += "</tr>";
+    }
+    tableHtml += "</tbody></table>";
+    compareTable.innerHTML = tableHtml;
+    compareDiv.appendChild(compareTable);
+    parent.appendChild(compareDiv);
+  } else if (visitedLocs2.length < 2) {
+    // 还没跑够2个区域 → 提示探索
+    var exploreHint = document.createElement("div");
+    exploreHint.style.cssText =
+      "margin-top:16px;padding:10px;background:rgba(102,126,234,0.06);border-radius:6px;font-size:12px;color:var(--text-muted);text-align:center;";
+    var remainCount = allLocKeys.length - visitedLocs2.length;
+    exploreHint.innerHTML =
+      "🧭 已访问 " +
+      visitedLocs2.length +
+      "/" +
+      allLocKeys.length +
+      " 个区域。再逛 " +
+      remainCount +
+      " 个区域就能解锁价格对比！（需销售≥20级）";
+    parent.appendChild(exploreHint);
   }
-  tableHtml += "</tbody></table>";
-  compareTable.innerHTML = tableHtml;
-  compareDiv.appendChild(compareTable);
-  parent.appendChild(compareDiv);
+
+  // ====== NPC 交易情报入口（仅当该区域有NPC且好感足够时显示） ======
+  var locNpcs =
+    typeof getNpcsAtLocation === "function" ? getNpcsAtLocation(locKey) : [];
+  var hasTradeInfo = false;
+  for (var ni = 0; ni < locNpcs.length; ni++) {
+    if (locNpcs[ni].tradeInfo) {
+      hasTradeInfo = true;
+      break;
+    }
+  }
+  if (hasTradeInfo && typeof getNPCTradeInfo === "function") {
+    var npcInfoDiv = document.createElement("div");
+    npcInfoDiv.style.cssText =
+      "margin-top:16px;padding:10px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:8px;";
+    npcInfoDiv.innerHTML =
+      '<h4 style="color:var(--text-muted);margin:0 0 8px 0;">💬 当地情报</h4>';
+
+    var hasAnyInfo = false;
+    for (var ni2 = 0; ni2 < locNpcs.length; ni2++) {
+      var npcData = locNpcs[ni2];
+      var info = getNPCTradeInfo(npcData.id, state);
+      if (info && info.availableInfo.length > 0) {
+        hasAnyInfo = true;
+        var npcLine = document.createElement("div");
+        npcLine.style.cssText =
+          "margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;";
+        npcLine.innerHTML =
+          '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
+          npcData.name +
+          "（" +
+          npcData.role +
+          "）</div>";
+
+        for (var ai = 0; ai < info.availableInfo.length; ai++) {
+          var aiData = info.availableInfo[ai];
+          var costStr = aiData.free ? "免费" : "¥" + aiData.currentCost;
+          var btnHtml =
+            '<button class="btn btn-sm npc-info-btn" data-npc="' +
+            npcData.id +
+            '" data-info="' +
+            aiData.id +
+            '" style="margin:2px 4px 2px 0;">' +
+            aiData.label +
+            "（" +
+            costStr +
+            "）</button>";
+          npcLine.innerHTML += btnHtml;
+        }
+        npcInfoDiv.appendChild(npcLine);
+      }
+    }
+
+    if (hasAnyInfo) {
+      parent.appendChild(npcInfoDiv);
+    }
+  }
 
   // 绑定事件（延迟执行，等 DOM 插入完成）
   setTimeout(() => {
@@ -79043,6 +80567,30 @@ function renderTradeTab(state, parent) {
         renderSidebar(StateManager.getState());
         renderHeader(StateManager.getState());
         renderMessageLog(StateManager.getState());
+      });
+    });
+
+    // --- NPC 情报按钮 ---
+    parent.querySelectorAll(".npc-info-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        var npcId = btn.dataset.npc;
+        var infoTypeId = btn.dataset.info;
+        if (typeof buyInfoFromNpc === "function") {
+          var result = buyInfoFromNpc(
+            npcId,
+            infoTypeId,
+            StateManager.getState(),
+          );
+          StateManager.addMessage(
+            result.message,
+            result.success ? "success" : "warning",
+          );
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
       });
     });
   }, 0);

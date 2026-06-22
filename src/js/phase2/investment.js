@@ -1078,7 +1078,7 @@ function initInvestment(state) {
       var numPoints = 5 + Random.int(0, 3);
       for (var k = 0; k < numPoints; k++) {
         seedPrice =
-          seedPrice * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility);
+          seedPrice * (1 + s.trend + Random.float(-s.volatility, s.volatility));
         seedPrice = Math.max(0.5, seedPrice);
         history.push({
           day: state.player.day - numPoints + k,
@@ -1099,10 +1099,10 @@ function initInvestment(state) {
   if (!inv.btcHistory) inv.btcHistory = [];
   // 同样为 BTC 生成回溯历史
   if (inv.btcHistory.length === 0 && inv.btcPrice > 0) {
-    var btcSeed = inv.btcPrice * (0.85 + Math.random() * 0.3);
-    var btcPoints = 5 + Math.floor(Math.random() * 4);
+    var btcSeed = inv.btcPrice * Random.float(0.85, 1.15);
+    var btcPoints = Random.int(5, 8);
     for (var b = 0; b < btcPoints; b++) {
-      btcSeed = btcSeed * (1 + (Math.random() - 0.5) * 0.08);
+      btcSeed = btcSeed * (1 + Random.float(-0.04, 0.04));
       btcSeed = Math.max(1000, btcSeed);
       inv.btcHistory.push({
         day: state.player.day - btcPoints + b,
@@ -1141,7 +1141,7 @@ function tickInvestmentDaily(state) {
     if (!m) continue;
 
     // 基础随机游走 + 世界参数行业热度偏置
-    var baseChange = 1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility;
+    var baseChange = 1 + s.trend + Random.float(-s.volatility, s.volatility);
     if (typeof getSectorHeat === "function") {
       var heat = getSectorHeat(s.industry);
       if (heat && heat !== 1.0) {
@@ -1167,7 +1167,7 @@ function tickInvestmentDaily(state) {
   if (inv.btcPrice > 0) {
     inv.btcFearGreed = Math.max(
       5,
-      Math.min(95, (inv.btcFearGreed || 50) + (Math.random() - 0.5) * 10),
+      Math.min(95, (inv.btcFearGreed || 50) + Random.float(-5, 5)),
     );
     var btcNewsMul =
       typeof getNewsEffectForBtc === "function"
@@ -1178,7 +1178,7 @@ function tickInvestmentDaily(state) {
       Math.round(
         inv.btcPrice *
           (1 +
-            (Math.random() - 0.5) * 0.08 +
+            Random.float(-0.04, 0.04) +
             ((inv.btcFearGreed - 50) / 50) * 0.02) *
           btcNewsMul,
       ),
@@ -1207,7 +1207,7 @@ function tickInvestmentDaily(state) {
       var prop = inv.properties[p];
       prop.currentPrice = Math.round(
         (prop.currentPrice || prop.buyPrice) *
-          (1 + (prop.appreciation || 0.0001) + (Math.random() - 0.5) * 0.002) *
+          (1 + (prop.appreciation || 0.0001) + Random.float(-0.001, 0.001)) *
           propertyNewsMulFallback,
       );
       var isSelfLived = inv.selfLivePropertyId === prop.id;

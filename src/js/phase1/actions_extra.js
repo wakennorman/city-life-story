@@ -47,13 +47,13 @@ function addStreetExtras(state, actions) {
     handler: () => {
       const st = StateManager.getState();
       const skill = st.player.mental; // 心智影响成功率
-      const earned = Math.floor(5 + Math.random() * 20 + (skill - 25) * 0.3);
+      const earned = Math.floor(5 + Random.float(0, 20) + (skill - 25) * 0.3);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
       addDailyTransaction(st, "income", "side_job", earned, "街头卖唱");
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
       st.player.fame = Math.min(100, st.player.fame + 1);
-      if (Math.random() < 0.2) {
+      if (Random.chance(0.2)) {
         st.needs.happiness = Math.max(0, st.needs.happiness - 5);
         StateManager.addMessage(
           `🎤 唱了半天，城管赶人+路人嫌弃，赚到 ¥${earned}。`,
@@ -79,7 +79,7 @@ function addStreetExtras(state, actions) {
     payEstimate: "1~5",
     handler: () => {
       const st = StateManager.getState();
-      const earned = 1 + Math.floor(Math.random() * 5);
+      const earned = Random.int(1, 5);
       st.resources.cash += earned;
       st.resources.totalEarned += earned;
       addDailyTransaction(st, "income", "side_job", earned, "街头乞讨");
@@ -110,7 +110,7 @@ function addStreetExtras(state, actions) {
       }
       st.resources.cash -= 50;
       addDailyTransaction(st, "expense", "entertainment", 50, "赌博押注");
-      if (Math.random() < 0.45) {
+      if (Random.chance(0.45)) {
         st.resources.cash += 100;
         st.resources.totalEarned += 50;
         addDailyTransaction(st, "income", "side_job", 100, "赌博赢钱");
@@ -142,7 +142,7 @@ function addStreetExtras(state, actions) {
       addDailyTransaction(st, "expense", "misc", 2, "给家里打电话");
       st.needs.happiness = Math.min(100, st.needs.happiness + 15);
       st.needs.hunger = Math.max(0, st.needs.hunger - 3);
-      if (Math.random() < 0.3) {
+      if (Random.chance(0.3)) {
         st.resources.cash += 200; // 爸妈塞的钱
         addDailyTransaction(st, "income", "gift", 200, "爸妈给的零花钱");
         StateManager.addMessage(
@@ -191,8 +191,8 @@ function addStreetExtras(state, actions) {
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.3);
       const skills = ["english", "coding", "accounting"];
-      const sk = skills[Math.floor(Math.random() * skills.length)];
-      st.skills[sk].xp += 5 + Math.floor(Math.random() * 10);
+      const sk = Random.fromArray(skills);
+      st.skills[sk].xp += Random.int(5, 14);
       st.needs.happiness = Math.min(100, st.needs.happiness + 5);
       StateManager.addMessage(
         "💻 在网吧待了 2 小时，智力+，还有点收获。",
@@ -247,10 +247,10 @@ function addStreetExtras(state, actions) {
       const st = StateManager.getState();
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
       const skills = Object.keys(st.skills);
-      const key = skills[Math.floor(Math.random() * skills.length)];
+      const key = Random.fromArray(skills);
       // 小美好感60解锁图书馆内部账号：学习效率+30%
       var xpMult = st.flags.xiaomeiLibrary ? 1.3 : 1.0;
-      var xpGain = Math.floor((30 + Math.floor(Math.random() * 20)) * xpMult);
+      var xpGain = Math.floor((30 + Random.int(0, 19)) * xpMult);
       st.skills[key].xp += xpGain;
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
       var libTag = st.flags.xiaomeiLibrary
@@ -474,7 +474,7 @@ function addStreetExtras(state, actions) {
         return;
       }
       st.resources.cash -= 2;
-      const roll = Math.random();
+      const roll = Random.float(0, 1);
       if (roll < 0.00005) {
         st.resources.cash += 500000;
         st.resources.totalEarned += 500000;
@@ -484,7 +484,7 @@ function addStreetExtras(state, actions) {
           "success",
         );
       } else if (roll < 0.005) {
-        const prize = 50 + Math.floor(Math.random() * 200);
+        const prize = Random.int(50, 249);
         st.resources.cash += prize;
         st.resources.totalEarned += prize;
         st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -599,22 +599,22 @@ function addStreetExtras(state, actions) {
       if (salesLvl > 50) {
         salesMultiplier = 1.0 + (salesLvl - 50) * 0.005; // 50级以上额外+0.5%/级
       }
-      var luck = Math.random();
+      var luck = Random.float(0, 1);
       var baseEarned = 0;
       var xpGain = 0;
       if (luck < 0.25) {
         // 大赚
-        baseEarned = 150 + Math.floor(Math.random() * 200);
-        xpGain = 8 + Math.floor(Math.random() * 7); // 8~14 XP
+        baseEarned = Random.int(150, 349);
+        xpGain = Random.int(8, 14); // 8~14 XP
         st.player.fame = Math.min(100, st.player.fame + 2);
       } else if (luck < 0.7) {
         // 小赚
-        baseEarned = 30 + Math.floor(Math.random() * 90);
-        xpGain = 4 + Math.floor(Math.random() * 5); // 4~8 XP
+        baseEarned = Random.int(30, 119);
+        xpGain = Random.int(4, 8); // 4~8 XP
       } else if (luck < 0.85) {
         // 勉强回本
-        baseEarned = 180 + Math.floor(Math.random() * 40);
-        xpGain = 2 + Math.floor(Math.random() * 3); // 2~4 XP
+        baseEarned = Random.int(180, 219);
+        xpGain = Random.int(2, 4); // 2~4 XP
         StateManager.addMessage("🏪 摆摊勉强度日，赚了点辛苦钱。", "warning");
       } else {
         // 亏了
@@ -624,7 +624,7 @@ function addStreetExtras(state, actions) {
         );
         st.resources.cash = Math.max(0, st.resources.cash - 50);
         st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-        xpGain = 1 + Math.floor(Math.random() * 3); // 1~3 XP（失败也能学点教训）
+        xpGain = Random.int(1, 3); // 1~3 XP（失败也能学点教训）
       }
       // 应用销售技能收益倍率
       var earned = Math.floor(baseEarned * salesMultiplier);
@@ -722,7 +722,7 @@ function addStreetExtras(state, actions) {
       handler: function () {
         const st = StateManager.getState();
         const lvl = st.skills.coding.level || 0;
-        const earned = Math.floor(80 + lvl * 1.5 + Math.random() * 50);
+        const earned = Math.floor(80 + lvl * 1.5 + Random.float(0, 50));
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "job_income", earned, "编程外包");
@@ -730,7 +730,7 @@ function addStreetExtras(state, actions) {
         st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
         const xpGain =
           8 +
-          Math.floor(Math.random() * 12) +
+          Random.int(0, 11) +
           Math.floor((st.player.intelligence || 0) / 20);
         st.skills.coding.xp = (st.skills.coding.xp || 0) + xpGain;
         while (
@@ -825,10 +825,10 @@ function addStreetExtras(state, actions) {
         }
         st.flags[dk] = true;
         var salesLvl = st.skills.sales ? st.skills.sales.level || 0 : 0;
-        var base = 180 + Math.floor(Math.random() * 150);
+        var base = Random.int(180, 329);
         var bonus = Math.floor(salesLvl * 1.5);
         var earned = base + bonus;
-        var fameGain = 3 + Math.floor(Math.random() * 5);
+        var fameGain = Random.int(3, 7);
         st.resources.cash += earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "side_job", earned, "周末集市摆摊");
@@ -865,9 +865,9 @@ function addStreetExtras(state, actions) {
           return;
         }
         st.flags[mk] = true;
-        var roll = Math.random();
+        var roll = Random.float(0, 1);
         if (roll < 0.4) {
-          var cashTip = 100 + Math.floor(Math.random() * 150);
+          var cashTip = Random.int(100, 249);
           st.resources.cash += cashTip;
           st.resources.totalEarned += cashTip;
           StateManager.addMessage(
@@ -884,9 +884,9 @@ function addStreetExtras(state, actions) {
             "info",
           );
         } else {
-          var xpGainM = 25 + Math.floor(Math.random() * 25);
+          var xpGainM = Random.int(25, 49);
           var skillKeys = Object.keys(st.skills);
-          var sk = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+          var sk = Random.fromArray(skillKeys);
           st.skills[sk].xp += xpGainM;
           StateManager.addMessage(
             "📋 碰到个老师傅，聊了很久，" +

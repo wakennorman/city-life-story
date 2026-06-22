@@ -65,7 +65,7 @@ function rollStreetEvent(state) {
     var lk = getHistoryModifiers(state).luckBonus || 0;
     mod -= lk * 0.008; // 每点幸运降低0.8%触发率（+5幸运≈-4%）
   }
-  if (Math.random() < baseChance + mod) {
+  if (Random.chance(baseChance + mod)) {
     queueRandomEvent(state, "street");
   }
 }
@@ -82,7 +82,7 @@ function rollCorporateEvent(state) {
   if (state.player.corporate.risk > 50) mod += 0.1;
   if (state.player.corporate.popularity < 30) mod += 0.05;
   if (state.player.corporate.upwardMgmt < 20) mod += 0.05;
-  if (Math.random() < baseChance + mod) {
+  if (Random.chance(baseChance + mod)) {
     queueRandomEvent(state, "corporate");
   }
 }
@@ -113,7 +113,7 @@ function queueRandomEvent(state, phase) {
   var totalWeight = weights.reduce(function (a, b) {
     return a + b;
   }, 0);
-  var roll = Math.random() * totalWeight;
+  var roll = Random.float(0, totalWeight);
   var cursor = 0;
   var evt = eligible[0];
   for (var wi = 0; wi < eligible.length; wi++) {
@@ -426,7 +426,7 @@ function rollDailyNews(state) {
   if (state.player.phase === "street") {
     rollStreetEvent(state);
     // 8%概率接到市场消息（影响投资市场，仅投资类新闻）
-    if (Math.random() < 0.08 && typeof getRandomNewsEvent === "function") {
+    if (Random.chance(0.08) && typeof getRandomNewsEvent === "function") {
       var investNews = null;
       for (var _attempt = 0; _attempt < 5; _attempt++) {
         var candidate = getRandomNewsEvent();
@@ -453,7 +453,7 @@ function rollDailyNews(state) {
   }
   // 职场阶段：保留少量市场新闻 + 事件弹窗
   const newsChance = state.activeNews.length > 0 ? 0.05 : 0.12;
-  if (Math.random() < newsChance) {
+  if (Random.chance(newsChance)) {
     const news = getRandomNewsEvent();
     if (news && !state.flags.seenNewsToday.includes(news.id)) {
       news._appliedDay = state.player.day;

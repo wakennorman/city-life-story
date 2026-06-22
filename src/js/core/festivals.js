@@ -120,8 +120,8 @@ var SPRING_FESTIVAL_EVENTS = [
             return { ok: false, msg: "没钱买礼物！" };
           st.resources.cash -= 100;
           // 60% 概率收到更多红包
-          if (Math.random() < 0.6) {
-            const红包 = 150 + Math.floor(Math.random() * 100);
+          if (Random.chance(0.6)) {
+            const红包 = Random.int(150, 249);
             st.resources.cash += 红包;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             st.player.fame = Math.min(100, st.player.fame + 2);
@@ -160,9 +160,9 @@ var SPRING_FESTIVAL_EVENTS = [
         text: "🏪 去商业区看看有没有临时工作",
         hint: "过年不打烊",
         effect: function (st) {
-          const 找到 = Math.random() < 0.4;
+          const 找到 = Random.chance(0.4);
           if (找到) {
-            const收入 = 80 + Math.floor(Math.random() * 40);
+            const收入 = Random.int(80, 119);
             st.resources.cash += 收入;
             st.resources.totalEarned += 收入;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
@@ -265,7 +265,7 @@ var SPRING_FESTIVAL_EVENTS = [
           const skills = Object.keys(st.skills || {});
           if (skills.length === 0) return { ok: false, msg: "没有技能可学！" };
           const key = skills[0];
-          const xp = 20 + Math.floor(Math.random() * 10);
+          const xp = Random.int(20, 29);
           st.skills[key] = st.skills[key] || { level: 1, xp: 0 };
           st.skills[key].xp += xp;
           st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
@@ -319,8 +319,8 @@ var SPRING_FESTIVAL_EVENTS = [
           st.resources.cash -= 50;
           st.flags._springFestivalAchieveWorship = true; // 成就：迎财神
           // 30% 概率获得意外之财
-          if (Math.random() < 0.3) {
-            const 意外 = 100 + Math.floor(Math.random() * 200);
+          if (Random.chance(0.3)) {
+            const 意外 = Random.int(100, 299);
             st.resources.cash += 意外;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             return {
@@ -403,9 +403,9 @@ var SPRING_FESTIVAL_EVENTS = [
         text: "💼 去人才市场找临时工",
         hint: "节日加班费高",
         effect: function (st) {
-          const 找到 = Math.random() < 0.5;
+          const 找到 = Random.chance(0.5);
           if (找到) {
-            const收入 = 100 + Math.floor(Math.random() * 50);
+            const收入 = Random.int(100, 149);
             st.resources.cash += 收入;
             st.resources.totalEarned += 收入;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
@@ -427,9 +427,9 @@ var SPRING_FESTIVAL_EVENTS = [
         text: "🏭 去工厂区问问有没有活",
         hint: "体力活好找",
         effect: function (st) {
-          const 找到 = Math.random() < 0.6;
+          const 找到 = Random.chance(0.6);
           if (找到) {
-            const收入 = 80 + Math.floor(Math.random() * 30);
+            const收入 = Random.int(80, 109);
             st.resources.cash += 收入;
             st.resources.totalEarned += 收入;
             st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
@@ -470,7 +470,7 @@ var SPRING_FESTIVAL_EVENTS = [
               msg: "你和李工头还不熟，不太好意思主动找他要活。",
             };
           }
-          var报酬 = 120 + Math.floor(Math.random() * 60);
+          var报酬 = Random.int(120, 179);
           st.resources.cash += 报酬;
           st.resources.totalEarned += 报酬;
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
@@ -523,7 +523,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
           st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
           rel.affinity = Math.min(100, rel.affinity + 5);
-          var废品收入 = 40 + Math.floor(Math.random() * 30);
+          var废品收入 = Random.int(40, 69);
           st.resources.cash += 废品收入;
           st.resources.totalEarned += 废品收入;
           st.flags._springFestivalAlone = false;

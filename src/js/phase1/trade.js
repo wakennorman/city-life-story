@@ -73,6 +73,11 @@ function buyGood(goodId, qty) {
   adjustPriceAfterTrade(locKey, goodId, buyDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
 
+  // 交易获得销售经验
+  if (typeof gainTradeXp === "function") {
+    gainTradeXp(state);
+  }
+
   StateManager.addMessage(
     `🛒 购买了 ${qty}${good.unit}${good.name}，单价 ¥${price.toFixed(1)}，共 ¥${totalCost.toFixed(1)}。${newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : ""}`,
     "success",
@@ -154,7 +159,7 @@ function sellGood(goodId, qty) {
   }
 
   // 低买高卖时显示利润
-  const buyPrice = getAvgBuyPrice(state, goodId); // 估算买入价
+  const buyPrice = getAvgBuyPrice(state, goodId);
   let profitMsg = "";
   if (sameLocationPenalty) {
     profitMsg = " ⚠️ 同地转卖，贬值严重！";
@@ -171,6 +176,12 @@ function sellGood(goodId, qty) {
   const sellDelta = -Random.float(0.002, 0.005);
   adjustPriceAfterTrade(locKey, goodId, sellDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
+
+  // 交易获得销售经验
+  if (typeof gainTradeXp === "function") {
+    gainTradeXp(state);
+  }
+
   const priceMsg =
     newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : "";
 
@@ -403,4 +414,19 @@ function updateAllPrices(state) {
     }
   }
   state.trade.lastPriceUpdate = state.player.day;
+}
+
+/**
+ * 获取某地点今日可交易的商品列表
+ * 委托至 trade_intel.js 的 getDailyGoodsForLocation
+ * @param {string} locKey - 地点 ID
+ * @param {object} state - 游戏状态
+ * @returns {Array} 可用商品列表
+ */
+function getAvailableGoodsAtLocation(locKey, state) {
+  if (typeof getDailyGoodsForLocation === "function") {
+    return getDailyGoodsForLocation(locKey, state);
+  }
+  // 降级：如果没有 trade_intel.js，返回全部商品
+  return GOODS.slice();
 }

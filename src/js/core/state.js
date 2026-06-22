@@ -148,6 +148,12 @@ function createDefaultState() {
       goodsPrices: {}, // { locationKey: { goodId: price } }
       priceTrends: {},
       lastPriceUpdate: 0,
+      // 交易情报系统 v1.8
+      visitedToday: {}, // { locKey: { visitDay, prices: { goodId: price } } }
+      _visitedDay: null, // 今日天数（用于每日重置）
+      priceMemory: [], // [{ day, locKey, goodId, tier }] 前N日模糊记忆
+      _todayTradeXp: 0, // 通过交易获得的每日销售XP累计
+      _xpResetDay: null, // 上次XP重置天数
     },
 
     // --- 就业 ---
@@ -661,9 +667,16 @@ class GameStateManager {
     if (!s.stats) {
       s.stats = { actionFreq: {}, actionFirstUse: {} };
     }
+    // v1.7 → v1.8 迁移：交易情报系统
+    if (!s.trade) s.trade = {};
+    if (!s.trade.visitedToday) s.trade.visitedToday = {};
+    if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
+    if (!s.trade.priceMemory) s.trade.priceMemory = [];
+    if (typeof s.trade._todayTradeXp === "undefined") s.trade._todayTradeXp = 0;
+    if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.7.0";
+    s.version = "1.8.0";
     this._markAllDirty();
     this._notify();
   }

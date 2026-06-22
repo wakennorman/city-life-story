@@ -463,18 +463,18 @@ function checkNewsConduit(state) {
     if (!template || !template.conduit) continue;
 
     var conduit = template.conduit;
-    if (Math.random() > conduit.chance) continue;
+    if (!Random.chance(conduit.chance)) continue;
 
     // 找目标层级的事件
     var targetLevel = conduit.targetLevel;
     var candidates = findNewsByLevel(targetLevel);
     if (candidates.length === 0) continue;
 
-    var targetNews = candidates[Math.floor(Math.random() * candidates.length)];
+    var targetNews = Random.fromArray(candidates);
     var delay =
       conduit.delayRange[0] +
       Math.floor(
-        Math.random() * (conduit.delayRange[1] - conduit.delayRange[0] + 1),
+        Random.float(0, conduit.delayRange[1] - conduit.delayRange[0] + 1),
       );
 
     scheduleNewsConduit(state, targetNews, delay);
@@ -565,7 +565,7 @@ function applyPendingConduitNews(state) {
 function getRandomNewsByLevel(level) {
   var candidates = findNewsByLevel(level);
   if (candidates.length === 0) return null;
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  return Random.fromArray(candidates);
 }
 
 /** 获取今日新闻摘要（含层级标注，用于UI展示） */

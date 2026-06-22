@@ -238,23 +238,22 @@ function generateColleague(state, company) {
     { type: "技术宅", trait: "technical", bonus: "技术强", risk: "不善言辞" },
   ];
 
-  const name = names[Math.floor(Math.random() * names.length)];
-  const personality =
-    personalities[Math.floor(Math.random() * personalities.length)];
+  const name = Random.fromArray(names);
+  const personality = Random.fromArray(personalities);
   const roleKeys = Object.keys(COLLEAGUE_ROLES);
-  const roleKey = roleKeys[Math.floor(Math.random() * roleKeys.length)];
+  const roleKey = Random.fromArray(roleKeys);
 
   return {
     id:
       "colleague_" +
       state.player.day +
       "_" +
-      Math.random().toString(36).substr(2, 9),
+      Random.float(0, 1).toString(36).substr(2, 9),
     name: name,
     role: roleKey,
     personality: personality,
-    relationship: Math.floor(Math.random() * 40) + 20, // 20-60 初始
-    trust: Math.floor(Math.random() * 30) + 20, // 20-50 初始信任
+    relationship: Random.int(20, 59), // 20-59 初始
+    trust: Random.int(20, 49), // 20-49 初始信任
     faction: null, // 所属派系
     favors: [], // 欠你的人情
     secrets: [], // 知道你的秘密
@@ -457,9 +456,9 @@ function tickColleagueRelationships(state) {
       mentorship.level = Math.min(100, mentorship.level + 0.5);
 
       // 每日小指导
-      if (Math.random() < 0.3) {
+      if (Random.chance(0.3)) {
         const benefits = ["能力+1", "KPI+2", "向上管理+1", "人缘+1", "风险-1"];
-        const benefit = benefits[Math.floor(Math.random() * benefits.length)];
+        const benefit = Random.fromArray(benefits);
         StateManager.addMessage(
           `👨‍🏫 ${colleague.name}今天给了你一点指导：${benefit}`,
           "hint",
@@ -648,7 +647,7 @@ function chatWithColleague(state, colleagueId) {
     { topic: "闲聊", effect: "关系+1", bonus: 1 },
   ];
 
-  const topic = topics[Math.floor(Math.random() * topics.length)];
+  const topic = Random.fromArray(topics);
   const bonus = topic.bonus;
 
   increaseColleagueRelationship(

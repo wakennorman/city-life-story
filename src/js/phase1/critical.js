@@ -375,7 +375,7 @@ function applyAmenity(state, a) {
     for (var i = 0; i < a.bonusPool.length; i++) {
       var b = a.bonusPool[i];
       var ch = (b.chance || 0) * habitMult;
-      if (Math.random() < ch) {
+      if (Random.chance(ch)) {
         if (
           b.stat === "hunger" ||
           b.stat === "fatigue" ||
@@ -514,7 +514,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       // 第2次延期：中度 — 健康-8，饥饱-10，概率得肠胃炎
       state.status.health = Math.max(0, state.status.health - 8);
       state.needs.hunger = Math.max(0, state.needs.hunger - 10);
-      if (Math.random() < 0.4) {
+      if (Random.chance(0.4)) {
         _contractIllness(state, "stomach_inflammation");
       }
       StateManager.addMessage(
@@ -532,7 +532,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       skipDay = true;
     } else {
       // 第4次+延期：极端 — 送医急救或路人施舍
-      var fee = 300 + Math.floor(Math.random() * 700);
+      var fee = Random.int(300, 999);
       if (state.resources.cash >= fee) {
         state.resources.cash -= fee;
         if (typeof addDailyTransaction === "function") {
@@ -562,8 +562,8 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       // 第2次延期：中度 — 疲劳+15，概率过劳/失眠
       state.needs.fatigue = Math.min(100, state.needs.fatigue + 15);
       state.needs.happiness = Math.max(0, state.needs.happiness - 8);
-      if (Math.random() < 0.35) {
-        _contractIllness(state, Math.random() < 0.5 ? "overwork" : "insomnia");
+      if (Random.chance(0.35)) {
+        _contractIllness(state, Random.chance(0.5) ? "overwork" : "insomnia");
       }
       StateManager.addMessage("🥵 连续两天过度疲劳，身体发出警告...", "danger");
     } else if (deferCount === 3) {
@@ -601,11 +601,8 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       // 第2次延期：中度 — 概率患病，心情-8，名气-1
       state.needs.happiness = Math.max(0, state.needs.happiness - 8);
       state.player.fame = Math.max(0, (state.player.fame || 0) - 1);
-      if (Math.random() < 0.4) {
-        _contractIllness(
-          state,
-          Math.random() < 0.5 ? "skin_infection" : "cold",
-        );
+      if (Random.chance(0.4)) {
+        _contractIllness(state, Random.chance(0.5) ? "skin_infection" : "cold");
       }
       StateManager.addMessage(
         "🦠 连续两天卫生差，路人捂鼻避让，你可能生病了...",
@@ -623,7 +620,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
     } else {
       // 第4次+延期：极端 — 多重感染
       _contractIllness(state, "skin_infection");
-      if (Math.random() < 0.5) _contractIllness(state, "cold");
+      if (Random.chance(0.5)) _contractIllness(state, "cold");
       state.needs.happiness = Math.max(0, state.needs.happiness - 15);
       state.status.health = Math.max(0, state.status.health - 10);
       StateManager.addMessage(
@@ -674,7 +671,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.hunger = Math.max(0, state.needs.hunger - 10);
       state.needs.happiness = Math.min(100, state.needs.happiness + 5);
       state.needs.fatigue = Math.min(100, state.needs.fatigue + 15);
-      if (Math.random() < 0.3) {
+      if (Random.chance(0.3)) {
         _contractIllness(state, "depression");
       }
       StateManager.addMessage(

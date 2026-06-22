@@ -851,8 +851,8 @@ function triggerMoralEvent(state) {
   }
   if (eligible.length === 0) return false;
 
-  var evt = eligible[Math.floor(Math.random() * eligible.length)];
-  if (Math.random() > evt.dailyChance) return false;
+  var evt = Random.fromArray(eligible);
+  if (!Random.chance(evt.dailyChance)) return false;
 
   // 构建选择按钮
   var buttons = evt.choices.map(function (choice) {

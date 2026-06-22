@@ -331,7 +331,7 @@ function runDailyNewsBridge(state) {
 
   // 4. NPC对新闻的反馈
   var activeNews = state.activeNews || [];
-  if (activeNews.length > 0 && Math.random() < 0.15) {
+  if (activeNews.length > 0 && Random.chance(0.15)) {
     var latest = activeNews[activeNews.length - 1];
     var trigger = NEWS_TRIGGERED_EVENTS[latest.id];
     if (trigger && trigger.npcMsg) {
