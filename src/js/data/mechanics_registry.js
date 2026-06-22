@@ -1243,6 +1243,186 @@
   };
 
   // ============================================================
+  //  action_habits — 行动习惯分布
+  // ============================================================
+  MECHANICS.action_habits = {
+    id: "action_habits",
+    name: "行动习惯分布",
+    icon: "📊",
+    brief: "查看你的行动偏好统计 — 各分类/各行动的点击频次排行",
+    related: ["mechanics:ap"],
+    sections: [
+      {
+        kind: "desc",
+        text: "系统自动记录每次行动点击，按分类和具体行动统计使用频次。了解自己的游戏习惯，优化每日 AP 分配。",
+      },
+      {
+        kind: "html",
+        get: function (state) {
+          if (!state || !state.stats || !state.stats.actionFreq) {
+            return '<p class="wiki-desc" style="color:var(--text-muted);">暂无数据 — 开始游戏后会自动记录你的行动习惯。</p>';
+          }
+          var freq = state.stats.actionFreq;
+          var totalClicks = 0;
+          var catTotals = {};
+          var catActions = {};
+          var allActions =
+            typeof getAvailableActions === "function"
+              ? getAvailableActions(state)
+              : [];
+
+          // 按分类汇总
+          for (var aid in freq) {
+            if (!freq.hasOwnProperty(aid)) continue;
+            var count = freq[aid];
+            if (count <= 0) continue;
+            totalClicks += count;
+
+            var cat =
+              typeof ActionSort !== "undefined" && ActionSort.getActionCategory
+                ? ActionSort.getActionCategory(aid)
+                : "other";
+            if (!catTotals[cat]) {
+              catTotals[cat] = 0;
+              catActions[cat] = [];
+            }
+            catTotals[cat] += count;
+            catActions[cat].push({ id: aid, count: count });
+          }
+
+          if (totalClicks <= 0) {
+            return '<p class="wiki-desc" style="color:var(--text-muted);">暂无行动记录 — 开始行动后会自动统计。</p>';
+          }
+
+          // 分类名称映射
+          var catNames = {};
+          if (typeof ActionSort !== "undefined" && ActionSort.CATEGORIES) {
+            for (var _ci = 0; _ci < ActionSort.CATEGORIES.length; _ci++) {
+              catNames[ActionSort.CATEGORIES[_ci].id] =
+                ActionSort.CATEGORIES[_ci].icon +
+                " " +
+                ActionSort.CATEGORIES[_ci].name;
+            }
+          }
+          catNames["other"] = "📌 其他";
+
+          // 分类排序（按使用量降序）
+          var catList = Object.keys(catTotals).sort(function (a, b) {
+            return catTotals[b] - catTotals[a];
+          });
+
+          // Action ID → 友好名称映射
+          var nameMap = {};
+          for (var _i = 0; _i < allActions.length; _i++) {
+            if (allActions[_i] && allActions[_i].id) {
+              nameMap[allActions[_i].id] =
+                allActions[_i].icon +
+                " " +
+                (allActions[_i].name || allActions[_i].id);
+            }
+          }
+
+          var html = "";
+          html +=
+            '<p class="wiki-desc" style="margin-bottom:12px;">📊 累计行动 <strong>' +
+            totalClicks +
+            "</strong> 次</p>";
+
+          // === 按分类柱状图 ===
+          html += "<h3>📊 按分类统计</h3>";
+          html +=
+            '<div style="display:flex;flex-direction:column;gap:6px;padding:8px 0;">';
+          var maxCat = catTotals[catList[0]] || 1;
+          for (var _j = 0; _j < catList.length; _j++) {
+            var cid = catList[_j];
+            var ccount = catTotals[cid];
+            var pct = Math.round((ccount / totalClicks) * 100);
+            var barW = Math.round((ccount / maxCat) * 100);
+            var barColor = _getCatColor(cid);
+            html +=
+              '<div style="display:flex;align-items:center;gap:8px;font-size:12px;">' +
+              '<span style="width:100px;text-align:right;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+              _wkE(catNames[cid] || cid) +
+              "</span>" +
+              '<div style="flex:1;height:18px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;position:relative;">' +
+              '<div style="height:100%;width:' +
+              barW +
+              "%;background:" +
+              barColor +
+              ';border-radius:3px;transition:width 0.3s;"></div>' +
+              "</div>" +
+              '<span style="width:50px;text-align:right;color:var(--text-muted);font-size:11px;">' +
+              ccount +
+              " (" +
+              pct +
+              "%)</span>" +
+              "</div>";
+          }
+          html += "</div>";
+
+          // === 各分类 Top-5 行动 ===
+          html += '<h3 style="margin-top:16px;">🏆 各分类热门行动</h3>';
+          for (var _k = 0; _k < catList.length; _k++) {
+            var cid2 = catList[_k];
+            var acts = catActions[cid2] || [];
+            acts.sort(function (a, b) {
+              return b.count - a.count;
+            });
+            var topN = acts.slice(0, 5);
+            var subMax = topN[0] ? topN[0].count : 1;
+            html +=
+              '<div style="margin-bottom:8px;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:4px;">' +
+              '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">' +
+              _wkE(catNames[cid2] || cid2) +
+              ' <span style="font-weight:400;color:var(--text-muted);">(' +
+              catTotals[cid2] +
+              " 次)</span></div>";
+            for (var _m = 0; _m < topN.length; _m++) {
+              var act = topN[_m];
+              var actName = nameMap[act.id] || act.id;
+              var subPct = Math.round((act.count / subMax) * 100);
+              html +=
+                '<div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:1px 0;">' +
+                '<span style="width:120px;text-align:right;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+                _wkE(actName) +
+                "</span>" +
+                '<div style="flex:1;height:12px;background:rgba(255,255,255,0.03);border-radius:2px;overflow:hidden;">' +
+                '<div style="height:100%;width:' +
+                subPct +
+                "%;background:" +
+                _getCatColor(cid2) +
+                ';opacity:0.6;border-radius:2px;"></div>' +
+                "</div>" +
+                '<span style="width:30px;text-align:right;color:var(--text-muted);font-size:10px;">' +
+                act.count +
+                "</span>" +
+                "</div>";
+            }
+            html += "</div>";
+          }
+
+          return html;
+        },
+      },
+    ],
+  };
+
+  // 分类颜色辅助（供 action_habits 使用）
+  function _getCatColor(catId) {
+    var colors = {
+      survival: "var(--danger, #d9534f)",
+      work: "var(--accent, #00b4d8)",
+      appliance: "var(--warning, #f39c12)",
+      shopping: "var(--success, #27ae60)",
+      education: "var(--info, #3498db)",
+      social: "var(--purple, #8e77d9)",
+      finance: "var(--gold, #d4a017)",
+      career: "var(--primary, #4a9e5c)",
+    };
+    return colors[catId] || "var(--text-muted, #99958e)";
+  }
+
+  // ============================================================
   //  自检：列出未命中的引用，给开发者一个早期警告
   // ============================================================
   // 暴露为全局，main.js 启动后调用一次

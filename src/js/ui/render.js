@@ -1921,8 +1921,37 @@ function renderActionsTab(state, parent) {
       })(actions[_ai]);
     }
 
-    // 多层排序
+    // 多层排序（含新行动助力）
     actions = ActionSort.sortActions(actions, state);
+  }
+
+  // === ✨ 新行动助力条（首次使用后 3 天内置顶展示） ===
+  if (typeof ActionSort !== "undefined" && ActionSort.isActionNew) {
+    var newActions = actions.filter(function (a) {
+      return !a.disabled && ActionSort.isActionNew(a.id, state);
+    });
+    if (newActions.length > 0) {
+      var newBox = document.createElement("div");
+      newBox.style.cssText =
+        "margin-bottom:14px;padding:10px 14px;background:linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,165,0,0.04));border:1px solid rgba(255,215,0,0.3);border-radius:var(--radius-md);";
+      var newTitle = document.createElement("div");
+      newTitle.style.cssText =
+        "font-size:11px;color:var(--warning);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
+      newTitle.innerHTML =
+        "✨ 新行动 — 首次解锁 3 天内排序靠前 <span style='font-size:9px;color:var(--text-muted);font-weight:400;'>（今天第 " +
+        (state.player ? state.player.day : "?") +
+        " 天）</span>";
+      newBox.appendChild(newTitle);
+      var newGrid = document.createElement("div");
+      newGrid.className = "action-cards";
+      newGrid.style.gridTemplateColumns =
+        "repeat(auto-fill, minmax(160px, 1fr))";
+      for (var _n = 0; _n < newActions.length; _n++) {
+        newGrid.appendChild(createActionCard(newActions[_n], state));
+      }
+      newBox.appendChild(newGrid);
+      parent.appendChild(newBox);
+    }
   }
 
   // 分离出行和其他行动
@@ -2120,9 +2149,15 @@ function createActionCard(action, state) {
     card.classList.add("disabled");
   }
 
+  // 新行动标记
+  var isNew = false;
+  if (typeof ActionSort !== "undefined" && ActionSort.isActionNew && state) {
+    isNew = ActionSort.isActionNew(action.id, state);
+  }
+
   card.innerHTML = `
     <div class="card-icon">${action.icon}</div>
-    <div class="card-title">${action.name}</div>
+    <div class="card-title">${action.name}${isNew ? ' <span class="badge-new">✨新</span>' : ""}</div>
     <div class="card-desc">${action.desc}</div>
     <div class="card-meta">
       ${action.apCost ? `<span class="ap-cost">⚡${action.apCost}</span>` : ""}

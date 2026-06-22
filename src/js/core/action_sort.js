@@ -261,9 +261,56 @@
   }
 
   /**
+   * 判断行动是否为"新解锁"（首次使用后 3 天内）
+   * @param {string} actionId
+   * @param {Object} state
+   * @returns {boolean}
+   */
+  function isActionNew(actionId, state) {
+    if (!actionId || !state || !state.player) return false;
+    var firstUse =
+      state.stats && state.stats.actionFirstUse
+        ? state.stats.actionFirstUse
+        : {};
+    var day = firstUse[actionId];
+    if (typeof day === "undefined" || day === null) return false;
+    var currentDay = state.player.day || 0;
+    return currentDay - day >= 0 && currentDay - day <= 3;
+  }
+
+  /**
+   * 获取新行动在排序中的临时优先级加成（负值 = 越靠前）
+   * 第0天（刚使用）：-40（几乎置顶）
+   * 第1天：-25
+   * 第2天：-15
+   * 第3天：-5（微弱推动）
+   * 第4天+：0（过期）
+   * @param {string} actionId
+   * @param {Object} state
+   * @returns {number}
+   */
+  function getActionNewBoost(actionId, state) {
+    if (!actionId || !state || !state.player) return 0;
+    var firstUse =
+      state.stats && state.stats.actionFirstUse
+        ? state.stats.actionFirstUse
+        : {};
+    var day = firstUse[actionId];
+    if (typeof day === "undefined" || day === null) return 0;
+    var currentDay = state.player.day || 0;
+    var age = currentDay - day;
+    if (age < 0 || age > 3) return 0;
+    if (age === 0) return -40; // 今天刚用 → 非常靠前
+    if (age === 1) return -25;
+    if (age === 2) return -15;
+    if (age === 3) return -5; // 最后一天微推
+    return 0;
+  }
+
+  /**
    * 多层排序主函数
    * @param {Array} actions - 行动数组
-   * @param {Object} state - 游戏状态（用于读取频次）
+   * @param {Object} state - 游戏状态（用于读取频次和新行动状态）
    * @returns {Array} 排序后的新数组
    */
   function sortActions(actions, state) {
@@ -282,9 +329,9 @@
       var catOrdB = getCategoryOrder(catB);
       if (catOrdA !== catOrdB) return catOrdA - catOrdB;
 
-      // Level 2: 同类内默认优先级
-      var priA = getActionPriority(a.id);
-      var priB = getActionPriority(b.id);
+      // Level 2: 同类内默认优先级 + 新行动临时加成
+      var priA = getActionPriority(a.id) + getActionNewBoost(a.id, state);
+      var priB = getActionPriority(b.id) + getActionNewBoost(b.id, state);
       if (priA !== priB) return priA - priB;
 
       // Level 3: 禁用项排同类末尾
@@ -421,6 +468,8 @@
     getActionCategory: getActionCategory,
     getCategoryOrder: getCategoryOrder,
     getActionPriority: getActionPriority,
+    isActionNew: isActionNew,
+    getActionNewBoost: getActionNewBoost,
     sortActions: sortActions,
     groupActionsByCategory: groupActionsByCategory,
     runAudit: runAudit,

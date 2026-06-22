@@ -32,12 +32,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：交易 Action Card 价格预览 ✅（2026-06-22）
-  - **核心变化**：从 Actions Tab 直接看到当前市场的价格状况，无需进入 Trade Tab
-  - **4 档技能门控预览**：0→仅商品数量 / 20→红绿对比(几个好价/高价) / 40→低价商品名+价格 / 60→全城最低商品标记
-  - **新建函数** `src/js/main.js::buildTradePricePreview()` — 复用 trade_intel.js 的价格判断函数
-  - **修改** `render.js::createActionCard()` — 支持 `pricePreview` 属性渲染
-  - **修改** `style.css` — 新增 `.price-preview` 紧凑样式
+- **最近一次工作**：新行动助力系统 + 行动习惯分布百科图 ✅（2026-06-22）
+  - **新行动助力**：`action_sort.js` 新增 `isActionNew()` / `getActionNewBoost()` — 首次使用后 3 天内排序临时加成（-40/-25/-15/-5），同类几乎置顶
+  - **UI 增强**：`render.js` 新增 ✨新徽章脉冲动画 + 新行动专属置顶卡片区
+  - **百科新条目**：`mechanics_registry.js` 新增 `MECHANICS.action_habits` — 分类柱状图 + Top-5 热门行动排行
+  - **排序逻辑**：分类顺序 → 同类优先级（含新行动加成）→ 禁用 → 点击频次 → AP 消耗 → 名称
   - **构建**：已 `python build.py`（3162.5 KB）
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）

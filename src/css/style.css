@@ -666,6 +666,25 @@ body {
   text-overflow: ellipsis;
 }
 
+/* --- New Action Badge --- */
+.badge-new {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #d4a017;
+  background: rgba(255, 215, 0, 0.12);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: badge-new-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-new-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* --- Message Log --- */
 #message-log {
   background: var(--bg-card);
