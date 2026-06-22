@@ -492,10 +492,11 @@ const ITEMS = [
   },
 
   // ============================================================
-  // 待完成：新增装备 — 参考《大多数》装备系统 + 《Stardew Valley》工具
+  // 待完成：新增装备 — 参考《大多数》装备系统 + 《Stardew Valley》工具 + 真实中国生活
   // 实现提示：在 ITEMS 数组中追加，注意 slot 字段（head/hand/feet/body/accessory/null）
+  // 参考来源：《大多数》装备系统、《Stardew Valley》工具系统、真实中国生活用品
   // ============================================================
-  // TODO: 待实现 - 保暖内衣（冬天防寒+15，室外工作疲劳-3）
+  // TODO: 待实现 - 保暖内衣（冬天必备）
   // {
   //   id: "thermal_underwear",
   //   name: "保暖内衣",
@@ -507,29 +508,52 @@ const ITEMS = [
   //     waste_recycling: { incomeMultiplier: 1.05 },
   //   },
   //   price: 60,
-  //   desc: "防寒+15，冬天必备。室外工作疲劳减少。",
+  //   desc: "防寒+15，冬天必备。室外工作疲劳减少3点。",
   //   buyLocations: ["wholesaleMarket"],
   // },
-  // TODO: 待实现 - 雨衣（雨天卫生-0，疲劳-5）
-  // TODO: 待实现 - 充电宝（智能手机不耗电，配送效率+5%）
-  // TODO: 待实现 - 急救包（受伤时自动治疗，生病概率-10%）
-  // TODO: 待实现 - 电脑包（智力+1，科技类工作收入+5%）
-  // TODO: 待实现 - 劳保靴（体质+2，工地受伤概率-8%）
-  // TODO: 待实现 - 反光背心（夜间工作收入+8%）
-  // TODO: 待实现 - 维生素片（每日健康+1，连续服用7天额外+5）
-  // TODO: 待实现 - 眼药水（智力工作疲劳-2）
-  // TODO: 待实现 - 按摩仪（每日疲劳-5，体质恢复+3）
-  // TODO: 待实现 - 记事本（学习技能XP+10%）
-  // TODO: 待实现 - 手电筒（夜间工作收入+5%，夜间探索AP-1）
-  // TODO: 待实现 - 雨伞（雨天卫生-0，出行AP-1）
-  // TODO: 待实现 - 智能手表（健康监控，疲劳恢复+5%）
-  // TODO: 待实现 - 降噪耳机（学习环境效率+15%，疲劳-3）
+  // TODO: 待实现 - 雨衣（雨天必备）
+  // { id: "raincoat", name: "雨衣", icon: "🌧️", slot: "body", effects: { rainProtection: 20, fatigue: -5 }, jobBonuses: { delivery_rider: { incomeMultiplier: 1.08 }, street_vending_food: { incomeMultiplier: 1.05 } }, price: 40, desc: "雨天卫生-0，疲劳-5。配送/摆摊雨天必备。", buyLocations: ["wholesaleMarket"] },
+  // TODO: 待实现 - 充电宝（数码党必备）
+  // { id: "power_bank", name: "充电宝", icon: "🔋", slot: "accessory", effects: { phoneBattery: true }, jobBonuses: { delivery_rider: { incomeMultiplier: 1.05 }, customer_service_tech: { incomeMultiplier: 1.03 } }, price: 100, desc: "智能手机不耗电，配送效率+5%。数码党必备。", buyLocations: ["commercialDist", "techPark"] },
+  // TODO: 待实现 - 急救包（保命神器）
+  // { id: "first_aid_kit", name: "急救包", icon: "🚑", slot: "accessory", effects: { illnessReduction: 0.1, injuryAutoHeal: true }, price: 150, desc: "受伤时自动治疗，生病概率-10%。保命神器。", buyLocations: ["hospital", "wholesaleMarket"] },
+  // TODO: 待实现 - 电脑包（白领必备）
+  // { id: "laptop_bag", name: "电脑包", icon: "💼", slot: "accessory", effects: { intelligence: 1 }, jobBonuses: { data_entry: { incomeMultiplier: 1.05 }, customer_service_tech: { incomeMultiplier: 1.05 }, content_writing: { incomeMultiplier: 1.05 } }, price: 200, desc: "智力+1，科技类工作收入+5%。白领必备。", buyLocations: ["techPark", "commercialDist"] },
+  // TODO: 待实现 - 劳保靴（工地必备）
+  // { id: "work_boots", name: "劳保靴", icon: "👢", slot: "feet", effects: { physique: 2, injuryReduction: 0.08 }, jobBonuses: { manual_labor_construction: { incomeMultiplier: 1.06 }, skilled_labor_construction: { incomeMultiplier: 1.05 } }, price: 80, desc: "体质+2，工地受伤概率-8%。工地必备。", buyLocations: ["construction", "wholesaleMarket"] },
+  // TODO: 待实现 - 反光背心（夜间配送）
+  // { id: "reflective_vest", name: "反光背心", icon: "🦺", slot: "body", effects: { nightVisibility: 20 }, jobBonuses: { delivery_rider: { incomeMultiplier: 1.08 }, package_delivery: { incomeMultiplier: 1.06 } }, price: 30, desc: "夜间工作可见度+20%，配送收入+6%~8%。夜间配送必备。", buyLocations: ["wholesaleMarket"] },
+  // TODO: 待实现 - 维生素片（健康补充）
+  // { id: "vitamins", name: "维生素片", icon: "💊", slot: null, effects: { healthDaily: 1, healthBonusStreak: 5 }, price: 20, desc: "每日健康+1，连续服用7天额外+5。需每日服用。", buyLocations: ["hospital", "commercialDist"] },
+  // TODO: 待实现 - 眼药水（程序员必备）
+  // { id: "eye_drops", name: "眼药水", icon: "💧", slot: null, effects: { fatigueIntelWork: -2 }, price: 15, desc: "智力工作疲劳-2，连续使用效果递减。程序员必备。", buyLocations: ["hospital", "commercialDist"] },
+  // TODO: 待实现 - 按摩仪（放松神器）
+  // { id: "back_massager", name: "按摩仪", icon: "💆", slot: null, effects: { fatigue: -5, physiqueRecovery: 3 }, price: 200, desc: "每日疲劳-5，体质恢复+3。体力工作后放松。", buyLocations: ["commercialDist"] },
+  // TODO: 待实现 - 记事本（学习辅助）
+  // { id: "notebook", name: "记事本", icon: "📓", slot: null, effects: { skillXpBonus: 0.1 }, price: 10, desc: "学习技能XP+10%，记录重要信息。学习辅助。", buyLocations: ["school", "wholesaleMarket"] },
+  // TODO: 待实现 - 手电筒（夜间工作）
+  // { id: "flashlight", name: "手电筒", icon: "🔦", slot: null, effects: { nightWorkIncome: 0.05, nightExploreAp: -1 }, price: 25, desc: "夜间工作收入+5%，夜间探索AP-1。夜间工作必备。", buyLocations: ["wholesaleMarket"] },
+  // TODO: 待实现 - 雨伞（雨天出行）
+  // { id: "umbrella", name: "雨伞", icon: "☂️", slot: null, effects: { rainHygiene: 0, travelAp: -1 }, price: 30, desc: "雨天卫生-0，出行AP-1。雨天必备。", buyLocations: ["wholesaleMarket", "commercialDist"] },
+  // TODO: 待实现 - 智能手表（健康监控）
+  // { id: "smart_watch", name: "智能手表", icon: "⌚", slot: "accessory", effects: { healthMonitor: true, fatigueRecoveryBonus: 0.05 }, jobBonuses: { delivery_rider: { incomeMultiplier: 1.05 } }, price: 300, desc: "健康监控，疲劳恢复+5%，消息提醒。", buyLocations: ["techPark", "commercialDist"] },
+  // TODO: 待实现 - 降噪耳机（学习办公）
+  // { id: "noise_cancelling_earphones", name: "降噪耳机", icon: "🎧", slot: "accessory", effects: { studyEfficiency: 0.15, fatigue: -3 }, price: 250, desc: "学习环境效率+15%，疲劳-3。学习/办公必备。", buyLocations: ["techPark", "commercialDist"] },
+  // TODO: 待实现 - 保温饭盒（带饭神器）
+  // { id: "lunch_box", name: "保温饭盒", icon: "🍱", slot: null, effects: { foodFreshness: 0.5, hunger: 3 }, price: 50, desc: "饭菜保温时间+50%，吃饭恢复+3饥饱。带饭必备。", buyLocations: ["wholesaleMarket"] },
+  // TODO: 待实现 - 折叠自行车（通勤神器）
+  // { id: "folding_bike", name: "折叠自行车", icon: "🚲", slot: null, effects: { agility: 3, fatigueReduction: 8, travelAp: -2 }, jobBonuses: { delivery_rider: { incomeMultiplier: 1.15 }, package_delivery: { incomeMultiplier: 1.1 } }, price: 350, desc: "敏捷+3，每日减疲劳8，旅行AP-2。通勤/配送神器。", buyLocations: ["wholesaleMarket", "commercialDist"] },
+  // TODO: 待实现 - 防狼喷雾（女性安全）
+  // { id: "pepper_spray", name: "防狼喷雾", icon: "🧴", slot: "accessory", effects: { safety: 30 }, price: 50, desc: "夜间出行安全+30%，降低被袭击概率。女性必备。", buyLocations: ["commercialDist"] },
+  // TODO: 待实现 - 收音机（信息获取）
+  // { id: "radio", name: "收音机", icon: "📻", slot: null, effects: { newsAccess: true, happiness: 2 }, price: 80, desc: "获取新闻信息，心情+2。信息获取渠道。", buyLocations: ["wholesaleMarket"] },
 
   // ============================================================
-  // 待完成：装备品质系统 — 参考《暗黑破坏神》《魔兽世界》
-  // 实现提示：在 ITEMS 数组中每项追加 quality 字段
+  // 待完成：装备品质系统 — 参考《暗黑破坏神》《魔兽世界》《Stardew Valley》
+  // 实现提示：在 ITEMS 数组中每项追加 quality 字段，新增品质判定逻辑
+  // 参考来源：《暗黑破坏神》装备品质、《魔兽世界》物品稀有度、《Stardew Valley》工具等级
   // ============================================================
-  // TODO: 待实现
+  // TODO: 待实现 - 装备品质系统
   // 品质等级定义：
   // {
   //   quality: "common", // common / rare / epic / legendary
@@ -547,15 +571,19 @@ const ITEMS = [
   // { id: "vitality", effect: { healthRecoveryBonus: 0.1 }, desc: "活力：健康恢复+10%" }
   // { id: "agility_up", effect: { agility: 2 }, desc: "敏捷+2" }
   // { id: "strength_up", effect: { physique: 2 }, desc: "力量+2" }
+  // { id: "hygiene_up", effect: { hygiene: 3 }, desc: "卫生+3" }
+  // { id: "fame_up", effect: { fame: 1 }, desc: "名气+1" }
   //
   // 品质出现概率：common 70%, rare 20%, epic 8%, legendary 2%
-  // 来源：普通购买（common为主）、抽奖/活动（rare+）、NPC赠送（随机）
+  // 来源：普通购买（common为主）、抽奖/活动（rare+）、NPC赠送（随机）、隐藏商店（epic+）
+  // 实现提示：在 buyItem() 函数中新增品质判定，在 renderEquipment() 中显示品质颜色
 
   // ============================================================
-  // 待完成：新增住所等级 — 参考《模拟人生》住房系统
+  // 待完成：新增住所等级 — 参考《模拟人生》住房系统《大多数》住所
   // 实现提示：在 HOUSING_TIERS 数组中追加 tier 5 和 tier 6
+  // 参考来源：《模拟人生》住房系统、《大多数》住所系统、真实中国住房市场
   // ============================================================
-  // TODO: 待实现
+  // TODO: 待实现 - 别墅（成功人士住所）
   // {
   //   tier: 5,
   //   name: "别墅",
@@ -572,7 +600,13 @@ const ITEMS = [
   //   canRest: true,
   //   homeType: "villa",
   //   extraFeatures: { canHostNPC: true, garden: true, garage: true },
+  //   effects: {
+  //     healthRecovery: 5,
+  //     skillStudyBonus: 0.1,
+  //     npcVisitBonus: 0.1,
+  //   },
   // },
+  // TODO: 待实现 - 豪宅（顶级住所）
   // {
   //   tier: 6,
   //   name: "豪宅",
@@ -589,6 +623,12 @@ const ITEMS = [
   //   canRest: true,
   //   homeType: "mansion",
   //   extraFeatures: { canHostNPC: true, party: true, view: "panoramic", staff: true },
+  //   effects: {
+  //     healthRecovery: 10,
+  //     skillStudyBonus: 0.2,
+  //     npcVisitBonus: 0.2,
+  //     fameGain: 0.1,
+  //   },
   // },
 ];
 

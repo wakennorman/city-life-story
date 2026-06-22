@@ -969,10 +969,11 @@ const STREET_JOBS = [
     },
 
     // ============================================================
-    // 待完成：新增地点专属工作 — 参考《大多数》工作系统
-    // 实现提示：在 BRANCH_JOBS 数组中追加，注意 location 字段对应 locations.js
+    // 待完成：新增地点专属工作 — 参考《大多数》工作系统《北京浮生记》
+    // 实现提示：在 BRANCH_JOBS 数组中追加，注意 location 字段对应 locations.js 中的 ID
+    // 参考来源：《大多数》工作系统、《北京浮生记》街头工作
     // ============================================================
-    // TODO: 待实现 - 公园工作
+    // TODO: 待实现 - 公园街头表演
     // {
     //   id: "busking",
     //   name: "街头表演",
@@ -987,51 +988,79 @@ const STREET_JOBS = [
     //   risk: {},
     // },
     // TODO: 待实现 - 公园保安
+    // { id: "park_security", name: "公园保安", icon: "👮", location: "park", requirements: { minAge: 18, maxAge: 55 }, effects: { fatigue: 10, happiness: -3, physiqueXp: 1 }, payCalc: function(state) { return Math.floor(Random.float(35, 50)); }, risk: {} },
     // TODO: 待实现 - 公园清洁
+    // { id: "park_cleaning", name: "公园清洁", icon: "🧹", location: "park", requirements: { minAge: 18, maxAge: 60 }, effects: { fatigue: 18, hygiene: -5, physiqueXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(25, 40)); }, risk: {} },
     // TODO: 待实现 - 医院保洁
+    // { id: "hospital_cleaning", name: "医院保洁", icon: "🧹", location: "hospital", requirements: { hygiene: 10, minAge: 18, maxAge: 55 }, effects: { fatigue: 15, hygiene: -8, happiness: -2 }, payCalc: function(state) { return Math.floor(Random.float(40, 60)); }, risk: { illness: 0.05 } },
     // TODO: 待实现 - 医院配送
+    // { id: "hospital_delivery", name: "医院配送", icon: "📦", location: "hospital", requirements: { agility: 15, minAge: 18, maxAge: 45 }, effects: { fatigue: 20, agilityXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(50, 80)); }, risk: { illness: 0.03 } },
     // TODO: 待实现 - 银行保安
+    // { id: "bank_security", name: "银行保安", icon: "👮", location: "bank", requirements: { minAge: 20, maxAge: 50 }, effects: { fatigue: 8, happiness: -2, physiqueXp: 0 }, payCalc: function(state) { return Math.floor(Random.float(60, 90)); }, risk: {} },
     // TODO: 待实现 - 银行大堂助理
+    // { id: "bank_cashier_assist", name: "银行大堂助理", icon: "💼", location: "bank", requirements: { intelligence: 25, minAge: 22, maxAge: 35, education: 1 }, effects: { fatigue: 10, intelligenceXp: 2, happiness: 2 }, payCalc: function(state) { return Math.floor(Random.float(70, 100)); }, risk: {} },
     // TODO: 待实现 - 培训辅导
+    // { id: "tutor_care", name: "培训辅导", icon: "📚", location: "trainingCenter", requirements: { intelligence: 30, minAge: 22, maxAge: 50 }, effects: { fatigue: 12, intelligenceXp: 3, happiness: 5 }, payCalc: function(state) { return Math.floor(Random.float(80, 120)); }, risk: {} },
     // TODO: 待实现 - 培训中心保洁
+    // { id: "center_cleaning", name: "培训中心保洁", icon: "🧹", location: "trainingCenter", requirements: { minAge: 18, maxAge: 55 }, effects: { fatigue: 15, hygiene: -3 }, payCalc: function(state) { return Math.floor(Random.float(30, 50)); }, risk: {} },
     // TODO: 待实现 - 批发配送
+    // { id: "wholesale_delivery", name: "批发配送", icon: "🚚", location: "wholesaleMarket", requirements: { driving: 10, minAge: 20, maxAge: 45 }, effects: { fatigue: 25, agilityXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(50, 90)); }, risk: { injury: 0.02 } },
     // TODO: 待实现 - 货物分拣
+    // { id: "wholesale_sorting", name: "货物分拣", icon: "📦", location: "wholesaleMarket", requirements: { agility: 15, minAge: 18, maxAge: 45 }, effects: { fatigue: 22, physiqueXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(40, 70)); }, risk: { injury: 0.03 } },
     // TODO: 待实现 - 实验室助理
+    // { id: "lab_assistant", name: "实验室助理", icon: "🔬", location: "techPark", requirements: { intelligence: 35, minAge: 22, maxAge: 35, education: 1 }, effects: { fatigue: 10, intelligenceXp: 4, happiness: 3 }, payCalc: function(state) { return Math.floor(Random.float(90, 150)); }, risk: {} },
+    // TODO: 待实现 - 健身房教练
+    // { id: "gym_coach", name: "健身房教练", icon: "🏋️", location: "commercialDist", requirements: { physique: 50, minAge: 22, maxAge: 45 }, effects: { fatigue: 15, physiqueXp: 3, happiness: 8 }, payCalc: function(state) { return Math.floor(80 + state.player.physique * 0.5 + Random.float(0, 50)); }, risk: {} },
+    // TODO: 待实现 - 宠物保姆
+    // { id: "pet_sitter", name: "宠物保姆", icon: "🐕", location: "commercialDist", requirements: { minAge: 18, maxAge: 45 }, effects: { fatigue: 8, happiness: 10 }, payCalc: function(state) { return Math.floor(Random.float(40, 80)); }, risk: {} },
 
     // ============================================================
-    // 待完成：新增节日/季节性工作 — 参考真实节日经济
+    // 待完成：新增节日/季节性工作 — 参考真实节日经济《大多数》节日工作
+    // 实现提示：在 STREET_JOBS 数组中追加，添加 seasonal 字段控制出现时间
+    // 参考来源：真实中国节日经济、《大多数》节日工作
     // ============================================================
-    // TODO: 待实现
+    // TODO: 待实现 - 写春联（春节前7天）
     // {
     //   id: "fest_spring_couplet",
     //   name: "写春联",
-    //   desc: "春节前帮人写春联，按幅收费。",
+    //   desc: "春节前帮人写春联，按幅收费。书法好的能赚不少。",
     //   icon: "🧧",
     //   location: "commercialDist",
     //   requirements: { intelligence: 20 },
     //   effects: { fatigue: 8, happiness: 5, intelligenceXp: 2 },
     //   payCalc(state) {
-    //     return Math.floor(60 + state.skills.coding.level * 2 + Random.float(0, 40));
+    //     return Math.floor(60 + (state.skills.calligraphy?.level || 0) * 2 + Random.float(0, 40));
     //   },
     //   risk: {},
     //   seasonal: { festival: "spring_festival", daysBefore: 7, daysAfter: 0 },
     // },
     // TODO: 待实现 - 做月饼（中秋节前5天）
+    // { id: "fest_mid_autumn_mooncake", name: "做月饼", icon: "🥮", location: "commercialDist", requirements: { cooking: 15 }, effects: { fatigue: 12, happiness: 3, cookingXp: 5 }, payCalc: function(state) { return Math.floor(80 + state.skills.cooking.level * 1.5 + Random.float(0, 50)); }, risk: {}, seasonal: { festival: "mid_autumn", daysBefore: 5, daysAfter: 0 } },
     // TODO: 待实现 - 包粽子（端午节前3天）
+    // { id: "fest_dragon_zongzi", name: "包粽子", icon: "🛶", location: "commercialDist", requirements: { cooking: 10 }, effects: { fatigue: 10, happiness: 3, cookingXp: 4 }, payCalc: function(state) { return Math.floor(60 + state.skills.cooking.level * 1.2 + Random.float(0, 40)); }, risk: {}, seasonal: { festival: "dragon_boat", daysBefore: 3, daysAfter: 0 } },
     // TODO: 待实现 - 卖冬装（冬季12-2月）
+    // { id: "winter_coat_vendor", name: "卖冬装", icon: "🧥", location: "commercialDist", requirements: { sales: 15 }, effects: { fatigue: 14, happiness: 2, salesXp: 4 }, payCalc: function(state) { return Math.floor(100 + state.skills.sales.level * 2 + Random.float(0, 80)); }, risk: {}, seasonal: { months: [12, 1, 2] } },
     // TODO: 待实现 - 卖冷饮（夏季6-8月）
+    // { id: "summer_cold_drink", name: "卖冷饮", icon: "🍦", location: "commercialDist", requirements: {}, effects: { fatigue: 12, happiness: 5, salesXp: 2 }, payCalc: function(state) { return Math.floor(50 + Random.float(0, 60)); }, risk: {}, seasonal: { months: [6, 7, 8] } },
     // TODO: 待实现 - 开学季布置（每学期初）
+    // { id: "school_term_prep", name: "开学季布置", icon: "📚", location: "school", requirements: { agility: 15 }, effects: { fatigue: 18, happiness: 3 }, payCalc: function(state) { return Math.floor(80 + Random.float(0, 50)); }, risk: {}, seasonal: { months: [2, 9] } },
     // TODO: 待实现 - 情人节卖花（2月14日前3天）
+    // { id: "valentine_flower", name: "情人节卖花", icon: "🌹", location: "commercialDist", requirements: { sales: 10 }, effects: { fatigue: 10, happiness: 8, salesXp: 3 }, payCalc: function(state) { return Math.floor(150 + state.skills.sales.level * 3 + Random.float(0, 100)); }, risk: {}, seasonal: { festival: "valentine", daysBefore: 3, daysAfter: 0 } },
     // TODO: 待实现 - 七夕卖礼物（七夕前5天）
+    // { id: "chinese_valentine", name: "七夕卖礼物", icon: "💝", location: "commercialDist", requirements: { sales: 15 }, effects: { fatigue: 12, happiness: 8, salesXp: 4 }, payCalc: function(state) { return Math.floor(120 + state.skills.sales.level * 2.5 + Random.float(0, 80)); }, risk: {}, seasonal: { festival: "qixi", daysBefore: 5, daysAfter: 0 } },
+    // TODO: 待实现 - 圣诞装饰（12月）
+    // { id: "christmas_deco", name: "圣诞装饰", icon: "🎄", location: "commercialDist", requirements: { agility: 15 }, effects: { fatigue: 15, happiness: 5 }, payCalc: function(state) { return Math.floor(100 + Random.float(0, 60)); }, risk: {}, seasonal: { months: [12] } },
 
     // ============================================================
-    // 待完成：新增自由职业工作 — 参考《自由职业模拟器》
+    // 待完成：新增自由职业工作 — 参考《自由职业模拟器》《零工经济》
+    // 实现提示：在 STREET_JOBS 数组中追加，注意自由职业的特性（时间灵活、收入波动大）
+    // 参考来源：《自由职业模拟器》、真实零工经济数据
     // ============================================================
-    // TODO: 待实现
+    // TODO: 待实现 - 自由设计接单
     // {
     //   id: "freelance_design",
     //   name: "自由设计接单",
-    //   desc: "接平面设计、LOGO设计、海报设计等单子。",
+    //   desc: "接平面设计、LOGO设计、海报设计等单子。时间灵活，收入看能力。",
     //   icon: "🎨",
     //   location: "techPark",
     //   requirements: { design: 20, intelligence: 25 },
@@ -1042,10 +1071,19 @@ const STREET_JOBS = [
     //   risk: {},
     // },
     // TODO: 待实现 - 自由写作接单
+    // { id: "freelance_writing", name: "自由写作接单", icon: "✍️", location: "techPark", requirements: { intelligence: 35, writing: 15 }, effects: { fatigue: 12, intelligenceXp: 4, happiness: 5 }, payCalc: function(state) { return Math.floor(50 + state.skills.writing.level * 4 + Random.float(0, 150)); }, risk: {} },
     // TODO: 待实现 - 自由翻译接单
+    // { id: "freelance_translation", name: "自由翻译接单", icon: "🌐", location: "techPark", requirements: { english: 40 }, effects: { fatigue: 10, intelligenceXp: 3, happiness: 3 }, payCalc: function(state) { return Math.floor(100 + state.skills.english.level * 3 + Random.float(0, 300)); }, risk: {} },
     // TODO: 待实现 - 自由摄影接单
+    // { id: "freelance_photo", name: "自由摄影接单", icon: "📷", location: "commercialDist", requirements: { agility: 25, photography: 10 }, effects: { fatigue: 18, happiness: 8, agilityXp: 2 }, payCalc: function(state) { return Math.floor(150 + state.skills.photography.level * 5 + Random.float(0, 350)); }, risk: {} },
     // TODO: 待实现 - 自由咨询接单
+    // { id: "freelance_consulting", name: "自由咨询接单", icon: "💡", location: "techPark", requirements: { management: 30, intelligence: 45 }, effects: { fatigue: 8, intelligenceXp: 5, happiness: 5 }, payCalc: function(state) { return Math.floor(200 + state.skills.management.level * 6 + Random.float(0, 600)); }, risk: {} },
     // TODO: 待实现 - 线上家教
+    // { id: "freelance_tutor", name: "线上家教", icon: "📖", location: "school", requirements: { intelligence: 40, teaching: 20 }, effects: { fatigue: 10, intelligenceXp: 3, happiness: 8 }, payCalc: function(state) { return Math.floor(60 + state.skills.teaching.level * 3 + Random.float(0, 90)); }, risk: {} },
+    // TODO: 待实现 - 视频剪辑
+    // { id: "video_editing", name: "视频剪辑", icon: "🎬", location: "techPark", requirements: { intelligence: 30, videoEditing: 15 }, effects: { fatigue: 15, intelligenceXp: 4, happiness: 3 }, payCalc: function(state) { return Math.floor(100 + state.skills.videoEditing.level * 5 + Random.float(0, 200)); }, risk: {} },
+    // TODO: 待实现 - 代驾服务
+    // { id: "代驾", name: "代驾服务", icon: "🚗", location: "commercialDist", requirements: { driving: 30, minAge: 25, maxAge: 50 }, effects: { fatigue: 12, agilityXp: 2, happiness: 2 }, payCalc: function(state) { return Math.floor(80 + state.skills.driving.level * 2 + Random.float(0, 120)); }, risk: { injury: 0.02 } },
   ];
 
   // 将分支工作合并到 STREET_JOBS 中

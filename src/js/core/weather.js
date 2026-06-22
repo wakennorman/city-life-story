@@ -63,10 +63,11 @@ const WEATHER_TYPES = [
   },
 
   // ============================================================
-  // 待完成：新增天气类型 — 参考真实气象 + 《大多数》天气系统
+  // 待完成：新增天气类型 — 参考真实中国气象数据 + 《大多数》天气系统
   // 实现提示：在 WEATHER_TYPES 数组中追加，并在 SEASONS 的 weatherWeights 中配置权重
+  // 参考来源：中国气象局公开数据、《大多数》天气系统
   // ============================================================
-  // TODO: 待实现 - 高温预警
+  // TODO: 待实现 - 高温预警（参考中国夏季高温天气）
   // {
   //   id: "heatwave",
   //   name: "高温预警",
@@ -76,8 +77,14 @@ const WEATHER_TYPES = [
   //   happinessBonus: -8,
   //   healthMod: -2,
   //   desc: "室外工作疲劳+10，卫生-5，水价格×1.5",
+  //   effects: {
+  //     outdoorFatigueBonus: 10,
+  //     hygieneMod: -5,
+  //     priceMod: { water: 1.5, beer: 1.3 },
+  //     illnessRisk: { heatStroke: 0.05 },
+  //   },
   // },
-  // TODO: 待实现 - 寒潮
+  // TODO: 待实现 - 寒潮（参考中国冬季寒潮）
   // {
   //   id: "cold_snap",
   //   name: "寒潮",
@@ -87,8 +94,14 @@ const WEATHER_TYPES = [
   //   happinessBonus: -5,
   //   healthMod: -3,
   //   desc: "室外工作疲劳+8，健康-3，衣物价格×1.3",
+  //   effects: {
+  //     outdoorFatigueBonus: 8,
+  //     healthMod: -3,
+  //     priceMod: { clothing: 1.3, warm_coat: 1.2 },
+  //     illnessRisk: { coldFlu: 0.08 },
+  //   },
   // },
-  // TODO: 待实现 - 重度雾霾
+  // TODO: 待实现 - 重度雾霾（参考北京雾霾历史数据）
   // {
   //   id: "heavy_smog",
   //   name: "重度雾霾",
@@ -99,8 +112,14 @@ const WEATHER_TYPES = [
   //   healthMod: -2,
   //   respiratoryDiseaseBonus: 0.15,
   //   desc: "所有工作健康-2，呼吸系统疾病概率+15%",
+  //   effects: {
+  //     healthMod: -2,
+  //     illnessRisk: { respiratoryDisease: 0.15 },
+  //     outdoorMod: 0.5,
+  //     maskRequired: true,
+  //   },
   // },
-  // TODO: 待实现 - 台风
+  // TODO: 待实现 - 台风（参考东南沿海台风）
   // {
   //   id: "typhoon",
   //   name: "台风",
@@ -112,6 +131,46 @@ const WEATHER_TYPES = [
   //   outdoorJobsBlocked: true,
   //   indoorJobIncomeMod: 0.8,
   //   desc: "所有室外工作不可用，室内工作收入-20%",
+  //   effects: {
+  //     outdoorJobsBlocked: true,
+  //     indoorJobIncomeMod: 0.8,
+  //     footTrafficMod: 0.1,
+  //     duration: { min: 1, max: 2 },
+  //   },
+  // },
+  // TODO: 待实现 - 沙尘暴（参考北方春季沙尘）
+  // {
+  //   id: "sandstorm",
+  //   name: "沙尘暴",
+  //   icon: "🌪️",
+  //   outdoorMod: 0.4,
+  //   fatigueBonus: 12,
+  //   happinessBonus: -10,
+  //   healthMod: -3,
+  //   desc: "室外工作疲劳+12，健康-3，呼吸系统疾病概率+20%",
+  //   effects: {
+  //     outdoorFatigueBonus: 12,
+  //     healthMod: -3,
+  //     illnessRisk: { respiratoryDisease: 0.2 },
+  //     hygieneMod: -10,
+  //   },
+  // },
+  // TODO: 待实现 - 梅雨季（参考江南梅雨）
+  // {
+  //   id: "plum_rain",
+  //   name: "梅雨季",
+  //   icon: "🌧️",
+  //   outdoorMod: 0.6,
+  //   fatigueBonus: 8,
+  //   happinessBonus: -6,
+  //   healthMod: -1,
+  //   desc: "连续阴雨，室外工作疲劳+8，心情-6，食物易发霉",
+  //   effects: {
+  //     outdoorFatigueBonus: 8,
+  //     happinessBonus: -6,
+  //     foodPerishRate: 1.5, // 食物过期速度+50%
+  //     humidity: 90,
+  //   },
   // },
 ];
 
