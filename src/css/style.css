@@ -652,6 +652,20 @@ body {
   font-size: 10px;
 }
 
+/* --- Price Preview (trade action card) --- */
+.action-card .price-preview {
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 4px;
+  padding: 3px 6px;
+  background: rgba(0, 180, 216, 0.06);
+  border-radius: 3px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* --- Message Log --- */
 #message-log {
   background: var(--bg-card);

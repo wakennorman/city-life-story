@@ -1640,6 +1640,118 @@ function initializePrices() {
   state.trade.lastPriceUpdate = state.player.day;
 }
 
+// ====== 为交易 action card 生成价格预览文本 ======
+/**
+ * 根据销售技能和位置信息，为交易卡片生成一行价格预览
+ * @param {object} state - 游戏状态
+ * @param {string} locKey - 地点 ID
+ * @param {boolean} isWholesale - 是否为批发市场
+ * @returns {string} 预览文本（可能为空字符串）
+ */
+function buildTradePricePreview(state, locKey, isWholesale) {
+  if (!state.trade.goodsPrices[locKey]) return "";
+  var goodsList =
+    typeof getAvailableGoodsAtLocation === "function"
+      ? getAvailableGoodsAtLocation(locKey, state)
+      : typeof GOODS !== "undefined"
+        ? GOODS
+        : [];
+  if (!goodsList || goodsList.length === 0) return "";
+
+  // 实际有价格的商品数量
+  var priceKeys = Object.keys(state.trade.goodsPrices[locKey]).filter(
+    function (k) {
+      return typeof state.trade.goodsPrices[locKey][k] === "number";
+    },
+  );
+  var count = priceKeys.length;
+  if (count === 0) return "";
+
+  var parts = [];
+  parts.push("📊 " + count + "种商品");
+
+  // 批发市场固定折扣
+  if (isWholesale) {
+    parts.push("🚚 批发价");
+  }
+
+  // 销售技能 >= 20：显示红绿对比
+  if (typeof canSeePriceMarkers === "function" && canSeePriceMarkers(state)) {
+    var visited = state.trade.visitedToday || {};
+    var lowCount = 0,
+      highCount = 0;
+
+    for (var _ii = 0; _ii < goodsList.length; _ii++) {
+      var g = goodsList[_ii];
+      if (!g) continue;
+      var p = state.trade.goodsPrices[locKey][g.id];
+      if (!p || typeof p !== "number") continue;
+
+      // 收集已访问区域中该商品的价格
+      var comparePrices = [];
+      for (var _v in visited) {
+        if (!visited.hasOwnProperty(_v)) continue;
+        if (_v === locKey) continue;
+        var snap = visited[_v].prices;
+        if (snap && typeof snap[g.id] === "number") {
+          comparePrices.push(snap[g.id]);
+        }
+      }
+      if (comparePrices.length === 0) continue;
+
+      var avg =
+        comparePrices.reduce(function (a, b) {
+          return a + b;
+        }, 0) / comparePrices.length;
+      if (p < avg * 0.98) lowCount++;
+      else if (p > avg * 1.02) highCount++;
+    }
+
+    if (lowCount > 0) parts.push("🟢" + lowCount + "个好价");
+    if (highCount > 0) parts.push("🔴" + highCount + "个高价");
+
+    // 销售技能 >= 40：显示一个极端例子
+    if (
+      typeof canSeeVisitedExtremes === "function" &&
+      canSeeVisitedExtremes(state)
+    ) {
+      for (var _ij = 0; _ij < goodsList.length; _ij++) {
+        var g2 = goodsList[_ij];
+        if (!g2) continue;
+        var p2 = state.trade.goodsPrices[locKey][g2.id];
+        if (!p2 || typeof p2 !== "number") continue;
+        if (typeof getVisitedExtreme !== "function") break;
+        var ext = getVisitedExtreme(state, locKey, g2.id);
+        if (ext.isVisitedLowest) {
+          parts.push("⬇️" + g2.name + "¥" + p2);
+          break;
+        }
+      }
+    }
+
+    // 销售技能 >= 60：全城极端
+    if (
+      typeof canSeeCityExtremes === "function" &&
+      canSeeCityExtremes(state) &&
+      typeof getCityExtreme === "function"
+    ) {
+      for (var _ik = 0; _ik < goodsList.length; _ik++) {
+        var g3 = goodsList[_ik];
+        if (!g3) continue;
+        var p3 = state.trade.goodsPrices[locKey][g3.id];
+        if (!p3 || typeof p3 !== "number") continue;
+        var cityExt = getCityExtreme(state, locKey, g3.id);
+        if (cityExt.isCityLowest) {
+          parts.push("🏆" + g3.name + "全城最低");
+          break;
+        }
+      }
+    }
+  }
+
+  return parts.join(" · ");
+}
+
 // ====== 可用行动列表 ======
 function getAvailableActions(state) {
   const actions = [];
@@ -1737,6 +1849,7 @@ function getAvailableActions(state) {
         name: "批发进货",
         desc: "在批发市场以折扣价批量购入商品，转手到商业区卖出赚差价！点击后自动切换到交易Tab进行采购。",
         icon: "📦",
+        pricePreview: buildTradePricePreview(state, locKey, true),
         handler: () => {
           switchTab("trade");
         },
@@ -1753,6 +1866,7 @@ function getAvailableActions(state) {
         name: "买卖商品",
         desc: "查看当前市场价格，低买高卖赚取差价。点击后自动切换到交易Tab。",
         icon: "🛒",
+        pricePreview: buildTradePricePreview(state, locKey, false),
         handler: () => {
           switchTab("trade");
         },

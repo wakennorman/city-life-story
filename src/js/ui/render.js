@@ -2100,6 +2100,7 @@ function createActionCard(action, state) {
       ${action.costEstimate ? `<span class="cost-estimate">💸 ¥${action.costEstimate}</span>` : ""}
       ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ""}
     </div>
+    ${action.pricePreview ? `<div class="price-preview">${action.pricePreview}</div>` : ""}
     ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px;">${action.payTags.join(" ")}</div>` : ""}
   `;
 
