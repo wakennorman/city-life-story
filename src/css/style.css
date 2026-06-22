@@ -681,60 +681,48 @@ body {
 }
 
 @keyframes badge-new-pulse {
-
-/* 装备品质系统 */
-.quality-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-.quality-common { background: rgba(153,153,153,0.12); color: #888; border: 1px solid rgba(153,153,153,0.3); }
-.quality-rare { background: rgba(74,144,217,0.12); color: #5DADE2; border: 1px solid rgba(74,144,217,0.3); }
-.quality-epic { background: rgba(155,89,182,0.12); color: #AF7AC5; border: 1px solid rgba(155,89,182,0.3); }
-.quality-legendary { background: rgba(230,126,34,0.12); color: #F39C12; border: 1px solid rgba(230,126,34,0.4); box-shadow: 0 0 8px rgba(230,126,34,0.2); }
-@keyframes quality-legendary-pulse { 0%,100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); } 50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); } }
-.quality-legendary.pulse { animation: quality-legendary-pulse 2s ease-in-out infinite; }
-.equipment-card.quality-common { border-left: 3px solid #888; }
-.equipment-card.quality-rare { border-left: 3px solid #5DADE2; }
-.equipment-card.quality-epic { border-left: 3px solid #AF7AC5; }
-.equipment-card.quality-legendary { border-left: 3px solid #F39C12; }
-.quality-price { font-size: 12px; color: var(--text-secondary); }
   0%, 100% { opacity: 1; }
-
-/* 装备品质系统 */
-.quality-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-.quality-common { background: rgba(153,153,153,0.12); color: #888; border: 1px solid rgba(153,153,153,0.3); }
-.quality-rare { background: rgba(74,144,217,0.12); color: #5DADE2; border: 1px solid rgba(74,144,217,0.3); }
-.quality-epic { background: rgba(155,89,182,0.12); color: #AF7AC5; border: 1px solid rgba(155,89,182,0.3); }
-.quality-legendary { background: rgba(230,126,34,0.12); color: #F39C12; border: 1px solid rgba(230,126,34,0.4); box-shadow: 0 0 8px rgba(230,126,34,0.2); }
-@keyframes quality-legendary-pulse { 0%,100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); } 50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); } }
-.quality-legendary.pulse { animation: quality-legendary-pulse 2s ease-in-out infinite; }
-.equipment-card.quality-common { border-left: 3px solid #888; }
-.equipment-card.quality-rare { border-left: 3px solid #5DADE2; }
-.equipment-card.quality-epic { border-left: 3px solid #AF7AC5; }
-.equipment-card.quality-legendary { border-left: 3px solid #F39C12; }
-.quality-price { font-size: 12px; color: var(--text-secondary); }
   50% { opacity: 0.5; }
-
-/* 装备品质系统 */
-.quality-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-.quality-common { background: rgba(153,153,153,0.12); color: #888; border: 1px solid rgba(153,153,153,0.3); }
-.quality-rare { background: rgba(74,144,217,0.12); color: #5DADE2; border: 1px solid rgba(74,144,217,0.3); }
-.quality-epic { background: rgba(155,89,182,0.12); color: #AF7AC5; border: 1px solid rgba(155,89,182,0.3); }
-.quality-legendary { background: rgba(230,126,34,0.12); color: #F39C12; border: 1px solid rgba(230,126,34,0.4); box-shadow: 0 0 8px rgba(230,126,34,0.2); }
-@keyframes quality-legendary-pulse { 0%,100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); } 50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); } }
-.quality-legendary.pulse { animation: quality-legendary-pulse 2s ease-in-out infinite; }
-.equipment-card.quality-common { border-left: 3px solid #888; }
-.equipment-card.quality-rare { border-left: 3px solid #5DADE2; }
-.equipment-card.quality-epic { border-left: 3px solid #AF7AC5; }
-.equipment-card.quality-legendary { border-left: 3px solid #F39C12; }
-.quality-price { font-size: 12px; color: var(--text-secondary); }
 }
 
 /* 装备品质系统 */
-.quality-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-.quality-common { background: rgba(153,153,153,0.12); color: #888; border: 1px solid rgba(153,153,153,0.3); }
-.quality-rare { background: rgba(74,144,217,0.12); color: #5DADE2; border: 1px solid rgba(74,144,217,0.3); }
-.quality-epic { background: rgba(155,89,182,0.12); color: #AF7AC5; border: 1px solid rgba(155,89,182,0.3); }
-.quality-legendary { background: rgba(230,126,34,0.12); color: #F39C12; border: 1px solid rgba(230,126,34,0.4); box-shadow: 0 0 8px rgba(230,126,34,0.2); }
-@keyframes quality-legendary-pulse { 0%,100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); } 50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); } }
-.quality-legendary.pulse { animation: quality-legendary-pulse 2s ease-in-out infinite; }
+.quality-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.quality-common {
+  background: rgba(153,153,153,0.12);
+  color: #888;
+  border: 1px solid rgba(153,153,153,0.3);
+}
+.quality-rare {
+  background: rgba(74,144,217,0.12);
+  color: #5DADE2;
+  border: 1px solid rgba(74,144,217,0.3);
+}
+.quality-epic {
+  background: rgba(155,89,182,0.12);
+  color: #AF7AC5;
+  border: 1px solid rgba(155,89,182,0.3);
+}
+.quality-legendary {
+  background: rgba(230,126,34,0.12);
+  color: #F39C12;
+  border: 1px solid rgba(230,126,34,0.4);
+  box-shadow: 0 0 8px rgba(230,126,34,0.2);
+}
+@keyframes quality-legendary-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); }
+  50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); }
+}
+.quality-legendary.pulse {
+  animation: quality-legendary-pulse 2s ease-in-out infinite;
+}
 .equipment-card.quality-common { border-left: 3px solid #888; }
 .equipment-card.quality-rare { border-left: 3px solid #5DADE2; }
 .equipment-card.quality-epic { border-left: 3px solid #AF7AC5; }
