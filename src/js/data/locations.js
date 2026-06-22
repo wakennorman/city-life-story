@@ -214,29 +214,28 @@ const LOCATIONS = {
   // ============================================================
   //
   // === 居住区扩展 ===
-  // TODO: 待实现 - 郊区（参考真实城郊结合部，房租低、交通不便）
-  // {
-  //   id: "suburb",
-  //   name: "郊区",
-  //   desc: "城市边缘的郊区，安静但交通不便。房租便宜，适合养病/休息。",
-  //   type: "residential",
-  //   wealthTier: 2,
-  //   footfall: 0.4,
-  //   vendingNote: "客流量少，适合长期居住不适合摆摊",
-  //   specialties: ["vegetables", "fruits"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: ["food"],
-  //   jobs: ["suburb_cleaning", "suburb_security"],
-  //   priceMod: {
-  //     water: 0.85,
-  //     vegetables: 0.8,
-  //     fruits: 0.85,
-  //   },
-  //   weatherEffects: {
-  //     rain: { footfallMod: 0.5 },
-  //     snow: { footfallMod: 0.3 },
-  //   },
-  // },
+  suburb: {
+    id: "suburb",
+    name: "郊区",
+    desc: "城市边缘的郊区，安静但交通不便。房租便宜，适合养病/休息。",
+    type: "residential",
+    wealthTier: 2,
+    footfall: 0.4,
+    vendingNote: "客流量少，适合长期居住不适合摆摊",
+    specialties: ["vegetables", "fruits"],
+    dailyProbability: 0.3,
+    specialCategory: ["food"],
+    jobs: ["suburb_cleaning", "suburb_security"],
+    priceMod: {
+      water: 0.85,
+      vegetables: 0.8,
+      fruits: 0.85,
+    },
+    weatherEffects: {
+      rain: { footfallMod: 0.5 },
+      snow: { footfallMod: 0.3 },
+    },
+  },
   // TODO: 待实现 - 高档小区（参考真实高档小区，富人有保安门禁）
   // {
   //   id: "luxury_community",
@@ -276,22 +275,21 @@ const LOCATIONS = {
   // },
   //
   // === 公共服务区 ===
-  // TODO: 待实现 - 政府办事大厅（参考真实政务服务中心）
-  // {
-  //   id: "gov_office",
-  //   name: "政府办事大厅",
-  //   desc: "办理各种证件/业务的地方。办证/贷款/社保都在这里。",
-  //   type: "service",
-  //   wealthTier: 2,
-  //   footfall: 0.5,
-  //   vendingNote: "人流稀少，不适合摆摊",
-  //   specialties: [],
-  //   dailyProbability: 0.2,
-  //   specialCategory: [],
-  //   jobs: [],
-  //   priceMod: {},
-  //   specialActions: ["办身份证", "办护照", "办社保卡", "申请低保", "办理贷款"],
-  // },
+  gov_office: {
+    id: "gov_office",
+    name: "政府办事大厅",
+    desc: "办理各种证件/业务的地方。办证/贷款/社保都在这里。",
+    type: "service",
+    wealthTier: 2,
+    footfall: 0.5,
+    vendingNote: "人流稀少，不适合摆摊",
+    specialties: [],
+    dailyProbability: 0.2,
+    specialCategory: [],
+    jobs: [],
+    priceMod: {},
+    specialActions: ["办身份证", "办护照", "办社保卡", "申请低保", "办理贷款"],
+  },
   // TODO: 待实现 - 法院/司法局（参考真实司法机构）
   // {
   //   id: "court",
@@ -326,44 +324,42 @@ const LOCATIONS = {
   // },
   //
   // === 娱乐休闲区 ===
-  // TODO: 待实现 - 娱乐城（参考真实娱乐综合体）
-  // {
-  //   id: "entertainment",
-  //   name: "娱乐城",
-  //   desc: "电影院/KTV/游戏厅聚集地。放松娱乐，消耗现金。",
-  //   type: "recreation",
-  //   wealthTier: 3,
-  //   footfall: 1.5,
-  //   vendingNote: "年轻人多，消费力强",
-  //   specialties: ["snacks", "beer", "electronics"],
-  //   dailyProbability: 0.6,
-  //   specialCategory: ["luxury", "food"],
-  //   jobs: ["entertainment_staff", "game_attendant"],
-  //   priceMod: {
-  //     snacks: 1.2,
-  //     beer: 1.3,
-  //     electronics: 1.1,
-  //   },
-  // },
-  // TODO: 待实现 - 寺庙（参考真实城市寺庙）
-  // {
-  //   id: "temple",
-  //   name: "寺庙",
-  //   desc: "城市中的古老寺庙。祈福/冥想/心灵慰藉。",
-  //   type: "recreation",
-  //   wealthTier: 2,
-  //   footfall: 0.6,
-  //   vendingNote: "香客多，不适合摆摊",
-  //   specialties: ["fruits", "water"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: [],
-  //   jobs: [],
-  //   priceMod: {
-  //     fruits: 1.1,
-  //     water: 1.05,
-  //   },
-  //   specialActions: ["祈福", "冥想", "捐香火钱", "求签"],
-  // },
+  entertainment: {
+    id: "entertainment",
+    name: "娱乐城",
+    desc: "电影院/KTV/游戏厅聚集地。放松娱乐，消耗现金。",
+    type: "recreation",
+    wealthTier: 3,
+    footfall: 1.5,
+    vendingNote: "年轻人多，消费力强",
+    specialties: ["snacks", "beer", "electronics"],
+    dailyProbability: 0.6,
+    specialCategory: ["luxury", "food"],
+    jobs: ["entertainment_staff", "game_attendant"],
+    priceMod: {
+      snacks: 1.2,
+      beer: 1.3,
+      electronics: 1.1,
+    },
+  },
+  temple: {
+    id: "temple",
+    name: "寺庙",
+    desc: "城市中的古老寺庙。祈福/冥想/心灵慰藉。",
+    type: "recreation",
+    wealthTier: 2,
+    footfall: 0.6,
+    vendingNote: "香客多，不适合摆摊",
+    specialties: ["fruits", "water"],
+    dailyProbability: 0.3,
+    specialCategory: [],
+    jobs: [],
+    priceMod: {
+      fruits: 1.1,
+      water: 1.05,
+    },
+    specialActions: ["祈福", "冥想", "捐香火钱", "求签"],
+  },
   // TODO: 待实现 - 图书馆（参考真实公共图书馆）
   // {
   //   id: "library",
@@ -498,17 +494,28 @@ const LOCATIONS = {
 
 // 旅行图（哪些地点之间可以直接通行）
 const TRAVEL_GRAPH = {
-  slum: ["wholesaleMarket", "construction", "park", "bank"],
-  wholesaleMarket: ["slum", "commercialDist", "factoryZone"],
+  slum: ["wholesaleMarket", "construction", "park", "bank", "suburb", "temple"],
+  wholesaleMarket: ["slum", "commercialDist", "factoryZone", "suburb"],
   construction: ["slum", "commercialDist"],
   factoryZone: ["wholesaleMarket", "school", "hospital"],
-  school: ["factoryZone", "park", "trainingCenter"],
-  commercialDist: ["wholesaleMarket", "construction", "techPark", "hospital"],
-  techPark: ["commercialDist"],
+  school: ["factoryZone", "park", "trainingCenter", "entertainment", "temple"],
+  commercialDist: [
+    "wholesaleMarket",
+    "construction",
+    "techPark",
+    "hospital",
+    "gov_office",
+    "entertainment",
+  ],
+  techPark: ["commercialDist", "entertainment"],
   hospital: ["factoryZone", "commercialDist"],
-  bank: ["slum", "commercialDist"],
-  park: ["slum", "school", "commercialDist"],
+  bank: ["slum", "commercialDist", "gov_office"],
+  park: ["slum", "school", "commercialDist", "suburb", "temple"],
   trainingCenter: ["school"],
+  suburb: ["slum", "wholesaleMarket", "park"],
+  gov_office: ["commercialDist", "bank"],
+  entertainment: ["commercialDist", "techPark", "school"],
+  temple: ["park", "school", "slum"],
 };
 
 /** 获取地点信息 */
