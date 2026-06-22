@@ -115,17 +115,8 @@ const NEWS_EVENTS = [
     followUpId: "training_subsidy_echo",
     followUpDelay: 5,
   },
-  {
-    id: "park_renovation",
-    headline: "🔨 市中心公园启动改造！部分区域封闭施工",
-    desc: "公园将从下月开始为期两个月的改造升级，部分区域暂时封闭，影响街头工作和卖花收入。",
-    effects: {
-      jobPenalty: ["park_cleaning", "park_guide", "park_flower_vendor", "busking"],
-      jobMultiplier: 0.6,
-      duration: 60, // 长期影响
-    },
-    type: "job",
-  },
+  // park_renovation 已删除 — 引用了不存在的工作（park_cleaning/park_guide/park_flower_vendor）
+  // 如需公园相关事件，建议改用 busking 单一工作引用
   {
     id: "construction_boom",
     headline: "🏗️ 新楼盘开工！工地大量招人，工资上涨",
@@ -547,13 +538,7 @@ const NEWS_EVENTS = [
     type: "personal",
   },
 
-  // === 政策事件 ===
-  {
-    id: "subsidy",
-    headline: "🏛️ 政府推出职业技能培训补贴！培训费用减半",
-    effects: { trainingDiscount: 0.5, duration: 8 },
-    type: "policy",
-  },
+  // subsidy 已删除 — 与 training_subsidy (line 107) 重复，保留 training_subsidy（效果更完整）
 
   // === 投资专项事件（10+）— 直接影响投资市场 ===
   {
@@ -705,21 +690,8 @@ const NEWS_EVENTS = [
     followUpId: "energy_crisis_echo",
     followUpDelay: 4,
   },
-  {
-    id: "black_swan",
-    headline: "🦢 黑天鹅事件！未知危机引发全球市场恐慌性抛售",
-    effects: {
-      investmentEffect: [
-        { allStocks: true, mul: 0.87 },
-        { btc: true, mul: 0.72 },
-        { category: "贵金属", mul: 1.2 },
-      ],
-      duration: 4,
-    },
-    type: "investment",
-    followUpId: "black_swan_echo",
-    followUpDelay: 2,
-  },
+  // black_swan 已删除 — 与 geopolitical_crisis 效果重叠（市场恐慌+避险资产上涨）
+  // black_swan_echo 后续新闻也已删除
   {
     id: "ev_subsidy",
     headline: "🚗 国家加大新能源车补贴力度！比亚迪、蔚来订单暴增",
@@ -930,16 +902,7 @@ var NEWS_FOLLOWUP = {
       duration: 3,
     },
   },
-  black_swan_echo: {
-    headline: "🔻 黑天鹅余震持续！机构减仓速度加快，散户'抄底'变'接刀'",
-    effects: {
-      investmentEffect: [
-        { allStocks: true, mul: 0.94 },
-        { category: "贵金属", mul: 1.11 },
-      ],
-      duration: 2,
-    },
-  },
+  // black_swan_echo 已删除 — 对应 black_swan 已删除
   chip_domestic_rise: {
     headline: "🇨🇳 国产替代加速崛起！国内芯片厂商订单爆满，多家宣布量产突破",
     effects: {
@@ -963,6 +926,22 @@ var NEWS_FOLLOWUP = {
       jobBonus: ["delivery_rider"],
       jobMultiplier: 0.8,
       duration: 4,
+    },
+  },
+  // 补充缺失的 follow-up 定义
+  bank_fraud_echo: {
+    headline: "🚨 诈骗案后续：警方抓获犯罪团伙，提醒市民警惕新型理财骗局",
+    effects: {
+      investmentEffect: [
+        { industry: "金融", mul: 1.02 },
+      ],
+      duration: 3,
+    },
+  },
+  training_subsidy_echo: {
+    headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
+    effects: {
+      effects: { trainingDiscount: 0.5, duration: 5 },
     },
   },
 };
@@ -989,10 +968,10 @@ var NPC_INTEL_RULES = {
       confidence: 78,
     },
     {
-      newsId: "black_swan",
+      newsId: "cigarette_ban",
       delay: 2,
-      text: "王大婶压低声音说小区里几个做生意的邻居都在抛东西变现，像是闻到什么风声了。",
-      confidence: 60,
+      text: "王大婶说小区门口小卖部香烟突然不卖了，听说是要出新的禁烟规定。",
+      confidence: 65,
     },
     {
       newsId: "mortgage_rate_cut",
