@@ -1685,19 +1685,27 @@ function getVendingLocationAdvice(state) {
   var weatherMod = 1.0;
   var weatherAdvice = "";
   if (weather) {
-    if (weather.type === "stormy" || weather.type === "snowy") {
+    if (weather.current === "stormy" || weather.current === "snowy" || weather.current === "typhoon" || weather.current === "sandstorm") {
       weatherMod = 0.4;
       weatherAdvice = "⚠️ 恶劣天气，室外摆摊客流锐减，建议室内行动或休息";
-    } else if (weather.type === "rainy") {
+    } else if (weather.current === "rainy" || weather.current === "plum_rain") {
       weatherMod = 0.7;
-      weatherAdvice = "💡 小雨天气，建议去有遮蔽的地方（批发市场/培训中心）";
-    } else if (weather.type === "sunny") {
+      weatherAdvice = "💡 雨天天气，建议去有遮蔽的地方（批发市场/培训中心）";
+    } else if (weather.current === "sunny") {
       weatherMod = 1.1;
       weatherAdvice = "☀️ 晴天，室外摆摊最佳时机！";
-    } else if (weather.type === "cloudy") {
+    } else if (weather.current === "cloudy") {
       weatherMod = 1.0;
+    } else if (weather.current === "heatwave") {
+      weatherMod = 0.6;
+      weatherAdvice = "🥵 高温预警，注意防暑，建议减少户外活动";
+    } else if (weather.current === "cold_snap") {
+      weatherMod = 0.5;
+      weatherAdvice = "🥶 寒潮来袭，注意保暖，建议在室内工作";
+    } else if (weather.current === "heavy_smog") {
+      weatherMod = 0.6;
+      weatherAdvice = "😷 重度雾霾，建议佩戴口罩或室内行动";
     }
-  }
 
   // 节日修正
   var festivalMod = 1.0;

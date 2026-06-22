@@ -32,21 +32,17 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最近一次工作**：全局数值精度规范化 ✅（2026-06-22）
-  - **根因修复**：`investment.js` — `btcFearGreed` 经过 `Random.float(-5,5)` 产生长浮点数（如 `48.71837561344329`），直接显示在「虚拟币市场情绪」面板
-  - **格式化方案**（参考 BTC Fear & Greed Index 整数0-100）：恐慌指数一律 `Math.round()` 取整显示
-  - **持仓格式化**：虚拟币持仓显示按币价精度保留4位小数（¥1000+→4位），贵金属/期货统一2位
-  - **买卖消息**：BTC交易 `amount.toFixed(6)`，非股票类资产 `shares.toFixed(6)`，避免JS浮点精度
-  - **技术分析**：MA/MACD/RSI 显示补齐 `.toFixed(2/1)`，不再裸露多余小数位
-  - **影响文件**：`src/js/phase2/investment.js` + `src/js/phase2/investment_analysis.js`
-  - **原则**：参考 Bloomberg Terminal（2位货币/0位指数/1位RSI）+ TradingView（自动截断尾部0）+ 真实BTC恐慌指数（整数）
-  - **构建**：已 `python build.py`（3387.3 KB）
-
-- **最新一次工作**：内容扩充数据录入（待实现标记）✅（2026-06-22）
-  - **11 个数据文件** 追加待实现内容：成就/ NPC /装备/商品/食材/疾病/地点/证书/公司/新闻/工作/天气
-  - **全部标记为 TODO**：附实现提示、字段格式说明、参考来源
-  - **覆盖 17 个模块**：预计新增 150+ 条内容，全部为数据定义（非代码逻辑）
-  - **开发文档更新**：`DEVELOPMENT.md` 新增 2026-06-22 变更记录
+- **最新一次工作**：天气深化系统 v2 ✅（2026-06-23）
+  - **核心增强**：极端天气持续多天（高温3-5天/寒潮2-3天/梅雨季3-5天/台风1-2天等）
+  - **天气预报**：每日3天预报（85%/65%/45%置信度），极端天气持续期内可持续参考
+  - **旅行AP修正**：大雾×1.3、暴雨×1.25、台风×2、暴雪×1.5 影响旅行AP消耗
+  - **天气→疾病风险**：极端天气按 WEATHER_TYPES.effects.illnessRisk 触发疾病，健康≤30概率×3、体质≥80概率×0.3
+  - **地点×天气联动**：利用 locations.js 中 weatherEffects 字段，不同天气下各地点客流量/价格不同
+  - **天气UI面板**：`#weather-panel` 显示天气图标+温度+体感+舒适度+持续期+3天预报，极端天气红色边框警告
+  - **Bug修复**：`modal.js` 和 `render.js` 中 `weather.type` → `weather.current`（2处）
+  - **百科更新**：`mechanics_registry.js` + `wiki.js` 天气条目扩展为13种+持续期+预报+疾病
+  - **影响文件**：`state.js` / `weather.js` / `locations.js` / `illness.js` / `daily_pipeline.js` / `index.html` / `render.js` / `modal.js` / `mechanics_registry.js` / `wiki.js`
+  - **构建**：已 `python build.py`（3417.9 KB）
 
 - **上一次工作**：房产市场波动系统 v2 ✅（2026-06-22 下午）
   - **问题根源**：`PROPERTIES` 数组中每套房产固定 `appreciation`（恒为正数 0.0001~0.0012/天），导致房价只涨不跌，不符合中国房地产真实波动

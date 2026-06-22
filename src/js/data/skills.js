@@ -177,18 +177,15 @@ const CERTIFICATES = [
     examPassRate: 0.8,
     trainingDays: 5,
   },
-
-  // === 医疗健康类（更多待实现） ===
-  // TODO: 待实现 - 心理咨询师（参考真实培训费¥4000-8000，通过率约50%）
-  // {
-  //   id: "psychologist",
-  //   name: "心理咨询师",
-  //   desc: "经过系统培训取得心理咨询资格，可以为他人提供心理疏导服务。需要较强的共情能力和沟通技巧。",
-  //   requirements: { cash: 800, intelligence: 40, mental: 40 },
-  //   effects: { psychologyXp: 60, mentalBonus: 5 },
-  //   examPassRate: 0.50,
-  //   trainingDays: 14,
-  // },
+  {
+    id: "psychologist",
+    name: "心理咨询师",
+    desc: "经过系统培训取得心理咨询资格，可以为他人提供心理疏导服务。需要较强的共情能力和沟通技巧。",
+    requirements: { cash: 800, intelligence: 40, mental: 40 },
+    effects: { psychologyXp: 60, mentalBonus: 5 },
+    examPassRate: 0.5,
+    trainingDays: 14,
+  },
 ];
 
 /** 获取证书定义 */

@@ -590,5 +590,13 @@ function getTravelApCost(fromKey, toKey, state) {
   // 老周三轮车
   if (state && state.flags && state.flags.oldZhouTricycle) base -= 2;
 
+  // 天气AP修正（天气深化系统）：大雾/暴雨/台风增加出行消耗
+  if (typeof getWeatherTravelApMod === "function") {
+    var weatherApMod = getWeatherTravelApMod(state);
+    if (weatherApMod !== 1.0) {
+      base = Math.round(base * weatherApMod);
+    }
+  }
+
   return Math.max(5, base);
 }

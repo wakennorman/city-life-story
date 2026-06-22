@@ -821,6 +821,88 @@ function renderLocation(state) {
       ${state.housing?.tier < 3 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">💡 去<strong style="color:var(--accent);">城中村</strong>可升级住所</div>` : ""}
     `;
   }
+
+  // 天气面板（天气深化系统）
+  renderWeatherPanel(state);
+}
+
+/**
+ * 渲染天气面板（天气深化系统）
+ * 显示：当前天气详情、舒适度、持续期、天气预报
+ */
+function renderWeatherPanel(state) {
+  var panel = document.getElementById("weather-panel");
+  if (!panel) return;
+  var w = state.weather;
+  if (!w || !w.current) { panel.style.display = "none"; return; }
+  var wDef = typeof WEATHER_TYPES !== "undefined"
+    ? WEATHER_TYPES.find(function (wt) { return wt.id === w.current; })
+    : null;
+  if (!wDef) { panel.style.display = "none"; return; }
+  var tempEffect = typeof getTempEffect === "function" ? getTempEffect(w.temperature || 22) : null;
+
+  var isExtreme = typeof isExtremeWeather === "function" ? isExtremeWeather(w.current) : false;
+  var isPersistent = w.persistent && w.duration > 1;
+
+  var comfort = (state.status && state.status.comfort != null) ? state.status.comfort : 50;
+  var comfortLabel = comfort >= 80 ? "舒适" : comfort >= 60 ? "还行" : comfort >= 40 ? "不适" : comfort >= 20 ? "难受" : "恶劣";
+  var comfortColor = comfort >= 60 ? "var(--success)" : comfort >= 40 ? "var(--warning)" : "var(--danger)";
+
+  var html = '';
+
+  html += '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
+  html += '<span style="font-size:14px;">' + wDef.icon + '</span>';
+  html += '<span style="font-size:12px;font-weight:600;">' + wDef.name + '</span>';
+  html += '<span style="font-size:11px;color:var(--text-secondary);">🌡️' + Math.round(w.temperature || 22) + '°C</span>';
+  if (tempEffect) {
+    html += '<span style="font-size:10px;color:var(--text-muted);">(' + tempEffect.name + ')</span>';
+  }
+  html += '<span style="font-size:10px;color:' + comfortColor + ';margin-left:auto;">☂️' + comfortLabel + '</span>';
+  html += '</div>';
+
+  if (isPersistent) {
+    html += '<div style="margin-top:3px;font-size:10px;color:var(--warning);">';
+    html += '📅 第' + w.daysActive + '/' + w.duration + '天';
+    if (w.current === "plum_rain") html += ' · 注意防潮防霉';
+    else if (w.current === "heatwave") html += ' · 注意防暑降温';
+    else if (w.current === "cold_snap") html += ' · 注意防寒保暖';
+    else if (w.current === "typhoon") html += ' · 注意人身安全';
+    else if (w.current === "sandstorm") html += ' · 做好防护措施';
+    else if (w.current === "heavy_smog") html += ' · 建议佩戴口罩';
+    html += '</div>';
+  }
+
+  if (w.forecast && w.forecast.length > 0) {
+    html += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">📅 未来天气展望：</div>';
+    html += '<div style="display:flex;gap:3px;">';
+    for (var i = 0; i < w.forecast.length; i++) {
+      var f = w.forecast[i];
+      var fDef = typeof WEATHER_TYPES !== "undefined"
+        ? WEATHER_TYPES.find(function (wt) { return wt.id === f.weatherId; })
+        : null;
+      var icon = fDef ? fDef.icon : "🌤️";
+      var fName = fDef ? fDef.name : "未知";
+      var pct = Math.round(f.confidence * 100);
+      html += '<div style="flex:1;text-align:center;font-size:10px;padding:3px 2px;border-radius:4px;background:var(--bg-card);">';
+      html += '<div>' + icon + '</div>';
+      html += '<div style="font-size:9px;color:var(--text-secondary);">' + fName + '</div>';
+      html += '<div style="font-size:8px;color:var(--text-muted);">' + pct + '%</div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  if (isExtreme) {
+    panel.style.cssText = 'margin-top:6px;padding:6px 8px;border-radius:6px;' +
+      'background:rgba(196,85,61,0.08);font-size:11px;line-height:1.5;display:block;' +
+      'border-left:3px solid var(--danger);';
+  } else {
+    panel.style.cssText = 'margin-top:6px;padding:6px 8px;border-radius:6px;' +
+      'background:var(--bg-input);font-size:11px;line-height:1.5;display:block;';
+  }
+
+  panel.innerHTML = html;
 }
 
 /** 获取地点服务标签 */
@@ -1463,18 +1545,22 @@ function getDailyActionTips(state) {
 
   // 天气
   if (state.weather) {
-    var wid = state.weather.weatherId || state.weather.type;
-    if (wid === "rainy" || wid === "storm" || wid === "thunderstorm") {
-      tips.push("🌧️ 今天下雨，室内工作（工厂/理发/摆摊室内）比户外更合适。");
-    } else if (wid === "sunny" || wid === "clear") {
+    var wid = state.weather.current;
+    if (wid === "rainy" || wid === "stormy" || wid === "plum_rain") {
+      tips.push("🌧️ 今天下雨，室内工作比户外更合适。");
+    } else if (wid === "sunny") {
       if (typeof getVendingFootfallMod === "function") {
         var mod = getVendingFootfallMod(loc, state);
         if (mod > 1.2) tips.push("☀️ 天气晴好，客流量高，今天摆摊收益不错！");
       }
-    } else if (wid === "heatwave" || wid === "hot") {
+    } else if (wid === "heatwave") {
       tips.push("🥵 高温天气，多备点水，户外劳动注意防暑。");
-    } else if (wid === "coldwave" || wid === "blizzard") {
+    } else if (wid === "cold_snap" || wid === "snowy") {
       tips.push("🧊 寒潮来袭，厚衣物和泡面很畅销，可以考虑囤货出售。");
+    } else if (wid === "typhoon") {
+      tips.push("🌀 台风天，所有室外工作暂停，注意安全！");
+    } else if (wid === "heavy_smog" || wid === "sandstorm") {
+      tips.push("😷 空气质量差，佩戴口罩减少户外活动。");
     }
   }
 
@@ -3337,6 +3423,7 @@ function renderInventoryTab(state, parent) {
   if (items.length === 0) {
     div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
   } else {
+    const grid = document.createElement("div  } else {
     const grid = document.createElement("div");
     grid.className = "inventory-grid";
     for (const item of items) {
@@ -3346,10 +3433,21 @@ function renderInventoryTab(state, parent) {
           : null;
       const el = document.createElement("div");
       el.className = "inventory-item";
+      // 品质颜色
+      var qualityStyle = '';
+      if (item.quality && item.quality !== 'common' && typeof getQualityColor === 'function') {
+        qualityStyle = 'border-left:3px solid ' + getQualityColor(item.quality) + ';';
+      }
+      // 附魔描述
+      var enchantHtml = '';
+      if (item.enchantments && item.enchantments.length > 0 && typeof describeItemQuality === 'function') {
+        enchantHtml = '<div style="font-size:9px;color:var(--accent);margin-top:2px;">' + describeItemQuality({ quality: item.quality, enchantments: item.enchantments }) + '</div>';
+      }
       el.innerHTML = `
-        <div class="item-name">${def ? def.name : item.id}</div>
+        <div class="item-name" style="${qualityStyle}">${def ? def.name : item.id}</div>
         <div class="item-qty">数量: ${item.qty}</div>
         ${def ? `<div class="item-effects">${describeItemEffects(def)}</div>` : ""}
+        ${enchantHtml}
       `;
       grid.appendChild(el);
     }
@@ -4365,70 +4463,241 @@ function renderAchievementsTab(state, parent) {
   var totalVisible = all.filter(function (a) {
     return !a.hidden || a.unlocked;
   }).length;
+  var pct =
+    totalVisible > 0 ? Math.round((unlockedCount / totalVisible) * 100) : 0;
 
+  // 分类图标映射
+  var CATEGORY_ICONS = {
+    人生第一次: "🎯",
+    里程碑: "🏆",
+    道德档案: "⚖️",
+    隐藏: "🔮",
+    节日: "🎉",
+    创业: "🚀",
+    新闻: "📰",
+    "健康/生活线": "❤️",
+    社交线: "👥",
+  };
+
+  // 分类排序（优先级）
+  var CATEGORY_ORDER = [
+    "人生第一次",
+    "里程碑",
+    "创业",
+    "节日",
+    "道德档案",
+    "健康/生活线",
+    "社交线",
+    "新闻",
+    "隐藏",
+  ];
+
+  // ====== 顶部统计 ======
   var header = document.createElement("div");
   header.style.cssText =
-    "padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);margin-bottom:8px;";
+    "padding:16px;background:var(--bg-card);border-bottom:1px solid var(--border);margin-bottom:8px;";
   header.innerHTML =
-    '<h3 style="margin:0;font-size:14px;color:var(--text-primary);">🏅 成就档案</h3>' +
-    '<p style="margin:4px 0 0;font-size:11px;color:var(--text-muted);">已解锁 ' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+    '<span style="font-size:24px;">🏅</span>' +
+    '<h3 style="margin:0;font-size:16px;color:var(--text-primary);">成就档案</h3>' +
+    "</div>" +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">' +
+    '<span style="font-size:13px;color:var(--text-primary);font-weight:bold;">' +
     unlockedCount +
     " / " +
     totalVisible +
-    " 个 &nbsp;|&nbsp; 记录你在这座城市走过的路</p>";
+    "</span>" +
+    '<span style="font-size:11px;color:var(--text-muted);">已解锁</span>' +
+    '<span style="flex:1;"></span>' +
+    '<span style="font-size:12px;color:var(--accent);font-weight:bold;">' +
+    pct +
+    "%</span>" +
+    "</div>" +
+    '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">' +
+    '<div style="height:100%;width:' +
+    pct +
+    '%;background:linear-gradient(90deg,var(--accent),#e8b84c);border-radius:3px;transition:width 0.4s;"></div>' +
+    "</div>";
   parent.appendChild(header);
 
-  var categories = ["人生第一次", "里程碑", "道德档案", "隐藏"];
-  categories.forEach(function (cat) {
+  // ====== 分类列表 ======
+  CATEGORY_ORDER.forEach(function (cat) {
     var catAchs = all.filter(function (a) {
       return a.category === cat && (!a.hidden || a.unlocked);
     });
     if (catAchs.length === 0) return;
+
+    var catUnlocked = catAchs.filter(function (a) {
+      return a.unlocked;
+    }).length;
+    var catIcon = CATEGORY_ICONS[cat] || "📌";
+
     var section = document.createElement("div");
-    section.style.cssText = "margin-bottom:12px;";
-    var catTitle = document.createElement("div");
-    catTitle.style.cssText =
-      "padding:6px 16px;font-size:11px;font-weight:bold;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;";
-    catTitle.textContent = cat;
-    section.appendChild(catTitle);
+    section.style.cssText = "margin-bottom:8px;";
+
+    // 分类标题 + 进度条
+    var catHeader = document.createElement("div");
+    catHeader.style.cssText =
+      "display:flex;align-items:center;gap:8px;padding:8px 16px 4px;cursor:pointer;user-select:none;";
+    catHeader.innerHTML =
+      '<span style="font-size:14px;">' +
+      catIcon +
+      "</span>" +
+      '<span style="flex:1;font-size:12px;font-weight:bold;color:var(--text-primary);">' +
+      cat +
+      "</span>" +
+      '<span style="font-size:10px;color:var(--text-muted);">' +
+      catUnlocked +
+      "/" +
+      catAchs.length +
+      "</span>" +
+      '<span style="font-size:10px;color:var(--accent);">' +
+      Math.round((catUnlocked / catAchs.length) * 100) +
+      "%</span>" +
+      '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;" class="ach-toggle">▲</span>';
+    section.appendChild(catHeader);
+
+    // 分类进度条
+    var catBar = document.createElement("div");
+    catBar.style.cssText = "padding:0 16px 6px;";
+    catBar.innerHTML =
+      '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">' +
+      '<div style="height:100%;width:' +
+      (catUnlocked / catAchs.length) * 100 +
+      '%;background:var(--accent);border-radius:2px;"></div>' +
+      "</div>";
+    section.appendChild(catBar);
+
+    // 成就卡片容器（可折叠）
+    var cardContainer = document.createElement("div");
+    cardContainer.style.cssText =
+      "overflow:hidden;transition:max-height 0.3s;max-height:9999px;";
+
     catAchs.forEach(function (ach) {
       var card = document.createElement("div");
       card.style.cssText =
-        "display:flex;gap:10px;align-items:flex-start;padding:10px 14px;margin:2px 8px;background:var(--bg-card);border:1px solid " +
+        "display:flex;gap:10px;align-items:flex-start;padding:8px 14px;margin:2px 12px;" +
+        "background:var(--bg-card);border:1px solid " +
         (ach.unlocked ? "var(--accent)" : "var(--border)") +
         ";border-radius:8px;opacity:" +
-        (ach.unlocked ? "1" : "0.55") +
+        (ach.unlocked ? "1" : "0.5") +
         ";";
+
       var iconEl = document.createElement("div");
-      iconEl.style.cssText = "font-size:22px;flex-shrink:0;";
-      iconEl.textContent = ach.icon;
+      iconEl.style.cssText =
+        "font-size:20px;flex-shrink:0;width:32px;text-align:center;";
+      iconEl.textContent = ach.unlocked ? ach.icon : "🔒";
+
       var info = document.createElement("div");
       info.style.cssText = "flex:1;min-width:0;";
-      var nameEl = document.createElement("div");
+
+      var nameRow = document.createElement("div");
+      nameRow.style.cssText = "display:flex;align-items:center;gap:6px;";
+      var nameEl = document.createElement("span");
       nameEl.style.cssText =
-        "font-size:13px;font-weight:bold;color:" +
+        "font-size:12px;font-weight:bold;color:" +
         (ach.unlocked ? "var(--text-primary)" : "var(--text-muted)") +
         ";";
       nameEl.textContent = ach.name;
+      nameRow.appendChild(nameEl);
+
+      if (ach.unlocked) {
+        var badge = document.createElement("span");
+        badge.style.cssText =
+          "font-size:9px;padding:1px 5px;border-radius:4px;background:var(--accent-light);color:var(--accent);" +
+          "font-weight:bold;";
+        badge.textContent = "✓";
+        nameRow.appendChild(badge);
+      }
+
+      info.appendChild(nameRow);
+
       var descEl = document.createElement("div");
       descEl.style.cssText =
-        "font-size:11px;color:var(--text-secondary);margin-top:2px;";
+        "font-size:10px;color:var(--text-secondary);margin-top:1px;";
       descEl.textContent = ach.desc;
-      info.appendChild(nameEl);
       info.appendChild(descEl);
+
       if (ach.unlocked && ach.story) {
         var storyEl = document.createElement("div");
         storyEl.style.cssText =
-          "font-size:10px;color:var(--text-muted);margin-top:4px;font-style:italic;border-top:1px solid var(--border);padding-top:4px;";
+          "font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;" +
+          "border-top:1px solid var(--border);padding-top:3px;";
         storyEl.textContent = '"' + ach.story + '"';
         info.appendChild(storyEl);
       }
+
       card.appendChild(iconEl);
       card.appendChild(info);
-      section.appendChild(card);
+      cardContainer.appendChild(card);
     });
+
+    section.appendChild(cardContainer);
     parent.appendChild(section);
+
+    // 可折叠功能
+    catHeader.addEventListener("click", function () {
+      var container = this.nextElementSibling.nextElementSibling;
+      var toggle = this.querySelector(".ach-toggle");
+      if (
+        container.style.maxHeight === "0px" ||
+        container.style.maxHeight === "0"
+      ) {
+        container.style.maxHeight = "9999px";
+        toggle.textContent = "▲";
+      } else {
+        container.style.maxHeight = "0px";
+        toggle.textContent = "▼";
+      }
+    });
   });
+}
+
+/**
+ * 成就解锁通知弹窗
+ * 在成就解锁时调用，显示一个飘窗动画
+ */
+function showAchievementUnlockedPopup(ach) {
+  if (!ach) return;
+  var existing = document.getElementById("ach-popup");
+  if (existing) existing.remove();
+
+  var popup = document.createElement("div");
+  popup.id = "ach-popup";
+  popup.style.cssText =
+    "position:fixed;top:80px;right:20px;z-index:9999;" +
+    "background:linear-gradient(135deg,var(--bg-card),#2a2520);" +
+    "border:2px solid var(--accent);border-radius:12px;" +
+    "padding:16px 20px;min-width:260px;max-width:320px;" +
+    "box-shadow:0 8px 32px rgba(0,0,0,0.4);" +
+    "animation:achSlideIn 0.5s ease-out;" +
+    "display:flex;gap:12px;align-items:flex-start;";
+
+  popup.innerHTML =
+    '<div style="font-size:32px;flex-shrink:0;">' +
+    (ach.icon || "🏅") +
+    "</div>" +
+    '<div style="flex:1;min-width:0;">' +
+    '<div style="font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:2px;">🏆 成就解锁</div>' +
+    '<div style="font-size:14px;font-weight:bold;color:var(--text-primary);margin-bottom:2px;">' +
+    ach.name +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-secondary);">' +
+    (ach.desc || "") +
+    "</div>" +
+    "</div>";
+
+  document.body.appendChild(popup);
+
+  // 3秒后淡出移除
+  setTimeout(function () {
+    popup.style.transition = "opacity 0.5s, transform 0.5s";
+    popup.style.opacity = "0";
+    popup.style.transform = "translateX(50px)";
+    setTimeout(function () {
+      if (popup.parentNode) popup.remove();
+    }, 500);
+  }, 3000);
 }
 
 // ====== P2#12 技能分支选择弹窗 ======

@@ -166,6 +166,29 @@ const WEATHER_TYPES = [
   },
 ];
 
+/**
+ * 极端天气持续天数配置（天气深化系统 v2）
+ * key = weather id, value = [min, max] 持续天数
+ */
+const EXTREME_WEATHER_DURATION = {
+  heatwave: [3, 5],
+  cold_snap: [2, 3],
+  heavy_smog: [2, 3],
+  typhoon: [1, 2],
+  sandstorm: [1, 2],
+  plum_rain: [3, 5],
+};
+
+/** 该天气是否为极端天气（需要持续期） */
+function isExtremeWeather(weatherId) {
+  return !!EXTREME_WEATHER_DURATION[weatherId];
+}
+
+/** 该天气是否为降水类（影响客流量更大） */
+function isPrecipitationWeather(weatherId) {
+  return ["rainy", "stormy", "snowy", "plum_rain"].includes(weatherId);
+}
+
 const SEASONS = [
   {
     id: "spring",
@@ -244,7 +267,7 @@ function getSeason(day) {
   return SEASONS[3]; // 冬
 }
 
-/** 每日天气判定 */
+/** 每日天气判定（增强版：持续期+预报） */
 function rollWeather(state) {
   if (!state.weather) {
     state.weather = {
@@ -252,38 +275,145 @@ function rollWeather(state) {
       temperature: 22,
       season: "spring",
       lastChanged: 0,
+      forecast: [],
+      duration: 1,
+      daysActive: 0,
+      persistent: false,
     };
   }
 
-  const season = getSeason(state.player.day);
-  state.weather.season = season.id;
+  var w = state.weather;
+  var season = getSeason(state.player.day);
+  w.season = season.id;
 
-  // 25%概率天气变化
-  if (Random.chance(0.25) || !state.weather.current) {
-    const weights = season.weatherWeights;
-    const total = Object.values(weights).reduce((a, b) => a + b, 0);
-    let roll = Random.float(0, total);
-    let newWeather = "sunny";
-    for (const [wid, wgt] of Object.entries(weights)) {
-      roll -= wgt;
-      if (roll <= 0) {
-        newWeather = wid;
-        break;
-      }
+  // 持续期模式：天气尚未结束，递增天数，不重新roll
+  if (w.persistent && w.duration && w.daysActive < w.duration) {
+    w.daysActive++;
+    // 梅雨季特殊持续效果
+    if (w.current === "plum_rain") {
+      state.needs.fatigue = Math.max(0, Math.min(100, state.needs.fatigue + 2));
+      state.needs.happiness = Math.max(
+        0,
+        Math.min(100, state.needs.happiness - 1),
+      );
     }
-    state.weather.current = newWeather;
-    state.weather.lastChanged = state.player.day;
+    // 更新温度（极端天气温度每天微浮动）
+    updateWeatherTemperature(state, season);
+    // 更新预报（每天推移一天）
+    generateWeatherForecast(state, season);
+    return;
   }
 
-  // 温度 = 季节基础范围中值 + 天气偏移 + 随机噪声
-  const [tMin, tMax] = season.tempRange;
-  const weatherDef = WEATHER_TYPES.find((w) => w.id === state.weather.current);
-  const tempBase = (tMin + tMax) / 2;
-  const weatherOffset = weatherDef ? (weatherDef.outdoorMod - 1) * 10 : 0;
-  const noise = Random.float(-3, 3);
-  state.weather.temperature = Math.round(
+  // 非持续期（或持续期已结束）：正常25%概率变化
+  var shouldChange =
+    Random.chance(0.25) || !w.current || w.daysActive >= w.duration;
+  if (!shouldChange) {
+    w.daysActive = (w.daysActive || 0) + 1;
+    updateWeatherTemperature(state, season);
+    generateWeatherForecast(state, season);
+    return;
+  }
+
+  // === 天气变化：从季节权重中roll新天气 ===
+  var weights = season.weatherWeights;
+  var total = Object.values(weights).reduce(function (a, b) {
+    return a + b;
+  }, 0);
+  var roll = Random.float(0, total);
+  var newWeather = "sunny";
+  for (var wid in weights) {
+    if (!weights.hasOwnProperty(wid)) continue;
+    roll -= weights[wid];
+    if (roll <= 0) {
+      newWeather = wid;
+      break;
+    }
+  }
+
+  // 应用新天气
+  w.current = newWeather;
+  w.lastChanged = state.player.day;
+
+  // 极端天气 → 进入持续期
+  if (isExtremeWeather(newWeather)) {
+    var durRange = EXTREME_WEATHER_DURATION[newWeather];
+    w.duration = Random.int(durRange[0], durRange[1]);
+    w.daysActive = 1;
+    w.persistent = true;
+  } else {
+    w.duration = 1;
+    w.daysActive = 1;
+    w.persistent = false;
+  }
+
+  // 更新温度
+  updateWeatherTemperature(state, season);
+
+  // 生成未来3天预报
+  generateWeatherForecast(state, season);
+}
+
+/** 更新天气温度（抽取自 rollWeather，供持续期调用） */
+function updateWeatherTemperature(state, season) {
+  var w = state.weather;
+  var [tMin, tMax] = season.tempRange;
+  var weatherDef = WEATHER_TYPES.find(function (wt) {
+    return wt.id === w.current;
+  });
+  var tempBase = (tMin + tMax) / 2;
+  var weatherOffset = weatherDef ? (weatherDef.outdoorMod - 1) * 10 : 0;
+  var noise = Random.float(-3, 3);
+  w.temperature = Math.round(
     Math.max(-15, Math.min(45, tempBase + weatherOffset + noise)),
   );
+}
+
+/**
+ * 生成未来3天天气预报（在 rollWeather 中调用）
+ * @param {Object} state - 游戏状态
+ * @param {Object} season - 当前季节对象
+ */
+function generateWeatherForecast(state, season) {
+  var w = state.weather;
+  var forecast = [];
+  var dayOffset = state.player.day + 1;
+
+  // 预测未来3天
+  for (var i = 0; i < 3; i++) {
+    var confidence = i === 0 ? 0.85 : i === 1 ? 0.65 : 0.45;
+
+    // 如果当前是持续期，预报偏向持续
+    var extendsCurrent = w.persistent && Random.chance(0.6 - i * 0.15);
+
+    var fWeather;
+    if (extendsCurrent) {
+      fWeather = w.current;
+    } else {
+      // 从季节权重roll
+      var weights = season.weatherWeights;
+      var total = Object.values(weights).reduce(function (a, b) {
+        return a + b;
+      }, 0);
+      var r = Random.float(0, total);
+      fWeather = "sunny";
+      for (var wid in weights) {
+        if (!weights.hasOwnProperty(wid)) continue;
+        r -= weights[wid];
+        if (r <= 0) {
+          fWeather = wid;
+          break;
+        }
+      }
+    }
+
+    forecast.push({
+      day: dayOffset + i,
+      weatherId: fWeather,
+      confidence: confidence,
+    });
+  }
+
+  w.forecast = forecast;
 }
 
 /** 获取天气对户外工作的修正系数 */
@@ -311,7 +441,13 @@ function getWeatherHappiness(state) {
  * 获取天气对客流量的影响系数（仅摆摊类工作）
  * 0.0 ~ 1.0，1.0 = 正常客流量
  */
-function getWeatherFootTrafficMod(state) {
+/**
+ * 获取天气对客流量的影响系数（仅摆摊类工作）
+ * 0.0 ~ 1.0，1.0 = 正常客流量
+ * @param {Object} state - 游戏状态
+ * @param {string} [locKey] - 可选，地点ID，叠加地点特定天气修正
+ */
+function getWeatherFootTrafficMod(state, locKey) {
   if (!state.weather) return 1.0;
   const traffic = {
     sunny: 1.0,
@@ -328,7 +464,16 @@ function getWeatherFootTrafficMod(state) {
     sandstorm: 0.2,
     plum_rain: 0.45,
   };
-  const base = traffic[state.weather.current] || 1.0;
+  var base = traffic[state.weather.current] || 1.0;
+
+  // 地点特定天气修正
+  if (locKey) {
+    var locMod = getWeatherModForLocation(locKey, state);
+    if (locMod.footfallMod !== 1.0) {
+      base = base * locMod.footfallMod;
+    }
+  }
+
   // 时段修正：下午人流多，晚上少
   if (state.player && state.player.timeSlot === "afternoon")
     return Math.min(1.0, base + 0.1);
@@ -570,10 +715,18 @@ function applyWeatherDailyEffects(state) {
 }
 
 /** 获取天气对特定商品的价格影响（风/雨/雪天某些商品涨价） */
-function getWeatherGoodPriceMod(state, goodId) {
+function getWeatherGoodPriceMod(state, goodId, locKey) {
   if (!state.weather) return 1.0;
   var base = 1.0;
   var wId = state.weather.current;
+
+  // 地点特定天气价格修正
+  if (locKey) {
+    var locMod = getWeatherModForLocation(locKey, state);
+    if (locMod.priceMod && locMod.priceMod[goodId]) {
+      base = base * locMod.priceMod[goodId];
+    }
+  }
   if (wId === "rainy" || wId === "stormy") {
     if (goodId === "daily_use") base = 1.15;
     if (goodId === "cigarettes") base = 1.1;
@@ -626,6 +779,110 @@ function getWeatherTransportRiskMod(state) {
     plum_rain: 1.1,
   };
   return riskMap[state.weather.current] || 1.0;
+}
+
+/**
+ * 获取天气对旅行 AP 消耗的倍率（天气深化系统）
+ * 大雾/暴雨/台风/暴雪 等降低能见度的天气增加出行成本
+ */
+function getWeatherTravelApMod(state) {
+  if (!state.weather) return 1.0;
+  var apModMap = {
+    rainy: 1.0,
+    stormy: 1.25,
+    windy: 1.05,
+    snowy: 1.5,
+    foggy: 1.3,
+    heavy_smog: 1.35,
+    typhoon: 2.0,
+    sandstorm: 1.5,
+    cold_snap: 1.15,
+    plum_rain: 1.1,
+  };
+  return apModMap[state.weather.current] || 1.0;
+}
+
+/**
+ * 获取天气对特定地点的修正系数（天气深化系统）
+ * 读取 LOCATIONS[locKey].weatherEffects 匹配当前天气
+ * @returns {{ footfallMod: number, priceMod: Object }}
+ */
+function getWeatherModForLocation(locKey, state) {
+  if (!state.weather || !locKey) return { footfallMod: 1.0, priceMod: {} };
+  if (typeof LOCATIONS === "undefined" || !LOCATIONS[locKey])
+    return { footfallMod: 1.0, priceMod: {} };
+  var effects = LOCATIONS[locKey].weatherEffects;
+  if (!effects) return { footfallMod: 1.0, priceMod: {} };
+  var wId = state.weather.current;
+  // 匹配天气别名
+  var matched = effects[wId] || null;
+  if (!matched) {
+    // 尝试匹配通用类别
+    if (isPrecipitationWeather(wId) && effects.rain) matched = effects.rain;
+    else if (wId === "snowy" && effects.snow) matched = effects.snow;
+  }
+  if (!matched) return { footfallMod: 1.0, priceMod: {} };
+  return {
+    footfallMod: matched.footfallMod != null ? matched.footfallMod : 1.0,
+    priceMod: matched.priceMod || {},
+  };
+}
+
+/**
+ * 根据健康/体质修正极端天气发病概率（天气深化系统）
+ * @param {number} baseProb - 基础概率（来自 WEATHER_TYPES.effects.illnessRisk）
+ * @param {Object} state - 游戏状态
+ * @returns {number} 修正后概率
+ */
+function getWeatherIllnessAdjustedProb(baseProb, state) {
+  var health =
+    state.status && state.status.health != null ? state.status.health : 100;
+  var physique =
+    state.status && state.status.physique != null ? state.status.physique : 50;
+  // 健康乘数：越健康概率越低
+  var healthMul =
+    health <= 30 ? 3.0 : health <= 50 ? 2.0 : health <= 70 ? 1.3 : 1.0;
+  // 体质乘数：体质越好概率越低
+  var physMul =
+    physique >= 80 ? 0.3 : physique >= 60 ? 0.6 : physique >= 40 ? 0.9 : 1.2;
+  return baseProb * healthMul * physMul;
+}
+
+/**
+ * 每日天气→疾病风险（天气深化系统）
+ * 极端天气触发对应疾病，健康/体质越低概率越大
+ */
+function applyWeatherIllnessRisk(state) {
+  if (!state.weather || !state.weather.current) return;
+  var wDef = WEATHER_TYPES.find(function (w) {
+    return w.id === state.weather.current;
+  });
+  if (!wDef || !wDef.effects || !wDef.effects.illnessRisk) return;
+
+  var risks = wDef.effects.illnessRisk;
+  for (var illId in risks) {
+    if (!risks.hasOwnProperty(illId)) continue;
+    var baseProb = risks[illId];
+    var adjustedProb = getWeatherIllnessAdjustedProb(baseProb, state);
+    if (Random.chance(adjustedProb)) {
+      // 触发疾病
+      if (typeof triggerIllness === "function") {
+        triggerIllness(state, illId, "weather");
+        var illName = getIllnessName(illId);
+        if (illName) {
+          StateManager.addMessage("🌡️ " + illName + "（天气诱发）", "danger");
+        }
+      }
+    }
+  }
+}
+
+/** 辅助：根据疾病ID获取名称 */
+function getIllnessName(illId) {
+  if (typeof ILLNESSES !== "undefined" && ILLNESSES[illId]) {
+    return ILLNESSES[illId].name || illId;
+  }
+  return null;
 }
 
 /** 天气是否不宜出行 */

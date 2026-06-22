@@ -329,6 +329,10 @@ function createDefaultState() {
       temperature: 22,
       season: "spring",
       lastChanged: 0,
+      forecast: [], // [{day, weatherId, confidence}] 未来3天预报
+      duration: 1, // 当前天气计划持续天数（极端天气 > 1）
+      daysActive: 0, // 当前天气已持续天数
+      persistent: false, // true=持续期模式（极端天气不随机切换）
     },
 
     // --- 城管 ---

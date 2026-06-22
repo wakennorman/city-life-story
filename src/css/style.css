@@ -3053,3 +3053,23 @@ body {
   color: var(--text-primary);
   margin-top: 2px;
 }
+
+/* 装备品质边框 */
+.quality-rare { border-color: #4a9e5c !important; }
+.quality-epic { border-color: #4a6cf7 !important; }
+.quality-legendary {
+  border-color: #e8b84c !important;
+  animation: quality-legendary-pulse 2s ease-in-out infinite !important;
+}
+
+/* 成就解锁飘窗动画 */
+@keyframes achSlideIn {
+  0% {
+    transform: translateX(80px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

@@ -1,9 +1,69 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（解注释4个新地点 + TRAVEL_GRAPH扩展 — LOCATIONS从11个增加到15个）
+> 最后更新: 2026-06-23（天气深化系统 v2 — 持续期/预报/疾病/地点联动/UI面板）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
-## 2026-06-22 — 解注释4个新地点 + TRAVEL_GRAPH 扩展
+## 2026-06-23 — 天气深化系统 v2（新系统）
+
+### 背景
+
+天气系统此前仅有13种天气类型+四季权重，但极端天气不持续、无预报、天气×疾病/地点未落实、无独立UI面板。
+
+### 改动清单
+
+#### src/js/core/state.js
+
+- `weather` 对象新增字段：`forecast`（3天预报数组）、`duration`（持续天数）、`daysActive`（已持续天数）、`persistent`（持续期标记）
+
+#### src/js/core/weather.js
+
+1. **天气持续期系统** — 极端天气自动进入持续期（高温3-5天、寒潮2-3天、梅雨季3-5天等），持续期内天气不随机变化
+2. **3天天气预报** — `generateWeatherForecast()` 每日生成本日+未来3天预报，置信度85%/65%/45%
+3. **旅行AP修正** — `getWeatherTravelApMod()` 大雾×1.3、暴雨×1.25、台风×2、暴雪×1.5
+4. **地点×天气联动** — `getWeatherModForLocation()` 读取 LOCATIONS 的 `weatherEffects` 字段，按天气+地点修正客流量/价格
+5. **天气→疾病风险** — `applyWeatherIllnessRisk()` 消费 WEATHER_TYPES.effects.illnessRisk
+6. **体质修正发病概率** — `getWeatherIllnessAdjustedProb()` 健康≤30概率×3.0，体质≥80概率×0.3
+7. `getWeatherFootTrafficMod()` 增加可选 `locKey` 参数叠加地点修正
+8. `getWeatherGoodPriceMod()` 增加可选 `locKey` 参数叠加地点价格修正
+9. 新增辅助函数：`isExtremeWeather()`、`isPrecipitationWeather()`、`updateWeatherTemperature()`、`getIllnessName()`
+
+#### src/js/data/locations.js
+
+- `getTravelApCost()` 新增天气AP修正：旅行消耗 = 基础 × 天气倍率
+
+#### src/js/phase1/illness.js
+
+- 新增 `triggerIllness(state, illnessId, source)` — 外部系统触发疾病入口，含疾病已存在检查
+
+#### src/js/phase1/daily_pipeline.js
+
+- 新增 `weather_illness_risk` 管线步骤（在 weather_daily_effects 之后）
+
+#### src/index.html
+
+- 新增 `#weather-panel` div（位置名下方，用于显示天气详情面板）
+
+#### src/js/ui/render.js
+
+1. 新增 `renderWeatherPanel(state)` — 天气面板：天气图标+名称+温度+体感+舒适度+持续期+3天预报
+2. 极端天气面板有红色左侧边框+红色背景警告样式
+3. Bug修复：`weather.type` → `weather.current`（line 1466）
+
+#### src/js/ui/modal.js
+
+- Bug修复：`weather.type` → `weather.current` + 补充7种极端天气匹配（line 1688-1698）
+
+#### src/js/data/mechanics_registry.js
+
+- `weather_link` 更新：13种天气完整影响表、极端天气持续期、天气预报、疾病风险、地点联动
+
+#### src/js/ui/wiki.js
+
+- `weather_link` 百科条目更新：扩展为完整天气深化系统描述
+
+### 构建
+
+- 已 `python build.py`（3417.9 KB）
 
 ### 改动清单
 

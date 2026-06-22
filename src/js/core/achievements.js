@@ -2264,6 +2264,10 @@ function notifyNewAchievements(state) {
       "🏅 成就解锁：【" + ach.name + "】 — " + ach.story,
       "event",
     );
+    // 如果 showAchievementUnlockedPopup 已加载，显示飘窗通知
+    if (typeof showAchievementUnlockedPopup === "function") {
+      showAchievementUnlockedPopup(ach);
+    }
   });
   return newOnes.length;
 }

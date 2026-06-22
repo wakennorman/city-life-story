@@ -1014,3 +1014,32 @@ function trackJobDiseaseRisk(jobId, state) {
     h._totalPhysiqueBuild = (h._totalPhysiqueBuild || 0) + risks.pb;
   }
 }
+
+// ====== 天气→疾病触发（天气深化系统） ======
+
+/**
+ * 直接触发一种疾病（供天气系统/外部系统调用）
+ * @param {Object} state - 游戏状态
+ * @param {string} illnessId - 疾病ID
+ * @param {string} source - 触发来源："weather" | "event" | "system"
+ * @returns {boolean} 是否成功触发
+ */
+function triggerIllness(state, illnessId, source) {
+  if (!ILLNESSES || !ILLNESSES[illnessId]) return false;
+  // 已有该病则不重复触发
+  if (hasIllness(state, illnessId)) return false;
+  // 初始化
+  if (!state.status) state.status = {};
+  if (!state.status.illnesses) state.status.illnesses = [];
+  // 加入疾病
+  state.status.illnesses.push({
+    id: illnessId,
+    daysRemaining:
+      Random.int(
+        ILLNESSES[illnessId].naturalCureDays[0],
+        ILLNESSES[illnessId].naturalCureDays[1],
+      ) || 5,
+    severity: ILLNESSES[illnessId].severity || 1,
+  });
+  return true;
+}

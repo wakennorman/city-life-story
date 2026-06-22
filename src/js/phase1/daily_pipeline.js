@@ -435,6 +435,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 天气→疾病风险（天气深化系统）===
+  {
+    name: "weather_illness_risk",
+    fn: function (state) {
+      if (typeof applyWeatherIllnessRisk === "function") {
+        applyWeatherIllnessRisk(state);
+      }
+    },
+  },
+
   // === 节日效果 ===
   {
     name: "festival",
