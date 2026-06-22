@@ -1,5 +1,5 @@
 /**
- * 街头工作定义（15+种）
+ * 街头工作定义（精简版 v2.1 — 20个代表性工作）
  *
  * 每项工作格式:
  * {
@@ -14,7 +14,7 @@
  */
 
 const STREET_JOBS = [
-  // ====== 城中村 ======
+  // ====== 城中村（2个）=====
   {
     id: "waste_recycling",
     name: "废品回收",
@@ -36,50 +36,32 @@ const STREET_JOBS = [
     },
     risk: { injury: 0.04, illness: 0.03 },
   },
-
-  // ====== 街头摆摊（多地点，收益受客流量影响）======
   {
-    id: "street_vending_food",
-    name: "摆摊卖小吃",
-    desc: "在街边支个小摊卖烤串、煎饼果子。客流量越大，手艺越好，赚得越多。",
-    icon: "🍢",
-    location: "commercialDist",
-    requirements: { minAge: 16, maxAge: 60 },
-    effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
-    payCalc(state) {
-      const skillBonus = state.skills.cooking.level * 0.8;
-      const base = Random.float(45 + skillBonus, 80 + skillBonus);
-      const footfall =
-        typeof getVendingFootfallMod === "function"
-          ? getVendingFootfallMod(state.trade.currentLocation, state)
-          : 1.0;
-      return Math.floor(base * footfall);
+    id: "old_zhou_recycling",
+    name: "老周介绍·正规回收站",
+    desc: "老周引荐你去了城西正规废品回收站，分类更细、称重公道、收入翻倍。",
+    icon: "♻️",
+    location: "slum",
+    requirements: { physique: 15, minAge: 18, maxAge: 60 },
+    requiredFlag: "oldZhouReferred",
+    effects: {
+      fatigue: 18,
+      hygiene: -8,
+      physiqueXp: 3,
+      repairXp: 2,
     },
-    startupCost: 50,
-    risk: {},
-  },
-  {
-    id: "street_vending_goods",
-    name: "摆摊卖小商品",
-    desc: "从批发市场进些日用品、小电子产品，在各地摆摊赚差价。",
-    icon: "🧦",
-    location: "commercialDist",
-    requirements: { minAge: 16, maxAge: 60 },
-    effects: { fatigue: 14, happiness: 2, salesXp: 3 },
     payCalc(state) {
-      const skillBonus = state.skills.sales.level * 0.6;
-      const base = Random.float(38 + skillBonus, 66 + skillBonus);
-      const footfall =
-        typeof getVendingFootfallMod === "function"
-          ? getVendingFootfallMod(state.trade.currentLocation, state)
-          : 1.0;
-      return Math.floor(base * footfall);
+      return Math.floor(
+        55 +
+          state.player.physique * 0.6 +
+          state.skills.sales.level * 0.5 +
+          Random.float(0, 30),
+      );
     },
-    startupCost: 30,
     risk: { injury: 0.02 },
   },
 
-  // ====== 建筑工地 ======
+  // ====== 建筑工地（2个）=====
   {
     id: "manual_labor_construction",
     name: "建筑工地苦力",
@@ -101,43 +83,6 @@ const STREET_JOBS = [
       );
     },
     risk: { injury: 0.1, illness: 0.04 },
-  },
-  {
-    id: "skilled_labor_construction",
-    name: "工地技术工",
-    desc: "会手艺的工地活——水电安装、木工、钢筋工。收入比苦力高不少。",
-    icon: "🔨",
-    location: "construction",
-    requirements: {
-      physique: 25,
-      repair: 15,
-      agility: 20,
-      minAge: 20,
-      maxAge: 60,
-    },
-    effects: {
-      fatigue: 28,
-      hygiene: -12,
-      physiqueXp: 3,
-      repairXp: 5,
-      weldingXp: 2,
-    },
-    payCalc(state) {
-      const weldBonus =
-        typeof getConstructionBonus === "function"
-          ? getConstructionBonus(state.skills.welding.level || 0)
-          : 0;
-      const bossBonus = state.flags && state.flags.bossLiSkillJob ? 1.2 : 1.0;
-      return Math.floor(
-        (120 +
-          state.skills.repair.level * 1.2 +
-          state.player.physique * 0.25 +
-          Random.float(0, 35)) *
-          (1 + weldBonus) *
-          bossBonus,
-      );
-    },
-    risk: { injury: 0.05 },
   },
   {
     id: "premium_engineering",
@@ -169,26 +114,8 @@ const STREET_JOBS = [
     },
     risk: { injury: 0.03 },
   },
-  {
-    id: "restaurant_assistant",
-    name: "帮陈师傅打下手",
-    desc: "在陈师傅餐厅打下手，学做菜的同时赚点辛苦钱。",
-    icon: "🍳",
-    location: "commercialDist",
-    requirements: { minAge: 16 },
-    requiredFlag: "chefChenAssistant",
-    effects: { fatigue: 20, hygiene: -5, cookingXp: 12, happiness: 5 },
-    payCalc(state) {
-      const cookBonus =
-        typeof getCookingDiscount === "function"
-          ? Math.floor(state.skills.cooking.level * 0.5)
-          : 0;
-      return Math.floor(50 + cookBonus + Random.float(0, 30));
-    },
-    risk: {},
-  },
 
-  // ====== 工业区 — 工厂 ======
+  // ====== 工业区 — 工厂（1个）=====
   {
     id: "factory_work_assembly",
     name: "工厂流水线",
@@ -216,61 +143,27 @@ const STREET_JOBS = [
     },
     risk: { injury: 0.03, illness: 0.02 },
   },
-  {
 
-  // ====== 商业区 — 餐饮服务 ======
+  // ====== 商业区 — 摆摊/餐饮（2个）=====
   {
-    id: "food_stall",
-    name: "餐饮摊贩",
-    desc: "租个小摊位卖早餐、夜宵。辛苦但利润不错，手艺好能赚更多。",
-    icon: "🍜",
+    id: "street_vending_food",
+    name: "摆摊卖小吃",
+    desc: "在街边支个小摊卖烤串、煎饼果子。客流量越大，手艺越好，赚得越多。",
+    icon: "🍢",
     location: "commercialDist",
-    requirements: { cooking: 10, minAge: 18, maxAge: 55 },
-    effects: { fatigue: 22, hygiene: -8, cookingXp: 5, happiness: 2 },
+    requirements: { minAge: 16, maxAge: 60 },
+    effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
     payCalc(state) {
-      const base = Random.float(
-        95 + state.skills.cooking.level * 1.5,
-        145 + state.skills.cooking.level * 1.5,
-      );
+      const skillBonus = state.skills.cooking.level * 0.8;
+      const base = Random.float(45 + skillBonus, 80 + skillBonus);
       const footfall =
         typeof getVendingFootfallMod === "function"
           ? getVendingFootfallMod(state.trade.currentLocation, state)
           : 1.0;
       return Math.floor(base * footfall);
     },
-    startupCost: 200,
-    risk: { injury: 0.02 },
-  },
-
-  // ====== 商业区 — 服务业 ======
-  {
-  {
-  },
-
-  // ====== NPC关联升级工作 ======
-  {
-    id: "old_zhou_recycling",
-    name: "老周介绍·正规回收站",
-    desc: "老周引荐你去了城西正规废品回收站，分类更细、称重公道、收入翻倍。",
-    icon: "♻️",
-    location: "slum",
-    requirements: { physique: 15, minAge: 18, maxAge: 60 },
-    requiredFlag: "oldZhouReferred",
-    effects: {
-      fatigue: 18,
-      hygiene: -8,
-      physiqueXp: 3,
-      repairXp: 2,
-    },
-    payCalc(state) {
-      return Math.floor(
-        55 +
-          state.player.physique * 0.6 +
-          state.skills.sales.level * 0.5 +
-          Random.float(0, 30),
-      );
-    },
-    risk: { injury: 0.02 },
+    startupCost: 50,
+    risk: {},
   },
   {
     id: "sister_zhang_vending",
@@ -293,6 +186,41 @@ const STREET_JOBS = [
     },
     risk: {},
   },
+
+  // ====== 商业区 — 服务/配送（2个）=====
+  {
+    id: "delivery_rider",
+    name: "外卖骑手",
+    desc: "平台众包骑手，接单送餐。多劳多得，风里来雨里去。",
+    icon: "🛵",
+    location: "commercialDist",
+    requirements: { agility: 22, minAge: 18, maxAge: 45 },
+    effects: { fatigue: 34, hygiene: -8, agilityXp: 5, happiness: -5 },
+    payCalc(state) {
+      return Math.floor(50 + state.player.agility * 0.7 + Random.float(0, 50));
+    },
+    risk: { injury: 0.07 },
+  },
+  {
+    id: "restaurant_assistant",
+    name: "帮陈师傅打下手",
+    desc: "在陈师傅餐厅打下手，学做菜的同时赚点辛苦钱。",
+    icon: "🍳",
+    location: "commercialDist",
+    requirements: { minAge: 16 },
+    requiredFlag: "chefChenAssistant",
+    effects: { fatigue: 20, hygiene: -5, cookingXp: 12, happiness: 5 },
+    payCalc(state) {
+      const cookBonus =
+        typeof getCookingDiscount === "function"
+          ? Math.floor(state.skills.cooking.level * 0.5)
+          : 0;
+      return Math.floor(50 + cookBonus + Random.float(0, 30));
+    },
+    risk: {},
+  },
+
+  // ====== 大学城（1个）=====
   {
     id: "xiao_mei_tutoring",
     name: "小美推荐·精英家教",
@@ -314,42 +242,7 @@ const STREET_JOBS = [
     risk: {},
   },
 
-  // ====== 大学城 ======
-  {
-  {
-    requirements: { intelligence: 30, minAge: 18, maxAge: 65 },
-    educationRequired: 1,
-    effects: { fatigue: 12, intelligenceXp: 3, englishXp: 2, happiness: 10 },
-    payCalc(state) {
-      return Math.floor(
-        62 +
-          state.player.intelligence * 0.45 +
-          state.skills.english.level * 0.3 +
-          Random.float(0, 32),
-      );
-    },
-    risk: {},
-  },
-
-  // ====== 商业区 — 更多 ======
-  {
-    id: "delivery_rider",
-    name: "外卖骑手",
-    desc: "平台众包骑手，接单送餐。多劳多得，风里来雨里去。",
-    icon: "🛵",
-    location: "commercialDist",
-    requirements: { agility: 22, minAge: 18, maxAge: 45 },
-    effects: { fatigue: 34, hygiene: -8, agilityXp: 5, happiness: -5 },
-    payCalc(state) {
-      return Math.floor(50 + state.player.agility * 0.7 + Random.float(0, 50));
-    },
-    risk: { injury: 0.07 },
-  },
-  {
-
-  // ====== 科技园 — 需要学历 ======
-  {
-  {
+  // ====== 科技园 — 白领/技术（2个）=====
   {
     id: "content_writing",
     name: "内容创作者",
@@ -387,6 +280,51 @@ const STREET_JOBS = [
       return Math.floor(
         130 + state.player.intelligence * 1.2 + Random.float(0, 60),
       );
+    },
+    risk: {},
+  },
+
+  // ====== 其他地点（3个）=====
+  {
+    id: "busking",
+    name: "街头表演",
+    desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+    icon: "🎸",
+    location: "park",
+    requirements: { mental: 30, minAge: 16, maxAge: 60 },
+    effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+    payCalc(state) {
+      return Math.floor(
+        18 +
+          state.player.mental * 0.2 +
+          state.player.fame * 0.3 +
+          Random.float(0, 42),
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "bank_security",
+    name: "银行保安",
+    icon: "👮",
+    location: "bank",
+    requirements: { minAge: 20, maxAge: 50 },
+    effects: { fatigue: 8, happiness: -2, physiqueXp: 0 },
+    payCalc: function (state) {
+      return Math.floor(Random.float(60, 90));
+    },
+    risk: {},
+  },
+  {
+    id: "training_assistant",
+    name: "培训助理",
+    desc: "协助培训老师管理班级、准备教材。需要耐心和组织能力。",
+    icon: "📋",
+    location: "trainingCenter",
+    requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 40 },
+    effects: { fatigue: 10, happiness: 3, managementXp: 2 },
+    payCalc(state) {
+      return Math.floor(40 + state.player.mental * 0.2 + Random.float(0, 40));
     },
     risk: {},
   },

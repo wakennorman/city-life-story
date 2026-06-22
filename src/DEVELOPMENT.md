@@ -565,4 +565,46 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 
 ---
 
+## 2026-06-22 — 工作精简至 20 个（v2.1 执行）
+
+### 改动动机
+
+按 v2.1 精简原则：街头工作总数控制在 20 个以内，每个地点只保留最具代表性的工作。
+
+### 精简结果（35 → 20 个）
+
+| 地点          | 精简前 | 精简后 | 保留工作                                                          |
+| ------------- | ------ | ------ | ----------------------------------------------------------------- |
+| 城中村        | 2 个   | 2 个   | waste_recycling（基础）、old_zhou_recycling（NPC升级）            |
+| 建筑工地      | 3 个   | 2 个   | manual_labor_construction（苦力）、premium_engineering（NPC升级） |
+| 工业区        | 1 个   | 1 个   | factory_work_assembly（工厂流水线）                               |
+| 商业区摆摊    | 2 个   | 1 个   | street_vending_food（摆摊卖小吃，合并 goods 摆摊）                |
+| 商业区服务    | 3 个   | 2 个   | delivery_rider（外卖骑手）、restaurant_assistant（陈师傅打下手）  |
+| 商业区NPC升级 | 1 个   | 1 个   | sister_zhang_vending（张姐黄金摊位）                              |
+| 大学城        | 2 个   | 1 个   | xiao_mei_tutoring（小美精英家教）                                 |
+| 科技园        | 2 个   | 2 个   | content_writing（内容创作者）、junior_analyst（数据分析师）       |
+| 公园          | 1 个   | 1 个   | busking（街头表演）                                               |
+| 银行          | 1 个   | 1 个   | bank_security（银行保安）                                         |
+| 培训中心      | 1 个   | 1 个   | training_assistant（培训助理）                                    |
+
+**删除的工作**（重复/相似/低代表性）：
+
+- street_vending_goods（与 street_vending_food 功能重叠，合并保留食物摆摊）
+- skilled_labor_construction（与 manual_labor 功能重叠，保留苦力+工程队两档）
+- food_stall（与 street_vending_food 功能重叠）
+- 大学城 tutoring/package_delivery（与小美家教功能重叠，保留精英家教）
+- 科技园 junior_analyst 之后的所有分支工作（BRANCH_JOBS 数组保留代码但不在 STREET_JOBS 中展开）
+
+### 修改文件
+
+| 文件                  | 操作 | 说明                                                         |
+| --------------------- | ---- | ------------------------------------------------------------ |
+| `src/js/data/jobs.js` | 修改 | STREET_JOBS 精简为 20 个，BRANCH_JOBS 代码保留但不再自动合并 |
+
+### 新闻数量
+
+当前新闻正好 46 条（无需精简），覆盖：价格影响 10 条 / 工作联动 8 条 / 玩家个人 7 条 / 政策 2 条 / 投资 13 条 / 房地产 6 条。
+
+---
+
 ## 2026-06-22 — 内容扩充指令 v2.0 建立（已废弃，升级为 v2.1）
