@@ -1,7 +1,28 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（v2.3 全局数值精度规范化 — 清除长浮点数显示）
+> 最后更新: 2026-06-22（解注释4个新地点 + TRAVEL_GRAPH扩展 — LOCATIONS从11个增加到15个）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
+
+## 2026-06-22 — 解注释4个新地点 + TRAVEL_GRAPH 扩展
+
+### 改动清单
+
+#### src/js/data/locations.js
+
+1. **解注释 suburb（郊区）** — residential, tier 2, 连接 slum/wholesaleMarket/park
+2. **解注释 gov_office（政府办事大厅）** — service, tier 2, 连接 commercialDist/bank
+3. **解注释 entertainment（娱乐城）** — recreation, tier 3, 连接 commercialDist/techPark/school
+4. **解注释 temple（寺庙）** — recreation, tier 2, 连接 park/school/slum
+5. **TRAVEL_GRAPH 双向连通** — 已有地点 slum/wholesaleMarket/school/commercialDist/techPark/bank/park 均添加了通向新地点的连接
+6. **LOCATIONS 总数**：11 → **15** 个（仍保留 12 个 TODO 注释地点待后续实现）
+7. **构建**：已 `python build.py`（3383.7 KB）
+
+### 受影响模块
+
+- `getLocationHops()` — BFS 自动适配新节点，无需修改
+- `getTravelApCost()` — 通过 `LOCATIONS[fromKey].wealthTier` 自动计算跨区消耗
+- `getJobsAtLocation()` — 新地点的 `jobs` 数组直接可用（即使部分工作尚未定义）
+- `getReachableLocations()` — 基于新 TRAVEL_GRAPH 返回可达地点列表
 
 ## 2026-06-22 — 全局数值精度规范化
 
