@@ -321,7 +321,6 @@ function findDatingTarget(state, location) {
     "小芳",
   ];
   const partnerTypeKeys = Object.keys(SPOUSE_TYPES);
-  const typeKey =
   const typeKey = Random.fromArray(partnerTypeKeys);
   const partnerType = SPOUSE_TYPES[typeKey];
   const name = Random.fromArray(names);
@@ -389,8 +388,7 @@ function goDating(state, eventId) {
   }
 
   // 检查费用
-  const cost =
-    Random.int(event.cost[0], event.cost[1] - 1);
+  const cost = Random.int(event.cost[0], event.cost[1] - 1);
   if (state.resources.cash < cost) {
     return { success: false, message: `现金不足，需要¥${cost}` };
   }
@@ -540,7 +538,14 @@ function haveChild(state) {
     age: 0,
     stage: "infant",
     intelligence: Random.int(50, 79),
-    personality: Random.fromArray(["活泼", "安静", "内向", "外向", "敏感", "乐观"]),
+    personality: Random.fromArray([
+      "活泼",
+      "安静",
+      "内向",
+      "外向",
+      "敏感",
+      "乐观",
+    ]),
     happiness: 80,
     health: 90,
     educationLevel: 0,
@@ -865,8 +870,7 @@ function doFamilyActivity(state, activityId) {
 
   // 检查费用
   const cost =
-    activity.cost[0] +
-    Random.int(activity.cost[0], activity.cost[1] - 1);
+    activity.cost[0] + Random.int(activity.cost[0], activity.cost[1] - 1);
   if (state.resources.cash < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }

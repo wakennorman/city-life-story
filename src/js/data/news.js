@@ -79,7 +79,7 @@ const NEWS_EVENTS = [
   {
     id: "bank_fraud_alert",
     headline: "🚨 银行附近出现诈骗团伙！老人被骗光积蓄",
-    desc: "警方提醒：近期有诈骗团伙在银行附近冒充工作人员，以"高息理财"为名骗取老人存款。",
+    desc: "警方提醒：近期有诈骗团伙在银行附近冒充工作人员，以“高息理财”为名骗取老人存款。",
     effects: {
       priceMod: { daily_use: 1.05 }, // 安全用品涨价
       jobBonus: ["bank_security"],
@@ -807,8 +807,9 @@ const NEWS_EVENTS = [
     },
     type: "investment",
   },
+];
 
-  // ============================================================
+// ============================================================
 
 /** 级联后续新闻（L2层：由L1大事件自动触发，N天后出现） */
 var NEWS_FOLLOWUP = {
@@ -932,9 +933,7 @@ var NEWS_FOLLOWUP = {
   bank_fraud_echo: {
     headline: "🚨 诈骗案后续：警方抓获犯罪团伙，提醒市民警惕新型理财骗局",
     effects: {
-      investmentEffect: [
-        { industry: "金融", mul: 1.02 },
-      ],
+      investmentEffect: [{ industry: "金融", mul: 1.02 }],
       duration: 3,
     },
   },

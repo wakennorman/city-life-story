@@ -1001,3 +1001,25 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 - python build.py (3367.1 KB)
 
 ## 2026-06-22 — 内容扩充指令 v2.0 建立（已废弃，升级为 v2.1）
+
+## 2026-06-22 21:00 — 紧急修复：4 处语法错误导致按钮无响应
+
+### 排查过程
+
+玩家点击"选择游戏模式"按钮无反应 → 浏览器控制台发现多处 `SyntaxError` + `ReferenceError: LOCATIONS is not defined` → 根因为内容扩充时遗留下的语法错误，导致相关 `<script>` 解析中断，`LOCATIONS` 等全局变量从未创建。
+
+### 修复内容
+
+| 文件                    | 问题                                                                    | 修复               |
+| ----------------------- | ----------------------------------------------------------------------- | ------------------ |
+| `data/news.js`          | `NEWS_EVENTS` 数组未以 `];` 闭合，后续 `var NEWS_FOLLOWUP` 出现在数组中 | 补 `];`            |
+| `data/news.js`          | desc 字符串内 `"高息理财"` 的 ASCII 双引号被解析器误认为字符串结束      | 改为中文弯引号 ` ` |
+| `data/locations.js`     | `LOCATIONS = {` 为对象，结尾误用 `]`                                    | `]` → `}`          |
+| `data/illnesses.js`     | `ILLNESSES = {` 为对象，结尾误用 `]`                                    | `]` → `}`          |
+| `phase2/family_life.js` | `const typeKey =` 重复两行                                              | 删除空行           |
+
+### 验证
+
+- ✅ dist 全部 80 个 `<script>` 块通过 `new Function()` 语法检查
+- ✅ 构建完成
+- **构建**：python build.py (3387.3 KB)

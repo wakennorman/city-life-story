@@ -61,10 +61,7 @@ const LOCATIONS = {
     specialties: ["water", "beer", "cigarettes", "instant_noodles"],
     dailyProbability: 0.3,
     specialCategory: ["luxury", "food"],
-    jobs: [
-      "manual_labor_construction",
-      "premium_engineering",
-    ],
+    jobs: ["manual_labor_construction", "premium_engineering"],
     priceMod: {},
   },
   factoryZone: {
@@ -98,10 +95,7 @@ const LOCATIONS = {
     specialties: ["fruits", "vegetables", "snacks"],
     dailyProbability: 0.5,
     specialCategory: ["food", "clothing"],
-    jobs: [
-      "tutoring",
-      "xiao_mei_tutoring",
-    ],
+    jobs: ["tutoring", "xiao_mei_tutoring"],
     priceMod: {
       water: 0.8,
       snacks: 0.9,
@@ -150,10 +144,7 @@ const LOCATIONS = {
     specialties: ["electronics", "daily_use", "snacks"],
     dailyProbability: 0.4,
     specialCategory: ["electronics"],
-    jobs: [
-      "content_writing",
-      "junior_analyst",
-    ],
+    jobs: ["content_writing", "junior_analyst"],
     priceMod: {},
   },
   hospital: {
@@ -167,10 +158,7 @@ const LOCATIONS = {
     specialties: ["fruits", "water", "snacks"],
     dailyProbability: 0.3,
     specialCategory: ["food"],
-    jobs: [
-      "hospital_caregiver",
-      "hospital_companion",
-    ],
+    jobs: ["hospital_caregiver", "hospital_companion"],
     priceMod: {},
   },
   bank: {
@@ -184,9 +172,7 @@ const LOCATIONS = {
     specialties: [],
     dailyProbability: 0.2,
     specialCategory: [],
-    jobs: [
-      "bank_security",
-    ],
+    jobs: ["bank_security"],
     priceMod: {},
   },
   park: {
@@ -200,9 +186,7 @@ const LOCATIONS = {
     specialties: ["snacks", "water", "fruits"],
     dailyProbability: 0.5,
     specialCategory: ["food"],
-    jobs: [
-      "busking",
-    ],
+    jobs: ["busking"],
     priceMod: {},
   },
   trainingCenter: {
@@ -216,9 +200,7 @@ const LOCATIONS = {
     specialties: ["daily_use", "snacks", "water"],
     dailyProbability: 0.3,
     specialCategory: [],
-    jobs: [
-      "training_assistant",
-    ],
+    jobs: ["training_assistant"],
     priceMod: {},
   },
 
@@ -512,7 +494,7 @@ const LOCATIONS = {
   //     books: 0.6,
   //   },
   // },
-];
+};
 
 // 旅行图（哪些地点之间可以直接通行）
 const TRAVEL_GRAPH = {

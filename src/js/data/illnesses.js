@@ -424,7 +424,7 @@ const ILLNESSES = {
   //   evolvesFrom: ["fatty_liver"],
   //   isCritical: true,
   // },
-];
+};
 
 /** 列出当前可能患的疾病（按 habits 字段判断） */
 function getIllnessById(id) {
