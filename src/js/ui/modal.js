@@ -1685,7 +1685,12 @@ function getVendingLocationAdvice(state) {
   var weatherMod = 1.0;
   var weatherAdvice = "";
   if (weather) {
-    if (weather.current === "stormy" || weather.current === "snowy" || weather.current === "typhoon" || weather.current === "sandstorm") {
+    if (
+      weather.current === "stormy" ||
+      weather.current === "snowy" ||
+      weather.current === "typhoon" ||
+      weather.current === "sandstorm"
+    ) {
       weatherMod = 0.4;
       weatherAdvice = "⚠️ 恶劣天气，室外摆摊客流锐减，建议室内行动或休息";
     } else if (weather.current === "rainy" || weather.current === "plum_rain") {
@@ -1706,6 +1711,7 @@ function getVendingLocationAdvice(state) {
       weatherMod = 0.6;
       weatherAdvice = "😷 重度雾霾，建议佩戴口罩或室内行动";
     }
+  }
 
   // 节日修正
   var festivalMod = 1.0;
