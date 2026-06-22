@@ -217,31 +217,6 @@ const STREET_JOBS = [
     risk: { injury: 0.03, illness: 0.02 },
   },
   {
-    id: "factory_overtime",
-    name: "工厂加班",
-    desc: "晚上加班赶订单，加班费可观，但这钱是用身体换的。",
-    icon: "🌙",
-    location: "factoryZone",
-    requirements: { agility: 15, physique: 18, minAge: 18, maxAge: 45 },
-    effects: {
-      fatigue: 42,
-      hygiene: -3,
-      happiness: -20,
-      mental: -4,
-      electricianXp: 3,
-    },
-    payCalc(state) {
-      const elecBonus =
-        typeof getFactoryBonus === "function"
-          ? getFactoryBonus(state.skills.electrician.level || 0)
-          : 0;
-      return Math.floor(
-        (115 + state.player.physique * 0.4 + Random.float(0, 25)) *
-          (1 + elecBonus),
-      );
-    },
-    risk: { illness: 0.06 },
-  },
 
   // ====== 商业区 — 餐饮服务 ======
   {
@@ -269,107 +244,7 @@ const STREET_JOBS = [
 
   // ====== 商业区 — 服务业 ======
   {
-    id: "barber",
-    name: "理发师",
-    desc: "在街边理发店做理发师。手艺活，环境干净，收入稳定。",
-    icon: "💇",
-    location: "commercialDist",
-    requirements: { agility: 20, sales: 5, minAge: 18, maxAge: 60 },
-    effects: { fatigue: 16, happiness: 5, agilityXp: 2, salesXp: 3 },
-    payCalc(state) {
-      return Math.floor(
-        48 +
-          state.player.agility * 0.25 +
-          state.skills.sales.level * 0.5 +
-          Random.float(0, 32),
-      );
-    },
-    risk: {},
-  },
   {
-    id: "cleaning_service",
-    name: "保洁/家政",
-    desc: "帮人打扫卫生、收拾屋子。活不重，收入不高但稳定。",
-    icon: "🧹",
-    location: "commercialDist",
-    requirements: { minAge: 18, maxAge: 55 },
-    effects: { fatigue: 20, hygiene: -8, physiqueXp: 2 },
-    payCalc(state) {
-      return Math.floor(
-        40 + state.player.physique * 0.15 + Random.float(0, 25),
-      );
-    },
-    risk: {},
-  },
-  {
-    id: "repair_service",
-    name: "家电维修",
-    desc: "帮人修家电、手机、电脑。技术活，口碑好了收入越来越高。",
-    icon: "🔧",
-    location: "commercialDist",
-    requirements: { repair: 20, intelligence: 20, minAge: 18, maxAge: 65 },
-    effects: { fatigue: 14, repairXp: 5, happiness: 8 },
-    payCalc(state) {
-      return Math.floor(
-        65 + state.skills.repair.level * 2.0 + Random.float(0, 42),
-      );
-    },
-    risk: {},
-  },
-
-  // ====== 工业区 ======
-  {
-    id: "security_guard",
-    name: "保安",
-    desc: "在工厂或小区看大门。活不多，能坐着，但工资不高。",
-    icon: "👮",
-    location: "factoryZone",
-    requirements: { minAge: 20, maxAge: 55 },
-    effects: { fatigue: 10, happiness: -3, physiqueXp: 1 },
-    payCalc(state) {
-      return Math.floor(Random.float(32, 50));
-    },
-    risk: {},
-  },
-  {
-    id: "warehouse_worker",
-    name: "仓库搬运",
-    desc: "在物流仓库搬货、分拣包裹。体力消耗大但按件计酬。",
-    icon: "📦",
-    location: "factoryZone",
-    requirements: { physique: 18, minAge: 18, maxAge: 50 },
-    effects: { fatigue: 32, hygiene: -10, physiqueXp: 4 },
-    payCalc(state) {
-      return Math.floor(58 + state.player.physique * 0.4 + Random.float(0, 25));
-    },
-    risk: { injury: 0.05 },
-  },
-
-  // ====== 医院 ======
-  {
-    id: "hospital_caregiver",
-    name: "临时陪诊护工",
-    desc: "在医院帮病人挂号、取药、陪检。需要耐心和体力，流感季需求会暴涨。",
-    icon: "🏥",
-    location: "hospital",
-    requirements: { physique: 18, mental: 22, minAge: 18, maxAge: 60 },
-    effects: {
-      fatigue: 30,
-      hygiene: -10,
-      happiness: 4,
-      mental: -2,
-      physiqueXp: 2,
-      salesXp: 2,
-    },
-    payCalc(state) {
-      return Math.floor(
-        72 +
-          state.player.mental * 0.45 +
-          state.player.physique * 0.25 +
-          Random.float(0, 42),
-      );
-    },
-    risk: { illness: 0.08 },
   },
 
   // ====== NPC关联升级工作 ======
@@ -441,37 +316,7 @@ const STREET_JOBS = [
 
   // ====== 大学城 ======
   {
-    id: "school_maintenance",
-    name: "学校勤杂工",
-    desc: "在学校做维修、绿化、清洁等杂活。环境好，氛围轻松。",
-    icon: "🏫",
-    location: "school",
-    requirements: { minAge: 18, maxAge: 60 },
-    effects: { fatigue: 16, hygiene: -5, happiness: 8, repairXp: 2 },
-    payCalc(state) {
-      return Math.floor(Random.float(42, 64));
-    },
-    risk: {},
-  },
   {
-    id: "package_delivery",
-    name: "校园/社区快递",
-    desc: "帮学生和社区居民收发快递包裹。腿脚麻利跑得快是核心竞争力。",
-    icon: "📬",
-    location: "school",
-    requirements: { agility: 15, minAge: 18, maxAge: 50 },
-    effects: { fatigue: 24, hygiene: -5, agilityXp: 4 },
-    payCalc(state) {
-      return Math.floor(40 + state.player.agility * 0.4 + Random.float(0, 25));
-    },
-    risk: { injury: 0.03 },
-  },
-  {
-    id: "tutoring",
-    name: "家教",
-    desc: "给中小学生辅导功课。知识就是金钱，智力越高收入越好。需要本科学历。",
-    icon: "📖",
-    location: "school",
     requirements: { intelligence: 30, minAge: 18, maxAge: 65 },
     educationRequired: 1,
     effects: { fatigue: 12, intelligenceXp: 3, englishXp: 2, happiness: 10 },
@@ -501,66 +346,10 @@ const STREET_JOBS = [
     risk: { injury: 0.07 },
   },
   {
-    id: "street_performer",
-    name: "街头卖艺",
-    desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
-    icon: "🎸",
-    location: "commercialDist",
-    requirements: { mental: 30, minAge: 16, maxAge: 60 },
-    effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
-    payCalc(state) {
-      return Math.floor(
-        18 +
-          state.player.mental * 0.2 +
-          state.player.fame * 0.3 +
-          Random.float(0, 42),
-      );
-    },
-    risk: {},
-  },
 
   // ====== 科技园 — 需要学历 ======
   {
-    id: "data_entry",
-    name: "数据录入员",
-    desc: "在科技公司做基础数据录入整理。大专学历起步，入门白领工作。",
-    icon: "💻",
-    location: "techPark",
-    requirements: { intelligence: 18, minAge: 18, maxAge: 45 },
-    educationRequired: 0,
-    effects: { fatigue: 14, happiness: 5, intelligenceXp: 2, happiness: 8 },
-    payCalc(state) {
-      return Math.floor(
-        70 + state.player.intelligence * 0.4 + Random.float(0, 30),
-      );
-    },
-    risk: {},
-  },
   {
-    id: "customer_service_tech",
-    name: "科技客服专员",
-    desc: "在互联网公司做线上客服，处理用户投诉和咨询。需要本科学历，薪资比普通体力活高一档。",
-    icon: "🎧",
-    location: "techPark",
-    requirements: { intelligence: 25, mental: 20, minAge: 18, maxAge: 40 },
-    educationRequired: 1,
-    effects: {
-      fatigue: 16,
-      happiness: 3,
-      mental: -2,
-      intelligenceXp: 3,
-      salesXp: 2,
-    },
-    payCalc(state) {
-      const engBonus = state.skills.english
-        ? state.skills.english.level * 0.3
-        : 0;
-      return Math.floor(
-        95 + state.player.intelligence * 0.6 + engBonus + Random.float(0, 40),
-      );
-    },
-    risk: {},
-  },
   {
     id: "content_writing",
     name: "内容创作者",
@@ -1035,131 +824,6 @@ const STREET_JOBS = [
       },
       risk: {},
     },
-    {
-      id: "park_security",
-      name: "公园保安",
-      icon: "👮",
-      location: "park",
-      requirements: { minAge: 18, maxAge: 55 },
-      effects: { fatigue: 10, happiness: -3, physiqueXp: 1 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(35, 50));
-      },
-      risk: {},
-    },
-    {
-      id: "park_cleaning",
-      name: "公园清洁",
-      icon: "🧹",
-      location: "park",
-      requirements: { minAge: 18, maxAge: 60 },
-      effects: { fatigue: 18, hygiene: -5, physiqueXp: 2 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(25, 40));
-      },
-      risk: {},
-    },
-    {
-      id: "park_guide",
-      name: "公园导游",
-      desc: "在公园/景区为游客提供讲解服务。需要口才好、知识面广。",
-      icon: "🗣️",
-      location: "park",
-      requirements: { intelligence: 25, mental: 20, minAge: 18, maxAge: 50 },
-      effects: { fatigue: 8, happiness: 5, intelligenceXp: 2, fame: 2 },
-      payCalc(state) {
-        return Math.floor(
-          50 + state.player.intelligence * 0.3 + Random.float(0, 50),
-        );
-      },
-      risk: {},
-    },
-    {
-      id: "park_flower_vendor",
-      name: "公园卖花",
-      desc: "在公园门口或内部卖鲜花/盆栽。周末和节日生意好。",
-      icon: "💐",
-      location: "park",
-      requirements: { sales: 10, minAge: 18 },
-      effects: { fatigue: 10, happiness: 3, salesXp: 2 },
-      payCalc(state) {
-        return Math.floor(
-          40 + state.skills.sales.level * 2 + Random.float(0, 60),
-        );
-      },
-      risk: {},
-      seasonal: { months: [2, 3, 5, 10] }, // 情人节/五一/国庆
-    },
-    //
-    // ============================================================
-    // 医院地点工作（正式实现 — 医院目前仅1个工作，需扩充）
-    // 参考来源：《大多数》工作系统 / 真实中国医院就业数据（2024年）
-    // 联动：医院地点 jobs 数组需更新，需配套添加 NPC + 事件
-    // ============================================================
-    {
-      id: "hospital_cleaning",
-      name: "医院保洁",
-      icon: "🧹",
-      location: "hospital",
-      requirements: { hygiene: 10, minAge: 18, maxAge: 55 },
-      effects: { fatigue: 15, hygiene: -8, happiness: -2 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(40, 60));
-      },
-      risk: { illness: 0.05 },
-    },
-    {
-      id: "hospital_delivery",
-      name: "医院配送",
-      icon: "📦",
-      location: "hospital",
-      requirements: { agility: 15, minAge: 18, maxAge: 45 },
-      effects: { fatigue: 20, agilityXp: 2 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(50, 80));
-      },
-      risk: { illness: 0.03 },
-    },
-    {
-      id: "hospital_orderly",
-      name: "医院护工",
-      desc: "在医院照顾病人日常生活。需要耐心和体力，有护理证收入更高。",
-      icon: "👨‍⚕️",
-      location: "hospital",
-      requirements: { physique: 20, mental: 25, minAge: 20, maxAge: 55 },
-      effects: { fatigue: 25, hygiene: -5, happiness: 2, physiqueXp: 2 },
-      payCalc(state) {
-        var base = 60 + state.player.physique * 0.3 + Random.float(0, 40);
-        if (state.flags.nursingCert) base *= 1.3;
-        return Math.floor(base);
-      },
-      risk: { illness: 0.06 },
-    },
-    {
-      id: "hospital_guidance",
-      name: "医院导诊",
-      desc: "在医院为患者提供导诊服务。需要熟悉医院流程，耐心解答问题。",
-      icon: "🗺️",
-      location: "hospital",
-      requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 50 },
-      effects: { fatigue: 10, happiness: 3, mentalXp: 2 },
-      payCalc(state) {
-        return Math.floor(35 + state.player.mental * 0.2 + Random.float(0, 30));
-      },
-      risk: { illness: 0.02 },
-    },
-    // TODO: 待实现 - 殡仪馆工作人员（参考真实殡仪馆工作人员工资¥5000-10000/月）
-    // {
-    //   id: "funeral_home",
-    //   name: "殡仪馆工作人员",
-    //   desc: "在殡仪馆协助处理丧事。收入高但心理压力大，需要强大的心理素质。",
-    //   icon: "⚰️",
-    //   location: "hospital",
-    //   requirements: { mental: 40, physique: 15, minAge: 22, maxAge: 50 },
-    //   effects: { fatigue: 15, happiness: -10, mental: -3, physiqueXp: 1 },
-    //   payCalc(state) { return Math.floor(80 + state.player.mental * 0.5 + Random.float(0, 60)); },
-    //   risk: { illness: 0.03 },
-    // },
     //
     // ============================================================
     // 银行地点工作（正式实现 — 银行之前是空地点）
@@ -1178,63 +842,12 @@ const STREET_JOBS = [
       },
       risk: {},
     },
-    {
-      id: "bank_cashier_assist",
-      name: "银行大堂助理",
-      icon: "💼",
-      location: "bank",
-      requirements: { intelligence: 25, minAge: 22, maxAge: 35, education: 1 },
-      effects: { fatigue: 10, intelligenceXp: 2, happiness: 2 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(70, 100));
-      },
-      risk: {},
-    },
-    {
-      id: "atm_maintenance",
-      name: "ATM维护员",
-      desc: "负责ATM机的日常维护和加钞。需要技术基础，收入稳定。",
-      icon: "🏧",
-      location: "bank",
-      requirements: { repair: 15, intelligence: 20, minAge: 22, maxAge: 45 },
-      effects: { fatigue: 12, intelligenceXp: 2, happiness: 2 },
-      payCalc(state) {
-        return Math.floor(
-          70 + state.skills.repair.level * 1.5 + Random.float(0, 50),
-        );
-      },
-      risk: {},
-    },
     //
     // ============================================================
     // 培训中心地点工作（正式实现 — 培训中心之前是空地点）
     // 参考来源：《大多数》工作系统 / 真实中国培训机构就业数据（2024年）
     // 联动：培训中心地点 jobs 数组需更新
     // ============================================================
-    {
-      id: "tutor_care",
-      name: "培训辅导",
-      icon: "📚",
-      location: "trainingCenter",
-      requirements: { intelligence: 30, minAge: 22, maxAge: 50 },
-      effects: { fatigue: 12, intelligenceXp: 3, happiness: 5 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(80, 120));
-      },
-      risk: {},
-    },
-    {
-      id: "center_cleaning",
-      name: "培训中心保洁",
-      icon: "🧹",
-      location: "trainingCenter",
-      requirements: { minAge: 18, maxAge: 55 },
-      effects: { fatigue: 15, hygiene: -3 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(30, 50));
-      },
-      risk: {},
-    },
     {
       id: "training_assistant",
       name: "培训助理",

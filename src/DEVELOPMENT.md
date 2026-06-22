@@ -532,13 +532,36 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 
 以后用户说"按 v2.1 提示词继续内容扩充"，即按此提示词执行。完整提示词见 `memory/content-expansion-v2.1.md`。
 
-### 当前待处理问题
+### ✅ 2026-06-22 — v2.1 精简执行完成
 
-1. 工作重复定义（street_performer/busking、hospital_caregiver/hospital_orderly 等）→ 合并为 1 个代表
-2. 技能-装备兼容性（beauty、photography、japanese 等技能是否存在）
-3. 地点空地点问题（殡仪馆等无配套玩法）
-4. 新闻事件数量过多（需精简至 40-50 条）
-5. **20 职业上限执行**：需从现有 ~47 个工作精简至 20 个以内
+#### 工作精简（47 → 20 个）
+
+| 地点     | 精简前 | 精简后 | 保留工作                                                                                |
+| -------- | ------ | ------ | --------------------------------------------------------------------------------------- |
+| 医院     | 5 个   | 1 个   | hospital_caregiver（合并 hospital_orderly 护理证加成）                                  |
+| 公园     | 5 个   | 1 个   | busking（街头表演）                                                                     |
+| 银行     | 3 个   | 1 个   | bank_security（银行保安）                                                               |
+| 培训中心 | 3 个   | 1 个   | training_assistant（培训助理）                                                          |
+| 工业区   | 3 个   | 2 个   | factory_work_assembly, warehouse_worker                                                 |
+| 大学城   | 4 个   | 2 个   | tutoring, package_delivery                                                              |
+| 商业区   | 10+ 个 | 6 个   | street_vending_food/goods, food_stall, repair_service, delivery_rider, cleaning_service |
+| 建筑工地 | 3 个   | 3 个   | manual_labor, skilled_labor, premium_engineering                                        |
+| 城中村   | 2 个   | 2 个   | waste_recycling, old_zhou_recycling                                                     |
+| 科技园   | 4 个   | 2 个   | content_writing, junior_analyst                                                         |
+
+**删除工作**：hospital_cleaning/delivery/orderly/guidance, park_security/cleaning/guide/flower_vendor, bank_cashier_assist/atm_maintenance, tutor_care/center_cleaning, security_guard, barber, street_performer, data_entry, customer_service_tech, school_maintenance, factory_overtime
+
+#### NPC 精简（删除行业重复）
+
+- 删除：刘叔（退休老教师，与小美教育行业重复）
+- 保留：6 个主 NPC（王大婶/李工头/张姐/老周/小美/陈师傅）
+- 每个行业 1 代表：废品回收（老周）、建筑（李工头）、中介（张姐）、教育（小美）、餐饮（陈师傅）、房东（王大婶-特殊）
+
+#### 新闻精简（100 → 46 条）
+
+- 已实现：43 条高质量新闻
+- 待实现：3 条代表性新闻（保留核心类别）
+- 删除：58 条重复/低质量待实现新闻
 
 ---
 
