@@ -406,7 +406,7 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.ma) {
     const { ma5, ma7, ma20 } = indicators.ma;
-    lines.push(`  MA5: ¥${ma5} | MA7: ¥${ma7} | MA20: ¥${ma20}`);
+    lines.push(`  MA5: ¥${ma5.toFixed(2)} | MA7: ¥${ma7.toFixed(2)} | MA20: ¥${ma20.toFixed(2)}`);
     if (ma5 > ma7 && ma7 > ma20) lines.push("  ✅ 均线多头排列，上涨趋势明确");
     else if (ma5 < ma7 && ma7 < ma20)
       lines.push("  ❌ 均线空头排列，下跌趋势明确");
@@ -415,13 +415,13 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.macd) {
     const { macd, signal, histogram } = indicators.macd;
-    lines.push(`  MACD: ${macd} | 信号线: ${signal} | 柱状图: ${histogram}`);
+    lines.push(`  MACD: ${macd.toFixed(2)} | ${signal} | 柱状图: ${histogram.toFixed(2)}`);
     lines.push(`  ${histogram > 0 ? "🟢 动能正向" : "🔴 动能负向"}`);
   }
 
   if (indicators.rsi) {
     const { value, signal: rsiSignal } = indicators.rsi;
-    lines.push(`  RSI(14): ${value} → ${rsiSignal}`);
+    lines.push(`  RSI(14): ${value.toFixed(1)} → ${rsiSignal}`);
   }
 
   if (indicators.bollinger) {

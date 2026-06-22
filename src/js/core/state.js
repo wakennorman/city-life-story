@@ -78,6 +78,9 @@ function createDefaultState() {
     stats: {
       actionFreq: {}, // { actionId: 累计点击次数 }
       actionFirstUse: {}, // { actionId: 首次点击天数 }
+      tradeFreq: {}, // { goodId: 累计买卖次数 }
+      trainFreq: {}, // { skillKey: 累计训练次数 }
+      investFreq: {}, // { symbol: 累计交易次数 }
     },
 
     // --- 基本需求 (0-100) ---
@@ -665,8 +668,12 @@ class GameStateManager {
     }
     // v1.6 → v1.7 迁移：行动频次统计
     if (!s.stats) {
-      s.stats = { actionFreq: {}, actionFirstUse: {} };
+      s.stats = { actionFreq: {}, actionFirstUse: {}, tradeFreq: {}, trainFreq: {}, investFreq: {} };
     }
+    // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
+    if (!s.stats.tradeFreq) s.stats.tradeFreq = {};
+    if (!s.stats.trainFreq) s.stats.trainFreq = {};
+    if (!s.stats.investFreq) s.stats.investFreq = {};
     // v1.7 → v1.8 迁移：交易情报系统
     if (!s.trade) s.trade = {};
     if (!s.trade.visitedToday) s.trade.visitedToday = {};

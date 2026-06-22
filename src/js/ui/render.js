@@ -2612,6 +2612,26 @@ function renderTradeTab(state, parent) {
     return;
   }
 
+  // ====== 分类排序系统：品类优先 → 频次辅助 → 价格 → 名称 ======
+  if (typeof SortUtils !== "undefined") {
+    goodsList = SortUtils.sortInteractiveList(
+      goodsList,
+      {
+        categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+        priorityMap: {
+          water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
+          pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+        },
+        freqMap: "tradeFreq",
+        getCategory: function (g) { return g.category || "other"; },
+        getFreqKey: function (g) { return g.id; },
+        getCost: function (g) { return g.basePrice || 0; },
+        getName: function (g) { return g.name || g.id; },
+      },
+      state,
+    );
+  }
+
   // 背包中的商品（方便快速卖出）
   const ownedGoods = state.inventory.items || [];
   if (ownedGoods.length > 0) {
@@ -2976,10 +2996,15 @@ function renderTradeTab(state, parent) {
         const qty = parseInt(btn.dataset.qty) || 1;
         if (typeof buyGood === "function") {
           buyGood(goodId, qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          // 追踪买卖频次
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -2992,9 +3017,10 @@ function renderTradeTab(state, parent) {
         const qty = parseInt(btn.dataset.qty) || 10;
         if (typeof buyWholesale === "function") {
           buyWholesale(goodId, qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+          }
           renderMessageLog(StateManager.getState());
         }
       });
@@ -3007,10 +3033,14 @@ function renderTradeTab(state, parent) {
         const goodId = btn.dataset.good;
         if (typeof sellGood === "function") {
           sellGood(goodId, 1);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + 1;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -3019,15 +3049,19 @@ function renderTradeTab(state, parent) {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const goodId = btn.dataset.good;
-        const item = StateManager.getState().inventory.items.find(
+        const st = StateManager.getState();
+        const item = st.inventory.items.find(
           (i) => i.id === goodId,
         );
         if (item && typeof sellGood === "function") {
           sellGood(goodId, item.qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + item.qty;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -3189,6 +3223,11 @@ function renderTradeTab(state, parent) {
             }
             buyGood(goodId, qty);
           }
+          // 追踪自定义买卖频次
+          var st2 = StateManager.getState();
+          if (st2 && st2.stats) {
+            st2.stats.tradeFreq[goodId] = (st2.stats.tradeFreq[goodId] || 0) + qty;
+          }
         } else {
           // sell
           const item = StateManager.getState().inventory.items.find(
@@ -3205,6 +3244,11 @@ function renderTradeTab(state, parent) {
           }
           if (typeof sellGood === "function") {
             sellGood(goodId, qty);
+          }
+          // 追踪自定义卖出频次
+          var st3 = StateManager.getState();
+          if (st3 && st3.stats) {
+            st3.stats.tradeFreq[goodId] = (st3.stats.tradeFreq[goodId] || 0) + qty;
           }
         }
         // 成功后收起面板
@@ -3398,6 +3442,28 @@ function renderSkillsTab(state, parent) {
   var skillNamesCache = skillNames;
 
   var skillKeys = Object.keys(state.skills);
+
+  // ====== 分类排序系统：实用型→学术型→体能型 → 训练频次 → 等级 → 名称 ======
+  if (typeof SortUtils !== "undefined") {
+    var skillObjs = skillKeys.map(function (k) {
+      return { id: k, name: skillNamesCache[k] || k, level: state.skills[k].level };
+    });
+    var sortedSkills = SortUtils.sortInteractiveList(
+      skillObjs,
+      {
+        categoryOrder: ["practical", "academic", "physical"],
+        priorityMap: { cooking: 10, repair: 15, coding: 20, driving: 25, english: 30, accounting: 35, electrician: 40, management: 45, sales: 50, welding: 55 },
+        freqMap: "trainFreq",
+        getCategory: function (s) { return SortUtils.getSkillCategory ? SortUtils.getSkillCategory(s.id) : "physical"; },
+        getFreqKey: function (s) { return s.id; },
+        getCost: function (s) { return 15; },
+        getName: function (s) { return s.name || s.id; },
+      },
+      state,
+    );
+    skillKeys = sortedSkills.map(function (s) { return s.id; });
+  }
+
   for (var ki = 0; ki < skillKeys.length; ki++) {
     var key = skillKeys[ki];
     var skill = state.skills[key];
@@ -3640,6 +3706,9 @@ function renderSkillsTab(state, parent) {
         sk.xp += xpGain;
         // 记录训练次数
         st.flags._dailyTrainingCounts[skillKey] = trained + 1;
+        // 追踪训练频次（用于排序）
+        if (!st.stats.trainFreq) st.stats.trainFreq = {};
+        st.stats.trainFreq[skillKey] = (st.stats.trainFreq[skillKey] || 0) + 1;
         // 升级处理（新阈值：120）
         while (sk.xp >= (sk.level + 1) * 120 && sk.level < 100) {
           sk.xp -= (sk.level + 1) * 120;

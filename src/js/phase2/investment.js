@@ -1165,9 +1165,8 @@ function tickInvestmentDaily(state) {
 
   // 比特币
   if (inv.btcPrice > 0) {
-    inv.btcFearGreed = Math.max(
-      5,
-      Math.min(95, (inv.btcFearGreed || 50) + Random.float(-5, 5)),
+    inv.btcFearGreed = Math.round(
+      Math.max(5, Math.min(95, (inv.btcFearGreed || 50) + Random.float(-5, 5))),
     );
     var btcNewsMul =
       typeof getNewsEffectForBtc === "function"
@@ -1300,12 +1299,20 @@ function buyInvStock(symbol, shares) {
       shares: shares,
       avgPrice: m.price,
     });
+  // 追踪交易频次（用于排序）
+  if (state.stats) {
+    if (!state.stats.investFreq) state.stats.investFreq = {};
+    state.stats.investFreq[symbol] =
+      (state.stats.investFreq[symbol] || 0) + shares;
+  }
+  var isStockCat = def && def.category === "股票";
+  var qtyStr = isStockCat ? Math.floor(shares) : shares.toFixed(6);
   StateManager.addMessage(
     "买入 " +
       symbol +
       " " +
-      shares +
-      (def && def.category === "股票" ? "股" : " " + (def?.unit || "")),
+      qtyStr +
+      (isStockCat ? "股" : " " + (def?.unit || "")),
     "success",
   );
 }
@@ -1342,7 +1349,22 @@ function sellInvStock(symbol, shares) {
     inv.stockHoldings = inv.stockHoldings.filter(function (s) {
       return s.symbol !== symbol;
     });
-  StateManager.addMessage("卖出 " + symbol + " " + shares + "股", "success");
+  // 追踪卖出频次（用于排序）
+  if (state.stats) {
+    if (!state.stats.investFreq) state.stats.investFreq = {};
+    state.stats.investFreq[symbol] =
+      (state.stats.investFreq[symbol] || 0) + shares;
+  }
+  var isStockCat = def && def.category === "股票";
+  var qtyStr = isStockCat ? Math.floor(shares) : shares.toFixed(6);
+  StateManager.addMessage(
+    "卖出 " +
+      symbol +
+      " " +
+      qtyStr +
+      (isStockCat ? "股" : " " + (def?.unit || "")),
+    "success",
+  );
 }
 
 function buyBtc(amount) {
@@ -1363,7 +1385,7 @@ function buyBtc(amount) {
       ? Math.round((newTotal / inv.btcHoldings) * 100) / 100
       : 0;
   StateManager.addMessage(
-    "买入 " + amount + " BTC, 均价 ¥" + inv.btcAvgCost.toLocaleString(),
+    "买入 " + amount.toFixed(6) + " BTC, 均价 ¥" + inv.btcAvgCost.toFixed(2),
     "success",
   );
 }
@@ -1386,7 +1408,7 @@ function sellBtc(amount) {
   if (inv.btcHoldings <= 0) inv.btcAvgCost = 0;
   StateManager.addMessage(
     "卖出 " +
-      amount +
+      amount.toFixed(6) +
       " BTC, 到手 ¥" +
       Math.round(revenue).toLocaleString() +
       plStr,
@@ -1657,7 +1679,7 @@ function renderMarketSentiment(state, inv) {
       else if (mul < 1) bearScore += (1 - mul) * 8;
     }
   }
-  var fg = (inv && inv.btcFearGreed) || 50;
+  var fg = Math.round((inv && inv.btcFearGreed) || 50);
   if (fg > 65) bullScore += (fg - 65) * 0.4;
   else if (fg < 35) bearScore += (35 - fg) * 0.4;
 
@@ -2217,7 +2239,7 @@ function bindInvQtyHandlers(area, state, parent, tabFn) {
             qty = maxQ;
             input.value = qty.toFixed(dec);
             StateManager.addMessage(
-              "ℹ️ 现金不足，调整为 " + qty + "。",
+              "ℹ️ 现金不足，调整为 " + qty.toFixed(dec) + "。",
               "info",
             );
           }
@@ -2324,9 +2346,36 @@ function renderStocks(area, inv, state, parent) {
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
 
-  for (var i = 0; i < INV_STOCKS.length; i++) {
-    var s = INV_STOCKS[i];
-    if (s.category !== "股票") continue;
+  // ====== 分类排序系统：行业优先 → 交易频次 → 价格 → 代码 ======
+  var stockList = [];
+  for (var si = 0; si < INV_STOCKS.length; si++) {
+    if (INV_STOCKS[si].category === "股票") stockList.push(INV_STOCKS[si]);
+  }
+  if (typeof SortUtils !== "undefined") {
+    stockList = SortUtils.sortInteractiveList(
+      stockList,
+      {
+        categoryOrder: ["科技", "新能源", "消费", "金融", "房地产", "医药"],
+        freqMap: "investFreq",
+        getCategory: function (s) {
+          return s.industry || "其他";
+        },
+        getFreqKey: function (s) {
+          return s.symbol;
+        },
+        getCost: function (s) {
+          return s.basePrice || 0;
+        },
+        getName: function (s) {
+          return s.symbol;
+        },
+      },
+      state,
+    );
+  }
+
+  for (var i = 0; i < stockList.length; i++) {
+    var s = stockList[i];
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
     var h = null;
@@ -2348,6 +2397,7 @@ function renderStocks(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -2435,7 +2485,7 @@ function renderBtc(area, inv, state, parent) {
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
 
-  var fg = inv.btcFearGreed || 50;
+  var fg = Math.round(inv.btcFearGreed || 50);
   var fgColor = fg > 60 ? "#c4553d" : fg > 40 ? "#c49a3a" : "#4a9e5c";
   var fgLabel = fg > 60 ? "贪婪" : fg > 40 ? "中性" : "恐惧";
 
@@ -2486,6 +2536,9 @@ function renderBtc(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
+    var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
+    var sharesStr = h ? h.shares.toFixed(dec) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -2505,7 +2558,7 @@ function renderBtc(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价¥" +
@@ -2518,9 +2571,7 @@ function renderBtc(area, inv, state, parent) {
           "</div>"
         : "") +
       (function () {
-        var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
         var bq2 = s.basePrice > 1000 ? 0.01 : s.basePrice > 100 ? 1 : 100;
-        var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
         var qtyLabel = bq < 1 ? bq.toString() : Math.round(bq).toString();
         var qtyLabel2 = bq2 < 1 ? bq2.toString() : Math.round(bq2).toString();
         return stdInvBtns(
@@ -2623,6 +2674,7 @@ function renderPrecious(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -2642,7 +2694,7 @@ function renderPrecious(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价" +
@@ -2760,7 +2812,7 @@ function renderFutures(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价" +

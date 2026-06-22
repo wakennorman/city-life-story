@@ -1,7 +1,69 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（v2.1 内容扩充 — 地点-工作引用修复 + NPC 补充）
+> 最后更新: 2026-06-22（v2.2 分类排序系统扩展 — sort_utils.js + Trade/Skills/Stocks 排序）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
+
+## 2026-06-22 — 分类排序系统扩展 v1.0（sort_utils.js）
+
+### 背景
+
+ActionSort 系统（6层排序）此前仅用于行动Tab。但游戏中还有其他交互选项列表（Trade Goods 23个、Skills 10个、Stocks 30只）完全未使用排序，用户只能按数据定义顺序浏览。
+
+### 改动内容
+
+**新建 `src/js/core/sort_utils.js`** — 通用交互列表排序工具：
+
+- `SortUtils.sortInteractiveList(items, config, state)` — 5层通用排序（分类→优先级→频次→成本→名称）
+- `SortUtils.registerListType(id, config)` — 注册新列表类型（含内置3种）
+- `SortUtils.detectApplicableLists()` — 审计所有注册列表的排序覆盖率
+- 内置注册：`trade_goods` / `skills` / `stocks` 三种列表类型
+
+**新增频次追踪**（`state.js`）：
+
+- `state.stats.tradeFreq` — 每买卖1个商品+1
+- `state.stats.trainFreq` — 每次训练技能+1
+- `state.stats.investFreq` — 每次交易股票+1
+- 存档迁移：旧存档自动补空对象
+
+**启用排序的3个列表**：
+
+| 列表     | 分类顺序                          | 频次依据   | 消耗依据  | 文件          |
+| -------- | --------------------------------- | ---------- | --------- | ------------- |
+| 交易商品 | 食品→日用品→服装→电子→奢侈品→废品 | tradeFreq  | basePrice | render.js     |
+| 技能训练 | 实用型→学术型→体能型              | trainFreq  | AP=15     | render.js     |
+| 股票市场 | 科技→新能源→消费→金融→房地产→医药 | investFreq | basePrice | investment.js |
+
+**频次埋点**：
+
+- 交易：buy-btn、sell-one-btn、sell-all-btn、qty-action-btn 回调 → tradeFreq
+- 技能：训练成功后 → trainFreq
+- 投资：buyInvStock()/sellInvStock() 成功后 → investFreq
+
+### 涉及文件
+
+| 文件                                | 操作                                                                 |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| `src/js/core/sort_utils.js`         | **新建**                                                             |
+| `src/js/core/state.js`              | 修改 — stats 新增 tradeFreq/trainFreq/investFreq + 迁移              |
+| `src/js/ui/render.js`               | 修改 — renderTradeTab 商品排序 + renderSkillsTab 技能排序 + 频次埋点 |
+| `src/js/phase2/investment.js`       | 修改 — renderStocks 股票排序 + buyInvStock/sellInvStock 频次埋点     |
+| `src/index.html`                    | 修改 — 加载 sort_utils.js                                            |
+| `src/js/data/mechanics_registry.js` | 修改 — 新增 sort_system 百科条目                                     |
+| `src/DEVELOPMENT.md`                | 修改 — 本文档                                                        |
+
+### 检测规则（未来新增内容适用）
+
+一个列表适用分类排序系统的条件：
+
+1. 以可点击卡片/按钮网格渲染（非纯展示）
+2. 条目有唯一字符串 ID
+3. 条目数 > 5
+4. 有分类依据（category / type / industry 等字段，或可按规则分组）
+5. 玩家与它多轮次多次交互
+
+满足条件后调用 `SortUtils.registerListType()` 注册 + 在 render 函数调用 `sortInteractiveList()`。
+
+---
 
 ## 项目概述
 

@@ -1006,6 +1006,9 @@ function createDefaultState() {
     stats: {
       actionFreq: {}, // { actionId: 累计点击次数 }
       actionFirstUse: {}, // { actionId: 首次点击天数 }
+      tradeFreq: {}, // { goodId: 累计买卖次数 }
+      trainFreq: {}, // { skillKey: 累计训练次数 }
+      investFreq: {}, // { symbol: 累计交易次数 }
     },
 
     // --- 基本需求 (0-100) ---
@@ -1593,8 +1596,12 @@ class GameStateManager {
     }
     // v1.6 → v1.7 迁移：行动频次统计
     if (!s.stats) {
-      s.stats = { actionFreq: {}, actionFirstUse: {} };
+      s.stats = { actionFreq: {}, actionFirstUse: {}, tradeFreq: {}, trainFreq: {}, investFreq: {} };
     }
+    // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
+    if (!s.stats.tradeFreq) s.stats.tradeFreq = {};
+    if (!s.stats.trainFreq) s.stats.trainFreq = {};
+    if (!s.stats.investFreq) s.stats.investFreq = {};
     // v1.7 → v1.8 迁移：交易情报系统
     if (!s.trade) s.trade = {};
     if (!s.trade.visitedToday) s.trade.visitedToday = {};
@@ -2146,6 +2153,260 @@ function addDailyTransaction(state, type, category, amount, description) {
   };
 })();
 </script>
+    <script>/**
+ * 分类排序工具 — SortUtils
+ *
+ * 通用交互列表排序系统，适用于所有"可点击选项列表"。
+ * 将 ActionSort 的 分类优先+频次辅助 模式抽象为可配置的排序函数。
+ *
+ * 排序层级（5层）：
+ *   1. 分类固定顺序（生存必需 > 赚钱谋生 > ... > 其他）
+ *   2. 同类内默认优先级（关键条目置顶）
+ *   3. 交互频次（高频优先，轻量反馈）
+ *   4. 成本消耗（低消耗优先）
+ *   5. 名称拼音（最终保底）
+ *
+ * 用法：
+ *   SortUtils.sortInteractiveList(items, config, state) → sorted[]
+ *   SortUtils.registerListType(id, config) → 注册新列表类型
+ *   SortUtils.detectApplicableLists() → 审计所有注册列表
+ *
+ * 检测规则（判断一个列表是否适用本系统）：
+ *   1. 以可点击卡片/按钮的网格或列表渲染（非纯展示）
+ *   2. 条目有唯一字符串 ID
+ *   3. 条目数 >5
+ *   4. 条目有分类依据（category / type / industry 等字段，或可按规则分组）
+ *   5. 玩家与它多轮次多次交互
+ *
+ * 未来新增内容后自动使用本系统：
+ *   1. 在数据定义中检查是否有 category/type/industry 字段
+ *   2. 确认条目数是否 >5
+ *   3. 调用 SortUtils.registerListType() 注册配置
+ *   4. 在对应的 render 函数中调用 sortInteractiveList() 排序
+ *   5. 在交互事件中更新频次追踪
+ */
+
+(function () {
+  "use strict";
+
+  // ====== 注册表 ======
+  var LIST_REGISTRY = {};
+
+  /**
+   * 注册一个新列表类型
+   * @param {string} id - 唯一标识
+   * @param {Object} config - 排序配置
+   * @param {string} config.name - 显示名称
+   * @param {string[]} config.categoryOrder - 分类固定顺序（升序=先显示）
+   * @param {Object} [config.priorityMap] - 同类默认优先级 { id: number }
+   * @param {string} [config.freqMap] - state.stats 中的频次字段名
+   * @param {Function} config.getCategory - (item) => categoryId
+   * @param {Function} config.getFreqKey - (item) => key into freqMap
+   * @param {Function} [config.getCost] - (item) => cost number（升序优先）
+   * @param {Function} config.getName - (item) => display name string
+   * @param {string} [config.description] - 列表描述
+   */
+  function registerListType(id, config) {
+    if (!id || !config) return;
+    LIST_REGISTRY[id] = {
+      id: id,
+      name: config.name || id,
+      categoryOrder: config.categoryOrder || [],
+      priorityMap: config.priorityMap || {},
+      freqMap: config.freqMap || null,
+      getCategory: config.getCategory || function () { return "other"; },
+      getFreqKey: config.getFreqKey || function (item) { return item.id; },
+      getCost: config.getCost || function () { return 0; },
+      getName: config.getName || function (item) { return item.name || item.id || ""; },
+      description: config.description || "",
+    };
+  }
+
+  /**
+   * 通用多层排序
+   * @param {Array} items - 条目数组
+   * @param {Object} config - 排序配置（同 registerListType 的 config）
+   * @param {Object} state - 游戏状态（读取频次）
+   * @returns {Array} 新排序数组
+   */
+  function sortInteractiveList(items, config, state) {
+    if (!items || items.length === 0) return items || [];
+
+    // 构建 categoryOrder 查找表
+    var catIndex = {};
+    if (config.categoryOrder) {
+      for (var ci = 0; ci < config.categoryOrder.length; ci++) {
+        catIndex[config.categoryOrder[ci]] = ci;
+      }
+    }
+
+    // 获取频次映射
+    var freq = {};
+    if (config.freqMap && state && state.stats) {
+      freq = state.stats[config.freqMap] || {};
+    }
+
+    var defaultPriority = config.priorityMap || {};
+
+    var sorted = items.slice();
+    sorted.sort(function (a, b) {
+      // Level 1: 分类顺序
+      var catA = config.getCategory ? config.getCategory(a) : "other";
+      var catB = config.getCategory ? config.getCategory(b) : "other";
+      var idxA = catIndex.hasOwnProperty(catA) ? catIndex[catA] : 999;
+      var idxB = catIndex.hasOwnProperty(catB) ? catIndex[catB] : 999;
+      if (idxA !== idxB) return idxA - idxB;
+
+      // Level 2: 同类内默认优先级
+      var keyA = config.getFreqKey ? config.getFreqKey(a) : a.id;
+      var keyB = config.getFreqKey ? config.getFreqKey(b) : b.id;
+      var priA = defaultPriority.hasOwnProperty(keyA) ? defaultPriority[keyA] : 50;
+      var priB = defaultPriority.hasOwnProperty(keyB) ? defaultPriority[keyB] : 50;
+      if (priA !== priB) return priA - priB;
+
+      // Level 3: 交互频次（高频优先）
+      var freqA = freq[keyA] || 0;
+      var freqB = freq[keyB] || 0;
+      if (freqA !== freqB) return freqB - freqA;
+
+      // Level 4: 成本消耗（低消耗优先）
+      if (config.getCost) {
+        var costA = config.getCost(a) || 0;
+        var costB = config.getCost(b) || 0;
+        if (costA !== costB) return costA - costB;
+      }
+
+      // Level 5: 名称拼音（保底）
+      var nameA = config.getName ? config.getName(a) : (a.name || a.id || "");
+      var nameB = config.getName ? config.getName(b) : (b.name || b.id || "");
+      return nameA.localeCompare(nameB, "zh-CN");
+    });
+
+    return sorted;
+  }
+
+  /**
+   * 审计所有已注册列表的输出
+   * @param {Object} state - 游戏状态
+   * @returns {Array} 审计结果数组
+   */
+  function detectApplicableLists(state) {
+    var results = [];
+    var ids = Object.keys(LIST_REGISTRY);
+    for (var i = 0; i < ids.length; i++) {
+      var def = LIST_REGISTRY[ids[i]];
+      var freqSize = 0;
+      var freqKey = def.freqMap;
+      if (freqKey && state && state.stats && state.stats[freqKey]) {
+        freqSize = Object.keys(state.stats[freqKey]).length;
+      }
+      results.push({
+        id: def.id,
+        name: def.name,
+        description: def.description,
+        categoryCount: def.categoryOrder ? def.categoryOrder.length : 0,
+        freqTrackingActive: freqKey ? (state && state.stats && state.stats[freqKey] ? true : false) : false,
+        freqEntries: freqSize,
+        layers: 5,
+      });
+    }
+    return results;
+  }
+
+  /**
+   * 获取注册列表定义
+   * @param {string} id
+   * @returns {Object|null}
+   */
+  function getListDef(id) {
+    return LIST_REGISTRY[id] || null;
+  }
+
+  /**
+   * 获取所有已注册列表 ID
+   * @returns {string[]}
+   */
+  function getRegisteredIds() {
+    return Object.keys(LIST_REGISTRY);
+  }
+
+  // ====== 技能分类辅助函数 ======
+  var SKILL_CATEGORY_MAP = {
+    cooking: "practical",
+    repair: "practical",
+    electrician: "practical",
+    welding: "practical",
+    coding: "academic",
+    english: "academic",
+    accounting: "academic",
+    driving: "physical",
+    sales: "physical",
+    management: "physical",
+  };
+
+  function getSkillCategory(skillId) {
+    return SKILL_CATEGORY_MAP[skillId] || "physical";
+  }
+
+  // ====== 注册内置列表类型 ======
+
+  // 1. 交易商品列表
+  registerListType("trade_goods", {
+    name: "交易商品",
+    description: "市场购买/出售的商品列表，按品类→频次→价格→名称排序",
+    categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+    priorityMap: {
+      water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
+      pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+      daily_use: 15,
+    },
+    freqMap: "tradeFreq",
+    getCategory: function (g) { return g.category || "other"; },
+    getFreqKey: function (g) { return g.id; },
+    getCost: function (g) { return g.basePrice || 0; },
+    getName: function (g) { return g.name || g.id; },
+  });
+
+  // 2. 技能列表
+  registerListType("skills", {
+    name: "技能训练",
+    description: "技能训练列表，按实用型→学术型→体能型分组，频次优先",
+    categoryOrder: ["practical", "academic", "physical"],
+    priorityMap: {
+      cooking: 10, repair: 15, coding: 20, driving: 25,
+      english: 30, accounting: 35, electrician: 40,
+      management: 45, sales: 50, welding: 55,
+    },
+    freqMap: "trainFreq",
+    getCategory: function (s) { return getSkillCategory(s.id); },
+    getFreqKey: function (s) { return s.id; },
+    getCost: function (s) { return 15; },
+    getName: function (s) { return s.name || s.id; },
+  });
+
+  // 3. 投资股票列表（股票子标签内）
+  registerListType("stocks", {
+    name: "投资股票",
+    description: "股票市场（A股），按行业→频次→价格→代码排序",
+    categoryOrder: ["科技", "新能源", "消费", "金融", "房地产", "医药"],
+    priorityMap: {},
+    freqMap: "investFreq",
+    getCategory: function (s) { return s.industry || "其他"; },
+    getFreqKey: function (s) { return s.symbol; },
+    getCost: function (s) { return s.basePrice || 0; },
+    getName: function (s) { return s.symbol; },
+  });
+
+  // ====== 全局注册 ======
+  window.SortUtils = {
+    sortInteractiveList: sortInteractiveList,
+    registerListType: registerListType,
+    detectApplicableLists: detectApplicableLists,
+    getListDef: getListDef,
+    getRegisteredIds: getRegisteredIds,
+    getSkillCategory: getSkillCategory,
+  };
+})();</script>
     <script>/**
  * 金融计算模块 — 贷款额度动态评估引擎
  *
@@ -35105,6 +35366,72 @@ function hasIllness(state, illnessId) {
   }
 
   // ============================================================
+  //  sort_system — 分类排序系统
+  // ============================================================
+  MECHANICS.sort_system = {
+    id: "sort_system",
+    name: "分类排序系统",
+    icon: "🔀",
+    brief: "所有可点击选项列表的智能排序规则 — 分类优先、频次辅助",
+    related: ["mechanics:action_habits", "mechanics:ap"],
+    sections: [
+      {
+        kind: "desc",
+        text: "游戏中有多个可点击选项列表（行动、商品、技能、股票等），随着内容增多，合理的排序顺序至关重要。采用「分类优先、频次辅助」混合策略：先按自然分类分组，同类内高频使用的条目靠前。",
+      },
+      {
+        kind: "subhead",
+        text: "📋 适用列表一览",
+      },
+      {
+        kind: "list",
+        items: [
+          "行动选项（已启用）：生存必需→赚钱谋生→地点服务→购物装备→学习提升→社交休闲→金融理财→职业发展，同频次优先，低AP优先",
+          "交易商品（已启用）：食品→日用品→服装→电子→奢侈品→废品，同频次优先，低价优先",
+          "技能训练（已启用）：实用型→学术型→体能型，同频次优先，等级优先",
+          "股票市场（已启用）：科技→新能源→消费→金融→房地产→医药，同频次优先，低价优先",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "多买/卖你常交易的商品，它们会自动浮到列表前部！技能训练同理，常练的技能自动靠前。",
+      },
+      {
+        kind: "subhead",
+        text: "📐 排序层级（5层）",
+      },
+      {
+        kind: "list",
+        items: [
+          "第1层 — 分类固定顺序：关键分类先显示（如食物优先于奢侈品）",
+          "第2层 — 同类默认优先级：特定条目置顶（如水在大米之前）",
+          "第3层 — 交互频次：你最常操作的条目优先",
+          "第4层 — 消耗/价格：低AP/低价格优先显示",
+          "第5层 — 名称拼音：最终稳定兜底",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "🔍 如何判断一个新列表是否适用",
+      },
+      {
+        kind: "list",
+        items: [
+          "以可点击卡片/按钮网格渲染（非纯展示）",
+          "条目有唯一字符串 ID",
+          "条目数 > 5",
+          "有分类依据（category / type / industry 等字段，或可按规则分组）",
+          "玩家与该列表多轮次多次交互",
+        ],
+      },
+      {
+        kind: "desc",
+        text: "未来新增内容后，只要满足以上条件，开发时即可通过 SortUtils.registerListType() 注册并启用。",
+      },
+    ],
+  };
+
+  // ============================================================
   //  自检：列出未命中的引用，给开发者一个早期警告
   // ============================================================
   // 暴露为全局，main.js 启动后调用一次
@@ -49625,9 +49952,8 @@ function tickInvestmentDaily(state) {
 
   // 比特币
   if (inv.btcPrice > 0) {
-    inv.btcFearGreed = Math.max(
-      5,
-      Math.min(95, (inv.btcFearGreed || 50) + Random.float(-5, 5)),
+    inv.btcFearGreed = Math.round(
+      Math.max(5, Math.min(95, (inv.btcFearGreed || 50) + Random.float(-5, 5))),
     );
     var btcNewsMul =
       typeof getNewsEffectForBtc === "function"
@@ -49760,12 +50086,20 @@ function buyInvStock(symbol, shares) {
       shares: shares,
       avgPrice: m.price,
     });
+  // 追踪交易频次（用于排序）
+  if (state.stats) {
+    if (!state.stats.investFreq) state.stats.investFreq = {};
+    state.stats.investFreq[symbol] =
+      (state.stats.investFreq[symbol] || 0) + shares;
+  }
+  var isStockCat = def && def.category === "股票";
+  var qtyStr = isStockCat ? Math.floor(shares) : shares.toFixed(6);
   StateManager.addMessage(
     "买入 " +
       symbol +
       " " +
-      shares +
-      (def && def.category === "股票" ? "股" : " " + (def?.unit || "")),
+      qtyStr +
+      (isStockCat ? "股" : " " + (def?.unit || "")),
     "success",
   );
 }
@@ -49802,7 +50136,22 @@ function sellInvStock(symbol, shares) {
     inv.stockHoldings = inv.stockHoldings.filter(function (s) {
       return s.symbol !== symbol;
     });
-  StateManager.addMessage("卖出 " + symbol + " " + shares + "股", "success");
+  // 追踪卖出频次（用于排序）
+  if (state.stats) {
+    if (!state.stats.investFreq) state.stats.investFreq = {};
+    state.stats.investFreq[symbol] =
+      (state.stats.investFreq[symbol] || 0) + shares;
+  }
+  var isStockCat = def && def.category === "股票";
+  var qtyStr = isStockCat ? Math.floor(shares) : shares.toFixed(6);
+  StateManager.addMessage(
+    "卖出 " +
+      symbol +
+      " " +
+      qtyStr +
+      (isStockCat ? "股" : " " + (def?.unit || "")),
+    "success",
+  );
 }
 
 function buyBtc(amount) {
@@ -49823,7 +50172,7 @@ function buyBtc(amount) {
       ? Math.round((newTotal / inv.btcHoldings) * 100) / 100
       : 0;
   StateManager.addMessage(
-    "买入 " + amount + " BTC, 均价 ¥" + inv.btcAvgCost.toLocaleString(),
+    "买入 " + amount.toFixed(6) + " BTC, 均价 ¥" + inv.btcAvgCost.toFixed(2),
     "success",
   );
 }
@@ -49846,7 +50195,7 @@ function sellBtc(amount) {
   if (inv.btcHoldings <= 0) inv.btcAvgCost = 0;
   StateManager.addMessage(
     "卖出 " +
-      amount +
+      amount.toFixed(6) +
       " BTC, 到手 ¥" +
       Math.round(revenue).toLocaleString() +
       plStr,
@@ -50117,7 +50466,7 @@ function renderMarketSentiment(state, inv) {
       else if (mul < 1) bearScore += (1 - mul) * 8;
     }
   }
-  var fg = (inv && inv.btcFearGreed) || 50;
+  var fg = Math.round((inv && inv.btcFearGreed) || 50);
   if (fg > 65) bullScore += (fg - 65) * 0.4;
   else if (fg < 35) bearScore += (35 - fg) * 0.4;
 
@@ -50677,7 +51026,7 @@ function bindInvQtyHandlers(area, state, parent, tabFn) {
             qty = maxQ;
             input.value = qty.toFixed(dec);
             StateManager.addMessage(
-              "ℹ️ 现金不足，调整为 " + qty + "。",
+              "ℹ️ 现金不足，调整为 " + qty.toFixed(dec) + "。",
               "info",
             );
           }
@@ -50784,9 +51133,36 @@ function renderStocks(area, inv, state, parent) {
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
 
-  for (var i = 0; i < INV_STOCKS.length; i++) {
-    var s = INV_STOCKS[i];
-    if (s.category !== "股票") continue;
+  // ====== 分类排序系统：行业优先 → 交易频次 → 价格 → 代码 ======
+  var stockList = [];
+  for (var si = 0; si < INV_STOCKS.length; si++) {
+    if (INV_STOCKS[si].category === "股票") stockList.push(INV_STOCKS[si]);
+  }
+  if (typeof SortUtils !== "undefined") {
+    stockList = SortUtils.sortInteractiveList(
+      stockList,
+      {
+        categoryOrder: ["科技", "新能源", "消费", "金融", "房地产", "医药"],
+        freqMap: "investFreq",
+        getCategory: function (s) {
+          return s.industry || "其他";
+        },
+        getFreqKey: function (s) {
+          return s.symbol;
+        },
+        getCost: function (s) {
+          return s.basePrice || 0;
+        },
+        getName: function (s) {
+          return s.symbol;
+        },
+      },
+      state,
+    );
+  }
+
+  for (var i = 0; i < stockList.length; i++) {
+    var s = stockList[i];
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
     var h = null;
@@ -50808,6 +51184,7 @@ function renderStocks(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -50895,7 +51272,7 @@ function renderBtc(area, inv, state, parent) {
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
 
-  var fg = inv.btcFearGreed || 50;
+  var fg = Math.round(inv.btcFearGreed || 50);
   var fgColor = fg > 60 ? "#c4553d" : fg > 40 ? "#c49a3a" : "#4a9e5c";
   var fgLabel = fg > 60 ? "贪婪" : fg > 40 ? "中性" : "恐惧";
 
@@ -50946,6 +51323,9 @@ function renderBtc(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
+    var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
+    var sharesStr = h ? h.shares.toFixed(dec) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -50965,7 +51345,7 @@ function renderBtc(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价¥" +
@@ -50978,9 +51358,7 @@ function renderBtc(area, inv, state, parent) {
           "</div>"
         : "") +
       (function () {
-        var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
         var bq2 = s.basePrice > 1000 ? 0.01 : s.basePrice > 100 ? 1 : 100;
-        var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
         var qtyLabel = bq < 1 ? bq.toString() : Math.round(bq).toString();
         var qtyLabel2 = bq2 < 1 ? bq2.toString() : Math.round(bq2).toString();
         return stdInvBtns(
@@ -51083,6 +51461,7 @@ function renderPrecious(area, inv, state, parent) {
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
+    var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -51102,7 +51481,7 @@ function renderPrecious(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价" +
@@ -51220,7 +51599,7 @@ function renderFutures(area, inv, state, parent) {
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持有 " +
-          h.shares +
+          sharesStr +
           " " +
           unit +
           " 均价" +
@@ -72388,7 +72767,7 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.ma) {
     const { ma5, ma7, ma20 } = indicators.ma;
-    lines.push(`  MA5: ¥${ma5} | MA7: ¥${ma7} | MA20: ¥${ma20}`);
+    lines.push(`  MA5: ¥${ma5.toFixed(2)} | MA7: ¥${ma7.toFixed(2)} | MA20: ¥${ma20.toFixed(2)}`);
     if (ma5 > ma7 && ma7 > ma20) lines.push("  ✅ 均线多头排列，上涨趋势明确");
     else if (ma5 < ma7 && ma7 < ma20)
       lines.push("  ❌ 均线空头排列，下跌趋势明确");
@@ -72397,13 +72776,13 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.macd) {
     const { macd, signal, histogram } = indicators.macd;
-    lines.push(`  MACD: ${macd} | 信号线: ${signal} | 柱状图: ${histogram}`);
+    lines.push(`  MACD: ${macd.toFixed(2)} | ${signal} | 柱状图: ${histogram.toFixed(2)}`);
     lines.push(`  ${histogram > 0 ? "🟢 动能正向" : "🔴 动能负向"}`);
   }
 
   if (indicators.rsi) {
     const { value, signal: rsiSignal } = indicators.rsi;
-    lines.push(`  RSI(14): ${value} → ${rsiSignal}`);
+    lines.push(`  RSI(14): ${value.toFixed(1)} → ${rsiSignal}`);
   }
 
   if (indicators.bollinger) {
@@ -85080,6 +85459,26 @@ function renderTradeTab(state, parent) {
     return;
   }
 
+  // ====== 分类排序系统：品类优先 → 频次辅助 → 价格 → 名称 ======
+  if (typeof SortUtils !== "undefined") {
+    goodsList = SortUtils.sortInteractiveList(
+      goodsList,
+      {
+        categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+        priorityMap: {
+          water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
+          pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+        },
+        freqMap: "tradeFreq",
+        getCategory: function (g) { return g.category || "other"; },
+        getFreqKey: function (g) { return g.id; },
+        getCost: function (g) { return g.basePrice || 0; },
+        getName: function (g) { return g.name || g.id; },
+      },
+      state,
+    );
+  }
+
   // 背包中的商品（方便快速卖出）
   const ownedGoods = state.inventory.items || [];
   if (ownedGoods.length > 0) {
@@ -85444,10 +85843,15 @@ function renderTradeTab(state, parent) {
         const qty = parseInt(btn.dataset.qty) || 1;
         if (typeof buyGood === "function") {
           buyGood(goodId, qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          // 追踪买卖频次
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -85460,9 +85864,10 @@ function renderTradeTab(state, parent) {
         const qty = parseInt(btn.dataset.qty) || 10;
         if (typeof buyWholesale === "function") {
           buyWholesale(goodId, qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+          }
           renderMessageLog(StateManager.getState());
         }
       });
@@ -85475,10 +85880,14 @@ function renderTradeTab(state, parent) {
         const goodId = btn.dataset.good;
         if (typeof sellGood === "function") {
           sellGood(goodId, 1);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          var st = StateManager.getState();
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + 1;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -85487,15 +85896,19 @@ function renderTradeTab(state, parent) {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const goodId = btn.dataset.good;
-        const item = StateManager.getState().inventory.items.find(
+        const st = StateManager.getState();
+        const item = st.inventory.items.find(
           (i) => i.id === goodId,
         );
         if (item && typeof sellGood === "function") {
           sellGood(goodId, item.qty);
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
-          renderSidebar(StateManager.getState());
-          renderHeader(StateManager.getState());
-          renderMessageLog(StateManager.getState());
+          if (st && st.stats) {
+            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + item.qty;
+          }
+          renderCurrentTab(st, parent.parentElement);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -85657,6 +86070,11 @@ function renderTradeTab(state, parent) {
             }
             buyGood(goodId, qty);
           }
+          // 追踪自定义买卖频次
+          var st2 = StateManager.getState();
+          if (st2 && st2.stats) {
+            st2.stats.tradeFreq[goodId] = (st2.stats.tradeFreq[goodId] || 0) + qty;
+          }
         } else {
           // sell
           const item = StateManager.getState().inventory.items.find(
@@ -85673,6 +86091,11 @@ function renderTradeTab(state, parent) {
           }
           if (typeof sellGood === "function") {
             sellGood(goodId, qty);
+          }
+          // 追踪自定义卖出频次
+          var st3 = StateManager.getState();
+          if (st3 && st3.stats) {
+            st3.stats.tradeFreq[goodId] = (st3.stats.tradeFreq[goodId] || 0) + qty;
           }
         }
         // 成功后收起面板
@@ -85866,6 +86289,28 @@ function renderSkillsTab(state, parent) {
   var skillNamesCache = skillNames;
 
   var skillKeys = Object.keys(state.skills);
+
+  // ====== 分类排序系统：实用型→学术型→体能型 → 训练频次 → 等级 → 名称 ======
+  if (typeof SortUtils !== "undefined") {
+    var skillObjs = skillKeys.map(function (k) {
+      return { id: k, name: skillNamesCache[k] || k, level: state.skills[k].level };
+    });
+    var sortedSkills = SortUtils.sortInteractiveList(
+      skillObjs,
+      {
+        categoryOrder: ["practical", "academic", "physical"],
+        priorityMap: { cooking: 10, repair: 15, coding: 20, driving: 25, english: 30, accounting: 35, electrician: 40, management: 45, sales: 50, welding: 55 },
+        freqMap: "trainFreq",
+        getCategory: function (s) { return SortUtils.getSkillCategory ? SortUtils.getSkillCategory(s.id) : "physical"; },
+        getFreqKey: function (s) { return s.id; },
+        getCost: function (s) { return 15; },
+        getName: function (s) { return s.name || s.id; },
+      },
+      state,
+    );
+    skillKeys = sortedSkills.map(function (s) { return s.id; });
+  }
+
   for (var ki = 0; ki < skillKeys.length; ki++) {
     var key = skillKeys[ki];
     var skill = state.skills[key];
@@ -86108,6 +86553,9 @@ function renderSkillsTab(state, parent) {
         sk.xp += xpGain;
         // 记录训练次数
         st.flags._dailyTrainingCounts[skillKey] = trained + 1;
+        // 追踪训练频次（用于排序）
+        if (!st.stats.trainFreq) st.stats.trainFreq = {};
+        st.stats.trainFreq[skillKey] = (st.stats.trainFreq[skillKey] || 0) + 1;
         // 升级处理（新阈值：120）
         while (sk.xp >= (sk.level + 1) * 120 && sk.level < 100) {
           sk.xp -= (sk.level + 1) * 120;
