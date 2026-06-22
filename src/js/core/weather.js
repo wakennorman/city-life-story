@@ -63,115 +63,107 @@ const WEATHER_TYPES = [
   },
 
   // ============================================================
-  // 待完成：新增天气类型 — 参考真实中国气象数据 + 《大多数》天气系统
-  // 实现提示：在 WEATHER_TYPES 数组中追加，并在 SEASONS 的 weatherWeights 中配置权重
-  // 参考来源：中国气象局公开数据、《大多数》天气系统
+  // 极端天气 — 正式实现（v2.1 Batch 6，参考真实中国气象数据）
   // ============================================================
-  // TODO: 待实现 - 高温预警（参考中国夏季高温天气）
-  // {
-  //   id: "heatwave",
-  //   name: "高温预警",
-  //   icon: "🥵",
-  //   outdoorMod: 0.6,
-  //   fatigueBonus: 10,
-  //   happinessBonus: -8,
-  //   healthMod: -2,
-  //   desc: "室外工作疲劳+10，卫生-5，水价格×1.5",
-  //   effects: {
-  //     outdoorFatigueBonus: 10,
-  //     hygieneMod: -5,
-  //     priceMod: { water: 1.5, beer: 1.3 },
-  //     illnessRisk: { heatStroke: 0.05 },
-  //   },
-  // },
-  // TODO: 待实现 - 寒潮（参考中国冬季寒潮）
-  // {
-  //   id: "cold_snap",
-  //   name: "寒潮",
-  //   icon: "🥶",
-  //   outdoorMod: 0.5,
-  //   fatigueBonus: 8,
-  //   happinessBonus: -5,
-  //   healthMod: -3,
-  //   desc: "室外工作疲劳+8，健康-3，衣物价格×1.3",
-  //   effects: {
-  //     outdoorFatigueBonus: 8,
-  //     healthMod: -3,
-  //     priceMod: { clothing: 1.3, warm_coat: 1.2 },
-  //     illnessRisk: { coldFlu: 0.08 },
-  //   },
-  // },
-  // TODO: 待实现 - 重度雾霾（参考北京雾霾历史数据）
-  // {
-  //   id: "heavy_smog",
-  //   name: "重度雾霾",
-  //   icon: "😷",
-  //   outdoorMod: 0.5,
-  //   fatigueBonus: 5,
-  //   happinessBonus: -8,
-  //   healthMod: -2,
-  //   respiratoryDiseaseBonus: 0.15,
-  //   desc: "所有工作健康-2，呼吸系统疾病概率+15%",
-  //   effects: {
-  //     healthMod: -2,
-  //     illnessRisk: { respiratoryDisease: 0.15 },
-  //     outdoorMod: 0.5,
-  //     maskRequired: true,
-  //   },
-  // },
-  // TODO: 待实现 - 台风（参考东南沿海台风）
-  // {
-  //   id: "typhoon",
-  //   name: "台风",
-  //   icon: "🌀",
-  //   outdoorMod: 0,
-  //   fatigueBonus: 20,
-  //   happinessBonus: -15,
-  //   healthMod: -2,
-  //   outdoorJobsBlocked: true,
-  //   indoorJobIncomeMod: 0.8,
-  //   desc: "所有室外工作不可用，室内工作收入-20%",
-  //   effects: {
-  //     outdoorJobsBlocked: true,
-  //     indoorJobIncomeMod: 0.8,
-  //     footTrafficMod: 0.1,
-  //     duration: { min: 1, max: 2 },
-  //   },
-  // },
-  // TODO: 待实现 - 沙尘暴（参考北方春季沙尘）
-  // {
-  //   id: "sandstorm",
-  //   name: "沙尘暴",
-  //   icon: "🌪️",
-  //   outdoorMod: 0.4,
-  //   fatigueBonus: 12,
-  //   happinessBonus: -10,
-  //   healthMod: -3,
-  //   desc: "室外工作疲劳+12，健康-3，呼吸系统疾病概率+20%",
-  //   effects: {
-  //     outdoorFatigueBonus: 12,
-  //     healthMod: -3,
-  //     illnessRisk: { respiratoryDisease: 0.2 },
-  //     hygieneMod: -10,
-  //   },
-  // },
-  // TODO: 待实现 - 梅雨季（参考江南梅雨）
-  // {
-  //   id: "plum_rain",
-  //   name: "梅雨季",
-  //   icon: "🌧️",
-  //   outdoorMod: 0.6,
-  //   fatigueBonus: 8,
-  //   happinessBonus: -6,
-  //   healthMod: -1,
-  //   desc: "连续阴雨，室外工作疲劳+8，心情-6，食物易发霉",
-  //   effects: {
-  //     outdoorFatigueBonus: 8,
-  //     happinessBonus: -6,
-  //     foodPerishRate: 1.5, // 食物过期速度+50%
-  //     humidity: 90,
-  //   },
-  // },
+  {
+    id: "heatwave",
+    name: "高温预警",
+    icon: "🥵",
+    outdoorMod: 0.6,
+    fatigueBonus: 10,
+    happinessBonus: -8,
+    healthMod: -2,
+    desc: "室外工作疲劳+10，卫生-5，水价格×1.5",
+    effects: {
+      outdoorFatigueBonus: 10,
+      hygieneMod: -5,
+      priceMod: { water: 1.5, beer: 1.3 },
+      illnessRisk: { heatStroke: 0.05 },
+    },
+  },
+  {
+    id: "cold_snap",
+    name: "寒潮",
+    icon: "🥶",
+    outdoorMod: 0.5,
+    fatigueBonus: 8,
+    happinessBonus: -5,
+    healthMod: -3,
+    desc: "室外工作疲劳+8，健康-3，衣物价格×1.3",
+    effects: {
+      outdoorFatigueBonus: 8,
+      healthMod: -3,
+      priceMod: { clothing: 1.3, warm_coat: 1.2 },
+      illnessRisk: { coldFlu: 0.08 },
+    },
+  },
+  {
+    id: "heavy_smog",
+    name: "重度雾霾",
+    icon: "😷",
+    outdoorMod: 0.5,
+    fatigueBonus: 5,
+    happinessBonus: -8,
+    healthMod: -2,
+    respiratoryDiseaseBonus: 0.15,
+    desc: "所有工作健康-2，呼吸系统疾病概率+15%",
+    effects: {
+      healthMod: -2,
+      illnessRisk: { respiratoryDisease: 0.15 },
+      outdoorMod: 0.5,
+      maskRequired: true,
+    },
+  },
+  {
+    id: "typhoon",
+    name: "台风",
+    icon: "🌀",
+    outdoorMod: 0,
+    fatigueBonus: 20,
+    happinessBonus: -15,
+    healthMod: -2,
+    outdoorJobsBlocked: true,
+    indoorJobIncomeMod: 0.8,
+    desc: "所有室外工作不可用，室内工作收入-20%",
+    effects: {
+      outdoorJobsBlocked: true,
+      indoorJobIncomeMod: 0.8,
+      footTrafficMod: 0.1,
+      duration: { min: 1, max: 2 },
+    },
+  },
+  {
+    id: "sandstorm",
+    name: "沙尘暴",
+    icon: "🌪️",
+    outdoorMod: 0.4,
+    fatigueBonus: 12,
+    happinessBonus: -10,
+    healthMod: -3,
+    desc: "室外工作疲劳+12，健康-3，呼吸系统疾病概率+20%",
+    effects: {
+      outdoorFatigueBonus: 12,
+      healthMod: -3,
+      illnessRisk: { respiratoryDisease: 0.2 },
+      hygieneMod: -10,
+    },
+  },
+  {
+    id: "plum_rain",
+    name: "梅雨季",
+    icon: "🌧️",
+    outdoorMod: 0.6,
+    fatigueBonus: 8,
+    happinessBonus: -6,
+    healthMod: -1,
+    desc: "连续阴雨，室外工作疲劳+8，心情-6，食物易发霉",
+    effects: {
+      outdoorFatigueBonus: 8,
+      happinessBonus: -6,
+      foodPerishRate: 1.5,
+      humidity: 90,
+    },
+  },
 ];
 
 const SEASONS = [
@@ -181,11 +173,14 @@ const SEASONS = [
     icon: "🌸",
     tempRange: [15, 28],
     weatherWeights: {
-      sunny: 0.3,
-      cloudy: 0.3,
-      rainy: 0.2,
-      windy: 0.15,
+      sunny: 0.25,
+      cloudy: 0.25,
+      rainy: 0.15,
+      windy: 0.12,
       foggy: 0.05,
+      heavy_smog: 0.05,
+      sandstorm: 0.08,
+      plum_rain: 0.05,
     },
   },
   {
@@ -194,11 +189,15 @@ const SEASONS = [
     icon: "☀️",
     tempRange: [25, 38],
     weatherWeights: {
-      sunny: 0.4,
-      cloudy: 0.2,
-      rainy: 0.15,
-      stormy: 0.15,
-      foggy: 0.1,
+      sunny: 0.3,
+      cloudy: 0.15,
+      rainy: 0.12,
+      stormy: 0.12,
+      heatwave: 0.12,
+      foggy: 0.06,
+      heavy_smog: 0.05,
+      typhoon: 0.05,
+      plum_rain: 0.03,
     },
   },
   {
@@ -207,11 +206,14 @@ const SEASONS = [
     icon: "🍂",
     tempRange: [12, 25],
     weatherWeights: {
-      sunny: 0.25,
-      cloudy: 0.3,
-      rainy: 0.2,
-      windy: 0.2,
+      sunny: 0.22,
+      cloudy: 0.25,
+      rainy: 0.15,
+      windy: 0.15,
       foggy: 0.05,
+      heavy_smog: 0.08,
+      sandstorm: 0.05,
+      plum_rain: 0.05,
     },
   },
   {
@@ -220,11 +222,14 @@ const SEASONS = [
     icon: "❄️",
     tempRange: [-5, 10],
     weatherWeights: {
-      sunny: 0.2,
-      cloudy: 0.25,
-      snowy: 0.25,
-      windy: 0.2,
-      rainy: 0.1,
+      sunny: 0.18,
+      cloudy: 0.22,
+      snowy: 0.22,
+      windy: 0.15,
+      rainy: 0.05,
+      foggy: 0.05,
+      heavy_smog: 0.08,
+      cold_snap: 0.05,
     },
   },
 ];
@@ -316,6 +321,12 @@ function getWeatherFootTrafficMod(state) {
     windy: 0.7,
     snowy: 0.25,
     foggy: 0.5,
+    heatwave: 0.4,
+    cold_snap: 0.3,
+    heavy_smog: 0.35,
+    typhoon: 0.05,
+    sandstorm: 0.2,
+    plum_rain: 0.45,
   };
   const base = traffic[state.weather.current] || 1.0;
   // 时段修正：下午人流多，晚上少
@@ -337,6 +348,12 @@ function getWeatherDemandBonus(weatherId, goodId) {
     windy: { clothing: 1.1 },
     snowy: { clothing: 1.4, instant_noodles: 1.2, cigarettes: 1.1 },
     foggy: { daily_use: 1.1, cigarettes: 1.1 },
+    heatwave: { water: 1.8, beer: 1.5, ice_cream: 1.6 },
+    cold_snap: { clothing: 1.5, instant_noodles: 1.3, beer: 1.2 },
+    heavy_smog: { daily_use: 1.2, masks: 2.0, cigarettes: 1.1 },
+    typhoon: { instant_noodles: 1.5, water: 1.4, canned_food: 1.3 },
+    sandstorm: { masks: 2.0, daily_use: 1.2, water: 1.3 },
+    plum_rain: { instant_noodles: 1.2, daily_use: 1.1, rice: 1.1 },
   };
   return demandMap[weatherId]?.[goodId] || 1.0;
 }
@@ -501,12 +518,26 @@ function applyWeatherDailyEffects(state) {
     );
   }
 
-  // 极端场景提示
+  // 极端天气特殊效果
   var wId = state.weather.current;
-  if (wId === "stormy" && Random.chance(0.15))
-    StateManager.addMessage("⚡ 雷雨交加，不宜外出！", "danger");
-  if (wId === "snowy" && Random.chance(0.2))
-    StateManager.addMessage("❄️ 大雪纷飞，行动不便！", "warning");
+  if (wId === "heatwave" && Random.chance(0.2))
+    StateManager.addMessage("🥵 高温预警！注意防暑，多喝水！", "warning");
+  if (wId === "cold_snap" && Random.chance(0.2))
+    StateManager.addMessage("🥶 寒潮来袭！注意保暖，避免感冒！", "warning");
+  if (wId === "heavy_smog" && Random.chance(0.25))
+    StateManager.addMessage(
+      "😷 重度雾霾！建议佩戴口罩，减少户外活动！",
+      "danger",
+    );
+  if (wId === "typhoon" && Random.chance(0.3))
+    StateManager.addMessage(
+      "🌀 台风登陆！所有室外工作暂停，注意安全！",
+      "danger",
+    );
+  if (wId === "sandstorm" && Random.chance(0.25))
+    StateManager.addMessage("🌪️ 沙尘暴！注意防护，避免呼吸道疾病！", "danger");
+  if (wId === "plum_rain" && Random.chance(0.15))
+    StateManager.addMessage("🌧️ 梅雨季来临！注意防潮防霉！", "warning");
 
   // 舒适度计算
   if (!state.status) state.status = {};
@@ -518,6 +549,13 @@ function applyWeatherDailyEffects(state) {
   else if (tempEffect.name === "寒冷") comfort -= 10;
   else if (tempEffect.name === "严寒") comfort -= 20;
   else if (tempEffect.name === "极寒") comfort -= 30;
+  // 极端天气额外影响舒适度
+  if (wId === "heatwave") comfort -= 10;
+  else if (wId === "cold_snap") comfort -= 10;
+  else if (wId === "heavy_smog") comfort -= 15;
+  else if (wId === "typhoon") comfort -= 20;
+  else if (wId === "sandstorm") comfort -= 15;
+  else if (wId === "plum_rain") comfort -= 8;
   if (state.needs.hygiene < 30) comfort -= 15;
   else if (state.needs.hygiene < 60) comfort -= 5;
   comfort = Math.max(0, Math.min(100, comfort));
@@ -547,6 +585,27 @@ function getWeatherGoodPriceMod(state, goodId) {
   if (wId === "windy") {
     if (goodId === "clothing") base = 1.1;
   }
+  // 新增极端天气价格影响
+  if (wId === "heatwave") {
+    if (goodId === "water") base = 1.5;
+    if (goodId === "beer") base = 1.3;
+  }
+  if (wId === "cold_snap") {
+    if (goodId === "clothing") base = 1.3;
+    if (goodId === "warm_coat") base = 1.2;
+  }
+  if (wId === "heavy_smog" || wId === "sandstorm") {
+    if (goodId === "masks") base = 2.0;
+    if (goodId === "daily_use") base = 1.2;
+  }
+  if (wId === "typhoon") {
+    if (goodId === "instant_noodles") base = 1.5;
+    if (goodId === "water") base = 1.4;
+  }
+  if (wId === "plum_rain") {
+    if (goodId === "instant_noodles") base = 1.2;
+    if (goodId === "rice") base = 1.1;
+  }
   return base;
 }
 
@@ -559,6 +618,12 @@ function getWeatherTransportRiskMod(state) {
     windy: 1.1,
     snowy: 1.3,
     foggy: 1.1,
+    heatwave: 1.1,
+    cold_snap: 1.15,
+    heavy_smog: 1.2,
+    typhoon: 1.5,
+    sandstorm: 1.3,
+    plum_rain: 1.1,
   };
   return riskMap[state.weather.current] || 1.0;
 }
@@ -566,9 +631,16 @@ function getWeatherTransportRiskMod(state) {
 /** 天气是否不宜出行 */
 function isWeatherTravelBlocked(state) {
   if (!state.weather) return false;
-  return (
-    state.weather.current === "stormy" || state.weather.current === "snowy"
-  );
+  // 极端天气阻断出行
+  const blockedWeathers = [
+    "stormy",
+    "snowy",
+    "typhoon",
+    "sandstorm",
+    "cold_snap",
+    "heatwave",
+  ];
+  return blockedWeathers.includes(state.weather.current);
 }
 
 /** 获取天气详细描述文本 */
@@ -590,5 +662,9 @@ function getWeatherEnhancedDesc(state) {
   if (wDef.happinessBonus < -3) parts.push("☹️心情差");
   if (wDef.fatigueBonus > 5) parts.push("😰易疲劳");
   if (tempEffect.healthMod < -2) parts.push("⚠️影响健康");
+  if (wDef.outdoorMod <= 0.4) parts.push("🚫户外受限");
+  if (wDef.id === "typhoon") parts.push("🔒室外停工");
+  if (wDef.id === "heavy_smog" || wDef.id === "sandstorm")
+    parts.push("😷需防护");
   return parts.join(" · ");
 }
