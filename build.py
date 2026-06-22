@@ -49,8 +49,10 @@ def inline_js(html):
                     capture_output=True, text=True, check=True
                 )
             except subprocess.CalledProcessError as e:
-                print(f'\n❌ JS语法错误: {path}')
-                print(e.stderr.strip())
+                err_msg = e.stderr.strip() if e.stderr else '语法错误'
+                # 避免GBK终端炸emoji
+                print('\n[JS语法错误] %s' % path)
+                print(err_msg)
                 sys.exit(1)
             js = read_file(path)
             return f'<script>{js}</script>'
