@@ -6,12 +6,16 @@
  */
 
 const GOODS = [
+  // ====== 日用品类 ======
   {
     id: "water",
     name: "瓶装水",
     basePrice: 1.5,
     unit: "瓶",
     category: "daily",
+    buyLocations: ["wholesaleMarket", "slum", "factoryZone"],
+    sellLocations: ["commercialDist", "construction", "park"],
+    seasonal: { summer: 1.3, winter: 0.9 },
   },
   {
     id: "instant_noodles",
@@ -19,23 +23,18 @@ const GOODS = [
     basePrice: 4,
     unit: "袋",
     category: "food",
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["factoryZone", "construction", "commercialDist"],
   },
-  { id: "snacks", name: "零食", basePrice: 5, unit: "包", category: "food" },
-  { id: "fruits", name: "水果", basePrice: 6, unit: "斤", category: "food" },
   {
-    id: "vegetables",
-    name: "蔬菜",
-    basePrice: 3,
-    unit: "斤",
-    category: "food",
-  },
-  { id: "beer", name: "啤酒", basePrice: 4, unit: "瓶", category: "luxury" },
-  {
-    id: "cigarettes",
-    name: "香烟",
-    basePrice: 15,
+    id: "snacks",
+    name: "零食",
+    basePrice: 5,
     unit: "包",
-    category: "luxury",
+    category: "food",
+    buyLocations: ["wholesaleMarket", "school"],
+    sellLocations: ["commercialDist", "school", "park"],
+    seasonal: { winter: 1.1 },
   },
   {
     id: "daily_use",
@@ -43,13 +42,66 @@ const GOODS = [
     basePrice: 10,
     unit: "件",
     category: "daily",
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "techPark", "hospital"],
   },
+
+  // ====== 食品类 ======
+  {
+    id: "fruits",
+    name: "水果",
+    basePrice: 6,
+    unit: "斤",
+    category: "food",
+    buyLocations: ["wholesaleMarket", "school", "slum"],
+    sellLocations: ["commercialDist", "hospital", "techPark"],
+    seasonal: { autumn: 0.7, summer: 1.2 },
+  },
+  {
+    id: "vegetables",
+    name: "蔬菜",
+    basePrice: 3,
+    unit: "斤",
+    category: "food",
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "hospital"],
+    seasonal: { spring: 0.8, winter: 1.3 },
+  },
+  {
+    id: "beer",
+    name: "啤酒",
+    basePrice: 4,
+    unit: "瓶",
+    category: "luxury",
+    buyLocations: ["wholesaleMarket", "factoryZone"],
+    sellLocations: ["commercialDist", "construction", "factoryZone"],
+    seasonal: { summer: 1.3, winter: 0.85 },
+  },
+  {
+    id: "cigarettes",
+    name: "香烟",
+    basePrice: 15,
+    unit: "包",
+    category: "luxury",
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: [
+      "commercialDist",
+      "construction",
+      "factoryZone",
+      "hospital",
+    ],
+  },
+
+  // ====== 服饰电子类 ======
   {
     id: "clothing",
     name: "二手衣物",
     basePrice: 25,
     unit: "件",
     category: "clothing",
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "techPark"],
+    seasonal: { autumn: 1.2, summer: 0.7 },
   },
   {
     id: "electronics",
@@ -57,13 +109,19 @@ const GOODS = [
     basePrice: 80,
     unit: "个",
     category: "electronics",
+    buyLocations: ["wholesaleMarket", "techPark"],
+    sellLocations: ["commercialDist", "techPark", "school"],
   },
+
+  // ====== 废品类 ======
   {
     id: "scrap_metal",
     name: "废金属",
     basePrice: 2.5,
     unit: "斤",
     category: "scrap",
+    buyLocations: ["slum", "construction"],
+    sellLocations: ["wholesaleMarket", "factoryZone"],
   },
   {
     id: "scrap_paper",
@@ -71,6 +129,8 @@ const GOODS = [
     basePrice: 0.8,
     unit: "斤",
     category: "scrap",
+    buyLocations: ["slum", "school"],
+    sellLocations: ["wholesaleMarket", "factoryZone"],
   },
   {
     id: "scrap_plastic",
@@ -78,6 +138,8 @@ const GOODS = [
     basePrice: 1.5,
     unit: "斤",
     category: "scrap",
+    buyLocations: ["slum", "commercialDist"],
+    sellLocations: ["wholesaleMarket", "factoryZone"],
   },
 
   // ============================================================
@@ -245,76 +307,278 @@ const GOODS = [
   },
 
   // ============================================================
-  // 待完成：新增商品类别 — 参考《模拟人生》物品系统
-  // 实现提示：在 GOODS 数组中追加，注意 isIngredient 字段区分食材
+  // 新增商品类别 — 正式实现（v2.1 内容扩充）
+  // 参考来源：《模拟人生》物品系统 / 真实中国市场价格（2024年）
   // ============================================================
-  // TODO: 待实现 - 书籍类
-  // { id: "second_hand_book", name: "二手书", basePrice: 15, unit: "本", category: "books", desc: "可提升智力，随机获得技能XP" },
-  // TODO: 待实现 - 鲜花类
-  // { id: "carnation", name: "康乃馨", basePrice: 5, unit: "支", category: "flowers", desc: "送礼NPC增加好感，母亲节/教师节专用" },
-  // { id: "rose", name: "玫瑰花", basePrice: 10, unit: "支", category: "flowers", desc: "情人节/七夕特殊礼物，表白必备" },
-  // TODO: 待实现 - 药品类
-  // { id: "cold_medicine", name: "感冒药", basePrice: 20, unit: "盒", category: "medicine", desc: "治疗感冒类疾病" },
-  // { id: "painkiller", name: "止痛药", basePrice: 10, unit: "盒", category: "medicine", desc: "缓解疼痛，临时健康+5" },
-  // { id: "vitamins", name: "维生素", basePrice: 25, unit: "瓶", category: "medicine", desc: "每日健康+1" },
-  // TODO: 待实现 - 文具类
-  // { id: "pen", name: "笔", basePrice: 3, unit: "支", category: "stationery", desc: "提升学习XP+5%" },
-  // { id: "notebook_item", name: "笔记本", basePrice: 5, unit: "本", category: "stationery", desc: "记录信息，智力+1" },
+
+  // ====== 书籍类 ======
+  {
+    id: "second_hand_book",
+    name: "二手书",
+    basePrice: 15,
+    unit: "本",
+    category: "books",
+    buyLocations: ["school", "slum", "wholesaleMarket"],
+    sellLocations: ["commercialDist", "techPark"],
+    desc: "可提升智力，随机获得技能XP。来源：旧书摊/图书馆清理。",
+  },
+
+  // ====== 鲜花类 ======
+  {
+    id: "carnation",
+    name: "康乃馨",
+    basePrice: 5,
+    unit: "支",
+    category: "flowers",
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist", "hospital"],
+    seasonal: { festival_mothers_day: 2.0, festival_teachers_day: 1.8 },
+    desc: "送礼NPC增加好感，母亲节/教师节专用。",
+  },
+  {
+    id: "rose",
+    name: "玫瑰花",
+    basePrice: 10,
+    unit: "支",
+    category: "flowers",
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist", "techPark"],
+    seasonal: { festival_valentine: 2.5, festival_qixi: 2.2 },
+    desc: "情人节/七夕特殊礼物，表白必备。",
+  },
+
+  // ====== 药品类 ======
+  {
+    id: "cold_medicine",
+    name: "感冒药",
+    basePrice: 20,
+    unit: "盒",
+    category: "medicine",
+    buyLocations: ["hospital", "wholesaleMarket"],
+    sellLocations: ["commercialDist", "factoryZone", "slum"],
+    desc: "治疗感冒类疾病，恢复健康+10。",
+  },
+  {
+    id: "painkiller",
+    name: "止痛药",
+    basePrice: 10,
+    unit: "盒",
+    category: "medicine",
+    buyLocations: ["hospital", "wholesaleMarket"],
+    sellLocations: ["commercialDist", "construction", "factoryZone"],
+    desc: "缓解疼痛，临时健康+5，但长期使用有依赖风险。",
+  },
+  {
+    id: "vitamins_item",
+    name: "维生素",
+    basePrice: 25,
+    unit: "瓶",
+    category: "medicine",
+    buyLocations: ["hospital", "commercialDist"],
+    sellLocations: ["techPark", "commercialDist", "school"],
+    desc: "每日健康+1，适合长期服用。",
+  },
+
+  // ====== 文具类 ======
+  {
+    id: "pen",
+    name: "笔",
+    basePrice: 3,
+    unit: "支",
+    category: "stationery",
+    buyLocations: ["school", "wholesaleMarket"],
+    sellLocations: ["school", "techPark", "commercialDist"],
+    desc: "提升学习XP+5%，写春联/做笔记必备。",
+  },
+  {
+    id: "notebook_item",
+    name: "笔记本",
+    basePrice: 5,
+    unit: "本",
+    category: "stationery",
+    buyLocations: ["school", "wholesaleMarket"],
+    sellLocations: ["school", "techPark"],
+    desc: "记录信息，智力+1，考证备考必备。",
+  },
 
   // ============================================================
-  // 待完成：新增食材 — 参考《大多数》食材系统 + 真实菜市场
-  // 实现提示：在 GOODS 数组中追加 isIngredient: true 的条目
+  // 新增食材 — 正式实现（v2.1 内容扩充）
+  // 参考来源：《大多数》食材系统 + 真实菜市场数据（2024年）
   // ============================================================
-  // TODO: 待实现 - 豆腐
-  // { id: "tofu", name: "豆腐", basePrice: 3, unit: "块", category: "food", isIngredient: true, desc: "可做麻婆豆腐、豆腐汤" },
-  // TODO: 待实现 - 蘑菇
-  // { id: "mushroom", name: "蘑菇", basePrice: 4, unit: "斤", category: "food", isIngredient: true, desc: "可做蘑菇汤、炒蘑菇" },
-  // TODO: 待实现 - 竹笋
-  // { id: "bamboo_shoot", name: "竹笋", basePrice: 5, unit: "斤", category: "food", isIngredient: true, desc: "可做竹笋炒肉" },
-  // TODO: 待实现 - 生菜
-  // { id: "lettuce", name: "生菜", basePrice: 2, unit: "斤", category: "food", isIngredient: true, desc: "可做生菜包肉" },
-  // TODO: 待实现 - 玉米
-  // { id: "corn", name: "玉米", basePrice: 2, unit: "根", category: "food", isIngredient: true, desc: "可做玉米粥、蒸玉米" },
-  // TODO: 待实现 - 洋葱
-  // { id: "onion", name: "洋葱", basePrice: 2, unit: "斤", category: "food", isIngredient: true, desc: "做菜必备" },
-  // TODO: 待实现 - 大蒜
-  // { id: "garlic", name: "大蒜", basePrice: 2, unit: "斤", category: "food", isIngredient: true, desc: "提味增香" },
-  // TODO: 待实现 - 生姜
-  // { id: "ginger", name: "生姜", basePrice: 3, unit: "斤", category: "food", isIngredient: true, desc: "驱寒暖胃" },
-  // TODO: 待实现 - 醋
-  // { id: "vinegar", name: "醋", basePrice: 2, unit: "瓶", category: "food", isIngredient: true, desc: "调味必备" },
-  // TODO: 待实现 - 淀粉
-  // { id: "starch", name: "淀粉", basePrice: 2, unit: "袋", category: "food", isIngredient: true, desc: "勾芡用" },
-  // TODO: 待实现 - 虾
-  // { id: "shrimp", name: "虾", basePrice: 20, unit: "斤", category: "food", isIngredient: true, desc: "高蛋白，清蒸/油焖" },
-  // TODO: 待实现 - 鸭子
-  // { id: "duck", name: "鸭子", basePrice: 22, unit: "只", category: "food", isIngredient: true, desc: "可做烤鸭/炖鸭汤" },
+
+  // ====== 调味辅料类 ======
+  {
+    id: "tofu",
+    name: "豆腐",
+    basePrice: 3,
+    unit: "块",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    perishDays: 2,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "hospital"],
+    desc: "可做麻婆豆腐、豆腐汤。保质期极短。",
+  },
+  {
+    id: "mushroom",
+    name: "蘑菇",
+    basePrice: 4,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    perishDays: 3,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist", "hospital"],
+    desc: "可做蘑菇汤、炒蘑菇。",
+  },
+  {
+    id: "bamboo_shoot",
+    name: "竹笋",
+    basePrice: 5,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    perishDays: 5,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist"],
+    desc: "可做竹笋炒肉。春季最鲜。",
+    seasonal: { spring: 0.7, winter: 1.3 },
+  },
+  {
+    id: "lettuce",
+    name: "生菜",
+    basePrice: 2,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    perishDays: 3,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist"],
+    desc: "可做生菜包肉。保质期短。",
+  },
+  {
+    id: "corn",
+    name: "玉米",
+    basePrice: 2,
+    unit: "根",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "主食",
+    perishDays: 7,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "school"],
+    desc: "可做玉米粥、蒸玉米。秋季丰收价低。",
+    seasonal: { autumn: 0.6 },
+  },
+  {
+    id: "onion",
+    name: "洋葱",
+    basePrice: 2,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "调料",
+    perishDays: 14,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist"],
+    desc: "做菜必备，保鲜期较长。",
+  },
+  {
+    id: "garlic",
+    name: "大蒜",
+    basePrice: 2,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "调料",
+    perishDays: 20,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist"],
+    desc: "提味增香，几乎每道菜都用。",
+  },
+  {
+    id: "ginger",
+    name: "生姜",
+    basePrice: 3,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "调料",
+    perishDays: 15,
+    buyLocations: ["wholesaleMarket", "slum"],
+    sellLocations: ["commercialDist", "hospital"],
+    desc: "驱寒暖胃，炖汤必备。",
+  },
+  {
+    id: "vinegar",
+    name: "醋",
+    basePrice: 2,
+    unit: "瓶",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "调料",
+    perishDays: 365,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist"],
+    desc: "调味必备，保质期长。",
+  },
+  {
+    id: "starch",
+    name: "淀粉",
+    basePrice: 2,
+    unit: "袋",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "调料",
+    perishDays: 180,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist"],
+    desc: "勾芡用，做菜增稠。",
+  },
+  {
+    id: "shrimp",
+    name: "虾",
+    basePrice: 20,
+    unit: "斤",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "肉类",
+    perishDays: 2,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist", "hospital", "techPark"],
+    desc: "高蛋白，清蒸/油焖。保质期极短。",
+  },
+  {
+    id: "duck",
+    name: "鸭子",
+    basePrice: 22,
+    unit: "只",
+    category: "food",
+    isIngredient: true,
+    ingredientType: "肉类",
+    perishDays: 4,
+    buyLocations: ["wholesaleMarket"],
+    sellLocations: ["commercialDist"],
+    desc: "可做烤鸭/炖鸭汤。",
+  },
 
   // ============================================================
-  // 待完成：新增食谱 — 参考《大多数》烹饪系统
+  // 新增食谱 — 待实现（参考《大多数》烹饪系统）
   // 实现提示：在 cooking.js 的 RECIPES 数组中追加
+  // 联动：食材已在上文定义，只需在 cooking.js 中追加配方
   // ============================================================
-  // TODO: 待实现（20个新食谱）
-  // { id: "mapo_tofu", name: "麻婆豆腐", ingredients: ["tofu", "pork", "chili", "soy_sauce"], skillRequired: 15, hungerRestore: 35, sellPrice: 25 },
-  // { id: "mushroom_soup", name: "蘑菇汤", ingredients: ["mushroom", "tofu", "salt", "cooking_oil"], skillRequired: 10, hungerRestore: 25, sellPrice: 18 },
-  // { id: "stir_fry_bamboo", name: "竹笋炒肉", ingredients: ["bamboo_shoot", "pork", "soy_sauce", "garlic"], skillRequired: 12, hungerRestore: 30, sellPrice: 22 },
-  // { id: "corn_porridge", name: "玉米粥", ingredients: ["corn", "water", "sugar"], skillRequired: 5, hungerRestore: 15, sellPrice: 8 },
-  // { id: "lettuce_wrap", name: "生菜包肉", ingredients: ["lettuce", "pork", "chili", "garlic"], skillRequired: 15, hungerRestore: 35, sellPrice: 28 },
-  // { id: "steamed_shrimp", name: "清蒸虾", ingredients: ["shrimp", "ginger", "soy_sauce", "cooking_oil"], skillRequired: 20, hungerRestore: 40, sellPrice: 35 },
-  // { id: "roast_duck", name: "烤鸭", ingredients: ["duck", "sugar", "soy_sauce", "star_anise"], skillRequired: 25, hungerRestore: 50, sellPrice: 50 },
-  // { id: "stir_fry_lettuce", name: "清炒生菜", ingredients: ["lettuce", "garlic", "cooking_oil", "salt"], skillRequired: 8, hungerRestore: 20, sellPrice: 12 },
-  // { id: "corn_steamed", name: "蒸玉米", ingredients: ["corn"], skillRequired: 3, hungerRestore: 18, sellPrice: 10 },
-  // { id: "onion_beef", name: "洋葱炒牛肉", ingredients: ["onion", "beef", "soy_sauce", "ginger"], skillRequired: 18, hungerRestore: 40, sellPrice: 38 },
-  // { id: "garlic_pork", name: "蒜蓉猪肉", ingredients: ["pork", "garlic", "soy_sauce", "cooking_oil"], skillRequired: 12, hungerRestore: 32, sellPrice: 26 },
-  // { id: "ginger_duck_soup", name: "姜炖鸭汤", ingredients: ["duck", "ginger", "salt", "water"], skillRequired: 20, hungerRestore: 45, sellPrice: 42 },
-  // { id: "vinegar_cucumber", name: "醋溜黄瓜", ingredients: ["cucumber", "vinegar", "garlic", "chili"], skillRequired: 10, hungerRestore: 22, sellPrice: 14 },
-  // { id: "starch_meatballs", name: "淀粉肉丸", ingredients: ["pork", "starch", "soy_sauce", "salt"], skillRequired: 15, hungerRestore: 38, sellPrice: 30 },
-  // { id: "mushroom_tofu_soup", name: "蘑菇豆腐汤", ingredients: ["mushroom", "tofu", "salt", "cooking_oil", "ginger"], skillRequired: 12, hungerRestore: 28, sellPrice: 20 },
-  // { id: "bamboo_shrimp", name: "竹笋炒虾", ingredients: ["bamboo_shoot", "shrimp", "soy_sauce", "ginger"], skillRequired: 22, hungerRestore: 42, sellPrice: 40 },
-  // { id: "lettuce_pork_soup", name: "生菜肉片汤", ingredients: ["lettuce", "pork", "salt", "cooking_oil"], skillRequired: 10, hungerRestore: 26, sellPrice: 18 },
-  // { id: "corn_chicken_soup", name: "玉米鸡汤", ingredients: ["corn", "chicken", "salt", "ginger", "water"], skillRequired: 18, hungerRestore: 40, sellPrice: 35 },
-  // { id: "stir_fry_mushroom", name: "炒蘑菇", ingredients: ["mushroom", "garlic", "soy_sauce", "cooking_oil"], skillRequired: 8, hungerRestore: 20, sellPrice: 15 },
-  // { id: "simple_rice_porridge", name: "白粥", ingredients: ["rice", "water"], skillRequired: 1, hungerRestore: 12, sellPrice: 5 },
+  // 已定义食材 → 可解锁的新食谱（20个）：
+  // mapo_tofu(麻婆豆腐), mushroom_soup(蘑菇汤), stir_fry_bamboo(竹笋炒肉),
+  // corn_porridge(玉米粥), lettuce_wrap(生菜包肉), steamed_shrimp(清蒸虾),
+  // roast_duck(烤鸭), stir_fry_lettuce(清炒生菜), corn_steamed(蒸玉米),
+  // onion_beef(洋葱炒牛肉), garlic_pork(蒜蓉猪肉), ginger_duck_soup(姜炖鸭汤),
+  // vinegar_cucumber(醋溜黄瓜), starch_meatballs(淀粉肉丸), mushroom_tofu_soup(蘑菇豆腐汤),
+  // bamboo_shrimp(竹笋炒虾), lettuce_pork_soup(生菜肉片汤), corn_chicken_soup(玉米鸡汤),
+  // stir_fry_mushroom(炒蘑菇), simple_rice_porridge(白粥)
 ];
 
 /** 获取商品定义 */
