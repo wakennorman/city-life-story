@@ -84457,72 +84457,129 @@ function renderWeatherPanel(state) {
   var panel = document.getElementById("weather-panel");
   if (!panel) return;
   var w = state.weather;
-  if (!w || !w.current) { panel.style.display = "none"; return; }
-  var wDef = typeof WEATHER_TYPES !== "undefined"
-    ? WEATHER_TYPES.find(function (wt) { return wt.id === w.current; })
-    : null;
-  if (!wDef) { panel.style.display = "none"; return; }
-  var tempEffect = typeof getTempEffect === "function" ? getTempEffect(w.temperature || 22) : null;
+  if (!w || !w.current) {
+    panel.style.display = "none";
+    return;
+  }
+  var wDef =
+    typeof WEATHER_TYPES !== "undefined"
+      ? WEATHER_TYPES.find(function (wt) {
+          return wt.id === w.current;
+        })
+      : null;
+  if (!wDef) {
+    panel.style.display = "none";
+    return;
+  }
+  var tempEffect =
+    typeof getTempEffect === "function"
+      ? getTempEffect(w.temperature || 22)
+      : null;
 
-  var isExtreme = typeof isExtremeWeather === "function" ? isExtremeWeather(w.current) : false;
+  var isExtreme =
+    typeof isExtremeWeather === "function"
+      ? isExtremeWeather(w.current)
+      : false;
   var isPersistent = w.persistent && w.duration > 1;
 
-  var comfort = (state.status && state.status.comfort != null) ? state.status.comfort : 50;
-  var comfortLabel = comfort >= 80 ? "舒适" : comfort >= 60 ? "还行" : comfort >= 40 ? "不适" : comfort >= 20 ? "难受" : "恶劣";
-  var comfortColor = comfort >= 60 ? "var(--success)" : comfort >= 40 ? "var(--warning)" : "var(--danger)";
+  var comfort =
+    state.status && state.status.comfort != null ? state.status.comfort : 50;
+  var comfortLabel =
+    comfort >= 80
+      ? "舒适"
+      : comfort >= 60
+        ? "还行"
+        : comfort >= 40
+          ? "不适"
+          : comfort >= 20
+            ? "难受"
+            : "恶劣";
+  var comfortColor =
+    comfort >= 60
+      ? "var(--success)"
+      : comfort >= 40
+        ? "var(--warning)"
+        : "var(--danger)";
 
-  var html = '';
+  var html = "";
 
-  html += '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
-  html += '<span style="font-size:14px;">' + wDef.icon + '</span>';
-  html += '<span style="font-size:12px;font-weight:600;">' + wDef.name + '</span>';
-  html += '<span style="font-size:11px;color:var(--text-secondary);">🌡️' + Math.round(w.temperature || 22) + '°C</span>';
+  html +=
+    '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
+  html += '<span style="font-size:14px;">' + wDef.icon + "</span>";
+  html +=
+    '<span style="font-size:12px;font-weight:600;">' + wDef.name + "</span>";
+  html +=
+    '<span style="font-size:11px;color:var(--text-secondary);">🌡️' +
+    Math.round(w.temperature || 22) +
+    "°C</span>";
   if (tempEffect) {
-    html += '<span style="font-size:10px;color:var(--text-muted);">(' + tempEffect.name + ')</span>';
+    html +=
+      '<span style="font-size:10px;color:var(--text-muted);">(' +
+      tempEffect.name +
+      ")</span>";
   }
-  html += '<span style="font-size:10px;color:' + comfortColor + ';margin-left:auto;">☂️' + comfortLabel + '</span>';
-  html += '</div>';
+  html +=
+    '<span style="font-size:10px;color:' +
+    comfortColor +
+    ';margin-left:auto;">☂️' +
+    comfortLabel +
+    "</span>";
+  html += "</div>";
 
   if (isPersistent) {
     html += '<div style="margin-top:3px;font-size:10px;color:var(--warning);">';
-    html += '📅 第' + w.daysActive + '/' + w.duration + '天';
-    if (w.current === "plum_rain") html += ' · 注意防潮防霉';
-    else if (w.current === "heatwave") html += ' · 注意防暑降温';
-    else if (w.current === "cold_snap") html += ' · 注意防寒保暖';
-    else if (w.current === "typhoon") html += ' · 注意人身安全';
-    else if (w.current === "sandstorm") html += ' · 做好防护措施';
-    else if (w.current === "heavy_smog") html += ' · 建议佩戴口罩';
-    html += '</div>';
+    html += "📅 第" + w.daysActive + "/" + w.duration + "天";
+    if (w.current === "plum_rain") html += " · 注意防潮防霉";
+    else if (w.current === "heatwave") html += " · 注意防暑降温";
+    else if (w.current === "cold_snap") html += " · 注意防寒保暖";
+    else if (w.current === "typhoon") html += " · 注意人身安全";
+    else if (w.current === "sandstorm") html += " · 做好防护措施";
+    else if (w.current === "heavy_smog") html += " · 建议佩戴口罩";
+    html += "</div>";
   }
 
   if (w.forecast && w.forecast.length > 0) {
-    html += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);">';
-    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">📅 未来天气展望：</div>';
+    html +=
+      '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);">';
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">📅 未来天气展望：</div>';
     html += '<div style="display:flex;gap:3px;">';
     for (var i = 0; i < w.forecast.length; i++) {
       var f = w.forecast[i];
-      var fDef = typeof WEATHER_TYPES !== "undefined"
-        ? WEATHER_TYPES.find(function (wt) { return wt.id === f.weatherId; })
-        : null;
+      var fDef =
+        typeof WEATHER_TYPES !== "undefined"
+          ? WEATHER_TYPES.find(function (wt) {
+              return wt.id === f.weatherId;
+            })
+          : null;
       var icon = fDef ? fDef.icon : "🌤️";
       var fName = fDef ? fDef.name : "未知";
       var pct = Math.round(f.confidence * 100);
-      html += '<div style="flex:1;text-align:center;font-size:10px;padding:3px 2px;border-radius:4px;background:var(--bg-card);">';
-      html += '<div>' + icon + '</div>';
-      html += '<div style="font-size:9px;color:var(--text-secondary);">' + fName + '</div>';
-      html += '<div style="font-size:8px;color:var(--text-muted);">' + pct + '%</div>';
-      html += '</div>';
+      html +=
+        '<div style="flex:1;text-align:center;font-size:10px;padding:3px 2px;border-radius:4px;background:var(--bg-card);">';
+      html += "<div>" + icon + "</div>";
+      html +=
+        '<div style="font-size:9px;color:var(--text-secondary);">' +
+        fName +
+        "</div>";
+      html +=
+        '<div style="font-size:8px;color:var(--text-muted);">' +
+        pct +
+        "%</div>";
+      html += "</div>";
     }
-    html += '</div></div>';
+    html += "</div></div>";
   }
 
   if (isExtreme) {
-    panel.style.cssText = 'margin-top:6px;padding:6px 8px;border-radius:6px;' +
-      'background:rgba(196,85,61,0.08);font-size:11px;line-height:1.5;display:block;' +
-      'border-left:3px solid var(--danger);';
+    panel.style.cssText =
+      "margin-top:6px;padding:6px 8px;border-radius:6px;" +
+      "background:rgba(196,85,61,0.08);font-size:11px;line-height:1.5;display:block;" +
+      "border-left:3px solid var(--danger);";
   } else {
-    panel.style.cssText = 'margin-top:6px;padding:6px 8px;border-radius:6px;' +
-      'background:var(--bg-input);font-size:11px;line-height:1.5;display:block;';
+    panel.style.cssText =
+      "margin-top:6px;padding:6px 8px;border-radius:6px;" +
+      "background:var(--bg-input);font-size:11px;line-height:1.5;display:block;";
   }
 
   panel.innerHTML = html;
@@ -87056,14 +87113,29 @@ function renderInventoryTab(state, parent) {
       const el = document.createElement("div");
       el.className = "inventory-item";
       // 品质颜色
-      var qualityStyle = '';
-      if (item.quality && item.quality !== 'common' && typeof getQualityColor === 'function') {
-        qualityStyle = 'border-left:3px solid ' + getQualityColor(item.quality) + ';';
+      var qualityStyle = "";
+      if (
+        item.quality &&
+        item.quality !== "common" &&
+        typeof getQualityColor === "function"
+      ) {
+        qualityStyle =
+          "border-left:3px solid " + getQualityColor(item.quality) + ";";
       }
       // 附魔描述
-      var enchantHtml = '';
-      if (item.enchantments && item.enchantments.length > 0 && typeof describeItemQuality === 'function') {
-        enchantHtml = '<div style="font-size:9px;color:var(--accent);margin-top:2px;">' + describeItemQuality({ quality: item.quality, enchantments: item.enchantments }) + '</div>';
+      var enchantHtml = "";
+      if (
+        item.enchantments &&
+        item.enchantments.length > 0 &&
+        typeof describeItemQuality === "function"
+      ) {
+        enchantHtml =
+          '<div style="font-size:9px;color:var(--accent);margin-top:2px;">' +
+          describeItemQuality({
+            quality: item.quality,
+            enchantments: item.enchantments,
+          }) +
+          "</div>";
       }
       el.innerHTML = `
         <div class="item-name" style="${qualityStyle}">${def ? def.name : item.id}</div>
@@ -91289,7 +91361,12 @@ function getVendingLocationAdvice(state) {
   var weatherMod = 1.0;
   var weatherAdvice = "";
   if (weather) {
-    if (weather.current === "stormy" || weather.current === "snowy" || weather.current === "typhoon" || weather.current === "sandstorm") {
+    if (
+      weather.current === "stormy" ||
+      weather.current === "snowy" ||
+      weather.current === "typhoon" ||
+      weather.current === "sandstorm"
+    ) {
       weatherMod = 0.4;
       weatherAdvice = "⚠️ 恶劣天气，室外摆摊客流锐减，建议室内行动或休息";
     } else if (weather.current === "rainy" || weather.current === "plum_rain") {

@@ -6,6 +6,8 @@
 
 import re
 import os
+import subprocess
+import sys
 
 SRC_DIR = 'src'
 DIST_DIR = 'dist'
@@ -40,6 +42,16 @@ def inline_js(html):
         src = src_match.group(1)
         path = os.path.join(SRC_DIR, src)
         if os.path.exists(path):
+            # JS语法检查
+            try:
+                subprocess.run(
+                    ['node', '--check', path],
+                    capture_output=True, text=True, check=True
+                )
+            except subprocess.CalledProcessError as e:
+                print(f'\n❌ JS语法错误: {path}')
+                print(e.stderr.strip())
+                sys.exit(1)
             js = read_file(path)
             return f'<script>{js}</script>'
         return match.group(0)
