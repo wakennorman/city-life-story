@@ -3312,12 +3312,33 @@ function renderInventoryTab(state, parent) {
   equipGrid.style.gridTemplateColumns = "repeat(auto-fill, minmax(130px, 1fr))";
   for (const slot of slots) {
     const itemId = equip[slot.key];
+    const instanceId = equip[slot.key + "_instance"];
+    const equipInstance =
+      instanceId && state.inventory?.equipmentInstances
+        ? state.inventory.equipmentInstances[instanceId]
+        : null;
     const itemDef =
       itemId && typeof ITEMS !== "undefined"
         ? ITEMS.find((i) => i.id === itemId)
         : null;
+    const displayItem = equipInstance || itemDef;
+    const qualityId = equipInstance?.quality || null;
+    const qualityInfo =
+      qualityId && typeof getQualityInfo === "function"
+        ? getQualityInfo(qualityId)
+        : null;
+    const enchantments = equipInstance?.enchantments || [];
+    const enchantDesc =
+      enchantments.length > 0 && typeof formatEnchantmentDesc === "function"
+        ? formatEnchantmentDesc(enchantments)
+        : "";
+
     const card = document.createElement("div");
-    card.className = "action-card";
+    card.className =
+      "action-card" +
+      (qualityId && typeof getQualityClass === "function"
+        ? " " + getQualityClass(qualityId)
+        : "");
     var repairHtml = "";
     if (itemDef && typeof buildRepairPreview === "function") {
       var rp = buildRepairPreview(state, itemDef);
@@ -3327,11 +3348,20 @@ function renderInventoryTab(state, parent) {
           rp +
           "</div>";
     }
+    var qualityBadge = qualityInfo
+      ? `<span class="quality-badge quality-${qualityId}">${qualityInfo.icon} ${qualityInfo.name}</span>`
+      : "";
+    var priceDisplay = displayItem?.actualPrice
+      ? `<div class="quality-price">¥${displayItem.actualPrice}</div>`
+      : "";
+
     card.innerHTML = `
       <div style="font-size:11px;color:var(--text-muted)">${slot.icon} ${slot.name}</div>
-      <div style="font-size:12px;color:${itemDef ? "var(--success)" : "var(--text-muted)"}">
-        ${itemDef ? itemDef.name : "(空)"}
+      <div style="font-size:12px;color:${displayItem ? "var(--success)" : "var(--text-muted)"};display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+        ${displayItem ? displayItem.name : "(空)"} ${qualityBadge}
       </div>
+      ${enchantDesc ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${enchantDesc}</div>` : ""}
+      ${priceDisplay}
       ${repairHtml}
     `;
     equipGrid.appendChild(card);

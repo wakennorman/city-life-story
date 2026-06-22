@@ -965,43 +965,72 @@ function buildCompanyCardHtml(company) {
 }
 
 // ====== 装备商店 ======
-/** 购买装备：扣钱，添加到 inventory.equipment 或 items */
+/** 购买装备：扣钱，添加到 inventory.equipment 或 items（支持品质系统） */
 function buyItemFromShop(itemId) {
   var state = StateManager.getState();
   var item = typeof getItemById === "function" ? getItemById(itemId) : null;
   if (!item) return;
-  if (state.resources.cash < item.price) {
+
+  // 品质系统：生成带品质的装备实例
+  var equippedItem = null;
+  if (typeof createEquipmentInstance === "function" && item.slot) {
+    equippedItem = createEquipmentInstance(item, "buy");
+  }
+
+  // 价格：使用品质价格（如果有）
+  var price = equippedItem ? equippedItem.actualPrice : item.price;
+
+  if (state.resources.cash < price) {
     StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
     return;
   }
-  state.resources.cash -= item.price;
+  state.resources.cash -= price;
   addDailyTransaction(
     state,
     "expense",
     "shopping",
-    item.price,
+    price,
     "购买" + (item.icon || "") + item.name,
   );
-  // 装备类（有slot）：放入 equipment 槽位
+
+  // 装备类（有slot）：放入 equipment 槽位（带品质信息）
   if (item.slot) {
     if (!state.inventory.equipment) state.inventory.equipment = {};
-    var cur = state.inventory.equipment[item.slot];
-    if (cur) {
+    var curItemId = state.inventory.equipment[item.slot];
+    var curItem = curItemId
+      ? state.inventory.equipmentInstances?.[curItemId + "_instance"] ||
+        getItemById(curItemId)
+      : null;
+
+    if (curItem) {
       StateManager.addMessage(
         "👕 替换了旧的" +
-          (typeof getItemById === "function" && getItemById(cur)
-            ? getItemById(cur).name
-            : cur) +
+          (curItem.name || curItemId) +
           "，装备了" +
-          item.name,
+          (equippedItem ? equippedItem.name : item.name),
         "info",
       );
     } else {
-      StateManager.addMessage("✅ 购买并装备了：" + item.name, "success");
+      StateManager.addMessage(
+        "✅ 购买并装备了：" + (equippedItem ? equippedItem.name : item.name),
+        "success",
+      );
     }
     state.inventory.equipment[item.slot] = itemId;
+    if (equippedItem) {
+      if (!state.inventory.equipmentInstances)
+        state.inventory.equipmentInstances = {};
+      var instanceId =
+        itemId +
+        "_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).slice(2, 7);
+      equippedItem.instanceId = instanceId;
+      state.inventory.equipmentInstances[instanceId] = equippedItem;
+    }
   } else {
-    // 无slot的道具（教材/自行车等）：放入 items 背包
+    // 无slot的道具：放入 items 背包
     if (!state.inventory.items) state.inventory.items = [];
     var existing = state.inventory.items.find(function (i) {
       return i.id === itemId;
@@ -1009,7 +1038,14 @@ function buyItemFromShop(itemId) {
     if (existing) {
       existing.qty = (existing.qty || 1) + 1;
     } else {
-      state.inventory.items.push({ id: itemId, qty: 1 });
+      var itemInstance = { id: itemId, qty: 1 };
+      if (equippedItem) {
+        itemInstance.quality = equippedItem.quality;
+        itemInstance.enchantments = equippedItem.enchantments;
+        itemInstance.actualEffects = equippedItem.actualEffects;
+        itemInstance.actualPrice = equippedItem.actualPrice;
+      }
+      state.inventory.items.push(itemInstance);
     }
     StateManager.addMessage("✅ 购买了：" + item.name, "success");
   }
