@@ -71,6 +71,61 @@ const NEWS_EVENTS = [
     effects: { priceMod: { fruits: 0.4, vegetables: 0.5 }, duration: 4 },
     type: "price",
   },
+
+  // ============================================================
+  // 新地点联动新闻（配套银行/公园/培训中心地点）
+  // 参考来源：真实中国城市新闻 / 《大多数》新闻系统
+  // ============================================================
+  {
+    id: "bank_fraud_alert",
+    headline: "🚨 银行附近出现诈骗团伙！老人被骗光积蓄",
+    desc: "警方提醒：近期有诈骗团伙在银行附近冒充工作人员，以"高息理财"为名骗取老人存款。",
+    effects: {
+      priceMod: { daily_use: 1.05 }, // 安全用品涨价
+      jobBonus: ["bank_security"],
+      jobMultiplier: 1.2, // 银行保安需求增加
+      duration: 5,
+    },
+    type: "job",
+    industry: "金融",
+    followUpId: "bank_fraud_echo",
+    followUpDelay: 4,
+  },
+  {
+    id: "park_festival",
+    headline: "🎉 公园文化节即将开幕！街头艺人报名火爆",
+    desc: "市里将在公园举办为期一周的文化节，街头表演、手工艺品摊位报名火爆。",
+    effects: {
+      priceMod: { snacks: 1.3, fruits: 1.2, clothing: 1.1 },
+      jobBonus: ["busking", "park_flower_vendor", "street_performer"],
+      jobMultiplier: 1.5,
+      duration: 3,
+    },
+    type: "job",
+  },
+  {
+    id: "training_subsidy",
+    headline: "📚 政府推出技能培训补贴！考证人数激增",
+    desc: "人社局宣布：对考取电工证、会计证等职业资格证书的人员给予补贴，最高¥3000。",
+    effects: {
+      // 培训中心相关
+      duration: 7,
+    },
+    type: "policy",
+    followUpId: "training_subsidy_echo",
+    followUpDelay: 5,
+  },
+  {
+    id: "park_renovation",
+    headline: "🔨 市中心公园启动改造！部分区域封闭施工",
+    desc: "公园将从下月开始为期两个月的改造升级，部分区域暂时封闭，影响街头工作和卖花收入。",
+    effects: {
+      jobPenalty: ["park_cleaning", "park_guide", "park_flower_vendor", "busking"],
+      jobMultiplier: 0.6,
+      duration: 60, // 长期影响
+    },
+    type: "job",
+  },
   {
     id: "construction_boom",
     headline: "🏗️ 新楼盘开工！工地大量招人，工资上涨",

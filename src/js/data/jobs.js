@@ -967,6 +967,25 @@ const STREET_JOBS = [
       },
       risk: { injury: 0.12 },
     },
+    // === 灵活配送 → 跑腿零工（修复 items.js 中 4 件装备引用断裂） ===
+    {
+      id: "courier_gig",
+      name: "跑腿零工",
+      desc: "帮人取快递、送文件、买咖啡，啥急活都接。灵活自由，多劳多得。",
+      icon: "🚶",
+      location: "commercialDist",
+      requirements: { agility: 15, minAge: 18, maxAge: 50 },
+      effects: { fatigue: 8, agilityXp: 2, happiness: 2 },
+      payCalc(state) {
+        var base = 35 + state.player.agility * 0.3 + Random.float(0, 35);
+        // 有配送类技能收入更高
+        if (state.skills.driving && state.skills.driving.level > 0)
+          base *= 1.15;
+        if (state.skills.sales && state.skills.sales.level > 0) base *= 1.1;
+        return Math.floor(base);
+      },
+      risk: { injury: 0.01 },
+    },
 
     // ============================================================
     // 待完成：新增地点专属工作 — 参考《大多数》工作系统《北京浮生记》
@@ -992,69 +1011,143 @@ const STREET_JOBS = [
     //   },
     //   risk: {},
     // },
-    // TODO: 待实现 - 公园保安（参考真实公园保安工资¥3000-5000/月）
-    // { id: "park_security", name: "公园保安", icon: "👮", location: "park", requirements: { minAge: 18, maxAge: 55 }, effects: { fatigue: 10, happiness: -3, physiqueXp: 1 }, payCalc: function(state) { return Math.floor(Random.float(35, 50)); }, risk: {} },
-    // TODO: 待实现 - 公园清洁（参考真实公园清洁工工资¥2500-4000/月）
-    // { id: "park_cleaning", name: "公园清洁", icon: "🧹", location: "park", requirements: { minAge: 18, maxAge: 60 }, effects: { fatigue: 18, hygiene: -5, physiqueXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(25, 40)); }, risk: {} },
-    // TODO: 待实现 - 公园导游（参考真实景区导游收入¥100-300/天）
-    // {
-    //   id: "park_guide",
-    //   name: "公园导游",
-    //   desc: "在公园/景区为游客提供讲解服务。需要口才好、知识面广。",
-    //   icon: "🗣️",
-    //   location: "park",
-    //   requirements: { intelligence: 25, mental: 20, minAge: 18, maxAge: 50 },
-    //   effects: { fatigue: 8, happiness: 5, intelligenceXp: 2, fame: 2 },
-    //   payCalc(state) { return Math.floor(50 + state.player.intelligence * 0.3 + Random.float(0, 50)); },
-    //   risk: {},
-    // },
-    // TODO: 待实现 - 公园摆摊卖花（参考真实公园卖花收入）
-    // {
-    //   id: "park_flower_vendor",
-    //   name: "公园卖花",
-    //   desc: "在公园门口或内部卖鲜花/盆栽。周末和节日生意好。",
-    //   icon: "💐",
-    //   location: "park",
-    //   requirements: { sales: 10, minAge: 18 },
-    //   effects: { fatigue: 10, happiness: 3, salesXp: 2 },
-    //   payCalc(state) { return Math.floor(40 + state.skills.sales.level * 2 + Random.float(0, 60)); },
-    //   risk: {},
-    //   seasonal: { months: [2, 3, 5, 10] }, // 情人节/五一/国庆
-    // },
+    // ============================================================
+    // 公园地点工作（正式实现 — 修复公园空地点问题）
+    // 参考来源：《大多数》工作系统 / 真实中国公园就业数据（2024年）
+    // 联动：公园地点 jobs 数组已更新，需配套添加 NPC + 事件
+    // ============================================================
+    // TODO: 待实现 - 公园街头表演（参考真实街头艺人收入¥50-500/天）
+    {
+      id: "busking",
+      name: "街头表演",
+      desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+      icon: "🎸",
+      location: "park",
+      requirements: { mental: 30, minAge: 16, maxAge: 60 },
+      effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+      payCalc(state) {
+        return Math.floor(
+          18 +
+            state.player.mental * 0.2 +
+            state.player.fame * 0.3 +
+            Random.float(0, 42),
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "park_security",
+      name: "公园保安",
+      icon: "👮",
+      location: "park",
+      requirements: { minAge: 18, maxAge: 55 },
+      effects: { fatigue: 10, happiness: -3, physiqueXp: 1 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(35, 50));
+      },
+      risk: {},
+    },
+    {
+      id: "park_cleaning",
+      name: "公园清洁",
+      icon: "🧹",
+      location: "park",
+      requirements: { minAge: 18, maxAge: 60 },
+      effects: { fatigue: 18, hygiene: -5, physiqueXp: 2 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(25, 40));
+      },
+      risk: {},
+    },
+    {
+      id: "park_guide",
+      name: "公园导游",
+      desc: "在公园/景区为游客提供讲解服务。需要口才好、知识面广。",
+      icon: "🗣️",
+      location: "park",
+      requirements: { intelligence: 25, mental: 20, minAge: 18, maxAge: 50 },
+      effects: { fatigue: 8, happiness: 5, intelligenceXp: 2, fame: 2 },
+      payCalc(state) {
+        return Math.floor(
+          50 + state.player.intelligence * 0.3 + Random.float(0, 50),
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "park_flower_vendor",
+      name: "公园卖花",
+      desc: "在公园门口或内部卖鲜花/盆栽。周末和节日生意好。",
+      icon: "💐",
+      location: "park",
+      requirements: { sales: 10, minAge: 18 },
+      effects: { fatigue: 10, happiness: 3, salesXp: 2 },
+      payCalc(state) {
+        return Math.floor(
+          40 + state.skills.sales.level * 2 + Random.float(0, 60),
+        );
+      },
+      risk: {},
+      seasonal: { months: [2, 3, 5, 10] }, // 情人节/五一/国庆
+    },
     //
-    // === 医院地点工作 ===
-    // TODO: 待实现 - 医院保洁（参考真实医院保洁工资¥3000-4500/月）
-    // { id: "hospital_cleaning", name: "医院保洁", icon: "🧹", location: "hospital", requirements: { hygiene: 10, minAge: 18, maxAge: 55 }, effects: { fatigue: 15, hygiene: -8, happiness: -2 }, payCalc: function(state) { return Math.floor(Random.float(40, 60)); }, risk: { illness: 0.05 } },
-    // TODO: 待实现 - 医院配送（参考真实医院配送员工资¥4000-6000/月）
-    // { id: "hospital_delivery", name: "医院配送", icon: "📦", location: "hospital", requirements: { agility: 15, minAge: 18, maxAge: 45 }, effects: { fatigue: 20, agilityXp: 2 }, payCalc: function(state) { return Math.floor(Random.float(50, 80)); }, risk: { illness: 0.03 } },
-    // TODO: 待实现 - 医院护工（参考真实护工工资¥4000-8000/月，需护理证）
-    // {
-    //   id: "hospital_orderly",
-    //   name: "医院护工",
-    //   desc: "在医院照顾病人日常生活。需要耐心和体力，有护理证收入更高。",
-    //   icon: "👨‍⚕️",
-    //   location: "hospital",
-    //   requirements: { physique: 20, mental: 25, minAge: 20, maxAge: 55 },
-    //   effects: { fatigue: 25, hygiene: -5, happiness: 2, physiqueXp: 2 },
-    //   payCalc(state) {
-    //     var base = 60 + state.player.physique * 0.3 + Random.float(0, 40);
-    //     if (state.flags.nursingCert) base *= 1.3;
-    //     return Math.floor(base);
-    //   },
-    //   risk: { illness: 0.06 },
-    // },
-    // TODO: 待实现 - 医院导诊（参考真实医院导诊员工资）
-    // {
-    //   id: "hospital_guidance",
-    //   name: "医院导诊",
-    //   desc: "在医院为患者提供导诊服务。需要熟悉医院流程，耐心解答问题。",
-    //   icon: "🗺️",
-    //   location: "hospital",
-    //   requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 50 },
-    //   effects: { fatigue: 10, happiness: 3, mentalXp: 2 },
-    //   payCalc(state) { return Math.floor(35 + state.player.mental * 0.2 + Random.float(0, 30)); },
-    //   risk: { illness: 0.02 },
-    // },
+    // ============================================================
+    // 医院地点工作（正式实现 — 医院目前仅1个工作，需扩充）
+    // 参考来源：《大多数》工作系统 / 真实中国医院就业数据（2024年）
+    // 联动：医院地点 jobs 数组需更新，需配套添加 NPC + 事件
+    // ============================================================
+    {
+      id: "hospital_cleaning",
+      name: "医院保洁",
+      icon: "🧹",
+      location: "hospital",
+      requirements: { hygiene: 10, minAge: 18, maxAge: 55 },
+      effects: { fatigue: 15, hygiene: -8, happiness: -2 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(40, 60));
+      },
+      risk: { illness: 0.05 },
+    },
+    {
+      id: "hospital_delivery",
+      name: "医院配送",
+      icon: "📦",
+      location: "hospital",
+      requirements: { agility: 15, minAge: 18, maxAge: 45 },
+      effects: { fatigue: 20, agilityXp: 2 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(50, 80));
+      },
+      risk: { illness: 0.03 },
+    },
+    {
+      id: "hospital_orderly",
+      name: "医院护工",
+      desc: "在医院照顾病人日常生活。需要耐心和体力，有护理证收入更高。",
+      icon: "👨‍⚕️",
+      location: "hospital",
+      requirements: { physique: 20, mental: 25, minAge: 20, maxAge: 55 },
+      effects: { fatigue: 25, hygiene: -5, happiness: 2, physiqueXp: 2 },
+      payCalc(state) {
+        var base = 60 + state.player.physique * 0.3 + Random.float(0, 40);
+        if (state.flags.nursingCert) base *= 1.3;
+        return Math.floor(base);
+      },
+      risk: { illness: 0.06 },
+    },
+    {
+      id: "hospital_guidance",
+      name: "医院导诊",
+      desc: "在医院为患者提供导诊服务。需要熟悉医院流程，耐心解答问题。",
+      icon: "🗺️",
+      location: "hospital",
+      requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 50 },
+      effects: { fatigue: 10, happiness: 3, mentalXp: 2 },
+      payCalc(state) {
+        return Math.floor(35 + state.player.mental * 0.2 + Random.float(0, 30));
+      },
+      risk: { illness: 0.02 },
+    },
     // TODO: 待实现 - 殡仪馆工作人员（参考真实殡仪馆工作人员工资¥5000-10000/月）
     // {
     //   id: "funeral_home",
@@ -1068,41 +1161,93 @@ const STREET_JOBS = [
     //   risk: { illness: 0.03 },
     // },
     //
-    // === 银行地点工作 ===
-    // TODO: 待实现 - 银行保安（参考真实银行保安工资¥4000-6000/月）
-    // { id: "bank_security", name: "银行保安", icon: "👮", location: "bank", requirements: { minAge: 20, maxAge: 50 }, effects: { fatigue: 8, happiness: -2, physiqueXp: 0 }, payCalc: function(state) { return Math.floor(Random.float(60, 90)); }, risk: {} },
-    // TODO: 待实现 - 银行大堂助理（参考真实银行大堂经理助理工资¥5000-8000/月）
-    // { id: "bank_cashier_assist", name: "银行大堂助理", icon: "💼", location: "bank", requirements: { intelligence: 25, minAge: 22, maxAge: 35, education: 1 }, effects: { fatigue: 10, intelligenceXp: 2, happiness: 2 }, payCalc: function(state) { return Math.floor(Random.float(70, 100)); }, risk: {} },
-    // TODO: 待实现 - 银行ATM维护员（参考真实ATM维护员工资）
-    // {
-    //   id: "atm_maintenance",
-    //   name: "ATM维护员",
-    //   desc: "负责ATM机的日常维护和加钞。需要技术基础，收入稳定。",
-    //   icon: "🏧",
-    //   location: "bank",
-    //   requirements: { repair: 15, intelligence: 20, minAge: 22, maxAge: 45 },
-    //   effects: { fatigue: 12, intelligenceXp: 2, happiness: 2 },
-    //   payCalc(state) { return Math.floor(70 + state.skills.repair.level * 1.5 + Random.float(0, 50)); },
-    //   risk: {},
-    // },
+    // ============================================================
+    // 银行地点工作（正式实现 — 银行之前是空地点）
+    // 参考来源：《大多数》工作系统 / 真实中国银行就业数据（2024年）
+    // 联动：银行地点 jobs 数组需更新
+    // ============================================================
+    {
+      id: "bank_security",
+      name: "银行保安",
+      icon: "👮",
+      location: "bank",
+      requirements: { minAge: 20, maxAge: 50 },
+      effects: { fatigue: 8, happiness: -2, physiqueXp: 0 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(60, 90));
+      },
+      risk: {},
+    },
+    {
+      id: "bank_cashier_assist",
+      name: "银行大堂助理",
+      icon: "💼",
+      location: "bank",
+      requirements: { intelligence: 25, minAge: 22, maxAge: 35, education: 1 },
+      effects: { fatigue: 10, intelligenceXp: 2, happiness: 2 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(70, 100));
+      },
+      risk: {},
+    },
+    {
+      id: "atm_maintenance",
+      name: "ATM维护员",
+      desc: "负责ATM机的日常维护和加钞。需要技术基础，收入稳定。",
+      icon: "🏧",
+      location: "bank",
+      requirements: { repair: 15, intelligence: 20, minAge: 22, maxAge: 45 },
+      effects: { fatigue: 12, intelligenceXp: 2, happiness: 2 },
+      payCalc(state) {
+        return Math.floor(
+          70 + state.skills.repair.level * 1.5 + Random.float(0, 50),
+        );
+      },
+      risk: {},
+    },
     //
-    // === 培训中心地点工作 ===
-    // TODO: 待实现 - 培训辅导（参考真实培训辅导老师工资¥5000-10000/月）
-    // { id: "tutor_care", name: "培训辅导", icon: "📚", location: "trainingCenter", requirements: { intelligence: 30, minAge: 22, maxAge: 50 }, effects: { fatigue: 12, intelligenceXp: 3, happiness: 5 }, payCalc: function(state) { return Math.floor(Random.float(80, 120)); }, risk: {} },
-    // TODO: 待实现 - 培训中心保洁（参考真实培训机构保洁工资）
-    // { id: "center_cleaning", name: "培训中心保洁", icon: "🧹", location: "trainingCenter", requirements: { minAge: 18, maxAge: 55 }, effects: { fatigue: 15, hygiene: -3 }, payCalc: function(state) { return Math.floor(Random.float(30, 50)); }, risk: {} },
-    // TODO: 待实现 - 培训助理（参考真实培训助理工资）
-    // {
-    //   id: "training_assistant",
-    //   name: "培训助理",
-    //   desc: "协助培训老师管理班级、准备教材。需要耐心和组织能力。",
-    //   icon: "📋",
-    //   location: "trainingCenter",
-    //   requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 40 },
-    //   effects: { fatigue: 10, happiness: 3, managementXp: 2 },
-    //   payCalc(state) { return Math.floor(40 + state.player.mental * 0.2 + Random.float(0, 40)); },
-    //   risk: {},
-    // },
+    // ============================================================
+    // 培训中心地点工作（正式实现 — 培训中心之前是空地点）
+    // 参考来源：《大多数》工作系统 / 真实中国培训机构就业数据（2024年）
+    // 联动：培训中心地点 jobs 数组需更新
+    // ============================================================
+    {
+      id: "tutor_care",
+      name: "培训辅导",
+      icon: "📚",
+      location: "trainingCenter",
+      requirements: { intelligence: 30, minAge: 22, maxAge: 50 },
+      effects: { fatigue: 12, intelligenceXp: 3, happiness: 5 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(80, 120));
+      },
+      risk: {},
+    },
+    {
+      id: "center_cleaning",
+      name: "培训中心保洁",
+      icon: "🧹",
+      location: "trainingCenter",
+      requirements: { minAge: 18, maxAge: 55 },
+      effects: { fatigue: 15, hygiene: -3 },
+      payCalc: function (state) {
+        return Math.floor(Random.float(30, 50));
+      },
+      risk: {},
+    },
+    {
+      id: "training_assistant",
+      name: "培训助理",
+      desc: "协助培训老师管理班级、准备教材。需要耐心和组织能力。",
+      icon: "📋",
+      location: "trainingCenter",
+      requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 40 },
+      effects: { fatigue: 10, happiness: 3, managementXp: 2 },
+      payCalc(state) {
+        return Math.floor(40 + state.player.mental * 0.2 + Random.float(0, 40));
+      },
+      risk: {},
+    },
     //
     // === 批发市场地点工作 ===
     // TODO: 待实现 - 批发配送（参考真实批发配送员工资¥5000-8000/月）

@@ -1074,8 +1074,73 @@ const NPCS = [
   //   - 《大多数》NPC系统：好感度、求助、深度任务
   // ============================================================
   //
-  // === 公园/居住区 NPC ===
+  // ============================================================
+  // 银行地点 NPC（精简版 — 每个行业只保留1个代表）
+  // 参考来源：《大多数》NPC系统 / 真实中国银行从业者画像（2024年）
+  // 联动：银行地点 jobs 数组已更新，需配套添加事件
+  // ============================================================
+  // TODO: 待实现 - 老陈（银行保安，参考真实银行保安工作生活）
+  // {
+  //   id: "uncle_chen_bank",
+  //   name: "老陈",
+  //   role: "银行保安",
+  //   location: "bank",
+  //   birthday: 200,
+  //   desc: "银行门口站了八年的保安，见过形形色色的人。退休前在部队干过，说话直但心善。",
+  //   birthdayLine: "今天是我生日？哈哈，你还记得！来，进屋坐坐，喝杯茶。",
+  //   festivalLines: {
+  //     spring_festival: "过年银行开门三天，取钱的人排长队，忙死了！",
+  //     mid_autumn: "中秋节银行不放假，客户来办业务的不少。",
+  //     labor_day: "劳动节放假三天，银行关门，我在家陪老伴。",
+  //     national_day: "黄金周理财到期的人多，大厅挤满了。",
+  //   },
+  //   talkLines: [
+  //     "存取款记得带身份证。",
+  //     "别信那些高息理财，都是坑。",
+  //     "年轻人，多存点钱，以备不时之需。",
+  //   ],
+  //   giftPrefers: ["cigarettes", "beer"],
+  //   tradeInfo: {
+  //     expertise: ["daily", "food"],
+  //     infoTypes: {
+  //       price_level: { label: "银行周边消费水平", threshold: 30, cost: 20 },
+  //       category_lowest: { label: "附近吃饭哪里便宜", threshold: 60, cost: 10 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["bank_security"],
+  //       multiplier: 1.08,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "chen_bank_30", desc: "老陈提醒你防诈骗（降低被骗风险）", effect: function(st) { st.flags.chenScamWarning = true; StateManager.addMessage("💕 老陈悄悄说：「最近骗子多，有人冒充银行工作人员打电话，你小心点。」防诈骗提示已开启。", "success"); } },
+  //     { threshold: 60, id: "chen_bank_60", desc: "老陈介绍银行周边兼职（解锁银行附近临时工作）", effect: function(st) { st.flags.chenSideJob = true; StateManager.addMessage("💕 老陈说：「我认识银行对面便利店老板，缺个临时工，你要不要试试？」", "success"); } },
+  //     { threshold: 80, id: "chen_bank_80", desc: "老陈帮你留意银行正式招聘信息", effect: function(st) { st.flags.chenBankInfo = true; StateManager.addMessage("❤️ 老陈说：「银行偶尔招正式员工，我帮你留意着，有消息第一时间告诉你。」", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "老陈有些为难：「我老母亲今天住院了，我得去陪护。你能不能帮我顶半天班？就站在门口，有人进出打个招呼就行。」",
+  //     choices: [
+  //       { text: "💪 行，我来顶半天", apply: function(st) { st.flags._npcFavor_uncle_chen_bank = true; st.resources.cash += 50 + Random.int(0, 30); st.needs.fatigue = Math.min(100, st.needs.fatigue + 5); if (!st.relationships.uncle_chen_bank) st.relationships.uncle_chen_bank = { affinity: 0, met: true }; st.relationships.uncle_chen_bank.affinity = Math.min(100, st.relationships.uncle_chen_bank.affinity + 12); StateManager.addMessage("💪 站了半天班，没啥事，赚了¥" + (50 + Random.int(0, 30)) + "！老陈欠你一个人情。", "success"); } },
+  //       { text: "😅 今天没空", apply: function(st) { st.flags._npcFavor_uncle_chen_bank = true; if (!st.relationships.uncle_chen_bank) st.relationships.uncle_chen_bank = { affinity: 0, met: true }; st.relationships.uncle_chen_bank.affinity = Math.max(-100, st.relationships.uncle_chen_bank.affinity - 3); StateManager.addMessage("😅 老陈点点头：「没事，我再想想办法。」", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "老陈叹了口气：「干了这么多年保安，攒了点钱。儿子说让我退休，但我不知道能干啥……你给个建议？」",
+  //     choices: [
+  //       { text: "💪 退休也好，陪陪家人", hint: "好感+8", apply: function(st) { st.flags._npcDeepTask_uncle_chen_bank = true; st.relationships.uncle_chen_bank.affinity = Math.min(100, st.relationships.uncle_chen_bank.affinity + 8); StateManager.addMessage("💕 老陈点点头：「你说得对，我也该歇歇了。」", "success"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_uncle_chen_bank = true; StateManager.addMessage("🤷 老陈点点头：「我再想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+
+  // ============================================================
+  // 公园/居住区 NPC
+  // ============================================================
   // TODO: 待实现 - 刘叔（退休老教师，参考《Stardew Valley》刘易斯镇长）
+  // 配套地点：park（公园），配套工作：busking/park_security/park_cleaning/park_guide/park_flower_vendor
   // {
   //   id: "uncle_liu",
   //   name: "刘叔",

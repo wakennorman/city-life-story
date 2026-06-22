@@ -178,7 +178,13 @@ const LOCATIONS = {
     specialties: ["fruits", "water", "snacks"],
     dailyProbability: 0.3,
     specialCategory: ["food"],
-    jobs: ["hospital_caregiver"],
+    jobs: [
+      "hospital_caregiver",
+      "hospital_cleaning",
+      "hospital_delivery",
+      "hospital_orderly",
+      "hospital_guidance",
+    ],
     priceMod: {},
   },
   bank: {
@@ -192,7 +198,11 @@ const LOCATIONS = {
     specialties: [],
     dailyProbability: 0.2,
     specialCategory: [],
-    jobs: [],
+    jobs: [
+      "bank_security",
+      "bank_cashier_assist",
+      "atm_maintenance",
+    ],
     priceMod: {},
   },
   park: {
@@ -211,6 +221,10 @@ const LOCATIONS = {
       "street_vending_goods",
       "street_performer",
       "busking",
+      "park_security",
+      "park_cleaning",
+      "park_guide",
+      "park_flower_vendor",
     ],
     priceMod: {},
   },
@@ -225,7 +239,11 @@ const LOCATIONS = {
     specialties: ["daily_use", "snacks", "water"],
     dailyProbability: 0.3,
     specialCategory: [],
-    jobs: [],
+    jobs: [
+      "tutor_care",
+      "center_cleaning",
+      "training_assistant",
+    ],
     priceMod: {},
   },
 
