@@ -1596,7 +1596,13 @@ class GameStateManager {
     }
     // v1.6 → v1.7 迁移：行动频次统计
     if (!s.stats) {
-      s.stats = { actionFreq: {}, actionFirstUse: {}, tradeFreq: {}, trainFreq: {}, investFreq: {} };
+      s.stats = {
+        actionFreq: {},
+        actionFirstUse: {},
+        tradeFreq: {},
+        trainFreq: {},
+        investFreq: {},
+      };
     }
     // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
     if (!s.stats.tradeFreq) s.stats.tradeFreq = {};
@@ -2214,10 +2220,26 @@ function addDailyTransaction(state, type, category, amount, description) {
       categoryOrder: config.categoryOrder || [],
       priorityMap: config.priorityMap || {},
       freqMap: config.freqMap || null,
-      getCategory: config.getCategory || function () { return "other"; },
-      getFreqKey: config.getFreqKey || function (item) { return item.id; },
-      getCost: config.getCost || function () { return 0; },
-      getName: config.getName || function (item) { return item.name || item.id || ""; },
+      getCategory:
+        config.getCategory ||
+        function () {
+          return "other";
+        },
+      getFreqKey:
+        config.getFreqKey ||
+        function (item) {
+          return item.id;
+        },
+      getCost:
+        config.getCost ||
+        function () {
+          return 0;
+        },
+      getName:
+        config.getName ||
+        function (item) {
+          return item.name || item.id || "";
+        },
       description: config.description || "",
     };
   }
@@ -2260,8 +2282,12 @@ function addDailyTransaction(state, type, category, amount, description) {
       // Level 2: 同类内默认优先级
       var keyA = config.getFreqKey ? config.getFreqKey(a) : a.id;
       var keyB = config.getFreqKey ? config.getFreqKey(b) : b.id;
-      var priA = defaultPriority.hasOwnProperty(keyA) ? defaultPriority[keyA] : 50;
-      var priB = defaultPriority.hasOwnProperty(keyB) ? defaultPriority[keyB] : 50;
+      var priA = defaultPriority.hasOwnProperty(keyA)
+        ? defaultPriority[keyA]
+        : 50;
+      var priB = defaultPriority.hasOwnProperty(keyB)
+        ? defaultPriority[keyB]
+        : 50;
       if (priA !== priB) return priA - priB;
 
       // Level 3: 交互频次（高频优先）
@@ -2277,8 +2303,8 @@ function addDailyTransaction(state, type, category, amount, description) {
       }
 
       // Level 5: 名称拼音（保底）
-      var nameA = config.getName ? config.getName(a) : (a.name || a.id || "");
-      var nameB = config.getName ? config.getName(b) : (b.name || b.id || "");
+      var nameA = config.getName ? config.getName(a) : a.name || a.id || "";
+      var nameB = config.getName ? config.getName(b) : b.name || b.id || "";
       return nameA.localeCompare(nameB, "zh-CN");
     });
 
@@ -2305,7 +2331,11 @@ function addDailyTransaction(state, type, category, amount, description) {
         name: def.name,
         description: def.description,
         categoryCount: def.categoryOrder ? def.categoryOrder.length : 0,
-        freqTrackingActive: freqKey ? (state && state.stats && state.stats[freqKey] ? true : false) : false,
+        freqTrackingActive: freqKey
+          ? state && state.stats && state.stats[freqKey]
+            ? true
+            : false
+          : false,
         freqEntries: freqSize,
         layers: 5,
       });
@@ -2354,17 +2384,41 @@ function addDailyTransaction(state, type, category, amount, description) {
   registerListType("trade_goods", {
     name: "交易商品",
     description: "市场购买/出售的商品列表，按品类→频次→价格→名称排序",
-    categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+    categoryOrder: [
+      "food",
+      "daily",
+      "clothing",
+      "electronics",
+      "luxury",
+      "scrap",
+    ],
     priorityMap: {
-      water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
-      pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+      water: 10,
+      rice: 11,
+      vegetables: 12,
+      fruits: 13,
+      noodles: 14,
+      pork: 20,
+      beef: 21,
+      chicken: 22,
+      fish: 23,
+      egg: 24,
+      milk: 25,
       daily_use: 15,
     },
     freqMap: "tradeFreq",
-    getCategory: function (g) { return g.category || "other"; },
-    getFreqKey: function (g) { return g.id; },
-    getCost: function (g) { return g.basePrice || 0; },
-    getName: function (g) { return g.name || g.id; },
+    getCategory: function (g) {
+      return g.category || "other";
+    },
+    getFreqKey: function (g) {
+      return g.id;
+    },
+    getCost: function (g) {
+      return g.basePrice || 0;
+    },
+    getName: function (g) {
+      return g.name || g.id;
+    },
   });
 
   // 2. 技能列表
@@ -2373,15 +2427,30 @@ function addDailyTransaction(state, type, category, amount, description) {
     description: "技能训练列表，按实用型→学术型→体能型分组，频次优先",
     categoryOrder: ["practical", "academic", "physical"],
     priorityMap: {
-      cooking: 10, repair: 15, coding: 20, driving: 25,
-      english: 30, accounting: 35, electrician: 40,
-      management: 45, sales: 50, welding: 55,
+      cooking: 10,
+      repair: 15,
+      coding: 20,
+      driving: 25,
+      english: 30,
+      accounting: 35,
+      electrician: 40,
+      management: 45,
+      sales: 50,
+      welding: 55,
     },
     freqMap: "trainFreq",
-    getCategory: function (s) { return getSkillCategory(s.id); },
-    getFreqKey: function (s) { return s.id; },
-    getCost: function (s) { return 15; },
-    getName: function (s) { return s.name || s.id; },
+    getCategory: function (s) {
+      return getSkillCategory(s.id);
+    },
+    getFreqKey: function (s) {
+      return s.id;
+    },
+    getCost: function (s) {
+      return 15;
+    },
+    getName: function (s) {
+      return s.name || s.id;
+    },
   });
 
   // 3. 投资股票列表（股票子标签内）
@@ -2391,10 +2460,18 @@ function addDailyTransaction(state, type, category, amount, description) {
     categoryOrder: ["科技", "新能源", "消费", "金融", "房地产", "医药"],
     priorityMap: {},
     freqMap: "investFreq",
-    getCategory: function (s) { return s.industry || "其他"; },
-    getFreqKey: function (s) { return s.symbol; },
-    getCost: function (s) { return s.basePrice || 0; },
-    getName: function (s) { return s.symbol; },
+    getCategory: function (s) {
+      return s.industry || "其他";
+    },
+    getFreqKey: function (s) {
+      return s.symbol;
+    },
+    getCost: function (s) {
+      return s.basePrice || 0;
+    },
+    getName: function (s) {
+      return s.symbol;
+    },
   });
 
   // ====== 全局注册 ======
@@ -2406,7 +2483,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     getRegisteredIds: getRegisteredIds,
     getSkillCategory: getSkillCategory,
   };
-})();</script>
+})();
+</script>
     <script>/**
  * 金融计算模块 — 贷款额度动态评估引擎
  *
@@ -72767,7 +72845,9 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.ma) {
     const { ma5, ma7, ma20 } = indicators.ma;
-    lines.push(`  MA5: ¥${ma5.toFixed(2)} | MA7: ¥${ma7.toFixed(2)} | MA20: ¥${ma20.toFixed(2)}`);
+    lines.push(
+      `  MA5: ¥${ma5.toFixed(2)} | MA7: ¥${ma7.toFixed(2)} | MA20: ¥${ma20.toFixed(2)}`,
+    );
     if (ma5 > ma7 && ma7 > ma20) lines.push("  ✅ 均线多头排列，上涨趋势明确");
     else if (ma5 < ma7 && ma7 < ma20)
       lines.push("  ❌ 均线空头排列，下跌趋势明确");
@@ -72776,7 +72856,9 @@ function generateTechnicalSummary(symbol, price, trend, rating, indicators) {
 
   if (indicators.macd) {
     const { macd, signal, histogram } = indicators.macd;
-    lines.push(`  MACD: ${macd.toFixed(2)} | ${signal} | 柱状图: ${histogram.toFixed(2)}`);
+    lines.push(
+      `  MACD: ${macd.toFixed(2)} | ${signal} | 柱状图: ${histogram.toFixed(2)}`,
+    );
     lines.push(`  ${histogram > 0 ? "🟢 动能正向" : "🔴 动能负向"}`);
   }
 
@@ -85464,16 +85546,40 @@ function renderTradeTab(state, parent) {
     goodsList = SortUtils.sortInteractiveList(
       goodsList,
       {
-        categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+        categoryOrder: [
+          "food",
+          "daily",
+          "clothing",
+          "electronics",
+          "luxury",
+          "scrap",
+        ],
         priorityMap: {
-          water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
-          pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+          water: 10,
+          rice: 11,
+          vegetables: 12,
+          fruits: 13,
+          noodles: 14,
+          pork: 20,
+          beef: 21,
+          chicken: 22,
+          fish: 23,
+          egg: 24,
+          milk: 25,
         },
         freqMap: "tradeFreq",
-        getCategory: function (g) { return g.category || "other"; },
-        getFreqKey: function (g) { return g.id; },
-        getCost: function (g) { return g.basePrice || 0; },
-        getName: function (g) { return g.name || g.id; },
+        getCategory: function (g) {
+          return g.category || "other";
+        },
+        getFreqKey: function (g) {
+          return g.id;
+        },
+        getCost: function (g) {
+          return g.basePrice || 0;
+        },
+        getName: function (g) {
+          return g.name || g.id;
+        },
       },
       state,
     );
@@ -85846,7 +85952,8 @@ function renderTradeTab(state, parent) {
           // 追踪买卖频次
           var st = StateManager.getState();
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + qty;
           }
           renderCurrentTab(st, parent.parentElement);
           renderSidebar(st);
@@ -85866,7 +85973,8 @@ function renderTradeTab(state, parent) {
           buyWholesale(goodId, qty);
           var st = StateManager.getState();
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + qty;
           }
           renderMessageLog(StateManager.getState());
         }
@@ -85897,13 +86005,12 @@ function renderTradeTab(state, parent) {
         e.stopPropagation();
         const goodId = btn.dataset.good;
         const st = StateManager.getState();
-        const item = st.inventory.items.find(
-          (i) => i.id === goodId,
-        );
+        const item = st.inventory.items.find((i) => i.id === goodId);
         if (item && typeof sellGood === "function") {
           sellGood(goodId, item.qty);
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + item.qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + item.qty;
           }
           renderCurrentTab(st, parent.parentElement);
           renderSidebar(st);
@@ -86073,7 +86180,8 @@ function renderTradeTab(state, parent) {
           // 追踪自定义买卖频次
           var st2 = StateManager.getState();
           if (st2 && st2.stats) {
-            st2.stats.tradeFreq[goodId] = (st2.stats.tradeFreq[goodId] || 0) + qty;
+            st2.stats.tradeFreq[goodId] =
+              (st2.stats.tradeFreq[goodId] || 0) + qty;
           }
         } else {
           // sell
@@ -86095,7 +86203,8 @@ function renderTradeTab(state, parent) {
           // 追踪自定义卖出频次
           var st3 = StateManager.getState();
           if (st3 && st3.stats) {
-            st3.stats.tradeFreq[goodId] = (st3.stats.tradeFreq[goodId] || 0) + qty;
+            st3.stats.tradeFreq[goodId] =
+              (st3.stats.tradeFreq[goodId] || 0) + qty;
           }
         }
         // 成功后收起面板
@@ -86293,22 +86402,49 @@ function renderSkillsTab(state, parent) {
   // ====== 分类排序系统：实用型→学术型→体能型 → 训练频次 → 等级 → 名称 ======
   if (typeof SortUtils !== "undefined") {
     var skillObjs = skillKeys.map(function (k) {
-      return { id: k, name: skillNamesCache[k] || k, level: state.skills[k].level };
+      return {
+        id: k,
+        name: skillNamesCache[k] || k,
+        level: state.skills[k].level,
+      };
     });
     var sortedSkills = SortUtils.sortInteractiveList(
       skillObjs,
       {
         categoryOrder: ["practical", "academic", "physical"],
-        priorityMap: { cooking: 10, repair: 15, coding: 20, driving: 25, english: 30, accounting: 35, electrician: 40, management: 45, sales: 50, welding: 55 },
+        priorityMap: {
+          cooking: 10,
+          repair: 15,
+          coding: 20,
+          driving: 25,
+          english: 30,
+          accounting: 35,
+          electrician: 40,
+          management: 45,
+          sales: 50,
+          welding: 55,
+        },
         freqMap: "trainFreq",
-        getCategory: function (s) { return SortUtils.getSkillCategory ? SortUtils.getSkillCategory(s.id) : "physical"; },
-        getFreqKey: function (s) { return s.id; },
-        getCost: function (s) { return 15; },
-        getName: function (s) { return s.name || s.id; },
+        getCategory: function (s) {
+          return SortUtils.getSkillCategory
+            ? SortUtils.getSkillCategory(s.id)
+            : "physical";
+        },
+        getFreqKey: function (s) {
+          return s.id;
+        },
+        getCost: function (s) {
+          return 15;
+        },
+        getName: function (s) {
+          return s.name || s.id;
+        },
       },
       state,
     );
-    skillKeys = sortedSkills.map(function (s) { return s.id; });
+    skillKeys = sortedSkills.map(function (s) {
+      return s.id;
+    });
   }
 
   for (var ki = 0; ki < skillKeys.length; ki++) {

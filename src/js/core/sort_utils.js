@@ -59,10 +59,26 @@
       categoryOrder: config.categoryOrder || [],
       priorityMap: config.priorityMap || {},
       freqMap: config.freqMap || null,
-      getCategory: config.getCategory || function () { return "other"; },
-      getFreqKey: config.getFreqKey || function (item) { return item.id; },
-      getCost: config.getCost || function () { return 0; },
-      getName: config.getName || function (item) { return item.name || item.id || ""; },
+      getCategory:
+        config.getCategory ||
+        function () {
+          return "other";
+        },
+      getFreqKey:
+        config.getFreqKey ||
+        function (item) {
+          return item.id;
+        },
+      getCost:
+        config.getCost ||
+        function () {
+          return 0;
+        },
+      getName:
+        config.getName ||
+        function (item) {
+          return item.name || item.id || "";
+        },
       description: config.description || "",
     };
   }
@@ -105,8 +121,12 @@
       // Level 2: 同类内默认优先级
       var keyA = config.getFreqKey ? config.getFreqKey(a) : a.id;
       var keyB = config.getFreqKey ? config.getFreqKey(b) : b.id;
-      var priA = defaultPriority.hasOwnProperty(keyA) ? defaultPriority[keyA] : 50;
-      var priB = defaultPriority.hasOwnProperty(keyB) ? defaultPriority[keyB] : 50;
+      var priA = defaultPriority.hasOwnProperty(keyA)
+        ? defaultPriority[keyA]
+        : 50;
+      var priB = defaultPriority.hasOwnProperty(keyB)
+        ? defaultPriority[keyB]
+        : 50;
       if (priA !== priB) return priA - priB;
 
       // Level 3: 交互频次（高频优先）
@@ -122,8 +142,8 @@
       }
 
       // Level 5: 名称拼音（保底）
-      var nameA = config.getName ? config.getName(a) : (a.name || a.id || "");
-      var nameB = config.getName ? config.getName(b) : (b.name || b.id || "");
+      var nameA = config.getName ? config.getName(a) : a.name || a.id || "";
+      var nameB = config.getName ? config.getName(b) : b.name || b.id || "";
       return nameA.localeCompare(nameB, "zh-CN");
     });
 
@@ -150,7 +170,11 @@
         name: def.name,
         description: def.description,
         categoryCount: def.categoryOrder ? def.categoryOrder.length : 0,
-        freqTrackingActive: freqKey ? (state && state.stats && state.stats[freqKey] ? true : false) : false,
+        freqTrackingActive: freqKey
+          ? state && state.stats && state.stats[freqKey]
+            ? true
+            : false
+          : false,
         freqEntries: freqSize,
         layers: 5,
       });
@@ -199,17 +223,41 @@
   registerListType("trade_goods", {
     name: "交易商品",
     description: "市场购买/出售的商品列表，按品类→频次→价格→名称排序",
-    categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+    categoryOrder: [
+      "food",
+      "daily",
+      "clothing",
+      "electronics",
+      "luxury",
+      "scrap",
+    ],
     priorityMap: {
-      water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
-      pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+      water: 10,
+      rice: 11,
+      vegetables: 12,
+      fruits: 13,
+      noodles: 14,
+      pork: 20,
+      beef: 21,
+      chicken: 22,
+      fish: 23,
+      egg: 24,
+      milk: 25,
       daily_use: 15,
     },
     freqMap: "tradeFreq",
-    getCategory: function (g) { return g.category || "other"; },
-    getFreqKey: function (g) { return g.id; },
-    getCost: function (g) { return g.basePrice || 0; },
-    getName: function (g) { return g.name || g.id; },
+    getCategory: function (g) {
+      return g.category || "other";
+    },
+    getFreqKey: function (g) {
+      return g.id;
+    },
+    getCost: function (g) {
+      return g.basePrice || 0;
+    },
+    getName: function (g) {
+      return g.name || g.id;
+    },
   });
 
   // 2. 技能列表
@@ -218,15 +266,30 @@
     description: "技能训练列表，按实用型→学术型→体能型分组，频次优先",
     categoryOrder: ["practical", "academic", "physical"],
     priorityMap: {
-      cooking: 10, repair: 15, coding: 20, driving: 25,
-      english: 30, accounting: 35, electrician: 40,
-      management: 45, sales: 50, welding: 55,
+      cooking: 10,
+      repair: 15,
+      coding: 20,
+      driving: 25,
+      english: 30,
+      accounting: 35,
+      electrician: 40,
+      management: 45,
+      sales: 50,
+      welding: 55,
     },
     freqMap: "trainFreq",
-    getCategory: function (s) { return getSkillCategory(s.id); },
-    getFreqKey: function (s) { return s.id; },
-    getCost: function (s) { return 15; },
-    getName: function (s) { return s.name || s.id; },
+    getCategory: function (s) {
+      return getSkillCategory(s.id);
+    },
+    getFreqKey: function (s) {
+      return s.id;
+    },
+    getCost: function (s) {
+      return 15;
+    },
+    getName: function (s) {
+      return s.name || s.id;
+    },
   });
 
   // 3. 投资股票列表（股票子标签内）
@@ -236,10 +299,18 @@
     categoryOrder: ["科技", "新能源", "消费", "金融", "房地产", "医药"],
     priorityMap: {},
     freqMap: "investFreq",
-    getCategory: function (s) { return s.industry || "其他"; },
-    getFreqKey: function (s) { return s.symbol; },
-    getCost: function (s) { return s.basePrice || 0; },
-    getName: function (s) { return s.symbol; },
+    getCategory: function (s) {
+      return s.industry || "其他";
+    },
+    getFreqKey: function (s) {
+      return s.symbol;
+    },
+    getCost: function (s) {
+      return s.basePrice || 0;
+    },
+    getName: function (s) {
+      return s.symbol;
+    },
   });
 
   // ====== 全局注册 ======

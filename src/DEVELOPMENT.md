@@ -1,13 +1,44 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（v2.2 分类排序系统扩展 — sort_utils.js + Trade/Skills/Stocks 排序）
+> 最后更新: 2026-06-22（v2.3 全局数值精度规范化 — 清除长浮点数显示）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
-## 2026-06-22 — 分类排序系统扩展 v1.0（sort_utils.js）
+## 2026-06-22 — 全局数值精度规范化
 
 ### 背景
 
-ActionSort 系统（6层排序）此前仅用于行动Tab。但游戏中还有其他交互选项列表（Trade Goods 23个、Skills 10个、Stocks 30只）完全未使用排序，用户只能按数据定义顺序浏览。
+游戏中「虚拟币市场情绪」面板显示 `48.71837561344329` 这样的长浮点数，根源是 `btcFearGreed` 状态每天叠加 `Random.float(-5,5)` 从未舍入，直接裸显。
+
+### 改动清单
+
+#### investment.js
+
+1. **btcFearGreed 取整**（line 1170）：`Math.round()` 包裹整个表达式，恐慌指数保持整数（参考 BTC Fear & Greed Index 0-100 整数规范）
+2. **renderBtc 恐慌指数显示**（line 2484）：`Math.round(fg)` 整数显示（原裸显长浮点，用户投诉对象）
+3. **renderMarketSentiment BTC恐贪**（line 1690）：同上取整显示
+4. **虚拟币持仓显示**（line 2560）：新增 `sharesStr = h.shares.toFixed(dec)`，按 `basePrice` 自动选择精度（>¥1000=4位, >¥100=2位）
+5. **贵金属/期货持仓显示**（lines 2673/2814）：`sharesStr = h.shares.toFixed(2)` 统一2位小数
+6. **买卖消息格式化**（lines 1315/1361）：非股票类 `shares.toFixed(6)`，虚拟币/贵金属避免裸显JS浮点精度
+7. **BTC买卖消息**（lines 1388/1412）：`amount.toFixed(6)` + `btcAvgCost.toFixed(2)` 替代 `toLocaleString()`
+8. **自定义数量提示**（line 2242）：`qty.toFixed(dec)` 避免「调整为 0.0010000000000002」
+
+#### investment_analysis.js
+
+9. **MA显示**（line 409）：`ma5/ma7/ma20.toFixed(2)` 补齐2位小数
+10. **MACD显示**（line 418）：`macd/histogram.toFixed(2)` 补齐2位小数
+11. **RSI显示**（line 424）：`value.toFixed(1)` RSI值1位小数（参考TradingView标准）
+
+### 格式化原则
+
+| 数据类型        | 精度            | 参考来源                    |
+| --------------- | --------------- | --------------------------- |
+| 恐慌指数        | 0位（整数）     | 真实 BTC Fear & Greed Index |
+| 股价/均价       | 2位             | Bloomberg Terminal 标准     |
+| BTC数量         | 6位             | 交易所规范                  |
+| 虚拟币持仓      | 2-4位（按币价） | 币价¥1000+→4位，¥100+→2位   |
+| 贵金属/期货持仓 | 2位             | 商品期货标准                |
+| RSI             | 1位             | TradingView                 |
+| MA/MACD         | 2位             | 传统技术分析标准            |
 
 ### 改动内容
 

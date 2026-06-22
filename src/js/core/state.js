@@ -668,7 +668,13 @@ class GameStateManager {
     }
     // v1.6 → v1.7 迁移：行动频次统计
     if (!s.stats) {
-      s.stats = { actionFreq: {}, actionFirstUse: {}, tradeFreq: {}, trainFreq: {}, investFreq: {} };
+      s.stats = {
+        actionFreq: {},
+        actionFirstUse: {},
+        tradeFreq: {},
+        trainFreq: {},
+        investFreq: {},
+      };
     }
     // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
     if (!s.stats.tradeFreq) s.stats.tradeFreq = {};

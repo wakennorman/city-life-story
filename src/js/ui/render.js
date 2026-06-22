@@ -2617,16 +2617,40 @@ function renderTradeTab(state, parent) {
     goodsList = SortUtils.sortInteractiveList(
       goodsList,
       {
-        categoryOrder: ["food", "daily", "clothing", "electronics", "luxury", "scrap"],
+        categoryOrder: [
+          "food",
+          "daily",
+          "clothing",
+          "electronics",
+          "luxury",
+          "scrap",
+        ],
         priorityMap: {
-          water: 10, rice: 11, vegetables: 12, fruits: 13, noodles: 14,
-          pork: 20, beef: 21, chicken: 22, fish: 23, egg: 24, milk: 25,
+          water: 10,
+          rice: 11,
+          vegetables: 12,
+          fruits: 13,
+          noodles: 14,
+          pork: 20,
+          beef: 21,
+          chicken: 22,
+          fish: 23,
+          egg: 24,
+          milk: 25,
         },
         freqMap: "tradeFreq",
-        getCategory: function (g) { return g.category || "other"; },
-        getFreqKey: function (g) { return g.id; },
-        getCost: function (g) { return g.basePrice || 0; },
-        getName: function (g) { return g.name || g.id; },
+        getCategory: function (g) {
+          return g.category || "other";
+        },
+        getFreqKey: function (g) {
+          return g.id;
+        },
+        getCost: function (g) {
+          return g.basePrice || 0;
+        },
+        getName: function (g) {
+          return g.name || g.id;
+        },
       },
       state,
     );
@@ -2999,7 +3023,8 @@ function renderTradeTab(state, parent) {
           // 追踪买卖频次
           var st = StateManager.getState();
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + qty;
           }
           renderCurrentTab(st, parent.parentElement);
           renderSidebar(st);
@@ -3019,7 +3044,8 @@ function renderTradeTab(state, parent) {
           buyWholesale(goodId, qty);
           var st = StateManager.getState();
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + qty;
           }
           renderMessageLog(StateManager.getState());
         }
@@ -3050,13 +3076,12 @@ function renderTradeTab(state, parent) {
         e.stopPropagation();
         const goodId = btn.dataset.good;
         const st = StateManager.getState();
-        const item = st.inventory.items.find(
-          (i) => i.id === goodId,
-        );
+        const item = st.inventory.items.find((i) => i.id === goodId);
         if (item && typeof sellGood === "function") {
           sellGood(goodId, item.qty);
           if (st && st.stats) {
-            st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + item.qty;
+            st.stats.tradeFreq[goodId] =
+              (st.stats.tradeFreq[goodId] || 0) + item.qty;
           }
           renderCurrentTab(st, parent.parentElement);
           renderSidebar(st);
@@ -3226,7 +3251,8 @@ function renderTradeTab(state, parent) {
           // 追踪自定义买卖频次
           var st2 = StateManager.getState();
           if (st2 && st2.stats) {
-            st2.stats.tradeFreq[goodId] = (st2.stats.tradeFreq[goodId] || 0) + qty;
+            st2.stats.tradeFreq[goodId] =
+              (st2.stats.tradeFreq[goodId] || 0) + qty;
           }
         } else {
           // sell
@@ -3248,7 +3274,8 @@ function renderTradeTab(state, parent) {
           // 追踪自定义卖出频次
           var st3 = StateManager.getState();
           if (st3 && st3.stats) {
-            st3.stats.tradeFreq[goodId] = (st3.stats.tradeFreq[goodId] || 0) + qty;
+            st3.stats.tradeFreq[goodId] =
+              (st3.stats.tradeFreq[goodId] || 0) + qty;
           }
         }
         // 成功后收起面板
@@ -3446,22 +3473,49 @@ function renderSkillsTab(state, parent) {
   // ====== 分类排序系统：实用型→学术型→体能型 → 训练频次 → 等级 → 名称 ======
   if (typeof SortUtils !== "undefined") {
     var skillObjs = skillKeys.map(function (k) {
-      return { id: k, name: skillNamesCache[k] || k, level: state.skills[k].level };
+      return {
+        id: k,
+        name: skillNamesCache[k] || k,
+        level: state.skills[k].level,
+      };
     });
     var sortedSkills = SortUtils.sortInteractiveList(
       skillObjs,
       {
         categoryOrder: ["practical", "academic", "physical"],
-        priorityMap: { cooking: 10, repair: 15, coding: 20, driving: 25, english: 30, accounting: 35, electrician: 40, management: 45, sales: 50, welding: 55 },
+        priorityMap: {
+          cooking: 10,
+          repair: 15,
+          coding: 20,
+          driving: 25,
+          english: 30,
+          accounting: 35,
+          electrician: 40,
+          management: 45,
+          sales: 50,
+          welding: 55,
+        },
         freqMap: "trainFreq",
-        getCategory: function (s) { return SortUtils.getSkillCategory ? SortUtils.getSkillCategory(s.id) : "physical"; },
-        getFreqKey: function (s) { return s.id; },
-        getCost: function (s) { return 15; },
-        getName: function (s) { return s.name || s.id; },
+        getCategory: function (s) {
+          return SortUtils.getSkillCategory
+            ? SortUtils.getSkillCategory(s.id)
+            : "physical";
+        },
+        getFreqKey: function (s) {
+          return s.id;
+        },
+        getCost: function (s) {
+          return 15;
+        },
+        getName: function (s) {
+          return s.name || s.id;
+        },
       },
       state,
     );
-    skillKeys = sortedSkills.map(function (s) { return s.id; });
+    skillKeys = sortedSkills.map(function (s) {
+      return s.id;
+    });
   }
 
   for (var ki = 0; ki < skillKeys.length; ki++) {
