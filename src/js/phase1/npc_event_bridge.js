@@ -171,6 +171,83 @@ const EVENT_NPC_MAP = {
       },
     },
   },
+  // === 新 NPC 事件桥接（v2.1）===
+  // 林阿姨相关事件
+  wholesale_bargain: {
+    npcs: {
+      auntie_lin: {
+        change: 2,
+        msg: "林阿姨笑着说：'会砍价是好习惯，买菜也得有技巧。'",
+      },
+    },
+  },
+  veggie_fresh_find: {
+    npcs: {
+      auntie_lin: {
+        change: 3,
+        msg: "林阿姨点头：'挑菜的眼光不错嘛，跟我学的吧？'",
+      },
+    },
+  },
+  // 赵师傅相关事件
+  equipment_breakdown: {
+    npcs: {
+      master_zhao: {
+        change: 2,
+        msg: "赵师傅听说你东西坏了：'修修还能用，别急着扔。'",
+      },
+    },
+  },
+  repair_success: {
+    npcs: {
+      master_zhao: {
+        change: 3,
+        msg: "赵师傅竖起大拇指：'自己动手修好了？有出息！'",
+      },
+    },
+  },
+  // 小丽相关事件
+  content_creation: {
+    npcs: {
+      xiaoli: {
+        change: 2,
+        msg: "小丽兴奋地说：'你也在做内容？改天一起直播啊！'",
+      },
+    },
+  },
+  viral_moment: {
+    npcs: {
+      xiaoli: {
+        change: 4,
+        msg: "小丽激动地拍你肩膀：'火了火了！教教我怎么做到的！'",
+      },
+    },
+  },
+  // 王医生相关事件
+  health_checkup: {
+    npcs: {
+      dr_wang: {
+        change: 2,
+        msg: "王医生点头：'定期检查是好习惯，继续保持。'",
+      },
+    },
+  },
+  illness_recovery: {
+    npcs: {
+      dr_wang: {
+        change: 3,
+        msg: "王医生欣慰地说：'恢复得不错，按时吃药记得。'",
+      },
+    },
+  },
+  mental_breakdown_edge: {
+    npcs: {
+      dr_wang: {
+        change: 3,
+        msg: "王医生严肃地说：'身体是革命的本钱，别硬撑。'",
+      },
+    },
+  },
 };
 
 /**
@@ -325,6 +402,67 @@ function getNpcDailyEchoes(npcId, affinity, state) {
         text: "陈师傅拉你坐下：'我打算开店了，你来给我当合伙人吧！'",
       },
     ],
+    // === 新 NPC 日常回响（v2.1）===
+    auntie_lin: [
+      { min: -100, max: -10, text: "林阿姨瞥了你一眼，转身继续忙。" },
+      { min: -10, max: 20, text: "林阿姨低头挑菜，没注意到你。" },
+      { min: 20, max: 50, text: "林阿姨招呼：'今天菜新鲜，来买点？'" },
+      {
+        min: 50,
+        max: 80,
+        text: "林阿姨笑着说：'今天有特价菜，给你留了点。'",
+      },
+      {
+        min: 80,
+        max: 101,
+        text: "林阿姨塞给你一把青菜：'自家种的，拿着！'",
+      },
+    ],
+    master_zhao: [
+      { min: -100, max: -10, text: "赵师傅戴着护目镜，没看你。" },
+      { min: -10, max: 20, text: "赵师傅埋头修车，没空搭话。" },
+      { min: 20, max: 50, text: "赵师傅抬头：'车有问题？过来看看。'" },
+      {
+        min: 50,
+        max: 80,
+        text: "赵师傅递个扳手：'来帮我递下工具，顺便学学。'",
+      },
+      {
+        min: 80,
+        max: 101,
+        text: "赵师傅拍你肩膀：'这铺子以后交给你都行！'",
+      },
+    ],
+    xiaoli: [
+      { min: -100, max: -10, text: "小丽戴着耳机直播，没注意到你。" },
+      { min: -10, max: 20, text: "小丽低头回评论，当没看见。" },
+      { min: 20, max: 50, text: "小丽挥手：'今天直播数据不错，来聊聊？'" },
+      {
+        min: 50,
+        max: 80,
+        text: "小丽兴奋地说：'我新视频爆了！改天教你拍！'",
+      },
+      {
+        min: 80,
+        max: 101,
+        text: "小丽拉你：'帮我拍个视频吧，你出镜！'",
+      },
+    ],
+    dr_wang: [
+      { min: -100, max: -10, text: "王医生在写病历，没空理你。" },
+      { min: -10, max: 20, text: "王医生匆匆路过，点头示意。" },
+      { min: 20, max: 50, text: "王医生问：'最近身体怎么样？'" },
+      {
+        min: 50,
+        max: 80,
+        text: "王医生笑着说：'按时吃药，注意休息，别太拼。'",
+      },
+      {
+        min: 80,
+        max: 101,
+        text: "王医生拍拍你：'有空来做个全面体检，我帮你安排。'",
+      },
+    ],
   };
 
   var pool = echoes[npcId];
@@ -352,12 +490,17 @@ function rollNewsNpcComment(state, newsHeadline) {
 
   // 根据新闻关键词选择相关NPC
   var keywords = {
-    aunt_wand: ["租金", "房东", "城中村", "旧改"],
+    aunt_wang: ["租金", "房东", "城中村", "旧改"],
     boss_li: ["工地", "建筑", "工程", "楼盘"],
     sister_zhang: ["招聘", "工作", "就业", "工资", "政策"],
     old_zhou: ["废品", "回收", "金属", "涨价"],
     xiao_mei: ["大学", "学校", "学生", "教育", "考试"],
     chef_chen: ["餐饮", "食品", "外卖", "物价", "天气"],
+    // === 新 NPC 新闻关键词（v2.1）===
+    auntie_lin: ["菜市场", "蔬菜", "食材", "物价", "农产品"],
+    master_zhao: ["汽车", "维修", "机械", "工厂", "设备"],
+    xiaoli: ["直播", "网红", "内容", "平台", "粉丝", "视频"],
+    dr_wang: ["医院", "健康", "医疗", "药品", "疫情", "疾病"],
   };
 
   for (var npcId in keywords) {
@@ -375,6 +518,12 @@ function rollNewsNpcComment(state, newsHeadline) {
           old_zhou: "老周耳朵竖起来：'这行情……我得合计合计。'",
           xiao_mei: "小美推了推眼镜：'这跟我专业相关诶！'",
           chef_chen: "陈师傅擦了擦手看新闻：'做餐饮的得盯着这消息。'",
+          // === 新 NPC 新闻评论（v2.1）===
+          auntie_lin: "林阿姨点头：'菜价涨涨跌跌正常，我这摊子还得开下去。'",
+          master_zhao:
+            "赵师傅看了看新闻：'这跟修车没关系，但工厂的事我得留意。'",
+          xiaoli: "小丽眼睛一亮：'这新闻能当素材！我得拍个视频！'",
+          dr_wang: "王医生认真看完：'这条跟健康有关，得让更多人知道。'",
         };
         StateManager.addMessage("💬 " + echoes[actualNpcId], "info");
         // 好感高的NPC更积极回应
@@ -427,6 +576,47 @@ const LOCATION_NPC_MESSAGES = {
     msgs: [
       "小美抱着书本从图书馆出来，笑着冲你点头。",
       "小美在食堂门口排着队，看到你招了招手。",
+    ],
+  },
+  // === 新 NPC 位置交互（v2.1）===
+  wholesaleMarket: {
+    npcId: "auntie_lin",
+    chance: 0.25,
+    minAffinity: 0,
+    msgs: [
+      "林阿姨正在整理菜摊，看到你招手：'今天菜新鲜！'",
+      "林阿姨在称重，抽空抬头：'要买点什么？'",
+      "菜市场碰到林阿姨，她正跟顾客讲价。",
+    ],
+  },
+  factoryZone: {
+    npcId: "master_zhao",
+    chance: 0.2,
+    minAffinity: 0,
+    msgs: [
+      "赵师傅在修车，满身油污地抬头：'车有问题？'",
+      "赵师傅擦着手：'午休了，来喝口水。'",
+      "工业区路过赵师傅的铺子，听到里面传来工具声。",
+    ],
+  },
+  techPark: {
+    npcId: "xiaoli",
+    chance: 0.2,
+    minAffinity: 0,
+    msgs: [
+      "小丽在草坪上直播，看到你挥手：'来当我的观众！'",
+      "小丽刚结束直播，笑着问：'今天拍什么内容好？'",
+      "科技园咖啡厅碰到小丽，她正在回粉丝评论。",
+    ],
+  },
+  hospital: {
+    npcId: "dr_wang",
+    chance: 0.15,
+    minAffinity: 0,
+    msgs: [
+      "王医生在走廊匆匆走过，点头示意。",
+      "王医生在护士站查病历，抬头：'来看病？'",
+      "医院碰到王医生，他正跟家属交代注意事项。",
     ],
   },
 };
