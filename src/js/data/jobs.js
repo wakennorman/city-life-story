@@ -328,6 +328,49 @@ const STREET_JOBS = [
     },
     risk: {},
   },
+  {
+    id: "hospital_companion",
+    name: "陪诊服务",
+    desc: "帮老人/行动不便者去医院陪诊挂号、取药。需要耐心和细心，收入稳定。",
+    icon: "🏥",
+    location: "hospital",
+    requirements: { mental: 25, minAge: 22, maxAge: 55 },
+    effects: { fatigue: 15, happiness: 5, caregiverXp: 2 },
+    payCalc(state) {
+      return Math.floor(80 + state.player.mental * 0.3 + Random.float(0, 80));
+    },
+    risk: { illness: 0.02 },
+  },
+  {
+    id: "tutoring",
+    name: "家教辅导",
+    desc: "给中小学生辅导功课。智力要求不高，但需要耐心和责任心。",
+    icon: "📚",
+    location: "school",
+    requirements: { intelligence: 20, minAge: 18 },
+    effects: { fatigue: 8, intelligenceXp: 2, happiness: 5 },
+    payCalc(state) {
+      return Math.floor(
+        40 + state.player.intelligence * 0.3 + Random.float(0, 30),
+      );
+    },
+    risk: {},
+  },
+  {
+    id: "factory_overtime",
+    name: "工厂加班",
+    desc: "工业区工厂招临时加班工。工资高但疲劳增加快，适合短期冲刺。",
+    icon: "⏰",
+    location: "factoryZone",
+    requirements: { physique: 15, minAge: 18, maxAge: 45 },
+    effects: { fatigue: 40, hygiene: -3, physiqueXp: 1 },
+    payCalc(state) {
+      return Math.floor(
+        120 + state.player.physique * 0.4 + Random.float(0, 40),
+      );
+    },
+    risk: { injury: 0.05, illness: 0.02 },
+  },
 ];
 
 // ====== P2#12 技能树分支解锁工作 ======
@@ -739,65 +782,35 @@ const STREET_JOBS = [
     //   risk: {},
     // },
     // ============================================================
-    // 公园地点工作（正式实现 — 修复公园空地点问题）
-    // 参考来源：《大多数》工作系统 / 真实中国公园就业数据（2024年）
-    // 联动：公园地点 jobs 数组已更新，需配套添加 NPC + 事件
+    // 批发市场地点工作（正式实现 — 参考真实批发行业就业）
+    // 联动：wholesaleMarket 地点 jobs 数组需更新
     // ============================================================
-    // TODO: 待实现 - 公园街头表演（参考真实街头艺人收入¥50-500/天）
     {
-      id: "busking",
-      name: "街头表演",
-      desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
-      icon: "🎸",
-      location: "park",
-      requirements: { mental: 30, minAge: 16, maxAge: 60 },
-      effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+      id: "wholesale_delivery",
+      name: "批发配送",
+      desc: "帮批发商送货上门。需要会开车，体力好，收入稳定。",
+      icon: "🚚",
+      location: "wholesaleMarket",
+      requirements: { driving: 10, minAge: 20, maxAge: 45 },
+      effects: { fatigue: 25, agilityXp: 2 },
       payCalc(state) {
-        return Math.floor(
-          18 +
-            state.player.mental * 0.2 +
-            state.player.fame * 0.3 +
-            Random.float(0, 42),
-        );
+        const drivingBonus = state.skills.driving?.level || 0;
+        return Math.floor(Random.float(50, 90) * (1 + drivingBonus * 0.02));
       },
-      risk: {},
+      risk: { injury: 0.02 },
     },
-    //
-    // ============================================================
-    // 银行地点工作（正式实现 — 银行之前是空地点）
-    // 参考来源：《大多数》工作系统 / 真实中国银行就业数据（2024年）
-    // 联动：银行地点 jobs 数组需更新
-    // ============================================================
     {
-      id: "bank_security",
-      name: "银行保安",
-      icon: "👮",
-      location: "bank",
-      requirements: { minAge: 20, maxAge: 50 },
-      effects: { fatigue: 8, happiness: -2, physiqueXp: 0 },
-      payCalc: function (state) {
-        return Math.floor(Random.float(60, 90));
-      },
-      risk: {},
-    },
-    //
-    // ============================================================
-    // 培训中心地点工作（正式实现 — 培训中心之前是空地点）
-    // 参考来源：《大多数》工作系统 / 真实中国培训机构就业数据（2024年）
-    // 联动：培训中心地点 jobs 数组需更新
-    // ============================================================
-    {
-      id: "training_assistant",
-      name: "培训助理",
-      desc: "协助培训老师管理班级、准备教材。需要耐心和组织能力。",
-      icon: "📋",
-      location: "trainingCenter",
-      requirements: { mental: 20, intelligence: 15, minAge: 18, maxAge: 40 },
-      effects: { fatigue: 10, happiness: 3, managementXp: 2 },
+      id: "wholesale_sorting",
+      name: "货物分拣",
+      desc: "在批发市场仓库分拣货物。重复劳动但轻松，适合休息养病。",
+      icon: "📦",
+      location: "wholesaleMarket",
+      requirements: { agility: 15, minAge: 18, maxAge: 45 },
+      effects: { fatigue: 22, physiqueXp: 2 },
       payCalc(state) {
-        return Math.floor(40 + state.player.mental * 0.2 + Random.float(0, 40));
+        return Math.floor(Random.float(40, 70));
       },
-      risk: {},
+      risk: { injury: 0.03 },
     },
     //
     // === 批发市场地点工作 ===

@@ -15,7 +15,7 @@ const LOCATIONS = {
     specialties: ["scrap_metal", "scrap_paper", "scrap_plastic"], // 区域特产（必出）
     dailyProbability: 0.4, // 非特产商品出现概率
     specialCategory: ["scrap"], // 此类别商品额外+0.3概率
-    jobs: ["waste_recycling", "street_vending_goods", "street_vending_food"],
+    jobs: ["waste_recycling", "street_vending_food"],
     priceMod: {
       water: 0.9,
       snacks: 0.85,
@@ -37,7 +37,7 @@ const LOCATIONS = {
     specialties: [], // 批发市场：所有商品由 getDailyGoodsForLocation 特殊处理
     dailyProbability: 1.0, // 批发市场所有商品都会出现
     specialCategory: [],
-    jobs: ["street_vending_goods", "warehouse_worker"],
+    jobs: ["wholesale_delivery", "wholesale_sorting"],
     priceMod: {
       water: 0.8,
       snacks: 0.78,
@@ -63,9 +63,7 @@ const LOCATIONS = {
     specialCategory: ["luxury", "food"],
     jobs: [
       "manual_labor_construction",
-      "skilled_labor_construction",
       "premium_engineering",
-      "street_vending_food",
     ],
     priceMod: {},
   },
@@ -87,6 +85,7 @@ const LOCATIONS = {
       cigarettes: 1.2,
       beer: 1.2,
     },
+    jobs: ["factory_work_assembly", "factory_overtime"],
   },
   school: {
     id: "school",
@@ -100,11 +99,8 @@ const LOCATIONS = {
     dailyProbability: 0.5,
     specialCategory: ["food", "clothing"],
     jobs: [
-      "school_maintenance",
-      "package_delivery",
       "tutoring",
-      "street_vending_food",
-      "street_vending_goods",
+      "xiao_mei_tutoring",
     ],
     priceMod: {
       water: 0.8,
@@ -127,12 +123,8 @@ const LOCATIONS = {
     specialCategory: ["clothing", "electronics", "luxury"],
     jobs: [
       "street_vending_food",
-      "food_stall",
-      "barber",
-      "cleaning_service",
-      "repair_service",
+      "sister_zhang_vending",
       "delivery_rider",
-      "street_performer",
       "restaurant_assistant",
     ],
     priceMod: {
@@ -159,9 +151,6 @@ const LOCATIONS = {
     dailyProbability: 0.4,
     specialCategory: ["electronics"],
     jobs: [
-      "street_vending_food",
-      "data_entry",
-      "customer_service_tech",
       "content_writing",
       "junior_analyst",
     ],
@@ -180,10 +169,7 @@ const LOCATIONS = {
     specialCategory: ["food"],
     jobs: [
       "hospital_caregiver",
-      "hospital_cleaning",
-      "hospital_delivery",
-      "hospital_orderly",
-      "hospital_guidance",
+      "hospital_companion",
     ],
     priceMod: {},
   },
@@ -200,8 +186,6 @@ const LOCATIONS = {
     specialCategory: [],
     jobs: [
       "bank_security",
-      "bank_cashier_assist",
-      "atm_maintenance",
     ],
     priceMod: {},
   },
@@ -217,14 +201,7 @@ const LOCATIONS = {
     dailyProbability: 0.5,
     specialCategory: ["food"],
     jobs: [
-      "street_vending_food",
-      "street_vending_goods",
-      "street_performer",
       "busking",
-      "park_security",
-      "park_cleaning",
-      "park_guide",
-      "park_flower_vendor",
     ],
     priceMod: {},
   },
@@ -240,8 +217,6 @@ const LOCATIONS = {
     dailyProbability: 0.3,
     specialCategory: [],
     jobs: [
-      "tutor_care",
-      "center_cleaning",
       "training_assistant",
     ],
     priceMod: {},
