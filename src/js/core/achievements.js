@@ -1237,193 +1237,1001 @@ const ACHIEVEMENTS = [
   },
 
   // ============================================================
-  // 待完成：生存线成就（城中村阶段）— 参考《大多数》《北京浮生记》《This War of Mine》
-  // 实现提示：在 check() 中检测对应状态条件，注意在 main.js 或对应系统中埋点 flags
+  // 生存线成就（城中村阶段）— 正式实现
   // ============================================================
-  // TODO: 待实现 - 废品大王
-  // {
-  //   id: "scrap_master",
-  //   name: "废品大王",
-  //   desc: "废品回收累计收入 ¥10,000",
-  //   story: "从第一个塑料瓶到第一千个易拉罐，你把这些没人要的东西变成了真金白银。",
-  //   icon: "♻️",
-  //   category: "里程碑",
-  //   hidden: false,
-  //   check: function(st) { return (st.flags._scrapTotalIncome || 0) >= 10000; },
-  // },
-  // TODO: 待实现 - 街头小贩（摆摊累计收入 ¥5,000）
-  // { id: "street_vendor", name: "街头小贩", desc: "摆摊累计收入 ¥5,000", story: "你的小摊从最初的烤串到后来的煎饼果子，一步步做大了。", icon: "🍢", category: "里程碑", hidden: false, check: function(st) { return (st.flags._vendingTotalIncome || 0) >= 5000; } },
-  // TODO: 待实现 - 生存满30天（已有 survive_30_days，此处为更严格要求：30天不生病）
-  // { id: "survival_30_healthy", name: "三十天无恙", desc: "生存满30天且从未生病", story: "这一个月你小心翼翼，没让自己病过一次。健康是最大的财富。", icon: "💪", category: "健康/生活线", hidden: true, check: function(st) { return (st.player.day || 0) >= 30 && !(st.flags && st.flags._everGotSick); } },
-  // TODO: 待实现 - 露宿街头满7天
-  // { id: "no_home_7days", name: "流浪者", desc: "露宿街头满7天", story: "天为被，地为床。那七天你明白了什么叫真正的底层。", icon: "🌃", category: "人生第一次", hidden: true, check: function(st) { return (st.flags._homelessDays || 0) >= 7; } },
-  // TODO: 待实现 - 从露宿升级到合租床位
-  // { id: "homeless_to_roof", name: "从街头到屋顶", desc: "从露宿升级到合租床位", story: "你终于有了属于自己的床——虽然只是别人家的一角。", icon: "🛏️", category: "里程碑", hidden: false, check: function(st) { return (st.housing.tier || 0) >= 1 && (st.flags._everHomeless || 0); } },
-  // TODO: 待实现 - 单次交易利润超过 ¥500
-  // { id: "market_hawk", name: "市场猎手", desc: "单次交易利润超过 ¥500", story: "那笔买卖你赚了一整天的工钱。市场的逻辑，你摸到了一点门道。", icon: "📈", category: "里程碑", hidden: false, check: function(st) { return (st.flags._maxSingleTradeProfit || 0) >= 500; } },
-  // TODO: 待实现 - 单次拾荒获得物品总价值超 ¥200
-  // { id: "scavenge_king", name: "拾荒之王", desc: "单次拾荒获得物品总价值超 ¥200", story: "那天你运气爆棚，捡到的东西卖了一大笔。但好运不会每次都来。", icon: "🔍", category: "隐藏", hidden: true, check: function(st) { return (st.flags._maxSingleScavengeValue || 0) >= 200; } },
-  // TODO: 待实现 - 暴雨天出门工作3次
-  // { id: "rain_walker", name: "雨中行者", desc: "暴雨天出门工作3次", story: "雨再大你也得出去，因为家里的米缸不能空。", icon: "🌧️", category: "隐藏", hidden: true, check: function(st) { return (st.flags._rainyWorkCount || 0) >= 3; } },
-  // TODO: 待实现 - 连续7天不购买任何物品
-  // { id: "thrift_master", name: "节俭大师", desc: "连续7天不购买任何物品", story: "七天，你没花一分钱在购物上。省下的每一块钱都是赚到的。", icon: "💰", category: "隐藏", hidden: true, check: function(st) { return (st.flags._maxThriftDays || 0) >= 7; } },
-  // TODO: 待实现 - 王大婶好感达到30（已有 friend_circle，此处为单NPC专项）
-  // { id: "neighborly", name: "远亲不如近邻", desc: "王大婶好感达到30", story: "王大婶开始把你当自己人了。在城中村，有个好邻居比什么都重要。", icon: "👵", category: "社交线", hidden: false, check: function(st) { return st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity >= 30; } },
-  // TODO: 待实现 - 废品分类准确率>90%（需新增机制：在废品回收行动中记录分类准确率）
-  // { id: "recycle_pro", name: "回收达人", desc: "废品分类准确率>90%", story: "你把废品分得清清楚楚，回收站老板都夸你专业。", icon: "🗂️", category: "隐藏", hidden: true, check: function(st) { return (st.flags._scrapSortAccuracy || 0) >= 90; } },
-  // TODO: 待实现 - 晚上（22:00后）工作5次
-  // { id: "night_owl", name: "夜猫子", desc: "在晚上（22:00后）工作5次", story: "深夜的街道空无一人，只有你还在干活。夜越深，钱越难赚。", icon: "🌙", category: "隐藏", hidden: true, check: function(st) { return (st.flags._nightWorkCount || 0) >= 5; } },
-  // TODO: 待实现 - 早晨（6:00前）工作5次
-  // { id: "early_bird", name: "早起鸟", desc: "在早晨（6:00前）工作5次", story: "天还没亮你就起来了。早起的鸟儿有虫吃。", icon: "🌅", category: "隐藏", hidden: true, check: function(st) { return (st.flags._earlyWorkCount || 0) >= 5; } },
-  // TODO: 待实现 - 连续7天不休息（不睡觉/不躺平）
-  // { id: "hustle_7days", name: "七天无休", desc: "连续7天不休息（不睡觉/不躺平）", story: "七天你没给自己放一天假。身体在抗议，但你不能停。", icon: "⚡", category: "隐藏", hidden: true, check: function(st) { return (st.flags._maxHustleDays || 0) >= 7; } },
-  // TODO: 待实现 - 第一次赚到¥1000
-  // { id: "first_1k", name: "千元户", desc: "累计赚到 ¥1,000", story: "一千块。不多，但这是你在这座城市站稳脚跟的第一步。", icon: "💵", category: "人生第一次", hidden: false, check: function(st) { return (st.resources.totalEarned || 0) >= 1000; } },
-  // TODO: 待实现 - 第一次买房（自住房）
-  // { id: "first_homebuyer", name: "有房一族", desc: "购买了自己的自住房", story: "房产证上写着你的名字。这一刻，你觉得自己真正属于这座城市了。", icon: "🏠", category: "里程碑", hidden: false, check: function(st) { return !!(st.flags && st.flags._ownedHome); } },
+  {
+    id: "scrap_master",
+    name: "废品大王",
+    desc: "废品回收累计收入 ¥10,000",
+    story:
+      "从第一个塑料瓶到第一千个易拉罐，你把这些没人要的东西变成了真金白银。",
+    icon: "♻️",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.flags._scrapTotalIncome || 0) >= 10000;
+    },
+  },
+  {
+    id: "street_vendor",
+    name: "街头小贩",
+    desc: "摆摊累计收入 ¥5,000",
+    story: "你的小摊从最初的烤串到后来的煎饼果子，一步步做大了。",
+    icon: "🍢",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.flags._vendingTotalIncome || 0) >= 5000;
+    },
+  },
+  {
+    id: "survival_30_healthy",
+    name: "三十天无恙",
+    desc: "生存满30天且从未生病",
+    story: "这一个月你小心翼翼，没让自己病过一次。健康是最大的财富。",
+    icon: "💪",
+    category: "健康/生活线",
+    hidden: true,
+    check: function (st) {
+      return (st.player.day || 0) >= 30 && !(st.flags && st.flags._everGotSick);
+    },
+  },
+  {
+    id: "no_home_7days",
+    name: "流浪者",
+    desc: "露宿街头满7天",
+    story: "天为被，地为床。那七天你明白了什么叫真正的底层。",
+    icon: "🌃",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._homelessDays || 0) >= 7;
+    },
+  },
+  {
+    id: "homeless_to_roof",
+    name: "从街头到屋顶",
+    desc: "从露宿升级到合租床位",
+    story: "你终于有了属于自己的床——虽然只是别人家的一角。",
+    icon: "🛏️",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.housing.tier || 0) >= 1 && (st.flags._everHomeless || 0);
+    },
+  },
+  {
+    id: "market_hawk",
+    name: "市场猎手",
+    desc: "单次交易利润超过 ¥500",
+    story: "那笔买卖你赚了一整天的工钱。市场的逻辑，你摸到了一点门道。",
+    icon: "📈",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.flags._maxSingleTradeProfit || 0) >= 500;
+    },
+  },
+  {
+    id: "scavenge_king",
+    name: "拾荒之王",
+    desc: "单次拾荒获得物品总价值超 ¥200",
+    story: "那天你运气爆棚，捡到的东西卖了一大笔。但好运不会每次都来。",
+    icon: "🔍",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._maxSingleScavengeValue || 0) >= 200;
+    },
+  },
+  {
+    id: "rain_walker",
+    name: "雨中行者",
+    desc: "暴雨天出门工作3次",
+    story: "雨再大你也得出去，因为家里的米缸不能空。",
+    icon: "🌧️",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._rainyWorkCount || 0) >= 3;
+    },
+  },
+  {
+    id: "thrift_master",
+    name: "节俭大师",
+    desc: "连续7天不购买任何物品",
+    story: "七天，你没花一分钱在购物上。省下的每一块钱都是赚到的。",
+    icon: "💰",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._maxThriftDays || 0) >= 7;
+    },
+  },
+  {
+    id: "neighborly",
+    name: "远亲不如近邻",
+    desc: "王大婶好感达到30",
+    story: "王大婶开始把你当自己人了。在城中村，有个好邻居比什么都重要。",
+    icon: "👵",
+    category: "社交线",
+    hidden: false,
+    check: function (st) {
+      return (
+        st.relationships &&
+        st.relationships.aunt_wang &&
+        st.relationships.aunt_wang.affinity >= 30
+      );
+    },
+  },
+  {
+    id: "night_owl",
+    name: "夜猫子",
+    desc: "在晚上（22:00后）工作5次",
+    story: "深夜的街道空无一人，只有你还在干活。夜越深，钱越难赚。",
+    icon: "🌙",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._nightWorkCount || 0) >= 5;
+    },
+  },
+  {
+    id: "early_bird",
+    name: "早起鸟",
+    desc: "在早晨（6:00前）工作5次",
+    story: "天还没亮你就起来了。早起的鸟儿有虫吃。",
+    icon: "🌅",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._earlyWorkCount || 0) >= 5;
+    },
+  },
+  {
+    id: "hustle_7days",
+    name: "七天无休",
+    desc: "连续7天不休息（不睡觉/不躺平）",
+    story: "七天你没给自己放一天假。身体在抗议，但你不能停。",
+    icon: "⚡",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.flags._maxHustleDays || 0) >= 7;
+    },
+  },
+  {
+    id: "first_1k",
+    name: "千元户",
+    desc: "累计赚到 ¥1,000",
+    story: "一千块。不多，但这是你在这座城市站稳脚跟的第一步。",
+    icon: "💵",
+    category: "人生第一次",
+    hidden: false,
+    check: function (st) {
+      return (st.resources.totalEarned || 0) >= 1000;
+    },
+  },
+  {
+    id: "first_homebuyer",
+    name: "有房一族",
+    desc: "购买了自己的自住房",
+    story: "房产证上写着你的名字。这一刻，你觉得自己真正属于这座城市了。",
+    icon: "🏠",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._ownedHome);
+    },
+  },
 
   // ============================================================
-  // 待完成：职场线成就（打工→开公司）— 参考《互联网大厂模拟器》《大厂生存指南》
-  // 实现提示：注意 P 职级字段在 state.corporate.rank，加班时长在 state.corporate.overtimeHours
+  // 职场线成就（打工→开公司）— 正式实现
   // ============================================================
-  // TODO: 待实现 - 职场新人（已有 enter_corporate，此处为入职首周完成首个项目）
-  // { id: "office_newbie_project", name: "职场新人·首战告捷", desc: "入职第一周完成首个项目", story: "你忐忑地接下了第一个需求，三天后交付了。领导说还行。", icon: "💻", category: "人生第一次", hidden: false, check: function(st) { return !!(st.flags && st.flags._firstWeekProjectDone); } },
-  // TODO: 待实现 - 第一次晋升（P5→P6）
-  // { id: "first_promotion", name: "初露锋芒", desc: "第一次晋升（P5→P6）", story: "晋升邮件发下来的时候，你盯着屏幕看了很久。同届进来的人，有的走了，有的升了。", icon: "📈", category: "里程碑", hidden: false, check: function(st) { return (st.corporate && st.corporate.rank) === 'P6' && !(st.flags && st.flags._everAtP7); } },
-  // TODO: 待实现 - 晋升P7，首次管理团队
-  // { id: "team_leader", name: "团队领袖", desc: "晋升P7，首次管理团队", story: "你开始管人了。管人比管事难——有人想躺平，有人想出头，你要在中间找平衡。", icon: "👥", category: "里程碑", hidden: false, check: function(st) { return (st.corporate && st.corporate.rank) === 'P7' && (st.corporate && st.corporate.teamSize || 0) >= 2; } },
-  // TODO: 待实现 - 晋升P8
-  // { id: "expert_path", name: "技术专家", desc: "晋升P8", story: "P8。同届进来的一半人都走了，你还在，而且往上走了。", icon: "🚀", category: "里程碑", hidden: false, check: function(st) { return (st.corporate && st.corporate.rank) === 'P8'; } },
-  // TODO: 待实现 - 晋升P10
-  // { id: "partner", name: "合伙人", desc: "晋升P10", story: "你站在了金字塔尖。回头看，这条路走了多久？", icon: "👑", category: "里程碑", hidden: false, check: function(st) { return (st.corporate && st.corporate.rank) === 'P10'; } },
-  // TODO: 待实现 - 累计加班100小时
-  // { id: "overtime_warrior", name: "加班战神", desc: "累计加班100小时", story: "一百个小时的加班，换来了什么？钱？经验？还是透支的身体？", icon: "🌙", category: "隐藏", hidden: true, check: function(st) { return (st.corporate && st.corporate.totalOvertimeHours || 0) >= 100; } },
-  // TODO: 待实现 - 连续5次绩效考核S级
-  // { id: "kpi_king", name: "KPI之王", desc: "连续5次绩效考核S级", story: "五次S级。你成了部门的标杆，也成了其他人的靶子。", icon: "🏆", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._consecutiveSCount || 0) >= 5; } },
-  // TODO: 待实现 - 向上社交行动累计10次
-  // { id: "networker", name: "社交达人", desc: "向上社交行动累计10次", story: "你学会了和领导吃饭、汇报、展示价值。职场不只是干活，还有人情世故。", icon: "🤝", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._upwardSocialCount || 0) >= 10; } },
-  // TODO: 待实现 - 学习新技术累计20次
-  // { id: "tech_geek", name: "技术极客", desc: "学习新技术累计20次", story: "你一直在学。新技术、新框架、新语言。技术人的路，永远在前方。", icon: "📚", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._techLearnCount || 0) >= 20; } },
-  // TODO: 待实现 - 摸鱼/休息行动累计30次
-  // { id: "work_life", name: "工作生活平衡", desc: "摸鱼/休息行动累计30次", story: "你学会了在忙碌中偷闲。工作不是全部，生活也是。", icon: "🎮", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._restActionCount || 0) >= 30; } },
-  // TODO: 待实现 - 公司股票投资累计盈利 ¥50,000
-  // { id: "stock_wizard", name: "股票巫师", desc: "公司股票投资累计盈利 ¥50,000", story: "你买的股票涨了。不是运气，是你看懂了这家公司。", icon: "📈", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._stockTotalProfit || 0) >= 50000; } },
-  // TODO: 待实现 - 走捷径/埋雷行动累计10次
-  // { id: "risk_taker", name: "风险承担者", desc: "走捷径/埋雷行动累计10次", story: "你选择了走捷径。短期有利，但你知道——埋下的雷迟早会炸。", icon: "💣", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._shortcutCount || 0) >= 10; } },
-  // TODO: 待实现 - 排查风险行动累计10次
-  // { id: "risk_defuser", name: "风险化解者", desc: "排查风险行动累计10次", story: "你一次次排查风险、修bug、写测试。代码的质量，是你守住的底线。", icon: "🔍", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._riskDefuseCount || 0) >= 10; } },
-  // TODO: 待实现 - 成功开公司
-  // { id: "company_founder", name: "创业老板", desc: "成功开公司", story: "你从打工者变成了老板。这条路，你走了很久。", icon: "🚀", category: "里程碑", hidden: false, check: function(st) { return !!(st.startup && st.startup.flags && st.startup.flags.registered); } },
-  // TODO: 待实现 - 公司成功上市
-  // { id: "ipo_dream", name: "IPO梦想", desc: "公司成功上市", story: "敲钟的那一刻，闪光灯刺眼。你做到了。", icon: "🔔", category: "里程碑", hidden: false, check: function(st) { return !!(st.startup && st.startup.flags && st.startup.flags.exitType === 'ipo'); } },
-  // TODO: 待实现 - 第一次被领导表扬
-  // { id: "first_praise", name: "被看见", desc: "第一次被领导公开表扬", story: "会议上，领导提到了你的名字。那一刻，你觉得所有的加班都值了。", icon: "🌟", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstPraise); } },
-  // TODO: 待实现 - 第一次被领导批评
-  // { id: "first_criticism", name: "挨批", desc: "第一次被领导公开批评", story: "会议室里的空气凝固了。领导的话像刀子一样。你记住了这种感觉。", icon: "😓", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstCriticism); } },
-  // TODO: 待实现 - 第一次带新人
-  // { id: "first_mentor", name: "师父", desc: "第一次带新人", story: "新人怯生生地问你问题。你忽然想起了当年的自己。", icon: "👨‍🏫", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstMentored); } },
-  // TODO: 待实现 - 第一次拒绝加班
-  // { id: "first_no_overtime", name: "第一次说不", desc: "第一次拒绝加班", story: "你说'今天不加了'。领导愣了一下，同意了。你发现——天不会塌。", icon: "✋", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstRefusedOvertime); } },
+  {
+    id: "office_newbie_project",
+    name: "职场新人·首战告捷",
+    desc: "入职第一周完成首个项目",
+    story: "你忐忑地接下了第一个需求，三天后交付了。领导说还行。",
+    icon: "💻",
+    category: "人生第一次",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstWeekProjectDone);
+    },
+  },
+  {
+    id: "first_promotion",
+    name: "初露锋芒",
+    desc: "第一次晋升（P5→P6）",
+    story:
+      "晋升邮件发下来的时候，你盯着屏幕看了很久。同届进来的人，有的走了，有的升了。",
+    icon: "📈",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (
+        (st.corporate && st.corporate.rank) === "P6" &&
+        !(st.flags && st.flags._everAtP7)
+      );
+    },
+  },
+  {
+    id: "team_leader",
+    name: "团队领袖",
+    desc: "晋升P7，首次管理团队",
+    story:
+      "你开始管人了。管人比管事难——有人想躺平，有人想出头，你要在中间找平衡。",
+    icon: "👥",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (
+        (st.corporate && st.corporate.rank) === "P7" &&
+        ((st.corporate && st.corporate.teamSize) || 0) >= 2
+      );
+    },
+  },
+  {
+    id: "expert_path",
+    name: "技术专家",
+    desc: "晋升P8",
+    story: "P8。同届进来的一半人都走了，你还在，而且往上走了。",
+    icon: "🚀",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.corporate && st.corporate.rank) === "P8";
+    },
+  },
+  {
+    id: "partner",
+    name: "合伙人",
+    desc: "晋升P10",
+    story: "你站在了金字塔尖。回头看，这条路走了多久？",
+    icon: "👑",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return (st.corporate && st.corporate.rank) === "P10";
+    },
+  },
+  {
+    id: "overtime_warrior",
+    name: "加班战神",
+    desc: "累计加班100小时",
+    story: "一百个小时的加班，换来了什么？钱？经验？还是透支的身体？",
+    icon: "🌙",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.corporate && st.corporate.totalOvertimeHours) || 0) >= 100;
+    },
+  },
+  {
+    id: "kpi_king",
+    name: "KPI之王",
+    desc: "连续5次绩效考核S级",
+    story: "五次S级。你成了部门的标杆，也成了其他人的靶子。",
+    icon: "🏆",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._consecutiveSCount) || 0) >= 5;
+    },
+  },
+  {
+    id: "networker",
+    name: "社交达人",
+    desc: "向上社交行动累计10次",
+    story: "你学会了和领导吃饭、汇报、展示价值。职场不只是干活，还有人情世故。",
+    icon: "🤝",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._upwardSocialCount) || 0) >= 10;
+    },
+  },
+  {
+    id: "tech_geek",
+    name: "技术极客",
+    desc: "学习新技术累计20次",
+    story: "你一直在学。新技术、新框架、新语言。技术人的路，永远在前方。",
+    icon: "📚",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._techLearnCount) || 0) >= 20;
+    },
+  },
+  {
+    id: "work_life",
+    name: "工作生活平衡",
+    desc: "摸鱼/休息行动累计30次",
+    story: "你学会了在忙碌中偷闲。工作不是全部，生活也是。",
+    icon: "🎮",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._restActionCount) || 0) >= 30;
+    },
+  },
+  {
+    id: "stock_wizard",
+    name: "股票巫师",
+    desc: "公司股票投资累计盈利 ¥50,000",
+    story: "你买的股票涨了。不是运气，是你看懂了这家公司。",
+    icon: "📈",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._stockTotalProfit) || 0) >= 50000;
+    },
+  },
+  {
+    id: "risk_taker",
+    name: "风险承担者",
+    desc: "走捷径/埋雷行动累计10次",
+    story: "你选择了走捷径。短期有利，但你知道——埋下的雷迟早会炸。",
+    icon: "💣",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._shortcutCount) || 0) >= 10;
+    },
+  },
+  {
+    id: "risk_defuser",
+    name: "风险化解者",
+    desc: "排查风险行动累计10次",
+    story: "你一次次排查风险、修bug、写测试。代码的质量，是你守住的底线。",
+    icon: "🔍",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._riskDefuseCount) || 0) >= 10;
+    },
+  },
+  {
+    id: "company_founder",
+    name: "创业老板",
+    desc: "成功开公司",
+    story: "你从打工者变成了老板。这条路，你走了很久。",
+    icon: "🚀",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return !!(st.startup && st.startup.flags && st.startup.flags.registered);
+    },
+  },
+  {
+    id: "ipo_dream",
+    name: "IPO梦想",
+    desc: "公司成功上市",
+    story: "敲钟的那一刻，闪光灯刺眼。你做到了。",
+    icon: "🔔",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return !!(
+        st.startup &&
+        st.startup.flags &&
+        st.startup.flags.exitType === "ipo"
+      );
+    },
+  },
+  {
+    id: "first_praise",
+    name: "被看见",
+    desc: "第一次被领导公开表扬",
+    story: "会议上，领导提到了你的名字。那一刻，你觉得所有的加班都值了。",
+    icon: "🌟",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstPraise);
+    },
+  },
+  {
+    id: "first_criticism",
+    name: "挨批",
+    desc: "第一次被领导公开批评",
+    story: "会议室里的空气凝固了。领导的话像刀子一样。你记住了这种感觉。",
+    icon: "😓",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstCriticism);
+    },
+  },
+  {
+    id: "first_mentor",
+    name: "师父",
+    desc: "第一次带新人",
+    story: "新人怯生生地问你问题。你忽然想起了当年的自己。",
+    icon: "👨‍🏫",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstMentored);
+    },
+  },
+  {
+    id: "first_no_overtime",
+    name: "第一次说不",
+    desc: "第一次拒绝加班",
+    story: "你说'今天不加了'。领导愣了一下，同意了。你发现——天不会塌。",
+    icon: "✋",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstRefusedOvertime);
+    },
+  },
 
   // ============================================================
-  // 待完成：投资线成就 — 参考《资本家模拟器》《股票大作手回忆录》
-  // 实现提示：投资数据在 state.investment 中，注意追踪买入/卖出记录
+  // 投资线成就 — 正式实现
   // ============================================================
-  // TODO: 待实现 - 买入第一支股票
-  // { id: "first_stock", name: "第一支股票", desc: "买入第一支股票", story: "你按下了买入键。那一刻，你不再是旁观者，你是参与者。", icon: "📈", category: "人生第一次", hidden: false, check: function(st) { return !!(st.flags && st.flags._firstStockBought); } },
-  // TODO: 待实现 - 在牛市中获利 ¥100,000
-  // { id: "bull_runner", name: "牛市跑者", desc: "在牛市中获利 ¥100,000", story: "牛市来了，你抓住了。十万块的利润，是趋势+眼光+运气。", icon: "🐂", category: "里程碑", hidden: false, check: function(st) { return (st.flags && st.flags._bullMarketProfit || 0) >= 100000; } },
-  // TODO: 待实现 - 在熊市中存活30天不爆仓
-  // { id: "bear_survivor", name: "熊市幸存者", desc: "在熊市中存活30天不爆仓", story: "熊市里，很多人割肉离场。你留了下来，因为你知道——冬天之后是春天。", icon: "🐻", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._bearSurvivalDays || 0) >= 30; } },
-  // TODO: 待实现 - 比特币<¥10,000时买入
-  // { id: "btc_early", name: "比特币早期投资者", desc: "比特币<¥10,000时买入", story: "那时候没人相信比特币。你买了，不是因为懂，是因为相信未来。", icon: "₿", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._btcEarlyBuy); } },
-  // TODO: 待实现 - 房产投资累计盈利 ¥500,000
-  // { id: "real_estate_baron", name: "房地产大亨", desc: "房产投资累计盈利 ¥500,000", story: "你买了房，涨了，卖了。再来一次。房地产是你的提款机。", icon: "🏠", category: "里程碑", hidden: false, check: function(st) { return (st.flags && st.flags._propertyTotalProfit || 0) >= 500000; } },
-  // TODO: 待实现 - 同时持有股票+房产+BTC+贵金属
-  // { id: "diversified", name: "资产配置大师", desc: "同时持有股票+房产+BTC+贵金属", story: "你不把鸡蛋放在一个篮子里。分散，是对不确定性的敬畏。", icon: "📊", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._hasAllAssetTypes); } },
-  // TODO: 待实现 - 单次低买高卖利润超 ¥50,000
-  // { id: "timing_master", name: "时机大师", desc: "单次低买高卖利润超 ¥50,000", story: "你买在最低点，卖在最高点。那一刻，你觉得自己是股神。", icon: "⏰", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._maxSingleInvestProfit || 0) >= 50000; } },
-  // TODO: 待实现 - 持有某支股票超过180天
-  // { id: "long_term", name: "长期主义者", desc: "持有某支股票超过180天", story: "你没卖。涨涨跌跌，你看着它。180天后，你收获了复利。", icon: "⏳", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._maxHoldingDays || 0) >= 180; } },
-  // TODO: 待实现 - 在恐慌性抛售时买入
-  // { id: "panic_seller_fixed", name: "克服恐慌", desc: "在恐慌性抛售时买入", story: "所有人都在卖，你在买。别人恐惧时你贪婪——这句话你做到了。", icon: "💪", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._boughtInPanic); } },
-  // TODO: 待实现 - 投资累计总盈利 ¥1,000,000
-  // { id: "millionaire_investor", name: "投资百万富翁", desc: "投资累计总盈利 ¥1,000,000", story: "一百万的投资利润。你不再是那个为几千块纠结的人了。", icon: "💰", category: "里程碑", hidden: false, check: function(st) { return (st.flags && st.flags._totalInvestProfit || 0) >= 1000000; } },
-  // TODO: 待实现 - 第一次投资亏损超过¥10,000
-  // { id: "first_big_loss", name: "第一课", desc: "第一次投资亏损超过 ¥10,000", story: "那笔投资你亏了。十多万，没了。你记住了：市场永远是对的。", icon: "💸", category: "人生第一次", hidden: true, check: function(st) { return (st.flags && st.flags._maxSingleInvestLoss || 0) >= 10000; } },
-  // TODO: 待实现 - 一次性全部卖出（清仓）
-  // { id: "all_in_sell", name: "清仓大师", desc: "一次性卖出所有持仓", story: "你清仓了。不是恐慌，是判断——你认为顶部来了。", icon: "📉", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._didFullSell); } },
+  {
+    id: "first_stock",
+    name: "第一支股票",
+    desc: "买入第一支股票",
+    story: "你按下了买入键。那一刻，你不再是旁观者，你是参与者。",
+    icon: "📈",
+    category: "人生第一次",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstStockBought);
+    },
+  },
+  {
+    id: "bull_runner",
+    name: "牛市跑者",
+    desc: "在牛市中获利 ¥100,000",
+    story: "牛市来了，你抓住了。十万块的利润，是趋势+眼光+运气。",
+    icon: "🐂",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return ((st.flags && st.flags._bullMarketProfit) || 0) >= 100000;
+    },
+  },
+  {
+    id: "bear_survivor",
+    name: "熊市幸存者",
+    desc: "在熊市中存活30天不爆仓",
+    story: "熊市里，很多人割肉离场。你留了下来，因为你知道——冬天之后是春天。",
+    icon: "🐻",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._bearSurvivalDays) || 0) >= 30;
+    },
+  },
+  {
+    id: "btc_early",
+    name: "比特币早期投资者",
+    desc: "比特币<¥10,000时买入",
+    story: "那时候没人相信比特币。你买了，不是因为懂，是因为相信未来。",
+    icon: "₿",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._btcEarlyBuy);
+    },
+  },
+  {
+    id: "real_estate_baron",
+    name: "房地产大亨",
+    desc: "房产投资累计盈利 ¥500,000",
+    story: "你买了房，涨了，卖了。再来一次。房地产是你的提款机。",
+    icon: "🏠",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return ((st.flags && st.flags._propertyTotalProfit) || 0) >= 500000;
+    },
+  },
+  {
+    id: "diversified",
+    name: "资产配置大师",
+    desc: "同时持有股票+房产+BTC+贵金属",
+    story: "你不把鸡蛋放在一个篮子里。分散，是对不确定性的敬畏。",
+    icon: "📊",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._hasAllAssetTypes);
+    },
+  },
+  {
+    id: "timing_master",
+    name: "时机大师",
+    desc: "单次低买高卖利润超 ¥50,000",
+    story: "你买在最低点，卖在最高点。那一刻，你觉得自己是股神。",
+    icon: "⏰",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxSingleInvestProfit) || 0) >= 50000;
+    },
+  },
+  {
+    id: "long_term",
+    name: "长期主义者",
+    desc: "持有某支股票超过180天",
+    story: "你没卖。涨涨跌跌，你看着它。180天后，你收获了复利。",
+    icon: "⏳",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxHoldingDays) || 0) >= 180;
+    },
+  },
+  {
+    id: "panic_seller_fixed",
+    name: "克服恐慌",
+    desc: "在恐慌性抛售时买入",
+    story: "所有人都在卖，你在买。别人恐惧时你贪婪——这句话你做到了。",
+    icon: "💪",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._boughtInPanic);
+    },
+  },
+  {
+    id: "millionaire_investor",
+    name: "投资百万富翁",
+    desc: "投资累计总盈利 ¥1,000,000",
+    story: "一百万的投资利润。你不再是那个为几千块纠结的人了。",
+    icon: "💰",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return ((st.flags && st.flags._totalInvestProfit) || 0) >= 1000000;
+    },
+  },
+  {
+    id: "first_big_loss",
+    name: "第一课",
+    desc: "第一次投资亏损超过 ¥10,000",
+    story: "那笔投资你亏了。十多万，没了。你记住了：市场永远是对的。",
+    icon: "💸",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxSingleInvestLoss) || 0) >= 10000;
+    },
+  },
+  {
+    id: "all_in_sell",
+    name: "清仓大师",
+    desc: "一次性卖出所有持仓",
+    story: "你清仓了。不是恐慌，是判断——你认为顶部来了。",
+    icon: "📉",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._didFullSell);
+    },
+  },
 
   // ============================================================
-  // 待完成：社交线成就 — 参考《Stardew Valley》NPC系统《动物森友会》
-  // 实现提示：NPC好感在 state.relationships 中，送礼记录需新增 flags
+  // 社交线成就 — 正式实现
   // ============================================================
-  // TODO: 待实现 - 与3个NPC好感达到30
-  // { id: "friend_circle", name: "朋友圈", desc: "与3个NPC好感达到30", story: "你有了朋友。这座城市不再那么冷了。", icon: "👥", category: "社交线", hidden: false, check: function(st) { if (!st.relationships) return false; var count = 0; ['aunt_wang','boss_li','sister_zhang','old_zhou','xiao_mei','chef_chen'].forEach(function(id) { if (st.relationships[id] && st.relationships[id].affinity >= 30) count++; }); return count >= 3; } },
-  // TODO: 待实现 - 与任意NPC好感达到80
-  // { id: "best_friend", name: "挚友", desc: "与任意NPC好感达到80", story: "你和某人成了真正的朋友。TA信任你，你也信任TA。", icon: "❤️", category: "社交线", hidden: false, check: function(st) { if (!st.relationships) return false; return ['aunt_wang','boss_li','sister_zhang','old_zhou','xiao_mei','chef_chen'].some(function(id) { return st.relationships[id] && st.relationships[id].affinity >= 80; }); } },
-  // TODO: 待实现 - 累计送礼10次
-  // { id: "gift_giver", name: "送礼达人", desc: "累计送礼10次", story: "你学会了送礼。不是讨好，是维护关系。人情往来，是一门学问。", icon: "🎁", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._giftCount || 0) >= 10; } },
-  // TODO: 待实现 - 给3个NPC过生日
-  // { id: "birthday_celebration", name: "生日庆祝者", desc: "给3个NPC过生日", story: "你记得他们的生日。被记住的感觉，很好。", icon: "🎂", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._birthdayCelebrateCount || 0) >= 3; } },
-  // TODO: 待实现 - 完成5次NPC求助
-  // { id: "favor_return", name: "互帮互助", desc: "完成5次NPC求助", story: "你帮了别人，别人也帮了你。这就是人情。", icon: "🤝", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._favorHelpCount || 0) >= 5; } },
-  // TODO: 待实现 - 完成3个NPC深度任务
-  // { id: "deep_connection", name: "深度连接", desc: "完成3个NPC深度任务", story: "你走进了他们的故事。那些藏在心底的话，你说出来了。", icon: "💬", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._deepTaskCompleteCount || 0) >= 3; } },
-  // TODO: 待实现 - 与所有6个NPC好感达到60
-  // { id: "social_butterfly", name: "社交蝴蝶", desc: "与所有6个NPC好感达到60", story: "每个人都记得你，每个人都愿意帮你。人脉，是另一种形式的财富。", icon: "🦋", category: "隐藏", hidden: true, check: function(st) { if (!st.relationships) return false; return ['aunt_wang','boss_li','sister_zhang','old_zhou','xiao_mei','chef_chen'].every(function(id) { return st.relationships[id] && st.relationships[id].affinity >= 60; }); } },
-  // TODO: 待实现 - 小美好感80+并完成支教
-  // { id: "mentor_student", name: "师徒传承", desc: "小美好感80+并完成支教", story: "你陪小美去了支教。那群孩子的眼睛，让你想起了自己为什么来这座城市。", icon: "👩‍🏫", category: "社交线", hidden: false, check: function(st) { return !!(st.relationships && st.relationships.xiao_mei && st.relationships.xiao_mei.affinity >= 80 && st.flags && st.flags._xiaomeiVolunteerDone); } },
-  // TODO: 待实现 - 第一次和NPC一起吃饭
-  // { id: "first_meal", name: "一起吃饭", desc: "第一次和NPC一起吃饭", story: "你们坐在路边的小馆里。饭菜不贵，但那一刻很温暖。", icon: "🍜", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstMealWithNPC); } },
-  // TODO: 待实现 - 收到NPC的第一份礼物
-  // { id: "first_gift_received", name: "被惦记", desc: "收到NPC的第一份礼物", story: "TA记得你喜欢什么。被惦记的感觉，比礼物本身更珍贵。", icon: "🎁", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstGiftReceived); } },
+  {
+    id: "friend_circle",
+    name: "朋友圈",
+    desc: "与3个NPC好感达到30",
+    story: "你有了朋友。这座城市不再那么冷了。",
+    icon: "👥",
+    category: "社交线",
+    hidden: false,
+    check: function (st) {
+      if (!st.relationships) return false;
+      var count = 0;
+      [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].forEach(function (id) {
+        if (st.relationships[id] && st.relationships[id].affinity >= 30)
+          count++;
+      });
+      return count >= 3;
+    },
+  },
+  {
+    id: "best_friend",
+    name: "挚友",
+    desc: "与任意NPC好感达到80",
+    story: "你和某人成了真正的朋友。TA信任你，你也信任TA。",
+    icon: "❤️",
+    category: "社交线",
+    hidden: false,
+    check: function (st) {
+      if (!st.relationships) return false;
+      return [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].some(function (id) {
+        return st.relationships[id] && st.relationships[id].affinity >= 80;
+      });
+    },
+  },
+  {
+    id: "gift_giver",
+    name: "送礼达人",
+    desc: "累计送礼10次",
+    story: "你学会了送礼。不是讨好，是维护关系。人情往来，是一门学问。",
+    icon: "🎁",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._giftCount) || 0) >= 10;
+    },
+  },
+  {
+    id: "birthday_celebration",
+    name: "生日庆祝者",
+    desc: "给3个NPC过生日",
+    story: "你记得他们的生日。被记住的感觉，很好。",
+    icon: "🎂",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._birthdayCelebrateCount) || 0) >= 3;
+    },
+  },
+  {
+    id: "favor_return",
+    name: "互帮互助",
+    desc: "完成5次NPC求助",
+    story: "你帮了别人，别人也帮了你。这就是人情。",
+    icon: "🤝",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._favorHelpCount) || 0) >= 5;
+    },
+  },
+  {
+    id: "deep_connection",
+    name: "深度连接",
+    desc: "完成3个NPC深度任务",
+    story: "你走进了他们的故事。那些藏在心底的话，你说出来了。",
+    icon: "💬",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._deepTaskCompleteCount) || 0) >= 3;
+    },
+  },
+  {
+    id: "social_butterfly",
+    name: "社交蝴蝶",
+    desc: "与所有6个NPC好感达到60",
+    story: "每个人都记得你，每个人都愿意帮你。人脉，是另一种形式的财富。",
+    icon: "🦋",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.relationships) return false;
+      return [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].every(function (id) {
+        return st.relationships[id] && st.relationships[id].affinity >= 60;
+      });
+    },
+  },
+  {
+    id: "mentor_student",
+    name: "师徒传承",
+    desc: "小美好感80+并完成支教",
+    story: "你陪小美去了支教。那群孩子的眼睛，让你想起了自己为什么来这座城市。",
+    icon: "👩‍🏫",
+    category: "社交线",
+    hidden: false,
+    check: function (st) {
+      return !!(
+        st.relationships &&
+        st.relationships.xiao_mei &&
+        st.relationships.xiao_mei.affinity >= 80 &&
+        st.flags &&
+        st.flags._xiaomeiVolunteerDone
+      );
+    },
+  },
+  {
+    id: "first_meal",
+    name: "一起吃饭",
+    desc: "第一次和NPC一起吃饭",
+    story: "你们坐在路边的小馆里。饭菜不贵，但那一刻很温暖。",
+    icon: "🍜",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstMealWithNPC);
+    },
+  },
+  {
+    id: "first_gift_received",
+    name: "被惦记",
+    desc: "收到NPC的第一份礼物",
+    story: "TA记得你喜欢什么。被惦记的感觉，比礼物本身更珍贵。",
+    icon: "🎁",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstGiftReceived);
+    },
+  },
 
   // ============================================================
-  // 待完成：健康/生活线成就 — 参考《大多数》健康系统
-  // 实现提示：健康值在 state.status.health，疾病在 state.status.illnesses
+  // 健康/生活线成就 — 正式实现
   // ============================================================
-  // TODO: 待实现 - 健康值保持80+超过30天
-  // { id: "healthy_living", name: "健康生活", desc: "健康值保持80+超过30天", story: "你学会了照顾自己。健康不是理所当然的，是需要经营的。", icon: "💪", category: "健康/生活线", hidden: false, check: function(st) { return (st.flags && st.flags._healthyDaysStreak || 0) >= 30; } },
-  // TODO: 待实现 - 患过任意疾病并治愈
-  // { id: "disease_survivor", name: "疾病幸存者", desc: "患过任意疾病并治愈", story: "你生过病，也好了。那场病让你明白：健康是最大的财富。", icon: "💊", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._everHadIllness && st.flags && st.flags._everCuredIllness); } },
-  // TODO: 待实现 - 体质达到80
-  // { id: "fitness_freak", name: "健身狂人", desc: "体质达到80", story: "你练出了好身体。体力工作不再那么累，你也更有底气了。", icon: "💪", category: "隐藏", hidden: true, check: function(st) { return (st.player && st.player.physique) >= 80; } },
-  // TODO: 待实现 - 心智达到80
-  // { id: "mindful", name: "正念大师", desc: "心智达到80", story: "你学会了控制情绪。这座城市再乱，你的心是静的。", icon: "🧘", category: "隐藏", hidden: true, check: function(st) { return (st.player && st.player.mental) >= 80; } },
-  // TODO: 待实现 - 烹饪技能达到50级
-  // { id: "cooking_master", name: "烹饪大师", desc: "烹饪技能达到50级", story: "你成了大厨。家常菜做得比餐馆还好。", icon: "🍳", category: "隐藏", hidden: true, check: function(st) { return (st.skills && st.skills.cooking && st.skills.cooking.level) >= 50; } },
-  // TODO: 待实现 - 连续7天自己做饭
-  // { id: "perfect_diet", name: "完美饮食", desc: "连续7天自己做饭", story: "七天，你没点过一次外卖。自己做的饭，好吃又省钱。", icon: "🍲", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._maxCookingStreak || 0) >= 7; } },
-  // TODO: 待实现 - 100天内不患任何疾病
-  // { id: "no_illness_100days", name: "百日无病", desc: "100天内不患任何疾病", story: "一百天，你没病过。你学会了：预防比治疗重要。", icon: "🛡️", category: "健康/生活线", hidden: true, check: function(st) { return (st.flags && st.flags._maxIllnessFreeDays || 0) >= 100; } },
-  // TODO: 待实现 - 第一次体检
-  // { id: "first_checkup", name: "体检", desc: "第一次去做体检", story: "你去了医院体检。拿到报告的那一刻，你希望一切正常。", icon: "🩺", category: "人生第一次", hidden: true, check: function(st) { return !!(st.flags && st.flags._firstCheckup); } },
-  // TODO: 待实现 - 健身卡
-  // { id: "gym_member", name: "健身卡", desc: "购买了健身卡", story: "你办了健身卡。虽然不一定每次都去，但至少你开始了。", icon: "🏋️", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._gymMembership); } },
+  {
+    id: "healthy_living",
+    name: "健康生活",
+    desc: "健康值保持80+超过30天",
+    story: "你学会了照顾自己。健康不是理所当然的，是需要经营的。",
+    icon: "💪",
+    category: "健康/生活线",
+    hidden: false,
+    check: function (st) {
+      return ((st.flags && st.flags._healthyDaysStreak) || 0) >= 30;
+    },
+  },
+  {
+    id: "disease_survivor",
+    name: "疾病幸存者",
+    desc: "患过任意疾病并治愈",
+    story: "你生过病，也好了。那场病让你明白：健康是最大的财富。",
+    icon: "💊",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.flags &&
+        st.flags._everHadIllness &&
+        st.flags &&
+        st.flags._everCuredIllness
+      );
+    },
+  },
+  {
+    id: "fitness_freak",
+    name: "健身狂人",
+    desc: "体质达到80",
+    story: "你练出了好身体。体力工作不再那么累，你也更有底气了。",
+    icon: "💪",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.player && st.player.physique) >= 80;
+    },
+  },
+  {
+    id: "mindful",
+    name: "正念大师",
+    desc: "心智达到80",
+    story: "你学会了控制情绪。这座城市再乱，你的心是静的。",
+    icon: "🧘",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.player && st.player.mental) >= 80;
+    },
+  },
+  {
+    id: "cooking_master",
+    name: "烹饪大师",
+    desc: "烹饪技能达到50级",
+    story: "你成了大厨。家常菜做得比餐馆还好。",
+    icon: "🍳",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return (st.skills && st.skills.cooking && st.skills.cooking.level) >= 50;
+    },
+  },
+  {
+    id: "perfect_diet",
+    name: "完美饮食",
+    desc: "连续7天自己做饭",
+    story: "七天，你没点过一次外卖。自己做的饭，好吃又省钱。",
+    icon: "🍲",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxCookingStreak) || 0) >= 7;
+    },
+  },
+  {
+    id: "no_illness_100days",
+    name: "百日无病",
+    desc: "100天内不患任何疾病",
+    story: "一百天，你没病过。你学会了：预防比治疗重要。",
+    icon: "🛡️",
+    category: "健康/生活线",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxIllnessFreeDays) || 0) >= 100;
+    },
+  },
+  {
+    id: "first_checkup",
+    name: "体检",
+    desc: "第一次去做体检",
+    story: "你去了医院体检。拿到报告的那一刻，你希望一切正常。",
+    icon: "🩺",
+    category: "人生第一次",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._firstCheckup);
+    },
+  },
+  {
+    id: "gym_member",
+    name: "健身卡",
+    desc: "购买了健身卡",
+    story: "你办了健身卡。虽然不一定每次都去，但至少你开始了。",
+    icon: "🏋️",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._gymMembership);
+    },
+  },
 
   // ============================================================
-  // 待完成：隐藏成就（叙事向）— 参考《This War of Mine》道德困境
-  // 实现提示：道德选择需要在对应事件中埋点 flags
+  // 隐藏成就（叙事向）— 正式实现
   // ============================================================
-  // TODO: 待实现 - 在饥荒日（现金<¥10且饥饿<20）选择分享食物给NPC
-  // { id: "share_when_poor", name: "雪中送炭", desc: "在饥荒日（现金<¥10且饥饿<20）选择分享食物给NPC", story: "你自己都快饿死了，但还是把食物分给了更需要的人。那一刻，你觉得自己还没被这座城市完全改变。", icon: "❤️", category: "道德档案", hidden: true, check: function(st) { return !!(st.flags && st.flags._sharedFoodWhenPoor); } },
-  // TODO: 待实现 - 连续30天每天给某个NPC送礼
-  // { id: "persistent_giver", name: "持之以恒", desc: "连续30天每天给某个NPC送礼", story: "三十天，你没间断。TA说'不用这么麻烦'，但你坚持。有些关系，需要时间沉淀。", icon: "📅", category: "隐藏", hidden: true, check: function(st) { return (st.flags && st.flags._maxGiftStreak || 0) >= 30; } },
-  // TODO: 待实现 - 在NPC最困难时（好感<0）仍然帮助他
-  // { id: "help_when_hated", name: "以德报怨", desc: "在NPC最困难时（好感<0）仍然帮助他", story: "TA讨厌你，但你还是帮了。不是因为期待回报，是因为你觉得——应该这么做。", icon: "🕊️", category: "道德档案", hidden: true, check: function(st) { return !!(st.flags && st.flags._helpedHatedNPC); } },
-  // TODO: 待实现 - 从未做过任何违法工作（赌博/灰产/走私等）
-  // { id: "clean_record", name: "清白之身", desc: "从未做过任何违法工作", story: "这座城市有很多灰色的路。你没走。不是因为胆小，是因为你知道——有些线不能跨。", icon: "⚖️", category: "道德档案", hidden: true, check: function(st) { return !(st.flags && (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)); } },
-  // TODO: 待实现 - 在牛市顶峰时全部卖出，熊市谷底时全部买入
-  // { id: "perfect_timing", name: "神之一手", desc: "在牛市顶峰时全部卖出，熊市谷底时全部买入", story: "你卖在了最高点，买在了最低点。那一刻，你觉得自己是股神。但你知道——运气成分很大。", icon: "🎯", category: "隐藏", hidden: true, check: function(st) { return !!(st.flags && st.flags._perfectMarketTiming); } },
-  // TODO: 待实现 - 开公司后从未解雇过任何员工
-  // { id: "never_fired", name: "仁厚老板", desc: "开公司后从未解雇过任何员工", story: "你开公司后，没解雇过任何人。员工有难，你扛了。", icon: "🤝", category: "道德档案", hidden: true, check: function(st) { return !!(st.startup && st.startup.flags && st.startup.flags.registered && !(st.flags && st.flags._everFiredEmployee)); } },
-  // TODO: 待实现 - 从未让任何NPC好感降到负数
-  // { id: "no_hate", name: "人缘极好", desc: "从未让任何NPC好感降到负数", story: "你得罪不了任何人。不是因为你圆滑，是因为你懂得尊重。", icon: "😊", category: "隐藏", hidden: true, check: function(st) { if (!st.relationships) return true; return !['aunt_wang','boss_li','sister_zhang','old_zhou','xiao_mei','chef_chen'].some(function(id) { return st.relationships[id] && st.relationships[id].affinity < 0; }); } },
-  // TODO: 待实现 - 把最后一笔钱捐给慈善
-  // { id: "last_money_donation", name: "最后的善良", desc: "把最后一笔钱（现金<¥50时）捐给慈善", story: "你只剩几十块了，但还是捐了。那一刻，你觉得自己还没被这座城市完全改变。", icon: "🙏", category: "道德档案", hidden: true, check: function(st) { return !!(st.flags && st.flags._donatedLastMoney); } },
-  // TODO: 待实现 - 拒绝高薪但违法的工作
-  // { id: "refused_illegal_job", name: "底线", desc: "拒绝高薪但违法的工作", story: "¥5000一天，但你拒绝了。有些钱，不能赚。", icon: "✋", category: "道德档案", hidden: true, check: function(st) { return !!(st.flags && st.flags._refusedIllegalJob); } },
+  {
+    id: "share_when_poor",
+    name: "雪中送炭",
+    desc: "在饥荒日（现金<¥10且饥饿<20）选择分享食物给NPC",
+    story:
+      "你自己都快饿死了，但还是把食物分给了更需要的人。那一刻，你觉得自己还没被这座城市完全改变。",
+    icon: "❤️",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._sharedFoodWhenPoor);
+    },
+  },
+  {
+    id: "persistent_giver",
+    name: "持之以恒",
+    desc: "连续30天每天给某个NPC送礼",
+    story:
+      "三十天，你没间断。TA说'不用这么麻烦'，但你坚持。有些关系，需要时间沉淀。",
+    icon: "📅",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return ((st.flags && st.flags._maxGiftStreak) || 0) >= 30;
+    },
+  },
+  {
+    id: "help_when_hated",
+    name: "以德报怨",
+    desc: "在NPC最困难时（好感<0）仍然帮助他",
+    story:
+      "TA讨厌你，但你还是帮了。不是因为期待回报，是因为你觉得——应该这么做。",
+    icon: "🕊️",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._helpedHatedNPC);
+    },
+  },
+  {
+    id: "clean_record",
+    name: "清白之身",
+    desc: "从未做过任何违法工作",
+    story:
+      "这座城市有很多灰色的路。你没走。不是因为胆小，是因为你知道——有些线不能跨。",
+    icon: "⚖️",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !(
+        st.flags &&
+        (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
+      );
+    },
+  },
+  {
+    id: "perfect_timing",
+    name: "神之一手",
+    desc: "在牛市顶峰时全部卖出，熊市谷底时全部买入",
+    story:
+      "你卖在了最高点，买在了最低点。那一刻，你觉得自己是股神。但你知道——运气成分很大。",
+    icon: "🎯",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._perfectMarketTiming);
+    },
+  },
+  {
+    id: "never_fired",
+    name: "仁厚老板",
+    desc: "开公司后从未解雇过任何员工",
+    story: "你开公司后，没解雇过任何人。员工有难，你扛了。",
+    icon: "🤝",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.startup &&
+        st.startup.flags &&
+        st.startup.flags.registered &&
+        !(st.flags && st.flags._everFiredEmployee)
+      );
+    },
+  },
+  {
+    id: "no_hate",
+    name: "人缘极好",
+    desc: "从未让任何NPC好感降到负数",
+    story: "你得罪不了任何人。不是因为你圆滑，是因为你懂得尊重。",
+    icon: "😊",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.relationships) return true;
+      return ![
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].some(function (id) {
+        return st.relationships[id] && st.relationships[id].affinity < 0;
+      });
+    },
+  },
+  {
+    id: "last_money_donation",
+    name: "最后的善良",
+    desc: "把最后一笔钱（现金<¥50时）捐给慈善",
+    story:
+      "你只剩几十块了，但还是捐了。那一刻，你觉得自己还没被这座城市完全改变。",
+    icon: "🙏",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._donatedLastMoney);
+    },
+  },
+  {
+    id: "refused_illegal_job",
+    name: "底线",
+    desc: "拒绝高薪但违法的工作",
+    story: "¥5000一天，但你拒绝了。有些钱，不能赚。",
+    icon: "✋",
+    category: "道德档案",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._refusedIllegalJob);
+    },
+  },
 ];
 
 /**
