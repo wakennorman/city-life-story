@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-22（交易情报系统 v1.8：技能驱动价格信息+区域商品概率+NPC情报）
+> 最后更新: 2026-06-22（交易 Action Card 价格预览：技能门控价格信息直显在行动卡上）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
 ## 项目概述
@@ -246,3 +246,43 @@ const TAB_RENDERERS = {
 - `src/js/ui/render.js` — 替换旧全表为技能门控价格展示+NPC情报入口
 - `src/js/phase1/daily_pipeline.js` — 新增 npc_trade_info_share 步骤
 - `src/index.html` — 注册 trade_intel.js
+
+---
+
+## 2026-06-22 — 交易 Action Card 价格预览 v1.7.2
+
+### 改动动机
+
+玩家在 Actions Tab 看到"买卖商品"按钮时，无法直接了解当前市场的价格状况，必须点击进入 Trade Tab 才能查看。这降低了信息传达效率，尤其是对新手玩家。
+
+### 核心改动
+
+**新增 `buildTradePricePreview()` 函数**（`src/js/main.js`）：
+
+```
+// 销售技能门槛决定预览可见度
+Sales < 20  → "📊 N种商品"
+Sales >= 20 → "📊 N种商品 · 🟢N个好价 · 🔴N个高价"
+Sales >= 40 → "📊 N种商品 · ⬇️商品名¥价格"
+Sales >= 60 → "📊 N种商品 · 🏆商品名全城最低"
+```
+
+- `trade_header`（买卖商品）和 `wholesale_header`（批发进货）两个 action 均增加 `pricePreview` 属性
+- `getPriceMarker()`/`getVisitedExtreme()`/`getCityExtreme()` 函数复用自 trade_intel.js
+- 所有 edge case（无价格数据、未访问别的地、函数未加载）均有兜底
+
+**修改 `createActionCard()`**（`src/js/ui/render.js`）：
+
+- 新增 `pricePreview` 属性渲染支持，通过 `<div class="price-preview">` 展示
+
+**新增 `.price-preview` CSS 类**（`src/css/style.css`）：
+
+- 紧凑单行 accent 色条，`text-overflow: ellipsis` 防止内容溢出
+- 浅色背景 + 微边框区隔
+
+**修改文件**：
+
+- `src/js/main.js` — 新增 `buildTradePricePreview()` + 2 处 action 添加 `pricePreview`
+- `src/js/ui/render.js` — `createActionCard()` 新增 pricePreview 渲染
+- `src/css/style.css` — 新增 `.price-preview` 样式
+- `dist/index.html` — `python build.py` 重新打包
