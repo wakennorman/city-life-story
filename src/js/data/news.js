@@ -30,6 +30,7 @@ const NEWS_EVENTS = [
   {
     id: "heatwave",
     headline: "☀️ 高温来袭！瓶装水和饮料需求暴增",
+    seasons: ["summer"], // 仅夏季
     effects: {
       priceMod: { water: 1.8, beer: 1.5, snacks: 1.3 },
       investmentEffect: [
@@ -68,6 +69,7 @@ const NEWS_EVENTS = [
   {
     id: "fruit_glut",
     headline: "🍎 水果大丰收！批发市场价格暴跌",
+    seasons: ["autumn"], // 秋季水果丰收
     effects: { priceMod: { fruits: 0.4, vegetables: 0.5 }, duration: 4 },
     type: "price",
   },
@@ -147,6 +149,7 @@ const NEWS_EVENTS = [
   {
     id: "back_to_school",
     headline: "🎒 开学季！大学城快递和家教需求暴涨",
+    seasons: ["autumn"], // 9月开学
     effects: {
       jobBonus: ["package_delivery", "tutoring"],
       jobMultiplier: 1.8,
@@ -161,6 +164,7 @@ const NEWS_EVENTS = [
   {
     id: "cold_wave",
     headline: "🥶 寒潮来袭！二手衣物和日用品涨价",
+    seasons: ["winter"], // 仅冬季
     effects: {
       priceMod: { clothing: 2.5, daily_use: 1.8 },
       investmentEffect: [
@@ -1361,7 +1365,10 @@ function getActiveIntelTips(state, limit) {
 }
 
 /** 获取随机新闻事件（根据世界参数加权） */
-function getRandomNewsEvent() {
+function getRandomNewsEvent(state) {
+  // 获取当前季节（用于季节过滤）
+  var seasonId = state && state.weather && state.weather.season;
+
   // 按类型加权：价格35%，工作20%，个人20%，政策10%，投资15%
   var weights = {
     price: 35,
@@ -1399,12 +1406,36 @@ function getRandomNewsEvent() {
     roll -= weights[type];
     if (roll <= 0) {
       var typeEvents = NEWS_EVENTS.filter(function (e) {
-        return e.type === type;
+        if (e.type !== type) return false;
+        // 季节过滤：如果新闻有seasons字段，必须匹配当前季节
+        if (seasonId && e.seasons && !e.seasons.includes(seasonId)) {
+          return false;
+        }
+        return true;
       });
-      return Random.fromArray(typeEvents);
+      if (typeEvents.length === 0) {
+        // 如果该类型在当季没有新闻，回退到所有新闻
+        typeEvents = NEWS_EVENTS.filter(function (e) {
+          if (seasonId && e.seasons && !e.seasons.includes(seasonId)) {
+            return false;
+          }
+          return true;
+        });
+      }
+      return typeEvents.length > 0 ? Random.fromArray(typeEvents) : null;
     }
   }
-  return Random.fromArray(NEWS_EVENTS);
+
+  // 兜底：从所有季节匹配的新闻中随机选择
+  var allEligible = NEWS_EVENTS.filter(function (e) {
+    if (seasonId && e.seasons && !e.seasons.includes(seasonId)) {
+      return false;
+    }
+    return true;
+  });
+  return allEligible.length > 0
+    ? Random.fromArray(allEligible)
+    : Random.fromArray(NEWS_EVENTS);
 }
 
 /** 应用新闻效果 */

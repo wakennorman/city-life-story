@@ -327,7 +327,7 @@ function createDefaultState() {
     weather: {
       current: "sunny",
       temperature: 22,
-      season: "spring",
+      season: null, // 将在 initWeather() 中随机初始化
       lastChanged: 0,
       forecast: [], // [{day, weatherId, confidence}] 未来3天预报
       duration: 1, // 当前天气计划持续天数（极端天气 > 1）

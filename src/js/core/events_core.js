@@ -429,7 +429,7 @@ function rollDailyNews(state) {
     if (Random.chance(0.08) && typeof getRandomNewsEvent === "function") {
       var investNews = null;
       for (var _attempt = 0; _attempt < 5; _attempt++) {
-        var candidate = getRandomNewsEvent();
+        var candidate = getRandomNewsEvent(state);
         if (
           candidate &&
           candidate.type === "investment" &&
@@ -454,7 +454,7 @@ function rollDailyNews(state) {
   // 职场阶段：保留少量市场新闻 + 事件弹窗
   const newsChance = state.activeNews.length > 0 ? 0.05 : 0.12;
   if (Random.chance(newsChance)) {
-    const news = getRandomNewsEvent();
+    const news = getRandomNewsEvent(state);
     if (news && !state.flags.seenNewsToday.includes(news.id)) {
       news._appliedDay = state.player.day;
       state.activeNews.push(news);

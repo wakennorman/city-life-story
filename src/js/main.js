@@ -1179,6 +1179,11 @@ function startNewGame() {
     initEnterpriseFate(StateManager.getState());
   }
 
+  // 初始化天气系统（随机开局季节）
+  if (typeof initWeather === "function") {
+    initWeather(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());

@@ -72,7 +72,7 @@ const GOODS = [
     name: "啤酒",
     basePrice: 4,
     unit: "瓶",
-    category: "luxury",
+    category: "food", // 修正：啤酒是食品/饮料，不是奢侈品
     buyLocations: ["wholesaleMarket", "factoryZone"],
     sellLocations: ["commercialDist", "construction", "factoryZone"],
     seasonal: { summer: 1.3, winter: 0.85 },

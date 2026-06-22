@@ -494,13 +494,27 @@ function findNewsTemplate(id) {
   return null;
 }
 
-/** 按层级查找新闻事件 */
-function findNewsByLevel(level) {
+/** 按层级查找新闻事件（增强版：支持季节过滤） */
+function findNewsByLevel(level, seasonId) {
   var result = [];
+  var sources = [];
   if (typeof NEWS_EVENTS !== "undefined") {
-    for (var i = 0; i < NEWS_EVENTS.length; i++) {
-      if (NEWS_EVENTS[i].level === level) result.push(NEWS_EVENTS[i]);
+    sources = sources.concat(NEWS_EVENTS);
+  }
+  // 也检查 NEWS_L1_L4
+  if (typeof NEWS_L1_L4 !== "undefined") {
+    sources = sources.concat(NEWS_L1_L4);
+  }
+
+  for (var i = 0; i < sources.length; i++) {
+    var news = sources[i];
+    // 层级过滤
+    if (level && news.level !== level) continue;
+    // 季节过滤：如果新闻有seasons字段，必须匹配当前季节
+    if (seasonId && news.seasons && !news.seasons.includes(seasonId)) {
+      continue;
     }
+    result.push(news);
   }
   return result;
 }
@@ -561,9 +575,10 @@ function applyPendingConduitNews(state) {
 //  四、L1-L4 感知的新闻获取增强
 // ============================================================
 
-/** 获取按层级筛选的随机新闻（增强版 getRandomNewsEvent） */
-function getRandomNewsByLevel(level) {
-  var candidates = findNewsByLevel(level);
+/** 获取按层级筛选的随机新闻（增强版：支持季节过滤） */
+function getRandomNewsByLevel(level, state) {
+  var seasonId = state && state.weather && state.weather.season;
+  var candidates = findNewsByLevel(level, seasonId);
   if (candidates.length === 0) return null;
   return Random.fromArray(candidates);
 }

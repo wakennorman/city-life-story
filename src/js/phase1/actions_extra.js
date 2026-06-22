@@ -1024,7 +1024,7 @@ function showRemitModal() {
   showModal({
     title: "💌 给家里汇款",
     body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
-           <p style="font-size:11px;color:var(--text-secondary);">每汇 100 元，心情+3，名气+0.5。</p>
+           <p style="font-size:11px;color:var(--text-secondary);">每汇 100 元，心情+3，家庭关系+1（汇款给家人不会涨名气，名气来自公共贡献）。</p>
            <label>汇款金额: <input id="remit-amount" type="number" min="100" max="${state.resources.cash}" value="200" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
@@ -1048,14 +1048,38 @@ function showRemitModal() {
             100,
             state.needs.happiness + (amt / 100) * 3,
           );
-          state.player.fame = Math.min(
-            100,
-            state.player.fame + (amt / 100) * 0.5,
-          );
-          StateManager.addMessage(
-            `💌 给家里汇了 ¥${amt.toLocaleString()}，爸妈很高兴。`,
-            "success",
-          );
+          // 家庭关系提升（不增加名气，名气来自公共贡献如捐款）
+          if (!state.family) state.family = {};
+          if (state.family.relationshipStage === undefined)
+            state.family.relationshipStage = "stranger";
+          // 汇款提升家庭关系阶段
+          var stageOrder = [
+            "stranger",
+            "acquaintance",
+            "friend",
+            "good_friend",
+            "crush",
+            "dating",
+            "engaged",
+            "married",
+          ];
+          var currentIdx = stageOrder.indexOf(state.family.relationshipStage);
+          if (
+            amt >= 500 &&
+            currentIdx < stageOrder.length - 1 &&
+            Math.random() < 0.3
+          ) {
+            state.family.relationshipStage = stageOrder[currentIdx + 1];
+            StateManager.addMessage(
+              `💌 给家里汇了 ¥${amt.toLocaleString()}，爸妈很高兴，家庭关系提升到「${state.family.relationshipStage}」。`,
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              `💌 给家里汇了 ¥${amt.toLocaleString()}，爸妈很高兴。`,
+              "success",
+            );
+          }
           document.querySelector(".modal-overlay")?.remove();
           renderAll();
         },

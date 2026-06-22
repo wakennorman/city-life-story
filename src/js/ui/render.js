@@ -4039,15 +4039,30 @@ function renderSkillsTab(state, parent) {
       synDiv.innerHTML =
         synTitle +
         '<div style="font-size:11px;color:var(--text-muted);">多技能达到门槛时激活持续加成。已定义组合：</div>';
+      // 技能名称映射（中文）
+      var SKILL_NAMES_CN = {
+        cooking: "烹饪",
+        repair: "维修",
+        coding: "编程",
+        english: "英语",
+        driving: "驾驶",
+        sales: "销售",
+        management: "管理",
+        accounting: "会计",
+        electrician: "电工",
+        welding: "焊接",
+      };
+
       var allHtml = "";
       for (var si = 0; si < SKILL_SYNERGIES.length; si++) {
         var syn = SKILL_SYNERGIES[si];
         var reqs = Object.entries
           ? Object.entries(syn.skills)
               .map(function (e) {
-                return e[0] + "≥" + e[1];
+                var skillName = SKILL_NAMES_CN[e[0]] || e[0];
+                return skillName + "≥Lv." + e[1];
               })
-              .join("+")
+              .join(" + ")
           : "";
         allHtml +=
           '<div style="font-size:10px;color:var(--text-muted);padding:2px 0;">🔒 ' +

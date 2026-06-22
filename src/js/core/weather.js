@@ -925,3 +925,34 @@ function getWeatherEnhancedDesc(state) {
     parts.push("😷需防护");
   return parts.join(" · ");
 }
+
+/**
+ * 初始化天气系统（游戏开始时调用）
+ * 随机选择开局季节，并设置合理温度
+ */
+function initWeather(state) {
+  if (!state.weather) {
+    state.weather = {};
+  }
+  var w = state.weather;
+
+  // 随机选择开局季节
+  var seasonIndex = Random.int(0, 3);
+  var season = SEASONS[seasonIndex];
+  w.season = season.id;
+  w.current = "sunny"; // 开局默认晴天
+  w.lastChanged = state.player.day;
+  w.duration = 1;
+  w.daysActive = 1;
+  w.persistent = false;
+  w.forecast = [];
+
+  // 设置合理温度（季节范围内随机）
+  var [tMin, tMax] = season.tempRange;
+  w.temperature = Random.int(tMin, tMax);
+
+  // 生成初始预报
+  generateWeatherForecast(state, season);
+
+  return w;
+}
