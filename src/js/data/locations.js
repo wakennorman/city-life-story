@@ -230,10 +230,16 @@ const LOCATIONS = {
   },
 
   // ============================================================
-  // 待完成：新增地点 — 参考《大多数》地图系统
+  // 待完成：新增地点 — 参考《大多数》地图系统《北京浮生记》真实中国城市地图
   // 实现提示：在 LOCATIONS 对象中追加，并在 TRAVEL_GRAPH 中配置连接关系
+  // 参考来源：
+  //   - 《大多数》地图系统：游戏化地点设计思路
+  //   - 《北京浮生记》：真实北京城市地图
+  //   - 真实中国城市功能区划分
   // ============================================================
-  // TODO: 待实现 - 郊区
+  //
+  // === 居住区扩展 ===
+  // TODO: 待实现 - 郊区（参考真实城郊结合部，房租低、交通不便）
   // {
   //   id: "suburb",
   //   name: "郊区",
@@ -256,7 +262,46 @@ const LOCATIONS = {
   //     snow: { footfallMod: 0.3 },
   //   },
   // },
-  // TODO: 待实现 - 政府办事大厅
+  // TODO: 待实现 - 高档小区（参考真实高档小区，富人有保安门禁）
+  // {
+  //   id: "luxury_community",
+  //   name: "高档小区",
+  //   desc: "高档封闭式小区，有物业和保安。普通摆摊进不去，但可以提供上门服务。",
+  //   type: "residential",
+  //   wealthTier: 3,
+  //   footfall: 0.3,
+  //   vendingNote: "门禁严格，需要预约才能进入",
+  //   specialties: ["luxury", "electronics"],
+  //   dailyProbability: 0.2,
+  //   specialCategory: ["luxury"],
+  //   jobs: ["premium_housekeeper", "chauffeur"],
+  //   priceMod: {
+  //     clothing: 1.3,
+  //     electronics: 1.2,
+  //     luxury: 1.4,
+  //   },
+  // },
+  // TODO: 待实现 - 老旧小区（参考真实老旧小区，设施陈旧但生活便利）
+  // {
+  //   id: "old_community",
+  //   name: "老旧小区",
+  //   desc: "90年代建的老小区，设施陈旧但生活便利。居民多为本地老住户。",
+  //   type: "residential",
+  //   wealthTier: 2,
+  //   footfall: 0.7,
+  //   vendingNote: "老年居民多，消费习惯保守",
+  //   specialties: ["daily_use", "food"],
+  //   dailyProbability: 0.4,
+  //   specialCategory: ["daily", "food"],
+  //   jobs: ["cleaning_service", "repair_service"],
+  //   priceMod: {
+  //     daily_use: 0.9,
+  //     food: 0.85,
+  //   },
+  // },
+  //
+  // === 公共服务区 ===
+  // TODO: 待实现 - 政府办事大厅（参考真实政务服务中心）
   // {
   //   id: "gov_office",
   //   name: "政府办事大厅",
@@ -272,7 +317,41 @@ const LOCATIONS = {
   //   priceMod: {},
   //   specialActions: ["办身份证", "办护照", "办社保卡", "申请低保", "办理贷款"],
   // },
-  // TODO: 待实现 - 娱乐城
+  // TODO: 待实现 - 法院/司法局（参考真实司法机构）
+  // {
+  //   id: "court",
+  //   name: "法院",
+  //   desc: "打官司的地方。可以起诉欠债不还、劳动纠纷等。",
+  //   type: "service",
+  //   wealthTier: 2,
+  //   footfall: 0.3,
+  //   vendingNote: "严肃场所，不适合摆摊",
+  //   specialties: [],
+  //   dailyProbability: 0.1,
+  //   specialCategory: [],
+  //   jobs: [],
+  //   priceMod: {},
+  //   specialActions: ["起诉欠债", "劳动仲裁", "法律咨询"],
+  // },
+  // TODO: 待实现 - 人才市场（参考真实人才交流中心）
+  // {
+  //   id: "job_market",
+  //   name: "人才市场",
+  //   desc: "找工作、招聘的地方。每周有招聘会，可以投简历。",
+  //   type: "service",
+  //   wealthTier: 2,
+  //   footfall: 0.8,
+  //   vendingNote: "求职者多，但消费力弱",
+  //   specialties: ["daily_use"],
+  //   dailyProbability: 0.3,
+  //   specialCategory: ["daily"],
+  //   jobs: [],
+  //   priceMod: { daily_use: 0.9 },
+  //   specialActions: ["投简历", "参加招聘会", "职业咨询"],
+  // },
+  //
+  // === 娱乐休闲区 ===
+  // TODO: 待实现 - 娱乐城（参考真实娱乐综合体）
   // {
   //   id: "entertainment",
   //   name: "娱乐城",
@@ -291,7 +370,7 @@ const LOCATIONS = {
   //     electronics: 1.1,
   //   },
   // },
-  // TODO: 待实现 - 寺庙
+  // TODO: 待实现 - 寺庙（参考真实城市寺庙）
   // {
   //   id: "temple",
   //   name: "寺庙",
@@ -309,6 +388,136 @@ const LOCATIONS = {
   //     water: 1.05,
   //   },
   //   specialActions: ["祈福", "冥想", "捐香火钱", "求签"],
+  // },
+  // TODO: 待实现 - 图书馆（参考真实公共图书馆）
+  // {
+  //   id: "library",
+  //   name: "图书馆",
+  //   desc: "免费看书学习的地方。环境好，可以静心学习技能。",
+  //   type: "education",
+  //   wealthTier: 2,
+  //   footfall: 0.5,
+  //   vendingNote: "安静场所，禁止摆摊",
+  //   specialties: [],
+  //   dailyProbability: 0.2,
+  //   specialCategory: [],
+  //   jobs: [],
+  //   priceMod: {},
+  //   specialActions: ["借书学习", "自习", "参加读书会"],
+  // },
+  // TODO: 待实现 - 体育馆/健身房（参考真实公共体育设施）
+  // {
+  //   id: "gym",
+  //   name: "体育馆",
+  //   desc: "可以健身/打球/游泳的地方。增强体质的好去处。",
+  //   type: "recreation",
+  //   wealthTier: 2,
+  //   footfall: 0.8,
+  //   vendingNote: "运动人群多，消费力中等",
+  //   specialties: ["sports_equipment", "snacks"],
+  //   dailyProbability: 0.4,
+  //   specialCategory: ["daily"],
+  //   jobs: ["gym_coach"],
+  //   priceMod: { snacks: 1.1, sports_equipment: 1.0 },
+  // },
+  // TODO: 待实现 - 网吧（参考真实网吧/电竞馆）
+  // {
+  //   id: "internet_cafe",
+  //   name: "网吧",
+  //   desc: "上网/打游戏的地方。可以接线上任务，也可以消磨时间。",
+  //   type: "recreation",
+  //   wealthTier: 2,
+  //   footfall: 0.7,
+  //   vendingNote: "年轻人多，零食饮料消费旺盛",
+  //   specialties: ["snacks", "beverages"],
+  //   dailyProbability: 0.5,
+  //   specialCategory: ["food"],
+  //   jobs: ["data_entry"],
+  //   priceMod: { snacks: 1.0, beverages: 1.0 },
+  // },
+  // TODO: 待实现 - 菜市场（参考真实农贸市场）
+  // {
+  //   id: "vegetable_market",
+  //   name: "菜市场",
+  //   desc: "买菜的地方。新鲜食材最便宜，但环境嘈杂。",
+  //   type: "commercial",
+  //   wealthTier: 2,
+  //   footfall: 1.2,
+  //   vendingNote: "买菜人多，但消费力有限",
+  //   specialties: ["vegetables", "fruits", "meat", "seafood"],
+  //   dailyProbability: 0.8,
+  //   specialCategory: ["food"],
+  //   jobs: ["street_vending_food"],
+  //   priceMod: {
+  //     vegetables: 0.7,
+  //     fruits: 0.75,
+  //     meat: 0.85,
+  //     seafood: 0.8,
+  //   },
+  // },
+  // TODO: 待实现 - 物流园区（参考真实物流集散中心）
+  // {
+  //   id: "logistics_park",
+  //   name: "物流园区",
+  //   desc: "快递/物流集散中心。工作机会多，但环境嘈杂。",
+  //   type: "industrial",
+  //   wealthTier: 2,
+  //   footfall: 1.0,
+  //   vendingNote: "快递员和司机是主力消费群体",
+  //   specialties: ["food", "daily_use"],
+  //   dailyProbability: 0.5,
+  //   specialCategory: ["food", "daily"],
+  //   jobs: ["package_delivery", "warehouse_worker", "logistics_sorting"],
+  //   priceMod: { food: 0.9, daily_use: 0.85 },
+  // },
+  // TODO: 待实现 - 汽车城/4S店集群（参考真实汽车商圈）
+  // {
+  //   id: "auto_city",
+  //   name: "汽车城",
+  //   desc: "4S店和二手车市场聚集地。可以买车/修车/找工作。",
+  //   type: "commercial",
+  //   wealthTier: 3,
+  //   footfall: 0.6,
+  //   vendingNote: "看车人多，但买车人少",
+  //   specialties: ["electronics", "luxury"],
+  //   dailyProbability: 0.3,
+  //   specialCategory: ["electronics"],
+  //   jobs: ["auto_repair", "car_sales"],
+  //   priceMod: { electronics: 1.1 },
+  // },
+  // TODO: 待实现 - 花鸟市场（参考真实花鸟鱼虫市场）
+  // {
+  //   id: "flower_bird_market",
+  //   name: "花鸟市场",
+  //   desc: "卖花/宠物/观赏鱼的地方。喜欢动植物的天堂。",
+  //   type: "recreation",
+  //   wealthTier: 2,
+  //   footfall: 0.5,
+  //   vendingNote: "爱好者多，消费力中等",
+  //   specialties: ["flowers", "pets"],
+  //   dailyProbability: 0.3,
+  //   specialCategory: [],
+  //   jobs: ["pet_sitter"],
+  //   priceMod: {},
+  // },
+  // TODO: 待实现 - 二手市场/跳蚤市场（参考真实二手交易市场）
+  // {
+  //   id: "flea_market",
+  //   name: "二手市场",
+  //   desc: "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
+  //   type: "commercial",
+  //   wealthTier: 2,
+  //   footfall: 0.8,
+  //   vendingNote: "淘货人多，消费力参差不齐",
+  //   specialties: ["clothing", "electronics", "books"],
+  //   dailyProbability: 0.5,
+  //   specialCategory: ["clothing", "electronics"],
+  //   jobs: ["street_vending_goods"],
+  //   priceMod: {
+  //     clothing: 0.7,
+  //     electronics: 0.75,
+  //     books: 0.6,
+  //   },
   // },
 ];
 

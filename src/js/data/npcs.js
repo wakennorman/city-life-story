@@ -1066,10 +1066,16 @@ const NPCS = [
   },
 
   // ============================================================
-  // 待完成：新增 NPC — 刘叔（退休老教师）
-  // 参考：《Stardew Valley》刘易斯镇长 / 《动物森友会》岛民
+  // 待完成：新增 NPC — 完整配置（参考《Stardew Valley》《动物森友会》《大多数》）
+  // 实现提示：每个 NPC 需要完整配置（生日/节日/对话/礼物/情报/在场加成/好感奖励/求助/深度任务）
+  // 参考来源：
+  //   - 《Stardew Valley》NPC系统：岛民性格、喜好、任务链设计
+  //   - 《动物森友会》：岛民对话风格、节日互动
+  //   - 《大多数》NPC系统：好感度、求助、深度任务
   // ============================================================
-  // TODO: 待实现
+  //
+  // === 公园/居住区 NPC ===
+  // TODO: 待实现 - 刘叔（退休老教师，参考《Stardew Valley》刘易斯镇长）
   // {
   //   id: "uncle_liu",
   //   name: "刘叔",
@@ -1126,13 +1132,10 @@ const NPCS = [
   //       { text: "🤷 成功是什么？您觉得呢", hint: "好感+5，开启哲学对话", apply: function(st) { st.flags._npcDeepTask_uncle_liu = true; if (!st.relationships.uncle_liu) st.relationships.uncle_liu = { affinity: 0, met: true }; st.relationships.uncle_liu.affinity = Math.min(100, st.relationships.uncle_liu.affinity + 5); StateManager.addMessage("🤷 刘叔笑了笑：「也是，成功是什么，每个人都有自己的答案。来，咱们下盘棋。」好感+5。", "info"); } },
   //     ],
   //   },
-  // }
-
-  // ============================================================
-  // 待完成：新增 NPC — 吴姐（美容院老板）
-  // 参考：《模拟人生》NPC / 《大多数》美容院事件
-  // ============================================================
-  // TODO: 待实现
+  // },
+  //
+  // === 商业区 NPC ===
+  // TODO: 待实现 - 吴姐（美容院老板，参考《模拟人生》NPC）
   // {
   //   id: "sister_wu",
   //   name: "吴姐",
@@ -1140,14 +1143,56 @@ const NPCS = [
   //   location: "commercialDist",
   //   birthday: 200,
   //   desc: "美容院老板娘，认识各种人，能介绍美容/时尚相关工作。",
-  //   // ... 完整配置（生日/节日/对话/礼物/情报/在场加成/好感奖励/求助/深度任务）
-  // }
-
-  // ============================================================
-  // 待完成：新增 NPC — 阿黄（快递站长）
-  // 参考：《快递小哥模拟器》
-  // ============================================================
-  // TODO: 待实现
+  //   birthdayLine: "今天是我生日！你记得？哎，平时太忙了，难得有人想着我，谢谢你啊！",
+  //   festivalLines: {
+  //     spring_festival: "过年好！美容院初五开门，你来做个脸？给你打八折！",
+  //     mid_autumn: "中秋节送月饼不如送美丽，来做个护理吧！",
+  //     labor_day: "劳动节美容师也要休息，但你可以预约节后。",
+  //     national_day: "黄金周美容预约爆满，提前一个月约！",
+  //   },
+  //   talkLines: [
+  //     "女人要爱自己，定期做个护理。",
+  //     "最近流行医美，你要不要试试？",
+  //     "我认识几个网红，你要不要认识认识？",
+  //   ],
+  //   giftPrefers: ["clothing", "snacks", "luxury"],
+  //   tradeInfo: {
+  //     expertise: ["clothing", "luxury"],
+  //     infoTypes: {
+  //       price_level: { label: "服装价格水平", threshold: 30, cost: 40 },
+  //       category_highest: { label: "哪买衣服最贵", threshold: 60, cost: 20 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["beauty_salon", "nail_artist"],
+  //       multiplier: 1.1,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "sister_wu_30", desc: "吴姐给你免费做护理（美容XP+30）", effect: function(st) { st.skills.beauty = st.skills.beauty || { level: 0, xp: 0 }; st.skills.beauty.xp += 30; StateManager.addMessage("💕 吴姐说'今天送你做个护理'，美容XP+30！", "success"); } },
+  //     { threshold: 60, id: "sister_wu_60", desc: "吴姐介绍美容客户（美容工作收入+15%）", effect: function(st) { st.flags.wuBeautyClients = true; StateManager.addMessage("💕 吴姐说'我介绍几个客户给你'，美容工作收入+15%！", "success"); } },
+  //     { threshold: 80, id: "sister_wu_80", desc: "吴姐帮你开美容院（解锁美容院工作）", effect: function(st) { st.flags.wuBeautyShop = true; StateManager.addMessage("❤️ 吴姐说'我入股，你当店长'，解锁美容院高级工作！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "吴姐有些为难：「最近有个大客户要办卡，但她说要认识人才给折扣……你能不能帮我牵个线？」",
+  //     choices: [
+  //       { text: "💁 帮你牵线（需要认识富裕NPC）", apply: function(st) { st.flags._npcFavor_sister_wu = true; st.relationships.sister_wu.affinity = Math.min(100, st.relationships.sister_wu.affinity + 12); StateManager.addMessage("💕 你牵线成功了，吴姐很开心！", "success"); } },
+  //       { text: "😅 我不认识这样的人", apply: function(st) { st.flags._npcFavor_sister_wu = true; st.relationships.sister_wu.affinity = Math.max(-100, st.relationships.sister_wu.affinity - 3); StateManager.addMessage("😅 吴姐有点失望。", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "吴姐叹了口气：「开了十年美容院，累了。想转行做医美，但不知道行不行……你觉得呢？」",
+  //     choices: [
+  //       { text: "💪 医美是趋势，值得投入", hint: "好感+8，吴姐获得转型信心", apply: function(st) { st.flags._npcDeepTask_sister_wu = true; st.relationships.sister_wu.affinity = Math.min(100, st.relationships.sister_wu.affinity + 8); st.needs.happiness = Math.min(100, st.needs.happiness + 8); StateManager.addMessage("💕 吴姐说'你说得对，我试试'。", "success"); } },
+  //       { text: "⚠️ 医美风险大，先调研", hint: "好感+3，吴姐冷静下来", apply: function(st) { st.flags._npcDeepTask_sister_wu = true; st.relationships.sister_wu.affinity = Math.min(100, st.relationships.sister_wu.affinity + 3); StateManager.addMessage("⚠️ 吴姐点点头：「你说得对，我先调研一下。」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_sister_wu = true; StateManager.addMessage("🤷 吴姐点点头：「也是，我自己想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  // TODO: 待实现 - 阿黄（快递站长，参考《快递小哥模拟器》）
   // {
   //   id: "brother_huang",
   //   name: "阿黄",
@@ -1155,14 +1200,58 @@ const NPCS = [
   //   location: "commercialDist",
   //   birthday: 250,
   //   desc: "快递站点站长，管理几十个骑手，能介绍配送工作。",
-  //   // ... 完整配置
-  // }
-
-  // ============================================================
-  // 待完成：新增 NPC — 林阿姨（菜市场摊主）
-  // 参考：《菜市场模拟器》
-  // ============================================================
-  // TODO: 待实现
+  //   birthdayLine: "今天生日？巧了，我手下一个小哥也是今天生日，你们有缘！",
+  //   festivalLines: {
+  //     spring_festival: "过年快递不停，初一初二三倍工资，要不要来？",
+  //     mid_autumn: "中秋节月饼礼盒配送爆单，你来帮忙？",
+  //     labor_day: "劳动节快递最忙，一天能赚¥500！",
+  //     national_day: "黄金周快递量翻倍，全员上岗！",
+  //   },
+  //   talkLines: [
+  //     "这行干久了，腿都跑细了。",
+  //     "快递这行，拼的是速度和态度。",
+  //     "平台抽成越来越高，我们赚的是辛苦钱。",
+  //   ],
+  //   giftPrefers: ["beer", "cigarettes", "daily_use"],
+  //   tradeInfo: {
+  //     expertise: ["daily", "food"],
+  //     infoTypes: {
+  //       price_level: { label: "配送员消费水平", threshold: 30, cost: 30 },
+  //       category_lowest: { label: "哪吃饭最便宜", threshold: 60, cost: 15 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["delivery_rider", "package_delivery"],
+  //       multiplier: 1.12,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "brother_huang_30", desc: "阿黄给你优先派单（配送收入+10%）", effect: function(st) { st.flags.huangPriorityOrders = true; StateManager.addMessage("💕 阿黄说'以后给你派好单'，配送收入+10%！", "success"); } },
+  //     { threshold: 60, id: "brother_huang_60", desc: "阿黄借你电动车（配送效率+15%）", effect: function(st) { st.flags.huangEbike = true; StateManager.addMessage("💕 阿黄把他的备用电动车借给你！", "success"); } },
+  //     { threshold: 80, id: "brother_huang_80", desc: "阿黄让你当片区站长（解锁管理岗位）", effect: function(st) { st.flags.huangStationManager = true; StateManager.addMessage("❤️ 阿黄说'这个片区交给你管'，解锁站长岗位！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "阿黄有些着急：「有个小哥病了，今天单太多送不完。你能不能帮我顶半天？」",
+  //     choices: [
+  //       { text: "🚴 帮你顶半天", apply: function(st) { st.flags._npcFavor_brother_huang = true; st.resources.cash += 80 + Random.int(0, 40); st.needs.fatigue = Math.min(100, st.needs.fatigue + 15); st.relationships.brother_huang.affinity = Math.min(100, st.relationships.brother_huang.affinity + 12); StateManager.addMessage("🚴 送了30单，赚了¥" + (80 + Random.int(0, 40)) + "！", "success"); } },
+  //       { text: "😅 今天没空", apply: function(st) { st.flags._npcFavor_brother_huang = true; st.relationships.brother_huang.affinity = Math.max(-100, st.relationships.brother_huang.affinity - 3); StateManager.addMessage("😅 阿黄叹了口气。", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "阿黄点了根烟：「干了五年站长，累得要死。平台越来越抠，小哥越来越难管……我在想，要不要转行。」",
+  //     choices: [
+  //       { text: "💪 转行做什么？", hint: "好感+5，阿黄分享想法", apply: function(st) { st.flags._npcDeepTask_brother_huang = true; st.relationships.brother_huang.affinity = Math.min(100, st.relationships.brother_huang.affinity + 5); StateManager.addMessage("💕 阿黄说'我想开个便利店'。", "info"); } },
+  //       { text: "⚠️ 现在转行风险大", hint: "好感+3", apply: function(st) { st.flags._npcDeepTask_brother_huang = true; st.relationships.brother_huang.affinity = Math.min(100, st.relationships.brother_huang.affinity + 3); StateManager.addMessage("⚠️ 阿黄点点头：「你说得对，我再想想。」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_brother_huang = true; StateManager.addMessage("🤷 阿黄叹了口气：「也是。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  //
+  // === 批发市场/工业区 NPC ===
+  // TODO: 待实现 - 林阿姨（菜市场摊主，参考《菜市场模拟器》）
   // {
   //   id: "auntie_lin",
   //   name: "林阿姨",
@@ -1170,14 +1259,56 @@ const NPCS = [
   //   location: "wholesaleMarket",
   //   birthday: 150,
   //   desc: "菜市场卖菜的老摊主，知道食材价格门道，能介绍餐饮工作。",
-  //   // ... 完整配置
-  // }
-
-  // ============================================================
-  // 待完成：新增 NPC — 赵师傅（修车师傅）
-  // 参考：《修车模拟器》
-  // ============================================================
-  // TODO: 待实现
+  //   birthdayLine: "今天是我生日？哎呀，我都不记得了。来来，送你一把青菜！",
+  //   festivalLines: {
+  //     spring_festival: "过年菜价贵，但我家菜新鲜，你来买点？",
+  //     mid_autumn: "中秋节家里做月饼，要不要买点鲜肉？",
+  //     dragon_boat: "端午节粽子叶我这里有，新鲜的！",
+  //     labor_day: "劳动节菜场最忙，我从天不亮就起来了。",
+  //   },
+  //   talkLines: [
+  //     "今天的青菜特别新鲜，刚从地里摘的。",
+  //     "猪肉价格又涨了，猪周期来了。",
+  //     "我在这卖了二十年菜，什么价没见过？",
+  //   ],
+  //   giftPrefers: ["fruits", "daily_use", "snacks"],
+  //   tradeInfo: {
+  //     expertise: ["food", "vegetables"],
+  //     infoTypes: {
+  //       price_level: { label: "菜市场价格水平", threshold: 30, cost: 20 },
+  //       category_lowest: { label: "哪买菜最便宜", threshold: 60, cost: 10 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["street_vending_food", "food_stall"],
+  //       multiplier: 1.08,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "auntie_lin_30", desc: "林阿姨给你便宜菜（食材价格-10%）", effect: function(st) { st.flags.linCheapVeg = true; StateManager.addMessage("💕 林阿姨说'来我这买菜便宜点'，食材价格-10%！", "success"); } },
+  //     { threshold: 60, id: "auntie_lin_60", desc: "林阿姨教你挑菜（食材质量判断）", effect: function(st) { st.flags.linVegTips = true; StateManager.addMessage("💕 林阿姨教你怎么挑新鲜菜！", "success"); } },
+  //     { threshold: 80, id: "auntie_lin_80", desc: "林阿姨让你帮卖菜（解锁菜摊工作）", effect: function(st) { st.flags.linVegStand = true; StateManager.addMessage("❤️ 林阿姨说'帮我看看摊子'，解锁菜摊工作！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "林阿姨有些为难：「今天腰疼得厉害，能不能帮我照看半天摊子？」",
+  //     choices: [
+  //       { text: "💁 帮你照看摊子", apply: function(st) { st.flags._npcFavor_auntie_lin = true; st.resources.cash += 50 + Random.int(0, 30); st.relationships.auntie_lin.affinity = Math.min(100, st.relationships.auntie_lin.affinity + 12); StateManager.addMessage("💁 卖了¥" + (50 + Random.int(0, 30)) + "，林阿姨给你分成！", "success"); } },
+  //       { text: "😅 今天没空", apply: function(st) { st.flags._npcFavor_auntie_lin = true; st.relationships.auntie_lin.affinity = Math.max(-100, st.relationships.auntie_lin.affinity - 3); StateManager.addMessage("😅 林阿姨点点头：「没事。」", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "林阿姨叹了口气：「卖了二十年菜，腰也弯了，眼睛也花了。儿子说让我退休，但我不舍得这个摊子……」",
+  //     choices: [
+  //       { text: "💪 退休也好，享享福", hint: "好感+5", apply: function(st) { st.flags._npcDeepTask_auntie_lin = true; st.relationships.auntie_lin.affinity = Math.min(100, st.relationships.auntie_lin.affinity + 5); StateManager.addMessage("💕 林阿姨说「你说得对，我也该歇歇了。」", "info"); } },
+  //       { text: "💰 可以传给儿子", hint: "好感+3", apply: function(st) { st.flags._npcDeepTask_auntie_lin = true; st.relationships.auntie_lin.affinity = Math.min(100, st.relationships.auntie_lin.affinity + 3); StateManager.addMessage("💰 林阿姨说「儿子不愿意干这个……」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_auntie_lin = true; StateManager.addMessage("🤷 林阿姨点点头：「我再想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  // TODO: 待实现 - 赵师傅（修车师傅，参考《修车模拟器》）
   // {
   //   id: "master_zhao",
   //   name: "赵师傅",
@@ -1185,14 +1316,58 @@ const NPCS = [
   //   location: "factoryZone",
   //   birthday: 280,
   //   desc: "修车铺老板，懂机械维修，能介绍维修/驾驶相关工作。",
-  //   // ... 完整配置
-  // }
-
-  // ============================================================
-  // 待完成：新增 NPC — 小丽（网红/主播）
-  // 参考：《网红模拟器》
-  // ============================================================
-  // TODO: 待实现
+  //   birthdayLine: "今天生日？难得！来，给你免费检查下车子！",
+  //   festivalLines: {
+  //     spring_festival: "过年修车不停，初一初二加急费翻倍！",
+  //     mid_autumn: "中秋节回家路上车子坏了？找我！",
+  //     labor_day: "劳动节路上车多，修车排长队！",
+  //     national_day: "黄金周自驾游多，我24小时待命！",
+  //   },
+  //   talkLines: [
+  //     "车子就像人，定期保养不出问题。",
+  //     "现在新能源车多了，修车也得学新东西。",
+  //     "我干了二十年修车，什么车没见过？",
+  //   ],
+  //   giftPrefers: ["beer", "cigarettes", "daily_use"],
+  //   tradeInfo: {
+  //     expertise: ["electronics", "daily"],
+  //     infoTypes: {
+  //       price_level: { label: "汽配价格水平", threshold: 30, cost: 30 },
+  //       category_highest: { label: "哪买配件最贵", threshold: 60, cost: 15 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["repair_service", "auto_repair"],
+  //       multiplier: 1.1,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "master_zhao_30", desc: "赵师傅免费帮你修车（节省修车费）", effect: function(st) { st.flags.zhaoFreeRepair = true; StateManager.addMessage("💕 赵师傅说'帮你免费看看'，省了修车费！", "success"); } },
+  //     { threshold: 60, id: "master_zhao_60", desc: "赵师傅教你修车（维修XP+50）", effect: function(st) { st.skills.repair = st.skills.repair || { level: 0, xp: 0 }; st.skills.repair.xp += 50; StateManager.addMessage("💕 赵师傅手把手教你修车，维修XP+50！", "success"); } },
+  //     { threshold: 80, id: "master_zhao_80", desc: "赵师傅让你当学徒（解锁汽修工作）", effect: function(st) { st.flags.zhaoApprentice = true; StateManager.addMessage("❤️ 赵师傅说'跟我学修车吧'，解锁汽修工作！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "赵师傅擦了擦手：「今天活多，一个人忙不过来。你能不能帮我打下手？」",
+  //     choices: [
+  //       { text: "🔧 帮你打下手", apply: function(st) { st.flags._npcFavor_master_zhao = true; st.resources.cash += 60 + Random.int(0, 40); st.skills.repair = st.skills.repair || { level: 0, xp: 0 }; st.skills.repair.xp += 20; st.relationships.master_zhao.affinity = Math.min(100, st.relationships.master_zhao.affinity + 12); StateManager.addMessage("🔧 干了半天，赚了¥" + (60 + Random.int(0, 40)) + "，维修XP+20！", "success"); } },
+  //       { text: "😅 今天没空", apply: function(st) { st.flags._npcFavor_master_zhao = true; st.relationships.master_zhao.affinity = Math.max(-100, st.relationships.master_zhao.affinity - 3); StateManager.addMessage("😅 赵师傅点点头：「没事。」", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "赵师傅点了根烟：「干了二十年修车，腰也弯了。儿子说让我退休，但我不舍得这个铺子……」",
+  //     choices: [
+  //       { text: "💪 退休也好，享享福", hint: "好感+5", apply: function(st) { st.flags._npcDeepTask_master_zhao = true; st.relationships.master_zhao.affinity = Math.min(100, st.relationships.master_zhao.affinity + 5); StateManager.addMessage("💕 赵师傅说「你说得对，我也该歇歇了。」", "info"); } },
+  //       { text: "💰 可以传给儿子", hint: "好感+3", apply: function(st) { st.flags._npcDeepTask_master_zhao = true; st.relationships.master_zhao.affinity = Math.min(100, st.relationships.master_zhao.affinity + 3); StateManager.addMessage("💰 赵师傅说「儿子不愿意干这个……」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_master_zhao = true; StateManager.addMessage("🤷 赵师傅点点头：「我再想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  //
+  // === 科技园/商业区 NPC ===
+  // TODO: 待实现 - 小丽（网红/主播，参考《网红模拟器》）
   // {
   //   id: "xiaoli",
   //   name: "小丽",
@@ -1200,8 +1375,166 @@ const NPCS = [
   //   location: "techPark",
   //   birthday: 300,
   //   desc: "短视频主播，粉丝几万，能介绍内容创作/直播相关工作。",
+  //   birthdayLine: "哇你居然记得我生日！你是我的铁粉吗？爱你！",
+  //   festivalLines: {
+  //     spring_festival: "过年直播七天，粉丝福利大放送！",
+  //     mid_autumn: "中秋节直播赏月，来我直播间！",
+  //     labor_day: "劳动节出去旅游直播，粉丝点我！",
+  //     national_day: "黄金周直播vlog，关注不迷路！",
+  //   },
+  //   talkLines: [
+  //     "今天直播数据不错，涨粉500！",
+  //     "平台抽成太高，我想自己建站。",
+  //     "网红这行吃青春饭，我得想后路。",
+  //   ],
+  //   giftPrefers: ["clothing", "electronics", "luxury"],
+  //   tradeInfo: {
+  //     expertise: ["electronics", "luxury"],
+  //     infoTypes: {
+  //       price_level: { label: "网红消费水平", threshold: 30, cost: 50 },
+  //       category_highest: { label: "哪买化妆品最贵", threshold: 60, cost: 20 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["content_writing", "streamer"],
+  //       multiplier: 1.1,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "xiaoli_30", desc: "小丽推荐你做直播助理（解锁直播工作）", effect: function(st) { st.flags.xiaoliAssistant = true; StateManager.addMessage("💕 小丽说'你来帮我吧'，解锁直播助理工作！", "success"); } },
+  //     { threshold: 60, id: "xiaoli_60", desc: "小丽教你做内容（内容创作XP+50）", effect: function(st) { st.skills.content = st.skills.content || { level: 0, xp: 0 }; st.skills.content.xp += 50; StateManager.addMessage("💕 小丽教你怎么做内容，内容创作XP+50！", "success"); } },
+  //     { threshold: 80, id: "xiaoli_80", desc: "小丽让你开小号（解锁主播工作）", effect: function(st) { st.flags.xiaoliOwnAccount = true; StateManager.addMessage("❤️ 小丽说'我帮你开个号'，解锁主播工作！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "小丽有些着急：「今天直播设备坏了，你能不能帮我修一下？」",
+  //     choices: [
+  //       { text: "🔧 帮你修设备", apply: function(st) { st.flags._npcFavor_xiaoli = true; st.resources.cash += 100 + Random.int(0, 50); st.relationships.xiaoli.affinity = Math.min(100, st.relationships.xiaoli.affinity + 12); StateManager.addMessage("🔧 修好了，小丽给你¥" + (100 + Random.int(0, 50)) + "！", "success"); } },
+  //       { text: "😅 我不会这个", apply: function(st) { st.flags._npcFavor_xiaoli = true; st.relationships.xiaoli.affinity = Math.max(-100, st.relationships.xiaoli.affinity - 3); StateManager.addMessage("😅 小丽失望地点点头。", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "小丽有些疲惫：「做了三年主播，粉丝十万，但身体累垮了。我在想，要不要转行……」",
+  //     choices: [
+  //       { text: "💪 转行做什么？", hint: "好感+5", apply: function(st) { st.flags._npcDeepTask_xiaoli = true; st.relationships.xiaoli.affinity = Math.min(100, st.relationships.xiaoli.affinity + 5); StateManager.addMessage("💕 小丽说「我想做美妆博主。」", "info"); } },
+  //       { text: "⚠️ 先养好身体", hint: "好感+3", apply: function(st) { st.flags._npcDeepTask_xiaoli = true; st.relationships.xiaoli.affinity = Math.min(100, st.relationships.xiaoli.affinity + 3); StateManager.addMessage("⚠️ 小丽点点头：「你说得对。」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_xiaoli = true; StateManager.addMessage("🤷 小丽叹了口气：「我再想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  //
+  // === 医院/服务类 NPC ===
+  // TODO: 待实现 - 王医生（医院医生，参考真实医患关系）
+  // {
+  //   id: "dr_wang",
+  //   name: "王医生",
+  //   role: "医院医生",
+  //   location: "hospital",
+  //   birthday: 120,
+  //   desc: "医院内科医生，工作辛苦但收入稳定。能给你健康建议。",
+  //   birthdayLine: "今天生日？难得有人记得。送你一句：健康最重要。",
+  //   festivalLines: {
+  //     spring_festival: "过年医院最忙，急诊人爆满。",
+  //     mid_autumn: "中秋节医院也不休息，病人不会放假。",
+  //     labor_day: "劳动节我值班，病人不会因为你放假就不生病。",
+  //     national_day: "黄金周急诊最多，喝酒吃坏肚子的全是。",
+  //   },
+  //   talkLines: [
+  //     "健康是革命的本钱，别透支。",
+  //     "现在年轻人亚健康太普遍了。",
+  //     "我干了二十年医生，见多了。",
+  //   ],
+  //   giftPrefers: ["fruits", "daily_use"],
+  //   tradeInfo: {
+  //     expertise: ["daily", "food"],
+  //     infoTypes: {
+  //       price_level: { label: "医疗价格水平", threshold: 30, cost: 40 },
+  //       category_lowest: { label: "哪看病最便宜", threshold: 60, cost: 20 },
+  //     },
+  //   },
+  //   presenceBonus: [
+  //     {
+  //       minAffinity: 30,
+  //       jobs: ["hospital_caregiver"],
+  //       multiplier: 1.1,
+  //     },
+  //   ],
+  //   affinityRewards: [
+  //     { threshold: 30, id: "dr_wang_30", desc: "王医生给你健康建议（生病概率-5%）", effect: function(st) { st.flags.wangHealthTips = true; StateManager.addMessage("💕 王医生给你一些健康建议，生病概率-5%！", "success"); } },
+  //     { threshold: 60, id: "dr_wang_60", desc: "王医生给你优先挂号（医院AP-2）", effect: function(st) { st.flags.wangPriority = true; StateManager.addMessage("💕 王医生说'找我直接进'，医院AP-2！", "success"); } },
+  //     { threshold: 80, id: "dr_wang_80", desc: "王医生给你免费体检（健康检查）", effect: function(st) { st.flags.wangFreeCheckup = true; StateManager.addMessage("❤️ 王医生说'给你做个全面检查'，免费体检！", "success"); } },
+  //   ],
+  //   favor: {
+  //     story: "王医生有些疲惫：「今天连续看了30个病人，累死了。你能不能帮我倒杯咖啡？」",
+  //     choices: [
+  //       { text: "☕ 帮你买咖啡", apply: function(st) { st.flags._npcFavor_dr_wang = true; st.resources.cash -= 15; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 8); StateManager.addMessage("☕ 王医生喝了咖啡，精神好多了！", "success"); } },
+  //       { text: "😅 我没带钱", apply: function(st) { st.flags._npcFavor_dr_wang = true; st.relationships.dr_wang.affinity = Math.max(-100, st.relationships.dr_wang.affinity - 2); StateManager.addMessage("😅 王医生点点头：「没事。」", "info"); } },
+  //     ],
+  //   },
+  //   deepTask: {
+  //     requiredAffinity: 70,
+  //     story: "王医生叹了口气：「干了二十年医生，见多了生死。有时候觉得，自己也在消耗生命……」",
+  //     choices: [
+  //       { text: "💪 你是救死扶伤的英雄", hint: "好感+8", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 8); st.needs.happiness = Math.min(100, st.needs.happiness + 10); StateManager.addMessage("💕 王医生笑了笑：「谢谢你。」", "success"); } },
+  //       { text: "⚠️ 注意休息", hint: "好感+5", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 5); StateManager.addMessage("⚠️ 王医生点点头：「我会注意的。」", "info"); } },
+  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info"); } },
+  //     ],
+  //   },
+  // },
+  //
+  // === 其他特色 NPC ===
+  // TODO: 待实现 - 老张（拾荒者，参考真实拾荒者生活）
+  // {
+  //   id: "old_zhang",
+  //   name: "老张",
+  //   role: "拾荒者",
+  //   location: "slum",
+  //   birthday: 200,
+  //   desc: "在城中村拾荒的老人，知道很多城中村的秘密。",
   //   // ... 完整配置
-  // }
+  // },
+  // TODO: 待实现 - 小陈（外卖骑手，参考真实外卖骑手生活）
+  // {
+  //   id: "xiaochen",
+  //   name: "小陈",
+  //   role: "外卖骑手",
+  //   location: "commercialDist",
+  //   birthday: 180,
+  //   desc: "年轻的外卖骑手，每天跑几十单。能介绍配送工作。",
+  //   // ... 完整配置
+  // },
+  // TODO: 待实现 - 李姐（保洁阿姨，参考真实保洁阿姨生活）
+  // {
+  //   id: "sister_li",
+  //   name: "李姐",
+  //   role: "保洁阿姨",
+  //   location: "commercialDist",
+  //   birthday: 150,
+  //   desc: "在商业区做保洁的阿姨，认识很多公司。",
+  //   // ... 完整配置
+  // },
+  // TODO: 待实现 - 大刘（保安，参考真实保安生活）
+  // {
+  //   id: "da_liu",
+  //   name: "大刘",
+  //   role: "保安",
+  //   location: "factoryZone",
+  //   birthday: 200,
+  //   desc: "工厂保安，工作轻松但工资不高。",
+  //   // ... 完整配置
+  // },
+  // TODO: 待实现 - 阿梅（便利店店员，参考真实便利店店员生活）
+  // {
+  //   id: "amei",
+  //   name: "阿梅",
+  //   role: "便利店店员",
+  //   location: "commercialDist",
+  //   birthday: 220,
+  //   desc: "便利店夜班店员，见过各种人。",
+  //   // ... 完整配置
+  // },
 ];
 
 /** 获取NPC */
