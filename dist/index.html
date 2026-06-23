@@ -105291,7 +105291,8 @@ function checkCareerPromotion(state, pathId, level) {
   // 社交关系检查（高阶职位需要）
   if (level.reqSocial) {
     var colleagues = state.workplaceSocial?.colleagues?.network || [];
-    if (!colleagues.length) colleagues = state.corporate?.colleagues?.network || [];
+    if (!colleagues.length)
+      colleagues = state.corporate?.colleagues?.network || [];
     var highTrust = colleagues.filter(function (c) {
       return c.relationship >= 60;
     }).length;
@@ -105308,10 +105309,16 @@ function renderPromotionReqs(state, pathId, level) {
   if (level.reqSkills) {
     for (var s in level.reqSkills) {
       var labels = {
-        coding: "编程", english: "英语", accounting: "财务",
-        management: "管理", sales: "销售",
-        intelligence: "智力", mental: "能力", physique: "体质",
-        agility: "敏捷", charm: "颜值",
+        coding: "编程",
+        english: "英语",
+        accounting: "财务",
+        management: "管理",
+        sales: "销售",
+        intelligence: "智力",
+        mental: "能力",
+        physique: "体质",
+        agility: "敏捷",
+        charm: "颜值",
       };
       parts.push((labels[s] || s) + "≥" + level.reqSkills[s]);
     }
@@ -105320,8 +105327,13 @@ function renderPromotionReqs(state, pathId, level) {
   if (level.reqAttrs) {
     for (var a in level.reqAttrs) {
       var attrLabels = {
-        physique: "体质", intelligence: "智力", agility: "敏捷",
-        mental: "能力", charm: "颜值", fame: "名气", morality: "道德",
+        physique: "体质",
+        intelligence: "智力",
+        agility: "敏捷",
+        mental: "能力",
+        charm: "颜值",
+        fame: "名气",
+        morality: "道德",
       };
       parts.push((attrLabels[a] || a) + "≥" + level.reqAttrs[a]);
     }
