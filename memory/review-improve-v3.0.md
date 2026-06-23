@@ -1,0 +1,160 @@
+---
+name: review-improve-v3.0
+description: 城市浮生记审查改进 v3.0 SOP — 全套评估+省 token 护栏+跨 agent 复用
+metadata:
+  type: reference
+  irl_trigger_display: "v3.0 审查改进"
+  inherits_from: content-expansion-v2.1.md
+---
+
+# 城市浮生记 — 审查改进 v3.0 SOP
+
+> **一句话触发** → 你说 **"按 v3.0 审查改进"**，我自动按此 SOP 执行。
+> 
+> Hermes / Claude Code / 其他 agent 通用。占用你 ~50 tokens；我按需读本文件（~450 tokens）。
+>
+> 本文件是 v2.1 内容扩充 SOP 的全面升级版，整合了 REVIEW_BRIEF.md（评估框架+省 token 护栏）和 REVIEW_RESULT.md（已知缺陷清单）。
+
+---
+
+## 一、硬约束（Tier-1 — 绝不可违反）
+
+| # | 规则 | 来源 |
+|---|------|------|
+| 1 | **不 cat 整文件** — main.js 4000 行、events_street.js 9800 行、render.js 5200 行。只用 `grep -n` + 范围 `Read`（≤80 行/次） | REVIEW_BRIEF |
+| 2 | **每次改动 ≤20 行**，多次小改优于一次大改。新模块 ≤300 行 | REVIEW_BRIEF |
+| 3 | **不反复 build** — 全部改完后最后一次 `python build.py` | REVIEW_BRIEF |
+| 4 | **街头工作 ≤20 个** — 超即砍无特色纯数值条目 | v2.1 |
+| 5 | **行业代表制** — 每个行业只留 1 个代表 NPC，同类不重复 | v2.1 |
+| 6 | **空地点禁止** — 去了无事可做的地方不添加 | v2.1 |
+| 7 | **任何改动结束必须更新 DEVELOPMENT.md 顶部** | REVIEW_BRIEF |
+| 8 | **不删文件只改文件；新文件必须论证为什么不能放现有模块** | REVIEW_BRIEF |
+
+---
+
+## 二、成套添加（Tier-2 — 新增内容必须配套，缺一不可）
+
+| 新条目 | 必须配套 |
+|--------|----------|
+| **地点** | 1–2 工作 + 1 NPC + 2–3 事件/新闻（均可标记 TODO） |
+| **NPC** | 3–5 对话（好感分级）+ 1 求助事件链 + 礼物偏好表 + 1 深度任务 |
+| **商品** | buyLocations + sellLocations（套利路径）+ seasonal 标注 |
+| **证书/考试** | 考试地点 + 费用/通过率 + 生效后具体加成效果 |
+| **新模块** | 暴露 ≤4 个 `window.xxx` 函数；接入 `daily_pipeline.js` 一个 step；`index.html` 注册 script 放 core/ 之后 |
+
+---
+
+## 三、交叉验证（Tier-2 — 改前必做）
+
+- [ ] `grep` 同名/同功能 — 重复则合并，不新建
+- [ ] 装备引用 skill → `skills.js` 存在
+- [ ] 地点 ID → `jobs.js` 的 `location` 字段一致
+- [ ] events_street.js 引用的 flag → 已有早期的 `if (state.flags.xxx)` 检查
+- [ ] 改动后 `grep 关键词` 在 `dist/index.html` 中能否找到
+
+---
+
+## 四、审查评估框架（A-E 五维度）
+
+**每次接到"审查改进"指令时，必须逐条检查以下项目**，提取出问题的才标记具体文件:行号。
+
+### A. 代码与架构
+
+- [ ] `main.js` 是否有可剥离的函数（游荡全局函数）
+- [ ] 脚本加载顺序有无耦合风险
+- [ ] phase1/phase2 边界是否清晰
+- [ ] 是否出现新文件未注册 `<script>` 标签
+- [ ] 是否出现重复定义（`var` / `function` 已存在）
+
+### B. 系统设计 / 经济平衡
+
+- [ ] 玩家经济曲线是否有指数膨胀点（中后期创业+股票+房产三联）
+- [ ] 反向闸门是否充足（中产税、疾病链、运气波动等）
+- [ ] **已知缺陷**：中后期"赚到就赢"、村长债 0.35%/日利率对老玩家几乎无感、开局属性差异≤5 点太小（来源：REVIEW_RESULT.md §2）
+- [ ] 难度是否有分层（休闲/标准/困难）
+
+### C. 叙事 / 主线
+
+- [ ] 主线是否有动机锚点（当前是开放沙盒，需保证"有方向感"）
+- [ ] 事件 followup 比例是否合理（当前 79 个 flag 仅 37 个有后续，目标 ≥ 60%）
+- [ ] **已知缺陷**：35 岁危机虽有剧情门槛但后续叙事链未延长；多周目只传 dreamId（来源：REVIEW_RESULT.md §5 B-1）
+- [ ] 本土化独有元素是否深挖（户口/催婚/996/考公/35岁/内卷/躺平/返乡）
+
+### D. UI / UX
+
+- [ ] 信息层级是否过载（sidebar 8+ section, tabs 12+）
+- [ ] 是否有"今天该做什么"的视觉锚点（daily_focus.js 可用）
+- [ ] 百科/成就锁定的显示是否正常
+
+### E. 玩家留存
+
+- [ ] 1h / 10h / 50h 玩家各做什么
+- [ ] 是否有"开新档钩子"
+- [ ] NG+ 继承的是否足够丰富（目前 9 类，但 dreamId 单字段太单薄）
+- [ ] **已有**：多周目继承 9 种声誉徽章/关系/物品/梦想/技能树/现金 → 检查是否真的有效传递
+
+---
+
+## 五、执行流程（8 步）
+
+```
+步骤 1: grep 探现状（不改动，只看）— 用 ≤5 个 grep 定位关键数据
+步骤 2: 匹配已知缺陷清单 → 选择任务范围（一次只聚焦 1-3 个系统）
+步骤 3: 用范围 Read 读相关代码（≤80 行/次）
+步骤 4: 成套设计改动（check 交叉验证列表）
+步骤 5: 实施改动 — 每文件 ≤20 行 diff
+步骤 6: 更新 src/DEVELOPMENT.md 顶部（新增变更记录，格式对齐已有）
+步骤 7: python build.py（最后一次）
+步骤 8: git add -A && git commit（不 push）
+```
+
+**每次聚焦 1–2 个文件，每完成一文件一对功能一 commit。**
+
+---
+
+## 六、已知即时可出发的缺陷清单（来自 REVIEW_RESULT.md）
+
+按下表优先级实施，做完划掉：
+
+| 优先级 | 缺陷 | 涉及文件 | 方案要点 |
+|--------|------|----------|----------|
+| P1 | main.js 可剥离函数 86 行 `getInvestmentContextLine` | main.js → phase1/npc_dialog.js | 纯搬移 |
+| P1 | main.js `startNewGame / startScenarioGame` → core/game_lifecycle.js | main.js → core/game_lifecycle.js | 纯搬移 |
+| P1 | events_street.js 9827 行拆分 | events_street.js → 5-6 主题文件 | 按主题分 |
+| P2 | 多周目继承传更多字段（35岁路径/道德score/NPC巅峰好感） | inheritance_chain.js | 追加字段 |
+| P2 | 难度曲线分层（休闲/标准/困难） | scenarios.js + 村长债利率 | 开局选项 |
+| P2 | 主线/副本 fork（3 章式结局路线） | 新系统 | 开放沙盒+方向感 |
+| P2 | 节日深度（清明回乡/中秋探亲） | festivals.js | 家庭事件链 |
+| P2 | 主界面折叠 12 tabs → 3 大组 | index.html + render.js | 信息分层 |
+| P2 | 传承币系统（NG+ 永久解锁不可购买物品） | new module | 50h 留存钩子 |
+
+---
+
+## 七、跨 agent 复用说明
+
+| agent | 触发方式 | 注意事项 |
+|-------|----------|----------|
+| **Claude Code** | 在项目根目录说"按 v3.0 审查改进" | 自动读 CLAUDE.md → 本文件标签 → 按流程执行 |
+| **Hermes** | 在聊天中说"按 v3.0 审查改进" | 从 Hermes 记忆解析为本文件路径 → 加载 → 执行 |
+| **其他 agent** | 直接读 `memory/review-improve-v3.0.md` | 确保工作目录在 `city-life-story/` 下 |
+
+---
+
+## 八、省 Token 提示词速查
+
+### 单系统改进
+```
+改进 city-life-story 的【X系统】。grep 定位→范围 Read→≤20 行 patch→不要 build→我手动 build。
+```
+
+### 新机制模块
+```
+加【X机制】（≤300行）。新建 src/js/{layer}/ 下→暴露 ≤4 个 window 函数→接 daily_pipeline.js→
+index.html 注册→不碰 tutorial.js/main.js（除 ≤15 行接线）。
+```
+
+### 内容扩充
+```
+加 N 条【事件/物品/工作】。grep 已有用 Read 末 100 行看格式→每项 15-40 行→Append 到 data/*.js→
+一次 build→中文含蓄有钩子不说明数值。
+```

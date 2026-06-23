@@ -19,6 +19,23 @@
 - 新 JS 模块 → 放在 `city-life-story/src/js/` 下
 - 必须在 `city-life-story/src/index.html` 中注册加载
 
+## 🔥 触发短语（极简快捷指令 — 跨 Hermes / Claude Code / 任意 agent）
+
+收到以下短语时，**先去读对应 SOP 文件再执行**，不要凭印象做：
+
+| 用户说 | 自动加载 | 用途 |
+|--------|----------|------|
+| **"按 v3.0 审查改进"** | `memory/review-improve-v3.0.md` | 全方位评估+改进（代码/架构/机制/剧情/UI/留存），自动评分+落地+commit |
+| **"按 v2.1 提示词继续内容扩充"** | `memory/content-expansion-v2.1.md` | 成套添加地点/NPC/商品/事件 |
+| **"按 1.4 标准检查"** | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计 |
+
+**执行规约**：
+- 看到触发短语→`Read` SOP 文件全文（每个 ≤8KB）→按其中流程执行
+- 不要在没读 SOP 的情况下凭记忆做事
+- 完成时引用所用 SOP 版本号写在 commit message 和 DEVELOPMENT.md
+
+---
+
 ## 项目信息
 
 - 入口: `src/index.html`（开发）/ `dist/index.html`（部署）
