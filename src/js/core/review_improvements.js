@@ -145,9 +145,11 @@
         // 七成概率坏账，三成将来还回（埋一个 fame +/- flag）
         if (Random.chance(0.7)) {
           s.flags._badDebtAmount = (s.flags._badDebtAmount || 0) + amt;
+          s.flags._badDebtSeed = s.player.day;
           StateManager.addMessage("💔 这笔钱多半要不回来了", "warning");
         } else {
           s.flags._goodLoanReturn = (s.flags._goodLoanReturn || 0) + amt;
+          s.flags._goodLoanSeed = s.player.day;
           StateManager.addMessage("📅 对方承诺一年后归还", "info");
         }
       },
@@ -343,6 +345,7 @@
             s.player.intelligence = Math.min(100, s.player.intelligence + 5);
             s.needs.happiness = Math.max(0, s.needs.happiness - 10);
             s.flags._crisis35Path = "exam";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "📖 你买齐了考公教材，把客厅改成了书房。新的人生从书桌开始。",
               "success",
@@ -358,6 +361,7 @@
             s.player.physique = Math.max(1, s.player.physique - 3);
             s.player.mental = Math.min(100, s.player.mental + 5);
             s.flags._crisis35Path = "career";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "🔥 你删掉了招聘APP里所有30岁以下的过滤器，重新写了简历。",
               "info",
@@ -374,6 +378,7 @@
             s.needs.happiness = Math.min(100, s.needs.happiness + 15);
             s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
             s.flags._crisis35Path = "lieflat";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "🍃 你给自己泡了壶茶，告诉自己：人生不必处处是赛跑。",
               "info",
