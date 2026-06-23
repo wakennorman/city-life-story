@@ -9528,6 +9528,298 @@
         },
       ],
     },
+    // ============================================================
+    // 批次D — 新增叙事事件（5个）
+    // ============================================================
+    {
+      id: "roommate_conflict",
+      phase: "street",
+      icon: "🏠",
+      title: "合租室友的矛盾",
+      story:
+        "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 5 &&
+          !st.flags._roommateConflictSeen
+        );
+      },
+      choices: [
+        {
+          text: "😤 当面跟他说清楚",
+          hint: "立规矩",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 7);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage(
+              "😤 你跟他吵了一架。他承诺以后会注意，但气氛很尴尬。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🤝 心平气和地商量分摊规则",
+          hint: "情商路线",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.flags._roommateNegotiated = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage(
+              "🤝 你们商量好了公共用品轮流买。关系反而更好了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😶 忍了，自己又买了新的",
+          hint: "多一事不如少一事",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.resources.cash -= 15;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage(
+              "😶 你默默去楼下超市买了新的。花¥15买个清净。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "skill_mentor",
+      phase: "street",
+      icon: "👨‍🏫",
+      title: "偶遇热心老师傅",
+      story:
+        "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 10 &&
+          !st.flags._skillMentorSeen &&
+          (st.player.mental || 50) >= 20
+        );
+      },
+      choices: [
+        {
+          text: "🙏 答应跟师傅学手艺",
+          hint: "花时间但不花钱",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            st.flags._mentorLearning = true;
+            if (st.skills && st.skills.repair) {
+              st.skills.repair.xp = Math.min(
+                1000,
+                (st.skills.repair.xp || 0) + 80,
+              );
+            }
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+            StateManager.addMessage(
+              "🔧 师傅教你认工具、调刹车。你感觉自己多了一门手艺。维修技能经验+80。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 谢谢好意，但没时间",
+          hint: "礼貌拒绝",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            StateManager.addMessage("😅 师傅说没事，想学随时来找他。", "info");
+          },
+        },
+        {
+          text: "💡 介绍朋友来跟师傅学",
+          hint: "人品+1",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            st.flags._referredFriend = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "💡 你介绍了想学技术的朋友过来。师傅夸你心眼好。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "rain_shelter_chat",
+      phase: "street",
+      icon: "☔",
+      title: "躲雨时的闲聊",
+      story:
+        "突如其来的暴雨把你困在便利店门口的屋檐下。旁边有个同样躲雨的中年人，他看着雨叹口气说「这雨下得人心烦。」",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          !st.flags._rainChatSeen &&
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy")
+        );
+      },
+      choices: [
+        {
+          text: "🗣️ 跟他聊两句，说不定有收获",
+          hint: "社交破冰",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 4);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (Random.chance(0.3)) {
+              st.resources.cash += 20;
+              StateManager.addMessage(
+                "☔ 聊开了！他原来是个小包工头，给了你一张名片说明天来找他干活。¥20预付款。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "☔ 聊了半小时，雨小了他先走了。虽然没什么实质收获，但心情好了些。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🎵 戴上耳机听歌，等雨停",
+          hint: "独处时间",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage("🎵 雨声配音乐，倒也挺惬意。", "info");
+          },
+        },
+        {
+          text: "🏃 不等了，冒雨跑回去",
+          hint: "赶时间但会淋湿",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.status.health = Math.max(0, st.status.health - 3);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage(
+              "🏃 你跑到家了，淋成了落汤鸡。健康-3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "community_volunteer",
+      phase: "street",
+      icon: "🧹",
+      title: "社区招募志愿者",
+      story:
+        "居委会大妈在楼下贴了告示：周末社区大扫除+独居老人慰问活动，招募8名志愿者。包一顿午饭，还发一张「优秀志愿者」证书。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 6 &&
+          !st.flags._communityVolunteerSeen
+        );
+      },
+      choices: [
+        {
+          text: "📋 报名参加志愿者",
+          hint: "名声+，花一天时间",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            st.flags._volunteerDone = true;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.needs.hunger = Math.min(100, st.needs.hunger + 20);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage(
+              "🧹 你干了一天活，帮三位独居老人打扫了卫生。居委会大妈非要给你写表扬信。名声+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📸 帮忙拍照片发社区公众号",
+          hint: "轻量参与",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            StateManager.addMessage(
+              "📸 你拍了几张照片，社区公众号发推文时署了你的名。",
+              "hint",
+            );
+          },
+        },
+        {
+          text: "😅 下次再说吧",
+          hint: "没空",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            StateManager.addMessage("😅 你看了看告示，转身走了。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "market_clearance_bargain",
+      phase: "street",
+      icon: "🏪",
+      title: "菜市场收摊大甩卖",
+      story:
+        "傍晚菜市场快收摊了，卖菜的大姐冲你喊：「小伙子，剩的这些全给你，¥10拿走！」一堆蔬菜加起来得有四五斤，平时要¥25以上。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 3 &&
+          !st.flags._clearanceBargainSeen &&
+          st.resources.cash >= 10
+        );
+      },
+      choices: [
+        {
+          text: "💰 ¥10全买了！",
+          hint: "够吃好几天",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            st.resources.cash -= 10;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 15);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            StateManager.addMessage(
+              "💰 你拎了一大袋菜回去，够吃四五天了！省了至少¥15。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 跟大姐砍到¥8",
+          hint: "省钱但大姐脸色不好",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            st.resources.cash -= 8;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 15);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 1);
+            StateManager.addMessage(
+              "🤝 大姐撇了撇嘴还是卖你了。省了¥2，但感觉不太对。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 家里还有菜，不买了",
+          hint: "按需消费",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            StateManager.addMessage(
+              "🚶 你摆了摆手。确实不需要的东西再便宜也是浪费。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);

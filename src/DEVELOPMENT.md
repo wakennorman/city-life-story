@@ -1,7 +1,53 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（批次C：事件实际后果+装备耐久度+事件迷惑性）
+> 最后更新: 2026-06-23（批次D：内容扩充—更多道德事件/新闻事件/街头叙事事件）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
+
+## 2026-06-23 — 批次D：内容扩充（道德事件+新闻+街头叙事）
+
+### 变更内容
+
+**1. 道德系统再扩充** (`moral_events.js`)
+
+- 新增8个道德事件，总数12→20→28
+  1. `supermarket_temptation` — 自助结账漏扫诱惑（3选择）
+  2. `taxi_overpaid` — 打车司机少收钱（3选择）
+  3. `friend_cheating` — 发现朋友考试作弊（3选择）
+  4. `library_book_damage` — 图书馆书被弄湿（3选择）
+  5. `parking_scrape` — 刮了别人车没人看见（3选择）
+  6. `elderly_scam_alert` — 老人正被电话诈骗（3选择）
+  7. `vending_machine_error` — 售货机多掉出饮料（3选择）
+  8. `neighbor_borrow_debt` — 邻居借钱不还又来借（3选择）
+- 新增8条后果链（每事件对应正面/负面后果）
+
+**2. 新闻系统扩充** (`news.js`)
+
+- 新增8条新闻事件，总数48→56
+  1. `tech_layoff` — 科技大厂裁员潮（电子产品价格×0.5，科技股×0.83）
+  2. `food_safety` — 食品安全事件曝光（外卖工作×0.6，食材×1.3）
+  3. `e_commerce_festival` — 电商大促（快递工作×2.0，电子产品×0.8）
+  4. `tourism_revival` — 旅游市场复苏（服务类工作×1.5）
+  5. `rental_crisis` — 租房市场紧张（房地产股×1.08，持续10天）
+  6. `second_hand_boom` — 二手经济爆发（废品回收价格×1.4~1.6）
+  7. `winter_heating` — 供暖季煤炭涨价（煤炭×1.25，冬装×1.5）
+  8. `luxury_boom` — 高端消费回暖（奢侈品/高端商品价格×1.15~1.2）
+- 新增4条后续新闻（L2级联：tech_layoff_echo/food_safety_echo/e_commerce_echo/rental_crisis_echo）
+
+**3. 街头叙事事件扩充** (`events_street.js`)
+
+- 新增5个叙事事件，总数165→170
+  1. `roommate_conflict` — 合租室友矛盾（沟通/忍让/立规矩三种应对）
+  2. `skill_mentor` — 偶遇修车师傅愿教手艺（学艺/拒绝/推荐朋友）
+  3. `rain_shelter_chat` — 躲雨时陌生人聊天（社交/独处/冒雨跑）
+  4. `community_volunteer` — 社区招募志愿者（大扫除慰问独居老人）
+  5. `market_clearance_bargain` — 菜市场收摊甩卖（省钱/砍价/不买）
+- `skill_mentor` 联动维修技能（repair XP+80）
+- `rain_shelter_chat` 有30%概率触发小包工头给活干
+
+**涉及文件**：`moral_events.js` / `news.js` / `events_street.js`
+**构建**：已 `python build.py`（3499.3 KB）
+
+---
 
 ## 2026-06-23 — 批次B：道德系统扩充+财富检查+图表修复+背包标签+离线消息
 

@@ -13783,6 +13783,228 @@ function quarterlyCleanup(state) {
         },
       ],
     },
+    // ============================================================
+    // 批次D — 新增叙事事件（5个）
+    // ============================================================
+    {
+      id: "roommate_conflict",
+      phase: "street",
+      icon: "🏠",
+      title: "合租室友的矛盾",
+      story: "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
+      conditions: function (st) {
+        return st.player.phase === "street" && st.player.day >= 5 && !st.flags._roommateConflictSeen;
+      },
+      choices: [
+        {
+          text: "😤 当面跟他说清楚",
+          hint: "立规矩",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 7);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage("😤 你跟他吵了一架。他承诺以后会注意，但气氛很尴尬。", "warning");
+          },
+        },
+        {
+          text: "🤝 心平气和地商量分摊规则",
+          hint: "情商路线",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.flags._roommateNegotiated = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage("🤝 你们商量好了公共用品轮流买。关系反而更好了。", "success");
+          },
+        },
+        {
+          text: "😶 忍了，自己又买了新的",
+          hint: "多一事不如少一事",
+          apply: function (st) {
+            st.flags._roommateConflictSeen = true;
+            st.resources.cash -= 15;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage("😶 你默默去楼下超市买了新的。花¥15买个清净。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "skill_mentor",
+      phase: "street",
+      icon: "👨‍🏫",
+      title: "偶遇热心老师傅",
+      story: "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
+      conditions: function (st) {
+        return st.player.phase === "street" && st.player.day >= 10 && !st.flags._skillMentorSeen && (st.player.mental || 50) >= 20;
+      },
+      choices: [
+        {
+          text: "🙏 答应跟师傅学手艺",
+          hint: "花时间但不花钱",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            st.flags._mentorLearning = true;
+            if (st.skills && st.skills.repair) {
+              st.skills.repair.xp = Math.min(1000, (st.skills.repair.xp || 0) + 80);
+            }
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+            StateManager.addMessage("🔧 师傅教你认工具、调刹车。你感觉自己多了一门手艺。维修技能经验+80。", "success");
+          },
+        },
+        {
+          text: "😅 谢谢好意，但没时间",
+          hint: "礼貌拒绝",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            StateManager.addMessage("😅 师傅说没事，想学随时来找他。", "info");
+          },
+        },
+        {
+          text: "💡 介绍朋友来跟师傅学",
+          hint: "人品+1",
+          apply: function (st) {
+            st.flags._skillMentorSeen = true;
+            st.flags._referredFriend = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage("💡 你介绍了想学技术的朋友过来。师傅夸你心眼好。", "success");
+          },
+        },
+      ],
+    },
+    {
+      id: "rain_shelter_chat",
+      phase: "street",
+      icon: "☔",
+      title: "躲雨时的闲聊",
+      story: "突如其来的暴雨把你困在便利店门口的屋檐下。旁边有个同样躲雨的中年人，他看着雨叹口气说「这雨下得人心烦。」",
+      conditions: function (st) {
+        return st.player.phase === "street" && !st.flags._rainChatSeen && st.weather && (st.weather.current === "rainy" || st.weather.current === "stormy");
+      },
+      choices: [
+        {
+          text: "🗣️ 跟他聊两句，说不定有收获",
+          hint: "社交破冰",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 4);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (Random.chance(0.3)) {
+              st.resources.cash += 20;
+              StateManager.addMessage("☔ 聊开了！他原来是个小包工头，给了你一张名片说明天来找他干活。¥20预付款。", "success");
+            } else {
+              StateManager.addMessage("☔ 聊了半小时，雨小了他先走了。虽然没什么实质收获，但心情好了些。", "info");
+            }
+          },
+        },
+        {
+          text: "🎵 戴上耳机听歌，等雨停",
+          hint: "独处时间",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage("🎵 雨声配音乐，倒也挺惬意。", "info");
+          },
+        },
+        {
+          text: "🏃 不等了，冒雨跑回去",
+          hint: "赶时间但会淋湿",
+          apply: function (st) {
+            st.flags._rainChatSeen = true;
+            st.status.health = Math.max(0, st.status.health - 3);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage("🏃 你跑到家了，淋成了落汤鸡。健康-3。", "warning");
+          },
+        },
+      ],
+    },
+    {
+      id: "community_volunteer",
+      phase: "street",
+      icon: "🧹",
+      title: "社区招募志愿者",
+      story: "居委会大妈在楼下贴了告示：周末社区大扫除+独居老人慰问活动，招募8名志愿者。包一顿午饭，还发一张「优秀志愿者」证书。",
+      conditions: function (st) {
+        return st.player.phase === "street" && st.player.day >= 6 && !st.flags._communityVolunteerSeen;
+      },
+      choices: [
+        {
+          text: "📋 报名参加志愿者",
+          hint: "名声+，花一天时间",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            st.flags._volunteerDone = true;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.needs.hunger = Math.min(100, st.needs.hunger + 20);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage("🧹 你干了一天活，帮三位独居老人打扫了卫生。居委会大妈非要给你写表扬信。名声+5。", "success");
+          },
+        },
+        {
+          text: "📸 帮忙拍照片发社区公众号",
+          hint: "轻量参与",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            StateManager.addMessage("📸 你拍了几张照片，社区公众号发推文时署了你的名。", "hint");
+          },
+        },
+        {
+          text: "😅 下次再说吧",
+          hint: "没空",
+          apply: function (st) {
+            st.flags._communityVolunteerSeen = true;
+            StateManager.addMessage("😅 你看了看告示，转身走了。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "market_clearance_bargain",
+      phase: "street",
+      icon: "🏪",
+      title: "菜市场收摊大甩卖",
+      story: "傍晚菜市场快收摊了，卖菜的大姐冲你喊：「小伙子，剩的这些全给你，¥10拿走！」一堆蔬菜加起来得有四五斤，平时要¥25以上。",
+      conditions: function (st) {
+        return st.player.phase === "street" && st.player.day >= 3 && !st.flags._clearanceBargainSeen && st.resources.cash >= 10;
+      },
+      choices: [
+        {
+          text: "💰 ¥10全买了！",
+          hint: "够吃好几天",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            st.resources.cash -= 10;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 15);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            StateManager.addMessage("💰 你拎了一大袋菜回去，够吃四五天了！省了至少¥15。", "success");
+          },
+        },
+        {
+          text: "🤝 跟大姐砍到¥8",
+          hint: "省钱但大姐脸色不好",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            st.resources.cash -= 8;
+            st.needs.hunger = Math.min(100, st.needs.hunger + 15);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 1);
+            StateManager.addMessage("🤝 大姐撇了撇嘴还是卖你了。省了¥2，但感觉不太对。", "info");
+          },
+        },
+        {
+          text: "🚶 家里还有菜，不买了",
+          hint: "按需消费",
+          apply: function (st) {
+            st.flags._clearanceBargainSeen = true;
+            StateManager.addMessage("🚶 你摆了摆手。确实不需要的东西再便宜也是浪费。", "hint");
+          },
+        },
+      ],
+    },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
@@ -23607,7 +23829,12 @@ var _DEFAULT_MAX_DURABILITY = 50;
  * 获取装备的基底耐久度配置
  */
 function getDurabilityBase(itemId) {
-  return _DURABILITY_BASE[itemId] || { max: _DEFAULT_MAX_DURABILITY, category: "standard" };
+  return (
+    _DURABILITY_BASE[itemId] || {
+      max: _DEFAULT_MAX_DURABILITY,
+      category: "standard",
+    }
+  );
 }
 
 // ====== 耐久度描述（维修技能可见性） ======
@@ -23626,7 +23853,8 @@ function getDurabilityBase(itemId) {
  * @returns {Object} { visible: bool, label: string, detail: string|null, repairable: bool, repairCost: number|null }
  */
 function getDurabilityVisibility(state, durability, maxDurability) {
-  var repairLevel = (state.skills && state.skills.repair && state.skills.repair.level) || 0;
+  var repairLevel =
+    (state.skills && state.skills.repair && state.skills.repair.level) || 0;
 
   var ratio = maxDurability > 0 ? durability / maxDurability : 0;
 
@@ -23743,8 +23971,7 @@ function applyDailyWear(state) {
   var harshWeather = false;
   if (state.weather && state.weather.current) {
     var w = state.weather.current;
-    harshWeather =
-      w === "typhoon" || w === "blizzard" || w === "heavy_rain";
+    harshWeather = w === "typhoon" || w === "blizzard" || w === "heavy_rain";
   }
 
   for (var slot in state.inventory.equipment) {
@@ -23822,10 +24049,7 @@ function repairEquipment(state, itemId) {
       return false;
     }
     // 背包中的物品可以批量维修（这里简化：只提示）
-    StateManager.addMessage(
-      "📦 背包中的装备需要先装备才能维修",
-      "info",
-    );
+    StateManager.addMessage("📦 背包中的装备需要先装备才能维修", "info");
     return false;
   }
 
@@ -23950,7 +24174,9 @@ function buildRepairPreview(state, itemDef) {
 
   // 检查耐久度实例
   var instanceId = itemId + "_instance";
-  var inst = state.inventory.equipmentInstances && state.inventory.equipmentInstances[instanceId];
+  var inst =
+    state.inventory.equipmentInstances &&
+    state.inventory.equipmentInstances[instanceId];
   if (!inst || inst.durability === undefined) return null;
 
   var vis = getDurabilityVisibility(state, inst.durability, inst.maxDurability);
@@ -23966,8 +24192,12 @@ function buildRepairPreview(state, itemDef) {
     // 检查废料是否足够
     var scrapCount = 0;
     if (state.inventory.items) {
-      var scrap1 = state.inventory.items.find(function(i) { return i.id === "scrap_metal"; });
-      var scrap2 = state.inventory.items.find(function(i) { return i.id === "scrap_recycled"; });
+      var scrap1 = state.inventory.items.find(function (i) {
+        return i.id === "scrap_metal";
+      });
+      var scrap2 = state.inventory.items.find(function (i) {
+        return i.id === "scrap_recycled";
+      });
       scrapCount = (scrap1 ? scrap1.qty : 0) + (scrap2 ? scrap2.qty : 0);
     }
     var canAfford = scrapCount >= vis.repairCost;
@@ -23986,7 +24216,7 @@ function buildRepairPreview(state, itemDef) {
       html +=
         ' <button style="font-size:10px;padding:2px 6px;margin-left:4px;background:var(--accent);color:#fff;border:none;border-radius:3px;cursor:pointer;" onclick="repairEquipment(StateManager.getState(), \'' +
         itemId +
-        '\')">修复</button>';
+        "')\">修复</button>";
     }
   }
 
@@ -28647,6 +28877,141 @@ const NEWS_EVENTS = [
     },
     type: "investment",
   },
+
+  // ============================================================
+  // 批次D — 新增新闻（8条）
+  // ============================================================
+  {
+    id: "tech_layoff",
+    headline: "📉 科技大厂裁员潮！二手电子产品泛滥，价格暴跌",
+    desc: "多家一线互联网公司开启新一轮裁员，大量程序员涌入求职市场。二手电子设备供应激增。",
+    effects: {
+      priceMod: { electronics: 0.5 },
+      investmentEffect: [
+        { industry: "科技", mul: 0.88 },
+        { symbols: ["ALIM", "TENC", "MEIT", "BYTE"], mul: 0.83 },
+        { industry: "消费", mul: 0.96 },
+      ],
+      duration: 7,
+    },
+    type: "price",
+    followUpId: "tech_layoff_echo",
+    followUpDelay: 5,
+  },
+  {
+    id: "food_safety",
+    headline: "🔬 食品安全事件曝光！外卖订单骤降，菜市场食材需求上升",
+    desc: "媒体暗访曝光多家网红外卖店铺后厨卫生问题，市民纷纷转向自己做饭，食材价格小幅上涨。",
+    effects: {
+      jobPenalty: ["delivery_rider", "street_vending_food", "food_stall"],
+      jobMultiplier: 0.6,
+      priceMod: { vegetables: 1.3, fruits: 1.15, noodles: 1.1 },
+      investmentEffect: [
+        { industry: "消费", mul: 0.92 },
+        { symbols: ["MEIT"], mul: 0.85 },
+      ],
+      duration: 5,
+    },
+    type: "job",
+    followUpId: "food_safety_echo",
+    followUpDelay: 4,
+  },
+  {
+    id: "e_commerce_festival",
+    headline: "📦 电商大促节来袭！物流爆仓，快递骑手日入翻倍",
+    desc: "618/双11大促进入高峰期，全城快递量暴增300%。快递站点通宵运转，临时工日薪飙涨。",
+    effects: {
+      jobBonus: ["delivery_rider", "package_delivery"],
+      jobMultiplier: 2.0,
+      priceMod: { electronics: 0.8, clothing: 0.75, daily_use: 0.85 },
+      investmentEffect: [
+        { symbols: ["ALIM", "MEIT", "JD"], mul: 1.15 },
+        { industry: "消费", mul: 1.08 },
+      ],
+      duration: 5,
+    },
+    type: "job",
+    seasons: ["summer"],
+    followUpId: "e_commerce_echo",
+    followUpDelay: 4,
+  },
+  {
+    id: "tourism_revival",
+    headline: "✈️ 旅游市场全面复苏！景区爆满，服务业用工荒",
+    desc: "长假期间旅游需求井喷式增长，景区周边酒店、餐饮、交通全线紧张，服务业时薪大涨。",
+    effects: {
+      jobBonus: ["cleaning_service", "hospitality"],
+      jobMultiplier: 1.5,
+      priceMod: { snacks: 1.4, water: 1.3, beer: 1.3 },
+      investmentEffect: [
+        { industry: "消费", mul: 1.1 },
+        { symbols: ["MEIT", "DIDI"], mul: 1.08 },
+      ],
+      duration: 7,
+    },
+    type: "job",
+    seasons: ["spring", "autumn"],
+  },
+  {
+    id: "rental_crisis",
+    headline: "🏠 租房市场全面紧张！租金飙涨，城中村床位一位难求",
+    desc: "随着外来务工人员回流，城市租房需求暴增。城中村房东集体涨价，床位月租上涨三成。",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.08 },
+        { symbols: ["ESTATE"], mul: 1.06 },
+        { industry: "消费", mul: 0.94 },
+      ],
+      duration: 10,
+    },
+    type: "price",
+    followUpId: "rental_crisis_echo",
+    followUpDelay: 6,
+  },
+  {
+    id: "second_hand_boom",
+    headline: "🔄 二手经济爆发！闲鱼转转交易量翻倍，废品回收价格飙升",
+    desc: "年轻一代消费观念转变，二手交易平台活跃度创历史新高。废品回收站收都收不过来。",
+    effects: {
+      priceMod: { scrap_metal: 1.6, scrap_plastic: 1.4, scrap_paper: 1.3 },
+      investmentEffect: [
+        { symbols: ["ALIM"], mul: 1.06 },
+        { industry: "消费", mul: 1.04 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+  },
+  {
+    id: "winter_heating",
+    headline: "🔥 寒潮供暖季来临！煤炭天然气需求激增，保暖用品脱销",
+    desc: "北方大面积寒潮来袭，供暖需求集中释放。煤炭价格创年内新高，羽绒服、电热毯卖断货。",
+    effects: {
+      priceMod: { clothing: 1.5, daily_use: 1.2 },
+      investmentEffect: [
+        { symbols: ["CL", "NG"], mul: 1.25 },
+        { category: "贵金属", mul: 1.05 },
+      ],
+      duration: 5,
+    },
+    type: "price",
+    seasons: ["winter"],
+  },
+  {
+    id: "luxury_boom",
+    headline: "💎 高端消费回暖！奢侈品卖场排起长队，二手奢侈品价格水涨船高",
+    desc: "经济复苏信号明显，高端消费市场率先反弹。国际奢侈品牌在华销售额同比大涨30%。",
+    effects: {
+      priceMod: { electronics: 1.15, clothing: 1.2 },
+      investmentEffect: [
+        { industry: "消费", mul: 1.08 },
+        { symbols: ["NVDA"], mul: 1.06 },
+        { industry: "科技", mul: 1.04 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+  },
 ];
 
 // ============================================================
@@ -28781,6 +29146,51 @@ var NEWS_FOLLOWUP = {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
     effects: {
       effects: { trainingDiscount: 0.5, duration: 5 },
+    },
+  },
+  // ====== 批次D后续新闻 ======
+  tech_layoff_echo: {
+    headline: "🔄 裁员潮催生创业潮！前大厂员工纷纷下场创业，共享办公空间爆满",
+    effects: {
+      jobBonus: ["coding_freelance"],
+      jobMultiplier: 1.2,
+      investmentEffect: [
+        { industry: "科技", mul: 0.96 },
+        { symbols: ["WEORK"], mul: 1.15 },
+      ],
+      duration: 4,
+    },
+  },
+  food_safety_echo: {
+    headline: "🧑‍🍳 食品安全整顿收尾！外卖平台推出明厨亮灶计划，合格商家订单回升",
+    effects: {
+      jobBonus: ["delivery_rider", "food_stall"],
+      jobMultiplier: 1.1,
+      investmentEffect: [
+        { symbols: ["MEIT"], mul: 1.04 },
+        { industry: "消费", mul: 1.02 },
+      ],
+      duration: 3,
+    },
+  },
+  e_commerce_echo: {
+    headline: "♻️ 大促过后退换货潮来袭！逆向物流爆单，包装废品回收量大增",
+    effects: {
+      priceMod: { scrap_paper: 1.3, scrap_plastic: 1.2 },
+      investmentEffect: [
+        { symbols: ["ALIM", "JD"], mul: 0.96 },
+      ],
+      duration: 3,
+    },
+  },
+  rental_crisis_echo: {
+    headline: "📋 住建部约谈多城！租金指导价政策酝酿出台，租房市场降温在即",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 0.95 },
+        { symbols: ["ESTATE"], mul: 0.95 },
+      ],
+      duration: 4,
     },
   },
 };
@@ -38631,6 +39041,334 @@ const MORAL_EVENTS = [
       },
     ],
   },
+
+  // ============================================================
+  // 新增道德事件（批次D — 8个新场景）
+  // ============================================================
+  {
+    id: "supermarket_temptation",
+    title: "🛒 自助结账的诱惑",
+    desc: "超市自助结账机上，你扫完所有商品后，发现购物车底部还有一盒¥48的进口巧克力没扫码。周围没有工作人员注意你，后面也没人排队。",
+    minDay: 5,
+    dailyChance: 0.045,
+    choices: [
+      {
+        text: "✅ 拿起来扫码付款，不能因小失大",
+        flag: "moral_scan_honest",
+        score: 6,
+        immediate: function (s) {
+          s.resources.cash -= 48;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage("🛒 你扫码付了巧克力的钱。诚信值+1。", "success");
+        },
+      },
+      {
+        text: "👀 假装没看见，塞进购物袋带走",
+        flag: "moral_scan_steal",
+        score: -10,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 2);
+          StateManager.addMessage("👀 你心跳加速地走出超市，手里紧握着那盒巧克力。", "warning");
+        },
+      },
+      {
+        text: "🤷 放回货架，不买了",
+        flag: "moral_scan_return",
+        score: 4,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 1);
+          StateManager.addMessage("🤷 你走回货架放下了巧克力。虽然没吃到，但心里踏实。", "info");
+        },
+      },
+    ],
+  },
+  {
+    id: "taxi_overpaid",
+    title: "🚕 打车少付了钱",
+    desc: "你打车到了目的地，计价器显示¥32。你递给司机¥50，他看了一眼计价器说「找您¥28」。你接过钱一愣——计价器其实跳到了¥34，他少算了¥2。他显然记错了。",
+    minDay: 4,
+    dailyChance: 0.04,
+    choices: [
+      {
+        text: "👍 主动补上差额¥2",
+        flag: "moral_taxi_fix",
+        score: 6,
+        immediate: function (s) {
+          s.resources.cash -= 2;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
+          StateManager.addMessage("🚕 司机愣了一下，笑着说「好人啊，谢谢了！」", "success");
+        },
+      },
+      {
+        text: "🤐 接过钱默默下车",
+        flag: "moral_taxi_keep",
+        score: -3,
+        immediate: function (s) {
+          s.resources.cash += 2;
+          s.needs.happiness = Math.max(0, s.needs.happiness - 1);
+          StateManager.addMessage("🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。", "info");
+        },
+      },
+      {
+        text: "💰 多给¥10当小费",
+        flag: "moral_taxi_tip",
+        score: 8,
+        immediate: function (s) {
+          s.resources.cash -= 10;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 6);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage("🚕 司机惊喜地接过钱，「小伙子以后打车找我，给你打折！」", "success");
+        },
+      },
+    ],
+  },
+  {
+    id: "friend_cheating",
+    title: "📝 发现朋友考试作弊",
+    desc: "你和朋友一起参加职业资格考试。你无意中看到他在用手机搜答案，监考老师正往这边走。他向你投来求助的眼神。",
+    minDay: 15,
+    dailyChance: 0.025,
+    choices: [
+      {
+        text: "🗣️ 轻咳一声提醒他收手机",
+        flag: "moral_cheat_warn",
+        score: 5,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          s.flags._friendCheatWarned = true;
+          StateManager.addMessage("🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。", "hint");
+        },
+      },
+      {
+        text: "🙈 装作没看见，管好自己",
+        flag: "moral_cheat_ignore",
+        score: -4,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          StateManager.addMessage("🙈 你低下头专心答题。后来听到他被请出考场的动静。", "warning");
+        },
+      },
+      {
+        text: "📋 举手报告监考老师",
+        flag: "moral_cheat_report",
+        score: -5,
+        immediate: function (s) {
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          s.needs.happiness = Math.max(0, s.needs.happiness - 6);
+          StateManager.addMessage("📋 你举手报告了。朋友被没收了试卷，他回头时眼神让你难受了一整天。", "warning");
+        },
+      },
+    ],
+  },
+  {
+    id: "library_book_damage",
+    title: "📚 图书馆的书被弄湿了",
+    desc: "你借的图书馆书不小心被水杯打翻淋湿了，好几页黏在一起。书是刚出版的新书，定价¥68。还回去肯定会被发现。",
+    minDay: 3,
+    dailyChance: 0.04,
+    choices: [
+      {
+        text: "🏪 主动去图书馆说明情况并赔偿",
+        flag: "moral_book_pay",
+        score: 8,
+        immediate: function (s) {
+          if (s.resources.cash >= 68) {
+            s.resources.cash -= 68;
+            s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+            s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+            StateManager.addMessage("📚 管理员说「诚实的学生不多了」，只收了¥34（半价）。", "success");
+          } else {
+            StateManager.addMessage("📚 钱不够赔全款，管理员让你写了份检讨分期付款。", "info");
+          }
+        },
+      },
+      {
+        text: "💨 悄悄放进还书箱当无事发生",
+        flag: "moral_book_hide",
+        score: -8,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          StateManager.addMessage("💨 你还了书，但图书馆有监控...希望不会被查到。", "warning");
+        },
+      },
+      {
+        text: "📖 买一本新的还回去",
+        flag: "moral_book_replace",
+        score: 6,
+        immediate: function (s) {
+          if (s.resources.cash >= 68) {
+            s.resources.cash -= 68;
+            s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+            StateManager.addMessage("📖 你买了新书还回去，管理员没发现区别——但你知道。", "info");
+          } else {
+            StateManager.addMessage("📖 不够钱买新的...", "warning");
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: "parking_scrape",
+    title: "🚗 不小心刮了别人的车",
+    desc: "你在狭窄的巷子里走，手里拎着东西转身时，背包拉链刮到了一辆停在路边的白色私家车，留下了一道明显的划痕。周围没有人看到。",
+    minDay: 8,
+    dailyChance: 0.03,
+    choices: [
+      {
+        text: "📝 留张纸条写上你的电话",
+        flag: "moral_scrape_note",
+        score: 12,
+        immediate: function (s) {
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 2);
+          s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          s.flags._scrapeLeftNote = true;
+          StateManager.addMessage("📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。", "hint");
+        },
+      },
+      {
+        text: "👀 四下无人，赶紧走",
+        flag: "moral_scrape_flee",
+        score: -12,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 5);
+          StateManager.addMessage("👀 你快步离开现场，走出两条街才敢回头。", "warning");
+        },
+      },
+      {
+        text: "📸 拍下划痕和周围环境，先看看监控再说",
+        flag: "moral_scrape_check",
+        score: 3,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 1);
+          s.flags._scrapeCheckCamera = true;
+          StateManager.addMessage("📸 你发现巷子里没有监控——但你知道自己做了什么。", "info");
+        },
+      },
+    ],
+  },
+  {
+    id: "elderly_scam_alert",
+    title: "📞 正在被诈骗的老人",
+    desc: "你在银行ATM区排队，前面一个老奶奶正在边打电话边操作ATM。她神色慌张，电话那头隐约传来「安全账户」「洗钱」「不要告诉任何人」等字眼。",
+    minDay: 10,
+    dailyChance: 0.025,
+    choices: [
+      {
+        text: "🚨 上前打断她，提醒可能是诈骗",
+        flag: "moral_scam_stop",
+        score: 15,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 8);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
+          s.flags._stoppedScam = true;
+          StateManager.addMessage("🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！", "success");
+        },
+      },
+      {
+        text: "🔔 悄悄告诉银行保安或大堂经理",
+        flag: "moral_scam_report",
+        score: 10,
+        immediate: function (s) {
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+          StateManager.addMessage("🔔 保安立刻过去询问情况，中止了转账操作。", "success");
+        },
+      },
+      {
+        text: "😞 多一事不如少一事，办完自己的事就走",
+        flag: "moral_scam_ignore",
+        score: -10,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 5);
+          StateManager.addMessage("😞 你办完业务离开时，老奶奶还在打电话...你希望她运气好吧。", "warning");
+        },
+      },
+    ],
+  },
+  {
+    id: "vending_machine_error",
+    title: "🥤 售货机多掉出一瓶饮料",
+    desc: "你在自助售货机买了一瓶¥4的矿泉水，扫码付款后，机器「哐当」一声掉出来两瓶——一瓶你买的矿泉水，外加一瓶¥8的果汁。机器屏幕没有任何异常提示。",
+    minDay: 2,
+    dailyChance: 0.05,
+    choices: [
+      {
+        text: "📞 按机器上的报修电话说明情况",
+        flag: "moral_vending_report",
+        score: 6,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          s.player.fame = Math.min(100, (s.player.fame || 1) + 1);
+          StateManager.addMessage("📞 客服说「下次来免费补给您一瓶」，你放下果汁和多出的水离开了。", "success");
+        },
+      },
+      {
+        text: "🎉 赚到了！两瓶都拿走",
+        flag: "moral_vending_take",
+        score: -5,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage("🥤 你拿了两瓶饮料离开。走了几步忍不住回头看了一眼机器。", "info");
+        },
+      },
+      {
+        text: "💪 只拿自己买的，把多出的放回取物口",
+        flag: "moral_vending_leave",
+        score: 4,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          StateManager.addMessage("💪 你只拿了自己的水。下一个人来取货时会发现的。", "hint");
+        },
+      },
+    ],
+  },
+  {
+    id: "neighbor_borrow_debt",
+    title: "🏠 邻居又来借钱了",
+    desc: "合租公寓的邻居敲你的门，一脸尴尬地说这个月房租还差¥200，想再借点。「上次借的¥150实在对不住，下个月发工资一定一起还。」你记得他上个月也是这么说的。",
+    minDay: 10,
+    dailyChance: 0.03,
+    condition: function (s) {
+      return s.resources.cash >= 200;
+    },
+    choices: [
+      {
+        text: "💰 再借他¥200，希望这次能还",
+        flag: "moral_borrow_again",
+        score: 5,
+        immediate: function (s) {
+          s.resources.cash -= 200;
+          s.needs.happiness = Math.max(0, s.needs.happiness - 2);
+          s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
+          StateManager.addMessage("💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。", "warning");
+        },
+      },
+      {
+        text: "😅 抱歉说自己也没钱了",
+        flag: "moral_borrow_refuse",
+        score: -3,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          s.flags._neighborRefused = true;
+          StateManager.addMessage("😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。", "info");
+        },
+      },
+      {
+        text: "📋 让他写个借条，约定分期还",
+        flag: "moral_borrow_iou",
+        score: 8,
+        immediate: function (s) {
+          s.resources.cash -= 200;
+          s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
+          s.flags._neighborHasIOU = true;
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage("📋 他犹豫了一下还是写了借条。你收好纸条——至少有个凭证。", "hint");
+        },
+      },
+    ],
+  },
 ];
 
 const MORAL_CONSEQUENCES = {
@@ -38997,6 +39735,190 @@ const MORAL_CONSEQUENCES = {
         "👮 交警摇下车窗给你竖了个大拇指：「好样的！」",
         "success",
       );
+    },
+  },
+  // ====== 批次D后果链（8个新事件） ======
+  moral_scan_honest: {
+    id: "consequence_scan_honest",
+    title: "⭐ 收银员的信任",
+    delay: [4, 8],
+    desc: function (s) {
+      return "几天后你再去那家超市，自助结账区的员工认出了你。她笑着说上次监控看到你多拿了巧克力回来扫码，说像你这样的人不多了。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+      s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+      StateManager.addMessage("⭐ 被超市员工记住了！她说以后有内部优惠会通知你。", "success");
+    },
+  },
+  moral_scan_steal: {
+    id: "consequence_scan_steal",
+    title: "😰 超市的黑名单",
+    delay: [5, 10],
+    desc: function (s) {
+      return "你再去那家超市时，发现入口处多了一个摄像头。你总觉得有人在盯着你，那盒巧克力吃在嘴里也不香。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.max(0, s.needs.happiness - 6);
+      StateManager.addMessage("😰 每次路过那家超市你都绕着走，心虚得很。", "warning");
+    },
+  },
+  moral_taxi_fix: {
+    id: "consequence_taxi_fix",
+    title: "🚕 司机的老主顾待遇",
+    delay: [5, 10],
+    desc: function (s) {
+      return "有次你在路边等车，上次那个出租车司机正好经过，认出了你，主动停下说「顺路带你一程，免费的！」";
+    },
+    apply: function (s) {
+      s.resources.cash += 20;
+      s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+      StateManager.addMessage("🚕 司机正好顺路，免费捎了你一段！省了¥20。", "success");
+    },
+  },
+  moral_taxi_tip: {
+    id: "consequence_taxi_tip",
+    title: "🗺️ 司机的城市攻略",
+    delay: [3, 7],
+    desc: function (s) {
+      return "那位出租车司机对这座城市了如指掌。他告诉你几个城中村附近最便宜的菜市场时段和隐藏的免费饮水点。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+      s.player.intelligence = Math.min(100, (s.player.intelligence || 0) + 2);
+      StateManager.addMessage("🗺️ 司机的攻略很有用！以后日用品支出略有降低。", "hint");
+    },
+  },
+  moral_cheat_warn: {
+    id: "consequence_cheat_warn",
+    title: "🤝 朋友的感谢",
+    delay: [3, 6],
+    desc: function (s) {
+      return "考试结束后，朋友找到你，说还好你提醒了。他请你吃了顿饭，说以后有什么需要帮忙的尽管开口。";
+    },
+    apply: function (s) {
+      s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 25);
+      s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+      StateManager.addMessage("🍜 朋友请吃了顿饭，两人关系更好了。", "success");
+    },
+  },
+  moral_cheat_report: {
+    id: "consequence_cheat_report",
+    title: "🏷️ 告密者的标签",
+    delay: [5, 10],
+    desc: function (s) {
+      return "考场那件事传开了。虽然老师表扬了你，但其他同学开始疏远你。有人在背后叫你「举报侠」。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.max(0, s.needs.happiness - 8);
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 3);
+      StateManager.addMessage("🏷️ 同学群里的聊天开始避开你了。", "warning");
+    },
+  },
+  moral_book_pay: {
+    id: "consequence_book_pay",
+    title: "📚 图书馆特别借阅权",
+    delay: [6, 12],
+    desc: function (s) {
+      return "图书馆管理员记住了你的诚实，给了你一张「特别借阅卡」，可以借阅教师参考区的书籍。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+      s.player.intelligence = Math.min(100, (s.player.intelligence || 0) + 3);
+      StateManager.addMessage("📚 有了特别借阅卡！学习效率小幅提升。", "success");
+    },
+  },
+  moral_book_hide: {
+    id: "consequence_book_hide",
+    title: "📬 图书馆的催赔通知",
+    delay: [3, 7],
+    desc: function (s) {
+      return "图书馆发来短信：您归还的图书有严重污损，请尽快到馆处理赔偿事宜。逾期将影响信用记录。";
+    },
+    apply: function (s) {
+      s.resources.cash -= 68;
+      s.needs.happiness = Math.max(0, s.needs.happiness - 6);
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
+      StateManager.addMessage("📬 终于还是被发现了，赔了¥68还得写检讨。早知道当初主动承认就好了。", "danger");
+    },
+  },
+  moral_scrape_note: {
+    id: "consequence_scrape_note",
+    title: "🤝 不打不相识",
+    delay: [4, 8],
+    desc: function (s) {
+      return "车主打电话来了！你做好了大吵一架的准备，没想到对方说「刮得不算深，你留了纸条说明人品好，算了不用赔了。」";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 12);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
+      StateManager.addMessage("🤝 车主竟然说算了！「现在诚实的人太少，你这朋友我交了。」", "success");
+    },
+  },
+  moral_scrape_flee: {
+    id: "consequence_scrape_flee",
+    title: "🚔 监控找上门",
+    delay: [5, 10],
+    desc: function (s) {
+      return "几天后两个穿制服的人敲了你的门——巷子里有监控。车主报了警，监控拍到了你的背影。";
+    },
+    apply: function (s) {
+      s.resources.cash -= 300;
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 10);
+      StateManager.addMessage("🚔 被找到了！赔了¥300。不但花了钱，脸也丢光了。", "danger");
+    },
+  },
+  moral_scam_stop: {
+    id: "consequence_scam_stop",
+    title: "📰 上了社区好人榜",
+    delay: [7, 14],
+    desc: function (s) {
+      return "银行把你的见义勇为上报了社区。居委会在公告栏贴了表扬信，还给了你一面「防诈骗先锋」的小锦旗。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
+      s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+      s.resources.cash += 100;
+      StateManager.addMessage("📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。", "success");
+    },
+  },
+  moral_scam_ignore: {
+    id: "consequence_scam_ignore",
+    title: "😔 后悔的新闻",
+    delay: [7, 14],
+    desc: function (s) {
+      return "几天后你看到本地新闻：一位老人被冒充公检法的诈骗团伙骗走了毕生积蓄¥30多万。新闻画面里那个银行门口很眼熟。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.max(0, s.needs.happiness - 12);
+      StateManager.addMessage("😔 新闻里的老人和那天在ATM机前的老人很像。你后悔了很久。", "danger");
+    },
+  },
+  moral_borrow_again: {
+    id: "consequence_borrow_again",
+    title: "💸 邻居终于还钱了",
+    delay: [12, 20],
+    desc: function (s) {
+      return "过了很久，久到你都忘了这件事。邻居突然敲你的门，把一叠现金塞到你手里：「兄弟对不住，拖了这么久。」";
+    },
+    apply: function (s) {
+      var total = s.flags._neighborDebt || 350;
+      s.resources.cash += total;
+      s.needs.happiness = Math.min(100, s.needs.happiness + 8);
+      StateManager.addMessage("💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。", "success");
+    },
+  },
+  moral_vending_report: {
+    id: "consequence_vending_report",
+    title: "🥤 售货机公司的答谢",
+    delay: [3, 5],
+    desc: function (s) {
+      return "维修人员检查后发现是机器故障。公司在系统里给你的账户充了¥10余额作为诚信奖励。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+      StateManager.addMessage("🥤 账户多了¥10余额。客服说「像您这样的用户是我们的财富。」", "success");
     },
   },
 };

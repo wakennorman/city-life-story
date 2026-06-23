@@ -817,6 +817,141 @@ const NEWS_EVENTS = [
     },
     type: "investment",
   },
+
+  // ============================================================
+  // 批次D — 新增新闻（8条）
+  // ============================================================
+  {
+    id: "tech_layoff",
+    headline: "📉 科技大厂裁员潮！二手电子产品泛滥，价格暴跌",
+    desc: "多家一线互联网公司开启新一轮裁员，大量程序员涌入求职市场。二手电子设备供应激增。",
+    effects: {
+      priceMod: { electronics: 0.5 },
+      investmentEffect: [
+        { industry: "科技", mul: 0.88 },
+        { symbols: ["ALIM", "TENC", "MEIT", "BYTE"], mul: 0.83 },
+        { industry: "消费", mul: 0.96 },
+      ],
+      duration: 7,
+    },
+    type: "price",
+    followUpId: "tech_layoff_echo",
+    followUpDelay: 5,
+  },
+  {
+    id: "food_safety",
+    headline: "🔬 食品安全事件曝光！外卖订单骤降，菜市场食材需求上升",
+    desc: "媒体暗访曝光多家网红外卖店铺后厨卫生问题，市民纷纷转向自己做饭，食材价格小幅上涨。",
+    effects: {
+      jobPenalty: ["delivery_rider", "street_vending_food", "food_stall"],
+      jobMultiplier: 0.6,
+      priceMod: { vegetables: 1.3, fruits: 1.15, noodles: 1.1 },
+      investmentEffect: [
+        { industry: "消费", mul: 0.92 },
+        { symbols: ["MEIT"], mul: 0.85 },
+      ],
+      duration: 5,
+    },
+    type: "job",
+    followUpId: "food_safety_echo",
+    followUpDelay: 4,
+  },
+  {
+    id: "e_commerce_festival",
+    headline: "📦 电商大促节来袭！物流爆仓，快递骑手日入翻倍",
+    desc: "618/双11大促进入高峰期，全城快递量暴增300%。快递站点通宵运转，临时工日薪飙涨。",
+    effects: {
+      jobBonus: ["delivery_rider", "package_delivery"],
+      jobMultiplier: 2.0,
+      priceMod: { electronics: 0.8, clothing: 0.75, daily_use: 0.85 },
+      investmentEffect: [
+        { symbols: ["ALIM", "MEIT", "JD"], mul: 1.15 },
+        { industry: "消费", mul: 1.08 },
+      ],
+      duration: 5,
+    },
+    type: "job",
+    seasons: ["summer"],
+    followUpId: "e_commerce_echo",
+    followUpDelay: 4,
+  },
+  {
+    id: "tourism_revival",
+    headline: "✈️ 旅游市场全面复苏！景区爆满，服务业用工荒",
+    desc: "长假期间旅游需求井喷式增长，景区周边酒店、餐饮、交通全线紧张，服务业时薪大涨。",
+    effects: {
+      jobBonus: ["cleaning_service", "hospitality"],
+      jobMultiplier: 1.5,
+      priceMod: { snacks: 1.4, water: 1.3, beer: 1.3 },
+      investmentEffect: [
+        { industry: "消费", mul: 1.1 },
+        { symbols: ["MEIT", "DIDI"], mul: 1.08 },
+      ],
+      duration: 7,
+    },
+    type: "job",
+    seasons: ["spring", "autumn"],
+  },
+  {
+    id: "rental_crisis",
+    headline: "🏠 租房市场全面紧张！租金飙涨，城中村床位一位难求",
+    desc: "随着外来务工人员回流，城市租房需求暴增。城中村房东集体涨价，床位月租上涨三成。",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 1.08 },
+        { symbols: ["ESTATE"], mul: 1.06 },
+        { industry: "消费", mul: 0.94 },
+      ],
+      duration: 10,
+    },
+    type: "price",
+    followUpId: "rental_crisis_echo",
+    followUpDelay: 6,
+  },
+  {
+    id: "second_hand_boom",
+    headline: "🔄 二手经济爆发！闲鱼转转交易量翻倍，废品回收价格飙升",
+    desc: "年轻一代消费观念转变，二手交易平台活跃度创历史新高。废品回收站收都收不过来。",
+    effects: {
+      priceMod: { scrap_metal: 1.6, scrap_plastic: 1.4, scrap_paper: 1.3 },
+      investmentEffect: [
+        { symbols: ["ALIM"], mul: 1.06 },
+        { industry: "消费", mul: 1.04 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+  },
+  {
+    id: "winter_heating",
+    headline: "🔥 寒潮供暖季来临！煤炭天然气需求激增，保暖用品脱销",
+    desc: "北方大面积寒潮来袭，供暖需求集中释放。煤炭价格创年内新高，羽绒服、电热毯卖断货。",
+    effects: {
+      priceMod: { clothing: 1.5, daily_use: 1.2 },
+      investmentEffect: [
+        { symbols: ["CL", "NG"], mul: 1.25 },
+        { category: "贵金属", mul: 1.05 },
+      ],
+      duration: 5,
+    },
+    type: "price",
+    seasons: ["winter"],
+  },
+  {
+    id: "luxury_boom",
+    headline: "💎 高端消费回暖！奢侈品卖场排起长队，二手奢侈品价格水涨船高",
+    desc: "经济复苏信号明显，高端消费市场率先反弹。国际奢侈品牌在华销售额同比大涨30%。",
+    effects: {
+      priceMod: { electronics: 1.15, clothing: 1.2 },
+      investmentEffect: [
+        { industry: "消费", mul: 1.08 },
+        { symbols: ["NVDA"], mul: 1.06 },
+        { industry: "科技", mul: 1.04 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+  },
 ];
 
 // ============================================================
@@ -951,6 +1086,49 @@ var NEWS_FOLLOWUP = {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
     effects: {
       effects: { trainingDiscount: 0.5, duration: 5 },
+    },
+  },
+  // ====== 批次D后续新闻 ======
+  tech_layoff_echo: {
+    headline: "🔄 裁员潮催生创业潮！前大厂员工纷纷下场创业，共享办公空间爆满",
+    effects: {
+      jobBonus: ["coding_freelance"],
+      jobMultiplier: 1.2,
+      investmentEffect: [
+        { industry: "科技", mul: 0.96 },
+        { symbols: ["WEORK"], mul: 1.15 },
+      ],
+      duration: 4,
+    },
+  },
+  food_safety_echo: {
+    headline: "🧑‍🍳 食品安全整顿收尾！外卖平台推出明厨亮灶计划，合格商家订单回升",
+    effects: {
+      jobBonus: ["delivery_rider", "food_stall"],
+      jobMultiplier: 1.1,
+      investmentEffect: [
+        { symbols: ["MEIT"], mul: 1.04 },
+        { industry: "消费", mul: 1.02 },
+      ],
+      duration: 3,
+    },
+  },
+  e_commerce_echo: {
+    headline: "♻️ 大促过后退换货潮来袭！逆向物流爆单，包装废品回收量大增",
+    effects: {
+      priceMod: { scrap_paper: 1.3, scrap_plastic: 1.2 },
+      investmentEffect: [{ symbols: ["ALIM", "JD"], mul: 0.96 }],
+      duration: 3,
+    },
+  },
+  rental_crisis_echo: {
+    headline: "📋 住建部约谈多城！租金指导价政策酝酿出台，租房市场降温在即",
+    effects: {
+      investmentEffect: [
+        { industry: "房地产", mul: 0.95 },
+        { symbols: ["ESTATE"], mul: 0.95 },
+      ],
+      duration: 4,
     },
   },
 };
