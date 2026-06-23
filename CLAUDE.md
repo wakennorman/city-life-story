@@ -50,7 +50,23 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：review v3.0 P2 改进落地（2026-06-23，吴八哥 / 高级开发工程师）
+- **最新一次工作**：地图/寺庙/创业Tab/引导系统完善（2026-06-23，玩法师 / 游戏设计师）
+  - **修复1 地图缺地点**：`render.js positions` 补齐 suburb/entertainment/temple 三个坐标，原版只有 9 个导致这 3 个地点在地图网格上根本不显示
+  - **修复2 寺庙完善**：`actions_extra.js` 新增 `addTempleActions` 4 项行动（🙏祈福/🧘冥想/💰捐香火钱/🔖求签），每项每日冷却 1 次防滥用。设计参考《大多数》心态值分级 + BitLife 随机 buff
+  - **修复3 创业Tab可见**：街头阶段也显示创业 Tab（原版仅注册公司后显示），让玩家从一开始就知道有创业系统。点击后 renderStartupTab 已有逻辑会显示注册条件引导
+  - **修复4 引导系统重做**：
+    - 必须点击高亮元素才推进（旧版点哪都跳过）
+    - 高亮框跟随目标元素 + 窗口大小变化自动重定位
+    - 修复"高亮框一直闪"bug（所有路径强制 cleanupHighlight）
+    - 修复"点击任意处跳过"bug（tutorial-overlay 不可点击关闭）
+    - 7 步引导逐步绑定：sidebar → content-area → 废品回收卡片 → 吃顿饭卡片 → 地图标签
+    - 新增 _confirmSkip 二次确认
+    - 行动卡片加 data-action-id 属性让引导能定位
+  - **整合到剧本**：startScenarioGame / startSandboxGame / startNewGame 都调用 startTutorial，isTutorialDone() 检查 localStorage（清除浏览器算第一次玩）
+  - **影响文件**：render.js / actions_extra.js / tutorial.js / modal.js
+  - **构建**：已 `python build.py`（3587.1 KB）
+
+- **上一次工作**：review v3.0 P2 改进落地（2026-06-23，吴八哥 / 高级开发工程师）
   - **P0-BUGFIX**：修复"村长债复利从未生效"——`state.resources.dailyInterest` 字段被 4 个 UI 读取但从未被应用，`villageDebtInterest` 恒为 0。在 `skill_bonuses.js::settleDailyFinance` 补 19 行复利结算。
   - **P2-B-2 难度分层**：新建 `src/js/core/difficulty_system.js`（168 行），3 档（🍵休闲 0.20%/⚖️标准 0.35%/🔥困难 0.50% 日息），影响村长债利率 + 中产税概率 + 事件惩罚 + 需求衰减。剧本选择界面新增难度选择 UI。
   - **P2-E-1 传承币系统**：新建 `src/js/core/heritage_coin.js`（224 行），Hades 风格红/绿互斥解锁（祖传秘方/祖辈教诲/人脉引荐/启动资金/命格护佑/命运骰子），跨周目累积到 localStorage，参考 Hades 夜之镜 + BitLife Ribbons + Stardew 祖父评价信。

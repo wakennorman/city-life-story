@@ -38,6 +38,13 @@ function resetTutorial() {
 /**
  * 启动新手引导
  * 在 startNewGame() 之后调用。
+ *
+ * v3.0 重写：
+ * - 引导步骤可绑定 waitForClick 目标（CSS 选择器）
+ * - 玩家必须点击高亮元素才推进下一步（不再点哪都行）
+ * - tutorial overlay 不允许点击空白关闭（在 modal.js 中处理）
+ * - 完成或跳过都强制 cleanupHighlight，避免高亮框残留闪烁
+ * - 第一次玩才显示（localStorage TUTORIAL_KEY 检查，清除浏览器算第一次）
  */
 function startTutorial() {
   if (isTutorialDone()) return;
@@ -50,45 +57,54 @@ function startTutorial() {
         还欠村长 <strong style="color:var(--danger);">¥5,500</strong>（日息0.3%）。</p>
         <p>目标：<strong>活下去，活出个人样来！</strong></p>
         <p style="color:var(--text-secondary);font-size:11px;">🗑️ 废品回收 → 🛒 进货倒卖 → 💼 应聘职场 → 🏆 P10合伙人</p>
-        <p style="color:var(--success);">接下来用30秒带你快速上手 ⬇️</p>
+        <p style="color:var(--success);">点「开始引导」进入下一步 ⬇️</p>
       `,
       highlight: null,
+      waitForClick: null,
     },
     {
       title: "📊 左侧是你的状态面板",
       body: `
         <p><strong>4维属性</strong>：体质、智力、敏捷、心智 — 影响工作和学习效率</p>
         <p><strong>4项需求</strong>：饥饱、疲劳、卫生、心情 — 低于30会触发危险提示</p>
-        <p style="color:var(--text-secondary);font-size:11px;">💡 属性靠技能和工作提升，需求靠吃饭/休息/洗澡维持</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong> 任意位置继续</p>
       `,
       highlight: "#sidebar",
+      waitForClick: "#sidebar",
     },
     {
       title: "🏘️ 你在城中村，这是你的起点",
       body: `
         <p>每个地点有不同的 <strong>工作机会</strong> 和 <strong>商品价格</strong></p>
         <p>点击行动卡片上的 <strong>"前往 XX"</strong> 可移动到其他地点</p>
-        <p style="color:var(--text-secondary);font-size:11px;">💡 可到达的地点也列在左侧栏「附近可前往」中</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击下方 <strong>行动区</strong> 任意位置继续</p>
       `,
       highlight: "#content-area",
+      waitForClick: "#content-area",
     },
     {
       title: "🗑️ 试试第一次赚钱",
       body: `
         <p>点击下方的 <strong>"废品回收"</strong> 行动卡片开始工作</p>
         <p>每次行动消耗行动力（AP），耗尽后结束一天</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>废品回收</strong> 行动卡片（高亮处）继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">💡 前15天废品回收有新人加成+¥5</p>
       `,
-      highlight: "#content-area",
+      highlight: '[data-action-id="waste_recycling"]',
+      waitForClick: '[data-action-id="waste_recycling"]',
+      hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
     },
     {
       title: "🍚 吃饱了才有力气干活",
       body: `
         <p>赚到钱后点 <strong>"吃顿饭"</strong> 补充饥饱</p>
         <p style="color:var(--success);font-size:11px;">💡 新人福利：前10天吃饭只要¥5（平时¥10）</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>吃顿饭</strong> 行动卡片继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">每天结束会自动扣房租、算利息、更新天气</p>
       `,
-      highlight: "#content-area",
+      highlight: '[data-action-id="eat"]',
+      waitForClick: '[data-action-id="eat"]',
+      hint: "吃顿饭通常和废品回收一样在行动卡片列表里。",
     },
     {
       title: "🗺️ 查看地图探索城市",
@@ -96,8 +112,10 @@ function startTutorial() {
         <p>点击顶部 <strong>"🗺️ 地图"</strong> 标签查看城市全景</p>
         <p>地图显示所有地点、旅行路线和当前所在位置</p>
         <p style="color:var(--accent);font-size:11px;">💡 最快赚钱路线：批发市场进货 → 商业区卖出赚差价！</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击顶部 <strong>🗺️ 地图</strong> 标签按钮继续</p>
       `,
-      highlight: "#tab-bar",
+      highlight: '[data-tab="map"]',
+      waitForClick: '[data-tab="map"]',
     },
     {
       title: "🎯 你准备好了！",
@@ -112,18 +130,25 @@ function startTutorial() {
           <li>🏥 医院 — 看病治疗伤病</li>
           <li>📚 培训中心 — 学习技能考证书</li>
           <li>💻 科技园 — 应聘进入职场</li>
+          <li>🛕 寺庙 — 祈福/冥想/求签（v3.0新增）</li>
         </ul>
         <p style="color:var(--success);">祝你在这座城市混出名堂！🏆</p>
       `,
       highlight: null,
+      waitForClick: null,
     },
   ];
 
   showTutorialStep(steps, 0);
 }
 
-/** 逐步展示引导 */
+/** 逐步展示引导 — v3.0 重写支持 waitForClick 模式 */
 function showTutorialStep(steps, index) {
+  // 任何步骤切换前都先清理高亮，避免残留
+  cleanupHighlight();
+  // 同时清理旧的 waitForClick 监听
+  _clearWaitForClickListeners();
+
   if (index >= steps.length) {
     // 全部完成
     cleanupHighlight();
@@ -138,39 +163,80 @@ function showTutorialStep(steps, index) {
   const step = steps[index];
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;
+  _currentTutorialSteps = steps;
+  _currentTutorialIndex = index;
 
   // 高亮目标区域
   if (step.highlight) {
     highlightElement(step.highlight);
-  } else {
-    cleanupHighlight();
   }
 
-  const buttons = [
-    {
-      text: isFirst ? "跳过引导" : "← 上一步",
-      cls: isFirst ? "" : "",
+  // 决定按钮：如果 step.waitForClick 存在，不显示"下一步"按钮
+  // 改为在目标元素上挂监听，点击后推进
+  const buttons = [];
+  if (isFirst) {
+    buttons.push({
+      text: "跳过引导",
+      cls: "",
       callback: () => {
-        if (isFirst) {
-          cleanupHighlight();
-          markTutorialDone();
-          StateManager.addMessage(
-            "💡 可以随时点击 ❓ 帮助按钮查看游戏指南。",
-            "info",
-          );
-        } else {
-          showTutorialStep(steps, index - 1);
-        }
+        _confirmSkip(steps);
       },
-    },
-    {
-      text: isLast ? "🎯 开始游戏！" : "下一步 →",
+    });
+    buttons.push({
+      text: "开始引导 →",
+      cls: "btn-primary",
+      callback: () => {
+        // 第一步无 waitForClick，直接推进
+        showTutorialStep(steps, index + 1);
+      },
+    });
+  } else if (isLast) {
+    buttons.push({
+      text: "🎯 开始游戏！",
+      cls: "btn-primary",
+      callback: () => {
+        cleanupHighlight();
+        markTutorialDone();
+        StateManager.addMessage(
+          "✅ 新手引导完成！点击 ❓ 帮助按钮可随时回顾。",
+          "success",
+        );
+      },
+    });
+  } else if (step.waitForClick) {
+    // 中间步骤且需要点击目标：不显示"下一步"按钮
+    // 只显示"返回上一步"和"跳过引导"
+    buttons.push({
+      text: "← 上一步",
+      cls: "",
+      callback: () => {
+        showTutorialStep(steps, index - 1);
+      },
+    });
+    buttons.push({
+      text: "跳过引导",
+      cls: "",
+      callback: () => {
+        _confirmSkip(steps);
+      },
+    });
+  } else {
+    // 中间步骤但不需点击目标：保留"下一步"按钮
+    buttons.push({
+      text: "← 上一步",
+      cls: "",
+      callback: () => {
+        showTutorialStep(steps, index - 1);
+      },
+    });
+    buttons.push({
+      text: "下一步 →",
       cls: "btn-primary",
       callback: () => {
         showTutorialStep(steps, index + 1);
       },
-    },
-  ];
+    });
+  }
 
   showModal({
     title: `${index + 1}/${steps.length} ${step.title}`,
@@ -187,9 +253,97 @@ function showTutorialStep(steps, index) {
       if (box) box.classList.add("tutorial-box");
     }
   }, 10);
+
+  // 如果该步骤需要等玩家点击目标，挂监听
+  if (step.waitForClick) {
+    _attachWaitForClick(step.waitForClick, steps, index, step.hint);
+  }
 }
 
-/** 高亮页面元素 */
+/** v3.0 新增：等待玩家点击目标元素才推进 */
+var _currentTutorialSteps = null;
+var _currentTutorialIndex = 0;
+var _waitForClickListeners = []; // 记录所有监听以便清理
+
+function _attachWaitForClick(selector, steps, index, hint) {
+  // 等待 DOM 渲染完成（renderAll 是同步的，但保险起见用 setTimeout）
+  setTimeout(() => {
+    const targets = document.querySelectorAll(selector);
+    if (targets.length === 0) {
+      // 目标不在 DOM 中（例如行动卡片还没渲染），5 秒后重试一次
+      console.warn("[tutorial] 目标未找到:", selector, "5 秒后重试");
+      setTimeout(() => _attachWaitForClick(selector, steps, index, hint), 5000);
+      return;
+    }
+    targets.forEach((target) => {
+      const handler = function (e) {
+        // 阻止冒泡，避免触发原 handler 之前先推进引导
+        // 实际上我们让原 handler 继续执行，引导推进是异步的
+        e.stopPropagation();
+        // 移除所有监听
+        _clearWaitForClickListeners();
+        cleanupHighlight();
+        // 关闭当前 tutorial modal（如果有）
+        const overlay = document.querySelector(".tutorial-overlay");
+        if (overlay) {
+          try { overlay.parentNode.removeChild(overlay); } catch (err) {}
+        }
+        // 推进下一步
+        setTimeout(() => {
+          showTutorialStep(steps, index + 1);
+        }, 100);
+      };
+      // 使用 capture 阶段，确保在原 handler 之前捕获
+      target.addEventListener("click", handler, { capture: true, once: true });
+      _waitForClickListeners.push({ target, handler });
+    });
+  }, 100);
+}
+
+function _clearWaitForClickListeners() {
+  _waitForClickListeners.forEach(({ target, handler }) => {
+    try { target.removeEventListener("click", handler, { capture: true }); } catch (e) {}
+  });
+  _waitForClickListeners = [];
+}
+
+/** v3.0 新增：跳过引导二次确认 */
+function _confirmSkip(steps) {
+  showModal({
+    title: "确定跳过引导？",
+    body: `
+      <p>跳过后将不再自动出现新手引导。</p>
+      <p style="color:var(--text-secondary);font-size:12px;">💡 你可以随时点击右上角 <strong>❓ 帮助</strong> 按钮回顾。</p>
+    `,
+    buttons: [
+      {
+        text: "继续引导",
+        cls: "btn-primary",
+        callback: () => {
+          // 重新显示当前步骤
+          if (_currentTutorialSteps) {
+            showTutorialStep(_currentTutorialSteps, _currentTutorialIndex);
+          }
+        },
+      },
+      {
+        text: "确认跳过",
+        cls: "",
+        callback: () => {
+          cleanupHighlight();
+          _clearWaitForClickListeners();
+          markTutorialDone();
+          StateManager.addMessage(
+            "💡 已跳过新手引导。点击 ❓ 帮助按钮可随时查看。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+}
+
+/** 高亮页面元素 — v3.0 增强：让高亮框本身可点击穿透 */
 function highlightElement(selector) {
   cleanupHighlight();
   const el = document.querySelector(selector);
@@ -214,14 +368,37 @@ function highlightElement(selector) {
     animation: tutorial-pulse 1.5s ease-in-out infinite;
   `;
   document.body.appendChild(hl);
+
+  // 监听窗口大小变化，重新定位高亮框
+  if (!window._tutorialResizeHandler) {
+    window._tutorialResizeHandler = () => {
+      const cur = document.getElementById("tutorial-highlight");
+      if (cur) {
+        const targetEl = document.querySelector(selector);
+        if (targetEl) {
+          const r = targetEl.getBoundingClientRect();
+          cur.style.top = (r.top - 6) + "px";
+          cur.style.left = (r.left - 6) + "px";
+          cur.style.width = (r.width + 12) + "px";
+          cur.style.height = (r.height + 12) + "px";
+        }
+      }
+    };
+    window.addEventListener("resize", window._tutorialResizeHandler);
+  }
 }
 
-/** 清除高亮 */
+/** 清除高亮 — v3.0 增强：同时移除 resize 监听 */
 function cleanupHighlight() {
   const existing = document.getElementById("tutorial-highlight");
   if (existing) existing.remove();
   // 同时清除其他可能的残留
   document.querySelectorAll(".tutorial-highlight").forEach((e) => e.remove());
+  // 清理 resize 监听
+  if (window._tutorialResizeHandler) {
+    window.removeEventListener("resize", window._tutorialResizeHandler);
+    window._tutorialResizeHandler = null;
+  }
 }
 
 // ====== 动态教程提示系统 ======

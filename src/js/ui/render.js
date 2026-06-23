@@ -1072,12 +1072,11 @@ function renderTabBar(state) {
       // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
       btn.style.display = "none";
     } else if (btn.dataset.tab === "startup") {
-      // 创业Tab：注册了公司才显示
-      if (
-        !state.startup ||
-        state.startup.status === "none" ||
-        !state.startup.company
-      ) {
+      // v3.0 修复：创业Tab 在街头阶段也显示（即便未注册公司），
+      // 让玩家从一开始就知道有创业系统。点击后 renderStartupTab 会显示注册条件引导。
+      // 仅在玩家进入公司阶段且未自己创业时隐藏（避免与 corp Tab 重复）
+      if (state.player.phase === "corporate" &&
+          (!state.startup || state.startup.status === "none")) {
         btn.style.display = "none";
       } else {
         btn.style.display = "";
@@ -2291,6 +2290,8 @@ function renderActionsTab(state, parent) {
 function createActionCard(action, state) {
   const card = document.createElement("div");
   card.className = "action-card";
+  // v3.0 引导系统需要：在卡片上加 data-action-id 让 tutorial.js 能定位
+  if (action.id) card.dataset.actionId = action.id;
   if (action.disabled) {
     card.classList.add("disabled");
   }
@@ -2415,6 +2416,8 @@ function renderMapTab(state, parent) {
   mapGrid.style.cssText = "position:relative;width:100%;min-height:460px;";
 
   // 地点坐标映射（百分比定位）
+  // v3.0 修复：补齐 suburb/entertainment/temple 三个地点的坐标
+  // 旧版只有 9 个坐标，导致这 3 个地点在地图网格上根本不显示
   const positions = {
     techPark: { x: 65, y: 5 },
     commercialDist: { x: 58, y: 22 },
@@ -2427,6 +2430,9 @@ function renderMapTab(state, parent) {
     park: { x: 50, y: 62 },
     school: { x: 42, y: 72 },
     trainingCenter: { x: 55, y: 85 },
+    suburb: { x: 75, y: 70 },        // 居住区（右下）
+    entertainment: { x: 65, y: 80 },  // 娱乐区（中下）
+    temple: { x: 18, y: 75 },         // 寺庙（左下）
   };
 
   // SVG连线

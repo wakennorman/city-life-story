@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（review v3.0 P2 改进落地：难度分层 + 传承币 + 多周目继承扩展 + BUG 修复）
+> 最后更新: 2026-06-23（地图/寺庙/创业Tab/引导系统 v3.0 完善批次）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
@@ -12,6 +12,76 @@
 > | v3.0 | `memory/review-improve-v3.0.md`         | 全方位审查改进（代码/架构/机制/剧情/UI/留存） |
 > | v2.1 | `memory/content-expansion-v2.1.md`      | 内容扩充 SOP（20职业上限/成套添加/交叉验证）  |
 > | 1.4  | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                          |
+
+## 2026-06-23 — 玩法师批次：地图/寺庙/创业Tab/引导系统完善
+
+**执行人**：玩法师（游戏设计师）
+**会话产出**：4 个问题域修复 + 2 个 bug 修复，约 280 行代码改动，1 次 build
+
+### 修复1 · 地图缺失 3 个地点坐标（render.js）
+
+- **问题**：`render.js:2418 positions` 只定义了 9 个地点坐标，缺 suburb / entertainment / temple 三个，导致这 3 个地点在地图网格上根本不显示节点
+- **修复**：补齐三个坐标 suburb(75,70) / entertainment(65,80) / temple(18,75)
+- **影响**：玩家现在能在地图上看到全部 12 个地点
+
+### 修复2 · 寺庙地点完善 4 项特殊行动（actions_extra.js +80 行）
+
+- **问题**：`locations.js:345 temple` 定义了 `specialActions: ["祈福","冥想","捐香火钱","求签"]` 但无任何代码消费，玩家去了寺庙无事可做
+- **设计参考**：《大多数》心态值分级 + BitLife 随机 buff
+- **实现**：新建 `addTempleActions(state, actions)` 函数（actions_extra.js），4 项行动每项每日冷却 1 次防滥用：
+
+  | 行动 | AP | 成本 | 效果 |
+  | ---- | -- | ---- | ---- |
+  | 🙏 祈福 | 3 | ¥10 | 心情+8/运气+1/道德+1 |
+  | 🧘 冥想 | 5 | 免费 | 疲劳-15/心智+2 |
+  | 💰 捐香火钱 | 2 | ¥50 | 运气+3/道德+1/名气+2 |
+  | 🔖 求签 | 2 | ¥20 | 随机 buff/debuff 24h（5档签：上上/上/中/下/下下） |
+
+- **接入**：`addExtraActions` 在街头阶段调用 `addTempleActions`
+
+### 修复3 · 创业Tab 在街头阶段也可见（render.js）
+
+- **问题**：`renderTabBar` 仅在 `state.startup.company` 已注册时显示创业 Tab，玩家没注册前看不到入口，不知道有创业系统
+- **修复**：街头阶段也显示创业 Tab，点击后 `renderStartupTab` 已有逻辑会显示"注册条件引导卡片"。仅在公司阶段且未自己创业时隐藏（避免与 corp Tab 重复）
+
+### 修复4 · 引导系统重做（tutorial.js + modal.js + render.js）
+
+- **设计参考**：玩家反馈"点击哪里都能跳过引导""高亮框一直闪""没导航到对应按钮"
+- **重写 `showTutorialStep`** 支持 `waitForClick` 模式：
+  - 当 step.waitForClick 存在时，不显示"下一步"按钮
+  - 在目标元素上挂 `click` capture 监听（once: true），玩家点击该元素才推进
+  - 目标未找到时 5 秒后重试（处理异步渲染）
+- **修复 bug 1（点击任意处跳过）**：`modal.js:68` 改为仅在 overlay 不是 tutorial-overlay 时允许点击空白关闭
+- **修复 bug 2（高亮框一直闪）**：所有跳过/完成/上一步路径都强制 `cleanupHighlight()`，并移除 resize 监听
+- **修复 bug 3（无导航高亮）**：每步绑定具体 CSS 选择器，高亮框跟随目标元素，窗口大小变化自动重新定位
+- **新增 `_confirmSkip()`**：跳过引导二次确认，避免误操作
+- **7 步引导重写**：
+  1. 欢迎页（无目标，点"开始引导"）
+  2. 看左侧栏（必须点 `#sidebar`）
+  3. 看行动区（必须点 `#content-area`）
+  4. 必须点废品回收卡片（必须点 `[data-action-id="waste_recycling"]`）
+  5. 必须点吃顿饭卡片（必须点 `[data-action-id="eat"]`）
+  6. 必须点地图标签（必须点 `[data-tab="map"]`）
+  7. 收尾（无目标，点"开始游戏"）
+- **render.js `createActionCard` 加 `data-action-id` 属性**：让引导能定位到具体行动卡片
+- **整合到剧本模式**：现有 `startScenarioGame / startSandboxGame / startNewGame` 已调用 `startTutorial`，且 `isTutorialDone()` 检查 localStorage（清除浏览器算第一次玩）— 符合"开局引导整合到剧本模式 + 第一次玩才显示"要求
+
+### 文件变更清单
+
+| 文件 | 类型 | 行数 | 说明 |
+| ---- | ---- | ---- | ---- |
+| `src/js/ui/render.js` | 修改 | +14 | 修复1 地图3地点坐标 / 修复3 创业Tab / 修复4 createActionCard data-action-id |
+| `src/js/phase1/actions_extra.js` | 修改 | +110 | 修复2 addTempleActions 4 项行动 |
+| `src/js/ui/tutorial.js` | 修改 | +130 | 修复4 重写 showTutorialStep + waitForClick + _confirmSkip + 高亮增强 |
+| `src/js/ui/modal.js` | 修改 | +5 | 修复4 tutorial overlay 不可点击关闭 |
+
+**总计 ≈ 260 行**（远低于 1500 行护栏）
+
+### 验证
+
+- 4 个 JS `node --check` 全通过 ✅
+- 构建产物 `dist/index.html` 3587.1 KB（在 3.5-3.8MB 期望区间内）✅
+- grep 验证：寺庙行动 6 处 / 地图坐标 12 处 / 创业Tab可见 13 处 / 引导 waitForClick 27 处 / 行动卡片data属性 1 处 / tutorial overlay保护 4 处 ✅
 >
 > ## 2026-06-23 — Review v3.0 P2 改进落地（吴八哥 / 高级开发工程师）
 

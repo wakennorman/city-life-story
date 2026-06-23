@@ -65,8 +65,10 @@ function showModal({ title, body, buttons }) {
   box.appendChild(actionsDiv);
 
   overlay.appendChild(box);
+  // v3.0 修复：tutorial overlay 不允许点击空白处关闭
+  // 旧版任何 modal 点击 overlay 空白都会 removeChild，导致 tutorial 被意外关掉、高亮残留
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
+    if (e.target === overlay && !overlay.classList.contains("tutorial-overlay")) {
       try {
         document.body.removeChild(overlay);
       } catch (err) {

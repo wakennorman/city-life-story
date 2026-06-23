@@ -1715,6 +1715,121 @@ function addClinicAction(state, actions) {
   });
 }
 
+/**
+ * 寺庙地点解锁的 4 项特殊行动（v3.0 P2-C-2 完善）
+ * 设计参考：《大多数》心态值分级 + BitLife 随机 buff
+ * 每项每日冷却 1 次，防止滥用
+ */
+function addTempleActions(state, actions) {
+  if (state.trade.currentLocation !== "temple") return;
+  var flags = state.flags || (state.flags = {});
+  var day = state.player.day || 0;
+
+  // 祈福：心情+8/运气+1，成本¥10，AP 3
+  if (day - (flags._templePrayDay || -1) >= 1) {
+    actions.push({
+      id: "temple_pray",
+      name: "🙏 祈福",
+      desc: "在佛像前静默祈愿。心情+8，运气+1（每日1次）",
+      icon: "🙏",
+      apCost: 3,
+      handler: function () {
+        if (state.resources.cash < 10) {
+          StateManager.addMessage("香火钱至少要¥10。", "warning");
+          return;
+        }
+        state.resources.cash -= 10;
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 8);
+        flags._luckBonus = (flags._luckBonus || 0) + 1;
+        flags._templePrayDay = day;
+        flags.moralGoodChoices = (flags.moralGoodChoices || 0) + 1;
+        StateManager.addMessage("🙏 你在佛像前虔诚跪拜，内心平静了些。心情+8，运气+1。", "success");
+        consumeAP(3);
+        renderAll();
+      },
+    });
+  }
+
+  // 冥想：疲劳-15/心智+2，免费，AP 5
+  if (day - (flags._templeMeditateDay || -1) >= 1) {
+    actions.push({
+      id: "temple_meditate",
+      name: "🧘 冥想",
+      desc: "在禅房静坐片刻。疲劳-15，心智+2（每日1次）",
+      icon: "🧘",
+      apCost: 5,
+      handler: function () {
+        state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 15);
+        state.player.mental = Math.min(100, (state.player.mental || 0) + 2);
+        flags._templeMeditateDay = day;
+        StateManager.addMessage("🧘 一炷香后，杂念渐息，精神焕发。疲劳-15，心智+2。", "success");
+        consumeAP(5);
+        renderAll();
+      },
+    });
+  }
+
+  // 捐香火钱：运气+3/道德+1/名气+2，成本¥50，AP 2
+  if (day - (flags._templeDonateDay || -1) >= 1) {
+    actions.push({
+      id: "temple_donate",
+      name: "💰 捐香火钱",
+      desc: "为修缮寺庙添砖加瓦。运气+3，道德+1，名气+2（每日1次，¥50）",
+      icon: "💰",
+      apCost: 2,
+      handler: function () {
+        if (state.resources.cash < 50) {
+          StateManager.addMessage("香火钱至少¥50。", "warning");
+          return;
+        }
+        state.resources.cash -= 50;
+        flags._luckBonus = (flags._luckBonus || 0) + 3;
+        flags.moralGoodChoices = (flags.moralGoodChoices || 0) + 1;
+        state.player.fame = Math.min(100, (state.player.fame || 0) + 2);
+        flags._templeDonateDay = day;
+        StateManager.addMessage("💰 你捐了¥50香火钱，方丈合十致谢。运气+3，道德+1，名气+2。", "success");
+        consumeAP(2);
+        renderAll();
+      },
+    });
+  }
+
+  // 求签：随机 buff/debuff 24h，成本¥20，AP 2
+  if (day - (flags._templeDivinationDay || -1) >= 1) {
+    actions.push({
+      id: "temple_divination",
+      name: "🔖 求签",
+      desc: "摇一支签，看看今日运势。随机效果持续到明日（¥20）",
+      icon: "🔖",
+      apCost: 2,
+      handler: function () {
+        if (state.resources.cash < 20) {
+          StateManager.addMessage("求签费至少¥20。", "warning");
+          return;
+        }
+        state.resources.cash -= 20;
+        flags._templeDivinationDay = day;
+        var rolls = [
+          { name: "上上签", desc: "万事亨通", buff: { luck: 5, happiness: 10 } },
+          { name: "上签", desc: "吉星高照", buff: { luck: 3, happiness: 5 } },
+          { name: "中签", desc: "平平淡淡", buff: { luck: 1 } },
+          { name: "下签", desc: "宜守不宜攻", buff: { luck: -2, happiness: -3 } },
+          { name: "下下签", desc: "今日宜静", buff: { luck: -3, happiness: -5 } },
+        ];
+        var r = rolls[Math.floor(Math.random() * rolls.length)];
+        flags._divinationResult = r.name;
+        flags._divinationExpireDay = day + 1;
+        flags._divinationBuff = r.buff;
+        if (r.buff.luck) flags._luckBonus = (flags._luckBonus || 0) + r.buff.luck;
+        if (r.buff.happiness) state.needs.happiness = Math.max(0, Math.min(100, (state.needs.happiness || 0) + r.buff.happiness));
+        StateManager.addMessage("🔖 你摇出一支【" + r.name + "】：" + r.desc + "。效果持续到明日。", r.name.indexOf("下") >= 0 ? "warning" : "success");
+        consumeAP(2);
+        renderAll();
+      },
+    });
+  }
+}
+
 /** 给 main.js 调用的统一入口 */
 function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
@@ -1723,6 +1838,7 @@ function addExtraActions(state, actions) {
     addHomeActions(state, actions);
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
+    addTempleActions(state, actions);
   }
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {
