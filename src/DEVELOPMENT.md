@@ -1,103 +1,73 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（批次D：内容扩充—更多道德事件/新闻事件/街头叙事事件）
+> 最后更新: 2026-06-23（批次E：百科剧透隐藏+NPC在场概率+地点触发对话）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
-## 2026-06-23 — 批次D：内容扩充（道德事件+新闻+街头叙事）
+## 2026-06-23 — 批次E：百科剧透隐藏+NPC在场概率+地点触发对话
 
 ### 变更内容
 
-**1. 道德系统再扩充** (`moral_events.js`)
+**1. 百科NPC剧透隐藏** (`wiki.js`)
 
-- 新增8个道德事件，总数12→20→28
-  1. `supermarket_temptation` — 自助结账漏扫诱惑（3选择）
-  2. `taxi_overpaid` — 打车司机少收钱（3选择）
-  3. `friend_cheating` — 发现朋友考试作弊（3选择）
-  4. `library_book_damage` — 图书馆书被弄湿（3选择）
-  5. `parking_scrape` — 刮了别人车没人看见（3选择）
-  6. `elderly_scam_alert` — 老人正被电话诈骗（3选择）
-  7. `vending_machine_error` — 售货机多掉出饮料（3选择）
-  8. `neighbor_borrow_debt` — 邻居借钱不还又来借（3选择）
-- 新增8条后果链（每事件对应正面/负面后果）
+- 生日：隐藏直到通过聊天发现或好感≥60
+- 礼物偏好：隐藏品类直到通过聊天发现或好感≥50（提示文字始终可见）
+- 在场加成：只显示已解锁的好感阈值层级，未解锁的显示🔒
+- 好感阈值奖励：只显示已解锁的层级描述，未解锁的显示"达成后解锁"
+- 委托任务：隐藏故事详情直到好感≥30或已发现
+- 深度任务：隐藏故事详情直到好感≥70或已发现
+- 新增 `ensureNpcDiscovered()` 调用确保discovered字段存在
 
-**2. 新闻系统扩充** (`news.js`)
+**2. NPC在场概率系统** (`npcs.js` + `skill_bonuses.js`)
 
-- 新增8条新闻事件，总数48→56
-  1. `tech_layoff` — 科技大厂裁员潮（电子产品价格×0.5，科技股×0.83）
-  2. `food_safety` — 食品安全事件曝光（外卖工作×0.6，食材×1.3）
-  3. `e_commerce_festival` — 电商大促（快递工作×2.0，电子产品×0.8）
-  4. `tourism_revival` — 旅游市场复苏（服务类工作×1.5）
-  5. `rental_crisis` — 租房市场紧张（房地产股×1.08，持续10天）
-  6. `second_hand_boom` — 二手经济爆发（废品回收价格×1.4~1.6）
-  7. `winter_heating` — 供暖季煤炭涨价（煤炭×1.25，冬装×1.5）
-  8. `luxury_boom` — 高端消费回暖（奢侈品/高端商品价格×1.15~1.2）
-- 新增4条后续新闻（L2级联：tech_layoff_echo/food_safety_echo/e_commerce_echo/rental_crisis_echo）
+- 每个NPC新增 `presenceChance` 字段（0.65~0.85），决定每天在位置的概率
+- `getNpcPresenceBonus()` 增加 `isNpcPresent()` 检查，NPC不在场则无加成
+- `getNpcPresenceBonusDesc()` 同样检查在场状态
+- 固定位置NPC（王大婶/赵师傅/林阿姨）→0.85，半固定（李工头/陈师傅）→0.75，高流动性（张姐/小丽）→0.65
+- 确定性哈希判定：`hash(npcId + day) % 1000 < presenceChance * 1000`
 
-**3. 街头叙事事件扩充** (`events_street.js`)
+**3. 地点切换NPC触发** (`npc_event_bridge.js` + `main.js`)
 
-- 新增5个叙事事件，总数165→170
-  1. `roommate_conflict` — 合租室友矛盾（沟通/忍让/立规矩三种应对）
-  2. `skill_mentor` — 偶遇修车师傅愿教手艺（学艺/拒绝/推荐朋友）
-  3. `rain_shelter_chat` — 躲雨时陌生人聊天（社交/独处/冒雨跑）
-  4. `community_volunteer` — 社区招募志愿者（大扫除慰问独居老人）
-  5. `market_clearance_bargain` — 菜市场收摊甩卖（省钱/砍价/不买）
-- `skill_mentor` 联动维修技能（repair XP+80）
-- `rain_shelter_chat` 有30%概率触发小包工头给活干
+- 新增 `rollNpcEncounterOnArrival()` — 玩家到达新地点时自动触发NPC对话
+- 60%概率触发，NPC需在场检查通过
+- 每次触发好感+1，同时尝试信息解锁
+- 旅行handler中自动调用
 
-**涉及文件**：`moral_events.js` / `news.js` / `events_street.js`
-**构建**：已 `python build.py`（3499.3 KB）
+**4. NPC信息发现系统** (`npc_event_bridge.js` + `main.js` + `state.js`)
 
----
+- 新增 `_npcHash()` 确定性哈希函数
+- 新增 `isNpcPresent()` 在场判定
+- 新增 `ensureNpcDiscovered()` 自动初始化discovered字段
+- 新增 `tryRevealNpcInfo()` 信息解锁（聊天/到达/好感提升触发）
+- 生日：当天聊天自动解锁，日常聊天好感≥15有5%概率
+- 礼物偏好：聊天好感≥20有12%概率解锁，好感≥50自动解锁
+- 好感阈值奖励和在场加成：好感达标自动解锁对应层级
+- 存档迁移：`importState()` 中自动补全旧存档的discovered字段
 
-## 2026-06-23 — 批次B：道德系统扩充+财富检查+图表修复+背包标签+离线消息
+**5. 其他百科分类剧透保护** (`wiki.js`)
 
-### 变更内容
+- 隐藏成就的解锁条件改为"🔒 达成条件神秘"（之前列出所有隐藏成就名）
+- 叙事条目增加锁定：玩家未经历的事件显示为"🔒 你还没有经历过这段故事"
+- `afterEventApplied()` 追踪已体验事件到 `_experiencedNarratives`
+- 系统说明类叙事（四层新闻生态/新游戏+等）始终可见
 
-**2.1 图表修复** (`data_viz.js`)
+**涉及文件**：
 
-- `setupCanvas` 添加 `display:block` + 白色背景填充
-- `setTimeout` 改为 `requestAnimationFrame`，避免时机问题
-- 添加 `try-catch`，绘制出错时不影响游戏运行
+- `src/js/data/npcs.js` — 10个NPC新增presenceChance/encounterLines/infoHints
+- `src/js/core/state.js` — relationships schema注释更新+存档迁移+\_experiencedNarratives
+- `src/js/phase1/npc_event_bridge.js` — 新增5个函数+信息发现系统
+- `src/js/phase1/skill_bonuses.js` — 在场加成加入NPC在场检查
+- `src/js/ui/wiki.js` — NPC详情剧透隐藏+叙事锁定+成就隐藏
+- `src/js/main.js` — 旅行handler+聊天handler集成
 
-**3.1 事件财富检查** (`events_core.js + events_street.js`)
+**设计参考**：
 
-- `queueRandomEvent` 添加通用 `maxCash` / `minCash` 过滤（检查现金+存款）
-- `events_street.js` 夜班搬运工事件添加 `maxCash: 50000`，避免百万富翁在街头搬砖
+- 《Stardew Valley》Collection：已发现/未发现状态徽章
+- 《Terraria》Bestiary：图鉴形式，遇到后才解锁详情
+- 《My Time at Portia》：NPC信息逐步解锁
+- 确定性在场概率：使用NPC id+天数的哈希值决定（可重复、不依赖RNG状态）
 
-**3.5 背包/仓库容量标签统一** (`trade.js + carry.js + pricing.js + render.js`)
+**构建**：已 `python build.py`（3519.1 KB）
 
-- `trade.js`："背包空间不足" → "仓库空间不足（X/Y 槽位）"
-- `render.js`：物品栏分两行显示"仓库 X/Y 槽位" + "负重 X/Y kg"
-- `pricing.js`："太重了！背不动" → "超出负重上限！"
-- `carry.js`：重量提示改为"超重！请减少携带或加强体质"
-
-**3.6 道德系统整合+扩充** (`main.js + moral_events.js`)
-
-- 道德事件触发率从3%提升至8%
-- 新增8个道德事件：ATM机遗忘卡/超市多找钱/共享单车未锁/同事摸鱼/受伤小猫/帮搬重物/深夜红灯/走丢小孩
-- 新增6条后果链：ATM上报/ATM取钱/退钱/救猫/帮小孩/等红灯
-
-**4.2 离线消息优化** (`world_params.js`)
-
-- 浏览器检测：跳过 Yahoo Finance CORS 必然失败的请求
-- "离线模式" → "本地模式：开局结果与现实脱钩"（更准确描述）
-
-## 2026-06-23 — 批次A：关键Bug修复+雷达图+UI调整+创业完善
-
-### 变更内容
-
-**1.1 闭包Bug修复** (`main.js:2828`)
-
-- `for (var sa of startupActions)` 因 `var` 函数作用域导致所有创业按钮handler共享最后一个sa
-- 修复：改为 `startupActions.forEach(function(sa) { ... })`，内联 `actionId` 和 `actionApCost`
-
-**1.2 创业AP消耗** (`main.js:2839`)
-
-- handler 执行成功后调用 `consumeAP(actionApCost)`，防止无限执行创业操作
-
-**1.3 发布产品操作入口** (`startup.js:8350+10730`)
-
-- `getAvailableStartupActions()` 添加 `launch_product` 操作（🚀 发布产品，20AP）
 - `executeStartupAction()` 添加对应 case，调用 `launchProduct(state, productId)`
 
 **1.4 季节性事件匹配真实季节** (`extra_events.js`)

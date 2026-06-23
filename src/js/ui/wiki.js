@@ -1853,6 +1853,11 @@ function _wikiDetailNpc(state, id) {
   var rel = state && state.relationships && state.relationships[id];
   var aff = rel ? rel.affinity || 0 : 0;
   var met = rel && rel.met;
+  // 确保 discovered 字段存在（兼容旧存档+新游戏）
+  if (rel && typeof ensureNpcDiscovered === "function") {
+    ensureNpcDiscovered(rel, aff);
+  }
+  var discovered = rel && rel.discovered ? rel.discovered : {};
 
   var html =
     "<h2>👤 " +
@@ -1875,88 +1880,131 @@ function _wikiDetailNpc(state, id) {
       : _wkE(npc.location)) +
     "</div>";
   if (npc.birthday)
-    html += "<div><b>生日</b>第 " + npc.birthday + " 天（按 day%365）</div>";
+    html +=
+      "<div><b>生日</b>" +
+      ((discovered && discovered.birthday) || aff >= 60
+        ? "第 " + npc.birthday + " 天（按 day%365）"
+        : "🔒 尚未发现") +
+      "</div>";
   html += "</div>";
 
-  // 礼物偏好
+  // 礼物偏好（剧透隐藏：已发现或好感≥50才显示具体品类）
   if (npc.giftPrefers && npc.giftPrefers.length > 0) {
-    html += '<h3>🎁 喜欢的礼物</h3><div class="wiki-links">';
-    for (var g = 0; g < npc.giftPrefers.length; g++) {
-      var goodId = npc.giftPrefers[g];
-      var good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
-      if (good) html += _wkLink("goods", good.id, good.name, "📦") + " ";
-      else html += '<span class="wiki-pill">' + _wkE(goodId) + "</span> ";
+    if ((discovered && discovered.giftPrefers) || aff >= 50) {
+      html += '<h3>🎁 喜欢的礼物</h3><div class="wiki-links">';
+      for (var g = 0; g < npc.giftPrefers.length; g++) {
+        var goodId = npc.giftPrefers[g];
+        var good =
+          typeof getGoodById === "function" ? getGoodById(goodId) : null;
+        if (good) html += _wkLink("goods", good.id, good.name, "📦") + " ";
+        else html += '<span class="wiki-pill">' + _wkE(goodId) + "</span> ";
+      }
+      html += "</div>";
+    } else {
+      html +=
+        '<h3>🎁 喜欢的礼物</h3><p class="wiki-muted">🔒 多与TA交谈或许能发现TA喜欢什么……</p>';
     }
     html +=
-      '</div><p class="wiki-tip">送投其所好礼物 +15 好感（普通礼物 +5）；生日当天 ×2。</p>';
+      '<p class="wiki-tip">送投其所好礼物 +15 好感（普通礼物 +5）；生日当天 ×2。</p>';
   }
 
-  // 在场加成
+  // 在场加成（剧透隐藏：只展示已发现的好感阈值层级）
   if (npc.presenceBonus && npc.presenceBonus.length > 0) {
-    html += '<h3>✨ 在场加成（TA 在该地点时）</h3><ul class="wiki-list">';
+    var pbShown = [];
+    var pbLocked = 0;
     for (var pi = 0; pi < npc.presenceBonus.length; pi++) {
       var pb = npc.presenceBonus[pi];
-      var jobLabel = pb.jobs
-        ? pb.jobs
-            .map(function (jid) {
-              var job =
-                typeof getJobById === "function" ? getJobById(jid) : null;
-              return job ? job.name : jid;
-            })
-            .join(" / ")
-        : "所有相关工作";
-      html +=
-        "<li>好感 ≥" +
-        pb.minAffinity +
-        " · " +
-        _wkE(jobLabel) +
-        " 收入 ×" +
-        pb.multiplier.toFixed(2) +
-        "</li>";
+      if (discovered && discovered.presenceBonus.indexOf(pb.minAffinity) >= 0) {
+        pbShown.push(pb);
+      } else {
+        pbLocked++;
+      }
     }
-    html += "</ul>";
+    if (pbShown.length > 0) {
+      html += '<h3>✨ 在场加成（TA在该地点时）</h3><ul class="wiki-list">';
+      for (var psi = 0; psi < pbShown.length; psi++) {
+        var pbs = pbShown[psi];
+        var jobLabel = pbs.jobs
+          ? pbs.jobs
+              .map(function (jid) {
+                var job =
+                  typeof getJobById === "function" ? getJobById(jid) : null;
+                return job ? job.name : jid;
+              })
+              .join(" / ")
+          : "所有相关工作";
+        html +=
+          "<li>好感 ≥" +
+          pbs.minAffinity +
+          " · " +
+          _wkE(jobLabel) +
+          " 收入 ×" +
+          pbs.multiplier.toFixed(2) +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+    if (pbLocked > 0) {
+      html += '<p class="wiki-muted">🔒 好感提升后将解锁更多在场加成信息</p>';
+    }
   }
 
-  // 好感阈值奖励
+  // 好感阈值奖励（剧透隐藏：只展示已发现的好感层级）
   if (npc.affinityRewards && npc.affinityRewards.length > 0) {
     html += '<h3>💕 好感阈值奖励</h3><ul class="wiki-list">';
     for (var ar = 0; ar < npc.affinityRewards.length; ar++) {
       var rwd = npc.affinityRewards[ar];
+      var isDiscovered =
+        discovered && discovered.affinityRewards.indexOf(rwd.threshold) >= 0;
       var ok = aff >= rwd.threshold;
-      html +=
-        "<li>" +
-        (ok ? "✅ " : "🔒 ") +
-        "好感 " +
-        rwd.threshold +
-        ":" +
-        _wkE(rwd.desc) +
-        "</li>";
+      if (isDiscovered || ok) {
+        html +=
+          "<li>" +
+          (ok ? "✅ " : "🔒 ") +
+          "好感 " +
+          rwd.threshold +
+          ":" +
+          _wkE(rwd.desc) +
+          "</li>";
+      } else {
+        html += "<li>🔒 好感 " + rwd.threshold + " 达成后解锁</li>";
+      }
     }
     html += "</ul>";
   }
 
-  // 委托
+  // 委托任务（剧透隐藏：好感≥30或已发现才显示详情）
   if (npc.favor) {
     var favorDone = state && state.flags && state.flags["_npcFavor_" + id];
-    html +=
-      "<h3>📜 委托任务（好感 ≥30 解锁" +
-      (favorDone ? "，已完成" : "") +
-      "）</h3>" +
-      '<p class="wiki-quote">' +
-      _wkE(npc.favor.story) +
-      "</p>";
+    if ((discovered && discovered.favor) || aff >= 30) {
+      html +=
+        "<h3>📜 委托任务（好感 ≥30 解锁" +
+        (favorDone ? "，已完成" : "") +
+        "）</h3>" +
+        '<p class="wiki-quote">' +
+        _wkE(npc.favor.story) +
+        "</p>";
+    } else {
+      html +=
+        '<h3>📜 委托任务</h3><p class="wiki-muted">🔒 好感达到30后将解锁特殊委托。</p>';
+    }
   }
 
-  // 深度任务
+  // 深度任务（剧透隐藏：好感≥70或已发现才显示详情）
   if (npc.deepTask) {
     var deepDone = state && state.flags && state.flags["_npcDeepTask_" + id];
-    html +=
-      "<h3>💌 深度任务（好感 ≥70 解锁" +
-      (deepDone ? "，已完成" : "") +
-      "）</h3>" +
-      '<p class="wiki-quote">' +
-      _wkE(npc.deepTask.story) +
-      "</p>";
+    if ((discovered && discovered.deepTask) || aff >= 70) {
+      html +=
+        "<h3>💌 深度任务（好感 ≥70 解锁" +
+        (deepDone ? "，已完成" : "") +
+        "）</h3>" +
+        '<p class="wiki-quote">' +
+        _wkE(npc.deepTask.story) +
+        "</p>";
+    } else {
+      html +=
+        '<h3>💌 深度任务</h3><p class="wiki-muted">🔒 好感达到70后将解锁深度剧情任务。</p>';
+    }
   }
 
   // 节日台词
@@ -2809,6 +2857,60 @@ function _wikiDetailMechanic(state, id) {
 //  详情：世界叙事
 // ================================================================
 function _wikiDetailNarrative(state, id) {
+  // 剧透保护：检查玩家是否经历过该叙事
+  var hasExp =
+    state &&
+    state.flags &&
+    state.flags._experiencedNarratives &&
+    state.flags._experiencedNarratives.indexOf(id) >= 0;
+  // 一些系统说明类叙事不需要锁定
+  var freeIds = [
+    "news_4layer",
+    "news_cascade",
+    "ng_plus",
+    "festival_achievements",
+  ];
+  var isFree = freeIds.indexOf(id) >= 0;
+
+  if (
+    !isFree &&
+    !hasExp &&
+    state &&
+    state.flags &&
+    state.flags._experiencedNarratives !== undefined
+  ) {
+    // 注册表条目 — 显示锁定状态
+    if (typeof NARRATIVES === "object" && NARRATIVES && NARRATIVES[id]) {
+      var nEntry = NARRATIVES[id];
+      return (
+        "<h2>" +
+        (nEntry.icon ? _wkE(nEntry.icon) + " " : "") +
+        _wkE(nEntry.name) +
+        "</h2>" +
+        '<p class="wiki-desc">🔒 你还没有经历过这段故事……</p>' +
+        '<p class="wiki-tip">💡 在游戏中探索，触发相关事件后可在此查看完整叙事。</p>'
+      );
+    }
+    // 旧 pages 字典 — 查找名称
+    var allPages = {
+      world_events: "🎬 有梗世界事件",
+      moral: "⚖️ 道德困境系统",
+      event_real_estate: "🏠 房产风波",
+      event_insider: "💼 内幕新闻",
+      event_workplace: "🏢 职场事件",
+      spring_festival_event: "🧧 春节事件链",
+      company_history: "📖 公司历史书",
+    };
+    var pName = allPages[id] || id;
+    return (
+      "<h2>" +
+      _wkE(pName) +
+      "</h2>" +
+      '<p class="wiki-desc">🔒 你还没有经历过这段故事……</p>' +
+      '<p class="wiki-tip">💡 在游戏中探索，触发相关事件后可在此查看完整叙事。</p>'
+    );
+  }
+
   // 1) 注册表优先
   if (typeof NARRATIVES === "object" && NARRATIVES && NARRATIVES[id]) {
     return _renderWikiEntry(state, NARRATIVES[id]);
@@ -3131,10 +3233,10 @@ function _wikiDetailVictory(state, id) {
       '<h3>📋 类别</h3><ul class="wiki-list">' +
       "<li>🌅 人生第一次（7 个）：第一桶金/第一份工作/第一次倒卖等</li>" +
       "<li>🏆 里程碑（8 个）：月入 5000/三个月/存款 1 万/全 NPC 结识等</li>" +
-      "<li>📜 道德档案（4 个隐藏）：追踪帮助 vs 放弃选择</li>" +
-      "<li>🎁 隐藏（3 个）：流浪歌手/还是私吞/100 天坚韧</li>" +
+      "<li>📜 道德档案（4 个隐藏）：🔒 达成条件神秘，在游戏中探索</li>" +
+      "<li>🎁 隐藏（3 个）：🔒 达成条件神秘，在游戏中探索</li>" +
       "</ul>" +
-      '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。</p>',
+      '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。已解锁的成就将永久记录。</p>',
   };
   return pages[id] || "";
 }

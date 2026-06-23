@@ -1082,7 +1082,7 @@ function createDefaultState() {
     },
 
     // --- 人际关系 ---
-    relationships: {}, // { npcId: { affinity: -100~100, met: bool } }
+    relationships: {}, // { npcId: { affinity: -100~100, met: bool, discovered: { birthday, giftPrefers, favor, deepTask, presenceBonus:[], affinityRewards:[] } } }
 
     // --- 交易系统 ---
     trade: {
@@ -1631,9 +1631,36 @@ class GameStateManager {
     if (!s.trade.priceMemory) s.trade.priceMemory = [];
     if (typeof s.trade._todayTradeXp === "undefined") s.trade._todayTradeXp = 0;
     if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
+    // v1.8 → v1.9 迁移：NPC信息发现系统
+    if (s.relationships) {
+      for (var _nid in s.relationships) {
+        var _rel = s.relationships[_nid];
+        if (_rel && !_rel.discovered) {
+          var _aff = _rel.affinity || 0;
+          _rel.discovered = {
+            birthday: false,
+            giftPrefers: false,
+            favor: _aff >= 30,
+            deepTask: _aff >= 70,
+            presenceBonus: [],
+            affinityRewards: [],
+          };
+          if (_aff >= 30) _rel.discovered.presenceBonus.push(30);
+          if (_aff >= 60) _rel.discovered.presenceBonus.push(60);
+          if (_aff >= 80) _rel.discovered.presenceBonus.push(80);
+          if (_aff >= 30) _rel.discovered.affinityRewards.push(30);
+          if (_aff >= 60) _rel.discovered.affinityRewards.push(60);
+          if (_aff >= 80) _rel.discovered.affinityRewards.push(80);
+        }
+      }
+    }
+    // 叙事体验追踪
+    if (s.flags && !s.flags._experiencedNarratives) {
+      s.flags._experiencedNarratives = [];
+    }
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.8.0";
+    s.version = "1.9.0";
     this._markAllDirty();
     this._notify();
   }
@@ -13791,9 +13818,14 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🏠",
       title: "合租室友的矛盾",
-      story: "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
+      story:
+        "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
       conditions: function (st) {
-        return st.player.phase === "street" && st.player.day >= 5 && !st.flags._roommateConflictSeen;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 5 &&
+          !st.flags._roommateConflictSeen
+        );
       },
       choices: [
         {
@@ -13803,7 +13835,10 @@ function quarterlyCleanup(state) {
             st.flags._roommateConflictSeen = true;
             st.needs.happiness = Math.max(0, st.needs.happiness - 7);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            StateManager.addMessage("😤 你跟他吵了一架。他承诺以后会注意，但气氛很尴尬。", "warning");
+            StateManager.addMessage(
+              "😤 你跟他吵了一架。他承诺以后会注意，但气氛很尴尬。",
+              "warning",
+            );
           },
         },
         {
@@ -13814,7 +13849,10 @@ function quarterlyCleanup(state) {
             st.flags._roommateNegotiated = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            StateManager.addMessage("🤝 你们商量好了公共用品轮流买。关系反而更好了。", "success");
+            StateManager.addMessage(
+              "🤝 你们商量好了公共用品轮流买。关系反而更好了。",
+              "success",
+            );
           },
         },
         {
@@ -13824,7 +13862,10 @@ function quarterlyCleanup(state) {
             st.flags._roommateConflictSeen = true;
             st.resources.cash -= 15;
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
-            StateManager.addMessage("😶 你默默去楼下超市买了新的。花¥15买个清净。", "info");
+            StateManager.addMessage(
+              "😶 你默默去楼下超市买了新的。花¥15买个清净。",
+              "info",
+            );
           },
         },
       ],
@@ -13834,9 +13875,15 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "👨‍🏫",
       title: "偶遇热心老师傅",
-      story: "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
+      story:
+        "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
       conditions: function (st) {
-        return st.player.phase === "street" && st.player.day >= 10 && !st.flags._skillMentorSeen && (st.player.mental || 50) >= 20;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 10 &&
+          !st.flags._skillMentorSeen &&
+          (st.player.mental || 50) >= 20
+        );
       },
       choices: [
         {
@@ -13846,11 +13893,17 @@ function quarterlyCleanup(state) {
             st.flags._skillMentorSeen = true;
             st.flags._mentorLearning = true;
             if (st.skills && st.skills.repair) {
-              st.skills.repair.xp = Math.min(1000, (st.skills.repair.xp || 0) + 80);
+              st.skills.repair.xp = Math.min(
+                1000,
+                (st.skills.repair.xp || 0) + 80,
+              );
             }
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             st.needs.happiness = Math.min(100, st.needs.happiness + 6);
-            StateManager.addMessage("🔧 师傅教你认工具、调刹车。你感觉自己多了一门手艺。维修技能经验+80。", "success");
+            StateManager.addMessage(
+              "🔧 师傅教你认工具、调刹车。你感觉自己多了一门手艺。维修技能经验+80。",
+              "success",
+            );
           },
         },
         {
@@ -13869,7 +13922,10 @@ function quarterlyCleanup(state) {
             st.flags._referredFriend = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-            StateManager.addMessage("💡 你介绍了想学技术的朋友过来。师傅夸你心眼好。", "success");
+            StateManager.addMessage(
+              "💡 你介绍了想学技术的朋友过来。师傅夸你心眼好。",
+              "success",
+            );
           },
         },
       ],
@@ -13879,9 +13935,15 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "☔",
       title: "躲雨时的闲聊",
-      story: "突如其来的暴雨把你困在便利店门口的屋檐下。旁边有个同样躲雨的中年人，他看着雨叹口气说「这雨下得人心烦。」",
+      story:
+        "突如其来的暴雨把你困在便利店门口的屋檐下。旁边有个同样躲雨的中年人，他看着雨叹口气说「这雨下得人心烦。」",
       conditions: function (st) {
-        return st.player.phase === "street" && !st.flags._rainChatSeen && st.weather && (st.weather.current === "rainy" || st.weather.current === "stormy");
+        return (
+          st.player.phase === "street" &&
+          !st.flags._rainChatSeen &&
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy")
+        );
       },
       choices: [
         {
@@ -13893,9 +13955,15 @@ function quarterlyCleanup(state) {
             st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             if (Random.chance(0.3)) {
               st.resources.cash += 20;
-              StateManager.addMessage("☔ 聊开了！他原来是个小包工头，给了你一张名片说明天来找他干活。¥20预付款。", "success");
+              StateManager.addMessage(
+                "☔ 聊开了！他原来是个小包工头，给了你一张名片说明天来找他干活。¥20预付款。",
+                "success",
+              );
             } else {
-              StateManager.addMessage("☔ 聊了半小时，雨小了他先走了。虽然没什么实质收获，但心情好了些。", "info");
+              StateManager.addMessage(
+                "☔ 聊了半小时，雨小了他先走了。虽然没什么实质收获，但心情好了些。",
+                "info",
+              );
             }
           },
         },
@@ -13915,7 +13983,10 @@ function quarterlyCleanup(state) {
             st.flags._rainChatSeen = true;
             st.status.health = Math.max(0, st.status.health - 3);
             st.needs.happiness = Math.max(0, st.needs.happiness - 2);
-            StateManager.addMessage("🏃 你跑到家了，淋成了落汤鸡。健康-3。", "warning");
+            StateManager.addMessage(
+              "🏃 你跑到家了，淋成了落汤鸡。健康-3。",
+              "warning",
+            );
           },
         },
       ],
@@ -13925,9 +13996,14 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🧹",
       title: "社区招募志愿者",
-      story: "居委会大妈在楼下贴了告示：周末社区大扫除+独居老人慰问活动，招募8名志愿者。包一顿午饭，还发一张「优秀志愿者」证书。",
+      story:
+        "居委会大妈在楼下贴了告示：周末社区大扫除+独居老人慰问活动，招募8名志愿者。包一顿午饭，还发一张「优秀志愿者」证书。",
       conditions: function (st) {
-        return st.player.phase === "street" && st.player.day >= 6 && !st.flags._communityVolunteerSeen;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 6 &&
+          !st.flags._communityVolunteerSeen
+        );
       },
       choices: [
         {
@@ -13940,7 +14016,10 @@ function quarterlyCleanup(state) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             st.needs.hunger = Math.min(100, st.needs.hunger + 20);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            StateManager.addMessage("🧹 你干了一天活，帮三位独居老人打扫了卫生。居委会大妈非要给你写表扬信。名声+5。", "success");
+            StateManager.addMessage(
+              "🧹 你干了一天活，帮三位独居老人打扫了卫生。居委会大妈非要给你写表扬信。名声+5。",
+              "success",
+            );
           },
         },
         {
@@ -13950,7 +14029,10 @@ function quarterlyCleanup(state) {
             st.flags._communityVolunteerSeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
-            StateManager.addMessage("📸 你拍了几张照片，社区公众号发推文时署了你的名。", "hint");
+            StateManager.addMessage(
+              "📸 你拍了几张照片，社区公众号发推文时署了你的名。",
+              "hint",
+            );
           },
         },
         {
@@ -13968,9 +14050,15 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🏪",
       title: "菜市场收摊大甩卖",
-      story: "傍晚菜市场快收摊了，卖菜的大姐冲你喊：「小伙子，剩的这些全给你，¥10拿走！」一堆蔬菜加起来得有四五斤，平时要¥25以上。",
+      story:
+        "傍晚菜市场快收摊了，卖菜的大姐冲你喊：「小伙子，剩的这些全给你，¥10拿走！」一堆蔬菜加起来得有四五斤，平时要¥25以上。",
       conditions: function (st) {
-        return st.player.phase === "street" && st.player.day >= 3 && !st.flags._clearanceBargainSeen && st.resources.cash >= 10;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 3 &&
+          !st.flags._clearanceBargainSeen &&
+          st.resources.cash >= 10
+        );
       },
       choices: [
         {
@@ -13981,7 +14069,10 @@ function quarterlyCleanup(state) {
             st.resources.cash -= 10;
             st.needs.hunger = Math.min(100, st.needs.hunger + 15);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-            StateManager.addMessage("💰 你拎了一大袋菜回去，够吃四五天了！省了至少¥15。", "success");
+            StateManager.addMessage(
+              "💰 你拎了一大袋菜回去，够吃四五天了！省了至少¥15。",
+              "success",
+            );
           },
         },
         {
@@ -13992,7 +14083,10 @@ function quarterlyCleanup(state) {
             st.resources.cash -= 8;
             st.needs.hunger = Math.min(100, st.needs.hunger + 15);
             st.needs.happiness = Math.max(0, st.needs.happiness - 1);
-            StateManager.addMessage("🤝 大姐撇了撇嘴还是卖你了。省了¥2，但感觉不太对。", "info");
+            StateManager.addMessage(
+              "🤝 大姐撇了撇嘴还是卖你了。省了¥2，但感觉不太对。",
+              "info",
+            );
           },
         },
         {
@@ -14000,7 +14094,10 @@ function quarterlyCleanup(state) {
           hint: "按需消费",
           apply: function (st) {
             st.flags._clearanceBargainSeen = true;
-            StateManager.addMessage("🚶 你摆了摆手。确实不需要的东西再便宜也是浪费。", "hint");
+            StateManager.addMessage(
+              "🚶 你摆了摆手。确实不需要的东西再便宜也是浪费。",
+              "hint",
+            );
           },
         },
       ],
@@ -29177,9 +29274,7 @@ var NEWS_FOLLOWUP = {
     headline: "♻️ 大促过后退换货潮来袭！逆向物流爆单，包装废品回收量大增",
     effects: {
       priceMod: { scrap_paper: 1.3, scrap_plastic: 1.2 },
-      investmentEffect: [
-        { symbols: ["ALIM", "JD"], mul: 0.96 },
-      ],
+      investmentEffect: [{ symbols: ["ALIM", "JD"], mul: 0.96 }],
       duration: 3,
     },
   },
@@ -31699,6 +31794,21 @@ const NPCS = [
       "看你挺勤快的，工地上缺人要不要去试试？",
       "年轻人要有志气，别一辈子收废品。",
     ],
+    // 新加：在场概率（固定位置NPC概率高）
+    presenceChance: 0.85,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "王大婶在楼道里浇花，看到你笑了笑。",
+      "王大婶提着一袋菜回来，说今天菜价又涨了。",
+      "王大婶在门口择菜，抬头用袖子擦了把汗。",
+    ],
+    // 新加：对话中可透露的信息线索
+    infoHints: {
+      giftHint:
+        "王大婶念叨着：「今年的水果比去年贵了不少，还是买点日用品实惠。」",
+      birthdayHint:
+        "王大婶今天好像特别高兴，哼着小曲在打扫，或许是什么特别的日子？",
+    },
     giftPrefers: ["fruits", "daily_use"],
     // 交易情报：专业领域和好感门控信息
     tradeInfo: {
@@ -31879,6 +31989,20 @@ const NPCS = [
       labor_day: "劳动节到了，建筑工人才是真正的劳动者！今天我请喝酒。",
     },
     talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
+    // 新加：在场概率（半固定NPC）
+    presenceChance: 0.75,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "李工头在工地图纸前比划着，抬头朝你点点头。",
+      "李工头叼着烟蹲在钢筋堆上，眯眼看着吊车。",
+      "李工头正跟材料商吵架，看到你摆摆手。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint: "李工头从口袋里掏出一包烟，抽出一根点上，看起来烟不离手。",
+      birthdayHint:
+        "李工头今天心情不错，哼着歌在工地上转悠，似乎忘了什么重要的事。",
+    },
     giftPrefers: ["cigarettes", "beer"],
     // 交易情报
     tradeInfo: {
@@ -32057,6 +32181,21 @@ const NPCS = [
       "做服务业态度最重要。",
       "多考几个证，好工作不愁。",
     ],
+    // 新加：在场概率（流动性高的NPC）
+    presenceChance: 0.65,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "张姐在路边发传单，抽空朝你挥了挥手。",
+      "张姐在咖啡店门口刷手机，抬头冲你笑了笑。",
+      "张姐手里拎着一袋新衣服，脚步匆匆地走过。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint:
+        "张姐路过服装店橱窗，停下来看了看那件新款外套，眼神有些向往。",
+      birthdayHint:
+        "张姐今天特意打扮了一番，说是跟朋友约好了，但嘴角一直带着笑意。",
+    },
     giftPrefers: ["clothing", "snacks"],
     // 交易情报
     tradeInfo: {
@@ -32231,6 +32370,20 @@ const NPCS = [
       "收废品虽然脏，但也是一门生意经。",
       "年轻人脑子活，学学怎么挑好货。",
     ],
+    // 新加：在场概率（半固定NPC）
+    presenceChance: 0.80,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "老周在三轮车旁整理废纸板，看到你咧嘴笑了笑。",
+      "老周正跟人讲价，声音不小。",
+      "老周用袖子擦着汗，坐在废品堆旁歇脚。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint: "老周歇下来时，从兜里掏出一瓶啤酒，咕咚咕咚喝了几口。",
+      birthdayHint:
+        "老周今天没出来收废品，废品站说他难得歇了一天，可能是日子特殊。",
+    },
     giftPrefers: ["beer", "instant_noodles"],
     // 交易情报
     tradeInfo: {
@@ -32409,6 +32562,20 @@ const NPCS = [
       "我英语还不错，可以教初中生。",
       "毕业后想去大厂，得先积累经验。",
     ],
+    // 新加：在场概率（半固定NPC）
+    presenceChance: 0.70,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "小美抱着书本从图书馆出来，笑着冲你点头。",
+      "小美在食堂门口排着队，看到你招了招手。",
+      "小美在自习室窗边看书，阳光洒在桌面上。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint:
+        "小美从书包里掏出一个苹果啃了起来，说是同学给的，又红又甜。",
+      birthdayHint: "小美今天收到一束花，不好意思地说是一个朋友送的。",
+    },
     giftPrefers: ["fruits", "snacks"],
     // 交易情报
     tradeInfo: {
@@ -32572,6 +32739,21 @@ const NPCS = [
       "来尝尝我新研制的配方。",
       "你有点天分，要不要学两手？",
     ],
+    // 新加：在场概率（半固定NPC）
+    presenceChance: 0.75,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "陈师傅在灶台前颠勺，火光映红了脸。",
+      "陈师傅正在切菜，刀工干净利落，看到你笑了笑。",
+      "陈师傅摘下围裙，擦了擦手，准备歇会儿。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint:
+        "陈师傅炒菜时从箱底拿出一瓶好酒，喃喃说：「这个配我的葱爆牛肉绝了。」",
+      birthdayHint:
+        "陈师傅今天做了几道拿手菜请熟客尝，看起来特别高兴。",
+    },
     giftPrefers: ["beer", "vegetables"],
     // 交易情报
     tradeInfo: {
@@ -33219,6 +33401,19 @@ const NPCS = [
       "猪肉价格又涨了，猪周期来了。",
       "我在这卖了二十年菜，什么价没见过？",
     ],
+    // 新加：在场概率（固定位置NPC）
+    presenceChance: 0.85,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "林阿姨正在摆菜，嫩绿的青菜码得整整齐齐。",
+      "林阿姨在称重，抽空抬头问了句「要点什么？」",
+      "林阿姨边算账边跟隔壁摊聊天，看到你来了笑着招手。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint: "林阿姨收摊时拎了袋水果回家，说家里孩子爱吃。",
+      birthdayHint: "林阿姨今天收摊比往常早，笑着说过节去。",
+    },
     giftPrefers: ["fruits", "daily_use", "snacks"],
     tradeInfo: {
       expertise: ["food", "vegetables"],
@@ -33369,6 +33564,21 @@ const NPCS = [
       "现在新能源车多了，修车也得学新东西。",
       "我干了二十年修车，什么车没见过？",
     ],
+    // 新加：在场概率（固定位置NPC）
+    presenceChance: 0.85,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "赵师傅趴在车底下，只露出一双沾满油污的鞋子。",
+      "赵师傅擦着手上的机油，站起来伸了个懒腰。",
+      "赵师傅对着发动机皱眉，一手拿着扳手琢磨。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint:
+        "赵师傅干完活从工具箱下面摸出一瓶啤酒，用满是油污的手撬开瓶盖。",
+      birthdayHint:
+        "赵师傅今天没开门，门上贴着「今日休息，家有喜事」的纸条。",
+    },
     giftPrefers: ["beer", "cigarettes", "daily_use"],
     tradeInfo: {
       expertise: ["electronics", "daily"],
@@ -33522,6 +33732,19 @@ const NPCS = [
       "平台抽成太高，我想自己建站。",
       "网红这行吃青春饭，我得想后路。",
     ],
+    // 新加：在场概率（流动性高的NPC）
+    presenceChance: 0.65,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "小丽在草坪上对着手机自拍，看到你挥了挥手。",
+      "小丽刚结束直播，靠在椅子上刷着弹幕。",
+      "小丽在咖啡厅写拍摄脚本，旁边放着三台设备。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint: "小丽拆开一个快递，是一件新衣服，对着镜头比划说「今天开箱！」",
+      birthdayHint: "小丽今天直播间特别热闹，说在抽奖庆祝。",
+    },
     giftPrefers: ["clothing", "electronics", "luxury"],
     tradeInfo: {
       expertise: ["electronics", "luxury"],
@@ -33666,6 +33889,20 @@ const NPCS = [
       "现在年轻人亚健康太普遍了。",
       "我干了二十年医生，见多了。",
     ],
+    // 新加：在场概率（固定位置NPC）
+    presenceChance: 0.80,
+    // 新加：地点触发专用对话
+    encounterLines: [
+      "王医生在走廊匆匆走过，白大褂衣角翻飞。",
+      "王医生在护士站查病历，抬头看了一眼。",
+      "王医生正在给实习生讲解，语气温和又坚定。",
+    ],
+    // 新加：信息线索
+    infoHints: {
+      giftHint: "王医生桌上放着一篮水果，说是患者送的，分了一个给你。",
+      birthdayHint:
+        "值班表上贴着张贺卡，护士说今天是王医生的生日，但他还在查房。",
+    },
     giftPrefers: ["fruits", "daily_use"],
     tradeInfo: {
       expertise: ["daily", "food"],
@@ -39059,7 +39296,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash -= 48;
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
-          StateManager.addMessage("🛒 你扫码付了巧克力的钱。诚信值+1。", "success");
+          StateManager.addMessage(
+            "🛒 你扫码付了巧克力的钱。诚信值+1。",
+            "success",
+          );
         },
       },
       {
@@ -39068,7 +39308,10 @@ const MORAL_EVENTS = [
         score: -10,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
-          StateManager.addMessage("👀 你心跳加速地走出超市，手里紧握着那盒巧克力。", "warning");
+          StateManager.addMessage(
+            "👀 你心跳加速地走出超市，手里紧握着那盒巧克力。",
+            "warning",
+          );
         },
       },
       {
@@ -39077,7 +39320,10 @@ const MORAL_EVENTS = [
         score: 4,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 1);
-          StateManager.addMessage("🤷 你走回货架放下了巧克力。虽然没吃到，但心里踏实。", "info");
+          StateManager.addMessage(
+            "🤷 你走回货架放下了巧克力。虽然没吃到，但心里踏实。",
+            "info",
+          );
         },
       },
     ],
@@ -39097,7 +39343,10 @@ const MORAL_EVENTS = [
           s.resources.cash -= 2;
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
-          StateManager.addMessage("🚕 司机愣了一下，笑着说「好人啊，谢谢了！」", "success");
+          StateManager.addMessage(
+            "🚕 司机愣了一下，笑着说「好人啊，谢谢了！」",
+            "success",
+          );
         },
       },
       {
@@ -39107,7 +39356,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash += 2;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
-          StateManager.addMessage("🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。", "info");
+          StateManager.addMessage(
+            "🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。",
+            "info",
+          );
         },
       },
       {
@@ -39118,7 +39370,10 @@ const MORAL_EVENTS = [
           s.resources.cash -= 10;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
-          StateManager.addMessage("🚕 司机惊喜地接过钱，「小伙子以后打车找我，给你打折！」", "success");
+          StateManager.addMessage(
+            "🚕 司机惊喜地接过钱，「小伙子以后打车找我，给你打折！」",
+            "success",
+          );
         },
       },
     ],
@@ -39137,7 +39392,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           s.flags._friendCheatWarned = true;
-          StateManager.addMessage("🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。", "hint");
+          StateManager.addMessage(
+            "🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。",
+            "hint",
+          );
         },
       },
       {
@@ -39146,7 +39404,10 @@ const MORAL_EVENTS = [
         score: -4,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
-          StateManager.addMessage("🙈 你低下头专心答题。后来听到他被请出考场的动静。", "warning");
+          StateManager.addMessage(
+            "🙈 你低下头专心答题。后来听到他被请出考场的动静。",
+            "warning",
+          );
         },
       },
       {
@@ -39156,7 +39417,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           s.needs.happiness = Math.max(0, s.needs.happiness - 6);
-          StateManager.addMessage("📋 你举手报告了。朋友被没收了试卷，他回头时眼神让你难受了一整天。", "warning");
+          StateManager.addMessage(
+            "📋 你举手报告了。朋友被没收了试卷，他回头时眼神让你难受了一整天。",
+            "warning",
+          );
         },
       },
     ],
@@ -39177,9 +39441,15 @@ const MORAL_EVENTS = [
             s.resources.cash -= 68;
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
-            StateManager.addMessage("📚 管理员说「诚实的学生不多了」，只收了¥34（半价）。", "success");
+            StateManager.addMessage(
+              "📚 管理员说「诚实的学生不多了」，只收了¥34（半价）。",
+              "success",
+            );
           } else {
-            StateManager.addMessage("📚 钱不够赔全款，管理员让你写了份检讨分期付款。", "info");
+            StateManager.addMessage(
+              "📚 钱不够赔全款，管理员让你写了份检讨分期付款。",
+              "info",
+            );
           }
         },
       },
@@ -39189,7 +39459,10 @@ const MORAL_EVENTS = [
         score: -8,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
-          StateManager.addMessage("💨 你还了书，但图书馆有监控...希望不会被查到。", "warning");
+          StateManager.addMessage(
+            "💨 你还了书，但图书馆有监控...希望不会被查到。",
+            "warning",
+          );
         },
       },
       {
@@ -39200,7 +39473,10 @@ const MORAL_EVENTS = [
           if (s.resources.cash >= 68) {
             s.resources.cash -= 68;
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
-            StateManager.addMessage("📖 你买了新书还回去，管理员没发现区别——但你知道。", "info");
+            StateManager.addMessage(
+              "📖 你买了新书还回去，管理员没发现区别——但你知道。",
+              "info",
+            );
           } else {
             StateManager.addMessage("📖 不够钱买新的...", "warning");
           }
@@ -39224,7 +39500,10 @@ const MORAL_EVENTS = [
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           s.flags._scrapeLeftNote = true;
-          StateManager.addMessage("📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。", "hint");
+          StateManager.addMessage(
+            "📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。",
+            "hint",
+          );
         },
       },
       {
@@ -39233,7 +39512,10 @@ const MORAL_EVENTS = [
         score: -12,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
-          StateManager.addMessage("👀 你快步离开现场，走出两条街才敢回头。", "warning");
+          StateManager.addMessage(
+            "👀 你快步离开现场，走出两条街才敢回头。",
+            "warning",
+          );
         },
       },
       {
@@ -39243,7 +39525,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 1);
           s.flags._scrapeCheckCamera = true;
-          StateManager.addMessage("📸 你发现巷子里没有监控——但你知道自己做了什么。", "info");
+          StateManager.addMessage(
+            "📸 你发现巷子里没有监控——但你知道自己做了什么。",
+            "info",
+          );
         },
       },
     ],
@@ -39263,7 +39548,10 @@ const MORAL_EVENTS = [
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.flags._stoppedScam = true;
-          StateManager.addMessage("🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！", "success");
+          StateManager.addMessage(
+            "🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！",
+            "success",
+          );
         },
       },
       {
@@ -39273,7 +39561,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
-          StateManager.addMessage("🔔 保安立刻过去询问情况，中止了转账操作。", "success");
+          StateManager.addMessage(
+            "🔔 保安立刻过去询问情况，中止了转账操作。",
+            "success",
+          );
         },
       },
       {
@@ -39282,7 +39573,10 @@ const MORAL_EVENTS = [
         score: -10,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
-          StateManager.addMessage("😞 你办完业务离开时，老奶奶还在打电话...你希望她运气好吧。", "warning");
+          StateManager.addMessage(
+            "😞 你办完业务离开时，老奶奶还在打电话...你希望她运气好吧。",
+            "warning",
+          );
         },
       },
     ],
@@ -39301,7 +39595,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
           s.player.fame = Math.min(100, (s.player.fame || 1) + 1);
-          StateManager.addMessage("📞 客服说「下次来免费补给您一瓶」，你放下果汁和多出的水离开了。", "success");
+          StateManager.addMessage(
+            "📞 客服说「下次来免费补给您一瓶」，你放下果汁和多出的水离开了。",
+            "success",
+          );
         },
       },
       {
@@ -39310,7 +39607,10 @@ const MORAL_EVENTS = [
         score: -5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
-          StateManager.addMessage("🥤 你拿了两瓶饮料离开。走了几步忍不住回头看了一眼机器。", "info");
+          StateManager.addMessage(
+            "🥤 你拿了两瓶饮料离开。走了几步忍不住回头看了一眼机器。",
+            "info",
+          );
         },
       },
       {
@@ -39319,7 +39619,10 @@ const MORAL_EVENTS = [
         score: 4,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
-          StateManager.addMessage("💪 你只拿了自己的水。下一个人来取货时会发现的。", "hint");
+          StateManager.addMessage(
+            "💪 你只拿了自己的水。下一个人来取货时会发现的。",
+            "hint",
+          );
         },
       },
     ],
@@ -39342,7 +39645,10 @@ const MORAL_EVENTS = [
           s.resources.cash -= 200;
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
-          StateManager.addMessage("💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。", "warning");
+          StateManager.addMessage(
+            "💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。",
+            "warning",
+          );
         },
       },
       {
@@ -39352,7 +39658,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
           s.flags._neighborRefused = true;
-          StateManager.addMessage("😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。", "info");
+          StateManager.addMessage(
+            "😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。",
+            "info",
+          );
         },
       },
       {
@@ -39364,7 +39673,10 @@ const MORAL_EVENTS = [
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
-          StateManager.addMessage("📋 他犹豫了一下还是写了借条。你收好纸条——至少有个凭证。", "hint");
+          StateManager.addMessage(
+            "📋 他犹豫了一下还是写了借条。你收好纸条——至少有个凭证。",
+            "hint",
+          );
         },
       },
     ],
@@ -39748,7 +40060,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-      StateManager.addMessage("⭐ 被超市员工记住了！她说以后有内部优惠会通知你。", "success");
+      StateManager.addMessage(
+        "⭐ 被超市员工记住了！她说以后有内部优惠会通知你。",
+        "success",
+      );
     },
   },
   moral_scan_steal: {
@@ -39760,7 +40075,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
-      StateManager.addMessage("😰 每次路过那家超市你都绕着走，心虚得很。", "warning");
+      StateManager.addMessage(
+        "😰 每次路过那家超市你都绕着走，心虚得很。",
+        "warning",
+      );
     },
   },
   moral_taxi_fix: {
@@ -39773,7 +40091,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.resources.cash += 20;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-      StateManager.addMessage("🚕 司机正好顺路，免费捎了你一段！省了¥20。", "success");
+      StateManager.addMessage(
+        "🚕 司机正好顺路，免费捎了你一段！省了¥20。",
+        "success",
+      );
     },
   },
   moral_taxi_tip: {
@@ -39786,7 +40107,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 4);
       s.player.intelligence = Math.min(100, (s.player.intelligence || 0) + 2);
-      StateManager.addMessage("🗺️ 司机的攻略很有用！以后日用品支出略有降低。", "hint");
+      StateManager.addMessage(
+        "🗺️ 司机的攻略很有用！以后日用品支出略有降低。",
+        "hint",
+      );
     },
   },
   moral_cheat_warn: {
@@ -39825,7 +40149,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 4);
       s.player.intelligence = Math.min(100, (s.player.intelligence || 0) + 3);
-      StateManager.addMessage("📚 有了特别借阅卡！学习效率小幅提升。", "success");
+      StateManager.addMessage(
+        "📚 有了特别借阅卡！学习效率小幅提升。",
+        "success",
+      );
     },
   },
   moral_book_hide: {
@@ -39839,7 +40166,10 @@ const MORAL_CONSEQUENCES = {
       s.resources.cash -= 68;
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
-      StateManager.addMessage("📬 终于还是被发现了，赔了¥68还得写检讨。早知道当初主动承认就好了。", "danger");
+      StateManager.addMessage(
+        "📬 终于还是被发现了，赔了¥68还得写检讨。早知道当初主动承认就好了。",
+        "danger",
+      );
     },
   },
   moral_scrape_note: {
@@ -39852,7 +40182,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 12);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-      StateManager.addMessage("🤝 车主竟然说算了！「现在诚实的人太少，你这朋友我交了。」", "success");
+      StateManager.addMessage(
+        "🤝 车主竟然说算了！「现在诚实的人太少，你这朋友我交了。」",
+        "success",
+      );
     },
   },
   moral_scrape_flee: {
@@ -39866,7 +40199,10 @@ const MORAL_CONSEQUENCES = {
       s.resources.cash -= 300;
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
-      StateManager.addMessage("🚔 被找到了！赔了¥300。不但花了钱，脸也丢光了。", "danger");
+      StateManager.addMessage(
+        "🚔 被找到了！赔了¥300。不但花了钱，脸也丢光了。",
+        "danger",
+      );
     },
   },
   moral_scam_stop: {
@@ -39880,7 +40216,10 @@ const MORAL_CONSEQUENCES = {
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
       s.resources.cash += 100;
-      StateManager.addMessage("📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。", "success");
+      StateManager.addMessage(
+        "📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。",
+        "success",
+      );
     },
   },
   moral_scam_ignore: {
@@ -39892,7 +40231,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.max(0, s.needs.happiness - 12);
-      StateManager.addMessage("😔 新闻里的老人和那天在ATM机前的老人很像。你后悔了很久。", "danger");
+      StateManager.addMessage(
+        "😔 新闻里的老人和那天在ATM机前的老人很像。你后悔了很久。",
+        "danger",
+      );
     },
   },
   moral_borrow_again: {
@@ -39906,7 +40248,10 @@ const MORAL_CONSEQUENCES = {
       var total = s.flags._neighborDebt || 350;
       s.resources.cash += total;
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-      StateManager.addMessage("💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。", "success");
+      StateManager.addMessage(
+        "💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。",
+        "success",
+      );
     },
   },
   moral_vending_report: {
@@ -39918,7 +40263,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 4);
-      StateManager.addMessage("🥤 账户多了¥10余额。客服说「像您这样的用户是我们的财富。」", "success");
+      StateManager.addMessage(
+        "🥤 账户多了¥10余额。客服说「像您这样的用户是我们的财富。」",
+        "success",
+      );
     },
   },
 };
@@ -45434,6 +45782,12 @@ function getNpcPresenceBonus(locKey, jobId, state) {
     var rel = state.relationships[npc.id];
     var affinity = rel ? rel.affinity || 0 : 0;
 
+    // 新增：NPC不一定在场（需要已结识）
+    if (!rel || !rel.met) continue;
+    if (typeof isNpcPresent === "function" && !isNpcPresent(npc.id, state.player.day)) {
+      continue;
+    }
+
     for (var b = 0; b < npc.presenceBonus.length; b++) {
       var bonus = npc.presenceBonus[b];
       if (affinity < (bonus.minAffinity || 0)) continue;
@@ -45461,6 +45815,12 @@ function getNpcPresenceBonusDesc(locKey, jobId, state) {
 
     var rel = state.relationships[npc.id];
     var affinity = rel ? rel.affinity || 0 : 0;
+
+    // 新增：NPC不一定在场
+    if (!rel || !rel.met) continue;
+    if (typeof isNpcPresent === "function" && !isNpcPresent(npc.id, state.player.day)) {
+      continue;
+    }
 
     for (var b = 0; b < npc.presenceBonus.length; b++) {
       var bonus = npc.presenceBonus[b];
@@ -45495,6 +45855,10 @@ function checkNpcAffinityRewards(npcId, state) {
       reward.effect(state);
     }
   });
+  // 好感变化后尝试解锁隐藏信息
+  if (typeof tryRevealNpcInfo === "function") {
+    tryRevealNpcInfo(npcId, state, "affinity_up");
+  }
 }
 
 /** 每日财务结算 — 银行利息（含accounting技能加成） */
@@ -50310,6 +50674,165 @@ function rollLocationNpcInteraction(state, locationKey) {
   StateManager.addMessage("💬 " + msg, "info");
   // 每次偶遇好感+1（自动社交）
   rel.affinity = Math.min(100, rel.affinity + 1);
+  // 同时尝试信息解锁
+  if (typeof tryRevealNpcInfo === "function") {
+    tryRevealNpcInfo(locData.npcId, state, "encounter");
+  }
+}
+
+// ============================================================
+// 第五层：NPC信息发现系统 — 百科剧透隐藏的运行时支持
+// ============================================================
+
+/** 简易字符串哈希（确定性） */
+function _npcHash(str) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    var ch = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + ch;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * 判断NPC是否在场（基于天数的确定性格子判断）
+ * @param {string} npcId
+ * @param {number} day 当前天数
+ * @returns {boolean}
+ */
+function isNpcPresent(npcId, day) {
+  var npc = typeof getNpcById === "function" ? getNpcById(npcId) : null;
+  if (!npc) return false;
+  var chance = typeof npc.presenceChance === "number" ? npc.presenceChance : 0.8;
+  var seed = _npcHash(npcId + "_" + (day || 1));
+  return (seed % 1000) / 1000 < chance;
+}
+
+/**
+ * 初始化NPC发现状态（确保discovered字段存在）
+ * @param {object} rel NPC关系对象
+ * @param {number} affinity 当前好感
+ */
+function ensureNpcDiscovered(rel, affinity) {
+  if (!rel) return;
+  if (!rel.discovered) {
+    rel.discovered = {
+      birthday: false,
+      giftPrefers: false,
+      favor: false,
+      deepTask: false,
+      presenceBonus: [],
+      affinityRewards: [],
+    };
+  }
+  var d = rel.discovered;
+  // 自动根据好感解锁
+  if (affinity >= 30 && !d.favor) d.favor = true;
+  if (affinity >= 70 && !d.deepTask) d.deepTask = true;
+  // 解锁在场加成阈值
+  if (d.presenceBonus.indexOf(30) < 0 && affinity >= 30)
+    d.presenceBonus.push(30);
+  if (d.presenceBonus.indexOf(60) < 0 && affinity >= 60)
+    d.presenceBonus.push(60);
+  if (d.presenceBonus.indexOf(80) < 0 && affinity >= 80)
+    d.presenceBonus.push(80);
+  // 解锁好感奖励阈值
+  if (d.affinityRewards.indexOf(30) < 0 && affinity >= 30)
+    d.affinityRewards.push(30);
+  if (d.affinityRewards.indexOf(60) < 0 && affinity >= 60)
+    d.affinityRewards.push(60);
+  if (d.affinityRewards.indexOf(80) < 0 && affinity >= 80)
+    d.affinityRewards.push(80);
+}
+
+/**
+ * 尝试解锁NPC隐藏信息
+ * @param {string} npcId
+ * @param {object} state
+ * @param {string} triggerType "chat" | "encounter" | "affinity_up"
+ */
+function tryRevealNpcInfo(npcId, state, triggerType) {
+  var npc = typeof getNpcById === "function" ? getNpcById(npcId) : null;
+  if (!npc || !state.relationships) return null;
+  var rel = state.relationships[npcId];
+  if (!rel) return null;
+  var aff = rel.affinity || 0;
+  ensureNpcDiscovered(rel, aff);
+  var d = rel.discovered;
+  var revealed = [];
+
+  // Birthday：当天在聊天时自动解锁；日常聊天好感≥15有5%概率
+  if (!d.birthday && triggerType === "chat") {
+    var dayInYear = (state.player.day || 1) % 365;
+    if (dayInYear === (npc.birthday || 0)) {
+      d.birthday = true;
+      revealed.push("生日");
+    } else if (aff >= 15 && Random.chance(0.05)) {
+      d.birthday = true;
+      revealed.push("生日");
+    }
+  }
+
+  // GiftPrefers：聊天好感≥20有12%概率解锁；亲和力_up时高好感自动解锁
+  if (!d.giftPrefers) {
+    if (triggerType === "chat" && aff >= 20 && Random.chance(0.12)) {
+      d.giftPrefers = true;
+      revealed.push("礼物偏好");
+    } else if (aff >= 50) {
+      d.giftPrefers = true;
+      revealed.push("礼物偏好（自动）");
+    }
+  }
+
+  // Favor：好感≥30自动解锁（已由ensureNpcDiscovered处理）
+  // DeepTask：好感≥70自动解锁（已由ensureNpcDiscovered处理）
+
+  if (revealed.length > 0) {
+    var hint = "";
+    if (npc.infoHints && triggerType === "encounter") {
+      hint = " " + (npc.infoHints.giftHint || "");
+    }
+    var msg = "🔍 你从" + npc.name + "那里了解到：" + revealed.join("、") + "。" + hint;
+    StateManager.addMessage(msg, "hint");
+    // 返回已解锁的信息列表（供其他模块使用）
+  }
+  return revealed.length > 0 ? revealed : null;
+}
+
+/**
+ * 到达新地点时触发NPC互动
+ * @param {object} state
+ * @param {string} locationKey
+ */
+function rollNpcEncounterOnArrival(state, locationKey) {
+  if (!state.relationships || !locationKey) return;
+  var npcsHere = typeof getNpcsAtLocation === "function"
+    ? getNpcsAtLocation(locationKey)
+    : [];
+  for (var i = 0; i < npcsHere.length; i++) {
+    var npc = npcsHere[i];
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    // 检查NPC是否在场
+    if (!isNpcPresent(npc.id, state.player.day)) continue;
+    // 60%概率触发
+    if (!Random.chance(0.6)) continue;
+
+    // 优先使用地点触发对话
+    var line = npc.encounterLines && npc.encounterLines.length > 0
+      ? Random.fromArray(npc.encounterLines)
+      : (npc.talkLines && npc.talkLines.length > 0
+          ? Random.fromArray(npc.talkLines)
+          : null);
+    if (line) {
+      StateManager.addMessage("💬 " + npc.name + "：" + line, "info");
+      // 好感+1
+      rel.affinity = Math.min(100, rel.affinity + 1);
+      // 尝试信息解锁
+      tryRevealNpcInfo(npc.id, state, "encounter");
+    }
+  }
 }
 
 // ============================================================
@@ -50344,6 +50867,12 @@ function afterEventApplied(eventId, state) {
   if (!state.flags._eventEncounters) state.flags._eventEncounters = {};
   state.flags._eventEncounters[eventId] =
     (state.flags._eventEncounters[eventId] || 0) + 1;
+
+  // 追踪已体验的叙事（用于百科剧透隐藏）
+  if (!state.flags._experiencedNarratives) state.flags._experiencedNarratives = [];
+  if (state.flags._experiencedNarratives.indexOf(eventId) < 0) {
+    state.flags._experiencedNarratives.push(eventId);
+  }
 }
 </script>
 
@@ -96526,6 +97055,11 @@ function _wikiDetailNpc(state, id) {
   var rel = state && state.relationships && state.relationships[id];
   var aff = rel ? rel.affinity || 0 : 0;
   var met = rel && rel.met;
+  // 确保 discovered 字段存在（兼容旧存档+新游戏）
+  if (rel && typeof ensureNpcDiscovered === "function") {
+    ensureNpcDiscovered(rel, aff);
+  }
+  var discovered = rel && rel.discovered ? rel.discovered : {};
 
   var html =
     "<h2>👤 " +
@@ -96548,88 +97082,122 @@ function _wikiDetailNpc(state, id) {
       : _wkE(npc.location)) +
     "</div>";
   if (npc.birthday)
-    html += "<div><b>生日</b>第 " + npc.birthday + " 天（按 day%365）</div>";
+    html += "<div><b>生日</b>" + (discovered && discovered.birthday || aff >= 60
+      ? "第 " + npc.birthday + " 天（按 day%365）"
+      : "🔒 尚未发现") + "</div>";
   html += "</div>";
 
-  // 礼物偏好
+  // 礼物偏好（剧透隐藏：已发现或好感≥50才显示具体品类）
   if (npc.giftPrefers && npc.giftPrefers.length > 0) {
-    html += '<h3>🎁 喜欢的礼物</h3><div class="wiki-links">';
-    for (var g = 0; g < npc.giftPrefers.length; g++) {
-      var goodId = npc.giftPrefers[g];
-      var good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
-      if (good) html += _wkLink("goods", good.id, good.name, "📦") + " ";
-      else html += '<span class="wiki-pill">' + _wkE(goodId) + "</span> ";
+    if (discovered && discovered.giftPrefers || aff >= 50) {
+      html += '<h3>🎁 喜欢的礼物</h3><div class="wiki-links">';
+      for (var g = 0; g < npc.giftPrefers.length; g++) {
+        var goodId = npc.giftPrefers[g];
+        var good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+        if (good) html += _wkLink("goods", good.id, good.name, "📦") + " ";
+        else html += '<span class="wiki-pill">' + _wkE(goodId) + "</span> ";
+      }
+      html += "</div>";
+    } else {
+      html += '<h3>🎁 喜欢的礼物</h3><p class="wiki-muted">🔒 多与TA交谈或许能发现TA喜欢什么……</p>';
     }
-    html +=
-      '</div><p class="wiki-tip">送投其所好礼物 +15 好感（普通礼物 +5）；生日当天 ×2。</p>';
+    html += '<p class="wiki-tip">送投其所好礼物 +15 好感（普通礼物 +5）；生日当天 ×2。</p>';
   }
 
-  // 在场加成
+  // 在场加成（剧透隐藏：只展示已发现的好感阈值层级）
   if (npc.presenceBonus && npc.presenceBonus.length > 0) {
-    html += '<h3>✨ 在场加成（TA 在该地点时）</h3><ul class="wiki-list">';
+    var pbShown = [];
+    var pbLocked = 0;
     for (var pi = 0; pi < npc.presenceBonus.length; pi++) {
       var pb = npc.presenceBonus[pi];
-      var jobLabel = pb.jobs
-        ? pb.jobs
-            .map(function (jid) {
-              var job =
-                typeof getJobById === "function" ? getJobById(jid) : null;
-              return job ? job.name : jid;
-            })
-            .join(" / ")
-        : "所有相关工作";
-      html +=
-        "<li>好感 ≥" +
-        pb.minAffinity +
-        " · " +
-        _wkE(jobLabel) +
-        " 收入 ×" +
-        pb.multiplier.toFixed(2) +
-        "</li>";
+      if (discovered && discovered.presenceBonus.indexOf(pb.minAffinity) >= 0) {
+        pbShown.push(pb);
+      } else {
+        pbLocked++;
+      }
     }
-    html += "</ul>";
+    if (pbShown.length > 0) {
+      html += '<h3>✨ 在场加成（TA在该地点时）</h3><ul class="wiki-list">';
+      for (var psi = 0; psi < pbShown.length; psi++) {
+        var pbs = pbShown[psi];
+        var jobLabel = pbs.jobs
+          ? pbs.jobs
+              .map(function (jid) {
+                var job = typeof getJobById === "function" ? getJobById(jid) : null;
+                return job ? job.name : jid;
+              })
+              .join(" / ")
+          : "所有相关工作";
+        html +=
+          "<li>好感 ≥" +
+          pbs.minAffinity +
+          " · " +
+          _wkE(jobLabel) +
+          " 收入 ×" +
+          pbs.multiplier.toFixed(2) +
+          "</li>";
+      }
+      html += "</ul>";
+    }
+    if (pbLocked > 0) {
+      html += '<p class="wiki-muted">🔒 好感提升后将解锁更多在场加成信息</p>';
+    }
   }
 
-  // 好感阈值奖励
+  // 好感阈值奖励（剧透隐藏：只展示已发现的好感层级）
   if (npc.affinityRewards && npc.affinityRewards.length > 0) {
     html += '<h3>💕 好感阈值奖励</h3><ul class="wiki-list">';
     for (var ar = 0; ar < npc.affinityRewards.length; ar++) {
       var rwd = npc.affinityRewards[ar];
+      var isDiscovered = discovered && discovered.affinityRewards.indexOf(rwd.threshold) >= 0;
       var ok = aff >= rwd.threshold;
-      html +=
-        "<li>" +
-        (ok ? "✅ " : "🔒 ") +
-        "好感 " +
-        rwd.threshold +
-        ":" +
-        _wkE(rwd.desc) +
-        "</li>";
+      if (isDiscovered || ok) {
+        html +=
+          "<li>" +
+          (ok ? "✅ " : "🔒 ") +
+          "好感 " +
+          rwd.threshold +
+          ":" +
+          _wkE(rwd.desc) +
+          "</li>";
+      } else {
+        html +=
+          "<li>🔒 好感 " + rwd.threshold + " 达成后解锁</li>";
+      }
     }
     html += "</ul>";
   }
 
-  // 委托
+  // 委托任务（剧透隐藏：好感≥30或已发现才显示详情）
   if (npc.favor) {
     var favorDone = state && state.flags && state.flags["_npcFavor_" + id];
-    html +=
-      "<h3>📜 委托任务（好感 ≥30 解锁" +
-      (favorDone ? "，已完成" : "") +
-      "）</h3>" +
-      '<p class="wiki-quote">' +
-      _wkE(npc.favor.story) +
-      "</p>";
+    if ((discovered && discovered.favor) || aff >= 30) {
+      html +=
+        "<h3>📜 委托任务（好感 ≥30 解锁" +
+        (favorDone ? "，已完成" : "") +
+        "）</h3>" +
+        '<p class="wiki-quote">' +
+        _wkE(npc.favor.story) +
+        "</p>";
+    } else {
+      html += '<h3>📜 委托任务</h3><p class="wiki-muted">🔒 好感达到30后将解锁特殊委托。</p>';
+    }
   }
 
-  // 深度任务
+  // 深度任务（剧透隐藏：好感≥70或已发现才显示详情）
   if (npc.deepTask) {
     var deepDone = state && state.flags && state.flags["_npcDeepTask_" + id];
-    html +=
-      "<h3>💌 深度任务（好感 ≥70 解锁" +
-      (deepDone ? "，已完成" : "") +
-      "）</h3>" +
-      '<p class="wiki-quote">' +
-      _wkE(npc.deepTask.story) +
-      "</p>";
+    if ((discovered && discovered.deepTask) || aff >= 70) {
+      html +=
+        "<h3>💌 深度任务（好感 ≥70 解锁" +
+        (deepDone ? "，已完成" : "") +
+        "）</h3>" +
+        '<p class="wiki-quote">' +
+        _wkE(npc.deepTask.story) +
+        "</p>";
+    } else {
+      html += '<h3>💌 深度任务</h3><p class="wiki-muted">🔒 好感达到70后将解锁深度剧情任务。</p>';
+    }
   }
 
   // 节日台词
@@ -97482,6 +98050,37 @@ function _wikiDetailMechanic(state, id) {
 //  详情：世界叙事
 // ================================================================
 function _wikiDetailNarrative(state, id) {
+  // 剧透保护：检查玩家是否经历过该叙事
+  var hasExp = state && state.flags && state.flags._experiencedNarratives &&
+    state.flags._experiencedNarratives.indexOf(id) >= 0;
+  // 一些系统说明类叙事不需要锁定
+  var freeIds = ["news_4layer", "news_cascade", "ng_plus", "festival_achievements"];
+  var isFree = freeIds.indexOf(id) >= 0;
+
+  if (!isFree && !hasExp && state && state.flags && state.flags._experiencedNarratives !== undefined) {
+    // 注册表条目 — 显示锁定状态
+    if (typeof NARRATIVES === "object" && NARRATIVES && NARRATIVES[id]) {
+      var nEntry = NARRATIVES[id];
+      return "<h2>" + (nEntry.icon ? _wkE(nEntry.icon) + " " : "") + _wkE(nEntry.name) + "</h2>" +
+        '<p class="wiki-desc">🔒 你还没有经历过这段故事……</p>' +
+        '<p class="wiki-tip">💡 在游戏中探索，触发相关事件后可在此查看完整叙事。</p>';
+    }
+    // 旧 pages 字典 — 查找名称
+    var allPages = {
+      world_events: "🎬 有梗世界事件",
+      moral: "⚖️ 道德困境系统",
+      event_real_estate: "🏠 房产风波",
+      event_insider: "💼 内幕新闻",
+      event_workplace: "🏢 职场事件",
+      spring_festival_event: "🧧 春节事件链",
+      company_history: "📖 公司历史书",
+    };
+    var pName = allPages[id] || id;
+    return "<h2>" + _wkE(pName) + "</h2>" +
+      '<p class="wiki-desc">🔒 你还没有经历过这段故事……</p>' +
+      '<p class="wiki-tip">💡 在游戏中探索，触发相关事件后可在此查看完整叙事。</p>';
+  }
+
   // 1) 注册表优先
   if (typeof NARRATIVES === "object" && NARRATIVES && NARRATIVES[id]) {
     return _renderWikiEntry(state, NARRATIVES[id]);
@@ -97804,10 +98403,10 @@ function _wikiDetailVictory(state, id) {
       '<h3>📋 类别</h3><ul class="wiki-list">' +
       "<li>🌅 人生第一次（7 个）：第一桶金/第一份工作/第一次倒卖等</li>" +
       "<li>🏆 里程碑（8 个）：月入 5000/三个月/存款 1 万/全 NPC 结识等</li>" +
-      "<li>📜 道德档案（4 个隐藏）：追踪帮助 vs 放弃选择</li>" +
-      "<li>🎁 隐藏（3 个）：流浪歌手/还是私吞/100 天坚韧</li>" +
+      "<li>📜 道德档案（4 个隐藏）：🔒 达成条件神秘，在游戏中探索</li>" +
+      "<li>🎁 隐藏（3 个）：🔒 达成条件神秘，在游戏中探索</li>" +
       "</ul>" +
-      '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。</p>',
+      '<p class="wiki-tip">💡 切换到 🏅 成就 Tab 查看完整解锁状态与叙事文案。已解锁的成就将永久记录。</p>',
   };
   return pages[id] || "";
 }
@@ -101183,6 +101782,10 @@ function getAvailableActions(state) {
               : 1;
           var hint = hops > 1 ? `（跨${hops}个地段）` : "";
           StateManager.addMessage(`🚶 你来到了${dest.name}。${hint}`, "info");
+          // 到达新地点触发NPC互动（信息发现+社交）
+          if (typeof rollNpcEncounterOnArrival === "function") {
+            rollNpcEncounterOnArrival(st, destKey);
+          }
           consumeAP(ap);
         },
       });
@@ -101696,6 +102299,10 @@ function getAvailableActions(state) {
           // 检查好感阈值奖励
           if (typeof checkNpcAffinityRewards === "function") {
             checkNpcAffinityRewards(npc.id, state);
+          }
+          // 信息发现：聊天中可能解锁隐藏信息（生日/喜好）
+          if (typeof tryRevealNpcInfo === "function") {
+            tryRevealNpcInfo(npc.id, state, "chat");
           }
           consumeAP(10);
         },

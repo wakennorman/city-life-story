@@ -633,6 +633,169 @@ function rollLocationNpcInteraction(state, locationKey) {
   StateManager.addMessage("💬 " + msg, "info");
   // 每次偶遇好感+1（自动社交）
   rel.affinity = Math.min(100, rel.affinity + 1);
+  // 同时尝试信息解锁
+  if (typeof tryRevealNpcInfo === "function") {
+    tryRevealNpcInfo(locData.npcId, state, "encounter");
+  }
+}
+
+// ============================================================
+// 第五层：NPC信息发现系统 — 百科剧透隐藏的运行时支持
+// ============================================================
+
+/** 简易字符串哈希（确定性） */
+function _npcHash(str) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    var ch = str.charCodeAt(i);
+    hash = (hash << 5) - hash + ch;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * 判断NPC是否在场（基于天数的确定性格子判断）
+ * @param {string} npcId
+ * @param {number} day 当前天数
+ * @returns {boolean}
+ */
+function isNpcPresent(npcId, day) {
+  var npc = typeof getNpcById === "function" ? getNpcById(npcId) : null;
+  if (!npc) return false;
+  var chance =
+    typeof npc.presenceChance === "number" ? npc.presenceChance : 0.8;
+  var seed = _npcHash(npcId + "_" + (day || 1));
+  return (seed % 1000) / 1000 < chance;
+}
+
+/**
+ * 初始化NPC发现状态（确保discovered字段存在）
+ * @param {object} rel NPC关系对象
+ * @param {number} affinity 当前好感
+ */
+function ensureNpcDiscovered(rel, affinity) {
+  if (!rel) return;
+  if (!rel.discovered) {
+    rel.discovered = {
+      birthday: false,
+      giftPrefers: false,
+      favor: false,
+      deepTask: false,
+      presenceBonus: [],
+      affinityRewards: [],
+    };
+  }
+  var d = rel.discovered;
+  // 自动根据好感解锁
+  if (affinity >= 30 && !d.favor) d.favor = true;
+  if (affinity >= 70 && !d.deepTask) d.deepTask = true;
+  // 解锁在场加成阈值
+  if (d.presenceBonus.indexOf(30) < 0 && affinity >= 30)
+    d.presenceBonus.push(30);
+  if (d.presenceBonus.indexOf(60) < 0 && affinity >= 60)
+    d.presenceBonus.push(60);
+  if (d.presenceBonus.indexOf(80) < 0 && affinity >= 80)
+    d.presenceBonus.push(80);
+  // 解锁好感奖励阈值
+  if (d.affinityRewards.indexOf(30) < 0 && affinity >= 30)
+    d.affinityRewards.push(30);
+  if (d.affinityRewards.indexOf(60) < 0 && affinity >= 60)
+    d.affinityRewards.push(60);
+  if (d.affinityRewards.indexOf(80) < 0 && affinity >= 80)
+    d.affinityRewards.push(80);
+}
+
+/**
+ * 尝试解锁NPC隐藏信息
+ * @param {string} npcId
+ * @param {object} state
+ * @param {string} triggerType "chat" | "encounter" | "affinity_up"
+ */
+function tryRevealNpcInfo(npcId, state, triggerType) {
+  var npc = typeof getNpcById === "function" ? getNpcById(npcId) : null;
+  if (!npc || !state.relationships) return null;
+  var rel = state.relationships[npcId];
+  if (!rel) return null;
+  var aff = rel.affinity || 0;
+  ensureNpcDiscovered(rel, aff);
+  var d = rel.discovered;
+  var revealed = [];
+
+  // Birthday：当天在聊天时自动解锁；日常聊天好感≥15有5%概率
+  if (!d.birthday && triggerType === "chat") {
+    var dayInYear = (state.player.day || 1) % 365;
+    if (dayInYear === (npc.birthday || 0)) {
+      d.birthday = true;
+      revealed.push("生日");
+    } else if (aff >= 15 && Random.chance(0.05)) {
+      d.birthday = true;
+      revealed.push("生日");
+    }
+  }
+
+  // GiftPrefers：聊天好感≥20有12%概率解锁；亲和力_up时高好感自动解锁
+  if (!d.giftPrefers) {
+    if (triggerType === "chat" && aff >= 20 && Random.chance(0.12)) {
+      d.giftPrefers = true;
+      revealed.push("礼物偏好");
+    } else if (aff >= 50) {
+      d.giftPrefers = true;
+      revealed.push("礼物偏好（自动）");
+    }
+  }
+
+  // Favor：好感≥30自动解锁（已由ensureNpcDiscovered处理）
+  // DeepTask：好感≥70自动解锁（已由ensureNpcDiscovered处理）
+
+  if (revealed.length > 0) {
+    var hint = "";
+    if (npc.infoHints && triggerType === "encounter") {
+      hint = " " + (npc.infoHints.giftHint || "");
+    }
+    var msg =
+      "🔍 你从" + npc.name + "那里了解到：" + revealed.join("、") + "。" + hint;
+    StateManager.addMessage(msg, "hint");
+    // 返回已解锁的信息列表（供其他模块使用）
+  }
+  return revealed.length > 0 ? revealed : null;
+}
+
+/**
+ * 到达新地点时触发NPC互动
+ * @param {object} state
+ * @param {string} locationKey
+ */
+function rollNpcEncounterOnArrival(state, locationKey) {
+  if (!state.relationships || !locationKey) return;
+  var npcsHere =
+    typeof getNpcsAtLocation === "function"
+      ? getNpcsAtLocation(locationKey)
+      : [];
+  for (var i = 0; i < npcsHere.length; i++) {
+    var npc = npcsHere[i];
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    // 检查NPC是否在场
+    if (!isNpcPresent(npc.id, state.player.day)) continue;
+    // 60%概率触发
+    if (!Random.chance(0.6)) continue;
+
+    // 优先使用地点触发对话
+    var line =
+      npc.encounterLines && npc.encounterLines.length > 0
+        ? Random.fromArray(npc.encounterLines)
+        : npc.talkLines && npc.talkLines.length > 0
+          ? Random.fromArray(npc.talkLines)
+          : null;
+    if (line) {
+      StateManager.addMessage("💬 " + npc.name + "：" + line, "info");
+      // 好感+1
+      rel.affinity = Math.min(100, rel.affinity + 1);
+      // 尝试信息解锁
+      tryRevealNpcInfo(npc.id, state, "encounter");
+    }
+  }
 }
 
 // ============================================================
@@ -667,4 +830,11 @@ function afterEventApplied(eventId, state) {
   if (!state.flags._eventEncounters) state.flags._eventEncounters = {};
   state.flags._eventEncounters[eventId] =
     (state.flags._eventEncounters[eventId] || 0) + 1;
+
+  // 追踪已体验的叙事（用于百科剧透隐藏）
+  if (!state.flags._experiencedNarratives)
+    state.flags._experiencedNarratives = [];
+  if (state.flags._experiencedNarratives.indexOf(eventId) < 0) {
+    state.flags._experiencedNarratives.push(eventId);
+  }
 }

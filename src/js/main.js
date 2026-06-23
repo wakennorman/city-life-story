@@ -2473,6 +2473,10 @@ function getAvailableActions(state) {
               : 1;
           var hint = hops > 1 ? `（跨${hops}个地段）` : "";
           StateManager.addMessage(`🚶 你来到了${dest.name}。${hint}`, "info");
+          // 到达新地点触发NPC互动（信息发现+社交）
+          if (typeof rollNpcEncounterOnArrival === "function") {
+            rollNpcEncounterOnArrival(st, destKey);
+          }
           consumeAP(ap);
         },
       });
@@ -2986,6 +2990,10 @@ function getAvailableActions(state) {
           // 检查好感阈值奖励
           if (typeof checkNpcAffinityRewards === "function") {
             checkNpcAffinityRewards(npc.id, state);
+          }
+          // 信息发现：聊天中可能解锁隐藏信息（生日/喜好）
+          if (typeof tryRevealNpcInfo === "function") {
+            tryRevealNpcInfo(npc.id, state, "chat");
           }
           consumeAP(10);
         },

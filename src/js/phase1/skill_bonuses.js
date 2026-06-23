@@ -629,6 +629,15 @@ function getNpcPresenceBonus(locKey, jobId, state) {
     var rel = state.relationships[npc.id];
     var affinity = rel ? rel.affinity || 0 : 0;
 
+    // 新增：NPC不一定在场（需要已结识）
+    if (!rel || !rel.met) continue;
+    if (
+      typeof isNpcPresent === "function" &&
+      !isNpcPresent(npc.id, state.player.day)
+    ) {
+      continue;
+    }
+
     for (var b = 0; b < npc.presenceBonus.length; b++) {
       var bonus = npc.presenceBonus[b];
       if (affinity < (bonus.minAffinity || 0)) continue;
@@ -656,6 +665,15 @@ function getNpcPresenceBonusDesc(locKey, jobId, state) {
 
     var rel = state.relationships[npc.id];
     var affinity = rel ? rel.affinity || 0 : 0;
+
+    // 新增：NPC不一定在场
+    if (!rel || !rel.met) continue;
+    if (
+      typeof isNpcPresent === "function" &&
+      !isNpcPresent(npc.id, state.player.day)
+    ) {
+      continue;
+    }
 
     for (var b = 0; b < npc.presenceBonus.length; b++) {
       var bonus = npc.presenceBonus[b];
@@ -690,6 +708,10 @@ function checkNpcAffinityRewards(npcId, state) {
       reward.effect(state);
     }
   });
+  // 好感变化后尝试解锁隐藏信息
+  if (typeof tryRevealNpcInfo === "function") {
+    tryRevealNpcInfo(npcId, state, "affinity_up");
+  }
 }
 
 /** 每日财务结算 — 银行利息（含accounting技能加成） */

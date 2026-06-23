@@ -142,7 +142,7 @@ function createDefaultState() {
     },
 
     // --- 人际关系 ---
-    relationships: {}, // { npcId: { affinity: -100~100, met: bool } }
+    relationships: {}, // { npcId: { affinity: -100~100, met: bool, discovered: { birthday, giftPrefers, favor, deepTask, presenceBonus:[], affinityRewards:[] } } }
 
     // --- 交易系统 ---
     trade: {
@@ -691,9 +691,36 @@ class GameStateManager {
     if (!s.trade.priceMemory) s.trade.priceMemory = [];
     if (typeof s.trade._todayTradeXp === "undefined") s.trade._todayTradeXp = 0;
     if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
+    // v1.8 → v1.9 迁移：NPC信息发现系统
+    if (s.relationships) {
+      for (var _nid in s.relationships) {
+        var _rel = s.relationships[_nid];
+        if (_rel && !_rel.discovered) {
+          var _aff = _rel.affinity || 0;
+          _rel.discovered = {
+            birthday: false,
+            giftPrefers: false,
+            favor: _aff >= 30,
+            deepTask: _aff >= 70,
+            presenceBonus: [],
+            affinityRewards: [],
+          };
+          if (_aff >= 30) _rel.discovered.presenceBonus.push(30);
+          if (_aff >= 60) _rel.discovered.presenceBonus.push(60);
+          if (_aff >= 80) _rel.discovered.presenceBonus.push(80);
+          if (_aff >= 30) _rel.discovered.affinityRewards.push(30);
+          if (_aff >= 60) _rel.discovered.affinityRewards.push(60);
+          if (_aff >= 80) _rel.discovered.affinityRewards.push(80);
+        }
+      }
+    }
+    // 叙事体验追踪
+    if (s.flags && !s.flags._experiencedNarratives) {
+      s.flags._experiencedNarratives = [];
+    }
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";
-    s.version = "1.8.0";
+    s.version = "1.9.0";
     this._markAllDirty();
     this._notify();
   }
