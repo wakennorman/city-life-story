@@ -8357,6 +8357,16 @@ function getAvailableStartupActions(state) {
     available: company.products.some((p) => p.status === "developing"),
   });
 
+  // 发布产品
+  actions.push({
+    id: "launch_product",
+    name: "发布产品",
+    icon: "🚀",
+    apCost: 20,
+    desc: "发布已开发完成的产品，推入市场",
+    available: company.products.some((p) => p.status === "ready_to_launch"),
+  });
+
   // 创建新产品
   actions.push({
     id: "create_product",
@@ -10727,6 +10737,19 @@ function executeStartupAction(state, actionId, params) {
           return developProduct(state, developing.id, effort);
         }
         return developProduct(state, productId, effort);
+      }
+      break;
+
+    case "launch_product":
+      {
+        const companyLP = state.startup.company;
+        const readyProduct = companyLP?.products?.find(
+          (p) => p.status === "ready_to_launch",
+        );
+        if (!readyProduct) {
+          return { success: false, message: "没有可以发布的产品" };
+        }
+        return launchProduct(state, readyProduct.id);
       }
       break;
 

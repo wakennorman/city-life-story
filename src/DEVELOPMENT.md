@@ -1,9 +1,56 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（天气深化系统 v2 — 持续期/预报/疾病/地点联动/UI面板）
+> 最后更新: 2026-06-23（批次A：关键Bug修复+雷达图+UI调整+创业完善）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
-## 2026-06-23 — 天气深化系统 v2（新系统）
+## 2026-06-23 — 批次A：关键Bug修复+UI调整+创业完善
+
+### 变更内容
+
+**1.1 闭包Bug修复** (`main.js:2828`)
+
+- `for (var sa of startupActions)` 因 `var` 函数作用域导致所有创业按钮handler共享最后一个sa
+- 修复：改为 `startupActions.forEach(function(sa) { ... })`，内联 `actionId` 和 `actionApCost`
+
+**1.2 创业AP消耗** (`main.js:2839`)
+
+- handler 执行成功后调用 `consumeAP(actionApCost)`，防止无限执行创业操作
+
+**1.3 发布产品操作入口** (`startup.js:8350+10730`)
+
+- `getAvailableStartupActions()` 添加 `launch_product` 操作（🚀 发布产品，20AP）
+- `executeStartupAction()` 添加对应 case，调用 `launchProduct(state, productId)`
+
+**1.4 季节性事件匹配真实季节** (`extra_events.js`)
+
+- spring/summer/autumn/winter 四个季节事件均添加 `st.weather.season` 条件检查
+- 修复"春天出现入秋事件"的问题
+
+**2.2 雷达图加名气** (`data_viz.js:435`)
+
+- street模式雷达图属性从4个扩展到5个（体质/智力/敏捷/心智/名气）
+- 历史覆盖层同步添加fame
+
+**2.4 数据摘要UI缩小** (`data_viz.js:988-1012`)
+
+- CSS grid 从 `minmax(120px,1fr)` → `minmax(90px,1fr)`
+- 图标字体 20px→16px，数值字体 14px→12px
+- 添加 `max-height:280px;overflow-y:auto`
+
+**3.3 创业操作隔离** (`main.js:2794`)
+
+- 创业操作不再出现在Street/Corp行动面板
+- 仅在 techPark/startupOffice 地点可见
+
+**3.4 创业竞争对手数量** (`startup_competition.js:226`)
+
+- 初始竞争对手从最少1个→最少2个，最多4个
+- 对手员工数从最少1人→最少3人
+
+**其他窗口改动** (`news.js`)
+
+- 修正全角/半角引号
+- 新闻添加季节注释
 
 ### 背景
 

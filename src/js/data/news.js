@@ -26,6 +26,7 @@ const NEWS_EVENTS = [
     type: "price",
     followUpId: "metal_boom_echo",
     followUpDelay: 4,
+    // 无季节限制，全年可能发生
   },
   {
     id: "heatwave",
@@ -51,6 +52,7 @@ const NEWS_EVENTS = [
       duration: 4,
     },
     type: "job",
+    // 无季节限制，全年可能发生
   },
   {
     id: "factory_boom",
@@ -65,6 +67,7 @@ const NEWS_EVENTS = [
       duration: 5,
     },
     type: "job",
+    // 无季节限制，全年可能发生
   },
   {
     id: "fruit_glut",
@@ -81,7 +84,7 @@ const NEWS_EVENTS = [
   {
     id: "bank_fraud_alert",
     headline: "🚨 银行附近出现诈骗团伙！老人被骗光积蓄",
-    desc: "警方提醒：近期有诈骗团伙在银行附近冒充工作人员，以“高息理财”为名骗取老人存款。",
+    desc: "警方提醒：近期有诈骗团伙在银行附近冒充工作人员，以「高息理财」为名骗取老人存款。",
     effects: {
       priceMod: { daily_use: 1.05 }, // 安全用品涨价
       jobBonus: ["bank_security"],
@@ -92,6 +95,7 @@ const NEWS_EVENTS = [
     industry: "金融",
     followUpId: "bank_fraud_echo",
     followUpDelay: 4,
+    // 无季节限制，全年可能发生
   },
   {
     id: "park_festival",
@@ -104,6 +108,7 @@ const NEWS_EVENTS = [
       duration: 3,
     },
     type: "job",
+    seasons: ["spring", "summer", "autumn"], // 文化节多在春/夏/秋季
   },
   {
     id: "training_subsidy",
@@ -116,6 +121,7 @@ const NEWS_EVENTS = [
     type: "policy",
     followUpId: "training_subsidy_echo",
     followUpDelay: 5,
+    // 无季节限制，全年可能发生
   },
   // park_renovation 已删除 — 引用了不存在的工作（park_cleaning/park_guide/park_flower_vendor）
   // 如需公园相关事件，建议改用 busking 单一工作引用

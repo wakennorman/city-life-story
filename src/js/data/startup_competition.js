@@ -224,8 +224,8 @@ function generateCompetitors(state, playerCompany) {
   const industry = playerCompany.industry;
   const templates = COMPETITOR_TEMPLATES[industry] || COMPETITOR_TEMPLATES.tech;
   const numCompetitors = Math.min(
-    3,
-    Math.max(1, Math.floor(playerCompany.employees.length / 5) + 1),
+    4,
+    Math.max(2, Math.floor(playerCompany.employees.length / 3) + 2),
   );
 
   const competitors = [];
@@ -240,8 +240,8 @@ function generateCompetitors(state, playerCompany) {
       industry: industry,
       valuation: playerCompany.valuation * Random.float(0.3, 1.0),
       employees: Math.max(
-        1,
-        Math.floor(playerCompany.employees.length * Random.float(0.3, 1.1)),
+        3,
+        Math.floor(playerCompany.employees.length * Random.float(0.3, 1.1) + 2),
       ),
       technologyScore: Math.min(
         100,

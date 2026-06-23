@@ -433,6 +433,7 @@ function drawRadarChart(ctx, state, x, y, w, h, mode, overlayAttrs) {
       { label: "智力", value: p.intelligence || 0, color: "#5a94ba" },
       { label: "敏捷", value: p.agility || 0, color: "#56a64e" },
       { label: "心智", value: p.mental || 0, color: "#9672b4" },
+      { label: "名气", value: p.fame || 0, color: "#d4a017" },
     ];
   } else {
     const c = state.corporate || {};
@@ -986,23 +987,23 @@ function renderGrowthTab(state, container) {
 
   var statsSection = makeCard("", { noMargin: true });
   statsSection.innerHTML =
-    '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">📊 数据摘要</h3>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">';
+    '<h3 style="margin:0 0 8px;font-size:13px;color:var(--text-primary);">📊 数据摘要</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;max-height:280px;overflow-y:auto;">';
 
   statsData.forEach(function (stat) {
     statsSection.innerHTML +=
       '<div style="background:' +
       (stat.color ? "rgba(196,85,51,0.08)" : "var(--bg-secondary)") +
-      ";border-radius:8px;padding:12px;text-align:center;" +
+      ";border-radius:6px;padding:8px 6px;text-align:center;" +
       (stat.color ? "border:1px solid rgba(196,85,51,0.2);" : "") +
       '">' +
-      '<div style="font-size:20px;margin-bottom:4px;">' +
+      '<div style="font-size:16px;margin-bottom:2px;">' +
       stat.icon +
       "</div>" +
-      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">' +
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:1px;">' +
       stat.label +
       "</div>" +
-      '<div style="font-size:14px;font-weight:600;color:' +
+      '<div style="font-size:12px;font-weight:600;color:' +
       (stat.color || "var(--text-primary)") +
       ';">' +
       stat.value +
@@ -1038,6 +1039,7 @@ function renderGrowthTab(state, container) {
           },
           { label: "敏捷", value: oldSnapshot.agility || 0, color: "#56a64e" },
           { label: "心智", value: oldSnapshot.mental || 0, color: "#9672b4" },
+          { label: "名气", value: oldSnapshot.fame || 0, color: "#d4a017" },
         ];
       }
     }

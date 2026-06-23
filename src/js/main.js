@@ -2791,12 +2791,13 @@ function getAvailableActions(state) {
     }
   }
 
-  // --- 创业阶段行动 (Phase 2) ---
+  // --- 创业阶段行动 (Phase 2)：仅在公司相关地点显示，避免与创业Tab重复 ---
   if (
     state.startup &&
     state.startup.status &&
     state.startup.status !== "none" &&
-    state.startup.status !== "exited"
+    state.startup.status !== "exited" &&
+    (locKey === "techPark" || locKey === "startupOffice")
   ) {
     // 创业状态提示
     var startupSummary = null;
@@ -2825,21 +2826,26 @@ function getAvailableActions(state) {
       if (typeof getAvailableStartupActions === "function") {
         startupActions = getAvailableStartupActions(state);
       }
-      for (var sa of startupActions) {
+      startupActions.forEach(function (sa) {
+        var actionId = sa.id;
+        var actionApCost = sa.apCost;
         actions.push({
-          id: "startup_" + sa.id,
+          id: "startup_" + actionId,
           name: sa.name,
           desc: sa.desc + (sa.meta ? "（可选：" + sa.meta + "）" : ""),
           icon: sa.icon,
-          apCost: sa.apCost,
+          apCost: actionApCost,
           costEstimate: null,
           disabled: !sa.available,
           handler: function () {
             if (typeof executeStartupAction === "function") {
-              var result = executeStartupAction(state, sa.id, {});
-              if (!result.success) {
+              var result = executeStartupAction(state, actionId, {});
+              if (result && result.success) {
+                consumeAP(actionApCost);
+              }
+              if (!result || !result.success) {
                 StateManager.addMessage(
-                  result.message || "操作失败",
+                  result && result.message ? result.message : "操作失败",
                   "warning",
                 );
               }
@@ -2847,7 +2853,7 @@ function getAvailableActions(state) {
             }
           },
         });
-      }
+      });
     }
   }
 

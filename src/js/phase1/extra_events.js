@@ -25,6 +25,9 @@
       title: "开春招工潮",
       story:
         "春节过后，城市迎来了招工旺季。工地、工厂、餐饮店门口都贴着招工启事。街上的招工中介也比平时多了好几家——春天是找工作的好时候。",
+      conditions: function (st) {
+        return st.weather && st.weather.season === "spring";
+      },
       choices: [
         {
           text: "💪 趁旺季多打几份工",
@@ -70,7 +73,7 @@
       story:
         "三伏天，太阳像火炉一样烤着街道。摆摊的商贩都躲到了阴凉处，工地的工人们也放慢了节奏。这种天气下干活，体力消耗是平时的两倍。",
       conditions: function (st) {
-        return st.player.day > 60 || !st.flags._summerFlag;
+        return st.weather && st.weather.season === "summer";
       },
       choices: [
         {
@@ -119,6 +122,9 @@
       title: "秋收季节·物价波动",
       story:
         "入秋后，农产品大量上市，菜市场的水果蔬菜价格明显下降。与此同时，服装店开始上秋冬新款，旧款打折清仓。精明的商家知道这是个囤货的好时机。",
+      conditions: function (st) {
+        return st.weather && st.weather.season === "autumn";
+      },
       choices: [
         {
           text: "🛒 趁便宜多买食材",
@@ -153,6 +159,9 @@
       title: "严冬求生",
       story:
         "寒潮来袭，气温骤降到零下。街上的流浪猫狗都不见了踪影，路面结了一层薄冰。这种天气里，有个温暖的住处比什么都重要。",
+      conditions: function (st) {
+        return st.weather && st.weather.season === "winter";
+      },
       choices: [
         {
           text: "🔥 找地方取暖",
