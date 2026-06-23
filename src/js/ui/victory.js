@@ -118,6 +118,18 @@ function triggerVictory(state, type, title, desc) {
   state.flags.gameOver = true;
   state.flags.victoryTitle = title;
   state.flags.victoryDesc = desc;
+  // v3.1：人生缎带判定
+  if (typeof determineLifeRibbon === "function") {
+    var result = determineLifeRibbon(state);
+    state.flags._lifeRibbon = result.ribbon.id;
+    state.flags._lifeRibbonName = result.ribbon.icon + " " + result.ribbon.name;
+    if (typeof recordRibbon === "function") {
+      var isNew = recordRibbon(result.ribbon.id, result.stats);
+      if (isNew) {
+        state.flags._newRibbonEarned = true;
+      }
+    }
+  }
   // 记录公司命运到多周目记忆
   if (typeof recordPlaythroughEnd === "function") {
     recordPlaythroughEnd(state);

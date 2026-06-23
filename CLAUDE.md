@@ -50,32 +50,25 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：地图/寺庙/创业Tab/引导系统完善（2026-06-23，玩法师 / 游戏设计师）
-  - **修复1 地图缺地点**：`render.js positions` 补齐 suburb/entertainment/temple 三个坐标，原版只有 9 个导致这 3 个地点在地图网格上根本不显示
-  - **修复2 寺庙完善**：`actions_extra.js` 新增 `addTempleActions` 4 项行动（🙏祈福/🧘冥想/💰捐香火钱/🔖求签），每项每日冷却 1 次防滥用。设计参考《大多数》心态值分级 + BitLife 随机 buff
-  - **修复3 创业Tab可见**：街头阶段也显示创业 Tab（原版仅注册公司后显示），让玩家从一开始就知道有创业系统。点击后 renderStartupTab 已有逻辑会显示注册条件引导
-  - **修复4 引导系统重做**：
-    - 必须点击高亮元素才推进（旧版点哪都跳过）
-    - 高亮框跟随目标元素 + 窗口大小变化自动重定位
-    - 修复"高亮框一直闪"bug（所有路径强制 cleanupHighlight）
-    - 修复"点击任意处跳过"bug（tutorial-overlay 不可点击关闭）
-    - 7 步引导逐步绑定：sidebar → content-area → 废品回收卡片 → 吃顿饭卡片 → 地图标签
-    - 新增 \_confirmSkip 二次确认
-    - 行动卡片加 data-action-id 属性让引导能定位
-  - **整合到剧本**：startScenarioGame / startSandboxGame / startNewGame 都调用 startTutorial，isTutorialDone() 检查 localStorage（清除浏览器算第一次玩）
+- **最新一次工作**：v3.1 游戏机制扩展（2026-06-23，QoderWork / 游戏设计师+研究员）
+  - **新系统1 人生缎带**：`life_ribbon.js`（280行），BitLife 风格 12 条缎带结局分类，从人生轨迹涌现而非玩家选择，跨周目收集到 localStorage
+  - **新系统2 主线章节**：`story_chapters.js`（280行），3 章式人生主线（生存→立足→选择），在 Day 30/180/365 设置叙事检查点
+  - **新系统3 跨系统联动事件**：`cross_system_events.js`（300行），5 条事件打通 NPC/行业热度/世界状态/道德选择，IIFE 注入 RANDOM_EVENTS
+  - **节日深度**：`festivals.js +133行`，清明回乡（Day 104）+ 中秋探亲（Day 257）事件链，NPC 好感+道德系统联动
+  - **Tab 系统重组**：创业Tab→事业发展Tab（career_dev.js），合并职场社交+家庭→社交Tab（social_tab.js），合并成长数据+个人成长
+  - **创业平衡调参**：`startup.js` 估值下调30%/燃烧率上调50%/注册门槛 ¥50k→¥200k
+  - **Bug 修复**：render.js TAB_RENDERERS 对象未闭合 + 重复 else 块
+  - **接线**：daily_pipeline.js 新增 story_chapter_check 步骤 + festival deep events 调用；victory.js/modal.js 接入缎带判定；corp_ui.js 缎带展示 UI
+  - **设计参考**：BitLife Ribbons / Stardew Valley 祖父评价信 / This War of Mine / Capitalism Lab / 《大多数》五维耦合
+  - **影响文件**：3 个新模块 + career_dev.js + social_tab.js + 6 处修改，共 11 文件
+  - **构建**：已 `python build.py`（3666.5 KB）
+
+- **上一次工作**：地图/寺庙/创业Tab/引导系统完善（2026-06-23，玩法师 / 游戏设计师）
+  - 修复地图缺地点坐标 / 寺庙4项行动 / 创业Tab街头可见 / 引导系统重做
   - **影响文件**：render.js / actions_extra.js / tutorial.js / modal.js
   - **构建**：已 `python build.py`（3587.1 KB）
 
 - **上一次工作**：review v3.0 P2 改进落地（2026-06-23，吴八哥 / 高级开发工程师）
-  - **P0-BUGFIX**：修复"村长债复利从未生效"——`state.resources.dailyInterest` 字段被 4 个 UI 读取但从未被应用，`villageDebtInterest` 恒为 0。在 `skill_bonuses.js::settleDailyFinance` 补 19 行复利结算。
-  - **P2-B-2 难度分层**：新建 `src/js/core/difficulty_system.js`（168 行），3 档（🍵休闲 0.20%/⚖️标准 0.35%/🔥困难 0.50% 日息），影响村长债利率 + 中产税概率 + 事件惩罚 + 需求衰减。剧本选择界面新增难度选择 UI。
-  - **P2-E-1 传承币系统**：新建 `src/js/core/heritage_coin.js`（224 行），Hades 风格红/绿互斥解锁（祖传秘方/祖辈教诲/人脉引荐/启动资金/命格护佑/命运骰子），跨周目累积到 localStorage，参考 Hades 夜之镜 + BitLife Ribbons + Stardew 祖父评价信。
-  - **P2-B-1 多周目继承扩展**：`inheritance_chain.js` 新增 3 个继承字段（35岁路径/道德分/NPC巅峰好感），让"重开"真的有传承感。
-  - **设计参考**：《大多数》心态值分级 /《中国式家长》经济复利 /《This War of Mine》角色组合 / Hades 夜之镜 / BitLife Ribbons / Stardew Valley 祖父评价信
-  - **影响文件**：2 个新模块 + `skill_bonuses.js` / `review_improvements.js` / `inheritance_chain.js` / `main.js` / `modal.js` / `index.html` 共 8 文件
-  - **构建**：已 `python build.py`（3574.8 KB）
-
-- **上一次工作**：批次E完成（2026-06-23）
   - **百科剧透隐藏**：`wiki.js` NPC详情页全面剧透隐藏（生日/礼物偏好/在场加成/好感阈值奖励/委托任务/深度任务），根据玩家探索进度逐步解锁
   - **在场概率**：10个NPC新增 `presenceChance`（0.65~0.85），确定性哈希判定，不在场则无加成
   - **地点触发对话**：旅行手自动触发NPC互动 `rollNpcEncounterOnArrival()`，好感+1+信息解锁

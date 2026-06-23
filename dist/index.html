@@ -459,24 +459,20 @@
           <button class="tab-btn" data-tab="investment">💰 投资</button>
           <button
             class="tab-btn"
-            data-tab="startup"
-            id="tab-btn-startup"
+            data-tab="career_dev"
+            id="tab-btn-career-dev"
             style="display: none"
           >
-            🚀 创业
+            🚀 事业发展
           </button>
           <button class="tab-btn" data-tab="enterprise" style="display: none">
             🏭 企业
           </button>
-          <button class="tab-btn" data-tab="achievements">🏅 成就</button>
-          <button class="tab-btn" data-tab="growth">📈 成长</button>
-          <button class="tab-btn" data-tab="workplace_social">
-            👥 职场社交
-          </button>
-          <button class="tab-btn" data-tab="family">👨‍👩‍👧 家庭</button>
+          <button class="tab-btn" data-tab="social">👥 社交</button>
           <button class="tab-btn" data-tab="personal_growth">
             🌱 个人成长
           </button>
+          <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
 
@@ -20049,6 +20045,176 @@ function getSeasonFestivalTip(state) {
 
   return parts.join(" | ");
 }
+
+// ====== 清明回乡事件链 ======
+// v3.1: 设计参考：现实中国清明节传统 + Stardew Valley 节日事件
+var QINGMING_EVENTS = [
+  {
+    id: "qingming_return",
+    icon: "🌿",
+    title: "清明时节雨纷纷",
+    story: `清明到了。工友老李说：\u201c过节了，你不回老家看看？\u201d\n你想起村口那座坟，想起送你出来时母亲的眼神。回去一趟要花两天的工钱和车费，但有些事，不是钱能衡量的。`,
+    choices: [
+      {
+        text: "🚌 回老家扫墓 (¥200)",
+        hint: "两天不能工作，但心里踏实",
+        cost: 200,
+        apply: function (st) {
+          st.resources.cash -= 200;
+          st.player.day += 1;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 20);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          st.flags._qingmingReturned = (st.flags._qingmingReturned || 0) + 1;
+          st.flags._returnedHometown = true;
+          var gift = Random.int(0, 3);
+          if (gift === 0) {
+            var money = Random.int(100, 500);
+            st.resources.cash += money;
+            StateManager.addMessage(
+              `\u00ael 母亲硬塞了¥${money}给你：\u201c路上吃顿好的，别亏待自己。\u201d`,
+              "success",
+            );
+          } else if (gift === 1) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 30);
+            StateManager.addMessage(
+              `\u00ael 母亲装了一大袋腊肉和咸菜：\u201c城里的东西贵，这些你爱吃。\u201d`,
+              "success",
+            );
+          } else {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            StateManager.addMessage(
+              "\u00ael 回村扫了墓，村里人都夸你有出息了。名气+3",
+              "hint",
+            );
+          }
+        },
+      },
+      {
+        text: "📞 给家里打个电话就好",
+        hint: "省钱，但心里不是滋味",
+        apply: function (st) {
+          st.resources.cash -= 10;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.flags._moralScore = (st.flags._moralScore || 0) - 1;
+          StateManager.addMessage(
+            "\u00a1 电话那头母亲说\u201c没事，你忙你的\u201d。你知道她懂，但心里还是酸了一下。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👷 算了，多赚一天是一天",
+        hint: "现实不允许矫情",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 8);
+          st.flags._moralScore = (st.flags._moralScore || 0) - 2;
+          StateManager.addMessage(
+            "\u00a1 你低着头继续干活。清明?清明是什么。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+];
+
+// ====== 中秋探亲事件链 ======
+// v3.1: 设计参考：中秋节走亲访友传统 + NPC好感联动
+var MID_AUTUMN_DEEP_EVENTS = [
+  {
+    id: "mid_autumn_reunion",
+    icon: "🥮",
+    title: "月圆人不圆",
+    story: `中秋夜。你坐在出租屋窗前，月亮又大又圆。\n手机里刷到朋友圈全是团圆饭的照片。你想起了谁，又或者，谁正在想你？`,
+    choices: [
+      {
+        text: "🥮 买月饼去看王大婶",
+        hint: "¥50，好感+15",
+        cost: 50,
+        apply: function (st) {
+          st.resources.cash -= 50;
+          if (st.npcRelations && st.npcRelations.aunt_wang) {
+            st.npcRelations.aunt_wang.affinity = Math.min(
+              100,
+              (st.npcRelations.aunt_wang.affinity || 0) + 15,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.flags._midAutumnGift = true;
+          StateManager.addMessage(
+            "\u00ae 王大婶看到月饼眼眶红了：\u201c孩子，你比我亲生的还孝顺。\u201d好感+15",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🌙 一个人在天台赏月",
+        hint: "省钱，但有点孤独",
+        apply: function (st) {
+          var mood = Random.int(0, 3);
+          if (mood === 0) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "\u00ae 月亮真圆。你想：至少我还活着，还在路上。这也不错。",
+              "hint",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "\u00ae 风有点凉。你裹紧外套，觉得自己像这座城市里的一粒沙。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📱 发条朋友圈",
+        hint: "也许有人会看到",
+        apply: function (st) {
+          var likeCount = Random.int(0, 10);
+          if (likeCount >= 5) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              `\u00ae 朋友圈${likeCount}个赞。有人说\u201c中秋快乐\u201d——你觉得被世界记着。`,
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "\u00ae 朋友圈没什么人回应。月亮不在乎。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  },
+];
+
+/** v3.1: 检查清明/中秋深度事件 */
+function checkFestivalDeepEvents(state) {
+  if (!state.player || !state.player.day) return false;
+  if (state.flags.gameOver || state.flags.victory) return false;
+  var doy = state.player.day % 365;
+  var year = Math.floor(state.player.day / 365);
+  if (doy === 104 && !state.flags["_qingming_y" + year]) {
+    state.flags["_qingming_y" + year] = true;
+    state._pendingEvent = QINGMING_EVENTS[0];
+    setTimeout(function () {
+      if (typeof showEventModal === "function") showEventModal();
+    }, 100);
+    return true;
+  }
+  if (doy === 257 && !state.flags["_midAutumnDeep_y" + year]) {
+    state.flags["_midAutumnDeep_y" + year] = true;
+    state._pendingEvent = MID_AUTUMN_DEEP_EVENTS[0];
+    setTimeout(function () {
+      if (typeof showEventModal === "function") showEventModal();
+    }, 100);
+    return true;
+  }
+  return false;
+}
 </script>
     <script>/**
  * 梦想追踪系统 — 人生目标与里程碑叙事
@@ -25415,6 +25581,1082 @@ if (typeof window !== "undefined") {
     window.spendHeritageCoin = spendHeritageCoin;
     window.applyHeritageUnlocks = applyHeritageUnlocks;
     window.HERITAGE_UNLOCKS = HERITAGE_UNLOCKS;
+  }
+})();
+</script>
+    <!-- v3.1: Life Ribbon System (BitLife-style ending classification) -->
+    <script>/**
+ * 人生缎带系统 — BitLife 风格结局分类
+ *
+ * 设计参考：BitLife Ribbons（40种缎带覆盖各种人生路线）
+ *           《大多数》结局评价（基于玩家行为轨迹而非单一指标）
+ *           Stardew Valley 祖父评价信（多维度综合评估）
+ *
+ * 核心理念：缎带不是玩家选择的，而是从人生轨迹中涌现的。
+ * 每局结束（胜利或失败）时，系统根据玩家全周期的行为数据，
+ * 自动判定最符合的人生缎带。缎带跨周目持久化到 localStorage，
+ * 形成收集目标。
+ *
+ * 12 条缎带覆盖中国都市生活的典型人生路线：
+ *   🏪 商海弄潮儿 | 💼 打工皇帝 | 🍵 躺平达人 | 🏗️ 街头生存者
+ *   📚 考公上岸   | 🏠 房奴一生 | 🌊 归园田居 | ⚡ 内卷之王
+ *   🎲 创业先锋   | 💊 病困交加 | 🌟 城市传奇 | 😔 默默无闻
+ */
+
+// ====== 缎带定义 ======
+// 每条缎带含：检查条件函数 + 互斥优先级（数字越小越优先匹配）
+var LIFE_RIBBONS = [
+  {
+    id: "city_legend",
+    name: "城市传奇",
+    icon: "🌟",
+    desc: "你的故事在这座城市广为流传，成为一代传奇。",
+    priority: 1,
+    color: "#FFD700",
+    check: function (st, stats) {
+      return stats.victoryType === "celebrity" || stats.victoryType === "money";
+    },
+  },
+  {
+    id: "entrepreneur",
+    name: "创业先锋",
+    icon: "🎲",
+    desc: "从零起步，你在创业的浪潮中搏出了自己的一片天。",
+    priority: 2,
+    color: "#FF6B35",
+    check: function (st, stats) {
+      return (
+        st.startup &&
+        st.startup.company &&
+        (st.startup.company.stage >= 2 ||
+          stats.victoryType === "merchant" ||
+          (st.startup.company.fundingRound &&
+            st.startup.company.fundingRound >= 2))
+      );
+    },
+  },
+  {
+    id: "work_emperor",
+    name: "打工皇帝",
+    icon: "💼",
+    desc: "你在职场上一路高歌，从底层爬到了金字塔的顶端。",
+    priority: 3,
+    color: "#4A90D9",
+    check: function (st, stats) {
+      return (
+        st.corporate &&
+        (st.corporate.rank === "P10" ||
+          st.corporate.rank === "P9" ||
+          stats.victoryType === "p10")
+      );
+    },
+  },
+  {
+    id: "civil_service",
+    name: "考公上岸",
+    icon: "📚",
+    desc: "你成功考上了公务员，端起了传说中的铁饭碗。",
+    priority: 4,
+    color: "#50C878",
+    check: function (st, stats) {
+      return st.flags._crisis35Path === "exam" || st.flags._passedCivilService;
+    },
+  },
+  {
+    id: "involution_king",
+    name: "内卷之王",
+    icon: "⚡",
+    desc: "你把内卷做到了极致——996是常态，007也不在话下。",
+    priority: 5,
+    color: "#E74C3C",
+    check: function (st, stats) {
+      return (
+        stats.totalWorkDays >= 500 &&
+        stats.avgFatigue >= 60 &&
+        st.flags._crisis35Path === "career"
+      );
+    },
+  },
+  {
+    id: "mortgage_slave",
+    name: "房奴一生",
+    icon: "🏠",
+    desc: "大半辈子都在还房贷，但你终于有了自己的家。",
+    priority: 6,
+    color: "#8B6914",
+    check: function (st, stats) {
+      var props = (st.investment && st.investment.properties) || [];
+      return props.some(function (p) {
+        return p.isSelfOccupied && p.mortgageRemaining > 0;
+      });
+    },
+  },
+  {
+    id: "street_survivor",
+    name: "街头生存者",
+    icon: "🏗️",
+    desc: "你在最底层摸爬滚打，靠双手在这座城市活了下来。",
+    priority: 7,
+    color: "#95A5A6",
+    check: function (st, stats) {
+      return (
+        stats.victoryType === "master" ||
+        (stats.daysSurvived >= 365 &&
+          stats.maxCash < 50000 &&
+          !stats.victoryType)
+      );
+    },
+  },
+  {
+    id: "lying_flat",
+    name: "躺平达人",
+    icon: "🍵",
+    desc: "不卷了。你选择了佛系人生，怡然自得。",
+    priority: 8,
+    color: "#27AE60",
+    check: function (st, stats) {
+      return (
+        stats.daysSurvived >= 200 &&
+        stats.avgFatigue <= 30 &&
+        st.flags._crisis35Path === "lieflat"
+      );
+    },
+  },
+  {
+    id: "returning_home",
+    name: "归园田居",
+    icon: "🌊",
+    desc: "看遍城市繁华后，你选择回到故乡，过另一种生活。",
+    priority: 9,
+    color: "#2ECC71",
+    check: function (st, stats) {
+      return st.flags._returnedHometown || st.flags._crisis35Path === "lieflat";
+    },
+  },
+  {
+    id: "sick_and_broke",
+    name: "病困交加",
+    icon: "💊",
+    desc: "身体垮了，钱也没了。这座城市终究没有善待你。",
+    priority: 10,
+    color: "#E67E22",
+    check: function (st, stats) {
+      return (
+        !stats.victoryType &&
+        (stats.finalHealth <= 20 ||
+          (st.status && st.status.illness && st.status.illness.length >= 3))
+      );
+    },
+  },
+  {
+    id: "skill_master",
+    name: "百艺通",
+    icon: "🎓",
+    desc: "你花了大量时间精进各种技能，成为不可多得的通才。",
+    priority: 11,
+    color: "#9B59B6",
+    check: function (st, stats) {
+      var highSkills = 0;
+      if (st.skills) {
+        for (var k in st.skills) {
+          if (st.skills[k] && st.skills[k].level >= 70) highSkills++;
+        }
+      }
+      return highSkills >= 5;
+    },
+  },
+  {
+    id: "nobody",
+    name: "默默无闻",
+    icon: "😔",
+    desc: "你来过这座城市，但没有留下太多痕迹。",
+    priority: 99,
+    color: "#7F8C8D",
+    check: function () {
+      return true; // 兜底：总是匹配
+    },
+  },
+];
+
+// ====== 统计数据收集 ======
+
+/** 从 state 中提取用于缎带判定的统计数据 */
+function collectLifeStats(state) {
+  var inv = state.investment || {};
+  var stockVal = 0;
+  if (inv.stockHoldings && inv.stockMarket) {
+    inv.stockHoldings.forEach(function (h) {
+      var m = inv.stockMarket[h.symbol];
+      stockVal += (m ? m.price : 0) * (h.shares || 0);
+    });
+  }
+  var propVal = (inv.properties || []).reduce(function (s, p) {
+    return s + (p.currentPrice || p.buyPrice || 0);
+  }, 0);
+  var btcVal = (inv.btcPrice || 0) * (inv.btcHoldings || 0);
+  var totalAssets =
+    (state.resources.cash || 0) +
+    (state.resources.bankBalance || 0) +
+    stockVal +
+    propVal +
+    btcVal;
+
+  // 统计高好感NPC数量
+  var highAffinityNPCs = 0;
+  if (state.npcRelations) {
+    for (var id in state.npcRelations) {
+      if ((state.npcRelations[id].affinity || 0) >= 50) highAffinityNPCs++;
+    }
+  }
+
+  // 统计高等级技能数量
+  var highSkills = 0;
+  if (state.skills) {
+    for (var k in state.skills) {
+      if (state.skills[k] && state.skills[k].level >= 60) highSkills++;
+    }
+  }
+
+  // 交易总利润
+  var tradeProfit = (state.trade && state.trade.totalProfit) || 0;
+
+  // 工作天数估算（通过 flags 中的工作记录）
+  var totalWorkDays =
+    (state.flags._totalWorkDays || 0) + (state.player.day || 0);
+
+  // 平均疲劳估算
+  var avgFatigue = state.needs ? state.needs.fatigue || 0 : 0;
+
+  return {
+    victoryType: state.flags.victoryType || null,
+    daysSurvived: state.player.day || 0,
+    finalHealth: (state.status && state.status.health) || 100,
+    finalCash: state.resources.cash || 0,
+    maxCash: state.flags._maxCashEver || state.resources.cash || 0,
+    totalAssets: totalAssets,
+    tradeProfit: tradeProfit,
+    totalWorkDays: totalWorkDays,
+    avgFatigue: avgFatigue,
+    highAffinityNPCs: highAffinityNPCs,
+    highSkills: highSkills,
+    playerAge: state.player.age || 20,
+    playerFame: state.player.fame || 0,
+    moralScore: state.flags._moralScore || 0,
+    difficulty: state._difficulty || "normal",
+  };
+}
+
+// ====== 缎带判定 ======
+
+/** 在游戏结束时调用，返回匹配的缎带 */
+function determineLifeRibbon(state) {
+  var stats = collectLifeStats(state);
+  // 按优先级排序
+  var sorted = LIFE_RIBBONS.slice().sort(function (a, b) {
+    return a.priority - b.priority;
+  });
+  for (var i = 0; i < sorted.length; i++) {
+    try {
+      if (sorted[i].check(state, stats)) {
+        return { ribbon: sorted[i], stats: stats };
+      }
+    } catch (e) {
+      // 条件检查出错则跳过
+    }
+  }
+  return { ribbon: sorted[sorted.length - 1], stats: stats };
+}
+
+// ====== localStorage 持久化 ======
+
+var RIBBON_KEY = "__lifeRibbons";
+
+/** 获取已获得的缎带列表 */
+function getEarnedRibbons() {
+  try {
+    var raw = localStorage.getItem(RIBBON_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/** 记录新获得的缎带（去重） */
+function recordRibbon(ribbonId, stats) {
+  var earned = getEarnedRibbons();
+  var existing = earned.find(function (r) {
+    return r.id === ribbonId;
+  });
+  if (!existing) {
+    earned.push({
+      id: ribbonId,
+      earnedDate: Date.now(),
+      playthroughs: 1,
+    });
+  } else {
+    existing.playthroughs = (existing.playthroughs || 1) + 1;
+    existing.earnedDate = Date.now();
+  }
+  try {
+    localStorage.setItem(RIBBON_KEY, JSON.stringify(earned));
+  } catch (e) {
+    // 存储失败忽略
+  }
+  return !existing; // 返回 true 表示新获得
+}
+
+/** 获取缎带收集进度 */
+function getRibbonProgress() {
+  var earned = getEarnedRibbons();
+  var earnedIds = earned.map(function (r) {
+    return r.id;
+  });
+  return {
+    total: LIFE_RIBBONS.length,
+    earned: earned.length,
+    unearned: LIFE_RIBBONS.filter(function (r) {
+      return earnedIds.indexOf(r.id) === -1;
+    }),
+    earnedList: earned,
+    allRibbons: LIFE_RIBBONS.map(function (r) {
+      return {
+        id: r.id,
+        name: r.name,
+        icon: r.icon,
+        desc: r.desc,
+        color: r.color,
+        earned: earnedIds.indexOf(r.id) !== -1,
+      };
+    }),
+  };
+}
+
+// ====== 全局挂载 ======
+if (typeof window !== "undefined") {
+  window.LIFE_RIBBONS = LIFE_RIBBONS;
+  window.collectLifeStats = collectLifeStats;
+  window.determineLifeRibbon = determineLifeRibbon;
+  window.recordRibbon = recordRibbon;
+  window.getEarnedRibbons = getEarnedRibbons;
+  window.getRibbonProgress = getRibbonProgress;
+}
+</script>
+    <!-- v3.1: Story Chapter System (3-chapter main story checkpoints) -->
+    <script>/**
+ * 主线章节系统 — 3 章式人生主线
+ *
+ * 设计参考：Stardew Valley 祖父评价信（Year 3 检查点）
+ *           《大多数》阶段递进（街头→立足→选择）
+ *           This War of Mine 叙事检查点
+ *           BitLife 人生阶段分类
+ *
+ * 核心理念：开放沙盒游戏缺少"方向感"。本系统在关键时间节点
+ * 设置叙事检查点，回顾玩家当前的人生状态，给出方向指引和
+ * 阶段性评价，但不强制改变游戏玩法——纯叙事层增强。
+ *
+ * 三章结构（按天数推进）：
+ *   第一章「生存」(第30天) — 你在这座城市活下来了吗？
+ *   第二章「立足」(第180天) — 你找到自己的位置了吗？
+ *   第三章「选择」(第365天) — 你要过什么样的人生？
+ *
+ * 每章检查点：
+ *   - 弹出不可跳过的叙事弹窗
+ *   - 展示当前人生状态摘要
+ *   - 给出基于玩家行为的"人生方向"提示
+ *   - 记录 chapter flag 供后续叙事引用
+ *   - 第三章给出 4 条结局路线预览（创业/体制/出国/躺平）
+ */
+
+// ====== 章节定义 ======
+
+var STORY_CHAPTERS = [
+  {
+    id: "chapter1_survival",
+    title: "第一章 · 生存",
+    triggerDay: 30,
+    flag: "_ch1Done",
+    icon: "🏕️",
+    intro: "三十天了。你站在城中村的街角，看着人来人往。",
+    epilogues: [
+      {
+        id: "survive_debt",
+        condition: function (st) {
+          return (st.resources.villageDebt || 0) > 3000;
+        },
+        text: "村长的债还压在心头。这座城市不会等你，利滚利的数字每天都在涨。",
+        hint: "先想办法还债，别让它拖垮你。",
+      },
+      {
+        id: "survive_broke",
+        condition: function (st) {
+          return (
+            (st.resources.cash || 0) < 200 &&
+            (st.resources.villageDebt || 0) < 1000
+          );
+        },
+        text: "兜里没几个钱了，但你总算在这座城市站稳了脚跟。活着，就是第一步。",
+        hint: "攒点钱，找份稳定的工作。",
+      },
+      {
+        id: "survive_stable",
+        condition: function (st) {
+          return (
+            (st.resources.cash || 0) >= 2000 && (st.needs.hunger || 0) >= 50
+          );
+        },
+        text: "你不再为明天吃什么发愁了。这座城市开始对你露出善意的一面。",
+        hint: "是时候想想更长远的事了。",
+      },
+      {
+        id: "survive_default",
+        condition: function () {
+          return true;
+        },
+        text: "三十天，说长不长，说短不短。你还在这里，这本身就是一种胜利。",
+        hint: "继续探索这座城市，机会无处不在。",
+      },
+    ],
+  },
+  {
+    id: "chapter2_foothold",
+    title: "第二章 · 立足",
+    triggerDay: 180,
+    flag: "_ch2Done",
+    icon: "🏗️",
+    intro: "半年过去了。你开始觉得，这座城市也许真的能容得下你。",
+    epilogues: [
+      {
+        id: "foothold_startup",
+        condition: function (st) {
+          return st.startup && st.startup.company;
+        },
+        text: "你创办的公司虽然还在风雨中飘摇，但毕竟是你自己的事业。创业这条路，走上去就没有回头。",
+        hint: "把公司做大做强，或者...及时止损？",
+      },
+      {
+        id: "foothold_corporate",
+        condition: function (st) {
+          return st.player.phase === "corporate" && st.corporate;
+        },
+        text: "你在职场上混得风生水起，职级一路攀升。但夜深人静时，你偶尔会想：这就是我要的生活吗？",
+        hint: "职场之外，还有更广阔的世界。",
+      },
+      {
+        id: "foothold_investor",
+        condition: function (st) {
+          var inv = st.investment || {};
+          var stockVal = 0;
+          if (inv.stockHoldings && inv.stockMarket) {
+            inv.stockHoldings.forEach(function (h) {
+              var m = inv.stockMarket[h.symbol];
+              stockVal += (m ? m.price : 0) * (h.shares || 0);
+            });
+          }
+          return stockVal >= 50000;
+        },
+        text: "你的投资组合已经初具规模。钱生钱的游戏，你已经摸到了门道。",
+        hint: "注意风险——市场不会永远只涨不跌。",
+      },
+      {
+        id: "foothold_npc",
+        condition: function (st) {
+          var count = 0;
+          if (st.npcRelations) {
+            for (var id in st.npcRelations) {
+              if ((st.npcRelations[id].affinity || 0) >= 60) count++;
+            }
+          }
+          return count >= 2;
+        },
+        text: "你在这座城市交到了真正的朋友。有人脉的城市，才不是异乡。",
+        hint: "维系好这些关系，它们会在关键时刻帮你。",
+      },
+      {
+        id: "foothold_default",
+        condition: function () {
+          return true;
+        },
+        text: "半年了。你在这座城市有了自己的节奏——虽然算不上多好，但至少是自己的。",
+        hint: "人生的转折点，也许就在下一个路口。",
+      },
+    ],
+  },
+  {
+    id: "chapter3_choice",
+    title: "第三章 · 选择",
+    triggerDay: 365,
+    flag: "_ch3Done",
+    icon: "🌌",
+    intro: "一年了。你站在天台上，看着脚下灯火通明的城市。这一年，值吗？",
+    epilogues: [
+      {
+        id: "choice_entrepreneur",
+        condition: function (st) {
+          return (
+            st.startup && st.startup.company && st.startup.company.stage >= 1
+          );
+        },
+        text: "你的公司还在运转。创业这条路，你已经走了很远，也许...该走到底？",
+        hint: "继续创业，或寻找新的可能。",
+        route: "entrepreneur",
+      },
+      {
+        id: "choice_civil_service",
+        condition: function (st) {
+          return (
+            st.flags._crisis35Path === "exam" || st.flags._passedCivilService
+          );
+        },
+        text: "你选择了考公这条路。体制内的安稳，是多少人梦寐以求的。",
+        hint: "铁饭碗在手，但人生不止于此。",
+        route: "civil_service",
+      },
+      {
+        id: "choice_wealth",
+        condition: function (st) {
+          var total =
+            (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+          return total >= 200000;
+        },
+        text: "你攒下了一笔可观的财富。有了底气，就有了选择的权利。",
+        hint: "财务自由不是终点，而是新的起点。",
+        route: "wealth",
+      },
+      {
+        id: "choice_lying_flat",
+        condition: function (st) {
+          return (
+            st.flags._crisis35Path === "lieflat" ||
+            ((st.needs.fatigue || 0) <= 20 && (st.player.day || 0) >= 365)
+          );
+        },
+        text: "你选择了不那么拼。这座城市教会你：不是所有事都值得拼命。",
+        hint: "躺平也是一种智慧。但也许，还能做点什么？",
+        route: "lying_flat",
+      },
+      {
+        id: "choice_default",
+        condition: function () {
+          return true;
+        },
+        text: "一年了。你还在这座城市，还在寻找答案。也许答案本身并不重要——重要的是，你还在找。",
+        hint: "新的一年，新的可能。",
+        route: "open",
+      },
+    ],
+  },
+];
+
+// ====== 章节检查与触发 ======
+
+/**
+ * 每日管线调用：检查是否到了章节触发点
+ * 返回 true 表示触发了某个章节（调用方可据此暂停管线）
+ */
+function checkStoryChapter(state) {
+  if (!state.player || !state.player.day) return false;
+  if (state.flags.gameOver || state.flags.victory) return false;
+
+  for (var i = 0; i < STORY_CHAPTERS.length; i++) {
+    var ch = STORY_CHAPTERS[i];
+    if (state.player.day >= ch.triggerDay && !state.flags[ch.flag]) {
+      _triggerChapter(state, ch);
+      return true;
+    }
+  }
+  return false;
+}
+
+/** 触发章节弹窗 */
+function _triggerChapter(state, ch) {
+  state.flags[ch.flag] = true;
+  state.flags._currentStoryChapter = ch.id;
+
+  // 匹配最适合的结语
+  var epilogue = ch.epilogues[0];
+  for (var i = 0; i < ch.epilogues.length; i++) {
+    if (ch.epilogues[i].condition(state)) {
+      epilogue = ch.epilogues[i];
+      break;
+    }
+  }
+
+  // 记录选择的路线（第三章）
+  if (ch.id === "chapter3_choice" && epilogue.route) {
+    state.flags._lifeRoute = epilogue.route;
+  }
+
+  // 构建弹窗内容
+  var content = ch.intro + "\n\n" + epilogue.text + "\n\n💡 " + epilogue.hint;
+
+  // 统计当前人生状态
+  var stats = _collectChapterStats(state);
+  var statLine =
+    "📊 人生状态：第" +
+    state.player.day +
+    "天 | " +
+    (state.player.age || 20) +
+    "岁 | 现金¥" +
+    (state.resources.cash || 0) +
+    " | 名气" +
+    (state.player.fame || 0) +
+    " | 技能" +
+    stats.highSkills +
+    "项达标";
+
+  // 使用现有的弹窗系统
+  if (typeof showEventModal === "function") {
+    state._pendingEvent = {
+      id: ch.id,
+      icon: ch.icon,
+      title: ch.title,
+      story: content + "\n\n" + statLine,
+      choices: [
+        {
+          text: "继续前行",
+          hint: "人生还在继续",
+          apply: function (st) {
+            StateManager.addMessage(
+              ch.icon +
+                " " +
+                ch.title +
+                " — " +
+                epilogue.text.substring(0, 30) +
+                "...",
+              "story",
+            );
+          },
+        },
+      ],
+    };
+    setTimeout(function () {
+      showEventModal();
+    }, 100);
+  } else {
+    StateManager.addMessage(
+      ch.icon + " " + ch.title + " — " + epilogue.text,
+      "story",
+    );
+  }
+}
+
+/** 收集章节统计数据 */
+function _collectChapterStats(state) {
+  var highSkills = 0;
+  if (state.skills) {
+    for (var k in state.skills) {
+      if (state.skills[k] && state.skills[k].level >= 60) highSkills++;
+    }
+  }
+  var npcFriends = 0;
+  if (state.npcRelations) {
+    for (var id in state.npcRelations) {
+      if ((state.npcRelations[id].affinity || 0) >= 50) npcFriends++;
+    }
+  }
+  return {
+    highSkills: highSkills,
+    npcFriends: npcFriends,
+    totalAssets:
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0),
+  };
+}
+
+// ====== 获取章节进度 ======
+
+function getStoryChapterProgress(state) {
+  var current = 0;
+  var total = STORY_CHAPTERS.length;
+  for (var i = 0; i < STORY_CHAPTERS.length; i++) {
+    if (state.flags[STORY_CHAPTERS[i].flag]) current++;
+  }
+  var nextChapter = null;
+  for (var i = 0; i < STORY_CHAPTERS.length; i++) {
+    if (!state.flags[STORY_CHAPTERS[i].flag]) {
+      nextChapter = {
+        title: STORY_CHAPTERS[i].title,
+        triggerDay: STORY_CHAPTERS[i].triggerDay,
+        daysUntil: STORY_CHAPTERS[i].triggerDay - (state.player.day || 0),
+      };
+      break;
+    }
+  }
+  return {
+    current: current,
+    total: total,
+    nextChapter: nextChapter,
+    lifeRoute: state.flags._lifeRoute || null,
+  };
+}
+
+// ====== 全局挂载 ======
+if (typeof window !== "undefined") {
+  window.STORY_CHAPTERS = STORY_CHAPTERS;
+  window.checkStoryChapter = checkStoryChapter;
+  window.getStoryChapterProgress = getStoryChapterProgress;
+}
+</script>
+    <!-- v3.1: Cross-System Events (NPC/sector/world state linkage) -->
+    <script>/**
+ * 跨系统联动事件 — 提升游戏内容关联度
+ *
+ * 设计参考：
+ *   - This War of Mine：NPC角色互动影响事件
+ *   - 《大多数》：行业热度影响街头生存
+ *   - Capitalism Lab：经济系统交叉反馈
+ *   - Stardew Valley：NPC关系解锁特殊事件
+ *
+ * 核心理念：让玩家感觉各系统不是孤立的——
+ *   NPC关系影响事件选项、行业热度影响街头收益、
+ *   世界状态影响可用事件、道德选择产生长期回响。
+ *
+ * 接入方式：通过 setTimeout 在所有脚本加载后注入到 RANDOM_EVENTS
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossSystemLoaded) return;
+  RANDOM_EVENTS._crossSystemLoaded = true;
+
+  var CROSS_EVENTS = [
+    // === NPC关系联动事件 ===
+    {
+      id: "npc_rescue_aunt_wang",
+      phase: "street",
+      icon: "🏠",
+      title: "王大婶的救急",
+      story: `收工时王大婶急匆匆跑来："孩子，我家水管爆了，满屋子水！你能不能帮忙修修？"\n你看了看她焦急的样子，想起她平日里对你的照顾。`,
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.aunt_wang &&
+          (st.npcRelations.aunt_wang.affinity || 0) >= 30 &&
+          st.player.day > 10
+        );
+      },
+      choices: [
+        {
+          text: "🔧 帮她修水管",
+          hint: "花1个AP，好感+10",
+          apply: function (st) {
+            if (st.skills && st.skills.repair) {
+              var level = st.skills.repair.level || 0;
+              if (level >= 20) {
+                st.npcRelations.aunt_wang.affinity = Math.min(
+                  100,
+                  (st.npcRelations.aunt_wang.affinity || 0) + 12,
+                );
+                st.skills.repair.xp = (st.skills.repair.xp || 0) + 30;
+                StateManager.addMessage(
+                  "🔧 你三两下就修好了水管。王大婶感激得不行，好感+12。",
+                  "success",
+                );
+              } else {
+                st.npcRelations.aunt_wang.affinity = Math.min(
+                  100,
+                  (st.npcRelations.aunt_wang.affinity || 0) + 8,
+                );
+                StateManager.addMessage(
+                  "🔧 你笨手笨脚修好了，虽然弄了一身水。王大婶还是谢谢你，好感+8。",
+                  "success",
+                );
+              }
+            } else {
+              st.npcRelations.aunt_wang.affinity = Math.min(
+                100,
+                (st.npcRelations.aunt_wang.affinity || 0) + 5,
+              );
+              StateManager.addMessage(
+                "🔧 你不太会修，但帮着递工具也帮上忙了。好感+5。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "💰 给她¥100找修水工",
+          hint: "花钱省事",
+          cost: 100,
+          apply: function (st) {
+            st.resources.cash -= 100;
+            st.npcRelations.aunt_wang.affinity = Math.min(
+              100,
+              (st.npcRelations.aunt_wang.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              "💰 你掏了¥100让她找专业修水工。王大婶嘴上说不用，心里记着你的好。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 我自己都顾不上",
+          hint: "关系可能变差",
+          apply: function (st) {
+            st.npcRelations.aunt_wang.affinity = Math.max(
+              0,
+              (st.npcRelations.aunt_wang.affinity || 0) - 8,
+            );
+            StateManager.addMessage(
+              "🚶 你说实在没空。王大婶脸上的笑僵了一下，转身走了。好感-8。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    // === 行业热度联动事件 ===
+    {
+      id: "sector_heat_temp_job",
+      phase: "street",
+      icon: "📊",
+      title: "风口来了",
+      story: `手机弹了条推送："XX行业人才缺口巨大，日薪涨了50%！"\n你看了看，心跳加速——这不就是你一直在干的活吗？`,
+      conditions: function (st) {
+        if (!st._worldParams || !st._worldParams.sectorHeat) return false;
+        for (var sector in st._worldParams.sectorHeat) {
+          if (st._worldParams.sectorHeat[sector] > 1.2) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🔥 抓住风口，多接活",
+          hint: "体力消耗大，但收入翻倍",
+          apply: function (st) {
+            var bonus = Random.int(80, 200);
+            st.resources.cash += bonus;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 15);
+            StateManager.addMessage(
+              "🔥 你趁热打铁多干了一轮，多赚¥" + bonus + "。但累得够呛。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📈 研究一下哪个行业最热",
+          hint: "心智+2，获得投资灵感",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "📈 你仔细研究了行业趋势，发现科技和新能源都在升温。也许该关注下股票？",
+              "hint",
+            );
+          },
+        },
+        {
+          text: "😴 风口关我什么事",
+          hint: "佛系",
+          apply: function (st) {
+            StateManager.addMessage(
+              "😴 你把手机扔一边，翻了个身。风口吹不到你的出租屋。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // === 世界状态联动事件 ===
+    {
+      id: "market_crash_opportunity",
+      phase: "street",
+      icon: "📉",
+      title: "暴跌中的机会",
+      story:
+        "股市暴跌的新闻铺天盖地。你路过证券营业部，看到大爷大妈们一脸愁容。\n但你想起来有人说过：'别人恐惧时我贪婪'。",
+      conditions: function (st) {
+        if (!st._worldParams) return false;
+        return st._worldParams.marketMood === "bearish" && st.player.day > 20;
+      },
+      choices: [
+        {
+          text: "💰 凑点钱抄底",
+          hint: "高风险高回报",
+          cost: 50,
+          apply: function (st) {
+            st.resources.cash -= 50;
+            var result = Random.int(0, 3);
+            if (result === 0) {
+              var profit = Random.int(100, 500);
+              st.resources.cash += profit;
+              StateManager.addMessage(
+                `💰 抄底成功！你低买高卖赚了¥" + profit + "！`,
+                "success",
+              );
+            } else if (result === 1) {
+              StateManager.addMessage(
+                "📉 又跌了。你的¥50打了水漂。但至少学到了教训。",
+                "warning",
+              );
+            } else {
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+              StateManager.addMessage(
+                "📊 你研究了一番市场走势，虽然没赚到钱，但学到了不少。心智+3",
+                "hint",
+              );
+            }
+          },
+        },
+        {
+          text: "🛡️ 观望再说",
+          hint: "保本第一",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            StateManager.addMessage("🛡️ 你选择观望。不亏就是赚。", "info");
+          },
+        },
+        {
+          text: "🤝 安慰旁边的大爷",
+          hint: "善有善报",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            st.flags._moralScore = (st.flags._moralScore || 0) + 1;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            StateManager.addMessage(
+              `🤝 你拍了拍旁边大爷的肩："别急，市场总会好起来的。"大爷感激地看着你。`,
+              "success",
+            );
+          },
+        },
+      ],
+    },
+    // === 道德选择联动事件 ===
+    {
+      id: "moral_finding_money",
+      phase: "street",
+      icon: "💵",
+      title: "地上有一沓钱",
+      story:
+        "路过ATM机时，你注意到地上有一沓现金——目测至少¥500。四下无人，监控似乎也坏了。\n你心跳加速。",
+      conditions: function (st) {
+        return st.player.day > 5 && !st.flags._foundATMCash;
+      },
+      choices: [
+        {
+          text: "💸 捡了就走",
+          hint: "¥500，但良心不安",
+          apply: function (st) {
+            st.flags._foundATMCash = true;
+            var amount = Random.int(300, 800);
+            st.resources.cash += amount;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
+            st.flags._moralScore = (st.flags._moralScore || 0) - 3;
+            st.flags._keptFoundMoney = true;
+            StateManager.addMessage(
+              `💸 你捡起钱快步走了。¥" + amount + "到手，但心里有点虚...`,
+              "warning",
+            );
+            // 后续埋点：10天后可能遇到失主
+            st.flags._foundMoneyDay = st.player.day;
+          },
+        },
+        {
+          text: "🏪 交给银行",
+          hint: "品德高尚",
+          apply: function (st) {
+            st.flags._foundATMCash = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            st.flags._moralScore = (st.flags._moralScore || 0) + 3;
+            st.flags._returnedFoundMoney = true;
+            StateManager.addMessage(
+              "🏪 你把钱交给了银行。工作人员登记后夸你品德高尚。名气+5，心情+15。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📸 发到业主群问问",
+          hint: "中间路线",
+          apply: function (st) {
+            st.flags._foundATMCash = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            st.flags._moralScore = (st.flags._moralScore || 0) + 1;
+            StateManager.addMessage(
+              "📸 你拍了照发到业主群。半天后有人来认领，给了你¥50感谢费。心情+5。",
+              "success",
+            );
+            st.resources.cash += 50;
+          },
+        },
+      ],
+    },
+    // === NPC协同事件 ===
+    {
+      id: "npc_synergy_old_zhou_deal",
+      phase: "street",
+      icon: "🤝",
+      title: "老周的废品渠道",
+      story: `老周神秘兮兮地拉你到一边："我有个门路，一个工地的废铜废铁没人收。你要是能拉走，咱俩分。"\n你看了看老周认真的表情，这不像是开玩笑。`,
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.old_zhou &&
+          (st.npcRelations.old_zhou.affinity || 0) >= 40 &&
+          st.player.day > 15
+        );
+      },
+      choices: [
+        {
+          text: "🚶 去工地拉废品",
+          hint: "需要体力，但利润可观",
+          apply: function (st) {
+            var profit = Random.int(150, 400);
+            var zhouShare = Math.floor(profit * 0.3);
+            st.resources.cash += profit - zhouShare;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 8,
+            );
+            StateManager.addMessage(
+              "🤝 你拉了一车废铜回来，卖了¥" +
+                (profit - zhouShare) +
+                "。老周那份¥" +
+                zhouShare +
+                "也给了他。好感+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💰 出¥100入伙费",
+          hint: "花钱但省力",
+          cost: 100,
+          apply: function (st) {
+            st.resources.cash -= 100;
+            var profit = Random.int(100, 250);
+            st.resources.cash += profit;
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              `💰 你出了¥100入伙费，分到¥" + profit + "。老周拍了拍你的肩。`,
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 这个不太合规吧",
+          hint: "谨慎行事",
+          apply: function (st) {
+            st.npcRelations.old_zhou.affinity = Math.max(
+              0,
+              (st.npcRelations.old_zhou.affinity || 0) - 3,
+            );
+            StateManager.addMessage(
+              `🤔 你犹豫了一下没接。老周叹了口气："也是，你比我想得多。"好感-3。`,
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < CROSS_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(CROSS_EVENTS[i]);
   }
 })();
 </script>
@@ -49624,6 +50866,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 固定工作（上班族）每日 tick ===
+  {
+    name: "career_job_daily",
+    fn: function (state) {
+      if (typeof tickCareerJobDaily === "function") {
+        tickCareerJobDaily(state);
+      }
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
@@ -49712,6 +50964,10 @@ const DAILY_PIPELINE = [
       // 春节7天特殊活动
       if (typeof checkSpringFestivalEvents === "function") {
         checkSpringFestivalEvents(state);
+      }
+      // v3.1: 清明/中秋深度事件
+      if (typeof checkFestivalDeepEvents === "function") {
+        checkFestivalDeepEvents(state);
       }
     },
   },
@@ -49988,6 +51244,16 @@ const DAILY_PIPELINE = [
       }
       if (typeof check35Crisis === "function") {
         check35Crisis(state);
+      }
+    },
+  },
+
+  // === v3.1：主线章节检查 ===
+  {
+    name: "story_chapter_check",
+    fn: function (state) {
+      if (typeof checkStoryChapter === "function") {
+        checkStoryChapter(state);
       }
     },
   },
@@ -57311,47 +58577,47 @@ const STARTUP_INDUSTRIES = {
   tech: {
     name: "科技",
     icon: "💻",
-    baseValuation: 2000000,
-    avgBurnRate: 80000,
+    baseValuation: 1400000,
+    avgBurnRate: 120000,
     keySkills: ["coding", "english"],
     desc: "互联网/软件/AI，高增长高波动",
   },
   consumer: {
     name: "消费",
     icon: "🛍️",
-    baseValuation: 1000000,
-    avgBurnRate: 50000,
+    baseValuation: 700000,
+    avgBurnRate: 80000,
     keySkills: ["sales", "cooking"],
     desc: "零售/餐饮/品牌，稳定但增长慢",
   },
   finance: {
     name: "金融科技",
     icon: "💳",
-    baseValuation: 3000000,
-    avgBurnRate: 100000,
+    baseValuation: 2100000,
+    avgBurnRate: 150000,
     keySkills: ["accounting", "management"],
     desc: "支付/理财/保险科技，政策敏感",
   },
   healthcare: {
     name: "医疗健康",
     icon: "🏥",
-    baseValuation: 2500000,
-    avgBurnRate: 90000,
+    baseValuation: 1750000,
+    avgBurnRate: 130000,
     keySkills: ["management"],
     desc: "医疗/医药/健康服务，监管严格",
   },
   education: {
     name: "教育",
     icon: "📚",
-    baseValuation: 800000,
-    avgBurnRate: 40000,
+    baseValuation: 560000,
+    avgBurnRate: 110000,
     keySkills: ["english", "management"],
     desc: "培训/在线教育/内容，受政策影响大",
   },
   manufacturing: {
     name: "制造",
     icon: "🏭",
-    baseValuation: 1500000,
+    baseValuation: 1050000,
     avgBurnRate: 70000,
     keySkills: ["repair", "electrician"],
     desc: "硬件/智能设备/新材料，重资产",
@@ -59517,7 +60783,7 @@ function getStartupTriggerConditions(state) {
       corporate: { rank: "P5", cash: 20000, label: "技术移民转创业" },
     },
     second_gen: {
-      street: { cash: 100000, label: "家里支持启动资金" },
+      street: { cash: 200000, label: "家里支持启动资金" },
       corporate: { rank: "P5", cash: 100000, label: "家里支持启动资金" },
     },
     midlife_crisis: {
@@ -59542,12 +60808,12 @@ function getStartupTriggerConditions(state) {
     rankMet = pIdx >= reqIdx;
   }
   return {
-    cashRequired: pc.cash || 50000,
+    cashRequired: pc.cash || 200000,
     rankRequired: pc.rank || null,
     label: pc.label || "资源积累",
     cashOk: cash >= (pc.cash || 50000),
     rankOk: rankMet,
-    canRegister: cash >= 50000, // 注册硬门槛（启动金）
+    canRegister: cash >= 200000, // 注册硬门槛（启动金）
     met: cash >= (pc.cash || 50000) && rankMet,
   };
 }
@@ -59557,7 +60823,7 @@ function showStartupRegisterModal() {
   var state = StateManager.getState();
   var cash = (state.resources && state.resources.cash) || 0;
   if (cash < 50000) {
-    StateManager.addMessage("⚠️ 注册公司需要 ¥50,000 启动资金。", "warning");
+    StateManager.addMessage("⚠️ 注册公司需要 ¥200,000 启动资金。", "warning");
     return;
   }
 
@@ -59582,7 +60848,7 @@ function showStartupRegisterModal() {
 
   var bodyHtml =
     '<div style="font-size:13px;">' +
-    "<p>注册公司需缴纳 <strong>¥50,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
+    "<p>注册公司需缴纳 <strong>¥200,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
     '<div style="margin:12px 0;">' +
     '<label style="font-weight:600;font-size:12px;">🏢 公司名称</label>' +
     '<input id="startup-name-input" type="text" placeholder="输入公司名（可选）" maxlength="16" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
@@ -59650,7 +60916,7 @@ function registerStartup(state, name, industry, description) {
   // 检查触发条件
   const cash = state.resources.cash;
   const day = state.player.day;
-  const minCash = 50000; // 最低启动资金
+  const minCash = 200000; // 最低启动资金
 
   if (cash < minCash) {
     return {
@@ -61577,6 +62843,25 @@ function tickStartup(state, tickType) {
     Math.round(DAILY_MARKETING_BASE * timeMult) +
     Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
   totalExpenses += marketing;
+
+  // ====== 新增运营成本（使创业更难更真实）=======
+  // 水电网络费 ~¥50/天
+  const utilities = Math.round(50 * timeMult);
+  totalExpenses += utilities;
+
+  // 法律合规费 ~¥30/天（工商年检、商标、许可证等）
+  const legalCompliance = Math.round(30 * timeMult);
+  totalExpenses += legalCompliance;
+
+  // 杂项（办公耗材、茶水、清洁等）~¥25/天
+  const miscOps = Math.round(25 * timeMult);
+  totalExpenses += miscOps;
+
+  // 社保公积金（每个员工额外40%用工成本）
+  const socialInsurance = company.employees.reduce(function (sum, emp) {
+    return sum + Math.round((emp.salary / DAILY_SALARY_DIV) * 0.4 * timeMult);
+  }, 0);
+  totalExpenses += socialInsurance;
 
   company.revenue = totalRevenue;
   company.expenses = totalExpenses;
@@ -68524,9 +69809,9 @@ function renderStartupTab(state, parent) {
       '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>¥50,000</span></div>' +
       "</div>" +
       '<button class="btn btn-lg btn-primary" onclick="showStartupRegisterModal()" ' +
-      (cashNow >= 50000 ? "" : 'style="opacity:0.5;" disabled') +
+      (cashNow >= 200000 ? "" : 'style="opacity:0.5;" disabled') +
       ">" +
-      (cashNow >= 50000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
+      (cashNow >= 200000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
       "</button>" +
       '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);">注册费 ¥50,000，不限阶段和天数，随时可注册</div>' +
       "</div>";
@@ -88760,14 +90045,19 @@ function renderTabBar(state) {
       // 企业命运生态 — 后台系统，不单独显示Tab
       // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
       btn.style.display = "none";
-    } else if (btn.dataset.tab === "startup") {
-      // v3.0 修复：创业Tab 在街头阶段也显示（即便未注册公司），
-      // 让玩家从一开始就知道有创业系统。点击后 renderStartupTab 会显示注册条件引导。
-      // 仅在玩家进入公司阶段且未自己创业时隐藏（避免与 corp Tab 重复）
+    } else if (btn.dataset.tab === "career_dev") {
+      // 事业发展Tab：街头阶段显示上班族工作引导，公司阶段不冲突时显示
       if (
         state.player.phase === "corporate" &&
         (!state.startup || state.startup.status === "none")
       ) {
+        btn.style.display = "none";
+      } else {
+        btn.style.display = "";
+      }
+    } else if (btn.dataset.tab === "social") {
+      // 社交Tab在公司阶段才显示（包含职场社交+家庭）
+      if (state.player.phase !== "corporate") {
         btn.style.display = "none";
       } else {
         btn.style.display = "";
@@ -88798,18 +90088,15 @@ const TAB_RENDERERS = {
   corp: renderCorpTab,
   // renderInvestmentTab 在 investment.js 中定义（跨文件）
   investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
-  // renderStartupTab 在 startup.js 中定义（跨文件）
-  startup: { fnName: "renderStartupTab", fallback: "创业系统加载中..." },
+  // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
+  career_dev: { fnName: "renderCareerDevTab", fallback: "事业发展系统加载中..." },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
   achievements: renderAchievementsTab,
-  growth: renderGrowthTab,
-  workplace_social: {
-    fn: renderWorkplaceSocialTab,
-    fallback: "职场社交系统加载中...",
-  },
-  family: { fn: renderFamilyTab, fallback: "家庭系统加载中..." },
+  // 社交Tab：合并职场社交+家庭（跨文件）
+  social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
+  // 个人成长Tab（合并了原成长数据可视化+原个人成长）
   personal_growth: {
-    fn: renderPersonalGrowthTab,
+    fn: renderMergedPersonalGrowthTab,
     fallback: "个人成长系统加载中...",
   },
   // renderWikiTab 在 wiki.js 中定义（跨文件）
@@ -92962,6 +94249,239 @@ function renderPersonalGrowthTab(state, parent) {
   `;
   parent.innerHTML = html;
 }
+
+/**
+ * 合并的个人成长Tab（原数据可视化+原个人成长系统合并）
+ * 包含：数据图表 + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
+ */
+function renderMergedPersonalGrowthTab(state, parent) {
+  parent.innerHTML = '';
+  var p = state.player;
+  var pg = state.personalGrowth || {};
+
+  // ---- 子Tab导航 ----
+  var subTabs = [
+    { id: 'pg_charts', label: '📈 数据', icon: '📈' },
+    { id: 'pg_hobbies', label: '🏃 爱好', icon: '🏃' },
+    { id: 'pg_health', label: '💪 健康', icon: '💪' },
+    { id: 'pg_goals', label: '🎯 目标', icon: '🎯' },
+  ];
+  var currentSubTab = state._pgSubTab || 'pg_charts';
+
+  var nav = document.createElement('div');
+  nav.style.cssText =
+    'display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;';
+  subTabs.forEach(function (st) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (currentSubTab === st.id ? ' active' : '');
+    btn.style.cssText = 'font-size:11px;padding:4px 10px;white-space:nowrap;';
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._pgSubTab = st.id;
+      renderMergedPersonalGrowthTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:8px;';
+
+  switch (currentSubTab) {
+    case 'pg_charts':
+      renderPgCharts(state, content);
+      break;
+    case 'pg_hobbies':
+      renderPgHobbies(state, content, pg);
+      break;
+    case 'pg_health':
+      renderPgHealth(state, content, pg);
+      break;
+    case 'pg_goals':
+      renderPgGoals(state, content, pg);
+      break;
+  }
+
+  parent.appendChild(content);
+}
+
+/** 图表子面板（数据可视化） */
+function renderPgCharts(state, content) {
+  if (typeof _dataVizRenderGrowthTab === 'function') {
+    _dataVizRenderGrowthTab(state, content);
+    return;
+  }
+  var p = state.player;
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'padding:12px;';
+
+  var chartSection = document.createElement('div');
+  chartSection.style.cssText =
+    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);';
+  chartSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📈 资产变化曲线</h3>';
+  var lineCanvas = document.createElement('canvas');
+  lineCanvas.width = 520;
+  lineCanvas.height = 160;
+  lineCanvas.style.cssText = 'width:100%;height:auto;display:block;';
+  chartSection.appendChild(lineCanvas);
+  wrapper.appendChild(chartSection);
+
+  var radarSection = document.createElement('div');
+  radarSection.style.cssText =
+    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;';
+  var radarInfo = document.createElement('div');
+  radarInfo.style.cssText = 'flex:1;min-width:0;';
+  radarInfo.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🕸️ 能力雷达图</h3>';
+  var radarCanvas = document.createElement('canvas');
+  radarCanvas.width = 200;
+  radarCanvas.height = 200;
+  radarCanvas.style.cssText =
+    'width:100%;max-width:200px;height:auto;display:block;margin:0 auto;';
+  radarInfo.appendChild(radarCanvas);
+  radarSection.appendChild(radarInfo);
+  var statSummary = document.createElement('div');
+  statSummary.style.cssText = 'flex:1;min-width:0;padding-top:28px;';
+  var stats = [
+    { label: '体质', value: p.physique, color: '#c4803a' },
+    { label: '智力', value: p.intelligence, color: '#5a8ab4' },
+    { label: '敏捷', value: p.agility, color: '#5aaa5a' },
+    { label: '心智', value: p.mental, color: '#9b74b8' },
+    { label: '名气', value: (p && p.fame) || 0, color: '#d4a017' },
+  ];
+  stats.forEach(function (s) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:3px 0;';
+    row.innerHTML =
+      '<span style="font-size:11px;color:' +
+      s.color +
+      ';width:32px;">' +
+      s.label +
+      '</span><span style="font-size:11px;color:var(--text-secondary);">' +
+      Math.round(s.value) +
+      '</span>';
+    statSummary.appendChild(row);
+  });
+  radarSection.appendChild(statSummary);
+  wrapper.appendChild(radarSection);
+
+  content.appendChild(wrapper);
+  setTimeout(function () {
+    try {
+      if (typeof drawLineChart === 'function')
+        drawLineChart(
+          lineCanvas,
+          state._assetHistory || [],
+          '#c4803a',
+          '#c4803a22',
+        );
+      if (typeof drawRadarChart === 'function')
+        drawRadarChart(radarCanvas, stats, 80);
+    } catch (e) {}
+  }, 50);
+}
+
+/** 爱好子面板 */
+function renderPgHobbies(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">🏃 兴趣爱好</h2>';
+
+  var hobbyEntries = pg.hobbies ? Object.entries(pg.hobbies) : [];
+  if (hobbyEntries.length > 0) {
+    hobbyEntries.forEach(function (_a) {
+      var id = _a[0], h = _a[1];
+      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += '<strong>' + (h.name || id) + '</strong> — Lv.' + (h.level || 1);
+      if (h.totalSessions) html += ' · 练习' + h.totalSessions + '次';
+      html += '</div>';
+    });
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:12px;">还没有开始任何爱好，去行动Tab培养爱好吧！</p>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/** 健康子面板 */
+function renderPgHealth(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">💪 健康管理</h2>';
+
+  html += '<div class="section"><h3>🏥 健康指标</h3>';
+  html += '<div class="card" style="padding:12px;font-size:12px;">';
+  if (pg.health) {
+    html += '<p>💪 身体：' + (pg.health.physical || '?') + '</p>';
+    html += '<p>🧠 心理：' + (pg.health.mental || '?') + '</p>';
+    html += '<p>⚖️ 代谢：' + (pg.health.metabolic || '?') + '</p>';
+  } else {
+    html += '<p>暂无数据</p>';
+  }
+  html += '</div></div>';
+
+  if (pg.psychology) {
+    html += '<div class="section"><h3>🧠 心理状态</h3>';
+    html += '<div class="card" style="padding:12px;font-size:12px;">';
+    html += '<p>😰 压力：' + Math.round(pg.psychology.stress || 0) + '/100</p>';
+    html += '<p>😟 焦虑：' + Math.round(pg.psychology.anxiety || 0) + '/100</p>';
+    html += '<p>😔 抑郁：' + Math.round(pg.psychology.depression || 0) + '/100</p>';
+    html += '<p>😊 心情：' + Math.round(pg.psychology.mood || 0) + '/100</p>';
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/** 目标子面板 */
+function renderPgGoals(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">🎯 人生目标</h2>';
+
+  var goals = pg.lifeGoals || {};
+  var active = goals.active || [];
+  var completed = goals.completed || [];
+
+  if (active.length > 0) {
+    active.forEach(function (g) {
+      var pct =
+        g.targetValue > 0
+          ? Math.round(((g.currentValue || 0) / g.targetValue) * 100)
+          : 0;
+      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += '<strong>' + (g.description || '目标') + '</strong>';
+      html +=
+        '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px;">' +
+        '<div style="height:100%;width:' +
+        pct +
+        '%;background:var(--accent);border-radius:2px;"></div></div>';
+      html +=
+        '<span style="font-size:10px;color:var(--text-muted);">' +
+        pct +
+        '%</span>';
+      html += '</div>';
+    });
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:12px;">还没有设定人生目标。</p>';
+  }
+
+  if (completed.length > 0) {
+    html += '<div style="margin-top:16px;"><h3>✅ 已完成目标</h3>';
+    completed.forEach(function (g) {
+      html +=
+        '<div class="card" style="margin:4px 0;padding:8px;font-size:11px;">✅ ' +
+        (g.description || '已完成') +
+        '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+
 </script>
     <script>/**
  * 职场专用 UI 组件
@@ -93382,6 +94902,30 @@ function showVictoryModal() {
         " 枚声誉徽章，下局可继承加成</p>"
       : "";
 
+  // v3.1：人生缎带展示
+  var ribbonText = "";
+  if (state.flags._lifeRibbonName) {
+    var ribbonProgress =
+      typeof getRibbonProgress === "function" ? getRibbonProgress() : null;
+    var newBadge = state.flags._newRibbonEarned ? " ✨新获得！" : "";
+    ribbonText =
+      '<div style="margin-top:15px;padding:10px 15px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.05));border:1px solid rgba(255,215,0,0.3);border-radius:8px;text-align:center;">' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">🎖️ 人生缎带' +
+      newBadge +
+      "</div>" +
+      '<div style="font-size:18px;font-weight:bold;color:#FFD700;">' +
+      state.flags._lifeRibbonName +
+      "</div>" +
+      (ribbonProgress
+        ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">已收集 ' +
+          ribbonProgress.earned +
+          "/" +
+          ribbonProgress.total +
+          " 条缎带</div>"
+        : "") +
+      "</div>";
+  }
+
   showModal({
     title,
     body: `
@@ -93397,6 +94941,7 @@ function showVictoryModal() {
           <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
         </table>
         ${badgeText}
+        ${ribbonText}
       </div>`,
     buttons: [
       {
@@ -93927,6 +95472,19 @@ function showHelpModal() {
 
 function showGameOverModal() {
   const state = StateManager.getState();
+
+  // v3.1：人生缎带判定（游戏失败也记录缎带）
+  if (typeof determineLifeRibbon === "function" && !state.flags._lifeRibbon) {
+    var result = determineLifeRibbon(state);
+    state.flags._lifeRibbon = result.ribbon.id;
+    state.flags._lifeRibbonName = result.ribbon.icon + " " + result.ribbon.name;
+    if (typeof recordRibbon === "function") {
+      var isNew = recordRibbon(result.ribbon.id, result.stats);
+      if (isNew) {
+        state.flags._newRibbonEarned = true;
+      }
+    }
+  }
 
   // Phase 3: 记录多周目记忆 + 生成遗产数据
   if (typeof recordPlaythroughEndEnhanced === "function") {
@@ -97070,6 +98628,18 @@ function triggerVictory(state, type, title, desc) {
   state.flags.gameOver = true;
   state.flags.victoryTitle = title;
   state.flags.victoryDesc = desc;
+  // v3.1：人生缎带判定
+  if (typeof determineLifeRibbon === "function") {
+    var result = determineLifeRibbon(state);
+    state.flags._lifeRibbon = result.ribbon.id;
+    state.flags._lifeRibbonName = result.ribbon.icon + " " + result.ribbon.name;
+    if (typeof recordRibbon === "function") {
+      var isNew = recordRibbon(result.ribbon.id, result.stats);
+      if (isNew) {
+        state.flags._newRibbonEarned = true;
+      }
+    }
+  }
   // 记录公司命运到多周目记忆
   if (typeof recordPlaythroughEnd === "function") {
     recordPlaythroughEnd(state);
@@ -101220,6 +102790,648 @@ function showDailyReport(state) {
   });
 
   document.body.appendChild(overlay);
+}
+</script>
+    <script>/**
+ * 社交Tab渲染 — 合并职场社交系统 + 家庭与生活系统
+ *
+ * 包含：
+ * 1. 婚恋/家庭板块（原family_tab）
+ * 2. 同事关系/职场社交板块（原workplace_social_tab）
+ * 3. 社交网络概览摘要
+ */
+
+// ====== 社交Tab主渲染函数 ======
+function renderSocialTab(state, parent) {
+  parent.innerHTML = "";
+
+  // ---- 顶部导航：Tab 内子标签 ----
+  var subTabs = [
+    { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
+    { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
+    { id: "social_overview", label: "📊 关系总览", icon: "📊" },
+  ];
+  var currentSubTab = state._socialSubTab || "social_overview";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;";
+  subTabs.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._socialSubTab = st.id;
+      renderSocialTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  // ---- 内容区域 ----
+  var content = document.createElement("div");
+  content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
+
+  switch (currentSubTab) {
+    case "social_family":
+      renderSocialFamilyTab(state, content);
+      break;
+    case "social_workplace":
+      renderSocialWorkplaceTab(state, content);
+      break;
+    case "social_overview":
+    default:
+      renderSocialOverviewTab(state, content);
+      break;
+  }
+
+  parent.appendChild(content);
+}
+
+// ====== 关系总览 ======
+function renderSocialOverviewTab(state, content) {
+  var html = '<div class="tab-content">';
+
+  // 家庭摘要
+  var family = state.family;
+  if (family) {
+    html += '<div class="section"><h3>👨‍👩‍👧 家庭概况</h3>';
+    html += "<div class='card' style='padding:12px;'>";
+    if (family.spouse) {
+      html +=
+        "<p>💑 配偶：" +
+        family.spouse.name +
+        "（" +
+        (family.spouse.typeData?.name || "") +
+        "）</p>";
+    }
+    if (family.children && family.children.length > 0) {
+      html += "<p>👶 子女：" + family.children.length + "人</p>";
+    }
+    if (family.parents) {
+      html +=
+        "<p>👴 父母：父亲" +
+        family.parents.father.age +
+        "岁 · 母亲" +
+        family.parents.mother.age +
+        "岁</p>";
+    }
+    html += "</div></div>";
+  }
+
+  // 同事摘要
+  var colleagues = state.corporate?.colleagues?.network;
+  if (colleagues && colleagues.length > 0) {
+    html += '<div class="section"><h3>🏢 职场关系</h3>';
+    html += "<div class='card' style='padding:12px;'>";
+    html += "<p>👥 同事数：" + colleagues.length + "人</p>";
+    var avgRel = Math.round(
+      colleagues.reduce(function (s, c) {
+        return s + c.relationship;
+      }, 0) / colleagues.length,
+    );
+    html += "<p>📊 平均好感度：" + avgRel + "</p>";
+    var highTrust = colleagues.filter(function (c) {
+      return c.relationship >= 60;
+    }).length;
+    html += "<p>🤝 信任级以上的同事：" + highTrust + "人</p>";
+    if (state.corporate?.colleagues?.mentorship) {
+      html +=
+        "<p>👨‍🏫 导师：" +
+        state.corporate.colleagues.mentorship.mentorName +
+        "</p>";
+    }
+    html += "</div></div>";
+  }
+
+  // 社交网络建议
+  html +=
+    '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);">💡 人脉就是资源。维护好家庭关系和职场人脉，它们会在关键时刻帮到你。</p>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">🔹 家庭关系影响心态稳定 · 🔹 职场关系影响晋升和绩效</p>';
+  html += "</div>";
+
+  html += "</div>";
+  content.innerHTML = html;
+}
+
+// ====== 家庭生活子tab ======
+function renderSocialFamilyTab(state, parent) {
+  if (typeof renderFamilyTab === "function") {
+    renderFamilyTab(state, parent);
+  } else {
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">👨‍👩‍👧 家庭系统加载中...</p>';
+  }
+}
+
+// ====== 职场社交子tab ======
+function renderSocialWorkplaceTab(state, parent) {
+  if (typeof renderWorkplaceSocialTab === "function") {
+    renderWorkplaceSocialTab(state, parent);
+  } else {
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">🏢 职场社交系统加载中...</p>';
+  }
+}
+</script>
+    <script>/**
+ * 事业发展Tab — 合并创业系统 + 固定工作/上班族职业路径
+ *
+ * 包含：
+ * 1. 创业系统（原 startup 全部内容）
+ * 2. 固定工作/上班族职业路径（新增）
+ * 3. 职业发展与职场社交联动（晋升需要关系）
+ */
+
+// ====== 上班族/固定工作职业路径定义 ======
+const CAREER_PATHS = {
+  tech: {
+    name: "💻 IT技术",
+    icon: "💻",
+    levels: [
+      { id: "tech_junior", name: "初级程序员", minAge: 20, reqSkills: { coding: 15 }, salary: 6000, reqEducation: 1, desc: "写业务代码、修Bug" },
+      { id: "tech_mid", name: "中级开发工程师", minAge: 23, reqSkills: { coding: 30, english: 10 }, salary: 12000, reqEducation: 1, reqWorkDays: 365, desc: "独立负责模块开发" },
+      { id: "tech_senior", name: "高级开发工程师", minAge: 26, reqSkills: { coding: 50, english: 20, management: 10 }, salary: 22000, reqEducation: 1, reqWorkDays: 1095, desc: "技术方案设计、带新人" },
+      { id: "tech_lead", name: "技术Leader", minAge: 30, reqSkills: { coding: 65, management: 30, english: 25 }, salary: 35000, reqEducation: 1, reqWorkDays: 2190, desc: "带团队、定技术方向", reqSocial: 60 },
+    ],
+  },
+  finance: {
+    name: "📊 金融财务",
+    icon: "📊",
+    levels: [
+      { id: "fin_junior", name: "财务助理", minAge: 20, reqSkills: { accounting: 15, intelligence: 20 }, salary: 5500, reqEducation: 1, desc: "整理票据、录入凭证" },
+      { id: "fin_mid", name: "会计/分析师", minAge: 23, reqSkills: { accounting: 30, intelligence: 30, english: 10 }, salary: 10000, reqEducation: 1, reqWorkDays: 365, desc: "做账、出报表" },
+      { id: "fin_senior", name: "高级分析师", minAge: 26, reqSkills: { accounting: 45, management: 15, intelligence: 40 }, salary: 18000, reqEducation: 1, reqWorkDays: 1095, desc: "财务分析、预算管控" },
+      { id: "fin_manager", name: "财务经理", minAge: 30, reqSkills: { accounting: 55, management: 35, intelligence: 50 }, salary: 30000, reqEducation: 1, reqWorkDays: 2190, desc: "管团队、做决策", reqSocial: 60 },
+    ],
+  },
+  sales: {
+    name: "💼 销售市场",
+    icon: "💼",
+    levels: [
+      { id: "sales_junior", name: "销售助理", minAge: 18, reqSkills: { sales: 15 }, salary: 4000, desc: "跟单、电话邀约" },
+      { id: "sales_mid", name: "销售代表", minAge: 21, reqSkills: { sales: 30, mental: 20 }, salary: 8000, reqWorkDays: 365, desc: "独立谈客户、签单" },
+      { id: "sales_senior", name: "高级销售", minAge: 25, reqSkills: { sales: 50, management: 15, mental: 30 }, salary: 15000, reqWorkDays: 1095, desc: "带客户资源、跟大单" },
+      { id: "sales_manager", name: "销售经理", minAge: 28, reqSkills: { sales: 60, management: 35, mental: 40 }, salary: 25000, reqWorkDays: 2190, desc: "带销售团队", reqSocial: 60 },
+    ],
+  },
+  operations: {
+    name: "⚙️ 运营管理",
+    icon: "⚙️",
+    levels: [
+      { id: "ops_junior", name: "运营助理", minAge: 18, reqSkills: { management: 10, intelligence: 15 }, salary: 4500, reqEducation: 1, desc: "数据录入、文档整理" },
+      { id: "ops_mid", name: "运营专员", minAge: 21, reqSkills: { management: 25, intelligence: 25 }, salary: 8000, reqEducation: 1, reqWorkDays: 365, desc: "活动执行、数据分析" },
+      { id: "ops_senior", name: "运营主管", minAge: 25, reqSkills: { management: 40, intelligence: 35, sales: 15 }, salary: 14000, reqEducation: 1, reqWorkDays: 1095, desc: "带项目、优化流程" },
+      { id: "ops_manager", name: "运营经理", minAge: 28, reqSkills: { management: 55, intelligence: 45, sales: 25 }, salary: 22000, reqEducation: 1, reqWorkDays: 2190, desc: "部门管理、策略制定", reqSocial: 60 },
+    ],
+  },
+};
+
+// ====== ======
+
+/** 事业发展Tab主渲染函数 */
+function renderCareerDevTab(state, parent) {
+  parent.innerHTML = "";
+
+  // 子Tab导航
+  var subTabs = [
+    { id: "career_startup", label: "🚀 创业", icon: "🚀" },
+    { id: "career_jobs", label: "💼 职业路径", icon: "💼" },
+    { id: "career_overview", label: "📊 事业概览", icon: "📊" },
+  ];
+  var currentSubTab = state._careerSubTab || "career_overview";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;";
+  subTabs.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._careerSubTab = st.id;
+      renderCareerDevTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  var content = document.createElement("div");
+  content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
+
+  switch (currentSubTab) {
+    case "career_startup":
+      renderCareerStartup(state, content);
+      break;
+    case "career_jobs":
+      renderCareerJobs(state, content);
+      break;
+    case "career_overview":
+    default:
+      renderCareerOverview(state, content);
+      break;
+  }
+
+  parent.appendChild(content);
+}
+
+/** 创业子面板（委托到原 startup.js） */
+function renderCareerStartup(state, parent) {
+  if (typeof renderStartupTab === "function") {
+    renderStartupTab(state, parent);
+  } else {
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">🚀 创业系统加载中...</p>';
+  }
+}
+
+/** 职业路径子面板（上班族固定工作） */
+function renderCareerJobs(state, parent) {
+  var p = state.player;
+  var career = state.career || {};
+  var currentJob = career.currentJob || null;
+  var careerHistory = career.history || [];
+
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">💼 上班族职业路径</h2>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">选择一条职业路线，从基层做起，逐步晋升。晋升不仅需要技能，还需要职场人脉。</p>';
+
+  // ---- 当前工作状态 ----
+  if (currentJob) {
+    var path = CAREER_PATHS[currentJob.path];
+    var levelData = null;
+    if (path) {
+      levelData = path.levels.find(function (l) { return l.id === currentJob.levelId; });
+    }
+    html += '<div class="section"><h3>📌 当前工作</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += '<div style="font-size:13px;font-weight:bold;">' + (path ? path.icon : "💼") + " " + (levelData ? levelData.name : currentJob.levelId || "未知") + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (path ? path.name : "") + " · 第" + (currentJob.workDays || 0) + "天</div>";
+    html += '<div style="font-size:13px;color:var(--accent);font-weight:bold;margin:6px 0;">月薪 ¥' + (levelData ? levelData.salary.toLocaleString() : "?") + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (levelData ? levelData.desc : "") + "</div>";
+
+    // 晋升条件
+    var nextLevel = getNextCareerLevel(currentJob.path, currentJob.levelId);
+    if (nextLevel) {
+      var canPromote = checkCareerPromotion(state, currentJob.path, nextLevel);
+      html += '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;">';
+      html += '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' + nextLevel.name + '</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);">' + renderPromotionReqs(state, currentJob.path, nextLevel) + "</div>";
+      if (canPromote) {
+        html += '<button class="btn btn-sm" style="margin-top:6px;" onclick="applyCareerPromotion(\'' + currentJob.path + '\',\'' + nextLevel.id + '\')">⬆️ 申请晋升</button>';
+      } else {
+        html += '<div style="font-size:10px;color:var(--warning);margin-top:4px;">⚠️ 条件不足，继续努力</div>';
+      }
+      html += "</div>";
+    } else {
+      html += '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
+    }
+
+    // 离职按钮
+    html += '<button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="if(confirm(\'确定要辞职吗？\'))resignCareerJob()">🚪 辞职</button>';
+    html += "</div></div>";
+
+  } else {
+    // 没有工作，显示可选职业路径
+    html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-bottom:12px;">';
+    html += '<p style="font-size:11px;">💡 你目前没有固定工作。选择一条职业路线投递简历，从基层做起。</p>';
+    html += "</div>";
+  }
+
+  // ---- 职业路径选择（没有工作时显示） ----
+  if (!currentJob) {
+    html += '<div class="section"><h3>🔍 选择职业方向</h3>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+
+    for (var pathKey in CAREER_PATHS) {
+      var pData = CAREER_PATHS[pathKey];
+      var entryLevel = pData.levels[0];
+
+      // 检查是否满足最低要求
+      var meetReqs = checkCareerPromotion(state, pathKey, entryLevel);
+      var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
+
+      html += '<div class="card" style="padding:10px;cursor:' + (meetReqs ? 'pointer' : 'default') + ';opacity:' + (meetReqs ? '1' : '0.6') + ';" onclick="' + (meetReqs ? "applyCareerJob('" + pathKey + "','" + entryLevel.id + "')" : "") + '">';
+      html += '<div style="font-size:13px;font-weight:bold;">' + pData.icon + " " + pData.name + "</div>";
+      html += '<div style="font-size:11px;color:var(--text-secondary);margin:4px 0;">' + entryLevel.name + " · 月薪¥" + entryLevel.salary.toLocaleString() + "</div>";
+      html += '<div style="font-size:10px;color:var(--text-muted);">' + entryLevel.desc + "</div>";
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + reqsHtml + "</div>";
+      if (meetReqs) {
+        html += '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历</button>';
+      } else {
+        html += '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
+      }
+      html += "</div>";
+    }
+    html += "</div></div>";
+  }
+
+  // ---- 晋升历史 ----
+  if (careerHistory.length > 0) {
+    html += '<div class="section" style="margin-top:12px;"><h3>📜 职业历程</h3>';
+    html += '<div style="max-height:200px;overflow-y:auto;">';
+    // 按天倒序
+    var sorted = careerHistory.slice().sort(function (a, b) { return b.day - a.day; });
+    sorted.forEach(function (h) {
+      html += '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
+      html += "第" + h.day + "天 · " + h.event;
+      html += "</div>";
+    });
+    html += "</div></div>";
+  }
+
+  html += "</div>";
+  parent.innerHTML = html;
+}
+
+/** 事业概览子面板 */
+function renderCareerOverview(state, parent) {
+  var html = '<div class="tab-content">';
+
+  // 创业摘要
+  var startup = state.startup;
+  if (startup && startup.status !== "none" && startup.company) {
+    html += '<div class="section"><h3>🚀 创业状态</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += "<p>🏢 " + (startup.company.name || "未命名公司") + "</p>";
+    html += "<p>📊 估值：¥" + ((startup.company.valuation || 0).toLocaleString()) + "</p>";
+    html += "<p>💰 现金流：¥" + ((startup.company.cash || 0).toLocaleString()) + "</p>";
+    html += "<p>👥 团队：" + ((startup.company.employees || []).length) + "人</p>";
+    html += "</div></div>";
+  }
+
+  // 固定工作摘要
+  var career = state.career || {};
+  if (career.currentJob) {
+    html += '<div class="section"><h3>💼 当前职业</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += "<p>" + (career.currentJob.levelName || "在职") + "</p>";
+    html += "<p>📅 在职 " + (career.currentJob.workDays || 0) + " 天</p>";
+    html += "</div></div>";
+  }
+
+  // 事业建议
+  html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
+  html += '<p style="font-size:11px;color:var(--text-muted);">💡 事业建议：</p>';
+  html += '<ul style="font-size:11px;color:var(--text-muted);margin:4px 0 0 16px;padding:0;">';
+  if (!startup || startup.status === "none") {
+    html += "<li>🚀 积累够¥200,000可以尝试创业</li>";
+  }
+  if (!career.currentJob) {
+    html += "<li>💼 找一份固定工作，获得稳定月收入</li>";
+  }
+  html += "<li>🤝 职场社交关系会影响晋升——多维护同事关系</li>";
+  html += "<li>📚 提升技能可以解锁更高级的职位</li>";
+  html += "</ul>";
+  html += "</div>";
+
+  html += "</div>";
+  parent.innerHTML = html;
+}
+
+// ====== 工具函数 ======
+
+/** 获取职业路径的下一级 */
+function getNextCareerLevel(pathId, currentLevelId) {
+  var path = CAREER_PATHS[pathId];
+  if (!path) return null;
+  for (var i = 0; i < path.levels.length - 1; i++) {
+    if (path.levels[i].id === currentLevelId) {
+      return path.levels[i + 1];
+    }
+  }
+  return null;
+}
+
+/** 检查晋升条件 */
+function checkCareerPromotion(state, pathId, level) {
+  var p = state.player;
+
+  // 年龄检查
+  if (level.minAge && (state.player.age || 20) < level.minAge) return false;
+
+  // 学历检查
+  if (level.reqEducation && !p.education) return false;
+
+  // 技能检查
+  if (level.reqSkills) {
+    for (var skill in level.reqSkills) {
+      var required = level.reqSkills[skill];
+      var actual = 0;
+      if (skill === "intelligence") actual = p.intelligence || 0;
+      else if (skill === "mental") actual = p.mental || 0;
+      else if (p.skills && p.skills[skill]) actual = p.skills[skill].level || 0;
+      else return false;
+      if (actual < required) return false;
+    }
+  }
+
+  // 工作天数检查
+  var career = state.career || {};
+  var workDays = career.currentJob ? (career.currentJob.workDays || 0) : 0;
+  if (level.reqWorkDays && workDays < level.reqWorkDays) return false;
+
+  // 社交关系检查（高阶职位需要）
+  if (level.reqSocial) {
+    var colleagues = state.corporate?.colleagues?.network || [];
+    var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+    if (highTrust < level.reqSocial / 20) return false;
+  }
+
+  return true;
+}
+
+/** 渲染晋升条件文字 */
+function renderPromotionReqs(state, pathId, level) {
+  var parts = [];
+  if (level.salary) parts.push("月薪¥" + level.salary.toLocaleString());
+  if (level.reqSkills) {
+    for (var s in level.reqSkills) {
+      var labels = { coding: "编程", english: "英语", accounting: "财务", management: "管理", sales: "销售", intelligence: "智力", mental: "心智" };
+      parts.push((labels[s] || s) + "≥" + level.reqSkills[s]);
+    }
+  }
+  if (level.minAge) parts.push("年龄≥" + level.minAge);
+  if (level.reqEducation) parts.push("大专以上学历");
+  if (level.reqWorkDays) parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
+  if (level.reqSocial) parts.push("信任同事≥" + Math.floor(level.reqSocial / 20) + "人");
+  return "要求：" + parts.join(" · ");
+}
+
+/** 投递简历（申请初级职位） */
+function applyCareerJob(pathId, levelId) {
+  var state = StateManager.getState();
+  var path = CAREER_PATHS[pathId];
+  if (!path) { StateManager.addMessage("⚠️ 该职业路径不存在", "warning"); return; }
+
+  var level = path.levels.find(function (l) { return l.id === levelId; });
+  if (!level) return;
+
+  if (!checkCareerPromotion(state, pathId, level)) {
+    StateManager.addMessage("⚠️ 你不满足该职位的条件", "warning"); return;
+  }
+
+  // 初始化 career 状态
+  if (!state.career) state.career = { currentJob: null, history: [] };
+  if (state.career.currentJob) {
+    StateManager.addMessage("⚠️ 你已经有工作了，先辞职才能投递新职位", "warning"); return;
+  }
+
+  state.career.currentJob = {
+    path: pathId,
+    levelId: levelId,
+    levelName: level.name,
+    salary: level.salary,
+    workDays: 0,
+    startDay: state.player.day,
+  };
+
+  StateManager.addMessage(
+    "✅ 入职成功！你成为了" + path.name + "的" + level.name + "，月薪¥" + level.salary.toLocaleString(),
+    "success"
+  );
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 申请晋升 */
+function applyCareerPromotion(pathId, levelId) {
+  var state = StateManager.getState();
+  var path = CAREER_PATHS[pathId];
+  var level = path.levels.find(function (l) { return l.id === levelId; });
+  if (!level) return;
+
+  if (!state.career || !state.career.currentJob) {
+    StateManager.addMessage("⚠️ 你目前没有工作", "warning"); return;
+  }
+
+  if (!checkCareerPromotion(state, pathId, level)) {
+    StateManager.addMessage("⚠️ 晋升条件不足，查看具体要求", "warning"); return;
+  }
+
+  // 晋升成功
+  var oldJob = state.career.currentJob;
+  state.career.history.push({
+    day: state.player.day,
+    event: "晋升：" + oldJob.levelName + " → " + level.name
+  });
+
+  state.career.currentJob.levelId = levelId;
+  state.career.currentJob.levelName = level.name;
+  state.career.currentJob.salary = level.salary;
+
+  StateManager.addMessage(
+    "🎉 晋升成功！你成为了" + level.name + "，月薪涨至¥" + level.salary.toLocaleString(),
+    "success"
+  );
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 辞职 */
+function resignCareerJob() {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+
+  state.career.history.push({
+    day: state.player.day,
+    event: "辞职：离开了" + state.career.currentJob.levelName + "岗位"
+  });
+  state.career.currentJob = null;
+
+  StateManager.addMessage("👋 你已辞去当前工作", "info");
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 每日固定工作结算 */
+function tickCareerJobDaily(state) {
+  if (!state.career || !state.career.currentJob) return;
+
+  var job = state.career.currentJob;
+  job.workDays = (job.workDays || 0) + 1;
+
+  // 每月1日发薪
+  if (state.player.day % 30 === 1) {
+    var salary = job.salary || 5000;
+    state.resources.cash += salary;
+    state.resources.totalEarned += salary;
+    StateManager.addMessage(
+      "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）",
+      "success"
+    );
+
+    // 高阶职位需要维持社交关系
+    var path = CAREER_PATHS[job.path];
+    if (path) {
+      var level = path.levels.find(function (l) { return l.id === job.levelId; });
+      if (level && level.reqSocial) {
+        // 社交关系不足会有绩效警告
+        var colleagues = state.corporate?.colleagues?.network || [];
+        var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+        if (highTrust < Math.floor(level.reqSocial / 20)) {
+          StateManager.addMessage(
+            "⚠️ 你的社交关系网络不足以支撑当前职位，小心被取代！",
+            "warning"
+          );
+        }
+      }
+    }
+  }
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.career_dev = {
+    id: "career_dev",
+    name: "事业发展",
+    icon: "🚀",
+    brief: "创业系统 + 上班族职业路径，从基层到高管的完整职业生涯",
+    version: "1.0.0",
+    related: ["mechanics:startup", "mechanics:workplace_social"],
+    sections: [
+      {
+        kind: "desc",
+        text: "事业是人生的支柱。从街头打零工到成为上市公司CEO，事业系统让你体验不同职业路径的酸甜苦辣。"
+      },
+      {
+        kind: "subhead",
+        text: "💼 职业路径"
+      },
+      {
+        kind: "list",
+        items: [
+          "💻 IT技术：初级程序员→中级开发→高级开发→技术Leader",
+          "📊 金融财务：财务助理→会计/分析师→高级分析师→财务经理",
+          "💼 销售市场：销售助理→销售代表→高级销售→销售经理",
+          "⚙️ 运营管理：运营助理→运营专员→运营主管→运营经理",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "🚀 创业路径"
+      },
+      {
+        kind: "list",
+        items: [
+          "种子轮：验证想法，组建核心团队",
+          "A轮：产品验证后规模化扩张",
+          "B轮：市场扩张，建立壁垒",
+          "C轮：准备IPO前的最后一轮",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：创业需要¥200,000启动资金和承担风险的能力；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需要维护好同事关系才能顺利晋升。"
+      },
+    ],
+  };
 }
 </script>
 

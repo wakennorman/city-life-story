@@ -367,6 +367,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 固定工作（上班族）每日 tick ===
+  {
+    name: "career_job_daily",
+    fn: function (state) {
+      if (typeof tickCareerJobDaily === "function") {
+        tickCareerJobDaily(state);
+      }
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
@@ -455,6 +465,10 @@ const DAILY_PIPELINE = [
       // 春节7天特殊活动
       if (typeof checkSpringFestivalEvents === "function") {
         checkSpringFestivalEvents(state);
+      }
+      // v3.1: 清明/中秋深度事件
+      if (typeof checkFestivalDeepEvents === "function") {
+        checkFestivalDeepEvents(state);
       }
     },
   },
@@ -731,6 +745,16 @@ const DAILY_PIPELINE = [
       }
       if (typeof check35Crisis === "function") {
         check35Crisis(state);
+      }
+    },
+  },
+
+  // === v3.1：主线章节检查 ===
+  {
+    name: "story_chapter_check",
+    fn: function (state) {
+      if (typeof checkStoryChapter === "function") {
+        checkStoryChapter(state);
       }
     },
   },

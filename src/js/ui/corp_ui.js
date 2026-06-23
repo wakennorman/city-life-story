@@ -417,6 +417,30 @@ function showVictoryModal() {
         " 枚声誉徽章，下局可继承加成</p>"
       : "";
 
+  // v3.1：人生缎带展示
+  var ribbonText = "";
+  if (state.flags._lifeRibbonName) {
+    var ribbonProgress =
+      typeof getRibbonProgress === "function" ? getRibbonProgress() : null;
+    var newBadge = state.flags._newRibbonEarned ? " ✨新获得！" : "";
+    ribbonText =
+      '<div style="margin-top:15px;padding:10px 15px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.05));border:1px solid rgba(255,215,0,0.3);border-radius:8px;text-align:center;">' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">🎖️ 人生缎带' +
+      newBadge +
+      "</div>" +
+      '<div style="font-size:18px;font-weight:bold;color:#FFD700;">' +
+      state.flags._lifeRibbonName +
+      "</div>" +
+      (ribbonProgress
+        ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">已收集 ' +
+          ribbonProgress.earned +
+          "/" +
+          ribbonProgress.total +
+          " 条缎带</div>"
+        : "") +
+      "</div>";
+  }
+
   showModal({
     title,
     body: `
@@ -432,6 +456,7 @@ function showVictoryModal() {
           <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
         </table>
         ${badgeText}
+        ${ribbonText}
       </div>`,
     buttons: [
       {

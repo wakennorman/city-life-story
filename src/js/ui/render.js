@@ -1071,14 +1071,19 @@ function renderTabBar(state) {
       // 企业命运生态 — 后台系统，不单独显示Tab
       // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
       btn.style.display = "none";
-    } else if (btn.dataset.tab === "startup") {
-      // v3.0 修复：创业Tab 在街头阶段也显示（即便未注册公司），
-      // 让玩家从一开始就知道有创业系统。点击后 renderStartupTab 会显示注册条件引导。
-      // 仅在玩家进入公司阶段且未自己创业时隐藏（避免与 corp Tab 重复）
+    } else if (btn.dataset.tab === "career_dev") {
+      // 事业发展Tab：街头阶段显示上班族工作引导，公司阶段不冲突时显示
       if (
         state.player.phase === "corporate" &&
         (!state.startup || state.startup.status === "none")
       ) {
+        btn.style.display = "none";
+      } else {
+        btn.style.display = "";
+      }
+    } else if (btn.dataset.tab === "social") {
+      // 社交Tab在公司阶段才显示（包含职场社交+家庭）
+      if (state.player.phase !== "corporate") {
         btn.style.display = "none";
       } else {
         btn.style.display = "";
@@ -1109,18 +1114,15 @@ const TAB_RENDERERS = {
   corp: renderCorpTab,
   // renderInvestmentTab 在 investment.js 中定义（跨文件）
   investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
-  // renderStartupTab 在 startup.js 中定义（跨文件）
-  startup: { fnName: "renderStartupTab", fallback: "创业系统加载中..." },
+  // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
+  career_dev: { fnName: "renderCareerDevTab", fallback: "事业发展系统加载中..." },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
   achievements: renderAchievementsTab,
-  growth: renderGrowthTab,
-  workplace_social: {
-    fn: renderWorkplaceSocialTab,
-    fallback: "职场社交系统加载中...",
-  },
-  family: { fn: renderFamilyTab, fallback: "家庭系统加载中..." },
+  // 社交Tab：合并职场社交+家庭（跨文件）
+  social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
+  // 个人成长Tab（合并了原成长数据可视化+原个人成长）
   personal_growth: {
-    fn: renderPersonalGrowthTab,
+    fn: renderMergedPersonalGrowthTab,
     fallback: "个人成长系统加载中...",
   },
   // renderWikiTab 在 wiki.js 中定义（跨文件）
@@ -5273,3 +5275,236 @@ function renderPersonalGrowthTab(state, parent) {
   `;
   parent.innerHTML = html;
 }
+
+/**
+ * 合并的个人成长Tab（原数据可视化+原个人成长系统合并）
+ * 包含：数据图表 + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
+ */
+function renderMergedPersonalGrowthTab(state, parent) {
+  parent.innerHTML = '';
+  var p = state.player;
+  var pg = state.personalGrowth || {};
+
+  // ---- 子Tab导航 ----
+  var subTabs = [
+    { id: 'pg_charts', label: '📈 数据', icon: '📈' },
+    { id: 'pg_hobbies', label: '🏃 爱好', icon: '🏃' },
+    { id: 'pg_health', label: '💪 健康', icon: '💪' },
+    { id: 'pg_goals', label: '🎯 目标', icon: '🎯' },
+  ];
+  var currentSubTab = state._pgSubTab || 'pg_charts';
+
+  var nav = document.createElement('div');
+  nav.style.cssText =
+    'display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;';
+  subTabs.forEach(function (st) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (currentSubTab === st.id ? ' active' : '');
+    btn.style.cssText = 'font-size:11px;padding:4px 10px;white-space:nowrap;';
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._pgSubTab = st.id;
+      renderMergedPersonalGrowthTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:8px;';
+
+  switch (currentSubTab) {
+    case 'pg_charts':
+      renderPgCharts(state, content);
+      break;
+    case 'pg_hobbies':
+      renderPgHobbies(state, content, pg);
+      break;
+    case 'pg_health':
+      renderPgHealth(state, content, pg);
+      break;
+    case 'pg_goals':
+      renderPgGoals(state, content, pg);
+      break;
+  }
+
+  parent.appendChild(content);
+}
+
+/** 图表子面板（数据可视化） */
+function renderPgCharts(state, content) {
+  if (typeof _dataVizRenderGrowthTab === 'function') {
+    _dataVizRenderGrowthTab(state, content);
+    return;
+  }
+  var p = state.player;
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'padding:12px;';
+
+  var chartSection = document.createElement('div');
+  chartSection.style.cssText =
+    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);';
+  chartSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📈 资产变化曲线</h3>';
+  var lineCanvas = document.createElement('canvas');
+  lineCanvas.width = 520;
+  lineCanvas.height = 160;
+  lineCanvas.style.cssText = 'width:100%;height:auto;display:block;';
+  chartSection.appendChild(lineCanvas);
+  wrapper.appendChild(chartSection);
+
+  var radarSection = document.createElement('div');
+  radarSection.style.cssText =
+    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;';
+  var radarInfo = document.createElement('div');
+  radarInfo.style.cssText = 'flex:1;min-width:0;';
+  radarInfo.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🕸️ 能力雷达图</h3>';
+  var radarCanvas = document.createElement('canvas');
+  radarCanvas.width = 200;
+  radarCanvas.height = 200;
+  radarCanvas.style.cssText =
+    'width:100%;max-width:200px;height:auto;display:block;margin:0 auto;';
+  radarInfo.appendChild(radarCanvas);
+  radarSection.appendChild(radarInfo);
+  var statSummary = document.createElement('div');
+  statSummary.style.cssText = 'flex:1;min-width:0;padding-top:28px;';
+  var stats = [
+    { label: '体质', value: p.physique, color: '#c4803a' },
+    { label: '智力', value: p.intelligence, color: '#5a8ab4' },
+    { label: '敏捷', value: p.agility, color: '#5aaa5a' },
+    { label: '心智', value: p.mental, color: '#9b74b8' },
+    { label: '名气', value: (p && p.fame) || 0, color: '#d4a017' },
+  ];
+  stats.forEach(function (s) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:3px 0;';
+    row.innerHTML =
+      '<span style="font-size:11px;color:' +
+      s.color +
+      ';width:32px;">' +
+      s.label +
+      '</span><span style="font-size:11px;color:var(--text-secondary);">' +
+      Math.round(s.value) +
+      '</span>';
+    statSummary.appendChild(row);
+  });
+  radarSection.appendChild(statSummary);
+  wrapper.appendChild(radarSection);
+
+  content.appendChild(wrapper);
+  setTimeout(function () {
+    try {
+      if (typeof drawLineChart === 'function')
+        drawLineChart(
+          lineCanvas,
+          state._assetHistory || [],
+          '#c4803a',
+          '#c4803a22',
+        );
+      if (typeof drawRadarChart === 'function')
+        drawRadarChart(radarCanvas, stats, 80);
+    } catch (e) {}
+  }, 50);
+}
+
+/** 爱好子面板 */
+function renderPgHobbies(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">🏃 兴趣爱好</h2>';
+
+  var hobbyEntries = pg.hobbies ? Object.entries(pg.hobbies) : [];
+  if (hobbyEntries.length > 0) {
+    hobbyEntries.forEach(function (_a) {
+      var id = _a[0], h = _a[1];
+      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += '<strong>' + (h.name || id) + '</strong> — Lv.' + (h.level || 1);
+      if (h.totalSessions) html += ' · 练习' + h.totalSessions + '次';
+      html += '</div>';
+    });
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:12px;">还没有开始任何爱好，去行动Tab培养爱好吧！</p>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/** 健康子面板 */
+function renderPgHealth(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">💪 健康管理</h2>';
+
+  html += '<div class="section"><h3>🏥 健康指标</h3>';
+  html += '<div class="card" style="padding:12px;font-size:12px;">';
+  if (pg.health) {
+    html += '<p>💪 身体：' + (pg.health.physical || '?') + '</p>';
+    html += '<p>🧠 心理：' + (pg.health.mental || '?') + '</p>';
+    html += '<p>⚖️ 代谢：' + (pg.health.metabolic || '?') + '</p>';
+  } else {
+    html += '<p>暂无数据</p>';
+  }
+  html += '</div></div>';
+
+  if (pg.psychology) {
+    html += '<div class="section"><h3>🧠 心理状态</h3>';
+    html += '<div class="card" style="padding:12px;font-size:12px;">';
+    html += '<p>😰 压力：' + Math.round(pg.psychology.stress || 0) + '/100</p>';
+    html += '<p>😟 焦虑：' + Math.round(pg.psychology.anxiety || 0) + '/100</p>';
+    html += '<p>😔 抑郁：' + Math.round(pg.psychology.depression || 0) + '/100</p>';
+    html += '<p>😊 心情：' + Math.round(pg.psychology.mood || 0) + '/100</p>';
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/** 目标子面板 */
+function renderPgGoals(state, content, pg) {
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">🎯 人生目标</h2>';
+
+  var goals = pg.lifeGoals || {};
+  var active = goals.active || [];
+  var completed = goals.completed || [];
+
+  if (active.length > 0) {
+    active.forEach(function (g) {
+      var pct =
+        g.targetValue > 0
+          ? Math.round(((g.currentValue || 0) / g.targetValue) * 100)
+          : 0;
+      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += '<strong>' + (g.description || '目标') + '</strong>';
+      html +=
+        '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px;">' +
+        '<div style="height:100%;width:' +
+        pct +
+        '%;background:var(--accent);border-radius:2px;"></div></div>';
+      html +=
+        '<span style="font-size:10px;color:var(--text-muted);">' +
+        pct +
+        '%</span>';
+      html += '</div>';
+    });
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:12px;">还没有设定人生目标。</p>';
+  }
+
+  if (completed.length > 0) {
+    html += '<div style="margin-top:16px;"><h3>✅ 已完成目标</h3>';
+    completed.forEach(function (g) {
+      html +=
+        '<div class="card" style="margin:4px 0;padding:8px;font-size:11px;">✅ ' +
+        (g.description || '已完成') +
+        '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+

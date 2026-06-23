@@ -1,0 +1,495 @@
+/**
+ * 事业发展Tab — 合并创业系统 + 固定工作/上班族职业路径
+ *
+ * 包含：
+ * 1. 创业系统（原 startup 全部内容）
+ * 2. 固定工作/上班族职业路径（新增）
+ * 3. 职业发展与职场社交联动（晋升需要关系）
+ */
+
+// ====== 上班族/固定工作职业路径定义 ======
+const CAREER_PATHS = {
+  tech: {
+    name: "💻 IT技术",
+    icon: "💻",
+    levels: [
+      { id: "tech_junior", name: "初级程序员", minAge: 20, reqSkills: { coding: 15 }, salary: 6000, reqEducation: 1, desc: "写业务代码、修Bug" },
+      { id: "tech_mid", name: "中级开发工程师", minAge: 23, reqSkills: { coding: 30, english: 10 }, salary: 12000, reqEducation: 1, reqWorkDays: 365, desc: "独立负责模块开发" },
+      { id: "tech_senior", name: "高级开发工程师", minAge: 26, reqSkills: { coding: 50, english: 20, management: 10 }, salary: 22000, reqEducation: 1, reqWorkDays: 1095, desc: "技术方案设计、带新人" },
+      { id: "tech_lead", name: "技术Leader", minAge: 30, reqSkills: { coding: 65, management: 30, english: 25 }, salary: 35000, reqEducation: 1, reqWorkDays: 2190, desc: "带团队、定技术方向", reqSocial: 60 },
+    ],
+  },
+  finance: {
+    name: "📊 金融财务",
+    icon: "📊",
+    levels: [
+      { id: "fin_junior", name: "财务助理", minAge: 20, reqSkills: { accounting: 15, intelligence: 20 }, salary: 5500, reqEducation: 1, desc: "整理票据、录入凭证" },
+      { id: "fin_mid", name: "会计/分析师", minAge: 23, reqSkills: { accounting: 30, intelligence: 30, english: 10 }, salary: 10000, reqEducation: 1, reqWorkDays: 365, desc: "做账、出报表" },
+      { id: "fin_senior", name: "高级分析师", minAge: 26, reqSkills: { accounting: 45, management: 15, intelligence: 40 }, salary: 18000, reqEducation: 1, reqWorkDays: 1095, desc: "财务分析、预算管控" },
+      { id: "fin_manager", name: "财务经理", minAge: 30, reqSkills: { accounting: 55, management: 35, intelligence: 50 }, salary: 30000, reqEducation: 1, reqWorkDays: 2190, desc: "管团队、做决策", reqSocial: 60 },
+    ],
+  },
+  sales: {
+    name: "💼 销售市场",
+    icon: "💼",
+    levels: [
+      { id: "sales_junior", name: "销售助理", minAge: 18, reqSkills: { sales: 15 }, salary: 4000, desc: "跟单、电话邀约" },
+      { id: "sales_mid", name: "销售代表", minAge: 21, reqSkills: { sales: 30, mental: 20 }, salary: 8000, reqWorkDays: 365, desc: "独立谈客户、签单" },
+      { id: "sales_senior", name: "高级销售", minAge: 25, reqSkills: { sales: 50, management: 15, mental: 30 }, salary: 15000, reqWorkDays: 1095, desc: "带客户资源、跟大单" },
+      { id: "sales_manager", name: "销售经理", minAge: 28, reqSkills: { sales: 60, management: 35, mental: 40 }, salary: 25000, reqWorkDays: 2190, desc: "带销售团队", reqSocial: 60 },
+    ],
+  },
+  operations: {
+    name: "⚙️ 运营管理",
+    icon: "⚙️",
+    levels: [
+      { id: "ops_junior", name: "运营助理", minAge: 18, reqSkills: { management: 10, intelligence: 15 }, salary: 4500, reqEducation: 1, desc: "数据录入、文档整理" },
+      { id: "ops_mid", name: "运营专员", minAge: 21, reqSkills: { management: 25, intelligence: 25 }, salary: 8000, reqEducation: 1, reqWorkDays: 365, desc: "活动执行、数据分析" },
+      { id: "ops_senior", name: "运营主管", minAge: 25, reqSkills: { management: 40, intelligence: 35, sales: 15 }, salary: 14000, reqEducation: 1, reqWorkDays: 1095, desc: "带项目、优化流程" },
+      { id: "ops_manager", name: "运营经理", minAge: 28, reqSkills: { management: 55, intelligence: 45, sales: 25 }, salary: 22000, reqEducation: 1, reqWorkDays: 2190, desc: "部门管理、策略制定", reqSocial: 60 },
+    ],
+  },
+};
+
+// ====== ======
+
+/** 事业发展Tab主渲染函数 */
+function renderCareerDevTab(state, parent) {
+  parent.innerHTML = "";
+
+  // 子Tab导航
+  var subTabs = [
+    { id: "career_startup", label: "🚀 创业", icon: "🚀" },
+    { id: "career_jobs", label: "💼 职业路径", icon: "💼" },
+    { id: "career_overview", label: "📊 事业概览", icon: "📊" },
+  ];
+  var currentSubTab = state._careerSubTab || "career_overview";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;";
+  subTabs.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._careerSubTab = st.id;
+      renderCareerDevTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  var content = document.createElement("div");
+  content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
+
+  switch (currentSubTab) {
+    case "career_startup":
+      renderCareerStartup(state, content);
+      break;
+    case "career_jobs":
+      renderCareerJobs(state, content);
+      break;
+    case "career_overview":
+    default:
+      renderCareerOverview(state, content);
+      break;
+  }
+
+  parent.appendChild(content);
+}
+
+/** 创业子面板（委托到原 startup.js） */
+function renderCareerStartup(state, parent) {
+  if (typeof renderStartupTab === "function") {
+    renderStartupTab(state, parent);
+  } else {
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">🚀 创业系统加载中...</p>';
+  }
+}
+
+/** 职业路径子面板（上班族固定工作） */
+function renderCareerJobs(state, parent) {
+  var p = state.player;
+  var career = state.career || {};
+  var currentJob = career.currentJob || null;
+  var careerHistory = career.history || [];
+
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">💼 上班族职业路径</h2>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">选择一条职业路线，从基层做起，逐步晋升。晋升不仅需要技能，还需要职场人脉。</p>';
+
+  // ---- 当前工作状态 ----
+  if (currentJob) {
+    var path = CAREER_PATHS[currentJob.path];
+    var levelData = null;
+    if (path) {
+      levelData = path.levels.find(function (l) { return l.id === currentJob.levelId; });
+    }
+    html += '<div class="section"><h3>📌 当前工作</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += '<div style="font-size:13px;font-weight:bold;">' + (path ? path.icon : "💼") + " " + (levelData ? levelData.name : currentJob.levelId || "未知") + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (path ? path.name : "") + " · 第" + (currentJob.workDays || 0) + "天</div>";
+    html += '<div style="font-size:13px;color:var(--accent);font-weight:bold;margin:6px 0;">月薪 ¥' + (levelData ? levelData.salary.toLocaleString() : "?") + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (levelData ? levelData.desc : "") + "</div>";
+
+    // 晋升条件
+    var nextLevel = getNextCareerLevel(currentJob.path, currentJob.levelId);
+    if (nextLevel) {
+      var canPromote = checkCareerPromotion(state, currentJob.path, nextLevel);
+      html += '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;">';
+      html += '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' + nextLevel.name + '</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);">' + renderPromotionReqs(state, currentJob.path, nextLevel) + "</div>";
+      if (canPromote) {
+        html += '<button class="btn btn-sm" style="margin-top:6px;" onclick="applyCareerPromotion(\'' + currentJob.path + '\',\'' + nextLevel.id + '\')">⬆️ 申请晋升</button>';
+      } else {
+        html += '<div style="font-size:10px;color:var(--warning);margin-top:4px;">⚠️ 条件不足，继续努力</div>';
+      }
+      html += "</div>";
+    } else {
+      html += '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
+    }
+
+    // 离职按钮
+    html += '<button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="if(confirm(\'确定要辞职吗？\'))resignCareerJob()">🚪 辞职</button>';
+    html += "</div></div>";
+
+  } else {
+    // 没有工作，显示可选职业路径
+    html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-bottom:12px;">';
+    html += '<p style="font-size:11px;">💡 你目前没有固定工作。选择一条职业路线投递简历，从基层做起。</p>';
+    html += "</div>";
+  }
+
+  // ---- 职业路径选择（没有工作时显示） ----
+  if (!currentJob) {
+    html += '<div class="section"><h3>🔍 选择职业方向</h3>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+
+    for (var pathKey in CAREER_PATHS) {
+      var pData = CAREER_PATHS[pathKey];
+      var entryLevel = pData.levels[0];
+
+      // 检查是否满足最低要求
+      var meetReqs = checkCareerPromotion(state, pathKey, entryLevel);
+      var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
+
+      html += '<div class="card" style="padding:10px;cursor:' + (meetReqs ? 'pointer' : 'default') + ';opacity:' + (meetReqs ? '1' : '0.6') + ';" onclick="' + (meetReqs ? "applyCareerJob('" + pathKey + "','" + entryLevel.id + "')" : "") + '">';
+      html += '<div style="font-size:13px;font-weight:bold;">' + pData.icon + " " + pData.name + "</div>";
+      html += '<div style="font-size:11px;color:var(--text-secondary);margin:4px 0;">' + entryLevel.name + " · 月薪¥" + entryLevel.salary.toLocaleString() + "</div>";
+      html += '<div style="font-size:10px;color:var(--text-muted);">' + entryLevel.desc + "</div>";
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + reqsHtml + "</div>";
+      if (meetReqs) {
+        html += '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历</button>';
+      } else {
+        html += '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
+      }
+      html += "</div>";
+    }
+    html += "</div></div>";
+  }
+
+  // ---- 晋升历史 ----
+  if (careerHistory.length > 0) {
+    html += '<div class="section" style="margin-top:12px;"><h3>📜 职业历程</h3>';
+    html += '<div style="max-height:200px;overflow-y:auto;">';
+    // 按天倒序
+    var sorted = careerHistory.slice().sort(function (a, b) { return b.day - a.day; });
+    sorted.forEach(function (h) {
+      html += '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
+      html += "第" + h.day + "天 · " + h.event;
+      html += "</div>";
+    });
+    html += "</div></div>";
+  }
+
+  html += "</div>";
+  parent.innerHTML = html;
+}
+
+/** 事业概览子面板 */
+function renderCareerOverview(state, parent) {
+  var html = '<div class="tab-content">';
+
+  // 创业摘要
+  var startup = state.startup;
+  if (startup && startup.status !== "none" && startup.company) {
+    html += '<div class="section"><h3>🚀 创业状态</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += "<p>🏢 " + (startup.company.name || "未命名公司") + "</p>";
+    html += "<p>📊 估值：¥" + ((startup.company.valuation || 0).toLocaleString()) + "</p>";
+    html += "<p>💰 现金流：¥" + ((startup.company.cash || 0).toLocaleString()) + "</p>";
+    html += "<p>👥 团队：" + ((startup.company.employees || []).length) + "人</p>";
+    html += "</div></div>";
+  }
+
+  // 固定工作摘要
+  var career = state.career || {};
+  if (career.currentJob) {
+    html += '<div class="section"><h3>💼 当前职业</h3>';
+    html += '<div class="card" style="padding:12px;">';
+    html += "<p>" + (career.currentJob.levelName || "在职") + "</p>";
+    html += "<p>📅 在职 " + (career.currentJob.workDays || 0) + " 天</p>";
+    html += "</div></div>";
+  }
+
+  // 事业建议
+  html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
+  html += '<p style="font-size:11px;color:var(--text-muted);">💡 事业建议：</p>';
+  html += '<ul style="font-size:11px;color:var(--text-muted);margin:4px 0 0 16px;padding:0;">';
+  if (!startup || startup.status === "none") {
+    html += "<li>🚀 积累够¥200,000可以尝试创业</li>";
+  }
+  if (!career.currentJob) {
+    html += "<li>💼 找一份固定工作，获得稳定月收入</li>";
+  }
+  html += "<li>🤝 职场社交关系会影响晋升——多维护同事关系</li>";
+  html += "<li>📚 提升技能可以解锁更高级的职位</li>";
+  html += "</ul>";
+  html += "</div>";
+
+  html += "</div>";
+  parent.innerHTML = html;
+}
+
+// ====== 工具函数 ======
+
+/** 获取职业路径的下一级 */
+function getNextCareerLevel(pathId, currentLevelId) {
+  var path = CAREER_PATHS[pathId];
+  if (!path) return null;
+  for (var i = 0; i < path.levels.length - 1; i++) {
+    if (path.levels[i].id === currentLevelId) {
+      return path.levels[i + 1];
+    }
+  }
+  return null;
+}
+
+/** 检查晋升条件 */
+function checkCareerPromotion(state, pathId, level) {
+  var p = state.player;
+
+  // 年龄检查
+  if (level.minAge && (state.player.age || 20) < level.minAge) return false;
+
+  // 学历检查
+  if (level.reqEducation && !p.education) return false;
+
+  // 技能检查
+  if (level.reqSkills) {
+    for (var skill in level.reqSkills) {
+      var required = level.reqSkills[skill];
+      var actual = 0;
+      if (skill === "intelligence") actual = p.intelligence || 0;
+      else if (skill === "mental") actual = p.mental || 0;
+      else if (p.skills && p.skills[skill]) actual = p.skills[skill].level || 0;
+      else return false;
+      if (actual < required) return false;
+    }
+  }
+
+  // 工作天数检查
+  var career = state.career || {};
+  var workDays = career.currentJob ? (career.currentJob.workDays || 0) : 0;
+  if (level.reqWorkDays && workDays < level.reqWorkDays) return false;
+
+  // 社交关系检查（高阶职位需要）
+  if (level.reqSocial) {
+    var colleagues = state.corporate?.colleagues?.network || [];
+    var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+    if (highTrust < level.reqSocial / 20) return false;
+  }
+
+  return true;
+}
+
+/** 渲染晋升条件文字 */
+function renderPromotionReqs(state, pathId, level) {
+  var parts = [];
+  if (level.salary) parts.push("月薪¥" + level.salary.toLocaleString());
+  if (level.reqSkills) {
+    for (var s in level.reqSkills) {
+      var labels = { coding: "编程", english: "英语", accounting: "财务", management: "管理", sales: "销售", intelligence: "智力", mental: "心智" };
+      parts.push((labels[s] || s) + "≥" + level.reqSkills[s]);
+    }
+  }
+  if (level.minAge) parts.push("年龄≥" + level.minAge);
+  if (level.reqEducation) parts.push("大专以上学历");
+  if (level.reqWorkDays) parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
+  if (level.reqSocial) parts.push("信任同事≥" + Math.floor(level.reqSocial / 20) + "人");
+  return "要求：" + parts.join(" · ");
+}
+
+/** 投递简历（申请初级职位） */
+function applyCareerJob(pathId, levelId) {
+  var state = StateManager.getState();
+  var path = CAREER_PATHS[pathId];
+  if (!path) { StateManager.addMessage("⚠️ 该职业路径不存在", "warning"); return; }
+
+  var level = path.levels.find(function (l) { return l.id === levelId; });
+  if (!level) return;
+
+  if (!checkCareerPromotion(state, pathId, level)) {
+    StateManager.addMessage("⚠️ 你不满足该职位的条件", "warning"); return;
+  }
+
+  // 初始化 career 状态
+  if (!state.career) state.career = { currentJob: null, history: [] };
+  if (state.career.currentJob) {
+    StateManager.addMessage("⚠️ 你已经有工作了，先辞职才能投递新职位", "warning"); return;
+  }
+
+  state.career.currentJob = {
+    path: pathId,
+    levelId: levelId,
+    levelName: level.name,
+    salary: level.salary,
+    workDays: 0,
+    startDay: state.player.day,
+  };
+
+  StateManager.addMessage(
+    "✅ 入职成功！你成为了" + path.name + "的" + level.name + "，月薪¥" + level.salary.toLocaleString(),
+    "success"
+  );
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 申请晋升 */
+function applyCareerPromotion(pathId, levelId) {
+  var state = StateManager.getState();
+  var path = CAREER_PATHS[pathId];
+  var level = path.levels.find(function (l) { return l.id === levelId; });
+  if (!level) return;
+
+  if (!state.career || !state.career.currentJob) {
+    StateManager.addMessage("⚠️ 你目前没有工作", "warning"); return;
+  }
+
+  if (!checkCareerPromotion(state, pathId, level)) {
+    StateManager.addMessage("⚠️ 晋升条件不足，查看具体要求", "warning"); return;
+  }
+
+  // 晋升成功
+  var oldJob = state.career.currentJob;
+  state.career.history.push({
+    day: state.player.day,
+    event: "晋升：" + oldJob.levelName + " → " + level.name
+  });
+
+  state.career.currentJob.levelId = levelId;
+  state.career.currentJob.levelName = level.name;
+  state.career.currentJob.salary = level.salary;
+
+  StateManager.addMessage(
+    "🎉 晋升成功！你成为了" + level.name + "，月薪涨至¥" + level.salary.toLocaleString(),
+    "success"
+  );
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 辞职 */
+function resignCareerJob() {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+
+  state.career.history.push({
+    day: state.player.day,
+    event: "辞职：离开了" + state.career.currentJob.levelName + "岗位"
+  });
+  state.career.currentJob = null;
+
+  StateManager.addMessage("👋 你已辞去当前工作", "info");
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 每日固定工作结算 */
+function tickCareerJobDaily(state) {
+  if (!state.career || !state.career.currentJob) return;
+
+  var job = state.career.currentJob;
+  job.workDays = (job.workDays || 0) + 1;
+
+  // 每月1日发薪
+  if (state.player.day % 30 === 1) {
+    var salary = job.salary || 5000;
+    state.resources.cash += salary;
+    state.resources.totalEarned += salary;
+    StateManager.addMessage(
+      "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）",
+      "success"
+    );
+
+    // 高阶职位需要维持社交关系
+    var path = CAREER_PATHS[job.path];
+    if (path) {
+      var level = path.levels.find(function (l) { return l.id === job.levelId; });
+      if (level && level.reqSocial) {
+        // 社交关系不足会有绩效警告
+        var colleagues = state.corporate?.colleagues?.network || [];
+        var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+        if (highTrust < Math.floor(level.reqSocial / 20)) {
+          StateManager.addMessage(
+            "⚠️ 你的社交关系网络不足以支撑当前职位，小心被取代！",
+            "warning"
+          );
+        }
+      }
+    }
+  }
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.career_dev = {
+    id: "career_dev",
+    name: "事业发展",
+    icon: "🚀",
+    brief: "创业系统 + 上班族职业路径，从基层到高管的完整职业生涯",
+    version: "1.0.0",
+    related: ["mechanics:startup", "mechanics:workplace_social"],
+    sections: [
+      {
+        kind: "desc",
+        text: "事业是人生的支柱。从街头打零工到成为上市公司CEO，事业系统让你体验不同职业路径的酸甜苦辣。"
+      },
+      {
+        kind: "subhead",
+        text: "💼 职业路径"
+      },
+      {
+        kind: "list",
+        items: [
+          "💻 IT技术：初级程序员→中级开发→高级开发→技术Leader",
+          "📊 金融财务：财务助理→会计/分析师→高级分析师→财务经理",
+          "💼 销售市场：销售助理→销售代表→高级销售→销售经理",
+          "⚙️ 运营管理：运营助理→运营专员→运营主管→运营经理",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "🚀 创业路径"
+      },
+      {
+        kind: "list",
+        items: [
+          "种子轮：验证想法，组建核心团队",
+          "A轮：产品验证后规模化扩张",
+          "B轮：市场扩张，建立壁垒",
+          "C轮：准备IPO前的最后一轮",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "💡 提示：创业需要¥200,000启动资金和承担风险的能力；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需要维护好同事关系才能顺利晋升。"
+      },
+    ],
+  };
+}

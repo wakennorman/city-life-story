@@ -147,6 +147,19 @@ function showHelpModal() {
 function showGameOverModal() {
   const state = StateManager.getState();
 
+  // v3.1：人生缎带判定（游戏失败也记录缎带）
+  if (typeof determineLifeRibbon === "function" && !state.flags._lifeRibbon) {
+    var result = determineLifeRibbon(state);
+    state.flags._lifeRibbon = result.ribbon.id;
+    state.flags._lifeRibbonName = result.ribbon.icon + " " + result.ribbon.name;
+    if (typeof recordRibbon === "function") {
+      var isNew = recordRibbon(result.ribbon.id, result.stats);
+      if (isNew) {
+        state.flags._newRibbonEarned = true;
+      }
+    }
+  }
+
   // Phase 3: 记录多周目记忆 + 生成遗产数据
   if (typeof recordPlaythroughEndEnhanced === "function") {
     recordPlaythroughEndEnhanced(state);

@@ -1191,3 +1191,173 @@ function getSeasonFestivalTip(state) {
 
   return parts.join(" | ");
 }
+
+// ====== 清明回乡事件链 ======
+// v3.1: 设计参考：现实中国清明节传统 + Stardew Valley 节日事件
+var QINGMING_EVENTS = [
+  {
+    id: "qingming_return",
+    icon: "🌿",
+    title: "清明时节雨纷纷",
+    story: `清明到了。工友老李说：\u201c过节了，你不回老家看看？\u201d\n你想起村口那座坟，想起送你出来时母亲的眼神。回去一趟要花两天的工钱和车费，但有些事，不是钱能衡量的。`,
+    choices: [
+      {
+        text: "🚌 回老家扫墓 (¥200)",
+        hint: "两天不能工作，但心里踏实",
+        cost: 200,
+        apply: function (st) {
+          st.resources.cash -= 200;
+          st.player.day += 1;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 20);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          st.flags._qingmingReturned = (st.flags._qingmingReturned || 0) + 1;
+          st.flags._returnedHometown = true;
+          var gift = Random.int(0, 3);
+          if (gift === 0) {
+            var money = Random.int(100, 500);
+            st.resources.cash += money;
+            StateManager.addMessage(
+              `\u00ael 母亲硬塞了¥${money}给你：\u201c路上吃顿好的，别亏待自己。\u201d`,
+              "success",
+            );
+          } else if (gift === 1) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 30);
+            StateManager.addMessage(
+              `\u00ael 母亲装了一大袋腊肉和咸菜：\u201c城里的东西贵，这些你爱吃。\u201d`,
+              "success",
+            );
+          } else {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            StateManager.addMessage(
+              "\u00ael 回村扫了墓，村里人都夸你有出息了。名气+3",
+              "hint",
+            );
+          }
+        },
+      },
+      {
+        text: "📞 给家里打个电话就好",
+        hint: "省钱，但心里不是滋味",
+        apply: function (st) {
+          st.resources.cash -= 10;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.flags._moralScore = (st.flags._moralScore || 0) - 1;
+          StateManager.addMessage(
+            "\u00a1 电话那头母亲说\u201c没事，你忙你的\u201d。你知道她懂，但心里还是酸了一下。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👷 算了，多赚一天是一天",
+        hint: "现实不允许矫情",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 8);
+          st.flags._moralScore = (st.flags._moralScore || 0) - 2;
+          StateManager.addMessage(
+            "\u00a1 你低着头继续干活。清明?清明是什么。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+];
+
+// ====== 中秋探亲事件链 ======
+// v3.1: 设计参考：中秋节走亲访友传统 + NPC好感联动
+var MID_AUTUMN_DEEP_EVENTS = [
+  {
+    id: "mid_autumn_reunion",
+    icon: "🥮",
+    title: "月圆人不圆",
+    story: `中秋夜。你坐在出租屋窗前，月亮又大又圆。\n手机里刷到朋友圈全是团圆饭的照片。你想起了谁，又或者，谁正在想你？`,
+    choices: [
+      {
+        text: "🥮 买月饼去看王大婶",
+        hint: "¥50，好感+15",
+        cost: 50,
+        apply: function (st) {
+          st.resources.cash -= 50;
+          if (st.npcRelations && st.npcRelations.aunt_wang) {
+            st.npcRelations.aunt_wang.affinity = Math.min(
+              100,
+              (st.npcRelations.aunt_wang.affinity || 0) + 15,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.flags._midAutumnGift = true;
+          StateManager.addMessage(
+            "\u00ae 王大婶看到月饼眼眶红了：\u201c孩子，你比我亲生的还孝顺。\u201d好感+15",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🌙 一个人在天台赏月",
+        hint: "省钱，但有点孤独",
+        apply: function (st) {
+          var mood = Random.int(0, 3);
+          if (mood === 0) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "\u00ae 月亮真圆。你想：至少我还活着，还在路上。这也不错。",
+              "hint",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "\u00ae 风有点凉。你裹紧外套，觉得自己像这座城市里的一粒沙。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📱 发条朋友圈",
+        hint: "也许有人会看到",
+        apply: function (st) {
+          var likeCount = Random.int(0, 10);
+          if (likeCount >= 5) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              `\u00ae 朋友圈${likeCount}个赞。有人说\u201c中秋快乐\u201d——你觉得被世界记着。`,
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "\u00ae 朋友圈没什么人回应。月亮不在乎。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  },
+];
+
+/** v3.1: 检查清明/中秋深度事件 */
+function checkFestivalDeepEvents(state) {
+  if (!state.player || !state.player.day) return false;
+  if (state.flags.gameOver || state.flags.victory) return false;
+  var doy = state.player.day % 365;
+  var year = Math.floor(state.player.day / 365);
+  if (doy === 104 && !state.flags["_qingming_y" + year]) {
+    state.flags["_qingming_y" + year] = true;
+    state._pendingEvent = QINGMING_EVENTS[0];
+    setTimeout(function () {
+      if (typeof showEventModal === "function") showEventModal();
+    }, 100);
+    return true;
+  }
+  if (doy === 257 && !state.flags["_midAutumnDeep_y" + year]) {
+    state.flags["_midAutumnDeep_y" + year] = true;
+    state._pendingEvent = MID_AUTUMN_DEEP_EVENTS[0];
+    setTimeout(function () {
+      if (typeof showEventModal === "function") showEventModal();
+    }, 100);
+    return true;
+  }
+  return false;
+}

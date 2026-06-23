@@ -27,47 +27,47 @@ const STARTUP_INDUSTRIES = {
   tech: {
     name: "科技",
     icon: "💻",
-    baseValuation: 2000000,
-    avgBurnRate: 80000,
+    baseValuation: 1400000,
+    avgBurnRate: 120000,
     keySkills: ["coding", "english"],
     desc: "互联网/软件/AI，高增长高波动",
   },
   consumer: {
     name: "消费",
     icon: "🛍️",
-    baseValuation: 1000000,
-    avgBurnRate: 50000,
+    baseValuation: 700000,
+    avgBurnRate: 80000,
     keySkills: ["sales", "cooking"],
     desc: "零售/餐饮/品牌，稳定但增长慢",
   },
   finance: {
     name: "金融科技",
     icon: "💳",
-    baseValuation: 3000000,
-    avgBurnRate: 100000,
+    baseValuation: 2100000,
+    avgBurnRate: 150000,
     keySkills: ["accounting", "management"],
     desc: "支付/理财/保险科技，政策敏感",
   },
   healthcare: {
     name: "医疗健康",
     icon: "🏥",
-    baseValuation: 2500000,
-    avgBurnRate: 90000,
+    baseValuation: 1750000,
+    avgBurnRate: 130000,
     keySkills: ["management"],
     desc: "医疗/医药/健康服务，监管严格",
   },
   education: {
     name: "教育",
     icon: "📚",
-    baseValuation: 800000,
-    avgBurnRate: 40000,
+    baseValuation: 560000,
+    avgBurnRate: 110000,
     keySkills: ["english", "management"],
     desc: "培训/在线教育/内容，受政策影响大",
   },
   manufacturing: {
     name: "制造",
     icon: "🏭",
-    baseValuation: 1500000,
+    baseValuation: 1050000,
     avgBurnRate: 70000,
     keySkills: ["repair", "electrician"],
     desc: "硬件/智能设备/新材料，重资产",
@@ -2233,7 +2233,7 @@ function getStartupTriggerConditions(state) {
       corporate: { rank: "P5", cash: 20000, label: "技术移民转创业" },
     },
     second_gen: {
-      street: { cash: 100000, label: "家里支持启动资金" },
+      street: { cash: 200000, label: "家里支持启动资金" },
       corporate: { rank: "P5", cash: 100000, label: "家里支持启动资金" },
     },
     midlife_crisis: {
@@ -2258,12 +2258,12 @@ function getStartupTriggerConditions(state) {
     rankMet = pIdx >= reqIdx;
   }
   return {
-    cashRequired: pc.cash || 50000,
+    cashRequired: pc.cash || 200000,
     rankRequired: pc.rank || null,
     label: pc.label || "资源积累",
     cashOk: cash >= (pc.cash || 50000),
     rankOk: rankMet,
-    canRegister: cash >= 50000, // 注册硬门槛（启动金）
+    canRegister: cash >= 200000, // 注册硬门槛（启动金）
     met: cash >= (pc.cash || 50000) && rankMet,
   };
 }
@@ -2273,7 +2273,7 @@ function showStartupRegisterModal() {
   var state = StateManager.getState();
   var cash = (state.resources && state.resources.cash) || 0;
   if (cash < 50000) {
-    StateManager.addMessage("⚠️ 注册公司需要 ¥50,000 启动资金。", "warning");
+    StateManager.addMessage("⚠️ 注册公司需要 ¥200,000 启动资金。", "warning");
     return;
   }
 
@@ -2298,7 +2298,7 @@ function showStartupRegisterModal() {
 
   var bodyHtml =
     '<div style="font-size:13px;">' +
-    "<p>注册公司需缴纳 <strong>¥50,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
+    "<p>注册公司需缴纳 <strong>¥200,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
     '<div style="margin:12px 0;">' +
     '<label style="font-weight:600;font-size:12px;">🏢 公司名称</label>' +
     '<input id="startup-name-input" type="text" placeholder="输入公司名（可选）" maxlength="16" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
@@ -2366,7 +2366,7 @@ function registerStartup(state, name, industry, description) {
   // 检查触发条件
   const cash = state.resources.cash;
   const day = state.player.day;
-  const minCash = 50000; // 最低启动资金
+  const minCash = 200000; // 最低启动资金
 
   if (cash < minCash) {
     return {
@@ -4293,6 +4293,25 @@ function tickStartup(state, tickType) {
     Math.round(DAILY_MARKETING_BASE * timeMult) +
     Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
   totalExpenses += marketing;
+
+  // ====== 新增运营成本（使创业更难更真实）=======
+  // 水电网络费 ~¥50/天
+  const utilities = Math.round(50 * timeMult);
+  totalExpenses += utilities;
+
+  // 法律合规费 ~¥30/天（工商年检、商标、许可证等）
+  const legalCompliance = Math.round(30 * timeMult);
+  totalExpenses += legalCompliance;
+
+  // 杂项（办公耗材、茶水、清洁等）~¥25/天
+  const miscOps = Math.round(25 * timeMult);
+  totalExpenses += miscOps;
+
+  // 社保公积金（每个员工额外40%用工成本）
+  const socialInsurance = company.employees.reduce(function (sum, emp) {
+    return sum + Math.round((emp.salary / DAILY_SALARY_DIV) * 0.4 * timeMult);
+  }, 0);
+  totalExpenses += socialInsurance;
 
   company.revenue = totalRevenue;
   company.expenses = totalExpenses;
@@ -11240,9 +11259,9 @@ function renderStartupTab(state, parent) {
       '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>¥50,000</span></div>' +
       "</div>" +
       '<button class="btn btn-lg btn-primary" onclick="showStartupRegisterModal()" ' +
-      (cashNow >= 50000 ? "" : 'style="opacity:0.5;" disabled') +
+      (cashNow >= 200000 ? "" : 'style="opacity:0.5;" disabled') +
       ">" +
-      (cashNow >= 50000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
+      (cashNow >= 200000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
       "</button>" +
       '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);">注册费 ¥50,000，不限阶段和天数，随时可注册</div>' +
       "</div>";

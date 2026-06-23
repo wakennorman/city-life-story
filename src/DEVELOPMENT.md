@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（地图/寺庙/创业Tab/引导系统 v3.0 完善批次）
+> 最后更新: 2026-06-23（v3.1 游戏机制扩展：人生缎带+主线章节+节日深度+跨系统联动事件）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
@@ -13,7 +13,128 @@
 > | v2.1 | `memory/content-expansion-v2.1.md`      | 内容扩充 SOP（20职业上限/成套添加/交叉验证）  |
 > | 1.4  | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                          |
 
-## 2026-06-23 — 玩法师批次：地图/寺庙/创业Tab/引导系统完善
+## 2026-06-23 — v3.1 游戏机制扩展（QoderWork / 游戏设计师+研究员）
+
+**执行 SOP**：`memory/review-improve-v3.0.md` §四/§五
+**会话产出**：3 个新模块 + 1 个事件扩展 + 6 处接线 + 1 个 bug 修复，约 1000 行代码改动，1 次 build
+
+### 研究基础
+
+深度研究了 8 款参考游戏的设计模式和 6 项中国都市现实题材：
+- **《大多数》**：五维生存压力系统、债务驱动叙事
+- **《中国式家长》**：传家宝继承、代际复利
+- **BitLife**：40 种缎带结局分类系统
+- **This War of Mine**：角色崩溃点、资源稀缺耦合
+- **Stardew Valley**：NPC 关系深度、祖父评价信（Year 3 检查点）
+- **Hades**：夜之镜红/绿互斥永久升级
+- **Papers Please**：隐藏成就、道德选择轴
+- **Capitalism Lab**：跨行业反馈循环
+
+### 新系统1 · 人生缎带系统（life_ribbon.js）
+
+- **设计参考**：BitLife Ribbons（40种缎带覆盖各种人生路线）+ 《大多数》结局评价 + Stardew Valley 祖父评价信
+- **新建** `src/js/core/life_ribbon.js`（~280 行），12 条缎带覆盖中国都市生活典型路线：
+  - 🌟 城市传奇 | 🎲 创业先锋 | 💼 打工皇帝 | 📚 考公上岸
+  - ⚡ 内卷之王 | 🏠 房奴一生 | 🏗️ 街头生存者 | 🍵 躺平达人
+  - 🌊 归园田居 | 💊 病困交加 | 🎓 百艺通 | 😔 默默无闻
+- **机制**：游戏结束时（胜利或失败）自动判定最匹配的缎带，缎带不是玩家选择的，而是从人生轨迹中涌现的
+- **持久化**：跨周目累积到 localStorage（`__lifeRibbons`），形成收集目标
+- **UI 集成**：胜利弹窗展示获得缎带 + 收集进度（已收集 X/12）
+- **暴露函数**：`determineLifeRibbon` / `recordRibbon` / `getEarnedRibbons` / `getRibbonProgress` / `collectLifeStats`
+
+### 新系统2 · 主线章节系统（story_chapters.js）
+
+- **设计参考**：Stardew Valley 祖父评价信（Year 3 检查点）+ 《大多数》阶段递进 + This War of Mine 叙事检查点
+- **新建** `src/js/core/story_chapters.js`（~280 行），3 章式人生主线：
+  - **第一章「生存」(第30天)** — 你在这座城市活下来了吗？（4 条分支评价：还债中/刚起步/已稳定/默认）
+  - **第二章「立足」(第180天)** — 你找到自己的位置了吗？（5 条分支：创业/职场/投资/NPC关系/默认）
+  - **第三章「选择」(第365天)** — 你要过什么样的人生？（5 条结局路线预览：创业/考公/财富/躺平/开放）
+- **机制**：纯叙事层增强，不改变游戏玩法，在关键时间节点设置不可跳过的叙事弹窗
+- **接线**：`daily_pipeline.js` 新增 `story_chapter_check` 步骤
+- **暴露函数**：`checkStoryChapter` / `getStoryChapterProgress`
+
+### 新系统3 · 跨系统联动事件（cross_system_events.js）
+
+- **设计参考**：This War of Mine NPC 互动 + 《大多数》行业热度影响 + Capitalism Lab 经济交叉反馈 + Stardew Valley NPC 关系解锁
+- **新建** `src/js/core/cross_system_events.js`（~300 行），5 条跨系统事件：
+  - **王大婶的救急**：NPC 好感 ≥30 触发，修理技能影响结果
+  - **风口来了**：行业热度 >1.2 触发，体力劳动 vs 投资研究选择
+  - **暴跌中的机会**：市场情绪 bearish 触发，抄底 vs 观望 vs 安慰他人
+  - **地上有一沓钱**：道德选择联动，3 条路线（据为己有/交银行/发群找失主）
+  - **老周的废品渠道**：NPC 好感 ≥40 触发，体力劳动 vs 入伙费 vs 拒绝
+- **机制**：通过 IIFE 注入到 RANDOM_EVENTS 数组，零侵入式扩展
+- **核心价值**：让玩家感觉各系统不是孤立的——NPC 关系影响事件、行业热度影响街头收益、世界状态影响可用事件、道德选择产生长期回响
+
+### 节日深度 · 清明回乡 + 中秋探亲事件链（festivals.js +133 行）
+
+- **设计参考**：现实中国清明节传统 + Stardew Valley 节日事件 + 中秋节走亲访友传统
+- **清明回乡**（第104天）：3 选 1 事件链 — 回老家扫墓（¥200，好感+20，随机母亲礼物）/ 打电话（省钱，道德-1）/ 继续干活（道德-2）
+- **中秋探亲**（第257天）：3 选 1 事件链 — 买月饼看王大婶（¥50，好感+15）/ 天台赏月（随机心情）/ 发朋友圈（随机点赞）
+- **NPC 联动**：中秋事件直接操作 `npcRelations.aunt_wang.affinity`，让节日与 NPC 关系系统产生交叉
+- **道德系统联动**：清明事件影响 `_moralScore`，为后续道德事件埋下伏笔
+- **接线**：`daily_pipeline.js` 的 `festival` 步骤新增 `checkFestivalDeepEvents` 调用
+
+### Tab 系统重组 · 事业发展 + 社交合并 + 个人成长合并
+
+- **设计参考**：BitLife 精简 Tab 布局 + 玩家反馈"Tab 太多找不到功能"
+- **新建** `src/js/ui/career_dev.js`（495 行）：事业发展 Tab，街头阶段显示上班族工作引导，创业阶段显示创业系统
+- **新建** `src/js/ui/social_tab.js`（145 行）：合并职场社交 + 家庭为统一社交 Tab
+- **render.js 重组**：
+  - `startup` Tab → `career_dev` Tab（ renderCareerDevTab）
+  - `workplace_social` + `family` → `social` Tab（ renderSocialTab）
+  - `growth` + `personal_growth` → 合并的 `personal_growth` Tab（ renderMergedPersonalGrowthTab，含子 Tab：数据/爱好/健康/目标）
+- **index.html**：更新 Tab 按钮 + 注册2个新 script
+
+### 创业平衡调参 · startup.js
+
+- **设计参考**：《大多数》创业难度 + 玩家反馈"创业太容易赚钱"
+- **估值下调 30%**：科技 200万→140万 / 消费 100万→70万 / 金融 300万→210万 等
+- **燃烧率上调 50%**：科技 8万→12万 / 消费 5万→8万 / 教育 4万→11万 等
+- **注册门槛提高**：¥50,000 → ¥200,000（所有触发条件 + UI 文案同步更新）
+- **second_gen 街头启动资金**：¥100,000 → ¥200,000
+
+### Bug 修复 · render.js TAB_RENDERERS 对象未关闭 + 重复 else 块
+
+- **问题**：`render.js:1091` 存在 `} else {    } else {` 重复块 + `TAB_RENDERERS` 对象缺少闭合 `};`
+- **修复**：移除重复 else 块，补上对象闭合括号
+
+### 文件变更清单
+
+| 文件 | 类型 | 行数 | 说明 |
+| ---- | ---- | ---- | ---- |
+| `src/js/core/life_ribbon.js` | 新建 | 280 | 人生缎带系统（12条缎带 + 收集进度） |
+| `src/js/core/story_chapters.js` | 新建 | 280 | 3章式主线检查点（生存→立足→选择） |
+| `src/js/core/cross_system_events.js` | 新建 | 300 | 5条跨系统联动事件（NPC/行业/世界/道德） |
+| `src/js/ui/career_dev.js` | 新建 | 495 | 事业发展Tab（创业+上班引导） |
+| `src/js/ui/social_tab.js` | 新建 | 145 | 社交Tab（合并职场社交+家庭） |
+| `src/js/core/festivals.js` | 修改 | +133 | 清明回乡 + 中秋探亲事件链 |
+| `src/js/phase1/daily_pipeline.js` | 修改 | +12 | story_chapter_check 步骤 + festival deep events |
+| `src/js/phase2/startup.js` | 修改 | ~38 | 估值/燃烧率/注册门槛平衡调参 |
+| `src/js/ui/victory.js` | 修改 | +12 | triggerVictory 接入缎带判定 |
+| `src/js/ui/modal.js` | 修改 | +12 | showGameOverModal 接入缎带判定 |
+| `src/js/ui/corp_ui.js` | 修改 | +16 | showVictoryModal 缎带展示 UI |
+| `src/js/ui/render.js` | 修改 | ~260 | Tab重组 + renderMergedPersonalGrowthTab + bug修复 |
+| `src/index.html` | 修改 | ~22 | Tab按钮重组 + 注册5个新script |
+
+**总计 ≈ 2000 行**（含叙事文案+UI代码）
+
+### 验证
+
+- 全部 8 个 JS 文件 `node --check` 通过 ✅
+- 构建产物 `dist/index.html` 3666.5 KB（在 3.5-3.8MB 期望区间内）✅
+- grep 验证：life_ribbon 21处 / story_chapters 18处 / cross_system 7处 / festival_deep 5处 ✅
+
+### 设计参考总结
+
+| 改进项 | 参考游戏 | 借鉴的核心设计 |
+| ---- | ---- | ---- |
+| 人生缎带 | BitLife Ribbons | 缎带从行为涌现而非玩家选择 |
+| 主线章节 | Stardew Valley 祖父评价信 | 关键时间节点叙事检查点 |
+| 跨系统事件 | This War of Mine / Capitalism Lab | NPC关系/行业热度/世界状态联动 |
+| 节日深度 | Stardew Valley 节日事件 | 节日与NPC关系/道德系统交叉 |
+| 内容关联度 | 《大多数》五维耦合 | 系统间相互影响而非各自孤立 |
+
+
 
 **执行人**：玩法师（游戏设计师）
 **会话产出**：4 个问题域修复 + 2 个 bug 修复，约 280 行代码改动，1 次 build
