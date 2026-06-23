@@ -320,6 +320,41 @@ var DREAMS = [
   },
 ];
 
+/** 强制选择人生目标弹窗（无"稍后再说"选项）*/
+function showForcedDreamModal() {
+  if (typeof showDreamSelectModal === "function") {
+    // 调用 actions_extra.js 中的 selectDream 回调
+    // 但强制模式：不设"稍后再说"按钮
+    if (typeof DREAMS === "undefined") return;
+    var optHtml = DREAMS.map(function (d) {
+      return (
+        "<div onclick=\"window.selectDream('" +
+        d.id +
+        '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
+        "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"> " +
+        "<strong>" +
+        d.icon +
+        " " +
+        d.name +
+        "</strong>" +
+        '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
+        d.desc +
+        "</div>" +
+        "</div>"
+      );
+    }).join("");
+    showModal({
+      title: "🌟 确立人生目标",
+      body:
+        '<p style="font-size:13px;color:var(--text-primary);margin-bottom:12px;font-weight:600;">在这座城市，你想要什么？选定一个方向，脚踏实地去努力。</p>' +
+        '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">选定一个方向，游戏会追踪你的进度，在每个里程碑时给你一段专属故事。</p>' +
+        '<p style="font-size:11px;color:var(--danger);margin-bottom:10px;">⚠️ 必须选择一个人生目标才能继续游戏</p>' +
+        optHtml,
+      buttons: [],
+    });
+  }
+}
+
 /** 获取当前梦想定义 */
 function getCurrentDream(state) {
   var id = state.flags && state.flags._dreamId;
@@ -376,4 +411,14 @@ function getDreamCurrentTitle(state) {
   var idx = state.flags._dreamMilestone || 0;
   if (idx >= dream.milestones.length) return "圆梦！ 🎉";
   return dream.milestones[idx].title;
+}
+
+// ====== 全局挂载 ======
+if (typeof window !== "undefined") {
+  window.showForcedDreamModal = showForcedDreamModal;
+  window.DREAMS = DREAMS;
+  window.getCurrentDream = getCurrentDream;
+  window.checkDreamProgress = checkDreamProgress;
+  window.getDreamProgress = getDreamProgress;
+  window.getDreamCurrentTitle = getDreamCurrentTitle;
 }

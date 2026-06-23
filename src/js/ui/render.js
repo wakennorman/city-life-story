@@ -1205,15 +1205,17 @@ function renderGrowthTab(state, parent) {
   radarInfo.appendChild(radarCanvas);
   radarSection.appendChild(radarInfo);
 
-  // 属性说明
+  // 属性说明（v3.0：心智→能力，新增颜值/道德，标题"属性"取代"基础属性"）
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
     { label: "体质", value: p.physique, color: "#c4803a" },
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "心智", value: p.mental, color: "#9b74b8" },
+    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
   stats.forEach(function (s) {
     var row = document.createElement("div");
@@ -2407,6 +2409,177 @@ function renderMapTab(state, parent) {
     quick.innerHTML += "</div>";
     container.appendChild(quick);
   }
+
+  // === v3.0 交通方式选择（共享单车/地铁/打车）===
+  // 设计参考：北上广真实数据
+  //   共享单车 ¥2/15分钟，仅适合相邻地点（≤1跳），最快到非商业区
+  //   地铁 ¥4 固定，仅可到地铁沿线大站（科技园/商业区/医院/学校/培训中心/娱乐区）
+  //   打车 ¥15-50 按距离，可达任何已探索地点，最快但最贵
+  const transitWrap = document.createElement("div");
+  transitWrap.style.cssText =
+    "padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);";
+  transitWrap.innerHTML = `
+    <h4 style="color:var(--accent);margin:0 0 8px;font-size:13px;">🚇 交通方式</h4>
+    <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;">
+      点击上方"快速出行"选择目的地后，下方按钮激活；或直接点选交通方式查看可达地点。
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <button class="transit-btn" data-mode="bike" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥2 · 仅相邻地点</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快到非商业区</div>
+      </button>
+      <button class="transit-btn" data-mode="metro" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--accent);">🚇 地铁</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 仅地铁沿线</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院等</div>
+      </button>
+      <button class="transit-btn" data-mode="taxi" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--warning);">🚕 打车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥15-50 按距离</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">可达任何已探索地点</div>
+      </button>
+    </div>
+    <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+  `;
+  container.appendChild(transitWrap);
+
+  // v3.0 地铁沿线大站定义
+  const METRO_STATIONS = [
+    "techPark",
+    "commercialDist",
+    "hospital",
+    "school",
+    "trainingCenter",
+    "entertainment",
+  ];
+  // v3.0 共享单车仅可到相邻地点（TRAVEL_GRAPH 1 跳）
+  // 打车可到任何 reachable 已探索地点
+
+  // 绑定交通方式按钮
+  setTimeout(() => {
+    document.querySelectorAll(".transit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        const result = document.getElementById("transit-result");
+        if (!result) return;
+        // 列出该交通方式可到的地点
+        let available = [];
+        let priceInfo = "";
+        let apInfo = "";
+        if (mode === "bike") {
+          available = reachableList.slice(); // 仅相邻地点
+          priceInfo = "¥2/次";
+          apInfo = "AP -8（骑行耗时）";
+        } else if (mode === "metro") {
+          available = reachableList.filter(
+            (k) => METRO_STATIONS.indexOf(k) >= 0,
+          );
+          // 也允许从地铁沿线出发到任何地铁沿线
+          if (METRO_STATIONS.indexOf(locKey) >= 0) {
+            METRO_STATIONS.forEach((k) => {
+              if (k !== locKey && available.indexOf(k) < 0) available.push(k);
+            });
+          }
+          priceInfo = "¥4/次";
+          apInfo = "AP -5（地铁最快）";
+        } else if (mode === "taxi") {
+          available = reachableList.slice();
+          priceInfo = "¥15-50（按距离）";
+          apInfo = "AP -3（最快但最贵）";
+        }
+        if (available.length === 0) {
+          result.innerHTML =
+            '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
+          return;
+        }
+        result.innerHTML =
+          '<div style="margin-bottom:6px;">' +
+          "<strong>" +
+          { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[mode] +
+          "</strong> · " +
+          priceInfo +
+          " · " +
+          apInfo +
+          "</div>" +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">' +
+          available
+            .map((k) => {
+              const d = getLocation(k);
+              if (!d) return "";
+              const price =
+                mode === "bike"
+                  ? 2
+                  : mode === "metro"
+                    ? 4
+                    : 15 + Math.floor(Math.random() * 36);
+              const ap = mode === "bike" ? 8 : mode === "metro" ? 5 : 3;
+              return (
+                '<button class="transit-go-btn" data-dest="' +
+                k +
+                '" data-price="' +
+                price +
+                '" data-ap="' +
+                ap +
+                '" data-mode="' +
+                mode +
+                '" style="' +
+                'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+                '<div style="font-weight:600;">' +
+                d.name +
+                "</div>" +
+                '<div style="color:var(--text-muted);margin-top:2px;">¥' +
+                price +
+                " · AP" +
+                ap +
+                "</div>" +
+                "</button>"
+              );
+            })
+            .join("") +
+          "</div>";
+        // 绑定实际出行按钮
+        document.querySelectorAll(".transit-go-btn").forEach((gb) => {
+          gb.addEventListener("click", () => {
+            const destKey = gb.dataset.dest;
+            const price = parseInt(gb.dataset.price, 10) || 0;
+            const ap = parseInt(gb.dataset.ap, 10) || 5;
+            const modeName =
+              { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[
+                gb.dataset.mode
+              ] || "出行";
+            if ((state.resources.cash || 0) < price) {
+              StateManager.addMessage(
+                "💸 " + modeName + "需要¥" + price + "，你现金不够。",
+                "warning",
+              );
+              return;
+            }
+            state.resources.cash -= price;
+            StateManager.update("trade.currentLocation", destKey);
+            const dest = getLocation(destKey);
+            StateManager.addMessage(
+              modeName +
+                " 你来到了" +
+                (dest ? dest.name : destKey) +
+                "，花了¥" +
+                price +
+                "。",
+              "info",
+            );
+            if (typeof consumeAP === "function") consumeAP(ap);
+            renderAll();
+          });
+        });
+      });
+    });
+  }, 0);
 
   // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
   const mapWrap = document.createElement("div");
@@ -5277,21 +5450,22 @@ function renderPersonalGrowthTab(state, parent) {
 
 /**
  * 合并的个人成长Tab（原数据可视化+原个人成长系统合并）
- * 包含：数据图表 + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
+ * 包含：属性训练(v3.0新增,排第一) + 数据图表(排最后) + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
  */
 function renderMergedPersonalGrowthTab(state, parent) {
   parent.innerHTML = "";
   var p = state.player;
   var pg = state.personalGrowth || {};
 
-  // ---- 子Tab导航 ----
+  // ---- 子Tab导航（v3.0：属性训练排第一，数据排最后）----
   var subTabs = [
-    { id: "pg_charts", label: "📈 数据", icon: "📈" },
+    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" }, // v3.0 新增排第一
     { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
     { id: "pg_health", label: "💪 健康", icon: "💪" },
     { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
+    { id: "pg_charts", label: "📈 数据", icon: "📈" }, // v3.0 移到最后
   ];
-  var currentSubTab = state._pgSubTab || "pg_charts";
+  var currentSubTab = state._pgSubTab || "pg_stat_train";
 
   var nav = document.createElement("div");
   nav.style.cssText =
@@ -5313,6 +5487,9 @@ function renderMergedPersonalGrowthTab(state, parent) {
   content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
 
   switch (currentSubTab) {
+    case "pg_stat_train":
+      renderPgStatTrain(state, content);
+      break;
     case "pg_charts":
       renderPgCharts(state, content);
       break;
@@ -5329,6 +5506,237 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
   parent.appendChild(content);
 }
+
+/** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
+function renderPgStatTrain(state, content) {
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+
+  // 整容入口（医院/美容院）
+  var trainings = [
+    {
+      id: "train_physique",
+      name: "🏋️ 健身房",
+      stat: "physique",
+      statLabel: "体质",
+      basePrice: 50,
+      priceStep: 30,
+      gain: [1, 3],
+    },
+    {
+      id: "train_intelligence",
+      name: "📚 自习室",
+      stat: "intelligence",
+      statLabel: "智力",
+      basePrice: 60,
+      priceStep: 40,
+      gain: [1, 3],
+    },
+    {
+      id: "train_agility",
+      name: "🏃 跑步训练",
+      stat: "agility",
+      statLabel: "敏捷",
+      basePrice: 40,
+      priceStep: 25,
+      gain: [1, 3],
+    },
+    {
+      id: "train_ability",
+      name: "🧘 冥想训练",
+      stat: "mental",
+      statLabel: "能力",
+      basePrice: 70,
+      priceStep: 50,
+      gain: [1, 2],
+    },
+    {
+      id: "train_charm_grooming",
+      name: "💇 形象设计",
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 100,
+      priceStep: 80,
+      gain: [1, 3],
+    },
+    {
+      id: "train_charm_surgery",
+      name: "💉 整容手术",
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 2000,
+      priceStep: 1500,
+      gain: [5, 15],
+      risky: true,
+    },
+  ];
+
+  var html =
+    '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+
+  trainings.forEach(function (t) {
+    var count = flags["_trainCount_" + t.id] || 0;
+    var price = t.basePrice + count * t.priceStep;
+    var curVal = p[t.stat] || 0;
+    var canAfford = (state.resources.cash || 0) >= price;
+    html +=
+      '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
+    html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
+      t.statLabel +
+      "：" +
+      curVal +
+      "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">已训练 ' +
+      count +
+      " 次</div>";
+    html +=
+      '<div style="font-size:12px;color:' +
+      (canAfford ? "var(--success)" : "var(--danger)") +
+      ';margin-top:4px;">价格：¥' +
+      price.toLocaleString() +
+      "</div>";
+    if (t.risky) {
+      html +=
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（颜值-5/健康-15）</div>';
+    }
+    html +=
+      "<button onclick=\"window.__doTrain('" +
+      t.id +
+      "')\" " +
+      (canAfford ? "" : "disabled") +
+      ' style="' +
+      "margin-top:6px;padding:6px 10px;background:" +
+      (canAfford ? "var(--accent)" : "var(--bg-secondary)") +
+      ";" +
+      "color:" +
+      (canAfford ? "white" : "var(--text-muted)") +
+      ";border:none;border-radius:4px;cursor:" +
+      (canAfford ? "pointer" : "not-allowed") +
+      ';font-size:12px;">' +
+      (canAfford ? "训练" : "现金不足") +
+      "</button>";
+    html += "</div>";
+  });
+  html += "</div>";
+
+  // 整容说明
+  html +=
+    '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
+  html +=
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时颜值-5、健康-15、心情-10。建议攒够钱一次到位，避免反复失败。";
+  html += "</div>";
+
+  content.innerHTML = html;
+}
+
+/** v3.0 训练执行（暴露给 onclick）*/
+window.__doTrain = function (trainId) {
+  var state = StateManager.getState();
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+  var trainings = {
+    train_physique: {
+      stat: "physique",
+      statLabel: "体质",
+      basePrice: 50,
+      priceStep: 30,
+      gain: [1, 3],
+      apCost: 6,
+    },
+    train_intelligence: {
+      stat: "intelligence",
+      statLabel: "智力",
+      basePrice: 60,
+      priceStep: 40,
+      gain: [1, 3],
+      apCost: 6,
+    },
+    train_agility: {
+      stat: "agility",
+      statLabel: "敏捷",
+      basePrice: 40,
+      priceStep: 25,
+      gain: [1, 3],
+      apCost: 5,
+    },
+    train_ability: {
+      stat: "mental",
+      statLabel: "能力",
+      basePrice: 70,
+      priceStep: 50,
+      gain: [1, 2],
+      apCost: 5,
+    },
+    train_charm_grooming: {
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 100,
+      priceStep: 80,
+      gain: [1, 3],
+      apCost: 4,
+    },
+    train_charm_surgery: {
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 2000,
+      priceStep: 1500,
+      gain: [5, 15],
+      apCost: 8,
+      risky: true,
+    },
+  };
+  var t = trainings[trainId];
+  if (!t) return;
+  var count = flags["_trainCount_" + trainId] || 0;
+  var price = t.basePrice + count * t.priceStep;
+  if ((state.resources.cash || 0) < price) {
+    StateManager.addMessage("💸 现金不足，需要¥" + price, "warning");
+    return;
+  }
+  state.resources.cash -= price;
+  flags["_trainCount_" + trainId] = count + 1;
+
+  // 风险检查（整容）
+  if (t.risky && Math.random() < 0.2) {
+    p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
+    state.status.health = Math.max(20, (state.status.health || 100) - 15);
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
+    StateManager.addMessage(
+      "💉 整容失败！颜值-5，健康-15，心情-10。 surgeon 技术不行...",
+      "error",
+    );
+  } else {
+    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var crit = Math.random() < 0.1 ? 2 : 0;
+    var totalGain = baseGain + crit;
+    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
+    var msg =
+      "✨ " +
+      ({
+        physique: "🏋️ 健身房",
+        intelligence: "📚 自习室",
+        agility: "🏃 跑步训练",
+        mental: "🧘 冥想训练",
+        charm: "💇 形象设计/整容",
+      }[t.stat] || "训练") +
+      " " +
+      t.statLabel +
+      "+" +
+      totalGain;
+    if (crit > 0) msg += "（爆击！）";
+    StateManager.addMessage(msg, "success");
+  }
+  if (typeof consumeAP === "function") consumeAP(t.apCost);
+  if (typeof renderAll === "function") renderAll();
+};
 
 /** 图表子面板（数据可视化） */
 function renderPgCharts(state, content) {
@@ -5372,8 +5780,10 @@ function renderPgCharts(state, content) {
     { label: "体质", value: p.physique, color: "#c4803a" },
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "心智", value: p.mental, color: "#9b74b8" },
+    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
   stats.forEach(function (s) {
     var row = document.createElement("div");

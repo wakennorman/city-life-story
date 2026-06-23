@@ -20,9 +20,10 @@
 
   // ====== 分类定义 ======
   // 顺序决定了页面上分类的显示顺序
+  // v3.0：赚钱谋生 → 短期临时工作（更准确）
   var CATEGORIES = [
     { id: "survival", name: "生存必需", icon: "🌾", order: 10 },
-    { id: "work", name: "赚钱谋生", icon: "💼", order: 20 },
+    { id: "work", name: "短期临时工作", icon: "💼", order: 20 },
     { id: "appliance", name: "地点服务", icon: "🏪", order: 25 },
     { id: "shopping", name: "购物装备", icon: "🛒", order: 30 },
     { id: "education", name: "学习提升", icon: "🎓", order: 40 },
@@ -90,7 +91,8 @@
     // === 职业发展 ===
     corpteam_view: "career",
     corp_team_view: "career",
-    start_business: "career",
+    // v3.0：start_business 移到 other 分类
+    start_business: "other",
 
     // === 社交休闲 ===
     call_home: "social",
@@ -108,8 +110,8 @@
     self_study: "education",
     night_school: "education",
     study: "education",
-    set_dream: "education",
-    view_dream: "education",
+    set_dream: "other", // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
+    view_dream: "other",
 
     // === 购物装备 ===
     buy_ingredients: "shopping",
@@ -164,8 +166,9 @@
     study: 10,
     self_study: 15,
     night_school: 20,
-    set_dream: 25, // 确立人生目标
-    view_dream: 26,
+    // v3.0：set_dream / view_dream 移到"其他"分类，归类到个人成长Tab的目标子项
+    set_dream: 5, // 但归类改为 other
+    view_dream: 6,
     // edu_study 由前缀 ^edu_ 匹配，设默认50
     // edu_exam
     // edu_cert
@@ -200,7 +203,8 @@
     // loan 保持默认50
 
     // 职业发展
-    start_business: 10, // 摆地摊创业（街头→创业的跳板）
+    // v3.0：start_business（摆地摊创业）从 work 分类移到 other 分类
+    start_business: 10, // 摆地摊创业（街头→创业的跳板，归"其他"）
     // corp_* 和 startup_* 保持默认50
   };
 

@@ -6,26 +6,33 @@
  */
 
 const SCENARIOS = [
-  // ====== 默认/经典：城市务工者 ======
+  // ====== 默认/经典：城市务工者（v3.0 黑暗开局重做） ======
   {
     id: "classic",
     name: "城市务工者",
-    icon: "🏘️",
+    icon: "🏚️",
     category: "default",
-    brief: "从城中村收废品起步，技能积累与阶级流动的经典叙事",
+    brief:
+      "黑暗开局：身无分文、风餐露宿，3 天内必须找到饭吃。城市冰冷，活下去就是胜利",
     description:
-      "你从农村来到城市，揣着仅有的1500元，还欠村长5500元。一切从零开始——城中村的废品回收、工地上的汗水和街头的小生意。这座城市既冷漠又充满机会，看你能否抓住命运的转折点。",
+      "你从农村来到城市，揣着仅剩的¥300。没有村长债——村长那笔钱早被你爹赌光了。\n\n你睡在城中村桥洞下，三天没正经吃过饭，胃在拧成绳。健康亮红灯，饥饱见底，状态全线告急。这座城市不会等你。\n\n要么去工地扛水泥、要么去偷电瓶——选择在你。但记住：偷东西快，被抓也快。",
     startingMessage:
-      "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
-    difficulty: "★★☆",
-    difficultyLabel: "适中",
-    // 初始属性
-    stats: { physique: 22, intelligence: 20, agility: 24, mental: 26 },
-    // 初始资源
-    resources: { cash: 1500, bankBalance: 0, villageDebt: 5500, bankDebt: 0 },
+      "🏚️ 你揣着仅剩的¥300来到这座城市。没有村长债——但也没有退路。饥饱见底，健康亮红灯。3 天内必须找到饭吃，否则这座城市会把你吞掉。集中注意力，活下去。",
+    difficulty: "★★★★",
+    difficultyLabel: "地狱",
+    // 初始属性（v3.0：保留 mental 字段名避免破坏现有代码，UI 层显示为"能力"；新增 charm 颜值）
+    stats: {
+      physique: 18,
+      intelligence: 15,
+      agility: 22,
+      mental: 18,
+      charm: 20,
+    },
+    // 初始资源（v3.0 黑暗：¥300 起步，无村长债）
+    resources: { cash: 300, bankBalance: 0, villageDebt: 0, bankDebt: 0 },
     // 初始年龄
     age: 20,
-    // 初始技能（level, xp）
+    // 初始技能
     skills: {
       cooking: { level: 0, xp: 0 },
       repair: { level: 0, xp: 0 },
@@ -38,12 +45,14 @@ const SCENARIOS = [
       electrician: { level: 0, xp: 0 },
       welding: { level: 0, xp: 0 },
     },
-    // 初始学历 0=大专, 1=本科, 2=研究生
+    // 初始学历
     education: 0,
-    // 初始需求
-    needs: { hunger: 70, fatigue: 15, hygiene: 75, happiness: 55 },
-    // 初始健康
-    health: 100,
+    // 初始需求（v3.0 黑暗：饥饱见底、卫生差、心情崩、疲劳高）
+    needs: { hunger: 25, fatigue: 50, hygiene: 30, happiness: 20 },
+    // 初始健康（v3.0 黑暗：70 不是 100，逼玩家立刻处理）
+    health: 70,
+    // 初始道德（v3.0 新增，0-100，初始 50）
+    morality: 50,
     // 初始住所等级
     housingTier: 0, // 0=露宿
     // 初始名声
@@ -53,9 +62,9 @@ const SCENARIOS = [
     // 游戏阶段
     phase: "street",
     // 特殊标记
-    tags: ["新手友好", "均衡发展"],
-    // 叙事标签（用于游戏百科、成就统计等）
-    narrativeTags: ["migrant_worker"],
+    tags: ["地狱开局", "逼玩家集中赚钱", "道德考验"],
+    // 叙事标签
+    narrativeTags: ["migrant_worker", "dark_start"],
     // 剧本专属起始事件（可选）
     startEvent: null,
   },

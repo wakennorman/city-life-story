@@ -22,6 +22,9 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
+      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
+      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
+      state.flags._dayStartCash = state.resources.cash || 0;
     },
   },
 
@@ -749,6 +752,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.0 黑暗开局：道德良知回响检查 ===
+  {
+    name: "morality_echo",
+    fn: function (state) {
+      if (typeof checkMoralityEcho === "function") {
+        checkMoralityEcho(state);
+      }
+    },
+  },
+
   // === v3.1：主线章节检查 ===
   {
     name: "story_chapter_check",
@@ -888,8 +901,9 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
  * MiniMax 友好：新增步骤只需 push 一个 {name, fn} 对象。
  */
 function runDailyPipeline(state) {
-  // 记录日始状态用于今日总结（存入 state.flags 供 end_log fn 读取）
-  state.flags._dayStartCash = state.resources.cash || 0;
+  // 记录日始状态用于今日总结
+  // v3.2 修复: _dayStartCash 在 day_increment 步骤中设置（正确捕获日初现金）
+  // 此处仅记录健康/心情日始值（这些在管线中不变化）
   state.flags._dayStartHealth = (state.status && state.status.health) || 100;
   state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
 
@@ -898,7 +912,8 @@ function runDailyPipeline(state) {
 
     // 极端状态短路逻辑：
     // extreme_check / critical_punish 返回 'skip_day' 时，跳过后续非核心步骤
-    // 但 finance / autosave 始终执行（保证利息和存档不丢）
+    // 但 finance / autosave / daily_report 始终执行
+    // （v3.0 修复：daily_report 也加入始终执行列表，否则极端状态天玩家看不到收支报告）
     if (step.name === "extreme_check" || step.name === "critical_punish") {
       var result = step.fn(state);
       if (result === "skip_day") {
@@ -906,10 +921,14 @@ function runDailyPipeline(state) {
           "🌙 第" + state.player.day + "天在昏迷中过去了...",
           "danger",
         );
-        // 执行最后的核心步骤：财务、存档
+        // 执行最后的核心步骤：财务、收支报告、存档
         for (var j = i + 1; j < DAILY_PIPELINE.length; j++) {
           var lateStep = DAILY_PIPELINE[j];
-          if (lateStep.name === "finance" || lateStep.name === "autosave") {
+          if (
+            lateStep.name === "finance" ||
+            lateStep.name === "autosave" ||
+            lateStep.name === "daily_report"
+          ) {
             lateStep.fn(state);
           }
         }

@@ -965,11 +965,13 @@ function createDefaultState() {
       age: 20,
       birthday: { month: 6, day: 15 },
 
-      // 街头 4 维属性 (0-100)
+      // 街头 4+2 维属性 (0-100)
       physique: 22, // 体质
       intelligence: 20, // 智力
       agility: 24, // 敏捷
-      mental: 26, // 心智
+      mental: 26, // 心智（v3.0：UI 显示为"能力"，字段名保留避免破坏）
+      charm: 20, // 颜值（v3.0 新增：影响 NPC 初遇好感、职场面试、特殊行动）
+      morality: 50, // 道德（v3.0 新增：0-100，违法行为降低，捐款/义工提升）
       fame: 0, // 名气（基础第五维，从 status.fame 迁移而来）
 
       // 职场 7 维属性 (进入职场后初始化)
@@ -997,15 +999,15 @@ function createDefaultState() {
 
     // --- 经济 ---
     resources: {
-      cash: 1500, // 现金（元）
+      cash: 300, // 现金（元）— v3.2 黑暗开局：¥300
       bankBalance: 0, // 银行存款
-      debt: 5500, // 当前总欠款（兼容旧字段）
-      villageDebt: 5500, // 欠村长的钱
+      debt: 0, // 当前总欠款 — v3.2 无起步债
+      villageDebt: 0, // 欠村长的钱 — v3.2 无起步债
       villageDebtInterest: 0, // 累计村长利息
       bankDebt: 0, // 欠银行的钱
       bankDebtDay: 0, // 最近一笔银行贷款发放日
       bankCreditHistory: [], // 信贷记录 [{ day, amount, repaid, rating }]
-      loanPrincipal: 5500, // 原始借款额
+      loanPrincipal: 0, // v3.2 无起步债
       loanDay: 0, // 借款日
       dailyInterest: 0.0035, // 日息 0.3%
       totalEarned: 0, // 终身总收入
@@ -1028,15 +1030,15 @@ function createDefaultState() {
 
     // --- 基本需求 (0-100) ---
     needs: {
-      hunger: 70,
-      fatigue: 15,
-      hygiene: 75,
-      happiness: 55,
+      hunger: 25, // v3.2 黑暗开局：饥饱见底
+      fatigue: 50, // v3.2 黑暗开局：疲惫不堪
+      hygiene: 30, // v3.2 黑暗开局：卫生差
+      happiness: 20, // v3.2 黑暗开局：心情低落
     },
 
     // --- 派生状态 ---
     status: {
-      health: 100,
+      health: 70, // v3.2 黑暗开局：健康亮红灯
       emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
       sick: false, // 兼容旧字段（内部由 illnesses 数组派生）
       injured: false, // 兼容旧字段
@@ -1749,9 +1751,10 @@ function addDailyTransaction(state, type, category, amount, description) {
 
   // ====== 分类定义 ======
   // 顺序决定了页面上分类的显示顺序
+  // v3.0：赚钱谋生 → 短期临时工作（更准确）
   var CATEGORIES = [
     { id: "survival", name: "生存必需", icon: "🌾", order: 10 },
-    { id: "work", name: "赚钱谋生", icon: "💼", order: 20 },
+    { id: "work", name: "短期临时工作", icon: "💼", order: 20 },
     { id: "appliance", name: "地点服务", icon: "🏪", order: 25 },
     { id: "shopping", name: "购物装备", icon: "🛒", order: 30 },
     { id: "education", name: "学习提升", icon: "🎓", order: 40 },
@@ -1819,7 +1822,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     // === 职业发展 ===
     corpteam_view: "career",
     corp_team_view: "career",
-    start_business: "career",
+    // v3.0：start_business 移到 other 分类
+    start_business: "other",
 
     // === 社交休闲 ===
     call_home: "social",
@@ -1837,8 +1841,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     self_study: "education",
     night_school: "education",
     study: "education",
-    set_dream: "education",
-    view_dream: "education",
+    set_dream: "other",  // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
+    view_dream: "other",
 
     // === 购物装备 ===
     buy_ingredients: "shopping",
@@ -1893,8 +1897,9 @@ function addDailyTransaction(state, type, category, amount, description) {
     study: 10,
     self_study: 15,
     night_school: 20,
-    set_dream: 25, // 确立人生目标
-    view_dream: 26,
+    // v3.0：set_dream / view_dream 移到"其他"分类，归类到个人成长Tab的目标子项
+    set_dream: 5,  // 但归类改为 other
+    view_dream: 6,
     // edu_study 由前缀 ^edu_ 匹配，设默认50
     // edu_exam
     // edu_cert
@@ -1929,7 +1934,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     // loan 保持默认50
 
     // 职业发展
-    start_business: 10, // 摆地摊创业（街头→创业的跳板）
+    // v3.0：start_business（摆地摊创业）从 work 分类移到 other 分类
+    start_business: 10, // 摆地摊创业（街头→创业的跳板，归"其他"）
     // corp_* 和 startup_* 保持默认50
   };
 
@@ -17548,12 +17554,52 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "📱",
       title: "手机被偷了",
-      story: "在拥挤的公交车上，你感觉口袋一轻——手机没了！那部手机虽然不值钱，但里面有你的通讯录、支付信息和各种账号。",
-      conditions: function (st) { return st.player.day > 5 && st.resources.cash > 100; },
+      story:
+        "在拥挤的公交车上，你感觉口袋一轻——手机没了！那部手机虽然不值钱，但里面有你的通讯录、支付信息和各种账号。",
+      conditions: function (st) {
+        return st.player.day > 5 && st.resources.cash > 100;
+      },
       choices: [
-        { text: "🚓 报警挂失", hint: "安全第一，花¥200补办", cost: 200, apply: function(st) { StateManager.addMessage("🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。", "info"); } },
-        { text: "💪 自己沿路找找", hint: "花1AP碰运气", apply: function(st) { var found = Random.chance(0.3); if(found){StateManager.addMessage("🙏 你沿着原路找回去，竟然在垃圾桶旁边找到了！虚惊一场。","success");}else{StateManager.addMessage("😤 找了半天没找到，还耽误了时间。","warning");} } },
-        { text: "😤 破财消灾，直接买二手", hint: "¥500换个二手", cost: 500, apply: function(st) { StateManager.addMessage("💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。","info"); } },
+        {
+          text: "🚓 报警挂失",
+          hint: "安全第一，花¥200补办",
+          cost: 200,
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 自己沿路找找",
+          hint: "花1AP碰运气",
+          apply: function (st) {
+            var found = Random.chance(0.3);
+            if (found) {
+              StateManager.addMessage(
+                "🙏 你沿着原路找回去，竟然在垃圾桶旁边找到了！虚惊一场。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😤 找了半天没找到，还耽误了时间。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😤 破财消灾，直接买二手",
+          hint: "¥500换个二手",
+          cost: 500,
+          apply: function (st) {
+            StateManager.addMessage(
+              "💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。",
+              "info",
+            );
+          },
+        },
       ],
     },
     {
@@ -17561,12 +17607,53 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🏠",
       title: "房东临时查房",
-      story: "你正窝在出租屋里休息，突然传来急促的敲门声——房东来了！他皱着眉头扫了一圈屋里的情况，看来是要找茬涨房租。",
-      conditions: function (st) { return st.player.day > 15 && !st.flags._landlordVisited; },
+      story:
+        "你正窝在出租屋里休息，突然传来急促的敲门声——房东来了！他皱着眉头扫了一圈屋里的情况，看来是要找茬涨房租。",
+      conditions: function (st) {
+        return st.player.day > 15 && !st.flags._landlordVisited;
+      },
       choices: [
-        { text: "🤝 好烟好茶招待", hint: "花¥100缓和关系", cost: 100, apply: function(st) { st.flags._landlordVisited = true; StateManager.addMessage("🍵 你给房东递了根烟倒了杯茶。他脸色缓和了，临走说了句「小伙子懂事」。房租暂时不涨。","success"); } },
-        { text: "💪 据理力争，合同说话", hint: "需要心智≥30", apply: function(st) { st.flags._landlordVisited = true; if((st.player.mental||0)>=30){StateManager.addMessage("📋 你拿出租房合同据理力争。房东理亏，嘟囔了几句走了。","success");}else{StateManager.addMessage("😰 你支支吾吾说不出个所以然，房东决定下个月涨租¥200。","warning");} } },
-        { text: "😰 装可怜求情", hint: "可能需要好感", apply: function(st) { st.flags._landlordVisited = true; StateManager.addMessage("😢 你跟房东说最近确实困难。房东叹了口气：「我也是给人打工的，下不为例。」","info"); } },
+        {
+          text: "🤝 好烟好茶招待",
+          hint: "花¥100缓和关系",
+          cost: 100,
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            StateManager.addMessage(
+              "🍵 你给房东递了根烟倒了杯茶。他脸色缓和了，临走说了句「小伙子懂事」。房租暂时不涨。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 据理力争，合同说话",
+          hint: "需要心智≥30",
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            if ((st.player.mental || 0) >= 30) {
+              StateManager.addMessage(
+                "📋 你拿出租房合同据理力争。房东理亏，嘟囔了几句走了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😰 你支支吾吾说不出个所以然，房东决定下个月涨租¥200。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😰 装可怜求情",
+          hint: "可能需要好感",
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            StateManager.addMessage(
+              "😢 你跟房东说最近确实困难。房东叹了口气：「我也是给人打工的，下不为例。」",
+              "info",
+            );
+          },
+        },
       ],
     },
     {
@@ -17574,12 +17661,49 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "👊",
       title: "街边冲突",
-      story: "你路过小吃街时，几个人因为排队问题吵了起来。其中一个人推了你一把，差点把你推到路边的污水沟里。",
-      conditions: function (st) { return st.player.day > 10 && Random.chance(0.5); },
+      story:
+        "你路过小吃街时，几个人因为排队问题吵了起来。其中一个人推了你一把，差点把你推到路边的污水沟里。",
+      conditions: function (st) {
+        return st.player.day > 10 && Random.chance(0.5);
+      },
       choices: [
-        { text: "🛡️ 忍了，绕道走", hint: "安全第一", apply: function(st) { StateManager.addMessage("🚶 你绕了远路多花了10分钟。虽然憋屈，但没惹上麻烦。","info"); } },
-        { text: "💪 理论两句", hint: "需要体质≥30", apply: function(st) { if((st.player.physique||0)>=30){StateManager.addMessage("💪 你站直了身板盯着对方。对方看你不好惹，嘟囔着走开了。","success");}else{StateManager.addMessage("😅 你刚开口就被怼了回来。周围人都在看你，尴尬至极。","warning");} } },
-        { text: "📞 报警", hint: "让警察处理", apply: function(st) { StateManager.addMessage("🚓 警察来了之后人群散了。你做了笔录，耽误了半小时。","info"); } },
+        {
+          text: "🛡️ 忍了，绕道走",
+          hint: "安全第一",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你绕了远路多花了10分钟。虽然憋屈，但没惹上麻烦。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 理论两句",
+          hint: "需要体质≥30",
+          apply: function (st) {
+            if ((st.player.physique || 0) >= 30) {
+              StateManager.addMessage(
+                "💪 你站直了身板盯着对方。对方看你不好惹，嘟囔着走开了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 你刚开口就被怼了回来。周围人都在看你，尴尬至极。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📞 报警",
+          hint: "让警察处理",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚓 警察来了之后人群散了。你做了笔录，耽误了半小时。",
+              "info",
+            );
+          },
+        },
       ],
     },
     // ====== 机遇类事件 ======
@@ -17588,12 +17712,40 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "📸",
       title: "偶遇街拍摄影师",
-      story: "一个背着相机的年轻人叫住你：「你好，我在做城市纪实摄影项目。你的穿搭很有感觉，能给你拍几张照片吗？」",
-      conditions: function (st) { return st.player.day > 20 && (st.player.fame||0) < 50; },
+      story:
+        "一个背着相机的年轻人叫住你：「你好，我在做城市纪实摄影项目。你的穿搭很有感觉，能给你拍几张照片吗？」",
+      conditions: function (st) {
+        return st.player.day > 20 && (st.player.fame || 0) < 50;
+      },
       choices: [
-        { text: "😊 大方配合", hint: "名气+2，可能上本地公众号", apply: function(st) { st.player.fame = Math.min(100, (st.player.fame||0) + 2); StateManager.addMessage("📸 摄影师拍了几张照片，说会上传本地生活号。你感觉自己在城市里留了个印记。名气+2","success"); } },
-        { text: "🤝 跟他聊聊摄影", hint: "可能学到新技能", apply: function(st) { StateManager.addMessage("📷 你们聊了半小时摄影。他说如果想学可以去找他，但需要自己有相机。","hint"); } },
-        { text: "🚶 婉拒，赶时间", hint: "没损失", apply: function(st) { StateManager.addMessage("🚶 你摆了摆手，继续赶路。","info"); } },
+        {
+          text: "😊 大方配合",
+          hint: "名气+2，可能上本地公众号",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "📸 摄影师拍了几张照片，说会上传本地生活号。你感觉自己在城市里留了个印记。名气+2",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 跟他聊聊摄影",
+          hint: "可能学到新技能",
+          apply: function (st) {
+            StateManager.addMessage(
+              "📷 你们聊了半小时摄影。他说如果想学可以去找他，但需要自己有相机。",
+              "hint",
+            );
+          },
+        },
+        {
+          text: "🚶 婉拒，赶时间",
+          hint: "没损失",
+          apply: function (st) {
+            StateManager.addMessage("🚶 你摆了摆手，继续赶路。", "info");
+          },
+        },
       ],
     },
     {
@@ -17601,12 +17753,52 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🏥",
       title: "社区免费体检",
-      story: "社区卫生服务中心贴出公告：本周有免费体检活动，包括血压、血糖、心电图等基础项目。平时去医院要花好几百呢。",
-      conditions: function (st) { return st.player.day > 30 && (st.needs&&st.needs.health||100) < 90; },
+      story:
+        "社区卫生服务中心贴出公告：本周有免费体检活动，包括血压、血糖、心电图等基础项目。平时去医院要花好几百呢。",
+      conditions: function (st) {
+        return (
+          st.player.day > 30 && ((st.needs && st.needs.health) || 100) < 90
+        );
+      },
       choices: [
-        { text: "✅ 去体检", hint: "了解身体状况，免费", apply: function(st) { if(!st.flags)st.flags={}; st.flags._healthChecked = st.player.day; StateManager.addMessage("🏥 体检结果：各项指标"+(Random.chance(0.8)?"基本正常":"有些指标需要注意")+"。心里踏实多了。","success"); } },
-        { text: "💪 顺便咨询健康建议", hint: "+1 体质经验", apply: function(st) { if(!st.flags)st.flags={}; st.flags._healthChecked = st.player.day; if(st.player.physique)st.player.physique=Math.min(100,st.player.physique+1); StateManager.addMessage("💪 医生给了你一些健康建议，你感觉身体状态有所改善。体质+1","success"); } },
-        { text: "😴 懒得去", hint: "错过免费机会", apply: function(st) { StateManager.addMessage("😴 你想着反正年轻没事，就没去。但心里还是有点虚。","info"); } },
+        {
+          text: "✅ 去体检",
+          hint: "了解身体状况，免费",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._healthChecked = st.player.day;
+            StateManager.addMessage(
+              "🏥 体检结果：各项指标" +
+                (Random.chance(0.8) ? "基本正常" : "有些指标需要注意") +
+                "。心里踏实多了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 顺便咨询健康建议",
+          hint: "+1 体质经验",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._healthChecked = st.player.day;
+            if (st.player.physique)
+              st.player.physique = Math.min(100, st.player.physique + 1);
+            StateManager.addMessage(
+              "💪 医生给了你一些健康建议，你感觉身体状态有所改善。体质+1",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😴 懒得去",
+          hint: "错过免费机会",
+          apply: function (st) {
+            StateManager.addMessage(
+              "😴 你想着反正年轻没事，就没去。但心里还是有点虚。",
+              "info",
+            );
+          },
+        },
       ],
     },
     // ====== 人情世故事件 ======
@@ -17615,12 +17807,62 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🤝",
       title: "老同学借钱",
-      story: "多年没联系的老同学突然在微信上找你：「兄弟最近手头紧，能借点钱周转一下吗？下个月发工资就还你。」你翻了下聊天记录，上次说话是两年前。",
-      conditions: function (st) { return st.player.day > 50 && st.resources.cash > 2000; },
+      story:
+        "多年没联系的老同学突然在微信上找你：「兄弟最近手头紧，能借点钱周转一下吗？下个月发工资就还你。」你翻了下聊天记录，上次说话是两年前。",
+      conditions: function (st) {
+        return st.player.day > 50 && st.resources.cash > 2000;
+      },
       choices: [
-        { text: "💰 借¥500", hint: "做好人，可能收不回", cost: 500, apply: function(st) { var repaid = Random.chance(0.4); if(repaid){st.resources.cash+=600;StateManager.addMessage("🙏 老同学真的还了，还多给了¥100当利息。你心里暖暖的。","success");}else{StateManager.addMessage("😤 一个月过去了，老同学再也没提还钱的事...","warning");} } },
-        { text: "💰 借¥2000", hint: "大数目，高风险", cost: 2000, apply: function(st) { var repaid = Random.chance(0.25); if(repaid){st.resources.cash+=2500;StateManager.addMessage("🎉 老同学按时还了钱，还请你吃了顿饭。好人好报。","success");}else{StateManager.addMessage("💔 老同学失联了...你叹了口气，当交学费了。","warning");} } },
-        { text: "❌ 婉拒", hint: "保护自己", apply: function(st) { StateManager.addMessage("🚫 你说最近也紧张。他回了句「没事」，但之后再没联系过你。","info"); } },
+        {
+          text: "💰 借¥500",
+          hint: "做好人，可能收不回",
+          cost: 500,
+          apply: function (st) {
+            var repaid = Random.chance(0.4);
+            if (repaid) {
+              st.resources.cash += 600;
+              StateManager.addMessage(
+                "🙏 老同学真的还了，还多给了¥100当利息。你心里暖暖的。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😤 一个月过去了，老同学再也没提还钱的事...",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💰 借¥2000",
+          hint: "大数目，高风险",
+          cost: 2000,
+          apply: function (st) {
+            var repaid = Random.chance(0.25);
+            if (repaid) {
+              st.resources.cash += 2500;
+              StateManager.addMessage(
+                "🎉 老同学按时还了钱，还请你吃了顿饭。好人好报。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "💔 老同学失联了...你叹了口气，当交学费了。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "❌ 婉拒",
+          hint: "保护自己",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚫 你说最近也紧张。他回了句「没事」，但之后再没联系过你。",
+              "info",
+            );
+          },
+        },
       ],
     },
     {
@@ -17628,12 +17870,48 @@ function quarterlyCleanup(state) {
       phase: "street",
       icon: "🎁",
       title: "邻居送特产",
-      story: "楼下的阿姨敲开门，手里拎着一袋东西：「老家寄来的腊肉和干笋，给你尝尝！一个人在外打拼不容易，别总吃泡面。」",
-      conditions: function (st) { return st.player.day > 25 && (st.needs&&st.needs.hunger||50) < 60; },
+      story:
+        "楼下的阿姨敲开门，手里拎着一袋东西：「老家寄来的腊肉和干笋，给你尝尝！一个人在外打拼不容易，别总吃泡面。」",
+      conditions: function (st) {
+        return st.player.day > 25 && ((st.needs && st.needs.hunger) || 50) < 60;
+      },
       choices: [
-        { text: "🙏 感激收下", hint: "饥饱+15，幸福感+5", apply: function(st) { st.needs.hunger=Math.min(100,(st.needs.hunger||0)+15); st.needs.happiness=Math.min(100,(st.needs.happiness||0)+5); StateManager.addMessage("🍖 晚上你炒了盘腊肉，香飘满屋。突然间觉得这座城市也没那么冰冷。","success"); } },
-        { text: "🎁 回赠一个小礼物", hint: "花¥50，好感再+5", cost: 50, apply: function(st) { st.needs.hunger=Math.min(100,(st.needs.hunger||0)+15); st.needs.happiness=Math.min(100,(st.needs.happiness||0)+8); StateManager.addMessage("🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」","success"); } },
-        { text: "😐 客气几句收下", hint: "礼貌性回应", apply: function(st) { st.needs.hunger=Math.min(100,(st.needs.hunger||0)+10); StateManager.addMessage("🍖 你客气了几句收下了。阿姨摆摆手：「别客气，邻里邻居的。」","info"); } },
+        {
+          text: "🙏 感激收下",
+          hint: "饥饱+15，幸福感+5",
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "🍖 晚上你炒了盘腊肉，香飘满屋。突然间觉得这座城市也没那么冰冷。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🎁 回赠一个小礼物",
+          hint: "花¥50，好感再+5",
+          cost: 50,
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😐 客气几句收下",
+          hint: "礼貌性回应",
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 10);
+            StateManager.addMessage(
+              "🍖 你客气了几句收下了。阿姨摆摆手：「别客气，邻里邻居的。」",
+              "info",
+            );
+          },
+        },
       ],
     },
   ]; // 新事件结束
@@ -20632,6 +20910,41 @@ var DREAMS = [
   },
 ];
 
+/** 强制选择人生目标弹窗（无"稍后再说"选项）*/
+function showForcedDreamModal() {
+  if (typeof showDreamSelectModal === "function") {
+    // 调用 actions_extra.js 中的 selectDream 回调
+    // 但强制模式：不设"稍后再说"按钮
+    if (typeof DREAMS === "undefined") return;
+    var optHtml = DREAMS.map(function (d) {
+      return (
+        "<div onclick=\"window.selectDream('" +
+        d.id +
+        '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
+        "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"> " +
+        "<strong>" +
+        d.icon +
+        " " +
+        d.name +
+        "</strong>" +
+        '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
+        d.desc +
+        "</div>" +
+        "</div>"
+      );
+    }).join("");
+    showModal({
+      title: "🌟 确立人生目标",
+      body:
+        '<p style="font-size:13px;color:var(--text-primary);margin-bottom:12px;font-weight:600;">在这座城市，你想要什么？选定一个方向，脚踏实地去努力。</p>' +
+        '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">选定一个方向，游戏会追踪你的进度，在每个里程碑时给你一段专属故事。</p>' +
+        '<p style="font-size:11px;color:var(--danger);margin-bottom:10px;">⚠️ 必须选择一个人生目标才能继续游戏</p>' +
+        optHtml,
+      buttons: [],
+    });
+  }
+}
+
 /** 获取当前梦想定义 */
 function getCurrentDream(state) {
   var id = state.flags && state.flags._dreamId;
@@ -20688,6 +21001,16 @@ function getDreamCurrentTitle(state) {
   var idx = state.flags._dreamMilestone || 0;
   if (idx >= dream.milestones.length) return "圆梦！ 🎉";
   return dream.milestones[idx].title;
+}
+
+// ====== 全局挂载 ======
+if (typeof window !== "undefined") {
+  window.showForcedDreamModal = showForcedDreamModal;
+  window.DREAMS = DREAMS;
+  window.getCurrentDream = getCurrentDream;
+  window.checkDreamProgress = checkDreamProgress;
+  window.getDreamProgress = getDreamProgress;
+  window.getDreamCurrentTitle = getDreamCurrentTitle;
 }
 </script>
     <script>/**
@@ -25675,6 +25998,277 @@ if (typeof window !== "undefined") {
     window.spendHeritageCoin = spendHeritageCoin;
     window.applyHeritageUnlocks = applyHeritageUnlocks;
     window.HERITAGE_UNLOCKS = HERITAGE_UNLOCKS;
+  }
+})();
+</script>
+    <!-- v3.0 黑暗开局: Illegal Actions + Morality System -->
+    <script>/**
+ * 违法行为系统 v1.0 — v3.0 黑暗开局配套
+ *
+ * 设计参考：
+ * - BitLife：犯罪分级 + 明牌刑期表 + 越狱加刑
+ * - This War of Mine：良知回响，让"明知故犯"留心理账单
+ * - 《大多数》：偷电瓶被抓的随机压力
+ *
+ * 4 类违法行为（高收益但被抓概率 25-40%）：
+ *   ┌──────────────┬────────┬────────┬──────────┬────────────────────┐
+ *   │ 行动         │ 收益   │ 抓获率 │ 道德扣   │ 惩罚                │
+ *   ├──────────────┼────────┼────────┼──────────┼────────────────────┤
+ *   │ 偷电瓶       │ ¥150-300│  0.35 │ -15      │ 拘留1天+罚¥500      │
+ *   │ 扒窃         │ ¥80-200 │  0.30 │ -12      │ 拘留1天+罚¥300      │
+ *   │ 洗脚城灰服务 │ 心情+30 │  0.25 │ -10      │ 罚¥500+染病35%      │
+ *   │ 黑市倒卖     │ ¥300-600│  0.40 │ -20      │ 拘留2天+罚¥1000     │
+ *   └──────────────┴────────┴────────┴──────────┴────────────────────┘
+ *
+ * 道德回响（This War of Mine 风格）：
+ *   - 每次违法后 5-15 天内 30% 概率触发"良知反噬"事件（失眠/噩梦/路人鄙视）
+ *   - 道德 < 30 时负面事件触发率 +50%
+ *   - 道德 > 70 时 NPC 初遇好感 +5，特殊正面事件可触发
+ *
+ * 暴露 window 函数（≤4）：
+ *   addIllegalActions(state, actions)   追加违法行为行动卡片
+ *   getMoralityLabel(morality)          返回道德档位标签
+ *   applyMoralityChange(state, delta, reason)  修改道德并触发回响检查
+ *   checkMoralityEcho(state)            每日调用，触发良知反噬事件
+ *
+ * 接入点：
+ *   - actions_extra.js::addExtraActions 在街头阶段调用 addIllegalActions
+ *   - daily_pipeline.js 新增 morality_echo 步骤
+ *   - getMoralityLabel 供 render.js / wiki.js 显示
+ *
+ * v3.0 SOP 合规：
+ *   - 新模块 ≤300 行
+ *   - 暴露 4 个 window 函数
+ *   - 不修改 main.js / events_*.js 主体，仅 ≤15 行接线
+ */
+
+(function () {
+  "use strict";
+
+  // ====== 违法行动定义 ======
+  var ILLEGAL_ACTIONS = [
+    {
+      id: "illegal_steal_battery",
+      name: "🔋 偷电瓶",
+      desc: "凌晨潜入小区车棚偷电动车电瓶。来钱快，但被保安或警察抓住就完蛋。",
+      icon: "🔋",
+      apCost: 6,
+      location: "slum", // 仅在城中村可做
+      rewardRange: [150, 300],
+      catchProb: 0.35,
+      moralityDelta: -15,
+      penalty: { jailDays: 1, fine: 500 },
+    },
+    {
+      id: "illegal_pickpocket",
+      name: "🤏 扒窃",
+      desc: "在商业区人潮中摸手机钱包。技术活，但被人赃并获就是拘留+罚款。",
+      icon: "🤏",
+      apCost: 4,
+      location: "commercialDist",
+      rewardRange: [80, 200],
+      catchProb: 0.30,
+      moralityDelta: -12,
+      penalty: { jailDays: 1, fine: 300 },
+    },
+    {
+      id: "illegal_foot_massage",
+      name: "🦶 洗脚城灰服务",
+      desc: "去洗脚城点'特殊服务'。心情大涨，但有被扫黄抓+染病风险。",
+      icon: "🦶",
+      apCost: 4,
+      location: "entertainment",
+      rewardType: "happiness", // 不是钱，是心情
+      rewardRange: [25, 40],
+      catchProb: 0.25,
+      moralityDelta: -10,
+      penalty: { jailDays: 0, fine: 500, diseaseProb: 0.35 },
+    },
+    {
+      id: "illegal_blackmarket",
+      name: "📦 黑市倒卖",
+      desc: "倒卖来路不明的货物（赃物/走私品）。利润高，但抓到就是 2 天拘留+重罚。",
+      icon: "📦",
+      apCost: 8,
+      location: "wholesaleMarket",
+      rewardRange: [300, 600],
+      catchProb: 0.40,
+      moralityDelta: -20,
+      penalty: { jailDays: 2, fine: 1000 },
+    },
+  ];
+
+  // ====== 道德档位标签 ======
+  function getMoralityLabel(morality) {
+    if (morality >= 80) return { label: "圣徒", icon: "😇", color: "var(--success)" };
+    if (morality >= 60) return { label: "善人", icon: "🙏", color: "var(--success)" };
+    if (morality >= 40) return { label: "普通人", icon: "😐", color: "var(--text-secondary)" };
+    if (morality >= 20) return { label: "小恶", icon: "😏", color: "var(--warning)" };
+    return { label: "恶人", icon: "😈", color: "var(--danger)" };
+  }
+
+  // ====== 修改道德并触发回响检查 ======
+  function applyMoralityChange(state, delta, reason) {
+    if (!state.player) return;
+    var old = state.player.morality || 50;
+    var next = Math.max(0, Math.min(100, old + delta));
+    state.player.morality = next;
+    // 记录违法历史供回响系统使用
+    if (delta < 0) {
+      state.flags = state.flags || {};
+      state.flags._illegalHistory = state.flags._illegalHistory || [];
+      state.flags._illegalHistory.push({
+        day: state.player.day || 0,
+        delta: delta,
+        reason: reason || "违法行为",
+      });
+      // 标记需要回响检查
+      state.flags._pendingMoralityEcho = true;
+    }
+    // 道德跌破 20 时强警告
+    if (old >= 20 && next < 20 && typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "😈 你的道德已跌破底线，城里开始有人在你背后指指点点。",
+        "error"
+      );
+    }
+  }
+
+  // ====== 良知反响事件（每日检查）======
+  function checkMoralityEcho(state) {
+    if (!state.flags || !state.flags._pendingMoralityEcho) return;
+    var lastEcho = state.flags._lastMoralityEchoDay || 0;
+    var day = state.player.day || 0;
+    if (day - lastEcho < 5) return; // 至少 5 天间隔
+    if (Math.random() > 0.30) return; // 30% 概率触发
+    state.flags._pendingMoralityEcho = false;
+    state.flags._lastMoralityEchoDay = day;
+    var echoes = [
+      {
+        msg: "😱 半夜从噩梦中惊醒，梦里那些被你伤害过的人围着你。疲劳+10，心情-8。",
+        apply: function (s) {
+          s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 10);
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 8);
+        },
+      },
+      {
+        msg: "👀 路过的小贩用异样眼神看你，似乎听说了你的事。心情-5，名气-2。",
+        apply: function (s) {
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 5);
+          s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
+        },
+      },
+      {
+        msg: "💔 一个老朋友在路上认出你，转身就走。心情-10。",
+        apply: function (s) {
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 10);
+        },
+      },
+    ];
+    var e = echoes[Math.floor(Math.random() * echoes.length)];
+    e.apply(state);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(e.msg, "warning");
+    }
+  }
+
+  // ====== 追加违法行为行动卡片 ======
+  function addIllegalActions(state, actions) {
+    if (state.player.phase !== "street") return;
+    var loc = state.trade && state.trade.currentLocation;
+    var day = state.player.day || 0;
+    var flags = state.flags || (state.flags = {});
+    // 拘留期间不能做违法
+    if (flags._inJailUntil && day < flags._inJailUntil) return;
+
+    ILLEGAL_ACTIONS.forEach(function (a) {
+      if (a.location && a.location !== loc) return;
+      actions.push({
+        id: a.id,
+        name: a.name,
+        desc: a.desc + "（道德-" + Math.abs(a.moralityDelta) + "，被抓率" + Math.round(a.catchProb * 100) + "%）",
+        icon: a.icon,
+        apCost: a.apCost,
+        handler: function () {
+          _executeIllegalAction(state, a);
+        },
+      });
+    });
+  }
+
+  // ====== 执行违法行为（内部）======
+  function _executeIllegalAction(state, action) {
+    var day = state.player.day || 0;
+    // 判定是否被抓
+    var caught = Math.random() < action.catchProb;
+    if (caught) {
+      // 被抓：拘留+罚款+道德扣
+      var p = action.penalty;
+      if (p.jailDays > 0) {
+        state.flags = state.flags || {};
+        state.flags._inJailUntil = day + p.jailDays;
+        StateManager.addMessage(
+          "🚔 你被警察当场抓获！拘留 " + p.jailDays + " 天，罚款 ¥" + p.fine + "。" +
+          "出来后状态全线崩溃，回去休息几天。",
+          "error"
+        );
+      } else {
+        StateManager.addMessage(
+          "🚔 你被扫黄抓了！罚款 ¥" + p.fine + "。",
+          "error"
+        );
+      }
+      // 罚款（不够则扣到 0）
+      var fineActual = Math.min(state.resources.cash, p.fine);
+      state.resources.cash -= fineActual;
+      // 出狱后状态崩溃
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 40);
+      state.needs.hunger = Math.max(0, (state.needs.hunger || 0) - 30);
+      state.needs.hygiene = Math.max(0, (state.needs.hygiene || 0) - 30);
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 20);
+      state.status.health = Math.max(20, (state.status.health || 100) - 15);
+      // 染病判定
+      if (p.diseaseProb && Math.random() < p.diseaseProb) {
+        if (typeof addIllness === "function") {
+          addIllness(state, "std_suspicion"); // 假设疾病系统支持
+        }
+        StateManager.addMessage("🦠 你感觉身体不对劲，可能染上了什么...", "warning");
+      }
+      // 道德扣（被抓更狠）
+      applyMoralityChange(state, action.moralityDelta - 5, action.id + "_caught");
+      // 名气扣
+      state.player.fame = Math.max(0, (state.player.fame || 0) - 5);
+    } else {
+      // 未被抓：拿到奖励
+      if (action.rewardType === "happiness") {
+        var happy = action.rewardRange[0] + Math.floor(Math.random() * (action.rewardRange[1] - action.rewardRange[0]));
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + happy);
+        StateManager.addMessage(
+          action.icon + " 你" + action.name.replace(/^[^\s]+\s/, "") + "了，心情+" + happy + "。但心里有点不安...",
+          "info"
+        );
+      } else {
+        var reward = action.rewardRange[0] + Math.floor(Math.random() * (action.rewardRange[1] - action.rewardRange[0]));
+        state.resources.cash += reward;
+        state.resources.totalEarned = (state.resources.totalEarned || 0) + reward;
+        StateManager.addMessage(
+          action.icon + " 你" + action.name.replace(/^[^\s]+\s/, "") + "成功，赚了 ¥" + reward + "。但心里发虚...",
+          "success"
+        );
+      }
+      applyMoralityChange(state, action.moralityDelta, action.id + "_success");
+    }
+    if (typeof consumeAP === "function") consumeAP(action.apCost);
+    if (typeof renderAll === "function") renderAll();
+  }
+
+  // ====== 全局挂载 ======
+  if (typeof window !== "undefined") {
+    window.addIllegalActions = addIllegalActions;
+    window.getMoralityLabel = getMoralityLabel;
+    window.applyMoralityChange = applyMoralityChange;
+    window.checkMoralityEcho = checkMoralityEcho;
+    window.ILLEGAL_ACTIONS = ILLEGAL_ACTIONS;
   }
 })();
 </script>
@@ -36688,26 +37282,26 @@ function getAffinityLabel(affinity) {
  */
 
 const SCENARIOS = [
-  // ====== 默认/经典：城市务工者 ======
+  // ====== 默认/经典：城市务工者（v3.0 黑暗开局重做） ======
   {
     id: "classic",
     name: "城市务工者",
-    icon: "🏘️",
+    icon: "🏚️",
     category: "default",
-    brief: "从城中村收废品起步，技能积累与阶级流动的经典叙事",
+    brief: "黑暗开局：身无分文、风餐露宿，3 天内必须找到饭吃。城市冰冷，活下去就是胜利",
     description:
-      "你从农村来到城市，揣着仅有的1500元，还欠村长5500元。一切从零开始——城中村的废品回收、工地上的汗水和街头的小生意。这座城市既冷漠又充满机会，看你能否抓住命运的转折点。",
+      "你从农村来到城市，揣着仅剩的¥300。没有村长债——村长那笔钱早被你爹赌光了。\n\n你睡在城中村桥洞下，三天没正经吃过饭，胃在拧成绳。健康亮红灯，饥饱见底，状态全线告急。这座城市不会等你。\n\n要么去工地扛水泥、要么去偷电瓶——选择在你。但记住：偷东西快，被抓也快。",
     startingMessage:
-      "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
-    difficulty: "★★☆",
-    difficultyLabel: "适中",
-    // 初始属性
-    stats: { physique: 22, intelligence: 20, agility: 24, mental: 26 },
-    // 初始资源
-    resources: { cash: 1500, bankBalance: 0, villageDebt: 5500, bankDebt: 0 },
+      "🏚️ 你揣着仅剩的¥300来到这座城市。没有村长债——但也没有退路。饥饱见底，健康亮红灯。3 天内必须找到饭吃，否则这座城市会把你吞掉。集中注意力，活下去。",
+    difficulty: "★★★★",
+    difficultyLabel: "地狱",
+    // 初始属性（v3.0：保留 mental 字段名避免破坏现有代码，UI 层显示为"能力"；新增 charm 颜值）
+    stats: { physique: 18, intelligence: 15, agility: 22, mental: 18, charm: 20 },
+    // 初始资源（v3.0 黑暗：¥300 起步，无村长债）
+    resources: { cash: 300, bankBalance: 0, villageDebt: 0, bankDebt: 0 },
     // 初始年龄
     age: 20,
-    // 初始技能（level, xp）
+    // 初始技能
     skills: {
       cooking: { level: 0, xp: 0 },
       repair: { level: 0, xp: 0 },
@@ -36720,12 +37314,14 @@ const SCENARIOS = [
       electrician: { level: 0, xp: 0 },
       welding: { level: 0, xp: 0 },
     },
-    // 初始学历 0=大专, 1=本科, 2=研究生
+    // 初始学历
     education: 0,
-    // 初始需求
-    needs: { hunger: 70, fatigue: 15, hygiene: 75, happiness: 55 },
-    // 初始健康
-    health: 100,
+    // 初始需求（v3.0 黑暗：饥饱见底、卫生差、心情崩、疲劳高）
+    needs: { hunger: 25, fatigue: 50, hygiene: 30, happiness: 20 },
+    // 初始健康（v3.0 黑暗：70 不是 100，逼玩家立刻处理）
+    health: 70,
+    // 初始道德（v3.0 新增，0-100，初始 50）
+    morality: 50,
     // 初始住所等级
     housingTier: 0, // 0=露宿
     // 初始名声
@@ -36735,9 +37331,9 @@ const SCENARIOS = [
     // 游戏阶段
     phase: "street",
     // 特殊标记
-    tags: ["新手友好", "均衡发展"],
-    // 叙事标签（用于游戏百科、成就统计等）
-    narrativeTags: ["migrant_worker"],
+    tags: ["地狱开局", "逼玩家集中赚钱", "道德考验"],
+    // 叙事标签
+    narrativeTags: ["migrant_worker", "dark_start"],
     // 剧本专属起始事件（可选）
     startEvent: null,
   },
@@ -50733,6 +51329,10 @@ function addExtraActions(state, actions) {
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
+    // v3.0 黑暗开局：违法行为（高收益高风险）
+    if (typeof addIllegalActions === "function") {
+      addIllegalActions(state, actions);
+    }
   }
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {
@@ -50920,6 +51520,9 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
+      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
+      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
+      state.flags._dayStartCash = state.resources.cash || 0;
     },
   },
 
@@ -51647,6 +52250,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.0 黑暗开局：道德良知回响检查 ===
+  {
+    name: "morality_echo",
+    fn: function (state) {
+      if (typeof checkMoralityEcho === "function") {
+        checkMoralityEcho(state);
+      }
+    },
+  },
+
   // === v3.1：主线章节检查 ===
   {
     name: "story_chapter_check",
@@ -51786,8 +52399,9 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
  * MiniMax 友好：新增步骤只需 push 一个 {name, fn} 对象。
  */
 function runDailyPipeline(state) {
-  // 记录日始状态用于今日总结（存入 state.flags 供 end_log fn 读取）
-  state.flags._dayStartCash = state.resources.cash || 0;
+  // 记录日始状态用于今日总结
+  // v3.2 修复: _dayStartCash 在 day_increment 步骤中设置（正确捕获日初现金）
+  // 此处仅记录健康/心情日始值（这些在管线中不变化）
   state.flags._dayStartHealth = (state.status && state.status.health) || 100;
   state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
 
@@ -51796,7 +52410,8 @@ function runDailyPipeline(state) {
 
     // 极端状态短路逻辑：
     // extreme_check / critical_punish 返回 'skip_day' 时，跳过后续非核心步骤
-    // 但 finance / autosave 始终执行（保证利息和存档不丢）
+    // 但 finance / autosave / daily_report 始终执行
+    // （v3.0 修复：daily_report 也加入始终执行列表，否则极端状态天玩家看不到收支报告）
     if (step.name === "extreme_check" || step.name === "critical_punish") {
       var result = step.fn(state);
       if (result === "skip_day") {
@@ -51804,10 +52419,10 @@ function runDailyPipeline(state) {
           "🌙 第" + state.player.day + "天在昏迷中过去了...",
           "danger",
         );
-        // 执行最后的核心步骤：财务、存档
+        // 执行最后的核心步骤：财务、收支报告、存档
         for (var j = i + 1; j < DAILY_PIPELINE.length; j++) {
           var lateStep = DAILY_PIPELINE[j];
-          if (lateStep.name === "finance" || lateStep.name === "autosave") {
+          if (lateStep.name === "finance" || lateStep.name === "autosave" || lateStep.name === "daily_report") {
             lateStep.fn(state);
           }
         }
@@ -90578,15 +91193,17 @@ function renderGrowthTab(state, parent) {
   radarInfo.appendChild(radarCanvas);
   radarSection.appendChild(radarInfo);
 
-  // 属性说明
+  // 属性说明（v3.0：心智→能力，新增颜值/道德，标题"属性"取代"基础属性"）
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
     { label: "体质", value: p.physique, color: "#c4803a" },
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "心智", value: p.mental, color: "#9b74b8" },
+    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
   stats.forEach(function (s) {
     var row = document.createElement("div");
@@ -91780,6 +92397,121 @@ function renderMapTab(state, parent) {
     quick.innerHTML += "</div>";
     container.appendChild(quick);
   }
+
+  // === v3.0 交通方式选择（共享单车/地铁/打车）===
+  // 设计参考：北上广真实数据
+  //   共享单车 ¥2/15分钟，仅适合相邻地点（≤1跳），最快到非商业区
+  //   地铁 ¥4 固定，仅可到地铁沿线大站（科技园/商业区/医院/学校/培训中心/娱乐区）
+  //   打车 ¥15-50 按距离，可达任何已探索地点，最快但最贵
+  const transitWrap = document.createElement("div");
+  transitWrap.style.cssText =
+    "padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);";
+  transitWrap.innerHTML = `
+    <h4 style="color:var(--accent);margin:0 0 8px;font-size:13px;">🚇 交通方式</h4>
+    <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;">
+      点击上方"快速出行"选择目的地后，下方按钮激活；或直接点选交通方式查看可达地点。
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <button class="transit-btn" data-mode="bike" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥2 · 仅相邻地点</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快到非商业区</div>
+      </button>
+      <button class="transit-btn" data-mode="metro" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--accent);">🚇 地铁</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 仅地铁沿线</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院等</div>
+      </button>
+      <button class="transit-btn" data-mode="taxi" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--warning);">🚕 打车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥15-50 按距离</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">可达任何已探索地点</div>
+      </button>
+    </div>
+    <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+  `;
+  container.appendChild(transitWrap);
+
+  // v3.0 地铁沿线大站定义
+  const METRO_STATIONS = ["techPark", "commercialDist", "hospital", "school", "trainingCenter", "entertainment"];
+  // v3.0 共享单车仅可到相邻地点（TRAVEL_GRAPH 1 跳）
+  // 打车可到任何 reachable 已探索地点
+
+  // 绑定交通方式按钮
+  setTimeout(() => {
+    document.querySelectorAll(".transit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        const result = document.getElementById("transit-result");
+        if (!result) return;
+        // 列出该交通方式可到的地点
+        let available = [];
+        let priceInfo = "";
+        let apInfo = "";
+        if (mode === "bike") {
+          available = reachableList.slice(); // 仅相邻地点
+          priceInfo = "¥2/次";
+          apInfo = "AP -8（骑行耗时）";
+        } else if (mode === "metro") {
+          available = reachableList.filter((k) => METRO_STATIONS.indexOf(k) >= 0);
+          // 也允许从地铁沿线出发到任何地铁沿线
+          if (METRO_STATIONS.indexOf(locKey) >= 0) {
+            METRO_STATIONS.forEach((k) => { if (k !== locKey && available.indexOf(k) < 0) available.push(k); });
+          }
+          priceInfo = "¥4/次";
+          apInfo = "AP -5（地铁最快）";
+        } else if (mode === "taxi") {
+          available = reachableList.slice();
+          priceInfo = "¥15-50（按距离）";
+          apInfo = "AP -3（最快但最贵）";
+        }
+        if (available.length === 0) {
+          result.innerHTML = '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
+          return;
+        }
+        result.innerHTML = '<div style="margin-bottom:6px;">' +
+          '<strong>' + ({bike:'🚲 共享单车',metro:'🚇 地铁',taxi:'🚕 打车'}[mode]) + '</strong> · ' +
+          priceInfo + ' · ' + apInfo + '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">' +
+          available.map((k) => {
+            const d = getLocation(k);
+            if (!d) return "";
+            const price = mode === "bike" ? 2 : mode === "metro" ? 4 : 15 + Math.floor(Math.random() * 36);
+            const ap = mode === "bike" ? 8 : mode === "metro" ? 5 : 3;
+            return '<button class="transit-go-btn" data-dest="' + k + '" data-price="' + price + '" data-ap="' + ap + '" data-mode="' + mode + '" style="' +
+              'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+              '<div style="font-weight:600;">' + d.name + '</div>' +
+              '<div style="color:var(--text-muted);margin-top:2px;">¥' + price + ' · AP' + ap + '</div>' +
+              '</button>';
+          }).join("") + '</div>';
+        // 绑定实际出行按钮
+        document.querySelectorAll(".transit-go-btn").forEach((gb) => {
+          gb.addEventListener("click", () => {
+            const destKey = gb.dataset.dest;
+            const price = parseInt(gb.dataset.price, 10) || 0;
+            const ap = parseInt(gb.dataset.ap, 10) || 5;
+            const modeName = ({bike:'🚲 共享单车',metro:'🚇 地铁',taxi:'🚕 打车'})[gb.dataset.mode] || '出行';
+            if ((state.resources.cash || 0) < price) {
+              StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
+              return;
+            }
+            state.resources.cash -= price;
+            StateManager.update("trade.currentLocation", destKey);
+            const dest = getLocation(destKey);
+            StateManager.addMessage(modeName + " 你来到了" + (dest ? dest.name : destKey) + "，花了¥" + price + "。", "info");
+            if (typeof consumeAP === "function") consumeAP(ap);
+            renderAll();
+          });
+        });
+      });
+    });
+  }, 0);
 
   // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
   const mapWrap = document.createElement("div");
@@ -94650,21 +95382,22 @@ function renderPersonalGrowthTab(state, parent) {
 
 /**
  * 合并的个人成长Tab（原数据可视化+原个人成长系统合并）
- * 包含：数据图表 + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
+ * 包含：属性训练(v3.0新增,排第一) + 数据图表(排最后) + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
  */
 function renderMergedPersonalGrowthTab(state, parent) {
   parent.innerHTML = "";
   var p = state.player;
   var pg = state.personalGrowth || {};
 
-  // ---- 子Tab导航 ----
+  // ---- 子Tab导航（v3.0：属性训练排第一，数据排最后）----
   var subTabs = [
-    { id: "pg_charts", label: "📈 数据", icon: "📈" },
+    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" }, // v3.0 新增排第一
     { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
     { id: "pg_health", label: "💪 健康", icon: "💪" },
     { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
+    { id: "pg_charts", label: "📈 数据", icon: "📈" }, // v3.0 移到最后
   ];
-  var currentSubTab = state._pgSubTab || "pg_charts";
+  var currentSubTab = state._pgSubTab || "pg_stat_train";
 
   var nav = document.createElement("div");
   nav.style.cssText =
@@ -94686,6 +95419,9 @@ function renderMergedPersonalGrowthTab(state, parent) {
   content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
 
   switch (currentSubTab) {
+    case "pg_stat_train":
+      renderPgStatTrain(state, content);
+      break;
     case "pg_charts":
       renderPgCharts(state, content);
       break;
@@ -94702,6 +95438,98 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
   parent.appendChild(content);
 }
+
+/** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
+function renderPgStatTrain(state, content) {
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+
+  // 整容入口（医院/美容院）
+  var trainings = [
+    { id: "train_physique", name: "🏋️ 健身房", stat: "physique", statLabel: "体质", basePrice: 50, priceStep: 30, gain: [1, 3] },
+    { id: "train_intelligence", name: "📚 自习室", stat: "intelligence", statLabel: "智力", basePrice: 60, priceStep: 40, gain: [1, 3] },
+    { id: "train_agility", name: "🏃 跑步训练", stat: "agility", statLabel: "敏捷", basePrice: 40, priceStep: 25, gain: [1, 3] },
+    { id: "train_ability", name: "🧘 冥想训练", stat: "mental", statLabel: "能力", basePrice: 70, priceStep: 50, gain: [1, 2] },
+    { id: "train_charm_grooming", name: "💇 形象设计", stat: "charm", statLabel: "颜值", basePrice: 100, priceStep: 80, gain: [1, 3] },
+    { id: "train_charm_surgery", name: "💉 整容手术", stat: "charm", statLabel: "颜值", basePrice: 2000, priceStep: 1500, gain: [5, 15], risky: true },
+  ];
+
+  var html = '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
+  html += '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+
+  trainings.forEach(function (t) {
+    var count = flags["_trainCount_" + t.id] || 0;
+    var price = t.basePrice + count * t.priceStep;
+    var curVal = p[t.stat] || 0;
+    var canAfford = (state.resources.cash || 0) >= price;
+    html += '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
+    html += '<div style="font-weight:600;font-size:13px;">' + t.name + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' + t.statLabel + '：' + curVal + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">已训练 ' + count + ' 次</div>';
+    html += '<div style="font-size:12px;color:' + (canAfford ? 'var(--success)' : 'var(--danger)') + ';margin-top:4px;">价格：¥' + price.toLocaleString() + '</div>';
+    if (t.risky) {
+      html += '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（颜值-5/健康-15）</div>';
+    }
+    html += '<button onclick="window.__doTrain(\'' + t.id + '\')" ' + (canAfford ? '' : 'disabled') + ' style="' +
+      'margin-top:6px;padding:6px 10px;background:' + (canAfford ? 'var(--accent)' : 'var(--bg-secondary)') + ';' +
+      'color:' + (canAfford ? 'white' : 'var(--text-muted)') + ';border:none;border-radius:4px;cursor:' + (canAfford ? 'pointer' : 'not-allowed') + ';font-size:12px;">' +
+      (canAfford ? '训练' : '现金不足') + '</button>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // 整容说明
+  html += '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
+  html += '💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时颜值-5、健康-15、心情-10。建议攒够钱一次到位，避免反复失败。';
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+/** v3.0 训练执行（暴露给 onclick）*/
+window.__doTrain = function (trainId) {
+  var state = StateManager.getState();
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+  var trainings = {
+    train_physique: { stat: "physique", statLabel: "体质", basePrice: 50, priceStep: 30, gain: [1, 3], apCost: 6 },
+    train_intelligence: { stat: "intelligence", statLabel: "智力", basePrice: 60, priceStep: 40, gain: [1, 3], apCost: 6 },
+    train_agility: { stat: "agility", statLabel: "敏捷", basePrice: 40, priceStep: 25, gain: [1, 3], apCost: 5 },
+    train_ability: { stat: "mental", statLabel: "能力", basePrice: 70, priceStep: 50, gain: [1, 2], apCost: 5 },
+    train_charm_grooming: { stat: "charm", statLabel: "颜值", basePrice: 100, priceStep: 80, gain: [1, 3], apCost: 4 },
+    train_charm_surgery: { stat: "charm", statLabel: "颜值", basePrice: 2000, priceStep: 1500, gain: [5, 15], apCost: 8, risky: true },
+  };
+  var t = trainings[trainId];
+  if (!t) return;
+  var count = flags["_trainCount_" + trainId] || 0;
+  var price = t.basePrice + count * t.priceStep;
+  if ((state.resources.cash || 0) < price) {
+    StateManager.addMessage("💸 现金不足，需要¥" + price, "warning");
+    return;
+  }
+  state.resources.cash -= price;
+  flags["_trainCount_" + trainId] = count + 1;
+
+  // 风险检查（整容）
+  if (t.risky && Math.random() < 0.20) {
+    p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
+    state.status.health = Math.max(20, (state.status.health || 100) - 15);
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
+    StateManager.addMessage("💉 整容失败！颜值-5，健康-15，心情-10。 surgeon 技术不行...", "error");
+  } else {
+    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
+    var baseGain = t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var crit = Math.random() < 0.10 ? 2 : 0;
+    var totalGain = baseGain + crit;
+    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
+    var msg = "✨ " + ({physique:'🏋️ 健身房',intelligence:'📚 自习室',agility:'🏃 跑步训练',mental:'🧘 冥想训练',charm:'💇 形象设计/整容'}[t.stat] || '训练') + " " + t.statLabel + "+" + totalGain;
+    if (crit > 0) msg += "（爆击！）";
+    StateManager.addMessage(msg, "success");
+  }
+  if (typeof consumeAP === "function") consumeAP(t.apCost);
+  if (typeof renderAll === "function") renderAll();
+};
 
 /** 图表子面板（数据可视化） */
 function renderPgCharts(state, content) {
@@ -94745,8 +95573,10 @@ function renderPgCharts(state, content) {
     { label: "体质", value: p.physique, color: "#c4803a" },
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "心智", value: p.mental, color: "#9b74b8" },
+    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
   stats.forEach(function (s) {
     var row = document.createElement("div");
@@ -104682,11 +105512,13 @@ function startScenarioGame(scenarioId) {
   // 应用剧本配置
   var state = StateManager.getState();
 
-  // --- 基础属性 ---
+  // --- 基础属性（v3.0 新增 charm 颜值 + morality 道德）---
   state.player.physique = scenario.stats.physique || 22;
   state.player.intelligence = scenario.stats.intelligence || 20;
   state.player.agility = scenario.stats.agility || 24;
   state.player.mental = scenario.stats.mental || 26;
+  state.player.charm = scenario.stats.charm || 20; // v3.0 颜值
+  state.player.morality = scenario.morality !== undefined ? scenario.morality : 50; // v3.0 道德
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
@@ -104789,6 +105621,9 @@ function startScenarioGame(scenarioId) {
     applyHeritageUnlocks(state);
   }
 
+  // v3.2 修复: 记录第1天日初现金
+  state.flags._dayStartCash = state.resources.cash || 0;
+
   // --- 进入游戏 ---
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("scenario-select-screen").style.display = "none";
@@ -104803,6 +105638,13 @@ function startScenarioGame(scenarioId) {
       startTutorial();
     }, 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 // ====== 沙盒模式 ======
@@ -105285,6 +106127,9 @@ function startSandboxGame() {
     applyHeritageUnlocks(state);
   }
 
+  // v3.2 修复: 记录第1天日初现金
+  state.flags._dayStartCash = state.resources.cash || 0;
+
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
@@ -105297,11 +106142,23 @@ function startSandboxGame() {
       startTutorial();
     }, 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 function startNewGame() {
   StateManager.newGame();
   initializePrices();
+
+  // v3.2 修复: 记录第1天日初现金（后续日由 day_increment 管线步骤管理）
+  StateManager.getState().flags._dayStartCash = StateManager.getState().resources.cash || 0;
+
+  // 初始化企业命运系统
 
   // 初始化企业命运系统
   if (typeof initEnterpriseFate === "function") {
@@ -105354,7 +106211,7 @@ function startNewGame() {
 
   if (!inheritanceApplied) {
     StateManager.addMessage(
-      "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
+      "🏚️ 你揣着仅剩的¥300来到这座城市。没有退路，没有靠山。饥饱见底，健康亮红灯。3天内必须找到饭吃，否则这座城市会把你吞掉。",
       "event",
     );
   } else {
@@ -105384,6 +106241,13 @@ function startNewGame() {
   if (typeof startTutorial === "function") {
     setTimeout(() => startTutorial(), 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 function loadExistingGame(slot) {

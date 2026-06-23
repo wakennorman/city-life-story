@@ -590,11 +590,14 @@ function startScenarioGame(scenarioId) {
   // 应用剧本配置
   var state = StateManager.getState();
 
-  // --- 基础属性 ---
+  // --- 基础属性（v3.0 新增 charm 颜值 + morality 道德）---
   state.player.physique = scenario.stats.physique || 22;
   state.player.intelligence = scenario.stats.intelligence || 20;
   state.player.agility = scenario.stats.agility || 24;
   state.player.mental = scenario.stats.mental || 26;
+  state.player.charm = scenario.stats.charm || 20; // v3.0 颜值
+  state.player.morality =
+    scenario.morality !== undefined ? scenario.morality : 50; // v3.0 道德
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
@@ -697,6 +700,9 @@ function startScenarioGame(scenarioId) {
     applyHeritageUnlocks(state);
   }
 
+  // v3.2 修复: 记录第1天日初现金
+  state.flags._dayStartCash = state.resources.cash || 0;
+
   // --- 进入游戏 ---
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("scenario-select-screen").style.display = "none";
@@ -711,6 +717,13 @@ function startScenarioGame(scenarioId) {
       startTutorial();
     }, 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 // ====== 沙盒模式 ======
@@ -1193,6 +1206,9 @@ function startSandboxGame() {
     applyHeritageUnlocks(state);
   }
 
+  // v3.2 修复: 记录第1天日初现金
+  state.flags._dayStartCash = state.resources.cash || 0;
+
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
@@ -1205,11 +1221,24 @@ function startSandboxGame() {
       startTutorial();
     }, 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 function startNewGame() {
   StateManager.newGame();
   initializePrices();
+
+  // v3.2 修复: 记录第1天日初现金（后续日由 day_increment 管线步骤管理）
+  StateManager.getState().flags._dayStartCash =
+    StateManager.getState().resources.cash || 0;
+
+  // 初始化企业命运系统
 
   // 初始化企业命运系统
   if (typeof initEnterpriseFate === "function") {
@@ -1262,7 +1291,7 @@ function startNewGame() {
 
   if (!inheritanceApplied) {
     StateManager.addMessage(
-      "🏘️ 你揣着1500元来到这座城市。欠村长5500元，日息0.35%复利。活下去，混出个人样来！",
+      "🏚️ 你揣着仅剩的¥300来到这座城市。没有退路，没有靠山。饥饱见底，健康亮红灯。3天内必须找到饭吃，否则这座城市会把你吞掉。",
       "event",
     );
   } else {
@@ -1292,6 +1321,13 @@ function startNewGame() {
   if (typeof startTutorial === "function") {
     setTimeout(() => startTutorial(), 300);
   }
+
+  // v3.2: 强制选择人生目标（不可跳过）
+  setTimeout(function () {
+    if (typeof showForcedDreamModal === "function") {
+      showForcedDreamModal();
+    }
+  }, 500);
 }
 
 function loadExistingGame(slot) {

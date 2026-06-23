@@ -1868,6 +1868,10 @@ function addExtraActions(state, actions) {
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
+    // v3.0 黑暗开局：违法行为（高收益高风险）
+    if (typeof addIllegalActions === "function") {
+      addIllegalActions(state, actions);
+    }
   }
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {

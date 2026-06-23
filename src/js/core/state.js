@@ -22,11 +22,13 @@ function createDefaultState() {
       age: 20,
       birthday: { month: 6, day: 15 },
 
-      // 街头 4 维属性 (0-100)
+      // 街头 4+2 维属性 (0-100)
       physique: 22, // 体质
       intelligence: 20, // 智力
       agility: 24, // 敏捷
-      mental: 26, // 心智
+      mental: 26, // 心智（v3.0：UI 显示为"能力"，字段名保留避免破坏）
+      charm: 20, // 颜值（v3.0 新增：影响 NPC 初遇好感、职场面试、特殊行动）
+      morality: 50, // 道德（v3.0 新增：0-100，违法行为降低，捐款/义工提升）
       fame: 0, // 名气（基础第五维，从 status.fame 迁移而来）
 
       // 职场 7 维属性 (进入职场后初始化)
@@ -54,15 +56,15 @@ function createDefaultState() {
 
     // --- 经济 ---
     resources: {
-      cash: 1500, // 现金（元）
+      cash: 300, // 现金（元）— v3.2 黑暗开局：¥300
       bankBalance: 0, // 银行存款
-      debt: 5500, // 当前总欠款（兼容旧字段）
-      villageDebt: 5500, // 欠村长的钱
+      debt: 0, // 当前总欠款 — v3.2 无起步债
+      villageDebt: 0, // 欠村长的钱 — v3.2 无起步债
       villageDebtInterest: 0, // 累计村长利息
       bankDebt: 0, // 欠银行的钱
       bankDebtDay: 0, // 最近一笔银行贷款发放日
       bankCreditHistory: [], // 信贷记录 [{ day, amount, repaid, rating }]
-      loanPrincipal: 5500, // 原始借款额
+      loanPrincipal: 0, // v3.2 无起步债
       loanDay: 0, // 借款日
       dailyInterest: 0.0035, // 日息 0.3%
       totalEarned: 0, // 终身总收入
@@ -85,15 +87,15 @@ function createDefaultState() {
 
     // --- 基本需求 (0-100) ---
     needs: {
-      hunger: 70,
-      fatigue: 15,
-      hygiene: 75,
-      happiness: 55,
+      hunger: 25, // v3.2 黑暗开局：饥饱见底
+      fatigue: 50, // v3.2 黑暗开局：疲惫不堪
+      hygiene: 30, // v3.2 黑暗开局：卫生差
+      happiness: 20, // v3.2 黑暗开局：心情低落
     },
 
     // --- 派生状态 ---
     status: {
-      health: 100,
+      health: 70, // v3.2 黑暗开局：健康亮红灯
       emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
       sick: false, // 兼容旧字段（内部由 illnesses 数组派生）
       injured: false, // 兼容旧字段
