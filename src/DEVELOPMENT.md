@@ -1,9 +1,42 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（批次A：关键Bug修复+雷达图+UI调整+创业完善）
+> 最后更新: 2026-06-23（批次B：道德系统扩充+财富检查+图表修复+背包标签+离线消息）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 
-## 2026-06-23 — 批次A：关键Bug修复+UI调整+创业完善
+## 2026-06-23 — 批次B：道德系统扩充+财富检查+图表修复+背包标签+离线消息
+
+### 变更内容
+
+**2.1 图表修复** (`data_viz.js`)
+
+- `setupCanvas` 添加 `display:block` + 白色背景填充
+- `setTimeout` 改为 `requestAnimationFrame`，避免时机问题
+- 添加 `try-catch`，绘制出错时不影响游戏运行
+
+**3.1 事件财富检查** (`events_core.js + events_street.js`)
+
+- `queueRandomEvent` 添加通用 `maxCash` / `minCash` 过滤（检查现金+存款）
+- `events_street.js` 夜班搬运工事件添加 `maxCash: 50000`，避免百万富翁在街头搬砖
+
+**3.5 背包/仓库容量标签统一** (`trade.js + carry.js + pricing.js + render.js`)
+
+- `trade.js`："背包空间不足" → "仓库空间不足（X/Y 槽位）"
+- `render.js`：物品栏分两行显示"仓库 X/Y 槽位" + "负重 X/Y kg"
+- `pricing.js`："太重了！背不动" → "超出负重上限！"
+- `carry.js`：重量提示改为"超重！请减少携带或加强体质"
+
+**3.6 道德系统整合+扩充** (`main.js + moral_events.js`)
+
+- 道德事件触发率从3%提升至8%
+- 新增8个道德事件：ATM机遗忘卡/超市多找钱/共享单车未锁/同事摸鱼/受伤小猫/帮搬重物/深夜红灯/走丢小孩
+- 新增6条后果链：ATM上报/ATM取钱/退钱/救猫/帮小孩/等红灯
+
+**4.2 离线消息优化** (`world_params.js`)
+
+- 浏览器检测：跳过 Yahoo Finance CORS 必然失败的请求
+- "离线模式" → "本地模式：开局结果与现实脱钩"（更准确描述）
+
+## 2026-06-23 — 批次A：关键Bug修复+雷达图+UI调整+创业完善
 
 ### 变更内容
 

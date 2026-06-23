@@ -616,7 +616,7 @@ function retrieveFromStorage(goodId, qty) {
   }
   var carry = canCarryMore(state, goodId, qty);
   if (carry.overLimit && carry.weightRatio > 1.6) {
-    StateManager.addMessage("⚠️ 太重了！", "danger");
+    StateManager.addMessage("⚠️ 超重！请减少携带或加强体质。", "danger");
     return false;
   }
   var good = getGoodById(goodId);

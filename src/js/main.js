@@ -3754,9 +3754,9 @@ function consumeAP(cost) {
     }
   }
 
-  // 道德事件判定（3%概率，每日最多一次，用showModal展示选择）
+  // 道德事件判定（8%概率，每日最多一次，用showModal展示选择）
   if (!state._pendingEvent && typeof triggerMoralEvent === "function") {
-    if (Random.chance(0.03)) {
+    if (Random.chance(0.08)) {
       triggerMoralEvent(state);
     }
   }

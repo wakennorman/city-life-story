@@ -94,7 +94,20 @@ function queueRandomEvent(state, phase) {
 
   // 过滤掉不满足条件的事件
   var eligible = pool.filter(function (e) {
-    return !e.conditions || e.conditions(state);
+    // 通用条件函数检查
+    if (e.conditions && !e.conditions(state)) return false;
+    // 财富检查：太有钱时不出贫穷主题事件
+    if (
+      e.maxCash &&
+      state.resources.cash + (state.resources.bankBalance || 0) > e.maxCash
+    )
+      return false;
+    if (
+      e.minCash &&
+      state.resources.cash + (state.resources.bankBalance || 0) < e.minCash
+    )
+      return false;
+    return true;
   });
   if (eligible.length === 0) return;
 

@@ -815,7 +815,7 @@ function renderLocation(state) {
         ${curRent > 0 ? `<span style="font-size:10px;color:var(--warning);">日租¥${curRent}</span>` : ""}
       </div>
       <div style="font-size:11px;color:var(--text-muted);">
-        🎒 背包 ${itemCount}/${totalCap}
+        🎒 仓库槽位 ${itemCount}/${totalCap}
         ${state.housing?.storageRented ? " 📦 已租仓库" : ""}
       </div>
       ${state.housing?.tier < 3 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">💡 去<strong style="color:var(--accent);">城中村</strong>可升级住所</div>` : ""}
@@ -3468,10 +3468,21 @@ function renderTradeTab(state, parent) {
 function renderInventoryTab(state, parent) {
   parent.innerHTML = "";
   const div = document.createElement("div");
+  // 计算负重信息
+  var totalWeight = 0;
+  var maxCarry = 15 + (state.player.physique || 0) * 0.3;
+  if (typeof calcEncumbrance === "function") {
+    var enc = calcEncumbrance(state);
+    totalWeight = Math.round(enc.totalWeight * 10) / 10;
+    maxCarry = Math.round(enc.maxCarry * 10) / 10;
+  }
   div.innerHTML = `
     <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
       <span style="font-size:11px;color:var(--text-muted)">
-        (${state.inventory.items.length}/${state.inventory.capacity})
+        (仓库 ${state.inventory.items.length}/${state.inventory.capacity} 槽位)
+      </span>
+      <span style="font-size:10px;color:var(--text-muted);margin-left:8px;">
+        负重 ${totalWeight}/${maxCarry}kg
       </span>
     </h3>
   `;

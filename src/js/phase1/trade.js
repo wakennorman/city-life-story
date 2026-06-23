@@ -44,7 +44,7 @@ function buyGood(goodId, qty) {
   );
   if (currentItems + qty > state.inventory.capacity) {
     StateManager.addMessage(
-      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+      `⚠️ 仓库空间不足！（${currentItems}/${state.inventory.capacity} 槽位）`,
       "danger",
     );
     return false;
@@ -241,7 +241,7 @@ function buyWholesale(goodId, qty) {
   );
   if (currentItems + qty > state.inventory.capacity) {
     StateManager.addMessage(
-      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+      `⚠️ 仓库空间不足！（${currentItems}/${state.inventory.capacity} 槽位）`,
       "danger",
     );
     return false;

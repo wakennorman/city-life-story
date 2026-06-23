@@ -92,10 +92,14 @@ function seedWorldFromReality(state) {
   var fetchUrl =
     "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d";
 
-  // 由于是纯前端 fetch，用 try-catch 兜底
+  // 浏览器环境：CORS 限制导致 Yahoo Finance 无法获取，跳过直接使用随机种子
+  var isBrowser =
+    typeof window !== "undefined" && typeof window.navigator !== "undefined";
   var success = false;
 
   try {
+    if (isBrowser) throw new Error("skip: browser CORS");
+
     // 使用 XMLHttpRequest 的同步风格（保持脚本加载顺序兼容性）
     var xhr = new XMLHttpRequest();
     xhr.open("GET", fetchUrl, false); // 同步请求（开局时阻塞可接受）
@@ -233,10 +237,14 @@ function seedWorldFromReality(state) {
     params.seedSource = "random";
     params.seedDate = null;
 
-    StateManager.addMessage("🌐 世界参数已随机初始化（离线模式）", "info");
+    StateManager.addMessage(
+      "🌐 世界参数已随机初始化（本地模式：开局结果与现实脱钩）",
+      "info",
+    );
   }
 
   state._worldParams = params;
+  return params;
   return params;
 }
 

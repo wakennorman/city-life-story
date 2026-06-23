@@ -392,13 +392,13 @@ if (typeof window !== "undefined") {
       var carry = canCarryMore(state, goodId, qty);
       if (!carry.weightOk || !carry.volumeOk) {
         StateManager.addMessage(
-          "⚠️ 太重了！背不动（检查重量/体积）。",
+          "⚠️ 超出负重上限！（加强体质可提升负重）",
           "danger",
         );
         return false;
       }
       if (carry.overLimit) {
-        StateManager.addMessage("⚠️ 装得有点多了，行动会变慢。", "warning");
+        StateManager.addMessage("⚠️ 负重较高，行动会变慢。", "warning");
       }
     }
     // 调用原购买函数

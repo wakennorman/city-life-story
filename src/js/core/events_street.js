@@ -2356,6 +2356,7 @@
       title: "夜班搬运工机会",
       story:
         "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
+      maxCash: 50000,
       conditions: function (st) {
         return st.player.phase === "street" && st.needs.fatigue <= 60;
       },

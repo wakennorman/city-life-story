@@ -541,6 +541,354 @@ const MORAL_EVENTS = [
       },
     ],
   },
+  // ============================================================
+  // 新增道德事件（v2 — 8个新场景）
+  // ============================================================
+  {
+    id: "found_atm_card",
+    title: "🏧 ATM机的遗忘银行卡",
+    desc: "你在ATM机前排队时，发现插卡口里插着一张别人遗忘的银行卡，屏幕上显示着余额查询结果：¥8,325.40。后面还没人注意到。",
+    minDay: 4,
+    dailyChance: 0.04,
+    choices: [
+      {
+        text: "🏦 取出来交给银行保安",
+        flag: "moral_atm_report",
+        score: 10,
+        immediate: function (s) {
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 4);
+          StateManager.addMessage(
+            "🏦 保安登记了你的信息，说会联系银行处理。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💳 试试能不能取点钱出来",
+        flag: "moral_atm_take",
+        score: -18,
+        immediate: function (s) {
+          var taken = Random.int(200, 500);
+          s.resources.cash += taken;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+          StateManager.addMessage(
+            "💸 你的手在发抖，取了¥" + taken + "赶紧离开了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📱 发朋友圈提醒大家注意财产安全",
+        flag: "moral_atm_warn",
+        score: 5,
+        immediate: function (s) {
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage(
+            "📱 你发了条提醒，朋友们纷纷点赞转发。",
+            "hint",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "cashier_overpaid",
+    title: "🛒 超市收银员多找了钱",
+    desc: "你在超市买了一堆日用品，结账后走出门口发现收银员多找了你¥30。你手里攥着多出来的钱，回头看了一眼收银台前排着的长队。",
+    minDay: 3,
+    dailyChance: 0.05,
+    choices: [
+      {
+        text: "↩️ 回去退还多余的钱",
+        flag: "moral_cashier_return",
+        score: 8,
+        immediate: function (s) {
+          s.resources.cash -= 30;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+          StateManager.addMessage(
+            "😊 收银员感激地说「你真是个好人！」",
+            "success",
+          );
+        },
+      },
+      {
+        text: "👛 算了，她自己会发现的",
+        flag: "moral_cashier_keep",
+        score: -5,
+        immediate: function (s) {
+          s.resources.cash += 30;
+          s.needs.happiness = Math.max(0, s.needs.happiness - 2);
+          StateManager.addMessage(
+            "😐 你安慰自己说「算了，就当是超市的失误。」",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "shared_bike_unlocked",
+    title: "🚲 路边一辆没锁的共享单车",
+    desc: "你看到路边停着一辆共享单车，车锁没扣上，也没人扫码。骑走就能省下一笔交通费，但这样做不太对。",
+    minDay: 2,
+    dailyChance: 0.05,
+    choices: [
+      {
+        text: "🔒 帮它锁上，拍张照报修",
+        flag: "moral_bike_lock",
+        score: 6,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage(
+            "🚲 你帮锁了车，报了故障——心里踏实多了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏍️ 骑走用用，反正没人知道",
+        flag: "moral_bike_steal",
+        score: -8,
+        immediate: function (s) {
+          StateManager.addMessage(
+            "🚲 你骑了几条街，总觉得有人在看你。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📷 拍照发到群里提醒大家注意",
+        flag: "moral_bike_report",
+        score: 4,
+        immediate: function (s) {
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage("📱 群里有人感谢你提醒！", "hint");
+        },
+      },
+    ],
+  },
+  {
+    id: "colleague_slack",
+    title: "👔 同事在摸鱼被你看到",
+    desc: "你路过茶水间，看到同事老张正躲在角落里刷短视频。最近公司业绩不好，总监正在抓典型。他看到你，尴尬地笑了笑。你", // 后续在desc中
+    minDay: 60,
+    dailyChance: 0.03,
+    condition: function (s) {
+      return s.player.phase === "corporate";
+    },
+    choices: [
+      {
+        text: "🤫 假装没看见，默默走开",
+        flag: "moral_colleague_ignore",
+        score: 3,
+        immediate: function (s) {
+          s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) + 1;
+          StateManager.addMessage("🤫 你低头走开了，老张松了口气。", "info");
+        },
+      },
+      {
+        text: "📋 委婉提醒他注意影响",
+        flag: "moral_colleague_warn",
+        score: 5,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          StateManager.addMessage(
+            "📋 你说「最近风声紧，注意点」，老张感激地点点头。",
+            "hint",
+          );
+        },
+      },
+      {
+        text: "📞 匿名向总监举报",
+        flag: "moral_colleague_snitch",
+        score: -10,
+        immediate: function (s) {
+          s.player.corporate.upward = Math.min(
+            100,
+            (s.player.corporate.upward || 0) + 3,
+          );
+          s.needs.happiness = Math.max(0, s.needs.happiness - 5);
+          s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
+          StateManager.addMessage(
+            "📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "injured_animal",
+    title: "🐱 路边发现受伤的小猫",
+    desc: "你在巷口发现一只脏兮兮的小猫，后腿似乎受了伤，蜷缩在角落瑟瑟发抖。它看到你，发出微弱的叫声。",
+    minDay: 3,
+    dailyChance: 0.04,
+    choices: [
+      {
+        text: "🏥 送去附近的宠物医院",
+        flag: "moral_cat_rescue",
+        score: 12,
+        immediate: function (s) {
+          s.resources.cash -= Random.int(80, 150);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🏥 宠物医生说小猫能救活，你心里暖暖的。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍞 留点吃的，然后就走吧",
+        flag: "moral_cat_feed",
+        score: 4,
+        immediate: function (s) {
+          s.resources.cash -= 5;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          StateManager.addMessage(
+            "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 自己都养不活，管不了它",
+        flag: "moral_cat_ignore",
+        score: -4,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          StateManager.addMessage(
+            "😞 你转身走了，身后传来微弱的叫声。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "help_carry",
+    title: "📦 路人在搬重物",
+    desc: "一个快递员正在满头大汗地把大件包裹往三轮车上搬。他看见你，犹豫了一下，欲言又止。他看起来很需要帮助。",
+    minDay: 5,
+    dailyChance: 0.05,
+    choices: [
+      {
+        text: "💪 主动上去搭把手",
+        flag: "moral_help_carry",
+        score: 6,
+        immediate: function (s) {
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 5);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+          StateManager.addMessage(
+            "💪 快递员连声道谢，非要塞给你一瓶水。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 问他出不出钱找人帮忙",
+        flag: "moral_help_charge",
+        score: -2,
+        immediate: function (s) {
+          s.resources.cash += Random.int(10, 20);
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
+          StateManager.addMessage(
+            "💰 他犹豫了一下，给了你¥" + ((s.resources.cash % 20) + 10) + "。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👀 只是看了一眼，继续赶路",
+        flag: "moral_help_pass",
+        score: -1,
+        immediate: function (s) {
+          StateManager.addMessage(
+            "😐 你确实很忙，但心里有点过意不去。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "crosswalk_dilemma",
+    title: "🚦 深夜空无一人的红灯",
+    desc: "深夜两点，你走在空无一人的大街上，前方是红灯。四周一辆车都没有，最近的人影在几百米之外。等红灯要两分钟。",
+    minDay: 6,
+    dailyChance: 0.04,
+    choices: [
+      {
+        text: "🚶 虽然没人，但还是等绿灯",
+        flag: "moral_crosswalk_wait",
+        score: 5,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          StateManager.addMessage(
+            "🚦 你站在空荡荡的路口等了两分钟——原则就是原则。",
+            "hint",
+          );
+        },
+      },
+      {
+        text: "🏃 左右看看没车，赶紧跑过去",
+        flag: "moral_crosswalk_run",
+        score: -3,
+        immediate: function (s) {
+          s.player.agility = Math.min(100, (s.player.agility || 0) + 0.3);
+          StateManager.addMessage(
+            "🏃 你快步跑过马路，什么事都没发生。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+  {
+    id: "lost_child",
+    title: "👶 商城里走丢的小孩",
+    desc: "你在商场里看到一个四五岁的小男孩在走廊中间哭着喊妈妈，周围的大人行色匆匆，没人停下来。",
+    minDay: 7,
+    dailyChance: 0.03,
+    choices: [
+      {
+        text: "🤝 蹲下来安慰他，带他去服务台广播",
+        flag: "moral_child_help",
+        score: 14,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "👶 广播响了三次后，一位焦急的母亲冲到了服务台，抱着孩子哭了。她不停向你道谢。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 拍个照发到商场群让管理员处理",
+        flag: "moral_child_report",
+        score: 7,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage("📱 管理员很快赶到，把孩子带走了。", "info");
+        },
+      },
+      {
+        text: "🚶 商场有保安，用不着我管",
+        flag: "moral_child_ignore",
+        score: -6,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, s.needs.happiness - 4);
+          StateManager.addMessage(
+            "😞 你走远了，还能听到后面隐约的哭声。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 const MORAL_CONSEQUENCES = {
@@ -813,6 +1161,100 @@ const MORAL_CONSEQUENCES = {
       );
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage("📈 经理在会上表扬了坚持原则的行为。", "success");
+    },
+  },
+  // 新事件后果（v2）
+  moral_atm_report: {
+    id: "consequence_atm_report",
+    title: "📞 失主打来的感谢电话",
+    delay: [3, 7],
+    desc: function (s) {
+      return "银行通过预留信息联系到了失主，失主打来电话说那些钱是给孩子交学费的，感激不尽。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 8);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+      StateManager.addMessage(
+        "📞 失主在电话里声音哽咽，说你是大恩人。",
+        "success",
+      );
+    },
+  },
+  moral_atm_take: {
+    id: "consequence_atm_guilt",
+    title: "😰 银行调查的风声",
+    delay: [4, 8],
+    desc: function (s) {
+      return "你听说那台ATM机的监控录像被调取了，虽然不确定会不会找到你，但每天都提心吊胆。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.max(0, s.needs.happiness - 10);
+      StateManager.addMessage(
+        "😰 你总是疑神疑鬼，听到警笛声就心跳加速。",
+        "danger",
+      );
+    },
+  },
+  moral_cashier_return: {
+    id: "consequence_cashier_return",
+    title: "🥐 超市的善意小回馈",
+    delay: [6, 12],
+    desc: function (s) {
+      return "今天再去那家超市时，那个收银员认出了你，笑着多给了你一盒牛奶。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+      StateManager.addMessage(
+        "🥛 收银员冲你笑了笑，把一盒牛奶塞进了你的袋子。",
+        "success",
+      );
+    },
+  },
+  moral_cat_rescue: {
+    id: "consequence_cat_rescue",
+    title: "🐱 小猫康复了",
+    delay: [7, 14],
+    desc: function (s) {
+      return "宠物医院打来电话，说那只小猫的腿保住了，已经有人愿意领养。医院说你是它的大恩人。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 12);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+      StateManager.addMessage(
+        "🐱 听到小猫康复的消息，你整整开心了一天。",
+        "success",
+      );
+    },
+  },
+  moral_child_help: {
+    id: "consequence_child_help",
+    title: "🎁 意外的感谢",
+    delay: [5, 12],
+    desc: function (s) {
+      return "那位母亲通过商场监控找到了你的联系方式，邀请你去她家开的餐馆免费吃一顿。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 8);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
+      StateManager.addMessage(
+        "🎫 她盛情难却，你在她家餐馆吃了一顿大餐，分文不收。",
+        "success",
+      );
+    },
+  },
+  moral_crosswalk_wait: {
+    id: "consequence_crosswalk_wait",
+    title: "🚔 意外的考察",
+    delay: [3, 5],
+    desc: function (s) {
+      return "深夜那个路口，路边一辆不起眼的车里坐着一位下班的交警，他看到了你等红灯的全过程。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+      StateManager.addMessage(
+        "👮 交警摇下车窗给你竖了个大拇指：「好样的！」",
+        "success",
+      );
     },
   },
 };

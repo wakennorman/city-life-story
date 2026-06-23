@@ -23,9 +23,15 @@ function setupCanvas(canvas, w, h) {
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.cssText =
-    "width:" + w + "px;height:" + h + "px;max-width:100%;border-radius:8px;";
+    "width:" +
+    w +
+    "px;height:" +
+    h +
+    "px;display:block;max-width:100%;border-radius:8px;";
   var ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
+  ctx.fillStyle = "#faf8f5";
+  ctx.fillRect(0, 0, w, h);
   return ctx;
 }
 
@@ -1013,47 +1019,59 @@ function renderGrowthTab(state, container) {
   container.appendChild(statsSection);
 
   // ---- 异步绘制图表（Retina 高清） ----
-  setTimeout(function () {
-    // 总资产曲线（560x180）
-    var ctxAsset = setupCanvas(assetCanvas, 560, 180);
-    drawAssetLineChart(ctxAsset, state, 0, 0, 560, 180);
+  requestAnimationFrame(function () {
+    try {
+      // 总资产曲线（560x180）
+      var ctxAsset = setupCanvas(assetCanvas, 560, 180);
+      drawAssetLineChart(ctxAsset, state, 0, 0, 560, 180);
 
-    // 收入/支出曲线（560x220）
-    var ctxIncome = setupCanvas(incomeCanvas, 560, 220);
-    drawIncomeChart(ctxIncome, state, 0, 0, 560, 220);
+      // 收入/支出曲线（560x220）
+      var ctxIncome = setupCanvas(incomeCanvas, 560, 220);
+      drawIncomeChart(ctxIncome, state, 0, 0, 560, 220);
 
-    // 雷达图（280x260）
-    var ctxRadar = setupCanvas(radarCanvas, 280, 260);
-    // 历史属性对比：取最近一次快照（约7天前）
-    var historyStats = (state.history && state.history.stats) || [];
-    var overlayAttrs = null;
-    if (historyStats.length >= 2 && !isCorporate) {
-      var oldSnapshot = historyStats[Math.max(0, historyStats.length - 2)];
-      if (oldSnapshot && oldSnapshot.day < (p.day || 0)) {
-        overlayAttrs = [
-          { label: "体质", value: oldSnapshot.physique || 0, color: "#c48e4a" },
-          {
-            label: "智力",
-            value: oldSnapshot.intelligence || 0,
-            color: "#5a94ba",
-          },
-          { label: "敏捷", value: oldSnapshot.agility || 0, color: "#56a64e" },
-          { label: "心智", value: oldSnapshot.mental || 0, color: "#9672b4" },
-          { label: "名气", value: oldSnapshot.fame || 0, color: "#d4a017" },
-        ];
+      // 雷达图（280x260）
+      var ctxRadar = setupCanvas(radarCanvas, 280, 260);
+      // 历史属性对比：取最近一次快照（约7天前）
+      var historyStats = (state.history && state.history.stats) || [];
+      var overlayAttrs = null;
+      if (historyStats.length >= 2 && !isCorporate) {
+        var oldSnapshot = historyStats[Math.max(0, historyStats.length - 2)];
+        if (oldSnapshot && oldSnapshot.day < (p.day || 0)) {
+          overlayAttrs = [
+            {
+              label: "体质",
+              value: oldSnapshot.physique || 0,
+              color: "#c48e4a",
+            },
+            {
+              label: "智力",
+              value: oldSnapshot.intelligence || 0,
+              color: "#5a94ba",
+            },
+            {
+              label: "敏捷",
+              value: oldSnapshot.agility || 0,
+              color: "#56a64e",
+            },
+            { label: "心智", value: oldSnapshot.mental || 0, color: "#9672b4" },
+            { label: "名气", value: oldSnapshot.fame || 0, color: "#d4a017" },
+          ];
+        }
       }
+      drawRadarChart(
+        ctxRadar,
+        state,
+        0,
+        0,
+        280,
+        260,
+        isCorporate ? "corp" : "street",
+        overlayAttrs,
+      );
+    } catch (e) {
+      console.warn("[data_viz] 图表绘制错误（不影响游戏）:", e);
     }
-    drawRadarChart(
-      ctxRadar,
-      state,
-      0,
-      0,
-      280,
-      260,
-      isCorporate ? "corp" : "street",
-      overlayAttrs,
-    );
-  }, 0);
+  });
 }
 
 // 全局挂载
