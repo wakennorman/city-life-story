@@ -1029,6 +1029,10 @@ function buyItemFromShop(itemId) {
       equippedItem.instanceId = instanceId;
       state.inventory.equipmentInstances[instanceId] = equippedItem;
     }
+    // 初始化耐久度（新装备立即有耐久度）
+    if (typeof initEquipmentDurability === "function") {
+      initEquipmentDurability(state);
+    }
   } else {
     // 无slot的道具：放入 items 背包
     if (!state.inventory.items) state.inventory.items = [];

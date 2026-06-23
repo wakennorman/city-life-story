@@ -682,6 +682,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 装备耐久度磨损 ===
+  {
+    name: "durability_wear",
+    fn: function (state) {
+      if (typeof applyDailyWear === "function") {
+        applyDailyWear(state);
+      }
+    },
+  },
+
   // === 每日收支报告（阻塞弹窗）===
   {
     name: "daily_report",

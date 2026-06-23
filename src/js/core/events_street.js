@@ -1642,8 +1642,18 @@
             if (Random.chance(0.7)) {
               st.resources.cash -= 150;
               st.player.fame = Math.min(100, st.player.fame + 2);
+              // 添加到背包
+              if (!st.inventory.items) st.inventory.items = [];
+              var existPhone = st.inventory.items.find(function (x) {
+                return x.id === "smartphone";
+              });
+              if (existPhone) {
+                existPhone.qty = (existPhone.qty || 1) + 1;
+              } else {
+                st.inventory.items.push({ id: "smartphone", qty: 1 });
+              }
               StateManager.addMessage(
-                "📱 手机买到了，成色还不错！跑外卖的路敞开了，名气+2。",
+                "📱 手机买到了，成色还不错！已放入背包，跑外卖的路敞开了，名气+2。",
                 "success",
               );
             } else {
@@ -1666,8 +1676,20 @@
             );
             const price = Random.int(100, 179);
             st.resources.cash -= price;
+            // 添加到背包
+            if (!st.inventory.items) st.inventory.items = [];
+            var existPhone2 = st.inventory.items.find(function (x) {
+              return x.id === "smartphone";
+            });
+            if (existPhone2) {
+              existPhone2.qty = (existPhone2.qty || 1) + 1;
+            } else {
+              st.inventory.items.push({ id: "smartphone", qty: 1 });
+            }
             StateManager.addMessage(
-              "🔍 你仔细测试了30分钟，砍价到¥" + price + "成交，没有暗病。",
+              "🔍 你仔细测试了30分钟，砍价到¥" +
+                price +
+                "成交，没有暗病。手机已放入背包。",
               "success",
             );
           },
@@ -3533,7 +3555,7 @@
       choices: [
         {
           text: "🍱 买一份盒饭给他",
-          hint: "花费¥15，心情+10，心智+5",
+          hint: "花点钱做件好事",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.flags._gaveFoodToChild = true;
@@ -3548,7 +3570,7 @@
         },
         {
           text: "💵 给他20块钱",
-          hint: "花费¥20，心情+8",
+          hint: "花点零钱换好心情",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
@@ -3561,7 +3583,7 @@
         },
         {
           text: "🚶 装作没看见，走了",
-          hint: "无消耗，但心智-3",
+          hint: "不用花钱，但心里不好受",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
@@ -3590,7 +3612,7 @@
       choices: [
         {
           text: "🏃 冲进去帮忙疏散工人",
-          hint: "名气+10，体质+2，但健康-15，有风险",
+          hint: "挺身而出，可能受伤但能积累名望",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.flags._factoryFireHero = true;
@@ -3605,7 +3627,7 @@
         },
         {
           text: "📞 第一时间打119，在外面等",
-          hint: "理性选择，无惩罚，名气+3",
+          hint: "理智应对，稳妥至上",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.player.fame = Math.min(100, st.player.fame + 3);
@@ -3617,7 +3639,7 @@
         },
         {
           text: "😨 惊慌失措，人群里往后退",
-          hint: "无影响，但心智-5",
+          hint: "随波逐流，但内心不安",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
@@ -3647,7 +3669,7 @@
       choices: [
         {
           text: "🤫 偷偷复印一份，留着他需要的时候用",
-          hint: "好感+5（下次遇到老马），道德档案+",
+          hint: "留一手，日后好做人",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.flags._savedCoworkerDoc = true;
@@ -3659,7 +3681,7 @@
         },
         {
           text: "💬 直接告诉老马，他应该知道",
-          hint: "心情+8，老马好感大增",
+          hint: "坦诚相待，对方会感激你",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
@@ -3672,7 +3694,7 @@
         },
         {
           text: "🙅 不是我的事，假装没看见",
-          hint: "无后果，但心智-2",
+          hint: "明哲保身，但夜里可能睡不着",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 2);
@@ -3697,7 +3719,7 @@
       choices: [
         {
           text: "🚶 亲自送他过去",
-          hint: "消耗一点AP，心情+15，名气+5",
+          hint: "亲自帮忙，既费时也暖心",
           apply: function (st) {
             st.flags._helpedElderlyLost = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -3710,7 +3732,7 @@
         },
         {
           text: "📱 帮他叫了辆顺风车",
-          hint: "花费¥15，心情+8",
+          hint: "破费一点，省心省力",
           apply: function (st) {
             st.flags._helpedElderlyLost = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
@@ -3752,7 +3774,7 @@
       choices: [
         {
           text: "💰 去兑奖，这就是运气",
-          hint: "现金+¥3800，但心智-3（总感觉有点不对劲）",
+          hint: "收获现金，但内心隐隐不安",
           apply: function (st) {
             st.flags._foundLotteryTicket = true;
             st.flags._keptLotteryMoney = true;
@@ -3767,7 +3789,7 @@
         },
         {
           text: "📢 在原地等了一会儿，想看有没有人来找",
-          hint: "无现金收益，但心情+12，心智+5",
+          hint: "等失主，求个心安",
           apply: function (st) {
             st.flags._foundLotteryTicket = true;
             st.flags._waitedForLotteryOwner = true;
@@ -3813,7 +3835,7 @@
         },
         {
           text: "💸 立刻打算还¥500过去表态",
-          hint: "现金-500，但树立信誉",
+          hint: "还钱表态，积攒信誉",
           apply: function (st) {
             var pay = Math.min(
               500,
@@ -3880,7 +3902,7 @@
       choices: [
         {
           text: "🤝 求亲戚帮忙说情，多给点时间",
-          hint: "心情-10，再宽限30天",
+          hint: "一家人还算一条心",
           apply: function (st) {
             st.flags._debtPressureGiven = true;
             st.flags._debtExtensionDays = (st.player.day || 0) + 30;
@@ -3894,7 +3916,7 @@
         },
         {
           text: "💰 还¥1000，表明诚意",
-          hint: "现金-1000，压力减轻",
+          hint: "还一笔，减轻债务压力",
           apply: function (st) {
             var pay = Math.min(
               1000,
@@ -3966,7 +3988,7 @@
       choices: [
         {
           text: "😰 当场还¥2000，保住颜面",
-          hint: "现金-2000，债务减少，家庭关系修复",
+          hint: "破财消灾，保全体面",
           apply: function (st) {
             var pay = Math.min(
               2000,
@@ -4239,7 +4261,7 @@
         },
         {
           text: "📢 联合维权（要求恢复补贴）",
-          hint: "消耗¥50组织费，名气+5，15天后见结果",
+          hint: "组织维权，积累声望",
           cost: 50,
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
@@ -4254,7 +4276,7 @@
         },
         {
           text: "🍜 用攒的钱转型开摊（需¥500）",
-          hint: "花¥200启动摆摊，体质+3",
+          hint: "投资自己，身体是革命的本钱",
           cost: 500,
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
@@ -4306,7 +4328,7 @@
         },
         {
           text: "⚖️ 继续上诉，等法律途径",
-          hint: "名气+8，但结果不确定",
+          hint: "名声在外，但结果难测",
           apply: function (st) {
             st.flags._riderRightsResolved = true;
             st.flags._riderRightsAppealing = true;
@@ -7119,7 +7141,7 @@
         },
         {
           text: "🛒 趁打折给自己买点好的",
-          hint: "心情+15，花¥200",
+          hint: "犒劳自己一下就对了",
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.resources.cash -= 200;
@@ -7172,7 +7194,7 @@
         },
         {
           text: "📢 帮维权群众写联名信",
-          hint: "名气+5，耗时15AP",
+          hint: "帮助别人，让大家记住你",
           apply: function (st) {
             st.flags._p2pCrashSeen = true;
             st.flags._p2pHelped = true;
@@ -7338,7 +7360,7 @@
       choices: [
         {
           text: "🎉 高兴——可以找正常下班的朋友玩",
-          hint: "心情+10",
+          hint: "下班后的小确幸",
           apply: function (st) {
             st.flags._tech996Seen = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -7964,7 +7986,7 @@
         },
         {
           text: "📚 学习区块链知识",
-          hint: "智力+3",
+          hint: "增长见识，开阔视野",
           apply: function (st) {
             st.flags._cryptoCycleSeen = true;
             st.player.intelligence = Math.min(
@@ -8090,7 +8112,7 @@
         },
         {
           text: "📖 学习量化交易知识",
-          hint: "智力+2，也许以后用得上",
+          hint: "学习量化交易知识",
           apply: function (st) {
             st.flags._quantFundSeen = true;
             st.player.intelligence = Math.min(
@@ -8424,7 +8446,7 @@
         },
         {
           text: "📖 报名夜校学电路基础",
-          hint: "智力+3，花¥500学费",
+          hint: "花笔学费学习实用技能",
           apply: function (st) {
             st.flags._chipLocalSeen = true;
             if (st.resources.cash >= 500) {
@@ -8620,7 +8642,7 @@
         },
         {
           text: "📖 学英语准备做出海运营",
-          hint: "智力+2，花¥300买教材",
+          hint: "花钱买教材，为将来铺路",
           apply: function (st) {
             st.flags._goingGlobalSeen = true;
             if (st.resources.cash >= 300) {
@@ -9094,7 +9116,7 @@
       choices: [
         {
           text: "📚 买套考公资料自己学",
-          hint: "¥300，智力+2，开启一个新方向",
+          hint: "花点钱换一个全新的方向",
           apply: function (st) {
             st.flags._examCompetitionSeen = true;
             if (st.resources.cash >= 300) {

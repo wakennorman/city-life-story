@@ -1184,6 +1184,11 @@ function startNewGame() {
     initWeather(StateManager.getState());
   }
 
+  // 初始化装备耐久度
+  if (typeof initEquipmentDurability === "function") {
+    initEquipmentDurability(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());
@@ -1266,6 +1271,10 @@ function loadExistingGame(slot) {
     // 兼容旧存档：初始化企业命运系统
     if (typeof initEnterpriseFate === "function") {
       initEnterpriseFate(StateManager.getState());
+    }
+    // 兼容旧存档：初始化装备耐久度
+    if (typeof initEquipmentDurability === "function") {
+      initEquipmentDurability(StateManager.getState());
     }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";

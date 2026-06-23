@@ -3844,8 +3844,16 @@ function queueRandomEvent(state, phase) {
     // 通用条件函数检查
     if (e.conditions && !e.conditions(state)) return false;
     // 财富检查：太有钱时不出贫穷主题事件
-    if (e.maxCash && (state.resources.cash + (state.resources.bankBalance || 0)) > e.maxCash) return false;
-    if (e.minCash && (state.resources.cash + (state.resources.bankBalance || 0)) < e.minCash) return false;
+    if (
+      e.maxCash &&
+      state.resources.cash + (state.resources.bankBalance || 0) > e.maxCash
+    )
+      return false;
+    if (
+      e.minCash &&
+      state.resources.cash + (state.resources.bankBalance || 0) < e.minCash
+    )
+      return false;
     return true;
   });
   if (eligible.length === 0) return;
@@ -5889,8 +5897,18 @@ function quarterlyCleanup(state) {
             if (Random.chance(0.7)) {
               st.resources.cash -= 150;
               st.player.fame = Math.min(100, st.player.fame + 2);
+              // 添加到背包
+              if (!st.inventory.items) st.inventory.items = [];
+              var existPhone = st.inventory.items.find(function (x) {
+                return x.id === "smartphone";
+              });
+              if (existPhone) {
+                existPhone.qty = (existPhone.qty || 1) + 1;
+              } else {
+                st.inventory.items.push({ id: "smartphone", qty: 1 });
+              }
               StateManager.addMessage(
-                "📱 手机买到了，成色还不错！跑外卖的路敞开了，名气+2。",
+                "📱 手机买到了，成色还不错！已放入背包，跑外卖的路敞开了，名气+2。",
                 "success",
               );
             } else {
@@ -5913,8 +5931,20 @@ function quarterlyCleanup(state) {
             );
             const price = Random.int(100, 179);
             st.resources.cash -= price;
+            // 添加到背包
+            if (!st.inventory.items) st.inventory.items = [];
+            var existPhone2 = st.inventory.items.find(function (x) {
+              return x.id === "smartphone";
+            });
+            if (existPhone2) {
+              existPhone2.qty = (existPhone2.qty || 1) + 1;
+            } else {
+              st.inventory.items.push({ id: "smartphone", qty: 1 });
+            }
             StateManager.addMessage(
-              "🔍 你仔细测试了30分钟，砍价到¥" + price + "成交，没有暗病。",
+              "🔍 你仔细测试了30分钟，砍价到¥" +
+                price +
+                "成交，没有暗病。手机已放入背包。",
               "success",
             );
           },
@@ -7780,7 +7810,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🍱 买一份盒饭给他",
-          hint: "花费¥15，心情+10，心智+5",
+          hint: "花点钱做件好事",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.flags._gaveFoodToChild = true;
@@ -7795,7 +7825,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "💵 给他20块钱",
-          hint: "花费¥20，心情+8",
+          hint: "花点零钱换好心情",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
@@ -7808,7 +7838,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🚶 装作没看见，走了",
-          hint: "无消耗，但心智-3",
+          hint: "不用花钱，但心里不好受",
           apply: function (st) {
             st.flags._childBeggaredSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
@@ -7837,7 +7867,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🏃 冲进去帮忙疏散工人",
-          hint: "名气+10，体质+2，但健康-15，有风险",
+          hint: "挺身而出，可能受伤但能积累名望",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.flags._factoryFireHero = true;
@@ -7852,7 +7882,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📞 第一时间打119，在外面等",
-          hint: "理性选择，无惩罚，名气+3",
+          hint: "理智应对，稳妥至上",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.player.fame = Math.min(100, st.player.fame + 3);
@@ -7864,7 +7894,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "😨 惊慌失措，人群里往后退",
-          hint: "无影响，但心智-5",
+          hint: "随波逐流，但内心不安",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
@@ -7894,7 +7924,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🤫 偷偷复印一份，留着他需要的时候用",
-          hint: "好感+5（下次遇到老马），道德档案+",
+          hint: "留一手，日后好做人",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.flags._savedCoworkerDoc = true;
@@ -7906,7 +7936,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "💬 直接告诉老马，他应该知道",
-          hint: "心情+8，老马好感大增",
+          hint: "坦诚相待，对方会感激你",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
@@ -7919,7 +7949,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🙅 不是我的事，假装没看见",
-          hint: "无后果，但心智-2",
+          hint: "明哲保身，但夜里可能睡不着",
           apply: function (st) {
             st.flags._coworkerDocSeen = true;
             st.player.mental = Math.max(0, (st.player.mental || 0) - 2);
@@ -7944,7 +7974,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🚶 亲自送他过去",
-          hint: "消耗一点AP，心情+15，名气+5",
+          hint: "亲自帮忙，既费时也暖心",
           apply: function (st) {
             st.flags._helpedElderlyLost = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -7957,7 +7987,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📱 帮他叫了辆顺风车",
-          hint: "花费¥15，心情+8",
+          hint: "破费一点，省心省力",
           apply: function (st) {
             st.flags._helpedElderlyLost = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
@@ -7999,7 +8029,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "💰 去兑奖，这就是运气",
-          hint: "现金+¥3800，但心智-3（总感觉有点不对劲）",
+          hint: "收获现金，但内心隐隐不安",
           apply: function (st) {
             st.flags._foundLotteryTicket = true;
             st.flags._keptLotteryMoney = true;
@@ -8014,7 +8044,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📢 在原地等了一会儿，想看有没有人来找",
-          hint: "无现金收益，但心情+12，心智+5",
+          hint: "等失主，求个心安",
           apply: function (st) {
             st.flags._foundLotteryTicket = true;
             st.flags._waitedForLotteryOwner = true;
@@ -8060,7 +8090,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "💸 立刻打算还¥500过去表态",
-          hint: "现金-500，但树立信誉",
+          hint: "还钱表态，积攒信誉",
           apply: function (st) {
             var pay = Math.min(
               500,
@@ -8127,7 +8157,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🤝 求亲戚帮忙说情，多给点时间",
-          hint: "心情-10，再宽限30天",
+          hint: "一家人还算一条心",
           apply: function (st) {
             st.flags._debtPressureGiven = true;
             st.flags._debtExtensionDays = (st.player.day || 0) + 30;
@@ -8141,7 +8171,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "💰 还¥1000，表明诚意",
-          hint: "现金-1000，压力减轻",
+          hint: "还一笔，减轻债务压力",
           apply: function (st) {
             var pay = Math.min(
               1000,
@@ -8213,7 +8243,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "😰 当场还¥2000，保住颜面",
-          hint: "现金-2000，债务减少，家庭关系修复",
+          hint: "破财消灾，保全体面",
           apply: function (st) {
             var pay = Math.min(
               2000,
@@ -8486,7 +8516,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📢 联合维权（要求恢复补贴）",
-          hint: "消耗¥50组织费，名气+5，15天后见结果",
+          hint: "组织维权，积累声望",
           cost: 50,
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
@@ -8501,7 +8531,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🍜 用攒的钱转型开摊（需¥500）",
-          hint: "花¥200启动摆摊，体质+3",
+          hint: "投资自己，身体是革命的本钱",
           cost: 500,
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
@@ -8553,7 +8583,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "⚖️ 继续上诉，等法律途径",
-          hint: "名气+8，但结果不确定",
+          hint: "名声在外，但结果难测",
           apply: function (st) {
             st.flags._riderRightsResolved = true;
             st.flags._riderRightsAppealing = true;
@@ -11366,7 +11396,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🛒 趁打折给自己买点好的",
-          hint: "心情+15，花¥200",
+          hint: "犒劳自己一下就对了",
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.resources.cash -= 200;
@@ -11419,7 +11449,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📢 帮维权群众写联名信",
-          hint: "名气+5，耗时15AP",
+          hint: "帮助别人，让大家记住你",
           apply: function (st) {
             st.flags._p2pCrashSeen = true;
             st.flags._p2pHelped = true;
@@ -11585,7 +11615,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "🎉 高兴——可以找正常下班的朋友玩",
-          hint: "心情+10",
+          hint: "下班后的小确幸",
           apply: function (st) {
             st.flags._tech996Seen = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -12211,7 +12241,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📚 学习区块链知识",
-          hint: "智力+3",
+          hint: "增长见识，开阔视野",
           apply: function (st) {
             st.flags._cryptoCycleSeen = true;
             st.player.intelligence = Math.min(
@@ -12337,7 +12367,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📖 学习量化交易知识",
-          hint: "智力+2，也许以后用得上",
+          hint: "学习量化交易知识",
           apply: function (st) {
             st.flags._quantFundSeen = true;
             st.player.intelligence = Math.min(
@@ -12671,7 +12701,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📖 报名夜校学电路基础",
-          hint: "智力+3，花¥500学费",
+          hint: "花笔学费学习实用技能",
           apply: function (st) {
             st.flags._chipLocalSeen = true;
             if (st.resources.cash >= 500) {
@@ -12867,7 +12897,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "📖 学英语准备做出海运营",
-          hint: "智力+2，花¥300买教材",
+          hint: "花钱买教材，为将来铺路",
           apply: function (st) {
             st.flags._goingGlobalSeen = true;
             if (st.resources.cash >= 300) {
@@ -13341,7 +13371,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "📚 买套考公资料自己学",
-          hint: "¥300，智力+2，开启一个新方向",
+          hint: "花点钱换一个全新的方向",
           apply: function (st) {
             st.flags._examCompetitionSeen = true;
             if (st.resources.cash >= 300) {
@@ -23499,6 +23529,576 @@ if (typeof window !== "undefined") {
   };
 }
 </script>
+    <script>/**
+ * 装备耐久度系统 — 磨损·维修·回收联动
+ *
+ * 设计原则：
+ * - 日常使用轻微磨损，极端天气/高风险工作磨损加速
+ * - 维修技能决定「你能看到什么信息」和「能修到什么程度」
+ * - 维修消耗回收废料（scrap_metal 等），打通回收→维修闭环
+ * - 耐久归零的装备效果失效，但不消失（可以修）
+ *
+ * ┌──────────────┐
+ * │  玩家装备物品  │
+ * └──────┬───────┘
+ *        ↓ 每日使用
+ * ┌──────────────┐
+ * │  durability-- │ ← 磨损
+ * │  （装备专属）  │
+ * └──────┬───────┘
+ *        ↓ 耐久 ≤ 0
+ * ┌──────────────┐
+ * │  装备效果失效  │ ← 仍可装备，但不提供加成
+ * └──────┬───────┘
+ *        ↓ 维修
+ * ┌──────────────┐
+ * │  消耗回收废料  │ ← 打通回收→维修闭环
+ * │  恢复耐久度    │
+ * └──────────────┘
+ */
+
+// ====== 装备基底耐久度 ======
+var _DURABILITY_BASE = {
+  // 套装/通用装备（按价格分档）
+  straw_hat: { max: 30, category: "light" },
+  work_gloves: { max: 50, category: "heavy" },
+  mask: { max: 20, category: "light" },
+  sturdy_shoes: { max: 60, category: "heavy" },
+  backpack: { max: 80, category: "heavy" },
+  work_uniform: { max: 60, category: "standard" },
+  safety_helmet: { max: 100, category: "heavy" },
+  smartphone: { max: 100, category: "electronic" },
+  bicycle: { max: 120, category: "vehicle" },
+  // 高品质背包
+  backpack_basic: { max: 50, category: "heavy" },
+  backpack_large: { max: 100, category: "heavy" },
+  backpack_pro: { max: 150, category: "heavy" },
+  // 季节装
+  warm_coat: { max: 80, category: "standard" },
+  thermal_underwear: { max: 60, category: "light" },
+  raincoat: { max: 40, category: "light" },
+  umbrella: { max: 30, category: "light" },
+  sunscreen: { max: 20, category: "consumable" },
+  // 安全类
+  first_aid_kit: { max: 15, category: "consumable" },
+  work_boots: { max: 120, category: "heavy" },
+  reflective_vest: { max: 60, category: "standard" },
+  pepper_spray: { max: 20, category: "consumable" },
+  // 数码
+  power_bank: { max: 80, category: "electronic" },
+  laptop_bag: { max: 100, category: "standard" },
+  smart_watch: { max: 100, category: "electronic" },
+  noise_cancelling_earphones: { max: 70, category: "electronic" },
+  // 生活
+  thermos: { max: 90, category: "standard" },
+  folding_bike: { max: 150, category: "vehicle" },
+  // 学习
+  cert_exam_book: { max: 30, category: "light" },
+  notebook_item: { max: 20, category: "light" },
+  // 杂项
+  flashlight: { max: 60, category: "electronic" },
+  radio: { max: 80, category: "electronic" },
+};
+
+// 默认耐久度（未在 _DURABILITY_BASE 中定义的装备）
+var _DEFAULT_MAX_DURABILITY = 50;
+
+/**
+ * 获取装备的基底耐久度配置
+ */
+function getDurabilityBase(itemId) {
+  return _DURABILITY_BASE[itemId] || { max: _DEFAULT_MAX_DURABILITY, category: "standard" };
+}
+
+// ====== 耐久度描述（维修技能可见性） ======
+
+/**
+ * 根据维修技能等级返回装备「可见状态」。
+ *
+ * Lv  0：只看得到装备名称，看不到任何状态
+ * Lv 20：能看到模糊描述（"看起来还行" / "有点磨损了" / "快不行了"）
+ * Lv 40：能看到精确耐久值（"72/100"）
+ * Lv 60：能看到维修成本估算 + 可修复
+ *
+ * @param {Object} state - 游戏状态
+ * @param {number} durability - 当前耐久度
+ * @param {number} maxDurability - 最大耐久度
+ * @returns {Object} { visible: bool, label: string, detail: string|null, repairable: bool, repairCost: number|null }
+ */
+function getDurabilityVisibility(state, durability, maxDurability) {
+  var repairLevel = (state.skills && state.skills.repair && state.skills.repair.level) || 0;
+
+  var ratio = maxDurability > 0 ? durability / maxDurability : 0;
+
+  // Lv 0: 完全不可见
+  if (repairLevel < 20) {
+    return {
+      visible: false,
+      label: "",
+      detail: null,
+      repairable: false,
+      repairCost: null,
+    };
+  }
+
+  // Lv 20+: 模糊描述
+  var label;
+  if (ratio <= 0) label = "⚠️ 已损坏，无效果";
+  else if (ratio <= 0.25) label = "⚡ 严重磨损，快不行了";
+  else if (ratio <= 0.5) label = "🔧 有点磨损了";
+  else if (ratio <= 0.75) label = "👍 看起来还行";
+  else label = "✨ 几乎全新";
+
+  // Lv 40+: 可见精确值
+  var detail = null;
+  if (repairLevel >= 40) {
+    detail = durability + "/" + maxDurability;
+  }
+
+  // Lv 60+: 可维修 + 成本估算
+  var repairable = false;
+  var repairCost = null;
+  if (repairLevel >= 60 && durability < maxDurability) {
+    repairable = true;
+    // 维修成本 = 缺失耐久度 * 0.3，按 scrap_metal 数量折算
+    var missing = maxDurability - durability;
+    repairCost = Math.max(1, Math.ceil(missing * 0.3));
+  }
+
+  return {
+    visible: true,
+    label: label,
+    detail: detail,
+    repairable: repairable,
+    repairCost: repairCost,
+  };
+}
+
+// ====== 磨损系统 ======
+
+/**
+ * 检查装备是否需要耐久度初始化。
+ * 装备首次被放入 equipment slot 时，如果没有 durability 字段则初始化。
+ *
+ * @param {Object} state - 游戏状态
+ */
+function initEquipmentDurability(state) {
+  if (!state.inventory || !state.inventory.equipment) return;
+  if (!state.inventory.equipmentInstances) return;
+
+  for (var slot in state.inventory.equipment) {
+    var itemId = state.inventory.equipment[slot];
+    if (!itemId) continue;
+    var instanceId = itemId + "_instance";
+    var inst = state.inventory.equipmentInstances[instanceId];
+    if (!inst) {
+      // 旧格式：没有 instance，创建一个
+      var base = getDurabilityBase(itemId);
+      // 检查是否已有 durability（兼容迁移）
+      if (!state.inventory.equipmentInstances[instanceId]) {
+        state.inventory.equipmentInstances[instanceId] = {};
+      }
+      inst = state.inventory.equipmentInstances[instanceId];
+    }
+    if (inst.durability === undefined) {
+      inst.durability = base.max;
+      inst.maxDurability = base.max;
+    }
+  }
+}
+
+/**
+ * 每日磨损：对当前装备的所有物品施加磨损。
+ *
+ * 磨损规则：
+ * - 基础磨损：每个装备 -1~3 点（随机）
+ * - 高风险工作（建筑/搬运/回收）：额外 -1~2
+ * - 极端天气（暴雨/台风/暴雪）：额外 -1~2
+ * - 背包类（vehicle/category="heavy" 以外的 accessory）：磨损减半
+ * - 消耗品（consumable category）：磨损翻倍（用得快）
+ *
+ * 在 daily_pipeline 中调用。
+ *
+ * @param {Object} state - 游戏状态
+ */
+function applyDailyWear(state) {
+  if (!state.inventory || !state.inventory.equipment) return;
+
+  // 确保耐久度已初始化
+  initEquipmentDurability(state);
+
+  // 检查玩家当前工作是否是高风险
+  var highRiskJobs = [
+    "manual_labor_construction",
+    "waste_recycling",
+    "steel_worker",
+    "premium_engineering",
+  ];
+  var isHighRisk =
+    state.employment &&
+    state.employment.currentJob &&
+    highRiskJobs.indexOf(state.employment.currentJob) >= 0;
+
+  // 检查天气
+  var harshWeather = false;
+  if (state.weather && state.weather.current) {
+    var w = state.weather.current;
+    harshWeather =
+      w === "typhoon" || w === "blizzard" || w === "heavy_rain";
+  }
+
+  for (var slot in state.inventory.equipment) {
+    var itemId = state.inventory.equipment[slot];
+    if (!itemId) continue;
+
+    var base = getDurabilityBase(itemId);
+    var instanceId = itemId + "_instance";
+    var inst =
+      state.inventory.equipmentInstances &&
+      state.inventory.equipmentInstances[instanceId];
+    if (!inst || inst.durability === undefined || inst.durability <= 0)
+      continue;
+
+    // 计算磨损
+    var wear = Random.int(1, 3); // 基础磨损 1~3
+
+    // 高风险工作加成
+    if (isHighRisk) wear += Random.int(1, 2);
+
+    // 恶劣天气加成
+    if (harshWeather) wear += Random.int(1, 2);
+
+    // 消耗品磨损翻倍
+    if (base.category === "consumable") wear *= 2;
+
+    // 轻量装备磨损减半
+    if (base.category === "light") wear = Math.max(1, Math.floor(wear / 2));
+
+    // 应用磨损
+    inst.durability = Math.max(0, inst.durability - wear);
+  }
+}
+
+/**
+ * 维修一件装备。
+ *
+ * 条件：
+ * - 维修技能 ≥ 60
+ * - 背包中有足够的废料（scrap_metal）
+ * - 装备耐久未满
+ *
+ * @param {Object} state - 游戏状态
+ * @param {string} itemId - 装备ID
+ * @returns {boolean} 是否成功维修
+ */
+function repairEquipment(state, itemId) {
+  var repairLevel =
+    (state.skills && state.skills.repair && state.skills.repair.level) || 0;
+  if (repairLevel < 60) {
+    StateManager.addMessage(
+      "🔧 维修技能不足（需要60级才能维修装备）",
+      "warning",
+    );
+    return false;
+  }
+
+  if (!state.inventory || !state.inventory.equipment) return false;
+
+  // 找装备
+  var slot = null;
+  for (var s in state.inventory.equipment) {
+    if (state.inventory.equipment[s] === itemId) {
+      slot = s;
+      break;
+    }
+  }
+  if (!slot) {
+    // 不在装备中，尝试在背包中找到
+    var bagItem = (state.inventory.items || []).find(function (i) {
+      return i.id === itemId;
+    });
+    if (!bagItem) {
+      StateManager.addMessage("❌ 没有找到需要维修的装备", "warning");
+      return false;
+    }
+    // 背包中的物品可以批量维修（这里简化：只提示）
+    StateManager.addMessage(
+      "📦 背包中的装备需要先装备才能维修",
+      "info",
+    );
+    return false;
+  }
+
+  var instanceId = itemId + "_instance";
+  var inst =
+    state.inventory.equipmentInstances &&
+    state.inventory.equipmentInstances[instanceId];
+  if (!inst || inst.durability === undefined) {
+    StateManager.addMessage("❌ 该装备没有耐久度数据", "warning");
+    return false;
+  }
+
+  if (inst.durability >= inst.maxDurability) {
+    StateManager.addMessage("✅ 该装备已经是全新状态，无需维修", "info");
+    return false;
+  }
+
+  // 计算所需废料
+  var missing = inst.maxDurability - inst.durability;
+  var scrapNeeded = Math.max(1, Math.ceil(missing * 0.3));
+
+  // 检查废料库存
+  if (!state.inventory.items) state.inventory.items = [];
+  var scrapItem = state.inventory.items.find(function (i) {
+    return i.id === "scrap_metal";
+  });
+  var scrapCount = scrapItem ? scrapItem.qty : 0;
+
+  // 也检查 scrap_recycled（部分回收站产出用这个ID）
+  var scrapItem2 = state.inventory.items.find(function (i) {
+    return i.id === "scrap_recycled";
+  });
+  var scrapCount2 = scrapItem2 ? scrapItem2.qty : 0;
+  var totalScrap = scrapCount + scrapCount2;
+
+  if (totalScrap < scrapNeeded) {
+    StateManager.addMessage(
+      "🔧 废料不足！需要 " +
+        scrapNeeded +
+        " 个废料（当前：" +
+        totalScrap +
+        "），去回收站或废品站收集点吧。",
+      "warning",
+    );
+    return false;
+  }
+
+  // 消耗废料（优先消耗 scrap_metal）
+  if (scrapCount >= scrapNeeded) {
+    scrapItem.qty -= scrapNeeded;
+    if (scrapItem.qty <= 0) {
+      state.inventory.items = state.inventory.items.filter(function (i) {
+        return i.id !== "scrap_metal" || i.qty > 0;
+      });
+    }
+  } else {
+    // 两种废料混合消耗
+    scrapItem.qty = 0;
+    var remaining = scrapNeeded - scrapCount;
+    scrapItem2.qty -= remaining;
+    if (scrapItem2.qty <= 0) {
+      state.inventory.items = state.inventory.items.filter(function (i) {
+        return i.id !== "scrap_recycled" || i.qty > 0;
+      });
+    }
+    // 清空 scrap_metal
+    state.inventory.items = state.inventory.items.filter(function (i) {
+      return i.id !== "scrap_metal" || i.qty > 0;
+    });
+  }
+
+  // 恢复耐久度
+  inst.durability = inst.maxDurability;
+
+  // 维修技能经验
+  if (state.skills && state.skills.repair) {
+    state.skills.repair.xp = (state.skills.repair.xp || 0) + 10;
+  }
+
+  StateManager.addMessage(
+    "🔧 维修完成！消耗了 " +
+      scrapNeeded +
+      " 个废料，" +
+      inst.maxDurability +
+      "/" +
+      inst.maxDurability +
+      " 满耐久。维修技能经验+10。",
+    "success",
+  );
+
+  // 触发成就
+  if (typeof checkAchievements === "function") {
+    checkAchievements(state);
+  }
+
+  return true;
+}
+
+/**
+ * 为 render.js 装备卡片提供耐久度预览 HTML。
+ * 这个函数名是 render.js 中已预留的钩子。
+ *
+ * @param {Object} state - 游戏状态
+ * @param {Object} itemDef - 物品定义
+ * @returns {string|null} HTML 字符串，或 null（不可见时）
+ */
+function buildRepairPreview(state, itemDef) {
+  if (!state.inventory || !state.inventory.equipment) return null;
+
+  var itemId = itemDef && itemDef.id;
+  if (!itemId) return null;
+
+  // 检查该物品是否在装备中
+  var isEquipped = false;
+  for (var s in state.inventory.equipment) {
+    if (state.inventory.equipment[s] === itemId) {
+      isEquipped = true;
+      break;
+    }
+  }
+  if (!isEquipped) return null;
+
+  // 检查耐久度实例
+  var instanceId = itemId + "_instance";
+  var inst = state.inventory.equipmentInstances && state.inventory.equipmentInstances[instanceId];
+  if (!inst || inst.durability === undefined) return null;
+
+  var vis = getDurabilityVisibility(state, inst.durability, inst.maxDurability);
+  if (!vis.visible) return null;
+
+  var parts = [vis.label];
+  if (vis.detail) parts.push(" (" + vis.detail + ")");
+
+  var html = parts.join("");
+
+  // 可维修时显示修复按钮
+  if (vis.repairable && vis.repairCost !== null) {
+    // 检查废料是否足够
+    var scrapCount = 0;
+    if (state.inventory.items) {
+      var scrap1 = state.inventory.items.find(function(i) { return i.id === "scrap_metal"; });
+      var scrap2 = state.inventory.items.find(function(i) { return i.id === "scrap_recycled"; });
+      scrapCount = (scrap1 ? scrap1.qty : 0) + (scrap2 ? scrap2.qty : 0);
+    }
+    var canAfford = scrapCount >= vis.repairCost;
+    var costColor = canAfford ? "var(--success)" : "var(--warning)";
+
+    html +=
+      ' <span style="font-size:9px;color:' +
+      costColor +
+      ';">🔧修:' +
+      vis.repairCost +
+      "废料" +
+      (scrapCount > 0 ? "(有" + scrapCount + ")" : "(无)") +
+      "</span>";
+
+    if (canAfford) {
+      html +=
+        ' <button style="font-size:10px;padding:2px 6px;margin-left:4px;background:var(--accent);color:#fff;border:none;border-radius:3px;cursor:pointer;" onclick="repairEquipment(StateManager.getState(), \'' +
+        itemId +
+        '\')">修复</button>';
+    }
+  }
+
+  return html;
+}
+
+// ====== 装备效果检查（耐久≤0时无效果） ======
+
+/**
+ * 获取装备的实际效果（考虑耐久度）。
+ * 耐久度 ≤ 0 时，装备效果为 0（装备效果失效）。
+ *
+ * @param {Object} state - 游戏状态
+ * @param {string} itemId - 装备ID
+ * @param {Object} effects - 原始效果对象
+ * @returns {Object|null} 实际生效的效果，或 null（耐久为0）
+ */
+function getEffectiveEffects(state, itemId, effects) {
+  if (!state.inventory || !state.inventory.equipment) return effects;
+
+  // 检查该装备是否当前装备中
+  var isEquipped = false;
+  for (var s in state.inventory.equipment) {
+    if (state.inventory.equipment[s] === itemId) {
+      isEquipped = true;
+      break;
+    }
+  }
+  if (!isEquipped) return effects;
+
+  // 检查耐久度
+  var instanceId = itemId + "_instance";
+  var inst =
+    state.inventory.equipmentInstances &&
+    state.inventory.equipmentInstances[instanceId];
+  if (!inst || inst.durability === undefined) return effects;
+
+  if (inst.durability <= 0) {
+    return null; // 装备失效
+  }
+
+  return effects;
+}
+
+/**
+ * 检查装备是否已损坏（耐久≤0）。
+ */
+function isEquipmentBroken(state, itemId) {
+  var instanceId = itemId + "_instance";
+  var inst =
+    state.inventory.equipmentInstances &&
+    state.inventory.equipmentInstances[instanceId];
+  if (!inst || inst.durability === undefined) return false;
+  return inst.durability <= 0;
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.durability = {
+    id: "durability",
+    name: "装备耐久度系统",
+    icon: "🔧",
+    brief:
+      "日常使用会磨损装备，耐久归零效果失效，维修技能提升可解锁更多信息并修复装备",
+    version: "1.0.0",
+    related: ["mechanics:recycling", "skills:repair"],
+    sections: [
+      {
+        kind: "desc",
+        text: "装备耐久度系统将日常磨损、维修技能与回收体系打通。每个装备都有耐久度，使用越多磨损越严重。耐久归零时装备效果失效，但仍可维修恢复。维修消耗回收废料，形成了「回收→维修→再用」的完整闭环。",
+      },
+      {
+        kind: "subhead",
+        text: "👁️ 维修技能可见等级",
+      },
+      {
+        kind: "table",
+        headers: ["技能等级", "可见信息"],
+        rows: [
+          ["Lv 0-19", "只看得到装备名称，看不到任何状态"],
+          ["Lv 20-39", "可见模糊描述（几乎全新/看起来还行/有点磨损/快不行了）"],
+          ["Lv 40-59", "可见精确耐久数值（如 72/100）"],
+          ["Lv 60+", "可见维修成本估算，可消耗废料修复装备"],
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "⏳ 磨损规则",
+      },
+      {
+        kind: "list",
+        items: [
+          "基础磨损：每个装备每日-1~3点耐久",
+          "高风险工作（建筑/搬运/回收等）：额外-1~2",
+          "恶劣天气（暴雨/台风/暴雪）：额外-1~2",
+          "消耗品（防晒霜/急救包等）：磨损翻倍",
+          "轻量装备（口罩/草帽等）：磨损减半",
+        ],
+      },
+      {
+        kind: "subhead",
+        text: "♻️ 维修—回收闭环",
+      },
+      {
+        kind: "desc",
+        text: "维修消耗回收废料（scrap_metal），每点缺失耐久消耗0.3个废料。废料可通过废品回收工作、拾荒等途径获得。维修成功时还获得10点维修技能经验，鼓励玩家在实践中提升技能。",
+      },
+    ],
+  };
+}
+</script>
 
     <!-- Data -->
     <script>/**
@@ -29850,7 +30450,8 @@ function seedWorldFromReality(state) {
     "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d";
 
   // 浏览器环境：CORS 限制导致 Yahoo Finance 无法获取，跳过直接使用随机种子
-  var isBrowser = typeof window !== "undefined" && typeof window.navigator !== "undefined";
+  var isBrowser =
+    typeof window !== "undefined" && typeof window.navigator !== "undefined";
   var success = false;
 
   try {
@@ -29993,7 +30594,10 @@ function seedWorldFromReality(state) {
     params.seedSource = "random";
     params.seedDate = null;
 
-    StateManager.addMessage("🌐 世界参数已随机初始化（本地模式：开局结果与现实脱钩）", "info");
+    StateManager.addMessage(
+      "🌐 世界参数已随机初始化（本地模式：开局结果与现实脱钩）",
+      "info",
+    );
   }
 
   state._worldParams = params;
@@ -37696,7 +38300,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
-          StateManager.addMessage("🏦 保安登记了你的信息，说会联系银行处理。", "success");
+          StateManager.addMessage(
+            "🏦 保安登记了你的信息，说会联系银行处理。",
+            "success",
+          );
         },
       },
       {
@@ -37707,7 +38314,10 @@ const MORAL_EVENTS = [
           var taken = Random.int(200, 500);
           s.resources.cash += taken;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-          StateManager.addMessage("💸 你的手在发抖，取了¥" + taken + "赶紧离开了。", "warning");
+          StateManager.addMessage(
+            "💸 你的手在发抖，取了¥" + taken + "赶紧离开了。",
+            "warning",
+          );
         },
       },
       {
@@ -37717,7 +38327,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
-          StateManager.addMessage("📱 你发了条提醒，朋友们纷纷点赞转发。", "hint");
+          StateManager.addMessage(
+            "📱 你发了条提醒，朋友们纷纷点赞转发。",
+            "hint",
+          );
         },
       },
     ],
@@ -37736,7 +38349,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash -= 30;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-          StateManager.addMessage("😊 收银员感激地说「你真是个好人！」", "success");
+          StateManager.addMessage(
+            "😊 收银员感激地说「你真是个好人！」",
+            "success",
+          );
         },
       },
       {
@@ -37746,7 +38362,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash += 30;
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
-          StateManager.addMessage("😐 你安慰自己说「算了，就当是超市的失误。」", "info");
+          StateManager.addMessage(
+            "😐 你安慰自己说「算了，就当是超市的失误。」",
+            "info",
+          );
         },
       },
     ],
@@ -37764,7 +38383,10 @@ const MORAL_EVENTS = [
         score: 6,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
-          StateManager.addMessage("🚲 你帮锁了车，报了故障——心里踏实多了。", "success");
+          StateManager.addMessage(
+            "🚲 你帮锁了车，报了故障——心里踏实多了。",
+            "success",
+          );
         },
       },
       {
@@ -37772,7 +38394,10 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -8,
         immediate: function (s) {
-          StateManager.addMessage("🚲 你骑了几条街，总觉得有人在看你。", "warning");
+          StateManager.addMessage(
+            "🚲 你骑了几条街，总觉得有人在看你。",
+            "warning",
+          );
         },
       },
       {
@@ -37792,7 +38417,9 @@ const MORAL_EVENTS = [
     desc: "你路过茶水间，看到同事老张正躲在角落里刷短视频。最近公司业绩不好，总监正在抓典型。他看到你，尴尬地笑了笑。你", // 后续在desc中
     minDay: 60,
     dailyChance: 0.03,
-    condition: function (s) { return s.player.phase === "corporate"; },
+    condition: function (s) {
+      return s.player.phase === "corporate";
+    },
     choices: [
       {
         text: "🤫 假装没看见，默默走开",
@@ -37809,7 +38436,10 @@ const MORAL_EVENTS = [
         score: 5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
-          StateManager.addMessage("📋 你说「最近风声紧，注意点」，老张感激地点点头。", "hint");
+          StateManager.addMessage(
+            "📋 你说「最近风声紧，注意点」，老张感激地点点头。",
+            "hint",
+          );
         },
       },
       {
@@ -37817,10 +38447,16 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_snitch",
         score: -10,
         immediate: function (s) {
-          s.player.corporate.upward = Math.min(100, (s.player.corporate.upward || 0) + 3);
+          s.player.corporate.upward = Math.min(
+            100,
+            (s.player.corporate.upward || 0) + 3,
+          );
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
-          StateManager.addMessage("📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。", "warning");
+          StateManager.addMessage(
+            "📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。",
+            "warning",
+          );
         },
       },
     ],
@@ -37840,7 +38476,10 @@ const MORAL_EVENTS = [
           s.resources.cash -= Random.int(80, 150);
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
-          StateManager.addMessage("🏥 宠物医生说小猫能救活，你心里暖暖的。", "success");
+          StateManager.addMessage(
+            "🏥 宠物医生说小猫能救活，你心里暖暖的。",
+            "success",
+          );
         },
       },
       {
@@ -37850,7 +38489,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash -= 5;
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
-          StateManager.addMessage("🐱 你放下吃的，小猫狼吞虎咽地吃起来。", "info");
+          StateManager.addMessage(
+            "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
+            "info",
+          );
         },
       },
       {
@@ -37859,7 +38501,10 @@ const MORAL_EVENTS = [
         score: -4,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
-          StateManager.addMessage("😞 你转身走了，身后传来微弱的叫声。", "info");
+          StateManager.addMessage(
+            "😞 你转身走了，身后传来微弱的叫声。",
+            "info",
+          );
         },
       },
     ],
@@ -37878,7 +38523,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-          StateManager.addMessage("💪 快递员连声道谢，非要塞给你一瓶水。", "success");
+          StateManager.addMessage(
+            "💪 快递员连声道谢，非要塞给你一瓶水。",
+            "success",
+          );
         },
       },
       {
@@ -37888,7 +38536,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash += Random.int(10, 20);
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
-          StateManager.addMessage("💰 他犹豫了一下，给了你¥" + (s.resources.cash % 20 + 10) + "。", "info");
+          StateManager.addMessage(
+            "💰 他犹豫了一下，给了你¥" + ((s.resources.cash % 20) + 10) + "。",
+            "info",
+          );
         },
       },
       {
@@ -37896,7 +38547,10 @@ const MORAL_EVENTS = [
         flag: "moral_help_pass",
         score: -1,
         immediate: function (s) {
-          StateManager.addMessage("😐 你确实很忙，但心里有点过意不去。", "info");
+          StateManager.addMessage(
+            "😐 你确实很忙，但心里有点过意不去。",
+            "info",
+          );
         },
       },
     ],
@@ -37914,7 +38568,10 @@ const MORAL_EVENTS = [
         score: 5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
-          StateManager.addMessage("🚦 你站在空荡荡的路口等了两分钟——原则就是原则。", "hint");
+          StateManager.addMessage(
+            "🚦 你站在空荡荡的路口等了两分钟——原则就是原则。",
+            "hint",
+          );
         },
       },
       {
@@ -37923,7 +38580,10 @@ const MORAL_EVENTS = [
         score: -3,
         immediate: function (s) {
           s.player.agility = Math.min(100, (s.player.agility || 0) + 0.3);
-          StateManager.addMessage("🏃 你快步跑过马路，什么事都没发生。", "info");
+          StateManager.addMessage(
+            "🏃 你快步跑过马路，什么事都没发生。",
+            "info",
+          );
         },
       },
     ],
@@ -37942,7 +38602,10 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-          StateManager.addMessage("👶 广播响了三次后，一位焦急的母亲冲到了服务台，抱着孩子哭了。她不停向你道谢。", "success");
+          StateManager.addMessage(
+            "👶 广播响了三次后，一位焦急的母亲冲到了服务台，抱着孩子哭了。她不停向你道谢。",
+            "success",
+          );
         },
       },
       {
@@ -37960,7 +38623,10 @@ const MORAL_EVENTS = [
         score: -6,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 4);
-          StateManager.addMessage("😞 你走远了，还能听到后面隐约的哭声。", "info");
+          StateManager.addMessage(
+            "😞 你走远了，还能听到后面隐约的哭声。",
+            "info",
+          );
         },
       },
     ],
@@ -38250,7 +38916,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
-      StateManager.addMessage("📞 失主在电话里声音哽咽，说你是大恩人。", "success");
+      StateManager.addMessage(
+        "📞 失主在电话里声音哽咽，说你是大恩人。",
+        "success",
+      );
     },
   },
   moral_atm_take: {
@@ -38262,7 +38931,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
-      StateManager.addMessage("😰 你总是疑神疑鬼，听到警笛声就心跳加速。", "danger");
+      StateManager.addMessage(
+        "😰 你总是疑神疑鬼，听到警笛声就心跳加速。",
+        "danger",
+      );
     },
   },
   moral_cashier_return: {
@@ -38274,7 +38946,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
-      StateManager.addMessage("🥛 收银员冲你笑了笑，把一盒牛奶塞进了你的袋子。", "success");
+      StateManager.addMessage(
+        "🥛 收银员冲你笑了笑，把一盒牛奶塞进了你的袋子。",
+        "success",
+      );
     },
   },
   moral_cat_rescue: {
@@ -38287,7 +38962,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 12);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
-      StateManager.addMessage("🐱 听到小猫康复的消息，你整整开心了一天。", "success");
+      StateManager.addMessage(
+        "🐱 听到小猫康复的消息，你整整开心了一天。",
+        "success",
+      );
     },
   },
   moral_child_help: {
@@ -38300,7 +38978,10 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
-      StateManager.addMessage("🎫 她盛情难却，你在她家餐馆吃了一顿大餐，分文不收。", "success");
+      StateManager.addMessage(
+        "🎫 她盛情难却，你在她家餐馆吃了一顿大餐，分文不收。",
+        "success",
+      );
     },
   },
   moral_crosswalk_wait: {
@@ -38312,7 +38993,10 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       s.needs.happiness = Math.min(100, s.needs.happiness + 3);
-      StateManager.addMessage("👮 交警摇下车窗给你竖了个大拇指：「好样的！」", "success");
+      StateManager.addMessage(
+        "👮 交警摇下车窗给你竖了个大拇指：「好样的！」",
+        "success",
+      );
     },
   },
 };
@@ -46698,6 +47382,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof tickPerishableGoods === "function") {
         tickPerishableGoods(state);
+      }
+    },
+  },
+
+  // === 装备耐久度磨损 ===
+  {
+    name: "durability_wear",
+    fn: function (state) {
+      if (typeof applyDailyWear === "function") {
+        applyDailyWear(state);
       }
     },
   },
@@ -83089,7 +83783,11 @@ function setupCanvas(canvas, w, h) {
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.cssText =
-    "width:" + w + "px;height:" + h + "px;display:block;max-width:100%;border-radius:8px;";
+    "width:" +
+    w +
+    "px;height:" +
+    h +
+    "px;display:block;max-width:100%;border-radius:8px;";
   var ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
   ctx.fillStyle = "#faf8f5";
@@ -84100,13 +84798,21 @@ function renderGrowthTab(state, container) {
         var oldSnapshot = historyStats[Math.max(0, historyStats.length - 2)];
         if (oldSnapshot && oldSnapshot.day < (p.day || 0)) {
           overlayAttrs = [
-            { label: "体质", value: oldSnapshot.physique || 0, color: "#c48e4a" },
+            {
+              label: "体质",
+              value: oldSnapshot.physique || 0,
+              color: "#c48e4a",
+            },
             {
               label: "智力",
               value: oldSnapshot.intelligence || 0,
               color: "#5a94ba",
             },
-            { label: "敏捷", value: oldSnapshot.agility || 0, color: "#56a64e" },
+            {
+              label: "敏捷",
+              value: oldSnapshot.agility || 0,
+              color: "#56a64e",
+            },
             { label: "心智", value: oldSnapshot.mental || 0, color: "#9672b4" },
             { label: "名气", value: oldSnapshot.fame || 0, color: "#d4a017" },
           ];
@@ -91250,6 +91956,10 @@ function buyItemFromShop(itemId) {
       equippedItem.instanceId = instanceId;
       state.inventory.equipmentInstances[instanceId] = equippedItem;
     }
+    // 初始化耐久度（新装备立即有耐久度）
+    if (typeof initEquipmentDurability === "function") {
+      initEquipmentDurability(state);
+    }
   } else {
     // 无slot的道具：放入 items 背包
     if (!state.inventory.items) state.inventory.items = [];
@@ -98262,6 +98972,11 @@ function startNewGame() {
     initWeather(StateManager.getState());
   }
 
+  // 初始化装备耐久度
+  if (typeof initEquipmentDurability === "function") {
+    initEquipmentDurability(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());
@@ -98344,6 +99059,10 @@ function loadExistingGame(slot) {
     // 兼容旧存档：初始化企业命运系统
     if (typeof initEnterpriseFate === "function") {
       initEnterpriseFate(StateManager.getState());
+    }
+    // 兼容旧存档：初始化装备耐久度
+    if (typeof initEquipmentDurability === "function") {
+      initEquipmentDurability(StateManager.getState());
     }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
