@@ -21,6 +21,7 @@
 ### 研究基础
 
 深度研究了 8 款参考游戏的设计模式和 6 项中国都市现实题材：
+
 - **《大多数》**：五维生存压力系统、债务驱动叙事
 - **《中国式家长》**：传家宝继承、代际复利
 - **BitLife**：40 种缎带结局分类系统
@@ -100,21 +101,21 @@
 
 ### 文件变更清单
 
-| 文件 | 类型 | 行数 | 说明 |
-| ---- | ---- | ---- | ---- |
-| `src/js/core/life_ribbon.js` | 新建 | 280 | 人生缎带系统（12条缎带 + 收集进度） |
-| `src/js/core/story_chapters.js` | 新建 | 280 | 3章式主线检查点（生存→立足→选择） |
-| `src/js/core/cross_system_events.js` | 新建 | 300 | 5条跨系统联动事件（NPC/行业/世界/道德） |
-| `src/js/ui/career_dev.js` | 新建 | 495 | 事业发展Tab（创业+上班引导） |
-| `src/js/ui/social_tab.js` | 新建 | 145 | 社交Tab（合并职场社交+家庭） |
-| `src/js/core/festivals.js` | 修改 | +133 | 清明回乡 + 中秋探亲事件链 |
-| `src/js/phase1/daily_pipeline.js` | 修改 | +12 | story_chapter_check 步骤 + festival deep events |
-| `src/js/phase2/startup.js` | 修改 | ~38 | 估值/燃烧率/注册门槛平衡调参 |
-| `src/js/ui/victory.js` | 修改 | +12 | triggerVictory 接入缎带判定 |
-| `src/js/ui/modal.js` | 修改 | +12 | showGameOverModal 接入缎带判定 |
-| `src/js/ui/corp_ui.js` | 修改 | +16 | showVictoryModal 缎带展示 UI |
-| `src/js/ui/render.js` | 修改 | ~260 | Tab重组 + renderMergedPersonalGrowthTab + bug修复 |
-| `src/index.html` | 修改 | ~22 | Tab按钮重组 + 注册5个新script |
+| 文件                                 | 类型 | 行数 | 说明                                              |
+| ------------------------------------ | ---- | ---- | ------------------------------------------------- |
+| `src/js/core/life_ribbon.js`         | 新建 | 280  | 人生缎带系统（12条缎带 + 收集进度）               |
+| `src/js/core/story_chapters.js`      | 新建 | 280  | 3章式主线检查点（生存→立足→选择）                 |
+| `src/js/core/cross_system_events.js` | 新建 | 300  | 5条跨系统联动事件（NPC/行业/世界/道德）           |
+| `src/js/ui/career_dev.js`            | 新建 | 495  | 事业发展Tab（创业+上班引导）                      |
+| `src/js/ui/social_tab.js`            | 新建 | 145  | 社交Tab（合并职场社交+家庭）                      |
+| `src/js/core/festivals.js`           | 修改 | +133 | 清明回乡 + 中秋探亲事件链                         |
+| `src/js/phase1/daily_pipeline.js`    | 修改 | +12  | story_chapter_check 步骤 + festival deep events   |
+| `src/js/phase2/startup.js`           | 修改 | ~38  | 估值/燃烧率/注册门槛平衡调参                      |
+| `src/js/ui/victory.js`               | 修改 | +12  | triggerVictory 接入缎带判定                       |
+| `src/js/ui/modal.js`                 | 修改 | +12  | showGameOverModal 接入缎带判定                    |
+| `src/js/ui/corp_ui.js`               | 修改 | +16  | showVictoryModal 缎带展示 UI                      |
+| `src/js/ui/render.js`                | 修改 | ~260 | Tab重组 + renderMergedPersonalGrowthTab + bug修复 |
+| `src/index.html`                     | 修改 | ~22  | Tab按钮重组 + 注册5个新script                     |
 
 **总计 ≈ 2000 行**（含叙事文案+UI代码）
 
@@ -126,15 +127,13 @@
 
 ### 设计参考总结
 
-| 改进项 | 参考游戏 | 借鉴的核心设计 |
-| ---- | ---- | ---- |
-| 人生缎带 | BitLife Ribbons | 缎带从行为涌现而非玩家选择 |
-| 主线章节 | Stardew Valley 祖父评价信 | 关键时间节点叙事检查点 |
+| 改进项     | 参考游戏                          | 借鉴的核心设计                |
+| ---------- | --------------------------------- | ----------------------------- |
+| 人生缎带   | BitLife Ribbons                   | 缎带从行为涌现而非玩家选择    |
+| 主线章节   | Stardew Valley 祖父评价信         | 关键时间节点叙事检查点        |
 | 跨系统事件 | This War of Mine / Capitalism Lab | NPC关系/行业热度/世界状态联动 |
-| 节日深度 | Stardew Valley 节日事件 | 节日与NPC关系/道德系统交叉 |
-| 内容关联度 | 《大多数》五维耦合 | 系统间相互影响而非各自孤立 |
-
-
+| 节日深度   | Stardew Valley 节日事件           | 节日与NPC关系/道德系统交叉    |
+| 内容关联度 | 《大多数》五维耦合                | 系统间相互影响而非各自孤立    |
 
 **执行人**：玩法师（游戏设计师）
 **会话产出**：4 个问题域修复 + 2 个 bug 修复，约 280 行代码改动，1 次 build

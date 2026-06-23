@@ -1082,12 +1082,8 @@ function renderTabBar(state) {
         btn.style.display = "";
       }
     } else if (btn.dataset.tab === "social") {
-      // 社交Tab在公司阶段才显示（包含职场社交+家庭）
-      if (state.player.phase !== "corporate") {
-        btn.style.display = "none";
-      } else {
-        btn.style.display = "";
-      }
+      // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
+      btn.style.display = "";
     } else {
       btn.style.display = "";
     }
@@ -1115,7 +1111,10 @@ const TAB_RENDERERS = {
   // renderInvestmentTab 在 investment.js 中定义（跨文件）
   investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
   // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
-  career_dev: { fnName: "renderCareerDevTab", fallback: "事业发展系统加载中..." },
+  career_dev: {
+    fnName: "renderCareerDevTab",
+    fallback: "事业发展系统加载中...",
+  },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
   achievements: renderAchievementsTab,
   // 社交Tab：合并职场社交+家庭（跨文件）
@@ -5281,26 +5280,26 @@ function renderPersonalGrowthTab(state, parent) {
  * 包含：数据图表 + 兴趣爱好 + 健康管理 + 心理状态 + 个人形象 + 终身学习
  */
 function renderMergedPersonalGrowthTab(state, parent) {
-  parent.innerHTML = '';
+  parent.innerHTML = "";
   var p = state.player;
   var pg = state.personalGrowth || {};
 
   // ---- 子Tab导航 ----
   var subTabs = [
-    { id: 'pg_charts', label: '📈 数据', icon: '📈' },
-    { id: 'pg_hobbies', label: '🏃 爱好', icon: '🏃' },
-    { id: 'pg_health', label: '💪 健康', icon: '💪' },
-    { id: 'pg_goals', label: '🎯 目标', icon: '🎯' },
+    { id: "pg_charts", label: "📈 数据", icon: "📈" },
+    { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
+    { id: "pg_health", label: "💪 健康", icon: "💪" },
+    { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
   ];
-  var currentSubTab = state._pgSubTab || 'pg_charts';
+  var currentSubTab = state._pgSubTab || "pg_charts";
 
-  var nav = document.createElement('div');
+  var nav = document.createElement("div");
   nav.style.cssText =
-    'display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;';
+    "display:flex;gap:4px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;";
   subTabs.forEach(function (st) {
-    var btn = document.createElement('button');
-    btn.className = 'tab-btn' + (currentSubTab === st.id ? ' active' : '');
-    btn.style.cssText = 'font-size:11px;padding:4px 10px;white-space:nowrap;';
+    var btn = document.createElement("button");
+    btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
     btn.onclick = function () {
       state._pgSubTab = st.id;
@@ -5310,20 +5309,20 @@ function renderMergedPersonalGrowthTab(state, parent) {
   });
   parent.appendChild(nav);
 
-  var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:8px;';
+  var content = document.createElement("div");
+  content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
 
   switch (currentSubTab) {
-    case 'pg_charts':
+    case "pg_charts":
       renderPgCharts(state, content);
       break;
-    case 'pg_hobbies':
+    case "pg_hobbies":
       renderPgHobbies(state, content, pg);
       break;
-    case 'pg_health':
+    case "pg_health":
       renderPgHealth(state, content, pg);
       break;
-    case 'pg_goals':
+    case "pg_goals":
       renderPgGoals(state, content, pg);
       break;
   }
@@ -5333,52 +5332,52 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
 /** 图表子面板（数据可视化） */
 function renderPgCharts(state, content) {
-  if (typeof _dataVizRenderGrowthTab === 'function') {
+  if (typeof _dataVizRenderGrowthTab === "function") {
     _dataVizRenderGrowthTab(state, content);
     return;
   }
   var p = state.player;
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'padding:12px;';
+  var wrapper = document.createElement("div");
+  wrapper.style.cssText = "padding:12px;";
 
-  var chartSection = document.createElement('div');
+  var chartSection = document.createElement("div");
   chartSection.style.cssText =
-    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);';
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
   chartSection.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📈 资产变化曲线</h3>';
-  var lineCanvas = document.createElement('canvas');
+  var lineCanvas = document.createElement("canvas");
   lineCanvas.width = 520;
   lineCanvas.height = 160;
-  lineCanvas.style.cssText = 'width:100%;height:auto;display:block;';
+  lineCanvas.style.cssText = "width:100%;height:auto;display:block;";
   chartSection.appendChild(lineCanvas);
   wrapper.appendChild(chartSection);
 
-  var radarSection = document.createElement('div');
+  var radarSection = document.createElement("div");
   radarSection.style.cssText =
-    'background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;';
-  var radarInfo = document.createElement('div');
-  radarInfo.style.cssText = 'flex:1;min-width:0;';
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;";
+  var radarInfo = document.createElement("div");
+  radarInfo.style.cssText = "flex:1;min-width:0;";
   radarInfo.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🕸️ 能力雷达图</h3>';
-  var radarCanvas = document.createElement('canvas');
+  var radarCanvas = document.createElement("canvas");
   radarCanvas.width = 200;
   radarCanvas.height = 200;
   radarCanvas.style.cssText =
-    'width:100%;max-width:200px;height:auto;display:block;margin:0 auto;';
+    "width:100%;max-width:200px;height:auto;display:block;margin:0 auto;";
   radarInfo.appendChild(radarCanvas);
   radarSection.appendChild(radarInfo);
-  var statSummary = document.createElement('div');
-  statSummary.style.cssText = 'flex:1;min-width:0;padding-top:28px;';
+  var statSummary = document.createElement("div");
+  statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
-    { label: '体质', value: p.physique, color: '#c4803a' },
-    { label: '智力', value: p.intelligence, color: '#5a8ab4' },
-    { label: '敏捷', value: p.agility, color: '#5aaa5a' },
-    { label: '心智', value: p.mental, color: '#9b74b8' },
-    { label: '名气', value: (p && p.fame) || 0, color: '#d4a017' },
+    { label: "体质", value: p.physique, color: "#c4803a" },
+    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
+    { label: "心智", value: p.mental, color: "#9b74b8" },
+    { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
   ];
   stats.forEach(function (s) {
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:3px 0;';
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:6px;margin:3px 0;";
     row.innerHTML =
       '<span style="font-size:11px;color:' +
       s.color +
@@ -5386,7 +5385,7 @@ function renderPgCharts(state, content) {
       s.label +
       '</span><span style="font-size:11px;color:var(--text-secondary);">' +
       Math.round(s.value) +
-      '</span>';
+      "</span>";
     statSummary.appendChild(row);
   });
   radarSection.appendChild(statSummary);
@@ -5395,14 +5394,14 @@ function renderPgCharts(state, content) {
   content.appendChild(wrapper);
   setTimeout(function () {
     try {
-      if (typeof drawLineChart === 'function')
+      if (typeof drawLineChart === "function")
         drawLineChart(
           lineCanvas,
           state._assetHistory || [],
-          '#c4803a',
-          '#c4803a22',
+          "#c4803a",
+          "#c4803a22",
         );
-      if (typeof drawRadarChart === 'function')
+      if (typeof drawRadarChart === "function")
         drawRadarChart(radarCanvas, stats, 80);
     } catch (e) {}
   }, 50);
@@ -5416,17 +5415,20 @@ function renderPgHobbies(state, content, pg) {
   var hobbyEntries = pg.hobbies ? Object.entries(pg.hobbies) : [];
   if (hobbyEntries.length > 0) {
     hobbyEntries.forEach(function (_a) {
-      var id = _a[0], h = _a[1];
-      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
-      html += '<strong>' + (h.name || id) + '</strong> — Lv.' + (h.level || 1);
-      if (h.totalSessions) html += ' · 练习' + h.totalSessions + '次';
-      html += '</div>';
+      var id = _a[0],
+        h = _a[1];
+      html +=
+        '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += "<strong>" + (h.name || id) + "</strong> — Lv." + (h.level || 1);
+      if (h.totalSessions) html += " · 练习" + h.totalSessions + "次";
+      html += "</div>";
     });
   } else {
-    html += '<p style="color:var(--text-muted);font-size:12px;">还没有开始任何爱好，去行动Tab培养爱好吧！</p>';
+    html +=
+      '<p style="color:var(--text-muted);font-size:12px;">还没有开始任何爱好，去行动Tab培养爱好吧！</p>';
   }
 
-  html += '</div>';
+  html += "</div>";
   content.innerHTML = html;
 }
 
@@ -5438,25 +5440,27 @@ function renderPgHealth(state, content, pg) {
   html += '<div class="section"><h3>🏥 健康指标</h3>';
   html += '<div class="card" style="padding:12px;font-size:12px;">';
   if (pg.health) {
-    html += '<p>💪 身体：' + (pg.health.physical || '?') + '</p>';
-    html += '<p>🧠 心理：' + (pg.health.mental || '?') + '</p>';
-    html += '<p>⚖️ 代谢：' + (pg.health.metabolic || '?') + '</p>';
+    html += "<p>💪 身体：" + (pg.health.physical || "?") + "</p>";
+    html += "<p>🧠 心理：" + (pg.health.mental || "?") + "</p>";
+    html += "<p>⚖️ 代谢：" + (pg.health.metabolic || "?") + "</p>";
   } else {
-    html += '<p>暂无数据</p>';
+    html += "<p>暂无数据</p>";
   }
-  html += '</div></div>';
+  html += "</div></div>";
 
   if (pg.psychology) {
     html += '<div class="section"><h3>🧠 心理状态</h3>';
     html += '<div class="card" style="padding:12px;font-size:12px;">';
-    html += '<p>😰 压力：' + Math.round(pg.psychology.stress || 0) + '/100</p>';
-    html += '<p>😟 焦虑：' + Math.round(pg.psychology.anxiety || 0) + '/100</p>';
-    html += '<p>😔 抑郁：' + Math.round(pg.psychology.depression || 0) + '/100</p>';
-    html += '<p>😊 心情：' + Math.round(pg.psychology.mood || 0) + '/100</p>';
-    html += '</div></div>';
+    html += "<p>😰 压力：" + Math.round(pg.psychology.stress || 0) + "/100</p>";
+    html +=
+      "<p>😟 焦虑：" + Math.round(pg.psychology.anxiety || 0) + "/100</p>";
+    html +=
+      "<p>😔 抑郁：" + Math.round(pg.psychology.depression || 0) + "/100</p>";
+    html += "<p>😊 心情：" + Math.round(pg.psychology.mood || 0) + "/100</p>";
+    html += "</div></div>";
   }
 
-  html += '</div>';
+  html += "</div>";
   content.innerHTML = html;
 }
 
@@ -5475,8 +5479,9 @@ function renderPgGoals(state, content, pg) {
         g.targetValue > 0
           ? Math.round(((g.currentValue || 0) / g.targetValue) * 100)
           : 0;
-      html += '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
-      html += '<strong>' + (g.description || '目标') + '</strong>';
+      html +=
+        '<div class="card" style="margin:6px 0;padding:10px;font-size:12px;">';
+      html += "<strong>" + (g.description || "目标") + "</strong>";
       html +=
         '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px;">' +
         '<div style="height:100%;width:' +
@@ -5485,11 +5490,12 @@ function renderPgGoals(state, content, pg) {
       html +=
         '<span style="font-size:10px;color:var(--text-muted);">' +
         pct +
-        '%</span>';
-      html += '</div>';
+        "%</span>";
+      html += "</div>";
     });
   } else {
-    html += '<p style="color:var(--text-muted);font-size:12px;">还没有设定人生目标。</p>';
+    html +=
+      '<p style="color:var(--text-muted);font-size:12px;">还没有设定人生目标。</p>';
   }
 
   if (completed.length > 0) {
@@ -5497,14 +5503,12 @@ function renderPgGoals(state, content, pg) {
     completed.forEach(function (g) {
       html +=
         '<div class="card" style="margin:4px 0;padding:8px;font-size:11px;">✅ ' +
-        (g.description || '已完成') +
-        '</div>';
+        (g.description || "已完成") +
+        "</div>";
     });
-    html += '</div>';
+    html += "</div>";
   }
 
-  html += '</div>';
+  html += "</div>";
   content.innerHTML = html;
 }
-
-

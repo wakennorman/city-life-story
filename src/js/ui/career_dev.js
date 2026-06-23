@@ -13,40 +13,180 @@ const CAREER_PATHS = {
     name: "💻 IT技术",
     icon: "💻",
     levels: [
-      { id: "tech_junior", name: "初级程序员", minAge: 20, reqSkills: { coding: 15 }, salary: 6000, reqEducation: 1, desc: "写业务代码、修Bug" },
-      { id: "tech_mid", name: "中级开发工程师", minAge: 23, reqSkills: { coding: 30, english: 10 }, salary: 12000, reqEducation: 1, reqWorkDays: 365, desc: "独立负责模块开发" },
-      { id: "tech_senior", name: "高级开发工程师", minAge: 26, reqSkills: { coding: 50, english: 20, management: 10 }, salary: 22000, reqEducation: 1, reqWorkDays: 1095, desc: "技术方案设计、带新人" },
-      { id: "tech_lead", name: "技术Leader", minAge: 30, reqSkills: { coding: 65, management: 30, english: 25 }, salary: 35000, reqEducation: 1, reqWorkDays: 2190, desc: "带团队、定技术方向", reqSocial: 60 },
+      {
+        id: "tech_junior",
+        name: "初级程序员",
+        minAge: 20,
+        reqSkills: { coding: 15 },
+        salary: 6000,
+        reqEducation: 1,
+        desc: "写业务代码、修Bug",
+      },
+      {
+        id: "tech_mid",
+        name: "中级开发工程师",
+        minAge: 23,
+        reqSkills: { coding: 30, english: 10 },
+        salary: 12000,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "独立负责模块开发",
+      },
+      {
+        id: "tech_senior",
+        name: "高级开发工程师",
+        minAge: 26,
+        reqSkills: { coding: 50, english: 20, management: 10 },
+        salary: 22000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "技术方案设计、带新人",
+      },
+      {
+        id: "tech_lead",
+        name: "技术Leader",
+        minAge: 30,
+        reqSkills: { coding: 65, management: 30, english: 25 },
+        salary: 35000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "带团队、定技术方向",
+        reqSocial: 60,
+      },
     ],
   },
   finance: {
     name: "📊 金融财务",
     icon: "📊",
     levels: [
-      { id: "fin_junior", name: "财务助理", minAge: 20, reqSkills: { accounting: 15, intelligence: 20 }, salary: 5500, reqEducation: 1, desc: "整理票据、录入凭证" },
-      { id: "fin_mid", name: "会计/分析师", minAge: 23, reqSkills: { accounting: 30, intelligence: 30, english: 10 }, salary: 10000, reqEducation: 1, reqWorkDays: 365, desc: "做账、出报表" },
-      { id: "fin_senior", name: "高级分析师", minAge: 26, reqSkills: { accounting: 45, management: 15, intelligence: 40 }, salary: 18000, reqEducation: 1, reqWorkDays: 1095, desc: "财务分析、预算管控" },
-      { id: "fin_manager", name: "财务经理", minAge: 30, reqSkills: { accounting: 55, management: 35, intelligence: 50 }, salary: 30000, reqEducation: 1, reqWorkDays: 2190, desc: "管团队、做决策", reqSocial: 60 },
+      {
+        id: "fin_junior",
+        name: "财务助理",
+        minAge: 20,
+        reqSkills: { accounting: 15, intelligence: 20 },
+        salary: 5500,
+        reqEducation: 1,
+        desc: "整理票据、录入凭证",
+      },
+      {
+        id: "fin_mid",
+        name: "会计/分析师",
+        minAge: 23,
+        reqSkills: { accounting: 30, intelligence: 30, english: 10 },
+        salary: 10000,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "做账、出报表",
+      },
+      {
+        id: "fin_senior",
+        name: "高级分析师",
+        minAge: 26,
+        reqSkills: { accounting: 45, management: 15, intelligence: 40 },
+        salary: 18000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "财务分析、预算管控",
+      },
+      {
+        id: "fin_manager",
+        name: "财务经理",
+        minAge: 30,
+        reqSkills: { accounting: 55, management: 35, intelligence: 50 },
+        salary: 30000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "管团队、做决策",
+        reqSocial: 60,
+      },
     ],
   },
   sales: {
     name: "💼 销售市场",
     icon: "💼",
     levels: [
-      { id: "sales_junior", name: "销售助理", minAge: 18, reqSkills: { sales: 15 }, salary: 4000, desc: "跟单、电话邀约" },
-      { id: "sales_mid", name: "销售代表", minAge: 21, reqSkills: { sales: 30, mental: 20 }, salary: 8000, reqWorkDays: 365, desc: "独立谈客户、签单" },
-      { id: "sales_senior", name: "高级销售", minAge: 25, reqSkills: { sales: 50, management: 15, mental: 30 }, salary: 15000, reqWorkDays: 1095, desc: "带客户资源、跟大单" },
-      { id: "sales_manager", name: "销售经理", minAge: 28, reqSkills: { sales: 60, management: 35, mental: 40 }, salary: 25000, reqWorkDays: 2190, desc: "带销售团队", reqSocial: 60 },
+      {
+        id: "sales_junior",
+        name: "销售助理",
+        minAge: 18,
+        reqSkills: { sales: 15 },
+        salary: 4000,
+        desc: "跟单、电话邀约",
+      },
+      {
+        id: "sales_mid",
+        name: "销售代表",
+        minAge: 21,
+        reqSkills: { sales: 30, mental: 20 },
+        salary: 8000,
+        reqWorkDays: 365,
+        desc: "独立谈客户、签单",
+      },
+      {
+        id: "sales_senior",
+        name: "高级销售",
+        minAge: 25,
+        reqSkills: { sales: 50, management: 15, mental: 30 },
+        salary: 15000,
+        reqWorkDays: 1095,
+        desc: "带客户资源、跟大单",
+      },
+      {
+        id: "sales_manager",
+        name: "销售经理",
+        minAge: 28,
+        reqSkills: { sales: 60, management: 35, mental: 40 },
+        salary: 25000,
+        reqWorkDays: 2190,
+        desc: "带销售团队",
+        reqSocial: 60,
+      },
     ],
   },
   operations: {
     name: "⚙️ 运营管理",
     icon: "⚙️",
     levels: [
-      { id: "ops_junior", name: "运营助理", minAge: 18, reqSkills: { management: 10, intelligence: 15 }, salary: 4500, reqEducation: 1, desc: "数据录入、文档整理" },
-      { id: "ops_mid", name: "运营专员", minAge: 21, reqSkills: { management: 25, intelligence: 25 }, salary: 8000, reqEducation: 1, reqWorkDays: 365, desc: "活动执行、数据分析" },
-      { id: "ops_senior", name: "运营主管", minAge: 25, reqSkills: { management: 40, intelligence: 35, sales: 15 }, salary: 14000, reqEducation: 1, reqWorkDays: 1095, desc: "带项目、优化流程" },
-      { id: "ops_manager", name: "运营经理", minAge: 28, reqSkills: { management: 55, intelligence: 45, sales: 25 }, salary: 22000, reqEducation: 1, reqWorkDays: 2190, desc: "部门管理、策略制定", reqSocial: 60 },
+      {
+        id: "ops_junior",
+        name: "运营助理",
+        minAge: 18,
+        reqSkills: { management: 10, intelligence: 15 },
+        salary: 4500,
+        reqEducation: 1,
+        desc: "数据录入、文档整理",
+      },
+      {
+        id: "ops_mid",
+        name: "运营专员",
+        minAge: 21,
+        reqSkills: { management: 25, intelligence: 25 },
+        salary: 8000,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "活动执行、数据分析",
+      },
+      {
+        id: "ops_senior",
+        name: "运营主管",
+        minAge: 25,
+        reqSkills: { management: 40, intelligence: 35, sales: 15 },
+        salary: 14000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "带项目、优化流程",
+      },
+      {
+        id: "ops_manager",
+        name: "运营经理",
+        minAge: 28,
+        reqSkills: { management: 55, intelligence: 45, sales: 25 },
+        salary: 22000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "部门管理、策略制定",
+        reqSocial: 60,
+      },
     ],
   },
 };
@@ -127,40 +267,74 @@ function renderCareerJobs(state, parent) {
     var path = CAREER_PATHS[currentJob.path];
     var levelData = null;
     if (path) {
-      levelData = path.levels.find(function (l) { return l.id === currentJob.levelId; });
+      levelData = path.levels.find(function (l) {
+        return l.id === currentJob.levelId;
+      });
     }
     html += '<div class="section"><h3>📌 当前工作</h3>';
     html += '<div class="card" style="padding:12px;">';
-    html += '<div style="font-size:13px;font-weight:bold;">' + (path ? path.icon : "💼") + " " + (levelData ? levelData.name : currentJob.levelId || "未知") + '</div>';
-    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (path ? path.name : "") + " · 第" + (currentJob.workDays || 0) + "天</div>";
-    html += '<div style="font-size:13px;color:var(--accent);font-weight:bold;margin:6px 0;">月薪 ¥' + (levelData ? levelData.salary.toLocaleString() : "?") + '</div>';
-    html += '<div style="font-size:11px;color:var(--text-secondary);">' + (levelData ? levelData.desc : "") + "</div>";
+    html +=
+      '<div style="font-size:13px;font-weight:bold;">' +
+      (path ? path.icon : "💼") +
+      " " +
+      (levelData ? levelData.name : currentJob.levelId || "未知") +
+      "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-secondary);">' +
+      (path ? path.name : "") +
+      " · 第" +
+      (currentJob.workDays || 0) +
+      "天</div>";
+    html +=
+      '<div style="font-size:13px;color:var(--accent);font-weight:bold;margin:6px 0;">月薪 ¥' +
+      (levelData ? levelData.salary.toLocaleString() : "?") +
+      "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-secondary);">' +
+      (levelData ? levelData.desc : "") +
+      "</div>";
 
     // 晋升条件
     var nextLevel = getNextCareerLevel(currentJob.path, currentJob.levelId);
     if (nextLevel) {
       var canPromote = checkCareerPromotion(state, currentJob.path, nextLevel);
-      html += '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;">';
-      html += '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' + nextLevel.name + '</div>';
-      html += '<div style="font-size:10px;color:var(--text-muted);">' + renderPromotionReqs(state, currentJob.path, nextLevel) + "</div>";
+      html +=
+        '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;">';
+      html +=
+        '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' +
+        nextLevel.name +
+        "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        renderPromotionReqs(state, currentJob.path, nextLevel) +
+        "</div>";
       if (canPromote) {
-        html += '<button class="btn btn-sm" style="margin-top:6px;" onclick="applyCareerPromotion(\'' + currentJob.path + '\',\'' + nextLevel.id + '\')">⬆️ 申请晋升</button>';
+        html +=
+          '<button class="btn btn-sm" style="margin-top:6px;" onclick="applyCareerPromotion(\'' +
+          currentJob.path +
+          "','" +
+          nextLevel.id +
+          "')\">⬆️ 申请晋升</button>";
       } else {
-        html += '<div style="font-size:10px;color:var(--warning);margin-top:4px;">⚠️ 条件不足，继续努力</div>';
+        html +=
+          '<div style="font-size:10px;color:var(--warning);margin-top:4px;">⚠️ 条件不足，继续努力</div>';
       }
       html += "</div>";
     } else {
-      html += '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
+      html +=
+        '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
     // 离职按钮
-    html += '<button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="if(confirm(\'确定要辞职吗？\'))resignCareerJob()">🚪 辞职</button>';
+    html +=
+      '<button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="if(confirm(\'确定要辞职吗？\'))resignCareerJob()">🚪 辞职</button>';
     html += "</div></div>";
-
   } else {
     // 没有工作，显示可选职业路径
-    html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-bottom:12px;">';
-    html += '<p style="font-size:11px;">💡 你目前没有固定工作。选择一条职业路线投递简历，从基层做起。</p>';
+    html +=
+      '<div class="card" style="padding:12px;background:var(--bg-warning);margin-bottom:12px;">';
+    html +=
+      '<p style="font-size:11px;">💡 你目前没有固定工作。选择一条职业路线投递简历，从基层做起。</p>';
     html += "</div>";
   }
 
@@ -177,15 +351,42 @@ function renderCareerJobs(state, parent) {
       var meetReqs = checkCareerPromotion(state, pathKey, entryLevel);
       var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
 
-      html += '<div class="card" style="padding:10px;cursor:' + (meetReqs ? 'pointer' : 'default') + ';opacity:' + (meetReqs ? '1' : '0.6') + ';" onclick="' + (meetReqs ? "applyCareerJob('" + pathKey + "','" + entryLevel.id + "')" : "") + '">';
-      html += '<div style="font-size:13px;font-weight:bold;">' + pData.icon + " " + pData.name + "</div>";
-      html += '<div style="font-size:11px;color:var(--text-secondary);margin:4px 0;">' + entryLevel.name + " · 月薪¥" + entryLevel.salary.toLocaleString() + "</div>";
-      html += '<div style="font-size:10px;color:var(--text-muted);">' + entryLevel.desc + "</div>";
-      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + reqsHtml + "</div>";
+      html +=
+        '<div class="card" style="padding:10px;cursor:' +
+        (meetReqs ? "pointer" : "default") +
+        ";opacity:" +
+        (meetReqs ? "1" : "0.6") +
+        ';" onclick="' +
+        (meetReqs
+          ? "applyCareerJob('" + pathKey + "','" + entryLevel.id + "')"
+          : "") +
+        '">';
+      html +=
+        '<div style="font-size:13px;font-weight:bold;">' +
+        pData.icon +
+        " " +
+        pData.name +
+        "</div>";
+      html +=
+        '<div style="font-size:11px;color:var(--text-secondary);margin:4px 0;">' +
+        entryLevel.name +
+        " · 月薪¥" +
+        entryLevel.salary.toLocaleString() +
+        "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        entryLevel.desc +
+        "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
+        reqsHtml +
+        "</div>";
       if (meetReqs) {
-        html += '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历</button>';
+        html +=
+          '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历</button>';
       } else {
-        html += '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
+        html +=
+          '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
       }
       html += "</div>";
     }
@@ -194,12 +395,16 @@ function renderCareerJobs(state, parent) {
 
   // ---- 晋升历史 ----
   if (careerHistory.length > 0) {
-    html += '<div class="section" style="margin-top:12px;"><h3>📜 职业历程</h3>';
+    html +=
+      '<div class="section" style="margin-top:12px;"><h3>📜 职业历程</h3>';
     html += '<div style="max-height:200px;overflow-y:auto;">';
     // 按天倒序
-    var sorted = careerHistory.slice().sort(function (a, b) { return b.day - a.day; });
+    var sorted = careerHistory.slice().sort(function (a, b) {
+      return b.day - a.day;
+    });
     sorted.forEach(function (h) {
-      html += '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
+      html +=
+        '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
       html += "第" + h.day + "天 · " + h.event;
       html += "</div>";
     });
@@ -220,9 +425,14 @@ function renderCareerOverview(state, parent) {
     html += '<div class="section"><h3>🚀 创业状态</h3>';
     html += '<div class="card" style="padding:12px;">';
     html += "<p>🏢 " + (startup.company.name || "未命名公司") + "</p>";
-    html += "<p>📊 估值：¥" + ((startup.company.valuation || 0).toLocaleString()) + "</p>";
-    html += "<p>💰 现金流：¥" + ((startup.company.cash || 0).toLocaleString()) + "</p>";
-    html += "<p>👥 团队：" + ((startup.company.employees || []).length) + "人</p>";
+    html +=
+      "<p>📊 估值：¥" +
+      (startup.company.valuation || 0).toLocaleString() +
+      "</p>";
+    html +=
+      "<p>💰 现金流：¥" + (startup.company.cash || 0).toLocaleString() + "</p>";
+    html +=
+      "<p>👥 团队：" + (startup.company.employees || []).length + "人</p>";
     html += "</div></div>";
   }
 
@@ -237,9 +447,12 @@ function renderCareerOverview(state, parent) {
   }
 
   // 事业建议
-  html += '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
-  html += '<p style="font-size:11px;color:var(--text-muted);">💡 事业建议：</p>';
-  html += '<ul style="font-size:11px;color:var(--text-muted);margin:4px 0 0 16px;padding:0;">';
+  html +=
+    '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);">💡 事业建议：</p>';
+  html +=
+    '<ul style="font-size:11px;color:var(--text-muted);margin:4px 0 0 16px;padding:0;">';
   if (!startup || startup.status === "none") {
     html += "<li>🚀 积累够¥200,000可以尝试创业</li>";
   }
@@ -294,13 +507,15 @@ function checkCareerPromotion(state, pathId, level) {
 
   // 工作天数检查
   var career = state.career || {};
-  var workDays = career.currentJob ? (career.currentJob.workDays || 0) : 0;
+  var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
   if (level.reqWorkDays && workDays < level.reqWorkDays) return false;
 
   // 社交关系检查（高阶职位需要）
   if (level.reqSocial) {
     var colleagues = state.corporate?.colleagues?.network || [];
-    var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+    var highTrust = colleagues.filter(function (c) {
+      return c.relationship >= 60;
+    }).length;
     if (highTrust < level.reqSocial / 20) return false;
   }
 
@@ -313,14 +528,24 @@ function renderPromotionReqs(state, pathId, level) {
   if (level.salary) parts.push("月薪¥" + level.salary.toLocaleString());
   if (level.reqSkills) {
     for (var s in level.reqSkills) {
-      var labels = { coding: "编程", english: "英语", accounting: "财务", management: "管理", sales: "销售", intelligence: "智力", mental: "心智" };
+      var labels = {
+        coding: "编程",
+        english: "英语",
+        accounting: "财务",
+        management: "管理",
+        sales: "销售",
+        intelligence: "智力",
+        mental: "心智",
+      };
       parts.push((labels[s] || s) + "≥" + level.reqSkills[s]);
     }
   }
   if (level.minAge) parts.push("年龄≥" + level.minAge);
   if (level.reqEducation) parts.push("大专以上学历");
-  if (level.reqWorkDays) parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
-  if (level.reqSocial) parts.push("信任同事≥" + Math.floor(level.reqSocial / 20) + "人");
+  if (level.reqWorkDays)
+    parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
+  if (level.reqSocial)
+    parts.push("信任同事≥" + Math.floor(level.reqSocial / 20) + "人");
   return "要求：" + parts.join(" · ");
 }
 
@@ -328,19 +553,29 @@ function renderPromotionReqs(state, pathId, level) {
 function applyCareerJob(pathId, levelId) {
   var state = StateManager.getState();
   var path = CAREER_PATHS[pathId];
-  if (!path) { StateManager.addMessage("⚠️ 该职业路径不存在", "warning"); return; }
+  if (!path) {
+    StateManager.addMessage("⚠️ 该职业路径不存在", "warning");
+    return;
+  }
 
-  var level = path.levels.find(function (l) { return l.id === levelId; });
+  var level = path.levels.find(function (l) {
+    return l.id === levelId;
+  });
   if (!level) return;
 
   if (!checkCareerPromotion(state, pathId, level)) {
-    StateManager.addMessage("⚠️ 你不满足该职位的条件", "warning"); return;
+    StateManager.addMessage("⚠️ 你不满足该职位的条件", "warning");
+    return;
   }
 
   // 初始化 career 状态
   if (!state.career) state.career = { currentJob: null, history: [] };
   if (state.career.currentJob) {
-    StateManager.addMessage("⚠️ 你已经有工作了，先辞职才能投递新职位", "warning"); return;
+    StateManager.addMessage(
+      "⚠️ 你已经有工作了，先辞职才能投递新职位",
+      "warning",
+    );
+    return;
   }
 
   state.career.currentJob = {
@@ -353,8 +588,13 @@ function applyCareerJob(pathId, levelId) {
   };
 
   StateManager.addMessage(
-    "✅ 入职成功！你成为了" + path.name + "的" + level.name + "，月薪¥" + level.salary.toLocaleString(),
-    "success"
+    "✅ 入职成功！你成为了" +
+      path.name +
+      "的" +
+      level.name +
+      "，月薪¥" +
+      level.salary.toLocaleString(),
+    "success",
   );
 
   if (typeof renderAll === "function") renderAll();
@@ -364,22 +604,26 @@ function applyCareerJob(pathId, levelId) {
 function applyCareerPromotion(pathId, levelId) {
   var state = StateManager.getState();
   var path = CAREER_PATHS[pathId];
-  var level = path.levels.find(function (l) { return l.id === levelId; });
+  var level = path.levels.find(function (l) {
+    return l.id === levelId;
+  });
   if (!level) return;
 
   if (!state.career || !state.career.currentJob) {
-    StateManager.addMessage("⚠️ 你目前没有工作", "warning"); return;
+    StateManager.addMessage("⚠️ 你目前没有工作", "warning");
+    return;
   }
 
   if (!checkCareerPromotion(state, pathId, level)) {
-    StateManager.addMessage("⚠️ 晋升条件不足，查看具体要求", "warning"); return;
+    StateManager.addMessage("⚠️ 晋升条件不足，查看具体要求", "warning");
+    return;
   }
 
   // 晋升成功
   var oldJob = state.career.currentJob;
   state.career.history.push({
     day: state.player.day,
-    event: "晋升：" + oldJob.levelName + " → " + level.name
+    event: "晋升：" + oldJob.levelName + " → " + level.name,
   });
 
   state.career.currentJob.levelId = levelId;
@@ -387,8 +631,11 @@ function applyCareerPromotion(pathId, levelId) {
   state.career.currentJob.salary = level.salary;
 
   StateManager.addMessage(
-    "🎉 晋升成功！你成为了" + level.name + "，月薪涨至¥" + level.salary.toLocaleString(),
-    "success"
+    "🎉 晋升成功！你成为了" +
+      level.name +
+      "，月薪涨至¥" +
+      level.salary.toLocaleString(),
+    "success",
   );
 
   if (typeof renderAll === "function") renderAll();
@@ -401,7 +648,7 @@ function resignCareerJob() {
 
   state.career.history.push({
     day: state.player.day,
-    event: "辞职：离开了" + state.career.currentJob.levelName + "岗位"
+    event: "辞职：离开了" + state.career.currentJob.levelName + "岗位",
   });
   state.career.currentJob = null;
 
@@ -423,21 +670,25 @@ function tickCareerJobDaily(state) {
     state.resources.totalEarned += salary;
     StateManager.addMessage(
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）",
-      "success"
+      "success",
     );
 
     // 高阶职位需要维持社交关系
     var path = CAREER_PATHS[job.path];
     if (path) {
-      var level = path.levels.find(function (l) { return l.id === job.levelId; });
+      var level = path.levels.find(function (l) {
+        return l.id === job.levelId;
+      });
       if (level && level.reqSocial) {
         // 社交关系不足会有绩效警告
         var colleagues = state.corporate?.colleagues?.network || [];
-        var highTrust = colleagues.filter(function (c) { return c.relationship >= 60; }).length;
+        var highTrust = colleagues.filter(function (c) {
+          return c.relationship >= 60;
+        }).length;
         if (highTrust < Math.floor(level.reqSocial / 20)) {
           StateManager.addMessage(
             "⚠️ 你的社交关系网络不足以支撑当前职位，小心被取代！",
-            "warning"
+            "warning",
           );
         }
       }
@@ -458,11 +709,11 @@ if (typeof window !== "undefined") {
     sections: [
       {
         kind: "desc",
-        text: "事业是人生的支柱。从街头打零工到成为上市公司CEO，事业系统让你体验不同职业路径的酸甜苦辣。"
+        text: "事业是人生的支柱。从街头打零工到成为上市公司CEO，事业系统让你体验不同职业路径的酸甜苦辣。",
       },
       {
         kind: "subhead",
-        text: "💼 职业路径"
+        text: "💼 职业路径",
       },
       {
         kind: "list",
@@ -475,7 +726,7 @@ if (typeof window !== "undefined") {
       },
       {
         kind: "subhead",
-        text: "🚀 创业路径"
+        text: "🚀 创业路径",
       },
       {
         kind: "list",
@@ -488,7 +739,7 @@ if (typeof window !== "undefined") {
       },
       {
         kind: "tip",
-        text: "💡 提示：创业需要¥200,000启动资金和承担风险的能力；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需要维护好同事关系才能顺利晋升。"
+        text: "💡 提示：创业需要¥200,000启动资金和承担风险的能力；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需要维护好同事关系才能顺利晋升。",
       },
     ],
   };
