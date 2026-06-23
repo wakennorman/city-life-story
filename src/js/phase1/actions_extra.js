@@ -764,6 +764,109 @@ function addStreetExtras(state, actions) {
     });
   }
 
+  // === v3.2 道德恢复行动（捐款/义工）===
+  var morality = state.player.morality || 50;
+  // 捐款：寺庙/银行可捐，每¥100=+1道德
+  if (
+    state.trade.currentLocation === "temple" ||
+    state.trade.currentLocation === "bank"
+  ) {
+    actions.push({
+      id: "donate_money",
+      name: "💰 捐款行善",
+      desc:
+        "捐钱给需要的人。每捐¥100道德+1，帮助他人让自己心安。当前道德" +
+        morality +
+        "。",
+      icon: "💰",
+      apCost: 5,
+      handler: function () {
+        var st = StateManager.getState();
+        var maxDonate = Math.min(st.resources.cash, 1000);
+        if (maxDonate < 100) {
+          StateManager.addMessage(
+            "💸 你翻遍口袋只找到¥" +
+              (st.resources.cash || 0) +
+              "，连捐款都不够。",
+            "warning",
+          );
+          return;
+        }
+        var amount = Math.min(maxDonate, 500);
+        st.resources.cash -= amount;
+        var moralGain = Math.floor(amount / 100);
+        if (typeof applyMoralityChange === "function") {
+          applyMoralityChange(st, moralGain, "捐款");
+        } else {
+          st.player.morality = Math.min(
+            100,
+            (st.player.morality || 50) + moralGain,
+          );
+        }
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(st, "expense", "misc", amount, "捐款行善");
+        }
+        StateManager.addMessage(
+          "🙏 你捐了¥" +
+            amount +
+            "，感觉心里踏实了一些。道德+" +
+            moralGain +
+            "。",
+          "success",
+        );
+        consumeAP(5);
+      },
+    });
+  }
+
+  // 义工：医院/公园/寺庙可做，每次+3-5道德+8-20心情
+  if (
+    state.trade.currentLocation === "hospital" ||
+    state.trade.currentLocation === "park" ||
+    state.trade.currentLocation === "temple"
+  ) {
+    actions.push({
+      id: "volunteer_work",
+      name: "🤝 做义工",
+      desc:
+        "去医院/公园/寺庙做志愿者，帮助他人。提升道德和心情。当前道德" +
+        morality +
+        "。",
+      icon: "🤝",
+      apCost: 15,
+      handler: function () {
+        var st = StateManager.getState();
+        var moralGain = 3 + Math.floor(Random.float(0, 3));
+        var happyGain = 8 + Math.floor(Random.float(0, 13));
+        st.player.morality = Math.min(
+          100,
+          (st.player.morality || 50) + moralGain,
+        );
+        st.needs.happiness = Math.min(
+          100,
+          (st.needs.happiness || 50) + happyGain,
+        );
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+        st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+        StateManager.addMessage(
+          "🤝 你花了一上午做义工，帮助了" +
+            (st.trade.currentLocation === "hospital"
+              ? "病患"
+              : st.trade.currentLocation === "park"
+                ? "清洁公园"
+                : "寺庙修缮") +
+            "。道德+" +
+            moralGain +
+            "，心情+" +
+            happyGain +
+            "。",
+          "success",
+        );
+        consumeAP(15);
+      },
+    });
+  }
+
   // === 确立人生梦想（公园/家里才显示，未设定梦想时） ===
   var hasDream = state.flags && state.flags._dreamId;
   var atRestfulLoc =

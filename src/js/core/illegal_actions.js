@@ -14,6 +14,10 @@
  *   │ 扒窃         │ ¥80-200 │  0.30 │ -12      │ 拘留1天+罚¥300      │
  *   │ 洗脚城灰服务 │ 心情+30 │  0.25 │ -10      │ 罚¥500+染病35%      │
  *   │ 黑市倒卖     │ ¥300-600│  0.40 │ -20      │ 拘留2天+罚¥1000     │
+ *   │ 盗窃店铺     │ ¥200-500│  0.40 │ -18      │ 拘留2天+罚¥800      │
+ *   │ 碰瓷         │ ¥100-300│  0.45 │ -15      │ 拘留1天+罚¥500      │
+ *   │ 倒卖假证     │ ¥150-400│  0.35 │ -14      │ 拘留1天+罚¥600      │
+ *   │ 代考         │ ¥200-500│  0.30 │ -16      │ 拘留1天+罚¥700      │
  *   └──────────────┴────────┴────────┴──────────┴────────────────────┘
  *
  * 道德回响（This War of Mine 风格）：
@@ -91,6 +95,55 @@
       catchProb: 0.4,
       moralityDelta: -20,
       penalty: { jailDays: 2, fine: 1000 },
+    },
+    // v3.2 新增4种违法行为
+    {
+      id: "illegal_shop_theft",
+      name: "🏪 盗窃店铺",
+      desc: "趁店员不注意顺走货架上的值钱商品。商业区机会多，但监控也多。",
+      icon: "🏪",
+      apCost: 6,
+      location: "commercialDist",
+      rewardRange: [200, 500],
+      catchProb: 0.4,
+      moralityDelta: -18,
+      penalty: { jailDays: 2, fine: 800 },
+    },
+    {
+      id: "illegal_scam",
+      name: "🎭 碰瓷",
+      desc: "在马路上故意被车蹭倒，讹司机赔偿。风险高，但成功来钱快。",
+      icon: "🎭",
+      apCost: 5,
+      location: "commercialDist",
+      rewardRange: [100, 300],
+      catchProb: 0.45,
+      moralityDelta: -15,
+      penalty: { jailDays: 1, fine: 500 },
+    },
+    {
+      id: "illegal_fake_docs",
+      name: "📜 倒卖假证",
+      desc: "在批发市场找人做假身份证/毕业证。市场需求大，但警察盯得紧。",
+      icon: "📜",
+      apCost: 6,
+      location: "wholesaleMarket",
+      rewardRange: [150, 400],
+      catchProb: 0.35,
+      moralityDelta: -14,
+      penalty: { jailDays: 1, fine: 600 },
+    },
+    {
+      id: "illegal_exam_proxy",
+      name: "✍️ 代考",
+      desc: "替人参加考试，一科几百块。被发现就是开除+记过。",
+      icon: "✍️",
+      apCost: 8,
+      location: "school",
+      rewardRange: [200, 500],
+      catchProb: 0.3,
+      moralityDelta: -16,
+      penalty: { jailDays: 1, fine: 700 },
     },
   ];
 
@@ -236,6 +289,15 @@
       // 罚款（不够则扣到 0）
       var fineActual = Math.min(state.resources.cash, p.fine);
       state.resources.cash -= fineActual;
+      if (typeof addDailyTransaction === "function" && fineActual > 0) {
+        addDailyTransaction(
+          state,
+          "expense",
+          "fine",
+          fineActual,
+          "违法行为罚款 - " + action.name,
+        );
+      }
       // 出狱后状态崩溃
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 40);
       state.needs.hunger = Math.max(0, (state.needs.hunger || 0) - 30);
@@ -290,6 +352,15 @@
         state.resources.cash += reward;
         state.resources.totalEarned =
           (state.resources.totalEarned || 0) + reward;
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(
+            state,
+            "income",
+            "side_job",
+            reward,
+            action.name + "所得",
+          );
+        }
         StateManager.addMessage(
           action.icon +
             " 你" +

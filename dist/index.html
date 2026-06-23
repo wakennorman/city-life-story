@@ -1841,7 +1841,7 @@ function addDailyTransaction(state, type, category, amount, description) {
     self_study: "education",
     night_school: "education",
     study: "education",
-    set_dream: "other",  // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
+    set_dream: "other", // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
     view_dream: "other",
 
     // === 购物装备 ===
@@ -1898,7 +1898,7 @@ function addDailyTransaction(state, type, category, amount, description) {
     self_study: 15,
     night_school: 20,
     // v3.0：set_dream / view_dream 移到"其他"分类，归类到个人成长Tab的目标子项
-    set_dream: 5,  // 但归类改为 other
+    set_dream: 5, // 但归类改为 other
     view_dream: 6,
     // edu_study 由前缀 ^edu_ 匹配，设默认50
     // edu_exam
@@ -26018,6 +26018,10 @@ if (typeof window !== "undefined") {
  *   │ 扒窃         │ ¥80-200 │  0.30 │ -12      │ 拘留1天+罚¥300      │
  *   │ 洗脚城灰服务 │ 心情+30 │  0.25 │ -10      │ 罚¥500+染病35%      │
  *   │ 黑市倒卖     │ ¥300-600│  0.40 │ -20      │ 拘留2天+罚¥1000     │
+ *   │ 盗窃店铺     │ ¥200-500│  0.40 │ -18      │ 拘留2天+罚¥800      │
+ *   │ 碰瓷         │ ¥100-300│  0.45 │ -15      │ 拘留1天+罚¥500      │
+ *   │ 倒卖假证     │ ¥150-400│  0.35 │ -14      │ 拘留1天+罚¥600      │
+ *   │ 代考         │ ¥200-500│  0.30 │ -16      │ 拘留1天+罚¥700      │
  *   └──────────────┴────────┴────────┴──────────┴────────────────────┘
  *
  * 道德回响（This War of Mine 风格）：
@@ -26067,7 +26071,7 @@ if (typeof window !== "undefined") {
       apCost: 4,
       location: "commercialDist",
       rewardRange: [80, 200],
-      catchProb: 0.30,
+      catchProb: 0.3,
       moralityDelta: -12,
       penalty: { jailDays: 1, fine: 300 },
     },
@@ -26092,18 +26096,71 @@ if (typeof window !== "undefined") {
       apCost: 8,
       location: "wholesaleMarket",
       rewardRange: [300, 600],
-      catchProb: 0.40,
+      catchProb: 0.4,
       moralityDelta: -20,
       penalty: { jailDays: 2, fine: 1000 },
+    },
+    // v3.2 新增4种违法行为
+    {
+      id: "illegal_shop_theft",
+      name: "🏪 盗窃店铺",
+      desc: "趁店员不注意顺走货架上的值钱商品。商业区机会多，但监控也多。",
+      icon: "🏪",
+      apCost: 6,
+      location: "commercialDist",
+      rewardRange: [200, 500],
+      catchProb: 0.4,
+      moralityDelta: -18,
+      penalty: { jailDays: 2, fine: 800 },
+    },
+    {
+      id: "illegal_scam",
+      name: "🎭 碰瓷",
+      desc: "在马路上故意被车蹭倒，讹司机赔偿。风险高，但成功来钱快。",
+      icon: "🎭",
+      apCost: 5,
+      location: "commercialDist",
+      rewardRange: [100, 300],
+      catchProb: 0.45,
+      moralityDelta: -15,
+      penalty: { jailDays: 1, fine: 500 },
+    },
+    {
+      id: "illegal_fake_docs",
+      name: "📜 倒卖假证",
+      desc: "在批发市场找人做假身份证/毕业证。市场需求大，但警察盯得紧。",
+      icon: "📜",
+      apCost: 6,
+      location: "wholesaleMarket",
+      rewardRange: [150, 400],
+      catchProb: 0.35,
+      moralityDelta: -14,
+      penalty: { jailDays: 1, fine: 600 },
+    },
+    {
+      id: "illegal_exam_proxy",
+      name: "✍️ 代考",
+      desc: "替人参加考试，一科几百块。被发现就是开除+记过。",
+      icon: "✍️",
+      apCost: 8,
+      location: "school",
+      rewardRange: [200, 500],
+      catchProb: 0.3,
+      moralityDelta: -16,
+      penalty: { jailDays: 1, fine: 700 },
     },
   ];
 
   // ====== 道德档位标签 ======
   function getMoralityLabel(morality) {
-    if (morality >= 80) return { label: "圣徒", icon: "😇", color: "var(--success)" };
-    if (morality >= 60) return { label: "善人", icon: "🙏", color: "var(--success)" };
-    if (morality >= 40) return { label: "普通人", icon: "😐", color: "var(--text-secondary)" };
-    if (morality >= 20) return { label: "小恶", icon: "😏", color: "var(--warning)" };
+    if (morality >= 80)
+      return { label: "圣徒", icon: "😇", color: "var(--success)" };
+    if (morality >= 60)
+      return { label: "善人", icon: "🙏", color: "var(--success)" };
+    if (morality >= 40)
+      return { label: "普通人", icon: "😐", color: "var(--text-secondary)" };
+    if (morality >= 20)
+      return { label: "小恶", icon: "😏", color: "var(--warning)" };
     return { label: "恶人", icon: "😈", color: "var(--danger)" };
   }
 
@@ -26126,10 +26183,15 @@ if (typeof window !== "undefined") {
       state.flags._pendingMoralityEcho = true;
     }
     // 道德跌破 20 时强警告
-    if (old >= 20 && next < 20 && typeof StateManager !== "undefined" && StateManager.addMessage) {
+    if (
+      old >= 20 &&
+      next < 20 &&
+      typeof StateManager !== "undefined" &&
+      StateManager.addMessage
+    ) {
       StateManager.addMessage(
         "😈 你的道德已跌破底线，城里开始有人在你背后指指点点。",
-        "error"
+        "error",
       );
     }
   }
@@ -26140,7 +26202,7 @@ if (typeof window !== "undefined") {
     var lastEcho = state.flags._lastMoralityEchoDay || 0;
     var day = state.player.day || 0;
     if (day - lastEcho < 5) return; // 至少 5 天间隔
-    if (Math.random() > 0.30) return; // 30% 概率触发
+    if (Math.random() > 0.3) return; // 30% 概率触发
     state.flags._pendingMoralityEcho = false;
     state.flags._lastMoralityEchoDay = day;
     var echoes = [
@@ -26186,7 +26248,13 @@ if (typeof window !== "undefined") {
       actions.push({
         id: a.id,
         name: a.name,
-        desc: a.desc + "（道德-" + Math.abs(a.moralityDelta) + "，被抓率" + Math.round(a.catchProb * 100) + "%）",
+        desc:
+          a.desc +
+          "（道德-" +
+          Math.abs(a.moralityDelta) +
+          "，被抓率" +
+          Math.round(a.catchProb * 100) +
+          "%）",
         icon: a.icon,
         apCost: a.apCost,
         handler: function () {
@@ -26208,19 +26276,26 @@ if (typeof window !== "undefined") {
         state.flags = state.flags || {};
         state.flags._inJailUntil = day + p.jailDays;
         StateManager.addMessage(
-          "🚔 你被警察当场抓获！拘留 " + p.jailDays + " 天，罚款 ¥" + p.fine + "。" +
-          "出来后状态全线崩溃，回去休息几天。",
-          "error"
+          "🚔 你被警察当场抓获！拘留 " +
+            p.jailDays +
+            " 天，罚款 ¥" +
+            p.fine +
+            "。" +
+            "出来后状态全线崩溃，回去休息几天。",
+          "error",
         );
       } else {
         StateManager.addMessage(
           "🚔 你被扫黄抓了！罚款 ¥" + p.fine + "。",
-          "error"
+          "error",
         );
       }
       // 罚款（不够则扣到 0）
       var fineActual = Math.min(state.resources.cash, p.fine);
       state.resources.cash -= fineActual;
+      if (typeof addDailyTransaction === "function" && fineActual > 0) {
+        addDailyTransaction(state, "expense", "fine", fineActual, "违法行为罚款 - " + action.name);
+      }
       // 出狱后状态崩溃
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 40);
       state.needs.hunger = Math.max(0, (state.needs.hunger || 0) - 30);
@@ -26232,28 +26307,60 @@ if (typeof window !== "undefined") {
         if (typeof addIllness === "function") {
           addIllness(state, "std_suspicion"); // 假设疾病系统支持
         }
-        StateManager.addMessage("🦠 你感觉身体不对劲，可能染上了什么...", "warning");
+        StateManager.addMessage(
+          "🦠 你感觉身体不对劲，可能染上了什么...",
+          "warning",
+        );
       }
       // 道德扣（被抓更狠）
-      applyMoralityChange(state, action.moralityDelta - 5, action.id + "_caught");
+      applyMoralityChange(
+        state,
+        action.moralityDelta - 5,
+        action.id + "_caught",
+      );
       // 名气扣
       state.player.fame = Math.max(0, (state.player.fame || 0) - 5);
     } else {
       // 未被抓：拿到奖励
       if (action.rewardType === "happiness") {
-        var happy = action.rewardRange[0] + Math.floor(Math.random() * (action.rewardRange[1] - action.rewardRange[0]));
-        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + happy);
+        var happy =
+          action.rewardRange[0] +
+          Math.floor(
+            Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
+          );
+        state.needs.happiness = Math.min(
+          100,
+          (state.needs.happiness || 0) + happy,
+        );
         StateManager.addMessage(
-          action.icon + " 你" + action.name.replace(/^[^\s]+\s/, "") + "了，心情+" + happy + "。但心里有点不安...",
-          "info"
+          action.icon +
+            " 你" +
+            action.name.replace(/^[^\s]+\s/, "") +
+            "了，心情+" +
+            happy +
+            "。但心里有点不安...",
+          "info",
         );
       } else {
-        var reward = action.rewardRange[0] + Math.floor(Math.random() * (action.rewardRange[1] - action.rewardRange[0]));
+        var reward =
+          action.rewardRange[0] +
+          Math.floor(
+            Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
+          );
         state.resources.cash += reward;
-        state.resources.totalEarned = (state.resources.totalEarned || 0) + reward;
+        state.resources.totalEarned =
+          (state.resources.totalEarned || 0) + reward;
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(state, "income", "side_job", reward, action.name + "所得");
+        }
         StateManager.addMessage(
-          action.icon + " 你" + action.name.replace(/^[^\s]+\s/, "") + "成功，赚了 ¥" + reward + "。但心里发虚...",
-          "success"
+          action.icon +
+            " 你" +
+            action.name.replace(/^[^\s]+\s/, "") +
+            "成功，赚了 ¥" +
+            reward +
+            "。但心里发虚...",
+          "success",
         );
       }
       applyMoralityChange(state, action.moralityDelta, action.id + "_success");
@@ -37288,7 +37395,8 @@ const SCENARIOS = [
     name: "城市务工者",
     icon: "🏚️",
     category: "default",
-    brief: "黑暗开局：身无分文、风餐露宿，3 天内必须找到饭吃。城市冰冷，活下去就是胜利",
+    brief:
+      "黑暗开局：身无分文、风餐露宿，3 天内必须找到饭吃。城市冰冷，活下去就是胜利",
     description:
       "你从农村来到城市，揣着仅剩的¥300。没有村长债——村长那笔钱早被你爹赌光了。\n\n你睡在城中村桥洞下，三天没正经吃过饭，胃在拧成绳。健康亮红灯，饥饱见底，状态全线告急。这座城市不会等你。\n\n要么去工地扛水泥、要么去偷电瓶——选择在你。但记住：偷东西快，被抓也快。",
     startingMessage:
@@ -37296,7 +37404,13 @@ const SCENARIOS = [
     difficulty: "★★★★",
     difficultyLabel: "地狱",
     // 初始属性（v3.0：保留 mental 字段名避免破坏现有代码，UI 层显示为"能力"；新增 charm 颜值）
-    stats: { physique: 18, intelligence: 15, agility: 22, mental: 18, charm: 20 },
+    stats: {
+      physique: 18,
+      intelligence: 15,
+      agility: 22,
+      mental: 18,
+      charm: 20,
+    },
     // 初始资源（v3.0 黑暗：¥300 起步，无村长债）
     resources: { cash: 300, bankBalance: 0, villageDebt: 0, bankDebt: 0 },
     // 初始年龄
@@ -50225,6 +50339,66 @@ function addStreetExtras(state, actions) {
     });
   }
 
+  // === v3.2 道德恢复行动（捐款/义工）===
+  var morality = state.player.morality || 50;
+  // 捐款：寺庙/银行可捐，每¥100=+1道德
+  if (state.trade.currentLocation === "temple" || state.trade.currentLocation === "bank") {
+    actions.push({
+      id: "donate_money",
+      name: "💰 捐款行善",
+      desc: "捐钱给需要的人。每捐¥100道德+1，帮助他人让自己心安。当前道德" + morality + "。",
+      icon: "💰",
+      apCost: 5,
+      handler: function () {
+        var st = StateManager.getState();
+        var maxDonate = Math.min(st.resources.cash, 1000);
+        if (maxDonate < 100) {
+          StateManager.addMessage("💸 你翻遍口袋只找到¥" + (st.resources.cash || 0) + "，连捐款都不够。", "warning");
+          return;
+        }
+        var amount = Math.min(maxDonate, 500);
+        st.resources.cash -= amount;
+        var moralGain = Math.floor(amount / 100);
+        if (typeof applyMoralityChange === "function") {
+          applyMoralityChange(st, moralGain, "捐款");
+        } else {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + moralGain);
+        }
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(st, "expense", "misc", amount, "捐款行善");
+        }
+        StateManager.addMessage("🙏 你捐了¥" + amount + "，感觉心里踏实了一些。道德+" + moralGain + "。", "success");
+        consumeAP(5);
+      },
+    });
+  }
+
+  // 义工：医院/公园/寺庙可做，每次+3-5道德+8-20心情
+  if (state.trade.currentLocation === "hospital" || state.trade.currentLocation === "park" || state.trade.currentLocation === "temple") {
+    actions.push({
+      id: "volunteer_work",
+      name: "🤝 做义工",
+      desc: "去医院/公园/寺庙做志愿者，帮助他人。提升道德和心情。当前道德" + morality + "。",
+      icon: "🤝",
+      apCost: 15,
+      handler: function () {
+        var st = StateManager.getState();
+        var moralGain = 3 + Math.floor(Random.float(0, 3));
+        var happyGain = 8 + Math.floor(Random.float(0, 13));
+        st.player.morality = Math.min(100, (st.player.morality || 50) + moralGain);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + happyGain);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+        st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+        StateManager.addMessage(
+          "🤝 你花了一上午做义工，帮助了" + (st.trade.currentLocation === "hospital" ? "病患" : st.trade.currentLocation === "park" ? "清洁公园" : "寺庙修缮") +
+          "。道德+" + moralGain + "，心情+" + happyGain + "。",
+          "success"
+        );
+        consumeAP(15);
+      },
+    });
+  }
+
   // === 确立人生梦想（公园/家里才显示，未设定梦想时） ===
   var hasDream = state.flags && state.flags._dreamId;
   var atRestfulLoc =
@@ -52422,7 +52596,11 @@ function runDailyPipeline(state) {
         // 执行最后的核心步骤：财务、收支报告、存档
         for (var j = i + 1; j < DAILY_PIPELINE.length; j++) {
           var lateStep = DAILY_PIPELINE[j];
-          if (lateStep.name === "finance" || lateStep.name === "autosave" || lateStep.name === "daily_report") {
+          if (
+            lateStep.name === "finance" ||
+            lateStep.name === "autosave" ||
+            lateStep.name === "daily_report"
+          ) {
             lateStep.fn(state);
           }
         }
@@ -92439,7 +92617,14 @@ function renderMapTab(state, parent) {
   container.appendChild(transitWrap);
 
   // v3.0 地铁沿线大站定义
-  const METRO_STATIONS = ["techPark", "commercialDist", "hospital", "school", "trainingCenter", "entertainment"];
+  const METRO_STATIONS = [
+    "techPark",
+    "commercialDist",
+    "hospital",
+    "school",
+    "trainingCenter",
+    "entertainment",
+  ];
   // v3.0 共享单车仅可到相邻地点（TRAVEL_GRAPH 1 跳）
   // 打车可到任何 reachable 已探索地点
 
@@ -92459,10 +92644,14 @@ function renderMapTab(state, parent) {
           priceInfo = "¥2/次";
           apInfo = "AP -8（骑行耗时）";
         } else if (mode === "metro") {
-          available = reachableList.filter((k) => METRO_STATIONS.indexOf(k) >= 0);
+          available = reachableList.filter(
+            (k) => METRO_STATIONS.indexOf(k) >= 0,
+          );
           // 也允许从地铁沿线出发到任何地铁沿线
           if (METRO_STATIONS.indexOf(locKey) >= 0) {
-            METRO_STATIONS.forEach((k) => { if (k !== locKey && available.indexOf(k) < 0) available.push(k); });
+            METRO_STATIONS.forEach((k) => {
+              if (k !== locKey && available.indexOf(k) < 0) available.push(k);
+            });
           }
           priceInfo = "¥4/次";
           apInfo = "AP -5（地铁最快）";
@@ -92472,39 +92661,84 @@ function renderMapTab(state, parent) {
           apInfo = "AP -3（最快但最贵）";
         }
         if (available.length === 0) {
-          result.innerHTML = '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
+          result.innerHTML =
+            '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
           return;
         }
-        result.innerHTML = '<div style="margin-bottom:6px;">' +
-          '<strong>' + ({bike:'🚲 共享单车',metro:'🚇 地铁',taxi:'🚕 打车'}[mode]) + '</strong> · ' +
-          priceInfo + ' · ' + apInfo + '</div>' +
+        result.innerHTML =
+          '<div style="margin-bottom:6px;">' +
+          "<strong>" +
+          { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[mode] +
+          "</strong> · " +
+          priceInfo +
+          " · " +
+          apInfo +
+          "</div>" +
           '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">' +
-          available.map((k) => {
-            const d = getLocation(k);
-            if (!d) return "";
-            const price = mode === "bike" ? 2 : mode === "metro" ? 4 : 15 + Math.floor(Math.random() * 36);
-            const ap = mode === "bike" ? 8 : mode === "metro" ? 5 : 3;
-            return '<button class="transit-go-btn" data-dest="' + k + '" data-price="' + price + '" data-ap="' + ap + '" data-mode="' + mode + '" style="' +
-              'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
-              '<div style="font-weight:600;">' + d.name + '</div>' +
-              '<div style="color:var(--text-muted);margin-top:2px;">¥' + price + ' · AP' + ap + '</div>' +
-              '</button>';
-          }).join("") + '</div>';
+          available
+            .map((k) => {
+              const d = getLocation(k);
+              if (!d) return "";
+              const price =
+                mode === "bike"
+                  ? 2
+                  : mode === "metro"
+                    ? 4
+                    : 15 + Math.floor(Math.random() * 36);
+              const ap = mode === "bike" ? 8 : mode === "metro" ? 5 : 3;
+              return (
+                '<button class="transit-go-btn" data-dest="' +
+                k +
+                '" data-price="' +
+                price +
+                '" data-ap="' +
+                ap +
+                '" data-mode="' +
+                mode +
+                '" style="' +
+                'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+                '<div style="font-weight:600;">' +
+                d.name +
+                "</div>" +
+                '<div style="color:var(--text-muted);margin-top:2px;">¥' +
+                price +
+                " · AP" +
+                ap +
+                "</div>" +
+                "</button>"
+              );
+            })
+            .join("") +
+          "</div>";
         // 绑定实际出行按钮
         document.querySelectorAll(".transit-go-btn").forEach((gb) => {
           gb.addEventListener("click", () => {
             const destKey = gb.dataset.dest;
             const price = parseInt(gb.dataset.price, 10) || 0;
             const ap = parseInt(gb.dataset.ap, 10) || 5;
-            const modeName = ({bike:'🚲 共享单车',metro:'🚇 地铁',taxi:'🚕 打车'})[gb.dataset.mode] || '出行';
+            const modeName =
+              { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[
+                gb.dataset.mode
+              ] || "出行";
             if ((state.resources.cash || 0) < price) {
-              StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
+              StateManager.addMessage(
+                "💸 " + modeName + "需要¥" + price + "，你现金不够。",
+                "warning",
+              );
               return;
             }
             state.resources.cash -= price;
             StateManager.update("trade.currentLocation", destKey);
             const dest = getLocation(destKey);
-            StateManager.addMessage(modeName + " 你来到了" + (dest ? dest.name : destKey) + "，花了¥" + price + "。", "info");
+            StateManager.addMessage(
+              modeName +
+                " 你来到了" +
+                (dest ? dest.name : destKey) +
+                "，花了¥" +
+                price +
+                "。",
+              "info",
+            );
             if (typeof consumeAP === "function") consumeAP(ap);
             renderAll();
           });
@@ -95446,16 +95680,67 @@ function renderPgStatTrain(state, content) {
 
   // 整容入口（医院/美容院）
   var trainings = [
-    { id: "train_physique", name: "🏋️ 健身房", stat: "physique", statLabel: "体质", basePrice: 50, priceStep: 30, gain: [1, 3] },
-    { id: "train_intelligence", name: "📚 自习室", stat: "intelligence", statLabel: "智力", basePrice: 60, priceStep: 40, gain: [1, 3] },
-    { id: "train_agility", name: "🏃 跑步训练", stat: "agility", statLabel: "敏捷", basePrice: 40, priceStep: 25, gain: [1, 3] },
-    { id: "train_ability", name: "🧘 冥想训练", stat: "mental", statLabel: "能力", basePrice: 70, priceStep: 50, gain: [1, 2] },
-    { id: "train_charm_grooming", name: "💇 形象设计", stat: "charm", statLabel: "颜值", basePrice: 100, priceStep: 80, gain: [1, 3] },
-    { id: "train_charm_surgery", name: "💉 整容手术", stat: "charm", statLabel: "颜值", basePrice: 2000, priceStep: 1500, gain: [5, 15], risky: true },
+    {
+      id: "train_physique",
+      name: "🏋️ 健身房",
+      stat: "physique",
+      statLabel: "体质",
+      basePrice: 50,
+      priceStep: 30,
+      gain: [1, 3],
+    },
+    {
+      id: "train_intelligence",
+      name: "📚 自习室",
+      stat: "intelligence",
+      statLabel: "智力",
+      basePrice: 60,
+      priceStep: 40,
+      gain: [1, 3],
+    },
+    {
+      id: "train_agility",
+      name: "🏃 跑步训练",
+      stat: "agility",
+      statLabel: "敏捷",
+      basePrice: 40,
+      priceStep: 25,
+      gain: [1, 3],
+    },
+    {
+      id: "train_ability",
+      name: "🧘 冥想训练",
+      stat: "mental",
+      statLabel: "能力",
+      basePrice: 70,
+      priceStep: 50,
+      gain: [1, 2],
+    },
+    {
+      id: "train_charm_grooming",
+      name: "💇 形象设计",
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 100,
+      priceStep: 80,
+      gain: [1, 3],
+    },
+    {
+      id: "train_charm_surgery",
+      name: "💉 整容手术",
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 2000,
+      priceStep: 1500,
+      gain: [5, 15],
+      risky: true,
+    },
   ];
 
-  var html = '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
-  html += '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
+  var html =
+    '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
 
   trainings.forEach(function (t) {
@@ -95463,26 +95748,55 @@ function renderPgStatTrain(state, content) {
     var price = t.basePrice + count * t.priceStep;
     var curVal = p[t.stat] || 0;
     var canAfford = (state.resources.cash || 0) >= price;
-    html += '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
-    html += '<div style="font-weight:600;font-size:13px;">' + t.name + '</div>';
-    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' + t.statLabel + '：' + curVal + '</div>';
-    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">已训练 ' + count + ' 次</div>';
-    html += '<div style="font-size:12px;color:' + (canAfford ? 'var(--success)' : 'var(--danger)') + ';margin-top:4px;">价格：¥' + price.toLocaleString() + '</div>';
+    html +=
+      '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
+    html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
+      t.statLabel +
+      "：" +
+      curVal +
+      "</div>";
+    html +=
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">已训练 ' +
+      count +
+      " 次</div>";
+    html +=
+      '<div style="font-size:12px;color:' +
+      (canAfford ? "var(--success)" : "var(--danger)") +
+      ';margin-top:4px;">价格：¥' +
+      price.toLocaleString() +
+      "</div>";
     if (t.risky) {
-      html += '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（颜值-5/健康-15）</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（颜值-5/健康-15）</div>';
     }
-    html += '<button onclick="window.__doTrain(\'' + t.id + '\')" ' + (canAfford ? '' : 'disabled') + ' style="' +
-      'margin-top:6px;padding:6px 10px;background:' + (canAfford ? 'var(--accent)' : 'var(--bg-secondary)') + ';' +
-      'color:' + (canAfford ? 'white' : 'var(--text-muted)') + ';border:none;border-radius:4px;cursor:' + (canAfford ? 'pointer' : 'not-allowed') + ';font-size:12px;">' +
-      (canAfford ? '训练' : '现金不足') + '</button>';
-    html += '</div>';
+    html +=
+      "<button onclick=\"window.__doTrain('" +
+      t.id +
+      "')\" " +
+      (canAfford ? "" : "disabled") +
+      ' style="' +
+      "margin-top:6px;padding:6px 10px;background:" +
+      (canAfford ? "var(--accent)" : "var(--bg-secondary)") +
+      ";" +
+      "color:" +
+      (canAfford ? "white" : "var(--text-muted)") +
+      ";border:none;border-radius:4px;cursor:" +
+      (canAfford ? "pointer" : "not-allowed") +
+      ';font-size:12px;">' +
+      (canAfford ? "训练" : "现金不足") +
+      "</button>";
+    html += "</div>";
   });
-  html += '</div>';
+  html += "</div>";
 
   // 整容说明
-  html += '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
-  html += '💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时颜值-5、健康-15、心情-10。建议攒够钱一次到位，避免反复失败。';
-  html += '</div>';
+  html +=
+    '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
+  html +=
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时颜值-5、健康-15、心情-10。建议攒够钱一次到位，避免反复失败。";
+  html += "</div>";
 
   content.innerHTML = html;
 }
@@ -95493,12 +95807,55 @@ window.__doTrain = function (trainId) {
   var p = state.player;
   var flags = state.flags || (state.flags = {});
   var trainings = {
-    train_physique: { stat: "physique", statLabel: "体质", basePrice: 50, priceStep: 30, gain: [1, 3], apCost: 6 },
-    train_intelligence: { stat: "intelligence", statLabel: "智力", basePrice: 60, priceStep: 40, gain: [1, 3], apCost: 6 },
-    train_agility: { stat: "agility", statLabel: "敏捷", basePrice: 40, priceStep: 25, gain: [1, 3], apCost: 5 },
-    train_ability: { stat: "mental", statLabel: "能力", basePrice: 70, priceStep: 50, gain: [1, 2], apCost: 5 },
-    train_charm_grooming: { stat: "charm", statLabel: "颜值", basePrice: 100, priceStep: 80, gain: [1, 3], apCost: 4 },
-    train_charm_surgery: { stat: "charm", statLabel: "颜值", basePrice: 2000, priceStep: 1500, gain: [5, 15], apCost: 8, risky: true },
+    train_physique: {
+      stat: "physique",
+      statLabel: "体质",
+      basePrice: 50,
+      priceStep: 30,
+      gain: [1, 3],
+      apCost: 6,
+    },
+    train_intelligence: {
+      stat: "intelligence",
+      statLabel: "智力",
+      basePrice: 60,
+      priceStep: 40,
+      gain: [1, 3],
+      apCost: 6,
+    },
+    train_agility: {
+      stat: "agility",
+      statLabel: "敏捷",
+      basePrice: 40,
+      priceStep: 25,
+      gain: [1, 3],
+      apCost: 5,
+    },
+    train_ability: {
+      stat: "mental",
+      statLabel: "能力",
+      basePrice: 70,
+      priceStep: 50,
+      gain: [1, 2],
+      apCost: 5,
+    },
+    train_charm_grooming: {
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 100,
+      priceStep: 80,
+      gain: [1, 3],
+      apCost: 4,
+    },
+    train_charm_surgery: {
+      stat: "charm",
+      statLabel: "颜值",
+      basePrice: 2000,
+      priceStep: 1500,
+      gain: [5, 15],
+      apCost: 8,
+      risky: true,
+    },
   };
   var t = trainings[trainId];
   if (!t) return;
@@ -95512,18 +95869,34 @@ window.__doTrain = function (trainId) {
   flags["_trainCount_" + trainId] = count + 1;
 
   // 风险检查（整容）
-  if (t.risky && Math.random() < 0.20) {
+  if (t.risky && Math.random() < 0.2) {
     p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
-    StateManager.addMessage("💉 整容失败！颜值-5，健康-15，心情-10。 surgeon 技术不行...", "error");
+    StateManager.addMessage(
+      "💉 整容失败！颜值-5，健康-15，心情-10。 surgeon 技术不行...",
+      "error",
+    );
   } else {
     // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
-    var baseGain = t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
-    var crit = Math.random() < 0.10 ? 2 : 0;
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var crit = Math.random() < 0.1 ? 2 : 0;
     var totalGain = baseGain + crit;
     p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
-    var msg = "✨ " + ({physique:'🏋️ 健身房',intelligence:'📚 自习室',agility:'🏃 跑步训练',mental:'🧘 冥想训练',charm:'💇 形象设计/整容'}[t.stat] || '训练') + " " + t.statLabel + "+" + totalGain;
+    var msg =
+      "✨ " +
+      ({
+        physique: "🏋️ 健身房",
+        intelligence: "📚 自习室",
+        agility: "🏃 跑步训练",
+        mental: "🧘 冥想训练",
+        charm: "💇 形象设计/整容",
+      }[t.stat] || "训练") +
+      " " +
+      t.statLabel +
+      "+" +
+      totalGain;
     if (crit > 0) msg += "（爆击！）";
     StateManager.addMessage(msg, "success");
   }
@@ -105518,7 +105891,8 @@ function startScenarioGame(scenarioId) {
   state.player.agility = scenario.stats.agility || 24;
   state.player.mental = scenario.stats.mental || 26;
   state.player.charm = scenario.stats.charm || 20; // v3.0 颜值
-  state.player.morality = scenario.morality !== undefined ? scenario.morality : 50; // v3.0 道德
+  state.player.morality =
+    scenario.morality !== undefined ? scenario.morality : 50; // v3.0 道德
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
@@ -106156,7 +106530,8 @@ function startNewGame() {
   initializePrices();
 
   // v3.2 修复: 记录第1天日初现金（后续日由 day_increment 管线步骤管理）
-  StateManager.getState().flags._dayStartCash = StateManager.getState().resources.cash || 0;
+  StateManager.getState().flags._dayStartCash =
+    StateManager.getState().resources.cash || 0;
 
   // 初始化企业命运系统
 
