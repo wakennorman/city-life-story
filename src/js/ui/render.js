@@ -2428,29 +2428,29 @@ function renderMapTab(state, parent) {
         padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
         border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
         <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥2 · 仅相邻地点</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快到非商业区</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥3 · 2跳内可达</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">比步行快、比打车便宜</div>
       </button>
       <button class="transit-btn" data-mode="metro" style="
         padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
         border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
         <div style="font-weight:600;color:var(--accent);">🚇 地铁</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 仅地铁沿线</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院等</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 地铁8站覆盖</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院/城中村等</div>
       </button>
       <button class="transit-btn" data-mode="taxi" style="
         padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
         border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
         <div style="font-weight:600;color:var(--warning);">🚕 打车</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥15-50 按距离</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">可达任何已探索地点</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥10-40 按距离</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快的点对点交通</div>
       </button>
     </div>
     <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
   `;
   container.appendChild(transitWrap);
 
-  // v3.0 地铁沿线大站定义
+  // v3.2 地铁沿线大站定义（扩展：新增城中村+批发市场）
   const METRO_STATIONS = [
     "techPark",
     "commercialDist",
@@ -2458,11 +2458,12 @@ function renderMapTab(state, parent) {
     "school",
     "trainingCenter",
     "entertainment",
+    "slum", // v3.2 新增：城中村地铁站（城市中心扩张）
+    "wholesaleMarket", // v3.2 新增：批发市场站（物流枢纽）
   ];
-  // v3.0 共享单车仅可到相邻地点（TRAVEL_GRAPH 1 跳）
-  // 打车可到任何 reachable 已探索地点
-
-  // 绑定交通方式按钮
+  // v3.2 共享单车扩展到2跳内（不仅相邻地点），价格¥2→¥3，AP-8→AP-6
+  // 打车价格下调：¥15-50→¥10-40
+  // 打包绑定交通方式按钮
   setTimeout(() => {
     document.querySelectorAll(".transit-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -2474,9 +2475,28 @@ function renderMapTab(state, parent) {
         let priceInfo = "";
         let apInfo = "";
         if (mode === "bike") {
-          available = reachableList.slice(); // 仅相邻地点
-          priceInfo = "¥2/次";
-          apInfo = "AP -8（骑行耗时）";
+          // v3.2 共享单车扩展到2跳内
+          var bikeReachable = [];
+          var bikeQueue = [locKey];
+          var bikeVisited = {};
+          bikeVisited[locKey] = 0;
+          while (bikeQueue.length) {
+            var cur = bikeQueue.shift();
+            var dist = bikeVisited[cur];
+            if (dist >= 2) continue;
+            var neighbors = getReachableLocations(cur);
+            for (var ni = 0; ni < neighbors.length; ni++) {
+              var nb = neighbors[ni];
+              if (bikeVisited[nb] !== undefined) continue;
+              bikeVisited[nb] = dist + 1;
+              if (nb !== locKey && bikeReachable.indexOf(nb) < 0)
+                bikeReachable.push(nb);
+              bikeQueue.push(nb);
+            }
+          }
+          available = bikeReachable.slice();
+          priceInfo = "¥3/次";
+          apInfo = "AP -6（骑行适中）";
         } else if (mode === "metro") {
           available = reachableList.filter(
             (k) => METRO_STATIONS.indexOf(k) >= 0,
@@ -2491,7 +2511,7 @@ function renderMapTab(state, parent) {
           apInfo = "AP -5（地铁最快）";
         } else if (mode === "taxi") {
           available = reachableList.slice();
-          priceInfo = "¥15-50（按距离）";
+          priceInfo = "¥10-40（按距离）";
           apInfo = "AP -3（最快但最贵）";
         }
         if (available.length === 0) {
@@ -2515,11 +2535,11 @@ function renderMapTab(state, parent) {
               if (!d) return "";
               const price =
                 mode === "bike"
-                  ? 2
+                  ? 3 // v3.2 从¥2→¥3
                   : mode === "metro"
                     ? 4
-                    : 15 + Math.floor(Math.random() * 36);
-              const ap = mode === "bike" ? 8 : mode === "metro" ? 5 : 3;
+                    : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
+              const ap = mode === "bike" ? 6 : mode === "metro" ? 5 : 3; // v3.2 单车AP-8→AP-6
               return (
                 '<button class="transit-go-btn" data-dest="' +
                 k +
