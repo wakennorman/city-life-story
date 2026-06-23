@@ -851,7 +851,7 @@ function renderSandboxConfig() {
     "</div>" +
     // 属性
     '<div class="sandbox-section">' +
-    '<div class="sandbox-section-title">💪 基础属性 <span class="sandbox-points-left" id="sandbox-talent-pts">天赋点剩余：' +
+    '<div class="sandbox-section-title">💪 属性 <span class="sandbox-points-left" id="sandbox-talent-pts">天赋点剩余：' +
     talentRemaining +
     "</span></div>" +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">四项总和上限' +
@@ -1558,11 +1558,11 @@ function showCompareResult() {
 
   // 属性对比
   bodyHtml +=
-    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">💪 基础属性</h4>' +
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">💪 属性</h4>' +
     diffVal("体质", s1.player.physique || 0, s2.player.physique || 0) +
     diffVal("智力", s1.player.intelligence || 0, s2.player.intelligence || 0) +
     diffVal("敏捷", s1.player.agility || 0, s2.player.agility || 0) +
-    diffVal("心智", s1.player.mental || 0, s2.player.mental || 0) +
+    diffVal("能力", s1.player.mental || 0, s2.player.mental || 0) +
     diffVal("名气", s1.player.fame || 0, s2.player.fame || 0);
 
   // 需求状态对比

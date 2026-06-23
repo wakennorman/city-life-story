@@ -867,7 +867,7 @@ function addStreetExtras(state, actions) {
     });
   }
 
-  // === 确立人生梦想（公园/家里才显示，未设定梦想时） ===
+  // === 确立/更改人生梦想（首次强制在游戏开始弹窗，后续可在公园/家里更改） ===
   var hasDream = state.flags && state.flags._dreamId;
   var atRestfulLoc =
     state.trade.currentLocation === "park" ||
@@ -878,6 +878,28 @@ function addStreetExtras(state, actions) {
       name: "确立人生目标",
       desc: "在这座城市，你想要什么？选定一个方向，脚踏实地去努力。",
       icon: "🌟",
+      apCost: 5,
+      handler: function () {
+        showDreamSelectModal();
+      },
+    });
+  }
+
+  // v3.2 人生目标更改入口（已有梦想时，可在任何地点随时查看和更改）
+  if (hasDream) {
+    actions.push({
+      id: "change_dream",
+      name: "🎯 更改人生目标",
+      desc:
+        "当前目标：" +
+        (function () {
+          var d =
+            typeof getCurrentDream === "function"
+              ? getCurrentDream(state)
+              : null;
+          return d ? d.icon + " " + d.name : "";
+        })(),
+      icon: "🎯",
       apCost: 5,
       handler: function () {
         showDreamSelectModal();

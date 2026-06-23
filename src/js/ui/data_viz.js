@@ -423,11 +423,7 @@ function drawRadarChart(ctx, state, x, y, w, h, mode, overlayAttrs) {
   ctx.fillStyle = "#3d3a35";
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(
-    mode === "street" ? "💪 基础属性" : "🏢 职场属性",
-    centerX,
-    y + 16,
-  );
+  ctx.fillText(mode === "street" ? "💪 属性" : "🏢 职场属性", centerX, y + 16);
   ctx.textAlign = "left";
 
   // 属性数据
@@ -773,7 +769,7 @@ function renderGrowthTab(state, container) {
   // ---- 3. 属性雷达图 + 条形图侧边栏 ----
   var radarSection = makeCard(
     '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">' +
-      (isCorporate ? "🏢 职场属性雷达" : "💪 基础属性雷达") +
+      (isCorporate ? "🏢 职场属性雷达" : "💪 属性雷达") +
       "</h3>",
     { noMargin: true },
   );

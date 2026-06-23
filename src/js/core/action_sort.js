@@ -91,8 +91,8 @@
     // === 职业发展 ===
     corpteam_view: "career",
     corp_team_view: "career",
-    // v3.0：start_business 移到 other 分类
-    start_business: "other",
+    // v3.2：start_business（摆地摊创业）从 other 移到 work 分类（用户要求归类到短期临时工作）
+    start_business: "work",
 
     // === 社交休闲 ===
     call_home: "social",
@@ -112,6 +112,7 @@
     study: "education",
     set_dream: "other", // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
     view_dream: "other",
+    change_dream: "other", // v3.2：更改人生目标
 
     // === 购物装备 ===
     buy_ingredients: "shopping",
@@ -203,8 +204,8 @@
     // loan 保持默认50
 
     // 职业发展
-    // v3.0：start_business（摆地摊创业）从 work 分类移到 other 分类
-    start_business: 10, // 摆地摊创业（街头→创业的跳板，归"其他"）
+    // v3.2：start_business（摆地摊创业）从 other 移到 work，放在短期工作靠下位置
+    start_business: 50, // 摆地摊创业（归"短期临时工作"）
     // corp_* 和 startup_* 保持默认50
   };
 

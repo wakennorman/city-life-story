@@ -232,7 +232,7 @@
       <aside id="sidebar">
         <!-- 街头属性（Phase 1） -->
         <div id="street-stats-section" class="sidebar-section">
-          <h3>💪 基础属性</h3>
+          <h3>💪 属性</h3>
           <div class="stat-row" id="stat-physique">
             <span class="stat-label">体质</span>
             <div class="stat-bar-wrap">
@@ -1822,8 +1822,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     // === 职业发展 ===
     corpteam_view: "career",
     corp_team_view: "career",
-    // v3.0：start_business 移到 other 分类
-    start_business: "other",
+    // v3.2：start_business（摆地摊创业）从 other 移到 work 分类（用户要求归类到短期临时工作）
+    start_business: "work",
 
     // === 社交休闲 ===
     call_home: "social",
@@ -1843,6 +1843,7 @@ function addDailyTransaction(state, type, category, amount, description) {
     study: "education",
     set_dream: "other", // v3.0：从 education 移到 other，归类到个人成长Tab的目标子项
     view_dream: "other",
+    change_dream: "other", // v3.2：更改人生目标
 
     // === 购物装备 ===
     buy_ingredients: "shopping",
@@ -1934,8 +1935,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     // loan 保持默认50
 
     // 职业发展
-    // v3.0：start_business（摆地摊创业）从 work 分类移到 other 分类
-    start_business: 10, // 摆地摊创业（街头→创业的跳板，归"其他"）
+    // v3.2：start_business（摆地摊创业）从 other 移到 work，放在短期工作靠下位置
+    start_business: 50, // 摆地摊创业（归"短期临时工作"）
     // corp_* 和 startup_* 保持默认50
   };
 
@@ -50454,7 +50455,7 @@ function addStreetExtras(state, actions) {
     });
   }
 
-  // === 确立人生梦想（公园/家里才显示，未设定梦想时） ===
+  // === 确立/更改人生梦想（首次强制在游戏开始弹窗，后续可在公园/家里更改） ===
   var hasDream = state.flags && state.flags._dreamId;
   var atRestfulLoc =
     state.trade.currentLocation === "park" ||
@@ -50465,6 +50466,23 @@ function addStreetExtras(state, actions) {
       name: "确立人生目标",
       desc: "在这座城市，你想要什么？选定一个方向，脚踏实地去努力。",
       icon: "🌟",
+      apCost: 5,
+      handler: function () {
+        showDreamSelectModal();
+      },
+    });
+  }
+
+  // v3.2 人生目标更改入口（已有梦想时，可在任何地点随时查看和更改）
+  if (hasDream) {
+    actions.push({
+      id: "change_dream",
+      name: "🎯 更改人生目标",
+      desc: "当前目标：" + (function() {
+        var d = typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
+        return d ? d.icon + " " + d.name : "";
+      })(),
+      icon: "🎯",
       apCost: 5,
       handler: function () {
         showDreamSelectModal();
@@ -89557,7 +89575,7 @@ function drawRadarChart(ctx, state, x, y, w, h, mode, overlayAttrs) {
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(
-    mode === "street" ? "💪 基础属性" : "🏢 职场属性",
+    mode === "street" ? "💪 属性" : "🏢 职场属性",
     centerX,
     y + 16,
   );
@@ -89906,7 +89924,7 @@ function renderGrowthTab(state, container) {
   // ---- 3. 属性雷达图 + 条形图侧边栏 ----
   var radarSection = makeCard(
     '<h3 style="margin:0 0 12px;font-size:14px;color:var(--text-primary);">' +
-      (isCorporate ? "🏢 职场属性雷达" : "💪 基础属性雷达") +
+      (isCorporate ? "🏢 职场属性雷达" : "💪 属性雷达") +
       "</h3>",
     { noMargin: true },
   );
@@ -92710,7 +92728,8 @@ function renderMapTab(state, parent) {
               var nb = neighbors[ni];
               if (bikeVisited[nb] !== undefined) continue;
               bikeVisited[nb] = dist + 1;
-              if (nb !== locKey && bikeReachable.indexOf(nb) < 0) bikeReachable.push(nb);
+              if (nb !== locKey && bikeReachable.indexOf(nb) < 0)
+                bikeReachable.push(nb);
               bikeQueue.push(nb);
             }
           }
@@ -106220,7 +106239,7 @@ function renderSandboxConfig() {
     "</div>" +
     // 属性
     '<div class="sandbox-section">' +
-    '<div class="sandbox-section-title">💪 基础属性 <span class="sandbox-points-left" id="sandbox-talent-pts">天赋点剩余：' +
+    '<div class="sandbox-section-title">💪 属性 <span class="sandbox-points-left" id="sandbox-talent-pts">天赋点剩余：' +
     talentRemaining +
     "</span></div>" +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">四项总和上限' +
@@ -106927,11 +106946,11 @@ function showCompareResult() {
 
   // 属性对比
   bodyHtml +=
-    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">💪 基础属性</h4>' +
+    '<h4 style="margin:16px 0 8px;color:var(--text-muted);">💪 属性</h4>' +
     diffVal("体质", s1.player.physique || 0, s2.player.physique || 0) +
     diffVal("智力", s1.player.intelligence || 0, s2.player.intelligence || 0) +
     diffVal("敏捷", s1.player.agility || 0, s2.player.agility || 0) +
-    diffVal("心智", s1.player.mental || 0, s2.player.mental || 0) +
+    diffVal("能力", s1.player.mental || 0, s2.player.mental || 0) +
     diffVal("名气", s1.player.fame || 0, s2.player.fame || 0);
 
   // 需求状态对比
