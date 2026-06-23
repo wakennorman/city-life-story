@@ -1743,7 +1743,10 @@ function addTempleActions(state, actions) {
         flags._luckBonus = (flags._luckBonus || 0) + 1;
         flags._templePrayDay = day;
         flags.moralGoodChoices = (flags.moralGoodChoices || 0) + 1;
-        StateManager.addMessage("🙏 你在佛像前虔诚跪拜，内心平静了些。心情+8，运气+1。", "success");
+        StateManager.addMessage(
+          "🙏 你在佛像前虔诚跪拜，内心平静了些。心情+8，运气+1。",
+          "success",
+        );
         consumeAP(3);
         renderAll();
       },
@@ -1762,7 +1765,10 @@ function addTempleActions(state, actions) {
         state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 15);
         state.player.mental = Math.min(100, (state.player.mental || 0) + 2);
         flags._templeMeditateDay = day;
-        StateManager.addMessage("🧘 一炷香后，杂念渐息，精神焕发。疲劳-15，心智+2。", "success");
+        StateManager.addMessage(
+          "🧘 一炷香后，杂念渐息，精神焕发。疲劳-15，心智+2。",
+          "success",
+        );
         consumeAP(5);
         renderAll();
       },
@@ -1787,7 +1793,10 @@ function addTempleActions(state, actions) {
         flags.moralGoodChoices = (flags.moralGoodChoices || 0) + 1;
         state.player.fame = Math.min(100, (state.player.fame || 0) + 2);
         flags._templeDonateDay = day;
-        StateManager.addMessage("💰 你捐了¥50香火钱，方丈合十致谢。运气+3，道德+1，名气+2。", "success");
+        StateManager.addMessage(
+          "💰 你捐了¥50香火钱，方丈合十致谢。运气+3，道德+1，名气+2。",
+          "success",
+        );
         consumeAP(2);
         renderAll();
       },
@@ -1810,19 +1819,39 @@ function addTempleActions(state, actions) {
         state.resources.cash -= 20;
         flags._templeDivinationDay = day;
         var rolls = [
-          { name: "上上签", desc: "万事亨通", buff: { luck: 5, happiness: 10 } },
+          {
+            name: "上上签",
+            desc: "万事亨通",
+            buff: { luck: 5, happiness: 10 },
+          },
           { name: "上签", desc: "吉星高照", buff: { luck: 3, happiness: 5 } },
           { name: "中签", desc: "平平淡淡", buff: { luck: 1 } },
-          { name: "下签", desc: "宜守不宜攻", buff: { luck: -2, happiness: -3 } },
-          { name: "下下签", desc: "今日宜静", buff: { luck: -3, happiness: -5 } },
+          {
+            name: "下签",
+            desc: "宜守不宜攻",
+            buff: { luck: -2, happiness: -3 },
+          },
+          {
+            name: "下下签",
+            desc: "今日宜静",
+            buff: { luck: -3, happiness: -5 },
+          },
         ];
         var r = rolls[Math.floor(Math.random() * rolls.length)];
         flags._divinationResult = r.name;
         flags._divinationExpireDay = day + 1;
         flags._divinationBuff = r.buff;
-        if (r.buff.luck) flags._luckBonus = (flags._luckBonus || 0) + r.buff.luck;
-        if (r.buff.happiness) state.needs.happiness = Math.max(0, Math.min(100, (state.needs.happiness || 0) + r.buff.happiness));
-        StateManager.addMessage("🔖 你摇出一支【" + r.name + "】：" + r.desc + "。效果持续到明日。", r.name.indexOf("下") >= 0 ? "warning" : "success");
+        if (r.buff.luck)
+          flags._luckBonus = (flags._luckBonus || 0) + r.buff.luck;
+        if (r.buff.happiness)
+          state.needs.happiness = Math.max(
+            0,
+            Math.min(100, (state.needs.happiness || 0) + r.buff.happiness),
+          );
+        StateManager.addMessage(
+          "🔖 你摇出一支【" + r.name + "】：" + r.desc + "。效果持续到明日。",
+          r.name.indexOf("下") >= 0 ? "warning" : "success",
+        );
         consumeAP(2);
         renderAll();
       },

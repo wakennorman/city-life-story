@@ -157,7 +157,10 @@
       (state.resources?.cash || 0) +
       (state.resources?.bankBalance || 0) -
       (state.resources?.debt || 0);
-    var wealthCoins = Math.max(0, Math.floor(Math.log10(Math.max(1, wealth + 1)) * 3));
+    var wealthCoins = Math.max(
+      0,
+      Math.floor(Math.log10(Math.max(1, wealth + 1)) * 3),
+    );
     var moralGood = state.flags?.moralGoodChoices || 0;
     var moralBad = state.flags?.moralBadChoices || 0;
     var moralCoins = Math.max(-10, moralGood - moralBad);
@@ -181,7 +184,12 @@
     var cur = _readBalance();
     var next = cur + earned.total;
     _writeBalance(next);
-    return { before: cur, earned: earned.total, after: next, breakdown: earned.breakdown };
+    return {
+      before: cur,
+      earned: earned.total,
+      after: next,
+      breakdown: earned.breakdown,
+    };
   }
 
   // ====== 商店数据 ======
@@ -192,7 +200,8 @@
       balance: balance,
       unlocks: HERITAGE_UNLOCKS.map(function (u) {
         var isUnlocked = unlocked.indexOf(u.id) >= 0;
-        var mutualHeld = u.mutualExclusion && unlocked.indexOf(u.mutualExclusion) >= 0;
+        var mutualHeld =
+          u.mutualExclusion && unlocked.indexOf(u.mutualExclusion) >= 0;
         return {
           id: u.id,
           name: u.name,
@@ -212,9 +221,12 @@
   // ====== 购买解锁 ======
   function spendHeritageCoin(unlockId) {
     var shop = getHeritageShop();
-    var item = shop.unlocks.find(function (u) { return u.id === unlockId; });
+    var item = shop.unlocks.find(function (u) {
+      return u.id === unlockId;
+    });
     if (!item) return { ok: false, msg: "未知解锁项", balance: shop.balance };
-    if (item.unlocked) return { ok: false, msg: "已解锁", balance: shop.balance };
+    if (item.unlocked)
+      return { ok: false, msg: "已解锁", balance: shop.balance };
     if (item.blockedByMutual)
       return { ok: false, msg: "与已解锁的互斥项冲突", balance: shop.balance };
     if (!item.affordable)

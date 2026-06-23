@@ -1075,8 +1075,10 @@ function renderTabBar(state) {
       // v3.0 修复：创业Tab 在街头阶段也显示（即便未注册公司），
       // 让玩家从一开始就知道有创业系统。点击后 renderStartupTab 会显示注册条件引导。
       // 仅在玩家进入公司阶段且未自己创业时隐藏（避免与 corp Tab 重复）
-      if (state.player.phase === "corporate" &&
-          (!state.startup || state.startup.status === "none")) {
+      if (
+        state.player.phase === "corporate" &&
+        (!state.startup || state.startup.status === "none")
+      ) {
         btn.style.display = "none";
       } else {
         btn.style.display = "";
@@ -2430,9 +2432,9 @@ function renderMapTab(state, parent) {
     park: { x: 50, y: 62 },
     school: { x: 42, y: 72 },
     trainingCenter: { x: 55, y: 85 },
-    suburb: { x: 75, y: 70 },        // 居住区（右下）
-    entertainment: { x: 65, y: 80 },  // 娱乐区（中下）
-    temple: { x: 18, y: 75 },         // 寺庙（左下）
+    suburb: { x: 75, y: 70 }, // 居住区（右下）
+    entertainment: { x: 65, y: 80 }, // 娱乐区（中下）
+    temple: { x: 18, y: 75 }, // 寺庙（左下）
   };
 
   // SVG连线
@@ -2626,7 +2628,9 @@ function renderTradeTab(state, parent) {
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
-  const goodsList =
+  // v3.0 BUGFIX: 原为 const goodsList，但下方 SortUtils.sortInteractiveList 会重新赋值，
+  // 触发 "Assignment to constant variable" 错误导致整个交易Tab崩溃。改为 let。
+  let goodsList =
     typeof getAvailableGoodsAtLocation === "function"
       ? getAvailableGoodsAtLocation(locKey, state)
       : typeof GOODS !== "undefined"

@@ -774,9 +774,13 @@ function settleDailyFinance(state) {
     }
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
       StateManager.addMessage(
-        "💸 村长债 +¥" + vdInterest + " 利息（日息" +
-          (vdRate * 100).toFixed(2) + "%，欠款¥" +
-          state.resources.villageDebt.toLocaleString() + "）",
+        "💸 村长债 +¥" +
+          vdInterest +
+          " 利息（日息" +
+          (vdRate * 100).toFixed(2) +
+          "%，欠款¥" +
+          state.resources.villageDebt.toLocaleString() +
+          "）",
         "warning",
       );
     }

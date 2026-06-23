@@ -687,7 +687,10 @@ function startScenarioGame(scenarioId) {
   }
 
   // === v3.0 P2-B-2 + P2-E-1：难度系统 + 传承币解锁（仅在玩家选择后生效）===
-  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+  if (
+    typeof applyDifficultyToState === "function" &&
+    window._selectedDifficulty
+  ) {
     applyDifficultyToState(state, window._selectedDifficulty);
   }
   if (typeof applyHeritageUnlocks === "function") {
@@ -1180,7 +1183,10 @@ function startSandboxGame() {
   StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
 
   // === v3.0 P2-B-2 + P2-E-1：沙盒模式也接入难度 + 传承币 ===
-  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+  if (
+    typeof applyDifficultyToState === "function" &&
+    window._selectedDifficulty
+  ) {
     applyDifficultyToState(state, window._selectedDifficulty);
   }
   if (typeof applyHeritageUnlocks === "function") {

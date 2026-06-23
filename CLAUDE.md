@@ -60,7 +60,7 @@
     - 修复"高亮框一直闪"bug（所有路径强制 cleanupHighlight）
     - 修复"点击任意处跳过"bug（tutorial-overlay 不可点击关闭）
     - 7 步引导逐步绑定：sidebar → content-area → 废品回收卡片 → 吃顿饭卡片 → 地图标签
-    - 新增 _confirmSkip 二次确认
+    - 新增 \_confirmSkip 二次确认
     - 行动卡片加 data-action-id 属性让引导能定位
   - **整合到剧本**：startScenarioGame / startSandboxGame / startNewGame 都调用 startTutorial，isTutorialDone() 检查 localStorage（清除浏览器算第一次玩）
   - **影响文件**：render.js / actions_extra.js / tutorial.js / modal.js

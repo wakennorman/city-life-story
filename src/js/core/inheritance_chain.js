@@ -330,13 +330,30 @@ function inheritCrisisPath(prevState) {
   var path = prevState?.flags?._crisis35Path;
   if (!path) return null;
   var pathMap = {
-    grind: { label: "再卷职场", statBonus: { mental: 3 }, note: "上辈子的卷王气质延续" },
-    civil: { label: "备考公", statBonus: { intelligence: 3 }, note: "上辈子埋首题海的余温" },
-    lie_flat: { label: "摆烂", statBonus: { happiness: 5 }, note: "上辈子的松弛感传承" },
+    grind: {
+      label: "再卷职场",
+      statBonus: { mental: 3 },
+      note: "上辈子的卷王气质延续",
+    },
+    civil: {
+      label: "备考公",
+      statBonus: { intelligence: 3 },
+      note: "上辈子埋首题海的余温",
+    },
+    lie_flat: {
+      label: "摆烂",
+      statBonus: { happiness: 5 },
+      note: "上辈子的松弛感传承",
+    },
   };
   var info = pathMap[path];
   if (!info) return null;
-  return { path: path, label: info.label, statBonus: info.statBonus, note: info.note };
+  return {
+    path: path,
+    label: info.label,
+    statBonus: info.statBonus,
+    note: info.note,
+  };
 }
 
 /**
@@ -351,7 +368,14 @@ function inheritMoralScore(prevState) {
     score: score,
     good: good,
     bad: bad,
-    label: score >= 10 ? "善人" : score >= 0 ? "普通人" : score >= -5 ? "小恶" : "恶人",
+    label:
+      score >= 10
+        ? "善人"
+        : score >= 0
+          ? "普通人"
+          : score >= -5
+            ? "小恶"
+            : "恶人",
     note: "前世业力 " + (score >= 0 ? "+" : "") + score + "，影响新周目幸运",
   };
 }

@@ -30,12 +30,12 @@
 - **设计参考**：《大多数》心态值分级 + BitLife 随机 buff
 - **实现**：新建 `addTempleActions(state, actions)` 函数（actions_extra.js），4 项行动每项每日冷却 1 次防滥用：
 
-  | 行动 | AP | 成本 | 效果 |
-  | ---- | -- | ---- | ---- |
-  | 🙏 祈福 | 3 | ¥10 | 心情+8/运气+1/道德+1 |
-  | 🧘 冥想 | 5 | 免费 | 疲劳-15/心智+2 |
-  | 💰 捐香火钱 | 2 | ¥50 | 运气+3/道德+1/名气+2 |
-  | 🔖 求签 | 2 | ¥20 | 随机 buff/debuff 24h（5档签：上上/上/中/下/下下） |
+  | 行动        | AP  | 成本 | 效果                                              |
+  | ----------- | --- | ---- | ------------------------------------------------- |
+  | 🙏 祈福     | 3   | ¥10  | 心情+8/运气+1/道德+1                              |
+  | 🧘 冥想     | 5   | 免费 | 疲劳-15/心智+2                                    |
+  | 💰 捐香火钱 | 2   | ¥50  | 运气+3/道德+1/名气+2                              |
+  | 🔖 求签     | 2   | ¥20  | 随机 buff/debuff 24h（5档签：上上/上/中/下/下下） |
 
 - **接入**：`addExtraActions` 在街头阶段调用 `addTempleActions`
 
@@ -68,12 +68,12 @@
 
 ### 文件变更清单
 
-| 文件 | 类型 | 行数 | 说明 |
-| ---- | ---- | ---- | ---- |
-| `src/js/ui/render.js` | 修改 | +14 | 修复1 地图3地点坐标 / 修复3 创业Tab / 修复4 createActionCard data-action-id |
-| `src/js/phase1/actions_extra.js` | 修改 | +110 | 修复2 addTempleActions 4 项行动 |
-| `src/js/ui/tutorial.js` | 修改 | +130 | 修复4 重写 showTutorialStep + waitForClick + _confirmSkip + 高亮增强 |
-| `src/js/ui/modal.js` | 修改 | +5 | 修复4 tutorial overlay 不可点击关闭 |
+| 文件                             | 类型 | 行数 | 说明                                                                        |
+| -------------------------------- | ---- | ---- | --------------------------------------------------------------------------- |
+| `src/js/ui/render.js`            | 修改 | +14  | 修复1 地图3地点坐标 / 修复3 创业Tab / 修复4 createActionCard data-action-id |
+| `src/js/phase1/actions_extra.js` | 修改 | +110 | 修复2 addTempleActions 4 项行动                                             |
+| `src/js/ui/tutorial.js`          | 修改 | +130 | 修复4 重写 showTutorialStep + waitForClick + \_confirmSkip + 高亮增强       |
+| `src/js/ui/modal.js`             | 修改 | +5   | 修复4 tutorial overlay 不可点击关闭                                         |
 
 **总计 ≈ 260 行**（远低于 1500 行护栏）
 
@@ -82,8 +82,7 @@
 - 4 个 JS `node --check` 全通过 ✅
 - 构建产物 `dist/index.html` 3587.1 KB（在 3.5-3.8MB 期望区间内）✅
 - grep 验证：寺庙行动 6 处 / 地图坐标 12 处 / 创业Tab可见 13 处 / 引导 waitForClick 27 处 / 行动卡片data属性 1 处 / tutorial overlay保护 4 处 ✅
->
-> ## 2026-06-23 — Review v3.0 P2 改进落地（吴八哥 / 高级开发工程师）
+  > ## 2026-06-23 — Review v3.0 P2 改进落地（吴八哥 / 高级开发工程师）
 
 **本次执行 SOP**：`memory/review-improve-v3.0.md` §四/§五/§六
 **本次会话产出**：2 个新模块 + 1 个 P0 经济 BUG 修复 + 3 处接线 + 文档同步，约 327 行代码改动，1 次 build，1 次 commit + push
@@ -100,11 +99,11 @@
 - **新建** `src/js/core/difficulty_system.js`（168 行）暴露 4 个 window 函数：`getDifficultyConfig` / `applyDifficultyToState` / `getDifficultyMultiplier` / `renderDifficultyPicker`
 - **3 档参数**（仅调衰减/惩罚/概率，不调收益曲线）：
 
-  | 档位 | 日息 | 中产税概率 | 事件惩罚 | 需求衰减 | 启动金 |
-  | ---- | ---- | --------- | ------- | ------- | ----- |
-  | 🍵 休闲 | 0.20% | 0.20 | ×0.70 | ×0.85 | +¥500 |
-  | ⚖️ 标准 | 0.35% | 0.35 | ×1.00 | ×1.00 | — |
-  | 🔥 困难 | 0.50% | 0.50 | ×1.30 | ×1.15 | — |
+  | 档位    | 日息  | 中产税概率 | 事件惩罚 | 需求衰减 | 启动金 |
+  | ------- | ----- | ---------- | -------- | -------- | ------ |
+  | 🍵 休闲 | 0.20% | 0.20       | ×0.70    | ×0.85    | +¥500  |
+  | ⚖️ 标准 | 0.35% | 0.35       | ×1.00    | ×1.00    | —      |
+  | 🔥 困难 | 0.50% | 0.50       | ×1.30    | ×1.15    | —      |
 
 - **接线**：`main.js::showScenarioSelect` 顶部插入难度选择器 + `startScenarioGame / startSandboxGame` 在进入游戏前调用 `applyDifficultyToState` + `applyHeritageUnlocks`
 - **消费点**：`skill_bonuses.js::settleDailyFinance` 读取 `dailyInterest` 乘数 / `review_improvements.js::checkWealthTaxTick` 读取 `wealthTaxProb` 乘数
@@ -117,14 +116,14 @@
 - **币发放公式**：成就数×2 + log10(净资产)×3 + 道德分×1 + 存活天数/50（向上取整）
 - **6 项解锁**（参考 Hades 红/绿互斥）：
 
-  | 解锁项 | 成本 | 效果 | 互斥 |
-  | ----- | ---- | ---- | ---- |
-  | 🍳 祖传秘方 | 50 | 开局多 2 个高级食谱 | 🆚 📚 |
-  | 📚 祖辈教诲 | 50 | 技能 XP +10% | 🆚 🍳 |
-  | 🤝 人脉引荐 | 80 | NPC 初始好感 +10 | 🆚 💰 |
-  | 💰 启动资金 | 80 | 开局现金 +¥2000 | 🆚 🤝 |
-  | 🛡️ 命格护佑 | 100 | 首次濒死回 50% 血 | 无 |
-  | 🎲 命运骰子 | 150 | 重开时多保留 1 装备 | 无 |
+  | 解锁项      | 成本 | 效果                | 互斥  |
+  | ----------- | ---- | ------------------- | ----- |
+  | 🍳 祖传秘方 | 50   | 开局多 2 个高级食谱 | 🆚 📚 |
+  | 📚 祖辈教诲 | 50   | 技能 XP +10%        | 🆚 🍳 |
+  | 🤝 人脉引荐 | 80   | NPC 初始好感 +10    | 🆚 💰 |
+  | 💰 启动资金 | 80   | 开局现金 +¥2000     | 🆚 🤝 |
+  | 🛡️ 命格护佑 | 100  | 首次濒死回 50% 血   | 无    |
+  | 🎲 命运骰子 | 150  | 重开时多保留 1 装备 | 无    |
 
 - **持久化**：localStorage 键 `__heritageCoins` / `__heritageUnlocks`，跨周目累积
 - **接线**：`modal.js::showGameOverModal` 在保存 inheritanceData 后调用 `awardHeritageCoins` 并显示获得数 / `main.js` 启动游戏前调用 `applyHeritageUnlocks`
@@ -142,16 +141,16 @@
 
 ### 文件变更清单
 
-| 文件 | 类型 | 行数 | 说明 |
-| ---- | ---- | ---- | ---- |
-| `src/js/core/difficulty_system.js` | 新建 | 168 | P2-B-2 难度分层系统 |
-| `src/js/core/heritage_coin.js` | 新建 | 224 | P2-E-1 传承币系统 |
-| `src/js/phase1/skill_bonuses.js` | 修改 | +37 | P0-BUGFIX 村长债复利 + 难度读取 |
-| `src/js/core/review_improvements.js` | 修改 | +5 | P2-B-2 中产税概率读难度 |
-| `src/js/core/inheritance_chain.js` | 修改 | +60 | P2-B-1 三项新继承字段 + applyInheritance |
-| `src/js/main.js` | 修改 | +22 | P2-B-2/P2-E-1 难度选择 UI + 启动接线 |
-| `src/js/ui/modal.js` | 修改 | +8 | P2-E-1 发放传承币 + 继承 3 字段写入 |
-| `src/index.html` | 修改 | +3 | 注册 2 个新 script |
+| 文件                                 | 类型 | 行数 | 说明                                     |
+| ------------------------------------ | ---- | ---- | ---------------------------------------- |
+| `src/js/core/difficulty_system.js`   | 新建 | 168  | P2-B-2 难度分层系统                      |
+| `src/js/core/heritage_coin.js`       | 新建 | 224  | P2-E-1 传承币系统                        |
+| `src/js/phase1/skill_bonuses.js`     | 修改 | +37  | P0-BUGFIX 村长债复利 + 难度读取          |
+| `src/js/core/review_improvements.js` | 修改 | +5   | P2-B-2 中产税概率读难度                  |
+| `src/js/core/inheritance_chain.js`   | 修改 | +60  | P2-B-1 三项新继承字段 + applyInheritance |
+| `src/js/main.js`                     | 修改 | +22  | P2-B-2/P2-E-1 难度选择 UI + 启动接线     |
+| `src/js/ui/modal.js`                 | 修改 | +8   | P2-E-1 发放传承币 + 继承 3 字段写入      |
+| `src/index.html`                     | 修改 | +3   | 注册 2 个新 script                       |
 
 **总计代码改动 ≈ 327 行**（远低于 1500 行护栏；2 个新模块均 ≤300 行）
 

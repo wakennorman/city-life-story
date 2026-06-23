@@ -68,7 +68,10 @@ function showModal({ title, body, buttons }) {
   // v3.0 修复：tutorial overlay 不允许点击空白处关闭
   // 旧版任何 modal 点击 overlay 空白都会 removeChild，导致 tutorial 被意外关掉、高亮残留
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay && !overlay.classList.contains("tutorial-overlay")) {
+    if (
+      e.target === overlay &&
+      !overlay.classList.contains("tutorial-overlay")
+    ) {
       try {
         document.body.removeChild(overlay);
       } catch (err) {
@@ -182,9 +185,14 @@ function showGameOverModal() {
     narrative: "",
     prevState: state, // 完整上局状态
     // v3.0 P2-B-1：3 个新继承字段
-    crisisPath: typeof inheritCrisisPath === "function" ? inheritCrisisPath(state) : null,
-    moralScore: typeof inheritMoralScore === "function" ? inheritMoralScore(state) : null,
-    peakAffinity: typeof inheritPeakAffinity === "function" ? inheritPeakAffinity(state) : null,
+    crisisPath:
+      typeof inheritCrisisPath === "function" ? inheritCrisisPath(state) : null,
+    moralScore:
+      typeof inheritMoralScore === "function" ? inheritMoralScore(state) : null,
+    peakAffinity:
+      typeof inheritPeakAffinity === "function"
+        ? inheritPeakAffinity(state)
+        : null,
   };
 
   // 计算继承现金
@@ -229,7 +237,7 @@ function showGameOverModal() {
         <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
       </table>
       ${badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + " 枚声誉徽章，下局可继承加成</p>" : ""}
-      ${heritageResult && heritageResult.earned > 0 ? '<p style="margin-top:8px;color:var(--success);font-size:13px;">🪙 本局获得 <strong>' + heritageResult.earned + '</strong> 枚传承币（累计余额 ' + heritageResult.after + '），可在主菜单→传承商店消费解锁下局福利</p>' : ""}
+      ${heritageResult && heritageResult.earned > 0 ? '<p style="margin-top:8px;color:var(--success);font-size:13px;">🪙 本局获得 <strong>' + heritageResult.earned + "</strong> 枚传承币（累计余额 " + heritageResult.after + "），可在主菜单→传承商店消费解锁下局福利</p>" : ""}
     `,
     buttons: [
       { text: "重新开始", cls: "btn-primary", callback: () => startNewGame() },

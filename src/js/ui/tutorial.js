@@ -286,7 +286,9 @@ function _attachWaitForClick(selector, steps, index, hint) {
         // 关闭当前 tutorial modal（如果有）
         const overlay = document.querySelector(".tutorial-overlay");
         if (overlay) {
-          try { overlay.parentNode.removeChild(overlay); } catch (err) {}
+          try {
+            overlay.parentNode.removeChild(overlay);
+          } catch (err) {}
         }
         // 推进下一步
         setTimeout(() => {
@@ -302,7 +304,9 @@ function _attachWaitForClick(selector, steps, index, hint) {
 
 function _clearWaitForClickListeners() {
   _waitForClickListeners.forEach(({ target, handler }) => {
-    try { target.removeEventListener("click", handler, { capture: true }); } catch (e) {}
+    try {
+      target.removeEventListener("click", handler, { capture: true });
+    } catch (e) {}
   });
   _waitForClickListeners = [];
 }
@@ -377,10 +381,10 @@ function highlightElement(selector) {
         const targetEl = document.querySelector(selector);
         if (targetEl) {
           const r = targetEl.getBoundingClientRect();
-          cur.style.top = (r.top - 6) + "px";
-          cur.style.left = (r.left - 6) + "px";
-          cur.style.width = (r.width + 12) + "px";
-          cur.style.height = (r.height + 12) + "px";
+          cur.style.top = r.top - 6 + "px";
+          cur.style.left = r.left - 6 + "px";
+          cur.style.width = r.width + 12 + "px";
+          cur.style.height = r.height + 12 + "px";
         }
       }
     };

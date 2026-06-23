@@ -100,11 +100,12 @@
     }
     // 启动资金缓冲（仅休闲档）
     if (cfg.startingCashBonus > 0 && state.resources) {
-      state.resources.cash = (state.resources.cash || 0) + cfg.startingCashBonus;
+      state.resources.cash =
+        (state.resources.cash || 0) + cfg.startingCashBonus;
       if (typeof StateManager !== "undefined" && StateManager.addMessage) {
         StateManager.addMessage(
           "🍵 休闲档启动金 +¥" + cfg.startingCashBonus + "，慢慢享受故事。",
-          "info"
+          "info",
         );
       }
     }
@@ -136,12 +137,17 @@
         k +
         '" onclick="window.__difficultyPickerSelect(\'' +
         k +
-        '\')" ' +
+        "')\" " +
         'style="flex:1;min-width:90px;padding:8px 6px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;cursor:pointer;font-size:13px;">' +
-        '<div style="font-size:18px;">' + d.icon + '</div>' +
-        '<div style="font-weight:600;margin-top:2px;">' + d.name + '</div>' +
+        '<div style="font-size:18px;">' +
+        d.icon +
+        "</div>" +
+        '<div style="font-weight:600;margin-top:2px;">' +
+        d.name +
+        "</div>" +
         '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">日息 ' +
-        (d.dailyInterestBase * 100).toFixed(2) + '%</div>' +
+        (d.dailyInterestBase * 100).toFixed(2) +
+        "%</div>" +
         "</button>";
     });
     html += "</div></div>";
