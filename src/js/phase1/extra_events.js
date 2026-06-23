@@ -770,7 +770,373 @@
         },
       ],
     },
-  ];
+    // ====== 突发意外事件 ======
+    {
+      id: "phone_stolen",
+      phase: "street",
+      icon: "📱",
+      title: "手机被偷了",
+      story:
+        "在拥挤的公交车上，你感觉口袋一轻——手机没了！那部手机虽然不值钱，但里面有你的通讯录、支付信息和各种账号。",
+      conditions: function (st) {
+        return st.player.day > 5 && st.resources.cash > 100;
+      },
+      choices: [
+        {
+          text: "🚓 报警挂失",
+          hint: "安全第一，花¥200补办",
+          cost: 200,
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 自己沿路找找",
+          hint: "花1AP碰运气",
+          apply: function (st) {
+            var found = Random.chance(0.3);
+            if (found) {
+              StateManager.addMessage(
+                "🙏 你沿着原路找回去，竟然在垃圾桶旁边找到了！虚惊一场。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😤 找了半天没找到，还耽误了时间。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😤 破财消灾，直接买二手",
+          hint: "¥500换个二手",
+          cost: 500,
+          apply: function (st) {
+            StateManager.addMessage(
+              "💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "landlord_visit",
+      phase: "street",
+      icon: "🏠",
+      title: "房东临时查房",
+      story:
+        "你正窝在出租屋里休息，突然传来急促的敲门声——房东来了！他皱着眉头扫了一圈屋里的情况，看来是要找茬涨房租。",
+      conditions: function (st) {
+        return st.player.day > 15 && !st.flags._landlordVisited;
+      },
+      choices: [
+        {
+          text: "🤝 好烟好茶招待",
+          hint: "花¥100缓和关系",
+          cost: 100,
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            StateManager.addMessage(
+              "🍵 你给房东递了根烟倒了杯茶。他脸色缓和了，临走说了句「小伙子懂事」。房租暂时不涨。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 据理力争，合同说话",
+          hint: "需要心智≥30",
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            if ((st.player.mental || 0) >= 30) {
+              StateManager.addMessage(
+                "📋 你拿出租房合同据理力争。房东理亏，嘟囔了几句走了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😰 你支支吾吾说不出个所以然，房东决定下个月涨租¥200。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😰 装可怜求情",
+          hint: "可能需要好感",
+          apply: function (st) {
+            st.flags._landlordVisited = true;
+            StateManager.addMessage(
+              "😢 你跟房东说最近确实困难。房东叹了口气：「我也是给人打工的，下不为例。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "street_fight",
+      phase: "street",
+      icon: "👊",
+      title: "街边冲突",
+      story:
+        "你路过小吃街时，几个人因为排队问题吵了起来。其中一个人推了你一把，差点把你推到路边的污水沟里。",
+      conditions: function (st) {
+        return st.player.day > 10 && Random.chance(0.5);
+      },
+      choices: [
+        {
+          text: "🛡️ 忍了，绕道走",
+          hint: "安全第一",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你绕了远路多花了10分钟。虽然憋屈，但没惹上麻烦。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 理论两句",
+          hint: "需要体质≥30",
+          apply: function (st) {
+            if ((st.player.physique || 0) >= 30) {
+              StateManager.addMessage(
+                "💪 你站直了身板盯着对方。对方看你不好惹，嘟囔着走开了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 你刚开口就被怼了回来。周围人都在看你，尴尬至极。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📞 报警",
+          hint: "让警察处理",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚓 警察来了之后人群散了。你做了笔录，耽误了半小时。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 机遇类事件 ======
+    {
+      id: "street_photographer",
+      phase: "street",
+      icon: "📸",
+      title: "偶遇街拍摄影师",
+      story:
+        "一个背着相机的年轻人叫住你：「你好，我在做城市纪实摄影项目。你的穿搭很有感觉，能给你拍几张照片吗？」",
+      conditions: function (st) {
+        return st.player.day > 20 && (st.player.fame || 0) < 50;
+      },
+      choices: [
+        {
+          text: "😊 大方配合",
+          hint: "名气+2，可能上本地公众号",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "📸 摄影师拍了几张照片，说会上传本地生活号。你感觉自己在城市里留了个印记。名气+2",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 跟他聊聊摄影",
+          hint: "可能学到新技能",
+          apply: function (st) {
+            StateManager.addMessage(
+              "📷 你们聊了半小时摄影。他说如果想学可以去找他，但需要自己有相机。",
+              "hint",
+            );
+          },
+        },
+        {
+          text: "🚶 婉拒，赶时间",
+          hint: "没损失",
+          apply: function (st) {
+            StateManager.addMessage("🚶 你摆了摆手，继续赶路。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "free_clinic",
+      phase: "street",
+      icon: "🏥",
+      title: "社区免费体检",
+      story:
+        "社区卫生服务中心贴出公告：本周有免费体检活动，包括血压、血糖、心电图等基础项目。平时去医院要花好几百呢。",
+      conditions: function (st) {
+        return (
+          st.player.day > 30 && ((st.needs && st.needs.health) || 100) < 90
+        );
+      },
+      choices: [
+        {
+          text: "✅ 去体检",
+          hint: "了解身体状况，免费",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._healthChecked = st.player.day;
+            StateManager.addMessage(
+              "🏥 体检结果：各项指标" +
+                (Random.chance(0.8) ? "基本正常" : "有些指标需要注意") +
+                "。心里踏实多了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 顺便咨询健康建议",
+          hint: "+1 体质经验",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._healthChecked = st.player.day;
+            if (st.player.physique)
+              st.player.physique = Math.min(100, st.player.physique + 1);
+            StateManager.addMessage(
+              "💪 医生给了你一些健康建议，你感觉身体状态有所改善。体质+1",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😴 懒得去",
+          hint: "错过免费机会",
+          apply: function (st) {
+            StateManager.addMessage(
+              "😴 你想着反正年轻没事，就没去。但心里还是有点虚。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 人情世故事件 ======
+    {
+      id: "old_friend_borrow",
+      phase: "street",
+      icon: "🤝",
+      title: "老同学借钱",
+      story:
+        "多年没联系的老同学突然在微信上找你：「兄弟最近手头紧，能借点钱周转一下吗？下个月发工资就还你。」你翻了下聊天记录，上次说话是两年前。",
+      conditions: function (st) {
+        return st.player.day > 50 && st.resources.cash > 2000;
+      },
+      choices: [
+        {
+          text: "💰 借¥500",
+          hint: "做好人，可能收不回",
+          cost: 500,
+          apply: function (st) {
+            var repaid = Random.chance(0.4);
+            if (repaid) {
+              st.resources.cash += 600;
+              StateManager.addMessage(
+                "🙏 老同学真的还了，还多给了¥100当利息。你心里暖暖的。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😤 一个月过去了，老同学再也没提还钱的事...",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💰 借¥2000",
+          hint: "大数目，高风险",
+          cost: 2000,
+          apply: function (st) {
+            var repaid = Random.chance(0.25);
+            if (repaid) {
+              st.resources.cash += 2500;
+              StateManager.addMessage(
+                "🎉 老同学按时还了钱，还请你吃了顿饭。好人好报。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "💔 老同学失联了...你叹了口气，当交学费了。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "❌ 婉拒",
+          hint: "保护自己",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚫 你说最近也紧张。他回了句「没事」，但之后再没联系过你。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "neighbor_gift",
+      phase: "street",
+      icon: "🎁",
+      title: "邻居送特产",
+      story:
+        "楼下的阿姨敲开门，手里拎着一袋东西：「老家寄来的腊肉和干笋，给你尝尝！一个人在外打拼不容易，别总吃泡面。」",
+      conditions: function (st) {
+        return st.player.day > 25 && ((st.needs && st.needs.hunger) || 50) < 60;
+      },
+      choices: [
+        {
+          text: "🙏 感激收下",
+          hint: "饥饱+15，幸福感+5",
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "🍖 晚上你炒了盘腊肉，香飘满屋。突然间觉得这座城市也没那么冰冷。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🎁 回赠一个小礼物",
+          hint: "花¥50，好感再+5",
+          cost: 50,
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😐 客气几句收下",
+          hint: "礼貌性回应",
+          apply: function (st) {
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 10);
+            StateManager.addMessage(
+              "🍖 你客气了几句收下了。阿姨摆摆手：「别客气，邻里邻居的。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ]; // 新事件结束
 
   // 推入全局事件池
   for (var ei = 0; ei < EXTRA_EVENTS.length; ei++) {
