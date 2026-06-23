@@ -23,13 +23,14 @@
 
 收到以下短语时，**先去读对应 SOP 文件再执行**，不要凭印象做：
 
-| 用户说 | 自动加载 | 用途 |
-|--------|----------|------|
-| **"按 v3.0 审查改进"** | `memory/review-improve-v3.0.md` | 全方位评估+改进（代码/架构/机制/剧情/UI/留存），自动评分+落地+commit |
-| **"按 v2.1 提示词继续内容扩充"** | `memory/content-expansion-v2.1.md` | 成套添加地点/NPC/商品/事件 |
-| **"按 1.4 标准检查"** | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计 |
+| 用户说                           | 自动加载                                | 用途                                                                 |
+| -------------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
+| **"按 v3.0 审查改进"**           | `memory/review-improve-v3.0.md`         | 全方位评估+改进（代码/架构/机制/剧情/UI/留存），自动评分+落地+commit |
+| **"按 v2.1 提示词继续内容扩充"** | `memory/content-expansion-v2.1.md`      | 成套添加地点/NPC/商品/事件                                           |
+| **"按 1.4 标准检查"**            | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                                                 |
 
 **执行规约**：
+
 - 看到触发短语→`Read` SOP 文件全文（每个 ≤8KB）→按其中流程执行
 - 不要在没读 SOP 的情况下凭记忆做事
 - 完成时引用所用 SOP 版本号写在 commit message 和 DEVELOPMENT.md
@@ -49,7 +50,16 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：批次E完成（2026-06-23）
+- **最新一次工作**：review v3.0 P2 改进落地（2026-06-23，吴八哥 / 高级开发工程师）
+  - **P0-BUGFIX**：修复"村长债复利从未生效"——`state.resources.dailyInterest` 字段被 4 个 UI 读取但从未被应用，`villageDebtInterest` 恒为 0。在 `skill_bonuses.js::settleDailyFinance` 补 19 行复利结算。
+  - **P2-B-2 难度分层**：新建 `src/js/core/difficulty_system.js`（168 行），3 档（🍵休闲 0.20%/⚖️标准 0.35%/🔥困难 0.50% 日息），影响村长债利率 + 中产税概率 + 事件惩罚 + 需求衰减。剧本选择界面新增难度选择 UI。
+  - **P2-E-1 传承币系统**：新建 `src/js/core/heritage_coin.js`（224 行），Hades 风格红/绿互斥解锁（祖传秘方/祖辈教诲/人脉引荐/启动资金/命格护佑/命运骰子），跨周目累积到 localStorage，参考 Hades 夜之镜 + BitLife Ribbons + Stardew 祖父评价信。
+  - **P2-B-1 多周目继承扩展**：`inheritance_chain.js` 新增 3 个继承字段（35岁路径/道德分/NPC巅峰好感），让"重开"真的有传承感。
+  - **设计参考**：《大多数》心态值分级 /《中国式家长》经济复利 /《This War of Mine》角色组合 / Hades 夜之镜 / BitLife Ribbons / Stardew Valley 祖父评价信
+  - **影响文件**：2 个新模块 + `skill_bonuses.js` / `review_improvements.js` / `inheritance_chain.js` / `main.js` / `modal.js` / `index.html` 共 8 文件
+  - **构建**：已 `python build.py`（3574.8 KB）
+
+- **上一次工作**：批次E完成（2026-06-23）
   - **百科剧透隐藏**：`wiki.js` NPC详情页全面剧透隐藏（生日/礼物偏好/在场加成/好感阈值奖励/委托任务/深度任务），根据玩家探索进度逐步解锁
   - **在场概率**：10个NPC新增 `presenceChance`（0.65~0.85），确定性哈希判定，不在场则无加成
   - **地点触发对话**：旅行手自动触发NPC互动 `rollNpcEncounterOnArrival()`，好感+1+信息解锁

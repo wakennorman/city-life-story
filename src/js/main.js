@@ -389,6 +389,21 @@ function showScenarioSelect() {
   var listEl = document.getElementById("scenario-list");
   if (!listEl) return;
   var html = "";
+
+  // v3.0 P2-B-2：难度选择器（顶部）
+  if (typeof renderDifficultyPicker === "function") {
+    html += renderDifficultyPicker(function (level) {
+      window._selectedDifficulty = level;
+    });
+    // 默认选中标准
+    if (!window._selectedDifficulty) window._selectedDifficulty = "normal";
+    setTimeout(function () {
+      if (window.__difficultyPickerSelect) {
+        window.__difficultyPickerSelect(window._selectedDifficulty);
+      }
+    }, 0);
+  }
+
   // 默认模式单独显示
   var defaultScenario = getScenarioById("classic");
   if (defaultScenario) {
@@ -669,6 +684,14 @@ function startScenarioGame(scenarioId) {
         }
       }
     }
+  }
+
+  // === v3.0 P2-B-2 + P2-E-1：难度系统 + 传承币解锁（仅在玩家选择后生效）===
+  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+    applyDifficultyToState(state, window._selectedDifficulty);
+  }
+  if (typeof applyHeritageUnlocks === "function") {
+    applyHeritageUnlocks(state);
   }
 
   // --- 进入游戏 ---
@@ -1155,6 +1178,14 @@ function startSandboxGame() {
     "event",
   );
   StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+
+  // === v3.0 P2-B-2 + P2-E-1：沙盒模式也接入难度 + 传承币 ===
+  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+    applyDifficultyToState(state, window._selectedDifficulty);
+  }
+  if (typeof applyHeritageUnlocks === "function") {
+    applyHeritageUnlocks(state);
+  }
 
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";

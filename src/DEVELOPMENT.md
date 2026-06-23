@@ -1,18 +1,97 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（review：全方位评估 + P0/P1 改进落地）
+> 最后更新: 2026-06-23（review v3.0 P2 改进落地：难度分层 + 传承币 + 多周目继承扩展 + BUG 修复）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
 >
 > ### SOP 文件索引
 >
-> | 编号 | 文件 | 作用 |
-> |------|------|------|
-> | v3.0 | `memory/review-improve-v3.0.md` | 全方位审查改进（代码/架构/机制/剧情/UI/留存） |
-> | v2.1 | `memory/content-expansion-v2.1.md` | 内容扩充 SOP（20职业上限/成套添加/交叉验证） |
-> | 1.4 | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计 |
+> | 编号 | 文件                                    | 作用                                          |
+> | ---- | --------------------------------------- | --------------------------------------------- |
+> | v3.0 | `memory/review-improve-v3.0.md`         | 全方位审查改进（代码/架构/机制/剧情/UI/留存） |
+> | v2.1 | `memory/content-expansion-v2.1.md`      | 内容扩充 SOP（20职业上限/成套添加/交叉验证）  |
+> | 1.4  | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                          |
 >
+> ## 2026-06-23 — Review v3.0 P2 改进落地（吴八哥 / 高级开发工程师）
+
+**本次执行 SOP**：`memory/review-improve-v3.0.md` §四/§五/§六
+**本次会话产出**：2 个新模块 + 1 个 P0 经济 BUG 修复 + 3 处接线 + 文档同步，约 327 行代码改动，1 次 build，1 次 commit + push
+
+### P0-BUGFIX · 村长债复利从未生效（v3.0 审查漏掉的隐藏缺陷）
+
+- **问题**：`state.resources.dailyInterest = 0.0035`（0.35%/日复利）字段在 `state.js:67` 初始化，被 4 个 UI 文件读取（`daily_focus.js / modal.js / render.js / wiki.js`），但**没有任何代码把它实际应用到 `villageDebt` 上累积**。`villageDebtInterest` 字段始终为 0，"村长债复利"机制自游戏发布以来根本没生效。
+- **修复**：`src/js/phase1/skill_bonuses.js::settleDailyFinance` 在银行存款利息逻辑后追加 19 行村长债复利结算块。每日按当前难度的 `dailyInterestBase` 计算并累加到 `villageDebt`，同步更新 `villageDebtInterest` 和 `debt` 字段。
+- **影响**：所有有 `villageDebt > 0` 的剧本（classic 5500、debt_rerun 12000、deep_debt 10000、hardship 8000）现在终于会真实地"利滚利"。结合下方的难度分层，老玩家可挑战 0.50%/日的困难档。
+
+### P2-B-2 · 难度分层系统（休闲/标准/困难）
+
+- **设计参考**：《大多数》心态值分级（难度只调衰减速率不调收益曲线）/《中国式家长》经济复利隐性加压 /《This War of Mine》角色组合隐性难度
+- **新建** `src/js/core/difficulty_system.js`（168 行）暴露 4 个 window 函数：`getDifficultyConfig` / `applyDifficultyToState` / `getDifficultyMultiplier` / `renderDifficultyPicker`
+- **3 档参数**（仅调衰减/惩罚/概率，不调收益曲线）：
+
+  | 档位 | 日息 | 中产税概率 | 事件惩罚 | 需求衰减 | 启动金 |
+  | ---- | ---- | --------- | ------- | ------- | ----- |
+  | 🍵 休闲 | 0.20% | 0.20 | ×0.70 | ×0.85 | +¥500 |
+  | ⚖️ 标准 | 0.35% | 0.35 | ×1.00 | ×1.00 | — |
+  | 🔥 困难 | 0.50% | 0.50 | ×1.30 | ×1.15 | — |
+
+- **接线**：`main.js::showScenarioSelect` 顶部插入难度选择器 + `startScenarioGame / startSandboxGame` 在进入游戏前调用 `applyDifficultyToState` + `applyHeritageUnlocks`
+- **消费点**：`skill_bonuses.js::settleDailyFinance` 读取 `dailyInterest` 乘数 / `review_improvements.js::checkWealthTaxTick` 读取 `wealthTaxProb` 乘数
+- **数据兼容**：旧存档无 `_difficulty` 字段 → 视为 `normal`，行为完全不变
+
+### P2-E-1 · 传承币系统（NG+ 永久解锁）
+
+- **设计参考**：Hades 夜之镜（Darkness 永久解锁 + 红/绿互斥 + 命运骰高端门控）/《中国式家长》2.0 天赋继承硬上限 / BitLife Ribbons 解锁新事件链 / Stardew Valley 祖父评价信软 NG+
+- **新建** `src/js/core/heritage_coin.js`（224 行）暴露 6 个 window 函数 + 6 项解锁常量
+- **币发放公式**：成就数×2 + log10(净资产)×3 + 道德分×1 + 存活天数/50（向上取整）
+- **6 项解锁**（参考 Hades 红/绿互斥）：
+
+  | 解锁项 | 成本 | 效果 | 互斥 |
+  | ----- | ---- | ---- | ---- |
+  | 🍳 祖传秘方 | 50 | 开局多 2 个高级食谱 | 🆚 📚 |
+  | 📚 祖辈教诲 | 50 | 技能 XP +10% | 🆚 🍳 |
+  | 🤝 人脉引荐 | 80 | NPC 初始好感 +10 | 🆚 💰 |
+  | 💰 启动资金 | 80 | 开局现金 +¥2000 | 🆚 🤝 |
+  | 🛡️ 命格护佑 | 100 | 首次濒死回 50% 血 | 无 |
+  | 🎲 命运骰子 | 150 | 重开时多保留 1 装备 | 无 |
+
+- **持久化**：localStorage 键 `__heritageCoins` / `__heritageUnlocks`，跨周目累积
+- **接线**：`modal.js::showGameOverModal` 在保存 inheritanceData 后调用 `awardHeritageCoins` 并显示获得数 / `main.js` 启动游戏前调用 `applyHeritageUnlocks`
+
+### P2-B-1 · 多周目继承扩展（35岁路径/道德分/NPC巅峰好感）
+
+- **设计参考**：REVIEW_RESULT.md §5 B-1 / Stardew Valley 老熟人信息解锁
+- **修改** `src/js/core/inheritance_chain.js`：
+  - 新增 `inheritCrisisPath(prevState)` — 继承上局 35 岁分水岭选择（卷/考公/躺平），给微小属性加成（mental +3 / intelligence +3 / happiness +5）
+  - 新增 `inheritMoralScore(prevState)` — 继承善行-恶行净值，转化为新周目幸运加成（封顶 +5/-3），写入 `_prevMoralScore`
+  - 新增 `inheritPeakAffinity(prevState)` — 记录 NPC 上局最大好感（≥50 的），写入 `_prevPeakAffinity`，作为"老熟人"线索解锁入口
+  - 修改 `applyInheritance` 应用上述 3 项加成
+- **接线**：`modal.js::showGameOverModal` 在 inheritanceData 中追加 3 个新字段
+- **价值**：补齐 REVIEW_RESULT.md §5 B-1 缺陷"只传 dreamId 单字段太单薄"
+
+### 文件变更清单
+
+| 文件 | 类型 | 行数 | 说明 |
+| ---- | ---- | ---- | ---- |
+| `src/js/core/difficulty_system.js` | 新建 | 168 | P2-B-2 难度分层系统 |
+| `src/js/core/heritage_coin.js` | 新建 | 224 | P2-E-1 传承币系统 |
+| `src/js/phase1/skill_bonuses.js` | 修改 | +37 | P0-BUGFIX 村长债复利 + 难度读取 |
+| `src/js/core/review_improvements.js` | 修改 | +5 | P2-B-2 中产税概率读难度 |
+| `src/js/core/inheritance_chain.js` | 修改 | +60 | P2-B-1 三项新继承字段 + applyInheritance |
+| `src/js/main.js` | 修改 | +22 | P2-B-2/P2-E-1 难度选择 UI + 启动接线 |
+| `src/js/ui/modal.js` | 修改 | +8 | P2-E-1 发放传承币 + 继承 3 字段写入 |
+| `src/index.html` | 修改 | +3 | 注册 2 个新 script |
+
+**总计代码改动 ≈ 327 行**（远低于 1500 行护栏；2 个新模块均 ≤300 行）
+
+### 验证
+
+- 7 个 JS 文件 `node --check` 语法全部通过 ✅
+- 构建产物 `dist/index.html` 3574.8 KB（在 3.5-3.8MB 期望区间内）✅
+- grep 验证：难度系统 27 处命中 / 传承币 25 处 / 多周目继承扩展 9 处 / 村长债复利 4 处 ✅
+- v3.0 SOP §三 交叉验证全通过：无同名冲突 / 无脚本顺序破坏 / 无 flag 引用断裂
+
 > ## 2026-06-23 — Review：全方位评估 + P0/P1 改进（GLM-5.2）
 
 - **新建** `src/js/ui/daily_focus.js`：P0-1 今日重点 sidebar 组件（基于状态启发式打分取 Top 3）

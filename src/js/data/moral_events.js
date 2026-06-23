@@ -1964,7 +1964,10 @@ const MORAL_CONSEQUENCES = {
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 8);
       s.player.mental = Math.max(1, (s.player.mental || 0) - 2);
-      StateManager.addMessage("🧊 同事关系冻住了，孤立感慢慢爬上来。", "warning");
+      StateManager.addMessage(
+        "🧊 同事关系冻住了，孤立感慢慢爬上来。",
+        "warning",
+      );
     },
   },
 };

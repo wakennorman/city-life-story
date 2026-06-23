@@ -323,6 +323,58 @@ function inheritSkillTree(state, prevState) {
 }
 
 /**
+ * v3.0 P2-B-1：继承 35 岁分水岭选择
+ * 让上局的"卷/考公/躺平"路径在新周目留下叙事痕迹与微小加成
+ */
+function inheritCrisisPath(prevState) {
+  var path = prevState?.flags?._crisis35Path;
+  if (!path) return null;
+  var pathMap = {
+    grind: { label: "再卷职场", statBonus: { mental: 3 }, note: "上辈子的卷王气质延续" },
+    civil: { label: "备考公", statBonus: { intelligence: 3 }, note: "上辈子埋首题海的余温" },
+    lie_flat: { label: "摆烂", statBonus: { happiness: 5 }, note: "上辈子的松弛感传承" },
+  };
+  var info = pathMap[path];
+  if (!info) return null;
+  return { path: path, label: info.label, statBonus: info.statBonus, note: info.note };
+}
+
+/**
+ * v3.0 P2-B-1：继承道德分
+ * 善行 - 恶行的净值，新周目影响"前世业力"叙事 + 微小幸运加成
+ */
+function inheritMoralScore(prevState) {
+  var good = prevState?.flags?.moralGoodChoices || 0;
+  var bad = prevState?.flags?.moralBadChoices || 0;
+  var score = good - bad;
+  return {
+    score: score,
+    good: good,
+    bad: bad,
+    label: score >= 10 ? "善人" : score >= 0 ? "普通人" : score >= -5 ? "小恶" : "恶人",
+    note: "前世业力 " + (score >= 0 ? "+" : "") + score + "，影响新周目幸运",
+  };
+}
+
+/**
+ * v3.0 P2-B-1：继承 NPC 巅峰好感
+ * 记录每个 NPC 上局达到过的最大好感，新周目作为"老熟人"留下信息解锁线索
+ */
+function inheritPeakAffinity(prevState) {
+  var prevRels = prevState?.relationships || {};
+  var peak = {};
+  for (var npcId in prevRels) {
+    var r = prevRels[npcId];
+    if (!r || !r.met) continue;
+    var maxAff = Math.max(r.affinity || 0, r.peakAffinity || 0);
+    if (maxAff >= 50) {
+      peak[npcId] = { peakAffinity: maxAff, infoUnlocked: true };
+    }
+  }
+  return { npcs: peak, count: Object.keys(peak).length };
+}
+
+/**
  * 计算继承现金加成
  * 基础现金 + 声誉徽章加成
  */
@@ -469,6 +521,32 @@ function applyInheritance(newState, prevState, inheritanceData) {
     newState.flags._inheritanceCashBase = inheritanceData.cashInfo.base;
   }
 
+  // v3.0 P2-B-1：应用 35 岁路径继承（微小属性加成）
+  if (inheritanceData.crisisPath && inheritanceData.crisisPath.statBonus) {
+    var sb = inheritanceData.crisisPath.statBonus;
+    for (var k in sb) {
+      if (typeof newState.player[k] === "number") {
+        newState.player[k] = Math.min(100, newState.player[k] + sb[k]);
+      }
+    }
+    newState.flags._prevCrisis35Path = inheritanceData.crisisPath.path;
+  }
+
+  // v3.0 P2-B-1：应用道德分继承（幸运加成，封顶 +5）
+  if (inheritanceData.moralScore) {
+    var ms = inheritanceData.moralScore.score;
+    var luckBonus = Math.max(-3, Math.min(5, Math.floor(ms / 5)));
+    newState.inheritanceBonuses = newState.inheritanceBonuses || {};
+    newState.inheritanceBonuses.luckBonus =
+      (newState.inheritanceBonuses.luckBonus || 0) + luckBonus;
+    newState.flags._prevMoralScore = ms;
+  }
+
+  // v3.0 P2-B-1：应用 NPC 巅峰好感（解锁老熟人信息）
+  if (inheritanceData.peakAffinity && inheritanceData.peakAffinity.npcs) {
+    newState.flags._prevPeakAffinity = inheritanceData.peakAffinity.npcs;
+  }
+
   // 标记继承来源
   newState.flags._hasInheritance = true;
   newState.flags._inheritanceFromDay = prevState.player?.day || 0;
@@ -491,6 +569,9 @@ if (typeof window !== "undefined") {
     inheritItems,
     inheritDreamProgress,
     inheritSkillTree,
+    inheritCrisisPath,
+    inheritMoralScore,
+    inheritPeakAffinity,
     calculateInheritanceCash,
     generateInheritanceSummary,
     applyInheritance,

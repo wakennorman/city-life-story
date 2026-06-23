@@ -230,8 +230,12 @@
     var wealth = _estimateTotalWealth(state);
     if (wealth < 200000) return;
 
-    // 触发判定：基础 35% 概率
-    if (!Random.chance(0.35)) return;
+    // 触发判定：基础 35% 概率（v3.0 P2-B-2：根据难度调整为 0.20/0.35/0.50）
+    var taxProb = 0.35;
+    if (typeof getDifficultyMultiplier === "function") {
+      taxProb = getDifficultyMultiplier(state, "wealthTaxProb");
+    }
+    if (!Random.chance(taxProb)) return;
 
     // 候选事件
     var pool = WEALTH_TAX_EVENTS.filter(function (e) {
@@ -266,7 +270,10 @@
           cls: "btn-primary",
           callback: function () {
             var s = StateManager.getState();
-            var actual = Math.min(amount, (s.resources.cash || 0) + (s.resources.bankBalance || 0));
+            var actual = Math.min(
+              amount,
+              (s.resources.cash || 0) + (s.resources.bankBalance || 0),
+            );
             // 优先扣现金，不够扣存款
             if (s.resources.cash >= actual) {
               s.resources.cash -= actual;
@@ -278,7 +285,10 @@
                 (s.resources.bankBalance || 0) - leftover,
               );
             }
-            StateManager.addMessage(evt.message + "：-¥" + actual.toLocaleString(), "warning");
+            StateManager.addMessage(
+              evt.message + "：-¥" + actual.toLocaleString(),
+              "warning",
+            );
             if (evt.sideEffect) evt.sideEffect(s, actual);
             renderAll();
           },
@@ -319,8 +329,8 @@
       title: "⏳ 35 岁了",
       body:
         '<p style="line-height:1.7;">' +
-        "今天你 35 岁了。蛋糕上的蜡烛还没吹，手机已经推送了三条"
-        + '"35岁裁员潮"的新闻。' +
+        "今天你 35 岁了。蛋糕上的蜡烛还没吹，手机已经推送了三条" +
+        '"35岁裁员潮"的新闻。' +
         "你看了一眼镜子里的自己——头发没那么茂密，眼角有了细纹。" +
         "<br><br>选一条路走下去吧，未来 10 年的方向就在今天。" +
         "</p>",
@@ -412,8 +422,7 @@
           }
         return false;
       },
-      message:
-        "🔥 提示：某行业明显过热。看看股票/创业tab，机会就在风口上。",
+      message: "🔥 提示：某行业明显过热。看看股票/创业tab，机会就在风口上。",
     },
     {
       id: "first_rented_house",

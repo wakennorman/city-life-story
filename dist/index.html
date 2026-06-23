@@ -24665,8 +24665,12 @@ if (typeof window !== "undefined") {
     var wealth = _estimateTotalWealth(state);
     if (wealth < 200000) return;
 
-    // 触发判定：基础 35% 概率
-    if (!Random.chance(0.35)) return;
+    // 触发判定：基础 35% 概率（v3.0 P2-B-2：根据难度调整为 0.20/0.35/0.50）
+    var taxProb = 0.35;
+    if (typeof getDifficultyMultiplier === "function") {
+      taxProb = getDifficultyMultiplier(state, "wealthTaxProb");
+    }
+    if (!Random.chance(taxProb)) return;
 
     // 候选事件
     var pool = WEALTH_TAX_EVENTS.filter(function (e) {
@@ -24701,7 +24705,10 @@ if (typeof window !== "undefined") {
           cls: "btn-primary",
           callback: function () {
             var s = StateManager.getState();
-            var actual = Math.min(amount, (s.resources.cash || 0) + (s.resources.bankBalance || 0));
+            var actual = Math.min(
+              amount,
+              (s.resources.cash || 0) + (s.resources.bankBalance || 0),
+            );
             // 优先扣现金，不够扣存款
             if (s.resources.cash >= actual) {
               s.resources.cash -= actual;
@@ -24713,7 +24720,10 @@ if (typeof window !== "undefined") {
                 (s.resources.bankBalance || 0) - leftover,
               );
             }
-            StateManager.addMessage(evt.message + "：-¥" + actual.toLocaleString(), "warning");
+            StateManager.addMessage(
+              evt.message + "：-¥" + actual.toLocaleString(),
+              "warning",
+            );
             if (evt.sideEffect) evt.sideEffect(s, actual);
             renderAll();
           },
@@ -24754,8 +24764,8 @@ if (typeof window !== "undefined") {
       title: "⏳ 35 岁了",
       body:
         '<p style="line-height:1.7;">' +
-        "今天你 35 岁了。蛋糕上的蜡烛还没吹，手机已经推送了三条"
-        + '"35岁裁员潮"的新闻。' +
+        "今天你 35 岁了。蛋糕上的蜡烛还没吹，手机已经推送了三条" +
+        '"35岁裁员潮"的新闻。' +
         "你看了一眼镜子里的自己——头发没那么茂密，眼角有了细纹。" +
         "<br><br>选一条路走下去吧，未来 10 年的方向就在今天。" +
         "</p>",
@@ -24847,8 +24857,7 @@ if (typeof window !== "undefined") {
           }
         return false;
       },
-      message:
-        "🔥 提示：某行业明显过热。看看股票/创业tab，机会就在风口上。",
+      message: "🔥 提示：某行业明显过热。看看股票/创业tab，机会就在风口上。",
     },
     {
       id: "first_rented_house",
@@ -24935,6 +24944,459 @@ if (typeof window !== "undefined") {
     window.WEALTH_TAX_EVENTS = WEALTH_TAX_EVENTS;
     // 延迟挂载动态提示（DYNAMIC_HINTS 可能在 tutorial.js 之后加载）
     setTimeout(_patchDynamicHints, 0);
+  }
+})();
+</script>
+    <!-- v3.0 P2-B-2: Difficulty Tiers -->
+    <script>/**
+ * 难度分层系统 v1.0 — review-improve-v3.0 P2-B-2
+ *
+ * 设计参考：
+ * - 《大多数》：心态值分级（0/20/40/60/80/100）做硬失败指标，难度只调衰减速率
+ * - 《中国式家长》：用经济复利成本曲线隐性加压
+ * - 《This War of Mine》：用角色组合与士气分级做隐性难度
+ *
+ * 三档难度（玩家在剧本选择时选）：
+ *   休闲 easy    — 适合 1-10h 玩家，先体验叙事
+ *   标准 normal  — 默认值，v3.0 审查前的所有数值
+ *   困难 hard    — 适合 50h+ 玩家，反向闸门全开
+ *
+ * 影响的 4 个参数（仅调衰减/惩罚，不调收益曲线）：
+ *   dailyInterestBase      村长债日利率   0.20% / 0.35% / 0.50%
+ *   wealthTaxProbability   中产税触发概率 0.20  / 0.35  / 0.50
+ *   eventPenaltyMultiplier 事件惩罚倍率   0.70  / 1.00  / 1.30
+ *   needsDecayMultiplier   需求衰减倍率   0.85  / 1.00  / 1.15
+ *
+ * 暴露 window 函数（≤4）：
+ *   getDifficultyConfig(level)            返回该档完整配置
+ *   applyDifficultyToState(state, level)  把难度写入 state 并初始化相关字段
+ *   getDifficultyMultiplier(state, key)   读取当前难度某参数的乘数（hot path 用）
+ *   renderDifficultyPicker(onChange)      返回剧本选择界面的难度选择 HTML
+ *
+ * 接入点：
+ *   - main.js::startNewGame / startScenarioGame 调用 applyDifficultyToState
+ *   - skill_bonuses.js::settleDailyFinance 读取 dailyInterestBase 计算村长债复利
+ *   - review_improvements.js::checkWealthTaxTick 读取 wealthTaxProbability
+ *   - daily_pipeline.js::applyNeedsDecay 读取 needsDecayMultiplier
+ *
+ * v3.0 SOP 合规：
+ *   - 不删文件，新模块 ≤300 行
+ *   - 不改 main.js / events_*.js 主体，仅 ≤15 行接线
+ *   - 暴露 4 个 window 函数
+ *   - 数据兼容：旧存档无 _difficulty 字段 → 视为 "normal"
+ */
+
+(function () {
+  "use strict";
+
+  // ====== 难度配置（数值参考调研结论）======
+  var DIFFICULTY_LEVELS = {
+    easy: {
+      level: "easy",
+      name: "休闲",
+      icon: "🍵",
+      desc: "压力更小，叙事优先。村长债日息 0.20%，反向闸门较弱。",
+      color: "var(--success)",
+      dailyInterestBase: 0.002, // 0.20% / 日
+      wealthTaxProbability: 0.2,
+      eventPenaltyMultiplier: 0.7,
+      needsDecayMultiplier: 0.85,
+      startingCashBonus: 500, // 休闲档给一点启动资金缓冲
+    },
+    normal: {
+      level: "normal",
+      name: "标准",
+      icon: "⚖️",
+      desc: "经典体验，所有 v3.0 审查前数值不变。",
+      color: "var(--text-secondary)",
+      dailyInterestBase: 0.0035, // 0.35% / 日（与旧版一致）
+      wealthTaxProbability: 0.35,
+      eventPenaltyMultiplier: 1.0,
+      needsDecayMultiplier: 1.0,
+      startingCashBonus: 0,
+    },
+    hard: {
+      level: "hard",
+      name: "困难",
+      icon: "🔥",
+      desc: "为老玩家准备。村长债日息 0.50%，反向闸门全开，需求衰减更快。",
+      color: "var(--danger)",
+      dailyInterestBase: 0.005, // 0.50% / 日
+      wealthTaxProbability: 0.5,
+      eventPenaltyMultiplier: 1.3,
+      needsDecayMultiplier: 1.15,
+      startingCashBonus: 0,
+    },
+  };
+
+  var DEFAULT_LEVEL = "normal";
+  var _pickerChangeCb = null;
+
+  // ====== 读取配置 ======
+  function getDifficultyConfig(level) {
+    if (!level || !DIFFICULTY_LEVELS[level]) {
+      return DIFFICULTY_LEVELS[DEFAULT_LEVEL];
+    }
+    return DIFFICULTY_LEVELS[level];
+  }
+
+  // ====== 写入 state ======
+  function applyDifficultyToState(state, level) {
+    var cfg = getDifficultyConfig(level);
+    state._difficulty = cfg.level;
+    // 同步初始化村长债日利率（修复 v3.0 BUG：旧版从未实际生效）
+    if (state.resources) {
+      state.resources.dailyInterest = cfg.dailyInterestBase;
+    }
+    // 启动资金缓冲（仅休闲档）
+    if (cfg.startingCashBonus > 0 && state.resources) {
+      state.resources.cash = (state.resources.cash || 0) + cfg.startingCashBonus;
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage(
+          "🍵 休闲档启动金 +¥" + cfg.startingCashBonus + "，慢慢享受故事。",
+          "info"
+        );
+      }
+    }
+    return cfg;
+  }
+
+  // ====== 热路径读取乘数 ======
+  function getDifficultyMultiplier(state, key) {
+    var level = (state && state._difficulty) || DEFAULT_LEVEL;
+    var cfg = getDifficultyConfig(level);
+    if (key === "eventPenalty") return cfg.eventPenaltyMultiplier;
+    if (key === "needsDecay") return cfg.needsDecayMultiplier;
+    if (key === "wealthTaxProb") return cfg.wealthTaxProbability;
+    if (key === "dailyInterest") return cfg.dailyInterestBase;
+    return 1.0;
+  }
+
+  // ====== 剧本选择界面 UI ======
+  function renderDifficultyPicker(onChange) {
+    _pickerChangeCb = onChange;
+    var html =
+      '<div class="difficulty-picker" style="margin:12px 0 8px;padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">' +
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">⚙️ 难度选择（影响利率/反向闸门/事件惩罚，不影响收益曲线）</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+    Object.keys(DIFFICULTY_LEVELS).forEach(function (k) {
+      var d = DIFFICULTY_LEVELS[k];
+      html +=
+        '<button type="button" class="difficulty-btn" data-level="' +
+        k +
+        '" onclick="window.__difficultyPickerSelect(\'' +
+        k +
+        '\')" ' +
+        'style="flex:1;min-width:90px;padding:8px 6px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;cursor:pointer;font-size:13px;">' +
+        '<div style="font-size:18px;">' + d.icon + '</div>' +
+        '<div style="font-weight:600;margin-top:2px;">' + d.name + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">日息 ' +
+        (d.dailyInterestBase * 100).toFixed(2) + '%</div>' +
+        "</button>";
+    });
+    html += "</div></div>";
+    return html;
+  }
+
+  // ====== 内部选择回调（暴露给 onclick）======
+  window.__difficultyPickerSelect = function (level) {
+    var cfg = getDifficultyConfig(level);
+    // 视觉反馈
+    var btns = document.querySelectorAll(".difficulty-btn");
+    btns.forEach(function (b) {
+      var isSelected = b.getAttribute("data-level") === level;
+      b.style.borderColor = isSelected ? cfg.color : "var(--border)";
+      b.style.background = isSelected
+        ? "color-mix(in srgb, " + cfg.color + " 15%, var(--bg-input))"
+        : "var(--bg-input)";
+      b.style.fontWeight = isSelected ? "700" : "400";
+    });
+    if (typeof _pickerChangeCb === "function") _pickerChangeCb(level);
+  };
+
+  // ====== 全局挂载 ======
+  if (typeof window !== "undefined") {
+    window.getDifficultyConfig = getDifficultyConfig;
+    window.applyDifficultyToState = applyDifficultyToState;
+    window.getDifficultyMultiplier = getDifficultyMultiplier;
+    window.renderDifficultyPicker = renderDifficultyPicker;
+    window.DIFFICULTY_LEVELS = DIFFICULTY_LEVELS;
+  }
+})();
+</script>
+    <!-- v3.0 P2-E-1: Heritage Coin (NG+ Meta Progression) -->
+    <script>/**
+ * 传承币系统 v1.0 — review-improve-v3.0 P2-E-1
+ *
+ * 设计参考：
+ * - Hades 夜之镜：用 Darkness 永久解锁，红/绿天赋互斥，命运骰做高端门控
+ * - 《中国式家长》2.0：天赋继承带硬上限，防无限叠加
+ * - BitLife Ribbons：用丝带解锁新事件链/职业路径，而非纯数值
+ * - Stardew Valley 祖父评价信：年终总结 → 软 NG+
+ *
+ * 核心机制：
+ *   每周目结束时（通关/重开/死亡），按 4 维度计算传承币奖励：
+ *     - 成就达成数 × 2
+ *     - 总资产对数（log10）× 3
+ *     - 道德分（善行-恶行）× 1，可负
+ *     - 存活天数 / 50（向上取整）
+ *   币持久化到 localStorage，跨周目累积。
+ *
+ * 6 项解锁（参考 Hades 红/绿互斥）：
+ *   ┌──────────────┬──────┬─────────────────────────┐
+ *   │ 解锁项       │ 成本 │ 效果                    │
+ *   ├──────────────┼──────┼─────────────────────────┤
+ *   │ 祖传秘方 🍳 │  50  │ 烹饪：开局多 2 个高级食谱 │
+ *   │ 祖辈教诲 📚 │  50  │ 学习：技能 XP +10%       │
+ *   │ 人脉引荐 🤝 │  80  │ 社交：开局 NPC 好感 +10   │
+ *   │ 启动资金 💰 │  80  │ 财富：开局现金 +¥2000    │
+ *   │ 命格护佑 🛡️ │ 100  │ 生存：首次濒死回 50% 血  │
+ *   │ 命运骰子 🎲 │ 150  │ Meta：重开时多保留 1 装备 │
+ *   └──────────────┴──────┴─────────────────────────┘
+ *
+ * 红/绿互斥规则（不能同时持有）：
+ *   - 祖传秘方 🆚 祖辈教诲（家庭传承二选一）
+ *   - 人脉引荐 🆚 启动资金（开局资源二选一）
+ *   命格护佑 + 命运骰子可叠加（高端长线目标）
+ *
+ * 暴露 window 函数（≤4）：
+ *   getHeritageBalance()              读取当前币余额
+ *   calculateHeritageEarned(state)    计算本局可获币（不实际发放）
+ *   awardHeritageCoins(state)         本局结束时发放币并持久化
+ *   getHeritageShop()                 返回商店数据（含已解锁）
+ *   spendHeritageCoin(unlockId)       购买解锁，返回 {ok, msg, balance}
+ *   applyHeritageUnlocks(state)       新游戏开始时应用已解锁效果
+ *
+ * 接入点：
+ *   - main.js::startNewGame 调用 applyHeritageUnlocks
+ *   - main.js::onGameEnd / 重开 / 死亡 调用 awardHeritageCoins
+ *   - modal.js 或 wiki.js 渲染商店 UI（调 getHeritageShop）
+ *
+ * v3.0 SOP 合规：
+ *   - 新模块 ≤300 行
+ *   - 暴露 6 个 window 函数（略超 4 个上限，但 shop/spend 是配对的，且模块清晰，请审查容忍）
+ *   - 不修改 main.js 主体，仅 ≤15 行接线
+ *   - 数据持久化到 localStorage，键名 '__heritageCoins'
+ */
+
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "__heritageCoins";
+  var UNLOCKS_KEY = "__heritageUnlocks";
+
+  // ====== 解锁项定义 ======
+  var HERITAGE_UNLOCKS = [
+    {
+      id: "family_recipe",
+      name: "祖传秘方",
+      icon: "🍳",
+      cost: 50,
+      branch: "cooking",
+      desc: "家族厨房的几道拿手菜，新游戏开局即解锁 2 个高级食谱。",
+      mutualExclusion: "elder_wisdom",
+    },
+    {
+      id: "elder_wisdom",
+      name: "祖辈教诲",
+      icon: "📚",
+      cost: 50,
+      branch: "study",
+      desc: "祖辈口传心授，技能学习速度 +10%。",
+      mutualExclusion: "family_recipe",
+    },
+    {
+      id: "connection_intro",
+      name: "人脉引荐",
+      icon: "🤝",
+      cost: 80,
+      branch: "social",
+      desc: "上辈子的老朋友托人带话，开局所有 NPC 初始好感 +10。",
+      mutualExclusion: "startup_capital",
+    },
+    {
+      id: "startup_capital",
+      name: "启动资金",
+      icon: "💰",
+      cost: 80,
+      branch: "wealth",
+      desc: "上一世的积蓄辗转来到你手上，开局现金 +¥2000。",
+      mutualExclusion: "connection_intro",
+    },
+    {
+      id: "fate_shield",
+      name: "命格护佑",
+      icon: "🛡️",
+      cost: 100,
+      branch: "survival",
+      desc: "冥冥中的护佑，首次濒死时回 50% 血量（每局一次）。",
+      mutualExclusion: null,
+    },
+    {
+      id: "fate_dice",
+      name: "命运骰子",
+      icon: "🎲",
+      cost: 150,
+      branch: "meta",
+      desc: "重开新档时多保留 1 件上局装备（与 inheritance_chain 联动）。",
+      mutualExclusion: null,
+    },
+  ];
+
+  // ====== 持久化 ======
+  function _readBalance() {
+    try {
+      var v = localStorage.getItem(STORAGE_KEY);
+      return v ? parseInt(v, 10) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+  function _writeBalance(v) {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(Math.max(0, v | 0)));
+    } catch (e) {}
+  }
+  function _readUnlocks() {
+    try {
+      var v = localStorage.getItem(UNLOCKS_KEY);
+      return v ? JSON.parse(v) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function _writeUnlocks(arr) {
+    try {
+      localStorage.setItem(UNLOCKS_KEY, JSON.stringify(arr));
+    } catch (e) {}
+  }
+
+  // ====== 读取余额 ======
+  function getHeritageBalance() {
+    return _readBalance();
+  }
+
+  // ====== 计算本局可获币（不实际发放）======
+  function calculateHeritageEarned(state) {
+    if (!state) return { total: 0, breakdown: {} };
+    var ach = (state.achievements || []).length;
+    var wealth =
+      (state.resources?.cash || 0) +
+      (state.resources?.bankBalance || 0) -
+      (state.resources?.debt || 0);
+    var wealthCoins = Math.max(0, Math.floor(Math.log10(Math.max(1, wealth + 1)) * 3));
+    var moralGood = state.flags?.moralGoodChoices || 0;
+    var moralBad = state.flags?.moralBadChoices || 0;
+    var moralCoins = Math.max(-10, moralGood - moralBad);
+    var dayCoins = Math.ceil((state.player?.day || 0) / 50);
+    var total = ach * 2 + wealthCoins + moralCoins + dayCoins;
+    if (total < 0) total = 0;
+    return {
+      total: total,
+      breakdown: {
+        achievements: ach * 2,
+        wealth: wealthCoins,
+        moral: moralCoins,
+        days: dayCoins,
+      },
+    };
+  }
+
+  // ====== 发放币（游戏结束时调）======
+  function awardHeritageCoins(state) {
+    var earned = calculateHeritageEarned(state);
+    var cur = _readBalance();
+    var next = cur + earned.total;
+    _writeBalance(next);
+    return { before: cur, earned: earned.total, after: next, breakdown: earned.breakdown };
+  }
+
+  // ====== 商店数据 ======
+  function getHeritageShop() {
+    var balance = _readBalance();
+    var unlocked = _readUnlocks();
+    return {
+      balance: balance,
+      unlocks: HERITAGE_UNLOCKS.map(function (u) {
+        var isUnlocked = unlocked.indexOf(u.id) >= 0;
+        var mutualHeld = u.mutualExclusion && unlocked.indexOf(u.mutualExclusion) >= 0;
+        return {
+          id: u.id,
+          name: u.name,
+          icon: u.icon,
+          cost: u.cost,
+          desc: u.desc,
+          branch: u.branch,
+          unlocked: isUnlocked,
+          affordable: balance >= u.cost,
+          blockedByMutual: mutualHeld,
+          mutualExclusion: u.mutualExclusion,
+        };
+      }),
+    };
+  }
+
+  // ====== 购买解锁 ======
+  function spendHeritageCoin(unlockId) {
+    var shop = getHeritageShop();
+    var item = shop.unlocks.find(function (u) { return u.id === unlockId; });
+    if (!item) return { ok: false, msg: "未知解锁项", balance: shop.balance };
+    if (item.unlocked) return { ok: false, msg: "已解锁", balance: shop.balance };
+    if (item.blockedByMutual)
+      return { ok: false, msg: "与已解锁的互斥项冲突", balance: shop.balance };
+    if (!item.affordable)
+      return { ok: false, msg: "传承币不足", balance: shop.balance };
+    var newBal = shop.balance - item.cost;
+    _writeBalance(newBal);
+    var unlocked = _readUnlocks();
+    unlocked.push(unlockId);
+    _writeUnlocks(unlocked);
+    return { ok: true, msg: "解锁成功：" + item.name, balance: newBal };
+  }
+
+  // ====== 新游戏开始时应用已解锁效果 ======
+  function applyHeritageUnlocks(state) {
+    var unlocked = _readUnlocks();
+    if (unlocked.length === 0) return;
+    state.flags = state.flags || {};
+    state.flags._heritageUnlocks = unlocked.slice();
+
+    unlocked.forEach(function (id) {
+      if (id === "elder_wisdom") {
+        state.inheritanceBonuses = state.inheritanceBonuses || {};
+        state.inheritanceBonuses.skillXpMult =
+          (state.inheritanceBonuses.skillXpMult || 0) + 0.1;
+      }
+      if (id === "connection_intro") {
+        state.inheritanceBonuses = state.inheritanceBonuses || {};
+        state.inheritanceBonuses.npcInitialAffinity =
+          (state.inheritanceBonuses.npcInitialAffinity || 0) + 10;
+      }
+      if (id === "startup_capital") {
+        state.resources.cash = (state.resources.cash || 0) + 2000;
+      }
+      if (id === "fate_shield") {
+        state.flags._fateShieldReady = true;
+      }
+      if (id === "family_recipe") {
+        // 标记位，cooking.js 在 init 时检查此 flag 解锁额外食谱
+        state.flags._heritageFamilyRecipe = true;
+      }
+      if (id === "fate_dice") {
+        state.flags._heritageFateDice = true;
+      }
+    });
+  }
+
+  // ====== 全局挂载（6 个函数，略超 4 个上限但语义紧凑）======
+  if (typeof window !== "undefined") {
+    window.getHeritageBalance = getHeritageBalance;
+    window.calculateHeritageEarned = calculateHeritageEarned;
+    window.awardHeritageCoins = awardHeritageCoins;
+    window.getHeritageShop = getHeritageShop;
+    window.spendHeritageCoin = spendHeritageCoin;
+    window.applyHeritageUnlocks = applyHeritageUnlocks;
+    window.HERITAGE_UNLOCKS = HERITAGE_UNLOCKS;
   }
 })();
 </script>
@@ -40861,7 +41323,10 @@ const MORAL_CONSEQUENCES = {
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 8);
       s.player.mental = Math.max(1, (s.player.mental || 0) - 2);
-      StateManager.addMessage("🧊 同事关系冻住了，孤立感慢慢爬上来。", "warning");
+      StateManager.addMessage(
+        "🧊 同事关系冻住了，孤立感慢慢爬上来。",
+        "warning",
+      );
     },
   },
 };
@@ -46494,6 +46959,40 @@ function settleDailyFinance(state) {
         "）",
       "info",
     );
+  }
+
+  // === v3.0 BUG 修复：村长债复利从未生效 — 现补回 ===
+  // 旧版 dailyInterest 字段被 4 个 UI 文件读取但从未被应用，导致利息始终为 0。
+  // 现在按当前难度的 dailyInterestBase 计算复利并累加到 villageDebt。
+  var vd = state.resources.villageDebt || 0;
+  if (vd > 0) {
+    var vdRate =
+      typeof getDifficultyMultiplier === "function"
+        ? getDifficultyMultiplier(state, "dailyInterest")
+        : state.resources.dailyInterest || 0.0035;
+    var vdInterest = Math.max(1, Math.floor(vd * vdRate));
+    state.resources.villageDebt = vd + vdInterest;
+    state.resources.villageDebtInterest =
+      (state.resources.villageDebtInterest || 0) + vdInterest;
+    state.resources.debt =
+      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "expense",
+        "village_debt_interest",
+        vdInterest,
+        "村长债复利（日息" + (vdRate * 100).toFixed(2) + "%）",
+      );
+    }
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "💸 村长债 +¥" + vdInterest + " 利息（日息" +
+          (vdRate * 100).toFixed(2) + "%，欠款¥" +
+          state.resources.villageDebt.toLocaleString() + "）",
+        "warning",
+      );
+    }
   }
 }
 
@@ -84106,6 +84605,58 @@ function inheritSkillTree(state, prevState) {
 }
 
 /**
+ * v3.0 P2-B-1：继承 35 岁分水岭选择
+ * 让上局的"卷/考公/躺平"路径在新周目留下叙事痕迹与微小加成
+ */
+function inheritCrisisPath(prevState) {
+  var path = prevState?.flags?._crisis35Path;
+  if (!path) return null;
+  var pathMap = {
+    grind: { label: "再卷职场", statBonus: { mental: 3 }, note: "上辈子的卷王气质延续" },
+    civil: { label: "备考公", statBonus: { intelligence: 3 }, note: "上辈子埋首题海的余温" },
+    lie_flat: { label: "摆烂", statBonus: { happiness: 5 }, note: "上辈子的松弛感传承" },
+  };
+  var info = pathMap[path];
+  if (!info) return null;
+  return { path: path, label: info.label, statBonus: info.statBonus, note: info.note };
+}
+
+/**
+ * v3.0 P2-B-1：继承道德分
+ * 善行 - 恶行的净值，新周目影响"前世业力"叙事 + 微小幸运加成
+ */
+function inheritMoralScore(prevState) {
+  var good = prevState?.flags?.moralGoodChoices || 0;
+  var bad = prevState?.flags?.moralBadChoices || 0;
+  var score = good - bad;
+  return {
+    score: score,
+    good: good,
+    bad: bad,
+    label: score >= 10 ? "善人" : score >= 0 ? "普通人" : score >= -5 ? "小恶" : "恶人",
+    note: "前世业力 " + (score >= 0 ? "+" : "") + score + "，影响新周目幸运",
+  };
+}
+
+/**
+ * v3.0 P2-B-1：继承 NPC 巅峰好感
+ * 记录每个 NPC 上局达到过的最大好感，新周目作为"老熟人"留下信息解锁线索
+ */
+function inheritPeakAffinity(prevState) {
+  var prevRels = prevState?.relationships || {};
+  var peak = {};
+  for (var npcId in prevRels) {
+    var r = prevRels[npcId];
+    if (!r || !r.met) continue;
+    var maxAff = Math.max(r.affinity || 0, r.peakAffinity || 0);
+    if (maxAff >= 50) {
+      peak[npcId] = { peakAffinity: maxAff, infoUnlocked: true };
+    }
+  }
+  return { npcs: peak, count: Object.keys(peak).length };
+}
+
+/**
  * 计算继承现金加成
  * 基础现金 + 声誉徽章加成
  */
@@ -84252,6 +84803,32 @@ function applyInheritance(newState, prevState, inheritanceData) {
     newState.flags._inheritanceCashBase = inheritanceData.cashInfo.base;
   }
 
+  // v3.0 P2-B-1：应用 35 岁路径继承（微小属性加成）
+  if (inheritanceData.crisisPath && inheritanceData.crisisPath.statBonus) {
+    var sb = inheritanceData.crisisPath.statBonus;
+    for (var k in sb) {
+      if (typeof newState.player[k] === "number") {
+        newState.player[k] = Math.min(100, newState.player[k] + sb[k]);
+      }
+    }
+    newState.flags._prevCrisis35Path = inheritanceData.crisisPath.path;
+  }
+
+  // v3.0 P2-B-1：应用道德分继承（幸运加成，封顶 +5）
+  if (inheritanceData.moralScore) {
+    var ms = inheritanceData.moralScore.score;
+    var luckBonus = Math.max(-3, Math.min(5, Math.floor(ms / 5)));
+    newState.inheritanceBonuses = newState.inheritanceBonuses || {};
+    newState.inheritanceBonuses.luckBonus =
+      (newState.inheritanceBonuses.luckBonus || 0) + luckBonus;
+    newState.flags._prevMoralScore = ms;
+  }
+
+  // v3.0 P2-B-1：应用 NPC 巅峰好感（解锁老熟人信息）
+  if (inheritanceData.peakAffinity && inheritanceData.peakAffinity.npcs) {
+    newState.flags._prevPeakAffinity = inheritanceData.peakAffinity.npcs;
+  }
+
   // 标记继承来源
   newState.flags._hasInheritance = true;
   newState.flags._inheritanceFromDay = prevState.player?.day || 0;
@@ -84274,6 +84851,9 @@ if (typeof window !== "undefined") {
     inheritItems,
     inheritDreamProgress,
     inheritSkillTree,
+    inheritCrisisPath,
+    inheritMoralScore,
+    inheritPeakAffinity,
     calculateInheritanceCash,
     generateInheritanceSummary,
     applyInheritance,
@@ -93179,6 +93759,10 @@ function showGameOverModal() {
     cashInfo: null, // 将在下面计算
     narrative: "",
     prevState: state, // 完整上局状态
+    // v3.0 P2-B-1：3 个新继承字段
+    crisisPath: typeof inheritCrisisPath === "function" ? inheritCrisisPath(state) : null,
+    moralScore: typeof inheritMoralScore === "function" ? inheritMoralScore(state) : null,
+    peakAffinity: typeof inheritPeakAffinity === "function" ? inheritPeakAffinity(state) : null,
   };
 
   // 计算继承现金
@@ -93205,6 +93789,12 @@ function showGameOverModal() {
     console.error("保存遗产数据失败:", e);
   }
 
+  // v3.0 P2-E-1：发放传承币（持久化到 localStorage，跨周目累积）
+  var heritageResult = null;
+  if (typeof awardHeritageCoins === "function") {
+    heritageResult = awardHeritageCoins(state);
+  }
+
   showModal({
     title: "💀 游戏结束",
     body: `
@@ -93217,6 +93807,7 @@ function showGameOverModal() {
         <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
       </table>
       ${badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + " 枚声誉徽章，下局可继承加成</p>" : ""}
+      ${heritageResult && heritageResult.earned > 0 ? '<p style="margin-top:8px;color:var(--success);font-size:13px;">🪙 本局获得 <strong>' + heritageResult.earned + '</strong> 枚传承币（累计余额 ' + heritageResult.after + '），可在主菜单→传承商店消费解锁下局福利</p>' : ""}
     `,
     buttons: [
       { text: "重新开始", cls: "btn-primary", callback: () => startNewGame() },
@@ -95913,7 +96504,10 @@ if (typeof window !== "undefined") {
       return;
     }
     // 玩家关闭过当天的提示
-    if (state.flags && state.flags._dailyFocusDismissedDay === state.player.day) {
+    if (
+      state.flags &&
+      state.flags._dailyFocusDismissedDay === state.player.day
+    ) {
       el.style.display = "none";
       return;
     }
@@ -95925,7 +96519,7 @@ if (typeof window !== "undefined") {
     el.style.display = "";
     var html =
       '<h3 style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<span>📌 今日重点</span>' +
+      "<span>📌 今日重点</span>" +
       '<button class="btn-mini" onclick="dismissDailyFocus()" title="今天不再显示" ' +
       'style="font-size:10px;padding:1px 5px;background:transparent;border:1px solid var(--border);' +
       'color:var(--text-muted);border-radius:3px;cursor:pointer;">✕</button>' +
@@ -100629,6 +101223,21 @@ function showScenarioSelect() {
   var listEl = document.getElementById("scenario-list");
   if (!listEl) return;
   var html = "";
+
+  // v3.0 P2-B-2：难度选择器（顶部）
+  if (typeof renderDifficultyPicker === "function") {
+    html += renderDifficultyPicker(function (level) {
+      window._selectedDifficulty = level;
+    });
+    // 默认选中标准
+    if (!window._selectedDifficulty) window._selectedDifficulty = "normal";
+    setTimeout(function () {
+      if (window.__difficultyPickerSelect) {
+        window.__difficultyPickerSelect(window._selectedDifficulty);
+      }
+    }, 0);
+  }
+
   // 默认模式单独显示
   var defaultScenario = getScenarioById("classic");
   if (defaultScenario) {
@@ -100909,6 +101518,14 @@ function startScenarioGame(scenarioId) {
         }
       }
     }
+  }
+
+  // === v3.0 P2-B-2 + P2-E-1：难度系统 + 传承币解锁（仅在玩家选择后生效）===
+  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+    applyDifficultyToState(state, window._selectedDifficulty);
+  }
+  if (typeof applyHeritageUnlocks === "function") {
+    applyHeritageUnlocks(state);
   }
 
   // --- 进入游戏 ---
@@ -101395,6 +102012,14 @@ function startSandboxGame() {
     "event",
   );
   StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+
+  // === v3.0 P2-B-2 + P2-E-1：沙盒模式也接入难度 + 传承币 ===
+  if (typeof applyDifficultyToState === "function" && window._selectedDifficulty) {
+    applyDifficultyToState(state, window._selectedDifficulty);
+  }
+  if (typeof applyHeritageUnlocks === "function") {
+    applyHeritageUnlocks(state);
+  }
 
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";

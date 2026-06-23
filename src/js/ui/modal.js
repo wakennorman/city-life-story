@@ -179,6 +179,10 @@ function showGameOverModal() {
     cashInfo: null, // 将在下面计算
     narrative: "",
     prevState: state, // 完整上局状态
+    // v3.0 P2-B-1：3 个新继承字段
+    crisisPath: typeof inheritCrisisPath === "function" ? inheritCrisisPath(state) : null,
+    moralScore: typeof inheritMoralScore === "function" ? inheritMoralScore(state) : null,
+    peakAffinity: typeof inheritPeakAffinity === "function" ? inheritPeakAffinity(state) : null,
   };
 
   // 计算继承现金
@@ -205,6 +209,12 @@ function showGameOverModal() {
     console.error("保存遗产数据失败:", e);
   }
 
+  // v3.0 P2-E-1：发放传承币（持久化到 localStorage，跨周目累积）
+  var heritageResult = null;
+  if (typeof awardHeritageCoins === "function") {
+    heritageResult = awardHeritageCoins(state);
+  }
+
   showModal({
     title: "💀 游戏结束",
     body: `
@@ -217,6 +227,7 @@ function showGameOverModal() {
         <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
       </table>
       ${badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + " 枚声誉徽章，下局可继承加成</p>" : ""}
+      ${heritageResult && heritageResult.earned > 0 ? '<p style="margin-top:8px;color:var(--success);font-size:13px;">🪙 本局获得 <strong>' + heritageResult.earned + '</strong> 枚传承币（累计余额 ' + heritageResult.after + '），可在主菜单→传承商店消费解锁下局福利</p>' : ""}
     `,
     buttons: [
       { text: "重新开始", cls: "btn-primary", callback: () => startNewGame() },

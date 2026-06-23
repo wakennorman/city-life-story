@@ -747,6 +747,40 @@ function settleDailyFinance(state) {
       "info",
     );
   }
+
+  // === v3.0 BUG 修复：村长债复利从未生效 — 现补回 ===
+  // 旧版 dailyInterest 字段被 4 个 UI 文件读取但从未被应用，导致利息始终为 0。
+  // 现在按当前难度的 dailyInterestBase 计算复利并累加到 villageDebt。
+  var vd = state.resources.villageDebt || 0;
+  if (vd > 0) {
+    var vdRate =
+      typeof getDifficultyMultiplier === "function"
+        ? getDifficultyMultiplier(state, "dailyInterest")
+        : state.resources.dailyInterest || 0.0035;
+    var vdInterest = Math.max(1, Math.floor(vd * vdRate));
+    state.resources.villageDebt = vd + vdInterest;
+    state.resources.villageDebtInterest =
+      (state.resources.villageDebtInterest || 0) + vdInterest;
+    state.resources.debt =
+      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "expense",
+        "village_debt_interest",
+        vdInterest,
+        "村长债复利（日息" + (vdRate * 100).toFixed(2) + "%）",
+      );
+    }
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "💸 村长债 +¥" + vdInterest + " 利息（日息" +
+          (vdRate * 100).toFixed(2) + "%，欠款¥" +
+          state.resources.villageDebt.toLocaleString() + "）",
+        "warning",
+      );
+    }
+  }
 }
 
 /**

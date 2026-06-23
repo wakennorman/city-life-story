@@ -224,7 +224,10 @@
       return;
     }
     // 玩家关闭过当天的提示
-    if (state.flags && state.flags._dailyFocusDismissedDay === state.player.day) {
+    if (
+      state.flags &&
+      state.flags._dailyFocusDismissedDay === state.player.day
+    ) {
       el.style.display = "none";
       return;
     }
@@ -236,7 +239,7 @@
     el.style.display = "";
     var html =
       '<h3 style="display:flex;justify-content:space-between;align-items:center;">' +
-      '<span>📌 今日重点</span>' +
+      "<span>📌 今日重点</span>" +
       '<button class="btn-mini" onclick="dismissDailyFocus()" title="今天不再显示" ' +
       'style="font-size:10px;padding:1px 5px;background:transparent;border:1px solid var(--border);' +
       'color:var(--text-muted);border-radius:3px;cursor:pointer;">✕</button>' +
