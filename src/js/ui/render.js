@@ -371,6 +371,9 @@ function renderSidebar(state) {
   renderNeedsBars(state);
   renderDebtInfo(state);
   renderDreamSection(state);
+  if (typeof renderDailyFocusSection === "function") {
+    renderDailyFocusSection(state);
+  }
   renderEduSection(state);
   renderReputationBadge(state);
   renderMoralStatus(state);

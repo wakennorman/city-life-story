@@ -3258,6 +3258,17 @@ function doStreetJob(job) {
       }
     }
   }
+  // 行业热度反馈：sectorHeat → 街头工作收入（review P0-3）
+  if (typeof getSectorJobIncomeMultiplier === "function") {
+    var secMult = getSectorJobIncomeMultiplier(job.id, state);
+    if (secMult !== 1.0) {
+      pay = Math.floor(pay * secMult);
+      if (Random.chance(0.2) && typeof getSectorJobIncomeDesc === "function") {
+        var secDesc = getSectorJobIncomeDesc(job.id, state);
+        if (secDesc) StateManager.addMessage("📊 " + secDesc, "hint");
+      }
+    }
+  }
   // 玩家历史声誉加成（P2.9）：过去道德选择的持续影响
   if (typeof getHistoryModifiers === "function") {
     var histMods = getHistoryModifiers(state);

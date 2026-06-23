@@ -1,0 +1,13 @@
+请严格按照 REVIEW_BRIEF.md 执行：
+
+(1) 先 Read REVIEW_BRIEF.md 全文（在项目根目录）
+(2) 按 brief 的 Token 节省护栏工作：不要 cat 整个文件；只用 Grep 关键词 + Read with offset/limit；改动用 Edit 而非 Write
+(3) 完成评估维度 A-E 的真实评分（每项有文件:行号证据）
+(4) 实施 P0 改进的全部项 + P1 改进的至少 3 项
+(5) 生成 REVIEW_RESULT.md（六章节：执行摘要/维度评分表/P0已实施/P1已实施/P2建议/省token提示词模板）
+(6) 在 src/DEVELOPMENT.md 顶部追加一条变更记录
+(7) 运行 python build.py 重新打包 dist/index.html
+(8) git add -A && git commit（不要 push）
+(9) 最终只用三行输出：REVIEW_RESULT.md 绝对路径 / git commit 哈希 / dist/index.html 大小
+
+直接动手，不要冗长汇报。

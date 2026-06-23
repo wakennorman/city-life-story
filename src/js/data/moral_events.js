@@ -1880,6 +1880,93 @@ const MORAL_CONSEQUENCES = {
       );
     },
   },
+
+  // === Review 扩展（2026-06-23）：补足缺失的 6 个后续 ===
+  moral_beggar_coin: {
+    id: "consequence_beggar_coin",
+    title: "🥡 路边的回响",
+    delay: [4, 9],
+    desc: function () {
+      return "路过那个十字路口，乞讨的老人对你笑了笑——他记住了那枚硬币。旁边小卖部老板说：「这老头其实是失独的，每周固定来这儿。」";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+      StateManager.addMessage("🌿 那一枚硬币，让你心里暖了一下。", "info");
+    },
+  },
+  moral_beggar_ignore: {
+    id: "consequence_beggar_ignore",
+    title: "🌧️ 路过的犹豫",
+    delay: [3, 7],
+    desc: function () {
+      return "你又一次路过那个角落，乞讨的位置空了——也许搬走了，也许更糟。你说不清自己心里的那点不安从何而来。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+      s.player.mental = Math.max(1, (s.player.mental || 0) - 1);
+      StateManager.addMessage("☁️ 一阵说不清的情绪压过来。", "warning");
+    },
+  },
+  moral_change_keep: {
+    id: "consequence_change_keep",
+    title: "📲 收款码的提醒",
+    delay: [5, 10],
+    desc: function () {
+      return "你扫小店买东西时，收银员盯了你两秒：「上次你少给了几块钱吧？」语气没什么火药味，但你脸有点烫。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 4);
+      StateManager.addMessage(
+        "😳 你赶紧补给了对方，但小店从此再没去过。",
+        "warning",
+      );
+    },
+  },
+  moral_cat_feed: {
+    id: "consequence_cat_feed",
+    title: "🐈 楼下小常客",
+    delay: [6, 12],
+    desc: function () {
+      return "那只你喂过的橘猫现在会蹲在你回家的路上。邻居看见你蹲下抚摸它，开始和你打招呼。";
+    },
+    apply: function (s) {
+      s.needs.happiness = Math.min(100, s.needs.happiness + 6);
+      s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+      StateManager.addMessage(
+        "🐱 有个小生命在等你回家，疲惫减轻了一点。",
+        "success",
+      );
+    },
+  },
+  moral_borrow_iou: {
+    id: "consequence_borrow_iou",
+    title: "🧾 那张借条",
+    delay: [20, 45],
+    desc: function () {
+      return "你抽屉里那张借条——对方主动联系，把钱还给了你，还多塞了一盒水果。「写借条这事让我重新审视了自己。」他说。";
+    },
+    apply: function (s) {
+      s.resources.cash += 500;
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+      s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+      StateManager.addMessage("💰 朋友还了¥500，还多了一份信任。", "success");
+    },
+  },
+  moral_colleague_snitch: {
+    id: "consequence_colleague_snitch",
+    title: "🥶 办公室的冷空气",
+    delay: [5, 12],
+    desc: function () {
+      return "你打小报告这件事不知怎么传开了。几个原本和你聊得来的同事开始绕着走，连茶水间都安静了。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 8);
+      s.player.mental = Math.max(1, (s.player.mental || 0) - 2);
+      StateManager.addMessage("🧊 同事关系冻住了，孤立感慢慢爬上来。", "warning");
+    },
+  },
 };
 
 // ====== 触发逻辑 ======

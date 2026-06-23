@@ -722,6 +722,19 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === Review P0-4：中产税事件 + P1-1：35岁危机 ===
+  {
+    name: "review_improvements_tick",
+    fn: function (state) {
+      if (typeof checkWealthTaxTick === "function") {
+        checkWealthTaxTick(state);
+      }
+      if (typeof check35Crisis === "function") {
+        check35Crisis(state);
+      }
+    },
+  },
+
   // === 新闻桥接（新闻→事件权重 + 价格情绪）===
   {
     name: "news_bridge",

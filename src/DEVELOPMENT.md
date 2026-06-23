@@ -1,7 +1,16 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-23（批次E：百科剧透隐藏+NPC在场概率+地点触发对话）
+> 最后更新: 2026-06-23（review：全方位评估 + P0/P1 改进落地）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
+
+## 2026-06-23 — Review：全方位评估 + P0/P1 改进（GLM-5.2）
+
+- **新建** `src/js/ui/daily_focus.js`：P0-1 今日重点 sidebar 组件（基于状态启发式打分取 Top 3）
+- **新建** `src/js/core/review_improvements.js`：P0-3 行业热度→街头工作收入桥接（±15%）/ P0-4 中产税 6 事件 / P1-1 35 岁分水岭 / P1-2 8 条本土化动态提示
+- **扩展** `src/js/data/moral_events.js`：补足 6 条缺失道德后续（beggar_coin/beggar_ignore/change_keep/cat_feed/borrow_iou/colleague_snitch）
+- **接线** `main.js` doStreetJob / `daily_pipeline.js` 新增 `review_improvements_tick` 步骤 / `render.js` renderSidebar / `index.html` 注册 2 个 script + 1 个 sidebar 区块
+- **整体评分** 7.5 / 10（评估细则见根目录 `REVIEW_RESULT.md`）
+- **构建**：python build.py (3550.7 KB) ✅
 
 ## 2026-06-23 — 批次E：百科剧透隐藏+NPC在场概率+地点触发对话
 
