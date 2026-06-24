@@ -292,11 +292,11 @@ function getQualityClass(quality) {
 }
 
 /**
- * 创建设备实例（带品质）
+ * 创建设备实例（带品质 + 耐久）
  * 被 modal.js 的 buyItemFromShop 调用
  * @param {object} itemDef - 装备定义对象（来自 ITEMS 数组）
  * @param {string} source - "buy" | "loot" | "reward"
- * @returns {object} { instanceId, quality, qualityName, qualityColor, qualityIcon, enchantments, actualPrice }
+ * @returns {object} { instanceId, quality, qualityName, qualityColor, qualityIcon, enchantments, actualPrice, durability, maxDurability, isBroken }
  */
 function createEquipmentInstance(itemDef, source) {
   if (!itemDef || !itemDef.slot) return null;
@@ -304,7 +304,7 @@ function createEquipmentInstance(itemDef, source) {
   var qualityInfo = generateItemQuality(itemDef, {});
   if (!qualityInfo) {
     // 回退到普通品质
-    return {
+    var basicInstance = {
       instanceId: itemDef.id + "_inst",
       quality: "common",
       qualityName: "普通",
@@ -313,12 +313,16 @@ function createEquipmentInstance(itemDef, source) {
       enchantments: [],
       actualPrice: itemDef.price || 0,
     };
+    // 添加耐久
+    if (typeof initItemDurability === "function") {
+      basicInstance = initItemDurability(basicInstance, itemDef) || basicInstance;
+    }
+    return basicInstance;
   }
 
   var actualPrice = Math.round((itemDef.price || 0) * qualityInfo.priceMult);
   var instanceId = itemDef.id + "_" + Date.now() + "_" + Random.int(0, 999);
-
-  return {
+  var instance = {
     instanceId: instanceId,
     quality: qualityInfo.quality,
     qualityName: qualityInfo.qualityName,
@@ -327,6 +331,13 @@ function createEquipmentInstance(itemDef, source) {
     enchantments: qualityInfo.enchantments,
     actualPrice: actualPrice,
   };
+
+  // 添加耐久
+  if (typeof initItemDurability === "function") {
+    instance = initItemDurability(instance, itemDef) || instance;
+  }
+
+  return instance;
 }
 
 // ====== 百科注册 ======

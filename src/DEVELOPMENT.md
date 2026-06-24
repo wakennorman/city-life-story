@@ -1,6 +1,43 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.4 C3D 内容关联度深化 + v3.3 Wave-1 关联度闭合）
+> 最后更新: 2026-06-24（v3.5 装备套装/耐久/技能连携系统 + v3.4 C3D 内容关联度深化 + v3.3 Wave-1 关联度闭合）
+
+## 2026-06-24 — v3.5 装备套装/耐久/技能连携系统（游戏设计师+高级开发工程师）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+
+**设计参考**：《暗黑破坏神》套装效果 / 《我的世界》工具耐久 / 《中国式家长》天赋连携 / 《Rimworld》技能协同
+
+**目标**：深化装备系统（套装+耐久）和扩展技能连携效果，增加系统间关联性。
+
+- **T1 · 装备套装系统** — 新建 `src/js/core/equipment_suites.js`（400+行）
+  - 6套装备套装（街头生存/配送达人/工地安全/科技精英/四季防护/理财达人）
+  - 套装效果分3档（2/3/4件），自动检测已装备数量
+  - 套装效果：收入加成、受伤抗性、疲劳减少、旅行AP减少等
+  - `checkEquipmentSuites()` 每日检测，`renderSuiteCard()` 渲染套装进度
+
+- **T2 · 装备耐久系统** — 新建 `src/js/core/equipment_durability.js`（350+行）
+  - 装备使用消耗耐久（工作-5/旅行-3/学习-1等）
+  - 品质加成：传奇耐久×2.0，史诗×1.5，稀有×1.2
+  - 修理系统：每点耐久¥1-5（品质越高越贵），完全损坏修理费翻倍
+  - 耐久归零装备失效，需要修理恢复
+  - `consumeEquipmentDurability()` 工作消耗，`repairEquipment()` 修理，`renderDurabilityBar()` 渲染
+
+- **T3 · 跨技能连携系统** — 新建 `src/js/core/skill_synergy.js`（600+行）
+  - 双技能连携（8对）：烹饪+销售=餐饮创业、编程+英语=国际外包等
+  - 三技能连携（4组）：烹饪+销售+管理=餐饮帝国、编程+英语+管理=技术高管等
+  - 主题连携（3主题）：技术/商业/生活服务
+  - 连携效果：收入加成、解锁新工作/业务/行动、被动收入
+  - `checkSkillSynergies()` 自动检测，`getSkillSynergyBonus()` 收入加成计算
+
+**接线**：
+- `index.html` 注册3个新script
+- `daily_pipeline.js` 新增3个管线步骤（套装检测/耐久tick/连携检测）
+- `main.js::doStreetJob()` 工作后消耗装备耐久
+- `equipment_quality.js::createEquipmentInstance()` 创建装备时初始化耐久
+- `skill_synergy.js::getSkillSynergyBonus()` 被 `main.js` 调用计算连携收入加成
+
+构建：dist/index.html = 3928.0 KB
 
 ## 2026-06-24 — v3.3 Wave-1 关联度闭合（游戏设计师+高级开发工程师）
 

@@ -3726,6 +3726,13 @@ function doStreetJob(job) {
     trackJobDiseaseRisk(job.id, state);
   }
 
+  // === v3.5 装备耐久消耗（工作消耗耐久）===
+  if (typeof consumeEquipmentDurability === "function") {
+    // 街头工作消耗较多，职场工作消耗较少
+    var actionType = "street_job";
+    consumeEquipmentDurability(state, actionType, 1.0);
+  }
+
   // 推进时间
   advanceTimeSlot();
 }

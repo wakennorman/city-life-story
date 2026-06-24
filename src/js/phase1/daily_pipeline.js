@@ -835,6 +835,40 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.5 装备套装检测 ===
+  {
+    name: "equipment_suites_check",
+    fn: function (state) {
+      if (typeof checkEquipmentSuites === "function") {
+        var suiteResults = checkEquipmentSuites(state);
+        // 将套装结果存入 state 供渲染使用
+        state.equipmentSuites = suiteResults;
+      }
+    },
+  },
+
+  // === v3.5 装备耐久消耗（每日工作后） ===
+  {
+    name: "equipment_durability_tick",
+    fn: function (state) {
+      if (typeof tickEquipmentDurability === "function") {
+        tickEquipmentDurability(state);
+      }
+    },
+  },
+
+  // === v3.5 技能连携检测 ===
+  {
+    name: "skill_synergy_check",
+    fn: function (state) {
+      if (typeof checkSkillSynergies === "function") {
+        var synergyResults = checkSkillSynergies(state);
+        // 将连携结果存入 state 供渲染使用
+        state.skillSynergies = synergyResults;
+      }
+    },
+  },
+
   // === 新闻桥接（新闻→事件权重 + 价格情绪）===
   {
     name: "news_bridge",

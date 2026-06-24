@@ -23990,11 +23990,11 @@ function getQualityClass(quality) {
 }
 
 /**
- * 创建设备实例（带品质）
+ * 创建设备实例（带品质 + 耐久）
  * 被 modal.js 的 buyItemFromShop 调用
  * @param {object} itemDef - 装备定义对象（来自 ITEMS 数组）
  * @param {string} source - "buy" | "loot" | "reward"
- * @returns {object} { instanceId, quality, qualityName, qualityColor, qualityIcon, enchantments, actualPrice }
+ * @returns {object} { instanceId, quality, qualityName, qualityColor, qualityIcon, enchantments, actualPrice, durability, maxDurability, isBroken }
  */
 function createEquipmentInstance(itemDef, source) {
   if (!itemDef || !itemDef.slot) return null;
@@ -24002,7 +24002,7 @@ function createEquipmentInstance(itemDef, source) {
   var qualityInfo = generateItemQuality(itemDef, {});
   if (!qualityInfo) {
     // 回退到普通品质
-    return {
+    var basicInstance = {
       instanceId: itemDef.id + "_inst",
       quality: "common",
       qualityName: "普通",
@@ -24011,12 +24011,16 @@ function createEquipmentInstance(itemDef, source) {
       enchantments: [],
       actualPrice: itemDef.price || 0,
     };
+    // 添加耐久
+    if (typeof initItemDurability === "function") {
+      basicInstance = initItemDurability(basicInstance, itemDef) || basicInstance;
+    }
+    return basicInstance;
   }
 
   var actualPrice = Math.round((itemDef.price || 0) * qualityInfo.priceMult);
   var instanceId = itemDef.id + "_" + Date.now() + "_" + Random.int(0, 999);
-
-  return {
+  var instance = {
     instanceId: instanceId,
     quality: qualityInfo.quality,
     qualityName: qualityInfo.qualityName,
@@ -24025,6 +24029,13 @@ function createEquipmentInstance(itemDef, source) {
     enchantments: qualityInfo.enchantments,
     actualPrice: actualPrice,
   };
+
+  // 添加耐久
+  if (typeof initItemDurability === "function") {
+    instance = initItemDurability(instance, itemDef) || instance;
+  }
+
+  return instance;
 }
 
 // ====== 百科注册 ======
@@ -55102,6 +55113,40 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof tickRouteEffects === "function") {
         tickRouteEffects(state);
+      }
+    },
+  },
+
+  // === v3.5 装备套装检测 ===
+  {
+    name: "equipment_suites_check",
+    fn: function (state) {
+      if (typeof checkEquipmentSuites === "function") {
+        var suiteResults = checkEquipmentSuites(state);
+        // 将套装结果存入 state 供渲染使用
+        state.equipmentSuites = suiteResults;
+      }
+    },
+  },
+
+  // === v3.5 装备耐久消耗（每日工作后） ===
+  {
+    name: "equipment_durability_tick",
+    fn: function (state) {
+      if (typeof tickEquipmentDurability === "function") {
+        tickEquipmentDurability(state);
+      }
+    },
+  },
+
+  // === v3.5 技能连携检测 ===
+  {
+    name: "skill_synergy_check",
+    fn: function (state) {
+      if (typeof checkSkillSynergies === "function") {
+        var synergyResults = checkSkillSynergies(state);
+        // 将连携结果存入 state 供渲染使用
+        state.skillSynergies = synergyResults;
       }
     },
   },
@@ -91647,6 +91692,1368 @@ function getSkillChineseName(skillKey) {
   return names[skillKey] || skillKey;
 }
 </script>
+    <!-- Equipment Suite System (v3.5) -->
+    <script>/**
+ * 装备套装系统 (Equipment Suites System)
+ *
+ * 参考：《暗黑破坏神》套装效果 / 《魔兽世界》套装属性 / 《Stardew Valley》工具套装
+ *
+ * 套装定义：多件同主题装备同时装备时触发额外加成
+ * 套装效果：基于装备数量递增（2件/3件/4件/全套装）
+ * 套装识别：通过装备ID列表匹配，自动检测玩家当前装备是否属于某套装
+ */
+
+const EQUIPMENT_SUITES = {
+  // ============================================================
+  // 街头生存套装 - 底层生存者的必备装备
+  // ============================================================
+  street_survival: {
+    id: "street_survival",
+    name: "街头生存套装",
+    icon: "🏚️",
+    theme: "底层生存",
+    desc: "在街头摸爬滚打多年积累的经验，每一件装备都见证过你的挣扎。",
+    items: [
+      { id: "straw_hat", name: "草帽", slot: "head" },
+      { id: "work_gloves", name: "劳保手套", slot: "hand" },
+      { id: "sturdy_shoes", name: "解放鞋", slot: "feet" },
+      { id: "work_uniform", name: "工作服", slot: "body" },
+    ],
+    tiers: [
+      { count: 2, name: "初识街头", effects: { streetIncomeBonus: 0.05 } },
+      { count: 3, name: "街头老手", effects: { streetIncomeBonus: 0.10, injuryReduction: 0.05 } },
+      { count: 4, name: "街头王者", effects: { streetIncomeBonus: 0.15, injuryReduction: 0.10, fatigueReduction: 5 } },
+    ],
+  },
+
+  // ============================================================
+  // 配送达人套装 - 外卖骑手的终极装备
+  // ============================================================
+  delivery_master: {
+    id: "delivery_master",
+    name: "配送达人套装",
+    icon: "🛵",
+    theme: "外卖骑手",
+    desc: "风雨无阻的配送路上，这些装备是你最可靠的伙伴。",
+    items: [
+      { id: "mask", name: "口罩", slot: "head" },
+      { id: "sturdy_shoes", name: "解放鞋", slot: "feet" },
+      { id: "backpack", name: "大背包", slot: "accessory" },
+      { id: "smartphone", name: "智能手机", slot: "accessory" },
+    ],
+    tiers: [
+      { count: 2, name: "新手骑手", effects: { deliveryIncomeBonus: 0.08, travelApReduction: 1 } },
+      { count: 3, name: "资深骑手", effects: { deliveryIncomeBonus: 0.15, travelApReduction: 1, fatigueRecoveryBonus: 0.05 } },
+      { count: 4, name: "配送达人", effects: { deliveryIncomeBonus: 0.20, travelApReduction: 2, fatigueRecoveryBonus: 0.10, deliverySpeedBonus: 0.15 } },
+    ],
+  },
+
+  // ============================================================
+  // 工地安全套装 - 建筑工人的专业装备
+  // ============================================================
+  construction_safety: {
+    id: "construction_safety",
+    name: "工地安全套装",
+    icon: "🏗️",
+    theme: "建筑工人",
+    desc: "工地上的每一滴汗水，都凝结在这些专业装备里。",
+    items: [
+      { id: "safety_helmet", name: "安全帽", slot: "head" },
+      { id: "work_gloves", name: "劳保手套", slot: "hand" },
+      { id: "work_boots", name: "劳保靴", slot: "feet" },
+      { id: "reflective_vest", name: "反光背心", slot: "body" },
+    ],
+    tiers: [
+      { count: 2, name: "工地新人", effects: { constructionIncomeBonus: 0.05, injuryReduction: 0.05 } },
+      { count: 3, name: "工地熟手", effects: { constructionIncomeBonus: 0.10, injuryReduction: 0.12, nightWorkIncomeBonus: 0.05 } },
+      { count: 4, name: "工地专家", effects: { constructionIncomeBonus: 0.15, injuryReduction: 0.20, nightWorkIncomeBonus: 0.10, nightVisibilityBonus: 0.30 } },
+    ],
+  },
+
+  // ============================================================
+  // 科技精英套装 - IT从业者的标配
+  // ============================================================
+  tech_elite: {
+    id: "tech_elite",
+    name: "科技精英套装",
+    icon: "💻",
+    theme: "IT从业者",
+    desc: "代码世界的利器，每一样都是提升效率的必需品。",
+    items: [
+      { id: "smart_watch", name: "智能手表", slot: "accessory" },
+      { id: "noise_cancelling_earphones", name: "降噪耳机", slot: "accessory" },
+      { id: "laptop_bag", name: "电脑包", slot: "accessory" },
+      { id: "power_bank", name: "充电宝", slot: "accessory" },
+    ],
+    tiers: [
+      { count: 2, name: "技术新人", effects: { techIncomeBonus: 0.08, studyEfficiencyBonus: 0.10 } },
+      { count: 3, name: "技术骨干", effects: { techIncomeBonus: 0.12, studyEfficiencyBonus: 0.15, fatigueIntelWorkReduction: 3 } },
+      { count: 4, name: "技术精英", effects: { techIncomeBonus: 0.15, studyEfficiencyBonus: 0.20, fatigueIntelWorkReduction: 5, codingXpBonus: 0.15 } },
+    ],
+  },
+
+  // ============================================================
+  // 四季防护套装 - 户外工作者的全天候装备
+  // ============================================================
+  all_weather: {
+    id: "all_weather",
+    name: "四季防护套装",
+    icon: "🌦️",
+    theme: "户外工作者",
+    desc: "无论春夏秋冬，这些装备都能让你在户外工作更舒适。",
+    items: [
+      { id: "warm_coat", name: "厚棉衣", slot: "body" },
+      { id: "thermal_underwear", name: "保暖内衣", slot: "body" },
+      { id: "raincoat", name: "雨衣", slot: "body" },
+      { id: "umbrella", name: "雨伞", slot: null },
+    ],
+    tiers: [
+      { count: 2, name: "季节适应", effects: { weatherPenaltyReduction: 0.25, seasonalIncomeBonus: 0.05 } },
+      { count: 3, name: "四季自如", effects: { weatherPenaltyReduction: 0.40, seasonalIncomeBonus: 0.08, coldProtectionBonus: 10, heatProtectionBonus: 10 } },
+      { count: 4, name: "风雨无阻", effects: { weatherPenaltyReduction: 0.50, seasonalIncomeBonus: 0.10, coldProtectionBonus: 20, heatProtectionBonus: 15, rainProtectionBonus: 25 } },
+    ],
+  },
+
+  // ============================================================
+  // 理财达人套装 - 投资人的必备工具
+  // ============================================================
+  finance_master: {
+    id: "finance_master",
+    name: "理财达人套装",
+    icon: "📈",
+    theme: "投资人",
+    desc: "在金融市场的博弈中，这些工具帮你保持清醒和效率。",
+    items: [
+      { id: "smart_watch", name: "智能手表", slot: "accessory" },
+      { id: "smartphone", name: "智能手机", slot: "accessory" },
+      { id: "noise_cancelling_earphones", name: "降噪耳机", slot: "accessory" },
+      { id: "notebook_item", name: "记事本", slot: null },
+    ],
+    tiers: [
+      { count: 2, name: "投资入门", effects: { financeIncomeBonus: 0.05, newsAccess: true } },
+      { count: 3, name: "投资老手", effects: { financeIncomeBonus: 0.10, newsAccess: true, studyEfficiencyBonus: 0.10 } },
+      { count: 4, name: "投资达人", effects: { financeIncomeBonus: 0.15, newsAccess: true, studyEfficiencyBonus: 0.15, tradingFeeReduction: 0.10 } },
+    ],
+  },
+};
+
+/**
+ * 检测玩家当前装备属于哪些套装
+ * @param {object} state - 游戏状态
+ * @returns {object} 每个套装的已装备数量和最高达成等级
+ */
+function checkEquipmentSuites(state) {
+  if (!state || !state.equipment || !state.equipment.equipped) {
+    return {};
+  }
+
+  var equippedIds = {};
+  var equippedSlots = {};
+
+  // 收集已装备的装备ID和槽位
+  for (var slot in state.equipment.equipped) {
+    var item = state.equipment.equipped[slot];
+    if (item && item.id) {
+      equippedIds[item.id] = true;
+      equippedSlots[slot] = item.id;
+    }
+  }
+
+  var results = {};
+
+  for (var suiteId in EQUIPMENT_SUITES) {
+    var suite = EQUIPMENT_SUITES[suiteId];
+    var equippedCount = 0;
+    var equippedItems = [];
+
+    for (var i = 0; i < suite.items.length; i++) {
+      var itemDef = suite.items[i];
+      // 检查装备是否在已装备列表中
+      if (equippedIds[itemDef.id]) {
+        equippedCount++;
+        equippedItems.push(itemDef.id);
+      }
+    }
+
+    // 找到达到的最高等级
+    var achievedTier = null;
+    for (var j = 0; j < suite.tiers.length; j++) {
+      var tier = suite.tiers[j];
+      if (equippedCount >= tier.count) {
+        achievedTier = tier;
+      }
+    }
+
+    if (equippedCount > 0) {
+      results[suiteId] = {
+        suiteId: suiteId,
+        name: suite.name,
+        icon: suite.icon,
+        theme: suite.theme,
+        equippedCount: equippedCount,
+        totalCount: suite.items.length,
+        achievedTier: achievedTier,
+        achievedTierName: achievedTier ? achievedTier.name : null,
+        equippedItems: equippedItems,
+      };
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 获取套装加成效果（合并所有达成的套装等级）
+ * @param {object} suiteResults - checkEquipmentSuites的返回结果
+ * @returns {object} 合并后的效果对象
+ */
+function getSuiteEffects(suiteResults) {
+  var effects = {};
+
+  for (var suiteId in suiteResults) {
+    var result = suiteResults[suiteId];
+    if (result.achievedTier && result.achievedTier.effects) {
+      var tierEffects = result.achievedTier.effects;
+      for (var effectKey in tierEffects) {
+        var newValue = tierEffects[effectKey];
+        var existingValue = effects[effectKey] || 0;
+
+        // 处理不同类型的效果叠加
+        if (effectKey.indexOf("Reduction") >= 0 || effectKey.indexOf("Bonus") >= 0) {
+          // 百分比加成或减少值，取最大值（不叠加）
+          effects[effectKey] = Math.max(existingValue, newValue);
+        } else if (effectKey === "travelApReduction" || effectKey === "fatigueIntelWorkReduction") {
+          // AP减少值，可叠加
+          effects[effectKey] = existingValue + newValue;
+        } else {
+          // 其他效果，取最大值
+          effects[effectKey] = Math.max(existingValue, newValue);
+        }
+      }
+    }
+  }
+
+  return effects;
+}
+
+/**
+ * 获取套装达成进度描述
+ * @param {string} suiteId - 套装ID
+ * @param {number} equippedCount - 已装备数量
+ * @returns {string} 进度描述文本
+ */
+function getSuiteProgressDesc(suiteId, equippedCount) {
+  var suite = EQUIPMENT_SUITES[suiteId];
+  if (!suite) return "";
+
+  var currentTier = null;
+  for (var i = 0; i < suite.tiers.length; i++) {
+    if (equippedCount >= suite.tiers[i].count) {
+      currentTier = suite.tiers[i];
+    }
+  }
+
+  if (!currentTier) {
+    // 未达到任何等级
+    var nextTier = suite.tiers[0];
+    return "还需装备 " + (nextTier.count - equippedCount) + " 件装备解锁「" + nextTier.name + "」";
+  }
+
+  // 检查是否已达最高等级
+  if (currentTier === suite.tiers[suite.tiers.length - 1]) {
+    return "✅ 套装效果已全部解锁！";
+  }
+
+  // 还有未解锁等级
+  var nextIndex = suite.tiers.indexOf(currentTier) + 1;
+  if (nextIndex < suite.tiers.length) {
+    var next = suite.tiers[nextIndex];
+    return "已解锁「" + currentTier.name + "」，再装备 " + (next.count - equippedCount) + " 件解锁「" + next.name + "」";
+  }
+
+  return "已解锁「" + currentTier.name + "」";
+}
+
+/**
+ * 获取套装HTML渲染
+ * @param {object} suiteResult - checkEquipmentSuites的单个结果
+ * @returns {string} HTML字符串
+ */
+function renderSuiteCard(suiteResult) {
+  var suite = EQUIPMENT_SUITES[suiteResult.suiteId];
+  if (!suite) return "";
+
+  var progressDesc = getSuiteProgressDesc(suiteResult.suiteId, suiteResult.equippedCount);
+  var tierColor = suiteResult.achievedTier ? "var(--success)" : "var(--text-muted)";
+
+  var itemsHtml = "";
+  for (var i = 0; i < suite.items.length; i++) {
+    var item = suite.items[i];
+    var isEquipped = suiteResult.equippedItems.indexOf(item.id) >= 0;
+    var itemIcon = isEquipped ? "✅" : "⬜";
+    itemsHtml += '<span style="margin-right:8px;">' + itemIcon + ' ' + item.name + '</span>';
+  }
+
+  var tierHtml = "";
+  if (suiteResult.achievedTier) {
+    tierHtml = '<div style="color:' + tierColor + ';font-weight:bold;margin-top:8px;">' +
+      '🏆 已解锁：「' + suiteResult.achievedTierName + '」' +
+      '</div>';
+  }
+
+  return '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+    '<span style="font-size:24px;">' + suite.icon + '</span>' +
+    '<div style="font-weight:bold;color:var(--text-primary);">' + suite.name + '</div>' +
+    '<span style="font-size:12px;color:var(--text-secondary);margin-left:auto;">' + suiteResult.equippedCount + '/' + suiteResult.totalCount + '</span>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + suite.theme + '</div>' +
+    '<div style="margin-top:8px;font-size:12px;">' + itemsHtml + '</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + progressDesc + '</div>' +
+    tierHtml +
+    '</div>';
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.EQUIPMENT_SUITES = EQUIPMENT_SUITES;
+  window.checkEquipmentSuites = checkEquipmentSuites;
+  window.getSuiteEffects = getSuiteEffects;
+  window.getSuiteProgressDesc = getSuiteProgressDesc;
+  window.renderSuiteCard = renderSuiteCard;
+
+  MECHANICS.equipment_suites = {
+    id: "equipment_suites",
+    name: "装备套装",
+    icon: "🎒",
+    brief: "同时装备同套装的多件装备可触发额外加成效果，套装等级随装备数量递增。",
+    version: "1.0",
+    related: ["mechanics:items", "mechanics:equipment_quality"],
+    sections: [
+      {
+        type: "desc",
+        content: "套装效果基于同时装备的同主题装备数量递增。每套装备有2/3/4件三档加成，全部集齐可获得最强效果。套装效果可与其他装备效果叠加。",
+      },
+      {
+        type: "list",
+        items: Object.keys(EQUIPMENT_SUITES).map(function(id) {
+          var s = EQUIPMENT_SUITES[id];
+          return s.icon + " **" + s.name + "**（" + s.items.length + "件）— " + s.theme;
+        }),
+      },
+      {
+        type: "tip",
+        content: "套装效果在装备/卸下装备时自动检测，无需手动激活。在「装备」Tab可查看当前套装进度。",
+      },
+    ],
+  };
+}
+</script>
+    <!-- Equipment Durability System (v3.5) -->
+    <script>/**
+ * 装备耐久系统 (Equipment Durability System)
+ *
+ * 参考：《我的世界》工具耐久 / 《饥荒》装备耐久 / 《暗黑破坏神》装备耐久
+ *
+ * 耐久机制：
+ * - 装备每次使用（工作/旅行/特定行动）消耗耐久
+ * - 耐久归零时装备失效，效果不再生效
+ * - 修理需要工具+材料+金钱，恢复部分耐久
+ * - 高品质装备初始耐久更高，修理成本也更高
+ * - 耐久消耗可显示在装备详情中
+ */
+
+// 装备耐久基础值（按装备类型）
+const DURABILITY_BASE = {
+  head: 200,      // 头部装备：帽子、头盔等
+  hand: 300,      // 手部装备：手套等
+  feet: 250,      // 脚部装备：鞋子、靴子
+  body: 350,      // 身体装备：衣服、背心等
+  accessory: 400, // 配饰：背包、手表、耳机等
+  null: 500,      // 非穿戴装备：雨伞、手电筒等（消耗较慢）
+};
+
+// 装备使用时的耐久消耗（按行动类型）
+const DURABILITY_COST = {
+  // 工作类型
+  street_job: 5,          // 街头工作
+  corp_job: 2,            // 职场工作（消耗较少）
+  travel: 3,              // 旅行
+  learning: 1,            // 学习
+  rest: 0,                // 休息（不消耗）
+  cooking: 2,             // 烹饪
+  trading: 1,             // 交易
+  social: 1,              // 社交
+  other: 1,               // 其他行动
+};
+
+/**
+ * 为装备实例添加耐久字段
+ * @param {object} itemInstance - 装备实例（来自 createEquipmentInstance）
+ * @param {object} itemDef - 装备定义（来自 ITEMS）
+ * @returns {object} 带耐久的装备实例
+ */
+function initItemDurability(itemInstance, itemDef) {
+  if (!itemInstance) return null;
+
+  // 跳过非装备物品（食材、证书等）
+  if (!itemDef || !itemDef.slot && !itemDef.id) {
+    return itemInstance;
+  }
+
+  var slot = itemDef.slot || null;
+  var baseDurability = DURABILITY_BASE[slot] || DURABILITY_BASE.null;
+
+  // 品质加成：高品质装备耐久更高
+  var qualityMult = 1.0;
+  if (itemInstance.quality) {
+    if (itemInstance.quality === "rare") qualityMult = 1.2;
+    else if (itemInstance.quality === "epic") qualityMult = 1.5;
+    else if (itemInstance.quality === "legendary") qualityMult = 2.0;
+  }
+
+  var maxDurability = Math.floor(baseDurability * qualityMult);
+
+  // 复制实例并添加耐久
+  var durableItem = {};
+  for (var key in itemInstance) {
+    durableItem[key] = itemInstance[key];
+  }
+
+  durableItem.maxDurability = maxDurability;
+  durableItem.durability = maxDurability;
+  durableItem.isBroken = false;
+
+  return durableItem;
+}
+
+/**
+ * 消耗装备耐久（当使用装备进行行动时）
+ * @param {object} state - 游戏状态
+ * @param {string} actionType - 行动类型（street_job, corp_job, travel等）
+ * @param {number} costMultiplier - 消耗倍率（某些工作可能消耗更快）
+ */
+function consumeEquipmentDurability(state, actionType, costMultiplier) {
+  if (!state || !state.equipment || !state.equipment.equipped) return;
+
+  var cost = DURABILITY_COST[actionType] || DURABILITY_COST.other;
+  cost *= costMultiplier || 1.0;
+
+  if (cost <= 0) return;
+
+  var equipped = state.equipment.equipped;
+  for (var slot in equipped) {
+    var item = equipped[slot];
+    if (item && item.durability !== undefined) {
+      // 耐久归零的装备不消耗
+      if (item.isBroken) continue;
+
+      var oldDurability = item.durability;
+      item.durability = Math.max(0, item.durability - cost);
+
+      // 检查是否耐久归零
+      if (item.durability <= 0 && !item.isBroken) {
+        item.isBroken = true;
+        item.durability = 0;
+        // 触发装备损坏消息
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage(
+            "⚠️ 您的「" + (item.name || slot) + "」耐久耗尽，效果失效！需要修理。",
+            "warning"
+          );
+        }
+      }
+    }
+  }
+}
+
+/**
+ * 修理装备（恢复耐久）
+ * @param {object} state - 游戏状态
+ * @param {string} itemId - 要修理的装备ID
+ * @param {number} repairAmount - 修理量（0为满修）
+ * @returns {object} { success, cost, repairedAmount, message }
+ */
+function repairEquipment(state, itemId, repairAmount) {
+  if (!state || !state.equipment || !state.equipment.equipped) {
+    return { success: false, message: "没有可修理的装备" };
+  }
+
+  // 查找装备（可能在已装备或背包中）
+  var item = null;
+  var itemSlot = null;
+
+  // 检查已装备
+  for (var slot in state.equipment.equipped) {
+    if (state.equipment.equipped[slot].id === itemId) {
+      item = state.equipment.equipped[slot];
+      itemSlot = slot;
+      break;
+    }
+  }
+
+  // 检查背包
+  if (!item && state.equipment.inventory) {
+    for (var i = 0; i < state.equipment.inventory.length; i++) {
+      if (state.equipment.inventory[i].id === itemId) {
+        item = state.equipment.inventory[i];
+        break;
+      }
+    }
+  }
+
+  if (!item) {
+    return { success: false, message: "找不到该装备" };
+  }
+
+  if (!item.durability !== undefined) {
+    return { success: false, message: "该装备不支持耐久系统" };
+  }
+
+  if (item.isBroken && item.durability <= 0) {
+    return { success: false, message: "装备已完全损坏，需要大修（花费更多）" };
+  }
+
+  // 计算修理费用
+  var maxDur = item.maxDurability || 100;
+  var currentDur = item.durability || 0;
+  var repairTarget = repairAmount > 0 ? Math.min(maxDur, currentDur + repairAmount) : maxDur;
+  var repairNeeded = repairTarget - currentDur;
+
+  if (repairNeeded <= 0) {
+    return { success: false, message: "装备耐久已满" };
+  }
+
+  // 修理费用：每点耐久 ¥1-5，取决于品质
+  var pricePerPoint = 1;
+  if (item.quality === "rare") pricePerPoint = 2;
+  else if (item.quality === "epic") pricePerPoint = 3;
+  else if (item.quality === "legendary") pricePerPoint = 5;
+
+  // 完全损坏的装备修理费翻倍
+  if (item.isBroken) pricePerPoint *= 2;
+
+  var repairCost = Math.floor(repairNeeded * pricePerPoint);
+
+  // 检查是否有足够金钱
+  if (state.resources && state.resources.cash < repairCost) {
+    return {
+      success: false,
+      message: "修理需要 ¥" + repairCost + "，您只有 ¥" + (state.resources.cash || 0)
+    };
+  }
+
+  // 执行修理
+  state.resources.cash -= repairCost;
+  item.durability = repairTarget;
+  item.isBroken = false;
+
+  return {
+    success: true,
+    cost: repairCost,
+    repairedAmount: repairNeeded,
+    newDurability: item.durability,
+    maxDurability: item.maxDurability,
+    message: "✅ 「" + (item.name || itemId) + "」修理完成，耐久 " + Math.floor(currentDur) + " → " + Math.floor(item.durability) + "，花费 ¥" + repairCost
+  };
+}
+
+/**
+ * 获取装备耐久状态描述
+ * @param {object} item - 装备实例
+ * @returns {object} { percent, status, color, icon, desc }
+ */
+function getDurabilityStatus(item) {
+  if (!item || item.durability === undefined) {
+    return { percent: 100, status: "perfect", color: "var(--success)", icon: "✅", desc: "全新" };
+  }
+
+  var maxDur = item.maxDurability || 100;
+  var percent = Math.round((item.durability / maxDur) * 100);
+
+  if (item.isBroken || percent <= 0) {
+    return { percent: 0, status: "broken", color: "var(--danger)", icon: "💔", desc: "已损坏" };
+  } else if (percent <= 20) {
+    return { percent: percent, status: "critical", color: "var(--danger)", icon: "⚠️", desc: "急需修理" };
+  } else if (percent <= 50) {
+    return { percent: percent, status: "worn", color: "var(--warning)", icon: "🔧", desc: "磨损" };
+  } else if (percent <= 80) {
+    return { percent: percent, status: "used", color: "#f0ad4e", icon: "📦", desc: "使用过" };
+  } else {
+    return { percent: percent, status: "good", color: "var(--success)", icon: "✨", desc: "良好" };
+  }
+}
+
+/**
+ * 获取耐久HTML渲染
+ * @param {object} item - 装备实例
+ * @returns {string} HTML字符串
+ */
+function renderDurabilityBar(item) {
+  var status = getDurabilityStatus(item);
+  var barWidth = status.percent + "%";
+
+  return '<div style="margin-top:6px;">' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);">' +
+    '<span>耐久</span>' +
+    '<span style="color:' + status.color + ';">' + Math.floor(item.durability || 0) + '/' + (item.maxDurability || 0) + '</span>' +
+    '</div>' +
+    '<div style="background:var(--bg-input);border-radius:4px;height:6px;margin-top:2px;overflow:hidden;">' +
+    '<div style="background:' + status.color + ';height:100%;width:' + barWidth + ';transition:width 0.3s;"></div>' +
+    '</div>' +
+    '<div style="font-size:10px;color:' + status.color + ';margin-top:2px;">' + status.icon + ' ' + status.desc + '</div>' +
+    '</div>';
+}
+
+/**
+ * 每日检查装备耐久（自动修理或提醒）
+ * @param {object} state - 游戏状态
+ */
+function tickEquipmentDurability(state) {
+  if (!state || !state.equipment || !state.equipment.equipped) return;
+
+  // 检查是否有装备耐久归零
+  var brokenItems = [];
+  for (var slot in state.equipment.equipped) {
+    var item = state.equipment.equipped[slot];
+    if (item && item.durability !== undefined && item.isBroken) {
+      brokenItems.push(item);
+    }
+  }
+
+  if (brokenItems.length > 0) {
+    // 每天提醒一次
+    if (!state.flags || !state.flags._durabilityReminderToday) {
+      state.flags = state.flags || {};
+      state.flags._durabilityReminderToday = true;
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage(
+          "🔧 您有 " + brokenItems.length + " 件装备耐久耗尽，效果失效。去「装备」Tab修理吧！",
+          "warning"
+        );
+      }
+    }
+  } else {
+    // 重置每日提醒
+    if (state.flags) state.flags._durabilityReminderToday = false;
+  }
+}
+
+// ====== 导出 ======
+if (typeof window !== "undefined") {
+  window.DURABILITY_BASE = DURABILITY_BASE;
+  window.DURABILITY_COST = DURABILITY_COST;
+  window.initItemDurability = initItemDurability;
+  window.consumeEquipmentDurability = consumeEquipmentDurability;
+  window.repairEquipment = repairEquipment;
+  window.getDurabilityStatus = getDurabilityStatus;
+  window.renderDurabilityBar = renderDurabilityBar;
+  window.tickEquipmentDurability = tickEquipmentDurability;
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  MECHANICS.equipment_durability = {
+    id: "equipment_durability",
+    name: "装备耐久",
+    icon: "🔧",
+    brief: "装备使用会消耗耐久，耐久归零时效果失效，需要修理恢复。",
+    version: "1.0",
+    related: ["mechanics:items", "mechanics:equipment_quality"],
+    sections: [
+      {
+        type: "desc",
+        content: "每件装备都有耐久值，进行工作、旅行等行动时会消耗耐久。耐久归零时装备失效，需要花费金钱修理。高品质装备耐久更高，但修理也更贵。",
+      },
+      {
+        type: "table",
+        headers: ["装备类型", "基础耐久", "典型消耗"],
+        rows: [
+          ["头部（帽子/头盔）", "200", "工作-5/旅行-3"],
+          ["手部（手套）", "300", "工作-5/旅行-3"],
+          ["脚部（鞋子/靴子）", "250", "工作-5/旅行-3"],
+          ["身体（衣服）", "350", "工作-5/旅行-3"],
+          ["配饰（背包/手表）", "400", "工作-5/旅行-3"],
+          ["非穿戴（雨伞等）", "500", "工作-5/旅行-3"],
+        ],
+      },
+      {
+        type: "tip",
+        content: "修理费用：每点耐久 ¥1-5（取决于品质），完全损坏的装备修理费翻倍。建议在装备耐久低于30%时及时修理。",
+      },
+    ],
+  };
+}
+</script>
+    <!-- Skill Synergy System (v3.5) -->
+    <script>/**
+ * 跨技能连携效果系统 (Skill Synergy System)
+ *
+ * 参考：《中国式家长》天赋连携 / 《Rimworld》技能协同 / 《文明6》政策连携
+ *
+ * 连携机制：
+ * - 当玩家同时拥有多门技能达到一定等级时，触发额外加成
+ * - 连携效果分为：双技能连携（2门）、三技能连携（3门）、主题连携（3+门同主题）
+ * - 连携效果影响：工作收入、XP获取、特殊行动解锁、NPC互动等
+ * - 连携效果在技能等级变化时自动检测
+ */
+
+// 双技能连携（2门技能达到阈值）
+const SKILL_SYNERGY_DUAL = {
+  // 烹饪 + 销售 = 餐饮创业加成
+  cooking_sales: {
+    id: "cooking_sales",
+    name: "餐饮创业",
+    icon: "🍽️",
+    skills: [
+      { id: "cooking", minLevel: 40 },
+      { id: "sales", minLevel: 40 },
+    ],
+    effects: {
+      // 摆摊小吃收入+30%
+      street_vending_food: { incomeMultiplier: 1.30 },
+      sister_zhang_vending: { incomeMultiplier: 1.30 },
+      // 解锁新工作：餐饮摊主
+      unlockJobs: ["restaurant_owner"],
+      // 食材成本-15%
+      foodCostReduction: 0.15,
+      // 顾客满意度+20%
+      customerSatisfactionBonus: 0.20,
+    },
+    desc: "懂烹饪又懂销售，开个小餐馆或摆摊卖小吃都能赚钱。",
+  },
+
+  // 编程 + 英语 = 国际外包
+  coding_english: {
+    id: "coding_english",
+    name: "国际外包",
+    icon: "🌐",
+    skills: [
+      { id: "coding", minLevel: 50 },
+      { id: "english", minLevel: 50 },
+    ],
+    effects: {
+      // 编程类工作收入+40%
+      coding: { incomeMultiplier: 1.40 },
+      freelance_writing: { incomeMultiplier: 1.30 },
+      content_writing: { incomeMultiplier: 1.30 },
+      // 解锁国际外包工作
+      unlockJobs: ["international_freelance", "foreign_client_coding"],
+      // 学习XP+20%
+      codingXpBonus: 0.20,
+      englishXpBonus: 0.20,
+    },
+    desc: "会编程又会英语，可以接国际外包单，收入翻倍。",
+  },
+
+  // 维修 + 电工 = 综合维修
+  repair_electrician: {
+    id: "repair_electrician",
+    name: "综合维修",
+    icon: "🔧",
+    skills: [
+      { id: "repair", minLevel: 40 },
+      { id: "electrician", minLevel: 40 },
+    ],
+    effects: {
+      // 维修类工作收入+35%
+      instrument_repair: { incomeMultiplier: 1.35 },
+      electronics_repair: { incomeMultiplier: 1.35 },
+      factory_electrician: { incomeMultiplier: 1.30 },
+      // 解锁综合维修工作
+      unlockJobs: ["comprehensive_repairman"],
+      // 装备维修损耗-30%
+      repairWearReduction: 0.30,
+    },
+    desc: "既能修机械又能修电路，成为综合维修师傅，收入翻倍。",
+  },
+
+  // 销售 + 管理 = 团队销售
+  sales_management: {
+    id: "sales_management",
+    name: "团队销售",
+    icon: "👥",
+    skills: [
+      { id: "sales", minLevel: 50 },
+      { id: "management", minLevel: 40 },
+    ],
+    effects: {
+      // 销售类工作收入+30%
+      shop_assistant: { incomeMultiplier: 1.30 },
+      promoter: { incomeMultiplier: 1.30 },
+      // 解锁团队销售管理
+      unlockJobs: ["sales_team_lead"],
+      // 团队规模+2
+      teamSizeBonus: 2,
+      // 人缘成长+15%
+      popularityBonus: 15,
+    },
+    desc: "懂销售又会管理，可以带领销售团队，收入翻倍。",
+  },
+
+  // 驾驶 + 物流 = 长途运输
+  driving_logistics: {
+    id: "driving_logistics",
+    name: "长途运输",
+    icon: "🚛",
+    skills: [
+      { id: "driving", minLevel: 50 },
+      { id: "accounting", minLevel: 30 }, // 会计用于计算运费
+    ],
+    effects: {
+      // 货运/配送收入+40%
+      truck_assistant: { incomeMultiplier: 1.40 },
+      warehouse_logistics: { incomeMultiplier: 1.30 },
+      wholesale_delivery: { incomeMultiplier: 1.35 },
+      // 解锁长途运输工作
+      unlockJobs: ["long_haul_driver", "logistics_manager"],
+      // 旅行AP-3（效率更高）
+      travelApReduction: 3,
+    },
+    desc: "会开车又会算账，可以跑长途运输，收入翻倍。",
+  },
+
+  // 烹饪 + 维修 = 家庭全能
+  cooking_repair: {
+    id: "cooking_repair",
+    name: "家庭全能",
+    icon: "🏠",
+    skills: [
+      { id: "cooking", minLevel: 30 },
+      { id: "repair", minLevel: 30 },
+    ],
+    effects: {
+      // 在家做饭效果+50%
+      homeCookingBonus: 0.50,
+      // 自己修理装备节省50%修理费
+      selfRepairDiscount: 0.50,
+      // 解锁家庭维修行动
+      unlockActions: ["home_repair"],
+      // 幸福感+10%
+      happinessBonus: 10,
+    },
+    desc: "会做饭又会修东西，在家就能解决大部分问题，省钱又幸福。",
+  },
+
+  // 英语 + 管理 = 外企晋升
+  english_management: {
+    id: "english_management",
+    name: "外企晋升",
+    icon: "🏢",
+    skills: [
+      { id: "english", minLevel: 60 },
+      { id: "management", minLevel: 50 },
+    ],
+    effects: {
+      // 职场能力+15
+      abilityFlatBonus: 15,
+      // 向上管理+20
+      upwardMgmtBonus: 20,
+      // 解锁外企管理岗位
+      unlockJobs: ["foreign_company_manager", "international_project_lead"],
+      // 晋升速度+25%
+      promoSpeedBonus: 0.25,
+    },
+    desc: "英语好又会管理，在外企如鱼得水，晋升飞快。",
+  },
+
+  // 会计 + 投资 = 财务自由
+  accounting_investment: {
+    id: "accounting_investment",
+    name: "财务自由",
+    icon: "💰",
+    skills: [
+      { id: "accounting", minLevel: 50 },
+      { id: "management", minLevel: 40 }, // 管理用于投资决策
+    ],
+    effects: {
+      // 投资收入+30%
+      investmentIncomeBonus: 0.30,
+      // 股票交易手续费-50%
+      tradingFeeReduction: 0.50,
+      // 解锁高级投资分析
+      unlockActions: ["advanced_investment_analysis"],
+      // 每日被动收入+¥50（来自投资）
+      passiveInvestmentIncome: 50,
+    },
+    desc: "懂会计又会投资，钱生钱的速度远超打工，早日财务自由。",
+  },
+};
+
+// 三技能连携（3门技能达到阈值）
+const SKILL_SYNERGY_TRIPLE = {
+  // 烹饪 + 销售 + 管理 = 餐饮帝国
+  cooking_sales_management: {
+    id: "cooking_sales_management",
+    name: "餐饮帝国",
+    icon: "👑",
+    skills: [
+      { id: "cooking", minLevel: 60 },
+      { id: "sales", minLevel: 60 },
+      { id: "management", minLevel: 50 },
+    ],
+    effects: {
+      // 所有餐饮相关收入+50%
+      restaurantIncomeBonus: 0.50,
+      // 解锁连锁餐厅
+      unlockBusinesses: ["restaurant_chain"],
+      // 每日被动收入+¥200
+      passiveRestaurantIncome: 200,
+      // 员工效率+30%
+      employeeEfficiencyBonus: 0.30,
+      // 品牌等级提升速度+50%
+      brandGrowthBonus: 0.50,
+    },
+    desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
+  },
+
+  // 编程 + 英语 + 管理 = 技术高管
+  coding_english_management: {
+    id: "coding_english_management",
+    name: "技术高管",
+    icon: "🚀",
+    skills: [
+      { id: "coding", minLevel: 70 },
+      { id: "english", minLevel: 60 },
+      { id: "management", minLevel: 60 },
+    ],
+    effects: {
+      // 职场能力+25
+      abilityFlatBonus: 25,
+      // 向上管理+30
+      upwardMgmtBonus: 30,
+      // 解锁CTO岗位
+      unlockJobs: ["cto", "tech_director"],
+      // 晋升速度+50%
+      promoSpeedBonus: 0.50,
+      // 团队规模+5
+      teamSizeBonus: 5,
+      // 每日被动收入+¥300（来自股票期权）
+      passiveStockIncome: 300,
+    },
+    desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
+  },
+
+  // 维修 + 电工 + 编程 = 智能家居专家
+  repair_electrician_coding: {
+    id: "repair_electrician_coding",
+    name: "智能家居专家",
+    icon: "🏡",
+    skills: [
+      { id: "repair", minLevel: 50 },
+      { id: "electrician", minLevel: 50 },
+      { id: "coding", minLevel: 40 },
+    ],
+    effects: {
+      // 维修类工作收入+50%
+      comprehensiveRepairBonus: 0.50,
+      // 解锁智能家居安装工作
+      unlockJobs: ["smart_home_installer", "iot_developer"],
+      // 装备维修损耗-50%
+      repairWearReduction: 0.50,
+      // 每日被动收入+¥100（来自智能家居项目）
+      passiveSmartHomeIncome: 100,
+    },
+    desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
+  },
+
+  // 驾驶 + 物流 + 会计 = 物流帝国
+  driving_logistics_accounting: {
+    id: "driving_logistics_accounting",
+    name: "物流帝国",
+    icon: "🚚",
+    skills: [
+      { id: "driving", minLevel: 60 },
+      { id: "accounting", minLevel: 50 },
+      { id: "management", minLevel: 40 },
+    ],
+    effects: {
+      // 货运/配送收入+50%
+      logisticsIncomeBonus: 0.50,
+      // 解锁物流公司
+      unlockBusinesses: ["logistics_company"],
+      // 每日被动收入+¥250
+      passiveLogisticsIncome: 250,
+      // 车队规模+3
+      fleetSizeBonus: 3,
+    },
+    desc: "会开车、会算账、会管理，可以开物流公司，实现财务自由。",
+  },
+};
+
+// 主题连携（同主题多技能）
+const SKILL_SYNERGY_THEME = {
+  // 技术主题：编程 + 电工 + 维修
+  tech_theme: {
+    id: "tech_theme",
+    name: "技术全能",
+    icon: "⚙️",
+    theme: "技术",
+    skills: ["coding", "electrician", "repair"],
+    minSkills: 2, // 至少2门达到阈值
+    threshold: 40,
+    effects: {
+      techIncomeBonus: 0.15,
+      techXpBonus: 0.10,
+      unlockJobs: ["tech_consultant"],
+    },
+    desc: "技术相关技能多，成为技术顾问，收入翻倍。",
+  },
+
+  // 商业主题：销售 + 管理 + 会计
+  business_theme: {
+    id: "business_theme",
+    name: "商业奇才",
+    icon: "💼",
+    theme: "商业",
+    skills: ["sales", "management", "accounting"],
+    minSkills: 2,
+    threshold: 40,
+    effects: {
+      businessIncomeBonus: 0.15,
+      businessXpBonus: 0.10,
+      unlockJobs: ["business_consultant"],
+    },
+    desc: "商业相关技能多，成为商业顾问，收入翻倍。",
+  },
+
+  // 生活服务主题：烹饪 + 维修 + 驾驶
+  service_theme: {
+    id: "service_theme",
+    name: "生活服务专家",
+    icon: "🛠️",
+    theme: "生活服务",
+    skills: ["cooking", "repair", "driving"],
+    minSkills: 2,
+    threshold: 40,
+    effects: {
+      serviceIncomeBonus: 0.15,
+      serviceXpBonus: 0.10,
+      unlockJobs: ["personal_assistant"],
+    },
+    desc: "生活服务技能多，成为私人助理，收入翻倍。",
+  },
+};
+
+/**
+ * 检测玩家当前技能连携效果
+ * @param {object} state - 游戏状态
+ * @returns {object} 连携效果结果
+ */
+function checkSkillSynergies(state) {
+  if (!state || !state.skills) {
+    return { dual: {}, triple: {}, theme: {}, effects: {} };
+  }
+
+  var results = {
+    dual: {},
+    triple: {},
+    theme: {},
+    effects: {},
+    unlockedJobs: [],
+    unlockedBusinesses: [],
+    unlockedActions: [],
+  };
+
+  // 获取玩家技能等级
+  var skillLevels = {};
+  for (var skillId in state.skills) {
+    var skill = state.skills[skillId];
+    if (skill && typeof skill === 'object') {
+      skillLevels[skillId] = skill.level || 0;
+    } else if (typeof skill === 'number') {
+      skillLevels[skillId] = skill;
+    }
+  }
+
+  // 检测双技能连携
+  for (var synergyId in SKILL_SYNERGY_DUAL) {
+    var synergy = SKILL_SYNERGY_DUAL[synergyId];
+    var allMet = true;
+    for (var i = 0; i < synergy.skills.length; i++) {
+      var req = synergy.skills[i];
+      if ((skillLevels[req.id] || 0) < req.minLevel) {
+        allMet = false;
+        break;
+      }
+    }
+    if (allMet) {
+      results.dual[synergyId] = {
+        synergyId: synergyId,
+        name: synergy.name,
+        icon: synergy.icon,
+        desc: synergy.desc,
+        effects: synergy.effects,
+      };
+      // 收集解锁内容
+      if (synergy.effects.unlockJobs) {
+        results.unlockedJobs = results.unlockedJobs.concat(synergy.effects.unlockJobs);
+      }
+      if (synergy.effects.unlockBusinesses) {
+        results.unlockedBusinesses = results.unlockedBusinesses.concat(synergy.effects.unlockBusinesses);
+      }
+      if (synergy.effects.unlockActions) {
+        results.unlockedActions = results.unlockedActions.concat(synergy.effects.unlockActions);
+      }
+    }
+  }
+
+  // 检测三技能连携
+  for (var synergyId in SKILL_SYNERGY_TRIPLE) {
+    var synergy = SKILL_SYNERGY_TRIPLE[synergyId];
+    var allMet = true;
+    for (var i = 0; i < synergy.skills.length; i++) {
+      var req = synergy.skills[i];
+      if ((skillLevels[req.id] || 0) < req.minLevel) {
+        allMet = false;
+        break;
+      }
+    }
+    if (allMet) {
+      results.triple[synergyId] = {
+        synergyId: synergyId,
+        name: synergy.name,
+        icon: synergy.icon,
+        desc: synergy.desc,
+        effects: synergy.effects,
+      };
+      if (synergy.effects.unlockJobs) {
+        results.unlockedJobs = results.unlockedJobs.concat(synergy.effects.unlockJobs);
+      }
+      if (synergy.effects.unlockBusinesses) {
+        results.unlockedBusinesses = results.unlockedBusinesses.concat(synergy.effects.unlockBusinesses);
+      }
+      if (synergy.effects.unlockActions) {
+        results.unlockedActions = results.unlockedActions.concat(synergy.effects.unlockActions);
+      }
+    }
+  }
+
+  // 检测主题连携
+  for (var themeId in SKILL_SYNERGY_THEME) {
+    var theme = SKILL_SYNERGY_THEME[themeId];
+    var qualifiedSkills = [];
+    for (var i = 0; i < theme.skills.length; i++) {
+      if ((skillLevels[theme.skills[i]] || 0) >= theme.threshold) {
+        qualifiedSkills.push(theme.skills[i]);
+      }
+    }
+    if (qualifiedSkills.length >= theme.minSkills) {
+      results.theme[themeId] = {
+        themeId: themeId,
+        name: theme.name,
+        icon: theme.icon,
+        desc: theme.desc,
+        qualifiedSkills: qualifiedSkills,
+        effects: theme.effects,
+      };
+      if (theme.effects.unlockJobs) {
+        results.unlockedJobs = results.unlockedJobs.concat(theme.effects.unlockJobs);
+      }
+    }
+  }
+
+  // 合并所有效果
+  var combinedEffects = {};
+  function mergeEffects(source) {
+    for (var key in source) {
+      var value = source[key];
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        if (!combinedEffects[key]) combinedEffects[key] = {};
+        for (var k in value) {
+          combinedEffects[key][k] = value[k];
+        }
+      } else {
+        combinedEffects[key] = value;
+      }
+    }
+  }
+
+  for (var id in results.dual) {
+    mergeEffects(results.dual[id].effects);
+  }
+  for (var id in results.triple) {
+    mergeEffects(results.triple[id].effects);
+  }
+  for (var id in results.theme) {
+    mergeEffects(results.theme[id].effects);
+  }
+
+  results.effects = combinedEffects;
+
+  // 去重解锁列表
+  results.unlockedJobs = [...new Set(results.unlockedJobs)];
+  results.unlockedBusinesses = [...new Set(results.unlockedBusinesses)];
+  results.unlockedActions = [...new Set(results.unlockedActions)];
+
+  return results;
+}
+
+/**
+ * 获取连携效果HTML渲染
+ * @param {object} synergyResult - checkSkillSynergies的单个结果
+ * @param {string} type - "dual", "triple", "theme"
+ * @returns {string} HTML字符串
+ */
+function renderSynergyCard(synergyResult, type) {
+  var typeLabel = type === "dual" ? "双技能连携" : type === "triple" ? "三技能连携" : "主题连携";
+  var typeColor = type === "dual" ? "#4a9e5c" : type === "triple" ? "#4a6cf7" : "#e8b84c";
+
+  var effectsHtml = "";
+  var effects = synergyResult.effects;
+  for (var key in effects) {
+    if (key.indexOf("Bonus") >= 0 || key.indexOf("Reduction") >= 0 || key.indexOf("Multiplier") >= 0) {
+      effectsHtml += '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' + key + ': +' + (effects[key] * 100 || effects[key]) + '%</div>';
+    } else if (key === "unlockJobs" || key === "unlockBusinesses" || key === "unlockActions") {
+      // 跳过，单独显示
+    } else {
+      effectsHtml += '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' + key + ': ' + effects[key] + '</div>';
+    }
+  }
+
+  var unlockHtml = "";
+  if (synergyResult.unlockedJobs && synergyResult.unlockedJobs.length > 0) {
+    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🔓 解锁工作: ' + synergyResult.unlockedJobs.join(', ') + '</div>';
+  }
+  if (synergyResult.unlockedBusinesses && synergyResult.unlockedBusinesses.length > 0) {
+    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🏢 解锁业务: ' + synergyResult.unlockedBusinesses.join(', ') + '</div>';
+  }
+  if (synergyResult.unlockedActions && synergyResult.unlockedActions.length > 0) {
+    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🎯 解锁行动: ' + synergyResult.unlockedActions.join(', ') + '</div>';
+  }
+
+  return '<div style="background:var(--bg-card);border:1px solid ' + typeColor + ';border-radius:8px;padding:12px;margin-bottom:10px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+    '<span style="font-size:24px;">' + synergyResult.icon + '</span>' +
+    '<div>' +
+    '<div style="font-weight:bold;color:var(--text-primary);">' + synergyResult.name + '</div>' +
+    '<div style="font-size:11px;color:' + typeColor + ';">' + typeLabel + '</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">' + synergyResult.desc + '</div>' +
+    '<div style="margin-top:8px;">' + effectsHtml + '</div>' +
+    unlockHtml +
+    '</div>';
+}
+
+/**
+ * 获取技能连携对特定工作的收入加成
+ * @param {string} jobId - 工作ID
+ * @param {object} state - 游戏状态
+ * @returns {number} 收入加成倍率（0表示无加成）
+ */
+function getSkillSynergyBonus(jobId, state) {
+  if (!state || !state.skillSynergies) return 0;
+
+  var synergyResults = state.skillSynergies;
+  var totalBonus = 0;
+
+  // 检查双技能连携
+  for (var synergyId in synergyResults.dual) {
+    var synergy = synergyResults.dual[synergyId];
+    if (synergy.effects && synergy.effects[jobId]) {
+      var jobEffect = synergy.effects[jobId];
+      if (jobEffect.incomeMultiplier) {
+        totalBonus += jobEffect.incomeMultiplier - 1;
+      }
+    }
+    // 检查通用加成
+    if (synergy.effects) {
+      if (synergy.effects.streetIncomeBonus) totalBonus += synergy.effects.streetIncomeBonus;
+      if (synergy.effects.deliveryIncomeBonus) totalBonus += synergy.effects.deliveryIncomeBonus;
+      if (synergy.effects.constructionIncomeBonus) totalBonus += synergy.effects.constructionIncomeBonus;
+      if (synergy.effects.techIncomeBonus) totalBonus += synergy.effects.techIncomeBonus;
+      if (synergy.effects.logisticsIncomeBonus) totalBonus += synergy.effects.logisticsIncomeBonus;
+      if (synergy.effects.businessIncomeBonus) totalBonus += synergy.effects.businessIncomeBonus;
+      if (synergy.effects.serviceIncomeBonus) totalBonus += synergy.effects.serviceIncomeBonus;
+      if (synergy.effects.restaurantIncomeBonus) totalBonus += synergy.effects.restaurantIncomeBonus;
+      if (synergy.effects.comprehensiveRepairBonus) totalBonus += synergy.effects.comprehensiveRepairBonus;
+      if (synergy.effects.financeIncomeBonus) totalBonus += synergy.effects.financeIncomeBonus;
+    }
+  }
+
+  // 检查三技能连携
+  for (var synergyId in synergyResults.triple) {
+    var synergy = synergyResults.triple[synergyId];
+    if (synergy.effects) {
+      if (synergy.effects.streetIncomeBonus) totalBonus += synergy.effects.streetIncomeBonus;
+      if (synergy.effects.deliveryIncomeBonus) totalBonus += synergy.effects.deliveryIncomeBonus;
+      if (synergy.effects.constructionIncomeBonus) totalBonus += synergy.effects.constructionIncomeBonus;
+      if (synergy.effects.techIncomeBonus) totalBonus += synergy.effects.techIncomeBonus;
+      if (synergy.effects.logisticsIncomeBonus) totalBonus += synergy.effects.logisticsIncomeBonus;
+      if (synergy.effects.businessIncomeBonus) totalBonus += synergy.effects.businessIncomeBonus;
+      if (synergy.effects.serviceIncomeBonus) totalBonus += synergy.effects.serviceIncomeBonus;
+      if (synergy.effects.restaurantIncomeBonus) totalBonus += synergy.effects.restaurantIncomeBonus;
+      if (synergy.effects.comprehensiveRepairBonus) totalBonus += synergy.effects.comprehensiveRepairBonus;
+      if (synergy.effects.financeIncomeBonus) totalBonus += synergy.effects.financeIncomeBonus;
+    }
+  }
+
+  // 检查主题连携
+  for (var themeId in synergyResults.theme) {
+    var theme = synergyResults.theme[themeId];
+    if (theme.effects) {
+      if (theme.effects.techIncomeBonus) totalBonus += theme.effects.techIncomeBonus;
+      if (theme.effects.businessIncomeBonus) totalBonus += theme.effects.businessIncomeBonus;
+      if (theme.effects.serviceIncomeBonus) totalBonus += theme.effects.serviceIncomeBonus;
+    }
+  }
+
+  return totalBonus;
+}
+
+// ====== 导出 ======
+if (typeof window !== "undefined") {
+  window.SKILL_SYNERGY_DUAL = SKILL_SYNERGY_DUAL;
+  window.SKILL_SYNERGY_TRIPLE = SKILL_SYNERGY_TRIPLE;
+  window.SKILL_SYNERGY_THEME = SKILL_SYNERGY_THEME;
+  window.checkSkillSynergies = checkSkillSynergies;
+  window.renderSynergyCard = renderSynergyCard;
+  window.getSkillSynergyBonus = getSkillSynergyBonus;
+}
+
+// ====== 百科注册 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  MECHANICS.skill_synergy = {
+    id: "skill_synergy",
+    name: "技能连携",
+    icon: "🔗",
+    brief: "多门技能同时达到一定等级时触发额外加成，包括收入加成、解锁新工作/业务/行动。",
+    version: "1.0",
+    related: ["mechanics:skills", "mechanics:skill_tree"],
+    sections: [
+      {
+        type: "desc",
+        content: "技能连携分为双技能连携（2门）、三技能连携（3门）和主题连携（同主题多门）。连携效果自动检测，无需手动激活。",
+      },
+      {
+        type: "list",
+        items: [
+          "🍽️ **餐饮创业**：烹饪40+ 销售40+ → 摆摊收入+30%",
+          "🌐 **国际外包**：编程50+ 英语50+ → 编程收入+40%",
+          "🔧 **综合维修**：维修40+ 电工40+ → 维修收入+35%",
+          "👥 **团队销售**：销售50+ 管理40+ → 团队规模+2",
+          "🚛 **长途运输**：驾驶50+ 会计30+ → 货运收入+40%",
+          "🏠 **家庭全能**：烹饪30+ 维修30+ → 做饭效果+50%",
+          "🏢 **外企晋升**：英语60+ 管理50+ → 职场能力+15",
+          "💰 **财务自由**：会计50+ 管理40+ → 投资收入+30%",
+          "👑 **餐饮帝国**：烹饪60+ 销售60+ 管理50+ → 被动收入+¥200",
+          "🚀 **技术高管**：编程70+ 英语60+ 管理60+ → 被动收入+¥300",
+          "🏡 **智能家居专家**：维修50+ 电工50+ 编程40+ → 被动收入+¥100",
+          "🚚 **物流帝国**：驾驶60+ 会计50+ 管理40+ → 被动收入+¥250",
+        ],
+      },
+      {
+        type: "tip",
+        content: "连携效果在技能等级变化时自动检测。在「技能」Tab可查看当前连携状态和解锁内容。",
+      },
+    ],
+  };
+}
+</script>
     <!-- Company History Book Component -->
     <script>/**
  * 公司历史书组件（P1 企业命运系统 Phase 2）
@@ -112181,6 +113588,13 @@ function doStreetJob(job) {
   // 疾病-工作交互：跟踪工作对疾病风险的影响
   if (typeof trackJobDiseaseRisk === "function") {
     trackJobDiseaseRisk(job.id, state);
+  }
+
+  // === v3.5 装备耐久消耗（工作消耗耐久）===
+  if (typeof consumeEquipmentDurability === "function") {
+    // 街头工作消耗较多，职场工作消耗较少
+    var actionType = "street_job";
+    consumeEquipmentDurability(state, actionType, 1.0);
   }
 
   // 推进时间
