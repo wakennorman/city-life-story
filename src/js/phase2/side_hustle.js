@@ -282,6 +282,7 @@
   // ====== 导出 ======
   if (typeof window !== "undefined") {
     window.SIDE_HUSTLES = SIDE_HUSTLES;
+    window.sideHustleTick = sideHustleTick; // 供 daily_pipeline.js 直接调用
     window.sideHustle = {
       init: initSideHustle,
       tick: sideHustleTick,

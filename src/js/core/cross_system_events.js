@@ -37,18 +37,7 @@
       choices: [
         {
           text: "🔧 帮她修水管",
-          hint: "花1个AP，好感+10",
-          apply: function (st) {
-            if (st.skills && st.skills.repair) {
-              var level = st.skills.repair.level || 0;
-              if (level >= 20) {
-                st.npcRelations.aunt_wang.affinity = Math.min(
-                  100,
-                  (st.npcRelations.aunt_wang.affinity || 0) + 12,
-                );
-                st.skills.repair.xp = (st.skills.repair.xp || 0) + 30;
-                StateManager.addMessage(
-                  "🔧 你三两下就修好了水管。王大婶感激得不行，好感+12。",
+          hint: \"花1个AP，好感+10\"🔧 你三两下就修好了水管。王大婶感激得不行，好感+12。\",
                   "success",
                 );
               } else {
@@ -75,30 +64,14 @@
         },
         {
           text: "💰 给她¥100找修水工",
-          hint: "花钱省事",
-          cost: 100,
-          apply: function (st) {
-            st.resources.cash -= 100;
-            st.npcRelations.aunt_wang.affinity = Math.min(
-              100,
-              (st.npcRelations.aunt_wang.affinity || 0) + 5,
-            );
-            StateManager.addMessage(
-              "💰 你掏了¥100让她找专业修水工。王大婶嘴上说不用，心里记着你的好。",
+          hint: \"花钱省事\"💰 你掏了¥100让她找专业修水工。王大婶嘴上说不用，心里记着你的好。\",
               "info",
             );
           },
         },
         {
           text: "🚶 我自己都顾不上",
-          hint: "关系可能变差",
-          apply: function (st) {
-            st.npcRelations.aunt_wang.affinity = Math.max(
-              0,
-              (st.npcRelations.aunt_wang.affinity || 0) - 8,
-            );
-            StateManager.addMessage(
-              "🚶 你说实在没空。王大婶脸上的笑僵了一下，转身走了。好感-8。",
+          hint: \"关系可能变差\"🚶 你说实在没空。王大婶脸上的笑僵了一下，转身走了。好感-8。\",
               "warning",
             );
           },
@@ -122,35 +95,21 @@
       choices: [
         {
           text: "🔥 抓住风口，多接活",
-          hint: "体力消耗大，但收入翻倍",
-          apply: function (st) {
-            var bonus = Random.int(80, 200);
-            st.resources.cash += bonus;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
-            st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 15);
-            StateManager.addMessage(
-              "🔥 你趁热打铁多干了一轮，多赚¥" + bonus + "。但累得够呛。",
+          hint: \"体力消耗大，但收入翻倍\"🔥 你趁热打铁多干了一轮，多赚¥\" + bonus + "。但累得够呛。",
               "success",
             );
           },
         },
         {
           text: "📈 研究一下哪个行业最热",
-          hint: "心智+2，获得投资灵感",
-          apply: function (st) {
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
-            StateManager.addMessage(
-              "📈 你仔细研究了行业趋势，发现科技和新能源都在升温。也许该关注下股票？",
+          hint: \"心智+2，获得投资灵感\"📈 你仔细研究了行业趋势，发现科技和新能源都在升温。也许该关注下股票？\",
               "hint",
             );
           },
         },
         {
           text: "😴 风口关我什么事",
-          hint: "佛系",
-          apply: function (st) {
-            StateManager.addMessage(
-              "😴 你把手机扔一边，翻了个身。风口吹不到你的出租屋。",
+          hint: \"佛系\"😴 你把手机扔一边，翻了个身。风口吹不到你的出租屋。\",
               "info",
             );
           },
@@ -172,16 +131,7 @@
       choices: [
         {
           text: "💰 凑点钱抄底",
-          hint: "高风险高回报",
-          cost: 50,
-          apply: function (st) {
-            st.resources.cash -= 50;
-            var result = Random.int(0, 3);
-            if (result === 0) {
-              var profit = Random.int(100, 500);
-              st.resources.cash += profit;
-              StateManager.addMessage(
-                `💰 抄底成功！你低买高卖赚了¥" + profit + "！`,
+          hint: \"高风险高回报\" + profit + \"！`,
                 "success",
               );
             } else if (result === 1) {
@@ -200,21 +150,12 @@
         },
         {
           text: "🛡️ 观望再说",
-          hint: "保本第一",
-          apply: function (st) {
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
-            StateManager.addMessage("🛡️ 你选择观望。不亏就是赚。", "info");
+          hint: \"保本第一\"🛡️ 你选择观望。不亏就是赚。\", "info");
           },
         },
         {
           text: "🤝 安慰旁边的大爷",
-          hint: "善有善报",
-          apply: function (st) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-            st.flags._moralScore = (st.flags._moralScore || 0) + 1;
-            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
-            StateManager.addMessage(
-              `🤝 你拍了拍旁边大爷的肩："别急，市场总会好起来的。"大爷感激地看着你。`,
+          hint: \"善有善报\"别急，市场总会好起来的。\"大爷感激地看着你。`,
               "success",
             );
           },
@@ -235,16 +176,7 @@
       choices: [
         {
           text: "💸 捡了就走",
-          hint: "¥500，但良心不安",
-          apply: function (st) {
-            st.flags._foundATMCash = true;
-            var amount = Random.int(300, 800);
-            st.resources.cash += amount;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
-            st.flags._moralScore = (st.flags._moralScore || 0) - 3;
-            st.flags._keptFoundMoney = true;
-            StateManager.addMessage(
-              `💸 你捡起钱快步走了。¥" + amount + "到手，但心里有点虚...`,
+          hint: \"¥500，但良心不安\" + amount + \"到手，但心里有点虚...`,
               "warning",
             );
             // 后续埋点：10天后可能遇到失主
@@ -253,28 +185,14 @@
         },
         {
           text: "🏪 交给银行",
-          hint: "品德高尚",
-          apply: function (st) {
-            st.flags._foundATMCash = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
-            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            st.flags._moralScore = (st.flags._moralScore || 0) + 3;
-            st.flags._returnedFoundMoney = true;
-            StateManager.addMessage(
-              "🏪 你把钱交给了银行。工作人员登记后夸你品德高尚。名气+5，心情+15。",
+          hint: \"品德高尚\"🏪 你把钱交给了银行。工作人员登记后夸你品德高尚。名气+5，心情+15。\",
               "success",
             );
           },
         },
         {
           text: "📸 发到业主群问问",
-          hint: "中间路线",
-          apply: function (st) {
-            st.flags._foundATMCash = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-            st.flags._moralScore = (st.flags._moralScore || 0) + 1;
-            StateManager.addMessage(
-              "📸 你拍了照发到业主群。半天后有人来认领，给了你¥50感谢费。心情+5。",
+          hint: \"中间路线\"📸 你拍了照发到业主群。半天后有人来认领，给了你¥50感谢费。心情+5。\",
               "success",
             );
             st.resources.cash += 50;
@@ -300,18 +218,7 @@
       choices: [
         {
           text: "🚶 去工地拉废品",
-          hint: "需要体力，但利润可观",
-          apply: function (st) {
-            var profit = Random.int(150, 400);
-            var zhouShare = Math.floor(profit * 0.3);
-            st.resources.cash += profit - zhouShare;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            st.npcRelations.old_zhou.affinity = Math.min(
-              100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
-            );
-            StateManager.addMessage(
-              "🤝 你拉了一车废铜回来，卖了¥" +
+          hint: \"需要体力，但利润可观\"🤝 你拉了一车废铜回来，卖了¥\" +
                 (profit - zhouShare) +
                 "。老周那份¥" +
                 zhouShare +
@@ -322,32 +229,14 @@
         },
         {
           text: "💰 出¥100入伙费",
-          hint: "花钱但省力",
-          cost: 100,
-          apply: function (st) {
-            st.resources.cash -= 100;
-            var profit = Random.int(100, 250);
-            st.resources.cash += profit;
-            st.npcRelations.old_zhou.affinity = Math.min(
-              100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
-            );
-            StateManager.addMessage(
-              `💰 你出了¥100入伙费，分到¥" + profit + "。老周拍了拍你的肩。`,
+          hint: \"花钱但省力\" + profit + \"。老周拍了拍你的肩。`,
               "success",
             );
           },
         },
         {
           text: "🤔 这个不太合规吧",
-          hint: "谨慎行事",
-          apply: function (st) {
-            st.npcRelations.old_zhou.affinity = Math.max(
-              0,
-              (st.npcRelations.old_zhou.affinity || 0) - 3,
-            );
-            StateManager.addMessage(
-              `🤔 你犹豫了一下没接。老周叹了口气："也是，你比我想得多。"好感-3。`,
+          hint: \"谨慎行事\"也是，你比我想得多。\"好感-3。`,
               "info",
             );
           },
@@ -374,18 +263,7 @@
       choices: [
         {
           text: "🎁 送王大婶水果",
-          hint: "花费¥30，好感+5，张姐好感+2",
-          cost: 30,
-          apply: function (st) {
-            st.resources.cash -= 30;
-            // 直接好感提升
-            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
-            st.npcRelations.aunt_wang.affinity = Math.min(100, (st.npcRelations.aunt_wang.affinity || 0) + 5);
-            // 传导效应：张姐是王大婶的远房侄女
-            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
-            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 2);
-            StateManager.addMessage(
-              "🎁 王大婶收到水果很开心，还夸你有心了。好感+5。张姐听说后也对你印象更好了，好感+2。",
+          hint: \"花费¥30，好感+5，张姐好感+2\"🎁 王大婶收到水果很开心，还夸你有心了。好感+5。张姐听说后也对你印象更好了，好感+2。\",
               "success"
             );
             // 记录互动历史
@@ -395,9 +273,7 @@
         },
         {
           text: "🤔 算了，下次再说",
-          hint: "保留现金",
-          apply: function (st) {
-            StateManager.addMessage("🤔 你犹豫了一下，没送。", "info");
+          hint: \"保留现金\"🤔 你犹豫了一下，没送。\", "info");
           }
         }
       ]
@@ -423,25 +299,14 @@
       choices: [
         {
           text: "🔧 帮李工头修设备",
-          hint: "体力消耗，但李工头好感+8",
-          apply: function (st) {
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
-            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 8);
-            StateManager.addMessage(
-              "🔧 你花了一小时修好了设备。李工头很满意，说以后有技术活都找你。好感+8。",
+          hint: \"体力消耗，但李工头好感+8\"🔧 你花了一小时修好了设备。李工头很满意，说以后有技术活都找你。好感+8。\",
               "success"
             );
           }
         },
         {
           text: "😅 我修不了这个",
-          hint: "诚实但错失机会",
-          apply: function (st) {
-            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
-            st.npcRelations.boss_li.affinity = Math.max(0, (st.npcRelations.boss_li.affinity || 0) - 2);
-            StateManager.addMessage(
-              "😅 你坦白说自己不会。李工头点点头："也是，术业有专攻。"好感-2。",
+          hint: \"诚实但错失机会\"😅 你坦白说自己不会。李工头点点头：\\"也是，术业有专攻。\"好感-2。",
               "info"
             );
           }
@@ -469,29 +334,14 @@
       choices: [
         {
           text: "💼 接受内推",
-          hint: "日薪¥200，张姐好感+5",
-          apply: function (st) {
-            var days = Random.int(2, 5);
-            var total = days * 200;
-            st.resources.cash += total;
-            st.resources.totalEarned = (st.resources.totalEarned || 0) + total;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + days * 8);
-            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
-            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 5);
-            StateManager.addMessage(
-              "💼 你去了那家公司做了" + days + "天临时工，赚了¥" + total + "。张姐说客户很满意，以后有活还找你。",
+          hint: \"日薪¥200，张姐好感+5\"💼 你去了那家公司做了\" + days + "天临时工，赚了¥" + total + "。张姐说客户很满意，以后有活还找你。",
               "success"
             );
           }
         },
         {
           text: "🙏 谢谢但最近没空",
-          hint: "礼貌拒绝",
-          apply: function (st) {
-            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
-            st.npcRelations.sister_zhang.affinity = Math.max(0, (st.npcRelations.sister_zhang.affinity || 0) - 1);
-            StateManager.addMessage(
-              "🙏 你婉拒了。张姐理解地点点头："行，有合适的再联系你。"好感-1。",
+          hint: \"礼貌拒绝\"🙏 你婉拒了。张姐理解地点点头：\\\\"行，有合适的再联系你。\\\"好感-1。",
               "info"
             );
           }
@@ -519,26 +369,14 @@
       choices: [
         {
           text: "🏠 帮张姐介绍租房",
-          hint: "王大婶好感+8，张姐好感+5",
-          apply: function (st) {
-            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
-            st.npcRelations.aunt_wang.affinity = Math.min(100, (st.npcRelations.aunt_wang.affinity || 0) + 8);
-            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
-            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 5);
-            StateManager.addMessage(
-              "🏠 你帮张姐介绍了个便宜的房子。王大婶直夸你懂事，张姐也松了口气。两人好感都提升了。",
+          hint: \"王大婶好感+8，张姐好感+5\"🏠 你帮张姐介绍了个便宜的房子。王大婶直夸你懂事，张姐也松了口气。两人好感都提升了。\",
               "success"
             );
           }
         },
         {
           text: "🤷 我这边也不太熟",
-          hint: "推脱",
-          apply: function (st) {
-            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
-            st.npcRelations.aunt_wang.affinity = Math.max(0, (st.npcRelations.aunt_wang.affinity || 0) - 3);
-            StateManager.addMessage(
-              "🤷 你说自己也不太熟。王大婶有些失望："也是，你们刚认识不久。"好感-3。",
+          hint: \"推脱\"🤷 你说自己也不太熟。王大婶有些失望：\\\\"也是，你们刚认识不久。\\\"好感-3。",
               "warning"
             );
           }
@@ -566,45 +404,21 @@
       choices: [
         {
           text: "🤝 两边都帮",
-          hint: "体力消耗大，但两边好感都提升",
-          apply: function (st) {
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
-            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 6);
-            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
-            st.npcRelations.old_zhou.affinity = Math.min(100, (st.npcRelations.old_zhou.affinity || 0) + 4);
-            StateManager.addMessage(
-              "🤝 你帮李工头干了活，又帮老周收了废料。两边都挺满意，但你也累得够呛。",
+          hint: \"体力消耗大，但两边好感都提升\"🤝 你帮李工头干了活，又帮老周收了废料。两边都挺满意，但你也累得够呛。\",
               "success"
             );
           }
         },
         {
           text: "👉 帮李工头（收入高）",
-          hint: "李工头好感+8，老周好感-3",
-          apply: function (st) {
-            var bonus = Random.int(80, 150);
-            st.resources.cash += bonus;
-            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
-            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 8);
-            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
-            st.npcRelations.old_zhou.affinity = Math.max(-100, (st.npcRelations.old_zhou.affinity || 0) - 3);
-            StateManager.addMessage(
-              "👉 你帮李工头干了活，赚了¥" + bonus + "。老周在旁边没吭声，但你能感觉到他不太高兴。",
+          hint: \"李工头好感+8，老周好感-3\"👉 你帮李工头干了活，赚了¥\" + bonus + "。老周在旁边没吭声，但你能感觉到他不太高兴。",
               "success"
             );
           }
         },
         {
           text: "👈 帮老周（关系好）",
-          hint: "老周好感+6，李工头好感-2",
-          apply: function (st) {
-            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
-            st.npcRelations.old_zhou.affinity = Math.min(100, (st.npcRelations.old_zhou.affinity || 0) + 6);
-            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
-            st.npcRelations.boss_li.affinity = Math.max(0, (st.npcRelations.boss_li.affinity || 0) - 2);
-            StateManager.addMessage(
-              "👈 你帮老周收了废料。李工头那边没帮上，他有些失望。",
+          hint: \"老周好感+6，李工头好感-2\"👈 你帮老周收了废料。李工头那边没帮上，他有些失望。\",
               "info"
             );
           }
@@ -640,13 +454,7 @@
       options: [
         {
           text: "💼 接offer，跳槽！",
-          hint: "薪资翻倍，但需重新积累人脉",
-          apply: function (st) {
-            if (!st.career || !st.career.currentJob) return;
-            st.career.history.push({
-              day: st.player.day,
-              event:
-                "跳槽：从" + st.career.currentJob.levelName + "跳槽到新公司",
+          hint: \"薪资翻倍，但需重新积累人脉\"跳槽：从\" + st.career.currentJob.levelName + "跳槽到新公司",
             });
             st.career.currentJob.salary = Math.round(
               st.career.currentJob.salary * 2,
@@ -662,28 +470,14 @@
         },
         {
           text: "❌ 婉拒，当前工作挺好",
-          hint: "稳定为主",
-          apply: function (st) {
-            StateManager.addMessage(
-              "🤝 你礼貌地拒绝了猎头。他留下名片说「改主意了随时找我」。",
+          hint: \"稳定为主\"🤝 你礼貌地拒绝了猎头。他留下名片说「改主意了随时找我」。\",
               "info",
             );
           },
         },
         {
           text: "📄 拿着offer找老板谈涨薪",
-          hint: "需要社交关系≥50",
-          apply: function (st) {
-            var colleagues = st.corporate?.colleagues?.network || [];
-            var hasHighRel = colleagues.some(function (c) {
-              return c.relationship >= 50;
-            });
-            if (hasHighRel) {
-              st.career.currentJob.salary = Math.round(
-                st.career.currentJob.salary * 1.4,
-              );
-              StateManager.addMessage(
-                "💰 老板看到竞品offer，当场给你涨薪40%！月薪涨至¥" +
+          hint: \"需要社交关系≥50\"💰 老板看到竞品offer，当场给你涨薪40%！月薪涨至¥\" +
                   st.career.currentJob.salary.toLocaleString(),
                 "success",
               );
@@ -711,15 +505,7 @@
       options: [
         {
           text: "😰 找关系好的同事打听消息",
-          hint: "需要社交关系≥40",
-          apply: function (st) {
-            var colleagues = st.corporate?.colleagues?.network || [];
-            var allies = colleagues.filter(function (c) {
-              return c.relationship >= 40;
-            });
-            if (allies.length > 0) {
-              StateManager.addMessage(
-                "🤫 " +
+          hint: \"需要社交关系≥40\"🤫 \" +
                   allies[0].name +
                   "悄悄告诉你：「名单上没有你，但最近别摸鱼。」",
                 "success",
@@ -734,12 +520,7 @@
         },
         {
           text: "📊 主动提交业绩报告自保",
-          hint: "需要技能达标",
-          apply: function (st) {
-            var survived = st.career.currentJob.workDays > 365;
-            if (survived) {
-              StateManager.addMessage(
-                "📈 领导看了你的业绩报告很满意，明确表示你不在裁员名单上。",
+          hint: \"需要技能达标\"📈 领导看了你的业绩报告很满意，明确表示你不在裁员名单上。\",
                 "success",
               );
             } else {
@@ -753,17 +534,7 @@
         },
         {
           text: "💪 申请主动离职拿N+1补偿",
-          hint: "拿补偿金走人",
-          apply: function (st) {
-            if (!st.career || !st.career.currentJob) return;
-            var compensation = Math.round(
-              (st.career.currentJob.salary || 5000) * 1.5,
-            );
-            st.resources.cash += compensation;
-            st.career.history.push({
-              day: st.player.day,
-              event:
-                "裁员风波中主动离职，拿到¥" +
+          hint: \"拿补偿金走人\"裁员风波中主动离职，拿到¥\" +
                 compensation.toLocaleString() +
                 "补偿",
             });
@@ -794,17 +565,7 @@
       options: [
         {
           text: "🛡️ 抛售部分资产换现金",
-          hint: "减少损失",
-          apply: function (st) {
-            var inv = st.investment || {};
-            if (inv.stockHoldings && inv.stockHoldings.length > 0) {
-              var totalSold = 0;
-              for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
-                totalSold += 1;
-              }
-              inv.stockHoldings = [];
-              StateManager.addMessage(
-                "💼 你清仓了所有股票，回笼现金。虽然亏了一些，但现金为王。",
+          hint: \"减少损失\"💼 你清仓了所有股票，回笼现金。虽然亏了一些，但现金为王。\",
                 "success",
               );
             } else {
@@ -817,21 +578,14 @@
         },
         {
           text: "💼 加倍努力工作保住饭碗",
-          hint: "提前做好职业防御",
-          apply: function (st) {
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-            StateManager.addMessage(
-              "😤 你开始主动加班、多做汇报。虽然累，但领导对你印象更深了。",
+          hint: \"提前做好职业防御\"😤 你开始主动加班、多做汇报。虽然累，但领导对你印象更深了。\",
               "info",
             );
           },
         },
         {
           text: "📉 趁低吸纳，逆向投资",
-          hint: "高风险高回报",
-          apply: function (st) {
-            if (st.resources.cash < 10000) {
-              StateManager.addMessage("你的现金太少，不适合逆向投资。", "hint");
+          hint: \"高风险高回报\"你的现金太少，不适合逆向投资。\", "hint");
               return;
             }
             var invest = Math.min(st.resources.cash * 0.3, 50000);
@@ -867,12 +621,7 @@
       options: [
         {
           text: "📋 主动申报，依法纳税",
-          hint: "交税保平安",
-          apply: function (st) {
-            var tax = Math.round(st.resources.cash * 0.08);
-            st.resources.cash -= tax;
-            StateManager.addMessage(
-              "📋 你主动申报并缴纳了¥" +
+          hint: \"交税保平安\"📋 你主动申报并缴纳了¥\" +
                 tax.toLocaleString() +
                 "的税款。虽然肉疼，但心里踏实了。",
               "success",
@@ -881,11 +630,7 @@
         },
         {
           text: "🏦 咨询会计师做税务规划",
-          hint: "花费¥10,000，减少税款",
-          apply: function (st) {
-            if (st.resources.cash < 10000) {
-              StateManager.addMessage(
-                "会计师咨询费¥10,000，你付不起。",
+          hint: \"花费¥10,000，减少税款\"会计师咨询费¥10,000，你付不起。\",
                 "warning",
               );
               return;
@@ -903,10 +648,7 @@
         },
         {
           text: "😰 当作没看到",
-          hint: "有风险",
-          apply: function (st) {
-            StateManager.addMessage(
-              "😰 你把信塞进抽屉里。但你知道这不是长久之计...",
+          hint: \"有风险\"😰 你把信塞进抽屉里。但你知道这不是长久之计...\",
               "warning",
             );
           },
@@ -935,13 +677,7 @@
       options: [
         {
           text: "☔ 冒雨摆摊，雨天人少但单价高",
-          hint: "收入×1.5，健康-5",
-          apply: function (st) {
-            var earn = 80 + Random.int(0, 120);
-            st.resources.cash += Math.round(earn * 1.5);
-            st.status.health = Math.max(0, (st.status.health || 100) - 5);
-            StateManager.addMessage(
-              "☔ 你在暴雨中摆摊，虽然淋得浑身湿透，但赚了¥" +
+          hint: \"收入×1.5，健康-5\"☔ 你在暴雨中摆摊，虽然淋得浑身湿透，但赚了¥\" +
                 Math.round(earn * 1.5).toLocaleString() +
                 "。",
               "success",
@@ -950,12 +686,7 @@
         },
         {
           text: "🏃 帮人送货跑腿，雨天人少单多",
-          hint: "¥200 + 可能有好人缘",
-          apply: function (st) {
-            st.resources.cash += 200;
-            if (Random.chance(0.3)) {
-              StateManager.addMessage(
-                "🏃 客户看你冒雨送货，多给了¥50小费。",
+          hint: \"¥200 + 可能有好人缘\"🏃 客户看你冒雨送货，多给了¥50小费。\",
                 "success",
               );
               st.resources.cash += 50;
@@ -969,11 +700,7 @@
         },
         {
           text: "🚶 找个地方避雨发呆",
-          hint: "安全但没收益",
-          apply: function (st) {
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            StateManager.addMessage(
-              "🚶 你找了个屋檐蹲着等雨停，看着雨幕发呆。",
+          hint: \"安全但没收益\"🚶 你找了个屋檐蹲着等雨停，看着雨幕发呆。\",
               "info",
             );
           },
@@ -1003,16 +730,7 @@
       options: [
         {
           text: "🏠 去看看（押一付三¥2000）",
-          hint: "租到单间，不再露宿",
-          apply: function (st) {
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
-              if (!st.housing) st.housing = {};
-              var newTier = Math.max(st.housing.tier || 0, 1);
-              st.housing.tier = newTier;
-              st.flags._wangRental = true;
-              StateManager.addMessage(
-                "🏠 你租下了城中村的单间。虽然不大，但总算有个遮风挡雨的地方了。",
+          hint: \"租到单间，不再露宿\"🏠 你租下了城中村的单间。虽然不大，但总算有个遮风挡雨的地方了。\",
                 "success",
               );
             } else {
@@ -1025,27 +743,14 @@
         },
         {
           text: "🙅 嫌贵先不要",
-          hint: "继续住桥洞",
-          apply: function (st) {
-            StateManager.addMessage(
-              "🙅 你摆摆手说再等等。王大婶叹了口气：'有需要随时找我。'",
+          hint: \"继续住桥洞\"🙅 你摆摆手说再等等。王大婶叹了口气：'有需要随时找我。'\",
               "info",
             );
           },
         },
         {
           text: "🤔 问问有没有更便宜的",
-          hint: "好感≥60可¥300/月",
-          apply: function (st) {
-            var rel = st.relationships && st.relationships.aunt_wang;
-            if (rel && rel.affinity >= 60) {
-              if (st.resources.cash >= 1200) {
-                st.resources.cash -= 1200;
-                if (!st.housing) st.housing = {};
-                st.housing.tier = Math.max(st.housing.tier || 0, 1);
-                st.flags._wangRentalDiscounted = true;
-                StateManager.addMessage(
-                  "🏠 王大婶看你确实困难，'行吧，我亲戚那还有个储物间，¥300一个月。'你搬了进去，虽然小但总算有了个落脚处。",
+          hint: \"好感≥60可¥300/月\"🏠 王大婶看你确实困难，'行吧，我亲戚那还有个储物间，¥300一个月。'你搬了进去，虽然小但总算有了个落脚处。\",
                   "success",
                 );
               } else {
@@ -1091,21 +796,7 @@
       options: [
         {
           text: "🙏 虚心请教",
-          hint: "技能+2%，突破当前上限",
-          apply: function (st) {
-            var skillBoosted = false;
-            if (st.skills) {
-              for (var sk in st.skills) {
-                if (st.skills[sk] && st.skills[sk].level >= 50) {
-                  st.skills[sk].level = Math.min(100, st.skills[sk].level + 2);
-                  skillBoosted = true;
-                  break;
-                }
-              }
-            }
-            if (skillBoosted) {
-              StateManager.addMessage(
-                "🙏 老师傅一席话让你豁然开朗。技能提升了！",
+          hint: \"技能+2%，突破当前上限\"🙏 老师傅一席话让你豁然开朗。技能提升了！\",
                 "success",
               );
             } else {
@@ -1118,21 +809,14 @@
         },
         {
           text: "💬 搭讪聊天",
-          hint: "心情+10",
-          apply: function (st) {
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            StateManager.addMessage(
-              "💬 你陪老师傅聊了一下午，听他讲了几十年的见闻，心情大好。",
+          hint: \"心情+10\"💬 你陪老师傅聊了一下午，听他讲了几十年的见闻，心情大好。\",
               "info",
             );
           },
         },
         {
           text: "🚶 无视走过",
-          hint: "什么也不发生",
-          apply: function (st) {
-            StateManager.addMessage(
-              "🚶 你点了点头，继续往前走。老师傅叹了口气，继续看他的报纸。",
+          hint: \"什么也不发生\"🚶 你点了点头，继续往前走。老师傅叹了口气，继续看他的报纸。\",
               "info",
             );
           },
@@ -1165,36 +849,14 @@
       options: [
         {
           text: "🤗 安慰张姐",
-          hint: "好感+15",
-          apply: function (st) {
-            if (!st.relationships.sister_zhang) {
-              st.relationships.sister_zhang = { affinity: 0, met: true };
-            }
-            st.relationships.sister_zhang.affinity = Math.min(
-              100,
-              st.relationships.sister_zhang.affinity + 15,
-            );
-            StateManager.addMessage(
-              "🤗 你安慰张姐：'车到山前必有路，你技术好不怕找不到下家。'张姐擦了擦眼睛，勉强笑了笑。",
+          hint: \"好感+15\"🤗 你安慰张姐：'车到山前必有路，你技术好不怕找不到下家。'张姐擦了擦眼睛，勉强笑了笑。\",
               "info",
             );
           },
         },
         {
           text: "🤝 帮忙介绍工作",
-          hint: "社交≥50可成功，好感+30",
-          apply: function (st) {
-            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
-            if (social >= 50) {
-              if (!st.relationships.sister_zhang) {
-                st.relationships.sister_zhang = { affinity: 0, met: true };
-              }
-              st.relationships.sister_zhang.affinity = Math.min(
-                100,
-                st.relationships.sister_zhang.affinity + 30,
-              );
-              StateManager.addMessage(
-                "🤝 你动用人脉帮张姐找到了一家新工厂的面试机会。张姐感激得不知道该说什么。",
+          hint: \"社交≥50可成功，好感+30\"🤝 你动用人脉帮张姐找到了一家新工厂的面试机会。张姐感激得不知道该说什么。\",
                 "success",
               );
               st.flags._zhangReferral = true;
@@ -1208,17 +870,7 @@
         },
         {
           text: "😐 自顾不暇",
-          hint: "什么也不做",
-          apply: function (st) {
-            if (!st.relationships.sister_zhang) {
-              st.relationships.sister_zhang = { affinity: 0, met: true };
-            }
-            st.relationships.sister_zhang.affinity = Math.max(
-              -100,
-              st.relationships.sister_zhang.affinity - 5,
-            );
-            StateManager.addMessage(
-              "😐 你低头说自己也在艰难维持。张姐失望地转身走了。",
+          hint: \"什么也不做\"😐 你低头说自己也在艰难维持。张姐失望地转身走了。\",
               "warning",
             );
           },
@@ -1249,14 +901,7 @@
       options: [
         {
           text: "📱 卖手机配件（高风险高收益）",
-          hint: "收入×1.8，但可能被抓",
-          apply: function (st) {
-            var earn = 100 + Random.int(0, 200);
-            st.resources.cash += Math.round(earn * 1.8);
-            if (Random.chance(0.25)) {
-              st.resources.cash -= 200;
-              StateManager.addMessage(
-                "🚔 城管来了！你收起摊位就跑，但还是被罚了¥200。净赚¥" +
+          hint: \"收入×1.8，但可能被抓\"🚔 城管来了！你收起摊位就跑，但还是被罚了¥200。净赚¥\" +
                   Math.round(earn * 1.8 - 200).toLocaleString() +
                   "。",
                 "danger",
@@ -1273,23 +918,14 @@
         },
         {
           text: "📄 发传单",
-          hint: "¥80，稳定收入",
-          apply: function (st) {
-            st.resources.cash += 80;
-            StateManager.addMessage(
-              "📄 你在科技园门口发了一下午传单，赚了¥80。",
+          hint: \"¥80，稳定收入\"📄 你在科技园门口发了一下午传单，赚了¥80。\",
               "info",
             );
           },
         },
         {
           text: "🔍 找园区工作机会",
-          hint: "概率触发创业/工作线索",
-          apply: function (st) {
-            if (Random.chance(0.3)) {
-              st.flags._techParkLead = true;
-              StateManager.addMessage(
-                "🔍 你在科技园逛了一圈，和几个创业者聊了聊，拿到了一个不错的商业线索！",
+          hint: \"概率触发创业/工作线索\"🔍 你在科技园逛了一圈，和几个创业者聊了聊，拿到了一个不错的商业线索！\",
                 "success",
               );
             } else {
@@ -1325,15 +961,7 @@
       options: [
         {
           text: "🏥 去医院体检",
-          hint: "¥200，发现隐藏健康问题",
-          apply: function (st) {
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
-              var foundIssue = Random.chance(0.3);
-              if (foundIssue) {
-                st.flags._checkupFoundIssue = true;
-                StateManager.addMessage(
-                  "🏥 医生说你有些指标偏高，给你开了一些药。幸好发现得早！",
+          hint: \"¥200，发现隐藏健康问题\"🏥 医生说你有些指标偏高，给你开了一些药。幸好发现得早！\",
                   "warning",
                 );
                 st.status.health = Math.min(100, (st.status.health || 80) + 8);
@@ -1354,24 +982,14 @@
         },
         {
           text: "💪 自己扛着",
-          hint: "健康-5",
-          apply: function (st) {
-            st.status.health = Math.max(0, (st.status.health || 80) - 5);
-            StateManager.addMessage(
-              "💪 你觉得自己挺一挺就过去了。但身体似乎不太同意。",
+          hint: \"健康-5\"💪 你觉得自己挺一挺就过去了。但身体似乎不太同意。\",
               "warning",
             );
           },
         },
         {
           text: "💊 买点保健品",
-          hint: "¥50，健康+3%",
-          apply: function (st) {
-            if (st.resources.cash >= 50) {
-              st.resources.cash -= 50;
-              st.status.health = Math.min(100, (st.status.health || 80) + 3);
-              StateManager.addMessage(
-                "💊 你在药店买了些维生素，至少心理上感觉好多了。",
+          hint: \"¥50，健康+3%\"💊 你在药店买了些维生素，至少心理上感觉好多了。\",
                 "info",
               );
             } else {
@@ -1406,23 +1024,7 @@
       options: [
         {
           text: "💪 帮他一起干",
-          hint: "体力活，收入¥500-800 + 修理+5",
-          apply: function (st) {
-            var earn = 500 + Random.int(0, 300);
-            st.resources.cash += earn;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
-            if (st.skills && st.skills.repair) {
-              st.skills.repair.level = Math.min(100, st.skills.repair.level + 5);
-            }
-            if (!st.relationships.old_zhou) {
-              st.relationships.old_zhou = { affinity: 0, met: true };
-            }
-            st.relationships.old_zhou.affinity = Math.min(
-              100,
-              st.relationships.old_zhou.affinity + 10,
-            );
-            StateManager.addMessage(
-              "♻️ 你和老周干了一整天，把废金属分类打包。虽然累得腰都直不起来，但分到了¥" +
+          hint: \"体力活，收入¥500-800 + 修理+5\"♻️ 你和老周干了一整天，把废金属分类打包。虽然累得腰都直不起来，但分到了¥\" +
                 earn.toLocaleString() +
                 "。老周拍了拍你的背：'好小子！'",
               "success",
@@ -1431,20 +1033,7 @@
         },
         {
           text: "📞 介绍客户",
-          hint: "社交能力检查",
-          apply: function (st) {
-            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
-            if (social >= 40) {
-              st.resources.cash += 200;
-              if (!st.relationships.old_zhou) {
-                st.relationships.old_zhou = { affinity: 0, met: true };
-              }
-              st.relationships.old_zhou.affinity = Math.min(
-                100,
-                st.relationships.old_zhou.affinity + 15,
-              );
-              StateManager.addMessage(
-                "📞 你给老周介绍了一家回收站，他谈成了长期合作。老周眉开眼笑：'还是你们年轻人会来事！'",
+          hint: \"社交能力检查\"📞 你给老周介绍了一家回收站，他谈成了长期合作。老周眉开眼笑：'还是你们年轻人会来事！'\",
                 "success",
               );
             } else {
@@ -1457,10 +1046,7 @@
         },
         {
           text: "🙅 婉拒",
-          hint: "不参与",
-          apply: function (st) {
-            StateManager.addMessage(
-              "🙅 你说自己最近太忙了。老周有些失望：'那算了，我再找人。'",
+          hint: \"不参与\"🙅 你说自己最近太忙了。老周有些失望：'那算了，我再找人。'\",
               "info",
             );
           },
@@ -1490,19 +1076,7 @@
       options: [
         {
           text: "🤝 一起接单",
-          hint: "时薪¥15-20，分享收入",
-          apply: function (st) {
-            var earn = 60 + Random.int(0, 40);
-            st.resources.cash += Math.round(earn * 1.5);
-            if (!st.relationships.xiao_mei) {
-              st.relationships.xiao_mei = { affinity: 0, met: true };
-            }
-            st.relationships.xiao_mei.affinity = Math.min(
-              100,
-              st.relationships.xiao_mei.affinity + 10,
-            );
-            StateManager.addMessage(
-              "🤝 你们一起接了几单，分工合作效率很高。小美很开心：'搭档愉快！赚了¥" +
+          hint: \"时薪¥15-20，分享收入\"🤝 你们一起接了几单，分工合作效率很高。小美很开心：'搭档愉快！赚了¥\" +
                 Math.round(earn * 1.5).toLocaleString() +
                 "!'",
               "success",
@@ -1511,22 +1085,7 @@
         },
         {
           text: "💪 自己单干",
-          hint: "时薪¥25-30，不带她",
-          apply: function (st) {
-            var earn = 100 + Random.int(0, 50);
-            st.resources.cash += earn;
-            if (!st.relationships.xiao_mei) {
-              st.relationships.xiao_mei = { affinity: 0, met: true };
-            }
-            st.relationships.xiao_mei.affinity = Math.max(
-              -100,
-              st.relationships.xiao_mei.affinity - 5,
-            );
-            if (st.morality !== undefined) {
-              st.morality = Math.max(-100, st.morality - 1);
-            }
-            StateManager.addMessage(
-              "💪 你自己研究了一下APP，开始接单。小美看你没带她，有点失落。你赚了¥" +
+          hint: \"时薪¥25-30，不带她\"💪 你自己研究了一下APP，开始接单。小美看你没带她，有点失落。你赚了¥\" +
                 earn.toLocaleString() +
                 "。",
               "warning",
@@ -1535,10 +1094,7 @@
         },
         {
           text: "🙅 看不上这点钱",
-          hint: "错失机会",
-          apply: function (st) {
-            StateManager.addMessage(
-              "🙅 你摆摆手：'这点钱不够费事的。'小美撇了撇嘴：'看不起我们打工人啊。'",
+          hint: \"错失机会\"🙅 你摆摆手：'这点钱不够费事的。'小美撇了撇嘴：'看不起我们打工人啊。'\",
               "info",
             );
           },
@@ -1564,34 +1120,14 @@
       choices: [
         {
           text: "📖 仔细听讲",
-          hint: "学习废品分类，永久提升废品收入",
-          apply: function (st) {
-            st.flags._zhouTaughtScrapSkill = true;
-            if (st.skills && st.skills.sales) {
-              st.skills.sales.xp = (st.skills.sales.xp || 0) + 50;
-            }
-            st.flags._scrapIncomeBonus = 1.2;
-            st.npcRelations.old_zhou.affinity = Math.min(
-              100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
-            );
-            StateManager.addMessage(
-              "♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！",
+          hint: \"学习废品分类，永久提升废品收入\"♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！\",
               "success",
             );
           },
         },
         {
           text: "🙏 谢谢周叔，改天请你吃饭",
-          hint: "好感+3，安慰老周",
-          apply: function (st) {
-            st.flags._zhouTaughtScrapSkill = true;
-            st.npcRelations.old_zhou.affinity = Math.min(
-              100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
-            );
-            StateManager.addMessage(
-              "🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。",
+          hint: \"好感+3，安慰老周\"🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。\",
               "info",
             );
           },
@@ -1617,31 +1153,14 @@
       choices: [
         {
           text: "✅ 太好了，谢谢张姐！",
-          hint: "解锁固定夜班，日薪¥150+",
-          apply: function (st) {
-            st.flags._zhangIntroParttime = true;
-            st.flags._nightShiftJob = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
-              100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 10,
-            );
-            StateManager.addMessage(
-              "🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！",
+          hint: \"解锁固定夜班，日薪¥150+\"🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！\",
               "success",
             );
           },
         },
         {
           text: "🤔 我考虑考虑",
-          hint: "推迟决定",
-          apply: function (st) {
-            st.flags._zhangIntroduced = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
-              100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 2,
-            );
-            StateManager.addMessage(
-              "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
+          hint: \"推迟决定\"🤔 张姐说：'行，你慢慢考虑，机会不等人。'\",
               "info",
             );
           },
@@ -1668,9 +1187,7 @@
       choices: [
         {
           text: "👷 帮李工头（劝张姐别挖角）",
-          hint: "李工头好感+8，张姐好感-5，获得建筑类工作加成",
-          apply: function (st) {
-            st.flags._triangularChosen = "boss_li";
+          hint: \"李工头好感+8，张姐好感-5，获得建筑类工作加成\"boss_li\";
             if (st.relationships.boss_li) {
               st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 8);
             }
@@ -1683,9 +1200,7 @@
         },
         {
           text: "💼 帮张姐（支持工人权益）",
-          hint: "张姐好感+8，李工头好感-5，获得销售类工作加成",
-          apply: function (st) {
-            st.flags._triangularChosen = "sister_zhang";
+          hint: \"张姐好感+8，李工头好感-5，获得销售类工作加成\"sister_zhang\";
             if (st.relationships.sister_zhang) {
               st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 8);
             }
@@ -1698,7 +1213,7 @@
         },
         {
           text: "🤷 两边都不帮，各打五十大板",
-          hint: "双方好感各-3，但获得"和事佬"名声",
+          hint: \"双方好感各-3，但获得\\\\"名声\",
           apply: function (st) {
             st.flags._triangularChosen = "neutral";
             if (st.relationships.boss_li) {
@@ -1730,37 +1245,24 @@
       choices: [
         {
           text: "👵 帮王大婶问老周",
-          hint: "王大婶好感+5，老周好感-3",
-          apply: function (st) {
-            st.flags._auntZhouAsked = true;
-            if (st.relationships.aunt_wang) {
-              st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 5);
-            }
-            if (st.relationships.old_zhou) {
-              st.relationships.old_zhou.affinity = Math.max(-100, (st.relationships.old_zhou.affinity || 0) - 3);
-            }
-            StateManager.addMessage("👵 你问了老周，他叹口气说最近手头紧。王大婶说理解，但还是要催。", "info");
+          hint: \"王大婶好感+5，老周好感-3\"👵 你问了老周，他叹口气说最近手头紧。王大婶说理解，但还是要催。\", "info");
           },
         },
         {
           text: "👴 帮老周说情",
-          hint: "老周好感+5，王大婶好感-3",
-          apply: function (st) {
-            st.flags._auntZhouAsked = "zhou";
+          hint: \"老周好感+5，王大婶好感-3\"zhou\";
             if (st.relationships.old_zhou) {
               st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
             }
             if (st.relationships.aunt_wang) {
               st.relationships.aunt_wang.affinity = Math.max(-100, (st.relationships.aunt_wang.affinity || 0) - 3);
             }
-            StateManager.addMessage("👴 你跟王大婶说老周不容易，她叹口气说：「行吧，再宽限几天。」", "info");
+            StateManager.addMessage("👴 你跟王大婶说老周不容易，她叹口气说：\「行吧，再宽限几天。\」", "info");
           },
         },
         {
           text: "🤷 这事我不掺和",
-          hint: "双方好感不变",
-          apply: function (st) {
-            st.flags._auntZhouAsked = "neutral";
+          hint: \"双方好感不变\"neutral\";
             StateManager.addMessage("🤷 你说这事你不好管。王大婶没再说什么。", "info");
           },
         },
@@ -1782,22 +1284,12 @@
       choices: [
         {
           text: "🏠 提前找新住处",
-          hint: "避免被动涨租，获得搬家补贴¥200",
-          apply: function (st) {
-            st.flags._urbanRenewalWarned = true;
-            st.resources.cash += 200;
-            st.flags.preparedForUrbanRenewal = true;
-            if (st.relationships.zhaojie) {
-              st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 10);
-            }
-            StateManager.addMessage("🏠 你提前找了新住处，房东看你诚心，给了搬家补贴¥200。赵姐的情报救了你！", "success");
+          hint: \"避免被动涨租，获得搬家补贴¥200\"🏠 你提前找了新住处，房东看你诚心，给了搬家补贴¥200。赵姐的情报救了你！\", "success");
           },
         },
         {
           text: "🤔 先看看再说",
-          hint: "暂时不行动，后续可能被动涨租",
-          apply: function (st) {
-            st.flags._urbanRenewalWarned = "wait";
+          hint: \"暂时不行动，后续可能被动涨租\"wait\";
             StateManager.addMessage("🤔 你觉得先住着也行，到时候再说。赵姐摇摇头没说话。", "info");
           },
         },
@@ -1819,14 +1311,7 @@
       choices: [
         {
           text: "💰 冒险租下空地（¥500）",
-          hint: "70%概率赚¥800+，30%概率血本无归",
-          cost: 500,
-          apply: function (st) {
-            st.flags._chenSecretOpportunity = true;
-            if (Random.int(1, 10) <= 7) {
-              var profit = 800 + Random.int(0, 400);
-              st.resources.cash += profit;
-              StateManager.addMessage("💰 市政果然修了路，你的摊位成了黄金位置！赚了¥" + profit + "。陈哥消息真灵通。", "success");
+          hint: \"70%概率赚¥800+，30%概率血本无归\"💰 市政果然修了路，你的摊位成了黄金位置！赚了¥\" + profit + "。陈哥消息真灵通。", "success");
             } else {
               StateManager.addMessage("💰 市政改计划了，空地没修路，你的摊位没人光顾。¥500打水漂了。", "warning");
             }
@@ -1834,9 +1319,7 @@
         },
         {
           text: "🤔 太冒险了，不投",
-          hint: "错过机会，但保住本金",
-          apply: function (st) {
-            st.flags._chenSecretOpportunity = "passed";
+          hint: \"错过机会，但保住本金\"passed\";
             StateManager.addMessage("🤔 你觉得风险太大，拒绝了。陈哥说：「行，下次有好消息再告诉你。」", "info");
           },
         },
@@ -1858,35 +1341,23 @@
       choices: [
         {
           text: "💪 收下钱，鼓励他",
-          hint: "阿杰好感+8，获得¥200",
-          apply: function (st) {
-            st.flags._ajieDebtStarted = true;
-            st.resources.cash += 200;
-            if (st.relationships.ajie) {
-              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 8);
-            }
-            st.flags.ajiePayingBack = true;
-            StateManager.addMessage("💪 你收下200块：「慢慢来，能还就行。」阿杰眼眶红了：「多谢兄弟。」", "success");
+          hint: \"阿杰好感+8，获得¥200\"💪 你收下200块：\「慢慢来，能还就行。\」阿杰眼眶红了：\「多谢兄弟。\」\", "success");
           },
         },
         {
           text: "🤲 不用还了，当作我请你的",
-          hint: "阿杰好感+15，但损失¥200",
-          apply: function (st) {
-            st.flags._ajieDebtStarted = "forgiven";
+          hint: \"阿杰好感+15，但损失¥200\"forgiven\";
             st.resources.cash -= 200;
             if (st.relationships.ajie) {
               st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 15);
             }
             st.flags.ajieDebtForgiven = true;
-            StateManager.addMessage("🤲 你把钱推回去：「不用还了，当作我请你的。」阿杰眼泪下来了：「这辈子我忘不了你。」", "success");
+            StateManager.addMessage("🤲 你把钱推回去：\「不用还了，当作我请你的。\」阿杰眼泪下来了：\「这辈子我忘不了你。\」", "success");
           },
         },
         {
           text: "😕 先还一点也行，剩下的尽快",
-          hint: "阿杰好感+3，获得¥200",
-          apply: function (st) {
-            st.flags._ajieDebtStarted = "partial";
+          hint: \"阿杰好感+3，获得¥200\"partial\";
             st.resources.cash += 200;
             if (st.relationships.ajie) {
               st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 3);
@@ -1913,9 +1384,7 @@
       choices: [
         {
           text: "🏢 帮赵姐（佣金减半）",
-          hint: "赵姐好感+8，张姐好感-5，短期省钱",
-          apply: function (st) {
-            st.flags._agencyRivalryChosen = "zhaojie";
+          hint: \"赵姐好感+8，张姐好感-5，短期省钱\"zhaojie\";
             if (st.relationships.zhaojie) {
               st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 8);
             }
@@ -1928,9 +1397,7 @@
         },
         {
           text: "🏪 帮张姐（老客户情谊）",
-          hint: "张姐好感+8，赵姐好感-5，获得长期信任",
-          apply: function (st) {
-            st.flags._agencyRivalryChosen = "sister_zhang";
+          hint: \"张姐好感+8，赵姐好感-5，获得长期信任\"sister_zhang\";
             if (st.relationships.sister_zhang) {
               st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 8);
             }
@@ -1943,9 +1410,7 @@
         },
         {
           text: "🤷 两边都不选，自己找房源",
-          hint: "双方好感各-2，但保持独立",
-          apply: function (st) {
-            st.flags._agencyRivalryChosen = "neutral";
+          hint: \"双方好感各-2，但保持独立\"neutral\";
             if (st.relationships.zhaojie) {
               st.relationships.zhaojie.affinity = Math.max(-100, (st.relationships.zhaojie.affinity || 0) - 2);
             }
@@ -1974,24 +1439,12 @@
       choices: [
         {
           text: "👬 一起去看看阿杰",
-          hint: "触发老同学重逢事件，阿杰好感+10",
-          apply: function (st) {
-            st.flags._ajieReunionDone = true;
-            if (st.relationships.ajie) {
-              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 10);
-            }
-            if (st.relationships.chen_ge) {
-              st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 5);
-            }
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-            StateManager.addMessage("👬 你们找到阿杰，他正在工地搬砖。看到你们，他愣住了，然后笑了：「好久不见。」陈哥拍了拍他肩膀。你心里五味杂陈。心智+3。", "success");
+          hint: \"触发老同学重逢事件，阿杰好感+10\"👬 你们找到阿杰，他正在工地搬砖。看到你们，他愣住了，然后笑了：「好久不见。」陈哥拍了拍他肩膀。你心里五味杂陈。心智+3。\", "success");
           },
         },
         {
           text: "🤷 我不想见他",
-          hint: "陈哥好感-3，阿杰不知情",
-          apply: function (st) {
-            st.flags._ajieReunionDone = "refused";
+          hint: \"陈哥好感-3，阿杰不知情\"refused\";
             if (st.relationships.chen_ge) {
               st.relationships.chen_ge.affinity = Math.max(-100, (st.relationships.chen_ge.affinity || 0) - 3);
             }
@@ -2018,24 +1471,12 @@
       choices: [
         {
           text: "🤝 当中间人，促成和解",
-          hint: "双方好感各+10，解锁合作事件",
-          apply: function (st) {
-            st.flags._reconciliationDone = true;
-            if (st.relationships.boss_li) {
-              st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
-            }
-            if (st.relationships.sister_zhang) {
-              st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 10);
-            }
-            st.flags.bossZhangCooperate = true;
-            StateManager.addMessage("🤝 你约了两人吃饭，几杯酒下肚，他们握手言和。李工头说以后有活一起干，张姐说以后有工人介绍给他。", "success");
+          hint: \"双方好感各+10，解锁合作事件\"🤝 你约了两人吃饭，几杯酒下肚，他们握手言和。李工头说以后有活一起干，张姐说以后有工人介绍给他。\", "success");
           },
         },
         {
           text: "🤷 你们自己解决吧",
-          hint: "双方好感各+3",
-          apply: function (st) {
-            st.flags._reconciliationDone = "passed";
+          hint: \"双方好感各+3\"passed\";
             if (st.relationships.boss_li) {
               st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 3);
             }

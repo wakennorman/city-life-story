@@ -1089,6 +1089,13 @@ function renderTabBar(state) {
     } else if (btn.dataset.tab === "social") {
       // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
       btn.style.display = "";
+    } else if (btn.dataset.tab === "side_hustle") {
+      // 副业Tab：公司阶段显示（Phase 2）
+      if (state.player.phase === "corporate") {
+        btn.style.display = "";
+      } else {
+        btn.style.display = "none";
+      }
     } else {
       btn.style.display = "";
     }
@@ -1121,6 +1128,8 @@ const TAB_RENDERERS = {
     fallback: "事业发展系统加载中...",
   },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
+  // renderSideHustleTab 在 side_hustle_ui.js 中定义（跨文件）
+  side_hustle: { fnName: "renderSideHustleTab", fallback: "副业系统加载中..." },
   achievements: renderAchievementsTab,
   // 社交Tab：合并职场社交+家庭（跨文件）
   social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
