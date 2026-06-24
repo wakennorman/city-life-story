@@ -503,6 +503,191 @@
   }
 
   // ========================================================================
+  // 5) [v3.3 W1-T2] 体检异常 → 二阶事件链
+  //    `_healthCheckAlert` 写入后 7~21 天触发复查/调整事件
+  // ========================================================================
+
+  var CHRONIC_DISEASE_POOL = ["hypertension", "diabetes", "fatty_liver"];
+
+  function _hasIllness(state, id) {
+    var arr = state.status && state.status.illnesses;
+    if (!arr) return false;
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return true;
+    return false;
+  }
+
+  function _tryAddChronic(state) {
+    if (typeof window.ILLNESSES === "undefined") return null;
+    var candidates = CHRONIC_DISEASE_POOL.filter(function (id) {
+      return window.ILLNESSES[id] && !_hasIllness(state, id);
+    });
+    if (candidates.length === 0) return null;
+    var pick = Random.fromArray(candidates);
+    state.status.illnesses = state.status.illnesses || [];
+    state.status.illnesses.push({
+      id: pick,
+      contractedDay: state.player.day,
+      severity: 1,
+      treated: false,
+    });
+    state.status.sick = true;
+    return pick;
+  }
+
+  function _scheduleHealthFollowup(state) {
+    state.flags = state.flags || {};
+    if (state.flags._healthFollowupQueued) return;
+    if (!state.flags._healthCheckAlert) return;
+    if (state.flags.wt_recheck_diagnosis) return;
+    if (!state.flags._healthCheckAlertDay)
+      state.flags._healthCheckAlertDay = state.player.day;
+    var offset = state.player.day - state.flags._healthCheckAlertDay;
+    if (offset < 7 || offset > 21) return;
+    if (state._pendingEvent) return;
+    if (!Random.chance(0.25)) return;
+    state.flags._healthFollowupQueued = true;
+    showModal({
+      title: "🩺 体检异常复查通知",
+      body:
+        '<p style="line-height:1.7;">医院打来电话——上次体检的异常指标，建议尽快回去复查。' +
+        "你看着账单上的¥800，犹豫了半秒。</p>",
+      buttons: [
+        {
+          text: "🏥 去三甲复查（¥800）",
+          cls: "btn-primary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "tested";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlert = 0;
+            if (s.resources.cash < 800) {
+              StateManager.addMessage("💸 你掏不出¥800复查费。", "warning");
+              renderAll();
+              return;
+            }
+            s.resources.cash -= 800;
+            if (Random.chance(0.6)) {
+              var disease = _tryAddChronic(s);
+              s.flags._chronicDiseaseConfirmed = disease || "chronic";
+              StateManager.addMessage(
+                "⚠️ 复查确诊：" +
+                  (disease || "慢性病") +
+                  "。医生说要长期调理。",
+                "danger",
+              );
+            } else {
+              StateManager.addMessage(
+                "✅ 复查结果：虚惊一场，前次只是指标暂时性偏离。",
+                "success",
+              );
+            }
+            renderAll();
+          },
+        },
+        {
+          text: "🤷 忽视，继续过日子",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "ignored";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlertIgnoredDay = s.player.day;
+            // 埋雷：30 天后 30% 触发"晚期"事件由 _checkIgnoredHealthLatePhase 检测
+            StateManager.addMessage(
+              "🚪 你把通知单塞进抽屉。希望不会出大事。",
+              "warning",
+            );
+            renderAll();
+          },
+        },
+        {
+          text: "🌿 偏方调理（¥200）",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "folk";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlert = 0;
+            if (s.resources.cash < 200) {
+              StateManager.addMessage("💸 你连¥200都掏不出。", "warning");
+              renderAll();
+              return;
+            }
+            s.resources.cash -= 200;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 5);
+            s.flags.moral = s.flags.moral || {};
+            s.flags.moral.score = Math.max(
+              -100,
+              (s.flags.moral.score || 0) - 1,
+            );
+            StateManager.addMessage(
+              "🌿 你买了一堆中药+保健品。心理安慰是真的，效果是玄学。",
+              "info",
+            );
+            renderAll();
+          },
+        },
+      ],
+    });
+  }
+
+  function _scheduleLifestyleChoice(state) {
+    if (!state.flags._chronicDiseaseConfirmed) return;
+    if (state.flags.wt_chronic_disease_lifestyle) return;
+    if (!state.flags._chronicConfirmedDay)
+      state.flags._chronicConfirmedDay = state.player.day;
+    var off = state.player.day - state.flags._chronicConfirmedDay;
+    if (off < 7) return;
+    if (state._pendingEvent) return;
+    if (!Random.chance(0.3)) return;
+    showModal({
+      title: "🩹 该改改生活方式了",
+      body:
+        '<p style="line-height:1.7;">医生让你"改变生活方式"。说起来容易做起来难——少应酬、早睡、戒油盐。' +
+        "你纠结地盯着加班费和健康账单。</p>",
+      buttons: [
+        {
+          text: "🥗 听医生话（疲劳上限-5，每日健康+1）",
+          cls: "btn-primary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_chronic_disease_lifestyle = "healthy";
+            s.flags._fatigueCapPenalty =
+              (s.flags._fatigueCapPenalty || 0) + 5;
+            s.flags._dailyHealthBonus =
+              (s.flags._dailyHealthBonus || 0) + 1;
+            StateManager.addMessage(
+              "🥗 你把烟戒了，朋友圈分享了一个跑步打卡APP。",
+              "success",
+            );
+            renderAll();
+          },
+        },
+        {
+          text: "💼 继续 996",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_chronic_disease_lifestyle = "grind";
+            s.player.physique = Math.max(1, (s.player.physique || 0) - 3);
+            StateManager.addMessage(
+              "🔥 你照旧加班到深夜。镜子里的人越来越憔悴。",
+              "warning",
+            );
+            renderAll();
+          },
+        },
+      ],
+    });
+  }
+
+  function tickHealthFollowups(state) {
+    if (!state || !state.player) return;
+    _scheduleHealthFollowup(state);
+    _scheduleLifestyleChoice(state);
+  }
+
+  // ========================================================================
   // 出口
   // ========================================================================
   if (typeof window !== "undefined") {
@@ -510,6 +695,7 @@
     window.getSectorJobIncomeDesc = getSectorJobIncomeDesc;
     window.checkWealthTaxTick = checkWealthTaxTick;
     window.check35Crisis = check35Crisis;
+    window.tickHealthFollowups = tickHealthFollowups;
     window.JOB_SECTOR_MAP = JOB_SECTOR_MAP;
     window.WEALTH_TAX_EVENTS = WEALTH_TAX_EVENTS;
     // 延迟挂载动态提示（DYNAMIC_HINTS 可能在 tutorial.js 之后加载）

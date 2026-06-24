@@ -749,6 +749,9 @@ const DAILY_PIPELINE = [
       if (typeof check35Crisis === "function") {
         check35Crisis(state);
       }
+      if (typeof tickHealthFollowups === "function") {
+        tickHealthFollowups(state);
+      }
     },
   },
 
