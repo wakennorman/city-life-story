@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.2 全面重塑：黑暗开局+强制人生目标+职业路径扩展+交通优化+违法行为扩充）
+> 最后更新: 2026-06-24（v3.3 Wave-1A 关联度闭合：35岁链延伸+体检二阶+借款回响）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
@@ -12,6 +12,27 @@
 > | v3.0 | `memory/review-improve-v3.0.md`         | 全方位审查改进（代码/架构/机制/剧情/UI/留存） |
 > | v2.1 | `memory/content-expansion-v2.1.md`      | 内容扩充 SOP（20职业上限/成套添加/交叉验证）  |
 > | 1.4  | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                          |
+
+## 2026-06-24 — v3.3 Wave-1A 关联度闭合（GLM-5.2 / 游戏设计师+高级开发工程师）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+
+**目标**：把"已埋下但未串完"的关联通路接上 — 35 岁三路径、体检异常、借款回响。
+
+- **T1 · 35 岁分水岭三路径延伸事件链** — 新建 `src/js/data/crisis35_followups.js`（499 行）
+  - 6 个核心 followup：`c35_exam_first_try` / `c35_exam_decision`（exam 路径）；`c35_career_overtime` / `c35_career_layoff_list`（career 路径）；`c35_lieflat_family_call` / `c35_lieflat_friend_circle`（lieflat 路径）
+  - IIFE 注入 `window.RANDOM_EVENTS`；index.html 紧跟 `moral_events.js` 注册
+  - `review_improvements.js::check35Crisis` 三路径写 flag 时追加 `s.flags._crisis35Day = s.player.day`
+- **T2 · 体检异常 → 二阶事件链** — `review_improvements.js` +186 行
+  - `wt_recheck_diagnosis`（去三甲复查 / 忽视 / 偏方）+ `wt_chronic_disease_lifestyle`（调整生活方式 / 继续 996）
+  - `daily_pipeline.js::review_improvements_tick` 调用 `tickHealthFollowups`
+- **T3 · 坏账后续 + 好心回报（对称设计）** — `crisis35_followups.js` 末尾追加
+  - `bad_debt_chase`（亲戚消失：律师催债 / 自认倒霉 / 朋友圈骂街）
+  - `good_loan_return`（口碑传播：NPC 好感+5 + 30% 高薪临时任务）
+
+构建：`dist/index.html = 3771.7 KB`
+
+---
 
 ## 2026-06-24 — v3.2 全面重塑（QoderWork / 游戏设计师+高级开发工程师）
 

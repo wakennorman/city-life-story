@@ -150,6 +150,13 @@
         >
           ⏭️ 跳过引导，直接开始
         </button>
+        <button
+          class="btn btn-sm"
+          style="margin-top: 8px"
+          onclick="showHeritageStore && showHeritageStore()"
+        >
+          🏛 传承商店
+        </button>
       </div>
       <div id="load-section" style="display: none; margin-top: 8px"></div>
       <div style="margin-top: 32px; font-size: 11px; color: var(--text-muted)">
@@ -25164,9 +25171,11 @@ if (typeof window !== "undefined") {
         // 七成概率坏账，三成将来还回（埋一个 fame +/- flag）
         if (Random.chance(0.7)) {
           s.flags._badDebtAmount = (s.flags._badDebtAmount || 0) + amt;
+          s.flags._badDebtSeed = s.player.day;
           StateManager.addMessage("💔 这笔钱多半要不回来了", "warning");
         } else {
           s.flags._goodLoanReturn = (s.flags._goodLoanReturn || 0) + amt;
+          s.flags._goodLoanSeed = s.player.day;
           StateManager.addMessage("📅 对方承诺一年后归还", "info");
         }
       },
@@ -25362,6 +25371,7 @@ if (typeof window !== "undefined") {
             s.player.intelligence = Math.min(100, s.player.intelligence + 5);
             s.needs.happiness = Math.max(0, s.needs.happiness - 10);
             s.flags._crisis35Path = "exam";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "📖 你买齐了考公教材，把客厅改成了书房。新的人生从书桌开始。",
               "success",
@@ -25377,6 +25387,7 @@ if (typeof window !== "undefined") {
             s.player.physique = Math.max(1, s.player.physique - 3);
             s.player.mental = Math.min(100, s.player.mental + 5);
             s.flags._crisis35Path = "career";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "🔥 你删掉了招聘APP里所有30岁以下的过滤器，重新写了简历。",
               "info",
@@ -25393,6 +25404,7 @@ if (typeof window !== "undefined") {
             s.needs.happiness = Math.min(100, s.needs.happiness + 15);
             s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
             s.flags._crisis35Path = "lieflat";
+            s.flags._crisis35Day = s.player.day;
             StateManager.addMessage(
               "🍃 你给自己泡了壶茶，告诉自己：人生不必处处是赛跑。",
               "info",
@@ -25517,6 +25529,191 @@ if (typeof window !== "undefined") {
   }
 
   // ========================================================================
+  // 5) [v3.3 W1-T2] 体检异常 → 二阶事件链
+  //    `_healthCheckAlert` 写入后 7~21 天触发复查/调整事件
+  // ========================================================================
+
+  var CHRONIC_DISEASE_POOL = ["hypertension", "diabetes", "fatty_liver"];
+
+  function _hasIllness(state, id) {
+    var arr = state.status && state.status.illnesses;
+    if (!arr) return false;
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return true;
+    return false;
+  }
+
+  function _tryAddChronic(state) {
+    if (typeof window.ILLNESSES === "undefined") return null;
+    var candidates = CHRONIC_DISEASE_POOL.filter(function (id) {
+      return window.ILLNESSES[id] && !_hasIllness(state, id);
+    });
+    if (candidates.length === 0) return null;
+    var pick = Random.fromArray(candidates);
+    state.status.illnesses = state.status.illnesses || [];
+    state.status.illnesses.push({
+      id: pick,
+      contractedDay: state.player.day,
+      severity: 1,
+      treated: false,
+    });
+    state.status.sick = true;
+    return pick;
+  }
+
+  function _scheduleHealthFollowup(state) {
+    state.flags = state.flags || {};
+    if (state.flags._healthFollowupQueued) return;
+    if (!state.flags._healthCheckAlert) return;
+    if (state.flags.wt_recheck_diagnosis) return;
+    if (!state.flags._healthCheckAlertDay)
+      state.flags._healthCheckAlertDay = state.player.day;
+    var offset = state.player.day - state.flags._healthCheckAlertDay;
+    if (offset < 7 || offset > 21) return;
+    if (state._pendingEvent) return;
+    if (!Random.chance(0.25)) return;
+    state.flags._healthFollowupQueued = true;
+    showModal({
+      title: "🩺 体检异常复查通知",
+      body:
+        '<p style="line-height:1.7;">医院打来电话——上次体检的异常指标，建议尽快回去复查。' +
+        "你看着账单上的¥800，犹豫了半秒。</p>",
+      buttons: [
+        {
+          text: "🏥 去三甲复查（¥800）",
+          cls: "btn-primary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "tested";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlert = 0;
+            if (s.resources.cash < 800) {
+              StateManager.addMessage("💸 你掏不出¥800复查费。", "warning");
+              renderAll();
+              return;
+            }
+            s.resources.cash -= 800;
+            if (Random.chance(0.6)) {
+              var disease = _tryAddChronic(s);
+              s.flags._chronicDiseaseConfirmed = disease || "chronic";
+              StateManager.addMessage(
+                "⚠️ 复查确诊：" +
+                  (disease || "慢性病") +
+                  "。医生说要长期调理。",
+                "danger",
+              );
+            } else {
+              StateManager.addMessage(
+                "✅ 复查结果：虚惊一场，前次只是指标暂时性偏离。",
+                "success",
+              );
+            }
+            renderAll();
+          },
+        },
+        {
+          text: "🤷 忽视，继续过日子",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "ignored";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlertIgnoredDay = s.player.day;
+            // 埋雷：30 天后 30% 触发"晚期"事件由 _checkIgnoredHealthLatePhase 检测
+            StateManager.addMessage(
+              "🚪 你把通知单塞进抽屉。希望不会出大事。",
+              "warning",
+            );
+            renderAll();
+          },
+        },
+        {
+          text: "🌿 偏方调理（¥200）",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_recheck_diagnosis = "folk";
+            s.flags._healthFollowupQueued = false;
+            s.flags._healthCheckAlert = 0;
+            if (s.resources.cash < 200) {
+              StateManager.addMessage("💸 你连¥200都掏不出。", "warning");
+              renderAll();
+              return;
+            }
+            s.resources.cash -= 200;
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 5);
+            s.flags.moral = s.flags.moral || {};
+            s.flags.moral.score = Math.max(
+              -100,
+              (s.flags.moral.score || 0) - 1,
+            );
+            StateManager.addMessage(
+              "🌿 你买了一堆中药+保健品。心理安慰是真的，效果是玄学。",
+              "info",
+            );
+            renderAll();
+          },
+        },
+      ],
+    });
+  }
+
+  function _scheduleLifestyleChoice(state) {
+    if (!state.flags._chronicDiseaseConfirmed) return;
+    if (state.flags.wt_chronic_disease_lifestyle) return;
+    if (!state.flags._chronicConfirmedDay)
+      state.flags._chronicConfirmedDay = state.player.day;
+    var off = state.player.day - state.flags._chronicConfirmedDay;
+    if (off < 7) return;
+    if (state._pendingEvent) return;
+    if (!Random.chance(0.3)) return;
+    showModal({
+      title: "🩹 该改改生活方式了",
+      body:
+        '<p style="line-height:1.7;">医生让你"改变生活方式"。说起来容易做起来难——少应酬、早睡、戒油盐。' +
+        "你纠结地盯着加班费和健康账单。</p>",
+      buttons: [
+        {
+          text: "🥗 听医生话（疲劳上限-5，每日健康+1）",
+          cls: "btn-primary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_chronic_disease_lifestyle = "healthy";
+            s.flags._fatigueCapPenalty =
+              (s.flags._fatigueCapPenalty || 0) + 5;
+            s.flags._dailyHealthBonus =
+              (s.flags._dailyHealthBonus || 0) + 1;
+            StateManager.addMessage(
+              "🥗 你把烟戒了，朋友圈分享了一个跑步打卡APP。",
+              "success",
+            );
+            renderAll();
+          },
+        },
+        {
+          text: "💼 继续 996",
+          cls: "btn-secondary",
+          callback: function () {
+            var s = StateManager.getState();
+            s.flags.wt_chronic_disease_lifestyle = "grind";
+            s.player.physique = Math.max(1, (s.player.physique || 0) - 3);
+            StateManager.addMessage(
+              "🔥 你照旧加班到深夜。镜子里的人越来越憔悴。",
+              "warning",
+            );
+            renderAll();
+          },
+        },
+      ],
+    });
+  }
+
+  function tickHealthFollowups(state) {
+    if (!state || !state.player) return;
+    _scheduleHealthFollowup(state);
+    _scheduleLifestyleChoice(state);
+  }
+
+  // ========================================================================
   // 出口
   // ========================================================================
   if (typeof window !== "undefined") {
@@ -25524,6 +25721,7 @@ if (typeof window !== "undefined") {
     window.getSectorJobIncomeDesc = getSectorJobIncomeDesc;
     window.checkWealthTaxTick = checkWealthTaxTick;
     window.check35Crisis = check35Crisis;
+    window.tickHealthFollowups = tickHealthFollowups;
     window.JOB_SECTOR_MAP = JOB_SECTOR_MAP;
     window.WEALTH_TAX_EVENTS = WEALTH_TAX_EVENTS;
     // 延迟挂载动态提示（DYNAMIC_HINTS 可能在 tutorial.js 之后加载）
@@ -43711,6 +43909,82 @@ const MORAL_CONSEQUENCES = {
       );
     },
   },
+
+  // ====== [v3.3 W1-T4] 4 条新 followup ======
+  moral_phone_sell: {
+    id: "consequence_phone_sell",
+    title: "📱 二手贩子追上门",
+    delay: [4, 9],
+    desc: function (s) {
+      return "你卖手机的二手贩子被警察盯上了，他供出了几个上家。一个警察在你常去的街口蹲了两天。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 12);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 2);
+      s.flags._policeWatch = (s.flags._policeWatch || 0) + 1;
+      StateManager.addMessage(
+        "🚓 警察打听过你的事。你慌得几晚没睡好。",
+        "danger",
+      );
+    },
+  },
+  moral_thief_ignore: {
+    id: "consequence_thief_ignore",
+    title: "👀 被偷的是熟人",
+    delay: [3, 7],
+    desc: function (s) {
+      return "你后来才听说，那天被偷的人是隔壁摊主家的弟弟。摊主隐约知道你当时在场。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 6);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 1);
+      StateManager.addMessage(
+        "😶 摊主见你时眼神奇怪了一下，没多说。",
+        "warning",
+      );
+    },
+  },
+  moral_fall_ignore: {
+    id: "consequence_fall_ignore",
+    title: "📹 监控调出来了",
+    delay: [5, 11],
+    desc: function (s) {
+      return "那位摔倒的老人后来住院了。家属调监控时，看见你从旁边绕过去——视频被传到了社区群。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 12);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 10);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 3);
+      StateManager.addMessage(
+        "📵 你出门时听见有人窃窃私语。社区群有你的截图。",
+        "danger",
+      );
+    },
+  },
+  moral_atm_warn: {
+    id: "consequence_atm_warn",
+    title: "🙏 被救者上门致谢",
+    delay: [6, 12],
+    desc: function (s) {
+      return "你在ATM拦下的那位阿姨，差点被骗走毕生积蓄。她带着两盒水果找到你，说要请你吃顿饭。";
+    },
+    apply: function (s) {
+      s.resources.cash += 100;
+      s.needs.happiness = Math.min(100, s.needs.happiness + 12);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 6);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.min(100, (s.flags.moral.score || 0) + 2);
+      StateManager.addMessage(
+        "🍎 阿姨塞给你¥100红包+两盒水果。社区有人开始记住你的名字。",
+        "success",
+      );
+    },
+  },
 };
 
 // ====== 触发逻辑 ======
@@ -43857,6 +44131,507 @@ function getMoralEmoji(score) {
   if (score >= -40) return "😒";
   return "👿";
 }
+</script>
+    <!-- v3.3 W1-T1/T3: 35岁分水岭三路径延伸 + 坏账/好心回报 -->
+    <script>/**
+ * v3.3 W1-T1: 35 岁分水岭三路径延伸事件链
+ *
+ * 让 `_crisis35Path` 选定后 30~90 天内有响应，3 条路径各 2 个事件，
+ * 外加 T3 的坏账/好心借出回响事件 2 条，共 8 条事件。
+ *
+ * 注入方式：在 RANDOM_EVENTS 已加载后通过 IIFE 追加。
+ * 计时起点：`_crisis35Day`（在 review_improvements.js::check35Crisis 写入）。
+ * 一次性事件：使用 `state.flags.<id>` 标记防重。
+ */
+
+(function () {
+  if (typeof window === "undefined") return;
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crisis35FollowupsLoaded) return;
+  RANDOM_EVENTS._crisis35FollowupsLoaded = true;
+
+  function _dayOffset(state) {
+    var base = (state.flags && state.flags._crisis35Day) || 0;
+    return (state.player.day || 0) - base;
+  }
+
+  var CRISIS35_FOLLOWUPS = [
+    // ============================================================
+    // EXAM 路径：备考公
+    // ============================================================
+    {
+      id: "c35_exam_first_try",
+      phase: "street",
+      icon: "📝",
+      title: "第一次模考",
+      story:
+        "公考论坛报了一场全真模考。考场里全是熟悉的中年面孔——大家都揣着同样的赌注。",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "exam" &&
+          _dayOffset(st) >= 30 &&
+          _dayOffset(st) <= 60 &&
+          !st.flags.c35_exam_first_try
+        );
+      },
+      choices: [
+        {
+          text: "🧠 全力以赴",
+          apply: function (st) {
+            st.flags.c35_exam_first_try = true;
+            var iq = st.player.intelligence || 0;
+            var fatigue = st.needs.fatigue || 0;
+            var score = iq * 0.8 - fatigue * 0.3 + Random.int(-10, 10);
+            if (score >= 55) {
+              st.flags._examModelScorePass = true;
+              st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+              StateManager.addMessage(
+                "📊 模考成绩出来：行测78、申论65。你看到了上岸的希望。",
+                "success",
+              );
+            } else {
+              st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+              StateManager.addMessage(
+                "📊 模考分数惨不忍睹。你盯着错题册发呆，怀疑自己是不是真的考不上。",
+                "warning",
+              );
+            }
+            st.needs.fatigue = Math.min(100, fatigue + 15);
+          },
+        },
+        {
+          text: "🛑 跳过这次（先复习）",
+          apply: function (st) {
+            st.flags.c35_exam_first_try = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 2,
+            );
+            StateManager.addMessage(
+              "📚 你决定再多看一周书。机会还在后头。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "c35_exam_decision",
+      phase: "street",
+      icon: "🎯",
+      title: "笔试日 OR 放弃",
+      story:
+        "真正的笔试报名表摆在面前。你考虑了一夜：是赌上半年的辛苦，还是趁早转身？",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "exam" &&
+          _dayOffset(st) >= 90 &&
+          _dayOffset(st) <= 130 &&
+          !st.flags.c35_exam_decision
+        );
+      },
+      choices: [
+        {
+          text: "✊ 报名上考场",
+          apply: function (st) {
+            st.flags.c35_exam_decision = "tried";
+            var iq = st.player.intelligence || 0;
+            var prevPass = st.flags._examModelScorePass ? 15 : 0;
+            var chance = iq + prevPass - 60;
+            if (Random.chance(Math.max(0.1, Math.min(0.85, chance / 100)))) {
+              st.flags._passedCivilService = true;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 25);
+              st.resources.cash += 5000;
+              StateManager.addMessage(
+                "🎉 笔试通过！进入面试名单。亲戚朋友都打来祝贺电话，奖¥5000。",
+                "success",
+              );
+            } else {
+              st.flags._passedCivilService = false;
+              st.needs.happiness = Math.max(0, st.needs.happiness - 18);
+              StateManager.addMessage(
+                "📉 笔试差了两分。你坐在考点门口的台阶上坐了半小时。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🍃 放弃，承认自己不适合",
+          apply: function (st) {
+            st.flags.c35_exam_decision = "gaveup";
+            st.flags._passedCivilService = false;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
+            StateManager.addMessage(
+              "🚪 你把所有教材打包卖了二手。心情反而轻松了一些。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ============================================================
+    // CAREER 路径：再卷职场
+    // ============================================================
+    {
+      id: "c35_career_overtime",
+      phase: "street",
+      icon: "💼",
+      title: "加班通宵的KPI",
+      story:
+        "新公司给你压了一个 deadline：今晚必须出方案。\n你看着办公室空荡荡的椅子，喝了今天第四杯咖啡。",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "career" &&
+          _dayOffset(st) >= 30 &&
+          _dayOffset(st) <= 60 &&
+          !st.flags.c35_career_overtime
+        );
+      },
+      choices: [
+        {
+          text: "🔥 硬扛通宵",
+          apply: function (st) {
+            st.flags.c35_career_overtime = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 35);
+            st.player.physique = Math.max(1, (st.player.physique || 0) - 2);
+            st.resources.cash += 2500;
+            st.flags._careerKpiGood = (st.flags._careerKpiGood || 0) + 1;
+            StateManager.addMessage(
+              "☕ 你顶过去了。早上 6 点交了方案，老板回了个👍。月底拿到¥2500绩效。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🚶 摸鱼应付，明天再改",
+          apply: function (st) {
+            st.flags.c35_career_overtime = true;
+            st.flags._careerKpiBad = (st.flags._careerKpiBad || 0) + 1;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "😴 你早早回家睡了。第二天被老板叫到办公室单独谈话。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "c35_career_layoff_list",
+      phase: "street",
+      icon: "⚠️",
+      title: "裁员名单",
+      story:
+        "HR 群里流传出一份名单。你的名字赫然在列。\n是直接走人，还是去找老板申诉？",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "career" &&
+          _dayOffset(st) >= 60 &&
+          _dayOffset(st) <= 100 &&
+          !st.flags.c35_career_layoff_list
+        );
+      },
+      choices: [
+        {
+          text: "🤝 找老板/同事帮忙",
+          apply: function (st) {
+            st.flags.c35_career_layoff_list = true;
+            // 社交关系判定：NPC 关系 >=50 计 1 票，KPI 好 +1，KPI 坏 -1
+            var support = 0;
+            var rels = st.relationships || st.npcRelations || {};
+            for (var k in rels) {
+              if ((rels[k].affinity || 0) >= 50) support++;
+            }
+            support += st.flags._careerKpiGood || 0;
+            support -= st.flags._careerKpiBad || 0;
+            if (support >= 2) {
+              st.flags._careerSurvivedLayoff = true;
+              st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+              StateManager.addMessage(
+                "🛡️ 你的人脉关键时刻发挥了作用。名单改了，你留下了。",
+                "success",
+              );
+            } else {
+              st.flags._careerSurvivedLayoff = false;
+              st.resources.cash += 8000;
+              StateManager.addMessage(
+                "💔 没人替你说话。HR 给了¥8000的 N+1 让你走人。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🚪 接受 N+1，主动离开",
+          apply: function (st) {
+            st.flags.c35_career_layoff_list = true;
+            st.flags._careerSurvivedLayoff = false;
+            st.resources.cash += 12000;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            StateManager.addMessage(
+              "📃 你签了 N+1.5 的协议，¥12000到账。回家路上忽然觉得轻松。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ============================================================
+    // LIEFLAT 路径：摆烂
+    // ============================================================
+    {
+      id: "c35_lieflat_family_call",
+      phase: "street",
+      icon: "📞",
+      title: "家人的电话",
+      story:
+        "妈妈打来电话，说听亲戚说你最近「什么都不干」。她在那头沉默了好久。",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "lieflat" &&
+          _dayOffset(st) >= 30 &&
+          _dayOffset(st) <= 60 &&
+          !st.flags.c35_lieflat_family_call
+        );
+      },
+      choices: [
+        {
+          text: "🛡️ 坚持自己的选择",
+          apply: function (st) {
+            st.flags.c35_lieflat_family_call = true;
+            st.flags.moral = st.flags.moral || {};
+            st.flags.moral.score = Math.max(
+              -100,
+              (st.flags.moral.score || 0) - 2,
+            );
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            StateManager.addMessage(
+              "🍵 你解释了半天。挂电话时你和家人的距离又远了一点。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙏 哄她说自己在努力",
+          apply: function (st) {
+            st.flags.c35_lieflat_family_call = true;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            StateManager.addMessage(
+              "😶 你撒了个善意的谎。挂了电话盯着天花板，没什么感觉。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🚆 收拾东西，准备回老家",
+          apply: function (st) {
+            st.flags.c35_lieflat_family_call = true;
+            st.flags._returnedHometown = true;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+            StateManager.addMessage(
+              "🏡 你订了周末的车票。也许小县城才是你该回去的地方。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "c35_lieflat_friend_circle",
+      phase: "street",
+      icon: "📱",
+      title: "朋友圈的成功学",
+      story:
+        "翻朋友圈：前同事晒了升职CFO，老同学晒了三娃别墅。\n你盯着自己的二手手机，手指停在评论框上。",
+      conditions: function (st) {
+        return (
+          st.flags &&
+          st.flags._crisis35Path === "lieflat" &&
+          _dayOffset(st) >= 60 &&
+          _dayOffset(st) <= 100 &&
+          !st.flags.c35_lieflat_friend_circle
+        );
+      },
+      choices: [
+        {
+          text: "😤 嫉妒+发泄性消费",
+          apply: function (st) {
+            st.flags.c35_lieflat_friend_circle = "envy";
+            var spend = Math.min(st.resources.cash, 300);
+            st.resources.cash -= spend;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 6);
+            StateManager.addMessage(
+              "🛒 你花¥" + spend + "买了一堆没用的东西。报复性消费没带来快乐。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🍃 默默点赞，关掉手机",
+          apply: function (st) {
+            st.flags.c35_lieflat_friend_circle = "release";
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            // 触发归园田居线索（life_ribbon 读取）
+            st.flags._lieflatAtPeace = true;
+            StateManager.addMessage(
+              "🌿 你给所有人点了赞。窗外起风了，你拿起了一本书。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // ============================================================
+    // T3: 坏账后续 + 好心回报
+    // ============================================================
+    {
+      id: "bad_debt_chase",
+      phase: "street",
+      icon: "💸",
+      title: "亲戚消失了",
+      story:
+        "你给老同学/远房亲戚借出的那笔钱，到了约定日子没还。\n打电话——关机。微信——拉黑。",
+      conditions: function (st) {
+        var amt = (st.flags && st.flags._badDebtAmount) || 0;
+        return (
+          amt > 0 &&
+          !st.flags.bad_debt_chase &&
+          (st.flags._badDebtSeed === undefined ||
+            (st.player.day || 0) - st.flags._badDebtSeed >= 14)
+        );
+      },
+      choices: [
+        {
+          text: "⚖️ 请律师催债（¥500）",
+          apply: function (st) {
+            st.flags.bad_debt_chase = "lawyer";
+            if (st.resources.cash < 500) {
+              StateManager.addMessage("💸 你连律师费都掏不起。", "warning");
+              return;
+            }
+            st.resources.cash -= 500;
+            var amt = st.flags._badDebtAmount || 0;
+            if (Random.chance(0.3)) {
+              var rec = Math.floor(amt * 0.5);
+              st.resources.cash += rec;
+              StateManager.addMessage(
+                "📑 律师函生效，对方还了¥" + rec + "（一半）。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "📃 律师函石沉大海。¥500白扔了。",
+                "warning",
+              );
+            }
+            st.flags._badDebtAmount = 0;
+          },
+        },
+        {
+          text: "🍵 自认倒霉",
+          apply: function (st) {
+            st.flags.bad_debt_chase = "letgo";
+            st.flags.moral = st.flags.moral || {};
+            st.flags.moral.score = Math.min(
+              100,
+              (st.flags.moral.score || 0) + 2,
+            );
+            st.flags._badDebtAmount = 0;
+            StateManager.addMessage(
+              "🧘 你删掉了那个号码。算是花钱买教训。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📢 朋友圈骂街",
+          apply: function (st) {
+            st.flags.bad_debt_chase = "shame";
+            st.player.fame = Math.max(0, (st.player.fame || 0) - 10);
+            st.flags.moral = st.flags.moral || {};
+            st.flags.moral.score = Math.max(
+              -100,
+              (st.flags.moral.score || 0) - 3,
+            );
+            st.flags._badDebtAmount = 0;
+            StateManager.addMessage(
+              "📱 你发了长篇控诉。共同朋友圈炸了，但你的名声也跟着掉了。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "good_loan_return",
+      phase: "street",
+      icon: "💌",
+      title: "听说你大气",
+      story:
+        "一年前你借出去的那笔钱，对方真还回来了。\n更没想到的是，他在朋友圈夸你「够意思」，几个熟人都看见了。",
+      conditions: function (st) {
+        var amt = (st.flags && st.flags._goodLoanReturn) || 0;
+        return (
+          amt > 0 &&
+          !st.flags.good_loan_return &&
+          (st.flags._goodLoanSeed === undefined ||
+            (st.player.day || 0) - st.flags._goodLoanSeed >= 30)
+        );
+      },
+      choices: [
+        {
+          text: "🤝 收下，谢谢对方",
+          apply: function (st) {
+            st.flags.good_loan_return = true;
+            var amt = st.flags._goodLoanReturn || 0;
+            st.resources.cash += amt;
+            // NPC 平均好感+5
+            var rels = st.relationships || st.npcRelations || {};
+            var bumped = 0;
+            for (var k in rels) {
+              if (rels[k].met || rels[k].affinity >= 0) {
+                rels[k].affinity = Math.min(100, (rels[k].affinity || 0) + 5);
+                bumped++;
+              }
+            }
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            // 30% 概率引荐高薪一次性工作
+            if (Random.chance(0.3)) {
+              var pay = Random.int(800, 2000);
+              st.resources.cash += pay;
+              StateManager.addMessage(
+                "🎁 对方还把你介绍给一个老板，临时项目结款¥" + pay + "。",
+                "success",
+              );
+            }
+            st.flags._goodLoanReturn = 0;
+            StateManager.addMessage(
+              "💰 ¥" +
+                amt +
+                "原数到账。" +
+                (bumped > 0 ? "顺带 " + bumped + " 位熟人好感+5。" : "") +
+                "名声+8。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  Array.prototype.push.apply(RANDOM_EVENTS, CRISIS35_FOLLOWUPS);
+})();
 </script>
 
     <!-- Phase 1 -->
@@ -52498,6 +53273,9 @@ const DAILY_PIPELINE = [
       }
       if (typeof check35Crisis === "function") {
         check35Crisis(state);
+      }
+      if (typeof tickHealthFollowups === "function") {
+        tickHealthFollowups(state);
       }
     },
   },
@@ -99056,6 +99834,162 @@ function showInheritanceSummaryModal(inheritanceData) {
     ],
   });
 }
+</script>
+    <script>/**
+ * 传承商店 UI — v3.3 W1-T5
+ *
+ * 用 showModal 渲染 heritage_coin.js 已定义的 6 项红/绿互斥永久解锁。
+ * 数据从 getHeritageShop() / spendHeritageCoin() / HERITAGE_UNLOCKS 全部读现成。
+ *
+ * 入口：主菜单 / 新游戏前调用 showHeritageStore()
+ */
+
+(function () {
+  "use strict";
+
+  function _esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c
+      );
+    });
+  }
+
+  function _renderCard(u) {
+    var isUnlocked = !!u.unlocked;
+    var blocked = !!u.blockedByMutual;
+    var canBuy = !isUnlocked && !blocked && !!u.affordable;
+    var statusBadge = "";
+    if (isUnlocked)
+      statusBadge =
+        '<span style="color:var(--success);font-weight:bold;">✓ 已解锁</span>';
+    else if (blocked)
+      statusBadge =
+        '<span style="color:var(--danger);">🔒 与已解锁互斥</span>';
+    else if (!u.affordable)
+      statusBadge = '<span style="color:var(--text-muted);">币不足</span>';
+    else
+      statusBadge =
+        '<span style="color:var(--text-secondary);">可解锁</span>';
+
+    var btn = "";
+    if (canBuy) {
+      btn =
+        '<button class="btn btn-sm btn-primary" style="margin-top:6px;" onclick="_heritageBuyItem(\'' +
+        _esc(u.id) +
+        "')\">🪙 花 " +
+        u.cost +
+        " 解锁</button>";
+    } else if (isUnlocked) {
+      btn =
+        '<div style="margin-top:6px;color:var(--success);font-size:12px;">已生效</div>';
+    } else {
+      btn =
+        '<div style="margin-top:6px;color:var(--text-muted);font-size:12px;">需 ' +
+        u.cost +
+        " 币</div>";
+    }
+
+    var mutualHint = "";
+    if (u.mutualExclusion) {
+      mutualHint =
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">⚖ 与 [' +
+        _esc(u.mutualExclusion) +
+        "] 互斥</div>";
+    }
+
+    return (
+      '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-size:28px;">' +
+      _esc(u.icon) +
+      "</span>" +
+      '<div style="flex:1;">' +
+      '<div style="font-weight:bold;color:var(--text-primary);">' +
+      _esc(u.name) +
+      "</div>" +
+      '<div style="font-size:11px;color:var(--text-muted);">分支：' +
+      _esc(u.branch || "") +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">' +
+      _esc(u.desc) +
+      "</div>" +
+      mutualHint +
+      '<div style="margin-top:6px;font-size:12px;">' +
+      statusBadge +
+      "</div>" +
+      btn +
+      "</div>"
+    );
+  }
+
+  function showHeritageStore() {
+    if (typeof getHeritageShop !== "function") {
+      if (typeof showModal === "function") {
+        showModal({
+          title: "🏛 传承商店",
+          body: "<p>传承币系统尚未加载。</p>",
+          buttons: [{ text: "关闭", cls: "btn-primary", callback: function () {} }],
+        });
+      }
+      return;
+    }
+    var shop = getHeritageShop();
+    var balanceHtml =
+      '<div style="background:linear-gradient(135deg,#fff8dc,#ffe7a8);border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid #d4a96a;">' +
+      '<div style="font-size:14px;color:#8a5a00;">🪙 当前传承币</div>' +
+      '<div style="font-size:24px;font-weight:bold;color:#8a5a00;">' +
+      shop.balance +
+      "</div>" +
+      '<div style="font-size:11px;color:#8a5a00;margin-top:2px;">每周目结束按成就/财富/道德/天数结算</div>' +
+      "</div>";
+
+    var grid =
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
+    for (var i = 0; i < shop.unlocks.length; i++) {
+      grid += _renderCard(shop.unlocks[i]);
+    }
+    grid += "</div>";
+
+    var note =
+      '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);line-height:1.5;">' +
+      "⚖ 互斥提示：祖传秘方 / 祖辈教诲 二选一，人脉引荐 / 启动资金 二选一。<br/>" +
+      "💡 命格护佑 + 命运骰子可叠加，是高端长线目标。" +
+      "</div>";
+
+    showModal({
+      title: "🏛 传承商店",
+      body: balanceHtml + grid + note,
+      buttons: [
+        {
+          text: "返回",
+          cls: "btn-secondary",
+          callback: function () {},
+        },
+      ],
+    });
+  }
+
+  function _heritageBuyItem(id) {
+    if (typeof spendHeritageCoin !== "function") return;
+    var r = spendHeritageCoin(id);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        (r.ok ? "✅ " : "⚠️ ") + r.msg,
+        r.ok ? "success" : "warning",
+      );
+    }
+    // 重新渲染商店
+    showHeritageStore();
+  }
+
+  if (typeof window !== "undefined") {
+    window.showHeritageStore = showHeritageStore;
+    window._heritageBuyItem = _heritageBuyItem;
+  }
+})();
 </script>
     <script>/**
  * 新手引导系统

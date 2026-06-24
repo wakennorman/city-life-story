@@ -2281,6 +2281,13 @@ function _renderMechanicEntry(state, m) {
       "</p>";
   }
   var sections = m.sections || [];
+  if (typeof sections === "function") {
+    try {
+      sections = sections(state) || [];
+    } catch (e) {
+      sections = [];
+    }
+  }
   for (var i = 0; i < sections.length; i++) {
     html += _renderMechanicSection(state, sections[i]);
   }
