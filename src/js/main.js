@@ -1261,6 +1261,11 @@ function startNewGame() {
     npcRelationships.init(StateManager.getState());
   }
 
+  // v3.6 P0-2: 初始化时代变迁系统
+  if (typeof eraTransform && typeof eraTransform.init === "function") {
+    eraTransform.init(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());

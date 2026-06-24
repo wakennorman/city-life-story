@@ -799,6 +799,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.6 P0-2: 时代变迁每日演化 ===
+  {
+    name: "era_tick",
+    fn: function (state) {
+      if (typeof eraTick === "function") {
+        eraTick(state);
+      }
+    },
+  },
+
   // === 道德后果检查 ===
   {
     name: "moral_consequences",
