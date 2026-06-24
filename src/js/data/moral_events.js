@@ -1970,6 +1970,82 @@ const MORAL_CONSEQUENCES = {
       );
     },
   },
+
+  // ====== [v3.3 W1-T4] 4 条新 followup ======
+  moral_phone_sell: {
+    id: "consequence_phone_sell",
+    title: "📱 二手贩子追上门",
+    delay: [4, 9],
+    desc: function (s) {
+      return "你卖手机的二手贩子被警察盯上了，他供出了几个上家。一个警察在你常去的街口蹲了两天。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 12);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 2);
+      s.flags._policeWatch = (s.flags._policeWatch || 0) + 1;
+      StateManager.addMessage(
+        "🚓 警察打听过你的事。你慌得几晚没睡好。",
+        "danger",
+      );
+    },
+  },
+  moral_thief_ignore: {
+    id: "consequence_thief_ignore",
+    title: "👀 被偷的是熟人",
+    delay: [3, 7],
+    desc: function (s) {
+      return "你后来才听说，那天被偷的人是隔壁摊主家的弟弟。摊主隐约知道你当时在场。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 6);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 1);
+      StateManager.addMessage(
+        "😶 摊主见你时眼神奇怪了一下，没多说。",
+        "warning",
+      );
+    },
+  },
+  moral_fall_ignore: {
+    id: "consequence_fall_ignore",
+    title: "📹 监控调出来了",
+    delay: [5, 11],
+    desc: function (s) {
+      return "那位摔倒的老人后来住院了。家属调监控时，看见你从旁边绕过去——视频被传到了社区群。";
+    },
+    apply: function (s) {
+      s.player.fame = Math.max(0, (s.player.fame || 0) - 12);
+      s.needs.happiness = Math.max(0, s.needs.happiness - 10);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.max(-100, (s.flags.moral.score || 0) - 3);
+      StateManager.addMessage(
+        "📵 你出门时听见有人窃窃私语。社区群有你的截图。",
+        "danger",
+      );
+    },
+  },
+  moral_atm_warn: {
+    id: "consequence_atm_warn",
+    title: "🙏 被救者上门致谢",
+    delay: [6, 12],
+    desc: function (s) {
+      return "你在ATM拦下的那位阿姨，差点被骗走毕生积蓄。她带着两盒水果找到你，说要请你吃顿饭。";
+    },
+    apply: function (s) {
+      s.resources.cash += 100;
+      s.needs.happiness = Math.min(100, s.needs.happiness + 12);
+      s.player.fame = Math.min(100, (s.player.fame || 0) + 6);
+      s.flags.moral = s.flags.moral || {};
+      s.flags.moral.score = Math.min(100, (s.flags.moral.score || 0) + 2);
+      StateManager.addMessage(
+        "🍎 阿姨塞给你¥100红包+两盒水果。社区有人开始记住你的名字。",
+        "success",
+      );
+    },
+  },
 };
 
 // ====== 触发逻辑 ======
