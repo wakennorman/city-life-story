@@ -29,12 +29,16 @@
   - `getForecastHTML()` 侧边栏明日天气展示 + 准备状态提示
   - `prepareForWeather()` 买伞（¥20）/买暖宝（¥50）准备行动
   - `weather_prep_mitigation` 管线步骤减免天气惩罚
-- **T3 · 剧本专属开局链** — 新建 `src/js/data/scenario_start_chains.js`（348 行）
-  - 7 个剧本各 3-4 天开局事件链（classic/laid_off/small_town_grinder/foreign_worker/second_gen/midlife_crisis/fresh_grad）
-  - `checkScenarioStartChain()` 每日管线步骤逐天触发事件弹窗
-  - 接线：main.js 增加 `_currentScenario` flag
+- **T3 · 剧本专属开局链** — `src/js/data/scenario_start_chains.js` 升级为多选剧情（766 行）
+  - 7剧本各3-4天开局链，每个事件2-3个选择含具体效果
+  - classic(3天): 桥洞/零工/租房; laid_off(4天): 遣散费/摸底/转型/适应
+  - small_town_grinder(4天): 出租屋/投简历/面试/第一份工作
+  - foreign_worker(4天): 宿舍/流水线/学语言/选择
+  - second_gen(3天): 资金/启蒙/方向; midlife_crisis(3天): 被裁/下一站/家庭
+  - fresh_grad(3天): 租房陷阱/职场第一课/第一个工资
 
-构建：`dist/index.html = 3815.7 KB`
+构建：`src/index.html` 注册 3 个新 script；daily_pipeline.js 新增 2 个管线步骤
+构建：`dist/index.html = 3835.5 KB`
 
 ---
 
