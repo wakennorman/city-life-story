@@ -2361,9 +2361,46 @@ function showStartupRegisterModal() {
   });
 }
 
+/**
+ * 检查创业前置条件 — 防止跳过街头阶段直接创业
+ * 要求：3项技能≥15级 + 2NPC好感≥40 + 游戏天数≥60
+ */
+function canStartStartup(state) {
+  var reasons = [];
+
+  // 1. 技能门槛：至少 3 项技能达到 15 级（有足够的综合能力创业）
+  var skillCount = 0;
+  var skills = state.skills || {};
+  for (var k in skills) {
+    if (skills[k] && skills[k].level >= 15) skillCount++;
+  }
+  if (skillCount < 3) reasons.push("至少 3 项技能达到 15 级");
+
+  // 2. 社会关系：需要至少 2 个 NPC 好感 ≥ 40（商业合作基础）
+  var highAffNpcs = 0;
+  var rels = state.npcRelations || {};
+  for (var nid in rels) {
+    if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
+  }
+  if (highAffNpcs < 2) reasons.push("至少 2 位 NPC 好感 ≥ 40");
+
+  // 3. 天数门槛：Day 60+，前期先体验街头/职场生活
+  if (state.player.day < 60) reasons.push("游戏天数 ≥ 60 天");
+
+  return { ok: reasons.length === 0, reasons: reasons };
+}
+
 /** 注册新公司 */
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
+  // 前置条件：3技能15级+2NPC好感40+Day60
+  var prereq = canStartStartup(state);
+  if (!prereq.ok) {
+    return {
+      success: false,
+      message: "创业条件不足：" + prereq.reasons.join("；"),
+    };
+  }
   const cash = state.resources.cash;
   const day = state.player.day;
   const minCash = 200000; // 最低启动资金
@@ -2395,7 +2432,8 @@ function registerStartup(state, name, industry, description) {
     industry: industry,
     description: description || "",
     foundedDay: day,
-    valuation: STARTUP_INDUSTRIES[industry].baseValuation,
+    valuation: Math.min(STARTUP_INDUSTRIES[industry].baseValuation, 15000000),
+    // 估值上限 ¥15M（防止街头→创业 1000x 跳跃，资产绑定估值锚点）
     equity: {
       player: 100,
       coFounders: 0,

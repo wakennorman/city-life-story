@@ -52,9 +52,10 @@ function rollStreetEvent(state) {
   }
 
   // 链式事件队列检查（高优先级，插入心理危机/债务检查之后，随机池之前）
-  if (checkChainEventQueue(state, "street")) return;
+  if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "street")) return;
 
-  const baseChance = 0.18;
+  // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
+  const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
   let mod = 0;
   if (state.status.health < 50) mod += 0.1;
@@ -75,9 +76,10 @@ function rollCorporateEvent(state) {
   if (state._pendingEvent) return;
 
   // 链式事件队列检查（高优先级）
-  if (checkChainEventQueue(state, "corporate")) return;
+  if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "corporate")) return;
 
-  const baseChance = 0.22;
+  // 职场触发率亦随天数递增（Day1 22% → Day365 ~40%）
+  const baseChance = Math.min(0.40, 0.22 + state.player.day * 0.0005);
   let mod = 0;
   if (state.player.corporate.risk > 50) mod += 0.1;
   if (state.player.corporate.popularity < 30) mod += 0.05;

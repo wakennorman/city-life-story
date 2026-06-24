@@ -3843,9 +3843,10 @@ function rollStreetEvent(state) {
   }
 
   // 链式事件队列检查（高优先级，插入心理危机/债务检查之后，随机池之前）
-  if (checkChainEventQueue(state, "street")) return;
+  if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "street")) return;
 
-  const baseChance = 0.18;
+  // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
+  const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
   let mod = 0;
   if (state.status.health < 50) mod += 0.1;
@@ -3866,9 +3867,10 @@ function rollCorporateEvent(state) {
   if (state._pendingEvent) return;
 
   // 链式事件队列检查（高优先级）
-  if (checkChainEventQueue(state, "corporate")) return;
+  if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "corporate")) return;
 
-  const baseChance = 0.22;
+  // 职场触发率亦随天数递增（Day1 22% → Day365 ~40%）
+  const baseChance = Math.min(0.40, 0.22 + state.player.day * 0.0005);
   let mod = 0;
   if (state.player.corporate.risk > 50) mod += 0.1;
   if (state.player.corporate.popularity < 30) mod += 0.05;
@@ -29218,6 +29220,109 @@ if (typeof window !== "undefined") {
         },
       ],
     },
+    // === old_zhou 好感≥60 → 传授废品分类技巧 ===
+    {
+      id: "npc_zhou_scrap_tips",
+      phase: "street",
+      icon: "♻️",
+      title: "老周的废品经",
+      story: "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.old_zhou &&
+          (st.npcRelations.old_zhou.affinity || 0) >= 60 &&
+          st.player.day > 20 &&
+          !st.flags._zhouTaughtScrapSkill
+        );
+      },
+      choices: [
+        {
+          text: "📖 仔细听讲",
+          hint: "学习废品分类，永久提升废品收入",
+          apply: function (st) {
+            st.flags._zhouTaughtScrapSkill = true;
+            if (st.skills && st.skills.sales) {
+              st.skills.sales.xp = (st.skills.sales.xp || 0) + 50;
+            }
+            st.flags._scrapIncomeBonus = 1.2;
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              "♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢周叔，改天请你吃饭",
+          hint: "好感+3，安慰老周",
+          apply: function (st) {
+            st.flags._zhouTaughtScrapSkill = true;
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 8,
+            );
+            StateManager.addMessage(
+              "🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // === sister_zhang 好感≥80 → 介绍便利店兼职 ===
+    {
+      id: "npc_zhang_parttime",
+      phase: "street",
+      icon: "🏪",
+      title: "张姐的兼职机会",
+      story: "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.sister_zhang &&
+          (st.npcRelations.sister_zhang.affinity || 0) >= 80 &&
+          st.player.day > 30 &&
+          !st.flags._zhangIntroParttime
+        );
+      },
+      choices: [
+        {
+          text: "✅ 太好了，谢谢张姐！",
+          hint: "解锁固定夜班，日薪¥150+",
+          apply: function (st) {
+            st.flags._zhangIntroParttime = true;
+            st.flags._nightShiftJob = true;
+            st.npcRelations.sister_zhang.affinity = Math.min(
+              100,
+              (st.npcRelations.sister_zhang.affinity || 0) + 10,
+            );
+            StateManager.addMessage(
+              "🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 我考虑考虑",
+          hint: "推迟决定",
+          apply: function (st) {
+            st.flags._zhangIntroduced = true;
+            st.npcRelations.sister_zhang.affinity = Math.min(
+              100,
+              (st.npcRelations.sister_zhang.affinity || 0) + 2,
+            );
+            StateManager.addMessage(
+              "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 })();
 </script>
@@ -48195,6 +48300,43 @@ function getEmotionIcon(state) {
   };
   return icons[state.status.emotionalState] || "😐";
 }
+
+/**
+ * 资产关联维持性开支 — 解决后期"钱太多没事做"
+ * 物业费按资产 0.1%/天，社交应酬按资产梯度衰减心情
+ * 调用位置：daily_pipeline.js needs_decay 步骤后
+ */
+function applyWealthBasedOverhead(state) {
+  if (typeof StateManager === "undefined") return;
+  var totalAssets = state.resources.cash + (state.resources.bankBalance || 0);
+  if (totalAssets < 50000) return; // 仅资产 > 5W 触发
+
+  // 物业费：按资产 0.1%/天（¥50K→¥50/天，¥500K→¥500/天，¥5M→¥5000/天）
+  var propertyFee = Math.round(totalAssets * 0.001);
+  if (propertyFee > 0) {
+    state.resources.cash -= propertyFee;
+    StateManager.addMessage(
+      "🏠 物业管理费 ¥" + propertyFee.toLocaleString() + "（资产越高维护越贵）",
+      "info",
+    );
+  }
+
+  // 住房维护费：住房等级越高越贵
+  // tier 0=¥0/天, tier 1=¥30/天, tier 2=¥100/天, tier 3=¥500/天
+  var houseTier = (state.housing && state.housing.tier) || 0;
+  var UPKEEP = [0, 30, 100, 500];
+  var houseCost = UPKEEP[houseTier] || 0;
+  if (houseCost > 0) {
+    state.resources.cash -= houseCost;
+    StateManager.addMessage("🏡 住房维护费 ¥" + houseCost + "/天", "info");
+  }
+
+  // 社交应酬：资产每 ¥200K 增加 -1 心情衰减（富人有更多社交压力）
+  if (totalAssets > 200000) {
+    var socialDecay = Math.min(8, Math.floor(totalAssets / 200000) * 0.8);
+    state.needs.happiness = Math.max(0, state.needs.happiness - socialDecay);
+  }
+}
 </script>
     <script>/**
  * 状态互联系统 — 状态↔基础属性↔状态的深度交叉影响
@@ -54336,6 +54478,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 资产关联维持性开支（P1-5：后期"钱太多没事做"） ===
+  {
+    name: "wealth_overhead",
+    fn: function (state) {
+      if (typeof applyWealthBasedOverhead === "function") {
+        applyWealthBasedOverhead(state);
+      }
+    },
+  },
+
   // === 睡眠恢复 ===
   {
     name: "sleep_recovery",
@@ -56428,7 +56580,12 @@ if (typeof window !== "undefined") {
     if (typeof getWeatherGoodPriceMod === "function") {
       weatherMod = getWeatherGoodPriceMod(state, goodId);
     }
-    var finalPrice = basePrice * supplyMod * eventMod * weatherMod;
+    // 叠加节日价格修正（春节食物×1.25、劳动节电子×0.88 等）
+    var festivalMod = 1.0;
+    if (typeof getFestivalPriceMod === "function" && good) {
+      festivalMod = getFestivalPriceMod(state, good.category);
+    }
+    var finalPrice = basePrice * supplyMod * eventMod * weatherMod * festivalMod;
     // 限制在合理范围
     var good = getGoodById(goodId);
     if (good) {
@@ -58949,7 +59106,7 @@ const INV_STOCKS = [
     industry: "科技",
     basePrice: 850,
     volatility: 0.28,
-    trend: 0.015,
+    trend: 0.003,
     desc: "AI芯片之王,全球最热",
   },
   {
@@ -58959,7 +59116,7 @@ const INV_STOCKS = [
     industry: "科技",
     basePrice: 600,
     volatility: 0.13,
-    trend: 0.008,
+    trend: 0.003,
     desc: "全球代工霸主,地缘风险",
   },
   // 新能源车（映射：特斯拉/比亚迪/蔚来/小鹏/理想/宁德时代）
@@ -58970,7 +59127,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 250,
     volatility: 0.3,
-    trend: 0.008,
+    trend: 0.003,
     desc: "电动+火箭+AI,马斯克概念",
   },
   {
@@ -58980,7 +59137,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 180,
     volatility: 0.17,
-    trend: 0.01,
+    trend: 0.004,
     desc: "全球销冠,电池自研",
   },
   {
@@ -59020,7 +59177,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 320,
     volatility: 0.16,
-    trend: 0.009,
+    trend: 0.004,
     desc: "动力电池全球第一",
   },
   // 消费/零售（映射：茅台/五粮液/海底捞/泡泡玛特/名创优品/农夫山泉）
@@ -60509,31 +60666,34 @@ function renderMarketSentiment(state, inv) {
     "/100</span>";
   html += "</div>";
 
-  // 市场驱动摘要
-  if (typeof getNewsInvestmentSummary === "function") {
-    var drivers = getNewsInvestmentSummary(state);
-    if (drivers.length > 0) {
-      // 只显示前2个最强驱动
-      drivers.sort(function (a, b) {
-        return b.strength - a.strength;
-      });
-      html +=
-        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场驱动：';
-      for (var di = 0; di < Math.min(drivers.length, 2); di++) {
-        var d = drivers[di];
+  // 市场驱动摘要（显示新闻→标的因果链）
+    if (typeof getNewsInvestmentSummary === "function") {
+      var drivers = getNewsInvestmentSummary(state);
+      if (drivers.length > 0) {
+        drivers.sort(function (a, b) {
+          return b.strength - a.strength;
+        });
         html +=
-          '<span style="margin-right:6px;">' +
-          d.direction +
-          '<span style="' +
-          (d.avgMul > 1 ? "color:var(--danger);" : "color:var(--success);") +
-          '">' +
-          (d.avgMul > 1 ? "+" : "") +
-          d.strength +
-          "%</span></span>";
+          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 <strong>今日市场驱动</strong><br>';
+        for (var di = 0; di < Math.min(drivers.length, 3); di++) {
+          var d = drivers[di];
+          var headline = d.headline.length > 22
+            ? d.headline.substring(0, 22) + "…"
+            : d.headline;
+          var color = d.direction === "📈" ? "var(--danger)" : "var(--success)";
+          html += '<div style="margin:2px 0;display:flex;align-items:center;">';
+          html += '<span style="width:18px;">' + d.direction + '</span>';
+          html += '<span style="flex:1;font-size:10px;color:var(--text-primary);">' + headline + '</span>';
+          html += '<span style="color:' + color + ';font-size:10px;font-weight:bold;">'
+            + (d.avgMul > 1 ? "+" : "") + d.strength + '%</span>';
+          html += '</div>';
+        }
+        html += "</div>";
+      } else {
+        html +=
+          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场平稳，无明显驱动因素</div>';
       }
-      html += "</div>";
     }
-  }
 
   // 当前活跃新闻（最多3条）+ 市场驱动指示
   var shownNews = 0;
@@ -64968,9 +65128,46 @@ function showStartupRegisterModal() {
   });
 }
 
+/**
+ * 检查创业前置条件 — 防止跳过街头阶段直接创业
+ * 要求：3项技能≥15级 + 2NPC好感≥40 + 游戏天数≥60
+ */
+function canStartStartup(state) {
+  var reasons = [];
+
+  // 1. 技能门槛：至少 3 项技能达到 15 级（有足够的综合能力创业）
+  var skillCount = 0;
+  var skills = state.skills || {};
+  for (var k in skills) {
+    if (skills[k] && skills[k].level >= 15) skillCount++;
+  }
+  if (skillCount < 3) reasons.push("至少 3 项技能达到 15 级");
+
+  // 2. 社会关系：需要至少 2 个 NPC 好感 ≥ 40（商业合作基础）
+  var highAffNpcs = 0;
+  var rels = state.npcRelations || {};
+  for (var nid in rels) {
+    if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
+  }
+  if (highAffNpcs < 2) reasons.push("至少 2 位 NPC 好感 ≥ 40");
+
+  // 3. 天数门槛：Day 60+，前期先体验街头/职场生活
+  if (state.player.day < 60) reasons.push("游戏天数 ≥ 60 天");
+
+  return { ok: reasons.length === 0, reasons: reasons };
+}
+
 /** 注册新公司 */
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
+  // 前置条件：3技能15级+2NPC好感40+Day60
+  var prereq = canStartStartup(state);
+  if (!prereq.ok) {
+    return {
+      success: false,
+      message: "创业条件不足：" + prereq.reasons.join("；"),
+    };
+  }
   const cash = state.resources.cash;
   const day = state.player.day;
   const minCash = 200000; // 最低启动资金
@@ -65002,7 +65199,8 @@ function registerStartup(state, name, industry, description) {
     industry: industry,
     description: description || "",
     foundedDay: day,
-    valuation: STARTUP_INDUSTRIES[industry].baseValuation,
+    valuation: Math.min(STARTUP_INDUSTRIES[industry].baseValuation, 15000000),
+    // 估值上限 ¥15M（防止街头→创业 1000x 跳跃，资产绑定估值锚点）
     equity: {
       player: 100,
       coFounders: 0,
@@ -113163,6 +113361,21 @@ function doStreetJob(job) {
       : null;
   if (emoMod) {
     pay = Math.floor(pay * (emoMod.pay || 1));
+  }
+  // 天气→户外工作收入修正：晴天100%，暴雨60%，暴雪40%，台风0%
+  // （getWeatherWorkMod 在 weather.js 中定义，返回 outdoorMod）
+  if (typeof getWeatherWorkMod === "function") {
+    var weatherMult = getWeatherWorkMod(state);
+    if (weatherMult < 1.0) {
+      var oldWeatherPay = pay;
+      pay = Math.floor(pay * weatherMult);
+      if (weatherMult <= 0.5) {
+        StateManager.addMessage(
+          "🌧️ 恶劣天气，户外工作收入降至 " + Math.round(weatherMult * 100) + "%",
+          "warning",
+        );
+      }
+    }
   }
   // ===技能加权收入：减少纯RNG依赖，技能越高中位收入越高 ===
   const skillBonus = getSkillPayBonus(job.id, state);

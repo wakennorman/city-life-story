@@ -1288,5 +1288,108 @@
         },
       ],
     },
+    // === old_zhou 好感≥60 → 传授废品分类技巧 ===
+    {
+      id: "npc_zhou_scrap_tips",
+      phase: "street",
+      icon: "♻️",
+      title: "老周的废品经",
+      story: "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.old_zhou &&
+          (st.npcRelations.old_zhou.affinity || 0) >= 60 &&
+          st.player.day > 20 &&
+          !st.flags._zhouTaughtScrapSkill
+        );
+      },
+      choices: [
+        {
+          text: "📖 仔细听讲",
+          hint: "学习废品分类，永久提升废品收入",
+          apply: function (st) {
+            st.flags._zhouTaughtScrapSkill = true;
+            if (st.skills && st.skills.sales) {
+              st.skills.sales.xp = (st.skills.sales.xp || 0) + 50;
+            }
+            st.flags._scrapIncomeBonus = 1.2;
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              "♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢周叔，改天请你吃饭",
+          hint: "好感+3，安慰老周",
+          apply: function (st) {
+            st.flags._zhouTaughtScrapSkill = true;
+            st.npcRelations.old_zhou.affinity = Math.min(
+              100,
+              (st.npcRelations.old_zhou.affinity || 0) + 8,
+            );
+            StateManager.addMessage(
+              "🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // === sister_zhang 好感≥80 → 介绍便利店兼职 ===
+    {
+      id: "npc_zhang_parttime",
+      phase: "street",
+      icon: "🏪",
+      title: "张姐的兼职机会",
+      story: "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
+      conditions: function (st) {
+        return (
+          st.npcRelations &&
+          st.npcRelations.sister_zhang &&
+          (st.npcRelations.sister_zhang.affinity || 0) >= 80 &&
+          st.player.day > 30 &&
+          !st.flags._zhangIntroParttime
+        );
+      },
+      choices: [
+        {
+          text: "✅ 太好了，谢谢张姐！",
+          hint: "解锁固定夜班，日薪¥150+",
+          apply: function (st) {
+            st.flags._zhangIntroParttime = true;
+            st.flags._nightShiftJob = true;
+            st.npcRelations.sister_zhang.affinity = Math.min(
+              100,
+              (st.npcRelations.sister_zhang.affinity || 0) + 10,
+            );
+            StateManager.addMessage(
+              "🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 我考虑考虑",
+          hint: "推迟决定",
+          apply: function (st) {
+            st.flags._zhangIntroduced = true;
+            st.npcRelations.sister_zhang.affinity = Math.min(
+              100,
+              (st.npcRelations.sister_zhang.affinity || 0) + 2,
+            );
+            StateManager.addMessage(
+              "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 })();

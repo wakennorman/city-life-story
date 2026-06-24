@@ -133,3 +133,40 @@ function getEmotionIcon(state) {
   };
   return icons[state.status.emotionalState] || "😐";
 }
+
+/**
+ * 资产关联维持性开支 — 解决后期"钱太多没事做"
+ * 物业费按资产 0.1%/天，社交应酬按资产梯度衰减心情
+ * 调用位置：daily_pipeline.js needs_decay 步骤后
+ */
+function applyWealthBasedOverhead(state) {
+  if (typeof StateManager === "undefined") return;
+  var totalAssets = state.resources.cash + (state.resources.bankBalance || 0);
+  if (totalAssets < 50000) return; // 仅资产 > 5W 触发
+
+  // 物业费：按资产 0.1%/天（¥50K→¥50/天，¥500K→¥500/天，¥5M→¥5000/天）
+  var propertyFee = Math.round(totalAssets * 0.001);
+  if (propertyFee > 0) {
+    state.resources.cash -= propertyFee;
+    StateManager.addMessage(
+      "🏠 物业管理费 ¥" + propertyFee.toLocaleString() + "（资产越高维护越贵）",
+      "info",
+    );
+  }
+
+  // 住房维护费：住房等级越高越贵
+  // tier 0=¥0/天, tier 1=¥30/天, tier 2=¥100/天, tier 3=¥500/天
+  var houseTier = (state.housing && state.housing.tier) || 0;
+  var UPKEEP = [0, 30, 100, 500];
+  var houseCost = UPKEEP[houseTier] || 0;
+  if (houseCost > 0) {
+    state.resources.cash -= houseCost;
+    StateManager.addMessage("🏡 住房维护费 ¥" + houseCost + "/天", "info");
+  }
+
+  // 社交应酬：资产每 ¥200K 增加 -1 心情衰减（富人有更多社交压力）
+  if (totalAssets > 200000) {
+    var socialDecay = Math.min(8, Math.floor(totalAssets / 200000) * 0.8);
+    state.needs.happiness = Math.max(0, state.needs.happiness - socialDecay);
+  }
+}

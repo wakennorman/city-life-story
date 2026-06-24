@@ -153,7 +153,7 @@ const INV_STOCKS = [
     industry: "科技",
     basePrice: 850,
     volatility: 0.28,
-    trend: 0.015,
+    trend: 0.003,
     desc: "AI芯片之王,全球最热",
   },
   {
@@ -163,7 +163,7 @@ const INV_STOCKS = [
     industry: "科技",
     basePrice: 600,
     volatility: 0.13,
-    trend: 0.008,
+    trend: 0.003,
     desc: "全球代工霸主,地缘风险",
   },
   // 新能源车（映射：特斯拉/比亚迪/蔚来/小鹏/理想/宁德时代）
@@ -174,7 +174,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 250,
     volatility: 0.3,
-    trend: 0.008,
+    trend: 0.003,
     desc: "电动+火箭+AI,马斯克概念",
   },
   {
@@ -184,7 +184,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 180,
     volatility: 0.17,
-    trend: 0.01,
+    trend: 0.004,
     desc: "全球销冠,电池自研",
   },
   {
@@ -224,7 +224,7 @@ const INV_STOCKS = [
     industry: "新能源",
     basePrice: 320,
     volatility: 0.16,
-    trend: 0.009,
+    trend: 0.004,
     desc: "动力电池全球第一",
   },
   // 消费/零售（映射：茅台/五粮液/海底捞/泡泡玛特/名创优品/农夫山泉）
@@ -1713,31 +1713,34 @@ function renderMarketSentiment(state, inv) {
     "/100</span>";
   html += "</div>";
 
-  // 市场驱动摘要
-  if (typeof getNewsInvestmentSummary === "function") {
-    var drivers = getNewsInvestmentSummary(state);
-    if (drivers.length > 0) {
-      // 只显示前2个最强驱动
-      drivers.sort(function (a, b) {
-        return b.strength - a.strength;
-      });
-      html +=
-        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场驱动：';
-      for (var di = 0; di < Math.min(drivers.length, 2); di++) {
-        var d = drivers[di];
+  // 市场驱动摘要（显示新闻→标的因果链）
+    if (typeof getNewsInvestmentSummary === "function") {
+      var drivers = getNewsInvestmentSummary(state);
+      if (drivers.length > 0) {
+        drivers.sort(function (a, b) {
+          return b.strength - a.strength;
+        });
         html +=
-          '<span style="margin-right:6px;">' +
-          d.direction +
-          '<span style="' +
-          (d.avgMul > 1 ? "color:var(--danger);" : "color:var(--success);") +
-          '">' +
-          (d.avgMul > 1 ? "+" : "") +
-          d.strength +
-          "%</span></span>";
+          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 <strong>今日市场驱动</strong><br>';
+        for (var di = 0; di < Math.min(drivers.length, 3); di++) {
+          var d = drivers[di];
+          var headline = d.headline.length > 22
+            ? d.headline.substring(0, 22) + "…"
+            : d.headline;
+          var color = d.direction === "📈" ? "var(--danger)" : "var(--success)";
+          html += '<div style="margin:2px 0;display:flex;align-items:center;">';
+          html += '<span style="width:18px;">' + d.direction + '</span>';
+          html += '<span style="flex:1;font-size:10px;color:var(--text-primary);">' + headline + '</span>';
+          html += '<span style="color:' + color + ';font-size:10px;font-weight:bold;">'
+            + (d.avgMul > 1 ? "+" : "") + d.strength + '%</span>';
+          html += '</div>';
+        }
+        html += "</div>";
+      } else {
+        html +=
+          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场平稳，无明显驱动因素</div>';
       }
-      html += "</div>";
     }
-  }
 
   // 当前活跃新闻（最多3条）+ 市场驱动指示
   var shownNews = 0;

@@ -54,6 +54,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 资产关联维持性开支（P1-5：后期"钱太多没事做"） ===
+  {
+    name: "wealth_overhead",
+    fn: function (state) {
+      if (typeof applyWealthBasedOverhead === "function") {
+        applyWealthBasedOverhead(state);
+      }
+    },
+  },
+
   // === 睡眠恢复 ===
   {
     name: "sleep_recovery",

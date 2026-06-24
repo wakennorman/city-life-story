@@ -1,0 +1,106 @@
+# 城市浮生记 — 深度问题诊断报告
+
+## 总览：42 步管线 × 90+ script 标签 — 内容丰富但系统链断裂
+
+---
+
+## 一、玩法问题（平衡性、趣味性、目标感、节奏感）
+
+| 严重等级 | 问题 | 根因代码 | 修复成本 | 详细描述 |
+|----------|------|----------|----------|----------|
+| **P0** | **经济曲线指数膨胀 — 街头日薪¥200 vs 创业退出¥40M** | `phase2/startup.js` L26-75（baseValuation=¥560K~2.1M）; `phase2/investment.js` L150-157（NVDA trend=+1.5%/天）; `data/jobs.js`（街头工作¥50~300/天） | ~80行 | 街头工作¥100/天 ×365=¥36.5K；创业估值起步¥560K，IPO退出可达¥5-40M（1000x差距）。NVDA趋势+1.5%/天 → 46天翻倍，年化2000%。玩家一旦解锁创业/股票，街头阶段的贫富梯度瞬间崩塌，"钱太多没事做"在第200天必然出现。 |
+| **P0** | **后期"钱太多没事做" — 生存曲线尖锐衰减** | `phase1/needs.js`（需求衰减固定值，不随资产递增）; `main.js` L3906-3926（失败条件仅检health≤0或debt>50K） | ~120行 | 需求衰减与玩家资产无关联。Day1-30有生存压力（房租¥100、饥饱-8/天），Day180+ 资产¥50W+后所有需求数值变得无意义。缺少"维持性开支"（物业管理、子女教育、社交应酬）来消耗富余现金。失败条件仅在health≤0或debt>50K时触发，富玩家没有失败路径。 |
+| **P1** | **"最优解"锁定 — 创业永远优于打工** | `phase2/startup.js` L325+（员工月薪¥10-15K vs 阶段收入¥50-200K/月）; `data/jobs.js`（P10月薪¥80K vs startup growth阶段¥200K+/月） | ~60行 | P10月薪¥80K（最高职级），但growth阶段startup月入¥200K+。创业仅需¥50K启动资金、技能≥20，门槛极低。街头阶段无"创业前置条件链"（必须攒够¥500K、建立足够社会关系、通过市场调研）。 |
+| **P2** | **Day1-30 黑暗开局过难 vs Day365+ 无目标** | `state.js` L59（cash=300）、L90-94（needs=25/50/30/20）; `main.js` L3952+（init无阶段化目标引导） | ~50行 | 开局3天内在无行动指引下容易饿死/病死。Day30后中后期缺乏里程碑系统（非成就打卡）。无"150天中期结算"或"阶段大事件"重置体验。 |
+
+---
+
+## 二、系统问题（模块割裂、缺乏联动、数据不一致）
+
+| 严重等级 | 问题 | 根因代码 | 修复成本 | 详细描述 |
+|----------|------|----------|----------|----------|
+| **P0** | **天气→摆摊收益闭环断裂** — `outdoorMod` 定义但永不消费 | `core/weather.js` L9-80（每个天气有 outdoorMod: 1.0~0.3）; `phase1/trade.js`（摆摊收入计算不读天气）; `core/weather.js` L629-709（applyWeatherDailyEffects只影响happiness/fatigue/health） | ~40行 | `outdoorMod`字段每个天气都有定义：☀️1.0, 🌧️0.75, ⛈️0.4, ❄️0.3。但没有任何trade/stall函数读取它。降雨天气摆摊收入应下降25-60%，当前完全无影响。同理weather.priceMod（water:1.5等）仅在weather.js定义，trade.js从未读取。 |
+| **P1** | **节日价格浮动断裂** — `priceMods` 定义但不被消费 | `core/festivals.js` L629-660（春节priceMods:{ food:1.25, luxury:1.35 }，劳动节:{ electronics:0.88 }）; `phase1/trade.js` 和 `phase1/pricing.js` 不读festival.priceMods | ~50行 | 春节食物应涨价25%、劳动节电子产品应打8.8折。当前节日仅影响心情和弹出文字，不影响实际交易价格。是一个伪装的彩蛋而不是游戏机制。 |
+| **P1** | **世界参数→事件权重传导链单向** — params更新在news之后 | `phase1/daily_pipeline.js` L434-441（world_params_tick在L530 news之前）; `core/world_params.js` L257-280（tickWorldParams使用state.player.day，当日生效） | ~20行 | 流程正确：world_params_tick(step 28) → news(step 31)。但新闻影响行业热度的反馈是每日志算的——当天新闻→当天投资价格→次日世界参数→后日事件权重。宏观反馈延迟1-2天，可以接受但需要文档说明。 |
+| **P1** | **街头/职场/创业三条路线几乎无交叉** — 一局内专注于一条路线 | `main.js` L3256（doStreetJob分开处理）; `phase2/startup.js`（创业独立系统）; `phase2/corp_ops.js`（职场独立） | ~150行 | 玩家一旦从street→corporate，street的摆摊/拾荒/废品交易全部弃用。创业后工作直接丧失意义。三条路线没有"副业系统"——白天上班+晚上摆摊或创业期间做freelance项目。NPC好感度和道德系统是唯一跨路线留存状态。 |
+| **P2** | **装备/技能/连携系统虽有数据但UI反馈薄弱** | `core/equipment_suites.js`; `core/skill_synergy.js`; `dom`：（equipmentSuites存入state但只在侧栏小字显示） | ~80行 | equipmentSuites和skillSynergies结果存入了state（pipeline L845/868），但UI渲染只做了弱提示，没有独立装备套装Tab或连携效果详情页。玩家不知道自己触发了2件套/4件套效果。 |
+
+---
+
+## 三、事件问题（触发率、Followup 链、数值平衡）
+
+| 严重等级 | 问题 | 根因代码 | 修复成本 | 详细描述 |
+|----------|------|----------|----------|----------|
+| **P0** | **链式事件队列执行函数缺失** — `checkChainEventQueue` 不存在 | `core/events_core.js` L55-57（调用checkChainEventQueue）; 全局搜索无命中 | ~30行 | `rollStreetEvent`和`rollCorporateEvent`都调用了`checkChainEventQueue(state, phase)`，但该函数在任意JS文件中都不存在！所有`_chainEventQueue`中的延迟事件永远不会被触发，链式事件机制完全失效。这是followup率<30%的根因之一。 |
+| **P0** | **事件 reward 数量级失衡** — 街头事件给¥5K vs 创业月入¥200万 | `core/events_street.js` L14（found_wallet: ¥80-279）; `core/events_street.js` L130-179（stranger_invest: ¥300-699）; `data/moral_events.js` L35（moral_wallet_keep: ¥500） | ~40行 | 街头随机事件最大奖励¥699，而创业day-tick月入¥200K。到Day150后随机事件的¥200-500奖励完全无感。需要事件奖励也使用动态缩放（基于玩家财富等级）。 |
+| **P1** | **18%基础触发率导致后期事件稀疏** — 事件数增多但触发率不变 | `core/events_core.js` L57（baseChance=0.18，mod最多+0.2）; `core/events_core.js` L15-71（rollStreetEvent优先级：心理>债务>链式>随机） | ~25行 | 街头事件池有100+事件，以18%基础率每天最多触发1个（+心理+债务）。到Day200+，大量事件因条件不满足被过滤（maxCash限制），有效事件池缩小。建议事件触发率随天数递增（Day100+ → 25%），或改为每周保证1-2次。 |
+| **P1** | **35岁危机追访链设计OK，但执行依赖RANDOM_EVENTS** — 概率稀释 | `data/crisis35_followups.js` L23-500（8条事件注入RANDOM_EVENTS）; `core/events_core.js` L91-151（queueRandomEvent加权抽选） | ~20行 | 35岁追访事件注入RANDOM_EVENTS后，与非追访事件混合在同一概率池中。虽然有conditions函数确保只在特定天范围内可触发，但最终触发仍依赖rollStreetEvent的18%基础率×权重比。如果同时有其他事件满足条件，追访事件可能被挤掉。 |
+| **P2** | **MORAL_EVENTS系统完整** — `triggerMoralEvent`在consumeAP中调用，`checkMoralConsequences`在pipeline中执行 | `main.js` L3867-3871（8%概率调triggerMoralEvent）; `data/moral_events.js` L2054-2132（triggerMoralEvent）; `data/moral_events.js` L2135-2176（checkMoralConsequences）; `phase1/daily_pipeline.js` L783-790（moral_consequences步骤） | 0行（已完整） | 道德系统链路完整：consumeAP → triggerMoralEvent → 选择 → pendingConsequences加入队列 → 每日pipeline checkMoralConsequences → 弹窗。P2等级仅记录：后果事件类型较少（仅5条），可扩展。 |
+
+---
+
+## 四、关联问题（内容孤岛、系统间缺乏有机联系）
+
+| 严重等级 | 问题 | 根因代码 | 修复成本 | 详细描述 |
+|----------|------|----------|----------|----------|
+| **P0** | **NPC好感→事件解锁→装备能力→技能连携，链路断在中央** | `data/npcs.js`（NPC定义）; `core/cross_system_events.js` L24-107（仅aunt_wang救援事件检查好感>30）; `core/skill_synergy.js`（连携系统不读NPC关系） | ~100行 | NPC好感度影响的事件极少（只有aunt_wang水管事件检查好感≥30）。其他NPC（old_zhou、sister_zhang、boss_li等）的好感≥60/≥90时无特殊解锁。装备获取不依赖NPC好感。技能连携完全独立于社交系统。整条链路上只有1/4节点有实际连接。 |
+| **P1** | **新闻→投资传导在UI上对玩家不可见** — `getNewsInvestmentSummary`产生了但投资Tab不展示 | `core/news_investment_bridge.js` L129-158（getNewsInvestmentSummary生成driver列表）; `data/viz.js`和`ui/render.js`（投资Tab渲染不包含news driver板块） | ~50行 | `getNewsInvestmentSummary`在tick中调用生成driver列表，但投资Tab的UI渲染没有"今日市场驱动"板块。玩家看不到"科技股因为XX新闻上涨3%"的因果链，新闻系统显得与股市脱钩。 |
+| **P2** | **气候/天气→疾病风险桥梁存在但只有概率警告** | `core/weather.js` L666-685（极端天气消息警告）; `phase1/illness.js`（疾病系统）; `phase1/daily_pipeline.js` L500-509（weather_illness_risk步骤） | ~30行 | weather_illness_risk步骤存在且调用applyWeatherIllnessRisk，但检查发现该函数只做概率警告（cold_snap → 感冒概率+15%），不做数值层面的硬关联。暴雪天没有"生意完全停摆"的效果。 |
+
+---
+
+## 五、代码质量与架构问题
+
+| 严重等级 | 问题 | 根因代码 | 修复成本 | 详细描述 |
+|----------|------|----------|----------|----------|
+| **P1** | **main.js 44个顶层函数未命名空间化** | `main.js` L13-4095（44个function声明在全局作用域） | ~200行（重构） | setStatBar、checkJobRequirements、estimateJobPay、showWelcome等44个函数与全局命名空间平铺，增加命名冲突和调试难度。但作为非模块化项目（ES5全局脚本），这不是功能性bug而是可维护性隐患。 |
+| **P1** | **道德事件函数名与注释不一致** — 注释说"在daily_pipeline中调用"，实际在consumeAP中 | `data/moral_events.js` L2053（注释"在consumeAP中调用"）; `phase1/daily_pipeline.js` L783-790（实际上pipeline中只有checkMoralConsequences，没有triggerMoralEvent） | 0行（仅注释错误） | 函数注释准确（"在consumeAP中调用"），但triggerMoralEvent的放置位置（consumeAP中每行动检测）意味着玩家行动次数越多→触发概率越大，而非纯每日概率。这是设计选择而非bug。 |
+| **P2** | **investment.bak.js 残留** — 旧版文件未删除 | `phase2/investment.bak.js` L171（包含旧版tickInvestmentDaily） | 0行（清理） | investment.bak.js被script标签加载（index.html L615-616），与investment.js同时存在。两者都定义tickInvestmentDaily，但最后一个加载的覆盖前者。当前无功能性影响但增加混淆。 |
+
+---
+
+## 优先级排序总结
+
+### P0（本周期必须修复 — 4项）
+| # | 问题 | 影响面 | 估时 |
+|---|------|--------|------|
+| 1 | **checkChainEventQueue函数缺失** — 链式事件不触发 | 事件系统核心，followup=0% | 30min |
+| 2 | **天气→摆摊收益闭环断裂** — outdoorMod不消费 | 天气系统名存实亡 | 1h |
+| 3 | **经济指数膨胀** — 街头→创业1000x跳跃 | 游戏平衡核心 | 2h |
+| 4 | **NPC好感→事件/装备/技能链路中断** | 社交系统孤立 | 2h |
+
+### P1（本周期间应解决 — 5项）
+| # | 问题 | 影响面 | 估时 |
+|---|------|--------|------|
+| 5 | **后期"钱太多没事做"** — 无维持性开支 | 长线留存 | 2h |
+| 6 | **最优解锁定** — 创业永远优于打工 | 路线平衡 | 1.5h |
+| 7 | **新闻→投资UI透明化** — 不展示因果链 | 玩家感知 | 1h |
+| 8 | **节日priceMods不消费** — 节日经济无感 | 节日系统 | 1h |
+| 9 | **事件触发率不随天数递增** — 后期稀疏 | 中期体验 | 0.5h |
+
+### P2（可推迟，值得记录 — 4项）
+| # | 问题 | 影响面 | 估时 |
+|---|------|--------|------|
+| 10 | 装备/技能连携UI反馈薄弱 | 用户体验 | 2h |
+| 11 | 街头/职场/创业缺副业系统 | 内容丰富度 | 3h+ |
+| 12 | main.js 44个全局函数 | 维护性 | 2h（重构） |
+| 13 | investment.bak.js残留 | 清理 | 5min |
+
+---
+
+## 根因归总
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   三 大 根 因                             │
+├─────────────────────────────────────────────────────────┤
+│  1. checkChainEventQueue 函数缺失（一个丢掉的函数）        │
+│     → 链式事件全死 → followup <30%                      │
+│                                                         │
+│  2. outdoorMod / priceMods 定义但不消费（有数据无逻辑）    │
+│     → 天气不影响收益 → 节日不影响物价                     │
+│                                                         │
+│  3. 经济曲线无后期锚点（创业估值/股市trend未做天花板）      │
+│     → 第200天无事可做 → 中层断层10h→50h                  │
+└─────────────────────────────────────────────────────────┘
+```

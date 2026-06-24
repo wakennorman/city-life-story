@@ -3300,6 +3300,21 @@ function doStreetJob(job) {
   if (emoMod) {
     pay = Math.floor(pay * (emoMod.pay || 1));
   }
+  // 天气→户外工作收入修正：晴天100%，暴雨60%，暴雪40%，台风0%
+  // （getWeatherWorkMod 在 weather.js 中定义，返回 outdoorMod）
+  if (typeof getWeatherWorkMod === "function") {
+    var weatherMult = getWeatherWorkMod(state);
+    if (weatherMult < 1.0) {
+      var oldWeatherPay = pay;
+      pay = Math.floor(pay * weatherMult);
+      if (weatherMult <= 0.5) {
+        StateManager.addMessage(
+          "🌧️ 恶劣天气，户外工作收入降至 " + Math.round(weatherMult * 100) + "%",
+          "warning",
+        );
+      }
+    }
+  }
   // ===技能加权收入：减少纯RNG依赖，技能越高中位收入越高 ===
   const skillBonus = getSkillPayBonus(job.id, state);
   if (skillBonus > 1.0) {

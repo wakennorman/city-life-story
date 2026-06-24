@@ -1,6 +1,38 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.5 装备套装/耐久/技能连携系统 + v3.4 C3D 内容关联度深化 + v3.3 Wave-1 关联度闭合）
+> 最后更新: 2026-06-24（v3.6 审查改进实装 — 9项 P0/P1 系统修复 + 4项深度扩展方案设计）
+
+## 2026-06-24 — v3.6 审查改进实装（Hermes Agent 子任务链）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+
+**设计参考**：BitLife / Stardew Valley / This War of Mine / Capitalism Lab / 中国式家长
+**执行方式**：Hermes Agent 6 子任务链（分析→审查→诊断→修缮→扩展→实装）
+
+### 产出文档
+1. ANALYSIS.md — 架构分析与内容覆盖率评估（8.5/10）
+2. review-v3.0.md — A-E 五维度审查报告（7.0/10）
+3. DIAGNOSIS_REPORT.md — 深度问题诊断报告（3大根因）
+4. IMPROVEMENT_PLAN.md — P0/P1 改进方案（9项修复）
+5. EXPANSION_DESIGN.md — 4项深度内容扩展设计
+
+### 实装修复（9项，已手工完成）
+
+| 编号 | 问题 | 文件 | 改动 | 说明 |
+|------|------|------|------|------|
+| P0-1 | checkChainEventQueue typeof 守卫 | events_core.js | +2行 | 防止加载顺序异常导致 ReferenceError |
+| P0-2 | 天气→摆摊收入闭环 | main.js | +15行 | doStreetJob 注入天气 outdoorMod 乘数 |
+| P0-3 | 经济指数膨胀 | investment.js / startup.js | +3行 | NVDA trend 0.015→0.003，BYD/宁王/TSMC/TSLA 0.008-0.01→0.003-0.004；估值上限¥15M |
+| P0-4 | NPC 好感链路扩展 | cross_system_events.js | +106行 | 新增 old_zhou(好感≥60→废品技巧) + sister_zhang(好感≥80→夜班兼职) |
+| P1-5 | 后期维持性开支 | needs.js / daily_pipeline.js | +42行 | 物业费(资产0.1%/天)、住房维护费(tier)、社交应酬衰减 |
+| P1-6 | 创业前置条件链 | startup.js | +38行 | canStartStartup检查(3技能15级+2NPC好感40+Day60)，集成到registerStartup |
+| P1-7 | 新闻→投资UI透明化 | investment.js | +15行 | 市场驱动板块显示新闻标题→涨跌百分比因果链 |
+| P1-8 | 节日priceMods补全 | pricing.js | +5行 | 增强getCurrentPrice中补回festivalMod乘数 |
+| P1-9 | 事件触发率递增 | events_core.js | +4行 | baseChance改为Math.min(0.35, 0.18+day×0.0005)，职场同 |
+
+**构建**：待 `python build.py`
+
+---
 
 ## 2026-06-24 — v3.5 装备套装/耐久/技能连携系统（游戏设计师+高级开发工程师）
 
