@@ -130,6 +130,17 @@ function triggerVictory(state, type, title, desc) {
       }
     }
   }
+  // v3.6 P1-4: 生成人生回忆录摘要
+  if (typeof lifeMemoir !== "undefined" && typeof lifeMemoir.generateEnding === "function") {
+    var memoirSummary = lifeMemoir.generateEnding(state);
+    state.flags._memoirSummary = memoirSummary;
+    // 记录到回忆录
+    lifeMemoir.add("career", {
+      title: "游戏结局",
+      content: title + " - " + desc,
+      day: state.player.day,
+    });
+  }
   // 记录公司命运到多周目记忆
   if (typeof recordPlaythroughEnd === "function") {
     recordPlaythroughEnd(state);
