@@ -50,7 +50,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.4 C3D 内容关联度深化（2026-06-24，QoderWork / 游戏设计师+系统架构师+高级开发工程师）
+- **最新一次工作**：v3.6 审查改进实装（2026-06-24，Hermes Agent 6子任务链）
+  - **9项P0/P1修复**：chainEventQueue守卫/天气→摆摊/经济压缩(trend上限0.003+估值¥15M)/NPC好感链路×2/后期开支(物业费+住房维护+社交)/创业门槛(3技能15+2NPC40+Day60)/新闻→UI因果链/节日价格/pricing补全/事件触发率递增
+  - **扩展1 NPC关系网（~825行）**：9NPC关系链+蝴蝶效应+3新功能NPC(赵姐/陈哥/老同学阿杰)
+  - **扩展2 时代变迁（~718行）**：8个时间锚点事件+年度参数滑条(通胀/行业/房价/工资)
+  - **扩展3 副业系统（~725行）**：6类夜间经济(夜间摆摊/代驾/外包/自媒体/共享/社区)
+  - **扩展4 人生回忆录（~422行）**：8章节跨周目localStorage收藏
+  - **产出文档**：ANALYSIS.md / DIAGNOSIS_REPORT.md / IMPROVEMENT_PLAN.md / EXPANSION_DESIGN.md
+  - **设计参考**：BitLife/Stardew Valley/This War of Mine/Capitalism Lab/中国式家长/Hades
+  - **构建**：已 `python build.py`（4032.9 KB）
   - **T1 NPC位置关联系统**：新建 `npc_location_bridge.js`（93行），5核心NPC作息日程+时间地点匹配+pipeline步骤
   - **T2 跨系统联动事件×8**：`cross_system_events.js` +632行，8条跨维度事件（天气+NPC+行业+季节+技能+道德）
   - **T3 位置×技能特色行动×10**：`actions_extra.js` +276行，每个活跃地点1条特色行动+条件门槛
