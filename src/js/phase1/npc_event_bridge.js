@@ -829,6 +829,40 @@ function rollNpcEncounterOnArrival(state, locationKey) {
 // 桥接管线 — 在 daily_pipeline 中调用
 // ============================================================
 
+/**
+ * 好感×技能双门槛解锁检查 — 每次好感上升时检查是否满足 skillThresholds
+ * 设计参考：Stardew Valley 好感事件技能检查 / 双条件解锁永久增益
+ */
+function checkNpcSkillUnlocks(state) {
+  if (!state.relationships || !state.NPCS && typeof NPCS === "undefined") return;
+  var npcsList = state.NPCS || NPCS;
+  if (!npcsList) return;
+  for (var ni = 0; ni < npcsList.length; ni++) {
+    var npc = npcsList[ni];
+    if (!npc.skillThresholds || !npc.skillThresholds.length) continue;
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    for (var sj = 0; sj < npc.skillThresholds.length; sj++) {
+      var st = npc.skillThresholds[sj];
+      var flagKey = "_unlocked_" + st.id;
+      if (rel[flagKey]) continue;
+      if (rel.affinity < st.minAffinity) continue;
+      var meetsSkill = true;
+      if (st.skill) {
+        meetsSkill = state.skills && state.skills[st.skill] && state.skills[st.skill].level >= st.minSkill;
+      } else if (st.attr) {
+        meetsSkill = state.player[st.attr] >= st.minAttr;
+      }
+      if (meetsSkill) {
+        rel[flagKey] = true;
+        if (typeof st.effect === "function") {
+          st.effect(state);
+        }
+      }
+    }
+  }
+}
+
 /** 每日NPC桥接主函数 — 在 daily_pipeline 的 events 步骤后调用 */
 function runDailyNpcBridge(state) {
   if (!state.relationships) return;
@@ -847,6 +881,9 @@ function runDailyNpcBridge(state) {
     var latestNews = activeNews[activeNews.length - 1];
     rollNewsNpcComment(state, latestNews.headline);
   }
+
+  // 4. 好感×技能双门槛解锁检查 — 每日检查
+  checkNpcSkillUnlocks(state);
 }
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */

@@ -28575,14 +28575,639 @@ if (typeof window !== "undefined") {
         },
       ],
     },
-  ];
-  for (var ci = 0; ci < CAREER_EVENTS.length; ci++) {
-    RANDOM_EVENTS.push(CAREER_EVENTS[ci]);
-  }
 
-  for (var i = 0; i < CROSS_EVENTS.length; i++) {
-    RANDOM_EVENTS.push(CROSS_EVENTS[i]);
-  }
+    // ====== v3.4 C3D-T2: 跨系统联动事件 ×8 ======
+
+    // 1. 暴雨中的商机
+    {
+      id: "rain_opportunity",
+      name: "暴雨中的商机",
+      icon: "🌧️",
+      phase: "street",
+      trigger: function (st) {
+        return (
+          st.weather &&
+          (st.weather.weather === "rainy" || st.weather.weather === "stormy") &&
+          st.resources.cash < 10000
+        );
+      },
+      probability: 0.03,
+      repeatable: true,
+      text: "暴雨如注，街上行人稀少。你躲在屋檐下躲雨，心里盘算着今天该做什么。这时候你看到环卫工人撑着垃圾袋艰难前行，有人在暴雨中打车打不到。",
+      options: [
+        {
+          text: "☔ 冒雨摆摊，雨天人少但单价高",
+          hint: "收入×1.5，健康-5",
+          apply: function (st) {
+            var earn = 80 + Random.int(0, 120);
+            st.resources.cash += Math.round(earn * 1.5);
+            st.status.health = Math.max(0, (st.status.health || 100) - 5);
+            StateManager.addMessage(
+              "☔ 你在暴雨中摆摊，虽然淋得浑身湿透，但赚了¥" +
+                Math.round(earn * 1.5).toLocaleString() +
+                "。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏃 帮人送货跑腿，雨天人少单多",
+          hint: "¥200 + 可能有好人缘",
+          apply: function (st) {
+            st.resources.cash += 200;
+            if (Random.chance(0.3)) {
+              StateManager.addMessage(
+                "🏃 客户看你冒雨送货，多给了¥50小费。",
+                "success",
+              );
+              st.resources.cash += 50;
+            } else {
+              StateManager.addMessage(
+                "🏃 你顶着暴雨跑了三趟，浑身湿透赚了¥200。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 找个地方避雨发呆",
+          hint: "安全但没收益",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "🚶 你找了个屋檐蹲着等雨停，看着雨幕发呆。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 2. 王大婶的租房信息
+    {
+      id: "wang_tip_rental",
+      name: "王大婶的租房信息",
+      icon: "🏠",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.aunt_wang;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 40 &&
+          st.player.day >= 30 &&
+          st.player.day <= 90
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "王大婶在楼道里叫住你：'我一个亲戚在城中村有个单间空着，¥500一个月押一付三，条件一般但能遮风挡雨，要不要去看看？'",
+      options: [
+        {
+          text: "🏠 去看看（押一付三¥2000）",
+          hint: "租到单间，不再露宿",
+          apply: function (st) {
+            if (st.resources.cash >= 2000) {
+              st.resources.cash -= 2000;
+              if (!st.housing) st.housing = {};
+              var newTier = Math.max(st.housing.tier || 0, 1);
+              st.housing.tier = newTier;
+              st.flags._wangRental = true;
+              StateManager.addMessage(
+                "🏠 你租下了城中村的单间。虽然不大，但总算有个遮风挡雨的地方了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，¥2000押一付三拿不出来。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🙅 嫌贵先不要",
+          hint: "继续住桥洞",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你摆摆手说再等等。王大婶叹了口气：'有需要随时找我。'",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤔 问问有没有更便宜的",
+          hint: "好感≥60可¥300/月",
+          apply: function (st) {
+            var rel = st.relationships && st.relationships.aunt_wang;
+            if (rel && rel.affinity >= 60) {
+              if (st.resources.cash >= 1200) {
+                st.resources.cash -= 1200;
+                if (!st.housing) st.housing = {};
+                st.housing.tier = Math.max(st.housing.tier || 0, 1);
+                st.flags._wangRentalDiscounted = true;
+                StateManager.addMessage(
+                  "🏠 王大婶看你确实困难，'行吧，我亲戚那还有个储物间，¥300一个月。'你搬了进去，虽然小但总算有了个落脚处。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "😅 连¥1200你都拿不出来，王大婶叹了口气。",
+                  "warning",
+                );
+              }
+            } else {
+              StateManager.addMessage(
+                "🤔 王大婶摇头：'这已经是全城最便宜的价了，再低就得找桥洞了。'",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 3. 公园里的老师傅
+    {
+      id: "park_skill_encounter",
+      name: "公园里的老师傅",
+      icon: "🌳",
+      phase: "street",
+      trigger: function (st) {
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "park") return false;
+        var hasHighSkill = false;
+        if (st.skills) {
+          for (var sk in st.skills) {
+            if (st.skills[sk] && st.skills[sk].level >= 50) {
+              hasHighSkill = true;
+              break;
+            }
+          }
+        }
+        return hasHighSkill;
+      },
+      probability: 0.04,
+      repeatable: false,
+      text: "在公园的长椅上，你遇到了一位白发老师傅。他看到你手中的工具/书籍，眼睛一亮：'年轻人，你也在学这个？我干这个四十多年了，有些心得可以聊聊。'",
+      options: [
+        {
+          text: "🙏 虚心请教",
+          hint: "技能+2%，突破当前上限",
+          apply: function (st) {
+            var skillBoosted = false;
+            if (st.skills) {
+              for (var sk in st.skills) {
+                if (st.skills[sk] && st.skills[sk].level >= 50) {
+                  st.skills[sk].level = Math.min(100, st.skills[sk].level + 2);
+                  skillBoosted = true;
+                  break;
+                }
+              }
+            }
+            if (skillBoosted) {
+              StateManager.addMessage(
+                "🙏 老师傅一席话让你豁然开朗。技能提升了！",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🙏 老师傅聊了很多，但你没找到完全对口的点。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "💬 搭讪聊天",
+          hint: "心情+10",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            StateManager.addMessage(
+              "💬 你陪老师傅聊了一下午，听他讲了几十年的见闻，心情大好。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 无视走过",
+          hint: "什么也不发生",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你点了点头，继续往前走。老师傅叹了口气，继续看他的报纸。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 4. 张姐工厂裁员
+    {
+      id: "factory_zhang_layoff",
+      name: "张姐工厂裁员",
+      icon: "🏭",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.sister_zhang;
+        var heat = st._worldParams && st._worldParams.sectorHeat;
+        var mfgHeat = heat && heat["制造"];
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 30 &&
+          mfgHeat !== undefined &&
+          mfgHeat < 0.9 &&
+          st.player.day > 60
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "张姐神色疲惫地找到你：'厂里效益不行了，今天通知裁一批人……我可能也在名单上。'她的眼眶有些红。",
+      options: [
+        {
+          text: "🤗 安慰张姐",
+          hint: "好感+15",
+          apply: function (st) {
+            if (!st.relationships.sister_zhang) {
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            }
+            st.relationships.sister_zhang.affinity = Math.min(
+              100,
+              st.relationships.sister_zhang.affinity + 15,
+            );
+            StateManager.addMessage(
+              "🤗 你安慰张姐：'车到山前必有路，你技术好不怕找不到下家。'张姐擦了擦眼睛，勉强笑了笑。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤝 帮忙介绍工作",
+          hint: "社交≥50可成功，好感+30",
+          apply: function (st) {
+            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            if (social >= 50) {
+              if (!st.relationships.sister_zhang) {
+                st.relationships.sister_zhang = { affinity: 0, met: true };
+              }
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                st.relationships.sister_zhang.affinity + 30,
+              );
+              StateManager.addMessage(
+                "🤝 你动用人脉帮张姐找到了一家新工厂的面试机会。张姐感激得不知道该说什么。",
+                "success",
+              );
+              st.flags._zhangReferral = true;
+            } else {
+              StateManager.addMessage(
+                "😅 你想帮忙但认识的人有限。张姐说：'没事，你有这份心就够了。'",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😐 自顾不暇",
+          hint: "什么也不做",
+          apply: function (st) {
+            if (!st.relationships.sister_zhang) {
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            }
+            st.relationships.sister_zhang.affinity = Math.max(
+              -100,
+              st.relationships.sister_zhang.affinity - 5,
+            );
+            StateManager.addMessage(
+              "😐 你低头说自己也在艰难维持。张姐失望地转身走了。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // 5. 科技园地摊机会
+    {
+      id: "market_clearance_tech",
+      name: "科技园地摊机会",
+      icon: "📱",
+      phase: "street",
+      trigger: function (st) {
+        var curLoc = st.trade && st.trade.currentLocation;
+        var heat = st._worldParams && st._worldParams.sectorHeat;
+        var techHeat = heat && heat["科技"];
+        return (
+          curLoc === "techPark" &&
+          techHeat !== undefined &&
+          techHeat > 1.15 &&
+          st.flags.hasSmartphone
+        );
+      },
+      probability: 0.04,
+      repeatable: true,
+      text: "科技园门口聚集了一大堆白领在刷手机等下班。你注意到有人在摆摊卖手机配件，生意火爆。你摸了摸口袋里的智能手机，心想自己要不要也试试。",
+      options: [
+        {
+          text: "📱 卖手机配件（高风险高收益）",
+          hint: "收入×1.8，但可能被抓",
+          apply: function (st) {
+            var earn = 100 + Random.int(0, 200);
+            st.resources.cash += Math.round(earn * 1.8);
+            if (Random.chance(0.25)) {
+              st.resources.cash -= 200;
+              StateManager.addMessage(
+                "🚔 城管来了！你收起摊位就跑，但还是被罚了¥200。净赚¥" +
+                  Math.round(earn * 1.8 - 200).toLocaleString() +
+                  "。",
+                "danger",
+              );
+            } else {
+              StateManager.addMessage(
+                "📱 科技园的白领们对手机配件很感兴趣，你赚了¥" +
+                  Math.round(earn * 1.8).toLocaleString() +
+                  "。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "📄 发传单",
+          hint: "¥80，稳定收入",
+          apply: function (st) {
+            st.resources.cash += 80;
+            StateManager.addMessage(
+              "📄 你在科技园门口发了一下午传单，赚了¥80。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🔍 找园区工作机会",
+          hint: "概率触发创业/工作线索",
+          apply: function (st) {
+            if (Random.chance(0.3)) {
+              st.flags._techParkLead = true;
+              StateManager.addMessage(
+                "🔍 你在科技园逛了一圈，和几个创业者聊了聊，拿到了一个不错的商业线索！",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🔍 你在科技园转了转，保安问你是哪家公司的。你默默离开了。",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 6. 换季时节
+    {
+      id: "seasonal_health_check",
+      name: "换季时节",
+      icon: "🍂",
+      phase: "street",
+      trigger: function (st) {
+        var day = st.player.day;
+        var seasonEdgeDays = [91, 183, 274, 365];
+        for (var si = 0; si < seasonEdgeDays.length; si++) {
+          if (day === seasonEdgeDays[si]) {
+            return (st.status && st.status.health < 60);
+          }
+        }
+        return false;
+      },
+      probability: 0.4,
+      repeatable: true,
+      text: "换季了，天气忽冷忽热。你感觉有点不对劲，周围不少人在咳嗽。你的身体底子本来就不算好，这个季节得格外注意。",
+      options: [
+        {
+          text: "🏥 去医院体检",
+          hint: "¥200，发现隐藏健康问题",
+          apply: function (st) {
+            if (st.resources.cash >= 200) {
+              st.resources.cash -= 200;
+              var foundIssue = Random.chance(0.3);
+              if (foundIssue) {
+                st.flags._checkupFoundIssue = true;
+                StateManager.addMessage(
+                  "🏥 医生说你有些指标偏高，给你开了一些药。幸好发现得早！",
+                  "warning",
+                );
+                st.status.health = Math.min(100, (st.status.health || 80) + 8);
+              } else {
+                st.status.health = Math.min(100, (st.status.health || 80) + 5);
+                StateManager.addMessage(
+                  "🏥 体检结果还行，就是有点小毛病，医生建议多休息。",
+                  "info",
+                );
+              }
+            } else {
+              StateManager.addMessage(
+                "🏥 检查费¥200，你掏了掏口袋，钱不够。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💪 自己扛着",
+          hint: "健康-5",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 80) - 5);
+            StateManager.addMessage(
+              "💪 你觉得自己挺一挺就过去了。但身体似乎不太同意。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "💊 买点保健品",
+          hint: "¥50，健康+3%",
+          apply: function (st) {
+            if (st.resources.cash >= 50) {
+              st.resources.cash -= 50;
+              st.status.health = Math.min(100, (st.status.health || 80) + 3);
+              StateManager.addMessage(
+                "💊 你在药店买了些维生素，至少心理上感觉好多了。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 连¥50的保健品都买不起……",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 7. 老周的废品大单
+    {
+      id: "old_zhou_scrap_deal",
+      name: "老周的废品大单",
+      icon: "♻️",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.old_zhou;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 60 &&
+          st.player.day > 120
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "老周兴冲冲地找到你：'小子，有个大活儿！工业区那边有一批废金属要处理，量很大，我一个人忙不过来。要是干得好，够咱们吃一个月！'",
+      options: [
+        {
+          text: "💪 帮他一起干",
+          hint: "体力活，收入¥500-800 + 修理+5",
+          apply: function (st) {
+            var earn = 500 + Random.int(0, 300);
+            st.resources.cash += earn;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            if (st.skills && st.skills.repair) {
+              st.skills.repair.level = Math.min(100, st.skills.repair.level + 5);
+            }
+            if (!st.relationships.old_zhou) {
+              st.relationships.old_zhou = { affinity: 0, met: true };
+            }
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              st.relationships.old_zhou.affinity + 10,
+            );
+            StateManager.addMessage(
+              "♻️ 你和老周干了一整天，把废金属分类打包。虽然累得腰都直不起来，但分到了¥" +
+                earn.toLocaleString() +
+                "。老周拍了拍你的背：'好小子！'",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📞 介绍客户",
+          hint: "社交能力检查",
+          apply: function (st) {
+            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            if (social >= 40) {
+              st.resources.cash += 200;
+              if (!st.relationships.old_zhou) {
+                st.relationships.old_zhou = { affinity: 0, met: true };
+              }
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                st.relationships.old_zhou.affinity + 15,
+              );
+              StateManager.addMessage(
+                "📞 你给老周介绍了一家回收站，他谈成了长期合作。老周眉开眼笑：'还是你们年轻人会来事！'",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "📞 你想帮忙但认识的人不够。老周说：'没事，我另外想办法。'",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🙅 婉拒",
+          hint: "不参与",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你说自己最近太忙了。老周有些失望：'那算了，我再找人。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 8. 小美的副业机会
+    {
+      id: "xiao_mei_gig_economy",
+      name: "小美的副业机会",
+      icon: "💼",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.xiao_mei;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 30 &&
+          st.player.day > 45 &&
+          st.resources.cash < 50000
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "小美兴冲冲地给你看手机：'我在一个APP上接单，帮人做PPT和表格，一单能赚几十块！要不要一起干？我可以教你。'",
+      options: [
+        {
+          text: "🤝 一起接单",
+          hint: "时薪¥15-20，分享收入",
+          apply: function (st) {
+            var earn = 60 + Random.int(0, 40);
+            st.resources.cash += Math.round(earn * 1.5);
+            if (!st.relationships.xiao_mei) {
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            }
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              st.relationships.xiao_mei.affinity + 10,
+            );
+            StateManager.addMessage(
+              "🤝 你们一起接了几单，分工合作效率很高。小美很开心：'搭档愉快！赚了¥" +
+                Math.round(earn * 1.5).toLocaleString() +
+                "!'",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 自己单干",
+          hint: "时薪¥25-30，不带她",
+          apply: function (st) {
+            var earn = 100 + Random.int(0, 50);
+            st.resources.cash += earn;
+            if (!st.relationships.xiao_mei) {
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            }
+            st.relationships.xiao_mei.affinity = Math.max(
+              -100,
+              st.relationships.xiao_mei.affinity - 5,
+            );
+            if (st.morality !== undefined) {
+              st.morality = Math.max(-100, st.morality - 1);
+            }
+            StateManager.addMessage(
+              "💪 你自己研究了一下APP，开始接单。小美看你没带她，有点失落。你赚了¥" +
+                earn.toLocaleString() +
+                "。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🙅 看不上这点钱",
+          hint: "错失机会",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你摆摆手：'这点钱不够费事的。'小美撇了撇嘴：'看不起我们打工人啊。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
 })();
 </script>
 
@@ -35937,6 +36562,13 @@ const NPCS = [
     name: "王大婶",
     role: "房东",
     location: "slum",
+    // v3.4 C3D-T1: NPC 每日活动日程（地点关联系统用）
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "park",
+      evening: "slum",
+      night: "slum",
+    },
     birthday: 45,
     desc: "城中村的房东，说话嗓门大但心地不坏。偶尔会介绍些零活。",
     birthdayLine: "哎呀今天是我生日，没想到你还记得！来来来，坐下吃块蛋糕！",
@@ -35969,6 +36601,18 @@ const NPCS = [
         "王大婶今天好像特别高兴，哼着小曲在打扫，或许是什么特别的日子？",
     },
     giftPrefers: ["fruits", "daily_use"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "cooking", minSkill: 40, minAffinity: 80, id: "auntWangRecipe",
+        desc: "学做拿手菜，获得1个食谱",
+        effect: function(st) {
+          if (st.flags._auntWangRecipe) return;
+          st.flags._auntWangRecipe = true;
+          if (st.skills.cooking) st.skills.cooking.xp = Math.min(1000, (st.skills.cooking.xp || 0) + 200);
+          StateManager.addMessage("🧑‍🍳 王大婶手把手教你做了她的拿手菜——红烧肉！家常菜烹饪灵感大涨。","success");
+        }
+      }
+    ],
     // 交易情报：专业领域和好感门控信息
     tradeInfo: {
       expertise: ["daily", "food"],
@@ -36132,12 +36776,33 @@ const NPCS = [
         },
       ],
     },
+    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
+    skillThresholds: {
+      skillKey: "cooking",
+      minSkill: 40,
+      minAffinity: 80,
+      effect: "获得1个食谱",
+      onUnlock: function (st) {
+        st.flags._auntWangRecipeLearned = true;
+        StateManager.addMessage(
+          "🍳 王大婶看你勤快又好学，把她的拿手菜配方教给了你。",
+          "success",
+        );
+      },
+    },
   },
   {
     id: "boss_li",
     name: "李工头",
     role: "包工头",
     location: "construction",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "wholesaleMarket",
+      afternoon: "commercialDist",
+      evening: "entertainment",
+      night: "suburb",
+    },
     birthday: 98,
     desc: "建筑工地的包工头，手上活多。关系好了会给好活。",
     birthdayLine: "哈哈，我今天生日，难得碰上你，请你喝瓶啤酒！",
@@ -36163,6 +36828,17 @@ const NPCS = [
         "李工头今天心情不错，哼着歌在工地上转悠，似乎忘了什么重要的事。",
     },
     giftPrefers: ["cigarettes", "beer"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "sales", minSkill: 50, minAffinity: 80, id: "bossLiStallBonus",
+        desc: "学做生意技巧，摆摊收入+10%",
+        effect: function(st) {
+          if (st.flags.bossLiStallBonus) return;
+          st.flags.bossLiStallBonus = true;
+          StateManager.addMessage("📈 李工头教了你几手生意经：「进货砍价看这三样就够了！」摆摊收入永久+10%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -36319,12 +36995,33 @@ const NPCS = [
         },
       ],
     },
+    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
+    skillThresholds: {
+      skillKey: "social",
+      minSkill: 50,
+      minAffinity: 80,
+      effect: "摆摊收入+10% 永久",
+      onUnlock: function (st) {
+        st.flags._bossLiBizTip = true;
+        StateManager.addMessage(
+          "💼 李工头把做小生意的诀窍点拨给你：'进货看三处，出手要干脆。'从此摆摊收入+10%。",
+          "success",
+        );
+      },
+    },
   },
   {
     id: "sister_zhang",
     name: "张姐",
     role: "中介",
     location: "commercialDist",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "factoryZone",
+      afternoon: "factoryZone",
+      evening: "school",
+      night: "slum",
+    },
     birthday: 155,
     desc: "人力资源中介，认识各行各业的人。帮她跑腿可以提升关系。",
     birthdayLine:
@@ -36355,6 +37052,17 @@ const NPCS = [
         "张姐今天特意打扮了一番，说是跟朋友约好了，但嘴角一直带着笑意。",
     },
     giftPrefers: ["clothing", "snacks"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { attr: "physique", minAttr: 60, minAffinity: 80, id: "zhangFactoryBonus",
+        desc: "一起做计件工，factoryZone收入+15%",
+        effect: function(st) {
+          if (st.flags.zhangFactoryBonus) return;
+          st.flags.zhangFactoryBonus = true;
+          StateManager.addMessage("💪 张姐介绍你进工厂做计件工，多劳多得！工厂工作收入永久+15%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["clothing", "electronics", "luxury"],
@@ -36513,6 +37221,13 @@ const NPCS = [
     name: "老周",
     role: "收废品老人",
     location: "slum",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "slum",
+      afternoon: "construction",
+      evening: "wholesaleMarket",
+      night: "slum",
+    },
     birthday: 210,
     desc: "在城中村收了几十年废品的老前辈。知道废品行情的门道。",
     birthdayLine:
@@ -36543,6 +37258,17 @@ const NPCS = [
         "老周今天没出来收废品，废品站说他难得歇了一天，可能是日子特殊。",
     },
     giftPrefers: ["beer", "instant_noodles"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "repair", minSkill: 30, minAffinity: 80, id: "zhouScrapBonus",
+        desc: "废品行家指点，construction拾荒效率+20%",
+        effect: function(st) {
+          if (st.flags.zhouScrapBonus) return;
+          st.flags.zhouScrapBonus = true;
+          StateManager.addMessage("🔧 老周指点了你几手废品鉴别的诀窍：「看这里，这是铜不是铁！」废品回收效率永久+20%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -36703,6 +37429,13 @@ const NPCS = [
     name: "小美",
     role: "大学生",
     location: "school",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "trainingCenter",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "entertainment",
+    },
     birthday: 280,
     desc: "大学城的贫困生，周末做家教赚生活费。",
     birthdayLine:
@@ -36734,6 +37467,17 @@ const NPCS = [
       birthdayHint: "小美今天收到一束花，不好意思地说是一个朋友送的。",
     },
     giftPrefers: ["fruits", "snacks"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { attr: "charm", minAttr: 70, minAffinity: 80, id: "xiaomeiModelJob",
+        desc: "介绍高端兼职，解锁商业区模特工作",
+        effect: function(st) {
+          if (st.flags.xiaomeiModelJob) return;
+          st.flags.xiaomeiModelJob = true;
+          StateManager.addMessage("🌟 小美兴奋地说：「我学姐在商业区做平面模特，正缺人呢！以你的形象绝对合适！」解锁了商业区模特工作。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["daily", "food", "clothing"],
@@ -53110,6 +53854,10 @@ function addExtraActions(state, actions) {
     addClinicAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
+    // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）
+    if (typeof addLocationExtraActions === "function") {
+      addLocationExtraActions(state, actions);
+    }
     // v3.0 黑暗开局：违法行为（高收益高风险）
     if (typeof addIllegalActions === "function") {
       addIllegalActions(state, actions);
@@ -53275,6 +54023,278 @@ function showHomeActionsModal(state) {
       })(homeAmenities[j].id);
     }
   }, 50);
+}
+
+// ============================================================
+// v3.4 C3D-T3: 位置×技能特色行动（根据当前地点显示专属行动）
+// ============================================================
+
+/** 地点特色行动定义 — 玩家在当前地点时才会显示 */
+var LOCATION_EXTRA_ACTIONS = [
+  {
+    id: "scrapyard_picking",
+    name: "废品站淘货",
+    desc: "在工地附近的废品站翻找，运气好能发现值钱物件。了解行情的人更容易捡到宝。",
+    icon: "🔩",
+    location: "construction",
+    apCost: 20,
+    condition: function (st) {
+      return st.skills && st.skills.repair && st.skills.repair.level >= 30;
+    },
+    payEstimate: "50~300",
+    handler: function (st) {
+      var cost = 50;
+      st.resources.cash -= cost;
+      var findValue = Random.int(0, 100) + (st.skills.repair ? st.skills.repair.level : 0);
+      var earn = 0;
+      if (findValue > 120) earn = 250 + Random.int(0, 100);
+      else if (findValue > 80) earn = 100 + Random.int(0, 80);
+      else earn = 20 + Random.int(0, 30);
+      st.resources.cash += earn;
+      StateManager.addMessage(
+        "🔩 你在废品站翻了半天，" + (earn > 100 ? "找到一件有价值的旧零件，卖了¥" + earn : "就找到些破铜烂铁，卖了¥" + earn),
+        earn > 100 ? "success" : "info"
+      );
+    },
+  },
+  {
+    id: "factory_parttime",
+    name: "工厂兼职",
+    desc: "在工业区的工厂做临时工，体力活但收入稳定。需要一定的体力基础。",
+    icon: "🏭",
+    location: "factoryZone",
+    apCost: 25,
+    condition: function (st) {
+      return st.player.physique >= 40;
+    },
+    payEstimate: "80~120",
+    handler: function (st) {
+      var earn = 80 + Random.int(0, 40);
+      st.resources.cash += earn;
+      st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+      StateManager.addMessage(
+        "🏭 你在工厂干了一天体力活，赚了¥" + earn.toLocaleString() + "。累得腰酸背痛。",
+        "info"
+      );
+    },
+  },
+  {
+    id: "night_school",
+    name: "夜校自习",
+    desc: "在大学城找个自习室学习，效率比在住处高得多。需要交电费。",
+    icon: "📚",
+    location: "school",
+    apCost: 25,
+    condition: function (st) {
+      return st.resources.cash >= 10;
+    },
+    payEstimate: "-10",
+    handler: function (st) {
+      st.resources.cash -= 10;
+      if (st.skills) {
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].xp !== undefined) {
+            st.skills[sk].xp += Math.round(15 * 1.3);
+            break;
+          }
+        }
+      }
+      StateManager.addMessage(
+        "📚 你在自习室学到很晚。虽然花了¥10电费，但学习效率比平时高出不少。",
+        "info"
+      );
+    },
+  },
+  {
+    id: "flyer_distribution",
+    name: "商业区发传单",
+    desc: "在商业区帮商家发传单，收入稳定但枯燥。",
+    icon: "📄",
+    location: "commercialDist",
+    apCost: 20,
+    condition: function (st) { return true; },
+    payEstimate: "60~80",
+    handler: function (st) {
+      var earn = 60 + Random.int(0, 20);
+      st.resources.cash += earn;
+      st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+      StateManager.addMessage(
+        "📄 你发了一天的传单，赚了¥" + earn.toLocaleString() + "。手都酸了，但看着商家满意的脸色，还算值得。",
+        "info"
+      );
+    },
+  },
+  {
+    id: "techpark_networking",
+    name: "科技园找机会",
+    desc: "在科技园里观察和接触创业公司的人，可能找到工作或创业机会。需要脑子灵活。",
+    icon: "💡",
+    location: "techPark",
+    apCost: 20,
+    condition: function (st) {
+      return st.player.intel >= 60;
+    },
+    payEstimate: "0~∞",
+    handler: function (st) {
+      if (Random.chance(0.25)) {
+        st.flags._techParkLead = true;
+        StateManager.addMessage(
+          "💡 你和一位创业者聊得很投机，他给了你一张名片：'有兴趣来我们公司聊聊！'",
+          "success"
+        );
+      } else if (Random.chance(0.4)) {
+        st.resources.cash += 50;
+        StateManager.addMessage(
+          "💡 你帮一个创业团队跑腿买了咖啡和午饭，赚了¥50小费。",
+          "info"
+        );
+      } else {
+        StateManager.addMessage(
+          "💡 你在科技园逛了一圈，被保安问了几次话，收获不大。",
+          "info"
+        );
+      }
+    },
+  },
+  {
+    id: "hospital_donate",
+    name: "医院献血",
+    desc: "去医院献血，既能帮助他人又能赚营养补贴。要求身体健康。",
+    icon: "🩸",
+    location: "hospital",
+    apCost: 15,
+    condition: function (st) {
+      return st.status && st.status.health >= 60;
+    },
+    payEstimate: "200",
+    handler: function (st) {
+      st.resources.cash += 200;
+      st.status.health = Math.min(100, (st.status.health || 80) + 10);
+      st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+      StateManager.addMessage(
+        "🩸 你献了400ml全血，护士给你发了营养补贴¥200。虽然有点头晕，但心里暖暖的。",
+        "success"
+      );
+    },
+  },
+  {
+    id: "park_exercise",
+    name: "公园晨练",
+    desc: "在公园晨练，免费又健康，还能放松身心。",
+    icon: "🏃",
+    location: "park",
+    apCost: 15,
+    condition: function (st) { return true; },
+    payEstimate: "0",
+    handler: function (st) {
+      st.player.physique = Math.min(100, (st.player.physique || 50) + 3);
+      st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+      StateManager.addMessage(
+        "🏃 你在公园跑了三圈，打了套太极拳。浑身舒畅，精神焕发。",
+        "success"
+      );
+    },
+  },
+  {
+    id: "library_study",
+    name: "图书馆啃书",
+    desc: "在培训中心的图书馆看书，各种技能书都有，对提升技能很有帮助。只需交茶水费。",
+    icon: "📖",
+    location: "trainingCenter",
+    apCost: 20,
+    condition: function (st) {
+      return st.resources.cash >= 5;
+    },
+    payEstimate: "-5",
+    handler: function (st) {
+      st.resources.cash -= 5;
+      var xpGain = Math.round(Random.int(8, 18) * 1.15);
+      if (st.skills) {
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].xp !== undefined) {
+            st.skills[sk].xp += xpGain;
+            break;
+          }
+        }
+      }
+      StateManager.addMessage(
+        "📖 你泡了一天的图书馆。交了¥5茶位费，收获不小，技能经验提升了。",
+        "info"
+      );
+    },
+  },
+  {
+    id: "temple_meditate",
+    name: "寺庙静心",
+    desc: "在寺庙里打坐冥想，净化心灵。烧点香火，求个心安。",
+    icon: "🧘",
+    location: "temple",
+    apCost: 15,
+    condition: function (st) {
+      return st.resources.cash >= 10;
+    },
+    payEstimate: "-10",
+    handler: function (st) {
+      st.resources.cash -= 10;
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+      if (st.morality !== undefined) {
+        st.morality = Math.max(-100, Math.min(100, st.morality + 1));
+      }
+      StateManager.addMessage(
+        "🧘 你在寺庙里打坐了一个小时。听着钟声，心静了下来，感觉整个人都轻松了。",
+        "success"
+      );
+    },
+  },
+  {
+    id: "wholesale_flip",
+    name: "批发市场倒货",
+    desc: "在批发市场寻找低价商品，就地转卖给其他摊位。需要口才和眼力。",
+    icon: "🔄",
+    location: "wholesaleMarket",
+    apCost: 20,
+    condition: function (st) {
+      return st.skills && st.skills.social && st.skills.social.level >= 40;
+    },
+    payEstimate: "100~300",
+    handler: function (st) {
+      var earn = 100 + Random.int(0, 200);
+      st.resources.cash += earn;
+      if (st.skills && st.skills.social) {
+        st.skills.social.xp = (st.skills.social.xp || 0) + 5;
+      }
+      StateManager.addMessage(
+        "🔄 你在批发市场倒腾了一批小商品，赚了¥" + earn.toLocaleString() + "。嘴皮子功夫又见长了。",
+        "success"
+      );
+    },
+  },
+];
+
+/**
+ * 添加位置限定行动到 actions 列表
+ */
+function addLocationExtraActions(state, actions) {
+  var curLoc = state.trade && state.trade.currentLocation;
+  if (!curLoc) return;
+  for (var i = 0; i < LOCATION_EXTRA_ACTIONS.length; i++) {
+    var act = LOCATION_EXTRA_ACTIONS[i];
+    if (act.location !== curLoc) continue;
+    if (typeof act.condition === "function" && !act.condition(state)) continue;
+    (function (a) {
+      actions.push({
+        id: a.id,
+        name: a.name,
+        desc: a.desc,
+        icon: a.icon,
+        apCost: a.apCost,
+        payEstimate: a.payEstimate,
+        handler: function () {
+          a.handler(StateManager.getState());
+        },
+      });
+    })(act);
+  }
 }
 </script>
     <script>/**
@@ -53715,6 +54735,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof tickWorldParams === "function") {
         tickWorldParams(state);
+      }
+    },
+  },
+
+  // === v3.4 C3D-T1: NPC 位置轮换 ===
+  {
+    name: "npc_location_tick",
+    fn: function (state) {
+      if (typeof tickNpcLocationRotation === "function") {
+        tickNpcLocationRotation(state);
       }
     },
   },
@@ -56062,6 +57092,33 @@ const LOCATION_NPC_MESSAGES = {
 
 function rollLocationNpcInteraction(state, locationKey) {
   if (!state.relationships) return;
+  // v3.4 C3D-T1: 先检查是否有「本应在此」的 NPC（日程匹配）
+  if (typeof getActiveNpcLocations === "function") {
+    var scheduleNpcs = getActiveNpcLocations(state);
+    for (var si = 0; si < scheduleNpcs.length; si++) {
+      if (scheduleNpcs[si].location === locationKey) {
+        var snpc = scheduleNpcs[si];
+        var srel = state.relationships[snpc.npcId];
+        if (srel && srel.met && Random.chance(0.4)) {
+          var npcDef = null;
+          for (var ni = 0; ni < NPCS.length; ni++) {
+            if (NPCS[ni].id === snpc.npcId) { npcDef = NPCS[ni]; break; }
+          }
+          if (npcDef) {
+            var sline = (npcDef.encounterLines && npcDef.encounterLines.length > 0)
+              ? Random.fromArray(npcDef.encounterLines)
+              : npcDef.name + "正在附近忙活着呢。";
+            StateManager.addMessage("💬 " + sline, "info");
+            srel.affinity = Math.min(100, srel.affinity + 1);
+            if (typeof tryRevealNpcInfo === "function") {
+              tryRevealNpcInfo(snpc.npcId, state, "encounter");
+            }
+            return; // 日程匹配优先
+          }
+        }
+      }
+    }
+  }
   var locData = LOCATION_NPC_MESSAGES[locationKey];
   if (!locData) return;
   if (!Random.chance(locData.chance)) return;
@@ -56241,6 +57298,40 @@ function rollNpcEncounterOnArrival(state, locationKey) {
 // 桥接管线 — 在 daily_pipeline 中调用
 // ============================================================
 
+/**
+ * 好感×技能双门槛解锁检查 — 每次好感上升时检查是否满足 skillThresholds
+ * 设计参考：Stardew Valley 好感事件技能检查 / 双条件解锁永久增益
+ */
+function checkNpcSkillUnlocks(state) {
+  if (!state.relationships || !state.NPCS && typeof NPCS === "undefined") return;
+  var npcsList = state.NPCS || NPCS;
+  if (!npcsList) return;
+  for (var ni = 0; ni < npcsList.length; ni++) {
+    var npc = npcsList[ni];
+    if (!npc.skillThresholds || !npc.skillThresholds.length) continue;
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    for (var sj = 0; sj < npc.skillThresholds.length; sj++) {
+      var st = npc.skillThresholds[sj];
+      var flagKey = "_unlocked_" + st.id;
+      if (rel[flagKey]) continue;
+      if (rel.affinity < st.minAffinity) continue;
+      var meetsSkill = true;
+      if (st.skill) {
+        meetsSkill = state.skills && state.skills[st.skill] && state.skills[st.skill].level >= st.minSkill;
+      } else if (st.attr) {
+        meetsSkill = state.player[st.attr] >= st.minAttr;
+      }
+      if (meetsSkill) {
+        rel[flagKey] = true;
+        if (typeof st.effect === "function") {
+          st.effect(state);
+        }
+      }
+    }
+  }
+}
+
 /** 每日NPC桥接主函数 — 在 daily_pipeline 的 events 步骤后调用 */
 function runDailyNpcBridge(state) {
   if (!state.relationships) return;
@@ -56259,6 +57350,9 @@ function runDailyNpcBridge(state) {
     var latestNews = activeNews[activeNews.length - 1];
     rollNewsNpcComment(state, latestNews.headline);
   }
+
+  // 4. 好感×技能双门槛解锁检查 — 每日检查
+  checkNpcSkillUnlocks(state);
 }
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
@@ -56277,6 +57371,100 @@ function afterEventApplied(eventId, state) {
     state.flags._experiencedNarratives.push(eventId);
   }
 }
+</script>
+    <script>/**
+ * NPC 位置关联系统 — 日常活动轨迹
+ *
+ * 给每个核心 NPC 定义每日作息日程，玩家在特定时间/地点可遇到他们。
+ * 参考 Cart Life（NPC 日程驱动偶遇）+ Stardew Valley（可被找到的角色）
+ *
+ * 架构：独立 IIFE，暴露 3 个全局函数，集成到 daily_pipeline + npc_event_bridge
+ */
+
+(function () {
+  "use strict";
+
+  /**
+   * 初始化 NPC 位置数据 — 读取 npcs.js 中的 schedule 字段，建立索引
+   * @param {object} state - 游戏状态
+   */
+  function initNpcLocationData(state) {
+    if (!state._npcLocationData && typeof NPCS !== "undefined") {
+      state._npcLocationData = {};
+      for (var i = 0; i < NPCS.length; i++) {
+        var npc = NPCS[i];
+        if (npc.schedule && npc.id) {
+          state._npcLocationData[npc.id] = {
+            schedule: npc.schedule,
+            homeBase: npc.location || null,
+          };
+        }
+      }
+    }
+  }
+
+  /**
+   * 把游戏 3 时段映射为日程 4 时段（night→evening 兜底）
+   */
+  function _mapTimeSlot(slot) {
+    if (slot === "morning") return "morning";
+    if (slot === "afternoon") return "afternoon";
+    return "evening"; // evening + night 统一用 evening
+  }
+
+  /**
+   * 获取 NPC 当前所在位置
+   * @param {string} npcId
+   * @param {string} timeOfDay - "morning"/"afternoon"/"evening"/"night"
+   * @returns {string|null} 地点 key，或 null（未发现该 NPC / 无日程）
+   */
+  function getNpcCurrentLocation(npcId, timeOfDay) {
+    var st = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+    if (!st || !st._npcLocationData) return null;
+    var rel = st.relationships && st.relationships[npcId];
+    if (!rel || !rel.met) return null; // 未发现的 NPC 不暴露位置
+    var data = st._npcLocationData[npcId];
+    if (!data || !data.schedule) return null;
+    var mapped = _mapTimeSlot(timeOfDay);
+    return data.schedule[mapped] || data.schedule.evening || data.homeBase;
+  }
+
+  /**
+   * 每日管线步骤 — 更新 NPC 位置轮换数据
+   */
+  function tickNpcLocationRotation(state) {
+    initNpcLocationData(state);
+    // 可以在这里追加少量日志，但保持轻量
+  }
+
+  /**
+   * 获取当前时段 N 个有日程的 NPC 位置列表
+   * @param {object} state
+   * @returns {Array<{npcId:string, location:string}>}
+   */
+  function getActiveNpcLocations(state) {
+    initNpcLocationData(state);
+    var timeSlot = state.player.timeSlot || "morning";
+    var mapped = _mapTimeSlot(timeSlot);
+    var results = [];
+    var data = state._npcLocationData;
+    if (!data) return results;
+    for (var npcId in data) {
+      if (!data.hasOwnProperty(npcId)) continue;
+      var rel = state.relationships && state.relationships[npcId];
+      if (!rel || !rel.met) continue;
+      var loc = data[npcId].schedule[mapped] || data[npcId].schedule.evening;
+      if (loc) results.push({ npcId: npcId, location: loc });
+    }
+    return results;
+  }
+
+  // 暴露全局
+  window.initNpcLocationData = initNpcLocationData;
+  window.getNpcCurrentLocation = getNpcCurrentLocation;
+  window.tickNpcLocationRotation = tickNpcLocationRotation;
+  window.getActiveNpcLocations = getActiveNpcLocations;
+})();
 </script>
 
     <!-- Phase 2 -->

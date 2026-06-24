@@ -53,6 +53,18 @@ const NPCS = [
         "王大婶今天好像特别高兴，哼着小曲在打扫，或许是什么特别的日子？",
     },
     giftPrefers: ["fruits", "daily_use"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "cooking", minSkill: 40, minAffinity: 80, id: "auntWangRecipe",
+        desc: "学做拿手菜，获得1个食谱",
+        effect: function(st) {
+          if (st.flags._auntWangRecipe) return;
+          st.flags._auntWangRecipe = true;
+          if (st.skills.cooking) st.skills.cooking.xp = Math.min(1000, (st.skills.cooking.xp || 0) + 200);
+          StateManager.addMessage("🧑‍🍳 王大婶手把手教你做了她的拿手菜——红烧肉！家常菜烹饪灵感大涨。","success");
+        }
+      }
+    ],
     // 交易情报：专业领域和好感门控信息
     tradeInfo: {
       expertise: ["daily", "food"],
@@ -216,6 +228,20 @@ const NPCS = [
         },
       ],
     },
+    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
+    skillThresholds: {
+      skillKey: "cooking",
+      minSkill: 40,
+      minAffinity: 80,
+      effect: "获得1个食谱",
+      onUnlock: function (st) {
+        st.flags._auntWangRecipeLearned = true;
+        StateManager.addMessage(
+          "🍳 王大婶看你勤快又好学，把她的拿手菜配方教给了你。",
+          "success",
+        );
+      },
+    },
   },
   {
     id: "boss_li",
@@ -254,6 +280,17 @@ const NPCS = [
         "李工头今天心情不错，哼着歌在工地上转悠，似乎忘了什么重要的事。",
     },
     giftPrefers: ["cigarettes", "beer"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "sales", minSkill: 50, minAffinity: 80, id: "bossLiStallBonus",
+        desc: "学做生意技巧，摆摊收入+10%",
+        effect: function(st) {
+          if (st.flags.bossLiStallBonus) return;
+          st.flags.bossLiStallBonus = true;
+          StateManager.addMessage("📈 李工头教了你几手生意经：「进货砍价看这三样就够了！」摆摊收入永久+10%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -410,6 +447,20 @@ const NPCS = [
         },
       ],
     },
+    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
+    skillThresholds: {
+      skillKey: "social",
+      minSkill: 50,
+      minAffinity: 80,
+      effect: "摆摊收入+10% 永久",
+      onUnlock: function (st) {
+        st.flags._bossLiBizTip = true;
+        StateManager.addMessage(
+          "💼 李工头把做小生意的诀窍点拨给你：'进货看三处，出手要干脆。'从此摆摊收入+10%。",
+          "success",
+        );
+      },
+    },
   },
   {
     id: "sister_zhang",
@@ -453,6 +504,17 @@ const NPCS = [
         "张姐今天特意打扮了一番，说是跟朋友约好了，但嘴角一直带着笑意。",
     },
     giftPrefers: ["clothing", "snacks"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { attr: "physique", minAttr: 60, minAffinity: 80, id: "zhangFactoryBonus",
+        desc: "一起做计件工，factoryZone收入+15%",
+        effect: function(st) {
+          if (st.flags.zhangFactoryBonus) return;
+          st.flags.zhangFactoryBonus = true;
+          StateManager.addMessage("💪 张姐介绍你进工厂做计件工，多劳多得！工厂工作收入永久+15%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["clothing", "electronics", "luxury"],
@@ -648,6 +710,17 @@ const NPCS = [
         "老周今天没出来收废品，废品站说他难得歇了一天，可能是日子特殊。",
     },
     giftPrefers: ["beer", "instant_noodles"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { skill: "repair", minSkill: 30, minAffinity: 80, id: "zhouScrapBonus",
+        desc: "废品行家指点，construction拾荒效率+20%",
+        effect: function(st) {
+          if (st.flags.zhouScrapBonus) return;
+          st.flags.zhouScrapBonus = true;
+          StateManager.addMessage("🔧 老周指点了你几手废品鉴别的诀窍：「看这里，这是铜不是铁！」废品回收效率永久+20%。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -846,6 +919,17 @@ const NPCS = [
       birthdayHint: "小美今天收到一束花，不好意思地说是一个朋友送的。",
     },
     giftPrefers: ["fruits", "snacks"],
+    // v3.4 C3D-T4: 好感×技能双门槛解锁
+    skillThresholds: [
+      { attr: "charm", minAttr: 70, minAffinity: 80, id: "xiaomeiModelJob",
+        desc: "介绍高端兼职，解锁商业区模特工作",
+        effect: function(st) {
+          if (st.flags.xiaomeiModelJob) return;
+          st.flags.xiaomeiModelJob = true;
+          StateManager.addMessage("🌟 小美兴奋地说：「我学姐在商业区做平面模特，正缺人呢！以你的形象绝对合适！」解锁了商业区模特工作。","success");
+        }
+      }
+    ],
     // 交易情报
     tradeInfo: {
       expertise: ["daily", "food", "clothing"],
