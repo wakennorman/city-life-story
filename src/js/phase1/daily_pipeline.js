@@ -440,6 +440,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.4 C3D-T1: NPC 位置轮换 ===
+  {
+    name: "npc_location_tick",
+    fn: function (state) {
+      if (typeof tickNpcLocationRotation === "function") {
+        tickNpcLocationRotation(state);
+      }
+    },
+  },
+
   // === 天气 ===
   {
     name: "weather",

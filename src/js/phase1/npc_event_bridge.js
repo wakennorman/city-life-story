@@ -623,6 +623,33 @@ const LOCATION_NPC_MESSAGES = {
 
 function rollLocationNpcInteraction(state, locationKey) {
   if (!state.relationships) return;
+  // v3.4 C3D-T1: 先检查是否有「本应在此」的 NPC（日程匹配）
+  if (typeof getActiveNpcLocations === "function") {
+    var scheduleNpcs = getActiveNpcLocations(state);
+    for (var si = 0; si < scheduleNpcs.length; si++) {
+      if (scheduleNpcs[si].location === locationKey) {
+        var snpc = scheduleNpcs[si];
+        var srel = state.relationships[snpc.npcId];
+        if (srel && srel.met && Random.chance(0.4)) {
+          var npcDef = null;
+          for (var ni = 0; ni < NPCS.length; ni++) {
+            if (NPCS[ni].id === snpc.npcId) { npcDef = NPCS[ni]; break; }
+          }
+          if (npcDef) {
+            var sline = (npcDef.encounterLines && npcDef.encounterLines.length > 0)
+              ? Random.fromArray(npcDef.encounterLines)
+              : npcDef.name + "正在附近忙活着呢。";
+            StateManager.addMessage("💬 " + sline, "info");
+            srel.affinity = Math.min(100, srel.affinity + 1);
+            if (typeof tryRevealNpcInfo === "function") {
+              tryRevealNpcInfo(snpc.npcId, state, "encounter");
+            }
+            return; // 日程匹配优先
+          }
+        }
+      }
+    }
+  }
   var locData = LOCATION_NPC_MESSAGES[locationKey];
   if (!locData) return;
   if (!Random.chance(locData.chance)) return;

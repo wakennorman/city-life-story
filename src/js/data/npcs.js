@@ -14,6 +14,13 @@ const NPCS = [
     name: "王大婶",
     role: "房东",
     location: "slum",
+    // v3.4 C3D-T1: NPC 每日活动日程（地点关联系统用）
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "park",
+      evening: "slum",
+      night: "slum",
+    },
     birthday: 45,
     desc: "城中村的房东，说话嗓门大但心地不坏。偶尔会介绍些零活。",
     birthdayLine: "哎呀今天是我生日，没想到你还记得！来来来，坐下吃块蛋糕！",
@@ -215,6 +222,13 @@ const NPCS = [
     name: "李工头",
     role: "包工头",
     location: "construction",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "wholesaleMarket",
+      afternoon: "commercialDist",
+      evening: "entertainment",
+      night: "suburb",
+    },
     birthday: 98,
     desc: "建筑工地的包工头，手上活多。关系好了会给好活。",
     birthdayLine: "哈哈，我今天生日，难得碰上你，请你喝瓶啤酒！",
@@ -402,6 +416,13 @@ const NPCS = [
     name: "张姐",
     role: "中介",
     location: "commercialDist",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "factoryZone",
+      afternoon: "factoryZone",
+      evening: "school",
+      night: "slum",
+    },
     birthday: 155,
     desc: "人力资源中介，认识各行各业的人。帮她跑腿可以提升关系。",
     birthdayLine:
@@ -590,6 +611,13 @@ const NPCS = [
     name: "老周",
     role: "收废品老人",
     location: "slum",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "slum",
+      afternoon: "construction",
+      evening: "wholesaleMarket",
+      night: "slum",
+    },
     birthday: 210,
     desc: "在城中村收了几十年废品的老前辈。知道废品行情的门道。",
     birthdayLine:
@@ -780,6 +808,13 @@ const NPCS = [
     name: "小美",
     role: "大学生",
     location: "school",
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "trainingCenter",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "entertainment",
+    },
     birthday: 280,
     desc: "大学城的贫困生，周末做家教赚生活费。",
     birthdayLine:
