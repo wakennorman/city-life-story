@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.3 Wave-1A 关联度闭合：35岁链延伸+体检二阶+借款回响）
+> 最后更新: 2026-06-24（v3.3 Wave-2 路线效应+气象预报+剧本开局链）
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
@@ -12,6 +12,31 @@
 > | v3.0 | `memory/review-improve-v3.0.md`         | 全方位审查改进（代码/架构/机制/剧情/UI/留存） |
 > | v2.1 | `memory/content-expansion-v2.1.md`      | 内容扩充 SOP（20职业上限/成套添加/交叉验证）  |
 > | 1.4  | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                          |
+
+## 2026-06-24 — v3.3 Wave-2 三章路线效应+气象预报+剧本开局链（游戏设计师+高级开发工程师）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+
+**目标**：让三章路线产生实际游戏效应、天气预报让天气系统可感知、每个剧本有专属开局叙事。
+
+- **T1 · 三章结局路线游戏效应** — 新建 `src/js/core/route_effects.js`（431 行）
+  - 5 条路线（entrepreneur/civil_service/wealth/lying_flat/open）各有被动加成 + 周期性专属事件
+  - `initRouteEffects()` 在 `story_chapters.js` 第三章触发时注入 flag
+  - `tickRouteEffects()` 在 daily_pipeline 中按间隔触发路线事件弹窗
+  - 接线：story_chapters.js 第243行 → initRouteEffects 调用
+- **T2 · 气象预报系统** — 新建 `src/js/core/weather_forecast.js`（178 行）
+  - `updateNextDayForecast()` 在 weather 步骤中生成明日预报（准确率 70%）
+  - `getForecastHTML()` 侧边栏明日天气展示 + 准备状态提示
+  - `prepareForWeather()` 买伞（¥20）/买暖宝（¥50）准备行动
+  - `weather_prep_mitigation` 管线步骤减免天气惩罚
+- **T3 · 剧本专属开局链** — 新建 `src/js/data/scenario_start_chains.js`（348 行）
+  - 7 个剧本各 3-4 天开局事件链（classic/laid_off/small_town_grinder/foreign_worker/second_gen/midlife_crisis/fresh_grad）
+  - `checkScenarioStartChain()` 每日管线步骤逐天触发事件弹窗
+  - 接线：main.js 增加 `_currentScenario` flag
+
+构建：`dist/index.html = 3815.7 KB`
+
+---
 
 ## 2026-06-24 — v3.3 Wave-1A 关联度闭合（GLM-5.2 / 游戏设计师+高级开发工程师）
 
