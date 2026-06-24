@@ -656,12 +656,637 @@
         },
       ],
     },
-  ];
-  for (var ci = 0; ci < CAREER_EVENTS.length; ci++) {
-    RANDOM_EVENTS.push(CAREER_EVENTS[ci]);
-  }
 
-  for (var i = 0; i < CROSS_EVENTS.length; i++) {
-    RANDOM_EVENTS.push(CROSS_EVENTS[i]);
-  }
+    // ====== v3.4 C3D-T2: 跨系统联动事件 ×8 ======
+
+    // 1. 暴雨中的商机
+    {
+      id: "rain_opportunity",
+      name: "暴雨中的商机",
+      icon: "🌧️",
+      phase: "street",
+      trigger: function (st) {
+        return (
+          st.weather &&
+          (st.weather.weather === "rainy" || st.weather.weather === "stormy") &&
+          st.resources.cash < 10000
+        );
+      },
+      probability: 0.03,
+      repeatable: true,
+      text: "暴雨如注，街上行人稀少。你躲在屋檐下躲雨，心里盘算着今天该做什么。这时候你看到环卫工人撑着垃圾袋艰难前行，有人在暴雨中打车打不到。",
+      options: [
+        {
+          text: "☔ 冒雨摆摊，雨天人少但单价高",
+          hint: "收入×1.5，健康-5",
+          apply: function (st) {
+            var earn = 80 + Random.int(0, 120);
+            st.resources.cash += Math.round(earn * 1.5);
+            st.status.health = Math.max(0, (st.status.health || 100) - 5);
+            StateManager.addMessage(
+              "☔ 你在暴雨中摆摊，虽然淋得浑身湿透，但赚了¥" +
+                Math.round(earn * 1.5).toLocaleString() +
+                "。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏃 帮人送货跑腿，雨天人少单多",
+          hint: "¥200 + 可能有好人缘",
+          apply: function (st) {
+            st.resources.cash += 200;
+            if (Random.chance(0.3)) {
+              StateManager.addMessage(
+                "🏃 客户看你冒雨送货，多给了¥50小费。",
+                "success",
+              );
+              st.resources.cash += 50;
+            } else {
+              StateManager.addMessage(
+                "🏃 你顶着暴雨跑了三趟，浑身湿透赚了¥200。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 找个地方避雨发呆",
+          hint: "安全但没收益",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage(
+              "🚶 你找了个屋檐蹲着等雨停，看着雨幕发呆。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 2. 王大婶的租房信息
+    {
+      id: "wang_tip_rental",
+      name: "王大婶的租房信息",
+      icon: "🏠",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.aunt_wang;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 40 &&
+          st.player.day >= 30 &&
+          st.player.day <= 90
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "王大婶在楼道里叫住你：'我一个亲戚在城中村有个单间空着，¥500一个月押一付三，条件一般但能遮风挡雨，要不要去看看？'",
+      options: [
+        {
+          text: "🏠 去看看（押一付三¥2000）",
+          hint: "租到单间，不再露宿",
+          apply: function (st) {
+            if (st.resources.cash >= 2000) {
+              st.resources.cash -= 2000;
+              if (!st.housing) st.housing = {};
+              var newTier = Math.max(st.housing.tier || 0, 1);
+              st.housing.tier = newTier;
+              st.flags._wangRental = true;
+              StateManager.addMessage(
+                "🏠 你租下了城中村的单间。虽然不大，但总算有个遮风挡雨的地方了。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，¥2000押一付三拿不出来。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🙅 嫌贵先不要",
+          hint: "继续住桥洞",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你摆摆手说再等等。王大婶叹了口气：'有需要随时找我。'",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤔 问问有没有更便宜的",
+          hint: "好感≥60可¥300/月",
+          apply: function (st) {
+            var rel = st.relationships && st.relationships.aunt_wang;
+            if (rel && rel.affinity >= 60) {
+              if (st.resources.cash >= 1200) {
+                st.resources.cash -= 1200;
+                if (!st.housing) st.housing = {};
+                st.housing.tier = Math.max(st.housing.tier || 0, 1);
+                st.flags._wangRentalDiscounted = true;
+                StateManager.addMessage(
+                  "🏠 王大婶看你确实困难，'行吧，我亲戚那还有个储物间，¥300一个月。'你搬了进去，虽然小但总算有了个落脚处。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "😅 连¥1200你都拿不出来，王大婶叹了口气。",
+                  "warning",
+                );
+              }
+            } else {
+              StateManager.addMessage(
+                "🤔 王大婶摇头：'这已经是全城最便宜的价了，再低就得找桥洞了。'",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 3. 公园里的老师傅
+    {
+      id: "park_skill_encounter",
+      name: "公园里的老师傅",
+      icon: "🌳",
+      phase: "street",
+      trigger: function (st) {
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "park") return false;
+        var hasHighSkill = false;
+        if (st.skills) {
+          for (var sk in st.skills) {
+            if (st.skills[sk] && st.skills[sk].level >= 50) {
+              hasHighSkill = true;
+              break;
+            }
+          }
+        }
+        return hasHighSkill;
+      },
+      probability: 0.04,
+      repeatable: false,
+      text: "在公园的长椅上，你遇到了一位白发老师傅。他看到你手中的工具/书籍，眼睛一亮：'年轻人，你也在学这个？我干这个四十多年了，有些心得可以聊聊。'",
+      options: [
+        {
+          text: "🙏 虚心请教",
+          hint: "技能+2%，突破当前上限",
+          apply: function (st) {
+            var skillBoosted = false;
+            if (st.skills) {
+              for (var sk in st.skills) {
+                if (st.skills[sk] && st.skills[sk].level >= 50) {
+                  st.skills[sk].level = Math.min(100, st.skills[sk].level + 2);
+                  skillBoosted = true;
+                  break;
+                }
+              }
+            }
+            if (skillBoosted) {
+              StateManager.addMessage(
+                "🙏 老师傅一席话让你豁然开朗。技能提升了！",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🙏 老师傅聊了很多，但你没找到完全对口的点。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "💬 搭讪聊天",
+          hint: "心情+10",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            StateManager.addMessage(
+              "💬 你陪老师傅聊了一下午，听他讲了几十年的见闻，心情大好。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 无视走过",
+          hint: "什么也不发生",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你点了点头，继续往前走。老师傅叹了口气，继续看他的报纸。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 4. 张姐工厂裁员
+    {
+      id: "factory_zhang_layoff",
+      name: "张姐工厂裁员",
+      icon: "🏭",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.sister_zhang;
+        var heat = st._worldParams && st._worldParams.sectorHeat;
+        var mfgHeat = heat && heat["制造"];
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 30 &&
+          mfgHeat !== undefined &&
+          mfgHeat < 0.9 &&
+          st.player.day > 60
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "张姐神色疲惫地找到你：'厂里效益不行了，今天通知裁一批人……我可能也在名单上。'她的眼眶有些红。",
+      options: [
+        {
+          text: "🤗 安慰张姐",
+          hint: "好感+15",
+          apply: function (st) {
+            if (!st.relationships.sister_zhang) {
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            }
+            st.relationships.sister_zhang.affinity = Math.min(
+              100,
+              st.relationships.sister_zhang.affinity + 15,
+            );
+            StateManager.addMessage(
+              "🤗 你安慰张姐：'车到山前必有路，你技术好不怕找不到下家。'张姐擦了擦眼睛，勉强笑了笑。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤝 帮忙介绍工作",
+          hint: "社交≥50可成功，好感+30",
+          apply: function (st) {
+            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            if (social >= 50) {
+              if (!st.relationships.sister_zhang) {
+                st.relationships.sister_zhang = { affinity: 0, met: true };
+              }
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                st.relationships.sister_zhang.affinity + 30,
+              );
+              StateManager.addMessage(
+                "🤝 你动用人脉帮张姐找到了一家新工厂的面试机会。张姐感激得不知道该说什么。",
+                "success",
+              );
+              st.flags._zhangReferral = true;
+            } else {
+              StateManager.addMessage(
+                "😅 你想帮忙但认识的人有限。张姐说：'没事，你有这份心就够了。'",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😐 自顾不暇",
+          hint: "什么也不做",
+          apply: function (st) {
+            if (!st.relationships.sister_zhang) {
+              st.relationships.sister_zhang = { affinity: 0, met: true };
+            }
+            st.relationships.sister_zhang.affinity = Math.max(
+              -100,
+              st.relationships.sister_zhang.affinity - 5,
+            );
+            StateManager.addMessage(
+              "😐 你低头说自己也在艰难维持。张姐失望地转身走了。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // 5. 科技园地摊机会
+    {
+      id: "market_clearance_tech",
+      name: "科技园地摊机会",
+      icon: "📱",
+      phase: "street",
+      trigger: function (st) {
+        var curLoc = st.trade && st.trade.currentLocation;
+        var heat = st._worldParams && st._worldParams.sectorHeat;
+        var techHeat = heat && heat["科技"];
+        return (
+          curLoc === "techPark" &&
+          techHeat !== undefined &&
+          techHeat > 1.15 &&
+          st.flags.hasSmartphone
+        );
+      },
+      probability: 0.04,
+      repeatable: true,
+      text: "科技园门口聚集了一大堆白领在刷手机等下班。你注意到有人在摆摊卖手机配件，生意火爆。你摸了摸口袋里的智能手机，心想自己要不要也试试。",
+      options: [
+        {
+          text: "📱 卖手机配件（高风险高收益）",
+          hint: "收入×1.8，但可能被抓",
+          apply: function (st) {
+            var earn = 100 + Random.int(0, 200);
+            st.resources.cash += Math.round(earn * 1.8);
+            if (Random.chance(0.25)) {
+              st.resources.cash -= 200;
+              StateManager.addMessage(
+                "🚔 城管来了！你收起摊位就跑，但还是被罚了¥200。净赚¥" +
+                  Math.round(earn * 1.8 - 200).toLocaleString() +
+                  "。",
+                "danger",
+              );
+            } else {
+              StateManager.addMessage(
+                "📱 科技园的白领们对手机配件很感兴趣，你赚了¥" +
+                  Math.round(earn * 1.8).toLocaleString() +
+                  "。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "📄 发传单",
+          hint: "¥80，稳定收入",
+          apply: function (st) {
+            st.resources.cash += 80;
+            StateManager.addMessage(
+              "📄 你在科技园门口发了一下午传单，赚了¥80。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🔍 找园区工作机会",
+          hint: "概率触发创业/工作线索",
+          apply: function (st) {
+            if (Random.chance(0.3)) {
+              st.flags._techParkLead = true;
+              StateManager.addMessage(
+                "🔍 你在科技园逛了一圈，和几个创业者聊了聊，拿到了一个不错的商业线索！",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🔍 你在科技园转了转，保安问你是哪家公司的。你默默离开了。",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 6. 换季时节
+    {
+      id: "seasonal_health_check",
+      name: "换季时节",
+      icon: "🍂",
+      phase: "street",
+      trigger: function (st) {
+        var day = st.player.day;
+        var seasonEdgeDays = [91, 183, 274, 365];
+        for (var si = 0; si < seasonEdgeDays.length; si++) {
+          if (day === seasonEdgeDays[si]) {
+            return (st.status && st.status.health < 60);
+          }
+        }
+        return false;
+      },
+      probability: 0.4,
+      repeatable: true,
+      text: "换季了，天气忽冷忽热。你感觉有点不对劲，周围不少人在咳嗽。你的身体底子本来就不算好，这个季节得格外注意。",
+      options: [
+        {
+          text: "🏥 去医院体检",
+          hint: "¥200，发现隐藏健康问题",
+          apply: function (st) {
+            if (st.resources.cash >= 200) {
+              st.resources.cash -= 200;
+              var foundIssue = Random.chance(0.3);
+              if (foundIssue) {
+                st.flags._checkupFoundIssue = true;
+                StateManager.addMessage(
+                  "🏥 医生说你有些指标偏高，给你开了一些药。幸好发现得早！",
+                  "warning",
+                );
+                st.status.health = Math.min(100, (st.status.health || 80) + 8);
+              } else {
+                st.status.health = Math.min(100, (st.status.health || 80) + 5);
+                StateManager.addMessage(
+                  "🏥 体检结果还行，就是有点小毛病，医生建议多休息。",
+                  "info",
+                );
+              }
+            } else {
+              StateManager.addMessage(
+                "🏥 检查费¥200，你掏了掏口袋，钱不够。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💪 自己扛着",
+          hint: "健康-5",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 80) - 5);
+            StateManager.addMessage(
+              "💪 你觉得自己挺一挺就过去了。但身体似乎不太同意。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "💊 买点保健品",
+          hint: "¥50，健康+3%",
+          apply: function (st) {
+            if (st.resources.cash >= 50) {
+              st.resources.cash -= 50;
+              st.status.health = Math.min(100, (st.status.health || 80) + 3);
+              StateManager.addMessage(
+                "💊 你在药店买了些维生素，至少心理上感觉好多了。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 连¥50的保健品都买不起……",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // 7. 老周的废品大单
+    {
+      id: "old_zhou_scrap_deal",
+      name: "老周的废品大单",
+      icon: "♻️",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.old_zhou;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 60 &&
+          st.player.day > 120
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "老周兴冲冲地找到你：'小子，有个大活儿！工业区那边有一批废金属要处理，量很大，我一个人忙不过来。要是干得好，够咱们吃一个月！'",
+      options: [
+        {
+          text: "💪 帮他一起干",
+          hint: "体力活，收入¥500-800 + 修理+5",
+          apply: function (st) {
+            var earn = 500 + Random.int(0, 300);
+            st.resources.cash += earn;
+            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            if (st.skills && st.skills.repair) {
+              st.skills.repair.level = Math.min(100, st.skills.repair.level + 5);
+            }
+            if (!st.relationships.old_zhou) {
+              st.relationships.old_zhou = { affinity: 0, met: true };
+            }
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              st.relationships.old_zhou.affinity + 10,
+            );
+            StateManager.addMessage(
+              "♻️ 你和老周干了一整天，把废金属分类打包。虽然累得腰都直不起来，但分到了¥" +
+                earn.toLocaleString() +
+                "。老周拍了拍你的背：'好小子！'",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📞 介绍客户",
+          hint: "社交能力检查",
+          apply: function (st) {
+            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            if (social >= 40) {
+              st.resources.cash += 200;
+              if (!st.relationships.old_zhou) {
+                st.relationships.old_zhou = { affinity: 0, met: true };
+              }
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                st.relationships.old_zhou.affinity + 15,
+              );
+              StateManager.addMessage(
+                "📞 你给老周介绍了一家回收站，他谈成了长期合作。老周眉开眼笑：'还是你们年轻人会来事！'",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "📞 你想帮忙但认识的人不够。老周说：'没事，我另外想办法。'",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🙅 婉拒",
+          hint: "不参与",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你说自己最近太忙了。老周有些失望：'那算了，我再找人。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 8. 小美的副业机会
+    {
+      id: "xiao_mei_gig_economy",
+      name: "小美的副业机会",
+      icon: "💼",
+      phase: "street",
+      trigger: function (st) {
+        var rel = st.relationships && st.relationships.xiao_mei;
+        return (
+          rel &&
+          rel.met &&
+          rel.affinity >= 30 &&
+          st.player.day > 45 &&
+          st.resources.cash < 50000
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "小美兴冲冲地给你看手机：'我在一个APP上接单，帮人做PPT和表格，一单能赚几十块！要不要一起干？我可以教你。'",
+      options: [
+        {
+          text: "🤝 一起接单",
+          hint: "时薪¥15-20，分享收入",
+          apply: function (st) {
+            var earn = 60 + Random.int(0, 40);
+            st.resources.cash += Math.round(earn * 1.5);
+            if (!st.relationships.xiao_mei) {
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            }
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              st.relationships.xiao_mei.affinity + 10,
+            );
+            StateManager.addMessage(
+              "🤝 你们一起接了几单，分工合作效率很高。小美很开心：'搭档愉快！赚了¥" +
+                Math.round(earn * 1.5).toLocaleString() +
+                "!'",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 自己单干",
+          hint: "时薪¥25-30，不带她",
+          apply: function (st) {
+            var earn = 100 + Random.int(0, 50);
+            st.resources.cash += earn;
+            if (!st.relationships.xiao_mei) {
+              st.relationships.xiao_mei = { affinity: 0, met: true };
+            }
+            st.relationships.xiao_mei.affinity = Math.max(
+              -100,
+              st.relationships.xiao_mei.affinity - 5,
+            );
+            if (st.morality !== undefined) {
+              st.morality = Math.max(-100, st.morality - 1);
+            }
+            StateManager.addMessage(
+              "💪 你自己研究了一下APP，开始接单。小美看你没带她，有点失落。你赚了¥" +
+                earn.toLocaleString() +
+                "。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🙅 看不上这点钱",
+          hint: "错失机会",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙅 你摆摆手：'这点钱不够费事的。'小美撇了撇嘴：'看不起我们打工人啊。'",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
 })();
