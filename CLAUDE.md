@@ -58,7 +58,8 @@
   - **扩展4 人生回忆录（~422行）**：8章节跨周目localStorage收藏
   - **产出文档**：ANALYSIS.md / DIAGNOSIS_REPORT.md / IMPROVEMENT_PLAN.md / EXPANSION_DESIGN.md
   - **设计参考**：BitLife/Stardew Valley/This War of Mine/Capitalism Lab/中国式家长/Hades
-  - **构建**：已 `python build.py`（4032.9 KB）
+  - **构建**：已 `python build.py`（4037.5 KB）
+  - **commit历史**：9596623→acb5340→b28675d→b250a41→d4e9e0a→1bd7fde→154078d→63ad76b→d14810a
   - **T1 NPC位置关联系统**：新建 `npc_location_bridge.js`（93行），5核心NPC作息日程+时间地点匹配+pipeline步骤
   - **T2 跨系统联动事件×8**：`cross_system_events.js` +632行，8条跨维度事件（天气+NPC+行业+季节+技能+道德）
   - **T3 位置×技能特色行动×10**：`actions_extra.js` +276行，每个活跃地点1条特色行动+条件门槛

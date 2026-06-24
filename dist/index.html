@@ -1121,6 +1121,17 @@ function createDefaultState() {
       completedShifts: {},
     },
 
+    // --- 副业系统 (P0-1: 副业系统接入) ---
+    sideHustle: {
+      active: false,
+      type: null,  // 'stall' | 'driving' | 'freelance' | 'content' | 'sharing' | 'community'
+      fatigue: 0,  // 副业疲劳度（影响次日主业效率）
+      income: 0,   // 当日副业收入
+      reputation: 0,  // 副业口碑
+      history: [],  // 副业收入历史
+      lastActiveDay: null,
+    },
+
     // --- 职场 ---
     corporate: {
       company: null,
@@ -1516,6 +1527,15 @@ class GameStateManager {
     this._state.lastPlayedAt = Date.now();
     // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
     var s = this._state;
+    if (!s.relationships) s.relationships = {};
+    if (s.npcRelations) {
+      for (var legacyNpcId in s.npcRelations) {
+        if (!s.relationships[legacyNpcId]) {
+          s.relationships[legacyNpcId] = s.npcRelations[legacyNpcId];
+        }
+      }
+      delete s.npcRelations;
+    }
     if (s.status && typeof s.status.fame === "number") {
       if (s.player) s.player.fame = s.status.fame;
       delete s.status.fame;
@@ -3801,6 +3821,26 @@ if (typeof window !== "undefined") {
 
 // ====== 空事件容器（由拆分文件在加载后推入）======
 const RANDOM_EVENTS = [];
+
+/**
+ * 注册链式事件（P0-4: 链式事件填充）
+ * @param {Object} state - 游戏状态
+ * @param {string} eventId - 事件ID
+ * @param {number} delayDays - 延迟天数
+ * @param {Object} conditions - 触发条件（可选）
+ */
+function queueChainEvent(state, eventId, delayDays, conditions) {
+  if (!state.flags._chainEventQueue) {
+    state.flags._chainEventQueue = [];
+  }
+  state.flags._chainEventQueue.push({
+    eventId: eventId,
+    triggerDay: state.player.day + delayDays,
+    conditions: conditions || {},
+    phase: state.player.phase || "street",
+    triggered: false
+  });
+}
 
 /* =========================================================
  * 二、事件触发与队列管理
@@ -20697,10 +20737,10 @@ var MID_AUTUMN_DEEP_EVENTS = [
         cost: 50,
         apply: function (st) {
           st.resources.cash -= 50;
-          if (st.npcRelations && st.npcRelations.aunt_wang) {
-            st.npcRelations.aunt_wang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.npcRelations.aunt_wang.affinity || 0) + 15,
+              (st.relationships.aunt_wang.affinity || 0) + 15,
             );
           }
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
@@ -27004,9 +27044,9 @@ function collectLifeStats(state) {
 
   // 统计高好感NPC数量
   var highAffinityNPCs = 0;
-  if (state.npcRelations) {
-    for (var id in state.npcRelations) {
-      if ((state.npcRelations[id].affinity || 0) >= 50) highAffinityNPCs++;
+  if (state.relationships) {
+    for (var id in state.relationships) {
+      if ((state.relationships[id].affinity || 0) >= 50) highAffinityNPCs++;
     }
   }
 
@@ -27262,9 +27302,9 @@ var STORY_CHAPTERS = [
         id: "foothold_npc",
         condition: function (st) {
           var count = 0;
-          if (st.npcRelations) {
-            for (var id in st.npcRelations) {
-              if ((st.npcRelations[id].affinity || 0) >= 60) count++;
+          if (st.relationships) {
+            for (var id in st.relationships) {
+              if ((st.relationships[id].affinity || 0) >= 60) count++;
             }
           }
           return count >= 2;
@@ -27453,9 +27493,9 @@ function _collectChapterStats(state) {
     }
   }
   var npcFriends = 0;
-  if (state.npcRelations) {
-    for (var id in state.npcRelations) {
-      if ((state.npcRelations[id].affinity || 0) >= 50) npcFriends++;
+  if (state.relationships) {
+    for (var id in state.relationships) {
+      if ((state.relationships[id].affinity || 0) >= 50) npcFriends++;
     }
   }
   return {
@@ -27494,10 +27534,54 @@ function getStoryChapterProgress(state) {
 }
 
 // ====== 全局挂载 ======
+function getStoryChapterChecklist(state) {
+  var p = state.player || {};
+  var r = state.resources || {};
+  var n = state.needs || {};
+  var stats = _collectChapterStats(state);
+  var day = p.day || 1;
+  var totalAssets = (r.cash || 0) + (r.bankBalance || 0);
+  var debt = (r.villageDebt || 0) + (r.bankLoan || 0);
+  var items = [];
+
+  function add(label, done, hint, weight) {
+    items.push({
+      label: label,
+      done: !!done,
+      hint: hint,
+      weight: weight || 0,
+    });
+  }
+
+  if (day < 30) {
+    add("\u5148\u7a33\u4f4f\u6e29\u9971", (n.hunger || 100) >= 45 && (n.fatigue || 0) <= 75, "\u9965\u997f\u548c\u75b2\u52b3\u4f1a\u76f4\u63a5\u62d6\u57ae\u884c\u52a8\u6548\u7387\u3002", 90);
+    add("\u6512\u5230\u7b2c\u4e00\u7b14\u7f13\u51b2\u91d1", totalAssets >= 1000, "\u67091000\u5143\u7f13\u51b2\u540e\uff0c\u4e8b\u4ef6\u548c\u4ea4\u6613\u9009\u62e9\u4f1a\u4ece\u5bb9\u5f88\u591a\u3002", 70);
+    add("\u8ba4\u8bc6\u4e00\u4e2a\u80fd\u5e2e\u5fd9\u7684\u4eba", stats.npcFriends >= 1, "NPC\u597d\u611f\u4f1a\u89e3\u9501\u5de5\u4f5c\u3001\u6298\u6263\u548c\u5371\u673a\u5e2e\u52a9\u3002", 55);
+  } else if (day < 180) {
+    add("\u538b\u4f4e\u9ad8\u606f\u503a\u52a1", debt <= 1000, "\u6751\u957f\u503a\u548c\u94f6\u884c\u8d37\u6b3e\u4f1a\u6301\u7eed\u4fb5\u8680\u73b0\u91d1\u6d41\u3002", 88);
+    add("\u7ec3\u51fa\u4e00\u95e8\u6838\u5fc3\u6280\u80fd", stats.highSkills >= 1, "\u6280\u80fd\u8fbe\u523060\u540e\uff0c\u804c\u4e1a\u3001\u4ea4\u6613\u548c\u521b\u4e1a\u90fd\u4f1a\u6709\u66f4\u5f3a\u652f\u6491\u3002", 72);
+    add("\u5efa\u7acb\u57ce\u5e02\u5173\u7cfb\u7f51", stats.npcFriends >= 2, "\u81f3\u5c11\u4e24\u4e2a\u53ef\u9760\u5173\u7cfb\u80fd\u89e6\u53d1\u66f4\u591a\u8de8\u7cfb\u7edf\u4e8b\u4ef6\u3002", 60);
+  } else if (day < 365) {
+    add("\u786e\u5b9a\u4e2d\u671f\u8def\u7ebf", !!(state.flags && state.flags._lifeRoute), "\u521b\u4e1a\u3001\u804c\u573a\u3001\u6295\u8d44\u3001\u4f53\u5236\u6216\u8eba\u5e73\uff0c\u90fd\u9700\u8981\u5f00\u59cb\u805a\u7126\u3002", 85);
+    add("\u51c6\u5907\u6297\u98ce\u9669\u8d44\u4ea7", totalAssets >= 50000, "\u540e\u671f\u5371\u673a\u3001\u4e70\u623f\u548c\u521b\u4e1a\u90fd\u9700\u8981\u66f4\u539a\u7684\u73b0\u91d1\u57ab\u3002", 65);
+    add("\u8ba9\u5173\u7cfb\u4ea7\u751f\u5b9e\u9645\u56de\u62a5", stats.npcFriends >= 3, "\u9ad8\u597d\u611fNPC\u4f1a\u628a\u57ce\u5e02\u8d44\u6e90\u5e26\u5230\u4f60\u8eab\u8fb9\u3002", 50);
+  } else {
+    add("\u590d\u76d8\u4eba\u751f\u8def\u7ebf", !!(state.flags && state.flags._ch3Done), "\u4e00\u5e74\u8282\u70b9\u540e\uff0c\u4e3b\u7ebf\u4f1a\u6839\u636e\u4f60\u7684\u9009\u62e9\u7ed9\u51fa\u65b9\u5411\u53cd\u9988\u3002", 80);
+    add("\u8865\u9f50\u957f\u671f\u77ed\u677f", stats.highSkills >= 2, "\u540e\u671f\u4e0d\u662f\u53ea\u770b\u94b1\uff0c\u6280\u80fd\u7ec4\u5408\u4f1a\u51b3\u5b9a\u4e0a\u9650\u3002", 60);
+    add("\u7ef4\u6301\u73b0\u91d1\u6d41\u5b89\u5168", totalAssets >= Math.max(80000, debt * 3), "\u8d44\u4ea7\u548c\u503a\u52a1\u6bd4\u4f8b\u51b3\u5b9a\u4f60\u80fd\u4e0d\u80fd\u625b\u4f4f\u5927\u6ce2\u52a8\u3002", 55);
+  }
+
+  items.sort(function (a, b) {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return b.weight - a.weight;
+  });
+  return items.slice(0, 3);
+}
 if (typeof window !== "undefined") {
   window.STORY_CHAPTERS = STORY_CHAPTERS;
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
+  window.getStoryChapterChecklist = getStoryChapterChecklist;
 }
 </script>
     <!-- v3.3 W2-T1: Route Effects (三章结局路线实际游戏效应) -->
@@ -27551,10 +27635,10 @@ if (typeof window !== "undefined") {
               apply: function (st) {
                 if (typeof getNpcById === "function") {
                   var npc = getNpcById("li_ming");
-                  if (npc && st.npcRelations && st.npcRelations.li_ming) {
-                    st.npcRelations.li_ming.affinity = Math.min(
+                  if (npc && st.relationships && st.relationships.li_ming) {
+                    st.relationships.li_ming.affinity = Math.min(
                       100,
-                      (st.npcRelations.li_ming.affinity || 0) + 3,
+                      (st.relationships.li_ming.affinity || 0) + 3,
                     );
                   }
                 }
@@ -27789,12 +27873,12 @@ if (typeof window !== "undefined") {
                       var npcs = ["li_ming", "zhang_wei", "wang_dami"];
                       var pick = npcs[Random.int(0, npcs.length - 1)];
                       if (
-                        st.npcRelations &&
-                        st.npcRelations[pick]
+                        st.relationships &&
+                        st.relationships[pick]
                       ) {
-                        st.npcRelations[pick].affinity = Math.min(
+                        st.relationships[pick].affinity = Math.min(
                           100,
-                          (st.npcRelations[pick].affinity || 0) + 5,
+                          (st.relationships[pick].affinity || 0) + 5,
                         );
                       }
                     }
@@ -27963,9 +28047,9 @@ if (typeof window !== "undefined") {
       story: `收工时王大婶急匆匆跑来："孩子，我家水管爆了，满屋子水！你能不能帮忙修修？"\n你看了看她焦急的样子，想起她平日里对你的照顾。`,
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.aunt_wang &&
-          (st.npcRelations.aunt_wang.affinity || 0) >= 30 &&
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          (st.relationships.aunt_wang.affinity || 0) >= 30 &&
           st.player.day > 10
         );
       },
@@ -27977,9 +28061,9 @@ if (typeof window !== "undefined") {
             if (st.skills && st.skills.repair) {
               var level = st.skills.repair.level || 0;
               if (level >= 20) {
-                st.npcRelations.aunt_wang.affinity = Math.min(
+                st.relationships.aunt_wang.affinity = Math.min(
                   100,
-                  (st.npcRelations.aunt_wang.affinity || 0) + 12,
+                  (st.relationships.aunt_wang.affinity || 0) + 12,
                 );
                 st.skills.repair.xp = (st.skills.repair.xp || 0) + 30;
                 StateManager.addMessage(
@@ -27987,9 +28071,9 @@ if (typeof window !== "undefined") {
                   "success",
                 );
               } else {
-                st.npcRelations.aunt_wang.affinity = Math.min(
+                st.relationships.aunt_wang.affinity = Math.min(
                   100,
-                  (st.npcRelations.aunt_wang.affinity || 0) + 8,
+                  (st.relationships.aunt_wang.affinity || 0) + 8,
                 );
                 StateManager.addMessage(
                   "🔧 你笨手笨脚修好了，虽然弄了一身水。王大婶还是谢谢你，好感+8。",
@@ -27997,9 +28081,9 @@ if (typeof window !== "undefined") {
                 );
               }
             } else {
-              st.npcRelations.aunt_wang.affinity = Math.min(
+              st.relationships.aunt_wang.affinity = Math.min(
                 100,
-                (st.npcRelations.aunt_wang.affinity || 0) + 5,
+                (st.relationships.aunt_wang.affinity || 0) + 5,
               );
               StateManager.addMessage(
                 "🔧 你不太会修，但帮着递工具也帮上忙了。好感+5。",
@@ -28014,9 +28098,9 @@ if (typeof window !== "undefined") {
           cost: 100,
           apply: function (st) {
             st.resources.cash -= 100;
-            st.npcRelations.aunt_wang.affinity = Math.min(
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.npcRelations.aunt_wang.affinity || 0) + 5,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
             );
             StateManager.addMessage(
               "💰 你掏了¥100让她找专业修水工。王大婶嘴上说不用，心里记着你的好。",
@@ -28028,9 +28112,9 @@ if (typeof window !== "undefined") {
           text: "🚶 我自己都顾不上",
           hint: "关系可能变差",
           apply: function (st) {
-            st.npcRelations.aunt_wang.affinity = Math.max(
+            st.relationships.aunt_wang.affinity = Math.max(
               0,
-              (st.npcRelations.aunt_wang.affinity || 0) - 8,
+              (st.relationships.aunt_wang.affinity || 0) - 8,
             );
             StateManager.addMessage(
               "🚶 你说实在没空。王大婶脸上的笑僵了一下，转身走了。好感-8。",
@@ -28226,9 +28310,9 @@ if (typeof window !== "undefined") {
       story: `老周神秘兮兮地拉你到一边："我有个门路，一个工地的废铜废铁没人收。你要是能拉走，咱俩分。"\n你看了看老周认真的表情，这不像是开玩笑。`,
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.old_zhou &&
-          (st.npcRelations.old_zhou.affinity || 0) >= 40 &&
+          st.relationships &&
+          st.relationships.old_zhou &&
+          (st.relationships.old_zhou.affinity || 0) >= 40 &&
           st.player.day > 15
         );
       },
@@ -28241,9 +28325,9 @@ if (typeof window !== "undefined") {
             var zhouShare = Math.floor(profit * 0.3);
             st.resources.cash += profit - zhouShare;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
+              (st.relationships.old_zhou.affinity || 0) + 8,
             );
             StateManager.addMessage(
               "🤝 你拉了一车废铜回来，卖了¥" +
@@ -28263,9 +28347,9 @@ if (typeof window !== "undefined") {
             st.resources.cash -= 100;
             var profit = Random.int(100, 250);
             st.resources.cash += profit;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
+              (st.relationships.old_zhou.affinity || 0) + 5,
             );
             StateManager.addMessage(
               `💰 你出了¥100入伙费，分到¥" + profit + "。老周拍了拍你的肩。`,
@@ -28277,9 +28361,9 @@ if (typeof window !== "undefined") {
           text: "🤔 这个不太合规吧",
           hint: "谨慎行事",
           apply: function (st) {
-            st.npcRelations.old_zhou.affinity = Math.max(
+            st.relationships.old_zhou.affinity = Math.max(
               0,
-              (st.npcRelations.old_zhou.affinity || 0) - 3,
+              (st.relationships.old_zhou.affinity || 0) - 3,
             );
             StateManager.addMessage(
               `🤔 你犹豫了一下没接。老周叹了口气："也是，你比我想得多。"好感-3。`,
@@ -29232,9 +29316,9 @@ if (typeof window !== "undefined") {
       story: "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.old_zhou &&
-          (st.npcRelations.old_zhou.affinity || 0) >= 60 &&
+          st.relationships &&
+          st.relationships.old_zhou &&
+          (st.relationships.old_zhou.affinity || 0) >= 60 &&
           st.player.day > 20 &&
           !st.flags._zhouTaughtScrapSkill
         );
@@ -29249,9 +29333,9 @@ if (typeof window !== "undefined") {
               st.skills.sales.xp = (st.skills.sales.xp || 0) + 50;
             }
             st.flags._scrapIncomeBonus = 1.2;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
+              (st.relationships.old_zhou.affinity || 0) + 5,
             );
             StateManager.addMessage(
               "♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！",
@@ -29264,9 +29348,9 @@ if (typeof window !== "undefined") {
           hint: "好感+3，安慰老周",
           apply: function (st) {
             st.flags._zhouTaughtScrapSkill = true;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
+              (st.relationships.old_zhou.affinity || 0) + 8,
             );
             StateManager.addMessage(
               "🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。",
@@ -29285,9 +29369,9 @@ if (typeof window !== "undefined") {
       story: "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.sister_zhang &&
-          (st.npcRelations.sister_zhang.affinity || 0) >= 80 &&
+          st.relationships &&
+          st.relationships.sister_zhang &&
+          (st.relationships.sister_zhang.affinity || 0) >= 80 &&
           st.player.day > 30 &&
           !st.flags._zhangIntroParttime
         );
@@ -29299,9 +29383,9 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._zhangIntroParttime = true;
             st.flags._nightShiftJob = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
+            st.relationships.sister_zhang.affinity = Math.min(
               100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 10,
+              (st.relationships.sister_zhang.affinity || 0) + 10,
             );
             StateManager.addMessage(
               "🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！",
@@ -29314,9 +29398,9 @@ if (typeof window !== "undefined") {
           hint: "推迟决定",
           apply: function (st) {
             st.flags._zhangIntroduced = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
+            st.relationships.sister_zhang.affinity = Math.min(
               100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 2,
+              (st.relationships.sister_zhang.affinity || 0) + 2,
             );
             StateManager.addMessage(
               "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
@@ -29327,6 +29411,30 @@ if (typeof window !== "undefined") {
       ],
     },
   ];
+
+  for (var i = 0; i < CROSS_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(CROSS_EVENTS[i]);
+  }
+
+  for (var j = 0; j < CAREER_EVENTS.length; j++) {
+    var careerEvent = CAREER_EVENTS[j];
+    RANDOM_EVENTS.push({
+      id: careerEvent.id,
+      phase: careerEvent.phase || "street",
+      icon: careerEvent.icon || "💼",
+      title: careerEvent.title || careerEvent.name,
+      story: careerEvent.story || careerEvent.text,
+      conditions:
+        careerEvent.conditions ||
+        careerEvent.trigger ||
+        function () {
+          return true;
+        },
+      choices: careerEvent.choices || careerEvent.options || [],
+      probability: careerEvent.probability,
+      repeatable: careerEvent.repeatable,
+    });
+  }
 })();
 </script>
 
@@ -56307,16 +56415,6 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === v3.6 P0-1: NPC关系网每日演化 ===
-  {
-    name: "npc_relationships_tick",
-    fn: function (state) {
-      if (typeof npcRelationshipsTick === "function") {
-        npcRelationshipsTick(state);
-      }
-    },
-  },
-
   // === v3.6 P0-2: 时代变迁每日演化 ===
   {
     name: "era_tick",
@@ -66970,7 +67068,7 @@ function canStartStartup(state) {
 
   // 2. 社会关系：需要至少 2 个 NPC 好感 ≥ 40（商业合作基础）
   var highAffNpcs = 0;
-  var rels = state.npcRelations || {};
+  var rels = state.relationships || {};
   for (var nid in rels) {
     if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
   }
@@ -68868,6 +68966,8 @@ function tickStartup(state, tickType) {
   const DAILY_WORD_OF_MOUTH_PROB = 0.003; // ~0.3%/天 → ~2.7%/季度
   const DAILY_BASE_GROWTH = 0.0008; // ~0.08%/天 → ~7%/季度
   const DAILY_CHURN_BASE = 0.002; // ~0.2%/天 → ~18%/季度
+  // P0-2: 降低成长加成，使创业更难
+  const DAILY_GROWTH_BONUS = 0.001; // ~0.1%/天 → ~9%/季度（原0.003）
 
   // 1. 收入计算
   let totalRevenue = 0;
@@ -68878,7 +68978,7 @@ function tickStartup(state, tickType) {
       const marketMod = product.marketScore / 100;
       const industryMod =
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
-      const growthMod = 1 + (company.revenue > 0 ? 0.003 : 0);
+      const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
 
       product.revenue = Math.round(
         baseRevenue *
@@ -107149,6 +107249,24 @@ if (typeof window !== "undefined") {
         text: "接近35岁分水岭",
         hint: "现在还来得及转型/上岸",
       });
+    }
+
+    if (typeof getStoryChapterChecklist === "function") {
+      try {
+        var chapterGoals = getStoryChapterChecklist(state);
+        for (var gi = 0; gi < chapterGoals.length; gi++) {
+          var goal = chapterGoals[gi];
+          if (!goal || goal.done) continue;
+          out.push({
+            w: 58 + (goal.weight || 0) / 10,
+            icon: "\uD83D\uDCD6",
+            text: goal.label,
+            hint: goal.hint,
+          });
+        }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     return out;

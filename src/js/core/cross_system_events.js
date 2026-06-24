@@ -28,9 +28,9 @@
       story: `收工时王大婶急匆匆跑来："孩子，我家水管爆了，满屋子水！你能不能帮忙修修？"\n你看了看她焦急的样子，想起她平日里对你的照顾。`,
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.aunt_wang &&
-          (st.npcRelations.aunt_wang.affinity || 0) >= 30 &&
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          (st.relationships.aunt_wang.affinity || 0) >= 30 &&
           st.player.day > 10
         );
       },
@@ -42,9 +42,9 @@
             if (st.skills && st.skills.repair) {
               var level = st.skills.repair.level || 0;
               if (level >= 20) {
-                st.npcRelations.aunt_wang.affinity = Math.min(
+                st.relationships.aunt_wang.affinity = Math.min(
                   100,
-                  (st.npcRelations.aunt_wang.affinity || 0) + 12,
+                  (st.relationships.aunt_wang.affinity || 0) + 12,
                 );
                 st.skills.repair.xp = (st.skills.repair.xp || 0) + 30;
                 StateManager.addMessage(
@@ -52,9 +52,9 @@
                   "success",
                 );
               } else {
-                st.npcRelations.aunt_wang.affinity = Math.min(
+                st.relationships.aunt_wang.affinity = Math.min(
                   100,
-                  (st.npcRelations.aunt_wang.affinity || 0) + 8,
+                  (st.relationships.aunt_wang.affinity || 0) + 8,
                 );
                 StateManager.addMessage(
                   "🔧 你笨手笨脚修好了，虽然弄了一身水。王大婶还是谢谢你，好感+8。",
@@ -62,9 +62,9 @@
                 );
               }
             } else {
-              st.npcRelations.aunt_wang.affinity = Math.min(
+              st.relationships.aunt_wang.affinity = Math.min(
                 100,
-                (st.npcRelations.aunt_wang.affinity || 0) + 5,
+                (st.relationships.aunt_wang.affinity || 0) + 5,
               );
               StateManager.addMessage(
                 "🔧 你不太会修，但帮着递工具也帮上忙了。好感+5。",
@@ -79,9 +79,9 @@
           cost: 100,
           apply: function (st) {
             st.resources.cash -= 100;
-            st.npcRelations.aunt_wang.affinity = Math.min(
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.npcRelations.aunt_wang.affinity || 0) + 5,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
             );
             StateManager.addMessage(
               "💰 你掏了¥100让她找专业修水工。王大婶嘴上说不用，心里记着你的好。",
@@ -93,9 +93,9 @@
           text: "🚶 我自己都顾不上",
           hint: "关系可能变差",
           apply: function (st) {
-            st.npcRelations.aunt_wang.affinity = Math.max(
+            st.relationships.aunt_wang.affinity = Math.max(
               0,
-              (st.npcRelations.aunt_wang.affinity || 0) - 8,
+              (st.relationships.aunt_wang.affinity || 0) - 8,
             );
             StateManager.addMessage(
               "🚶 你说实在没空。王大婶脸上的笑僵了一下，转身走了。好感-8。",
@@ -291,9 +291,9 @@
       story: `老周神秘兮兮地拉你到一边："我有个门路，一个工地的废铜废铁没人收。你要是能拉走，咱俩分。"\n你看了看老周认真的表情，这不像是开玩笑。`,
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.old_zhou &&
-          (st.npcRelations.old_zhou.affinity || 0) >= 40 &&
+          st.relationships &&
+          st.relationships.old_zhou &&
+          (st.relationships.old_zhou.affinity || 0) >= 40 &&
           st.player.day > 15
         );
       },
@@ -306,9 +306,9 @@
             var zhouShare = Math.floor(profit * 0.3);
             st.resources.cash += profit - zhouShare;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
+              (st.relationships.old_zhou.affinity || 0) + 8,
             );
             StateManager.addMessage(
               "🤝 你拉了一车废铜回来，卖了¥" +
@@ -328,9 +328,9 @@
             st.resources.cash -= 100;
             var profit = Random.int(100, 250);
             st.resources.cash += profit;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
+              (st.relationships.old_zhou.affinity || 0) + 5,
             );
             StateManager.addMessage(
               `💰 你出了¥100入伙费，分到¥" + profit + "。老周拍了拍你的肩。`,
@@ -342,9 +342,9 @@
           text: "🤔 这个不太合规吧",
           hint: "谨慎行事",
           apply: function (st) {
-            st.npcRelations.old_zhou.affinity = Math.max(
+            st.relationships.old_zhou.affinity = Math.max(
               0,
-              (st.npcRelations.old_zhou.affinity || 0) - 3,
+              (st.relationships.old_zhou.affinity || 0) - 3,
             );
             StateManager.addMessage(
               `🤔 你犹豫了一下没接。老周叹了口气："也是，你比我想得多。"好感-3。`,
@@ -1297,9 +1297,9 @@
       story: "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.old_zhou &&
-          (st.npcRelations.old_zhou.affinity || 0) >= 60 &&
+          st.relationships &&
+          st.relationships.old_zhou &&
+          (st.relationships.old_zhou.affinity || 0) >= 60 &&
           st.player.day > 20 &&
           !st.flags._zhouTaughtScrapSkill
         );
@@ -1314,9 +1314,9 @@
               st.skills.sales.xp = (st.skills.sales.xp || 0) + 50;
             }
             st.flags._scrapIncomeBonus = 1.2;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 5,
+              (st.relationships.old_zhou.affinity || 0) + 5,
             );
             StateManager.addMessage(
               "♻️ 老周的废品经让你大开眼界，以后废品收入 +20%！",
@@ -1329,9 +1329,9 @@
           hint: "好感+3，安慰老周",
           apply: function (st) {
             st.flags._zhouTaughtScrapSkill = true;
-            st.npcRelations.old_zhou.affinity = Math.min(
+            st.relationships.old_zhou.affinity = Math.min(
               100,
-              (st.npcRelations.old_zhou.affinity || 0) + 8,
+              (st.relationships.old_zhou.affinity || 0) + 8,
             );
             StateManager.addMessage(
               "🙏 老周摆摆手：'年轻人肯学就行，请你吃饭就免了。' 老周好感+8。",
@@ -1350,9 +1350,9 @@
       story: "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
       conditions: function (st) {
         return (
-          st.npcRelations &&
-          st.npcRelations.sister_zhang &&
-          (st.npcRelations.sister_zhang.affinity || 0) >= 80 &&
+          st.relationships &&
+          st.relationships.sister_zhang &&
+          (st.relationships.sister_zhang.affinity || 0) >= 80 &&
           st.player.day > 30 &&
           !st.flags._zhangIntroParttime
         );
@@ -1364,9 +1364,9 @@
           apply: function (st) {
             st.flags._zhangIntroParttime = true;
             st.flags._nightShiftJob = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
+            st.relationships.sister_zhang.affinity = Math.min(
               100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 10,
+              (st.relationships.sister_zhang.affinity || 0) + 10,
             );
             StateManager.addMessage(
               "🏪 张姐带你去了便利店，交代了注意事项。以后每晚可做夜班兼职（+¥150/天）！",
@@ -1379,9 +1379,9 @@
           hint: "推迟决定",
           apply: function (st) {
             st.flags._zhangIntroduced = true;
-            st.npcRelations.sister_zhang.affinity = Math.min(
+            st.relationships.sister_zhang.affinity = Math.min(
               100,
-              (st.npcRelations.sister_zhang.affinity || 0) + 2,
+              (st.relationships.sister_zhang.affinity || 0) + 2,
             );
             StateManager.addMessage(
               "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
@@ -1392,4 +1392,28 @@
       ],
     },
   ];
+
+  for (var i = 0; i < CROSS_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(CROSS_EVENTS[i]);
+  }
+
+  for (var j = 0; j < CAREER_EVENTS.length; j++) {
+    var careerEvent = CAREER_EVENTS[j];
+    RANDOM_EVENTS.push({
+      id: careerEvent.id,
+      phase: careerEvent.phase || "street",
+      icon: careerEvent.icon || "💼",
+      title: careerEvent.title || careerEvent.name,
+      story: careerEvent.story || careerEvent.text,
+      conditions:
+        careerEvent.conditions ||
+        careerEvent.trigger ||
+        function () {
+          return true;
+        },
+      choices: careerEvent.choices || careerEvent.options || [],
+      probability: careerEvent.probability,
+      repeatable: careerEvent.repeatable,
+    });
+  }
 })();

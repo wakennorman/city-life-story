@@ -168,6 +168,17 @@ function createDefaultState() {
       completedShifts: {},
     },
 
+    // --- 副业系统 (P0-1: 副业系统接入) ---
+    sideHustle: {
+      active: false,
+      type: null,  // 'stall' | 'driving' | 'freelance' | 'content' | 'sharing' | 'community'
+      fatigue: 0,  // 副业疲劳度（影响次日主业效率）
+      income: 0,   // 当日副业收入
+      reputation: 0,  // 副业口碑
+      history: [],  // 副业收入历史
+      lastActiveDay: null,
+    },
+
     // --- 职场 ---
     corporate: {
       company: null,
@@ -563,6 +574,15 @@ class GameStateManager {
     this._state.lastPlayedAt = Date.now();
     // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
     var s = this._state;
+    if (!s.relationships) s.relationships = {};
+    if (s.npcRelations) {
+      for (var legacyNpcId in s.npcRelations) {
+        if (!s.relationships[legacyNpcId]) {
+          s.relationships[legacyNpcId] = s.npcRelations[legacyNpcId];
+        }
+      }
+      delete s.npcRelations;
+    }
     if (s.status && typeof s.status.fame === "number") {
       if (s.player) s.player.fame = s.status.fame;
       delete s.status.fame;

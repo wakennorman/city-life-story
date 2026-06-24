@@ -789,16 +789,6 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === v3.6 P0-1: NPC关系网每日演化 ===
-  {
-    name: "npc_relationships_tick",
-    fn: function (state) {
-      if (typeof npcRelationshipsTick === "function") {
-        npcRelationshipsTick(state);
-      }
-    },
-  },
-
   // === v3.6 P0-2: 时代变迁每日演化 ===
   {
     name: "era_tick",

@@ -216,9 +216,9 @@ function collectLifeStats(state) {
 
   // 统计高好感NPC数量
   var highAffinityNPCs = 0;
-  if (state.npcRelations) {
-    for (var id in state.npcRelations) {
-      if ((state.npcRelations[id].affinity || 0) >= 50) highAffinityNPCs++;
+  if (state.relationships) {
+    for (var id in state.relationships) {
+      if ((state.relationships[id].affinity || 0) >= 50) highAffinityNPCs++;
     }
   }
 

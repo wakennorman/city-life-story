@@ -1,0 +1,66 @@
+城市浮生记 v3.7 实装任务
+
+项目位置：D:/Claude Code+DeepSeekV4/city-life-story/
+参考文档：subagent_result4.md（改进方案）、subagent_result5.md（扩展方案）
+
+请完成以下实装任务，按顺序执行：
+
+## 第一阶段：P0改进（4项，~120行）
+
+### 1. 副业系统接入每日管线
+- 在 `phase1/daily_pipeline.js` 添加 `side_hustle_tick` 步骤（在 `night_activities` 后）
+- 在 `core/state.js` 初始化 `state.sideHustle` 字段
+- 在 `index.html` 确保 `side_hustle.js` 在 `daily_pipeline.js` 之后加载
+- 验证：测试 Day>60 后副业Tab可见
+
+### 2. 经济平衡
+- 在 `phase2/startup.js` 降低 growth 阶段月入乘数（2.5 → 1.8）
+- 在 `phase2/startup.js` 增加运营成本（员工月薪 8000 → 12000 + officeRent）
+- 在 `data/corp.js` 提升 P10 月薪（80000 → 100000 + 期权）
+- 验证：创业月入≤¥150K，打工P10月薪≥¥100K
+
+### 3. 后期开支
+- 在 `phase1/needs.js` 增强 `applyWealthBasedOverhead` 函数（资产¥50W+ → 月度开支¥10K-30K，资产¥5M+ → ¥80K-200K）
+- 在 `phase1/daily_pipeline.js` 调用增强后的函数
+- 验证：资产¥50W+ 玩家每月有¥10K+ 固定开支
+
+### 4. 链式事件填充
+- 在 `core/events_core.js` 增加 `queueChainEvent` 函数
+- 在多个事件（街头/职场/创业/NPC）中调用 `queueChainEvent`
+- 在 `checkChainEventQueue` 中增加事件质量检查
+- 验证：队列填充率≥60%
+
+## 第二阶段：P1改进（6项，~470行）
+
+### 5. 新闻→投资UI
+- 在 `phase2/investment.js` UI渲染中调用 `getNewsInvestmentSummary`
+- 添加"今日市场驱动"板块
+
+### 6. NPC好感链路
+- 在 `data/npcs.js` 为每个NPC增加 `affinityEvents`（30/60/80阈值）
+- 在 `phase1/npc_event_bridge.js` 增加 `checkNpcAffinityEvents` 函数
+
+### 7. 事件奖励缩放
+- 在 `core/events_core.js` 增加 `scaleEventReward` 函数
+- 在事件触发处调用缩放
+
+### 8. 家庭系统
+- 在 `phase2/family_life.js` 实现结婚系统（好感≥80 + 资产≥¥200K → 求婚）
+- 实现生子/子女教育（怀孕180天 → 生子 → 每月教育开支¥5K-20K）
+
+### 9. 装备获取来源
+- 在 `core/equipment_suites.js` 增加 `rollEquipmentDrop` 函数
+- 在 `data/items.js` 增加装备掉落表
+
+### 10. 35岁危机追访
+- 在 `core/events_core.js` 增加追访事件优先级（权重×3）
+
+## 完成后的验证步骤
+
+1. 运行 `python build.py` 构建
+2. 检查 `dist/index.html` 是否正常加载
+3. 提交 git，commit message 包含 "v3.7 P0/P1 改进"
+4. 更新 `CLAUDE.md` 和 `src/DEVELOPMENT.md`
+5. 输出实装报告（修改了哪些文件、新增了什么内容、总行数）
+
+注意：扩展系统（社交网络/旅行/医疗/法律/人生节点）暂不实装，留待后续迭代。

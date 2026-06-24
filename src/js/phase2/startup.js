@@ -2378,7 +2378,7 @@ function canStartStartup(state) {
 
   // 2. 社会关系：需要至少 2 个 NPC 好感 ≥ 40（商业合作基础）
   var highAffNpcs = 0;
-  var rels = state.npcRelations || {};
+  var rels = state.relationships || {};
   for (var nid in rels) {
     if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
   }
@@ -4276,6 +4276,8 @@ function tickStartup(state, tickType) {
   const DAILY_WORD_OF_MOUTH_PROB = 0.003; // ~0.3%/天 → ~2.7%/季度
   const DAILY_BASE_GROWTH = 0.0008; // ~0.08%/天 → ~7%/季度
   const DAILY_CHURN_BASE = 0.002; // ~0.2%/天 → ~18%/季度
+  // P0-2: 降低成长加成，使创业更难
+  const DAILY_GROWTH_BONUS = 0.001; // ~0.1%/天 → ~9%/季度（原0.003）
 
   // 1. 收入计算
   let totalRevenue = 0;
@@ -4286,7 +4288,7 @@ function tickStartup(state, tickType) {
       const marketMod = product.marketScore / 100;
       const industryMod =
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
-      const growthMod = 1 + (company.revenue > 0 ? 0.003 : 0);
+      const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
 
       product.revenue = Math.round(
         baseRevenue *

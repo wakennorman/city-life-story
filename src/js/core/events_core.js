@@ -8,6 +8,26 @@
 // ====== 空事件容器（由拆分文件在加载后推入）======
 const RANDOM_EVENTS = [];
 
+/**
+ * 注册链式事件（P0-4: 链式事件填充）
+ * @param {Object} state - 游戏状态
+ * @param {string} eventId - 事件ID
+ * @param {number} delayDays - 延迟天数
+ * @param {Object} conditions - 触发条件（可选）
+ */
+function queueChainEvent(state, eventId, delayDays, conditions) {
+  if (!state.flags._chainEventQueue) {
+    state.flags._chainEventQueue = [];
+  }
+  state.flags._chainEventQueue.push({
+    eventId: eventId,
+    triggerDay: state.player.day + delayDays,
+    conditions: conditions || {},
+    phase: state.player.phase || "street",
+    triggered: false
+  });
+}
+
 /* =========================================================
  * 二、事件触发与队列管理
  * ========================================================= */

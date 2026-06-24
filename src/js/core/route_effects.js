@@ -48,10 +48,10 @@
               apply: function (st) {
                 if (typeof getNpcById === "function") {
                   var npc = getNpcById("li_ming");
-                  if (npc && st.npcRelations && st.npcRelations.li_ming) {
-                    st.npcRelations.li_ming.affinity = Math.min(
+                  if (npc && st.relationships && st.relationships.li_ming) {
+                    st.relationships.li_ming.affinity = Math.min(
                       100,
-                      (st.npcRelations.li_ming.affinity || 0) + 3,
+                      (st.relationships.li_ming.affinity || 0) + 3,
                     );
                   }
                 }
@@ -286,12 +286,12 @@
                       var npcs = ["li_ming", "zhang_wei", "wang_dami"];
                       var pick = npcs[Random.int(0, npcs.length - 1)];
                       if (
-                        st.npcRelations &&
-                        st.npcRelations[pick]
+                        st.relationships &&
+                        st.relationships[pick]
                       ) {
-                        st.npcRelations[pick].affinity = Math.min(
+                        st.relationships[pick].affinity = Math.min(
                           100,
-                          (st.npcRelations[pick].affinity || 0) + 5,
+                          (st.relationships[pick].affinity || 0) + 5,
                         );
                       }
                     }

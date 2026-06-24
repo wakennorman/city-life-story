@@ -117,9 +117,9 @@ var STORY_CHAPTERS = [
         id: "foothold_npc",
         condition: function (st) {
           var count = 0;
-          if (st.npcRelations) {
-            for (var id in st.npcRelations) {
-              if ((st.npcRelations[id].affinity || 0) >= 60) count++;
+          if (st.relationships) {
+            for (var id in st.relationships) {
+              if ((st.relationships[id].affinity || 0) >= 60) count++;
             }
           }
           return count >= 2;
@@ -308,9 +308,9 @@ function _collectChapterStats(state) {
     }
   }
   var npcFriends = 0;
-  if (state.npcRelations) {
-    for (var id in state.npcRelations) {
-      if ((state.npcRelations[id].affinity || 0) >= 50) npcFriends++;
+  if (state.relationships) {
+    for (var id in state.relationships) {
+      if ((state.relationships[id].affinity || 0) >= 50) npcFriends++;
     }
   }
   return {
@@ -349,8 +349,52 @@ function getStoryChapterProgress(state) {
 }
 
 // ====== 全局挂载 ======
+function getStoryChapterChecklist(state) {
+  var p = state.player || {};
+  var r = state.resources || {};
+  var n = state.needs || {};
+  var stats = _collectChapterStats(state);
+  var day = p.day || 1;
+  var totalAssets = (r.cash || 0) + (r.bankBalance || 0);
+  var debt = (r.villageDebt || 0) + (r.bankLoan || 0);
+  var items = [];
+
+  function add(label, done, hint, weight) {
+    items.push({
+      label: label,
+      done: !!done,
+      hint: hint,
+      weight: weight || 0,
+    });
+  }
+
+  if (day < 30) {
+    add("\u5148\u7a33\u4f4f\u6e29\u9971", (n.hunger || 100) >= 45 && (n.fatigue || 0) <= 75, "\u9965\u997f\u548c\u75b2\u52b3\u4f1a\u76f4\u63a5\u62d6\u57ae\u884c\u52a8\u6548\u7387\u3002", 90);
+    add("\u6512\u5230\u7b2c\u4e00\u7b14\u7f13\u51b2\u91d1", totalAssets >= 1000, "\u67091000\u5143\u7f13\u51b2\u540e\uff0c\u4e8b\u4ef6\u548c\u4ea4\u6613\u9009\u62e9\u4f1a\u4ece\u5bb9\u5f88\u591a\u3002", 70);
+    add("\u8ba4\u8bc6\u4e00\u4e2a\u80fd\u5e2e\u5fd9\u7684\u4eba", stats.npcFriends >= 1, "NPC\u597d\u611f\u4f1a\u89e3\u9501\u5de5\u4f5c\u3001\u6298\u6263\u548c\u5371\u673a\u5e2e\u52a9\u3002", 55);
+  } else if (day < 180) {
+    add("\u538b\u4f4e\u9ad8\u606f\u503a\u52a1", debt <= 1000, "\u6751\u957f\u503a\u548c\u94f6\u884c\u8d37\u6b3e\u4f1a\u6301\u7eed\u4fb5\u8680\u73b0\u91d1\u6d41\u3002", 88);
+    add("\u7ec3\u51fa\u4e00\u95e8\u6838\u5fc3\u6280\u80fd", stats.highSkills >= 1, "\u6280\u80fd\u8fbe\u523060\u540e\uff0c\u804c\u4e1a\u3001\u4ea4\u6613\u548c\u521b\u4e1a\u90fd\u4f1a\u6709\u66f4\u5f3a\u652f\u6491\u3002", 72);
+    add("\u5efa\u7acb\u57ce\u5e02\u5173\u7cfb\u7f51", stats.npcFriends >= 2, "\u81f3\u5c11\u4e24\u4e2a\u53ef\u9760\u5173\u7cfb\u80fd\u89e6\u53d1\u66f4\u591a\u8de8\u7cfb\u7edf\u4e8b\u4ef6\u3002", 60);
+  } else if (day < 365) {
+    add("\u786e\u5b9a\u4e2d\u671f\u8def\u7ebf", !!(state.flags && state.flags._lifeRoute), "\u521b\u4e1a\u3001\u804c\u573a\u3001\u6295\u8d44\u3001\u4f53\u5236\u6216\u8eba\u5e73\uff0c\u90fd\u9700\u8981\u5f00\u59cb\u805a\u7126\u3002", 85);
+    add("\u51c6\u5907\u6297\u98ce\u9669\u8d44\u4ea7", totalAssets >= 50000, "\u540e\u671f\u5371\u673a\u3001\u4e70\u623f\u548c\u521b\u4e1a\u90fd\u9700\u8981\u66f4\u539a\u7684\u73b0\u91d1\u57ab\u3002", 65);
+    add("\u8ba9\u5173\u7cfb\u4ea7\u751f\u5b9e\u9645\u56de\u62a5", stats.npcFriends >= 3, "\u9ad8\u597d\u611fNPC\u4f1a\u628a\u57ce\u5e02\u8d44\u6e90\u5e26\u5230\u4f60\u8eab\u8fb9\u3002", 50);
+  } else {
+    add("\u590d\u76d8\u4eba\u751f\u8def\u7ebf", !!(state.flags && state.flags._ch3Done), "\u4e00\u5e74\u8282\u70b9\u540e\uff0c\u4e3b\u7ebf\u4f1a\u6839\u636e\u4f60\u7684\u9009\u62e9\u7ed9\u51fa\u65b9\u5411\u53cd\u9988\u3002", 80);
+    add("\u8865\u9f50\u957f\u671f\u77ed\u677f", stats.highSkills >= 2, "\u540e\u671f\u4e0d\u662f\u53ea\u770b\u94b1\uff0c\u6280\u80fd\u7ec4\u5408\u4f1a\u51b3\u5b9a\u4e0a\u9650\u3002", 60);
+    add("\u7ef4\u6301\u73b0\u91d1\u6d41\u5b89\u5168", totalAssets >= Math.max(80000, debt * 3), "\u8d44\u4ea7\u548c\u503a\u52a1\u6bd4\u4f8b\u51b3\u5b9a\u4f60\u80fd\u4e0d\u80fd\u625b\u4f4f\u5927\u6ce2\u52a8\u3002", 55);
+  }
+
+  items.sort(function (a, b) {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return b.weight - a.weight;
+  });
+  return items.slice(0, 3);
+}
 if (typeof window !== "undefined") {
   window.STORY_CHAPTERS = STORY_CHAPTERS;
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
+  window.getStoryChapterChecklist = getStoryChapterChecklist;
 }

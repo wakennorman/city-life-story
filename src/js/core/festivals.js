@@ -1279,10 +1279,10 @@ var MID_AUTUMN_DEEP_EVENTS = [
         cost: 50,
         apply: function (st) {
           st.resources.cash -= 50;
-          if (st.npcRelations && st.npcRelations.aunt_wang) {
-            st.npcRelations.aunt_wang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.npcRelations.aunt_wang.affinity || 0) + 15,
+              (st.relationships.aunt_wang.affinity || 0) + 15,
             );
           }
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);

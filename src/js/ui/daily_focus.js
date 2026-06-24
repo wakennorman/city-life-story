@@ -200,6 +200,24 @@
       });
     }
 
+    if (typeof getStoryChapterChecklist === "function") {
+      try {
+        var chapterGoals = getStoryChapterChecklist(state);
+        for (var gi = 0; gi < chapterGoals.length; gi++) {
+          var goal = chapterGoals[gi];
+          if (!goal || goal.done) continue;
+          out.push({
+            w: 58 + (goal.weight || 0) / 10,
+            icon: "\uD83D\uDCD6",
+            text: goal.label,
+            hint: goal.hint,
+          });
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
+
     return out;
   }
 
