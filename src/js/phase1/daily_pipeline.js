@@ -28,6 +28,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.3 W2-T3: 剧本专属开局链（在需求衰减之前触发）===
+  {
+    name: "scenario_start_chain",
+    fn: function (state) {
+      if (typeof checkScenarioStartChain === "function") {
+        checkScenarioStartChain(state);
+      }
+    },
+  },
+
   // === 需求衰减 ===
   {
     name: "needs_decay",

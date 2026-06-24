@@ -649,6 +649,7 @@ function startScenarioGame(scenarioId) {
 
   // --- 剧本标记 ---
   state.flags._scenarioId = scenarioId;
+  state.flags._currentScenario = scenarioId; // v3.3 W2-T3: 开局链用
   state.flags._scenarioName = scenario.name;
   state.flags._scenarioTags = scenario.narrativeTags || [];
   state.flags._isScenarioMode = true;
