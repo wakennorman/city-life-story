@@ -50,7 +50,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.6 审查改进实装（2026-06-24，Hermes Agent 6子任务链）
+- **最新一次工作**：v3.7 P0改进实装（2026-06-25，Hermes Agent）
+  - **P0-1 副业系统接入**：state.js 添加 sideHustle 字段初始化，daily_pipeline.js 已有 side_hustle_tick 步骤，index.html 已加载副业脚本
+  - **P0-2 经济平衡**：startup.js 降低 growth 加成（0.003 → 0.001），corp.js P10 月薪已100K
+  - **P0-3 后期开支**：needs.js applyWealthBasedOverhead 已增强，daily_pipeline.js wealth_overhead 步骤已存在
+  - **P0-4 链式事件填充**：events_core.js 新增 queueChainEvent 函数，checkChainEventQueue 已存在
+  - **构建**：已 `python build.py`（4038.7 KB）
+  - **commit**：a33af08（v3.7 P0改进实装）
+
+- **v3.6 审查改进实装（2026-06-24，Hermes Agent 6子任务链）**
   - **9项P0/P1修复**：chainEventQueue守卫/天气→摆摊/经济压缩(trend上限0.003+估值¥15M)/NPC好感链路×2/后期开支(物业费+住房维护+社交)/创业门槛(3技能15+2NPC40+Day60)/新闻→UI因果链/节日价格/pricing补全/事件触发率递增
   - **扩展1 NPC关系网（~825行）**：9NPC关系链+蝴蝶效应+3新功能NPC(赵姐/陈哥/老同学阿杰)
   - **扩展2 时代变迁（~718行）**：8个时间锚点事件+年度参数滑条(通胀/行业/房价/工资)
