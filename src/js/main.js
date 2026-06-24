@@ -1261,6 +1261,11 @@ function startNewGame() {
     seedWorldFromReality(StateManager.getState());
   }
 
+  // v3.6 NPC关系链初始化
+  if (typeof initNpcRelationships === "function") {
+    initNpcRelationships(StateManager.getState());
+  }
+
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产
   var inheritanceApplied = false;
   try {

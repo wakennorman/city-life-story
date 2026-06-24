@@ -36418,6 +36418,8 @@ if (typeof window !== "undefined") {
   };
 }
 </script>
+    <!-- v3.6 NPC关系链 -->
+    <script src="js/core/npc_relationships.js"></script>
     <script>/**
  * 证书/技能训练定义
  * 可在培训中心考取
@@ -111321,6 +111323,11 @@ function startNewGame() {
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());
+  }
+
+  // v3.6 NPC关系链初始化
+  if (typeof initNpcRelationships === "function") {
+    initNpcRelationships(StateManager.getState());
   }
 
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产

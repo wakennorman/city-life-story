@@ -1,36 +1,48 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.6 审查改进实装 — 9项 P0/P1 系统修复 + 4项深度扩展方案设计）
+> 最后更新: 2026-06-24（v3.6 社交网络扩展「人情江湖」实装 — NPC关系链核心引擎 + 3新NPC + 8关系事件）
 
-## 2026-06-24 — v3.6 审查改进实装（Hermes Agent 子任务链）
+## 2026-06-24 — v3.6 社交网络扩展「人情江湖」实装
 
-执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+执行任务：社交网络扩展（P1，NPC关系链核心引擎）
 
-**设计参考**：BitLife / Stardew Valley / This War of Mine / Capitalism Lab / 中国式家长
-**执行方式**：Hermes Agent 6 子任务链（分析→审查→诊断→修缮→扩展→实装）
+**设计参考**：《Stardew Valley》岛民关系 / 《大多数》人际网络 / This War of Mine 情景连锁
 
-### 产出文档
-1. ANALYSIS.md — 架构分析与内容覆盖率评估（8.5/10）
-2. review-v3.0.md — A-E 五维度审查报告（7.0/10）
-3. DIAGNOSIS_REPORT.md — 深度问题诊断报告（3大根因）
-4. IMPROVEMENT_PLAN.md — P0/P1 改进方案（9项修复）
-5. EXPANSION_DESIGN.md — 4项深度内容扩展设计
+### 新增文件
+1. `src/js/core/npc_relationships.js` — NPC关系链核心引擎（~450行）
+   - 12×12 NPC关系矩阵（旧识/竞争/业务/老同学/紧张/中立）
+   - 关系传播矩阵（蝴蝶效应：帮A→B好感传导）
+   - 每日tick：好感衰减 + 关系传导 + 事件触发检查
 
-### 实装修复（9项，已手工完成）
+### 修改文件
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `src/js/data/npcs.js` | +3 NPC（赵姐/陈哥/阿杰） | 完整配置：生日/节日/对话/礼物/好感奖励/求助/深度任务 |
+| `src/js/core/cross_system_events.js` | +8关系事件 | 三角选择/旧识反应/城市改造预警/隐藏商机/借钱还钱/同行竞争/老同学重逢/恩怨化解 |
+| `src/js/phase1/daily_pipeline.js` | +1步骤 | `npc_relationships_tick` 每日传播蝴蝶效应 |
+| `src/js/main.js` | +3行 | `startNewGame` 中调用 `initNpcRelationships` |
+| `src/index.html` | +1 script | 注册 `npc_relationships.js` |
 
-| 编号 | 问题 | 文件 | 改动 | 说明 |
-|------|------|------|------|------|
-| P0-1 | checkChainEventQueue typeof 守卫 | events_core.js | +2行 | 防止加载顺序异常导致 ReferenceError |
-| P0-2 | 天气→摆摊收入闭环 | main.js | +15行 | doStreetJob 注入天气 outdoorMod 乘数 |
-| P0-3 | 经济指数膨胀 | investment.js / startup.js | +3行 | NVDA trend 0.015→0.003，BYD/宁王/TSMC/TSLA 0.008-0.01→0.003-0.004；估值上限¥15M |
-| P0-4 | NPC 好感链路扩展 | cross_system_events.js | +106行 | 新增 old_zhou(好感≥60→废品技巧) + sister_zhang(好感≥80→夜班兼职) |
-| P1-5 | 后期维持性开支 | needs.js / daily_pipeline.js | +42行 | 物业费(资产0.1%/天)、住房维护费(tier)、社交应酬衰减 |
-| P1-6 | 创业前置条件链 | startup.js | +38行 | canStartStartup检查(3技能15级+2NPC好感40+Day60)，集成到registerStartup |
-| P1-7 | 新闻→投资UI透明化 | investment.js | +15行 | 市场驱动板块显示新闻标题→涨跌百分比因果链 |
-| P1-8 | 节日priceMods补全 | pricing.js | +5行 | 增强getCurrentPrice中补回festivalMod乘数 |
-| P1-9 | 事件触发率递增 | events_core.js | +4行 | baseChance改为Math.min(0.35, 0.18+day×0.0005)，职场同 |
+### 新增NPC详情
+| NPC | 身份 | 位置 | 特色 |
+|-----|------|------|------|
+| 赵姐 | 房产中介 | 商业区 | 城市改造情报、房租预警 |
+| 陈哥 | 情报贩子 | 夜市 | 隐藏商机、老同学阿杰线索 |
+| 阿杰 | 老同学 | 随机 | 借钱不还、还钱事件链 |
 
-**构建**：待 `python build.py`
+### 关系链设计
+- 王大婶 ↔ 老周：旧识（城中村老邻居）
+- 李工头 ↔ 张姐：竞争关系（抢活源）
+- 赵姐 ↔ 李工头：业务关系
+- 赵姐 ↔ 张姐：同行竞争
+- 陈哥 ↔ 老周：老相识（废品渠道）
+- 陈哥 ↔ 阿杰：老同学
+- 王大婶 ↔ 赵姐：紧张关系（对中介有戒心）
+
+### 构建
+待 `python build.py`
+
+---
 
 ---
 
