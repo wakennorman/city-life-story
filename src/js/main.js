@@ -1266,6 +1266,11 @@ function startNewGame() {
     eraTransform.init(StateManager.getState());
   }
 
+  // v3.6 P0-3: 初始化副业系统
+  if (typeof sideHustle && typeof sideHustle.init === "function") {
+    sideHustle.init(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());

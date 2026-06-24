@@ -1,0 +1,39 @@
+# 城市浮生记 v3.6 — 剩余扩展实装（方向3和4）
+
+项目路径：D:/Claude Code+DeepSeekV4/city-life-story/
+当前版本：v3.6，NPC关系网+时代变迁已实装并提交
+
+## 副业系统「夜间经济」（~725行）
+
+新建 phase2/side_hustle.js：6类副业定义+收入结算
+- ①夜间摆摊（复用trade.js，18:00利润率+15%）
+- ②代驾/跑腿（需agility+触发夜生活事件）
+- ③知识付费/外包（需intelligence≥30或编程技能）
+- ④自媒体创作（累计粉丝→广告收入阶梯）
+- ⑤共享经济（有房/车后出租）
+- ⑥社区服务（好感+微薄收入）
+- 独立疲劳系数，天气影响
+
+新建 data/side_hustle_events.js：副业专属随机事件
+
+新建 ui/side_hustle_ui.js：副业Tab界面渲染
+
+接线：daily_pipeline.js step: side_hustle_tick，index.html注册3个script
+
+## 人生回忆录「这辈子」（~422行）
+
+新建 ui/life_memoir.js：8章节回忆录
+- 序言/经济曲线/人生地图/社交圈/道德签名/成就墙/后悔的事/寄语
+- localStorage.__lifeMemoirs跨周目保存（最多10条）
+- 主菜单入口按钮
+
+修改 ui/victory.js：胜利时调用回忆录
+修改 main.js：失败时调用
+修改 ui/modal.js：主菜单加入口
+
+## 约束
+- 不删文件，不修改build.py
+- 新script追加到index.html末尾
+- 每个功能点完成后git add -A && git commit
+- 完成后 python build.py
+- 更新 src/DEVELOPMENT.md

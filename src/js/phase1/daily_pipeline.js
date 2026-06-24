@@ -809,6 +809,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.6 P0-3: 副业系统每日演化 ===
+  {
+    name: "side_hustle_tick",
+    fn: function (state) {
+      if (typeof sideHustleTick === "function") {
+        sideHustleTick(state);
+      }
+    },
+  },
+
   // === 道德后果检查 ===
   {
     name: "moral_consequences",
