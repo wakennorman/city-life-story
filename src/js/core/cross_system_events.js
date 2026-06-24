@@ -354,6 +354,263 @@
         },
       ],
     },
+    // === NPC关系网事件：送礼传导效应 ===
+    {
+      id: "npc_gift_propagation",
+      phase: "street",
+      icon: "🎁",
+      title: "礼尚往来",
+      story: `你给王大婶送了一份水果。她特别高兴："哎呀这孩子真懂事！我侄女张姐最近也在找礼物送人，你有心了！"\n你突然意识到——对一个人的好，可能会影响到她身边的人。`,
+      conditions: function (st) {
+        return (
+          st.player.day > 12 &&
+          st.resources &&
+          st.resources.cash >= 30 &&
+          st.npcRelations &&
+          st.npcRelations.aunt_wang &&
+          (st.npcRelations.aunt_wang.affinity || 0) >= 20
+        );
+      },
+      choices: [
+        {
+          text: "🎁 送王大婶水果",
+          hint: "花费¥30，好感+5，张姐好感+2",
+          cost: 30,
+          apply: function (st) {
+            st.resources.cash -= 30;
+            // 直接好感提升
+            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
+            st.npcRelations.aunt_wang.affinity = Math.min(100, (st.npcRelations.aunt_wang.affinity || 0) + 5);
+            // 传导效应：张姐是王大婶的远房侄女
+            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
+            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 2);
+            StateManager.addMessage(
+              "🎁 王大婶收到水果很开心，还夸你有心了。好感+5。张姐听说后也对你印象更好了，好感+2。",
+              "success"
+            );
+            // 记录互动历史
+            if (!st.npcRelations.aunt_wang.interactionHistory) st.npcRelations.aunt_wang.interactionHistory = [];
+            st.npcRelations.aunt_wang.interactionHistory.push({ day: st.player.day, type: "gift", target: "sister_zhang" });
+          }
+        },
+        {
+          text: "🤔 算了，下次再说",
+          hint: "保留现金",
+          apply: function (st) {
+            StateManager.addMessage("🤔 你犹豫了一下，没送。", "info");
+          }
+        }
+      ]
+    },
+    // === NPC关系网事件：口碑传播 ===
+    {
+      id: "npc_reputation_spread",
+      phase: "street",
+      icon: "📣",
+      title: "口碑的力量",
+      story: `你在城中村帮老周修好了三轮车。这事不知怎么传到了李工头耳朵里。\n第二天，李工头在工地喊你："听说你修车有一手？我这边有个设备坏了，能帮我看看吗？"`,
+      conditions: function (st) {
+        return (
+          st.player.day > 18 &&
+          st.npcRelations &&
+          st.npcRelations.old_zhou &&
+          (st.npcRelations.old_zhou.affinity || 0) >= 30 &&
+          st.npcRelations &&
+          st.npcRelations.boss_li &&
+          (st.npcRelations.boss_li.affinity || 0) < 40
+        );
+      },
+      choices: [
+        {
+          text: "🔧 帮李工头修设备",
+          hint: "体力消耗，但李工头好感+8",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
+            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 8);
+            StateManager.addMessage(
+              "🔧 你花了一小时修好了设备。李工头很满意，说以后有技术活都找你。好感+8。",
+              "success"
+            );
+          }
+        },
+        {
+          text: "😅 我修不了这个",
+          hint: "诚实但错失机会",
+          apply: function (st) {
+            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
+            st.npcRelations.boss_li.affinity = Math.max(0, (st.npcRelations.boss_li.affinity || 0) - 2);
+            StateManager.addMessage(
+              "😅 你坦白说自己不会。李工头点点头："也是，术业有专攻。"好感-2。",
+              "info"
+            );
+          }
+        }
+      ]
+    },
+    // === NPC关系网事件：前同事引荐 ===
+    {
+      id: "npc_former_colleague_referral",
+      phase: "street",
+      icon: "💼",
+      title: "张姐的内推",
+      story: `张姐找你聊天："我有个客户公司招临时工，日结¥200。不过他们比较看重人品，我得先问问你。"\n你想起张姐和李工头以前是同事——她可能把你的事跟李工头提过。`,
+      conditions: function (st) {
+        return (
+          st.player.day > 25 &&
+          st.npcRelations &&
+          st.npcRelations.sister_zhang &&
+          (st.npcRelations.sister_zhang.affinity || 0) >= 35 &&
+          st.npcRelations &&
+          st.npcRelations.boss_li &&
+          (st.npcRelations.boss_li.affinity || 0) >= 20
+        );
+      },
+      choices: [
+        {
+          text: "💼 接受内推",
+          hint: "日薪¥200，张姐好感+5",
+          apply: function (st) {
+            var days = Random.int(2, 5);
+            var total = days * 200;
+            st.resources.cash += total;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + total;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + days * 8);
+            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
+            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 5);
+            StateManager.addMessage(
+              "💼 你去了那家公司做了" + days + "天临时工，赚了¥" + total + "。张姐说客户很满意，以后有活还找你。",
+              "success"
+            );
+          }
+        },
+        {
+          text: "🙏 谢谢但最近没空",
+          hint: "礼貌拒绝",
+          apply: function (st) {
+            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
+            st.npcRelations.sister_zhang.affinity = Math.max(0, (st.npcRelations.sister_zhang.affinity || 0) - 1);
+            StateManager.addMessage(
+              "🙏 你婉拒了。张姐理解地点点头："行，有合适的再联系你。"好感-1。",
+              "info"
+            );
+          }
+        }
+      ]
+    },
+    // === NPC关系网事件：亲戚帮衬 ===
+    {
+      id: "npc_family_help",
+      phase: "street",
+      icon: "🏠",
+      title: "远亲不如近邻",
+      story: `王大婶来找你："我侄女张姐最近工作不顺，想在她那租个房子过渡下。你认识她不？"\n你想起张姐是王大婶的远房侄女，而且你们关系还不错。`,
+      conditions: function (st) {
+        return (
+          st.player.day > 30 &&
+          st.npcRelations &&
+          st.npcRelations.aunt_wang &&
+          (st.npcRelations.aunt_wang.affinity || 0) >= 25 &&
+          st.npcRelations &&
+          st.npcRelations.sister_zhang &&
+          (st.npcRelations.sister_zhang.affinity || 0) >= 15
+        );
+      },
+      choices: [
+        {
+          text: "🏠 帮张姐介绍租房",
+          hint: "王大婶好感+8，张姐好感+5",
+          apply: function (st) {
+            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
+            st.npcRelations.aunt_wang.affinity = Math.min(100, (st.npcRelations.aunt_wang.affinity || 0) + 8);
+            if (!st.npcRelations.sister_zhang) st.npcRelations.sister_zhang = { affinity: 0 };
+            st.npcRelations.sister_zhang.affinity = Math.min(100, (st.npcRelations.sister_zhang.affinity || 0) + 5);
+            StateManager.addMessage(
+              "🏠 你帮张姐介绍了个便宜的房子。王大婶直夸你懂事，张姐也松了口气。两人好感都提升了。",
+              "success"
+            );
+          }
+        },
+        {
+          text: "🤷 我这边也不太熟",
+          hint: "推脱",
+          apply: function (st) {
+            if (!st.npcRelations.aunt_wang) st.npcRelations.aunt_wang = { affinity: 0 };
+            st.npcRelations.aunt_wang.affinity = Math.max(0, (st.npcRelations.aunt_wang.affinity || 0) - 3);
+            StateManager.addMessage(
+              "🤷 你说自己也不太熟。王大婶有些失望："也是，你们刚认识不久。"好感-3。",
+              "warning"
+            );
+          }
+        }
+      ]
+    },
+    // === NPC关系网事件：竞争对手嫉妒 ===
+    {
+      id: "npc_rival_jealousy",
+      phase: "street",
+      icon: "😒",
+      title: "同行眼红",
+      story: `李工头最近接了个大活，工期紧人手不够。\n老周在旁边嘀咕："工头接了好活，废料价格也得涨涨。"\n你意识到——李工头和老周虽然是同行，但关系一般。`,
+      conditions: function (st) {
+        return (
+          st.player.day > 35 &&
+          st.npcRelations &&
+          st.npcRelations.boss_li &&
+          (st.npcRelations.boss_li.affinity || 0) >= 30 &&
+          st.npcRelations &&
+          st.npcRelations.old_zhou &&
+          (st.npcRelations.old_zhou.affinity || 0) >= 20
+        );
+      },
+      choices: [
+        {
+          text: "🤝 两边都帮",
+          hint: "体力消耗大，但两边好感都提升",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
+            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 6);
+            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
+            st.npcRelations.old_zhou.affinity = Math.min(100, (st.npcRelations.old_zhou.affinity || 0) + 4);
+            StateManager.addMessage(
+              "🤝 你帮李工头干了活，又帮老周收了废料。两边都挺满意，但你也累得够呛。",
+              "success"
+            );
+          }
+        },
+        {
+          text: "👉 帮李工头（收入高）",
+          hint: "李工头好感+8，老周好感-3",
+          apply: function (st) {
+            var bonus = Random.int(80, 150);
+            st.resources.cash += bonus;
+            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
+            st.npcRelations.boss_li.affinity = Math.min(100, (st.npcRelations.boss_li.affinity || 0) + 8);
+            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
+            st.npcRelations.old_zhou.affinity = Math.max(-100, (st.npcRelations.old_zhou.affinity || 0) - 3);
+            StateManager.addMessage(
+              "👉 你帮李工头干了活，赚了¥" + bonus + "。老周在旁边没吭声，但你能感觉到他不太高兴。",
+              "success"
+            );
+          }
+        },
+        {
+          text: "👈 帮老周（关系好）",
+          hint: "老周好感+6，李工头好感-2",
+          apply: function (st) {
+            if (!st.npcRelations.old_zhou) st.npcRelations.old_zhou = { affinity: 0 };
+            st.npcRelations.old_zhou.affinity = Math.min(100, (st.npcRelations.old_zhou.affinity || 0) + 6);
+            if (!st.npcRelations.boss_li) st.npcRelations.boss_li = { affinity: 0 };
+            st.npcRelations.boss_li.affinity = Math.max(0, (st.npcRelations.boss_li.affinity || 0) - 2);
+            StateManager.addMessage(
+              "👈 你帮老周收了废料。李工头那边没帮上，他有些失望。",
+              "info"
+            );
+          }
+        }
+      ]
+    },
   ];
 
   var CAREER_EVENTS = [
@@ -1387,6 +1644,405 @@
               "🤔 张姐说：'行，你慢慢考虑，机会不等人。'",
               "info",
             );
+          },
+        },
+      ],
+    },
+    // ============================================================
+    // v3.6 新增：NPC关系链联动事件（人情江湖）
+    // ============================================================
+
+    // === 三角选择：李工头 vs 张姐（竞争关系）===
+    {
+      id: "triangular_boss_zhang",
+      phase: "street",
+      icon: "⚖️",
+      title: "工头与中介的拉锯",
+      story: "李工头找你：「张姐那边抢了我几个工人，你帮我劝劝她别挖角。」\n转头张姐也说：「李工头克扣工资，你得站在道理这边。」\n两边都是熟面孔，怎么选？",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affLi = (st.relationships.boss_li && st.relationships.boss_li.affinity) || 0;
+        var affZhang = (st.relationships.sister_zhang && st.relationships.sister_zhang.affinity) || 0;
+        return affLi >= 50 && affZhang >= 30 && st.player.day > 20 && !st.flags._triangularChosen;
+      },
+      choices: [
+        {
+          text: "👷 帮李工头（劝张姐别挖角）",
+          hint: "李工头好感+8，张姐好感-5，获得建筑类工作加成",
+          apply: function (st) {
+            st.flags._triangularChosen = "boss_li";
+            if (st.relationships.boss_li) {
+              st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 8);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.max(-100, (st.relationships.sister_zhang.affinity || 0) - 5);
+            }
+            st.flags.bossLiAlly = true;
+            StateManager.addMessage("👷 你站在李工头这边，张姐有些不高兴。李工头给你安排了更好的活。", "success");
+          },
+        },
+        {
+          text: "💼 帮张姐（支持工人权益）",
+          hint: "张姐好感+8，李工头好感-5，获得销售类工作加成",
+          apply: function (st) {
+            st.flags._triangularChosen = "sister_zhang";
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 8);
+            }
+            if (st.relationships.boss_li) {
+              st.relationships.boss_li.affinity = Math.max(-100, (st.relationships.boss_li.affinity || 0) - 5);
+            }
+            st.flags.sisterZhangAlly = true;
+            StateManager.addMessage("💼 你支持张姐，李工头对你有了看法。但张姐给你介绍了更多销售机会。", "success");
+          },
+        },
+        {
+          text: "🤷 两边都不帮，各打五十大板",
+          hint: "双方好感各-3，但获得"和事佬"名声",
+          apply: function (st) {
+            st.flags._triangularChosen = "neutral";
+            if (st.relationships.boss_li) {
+              st.relationships.boss_li.affinity = Math.max(-100, (st.relationships.boss_li.affinity || 0) - 3);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.max(-100, (st.relationships.sister_zhang.affinity || 0) - 3);
+            }
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage("🤷 你把两边都说了一通，他们各自散了。你成了"和事佬"，名气+5。", "info");
+          },
+        },
+      ],
+    },
+
+    // === 旧识反应：帮老周→王大婶知情 ===
+    {
+      id: "old_zhou_aunt_reaction",
+      phase: "street",
+      icon: "👵",
+      title: "王大婶的"闲话"",
+      story: "你在城中村帮老周推了一车废品，王大婶在楼道里看见了。\n第二天她找你：「听说你帮老周干活了？那老头子欠我房租，你帮我问问他啥时候能还？」",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affZhou = (st.relationships.old_zhou && st.relationships.old_zhou.affinity) || 0;
+        var affWang = (st.relationships.aunt_wang && st.relationships.aunt_wang.affinity) || 0;
+        return affZhou >= 30 && affWang >= 20 && st.player.day > 15 && !st.flags._auntZhouAsked;
+      },
+      choices: [
+        {
+          text: "👵 帮王大婶问老周",
+          hint: "王大婶好感+5，老周好感-3",
+          apply: function (st) {
+            st.flags._auntZhouAsked = true;
+            if (st.relationships.aunt_wang) {
+              st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 5);
+            }
+            if (st.relationships.old_zhou) {
+              st.relationships.old_zhou.affinity = Math.max(-100, (st.relationships.old_zhou.affinity || 0) - 3);
+            }
+            StateManager.addMessage("👵 你问了老周，他叹口气说最近手头紧。王大婶说理解，但还是要催。", "info");
+          },
+        },
+        {
+          text: "👴 帮老周说情",
+          hint: "老周好感+5，王大婶好感-3",
+          apply: function (st) {
+            st.flags._auntZhouAsked = "zhou";
+            if (st.relationships.old_zhou) {
+              st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
+            }
+            if (st.relationships.aunt_wang) {
+              st.relationships.aunt_wang.affinity = Math.max(-100, (st.relationships.aunt_wang.affinity || 0) - 3);
+            }
+            StateManager.addMessage("👴 你跟王大婶说老周不容易，她叹口气说：「行吧，再宽限几天。」", "info");
+          },
+        },
+        {
+          text: "🤷 这事我不掺和",
+          hint: "双方好感不变",
+          apply: function (st) {
+            st.flags._auntZhouAsked = "neutral";
+            StateManager.addMessage("🤷 你说这事你不好管。王大婶没再说什么。", "info");
+          },
+        },
+      ],
+    },
+
+    // === 赵姐情报：城市改造预警 ===
+    {
+      id: "zhaojie_urban_renewal",
+      phase: "street",
+      icon: "🏗️",
+      title: "老城区要改造",
+      story: "赵姐把你拉到一边：「有个内部消息——下个月老城区要改造，你住的那片可能要涨房租甚至拆迁。提前告诉你一声，算是感谢之前帮我带客户。」\n她递给你一张纸条，上面写着几个备选住处。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affZhao = (st.relationships.zhaojie && st.relationships.zhaojie.affinity) || 0;
+        return affZhao >= 50 && st.player.day > 25 && !st.flags._urbanRenewalWarned;
+      },
+      choices: [
+        {
+          text: "🏠 提前找新住处",
+          hint: "避免被动涨租，获得搬家补贴¥200",
+          apply: function (st) {
+            st.flags._urbanRenewalWarned = true;
+            st.resources.cash += 200;
+            st.flags.preparedForUrbanRenewal = true;
+            if (st.relationships.zhaojie) {
+              st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 10);
+            }
+            StateManager.addMessage("🏠 你提前找了新住处，房东看你诚心，给了搬家补贴¥200。赵姐的情报救了你！", "success");
+          },
+        },
+        {
+          text: "🤔 先看看再说",
+          hint: "暂时不行动，后续可能被动涨租",
+          apply: function (st) {
+            st.flags._urbanRenewalWarned = "wait";
+            StateManager.addMessage("🤔 你觉得先住着也行，到时候再说。赵姐摇摇头没说话。", "info");
+          },
+        },
+      ],
+    },
+
+    // === 陈哥独家情报：隐藏商机 ===
+    {
+      id: "chen_ge_secret_opportunity",
+      phase: "street",
+      icon: "💎",
+      title: "陈哥的独家消息",
+      story: "陈哥递给你一支烟：「最近夜市对面那块空地，市政要修路，但还没正式公告。现在租下来做临时摊位，等路修好就是黄金位置。」\n「租金便宜，但得自己冒险——万一修路计划改了，钱就打水漂了。」",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affChen = (st.relationships.chen_ge && st.relationships.chen_ge.affinity) || 0;
+        return affChen >= 40 && st.player.day > 30 && !st.flags._chenSecretOpportunity;
+      },
+      choices: [
+        {
+          text: "💰 冒险租下空地（¥500）",
+          hint: "70%概率赚¥800+，30%概率血本无归",
+          cost: 500,
+          apply: function (st) {
+            st.flags._chenSecretOpportunity = true;
+            if (Random.int(1, 10) <= 7) {
+              var profit = 800 + Random.int(0, 400);
+              st.resources.cash += profit;
+              StateManager.addMessage("💰 市政果然修了路，你的摊位成了黄金位置！赚了¥" + profit + "。陈哥消息真灵通。", "success");
+            } else {
+              StateManager.addMessage("💰 市政改计划了，空地没修路，你的摊位没人光顾。¥500打水漂了。", "warning");
+            }
+          },
+        },
+        {
+          text: "🤔 太冒险了，不投",
+          hint: "错过机会，但保住本金",
+          apply: function (st) {
+            st.flags._chenSecretOpportunity = "passed";
+            StateManager.addMessage("🤔 你觉得风险太大，拒绝了。陈哥说：「行，下次有好消息再告诉你。」", "info");
+          },
+        },
+      ],
+    },
+
+    // === 老同学阿杰：借钱还钱事件链 ===
+    {
+      id: "ajie_debt_chain",
+      phase: "street",
+      icon: "💸",
+      title: "老同学的债",
+      story: "阿杰在夜市摊前拦住你：「兄弟，上次借的钱……我现在能还一部分了。」\n他掏出一叠皱巴巴的钞票，数了数：「这是200，剩下的等我找到稳定工作再还。」\n你想起陈哥说过，阿杰当年是为了给老婆治病才借的钱。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affAjie = (st.relationships.ajie && st.relationships.ajie.affinity) || 0;
+        return affAjie >= 20 && st.player.day > 35 && !st.flags._ajieDebtStarted;
+      },
+      choices: [
+        {
+          text: "💪 收下钱，鼓励他",
+          hint: "阿杰好感+8，获得¥200",
+          apply: function (st) {
+            st.flags._ajieDebtStarted = true;
+            st.resources.cash += 200;
+            if (st.relationships.ajie) {
+              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 8);
+            }
+            st.flags.ajiePayingBack = true;
+            StateManager.addMessage("💪 你收下200块：「慢慢来，能还就行。」阿杰眼眶红了：「多谢兄弟。」", "success");
+          },
+        },
+        {
+          text: "🤲 不用还了，当作我请你的",
+          hint: "阿杰好感+15，但损失¥200",
+          apply: function (st) {
+            st.flags._ajieDebtStarted = "forgiven";
+            st.resources.cash -= 200;
+            if (st.relationships.ajie) {
+              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 15);
+            }
+            st.flags.ajieDebtForgiven = true;
+            StateManager.addMessage("🤲 你把钱推回去：「不用还了，当作我请你的。」阿杰眼泪下来了：「这辈子我忘不了你。」", "success");
+          },
+        },
+        {
+          text: "😕 先还一点也行，剩下的尽快",
+          hint: "阿杰好感+3，获得¥200",
+          apply: function (st) {
+            st.flags._ajieDebtStarted = "partial";
+            st.resources.cash += 200;
+            if (st.relationships.ajie) {
+              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 3);
+            }
+            StateManager.addMessage("😕 你说先还一点也行。阿杰点点头：「我会尽快还剩下的。」", "info");
+          },
+        },
+      ],
+    },
+
+    // === 赵姐 vs 张姐：同行竞争 ===
+    {
+      id: "zhaojie_zhang_rivalry",
+      phase: "street",
+      icon: "🏢",
+      title: "两家中介的较量",
+      story: "张姐告诉你：「赵姐最近在抢我的客户，她给房东更低佣金。」\n赵姐也来找你：「张姐那边服务质量不行，我给你介绍客户，佣金减半。」\n两边都想拉你站队。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affZhao = (st.relationships.zhaojie && st.relationships.zhaojie.affinity) || 0;
+        var affZhang = (st.relationships.sister_zhang && st.relationships.sister_zhang.affinity) || 0;
+        return affZhao >= 30 && affZhang >= 30 && st.player.day > 40 && !st.flags._agencyRivalryChosen;
+      },
+      choices: [
+        {
+          text: "🏢 帮赵姐（佣金减半）",
+          hint: "赵姐好感+8，张姐好感-5，短期省钱",
+          apply: function (st) {
+            st.flags._agencyRivalryChosen = "zhaojie";
+            if (st.relationships.zhaojie) {
+              st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 8);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.max(-100, (st.relationships.sister_zhang.affinity || 0) - 5);
+            }
+            st.flags.zhaojieCommissionDiscount = true;
+            StateManager.addMessage("🏢 你选了赵姐，佣金减半。张姐知道了不太高兴。", "success");
+          },
+        },
+        {
+          text: "🏪 帮张姐（老客户情谊）",
+          hint: "张姐好感+8，赵姐好感-5，获得长期信任",
+          apply: function (st) {
+            st.flags._agencyRivalryChosen = "sister_zhang";
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 8);
+            }
+            if (st.relationships.zhaojie) {
+              st.relationships.zhaojie.affinity = Math.max(-100, (st.relationships.zhaojie.affinity || 0) - 5);
+            }
+            st.flags.sisterZhangLongTermTrust = true;
+            StateManager.addMessage("🏪 你选了张姐，她说：「还是你靠谱。」赵姐那边有点意见。", "success");
+          },
+        },
+        {
+          text: "🤷 两边都不选，自己找房源",
+          hint: "双方好感各-2，但保持独立",
+          apply: function (st) {
+            st.flags._agencyRivalryChosen = "neutral";
+            if (st.relationships.zhaojie) {
+              st.relationships.zhaojie.affinity = Math.max(-100, (st.relationships.zhaojie.affinity || 0) - 2);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.max(-100, (st.relationships.sister_zhang.affinity || 0) - 2);
+            }
+            StateManager.addMessage("🤷 你说你自己找房源，两边都拒绝了。她们各自散了。", "info");
+          },
+        },
+      ],
+    },
+
+    // === 陈哥找阿杰：老同学重逢 ===
+    {
+      id: "chen_ge_ajie_reunion",
+      phase: "street",
+      icon: "👬",
+      title: "老同学重逢",
+      story: "陈哥告诉你：「我打听到阿杰在城郊工地干活，今天休息，要不要一起去看看他？」\n你想起阿杰当年借了钱就消失，现在他过得怎么样？",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affChen = (st.relationships.chen_ge && st.relationships.chen_ge.affinity) || 0;
+        var affAjie = (st.relationships.ajie && st.relationships.ajie.affinity) || 0;
+        return affChen >= 50 && st.flags.chenGeSearchingAjie && st.player.day > 45 && !st.flags._ajieReunionDone;
+      },
+      choices: [
+        {
+          text: "👬 一起去看看阿杰",
+          hint: "触发老同学重逢事件，阿杰好感+10",
+          apply: function (st) {
+            st.flags._ajieReunionDone = true;
+            if (st.relationships.ajie) {
+              st.relationships.ajie.affinity = Math.min(100, (st.relationships.ajie.affinity || 0) + 10);
+            }
+            if (st.relationships.chen_ge) {
+              st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 5);
+            }
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            StateManager.addMessage("👬 你们找到阿杰，他正在工地搬砖。看到你们，他愣住了，然后笑了：「好久不见。」陈哥拍了拍他肩膀。你心里五味杂陈。心智+3。", "success");
+          },
+        },
+        {
+          text: "🤷 我不想见他",
+          hint: "陈哥好感-3，阿杰不知情",
+          apply: function (st) {
+            st.flags._ajieReunionDone = "refused";
+            if (st.relationships.chen_ge) {
+              st.relationships.chen_ge.affinity = Math.max(-100, (st.relationships.chen_ge.affinity || 0) - 3);
+            }
+            StateManager.addMessage("🤷 你说你不想见他。陈哥叹了口气：「行吧，那我自己去。」", "info");
+          },
+        },
+      ],
+    },
+
+    // === 关系和解：李工头与张姐 ===
+    {
+      id: "boss_zhang_reconciliation",
+      phase: "street",
+      icon: "🤝",
+      title: "恩怨化解",
+      story: "几个月后，李工头来找你：「张姐那边……我想跟她和解。以前是我不对，不该抢她客户。」\n他说想请你当中间人，约张姐吃顿饭。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var affLi = (st.relationships.boss_li && st.relationships.boss_li.affinity) || 0;
+        var affZhang = (st.relationships.sister_zhang && st.relationships.sister_zhang.affinity) || 0;
+        var chosen = st.flags._triangularChosen;
+        return affLi >= 60 && affZhang >= 40 && chosen && st.player.day > 60 && !st.flags._reconciliationDone;
+      },
+      choices: [
+        {
+          text: "🤝 当中间人，促成和解",
+          hint: "双方好感各+10，解锁合作事件",
+          apply: function (st) {
+            st.flags._reconciliationDone = true;
+            if (st.relationships.boss_li) {
+              st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 10);
+            }
+            st.flags.bossZhangCooperate = true;
+            StateManager.addMessage("🤝 你约了两人吃饭，几杯酒下肚，他们握手言和。李工头说以后有活一起干，张姐说以后有工人介绍给他。", "success");
+          },
+        },
+        {
+          text: "🤷 你们自己解决吧",
+          hint: "双方好感各+3",
+          apply: function (st) {
+            st.flags._reconciliationDone = "passed";
+            if (st.relationships.boss_li) {
+              st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 3);
+            }
+            if (st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(100, (st.relationships.sister_zhang.affinity || 0) + 3);
+            }
+            StateManager.addMessage("🤷 你说这事你不好掺和。李工头说：「也行，我自己找她谈。」", "info");
           },
         },
       ],

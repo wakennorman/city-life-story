@@ -789,6 +789,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.6 P0-1: NPC关系网每日演化 ===
+  {
+    name: "npc_relationships_tick",
+    fn: function (state) {
+      if (typeof npcRelationshipsTick === "function") {
+        npcRelationshipsTick(state);
+      }
+    },
+  },
+
   // === 道德后果检查 ===
   {
     name: "moral_consequences",
@@ -906,6 +916,16 @@ const DAILY_PIPELINE = [
             "info",
           );
         }
+      }
+    },
+  },
+
+  // === v3.6 NPC关系链每日tick（蝴蝶效应传播）===
+  {
+    name: "npc_relationships_tick",
+    fn: function (state) {
+      if (typeof tickNpcRelationships === "function") {
+        tickNpcRelationships(state);
       }
     },
   },

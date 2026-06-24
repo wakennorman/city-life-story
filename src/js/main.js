@@ -1256,6 +1256,11 @@ function startNewGame() {
     initEquipmentDurability(StateManager.getState());
   }
 
+  // v3.6 P0-1: 初始化NPC关系网
+  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
+    npcRelationships.init(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());

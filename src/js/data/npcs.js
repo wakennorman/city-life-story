@@ -65,6 +65,18 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.5,
+      slum: 0.3,
+      park: 0.2,
+    },
+    relationshipWeight: {
+      family: 1.2,
+      neighbor: 1.0,
+      mentor: 0.8,
+    },
+    interactionHistory: [],
     // 交易情报：专业领域和好感门控信息
     tradeInfo: {
       expertise: ["daily", "food"],
@@ -277,6 +289,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.4,
+      construction: 0.35,
+      entertainment: 0.25,
+    },
+    relationshipWeight: {
+      former_colleague: 1.3,
+      neighbor: 0.9,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -487,6 +510,18 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.5,
+      factoryZone: 0.3,
+      school: 0.2,
+    },
+    relationshipWeight: {
+      family: 1.2,
+      former_colleague: 1.1,
+      mentor: 0.85,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["clothing", "electronics", "luxury"],
@@ -693,6 +728,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      slum: 0.5,
+      construction: 0.3,
+      wholesaleMarket: 0.2,
+    },
+    relationshipWeight: {
+      neighbor: 1.1,
+      rival: 0.7,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -902,6 +948,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.4,
+      school: 0.35,
+      trainingCenter: 0.25,
+    },
+    relationshipWeight: {
+      mentor: 1.0,
+      friend: 1.0,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["daily", "food", "clothing"],
@@ -1079,6 +1136,17 @@ const NPCS = [
       birthdayHint: "陈师傅今天做了几道拿手菜请熟客尝，看起来特别高兴。",
     },
     giftPrefers: ["beer", "vegetables"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.6,
+      wholesaleMarket: 0.25,
+      slum: 0.15,
+    },
+    relationshipWeight: {
+      neighbor: 1.0,
+      mentor: 0.9,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["food"],
@@ -1739,6 +1807,16 @@ const NPCS = [
       birthdayHint: "林阿姨今天收摊比往常早，笑着说过节去。",
     },
     giftPrefers: ["fruits", "daily_use", "snacks"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      wholesaleMarket: 0.7,
+      commercialDist: 0.2,
+      slum: 0.1,
+    },
+    relationshipWeight: {
+      neighbor: 1.0,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["food", "vegetables"],
       infoTypes: {
@@ -1903,6 +1981,16 @@ const NPCS = [
       birthdayHint: "赵师傅今天没开门，门上贴着「今日休息，家有喜事」的纸条。",
     },
     giftPrefers: ["beer", "cigarettes", "daily_use"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      factoryZone: 0.75,
+      commercialDist: 0.15,
+      suburb: 0.1,
+    },
+    relationshipWeight: {
+      neighbor: 0.9,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["electronics", "daily"],
       infoTypes: {
@@ -2069,6 +2157,16 @@ const NPCS = [
       birthdayHint: "小丽今天直播间特别热闹，说在抽奖庆祝。",
     },
     giftPrefers: ["clothing", "electronics", "luxury"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      techPark: 0.5,
+      commercialDist: 0.35,
+      entertainment: 0.15,
+    },
+    relationshipWeight: {
+      mentor: 0.8,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["electronics", "luxury"],
       infoTypes: {
@@ -2227,6 +2325,16 @@ const NPCS = [
         "值班表上贴着张贺卡，护士说今天是王医生的生日，但他还在查房。",
     },
     giftPrefers: ["fruits", "daily_use"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      hospital: 0.7,
+      commercialDist: 0.2,
+      park: 0.1,
+    },
+    relationshipWeight: {
+      mentor: 0.7,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["daily", "food"],
       infoTypes: {
@@ -2347,6 +2455,561 @@ const NPCS = [
           hint: "好感不变",
           apply: function (st) {
             StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 赵姐（中介）
+  // ============================================================
+  {
+    id: "zhaojie",
+    name: "赵姐",
+    role: "房产中介",
+    location: "commercialDist",
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "commercialDist",
+      evening: "entertainment",
+      night: "commercialDist",
+    },
+    birthday: 188,
+    desc: "房产中介门店店长，消息灵通。城市改造、房租涨跌她都知道。",
+    birthdayLine: "哎呀你居然记得我生日！来，姐请你喝奶茶，今天不谈工作！",
+    festivalLines: {
+      spring_festival: "过年买房的人少，但年后开工第一波客户多，得提前准备！",
+      mid_autumn: "中秋节不少客户想看房，说是团圆节买房吉利。",
+      labor_day: "黄金周看房的人爆满，房价又要涨一波！",
+      national_day: "国庆七天我基本都在门店，有客户随时找我。",
+    },
+    talkLines: [
+      "最近老城区要改造，你住的那片可能涉及拆迁。",
+      "房租下个月要涨，房东都托我涨价。",
+      "想买房趁现在，明年政策可能要收紧。",
+    ],
+    presenceChance: 0.70,
+    encounterLines: [
+      "赵姐在门店门口打电话，语气很专业。",
+      "赵姐拿着楼盘宣传册，跟客户介绍户型。",
+      "赵姐坐在门店里刷手机，看到你来抬起头。",
+    ],
+    infoHints: {
+      giftHint: "赵姐说最近房价又要涨，看来她在关注楼市动态。",
+      birthdayHint: "赵姐今天穿得比较正式，可能是有重要客户。",
+    },
+    giftPrefers: ["cigarettes", "beer", "daily_use"],
+    skillThresholds: [
+      { attr: "intelligence", minAttr: 40, minAffinity: 60, id: "zhaojieCityInfo",
+        desc: "提前获知城市改造信息，避免房租暴涨",
+        effect: function(st) {
+          if (st.flags.zhaojieCityInfo) return;
+          st.flags.zhaojieCityInfo = true;
+          StateManager.addMessage("🏠 赵姐悄悄告诉你：「下个月老城区要改造，你住的片区房租可能要涨30%。趁现在赶紧找新地方！」提前获知城市改造信息。","success");
+        }
+      }
+    ],
+    tradeInfo: {
+      expertise: ["housing", "commercialDist"],
+      infoTypes: {
+        price_level: { label: "商业区房租行情", threshold: 30, cost: 50 },
+        category_highest: {
+          label: "哪租房最划算",
+          threshold: 60,
+          cost: 30,
+        },
+      },
+    },
+    presenceBonus: [
+      {
+        minAffinity: 30,
+        jobs: null,
+        multiplier: 1.05,
+      },
+      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+    ],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "zhaojie_30",
+        desc: "赵姐给你内部租房信息（房租-10%）",
+        effect: function (st) {
+          st.flags.zhaojieRentInfo = true;
+          StateManager.addMessage(
+            "💕 赵姐：「我手上有几个房东的房源，比外面便宜10%。」",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "zhaojie_60",
+        desc: "赵姐提前告知城市改造消息（避免被动涨租）",
+        effect: function (st) {
+          st.flags.zhaojieUrbanRenewal = true;
+          StateManager.addMessage(
+            "💕 赵姐悄悄说：「下个月老城区要改造，你那片房租要涨。趁现在赶紧找新地方，我帮你留意。」",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "zhaojie_80",
+        desc: "赵姐给你优先看房权+中介费打折",
+        effect: function (st) {
+          st.flags.zhaojiePriorityViewing = true;
+          StateManager.addMessage(
+            "❤️ 赵姐：「以后有新房源我先通知你，中介费给你打八折。」",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "赵姐有些为难：「今天有个大客户要看三套房，我一个人跑不过来，你能不能帮我带一套？佣金分你一半。」",
+      choices: [
+        {
+          text: "💪 帮忙！正好熟悉下城市",
+          apply: function (st) {
+            st.flags._npcFavor_zhaojie = true;
+            var pay = 100 + Random.int(0, 99);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.player.fame = Math.min(100, st.player.fame + 3);
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 12,
+            );
+            StateManager.addMessage(
+              "💪 带看完房赚了¥" + pay + "，还熟悉了商业区！好感+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 今天没空",
+          apply: function (st) {
+            st.flags._npcFavor_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.max(
+              -100,
+              st.relationships.zhaojie.affinity - 2,
+            );
+            StateManager.addMessage("😅 赵姐点点头：「没事，我自己跑吧。」", "info");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 70,
+      story:
+        "赵姐叹了口气：「干了八年中介，见过太多人在这座城市起起落落。我攒了点钱想自己开个店，但不知道行不行……你觉得呢？」",
+      choices: [
+        {
+          text: "💪 行！你经验丰富，客户资源也多",
+          hint: "好感+10，赵姐获得开店信念",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 10,
+            );
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.flags.zhaojieWillOpenStore = true;
+            StateManager.addMessage(
+              "💪 「你觉得我行吗？」「行。」赵姐沉默了一会儿，然后笑了：「你说得对，我试试。」好感+10，心情+10。也许某天，你会看到一家新开的中介门店，招牌上写着她的名字。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⚠️ 开店风险大，先攒更多钱再说",
+          hint: "好感+3，赵姐冷静下来",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 3,
+            );
+            StateManager.addMessage(
+              "⚠️ 你讲了开店的成本和风险。赵姐点点头：「你说得对，我再攒攒。」好感+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 你自己决定",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            StateManager.addMessage("🤷 「也是，这种事只能自己想。」赵姐笑了笑，没再提。", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 陈哥（情报贩子）
+  // ============================================================
+  {
+    id: "chen_ge",
+    name: "陈哥",
+    role: "情报贩子",
+    location: "nightMarket",
+    schedule: {
+      morning: "slum",
+      afternoon: "commercialDist",
+      evening: "nightMarket",
+      night: "nightMarket",
+    },
+    birthday: 245,
+    desc: "夜市摊主兼情报贩子，什么都知道。用钱或者人情换消息。",
+    birthdayLine: "哟你还记得我生日！今天不收你钱，这桌算我请的！",
+    festivalLines: {
+      spring_festival: "过年夜市照常开，初一初二客人最多，生意好得很！",
+      mid_autumn: "中秋节大家出来赏月，夜市生意翻倍。",
+      labor_day: "劳动节放假三天，夜市人挤人，我忙得脚不沾地。",
+      national_day: "黄金周七天我基本不歇，每天赚得比平时一周还多。",
+    },
+    talkLines: [
+      "想打听啥？有钱好说话。",
+      "城里的事，没有我不知道的。",
+      "人情比钱好用，帮过我的人，消息免费。",
+    ],
+    presenceChance: 0.60,
+    encounterLines: [
+      "陈哥坐在夜市摊前抽烟，眯眼看着来往的人。",
+      "陈哥正跟客人低声说话，看到你点点头。",
+      "陈哥在收摊，把最后一张折叠桌叠好。",
+    ],
+    infoHints: {
+      giftHint: "陈哥说最近城里出了几件大事，看来他消息确实灵通。",
+      birthdayHint: "陈哥今天摊位上摆了一瓶白酒，说是有人送的。",
+    },
+    giftPrefers: ["cigarettes", "beer", "snacks"],
+    skillThresholds: [
+      { attr: "intelligence", minAttr: 30, minAffinity: 60, id: "chenGeInfoBonus",
+        desc: "获取独家情报，触发隐藏事件",
+        effect: function(st) {
+          if (st.flags.chenGeInfoBonus) return;
+          st.flags.chenGeInfoBonus = true;
+          StateManager.addMessage("🕵️ 陈哥把你当自己人了：「有消息我第一个告诉你。」触发隐藏情报事件。","success");
+        }
+      }
+    ],
+    tradeInfo: {
+      expertise: ["info", "nightMarket"],
+      infoTypes: {
+        price_level: { label: "隐藏商机", threshold: 40, cost: 80 },
+        category_highest: {
+          label: "城里最近出了啥大事",
+          threshold: 60,
+          cost: 50,
+        },
+      },
+    },
+    presenceBonus: [
+      {
+        minAffinity: 30,
+        jobs: null,
+        multiplier: 1.05,
+      },
+      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+    ],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "chen_ge_30",
+        desc: "陈哥给你内部消息（随机获得一条有用情报）",
+        effect: function (st) {
+          st.flags.chenGeInfoAccess = true;
+          StateManager.addMessage(
+            "💕 陈哥：「最近城里出了件事，你可能感兴趣……」告诉你一条情报。",
+            "info",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "chen_ge_60",
+        desc: "陈哥给你独家情报（触发隐藏事件）",
+        effect: function (st) {
+          st.flags.chenGeExclusiveInfo = true;
+          StateManager.addMessage(
+            "💕 陈哥：「这条消息只告诉你，别到处说。」解锁隐藏情报事件。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "chen_ge_80",
+        desc: "陈哥把你当自己人（情报免费+双倍收益）",
+        effect: function (st) {
+          st.flags.chenGeTrusted = true;
+          StateManager.addMessage(
+            "❤️ 陈哥：「以后有消息我第一个告诉你，不收你钱。」情报免费，相关事件收益翻倍。",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "陈哥压低声音：「最近城里出了件事，我得确认下细节。你能不能帮我去打听一下？有好处。」",
+      choices: [
+        {
+          text: "🕵️ 帮忙！正好赚点情报费",
+          apply: function (st) {
+            st.flags._npcFavor_chen_ge = true;
+            var pay = 80 + Random.int(0, 79);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.player.fame = Math.min(100, st.player.fame + 2);
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.min(
+              100,
+              st.relationships.chen_ge.affinity + 10,
+            );
+            StateManager.addMessage(
+              "🕵️ 打听完消息赚了¥" + pay + "，还获得一条情报！好感+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 这我不方便",
+          apply: function (st) {
+            st.flags._npcFavor_chen_ge = true;
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.max(
+              -100,
+              st.relationships.chen_ge.affinity - 3,
+            );
+            StateManager.addMessage("😅 陈哥点点头：「没事，我找别人。」", "info");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 70,
+      story:
+        "陈哥喝了口酒：「干了这行十年，见过太多人为了消息铤而走险。我有个老同学，失踪好几年了，最近听说在这座城市出现过……你能不能帮我找找？」",
+      choices: [
+        {
+          text: "💪 帮你找！正好锻炼下情报能力",
+          hint: "好感+10，触发寻找老同学事件链",
+          apply: function (st) {
+            st.flags._npcDeepTask_chen_ge = true;
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.min(
+              100,
+              st.relationships.chen_ge.affinity + 10,
+            );
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            st.flags.chenGeSearchingAjie = true;
+            StateManager.addMessage(
+              "💪 陈哥：「多谢兄弟。」他告诉你老同学叫阿杰，以前在城郊工地干过活。好感+10，智力+2。寻找老同学阿杰的事件链已触发。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤷 这种事我帮不上",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_chen_ge = true;
+            StateManager.addMessage("🤷 陈哥叹了口气：「也是，这确实不是谁都能管的。」", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 老同学阿杰（随机出现）
+  // ============================================================
+  {
+    id: "ajie",
+    name: "阿杰",
+    role: "老同学",
+    location: "random", // 随机出现
+    schedule: {
+      morning: "random",
+      afternoon: "random",
+      evening: "random",
+      night: "random",
+    },
+    birthday: 310,
+    desc: "陈哥的老同学，多年前失踪后突然出现。欠了钱没还，又消失了。",
+    birthdayLine: "哎呀今天是我生日？我自己都忘了！你记得，够意思！",
+    festivalLines: {
+      spring_festival: "过年回老家了，今年不走了，打算在这安定下来。",
+      mid_autumn: "中秋节一个人在城市里过，挺想家的。",
+      labor_day: "劳动节我找了个新活，在工地搬砖。",
+      national_day: "黄金周我打算回老家看看，好久没回去了。",
+    },
+    talkLines: [
+      "当年不是故意不还钱的，真的遇到难处了。",
+      "我现在稳定了，慢慢还你，行不？",
+      "陈哥还好吗？好久没见他了。",
+    ],
+    presenceChance: 0.40, // 出现概率低
+    encounterLines: [
+      "阿杰坐在公园长椅上发呆，看到你愣了一下。",
+      "阿杰在路边摊吃面，抬头朝你点点头。",
+      "阿杰匆匆走过，看到你转身想躲。",
+    ],
+    infoHints: {
+      giftHint: "阿杰说他在工地干活，看来生活还算稳定。",
+      birthdayHint: "阿杰今天穿得比较整洁，似乎心情不错。",
+    },
+    giftPrefers: ["beer", "snacks"],
+    skillThresholds: [],
+    tradeInfo: {
+      expertise: [],
+      infoTypes: {},
+    },
+    presenceBonus: [],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "ajie_30",
+        desc: "阿杰还你一部分钱（¥100）",
+        effect: function (st) {
+          if (st.flags.ajiePaid) return;
+          st.resources.cash += 100;
+          st.flags.ajiePaid = true;
+          StateManager.addMessage(
+            "💕 阿杰：「先还你100，剩下的慢慢还。」收到¥100。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "ajie_60",
+        desc: "阿杰还你全部欠款（¥300）并介绍工作",
+        effect: function (st) {
+          if (st.flags.ajiePaidFull) return;
+          st.resources.cash += 300;
+          st.flags.ajiePaidFull = true;
+          st.flags.ajieReferred = true;
+          StateManager.addMessage(
+            "💕 阿杰：「这是剩下的300，多谢你没逼我。」又介绍你一份临时工作。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "ajie_80",
+        desc: "阿杰彻底还钱+成为固定联系人",
+        effect: function (st) {
+          if (st.flags.ajieTrusted) return;
+          st.flags.ajieTrusted = true;
+          st.flags.ajieReferred = true;
+          StateManager.addMessage(
+            "❤️ 阿杰：「兄弟，钱还清了。以后有活我第一个找你。」阿杰成为固定联系人，偶尔会给你介绍临时工作。",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "阿杰有些尴尬：「那个……之前借的钱，我现在手头有点紧，能不能再宽限几天？」",
+      choices: [
+        {
+          text: "💪 行，宽限你一周",
+          apply: function (st) {
+            st.flags._npcFavor_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 8,
+            );
+            st.flags.ajieGivenExtension = true;
+            StateManager.addMessage(
+              "💪 阿杰：「多谢兄弟，一周后一定还。」好感+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 我现在也需要钱",
+          apply: function (st) {
+            st.flags._npcFavor_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.max(
+              -100,
+              st.relationships.ajie.affinity - 5,
+            );
+            StateManager.addMessage("😅 阿杰低下头：「对不起……」好感-5。", "warning");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 50,
+      story:
+        "阿杰眼圈红了：「当年我欠钱跑路，不是故意躲着你们的。我老婆生病了，得钱治病……现在她走了，我也想重新开始。」",
+      choices: [
+        {
+          text: "💪 我理解，重新开始吧",
+          hint: "好感+15，阿杰彻底放下过去",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 15,
+            );
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.flags.ajieMovedOn = true;
+            StateManager.addMessage(
+              "💪 阿杰眼眶红了：「多谢你……我会重新开始。」好感+15，心情+10。阿杰似乎终于放下了过去。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⚠️ 理解，但钱还是要还",
+          hint: "好感+5",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 5,
+            );
+            StateManager.addMessage(
+              "⚠️ 阿杰点点头：「你说得对，我会还。」好感+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 你自己决定",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            StateManager.addMessage("🤷 阿杰沉默了一会儿，没说话。", "info");
           },
         },
       ],
