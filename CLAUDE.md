@@ -50,7 +50,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.2 全面重塑（2026-06-24，QoderWork）
+- **最新一次工作**：v3.4 C3D 内容关联度深化（2026-06-24，QoderWork / 游戏设计师+系统架构师+高级开发工程师）
+  - **T1 NPC位置关联系统**：新建 `npc_location_bridge.js`（93行），5核心NPC作息日程+时间地点匹配+pipeline步骤
+  - **T2 跨系统联动事件×8**：`cross_system_events.js` +632行，8条跨维度事件（天气+NPC+行业+季节+技能+道德）
+  - **T3 位置×技能特色行动×10**：`actions_extra.js` +276行，每个活跃地点1条特色行动+条件门槛
+  - **T4 NPC好感×技能联动解锁**：5个NPC双门槛永久增益（cooking/sales/physique/repair/charm），`checkNpcSkillUnlocks()`每日检查
+  - **设计参考**：Cart Life NPC日程 / Stardew Valley地点绑定 / This War of Mine情景连锁 / Capitalism Lab跨系统反馈
+  - **影响文件**：npc_location_bridge.js(new) + npcs.js + npc_event_bridge.js + cross_system_events.js + actions_extra.js
+  - **构建**：已 `python build.py`（3877.6 KB）
   - **强制人生目标弹窗**：游戏开始必须选目标才能继续
   - **黑暗开局**：¥300起步、无债、需求全线边缘化、健康70
   - **每日收支修复**：修复`_dayStartCash`日初基准

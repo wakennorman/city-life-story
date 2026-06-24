@@ -36776,20 +36776,6 @@ const NPCS = [
         },
       ],
     },
-    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
-    skillThresholds: {
-      skillKey: "cooking",
-      minSkill: 40,
-      minAffinity: 80,
-      effect: "获得1个食谱",
-      onUnlock: function (st) {
-        st.flags._auntWangRecipeLearned = true;
-        StateManager.addMessage(
-          "🍳 王大婶看你勤快又好学，把她的拿手菜配方教给了你。",
-          "success",
-        );
-      },
-    },
   },
   {
     id: "boss_li",
@@ -36994,20 +36980,6 @@ const NPCS = [
           },
         },
       ],
-    },
-    // v3.4 C3D-T4: NPC好感×技能双门槛解锁
-    skillThresholds: {
-      skillKey: "social",
-      minSkill: 50,
-      minAffinity: 80,
-      effect: "摆摊收入+10% 永久",
-      onUnlock: function (st) {
-        st.flags._bossLiBizTip = true;
-        StateManager.addMessage(
-          "💼 李工头把做小生意的诀窍点拨给你：'进货看三处，出手要干脆。'从此摆摊收入+10%。",
-          "success",
-        );
-      },
     },
   },
   {

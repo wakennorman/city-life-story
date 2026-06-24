@@ -1,6 +1,46 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.3 Wave-2 路线效应+气象预报+剧本开局链）
+> 最后更新: 2026-06-24（v3.4 C3D 内容关联度深化）
+
+## 2026-06-24 — v3.4 C3D 内容关联度深化（游戏设计师+系统架构师+高级开发工程师）
+
+执行 SOP：`PROMPT_v3.4.txt`（v3.4 内容关联度深化设计文档）
+
+**设计参考**：Cart Life NPC 日程 / Stardew Valley 地点绑定 / This War of Mine 情景连锁 / Capitalism Lab 跨系统反馈
+
+**目标**：内容关联度深化（C3D）— 让 NPC 有位置感、事件跨系统联动、地点有特色行动、好感与技能双门槛解锁。
+
+- **T1 · NPC 位置关联系统** — 新建 `src/js/core/npc_location_bridge.js`（93 行）
+  - 5 个核心 NPC 各有每日作息日程（morning/afternoon/evening/night 映射到 15 个活跃地点）
+  - `getNpcCurrentLocation()` 时间+地点匹配，未发现时不暴露
+  - `tickNpcLocationRotation()` 每日 pipeline 步
+  - `getActiveNpcLocations()` + `rollLocationNpcInteraction()` 地点 NPC 偶遇 + flavortext
+  - 接线：npcs.js 追加 schedule 字段、daily_pipeline.js 新增步骤、npc_event_bridge.js 位置匹配
+
+- **T2 · 8 条跨系统联动事件** — `cross_system_events.js` +632 行（新增 8 条，累计 17 条事件 ID）
+  - 暴雨商机（天气+摆摊）、王大婶租房（NPC+住房）、公园师傅（地点+技能）
+  - 张姐裁员（NPC+行业热度）、科技园地摊（物品+行业热度+违法）、换季体检（季节+健康）
+  - 老周废品大单（NPC+体力+技能）、小美副业（NPC+经济+道德）
+  - 联动维度：天气+健康+NPC+行业+地点+季节+技能+道德+违法
+
+- **T3 · 10 条地点限定行动** — `actions_extra.js` +276 行
+  - 每个活跃地点 1 条特色行动，条件=location+skill/attr threshold
+  - 废品站淘货（construction+修理）、工厂兼职（factoryZone+体质）、夜校自习（school+学习）
+  - 商业区发传单、科技园找机会（+智商）、医院献血（+健康门槛）、公园晨练（免费）
+  - 图书馆啃书（技能XP+茶叶）、寺庙静心（心情+道德）、批发市场倒货（+口才）
+
+- **T4 · NPC 好感×技能联动解锁** — `npcs.js` + `npc_event_bridge.js`（+121 行）
+  - 5 个双门槛解锁（好感80 + 技能/属性门槛）：
+    - aunt_wang: cooking≥40 → 获得食谱（cooking XP+200）
+    - boss_li: sales≥50 → 摆摊收入+10% 永久
+    - sister_zhang: physique≥60 → factoryZone 收入+15%
+    - old_zhou: repair≥30 → 拾荒效率+20%
+    - xiao_mei: charm≥70 → 解锁商业区模特工作
+  - `checkNpcSkillUnlocks()` 每日管线检查，`rel._unlocked_*` 防重复触发
+  - 支持 skill（技能 level）和 attr（属性数值）双类型门槛
+
+构建：`dist/index.html = 3877.6 KB`
+提交：37d6dbe(T1) 7f0a51f(T2) 517bce8(T3) cbca442(T4)
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。
