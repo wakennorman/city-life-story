@@ -1,6 +1,19 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.4 C3D 内容关联度深化）
+> 最后更新: 2026-06-24（v3.4 C3D 内容关联度深化 + v3.3 Wave-1 关联度闭合）
+
+## 2026-06-24 — v3.3 Wave-1 关联度闭合（游戏设计师+高级开发工程师）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+
+- T1 35 岁三路径延伸 — `crisis35_followups.js` 新建（499行，6事件：exam×2、career×2、lieflat×2）
+- T2 体检异常二阶 — `review_improvements.js` +184行（wt_recheck_diagnosis + wt_chronic_disease_lifestyle）
+- T3 坏账/好心回报 — `crisis35_followups.js` 末尾追加（2事件：bad_debt_chase + good_loan_return）
+- T4 道德 followup 补 4 — `moral_events.js` +74行（consequence_phone_sell / consequence_thief_ignore / consequence_fall_ignore / consequence_atm_warn）
+- T5 传承商店入口 — `heritage_store.js` 已存在（155行），`index.html` 已注册，`showHeritageStore` 可用
+- T6 前世记忆 wiki — `narratives_registry.js` +追加（past_life 条目，动态渲染继承数据）
+
+构建：dist/index.html = 3876.7 KB
 
 ## 2026-06-24 — v3.4 C3D 内容关联度深化（游戏设计师+系统架构师+高级开发工程师）
 
