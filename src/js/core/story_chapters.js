@@ -237,9 +237,12 @@ function _triggerChapter(state, ch) {
     }
   }
 
-  // 记录选择的路线（第三章）
+  // 记录选择的路线（第三章），并激活路线效应
   if (ch.id === "chapter3_choice" && epilogue.route) {
     state.flags._lifeRoute = epilogue.route;
+    if (typeof initRouteEffects === "function") {
+      initRouteEffects(state);
+    }
   }
 
   // 构建弹窗内容

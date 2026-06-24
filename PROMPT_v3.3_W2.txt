@@ -1,0 +1,136 @@
+请严格按照以下设计执行 city-life-story 的 v3.3 Wave-2 开发。
+
+执行触发：v3.0 审查改进。先 Read memory/review-improve-v3.0.md 全文，再开始。
+工作目录：D:\Claude Code+DeepSeekV4\city-life-story\
+身份：游戏设计师 + 高级开发工程师
+
+本次只做 T1、T2、T3 三个任务（三章路线效应 + 天气预报 + 剧本专属开局链）。
+
+=== 硬约束 ===
+1) 禁止 cat 整文件。main.js 4087 / render.js 5944 / events_street.js 9800+ / moral_events.js 2000+。只用 grep -n 定位 + Read 工具读 ≤80 行/次。
+2) 每个 patch ≤20 行；新模块 ≤300 行。
+3) 三个任务做完后只跑一次 python build.py。中间禁止 build。
+4) 每完成一个任务做一次 git add -A && git commit -m "v3.3-W2-Tn: ..."。禁止 git push。
+5) 不写测试，不引入外部库，不改 script 加载顺序，不删文件。
+6) 控制节奏，避免请求过快触发限流。
+
+=== T1: 三章结局路线游戏效应（核心 — 叙事→实际影响）===
+
+目标：让 story_chapters.js 已记录的 _lifeRoute 产生实际游戏效果。
+
+新文件：src/js/core/route_effects.js（≤280 行）
+
+结构 IIFE：暴露 window.initRouteEffects(state) 和 window.tickRouteEffects(state)
+
+每条路线的效应表：
+entrepreneur → 创业成本-20%（startup.js 估值修正乘数）+ 每30天一次"创业路演"事件 
+civil_service → 考试概率+25%（civil service exam bonus）+ 每45天一次"体制内福利"事件（稳定收入补充）
+wealth → 股票交易费-50% + 每60天一次"投资机会"事件
+lying_flat → 疲劳恢复+30%（daily_pipeline sleep_recovery 乘数）+ 每30天躺平专属放松事件
+open → 无固定路线，改为每月一次"新机遇发现"事件
+
+每路线的事件1-2个，通过 DAILY_PIPELINE 新增 _route_events_tick 步骤触发。
+
+接线要点：
+1) story_chapters.js::_triggerChapter 在设置 state.flags._lifeRoute 后调用 initRouteEffects(state)
+2) daily_pipeline.js 新增 step {name: "route_effects", fn: tickRouteEffects}
+3) index.html 注册 script，位置在 story_chapters.js 之后
+
+验证 grep：route_effects | _lifeRoute | startup_cost_mod | exam_bonus_mod | fatigue_recovery_mod
+
+=== T2: 气象预报系统（天气交互深化）===
+
+目标：让玩家可以在当天结束时查看明天天气，并做准备。
+
+新文件：src/js/core/weather_forecast.js（≤260 行）
+
+核心逻辑：
+1. 在 weather.js 的每日天气变化步骤中，额外存储 state.weather._nextDayForecast
+2. _nextDayForecast = weatherTypes[当前]=>基于季节+随机微调预测下一天
+3. 准确率：季节规律(70%) + 随机偏差(30%)，晴天准确率>雨天
+4. UI侧：在 Daily 报告末尾（或侧边栏）显示"明日天气：XX°C/🌧️ 建议带伞"
+5. 玩家可以"准备"：花费 ¥20 买伞（雨天疲劳惩罚减半）/ ¥50 买暖宝（雪天健康损失减半）
+6. 准备状态存储：state.flags._weatherPrep = {umbrella: bool, warmPack: bool}
+7. 在 weather_daily_effects 步骤中根据准备状态减免惩罚
+
+接线要点：
+1) daily_pipeline.js weather 步骤后新增 state.weather._nextDayForecast 更新
+2) render.js 侧边栏或每日报告展示明日预报
+3) 新行动"准备应对天气"（可在主行动区添加，或绑定到 actions_extra.js）
+4) index.html 注册 script
+
+验证 grep：_nextDayForecast | weatherPrep | 明日天气
+
+=== T3: 剧本专属开局链（差异化体验核心）===
+
+目标：让 7 个剧本各有独特的 3-5 天专属开局剧情链。
+
+新文件：src/js/data/scenario_start_chains.js（≤300 行）
+
+每个剧本定义 startChain: [{day: offset, event: {...}}, ...]
+用 IIFE 注入全局 SCENARIO_START_EVENTS 对象。
+
+开局链设计：
+
+1) classic 城市务工者：3天
+   - day+1: 桥洞下的第一夜（选择：早起找工/去工地/找老乡）
+   - day+2: 第一份零工（体力考验/选择找工类型）
+   - day+3: 找到落脚处（选择城中村租房/继续露宿省钱）
+
+2) laid_off 下岗再就业：4天
+   - day+1: 遣散费怎么花（存银行/买工具/付房租）
+   - day+2: 技能摸底（发现自己会什么）
+   - day+3: 转型尝试（第一次摆摊/送外卖/做家政）
+   - day+4: 适应期（选择坚持这个方向/换方向）
+
+3) small_town_grinder 小镇做题家：4天
+   - day+1: 出租屋的第一夜（室友/环境/心态）
+   - day+2: 投简历（学历vs现实落差）
+   - day+3: 面试（通过/被拒/心态调整）
+   - day+4: 第一份工作（不是理想但先做）
+
+4) foreign_worker 外来打工者：4天
+   - day+1: 宿舍里的老乡们（语言障碍/文化冲击）
+   - day+2: 流水线第一天（体力考验/时薪计算）
+   - day+3: 学语言（可选：找培训班/跟工友学/自己练）
+   - day+4: 选择（继续工厂/尝试新方向）
+
+5) second_gen 二代创业者：3天
+   - day+1: 资金的重量（选择：直接创业/先学习/先体验）
+   - day+2: 创业启蒙（去科技园/看别人怎么做）
+   - day+3: 方向选择（科技/消费/金融）
+
+6) midlife_crisis 中年危机职场人：3天
+   - day+1: 被裁的后续（选择：拿N+1走/谈判/找律师）
+   - day+2: 下一站（降薪小公司/创业/开滴滴过渡）
+   - day+3: 家庭压力（伴侣的态度/孩子的学费）
+
+7) fresh_grad 应届毕业生：3天
+   - day+1: 租房陷阱（中介坑/押金/合租）
+   - day+2: 职场第一课（被PUA/被卷/站队）
+   - day+3: 第一个工资（怎么分配）
+
+接线要点：
+1) main.js startScenarioGame() 调用时记录 scenario_id 到 state.flags._currentScenario
+2) 新增 DAILY_PIPELINE 步骤 scenario_start_chain，检查 state.flags._currentScenario 和 day 是否匹配 startChain 中的 day offset
+3) 事件通过 showEventModal() 展示
+4) index.html 注册 script，位置在 scenarios.js 之后
+
+验证 grep：SCENARIO_START_EVENTS | _currentScenario | scenario_start_chain
+
+
+=== 收尾 ===
+三任务完成后跑一次 python build.py
+在 src/DEVELOPMENT.md 顶部追加 v3.3 Wave-2 段。
+最终 commit "v3.3 Wave-2: 三章路线效应+天气预报+剧本开局链"
+
+=== 输出格式 ===
+v3.3 Wave-2 COMPLETE
+T1 ✅ route_effects.js: XXX行, grep ✓
+T2 ✅ weather_forecast.js: XXX行, grep ✓  
+T3 ✅ scenario_start_chains.js: XXX行, grep ✓
+BUILD: dist/index.html = XXXX.X KB
+COMMITS: <hash1> T1, <hash2> T2, <hash3> T3
+RISKS: <无>
+
+开始执行。

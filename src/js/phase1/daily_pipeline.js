@@ -775,6 +775,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 三章结局路线效应 ===
+  {
+    name: "route_effects",
+    fn: function (state) {
+      if (typeof tickRouteEffects === "function") {
+        tickRouteEffects(state);
+      }
+    },
+  },
+
   // === 新闻桥接（新闻→事件权重 + 价格情绪）===
   {
     name: "news_bridge",

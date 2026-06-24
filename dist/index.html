@@ -41696,6 +41696,124 @@ function hasIllness(state, illnessId) {
       },
     ],
   };
+
+  // ====== [v3.3 W1-T6] 前世记忆 ======
+  function _getCurState() {
+    try {
+      return (typeof StateManager !== "undefined" && StateManager.getState)
+        ? StateManager.getState()
+        : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _pastLifeSections() {
+    var s = _getCurState();
+    var f = (s && s.flags) || {};
+    var pathLabel = {
+      grind: "再卷职场",
+      civil: "备考公",
+      lie_flat: "摆烂躺平",
+      exam: "备考公",
+      career: "再卷职场",
+      lieflat: "摆烂躺平",
+    };
+    var path = f._prevCrisis35Path || f._crisis35Path;
+    var moralScore = (typeof f._prevMoralScore === "number")
+      ? f._prevMoralScore
+      : null;
+    var peakAffMap = f._prevPeakAffinity || {};
+    var ribbons = [];
+    try {
+      if (typeof getCollectedRibbons === "function") {
+        ribbons = getCollectedRibbons() || [];
+      }
+    } catch (e) {}
+    var coinBal = 0, unlocks = [];
+    try {
+      if (typeof getHeritageBalance === "function")
+        coinBal = getHeritageBalance() || 0;
+      if (typeof getHeritageShop === "function") {
+        var sh = getHeritageShop();
+        unlocks = (sh.unlocks || []).filter(function (u) {
+          return u.unlocked;
+        });
+      }
+    } catch (e) {}
+
+    var lines = [];
+    if (path) {
+      lines.push(
+        "🌗 35 岁那年，你选择了——【" +
+          (pathLabel[path] || path) +
+          "】。这条路在你身上留下了痕迹。",
+      );
+    } else {
+      lines.push("🌗 你还未跨过 35 岁的分水岭，或上一世没留下选择的记录。");
+    }
+    if (moralScore !== null) {
+      var ml =
+        moralScore >= 10
+          ? "前世善人，业力正向"
+          : moralScore >= 0
+            ? "前世清白，无功无过"
+            : moralScore >= -5
+              ? "前世小恶，欠了点债"
+              : "前世恶人，业力反噬";
+      lines.push("⚖ 前世道德净分：" + moralScore + "（" + ml + "）");
+    }
+    var peakCount = Object.keys(peakAffMap).length;
+    if (peakCount > 0) {
+      lines.push(
+        "❤ 上一世你与 " +
+          peakCount +
+          " 位 NPC 建立过深厚情谊（好感曾≥50），他们这一世会记得你的脸。",
+      );
+    }
+    var ribbonNames = (ribbons || []).slice(0, 6).map(function (r) {
+      return (r.icon || "🎀") + " " + (r.name || r.id);
+    });
+    if (ribbonNames.length > 0) {
+      lines.push(
+        "🎗 已收集人生缎带：" + ribbonNames.join("、") + (ribbons.length > 6 ? " 等" : ""),
+      );
+    }
+    lines.push("🪙 累计传承币：" + coinBal + "（在主菜单→传承商店消费）");
+    if (unlocks.length > 0) {
+      lines.push(
+        "🏛 已解锁传承：" +
+          unlocks
+            .map(function (u) {
+              return (u.icon || "") + u.name;
+            })
+            .join("、"),
+      );
+    }
+
+    return [
+      {
+        kind: "desc",
+        text:
+          "前世的记忆不是直接传给你，而是化作血脉里的某种倾向、某些熟悉的脸孔、和命运暗中的偏袒。这一页记录的，是你前世留下的痕迹。",
+      },
+      { kind: "subhead", text: "📜 前世的印记" },
+      { kind: "list", items: lines },
+      {
+        kind: "tip",
+        text:
+          "传承机制涉及：35岁路径加成、道德净分→幸运、NPC老熟人解锁、人生缎带、传承币与红/绿互斥解锁。重开新档时全部自动结算。",
+      },
+    ];
+  }
+  NARRATIVES.past_life = {
+    id: "past_life",
+    name: "前世记忆",
+    icon: "🕯",
+    brief: "上一周目你留下的痕迹——选择、道德、人情、缎带。",
+    version: "v3.3",
+    related: ["mechanics:heritage_coin", "narratives:life_ribbon"],
+    sections: _pastLifeSections,
+  };
 })();
 </script>
     <script>/**
@@ -103572,6 +103690,13 @@ function _renderMechanicEntry(state, m) {
       "</p>";
   }
   var sections = m.sections || [];
+  if (typeof sections === "function") {
+    try {
+      sections = sections(state) || [];
+    } catch (e) {
+      sections = [];
+    }
+  }
   for (var i = 0; i < sections.length; i++) {
     html += _renderMechanicSection(state, sections[i]);
   }
