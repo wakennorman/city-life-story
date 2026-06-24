@@ -1,6 +1,54 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.6 社交网络扩展「人情江湖」实装 — NPC关系链核心引擎 + 3新NPC + 8关系事件）
+> 最后更新: 2026-06-24（v3.6 版本升级 — NPC关系网+时代变迁+副业深化+人生回忆录）
+
+## 2026-06-24 — v3.6 版本升级（P0/P1全任务完成）
+
+执行任务：v3.6 版本升级（4组P0/P1任务）
+
+**设计参考**：《Stardew Valley》NPC关系网 / 《大多数》人际网络 / 中国CPI历史数据 / Capitalism Lab经济周期 / BitLife人生回顾
+
+### P0-1: NPC关系网系统（~825行）
+- 新建 `src/js/core/npc_relationships.js`：NPC关系网定义、好感传导、衰减系统
+- 修改 `src/js/data/npcs.js`：为10个NPC添加locationPreference/relationshipWeight/interactionHistory
+- 修改 `src/js/core/cross_system_events.js`：新增6条NPC关系网联动事件（送礼传导/口碑传播/前同事引荐等）
+- 修改 `src/js/ui/social_tab.js`：新增NPC关系网可视化Tab（关系卡片+传导日志）
+- 修改 `src/js/phase1/daily_pipeline.js`：新增npc_relationships_tick步骤
+- 修改 `src/index.html`：加载npc_relationships.js
+- 修改 `src/js/main.js`：初始化NPC关系网状态
+
+### P0-2: 时代变迁系统（~718行）
+- 新建 `src/js/core/era_transform.js`：通胀指数（8%/年）、时代阶段（起步/成长/成熟/调整）、每日演化
+- 新建 `src/js/data/era_events.js`：8个时代事件（Day 90/180/270/365/450/540/720/900）
+- 修改 `src/js/phase1/daily_pipeline.js`：新增era_tick步骤
+- 修改 `src/index.html`：加载era_transform.js和era_events.js
+- 修改 `src/js/main.js`：初始化时代变迁系统
+
+### P0-3: 副业系统深化（~725行）
+- 新建 `src/js/phase2/side_hustle.js`：6种副业（代购/家教/网约车/外卖/自媒体/投资理财）
+- 新建 `src/js/data/side_hustle_events.js`：副业随机事件（客户投诉/交通事故/平台封号等）
+- 新建 `src/js/ui/side_hustle_ui.js`：副业Tab界面+状态卡片
+- 修改 `src/js/phase1/daily_pipeline.js`：新增side_hustle_tick步骤
+- 修改 `src/index.html`：加载副业系统脚本
+- 修改 `src/js/main.js`：初始化副业系统
+
+**副业特色**：
+- 代购：18:00后+15%售价
+- 网约车/外卖：需要agility≥50
+- 家教：需要intelligence≥30
+- 自媒体：粉丝积累+波动收入
+- 投资理财：资金门槛+市场风险
+- 疲劳度系统：过度副业影响收入
+
+### P1-4: 人生回忆录系统（~422行）
+- 新建 `src/js/ui/life_memoir.js`：8类回忆录（童年/求学/初恋/职场/创业/家庭/疾病/旅行）
+- 修改 `src/js/ui/victory.js`：结局时生成回忆录摘要
+- 修改 `src/index.html`：加载life_memoir.js
+
+### 构建
+已 `python build.py`（4032.9 KB）
+
+---
 
 ## 2026-06-24 — v3.6 社交网络扩展「人情江湖」实装
 

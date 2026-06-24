@@ -479,6 +479,9 @@
           <button class="tab-btn" data-tab="personal_growth">
             🌱 个人成长
           </button>
+          <button class="tab-btn" data-tab="side_hustle" style="display: none">
+            💼 副业
+          </button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
@@ -36419,7 +36422,433 @@ if (typeof window !== "undefined") {
 }
 </script>
     <!-- v3.6 NPC关系链 -->
-    <script src="js/core/npc_relationships.js"></script>
+    <script>/**
+ * NPC 关系链核心引擎 — 「人情江湖」
+ *
+ * 设计目标：NPC 之间也有自己的关系网，玩家行为会触发蝴蝶效应。
+ * 参考：《Stardew Valley》岛民关系 / 《大多数》人情网络
+ *
+ * ┌─────────────────────────┐
+ * │ NPC关系矩阵（12×12双向）│
+ * │ aunt_wang ↔ old_zhou    │ ← 旧识（城中村老邻居）
+ * │ boss_li ↔ sister_zhang  │ ← 竞争关系（抢活源）
+ * │ 赵姐 ↔ boss_li          │ ← 业务关系
+ * │ 陈哥 ↔ 老同学阿杰       │ ← 老同学
+ * └───────────┬─────────────┘
+ *             ↓ 每日传播
+ * ┌─────────────────────────┐
+ * │ 蝴蝶效应：玩家帮A→得罪B │
+ * │ 关系链传导：A热→B升温   │
+ * └─────────────────────────┘
+ */
+
+// ====== 关系类型定义 ======
+const RELATION_TYPES = {
+  old_acquaintance: { label: "旧识", baseAffinityMod: -10, color: "#8B8050" },
+  competitor: { label: "竞争", baseAffinityMod: -15, color: "#C0392B" },
+  business: { label: "业务", baseAffinityMod: 5, color: "#2ECC71" },
+  classmate: { label: "老同学", baseAffinityMod: 10, color: "#3498DB" },
+  friendly: { label: "友善", baseAffinityMod: 5, color: "#F39C12" },
+  neutral: { label: "中立", baseAffinityMod: 0, color: "#95A5A6" },
+  strained: { label: "紧张", baseAffinityMod: -10, color: "#E74C3C" },
+};
+
+// ====== NPC关系矩阵 ======
+const NPC_RELATION_MATRIX = {
+  aunt_wang: {
+    old_zhou: "old_acquaintance",
+    boss_li: "neutral",
+    sister_zhang: "strained",
+    xiao_mei: "friendly",
+    chef_chen: "friendly",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  old_zhou: {
+    aunt_wang: "old_acquaintance",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "friendly",
+    chef_chen: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "friendly",
+    ajie: "neutral",
+  },
+  boss_li: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    sister_zhang: "competitor",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "business",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  sister_zhang: {
+    aunt_wang: "strained",
+    old_zhou: "neutral",
+    boss_li: "competitor",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "business",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  xiao_mei: {
+    aunt_wang: "friendly",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  chef_chen: {
+    aunt_wang: "friendly",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  auntie_lin: {
+    aunt_wang: "friendly",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  master_zhao: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  xiaoli: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  dr_wang: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  zhaojie: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "business",
+    sister_zhang: "business",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  chen_ge: {
+    aunt_wang: "neutral",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+  },
+  ajie: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "classmate",
+  },
+};
+
+// ====== 关系传播矩阵 ======
+const RELATION_PROPAGATION = {
+  aunt_wang: { old_zhou: 0.3, xiao_mei: 0.15, chef_chen: 0.1, auntie_lin: 0.1 },
+  old_zhou: { aunt_wang: 0.3, xiao_mei: 0.15, auntie_lin: 0.1, chen_ge: 0.15 },
+  boss_li: { sister_zhang: -0.25, zhaojie: 0.15 },
+  sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
+  zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
+};
+
+/** 初始化NPC关系状态 */
+function initNpcRelationships(state) {
+  if (!state.relationships) state.relationships = {};
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcId = npcIds[i];
+    if (!state.relationships[npcId]) {
+      state.relationships[npcId] = { affinity: 0, met: false };
+    }
+  }
+}
+
+/** 每日NPC关系tick — 蝴蝶效应传播 */
+function tickNpcRelationships(state) {
+  var day = state.player.day;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  if (!state.npcRelationshipLog.lastPropagationDay) {
+    state.npcRelationshipLog.lastPropagationDay = 0;
+  }
+  if (state.npcRelationshipLog.lastPropagationDay >= day) return;
+  state.npcRelationshipLog.lastPropagationDay = day;
+
+  var todayInteractions = state.npcRelationshipLog.dailyInteractions || {};
+  var propagated = {};
+
+  for (var npcId in todayInteractions) {
+    var interaction = todayInteractions[npcId];
+    var relationTargets = RELATION_PROPAGATION[npcId];
+    if (!relationTargets) continue;
+
+    for (var targetId in relationTargets) {
+      if (propagated[targetId]) continue;
+      var coeff = relationTargets[targetId];
+      var change = interaction.change * coeff;
+      applyAffinityChange(state, targetId, change, "关系传导");
+      propagated[targetId] = true;
+    }
+  }
+  state.npcRelationshipLog.dailyInteractions = {};
+}
+
+/** 记录玩家与NPC的互动 */
+function recordNpcInteraction(npcId, change, reason) {
+  if (typeof StateManager === "undefined") return;
+  var state = StateManager.getState();
+  if (!state) return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  if (!state.npcRelationshipLog.dailyInteractions) {
+    state.npcRelationshipLog.dailyInteractions = {};
+  }
+  var existing = state.npcRelationshipLog.dailyInteractions[npcId];
+  if (existing) {
+    existing.change += change;
+  } else {
+    state.npcRelationshipLog.dailyInteractions[npcId] = { change: change, reason: reason };
+  }
+  applyAffinityChange(state, npcId, change, reason);
+}
+
+/** 应用NPC好感变化 */
+function applyAffinityChange(state, npcId, change, reason) {
+  if (!state.relationships) state.relationships = {};
+  if (!state.relationships[npcId]) {
+    state.relationships[npcId] = { affinity: 0, met: true };
+  }
+  var oldAffinity = state.relationships[npcId].affinity;
+  var newAffinity = Math.max(-100, Math.min(100, oldAffinity + change));
+  state.relationships[npcId].affinity = newAffinity;
+  state.relationships[npcId].met = true;
+
+  if (change !== 0) {
+    var oldLabel = getAffinityLabel(oldAffinity);
+    var newLabel = getAffinityLabel(newAffinity);
+    if (oldLabel !== newLabel) {
+      StateManager.addMessage(
+        "👥 " + npcId + " 与你的关系： " + oldLabel + " → " + newLabel,
+        "info"
+      );
+    }
+  }
+}
+
+/** 获取NPC好感度描述 */
+function getAffinityLabel(affinity) {
+  if (affinity >= 80) return "❤️ 挚友";
+  if (affinity >= 60) return "😊 好友";
+  if (affinity >= 30) return "🙂 熟人";
+  if (affinity >= 0) return "👤 初识";
+  if (affinity >= -30) return "😐 冷淡";
+  return "😠 厌恶";
+}
+
+/** 获取NPC之间的关系类型描述 */
+function getRelationDesc(npcA, npcB) {
+  var relations = NPC_RELATION_MATRIX[npcA];
+  if (!relations) return null;
+  var type = relations[npcB];
+  var relDef = RELATION_TYPES[type] || RELATION_TYPES.neutral;
+  return { type: type, label: relDef.label, color: relDef.color };
+}
+
+/** 获取NPC的关系网（用于社交Tab渲染） */
+function getNpcRelationshipNetwork(state) {
+  var network = [];
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcId = npcIds[i];
+    var aff = (state.relationships[npcId] && state.relationships[npcId].affinity) || 0;
+    var rel = state.relationships[npcId];
+    if (!rel || !rel.met) continue;
+
+    var connections = [];
+    var relations = NPC_RELATION_MATRIX[npcId];
+    for (var otherId in relations) {
+      var otherAff = (state.relationships[otherId] && state.relationships[otherId].affinity) || 0;
+      if (otherAff <= 0) continue;
+      var relDesc = getRelationDesc(npcId, otherId);
+      connections.push({
+        targetId: otherId,
+        relationType: relDesc.type,
+        relationLabel: relDesc.label,
+        relationColor: relDesc.color,
+        targetAffinity: otherAff,
+      });
+    }
+
+    network.push({
+      npcId: npcId,
+      affinity: aff,
+      affinityLabel: getAffinityLabel(aff),
+      connections: connections,
+    });
+  }
+
+  network.sort(function(a, b) { return b.affinity - a.affinity; });
+  return network;
+}
+
+/** 检查NPC关系链是否满足事件触发条件 */
+function checkNpcRelationEventTriggers(state) {
+  var triggers = [];
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcA = npcIds[i];
+    var affA = (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
+    if (affA < 30) continue;
+
+    var relations = NPC_RELATION_MATRIX[npcA];
+    for (var npcB in relations) {
+      var type = relations[npcB];
+      var affB = (state.relationships[npcB] && state.relationships[npcB].affinity) || 0;
+
+      if (type === "competitor" && affA >= 50 && affB >= 30) {
+        triggers.push({
+          type: "triangular_choice",
+          npcA: npcA,
+          npcB: npcB,
+          relationType: type,
+          thresholdA: 50,
+          thresholdB: 30,
+        });
+      }
+      if (type === "old_acquaintance" && affA >= 60 && affB >= 20) {
+        triggers.push({
+          type: "old_friend_reaction",
+          npcA: npcA,
+          npcB: npcB,
+          relationType: type,
+          thresholdA: 60,
+          thresholdB: 20,
+        });
+      }
+    }
+  }
+  return triggers;
+}
+
+// ====== 百科自更新 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.npc_relationships = {
+    id: "npc_relationships",
+    name: "NPC关系链",
+    icon: "🕸️",
+    brief: "NPC之间也有自己的关系网，玩家行为会触发蝴蝶效应",
+    version: "1.0.0",
+    related: ["mechanics:npc_system", "mechanics:cross_system_events"],
+    sections: [
+      { kind: "desc", text: "NPC不是孤立的个体，他们之间有旧识、竞争、业务、同窗等各种关系。玩家帮助A的同时，可能会间接影响A的关系人B。" },
+      { kind: "subhead", text: "🔄 关系传播机制" },
+      { kind: "list", items: [
+        "每日tick时，玩家与NPC的互动会向该NPC的关系网扩散（传导系数0.1~0.3）",
+        "竞争关系传导为负值：帮A→B好感下降",
+        "旧识/业务关系传导为正值：帮A→B好感上升",
+      ]},
+    ],
+  };
+}
+</script>
     <script>/**
  * 证书/技能训练定义
  * 可在培训中心考取
@@ -36731,6 +37160,18 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.5,
+      slum: 0.3,
+      park: 0.2,
+    },
+    relationshipWeight: {
+      family: 1.2,
+      neighbor: 1.0,
+      mentor: 0.8,
+    },
+    interactionHistory: [],
     // 交易情报：专业领域和好感门控信息
     tradeInfo: {
       expertise: ["daily", "food"],
@@ -36943,6 +37384,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.4,
+      construction: 0.35,
+      entertainment: 0.25,
+    },
+    relationshipWeight: {
+      former_colleague: 1.3,
+      neighbor: 0.9,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -37153,6 +37605,18 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.5,
+      factoryZone: 0.3,
+      school: 0.2,
+    },
+    relationshipWeight: {
+      family: 1.2,
+      former_colleague: 1.1,
+      mentor: 0.85,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["clothing", "electronics", "luxury"],
@@ -37359,6 +37823,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      slum: 0.5,
+      construction: 0.3,
+      wholesaleMarket: 0.2,
+    },
+    relationshipWeight: {
+      neighbor: 1.1,
+      rival: 0.7,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["scrap"],
@@ -37568,6 +38043,17 @@ const NPCS = [
         }
       }
     ],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.4,
+      school: 0.35,
+      trainingCenter: 0.25,
+    },
+    relationshipWeight: {
+      mentor: 1.0,
+      friend: 1.0,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["daily", "food", "clothing"],
@@ -37745,6 +38231,17 @@ const NPCS = [
       birthdayHint: "陈师傅今天做了几道拿手菜请熟客尝，看起来特别高兴。",
     },
     giftPrefers: ["beer", "vegetables"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      commercialDist: 0.6,
+      wholesaleMarket: 0.25,
+      slum: 0.15,
+    },
+    relationshipWeight: {
+      neighbor: 1.0,
+      mentor: 0.9,
+    },
+    interactionHistory: [],
     // 交易情报
     tradeInfo: {
       expertise: ["food"],
@@ -38405,6 +38902,16 @@ const NPCS = [
       birthdayHint: "林阿姨今天收摊比往常早，笑着说过节去。",
     },
     giftPrefers: ["fruits", "daily_use", "snacks"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      wholesaleMarket: 0.7,
+      commercialDist: 0.2,
+      slum: 0.1,
+    },
+    relationshipWeight: {
+      neighbor: 1.0,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["food", "vegetables"],
       infoTypes: {
@@ -38569,6 +39076,16 @@ const NPCS = [
       birthdayHint: "赵师傅今天没开门，门上贴着「今日休息，家有喜事」的纸条。",
     },
     giftPrefers: ["beer", "cigarettes", "daily_use"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      factoryZone: 0.75,
+      commercialDist: 0.15,
+      suburb: 0.1,
+    },
+    relationshipWeight: {
+      neighbor: 0.9,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["electronics", "daily"],
       infoTypes: {
@@ -38735,6 +39252,16 @@ const NPCS = [
       birthdayHint: "小丽今天直播间特别热闹，说在抽奖庆祝。",
     },
     giftPrefers: ["clothing", "electronics", "luxury"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      techPark: 0.5,
+      commercialDist: 0.35,
+      entertainment: 0.15,
+    },
+    relationshipWeight: {
+      mentor: 0.8,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["electronics", "luxury"],
       infoTypes: {
@@ -38893,6 +39420,16 @@ const NPCS = [
         "值班表上贴着张贺卡，护士说今天是王医生的生日，但他还在查房。",
     },
     giftPrefers: ["fruits", "daily_use"],
+    // v3.6 P0-1: 关系网系统字段
+    locationPreference: {
+      hospital: 0.7,
+      commercialDist: 0.2,
+      park: 0.1,
+    },
+    relationshipWeight: {
+      mentor: 0.7,
+    },
+    interactionHistory: [],
     tradeInfo: {
       expertise: ["daily", "food"],
       infoTypes: {
@@ -39013,6 +39550,561 @@ const NPCS = [
           hint: "好感不变",
           apply: function (st) {
             StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 赵姐（中介）
+  // ============================================================
+  {
+    id: "zhaojie",
+    name: "赵姐",
+    role: "房产中介",
+    location: "commercialDist",
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "commercialDist",
+      evening: "entertainment",
+      night: "commercialDist",
+    },
+    birthday: 188,
+    desc: "房产中介门店店长，消息灵通。城市改造、房租涨跌她都知道。",
+    birthdayLine: "哎呀你居然记得我生日！来，姐请你喝奶茶，今天不谈工作！",
+    festivalLines: {
+      spring_festival: "过年买房的人少，但年后开工第一波客户多，得提前准备！",
+      mid_autumn: "中秋节不少客户想看房，说是团圆节买房吉利。",
+      labor_day: "黄金周看房的人爆满，房价又要涨一波！",
+      national_day: "国庆七天我基本都在门店，有客户随时找我。",
+    },
+    talkLines: [
+      "最近老城区要改造，你住的那片可能涉及拆迁。",
+      "房租下个月要涨，房东都托我涨价。",
+      "想买房趁现在，明年政策可能要收紧。",
+    ],
+    presenceChance: 0.70,
+    encounterLines: [
+      "赵姐在门店门口打电话，语气很专业。",
+      "赵姐拿着楼盘宣传册，跟客户介绍户型。",
+      "赵姐坐在门店里刷手机，看到你来抬起头。",
+    ],
+    infoHints: {
+      giftHint: "赵姐说最近房价又要涨，看来她在关注楼市动态。",
+      birthdayHint: "赵姐今天穿得比较正式，可能是有重要客户。",
+    },
+    giftPrefers: ["cigarettes", "beer", "daily_use"],
+    skillThresholds: [
+      { attr: "intelligence", minAttr: 40, minAffinity: 60, id: "zhaojieCityInfo",
+        desc: "提前获知城市改造信息，避免房租暴涨",
+        effect: function(st) {
+          if (st.flags.zhaojieCityInfo) return;
+          st.flags.zhaojieCityInfo = true;
+          StateManager.addMessage("🏠 赵姐悄悄告诉你：「下个月老城区要改造，你住的片区房租可能要涨30%。趁现在赶紧找新地方！」提前获知城市改造信息。","success");
+        }
+      }
+    ],
+    tradeInfo: {
+      expertise: ["housing", "commercialDist"],
+      infoTypes: {
+        price_level: { label: "商业区房租行情", threshold: 30, cost: 50 },
+        category_highest: {
+          label: "哪租房最划算",
+          threshold: 60,
+          cost: 30,
+        },
+      },
+    },
+    presenceBonus: [
+      {
+        minAffinity: 30,
+        jobs: null,
+        multiplier: 1.05,
+      },
+      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+    ],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "zhaojie_30",
+        desc: "赵姐给你内部租房信息（房租-10%）",
+        effect: function (st) {
+          st.flags.zhaojieRentInfo = true;
+          StateManager.addMessage(
+            "💕 赵姐：「我手上有几个房东的房源，比外面便宜10%。」",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "zhaojie_60",
+        desc: "赵姐提前告知城市改造消息（避免被动涨租）",
+        effect: function (st) {
+          st.flags.zhaojieUrbanRenewal = true;
+          StateManager.addMessage(
+            "💕 赵姐悄悄说：「下个月老城区要改造，你那片房租要涨。趁现在赶紧找新地方，我帮你留意。」",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "zhaojie_80",
+        desc: "赵姐给你优先看房权+中介费打折",
+        effect: function (st) {
+          st.flags.zhaojiePriorityViewing = true;
+          StateManager.addMessage(
+            "❤️ 赵姐：「以后有新房源我先通知你，中介费给你打八折。」",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "赵姐有些为难：「今天有个大客户要看三套房，我一个人跑不过来，你能不能帮我带一套？佣金分你一半。」",
+      choices: [
+        {
+          text: "💪 帮忙！正好熟悉下城市",
+          apply: function (st) {
+            st.flags._npcFavor_zhaojie = true;
+            var pay = 100 + Random.int(0, 99);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.player.fame = Math.min(100, st.player.fame + 3);
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 12,
+            );
+            StateManager.addMessage(
+              "💪 带看完房赚了¥" + pay + "，还熟悉了商业区！好感+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 今天没空",
+          apply: function (st) {
+            st.flags._npcFavor_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.max(
+              -100,
+              st.relationships.zhaojie.affinity - 2,
+            );
+            StateManager.addMessage("😅 赵姐点点头：「没事，我自己跑吧。」", "info");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 70,
+      story:
+        "赵姐叹了口气：「干了八年中介，见过太多人在这座城市起起落落。我攒了点钱想自己开个店，但不知道行不行……你觉得呢？」",
+      choices: [
+        {
+          text: "💪 行！你经验丰富，客户资源也多",
+          hint: "好感+10，赵姐获得开店信念",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 10,
+            );
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.flags.zhaojieWillOpenStore = true;
+            StateManager.addMessage(
+              "💪 「你觉得我行吗？」「行。」赵姐沉默了一会儿，然后笑了：「你说得对，我试试。」好感+10，心情+10。也许某天，你会看到一家新开的中介门店，招牌上写着她的名字。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⚠️ 开店风险大，先攒更多钱再说",
+          hint: "好感+3，赵姐冷静下来",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            if (!st.relationships.zhaojie)
+              st.relationships.zhaojie = { affinity: 0, met: true };
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 3,
+            );
+            StateManager.addMessage(
+              "⚠️ 你讲了开店的成本和风险。赵姐点点头：「你说得对，我再攒攒。」好感+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 你自己决定",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_zhaojie = true;
+            StateManager.addMessage("🤷 「也是，这种事只能自己想。」赵姐笑了笑，没再提。", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 陈哥（情报贩子）
+  // ============================================================
+  {
+    id: "chen_ge",
+    name: "陈哥",
+    role: "情报贩子",
+    location: "nightMarket",
+    schedule: {
+      morning: "slum",
+      afternoon: "commercialDist",
+      evening: "nightMarket",
+      night: "nightMarket",
+    },
+    birthday: 245,
+    desc: "夜市摊主兼情报贩子，什么都知道。用钱或者人情换消息。",
+    birthdayLine: "哟你还记得我生日！今天不收你钱，这桌算我请的！",
+    festivalLines: {
+      spring_festival: "过年夜市照常开，初一初二客人最多，生意好得很！",
+      mid_autumn: "中秋节大家出来赏月，夜市生意翻倍。",
+      labor_day: "劳动节放假三天，夜市人挤人，我忙得脚不沾地。",
+      national_day: "黄金周七天我基本不歇，每天赚得比平时一周还多。",
+    },
+    talkLines: [
+      "想打听啥？有钱好说话。",
+      "城里的事，没有我不知道的。",
+      "人情比钱好用，帮过我的人，消息免费。",
+    ],
+    presenceChance: 0.60,
+    encounterLines: [
+      "陈哥坐在夜市摊前抽烟，眯眼看着来往的人。",
+      "陈哥正跟客人低声说话，看到你点点头。",
+      "陈哥在收摊，把最后一张折叠桌叠好。",
+    ],
+    infoHints: {
+      giftHint: "陈哥说最近城里出了几件大事，看来他消息确实灵通。",
+      birthdayHint: "陈哥今天摊位上摆了一瓶白酒，说是有人送的。",
+    },
+    giftPrefers: ["cigarettes", "beer", "snacks"],
+    skillThresholds: [
+      { attr: "intelligence", minAttr: 30, minAffinity: 60, id: "chenGeInfoBonus",
+        desc: "获取独家情报，触发隐藏事件",
+        effect: function(st) {
+          if (st.flags.chenGeInfoBonus) return;
+          st.flags.chenGeInfoBonus = true;
+          StateManager.addMessage("🕵️ 陈哥把你当自己人了：「有消息我第一个告诉你。」触发隐藏情报事件。","success");
+        }
+      }
+    ],
+    tradeInfo: {
+      expertise: ["info", "nightMarket"],
+      infoTypes: {
+        price_level: { label: "隐藏商机", threshold: 40, cost: 80 },
+        category_highest: {
+          label: "城里最近出了啥大事",
+          threshold: 60,
+          cost: 50,
+        },
+      },
+    },
+    presenceBonus: [
+      {
+        minAffinity: 30,
+        jobs: null,
+        multiplier: 1.05,
+      },
+      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+    ],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "chen_ge_30",
+        desc: "陈哥给你内部消息（随机获得一条有用情报）",
+        effect: function (st) {
+          st.flags.chenGeInfoAccess = true;
+          StateManager.addMessage(
+            "💕 陈哥：「最近城里出了件事，你可能感兴趣……」告诉你一条情报。",
+            "info",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "chen_ge_60",
+        desc: "陈哥给你独家情报（触发隐藏事件）",
+        effect: function (st) {
+          st.flags.chenGeExclusiveInfo = true;
+          StateManager.addMessage(
+            "💕 陈哥：「这条消息只告诉你，别到处说。」解锁隐藏情报事件。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "chen_ge_80",
+        desc: "陈哥把你当自己人（情报免费+双倍收益）",
+        effect: function (st) {
+          st.flags.chenGeTrusted = true;
+          StateManager.addMessage(
+            "❤️ 陈哥：「以后有消息我第一个告诉你，不收你钱。」情报免费，相关事件收益翻倍。",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "陈哥压低声音：「最近城里出了件事，我得确认下细节。你能不能帮我去打听一下？有好处。」",
+      choices: [
+        {
+          text: "🕵️ 帮忙！正好赚点情报费",
+          apply: function (st) {
+            st.flags._npcFavor_chen_ge = true;
+            var pay = 80 + Random.int(0, 79);
+            st.resources.cash += pay;
+            st.resources.totalEarned += pay;
+            st.player.fame = Math.min(100, st.player.fame + 2);
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.min(
+              100,
+              st.relationships.chen_ge.affinity + 10,
+            );
+            StateManager.addMessage(
+              "🕵️ 打听完消息赚了¥" + pay + "，还获得一条情报！好感+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 这我不方便",
+          apply: function (st) {
+            st.flags._npcFavor_chen_ge = true;
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.max(
+              -100,
+              st.relationships.chen_ge.affinity - 3,
+            );
+            StateManager.addMessage("😅 陈哥点点头：「没事，我找别人。」", "info");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 70,
+      story:
+        "陈哥喝了口酒：「干了这行十年，见过太多人为了消息铤而走险。我有个老同学，失踪好几年了，最近听说在这座城市出现过……你能不能帮我找找？」",
+      choices: [
+        {
+          text: "💪 帮你找！正好锻炼下情报能力",
+          hint: "好感+10，触发寻找老同学事件链",
+          apply: function (st) {
+            st.flags._npcDeepTask_chen_ge = true;
+            if (!st.relationships.chen_ge)
+              st.relationships.chen_ge = { affinity: 0, met: true };
+            st.relationships.chen_ge.affinity = Math.min(
+              100,
+              st.relationships.chen_ge.affinity + 10,
+            );
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            st.flags.chenGeSearchingAjie = true;
+            StateManager.addMessage(
+              "💪 陈哥：「多谢兄弟。」他告诉你老同学叫阿杰，以前在城郊工地干过活。好感+10，智力+2。寻找老同学阿杰的事件链已触发。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤷 这种事我帮不上",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_chen_ge = true;
+            StateManager.addMessage("🤷 陈哥叹了口气：「也是，这确实不是谁都能管的。」", "info");
+          },
+        },
+      ],
+    },
+  },
+  // ============================================================
+  // v3.6 新增NPC — 老同学阿杰（随机出现）
+  // ============================================================
+  {
+    id: "ajie",
+    name: "阿杰",
+    role: "老同学",
+    location: "random", // 随机出现
+    schedule: {
+      morning: "random",
+      afternoon: "random",
+      evening: "random",
+      night: "random",
+    },
+    birthday: 310,
+    desc: "陈哥的老同学，多年前失踪后突然出现。欠了钱没还，又消失了。",
+    birthdayLine: "哎呀今天是我生日？我自己都忘了！你记得，够意思！",
+    festivalLines: {
+      spring_festival: "过年回老家了，今年不走了，打算在这安定下来。",
+      mid_autumn: "中秋节一个人在城市里过，挺想家的。",
+      labor_day: "劳动节我找了个新活，在工地搬砖。",
+      national_day: "黄金周我打算回老家看看，好久没回去了。",
+    },
+    talkLines: [
+      "当年不是故意不还钱的，真的遇到难处了。",
+      "我现在稳定了，慢慢还你，行不？",
+      "陈哥还好吗？好久没见他了。",
+    ],
+    presenceChance: 0.40, // 出现概率低
+    encounterLines: [
+      "阿杰坐在公园长椅上发呆，看到你愣了一下。",
+      "阿杰在路边摊吃面，抬头朝你点点头。",
+      "阿杰匆匆走过，看到你转身想躲。",
+    ],
+    infoHints: {
+      giftHint: "阿杰说他在工地干活，看来生活还算稳定。",
+      birthdayHint: "阿杰今天穿得比较整洁，似乎心情不错。",
+    },
+    giftPrefers: ["beer", "snacks"],
+    skillThresholds: [],
+    tradeInfo: {
+      expertise: [],
+      infoTypes: {},
+    },
+    presenceBonus: [],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "ajie_30",
+        desc: "阿杰还你一部分钱（¥100）",
+        effect: function (st) {
+          if (st.flags.ajiePaid) return;
+          st.resources.cash += 100;
+          st.flags.ajiePaid = true;
+          StateManager.addMessage(
+            "💕 阿杰：「先还你100，剩下的慢慢还。」收到¥100。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "ajie_60",
+        desc: "阿杰还你全部欠款（¥300）并介绍工作",
+        effect: function (st) {
+          if (st.flags.ajiePaidFull) return;
+          st.resources.cash += 300;
+          st.flags.ajiePaidFull = true;
+          st.flags.ajieReferred = true;
+          StateManager.addMessage(
+            "💕 阿杰：「这是剩下的300，多谢你没逼我。」又介绍你一份临时工作。",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "ajie_80",
+        desc: "阿杰彻底还钱+成为固定联系人",
+        effect: function (st) {
+          if (st.flags.ajieTrusted) return;
+          st.flags.ajieTrusted = true;
+          st.flags.ajieReferred = true;
+          StateManager.addMessage(
+            "❤️ 阿杰：「兄弟，钱还清了。以后有活我第一个找你。」阿杰成为固定联系人，偶尔会给你介绍临时工作。",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "阿杰有些尴尬：「那个……之前借的钱，我现在手头有点紧，能不能再宽限几天？」",
+      choices: [
+        {
+          text: "💪 行，宽限你一周",
+          apply: function (st) {
+            st.flags._npcFavor_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 8,
+            );
+            st.flags.ajieGivenExtension = true;
+            StateManager.addMessage(
+              "💪 阿杰：「多谢兄弟，一周后一定还。」好感+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 我现在也需要钱",
+          apply: function (st) {
+            st.flags._npcFavor_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.max(
+              -100,
+              st.relationships.ajie.affinity - 5,
+            );
+            StateManager.addMessage("😅 阿杰低下头：「对不起……」好感-5。", "warning");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 50,
+      story:
+        "阿杰眼圈红了：「当年我欠钱跑路，不是故意躲着你们的。我老婆生病了，得钱治病……现在她走了，我也想重新开始。」",
+      choices: [
+        {
+          text: "💪 我理解，重新开始吧",
+          hint: "好感+15，阿杰彻底放下过去",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 15,
+            );
+            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.flags.ajieMovedOn = true;
+            StateManager.addMessage(
+              "💪 阿杰眼眶红了：「多谢你……我会重新开始。」好感+15，心情+10。阿杰似乎终于放下了过去。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⚠️ 理解，但钱还是要还",
+          hint: "好感+5",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            if (!st.relationships.ajie)
+              st.relationships.ajie = { affinity: 0, met: true };
+            st.relationships.ajie.affinity = Math.min(
+              100,
+              st.relationships.ajie.affinity + 5,
+            );
+            StateManager.addMessage(
+              "⚠️ 阿杰点点头：「你说得对，我会还。」好感+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 你自己决定",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_ajie = true;
+            StateManager.addMessage("🤷 阿杰沉默了一会儿，没说话。", "info");
           },
         },
       ],
@@ -55215,6 +56307,36 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.6 P0-1: NPC关系网每日演化 ===
+  {
+    name: "npc_relationships_tick",
+    fn: function (state) {
+      if (typeof npcRelationshipsTick === "function") {
+        npcRelationshipsTick(state);
+      }
+    },
+  },
+
+  // === v3.6 P0-2: 时代变迁每日演化 ===
+  {
+    name: "era_tick",
+    fn: function (state) {
+      if (typeof eraTick === "function") {
+        eraTick(state);
+      }
+    },
+  },
+
+  // === v3.6 P0-3: 副业系统每日演化 ===
+  {
+    name: "side_hustle_tick",
+    fn: function (state) {
+      if (typeof sideHustleTick === "function") {
+        sideHustleTick(state);
+      }
+    },
+  },
+
   // === 道德后果检查 ===
   {
     name: "moral_consequences",
@@ -55332,6 +56454,16 @@ const DAILY_PIPELINE = [
             "info",
           );
         }
+      }
+    },
+  },
+
+  // === v3.6 NPC关系链每日tick（蝴蝶效应传播）===
+  {
+    name: "npc_relationships_tick",
+    fn: function (state) {
+      if (typeof tickNpcRelationships === "function") {
+        tickNpcRelationships(state);
       }
     },
   },
@@ -57641,6 +58773,697 @@ function afterEventApplied(eventId, state) {
   window.tickNpcLocationRotation = tickNpcLocationRotation;
   window.getActiveNpcLocations = getActiveNpcLocations;
 })();
+</script>
+    <script>/**
+ * 时代变迁系统（v3.6 P0-2）
+ *
+ * 模拟中国近30年经济变迁对物价/工资的影响：
+ * - 通胀指数：1.0 → 1.08（8%/年）
+ * - 时代阶段：初期/成长期/成熟期/衰退期
+ * - 每个阶段有不同的价格/工资倍率
+ *
+ * 设计参考：中国CPI历史数据 / Capitalism Lab经济周期
+ */
+
+(function () {
+  // ====== 时代阶段定义 ======
+  const ERA_STAGES = {
+    initial: {
+      id: "initial",
+      name: "起步期",
+      icon: "🌱",
+      desc: "经济起步阶段，物价稳定但工资较低",
+      priceMod: 0.85,
+      wageMod: 0.8,
+      color: "var(--success)",
+    },
+    growth: {
+      id: "growth",
+      name: "成长期",
+      icon: "📈",
+      desc: "经济高速增长，物价温和上涨，工资快速提升",
+      priceMod: 1.0,
+      wageMod: 1.0,
+      color: "var(--primary)",
+    },
+    mature: {
+      id: "mature",
+      name: "成熟期",
+      icon: "💰",
+      desc: "经济成熟，物价上涨明显，工资增长放缓",
+      priceMod: 1.15,
+      wageMod: 1.1,
+      color: "var(--warning)",
+    },
+    decline: {
+      id: "decline",
+      name: "调整期",
+      icon: "📉",
+      desc: "经济调整期，部分行业下行，机会与风险并存",
+      priceMod: 1.05,
+      wageMod: 0.95,
+      color: "var(--danger)",
+    },
+  };
+
+  // ====== 通胀指数配置 ======
+  const INFLATION_CONFIG = {
+    annualRate: 0.08, // 8%/年
+    baseIndex: 1.0,
+    maxIndex: 2.5, // 通胀指数上限
+    minIndex: 0.8, // 通胀指数下限
+  };
+
+  // ====== 时代事件触发点（按游戏天数） ======
+  const ERA_EVENTS_TRIGGER_DAYS = [90, 180, 270, 365, 450, 540, 720, 900];
+
+  /**
+   * 获取当前时代阶段
+   * @param {number} day - 当前游戏天数
+   * @returns {string} 阶段ID
+   */
+  function getEraStage(day) {
+    const year = day / 365;
+    if (year < 0.5) return "initial";
+    if (year < 1.5) return "growth";
+    if (year < 3) return "mature";
+    return "decline";
+  }
+
+  /**
+   * 获取当前时代修正
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 时代修正信息
+   */
+  function getEraMod(state) {
+    const day = state.player ? state.player.day : 1;
+    const stageId = getEraStage(day);
+    const stage = ERA_STAGES[stageId];
+
+    // 计算通胀指数
+    const year = day / 365;
+    let inflationIndex = INFLATION_CONFIG.baseIndex;
+    inflationIndex *= Math.pow(1 + INFLATION_CONFIG.annualRate, year);
+    inflationIndex = Math.max(
+      INFLATION_CONFIG.minIndex,
+      Math.min(INFLATION_CONFIG.maxIndex, inflationIndex),
+    );
+
+    // 世界参数叠加
+    let sectorDrift = 0;
+    if (state._worldParams && state._worldParams.sectorHeat) {
+      // 取平均行业热度
+      const heats = Object.values(state._worldParams.sectorHeat);
+      if (heats.length > 0) {
+        sectorDrift = heats.reduce((a, b) => a + b, 0) / heats.length - 1;
+      }
+    }
+
+    return {
+      stageId,
+      stageName: stage.name,
+      stageIcon: stage.icon,
+      stageDesc: stage.desc,
+      priceMod: stage.priceMod * inflationIndex * (1 + sectorDrift * 0.1),
+      wageMod: stage.wageMod * inflationIndex * (1 + sectorDrift * 0.05),
+      inflationIndex: inflationIndex,
+      year: year,
+    };
+  }
+
+  /**
+   * 时代变迁每日 tick
+   * @param {Object} state - 游戏状态
+   */
+  function eraTick(state) {
+    if (!state.player) return;
+
+    const day = state.player.day;
+    const eraMod = getEraMod(state);
+
+    // 记录时代状态
+    state._eraState = {
+      stageId: eraMod.stageId,
+      inflationIndex: eraMod.inflationIndex,
+      lastCheckDay: day,
+    };
+
+    // 检查是否触发时代事件
+    if (ERA_EVENTS_TRIGGER_DAYS.includes(day)) {
+      state._pendingEraEvent = {
+        triggerDay: day,
+        stage: eraMod.stageId,
+      };
+    }
+  }
+
+  /**
+   * 获取时代事件列表
+   * @returns {Array} 时代事件
+   */
+  function getEraEvents() {
+    return [
+      {
+        id: "era_90",
+        day: 90,
+        title: "第一桶金",
+        story: "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。",
+        effect: "物价+5%，工资+3%",
+      },
+      {
+        id: "era_180",
+        day: 180,
+        title: "行业风口",
+        story: "某个新兴行业突然火爆，相关岗位薪资翻倍。你看到新闻，心里痒痒的。",
+        effect: "解锁新工作机会，部分行业热度+20%",
+      },
+      {
+        id: "era_270",
+        day: 270,
+        title: "物价飞涨",
+        story: "通胀开始显现。房租涨了10%，菜价涨了8%。你开始认真考虑要不要存点钱买房。",
+        effect: "物价+10%，房租+10%",
+      },
+      {
+        id: "era_365",
+        day: 365,
+        title: "一周年",
+        story: "一年过去了。你回头看刚来时的自己，感慨万千。这一年，城市变了，你也变了。",
+        effect: "获得「城市生存者」成就，所有NPC好感衰减减半",
+      },
+      {
+        id: "era_450",
+        day: 450,
+        title: "行业洗牌",
+        story: "某些行业开始整合，小公司倒闭，大公司收购。有人失业，有人跳槽成功。",
+        effect: "部分工作消失，新工作出现",
+      },
+      {
+        id: "era_540",
+        day: 540,
+        title: "消费升级",
+        story: "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。",
+        effect: "高端商品解锁，物价+5%",
+      },
+      {
+        id: "era_720",
+        day: 720,
+        title: "两年之痒",
+        story: "两年了。你开始思考：是继续打工，还是自己单干？城市给了你机会，也给了你压力。",
+        effect: "创业门槛降低，创业事件概率+50%",
+      },
+      {
+        id: "era_900",
+        day: 900,
+        title: "三年之变",
+        story: "三年。这座城市已经把你塑造成了另一个人。你开始有能力影响周围的人。",
+        effect: "解锁「城市影响者」成就，NPC关系传导效果+20%",
+      },
+    ];
+  }
+
+  /**
+   * 初始化时代变迁系统
+   * @param {Object} state - 游戏状态
+   */
+  function initEraTransform(state) {
+    state._eraState = {
+      stageId: "initial",
+      inflationIndex: INFLATION_CONFIG.baseIndex,
+      lastCheckDay: state.player ? state.player.day : 1,
+    };
+    state._pendingEraEvent = null;
+  }
+
+  // ====== 导出 ======
+  if (typeof window !== "undefined") {
+    window.ERA_STAGES = ERA_STAGES;
+    window.eraTransform = {
+      init: initEraTransform,
+      tick: eraTick,
+      getMod: getEraMod,
+      getStage: getEraStage,
+      getEvents: getEraEvents,
+      getInflationConfig: () => INFLATION_CONFIG,
+    };
+  }
+})();
+</script>
+    <script>/**
+ * 时代变迁事件（v3.6 P0-2）
+ *
+ * 定义8个时代事件（Day 90/180/270/365/450/540/720/900）
+ * 每个事件包含：触发条件、选项、影响（物价/工资/行业热度）
+ */
+
+const ERA_EVENTS = [
+  // === Day 90: 第一桶金 ===
+  {
+    id: "era_90",
+    day: 90,
+    title: "第一桶金",
+    icon: "💰",
+    story: "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 90 && !st.flags._eraEvent_90;
+    },
+    choices: [
+      {
+        text: "💡 学老周，多囤点耐用品",
+        hint: "物价+5%，但获得「精明消费者」徽章",
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          st.flags.preciousConsumerBadge = true;
+          if (st._worldParams && st._worldParams.sectorHeat) {
+            for (let sector in st._worldParams.sectorHeat) {
+              st._worldParams.sectorHeat[sector] *= 1.05;
+            }
+          }
+          StateManager.addMessage(
+            "💡 你开始精明消费，学会了对比价格。获得「精明消费者」徽章。物价整体+5%。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "📈 投资点东西抗通胀",
+        hint: "需要¥200，获得投资经验",
+        cost: 200,
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          st.resources.cash -= 200;
+          if (!st.investment) st.investment = {};
+          if (!st.investment.history) st.investment.history = [];
+          st.investment.history.push({ day: st.player.day, type: "inflation_hedge", amount: 200 });
+          StateManager.addMessage(
+            "📈 你花了¥200买了些抗通胀的东西。虽然钱少了，但心里踏实。获得投资经验。",
+            "info"
+          );
+        }
+      },
+      {
+        text: "😌 走一步看一步",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          StateManager.addMessage(
+            "😌 你决定先不急着做决定。日子还得一天天过。",
+            "info"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 180: 行业风口 ===
+  {
+    id: "era_180",
+    day: 180,
+    title: "行业风口",
+    icon: "🚀",
+    story: "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 180 && !st.flags._eraEvent_180;
+    },
+    choices: [
+      {
+        text: "🔥 抓住风口！",
+        hint: "工资+50%，但需要体力消耗",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          st.flags.trendJobUnlocked = true;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🤔 先调研一下",
+        hint: "心智+3，获得行业情报",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          if (!st.flags) st.flags = {};
+          st.flags.industryIntel = true;
+          StateManager.addMessage(
+            "🤔 你花时间调研了行业趋势，发现有些风口其实是泡沫。心智+3。",
+            "hint"
+          );
+        }
+      },
+      {
+        text: "🙅 不靠谱，还是干老本行",
+        hint: "稳定但错失机会",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          StateManager.addMessage(
+            "🙅 你觉得风口太虚，还是继续干原来的活。稳妥，但也错过了可能的好机会。",
+            "info"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 270: 物价飞涨 ===
+  {
+    id: "era_270",
+    day: 270,
+    title: "物价飞涨",
+    icon: "📈",
+    story: "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 270 && !st.flags._eraEvent_270;
+    },
+    choices: [
+      {
+        text: "😓 接受涨价",
+        hint: "房租+¥50/天",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
+          StateManager.addMessage(
+            "😓 你接受了房租涨价。每个月多花¥1,500。物价涨了，钱包瘪了。",
+            "warning"
+          );
+        }
+      },
+      {
+        text: "🏠 找便宜的房子",
+        hint: "AP消耗，可能找到更便宜的",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          st.player.actionPoints = Math.max(0, (st.player.actionPoints || 100) - 20);
+          if (st.housing) {
+            const newRent = Math.max(200, st.housing.rent - 30);
+            st.housing.rent = newRent;
+          }
+          StateManager.addMessage(
+            "🏠 你花了半天找房，找到个便宜点的。房租从¥350降到¥320。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🤝 跟王大婶商量",
+        hint: "需要好感≥40，可能成功",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          const affinity = (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity) || 0;
+          if (affinity >= 40) {
+            if (st.housing) st.housing.rent = (st.housing.rent || 300) + 20;
+            StateManager.addMessage(
+              "🤝 王大婶看你平时表现不错，房租只涨了¥20。人情有时候比钱管用。",
+              "success"
+            );
+          } else {
+            if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
+            StateManager.addMessage(
+              "🤝 王大婶说：「咱俩关系一般，涨价是没办法。」房租涨了¥50。",
+              "warning"
+            );
+          }
+        }
+      }
+    ]
+  },
+
+  // === Day 365: 一周年 ===
+  {
+    id: "era_365",
+    day: 365,
+    title: "一周年",
+    icon: "🎉",
+    story: "一年过去了。你回头看刚来这座城市时的自己，感慨万千。\n这一年，你经历了什么？失去了什么？又得到了什么？",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 365 && !st.flags._eraEvent_365;
+    },
+    choices: [
+      {
+        text: "📝 写一封给自己的信",
+        hint: "心情+10，获得「反思者」徽章",
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          st.flags.reflectorBadge = true;
+          StateManager.addMessage(
+            "📝 你写下了一年的感悟。虽然辛苦，但你发现自己成长了很多。心情+10。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🎉 庆祝一下！",
+        hint: "花费¥100，心情+15",
+        cost: 100,
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.resources.cash -= 100;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          StateManager.addMessage(
+            "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "😌 平静地接受",
+        hint: "心智+5",
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "😌 你平静地接受了一年的收获与失去。心智+5。",
+            "hint"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 450: 行业洗牌 ===
+  {
+    id: "era_450",
+    day: 450,
+    title: "行业洗牌",
+    icon: "🔄",
+    story: "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 450 && !st.flags._eraEvent_450;
+    },
+    choices: [
+      {
+        text: "🔄 转行",
+        hint: "解锁新工作类别",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          st.flags.careerShift = true;
+          StateManager.addMessage(
+            "🔄 你决定转行。虽然有风险，但不转可能被淘汰。解锁新工作类别。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "💪 坚持原来的行业",
+        hint: "稳定但工资可能下降",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          StateManager.addMessage(
+            "💪 你决定坚持原来的行业。虽然活少了，但你相信熬过去会好起来。",
+            "info"
+          );
+        }
+      },
+      {
+        text: "📊 分析形势",
+        hint: "心智+5，获得决策建议",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
+            "hint"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 540: 消费升级 ===
+  {
+    id: "era_540",
+    day: 540,
+    title: "消费升级",
+    icon: "✨",
+    story: "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 540 && !st.flags._eraEvent_540;
+    },
+    choices: [
+      {
+        text: "✨ 体验高端消费",
+        hint: "花费¥150，心情+10",
+        cost: 150,
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.resources.cash -= 150;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          StateManager.addMessage(
+            "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🤔 观望一下",
+        hint: "心智+3",
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🤔 你觉得高端消费不是必须的，先观望。心智+3。",
+            "hint"
+          );
+        }
+      },
+      {
+        text: "💡 自己开个小店",
+        hint: "需要¥500，解锁创业机会",
+        cost: 500,
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.resources.cash -= 500;
+          st.flags.smallBusinessUnlocked = true;
+          StateManager.addMessage(
+            "💡 你决定自己开个小店。虽然有风险，但这是实现梦想的机会。解锁创业机会。",
+            "success"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 720: 两年之痒 ===
+  {
+    id: "era_720",
+    day: 720,
+    title: "两年之痒",
+    icon: "🤔",
+    story: "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 720 && !st.flags._eraEvent_720;
+    },
+    choices: [
+      {
+        text: "💼 鼓励老周创业",
+        hint: "老周好感+10，获得创业灵感",
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          if (st.relationships && st.relationships.old_zhou) {
+            st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 10);
+          }
+          st.flags.careerInspiration = true;
+          StateManager.addMessage(
+            "💼 你鼓励老周创业。他很高兴，说会认真考虑。好感+10。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🏢 自己考虑创业",
+        hint: "需要¥1000，解锁创业Tab",
+        cost: 1000,
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          st.resources.cash -= 1000;
+          st.flags.startupUnlocked = true;
+          StateManager.addMessage(
+            "🏢 你决定认真考虑创业。虽然需要投入，但这是改变命运的机会。解锁创业Tab。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "😌 继续打工",
+        hint: "稳定但错失机会",
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          StateManager.addMessage(
+            "😌 你觉得创业风险太大，还是继续打工稳妥。",
+            "info"
+          );
+        }
+      }
+    ]
+  },
+
+  // === Day 900: 三年之变 ===
+  {
+    id: "era_900",
+    day: 900,
+    title: "三年之变",
+    icon: "🌟",
+    story: "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 900 && !st.flags._eraEvent_900;
+    },
+    choices: [
+      {
+        text: "🌟 成为城市影响者",
+        hint: "获得「城市影响者」成就，NPC关系传导+20%",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.flags.cityInfluencer = true;
+          StateManager.addMessage(
+            "🌟 你成为了城市影响者。你的行为能影响更多人。NPC关系传导效果+20%。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "📚 回馈社会",
+        hint: "心情+15，道德+5",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
+          StateManager.addMessage(
+            "📚 你决定回馈社会，帮助更多刚来这座城市的人。心情+15，道德+5。",
+            "success"
+          );
+        }
+      },
+      {
+        text: "🏠 回家看看",
+        hint: "心情+10",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          StateManager.addMessage(
+            "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",
+            "info"
+          );
+        }
+      }
+    ]
+  }
+];
+
+// 导出
+if (typeof window !== "undefined") {
+  window.ERA_EVENTS = ERA_EVENTS;
+}
 </script>
 
     <!-- Phase 2 -->
@@ -86192,6 +88015,685 @@ if (typeof window !== "undefined") {
   };
 }
 </script>
+    <!-- v3.6 P0-3: 副业系统深化 -->
+    <script>/**
+ * 副业系统深化（v3.6 P0-3）
+ *
+ * 6种副业：代购/家教/网约车/外卖/自媒体/投资理财
+ * - 代购：18:00后+15%售价（与trade.js联动）
+ * - 网约车/外卖：需要agility≥50
+ * - 家教：需要intelligence≥30
+ * - 自媒体：持续投入+粉丝积累
+ * - 投资理财：资金门槛
+ * - 副业疲劳度系统：过度副业影响主业
+ */
+
+(function () {
+  // ====== 副业定义 ======
+  const SIDE_HUSTLES = {
+    // 代购
+    daigou: {
+      id: "daigou",
+      name: "代购",
+      icon: "🛍️",
+      desc: "帮人代购商品，赚取差价",
+      minAttr: { agility: 30 },
+      baseIncome: 80,
+      incomeVar: [50, 150],
+      fatigueCost: 15,
+      timeSlot: ["afternoon", "evening"],
+      specialBonus: { time: "evening", mod: 1.15 }, // 18:00后+15%
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 家教
+    tutoring: {
+      id: "tutoring",
+      name: "家教",
+      icon: "📚",
+      desc: "给学生补课，时薪可观",
+      minAttr: { intelligence: 30 },
+      baseIncome: 60,
+      incomeVar: [40, 100],
+      fatigueCost: 10,
+      timeSlot: ["afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 网约车
+    rideHailing: {
+      id: "ride_hailing",
+      name: "网约车",
+      icon: "🚗",
+      desc: "开网约车接单，自由灵活",
+      minAttr: { agility: 50 },
+      baseIncome: 120,
+      incomeVar: [80, 200],
+      fatigueCost: 25,
+      timeSlot: ["morning", "afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 外卖
+    foodDelivery: {
+      id: "food_delivery",
+      name: "外卖配送",
+      icon: "🛵",
+      desc: "送外卖，多劳多得",
+      minAttr: { agility: 50 },
+      baseIncome: 100,
+      incomeVar: [60, 180],
+      fatigueCost: 30,
+      timeSlot: ["morning", "afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 自媒体
+    selfMedia: {
+      id: "self_media",
+      name: "自媒体",
+      icon: "📱",
+      desc: "做短视频/写文章，积累粉丝",
+      minAttr: { intelligence: 40, charm: 30 },
+      baseIncome: 50,
+      incomeVar: [20, 300], // 波动大
+      fatigueCost: 20,
+      timeSlot: ["evening", "night"],
+      specialBonus: { followers: 100, mod: 1.5 }, // 粉丝≥100时+50%
+      levelUp: { level: 1, xp: 0, followers: 0 },
+    },
+    // 投资理财
+    investment: {
+      id: "investment_side",
+      name: "投资理财",
+      icon: "📈",
+      desc: "用闲钱投资，获得被动收入",
+      minAttr: { intelligence: 50 },
+      minCash: 500, // 资金门槛
+      baseIncome: 30,
+      incomeVar: [10, 200],
+      fatigueCost: 5,
+      timeSlot: ["morning", "afternoon"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+  };
+
+  // ====== 副业疲劳度配置 ======
+  const FATIGUE_CONFIG = {
+    maxSideHustleFatigue: 100,
+    penaltyThreshold: 60, // 疲劳度超过60开始惩罚
+    penaltyRate: 0.1, // 每超过1点，收入-1%
+    recoveryRate: 10, // 每天自然恢复
+  };
+
+  /**
+   * 检查是否满足副业条件
+   * @param {string} hustleId - 副业ID
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 检查结果
+   */
+  function checkHustleConditions(hustleId, state) {
+    const hustle = SIDE_HUSTLES[hustleId];
+    if (!hustle) return { ok: false, reason: "未知副业" };
+
+    // 属性检查
+    if (hustle.minAttr) {
+      for (let attr in hustle.minAttr) {
+        if ((state.player[attr] || 0) < hustle.minAttr[attr]) {
+          return {
+            ok: false,
+            reason: `${attr}不足（需要${hustle.minAttr[attr]}）`,
+          };
+        }
+      }
+    }
+
+    // 现金检查
+    if (hustle.minCash && (state.resources.cash || 0) < hustle.minCash) {
+      return {
+        ok: false,
+        reason: `资金不足（需要¥${hustle.minCash}）`,
+      };
+    }
+
+    // 时间槽检查
+    const currentSlot = state.player.timeSlot;
+    if (!hustle.timeSlot.includes(currentSlot)) {
+      return {
+        ok: false,
+        reason: `当前时间段不可进行（可在${hustle.timeSlot.join("、")}进行）`,
+      };
+    }
+
+    return { ok: true };
+  }
+
+  /**
+   * 执行副业
+   * @param {string} hustleId - 副业ID
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 执行结果
+   */
+  function performHustle(hustleId, state) {
+    const hustle = SIDE_HUSTLES[hustleId];
+    if (!hustle) return { success: false, error: "未知副业" };
+
+    // 检查条件
+    const check = checkHustleConditions(hustleId, state);
+    if (!check.ok) {
+      return { success: false, error: check.reason };
+    }
+
+    // 检查疲劳度
+    const fatigue = state._sideHustleFatigue || 0;
+    if (fatigue >= FATIGUE_CONFIG.maxSideHustleFatigue) {
+      return {
+        success: false,
+        error: "副业疲劳度过高，需要休息",
+      };
+    }
+
+    // 计算收入
+    let income = hustle.baseIncome;
+    if (hustle.incomeVar) {
+      income += Random.int(hustle.incomeVar[0], hustle.incomeVar[1]);
+    }
+
+    // 特殊加成
+    if (hustle.specialBonus) {
+      if (hustle.specialBonus.time === state.player.timeSlot) {
+        income *= hustle.specialBonus.mod;
+      }
+      if (hustle.specialBonus.followers) {
+        const followers = (state._sideHustleData && state._sideHustleData.selfMedia && state._sideHustleData.selfMedia.followers) || 0;
+        if (followers >= hustle.specialBonus.followers) {
+          income *= hustle.specialBonus.mod;
+        }
+      }
+    }
+
+    income = Math.round(income);
+
+    // 应用收入
+    state.resources.cash += income;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + income;
+
+    // 增加疲劳度
+    const newFatigue = Math.min(
+      FATIGUE_CONFIG.maxSideHustleFatigue,
+      fatigue + hustle.fatigueCost
+    );
+    state._sideHustleFatigue = newFatigue;
+
+    // 更新自媒体粉丝（如果是自媒体）
+    if (hustleId === "self_media") {
+      if (!state._sideHustleData) state._sideHustleData = {};
+      if (!state._sideHustleData.selfMedia) state._sideHustleData.selfMedia = { followers: 0 };
+      state._sideHustleData.selfMedia.followers = Math.min(
+        10000,
+        (state._sideHustleData.selfMedia.followers || 0) + Random.int(1, 5)
+      );
+    }
+
+    // 疲劳度惩罚检查
+    let penalty = 0;
+    if (newFatigue > FATIGUE_CONFIG.penaltyThreshold) {
+      penalty = (newFatigue - FATIGUE_CONFIG.penaltyThreshold) * FATIGUE_CONFIG.penaltyRate;
+    }
+
+    return {
+      success: true,
+      income,
+      fatigueCost: hustle.fatigueCost,
+      newFatigue,
+      penalty,
+      message: `完成${hustle.name}，收入¥${income}${penalty > 0 ? `（疲劳惩罚-${Math.round(penalty * 100)}%）` : ""}`,
+    };
+  }
+
+  /**
+   * 副业每日 tick
+   * @param {Object} state - 游戏状态
+   */
+  function sideHustleTick(state) {
+    if (!state.player) return;
+
+    // 疲劳度自然恢复
+    if (state._sideHustleFatigue !== undefined) {
+      state._sideHustleFatigue = Math.max(
+        0,
+        state._sideHustleFatigue - FATIGUE_CONFIG.recoveryRate
+      );
+    }
+  }
+
+  /**
+   * 获取副业疲劳度状态
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 疲劳度状态
+   */
+  function getFatigueStatus(state) {
+    const fatigue = state._sideHustleFatigue || 0;
+    let status = "normal";
+    if (fatigue > 80) status = "exhausted";
+    else if (fatigue > FATIGUE_CONFIG.penaltyThreshold) status = "warning";
+
+    return {
+      fatigue,
+      max: FATIGUE_CONFIG.maxSideHustleFatigue,
+      status,
+      penalty: Math.max(0, (fatigue - FATIGUE_CONFIG.penaltyThreshold) * FATIGUE_CONFIG.penaltyRate),
+    };
+  }
+
+  /**
+   * 初始化副业系统
+   * @param {Object} state - 游戏状态
+   */
+  function initSideHustle(state) {
+    state._sideHustleFatigue = 0;
+    state._sideHustleData = {
+      selfMedia: { followers: 0 },
+    };
+  }
+
+  // ====== 导出 ======
+  if (typeof window !== "undefined") {
+    window.SIDE_HUSTLES = SIDE_HUSTLES;
+    window.sideHustleTick = sideHustleTick; // 供 daily_pipeline.js 直接调用
+    window.sideHustle = {
+      init: initSideHustle,
+      tick: sideHustleTick,
+      check: checkHustleConditions,
+      perform: performHustle,
+      getFatigue: getFatigueStatus,
+      getList: () => SIDE_HUSTLES,
+    };
+  }
+})();
+</script>
+    <script>/**
+ * 副业随机事件（v3.6 P0-3）
+ *
+ * 副业事件：客户投诉/交通事故/平台封号等
+ */
+
+const SIDE_HUSTLE_EVENTS = [
+  // 代购：客户投诉
+  {
+    id: "side_daigou_complaint",
+    hustle: "daigou",
+    title: "客户投诉",
+    icon: "😠",
+    story: "你帮客户代购的商品有瑕疵，客户很不满意，要求退款并赔偿。\n「我花了这么多钱，就买到这个？」",
+    choices: [
+      {
+        text: "💰 全额退款+赔偿¥50",
+        hint: "损失¥130+，但保住信誉",
+        cost: 130,
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
+          StateManager.addMessage("💰 你全额退款并赔偿了¥50。虽然亏了钱，但客户说以后还会找你。", "warning");
+        }
+      },
+      {
+        text: "🤝 协商部分退款",
+        hint: "损失¥50，信誉小幅下降",
+        cost: 50,
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+          StateManager.addMessage("🤝 你和客户协商后，退了¥50。客户勉强接受，但说下次要考虑清楚。", "info");
+        }
+      },
+      {
+        text: "😤 拒绝赔偿",
+        hint: "信誉下降，可能失去客户",
+        apply: function (st) {
+          st.flags.daigouBadReview = true;
+          StateManager.addMessage("😤 你拒绝赔偿。客户很生气，说再也不找你代购了。", "warning");
+        }
+      }
+    ]
+  },
+
+  // 网约车：交通事故
+  {
+    id: "side_ride_accident",
+    hustle: "ride_hailing",
+    title: "小剐蹭",
+    icon: "🚗",
+    story: "你在接单时不小心剐蹭了别人的车。对方下车查看，表情不太高兴。\n「你怎么开车的？」",
+    choices: [
+      {
+        text: "🙏 道歉并私了",
+        hint: "花费¥200-¥500",
+        apply: function (st) {
+          var cost = Random.int(200, 500);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          StateManager.addMessage("🙏 你道歉并赔了¥" + cost + "私了。对方拿了钱走了。", "warning");
+        }
+      },
+      {
+        text: "📞 走保险",
+        hint: "不影响现金，但保险记录+1",
+        apply: function (st) {
+          st.flags.rideInsuranceClaim = (st.flags.rideInsuranceClaim || 0) + 1;
+          StateManager.addMessage("📞 你走了保险。虽然不用自己赔钱，但保险记录多了1次，明年保费会上涨。", "info");
+        }
+      },
+      {
+        text: "😰 跑",
+        hint: "高风险：可能被举报",
+        apply: function (st) {
+          if (Random.chance(0.3)) {
+            st.flags.rideCaught = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+            StateManager.addMessage("😰 你跑了，但被对方记下车牌举报了。罚款¥1000，驾照扣分。", "danger");
+          } else {
+            StateManager.addMessage("😰 你跑了，侥幸没被追上。但心里一直忐忑。", "info");
+          }
+        }
+      }
+    ]
+  },
+
+  // 外卖：超时投诉
+  {
+    id: "side_delivery_late",
+    hustle: "food_delivery",
+    title: "超时了",
+    icon: "⏰",
+    story: "今天单太多，你送晚了。客户开门时一脸不高兴：「怎么这么慢？我都饿了！」\n而且餐有点洒了。",
+    choices: [
+      {
+        text: "🙏 道歉并退部分钱",
+        hint: "损失¥20-¥50",
+        apply: function (st) {
+          var refund = Random.int(20, 50);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - refund);
+          StateManager.addMessage("🙏 你道歉并退了¥" + refund + "。客户勉强接受了。", "info");
+        }
+      },
+      {
+        text: "💪 解释路况",
+        hint: "可能成功也可能失败",
+        apply: function (st) {
+          if (Random.chance(0.5)) {
+            StateManager.addMessage("💪 你解释了路况，客户理解了你。没扣钱。", "success");
+          } else {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+            StateManager.addMessage("💪 客户不听解释，还是扣了¥30。", "warning");
+          }
+        }
+      },
+      {
+        text: "😤 不服",
+        hint: "可能被平台处罚",
+        apply: function (st) {
+          if (Random.chance(0.4)) {
+            st.flags.deliveryBan = true;
+            StateManager.addMessage("😤 你和客户吵了起来。平台收到投诉，暂停了你接单权限。", "danger");
+          } else {
+            StateManager.addMessage("😤 你坚持说自己没错。客户给了差评，但你没被处罚。", "warning");
+          }
+        }
+      }
+    ]
+  },
+
+  // 自媒体：平台封号
+  {
+    id: "side_media_ban",
+    hustle: "self_media",
+    title: "账号被封",
+    icon: "🚫",
+    story: "你的自媒体账号被平台封了——可能是内容违规，也可能是被举报。\n「您的账号因违反社区规范，已被暂时封禁。」\n几千粉丝瞬间看不到了。",
+    choices: [
+      {
+        text: "📝 申诉",
+        hint: "需要等待，可能解封也可能维持",
+        apply: function (st) {
+          st.flags.mediaAppeal = true;
+          StateManager.addMessage("📝 你提交了申诉。平台说会在3个工作日内回复。这段时间无法更新内容。", "info");
+        }
+      },
+      {
+        text: "🔄 换平台重新起步",
+        hint: "粉丝清零，但获得新平台经验",
+        apply: function (st) {
+          if (st._sideHustleData && st._sideHustleData.selfMedia) {
+            st._sideHustleData.selfMedia.followers = 0;
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage("🔄 你决定换平台重新起步。虽然粉丝清零，但你学到了教训。心智+5。", "warning");
+        }
+      },
+      {
+        text: "😞 放弃自媒体",
+        hint: "失去自媒体副业",
+        apply: function (st) {
+          st.flags.gaveUpSelfMedia = true;
+          StateManager.addMessage("😞 你觉得太累了，决定放弃自媒体。", "info");
+        }
+      }
+    ]
+  },
+
+  // 投资理财：市场暴跌
+  {
+    id: "side_invest_crash",
+    hustle: "investment_side",
+    title: "市场暴跌",
+    icon: "📉",
+    story: "你投资的标的突然暴跌——新闻说是政策变化/黑天鹅事件。\n「您持有的资产今日下跌15%。」\n你有点慌。",
+    choices: [
+      {
+        text: "💰 割肉离场",
+        hint: "确认亏损，但止损",
+        apply: function (st) {
+          var loss = Random.int(100, 500);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
+          StateManager.addMessage("💰 你割肉离场，亏损¥" + loss + "。虽然心疼，但及时止损了。", "warning");
+        }
+      },
+      {
+        text: "📈 持有观望",
+        hint: "等待反弹，可能回本也可能继续跌",
+        apply: function (st) {
+          st.flags.investHold = true;
+          StateManager.addMessage("📈 你选择持有观望。投资需要耐心，希望明天会好起来。", "info");
+        }
+      },
+      {
+        text: "🔥 抄底",
+        hint: "高风险高回报，需要额外资金",
+        cost: 200,
+        apply: function (st) {
+          st.resources.cash -= 200;
+          if (Random.chance(0.4)) {
+            var profit = Random.int(300, 800);
+            st.resources.cash += profit;
+            StateManager.addMessage("🔥 你抄底成功了！赚了¥" + profit + "。胆子大的人运气好。", "success");
+          } else {
+            StateManager.addMessage("🔥 抄底抄在半山腰。又亏了¥200。", "danger");
+          }
+        }
+      }
+    ]
+  },
+
+  // 家教：学生不听话
+  {
+    id: "side_tutor_difficult",
+    hustle: "tutoring",
+    title: "学生不听话",
+    icon: "👦",
+    story: "你辅导的学生今天特别不听话，一直在玩手机。\n「我不想学了，太无聊了。」\n家长在旁边很尴尬。",
+    choices: [
+      {
+        text: "📱 没收手机",
+        hint: "学生可能更反抗",
+        apply: function (st) {
+          if (Random.chance(0.3)) {
+            StateManager.addMessage("📱 你没收了手机，学生安静下来开始学习。家长很满意。", "success");
+          } else {
+            StateManager.addMessage("📱 学生大闹一场，家长很尴尬，说下次不找你教了。", "warning");
+          }
+        }
+      },
+      {
+        text: "🎮 用游戏教学法",
+        hint: "需要创意，可能成功",
+        apply: function (st) {
+          if (Random.chance(0.6)) {
+            StateManager.addMessage("🎮 你用游戏的方式教学，学生突然感兴趣了。家长很惊喜。", "success");
+          } else {
+            StateManager.addMessage("🎮 游戏教学法没奏效，学生还是不想学。", "info");
+          }
+        }
+      },
+      {
+        text: "👋 结束课程",
+        hint: "损失部分收入",
+        cost: 30,
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+          StateManager.addMessage("👋 你提前结束了课程。虽然损失了点钱，但没必要浪费时间。", "info");
+        }
+      }
+    ]
+  }
+];
+
+// 导出
+if (typeof window !== "undefined") {
+  window.SIDE_HUSTLE_EVENTS = SIDE_HUSTLE_EVENTS;
+}
+</script>
+    <script>/**
+ * 副业UI（v3.6 P0-3）
+ *
+ * 副业Tab界面 + 副业状态卡片
+ */
+
+// ====== 副业Tab渲染 ======
+function renderSideHustleTab(state, parent) {
+  if (!parent) return;
+  parent.innerHTML = "";
+
+  // 获取副业数据
+  const hustleList = typeof SIDE_HUSTLES !== "undefined" ? SIDE_HUSTLES : {};
+  const fatigue = typeof sideHustle !== "undefined" ? sideHustle.getFatigue(state) : { fatigue: 0, max: 100, status: "normal" };
+
+  // 标题
+  const header = document.createElement("div");
+  header.innerHTML = "<h3>💼 副业</h3>";
+  header.style.cssText = "padding:12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);";
+  parent.appendChild(header);
+
+  // 疲劳度状态
+  const fatigueBar = document.createElement("div");
+  fatigueBar.style.cssText = "padding:12px;background:var(--bg-secondary);margin:12px;border-radius:6px;";
+  const fatigueColor = fatigue.status === "exhausted" ? "var(--danger)" : fatigue.status === "warning" ? "var(--warning)" : "var(--success)";
+  const fatigueIcon = fatigue.status === "exhausted" ? "😫" : fatigue.status === "warning" ? "⚠️" : "💪";
+  fatigueBar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:14px;">${fatigueIcon} 副业疲劳度</span>
+      <span style="font-size:12px;color:var(--text-muted);">
+        ${fatigue.fatigue}/${fatigue.max}${fatigue.penalty > 0 ? `（惩罚-${Math.round(fatigue.penalty * 100)}%）` : ""}
+      </span>
+    </div>
+    <div style="height:8px;background:var(--bg-dark);border-radius:4px;overflow:hidden;">
+      <div style="height:100%;width:${(fatigue.fatigue / fatigue.max) * 100}%;background:${fatigueColor};transition:width 0.3s;"></div>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+      每天自然恢复10点。疲劳度过高会影响副业收入。
+    </p>
+  `;
+  parent.appendChild(fatigueBar);
+
+  // 副业列表
+  const list = document.createElement("div");
+  list.style.cssText = "padding:8px;display:flex;flex-wrap:wrap;gap:12px;";
+
+  for (let hustleId in hustleList) {
+    const hustle = hustleList[hustleId];
+    const check = typeof sideHustle !== "undefined" ? sideHustle.check(hustleId, state) : { ok: false, reason: "系统未加载" };
+
+    const card = document.createElement("div");
+    card.style.cssText = "flex:1;min-width:200px;max-width:280px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);";
+
+    // 检查是否可用
+    const available = check.ok;
+    const cardColor = available ? "var(--primary)" : "var(--text-muted)";
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:20px;">${hustle.icon}</span>
+        <span style="font-weight:bold;color:${cardColor};">${hustle.name}</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${hustle.desc}</p>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+        <div>💰 基础收入：¥${hustle.baseIncome}</div>
+        <div>💪 疲劳消耗：${hustle.fatigueCost}</div>
+        <div>⏰ 可接时间：${hustle.timeSlot.map(s => s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜").join("、")}</div>
+      </div>
+    `;
+
+    // 属性要求
+    if (hustle.minAttr) {
+      const reqText = Object.entries(hustle.minAttr).map(([attr, val]) => {
+        const current = state.player[attr] || 0;
+        const met = current >= val;
+        return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
+      }).join(", ");
+      card.innerHTML += `<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">${reqText}</div>`;
+    }
+
+    // 按钮
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm";
+    btn.style.cssText = "width:100%;margin-top:8px;";
+    btn.textContent = available ? "开始副业" : "不可进行";
+    btn.disabled = !available;
+
+    if (available) {
+      btn.onclick = function () {
+        performHustleAction(hustleId, state);
+      };
+    } else {
+      btn.title = check.reason;
+    }
+
+    card.appendChild(btn);
+    list.appendChild(card);
+  }
+
+  parent.appendChild(list);
+}
+
+// ====== 执行副业动作 ======
+function performHustleAction(hustleId, state) {
+  if (typeof sideHustle === "undefined") {
+    StateManager.addMessage("❌ 副业系统未加载", "danger");
+    return;
+  }
+
+  const result = sideHustle.perform(hustleId, state);
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage("❌ " + result.error, "warning");
+  }
+}
+
+// ====== 注册到窗口 ======
+if (typeof window !== "undefined") {
+  window.renderSideHustleTab = renderSideHustleTab;
+  window.performHustleAction = performHustleAction;
+}
+</script>
 
     <!-- Enterprise Fate System -->
     <script>/**
@@ -95678,6 +98180,13 @@ function renderTabBar(state) {
     } else if (btn.dataset.tab === "social") {
       // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
       btn.style.display = "";
+    } else if (btn.dataset.tab === "side_hustle") {
+      // 副业Tab：公司阶段显示（Phase 2）
+      if (state.player.phase === "corporate") {
+        btn.style.display = "";
+      } else {
+        btn.style.display = "none";
+      }
     } else {
       btn.style.display = "";
     }
@@ -95710,6 +98219,8 @@ const TAB_RENDERERS = {
     fallback: "事业发展系统加载中...",
   },
   enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
+  // renderSideHustleTab 在 side_hustle_ui.js 中定义（跨文件）
+  side_hustle: { fnName: "renderSideHustleTab", fallback: "副业系统加载中..." },
   achievements: renderAchievementsTab,
   // 社交Tab：合并职场社交+家庭（跨文件）
   social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
@@ -104850,6 +107361,17 @@ function triggerVictory(state, type, title, desc) {
       }
     }
   }
+  // v3.6 P1-4: 生成人生回忆录摘要
+  if (typeof lifeMemoir !== "undefined" && typeof lifeMemoir.generateEnding === "function") {
+    var memoirSummary = lifeMemoir.generateEnding(state);
+    state.flags._memoirSummary = memoirSummary;
+    // 记录到回忆录
+    lifeMemoir.add("career", {
+      title: "游戏结局",
+      content: title + " - " + desc,
+      day: state.player.day,
+    });
+  }
   // 记录公司命运到多周目记忆
   if (typeof recordPlaythroughEnd === "function") {
     recordPlaythroughEnd(state);
@@ -109010,13 +111532,104 @@ function showDailyReport(state) {
 }
 </script>
     <script>/**
- * 社交Tab渲染 — 合并职场社交系统 + 家庭与生活系统
+ * 社交Tab渲染 — 合并职场社交系统 + 家庭与生活系统 + NPC关系网（v3.6 P0-1）
  *
  * 包含：
  * 1. 婚恋/家庭板块（原family_tab）
  * 2. 同事关系/职场社交板块（原workplace_social_tab）
  * 3. 社交网络概览摘要
+ * 4. NPC关系网可视化（新增）
  */
+
+// ====== NPC关系网渲染 ======
+function renderNpcRelationships(state, content) {
+  if (!state.relationships) {
+    content.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">👥 NPC关系网加载中...</p>';
+    return;
+  }
+
+  var html = '<div class="section"><h3>👥 NPC关系网</h3>';
+  html += '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">';
+  html += '💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。';
+  html += '</p>';
+
+  // NPC关系卡片
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+
+  var npcIds = Object.keys(state.relationships);
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcId = npcIds[i];
+    var rel = state.relationships[npcId];
+    var affinity = rel ? (rel.affinity || 0) : 0;
+
+    // 颜色根据好感度
+    var colorClass = "neutral";
+    var icon = "👤";
+    if (affinity >= 80) { colorClass = "high"; icon = "❤️"; }
+    else if (affinity >= 60) { colorClass = "good"; icon = "😊"; }
+    else if (affinity >= 30) { colorClass = "friendly"; icon = "🙂"; }
+    else if (affinity >= 0) { colorClass = "neutral"; icon = "👤"; }
+    else if (affinity >= -30) { colorClass = "cold"; icon = "😐"; }
+    else { colorClass = "bad"; icon = "😠"; }
+
+    html += '<div class="npc-rel-card npc-rel-' + colorClass + '" style="';
+    html += 'padding:8px 12px;border-radius:6px;font-size:12px;min-width:100px;';
+    html += 'border:1px solid var(--border);background:var(--bg-secondary);">';
+    html += '<div style="display:flex;align-items:center;gap:4px;">';
+    html += '<span>' + icon + '</span>';
+    html += '<span style="font-weight:bold;">' + (npcId.replace(/_/g, ' ') + '</span>');
+    html += '<span style="margin-left:auto;">' + Math.round(affinity) + '</span>';
+    html += '</div>';
+
+    // 关系传导信息
+    if (rel._propagationLog && rel._propagationLog.length > 0) {
+      var lastProp = rel._propagationLog[rel._propagationLog.length - 1];
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">';
+      html += '传导: ' + lastProp.from.replace(/_/g, ' ') + ' (' + (lastProp.change > 0 ? '+' : '') + lastProp.change.toFixed(1) + ')';
+      html += '</div>';
+    }
+
+    // 衰减信息
+    if (rel._lastDecay) {
+      html += '<div style="font-size:10px;color:var(--text-warning);margin-top:2px;">';
+      html += '⚠ 衰减' + rel._lastDecay.toFixed(1);
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+
+  // 关系传导详情
+  html += '<div class="section" style="margin-top:16px;"><h4>📜 关系传导日志</h4>';
+  html += '<div style="max-height:200px;overflow-y:auto;font-size:11px;">';
+
+  var hasLog = false;
+  for (var key in state.relationships) {
+    var r = state.relationships[key];
+    if (r._propagationLog && r._propagationLog.length > 0) {
+      hasLog = true;
+      html += '<div style="padding:6px 8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;">';
+      html += '<strong>' + key.replace(/_/g, ' ') + '</strong>: ';
+      for (var j = 0; j < r._propagationLog.length; j++) {
+        var log = r._propagationLog[j];
+        html += '<span style="color:' + (log.change > 0 ? 'var(--success)' : 'var(--danger)') + '">';
+        html += log.change > 0 ? '+' : '' + log.change.toFixed(1) + '</span> ';
+        html += '<span style="color:var(--text-muted);font-size:10px;">(' + log.type + ')</span> ';
+      }
+      html += '</div>';
+    }
+  }
+
+  if (!hasLog) {
+    html += '<p style="color:var(--text-muted);padding:12px;text-align:center;">暂无传导记录。与NPC互动后可能会产生关系传导。</p>';
+  }
+
+  html += '</div></div>';
+
+  content.innerHTML = html;
+}
 
 // ====== 社交Tab主渲染函数 ======
 function renderSocialTab(state, parent) {
@@ -109026,6 +111639,7 @@ function renderSocialTab(state, parent) {
   var subTabs = [
     { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
     { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
+    { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
     { id: "social_overview", label: "📊 关系总览", icon: "📊" },
   ];
   var currentSubTab = state._socialSubTab || "social_overview";
@@ -109056,6 +111670,9 @@ function renderSocialTab(state, parent) {
       break;
     case "social_workplace":
       renderSocialWorkplaceTab(state, content);
+      break;
+    case "social_npc":
+      renderNpcRelationships(state, content);
       break;
     case "social_overview":
     default:
@@ -110059,6 +112676,268 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+</script>
+    <!-- v3.6 P1-4: 人生回忆录系统 -->
+    <script>/**
+ * 人生回忆录系统（v3.6 P1-4）
+ *
+ * 8类回忆录：童年/求学/初恋/职场/创业/家庭/疾病/旅行
+ * localStorage.__lifeMemoirs存储
+ * 每类最多10条回忆
+ *
+ * 设计参考：BitLife人生回顾 / This War of Mine记忆片段
+ */
+
+(function () {
+  // ====== 回忆录类别定义 ======
+  const MEMOIR_CATEGORIES = {
+    childhood: {
+      id: "childhood",
+      name: "童年",
+      icon: "🧸",
+      color: "var(--warning)",
+    },
+    education: {
+      id: "education",
+      name: "求学",
+      icon: "📚",
+      color: "var(--primary)",
+    },
+    love: {
+      id: "love",
+      name: "初恋",
+      icon: "💕",
+      color: "#e91e63",
+    },
+    career: {
+      id: "career",
+      name: "职场",
+      icon: "🏢",
+      color: "var(--info)",
+    },
+    startup: {
+      id: "startup",
+      name: "创业",
+      icon: "🚀",
+      color: "var(--success)",
+    },
+    family: {
+      id: "family",
+      name: "家庭",
+      icon: "👨‍👩‍👧",
+      color: "#9c27b0",
+    },
+    illness: {
+      id: "illness",
+      name: "疾病",
+      icon: "🏥",
+      color: "var(--danger)",
+    },
+    travel: {
+      id: "travel",
+      name: "旅行",
+      icon: "✈️",
+      color: "#00bcd4",
+    },
+  };
+
+  const MAX_MEMOIRS_PER_CATEGORY = 10;
+  const STORAGE_KEY = "__lifeMemoirs";
+
+  /**
+   * 获取所有回忆录
+   * @returns {Object} 回忆录数据
+   */
+  function getMemoirs() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch (e) {
+      console.error("读取回忆录失败:", e);
+    }
+    return {};
+  }
+
+  /**
+   * 保存回忆录
+   * @param {Object} memoirs - 回忆录数据
+   */
+  function saveMemoirs(memoirs) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memoirs));
+    } catch (e) {
+      console.error("保存回忆录失败:", e);
+    }
+  }
+
+  /**
+   * 添加回忆录
+   * @param {string} category - 类别ID
+   * @param {Object} memoir - 回忆录内容
+   * @returns {boolean} 是否成功
+   */
+  function addMemoir(category, memoir) {
+    const memoirs = getMemoirs();
+    if (!memoirs[category]) {
+      memoirs[category] = [];
+    }
+
+    // 检查是否超过上限
+    if (memoirs[category].length >= MAX_MEMOIRS_PER_CATEGORY) {
+      // 移除最早的
+      memoirs[category].shift();
+    }
+
+    // 添加时间戳
+    memoir.addedAt = Date.now();
+    memoir.day = memoir.day || (typeof StateManager !== "undefined" ? StateManager.getState().player.day : 0);
+
+    memoirs[category].push(memoir);
+    saveMemoirs(memoirs);
+    return true;
+  }
+
+  /**
+   * 获取某类别的回忆录
+   * @param {string} category - 类别ID
+   * @returns {Array} 回忆录列表
+   */
+  function getMemoirsByCategory(category) {
+    const memoirs = getMemoirs();
+    return memoirs[category] || [];
+  }
+
+  /**
+   * 获取所有回忆录统计
+   * @returns {Object} 统计信息
+   */
+  function getMemoirStats() {
+    const memoirs = getMemoirs();
+    const stats = {};
+    let total = 0;
+    for (let cat in MEMOIR_CATEGORIES) {
+      const count = (memoirs[cat] || []).length;
+      stats[cat] = count;
+      total += count;
+    }
+    stats.total = total;
+    return stats;
+  }
+
+  /**
+   * 生成结局回忆录摘要
+   * @param {Object} state - 游戏状态
+   * @returns {string} 回忆录摘要
+   */
+  function generateEndingMemoir(state) {
+    const stats = getMemoirStats();
+    const day = state.player.day;
+    const age = state.player.age;
+
+    let summary = `📖 人生回忆录摘要\n`;
+    summary += `─────────────────\n`;
+    summary += `游戏天数：${day}天\n`;
+    summary += `年龄：${age}岁\n`;
+    summary += `记录片段：${stats.total}个\n\n`;
+
+    for (let cat in MEMOIR_CATEGORIES) {
+      const count = stats[cat];
+      if (count > 0) {
+        const icon = MEMOIR_CATEGORIES[cat].icon;
+        const name = MEMOIR_CATEGORIES[cat].name;
+        summary += `${icon} ${name}：${count}个片段\n`;
+      }
+    }
+
+    return summary;
+  }
+
+  /**
+   * 渲染回忆录查看弹窗
+   * @param {Object} state - 游戏状态
+   */
+  function showMemoirModal(state) {
+    if (typeof showModal !== "function") {
+      console.warn("showModal未定义，无法打开回忆录弹窗");
+      return;
+    }
+
+    const stats = getMemoirStats();
+    const statsText = Object.entries(MEMOIR_CATEGORIES)
+      .map(([cat, def]) => {
+        const count = stats[cat] || 0;
+        return `${def.icon} ${def.name}：${count}`;
+      })
+      .join(" · ");
+
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <div style="padding:12px;">
+        <h4 style="margin-top:0;">📖 人生回忆录</h4>
+        <p style="color:var(--text-muted);font-size:12px;">${statsText}</p>
+        <div style="max-height:400px;overflow-y:auto;">
+          ${Object.entries(MEMOIR_CATEGORIES)
+            .map(([cat, def]) => {
+              const memoirs = getMemoirsByCategory(cat);
+              if (memoirs.length === 0) {
+                return `<div style="padding:8px;color:var(--text-muted);font-size:12px;">${def.icon} ${def.name}：暂无记录</div>`;
+              }
+              return memoirs
+                .slice(-5)
+                .reverse()
+                .map((m, i) => `
+                  <div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">
+                    <div style="color:${def.color};font-weight:bold;">${def.icon} ${m.title || "未命名"}</div>
+                    <div style="color:var(--text-muted);">${m.content || m.desc || ""}</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第${m.day || "?"}天</div>
+                  </div>
+                `)
+                .join("");
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+
+    showModal("人生回忆录", content, "large");
+  }
+
+  /**
+   * 自动记录关键事件
+   * @param {string} category - 类别
+   * @param {string} title - 标题
+   * @param {string} content - 内容
+   */
+  function autoRecord(category, title, content) {
+    if (!MEMOIR_CATEGORIES[category]) {
+      console.warn("未知回忆录类别:", category);
+      return;
+    }
+    addMemoir(category, {
+      title,
+      content,
+      day: typeof StateManager !== "undefined" ? StateManager.getState().player.day : 0,
+    });
+  }
+
+  // ====== 导出 ======
+  if (typeof window !== "undefined") {
+    window.MEMOIR_CATEGORIES = MEMOIR_CATEGORIES;
+    window.lifeMemoir = {
+      add: addMemoir,
+      get: getMemoirsByCategory,
+      getAll: getMemoirs,
+      getStats: getMemoirStats,
+      generateEnding: generateEndingMemoir,
+      show: showMemoirModal,
+      autoRecord,
+      categories: MEMOIR_CATEGORIES,
+      maxPerCategory: MAX_MEMOIRS_PER_CATEGORY,
+    };
+  }
+})();
 </script>
 
     <!-- Main -->
@@ -111318,6 +114197,21 @@ function startNewGame() {
   // 初始化装备耐久度
   if (typeof initEquipmentDurability === "function") {
     initEquipmentDurability(StateManager.getState());
+  }
+
+  // v3.6 P0-1: 初始化NPC关系网
+  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
+    npcRelationships.init(StateManager.getState());
+  }
+
+  // v3.6 P0-2: 初始化时代变迁系统
+  if (typeof eraTransform && typeof eraTransform.init === "function") {
+    eraTransform.init(StateManager.getState());
+  }
+
+  // v3.6 P0-3: 初始化副业系统
+  if (typeof sideHustle && typeof sideHustle.init === "function") {
+    sideHustle.init(StateManager.getState());
   }
 
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
