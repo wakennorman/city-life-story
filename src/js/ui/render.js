@@ -962,6 +962,11 @@ function renderWeatherPanel(state) {
       "background:var(--bg-input);font-size:11px;line-height:1.5;display:block;";
   }
 
+  // === v3.3 W2-T2: 明日预报 + 准备状态 ===
+  if (typeof getForecastHTML === "function") {
+    html += getForecastHTML(state);
+  }
+
   panel.innerHTML = html;
 }
 

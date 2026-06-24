@@ -37,6 +37,28 @@ function addStreetExtras(state, actions) {
     },
   });
 
+  // v3.3 W2-T2: 天气准备（买伞/暖宝）
+  actions.push({
+    id: "weather_prep",
+    name: "准备应对天气",
+    desc: "查看明日天气，购买雨伞（¥20，雨天疲劳减半）或暖宝（¥50，寒冷健康保护）。未雨绸缪总没错。",
+    icon: "🌤️",
+    apCost: 5,
+    handler: () => {
+      var st = StateManager.getState();
+      var prep = st.flags && st.flags._weatherPrep;
+      if (prep && prep.umbrella && prep.warmPack) {
+        StateManager.addMessage("🌤️ 你已经做好了所有天气准备（伞+暖宝）。", "info");
+        return;
+      }
+      if (typeof prepareForWeather === "function") {
+        prepareForWeather(st);
+      } else {
+        StateManager.addMessage("功能暂未加载", "warning");
+      }
+    },
+  });
+
   actions.push({
     id: "busking",
     name: "街头卖唱",

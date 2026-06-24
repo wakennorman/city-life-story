@@ -435,6 +435,10 @@ const DAILY_PIPELINE = [
     name: "weather",
     fn: function (state) {
       rollWeather(state);
+      // v3.3 W2-T2: 更新明日天气预报
+      if (typeof updateNextDayForecast === "function") {
+        updateNextDayForecast(state);
+      }
     },
   },
 
@@ -444,6 +448,32 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof applyWeatherDailyEffects === "function") {
         applyWeatherDailyEffects(state);
+      }
+    },
+  },
+
+  // === v3.3 W2-T2: 天气准备减免惩罚（伞/暖宝）===
+  {
+    name: "weather_prep_mitigation",
+    fn: function (state) {
+      var prep = state.flags && state.flags._weatherPrep;
+      if (!prep) return;
+      var wId = state.weather && state.weather.current;
+      var isRainy = ["rainy", "stormy", "plum_rain"].indexOf(wId) >= 0;
+      var isCold = ["snowy", "cold_snap", "foggy"].indexOf(wId) >= 0;
+
+      // 雨伞：雨天直接减免疲劳
+      if (prep.umbrella && isRainy) {
+        state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 5);
+        StateManager.addMessage("☂️ 雨伞挡住了风雨，疲劳感减轻了不少。", "info");
+      }
+
+      // 暖宝：寒冷天气健康保护
+      if (prep.warmPack && isCold) {
+        if (state.status) {
+          state.status.health = Math.min(100, (state.status.health || 100) + 3);
+        }
+        StateManager.addMessage("🧣 暖宝让你在寒风中感到一丝温暖。", "info");
       }
     },
   },
