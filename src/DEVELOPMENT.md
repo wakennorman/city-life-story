@@ -1,6 +1,10 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.7 Expansion v1 — 4大扩展系统基础实现）
+> 最后更新: 2026-06-25（v3.7 Expansion v1 — 冒烟测试与百科审计修复）
+
+## 2026-06-25 — v3.7 Expansion v1: 冒烟测试与百科审计修复
+
+对构建后的 `dist/index.html` 进行本地 HTTP + Chrome DevTools Protocol 冒烟测试：桌面/移动首屏均可加载，`checkLifeNodes`、`tickMedical`、`tickTravel`、`tickLegal` 等新增系统函数存在，4 个 MECHANICS 与 2 个 NARRATIVES 均注册成功，入口按钮可进入游戏主界面。测试发现新增叙事 `gaokao_memory`、`travel_memories` 缺少注册表要求的 `name` 字段，已在 `life_nodes.js` 与 `travel.js` 补齐，并重新 `python build.py`。复测显示 `runMechanicsAudit` 无问题；仅剩浏览器音频自动播放限制警告，属于用户手势前播放音效的既有浏览器策略。
 
 ## 2026-06-25 — v3.7 Expansion v1: 4大扩展系统基础实现
 

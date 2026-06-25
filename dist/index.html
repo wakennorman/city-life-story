@@ -37476,11 +37476,30 @@ const LIFE_NODES = {
     name: "高考",
     icon: "📝",
     triggerDay: 30, // 相对游戏开始约1个月触发（人生重要关口回闪）
-    condition: function (state) { return state.player.day >= this.triggerDay && !state.flags._lifeNode_gaokao_done; },
+    condition: function (state) {
+      return (
+        state.player.day >= this.triggerDay &&
+        !state.flags._lifeNode_gaokao_done
+      );
+    },
     choices: [
-      { text: "全力以赴备考", hint: "智力≥60，改变命运的机会", apply: "gaokao_excellent", attrReq: { intelligence: 60 } },
-      { text: "正常发挥", hint: "智力≥40，平平淡淡也是真", apply: "gaokao_normal", attrReq: { intelligence: 40 } },
-      { text: "直接步入社会", hint: "放弃高考，提前闯荡", apply: "gaokao_skip" },
+      {
+        text: "全力以赴备考",
+        hint: "智力≥60，改变命运的机会",
+        apply: "gaokao_excellent",
+        attrReq: { intelligence: 60 },
+      },
+      {
+        text: "正常发挥",
+        hint: "智力≥40，平平淡淡也是真",
+        apply: "gaokao_normal",
+        attrReq: { intelligence: 40 },
+      },
+      {
+        text: "直接步入社会",
+        hint: "放弃高考，提前闯荡",
+        apply: "gaokao_skip",
+      },
     ],
   },
   university: {
@@ -37488,11 +37507,32 @@ const LIFE_NODES = {
     name: "大学抉择",
     icon: "🎓",
     triggerDay: 90,
-    condition: function (state) { return state.flags._lifeNode_gaokao_done && state.player.day >= this.triggerDay && !state.flags._lifeNode_university_done; },
+    condition: function (state) {
+      return (
+        state.flags._lifeNode_gaokao_done &&
+        state.player.day >= this.triggerDay &&
+        !state.flags._lifeNode_university_done
+      );
+    },
     choices: [
-      { text: "读计算机/金融", hint: "智力≥65，技能加成：编程+10 会计+10", apply: "uni_tech", attrReq: { intelligence: 65 } },
-      { text: "读医学/工程", hint: "智力≥55，技能加成：医疗知识+10 维修+10", apply: "uni_engineering", attrReq: { intelligence: 55 } },
-      { text: "读文科/艺术", hint: "智力≥45，技能加成：魅力+10 口才+10", apply: "uni_arts", attrReq: { intelligence: 45 } },
+      {
+        text: "读计算机/金融",
+        hint: "智力≥65，技能加成：编程+10 会计+10",
+        apply: "uni_tech",
+        attrReq: { intelligence: 65 },
+      },
+      {
+        text: "读医学/工程",
+        hint: "智力≥55，技能加成：医疗知识+10 维修+10",
+        apply: "uni_engineering",
+        attrReq: { intelligence: 55 },
+      },
+      {
+        text: "读文科/艺术",
+        hint: "智力≥45，技能加成：魅力+10 口才+10",
+        apply: "uni_arts",
+        attrReq: { intelligence: 45 },
+      },
       { text: "放弃大学", hint: "直接工作，节省4年时间", apply: "uni_skip" },
     ],
   },
@@ -37501,10 +37541,26 @@ const LIFE_NODES = {
     name: "35岁危机",
     icon: "⚡",
     triggerDay: 180,
-    condition: function (state) { return state.player.day >= this.triggerDay && state.player.day % 30 === 0 && !state.flags._lifeNode_career35_done; },
+    condition: function (state) {
+      return (
+        state.player.day >= this.triggerDay &&
+        state.player.day % 30 === 0 &&
+        !state.flags._lifeNode_career35_done
+      );
+    },
     choices: [
-      { text: "充电转型", hint: "智力≥50，学习新技能迎接变化", apply: "c35_transform", attrReq: { intelligence: 50 } },
-      { text: "咬牙硬扛", hint: "体质≥50，靠资历和经验撑过去", apply: "c35_hold", attrReq: { physique: 50 } },
+      {
+        text: "充电转型",
+        hint: "智力≥50，学习新技能迎接变化",
+        apply: "c35_transform",
+        attrReq: { intelligence: 50 },
+      },
+      {
+        text: "咬牙硬扛",
+        hint: "体质≥50，靠资历和经验撑过去",
+        apply: "c35_hold",
+        attrReq: { physique: 50 },
+      },
       { text: "寻找新赛道", hint: "人脉打开新机会", apply: "c35_newpath" },
       { text: "躺平接受", hint: "降低期望，守住现有", apply: "c35_lieflat" },
     ],
@@ -37514,11 +37570,30 @@ const LIFE_NODES = {
     name: "退休规划",
     icon: "🏖️",
     triggerDay: 365,
-    condition: function (state) { return state.player.day >= this.triggerDay && !state.flags._lifeNode_retirement_done; },
+    condition: function (state) {
+      return (
+        state.player.day >= this.triggerDay &&
+        !state.flags._lifeNode_retirement_done
+      );
+    },
     choices: [
-      { text: "体面退休", hint: "存款≥¥500K，安心养老", apply: "retire_wealthy", attrReq: { cash: 500000 } },
-      { text: "发挥余热", hint: "技能≥60，返聘做顾问", apply: "retire_advisor", attrReq: { skill: 60 } },
-      { text: "退而不休", hint: "继续工作直到干不动", apply: "retire_continue" },
+      {
+        text: "体面退休",
+        hint: "存款≥¥500K，安心养老",
+        apply: "retire_wealthy",
+        attrReq: { cash: 500000 },
+      },
+      {
+        text: "发挥余热",
+        hint: "技能≥60，返聘做顾问",
+        apply: "retire_advisor",
+        attrReq: { skill: 60 },
+      },
+      {
+        text: "退而不休",
+        hint: "继续工作直到干不动",
+        apply: "retire_continue",
+      },
     ],
   },
 };
@@ -37528,23 +37603,59 @@ function applyNodeChoice(state, nodeId, choiceKey) {
   state.flags._lifeNode_choice = choiceKey;
 
   switch (choiceKey) {
-    case "gaokao_excellent": state.skills.intelligence = (state.skills.intelligence || 0) + 5; state.flags._gaokaoResult = "excellent"; break;
-    case "gaokao_normal": state.skills.intelligence = (state.skills.intelligence || 0) + 2; state.flags._gaokaoResult = "normal"; break;
-    case "gaokao_skip": state.flags._gaokaoResult = "skip"; break;
+    case "gaokao_excellent":
+      state.skills.intelligence = (state.skills.intelligence || 0) + 5;
+      state.flags._gaokaoResult = "excellent";
+      break;
+    case "gaokao_normal":
+      state.skills.intelligence = (state.skills.intelligence || 0) + 2;
+      state.flags._gaokaoResult = "normal";
+      break;
+    case "gaokao_skip":
+      state.flags._gaokaoResult = "skip";
+      break;
 
-    case "uni_tech": state.skills.programming = (state.skills.programming || 0) + 10; state.skills.accounting = (state.skills.accounting || 0) + 10; break;
-    case "uni_engineering": state.skills.repair = (state.skills.repair || 0) + 10; break;
-    case "uni_arts": state.skills.charm = (state.skills.charm || 0) + 10; break;
-    case "uni_skip": state.resources.cash = (state.resources.cash || 0) + 5000; break;
+    case "uni_tech":
+      state.skills.programming = (state.skills.programming || 0) + 10;
+      state.skills.accounting = (state.skills.accounting || 0) + 10;
+      break;
+    case "uni_engineering":
+      state.skills.repair = (state.skills.repair || 0) + 10;
+      break;
+    case "uni_arts":
+      state.skills.charm = (state.skills.charm || 0) + 10;
+      break;
+    case "uni_skip":
+      state.resources.cash = (state.resources.cash || 0) + 5000;
+      break;
 
-    case "c35_transform": state.skills.intelligence = (state.skills.intelligence || 0) + 3; state.flags._career35Path = "transform"; break;
-    case "c35_hold": state.status.health = Math.min(100, (state.status.health || 100) + 5); state.flags._career35Path = "hold"; break;
-    case "c35_newpath": state.flags._career35Path = "newpath"; break;
-    case "c35_lieflat": state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10); state.flags._career35Path = "lieflat"; break;
+    case "c35_transform":
+      state.skills.intelligence = (state.skills.intelligence || 0) + 3;
+      state.flags._career35Path = "transform";
+      break;
+    case "c35_hold":
+      state.status.health = Math.min(100, (state.status.health || 100) + 5);
+      state.flags._career35Path = "hold";
+      break;
+    case "c35_newpath":
+      state.flags._career35Path = "newpath";
+      break;
+    case "c35_lieflat":
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
+      state.flags._career35Path = "lieflat";
+      break;
 
-    case "retire_wealthy": state.flags._retirementType = "wealthy"; state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20); break;
-    case "retire_advisor": state.flags._retirementType = "advisor"; state.resources.cash = (state.resources.cash || 0) + 2000; break;
-    case "retire_continue": state.flags._retirementType = "continue"; break;
+    case "retire_wealthy":
+      state.flags._retirementType = "wealthy";
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
+      break;
+    case "retire_advisor":
+      state.flags._retirementType = "advisor";
+      state.resources.cash = (state.resources.cash || 0) + 2000;
+      break;
+    case "retire_continue":
+      state.flags._retirementType = "continue";
+      break;
   }
 }
 
@@ -37586,10 +37697,14 @@ function getLifeNodeStatus(state) {
 function getGaokaoNarrative(state) {
   var result = state.flags && state.flags._gaokaoResult;
   switch (result) {
-    case "excellent": return "你以优异成绩考入名校，那是改变命运的一天。";
-    case "normal": return "你考上了普通大学，平平淡淡才是真。";
-    case "skip": return "你选择了走入社会，高考成了人生中的一个省略号。";
-    default: return "";
+    case "excellent":
+      return "你以优异成绩考入名校，那是改变命运的一天。";
+    case "normal":
+      return "你考上了普通大学，平平淡淡才是真。";
+    case "skip":
+      return "你选择了走入社会，高考成了人生中的一个省略号。";
+    default:
+      return "";
   }
 }
 
@@ -37606,11 +37721,16 @@ if (typeof window !== "undefined") {
     id: "life_nodes",
     name: "人生节点",
     icon: "🎯",
-    brief: "人生关键节点决定命运走向——高考、大学、35岁危机、退休规划。每个节点带来选择分支，影响后续发展。",
+    brief:
+      "人生关键节点决定命运走向——高考、大学、35岁危机、退休规划。每个节点带来选择分支，影响后续发展。",
     version: "v1",
     related: [],
     sections: [
-      { type: "desc", content: "人生节点系统在关键天数触发里程碑事件，你需要做出影响深远的选择。节点基于游戏天数+属性条件触发，每个节点有2-4个选项。" },
+      {
+        type: "desc",
+        content:
+          "人生节点系统在关键天数触发里程碑事件，你需要做出影响深远的选择。节点基于游戏天数+属性条件触发，每个节点有2-4个选项。",
+      },
       {
         type: "table",
         title: "节点一览",
@@ -37622,20 +37742,29 @@ if (typeof window !== "undefined") {
           ["🏖️ 退休规划", "Day 365+", "3", "晚年生活质量 + 传承影响"],
         ],
       },
-      { type: "tip", content: "不同选择影响多周目继承——你的每个决定都会在未来某天回响。" },
+      {
+        type: "tip",
+        content: "不同选择影响多周目继承——你的每个决定都会在未来某天回响。",
+      },
     ],
   };
 
   window.NARRATIVES = window.NARRATIVES || {};
   window.NARRATIVES.gaokao_memory = {
     id: "gaokao_memory",
+    name: "高考回忆",
     category: "人生故事",
     title: "📝 高考回忆",
     brief: "每个人心中都有一场高考——或辉煌、或平淡、或遗憾。",
     content: function () {
       var s = typeof StateManager !== "undefined" && StateManager.getState();
-      if (!s || !s.flags || !s.flags._gaokaoResult) return "🔒 你还没有经历过这段故事。";
-      var map = { excellent: "你以优异成绩考入名校，全家人为你骄傲。", normal: "你考上了一所普通大学，父母说'也不错'。", skip: "你放弃了高考，直接走进社会。那天的阳光很好，你头也不回。" };
+      if (!s || !s.flags || !s.flags._gaokaoResult)
+        return "🔒 你还没有经历过这段故事。";
+      var map = {
+        excellent: "你以优异成绩考入名校，全家人为你骄傲。",
+        normal: "你考上了一所普通大学，父母说'也不错'。",
+        skip: "你放弃了高考，直接走进社会。那天的阳光很好，你头也不回。",
+      };
       return map[s.flags._gaokaoResult] || "🔒 你还没有经历过这段故事。";
     },
     version: "v1",
@@ -37653,17 +37782,62 @@ if (typeof window !== "undefined") {
 
 // ====== 疾病分级 ======
 const ILLNESS_GRADES = {
-  mild: { name: "轻症", icon: "🩹", treatCost: 50, treatDays: 2, recoveryDays: 1 },
-  moderate: { name: "中症", icon: "🏥", treatCost: 500, treatDays: 5, recoveryDays: 3 },
-  severe: { name: "重症", icon: "🚑", treatCost: 5000, treatDays: 14, recoveryDays: 7 },
-  critical: { name: "危重症", icon: "💀", treatCost: 50000, treatDays: 30, recoveryDays: 14 },
+  mild: {
+    name: "轻症",
+    icon: "🩹",
+    treatCost: 50,
+    treatDays: 2,
+    recoveryDays: 1,
+  },
+  moderate: {
+    name: "中症",
+    icon: "🏥",
+    treatCost: 500,
+    treatDays: 5,
+    recoveryDays: 3,
+  },
+  severe: {
+    name: "重症",
+    icon: "🚑",
+    treatCost: 5000,
+    treatDays: 14,
+    recoveryDays: 7,
+  },
+  critical: {
+    name: "危重症",
+    icon: "💀",
+    treatCost: 50000,
+    treatDays: 30,
+    recoveryDays: 14,
+  },
 };
 
 // ====== 保险计划 ======
 const INSURANCE_PLANS = [
-  { id: "basic", name: "基础医保", icon: "🪪", monthly: 200, coverage: 0.5, desc: "覆盖50%医疗费" },
-  { id: "enhanced", name: "补充医保", icon: "🛡️", monthly: 500, coverage: 0.7, desc: "覆盖70%医疗费" },
-  { id: "premium", name: "高端医保", icon: "💎", monthly: 1500, coverage: 0.9, desc: "覆盖90%医疗费，含VIP病房" },
+  {
+    id: "basic",
+    name: "基础医保",
+    icon: "🪪",
+    monthly: 200,
+    coverage: 0.5,
+    desc: "覆盖50%医疗费",
+  },
+  {
+    id: "enhanced",
+    name: "补充医保",
+    icon: "🛡️",
+    monthly: 500,
+    coverage: 0.7,
+    desc: "覆盖70%医疗费",
+  },
+  {
+    id: "premium",
+    name: "高端医保",
+    icon: "💎",
+    monthly: 1500,
+    coverage: 0.9,
+    desc: "覆盖90%医疗费，含VIP病房",
+  },
 ];
 
 // ====== 初始化医疗状态 ======
@@ -37682,12 +37856,18 @@ function initMedicalState(state) {
 // ====== 购买保险 ======
 function buyMedicalInsurance(state, planId) {
   initMedicalState(state);
-  var plan = INSURANCE_PLANS.find(function (p) { return p.id === planId; });
+  var plan = INSURANCE_PLANS.find(function (p) {
+    return p.id === planId;
+  });
   if (!plan) return { ok: false, msg: "无效的保险计划" };
-  if ((state.resources.cash || 0) < plan.monthly) return { ok: false, msg: "现金不足" };
+  if ((state.resources.cash || 0) < plan.monthly)
+    return { ok: false, msg: "现金不足" };
   state.resources.cash -= plan.monthly;
   state.medical.insurance = planId;
-  return { ok: true, msg: "已购买「" + plan.name + "」，每月保费¥" + plan.monthly };
+  return {
+    ok: true,
+    msg: "已购买「" + plan.name + "」，每月保费¥" + plan.monthly,
+  };
 }
 
 // ====== 开始治疗 ======
@@ -37698,24 +37878,45 @@ function startTreatment(state, grade) {
   var cost = gradeInfo.treatCost;
   var coverage = 0;
   if (state.medical && state.medical.insurance) {
-    var plan = INSURANCE_PLANS.find(function (p) { return p.id === state.medical.insurance; });
+    var plan = INSURANCE_PLANS.find(function (p) {
+      return p.id === state.medical.insurance;
+    });
     if (plan) coverage = plan.coverage;
   }
   var actualCost = Math.round(cost * (1 - coverage));
-  if ((state.resources.cash || 0) < actualCost) return { ok: false, msg: "现金不足，治疗费需¥" + actualCost };
+  if ((state.resources.cash || 0) < actualCost)
+    return { ok: false, msg: "现金不足，治疗费需¥" + actualCost };
   state.resources.cash -= actualCost;
-  state.medical.totalMedicalSpent = (state.medical.totalMedicalSpent || 0) + actualCost;
+  state.medical.totalMedicalSpent =
+    (state.medical.totalMedicalSpent || 0) + actualCost;
 
   if (grade === "mild") {
     // 轻症门诊治疗，减部分AP
     state.ap = Math.max(0, (state.ap || 0) - 20);
     state.status.health = Math.min(100, (state.status.health || 100) + 15);
-    return { ok: true, msg: "去药店买了药，花费¥" + actualCost + "。注意休息。" };
+    return {
+      ok: true,
+      msg: "去药店买了药，花费¥" + actualCost + "。注意休息。",
+    };
   }
 
-  state.medical.treatment = { type: "treatment", grade: grade, daysRemaining: gradeInfo.treatDays, cost: actualCost };
+  state.medical.treatment = {
+    type: "treatment",
+    grade: grade,
+    daysRemaining: gradeInfo.treatDays,
+    cost: actualCost,
+  };
   state.medical.hospitalized = grade === "severe" || grade === "critical";
-  return { ok: true, msg: (state.medical.hospitalized ? "办理了住院" : "接受门诊治疗") + "，花费¥" + actualCost + "，需要" + gradeInfo.treatDays + "天治疗期。" };
+  return {
+    ok: true,
+    msg:
+      (state.medical.hospitalized ? "办理了住院" : "接受门诊治疗") +
+      "，花费¥" +
+      actualCost +
+      "，需要" +
+      gradeInfo.treatDays +
+      "天治疗期。",
+  };
 }
 
 // ====== 每日医疗 tick（管线步骤） ======
@@ -37730,11 +37931,14 @@ function tickMedical(state) {
   if (state.medical.hospitalized) {
     var dailyCost = 200;
     if (state.medical.insurance) {
-      var plan = INSURANCE_PLANS.find(function (p) { return p.id === state.medical.insurance; });
+      var plan = INSURANCE_PLANS.find(function (p) {
+        return p.id === state.medical.insurance;
+      });
       if (plan) dailyCost = Math.round(dailyCost * (1 - plan.coverage));
     }
     state.resources.cash = (state.resources.cash || 0) - dailyCost;
-    state.medical.totalMedicalSpent = (state.medical.totalMedicalSpent || 0) + dailyCost;
+    state.medical.totalMedicalSpent =
+      (state.medical.totalMedicalSpent || 0) + dailyCost;
   }
 
   // 治疗完成
@@ -37762,18 +37966,30 @@ function getMedicalSummary(state) {
   var m = state.medical;
   var lines = [];
   if (m.insurance) {
-    var plan = INSURANCE_PLANS.find(function (p) { return p.id === m.insurance; });
-    lines.push((plan ? plan.icon : "🪪") + " 保险：" + (plan ? plan.name : "已购买"));
+    var plan = INSURANCE_PLANS.find(function (p) {
+      return p.id === m.insurance;
+    });
+    lines.push(
+      (plan ? plan.icon : "🪪") + " 保险：" + (plan ? plan.name : "已购买"),
+    );
   } else {
     lines.push("⚠️ 未购买医疗保险");
   }
   if (m.treatment) {
     var gi = ILLNESS_GRADES[m.treatment.grade] || null;
-    lines.push("🏥 治疗中：" + (gi ? gi.name : "治疗") + "，剩余" + m.treatment.daysRemaining + "天");
+    lines.push(
+      "🏥 治疗中：" +
+        (gi ? gi.name : "治疗") +
+        "，剩余" +
+        m.treatment.daysRemaining +
+        "天",
+    );
   }
-  if (m.hospitalized) lines.push("🛏️ 住院中，每日费用¥" + (m.insurance ? "200(保险后)" : "200"));
+  if (m.hospitalized)
+    lines.push("🛏️ 住院中，每日费用¥" + (m.insurance ? "200(保险后)" : "200"));
   if (m.recoveryDays > 0) lines.push("🌱 康复期：" + m.recoveryDays + "天");
-  if (m.totalMedicalSpent > 0) lines.push("💰 累计医疗支出：¥" + m.totalMedicalSpent);
+  if (m.totalMedicalSpent > 0)
+    lines.push("💰 累计医疗支出：¥" + m.totalMedicalSpent);
   return lines;
 }
 
@@ -37793,11 +38009,16 @@ if (typeof window !== "undefined") {
     id: "medical_system",
     name: "医疗系统",
     icon: "🏥",
-    brief: "轻症门诊、中症住院、重症手术——疾病分级治疗 + 医保报销。健康是1，其他是0。",
+    brief:
+      "轻症门诊、中症住院、重症手术——疾病分级治疗 + 医保报销。健康是1，其他是0。",
     version: "v1",
     related: ["data:diseases"],
     sections: [
-      { type: "desc", content: "医疗系统将疾病分为4级，每级有不同的治疗费用和恢复期。购买保险可大幅降低医疗支出。" },
+      {
+        type: "desc",
+        content:
+          "医疗系统将疾病分为4级，每级有不同的治疗费用和恢复期。购买保险可大幅降低医疗支出。",
+      },
       {
         type: "table",
         title: "疾病分级",
@@ -37822,7 +38043,8 @@ if (typeof window !== "undefined") {
       { type: "tip", content: "建议尽早购买医保——一次重病可能掏空积蓄。" },
     ],
   };
-}</script>
+}
+</script>
     <script>/**
  * 旅行系统（v3.7 Expansion v1）
  *
@@ -37847,8 +38069,14 @@ const TRAVEL_DESTINATIONS = {
     desc: "帝都风情，故宫长城，胡同文化",
     souvenirs: ["北京烤鸭", "景泰蓝", "京剧脸谱"],
     events: [
-      { desc: "在故宫里逛了一整天，被历史的厚重感击中", effect: "心情+10，智力+2" },
-      { desc: "钻进胡同吃了碗炸酱面，老板跟你聊了半天", effect: "心情+8，名气+1" },
+      {
+        desc: "在故宫里逛了一整天，被历史的厚重感击中",
+        effect: "心情+10，智力+2",
+      },
+      {
+        desc: "钻进胡同吃了碗炸酱面，老板跟你聊了半天",
+        effect: "心情+8，名气+1",
+      },
     ],
     localSpecials: ["烤鸭", "糖葫芦", "豆汁儿"],
     incomeMod: 0, // 旅行中无收入
@@ -37863,7 +38091,10 @@ const TRAVEL_DESTINATIONS = {
     desc: "魔都繁华，外滩陆家嘴，弄堂风情",
     souvenirs: ["丝巾", "老字号糕点", "上海手表"],
     events: [
-      { desc: "在外滩看陆家嘴天际线，感觉自己很渺小", effect: "心情+12，智力+3" },
+      {
+        desc: "在外滩看陆家嘴天际线，感觉自己很渺小",
+        effect: "心情+12，智力+3",
+      },
       { desc: "在弄堂里迷路，被老奶奶请吃了碗馄饨", effect: "心情+10，道德+1" },
     ],
     localSpecials: ["生煎", "小笼包", "葱油拌面"],
@@ -37879,8 +38110,14 @@ const TRAVEL_DESTINATIONS = {
     desc: "天府之国，熊猫基地，火锅串串",
     souvenirs: ["熊猫公仔", "蜀绣", "花椒油"],
     events: [
-      { desc: "在熊猫基地看熊猫吃竹子，看了一下午", effect: "心情+15，疲劳-10" },
-      { desc: "吃了一顿正宗火锅，辣到流泪但停不下来", effect: "心情+8，体质+1" },
+      {
+        desc: "在熊猫基地看熊猫吃竹子，看了一下午",
+        effect: "心情+15，疲劳-10",
+      },
+      {
+        desc: "吃了一顿正宗火锅，辣到流泪但停不下来",
+        effect: "心情+8，体质+1",
+      },
     ],
     localSpecials: ["火锅", "串串", "担担面"],
     incomeMod: 0,
@@ -37895,8 +38132,14 @@ const TRAVEL_DESTINATIONS = {
     desc: "千年古都，兵马俑，古城墙",
     souvenirs: ["兵马俑仿品", "皮影", "碑林拓片"],
     events: [
-      { desc: "站在兵马俑坑前，两千年的沉默压了下来", effect: "心情+10，能力+2" },
-      { desc: "骑自行车在古城墙上转了一圈，风吹得很舒服", effect: "心情+8，体质+2" },
+      {
+        desc: "站在兵马俑坑前，两千年的沉默压了下来",
+        effect: "心情+10，能力+2",
+      },
+      {
+        desc: "骑自行车在古城墙上转了一圈，风吹得很舒服",
+        effect: "心情+8，体质+2",
+      },
     ],
     localSpecials: ["肉夹馍", "凉皮", "羊肉泡馍"],
     incomeMod: 0,
@@ -37911,7 +38154,10 @@ const TRAVEL_DESTINATIONS = {
     desc: "风花雪月，苍山洱海，慢生活",
     souvenirs: ["扎染布", "大理石摆件", "鲜花饼"],
     events: [
-      { desc: "在洱海边骑了一天自行车，仿佛时间静止了", effect: "心情+20，疲劳-15" },
+      {
+        desc: "在洱海边骑了一天自行车，仿佛时间静止了",
+        effect: "心情+20，疲劳-15",
+      },
       { desc: "在古城小酒馆里听了一晚上民谣", effect: "心情+12，名气+2" },
     ],
     localSpecials: ["过桥米线", "乳扇", "鲜花饼"],
@@ -37937,9 +38183,15 @@ function startTravel(state, destId) {
   initTravelState(state);
   var dest = TRAVEL_DESTINATIONS[destId];
   if (!dest) return { ok: false, msg: "未知目的地" };
-  if (state.travel && state.travel.active) return { ok: false, msg: "已经在旅行中" };
-  if ((state.resources.cash || 0) < dest.cost) return { ok: false, msg: "现金不足，前往" + dest.name + "需要¥" + dest.cost };
-  if ((state.ap || 0) < dest.apCost) return { ok: false, msg: "行动力不足，需要" + dest.apCost + "AP" };
+  if (state.travel && state.travel.active)
+    return { ok: false, msg: "已经在旅行中" };
+  if ((state.resources.cash || 0) < dest.cost)
+    return {
+      ok: false,
+      msg: "现金不足，前往" + dest.name + "需要¥" + dest.cost,
+    };
+  if ((state.ap || 0) < dest.apCost)
+    return { ok: false, msg: "行动力不足，需要" + dest.apCost + "AP" };
 
   state.resources.cash -= dest.cost;
   state.ap -= dest.apCost;
@@ -37949,7 +38201,17 @@ function startTravel(state, destId) {
   if (state.travel.visitedDestinations.indexOf(destId) === -1) {
     state.travel.visitedDestinations.push(destId);
   }
-  return { ok: true, msg: "出发去" + dest.name + "！花费¥" + dest.cost + "，" + dest.days + "天后回来。" };
+  return {
+    ok: true,
+    msg:
+      "出发去" +
+      dest.name +
+      "！花费¥" +
+      dest.cost +
+      "，" +
+      dest.days +
+      "天后回来。",
+  };
 }
 
 // ====== 旅行每日 tick ======
@@ -37966,7 +38228,11 @@ function tickTravel(state) {
       // 简单效果
       if (evt.effect.indexOf("心情+") !== -1) {
         var match = evt.effect.match(/心情\+(\d+)/);
-        if (match) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + parseInt(match[1]));
+        if (match)
+          state.needs.happiness = Math.min(
+            100,
+            (state.needs.happiness || 50) + parseInt(match[1]),
+          );
       }
       state._lastTravelEvent = evt.desc;
     }
@@ -37976,7 +38242,8 @@ function tickTravel(state) {
   if (state.travel.daysRemaining <= 0) {
     // 获得纪念品
     if (dest && dest.souvenirs && dest.souvenirs.length > 0) {
-      var gift = dest.souvenirs[Math.floor(Math.random() * dest.souvenirs.length)];
+      var gift =
+        dest.souvenirs[Math.floor(Math.random() * dest.souvenirs.length)];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
     }
@@ -37996,13 +38263,20 @@ function getTravelStatus(state) {
   var lines = [];
   if (t.active) {
     var dest = TRAVEL_DESTINATIONS[t.destination];
-    lines.push("✈️ 正在" + (dest ? dest.name : "旅行中") + "，剩余" + t.daysRemaining + "天");
+    lines.push(
+      "✈️ 正在" +
+        (dest ? dest.name : "旅行中") +
+        "，剩余" +
+        t.daysRemaining +
+        "天",
+    );
     if (state._lastTravelEvent) lines.push("📖 " + state._lastTravelEvent);
   } else {
     var visited = t.visitedDestinations || [];
     lines.push("🏠 当前不在地点 — 已去过 " + visited.length + "/5 个目的地");
   }
-  if (t.souvenirs && t.souvenirs.length > 0) lines.push("🎁 纪念品：" + t.souvenirs.join("、"));
+  if (t.souvenirs && t.souvenirs.length > 0)
+    lines.push("🎁 纪念品：" + t.souvenirs.join("、"));
   return lines;
 }
 
@@ -38019,11 +38293,16 @@ if (typeof window !== "undefined") {
     id: "travel_system",
     name: "旅行系统",
     icon: "✈️",
-    brief: "离开城市去远方——5个国内目的地，专属事件+纪念品收集。旅行是放松也是花钱的好方式。",
+    brief:
+      "离开城市去远方——5个国内目的地，专属事件+纪念品收集。旅行是放松也是花钱的好方式。",
     version: "v1",
     related: [],
     sections: [
-      { type: "desc", content: "旅行系统让你可以在游戏中离开当前城市，前往中国5个知名目的地体验当地风情。" },
+      {
+        type: "desc",
+        content:
+          "旅行系统让你可以在游戏中离开当前城市，前往中国5个知名目的地体验当地风情。",
+      },
       {
         type: "table",
         title: "目的地",
@@ -38036,25 +38315,42 @@ if (typeof window !== "undefined") {
           ["🏔️ 大理", "¥400", "4天", "苍山洱海/民谣/扎染"],
         ],
       },
-      { type: "tip", content: "旅行是快速恢复心情、收集纪念品的好方式，但费用不菲——穷游富游都是游。" },
+      {
+        type: "tip",
+        content:
+          "旅行是快速恢复心情、收集纪念品的好方式，但费用不菲——穷游富游都是游。",
+      },
     ],
   };
 
   window.NARRATIVES = window.NARRATIVES || {};
   window.NARRATIVES.travel_memories = {
     id: "travel_memories",
+    name: "旅行回忆",
     category: "人生故事",
     title: "✈️ 旅行回忆",
     brief: "那些年去过的地方，见过的风景。",
     content: function () {
       var s = typeof StateManager !== "undefined" && StateManager.getState();
-      if (!s || !s.travel || !s.travel.visitedDestinations || s.travel.visitedDestinations.length === 0) return "🔒 你还没有去过任何地方。";
-      var names = s.travel.visitedDestinations.map(function (id) { var d = TRAVEL_DESTINATIONS[id]; return d ? d.icon + " " + d.name : id; });
-      return "你去过 " + names.join("、") + "，见过不同的风景，也见过不同的自己。";
+      if (
+        !s ||
+        !s.travel ||
+        !s.travel.visitedDestinations ||
+        s.travel.visitedDestinations.length === 0
+      )
+        return "🔒 你还没有去过任何地方。";
+      var names = s.travel.visitedDestinations.map(function (id) {
+        var d = TRAVEL_DESTINATIONS[id];
+        return d ? d.icon + " " + d.name : id;
+      });
+      return (
+        "你去过 " + names.join("、") + "，见过不同的风景，也见过不同的自己。"
+      );
     },
     version: "v1",
   };
-}</script>
+}
+</script>
     <script>/**
  * 法律系统（v3.7 Expansion v1）
  *
@@ -38117,10 +38413,38 @@ const LEGAL_CASES = {
 
 // ====== 律师等级 ======
 const LAWYER_LEVELS = [
-  { id: "junior", name: "初级律师", icon: "📚", hourly: 200, caseFee: 3000, successBonus: 0.3 },
-  { id: "mid", name: "中级律师", icon: "⚖️", hourly: 500, caseFee: 8000, successBonus: 0.4 },
-  { id: "senior", name: "高级律师", icon: "🏛️", hourly: 1000, caseFee: 15000, successBonus: 0.5 },
-  { id: "partner", name: "合伙人律师", icon: "👑", hourly: 2000, caseFee: 30000, successBonus: 0.6 },
+  {
+    id: "junior",
+    name: "初级律师",
+    icon: "📚",
+    hourly: 200,
+    caseFee: 3000,
+    successBonus: 0.3,
+  },
+  {
+    id: "mid",
+    name: "中级律师",
+    icon: "⚖️",
+    hourly: 500,
+    caseFee: 8000,
+    successBonus: 0.4,
+  },
+  {
+    id: "senior",
+    name: "高级律师",
+    icon: "🏛️",
+    hourly: 1000,
+    caseFee: 15000,
+    successBonus: 0.5,
+  },
+  {
+    id: "partner",
+    name: "合伙人律师",
+    icon: "👑",
+    hourly: 2000,
+    caseFee: 30000,
+    successBonus: 0.6,
+  },
 ];
 
 // ====== 法律状态初始化 ======
@@ -38143,10 +38467,14 @@ function fileLawsuit(state, caseId, lawyerId) {
   if (!caseData) return { ok: false, msg: "无效的案件类型" };
   if (state.legal.activeCase) return { ok: false, msg: "已有进行中的诉讼" };
 
-  var lawyer = LAWYER_LEVELS.find(function (l) { return l.id === lawyerId; }) || LAWYER_LEVELS[0];
+  var lawyer =
+    LAWYER_LEVELS.find(function (l) {
+      return l.id === lawyerId;
+    }) || LAWYER_LEVELS[0];
   var totalCost = caseData.cost + lawyer.caseFee;
 
-  if ((state.resources.cash || 0) < totalCost) return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
+  if ((state.resources.cash || 0) < totalCost)
+    return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
 
   state.resources.cash -= totalCost;
   state.legal.totalLegalSpent = (state.legal.totalLegalSpent || 0) + totalCost;
@@ -38160,7 +38488,17 @@ function fileLawsuit(state, caseId, lawyerId) {
   };
   state.legal.lawyerRetained = lawyer.id;
 
-  return { ok: true, msg: "已提起" + caseData.name + "，聘请" + lawyer.name + "，预计" + caseData.duration + "天有结果。" };
+  return {
+    ok: true,
+    msg:
+      "已提起" +
+      caseData.name +
+      "，聘请" +
+      lawyer.name +
+      "，预计" +
+      caseData.duration +
+      "天有结果。",
+  };
 }
 
 // ====== 每日法律 tick ======
@@ -38171,7 +38509,7 @@ function tickLegal(state) {
 
   // 诉讼阶段推进
   var totalDays = LEGAL_CASES[ac.caseId] ? LEGAL_CASES[ac.caseId].duration : 15;
-  var progress = 1 - (ac.daysRemaining / totalDays);
+  var progress = 1 - ac.daysRemaining / totalDays;
 
   if (progress < 0.3) ac.phase = "filing";
   else if (progress < 0.6) ac.phase = "evidence";
@@ -38186,17 +38524,31 @@ function tickLegal(state) {
     var winChance = 0.5;
 
     if (caseData) {
-      var lawyer = LAWYER_LEVELS.find(function (l) { return l.id === ac.lawyerId; });
+      var lawyer = LAWYER_LEVELS.find(function (l) {
+        return l.id === ac.lawyerId;
+      });
       if (lawyer) winChance += lawyer.successBonus * 0.3;
-      winChance = Math.min(0.95, Math.max(0.1, winChance - caseData.difficulty));
+      winChance = Math.min(
+        0.95,
+        Math.max(0.1, winChance - caseData.difficulty),
+      );
     }
 
     var won = Math.random() < winChance;
     ac.result = won ? "won" : "lost";
-    state.legal.completedCases.push({ caseId: ac.caseId, result: ac.result, day: state.player.day });
+    state.legal.completedCases.push({
+      caseId: ac.caseId,
+      result: ac.result,
+      day: state.player.day,
+    });
 
     if (won) {
-      var reward = caseData ? Math.round(caseData.rewardMin + Math.random() * (caseData.rewardMax - caseData.rewardMin)) : 5000;
+      var reward = caseData
+        ? Math.round(
+            caseData.rewardMin +
+              Math.random() * (caseData.rewardMax - caseData.rewardMin),
+          )
+        : 5000;
       state.resources.cash = (state.resources.cash || 0) + reward;
       state.legal.totalLegalWon = (state.legal.totalLegalWon || 0) + reward;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
@@ -38229,13 +38581,26 @@ function getLegalSummary(state) {
   var lines = [];
   if (l.activeCase) {
     var caseData = LEGAL_CASES[l.activeCase.caseId];
-    lines.push("⚖️ 诉讼中：" + (caseData ? caseData.name : "未知案件") + "（" + l.activeCase.phase + "阶段，剩余" + l.activeCase.daysRemaining + "天）");
+    lines.push(
+      "⚖️ 诉讼中：" +
+        (caseData ? caseData.name : "未知案件") +
+        "（" +
+        l.activeCase.phase +
+        "阶段，剩余" +
+        l.activeCase.daysRemaining +
+        "天）",
+    );
   }
   if (l.completedCases && l.completedCases.length > 0) {
-    var won = l.completedCases.filter(function (c) { return c.result === "won"; }).length;
-    lines.push("📋 累计案件：" + l.completedCases.length + "（胜诉" + won + "）");
+    var won = l.completedCases.filter(function (c) {
+      return c.result === "won";
+    }).length;
+    lines.push(
+      "📋 累计案件：" + l.completedCases.length + "（胜诉" + won + "）",
+    );
   }
-  if (l.totalLegalSpent > 0) lines.push("💰 累计法律支出：¥" + l.totalLegalSpent);
+  if (l.totalLegalSpent > 0)
+    lines.push("💰 累计法律支出：¥" + l.totalLegalSpent);
   if (l.totalLegalWon > 0) lines.push("💰 累计获赔：¥" + l.totalLegalWon);
   var risk = checkLegalRisk(state);
   if (risk > 0) lines.push("⚠️ 法律风险：" + risk + "%");
@@ -38261,7 +38626,11 @@ if (typeof window !== "undefined") {
     version: "v1",
     related: ["data:illegal_actions"],
     sections: [
-      { type: "desc", content: "法律系统允许你通过诉讼解决纠纷。立案→举证→庭审→判决，全程7-30天。" },
+      {
+        type: "desc",
+        content:
+          "法律系统允许你通过诉讼解决纠纷。立案→举证→庭审→判决，全程7-30天。",
+      },
       {
         type: "table",
         title: "案件类型",
@@ -38287,7 +38656,8 @@ if (typeof window !== "undefined") {
       { type: "tip", content: "违法行为会增加法律风险——出来混，迟早要还的。" },
     ],
   };
-}</script>
+}
+</script>
     <script>/**
  * 证书/技能训练定义
  * 可在培训中心考取

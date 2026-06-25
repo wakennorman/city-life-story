@@ -279,6 +279,7 @@ if (typeof window !== "undefined") {
   window.NARRATIVES = window.NARRATIVES || {};
   window.NARRATIVES.travel_memories = {
     id: "travel_memories",
+    name: "旅行回忆",
     category: "人生故事",
     title: "✈️ 旅行回忆",
     brief: "那些年去过的地方，见过的风景。",

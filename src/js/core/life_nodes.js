@@ -290,6 +290,7 @@ if (typeof window !== "undefined") {
   window.NARRATIVES = window.NARRATIVES || {};
   window.NARRATIVES.gaokao_memory = {
     id: "gaokao_memory",
+    name: "高考回忆",
     category: "人生故事",
     title: "📝 高考回忆",
     brief: "每个人心中都有一场高考——或辉煌、或平淡、或遗憾。",

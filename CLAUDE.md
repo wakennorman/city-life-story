@@ -50,7 +50,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
+- **最新一次工作**：v3.7 Expansion v1 冒烟测试与百科审计修复（2026-06-25）
+  - **测试**：本地 HTTP + Chrome DevTools Protocol 冒烟测试通过，桌面/移动首屏加载正常，入口按钮可进入游戏主界面
+  - **修复**：`NARRATIVES.gaokao_memory` 与 `NARRATIVES.travel_memories` 补齐 `name` 字段
+  - **百科审计**：`runMechanicsAudit` 复测显示 MECHANICS 53 / NARRATIVES 14 / VICTORIES 8，无问题
+  - **构建**：已 `python build.py`
+  - **剩余风险**：浏览器 AudioContext 自动播放限制警告仍存在，属用户手势前播放音效的既有浏览器策略；未做长流程完整试玩
+
+- **上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
   - **系统1 人生节点** `core/life_nodes.js` — 高考/大学/35岁危机/退休 4大里程碑，属性门槛+分支选择+效果应用，MECHANICS+NARRATIVES注册
   - **系统2 医疗深度** `core/medical.js` — 4级疾病分级(轻症/中症/重症/危重症)，3档医保(50%-90%报销)，门诊+住院+康复+保险购买
   - **系统3 旅行系统** `core/travel.js` — 5个国内目的地(北京/上海/成都/西安/大理)，旅行事件+纪念品收集+特产风味
@@ -58,7 +65,7 @@
   - **集成**：4个管线步骤(life_node_check/medical_tick/recovery_tick/travel_tick/legal_tick)+index.html注册+main.js初始化+百科注册
   - **设计参考**：BitLife人生阶段 / 中国式家长节点 / 大多数医疗 / 真实中国民事诉讼 / 模拟人生度假
   - **构建**：已 `python build.py`
-  - **commit**：待commit
+  - **commit**：fc8f441
 
 ## 🔁 Codex接力清单（未完成任务，按优先级排序）
 
