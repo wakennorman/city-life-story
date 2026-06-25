@@ -2301,8 +2301,8 @@ function renderActionsTab(state, parent) {
         <span style="font-size:9px;color:var(--text-muted);">点击打开新系统</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-        <button onclick="switchTab('workplace_social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
-        <button onclick="switchTab('family')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
+        <button onclick="StateManager.getState()._socialSubTab='social_workplace';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
+        <button onclick="StateManager.getState()._socialSubTab='social_family';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
         <button onclick="switchTab('personal_growth')" class="btn btn-sm" style="padding:8px 12px;">🌱 个人成长</button>
       </div>
     `;
