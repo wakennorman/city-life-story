@@ -3017,6 +3017,46 @@ const NPCS = [
   },
 ];
 
+function ensureNpcAffinityEvents() {
+  var tierNames = {
+    30: "熟人事件",
+    60: "好友事件",
+    80: "挚友事件",
+  };
+
+  for (var i = 0; i < NPCS.length; i++) {
+    var npc = NPCS[i];
+    if (npc.affinityEvents && npc.affinityEvents.length > 0) continue;
+
+    var rewards = npc.affinityRewards || [];
+    npc.affinityEvents = [30, 60, 80].map(function (threshold) {
+      var reward = null;
+      for (var r = 0; r < rewards.length; r++) {
+        if (rewards[r].threshold === threshold) {
+          reward = rewards[r];
+          break;
+        }
+      }
+      return {
+        id: npc.id + "_affinity_event_" + threshold,
+        threshold: threshold,
+        title: npc.name + "的" + tierNames[threshold],
+        desc: reward
+          ? reward.desc
+          : "好感达到 " + threshold + " 后触发一次关系进展。",
+        message:
+          "💕 你和" +
+          npc.name +
+          "的关系更近了一步，解锁了" +
+          tierNames[threshold] +
+          "。",
+      };
+    });
+  }
+}
+
+ensureNpcAffinityEvents();
+
 /** 获取NPC */
 function getNpcById(npcId) {
   return NPCS.find((n) => n.id === npcId) || null;

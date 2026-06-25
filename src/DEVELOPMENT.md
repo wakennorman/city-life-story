@@ -17,6 +17,20 @@
 
 - 修改 `src/` 后执行 `python build.py`。
 
+## 2026-06-25 — v3.7 P1-2 NPC好感链路
+
+执行任务：完成 `IMPLEMENTATION_PROGRESS.md` 第二个未完成项 P1-2 NPC好感链路。
+
+### 实施内容
+
+- 修改 `src/js/data/npcs.js`，为所有 NPC 自动补齐 `affinityEvents`，包含 30/60/80 三档阈值事件，并复用原有 `affinityRewards` 的描述，避免维护两套互相矛盾的好感文案。
+- 修改 `src/js/phase1/npc_event_bridge.js`，新增 `checkNpcAffinityEvents(state, onlyNpcId)`，用 `state.flags._npcAffinityEventsSeen` 保证每个好感事件只触发一次；每日 NPC 桥接管线会检查并推送关系进展消息。
+- 修改 `src/js/ui/wiki.js`，在 NPC 详情中展示“好感事件”列表，并沿用已有剧透隐藏规则，未达阈值只显示锁定提示。
+
+### 验证
+
+- 修改 `src/` 后执行 `python build.py`。
+
 ## 2026-06-24 — v3.6 版本升级（P0/P1全任务完成）
 
 执行任务：v3.6 版本升级（4组P0/P1任务）

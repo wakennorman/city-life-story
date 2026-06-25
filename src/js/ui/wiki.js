@@ -1973,6 +1973,31 @@ function _wikiDetailNpc(state, id) {
     html += "</ul>";
   }
 
+  if (npc.affinityEvents && npc.affinityEvents.length > 0) {
+    html += '<h3>🎬 好感事件</h3><ul class="wiki-list">';
+    for (var ae = 0; ae < npc.affinityEvents.length; ae++) {
+      var evt = npc.affinityEvents[ae];
+      var eventKnown =
+        discovered && discovered.affinityRewards.indexOf(evt.threshold) >= 0;
+      var eventOk = aff >= evt.threshold;
+      if (eventKnown || eventOk) {
+        html +=
+          "<li>" +
+          (eventOk ? "✅ " : "🔒 ") +
+          "好感 " +
+          evt.threshold +
+          " · " +
+          _wkE(evt.title || "关系事件") +
+          "：" +
+          _wkE(evt.desc || "") +
+          "</li>";
+      } else {
+        html += "<li>🔒 好感 " + evt.threshold + " 后触发新的关系事件</li>";
+      }
+    }
+    html += "</ul>";
+  }
+
   // 委托任务（剧透隐藏：好感≥30或已发现才显示详情）
   if (npc.favor) {
     var favorDone = state && state.flags && state.flags["_npcFavor_" + id];

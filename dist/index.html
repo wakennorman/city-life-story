@@ -40316,6 +40316,46 @@ const NPCS = [
   },
 ];
 
+function ensureNpcAffinityEvents() {
+  var tierNames = {
+    30: "熟人事件",
+    60: "好友事件",
+    80: "挚友事件",
+  };
+
+  for (var i = 0; i < NPCS.length; i++) {
+    var npc = NPCS[i];
+    if (npc.affinityEvents && npc.affinityEvents.length > 0) continue;
+
+    var rewards = npc.affinityRewards || [];
+    npc.affinityEvents = [30, 60, 80].map(function (threshold) {
+      var reward = null;
+      for (var r = 0; r < rewards.length; r++) {
+        if (rewards[r].threshold === threshold) {
+          reward = rewards[r];
+          break;
+        }
+      }
+      return {
+        id: npc.id + "_affinity_event_" + threshold,
+        threshold: threshold,
+        title: npc.name + "的" + tierNames[threshold],
+        desc: reward
+          ? reward.desc
+          : "好感达到 " + threshold + " 后触发一次关系进展。",
+        message:
+          "💕 你和" +
+          npc.name +
+          "的关系更近了一步，解锁了" +
+          tierNames[threshold] +
+          "。",
+      };
+    });
+  }
+}
+
+ensureNpcAffinityEvents();
+
 /** 获取NPC */
 function getNpcById(npcId) {
   return NPCS.find((n) => n.id === npcId) || null;
@@ -58834,6 +58874,46 @@ function checkNpcSkillUnlocks(state) {
   }
 }
 
+/**
+ * NPC好感事件检查 — 达到30/60/80阈值时触发一次关系进展消息
+ * 与 affinityRewards 分离：奖励负责实际福利，这里负责叙事链路和百科发现。
+ */
+function checkNpcAffinityEvents(state, onlyNpcId) {
+  if (!state || !state.relationships) return;
+  var npcsList =
+    typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
+  if (!npcsList || !npcsList.length) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._npcAffinityEventsSeen)
+    state.flags._npcAffinityEventsSeen = {};
+
+  for (var ni = 0; ni < npcsList.length; ni++) {
+    var npc = npcsList[ni];
+    if (onlyNpcId && npc.id !== onlyNpcId) continue;
+    if (!npc.affinityEvents || !npc.affinityEvents.length) continue;
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    var affinity = rel.affinity || 0;
+
+    for (var ei = 0; ei < npc.affinityEvents.length; ei++) {
+      var evt = npc.affinityEvents[ei];
+      if (affinity < evt.threshold) continue;
+      if (state.flags._npcAffinityEventsSeen[evt.id]) continue;
+      state.flags._npcAffinityEventsSeen[evt.id] = true;
+
+      if (typeof evt.effect === "function") {
+        evt.effect(state, npc, rel);
+      } else if (evt.message) {
+        StateManager.addMessage(evt.message, "success");
+      }
+
+      if (typeof tryRevealNpcInfo === "function") {
+        tryRevealNpcInfo(npc.id, state, "affinity_up");
+      }
+    }
+  }
+}
+
 /** 每日NPC桥接主函数 — 在 daily_pipeline 的 events 步骤后调用 */
 function runDailyNpcBridge(state) {
   if (!state.relationships) return;
@@ -58855,6 +58935,9 @@ function runDailyNpcBridge(state) {
 
   // 4. 好感×技能双门槛解锁检查 — 每日检查
   checkNpcSkillUnlocks(state);
+
+  // 5. 好感阈值事件检查 — 每日检查，补足30/60/80叙事链路
+  checkNpcAffinityEvents(state);
 }
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
@@ -109711,6 +109794,31 @@ function _wikiDetailNpc(state, id) {
           "</li>";
       } else {
         html += "<li>🔒 好感 " + rwd.threshold + " 达成后解锁</li>";
+      }
+    }
+    html += "</ul>";
+  }
+
+  if (npc.affinityEvents && npc.affinityEvents.length > 0) {
+    html += '<h3>🎬 好感事件</h3><ul class="wiki-list">';
+    for (var ae = 0; ae < npc.affinityEvents.length; ae++) {
+      var evt = npc.affinityEvents[ae];
+      var eventKnown =
+        discovered && discovered.affinityRewards.indexOf(evt.threshold) >= 0;
+      var eventOk = aff >= evt.threshold;
+      if (eventKnown || eventOk) {
+        html +=
+          "<li>" +
+          (eventOk ? "✅ " : "🔒 ") +
+          "好感 " +
+          evt.threshold +
+          " · " +
+          _wkE(evt.title || "关系事件") +
+          "：" +
+          _wkE(evt.desc || "") +
+          "</li>";
+      } else {
+        html += "<li>🔒 好感 " + evt.threshold + " 后触发新的关系事件</li>";
       }
     }
     html += "</ul>";

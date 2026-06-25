@@ -863,6 +863,46 @@ function checkNpcSkillUnlocks(state) {
   }
 }
 
+/**
+ * NPC好感事件检查 — 达到30/60/80阈值时触发一次关系进展消息
+ * 与 affinityRewards 分离：奖励负责实际福利，这里负责叙事链路和百科发现。
+ */
+function checkNpcAffinityEvents(state, onlyNpcId) {
+  if (!state || !state.relationships) return;
+  var npcsList =
+    typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
+  if (!npcsList || !npcsList.length) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._npcAffinityEventsSeen)
+    state.flags._npcAffinityEventsSeen = {};
+
+  for (var ni = 0; ni < npcsList.length; ni++) {
+    var npc = npcsList[ni];
+    if (onlyNpcId && npc.id !== onlyNpcId) continue;
+    if (!npc.affinityEvents || !npc.affinityEvents.length) continue;
+    var rel = state.relationships[npc.id];
+    if (!rel || !rel.met) continue;
+    var affinity = rel.affinity || 0;
+
+    for (var ei = 0; ei < npc.affinityEvents.length; ei++) {
+      var evt = npc.affinityEvents[ei];
+      if (affinity < evt.threshold) continue;
+      if (state.flags._npcAffinityEventsSeen[evt.id]) continue;
+      state.flags._npcAffinityEventsSeen[evt.id] = true;
+
+      if (typeof evt.effect === "function") {
+        evt.effect(state, npc, rel);
+      } else if (evt.message) {
+        StateManager.addMessage(evt.message, "success");
+      }
+
+      if (typeof tryRevealNpcInfo === "function") {
+        tryRevealNpcInfo(npc.id, state, "affinity_up");
+      }
+    }
+  }
+}
+
 /** 每日NPC桥接主函数 — 在 daily_pipeline 的 events 步骤后调用 */
 function runDailyNpcBridge(state) {
   if (!state.relationships) return;
@@ -884,6 +924,9 @@ function runDailyNpcBridge(state) {
 
   // 4. 好感×技能双门槛解锁检查 — 每日检查
   checkNpcSkillUnlocks(state);
+
+  // 5. 好感阈值事件检查 — 每日检查，补足30/60/80叙事链路
+  checkNpcAffinityEvents(state);
 }
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
