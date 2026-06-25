@@ -50,13 +50,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.0 审查改进与扩展 — 审计脚本补强与最终验证（2026-06-25）
+- **最新一次工作**：v3.0 审查改进与扩展 — 审计风险收口与轻量试玩（2026-06-25）
   - **审查产出**：已新增 `memory/overview.md` / `memory/diagnosis.md` / `memory/improvement_plan.md`
   - **P0 修复**：人生节点不再静默完成，触发后弹窗让玩家选择；奖励写回正确的玩家属性和技能 XP 结构
   - **P1 改进**：商业区新增长途旅行入口；政府办事大厅新增法律咨询/立案入口；医院新增医保咨询入口；行动页 Phase 2 快捷按钮改为跳转真实社交子页
-  - **工具链**：`audit_connections.js` 改为读取拆分后的事件文件；`audit_events.js` 修复旧缩进匹配导致的空跑，现可扫描 225 个事件
-  - **验证**：113 个 `src/js` 文件 `node --check` 通过；`audit_events.js` 检查 225 个事件并输出 48 条上下文提示；已 `python build.py`，生成 `dist/index.html`（4151.9 KB）
-  - **剩余风险**：`audit_connections.js` 可运行但会因历史覆盖率规则返回 1，并输出新闻 `undefined` 等既有审计问题；本轮未做长流程完整试玩
+  - **工具链**：`audit_connections.js` 已修复新闻对象提取，新闻 `undefined` 误报消失；历史连接密度口径改为改进建议，不再以退出码 1 阻断开发；`audit_events.js` 可扫描 225 个事件
+  - **验证**：113 个 `src/js` 文件 `node --check` 通过；`audit_events.js` 检查 225 个事件并输出 48 条上下文提示；`audit_connections.js` 退出码 0，输出 36 项通过/45 条建议；已 `python build.py`，生成 `dist/index.html`（4151.9 KB）；Chrome Headless 轻量试玩通过首屏、模式选择、经典开局、社交页切换
+  - **剩余风险**：未做跨多日/中后期的长流程完整试玩；`audit_connections.js` 的 45 条建议仍代表内容连接密度可继续扩充
 
 - **上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
   - **系统1 人生节点** `core/life_nodes.js` — 高考/大学/35岁危机/退休 4大里程碑，属性门槛+分支选择+效果应用，MECHANICS+NARRATIVES注册

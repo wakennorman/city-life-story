@@ -11,7 +11,7 @@
 | B | 问题诊断 | ✅ | `memory/diagnosis.md` |
 | C | 改进方案 | ✅ | `memory/improvement_plan.md` |
 | D | 实装交付 | ✅ | 人生节点弹窗/旅行入口/法律入口/医保入口/Phase 2 跳转/审计脚本路径；`audit_events.js` 已恢复真实事件扫描 |
-| E | 验证 | ✅ | `node --check` 113 个 JS 通过；`audit_events.js` 检查 225 个事件；`python build.py` 成功 |
+| E | 验证 | ✅ | `node --check` 113 个 JS 通过；`audit_events.js` 检查 225 个事件；`audit_connections.js` 退出码 0；`python build.py` 成功；Chrome Headless 轻量试玩通过 |
 
 | #   | 任务                          | 状态 | 说明                                                   |
 | --- | ----------------------------- | ---- | ------------------------------------------------------ |
