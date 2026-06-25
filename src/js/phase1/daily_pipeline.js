@@ -390,6 +390,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === Phase 2 社交网络每日 tick ===
+  {
+    name: "social_network_daily",
+    fn: function (state) {
+      if (typeof tickSocialNetwork === "function") {
+        tickSocialNetwork(state);
+      }
+    },
+  },
+
   // === 固定工作（上班族）每日 tick ===
   {
     name: "career_job_daily",

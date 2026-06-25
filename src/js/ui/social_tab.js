@@ -106,6 +106,7 @@ function renderSocialTab(state, parent) {
   var subTabs = [
     { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
     { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
+    { id: "social_network", label: "📱 社交网络", icon: "📱" },
     { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
     { id: "social_overview", label: "📊 关系总览", icon: "📊" },
   ];
@@ -137,6 +138,9 @@ function renderSocialTab(state, parent) {
       break;
     case "social_workplace":
       renderSocialWorkplaceTab(state, content);
+      break;
+    case "social_network":
+      renderSocialNetworkTab(state, content);
       break;
     case "social_npc":
       renderNpcRelationships(state, content);
@@ -217,6 +221,122 @@ function renderSocialOverviewTab(state, content) {
 
   html += "</div>";
   content.innerHTML = html;
+}
+
+function socialNetworkEscape(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderSocialNetworkTab(state, content) {
+  if (typeof ensureSocialNetworkState === "function") {
+    ensureSocialNetworkState(state);
+  } else if (!state.socialNetwork) {
+    state.socialNetwork = { posts: [], weiboHotlist: [], npcFeeds: [], playerFans: 0 };
+  }
+  var sn = state.socialNetwork;
+  var incomeInfo =
+    typeof calculateInfluencerIncome === "function"
+      ? calculateInfluencerIncome(state)
+      : { level: sn.playerInfluencerLevel || "none", income: sn.influencerIncome || 0 };
+
+  var html = '<div class="tab-content">';
+  html += '<div class="section"><h3>📱 社交网络</h3>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">';
+  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">粉丝</div><strong>' + (sn.playerFans || 0).toLocaleString() + '</strong></div>';
+  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">网红等级</div><strong>' + socialNetworkEscape(incomeInfo.level) + '</strong></div>';
+  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">日收入</div><strong>¥' + Math.round(incomeInfo.income || 0).toLocaleString() + '</strong></div>';
+  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">舆论</div><strong>' + (sn.舆论危机 && sn.舆论危机.active ? "危机中" : "平稳") + '</strong></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
+  html += '<button class="btn btn-sm btn-primary sn-post-btn">✍️ 发朋友圈</button>';
+  html += '<button class="btn btn-sm sn-refresh-btn">🔥 刷新热搜</button>';
+  html += '</div>';
+
+  if (sn.舆论危机 && sn.舆论危机.active) {
+    html += '<div class="card" style="padding:10px;margin-bottom:10px;border-left:3px solid var(--danger);">';
+    html += '<strong>⚠️ 舆论危机</strong><div style="font-size:12px;color:var(--text-muted);">严重度 ' + sn.舆论危机.severity + '，剩余 ' + sn.舆论危机.daysRemaining + ' 天</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="section"><h4>💬 朋友圈</h4>';
+  var posts = sn.posts || [];
+  if (posts.length === 0) {
+    html += '<p style="color:var(--text-muted);">还没有发布过朋友圈。</p>';
+  } else {
+    for (var p = 0; p < Math.min(posts.length, 5); p++) {
+      var post = posts[p];
+      html += '<div class="card" style="padding:10px;margin:6px 0;">';
+      html += '<div style="font-size:12px;">' + socialNetworkEscape(post.content) + '</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">第' + post.postedDay + '天 · ' + socialNetworkEscape(post.visibility) + ' · 👍 ' + (post.likes ? post.likes.length : 0) + '</div>';
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+
+  html += '<div class="section"><h4>👥 NPC动态</h4>';
+  var feeds = sn.npcFeeds || [];
+  if (feeds.length === 0) {
+    html += '<p style="color:var(--text-muted);">暂无 NPC 动态。</p>';
+  } else {
+    for (var f = 0; f < Math.min(feeds.length, 5); f++) {
+      var feed = feeds[f];
+      var npc = typeof getNpcById === "function" ? getNpcById(feed.npcId) : null;
+      html += '<div class="card" style="padding:10px;margin:6px 0;">';
+      html += '<strong>' + socialNetworkEscape(npc ? npc.name : feed.npcId) + '</strong>';
+      html += '<div style="font-size:12px;margin-top:4px;">' + socialNetworkEscape(feed.content) + '</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第' + feed.postedDay + '天 · ' + socialNetworkEscape(feed.type || "daily") + '</div>';
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+
+  html += '<div class="section"><h4>🔥 微博热搜</h4>';
+  var hotlist = sn.weiboHotlist || [];
+  if (hotlist.length === 0) {
+    html += '<p style="color:var(--text-muted);">还没有刷新热搜。</p>';
+  } else {
+    for (var h = 0; h < Math.min(hotlist.length, 10); h++) {
+      var hot = hotlist[h];
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">';
+      html += '<span style="width:24px;color:var(--accent);font-weight:bold;">#' + hot.rank + '</span>';
+      html += '<span style="flex:1;">' + socialNetworkEscape(hot.title) + '</span>';
+      html += '<span style="color:var(--text-muted);">' + socialNetworkEscape(hot.category) + ' · ' + Math.round((hot.heat || 0) / 10000) + '万热度</span>';
+      html += '</div>';
+    }
+  }
+  html += '</div></div></div>';
+  content.innerHTML = html;
+
+  var postBtn = content.querySelector(".sn-post-btn");
+  if (postBtn) {
+    postBtn.onclick = function () {
+      var text = prompt("写点什么发到朋友圈：", "今天也在努力生活。");
+      if (!text) return;
+      var result = postToMoments(state, text, [], "public");
+      if (result && result.ok === false) {
+        StateManager.addMessage(result.message, "warning");
+      } else {
+        StateManager.addMessage("📱 朋友圈发布成功。", "success");
+      }
+      renderSocialNetworkTab(state, content);
+      if (typeof renderAll === "function") renderAll();
+    };
+  }
+  var refreshBtn = content.querySelector(".sn-refresh-btn");
+  if (refreshBtn) {
+    refreshBtn.onclick = function () {
+      if (typeof refreshWeiboHotlist === "function") {
+        refreshWeiboHotlist(state);
+        StateManager.addMessage("🔥 微博热搜已刷新。", "info");
+      }
+      renderSocialNetworkTab(state, content);
+    };
+  }
 }
 
 // ====== 家庭生活子tab ======

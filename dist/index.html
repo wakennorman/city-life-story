@@ -56426,6 +56426,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === Phase 2 社交网络每日 tick ===
+  {
+    name: "social_network_daily",
+    fn: function (state) {
+      if (typeof tickSocialNetwork === "function") {
+        tickSocialNetwork(state);
+      }
+    },
+  },
+
   // === 固定工作（上班族）每日 tick ===
   {
     name: "career_job_daily",
@@ -112531,8 +112541,28 @@ function createSocialNetworkState() {
   };
 }
 
+function ensureSocialNetworkState(state) {
+  if (!state.socialNetwork) {
+    state.socialNetwork = createSocialNetworkState();
+  }
+  var base = createSocialNetworkState();
+  for (var key in base) {
+    if (typeof state.socialNetwork[key] === "undefined") {
+      state.socialNetwork[key] = base[key];
+    }
+  }
+  if (!state.socialNetwork.舆论危机) {
+    state.socialNetwork.舆论危机 = base.舆论危机;
+  }
+  return state.socialNetwork;
+}
+
 // ====== 发布朋友圈 ======
 function postToMoments(state, content, images, visibility) {
+  ensureSocialNetworkState(state);
+  if ((state.player.actionPoints || 0) < 20) {
+    return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
+  }
   var post = {
     id: 'post_' + state.player.day + '_' + Date.now(),
     authorId: 'player',
@@ -112550,11 +112580,12 @@ function postToMoments(state, content, images, visibility) {
   if (visibility === 'public' && content.length > 10) {
     state.socialNetwork.playerFans += Math.floor(Math.random() * 5) + 1;
   }
-  return post;
+  return { ok: true, post: post };
 }
 
 // ====== 刷新微博热搜 ======
 function refreshWeiboHotlist(state) {
+  ensureSocialNetworkState(state);
   var categories = ['娱乐', '社会', '体育', '科技', '财经', '时尚'];
   var hotlist = [];
   for (var i = 0; i < 10; i++) {
@@ -112572,6 +112603,7 @@ function refreshWeiboHotlist(state) {
 
 // ====== NPC发布动态 ======
 function npcPostFeed(state, npcId, content, type) {
+  ensureSocialNetworkState(state);
   var feed = {
     npcId: npcId,
     content: content,
@@ -112589,6 +112621,7 @@ function npcPostFeed(state, npcId, content, type) {
 
 // ====== 网红经济计算 ======
 function calculateInfluencerIncome(state) {
+  ensureSocialNetworkState(state);
   var fans = state.socialNetwork.playerFans;
   var income = 0;
   var level = 'none';
@@ -112614,6 +112647,7 @@ function calculateInfluencerIncome(state) {
 
 // ====== 舆论危机触发 ======
 function triggerPublicOpinionCrisis(state, topic, severity) {
+  ensureSocialNetworkState(state);
   state.socialNetwork.舆论危机 = {
     active: true,
     severity: severity || Math.floor(Math.random() * 50) + 30,
@@ -112624,6 +112658,7 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
 
 // ====== 每日tick ======
 function tickSocialNetwork(state) {
+  ensureSocialNetworkState(state);
   // 刷新微博热搜（每3天）
   if (state.player.day - state.socialNetwork.lastWeiboRefresh >= 3) {
     refreshWeiboHotlist(state);
@@ -112645,12 +112680,38 @@ function tickSocialNetwork(state) {
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.createSocialNetworkState = createSocialNetworkState;
+  window.ensureSocialNetworkState = ensureSocialNetworkState;
   window.postToMoments = postToMoments;
   window.refreshWeiboHotlist = refreshWeiboHotlist;
   window.npcPostFeed = npcPostFeed;
   window.calculateInfluencerIncome = calculateInfluencerIncome;
   window.triggerPublicOpinionCrisis = triggerPublicOpinionCrisis;
   window.tickSocialNetwork = tickSocialNetwork;
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.social_network = {
+    id: "social_network",
+    name: "社交网络",
+    icon: "📱",
+    brief: "朋友圈、微博热搜、NPC动态、网红经济和舆论危机",
+    version: "1.0.0",
+    related: ["mechanics:npc_affinity", "mechanics:family_life"],
+    sections: [
+      {
+        kind: "desc",
+        text: "社交网络把玩家的日常发声、NPC动态、微博热搜和粉丝增长接入同一个系统。公开发布内容会消耗行动力，也可能带来粉丝增长。",
+      },
+      {
+        kind: "list",
+        items: [
+          "发朋友圈：消耗20点行动力，公开内容较完整时会增长少量粉丝",
+          "微博热搜：每3天自动刷新，也可在社交网络页手动刷新",
+          "NPC动态：事件或日常互动可写入动态流，保留最近50条",
+          "网红经济：粉丝达到100/1000/10000/100000后提升等级并产生日收入",
+          "舆论危机：负面事件可触发危机，严重度会每日衰减",
+        ],
+      },
+    ],
+  };
 }
 </script></script>
     <script>/**

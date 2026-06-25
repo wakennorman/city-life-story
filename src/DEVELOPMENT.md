@@ -75,6 +75,21 @@
 
 - 修改 `src/` 后执行 `python build.py`。
 
+## 2026-06-25 — v3.7 社交网络UI集成
+
+执行任务：完成 `IMPLEMENTATION_PROGRESS.md` 第六个未完成项 社交网络UI集成。
+
+### 实施内容
+
+- 修改 `src/js/core/social_network.js`，新增 `ensureSocialNetworkState(state)`，为旧存档和未初始化状态补齐朋友圈、微博热搜、NPC动态、粉丝、网红收入和舆论危机字段。
+- 修改 `src/js/phase1/daily_pipeline.js`，新增 `social_network_daily` 步骤，每日刷新热搜、结算网红收入并衰减舆论危机。
+- 修改 `src/js/ui/social_tab.js`，新增“📱 社交网络”子页，展示粉丝/网红等级/日收入/舆论状态、朋友圈、NPC动态和微博热搜，并提供发朋友圈与刷新热搜按钮。
+- 在 `social_network.js` 末尾注册 `MECHANICS.social_network`，同步游戏百科机制说明。
+
+### 验证
+
+- 修改 `src/` 后执行 `python build.py`。
+
 ## 2026-06-24 — v3.6 版本升级（P0/P1全任务完成）
 
 执行任务：v3.6 版本升级（4组P0/P1任务）
