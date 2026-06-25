@@ -52,13 +52,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.8 断点续传审查 — 人生事务常驻面板（2026-06-26）
-  - **审查产出**：已刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md`，按当前真实状态重新定位第一个断点为“4 大扩展系统可玩但不可见”
-  - **旧入口 UI**：`src/index.html` 新增“🧭 人生事务”Tab；`src/js/ui/render.js` 注册 `life_systems` renderer，不新增脚本、不重排既有 script 顺序
-  - **面板内容**：集中展示人生节点、医疗/医保、旅行记录、法律事务；按钮复用现有 `showLifeNodeModal`、`showMedicalInsuranceModal`、`showTravelAgencyModal`、`showLegalOfficeModal`
-  - **bridge 可见性**：同一面板展示 `WebAppBridge.getRecommendedCityServices()` 推荐服务和 `getDataCatalogSummary()` TS 内容接入状态
-  - **bridge 修复**：社区体检推荐和体检效果改为读写主游戏真实健康字段 `state.status.health`，保留旧 `state.player.health` 兜底
-  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4196.6 KB）、`npm run build` 全部通过；`dist/index.html` 已确认包含新 Tab 与 renderer
+- **最新一次工作**：用户反馈修复 — 财务/UI/职业/新闻（2026-06-26）
+  - **计划与记忆**：新增 `memory/2026-06-26-user-feedback-plan.md` 记录本轮完善计划，新增 `memory/long_term_lessons.md` 记录经验教训
+  - **P0 修复**：沙盒姓名输入不再整表重绘；每日收支报告取消伪造“其他支出/收入”平衡，改为未归类现金变动提示；收入/支出和总资产曲线按每日报告稳定写入；创业注册资金口径统一
+  - **UI 修复**：状态危机弹窗改为纵向换行按钮并真实禁用不可用项；背包显示中文名兜底并保留买入均价；天气准备购买伞/保暖用品会进入背包
+  - **入口归位**：人生目标不再出现在行动列表，保留开局强制选择和个人成长目标联动
+  - **P1 改进**：职业晋升读取真实 `state.skills`，展示业绩/职场人脉条件；新闻新增快报弹窗；位置/天气/住所/仓库压缩到顶部信息条，左栏滚动负担下降
+  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`（4206.7 KB）、`npm run build` 全部通过
 
 - **上一轮工作**：v3.8 TS 数据目录补全与内容审计（2026-06-25）
   - **TS 内容目录**：`events/jobs/locations/items/diseases/legal/travel` 从占位常量补成实际 TypeScript 数据；当前首批为事件12、职业12、地点14、物品17、疾病12、法律案件7、旅行目的地8，`lifeNodes` 仍为4个完整节点
@@ -379,9 +379,18 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 - 禁止删除任何 `.js` / `.html` / `.css` 文件
 - 禁止修改 `build.py`
 - 禁止修改 `src/index.html` 中的 `<script>` 加载顺序
-- 禁止 `git push`（只做本地修改）
+- 禁止 `git push`（只做本地修改）→ **已更新：见下方 Git Push 规则**
 - 禁止引入任何外部库或 npm 包
 - 禁止在改到一半时停止（功能要完整可运行再停）
+
+### Git Push 规则（2026-06-26 更新）
+- **本地 commit**：每个功能点完成后立即 `git add -A && git commit -m "..."`（不受限制，不限次数）
+- **push 到 GitHub**：仅在以下情况执行 `git push`：
+  - 完成一个完整功能或修复，需要别人测试/演示
+  - 用户明确要求 push
+  - 收工前需要远程备份
+- **频繁小改动不 push**：开发过程中的中间 commit 只保留在本地，避免浪费构建额度
+- **自动部署**：push 后 **Netlify + Cloudflare Pages** 同时自动构建部署
 
 ### 必须操作
 
