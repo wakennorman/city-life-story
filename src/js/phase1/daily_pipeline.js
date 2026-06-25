@@ -952,6 +952,56 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === v3.7 Expansion v1: 人生节点检查 ===
+  {
+    name: "life_node_check",
+    fn: function (state) {
+      if (typeof checkLifeNodes === "function") {
+        checkLifeNodes(state);
+      }
+    },
+  },
+
+  // === v3.7 Expansion v1: 医疗系统每日tick ===
+  {
+    name: "medical_tick",
+    fn: function (state) {
+      if (typeof tickMedical === "function") {
+        tickMedical(state);
+      }
+    },
+  },
+
+  // === v3.7 Expansion v1: 康复期tick ===
+  {
+    name: "recovery_tick",
+    fn: function (state) {
+      if (typeof tickRecovery === "function") {
+        tickRecovery(state);
+      }
+    },
+  },
+
+  // === v3.7 Expansion v1: 旅行每日tick ===
+  {
+    name: "travel_tick",
+    fn: function (state) {
+      if (typeof tickTravel === "function") {
+        tickTravel(state);
+      }
+    },
+  },
+
+  // === v3.7 Expansion v1: 法律系统每日tick ===
+  {
+    name: "legal_tick",
+    fn: function (state) {
+      if (typeof tickLegal === "function") {
+        tickLegal(state);
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */

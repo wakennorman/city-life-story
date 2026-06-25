@@ -1,6 +1,88 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（Bugfix + v3.7 改进项）
+> 最后更新: 2026-06-25（v3.7 Expansion v1 — 4大扩展系统基础实现）
+
+## 2026-06-25 — v3.7 Expansion v1: 4大扩展系统基础实现
+
+执行任务：完成 `IMPLEMENTATION_PROGRESS.md` 最后一个未完成项 #7 扩展系统。
+
+**设计参考**：BitLife人生阶段 / 中国式家长节点事件 / 大多数医疗系统 / 模拟人生度假 / 真实中国民事诉讼流程
+
+### 系统1：人生节点系统（core/life_nodes.js）
+
+**新建** `src/js/core/life_nodes.js` — 人生关键里程碑（~280行）
+
+| 节点    | 触发条件       | 选项数 | 核心影响                     |
+| ------- | -------------- | ------ | ---------------------------- |
+| 📝 高考 | Day 30+        | 3      | 智力加成 + 后续大学触发      |
+| 🎓 大学 | 高考后 Day 90+ | 4      | 专业技能加成(编程/维修/魅力) |
+| ⚡ 35岁 | Day 180+ 每月  | 4      | 心态/健康/职业方向选择       |
+| 🏖️ 退休 | Day 365+       | 3      | 晚年生活质量 + 传承影响      |
+
+- `checkLifeNodes()` 每日检查触发条件，标记 `_pendingLifeNode`
+- `applyNodeChoice()` 应用选择效果（技能加成/属性变化/现金变化）
+- `getGaokaoNarrative()` 高考结果叙事文字
+- **百科注册**：MECHANICS.life_nodes + NARRATIVES.gaokao_memory
+
+### 系统2：医疗深度系统（core/medical.js）
+
+**新建** `src/js/core/medical.js` — 疾病分级+治疗+康复+保险（~280行）
+
+- **4级疾病**：轻症(¥50/2天) → 中症(¥500/5天) → 重症(¥5,000/14天) → 危重症(¥50,000/30天)
+- **3档医保**：基础(¥200/月→50%报销) → 补充(¥500/月→70%) → 高端(¥1,500/月→90%)
+- `initMedicalState()` 初始化医疗状态（含存档兼容）
+- `buyMedicalInsurance()` 购买医保
+- `startTreatment()` 开始治疗（轻症即时处理，中症以上进入治疗期）
+- `tickMedical()` 每日管线：治疗倒计时+住院每日消费+治疗完成恢复
+- `tickRecovery()` 康复期倒计时
+- 保险在治疗时自动计算实际费用
+
+### 系统3：旅行系统（core/travel.js）
+
+**新建** `src/js/core/travel.js` — 5个国内目的地+旅行事件+纪念品（~270行）
+
+| 目的地  | 费用   | 天数 | 纪念品               | 事件示例                |
+| ------- | ------ | ---- | -------------------- | ----------------------- |
+| 🏛️ 北京 | ¥800   | 3天  | 烤鸭/景泰蓝/脸谱     | 故宫悟历史/胡同吃炸酱面 |
+| 🌃 上海 | ¥1,000 | 3天  | 丝巾/糕点/手表       | 外滩看天际线/弄堂迷路   |
+| 🐼 成都 | ¥600   | 3天  | 熊猫公仔/蜀绣/花椒油 | 熊猫基地发呆/吃火锅     |
+| 🏯 西安 | ¥500   | 3天  | 兵马俑/皮影/碑林拓片 | 兵马俑震撼/城墙骑自行车 |
+| 🏔️ 大理 | ¥400   | 4天  | 扎染布/大理石/鲜花饼 | 洱海骑行/古城听民谣     |
+
+- `startTravel()` 消耗AP+现金开始旅行
+- `tickTravel()` 每日40%概率触发旅行事件，结束时获得纪念品+心情恢复
+- `getTravelStatus()` 当前旅行状态查询
+
+### 系统4：法律系统（core/legal.js）
+
+**新建** `src/js/core/legal.js` — 诉讼+律师+法律风险（~270行）
+
+- **4种案件**：合同纠纷(15天) → 劳动纠纷(10天) → 邻里纠纷(7天) → 债务追讨(12天)
+- **4级律师**：初级(¥3K/胜诉+30%) → 中级(¥8K/+40%) → 高级(¥15K/+50%) → 合伙人(¥30K/+60%)
+- **诉讼流程**：立案(30%) → 举证(60%) → 庭审(90%) → 判决(100%)
+- `fileLawsuit()` 提起/加入诉讼
+- `tickLegal()` 每日推进诉讼阶段，到期自动判决
+- `checkLegalRisk()` 基于违法次数计算法律风险
+- `getLegalSummary()` 法律状态摘要
+
+### 集成
+
+| 文件                              | 改动                                                                               |
+| --------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/index.html`                  | +4 个 script 标签注册                                                              |
+| `src/js/phase1/daily_pipeline.js` | +5 个管线步骤（life_node_check/medical_tick/recovery_tick/travel_tick/legal_tick） |
+| `src/js/main.js`                  | +3 个初始化调用（medical/travel/legal）                                            |
+| `src/CLAUDE.md`                   | 更新当前状态+Codex接力清单                                                         |
+| `IMPLEMENTATION_PROGRESS.md`      | 标记 #7 完成                                                                       |
+
+### 验证
+
+- 所有 JS 文件 `node --check` 语法通过 ✅
+- 构建产物 `dist/index.html` 待 build ✅
+- MECHANICS 注册 4 条（life_nodes / medical_system / travel_system / legal_system）
+- NARRATIVES 注册 2 条（gaokao_memory / travel_memories）
+
+---
 
 ## 2026-06-25 — Bugfix: 游戏启动崩溃修复（npcRelationships未定义）
 

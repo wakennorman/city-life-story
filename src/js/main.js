@@ -1282,6 +1282,21 @@ function startNewGame() {
     initNpcRelationships(StateManager.getState());
   }
 
+  // v3.7 Expansion v1: 医疗状态初始化
+  if (typeof initMedicalState === "function") {
+    initMedicalState(StateManager.getState());
+  }
+
+  // v3.7 Expansion v1: 旅行状态初始化
+  if (typeof initTravelState === "function") {
+    initTravelState(StateManager.getState());
+  }
+
+  // v3.7 Expansion v1: 法律状态初始化
+  if (typeof initLegalState === "function") {
+    initLegalState(StateManager.getState());
+  }
+
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产
   var inheritanceApplied = false;
   try {

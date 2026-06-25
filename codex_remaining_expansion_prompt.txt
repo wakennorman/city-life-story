@@ -1,0 +1,41 @@
+你正在接手 D:/Claude Code+DeepSeekV4/city-life-story/ 项目。请先 cd 到该项目目录。
+
+任务来源：用户要求执行“城市浮生记 v3.0 审查改进与扩展”的 6 子任务链。当前项目里前 1-5 子任务报告已经存在，P0/P1/P2-4/社交网络UI也已经提交。请不要重复做已完成项。
+
+必须先阅读：
+1. CLAUDE.md
+2. memory/review-improve-v3.0.md
+3. IMPLEMENTATION_PROGRESS.md
+4. subagent_result5.md
+5. src/DEVELOPMENT.md 顶部/尾部必要上下文
+
+当前明确剩余：IMPLEMENTATION_PROGRESS.md 第7项未完成：旅行/医疗/法律/人生节点 + main.js重构。
+
+执行目标：在不推翻现有核心玩法框架的前提下，实装“轻量但完整可运行”的 v1 版本，优先系统联动深度，不追求数量。
+
+硬约束：
+- 遵守 CLAUDE.md 和 memory/review-improve-v3.0.md。
+- 禁止删除 .js/.html/.css 文件。
+- 禁止修改 build.py。
+- 禁止改变 src/index.html 既有 script 标签顺序；新增 script 只能追加在合适位置，不重排旧脚本。
+- 不引入 npm 包或外部库。
+- 新模块尽量 <=300 行，暴露 window 函数 <=4 个。
+- 每个新系统必须接入 daily_pipeline 一个 step 或明确说明为何不需要。
+- 新机制必须注册百科 MECHANICS/NARRATIVES，不能只写代码不接文档。
+- 完成后运行 python build.py。
+- 更新 src/DEVELOPMENT.md 与 CLAUDE.md 当前状态。
+- git add -A && git commit，commit message 包含 “v3.7 expansion v1”。
+
+具体实装范围（按优先级）：
+1. 人生节点 v1：新增 core/life_nodes.js + data/narratives/mechanics 注册，基于年龄/天数触发高考/35岁/退休的轻量检查；可用状态 flag 避免重复触发；接 daily_pipeline。
+2. 医疗深度 v1：新增 core/medical.js 或在现有 illness 基础上接入住院/康复/保险的轻量状态；接 daily_pipeline；与现金/健康/心情联动；注册百科。
+3. 旅行 v1：新增 core/travel.js，提供国内短途旅行计划/花费/回忆/特产或心情效果；接 daily_pipeline；与天气/社交/人生回忆录尽量联动；注册百科。
+4. 法律 v1：新增 core/legal.js，违法/创业/职场纠纷可进入简单案件进度；接 daily_pipeline；与道德/现金/名声联动；注册百科。
+5. main.js重构：只做低风险抽离或记录方案；如果风险大，不强行大拆。可以只移动一个纯函数，或在 CLAUDE.md/DEVELOPMENT.md 标记为后续。
+
+验证：
+- python build.py 成功。
+- 检查 dist/index.html 中能找到新增模块关键字。
+- git status 最终应干净。
+
+最终输出：简洁中文实装报告：完成项、修改文件、新增机制、验证结果、未做/风险。
