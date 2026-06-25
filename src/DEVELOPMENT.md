@@ -47,6 +47,20 @@
 
 - 修改 `src/` 后执行 `python build.py`。
 
+## 2026-06-25 — v3.7 P1-6 35岁危机追访
+
+执行任务：完成 `IMPLEMENTATION_PROGRESS.md` 第四个未完成项 P1-6 35岁危机追访。
+
+### 实施内容
+
+- 修改 `src/js/core/events_core.js`，新增 `isCrisis35FollowupEvent(evt, state)`，识别已选择 35 岁危机路径后的 `c35_` 追访事件。
+- 在 `queueRandomEvent()` 的权重计算中，对满足条件的 35 岁危机追访事件应用 `×3` 权重，提高它们在时间窗内出场的概率。
+- 保持原有 `conditions`、路径判断和一次性 flag 不变，只调整随机池选择优先级，避免破坏事件内容或强制插队。
+
+### 验证
+
+- 修改 `src/` 后执行 `python build.py`。
+
 ## 2026-06-24 — v3.6 版本升级（P0/P1全任务完成）
 
 执行任务：v3.6 版本升级（4组P0/P1任务）

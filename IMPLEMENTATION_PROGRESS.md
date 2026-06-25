@@ -9,7 +9,7 @@
 | 1 | P1-1 新闻→投资UI | ✅ | investment.js：今日市场驱动板块 |
 | 2 | P1-2 NPC好感链路 | ✅ | npcs.js + npc_event_bridge.js：affinityEvents 30/60/80 |
 | 3 | P1-4 家庭系统 | ✅ | family_life.js：NPC求婚 + 生子/子女教育 |
-| 4 | P1-6 35岁危机追访 | ❌ | events_core.js |
+| 4 | P1-6 35岁危机追访 | ✅ | events_core.js：c35_追访权重×3 |
 | 5 | P2-4 道德事件扩充 | ❌ | moral_events.js（基线重建18个新事件） |
 | 6 | 社交网络UI集成 | ❌ | social_network.js → render.js |
 | 7 | 扩展系统 | ❌ | 旅行/医疗/法律/人生节点 + main.js重构 |
@@ -21,3 +21,4 @@
 - 本次提交 — P1-1 新闻→投资UI：今日市场驱动板块
 - 本次提交 — P1-2 NPC好感链路：affinityEvents + checkNpcAffinityEvents
 - 本次提交 — P1-4 家庭系统：NPC求婚 + 生子/子女教育
+- 本次提交 — P1-6 35岁危机追访：追访事件权重×3

@@ -110,6 +110,16 @@ function rollCorporateEvent(state) {
 }
 
 /** 把一个随机事件塞进待弹队列 */
+function isCrisis35FollowupEvent(evt, state) {
+  return (
+    evt &&
+    typeof evt.id === "string" &&
+    evt.id.indexOf("c35_") === 0 &&
+    state.flags &&
+    !!state.flags._crisis35Path
+  );
+}
+
 function queueRandomEvent(state, phase) {
   const pool = RANDOM_EVENTS.filter((e) => e.phase === phase);
   if (pool.length === 0) return;
@@ -142,6 +152,10 @@ function queueRandomEvent(state, phase) {
     // 世界参数反馈环：行业热度高的领域相关事件更易触发
     if (typeof getSectorEventWeightMod === "function" && e.sector) {
       w *= getSectorEventWeightMod(e.sector);
+    }
+    // 35岁危机追访：路径已选且事件条件满足时，提高出场优先级
+    if (isCrisis35FollowupEvent(e, state)) {
+      w *= 3;
     }
     return Math.max(0.1, w);
   });
