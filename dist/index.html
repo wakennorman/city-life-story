@@ -4374,20 +4374,6 @@ function scaleEventReward(baseReward, state) {
   return Math.floor(baseReward * scale);
 }
 
-/** 注册链式事件（P0-4: 链式事件填充） */
-function queueChainEvent(state, eventId, delayDays, conditions) {
-  if (!state.flags._chainEventQueue) {
-    state.flags._chainEventQueue = [];
-  }
-  state.flags._chainEventQueue.push({
-    eventId: eventId,
-    triggerDay: state.player.day + delayDays,
-    conditions: conditions || {},
-    phase: state.player.phase || "street",
-    triggered: false,
-  });
-}
-
 /** 季度结束时的职场清理 */
 function quarterlyCleanup(state) {
   // 占位（兼容旧调用）
@@ -33315,10 +33301,6 @@ const HOUSING_TIERS = [
   },
 ];
 
-/** 获取当前住所信息 */
-function getCurrentHousing(state) {
-  return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
-}
 
 // ====== 装备掉落系统 (P1-5: 装备获取来源) ======
 
@@ -54970,8 +54952,8 @@ function getTutoringBonus(englishLevel) {
 
 /** accounting技能 → 银行利率加成 */
 function getBankRateBonus(accountingLevel) {
-  // 每年最多+5%（日息约+0.00014），100级满分
-  return accountingLevel * 0.0005;
+  // 每年最多+5%，折算到每日；避免把年化加成误当成日息导致资金指数膨胀。
+  return Math.min(0.05, accountingLevel * 0.0005) / 365;
 }
 
 /** electrician技能 → 工厂类工作收入加成百分比 */
@@ -55665,7 +55647,7 @@ function settleDailyFinance(state) {
   if (bal <= 0) return;
   var accountingLvl =
     (state.skills.accounting && state.skills.accounting.level) || 0;
-  var baseRate = 0.001;
+  var baseRate = 0.0001;
   var bonus =
     typeof getBankRateBonus === "function"
       ? getBankRateBonus(accountingLvl)
@@ -57998,6 +57980,9 @@ function addExtraActions(state, actions) {
     addClinicAction(state, actions);
     addLongDistanceTravelAction(state, actions);
     addLegalOfficeAction(state, actions);
+    if (typeof addWebAppBridgeActions === "function") {
+      addWebAppBridgeActions(state, actions);
+    }
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
     // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）
@@ -59461,6 +59446,20 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === v3.8 Web App bridge: 城市服务后续反馈 ===
+  {
+    name: "webapp_city_services_tick",
+    fn: function (state) {
+      if (
+        typeof WebAppBridge !== "undefined" &&
+        WebAppBridge &&
+        typeof WebAppBridge.tickCityServices === "function"
+      ) {
+        WebAppBridge.tickCityServices(state);
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */
@@ -59585,6 +59584,7 @@ function runDailyPipeline(state) {
           var lateStep = DAILY_PIPELINE[j];
           if (
             lateStep.name === "finance" ||
+            lateStep.name === "lose" ||
             lateStep.name === "autosave" ||
             lateStep.name === "daily_report"
           ) {
@@ -61490,6 +61490,8 @@ function ensureNpcDiscovered(rel, affinity) {
     };
   }
   var d = rel.discovered;
+  d.presenceBonus = Array.isArray(d.presenceBonus) ? d.presenceBonus : [];
+  d.affinityRewards = Array.isArray(d.affinityRewards) ? d.affinityRewards : [];
   // 自动根据好感解锁
   if (affinity >= 30 && !d.favor) d.favor = true;
   if (affinity >= 70 && !d.deepTask) d.deepTask = true;
@@ -70136,6 +70138,85 @@ function canStartStartup(state) {
 }
 
 /** 注册新公司 */
+function _ensureStartupProductDefaults(product, day) {
+  if (!product) return product;
+  product.features = Array.isArray(product.features) ? product.features : [];
+  product.version = product.version || "v1.0";
+  product.versionHistory = Array.isArray(product.versionHistory)
+    ? product.versionHistory
+    : [];
+  product.lifecycleStage = product.lifecycleStage || "introduction";
+  product.marketShare = product.marketShare || 0;
+  product.userGrowthRate = product.userGrowthRate || 0;
+  product.churnRate = product.churnRate || 0;
+  product.consecutiveGrowthDays = product.consecutiveGrowthDays || 0;
+  product.consecutiveDeclineDays = product.consecutiveDeclineDays || 0;
+  product.peakUsers = product.peakUsers || 0;
+  product.peakRevenue = product.peakRevenue || 0;
+  product.retired = !!product.retired;
+  product.retireDay = product.retireDay || null;
+  product.retireReason = product.retireReason || "";
+  product.versionIterationCount = product.versionIterationCount || 0;
+  product.retentionHistory = Array.isArray(product.retentionHistory)
+    ? product.retentionHistory
+    : [];
+  product.funnelHistory = Array.isArray(product.funnelHistory)
+    ? product.funnelHistory
+    : [];
+  product.techDebtHistory = Array.isArray(product.techDebtHistory)
+    ? product.techDebtHistory
+    : [];
+  product.bugHistory = Array.isArray(product.bugHistory) ? product.bugHistory : [];
+  product.crisisHistory = Array.isArray(product.crisisHistory)
+    ? product.crisisHistory
+    : [];
+  product.technicalDebt = product.technicalDebt || 0;
+  product.bugRate = product.bugRate || 0;
+  product.lastRefactorDay = product.lastRefactorDay || day || 0;
+  product.refactorBonus = product.refactorBonus || 0;
+  product.techDebtCrisis = !!product.techDebtCrisis;
+  product.techDebtSources = product.techDebtSources || {};
+  product.techDebtSources.rushDevelopment =
+    product.techDebtSources.rushDevelopment || 0;
+  product.techDebtSources.skippedTests = product.techDebtSources.skippedTests || 0;
+  product.techDebtSources.cutFeatures = product.techDebtSources.cutFeatures || 0;
+  product.techDebtSources.quickFixes = product.techDebtSources.quickFixes || 0;
+  product.techDebtSources.legacyCode = product.techDebtSources.legacyCode || 0;
+  product.activationRate = product.activationRate || 0.3;
+  product.activatedUsers = product.activatedUsers || 0;
+  product.onboardingCompleteRate = product.onboardingCompleteRate || 0.5;
+  product.dau = product.dau || 0;
+  product.wau = product.wau || 0;
+  product.mau = product.mau || 0;
+  product.retentionD1 = product.retentionD1 || 0.4;
+  product.retentionD7 = product.retentionD7 || 0.25;
+  product.retentionD30 = product.retentionD30 || 0.15;
+  product.arpu = product.arpu || 0;
+  product.arppu = product.arppu || 0;
+  product.payRate = product.payRate || 0.05;
+  product.payingUsers = product.payingUsers || 0;
+  product.ltv = product.ltv || 0;
+  product.kFactor = product.kFactor || 0;
+  product.referralRate = product.referralRate || 0.02;
+  product.referralConversion = product.referralConversion || 0.1;
+  product.viralCycleTime = product.viralCycleTime || 7;
+  product.newUsersToday = product.newUsersToday || 0;
+  product.acquisitionChannel = product.acquisitionChannel || "organic";
+  product.cac = product.cac || 0;
+  product.adSpend = product.adSpend || 0;
+  product.funnelData = product.funnelData || {
+    impressions: 0,
+    clicks: 0,
+    registrations: 0,
+    activated: 0,
+    retainedD7: 0,
+    retainedD30: 0,
+    paying: 0,
+    referred: 0,
+  };
+  return product;
+}
+
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
   // 前置条件：3技能15级+2NPC好感40+Day60
@@ -70327,6 +70408,7 @@ function registerStartup(state, name, industry, description) {
     revenue: 0,
     status: "developing",
   };
+  _ensureStartupProductDefaults(initialProduct, day);
   company.products.push(initialProduct);
 
   // ====== P2-11: 初始化办公地点（从共享办公开始） ======
@@ -70496,6 +70578,7 @@ function createProduct(state, name, category) {
       legacyCode: 0, // 遗留代码
     },
   };
+  _ensureStartupProductDefaults(product, state.player.day);
 
   company.products.push(product);
   StateManager.addMessage("💻 新产品「" + product.name + "」开始开发", "info");
@@ -70956,6 +71039,7 @@ function checkFeatureCompletion(state) {
 
 /** 计算产品竞争力 */
 function calculateProductCompetitiveness(product) {
+  _ensureStartupProductDefaults(product, 0);
   const category = PRODUCT_CATEGORIES[product.category];
   if (!category) return 0;
 
@@ -89357,6 +89441,12 @@ function initFamilySystem(state) {
       monthlyParents: 0,
     };
   }
+  state.family.expenses.monthlyMortgage =
+    state.family.expenses.monthlyMortgage || 0;
+  state.family.expenses.monthlyLiving = state.family.expenses.monthlyLiving || 3000;
+  state.family.expenses.monthlyChildren =
+    state.family.expenses.monthlyChildren || 0;
+  state.family.expenses.monthlyParents = state.family.expenses.monthlyParents || 0;
   if (state.family.partner && !state.family.spouse) {
     state.family.spouse = state.family.partner;
   }
@@ -89840,6 +89930,7 @@ function getStageMonthlyCost(stageKey) {
  * 每日家庭更新
  */
 function tickFamilyDaily(state) {
+  initFamilySystem(state);
   const day = state.player.day;
   const family = state.family;
 
@@ -90740,6 +90831,52 @@ function initPersonalGrowth(state) {
       },
     };
   }
+  var pg = state.personalGrowth;
+  if (!pg.hobbies) pg.hobbies = {};
+  if (!pg.health) {
+    pg.health = {
+      physical: 80,
+      mental: 70,
+      metabolic: 75,
+      dental: 85,
+      vision: 70,
+      lastCheckup: state.player.day,
+      checkupHistory: [],
+    };
+  }
+  if (!pg.psychology) {
+    pg.psychology = {
+      stress: 30,
+      anxiety: 25,
+      depression: 15,
+      mood: 70,
+      sleepQuality: 70,
+      lastTherapy: null,
+    };
+  }
+  if (!pg.image) {
+    pg.image = {
+      appearance: 60,
+      style: 50,
+      grooming: 65,
+      fitness: 55,
+      charisma: 50,
+    };
+  }
+  if (!pg.lifeGoals) pg.lifeGoals = { active: [], completed: [] };
+  if (!pg.reading) {
+    pg.reading = {
+      booksRead: 0,
+      booksThisYear: 0,
+      readingList: [],
+      currentBook: null,
+    };
+  }
+  pg.reading.booksRead = pg.reading.booksRead || 0;
+  pg.reading.booksThisYear = pg.reading.booksThisYear || 0;
+  pg.reading.readingList = Array.isArray(pg.reading.readingList)
+    ? pg.reading.readingList
+    : [];
 }
 
 /**
@@ -91161,6 +91298,7 @@ function readBook(state, bookTitle) {
  * 每日个人成长更新
  */
 function tickPersonalGrowthDaily(state) {
+  initPersonalGrowth(state);
   const pg = state.personalGrowth;
   const day = state.player.day;
 
@@ -92587,8 +92725,8 @@ var FATE_EVENTS = [
       return co.phase === "mature" && co.health > 50 && Random.chance(0.15);
     },
     apply: function (st, cid, co) {
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "CEO";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "CEO";
 
       co.sentiment = Math.min(100, co.sentiment + (5 + Random.int(0, 9)));
       co.health = Math.max(5, co.health - (3 + Random.int(0, 4)));
@@ -92659,8 +92797,8 @@ var FATE_EVENTS = [
       co.marketShare = Math.min(45, co.marketShare + (2 + Random.int(0, 3)));
       co.sentiment = Math.min(100, co.sentiment + (12 + Random.int(0, 17)));
 
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "公司";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "公司";
 
       var msg = CEO_BIOS
         ? ceoName + "团队取得重大技术突破，新产品引发行业震动"
@@ -92689,8 +92827,8 @@ var FATE_EVENTS = [
         co.talentScore = Math.max(5, co.talentScore - (5 + Random.int(0, 9)));
       }
 
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "公司";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "公司";
 
       var msg = CEO_BIOS
         ? ceoName + "遭遇监管调查，面临巨额罚款和整改要求"
@@ -107304,6 +107442,9 @@ function showVictoryModal() {
   }
 
   // 构建遗产数据
+  var inventoryItems = Array.isArray(state.inventory)
+    ? state.inventory
+    : (state.inventory && state.inventory.items) || [];
   var inheritanceData = {
     badges: badges,
     badgeCount: badges.length,
@@ -107313,7 +107454,7 @@ function showVictoryModal() {
         return r && r.met && (r.affinity || 0) >= 30;
       },
     ).length,
-    itemCount: (state.inventory || []).filter(function (item) {
+    itemCount: inventoryItems.filter(function (item) {
       return item.legendary || item.achievement || item.unique;
     }).length,
     dreamProgress: state.flags?._dreamId
@@ -107971,6 +108112,9 @@ function showGameOverModal() {
   }
 
   // 构建遗产数据（供下局继承）
+  var inventoryItems = Array.isArray(state.inventory)
+    ? state.inventory
+    : (state.inventory && state.inventory.items) || [];
   var inheritanceData = {
     badges: badges,
     badgeCount: badges.length,
@@ -107980,7 +108124,7 @@ function showGameOverModal() {
         return r && r.met && (r.affinity || 0) >= 30;
       },
     ).length,
-    itemCount: (state.inventory || []).filter(function (item) {
+    itemCount: inventoryItems.filter(function (item) {
       return item.legendary || item.achievement || item.unique;
     }).length,
     dreamProgress: state.flags?._dreamId
@@ -109312,7 +109456,7 @@ function executeScavengeRoute(routeId) {
 }
 
 // ====== Phase 2: IPO 审核结果弹窗 ======
-function showIPOResultModal(state, approved) {
+function applyIPOResultModal(state, approved) {
   if (typeof processIPOResult === "function") {
     processIPOResult(state, approved);
   }
@@ -109356,9 +109500,9 @@ function showIPOResultModal(state) {
         cls: approved ? "btn-success" : "btn-primary",
         callback: function () {
           if (approved) {
-            showIPOResultModal(state, true);
+            applyIPOResultModal(state, true);
           } else {
-            showIPOResultModal(state, false);
+            applyIPOResultModal(state, false);
           }
         },
       },
@@ -122351,6 +122495,333 @@ document.addEventListener("DOMContentLoaded", function () {
   if (typeof window !== "undefined") {
     window.SCENARIO_START_CHAINS = CHAINS;
     window.checkScenarioStartChain = checkScenarioStartChain;
+  }
+})();
+</script>
+    <!-- v3.8 Phase 1: Web App bridge (Vite/TypeScript migration adapter) -->
+    <script>/**
+ * Web App runtime bridge (Phase 1)
+ *
+ * 让新架构的第一批数据化玩法进入旧游戏，不替代 legacy runtime。
+ */
+(function () {
+  var APP_SAVE_SCHEMA_VERSION = 2;
+  var BRIDGE_VERSION = "0.1.0";
+
+  var CITY_SERVICE_ACTIONS = [
+    {
+      id: "labor_dispute_precheck",
+      title: "劳动争议预检",
+      icon: "⚖️",
+      category: "legal",
+      locationIds: ["gov_office"],
+      cost: 120,
+      apCost: 5,
+      brief: "把欠薪、裁员、合同风险先做一次材料预检。",
+    },
+    {
+      id: "insurance_bill_review",
+      title: "医保账单复核",
+      icon: "🪪",
+      category: "medical",
+      locationIds: ["hospital"],
+      cost: 30,
+      apCost: 3,
+      brief: "让医院医保窗口复核治疗账单，已参保时可能追回报销差额。",
+    },
+    {
+      id: "weekend_micro_trip",
+      title: "周末城市微旅行",
+      icon: "🚌",
+      category: "travel",
+      locationIds: ["commercialDist", "park"],
+      cost: 180,
+      apCost: 12,
+      brief: "不离开本城，坐一日公交线走完老街、公园和夜市。",
+    },
+  ];
+
+  function ensureWebAppSaveMeta(state) {
+    var now = Date.now();
+    if (!state._webApp || state._webApp.schemaVersion < APP_SAVE_SCHEMA_VERSION) {
+      var old = state._webApp || {};
+      state._webApp = {
+        schemaVersion: APP_SAVE_SCHEMA_VERSION,
+        firstMigratedAt: old.firstMigratedAt || now,
+        lastMigratedAt: now,
+        cityServices: {
+          used: (old.cityServices && old.cityServices.used) || {},
+          followUps: (old.cityServices && old.cityServices.followUps) || {},
+          legalPrep: (old.cityServices && old.cityServices.legalPrep) || 0,
+          medicalRefunds: (old.cityServices && old.cityServices.medicalRefunds) || 0,
+          dayTrips: (old.cityServices && old.cityServices.dayTrips) || 0,
+          lastActionDay:
+            old.cityServices && typeof old.cityServices.lastActionDay === "number"
+              ? old.cityServices.lastActionDay
+              : null,
+          lastTickDay:
+            old.cityServices && typeof old.cityServices.lastTickDay === "number"
+              ? old.cityServices.lastTickDay
+              : null,
+        },
+      };
+    }
+    if (!state.legal) state.legal = {};
+    if (!state.medical) state.medical = {};
+    if (!state.travel) {
+      state.travel = {
+        active: false,
+        destination: null,
+        daysRemaining: 0,
+        visitedDestinations: [],
+        souvenirs: [],
+      };
+    }
+    return state._webApp;
+  }
+
+  function currentState() {
+    return typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  }
+
+  function getAction(actionId) {
+    for (var i = 0; i < CITY_SERVICE_ACTIONS.length; i++) {
+      if (CITY_SERVICE_ACTIONS[i].id === actionId) return CITY_SERVICE_ACTIONS[i];
+    }
+    return null;
+  }
+
+  function canPay(state, action) {
+    if ((state.resources.cash || 0) < action.cost) {
+      return "现金不足，需要¥" + action.cost;
+    }
+    if ((state.player.actionPoints || 0) < action.apCost) {
+      return "行动力不足，需要" + action.apCost + "AP";
+    }
+    return "";
+  }
+
+  function applyCityService(actionId) {
+    var action = getAction(actionId);
+    var state = currentState();
+    if (!action || !state) return false;
+
+    var meta = ensureWebAppSaveMeta(state);
+    var loc = state.trade && state.trade.currentLocation;
+    if (action.locationIds.indexOf(loc) < 0) {
+      StateManager.addMessage("⚠️ 当前地点没有这个城市服务入口。", "warning");
+      return false;
+    }
+
+    var blocked = canPay(state, action);
+    if (blocked) {
+      StateManager.addMessage("⚠️ " + blocked, "warning");
+      return false;
+    }
+
+    state.resources.cash -= action.cost;
+    state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - action.apCost);
+    meta.cityServices.used[action.id] = (meta.cityServices.used[action.id] || 0) + 1;
+    meta.cityServices.lastActionDay = state.player.day || 1;
+
+    if (action.id === "labor_dispute_precheck") {
+      state.legal.prepScore = (state.legal.prepScore || 0) + 1;
+      state.legal.lastPrepDay = state.player.day || 1;
+      meta.cityServices.legalPrep += 1;
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      StateManager.addMessage(
+        "⚖️ 办事大厅窗口帮你理了一遍材料，劳动争议预检+1。",
+        "success",
+      );
+    } else if (action.id === "insurance_bill_review") {
+      state.medical.billingReviews = (state.medical.billingReviews || 0) + 1;
+      if (state.medical.insurance) {
+        var baseSpent = state.medical.totalMedicalSpent || 0;
+        var refund = Math.max(60, Math.min(260, Math.round(baseSpent * 0.06) + 60));
+        state.resources.cash += refund;
+        meta.cityServices.medicalRefunds += refund;
+        StateManager.addMessage("🪪 医保窗口复核成功，追回报销差额¥" + refund + "。", "success");
+      } else {
+        state.medical.consultVoucher = (state.medical.consultVoucher || 0) + 1;
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
+        StateManager.addMessage(
+          "🪪 你弄清了医保档位，获得一次医保咨询记录。下次别再糊涂看病。",
+          "info",
+        );
+      }
+    } else if (action.id === "weekend_micro_trip") {
+      state.travel.dayTrips = (state.travel.dayTrips || 0) + 1;
+      state.travel.souvenirs = state.travel.souvenirs || [];
+      if (state.travel.souvenirs.indexOf("城市漫游手账") < 0) {
+        state.travel.souvenirs.push("城市漫游手账");
+      }
+      meta.cityServices.dayTrips += 1;
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 16);
+      state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 6);
+      StateManager.addMessage(
+        "🚌 你在城市里绕了一整圈，带回一本「城市漫游手账」。心情+16，疲劳-6。",
+        "success",
+      );
+    }
+
+    if (typeof renderAll === "function") renderAll();
+    return true;
+  }
+
+  function markFollowUp(meta, followUpId) {
+    if (meta.cityServices.followUps[followUpId]) return false;
+    meta.cityServices.followUps[followUpId] = true;
+    return true;
+  }
+
+  function tickWebAppCityServices(state) {
+    if (!state) return;
+    var meta = ensureWebAppSaveMeta(state);
+    var services = meta.cityServices;
+    var day = state.player.day || 1;
+
+    if (services.lastTickDay === day) return;
+    services.lastTickDay = day;
+
+    var lastActionDay =
+      typeof services.lastActionDay === "number" ? services.lastActionDay : 0;
+    if (!lastActionDay || day <= lastActionDay) return;
+
+    var used = services.used || {};
+    if (used.labor_dispute_precheck > 0 && markFollowUp(meta, "labor_case_confidence")) {
+      state.legal.caseConfidence = (state.legal.caseConfidence || 0) + 5;
+      state.legal.laborEvidencePrepared = true;
+      StateManager.addMessage(
+        "📎 昨天整理的劳动材料派上用场了。你把合同、工资流水和聊天记录装进同一个文件夹，法律纠纷底气+5。",
+        "info",
+      );
+    }
+
+    if (used.insurance_bill_review > 0 && markFollowUp(meta, "medical_cost_awareness")) {
+      state.medical.costAwareness = (state.medical.costAwareness || 0) + 1;
+      state.medical.billingNoteReady = true;
+      StateManager.addMessage(
+        "🧾 你把医保复核结果记进账本。以后看到检查单和药费明细，不会再只剩一句“怎么这么贵”。",
+        "info",
+      );
+    }
+
+    if (used.weekend_micro_trip > 0 && markFollowUp(meta, "local_familiarity")) {
+      state.travel.localFamiliarity = (state.travel.localFamiliarity || 0) + 1;
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      StateManager.addMessage(
+        "🗺️ 昨天的城市漫游留下了路线记忆。你知道哪条巷子便宜、哪班公交不绕路，城市熟悉度+1。",
+        "info",
+      );
+    }
+  }
+
+  function actionsForCurrentLocation(state) {
+    var loc = state.trade && state.trade.currentLocation;
+    return CITY_SERVICE_ACTIONS.filter(function (action) {
+      return action.locationIds.indexOf(loc) >= 0;
+    });
+  }
+
+  function showCityServiceModal() {
+    if (typeof showModal !== "function") return;
+    var state = currentState();
+    if (!state) return;
+    ensureWebAppSaveMeta(state);
+    var actions = actionsForCurrentLocation(state);
+    var body =
+      '<div style="font-size:13px;line-height:1.7;">' +
+      '<p>这是 Web App 新架构接入的第一批数据化城市服务。它们会真实改变状态，并写入新存档元数据。</p>';
+
+    if (actions.length === 0) {
+      body += '<p style="color:var(--text-secondary);">当前地点暂无城市服务入口。</p>';
+    } else {
+      body += '<div style="display:grid;gap:8px;">';
+      actions.forEach(function (action) {
+        body +=
+          '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+          "<strong>" +
+          action.icon +
+          " " +
+          action.title +
+          "</strong> · ¥" +
+          action.cost +
+          " · " +
+          action.apCost +
+          "AP<br><span style=\"color:var(--text-secondary);\">" +
+          action.brief +
+          "</span></div>";
+      });
+      body += "</div>";
+    }
+    body += "</div>";
+
+    var buttons = actions.map(function (action) {
+      return {
+        text: action.icon + " " + action.title,
+        cls: "btn-primary",
+        callback: function () {
+          return applyCityService(action.id);
+        },
+      };
+    });
+    buttons.push({ text: "关闭", cls: "" });
+
+    showModal({ title: "🏙️ 城市服务中心", body: body, buttons: buttons });
+  }
+
+  function addWebAppBridgeActions(state, actions) {
+    ensureWebAppSaveMeta(state);
+    var available = actionsForCurrentLocation(state);
+    if (available.length === 0) return;
+    actions.push({
+      id: "webapp_city_services",
+      name: "城市服务中心",
+      desc: "Web App 新架构接入的医疗/法律/微旅行服务，会真实改变存档状态。",
+      icon: "🏙️",
+      category: "生活服务",
+      apCost: 0,
+      handler: showCityServiceModal,
+    });
+  }
+
+  if (typeof window !== "undefined") {
+    window.WEBAPP_CITY_SERVICE_ACTIONS = CITY_SERVICE_ACTIONS;
+    window.addWebAppBridgeActions = addWebAppBridgeActions;
+    window.WebAppBridge = {
+      version: BRIDGE_VERSION,
+      ensureSaveMeta: ensureWebAppSaveMeta,
+      showCityServiceModal: showCityServiceModal,
+      applyCityService: applyCityService,
+      tickCityServices: tickWebAppCityServices,
+    };
+
+    window.MECHANICS = window.MECHANICS || {};
+    window.MECHANICS.webapp_bridge = {
+      id: "webapp_bridge",
+      name: "Web App 桥接架构",
+      icon: "🏙️",
+      brief: "Vite/TypeScript 新架构与旧游戏运行时之间的渐进迁移桥。",
+      version: "phase1",
+      related: ["mechanics:medical_system", "mechanics:legal_system", "mechanics:travel_system"],
+      sections: [
+        {
+          type: "desc",
+          content:
+            "第一阶段不替换旧入口，而是通过桥接层把新数据化玩法接入旧行动列表，并写入 _webApp 存档元数据。",
+        },
+        {
+          type: "list",
+          title: "当前桥接内容",
+          items: [
+            "劳动争议预检：法律材料准备",
+            "医保账单复核：医疗费用复核/报销差额",
+            "周末城市微旅行：低成本旅行和心情恢复",
+            "城市服务后续：次日把服务结果沉淀为法律底气、医疗账单意识和城市熟悉度",
+          ],
+        },
+      ],
+    };
   }
 })();
 </script>
