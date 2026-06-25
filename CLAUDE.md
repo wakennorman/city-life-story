@@ -52,7 +52,18 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.8 Web App 架构第一阶段 — Vite/TypeScript 桥接迁移与城市服务玩法（2026-06-25）
+- **最新一次工作**：v3.8 审查改进与扩展 — TS 数据目录填充 + 桥接层扩展 + 经济出口 + NPC 深化（2026-06-25）
+  - **P0-1 TS 数据目录**：`src/app/data/lifeNodes/` 填入 4 个完整人生节点（高考/大学/35岁/退休），`src/app/data/cityServices.ts` 从 3 服务扩展到 7 服务
+  - **P0-1c healthCheck**：新增 TS 数据目录非空检测、legacy StateManager/WebAppBridge 状态检测
+  - **P0-2 桥接层**：`webapp_runtime_bridge.js` 从 3 个城市服务扩展到 7 个（新增社保查询/信用报告/公积金/社区体检），新增 `getRecommendedCityServices()` 自动推荐
+  - **P0-3 类型系统**：`game.ts` 新增 WeatherState/MedicalState/LegalState/TravelState/SideHustleState/StartupState/EraState/NpcRelationshipsState 等完整类型，覆盖实际运行的全部扩展系统
+  - **P1-1 经济出口**：每日管线新增住房维护费（¥0~¥2000/月）和社交圈维护费（按好感总值计算，上限¥500/月）
+  - **P1-2 差异化开局**：`inheritance_chain.js` — 上局欠债催收 + 上局违法案底
+  - **P1-3 NPC 深化**：`npc_event_bridge.js` 新增 `chatWithNpc()` 函数（2AP/次，3 档好感品质），`social_tab.js` 新增对话记录显示和聊天按钮
+  - **验证**：`npm run typecheck`、`npm run check:js`、`python build.py`（4184.4 KB）、`npm run build`（dist-webapp/ 15.89 KB）全部通过
+  - **产出文档**：`memory/overview.md`（v3.8 双轨版）/ `memory/diagnosis.md` / `memory/improvement_plan.md`
+
+- **上一轮工作**：v3.8 Web App 架构第一阶段 — Vite/TypeScript 桥接迁移与城市服务玩法（2026-06-25）
   - **架构变化**：新增根目录 `index.html`、`package.json`、`tsconfig.json`、`vite.config.mjs`、`src/app/`；旧 `src/index.html` 继续作为正式游戏入口，`python build.py` 仍生成 `dist/index.html`
   - **桥接边界**：新增 `src/js/app_bridge/webapp_runtime_bridge.js`，只追加到旧入口末尾，不重排既有 script；`actions_extra.js` 通过 `addWebAppBridgeActions` 注入可玩入口
   - **真实玩法验证**：新增“城市服务中心”，在政府办事大厅/医院/商业区或公园触发劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2` 和对应医疗/法律/旅行状态；次日通过每日管线沉淀为法律底气、医疗账单意识和城市熟悉度
@@ -79,33 +90,21 @@
 
 ## 🔁 Codex接力清单（未完成任务，按优先级排序）
 
-### 第一阶段：P1改进（4项，~470行）
+### 第一阶段：P0 待完成（3项）
 
-1. **P1-1 新闻→投资UI** — `phase2/investment.js` UI渲染中调用 `getNewsInvestmentSummary`，添加"今日市场驱动"板块
-2. **P1-2 NPC好感链路** — `data/npcs.js` 为每个NPC增加 `affinityEvents`（30/60/80阈值），`phase1/npc_event_bridge.js` 增加 `checkNpcAffinityEvents` 函数
-3. **P1-4 家庭系统** — `phase2/family_life.js` 实现结婚系统（好感≥80+资产≥¥200K→求婚）+ 生子/子女教育
-4. **P1-6 35岁危机追访** — `core/events_core.js` 增加追访事件优先级（权重×3）
+1. **P0 剩余 6 个 TS 数据目录填充** — events/jobs/locations/items/diseases/legal/travel 目录仍空，需填入实际 TypeScript 类型和数据
+2. **P0 4 大扩展系统独立 UI 面板** — life_nodes/medical/travel/legal 无独立 Tab，仅靠弹窗+管线触发
+3. **P0 TS-legacy 自动化数据审计脚本** — 校验 TS 数据目录与 legacy JS 字段对齐和覆盖度
 
-### 第二阶段：P2修复（2项，~100行）
+### 第二阶段：P1 改进（2项，~300行+）
 
-5. **P2-4 道德事件扩充** — `data/moral_events.js` 重建18个新事件（极端生存困境：偷药救孩子/争食/举报同事/邻居借钱等），原扩充因语法结构损坏已回退基线
-6. **main.js重构** — 已存在解耦方案但未实装
+4. **P1 超大文件拆分** — startup.js(14277行)/events_street.js(9827行)/render.js(6024行) 按主题渐进拆分
+5. **P1 4 大扩展系统深度联动** — 人生节点概率触发、医疗债务/保险纠纷、旅行行程定制、法律败诉连锁
 
-### 第三阶段：扩展系统（4项已完成 ✅）
+### 第三阶段：P2 修复（2项，~100行）
 
-7. ✅ ~~社交网络UI（social_network.js已完成骨架→需UI集成）~~ 已完成
-8. ✅ ~~旅行系统~~ `core/travel.js` v1 已完成（5国内目的地+事件+纪念品）
-9. ✅ ~~医疗系统~~ `core/medical.js` v1 已完成（4级疾病+3档医保+住院/康复）
-10. ✅ ~~法律系统~~ `core/legal.js` v1 已完成（4种案件+4级律师+诉讼流程）
-11. ✅ ~~人生节点~~ `core/life_nodes.js` v1 已完成（高考/大学/35岁/退休）
-
-#### 待深化方向（v2+）
-
-- 人生节点概率弹窗UI（当前是状态标记，需真正弹窗让玩家选择）
-- 医疗系统UI面板（当前仅数据层，需独立Tab展示）
-- 旅行行程定制（选择天数/预算/同伴）
-- 法律案件事件链（败诉后的连锁反应）
-- 各系统间的深度联动
+6. **P2 装备品质系统激活** — 品质框架就绪但玩家无感知，需 UI 展示和获取渠道
+7. **P2 CLAUDE.md 接力清单同步** — 维护已完成项的标记，确保口径一致
 
 _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到P1）_
 

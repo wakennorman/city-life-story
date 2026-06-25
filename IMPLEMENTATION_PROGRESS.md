@@ -5,15 +5,44 @@
 
 ## 2026-06-25 v3.8 Web App 架构第一阶段
 
-| # | 任务 | 状态 | 说明 |
-|---|------|------|------|
-| A | 现状复盘 | ✅ | `memory/webapp_migration_overview.md`，确认 legacy 入口、全局状态、存档键和不可立即重写模块 |
-| B | 架构方案 | ✅ | `memory/webapp_architecture_plan.md`，确定 Vite + TypeScript + 原生 DOM 的桥接式迁移路线 |
-| C | Web App 架构壳 | ✅ | 根目录 `index.html` + `package.json` + `src/app/`，Vite 构建输出到 `dist-webapp/` |
-| D | legacy 桥接层 | ✅ | `src/js/app_bridge/webapp_runtime_bridge.js` + `actions_extra.js` + `daily_pipeline.js` 注入入口和次日反馈，不替换 `src/index.html` |
-| E | 真实玩法验证 | ✅ | 城市服务中心：劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2`，并产生法律底气/医疗账单意识/城市熟悉度后续状态 |
-| F | 后续开发提醒 | ✅ | `CLAUDE.md` / `src/DEVELOPMENT.md` / migration docs 记录新架构边界和新增内容路径 |
-| G | 验证 | ✅ | `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 通过；Chrome Headless 验证正式游戏和 `dist-webapp` 架构壳 |
+| #   | 任务           | 状态 | 说明                                                                                                                                     |
+| --- | -------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | 现状复盘       | ✅   | `memory/webapp_migration_overview.md`，确认 legacy 入口、全局状态、存档键和不可立即重写模块                                              |
+| B   | 架构方案       | ✅   | `memory/webapp_architecture_plan.md`，确定 Vite + TypeScript + 原生 DOM 的桥接式迁移路线                                                 |
+| C   | Web App 架构壳 | ✅   | 根目录 `index.html` + `package.json` + `src/app/`，Vite 构建输出到 `dist-webapp/`                                                        |
+| D   | legacy 桥接层  | ✅   | `src/js/app_bridge/webapp_runtime_bridge.js` + `actions_extra.js` + `daily_pipeline.js` 注入入口和次日反馈，不替换 `src/index.html`      |
+| E   | 真实玩法验证   | ✅   | 城市服务中心：劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2`，并产生法律底气/医疗账单意识/城市熟悉度后续状态 |
+| F   | 后续开发提醒   | ✅   | `CLAUDE.md` / `src/DEVELOPMENT.md` / migration docs 记录新架构边界和新增内容路径                                                         |
+| G   | 验证           | ✅   | `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 通过；Chrome Headless 验证正式游戏和 `dist-webapp` 架构壳    |
+
+## 2026-06-25 v3.8 审查改进与扩展
+
+| #   | 任务     | 状态 | 说明                                                        |
+| --- | -------- | ---- | ----------------------------------------------------------- |
+| A   | 现状摸底 | ✅   | `memory/overview.md`（v3.8 版，双轨架构覆盖新 TS 数据目录） |
+| B   | 问题诊断 | ✅   | `memory/diagnosis.md`（16 项 P0/P1/P2 问题）                |
+| C   | 改进方案 | ✅   | `memory/improvement_plan.md`（6 项 P0+P1 方案）             |
+| D   | 实装交付 | ✅   | 见以下详细清单                                              |
+
+### P0 改进（已实装）
+
+| #   | 项目                       | 文件                                         | 行数 | 验证 |
+| --- | -------------------------- | -------------------------------------------- | ---- | ---- |
+| 1   | lifeNodes TS 数据目录填充  | `src/app/data/lifeNodes/index.ts`            | ~220 | ✅   |
+| 2   | cityServices TS 数据扩展   | `src/app/data/cityServices.ts`               | ~155 | ✅   |
+| 3   | healthCheck.ts 拓展        | `src/app/debug/healthCheck.ts`               | ~100 | ✅   |
+| 4   | 桥接层扩展（3→7 服务）     | `src/js/app_bridge/webapp_runtime_bridge.js` | ~510 | ✅   |
+| 5   | bridge 自动推荐            | `src/js/app_bridge/webapp_runtime_bridge.js` | ~50  | ✅   |
+| 6   | TS typed facade 扩系统字段 | `src/app/types/game.ts`                      | ~200 | ✅   |
+
+### P1 改进（已实装）
+
+| #   | 项目             | 文件                                                            | 行数 | 验证 |
+| --- | ---------------- | --------------------------------------------------------------- | ---- | ---- |
+| 7   | 住房维护费       | `src/js/phase1/daily_pipeline.js`                               | ~35  | ✅   |
+| 8   | 社交圈维护费     | `src/js/phase1/daily_pipeline.js`                               | ~40  | ✅   |
+| 9   | 差异化开局债务   | `src/js/core/inheritance_chain.js`                              | ~35  | ✅   |
+| 10  | NPC 常规对话深化 | `src/js/phase1/npc_event_bridge.js` + `src/js/ui/social_tab.js` | ~180 | ✅   |
 
 ### v3.8 后续阶段
 
@@ -24,13 +53,13 @@
 
 ## 2026-06-25 v3.0 审查改进与扩展
 
-| # | 任务 | 状态 | 说明 |
-|---|------|------|------|
-| A | 现状摸底 | ✅ | `memory/overview.md` |
-| B | 问题诊断 | ✅ | `memory/diagnosis.md` |
-| C | 改进方案 | ✅ | `memory/improvement_plan.md` |
-| D | 实装交付 | ✅ | 人生节点弹窗/旅行入口/法律入口/医保入口/Phase 2 跳转/审计脚本路径；`audit_events.js` 已恢复真实事件扫描 |
-| E | 验证 | ✅ | 全量 `src/js` 语法通过；`audit_events.js` 检查 225 个事件；`audit_connections.js` 0 问题/45 建议；`python build.py` 成功；Chrome Headless 完整压力试玩通过 Day 1260 |
+| #   | 任务     | 状态 | 说明                                                                                                                                                                |
+| --- | -------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | 现状摸底 | ✅   | `memory/overview.md`                                                                                                                                                |
+| B   | 问题诊断 | ✅   | `memory/diagnosis.md`                                                                                                                                               |
+| C   | 改进方案 | ✅   | `memory/improvement_plan.md`                                                                                                                                        |
+| D   | 实装交付 | ✅   | 人生节点弹窗/旅行入口/法律入口/医保入口/Phase 2 跳转/审计脚本路径；`audit_events.js` 已恢复真实事件扫描                                                             |
+| E   | 验证     | ✅   | 全量 `src/js` 语法通过；`audit_events.js` 检查 225 个事件；`audit_connections.js` 0 问题/45 建议；`python build.py` 成功；Chrome Headless 完整压力试玩通过 Day 1260 |
 
 | #   | 任务                          | 状态 | 说明                                                   |
 | --- | ----------------------------- | ---- | ------------------------------------------------------ |
