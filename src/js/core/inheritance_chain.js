@@ -571,6 +571,37 @@ function applyInheritance(newState, prevState, inheritanceData) {
     newState.flags._prevPeakAffinity = inheritanceData.peakAffinity.npcs;
   }
 
+  // === v3.8 P1-2: 差异化开局债务 ===
+  // 上局欠债未还 → 新周目催收上门
+  var prevDebt = prevState.resources?.villageDebt || 0;
+  if (
+    prevDebt > 0 &&
+    inheritanceData.badges &&
+    inheritanceData.badges.length >= 0
+  ) {
+    // 催收金额 = 上局债务的 5%~15%，上限 ¥2000
+    var debtCollect = Math.min(
+      2000,
+      Math.max(500, Math.round(prevDebt * (0.05 + Math.random() * 0.1))),
+    );
+    newState.flags._inheritanceDebtCollection = debtCollect;
+    newState.resources.cash = Math.max(
+      0,
+      (newState.resources.cash || 0) - debtCollect,
+    );
+    newState.flags._inheritanceDebtNote = "上局欠债未还，催收已上门";
+  }
+
+  // 上局违法多 → 新周目有案底
+  var prevArrests = prevState.flags?._arrestCount || 0;
+  if (prevArrests > 3) {
+    newState.flags._criminalRecord = true;
+    newState.flags._inheritanceCriminalRecord = true;
+    // 有案底的话找工作受限，开局减益
+    newState.player.fame = Math.max(0, (newState.player.fame || 0) - 5);
+    newState.flags._inheritanceArrestNote = "上局多次违法，留下案底影响求职";
+  }
+
   // 标记继承来源
   newState.flags._hasInheritance = true;
   newState.flags._inheritanceFromDay = prevState.player?.day || 0;

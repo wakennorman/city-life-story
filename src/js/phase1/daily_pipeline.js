@@ -172,6 +172,84 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.8: 住房维护费（按住房等级月度扣除） ===
+  {
+    name: "housing_maintenance",
+    fn: function (state) {
+      if (!state.housing) return;
+      var day = state.player.day || 1;
+      // 每月第 1 天结算（不是每天）
+      if (day % 30 !== 1) return;
+      var tier = state.housing.tier || 0;
+      // 住房等级：0=无/1=城中村/2=老旧小区/3=普通公寓/4=高档小区/5=管家服务
+      var maintenanceFee = 0;
+      if (tier <= 1) maintenanceFee = 0;
+      else if (tier === 2) maintenanceFee = 150;
+      else if (tier === 3) maintenanceFee = 300;
+      else if (tier === 4) maintenanceFee = 800;
+      else if (tier >= 5) maintenanceFee = 2000;
+      if (maintenanceFee > 0 && state.resources.cash >= maintenanceFee) {
+        state.resources.cash -= maintenanceFee;
+        addDailyTransaction(
+          state,
+          "expense",
+          "housing_maintenance",
+          maintenanceFee,
+          "住房物业维护费",
+        );
+      } else if (maintenanceFee > 0) {
+        StateManager.addMessage(
+          "⚠️ 付不起住房维护费 ¥" + maintenanceFee + "，房屋状况变差。",
+          "warning",
+        );
+        // 维护费付不起不降级，但累积欠费标记
+        state.flags._maintenanceArrears =
+          (state.flags._maintenanceArrears || 0) + 1;
+      }
+    },
+  },
+
+  // === v3.8: 社交圈维护费（每月基于 NPC 好感总值扣除） ===
+  {
+    name: "social_maintenance",
+    fn: function (state) {
+      if (!state.npcRelationships) return;
+      var day = state.player.day || 1;
+      // 每月第 1 天结算
+      if (day % 30 !== 1) return;
+      var totalAffinity = 0;
+      var npcCount = 0;
+      for (var npcId in state.npcRelationships) {
+        var rel = state.npcRelationships[npcId];
+        if (rel && typeof rel.affinity === "number" && rel.affinity >= 10) {
+          totalAffinity += rel.affinity;
+          npcCount++;
+        }
+      }
+      if (npcCount === 0) return;
+      // 每 100 好感 = ¥50/月
+      var socialCost = Math.round(totalAffinity / 100) * 50;
+      if (socialCost <= 0) return;
+      socialCost = Math.min(socialCost, 500); // 上限 ¥500/月
+      if (state.resources.cash >= socialCost) {
+        state.resources.cash -= socialCost;
+        addDailyTransaction(
+          state,
+          "expense",
+          "social_maintenance",
+          socialCost,
+          "人情往来（" + npcCount + "位朋友）",
+        );
+      } else {
+        state.resources.cash = 0;
+        StateManager.addMessage(
+          "⚠️ 连人情钱都凑不出… 朋友可能觉得你在疏远他们。",
+          "warning",
+        );
+      }
+    },
+  },
+
   // === 健康结算 ===
   {
     name: "health_tick",
