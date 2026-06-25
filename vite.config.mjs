@@ -1,4 +1,5 @@
 export default {
+  base: "./",
   publicDir: false,
   server: {
     host: "127.0.0.1",

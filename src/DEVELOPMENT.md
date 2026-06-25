@@ -4,7 +4,7 @@
 
 ## 2026-06-25 — v3.8 Web App 架构第一阶段：桥接式迁移
 
-本轮将《城市浮生记》从纯静态脚本工程推进到可长期扩展的 Web App 双轨架构：保留 `src/index.html` + `python build.py` 作为当前正式可玩入口，同时新增根目录 Vite/TypeScript 工程、`src/app/` 模块化目录、类型化数据目录、存档 `_webApp` schema 迁移函数和架构健康面板。为证明架构不是空壳，新增 `src/js/app_bridge/webapp_runtime_bridge.js` 并在旧行动列表接入“城市服务中心”，玩家可在政府办事大厅、医院、商业区/公园触发劳动争议预检、医保账单复核、周末城市微旅行，实际改变现金、AP、医疗/法律/旅行状态，并写入 `_webApp.schemaVersion=2`。每日管线已增加 `webapp_city_services_tick`，服务使用后的次日会沉淀为法律底气、医疗账单意识和城市熟悉度。后续开发注意：新增事件、职业、地点、疾病、法律、旅行、人生节点等配置优先进入 `src/app/data/*`，需要进入当前可玩版本时再通过 bridge/facade 接入 legacy。验证覆盖 `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 和浏览器/脚本冒烟。
+本轮将《城市浮生记》从纯静态脚本工程推进到可长期扩展的 Web App 双轨架构：保留 `src/index.html` + `python build.py` 作为当前正式可玩入口，同时新增根目录 Vite/TypeScript 工程、`src/app/` 模块化目录、类型化数据目录、存档 `_webApp` schema 迁移函数和架构健康面板。为证明架构不是空壳，新增 `src/js/app_bridge/webapp_runtime_bridge.js` 并在旧行动列表接入“城市服务中心”，玩家可在政府办事大厅、医院、商业区/公园触发劳动争议预检、医保账单复核、周末城市微旅行，实际改变现金、AP、医疗/法律/旅行状态，并写入 `_webApp.schemaVersion=2`。每日管线已增加 `webapp_city_services_tick`，服务使用后的次日会沉淀为法律底气、医疗账单意识和城市熟悉度。Vite 构建已设为相对资源路径，`dist-webapp/` 在 repo 静态服务下可打开，并按路径回指 legacy 入口。后续开发注意：新增事件、职业、地点、疾病、法律、旅行、人生节点等配置优先进入 `src/app/data/*`，需要进入当前可玩版本时再通过 bridge/facade 接入 legacy。验证覆盖 `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 和浏览器/脚本冒烟。
 
 ## 2026-06-25 — v3.0 审查改进与扩展：完整中后期压力试玩
 按 v3.0 SOP 对 `dist/index.html` 做 Chrome Headless + CDP 长流程压力试玩：先验证健康耗尽能进入 Game Over，再从 Day 60 推进到 Day 1260，覆盖创业产品、投资入口、家庭月结、个人成长年结、企业命运、主要 Tab 切换。修复长跑中暴露的创业产品默认字段、NPC discovered 数组、极端状态失败判定、结局弹窗 inventory、家庭开支默认值、企业命运变量拼写、个人成长阅读年度重置、`events_core.js` 重复声明，以及银行存款日息/会计加成口径导致的资金膨胀。验证：全量 `src/js` `node --check` 通过，`python build.py` 成功，Day 1260 压力脚本无运行时异常；审计脚本通过 `.cjs` 临时副本运行，连接审计 0 问题/45 建议，事件审计 225 事件/48 既有上下文提示。

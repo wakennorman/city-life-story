@@ -13,7 +13,7 @@
 | D | legacy 桥接层 | ✅ | `src/js/app_bridge/webapp_runtime_bridge.js` + `actions_extra.js` + `daily_pipeline.js` 注入入口和次日反馈，不替换 `src/index.html` |
 | E | 真实玩法验证 | ✅ | 城市服务中心：劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2`，并产生法律底气/医疗账单意识/城市熟悉度后续状态 |
 | F | 后续开发提醒 | ✅ | `CLAUDE.md` / `src/DEVELOPMENT.md` / migration docs 记录新架构边界和新增内容路径 |
-| G | 验证 | 🔄 | 已通过 Vite/TypeScript/JS 初检；收工前刷新 `dist/index.html` 并完成浏览器/脚本冒烟 |
+| G | 验证 | ✅ | `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 通过；Chrome Headless 验证正式游戏和 `dist-webapp` 架构壳 |
 
 ### v3.8 后续阶段
 

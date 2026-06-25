@@ -97,6 +97,7 @@ city-life-story/
 
 - 旧正式构建：`python build.py`，生成 `dist/index.html`。
 - Vite 构建：`npm run build`，生成 `dist-webapp/`，不覆盖旧 `dist/`。
+- Vite 构建路径：`vite.config.mjs` 使用 `base: "./"`；`src/app/shell/appShell.ts` 在 `dist-webapp/` 下用相对路径回指 `../src/index.html`，避免静态预览时资源或 legacy iframe 404。
 - 类型检查：`npm run typecheck`。
 - JS 语法检查：对 `src/js/**/*.js` 运行 `node --check`。
 - 玩法验证：打开旧游戏，检查首页/开局/存档/至少一个城市行动/新增桥接入口；打开 Vite shell，检查架构面板和 health check。
