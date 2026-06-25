@@ -6,6 +6,7 @@
 
 4 大扩展系统缺少常驻玩家面板，新增玩法可玩但不可见 | 人生节点/医疗/旅行/法律 | 完善 | P0 | `life_nodes.js`/`medical.js`/`travel.js`/`legal.js` 均已有状态函数和弹窗，但 `src/index.html` Tab 中没有对应入口，玩家只能靠地点行动或管线触发
 城市服务推荐函数已有但曝光弱 | bridge/UI | 完善 | P1 | `WebAppBridge.getRecommendedCityServices()` 已存在，旧入口缺少集中展示位，玩家不容易知道何时该用社保、信用、体检等服务
+社区体检服务读写了错误的健康字段 | bridge/城市服务 | 完善 | P1 | 主游戏健康条来自 `state.status.health`，但 `community_health_check` 和体检推荐使用 `state.player.health`，会让推荐与效果失真
 TS 数据目录多数未被 legacy 消费 | 新数据目录/bridge | 新增 | P1 | `src/app/data/index.ts` 中 events/jobs/items/diseases/legal 多为 `typed`，只有 cityServices 为 `playable`，travel/lifeNodes 为 `partial`
 超大 legacy 文件继续累积维护风险 | 架构 | 完善 | P1 | `startup.js`、`events_street.js`、`render.js`、`main.js` 仍是大文件，新增系统经常要改 render/main 注册点
 扩展系统之间缺少后果链 | 扩展系统 | 混合 | P1 | 医疗、旅行、法律、人生节点各自可运转，但医疗债务、旅行突发法律/医疗、败诉信用后果等交叉链还少

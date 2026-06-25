@@ -57,7 +57,8 @@
   - **旧入口 UI**：`src/index.html` 新增“🧭 人生事务”Tab；`src/js/ui/render.js` 注册 `life_systems` renderer，不新增脚本、不重排既有 script 顺序
   - **面板内容**：集中展示人生节点、医疗/医保、旅行记录、法律事务；按钮复用现有 `showLifeNodeModal`、`showMedicalInsuranceModal`、`showTravelAgencyModal`、`showLegalOfficeModal`
   - **bridge 可见性**：同一面板展示 `WebAppBridge.getRecommendedCityServices()` 推荐服务和 `getDataCatalogSummary()` TS 内容接入状态
-  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4195.9 KB）、`npm run build` 全部通过；`dist/index.html` 已确认包含新 Tab 与 renderer
+  - **bridge 修复**：社区体检推荐和体检效果改为读写主游戏真实健康字段 `state.status.health`，保留旧 `state.player.health` 兜底
+  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4196.6 KB）、`npm run build` 全部通过；`dist/index.html` 已确认包含新 Tab 与 renderer
 
 - **上一轮工作**：v3.8 TS 数据目录补全与内容审计（2026-06-25）
   - **TS 内容目录**：`events/jobs/locations/items/diseases/legal/travel` 从占位常量补成实际 TypeScript 数据；当前首批为事件12、职业12、地点14、物品17、疾病12、法律案件7、旅行目的地8，`lifeNodes` 仍为4个完整节点

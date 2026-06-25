@@ -6,6 +6,7 @@
 
 4 大扩展系统缺少常驻玩家面板 | `src/index.html`、`src/js/ui/render.js` | legacy 层 | 新增“人生事务”Tab，注册 `life_systems` renderer，复用 `getLifeNodeStatus`/`getMedicalSummary`/`getTravelStatus`/`getLegalSummary` 展示四块状态，并提供打开现有弹窗的按钮 | ~190 行 | 玩家可在旧正式入口主动查看人生节点、医保、旅行、法律状态，P0 可见性断点闭合
 城市服务推荐函数已有但曝光弱 | `src/js/ui/render.js` | bridge + legacy 层 | 在“人生事务”Tab 内读取 `WebAppBridge.getRecommendedCityServices(state)`，展示推荐城市服务、费用/AP/入口地点；若没有推荐则显示当前 bridge 目录摘要 | ~45 行 | 现有 bridge 推荐能力变成玩家可见信息，不再只埋在 window API
+社区体检服务读写了错误的健康字段 | `src/js/app_bridge/webapp_runtime_bridge.js` | bridge 层 | 新增健康字段读写 helper，优先使用 `state.status.health`，旧 `state.player.health` 仅作兜底；体检推荐和体检效果都走 helper | ~30 行 | 社区体检推荐会按真实健康条出现，体检效果也能反馈到玩家看到的健康值
 TS 数据目录多数未被 legacy 消费 | `src/js/ui/render.js`、后续 `src/js/app_bridge/` | 混合 | 本轮先在“人生事务”Tab 显示 `WebAppBridge.getDataCatalogSummary()`，明确 playable/partial/typed 状态；后续再按目录逐个接入事件或行动池 | ~35 行 | 玩家入口和开发者都能看到 TS 目录接入状态，避免误以为所有 TS 内容已可玩
 超大 legacy 文件继续累积维护风险 | `src/js/ui/render.js` | 完善 | 本轮只做最小插入：一个 renderer + 一个 Tab 注册，不拆 `render.js`，把大拆分保留为单独任务 | ~0 行额外 | 降低本轮风险，避免把 P0 可见性修复扩大成架构重构
 扩展系统之间缺少后果链 | `src/js/core/medical.js`、`src/js/core/legal.js`、`src/js/core/travel.js` | 混合 | 本轮不落地深度链，先通过新面板暴露状态和入口；后续再加医疗债务/旅行突发/败诉执行链 | 待拆分 | 有了统一面板后，后续联动有稳定反馈位置

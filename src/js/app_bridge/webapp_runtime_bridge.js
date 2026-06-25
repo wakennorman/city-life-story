@@ -169,6 +169,33 @@
     return "";
   }
 
+  function getPlayerHealth(state) {
+    if (
+      state &&
+      state.status &&
+      typeof state.status.health === "number"
+    ) {
+      return state.status.health;
+    }
+    if (
+      state &&
+      state.player &&
+      typeof state.player.health === "number"
+    ) {
+      return state.player.health;
+    }
+    return 100;
+  }
+
+  function addPlayerHealth(state, amount) {
+    if (!state) return;
+    if (state.status && typeof state.status.health === "number") {
+      state.status.health = Math.min(100, state.status.health + amount);
+      return;
+    }
+    state.player.health = Math.min(100, (state.player.health || 100) + amount);
+  }
+
   function applyCityService(actionId) {
     var action = getAction(actionId);
     var state = currentState();
@@ -270,7 +297,7 @@
       // -- 新增：健康 --
     } else if (action.id === "community_health_check") {
       state.flags._healthChecked = true;
-      state.player.health = Math.min(100, (state.player.health || 100) + 2);
+      addPlayerHealth(state, 2);
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
       StateManager.addMessage(
         "🏥 体检结果显示你总体健康，但医生提醒要注意休息和饮食。",
@@ -371,7 +398,7 @@
     var recs = [];
 
     // 健康低→推荐体检
-    if (!state.flags._healthChecked && (state.player.health || 100) < 70) {
+    if (!state.flags._healthChecked && getPlayerHealth(state) < 70) {
       var found = getAction("community_health_check");
       if (found)
         recs.push({

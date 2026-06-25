@@ -20,6 +20,7 @@
 | 1   | 4 大扩展系统常驻面板       | `src/index.html`、`src/js/ui/render.js` | ✅   |
 | 2   | 城市服务推荐玩家可见       | `src/js/ui/render.js`             | ✅   |
 | 3   | TS 内容目录接入状态展示    | `src/js/ui/render.js`             | ✅   |
+| 4   | 社区体检健康字段接线修复   | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
 
 ## 2026-06-25 v3.8 Web App 架构第一阶段
 
