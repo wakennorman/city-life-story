@@ -6,7 +6,7 @@
 | # | 任务 | 状态 | 说明 |
 |---|------|------|------|
 | 0 | P0（副业/经济/开支/链式事件） | ✅ | commit a33af08 |
-| 1 | P1-1 新闻→投资UI | ❌ | investment.js |
+| 1 | P1-1 新闻→投资UI | ✅ | investment.js：今日市场驱动板块 |
 | 2 | P1-2 NPC好感链路 | ❌ | npcs.js + npc_event_bridge.js |
 | 3 | P1-4 家庭系统 | ❌ | family_life.js |
 | 4 | P1-6 35岁危机追访 | ❌ | events_core.js |
@@ -18,3 +18,4 @@
 
 - 155da2b — P1-3 scaleEventReward + P1-5 rollEquipmentDrop + social_network.js骨架
 - 1bb3a22 — 进度文档
+- 本次提交 — P1-1 新闻→投资UI：今日市场驱动板块

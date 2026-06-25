@@ -62636,6 +62636,111 @@ function drawPriceChart(canvasId, priceData, color) {
 // ============================================================
 //  市场情绪看板（P3.2）
 // ============================================================
+function escapeInvestmentHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getInvestmentNewsTags(news) {
+  var invEffs = (news && news.effects && news.effects.investmentEffect) || [];
+  var tags = [];
+
+  for (var i = 0; i < invEffs.length; i++) {
+    var e = invEffs[i];
+    if (e.allStocks) {
+      tags.push("全市场");
+      break;
+    }
+    if (e.btc && tags.indexOf("BTC") < 0) tags.push("BTC");
+    if (e.industry && tags.indexOf(e.industry) < 0) tags.push(e.industry);
+    if (e.category && tags.indexOf(e.category) < 0) tags.push(e.category);
+    if (e.symbols) {
+      for (var si = 0; si < e.symbols.length; si++) {
+        var sym = e.symbols[si];
+        if (tags.indexOf(sym) < 0 && sym.length <= 6) tags.push(sym);
+      }
+    }
+  }
+
+  return tags.slice(0, 4);
+}
+
+function renderNewsInvestmentDrivers(state) {
+  var drivers =
+    typeof getNewsInvestmentSummary === "function"
+      ? getNewsInvestmentSummary(state)
+      : [];
+  var activeNews = state.activeNews || [];
+
+  drivers.sort(function (a, b) {
+    return b.strength - a.strength;
+  });
+
+  var html =
+    '<div style="margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:6px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">' +
+    '<strong style="font-size:12px;color:var(--accent);">📊 今日市场驱动</strong>' +
+    '<span style="font-size:10px;color:var(--text-muted);">新闻会影响相关资产的每日价格波动</span>' +
+    "</div>";
+
+  if (drivers.length === 0) {
+    return (
+      html +
+      '<div style="font-size:11px;color:var(--text-muted);padding:4px 0;">今日暂无明显新闻冲击，市场主要按基础趋势和随机波动运行。</div>' +
+      "</div>"
+    );
+  }
+
+  for (var i = 0; i < Math.min(drivers.length, 4); i++) {
+    var d = drivers[i];
+    var relatedNews = null;
+    for (var ni = 0; ni < activeNews.length; ni++) {
+      if (activeNews[ni].headline === d.headline) {
+        relatedNews = activeNews[ni];
+        break;
+      }
+    }
+
+    var tags = getInvestmentNewsTags(relatedNews);
+    var change = Math.round(((d.avgMul || 1) - 1) * 100);
+    var color =
+      change > 0
+        ? "var(--danger)"
+        : change < 0
+          ? "var(--success)"
+          : "var(--accent)";
+    var changeText = (change > 0 ? "+" : "") + change + "%";
+    var headline =
+      d.headline && d.headline.length > 34
+        ? d.headline.substring(0, 34) + "…"
+        : d.headline;
+
+    html +=
+      '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;">' +
+      '<span style="width:20px;text-align:center;">' +
+      d.direction +
+      "</span>" +
+      '<span style="flex:1;min-width:120px;color:var(--text-primary);">' +
+      escapeInvestmentHtml(headline) +
+      "</span>" +
+      '<span style="font-size:10px;color:var(--text-muted);">' +
+      escapeInvestmentHtml(tags.length ? tags.join("·") : "相关资产") +
+      "</span>" +
+      '<strong style="min-width:44px;text-align:right;color:' +
+      color +
+      ';">' +
+      changeText +
+      "</strong>" +
+      "</div>";
+  }
+
+  return html + "</div>";
+}
+
 function renderMarketSentiment(state, inv) {
   var activeNews = state.activeNews || [];
   var pending = (state.flags && state.flags._pendingFollowUpNews) || [];
@@ -62684,35 +62789,6 @@ function renderMarketSentiment(state, inv) {
     fg +
     "/100</span>";
   html += "</div>";
-
-  // 市场驱动摘要（显示新闻→标的因果链）
-    if (typeof getNewsInvestmentSummary === "function") {
-      var drivers = getNewsInvestmentSummary(state);
-      if (drivers.length > 0) {
-        drivers.sort(function (a, b) {
-          return b.strength - a.strength;
-        });
-        html +=
-          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 <strong>今日市场驱动</strong><br>';
-        for (var di = 0; di < Math.min(drivers.length, 3); di++) {
-          var d = drivers[di];
-          var headline = d.headline.length > 22
-            ? d.headline.substring(0, 22) + "…"
-            : d.headline;
-          var color = d.direction === "📈" ? "var(--danger)" : "var(--success)";
-          html += '<div style="margin:2px 0;display:flex;align-items:center;">';
-          html += '<span style="width:18px;">' + d.direction + '</span>';
-          html += '<span style="flex:1;font-size:10px;color:var(--text-primary);">' + headline + '</span>';
-          html += '<span style="color:' + color + ';font-size:10px;font-weight:bold;">'
-            + (d.avgMul > 1 ? "+" : "") + d.strength + '%</span>';
-          html += '</div>';
-        }
-        html += "</div>";
-      } else {
-        html +=
-          '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场平稳，无明显驱动因素</div>';
-      }
-    }
 
   // 当前活跃新闻（最多3条）+ 市场驱动指示
   var shownNews = 0;
@@ -62856,6 +62932,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", propVal) +
     summaryCard("汽车", carVal) +
     "</div>" +
+    renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
     "<span>📉 跌</span>" +
