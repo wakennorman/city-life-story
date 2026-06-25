@@ -1,0 +1,19 @@
+{
+  "name": "city-life-story-webapp",
+  "version": "3.8.0-webapp.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.12.1",
+  "scripts": {
+    "dev": "npx -y -p vite@8.1.0 vite --host 127.0.0.1",
+    "build": "npm run typecheck && npx -y -p vite@8.1.0 vite build",
+    "preview": "npx -y -p vite@8.1.0 vite preview --host 127.0.0.1",
+    "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
+    "check:js": "node scripts/check-js-syntax.mjs",
+    "build:legacy": "python build.py"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vite": "8.1.0"
+  }
+}

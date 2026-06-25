@@ -2060,6 +2060,9 @@ function addExtraActions(state, actions) {
     addClinicAction(state, actions);
     addLongDistanceTravelAction(state, actions);
     addLegalOfficeAction(state, actions);
+    if (typeof addWebAppBridgeActions === "function") {
+      addWebAppBridgeActions(state, actions);
+    }
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
     // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）
