@@ -503,7 +503,9 @@ function showNewsBriefingModal(news, state) {
     if (typeof showModal !== "function") return;
     var level = news.level ? " · " + news.level : "";
     var type = news.type ? " · " + news.type : "";
-    var duration = news.duration ? "影响约" + news.duration + "天" : "影响持续观察";
+    var duration = news.duration
+      ? "影响约" + news.duration + "天"
+      : "影响持续观察";
     showModal({
       title: "📰 新闻快报",
       body:
@@ -524,7 +526,9 @@ function showNewsBriefingModal(news, state) {
         (news.desc || "这条新闻正在影响城市里的价格、工作和人心。") +
         "</div>" +
         "</div>",
-      buttons: [{ text: "知道了", cls: "btn-primary", callback: function () {} }],
+      buttons: [
+        { text: "知道了", cls: "btn-primary", callback: function () {} },
+      ],
     });
   }
   setTimeout(openWhenReady, 120);

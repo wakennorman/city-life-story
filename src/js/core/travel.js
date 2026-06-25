@@ -145,7 +145,7 @@ function startTravel(state, destId) {
     };
   var currentAp = (state.player && state.player.actionPoints) || 0;
   if (currentAp < dest.apCost)
-    return { ok: false, msg: "行动力不足，需要" + dest.apCost + "AP" };
+    return { ok: false, msg: "行动力不足，需要" + dest.apCost + "行动力" };
 
   state.resources.cash -= dest.cost;
   state.player.actionPoints = Math.max(0, currentAp - dest.apCost);
@@ -251,7 +251,7 @@ function showTravelAgencyModal() {
       d.cost.toLocaleString() +
       " · " +
       d.apCost +
-      "AP · " +
+      "行动力 · " +
       d.days +
       '天<br><span style="color:var(--text-secondary);">' +
       d.desc +

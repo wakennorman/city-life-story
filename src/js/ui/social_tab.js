@@ -8,6 +8,34 @@
  * 4. NPC关系网可视化（新增）
  */
 
+// ====== NPC中文名查找 ======
+function getNpcChineseName(npcId) {
+  if (typeof NPCS !== "undefined" && Array.isArray(NPCS)) {
+    var found = NPCS.find(function (n) {
+      return n.id === npcId;
+    });
+    if (found && found.name) return found.name;
+  }
+  // 兜底：英文ID转中文
+  var nameMap = {
+    aunt_wang: "王大婶",
+    boss_li: "李工头",
+    sister_zhang: "张姐",
+    old_zhou: "老周",
+    xiao_mei: "小美",
+    chef_chen: "陈师傅",
+    auntie_lin: "林阿姨",
+    master_zhao: "赵师傅",
+    xiaoli: "小丽",
+    dr_wang: "王医生",
+    zhaojie: "赵姐",
+    chen_ge: "陈哥",
+    ajie: "阿杰",
+    uncle_chen_bank: "老陈",
+  };
+  return nameMap[npcId] || npcId.replace(/_/g, " ");
+}
+
 // ====== NPC关系网渲染 ======
 function renderNpcRelationships(state, content) {
   if (!state.relationships) {
@@ -31,6 +59,9 @@ function renderNpcRelationships(state, content) {
     var npcId = npcIds[i];
     var rel = state.relationships[npcId];
     var affinity = rel ? rel.affinity || 0 : 0;
+
+    // 获取NPC中文名
+    var npcDisplayName = getNpcChineseName(npcId);
 
     // 颜色根据好感度
     var colorClass = "neutral";
@@ -61,9 +92,7 @@ function renderNpcRelationships(state, content) {
     html += 'border:1px solid var(--border);background:var(--bg-secondary);">';
     html += '<div style="display:flex;align-items:center;gap:4px;">';
     html += "<span>" + icon + "</span>";
-    html +=
-      '<span style="font-weight:bold;">' +
-      (npcId.replace(/_/g, " ") + "</span>");
+    html += '<span style="font-weight:bold;">' + npcDisplayName + "</span>";
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";
@@ -341,6 +370,16 @@ function renderSocialNetworkTab(state, content) {
           income: sn.influencerIncome || 0,
         };
 
+  // 网红等级中文映射
+  var LEVEL_CN = {
+    none: "无",
+    micro: "萌芽网红",
+    medium: "中型网红",
+    large: "大型网红",
+    top: "顶级网红",
+  };
+  var levelLabel = LEVEL_CN[incomeInfo.level] || incomeInfo.level;
+
   var html = '<div class="tab-content">';
   html += '<div class="section"><h3>📱 社交网络</h3>';
   html +=
@@ -351,7 +390,7 @@ function renderSocialNetworkTab(state, content) {
     "</strong></div>";
   html +=
     '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">网红等级</div><strong>' +
-    socialNetworkEscape(incomeInfo.level) +
+    socialNetworkEscape(levelLabel) +
     "</strong></div>";
   html +=
     '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">日收入</div><strong>¥' +
@@ -435,7 +474,7 @@ function renderSocialNetworkTab(state, content) {
   }
   html += "</div>";
 
-  html += '<div class="section"><h4>🔥 微博热搜</h4>';
+  html += '<div class="section"><h4>🔥 围脖热搜</h4>';
   var hotlist = sn.weiboHotlist || [];
   if (hotlist.length === 0) {
     html += '<p style="color:var(--text-muted);">还没有刷新热搜。</p>';
@@ -482,7 +521,7 @@ function renderSocialNetworkTab(state, content) {
     refreshBtn.onclick = function () {
       if (typeof refreshWeiboHotlist === "function") {
         refreshWeiboHotlist(state);
-        StateManager.addMessage("🔥 微博热搜已刷新。", "info");
+        StateManager.addMessage("🔥 围脖热搜已刷新。", "info");
       }
       renderSocialNetworkTab(state, content);
     };

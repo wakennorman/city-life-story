@@ -14,6 +14,10 @@ var DREAMS = [
     name: "开一家餐馆",
     icon: "🍜",
     desc: "用双手和手艺，在这座城市撑起一片天地",
+    bonus: {
+      text: "烹饪/销售经验 +10%，周末集市和餐饮路线更容易起步",
+      skillXp: { cooking: 1.1, sales: 1.1 },
+    },
     milestones: [
       {
         id: "rest_1",
@@ -76,6 +80,10 @@ var DREAMS = [
     name: "在城里安个家",
     icon: "🏠",
     desc: "有一天，在这座城市拥有一套属于自己的房子",
+    bonus: {
+      text: "固定收入和街头正当工作收入 +3%，更快攒下押金和首付",
+      income: { job: 1.03, salary: 1.03 },
+    },
     milestones: [
       {
         id: "apt_1",
@@ -138,6 +146,10 @@ var DREAMS = [
     name: "出国留学深造",
     icon: "🎓",
     desc: "有一天走出国门，用知识改变命运",
+    bonus: {
+      text: "英语/编程/会计经验 +10%，学习型路线成长更快",
+      skillXp: { english: 1.1, coding: 1.1, accounting: 1.1 },
+    },
     milestones: [
       {
         id: "abroadd_1",
@@ -201,6 +213,10 @@ var DREAMS = [
     name: "成为投资大亨",
     icon: "💰",
     desc: "用钱生钱，让资产替自己工作",
+    bonus: {
+      text: "银行存款日息 +8%，投资和财富相关提示优先显示",
+      bankRate: 1.08,
+    },
     milestones: [
       {
         id: "inv_1",
@@ -266,6 +282,11 @@ var DREAMS = [
     name: "成为城市名人",
     icon: "⭐",
     desc: "靠才华和魅力，在这座城市留下自己的名字",
+    bonus: {
+      text: "销售经验 +10%，名气和人脉路线更容易滚起来",
+      skillXp: { sales: 1.1 },
+      fame: 1.05,
+    },
     milestones: [
       {
         id: "cel_1",
@@ -320,12 +341,41 @@ var DREAMS = [
   },
 ];
 
-/** 强制选择人生目标弹窗（无"稍后再说"选项）*/
+function getDreamBonusText(dream) {
+  return dream && dream.bonus && dream.bonus.text ? dream.bonus.text : "";
+}
+
+function getCurrentDreamBonus(state) {
+  var dream = getCurrentDream(state);
+  return dream && dream.bonus ? dream.bonus : null;
+}
+
+function getDreamSkillXpMultiplier(state, skillKey) {
+  var bonus = getCurrentDreamBonus(state);
+  if (!bonus || !bonus.skillXp) return 1;
+  return bonus.skillXp[skillKey] || 1;
+}
+
+function applyDreamIncomeBonus(state, amount, source) {
+  var bonus = getCurrentDreamBonus(state);
+  var mul = bonus && bonus.income ? bonus.income[source] || 1 : 1;
+  return Math.max(0, Math.floor((amount || 0) * mul));
+}
+
+function getDreamBankRateMultiplier(state) {
+  var bonus = getCurrentDreamBonus(state);
+  return bonus && bonus.bankRate ? bonus.bankRate : 1;
+}
+
+/** 推荐选择人生目标弹窗（可跳过；选择目标有加成）*/
 function showForcedDreamModal() {
   if (typeof showDreamSelectModal === "function") {
-    // 调用 actions_extra.js 中的 selectDream 回调
-    // 但强制模式：不设"稍后再说"按钮
     if (typeof DREAMS === "undefined") return;
+    var st =
+      typeof StateManager !== "undefined" && StateManager.getState
+        ? StateManager.getState()
+        : null;
+    if (st && st.flags && (st.flags._dreamId || st.flags._dreamSkipped)) return;
     var optHtml = DREAMS.map(function (d) {
       return (
         "<div onclick=\"window.selectDream('" +
@@ -340,17 +390,27 @@ function showForcedDreamModal() {
         '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
         d.desc +
         "</div>" +
+        '<div style="font-size:11px;color:var(--accent);margin-top:4px;">加成：' +
+        getDreamBonusText(d) +
+        "</div>" +
         "</div>"
       );
     }).join("");
     showModal({
       title: "🌟 确立人生目标",
       body:
-        '<p style="font-size:13px;color:var(--text-primary);margin-bottom:12px;font-weight:600;">在这座城市，你想要什么？选定一个方向，脚踏实地去努力。</p>' +
-        '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">选定一个方向，游戏会追踪你的进度，在每个里程碑时给你一段专属故事。</p>' +
-        '<p style="font-size:11px;color:var(--danger);margin-bottom:10px;">⚠️ 必须选择一个人生目标才能继续游戏</p>' +
+        '<p style="font-size:13px;color:var(--text-primary);margin-bottom:12px;font-weight:600;">在这座城市，你想要什么？目标不是必选项，但选定方向会给你路线加成和里程碑故事。</p>' +
+        '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">不确定也可以先跳过，之后在“个人成长”里重新设定。</p>' +
         optHtml,
-      buttons: [],
+      buttons: [
+        {
+          text: "暂时不选，自由开局",
+          cls: "",
+          callback: function () {
+            if (typeof skipDreamForNow === "function") skipDreamForNow();
+          },
+        },
+      ],
     });
   }
 }
@@ -417,6 +477,11 @@ function getDreamCurrentTitle(state) {
 if (typeof window !== "undefined") {
   window.showForcedDreamModal = showForcedDreamModal;
   window.DREAMS = DREAMS;
+  window.getDreamBonusText = getDreamBonusText;
+  window.getCurrentDreamBonus = getCurrentDreamBonus;
+  window.getDreamSkillXpMultiplier = getDreamSkillXpMultiplier;
+  window.applyDreamIncomeBonus = applyDreamIncomeBonus;
+  window.getDreamBankRateMultiplier = getDreamBankRateMultiplier;
   window.getCurrentDream = getCurrentDream;
   window.checkDreamProgress = checkDreamProgress;
   window.getDreamProgress = getDreamProgress;

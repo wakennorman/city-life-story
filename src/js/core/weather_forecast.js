@@ -176,7 +176,13 @@
         prep.umbrella = true;
         addVisiblePrepItem("umbrella");
         if (typeof addDailyTransaction === "function") {
-          addDailyTransaction(state, "expense", "shopping", 20, "天气准备：雨伞");
+          addDailyTransaction(
+            state,
+            "expense",
+            "shopping",
+            20,
+            "天气准备：雨伞",
+          );
         }
         results.push("☂️ 买了伞（¥20）");
       } else {

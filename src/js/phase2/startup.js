@@ -2249,6 +2249,12 @@ function getStartupTriggerConditions(state) {
   var cond = conditions[scenarioId];
   if (!cond) cond = conditions.classic;
   var pc = cond[phase] || cond.street;
+  var baseCash = pc.cash || 50000;
+  var discount =
+    typeof getCareerCapitalStartupDiscount === "function"
+      ? getCareerCapitalStartupDiscount(state)
+      : 0;
+  var requiredCash = Math.max(20000, Math.floor(baseCash * (1 - discount)));
   var rankMet = true;
   if (phase === "corporate" && pc.rank) {
     var rankNames = ["P5", "P6", "P7", "P8", "P9", "P10"];
@@ -2258,13 +2264,15 @@ function getStartupTriggerConditions(state) {
     rankMet = pIdx >= reqIdx;
   }
   return {
-    cashRequired: pc.cash || 200000,
+    cashRequired: requiredCash || 200000,
+    baseCashRequired: baseCash,
+    careerDiscount: discount,
     rankRequired: pc.rank || null,
     label: pc.label || "资源积累",
-    cashOk: cash >= (pc.cash || 50000),
+    cashOk: cash >= (requiredCash || 50000),
     rankOk: rankMet,
-    canRegister: cash >= (pc.cash || 50000) && rankMet,
-    met: cash >= (pc.cash || 50000) && rankMet,
+    canRegister: cash >= (requiredCash || 50000) && rankMet,
+    met: cash >= (requiredCash || 50000) && rankMet,
   };
 }
 
@@ -2278,6 +2286,10 @@ function showStartupRegisterModal() {
   var state = StateManager.getState();
   var cash = (state.resources && state.resources.cash) || 0;
   var registerCost = getStartupRegistrationCost(state);
+  var readinessNote =
+    typeof getStartupReadinessNote === "function"
+      ? getStartupReadinessNote(state)
+      : "";
   if (cash < registerCost) {
     StateManager.addMessage(
       "⚠️ 注册公司需要 ¥" + registerCost.toLocaleString() + " 启动资金。",
@@ -2310,6 +2322,11 @@ function showStartupRegisterModal() {
     "<p>注册公司需缴纳 <strong>¥" +
     registerCost.toLocaleString() +
     "</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
+    (readinessNote
+      ? '<div style="padding:8px 10px;margin:8px 0;background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.22);border-radius:6px;font-size:12px;color:var(--text-secondary);">💼 ' +
+        readinessNote +
+        "</div>"
+      : "") +
     '<div style="margin:12px 0;">' +
     '<label style="font-weight:600;font-size:12px;">🏢 公司名称</label>' +
     '<input id="startup-name-input" type="text" placeholder="输入公司名（可选）" maxlength="16" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
@@ -11365,6 +11382,10 @@ function renderStartupTab(state, parent) {
     // 剧本感知的触发条件
     var stc = getStartupTriggerConditions(state);
     var cashLabel = "¥" + stc.cashRequired.toLocaleString();
+    var readinessNote =
+      typeof getStartupReadinessNote === "function"
+        ? getStartupReadinessNote(state)
+        : "";
     var rankLabel = stc.rankRequired ? stc.rankRequired + "+" : "不限";
     var phaseLabel =
       state.player && state.player.phase === "corporate" ? "职场" : "街头";
@@ -11396,8 +11417,20 @@ function renderStartupTab(state, parent) {
       '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>🏢 职级要求</span><span>' +
       rankLabel +
       "</span></div>" +
-      '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>¥50,000</span></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>' +
+      cashLabel +
+      "</span></div>" +
+      (stc.careerDiscount
+        ? '<div style="font-size:11px;color:var(--accent);margin-top:6px;">职场资源已抵扣约 ' +
+          Math.round(stc.careerDiscount * 100) +
+          "% 启动资金</div>"
+        : "") +
       "</div>" +
+      (readinessNote
+        ? '<div style="margin:0 auto 12px;padding:10px;max-width:360px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.18);border-radius:8px;text-align:left;font-size:12px;color:var(--text-secondary);">💼 ' +
+          readinessNote +
+          "</div>"
+        : "") +
       '<button class="btn btn-lg btn-primary" onclick="showStartupRegisterModal()" ' +
       (stc.canRegister ? "" : 'style="opacity:0.5;" disabled') +
       ">" +

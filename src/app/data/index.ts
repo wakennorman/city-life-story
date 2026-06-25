@@ -105,7 +105,8 @@ export const DATA_CATALOGS: DataCatalogDescriptor[] = [
     count: TRAVEL_DESTINATIONS.length,
     legacySource: "src/js/core/travel.js",
     bridgeStatus: "partial",
-    description: "旧侧 5 个目的地仍可玩，TS 侧新增本城环线/杭州/深圳等扩展数据。",
+    description:
+      "旧侧 5 个目的地仍可玩，TS 侧新增本城环线/杭州/深圳等扩展数据。",
   },
 ];
 

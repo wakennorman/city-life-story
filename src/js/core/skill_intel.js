@@ -441,7 +441,7 @@ function buildDrivingPreview(state, fromLocKey, toLocKey, apCost) {
     if (dist2 <= 2) {
       parts.push("✅ 步行即可，无需绕路");
     } else {
-      parts.push("🛵 建议骑行，比步行省40%AP");
+      parts.push("🛵 建议骑行，比步行省40%行动力");
     }
   }
 

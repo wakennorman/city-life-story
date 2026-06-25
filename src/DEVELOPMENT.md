@@ -1,6 +1,31 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-26（用户反馈修复：财务/UI/职业/新闻）
+> 最后更新: 2026-06-26（v3.0 审查改进+UI修复+社交网络增强）
+
+## 2026-06-26 — v3.0 全面审查改进与UI修复
+
+本轮按 v3.0 SOP 执行 6 个子任务链，产出 `plans/subtask1-analysis.md` 至 `plans/subtask6-implementation.md` 报告。实装重点：
+
+**P0修复：**
+
+- 🔧 "AP"英文→全中文行动力：修复 main.js(节日工作)、render.js(交通方式)、modal.js(选项弹窗)、actions_extra.js、travel.js、webapp_runtime_bridge.js、skill_tree.js、critical.js、events_street.js、wiki.js、mechanics_registry.js、skill_intel.js 共 15+ 处"AP"英文显示
+- 🔧 NPC英文ID→中文名：social_tab.js NPC关系网卡片改为显示 `NPCS.name`（王大婶/老周等），新增 `getNpcChineseName()` 兜底映射
+- 🔧 学历从侧边栏移入个人成长Tab：新增"🎓 学历"子Tab（`renderPgEdu()`），展示学历等级+备考进度
+
+**P1改进：**
+
+- 🔧 header-context精简：移除位置/天气/背包容量重复信息，仅保留住所展示
+- 🔧 热搜话题扩充：`social_network.js` 新增30条预定义围脖热搜话题池，联动活跃新闻系统生成热点
+- 🔧 围脖热搜改名为"围脖热搜"（微博→围脖），全中文显示
+- 🔧 网红等级中文显示："none"→"无"、"micro"→"萌芽网红"、"medium"→"中型网红"等
+- 🔧 粉丝增长机制增强：内容长度+配图+名气多因子模型，粉丝增长反哺名气
+- 🔧 "附近可前往"移到sidebar靠前位置，首屏可见
+
+**影响文件：** main.js, render.js, social_tab.js, social_network.js, index.html, modal.js, wiki.js, mechanics_registry.js, travel.js, actions_extra.js, critical.js, skill_tree.js, skill_intel.js, webapp_runtime_bridge.js, events_street.js, era_events.js（共17个文件）
+
+验证：`node --check` 语法全通过，`python build.py`（4224.4 KB）
+
+本轮按 v3.0 SOP 和用户反馈完成 6 个子任务链，新增/覆盖 `subagent_result1.md` 至 `subagent_result6.md` 与 `plans/2026-06-26-v3-review-execution-context.md`。实装重点是修复开局目标、模式一致性、职业图标和事业深度：人生目标弹窗改为可跳过，选择目标会显示并生效轻量路线加成；三种开局共用 `initializeCommonGameSystems()`，剧本/沙盒补齐天气、装备、时代、副业、NPC、医疗、旅行、法律等通用初始化；沙盒默认改成无村长债的自由练习口径。事业发展页新增“今日事业建议”和事业信用数据，入职、晋升、阶段项目会积累行业资源/客户线索/声誉，创业注册可读取这些资源降低启动资金，并修复创业页注册费展示口径。职业路径 `name` 改为纯文本，彻底修复“💻 💻 IT技术”等重复图标。验证：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4217.3 KB）、`npm run build` 全部通过；Chrome Headless + CDP 冒烟确认经典开局目标弹窗可跳过、有加成文案，事业发展页出现“今日事业建议”，未捕获运行时错误。
 
 ## 2026-06-26 — 用户反馈修复：财务、UI、职业与新闻
 

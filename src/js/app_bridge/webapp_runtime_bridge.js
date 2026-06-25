@@ -164,24 +164,16 @@
       return "现金不足，需要¥" + action.cost;
     }
     if ((state.player.actionPoints || 0) < action.apCost) {
-      return "行动力不足，需要" + action.apCost + "AP";
+      return "行动力不足，需要" + action.apCost + "行动力";
     }
     return "";
   }
 
   function getPlayerHealth(state) {
-    if (
-      state &&
-      state.status &&
-      typeof state.status.health === "number"
-    ) {
+    if (state && state.status && typeof state.status.health === "number") {
       return state.status.health;
     }
-    if (
-      state &&
-      state.player &&
-      typeof state.player.health === "number"
-    ) {
+    if (state && state.player && typeof state.player.health === "number") {
       return state.player.health;
     }
     return 100;

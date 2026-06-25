@@ -893,7 +893,7 @@ function addStreetExtras(state, actions) {
   }
 
   // === 人生梦想入口归位 ===
-  // 首次选择由开局强制弹窗处理；查看/更改归入“个人成长”的目标区域，不占行动列表。
+  // 首次选择由开局推荐弹窗处理；查看/更改归入“个人成长”的目标区域，不占行动列表。
 
   // === 周末市集（每逢day%7=0或6出现：公园/商业区） ===
   var dayOfWeek = state.player.day % 7;
@@ -1018,15 +1018,28 @@ function showDreamSelectModal() {
       '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
       d.desc +
       "</div>" +
+      (typeof getDreamBonusText === "function"
+        ? '<div style="font-size:11px;color:var(--accent);margin-top:4px;">加成：' +
+          getDreamBonusText(d) +
+          "</div>"
+        : "") +
       "</div>"
     );
   }).join("");
   showModal({
     title: "🌟 确立人生目标",
     body:
-      '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">选定一个方向，游戏会追踪你的进度，在每个里程碑时给你一段专属故事。</p>' +
+      '<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">目标不是必选项。选定方向后会获得轻量路线加成，并在每个里程碑收到专属故事。</p>' +
       optHtml,
-    buttons: [{ text: "稍后再说", cls: "", callback: function () {} }],
+    buttons: [
+      {
+        text: "稍后再说",
+        cls: "",
+        callback: function () {
+          if (typeof skipDreamForNow === "function") skipDreamForNow();
+        },
+      },
+    ],
   });
 }
 
@@ -1035,6 +1048,7 @@ window.selectDream = function (dreamId) {
     document.querySelector(".modal-overlay").remove();
   var st = StateManager.getState();
   st.flags._dreamId = dreamId;
+  st.flags._dreamSkipped = false;
   st.flags._dreamMilestone = 0;
   st.flags._dreamStartDay = st.player.day;
   var dream =
@@ -1046,11 +1060,26 @@ window.selectDream = function (dreamId) {
         dream.name +
         "。\n" +
         dream.desc +
-        "。\n第一个里程碑：" +
+        "。\n路线加成：" +
+        (typeof getDreamBonusText === "function"
+          ? getDreamBonusText(dream)
+          : "里程碑故事") +
+        "\n第一个里程碑：" +
         (dream.milestones[0] ? dream.milestones[0].title : ""),
       "event",
     );
   }
+};
+
+window.skipDreamForNow = function () {
+  var overlay = document.querySelector(".modal-overlay");
+  if (overlay) overlay.remove();
+  var st = StateManager.getState();
+  st.flags._dreamSkipped = true;
+  StateManager.addMessage(
+    "🌟 你暂时没有确立人生目标。自由探索不会有惩罚，之后可在“个人成长”里重新选择并获得路线加成。",
+    "info",
+  );
 };
 
 /** 梦想进度模态框 */
@@ -1102,6 +1131,11 @@ function showDreamProgressModal() {
       progress +
       '%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.5s;"></div>' +
       "</div></div>" +
+      (typeof getDreamBonusText === "function"
+        ? '<div style="padding:8px 10px;margin:8px 0;background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.25);border-radius:6px;font-size:12px;color:var(--accent);">当前加成：' +
+          getDreamBonusText(dream) +
+          "</div>"
+        : "") +
       milestoneHtml,
     buttons: [{ text: "关闭", cls: "", callback: function () {} }],
   });
@@ -2091,7 +2125,7 @@ function addHomeActions(state, actions) {
       " — " +
       icons.join(" ") +
       " | " +
-      (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "AP回家"),
+      (isAtHome ? "🏠 已在住所" : "⚡ 需" + travelAp + "行动力回家"),
     apCost: travelAp,
     category: "restore",
     handler: function () {
@@ -2140,7 +2174,7 @@ function showHomeActionsModal(state) {
       "</span>" +
       '<span style="font-size:11px;color:var(--text-muted);">⚡' +
       (a.ap || 0) +
-      "AP | " +
+      "行动力 | " +
       (a.cost > 0 ? "¥" + a.cost : "免费") +
       "</span></div>" +
       '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +

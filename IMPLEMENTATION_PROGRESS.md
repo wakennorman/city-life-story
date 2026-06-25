@@ -5,33 +5,33 @@
 
 ## 2026-06-26 用户反馈修复：财务/UI/职业/新闻
 
-| #   | 任务 | 状态 | 说明 |
-| --- | ---- | ---- | ---- |
-| A | 完善计划与经验教训 | ✅ | 新增 `memory/2026-06-26-user-feedback-plan.md` 与 `memory/long_term_lessons.md` |
-| B | P0 财务与输入修复 | ✅ | 修复沙盒姓名输入、每日收支假平衡、曲线历史写入、创业注册资金口径 |
-| C | P0 UI 与显示修复 | ✅ | 状态危机弹窗纵向换行、禁用按钮真实禁用、背包中文名兜底、天气准备入背包 |
-| D | P1 入口与联动修复 | ✅ | 人生目标移出行动列表，保留开局强制弹窗与个人成长目标联动 |
-| E | P1 职业/新闻/左栏 | ✅ | 职业晋升读真实技能，展示业绩/人脉条件；新闻新增快报弹窗；位置/天气/住所/仓库压缩进顶部信息条 |
-| F | 验证 | ✅ | `npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 均通过 |
+| #   | 任务               | 状态 | 说明                                                                                         |
+| --- | ------------------ | ---- | -------------------------------------------------------------------------------------------- |
+| A   | 完善计划与经验教训 | ✅   | 新增 `memory/2026-06-26-user-feedback-plan.md` 与 `memory/long_term_lessons.md`              |
+| B   | P0 财务与输入修复  | ✅   | 修复沙盒姓名输入、每日收支假平衡、曲线历史写入、创业注册资金口径                             |
+| C   | P0 UI 与显示修复   | ✅   | 状态危机弹窗纵向换行、禁用按钮真实禁用、背包中文名兜底、天气准备入背包                       |
+| D   | P1 入口与联动修复  | ✅   | 人生目标移出行动列表，保留开局强制弹窗与个人成长目标联动                                     |
+| E   | P1 职业/新闻/左栏  | ✅   | 职业晋升读真实技能，展示业绩/人脉条件；新闻新增快报弹窗；位置/天气/住所/仓库压缩进顶部信息条 |
+| F   | 验证               | ✅   | `npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 均通过           |
 
 ## 2026-06-26 v3.8 断点续传审查：人生事务常驻面板
 
-| #   | 任务     | 状态 | 说明                                                                 |
-| --- | -------- | ---- | -------------------------------------------------------------------- |
-| A   | 现状摸底 | ✅   | 刷新 `memory/overview.md`，确认 TS 数据目录已填充，当前断点是扩展系统缺常驻 UI |
-| B   | 问题诊断 | ✅   | 刷新 `memory/diagnosis.md`，按一行一项记录 P0/P1/P2 问题              |
-| C   | 改进方案 | ✅   | 刷新 `memory/improvement_plan.md`，本轮实装前 3 条可验证方案          |
-| D   | 实装交付 | ✅   | `src/index.html` + `src/js/ui/render.js` 新增“人生事务”Tab             |
+| #   | 任务     | 状态 | 说明                                                                             |
+| --- | -------- | ---- | -------------------------------------------------------------------------------- |
+| A   | 现状摸底 | ✅   | 刷新 `memory/overview.md`，确认 TS 数据目录已填充，当前断点是扩展系统缺常驻 UI   |
+| B   | 问题诊断 | ✅   | 刷新 `memory/diagnosis.md`，按一行一项记录 P0/P1/P2 问题                         |
+| C   | 改进方案 | ✅   | 刷新 `memory/improvement_plan.md`，本轮实装前 3 条可验证方案                     |
+| D   | 实装交付 | ✅   | `src/index.html` + `src/js/ui/render.js` 新增“人生事务”Tab                       |
 | E   | 验证     | ✅   | `check:js` / `typecheck` / `check:ts-data` / `build.py` / `npm run build` 均通过 |
 
 ### 本轮落地
 
-| #   | 项目                       | 文件                              | 验证 |
-| --- | -------------------------- | --------------------------------- | ---- |
-| 1   | 4 大扩展系统常驻面板       | `src/index.html`、`src/js/ui/render.js` | ✅   |
-| 2   | 城市服务推荐玩家可见       | `src/js/ui/render.js`             | ✅   |
-| 3   | TS 内容目录接入状态展示    | `src/js/ui/render.js`             | ✅   |
-| 4   | 社区体检健康字段接线修复   | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
+| #   | 项目                     | 文件                                         | 验证 |
+| --- | ------------------------ | -------------------------------------------- | ---- |
+| 1   | 4 大扩展系统常驻面板     | `src/index.html`、`src/js/ui/render.js`      | ✅   |
+| 2   | 城市服务推荐玩家可见     | `src/js/ui/render.js`                        | ✅   |
+| 3   | TS 内容目录接入状态展示  | `src/js/ui/render.js`                        | ✅   |
+| 4   | 社区体检健康字段接线修复 | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
 
 ## 2026-06-25 v3.8 Web App 架构第一阶段
 
@@ -56,17 +56,17 @@
 
 ### P0 改进（已实装）
 
-| #   | 项目                       | 文件                                         | 行数 | 验证 |
-| --- | -------------------------- | -------------------------------------------- | ---- | ---- |
-| 1   | lifeNodes TS 数据目录填充  | `src/app/data/lifeNodes/index.ts`            | ~220 | ✅   |
-| 2   | cityServices TS 数据扩展   | `src/app/data/cityServices.ts`               | ~155 | ✅   |
-| 3   | healthCheck.ts 拓展        | `src/app/debug/healthCheck.ts`               | ~100 | ✅   |
-| 4   | 桥接层扩展（3→7 服务）     | `src/js/app_bridge/webapp_runtime_bridge.js` | ~510 | ✅   |
-| 5   | bridge 自动推荐            | `src/js/app_bridge/webapp_runtime_bridge.js` | ~50  | ✅   |
-| 6   | TS typed facade 扩系统字段 | `src/app/types/game.ts`                      | ~200 | ✅   |
-| 7   | events/jobs/locations/items/diseases/legal/travel TS 数据目录补全 | `src/app/data/*/index.ts` + `src/app/data/index.ts` | ~1200 | ✅   |
-| 8   | TS 数据目录审计脚本        | `scripts/audit-ts-data.mjs` + `package.json` | ~120 | ✅   |
-| 9   | Vite 内容目录面板 + bridge 摘要 | `src/app/ui/panels.ts` + `src/js/app_bridge/webapp_runtime_bridge.js` | ~90 | ✅   |
+| #   | 项目                                                              | 文件                                                                  | 行数  | 验证 |
+| --- | ----------------------------------------------------------------- | --------------------------------------------------------------------- | ----- | ---- |
+| 1   | lifeNodes TS 数据目录填充                                         | `src/app/data/lifeNodes/index.ts`                                     | ~220  | ✅   |
+| 2   | cityServices TS 数据扩展                                          | `src/app/data/cityServices.ts`                                        | ~155  | ✅   |
+| 3   | healthCheck.ts 拓展                                               | `src/app/debug/healthCheck.ts`                                        | ~100  | ✅   |
+| 4   | 桥接层扩展（3→7 服务）                                            | `src/js/app_bridge/webapp_runtime_bridge.js`                          | ~510  | ✅   |
+| 5   | bridge 自动推荐                                                   | `src/js/app_bridge/webapp_runtime_bridge.js`                          | ~50   | ✅   |
+| 6   | TS typed facade 扩系统字段                                        | `src/app/types/game.ts`                                               | ~200  | ✅   |
+| 7   | events/jobs/locations/items/diseases/legal/travel TS 数据目录补全 | `src/app/data/*/index.ts` + `src/app/data/index.ts`                   | ~1200 | ✅   |
+| 8   | TS 数据目录审计脚本                                               | `scripts/audit-ts-data.mjs` + `package.json`                          | ~120  | ✅   |
+| 9   | Vite 内容目录面板 + bridge 摘要                                   | `src/app/ui/panels.ts` + `src/js/app_bridge/webapp_runtime_bridge.js` | ~90   | ✅   |
 
 ### P1 改进（已实装）
 

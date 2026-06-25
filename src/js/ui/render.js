@@ -45,7 +45,11 @@ function getUiDisplayName(id, fallback) {
     var good = getGoodById(key);
     if (good && good.name) return good.name;
   }
-  if (typeof LOCATIONS !== "undefined" && LOCATIONS[key] && LOCATIONS[key].name) {
+  if (
+    typeof LOCATIONS !== "undefined" &&
+    LOCATIONS[key] &&
+    LOCATIONS[key].name
+  ) {
     return LOCATIONS[key].name;
   }
   if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
@@ -423,7 +427,8 @@ function renderSidebar(state) {
   if (typeof renderDailyFocusSection === "function") {
     renderDailyFocusSection(state);
   }
-  renderEduSection(state);
+  // 学历已移到个人成长Tab的"🎓 学历"子Tab中
+  // renderEduSection(state);
   renderReputationBadge(state);
   renderMoralStatus(state);
   renderAccountingIntel(state);
@@ -887,37 +892,9 @@ function renderHeaderContext(state, loc, weatherDef, seasonDef) {
       HOUSING_TIERS[state.housing?.tier || 0]) ||
     null;
   var houseName = houseData ? houseData.name : "露宿街头";
-  var itemCount = (state.inventory.items || []).reduce(function (sum, item) {
-    return sum + (item.qty || 0);
-  }, 0);
-  var totalCap = state.inventory.capacity || 0;
-  var weatherText =
-    weatherDef && seasonDef
-      ? seasonDef.icon +
-        seasonDef.name +
-        " " +
-        weatherDef.icon +
-        weatherDef.name +
-        " " +
-        Math.round((state.weather && state.weather.temperature) || 22) +
-        "°C"
-      : "";
-  var upgradeTip =
-    state.housing && state.housing.tier < 3 ? " · 可升级处所" : "";
-  el.innerHTML =
-    '<span class="context-chip">📍 ' +
-    (loc ? loc.name : locKey) +
-    "</span>" +
-    (weatherText ? '<span class="context-chip">' + weatherText + "</span>" : "") +
-    '<span class="context-chip">🏠 ' +
-    houseName +
-    "</span>" +
-    '<span class="context-chip">🎒 ' +
-    itemCount +
-    "/" +
-    totalCap +
-    upgradeTip +
-    "</span>";
+  // header-context只显示住所（位置/天气/背包在sidebar已有展示，避免重复）
+  el.innerHTML = '<span class="context-chip">🏠 ' + houseName + "</span>";
+  el.title = "当前住所：" + houseName;
 }
 
 /**
@@ -1421,7 +1398,8 @@ function _renderMedicalPanel(state) {
   var illnesses =
     (state.status && state.status.illnesses && state.status.illnesses.length) ||
     0;
-  if (illnesses > 0) lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
+  if (illnesses > 0)
+    lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
   return _lifeSystemsCard(
     "🏥",
     "医疗与医保",
@@ -1488,8 +1466,10 @@ function _renderBridgeRecommendations(state) {
             _lifeSystemsMoney(action.cost || 0) +
             " · " +
             (action.apCost || 0) +
-            "AP · 入口：" +
-            _lifeSystemsEscape((action.locationIds || []).join(" / ") || "当前地点") +
+            "行动力 · 入口：" +
+            _lifeSystemsEscape(
+              (action.locationIds || []).join(" / ") || "当前地点",
+            ) +
             "</div>" +
             "</div>"
           );
@@ -1516,7 +1496,11 @@ function _renderDataCatalogBridgeStatus() {
   var bridge = window.WebAppBridge;
   if (!bridge || typeof bridge.getDataCatalogSummary !== "function") return "";
   var summary = bridge.getDataCatalogSummary();
-  var statusLabel = { playable: "可玩", partial: "部分接入", typed: "仅类型化" };
+  var statusLabel = {
+    playable: "可玩",
+    partial: "部分接入",
+    typed: "仅类型化",
+  };
   return (
     '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;">' +
     '<h3 style="margin:0 0 8px;font-size:14px;color:var(--text-primary);">📂 TypeScript 内容接入状态</h3>' +
@@ -1548,7 +1532,8 @@ function renderLifeSystemsTab(state, parent) {
   if (typeof initLegalState === "function") initLegalState(state);
 
   var wrap = document.createElement("div");
-  wrap.style.cssText = "padding:12px;display:flex;flex-direction:column;gap:12px;";
+  wrap.style.cssText =
+    "padding:12px;display:flex;flex-direction:column;gap:12px;";
   wrap.innerHTML =
     '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);padding:12px;">' +
     '<h2 style="margin:0 0 6px;font-size:16px;color:var(--text-primary);">🧭 人生事务</h2>' +
@@ -2899,7 +2884,7 @@ function renderMapTab(state, parent) {
           }
           available = bikeReachable.slice();
           priceInfo = "¥3/次";
-          apInfo = "AP -6（骑行适中）";
+          apInfo = "行动力 -6（骑行适中）";
         } else if (mode === "metro") {
           available = reachableList.filter(
             (k) => METRO_STATIONS.indexOf(k) >= 0,
@@ -2911,11 +2896,11 @@ function renderMapTab(state, parent) {
             });
           }
           priceInfo = "¥4/次";
-          apInfo = "AP -5（地铁最快）";
+          apInfo = "行动力 -5（地铁最快）";
         } else if (mode === "taxi") {
           available = reachableList.slice();
           priceInfo = "¥10-40（按距离）";
-          apInfo = "AP -3（最快但最贵）";
+          apInfo = "行动力 -3（最快但最贵）";
         }
         if (available.length === 0) {
           result.innerHTML =
@@ -2959,7 +2944,7 @@ function renderMapTab(state, parent) {
                 "</div>" +
                 '<div style="color:var(--text-muted);margin-top:2px;">¥' +
                 price +
-                " · AP" +
+                " · 行动力" +
                 ap +
                 "</div>" +
                 "</button>"
@@ -3437,7 +3422,8 @@ function renderTradeTab(state, parent) {
         item.avgBuyPrice !== undefined && item.avgBuyPrice !== null
           ? "¥" + Number(item.avgBuyPrice).toFixed(1)
           : "暂无";
-      const currentPriceText = price !== null ? "¥" + price.toFixed(1) : "不可交易";
+      const currentPriceText =
+        price !== null ? "¥" + price.toFixed(1) : "不可交易";
       const tradeButtons = good
         ? `
           <button class="btn btn-sm btn-danger sell-one-btn" data-good="${displayId}">卖1</button>
@@ -5957,11 +5943,12 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
   // ---- 子Tab导航（v3.0：属性训练排第一，数据排最后）----
   var subTabs = [
-    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" }, // v3.0 新增排第一
+    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" },
+    { id: "pg_edu", label: "🎓 学历", icon: "🎓" },
     { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
     { id: "pg_health", label: "💪 健康", icon: "💪" },
     { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
-    { id: "pg_charts", label: "📈 数据", icon: "📈" }, // v3.0 移到最后
+    { id: "pg_charts", label: "📈 数据", icon: "📈" },
   ];
   var currentSubTab = state._pgSubTab || "pg_stat_train";
 
@@ -5990,6 +5977,9 @@ function renderMergedPersonalGrowthTab(state, parent) {
       break;
     case "pg_charts":
       renderPgCharts(state, content);
+      break;
+    case "pg_edu":
+      renderPgEdu(state, content);
       break;
     case "pg_hobbies":
       renderPgHobbies(state, content, pg);
@@ -6418,5 +6408,52 @@ function renderPgGoals(state, content, pg) {
   }
 
   html += "</div>";
+  content.innerHTML = html;
+}
+
+/** 学历子面板（已从侧边栏移入个人成长Tab） */
+function renderPgEdu(state, content) {
+  var p = state.player;
+  var edu = p.education ?? state.education ?? 0;
+  var ep = p.eduProgress ||
+    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  var eduNames = ["大专", "本科", "研究生"];
+  var eduIcons = ["🎓", "📜", "🏛️"];
+  var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
+  var html = '<div class="tab-content">';
+  html += '<h2 style="font-size:15px;">🎓 学历</h2>';
+  html += '<div class="card" style="padding:16px;margin:8px 0;">';
+  html +=
+    '<div style="font-size:18px;font-weight:600;margin-bottom:8px;">' +
+    label +
+    "</div>";
+  if (edu === 0) {
+    var pct = Math.round((ep.examsPassed / (ep.totalExams || 6)) * 100);
+    html +=
+      '<div style="background:var(--bg-input);border-radius:3px;height:8px;overflow:hidden;margin:8px 0;">';
+    html +=
+      '<div style="width:' +
+      pct +
+      '%;height:100%;background:var(--accent);border-radius:3px;"></div></div>';
+    html += '<div style="font-size:13px;color:var(--text-secondary);">';
+    html +=
+      "📝 备考进度：" +
+      ep.examsPassed +
+      "/" +
+      (ep.totalExams || 6) +
+      "门</div>";
+    html +=
+      '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">';
+    html += "学习点：" + ep.studyPoints + "/150";
+    html +=
+      ' <span style="font-size:11px;">（在行动页训练属性可获取学习点）</span>';
+    html += "</div>";
+  } else {
+    html +=
+      '<div style="font-size:12px;color:var(--text-secondary);">已通过所有考试，当前学历为 ' +
+      eduNames[edu] +
+      "。</div>";
+  }
+  html += "</div></div>";
   content.innerHTML = html;
 }

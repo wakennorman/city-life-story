@@ -16,7 +16,7 @@
 // v3.2 扩展为6路径×3-4级 ≈ 22个职位
 const CAREER_PATHS = {
   tech: {
-    name: "💻 IT技术",
+    name: "IT技术",
     icon: "💻",
     levels: [
       {
@@ -65,7 +65,7 @@ const CAREER_PATHS = {
     ],
   },
   finance: {
-    name: "📈 金融财务",
+    name: "金融财务",
     icon: "📈",
     levels: [
       {
@@ -115,7 +115,7 @@ const CAREER_PATHS = {
     ],
   },
   sales: {
-    name: "🏪 销售市场",
+    name: "销售市场",
     icon: "🏪",
     levels: [
       {
@@ -161,7 +161,7 @@ const CAREER_PATHS = {
     ],
   },
   operations: {
-    name: "⚙️ 运营管理",
+    name: "运营管理",
     icon: "⚙️",
     levels: [
       {
@@ -211,7 +211,7 @@ const CAREER_PATHS = {
     ],
   },
   design: {
-    name: "🎨 设计创意",
+    name: "设计创意",
     icon: "🎨",
     levels: [
       {
@@ -258,7 +258,7 @@ const CAREER_PATHS = {
     ],
   },
   legal: {
-    name: "⚖️ 法律服务",
+    name: "法律服务",
     icon: "⚖️",
     levels: [
       {
@@ -311,6 +311,124 @@ const CAREER_PATHS = {
 
 // ====== ======
 
+function ensureCareerCapital(state) {
+  if (!state.careerCapital) {
+    state.careerCapital = {
+      industryResources: 0,
+      clientLeads: 0,
+      reputation: 0,
+      partnerTrust: 0,
+      burnout: 0,
+    };
+  }
+  return state.careerCapital;
+}
+
+function clampCareerCapital(cap) {
+  [
+    "industryResources",
+    "clientLeads",
+    "reputation",
+    "partnerTrust",
+    "burnout",
+  ].forEach(function (key) {
+    cap[key] = Math.max(0, Math.min(100, cap[key] || 0));
+  });
+}
+
+function getCareerPathLabel(pathId) {
+  var path = CAREER_PATHS[pathId];
+  if (!path) return "未选择方向";
+  return path.icon + " " + path.name;
+}
+
+function getCareerCapitalStartupDiscount(state) {
+  var cap = ensureCareerCapital(state);
+  var score =
+    (cap.industryResources || 0) * 0.5 +
+    (cap.clientLeads || 0) * 0.8 +
+    (cap.reputation || 0) * 0.4 +
+    (cap.partnerTrust || 0) * 0.3 -
+    (cap.burnout || 0) * 0.25;
+  return Math.max(0, Math.min(0.15, score / 1000));
+}
+
+function getStartupReadinessNote(state) {
+  var cap = ensureCareerCapital(state);
+  var discount = getCareerCapitalStartupDiscount(state);
+  if (discount <= 0) {
+    return "暂无可转化的职场资源：裸辞创业成本更高，建议先积累行业资源、客户线索或合伙人信任。";
+  }
+  return (
+    "职场积累可转化为创业准备度：注册启动资金约 -" +
+    Math.round(discount * 100) +
+    "%，行业资源 " +
+    Math.round(cap.industryResources || 0) +
+    " / 客户线索 " +
+    Math.round(cap.clientLeads || 0) +
+    " / 声誉 " +
+    Math.round(cap.reputation || 0) +
+    "。"
+  );
+}
+
+function getCareerGuidanceHtml(state) {
+  var cap = ensureCareerCapital(state);
+  clampCareerCapital(cap);
+  var career = state.career || {};
+  var job = career.currentJob;
+  var startup = state.startup || {};
+  var dream =
+    typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
+  var status = "待选择事业方向";
+  var next = "先找一份稳定工作，或继续积累创业启动资金。";
+  var action = "查看上班族路径 / 调研创业条件";
+  if (job) {
+    status = getCareerPathLabel(job.path) + " · " + (job.levelName || "在职");
+    next =
+      (job.performance || 50) >= 70
+        ? "绩效不错，可以准备晋升或积累客户线索后创业。"
+        : "优先做项目、补技能和维护同事关系，先把绩效拉上来。";
+    action = "准备晋升 / 承接关键项目 / 维护职场人脉";
+  } else if (startup && startup.status !== "none" && startup.company) {
+    status = "创业中 · " + (startup.company.name || "未命名公司");
+    next = "关注现金流、团队稳定和融资可信度，避免烧钱过快。";
+    action = "看现金流 / 推进产品 / 处理团队风险";
+  }
+  return (
+    '<div class="card" style="padding:12px;margin-bottom:10px;background:rgba(74,158,92,0.07);border:1px solid rgba(74,158,92,0.22);">' +
+    '<div style="font-weight:700;color:var(--text-primary);margin-bottom:6px;">🧭 今日事业建议</div>' +
+    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">' +
+    "<div>当前事业：" +
+    status +
+    "</div><div>下一步：" +
+    next +
+    "</div><div>可做动作：" +
+    action +
+    "</div>" +
+    (dream
+      ? "<div>人生目标加成：" +
+        (typeof getDreamBonusText === "function"
+          ? getDreamBonusText(dream)
+          : dream.name) +
+        "</div>"
+      : "<div>人生目标：未选择，可在个人成长中设定来获得路线加成。</div>") +
+    "</div>" +
+    '<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;font-size:10px;color:var(--text-muted);">' +
+    "<div>行业<br><b>" +
+    Math.round(cap.industryResources || 0) +
+    "</b></div><div>客户<br><b>" +
+    Math.round(cap.clientLeads || 0) +
+    "</b></div><div>声誉<br><b>" +
+    Math.round(cap.reputation || 0) +
+    "</b></div><div>信任<br><b>" +
+    Math.round(cap.partnerTrust || 0) +
+    "</b></div><div>消耗<br><b>" +
+    Math.round(cap.burnout || 0) +
+    "</b></div></div></div>"
+  );
+}
+
 /** 事业发展Tab主渲染函数 */
 function renderCareerDevTab(state, parent) {
   parent.innerHTML = "";
@@ -362,6 +480,7 @@ function renderCareerDevTab(state, parent) {
 function renderCareerStartup(state, parent) {
   if (typeof renderStartupTab === "function") {
     renderStartupTab(state, parent);
+    parent.insertAdjacentHTML("afterbegin", getCareerGuidanceHtml(state));
   } else {
     parent.innerHTML =
       '<p style="color:var(--text-muted);padding:40px;text-align:center;">🚀 创业系统加载中...</p>';
@@ -376,6 +495,7 @@ function renderCareerJobs(state, parent) {
   var careerHistory = career.history || [];
 
   var html = '<div class="tab-content">';
+  html += getCareerGuidanceHtml(state);
   html += '<h2 style="font-size:15px;">💼 上班族职业路径</h2>';
   html +=
     '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">v3.2：6条路径×22个职位。晋升需要技能+属性(体质/智力/敏捷/能力/颜值)+人脉。</p>';
@@ -536,6 +656,7 @@ function renderCareerJobs(state, parent) {
 /** 事业概览子面板 */
 function renderCareerOverview(state, parent) {
   var html = '<div class="tab-content">';
+  html += getCareerGuidanceHtml(state);
 
   // 创业摘要
   var startup = state.startup;
@@ -657,7 +778,9 @@ function checkCareerPromotion(state, pathId, level) {
 
   // 社交关系检查（高阶职位需要）
   if (level.reqSocial) {
-    if (getCareerTrustedNetworkCount(state) < Math.floor(level.reqSocial / 20)) {
+    if (
+      getCareerTrustedNetworkCount(state) < Math.floor(level.reqSocial / 20)
+    ) {
       return false;
     }
   }
@@ -774,6 +897,7 @@ function applyCareerJob(pathId, levelId) {
 
   // 初始化 career 状态
   if (!state.career) state.career = { currentJob: null, history: [] };
+  var cap = ensureCareerCapital(state);
   if (state.career.currentJob) {
     StateManager.addMessage(
       "⚠️ 你已经有工作了，先辞职才能投递新职位",
@@ -789,11 +913,15 @@ function applyCareerJob(pathId, levelId) {
     salary: level.salary,
     workDays: 0,
     startDay: state.player.day,
+    performance: 50,
   };
+  cap.reputation = (cap.reputation || 0) + 2;
+  cap.industryResources = (cap.industryResources || 0) + 1;
+  clampCareerCapital(cap);
 
   StateManager.addMessage(
     "✅ 入职成功！你成为了" +
-      path.name +
+      getCareerPathLabel(pathId) +
       "的" +
       level.name +
       "，月薪¥" +
@@ -825,6 +953,7 @@ function applyCareerPromotion(pathId, levelId) {
 
   // 晋升成功
   var oldJob = state.career.currentJob;
+  var cap = ensureCareerCapital(state);
   state.career.history.push({
     day: state.player.day,
     event: "晋升：" + oldJob.levelName + " → " + level.name,
@@ -833,6 +962,14 @@ function applyCareerPromotion(pathId, levelId) {
   state.career.currentJob.levelId = levelId;
   state.career.currentJob.levelName = level.name;
   state.career.currentJob.salary = level.salary;
+  state.career.currentJob.performance = Math.max(
+    45,
+    (state.career.currentJob.performance || 55) - 10,
+  );
+  cap.reputation = (cap.reputation || 0) + 8;
+  cap.industryResources = (cap.industryResources || 0) + 4;
+  cap.partnerTrust = (cap.partnerTrust || 0) + 2;
+  clampCareerCapital(cap);
 
   StateManager.addMessage(
     "🎉 晋升成功！你成为了" +
@@ -865,11 +1002,18 @@ function tickCareerJobDaily(state) {
   if (!state.career || !state.career.currentJob) return;
 
   var job = state.career.currentJob;
+  var cap = ensureCareerCapital(state);
   job.workDays = (job.workDays || 0) + 1;
+  job.performance = Math.max(0, Math.min(100, job.performance || 50));
+  cap.reputation = (cap.reputation || 0) + 0.1;
+  cap.burnout = Math.max(0, (cap.burnout || 0) + 0.04);
 
   // 每月1日发薪
   if (state.player.day % 30 === 1) {
     var salary = job.salary || 5000;
+    if (typeof applyDreamIncomeBonus === "function") {
+      salary = applyDreamIncomeBonus(state, salary, "salary");
+    }
     state.resources.cash += salary;
     state.resources.totalEarned += salary;
     StateManager.addMessage(
@@ -898,10 +1042,29 @@ function tickCareerJobDaily(state) {
       }
     }
   }
+  if (job.workDays > 0 && job.workDays % 20 === 0) {
+    var projectGain = Math.max(2, Math.floor((job.performance || 50) / 20));
+    job.performance = Math.min(100, job.performance + 5);
+    cap.industryResources = (cap.industryResources || 0) + projectGain;
+    cap.clientLeads = (cap.clientLeads || 0) + Math.max(1, projectGain - 1);
+    cap.burnout = (cap.burnout || 0) + 2;
+    clampCareerCapital(cap);
+    StateManager.addMessage(
+      "💼 完成了一个阶段项目：业绩+5，行业资源+" +
+        projectGain +
+        "，客户线索+" +
+        Math.max(1, projectGain - 1) +
+        "。这些积累未来可转化为跳槽或创业优势。",
+      "success",
+    );
+  }
 }
 
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
+  window.ensureCareerCapital = ensureCareerCapital;
+  window.getCareerCapitalStartupDiscount = getCareerCapitalStartupDiscount;
+  window.getStartupReadinessNote = getStartupReadinessNote;
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.career_dev = {
     id: "career_dev",

@@ -203,5 +203,6 @@ export const DISEASES: Disease[] = [
 export const DISEASE_CATALOG_STATUS = {
   migrated: DISEASES.length,
   legacySource: "src/js/data/illnesses.js + src/js/core/medical.js",
-  nextStep: "新增疾病继续按触发条件/治疗/医保/并发症四段建模，再由医疗系统接入。",
+  nextStep:
+    "新增疾病继续按触发条件/治疗/医保/并发症四段建模，再由医疗系统接入。",
 } as const;

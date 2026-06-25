@@ -280,5 +280,6 @@ export const LEGAL_CASES: LegalCase[] = [
 export const LEGAL_CATALOG_STATUS = {
   migrated: LEGAL_CASES.length,
   legacySource: "src/js/core/legal.js",
-  nextStep: "新增案件继续写入 LEGAL_CASES，并由法律面板或 bridge 注册到旧入口。",
+  nextStep:
+    "新增案件继续写入 LEGAL_CASES，并由法律面板或 bridge 注册到旧入口。",
 } as const;

@@ -1,788 +1,283 @@
-# 城市浮生记 v3.7 — 内容完善方案
-
-> 基于 subagent_result3.md 的问题诊断结果
-> 改进原则：保留现有核心玩法框架，修复不合理之处，增强系统关联性
-
----
-
-## 一、P0 问题改进方案（4项）
-
-### P0-1: 副业系统接入每日管线
-
-**现状**：`phase2/side_hustle.js`（~725行）已实现6类夜间经济，但未接入 `daily_pipeline.js`。
-
-**修改点**：
-
-1. **`phase1/daily_pipeline.js`** — 在 `night_activities` 步骤后添加 `side_hustle_tick` 步骤
-   ```javascript
-   // daily_pipeline.js 约 L530 处，在 night_activities 后添加：
-   step(32, "side_hustle_tick", function () {
-     if (typeof tickSideHustle === "function") {
-       tickSideHustle(state);
-     }
-   });
-   ```
-2. **`index.html`** — 确保 `side_hustle.js` 在 `daily_pipeline.js` 之后加载
-   ```html
-   <script src="js/phase2/side_hustle.js"></script>
-   ```
-3. **`core/state.js`** — 初始化 `state.sideHustle` 字段
-   ```javascript
-   state.sideHustle = {
-     active: false,
-     type: null, // 'stall' | 'driving' | 'freelance' | 'content' | 'sharing' | 'community'
-     fatigue: 0, // 副业疲劳度（影响次日主业效率）
-     income: 0, // 当日副业收入
-     reputation: 0, // 副业口碑
-   };
-   ```
-
-**预期效果**：
-
-- 玩家可以在白天上班/创业之余，晚上从事副业
-- 副业疲劳度影响次日主业KPI（疲劳度>50 → KPI -15%）
-- 副业收入受天气、行业热度、技能等级影响
-
-**修复成本**：~20行
-
-**风险与回滚**：
-
-- 风险：副业疲劳度计算可能影响主线平衡
-- 回滚：删除 `daily_pipeline.js` 的 `side_hustle_tick` 步骤，恢复 `state.js` 原字段
-
----
-
-### P0-2: 经济平衡 — 压缩创业收益 / 提升打工吸引力
-
-**现状**：创业月入¥200K+，打工P10月薪¥80K，差距2.5倍。
-
-**方案A：压缩创业收益**
-
-1. **`phase2/startup.js`** — 降低 growth 阶段月入
-   ```javascript
-   // startup.js L325+ 处
-   // 原：growth月入 = baseRevenue * 2.5
-   // 新：growth月入 = baseRevenue * 1.8
-   var growthMultiplier = 1.8; // 原 2.5
-   ```
-2. **`phase2/startup.js`** — 增加运营成本
-   ```javascript
-   // startup.js L340+ 处
-   // 原：monthlyCost = employeeCount * 8000
-   // 新：monthlyCost = employeeCount * 12000 + officeRent
-   var monthlyCost =
-     state.startup.employeeCount * 12000 + state.startup.officeRent;
-   ```
-
-**方案B：提升打工吸引力**
-
-1. **`data/corp.js`** — 提升P10月薪
-   ```javascript
-   // corp.js L200+ 处
-   // 原：P10月薪 = 80000
-   // 新：P10月薪 = 100000 + 期权价值
-   var p10Salary = 100000;
-   var stockOptions = Math.floor(player.skillLevel * 500); // 技能加成
-   ```
-2. **`ui/corp_ui.js`** — 增加职场福利展示
-   ```javascript
-   // corp_ui.js 新增福利Tab
-   renderCorpBenefits: function (state) {
-     var benefits = [
-       { name: "五险一金", value: "公司全额缴纳" },
-       { name: "年终奖", value: "2-4个月薪资" },
-       { name: "股票期权", value: "P8以上可获" },
-       { name: "补充医疗", value: "覆盖家属" }
-     ];
-     // 渲染福利列表
-   }
-   ```
-
-**推荐**：方案A + 方案B 组合，创业月入压缩至¥150K，打工P10月薪提升至¥100K+期权。
-
-**预期效果**：
-
-- 创业与打工的吸引力差距从2.5倍降至1.5倍
-- 玩家有更多职业选择，不再"最优解锁定"
-
-**修复成本**：~40行
-
-**风险与回滚**：
-
-- 风险：创业收益过低可能导致玩家放弃创业路线
-- 回滚：恢复 `startup.js` 和 `corp.js` 原数值
-
----
-
-### P0-3: 后期"钱太多没事做" — 增加维持性开支
-
-**现状**：`daily_pipeline.js` 已有 `wealth_overhead` 步骤，但开支数值偏低。
-
-**修改点**：
-
-1. **`phase1/needs.js`** — 增加维持性开支函数
-
-   ```javascript
-   /**
-    * 根据玩家财富等级计算维持性开支
-    * 资产¥50W+ → 月度开支¥10K-30K
-    * 资产¥1M+ → 月度开支¥30K-80K
-    * 资产¥5M+ → 月度开支¥80K-200K（含社交应酬、子女教育、健康管理）
-    */
-   function applyWealthBasedOverhead(state) {
-     var assets = state.player.cash + state.player.bankBalance;
-     var monthlyOverhead = 0;
-
-     if (assets >= 5000000) {
-       monthlyOverhead = 80000 + Math.random() * 120000; // ¥80K-200K
-     } else if (assets >= 1000000) {
-       monthlyOverhead = 30000 + Math.random() * 50000; // ¥30K-80K
-     } else if (assets >= 500000) {
-       monthlyOverhead = 10000 + Math.random() * 20000; // ¥10K-30K
-     }
-
-     // 开支类型：物业管理、子女教育、社交应酬、健康管理、保险
-     var overheadTypes = [
-       "物业费",
-       "子女教育",
-       "社交应酬",
-       "健康管理",
-       "商业保险",
-     ];
-     var overheadType =
-       overheadTypes[Math.floor(Math.random() * overheadTypes.length)];
-
-     state.player.cash -= monthlyOverhead;
-     state.player.monthlyOverhead = monthlyOverhead;
-     state.player.lastOverheadType = overheadType;
-
-     return monthlyOverhead;
-   }
-   ```
-
-2. **`phase1/daily_pipeline.js`** — 在 `wealth_overhead` 步骤调用
-   ```javascript
-   // daily_pipeline.js L34-39 处，增强现有逻辑
-   step(25, "wealth_overhead", function () {
-     if (typeof applyWealthBasedOverhead === "function") {
-       applyWealthBasedOverhead(state);
-     }
-   });
-   ```
-
-**预期效果**：
-
-- 资产¥50W+ 玩家每月有¥10K-30K 固定开支
-- 资产¥5M+ 玩家每月有¥80K-200K 固定开支
-- 后期玩家仍有经济压力，避免"钱太多没事做"
-
-**修复成本**：~60行
-
-**风险与回滚**：
-
-- 风险：开支过高可能导致玩家破产
-- 回滚：恢复 `needs.js` 原 `applyWealthBasedOverhead` 函数
-
----
-
-### P0-4: 链式事件队列填充稀疏
-
-**现状**：`checkChainEventQueue` 函数存在，但 `queueChainEvent` 调用稀疏。
-
-**修改点**：
-
-1. **`core/events_core.js`** — 增加更多事件的链式注册
-
-   ```javascript
-   /**
-    * 注册链式事件
-    * @param {string} eventId - 事件ID
-    * @param {number} delayDays - 延迟天数
-    * @param {object} conditions - 触发条件
-    */
-   function queueChainEvent(state, eventId, delayDays, conditions) {
-     if (!state.player.chainEventQueue) {
-       state.player.chainEventQueue = [];
-     }
-     state.player.chainEventQueue.push({
-       eventId: eventId,
-       triggerDay: state.player.day + delayDays,
-       conditions: conditions,
-       triggered: false,
-     });
-   }
-
-   // 在以下事件中调用 queueChainEvent：
-   // 1. 街头事件：found_wallet → 失主寻找（3天后）
-   // 2. 街头事件：stranger_invest → 后续投资（7天后）
-   // 3. 职场事件：猎头挖角 → 入职谈判（5天后）
-   // 4. 职场事件：公司裁员 → 再就业困难（10天后）
-   // 5. 创业事件：融资成功 → 团队扩张（14天后）
-   // 6. 创业事件：创业危机 → 资金链断裂风险（21天后）
-   // 7. NPC事件：好感≥60 → 深度对话（3天后）
-   // 8. NPC事件：好感≥80 → 合作机会（7天后）
-   ```
-
-2. **`core/events_core.js`** — 在 `checkChainEventQueue` 中增加事件质量检查
-
-   ```javascript
-   // events_core.js L388-430 处，增强逻辑
-   function checkChainEventQueue(state, phase) {
-     if (
-       !state.player.chainEventQueue ||
-       state.player.chainEventQueue.length === 0
-     ) {
-       return false;
-     }
-
-     var today = state.player.day;
-     var triggered = false;
-
-     for (var i = 0; i < state.player.chainEventQueue.length; i++) {
-       var event = state.player.chainEventQueue[i];
-       if (event.triggerDay <= today && !event.triggered) {
-         // 检查条件
-         if (checkEventConditions(event.conditions, state)) {
-           triggerChainEvent(state, event.eventId);
-           event.triggered = true;
-           triggered = true;
-         } else {
-           // 条件不满足，延迟1天再检查
-           event.triggerDay = today + 1;
-         }
-       }
-     }
-
-     // 移除已触发的事件
-     state.player.chainEventQueue = state.player.chainEventQueue.filter(
-       function (e) {
-         return !e.triggered;
-       },
-     );
-
-     return triggered;
-   }
-   ```
-
-**预期效果**：
-
-- 链式事件队列填充率从<30%提升至≥60%
-- 玩家体验更连贯的事件链，而非孤立事件
-
-**修复成本**：~80行
-
-**风险与回滚**：
-
-- 风险：事件链过多可能导致弹窗疲劳
-- 回滚：减少 `queueChainEvent` 调用点，恢复原逻辑
-
----
-
-## 二、P1 问题改进方案（6项）
-
-### P1-1: 新闻→投资UI透明化
-
-**修改点**：
-
-1. **`phase2/investment.js`** — 在投资Tab渲染中调用 `getNewsInvestmentSummary`
-
-   ```javascript
-   // investment.js UI渲染处
-   function renderInvestmentTab(state) {
-     // ... 现有渲染逻辑
-
-     // 新增：今日市场驱动板块
-     if (typeof getNewsInvestmentSummary === "function") {
-       var newsDrivers = getNewsInvestmentSummary(state);
-       renderNewsDriversPanel(newsDrivers);
-     }
-   }
-
-   function renderNewsDriversPanel(drivers) {
-     if (!drivers || drivers.length === 0) return;
-
-     var html = '<div class="news-drivers-panel">';
-     html += "<h4>📰 今日市场驱动</h4>";
-     drivers.forEach(function (d) {
-       html += '<div class="news-driver">';
-       html += '<span class="news-title">' + d.newsTitle + "</span>";
-       html += '<span class="news-impact ' + d.impactType + '">';
-       html += d.impactType === "positive" ? "↑" : "↓";
-       html += " " + d.impactValue + "%</span>";
-       html += "</div>";
-     });
-     html += "</div>";
-
-     document
-       .getElementById("investment-tab")
-       .insertAdjacentHTML("beforeend", html);
-   }
-   ```
-
-**预期效果**：
-
-- 玩家可以看到"科技股因为XX新闻上涨3%"的因果链
-- 新闻系统与股市的关联变得透明
-
-**修复成本**：~50行
-
----
-
-### P1-2: NPC好感→事件/装备/技能链路增强
-
-**修改点**：
-
-1. **`data/npcs.js`** — 为每个NPC增加好感门控事件
-   ```javascript
-   // npcs.js 每个NPC定义中增加 affinityEvents
-   var npcs = {
-     aunt_wang: {
-       // ... 现有定义
-       affinityEvents: [
-         { threshold: 30, event: "aunt_wang_plumber", desc: "水管维修优惠" },
-         { threshold: 60, event: "aunt_wang_introduce", desc: "介绍新客户" },
-         { threshold: 80, event: "aunt_wang_invest", desc: "共同投资小生意" },
-       ],
-     },
-     old_zhou: {
-       // ... 现有定义
-       affinityEvents: [
-         { threshold: 30, event: "old_zhou_tips", desc: "提供交易情报" },
-         { threshold: 60, event: "old_zhou_introduce", desc: "介绍供应商" },
-         { threshold: 80, event: "old_zhou_partnership", desc: "合伙做生意" },
-       ],
-     },
-     // ... 其他NPC
-   };
-   ```
-2. **`phase1/npc_event_bridge.js`** — 增加好感事件检查
-
-   ```javascript
-   function checkNpcAffinityEvents(state) {
-     for (var npcId in npcs) {
-       var npc = npcs[npcId];
-       var affinity = state.player.npcAffinity[npcId] || 0;
-       var affinityEvents = npc.affinityEvents || [];
-
-       affinityEvents.forEach(function (event) {
-         if (
-           affinity >= event.threshold &&
-           !state.player.npcEventUnlocked[npcId + event.event]
-         ) {
-           // 解锁事件
-           state.player.npcEventUnlocked[npcId + event.event] = true;
-           queueChainEvent(state, event.event, 1, { npcId: npcId });
-         }
-       });
-     }
-   }
-   ```
-
-**预期效果**：
-
-- 每个NPC有3条好感门控事件（30/60/80阈值）
-- NPC好感度与事件解锁、装备获取、技能连携形成完整链路
-
-**修复成本**：~100行
-
----
-
-### P1-3: 事件奖励动态缩放
-
-**修改点**：
-
-1. **`core/events_core.js`** — 增加事件奖励缩放函数
-
-   ```javascript
-   /**
-    * 根据玩家财富等级缩放事件奖励
-    * 财富等级 = floor(log10(player.cash + 1))
-    * 奖励缩放 = 1 + 财富等级 * 0.5
-    */
-   function scaleEventReward(baseReward, state) {
-     var wealthLevel = Math.floor(Math.log10(state.player.cash + 1));
-     var scale = 1 + wealthLevel * 0.5;
-     return Math.floor(baseReward * scale);
-   }
-
-   // 在事件触发处调用：
-   // found_wallet: scaleEventReward(80 + Math.random() * 200, state)
-   // stranger_invest: scaleEventReward(300 + Math.random() * 400, state)
-   ```
-
-**预期效果**：
-
-- Day1 事件奖励¥80-280
-- Day100（资产¥50K）事件奖励¥120-420
-- Day365（资产¥500K）事件奖励¥200-700
-- 事件奖励与玩家财富等级匹配
-
-**修复成本**：~30行
-
----
-
-### P1-4: 家庭系统深化
-
-**修改点**：
-
-1. **`phase2/family_life.js`** — 实现结婚系统
-
-   ```javascript
-   /**
-    * 结婚条件：
-    * 1. 好感≥80的NPC（配偶候选人）
-    * 2. 特定事件（求婚成功）
-    * 3. 资产≥¥200K（购房/婚礼预算）
-    */
-   function checkMarriageEligibility(state) {
-     for (var npcId in npcs) {
-       var npc = npcs[npcId];
-       var affinity = state.player.npcAffinity[npcId] || 0;
-       if (affinity >= 80 && npc.canMarry && !state.player.spouse) {
-         // 求婚事件可触发
-         queueChainEvent(state, "marriage_proposal", 3, { npcId: npcId });
-       }
-     }
-   }
-
-   function triggerMarriage(state, npcId) {
-     state.player.spouse = npcId;
-     state.player.marriageDay = state.player.day;
-     // 婚礼开支
-     var weddingCost = 100000 + Math.random() * 100000; // ¥100K-200K
-     state.player.cash -= weddingCost;
-     // 配偶加成
-     state.player.spouseBonus = {
-       happiness: 5, // 心情加成
-       income: 0.05, // 收入加成5%
-     };
-   }
-   ```
-
-2. **`phase2/family_life.js`** — 实现生子/子女教育
-
-   ```javascript
-   function triggerPregnancy(state) {
-     // 结婚后30-180天随机触发
-     state.player.pregnancyDay = state.player.day;
-     state.player.pregnancyDuration = 180; // 6个月
-   }
-
-   function triggerChildbirth(state) {
-     state.player.child = {
-       name: generateChildName(state.player.spouse),
-       birthDay: state.player.day,
-       age: 0,
-       attributes: {
-         体质: Math.floor(Math.random() * 50) + 30,
-         智力: Math.floor(Math.random() * 50) + 30,
-         敏捷: Math.floor(Math.random() * 50) + 30,
-         心智: Math.floor(Math.random() * 50) + 30,
-       },
-       education: {
-         level: "幼儿园",
-         school: null,
-         expenses: 0,
-       },
-     };
-     // 子女教育开支
-     state.player.childExpenses = 5000; // 每月¥5K
-   }
-   ```
-
-**预期效果**：
-
-- 结婚系统：好感≥80 + 资产≥¥200K → 求婚 → 婚礼
-- 生子系统：结婚后随机触发怀孕 → 6个月后生子
-- 子女教育：每月开支¥5K-20K（随教育阶段递增）
-
-**修复成本**：~200行
-
----
-
-### P1-5: 装备获取来源
-
-**修改点**：
-
-1. **`core/equipment_suites.js`** — 增加装备掉落逻辑
-
-   ```javascript
-   /**
-    * 装备掉落来源：
-    * 1. 街头事件：拾荒/废品交易 → 随机装备
-    * 2. 职场奖励：晋升/优秀员工 → 职场装备
-    * 3. 创业成就：融资成功/IPO → 创业装备
-    * 4. NPC赠送：好感≥80 → 特定装备
-    * 5. 商城购买：使用游戏内货币购买
-    */
-   function rollEquipmentDrop(state, source) {
-     var equipmentPool = getEquipmentPoolBySource(source);
-     if (!equipmentPool || equipmentPool.length === 0) return null;
-
-     var equipment =
-       equipmentPool[Math.floor(Math.random() * equipmentPool.length)];
-     var quality = rollEquipmentQuality(); // 普通/稀有/史诗/传说
-     var enchant = rollEnchantment(quality);
-
-     return {
-       id: equipment.id,
-       name: equipment.name,
-       quality: quality,
-       enchant: enchant,
-       durability: equipment.maxDurability,
-       source: source,
-     };
-   }
-   ```
-
-2. **`data/items.js`** — 增加装备掉落表
-   ```javascript
-   var equipmentDrops = {
-     street: [
-       {
-         id: "eq_wrench",
-         name: "多功能扳手",
-         quality: "common",
-         maxDurability: 50,
-       },
-       {
-         id: "eq_flashlight",
-         name: "强光手电筒",
-         quality: "common",
-         maxDurability: 80,
-       },
-       {
-         id: "eq_work_gloves",
-         name: "劳保手套",
-         quality: "common",
-         maxDurability: 100,
-       },
-     ],
-     corporate: [
-       {
-         id: "eq_laptop",
-         name: "商务笔记本",
-         quality: "rare",
-         maxDurability: 200,
-       },
-       { id: "eq_suit", name: "定制西装", quality: "rare", maxDurability: 150 },
-     ],
-     startup: [
-       {
-         id: "eq_smartwatch",
-         name: "智能手表",
-         quality: "epic",
-         maxDurability: 300,
-       },
-       {
-         id: "eq_nfc_card",
-         name: "NFC门禁卡",
-         quality: "epic",
-         maxDurability: 500,
-       },
-     ],
-   };
-   ```
-
-**预期效果**：
-
-- 装备有明确获取来源（掉落/购买/制作/NPC赠送）
-- 玩家有动力参与街头/职场/创业活动以获取装备
-
-**修复成本**：~80行
-
----
-
-### P1-6: 35岁危机追访链稳定性
-
-**修改点**：
-
-1. **`core/events_core.js`** — 增加追访事件优先级
-
-   ```javascript
-   /**
-    * 追访事件优先级提升：
-    * 1. 在特定天范围内（35岁危机：Day340-370），追访事件权重×3
-    * 2. 追访事件独立于RANDOM_EVENTS池，单独抽选
-    */
-   function rollStreetEvent(state) {
-     // 检查是否有追访事件待触发
-     var crisisFollowups = getCrisisFollowups(state);
-     if (crisisFollowups.length > 0) {
-       // 追访事件独立抽选，权重×3
-       var followupWeight = 3;
-       var totalWeight =
-         followupWeight * crisisFollowups.length + getNormalEventWeight(state);
-       var roll = Math.random() * totalWeight;
-
-       if (roll < followupWeight * crisisFollowups.length) {
-         // 触发追访事件
-         var followup =
-           crisisFollowups[Math.floor(Math.random() * crisisFollowups.length)];
-         triggerEvent(followup);
-         return true;
-       }
-     }
-
-     // 正常事件抽选
-     // ...
-   }
-   ```
-
-**预期效果**：
-
-- 35岁危机追访事件在特定天范围内触发率提升至≥80%
-- 追访事件不会被其他事件挤掉
-
-**修复成本**：~40行
-
----
-
-## 三、P2 问题改进方案（6项）
-
-### P2-1: 装备/技能连携UI反馈
-
-**修改点**：
-
-1. **`ui/render.js`** — 新增装备套装Tab
-
-   ```javascript
-   // render.js 新增装备套装Tab
-   function renderEquipmentSuitesTab(state) {
-     var suites = state.equipmentSuites || [];
-     if (suites.length === 0) {
-       return '<div class="empty-state">暂无装备套装</div>';
-     }
-
-     var html = '<div class="equipment-suites-tab">';
-     suites.forEach(function (suite) {
-       html += '<div class="suite-card">';
-       html += "<h4>" + suite.name + "</h4>";
-       html += '<div class="suite-items">';
-       suite.items.forEach(function (item) {
-         html += '<span class="item-badge">' + item.name + "</span>";
-       });
-       html += "</div>";
-       html += '<div class="suite-bonus">';
-       html += "<strong>套装效果：</strong>" + suite.bonus;
-       html += "</div>";
-       html += "</div>";
-     });
-     html += "</div>";
-
-     return html;
-   }
-   ```
-
-**预期成本**：~80行
-
----
-
-### P2-2: main.js 模块化重构
-
-**修改点**：
-
-1. 拆出 `main_events.js`（事件相关函数）
-2. 拆出 `main_actions.js`（行动相关函数）
-3. 拆出 `main_ui.js`（UI相关函数）
-
-**预期成本**：~200行（分阶段进行）
-
----
-
-### P2-3: investment.bak.js 清理
-
-**修改点**：
-
-1. **`index.html`** — 移除 `investment.bak.js` script 标签
-
-**预期成本**：1行
-
----
-
-### P2-4: 道德事件链深度
-
-**修改点**：
-
-1. **`data/moral_events.js`** — 增加极端生存困境事件
-   ```javascript
-   var moralEvents = [
-     // ... 现有事件
-     {
-       id: "moral_steal_medicine",
-       title: "偷药救孩子",
-       desc: "孩子病重，需要¥5000的药，但你只有¥500。药店老板不在，你可以偷药。",
-       choices: [
-         { text: "偷药", consequence: "moral_steal_medicine_steal" },
-         { text: "不偷", consequence: "moral_steal_medicine_not" },
-         { text: "借钱", consequence: "moral_steal_medicine_borrow" },
-       ],
-     },
-   ];
-   ```
-
-**预期成本**：~100行
-
----
-
-### P2-5: 多周目继承衔接
-
-**修改点**：
-
-1. **`core/inheritance_chain.js`** — 单周目结束时显示"传承潜力评估"
-   ```javascript
-   function showInheritancePotential(state) {
-     var potential = calculateInheritancePotential(state);
-     // 显示评估结果：声誉徽章、NPC记忆、技能树保留、现金继承
-     // 引导玩家做出有意义的传承币选择
-   }
-   ```
-
-**预期成本**：~60行
-
----
-
-### P2-6: 社交网络系统
-
-**修改点**：
-
-1. 新建 `core/social_network.js`（微信朋友圈/微博机制）
-2. NPC通过社交网络传递信息
-3. "热搜"事件影响世界参数
-
-**预期成本**：~300行
-
----
-
-## 四、修复验证清单
-
-| 检查项       | 验证方法                              | 预期结果                       |
-| ------------ | ------------------------------------- | ------------------------------ |
-| 副业系统接入 | 测试 Day>60 后能否在白天上班+晚上摆摊 | 副业Tab可见，疲劳度影响次日KPI |
-| 经济平衡     | 创业月入≤¥150K 或 打工P10月薪≥¥100K   | 创业与打工吸引力差距≤1.5倍     |
-| 后期开支     | 资产¥50W+后每月开支≥¥10K              | 维持性开支消耗富余现金         |
-| 链式事件填充 | 队列填充率≥60%                        | 事件链连贯性提升               |
-| 新闻→投资UI  | 投资Tab展示"今日市场驱动"板块         | 可见新闻→股价因果链            |
-| NPC好感事件  | 每个NPC至少2条好感门控事件            | 好感≥30/60/80触发对应事件      |
-| 事件奖励缩放 | Day365事件奖励≥¥200                   | 奖励与财富等级匹配             |
-| 家庭系统     | 结婚/生子/子女教育完整循环            | 家庭开支影响经济               |
-| 装备获取     | 装备有明确来源                        | 玩家有动力参与活动             |
-| 35岁危机追访 | 特定天范围内触发率≥80%                | 追访事件不被挤掉               |
-
----
-
-## 五、开发节奏建议
-
-| 周期        | 任务                                                 | 估时 |
-| ----------- | ---------------------------------------------------- | ---- |
-| **第1周**   | P0-1 副业系统接入 + P0-3 后期开支                    | 4h   |
-| **第2周**   | P0-2 经济平衡 + P0-4 链式事件填充                    | 4h   |
-| **第3周**   | P1-1 新闻→投资UI + P1-2 NPC好感链路 + P1-3 事件奖励  | 4h   |
-| **第4周**   | P1-4 家庭系统 + P1-5 装备获取 + P1-6 35岁危机        | 6h   |
-| **第5-6周** | P2问题（装备UI/主文件重构/道德事件/多周目/社交网络） | 10h  |
-
-**总计**：~28小时（约3-4周）
-
----
-
-_方案生成：Hermes Agent | 基于 subagent_result3.md | 版本：v3.7_
+# 子任务4：内容完善方案（2026-06-26 本轮）
+
+> 范围：只基于 `plans/2026-06-26-v3-review-execution-context.md`、`CLAUDE.md`、`memory/review-improve-v3.0.md`、`subagent_result1.md`、`subagent_result2.md`、`subagent_result3.md` 提出方案，不修改源码。  
+> 目标：保留现有核心玩法框架，修复不合理之处，增强系统间关联和联动，确保逻辑自洽。
+
+## 一、改进方案清单
+
+### 1. 人生目标改为可跳过，并给选择目标明确加成
+
+- 具体修改点：
+  - 将 `showForcedDreamModal()` 从“必须选择后继续”改成“选择一个目标 / 暂时不选”。
+  - 跳过后写入 `state.flags._dreamSkipped = true` 或同等字段，避免三种模式开局后重复强弹。
+  - 选择目标时写入一个轻量目标加成状态，例如 `state.activeDreamBonus`，只做小幅、可解释、可感知的收益。
+  - 在目标卡片、个人成长页或侧栏摘要中显示“当前目标加成”和“下个里程碑奖励”。
+- 影响文件/模块：
+  - `src/js/core/dreams.js`
+  - `src/js/main.js`
+  - `src/js/ui/render.js`
+  - 可能涉及 `src/js/core/state.js` 或存档迁移逻辑
+- 预期效果：
+  - 开局节奏不再被目标弹窗阻断。
+  - 目标从“剧情收藏任务”变成有策略价值的可选志向。
+  - 经典、剧本、沙盒三种模式都能保持自由进入。
+- 风险：
+  - 加成过强会让目标变成最优解，破坏沙盒自由。
+  - 跳过字段如果未随新游戏重置，可能影响下一局。
+- 验证方式：
+  - 分别从经典、剧本、沙盒开局，确认均可跳过并进入游戏。
+  - 跳过后推进 3 天，确认不再重复强弹。
+  - 选择目标后确认 UI 显示加成，相关行动或里程碑奖励实际生效。
+
+### 2. 统一经典/剧本/沙盒开局通用初始化
+
+- 具体修改点：
+  - 抽出或复用一套 `initializeCommonGameSystems()`，让三种开局都执行相同的系统初始化。
+  - 通用初始化至少覆盖天气、装备耐久、时代、副业、世界参数、NPC 关系、医疗、旅行、法律、多周目/传承、每日统计基线等。
+  - 经典、剧本、沙盒只在通用初始化之后叠加各自差异参数。
+  - 沙盒默认预设重新定位：默认无债务或明确标注为“挑战沙盒”；债务型配置单独作为挑战预设。
+- 影响文件/模块：
+  - `src/js/main.js`
+  - `src/js/data/scenarios.js`
+  - 可能新增或迁移到 `src/js/core/game_lifecycle.js`
+- 预期效果：
+  - 避免某些系统只在经典模式可用、剧本/沙盒缺字段或 UI 异常。
+  - 沙盒定位更清晰，不再同时像“自由练习”和“隐性负债挑战”。
+- 风险：
+  - 初始化顺序敏感，改动可能影响存档、新游戏、剧本开场事件。
+  - 抽取过大容易碰到 `main.js` 多处隐式依赖。
+- 验证方式：
+  - 三种模式开局后检查天气、NPC、医疗、旅行、法律、传承、装备耐久状态存在且不报错。
+  - 沙盒默认开局检查现金、债务、健康、住所、位置与预设说明一致。
+  - 用 `npm run check:js`、`npm run typecheck`、`python build.py` 验证。
+
+### 3. 修复职业方向重复图标，并建立 name/icon 字段规范
+
+- 具体修改点：
+  - `CAREER_PATHS` 等数据里的 `name` 只保留纯文本，如 `IT技术`、`金融分析`。
+  - `icon` 单独保留 emoji 或图标字段。
+  - 渲染层统一拼接 `icon + name`，不要让数据层和渲染层都加图标。
+  - 顺手扫描目标、技能、事业子 Tab、职业路径等同类数据，修复 `name` 自带 emoji 且渲染层再次拼接的模式。
+- 影响文件/模块：
+  - `src/js/ui/career_dev.js`
+  - 可能涉及 `src/js/core/dreams.js`、`src/js/data/skills.js`、`src/js/ui/render.js`
+- 预期效果：
+  - 消除“图标 图标 名称”显示问题。
+  - 建立后续内容数据的显示规范，减少 UI 字段混用。
+- 风险：
+  - 如果某些地方直接使用 `name` 并期待包含 emoji，修改后局部显示会变朴素。
+- 验证方式：
+  - 打开事业发展页，确认所有职业方向卡片无重复图标。
+  - 搜索 `name: "😀` 类模式或同等 emoji 前缀，确认同类数据已处理或记录后续项。
+  - 跑 `npm run check:js`。
+
+### 4. 事业发展页增加“下一步建议”和上班族日常循环
+
+- 具体修改点：
+  - 在事业发展页顶部增加轻量摘要：当前职业状态、下一步建议、本周可做动作。
+  - 上班族路径增加少量高质量日常决策，不堆数量：绩效项目、跳槽报价、加班健康损耗、同事支持、裁员风险、证书/学历机会。
+  - 每个决策都要有可预期后果：绩效、薪资、健康、同事关系、行业资源、创业线索。
+  - 不重做职业系统，只在现有 `career_dev` 和事件池上补反馈闭环。
+- 影响文件/模块：
+  - `src/js/ui/career_dev.js`
+  - `src/js/core/cross_system_events.js`
+  - `src/js/phase1/daily_pipeline.js` 或职业每日 tick
+- 预期效果：
+  - 上班族不再只是“满足条件 -> 等天数 -> 晋升”。
+  - 玩家更清楚今天该为事业做什么。
+  - 创业和职场的深度差距缩小。
+- 风险：
+  - 如果事件触发频率过高，会让职场线压过生存主循环。
+  - 决策收益过强可能让上班族成为单一路径最优解。
+- 验证方式：
+  - 入职后推进 30-60 天，确认能看到事业建议和至少一次职场反馈。
+  - 检查绩效、健康、关系、薪资或行业资源至少一项真实变化。
+  - 验证未入职、创业中、失业状态下建议文案不误导。
+
+### 5. 建立上班族与创业的三条资源互通链
+
+- 具体修改点：
+  - 在职积累行业资源/客户线索，创业时降低获客、注册、市场调研或早期订单成本。
+  - 高人脉或关键 NPC 好感解锁合伙人、融资可信度或供应商折扣。
+  - 创业失败后回流职场，保留经验标签，但可能附带债务、声誉损伤或心理压力。
+- 影响文件/模块：
+  - `src/js/ui/career_dev.js`
+  - `src/js/phase2/startup.js`
+  - `src/js/core/cross_system_events.js`
+  - `src/js/data/npcs.js`
+- 预期效果：
+  - 创业和上班族成为同一条事业人生链，而不是两个并排系统。
+  - 玩家在职场积累能转化为创业优势，创业失败也能生成后续故事。
+- 风险：
+  - `startup.js` 体量极大，直接改动风险高；建议先通过小型桥接函数或已有入口接入。
+  - 资源互通如果没有 UI 提示，玩家仍感知不到。
+- 验证方式：
+  - 带行业资源进入创业，确认成本、线索或成功率变化可见。
+  - 创业失败后确认职场入口展示回流影响。
+  - 对比无资源/有资源两种状态的注册或早期经营反馈。
+
+### 6. 剧本模式增加持续反馈，不只改开局属性
+
+- 具体修改点：
+  - 让 `_currentScenario` / `_scenarioTags` 驱动 1-2 条后续事件或提示。
+  - 剧本开局事件之后，在第 7/15/30 天左右给主题反馈，例如债务压力、职业机会、家庭牵挂、健康隐患。
+  - 剧本后续事件不要另起大系统，优先复用链式事件或现有随机事件权重。
+- 影响文件/模块：
+  - `src/js/data/scenarios.js`
+  - `src/js/core/events_core.js`
+  - `src/js/core/cross_system_events.js`
+  - `src/js/main.js`
+- 预期效果：
+  - 剧本模式有持续主题，不再只是“初始属性包”。
+  - 和经典模式形成差异，同时共享同一套核心系统。
+- 风险：
+  - 剧本事件过强会像强制主线，削弱沙盒感。
+  - 事件字段若继续混用 `trigger/conditions`，可能定义后不触发。
+- 验证方式：
+  - 选择一个剧本推进 30 天，确认至少出现一次主题反馈。
+  - 检查经典和沙盒不会误触发剧本专属事件。
+
+### 7. UI 分类先局部收敛，不做大规模 Tab 重构
+
+- 具体修改点：
+  - 本轮不迁移顶层 Tab，以免破坏现有入口。
+  - 在事业发展页内部强化聚合：创业、上班族、副业、事业建议放在同一语义下。
+  - 在个人成长/人生事务之间增加引导文案或快捷入口，避免玩家找不到目标、医疗、旅行、法律。
+  - 后续再规划顶层收敛：`人生` 合并个人成长+人生事务，`资产` 合并交易+物品+投资。
+- 影响文件/模块：
+  - `src/index.html`
+  - `src/js/ui/render.js`
+  - `src/js/ui/career_dev.js`
+- 预期效果：
+  - 低风险改善“入口太散”的体验。
+  - 保留当前玩家熟悉的导航结构。
+- 风险：
+  - 只做局部收敛不能彻底解决顶层 Tab 多的问题。
+  - 快捷入口过多又可能形成新的冗余。
+- 验证方式：
+  - 打开主要 Tab，确认不新增重复入口。
+  - 事业发展页能一眼看到当前事业状态和下一步。
+  - 移动/窄屏下按钮不换行错乱。
+
+### 8. 事件字段规范和关键链路补漏
+
+- 具体修改点：
+  - 审计事件定义里的 `conditions/trigger`、`choices/options`、`name/icon/title` 混用。
+  - 优先修会导致“不触发”“重复图标”“选项不显示”的字段，而不是全量重构。
+  - 对目标、职业、剧本、创业失败回流、医疗/法律/旅行各补一条轻量后果链。
+- 影响文件/模块：
+  - `src/js/core/events_core.js`
+  - `src/js/core/cross_system_events.js`
+  - `src/js/data/moral_events.js`
+  - 相关数据文件
+- 预期效果：
+  - 现有内容能更稳定地被正式入口消费。
+  - 减少“数据有了但玩家玩不到”的问题。
+- 风险：
+  - 字段规范如果一次改太多，容易引入事件池回归。
+- 验证方式：
+  - 写轻量脚本或用现有检查扫描关键字段。
+  - 触发至少 2 条改动链路事件，确认选择和后果生效。
+
+### 9. 人生事务四系统补轻量后果链
+
+- 具体修改点：
+  - 医疗：医保复核成功降低一次医疗债务或治疗费用；拖延治疗提升法律/债务风险。
+  - 旅行：旅行中可能获得 NPC、行业线索、身心恢复或突发支出。
+  - 法律：败诉影响债务、职场信用或创业融资可信度；胜诉带来赔偿或压力下降。
+  - 人生节点：35 岁危机、退休等节点提供提前提示和后续选择，而非硬时间点突发。
+- 影响文件/模块：
+  - `src/js/core/medical.js`
+  - `src/js/core/travel.js`
+  - `src/js/core/legal.js`
+  - `src/js/core/life_nodes.js`
+  - `src/js/core/cross_system_events.js`
+- 预期效果：
+  - 人生事务面板从展示集合变成真正互相影响的生活系统。
+  - 提升长期选择的因果感。
+- 风险：
+  - 如果同一天触发过多后果，会增加信息噪音。
+- 验证方式：
+  - 分别触发医疗、旅行、法律状态，确认至少一个后果进入债务、NPC、职业或创业系统。
+  - 检查人生节点前后提示是否按预期出现。
+
+## 二、对用户 5 条反馈的对应落地方案
+
+1. 开局不再强制选择人生目标
+   - 本轮必须落地：目标弹窗增加“暂时不选”，跳过后不再强制弹出。
+   - 同步落地：选择目标时提供可见小加成，UI 显示当前加成和下个里程碑。
+
+2. 剧本模式、沙盒模式对照经典模式审查并修复不合理逻辑
+   - 本轮必须落地：统一通用初始化入口，剧本/沙盒只叠加差异。
+   - 同步落地：沙盒默认去掉隐性债务压力，或把债务预设明确命名为挑战型。
+   - 后续增强：每个剧本补 1-2 条持续反馈事件。
+
+3. 检查并优化 UI 布局，尤其 Tab 和小类冗余
+   - 本轮建议落地：事业发展页内部先收敛，增加“当前事业下一步”和“本周可做动作”。
+   - 后续处理：顶层 Tab 合并为更少大类，例如人生、资产、事业、社交、世界、百科/成就。
+
+4. 修复职业方向选择里的重复图标，并检查其他 Tab/子 Tab/小 Tab
+   - 本轮必须落地：职业路径 `name` 去 emoji，`icon` 由独立字段控制，渲染层统一拼接。
+   - 同步检查：目标、技能、事业子 Tab 等同类 `name/icon` 混用点。
+
+5. 继续完善事业发展系统，重点覆盖创业与上班族，增加玩法深度、现实逻辑和跨系统联动
+   - 本轮必须落地：上班族增加轻量日常循环和事业建议面板。
+   - 本轮尽量落地：上班族与创业建立 2-3 条资源互通链。
+   - 后续增强：创业失败回流、职场声誉、行业资源、客户线索、合伙人可信度形成更完整长期链路。
+
+## 三、P0/P1/P2 实施顺序建议
+
+### P0：本轮必须优先实装
+
+1. 人生目标可跳过，并且跳过后不重复强弹。
+2. 人生目标选择后提供小幅、可见、可验证加成。
+3. 修复职业方向重复图标，并建立 `name` 纯文本、`icon` 单独字段的规范。
+4. 统一经典/剧本/沙盒通用初始化，至少补齐核心系统初始化。
+5. 修正沙盒默认定位，避免默认同时“自由”和“负债挑战”。
+
+### P1：本轮建议尽量实装
+
+1. 事业发展页增加“当前事业下一步 / 本周可做动作”摘要。
+2. 上班族增加少量高质量日常决策或事件。
+3. 创业与上班族建立最小资源互通：行业资源、客户线索、人脉/合伙人、失败回流任选 2-3 条先落地。
+4. 剧本模式增加至少一条后续主题反馈。
+
+### P2：后续打磨
+
+1. 顶层 Tab 大规模收敛。
+2. 医疗/旅行/法律/人生节点之间补完整后果链。
+3. 新闻/世界参数增加更清晰的“今日适合做什么”可视化。
+4. 事件字段规范做自动审计并逐步修复。
+5. 装备品质和套装 UI 激活。
+
+## 四、本轮必须实装与后续保留
+
+### 本轮必须实装
+
+- 人生目标可跳过。
+- 目标选择有可见加成。
+- 职业重复图标修复。
+- 经典/剧本/沙盒共用核心初始化。
+- 沙盒默认逻辑修正或说明修正。
+- 事业发展页至少增加“下一步建议”，让用户能看到上班族/创业下一步。
+
+### 本轮应尽量实装
+
+- 上班族日常循环补 2-3 个高质量事件或决策。
+- 创业与上班族资源互通补 2 条稳定链路。
+- 剧本模式补 1 条后续反馈。
+- 同类 `name/icon` 混用点做一次轻量扫描并记录未修项。
+
+### 留作后续
+
+- 顶层 Tab 合并和大规模 UI 信息架构重排。
+- 4 大扩展系统之间完整后果链。
+- TS 数据目录全面接入 legacy 正式入口。
+- `startup.js`、`events_street.js`、`render.js` 大文件拆分。
+- 装备品质/套装系统完整玩家感知 UI。
+
+## 五、给实装子任务的收敛建议
+
+本轮不要先做大规模 UI 重构，也不要继续堆大量新事件。最稳的路径是先修入口和一致性：目标弹窗、开局初始化、职业图标、沙盒定位；然后在事业发展页补一个清晰的“下一步建议”面板和少量上班族/创业互通逻辑。这样能直接覆盖用户 5 条反馈，同时避免在 `startup.js`、`render.js`、`main.js` 三个超大文件里同时大改。
+
+_子任务4完成。_

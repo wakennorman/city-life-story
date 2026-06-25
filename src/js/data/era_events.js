@@ -151,7 +151,7 @@ const ERA_EVENTS = [
       },
       {
         text: "🏠 找便宜的房子",
-        hint: "AP消耗，可能找到更便宜的",
+        hint: "消耗行动力，可能找到更便宜的",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
           st.player.actionPoints = Math.max(

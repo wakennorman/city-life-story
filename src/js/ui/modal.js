@@ -1328,7 +1328,7 @@ function showScavengeRouteModal() {
     var apBadge = document.createElement("span");
     apBadge.style.cssText =
       "background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;";
-    apBadge.textContent = "⚡" + r.ap + "AP";
+    apBadge.textContent = "⚡" + r.ap + "行动力";
     card.appendChild(headerRow);
     headerRow.appendChild(apBadge);
 
@@ -1359,7 +1359,7 @@ function showScavengeRouteModal() {
       var apWarnEl = document.createElement("div");
       apWarnEl.style.cssText =
         "color:#e67e22;font-size:11px;margin-bottom:6px;";
-      apWarnEl.textContent = "⚡ 行动力不足（需要 " + r.ap + "AP）";
+      apWarnEl.textContent = "⚡ 行动力不足（需要 " + r.ap + "行动力）";
       card.appendChild(apWarnEl);
     }
 

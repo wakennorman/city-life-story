@@ -577,5 +577,6 @@ export const EVENT_CATALOG_STATUS = {
   migrated: EVENTS.length,
   legacySource:
     "src/js/core/events_core.js + events_street.js + events_corp.js",
-  nextStep: "新增事件继续进入 src/app/data/events，再由 bridge 分批接入 legacy。",
+  nextStep:
+    "新增事件继续进入 src/app/data/events，再由 bridge 分批接入 legacy。",
 } as const;

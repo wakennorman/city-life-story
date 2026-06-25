@@ -32,24 +32,24 @@ src/app/data/      webapp_runtime_bridge.js    旧游戏 actions + UI
 ```typescript
 // src/app/data/events/index.ts
 export interface GameEvent {
-  id: string;                              // 唯一 ID，如 "street_robbery"
-  name: string;                            // 显示名称
-  icon: string;                            // 图标 emoji
-  description: string;                     // 事件描述
+  id: string; // 唯一 ID，如 "street_robbery"
+  name: string; // 显示名称
+  icon: string; // 图标 emoji
+  description: string; // 事件描述
   trigger: {
     type: "random" | "chain" | "timed" | "location";
-    dayMin: number;                        // 最早触发天数
-    dayMax?: number;                       // 最晚触发天数
-    weight: number;                        // 权重（相对概率）
-    prerequisites?: string[];              // 前置条件（flag 或布尔表达式）
-    location?: string;                     // 触发地点（location 类型时）
+    dayMin: number; // 最早触发天数
+    dayMax?: number; // 最晚触发天数
+    weight: number; // 权重（相对概率）
+    prerequisites?: string[]; // 前置条件（flag 或布尔表达式）
+    location?: string; // 触发地点（location 类型时）
   };
   choices: Array<{
     id: string;
     text: string;
     hint: string;
     effects: Array<{
-      target: string;                      // 状态路径，如 "player.health"
+      target: string; // 状态路径，如 "player.health"
       op: "add" | "set" | "mul";
       value: number;
     }>;
@@ -57,8 +57,8 @@ export interface GameEvent {
   }>;
   narrativeBefore: string;
   narrativeAfter: (choiceId: string) => string;
-  followUp?: string;                       // 可选的链式事件 ID
-  tags: string[];                          // 分类标签，如 ["crime", "street", "daytime"]
+  followUp?: string; // 可选的链式事件 ID
+  tags: string[]; // 分类标签，如 ["crime", "street", "daytime"]
 }
 
 export const EVENTS: GameEvent[] = [
@@ -79,13 +79,13 @@ export interface Job {
   category: "street" | "corporate" | "freelance" | "public";
   requirements: Array<{ field: string; min?: number }>;
   baseSalary: number;
-  salaryGrowth: number;                    // 每级涨幅
+  salaryGrowth: number; // 每级涨幅
   maxLevel: number;
-  skills: string[];                        // 关联技能
-  stressPerDay: number;                    // 日常压力
+  skills: string[]; // 关联技能
+  stressPerDay: number; // 日常压力
   description: string;
-  unlockDescription: string;               // 解锁条件文案
-  events?: string[];                       // 关联事件 ID（引用 events/）
+  unlockDescription: string; // 解锁条件文案
+  events?: string[]; // 关联事件 ID（引用 events/）
 }
 
 export const JOBS: Job[] = [
@@ -103,15 +103,15 @@ export interface Location {
   icon: string;
   category: "work" | "life" | "gov" | "entertainment" | "service";
   description: string;
-  requires?: string[];                     // 解锁条件
+  requires?: string[]; // 解锁条件
   availableActions: Array<{
-    id: string;                            // 关联的行动 ID
+    id: string; // 关联的行动 ID
     name: string;
     apCost: number;
     minDay?: number;
   }>;
-  services?: string[];                     // 关联的城市服务 ID
-  npcs?: string[];                         // 关联的 NPC ID
+  services?: string[]; // 关联的城市服务 ID
+  npcs?: string[]; // 关联的 NPC ID
 }
 
 export const LOCATIONS: Location[] = [
@@ -129,12 +129,12 @@ export interface Item {
   icon: string;
   category: "tool" | "consumable" | "equipment" | "souvenir" | "special";
   description: string;
-  value: number;                           // 基础价值
+  value: number; // 基础价值
   rarity: "common" | "uncommon" | "rare" | "legendary";
-  obtainFrom: string[];                    // 获取途径说明
+  obtainFrom: string[]; // 获取途径说明
   useEffect?: Array<{ target: string; op: string; value: number }>;
   durability?: number;
-  wikiEntry: string;                       // 百科展示字段
+  wikiEntry: string; // 百科展示字段
   tags: string[];
 }
 
@@ -155,18 +155,18 @@ export interface Disease {
   triggerConditions: {
     healthBelow?: number;
     season?: string;
-    exposure?: string;                     // 暴露途径
+    exposure?: string; // 暴露途径
     probability: number;
   };
-  symptoms: string[];                      // 症状描述
+  symptoms: string[]; // 症状描述
   treatment: {
     type: "rest" | "medicine" | "surgery";
     cost: number;
-    duration: number;                      // 治疗天数
-    effectPerDay: number;                  // 每天恢复量
+    duration: number; // 治疗天数
+    effectPerDay: number; // 每天恢复量
   };
-  insuranceCoverage: number;               // 医保比例 0-1
-  complications?: string[];                // 并发症疾病 ID
+  insuranceCoverage: number; // 医保比例 0-1
+  complications?: string[]; // 并发症疾病 ID
 }
 
 export const DISEASES: Disease[] = [
@@ -183,21 +183,21 @@ export interface LegalCase {
   name: string;
   icon: string;
   category: "labor" | "civil" | "criminal" | "administrative";
-  triggerCondition: string;                // 触发条件描述
+  triggerCondition: string; // 触发条件描述
   stages: Array<{
-    name: string;                          // "立案" | "证据" | "审理" | "判决"
+    name: string; // "立案" | "证据" | "审理" | "判决"
     duration: number;
-    actions: string[];                     // 可采取的行动
+    actions: string[]; // 可采取的行动
   }>;
   outcomes: Array<{
-    condition: string;                     // 判决条件
-    result: string;                        // 结果描述
+    condition: string; // 判决条件
+    result: string; // 结果描述
     effects: Array<{ target: string; op: string; value: number }>;
     fine?: number;
     jailDays?: number;
   }>;
-  lawyerDifficulty: number;                // 1-10
-  defaultJudgment: string;                 // 默认判决
+  lawyerDifficulty: number; // 1-10
+  defaultJudgment: string; // 默认判决
 }
 
 export const LEGAL_CASES: LegalCase[] = [
@@ -213,12 +213,12 @@ export interface TravelDestination {
   id: string;
   name: string;
   icon: string;
-  region: string;                          // 区域分类
+  region: string; // 区域分类
   cost: number;
-  duration: number;                        // 旅行天数
+  duration: number; // 旅行天数
   apCost: number;
   requirements: Array<{ field: string; min?: number }>;
-  events: string[];                        // 旅行中可能触发的事件
+  events: string[]; // 旅行中可能触发的事件
   souvenirs: Array<{
     id: string;
     name: string;
@@ -275,29 +275,29 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
 
 完善现有内容的第一步：**找到要改的文件在哪**。
 
-| 你想改什么 | 大概率在哪个文件 | 文件大小 |
-|-----------|-----------------|---------|
-| 随机事件内容/权重 | `src/js/core/events_street.js` | 超大 |
-| 公司事件/晋升事件 | `src/js/core/events_corp.js` | 大 |
-| 道德事件内容 | `src/js/data/moral_events.js` | 中 |
-| 事件触发管线 | `src/js/core/events_core.js` | 中 |
-| 街头发起式事件 | `src/js/data/events_street_data.js` | 中 |
-| 职业薪资/等级 | `src/js/data/jobs.js` | 小 |
-| 物品/商品数据 | `src/js/data/items.js` + `goods.js` | 中 |
-| 地点数据 | `src/js/data/locations.js` | 小 |
-| 疾病数据 | `src/js/data/illnesses.js` | 小 |
-| 法律系统 | `src/js/core/legal.js` | 小 |
-| 医疗系统 | `src/js/core/medical.js` | 小 |
-| 旅行系统 | `src/js/core/travel.js` | 中 |
-| NPC 数据/好感 | `src/js/data/npcs.js` + `src/js/phase1/npc_event_bridge.js` | 中 |
-| 经济数值/创业 | `src/js/phase2/startup.js` | 大 |
-| 投资/股票 | `src/js/ui/investment.js` | 中 |
-| 每日管线 | `src/js/phase1/daily_pipeline.js` | 大 |
-| 行动列表生成 | `src/js/core/main.js`（getAvailableActions 部分） | 超大 |
-| 主 UI 渲染 | `src/js/ui/render.js` | 超大 |
-| 状态对象/存档 | `src/js/core/state.js` + `save.js` | 中 |
-| 城市服务 bridge | `src/js/app_bridge/webapp_runtime_bridge.js` | 大 |
-| TS 数据目录 | `src/app/data/*/index.ts` | 极小 |
+| 你想改什么        | 大概率在哪个文件                                            | 文件大小 |
+| ----------------- | ----------------------------------------------------------- | -------- |
+| 随机事件内容/权重 | `src/js/core/events_street.js`                              | 超大     |
+| 公司事件/晋升事件 | `src/js/core/events_corp.js`                                | 大       |
+| 道德事件内容      | `src/js/data/moral_events.js`                               | 中       |
+| 事件触发管线      | `src/js/core/events_core.js`                                | 中       |
+| 街头发起式事件    | `src/js/data/events_street_data.js`                         | 中       |
+| 职业薪资/等级     | `src/js/data/jobs.js`                                       | 小       |
+| 物品/商品数据     | `src/js/data/items.js` + `goods.js`                         | 中       |
+| 地点数据          | `src/js/data/locations.js`                                  | 小       |
+| 疾病数据          | `src/js/data/illnesses.js`                                  | 小       |
+| 法律系统          | `src/js/core/legal.js`                                      | 小       |
+| 医疗系统          | `src/js/core/medical.js`                                    | 小       |
+| 旅行系统          | `src/js/core/travel.js`                                     | 中       |
+| NPC 数据/好感     | `src/js/data/npcs.js` + `src/js/phase1/npc_event_bridge.js` | 中       |
+| 经济数值/创业     | `src/js/phase2/startup.js`                                  | 大       |
+| 投资/股票         | `src/js/ui/investment.js`                                   | 中       |
+| 每日管线          | `src/js/phase1/daily_pipeline.js`                           | 大       |
+| 行动列表生成      | `src/js/core/main.js`（getAvailableActions 部分）           | 超大     |
+| 主 UI 渲染        | `src/js/ui/render.js`                                       | 超大     |
+| 状态对象/存档     | `src/js/core/state.js` + `save.js`                          | 中       |
+| 城市服务 bridge   | `src/js/app_bridge/webapp_runtime_bridge.js`                | 大       |
+| TS 数据目录       | `src/app/data/*/index.ts`                                   | 极小     |
 
 > **技巧**：不确定文件在哪？用 `grep -rn "要找的关键词" src/js/` 搜索。
 
@@ -360,13 +360,14 @@ git commit -m "fix(系统名): 具体改了啥"
 ### 3.6 完善 vs 迁移的决策时机
 
 当你在完善的过程中发现：
+
 - 某个模块的旧数据量已经很大（>200行连续数据）
 - 你想加很多新内容到这个模块
 - 旧数据的结构已经不统一（同一个字段在不同位置格式不同）
 
 → **考虑把它迁移到 `src/app/data/` 目录**，但**不要一次全迁**。
-  做法：新建对应的 TS 目录，copy-on-write，旧数据保持原样，
-  新内容走 TS 目录，bridge 接入。
+做法：新建对应的 TS 目录，copy-on-write，旧数据保持原样，
+新内容走 TS 目录，bridge 接入。
 
 详见第 2 节各目录的标准数据格式。
 
@@ -417,11 +418,12 @@ export const EVENTS: GameEvent[] = [
       },
     ],
     narrativeBefore: "已经快 12 点了，楼上的音乐声和笑声让你无法入睡。",
-    narrativeAfter: (choiceId) => ({
-      complain: "你敲开了邻居的门，对方态度恶劣。你后悔自己太冲动。",
-      call_police: "民警来了之后调解了纠纷。邻居以后应该会注意。",
-      ignore: "你戴上耳机，翻了个身。这个世界不太安静。",
-    }[choiceId] || "这件事就这么过去了。"),
+    narrativeAfter: (choiceId) =>
+      ({
+        complain: "你敲开了邻居的门，对方态度恶劣。你后悔自己太冲动。",
+        call_police: "民警来了之后调解了纠纷。邻居以后应该会注意。",
+        ignore: "你戴上耳机，翻了个身。这个世界不太安静。",
+      })[choiceId] || "这件事就这么过去了。",
     tags: ["life", "neighborhood", "random"],
   },
 ];
@@ -456,7 +458,9 @@ actions.push({
   icon: "🏢",
   category: "生活",
   apCost: 3,
-  handler: function() { /* ... */ },
+  handler: function () {
+    /* ... */
+  },
 });
 ```
 
@@ -522,16 +526,16 @@ git commit -m "feat(data): 新增邻居纠纷事件（TS 目录 + bridge 注册�
 
 ## 五、已有例子的对照
 
-| 你想做什么 | 参考文件 | 类型 | 行数 |
-|-----------|---------|------|------|
-| 写配置化数据 + 对接旧行动列表 | `src/app/data/cityServices.ts` + bridge 中的 `applyCityService()` | 完整范例 | 187 + 510 |
-| 写带选择的人生节点 | `src/app/data/lifeNodes/index.ts` | 纯数据（无需 bridge） | 271 |
-| 写桥接脚本注入旧游戏 | `src/js/app_bridge/webapp_runtime_bridge.js` | 纯 JS bridge | 510 |
-| 通过 modal 展示给玩家 | `showCityServiceModal()` 函数 | bridge 中实现 | ~46 |
-| 在 action 列表注入入口 | `actions_extra.js` 中的 `addWebAppBridgeActions` 调用 | 单行调用 | 1 |
-| 每日后续反馈 | `daily_pipeline.js` 中的 `webapp_city_services_tick` | 单行注册 | 12 |
-| 在 Vite 调试面板展示 | `src/app/ui/panels.ts` 的 `renderCityServicesPanel` | 调试面板 | 53 |
-| 完善现有数值/文案/bug | 见第 3 节"完善现有内容" | 完整工作流 | — |
+| 你想做什么                    | 参考文件                                                          | 类型                  | 行数      |
+| ----------------------------- | ----------------------------------------------------------------- | --------------------- | --------- |
+| 写配置化数据 + 对接旧行动列表 | `src/app/data/cityServices.ts` + bridge 中的 `applyCityService()` | 完整范例              | 187 + 510 |
+| 写带选择的人生节点            | `src/app/data/lifeNodes/index.ts`                                 | 纯数据（无需 bridge） | 271       |
+| 写桥接脚本注入旧游戏          | `src/js/app_bridge/webapp_runtime_bridge.js`                      | 纯 JS bridge          | 510       |
+| 通过 modal 展示给玩家         | `showCityServiceModal()` 函数                                     | bridge 中实现         | ~46       |
+| 在 action 列表注入入口        | `actions_extra.js` 中的 `addWebAppBridgeActions` 调用             | 单行调用              | 1         |
+| 每日后续反馈                  | `daily_pipeline.js` 中的 `webapp_city_services_tick`              | 单行注册              | 12        |
+| 在 Vite 调试面板展示          | `src/app/ui/panels.ts` 的 `renderCityServicesPanel`               | 调试面板              | 53        |
+| 完善现有数值/文案/bug         | 见第 3 节"完善现有内容"                                           | 完整工作流            | —         |
 
 ---
 
@@ -567,12 +571,12 @@ python build.py           # 旧构建（输出到 dist/index.html）
 
 参考 `memory/webapp_architecture_plan.md` 的 5 阶段：
 
-| 阶段 | 状态 | 说明 |
-|------|------|------|
-| **阶段 1：桥接式 Web App 化** | ✅ **已完成** | Vite/TS 工程 + bridge + 城市服务验证 |
-| **阶段 2：稳定服务层** | ⬜ 未开始 | 封装 StateManager 访问、消息、AP、现金为服务 |
-| **阶段 3：数据目录接管新增内容** | ⬜ 部分开始 | lifeNodes ✅ / cityServices ✅ / 其余 7 个目录等待填充 |
-| **阶段 4：UI 面板渐进组件化** | ⬜ 未开始 | 先迁移医疗/法律/旅行等独立面板 |
-| **阶段 5：正式入口切换评估** | ⬜ 未开始 | 当 src/app 能承载核心流程后评估 |
+| 阶段                             | 状态          | 说明                                                   |
+| -------------------------------- | ------------- | ------------------------------------------------------ |
+| **阶段 1：桥接式 Web App 化**    | ✅ **已完成** | Vite/TS 工程 + bridge + 城市服务验证                   |
+| **阶段 2：稳定服务层**           | ⬜ 未开始     | 封装 StateManager 访问、消息、AP、现金为服务           |
+| **阶段 3：数据目录接管新增内容** | ⬜ 部分开始   | lifeNodes ✅ / cityServices ✅ / 其余 7 个目录等待填充 |
+| **阶段 4：UI 面板渐进组件化**    | ⬜ 未开始     | 先迁移医疗/法律/旅行等独立面板                         |
+| **阶段 5：正式入口切换评估**     | ⬜ 未开始     | 当 src/app 能承载核心流程后评估                        |
 
 当前最该做的就是**阶段 3**：把 `events/`、`jobs/`、`locations/`、`items/`、`diseases/`、`legal/`、`travel/` 填起来。

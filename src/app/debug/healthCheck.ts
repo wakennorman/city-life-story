@@ -7,7 +7,9 @@ interface HealthRow {
   detail: string;
 }
 
-function checkDataDirectory(catalog: (typeof DATA_CATALOGS)[number]): HealthRow {
+function checkDataDirectory(
+  catalog: (typeof DATA_CATALOGS)[number],
+): HealthRow {
   const count = catalog.count;
   return {
     name: `📂 ${catalog.name}`,

@@ -577,6 +577,31 @@ function startClassicGame() {
   startNewGame();
 }
 
+function initializeCommonGameSystems(state) {
+  if (typeof initEnterpriseFate === "function") initEnterpriseFate(state);
+  if (typeof initWeather === "function") initWeather(state);
+  if (typeof initEquipmentDurability === "function") {
+    initEquipmentDurability(state);
+  }
+  if (
+    typeof eraTransform !== "undefined" &&
+    typeof eraTransform.init === "function"
+  ) {
+    eraTransform.init(state);
+  }
+  if (
+    typeof sideHustle !== "undefined" &&
+    typeof sideHustle.init === "function"
+  ) {
+    sideHustle.init(state);
+  }
+  if (typeof seedWorldFromReality === "function") seedWorldFromReality(state);
+  if (typeof initNpcRelationships === "function") initNpcRelationships(state);
+  if (typeof initMedicalState === "function") initMedicalState(state);
+  if (typeof initTravelState === "function") initTravelState(state);
+  if (typeof initLegalState === "function") initLegalState(state);
+}
+
 /** 剧本模式开局 */
 function startScenarioGame(scenarioId) {
   var scenario = getScenarioById(scenarioId);
@@ -654,10 +679,8 @@ function startScenarioGame(scenarioId) {
   state.flags._scenarioTags = scenario.narrativeTags || [];
   state.flags._isScenarioMode = true;
 
-  // --- 初始化企业命运系统 ---
-  if (typeof initEnterpriseFate === "function") {
-    initEnterpriseFate(state);
-  }
+  // --- 通用系统初始化：与经典模式保持同一套底层状态 ---
+  initializeCommonGameSystems(state);
 
   // --- 开场消息 ---
   var msg = scenario.startingMessage;
@@ -719,7 +742,7 @@ function startScenarioGame(scenarioId) {
     }, 300);
   }
 
-  // v3.2: 强制选择人生目标（不可跳过）
+  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -984,9 +1007,9 @@ function renderSandboxConfig() {
     '<div class="sandbox-section">' +
     '<div class="sandbox-section-title">⚡ 快速预设</div>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'balanced\')">⚖️ 均衡型</button> ' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'strong\')">💪 体力型</button> ' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'smart\')">🧠 智力型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'balanced\')">⚖️ 自由练习</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'strong\')">💪 体力挑战</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'smart\')">🧠 智力挑战</button> ' +
     '<button class="btn btn-sm" onclick="applySandboxPreset(\'rich\')">💰 富裕型</button>' +
     "</div>" +
     "</div>" +
@@ -1077,8 +1100,9 @@ function applySandboxPreset(preset) {
       _sandboxConfig.agility = 22;
       _sandboxConfig.mental = 22;
       _sandboxConfig.cash = 5000;
-      _sandboxConfig.villageDebt = 3000;
+      _sandboxConfig.villageDebt = 0;
       _sandboxConfig.bankDebt = 0;
+      _sandboxConfig.health = 90;
       break;
     case "strong":
       _sandboxConfig.physique = 40;
@@ -1203,10 +1227,8 @@ function startSandboxGame() {
   // --- 沙盒标记 ---
   state.flags._isSandboxMode = true;
 
-  // --- 企业命运 ---
-  if (typeof initEnterpriseFate === "function") {
-    initEnterpriseFate(state);
-  }
+  // --- 通用系统初始化：沙盒只改开局参数，不跳过底层系统 ---
+  initializeCommonGameSystems(state);
 
   StateManager.addMessage(
     "⚙️ 沙盒模式开始！你自定义了开局条件。" +
@@ -1244,7 +1266,7 @@ function startSandboxGame() {
     }, 300);
   }
 
-  // v3.2: 强制选择人生目标（不可跳过）
+  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -1260,63 +1282,7 @@ function startNewGame() {
   StateManager.getState().flags._dayStartCash =
     StateManager.getState().resources.cash || 0;
 
-  // 初始化企业命运系统
-
-  // 初始化企业命运系统
-  if (typeof initEnterpriseFate === "function") {
-    initEnterpriseFate(StateManager.getState());
-  }
-
-  // 初始化天气系统（随机开局季节）
-  if (typeof initWeather === "function") {
-    initWeather(StateManager.getState());
-  }
-
-  // 初始化装备耐久度
-  if (typeof initEquipmentDurability === "function") {
-    initEquipmentDurability(StateManager.getState());
-  }
-
-  // v3.6 P0-2: 初始化时代变迁系统
-  if (
-    typeof eraTransform !== "undefined" &&
-    typeof eraTransform.init === "function"
-  ) {
-    eraTransform.init(StateManager.getState());
-  }
-
-  // v3.6 P0-3: 初始化副业系统
-  if (
-    typeof sideHustle !== "undefined" &&
-    typeof sideHustle.init === "function"
-  ) {
-    sideHustle.init(StateManager.getState());
-  }
-
-  // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
-  if (typeof seedWorldFromReality === "function") {
-    seedWorldFromReality(StateManager.getState());
-  }
-
-  // v3.6 NPC关系链初始化
-  if (typeof initNpcRelationships === "function") {
-    initNpcRelationships(StateManager.getState());
-  }
-
-  // v3.7 Expansion v1: 医疗状态初始化
-  if (typeof initMedicalState === "function") {
-    initMedicalState(StateManager.getState());
-  }
-
-  // v3.7 Expansion v1: 旅行状态初始化
-  if (typeof initTravelState === "function") {
-    initTravelState(StateManager.getState());
-  }
-
-  // v3.7 Expansion v1: 法律状态初始化
-  if (typeof initLegalState === "function") {
-    initLegalState(StateManager.getState());
-  }
+  initializeCommonGameSystems(StateManager.getState());
 
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产
   var inheritanceApplied = false;
@@ -1380,7 +1346,7 @@ function startNewGame() {
     setTimeout(() => startTutorial(), 300);
   }
 
-  // v3.2: 强制选择人生目标（不可跳过）
+  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -2354,7 +2320,7 @@ function getAvailableActions(state) {
             actions.push({
               id: fjob.id,
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
-              desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
+              desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "行动力）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
                 state.resources.cash += pay;
@@ -3628,6 +3594,9 @@ function doStreetJob(job) {
     }
   }
 
+  if (typeof applyDreamIncomeBonus === "function") {
+    pay = applyDreamIncomeBonus(state, pay, "job");
+  }
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
   addDailyTransaction(
@@ -3816,6 +3785,12 @@ function addSkillXp(skillKey, amount) {
   const state = StateManager.getState();
   const skill = state.skills[skillKey];
   if (!skill) return;
+  if (typeof getDreamSkillXpMultiplier === "function") {
+    amount = Math.max(
+      1,
+      Math.floor(amount * getDreamSkillXpMultiplier(state, skillKey)),
+    );
+  }
   skill.xp += amount;
   var xpNeeded = (skill.level + 1) * 120;
   // 支持连续升级

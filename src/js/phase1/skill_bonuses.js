@@ -726,6 +726,9 @@ function settleDailyFinance(state) {
       ? getBankRateBonus(accountingLvl)
       : 0;
   var rate = baseRate + bonus;
+  if (typeof getDreamBankRateMultiplier === "function") {
+    rate *= getDreamBankRateMultiplier(state);
+  }
   var interest = Math.floor(bal * rate);
   if (interest > 0) {
     state.resources.bankBalance += interest;

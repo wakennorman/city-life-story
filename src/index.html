@@ -324,7 +324,11 @@
         </div>
 
         <!-- 基本需求 -->
-        <div class="sidebar-section" id="location-section" style="display: none">
+        <div
+          class="sidebar-section"
+          id="location-section"
+          style="display: none"
+        >
           <h3>📊 状态</h3>
           <div class="stat-row" id="stat-hunger">
             <span class="stat-label">饥饱</span>
@@ -404,6 +408,21 @@
           style="display: none"
         ></div>
 
+        <!-- 附近地点快速出行（放在靠前位置，首屏可见） -->
+        <div class="sidebar-section" id="nearby-section" style="display: none">
+          <h3>🚶 附近可前往</h3>
+          <div
+            id="nearby-locations"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
+
         <!-- 当前位置 & 住所 -->
         <div class="sidebar-section">
           <h3>📍 当前位置</h3>
@@ -434,21 +453,6 @@
               margin-top: 8px;
               border-top: 1px solid var(--border);
               padding-top: 8px;
-            "
-          ></div>
-        </div>
-
-        <!-- 附近地点快速出行 -->
-        <div class="sidebar-section" id="nearby-section" style="display: none">
-          <h3>🚶 附近可前往</h3>
-          <div
-            id="nearby-locations"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 4px;
-              max-height: 200px;
-              overflow-y: auto;
             "
           ></div>
         </div>

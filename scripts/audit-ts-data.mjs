@@ -2,14 +2,54 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const catalogs = [
-  { name: "events", file: "src/app/data/events/index.ts", exportName: "EVENTS", min: 8 },
-  { name: "jobs", file: "src/app/data/jobs/index.ts", exportName: "JOBS", min: 8 },
-  { name: "locations", file: "src/app/data/locations/index.ts", exportName: "LOCATIONS", min: 8 },
-  { name: "items", file: "src/app/data/items/index.ts", exportName: "ITEMS", min: 10 },
-  { name: "diseases", file: "src/app/data/diseases/index.ts", exportName: "DISEASES", min: 8 },
-  { name: "legal", file: "src/app/data/legal/index.ts", exportName: "LEGAL_CASES", min: 4 },
-  { name: "travel", file: "src/app/data/travel/index.ts", exportName: "TRAVEL_DESTINATIONS", min: 5 },
-  { name: "lifeNodes", file: "src/app/data/lifeNodes/index.ts", exportName: "LIFE_NODES", min: 4 },
+  {
+    name: "events",
+    file: "src/app/data/events/index.ts",
+    exportName: "EVENTS",
+    min: 8,
+  },
+  {
+    name: "jobs",
+    file: "src/app/data/jobs/index.ts",
+    exportName: "JOBS",
+    min: 8,
+  },
+  {
+    name: "locations",
+    file: "src/app/data/locations/index.ts",
+    exportName: "LOCATIONS",
+    min: 8,
+  },
+  {
+    name: "items",
+    file: "src/app/data/items/index.ts",
+    exportName: "ITEMS",
+    min: 10,
+  },
+  {
+    name: "diseases",
+    file: "src/app/data/diseases/index.ts",
+    exportName: "DISEASES",
+    min: 8,
+  },
+  {
+    name: "legal",
+    file: "src/app/data/legal/index.ts",
+    exportName: "LEGAL_CASES",
+    min: 4,
+  },
+  {
+    name: "travel",
+    file: "src/app/data/travel/index.ts",
+    exportName: "TRAVEL_DESTINATIONS",
+    min: 5,
+  },
+  {
+    name: "lifeNodes",
+    file: "src/app/data/lifeNodes/index.ts",
+    exportName: "LIFE_NODES",
+    min: 4,
+  },
 ];
 
 function findArrayStart(source, exportName) {
@@ -118,7 +158,9 @@ for (const catalog of catalogs) {
 
   if (typeof count !== "number") {
     failed += 1;
-    rows.push(`✗ ${catalog.name}: missing exported array ${catalog.exportName}`);
+    rows.push(
+      `✗ ${catalog.name}: missing exported array ${catalog.exportName}`,
+    );
     continue;
   }
   if (count < catalog.min) {

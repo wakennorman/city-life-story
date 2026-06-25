@@ -1,3 +1,6 @@
 node_modules/
 dist/
 dist-webapp/
+
+# Local Netlify folder
+.netlify

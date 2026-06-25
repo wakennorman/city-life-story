@@ -243,7 +243,7 @@ function _wikiListEntries(catId, state) {
               (aa.cost || 0) +
               " · " +
               (aa.ap || 0) +
-              "AP",
+              "行动力",
           });
         }
       }
@@ -3479,7 +3479,7 @@ function _wikiDetailIllness(state, id) {
       mentalDebuff: "心智有效值扣减",
       agilityDebuff: "敏捷有效值扣减",
       intelligenceDebuff: "智力有效值扣减",
-      apMult: "AP 消耗倍率",
+      apMult: "行动力消耗倍率",
       fatigueRecoveryMult: "睡眠疲劳恢复倍率",
       randomFaintCh: "随机晕厥概率",
     };

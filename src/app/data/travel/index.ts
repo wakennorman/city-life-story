@@ -42,8 +42,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 800 }],
     events: ["forbidden_city_reflection", "hutong_noodle_chat"],
     souvenirs: [
-      { id: "peking_duck_coupon", name: "烤鸭券", description: "一张老字号烤鸭纪念券。" },
-      { id: "opera_mask", name: "京剧脸谱", description: "挂在出租屋墙上会显得很郑重。" },
+      {
+        id: "peking_duck_coupon",
+        name: "烤鸭券",
+        description: "一张老字号烤鸭纪念券。",
+      },
+      {
+        id: "opera_mask",
+        name: "京剧脸谱",
+        description: "挂在出租屋墙上会显得很郑重。",
+      },
     ],
     effects: [
       { target: "needs.happiness", op: "add", value: 10 },
@@ -63,7 +71,11 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     events: ["bund_skyline", "lane_wonton"],
     souvenirs: [
       { id: "silk_scarf", name: "丝巾", description: "旧弄堂小店买来的丝巾。" },
-      { id: "old_brand_pastry", name: "老字号糕点", description: "带回来分给朋友正合适。" },
+      {
+        id: "old_brand_pastry",
+        name: "老字号糕点",
+        description: "带回来分给朋友正合适。",
+      },
     ],
     effects: [
       { target: "needs.happiness", op: "add", value: 12 },
@@ -82,8 +94,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 600 }],
     events: ["panda_base_afternoon", "hotpot_tears"],
     souvenirs: [
-      { id: "panda_doll", name: "熊猫公仔", description: "抱起来让人松一口气。" },
-      { id: "pepper_oil", name: "花椒油", description: "能让普通面条变得像旅行。" },
+      {
+        id: "panda_doll",
+        name: "熊猫公仔",
+        description: "抱起来让人松一口气。",
+      },
+      {
+        id: "pepper_oil",
+        name: "花椒油",
+        description: "能让普通面条变得像旅行。",
+      },
     ],
     effects: [
       { target: "needs.happiness", op: "add", value: 15 },
@@ -102,8 +122,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 500 }],
     events: ["terracotta_silence", "city_wall_ride"],
     souvenirs: [
-      { id: "terracotta_replica", name: "兵马俑仿品", description: "很小，却有两千年的沉默。" },
-      { id: "shadow_puppet", name: "皮影", description: "纸影里藏着另一种生活。" },
+      {
+        id: "terracotta_replica",
+        name: "兵马俑仿品",
+        description: "很小，却有两千年的沉默。",
+      },
+      {
+        id: "shadow_puppet",
+        name: "皮影",
+        description: "纸影里藏着另一种生活。",
+      },
     ],
     effects: [
       { target: "player.intelligence", op: "add", value: 1 },
@@ -122,8 +150,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 400 }],
     events: ["erhai_cycling", "folk_song_night"],
     souvenirs: [
-      { id: "tie_dye_cloth", name: "扎染布", description: "蓝白纹路像水面和云。" },
-      { id: "flower_cake", name: "鲜花饼", description: "甜得很轻，适合慢慢吃。" },
+      {
+        id: "tie_dye_cloth",
+        name: "扎染布",
+        description: "蓝白纹路像水面和云。",
+      },
+      {
+        id: "flower_cake",
+        name: "鲜花饼",
+        description: "甜得很轻，适合慢慢吃。",
+      },
     ],
     effects: [
       { target: "needs.happiness", op: "add", value: 18 },
@@ -142,8 +178,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 700 }],
     events: ["west_lake_walk", "internet_city_visit"],
     souvenirs: [
-      { id: "longjing_tea", name: "龙井茶样", description: "小小一包，闻起来很清。" },
-      { id: "west_lake_postcard", name: "西湖明信片", description: "写给未来自己的明信片。" },
+      {
+        id: "longjing_tea",
+        name: "龙井茶样",
+        description: "小小一包，闻起来很清。",
+      },
+      {
+        id: "west_lake_postcard",
+        name: "西湖明信片",
+        description: "写给未来自己的明信片。",
+      },
     ],
     effects: [
       { target: "needs.happiness", op: "add", value: 10 },
@@ -165,8 +209,16 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     ],
     events: ["maker_space_visit", "bay_area_overtime"],
     souvenirs: [
-      { id: "maker_badge", name: "创客贴纸", description: "贴在二手电脑上刚刚好。" },
-      { id: "metro_day_pass", name: "地铁日票", description: "一座高效率城市的纸片。" },
+      {
+        id: "maker_badge",
+        name: "创客贴纸",
+        description: "贴在二手电脑上刚刚好。",
+      },
+      {
+        id: "metro_day_pass",
+        name: "地铁日票",
+        description: "一座高效率城市的纸片。",
+      },
     ],
     effects: [
       { target: "skills.programming.xp", op: "add", value: 8 },
@@ -185,7 +237,11 @@ export const TRAVEL_DESTINATIONS: TravelDestination[] = [
     requirements: [{ field: "resources.cash", min: 180 }],
     events: ["old_street_breakfast", "night_market_bus"],
     souvenirs: [
-      { id: "city_walking_notebook", name: "城市漫游手账", description: "记着公交线路、便宜饭馆和几个街角。" },
+      {
+        id: "city_walking_notebook",
+        name: "城市漫游手账",
+        description: "记着公交线路、便宜饭馆和几个街角。",
+      },
     ],
     effects: [
       { target: "travel.localFamiliarity", op: "add", value: 1 },

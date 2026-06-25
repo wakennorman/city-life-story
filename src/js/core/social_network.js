@@ -5,7 +5,7 @@
  *
  * 核心功能：
  * - 发布朋友圈（消耗AP，选择配图，写文字，可见范围）
- * - 刷微博（每日刷新热搜榜，点赞/评论/转发）
+ * - 刷围脖（每日刷新热搜榜，点赞/评论/转发）
  * - NPC动态（NPC发布生活动态，玩家互动）
  * - 网红经济（粉丝数≥1000可接广告，≥10000可直播带货）
  * - 舆论危机（负面事件可能引发舆论风暴）
@@ -68,24 +68,116 @@ function postToMoments(state, content, images, visibility) {
   // 消耗AP
   state.player.actionPoints = Math.max(0, state.player.actionPoints - 20);
   // 增加粉丝（如果公开）
-  if (visibility === "public" && content.length > 10) {
-    state.socialNetwork.playerFans += Math.floor(Math.random() * 5) + 1;
+  if (visibility === "public") {
+    // 基础增长：内容长度影响
+    var baseGain = 1;
+    if (content.length > 20) baseGain += 1; // 较长内容+1
+    if (content.length > 50) baseGain += 1; // 长内容再+1
+    if (images && images.length > 0) baseGain += 1; // 配图+1
+    // 名气加成：每10点名气 +0.5粉丝
+    var fameBonus = Math.floor((state.player.fame || 0) / 20);
+    // 随机波动
+    var totalGain = baseGain + fameBonus + Math.floor(Math.random() * 3);
+    state.socialNetwork.playerFans += totalGain;
+    // 反哺名气：少量粉丝增长也略微提升名气
+    state.player.fame = Math.min(
+      100,
+      (state.player.fame || 0) + Math.floor(totalGain / 5),
+    );
   }
   return { ok: true, post: post };
 }
 
-// ====== 刷新微博热搜 ======
+// ====== 预定义热搜话题池（30条，风格参考真实围脖热搜）======
+var WEIBO_HOT_TOPICS = [
+  { title: "某明星被曝恋情疑似地下情三年", category: "娱乐" },
+  { title: "某知名企业家称未来五年最赚钱行业是AI", category: "财经" },
+  { title: "某城市房价连跌三个月购房者观望加剧", category: "财经" },
+  { title: "某品牌手机发布新品引发排队抢购", category: "科技" },
+  { title: "某大学研发新型疫苗进入临床试验", category: "科技" },
+  { title: "某平台外卖小哥月入过万引发热议", category: "社会" },
+  { title: "某市出台新规严查租房乱收费", category: "社会" },
+  { title: "某知名主播被曝带货数据造假", category: "娱乐" },
+  { title: "某城市地铁新线开通市民排队体验", category: "社会" },
+  { title: "CBA季后赛某队爆冷淘汰夺冠热门", category: "体育" },
+  { title: "某选秀节目选手退赛引发争议", category: "娱乐" },
+  { title: "某程序员连续加班猝死引关注", category: "社会" },
+  { title: "某市出台人才新政本科可落户", category: "社会" },
+  { title: "某平台公布Q2财报营收超预期", category: "财经" },
+  { title: "某品牌联名款上线秒空黄牛加价", category: "时尚" },
+  { title: "某网红餐厅被曝使用过期食材", category: "社会" },
+  { title: "某市试点每周四天工作制引热议", category: "社会" },
+  { title: "某游戏公司新作上线首日收入破亿", category: "科技" },
+  { title: "某老旧小区改造居民将获补偿", category: "社会" },
+  { title: "某导演新片获国际电影节大奖提名", category: "娱乐" },
+  { title: "某新能源车企宣布全系降价", category: "财经" },
+  { title: "某高校食堂推出自助餐9元管饱", category: "社会" },
+  { title: "某外卖平台调整配送费算法引不满", category: "社会" },
+  { title: "某脱口秀演员段子被指冒犯引争议", category: "娱乐" },
+  { title: "某银行下调存款利率储户转向理财", category: "财经" },
+  { title: "某服装品牌宣布全面使用环保面料", category: "时尚" },
+  { title: "某市马拉松报名人数创新高", category: "体育" },
+  { title: "某短视频平台出新规打击抄袭", category: "科技" },
+  { title: "某奶茶品牌联名款日销百万杯", category: "时尚" },
+  { title: "某整容机构致人毁容被查封", category: "社会" },
+];
+
+// ====== 刷新微博热搜（联动新闻系统+话题池）======
 function refreshWeiboHotlist(state) {
   ensureSocialNetworkState(state);
   var categories = ["娱乐", "社会", "体育", "科技", "财经", "时尚"];
   var hotlist = [];
+
+  // 从当日活跃新闻中提取热点（最多3条）
+  var newsTopics = [];
+  if (state.activeNews && state.activeNews.length > 0) {
+    for (
+      var ni = 0;
+      ni < state.activeNews.length && newsTopics.length < 3;
+      ni++
+    ) {
+      var newsItem = state.activeNews[ni];
+      var title =
+        typeof newsItem === "string"
+          ? newsItem
+          : newsItem.title || newsItem.brief || "";
+      if (title && newsTopics.indexOf(title) < 0) newsTopics.push(title);
+    }
+  }
+  // 从新闻历史中取最近新闻
+  if (
+    newsTopics.length < 3 &&
+    state.newsHistory &&
+    state.newsHistory.length > 0
+  ) {
+    var recentNews = state.newsHistory.slice(-5);
+    for (var nri = 0; nri < recentNews.length && newsTopics.length < 3; nri++) {
+      var nr = recentNews[nri];
+      var nt = typeof nr === "string" ? nr : nr.title || nr.brief || "";
+      if (nt && newsTopics.indexOf(nt) < 0) newsTopics.push(nt);
+    }
+  }
+
+  // 前3条放新闻热点，余下的从话题池随机取
+  var poolCopy = WEIBO_HOT_TOPICS.slice();
   for (var i = 0; i < 10; i++) {
-    hotlist.push({
+    var item = {
       rank: i + 1,
-      title: "热搜话题" + (i + 1),
       heat: Math.floor(Math.random() * 1000000) + 100000,
-      category: categories[Math.floor(Math.random() * categories.length)],
-    });
+    };
+    if (i < newsTopics.length) {
+      item.title = newsTopics[i];
+      item.category = categories[Math.floor(Math.random() * categories.length)];
+    } else if (poolCopy.length > 0) {
+      var pickIdx = Math.floor(Math.random() * poolCopy.length);
+      var picked = poolCopy.splice(pickIdx, 1)[0];
+      item.title = picked.title;
+      item.category = picked.category;
+    } else {
+      item.title = "热议话题" + (i + 1);
+      item.category = categories[Math.floor(Math.random() * categories.length)];
+    }
+    hotlist.push(item);
   }
   state.socialNetwork.weiboHotlist = hotlist;
   state.socialNetwork.lastWeiboRefresh = state.player.day;

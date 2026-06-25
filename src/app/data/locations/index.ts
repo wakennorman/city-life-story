@@ -1,4 +1,9 @@
-export type LocationCategory = "work" | "life" | "gov" | "entertainment" | "service";
+export type LocationCategory =
+  | "work"
+  | "life"
+  | "gov"
+  | "entertainment"
+  | "service";
 
 export interface LocationAction {
   id: string;
@@ -200,5 +205,6 @@ export const LOCATIONS: Location[] = [
 export const LOCATION_CATALOG_STATUS = {
   migrated: LOCATIONS.length,
   legacySource: "src/js/data/locations.js",
-  nextStep: "新增地点继续保持 services/jobs/npcs 三类关联，bridge 只追加入口不重排脚本。",
+  nextStep:
+    "新增地点继续保持 services/jobs/npcs 三类关联，bridge 只追加入口不重排脚本。",
 } as const;

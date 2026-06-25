@@ -141,7 +141,7 @@ function showCriticalChoiceModal(state, need) {
       totalCost +
       " · " +
       totalAp +
-      "AP";
+      "行动力";
 
     buttons.push({
       text: btnText,

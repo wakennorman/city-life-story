@@ -1012,7 +1012,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
     return chooseSkillBranch(skillKey, newBranchId, state);
   }
   if (state.player.actionPoints < 30) {
-    StateManager.addMessage("⚠️ 切换发展方向需要30AP", "warning");
+    StateManager.addMessage("⚠️ 切换发展方向需要30行动力", "warning");
     return false;
   }
   if (state.resources.cash < 500) {

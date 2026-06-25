@@ -7127,7 +7127,7 @@
         },
         {
           text: "📦 去快递站做临时工",
-          hint: "¥280/天，消耗15AP",
+          hint: "¥280/天，消耗15行动力",
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.resources.cash += 280;
@@ -7715,7 +7715,7 @@
       choices: [
         {
           text: "🤝 帮忙调解",
-          hint: "做和事佬，名声+3，花10AP",
+          hint: "做和事佬，名声+3，花10行动力",
           apply: function (st) {
             st.flags._elevatorSeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
