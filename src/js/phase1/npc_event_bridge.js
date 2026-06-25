@@ -938,6 +938,133 @@ function runDailyNpcBridge(state) {
   checkNpcAffinityEvents(state);
 }
 
+/**
+ * v3.8 P1-3: 主动与 NPC 深入聊天
+ * 消耗 2 AP，产生对话历史和好感变化。
+ */
+function chatWithNpc(npcId, state) {
+  if (!state || !npcId) return;
+  if (!state.npcRelationships) state.npcRelationships = {};
+  var rel = state.npcRelationships[npcId];
+  if (!rel) {
+    StateManager.addMessage("你还不认识这个人。", "warning");
+    return;
+  }
+
+  var ap = state.player.actionPoints || 0;
+  if (ap < 2) {
+    StateManager.addMessage("行动力不足，需要 2 AP 才能深入聊天。", "warning");
+    return;
+  }
+  state.player.actionPoints = ap - 2;
+
+  // 好感变化（±1~3，好感高的更可能正面）
+  var affinity = rel.affinity || 0;
+  var delta = 0;
+  var chatType = "neutral";
+  var message = "";
+  var rollVal = Math.random();
+
+  if (affinity >= 50) {
+    // 好感高：大概率正面
+    if (rollVal < 0.6) {
+      delta = 2 + Math.floor(Math.random() * 2); // +2~3
+      chatType = "positive";
+      message = "你们聊得很开心";
+    } else if (rollVal < 0.85) {
+      delta = 1;
+      chatType = "positive";
+      message = "你们聊得还不错";
+    } else {
+      delta = -1;
+      chatType = "neutral";
+      message = "话题有点尴尬";
+    }
+  } else if (affinity >= 10) {
+    // 好感中等：中性为主
+    if (rollVal < 0.4) {
+      delta = 1 + Math.floor(Math.random() * 2); // +1~2
+      chatType = "positive";
+      message = "你们聊得挺投缘";
+    } else if (rollVal < 0.7) {
+      delta = 0;
+      chatType = "neutral";
+      message = "随便聊了几句";
+    } else if (rollVal < 0.9) {
+      delta = -1;
+      chatType = "neutral";
+      message = "话题不太对付";
+    } else {
+      delta = -2;
+      chatType = "negative";
+      message = "不小心说错话，气氛有点僵";
+    }
+  } else {
+    // 好感低：大概率负面
+    if (rollVal < 0.3) {
+      delta = 1;
+      chatType = "positive";
+      message = "也许你们之前有误会";
+    } else if (rollVal < 0.6) {
+      delta = 0;
+      chatType = "neutral";
+      message = "礼节性寒暄几句";
+    } else {
+      delta = -1 - Math.floor(Math.random() * 3); // -1~-3
+      chatType = "negative";
+      message = "对方不太想搭理你";
+    }
+  }
+
+  rel.affinity = Math.max(-100, Math.min(100, affinity + delta));
+
+  // 记录对话历史
+  if (!rel.interactionHistory) rel.interactionHistory = [];
+  rel.interactionHistory.push({
+    day: state.player.day || 1,
+    type: chatType,
+    delta: delta,
+    message: message,
+  });
+  // 保留最近 20 条
+  if (rel.interactionHistory.length > 20) {
+    rel.interactionHistory = rel.interactionHistory.slice(-20);
+  }
+
+  // 有概率解锁 NPC 信息
+  if (typeof tryRevealNpcInfo === "function" && delta >= 0) {
+    tryRevealNpcInfo(npcId, state, "chat");
+  }
+
+  // 推送状态消息
+  var npcName = npcId.replace(/_/g, " ");
+  if (delta > 0) {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "，好感 +" + delta + "。",
+      delta >= 2 ? "success" : "info",
+    );
+  } else if (delta === 0) {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "。好感不变。",
+      "info",
+    );
+  } else {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "，好感 " + delta + "。",
+      "warning",
+    );
+  }
+
+  // 传导好感变化给相关 NPC
+  if (typeof applyNpcPropagation === "function") {
+    var changeData = {};
+    changeData[npcId] = delta;
+    applyNpcPropagation(state, changeData);
+  }
+
+  if (typeof renderAll === "function") renderAll();
+}
+
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
 function afterEventApplied(eventId, state) {
   applyEventNpcEcho(eventId, state);

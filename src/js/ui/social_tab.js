@@ -91,6 +91,36 @@ function renderNpcRelationships(state, content) {
       html += "</div>";
     }
 
+    // 对话记录（最近 3 条）
+    if (rel.interactionHistory && rel.interactionHistory.length > 0) {
+      var hist = rel.interactionHistory.slice(-3);
+      html +=
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">';
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px;">💬 最近对话</div>';
+      for (var hi = 0; hi < hist.length; hi++) {
+        var h = hist[hi];
+        html +=
+          '<div style="font-size:10px;line-height:1.4;color:var(--text-secondary);">';
+        html += "第" + h.day + "天 · ";
+        if (h.delta > 0)
+          html += '<span style="color:var(--success);">+' + h.delta + "</span>";
+        else if (h.delta < 0)
+          html += '<span style="color:var(--danger);">' + h.delta + "</span>";
+        else html += '<span style="color:var(--text-muted);">0</span>';
+        html += " " + h.message + "</div>";
+      }
+      html += "</div>";
+    }
+
+    // 深入聊天按钮
+    html += '<div style="margin-top:6px;">';
+    html +=
+      '<button class="btn btn-sm btn-primary" style="font-size:10px;padding:2px 8px;" data-npc-chat="' +
+      npcId +
+      '">💬 聊天 (2AP)</button>';
+    html += "</div>";
+
     html += "</div>";
   }
 
@@ -133,6 +163,28 @@ function renderNpcRelationships(state, content) {
   html += "</div></div>";
 
   content.innerHTML = html;
+
+  // 绑定深入聊天按钮事件
+  var chatBtns = content.querySelectorAll("[data-npc-chat]");
+  for (var cb = 0; cb < chatBtns.length; cb++) {
+    (function (btn) {
+      btn.onclick = function () {
+        var npcId = btn.getAttribute("data-npc-chat");
+        if (typeof chatWithNpc === "function") {
+          var state =
+            typeof StateManager !== "undefined"
+              ? StateManager.getState()
+              : null;
+          if (state) {
+            chatWithNpc(npcId, state);
+            renderNpcRelationships(state, content);
+          }
+        } else {
+          StateManager.addMessage("聊天功能暂不可用。", "warning");
+        }
+      };
+    })(chatBtns[cb]);
+  }
 }
 
 // ====== 社交Tab主渲染函数 ======
