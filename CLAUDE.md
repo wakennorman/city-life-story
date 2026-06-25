@@ -50,13 +50,39 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.7 P0改进实装（2026-06-25，Hermes Agent）
-  - **P0-1 副业系统接入**：state.js 添加 sideHustle 字段初始化，daily_pipeline.js 已有 side_hustle_tick 步骤，index.html 已加载副业脚本
-  - **P0-2 经济平衡**：startup.js 降低 growth 加成（0.003 → 0.001），corp.js P10 月薪已100K
-  - **P0-3 后期开支**：needs.js applyWealthBasedOverhead 已增强，daily_pipeline.js wealth_overhead 步骤已存在
-  - **P0-4 链式事件填充**：events_core.js 新增 queueChainEvent 函数，checkChainEventQueue 已存在
-  - **构建**：已 `python build.py`（4038.7 KB）
-  - **commit**：a33af08（v3.7 P0改进实装）
+- **最新一次工作**：v3.7 P1改进中断保存（2026-06-25，Hermes Agent → 交Codex接力）
+  - **已提交**（155da2b）：
+    - P1-3 `scaleEventReward` — 事件奖励动态缩放（events_core.js）
+    - P1-5 `rollEquipmentDrop` — 装备掉落系统（items.js，4来源×4品质）
+    - 扩展 `social_network.js` — 社交网络骨架（朋友圈/微博/网红/舆论）
+    - `inheritance_chain.js` — 文化遗产链扩充（+62行）
+  - **回退**：moral_events.js 回退基线（上次扩充语法损坏）
+  - **构建**：已 `python build.py`（4040.1 KB）
+  - **待Codex接力**：↓ 下方「Codex接力清单」
+
+## 🔁 Codex接力清单（未完成任务，按优先级排序）
+
+### 第一阶段：P1改进（4项，~470行）
+
+1. **P1-1 新闻→投资UI** — `phase2/investment.js` UI渲染中调用 `getNewsInvestmentSummary`，添加"今日市场驱动"板块
+2. **P1-2 NPC好感链路** — `data/npcs.js` 为每个NPC增加 `affinityEvents`（30/60/80阈值），`phase1/npc_event_bridge.js` 增加 `checkNpcAffinityEvents` 函数
+3. **P1-4 家庭系统** — `phase2/family_life.js` 实现结婚系统（好感≥80+资产≥¥200K→求婚）+ 生子/子女教育
+4. **P1-6 35岁危机追访** — `core/events_core.js` 增加追访事件优先级（权重×3）
+
+### 第二阶段：P2修复（2项，~100行）
+
+5. **P2-4 道德事件扩充** — `data/moral_events.js` 重建18个新事件（极端生存困境：偷药救孩子/争食/举报同事/邻居借钱等），原扩充因语法结构损坏已回退基线
+6. **main.js重构** — 已存在解耦方案但未实装
+
+### 第三阶段：扩展系统（5项，需设计）
+
+7. 社交网络UI（social_network.js已完成骨架→需UI集成）
+8. 旅行系统
+9. 医疗系统
+10. 法律系统
+11. 人生节点
+
+*详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到P1）*
 
 - **v3.6 审查改进实装（2026-06-24，Hermes Agent 6子任务链）**
   - **9项P0/P1修复**：chainEventQueue守卫/天气→摆摊/经济压缩(trend上限0.003+估值¥15M)/NPC好感链路×2/后期开支(物业费+住房维护+社交)/创业门槛(3技能15+2NPC40+Day60)/新闻→UI因果链/节日价格/pricing补全/事件触发率递增
