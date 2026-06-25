@@ -33301,7 +33301,6 @@ const HOUSING_TIERS = [
   },
 ];
 
-
 // ====== 装备掉落系统 (P1-5: 装备获取来源) ======
 
 /**
@@ -37611,8 +37610,7 @@ function checkLifeNodeRequirement(state, choice) {
     var need = req[key];
     var actual = 0;
     if (key === "cash") {
-      actual =
-        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
       actual = getHighestLifeNodeSkill(state);
     } else {
@@ -37630,7 +37628,7 @@ function showLifeNodeModal(node) {
   var state = StateManager.getState();
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>人生走到一个关键节点。这个选择会留下长期影响。</p>' +
+    "<p>人生走到一个关键节点。这个选择会留下长期影响。</p>" +
     '<ul style="margin-left:16px;color:var(--text-secondary);">';
   for (var i = 0; i < node.choices.length; i++) {
     body +=
@@ -37664,7 +37662,11 @@ function showLifeNodeModal(node) {
     };
   });
 
-  showModal({ title: node.icon + " " + node.name, body: body, buttons: buttons });
+  showModal({
+    title: node.icon + " " + node.name,
+    body: body,
+    buttons: buttons,
+  });
 }
 
 // ====== 节点效果应用 ======
@@ -37746,7 +37748,10 @@ function applyNodeChoice(state, nodeId, choiceKey) {
 function checkLifeNodes(state) {
   if (!state.flags) state.flags = {};
   if (state._pendingLifeNode) {
-    if (typeof document !== "undefined" && !document.querySelector(".modal-overlay")) {
+    if (
+      typeof document !== "undefined" &&
+      !document.querySelector(".modal-overlay")
+    ) {
       setTimeout(function () {
         showLifeNodeModal(state._pendingLifeNode);
       }, 80);
@@ -38093,7 +38098,7 @@ function showMedicalInsuranceModal() {
   var summary = getMedicalSummary(state);
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>' +
+    "<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>" +
     '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
     summary.join("<br>") +
     "</div>" +
@@ -38108,7 +38113,7 @@ function showMedicalInsuranceModal() {
       p.name +
       "</strong> · ¥" +
       p.monthly.toLocaleString() +
-      " / 次<br><span style=\"color:var(--text-secondary);\">" +
+      ' / 次<br><span style="color:var(--text-secondary);">' +
       p.desc +
       "</span></div>";
   }
@@ -38375,7 +38380,10 @@ function tickTravel(state) {
       }
       state._lastTravelEvent = evt.desc;
       if (typeof StateManager !== "undefined") {
-        StateManager.addMessage("✈️ " + evt.desc + "（" + evt.effect + "）", "info");
+        StateManager.addMessage(
+          "✈️ " + evt.desc + "（" + evt.effect + "）",
+          "info",
+        );
       }
     }
   }
@@ -38389,7 +38397,10 @@ function tickTravel(state) {
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
       if (typeof StateManager !== "undefined") {
-        StateManager.addMessage("🎁 旅行归来，带回了「" + gift + "」。", "success");
+        StateManager.addMessage(
+          "🎁 旅行归来，带回了「" + gift + "」。",
+          "success",
+        );
       }
     }
     // 心情恢复
@@ -38416,7 +38427,7 @@ function showTravelAgencyModal() {
 
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>从商业区的长途客运站出发，去别的城市喘口气。</p>' +
+    "<p>从商业区的长途客运站出发，去别的城市喘口气。</p>" +
     '<div style="display:grid;gap:8px;">';
   for (var key in TRAVEL_DESTINATIONS) {
     var d = TRAVEL_DESTINATIONS[key];
@@ -38432,7 +38443,7 @@ function showTravelAgencyModal() {
       d.apCost +
       "AP · " +
       d.days +
-      "天<br><span style=\"color:var(--text-secondary);\">" +
+      '天<br><span style="color:var(--text-secondary);">' +
       d.desc +
       "</span></div>";
   }
@@ -38851,7 +38862,7 @@ function showLegalOfficeModal() {
   }).join("");
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>' +
+    "<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>" +
     '<label>案件类型</label><select id="legal-case-select" style="width:100%;margin:4px 0 10px;">' +
     caseOptions +
     "</select>" +
@@ -38877,7 +38888,10 @@ function showLegalOfficeModal() {
             caseEl && caseEl.value,
             lawyerEl && lawyerEl.value,
           );
-          StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+          StateManager.addMessage(
+            result.msg,
+            result.ok ? "success" : "warning",
+          );
           if (!result.ok) return false;
           if (typeof renderAll === "function") renderAll();
         },
@@ -58616,6 +58630,84 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.8: 住房维护费（按住房等级月度扣除） ===
+  {
+    name: "housing_maintenance",
+    fn: function (state) {
+      if (!state.housing) return;
+      var day = state.player.day || 1;
+      // 每月第 1 天结算（不是每天）
+      if (day % 30 !== 1) return;
+      var tier = state.housing.tier || 0;
+      // 住房等级：0=无/1=城中村/2=老旧小区/3=普通公寓/4=高档小区/5=管家服务
+      var maintenanceFee = 0;
+      if (tier <= 1) maintenanceFee = 0;
+      else if (tier === 2) maintenanceFee = 150;
+      else if (tier === 3) maintenanceFee = 300;
+      else if (tier === 4) maintenanceFee = 800;
+      else if (tier >= 5) maintenanceFee = 2000;
+      if (maintenanceFee > 0 && state.resources.cash >= maintenanceFee) {
+        state.resources.cash -= maintenanceFee;
+        addDailyTransaction(
+          state,
+          "expense",
+          "housing_maintenance",
+          maintenanceFee,
+          "住房物业维护费",
+        );
+      } else if (maintenanceFee > 0) {
+        StateManager.addMessage(
+          "⚠️ 付不起住房维护费 ¥" + maintenanceFee + "，房屋状况变差。",
+          "warning",
+        );
+        // 维护费付不起不降级，但累积欠费标记
+        state.flags._maintenanceArrears =
+          (state.flags._maintenanceArrears || 0) + 1;
+      }
+    },
+  },
+
+  // === v3.8: 社交圈维护费（每月基于 NPC 好感总值扣除） ===
+  {
+    name: "social_maintenance",
+    fn: function (state) {
+      if (!state.npcRelationships) return;
+      var day = state.player.day || 1;
+      // 每月第 1 天结算
+      if (day % 30 !== 1) return;
+      var totalAffinity = 0;
+      var npcCount = 0;
+      for (var npcId in state.npcRelationships) {
+        var rel = state.npcRelationships[npcId];
+        if (rel && typeof rel.affinity === "number" && rel.affinity >= 10) {
+          totalAffinity += rel.affinity;
+          npcCount++;
+        }
+      }
+      if (npcCount === 0) return;
+      // 每 100 好感 = ¥50/月
+      var socialCost = Math.round(totalAffinity / 100) * 50;
+      if (socialCost <= 0) return;
+      socialCost = Math.min(socialCost, 500); // 上限 ¥500/月
+      if (state.resources.cash >= socialCost) {
+        state.resources.cash -= socialCost;
+        addDailyTransaction(
+          state,
+          "expense",
+          "social_maintenance",
+          socialCost,
+          "人情往来（" + npcCount + "位朋友）",
+        );
+      } else {
+        state.resources.cash = 0;
+        StateManager.addMessage(
+          "⚠️ 连人情钱都凑不出… 朋友可能觉得你在疏远他们。",
+          "warning",
+        );
+      }
+    },
+  },
+
   // === 健康结算 ===
   {
     name: "health_tick",
@@ -61708,6 +61800,133 @@ function runDailyNpcBridge(state) {
 
   // 5. 好感阈值事件检查 — 每日检查，补足30/60/80叙事链路
   checkNpcAffinityEvents(state);
+}
+
+/**
+ * v3.8 P1-3: 主动与 NPC 深入聊天
+ * 消耗 2 AP，产生对话历史和好感变化。
+ */
+function chatWithNpc(npcId, state) {
+  if (!state || !npcId) return;
+  if (!state.npcRelationships) state.npcRelationships = {};
+  var rel = state.npcRelationships[npcId];
+  if (!rel) {
+    StateManager.addMessage("你还不认识这个人。", "warning");
+    return;
+  }
+
+  var ap = state.player.actionPoints || 0;
+  if (ap < 2) {
+    StateManager.addMessage("行动力不足，需要 2 AP 才能深入聊天。", "warning");
+    return;
+  }
+  state.player.actionPoints = ap - 2;
+
+  // 好感变化（±1~3，好感高的更可能正面）
+  var affinity = rel.affinity || 0;
+  var delta = 0;
+  var chatType = "neutral";
+  var message = "";
+  var rollVal = Math.random();
+
+  if (affinity >= 50) {
+    // 好感高：大概率正面
+    if (rollVal < 0.6) {
+      delta = 2 + Math.floor(Math.random() * 2); // +2~3
+      chatType = "positive";
+      message = "你们聊得很开心";
+    } else if (rollVal < 0.85) {
+      delta = 1;
+      chatType = "positive";
+      message = "你们聊得还不错";
+    } else {
+      delta = -1;
+      chatType = "neutral";
+      message = "话题有点尴尬";
+    }
+  } else if (affinity >= 10) {
+    // 好感中等：中性为主
+    if (rollVal < 0.4) {
+      delta = 1 + Math.floor(Math.random() * 2); // +1~2
+      chatType = "positive";
+      message = "你们聊得挺投缘";
+    } else if (rollVal < 0.7) {
+      delta = 0;
+      chatType = "neutral";
+      message = "随便聊了几句";
+    } else if (rollVal < 0.9) {
+      delta = -1;
+      chatType = "neutral";
+      message = "话题不太对付";
+    } else {
+      delta = -2;
+      chatType = "negative";
+      message = "不小心说错话，气氛有点僵";
+    }
+  } else {
+    // 好感低：大概率负面
+    if (rollVal < 0.3) {
+      delta = 1;
+      chatType = "positive";
+      message = "也许你们之前有误会";
+    } else if (rollVal < 0.6) {
+      delta = 0;
+      chatType = "neutral";
+      message = "礼节性寒暄几句";
+    } else {
+      delta = -1 - Math.floor(Math.random() * 3); // -1~-3
+      chatType = "negative";
+      message = "对方不太想搭理你";
+    }
+  }
+
+  rel.affinity = Math.max(-100, Math.min(100, affinity + delta));
+
+  // 记录对话历史
+  if (!rel.interactionHistory) rel.interactionHistory = [];
+  rel.interactionHistory.push({
+    day: state.player.day || 1,
+    type: chatType,
+    delta: delta,
+    message: message,
+  });
+  // 保留最近 20 条
+  if (rel.interactionHistory.length > 20) {
+    rel.interactionHistory = rel.interactionHistory.slice(-20);
+  }
+
+  // 有概率解锁 NPC 信息
+  if (typeof tryRevealNpcInfo === "function" && delta >= 0) {
+    tryRevealNpcInfo(npcId, state, "chat");
+  }
+
+  // 推送状态消息
+  var npcName = npcId.replace(/_/g, " ");
+  if (delta > 0) {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "，好感 +" + delta + "。",
+      delta >= 2 ? "success" : "info",
+    );
+  } else if (delta === 0) {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "。好感不变。",
+      "info",
+    );
+  } else {
+    StateManager.addMessage(
+      "💬 你和 " + npcName + " " + message + "，好感 " + delta + "。",
+      "warning",
+    );
+  }
+
+  // 传导好感变化给相关 NPC
+  if (typeof applyNpcPropagation === "function") {
+    var changeData = {};
+    changeData[npcId] = delta;
+    applyNpcPropagation(state, changeData);
+  }
+
+  if (typeof renderAll === "function") renderAll();
 }
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
@@ -70166,7 +70385,9 @@ function _ensureStartupProductDefaults(product, day) {
   product.techDebtHistory = Array.isArray(product.techDebtHistory)
     ? product.techDebtHistory
     : [];
-  product.bugHistory = Array.isArray(product.bugHistory) ? product.bugHistory : [];
+  product.bugHistory = Array.isArray(product.bugHistory)
+    ? product.bugHistory
+    : [];
   product.crisisHistory = Array.isArray(product.crisisHistory)
     ? product.crisisHistory
     : [];
@@ -70178,8 +70399,10 @@ function _ensureStartupProductDefaults(product, day) {
   product.techDebtSources = product.techDebtSources || {};
   product.techDebtSources.rushDevelopment =
     product.techDebtSources.rushDevelopment || 0;
-  product.techDebtSources.skippedTests = product.techDebtSources.skippedTests || 0;
-  product.techDebtSources.cutFeatures = product.techDebtSources.cutFeatures || 0;
+  product.techDebtSources.skippedTests =
+    product.techDebtSources.skippedTests || 0;
+  product.techDebtSources.cutFeatures =
+    product.techDebtSources.cutFeatures || 0;
   product.techDebtSources.quickFixes = product.techDebtSources.quickFixes || 0;
   product.techDebtSources.legacyCode = product.techDebtSources.legacyCode || 0;
   product.activationRate = product.activationRate || 0.3;
@@ -89443,10 +89666,12 @@ function initFamilySystem(state) {
   }
   state.family.expenses.monthlyMortgage =
     state.family.expenses.monthlyMortgage || 0;
-  state.family.expenses.monthlyLiving = state.family.expenses.monthlyLiving || 3000;
+  state.family.expenses.monthlyLiving =
+    state.family.expenses.monthlyLiving || 3000;
   state.family.expenses.monthlyChildren =
     state.family.expenses.monthlyChildren || 0;
-  state.family.expenses.monthlyParents = state.family.expenses.monthlyParents || 0;
+  state.family.expenses.monthlyParents =
+    state.family.expenses.monthlyParents || 0;
   if (state.family.partner && !state.family.spouse) {
     state.family.spouse = state.family.partner;
   }
@@ -96634,6 +96859,37 @@ function applyInheritance(newState, prevState, inheritanceData) {
   // v3.0 P2-B-1：应用 NPC 巅峰好感（解锁老熟人信息）
   if (inheritanceData.peakAffinity && inheritanceData.peakAffinity.npcs) {
     newState.flags._prevPeakAffinity = inheritanceData.peakAffinity.npcs;
+  }
+
+  // === v3.8 P1-2: 差异化开局债务 ===
+  // 上局欠债未还 → 新周目催收上门
+  var prevDebt = prevState.resources?.villageDebt || 0;
+  if (
+    prevDebt > 0 &&
+    inheritanceData.badges &&
+    inheritanceData.badges.length >= 0
+  ) {
+    // 催收金额 = 上局债务的 5%~15%，上限 ¥2000
+    var debtCollect = Math.min(
+      2000,
+      Math.max(500, Math.round(prevDebt * (0.05 + Math.random() * 0.1))),
+    );
+    newState.flags._inheritanceDebtCollection = debtCollect;
+    newState.resources.cash = Math.max(
+      0,
+      (newState.resources.cash || 0) - debtCollect,
+    );
+    newState.flags._inheritanceDebtNote = "上局欠债未还，催收已上门";
+  }
+
+  // 上局违法多 → 新周目有案底
+  var prevArrests = prevState.flags?._arrestCount || 0;
+  if (prevArrests > 3) {
+    newState.flags._criminalRecord = true;
+    newState.flags._inheritanceCriminalRecord = true;
+    // 有案底的话找工作受限，开局减益
+    newState.player.fame = Math.max(0, (newState.player.fame || 0) - 5);
+    newState.flags._inheritanceArrestNote = "上局多次违法，留下案底影响求职";
   }
 
   // 标记继承来源
@@ -115720,6 +115976,36 @@ function renderNpcRelationships(state, content) {
       html += "</div>";
     }
 
+    // 对话记录（最近 3 条）
+    if (rel.interactionHistory && rel.interactionHistory.length > 0) {
+      var hist = rel.interactionHistory.slice(-3);
+      html +=
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">';
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px;">💬 最近对话</div>';
+      for (var hi = 0; hi < hist.length; hi++) {
+        var h = hist[hi];
+        html +=
+          '<div style="font-size:10px;line-height:1.4;color:var(--text-secondary);">';
+        html += "第" + h.day + "天 · ";
+        if (h.delta > 0)
+          html += '<span style="color:var(--success);">+' + h.delta + "</span>";
+        else if (h.delta < 0)
+          html += '<span style="color:var(--danger);">' + h.delta + "</span>";
+        else html += '<span style="color:var(--text-muted);">0</span>';
+        html += " " + h.message + "</div>";
+      }
+      html += "</div>";
+    }
+
+    // 深入聊天按钮
+    html += '<div style="margin-top:6px;">';
+    html +=
+      '<button class="btn btn-sm btn-primary" style="font-size:10px;padding:2px 8px;" data-npc-chat="' +
+      npcId +
+      '">💬 聊天 (2AP)</button>';
+    html += "</div>";
+
     html += "</div>";
   }
 
@@ -115762,6 +116048,28 @@ function renderNpcRelationships(state, content) {
   html += "</div></div>";
 
   content.innerHTML = html;
+
+  // 绑定深入聊天按钮事件
+  var chatBtns = content.querySelectorAll("[data-npc-chat]");
+  for (var cb = 0; cb < chatBtns.length; cb++) {
+    (function (btn) {
+      btn.onclick = function () {
+        var npcId = btn.getAttribute("data-npc-chat");
+        if (typeof chatWithNpc === "function") {
+          var state =
+            typeof StateManager !== "undefined"
+              ? StateManager.getState()
+              : null;
+          if (state) {
+            chatWithNpc(npcId, state);
+            renderNpcRelationships(state, content);
+          }
+        } else {
+          StateManager.addMessage("聊天功能暂不可用。", "warning");
+        }
+      };
+    })(chatBtns[cb]);
+  }
 }
 
 // ====== 社交Tab主渲染函数 ======
@@ -122503,12 +122811,30 @@ document.addEventListener("DOMContentLoaded", function () {
  * Web App runtime bridge (Phase 1)
  *
  * 让新架构的第一批数据化玩法进入旧游戏，不替代 legacy runtime。
+ * v3.8+: 从 3 个城市服务扩展到 7 个，新增自动推荐和 TS 数据目录摘要。
  */
 (function () {
   var APP_SAVE_SCHEMA_VERSION = 2;
-  var BRIDGE_VERSION = "0.1.0";
+  var BRIDGE_VERSION = "0.3.0";
+
+  var DATA_CATALOG_SUMMARY = {
+    version: "ts-data-phase3",
+    totalRecords: 93,
+    catalogs: [
+      { id: "cityServices", name: "城市服务", count: 7, status: "playable" },
+      { id: "lifeNodes", name: "人生节点", count: 4, status: "partial" },
+      { id: "events", name: "事件", count: 12, status: "typed" },
+      { id: "jobs", name: "职业", count: 12, status: "typed" },
+      { id: "locations", name: "地点", count: 14, status: "typed" },
+      { id: "items", name: "物品", count: 17, status: "typed" },
+      { id: "diseases", name: "疾病", count: 12, status: "typed" },
+      { id: "legal", name: "法律案件", count: 7, status: "typed" },
+      { id: "travel", name: "旅行目的地", count: 8, status: "partial" },
+    ],
+  };
 
   var CITY_SERVICE_ACTIONS = [
+    // === 原基础 3 个服务 ===
     {
       id: "labor_dispute_precheck",
       title: "劳动争议预检",
@@ -122539,11 +122865,58 @@ document.addEventListener("DOMContentLoaded", function () {
       apCost: 12,
       brief: "不离开本城，坐一日公交线走完老街、公园和夜市。",
     },
+
+    // === v3.8 新增：金融 ===
+    {
+      id: "social_security_query",
+      title: "社保缴纳查询",
+      icon: "🏛️",
+      category: "financial",
+      locationIds: ["gov_office"],
+      cost: 0,
+      apCost: 3,
+      brief: "查询社保缴纳记录，了解医保/养老/失业累计情况。",
+    },
+    {
+      id: "credit_report_query",
+      title: "个人信用报告",
+      icon: "📊",
+      category: "financial",
+      locationIds: ["bank"],
+      cost: 20,
+      apCost: 3,
+      brief: "查询个人征信报告，了解贷款资格和利率信息。",
+    },
+    {
+      id: "housing_fund_query",
+      title: "公积金提取咨询",
+      icon: "💰",
+      category: "financial",
+      locationIds: ["gov_office"],
+      cost: 0,
+      apCost: 2,
+      brief: "咨询住房公积金提取条件和流程，为买房做准备。",
+    },
+
+    // === v3.8 新增：健康 ===
+    {
+      id: "community_health_check",
+      title: "社区免费体检",
+      icon: "🏥",
+      category: "health",
+      locationIds: ["hospital", "park"],
+      cost: 0,
+      apCost: 4,
+      brief: "社区组织的免费基础体检，了解身体状况。",
+    },
   ];
 
   function ensureWebAppSaveMeta(state) {
     var now = Date.now();
-    if (!state._webApp || state._webApp.schemaVersion < APP_SAVE_SCHEMA_VERSION) {
+    if (
+      !state._webApp ||
+      state._webApp.schemaVersion < APP_SAVE_SCHEMA_VERSION
+    ) {
       var old = state._webApp || {};
       state._webApp = {
         schemaVersion: APP_SAVE_SCHEMA_VERSION,
@@ -122553,10 +122926,12 @@ document.addEventListener("DOMContentLoaded", function () {
           used: (old.cityServices && old.cityServices.used) || {},
           followUps: (old.cityServices && old.cityServices.followUps) || {},
           legalPrep: (old.cityServices && old.cityServices.legalPrep) || 0,
-          medicalRefunds: (old.cityServices && old.cityServices.medicalRefunds) || 0,
+          medicalRefunds:
+            (old.cityServices && old.cityServices.medicalRefunds) || 0,
           dayTrips: (old.cityServices && old.cityServices.dayTrips) || 0,
           lastActionDay:
-            old.cityServices && typeof old.cityServices.lastActionDay === "number"
+            old.cityServices &&
+            typeof old.cityServices.lastActionDay === "number"
               ? old.cityServices.lastActionDay
               : null,
           lastTickDay:
@@ -122577,6 +122952,7 @@ document.addEventListener("DOMContentLoaded", function () {
         souvenirs: [],
       };
     }
+    if (!state.flags) state.flags = {};
     return state._webApp;
   }
 
@@ -122586,7 +122962,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getAction(actionId) {
     for (var i = 0; i < CITY_SERVICE_ACTIONS.length; i++) {
-      if (CITY_SERVICE_ACTIONS[i].id === actionId) return CITY_SERVICE_ACTIONS[i];
+      if (CITY_SERVICE_ACTIONS[i].id === actionId)
+        return CITY_SERVICE_ACTIONS[i];
     }
     return null;
   }
@@ -122620,10 +122997,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     state.resources.cash -= action.cost;
-    state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - action.apCost);
-    meta.cityServices.used[action.id] = (meta.cityServices.used[action.id] || 0) + 1;
+    state.player.actionPoints = Math.max(
+      0,
+      (state.player.actionPoints || 0) - action.apCost,
+    );
+    meta.cityServices.used[action.id] =
+      (meta.cityServices.used[action.id] || 0) + 1;
     meta.cityServices.lastActionDay = state.player.day || 1;
 
+    // -- 基础 3 个服务 --
     if (action.id === "labor_dispute_precheck") {
       state.legal.prepScore = (state.legal.prepScore || 0) + 1;
       state.legal.lastPrepDay = state.player.day || 1;
@@ -122637,13 +123019,22 @@ document.addEventListener("DOMContentLoaded", function () {
       state.medical.billingReviews = (state.medical.billingReviews || 0) + 1;
       if (state.medical.insurance) {
         var baseSpent = state.medical.totalMedicalSpent || 0;
-        var refund = Math.max(60, Math.min(260, Math.round(baseSpent * 0.06) + 60));
+        var refund = Math.max(
+          60,
+          Math.min(260, Math.round(baseSpent * 0.06) + 60),
+        );
         state.resources.cash += refund;
         meta.cityServices.medicalRefunds += refund;
-        StateManager.addMessage("🪪 医保窗口复核成功，追回报销差额¥" + refund + "。", "success");
+        StateManager.addMessage(
+          "🪪 医保窗口复核成功，追回报销差额¥" + refund + "。",
+          "success",
+        );
       } else {
         state.medical.consultVoucher = (state.medical.consultVoucher || 0) + 1;
-        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
+        state.needs.happiness = Math.min(
+          100,
+          (state.needs.happiness || 50) + 3,
+        );
         StateManager.addMessage(
           "🪪 你弄清了医保档位，获得一次医保咨询记录。下次别再糊涂看病。",
           "info",
@@ -122661,6 +123052,38 @@ document.addEventListener("DOMContentLoaded", function () {
       StateManager.addMessage(
         "🚌 你在城市里绕了一整圈，带回一本「城市漫游手账」。心情+16，疲劳-6。",
         "success",
+      );
+
+      // -- 新增：金融 --
+    } else if (action.id === "social_security_query") {
+      state.flags._socialCredit = (state.flags._socialCredit || 0) + 1;
+      state.player.fame = Math.min(100, (state.player.fame || 0) + 1);
+      StateManager.addMessage(
+        "🏛️ 工作人员打印了你的社保缴费明细，这几年没白干。",
+        "info",
+      );
+    } else if (action.id === "credit_report_query") {
+      state.flags._creditChecked = (state.flags._creditChecked || 0) + 1;
+      StateManager.addMessage(
+        "📊 征信报告显示你的记录良好。银行愿意给你更好的贷款条件。",
+        "success",
+      );
+    } else if (action.id === "housing_fund_query") {
+      state.flags._housingFundChecked =
+        (state.flags._housingFundChecked || 0) + 1;
+      StateManager.addMessage(
+        "💰 你了解了公积金提取政策，发现存的钱比想象中多。",
+        "info",
+      );
+
+      // -- 新增：健康 --
+    } else if (action.id === "community_health_check") {
+      state.flags._healthChecked = true;
+      state.player.health = Math.min(100, (state.player.health || 100) + 2);
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+      StateManager.addMessage(
+        "🏥 体检结果显示你总体健康，但医生提醒要注意休息和饮食。",
+        "info",
       );
     }
 
@@ -122688,7 +123111,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!lastActionDay || day <= lastActionDay) return;
 
     var used = services.used || {};
-    if (used.labor_dispute_precheck > 0 && markFollowUp(meta, "labor_case_confidence")) {
+
+    // 劳动预检后续
+    if (
+      used.labor_dispute_precheck > 0 &&
+      markFollowUp(meta, "labor_case_confidence")
+    ) {
       state.legal.caseConfidence = (state.legal.caseConfidence || 0) + 5;
       state.legal.laborEvidencePrepared = true;
       StateManager.addMessage(
@@ -122697,7 +123125,11 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
 
-    if (used.insurance_bill_review > 0 && markFollowUp(meta, "medical_cost_awareness")) {
+    // 医保复核后续
+    if (
+      used.insurance_bill_review > 0 &&
+      markFollowUp(meta, "medical_cost_awareness")
+    ) {
       state.medical.costAwareness = (state.medical.costAwareness || 0) + 1;
       state.medical.billingNoteReady = true;
       StateManager.addMessage(
@@ -122706,11 +123138,26 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
 
-    if (used.weekend_micro_trip > 0 && markFollowUp(meta, "local_familiarity")) {
+    // 微旅行后续
+    if (
+      used.weekend_micro_trip > 0 &&
+      markFollowUp(meta, "local_familiarity")
+    ) {
       state.travel.localFamiliarity = (state.travel.localFamiliarity || 0) + 1;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
       StateManager.addMessage(
         "🗺️ 昨天的城市漫游留下了路线记忆。你知道哪条巷子便宜、哪班公交不绕路，城市熟悉度+1。",
+        "info",
+      );
+    }
+
+    // 信用报告后续：解锁贷款利率信息
+    if (
+      used.credit_report_query > 0 &&
+      markFollowUp(meta, "credit_loan_info")
+    ) {
+      StateManager.addMessage(
+        "💳 你的信用报告已归档。以后贷款时记得告诉银行你有良好信用记录，利率可以谈。",
         "info",
       );
     }
@@ -122723,6 +123170,66 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /**
+   * 基于玩家状态推荐城市服务（v3.8 新增）
+   * 返回推荐服务列表，最多 3 条。
+   */
+  function getRecommendedCityServices(state) {
+    if (!state) return [];
+    var meta = ensureWebAppSaveMeta(state);
+    var recs = [];
+
+    // 健康低→推荐体检
+    if (!state.flags._healthChecked && (state.player.health || 100) < 70) {
+      var found = getAction("community_health_check");
+      if (found)
+        recs.push({
+          action: found,
+          reason: "你的健康状况不太好，建议去社区做免费体检",
+        });
+    }
+
+    // 现金充裕且没查过信用→推荐信用报告
+    if (!state.flags._creditChecked && (state.resources.cash || 0) > 500) {
+      var found = getAction("credit_report_query");
+      if (found)
+        recs.push({
+          action: found,
+          reason: "你手头有闲钱，查下征信看看贷款资格",
+        });
+    }
+
+    // 工作超过 60 天→推荐社保查询
+    if (!state.flags._socialCredit && (state.player.day || 0) >= 60) {
+      var found = getAction("social_security_query");
+      if (found)
+        recs.push({
+          action: found,
+          reason: "你已经打了一段时间工，该查查社保缴纳情况了",
+        });
+    }
+
+    // 心情低→推荐微旅行
+    if (
+      (state.needs.happiness || 50) < 40 &&
+      (state.resources.cash || 0) >= 180
+    ) {
+      var found = getAction("weekend_micro_trip");
+      if (found)
+        recs.push({ action: found, reason: "心情不太好，周末出去走走散散心" });
+    }
+
+    return recs.slice(0, 3);
+  }
+
+  function getDataCatalogSummary() {
+    return {
+      version: DATA_CATALOG_SUMMARY.version,
+      totalRecords: DATA_CATALOG_SUMMARY.totalRecords,
+      catalogs: DATA_CATALOG_SUMMARY.catalogs.slice(),
+    };
+  }
+
   function showCityServiceModal() {
     if (typeof showModal !== "function") return;
     var state = currentState();
@@ -122731,10 +123238,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var actions = actionsForCurrentLocation(state);
     var body =
       '<div style="font-size:13px;line-height:1.7;">' +
-      '<p>这是 Web App 新架构接入的第一批数据化城市服务。它们会真实改变状态，并写入新存档元数据。</p>';
+      "<p>城市服务中心集成了政务、金融、健康等公共服务入口。每个服务都会真实影响你的游戏状态。</p>";
 
     if (actions.length === 0) {
-      body += '<p style="color:var(--text-secondary);">当前地点暂无城市服务入口。</p>';
+      body +=
+        '<p style="color:var(--text-secondary);">当前地点暂无城市服务入口。试试去政府办事大厅、医院、银行或公园。</p>';
     } else {
       body += '<div style="display:grid;gap:8px;">';
       actions.forEach(function (action) {
@@ -122748,7 +123256,7 @@ document.addEventListener("DOMContentLoaded", function () {
           action.cost +
           " · " +
           action.apCost +
-          "AP<br><span style=\"color:var(--text-secondary);\">" +
+          'AP<br><span style="color:var(--text-secondary);">' +
           action.brief +
           "</span></div>";
       });
@@ -122777,7 +123285,7 @@ document.addEventListener("DOMContentLoaded", function () {
     actions.push({
       id: "webapp_city_services",
       name: "城市服务中心",
-      desc: "Web App 新架构接入的医疗/法律/微旅行服务，会真实改变存档状态。",
+      desc: "Web App 新架构接入的政务/金融/健康/医疗/旅行服务入口。",
       icon: "🏙️",
       category: "生活服务",
       apCost: 0,
@@ -122787,6 +123295,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (typeof window !== "undefined") {
     window.WEBAPP_CITY_SERVICE_ACTIONS = CITY_SERVICE_ACTIONS;
+    window.WEBAPP_DATA_CATALOG_SUMMARY = DATA_CATALOG_SUMMARY;
     window.addWebAppBridgeActions = addWebAppBridgeActions;
     window.WebAppBridge = {
       version: BRIDGE_VERSION,
@@ -122794,6 +123303,8 @@ document.addEventListener("DOMContentLoaded", function () {
       showCityServiceModal: showCityServiceModal,
       applyCityService: applyCityService,
       tickCityServices: tickWebAppCityServices,
+      getRecommendedCityServices: getRecommendedCityServices,
+      getDataCatalogSummary: getDataCatalogSummary,
     };
 
     window.MECHANICS = window.MECHANICS || {};
@@ -122803,7 +123314,11 @@ document.addEventListener("DOMContentLoaded", function () {
       icon: "🏙️",
       brief: "Vite/TypeScript 新架构与旧游戏运行时之间的渐进迁移桥。",
       version: "phase1",
-      related: ["mechanics:medical_system", "mechanics:legal_system", "mechanics:travel_system"],
+      related: [
+        "mechanics:medical_system",
+        "mechanics:legal_system",
+        "mechanics:travel_system",
+      ],
       sections: [
         {
           type: "desc",
@@ -122817,7 +123332,12 @@ document.addEventListener("DOMContentLoaded", function () {
             "劳动争议预检：法律材料准备",
             "医保账单复核：医疗费用复核/报销差额",
             "周末城市微旅行：低成本旅行和心情恢复",
-            "城市服务后续：次日把服务结果沉淀为法律底气、医疗账单意识和城市熟悉度",
+            "社保缴纳查询：社会信用资产追踪",
+            "个人信用报告：贷款资格与利率信息",
+            "公积金提取咨询：住房改善信息",
+            "社区免费体检：低成本健康检查和预防",
+            "城市服务推荐：基于玩家状态自动推荐",
+            "TS 数据目录摘要：事件/职业/地点/物品/疾病/法律/旅行已填充",
           ],
         },
       ],

@@ -2419,7 +2419,9 @@ function _ensureStartupProductDefaults(product, day) {
   product.techDebtHistory = Array.isArray(product.techDebtHistory)
     ? product.techDebtHistory
     : [];
-  product.bugHistory = Array.isArray(product.bugHistory) ? product.bugHistory : [];
+  product.bugHistory = Array.isArray(product.bugHistory)
+    ? product.bugHistory
+    : [];
   product.crisisHistory = Array.isArray(product.crisisHistory)
     ? product.crisisHistory
     : [];
@@ -2431,8 +2433,10 @@ function _ensureStartupProductDefaults(product, day) {
   product.techDebtSources = product.techDebtSources || {};
   product.techDebtSources.rushDevelopment =
     product.techDebtSources.rushDevelopment || 0;
-  product.techDebtSources.skippedTests = product.techDebtSources.skippedTests || 0;
-  product.techDebtSources.cutFeatures = product.techDebtSources.cutFeatures || 0;
+  product.techDebtSources.skippedTests =
+    product.techDebtSources.skippedTests || 0;
+  product.techDebtSources.cutFeatures =
+    product.techDebtSources.cutFeatures || 0;
   product.techDebtSources.quickFixes = product.techDebtSources.quickFixes || 0;
   product.techDebtSources.legacyCode = product.techDebtSources.legacyCode || 0;
   product.activationRate = product.activationRate || 0.3;

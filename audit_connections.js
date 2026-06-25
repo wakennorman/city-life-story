@@ -482,9 +482,7 @@ function auditEvents(file) {
   console.log(`    Flag设置: ${withFlagSet}/${eventIds.length}`);
 
   if (npcRefCount < 10) {
-    addAdvisory(
-      `⚠️ 事件中NPC引用严重不足 (${npcRefCount}/${eventIds.length})`,
-    );
+    addAdvisory(`⚠️ 事件中NPC引用严重不足 (${npcRefCount}/${eventIds.length})`);
   }
 
   // 检查npc_event_bridge覆盖

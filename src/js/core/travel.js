@@ -190,7 +190,10 @@ function tickTravel(state) {
       }
       state._lastTravelEvent = evt.desc;
       if (typeof StateManager !== "undefined") {
-        StateManager.addMessage("✈️ " + evt.desc + "（" + evt.effect + "）", "info");
+        StateManager.addMessage(
+          "✈️ " + evt.desc + "（" + evt.effect + "）",
+          "info",
+        );
       }
     }
   }
@@ -204,7 +207,10 @@ function tickTravel(state) {
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
       if (typeof StateManager !== "undefined") {
-        StateManager.addMessage("🎁 旅行归来，带回了「" + gift + "」。", "success");
+        StateManager.addMessage(
+          "🎁 旅行归来，带回了「" + gift + "」。",
+          "success",
+        );
       }
     }
     // 心情恢复
@@ -231,7 +237,7 @@ function showTravelAgencyModal() {
 
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>从商业区的长途客运站出发，去别的城市喘口气。</p>' +
+    "<p>从商业区的长途客运站出发，去别的城市喘口气。</p>" +
     '<div style="display:grid;gap:8px;">';
   for (var key in TRAVEL_DESTINATIONS) {
     var d = TRAVEL_DESTINATIONS[key];
@@ -247,7 +253,7 @@ function showTravelAgencyModal() {
       d.apCost +
       "AP · " +
       d.days +
-      "天<br><span style=\"color:var(--text-secondary);\">" +
+      '天<br><span style="color:var(--text-secondary);">' +
       d.desc +
       "</span></div>";
   }

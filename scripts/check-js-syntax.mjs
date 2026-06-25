@@ -26,7 +26,9 @@ for (const file of files) {
   });
   if (result.status !== 0) {
     failed += 1;
-    console.error(result.stderr || result.stdout || `node --check failed: ${file}`);
+    console.error(
+      result.stderr || result.stdout || `node --check failed: ${file}`,
+    );
   }
 }
 

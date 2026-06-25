@@ -298,7 +298,7 @@ function showLegalOfficeModal() {
   }).join("");
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>' +
+    "<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>" +
     '<label>案件类型</label><select id="legal-case-select" style="width:100%;margin:4px 0 10px;">' +
     caseOptions +
     "</select>" +
@@ -324,7 +324,10 @@ function showLegalOfficeModal() {
             caseEl && caseEl.value,
             lawyerEl && lawyerEl.value,
           );
-          StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+          StateManager.addMessage(
+            result.msg,
+            result.ok ? "success" : "warning",
+          );
           if (!result.ok) return false;
           if (typeof renderAll === "function") renderAll();
         },

@@ -167,8 +167,7 @@ function checkLifeNodeRequirement(state, choice) {
     var need = req[key];
     var actual = 0;
     if (key === "cash") {
-      actual =
-        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
       actual = getHighestLifeNodeSkill(state);
     } else {
@@ -186,7 +185,7 @@ function showLifeNodeModal(node) {
   var state = StateManager.getState();
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>人生走到一个关键节点。这个选择会留下长期影响。</p>' +
+    "<p>人生走到一个关键节点。这个选择会留下长期影响。</p>" +
     '<ul style="margin-left:16px;color:var(--text-secondary);">';
   for (var i = 0; i < node.choices.length; i++) {
     body +=
@@ -220,7 +219,11 @@ function showLifeNodeModal(node) {
     };
   });
 
-  showModal({ title: node.icon + " " + node.name, body: body, buttons: buttons });
+  showModal({
+    title: node.icon + " " + node.name,
+    body: body,
+    buttons: buttons,
+  });
 }
 
 // ====== 节点效果应用 ======
@@ -302,7 +305,10 @@ function applyNodeChoice(state, nodeId, choiceKey) {
 function checkLifeNodes(state) {
   if (!state.flags) state.flags = {};
   if (state._pendingLifeNode) {
-    if (typeof document !== "undefined" && !document.querySelector(".modal-overlay")) {
+    if (
+      typeof document !== "undefined" &&
+      !document.querySelector(".modal-overlay")
+    ) {
       setTimeout(function () {
         showLifeNodeModal(state._pendingLifeNode);
       }, 80);

@@ -227,7 +227,7 @@ function showMedicalInsuranceModal() {
   var summary = getMedicalSummary(state);
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    '<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>' +
+    "<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>" +
     '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
     summary.join("<br>") +
     "</div>" +
@@ -242,7 +242,7 @@ function showMedicalInsuranceModal() {
       p.name +
       "</strong> · ¥" +
       p.monthly.toLocaleString() +
-      " / 次<br><span style=\"color:var(--text-secondary);\">" +
+      ' / 次<br><span style="color:var(--text-secondary);">' +
       p.desc +
       "</span></div>";
   }

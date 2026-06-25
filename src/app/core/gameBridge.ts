@@ -15,7 +15,9 @@ export function inspectBridgeHealth(): BridgeHealth {
     {
       name: "legacy StateManager",
       ok: Boolean(legacyWindow.StateManager),
-      detail: legacyWindow.StateManager ? "可读取旧游戏状态" : "旧游戏尚未在同一窗口加载",
+      detail: legacyWindow.StateManager
+        ? "可读取旧游戏状态"
+        : "旧游戏尚未在同一窗口加载",
     },
     {
       name: "typed city service data",
@@ -33,5 +35,10 @@ export function inspectBridgeHealth(): BridgeHealth {
       detail: legacyWindow.WebAppBridge?.version ?? "Vite 壳内不强制要求",
     },
   ];
-  return { ok: checks.every((check) => check.ok || check.name === "legacy StateManager"), checks };
+  return {
+    ok: checks.every(
+      (check) => check.ok || check.name === "legacy StateManager",
+    ),
+    checks,
+  };
 }
