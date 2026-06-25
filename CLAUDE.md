@@ -52,7 +52,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.8 TS 数据目录补全与内容审计（2026-06-25）
+- **最新一次工作**：v3.8 断点续传审查 — 人生事务常驻面板（2026-06-26）
+  - **审查产出**：已刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md`，按当前真实状态重新定位第一个断点为“4 大扩展系统可玩但不可见”
+  - **旧入口 UI**：`src/index.html` 新增“🧭 人生事务”Tab；`src/js/ui/render.js` 注册 `life_systems` renderer，不新增脚本、不重排既有 script 顺序
+  - **面板内容**：集中展示人生节点、医疗/医保、旅行记录、法律事务；按钮复用现有 `showLifeNodeModal`、`showMedicalInsuranceModal`、`showTravelAgencyModal`、`showLegalOfficeModal`
+  - **bridge 可见性**：同一面板展示 `WebAppBridge.getRecommendedCityServices()` 推荐服务和 `getDataCatalogSummary()` TS 内容接入状态
+  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4195.9 KB）、`npm run build` 全部通过；`dist/index.html` 已确认包含新 Tab 与 renderer
+
+- **上一轮工作**：v3.8 TS 数据目录补全与内容审计（2026-06-25）
   - **TS 内容目录**：`events/jobs/locations/items/diseases/legal/travel` 从占位常量补成实际 TypeScript 数据；当前首批为事件12、职业12、地点14、物品17、疾病12、法律案件7、旅行目的地8，`lifeNodes` 仍为4个完整节点
   - **统一 catalog**：新增 `src/app/data/index.ts`，汇总 9 个数据目录的数量、旧来源和 bridge 状态；Vite 调试壳新增“TypeScript 内容目录”面板
   - **自动审计**：新增 `scripts/audit-ts-data.mjs` 与 `npm run check:ts-data`，无外部运行依赖，检查每个 TS 数据目录导出数组的最低覆盖
@@ -86,10 +93,10 @@
 
 ## 🔁 Codex接力清单（未完成任务，按优先级排序）
 
-### 第一阶段：P0 状态（1项待完成）
+### 第一阶段：P0 状态（已完成）
 
 1. ✅ **P0 TS 数据目录填充** — events/jobs/locations/items/diseases/legal/travel/lifeNodes 均已有实际 TypeScript 类型和数据
-2. ❌ **P0 4 大扩展系统独立 UI 面板** — life_nodes/medical/travel/legal 无独立 Tab，仅靠弹窗+管线触发
+2. ✅ **P0 4 大扩展系统独立 UI 面板** — 新增“人生事务”Tab，集中展示 life_nodes/medical/travel/legal 状态，并复用原弹窗入口
 3. ✅ **P0 TS 数据目录自动化审计脚本** — `npm run check:ts-data` 校验各目录导出数组最低覆盖；后续可继续扩展字段对齐规则
 
 ### 第二阶段：P1 改进（2项，~300行+）
@@ -97,10 +104,10 @@
 4. **P1 超大文件拆分** — startup.js(14277行)/events_street.js(9827行)/render.js(6024行) 按主题渐进拆分
 5. **P1 4 大扩展系统深度联动** — 人生节点概率触发、医疗债务/保险纠纷、旅行行程定制、法律败诉连锁
 
-### 第三阶段：P2 修复（2项，~100行）
+### 第三阶段：P2 修复（1项，~100行）
 
 6. **P2 装备品质系统激活** — 品质框架就绪但玩家无感知，需 UI 展示和获取渠道
-7. **P2 CLAUDE.md 接力清单同步** — 维护已完成项的标记，确保口径一致
+7. ✅ **P2 CLAUDE.md 接力清单同步** — 已维护本轮完成项的标记，确保口径一致
 
 _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到P1）_
 

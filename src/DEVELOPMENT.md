@@ -1,6 +1,10 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.8 TS 数据目录补全与内容审计）
+> 最后更新: 2026-06-26（v3.8 断点续传审查：人生事务常驻面板）
+
+## 2026-06-26 — v3.8 断点续传审查：人生事务常驻面板
+
+本轮按断点续传流程重新读取 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 与进度文档，确认 TS 数据目录和 bridge 基础已完成，真正的 P0 断点是 4 大扩展系统“可玩但不可见”。已刷新三份 memory 产出，并在 legacy 正式入口新增“🧭 人生事务”Tab：`src/index.html` 增加 Tab 按钮，`src/js/ui/render.js` 注册 `life_systems` renderer，集中展示人生节点、医疗/医保、旅行记录、法律事务，所有操作按钮复用现有弹窗和状态函数，不新增脚本、不重排 script 顺序。同一面板还展示 `WebAppBridge.getRecommendedCityServices()` 城市服务推荐，以及 `getDataCatalogSummary()` 的 TS 内容接入状态。验证：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`、`npm run build` 全部通过，并确认 `dist/index.html` 已包含新 Tab 与 renderer。
 
 ## 2026-06-25 — v3.8 TS 数据目录补全与内容审计
 

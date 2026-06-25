@@ -1133,6 +1133,10 @@ const TAB_RENDERERS = {
   achievements: renderAchievementsTab,
   // 社交Tab：合并职场社交+家庭（跨文件）
   social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
+  life_systems: {
+    fn: renderLifeSystemsTab,
+    fallback: "人生事务系统加载中...",
+  },
   // 个人成长Tab（合并了原成长数据可视化+原个人成长）
   personal_growth: {
     fn: renderMergedPersonalGrowthTab,
@@ -1179,6 +1183,296 @@ function renderCurrentTab(state) {
   } else {
     area.innerHTML += '<p style="color:var(--text-muted)">📌 开发中...</p>';
   }
+}
+
+// ====== Life Systems Tab: 人生节点 / 医疗 / 旅行 / 法律 ======
+function _lifeSystemsEscape(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[ch];
+  });
+}
+
+function _lifeSystemsMoney(value) {
+  return "¥" + Math.round(value || 0).toLocaleString();
+}
+
+function _lifeSystemsLines(lines, emptyText) {
+  if (!Array.isArray(lines) || lines.length === 0) {
+    lines = [emptyText || "暂无记录"];
+  }
+  return lines
+    .map(function (line) {
+      return (
+        '<li style="margin:4px 0;color:var(--text-secondary);">' +
+        _lifeSystemsEscape(line) +
+        "</li>"
+      );
+    })
+    .join("");
+}
+
+function _lifeSystemsCard(icon, title, bodyHtml, buttonHtml) {
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;min-height:170px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">' +
+    '<h3 style="margin:0;font-size:14px;color:var(--text-primary);">' +
+    icon +
+    " " +
+    title +
+    "</h3>" +
+    (buttonHtml || "") +
+    "</div>" +
+    bodyHtml +
+    "</section>"
+  );
+}
+
+function openLifeSystemsPendingNode() {
+  var state = StateManager.getState();
+  var status =
+    typeof getLifeNodeStatus === "function"
+      ? getLifeNodeStatus(state)
+      : { pending: null };
+  var node =
+    state._pendingLifeNode ||
+    (status.pending &&
+      window.LIFE_NODES &&
+      window.LIFE_NODES[status.pending.id]);
+
+  if (node && typeof showLifeNodeModal === "function") {
+    showLifeNodeModal(node);
+    return;
+  }
+  StateManager.addMessage("当前没有待处理的人生节点。", "info");
+}
+
+function openLifeSystemsMedical() {
+  if (typeof showMedicalInsuranceModal === "function") {
+    showMedicalInsuranceModal();
+    return;
+  }
+  StateManager.addMessage("医疗系统尚未加载。", "warning");
+}
+
+function openLifeSystemsTravel() {
+  if (typeof showTravelAgencyModal === "function") {
+    showTravelAgencyModal();
+    return;
+  }
+  StateManager.addMessage("旅行系统尚未加载。", "warning");
+}
+
+function openLifeSystemsLegal() {
+  if (typeof showLegalOfficeModal === "function") {
+    showLegalOfficeModal();
+    return;
+  }
+  StateManager.addMessage("法律系统尚未加载。", "warning");
+}
+
+function openLifeSystemsCityServices() {
+  if (
+    window.WebAppBridge &&
+    typeof window.WebAppBridge.showCityServiceModal === "function"
+  ) {
+    window.WebAppBridge.showCityServiceModal();
+    return;
+  }
+  StateManager.addMessage("Web App 城市服务桥接尚未加载。", "warning");
+}
+
+function _renderLifeNodePanel(state) {
+  var status =
+    typeof getLifeNodeStatus === "function"
+      ? getLifeNodeStatus(state)
+      : { completed: [], pending: null };
+  var completed = status.completed || [];
+  var lines = [];
+  lines.push(
+    "已完成节点：" +
+      (completed.length
+        ? completed
+            .map(function (node) {
+              return node.icon + node.name;
+            })
+            .join("、")
+        : "暂无"),
+  );
+  lines.push(
+    "待处理节点：" +
+      (status.pending ? status.pending.icon + status.pending.name : "暂无"),
+  );
+  if (typeof getGaokaoNarrative === "function") {
+    var narrative = getGaokaoNarrative(state);
+    if (narrative) lines.push("高考回忆：" + narrative);
+  }
+  return _lifeSystemsCard(
+    "🎯",
+    "人生节点",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines) +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsPendingNode()">处理节点</button>',
+  );
+}
+
+function _renderMedicalPanel(state) {
+  var lines =
+    typeof getMedicalSummary === "function"
+      ? getMedicalSummary(state)
+      : ["医疗系统未加载"];
+  var illnesses =
+    (state.status && state.status.illnesses && state.status.illnesses.length) ||
+    0;
+  if (illnesses > 0) lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
+  return _lifeSystemsCard(
+    "🏥",
+    "医疗与医保",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无医疗记录") +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedical()">医保咨询</button>',
+  );
+}
+
+function _renderTravelPanel(state) {
+  var lines =
+    typeof getTravelStatus === "function"
+      ? getTravelStatus(state)
+      : ["旅行系统未加载"];
+  return _lifeSystemsCard(
+    "✈️",
+    "旅行记录",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无旅行记录") +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsTravel()">长途旅行</button>',
+  );
+}
+
+function _renderLegalPanel(state) {
+  var lines =
+    typeof getLegalSummary === "function"
+      ? getLegalSummary(state)
+      : ["法律系统未加载"];
+  return _lifeSystemsCard(
+    "⚖️",
+    "法律事务",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无案件记录") +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>',
+  );
+}
+
+function _renderBridgeRecommendations(state) {
+  var bridge = window.WebAppBridge;
+  var recs = [];
+  if (bridge && typeof bridge.getRecommendedCityServices === "function") {
+    recs = bridge.getRecommendedCityServices(state) || [];
+  }
+
+  var body = "";
+  if (recs.length > 0) {
+    body =
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;">' +
+      recs
+        .map(function (rec) {
+          var action = rec.action || {};
+          return (
+            '<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--bg-input);">' +
+            '<strong style="font-size:13px;color:var(--text-primary);">' +
+            _lifeSystemsEscape((action.icon || "🏙️") + " " + action.title) +
+            "</strong>" +
+            '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' +
+            _lifeSystemsEscape(rec.reason || action.brief || "") +
+            "</div>" +
+            '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' +
+            _lifeSystemsMoney(action.cost || 0) +
+            " · " +
+            (action.apCost || 0) +
+            "AP · 入口：" +
+            _lifeSystemsEscape((action.locationIds || []).join(" / ") || "当前地点") +
+            "</div>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>";
+  } else {
+    body =
+      '<p style="margin:0;color:var(--text-secondary);font-size:13px;">当前没有强推荐服务。你仍可打开城市服务中心，查看当前地点可用的政务、金融和健康服务。</p>';
+  }
+
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">' +
+    '<h3 style="margin:0;font-size:14px;color:var(--text-primary);">🏙️ 城市服务推荐</h3>' +
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsCityServices()">打开服务中心</button>' +
+    "</div>" +
+    body +
+    "</section>"
+  );
+}
+
+function _renderDataCatalogBridgeStatus() {
+  var bridge = window.WebAppBridge;
+  if (!bridge || typeof bridge.getDataCatalogSummary !== "function") return "";
+  var summary = bridge.getDataCatalogSummary();
+  var statusLabel = { playable: "可玩", partial: "部分接入", typed: "仅类型化" };
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;">' +
+    '<h3 style="margin:0 0 8px;font-size:14px;color:var(--text-primary);">📂 TypeScript 内容接入状态</h3>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+    (summary.catalogs || [])
+      .map(function (catalog) {
+        return (
+          '<span style="display:inline-flex;gap:4px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:11px;background:var(--bg-input);">' +
+          _lifeSystemsEscape(catalog.name) +
+          " · " +
+          _lifeSystemsEscape(String(catalog.count)) +
+          " · " +
+          _lifeSystemsEscape(statusLabel[catalog.status] || catalog.status) +
+          "</span>"
+        );
+      })
+      .join("") +
+    "</div>" +
+    '<p style="margin:8px 0 0;font-size:11px;color:var(--text-muted);">总计 ' +
+    _lifeSystemsEscape(String(summary.totalRecords || 0)) +
+    " 条 TS 内容；显示为“仅类型化”的目录尚未自动进入旧游戏行动或事件池。</p>" +
+    "</section>"
+  );
+}
+
+function renderLifeSystemsTab(state, parent) {
+  if (typeof initMedicalState === "function") initMedicalState(state);
+  if (typeof initTravelState === "function") initTravelState(state);
+  if (typeof initLegalState === "function") initLegalState(state);
+
+  var wrap = document.createElement("div");
+  wrap.style.cssText = "padding:12px;display:flex;flex-direction:column;gap:12px;";
+  wrap.innerHTML =
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);padding:12px;">' +
+    '<h2 style="margin:0 0 6px;font-size:16px;color:var(--text-primary);">🧭 人生事务</h2>' +
+    '<p style="margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;">集中查看会影响长期人生的事务：关键节点、医保治疗、旅行记录、法律案件，以及 Web App 桥接进来的城市服务。</p>' +
+    "</section>" +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">' +
+    _renderLifeNodePanel(state) +
+    _renderMedicalPanel(state) +
+    _renderTravelPanel(state) +
+    _renderLegalPanel(state) +
+    "</div>" +
+    _renderBridgeRecommendations(state) +
+    _renderDataCatalogBridgeStatus();
+
+  parent.appendChild(wrap);
 }
 
 // ====== Growth Tab — 委托到 data_viz.js 新版 ======
