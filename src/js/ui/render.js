@@ -730,9 +730,10 @@ function renderLocation(state) {
       ? SEASONS.find((s) => s.id === weather.season)
       : null;
   const locNameEl = document.getElementById("location-name");
-  if (locNameEl && weatherDef && seasonDef) {
+  if (locNameEl && loc && weatherDef && seasonDef) {
     locNameEl.innerHTML = `${loc.name} <span style="font-size:11px;color:var(--text-secondary);">${seasonDef.icon}${seasonDef.name} ${weatherDef.icon}${weatherDef.name} ${Math.round(weather.temperature || 22)}°C</span>`;
   }
+  renderHeaderContext(state, loc, weatherDef, seasonDef);
 
   // 服务标签
   const servicesEl = document.getElementById("location-services");
@@ -876,6 +877,47 @@ function renderLocation(state) {
 
   // 天气面板（天气深化系统）
   renderWeatherPanel(state);
+}
+
+function renderHeaderContext(state, loc, weatherDef, seasonDef) {
+  var el = document.getElementById("header-context");
+  if (!el) return;
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData ? houseData.name : "露宿街头";
+  var itemCount = (state.inventory.items || []).reduce(function (sum, item) {
+    return sum + (item.qty || 0);
+  }, 0);
+  var totalCap = state.inventory.capacity || 0;
+  var weatherText =
+    weatherDef && seasonDef
+      ? seasonDef.icon +
+        seasonDef.name +
+        " " +
+        weatherDef.icon +
+        weatherDef.name +
+        " " +
+        Math.round((state.weather && state.weather.temperature) || 22) +
+        "°C"
+      : "";
+  var upgradeTip =
+    state.housing && state.housing.tier < 3 ? " · 可升级处所" : "";
+  el.innerHTML =
+    '<span class="context-chip">📍 ' +
+    (loc ? loc.name : locKey) +
+    "</span>" +
+    (weatherText ? '<span class="context-chip">' + weatherText + "</span>" : "") +
+    '<span class="context-chip">🏠 ' +
+    houseName +
+    "</span>" +
+    '<span class="context-chip">🎒 ' +
+    itemCount +
+    "/" +
+    totalCap +
+    upgradeTip +
+    "</span>";
 }
 
 /**

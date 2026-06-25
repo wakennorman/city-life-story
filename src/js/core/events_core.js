@@ -486,6 +486,50 @@ function checkChainEventQueue(state, phase) {
  * ========================================================= */
 
 /** 每日新闻判定（旧 API，保持兼容） */
+function showNewsBriefingModal(news, state) {
+  if (!news || typeof document === "undefined") return;
+  state.flags._newsPopupSeen = state.flags._newsPopupSeen || {};
+  var key = news.id + "_" + state.player.day;
+  if (state.flags._newsPopupSeen[key]) return;
+  state.flags._newsPopupSeen[key] = true;
+
+  var attempts = 0;
+  function openWhenReady() {
+    attempts++;
+    if (document.querySelector(".modal-overlay") && attempts < 8) {
+      setTimeout(openWhenReady, 450);
+      return;
+    }
+    if (typeof showModal !== "function") return;
+    var level = news.level ? " · " + news.level : "";
+    var type = news.type ? " · " + news.type : "";
+    var duration = news.duration ? "影响约" + news.duration + "天" : "影响持续观察";
+    showModal({
+      title: "📰 新闻快报",
+      body:
+        '<div style="font-size:13px;line-height:1.65;">' +
+        '<div style="font-weight:700;color:var(--text-primary);margin-bottom:8px;">' +
+        (news.headline || "突发新闻") +
+        "</div>" +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">' +
+        "第" +
+        state.player.day +
+        "天" +
+        level +
+        type +
+        " · " +
+        duration +
+        "</div>" +
+        '<div style="padding:8px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);">' +
+        (news.desc || "这条新闻正在影响城市里的价格、工作和人心。") +
+        "</div>" +
+        "</div>",
+      buttons: [{ text: "知道了", cls: "btn-primary", callback: function () {} }],
+    });
+  }
+  setTimeout(openWhenReady, 120);
+}
+
 function rollDailyNews(state) {
   // 街头阶段：触发随机事件弹窗，同时小概率触发投资新闻
   if (state.player.phase === "street") {
@@ -512,6 +556,7 @@ function rollDailyNews(state) {
         state.flags.seenNewsToday.push(investNews.id);
         applyNewsEffect(investNews, state);
         StateManager.addMessage("📰 " + investNews.headline, "event");
+        showNewsBriefingModal(investNews, state);
       }
     }
     return;
@@ -526,6 +571,7 @@ function rollDailyNews(state) {
       state.flags.seenNewsToday.push(news.id);
       applyNewsEffect(news, state);
       StateManager.addMessage(`📰 ${news.headline}`, "event");
+      showNewsBriefingModal(news, state);
     }
   }
   // 职场事件

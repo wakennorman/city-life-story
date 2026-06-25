@@ -184,6 +184,24 @@ body {
   font-weight: 700;
 }
 
+.header-context {
+  gap: 4px;
+  max-width: min(44vw, 560px);
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.header-context .context-chip {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* 单债务闪烁（只有一种债务时，沉稳的红色呼吸闪烁） */
 .header-stat .value.debt.single-debt-blink {
   animation: debt-blink 1.2s ease-in-out infinite;

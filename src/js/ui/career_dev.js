@@ -620,7 +620,8 @@ function checkCareerPromotion(state, pathId, level) {
       else if (skill === "physique") actual = p.physique || 0;
       else if (skill === "agility") actual = p.agility || 0;
       else if (skill === "charm") actual = p.charm || 0;
-      else if (p.skills && p.skills[skill]) actual = p.skills[skill].level || 0;
+      else if (state.skills && state.skills[skill])
+        actual = state.skills[skill].level || 0;
       else return false;
       if (actual < required) return false;
     }
@@ -648,18 +649,61 @@ function checkCareerPromotion(state, pathId, level) {
   var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
   if (level.reqWorkDays && workDays < level.reqWorkDays) return false;
 
+  // 业绩检查：高阶职位不仅熬年限，还要有可见绩效。
+  var performanceReq = getCareerPerformanceRequirement(level);
+  if (performanceReq && getCareerPerformanceScore(state) < performanceReq) {
+    return false;
+  }
+
   // 社交关系检查（高阶职位需要）
   if (level.reqSocial) {
-    var colleagues = state.workplaceSocial?.colleagues?.network || [];
-    if (!colleagues.length)
-      colleagues = state.corporate?.colleagues?.network || [];
-    var highTrust = colleagues.filter(function (c) {
-      return c.relationship >= 60;
-    }).length;
-    if (highTrust < level.reqSocial / 20) return false;
+    if (getCareerTrustedNetworkCount(state) < Math.floor(level.reqSocial / 20)) {
+      return false;
+    }
   }
 
   return true;
+}
+
+function getCareerPerformanceRequirement(level) {
+  if (level.reqPerformance) return level.reqPerformance;
+  if (!level.reqWorkDays) return 0;
+  var years = Math.floor(level.reqWorkDays / 365);
+  return Math.min(80, 25 + years * 12);
+}
+
+function getCareerPerformanceScore(state) {
+  var career = state.career || {};
+  var job = career.currentJob || {};
+  if (typeof job.performance === "number") return job.performance;
+  var corp = state.player && state.player.corporate;
+  if (corp && typeof corp.kpi === "number") return corp.kpi;
+  if (state.corporate && typeof state.corporate.kpi === "number") {
+    return state.corporate.kpi;
+  }
+  return 50;
+}
+
+function getCareerTrustedNetworkCount(state) {
+  var colleagues = [];
+  if (
+    state.workplaceSocial &&
+    state.workplaceSocial.colleagues &&
+    Array.isArray(state.workplaceSocial.colleagues.network)
+  ) {
+    colleagues = state.workplaceSocial.colleagues.network;
+  }
+  if (
+    !colleagues.length &&
+    state.corporate &&
+    state.corporate.colleagues &&
+    Array.isArray(state.corporate.colleagues.network)
+  ) {
+    colleagues = state.corporate.colleagues.network;
+  }
+  return colleagues.filter(function (c) {
+    return (c.relationship || c.trust || c.affinity || 0) >= 60;
+  }).length;
 }
 
 /** 渲染晋升条件文字（v3.2 更新：显示属性+颜值要求） */
@@ -702,8 +746,10 @@ function renderPromotionReqs(state, pathId, level) {
   if (level.reqEducation) parts.push("大专以上学历");
   if (level.reqWorkDays)
     parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
+  var performanceReq = getCareerPerformanceRequirement(level);
+  if (performanceReq) parts.push("业绩≥" + performanceReq);
   if (level.reqSocial)
-    parts.push("信任同事≥" + Math.floor(level.reqSocial / 20) + "人");
+    parts.push("职场人脉≥" + Math.floor(level.reqSocial / 20) + "人");
   return "要求：" + parts.join(" · ");
 }
 

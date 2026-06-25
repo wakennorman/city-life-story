@@ -198,6 +198,7 @@
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
+          <div class="header-stat header-context" id="header-context"></div>
           <div class="header-stat" id="header-mode-stat" style="display: none">
             <span class="label">🎮</span>
             <span class="value" id="header-mode"></span>
@@ -323,7 +324,7 @@
         </div>
 
         <!-- 基本需求 -->
-        <div class="sidebar-section">
+        <div class="sidebar-section" id="location-section" style="display: none">
           <h3>📊 状态</h3>
           <div class="stat-row" id="stat-hunger">
             <span class="stat-label">饥饱</span>
@@ -438,7 +439,7 @@
         </div>
 
         <!-- 附近地点快速出行 -->
-        <div class="sidebar-section" id="nearby-section">
+        <div class="sidebar-section" id="nearby-section" style="display: none">
           <h3>🚶 附近可前往</h3>
           <div
             id="nearby-locations"
