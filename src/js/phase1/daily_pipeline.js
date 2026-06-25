@@ -1002,6 +1002,20 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === v3.8 Web App bridge: 城市服务后续反馈 ===
+  {
+    name: "webapp_city_services_tick",
+    fn: function (state) {
+      if (
+        typeof WebAppBridge !== "undefined" &&
+        WebAppBridge &&
+        typeof WebAppBridge.tickCityServices === "function"
+      ) {
+        WebAppBridge.tickCityServices(state);
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */

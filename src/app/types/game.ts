@@ -48,10 +48,12 @@ export interface WebAppSaveMeta {
   lastMigratedAt: number;
   cityServices: {
     used: Record<string, number>;
+    followUps: Record<string, boolean>;
     legalPrep: number;
     medicalRefunds: number;
     dayTrips: number;
     lastActionDay: number | null;
+    lastTickDay?: number | null;
   };
 }
 
@@ -73,5 +75,6 @@ export interface LegacyWindow extends Window {
     ensureSaveMeta: (state: LegacyGameState) => WebAppSaveMeta;
     showCityServiceModal: () => void;
     applyCityService: (id: string) => boolean;
+    tickCityServices: (state: LegacyGameState) => void;
   };
 }

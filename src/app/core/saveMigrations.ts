@@ -1,6 +1,6 @@
 import type { LegacyGameState, WebAppSaveMeta } from "../types/game";
 
-export const APP_SAVE_SCHEMA_VERSION = 1;
+export const APP_SAVE_SCHEMA_VERSION = 2;
 
 export function ensureWebAppSaveMeta(state: LegacyGameState): WebAppSaveMeta {
   const now = Date.now();
@@ -15,10 +15,12 @@ export function ensureWebAppSaveMeta(state: LegacyGameState): WebAppSaveMeta {
     lastMigratedAt: now,
     cityServices: {
       used: current?.cityServices?.used ?? {},
+      followUps: current?.cityServices?.followUps ?? {},
       legalPrep: current?.cityServices?.legalPrep ?? 0,
       medicalRefunds: current?.cityServices?.medicalRefunds ?? 0,
       dayTrips: current?.cityServices?.dayTrips ?? 0,
       lastActionDay: current?.cityServices?.lastActionDay ?? null,
+      lastTickDay: current?.cityServices?.lastTickDay ?? null,
     },
   };
 

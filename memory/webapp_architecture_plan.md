@@ -2,6 +2,10 @@
 
 更新时间：2026-06-25
 
+## 当前实施状态
+
+第一阶段已按桥接式方案落地：Vite/TypeScript 工程已建立，`src/app/` 已包含 shell、typed data、bridge facade、save migration 和 health check；legacy 侧新增 `src/js/app_bridge/webapp_runtime_bridge.js`，并通过 `actions_extra.js` 注入“城市服务中心”，通过 `daily_pipeline.js` 注入城市服务次日反馈。正式可玩入口仍是 `src/index.html` / `dist/index.html`，新架构 shell 是并行开发与验证入口，不负责替代旧入口。
+
 ## 推荐技术栈
 
 - 第一阶段采用 Vite + TypeScript + 原生 DOM，不引入 React、Phaser 或其他运行时框架。
@@ -16,7 +20,7 @@ city-life-story/
   index.html                    # Vite 开发 shell，不替代旧入口
   package.json
   tsconfig.json
-  vite.config.ts
+  vite.config.mjs
   src/
     index.html                  # 旧正式入口，继续被 build.py 使用
     app/
@@ -39,7 +43,6 @@ city-life-story/
         lifeNodes/
         cityServices.ts         # 第一阶段验证用真实玩法数据
       ui/
-        mount.ts
         panels.ts
       debug/
         healthCheck.ts
@@ -58,6 +61,22 @@ city-life-story/
 - 存档层：只读写可序列化状态；新迁移函数以 `APP_SAVE_SCHEMA_VERSION` 为入口，先在 bridge 中幂等补字段，不改旧 localStorage 键。
 - 事件层：长期目标是把随机事件、链式后续、系统 tick 事件统一成可注册目录；第一阶段只新增 city service action pack 验证入口。
 - 调试层：集中提供 health check、数据目录统计、bridge ready 状态和 legacy runtime 探针，不进入玩家存档。
+
+## 旧框架删除评估
+
+结论：第一阶段不删除 legacy 框架。
+
+原因：
+
+- `src/index.html`、`src/js/**` 和 `python build.py -> dist/index.html` 仍承载正式可玩游戏、存档读写、主 UI、行动系统、每日管线、百科注册和大量已验证内容。
+- `src/app/` 目前是并行 Web App 架构壳和新增内容承载层，还没有完整替代开局、存档、多 Tab、经济、创业、社交、结局等主流程。
+- 直接删除 legacy 会破坏项目文档中的强约束：正式入口、单文件构建、script 顺序和存档兼容。
+
+处理方式：
+
+- 保留 legacy 正式入口，禁止重排既有 script；只允许在末尾追加 bridge 或在明确位置加入小型 facade 调用。
+- 后续若某个系统迁移完成，必须满足：新数据源可枚举、新 service 可测试、legacy 入口仍可触发、旧字段有迁移函数、构建与浏览器冒烟通过，才能删除对应旧模块。
+- 生成产物 `dist/index.html` 不和源码功能混提；每次 `python build.py` 后单独确认差异只来自当前源码，再提交。
 
 ## 存档兼容策略
 
@@ -125,6 +144,6 @@ city-life-story/
 - `src/index.html` 旧游戏仍能打开并进入核心流程。
 - `npm run build` 可构建 Vite shell。
 - 新增数据和 bridge action 至少让玩家触发 2-3 个真实状态变化。
-- 存档状态出现 `_webApp.schemaVersion`，旧档不报错。
+- 存档状态出现 `_webApp.schemaVersion=2`，旧档不报错。
 - `python build.py` 成功，`node --check` 通过新增/修改 JS。
 - 文档记录已迁移/未迁移边界和下一阶段风险。

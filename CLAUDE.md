@@ -16,8 +16,9 @@
 
 ### 新文件规则
 
-- 新 JS 模块 → 放在 `city-life-story/src/js/` 下
-- 必须在 `city-life-story/src/index.html` 中注册加载
+- 旧运行时 JS 模块 → 放在 `city-life-story/src/js/` 下，并在 `city-life-story/src/index.html` 中注册加载
+- Web App 新架构模块 → 放在 `city-life-story/src/app/` 下，优先使用 TypeScript 数据目录和 facade，不直接新增散落全局对象
+- 新玩法若要进入当前可玩版本，先通过 `src/js/app_bridge/` 或旧行动/管线桥接接入；不要把 Vite shell 当成正式入口替换 `src/index.html`
 
 ## 🔥 触发短语（极简快捷指令 — 跨 Hermes / Claude Code / 任意 agent）
 
@@ -42,15 +43,23 @@
 - 入口: `src/index.html`（开发）/ `dist/index.html`（部署）
 - **构建**: 每次修改 `src/` 后必须 `python build.py` 重新打包 `dist/`
 - 开发文档: `src/DEVELOPMENT.md`（每次改动必须同步更新）
-- 技术栈: 纯 HTML5 + CSS + Vanilla JS，零框架，无 npm 构建步骤
+- 技术栈: legacy 正式运行时仍是 HTML5 + CSS + Vanilla JS；v3.8 起新增 Vite + TypeScript 作为并行 Web App 架构壳和类型化迁移通道
 - **核心架构: 世界参数反馈环（v1.7）** — `src/js/core/world_params.js` 定义统一的 `_worldParams` 状态，将行业热度/市场情绪/财富等级纳入单一反馈闭环。行业热度由随机漂移+传导+新闻驱动（玩家个人不直接影响），财富反馈由玩家总资产决定，所有参数以 2%/天向基线衰减
 - 所有 JS 文件通过 `<script src="...">` 在 index.html 中按序加载，**禁止改变 script 标签顺序**
+- Web App 迁移提醒：后续新增事件、职业、地点、疾病、法律、旅行、人生节点等配置，优先进入 `src/app/data/*`；需要写入旧游戏时再通过 bridge/facade 接入。新增存档字段优先挂在 `_webApp` 并配套迁移函数，避免继续把所有兼容逻辑塞进 `state.js`。
 
 ## 当前状态
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.0 审查改进与扩展 — 完整中后期压力试玩与长流程修复（2026-06-25）
+- **最新一次工作**：v3.8 Web App 架构第一阶段 — Vite/TypeScript 桥接迁移与城市服务玩法（2026-06-25）
+  - **架构变化**：新增根目录 `index.html`、`package.json`、`tsconfig.json`、`vite.config.mjs`、`src/app/`；旧 `src/index.html` 继续作为正式游戏入口，`python build.py` 仍生成 `dist/index.html`
+  - **桥接边界**：新增 `src/js/app_bridge/webapp_runtime_bridge.js`，只追加到旧入口末尾，不重排既有 script；`actions_extra.js` 通过 `addWebAppBridgeActions` 注入可玩入口
+  - **真实玩法验证**：新增“城市服务中心”，在政府办事大厅/医院/商业区或公园触发劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2` 和对应医疗/法律/旅行状态；次日通过每日管线沉淀为法律底气、医疗账单意识和城市熟悉度
+  - **后续开发提醒**：新增内容先看 `memory/webapp_migration_overview.md` 与 `memory/webapp_architecture_plan.md`；不要继续把所有新数据只塞进 legacy 全局脚本，除非需要兼容当前正式入口
+  - **验证**：`npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py`、浏览器/脚本冒烟验证需在收工前保持通过
+
+- **上一轮工作**：v3.0 审查改进与扩展 — 完整中后期压力试玩与长流程修复（2026-06-25）
   - **审查产出**：已新增 `memory/overview.md` / `memory/diagnosis.md` / `memory/improvement_plan.md`
   - **长流程修复**：修复创业产品默认字段缺失、NPC发现字段缺数组、极端状态跳过失败判定、结局弹窗读取 inventory、家庭月度开支默认值、企业命运变量拼写、个人成长年度重置、链式事件重复声明等中后期崩点
   - **经济修复**：银行存款基础日息从 `0.001` 校正为 `0.0001`，会计技能加成按“年化最多 +5%”折算到日息，避免中后期资金指数膨胀
@@ -58,7 +67,7 @@
   - **审计**：`audit_connections.js` 以项目根 `.cjs` 临时副本运行，0 问题/45 建议；`audit_events.js` 以 `.cjs` 临时副本运行，检查 225 个事件并输出 48 条既有上下文提示
   - **剩余风险**：长跑分支为覆盖中后期关闭了提前胜利短路，并在每日后维持基础生存资源；这不是人工完整游玩。创业声誉仍可长期跌到负值，属于后续平衡项
 
-- **上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
+- **再上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
   - **系统1 人生节点** `core/life_nodes.js` — 高考/大学/35岁危机/退休 4大里程碑，属性门槛+分支选择+效果应用，MECHANICS+NARRATIVES注册
   - **系统2 医疗深度** `core/medical.js` — 4级疾病分级(轻症/中症/重症/危重症)，3档医保(50%-90%报销)，门诊+住院+康复+保险购买
   - **系统3 旅行系统** `core/travel.js` — 5个国内目的地(北京/上海/成都/西安/大理)，旅行事件+纪念品收集+特产风味

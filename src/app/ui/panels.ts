@@ -42,6 +42,7 @@ export function renderCityServicesPanel(): HTMLElement {
               <dt>入口</dt><dd>${action.locationIds.join(" / ")}</dd>
               <dt>成本</dt><dd>¥${action.cost} · ${action.apCost} AP</dd>
               <dt>状态变化</dt><dd>${action.stateEffects.join("；")}</dd>
+              <dt>后续反馈</dt><dd>${action.followUps.join("；")}</dd>
             </dl>
           </article>
         `,

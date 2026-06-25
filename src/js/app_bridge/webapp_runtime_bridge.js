@@ -4,7 +4,7 @@
  * 让新架构的第一批数据化玩法进入旧游戏，不替代 legacy runtime。
  */
 (function () {
-  var APP_SAVE_SCHEMA_VERSION = 1;
+  var APP_SAVE_SCHEMA_VERSION = 2;
   var BRIDGE_VERSION = "0.1.0";
 
   var CITY_SERVICE_ACTIONS = [
@@ -50,12 +50,17 @@
         lastMigratedAt: now,
         cityServices: {
           used: (old.cityServices && old.cityServices.used) || {},
+          followUps: (old.cityServices && old.cityServices.followUps) || {},
           legalPrep: (old.cityServices && old.cityServices.legalPrep) || 0,
           medicalRefunds: (old.cityServices && old.cityServices.medicalRefunds) || 0,
           dayTrips: (old.cityServices && old.cityServices.dayTrips) || 0,
           lastActionDay:
             old.cityServices && typeof old.cityServices.lastActionDay === "number"
               ? old.cityServices.lastActionDay
+              : null,
+          lastTickDay:
+            old.cityServices && typeof old.cityServices.lastTickDay === "number"
+              ? old.cityServices.lastTickDay
               : null,
         },
       };
@@ -162,6 +167,54 @@
     return true;
   }
 
+  function markFollowUp(meta, followUpId) {
+    if (meta.cityServices.followUps[followUpId]) return false;
+    meta.cityServices.followUps[followUpId] = true;
+    return true;
+  }
+
+  function tickWebAppCityServices(state) {
+    if (!state) return;
+    var meta = ensureWebAppSaveMeta(state);
+    var services = meta.cityServices;
+    var day = state.player.day || 1;
+
+    if (services.lastTickDay === day) return;
+    services.lastTickDay = day;
+
+    var lastActionDay =
+      typeof services.lastActionDay === "number" ? services.lastActionDay : 0;
+    if (!lastActionDay || day <= lastActionDay) return;
+
+    var used = services.used || {};
+    if (used.labor_dispute_precheck > 0 && markFollowUp(meta, "labor_case_confidence")) {
+      state.legal.caseConfidence = (state.legal.caseConfidence || 0) + 5;
+      state.legal.laborEvidencePrepared = true;
+      StateManager.addMessage(
+        "📎 昨天整理的劳动材料派上用场了。你把合同、工资流水和聊天记录装进同一个文件夹，法律纠纷底气+5。",
+        "info",
+      );
+    }
+
+    if (used.insurance_bill_review > 0 && markFollowUp(meta, "medical_cost_awareness")) {
+      state.medical.costAwareness = (state.medical.costAwareness || 0) + 1;
+      state.medical.billingNoteReady = true;
+      StateManager.addMessage(
+        "🧾 你把医保复核结果记进账本。以后看到检查单和药费明细，不会再只剩一句“怎么这么贵”。",
+        "info",
+      );
+    }
+
+    if (used.weekend_micro_trip > 0 && markFollowUp(meta, "local_familiarity")) {
+      state.travel.localFamiliarity = (state.travel.localFamiliarity || 0) + 1;
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      StateManager.addMessage(
+        "🗺️ 昨天的城市漫游留下了路线记忆。你知道哪条巷子便宜、哪班公交不绕路，城市熟悉度+1。",
+        "info",
+      );
+    }
+  }
+
   function actionsForCurrentLocation(state) {
     var loc = state.trade && state.trade.currentLocation;
     return CITY_SERVICE_ACTIONS.filter(function (action) {
@@ -239,6 +292,7 @@
       ensureSaveMeta: ensureWebAppSaveMeta,
       showCityServiceModal: showCityServiceModal,
       applyCityService: applyCityService,
+      tickCityServices: tickWebAppCityServices,
     };
 
     window.MECHANICS = window.MECHANICS || {};
@@ -262,6 +316,7 @@
             "劳动争议预检：法律材料准备",
             "医保账单复核：医疗费用复核/报销差额",
             "周末城市微旅行：低成本旅行和心情恢复",
+            "城市服务后续：次日把服务结果沉淀为法律底气、医疗账单意识和城市熟悉度",
           ],
         },
       ],

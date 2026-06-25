@@ -3,6 +3,25 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
+## 2026-06-25 v3.8 Web App 架构第一阶段
+
+| # | 任务 | 状态 | 说明 |
+|---|------|------|------|
+| A | 现状复盘 | ✅ | `memory/webapp_migration_overview.md`，确认 legacy 入口、全局状态、存档键和不可立即重写模块 |
+| B | 架构方案 | ✅ | `memory/webapp_architecture_plan.md`，确定 Vite + TypeScript + 原生 DOM 的桥接式迁移路线 |
+| C | Web App 架构壳 | ✅ | 根目录 `index.html` + `package.json` + `src/app/`，Vite 构建输出到 `dist-webapp/` |
+| D | legacy 桥接层 | ✅ | `src/js/app_bridge/webapp_runtime_bridge.js` + `actions_extra.js` + `daily_pipeline.js` 注入入口和次日反馈，不替换 `src/index.html` |
+| E | 真实玩法验证 | ✅ | 城市服务中心：劳动争议预检、医保账单复核、周末城市微旅行，写入 `_webApp.schemaVersion=2`，并产生法律底气/医疗账单意识/城市熟悉度后续状态 |
+| F | 后续开发提醒 | ✅ | `CLAUDE.md` / `src/DEVELOPMENT.md` / migration docs 记录新架构边界和新增内容路径 |
+| G | 验证 | 🔄 | 已通过 Vite/TypeScript/JS 初检；收工前刷新 `dist/index.html` 并完成浏览器/脚本冒烟 |
+
+### v3.8 后续阶段
+
+- 阶段 2：抽出 StateManager facade、消息/AP/现金服务和统一 action runner。
+- 阶段 3：让新增事件、职业、地点、疾病、法律、旅行、人生节点默认进入 `src/app/data/*`，补数据审计脚本。
+- 阶段 4：逐步迁移医疗、法律、旅行、生活服务等独立面板，主布局暂不重写。
+- 阶段 5：当 `src/app` 能稳定承载核心状态、存档、数据和主要 UI 后，再评估正式入口切换。
+
 ## 2026-06-25 v3.0 审查改进与扩展
 
 | # | 任务 | 状态 | 说明 |
