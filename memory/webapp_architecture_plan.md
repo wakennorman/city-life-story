@@ -148,3 +148,9 @@ city-life-story/
 - 存档状态出现 `_webApp.schemaVersion=2`，旧档不报错。
 - `python build.py` 成功，`node --check` 通过新增/修改 JS。
 - 文档记录已迁移/未迁移边界和下一阶段风险。
+
+## 入口展示规则补充
+
+- Vite 根入口和 `dist-webapp/index.html` 默认只负责跳转到玩家入口，不展示架构健康、数据目录或玩法卡片。
+- 架构健康、数据目录和 typed action pack 是开发调试面板，只能通过 `?debug=1`、`?mode=debug` 或 `#debug` 显式打开。
+- 玩家入口仍以 `src/index.html` / `dist/index.html` 为准，避免 iframe 缩放、字体变小或开发信息泄露给玩家。

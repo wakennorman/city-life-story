@@ -15,6 +15,34 @@ body {
   min-height: 100vh;
 }
 
+.player-redirect {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.player-redirect main {
+  max-width: 520px;
+}
+
+.player-redirect h1 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.player-redirect p {
+  margin: 0 0 16px;
+  color: #69645d;
+  line-height: 1.6;
+}
+
+.player-redirect a {
+  color: #69533a;
+  font-weight: 700;
+}
+
 .webapp-shell {
   display: grid;
   gap: 18px;
