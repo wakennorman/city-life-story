@@ -37598,17 +37598,111 @@ const LIFE_NODES = {
   },
 };
 
+function grantLifeNodeSkillXp(state, skillKey, amount) {
+  if (!amount) return;
+  if (typeof addSkillXp === "function") {
+    addSkillXp(skillKey, amount);
+    return;
+  }
+  state.skills = state.skills || {};
+  if (!state.skills[skillKey] || typeof state.skills[skillKey] !== "object") {
+    state.skills[skillKey] = { level: 0, xp: 0 };
+  }
+  state.skills[skillKey].xp = (state.skills[skillKey].xp || 0) + amount;
+}
+
+function getHighestLifeNodeSkill(state) {
+  var best = 0;
+  var skills = state.skills || {};
+  for (var key in skills) {
+    if (skills[key] && typeof skills[key] === "object") {
+      best = Math.max(best, skills[key].level || 0);
+    }
+  }
+  return best;
+}
+
+function checkLifeNodeRequirement(state, choice) {
+  var req = choice.attrReq;
+  if (!req) return { ok: true };
+  for (var key in req) {
+    var need = req[key];
+    var actual = 0;
+    if (key === "cash") {
+      actual =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    } else if (key === "skill") {
+      actual = getHighestLifeNodeSkill(state);
+    } else {
+      actual = (state.player && state.player[key]) || 0;
+    }
+    if (actual < need) {
+      return { ok: false, reason: choice.hint || "条件不足" };
+    }
+  }
+  return { ok: true };
+}
+
+function showLifeNodeModal(node) {
+  if (!node || typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>人生走到一个关键节点。这个选择会留下长期影响。</p>' +
+    '<ul style="margin-left:16px;color:var(--text-secondary);">';
+  for (var i = 0; i < node.choices.length; i++) {
+    body +=
+      "<li><strong>" +
+      node.choices[i].text +
+      "</strong><br><span>" +
+      (node.choices[i].hint || "") +
+      "</span></li>";
+  }
+  body += "</ul></div>";
+
+  var buttons = node.choices.map(function (choice) {
+    var canChoose = checkLifeNodeRequirement(state, choice).ok;
+    return {
+      text: (canChoose ? "" : "🔒 ") + choice.text,
+      cls: canChoose ? "btn-primary" : "",
+      callback: function () {
+        var fresh = StateManager.getState();
+        var check = checkLifeNodeRequirement(fresh, choice);
+        if (!check.ok) {
+          StateManager.addMessage("⚠️ " + check.reason, "warning");
+          return false;
+        }
+        applyNodeChoice(fresh, node.id, choice.apply);
+        StateManager.addMessage(
+          node.icon + " " + node.name + "：你选择了「" + choice.text + "」。",
+          "success",
+        );
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+
+  showModal({ title: node.icon + " " + node.name, body: body, buttons: buttons });
+}
+
 // ====== 节点效果应用 ======
 function applyNodeChoice(state, nodeId, choiceKey) {
+  if (!state.flags) state.flags = {};
   state.flags._lifeNode_choice = choiceKey;
 
   switch (choiceKey) {
     case "gaokao_excellent":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 5;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 5,
+      );
       state.flags._gaokaoResult = "excellent";
       break;
     case "gaokao_normal":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 2;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 2,
+      );
       state.flags._gaokaoResult = "normal";
       break;
     case "gaokao_skip":
@@ -37616,21 +37710,26 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       break;
 
     case "uni_tech":
-      state.skills.programming = (state.skills.programming || 0) + 10;
-      state.skills.accounting = (state.skills.accounting || 0) + 10;
+      grantLifeNodeSkillXp(state, "coding", 120);
+      grantLifeNodeSkillXp(state, "accounting", 120);
       break;
     case "uni_engineering":
-      state.skills.repair = (state.skills.repair || 0) + 10;
+      grantLifeNodeSkillXp(state, "repair", 120);
       break;
     case "uni_arts":
-      state.skills.charm = (state.skills.charm || 0) + 10;
+      state.player.charm = Math.min(100, (state.player.charm || 0) + 5);
+      grantLifeNodeSkillXp(state, "sales", 80);
       break;
     case "uni_skip":
       state.resources.cash = (state.resources.cash || 0) + 5000;
       break;
 
     case "c35_transform":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 3;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 3,
+      );
+      grantLifeNodeSkillXp(state, "management", 80);
       state.flags._career35Path = "transform";
       break;
     case "c35_hold":
@@ -37657,19 +37756,30 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retirementType = "continue";
       break;
   }
+  state.flags["_lifeNode_" + nodeId + "_done"] = true;
+  state._pendingLifeNode = null;
 }
 
 // ====== 节点检查器（每日管线调用） ======
 function checkLifeNodes(state) {
   if (!state.flags) state.flags = {};
+  if (state._pendingLifeNode) {
+    if (typeof document !== "undefined" && !document.querySelector(".modal-overlay")) {
+      setTimeout(function () {
+        showLifeNodeModal(state._pendingLifeNode);
+      }, 80);
+    }
+    return state._pendingLifeNode;
+  }
 
   var nodes = LIFE_NODES;
   for (var key in nodes) {
     var node = nodes[key];
     if (node.condition(state)) {
-      state.flags["_lifeNode_" + node.id + "_done"] = true;
-      // 标记待弹窗事件（由主循环消费）
       state._pendingLifeNode = node;
+      setTimeout(function () {
+        showLifeNodeModal(node);
+      }, 80);
       return node;
     }
   }
@@ -37715,6 +37825,7 @@ if (typeof window !== "undefined") {
   window.getLifeNodeStatus = getLifeNodeStatus;
   window.getGaokaoNarrative = getGaokaoNarrative;
   window.applyNodeChoice = applyNodeChoice;
+  window.showLifeNodeModal = showLifeNodeModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.life_nodes = {
@@ -37993,6 +38104,50 @@ function getMedicalSummary(state) {
   return lines;
 }
 
+function showMedicalInsuranceModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initMedicalState(state);
+  var summary = getMedicalSummary(state);
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>' +
+    '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
+    summary.join("<br>") +
+    "</div>" +
+    '<div style="display:grid;gap:8px;">';
+  for (var i = 0; i < INSURANCE_PLANS.length; i++) {
+    var p = INSURANCE_PLANS[i];
+    body +=
+      '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+      "<strong>" +
+      p.icon +
+      " " +
+      p.name +
+      "</strong> · ¥" +
+      p.monthly.toLocaleString() +
+      " / 次<br><span style=\"color:var(--text-secondary);\">" +
+      p.desc +
+      "</span></div>";
+  }
+  body += "</div></div>";
+
+  var buttons = INSURANCE_PLANS.map(function (plan) {
+    return {
+      text: plan.icon + " " + plan.name,
+      cls: "btn-primary",
+      callback: function () {
+        var result = buyMedicalInsurance(StateManager.getState(), plan.id);
+        StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+        if (!result.ok) return false;
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+  buttons.push({ text: "暂不购买", cls: "" });
+  showModal({ title: "🪪 医保咨询", body: body, buttons: buttons });
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.ILLNESS_GRADES = ILLNESS_GRADES;
@@ -38003,6 +38158,7 @@ if (typeof window !== "undefined") {
   window.tickMedical = tickMedical;
   window.tickRecovery = tickRecovery;
   window.getMedicalSummary = getMedicalSummary;
+  window.showMedicalInsuranceModal = showMedicalInsuranceModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.medical_system = {
@@ -38190,11 +38346,12 @@ function startTravel(state, destId) {
       ok: false,
       msg: "现金不足，前往" + dest.name + "需要¥" + dest.cost,
     };
-  if ((state.ap || 0) < dest.apCost)
+  var currentAp = (state.player && state.player.actionPoints) || 0;
+  if (currentAp < dest.apCost)
     return { ok: false, msg: "行动力不足，需要" + dest.apCost + "AP" };
 
   state.resources.cash -= dest.cost;
-  state.ap -= dest.apCost;
+  state.player.actionPoints = Math.max(0, currentAp - dest.apCost);
   state.travel.active = true;
   state.travel.destination = destId;
   state.travel.daysRemaining = dest.days;
@@ -38235,6 +38392,9 @@ function tickTravel(state) {
           );
       }
       state._lastTravelEvent = evt.desc;
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("✈️ " + evt.desc + "（" + evt.effect + "）", "info");
+      }
     }
   }
 
@@ -38246,6 +38406,9 @@ function tickTravel(state) {
         dest.souvenirs[Math.floor(Math.random() * dest.souvenirs.length)];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("🎁 旅行归来，带回了「" + gift + "」。", "success");
+      }
     }
     // 心情恢复
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
@@ -38254,6 +38417,60 @@ function tickTravel(state) {
     return true; // 旅行结束
   }
   return false;
+}
+
+function showTravelAgencyModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initTravelState(state);
+  if (state.travel.active) {
+    showModal({
+      title: "✈️ 长途旅行",
+      body: "<p>" + getTravelStatus(state).join("<br>") + "</p>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
+
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>从商业区的长途客运站出发，去别的城市喘口气。</p>' +
+    '<div style="display:grid;gap:8px;">';
+  for (var key in TRAVEL_DESTINATIONS) {
+    var d = TRAVEL_DESTINATIONS[key];
+    body +=
+      '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+      "<strong>" +
+      d.icon +
+      " " +
+      d.name +
+      "</strong> · ¥" +
+      d.cost.toLocaleString() +
+      " · " +
+      d.apCost +
+      "AP · " +
+      d.days +
+      "天<br><span style=\"color:var(--text-secondary);\">" +
+      d.desc +
+      "</span></div>";
+  }
+  body += "</div></div>";
+
+  var buttons = Object.keys(TRAVEL_DESTINATIONS).map(function (destId) {
+    var d = TRAVEL_DESTINATIONS[destId];
+    return {
+      text: d.icon + " " + d.name,
+      cls: "btn-primary",
+      callback: function () {
+        var result = startTravel(StateManager.getState(), destId);
+        StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+        if (!result.ok) return false;
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+  buttons.push({ text: "先不去了", cls: "" });
+  showModal({ title: "✈️ 长途旅行", body: body, buttons: buttons });
 }
 
 // ====== 旅行状态查询 ======
@@ -38287,6 +38504,7 @@ if (typeof window !== "undefined") {
   window.startTravel = startTravel;
   window.tickTravel = tickTravel;
   window.getTravelStatus = getTravelStatus;
+  window.showTravelAgencyModal = showTravelAgencyModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.travel_system = {
@@ -38607,6 +38825,86 @@ function getLegalSummary(state) {
   return lines;
 }
 
+function showLegalOfficeModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initLegalState(state);
+  var summary = getLegalSummary(state);
+  if (state.legal.activeCase) {
+    showModal({
+      title: "⚖️ 法律咨询",
+      body:
+        '<div style="font-size:13px;line-height:1.7;">' +
+        summary.join("<br>") +
+        "</div>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
+
+  var caseOptions = "";
+  for (var caseId in LEGAL_CASES) {
+    var c = LEGAL_CASES[caseId];
+    caseOptions +=
+      '<option value="' +
+      caseId +
+      '">' +
+      c.name +
+      " · 约¥" +
+      c.cost.toLocaleString() +
+      " · " +
+      c.duration +
+      "天</option>";
+  }
+  var lawyerOptions = LAWYER_LEVELS.map(function (l) {
+    return (
+      '<option value="' +
+      l.id +
+      '">' +
+      l.name +
+      " · ¥" +
+      l.caseFee.toLocaleString() +
+      "</option>"
+    );
+  }).join("");
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>' +
+    '<label>案件类型</label><select id="legal-case-select" style="width:100%;margin:4px 0 10px;">' +
+    caseOptions +
+    "</select>" +
+    '<label>律师档位</label><select id="legal-lawyer-select" style="width:100%;margin:4px 0 10px;">' +
+    lawyerOptions +
+    "</select>" +
+    '<p style="color:var(--text-secondary);">当前现金：¥' +
+    (state.resources.cash || 0).toLocaleString() +
+    "</p></div>";
+
+  showModal({
+    title: "⚖️ 法律咨询",
+    body: body,
+    buttons: [
+      {
+        text: "立案",
+        cls: "btn-primary",
+        callback: function () {
+          var caseEl = document.getElementById("legal-case-select");
+          var lawyerEl = document.getElementById("legal-lawyer-select");
+          var result = fileLawsuit(
+            StateManager.getState(),
+            caseEl && caseEl.value,
+            lawyerEl && lawyerEl.value,
+          );
+          StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+          if (!result.ok) return false;
+          if (typeof renderAll === "function") renderAll();
+        },
+      },
+      { text: "再想想", cls: "" },
+    ],
+  });
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.LEGAL_CASES = LEGAL_CASES;
@@ -38616,6 +38914,7 @@ if (typeof window !== "undefined") {
   window.tickLegal = tickLegal;
   window.checkLegalRisk = checkLegalRisk;
   window.getLegalSummary = getLegalSummary;
+  window.showLegalOfficeModal = showLegalOfficeModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.legal_system = {
@@ -57502,6 +57801,48 @@ function addClinicAction(state, actions) {
       consumeAP(5);
     },
   });
+  actions.push({
+    id: "medical_insurance",
+    name: "医保咨询",
+    desc: "了解并购买医疗保险，降低深度治疗和住院费用。",
+    icon: "🪪",
+    apCost: 0,
+    handler: function () {
+      if (typeof showMedicalInsuranceModal === "function") {
+        showMedicalInsuranceModal();
+      }
+    },
+  });
+}
+
+/** 商业区解锁的长途旅行入口 */
+function addLongDistanceTravelAction(state, actions) {
+  if (state.trade.currentLocation !== "commercialDist") return;
+  actions.push({
+    id: "long_distance_travel",
+    name: "长途旅行",
+    desc: "从商业区客运站出发，前往北京/上海/成都等城市旅行。",
+    icon: "✈️",
+    apCost: 0,
+    handler: function () {
+      if (typeof showTravelAgencyModal === "function") showTravelAgencyModal();
+    },
+  });
+}
+
+/** 政府办事大厅解锁的法律咨询入口 */
+function addLegalOfficeAction(state, actions) {
+  if (state.trade.currentLocation !== "gov_office") return;
+  actions.push({
+    id: "legal_office",
+    name: "法律咨询",
+    desc: "咨询合同/劳动/邻里/债务纠纷，可聘请律师提起诉讼。",
+    icon: "⚖️",
+    apCost: 0,
+    handler: function () {
+      if (typeof showLegalOfficeModal === "function") showLegalOfficeModal();
+    },
+  });
 }
 
 /**
@@ -57655,6 +57996,8 @@ function addExtraActions(state, actions) {
     addAmenityActions(state, actions);
     addHomeActions(state, actions);
     addClinicAction(state, actions);
+    addLongDistanceTravelAction(state, actions);
+    addLegalOfficeAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
     // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）
@@ -102891,8 +103234,8 @@ function renderActionsTab(state, parent) {
         <span style="font-size:9px;color:var(--text-muted);">点击打开新系统</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-        <button onclick="switchTab('workplace_social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
-        <button onclick="switchTab('family')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
+        <button onclick="StateManager.getState()._socialSubTab='social_workplace';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
+        <button onclick="StateManager.getState()._socialSubTab='social_family';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
         <button onclick="switchTab('personal_growth')" class="btn btn-sm" style="padding:8px 12px;">🌱 个人成长</button>
       </div>
     `;

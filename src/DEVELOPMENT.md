@@ -1,6 +1,10 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.7 Expansion v1 — 冒烟测试与百科审计修复）
+> 最后更新: 2026-06-25（v3.0 审查改进与扩展 — 入口补齐与构建验证）
+
+## 2026-06-25 — v3.0 审查改进与扩展：入口补齐与构建验证
+
+按 `memory/review-improve-v3.0.md` SOP 完成本轮审查、诊断、方案和实装交付。新增 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 记录项目结构、P0/P1 问题和改进方案；修复人生节点触发后静默完成的问题，新增节点选择弹窗，并把奖励写回正确的玩家属性/技能 XP 结构。补齐旅行、个人法律案件、医保咨询的玩家入口：商业区可打开长途旅行，政府办事大厅可立案，医院可购买医保；行动页 Phase 2 快捷入口改为跳转到真实社交子页；审计脚本改为读取拆分后的事件文件。验证：112 个 `src/js` 文件 `node --check` 通过，`python build.py` 成功生成 `dist/index.html`（4151.9 KB）。注意：`audit_connections.js` 已能运行，但会因历史内容覆盖率规则返回 1，并输出新闻解析为 `undefined` 等既有审计问题，未作为本轮阻断项。
 
 ## 2026-06-25 — v3.7 Expansion v1: 冒烟测试与百科审计修复
 

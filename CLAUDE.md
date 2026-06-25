@@ -50,12 +50,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.7 Expansion v1 冒烟测试与百科审计修复（2026-06-25）
-  - **测试**：本地 HTTP + Chrome DevTools Protocol 冒烟测试通过，桌面/移动首屏加载正常，入口按钮可进入游戏主界面
-  - **修复**：`NARRATIVES.gaokao_memory` 与 `NARRATIVES.travel_memories` 补齐 `name` 字段
-  - **百科审计**：`runMechanicsAudit` 复测显示 MECHANICS 53 / NARRATIVES 14 / VICTORIES 8，无问题
-  - **构建**：已 `python build.py`
-  - **剩余风险**：浏览器 AudioContext 自动播放限制警告仍存在，属用户手势前播放音效的既有浏览器策略；未做长流程完整试玩
+- **最新一次工作**：v3.0 审查改进与扩展 — 入口补齐与验证（2026-06-25）
+  - **审查产出**：已新增 `memory/overview.md` / `memory/diagnosis.md` / `memory/improvement_plan.md`
+  - **P0 修复**：人生节点不再静默完成，触发后弹窗让玩家选择；奖励写回正确的玩家属性和技能 XP 结构
+  - **P1 改进**：商业区新增长途旅行入口；政府办事大厅新增法律咨询/立案入口；医院新增医保咨询入口；行动页 Phase 2 快捷按钮改为跳转真实社交子页
+  - **工具链**：`audit_connections.js` / `audit_events.js` 改为读取拆分后的事件文件
+  - **验证**：112 个 `src/js` 文件 `node --check` 通过；已 `python build.py`，生成 `dist/index.html`（4151.9 KB）
+  - **剩余风险**：`audit_connections.js` 可运行但会因历史覆盖率规则返回 1，并输出新闻 `undefined` 等既有审计问题；本轮未做长流程完整试玩
 
 - **上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
   - **系统1 人生节点** `core/life_nodes.js` — 高考/大学/35岁危机/退休 4大里程碑，属性门槛+分支选择+效果应用，MECHANICS+NARRATIVES注册
