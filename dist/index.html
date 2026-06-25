@@ -46149,6 +46149,266 @@ const MORAL_EVENTS = [
   },
 ];
 
+const EXTREME_MORAL_EVENTS = [
+  {
+    id: "extreme_steal_medicine",
+    title: "💊 药店柜台后的救命药",
+    desc: "深夜药店只剩一个店员打盹。柜台后有一盒儿童退烧药，刚好是邻居孩子急需的那种，但你身上钱不够。",
+    minDay: 18,
+    choices: [
+      { text: "🧾 留下欠条，先拿药救人", flag: "moral_med_iou", score: 6, cash: -80, happiness: 3, msg: "你留下姓名和欠条拿走了药。孩子退烧了，店员第二天也没有报警。", type: "success" },
+      { text: "🕳️ 趁店员睡着直接拿走", flag: "moral_med_steal", score: -12, cash: 0, happiness: -5, msg: "你把药塞进怀里。孩子得救了，但你一整夜都听见自己的心跳。", type: "warning" },
+      { text: "🚪 转身离开，别惹麻烦", flag: "moral_med_leave", score: -8, happiness: -10, msg: "你离开了药店。楼道里的哭声一直没停。", type: "danger" },
+    ],
+  },
+  {
+    id: "extreme_food_queue",
+    title: "🍚 救济餐排到最后一份",
+    desc: "社区救济餐只剩最后一盒。你排了一小时，身后还有一个抱着孩子的女人。",
+    minDay: 16,
+    choices: [
+      { text: "🍱 自己拿走，今天你也饿坏了", flag: "moral_food_keep", score: -5, hunger: 25, happiness: -3, msg: "热饭进了肚子，但你没敢回头看。", type: "warning" },
+      { text: "👩‍👧 让给她和孩子", flag: "moral_food_give", score: 10, hunger: -10, happiness: 6, msg: "她不停道谢。你饿着肚子回去，却觉得心里没那么冷。", type: "success" },
+      { text: "🤝 提议一人一半", flag: "moral_food_share", score: 7, hunger: 8, happiness: 3, msg: "一盒饭分成两半，谁都没吃饱，但谁都撑过了今天。", type: "info" },
+    ],
+  },
+  {
+    id: "extreme_report_coworker",
+    title: "📋 同事伪造工时",
+    desc: "你发现临时工同事虚报了三天工时。他说家里老人住院，求你别举报。举报有奖金，不举报你也可能被牵连。",
+    minDay: 25,
+    choices: [
+      { text: "📣 举报，拿制度说话", flag: "moral_work_report", score: 4, cash: 300, fame: -2, msg: "你拿到奖金，但工友们看你的眼神变了。", type: "info" },
+      { text: "🤐 替他保密一次", flag: "moral_work_cover", score: -3, happiness: -2, msg: "你替他保密了，但开始担心事情败露。", type: "warning" },
+      { text: "🧾 劝他主动补签说明", flag: "moral_work_confess", score: 9, fame: 2, msg: "他红着脸去找领班说明。奖金没了，但事情没有闹大。", type: "success" },
+    ],
+  },
+  {
+    id: "extreme_eviction_neighbor",
+    title: "🏚️ 邻居被赶出门",
+    desc: "隔壁一家今晚交不上房租，房东把行李扔到走廊。你刚攒下几百块，明天也要交自己的房租。",
+    minDay: 20,
+    choices: [
+      { text: "💸 借他们¥300先过夜", flag: "moral_evict_lend", score: 10, cash: -300, happiness: 4, msg: "孩子终于停止哭泣。你开始盘算明天怎么办。", type: "success" },
+      { text: "🧍 帮忙和房东谈判", flag: "moral_evict_talk", score: 7, fame: 2, happiness: 2, msg: "你磨了半小时嘴皮子，房东答应宽限两天。", type: "success" },
+      { text: "🚪 关上门，别把麻烦带进来", flag: "moral_evict_close", score: -8, happiness: -4, msg: "走廊安静下去之后，你发现自己睡不着。", type: "warning" },
+    ],
+  },
+  {
+    id: "extreme_expired_food",
+    title: "🥫 快过期的临期食品",
+    desc: "仓库主管让你把一批快过期的罐头贴上新日期，说卖出去就能给你分成。",
+    minDay: 22,
+    choices: [
+      { text: "🏷️ 照做，拿分成", flag: "moral_expired_relabel", score: -15, cash: 500, happiness: -6, msg: "钱到手了。你却总想起买走罐头的老人。", type: "danger" },
+      { text: "🗑️ 拒绝并要求下架", flag: "moral_expired_refuse", score: 12, fame: 2, msg: "主管骂你死脑筋，但这批货没有流出去。", type: "success" },
+      { text: "🍲 标明临期，低价卖给愿意的人", flag: "moral_expired_discount", score: 6, cash: 80, msg: "大家知道风险后按需购买，浪费少了，心里也踏实些。", type: "info" },
+    ],
+  },
+  {
+    id: "extreme_hospital_queue",
+    title: "🏥 急诊队伍里的红包",
+    desc: "医院急诊排队很长。有人悄悄告诉你，塞个红包可以提前进去。你的朋友正疼得发抖。",
+    minDay: 28,
+    choices: [
+      { text: "🧧 塞红包插队", flag: "moral_queue_bribe", score: -10, cash: -500, happiness: -2, msg: "朋友先看上病了。后面的人沉默地看着你。", type: "warning" },
+      { text: "📢 找护士说明真实紧急情况", flag: "moral_queue_explain", score: 8, happiness: 2, msg: "护士重新分诊，朋友被提前处理，没有人需要被挤掉。", type: "success" },
+      { text: "🪑 继续排队", flag: "moral_queue_wait", score: 3, health: -3, msg: "你们等了很久。规则还在，但疼痛也是真的。", type: "info" },
+    ],
+  },
+  {
+    id: "extreme_wage_evidence",
+    title: "📱 欠薪证据",
+    desc: "你拿到了包工头拖欠工人工资的聊天记录。公开会得罪人，私下卖给包工头可以换一笔封口费。",
+    minDay: 30,
+    choices: [
+      { text: "⚖️ 交给劳动监察", flag: "moral_wage_report", score: 15, fame: 5, msg: "调查开始了。工友们第一次觉得钱可能拿得回来。", type: "success" },
+      { text: "💰 卖给包工头封口", flag: "moral_wage_sellout", score: -18, cash: 1500, fame: -8, happiness: -10, msg: "封口费很厚。工友们还在等一个不会来的结果。", type: "danger" },
+      { text: "🕊️ 匿名发给工友代表", flag: "moral_wage_anonymous", score: 10, happiness: 2, msg: "你没有站到台前，但证据开始流动。", type: "success" },
+    ],
+  },
+  {
+    id: "extreme_shelter_bed",
+    title: "🛏️ 救助站最后一张床",
+    desc: "寒潮夜里，救助站只剩最后一张床位。你冻得发抖，门外还有一个更老的人。",
+    minDay: 24,
+    choices: [
+      { text: "🛏️ 自己睡床，活过今晚最重要", flag: "moral_shelter_keep", score: -4, health: 8, happiness: -2, msg: "被子很暖。你把脸埋进去，假装没听见门外的咳嗽。", type: "warning" },
+      { text: "🧥 把床让给老人，自己坐一夜", flag: "moral_shelter_give", score: 12, health: -6, happiness: 6, msg: "老人睡下了。你坐到天亮，手脚冻得发麻。", type: "success" },
+      { text: "🤝 和管理员商量加铺纸板", flag: "moral_shelter_share", score: 8, health: 2, msg: "你们挤出一个角落。没人睡好，但没人被留在外面。", type: "info" },
+    ],
+  },
+  {
+    id: "extreme_insulin",
+    title: "🧊 冰袋里的胰岛素",
+    desc: "外卖箱里有一份误送的胰岛素。平台说找不到客户地址，超时会罚你钱。",
+    minDay: 26,
+    choices: [
+      { text: "🏃 自己查电话送回去", flag: "moral_insulin_return", score: 14, cash: -80, fame: 4, msg: "你多跑了半座城。对方家属握着你的手说谢谢。", type: "success" },
+      { text: "🧾 交回站点，按流程走", flag: "moral_insulin_station", score: 5, msg: "站点登记了。你不知道药最后有没有按时送到。", type: "info" },
+      { text: "🗑️ 当异常单处理，保住时效", flag: "moral_insulin_discard", score: -16, cash: 120, happiness: -8, msg: "系统显示准时。你却记住了冰袋上的患者姓名。", type: "danger" },
+    ],
+  },
+  {
+    id: "extreme_fake_charity",
+    title: "📦 假慈善募捐",
+    desc: "有人拉你一起做街头募捐，海报上的病人是真的，但钱大多进组织者口袋。你只要站半天就有提成。",
+    minDay: 18,
+    choices: [
+      { text: "🙋 参与募捐，拿提成", flag: "moral_charity_fake", score: -14, cash: 400, fame: -4, msg: "路人把零钱投进箱子，你低头说谢谢。", type: "danger" },
+      { text: "📣 当场拆穿", flag: "moral_charity_expose", score: 12, fame: 3, health: -2, msg: "组织者推搡了你几下，但路人开始散开。", type: "success" },
+      { text: "📞 悄悄举报", flag: "moral_charity_report", score: 8, msg: "你没有正面冲突。下午那群人被城管带走了。", type: "info" },
+    ],
+  },
+  {
+    id: "extreme_school_fee",
+    title: "🎒 借学费的孩子",
+    desc: "楼下孩子拿着缴费单，说妈妈电话打不通，明天不交就不能参加春游。你知道这可能只是大人教他的借口。",
+    minDay: 20,
+    choices: [
+      { text: "💳 帮他垫¥180", flag: "moral_school_pay", score: 9, cash: -180, happiness: 4, msg: "孩子攥着收据跑远。你希望钱真的去了学校。", type: "success" },
+      { text: "🏫 陪他去学校核实", flag: "moral_school_verify", score: 12, fame: 2, msg: "老师确认了情况，还联系上了孩子母亲。", type: "success" },
+      { text: "🙅 不管，别被骗", flag: "moral_school_refuse", score: -5, happiness: -2, msg: "孩子低着头走了。你告诉自己谨慎没错。", type: "warning" },
+    ],
+  },
+  {
+    id: "extreme_elevator_elder",
+    title: "🛗 停电楼梯间",
+    desc: "老楼停电，电梯停运。一个老人拎着氧气瓶，想请你帮忙抬上六楼。你已经累得腿发软。",
+    minDay: 15,
+    choices: [
+      { text: "💪 咬牙帮忙抬上去", flag: "moral_elevator_help", score: 12, fatigue: 18, health: -2, msg: "六层楼像六十层。老人家属给你倒了杯热水。", type: "success" },
+      { text: "📞 帮忙联系物业和邻居", flag: "moral_elevator_call", score: 7, fatigue: 4, msg: "你叫来两个人一起抬，没人逞英雄，事情解决了。", type: "info" },
+      { text: "🏃 推说赶时间离开", flag: "moral_elevator_leave", score: -7, happiness: -4, msg: "你下楼很快，心却沉得很慢。", type: "warning" },
+    ],
+  },
+  {
+    id: "extreme_blood_donation",
+    title: "🩸 血库告急",
+    desc: "医院门口贴着急需献血的通知，血型刚好和你一样。你今天还要干体力活，献血可能影响收入。",
+    minDay: 25,
+    choices: [
+      { text: "🩸 献血救急", flag: "moral_blood_donate", score: 13, health: -5, fatigue: 12, fame: 3, msg: "护士说这袋血会马上送进手术室。你坐了很久才缓过来。", type: "success" },
+      { text: "📢 转发求助，自己不献", flag: "moral_blood_share", score: 4, msg: "你把消息发到几个群里。也许会有人看到。", type: "info" },
+      { text: "🚶 假装没看见", flag: "moral_blood_ignore", score: -4, msg: "你走过通知栏，脚步没有停。", type: "warning" },
+    ],
+  },
+  {
+    id: "extreme_overdose_stranger",
+    title: "🚑 昏倒的陌生人",
+    desc: "巷口有人倒在地上，旁边散着药瓶。围观的人都怕惹麻烦，只拿手机拍。",
+    minDay: 24,
+    choices: [
+      { text: "📞 立刻报警叫救护车", flag: "moral_overdose_call", score: 12, fame: 2, msg: "救护车很快来了。医生说再晚一点就危险了。", type: "success" },
+      { text: "🧍 留在旁边等专业人员", flag: "moral_overdose_wait", score: 8, happiness: 2, msg: "你没有乱动他，只一直确认他还在呼吸。", type: "success" },
+      { text: "📱 拍视频发网上求助", flag: "moral_overdose_film", score: -8, fame: 6, happiness: -4, msg: "视频火了。评论里有人问：为什么不先打120？", type: "danger" },
+    ],
+  },
+  {
+    id: "extreme_delivery_crash",
+    title: "🛵 外卖骑手撞倒孩子",
+    desc: "一个外卖骑手为了赶时效撞倒了孩子。他求你帮忙作证说孩子突然冲出来，否则平台会扣光他这个月的钱。",
+    minDay: 22,
+    choices: [
+      { text: "👁️ 如实作证", flag: "moral_delivery_truth", score: 10, fame: 2, msg: "交警记录了你的证词。骑手沉默地蹲在路边。", type: "success" },
+      { text: "🛵 帮骑手圆谎", flag: "moral_delivery_lie", score: -12, happiness: -5, msg: "孩子家长哭着争辩。你避开了他们的眼睛。", type: "danger" },
+      { text: "🤝 劝骑手承担责任，帮他联系众筹", flag: "moral_delivery_crowd", score: 12, fame: 3, msg: "他最后承认了责任。你帮他写了求助说明。", type: "success" },
+    ],
+  },
+  {
+    id: "extreme_safety_coverup",
+    title: "🏗️ 工地安全事故",
+    desc: "工地脚手架松动差点砸到人。负责人让你别说出去，今天给你双倍工资。",
+    minDay: 30,
+    choices: [
+      { text: "💰 拿双倍工资闭嘴", flag: "moral_safety_silence", score: -15, cash: 600, happiness: -6, msg: "钱很快到账。你路过脚手架时不敢抬头。", type: "danger" },
+      { text: "🚧 要求停工检修", flag: "moral_safety_stop", score: 13, fame: 4, msg: "工友们骂骂咧咧停了工，但下午真的查出断裂扣件。", type: "success" },
+      { text: "📷 拍照匿名举报", flag: "moral_safety_report", score: 10, msg: "监管电话打到项目部，负责人脸色很难看。", type: "success" },
+    ],
+  },
+  {
+    id: "extreme_winter_child",
+    title: "🧒 冬夜里的走失孩子",
+    desc: "寒风里，一个孩子在公交站哭着找妈妈。你手机只剩5%电，今天最后一班车马上就到。",
+    minDay: 18,
+    choices: [
+      { text: "👮 带孩子去派出所", flag: "moral_winter_child_help", score: 14, fatigue: 10, happiness: 5, msg: "末班车走了。孩子的母亲赶到派出所时几乎跪下来谢你。", type: "success" },
+      { text: "📞 借路人手机报警后离开", flag: "moral_winter_child_call", score: 6, msg: "你看见警察接到孩子后才上车。手机彻底没电了。", type: "info" },
+      { text: "🚌 赶末班车，让别人处理", flag: "moral_winter_child_leave", score: -10, happiness: -6, msg: "车窗上起了雾。那个小小的身影越来越远。", type: "warning" },
+    ],
+  },
+  {
+    id: "extreme_privacy_leak",
+    title: "💾 一份客户名单",
+    desc: "兼职公司把客户手机号和住址表发错给了你。有人愿意花¥1000买这份名单。",
+    minDay: 26,
+    choices: [
+      { text: "🧹 删除文件并提醒公司", flag: "moral_privacy_delete", score: 12, fame: 2, msg: "负责人吓出一身冷汗，承诺补上数据权限。", type: "success" },
+      { text: "💸 卖掉名单", flag: "moral_privacy_sell", score: -18, cash: 1000, happiness: -8, msg: "钱到账了。接下来几天你不断接到陌生推销电话。", type: "danger" },
+      { text: "🕵️ 留着名单，以后也许有用", flag: "moral_privacy_keep", score: -10, happiness: -3, msg: "文件躺在手机里，像一颗没拆的雷。", type: "warning" },
+    ],
+  },
+];
+
+function applyExtremeMoralDelta(state, choice) {
+  if (typeof choice.cash === "number") {
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) + choice.cash);
+  }
+  if (typeof choice.happiness === "number") {
+    state.needs.happiness = Math.max(
+      0,
+      Math.min(100, (state.needs.happiness || 0) + choice.happiness),
+    );
+  }
+  if (typeof choice.hunger === "number") {
+    state.needs.hunger = Math.max(
+      0,
+      Math.min(100, (state.needs.hunger || 0) + choice.hunger),
+    );
+  }
+  if (typeof choice.fatigue === "number") {
+    state.needs.fatigue = Math.max(
+      0,
+      Math.min(100, (state.needs.fatigue || 0) + choice.fatigue),
+    );
+  }
+  if (typeof choice.health === "number") {
+    state.status.health = Math.max(
+      0,
+      Math.min(100, (state.status.health || 0) + choice.health),
+    );
+  }
+  if (typeof choice.fame === "number") {
+    state.player.fame = Math.max(
+      0,
+      Math.min(100, (state.player.fame || 0) + choice.fame),
+    );
+  }
+  StateManager.addMessage(choice.msg, choice.type || "info");
+}
+
+for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
+  (function (eventDef) {
+    MORAL_EVENTS.push({
+      id: eventDef.id,
+      title: eventDef.title,
+      desc: eventDef.desc,
+      minDay: eventDef.minDay || 10,
+      dailyChance: eventDef.dailyChance || 0.025,
+      choices: eventDef.choices.map(function (choiceDef) {
+        return {
+          text: choiceDef.text,
+          flag: choiceDef.flag,
+          score: choiceDef.score,
+          immediate: function (state) {
+            applyExtremeMoralDelta(state, choiceDef);
+          },
+        };
+      }),
+    });
+  })(EXTREME_MORAL_EVENTS[emi]);
+}
+
 const MORAL_CONSEQUENCES = {
   moral_wallet_return: {
     id: "consequence_wallet_return",
