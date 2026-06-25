@@ -136,17 +136,111 @@ const LIFE_NODES = {
   },
 };
 
+function grantLifeNodeSkillXp(state, skillKey, amount) {
+  if (!amount) return;
+  if (typeof addSkillXp === "function") {
+    addSkillXp(skillKey, amount);
+    return;
+  }
+  state.skills = state.skills || {};
+  if (!state.skills[skillKey] || typeof state.skills[skillKey] !== "object") {
+    state.skills[skillKey] = { level: 0, xp: 0 };
+  }
+  state.skills[skillKey].xp = (state.skills[skillKey].xp || 0) + amount;
+}
+
+function getHighestLifeNodeSkill(state) {
+  var best = 0;
+  var skills = state.skills || {};
+  for (var key in skills) {
+    if (skills[key] && typeof skills[key] === "object") {
+      best = Math.max(best, skills[key].level || 0);
+    }
+  }
+  return best;
+}
+
+function checkLifeNodeRequirement(state, choice) {
+  var req = choice.attrReq;
+  if (!req) return { ok: true };
+  for (var key in req) {
+    var need = req[key];
+    var actual = 0;
+    if (key === "cash") {
+      actual =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    } else if (key === "skill") {
+      actual = getHighestLifeNodeSkill(state);
+    } else {
+      actual = (state.player && state.player[key]) || 0;
+    }
+    if (actual < need) {
+      return { ok: false, reason: choice.hint || "条件不足" };
+    }
+  }
+  return { ok: true };
+}
+
+function showLifeNodeModal(node) {
+  if (!node || typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>人生走到一个关键节点。这个选择会留下长期影响。</p>' +
+    '<ul style="margin-left:16px;color:var(--text-secondary);">';
+  for (var i = 0; i < node.choices.length; i++) {
+    body +=
+      "<li><strong>" +
+      node.choices[i].text +
+      "</strong><br><span>" +
+      (node.choices[i].hint || "") +
+      "</span></li>";
+  }
+  body += "</ul></div>";
+
+  var buttons = node.choices.map(function (choice) {
+    var canChoose = checkLifeNodeRequirement(state, choice).ok;
+    return {
+      text: (canChoose ? "" : "🔒 ") + choice.text,
+      cls: canChoose ? "btn-primary" : "",
+      callback: function () {
+        var fresh = StateManager.getState();
+        var check = checkLifeNodeRequirement(fresh, choice);
+        if (!check.ok) {
+          StateManager.addMessage("⚠️ " + check.reason, "warning");
+          return false;
+        }
+        applyNodeChoice(fresh, node.id, choice.apply);
+        StateManager.addMessage(
+          node.icon + " " + node.name + "：你选择了「" + choice.text + "」。",
+          "success",
+        );
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+
+  showModal({ title: node.icon + " " + node.name, body: body, buttons: buttons });
+}
+
 // ====== 节点效果应用 ======
 function applyNodeChoice(state, nodeId, choiceKey) {
+  if (!state.flags) state.flags = {};
   state.flags._lifeNode_choice = choiceKey;
 
   switch (choiceKey) {
     case "gaokao_excellent":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 5;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 5,
+      );
       state.flags._gaokaoResult = "excellent";
       break;
     case "gaokao_normal":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 2;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 2,
+      );
       state.flags._gaokaoResult = "normal";
       break;
     case "gaokao_skip":
@@ -154,21 +248,26 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       break;
 
     case "uni_tech":
-      state.skills.programming = (state.skills.programming || 0) + 10;
-      state.skills.accounting = (state.skills.accounting || 0) + 10;
+      grantLifeNodeSkillXp(state, "coding", 120);
+      grantLifeNodeSkillXp(state, "accounting", 120);
       break;
     case "uni_engineering":
-      state.skills.repair = (state.skills.repair || 0) + 10;
+      grantLifeNodeSkillXp(state, "repair", 120);
       break;
     case "uni_arts":
-      state.skills.charm = (state.skills.charm || 0) + 10;
+      state.player.charm = Math.min(100, (state.player.charm || 0) + 5);
+      grantLifeNodeSkillXp(state, "sales", 80);
       break;
     case "uni_skip":
       state.resources.cash = (state.resources.cash || 0) + 5000;
       break;
 
     case "c35_transform":
-      state.skills.intelligence = (state.skills.intelligence || 0) + 3;
+      state.player.intelligence = Math.min(
+        100,
+        (state.player.intelligence || 0) + 3,
+      );
+      grantLifeNodeSkillXp(state, "management", 80);
       state.flags._career35Path = "transform";
       break;
     case "c35_hold":
@@ -195,19 +294,30 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retirementType = "continue";
       break;
   }
+  state.flags["_lifeNode_" + nodeId + "_done"] = true;
+  state._pendingLifeNode = null;
 }
 
 // ====== 节点检查器（每日管线调用） ======
 function checkLifeNodes(state) {
   if (!state.flags) state.flags = {};
+  if (state._pendingLifeNode) {
+    if (typeof document !== "undefined" && !document.querySelector(".modal-overlay")) {
+      setTimeout(function () {
+        showLifeNodeModal(state._pendingLifeNode);
+      }, 80);
+    }
+    return state._pendingLifeNode;
+  }
 
   var nodes = LIFE_NODES;
   for (var key in nodes) {
     var node = nodes[key];
     if (node.condition(state)) {
-      state.flags["_lifeNode_" + node.id + "_done"] = true;
-      // 标记待弹窗事件（由主循环消费）
       state._pendingLifeNode = node;
+      setTimeout(function () {
+        showLifeNodeModal(node);
+      }, 80);
       return node;
     }
   }
@@ -253,6 +363,7 @@ if (typeof window !== "undefined") {
   window.getLifeNodeStatus = getLifeNodeStatus;
   window.getGaokaoNarrative = getGaokaoNarrative;
   window.applyNodeChoice = applyNodeChoice;
+  window.showLifeNodeModal = showLifeNodeModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.life_nodes = {
