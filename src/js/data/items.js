@@ -1012,3 +1012,78 @@ const HOUSING_TIERS = [
 function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
 }
+
+// ====== 装备掉落系统 (P1-5: 装备获取来源) ======
+
+/**
+ * 根据来源随机掉落装备
+ * @param {Object} state - 游戏状态
+ * @param {string} source - 掉落来源：'street' | 'corporate' | 'startup' | 'npc_gift' | 'shop'
+ * @returns {Object|null} 掉落的装备或null
+ */
+function rollEquipmentDrop(state, source) {
+  var equipmentPool = getEquipmentPoolBySource(source);
+  if (!equipmentPool || equipmentPool.length === 0) return null;
+
+  var equipment = equipmentPool[Math.floor(Math.random() * equipmentPool.length)];
+  var quality = rollEquipmentQuality();
+  var enchant = rollEnchantment(quality);
+
+  return {
+    id: equipment.id,
+    name: equipment.name,
+    quality: quality,
+    enchant: enchant,
+    durability: equipment.maxDurability,
+    source: source
+  };
+}
+
+/** 获取装备掉落池 */
+function getEquipmentPoolBySource(source) {
+  var pools = {
+    street: [
+      { id: "eq_wrench", name: "多功能扳手", quality: "common", maxDurability: 50 },
+      { id: "eq_flashlight", name: "强光手电筒", quality: "common", maxDurability: 80 },
+      { id: "eq_work_gloves", name: "劳保手套", quality: "common", maxDurability: 100 },
+      { id: "eq_straw_hat", name: "草帽", quality: "common", maxDurability: 60 },
+    ],
+    corporate: [
+      { id: "eq_laptop", name: "商务笔记本", quality: "rare", maxDurability: 200 },
+      { id: "eq_suit", name: "定制西装", quality: "rare", maxDurability: 150 },
+      { id: "eq_smart_watch", name: "智能手表", quality: "rare", maxDurability: 180 },
+    ],
+    startup: [
+      { id: "eq_smartwatch", name: "智能手表", quality: "epic", maxDurability: 300 },
+      { id: "eq_nfc_card", name: "NFC门禁卡", quality: "epic", maxDurability: 500 },
+      { id: "eq_tablet", name: "平板电脑", quality: "epic", maxDurability: 250 },
+    ]
+  };
+  return pools[source] || pools.street;
+}
+
+/** 随机装备品质 */
+function rollEquipmentQuality() {
+  var roll = Math.random();
+  if (roll < 0.6) return "common";
+  if (roll < 0.85) return "rare";
+  if (roll < 0.97) return "epic";
+  return "legendary";
+}
+
+/** 随机附魔 */
+function rollEnchantment(quality) {
+  var enchantments = {
+    common: ["耐用", "轻便", "舒适"],
+    rare: ["高效", "精准", "耐用++"],
+    epic: ["专家级", "大师级", "传奇"],
+    legendary: ["传说", "神器", "永恒"]
+  };
+  var list = enchantments[quality] || enchantments.common;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+/** 获取当前住所信息 */
+function getCurrentHousing(state) {
+  return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
+}

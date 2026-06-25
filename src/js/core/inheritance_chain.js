@@ -604,3 +604,65 @@ if (typeof window !== "undefined") {
     REPUTATION_BADGES,
   });
 }
+
+/** 传承潜力评估（P2-5: 多周目衔接） */
+function assessInheritancePotential(state) {
+  var potential = {
+    score: 0,
+    badges: [],
+    relationships: [],
+    skills: [],
+    cash: 0,
+    notes: []
+  };
+
+  // 声誉徽章
+  potential.badges = calculateReputationBadges(state);
+  potential.score += potential.badges.length * 10;
+
+  // NPC关系（峰值好感）
+  var relationships = state.player.relationships || {};
+  for (var npcId in relationships) {
+    var rel = relationships[npcId];
+    if (rel && rel.affinity && rel.affinity > 50) {
+      potential.relationships.push({
+        npcId: npcId,
+        affinity: rel.affinity
+      });
+      potential.score += Math.floor(rel.affinity / 10);
+    }
+  }
+
+  // 技能树
+  var skills = state.player.skills || {};
+  for (var skillKey in skills) {
+    var skill = skills[skillKey];
+    if (skill && skill.level && skill.level > 30) {
+      potential.skills.push({
+        skill: skillKey,
+        level: skill.level
+      });
+      potential.score += Math.floor(skill.level / 10);
+    }
+  }
+
+  // 现金
+  potential.cash = state.resources.cash || 0;
+  potential.score += Math.floor(potential.cash / 10000);
+
+  // 生成评估建议
+  if (potential.score >= 100) {
+    potential.notes.push("⭐ 高潜力传承：建议优先解锁核心增益");
+  } else if (potential.score >= 50) {
+    potential.notes.push("👍 中等潜力传承：建议解锁1-2项核心增益");
+  } else {
+    potential.notes.push("💡 基础潜力传承：建议解锁基础增益或积累更多经验");
+  }
+
+  return potential;
+}
+
+// 全局挂载
+if (typeof window !== "undefined") {
+  window.assessInheritancePotential = assessInheritancePotential;
+}
