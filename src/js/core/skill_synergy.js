@@ -23,14 +23,14 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 摆摊小吃收入+30%
-      street_vending_food: { incomeMultiplier: 1.30 },
-      sister_zhang_vending: { incomeMultiplier: 1.30 },
+      street_vending_food: { incomeMultiplier: 1.3 },
+      sister_zhang_vending: { incomeMultiplier: 1.3 },
       // 解锁新工作：餐饮摊主
       unlockJobs: ["restaurant_owner"],
       // 食材成本-15%
       foodCostReduction: 0.15,
       // 顾客满意度+20%
-      customerSatisfactionBonus: 0.20,
+      customerSatisfactionBonus: 0.2,
     },
     desc: "懂烹饪又懂销售，开个小餐馆或摆摊卖小吃都能赚钱。",
   },
@@ -46,14 +46,14 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 编程类工作收入+40%
-      coding: { incomeMultiplier: 1.40 },
-      freelance_writing: { incomeMultiplier: 1.30 },
-      content_writing: { incomeMultiplier: 1.30 },
+      coding: { incomeMultiplier: 1.4 },
+      freelance_writing: { incomeMultiplier: 1.3 },
+      content_writing: { incomeMultiplier: 1.3 },
       // 解锁国际外包工作
       unlockJobs: ["international_freelance", "foreign_client_coding"],
       // 学习XP+20%
-      codingXpBonus: 0.20,
-      englishXpBonus: 0.20,
+      codingXpBonus: 0.2,
+      englishXpBonus: 0.2,
     },
     desc: "会编程又会英语，可以接国际外包单，收入翻倍。",
   },
@@ -71,11 +71,11 @@ const SKILL_SYNERGY_DUAL = {
       // 维修类工作收入+35%
       instrument_repair: { incomeMultiplier: 1.35 },
       electronics_repair: { incomeMultiplier: 1.35 },
-      factory_electrician: { incomeMultiplier: 1.30 },
+      factory_electrician: { incomeMultiplier: 1.3 },
       // 解锁综合维修工作
       unlockJobs: ["comprehensive_repairman"],
       // 装备维修损耗-30%
-      repairWearReduction: 0.30,
+      repairWearReduction: 0.3,
     },
     desc: "既能修机械又能修电路，成为综合维修师傅，收入翻倍。",
   },
@@ -91,8 +91,8 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 销售类工作收入+30%
-      shop_assistant: { incomeMultiplier: 1.30 },
-      promoter: { incomeMultiplier: 1.30 },
+      shop_assistant: { incomeMultiplier: 1.3 },
+      promoter: { incomeMultiplier: 1.3 },
       // 解锁团队销售管理
       unlockJobs: ["sales_team_lead"],
       // 团队规模+2
@@ -114,8 +114,8 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 货运/配送收入+40%
-      truck_assistant: { incomeMultiplier: 1.40 },
-      warehouse_logistics: { incomeMultiplier: 1.30 },
+      truck_assistant: { incomeMultiplier: 1.4 },
+      warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 解锁长途运输工作
       unlockJobs: ["long_haul_driver", "logistics_manager"],
@@ -136,9 +136,9 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 在家做饭效果+50%
-      homeCookingBonus: 0.50,
+      homeCookingBonus: 0.5,
       // 自己修理装备节省50%修理费
-      selfRepairDiscount: 0.50,
+      selfRepairDiscount: 0.5,
       // 解锁家庭维修行动
       unlockActions: ["home_repair"],
       // 幸福感+10%
@@ -180,9 +180,9 @@ const SKILL_SYNERGY_DUAL = {
     ],
     effects: {
       // 投资收入+30%
-      investmentIncomeBonus: 0.30,
+      investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
-      tradingFeeReduction: 0.50,
+      tradingFeeReduction: 0.5,
       // 解锁高级投资分析
       unlockActions: ["advanced_investment_analysis"],
       // 每日被动收入+¥50（来自投资）
@@ -206,15 +206,15 @@ const SKILL_SYNERGY_TRIPLE = {
     ],
     effects: {
       // 所有餐饮相关收入+50%
-      restaurantIncomeBonus: 0.50,
+      restaurantIncomeBonus: 0.5,
       // 解锁连锁餐厅
       unlockBusinesses: ["restaurant_chain"],
       // 每日被动收入+¥200
       passiveRestaurantIncome: 200,
       // 员工效率+30%
-      employeeEfficiencyBonus: 0.30,
+      employeeEfficiencyBonus: 0.3,
       // 品牌等级提升速度+50%
-      brandGrowthBonus: 0.50,
+      brandGrowthBonus: 0.5,
     },
     desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
   },
@@ -237,7 +237,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 解锁CTO岗位
       unlockJobs: ["cto", "tech_director"],
       // 晋升速度+50%
-      promoSpeedBonus: 0.50,
+      promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
       // 每日被动收入+¥300（来自股票期权）
@@ -258,11 +258,11 @@ const SKILL_SYNERGY_TRIPLE = {
     ],
     effects: {
       // 维修类工作收入+50%
-      comprehensiveRepairBonus: 0.50,
+      comprehensiveRepairBonus: 0.5,
       // 解锁智能家居安装工作
       unlockJobs: ["smart_home_installer", "iot_developer"],
       // 装备维修损耗-50%
-      repairWearReduction: 0.50,
+      repairWearReduction: 0.5,
       // 每日被动收入+¥100（来自智能家居项目）
       passiveSmartHomeIncome: 100,
     },
@@ -281,7 +281,7 @@ const SKILL_SYNERGY_TRIPLE = {
     ],
     effects: {
       // 货运/配送收入+50%
-      logisticsIncomeBonus: 0.50,
+      logisticsIncomeBonus: 0.5,
       // 解锁物流公司
       unlockBusinesses: ["logistics_company"],
       // 每日被动收入+¥250
@@ -306,7 +306,7 @@ const SKILL_SYNERGY_THEME = {
     threshold: 40,
     effects: {
       techIncomeBonus: 0.15,
-      techXpBonus: 0.10,
+      techXpBonus: 0.1,
       unlockJobs: ["tech_consultant"],
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
@@ -323,7 +323,7 @@ const SKILL_SYNERGY_THEME = {
     threshold: 40,
     effects: {
       businessIncomeBonus: 0.15,
-      businessXpBonus: 0.10,
+      businessXpBonus: 0.1,
       unlockJobs: ["business_consultant"],
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
@@ -340,7 +340,7 @@ const SKILL_SYNERGY_THEME = {
     threshold: 40,
     effects: {
       serviceIncomeBonus: 0.15,
-      serviceXpBonus: 0.10,
+      serviceXpBonus: 0.1,
       unlockJobs: ["personal_assistant"],
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
@@ -371,9 +371,9 @@ function checkSkillSynergies(state) {
   var skillLevels = {};
   for (var skillId in state.skills) {
     var skill = state.skills[skillId];
-    if (skill && typeof skill === 'object') {
+    if (skill && typeof skill === "object") {
       skillLevels[skillId] = skill.level || 0;
-    } else if (typeof skill === 'number') {
+    } else if (typeof skill === "number") {
       skillLevels[skillId] = skill;
     }
   }
@@ -399,13 +399,19 @@ function checkSkillSynergies(state) {
       };
       // 收集解锁内容
       if (synergy.effects.unlockJobs) {
-        results.unlockedJobs = results.unlockedJobs.concat(synergy.effects.unlockJobs);
+        results.unlockedJobs = results.unlockedJobs.concat(
+          synergy.effects.unlockJobs,
+        );
       }
       if (synergy.effects.unlockBusinesses) {
-        results.unlockedBusinesses = results.unlockedBusinesses.concat(synergy.effects.unlockBusinesses);
+        results.unlockedBusinesses = results.unlockedBusinesses.concat(
+          synergy.effects.unlockBusinesses,
+        );
       }
       if (synergy.effects.unlockActions) {
-        results.unlockedActions = results.unlockedActions.concat(synergy.effects.unlockActions);
+        results.unlockedActions = results.unlockedActions.concat(
+          synergy.effects.unlockActions,
+        );
       }
     }
   }
@@ -430,13 +436,19 @@ function checkSkillSynergies(state) {
         effects: synergy.effects,
       };
       if (synergy.effects.unlockJobs) {
-        results.unlockedJobs = results.unlockedJobs.concat(synergy.effects.unlockJobs);
+        results.unlockedJobs = results.unlockedJobs.concat(
+          synergy.effects.unlockJobs,
+        );
       }
       if (synergy.effects.unlockBusinesses) {
-        results.unlockedBusinesses = results.unlockedBusinesses.concat(synergy.effects.unlockBusinesses);
+        results.unlockedBusinesses = results.unlockedBusinesses.concat(
+          synergy.effects.unlockBusinesses,
+        );
       }
       if (synergy.effects.unlockActions) {
-        results.unlockedActions = results.unlockedActions.concat(synergy.effects.unlockActions);
+        results.unlockedActions = results.unlockedActions.concat(
+          synergy.effects.unlockActions,
+        );
       }
     }
   }
@@ -460,7 +472,9 @@ function checkSkillSynergies(state) {
         effects: theme.effects,
       };
       if (theme.effects.unlockJobs) {
-        results.unlockedJobs = results.unlockedJobs.concat(theme.effects.unlockJobs);
+        results.unlockedJobs = results.unlockedJobs.concat(
+          theme.effects.unlockJobs,
+        );
       }
     }
   }
@@ -470,7 +484,7 @@ function checkSkillSynergies(state) {
   function mergeEffects(source) {
     for (var key in source) {
       var value = source[key];
-      if (typeof value === 'object' && !Array.isArray(value)) {
+      if (typeof value === "object" && !Array.isArray(value)) {
         if (!combinedEffects[key]) combinedEffects[key] = {};
         for (var k in value) {
           combinedEffects[key][k] = value[k];
@@ -508,44 +522,99 @@ function checkSkillSynergies(state) {
  * @returns {string} HTML字符串
  */
 function renderSynergyCard(synergyResult, type) {
-  var typeLabel = type === "dual" ? "双技能连携" : type === "triple" ? "三技能连携" : "主题连携";
-  var typeColor = type === "dual" ? "#4a9e5c" : type === "triple" ? "#4a6cf7" : "#e8b84c";
+  var typeLabel =
+    type === "dual"
+      ? "双技能连携"
+      : type === "triple"
+        ? "三技能连携"
+        : "主题连携";
+  var typeColor =
+    type === "dual" ? "#4a9e5c" : type === "triple" ? "#4a6cf7" : "#e8b84c";
 
   var effectsHtml = "";
   var effects = synergyResult.effects;
   for (var key in effects) {
-    if (key.indexOf("Bonus") >= 0 || key.indexOf("Reduction") >= 0 || key.indexOf("Multiplier") >= 0) {
-      effectsHtml += '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' + key + ': +' + (effects[key] * 100 || effects[key]) + '%</div>';
-    } else if (key === "unlockJobs" || key === "unlockBusinesses" || key === "unlockActions") {
+    if (
+      key.indexOf("Bonus") >= 0 ||
+      key.indexOf("Reduction") >= 0 ||
+      key.indexOf("Multiplier") >= 0
+    ) {
+      effectsHtml +=
+        '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' +
+        key +
+        ": +" +
+        (effects[key] * 100 || effects[key]) +
+        "%</div>";
+    } else if (
+      key === "unlockJobs" ||
+      key === "unlockBusinesses" ||
+      key === "unlockActions"
+    ) {
       // 跳过，单独显示
     } else {
-      effectsHtml += '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' + key + ': ' + effects[key] + '</div>';
+      effectsHtml +=
+        '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">• ' +
+        key +
+        ": " +
+        effects[key] +
+        "</div>";
     }
   }
 
   var unlockHtml = "";
   if (synergyResult.unlockedJobs && synergyResult.unlockedJobs.length > 0) {
-    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🔓 解锁工作: ' + synergyResult.unlockedJobs.join(', ') + '</div>';
+    unlockHtml +=
+      '<div style="font-size:11px;color:var(--success);margin-top:4px;">🔓 解锁工作: ' +
+      synergyResult.unlockedJobs.join(", ") +
+      "</div>";
   }
-  if (synergyResult.unlockedBusinesses && synergyResult.unlockedBusinesses.length > 0) {
-    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🏢 解锁业务: ' + synergyResult.unlockedBusinesses.join(', ') + '</div>';
+  if (
+    synergyResult.unlockedBusinesses &&
+    synergyResult.unlockedBusinesses.length > 0
+  ) {
+    unlockHtml +=
+      '<div style="font-size:11px;color:var(--success);margin-top:4px;">🏢 解锁业务: ' +
+      synergyResult.unlockedBusinesses.join(", ") +
+      "</div>";
   }
-  if (synergyResult.unlockedActions && synergyResult.unlockedActions.length > 0) {
-    unlockHtml += '<div style="font-size:11px;color:var(--success);margin-top:4px;">🎯 解锁行动: ' + synergyResult.unlockedActions.join(', ') + '</div>';
+  if (
+    synergyResult.unlockedActions &&
+    synergyResult.unlockedActions.length > 0
+  ) {
+    unlockHtml +=
+      '<div style="font-size:11px;color:var(--success);margin-top:4px;">🎯 解锁行动: ' +
+      synergyResult.unlockedActions.join(", ") +
+      "</div>";
   }
 
-  return '<div style="background:var(--bg-card);border:1px solid ' + typeColor + ';border-radius:8px;padding:12px;margin-bottom:10px;">' +
+  return (
+    '<div style="background:var(--bg-card);border:1px solid ' +
+    typeColor +
+    ';border-radius:8px;padding:12px;margin-bottom:10px;">' +
     '<div style="display:flex;align-items:center;gap:8px;">' +
-    '<span style="font-size:24px;">' + synergyResult.icon + '</span>' +
-    '<div>' +
-    '<div style="font-weight:bold;color:var(--text-primary);">' + synergyResult.name + '</div>' +
-    '<div style="font-size:11px;color:' + typeColor + ';">' + typeLabel + '</div>' +
-    '</div>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">' + synergyResult.desc + '</div>' +
-    '<div style="margin-top:8px;">' + effectsHtml + '</div>' +
+    '<span style="font-size:24px;">' +
+    synergyResult.icon +
+    "</span>" +
+    "<div>" +
+    '<div style="font-weight:bold;color:var(--text-primary);">' +
+    synergyResult.name +
+    "</div>" +
+    '<div style="font-size:11px;color:' +
+    typeColor +
+    ';">' +
+    typeLabel +
+    "</div>" +
+    "</div>" +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">' +
+    synergyResult.desc +
+    "</div>" +
+    '<div style="margin-top:8px;">' +
+    effectsHtml +
+    "</div>" +
     unlockHtml +
-    '</div>';
+    "</div>"
+  );
 }
 
 /**
@@ -571,16 +640,26 @@ function getSkillSynergyBonus(jobId, state) {
     }
     // 检查通用加成
     if (synergy.effects) {
-      if (synergy.effects.streetIncomeBonus) totalBonus += synergy.effects.streetIncomeBonus;
-      if (synergy.effects.deliveryIncomeBonus) totalBonus += synergy.effects.deliveryIncomeBonus;
-      if (synergy.effects.constructionIncomeBonus) totalBonus += synergy.effects.constructionIncomeBonus;
-      if (synergy.effects.techIncomeBonus) totalBonus += synergy.effects.techIncomeBonus;
-      if (synergy.effects.logisticsIncomeBonus) totalBonus += synergy.effects.logisticsIncomeBonus;
-      if (synergy.effects.businessIncomeBonus) totalBonus += synergy.effects.businessIncomeBonus;
-      if (synergy.effects.serviceIncomeBonus) totalBonus += synergy.effects.serviceIncomeBonus;
-      if (synergy.effects.restaurantIncomeBonus) totalBonus += synergy.effects.restaurantIncomeBonus;
-      if (synergy.effects.comprehensiveRepairBonus) totalBonus += synergy.effects.comprehensiveRepairBonus;
-      if (synergy.effects.financeIncomeBonus) totalBonus += synergy.effects.financeIncomeBonus;
+      if (synergy.effects.streetIncomeBonus)
+        totalBonus += synergy.effects.streetIncomeBonus;
+      if (synergy.effects.deliveryIncomeBonus)
+        totalBonus += synergy.effects.deliveryIncomeBonus;
+      if (synergy.effects.constructionIncomeBonus)
+        totalBonus += synergy.effects.constructionIncomeBonus;
+      if (synergy.effects.techIncomeBonus)
+        totalBonus += synergy.effects.techIncomeBonus;
+      if (synergy.effects.logisticsIncomeBonus)
+        totalBonus += synergy.effects.logisticsIncomeBonus;
+      if (synergy.effects.businessIncomeBonus)
+        totalBonus += synergy.effects.businessIncomeBonus;
+      if (synergy.effects.serviceIncomeBonus)
+        totalBonus += synergy.effects.serviceIncomeBonus;
+      if (synergy.effects.restaurantIncomeBonus)
+        totalBonus += synergy.effects.restaurantIncomeBonus;
+      if (synergy.effects.comprehensiveRepairBonus)
+        totalBonus += synergy.effects.comprehensiveRepairBonus;
+      if (synergy.effects.financeIncomeBonus)
+        totalBonus += synergy.effects.financeIncomeBonus;
     }
   }
 
@@ -588,16 +667,26 @@ function getSkillSynergyBonus(jobId, state) {
   for (var synergyId in synergyResults.triple) {
     var synergy = synergyResults.triple[synergyId];
     if (synergy.effects) {
-      if (synergy.effects.streetIncomeBonus) totalBonus += synergy.effects.streetIncomeBonus;
-      if (synergy.effects.deliveryIncomeBonus) totalBonus += synergy.effects.deliveryIncomeBonus;
-      if (synergy.effects.constructionIncomeBonus) totalBonus += synergy.effects.constructionIncomeBonus;
-      if (synergy.effects.techIncomeBonus) totalBonus += synergy.effects.techIncomeBonus;
-      if (synergy.effects.logisticsIncomeBonus) totalBonus += synergy.effects.logisticsIncomeBonus;
-      if (synergy.effects.businessIncomeBonus) totalBonus += synergy.effects.businessIncomeBonus;
-      if (synergy.effects.serviceIncomeBonus) totalBonus += synergy.effects.serviceIncomeBonus;
-      if (synergy.effects.restaurantIncomeBonus) totalBonus += synergy.effects.restaurantIncomeBonus;
-      if (synergy.effects.comprehensiveRepairBonus) totalBonus += synergy.effects.comprehensiveRepairBonus;
-      if (synergy.effects.financeIncomeBonus) totalBonus += synergy.effects.financeIncomeBonus;
+      if (synergy.effects.streetIncomeBonus)
+        totalBonus += synergy.effects.streetIncomeBonus;
+      if (synergy.effects.deliveryIncomeBonus)
+        totalBonus += synergy.effects.deliveryIncomeBonus;
+      if (synergy.effects.constructionIncomeBonus)
+        totalBonus += synergy.effects.constructionIncomeBonus;
+      if (synergy.effects.techIncomeBonus)
+        totalBonus += synergy.effects.techIncomeBonus;
+      if (synergy.effects.logisticsIncomeBonus)
+        totalBonus += synergy.effects.logisticsIncomeBonus;
+      if (synergy.effects.businessIncomeBonus)
+        totalBonus += synergy.effects.businessIncomeBonus;
+      if (synergy.effects.serviceIncomeBonus)
+        totalBonus += synergy.effects.serviceIncomeBonus;
+      if (synergy.effects.restaurantIncomeBonus)
+        totalBonus += synergy.effects.restaurantIncomeBonus;
+      if (synergy.effects.comprehensiveRepairBonus)
+        totalBonus += synergy.effects.comprehensiveRepairBonus;
+      if (synergy.effects.financeIncomeBonus)
+        totalBonus += synergy.effects.financeIncomeBonus;
     }
   }
 
@@ -605,9 +694,12 @@ function getSkillSynergyBonus(jobId, state) {
   for (var themeId in synergyResults.theme) {
     var theme = synergyResults.theme[themeId];
     if (theme.effects) {
-      if (theme.effects.techIncomeBonus) totalBonus += theme.effects.techIncomeBonus;
-      if (theme.effects.businessIncomeBonus) totalBonus += theme.effects.businessIncomeBonus;
-      if (theme.effects.serviceIncomeBonus) totalBonus += theme.effects.serviceIncomeBonus;
+      if (theme.effects.techIncomeBonus)
+        totalBonus += theme.effects.techIncomeBonus;
+      if (theme.effects.businessIncomeBonus)
+        totalBonus += theme.effects.businessIncomeBonus;
+      if (theme.effects.serviceIncomeBonus)
+        totalBonus += theme.effects.serviceIncomeBonus;
     }
   }
 
@@ -631,13 +723,15 @@ if (typeof window !== "undefined") {
     id: "skill_synergy",
     name: "技能连携",
     icon: "🔗",
-    brief: "多门技能同时达到一定等级时触发额外加成，包括收入加成、解锁新工作/业务/行动。",
+    brief:
+      "多门技能同时达到一定等级时触发额外加成，包括收入加成、解锁新工作/业务/行动。",
     version: "1.0",
     related: ["mechanics:skills", "mechanics:skill_tree"],
     sections: [
       {
         type: "desc",
-        content: "技能连携分为双技能连携（2门）、三技能连携（3门）和主题连携（同主题多门）。连携效果自动检测，无需手动激活。",
+        content:
+          "技能连携分为双技能连携（2门）、三技能连携（3门）和主题连携（同主题多门）。连携效果自动检测，无需手动激活。",
       },
       {
         type: "list",
@@ -658,7 +752,8 @@ if (typeof window !== "undefined") {
       },
       {
         type: "tip",
-        content: "连携效果在技能等级变化时自动检测。在「技能」Tab可查看当前连携状态和解锁内容。",
+        content:
+          "连携效果在技能等级变化时自动检测。在「技能」Tab可查看当前连携状态和解锁内容。",
       },
     ],
   };

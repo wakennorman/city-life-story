@@ -11,19 +11,34 @@ function renderSideHustleTab(state, parent) {
 
   // 获取副业数据
   const hustleList = typeof SIDE_HUSTLES !== "undefined" ? SIDE_HUSTLES : {};
-  const fatigue = typeof sideHustle !== "undefined" ? sideHustle.getFatigue(state) : { fatigue: 0, max: 100, status: "normal" };
+  const fatigue =
+    typeof sideHustle !== "undefined"
+      ? sideHustle.getFatigue(state)
+      : { fatigue: 0, max: 100, status: "normal" };
 
   // 标题
   const header = document.createElement("div");
   header.innerHTML = "<h3>💼 副业</h3>";
-  header.style.cssText = "padding:12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);";
+  header.style.cssText =
+    "padding:12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);";
   parent.appendChild(header);
 
   // 疲劳度状态
   const fatigueBar = document.createElement("div");
-  fatigueBar.style.cssText = "padding:12px;background:var(--bg-secondary);margin:12px;border-radius:6px;";
-  const fatigueColor = fatigue.status === "exhausted" ? "var(--danger)" : fatigue.status === "warning" ? "var(--warning)" : "var(--success)";
-  const fatigueIcon = fatigue.status === "exhausted" ? "😫" : fatigue.status === "warning" ? "⚠️" : "💪";
+  fatigueBar.style.cssText =
+    "padding:12px;background:var(--bg-secondary);margin:12px;border-radius:6px;";
+  const fatigueColor =
+    fatigue.status === "exhausted"
+      ? "var(--danger)"
+      : fatigue.status === "warning"
+        ? "var(--warning)"
+        : "var(--success)";
+  const fatigueIcon =
+    fatigue.status === "exhausted"
+      ? "😫"
+      : fatigue.status === "warning"
+        ? "⚠️"
+        : "💪";
   fatigueBar.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="font-size:14px;">${fatigueIcon} 副业疲劳度</span>
@@ -46,10 +61,14 @@ function renderSideHustleTab(state, parent) {
 
   for (let hustleId in hustleList) {
     const hustle = hustleList[hustleId];
-    const check = typeof sideHustle !== "undefined" ? sideHustle.check(hustleId, state) : { ok: false, reason: "系统未加载" };
+    const check =
+      typeof sideHustle !== "undefined"
+        ? sideHustle.check(hustleId, state)
+        : { ok: false, reason: "系统未加载" };
 
     const card = document.createElement("div");
-    card.style.cssText = "flex:1;min-width:200px;max-width:280px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);";
+    card.style.cssText =
+      "flex:1;min-width:200px;max-width:280px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);";
 
     // 检查是否可用
     const available = check.ok;
@@ -64,17 +83,19 @@ function renderSideHustleTab(state, parent) {
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
         <div>💰 基础收入：¥${hustle.baseIncome}</div>
         <div>💪 疲劳消耗：${hustle.fatigueCost}</div>
-        <div>⏰ 可接时间：${hustle.timeSlot.map(s => s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜").join("、")}</div>
+        <div>⏰ 可接时间：${hustle.timeSlot.map((s) => (s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜")).join("、")}</div>
       </div>
     `;
 
     // 属性要求
     if (hustle.minAttr) {
-      const reqText = Object.entries(hustle.minAttr).map(([attr, val]) => {
-        const current = state.player[attr] || 0;
-        const met = current >= val;
-        return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
-      }).join(", ");
+      const reqText = Object.entries(hustle.minAttr)
+        .map(([attr, val]) => {
+          const current = state.player[attr] || 0;
+          const met = current >= val;
+          return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
+        })
+        .join(", ");
       card.innerHTML += `<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">${reqText}</div>`;
     }
 

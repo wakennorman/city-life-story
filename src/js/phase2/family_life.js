@@ -718,11 +718,7 @@ function investChildEducation(state, childId) {
   child.happiness = Math.min(100, (child.happiness || 80) + 2);
   updateChildExpenses(state);
   StateManager.addMessage(
-    "📚 给" +
-      child.name +
-      "追加教育投入，当前为「" +
-      child.education +
-      "」。",
+    "📚 给" + child.name + "追加教育投入，当前为「" + child.education + "」。",
     "success",
   );
   return { success: true, child: child };
@@ -1110,7 +1106,11 @@ if (typeof window !== "undefined") {
     icon: "👨‍👩‍👧",
     brief: "NPC求婚、婚恋系统、子女教育、父母养老、家庭生活",
     version: "1.1.0",
-    related: ["mechanics:main", "mechanics:npc_affinity", "mechanics:critical_needs"],
+    related: [
+      "mechanics:main",
+      "mechanics:npc_affinity",
+      "mechanics:critical_needs",
+    ],
     sections: [
       {
         kind: "desc",

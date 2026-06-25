@@ -48,7 +48,10 @@ function addStreetExtras(state, actions) {
       var st = StateManager.getState();
       var prep = st.flags && st.flags._weatherPrep;
       if (prep && prep.umbrella && prep.warmPack) {
-        StateManager.addMessage("🌤️ 你已经做好了所有天气准备（伞+暖宝）。", "info");
+        StateManager.addMessage(
+          "🌤️ 你已经做好了所有天气准备（伞+暖宝）。",
+          "info",
+        );
         return;
       }
       if (typeof prepareForWeather === "function") {
@@ -2206,15 +2209,19 @@ var LOCATION_EXTRA_ACTIONS = [
     handler: function (st) {
       var cost = 50;
       st.resources.cash -= cost;
-      var findValue = Random.int(0, 100) + (st.skills.repair ? st.skills.repair.level : 0);
+      var findValue =
+        Random.int(0, 100) + (st.skills.repair ? st.skills.repair.level : 0);
       var earn = 0;
       if (findValue > 120) earn = 250 + Random.int(0, 100);
       else if (findValue > 80) earn = 100 + Random.int(0, 80);
       else earn = 20 + Random.int(0, 30);
       st.resources.cash += earn;
       StateManager.addMessage(
-        "🔩 你在废品站翻了半天，" + (earn > 100 ? "找到一件有价值的旧零件，卖了¥" + earn : "就找到些破铜烂铁，卖了¥" + earn),
-        earn > 100 ? "success" : "info"
+        "🔩 你在废品站翻了半天，" +
+          (earn > 100
+            ? "找到一件有价值的旧零件，卖了¥" + earn
+            : "就找到些破铜烂铁，卖了¥" + earn),
+        earn > 100 ? "success" : "info",
       );
     },
   },
@@ -2234,8 +2241,10 @@ var LOCATION_EXTRA_ACTIONS = [
       st.resources.cash += earn;
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
       StateManager.addMessage(
-        "🏭 你在工厂干了一天体力活，赚了¥" + earn.toLocaleString() + "。累得腰酸背痛。",
-        "info"
+        "🏭 你在工厂干了一天体力活，赚了¥" +
+          earn.toLocaleString() +
+          "。累得腰酸背痛。",
+        "info",
       );
     },
   },
@@ -2262,7 +2271,7 @@ var LOCATION_EXTRA_ACTIONS = [
       }
       StateManager.addMessage(
         "📚 你在自习室学到很晚。虽然花了¥10电费，但学习效率比平时高出不少。",
-        "info"
+        "info",
       );
     },
   },
@@ -2273,15 +2282,19 @@ var LOCATION_EXTRA_ACTIONS = [
     icon: "📄",
     location: "commercialDist",
     apCost: 20,
-    condition: function (st) { return true; },
+    condition: function (st) {
+      return true;
+    },
     payEstimate: "60~80",
     handler: function (st) {
       var earn = 60 + Random.int(0, 20);
       st.resources.cash += earn;
       st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
       StateManager.addMessage(
-        "📄 你发了一天的传单，赚了¥" + earn.toLocaleString() + "。手都酸了，但看着商家满意的脸色，还算值得。",
-        "info"
+        "📄 你发了一天的传单，赚了¥" +
+          earn.toLocaleString() +
+          "。手都酸了，但看着商家满意的脸色，还算值得。",
+        "info",
       );
     },
   },
@@ -2301,18 +2314,18 @@ var LOCATION_EXTRA_ACTIONS = [
         st.flags._techParkLead = true;
         StateManager.addMessage(
           "💡 你和一位创业者聊得很投机，他给了你一张名片：'有兴趣来我们公司聊聊！'",
-          "success"
+          "success",
         );
       } else if (Random.chance(0.4)) {
         st.resources.cash += 50;
         StateManager.addMessage(
           "💡 你帮一个创业团队跑腿买了咖啡和午饭，赚了¥50小费。",
-          "info"
+          "info",
         );
       } else {
         StateManager.addMessage(
           "💡 你在科技园逛了一圈，被保安问了几次话，收获不大。",
-          "info"
+          "info",
         );
       }
     },
@@ -2334,7 +2347,7 @@ var LOCATION_EXTRA_ACTIONS = [
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
       StateManager.addMessage(
         "🩸 你献了400ml全血，护士给你发了营养补贴¥200。虽然有点头晕，但心里暖暖的。",
-        "success"
+        "success",
       );
     },
   },
@@ -2345,14 +2358,16 @@ var LOCATION_EXTRA_ACTIONS = [
     icon: "🏃",
     location: "park",
     apCost: 15,
-    condition: function (st) { return true; },
+    condition: function (st) {
+      return true;
+    },
     payEstimate: "0",
     handler: function (st) {
       st.player.physique = Math.min(100, (st.player.physique || 50) + 3);
       st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
       StateManager.addMessage(
         "🏃 你在公园跑了三圈，打了套太极拳。浑身舒畅，精神焕发。",
-        "success"
+        "success",
       );
     },
   },
@@ -2380,7 +2395,7 @@ var LOCATION_EXTRA_ACTIONS = [
       }
       StateManager.addMessage(
         "📖 你泡了一天的图书馆。交了¥5茶位费，收获不小，技能经验提升了。",
-        "info"
+        "info",
       );
     },
   },
@@ -2403,7 +2418,7 @@ var LOCATION_EXTRA_ACTIONS = [
       }
       StateManager.addMessage(
         "🧘 你在寺庙里打坐了一个小时。听着钟声，心静了下来，感觉整个人都轻松了。",
-        "success"
+        "success",
       );
     },
   },
@@ -2425,8 +2440,10 @@ var LOCATION_EXTRA_ACTIONS = [
         st.skills.social.xp = (st.skills.social.xp || 0) + 5;
       }
       StateManager.addMessage(
-        "🔄 你在批发市场倒腾了一批小商品，赚了¥" + earn.toLocaleString() + "。嘴皮子功夫又见长了。",
-        "success"
+        "🔄 你在批发市场倒腾了一批小商品，赚了¥" +
+          earn.toLocaleString() +
+          "。嘴皮子功夫又见长了。",
+        "success",
       );
     },
   },

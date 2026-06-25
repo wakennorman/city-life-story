@@ -187,7 +187,11 @@
         income *= hustle.specialBonus.mod;
       }
       if (hustle.specialBonus.followers) {
-        const followers = (state._sideHustleData && state._sideHustleData.selfMedia && state._sideHustleData.selfMedia.followers) || 0;
+        const followers =
+          (state._sideHustleData &&
+            state._sideHustleData.selfMedia &&
+            state._sideHustleData.selfMedia.followers) ||
+          0;
         if (followers >= hustle.specialBonus.followers) {
           income *= hustle.specialBonus.mod;
         }
@@ -203,24 +207,27 @@
     // 增加疲劳度
     const newFatigue = Math.min(
       FATIGUE_CONFIG.maxSideHustleFatigue,
-      fatigue + hustle.fatigueCost
+      fatigue + hustle.fatigueCost,
     );
     state._sideHustleFatigue = newFatigue;
 
     // 更新自媒体粉丝（如果是自媒体）
     if (hustleId === "self_media") {
       if (!state._sideHustleData) state._sideHustleData = {};
-      if (!state._sideHustleData.selfMedia) state._sideHustleData.selfMedia = { followers: 0 };
+      if (!state._sideHustleData.selfMedia)
+        state._sideHustleData.selfMedia = { followers: 0 };
       state._sideHustleData.selfMedia.followers = Math.min(
         10000,
-        (state._sideHustleData.selfMedia.followers || 0) + Random.int(1, 5)
+        (state._sideHustleData.selfMedia.followers || 0) + Random.int(1, 5),
       );
     }
 
     // 疲劳度惩罚检查
     let penalty = 0;
     if (newFatigue > FATIGUE_CONFIG.penaltyThreshold) {
-      penalty = (newFatigue - FATIGUE_CONFIG.penaltyThreshold) * FATIGUE_CONFIG.penaltyRate;
+      penalty =
+        (newFatigue - FATIGUE_CONFIG.penaltyThreshold) *
+        FATIGUE_CONFIG.penaltyRate;
     }
 
     return {
@@ -244,7 +251,7 @@
     if (state._sideHustleFatigue !== undefined) {
       state._sideHustleFatigue = Math.max(
         0,
-        state._sideHustleFatigue - FATIGUE_CONFIG.recoveryRate
+        state._sideHustleFatigue - FATIGUE_CONFIG.recoveryRate,
       );
     }
   }
@@ -264,7 +271,11 @@
       fatigue,
       max: FATIGUE_CONFIG.maxSideHustleFatigue,
       status,
-      penalty: Math.max(0, (fatigue - FATIGUE_CONFIG.penaltyThreshold) * FATIGUE_CONFIG.penaltyRate),
+      penalty: Math.max(
+        0,
+        (fatigue - FATIGUE_CONFIG.penaltyThreshold) *
+          FATIGUE_CONFIG.penaltyRate,
+      ),
     };
   }
 

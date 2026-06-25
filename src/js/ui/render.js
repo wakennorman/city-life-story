@@ -1139,7 +1139,10 @@ const TAB_RENDERERS = {
     fallback: "个人成长系统加载中...",
   },
   // renderWikiTab 在 wiki.js 中定义（跨文件）
-  equipmentSuites: { fnName: "renderEquipmentSuitesTab", fallback: "装备套装加载中..." },
+  equipmentSuites: {
+    fnName: "renderEquipmentSuitesTab",
+    fallback: "装备套装加载中...",
+  },
   wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
 };
 
@@ -5309,7 +5312,9 @@ function renderFamilyTab(state, parent) {
   const fam = state.family || {};
   const spouse = fam.spouse || fam.partner || null;
   const totalAssets =
-    typeof getFamilyTotalAssets === "function" ? getFamilyTotalAssets(state) : 0;
+    typeof getFamilyTotalAssets === "function"
+      ? getFamilyTotalAssets(state)
+      : 0;
   const eligibleNpcs =
     typeof getEligibleMarriageNpcs === "function"
       ? getEligibleMarriageNpcs(state)

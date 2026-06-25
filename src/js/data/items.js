@@ -1025,7 +1025,8 @@ function rollEquipmentDrop(state, source) {
   var equipmentPool = getEquipmentPoolBySource(source);
   if (!equipmentPool || equipmentPool.length === 0) return null;
 
-  var equipment = equipmentPool[Math.floor(Math.random() * equipmentPool.length)];
+  var equipment =
+    equipmentPool[Math.floor(Math.random() * equipmentPool.length)];
   var quality = rollEquipmentQuality();
   var enchant = rollEnchantment(quality);
 
@@ -1035,7 +1036,7 @@ function rollEquipmentDrop(state, source) {
     quality: quality,
     enchant: enchant,
     durability: equipment.maxDurability,
-    source: source
+    source: source,
   };
 }
 
@@ -1043,21 +1044,66 @@ function rollEquipmentDrop(state, source) {
 function getEquipmentPoolBySource(source) {
   var pools = {
     street: [
-      { id: "eq_wrench", name: "多功能扳手", quality: "common", maxDurability: 50 },
-      { id: "eq_flashlight", name: "强光手电筒", quality: "common", maxDurability: 80 },
-      { id: "eq_work_gloves", name: "劳保手套", quality: "common", maxDurability: 100 },
-      { id: "eq_straw_hat", name: "草帽", quality: "common", maxDurability: 60 },
+      {
+        id: "eq_wrench",
+        name: "多功能扳手",
+        quality: "common",
+        maxDurability: 50,
+      },
+      {
+        id: "eq_flashlight",
+        name: "强光手电筒",
+        quality: "common",
+        maxDurability: 80,
+      },
+      {
+        id: "eq_work_gloves",
+        name: "劳保手套",
+        quality: "common",
+        maxDurability: 100,
+      },
+      {
+        id: "eq_straw_hat",
+        name: "草帽",
+        quality: "common",
+        maxDurability: 60,
+      },
     ],
     corporate: [
-      { id: "eq_laptop", name: "商务笔记本", quality: "rare", maxDurability: 200 },
+      {
+        id: "eq_laptop",
+        name: "商务笔记本",
+        quality: "rare",
+        maxDurability: 200,
+      },
       { id: "eq_suit", name: "定制西装", quality: "rare", maxDurability: 150 },
-      { id: "eq_smart_watch", name: "智能手表", quality: "rare", maxDurability: 180 },
+      {
+        id: "eq_smart_watch",
+        name: "智能手表",
+        quality: "rare",
+        maxDurability: 180,
+      },
     ],
     startup: [
-      { id: "eq_smartwatch", name: "智能手表", quality: "epic", maxDurability: 300 },
-      { id: "eq_nfc_card", name: "NFC门禁卡", quality: "epic", maxDurability: 500 },
-      { id: "eq_tablet", name: "平板电脑", quality: "epic", maxDurability: 250 },
-    ]
+      {
+        id: "eq_smartwatch",
+        name: "智能手表",
+        quality: "epic",
+        maxDurability: 300,
+      },
+      {
+        id: "eq_nfc_card",
+        name: "NFC门禁卡",
+        quality: "epic",
+        maxDurability: 500,
+      },
+      {
+        id: "eq_tablet",
+        name: "平板电脑",
+        quality: "epic",
+        maxDurability: 250,
+      },
+    ],
   };
   return pools[source] || pools.street;
 }
@@ -1077,7 +1123,7 @@ function rollEnchantment(quality) {
     common: ["耐用", "轻便", "舒适"],
     rare: ["高效", "精准", "耐用++"],
     epic: ["专家级", "大师级", "传奇"],
-    legendary: ["传说", "神器", "永恒"]
+    legendary: ["传说", "神器", "永恒"],
   };
   var list = enchantments[quality] || enchantments.common;
   return list[Math.floor(Math.random() * list.length)];

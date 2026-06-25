@@ -45,7 +45,8 @@
    * @returns {string|null} 地点 key，或 null（未发现该 NPC / 无日程）
    */
   function getNpcCurrentLocation(npcId, timeOfDay) {
-    var st = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+    var st =
+      typeof StateManager !== "undefined" ? StateManager.getState() : null;
     if (!st || !st._npcLocationData) return null;
     var rel = st.relationships && st.relationships[npcId];
     if (!rel || !rel.met) return null; // 未发现的 NPC 不暴露位置

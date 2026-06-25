@@ -55,15 +55,26 @@ const NPCS = [
     giftPrefers: ["fruits", "daily_use"],
     // v3.4 C3D-T4: 好感×技能双门槛解锁
     skillThresholds: [
-      { skill: "cooking", minSkill: 40, minAffinity: 80, id: "auntWangRecipe",
+      {
+        skill: "cooking",
+        minSkill: 40,
+        minAffinity: 80,
+        id: "auntWangRecipe",
         desc: "学做拿手菜，获得1个食谱",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags._auntWangRecipe) return;
           st.flags._auntWangRecipe = true;
-          if (st.skills.cooking) st.skills.cooking.xp = Math.min(1000, (st.skills.cooking.xp || 0) + 200);
-          StateManager.addMessage("🧑‍🍳 王大婶手把手教你做了她的拿手菜——红烧肉！家常菜烹饪灵感大涨。","success");
-        }
-      }
+          if (st.skills.cooking)
+            st.skills.cooking.xp = Math.min(
+              1000,
+              (st.skills.cooking.xp || 0) + 200,
+            );
+          StateManager.addMessage(
+            "🧑‍🍳 王大婶手把手教你做了她的拿手菜——红烧肉！家常菜烹饪灵感大涨。",
+            "success",
+          );
+        },
+      },
     ],
     // v3.6 P0-1: 关系网系统字段
     locationPreference: {
@@ -280,14 +291,21 @@ const NPCS = [
     giftPrefers: ["cigarettes", "beer"],
     // v3.4 C3D-T4: 好感×技能双门槛解锁
     skillThresholds: [
-      { skill: "sales", minSkill: 50, minAffinity: 80, id: "bossLiStallBonus",
+      {
+        skill: "sales",
+        minSkill: 50,
+        minAffinity: 80,
+        id: "bossLiStallBonus",
         desc: "学做生意技巧，摆摊收入+10%",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.bossLiStallBonus) return;
           st.flags.bossLiStallBonus = true;
-          StateManager.addMessage("📈 李工头教了你几手生意经：「进货砍价看这三样就够了！」摆摊收入永久+10%。","success");
-        }
-      }
+          StateManager.addMessage(
+            "📈 李工头教了你几手生意经：「进货砍价看这三样就够了！」摆摊收入永久+10%。",
+            "success",
+          );
+        },
+      },
     ],
     // v3.6 P0-1: 关系网系统字段
     locationPreference: {
@@ -501,14 +519,21 @@ const NPCS = [
     giftPrefers: ["clothing", "snacks"],
     // v3.4 C3D-T4: 好感×技能双门槛解锁
     skillThresholds: [
-      { attr: "physique", minAttr: 60, minAffinity: 80, id: "zhangFactoryBonus",
+      {
+        attr: "physique",
+        minAttr: 60,
+        minAffinity: 80,
+        id: "zhangFactoryBonus",
         desc: "一起做计件工，factoryZone收入+15%",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.zhangFactoryBonus) return;
           st.flags.zhangFactoryBonus = true;
-          StateManager.addMessage("💪 张姐介绍你进工厂做计件工，多劳多得！工厂工作收入永久+15%。","success");
-        }
-      }
+          StateManager.addMessage(
+            "💪 张姐介绍你进工厂做计件工，多劳多得！工厂工作收入永久+15%。",
+            "success",
+          );
+        },
+      },
     ],
     // v3.6 P0-1: 关系网系统字段
     locationPreference: {
@@ -719,14 +744,21 @@ const NPCS = [
     giftPrefers: ["beer", "instant_noodles"],
     // v3.4 C3D-T4: 好感×技能双门槛解锁
     skillThresholds: [
-      { skill: "repair", minSkill: 30, minAffinity: 80, id: "zhouScrapBonus",
+      {
+        skill: "repair",
+        minSkill: 30,
+        minAffinity: 80,
+        id: "zhouScrapBonus",
         desc: "废品行家指点，construction拾荒效率+20%",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.zhouScrapBonus) return;
           st.flags.zhouScrapBonus = true;
-          StateManager.addMessage("🔧 老周指点了你几手废品鉴别的诀窍：「看这里，这是铜不是铁！」废品回收效率永久+20%。","success");
-        }
-      }
+          StateManager.addMessage(
+            "🔧 老周指点了你几手废品鉴别的诀窍：「看这里，这是铜不是铁！」废品回收效率永久+20%。",
+            "success",
+          );
+        },
+      },
     ],
     // v3.6 P0-1: 关系网系统字段
     locationPreference: {
@@ -939,14 +971,21 @@ const NPCS = [
     giftPrefers: ["fruits", "snacks"],
     // v3.4 C3D-T4: 好感×技能双门槛解锁
     skillThresholds: [
-      { attr: "charm", minAttr: 70, minAffinity: 80, id: "xiaomeiModelJob",
+      {
+        attr: "charm",
+        minAttr: 70,
+        minAffinity: 80,
+        id: "xiaomeiModelJob",
         desc: "介绍高端兼职，解锁商业区模特工作",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.xiaomeiModelJob) return;
           st.flags.xiaomeiModelJob = true;
-          StateManager.addMessage("🌟 小美兴奋地说：「我学姐在商业区做平面模特，正缺人呢！以你的形象绝对合适！」解锁了商业区模特工作。","success");
-        }
-      }
+          StateManager.addMessage(
+            "🌟 小美兴奋地说：「我学姐在商业区做平面模特，正缺人呢！以你的形象绝对合适！」解锁了商业区模特工作。",
+            "success",
+          );
+        },
+      },
     ],
     // v3.6 P0-1: 关系网系统字段
     locationPreference: {
@@ -2488,7 +2527,7 @@ const NPCS = [
       "房租下个月要涨，房东都托我涨价。",
       "想买房趁现在，明年政策可能要收紧。",
     ],
-    presenceChance: 0.70,
+    presenceChance: 0.7,
     encounterLines: [
       "赵姐在门店门口打电话，语气很专业。",
       "赵姐拿着楼盘宣传册，跟客户介绍户型。",
@@ -2500,14 +2539,21 @@ const NPCS = [
     },
     giftPrefers: ["cigarettes", "beer", "daily_use"],
     skillThresholds: [
-      { attr: "intelligence", minAttr: 40, minAffinity: 60, id: "zhaojieCityInfo",
+      {
+        attr: "intelligence",
+        minAttr: 40,
+        minAffinity: 60,
+        id: "zhaojieCityInfo",
         desc: "提前获知城市改造信息，避免房租暴涨",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.zhaojieCityInfo) return;
           st.flags.zhaojieCityInfo = true;
-          StateManager.addMessage("🏠 赵姐悄悄告诉你：「下个月老城区要改造，你住的片区房租可能要涨30%。趁现在赶紧找新地方！」提前获知城市改造信息。","success");
-        }
-      }
+          StateManager.addMessage(
+            "🏠 赵姐悄悄告诉你：「下个月老城区要改造，你住的片区房租可能要涨30%。趁现在赶紧找新地方！」提前获知城市改造信息。",
+            "success",
+          );
+        },
+      },
     ],
     tradeInfo: {
       expertise: ["housing", "commercialDist"],
@@ -2526,7 +2572,7 @@ const NPCS = [
         jobs: null,
         multiplier: 1.05,
       },
-      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+      { minAffinity: 60, jobs: null, multiplier: 1.1 },
     ],
     affinityRewards: [
       {
@@ -2600,7 +2646,10 @@ const NPCS = [
               -100,
               st.relationships.zhaojie.affinity - 2,
             );
-            StateManager.addMessage("😅 赵姐点点头：「没事，我自己跑吧。」", "info");
+            StateManager.addMessage(
+              "😅 赵姐点点头：「没事，我自己跑吧。」",
+              "info",
+            );
           },
         },
       ],
@@ -2651,7 +2700,10 @@ const NPCS = [
           hint: "好感不变",
           apply: function (st) {
             st.flags._npcDeepTask_zhaojie = true;
-            StateManager.addMessage("🤷 「也是，这种事只能自己想。」赵姐笑了笑，没再提。", "info");
+            StateManager.addMessage(
+              "🤷 「也是，这种事只能自己想。」赵姐笑了笑，没再提。",
+              "info",
+            );
           },
         },
       ],
@@ -2685,7 +2737,7 @@ const NPCS = [
       "城里的事，没有我不知道的。",
       "人情比钱好用，帮过我的人，消息免费。",
     ],
-    presenceChance: 0.60,
+    presenceChance: 0.6,
     encounterLines: [
       "陈哥坐在夜市摊前抽烟，眯眼看着来往的人。",
       "陈哥正跟客人低声说话，看到你点点头。",
@@ -2697,14 +2749,21 @@ const NPCS = [
     },
     giftPrefers: ["cigarettes", "beer", "snacks"],
     skillThresholds: [
-      { attr: "intelligence", minAttr: 30, minAffinity: 60, id: "chenGeInfoBonus",
+      {
+        attr: "intelligence",
+        minAttr: 30,
+        minAffinity: 60,
+        id: "chenGeInfoBonus",
         desc: "获取独家情报，触发隐藏事件",
-        effect: function(st) {
+        effect: function (st) {
           if (st.flags.chenGeInfoBonus) return;
           st.flags.chenGeInfoBonus = true;
-          StateManager.addMessage("🕵️ 陈哥把你当自己人了：「有消息我第一个告诉你。」触发隐藏情报事件。","success");
-        }
-      }
+          StateManager.addMessage(
+            "🕵️ 陈哥把你当自己人了：「有消息我第一个告诉你。」触发隐藏情报事件。",
+            "success",
+          );
+        },
+      },
     ],
     tradeInfo: {
       expertise: ["info", "nightMarket"],
@@ -2723,7 +2782,7 @@ const NPCS = [
         jobs: null,
         multiplier: 1.05,
       },
-      { minAffinity: 60, jobs: null, multiplier: 1.10 },
+      { minAffinity: 60, jobs: null, multiplier: 1.1 },
     ],
     affinityRewards: [
       {
@@ -2797,7 +2856,10 @@ const NPCS = [
               -100,
               st.relationships.chen_ge.affinity - 3,
             );
-            StateManager.addMessage("😅 陈哥点点头：「没事，我找别人。」", "info");
+            StateManager.addMessage(
+              "😅 陈哥点点头：「没事，我找别人。」",
+              "info",
+            );
           },
         },
       ],
@@ -2818,7 +2880,10 @@ const NPCS = [
               100,
               st.relationships.chen_ge.affinity + 10,
             );
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 2,
+            );
             st.flags.chenGeSearchingAjie = true;
             StateManager.addMessage(
               "💪 陈哥：「多谢兄弟。」他告诉你老同学叫阿杰，以前在城郊工地干过活。好感+10，智力+2。寻找老同学阿杰的事件链已触发。",
@@ -2831,7 +2896,10 @@ const NPCS = [
           hint: "好感不变",
           apply: function (st) {
             st.flags._npcDeepTask_chen_ge = true;
-            StateManager.addMessage("🤷 陈哥叹了口气：「也是，这确实不是谁都能管的。」", "info");
+            StateManager.addMessage(
+              "🤷 陈哥叹了口气：「也是，这确实不是谁都能管的。」",
+              "info",
+            );
           },
         },
       ],
@@ -2865,7 +2933,7 @@ const NPCS = [
       "我现在稳定了，慢慢还你，行不？",
       "陈哥还好吗？好久没见他了。",
     ],
-    presenceChance: 0.40, // 出现概率低
+    presenceChance: 0.4, // 出现概率低
     encounterLines: [
       "阿杰坐在公园长椅上发呆，看到你愣了一下。",
       "阿杰在路边摊吃面，抬头朝你点点头。",
@@ -2958,7 +3026,10 @@ const NPCS = [
               -100,
               st.relationships.ajie.affinity - 5,
             );
-            StateManager.addMessage("😅 阿杰低下头：「对不起……」好感-5。", "warning");
+            StateManager.addMessage(
+              "😅 阿杰低下头：「对不起……」好感-5。",
+              "warning",
+            );
           },
         },
       ],

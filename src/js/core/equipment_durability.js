@@ -13,26 +13,26 @@
 
 // 装备耐久基础值（按装备类型）
 const DURABILITY_BASE = {
-  head: 200,      // 头部装备：帽子、头盔等
-  hand: 300,      // 手部装备：手套等
-  feet: 250,      // 脚部装备：鞋子、靴子
-  body: 350,      // 身体装备：衣服、背心等
+  head: 200, // 头部装备：帽子、头盔等
+  hand: 300, // 手部装备：手套等
+  feet: 250, // 脚部装备：鞋子、靴子
+  body: 350, // 身体装备：衣服、背心等
   accessory: 400, // 配饰：背包、手表、耳机等
-  null: 500,      // 非穿戴装备：雨伞、手电筒等（消耗较慢）
+  null: 500, // 非穿戴装备：雨伞、手电筒等（消耗较慢）
 };
 
 // 装备使用时的耐久消耗（按行动类型）
 const DURABILITY_COST = {
   // 工作类型
-  street_job: 5,          // 街头工作
-  corp_job: 2,            // 职场工作（消耗较少）
-  travel: 3,              // 旅行
-  learning: 1,            // 学习
-  rest: 0,                // 休息（不消耗）
-  cooking: 2,             // 烹饪
-  trading: 1,             // 交易
-  social: 1,              // 社交
-  other: 1,               // 其他行动
+  street_job: 5, // 街头工作
+  corp_job: 2, // 职场工作（消耗较少）
+  travel: 3, // 旅行
+  learning: 1, // 学习
+  rest: 0, // 休息（不消耗）
+  cooking: 2, // 烹饪
+  trading: 1, // 交易
+  social: 1, // 社交
+  other: 1, // 其他行动
 };
 
 /**
@@ -45,7 +45,7 @@ function initItemDurability(itemInstance, itemDef) {
   if (!itemInstance) return null;
 
   // 跳过非装备物品（食材、证书等）
-  if (!itemDef || !itemDef.slot && !itemDef.id) {
+  if (!itemDef || (!itemDef.slot && !itemDef.id)) {
     return itemInstance;
   }
 
@@ -106,8 +106,10 @@ function consumeEquipmentDurability(state, actionType, costMultiplier) {
         // 触发装备损坏消息
         if (typeof StateManager !== "undefined" && StateManager.addMessage) {
           StateManager.addMessage(
-            "⚠️ 您的「" + (item.name || slot) + "」耐久耗尽，效果失效！需要修理。",
-            "warning"
+            "⚠️ 您的「" +
+              (item.name || slot) +
+              "」耐久耗尽，效果失效！需要修理。",
+            "warning",
           );
         }
       }
@@ -165,7 +167,8 @@ function repairEquipment(state, itemId, repairAmount) {
   // 计算修理费用
   var maxDur = item.maxDurability || 100;
   var currentDur = item.durability || 0;
-  var repairTarget = repairAmount > 0 ? Math.min(maxDur, currentDur + repairAmount) : maxDur;
+  var repairTarget =
+    repairAmount > 0 ? Math.min(maxDur, currentDur + repairAmount) : maxDur;
   var repairNeeded = repairTarget - currentDur;
 
   if (repairNeeded <= 0) {
@@ -187,7 +190,8 @@ function repairEquipment(state, itemId, repairAmount) {
   if (state.resources && state.resources.cash < repairCost) {
     return {
       success: false,
-      message: "修理需要 ¥" + repairCost + "，您只有 ¥" + (state.resources.cash || 0)
+      message:
+        "修理需要 ¥" + repairCost + "，您只有 ¥" + (state.resources.cash || 0),
     };
   }
 
@@ -202,7 +206,15 @@ function repairEquipment(state, itemId, repairAmount) {
     repairedAmount: repairNeeded,
     newDurability: item.durability,
     maxDurability: item.maxDurability,
-    message: "✅ 「" + (item.name || itemId) + "」修理完成，耐久 " + Math.floor(currentDur) + " → " + Math.floor(item.durability) + "，花费 ¥" + repairCost
+    message:
+      "✅ 「" +
+      (item.name || itemId) +
+      "」修理完成，耐久 " +
+      Math.floor(currentDur) +
+      " → " +
+      Math.floor(item.durability) +
+      "，花费 ¥" +
+      repairCost,
   };
 }
 
@@ -213,22 +225,58 @@ function repairEquipment(state, itemId, repairAmount) {
  */
 function getDurabilityStatus(item) {
   if (!item || item.durability === undefined) {
-    return { percent: 100, status: "perfect", color: "var(--success)", icon: "✅", desc: "全新" };
+    return {
+      percent: 100,
+      status: "perfect",
+      color: "var(--success)",
+      icon: "✅",
+      desc: "全新",
+    };
   }
 
   var maxDur = item.maxDurability || 100;
   var percent = Math.round((item.durability / maxDur) * 100);
 
   if (item.isBroken || percent <= 0) {
-    return { percent: 0, status: "broken", color: "var(--danger)", icon: "💔", desc: "已损坏" };
+    return {
+      percent: 0,
+      status: "broken",
+      color: "var(--danger)",
+      icon: "💔",
+      desc: "已损坏",
+    };
   } else if (percent <= 20) {
-    return { percent: percent, status: "critical", color: "var(--danger)", icon: "⚠️", desc: "急需修理" };
+    return {
+      percent: percent,
+      status: "critical",
+      color: "var(--danger)",
+      icon: "⚠️",
+      desc: "急需修理",
+    };
   } else if (percent <= 50) {
-    return { percent: percent, status: "worn", color: "var(--warning)", icon: "🔧", desc: "磨损" };
+    return {
+      percent: percent,
+      status: "worn",
+      color: "var(--warning)",
+      icon: "🔧",
+      desc: "磨损",
+    };
   } else if (percent <= 80) {
-    return { percent: percent, status: "used", color: "#f0ad4e", icon: "📦", desc: "使用过" };
+    return {
+      percent: percent,
+      status: "used",
+      color: "#f0ad4e",
+      icon: "📦",
+      desc: "使用过",
+    };
   } else {
-    return { percent: percent, status: "good", color: "var(--success)", icon: "✨", desc: "良好" };
+    return {
+      percent: percent,
+      status: "good",
+      color: "var(--success)",
+      icon: "✨",
+      desc: "良好",
+    };
   }
 }
 
@@ -241,16 +289,34 @@ function renderDurabilityBar(item) {
   var status = getDurabilityStatus(item);
   var barWidth = status.percent + "%";
 
-  return '<div style="margin-top:6px;">' +
+  return (
+    '<div style="margin-top:6px;">' +
     '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);">' +
-    '<span>耐久</span>' +
-    '<span style="color:' + status.color + ';">' + Math.floor(item.durability || 0) + '/' + (item.maxDurability || 0) + '</span>' +
-    '</div>' +
+    "<span>耐久</span>" +
+    '<span style="color:' +
+    status.color +
+    ';">' +
+    Math.floor(item.durability || 0) +
+    "/" +
+    (item.maxDurability || 0) +
+    "</span>" +
+    "</div>" +
     '<div style="background:var(--bg-input);border-radius:4px;height:6px;margin-top:2px;overflow:hidden;">' +
-    '<div style="background:' + status.color + ';height:100%;width:' + barWidth + ';transition:width 0.3s;"></div>' +
-    '</div>' +
-    '<div style="font-size:10px;color:' + status.color + ';margin-top:2px;">' + status.icon + ' ' + status.desc + '</div>' +
-    '</div>';
+    '<div style="background:' +
+    status.color +
+    ";height:100%;width:" +
+    barWidth +
+    ';transition:width 0.3s;"></div>' +
+    "</div>" +
+    '<div style="font-size:10px;color:' +
+    status.color +
+    ';margin-top:2px;">' +
+    status.icon +
+    " " +
+    status.desc +
+    "</div>" +
+    "</div>"
+  );
 }
 
 /**
@@ -276,8 +342,10 @@ function tickEquipmentDurability(state) {
       state.flags._durabilityReminderToday = true;
       if (typeof StateManager !== "undefined" && StateManager.addMessage) {
         StateManager.addMessage(
-          "🔧 您有 " + brokenItems.length + " 件装备耐久耗尽，效果失效。去「装备」Tab修理吧！",
-          "warning"
+          "🔧 您有 " +
+            brokenItems.length +
+            " 件装备耐久耗尽，效果失效。去「装备」Tab修理吧！",
+          "warning",
         );
       }
     }
@@ -312,7 +380,8 @@ if (typeof window !== "undefined") {
     sections: [
       {
         type: "desc",
-        content: "每件装备都有耐久值，进行工作、旅行等行动时会消耗耐久。耐久归零时装备失效，需要花费金钱修理。高品质装备耐久更高，但修理也更贵。",
+        content:
+          "每件装备都有耐久值，进行工作、旅行等行动时会消耗耐久。耐久归零时装备失效，需要花费金钱修理。高品质装备耐久更高，但修理也更贵。",
       },
       {
         type: "table",
@@ -328,7 +397,8 @@ if (typeof window !== "undefined") {
       },
       {
         type: "tip",
-        content: "修理费用：每点耐久 ¥1-5（取决于品质），完全损坏的装备修理费翻倍。建议在装备耐久低于30%时及时修理。",
+        content:
+          "修理费用：每点耐久 ¥1-5（取决于品质），完全损坏的装备修理费翻倍。建议在装备耐久低于30%时及时修理。",
       },
     ],
   };

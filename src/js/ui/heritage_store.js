@@ -12,9 +12,7 @@
 
   function _esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return (
-        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c
-      );
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c;
     });
   }
 
@@ -27,13 +25,11 @@
       statusBadge =
         '<span style="color:var(--success);font-weight:bold;">✓ 已解锁</span>';
     else if (blocked)
-      statusBadge =
-        '<span style="color:var(--danger);">🔒 与已解锁互斥</span>';
+      statusBadge = '<span style="color:var(--danger);">🔒 与已解锁互斥</span>';
     else if (!u.affordable)
       statusBadge = '<span style="color:var(--text-muted);">币不足</span>';
     else
-      statusBadge =
-        '<span style="color:var(--text-secondary);">可解锁</span>';
+      statusBadge = '<span style="color:var(--text-secondary);">可解锁</span>';
 
     var btn = "";
     if (canBuy) {
@@ -94,7 +90,9 @@
         showModal({
           title: "🏛 传承商店",
           body: "<p>传承币系统尚未加载。</p>",
-          buttons: [{ text: "关闭", cls: "btn-primary", callback: function () {} }],
+          buttons: [
+            { text: "关闭", cls: "btn-primary", callback: function () {} },
+          ],
         });
       }
       return;

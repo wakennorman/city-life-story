@@ -14,21 +14,21 @@
 // ====== 社交网络状态 ======
 function createSocialNetworkState() {
   return {
-    posts: [],  // 朋友圈帖子 [{ id, authorId, content, images: [], visibility: 'public'|'friends'|'private', likes: [], comments: [], postedDay }]
-    weiboHotlist: [],  // 微博热搜榜 [{ rank, title, heat, category }]
-    weiboPosts: [],  // 微博动态 [{ id, author, content, likes, comments, reposts, hot }]
-    npcFeeds: [],  // NPC动态 [{ npcId, content, images: [], postedDay, type: 'daily'|'event'|'mood' }]
-    playerFans: 0,  // 粉丝数
-    playerFollowers: [],  // 关注者列表
-    playerInfluencerLevel: 'none',  // 'none'|'micro'|'medium'|'large'|'top'
-    influencerIncome: 0,  // 网红收入
-    lastWeiboRefresh: 0,  // 上次刷新热搜的天数
-   舆论危机: {
+    posts: [], // 朋友圈帖子 [{ id, authorId, content, images: [], visibility: 'public'|'friends'|'private', likes: [], comments: [], postedDay }]
+    weiboHotlist: [], // 微博热搜榜 [{ rank, title, heat, category }]
+    weiboPosts: [], // 微博动态 [{ id, author, content, likes, comments, reposts, hot }]
+    npcFeeds: [], // NPC动态 [{ npcId, content, images: [], postedDay, type: 'daily'|'event'|'mood' }]
+    playerFans: 0, // 粉丝数
+    playerFollowers: [], // 关注者列表
+    playerInfluencerLevel: "none", // 'none'|'micro'|'medium'|'large'|'top'
+    influencerIncome: 0, // 网红收入
+    lastWeiboRefresh: 0, // 上次刷新热搜的天数
+    舆论危机: {
       active: false,
-      severity: 0,  // 0-100
+      severity: 0, // 0-100
       topics: [],
-      daysRemaining: 0
-    }
+      daysRemaining: 0,
+    },
   };
 }
 
@@ -55,20 +55,20 @@ function postToMoments(state, content, images, visibility) {
     return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
   }
   var post = {
-    id: 'post_' + state.player.day + '_' + Date.now(),
-    authorId: 'player',
+    id: "post_" + state.player.day + "_" + Date.now(),
+    authorId: "player",
     content: content,
     images: images || [],
-    visibility: visibility || 'public',
+    visibility: visibility || "public",
     likes: [],
     comments: [],
-    postedDay: state.player.day
+    postedDay: state.player.day,
   };
   state.socialNetwork.posts.unshift(post);
   // 消耗AP
   state.player.actionPoints = Math.max(0, state.player.actionPoints - 20);
   // 增加粉丝（如果公开）
-  if (visibility === 'public' && content.length > 10) {
+  if (visibility === "public" && content.length > 10) {
     state.socialNetwork.playerFans += Math.floor(Math.random() * 5) + 1;
   }
   return { ok: true, post: post };
@@ -77,14 +77,14 @@ function postToMoments(state, content, images, visibility) {
 // ====== 刷新微博热搜 ======
 function refreshWeiboHotlist(state) {
   ensureSocialNetworkState(state);
-  var categories = ['娱乐', '社会', '体育', '科技', '财经', '时尚'];
+  var categories = ["娱乐", "社会", "体育", "科技", "财经", "时尚"];
   var hotlist = [];
   for (var i = 0; i < 10; i++) {
     hotlist.push({
       rank: i + 1,
-      title: '热搜话题' + (i + 1),
+      title: "热搜话题" + (i + 1),
       heat: Math.floor(Math.random() * 1000000) + 100000,
-      category: categories[Math.floor(Math.random() * categories.length)]
+      category: categories[Math.floor(Math.random() * categories.length)],
     });
   }
   state.socialNetwork.weiboHotlist = hotlist;
@@ -100,7 +100,7 @@ function npcPostFeed(state, npcId, content, type) {
     content: content,
     images: [],
     postedDay: state.player.day,
-    type: type || 'daily'
+    type: type || "daily",
   };
   state.socialNetwork.npcFeeds.unshift(feed);
   // 保持最近50条
@@ -115,19 +115,19 @@ function calculateInfluencerIncome(state) {
   ensureSocialNetworkState(state);
   var fans = state.socialNetwork.playerFans;
   var income = 0;
-  var level = 'none';
+  var level = "none";
 
   if (fans >= 100000) {
-    level = 'top';
-    income = fans * 0.5;  // 每粉丝¥0.5/天
+    level = "top";
+    income = fans * 0.5; // 每粉丝¥0.5/天
   } else if (fans >= 10000) {
-    level = 'large';
+    level = "large";
     income = fans * 0.3;
   } else if (fans >= 1000) {
-    level = 'medium';
+    level = "medium";
     income = fans * 0.1;
   } else if (fans >= 100) {
-    level = 'micro';
+    level = "micro";
     income = fans * 0.05;
   }
 
@@ -143,7 +143,7 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
     active: true,
     severity: severity || Math.floor(Math.random() * 50) + 30,
     topics: [topic],
-    daysRemaining: Math.floor(Math.random() * 5) + 3
+    daysRemaining: Math.floor(Math.random() * 5) + 3,
   };
 }
 
@@ -161,7 +161,10 @@ function tickSocialNetwork(state) {
   // 舆论危机衰减
   if (state.socialNetwork.舆论危机.active) {
     state.socialNetwork.舆论危机.daysRemaining--;
-    state.socialNetwork.舆论危机.severity = Math.max(0, state.socialNetwork.舆论危机.severity - 5);
+    state.socialNetwork.舆论危机.severity = Math.max(
+      0,
+      state.socialNetwork.舆论危机.severity - 5,
+    );
     if (state.socialNetwork.舆论危机.daysRemaining <= 0) {
       state.socialNetwork.舆论危机.active = false;
     }

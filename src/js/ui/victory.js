@@ -131,7 +131,10 @@ function triggerVictory(state, type, title, desc) {
     }
   }
   // v3.6 P1-4: 生成人生回忆录摘要
-  if (typeof lifeMemoir !== "undefined" && typeof lifeMemoir.generateEnding === "function") {
+  if (
+    typeof lifeMemoir !== "undefined" &&
+    typeof lifeMemoir.generateEnding === "function"
+  ) {
     var memoirSummary = lifeMemoir.generateEnding(state);
     state.flags._memoirSummary = memoirSummary;
     // 记录到回忆录

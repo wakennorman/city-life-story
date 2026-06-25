@@ -26,8 +26,20 @@ const EQUIPMENT_SUITES = {
     ],
     tiers: [
       { count: 2, name: "初识街头", effects: { streetIncomeBonus: 0.05 } },
-      { count: 3, name: "街头老手", effects: { streetIncomeBonus: 0.10, injuryReduction: 0.05 } },
-      { count: 4, name: "街头王者", effects: { streetIncomeBonus: 0.15, injuryReduction: 0.10, fatigueReduction: 5 } },
+      {
+        count: 3,
+        name: "街头老手",
+        effects: { streetIncomeBonus: 0.1, injuryReduction: 0.05 },
+      },
+      {
+        count: 4,
+        name: "街头王者",
+        effects: {
+          streetIncomeBonus: 0.15,
+          injuryReduction: 0.1,
+          fatigueReduction: 5,
+        },
+      },
     ],
   },
 
@@ -47,9 +59,30 @@ const EQUIPMENT_SUITES = {
       { id: "smartphone", name: "智能手机", slot: "accessory" },
     ],
     tiers: [
-      { count: 2, name: "新手骑手", effects: { deliveryIncomeBonus: 0.08, travelApReduction: 1 } },
-      { count: 3, name: "资深骑手", effects: { deliveryIncomeBonus: 0.15, travelApReduction: 1, fatigueRecoveryBonus: 0.05 } },
-      { count: 4, name: "配送达人", effects: { deliveryIncomeBonus: 0.20, travelApReduction: 2, fatigueRecoveryBonus: 0.10, deliverySpeedBonus: 0.15 } },
+      {
+        count: 2,
+        name: "新手骑手",
+        effects: { deliveryIncomeBonus: 0.08, travelApReduction: 1 },
+      },
+      {
+        count: 3,
+        name: "资深骑手",
+        effects: {
+          deliveryIncomeBonus: 0.15,
+          travelApReduction: 1,
+          fatigueRecoveryBonus: 0.05,
+        },
+      },
+      {
+        count: 4,
+        name: "配送达人",
+        effects: {
+          deliveryIncomeBonus: 0.2,
+          travelApReduction: 2,
+          fatigueRecoveryBonus: 0.1,
+          deliverySpeedBonus: 0.15,
+        },
+      },
     ],
   },
 
@@ -69,9 +102,30 @@ const EQUIPMENT_SUITES = {
       { id: "reflective_vest", name: "反光背心", slot: "body" },
     ],
     tiers: [
-      { count: 2, name: "工地新人", effects: { constructionIncomeBonus: 0.05, injuryReduction: 0.05 } },
-      { count: 3, name: "工地熟手", effects: { constructionIncomeBonus: 0.10, injuryReduction: 0.12, nightWorkIncomeBonus: 0.05 } },
-      { count: 4, name: "工地专家", effects: { constructionIncomeBonus: 0.15, injuryReduction: 0.20, nightWorkIncomeBonus: 0.10, nightVisibilityBonus: 0.30 } },
+      {
+        count: 2,
+        name: "工地新人",
+        effects: { constructionIncomeBonus: 0.05, injuryReduction: 0.05 },
+      },
+      {
+        count: 3,
+        name: "工地熟手",
+        effects: {
+          constructionIncomeBonus: 0.1,
+          injuryReduction: 0.12,
+          nightWorkIncomeBonus: 0.05,
+        },
+      },
+      {
+        count: 4,
+        name: "工地专家",
+        effects: {
+          constructionIncomeBonus: 0.15,
+          injuryReduction: 0.2,
+          nightWorkIncomeBonus: 0.1,
+          nightVisibilityBonus: 0.3,
+        },
+      },
     ],
   },
 
@@ -91,9 +145,30 @@ const EQUIPMENT_SUITES = {
       { id: "power_bank", name: "充电宝", slot: "accessory" },
     ],
     tiers: [
-      { count: 2, name: "技术新人", effects: { techIncomeBonus: 0.08, studyEfficiencyBonus: 0.10 } },
-      { count: 3, name: "技术骨干", effects: { techIncomeBonus: 0.12, studyEfficiencyBonus: 0.15, fatigueIntelWorkReduction: 3 } },
-      { count: 4, name: "技术精英", effects: { techIncomeBonus: 0.15, studyEfficiencyBonus: 0.20, fatigueIntelWorkReduction: 5, codingXpBonus: 0.15 } },
+      {
+        count: 2,
+        name: "技术新人",
+        effects: { techIncomeBonus: 0.08, studyEfficiencyBonus: 0.1 },
+      },
+      {
+        count: 3,
+        name: "技术骨干",
+        effects: {
+          techIncomeBonus: 0.12,
+          studyEfficiencyBonus: 0.15,
+          fatigueIntelWorkReduction: 3,
+        },
+      },
+      {
+        count: 4,
+        name: "技术精英",
+        effects: {
+          techIncomeBonus: 0.15,
+          studyEfficiencyBonus: 0.2,
+          fatigueIntelWorkReduction: 5,
+          codingXpBonus: 0.15,
+        },
+      },
     ],
   },
 
@@ -113,9 +188,32 @@ const EQUIPMENT_SUITES = {
       { id: "umbrella", name: "雨伞", slot: null },
     ],
     tiers: [
-      { count: 2, name: "季节适应", effects: { weatherPenaltyReduction: 0.25, seasonalIncomeBonus: 0.05 } },
-      { count: 3, name: "四季自如", effects: { weatherPenaltyReduction: 0.40, seasonalIncomeBonus: 0.08, coldProtectionBonus: 10, heatProtectionBonus: 10 } },
-      { count: 4, name: "风雨无阻", effects: { weatherPenaltyReduction: 0.50, seasonalIncomeBonus: 0.10, coldProtectionBonus: 20, heatProtectionBonus: 15, rainProtectionBonus: 25 } },
+      {
+        count: 2,
+        name: "季节适应",
+        effects: { weatherPenaltyReduction: 0.25, seasonalIncomeBonus: 0.05 },
+      },
+      {
+        count: 3,
+        name: "四季自如",
+        effects: {
+          weatherPenaltyReduction: 0.4,
+          seasonalIncomeBonus: 0.08,
+          coldProtectionBonus: 10,
+          heatProtectionBonus: 10,
+        },
+      },
+      {
+        count: 4,
+        name: "风雨无阻",
+        effects: {
+          weatherPenaltyReduction: 0.5,
+          seasonalIncomeBonus: 0.1,
+          coldProtectionBonus: 20,
+          heatProtectionBonus: 15,
+          rainProtectionBonus: 25,
+        },
+      },
     ],
   },
 
@@ -135,9 +233,30 @@ const EQUIPMENT_SUITES = {
       { id: "notebook_item", name: "记事本", slot: null },
     ],
     tiers: [
-      { count: 2, name: "投资入门", effects: { financeIncomeBonus: 0.05, newsAccess: true } },
-      { count: 3, name: "投资老手", effects: { financeIncomeBonus: 0.10, newsAccess: true, studyEfficiencyBonus: 0.10 } },
-      { count: 4, name: "投资达人", effects: { financeIncomeBonus: 0.15, newsAccess: true, studyEfficiencyBonus: 0.15, tradingFeeReduction: 0.10 } },
+      {
+        count: 2,
+        name: "投资入门",
+        effects: { financeIncomeBonus: 0.05, newsAccess: true },
+      },
+      {
+        count: 3,
+        name: "投资老手",
+        effects: {
+          financeIncomeBonus: 0.1,
+          newsAccess: true,
+          studyEfficiencyBonus: 0.1,
+        },
+      },
+      {
+        count: 4,
+        name: "投资达人",
+        effects: {
+          financeIncomeBonus: 0.15,
+          newsAccess: true,
+          studyEfficiencyBonus: 0.15,
+          tradingFeeReduction: 0.1,
+        },
+      },
     ],
   },
 };
@@ -224,10 +343,16 @@ function getSuiteEffects(suiteResults) {
         var existingValue = effects[effectKey] || 0;
 
         // 处理不同类型的效果叠加
-        if (effectKey.indexOf("Reduction") >= 0 || effectKey.indexOf("Bonus") >= 0) {
+        if (
+          effectKey.indexOf("Reduction") >= 0 ||
+          effectKey.indexOf("Bonus") >= 0
+        ) {
           // 百分比加成或减少值，取最大值（不叠加）
           effects[effectKey] = Math.max(existingValue, newValue);
-        } else if (effectKey === "travelApReduction" || effectKey === "fatigueIntelWorkReduction") {
+        } else if (
+          effectKey === "travelApReduction" ||
+          effectKey === "fatigueIntelWorkReduction"
+        ) {
           // AP减少值，可叠加
           effects[effectKey] = existingValue + newValue;
         } else {
@@ -261,7 +386,13 @@ function getSuiteProgressDesc(suiteId, equippedCount) {
   if (!currentTier) {
     // 未达到任何等级
     var nextTier = suite.tiers[0];
-    return "还需装备 " + (nextTier.count - equippedCount) + " 件装备解锁「" + nextTier.name + "」";
+    return (
+      "还需装备 " +
+      (nextTier.count - equippedCount) +
+      " 件装备解锁「" +
+      nextTier.name +
+      "」"
+    );
   }
 
   // 检查是否已达最高等级
@@ -273,7 +404,15 @@ function getSuiteProgressDesc(suiteId, equippedCount) {
   var nextIndex = suite.tiers.indexOf(currentTier) + 1;
   if (nextIndex < suite.tiers.length) {
     var next = suite.tiers[nextIndex];
-    return "已解锁「" + currentTier.name + "」，再装备 " + (next.count - equippedCount) + " 件解锁「" + next.name + "」";
+    return (
+      "已解锁「" +
+      currentTier.name +
+      "」，再装备 " +
+      (next.count - equippedCount) +
+      " 件解锁「" +
+      next.name +
+      "」"
+    );
   }
 
   return "已解锁「" + currentTier.name + "」";
@@ -288,35 +427,66 @@ function renderSuiteCard(suiteResult) {
   var suite = EQUIPMENT_SUITES[suiteResult.suiteId];
   if (!suite) return "";
 
-  var progressDesc = getSuiteProgressDesc(suiteResult.suiteId, suiteResult.equippedCount);
-  var tierColor = suiteResult.achievedTier ? "var(--success)" : "var(--text-muted)";
+  var progressDesc = getSuiteProgressDesc(
+    suiteResult.suiteId,
+    suiteResult.equippedCount,
+  );
+  var tierColor = suiteResult.achievedTier
+    ? "var(--success)"
+    : "var(--text-muted)";
 
   var itemsHtml = "";
   for (var i = 0; i < suite.items.length; i++) {
     var item = suite.items[i];
     var isEquipped = suiteResult.equippedItems.indexOf(item.id) >= 0;
     var itemIcon = isEquipped ? "✅" : "⬜";
-    itemsHtml += '<span style="margin-right:8px;">' + itemIcon + ' ' + item.name + '</span>';
+    itemsHtml +=
+      '<span style="margin-right:8px;">' +
+      itemIcon +
+      " " +
+      item.name +
+      "</span>";
   }
 
   var tierHtml = "";
   if (suiteResult.achievedTier) {
-    tierHtml = '<div style="color:' + tierColor + ';font-weight:bold;margin-top:8px;">' +
-      '🏆 已解锁：「' + suiteResult.achievedTierName + '」' +
-      '</div>';
+    tierHtml =
+      '<div style="color:' +
+      tierColor +
+      ';font-weight:bold;margin-top:8px;">' +
+      "🏆 已解锁：「" +
+      suiteResult.achievedTierName +
+      "」" +
+      "</div>";
   }
 
-  return '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">' +
+  return (
+    '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">' +
     '<div style="display:flex;align-items:center;gap:8px;">' +
-    '<span style="font-size:24px;">' + suite.icon + '</span>' +
-    '<div style="font-weight:bold;color:var(--text-primary);">' + suite.name + '</div>' +
-    '<span style="font-size:12px;color:var(--text-secondary);margin-left:auto;">' + suiteResult.equippedCount + '/' + suiteResult.totalCount + '</span>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + suite.theme + '</div>' +
-    '<div style="margin-top:8px;font-size:12px;">' + itemsHtml + '</div>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + progressDesc + '</div>' +
+    '<span style="font-size:24px;">' +
+    suite.icon +
+    "</span>" +
+    '<div style="font-weight:bold;color:var(--text-primary);">' +
+    suite.name +
+    "</div>" +
+    '<span style="font-size:12px;color:var(--text-secondary);margin-left:auto;">' +
+    suiteResult.equippedCount +
+    "/" +
+    suiteResult.totalCount +
+    "</span>" +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' +
+    suite.theme +
+    "</div>" +
+    '<div style="margin-top:8px;font-size:12px;">' +
+    itemsHtml +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' +
+    progressDesc +
+    "</div>" +
     tierHtml +
-    '</div>';
+    "</div>"
+  );
 }
 
 // ====== 百科注册 ======
@@ -332,24 +502,35 @@ if (typeof window !== "undefined") {
     id: "equipment_suites",
     name: "装备套装",
     icon: "🎒",
-    brief: "同时装备同套装的多件装备可触发额外加成效果，套装等级随装备数量递增。",
+    brief:
+      "同时装备同套装的多件装备可触发额外加成效果，套装等级随装备数量递增。",
     version: "1.0",
     related: ["mechanics:items", "mechanics:equipment_quality"],
     sections: [
       {
         type: "desc",
-        content: "套装效果基于同时装备的同主题装备数量递增。每套装备有2/3/4件三档加成，全部集齐可获得最强效果。套装效果可与其他装备效果叠加。",
+        content:
+          "套装效果基于同时装备的同主题装备数量递增。每套装备有2/3/4件三档加成，全部集齐可获得最强效果。套装效果可与其他装备效果叠加。",
       },
       {
         type: "list",
-        items: Object.keys(EQUIPMENT_SUITES).map(function(id) {
+        items: Object.keys(EQUIPMENT_SUITES).map(function (id) {
           var s = EQUIPMENT_SUITES[id];
-          return s.icon + " **" + s.name + "**（" + s.items.length + "件）— " + s.theme;
+          return (
+            s.icon +
+            " **" +
+            s.name +
+            "**（" +
+            s.items.length +
+            "件）— " +
+            s.theme
+          );
         }),
       },
       {
         type: "tip",
-        content: "套装效果在装备/卸下装备时自动检测，无需手动激活。在「装备」Tab可查看当前套装进度。",
+        content:
+          "套装效果在装备/卸下装备时自动检测，无需手动激活。在「装备」Tab可查看当前套装进度。",
       },
     ],
   };

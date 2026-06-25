@@ -15,12 +15,20 @@
 
 ```javascript
 // events_core.js L55 — 替换原始单行调用
-if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "street")) return;
+if (
+  typeof checkChainEventQueue === "function" &&
+  checkChainEventQueue(state, "street")
+)
+  return;
 ```
 
 ```javascript
 // events_core.js L78 — 同样替换
-if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "corporate")) return;
+if (
+  typeof checkChainEventQueue === "function" &&
+  checkChainEventQueue(state, "corporate")
+)
+  return;
 ```
 
 **预期效果**：即使加载顺序异常也不会报 ReferenceError；链式事件从 0% 恢复为正常触发。
@@ -46,9 +54,12 @@ if (typeof checkChainEventQueue === "function" && checkChainEventQueue(state, "c
 function getOutdoorWorkMod(state) {
   if (!state.weather || !state.weather.current) return 1.0;
   // 从 state 的 weather.current 反查 WEATHER_TYPES
-  var wDef = (typeof WEATHER_TYPES !== "undefined")
-    ? WEATHER_TYPES.find(function (w) { return w.id === state.weather.current; })
-    : null;
+  var wDef =
+    typeof WEATHER_TYPES !== "undefined"
+      ? WEATHER_TYPES.find(function (w) {
+          return w.id === state.weather.current;
+        })
+      : null;
   return wDef ? wDef.outdoorMod : 1.0;
 }
 ```
@@ -57,9 +68,8 @@ function getOutdoorWorkMod(state) {
 
 ```javascript
 // 在计算街头工作收入时应用天气修正
-var weatherMod = typeof getOutdoorWorkMod === "function"
-  ? getOutdoorWorkMod(state)
-  : 1.0;
+var weatherMod =
+  typeof getOutdoorWorkMod === "function" ? getOutdoorWorkMod(state) : 1.0;
 var finalPay = Math.round(pay * weatherMod);
 if (weatherMod < 0.7) {
   StateManager.addMessage("🌧️ 恶劣天气，户外工作收入降低！", "warning");
@@ -205,7 +215,8 @@ function applyWealthBasedOverhead(state) {
   state.resources.cash -= propertyFee;
   if (propertyFee > 0) {
     StateManager.addMessage(
-      "🏠 物业管理费 ¥" + propertyFee + "（资产越高维护越贵）", "info"
+      "🏠 物业管理费 ¥" + propertyFee + "（资产越高维护越贵）",
+      "info",
     );
   }
 
@@ -238,7 +249,8 @@ function applyHousingUpkeep(state) {
 ```javascript
 // daily_pipeline.js — 在 needs_decay 步骤后追加
 // step: wealth_based_overhead
-if (typeof applyWealthBasedOverhead === "function") applyWealthBasedOverhead(state);
+if (typeof applyWealthBasedOverhead === "function")
+  applyWealthBasedOverhead(state);
 if (typeof applyHousingUpkeep === "function") applyHousingUpkeep(state);
 ```
 
@@ -316,28 +328,36 @@ if (stage === "exit") {
 
 ```javascript
 // phase2/investment.js — 替换 L1724-1738 的简化渲染为详细版
-html += '<div style="font-size:9px;color:var(--text-muted);padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">';
-html += '📊 <strong>今日市场驱动：</strong><br>';
+html +=
+  '<div style="font-size:9px;color:var(--text-muted);padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">';
+html += "📊 <strong>今日市场驱动：</strong><br>";
 
 for (var di = 0; di < Math.min(drivers.length, 3); di++) {
   var d = drivers[di];
   // 截断标题过长
-  var headline = d.headline.length > 22
-    ? d.headline.substring(0, 22) + "…"
-    : d.headline;
+  var headline =
+    d.headline.length > 22 ? d.headline.substring(0, 22) + "…" : d.headline;
   var color = d.direction === "📈" ? "var(--danger)" : "var(--success)";
   html += '<div style="margin:2px 0;display:flex;align-items:center;">';
-  html += '<span style="width:20px;">' + d.direction + '</span>';
-  html += '<span style="flex:1;font-size:10px;color:var(--text-primary);">' + headline + '</span>';
-  html += '<span style="color:' + color + ';font-size:10px;font-weight:bold;margin-left:4px;">'
-    + (d.avgMul > 1 ? "+" : "") + d.strength + '%</span>';
-  html += '</div>';
+  html += '<span style="width:20px;">' + d.direction + "</span>";
+  html +=
+    '<span style="flex:1;font-size:10px;color:var(--text-primary);">' +
+    headline +
+    "</span>";
+  html +=
+    '<span style="color:' +
+    color +
+    ';font-size:10px;font-weight:bold;margin-left:4px;">' +
+    (d.avgMul > 1 ? "+" : "") +
+    d.strength +
+    "%</span>";
+  html += "</div>";
 }
 
 if (drivers.length === 0) {
   html += '<span style="font-size:10px;">➡️ 市场平稳，无明显驱动因素</span>';
 }
-html += '</div>';
+html += "</div>";
 ```
 
 同时确保 `getNewsInvestmentSummary` 为每个 driver 返回 `symbols`/`industries` 字段（当前不包含），方便玩家知道哪个标的影响最大。
@@ -372,10 +392,20 @@ var finalPrice = basePrice * supplyMod * eventMod * weatherMod * festivalMod;
 ```javascript
 // 在玩家进入 trade tab 时检测当前节日并显示
 function showFestivalTradeTip(state) {
-  var f = typeof getCurrentFestival === "function" ? getCurrentFestival(state.player.day) : null;
+  var f =
+    typeof getCurrentFestival === "function"
+      ? getCurrentFestival(state.player.day)
+      : null;
   if (!f) return "";
-  return '<div style="padding:6px;background:rgba(255,215,0,0.1);border-radius:4px;font-size:11px;margin-bottom:6px;">'
-    + f.icon + ' ' + f.name + '期间：' + formatPriceMods(f.priceMods) + '</div>';
+  return (
+    '<div style="padding:6px;background:rgba(255,215,0,0.1);border-radius:4px;font-size:11px;margin-bottom:6px;">' +
+    f.icon +
+    " " +
+    f.name +
+    "期间：" +
+    formatPriceMods(f.priceMods) +
+    "</div>"
+  );
 }
 ```
 
@@ -399,7 +429,7 @@ const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
 // Day1: 18.05%, Day100: 23%, Day200: 28%, Day365: 36.25%
 
 // 同样修改 rollCorporateEvent（L80）
-const corpBaseChance = Math.min(0.40, 0.22 + state.player.day * 0.0005);
+const corpBaseChance = Math.min(0.4, 0.22 + state.player.day * 0.0005);
 ```
 
 可选增强——**保证每周最少 1 次事件**（~10 行）：
@@ -427,16 +457,16 @@ if ((state.flags._daysSinceLastEvent || 0) >= 7) {
 
 ## 汇总
 
-| # | 问题 | 核心文件 | 新增行数 | 难度 |
-|---|------|----------|----------|------|
-| P0-1 | checkChainEventQueue 缺失 | events_core.js | 2 | ★☆☆ |
-| P0-2 | 天气→摆摊闭环断裂 | trade.js / weather.js | 25 | ★★☆ |
-| P0-3 | 经济指数膨胀 | investment.js / startup.js | 60 | ★★★ |
-| P0-4 | NPC 好感链路中断 | cross_system_events.js | 65 | ★★★ |
-| P1-5 | 钱太多没事做 | needs.js / daily_pipeline.js | 60 | ★★☆ |
-| P1-6 | 最优解锁定 | startup.js | 45 | ★★☆ |
-| P1-7 | 新闻→投资 UI 透明化 | investment.js | 30 | ★☆☆ |
-| P1-8 | 节日 priceMods 不消费 | pricing.js | 13 | ★☆☆ |
-| P1-9 | 事件触发率不递增 | events_core.js | 15 | ★☆☆ |
+| #    | 问题                      | 核心文件                     | 新增行数 | 难度 |
+| ---- | ------------------------- | ---------------------------- | -------- | ---- |
+| P0-1 | checkChainEventQueue 缺失 | events_core.js               | 2        | ★☆☆  |
+| P0-2 | 天气→摆摊闭环断裂         | trade.js / weather.js        | 25       | ★★☆  |
+| P0-3 | 经济指数膨胀              | investment.js / startup.js   | 60       | ★★★  |
+| P0-4 | NPC 好感链路中断          | cross_system_events.js       | 65       | ★★★  |
+| P1-5 | 钱太多没事做              | needs.js / daily_pipeline.js | 60       | ★★☆  |
+| P1-6 | 最优解锁定                | startup.js                   | 45       | ★★☆  |
+| P1-7 | 新闻→投资 UI 透明化       | investment.js                | 30       | ★☆☆  |
+| P1-8 | 节日 priceMods 不消费     | pricing.js                   | 13       | ★☆☆  |
+| P1-9 | 事件触发率不递增          | events_core.js               | 15       | ★☆☆  |
 
 **总计：~315 行新增代码，不重构既有模块，不破坏存档兼容性。**

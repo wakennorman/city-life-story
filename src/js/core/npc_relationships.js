@@ -278,7 +278,10 @@ function recordNpcInteraction(npcId, change, reason) {
   if (existing) {
     existing.change += change;
   } else {
-    state.npcRelationshipLog.dailyInteractions[npcId] = { change: change, reason: reason };
+    state.npcRelationshipLog.dailyInteractions[npcId] = {
+      change: change,
+      reason: reason,
+    };
   }
   applyAffinityChange(state, npcId, change, reason);
 }
@@ -300,7 +303,7 @@ function applyAffinityChange(state, npcId, change, reason) {
     if (oldLabel !== newLabel) {
       StateManager.addMessage(
         "👥 " + npcId + " 与你的关系： " + oldLabel + " → " + newLabel,
-        "info"
+        "info",
       );
     }
   }
@@ -332,14 +335,18 @@ function getNpcRelationshipNetwork(state) {
 
   for (var i = 0; i < npcIds.length; i++) {
     var npcId = npcIds[i];
-    var aff = (state.relationships[npcId] && state.relationships[npcId].affinity) || 0;
+    var aff =
+      (state.relationships[npcId] && state.relationships[npcId].affinity) || 0;
     var rel = state.relationships[npcId];
     if (!rel || !rel.met) continue;
 
     var connections = [];
     var relations = NPC_RELATION_MATRIX[npcId];
     for (var otherId in relations) {
-      var otherAff = (state.relationships[otherId] && state.relationships[otherId].affinity) || 0;
+      var otherAff =
+        (state.relationships[otherId] &&
+          state.relationships[otherId].affinity) ||
+        0;
       if (otherAff <= 0) continue;
       var relDesc = getRelationDesc(npcId, otherId);
       connections.push({
@@ -359,7 +366,9 @@ function getNpcRelationshipNetwork(state) {
     });
   }
 
-  network.sort(function(a, b) { return b.affinity - a.affinity; });
+  network.sort(function (a, b) {
+    return b.affinity - a.affinity;
+  });
   return network;
 }
 
@@ -370,13 +379,15 @@ function checkNpcRelationEventTriggers(state) {
 
   for (var i = 0; i < npcIds.length; i++) {
     var npcA = npcIds[i];
-    var affA = (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
+    var affA =
+      (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
     if (affA < 30) continue;
 
     var relations = NPC_RELATION_MATRIX[npcA];
     for (var npcB in relations) {
       var type = relations[npcB];
-      var affB = (state.relationships[npcB] && state.relationships[npcB].affinity) || 0;
+      var affB =
+        (state.relationships[npcB] && state.relationships[npcB].affinity) || 0;
 
       if (type === "competitor" && affA >= 50 && affB >= 30) {
         triggers.push({
@@ -414,13 +425,19 @@ if (typeof window !== "undefined") {
     version: "1.0.0",
     related: ["mechanics:npc_system", "mechanics:cross_system_events"],
     sections: [
-      { kind: "desc", text: "NPC不是孤立的个体，他们之间有旧识、竞争、业务、同窗等各种关系。玩家帮助A的同时，可能会间接影响A的关系人B。" },
+      {
+        kind: "desc",
+        text: "NPC不是孤立的个体，他们之间有旧识、竞争、业务、同窗等各种关系。玩家帮助A的同时，可能会间接影响A的关系人B。",
+      },
       { kind: "subhead", text: "🔄 关系传播机制" },
-      { kind: "list", items: [
-        "每日tick时，玩家与NPC的互动会向该NPC的关系网扩散（传导系数0.1~0.3）",
-        "竞争关系传导为负值：帮A→B好感下降",
-        "旧识/业务关系传导为正值：帮A→B好感上升",
-      ]},
+      {
+        kind: "list",
+        items: [
+          "每日tick时，玩家与NPC的互动会向该NPC的关系网扩散（传导系数0.1~0.3）",
+          "竞争关系传导为负值：帮A→B好感下降",
+          "旧识/业务关系传导为正值：帮A→B好感上升",
+        ],
+      },
     ],
   };
 }

@@ -376,7 +376,8 @@ if (typeof window !== "undefined") {
     if (typeof getFestivalPriceMod === "function" && good) {
       festivalMod = getFestivalPriceMod(state, good.category);
     }
-    var finalPrice = basePrice * supplyMod * eventMod * weatherMod * festivalMod;
+    var finalPrice =
+      basePrice * supplyMod * eventMod * weatherMod * festivalMod;
     // 限制在合理范围
     var good = getGoodById(goodId);
     if (good) {

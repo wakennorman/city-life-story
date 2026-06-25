@@ -115141,11 +115141,6 @@ function startNewGame() {
     initEquipmentDurability(StateManager.getState());
   }
 
-  // v3.6 P0-1: 初始化NPC关系网
-  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
-    npcRelationships.init(StateManager.getState());
-  }
-
   // v3.6 P0-2: 初始化时代变迁系统
   if (typeof eraTransform && typeof eraTransform.init === "function") {
     eraTransform.init(StateManager.getState());

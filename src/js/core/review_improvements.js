@@ -652,10 +652,8 @@
           callback: function () {
             var s = StateManager.getState();
             s.flags.wt_chronic_disease_lifestyle = "healthy";
-            s.flags._fatigueCapPenalty =
-              (s.flags._fatigueCapPenalty || 0) + 5;
-            s.flags._dailyHealthBonus =
-              (s.flags._dailyHealthBonus || 0) + 1;
+            s.flags._fatigueCapPenalty = (s.flags._fatigueCapPenalty || 0) + 5;
+            s.flags._dailyHealthBonus = (s.flags._dailyHealthBonus || 0) + 1;
             StateManager.addMessage(
               "🥗 你把烟戒了，朋友圈分享了一个跑步打卡APP。",
               "success",

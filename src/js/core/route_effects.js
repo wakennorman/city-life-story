@@ -27,7 +27,8 @@
       events: [
         {
           title: "创业路演邀请",
-          story: "你收到了一个创业路演邀请函。在投资人面前展示项目，也许能拿到一笔投资意向。",
+          story:
+            "你收到了一个创业路演邀请函。在投资人面前展示项目，也许能拿到一笔投资意向。",
           choices: [
             {
               text: "准备路演",
@@ -135,11 +136,17 @@
               text: "投资 ¥20,000",
               hint: "高风险高回报",
               apply: function (st) {
-                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
+                st.resources.cash = Math.max(
+                  0,
+                  (st.resources.cash || 0) - 20000,
+                );
                 var result = Random.chance(0.55)
                   ? Random.int(30000, 80000)
                   : -Random.int(5000, 15000);
-                st.resources.cash = Math.max(0, (st.resources.cash || 0) + result);
+                st.resources.cash = Math.max(
+                  0,
+                  (st.resources.cash || 0) + result,
+                );
                 if (result > 0) {
                   StateManager.addMessage(
                     "📈 投资项目回报 ¥" + result + "！眼光不错！",
@@ -157,11 +164,17 @@
               text: "投 ¥5,000 试试水",
               hint: "小额试探",
               apply: function (st) {
-                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
+                st.resources.cash = Math.max(
+                  0,
+                  (st.resources.cash || 0) - 5000,
+                );
                 var result = Random.chance(0.6)
                   ? Random.int(6000, 12000)
                   : -Random.int(2000, 6000);
-                st.resources.cash = Math.max(0, (st.resources.cash || 0) + result);
+                st.resources.cash = Math.max(
+                  0,
+                  (st.resources.cash || 0) + result,
+                );
                 if (result > 0) {
                   StateManager.addMessage(
                     "📈 小赚 ¥" + result + "，聊胜于无。",
@@ -179,10 +192,7 @@
               text: "不投，保持现金",
               hint: "稳健为主",
               apply: function () {
-                StateManager.addMessage(
-                  "💼 你选择观望，现金为王。",
-                  "info",
-                );
+                StateManager.addMessage("💼 你选择观望，现金为王。", "info");
               },
             },
           ],
@@ -200,13 +210,17 @@
       events: [
         {
           title: "躺平日",
-          story: "今天阳光很好，你决定彻底放松一天。不需要赶时间，不需要看KPI。",
+          story:
+            "今天阳光很好，你决定彻底放松一天。不需要赶时间，不需要看KPI。",
           choices: [
             {
               text: "去公园晒太阳",
               hint: "心情+10，疲劳-15",
               apply: function (st) {
-                st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 0) + 10,
+                );
                 st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
                 StateManager.addMessage(
                   "☀️ 在公园长椅上晒太阳发呆，生活本该如此。",
@@ -218,12 +232,12 @@
               text: "在家看剧",
               hint: "心情+8，但费时间",
               apply: function (st) {
-                st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-                if (st.player) st.player.actionPoints = 0;
-                StateManager.addMessage(
-                  "📺 追了一天剧，荒废但快乐。",
-                  "info",
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 0) + 8,
                 );
+                if (st.player) st.player.actionPoints = 0;
+                StateManager.addMessage("📺 追了一天剧，荒废但快乐。", "info");
               },
             },
             {
@@ -285,10 +299,7 @@
                     if (typeof getNpcById === "function") {
                       var npcs = ["li_ming", "zhang_wei", "wang_dami"];
                       var pick = npcs[Random.int(0, npcs.length - 1)];
-                      if (
-                        st.relationships &&
-                        st.relationships[pick]
-                      ) {
+                      if (st.relationships && st.relationships[pick]) {
                         st.relationships[pick].affinity = Math.min(
                           100,
                           (st.relationships[pick].affinity || 0) + 5,
@@ -394,7 +405,10 @@
         showEventModal();
       }, 100);
     } else {
-      StateManager.addMessage(def.icon + " " + evt.title + " — " + evt.story, "event");
+      StateManager.addMessage(
+        def.icon + " " + evt.title + " — " + evt.story,
+        "event",
+      );
     }
   }
 
@@ -405,13 +419,23 @@
     var descs = [];
     var eff = def.effects || {};
     if (eff._routeStartupCostMod)
-      descs.push("创业成本-" + Math.round((1 - eff._routeStartupCostMod) * 100) + "%");
+      descs.push(
+        "创业成本-" + Math.round((1 - eff._routeStartupCostMod) * 100) + "%",
+      );
     if (eff._routeExamBonusMod)
-      descs.push("考试概率+" + Math.round((eff._routeExamBonusMod - 1) * 100) + "%");
+      descs.push(
+        "考试概率+" + Math.round((eff._routeExamBonusMod - 1) * 100) + "%",
+      );
     if (eff._routeStockFeeMod)
-      descs.push("股票交易费-" + Math.round((1 - eff._routeStockFeeMod) * 100) + "%");
+      descs.push(
+        "股票交易费-" + Math.round((1 - eff._routeStockFeeMod) * 100) + "%",
+      );
     if (eff._routeFatigueRecoveryMod)
-      descs.push("疲劳恢复+" + Math.round((eff._routeFatigueRecoveryMod - 1) * 100) + "%");
+      descs.push(
+        "疲劳恢复+" +
+          Math.round((eff._routeFatigueRecoveryMod - 1) * 100) +
+          "%",
+      );
     if (eff._routeEventInterval)
       descs.push("每" + eff._routeEventInterval + "天专属事件");
     return {

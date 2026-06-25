@@ -927,7 +927,8 @@
           text: "🤝 帮忙介绍工作",
           hint: "社交≥50可成功，好感+30",
           apply: function (st) {
-            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            var social =
+              (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (social >= 50) {
               if (!st.relationships.sister_zhang) {
                 st.relationships.sister_zhang = { affinity: 0, met: true };
@@ -1057,7 +1058,7 @@
         var seasonEdgeDays = [91, 183, 274, 365];
         for (var si = 0; si < seasonEdgeDays.length; si++) {
           if (day === seasonEdgeDays[si]) {
-            return (st.status && st.status.health < 60);
+            return st.status && st.status.health < 60;
           }
         }
         return false;
@@ -1118,10 +1119,7 @@
                 "info",
               );
             } else {
-              StateManager.addMessage(
-                "😅 连¥50的保健品都买不起……",
-                "warning",
-              );
+              StateManager.addMessage("😅 连¥50的保健品都买不起……", "warning");
             }
           },
         },
@@ -1136,12 +1134,7 @@
       phase: "street",
       trigger: function (st) {
         var rel = st.relationships && st.relationships.old_zhou;
-        return (
-          rel &&
-          rel.met &&
-          rel.affinity >= 60 &&
-          st.player.day > 120
-        );
+        return rel && rel.met && rel.affinity >= 60 && st.player.day > 120;
       },
       probability: 0.03,
       repeatable: false,
@@ -1155,7 +1148,10 @@
             st.resources.cash += earn;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             if (st.skills && st.skills.repair) {
-              st.skills.repair.level = Math.min(100, st.skills.repair.level + 5);
+              st.skills.repair.level = Math.min(
+                100,
+                st.skills.repair.level + 5,
+              );
             }
             if (!st.relationships.old_zhou) {
               st.relationships.old_zhou = { affinity: 0, met: true };
@@ -1176,7 +1172,8 @@
           text: "📞 介绍客户",
           hint: "社交能力检查",
           apply: function (st) {
-            var social = (st.skills && st.skills.social && st.skills.social.level) || 0;
+            var social =
+              (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (social >= 40) {
               st.resources.cash += 200;
               if (!st.relationships.old_zhou) {
@@ -1294,7 +1291,8 @@
       phase: "street",
       icon: "♻️",
       title: "老周的废品经",
-      story: "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
+      story:
+        "老周看你每天翻垃圾桶，叹了口气：'小子，你这样翻法挣不了几个钱。来，我教你看货。'",
       conditions: function (st) {
         return (
           st.relationships &&
@@ -1347,7 +1345,8 @@
       phase: "street",
       icon: "🏪",
       title: "张姐的兼职机会",
-      story: "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
+      story:
+        "张姐拦住你：'我表姐的便利店缺个夜班，工资日结，比你在外面风吹日晒强。去不去？'",
       conditions: function (st) {
         return (
           st.relationships &&

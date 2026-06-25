@@ -1,6 +1,40 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-24（v3.6 版本升级 — NPC关系网+时代变迁+副业深化+人生回忆录）
+> 最后更新: 2026-06-25（Bugfix + v3.7 改进项）
+
+## 2026-06-25 — Bugfix: 游戏启动崩溃修复（npcRelationships未定义）
+
+### 问题
+
+打开游戏时报 `Uncaught ReferenceError: npcRelationships is not defined`，游戏无法启动。
+
+### 根因
+
+`main.js:1260` 引用了 `npcRelationships.init(state)`，但 `npcRelationships` 从未在任何文件中定义。且 typeof 守卫写法有 bug：
+
+```js
+// typeof npcRelationships → "undefined"（truthy字符串）
+// 接着 ncpRelationships.init 访问未声明标识符 → ReferenceError
+if (typeof npcRelationships && typeof npcRelationships.init === "function") {
+```
+
+### 修复
+
+- 删除 `main.js` 中第1259-1262行死代码（`npcRelationships.init` 调用）
+- 实际有效的 `initNpcRelationships(state)` 已在第1275行正确调用
+
+### 影响文件
+
+| 文件             | 修改                 |
+| ---------------- | -------------------- |
+| `src/js/main.js` | -4行（删除死代码块） |
+
+### 验证
+
+- 构建成功（4072.9 KB）
+- grep 确认无 `npcRelationships.init` 残留
+
+---
 
 ## 2026-06-25 — v3.7 P1-1 新闻→投资UI
 
@@ -97,6 +131,7 @@
 **设计参考**：《Stardew Valley》NPC关系网 / 《大多数》人际网络 / 中国CPI历史数据 / Capitalism Lab经济周期 / BitLife人生回顾
 
 ### P0-1: NPC关系网系统（~825行）
+
 - 新建 `src/js/core/npc_relationships.js`：NPC关系网定义、好感传导、衰减系统
 - 修改 `src/js/data/npcs.js`：为10个NPC添加locationPreference/relationshipWeight/interactionHistory
 - 修改 `src/js/core/cross_system_events.js`：新增6条NPC关系网联动事件（送礼传导/口碑传播/前同事引荐等）
@@ -106,6 +141,7 @@
 - 修改 `src/js/main.js`：初始化NPC关系网状态
 
 ### P0-2: 时代变迁系统（~718行）
+
 - 新建 `src/js/core/era_transform.js`：通胀指数（8%/年）、时代阶段（起步/成长/成熟/调整）、每日演化
 - 新建 `src/js/data/era_events.js`：8个时代事件（Day 90/180/270/365/450/540/720/900）
 - 修改 `src/js/phase1/daily_pipeline.js`：新增era_tick步骤
@@ -113,6 +149,7 @@
 - 修改 `src/js/main.js`：初始化时代变迁系统
 
 ### P0-3: 副业系统深化（~725行）
+
 - 新建 `src/js/phase2/side_hustle.js`：6种副业（代购/家教/网约车/外卖/自媒体/投资理财）
 - 新建 `src/js/data/side_hustle_events.js`：副业随机事件（客户投诉/交通事故/平台封号等）
 - 新建 `src/js/ui/side_hustle_ui.js`：副业Tab界面+状态卡片
@@ -121,6 +158,7 @@
 - 修改 `src/js/main.js`：初始化副业系统
 
 **副业特色**：
+
 - 代购：18:00后+15%售价
 - 网约车/外卖：需要agility≥50
 - 家教：需要intelligence≥30
@@ -129,11 +167,13 @@
 - 疲劳度系统：过度副业影响收入
 
 ### P1-4: 人生回忆录系统（~422行）
+
 - 新建 `src/js/ui/life_memoir.js`：8类回忆录（童年/求学/初恋/职场/创业/家庭/疾病/旅行）
 - 修改 `src/js/ui/victory.js`：结局时生成回忆录摘要
 - 修改 `src/index.html`：加载life_memoir.js
 
 ### 构建
+
 已 `python build.py`（4037.5 KB）
 
 **commit历史**：9596623 → acb5340 → b28675d → b250a41 → d4e9e0a → 1bd7fde → 154078d → 63ad76b → d14810a
@@ -147,6 +187,7 @@
 执行任务：v3.6 → v3.7 审查改进与扩展设计
 
 **产出文档**：
+
 - `TASK_SUMMARY_REPORT.md` — 完整任务总结
 - `subagent_result2.md` — v3.0 审查报告（综合评分7.0/10）
 - `subagent_result3.md` — 深度问题诊断（16项问题+3大根因）
@@ -155,16 +196,19 @@
 - `ARCHITECTURE_REPORT_1~5.md` — 架构分析报告
 
 **核心发现**：
+
 - 综合评分：7.0/10
 - 三大根因：副业未接入管线 / 经济后期失衡 / 事件填充稀疏
 - 横向对比：NPC系统对标Stardew Valley / 经济反馈环对标Capitalism Lab / 多周目继承对标Hades
 
 **待实装改进**（方案已设计，代码待实装）：
+
 - P0改进（4项，~120行）：副业系统接入/经济平衡/后期开支/链式事件填充
 - P1改进（6项，~470行）：新闻→投资UI/NPC好感链路/事件奖励缩放/家庭系统/装备获取/35岁危机追访
 - P2改进（6项，~440行）：装备UI/主文件重构/清理残留/道德事件深度/多周目衔接/社交网络系统
 
 **待实装扩展**（5大新系统，~6135行）：
+
 - 社交网络系统（微信朋友圈/微博/网红经济）
 - 旅行系统（国内/出国/目的地收集）
 - 医疗深度系统（手术/住院/康复/医保）
@@ -180,28 +224,32 @@
 **设计参考**：《Stardew Valley》岛民关系 / 《大多数》人际网络 / This War of Mine 情景连锁
 
 ### 新增文件
+
 1. `src/js/core/npc_relationships.js` — NPC关系链核心引擎（~450行）
    - 12×12 NPC关系矩阵（旧识/竞争/业务/老同学/紧张/中立）
    - 关系传播矩阵（蝴蝶效应：帮A→B好感传导）
    - 每日tick：好感衰减 + 关系传导 + 事件触发检查
 
 ### 修改文件
-| 文件 | 改动 | 说明 |
-|------|------|------|
-| `src/js/data/npcs.js` | +3 NPC（赵姐/陈哥/阿杰） | 完整配置：生日/节日/对话/礼物/好感奖励/求助/深度任务 |
-| `src/js/core/cross_system_events.js` | +8关系事件 | 三角选择/旧识反应/城市改造预警/隐藏商机/借钱还钱/同行竞争/老同学重逢/恩怨化解 |
-| `src/js/phase1/daily_pipeline.js` | +1步骤 | `npc_relationships_tick` 每日传播蝴蝶效应 |
-| `src/js/main.js` | +3行 | `startNewGame` 中调用 `initNpcRelationships` |
-| `src/index.html` | +1 script | 注册 `npc_relationships.js` |
+
+| 文件                                 | 改动                     | 说明                                                                          |
+| ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------- |
+| `src/js/data/npcs.js`                | +3 NPC（赵姐/陈哥/阿杰） | 完整配置：生日/节日/对话/礼物/好感奖励/求助/深度任务                          |
+| `src/js/core/cross_system_events.js` | +8关系事件               | 三角选择/旧识反应/城市改造预警/隐藏商机/借钱还钱/同行竞争/老同学重逢/恩怨化解 |
+| `src/js/phase1/daily_pipeline.js`    | +1步骤                   | `npc_relationships_tick` 每日传播蝴蝶效应                                     |
+| `src/js/main.js`                     | +3行                     | `startNewGame` 中调用 `initNpcRelationships`                                  |
+| `src/index.html`                     | +1 script                | 注册 `npc_relationships.js`                                                   |
 
 ### 新增NPC详情
-| NPC | 身份 | 位置 | 特色 |
-|-----|------|------|------|
-| 赵姐 | 房产中介 | 商业区 | 城市改造情报、房租预警 |
-| 陈哥 | 情报贩子 | 夜市 | 隐藏商机、老同学阿杰线索 |
-| 阿杰 | 老同学 | 随机 | 借钱不还、还钱事件链 |
+
+| NPC  | 身份     | 位置   | 特色                     |
+| ---- | -------- | ------ | ------------------------ |
+| 赵姐 | 房产中介 | 商业区 | 城市改造情报、房租预警   |
+| 陈哥 | 情报贩子 | 夜市   | 隐藏商机、老同学阿杰线索 |
+| 阿杰 | 老同学   | 随机   | 借钱不还、还钱事件链     |
 
 ### 关系链设计
+
 - 王大婶 ↔ 老周：旧识（城中村老邻居）
 - 李工头 ↔ 张姐：竞争关系（抢活源）
 - 赵姐 ↔ 李工头：业务关系
@@ -211,6 +259,7 @@
 - 王大婶 ↔ 赵姐：紧张关系（对中介有戒心）
 
 ### 构建
+
 待 `python build.py`
 
 ---
@@ -246,6 +295,7 @@
   - `checkSkillSynergies()` 自动检测，`getSkillSynergyBonus()` 收入加成计算
 
 **接线**：
+
 - `index.html` 注册3个新script
 - `daily_pipeline.js` 新增3个管线步骤（套装检测/耐久tick/连携检测）
 - `main.js::doStreetJob()` 工作后消耗装备耐久
@@ -306,6 +356,7 @@
 
 构建：`dist/index.html = 3877.6 KB`
 提交：37d6dbe(T1) 7f0a51f(T2) 517bce8(T3) cbca442(T4)
+
 > **构建提醒**: 每次修改 src/ 下的文件后，必须 `python build.py` 重新打包 dist/index.html 才能生效！
 >
 > **快捷触发**：`CLAUDE.md` 定义了 3 条触发短语。对当前 agent 说"按 v3.0 审查改进"自动走 `memory/review-improve-v3.0.md` SOP；其他 agent 复用同一套文件。

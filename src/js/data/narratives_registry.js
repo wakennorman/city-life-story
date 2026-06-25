@@ -534,7 +534,7 @@
   // ====== [v3.3 W1-T6] 前世记忆 ======
   function _getCurState() {
     try {
-      return (typeof StateManager !== "undefined" && StateManager.getState)
+      return typeof StateManager !== "undefined" && StateManager.getState
         ? StateManager.getState()
         : null;
     } catch (e) {
@@ -553,9 +553,8 @@
       lieflat: "摆烂躺平",
     };
     var path = f._prevCrisis35Path || f._crisis35Path;
-    var moralScore = (typeof f._prevMoralScore === "number")
-      ? f._prevMoralScore
-      : null;
+    var moralScore =
+      typeof f._prevMoralScore === "number" ? f._prevMoralScore : null;
     var peakAffMap = f._prevPeakAffinity || {};
     var ribbons = [];
     try {
@@ -563,7 +562,8 @@
         ribbons = getCollectedRibbons() || [];
       }
     } catch (e) {}
-    var coinBal = 0, unlocks = [];
+    var coinBal = 0,
+      unlocks = [];
     try {
       if (typeof getHeritageBalance === "function")
         coinBal = getHeritageBalance() || 0;
@@ -609,7 +609,9 @@
     });
     if (ribbonNames.length > 0) {
       lines.push(
-        "🎗 已收集人生缎带：" + ribbonNames.join("、") + (ribbons.length > 6 ? " 等" : ""),
+        "🎗 已收集人生缎带：" +
+          ribbonNames.join("、") +
+          (ribbons.length > 6 ? " 等" : ""),
       );
     }
     lines.push("🪙 累计传承币：" + coinBal + "（在主菜单→传承商店消费）");
@@ -627,15 +629,13 @@
     return [
       {
         kind: "desc",
-        text:
-          "前世的记忆不是直接传给你，而是化作血脉里的某种倾向、某些熟悉的脸孔、和命运暗中的偏袒。这一页记录的，是你前世留下的痕迹。",
+        text: "前世的记忆不是直接传给你，而是化作血脉里的某种倾向、某些熟悉的脸孔、和命运暗中的偏袒。这一页记录的，是你前世留下的痕迹。",
       },
       { kind: "subhead", text: "📜 前世的印记" },
       { kind: "list", items: lines },
       {
         kind: "tip",
-        text:
-          "传承机制涉及：35岁路径加成、道德净分→幸运、NPC老熟人解锁、人生缎带、传承币与红/绿互斥解锁。重开新档时全部自动结算。",
+        text: "传承机制涉及：35岁路径加成、道德净分→幸运、NPC老熟人解锁、人生缎带、传承币与红/绿互斥解锁。重开新档时全部自动结算。",
       },
     ];
   }

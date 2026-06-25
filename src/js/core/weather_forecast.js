@@ -23,7 +23,8 @@
   function updateNextDayForecast(state) {
     if (!state.weather) return;
 
-    var season = typeof getSeason === "function" ? getSeason(state.player.day) : null;
+    var season =
+      typeof getSeason === "function" ? getSeason(state.player.day) : null;
     if (!season) return;
 
     var currentWid = state.weather.current || "sunny";
@@ -85,9 +86,12 @@
   function getForecastHTML(state) {
     if (!state.weather || !state.weather._nextDayForecast) return "";
     var f = state.weather._nextDayForecast;
-    var wDef = typeof WEATHER_TYPES !== "undefined"
-      ? WEATHER_TYPES.find(function (wt) { return wt.id === f.weatherId; })
-      : null;
+    var wDef =
+      typeof WEATHER_TYPES !== "undefined"
+        ? WEATHER_TYPES.find(function (wt) {
+            return wt.id === f.weatherId;
+          })
+        : null;
     var icon = wDef ? wDef.icon : "🌤️";
     var name = wDef ? wDef.name : "未知";
     var prep = state.flags && state.flags._weatherPrep;
@@ -95,23 +99,38 @@
     if (prep && prep.umbrella) prepIcon += "☂️";
     if (prep && prep.warmPack) prepIcon += "🧣";
 
-    var html = '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-size:10px;">';
+    var html =
+      '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-size:10px;">';
     html += '<span style="color:var(--text-muted);">📡 明日天气：</span>';
-    html += '<span style="font-weight:600;">' + icon + " " + name + " " + Math.round(f.temperature) + "°C</span>";
-    html += '<span style="color:var(--text-muted);margin-left:4px;">(' + f.confidence + "%)</span>";
+    html +=
+      '<span style="font-weight:600;">' +
+      icon +
+      " " +
+      name +
+      " " +
+      Math.round(f.temperature) +
+      "°C</span>";
+    html +=
+      '<span style="color:var(--text-muted);margin-left:4px;">(' +
+      f.confidence +
+      "%)</span>";
 
     // 建议提示
     var isRainy = ["rainy", "stormy", "plum_rain"].indexOf(f.weatherId) >= 0;
     var isCold = ["snowy", "cold_snap", "foggy"].indexOf(f.weatherId) >= 0;
     if (isRainy && !(prep && prep.umbrella)) {
-      html += '<div style="color:var(--warning);margin-top:2px;">💡 明日有雨，建议买伞（¥20）</div>';
+      html +=
+        '<div style="color:var(--warning);margin-top:2px;">💡 明日有雨，建议买伞（¥20）</div>';
     } else if (isRainy && prep && prep.umbrella) {
-      html += '<div style="color:var(--success);margin-top:2px;">✅ 已备伞，雨天出行无忧</div>';
+      html +=
+        '<div style="color:var(--success);margin-top:2px;">✅ 已备伞，雨天出行无忧</div>';
     }
     if (isCold && !(prep && prep.warmPack)) {
-      html += '<div style="color:var(--warning);margin-top:2px;">💡 明日寒冷，建议买暖宝（¥50）</div>';
+      html +=
+        '<div style="color:var(--warning);margin-top:2px;">💡 明日寒冷，建议买暖宝（¥50）</div>';
     } else if (isCold && prep && prep.warmPack) {
-      html += '<div style="color:var(--success);margin-top:2px;">✅ 已备暖宝，寒冷无惧</div>';
+      html +=
+        '<div style="color:var(--success);margin-top:2px;">✅ 已备暖宝，寒冷无惧</div>';
     }
     if (prepIcon) {
       html += '<div style="margin-top:2px;">🎒 已准备：' + prepIcon + "</div>";

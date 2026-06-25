@@ -82,7 +82,7 @@
 10. 法律系统
 11. 人生节点
 
-*详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到P1）*
+_详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到P1）_
 
 - **v3.6 审查改进实装（2026-06-24，Hermes Agent 6子任务链）**
   - **9项P0/P1修复**：chainEventQueue守卫/天气→摆摊/经济压缩(trend上限0.003+估值¥15M)/NPC好感链路×2/后期开支(物业费+住房维护+社交)/创业门槛(3技能15+2NPC40+Day60)/新闻→UI因果链/节日价格/pricing补全/事件触发率递增

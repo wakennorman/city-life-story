@@ -11,14 +11,17 @@
 // ====== NPC关系网渲染 ======
 function renderNpcRelationships(state, content) {
   if (!state.relationships) {
-    content.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">👥 NPC关系网加载中...</p>';
+    content.innerHTML =
+      '<p style="color:var(--text-muted);padding:20px;text-align:center;">👥 NPC关系网加载中...</p>';
     return;
   }
 
   var html = '<div class="section"><h3>👥 NPC关系网</h3>';
-  html += '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">';
-  html += '💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。';
-  html += '</p>';
+  html +=
+    '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">';
+  html +=
+    "💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。";
+  html += "</p>";
 
   // NPC关系卡片
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
@@ -27,49 +30,75 @@ function renderNpcRelationships(state, content) {
   for (var i = 0; i < npcIds.length; i++) {
     var npcId = npcIds[i];
     var rel = state.relationships[npcId];
-    var affinity = rel ? (rel.affinity || 0) : 0;
+    var affinity = rel ? rel.affinity || 0 : 0;
 
     // 颜色根据好感度
     var colorClass = "neutral";
     var icon = "👤";
-    if (affinity >= 80) { colorClass = "high"; icon = "❤️"; }
-    else if (affinity >= 60) { colorClass = "good"; icon = "😊"; }
-    else if (affinity >= 30) { colorClass = "friendly"; icon = "🙂"; }
-    else if (affinity >= 0) { colorClass = "neutral"; icon = "👤"; }
-    else if (affinity >= -30) { colorClass = "cold"; icon = "😐"; }
-    else { colorClass = "bad"; icon = "😠"; }
+    if (affinity >= 80) {
+      colorClass = "high";
+      icon = "❤️";
+    } else if (affinity >= 60) {
+      colorClass = "good";
+      icon = "😊";
+    } else if (affinity >= 30) {
+      colorClass = "friendly";
+      icon = "🙂";
+    } else if (affinity >= 0) {
+      colorClass = "neutral";
+      icon = "👤";
+    } else if (affinity >= -30) {
+      colorClass = "cold";
+      icon = "😐";
+    } else {
+      colorClass = "bad";
+      icon = "😠";
+    }
 
     html += '<div class="npc-rel-card npc-rel-' + colorClass + '" style="';
-    html += 'padding:8px 12px;border-radius:6px;font-size:12px;min-width:100px;';
+    html +=
+      "padding:8px 12px;border-radius:6px;font-size:12px;min-width:100px;";
     html += 'border:1px solid var(--border);background:var(--bg-secondary);">';
     html += '<div style="display:flex;align-items:center;gap:4px;">';
-    html += '<span>' + icon + '</span>';
-    html += '<span style="font-weight:bold;">' + (npcId.replace(/_/g, ' ') + '</span>');
-    html += '<span style="margin-left:auto;">' + Math.round(affinity) + '</span>';
-    html += '</div>';
+    html += "<span>" + icon + "</span>";
+    html +=
+      '<span style="font-weight:bold;">' +
+      (npcId.replace(/_/g, " ") + "</span>");
+    html +=
+      '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
+    html += "</div>";
 
     // 关系传导信息
     if (rel._propagationLog && rel._propagationLog.length > 0) {
       var lastProp = rel._propagationLog[rel._propagationLog.length - 1];
-      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">';
-      html += '传导: ' + lastProp.from.replace(/_/g, ' ') + ' (' + (lastProp.change > 0 ? '+' : '') + lastProp.change.toFixed(1) + ')';
-      html += '</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">';
+      html +=
+        "传导: " +
+        lastProp.from.replace(/_/g, " ") +
+        " (" +
+        (lastProp.change > 0 ? "+" : "") +
+        lastProp.change.toFixed(1) +
+        ")";
+      html += "</div>";
     }
 
     // 衰减信息
     if (rel._lastDecay) {
-      html += '<div style="font-size:10px;color:var(--text-warning);margin-top:2px;">';
-      html += '⚠ 衰减' + rel._lastDecay.toFixed(1);
-      html += '</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-warning);margin-top:2px;">';
+      html += "⚠ 衰减" + rel._lastDecay.toFixed(1);
+      html += "</div>";
     }
 
-    html += '</div>';
+    html += "</div>";
   }
 
-  html += '</div>';
+  html += "</div>";
 
   // 关系传导详情
-  html += '<div class="section" style="margin-top:16px;"><h4>📜 关系传导日志</h4>';
+  html +=
+    '<div class="section" style="margin-top:16px;"><h4>📜 关系传导日志</h4>';
   html += '<div style="max-height:200px;overflow-y:auto;font-size:11px;">';
 
   var hasLog = false;
@@ -77,23 +106,31 @@ function renderNpcRelationships(state, content) {
     var r = state.relationships[key];
     if (r._propagationLog && r._propagationLog.length > 0) {
       hasLog = true;
-      html += '<div style="padding:6px 8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;">';
-      html += '<strong>' + key.replace(/_/g, ' ') + '</strong>: ';
+      html +=
+        '<div style="padding:6px 8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;">';
+      html += "<strong>" + key.replace(/_/g, " ") + "</strong>: ";
       for (var j = 0; j < r._propagationLog.length; j++) {
         var log = r._propagationLog[j];
-        html += '<span style="color:' + (log.change > 0 ? 'var(--success)' : 'var(--danger)') + '">';
-        html += log.change > 0 ? '+' : '' + log.change.toFixed(1) + '</span> ';
-        html += '<span style="color:var(--text-muted);font-size:10px;">(' + log.type + ')</span> ';
+        html +=
+          '<span style="color:' +
+          (log.change > 0 ? "var(--success)" : "var(--danger)") +
+          '">';
+        html += log.change > 0 ? "+" : "" + log.change.toFixed(1) + "</span> ";
+        html +=
+          '<span style="color:var(--text-muted);font-size:10px;">(' +
+          log.type +
+          ")</span> ";
       }
-      html += '</div>';
+      html += "</div>";
     }
   }
 
   if (!hasLog) {
-    html += '<p style="color:var(--text-muted);padding:12px;text-align:center;">暂无传导记录。与NPC互动后可能会产生关系传导。</p>';
+    html +=
+      '<p style="color:var(--text-muted);padding:12px;text-align:center;">暂无传导记录。与NPC互动后可能会产生关系传导。</p>';
   }
 
-  html += '</div></div>';
+  html += "</div></div>";
 
   content.innerHTML = html;
 }
@@ -236,31 +273,60 @@ function renderSocialNetworkTab(state, content) {
   if (typeof ensureSocialNetworkState === "function") {
     ensureSocialNetworkState(state);
   } else if (!state.socialNetwork) {
-    state.socialNetwork = { posts: [], weiboHotlist: [], npcFeeds: [], playerFans: 0 };
+    state.socialNetwork = {
+      posts: [],
+      weiboHotlist: [],
+      npcFeeds: [],
+      playerFans: 0,
+    };
   }
   var sn = state.socialNetwork;
   var incomeInfo =
     typeof calculateInfluencerIncome === "function"
       ? calculateInfluencerIncome(state)
-      : { level: sn.playerInfluencerLevel || "none", income: sn.influencerIncome || 0 };
+      : {
+          level: sn.playerInfluencerLevel || "none",
+          income: sn.influencerIncome || 0,
+        };
 
   var html = '<div class="tab-content">';
   html += '<div class="section"><h3>📱 社交网络</h3>';
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">';
-  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">粉丝</div><strong>' + (sn.playerFans || 0).toLocaleString() + '</strong></div>';
-  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">网红等级</div><strong>' + socialNetworkEscape(incomeInfo.level) + '</strong></div>';
-  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">日收入</div><strong>¥' + Math.round(incomeInfo.income || 0).toLocaleString() + '</strong></div>';
-  html += '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">舆论</div><strong>' + (sn.舆论危机 && sn.舆论危机.active ? "危机中" : "平稳") + '</strong></div>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
-  html += '<button class="btn btn-sm btn-primary sn-post-btn">✍️ 发朋友圈</button>';
+  html +=
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">';
+  html +=
+    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">粉丝</div><strong>' +
+    (sn.playerFans || 0).toLocaleString() +
+    "</strong></div>";
+  html +=
+    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">网红等级</div><strong>' +
+    socialNetworkEscape(incomeInfo.level) +
+    "</strong></div>";
+  html +=
+    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">日收入</div><strong>¥' +
+    Math.round(incomeInfo.income || 0).toLocaleString() +
+    "</strong></div>";
+  html +=
+    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">舆论</div><strong>' +
+    (sn.舆论危机 && sn.舆论危机.active ? "危机中" : "平稳") +
+    "</strong></div>";
+  html += "</div>";
+  html +=
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
+  html +=
+    '<button class="btn btn-sm btn-primary sn-post-btn">✍️ 发朋友圈</button>';
   html += '<button class="btn btn-sm sn-refresh-btn">🔥 刷新热搜</button>';
-  html += '</div>';
+  html += "</div>";
 
   if (sn.舆论危机 && sn.舆论危机.active) {
-    html += '<div class="card" style="padding:10px;margin-bottom:10px;border-left:3px solid var(--danger);">';
-    html += '<strong>⚠️ 舆论危机</strong><div style="font-size:12px;color:var(--text-muted);">严重度 ' + sn.舆论危机.severity + '，剩余 ' + sn.舆论危机.daysRemaining + ' 天</div>';
-    html += '</div>';
+    html +=
+      '<div class="card" style="padding:10px;margin-bottom:10px;border-left:3px solid var(--danger);">';
+    html +=
+      '<strong>⚠️ 舆论危机</strong><div style="font-size:12px;color:var(--text-muted);">严重度 ' +
+      sn.舆论危机.severity +
+      "，剩余 " +
+      sn.舆论危机.daysRemaining +
+      " 天</div>";
+    html += "</div>";
   }
 
   html += '<div class="section"><h4>💬 朋友圈</h4>';
@@ -271,12 +337,22 @@ function renderSocialNetworkTab(state, content) {
     for (var p = 0; p < Math.min(posts.length, 5); p++) {
       var post = posts[p];
       html += '<div class="card" style="padding:10px;margin:6px 0;">';
-      html += '<div style="font-size:12px;">' + socialNetworkEscape(post.content) + '</div>';
-      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">第' + post.postedDay + '天 · ' + socialNetworkEscape(post.visibility) + ' · 👍 ' + (post.likes ? post.likes.length : 0) + '</div>';
-      html += '</div>';
+      html +=
+        '<div style="font-size:12px;">' +
+        socialNetworkEscape(post.content) +
+        "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">第' +
+        post.postedDay +
+        "天 · " +
+        socialNetworkEscape(post.visibility) +
+        " · 👍 " +
+        (post.likes ? post.likes.length : 0) +
+        "</div>";
+      html += "</div>";
     }
   }
-  html += '</div>';
+  html += "</div>";
 
   html += '<div class="section"><h4>👥 NPC动态</h4>';
   var feeds = sn.npcFeeds || [];
@@ -285,15 +361,27 @@ function renderSocialNetworkTab(state, content) {
   } else {
     for (var f = 0; f < Math.min(feeds.length, 5); f++) {
       var feed = feeds[f];
-      var npc = typeof getNpcById === "function" ? getNpcById(feed.npcId) : null;
+      var npc =
+        typeof getNpcById === "function" ? getNpcById(feed.npcId) : null;
       html += '<div class="card" style="padding:10px;margin:6px 0;">';
-      html += '<strong>' + socialNetworkEscape(npc ? npc.name : feed.npcId) + '</strong>';
-      html += '<div style="font-size:12px;margin-top:4px;">' + socialNetworkEscape(feed.content) + '</div>';
-      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第' + feed.postedDay + '天 · ' + socialNetworkEscape(feed.type || "daily") + '</div>';
-      html += '</div>';
+      html +=
+        "<strong>" +
+        socialNetworkEscape(npc ? npc.name : feed.npcId) +
+        "</strong>";
+      html +=
+        '<div style="font-size:12px;margin-top:4px;">' +
+        socialNetworkEscape(feed.content) +
+        "</div>";
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第' +
+        feed.postedDay +
+        "天 · " +
+        socialNetworkEscape(feed.type || "daily") +
+        "</div>";
+      html += "</div>";
     }
   }
-  html += '</div>';
+  html += "</div>";
 
   html += '<div class="section"><h4>🔥 微博热搜</h4>';
   var hotlist = sn.weiboHotlist || [];
@@ -302,14 +390,24 @@ function renderSocialNetworkTab(state, content) {
   } else {
     for (var h = 0; h < Math.min(hotlist.length, 10); h++) {
       var hot = hotlist[h];
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">';
-      html += '<span style="width:24px;color:var(--accent);font-weight:bold;">#' + hot.rank + '</span>';
-      html += '<span style="flex:1;">' + socialNetworkEscape(hot.title) + '</span>';
-      html += '<span style="color:var(--text-muted);">' + socialNetworkEscape(hot.category) + ' · ' + Math.round((hot.heat || 0) / 10000) + '万热度</span>';
-      html += '</div>';
+      html +=
+        '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">';
+      html +=
+        '<span style="width:24px;color:var(--accent);font-weight:bold;">#' +
+        hot.rank +
+        "</span>";
+      html +=
+        '<span style="flex:1;">' + socialNetworkEscape(hot.title) + "</span>";
+      html +=
+        '<span style="color:var(--text-muted);">' +
+        socialNetworkEscape(hot.category) +
+        " · " +
+        Math.round((hot.heat || 0) / 10000) +
+        "万热度</span>";
+      html += "</div>";
     }
   }
-  html += '</div></div></div>';
+  html += "</div></div></div>";
   content.innerHTML = html;
 
   var postBtn = content.querySelector(".sn-post-btn");

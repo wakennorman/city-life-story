@@ -315,7 +315,8 @@ function createEquipmentInstance(itemDef, source) {
     };
     // 添加耐久
     if (typeof initItemDurability === "function") {
-      basicInstance = initItemDurability(basicInstance, itemDef) || basicInstance;
+      basicInstance =
+        initItemDurability(basicInstance, itemDef) || basicInstance;
     }
     return basicInstance;
   }

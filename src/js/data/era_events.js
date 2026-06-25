@@ -12,7 +12,8 @@ const ERA_EVENTS = [
     day: 90,
     title: "第一桶金",
     icon: "💰",
-    story: "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
+    story:
+      "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 90 && !st.flags._eraEvent_90;
@@ -31,9 +32,9 @@ const ERA_EVENTS = [
           }
           StateManager.addMessage(
             "💡 你开始精明消费，学会了对比价格。获得「精明消费者」徽章。物价整体+5%。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "📈 投资点东西抗通胀",
@@ -44,12 +45,16 @@ const ERA_EVENTS = [
           st.resources.cash -= 200;
           if (!st.investment) st.investment = {};
           if (!st.investment.history) st.investment.history = [];
-          st.investment.history.push({ day: st.player.day, type: "inflation_hedge", amount: 200 });
+          st.investment.history.push({
+            day: st.player.day,
+            type: "inflation_hedge",
+            amount: 200,
+          });
           StateManager.addMessage(
             "📈 你花了¥200买了些抗通胀的东西。虽然钱少了，但心里踏实。获得投资经验。",
-            "info"
+            "info",
           );
-        }
+        },
       },
       {
         text: "😌 走一步看一步",
@@ -58,11 +63,11 @@ const ERA_EVENTS = [
           st.flags._eraEvent_90 = true;
           StateManager.addMessage(
             "😌 你决定先不急着做决定。日子还得一天天过。",
-            "info"
+            "info",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 180: 行业风口 ===
@@ -71,7 +76,8 @@ const ERA_EVENTS = [
     day: 180,
     title: "行业风口",
     icon: "🚀",
-    story: "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
+    story:
+      "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 180 && !st.flags._eraEvent_180;
@@ -86,9 +92,9 @@ const ERA_EVENTS = [
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
           StateManager.addMessage(
             "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🤔 先调研一下",
@@ -100,9 +106,9 @@ const ERA_EVENTS = [
           st.flags.industryIntel = true;
           StateManager.addMessage(
             "🤔 你花时间调研了行业趋势，发现有些风口其实是泡沫。心智+3。",
-            "hint"
+            "hint",
           );
-        }
+        },
       },
       {
         text: "🙅 不靠谱，还是干老本行",
@@ -111,11 +117,11 @@ const ERA_EVENTS = [
           st.flags._eraEvent_180 = true;
           StateManager.addMessage(
             "🙅 你觉得风口太虚，还是继续干原来的活。稳妥，但也错过了可能的好机会。",
-            "info"
+            "info",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 270: 物价飞涨 ===
@@ -124,7 +130,8 @@ const ERA_EVENTS = [
     day: 270,
     title: "物价飞涨",
     icon: "📈",
-    story: "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
+    story:
+      "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 270 && !st.flags._eraEvent_270;
@@ -138,48 +145,55 @@ const ERA_EVENTS = [
           if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
           StateManager.addMessage(
             "😓 你接受了房租涨价。每个月多花¥1,500。物价涨了，钱包瘪了。",
-            "warning"
+            "warning",
           );
-        }
+        },
       },
       {
         text: "🏠 找便宜的房子",
         hint: "AP消耗，可能找到更便宜的",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
-          st.player.actionPoints = Math.max(0, (st.player.actionPoints || 100) - 20);
+          st.player.actionPoints = Math.max(
+            0,
+            (st.player.actionPoints || 100) - 20,
+          );
           if (st.housing) {
             const newRent = Math.max(200, st.housing.rent - 30);
             st.housing.rent = newRent;
           }
           StateManager.addMessage(
             "🏠 你花了半天找房，找到个便宜点的。房租从¥350降到¥320。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🤝 跟王大婶商量",
         hint: "需要好感≥40，可能成功",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
-          const affinity = (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity) || 0;
+          const affinity =
+            (st.relationships &&
+              st.relationships.aunt_wang &&
+              st.relationships.aunt_wang.affinity) ||
+            0;
           if (affinity >= 40) {
             if (st.housing) st.housing.rent = (st.housing.rent || 300) + 20;
             StateManager.addMessage(
               "🤝 王大婶看你平时表现不错，房租只涨了¥20。人情有时候比钱管用。",
-              "success"
+              "success",
             );
           } else {
             if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
             StateManager.addMessage(
               "🤝 王大婶说：「咱俩关系一般，涨价是没办法。」房租涨了¥50。",
-              "warning"
+              "warning",
             );
           }
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 365: 一周年 ===
@@ -188,7 +202,8 @@ const ERA_EVENTS = [
     day: 365,
     title: "一周年",
     icon: "🎉",
-    story: "一年过去了。你回头看刚来这座城市时的自己，感慨万千。\n这一年，你经历了什么？失去了什么？又得到了什么？",
+    story:
+      "一年过去了。你回头看刚来这座城市时的自己，感慨万千。\n这一年，你经历了什么？失去了什么？又得到了什么？",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 365 && !st.flags._eraEvent_365;
@@ -203,9 +218,9 @@ const ERA_EVENTS = [
           st.flags.reflectorBadge = true;
           StateManager.addMessage(
             "📝 你写下了一年的感悟。虽然辛苦，但你发现自己成长了很多。心情+10。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🎉 庆祝一下！",
@@ -217,9 +232,9 @@ const ERA_EVENTS = [
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           StateManager.addMessage(
             "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "😌 平静地接受",
@@ -229,11 +244,11 @@ const ERA_EVENTS = [
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "😌 你平静地接受了一年的收获与失去。心智+5。",
-            "hint"
+            "hint",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 450: 行业洗牌 ===
@@ -242,7 +257,8 @@ const ERA_EVENTS = [
     day: 450,
     title: "行业洗牌",
     icon: "🔄",
-    story: "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
+    story:
+      "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 450 && !st.flags._eraEvent_450;
@@ -256,9 +272,9 @@ const ERA_EVENTS = [
           st.flags.careerShift = true;
           StateManager.addMessage(
             "🔄 你决定转行。虽然有风险，但不转可能被淘汰。解锁新工作类别。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "💪 坚持原来的行业",
@@ -267,9 +283,9 @@ const ERA_EVENTS = [
           st.flags._eraEvent_450 = true;
           StateManager.addMessage(
             "💪 你决定坚持原来的行业。虽然活少了，但你相信熬过去会好起来。",
-            "info"
+            "info",
           );
-        }
+        },
       },
       {
         text: "📊 分析形势",
@@ -279,11 +295,11 @@ const ERA_EVENTS = [
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
-            "hint"
+            "hint",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 540: 消费升级 ===
@@ -292,7 +308,8 @@ const ERA_EVENTS = [
     day: 540,
     title: "消费升级",
     icon: "✨",
-    story: "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
+    story:
+      "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 540 && !st.flags._eraEvent_540;
@@ -308,9 +325,9 @@ const ERA_EVENTS = [
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🤔 观望一下",
@@ -320,9 +337,9 @@ const ERA_EVENTS = [
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           StateManager.addMessage(
             "🤔 你觉得高端消费不是必须的，先观望。心智+3。",
-            "hint"
+            "hint",
           );
-        }
+        },
       },
       {
         text: "💡 自己开个小店",
@@ -334,11 +351,11 @@ const ERA_EVENTS = [
           st.flags.smallBusinessUnlocked = true;
           StateManager.addMessage(
             "💡 你决定自己开个小店。虽然有风险，但这是实现梦想的机会。解锁创业机会。",
-            "success"
+            "success",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 720: 两年之痒 ===
@@ -347,7 +364,8 @@ const ERA_EVENTS = [
     day: 720,
     title: "两年之痒",
     icon: "🤔",
-    story: "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
+    story:
+      "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 720 && !st.flags._eraEvent_720;
@@ -359,14 +377,17 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_720 = true;
           if (st.relationships && st.relationships.old_zhou) {
-            st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 10);
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 10,
+            );
           }
           st.flags.careerInspiration = true;
           StateManager.addMessage(
             "💼 你鼓励老周创业。他很高兴，说会认真考虑。好感+10。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🏢 自己考虑创业",
@@ -378,9 +399,9 @@ const ERA_EVENTS = [
           st.flags.startupUnlocked = true;
           StateManager.addMessage(
             "🏢 你决定认真考虑创业。虽然需要投入，但这是改变命运的机会。解锁创业Tab。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "😌 继续打工",
@@ -389,11 +410,11 @@ const ERA_EVENTS = [
           st.flags._eraEvent_720 = true;
           StateManager.addMessage(
             "😌 你觉得创业风险太大，还是继续打工稳妥。",
-            "info"
+            "info",
           );
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
 
   // === Day 900: 三年之变 ===
@@ -402,7 +423,8 @@ const ERA_EVENTS = [
     day: 900,
     title: "三年之变",
     icon: "🌟",
-    story: "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
+    story:
+      "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
     phase: "street",
     conditions: function (st) {
       return st.player && st.player.day >= 900 && !st.flags._eraEvent_900;
@@ -416,9 +438,9 @@ const ERA_EVENTS = [
           st.flags.cityInfluencer = true;
           StateManager.addMessage(
             "🌟 你成为了城市影响者。你的行为能影响更多人。NPC关系传导效果+20%。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "📚 回馈社会",
@@ -429,9 +451,9 @@ const ERA_EVENTS = [
           st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
           StateManager.addMessage(
             "📚 你决定回馈社会，帮助更多刚来这座城市的人。心情+15，道德+5。",
-            "success"
+            "success",
           );
-        }
+        },
       },
       {
         text: "🏠 回家看看",
@@ -441,12 +463,12 @@ const ERA_EVENTS = [
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",
-            "info"
+            "info",
           );
-        }
-      }
-    ]
-  }
+        },
+      },
+    ],
+  },
 ];
 
 // 导出

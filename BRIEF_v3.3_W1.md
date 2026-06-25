@@ -13,29 +13,29 @@
 
 ## 1. Token / 范围 硬护栏（Tier-1，不可违反）
 
-| 规则 | 来源 |
-|---|---|
-| **禁止 cat 整文件**。`main.js` 4087 行 / `render.js` 5944 行 / `events_street.js` 9800+ 行 / `moral_events.js` 2000+ 行 — 只用 `grep -n` 定位 + `Read` 工具读 ≤80 行/次 | v3.0 SOP |
-| 每个 patch ≤20 行；新模块 ≤300 行；不许写测试（无测试框架） | v3.0 SOP |
-| **不要反复 build**。所有 Wave-1 任务全做完后**最后一次** `python build.py` | v3.0 SOP |
-| 不删任何 `.js`/`.css`/`.html` 文件；不改 `build.py`；不改 `index.html` 中 `<script>` 加载顺序；不 `git push` | CLAUDE.md |
-| 不引入任何 npm 包/外部库（纯 vanilla JS 项目） | CLAUDE.md |
-| **最终汇报只输出 ≤30 行**：每个任务列 `状态/文件/grep 验证 keyword`，不要长篇汇报 | 省 token |
-| 每完成一个独立任务 `git add -A && git commit -m "<v3.3-Wx-Tn>: ..."`，**禁止 push** | CLAUDE.md |
+| 规则                                                                                                                                                                    | 来源      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **禁止 cat 整文件**。`main.js` 4087 行 / `render.js` 5944 行 / `events_street.js` 9800+ 行 / `moral_events.js` 2000+ 行 — 只用 `grep -n` 定位 + `Read` 工具读 ≤80 行/次 | v3.0 SOP  |
+| 每个 patch ≤20 行；新模块 ≤300 行；不许写测试（无测试框架）                                                                                                             | v3.0 SOP  |
+| **不要反复 build**。所有 Wave-1 任务全做完后**最后一次** `python build.py`                                                                                              | v3.0 SOP  |
+| 不删任何 `.js`/`.css`/`.html` 文件；不改 `build.py`；不改 `index.html` 中 `<script>` 加载顺序；不 `git push`                                                            | CLAUDE.md |
+| 不引入任何 npm 包/外部库（纯 vanilla JS 项目）                                                                                                                          | CLAUDE.md |
+| **最终汇报只输出 ≤30 行**：每个任务列 `状态/文件/grep 验证 keyword`，不要长篇汇报                                                                                       | 省 token  |
+| 每完成一个独立任务 `git add -A && git commit -m "<v3.3-Wx-Tn>: ..."`，**禁止 push**                                                                                     | CLAUDE.md |
 
 ## 2. 现状盘点（你需要知道但不要重新审计）
 
 主控已经替你 grep 过，以下都是**已经埋好但未闭合**的钩子：
 
-| flag/字段 | 写入位置 | 是否有 follow-up | 缺口 |
-|---|---|---|---|
-| `_crisis35Path = "exam" / "career" / "lieflat"` | `review_improvements.js:345-376` | 部分（`life_ribbon.js` 读；`story_chapters.js` 第三章读；`inheritance_chain.js::inheritCrisisPath` 读） | **缺 30~90 天延伸事件链**，3 条路径各应有 2~3 个后续叙事/系统影响事件 |
-| `_healthCheckAlert` | `review_improvements.js:191`（高端体检异常） | **0 后续** | 需"复查→真疾病确诊 / 虚惊一场"二阶事件，延迟 7~21 天 |
-| `_badDebtAmount` | `review_improvements.js:147`（亲戚借钱坏账） | **0 后续** | 需"亲戚跑路→催债律师函 / 一年后真还款（与 `_goodLoanReturn` 配对）"事件 |
-| `_goodLoanReturn` | `review_improvements.js:150`（好心借出还回） | **0 后续** | 需声誉传播事件（NPC 听说→好感+/介绍工作） |
-| `inheritCrisisPath / inheritMoralScore / inheritPeakAffinity` | `inheritance_chain.js:329-410` + `modal.js:202-207` 已读出 | **wiki 没有"前世回忆"渲染页** | 需 wiki 新条目"前世记忆"，展示上一周目 35 岁选择/道德分/巅峰 NPC 好感 |
-| `heritage_coin.js` 模块（6 项红/绿互斥永久解锁） | 已建好但**主菜单无入口** | localStorage 累计，但玩家看不到 | 主菜单"新游戏"前增加"传承商店"入口，渲染 6 项卡片+解锁状态 |
-| `moral_events.js` 79 个 flag 中仍有 ~30 个无 followup | 散落各处 | 部分 | 本 Wave 不强求全补，选 **4 个高频缺口** 补即可 |
+| flag/字段                                                     | 写入位置                                                   | 是否有 follow-up                                                                                        | 缺口                                                                    |
+| ------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `_crisis35Path = "exam" / "career" / "lieflat"`               | `review_improvements.js:345-376`                           | 部分（`life_ribbon.js` 读；`story_chapters.js` 第三章读；`inheritance_chain.js::inheritCrisisPath` 读） | **缺 30~90 天延伸事件链**，3 条路径各应有 2~3 个后续叙事/系统影响事件   |
+| `_healthCheckAlert`                                           | `review_improvements.js:191`（高端体检异常）               | **0 后续**                                                                                              | 需"复查→真疾病确诊 / 虚惊一场"二阶事件，延迟 7~21 天                    |
+| `_badDebtAmount`                                              | `review_improvements.js:147`（亲戚借钱坏账）               | **0 后续**                                                                                              | 需"亲戚跑路→催债律师函 / 一年后真还款（与 `_goodLoanReturn` 配对）"事件 |
+| `_goodLoanReturn`                                             | `review_improvements.js:150`（好心借出还回）               | **0 后续**                                                                                              | 需声誉传播事件（NPC 听说→好感+/介绍工作）                               |
+| `inheritCrisisPath / inheritMoralScore / inheritPeakAffinity` | `inheritance_chain.js:329-410` + `modal.js:202-207` 已读出 | **wiki 没有"前世回忆"渲染页**                                                                           | 需 wiki 新条目"前世记忆"，展示上一周目 35 岁选择/道德分/巅峰 NPC 好感   |
+| `heritage_coin.js` 模块（6 项红/绿互斥永久解锁）              | 已建好但**主菜单无入口**                                   | localStorage 累计，但玩家看不到                                                                         | 主菜单"新游戏"前增加"传承商店"入口，渲染 6 项卡片+解锁状态              |
+| `moral_events.js` 79 个 flag 中仍有 ~30 个无 followup         | 散落各处                                                   | 部分                                                                                                    | 本 Wave 不强求全补，选 **4 个高频缺口** 补即可                          |
 
 ## 3. Wave-1 任务清单（按依赖顺序，逐个 commit）
 
@@ -69,10 +69,11 @@
 3. **`lieflat` 摆烂**：① 第30天家人电话施压（道德分/心情冲突） ② 第60天朋友圈晒成功（嫉妒 vs 释然，写入 `_returnedHometown` or 决定是否触发归园田居缎带）
 
 **接线**：
+
 - `index.html` 新增 `<script src="js/data/crisis35_followups.js"></script>`，位置紧跟 `moral_events.js` 之后
 - 文件本身在末尾 IIFE：
   ```js
-  if (typeof window !== 'undefined' && window.RANDOM_EVENTS) {
+  if (typeof window !== "undefined" && window.RANDOM_EVENTS) {
     Array.prototype.push.apply(window.RANDOM_EVENTS, CRISIS35_FOLLOWUPS);
   }
   ```
@@ -89,6 +90,7 @@
 **位置**：在新模块 `src/js/core/review_improvements_v2.js` 中（或追加到现有 `review_improvements.js` 末尾，但**不要超出文件原有 +120 行**）
 
 **事件 2 条**（含选择）：
+
 - `wt_recheck_diagnosis`：触发条件 `_healthCheckAlert >= 1 && (state.day - lastTrigger) in [7,21]`，3 选项：①去三甲复查（¥800，60% 确诊一种慢性病并加入 `state.diseases`，40% 虚惊）②忽视（30% 30 天后剧情线触发"晚期"）③偏方（¥200 玄学，幸福+5 道德-1）
 - `wt_chronic_disease_lifestyle`：复查确诊后 7 天，提供"调整生活方式（疲劳上限-5 但每日健康+1）" vs "继续 996"二选一
 
@@ -116,6 +118,7 @@
 **目标**：把 `moral_events.js` 中 4 个**高频但无 followup** 的 flag 接上（不要重写已有 followup 已在的）。
 
 **先 grep 找出 4 个**：
+
 ```bash
 grep -n "flag:" src/js/data/moral_events.js | head -40
 # 与现有 followup 节（一般在文件下半部分的对象字面量）对比，找出 4 个没有同名 key 的
@@ -134,6 +137,7 @@ grep -n "flag:" src/js/data/moral_events.js | head -40
 **目标**：把 `heritage_coin.js` 的 6 项红/绿互斥永久解锁暴露给玩家。
 
 **实现**（≤80 行 patch 跨 3 文件）：
+
 - `src/js/ui/modal.js`：在 `showNewGameModal()` / 新游戏起步弹窗中，新增一个"🏛 传承商店"按钮，点开调用 `showHeritageStore()`
 - 新文件 `src/js/ui/heritage_store.js`（≤180 行）：渲染 6 项卡片（图标 / 名称 / 描述 / 解锁成本 / 已解锁 ✓ / 红绿互斥提示），从 `localStorage.__heritageCoins` 读余额，点"解锁"扣币写入 `localStorage.__heritageUnlocks`
 - `index.html` 注册新 script
@@ -149,17 +153,20 @@ grep -n "flag:" src/js/data/moral_events.js | head -40
 **目标**：让玩家在百科里看见上一周目留下了什么（不只是 modal 一瞬间）。
 
 **实现**（≤60 行 patch）：
+
 - 在 `src/js/data/narratives_registry.js` 末尾追加：
   ```js
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.NARRATIVES = window.NARRATIVES || {};
     NARRATIVES.past_life = {
-      id: 'past_life',
-      name: '前世记忆',
-      icon: '🕯',
-      brief: '上一周目你留下的痕迹...',
-      version: 'v3.3',
-      sections: [/* dynamic via () => functions */]
+      id: "past_life",
+      name: "前世记忆",
+      icon: "🕯",
+      brief: "上一周目你留下的痕迹...",
+      version: "v3.3",
+      sections: [
+        /* dynamic via () => functions */
+      ],
     };
   }
   ```
@@ -175,20 +182,22 @@ grep -n "flag:" src/js/data/moral_events.js | head -40
 
 1. 全部 6 个任务完成后**一次性** `python build.py`
 2. 在 `src/DEVELOPMENT.md` **顶部**插入新段（紧贴现有 v3.2 段之上）：
+
    ```markdown
    ## 2026-06-24 — v3.3 Wave-1 关联度闭合（GLM-5.2 / 游戏设计师）
-   
+
    执行 SOP：memory/review-improve-v3.0.md（v3.0 审查改进）
-   
+
    - T1 35 岁三路径延伸 — `crisis35_followups.js` 新建（~200 行，6 事件）
    - T2 体检异常二阶 — `review_improvements.js` +N 行（2 事件）
    - T3 坏账/好心回报 — `crisis35_followups.js` 末尾追加（2 事件）
    - T4 道德 followup 补 4 — `moral_events.js` +N 行
    - T5 传承商店入口 — `heritage_store.js` 新建 + modal.js 接线
    - T6 前世记忆 wiki — `narratives_registry.js` +追加
-   
+
    构建：dist/index.html = XXXX.X KB
    ```
+
 3. `git add -A && git commit -m "v3.3 Wave-1: 关联度闭合（35岁链/体检/坏账/道德/传承UI/前世wiki）"`（**不 push**）
 
 ## 5. 最终汇报格式（**严格遵守，≤30 行**）

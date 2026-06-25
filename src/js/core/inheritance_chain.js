@@ -613,7 +613,7 @@ function assessInheritancePotential(state) {
     relationships: [],
     skills: [],
     cash: 0,
-    notes: []
+    notes: [],
   };
 
   // 声誉徽章
@@ -627,7 +627,7 @@ function assessInheritancePotential(state) {
     if (rel && rel.affinity && rel.affinity > 50) {
       potential.relationships.push({
         npcId: npcId,
-        affinity: rel.affinity
+        affinity: rel.affinity,
       });
       potential.score += Math.floor(rel.affinity / 10);
     }
@@ -640,7 +640,7 @@ function assessInheritancePotential(state) {
     if (skill && skill.level && skill.level > 30) {
       potential.skills.push({
         skill: skillKey,
-        level: skill.level
+        level: skill.level,
       });
       potential.score += Math.floor(skill.level / 10);
     }

@@ -1256,11 +1256,6 @@ function startNewGame() {
     initEquipmentDurability(StateManager.getState());
   }
 
-  // v3.6 P0-1: 初始化NPC关系网
-  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
-    npcRelationships.init(StateManager.getState());
-  }
-
   // v3.6 P0-2: 初始化时代变迁系统
   if (typeof eraTransform && typeof eraTransform.init === "function") {
     eraTransform.init(StateManager.getState());
@@ -3329,7 +3324,9 @@ function doStreetJob(job) {
       pay = Math.floor(pay * weatherMult);
       if (weatherMult <= 0.5) {
         StateManager.addMessage(
-          "🌧️ 恶劣天气，户外工作收入降至 " + Math.round(weatherMult * 100) + "%",
+          "🌧️ 恶劣天气，户外工作收入降至 " +
+            Math.round(weatherMult * 100) +
+            "%",
           "warning",
         );
       }

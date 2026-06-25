@@ -171,11 +171,11 @@ function createDefaultState() {
     // --- 副业系统 (P0-1: 副业系统接入) ---
     sideHustle: {
       active: false,
-      type: null,  // 'stall' | 'driving' | 'freelance' | 'content' | 'sharing' | 'community'
-      fatigue: 0,  // 副业疲劳度（影响次日主业效率）
-      income: 0,   // 当日副业收入
-      reputation: 0,  // 副业口碑
-      history: [],  // 副业收入历史
+      type: null, // 'stall' | 'driving' | 'freelance' | 'content' | 'sharing' | 'community'
+      fatigue: 0, // 副业疲劳度（影响次日主业效率）
+      income: 0, // 当日副业收入
+      reputation: 0, // 副业口碑
+      history: [], // 副业收入历史
       lastActiveDay: null,
     },
 

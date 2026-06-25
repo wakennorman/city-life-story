@@ -633,12 +633,16 @@ function rollLocationNpcInteraction(state, locationKey) {
         if (srel && srel.met && Random.chance(0.4)) {
           var npcDef = null;
           for (var ni = 0; ni < NPCS.length; ni++) {
-            if (NPCS[ni].id === snpc.npcId) { npcDef = NPCS[ni]; break; }
+            if (NPCS[ni].id === snpc.npcId) {
+              npcDef = NPCS[ni];
+              break;
+            }
           }
           if (npcDef) {
-            var sline = (npcDef.encounterLines && npcDef.encounterLines.length > 0)
-              ? Random.fromArray(npcDef.encounterLines)
-              : npcDef.name + "正在附近忙活着呢。";
+            var sline =
+              npcDef.encounterLines && npcDef.encounterLines.length > 0
+                ? Random.fromArray(npcDef.encounterLines)
+                : npcDef.name + "正在附近忙活着呢。";
             StateManager.addMessage("💬 " + sline, "info");
             srel.affinity = Math.min(100, srel.affinity + 1);
             if (typeof tryRevealNpcInfo === "function") {
@@ -834,7 +838,8 @@ function rollNpcEncounterOnArrival(state, locationKey) {
  * 设计参考：Stardew Valley 好感事件技能检查 / 双条件解锁永久增益
  */
 function checkNpcSkillUnlocks(state) {
-  if (!state.relationships || !state.NPCS && typeof NPCS === "undefined") return;
+  if (!state.relationships || (!state.NPCS && typeof NPCS === "undefined"))
+    return;
   var npcsList = state.NPCS || NPCS;
   if (!npcsList) return;
   for (var ni = 0; ni < npcsList.length; ni++) {
@@ -849,7 +854,10 @@ function checkNpcSkillUnlocks(state) {
       if (rel.affinity < st.minAffinity) continue;
       var meetsSkill = true;
       if (st.skill) {
-        meetsSkill = state.skills && state.skills[st.skill] && state.skills[st.skill].level >= st.minSkill;
+        meetsSkill =
+          state.skills &&
+          state.skills[st.skill] &&
+          state.skills[st.skill].level >= st.minSkill;
       } else if (st.attr) {
         meetsSkill = state.player[st.attr] >= st.minAttr;
       }
@@ -869,8 +877,7 @@ function checkNpcSkillUnlocks(state) {
  */
 function checkNpcAffinityEvents(state, onlyNpcId) {
   if (!state || !state.relationships) return;
-  var npcsList =
-    typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
+  var npcsList = typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
   if (!npcsList || !npcsList.length) return;
   if (!state.flags) state.flags = {};
   if (!state.flags._npcAffinityEventsSeen)

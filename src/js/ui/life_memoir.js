@@ -112,7 +112,11 @@
 
     // 添加时间戳
     memoir.addedAt = Date.now();
-    memoir.day = memoir.day || (typeof StateManager !== "undefined" ? StateManager.getState().player.day : 0);
+    memoir.day =
+      memoir.day ||
+      (typeof StateManager !== "undefined"
+        ? StateManager.getState().player.day
+        : 0);
 
     memoirs[category].push(memoir);
     saveMemoirs(memoirs);
@@ -207,13 +211,15 @@
               return memoirs
                 .slice(-5)
                 .reverse()
-                .map((m, i) => `
+                .map(
+                  (m, i) => `
                   <div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">
                     <div style="color:${def.color};font-weight:bold;">${def.icon} ${m.title || "未命名"}</div>
                     <div style="color:var(--text-muted);">${m.content || m.desc || ""}</div>
                     <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第${m.day || "?"}天</div>
                   </div>
-                `)
+                `,
+                )
                 .join("");
             })
             .join("")}
@@ -238,7 +244,10 @@
     addMemoir(category, {
       title,
       content,
-      day: typeof StateManager !== "undefined" ? StateManager.getState().player.day : 0,
+      day:
+        typeof StateManager !== "undefined"
+          ? StateManager.getState().player.day
+          : 0,
     });
   }
 

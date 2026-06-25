@@ -505,7 +505,10 @@ const DAILY_PIPELINE = [
       // 雨伞：雨天直接减免疲劳
       if (prep.umbrella && isRainy) {
         state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 5);
-        StateManager.addMessage("☂️ 雨伞挡住了风雨，疲劳感减轻了不少。", "info");
+        StateManager.addMessage(
+          "☂️ 雨伞挡住了风雨，疲劳感减轻了不少。",
+          "info",
+        );
       }
 
       // 暖宝：寒冷天气健康保护

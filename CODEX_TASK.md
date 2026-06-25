@@ -15,32 +15,39 @@
 ## 步骤
 
 ### 1. P1-1 新闻→投资UI（investment.js）
+
 - 调用 `getNewsInvestmentSummary()` 渲染"今日市场驱动"板块
 - ✅ 完成标志：UI 显示活跃新闻对投资的影响
 
 ### 2. P1-2 NPC好感链路（npcs.js + npc_event_bridge.js）
+
 - 每个 NPC 加 `affinityEvents`（30/60/80 好感阈值事件）
 - `checkNpcAffinityEvents()` 每日检查
 - ✅ 完成标志：好感达标后触发 NPC 特殊对话/任务
 
 ### 3. P1-4 家庭系统（family_life.js）
+
 - 结婚（好感≥80+资产≥200K→求婚）、生子（孕180天）、教育开支¥5K-20K/月
 - ✅ 完成标志：可以在游戏中结婚生子
 
 ### 4. P1-6 35岁危机追访（events_core.js）
+
 - 追访事件权重×3
 - ✅ 完成标志：35岁相关事件触发率明显提升
 
 ### 5. P2-4 道德事件扩充（moral_events.js）
+
 - **注意**：上次加18个新事件语法损坏已回退基线，需要重新加
 - 建议事件：偷药救孩子/争食/举报同事/邻居借钱/ATM拦骗子等，每事件3-4选项
 - ✅ 完成标志：直接 `python build.py` 通过
 
 ### 6. 社交网络UI集成（social_network.js → UI）
+
 - 骨架已有（朋友圈/微博/网红/舆论），需挂载到 render.js
 - ✅ 完成标志：游戏内可发布朋友圈、刷微博
 
 ### 7. 扩展系统（main.js重构/旅行/医疗/法律/人生节点）
+
 - 参考 `EXPANSION_DESIGN.md`
 - ✅ 完成标志：每个扩展独立可用
 
