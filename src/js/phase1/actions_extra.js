@@ -1880,6 +1880,21 @@ function addLongDistanceTravelAction(state, actions) {
   });
 }
 
+/** 政府办事大厅解锁的法律咨询入口 */
+function addLegalOfficeAction(state, actions) {
+  if (state.trade.currentLocation !== "gov_office") return;
+  actions.push({
+    id: "legal_office",
+    name: "法律咨询",
+    desc: "咨询合同/劳动/邻里/债务纠纷，可聘请律师提起诉讼。",
+    icon: "⚖️",
+    apCost: 0,
+    handler: function () {
+      if (typeof showLegalOfficeModal === "function") showLegalOfficeModal();
+    },
+  });
+}
+
 /**
  * 寺庙地点解锁的 4 项特殊行动（v3.0 P2-C-2 完善）
  * 设计参考：《大多数》心态值分级 + BitLife 随机 buff
@@ -2032,6 +2047,7 @@ function addExtraActions(state, actions) {
     addHomeActions(state, actions);
     addClinicAction(state, actions);
     addLongDistanceTravelAction(state, actions);
+    addLegalOfficeAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
     // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）

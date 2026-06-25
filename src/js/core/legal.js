@@ -254,6 +254,86 @@ function getLegalSummary(state) {
   return lines;
 }
 
+function showLegalOfficeModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initLegalState(state);
+  var summary = getLegalSummary(state);
+  if (state.legal.activeCase) {
+    showModal({
+      title: "⚖️ 法律咨询",
+      body:
+        '<div style="font-size:13px;line-height:1.7;">' +
+        summary.join("<br>") +
+        "</div>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
+
+  var caseOptions = "";
+  for (var caseId in LEGAL_CASES) {
+    var c = LEGAL_CASES[caseId];
+    caseOptions +=
+      '<option value="' +
+      caseId +
+      '">' +
+      c.name +
+      " · 约¥" +
+      c.cost.toLocaleString() +
+      " · " +
+      c.duration +
+      "天</option>";
+  }
+  var lawyerOptions = LAWYER_LEVELS.map(function (l) {
+    return (
+      '<option value="' +
+      l.id +
+      '">' +
+      l.name +
+      " · ¥" +
+      l.caseFee.toLocaleString() +
+      "</option>"
+    );
+  }).join("");
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>在办事大厅旁边的法律服务窗口，可以咨询并提起民事诉讼。</p>' +
+    '<label>案件类型</label><select id="legal-case-select" style="width:100%;margin:4px 0 10px;">' +
+    caseOptions +
+    "</select>" +
+    '<label>律师档位</label><select id="legal-lawyer-select" style="width:100%;margin:4px 0 10px;">' +
+    lawyerOptions +
+    "</select>" +
+    '<p style="color:var(--text-secondary);">当前现金：¥' +
+    (state.resources.cash || 0).toLocaleString() +
+    "</p></div>";
+
+  showModal({
+    title: "⚖️ 法律咨询",
+    body: body,
+    buttons: [
+      {
+        text: "立案",
+        cls: "btn-primary",
+        callback: function () {
+          var caseEl = document.getElementById("legal-case-select");
+          var lawyerEl = document.getElementById("legal-lawyer-select");
+          var result = fileLawsuit(
+            StateManager.getState(),
+            caseEl && caseEl.value,
+            lawyerEl && lawyerEl.value,
+          );
+          StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+          if (!result.ok) return false;
+          if (typeof renderAll === "function") renderAll();
+        },
+      },
+      { text: "再想想", cls: "" },
+    ],
+  });
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.LEGAL_CASES = LEGAL_CASES;
@@ -263,6 +343,7 @@ if (typeof window !== "undefined") {
   window.tickLegal = tickLegal;
   window.checkLegalRisk = checkLegalRisk;
   window.getLegalSummary = getLegalSummary;
+  window.showLegalOfficeModal = showLegalOfficeModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.legal_system = {
