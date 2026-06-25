@@ -5305,24 +5305,57 @@ function renderWorkplaceSocialTab(state, parent) {
 }
 
 function renderFamilyTab(state, parent) {
+  if (typeof initFamilySystem === "function") initFamilySystem(state);
   const fam = state.family || {};
+  const spouse = fam.spouse || fam.partner || null;
+  const totalAssets =
+    typeof getFamilyTotalAssets === "function" ? getFamilyTotalAssets(state) : 0;
+  const eligibleNpcs =
+    typeof getEligibleMarriageNpcs === "function"
+      ? getEligibleMarriageNpcs(state)
+      : [];
+  const canProposeByAsset = totalAssets >= 200000;
+  const proposalHtml = spouse
+    ? ""
+    : `
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">求婚条件：NPC好感≥80，且总资产≥¥200,000（当前 ¥${totalAssets.toLocaleString()}）</div>
+        ${
+          eligibleNpcs.length > 0
+            ? eligibleNpcs
+                .map(
+                  (npc) => `
+          <button class="btn btn-sm btn-success family-propose-btn" data-npc="${npc.id}" ${canProposeByAsset ? "" : "disabled"}>
+            💍 向${npc.name}求婚
+          </button>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无好感达到80的 NPC。</p>'
+        }
+      </div>`;
+  const childActionHtml = spouse
+    ? '<button class="btn btn-sm btn-primary family-have-child-btn">👶 迎接孩子</button>'
+    : "";
   const html = `
     <div class="tab-content">
       <h2>👨‍👩‍👧 家庭与生活</h2>
       
       <div class="section">
         <h3>婚恋状态</h3>
-        <p>当前阶段: <strong>${fam.relationshipStage || "陌生人"}</strong></p>
+        <p>当前阶段: <strong>${spouse ? "已婚" : fam.relationshipStage || "陌生人"}</strong></p>
         ${
-          fam.partner
+          spouse
             ? `
           <div class="card" style="margin-top:8px;padding:12px;">
-            <div><strong>${fam.partner.name || "伴侣"}</strong> <span class="tag">${fam.partner.type || "未知类型"}</span></div>
-            <div>收入: ¥${fam.partner.income || 0}/月 | 陪伴值: ${fam.partner.companionship || 0}</div>
+            <div><strong>${spouse.name || "伴侣"}</strong> <span class="tag">${spouse.typeData?.name || spouse.type || "未知类型"}</span></div>
+            <div>收入: ¥${spouse.income || 0}/月 | 陪伴值: ${spouse.companionship || 0} | 幸福: ${spouse.happiness || 80}</div>
+            <div style="margin-top:8px;">${childActionHtml}</div>
           </div>
         `
             : '<p style="color:var(--text-muted);">尚未建立伴侣关系</p>'
         }
+        ${proposalHtml}
       </div>
 
       <div class="section">
@@ -5333,8 +5366,9 @@ function renderFamilyTab(state, parent) {
                 .map(
                   (c) => `
           <div class="card" style="margin:8px 0;padding:12px;">
-            <div><strong>${c.name || "孩子"}</strong> — ${c.age || 0}岁 (${c.stage || "未知"})</div>
-            <div>教育: ${c.education || "未入学"} | 月支出: ¥${c.expenses || 0}</div>
+            <div><strong>${c.name || "孩子"}</strong> — ${Math.floor(c.age || 0)}岁 (${c.stage || "未知"})</div>
+            <div>教育: ${c.education || "未入学"} | 教育等级: ${c.educationLevel || 0} | 月支出: ¥${c.expenses || 0}</div>
+            <button class="btn btn-sm btn-primary family-edu-btn" data-child="${c.id}" style="margin-top:6px;">📚 追加教育投入</button>
           </div>
         `,
                 )
@@ -5378,6 +5412,32 @@ function renderFamilyTab(state, parent) {
     </div>
   `;
   parent.innerHTML = html;
+
+  parent.querySelectorAll(".family-propose-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      var result = proposeToNpc(state, btn.dataset.npc);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  });
+  var childBtn = parent.querySelector(".family-have-child-btn");
+  if (childBtn) {
+    childBtn.onclick = function () {
+      var result = haveChild(state);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  }
+  parent.querySelectorAll(".family-edu-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      var result = investChildEducation(state, btn.dataset.child);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  });
 }
 
 function renderPersonalGrowthTab(state, parent) {

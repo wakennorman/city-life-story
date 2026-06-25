@@ -86543,6 +86543,124 @@ function initFamilySystem(state) {
       events: [],
     };
   }
+  if (!state.family.children) state.family.children = [];
+  if (!state.family.parents) {
+    state.family.parents = {
+      father: { age: 55, health: "healthy", name: "父亲" },
+      mother: { age: 53, health: "healthy", name: "母亲" },
+    };
+  }
+  if (!state.family.expenses) {
+    state.family.expenses = {
+      monthlyMortgage: 0,
+      monthlyLiving: 3000,
+      monthlyChildren: 0,
+      monthlyParents: 0,
+    };
+  }
+  if (state.family.partner && !state.family.spouse) {
+    state.family.spouse = state.family.partner;
+  }
+  if (state.family.spouse && !state.family.partner) {
+    state.family.partner = state.family.spouse;
+  }
+}
+
+function getFamilyTotalAssets(state) {
+  var total =
+    (state.resources && state.resources.cash ? state.resources.cash : 0) +
+    (state.resources && state.resources.bankBalance
+      ? state.resources.bankBalance
+      : 0);
+  var inv = state.investment || {};
+
+  for (var i = 0; i < (inv.properties || []).length; i++) {
+    total += inv.properties[i].currentPrice || inv.properties[i].buyPrice || 0;
+  }
+  for (var c = 0; c < (inv.cars || []).length; c++) {
+    total += inv.cars[c].currentPrice || inv.cars[c].buyPrice || 0;
+  }
+  for (var h = 0; h < (inv.stockHoldings || []).length; h++) {
+    var holding = inv.stockHoldings[h];
+    var market = inv.stockMarket && inv.stockMarket[holding.symbol];
+    total += (market ? market.price : holding.avgPrice || 0) * holding.shares;
+  }
+  if (inv.btcPrice && inv.btcHoldings) total += inv.btcPrice * inv.btcHoldings;
+
+  return Math.round(total);
+}
+
+function getEligibleMarriageNpcs(state) {
+  if (!state.relationships || typeof NPCS === "undefined") return [];
+  return NPCS.filter(function (npc) {
+    var rel = state.relationships[npc.id];
+    return rel && rel.met && (rel.affinity || 0) >= 80;
+  });
+}
+
+function proposeToNpc(state, npcId) {
+  initFamilySystem(state);
+  if (state.family.spouse || state.family.partner) {
+    return { success: false, message: "你已经有伴侣了" };
+  }
+  var npc = typeof getNpcById === "function" ? getNpcById(npcId) : null;
+  var rel = state.relationships && state.relationships[npcId];
+  if (!npc || !rel || !rel.met) {
+    return { success: false, message: "还没有建立足够关系" };
+  }
+  if ((rel.affinity || 0) < 80) {
+    return { success: false, message: "好感需要达到80才能求婚" };
+  }
+  var totalAssets = getFamilyTotalAssets(state);
+  if (totalAssets < 200000) {
+    return {
+      success: false,
+      message: "总资产需要达到¥200,000才能认真考虑成家",
+    };
+  }
+
+  var ceremonyCost = 20000;
+  if ((state.resources.cash || 0) < ceremonyCost) {
+    return { success: false, message: "至少需要¥20,000现金准备求婚和登记" };
+  }
+
+  state.resources.cash -= ceremonyCost;
+  var partnerTypeKeys = Object.keys(SPOUSE_TYPES);
+  var typeKey = Random.fromArray(partnerTypeKeys);
+  var typeData = SPOUSE_TYPES[typeKey];
+  var spouse = {
+    name: npc.name,
+    npcId: npc.id,
+    type: typeKey,
+    typeData: typeData,
+    age: Math.max(22, (state.player && state.player.age) || 25),
+    income: typeData.income,
+    companionship: typeData.companionship,
+    relationship: 100,
+    children: [],
+    happiness: 85,
+    marriedDay: state.player.day,
+  };
+
+  state.family.spouse = spouse;
+  state.family.partner = spouse;
+  state.family.relationshipStage = "married";
+  state.family.expenses.monthlyLiving =
+    (state.family.expenses.monthlyLiving || 3000) + 2000;
+  state.family.events = state.family.events || [];
+  state.family.events.push({
+    day: state.player.day,
+    type: "marriage",
+    npcId: npc.id,
+    desc: "与" + npc.name + "结婚",
+  });
+  rel.affinity = Math.min(100, (rel.affinity || 0) + 5);
+
+  StateManager.addMessage(
+    "💒 你向" + npc.name + "求婚成功，组建了自己的家庭。",
+    "success",
+  );
+  return { success: true, spouse: spouse };
 }
 
 /**
@@ -86766,6 +86884,7 @@ function getMarried(state) {
  * 生育子女
  */
 function haveChild(state) {
+  initFamilySystem(state);
   const spouse = state.family.spouse;
   if (!spouse) {
     return { success: false, message: "需要先结婚" };
@@ -86815,6 +86934,8 @@ function haveChild(state) {
     happiness: 80,
     health: 90,
     educationLevel: 0,
+    education: "早教启蒙",
+    expenses: getStageMonthlyCost("infant"),
     interests: [],
   };
 
@@ -86832,6 +86953,47 @@ function haveChild(state) {
   return { success: true, child: child };
 }
 
+function getChildEducationName(level) {
+  var names = ["早教启蒙", "稳定陪伴", "兴趣班", "重点培养", "精英教育"];
+  return names[Math.max(0, Math.min(names.length - 1, level || 0))];
+}
+
+function investChildEducation(state, childId) {
+  initFamilySystem(state);
+  var child = null;
+  for (var i = 0; i < state.family.children.length; i++) {
+    if (state.family.children[i].id === childId) {
+      child = state.family.children[i];
+      break;
+    }
+  }
+  if (!child) return { success: false, message: "找不到这个孩子" };
+  var currentLevel = child.educationLevel || 0;
+  if (currentLevel >= 4) {
+    return { success: false, message: "教育投入已经很高了" };
+  }
+  var cost = [1000, 3000, 8000, 20000][currentLevel] || 20000;
+  if ((state.resources.cash || 0) < cost) {
+    return { success: false, message: "教育投入需要¥" + cost.toLocaleString() };
+  }
+
+  state.resources.cash -= cost;
+  child.educationLevel = currentLevel + 1;
+  child.education = getChildEducationName(child.educationLevel);
+  child.intelligence = Math.min(100, (child.intelligence || 50) + 3);
+  child.happiness = Math.min(100, (child.happiness || 80) + 2);
+  updateChildExpenses(state);
+  StateManager.addMessage(
+    "📚 给" +
+      child.name +
+      "追加教育投入，当前为「" +
+      child.education +
+      "」。",
+    "success",
+  );
+  return { success: true, child: child };
+}
+
 /**
  * 更新子女支出
  */
@@ -86841,7 +87003,10 @@ function updateChildExpenses(state) {
   for (const child of state.family.children) {
     const stage = getChildStage(child.age);
     if (stage) {
-      monthlyTotal += getStageMonthlyCost(stage);
+      var childMonthly =
+        getStageMonthlyCost(stage) + (child.educationLevel || 0) * 500;
+      child.expenses = childMonthly;
+      monthlyTotal += childMonthly;
     }
   }
 
@@ -86899,6 +87064,7 @@ function tickFamilyDaily(state) {
     if (stageKey !== child.stage) {
       child.stage = stageKey;
       const stage = CHILD_STAGES[stageKey];
+      child.education = stage.education;
       StateManager.addMessage(
         `📚 ${child.name}进入${stage.name}阶段（${stage.education}）`,
         "info",
@@ -87208,9 +87374,9 @@ if (typeof window !== "undefined") {
     id: "family_life",
     name: "家庭与生活",
     icon: "👨‍👩‍👧",
-    brief: "婚恋系统、子女教育、父母养老、家庭生活、人际关系",
-    version: "1.0.0",
-    related: ["mechanics:main", "mechanics:critical_needs"],
+    brief: "NPC求婚、婚恋系统、子女教育、父母养老、家庭生活",
+    version: "1.1.0",
+    related: ["mechanics:main", "mechanics:npc_affinity", "mechanics:critical_needs"],
     sections: [
       {
         kind: "desc",
@@ -87224,6 +87390,8 @@ if (typeof window !== "undefined") {
         kind: "list",
         items: [
           "❓ 陌生人 → 👋 认识 → 🙂 朋友 → 👫 好朋友 → 💕 暧昧 → 💑 恋爱 → 💍 订婚 → 💒 结婚",
+          "NPC 好感 ≥80 且总资产 ≥¥200,000 时，可在家庭生活页发起求婚",
+          "求婚需要准备 ¥20,000 现金，成功后配偶加入家庭系统并增加家庭月生活成本",
         ],
       },
       {
@@ -87240,6 +87408,7 @@ if (typeof window !== "undefined") {
           "📝 高中生（15-17岁）：高考压力、补习",
           "🎓 大学生（18-22岁）：学费、生活费",
           "👨 成年人（23岁+）：独立生活",
+          "对子女追加教育投入可提升教育等级、智力和幸福，但会增加后续月度教育支出",
         ],
       },
       {
@@ -102814,24 +102983,57 @@ function renderWorkplaceSocialTab(state, parent) {
 }
 
 function renderFamilyTab(state, parent) {
+  if (typeof initFamilySystem === "function") initFamilySystem(state);
   const fam = state.family || {};
+  const spouse = fam.spouse || fam.partner || null;
+  const totalAssets =
+    typeof getFamilyTotalAssets === "function" ? getFamilyTotalAssets(state) : 0;
+  const eligibleNpcs =
+    typeof getEligibleMarriageNpcs === "function"
+      ? getEligibleMarriageNpcs(state)
+      : [];
+  const canProposeByAsset = totalAssets >= 200000;
+  const proposalHtml = spouse
+    ? ""
+    : `
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">求婚条件：NPC好感≥80，且总资产≥¥200,000（当前 ¥${totalAssets.toLocaleString()}）</div>
+        ${
+          eligibleNpcs.length > 0
+            ? eligibleNpcs
+                .map(
+                  (npc) => `
+          <button class="btn btn-sm btn-success family-propose-btn" data-npc="${npc.id}" ${canProposeByAsset ? "" : "disabled"}>
+            💍 向${npc.name}求婚
+          </button>
+        `,
+                )
+                .join("")
+            : '<p style="color:var(--text-muted);">暂无好感达到80的 NPC。</p>'
+        }
+      </div>`;
+  const childActionHtml = spouse
+    ? '<button class="btn btn-sm btn-primary family-have-child-btn">👶 迎接孩子</button>'
+    : "";
   const html = `
     <div class="tab-content">
       <h2>👨‍👩‍👧 家庭与生活</h2>
       
       <div class="section">
         <h3>婚恋状态</h3>
-        <p>当前阶段: <strong>${fam.relationshipStage || "陌生人"}</strong></p>
+        <p>当前阶段: <strong>${spouse ? "已婚" : fam.relationshipStage || "陌生人"}</strong></p>
         ${
-          fam.partner
+          spouse
             ? `
           <div class="card" style="margin-top:8px;padding:12px;">
-            <div><strong>${fam.partner.name || "伴侣"}</strong> <span class="tag">${fam.partner.type || "未知类型"}</span></div>
-            <div>收入: ¥${fam.partner.income || 0}/月 | 陪伴值: ${fam.partner.companionship || 0}</div>
+            <div><strong>${spouse.name || "伴侣"}</strong> <span class="tag">${spouse.typeData?.name || spouse.type || "未知类型"}</span></div>
+            <div>收入: ¥${spouse.income || 0}/月 | 陪伴值: ${spouse.companionship || 0} | 幸福: ${spouse.happiness || 80}</div>
+            <div style="margin-top:8px;">${childActionHtml}</div>
           </div>
         `
             : '<p style="color:var(--text-muted);">尚未建立伴侣关系</p>'
         }
+        ${proposalHtml}
       </div>
 
       <div class="section">
@@ -102842,8 +103044,9 @@ function renderFamilyTab(state, parent) {
                 .map(
                   (c) => `
           <div class="card" style="margin:8px 0;padding:12px;">
-            <div><strong>${c.name || "孩子"}</strong> — ${c.age || 0}岁 (${c.stage || "未知"})</div>
-            <div>教育: ${c.education || "未入学"} | 月支出: ¥${c.expenses || 0}</div>
+            <div><strong>${c.name || "孩子"}</strong> — ${Math.floor(c.age || 0)}岁 (${c.stage || "未知"})</div>
+            <div>教育: ${c.education || "未入学"} | 教育等级: ${c.educationLevel || 0} | 月支出: ¥${c.expenses || 0}</div>
+            <button class="btn btn-sm btn-primary family-edu-btn" data-child="${c.id}" style="margin-top:6px;">📚 追加教育投入</button>
           </div>
         `,
                 )
@@ -102887,6 +103090,32 @@ function renderFamilyTab(state, parent) {
     </div>
   `;
   parent.innerHTML = html;
+
+  parent.querySelectorAll(".family-propose-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      var result = proposeToNpc(state, btn.dataset.npc);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  });
+  var childBtn = parent.querySelector(".family-have-child-btn");
+  if (childBtn) {
+    childBtn.onclick = function () {
+      var result = haveChild(state);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  }
+  parent.querySelectorAll(".family-edu-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      var result = investChildEducation(state, btn.dataset.child);
+      if (!result.success) StateManager.addMessage(result.message, "warning");
+      renderFamilyTab(state, parent);
+      if (typeof renderAll === "function") renderAll();
+    };
+  });
 }
 
 function renderPersonalGrowthTab(state, parent) {

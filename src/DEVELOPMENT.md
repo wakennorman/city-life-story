@@ -31,6 +31,22 @@
 
 - 修改 `src/` 后执行 `python build.py`。
 
+## 2026-06-25 — v3.7 P1-4 家庭系统
+
+执行任务：完成 `IMPLEMENTATION_PROGRESS.md` 第三个未完成项 P1-4 家庭系统。
+
+### 实施内容
+
+- 修改 `src/js/phase2/family_life.js`，补齐家庭状态迁移与兼容字段，新增 `getFamilyTotalAssets()`、`getEligibleMarriageNpcs()`、`proposeToNpc()` 和 `investChildEducation()`。
+- 求婚规则落地为：已认识 NPC 好感 ≥80、玩家总资产 ≥¥200,000、现金 ≥¥20,000；成功后生成配偶、同步 `spouse/partner` 字段、记录家庭事件并增加家庭月生活成本。
+- 生子流程补充子女教育字段和月支出，教育投入可提升教育等级、智力和幸福，并增加后续月度教育支出。
+- 修改 `src/js/ui/render.js`，在家庭生活页显示可求婚 NPC、迎接孩子按钮、子女教育投入按钮。
+- 更新家庭系统百科注册，说明 NPC 求婚门槛和子女教育投入规则。
+
+### 验证
+
+- 修改 `src/` 后执行 `python build.py`。
+
 ## 2026-06-24 — v3.6 版本升级（P0/P1全任务完成）
 
 执行任务：v3.6 版本升级（4组P0/P1任务）

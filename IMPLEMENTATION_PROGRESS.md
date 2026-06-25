@@ -8,7 +8,7 @@
 | 0 | P0（副业/经济/开支/链式事件） | ✅ | commit a33af08 |
 | 1 | P1-1 新闻→投资UI | ✅ | investment.js：今日市场驱动板块 |
 | 2 | P1-2 NPC好感链路 | ✅ | npcs.js + npc_event_bridge.js：affinityEvents 30/60/80 |
-| 3 | P1-4 家庭系统 | ❌ | family_life.js |
+| 3 | P1-4 家庭系统 | ✅ | family_life.js：NPC求婚 + 生子/子女教育 |
 | 4 | P1-6 35岁危机追访 | ❌ | events_core.js |
 | 5 | P2-4 道德事件扩充 | ❌ | moral_events.js（基线重建18个新事件） |
 | 6 | 社交网络UI集成 | ❌ | social_network.js → render.js |
@@ -20,3 +20,4 @@
 - 1bb3a22 — 进度文档
 - 本次提交 — P1-1 新闻→投资UI：今日市场驱动板块
 - 本次提交 — P1-2 NPC好感链路：affinityEvents + checkNpcAffinityEvents
+- 本次提交 — P1-4 家庭系统：NPC求婚 + 生子/子女教育
