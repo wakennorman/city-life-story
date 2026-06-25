@@ -1008,10 +1008,6 @@ const HOUSING_TIERS = [
   },
 ];
 
-/** 获取当前住所信息 */
-function getCurrentHousing(state) {
-  return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
-}
 
 // ====== 装备掉落系统 (P1-5: 装备获取来源) ======
 
