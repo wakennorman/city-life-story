@@ -52,16 +52,12 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.8 审查改进与扩展 — TS 数据目录填充 + 桥接层扩展 + 经济出口 + NPC 深化（2026-06-25）
-  - **P0-1 TS 数据目录**：`src/app/data/lifeNodes/` 填入 4 个完整人生节点（高考/大学/35岁/退休），`src/app/data/cityServices.ts` 从 3 服务扩展到 7 服务
-  - **P0-1c healthCheck**：新增 TS 数据目录非空检测、legacy StateManager/WebAppBridge 状态检测
-  - **P0-2 桥接层**：`webapp_runtime_bridge.js` 从 3 个城市服务扩展到 7 个（新增社保查询/信用报告/公积金/社区体检），新增 `getRecommendedCityServices()` 自动推荐
-  - **P0-3 类型系统**：`game.ts` 新增 WeatherState/MedicalState/LegalState/TravelState/SideHustleState/StartupState/EraState/NpcRelationshipsState 等完整类型，覆盖实际运行的全部扩展系统
-  - **P1-1 经济出口**：每日管线新增住房维护费（¥0~¥2000/月）和社交圈维护费（按好感总值计算，上限¥500/月）
-  - **P1-2 差异化开局**：`inheritance_chain.js` — 上局欠债催收 + 上局违法案底
-  - **P1-3 NPC 深化**：`npc_event_bridge.js` 新增 `chatWithNpc()` 函数（2AP/次，3 档好感品质），`social_tab.js` 新增对话记录显示和聊天按钮
-  - **验证**：`npm run typecheck`、`npm run check:js`、`python build.py`（4184.4 KB）、`npm run build`（dist-webapp/ 15.89 KB）全部通过
-  - **产出文档**：`memory/overview.md`（v3.8 双轨版）/ `memory/diagnosis.md` / `memory/improvement_plan.md`
+- **最新一次工作**：v3.8 TS 数据目录补全与内容审计（2026-06-25）
+  - **TS 内容目录**：`events/jobs/locations/items/diseases/legal/travel` 从占位常量补成实际 TypeScript 数据；当前首批为事件12、职业12、地点14、物品17、疾病12、法律案件7、旅行目的地8，`lifeNodes` 仍为4个完整节点
+  - **统一 catalog**：新增 `src/app/data/index.ts`，汇总 9 个数据目录的数量、旧来源和 bridge 状态；Vite 调试壳新增“TypeScript 内容目录”面板
+  - **自动审计**：新增 `scripts/audit-ts-data.mjs` 与 `npm run check:ts-data`，无外部运行依赖，检查每个 TS 数据目录导出数组的最低覆盖
+  - **bridge 摘要**：`webapp_runtime_bridge.js` 升至 0.3.0，暴露 `WEBAPP_DATA_CATALOG_SUMMARY` 和 `WebAppBridge.getDataCatalogSummary()`；未重排 `src/index.html` script 顺序
+  - **验证**：`npm run typecheck`、`npm run check:ts-data`、`npm run check:js`、`python build.py`（4185.6 KB）、`npm run build` 全部通过；C盘空间为0，npm cache/temp 使用 D 盘验证
 
 - **上一轮工作**：v3.8 Web App 架构第一阶段 — Vite/TypeScript 桥接迁移与城市服务玩法（2026-06-25）
   - **架构变化**：新增根目录 `index.html`、`package.json`、`tsconfig.json`、`vite.config.mjs`、`src/app/`；旧 `src/index.html` 继续作为正式游戏入口，`python build.py` 仍生成 `dist/index.html`
@@ -90,11 +86,11 @@
 
 ## 🔁 Codex接力清单（未完成任务，按优先级排序）
 
-### 第一阶段：P0 待完成（3项）
+### 第一阶段：P0 状态（1项待完成）
 
-1. **P0 剩余 6 个 TS 数据目录填充** — events/jobs/locations/items/diseases/legal/travel 目录仍空，需填入实际 TypeScript 类型和数据
-2. **P0 4 大扩展系统独立 UI 面板** — life_nodes/medical/travel/legal 无独立 Tab，仅靠弹窗+管线触发
-3. **P0 TS-legacy 自动化数据审计脚本** — 校验 TS 数据目录与 legacy JS 字段对齐和覆盖度
+1. ✅ **P0 TS 数据目录填充** — events/jobs/locations/items/diseases/legal/travel/lifeNodes 均已有实际 TypeScript 类型和数据
+2. ❌ **P0 4 大扩展系统独立 UI 面板** — life_nodes/medical/travel/legal 无独立 Tab，仅靠弹窗+管线触发
+3. ✅ **P0 TS 数据目录自动化审计脚本** — `npm run check:ts-data` 校验各目录导出数组最低覆盖；后续可继续扩展字段对齐规则
 
 ### 第二阶段：P1 改进（2项，~300行+）
 

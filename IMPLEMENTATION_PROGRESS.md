@@ -34,6 +34,9 @@
 | 4   | 桥接层扩展（3→7 服务）     | `src/js/app_bridge/webapp_runtime_bridge.js` | ~510 | ✅   |
 | 5   | bridge 自动推荐            | `src/js/app_bridge/webapp_runtime_bridge.js` | ~50  | ✅   |
 | 6   | TS typed facade 扩系统字段 | `src/app/types/game.ts`                      | ~200 | ✅   |
+| 7   | events/jobs/locations/items/diseases/legal/travel TS 数据目录补全 | `src/app/data/*/index.ts` + `src/app/data/index.ts` | ~1200 | ✅   |
+| 8   | TS 数据目录审计脚本        | `scripts/audit-ts-data.mjs` + `package.json` | ~120 | ✅   |
+| 9   | Vite 内容目录面板 + bridge 摘要 | `src/app/ui/panels.ts` + `src/js/app_bridge/webapp_runtime_bridge.js` | ~90 | ✅   |
 
 ### P1 改进（已实装）
 
@@ -47,7 +50,7 @@
 ### v3.8 后续阶段
 
 - 阶段 2：抽出 StateManager facade、消息/AP/现金服务和统一 action runner。
-- 阶段 3：让新增事件、职业、地点、疾病、法律、旅行、人生节点默认进入 `src/app/data/*`，补数据审计脚本。
+- 阶段 3：✅ 首批完成。events/jobs/locations/items/diseases/legal/travel/lifeNodes 均已有实际 TS 数据；`npm run check:ts-data` 可审计最低覆盖。
 - 阶段 4：逐步迁移医疗、法律、旅行、生活服务等独立面板，主布局暂不重写。
 - 阶段 5：当 `src/app` 能稳定承载核心状态、存档、数据和主要 UI 后，再评估正式入口切换。
 

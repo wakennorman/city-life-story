@@ -209,5 +209,16 @@ export interface LegacyWindow extends Window {
     showCityServiceModal: () => void;
     applyCityService: (id: string) => boolean;
     tickCityServices: (state: LegacyGameState) => void;
+    getRecommendedCityServices?: (state: LegacyGameState) => unknown[];
+    getDataCatalogSummary?: () => {
+      version: string;
+      totalRecords: number;
+      catalogs: Array<{
+        id: string;
+        name: string;
+        count: number;
+        status: string;
+      }>;
+    };
   };
 }

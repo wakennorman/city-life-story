@@ -1,4 +1,5 @@
 import { CITY_SERVICE_ACTIONS } from "../data/cityServices";
+import { CONTENT_CATALOG_SUMMARY, DATA_CATALOGS } from "../data";
 import { buildHealthRows } from "../debug/healthCheck";
 
 export function renderHealthPanel(): HTMLElement {
@@ -45,6 +46,30 @@ export function renderCityServicesPanel(): HTMLElement {
               <dt>后续反馈</dt><dd>${action.followUps.join("；")}</dd>
             </dl>
           </article>
+        `,
+      ).join("")}
+    </div>
+  `;
+  return section;
+}
+
+export function renderContentCatalogPanel(): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "app-panel";
+  section.innerHTML = `
+    <h2>TypeScript 内容目录</h2>
+    <p>
+      已填充 ${CONTENT_CATALOG_SUMMARY.filledCatalogs}/${CONTENT_CATALOG_SUMMARY.totalCatalogs} 个目录，
+      共 ${CONTENT_CATALOG_SUMMARY.totalRecords} 条类型化内容。
+    </p>
+    <div class="health-list">
+      ${DATA_CATALOGS.map(
+        (catalog) => `
+          <div class="health-row">
+            <strong>${catalog.name}</strong>
+            <span data-status="${catalog.count > 0 ? "ready" : "empty"}">${catalog.count} 条</span>
+            <p>${catalog.description}（${catalog.bridgeStatus}）</p>
+          </div>
         `,
       ).join("")}
     </div>

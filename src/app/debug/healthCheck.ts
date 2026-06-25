@@ -1,5 +1,4 @@
-import { CITY_SERVICE_ACTIONS } from "../data/cityServices";
-import { LIFE_NODES } from "../data/lifeNodes";
+import { DATA_CATALOGS } from "../data";
 import { inspectBridgeHealth } from "../core/gameBridge";
 
 interface HealthRow {
@@ -8,19 +7,15 @@ interface HealthRow {
   detail: string;
 }
 
-function checkDataDirectory(
-  name: string,
-  items: unknown[] | readonly unknown[] | null | undefined,
-  legacyPath: string,
-): HealthRow {
-  const count = Array.isArray(items) ? items.length : 0;
+function checkDataDirectory(catalog: (typeof DATA_CATALOGS)[number]): HealthRow {
+  const count = catalog.count;
   return {
-    name: `📂 ${name}`,
+    name: `📂 ${catalog.name}`,
     status: count > 0 ? "ready" : "empty",
     detail:
       count > 0
-        ? `${count} 条数据已填充（legacy: ${legacyPath}）`
-        : `仅状态标记，实际数据仍在 ${legacyPath}`,
+        ? `${count} 条数据已填充（${catalog.bridgeStatus}；legacy: ${catalog.legacySource}）`
+        : `仅状态标记，实际数据仍在 ${catalog.legacySource}`,
   };
 }
 
@@ -71,37 +66,7 @@ export function buildHealthRows(): HealthRow[] {
       detail: "并行 Web App 壳已加载，不替代 legacy 正式入口。",
     },
     // ===== TS 数据目录检测 =====
-    checkDataDirectory(
-      "城市服务",
-      CITY_SERVICE_ACTIONS,
-      "src/js/app_bridge/webapp_runtime_bridge.js",
-    ),
-    checkDataDirectory("人生节点", LIFE_NODES, "src/js/core/life_nodes.js"),
-    {
-      name: "📂 事件 (events)",
-      status: "empty",
-      detail: "仅状态标记，实际数据在 src/js/core/events_street.js (163+)",
-    },
-    {
-      name: "📂 职业 (jobs)",
-      status: "empty",
-      detail: "仅状态标记，实际数据在 src/js/data/jobs.js (20+)",
-    },
-    {
-      name: "📂 地点 (locations)",
-      status: "empty",
-      detail: "仅状态标记，实际数据在 src/js/data/locations.js (15+)",
-    },
-    {
-      name: "📂 物品 (items)",
-      status: "empty",
-      detail: "仅状态标记，实际数据在 src/js/data/items.js (43+)",
-    },
-    {
-      name: "📂 疾病 (diseases)",
-      status: "empty",
-      detail: "仅状态标记，实际数据在 src/js/data/illnesses.js",
-    },
+    ...DATA_CATALOGS.map(checkDataDirectory),
     // ===== Legacy 状态检测 =====
     ...getLegacyStatus(),
     // ===== Bridge 检测 =====
@@ -116,11 +81,5 @@ export function buildHealthRows(): HealthRow[] {
 }
 
 export function countEmptyDirectories(): number {
-  const dirs = [CITY_SERVICE_ACTIONS.length > 0, LIFE_NODES.length > 0];
-  const empty = dirs.filter((d) => !d).length;
-  // 8 total TS dirs: events, jobs, locations, items, diseases, legal, travel, lifeNodes
-  // plus cityServices as bridge data
-  const totalDirs = 9;
-  const filled = dirs.filter(Boolean).length;
-  return totalDirs - filled;
+  return DATA_CATALOGS.filter((catalog) => catalog.count <= 0).length;
 }

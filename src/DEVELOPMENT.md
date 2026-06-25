@@ -1,6 +1,10 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.8 审查改进与扩展 — TS 数据填充 + 桥接扩展 + 经济出口 + NPC 深化）
+> 最后更新: 2026-06-25（v3.8 TS 数据目录补全与内容审计）
+
+## 2026-06-25 — v3.8 TS 数据目录补全与内容审计
+
+本轮针对断点续传清单中“events/jobs/locations/items/diseases/legal/travel 仍为空”的缺口，把 7 个 TS 数据目录从 `migrated: 0` 占位常量补成真实类型化内容：事件 12 条、职业 12 条、地点 14 个、物品 17 件、疾病 12 种、法律案件 7 类、旅行目的地 8 个；保留 legacy 正式入口和旧数据文件不迁移不删除。新增 `src/app/data/index.ts` 统一汇总目录数量和旧来源，调试面板新增“TypeScript 内容目录”。新增 `scripts/audit-ts-data.mjs` 与 `npm run check:ts-data`，用无依赖扫描确认每个目录导出数组达到最低数量。`webapp_runtime_bridge.js` 升至 0.3.0，暴露 `WEBAPP_DATA_CATALOG_SUMMARY` / `getDataCatalogSummary()` 供旧运行时感知 TS 内容目录状态，不新增玩家可见调试行动。验证：`npm run typecheck`、`npm run check:ts-data`、`npm run check:js`、`python build.py`、`npm run build` 全部通过；因 C 盘空间为 0，npm 验证时 cache/temp 指向 D 盘。
 
 ## 2026-06-25 — v3.8 审查改进与扩展
 

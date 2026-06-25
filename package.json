@@ -9,6 +9,7 @@
     "build": "npm run typecheck && npx -y -p vite@8.1.0 vite build",
     "preview": "npx -y -p vite@8.1.0 vite preview --host 127.0.0.1",
     "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
+    "check:ts-data": "node scripts/audit-ts-data.mjs",
     "check:js": "node scripts/check-js-syntax.mjs",
     "build:legacy": "python build.py"
   },

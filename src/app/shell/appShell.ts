@@ -1,4 +1,8 @@
-import { renderCityServicesPanel, renderHealthPanel } from "../ui/panels";
+import {
+  renderCityServicesPanel,
+  renderContentCatalogPanel,
+  renderHealthPanel,
+} from "../ui/panels";
 
 export function resolveLegacyEntryUrl(): string {
   return window.location.pathname.includes("/dist-webapp/")
@@ -37,6 +41,7 @@ export function mountAppShell(root: HTMLElement): void {
   `;
 
   app.appendChild(renderHealthPanel());
+  app.appendChild(renderContentCatalogPanel());
   app.appendChild(renderCityServicesPanel());
   root.appendChild(app);
 }

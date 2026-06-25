@@ -2,11 +2,27 @@
  * Web App runtime bridge (Phase 1)
  *
  * 让新架构的第一批数据化玩法进入旧游戏，不替代 legacy runtime。
- * v3.8+: 从 3 个城市服务扩展到 7 个，新增自动推荐功能。
+ * v3.8+: 从 3 个城市服务扩展到 7 个，新增自动推荐和 TS 数据目录摘要。
  */
 (function () {
   var APP_SAVE_SCHEMA_VERSION = 2;
-  var BRIDGE_VERSION = "0.2.0";
+  var BRIDGE_VERSION = "0.3.0";
+
+  var DATA_CATALOG_SUMMARY = {
+    version: "ts-data-phase3",
+    totalRecords: 93,
+    catalogs: [
+      { id: "cityServices", name: "城市服务", count: 7, status: "playable" },
+      { id: "lifeNodes", name: "人生节点", count: 4, status: "partial" },
+      { id: "events", name: "事件", count: 12, status: "typed" },
+      { id: "jobs", name: "职业", count: 12, status: "typed" },
+      { id: "locations", name: "地点", count: 14, status: "typed" },
+      { id: "items", name: "物品", count: 17, status: "typed" },
+      { id: "diseases", name: "疾病", count: 12, status: "typed" },
+      { id: "legal", name: "法律案件", count: 7, status: "typed" },
+      { id: "travel", name: "旅行目的地", count: 8, status: "partial" },
+    ],
+  };
 
   var CITY_SERVICE_ACTIONS = [
     // === 原基础 3 个服务 ===
@@ -397,6 +413,14 @@
     return recs.slice(0, 3);
   }
 
+  function getDataCatalogSummary() {
+    return {
+      version: DATA_CATALOG_SUMMARY.version,
+      totalRecords: DATA_CATALOG_SUMMARY.totalRecords,
+      catalogs: DATA_CATALOG_SUMMARY.catalogs.slice(),
+    };
+  }
+
   function showCityServiceModal() {
     if (typeof showModal !== "function") return;
     var state = currentState();
@@ -462,6 +486,7 @@
 
   if (typeof window !== "undefined") {
     window.WEBAPP_CITY_SERVICE_ACTIONS = CITY_SERVICE_ACTIONS;
+    window.WEBAPP_DATA_CATALOG_SUMMARY = DATA_CATALOG_SUMMARY;
     window.addWebAppBridgeActions = addWebAppBridgeActions;
     window.WebAppBridge = {
       version: BRIDGE_VERSION,
@@ -470,6 +495,7 @@
       applyCityService: applyCityService,
       tickCityServices: tickWebAppCityServices,
       getRecommendedCityServices: getRecommendedCityServices,
+      getDataCatalogSummary: getDataCatalogSummary,
     };
 
     window.MECHANICS = window.MECHANICS || {};
@@ -502,6 +528,7 @@
             "公积金提取咨询：住房改善信息",
             "社区免费体检：低成本健康检查和预防",
             "城市服务推荐：基于玩家状态自动推荐",
+            "TS 数据目录摘要：事件/职业/地点/物品/疾病/法律/旅行已填充",
           ],
         },
       ],
