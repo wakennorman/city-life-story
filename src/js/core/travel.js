@@ -143,11 +143,12 @@ function startTravel(state, destId) {
       ok: false,
       msg: "现金不足，前往" + dest.name + "需要¥" + dest.cost,
     };
-  if ((state.ap || 0) < dest.apCost)
+  var currentAp = (state.player && state.player.actionPoints) || 0;
+  if (currentAp < dest.apCost)
     return { ok: false, msg: "行动力不足，需要" + dest.apCost + "AP" };
 
   state.resources.cash -= dest.cost;
-  state.ap -= dest.apCost;
+  state.player.actionPoints = Math.max(0, currentAp - dest.apCost);
   state.travel.active = true;
   state.travel.destination = destId;
   state.travel.daysRemaining = dest.days;
@@ -188,6 +189,9 @@ function tickTravel(state) {
           );
       }
       state._lastTravelEvent = evt.desc;
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("✈️ " + evt.desc + "（" + evt.effect + "）", "info");
+      }
     }
   }
 
@@ -199,6 +203,9 @@ function tickTravel(state) {
         dest.souvenirs[Math.floor(Math.random() * dest.souvenirs.length)];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("🎁 旅行归来，带回了「" + gift + "」。", "success");
+      }
     }
     // 心情恢复
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
@@ -207,6 +214,60 @@ function tickTravel(state) {
     return true; // 旅行结束
   }
   return false;
+}
+
+function showTravelAgencyModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initTravelState(state);
+  if (state.travel.active) {
+    showModal({
+      title: "✈️ 长途旅行",
+      body: "<p>" + getTravelStatus(state).join("<br>") + "</p>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
+
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>从商业区的长途客运站出发，去别的城市喘口气。</p>' +
+    '<div style="display:grid;gap:8px;">';
+  for (var key in TRAVEL_DESTINATIONS) {
+    var d = TRAVEL_DESTINATIONS[key];
+    body +=
+      '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+      "<strong>" +
+      d.icon +
+      " " +
+      d.name +
+      "</strong> · ¥" +
+      d.cost.toLocaleString() +
+      " · " +
+      d.apCost +
+      "AP · " +
+      d.days +
+      "天<br><span style=\"color:var(--text-secondary);\">" +
+      d.desc +
+      "</span></div>";
+  }
+  body += "</div></div>";
+
+  var buttons = Object.keys(TRAVEL_DESTINATIONS).map(function (destId) {
+    var d = TRAVEL_DESTINATIONS[destId];
+    return {
+      text: d.icon + " " + d.name,
+      cls: "btn-primary",
+      callback: function () {
+        var result = startTravel(StateManager.getState(), destId);
+        StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+        if (!result.ok) return false;
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+  buttons.push({ text: "先不去了", cls: "" });
+  showModal({ title: "✈️ 长途旅行", body: body, buttons: buttons });
 }
 
 // ====== 旅行状态查询 ======
@@ -240,6 +301,7 @@ if (typeof window !== "undefined") {
   window.startTravel = startTravel;
   window.tickTravel = tickTravel;
   window.getTravelStatus = getTravelStatus;
+  window.showTravelAgencyModal = showTravelAgencyModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.travel_system = {

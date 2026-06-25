@@ -1865,6 +1865,21 @@ function addClinicAction(state, actions) {
   });
 }
 
+/** 商业区解锁的长途旅行入口 */
+function addLongDistanceTravelAction(state, actions) {
+  if (state.trade.currentLocation !== "commercialDist") return;
+  actions.push({
+    id: "long_distance_travel",
+    name: "长途旅行",
+    desc: "从商业区客运站出发，前往北京/上海/成都等城市旅行。",
+    icon: "✈️",
+    apCost: 0,
+    handler: function () {
+      if (typeof showTravelAgencyModal === "function") showTravelAgencyModal();
+    },
+  });
+}
+
 /**
  * 寺庙地点解锁的 4 项特殊行动（v3.0 P2-C-2 完善）
  * 设计参考：《大多数》心态值分级 + BitLife 随机 buff
@@ -2016,6 +2031,7 @@ function addExtraActions(state, actions) {
     addAmenityActions(state, actions);
     addHomeActions(state, actions);
     addClinicAction(state, actions);
+    addLongDistanceTravelAction(state, actions);
     addIngredientShoppingActions(state, actions);
     addTempleActions(state, actions);
     // v3.4 C3D-T3: 位置×技能特色行动（检查玩家当前地点）
