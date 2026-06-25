@@ -1,15 +1,68 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.8 Web App 架构第一阶段 — 桥接式迁移）
+> 最后更新: 2026-06-25（v3.8 审查改进与扩展 — TS 数据填充 + 桥接扩展 + 经济出口 + NPC 深化）
+
+## 2026-06-25 — v3.8 审查改进与扩展
+
+按审查改进 SOP 完成 4 个子任务：现状摸底、问题诊断、改进方案、实装交付。
+
+### 子任务 1：现状摸底
+
+- 产出 `memory/overview.md`（v3.8 版双轨架构），覆盖 legacy 114 个 JS 文件 + TS 8 个数据目录 + bridge 层
+- 确认验证通过：`npm run check:js` / `npm run typecheck` / `python build.py` / `npm run build`
+
+### 子任务 2：问题诊断
+
+- 产出 `memory/diagnosis.md`，识别 16 项问题（P0: 3 / P1: 7 / P2: 6）
+- 核心发现：TS 数据目录全空、桥接层极薄、扩展系统无独立 UI、超大文件风险、类型层无扩展字段
+
+### 子任务 3：改进方案
+
+- 产出 `memory/improvement_plan.md`，规划 6 项 P0+P1 方案（~620 行 P0 + ~180 行 P1）
+
+### 子任务 4：实装交付
+
+**P0-1 TS 数据目录填充**：
+
+- `src/app/data/lifeNodes/index.ts`：填入 4 个完整人生节点数据（220 行），TypeScript 类型 + 数据 + 导出函数
+- `src/app/data/cityServices.ts`：从 3 服务扩展到 7 服务（155 行），新增金融/健康分类
+- `src/app/debug/healthCheck.ts`：新增 TS 数据目录非空检测、legacy 运行时状态检测（110 行）
+
+**P0-2 桥接层扩展**：
+
+- `src/js/app_bridge/webapp_runtime_bridge.js`：从 3 个城市服务扩展到 7 个（+204 行）
+- 新增 `getRecommendedCityServices()` 基于玩家状态推荐
+- bridge 版本升至 0.2.0
+
+**P0-3 类型系统扩字段**：
+
+- `src/app/types/game.ts`：新增 8 个扩展系统接口 + 完整 LegacyGameState 覆盖（+200 行）
+
+**P1-1 经济被动出口**：
+
+- `src/js/phase1/daily_pipeline.js`：住房维护费 + 社交圈维护费
+
+**P1-2 差异化开局债务**：
+
+- `src/js/core/inheritance_chain.js`：上局欠债催收 + 上局违法案底
+
+**P1-3 NPC 常规对话深化**：
+
+- `src/js/phase1/npc_event_bridge.js`：新增 `chatWithNpc()`，2AP/次
+- `src/js/ui/social_tab.js`：对话记录 + 聊天按钮
+
+**验证**：typecheck / check:js / build.py / npm run build 全部通过
 
 ## 2026-06-25 — v3.8 Web App 架构第一阶段：桥接式迁移
 
 本轮将《城市浮生记》从纯静态脚本工程推进到可长期扩展的 Web App 双轨架构：保留 `src/index.html` + `python build.py` 作为当前正式可玩入口，同时新增根目录 Vite/TypeScript 工程、`src/app/` 模块化目录、类型化数据目录、存档 `_webApp` schema 迁移函数和架构健康面板。为证明架构不是空壳，新增 `src/js/app_bridge/webapp_runtime_bridge.js` 并在旧行动列表接入“城市服务中心”，玩家可在政府办事大厅、医院、商业区/公园触发劳动争议预检、医保账单复核、周末城市微旅行，实际改变现金、AP、医疗/法律/旅行状态，并写入 `_webApp.schemaVersion=2`。每日管线已增加 `webapp_city_services_tick`，服务使用后的次日会沉淀为法律底气、医疗账单意识和城市熟悉度。Vite 构建已设为相对资源路径，`dist-webapp/` 在 repo 静态服务下可打开，并按路径回指 legacy 入口。后续开发注意：新增事件、职业、地点、疾病、法律、旅行、人生节点等配置优先进入 `src/app/data/*`，需要进入当前可玩版本时再通过 bridge/facade 接入 legacy。验证覆盖 `npm run typecheck`、`npm run check:js`、`npm run build`、`python build.py` 和浏览器/脚本冒烟。
 
 ## 2026-06-25 — v3.0 审查改进与扩展：完整中后期压力试玩
+
 按 v3.0 SOP 对 `dist/index.html` 做 Chrome Headless + CDP 长流程压力试玩：先验证健康耗尽能进入 Game Over，再从 Day 60 推进到 Day 1260，覆盖创业产品、投资入口、家庭月结、个人成长年结、企业命运、主要 Tab 切换。修复长跑中暴露的创业产品默认字段、NPC discovered 数组、极端状态失败判定、结局弹窗 inventory、家庭开支默认值、企业命运变量拼写、个人成长阅读年度重置、`events_core.js` 重复声明，以及银行存款日息/会计加成口径导致的资金膨胀。验证：全量 `src/js` `node --check` 通过，`python build.py` 成功，Day 1260 压力脚本无运行时异常；审计脚本通过 `.cjs` 临时副本运行，连接审计 0 问题/45 建议，事件审计 225 事件/48 既有上下文提示。
 
 ## 2026-06-25 — v3.0 审查改进与扩展：审计风险收口与轻量试玩
+
 继续处理上一轮剩余风险：`audit_connections.js` 的新闻审计旧正则只匹配空对象起始行，导致 109 条误报和新闻 `undefined`。已改为按顶层新闻 `id` 对象提取，核对 `NEWS_EVENTS` 实际为 51 条新闻；连接密度不足、证书/装备覆盖率这类历史口径项改为“改进建议”，不再让脚本以失败码阻断开发。验证结果：`node audit_connections.js` 退出码为 0，输出 36 项通过、45 条建议；113 个 `src/js` 文件 `node --check` 通过；`audit_events.js` 仍检查 225 个事件并输出 48 条上下文提示；`python build.py` 成功生成 `dist/index.html`（4151.9 KB）。另用 Chrome Headless + DevTools Protocol 打开构建产物做轻量试玩：首屏加载、模式选择、经典开局、切换社交页均通过，未捕获控制台 error/warn。剩余风险降为：仍未做跨多日/中后期的长流程完整试玩。
 
 ## 2026-06-25 — v3.0 审查改进与扩展：审计脚本补强与最终验证
