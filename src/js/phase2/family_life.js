@@ -292,6 +292,12 @@ function initFamilySystem(state) {
       monthlyParents: 0,
     };
   }
+  state.family.expenses.monthlyMortgage =
+    state.family.expenses.monthlyMortgage || 0;
+  state.family.expenses.monthlyLiving = state.family.expenses.monthlyLiving || 3000;
+  state.family.expenses.monthlyChildren =
+    state.family.expenses.monthlyChildren || 0;
+  state.family.expenses.monthlyParents = state.family.expenses.monthlyParents || 0;
   if (state.family.partner && !state.family.spouse) {
     state.family.spouse = state.family.partner;
   }
@@ -775,6 +781,7 @@ function getStageMonthlyCost(stageKey) {
  * 每日家庭更新
  */
 function tickFamilyDaily(state) {
+  initFamilySystem(state);
   const day = state.player.day;
   const family = state.family;
 

@@ -506,6 +506,52 @@ function initPersonalGrowth(state) {
       },
     };
   }
+  var pg = state.personalGrowth;
+  if (!pg.hobbies) pg.hobbies = {};
+  if (!pg.health) {
+    pg.health = {
+      physical: 80,
+      mental: 70,
+      metabolic: 75,
+      dental: 85,
+      vision: 70,
+      lastCheckup: state.player.day,
+      checkupHistory: [],
+    };
+  }
+  if (!pg.psychology) {
+    pg.psychology = {
+      stress: 30,
+      anxiety: 25,
+      depression: 15,
+      mood: 70,
+      sleepQuality: 70,
+      lastTherapy: null,
+    };
+  }
+  if (!pg.image) {
+    pg.image = {
+      appearance: 60,
+      style: 50,
+      grooming: 65,
+      fitness: 55,
+      charisma: 50,
+    };
+  }
+  if (!pg.lifeGoals) pg.lifeGoals = { active: [], completed: [] };
+  if (!pg.reading) {
+    pg.reading = {
+      booksRead: 0,
+      booksThisYear: 0,
+      readingList: [],
+      currentBook: null,
+    };
+  }
+  pg.reading.booksRead = pg.reading.booksRead || 0;
+  pg.reading.booksThisYear = pg.reading.booksThisYear || 0;
+  pg.reading.readingList = Array.isArray(pg.reading.readingList)
+    ? pg.reading.readingList
+    : [];
 }
 
 /**
@@ -927,6 +973,7 @@ function readBook(state, bookTitle) {
  * 每日个人成长更新
  */
 function tickPersonalGrowthDaily(state) {
+  initPersonalGrowth(state);
   const pg = state.personalGrowth;
   const day = state.player.day;
 

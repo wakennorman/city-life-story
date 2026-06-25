@@ -560,20 +560,6 @@ function scaleEventReward(baseReward, state) {
   return Math.floor(baseReward * scale);
 }
 
-/** 注册链式事件（P0-4: 链式事件填充） */
-function queueChainEvent(state, eventId, delayDays, conditions) {
-  if (!state.flags._chainEventQueue) {
-    state.flags._chainEventQueue = [];
-  }
-  state.flags._chainEventQueue.push({
-    eventId: eventId,
-    triggerDay: state.player.day + delayDays,
-    conditions: conditions || {},
-    phase: state.player.phase || "street",
-    triggered: false,
-  });
-}
-
 /** 季度结束时的职场清理 */
 function quarterlyCleanup(state) {
   // 占位（兼容旧调用）

@@ -172,6 +172,9 @@ function showGameOverModal() {
   }
 
   // 构建遗产数据（供下局继承）
+  var inventoryItems = Array.isArray(state.inventory)
+    ? state.inventory
+    : (state.inventory && state.inventory.items) || [];
   var inheritanceData = {
     badges: badges,
     badgeCount: badges.length,
@@ -181,7 +184,7 @@ function showGameOverModal() {
         return r && r.met && (r.affinity || 0) >= 30;
       },
     ).length,
-    itemCount: (state.inventory || []).filter(function (item) {
+    itemCount: inventoryItems.filter(function (item) {
       return item.legendary || item.achievement || item.unique;
     }).length,
     dreamProgress: state.flags?._dreamId
@@ -1513,7 +1516,7 @@ function executeScavengeRoute(routeId) {
 }
 
 // ====== Phase 2: IPO 审核结果弹窗 ======
-function showIPOResultModal(state, approved) {
+function applyIPOResultModal(state, approved) {
   if (typeof processIPOResult === "function") {
     processIPOResult(state, approved);
   }
@@ -1557,9 +1560,9 @@ function showIPOResultModal(state) {
         cls: approved ? "btn-success" : "btn-primary",
         callback: function () {
           if (approved) {
-            showIPOResultModal(state, true);
+            applyIPOResultModal(state, true);
           } else {
-            showIPOResultModal(state, false);
+            applyIPOResultModal(state, false);
           }
         },
       },

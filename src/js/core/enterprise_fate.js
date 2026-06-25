@@ -455,8 +455,8 @@ var FATE_EVENTS = [
       return co.phase === "mature" && co.health > 50 && Random.chance(0.15);
     },
     apply: function (st, cid, co) {
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "CEO";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "CEO";
 
       co.sentiment = Math.min(100, co.sentiment + (5 + Random.int(0, 9)));
       co.health = Math.max(5, co.health - (3 + Random.int(0, 4)));
@@ -527,8 +527,8 @@ var FATE_EVENTS = [
       co.marketShare = Math.min(45, co.marketShare + (2 + Random.int(0, 3)));
       co.sentiment = Math.min(100, co.sentiment + (12 + Random.int(0, 17)));
 
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "公司";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "公司";
 
       var msg = CEO_BIOS
         ? ceoName + "团队取得重大技术突破，新产品引发行业震动"
@@ -557,8 +557,8 @@ var FATE_EVENTS = [
         co.talentScore = Math.max(5, co.talentScore - (5 + Random.int(0, 9)));
       }
 
-      varceoBio = CEO_BIOS && CEO_BIOS[cid];
-      varceoName = ceoBio ? ceoBio.name : "公司";
+      var ceoBio = CEO_BIOS && CEO_BIOS[cid];
+      var ceoName = ceoBio ? ceoBio.name : "公司";
 
       var msg = CEO_BIOS
         ? ceoName + "遭遇监管调查，面临巨额罚款和整改要求"

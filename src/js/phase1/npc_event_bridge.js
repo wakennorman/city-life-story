@@ -718,6 +718,8 @@ function ensureNpcDiscovered(rel, affinity) {
     };
   }
   var d = rel.discovered;
+  d.presenceBonus = Array.isArray(d.presenceBonus) ? d.presenceBonus : [];
+  d.affinityRewards = Array.isArray(d.affinityRewards) ? d.affinityRewards : [];
   // 自动根据好感解锁
   if (affinity >= 30 && !d.favor) d.favor = true;
   if (affinity >= 70 && !d.deepTask) d.deepTask = true;

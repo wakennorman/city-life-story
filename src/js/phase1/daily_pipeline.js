@@ -1126,6 +1126,7 @@ function runDailyPipeline(state) {
           var lateStep = DAILY_PIPELINE[j];
           if (
             lateStep.name === "finance" ||
+            lateStep.name === "lose" ||
             lateStep.name === "autosave" ||
             lateStep.name === "daily_report"
           ) {

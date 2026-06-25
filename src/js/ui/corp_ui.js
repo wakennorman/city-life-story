@@ -346,6 +346,9 @@ function showVictoryModal() {
   }
 
   // 构建遗产数据
+  var inventoryItems = Array.isArray(state.inventory)
+    ? state.inventory
+    : (state.inventory && state.inventory.items) || [];
   var inheritanceData = {
     badges: badges,
     badgeCount: badges.length,
@@ -355,7 +358,7 @@ function showVictoryModal() {
         return r && r.met && (r.affinity || 0) >= 30;
       },
     ).length,
-    itemCount: (state.inventory || []).filter(function (item) {
+    itemCount: inventoryItems.filter(function (item) {
       return item.legendary || item.achievement || item.unique;
     }).length,
     dreamProgress: state.flags?._dreamId

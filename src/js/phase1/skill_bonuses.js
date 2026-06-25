@@ -25,8 +25,8 @@ function getTutoringBonus(englishLevel) {
 
 /** accounting技能 → 银行利率加成 */
 function getBankRateBonus(accountingLevel) {
-  // 每年最多+5%（日息约+0.00014），100级满分
-  return accountingLevel * 0.0005;
+  // 每年最多+5%，折算到每日；避免把年化加成误当成日息导致资金指数膨胀。
+  return Math.min(0.05, accountingLevel * 0.0005) / 365;
 }
 
 /** electrician技能 → 工厂类工作收入加成百分比 */
@@ -720,7 +720,7 @@ function settleDailyFinance(state) {
   if (bal <= 0) return;
   var accountingLvl =
     (state.skills.accounting && state.skills.accounting.level) || 0;
-  var baseRate = 0.001;
+  var baseRate = 0.0001;
   var bonus =
     typeof getBankRateBonus === "function"
       ? getBankRateBonus(accountingLvl)

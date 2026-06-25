@@ -2391,6 +2391,85 @@ function canStartStartup(state) {
 }
 
 /** 注册新公司 */
+function _ensureStartupProductDefaults(product, day) {
+  if (!product) return product;
+  product.features = Array.isArray(product.features) ? product.features : [];
+  product.version = product.version || "v1.0";
+  product.versionHistory = Array.isArray(product.versionHistory)
+    ? product.versionHistory
+    : [];
+  product.lifecycleStage = product.lifecycleStage || "introduction";
+  product.marketShare = product.marketShare || 0;
+  product.userGrowthRate = product.userGrowthRate || 0;
+  product.churnRate = product.churnRate || 0;
+  product.consecutiveGrowthDays = product.consecutiveGrowthDays || 0;
+  product.consecutiveDeclineDays = product.consecutiveDeclineDays || 0;
+  product.peakUsers = product.peakUsers || 0;
+  product.peakRevenue = product.peakRevenue || 0;
+  product.retired = !!product.retired;
+  product.retireDay = product.retireDay || null;
+  product.retireReason = product.retireReason || "";
+  product.versionIterationCount = product.versionIterationCount || 0;
+  product.retentionHistory = Array.isArray(product.retentionHistory)
+    ? product.retentionHistory
+    : [];
+  product.funnelHistory = Array.isArray(product.funnelHistory)
+    ? product.funnelHistory
+    : [];
+  product.techDebtHistory = Array.isArray(product.techDebtHistory)
+    ? product.techDebtHistory
+    : [];
+  product.bugHistory = Array.isArray(product.bugHistory) ? product.bugHistory : [];
+  product.crisisHistory = Array.isArray(product.crisisHistory)
+    ? product.crisisHistory
+    : [];
+  product.technicalDebt = product.technicalDebt || 0;
+  product.bugRate = product.bugRate || 0;
+  product.lastRefactorDay = product.lastRefactorDay || day || 0;
+  product.refactorBonus = product.refactorBonus || 0;
+  product.techDebtCrisis = !!product.techDebtCrisis;
+  product.techDebtSources = product.techDebtSources || {};
+  product.techDebtSources.rushDevelopment =
+    product.techDebtSources.rushDevelopment || 0;
+  product.techDebtSources.skippedTests = product.techDebtSources.skippedTests || 0;
+  product.techDebtSources.cutFeatures = product.techDebtSources.cutFeatures || 0;
+  product.techDebtSources.quickFixes = product.techDebtSources.quickFixes || 0;
+  product.techDebtSources.legacyCode = product.techDebtSources.legacyCode || 0;
+  product.activationRate = product.activationRate || 0.3;
+  product.activatedUsers = product.activatedUsers || 0;
+  product.onboardingCompleteRate = product.onboardingCompleteRate || 0.5;
+  product.dau = product.dau || 0;
+  product.wau = product.wau || 0;
+  product.mau = product.mau || 0;
+  product.retentionD1 = product.retentionD1 || 0.4;
+  product.retentionD7 = product.retentionD7 || 0.25;
+  product.retentionD30 = product.retentionD30 || 0.15;
+  product.arpu = product.arpu || 0;
+  product.arppu = product.arppu || 0;
+  product.payRate = product.payRate || 0.05;
+  product.payingUsers = product.payingUsers || 0;
+  product.ltv = product.ltv || 0;
+  product.kFactor = product.kFactor || 0;
+  product.referralRate = product.referralRate || 0.02;
+  product.referralConversion = product.referralConversion || 0.1;
+  product.viralCycleTime = product.viralCycleTime || 7;
+  product.newUsersToday = product.newUsersToday || 0;
+  product.acquisitionChannel = product.acquisitionChannel || "organic";
+  product.cac = product.cac || 0;
+  product.adSpend = product.adSpend || 0;
+  product.funnelData = product.funnelData || {
+    impressions: 0,
+    clicks: 0,
+    registrations: 0,
+    activated: 0,
+    retainedD7: 0,
+    retainedD30: 0,
+    paying: 0,
+    referred: 0,
+  };
+  return product;
+}
+
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
   // 前置条件：3技能15级+2NPC好感40+Day60
@@ -2582,6 +2661,7 @@ function registerStartup(state, name, industry, description) {
     revenue: 0,
     status: "developing",
   };
+  _ensureStartupProductDefaults(initialProduct, day);
   company.products.push(initialProduct);
 
   // ====== P2-11: 初始化办公地点（从共享办公开始） ======
@@ -2751,6 +2831,7 @@ function createProduct(state, name, category) {
       legacyCode: 0, // 遗留代码
     },
   };
+  _ensureStartupProductDefaults(product, state.player.day);
 
   company.products.push(product);
   StateManager.addMessage("💻 新产品「" + product.name + "」开始开发", "info");
@@ -3211,6 +3292,7 @@ function checkFeatureCompletion(state) {
 
 /** 计算产品竞争力 */
 function calculateProductCompetitiveness(product) {
+  _ensureStartupProductDefaults(product, 0);
   const category = PRODUCT_CATEGORIES[product.category];
   if (!category) return 0;
 
