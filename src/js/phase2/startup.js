@@ -2263,17 +2263,26 @@ function getStartupTriggerConditions(state) {
     label: pc.label || "资源积累",
     cashOk: cash >= (pc.cash || 50000),
     rankOk: rankMet,
-    canRegister: cash >= 200000, // 注册硬门槛（启动金）
+    canRegister: cash >= (pc.cash || 50000) && rankMet,
     met: cash >= (pc.cash || 50000) && rankMet,
   };
+}
+
+function getStartupRegistrationCost(state) {
+  var stc = getStartupTriggerConditions(state);
+  return stc.cashRequired || 50000;
 }
 
 /** 打开注册公司弹窗 */
 function showStartupRegisterModal() {
   var state = StateManager.getState();
   var cash = (state.resources && state.resources.cash) || 0;
-  if (cash < 50000) {
-    StateManager.addMessage("⚠️ 注册公司需要 ¥200,000 启动资金。", "warning");
+  var registerCost = getStartupRegistrationCost(state);
+  if (cash < registerCost) {
+    StateManager.addMessage(
+      "⚠️ 注册公司需要 ¥" + registerCost.toLocaleString() + " 启动资金。",
+      "warning",
+    );
     return;
   }
 
@@ -2298,7 +2307,9 @@ function showStartupRegisterModal() {
 
   var bodyHtml =
     '<div style="font-size:13px;">' +
-    "<p>注册公司需缴纳 <strong>¥200,000</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
+    "<p>注册公司需缴纳 <strong>¥" +
+    registerCost.toLocaleString() +
+    "</strong> 启动资金。选择行业后即可开始创业之旅。</p>" +
     '<div style="margin:12px 0;">' +
     '<label style="font-weight:600;font-size:12px;">🏢 公司名称</label>' +
     '<input id="startup-name-input" type="text" placeholder="输入公司名（可选）" maxlength="16" style="width:100%;padding:8px;margin-top:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:13px;">' +
@@ -2312,7 +2323,7 @@ function showStartupRegisterModal() {
     '<div style="font-size:11px;color:var(--text-muted);">当前现金：¥' +
     cash.toLocaleString() +
     " | 注册后剩余：¥" +
-    (cash - 50000).toLocaleString() +
+    (cash - registerCost).toLocaleString() +
     "</div>" +
     "</div>";
 
@@ -2486,7 +2497,7 @@ function registerStartup(state, name, industry, description) {
   }
   const cash = state.resources.cash;
   const day = state.player.day;
-  const minCash = 200000; // 最低启动资金
+  const minCash = getStartupRegistrationCost(state); // 剧本/阶段感知启动资金
 
   if (cash < minCash) {
     return {
@@ -2504,6 +2515,9 @@ function registerStartup(state, name, industry, description) {
 
   // 扣减启动资金
   state.resources.cash -= minCash;
+  if (typeof addDailyTransaction === "function") {
+    addDailyTransaction(state, "expense", "misc", minCash, "注册公司启动资金");
+  }
 
   // 生成公司名（如果玩家没输入）
   const companyName = name || _startupGenerateCompanyName(industry);
@@ -11385,11 +11399,15 @@ function renderStartupTab(state, parent) {
       '<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:5px;"><span>💵 注册费</span><span>¥50,000</span></div>' +
       "</div>" +
       '<button class="btn btn-lg btn-primary" onclick="showStartupRegisterModal()" ' +
-      (cashNow >= 200000 ? "" : 'style="opacity:0.5;" disabled') +
+      (stc.canRegister ? "" : 'style="opacity:0.5;" disabled') +
       ">" +
-      (cashNow >= 200000 ? "🚀 注册公司" : "🚀 注册公司（资金不足）") +
+      (stc.canRegister ? "🚀 注册公司" : "🚀 注册公司（条件不足）") +
       "</button>" +
-      '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);">注册费 ¥50,000，不限阶段和天数，随时可注册</div>' +
+      '<div style="margin-top:12px;font-size:11px;color:var(--text-muted);">注册费 ' +
+      cashLabel +
+      "，满足资金" +
+      (stc.rankRequired ? "和职级" : "") +
+      "后即可注册</div>" +
       "</div>";
     return;
   }

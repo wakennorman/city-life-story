@@ -76,7 +76,7 @@ function getCategoryIcon(category) {
 // ====== 对账兜底 ======
 /**
  * 对比跟踪交易总额与实际现金变化，补充未记录条目。
- * 确保收支报告永远平衡。
+ * 未接线的现金变动不再伪造成真实收入/支出，只作为对账提示展示。
  */
 function reconcileTransactions(state) {
   var txs = state.flags._dailyTransactions || [];
@@ -89,29 +89,21 @@ function reconcileTransactions(state) {
   var actualDelta = (state.resources.cash || 0) - startCash;
   var discrepancy = Math.round((actualDelta - trackedDelta) * 100) / 100;
 
-  // 允许 ¥1 以内浮点误差
-  if (discrepancy > 1) {
-    txs.push({
-      type: "income",
-      category: "misc",
-      amount: Math.round(discrepancy),
-      description: "其他收入",
-    });
-  } else if (discrepancy < -1) {
-    txs.push({
-      type: "expense",
-      category: "misc",
-      amount: Math.round(Math.abs(discrepancy)),
-      description: "其他支出",
-    });
+  if (Math.abs(discrepancy) <= 1) {
+    return null;
   }
+  return {
+    amount: Math.round(discrepancy),
+    trackedDelta: Math.round(trackedDelta),
+    actualDelta: Math.round(actualDelta),
+  };
 }
 
 // ====== 构建报告 HTML ======
 /**
  * 按类型分类交易并生成排序后的HTML
  */
-function buildReportHTML(txs, state) {
+function buildReportHTML(txs, state, reconcileInfo) {
   var incomes = [];
   var expenses = [];
   for (var i = 0; i < txs.length; i++) {
@@ -240,6 +232,20 @@ function buildReportHTML(txs, state) {
   bodyHtml += summaryText;
   bodyHtml += "</div>";
 
+  if (reconcileInfo) {
+    var diff = reconcileInfo.amount;
+    var diffText =
+      diff > 0
+        ? "现金比已记录流水多 ¥" + Math.abs(diff).toLocaleString()
+        : "现金比已记录流水少 ¥" + Math.abs(diff).toLocaleString();
+    bodyHtml +=
+      '<div class="daily-report-reconcile" style="margin-top:8px;padding:8px 10px;border:1px dashed var(--warning);border-radius:6px;background:var(--warning-bg);font-size:11px;color:var(--text-secondary);line-height:1.45;">' +
+      "⚠️ " +
+      diffText +
+      "。这不是自动计入的收入或支出，而是仍未接入收支流水的现金变化，后续需要继续补埋点。" +
+      "</div>";
+  }
+
   return bodyHtml;
 }
 
@@ -332,6 +338,43 @@ function generateDailyReportSummary(state, incomes, expenses) {
   return "📋 " + summary;
 }
 
+function recordDailyReportHistory(state, txs) {
+  if (!state.history) state.history = {};
+  if (!Array.isArray(state.history.income)) state.history.income = [];
+  if (!Array.isArray(state.history.expense)) state.history.expense = [];
+  if (!state.flags._cashHistory) state.flags._cashHistory = [];
+
+  var income = 0;
+  var expense = 0;
+  for (var i = 0; i < txs.length; i++) {
+    var t = txs[i];
+    if (t.type === "income") income += t.amount || 0;
+    else if (t.type === "expense") expense += t.amount || 0;
+  }
+
+  var reportDay = Math.max(1, (state.player.day || 1) - 1);
+  var index = reportDay - 1;
+  state.history.income[index] = income;
+  state.history.expense[index] = expense;
+  if (state.history.income.length > 180) {
+    state.history.income = state.history.income.slice(-180);
+    state.history.expense = state.history.expense.slice(-180);
+  }
+
+  var totalAsset =
+    (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  var cashHistory = state.flags._cashHistory;
+  var last = cashHistory[cashHistory.length - 1];
+  if (last && last.day === reportDay) {
+    last.value = totalAsset;
+  } else {
+    cashHistory.push({ day: reportDay, value: totalAsset });
+  }
+  if (cashHistory.length > 180) {
+    state.flags._cashHistory = cashHistory.slice(-180);
+  }
+}
+
 // ====== 主入口 ======
 /**
  * 显示每日收支报告弹窗（阻塞式 — 必须点击"继续"才能关闭）
@@ -341,14 +384,15 @@ function showDailyReport(state) {
   // 游戏结束/胜利时不显示（对应 modal 优先）
   if (state.flags.gameOver || state.flags.victory) return;
 
-  // 对账：确保收支平衡（会在 _dailyTransactions 中追加对账条目）
-  reconcileTransactions(state);
+  var reconcileInfo = reconcileTransactions(state);
 
   // 保存当日交易记录快照，然后清除（为下一天做准备）
   var txs = (state.flags._dailyTransactions || []).slice();
+  recordDailyReportHistory(state, txs);
   state.flags._dailyTransactions = [];
+  state.flags._dayStartCash = state.resources.cash || 0;
 
-  var bodyHtml = buildReportHTML(txs, state);
+  var bodyHtml = buildReportHTML(txs, state, reconcileInfo);
 
   var overlay = document.createElement("div");
   overlay.className = "modal-overlay";

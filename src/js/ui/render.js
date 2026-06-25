@@ -8,6 +8,55 @@
 // 当前激活的 Tab
 let currentTab = "actions";
 
+// ====== 玩家可见名称兜底 ======
+var DISPLAY_NAME_ALIASES = {
+  vitamins_item: "维生素片",
+  electronics: "电子产品",
+  electronics_item: "电子产品",
+  daily: "日用品",
+  food: "食品",
+  clothing: "衣物",
+  luxury: "奢侈品",
+  scrap: "废品",
+};
+
+function formatIdAsDisplayName(id) {
+  if (id === undefined || id === null || id === "") return "未知项目";
+  return String(id)
+    .replace(/_item$/g, "")
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map(function (part) {
+      return DISPLAY_NAME_ALIASES[part] || part;
+    })
+    .join(" ");
+}
+
+function getUiDisplayName(id, fallback) {
+  if (fallback && fallback !== "undefined") return fallback;
+  if (id === undefined || id === null || id === "") return "未知项目";
+  var key = String(id);
+  if (DISPLAY_NAME_ALIASES[key]) return DISPLAY_NAME_ALIASES[key];
+  if (typeof getItemById === "function") {
+    var item = getItemById(key);
+    if (item && item.name) return item.name;
+  }
+  if (typeof getGoodById === "function") {
+    var good = getGoodById(key);
+    if (good && good.name) return good.name;
+  }
+  if (typeof LOCATIONS !== "undefined" && LOCATIONS[key] && LOCATIONS[key].name) {
+    return LOCATIONS[key].name;
+  }
+  if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
+    var job = STREET_JOBS.find(function (j) {
+      return j && j.id === key;
+    });
+    if (job && job.name) return job.name;
+  }
+  return formatIdAsDisplayName(key);
+}
+
 // ====== 紧凑型低数值预警 ======
 /**
  * 为 stat-row 元素添加颜色匹配的紧凑预警
@@ -3332,36 +3381,49 @@ function renderTradeTab(state, parent) {
 
     for (const item of ownedGoods) {
       const good = getGoodById(item.id);
-      if (!good) continue;
-      const price = prices[good.id] || good.basePrice;
+      const displayName = good ? good.name : getUiDisplayName(item.id);
+      const displayId = good ? good.id : item.id;
+      const price = good ? prices[good.id] || good.basePrice : null;
       const profitInfo = item.avgBuyPrice
-        ? price > item.avgBuyPrice
+        ? price !== null && price > item.avgBuyPrice
           ? `<span style="color:var(--success)">📈 +¥${((price - item.avgBuyPrice) * item.qty).toFixed(1)}</span>`
-          : `<span style="color:var(--danger)">📉 -¥${((item.avgBuyPrice - price) * item.qty).toFixed(1)}</span>`
+          : price !== null
+            ? `<span style="color:var(--danger)">📉 -¥${((item.avgBuyPrice - price) * item.qty).toFixed(1)}</span>`
+            : ""
         : "";
+      const avgPriceText =
+        item.avgBuyPrice !== undefined && item.avgBuyPrice !== null
+          ? "¥" + Number(item.avgBuyPrice).toFixed(1)
+          : "暂无";
+      const currentPriceText = price !== null ? "¥" + price.toFixed(1) : "不可交易";
+      const tradeButtons = good
+        ? `
+          <button class="btn btn-sm btn-danger sell-one-btn" data-good="${displayId}">卖1</button>
+          <button class="btn btn-sm btn-danger sell-all-btn" data-good="${displayId}">全卖</button>
+          <button class="qty-toggle-btn" data-good="${displayId}" data-side="sell" title="自定义数量">✏️</button>
+          <div class="qty-input-group" data-good="${displayId}" data-side="sell" style="display:none;">
+            <button class="qty-step-btn" data-good="${displayId}" data-dir="-1">−</button>
+            <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${displayId}">
+            <button class="qty-step-btn" data-good="${displayId}" data-dir="1">+</button>
+            <button class="btn btn-sm btn-danger qty-action-btn" data-good="${displayId}" data-side="sell">卖</button>
+          </div>
+        `
+        : '<span style="font-size:11px;color:var(--text-muted);">非交易物品</span>';
 
       const card = document.createElement("div");
       card.className = "action-card";
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="card-title" style="margin:0;">${good.name}</div>
+          <div class="card-title" style="margin:0;">${displayName}</div>
           <span class="slot-tag">×${item.qty}</span>
         </div>
         <div class="card-desc" style="margin:4px 0;">
-          买入均价: ¥${item.avgBuyPrice || "?"} | 当前价: ¥${price.toFixed(1)}
+          买入均价: ${avgPriceText} | 当前价: ${currentPriceText}
         </div>
         <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
           <span style="font-size:11px;">${profitInfo}</span>
           <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-left:auto;">
-            <button class="btn btn-sm btn-danger sell-one-btn" data-good="${good.id}">卖1</button>
-            <button class="btn btn-sm btn-danger sell-all-btn" data-good="${good.id}">全卖</button>
-            <button class="qty-toggle-btn" data-good="${good.id}" data-side="sell" title="自定义数量">✏️</button>
-            <div class="qty-input-group" data-good="${good.id}" data-side="sell" style="display:none;">
-              <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
-              <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
-              <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
-              <button class="btn btn-sm btn-danger qty-action-btn" data-good="${good.id}" data-side="sell">卖</button>
-            </div>
+            ${tradeButtons}
           </div>
         </div>
       `;

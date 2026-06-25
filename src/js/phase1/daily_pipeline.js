@@ -22,9 +22,6 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
-      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
-      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
-      state.flags._dayStartCash = state.resources.cash || 0;
     },
   },
 
@@ -343,8 +340,8 @@ const DAILY_PIPELINE = [
         day: state.player.day,
         value: totalAsset,
       });
-      if (state.flags._cashHistory.length > 90) {
-        state.flags._cashHistory = state.flags._cashHistory.slice(-90);
+      if (state.flags._cashHistory.length > 180) {
+        state.flags._cashHistory = state.flags._cashHistory.slice(-180);
       }
 
       // 2. 收入/支出历史（供 incomeChart 使用）
@@ -359,9 +356,9 @@ const DAILY_PIPELINE = [
       }
       state.history.income.push(dailyIncome);
       state.history.expense.push(dailyExpense);
-      if (state.history.income.length > 90) {
-        state.history.income = state.history.income.slice(-90);
-        state.history.expense = state.history.expense.slice(-90);
+      if (state.history.income.length > 180) {
+        state.history.income = state.history.income.slice(-180);
+        state.history.expense = state.history.expense.slice(-180);
       }
 
       // 3. 属性快照（每 7 天记录一次，供雷达图历史对比）

@@ -152,11 +152,32 @@
     var cash = state.resources.cash || 0;
     var results = [];
 
+    function addVisiblePrepItem(itemId) {
+      state.inventory = state.inventory || {};
+      state.inventory.items = state.inventory.items || [];
+      var found = state.inventory.items.find(function (it) {
+        return it && it.id === itemId;
+      });
+      if (found) {
+        found.qty = (found.qty || 1) + 1;
+      } else {
+        state.inventory.items.push({
+          id: itemId,
+          qty: 1,
+          avgBuyPrice: itemId === "umbrella" ? 20 : 50,
+        });
+      }
+    }
+
     // 买伞（雨天疲劳惩罚减半）
     if (!prep.umbrella) {
       if (cash >= 20) {
         state.resources.cash -= 20;
         prep.umbrella = true;
+        addVisiblePrepItem("umbrella");
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(state, "expense", "shopping", 20, "天气准备：雨伞");
+        }
         results.push("☂️ 买了伞（¥20）");
       } else {
         results.push("⚠️ 钱不够买伞（需¥20）");
@@ -170,6 +191,16 @@
       if (cash >= 50) {
         state.resources.cash -= 50;
         prep.warmPack = true;
+        addVisiblePrepItem("thermal_underwear");
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(
+            state,
+            "expense",
+            "shopping",
+            50,
+            "天气准备：保暖用品",
+          );
+        }
         results.push("🧣 买了暖宝（¥50）");
       } else {
         results.push("⚠️ 钱不够买暖宝（需¥50）");

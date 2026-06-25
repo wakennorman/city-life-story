@@ -782,7 +782,7 @@ function renderSandboxConfig() {
     "<label>姓名</label>" +
     '<input type="text" id="sandbox-name" value="' +
     cfg.name +
-    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxConfig(\'name\', this.value)">' +
+    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxName(this.value)">' +
     "</div>" +
     '<div class="sandbox-row">' +
     "<label>年龄</label>" +
@@ -1043,6 +1043,27 @@ function updateSandboxConfig(key, value) {
   if (!_sandboxConfig) return;
   _sandboxConfig[key] = value;
   renderSandboxConfig();
+}
+
+function updateSandboxName(value) {
+  if (!_sandboxConfig) return;
+  _sandboxConfig.name = value;
+  var summary = document.getElementById("sandbox-summary");
+  if (summary) {
+    summary.textContent =
+      "📋 " +
+      (_sandboxConfig.name || "无名") +
+      "，" +
+      _sandboxConfig.age +
+      "岁 · 现金¥" +
+      _sandboxConfig.cash.toLocaleString() +
+      " · 属性" +
+      (_sandboxConfig.physique +
+        _sandboxConfig.intelligence +
+        _sandboxConfig.agility +
+        _sandboxConfig.mental) +
+      "点";
+  }
 }
 
 /** 应用沙盒预设 */

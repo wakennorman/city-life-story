@@ -145,8 +145,9 @@ function showCriticalChoiceModal(state, need) {
 
     buttons.push({
       text: btnText,
-      cls: affordable && hasAp ? "btn-primary" : "",
+      cls: (affordable && hasAp ? "btn-primary" : "") + " critical-choice-btn",
       _disabled: !affordable || !hasAp,
+      disabledReason: affordable ? "行动力不足" : "现金不足",
       callback: (function (amenityId) {
         return function () {
           travelToAmenityAndUse(amenityId);
@@ -158,7 +159,7 @@ function showCriticalChoiceModal(state, need) {
   // 总有"后续自己再去"
   buttons.push({
     text: "🚶 后续自己再去",
-    cls: "",
+    cls: "critical-choice-btn",
     callback: function () {
       var st = StateManager.getState();
       st.flags._deferred = st.flags._deferred || {};
@@ -194,6 +195,12 @@ function showCriticalChoiceModal(state, need) {
 
   // 标记禁用按钮（modal.js 不支持 disabled，加个事后样式）
   setTimeout(function () {
+    var overlay = document.querySelector(".modal-overlay");
+    if (overlay) overlay.classList.add("critical-choice-overlay");
+    var box = document.querySelector(".modal-box");
+    if (box) box.classList.add("critical-choice-box");
+    var actions = document.querySelector(".modal-actions");
+    if (actions) actions.classList.add("critical-choice-actions");
     var btns = document.querySelectorAll(".modal-actions .btn");
     var idx = 0;
     for (var i = 0; i < buttons.length; i++) {

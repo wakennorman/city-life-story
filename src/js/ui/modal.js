@@ -38,8 +38,14 @@ function showModal({ title, body, buttons }) {
     const btnEl = document.createElement("button");
     btnEl.className = "btn " + (btn.cls || "btn-primary");
     btnEl.textContent = btn.text;
+    if (btn._disabled) {
+      btnEl.disabled = true;
+      btnEl.setAttribute("aria-disabled", "true");
+      btnEl.title = btn.disabledReason || "当前条件不足";
+    }
     btnEl.addEventListener("click", function (e) {
       e.preventDefault();
+      if (btn._disabled) return;
       // 先调用回调，让回调有机会读取弹窗中的元素
       var shouldClose = true;
       if (btn.callback) {

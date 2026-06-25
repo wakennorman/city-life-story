@@ -892,69 +892,8 @@ function addStreetExtras(state, actions) {
     });
   }
 
-  // === 确立/更改人生梦想（首次强制在游戏开始弹窗，后续可在公园/家里更改） ===
-  var hasDream = state.flags && state.flags._dreamId;
-  var atRestfulLoc =
-    state.trade.currentLocation === "park" ||
-    state.trade.currentLocation === "slum";
-  if (!hasDream && atRestfulLoc) {
-    actions.push({
-      id: "set_dream",
-      name: "确立人生目标",
-      desc: "在这座城市，你想要什么？选定一个方向，脚踏实地去努力。",
-      icon: "🌟",
-      apCost: 5,
-      handler: function () {
-        showDreamSelectModal();
-      },
-    });
-  }
-
-  // v3.2 人生目标更改入口（已有梦想时，可在任何地点随时查看和更改）
-  if (hasDream) {
-    actions.push({
-      id: "change_dream",
-      name: "🎯 更改人生目标",
-      desc:
-        "当前目标：" +
-        (function () {
-          var d =
-            typeof getCurrentDream === "function"
-              ? getCurrentDream(state)
-              : null;
-          return d ? d.icon + " " + d.name : "";
-        })(),
-      icon: "🎯",
-      apCost: 5,
-      handler: function () {
-        showDreamSelectModal();
-      },
-    });
-  }
-
-  // === 查看梦想进度（已有梦想时显示） ===
-  if (hasDream) {
-    var dream =
-      typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
-    if (dream) {
-      var progress =
-        typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
-      var curTitle =
-        typeof getDreamCurrentTitle === "function"
-          ? getDreamCurrentTitle(state)
-          : "";
-      actions.push({
-        id: "view_dream",
-        name: "梦想：" + dream.name,
-        desc: "进度 " + progress + "% · 当前里程碑：" + curTitle,
-        icon: "🌟",
-        apCost: 0,
-        handler: function () {
-          showDreamProgressModal();
-        },
-      });
-    }
-  }
+  // === 人生梦想入口归位 ===
+  // 首次选择由开局强制弹窗处理；查看/更改归入“个人成长”的目标区域，不占行动列表。
 
   // === 周末市集（每逢day%7=0或6出现：公园/商业区） ===
   var dayOfWeek = state.player.day % 7;
