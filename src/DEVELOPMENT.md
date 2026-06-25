@@ -1,6 +1,10 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-25（v3.0 审查改进与扩展 — 入口补齐与构建验证）
+> 最后更新: 2026-06-25（v3.0 审查改进与扩展 — 审计脚本补强与最终验证）
+
+## 2026-06-25 — v3.0 审查改进与扩展：审计脚本补强与最终验证
+
+按 `memory/review-improve-v3.0.md` SOP 对上一轮交付做断点续传核验：`memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 已存在且对应代码均已落地；人生节点弹窗、旅行入口、法律咨询、医保咨询、社交子页跳转均在源码中确认。修复 `audit_events.js` 仍按旧缩进提取事件导致“检查 0 个事件”的问题，改为识别拆分后事件文件的当前格式。验证结果：113 个 `src/js` 文件 `node --check` 通过，`audit_events.js` 可检查 225 个事件并输出 48 条上下文提示，`python build.py` 成功生成 `dist/index.html`（4151.9 KB）。剩余风险：`audit_connections.js` 仍会因历史覆盖率规则返回 1，并输出新闻解析为 `undefined` 的既有审计问题；本轮未做长流程完整试玩。
 
 ## 2026-06-25 — v3.0 审查改进与扩展：入口补齐与构建验证
 

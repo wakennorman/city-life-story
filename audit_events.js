@@ -12,8 +12,8 @@ const content = EVENT_FILES.filter((f) => fs.existsSync(f))
   .map((f) => fs.readFileSync(f, "utf-8"))
   .join("\n\n");
 
-// 提取所有事件
-const eventRegex = /\{\s*id:\s*"([^"]+)"[\s\S]*?^  \},/gm;
+// 提取所有事件。事件数据拆分后缩进不再固定，不能依赖旧版 "^  },"。
+const eventRegex = /\{\s*id:\s*"([^"]+)"[\s\S]*?\n\s{4}\},/gm;
 const events = [];
 let match;
 

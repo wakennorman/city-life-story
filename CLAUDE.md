@@ -50,12 +50,12 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：v3.0 审查改进与扩展 — 入口补齐与验证（2026-06-25）
+- **最新一次工作**：v3.0 审查改进与扩展 — 审计脚本补强与最终验证（2026-06-25）
   - **审查产出**：已新增 `memory/overview.md` / `memory/diagnosis.md` / `memory/improvement_plan.md`
   - **P0 修复**：人生节点不再静默完成，触发后弹窗让玩家选择；奖励写回正确的玩家属性和技能 XP 结构
   - **P1 改进**：商业区新增长途旅行入口；政府办事大厅新增法律咨询/立案入口；医院新增医保咨询入口；行动页 Phase 2 快捷按钮改为跳转真实社交子页
-  - **工具链**：`audit_connections.js` / `audit_events.js` 改为读取拆分后的事件文件
-  - **验证**：112 个 `src/js` 文件 `node --check` 通过；已 `python build.py`，生成 `dist/index.html`（4151.9 KB）
+  - **工具链**：`audit_connections.js` 改为读取拆分后的事件文件；`audit_events.js` 修复旧缩进匹配导致的空跑，现可扫描 225 个事件
+  - **验证**：113 个 `src/js` 文件 `node --check` 通过；`audit_events.js` 检查 225 个事件并输出 48 条上下文提示；已 `python build.py`，生成 `dist/index.html`（4151.9 KB）
   - **剩余风险**：`audit_connections.js` 可运行但会因历史覆盖率规则返回 1，并输出新闻 `undefined` 等既有审计问题；本轮未做长流程完整试玩
 
 - **上一轮工作**：v3.7 Expansion v1 — 4大扩展系统基础实现（2026-06-25）
