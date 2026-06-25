@@ -2,7 +2,15 @@
 // 扫描 events.js 中所有事件，检查故事文字中提到的关键场景与条件是否匹配
 
 const fs = require("fs");
-const content = fs.readFileSync("js/core/events.js", "utf-8");
+const EVENT_FILES = [
+  "src/js/core/events_core.js",
+  "src/js/core/events_street.js",
+  "src/js/core/events_corp.js",
+  "src/js/phase1/extra_events.js",
+];
+const content = EVENT_FILES.filter((f) => fs.existsSync(f))
+  .map((f) => fs.readFileSync(f, "utf-8"))
+  .join("\n\n");
 
 // 提取所有事件
 const eventRegex = /\{\s*id:\s*"([^"]+)"[\s\S]*?^  \},/gm;

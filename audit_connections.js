@@ -40,6 +40,22 @@ function loadFile(filename) {
   return { content, lines, filepath, filename };
 }
 
+function loadCombinedFiles(label, filenames) {
+  const parts = [];
+  for (const filename of filenames) {
+    const file = loadFile(filename);
+    if (file) parts.push(file.content);
+  }
+  if (parts.length === 0) return null;
+  const content = parts.join("\n\n");
+  return {
+    content,
+    lines: content.split("\n"),
+    filepath: label,
+    filename: label,
+  };
+}
+
 // ============================================================
 // NPC 审计
 // ============================================================
@@ -512,7 +528,12 @@ function main() {
     locations: loadFile("src/js/data/locations.js"),
     jobs: loadFile("src/js/data/jobs.js"),
     illnesses: loadFile("src/js/data/illnesses.js"),
-    events: loadFile("src/js/core/events.js"),
+    events: loadCombinedFiles("split events", [
+      "src/js/core/events_core.js",
+      "src/js/core/events_street.js",
+      "src/js/core/events_corp.js",
+      "src/js/phase1/extra_events.js",
+    ]),
   };
 
   if (
