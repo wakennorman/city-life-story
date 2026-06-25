@@ -1863,6 +1863,18 @@ function addClinicAction(state, actions) {
       consumeAP(5);
     },
   });
+  actions.push({
+    id: "medical_insurance",
+    name: "医保咨询",
+    desc: "了解并购买医疗保险，降低深度治疗和住院费用。",
+    icon: "🪪",
+    apCost: 0,
+    handler: function () {
+      if (typeof showMedicalInsuranceModal === "function") {
+        showMedicalInsuranceModal();
+      }
+    },
+  });
 }
 
 /** 商业区解锁的长途旅行入口 */

@@ -220,6 +220,50 @@ function getMedicalSummary(state) {
   return lines;
 }
 
+function showMedicalInsuranceModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initMedicalState(state);
+  var summary = getMedicalSummary(state);
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    '<p>医保会在深度治疗和住院费用中自动抵扣，适合长期生存。</p>' +
+    '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
+    summary.join("<br>") +
+    "</div>" +
+    '<div style="display:grid;gap:8px;">';
+  for (var i = 0; i < INSURANCE_PLANS.length; i++) {
+    var p = INSURANCE_PLANS[i];
+    body +=
+      '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+      "<strong>" +
+      p.icon +
+      " " +
+      p.name +
+      "</strong> · ¥" +
+      p.monthly.toLocaleString() +
+      " / 次<br><span style=\"color:var(--text-secondary);\">" +
+      p.desc +
+      "</span></div>";
+  }
+  body += "</div></div>";
+
+  var buttons = INSURANCE_PLANS.map(function (plan) {
+    return {
+      text: plan.icon + " " + plan.name,
+      cls: "btn-primary",
+      callback: function () {
+        var result = buyMedicalInsurance(StateManager.getState(), plan.id);
+        StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+        if (!result.ok) return false;
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+  buttons.push({ text: "暂不购买", cls: "" });
+  showModal({ title: "🪪 医保咨询", body: body, buttons: buttons });
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.ILLNESS_GRADES = ILLNESS_GRADES;
@@ -230,6 +274,7 @@ if (typeof window !== "undefined") {
   window.tickMedical = tickMedical;
   window.tickRecovery = tickRecovery;
   window.getMedicalSummary = getMedicalSummary;
+  window.showMedicalInsuranceModal = showMedicalInsuranceModal;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.medical_system = {
