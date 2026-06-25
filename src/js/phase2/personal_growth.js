@@ -941,6 +941,9 @@ function tickPersonalGrowthDaily(state) {
   }
 
   // 心理压力自然恢复
+  if (!pg.psychology) {
+    pg.psychology = { stress: 50, anxiety: 30, depression: 10, mood: 60 };
+  }
   pg.psychology.stress = Math.max(0, pg.psychology.stress - 0.5);
   pg.psychology.anxiety = Math.max(0, pg.psychology.anxiety - 0.3);
   pg.psychology.depression = Math.max(0, pg.psychology.depression - 0.2);

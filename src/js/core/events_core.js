@@ -206,6 +206,14 @@ function showEventModal(evt) {
   // 先卸掉任何旧弹窗
   document.querySelector(".modal-overlay")?.remove();
 
+  // 保护：evt 为 null/undefined 时静默返回
+  if (!evt || !evt.choices) {
+    var s = StateManager.getState();
+    s._pendingEvent = null;
+    s._pendingEventId = null;
+    return;
+  }
+
   // 支持 choices 为函数（动态生成，如政策套利兑现事件）
   var choicesArr = evt.choices;
   if (typeof choicesArr === "function") {

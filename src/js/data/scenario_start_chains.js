@@ -1065,7 +1065,7 @@
         choices: eventDef.choices,
       };
       setTimeout(function () {
-        showEventModal();
+        showEventModal(state._pendingEvent);
       }, 100);
     } else {
       StateManager.addMessage(

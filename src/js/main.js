@@ -1257,12 +1257,18 @@ function startNewGame() {
   }
 
   // v3.6 P0-2: 初始化时代变迁系统
-  if (typeof eraTransform && typeof eraTransform.init === "function") {
+  if (
+    typeof eraTransform !== "undefined" &&
+    typeof eraTransform.init === "function"
+  ) {
     eraTransform.init(StateManager.getState());
   }
 
   // v3.6 P0-3: 初始化副业系统
-  if (typeof sideHustle && typeof sideHustle.init === "function") {
+  if (
+    typeof sideHustle !== "undefined" &&
+    typeof sideHustle.init === "function"
+  ) {
     sideHustle.init(StateManager.getState());
   }
 
@@ -2303,7 +2309,7 @@ function getAvailableActions(state) {
         var festJobs = FESTIVAL_JOBS[curFest.id] || [];
         for (var fji = 0; fji < festJobs.length; fji++) {
           var fj = festJobs[fji];
-          if (fj.location && fj.location !== loc) continue;
+          if (fj.location && fj.location !== locKey) continue;
           if (fj.intReq && (state.player.intelligence || 0) < fj.intReq)
             continue;
           if ((state.player.actionPoints || 0) < (fj.apCost || 20)) continue;
