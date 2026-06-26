@@ -431,7 +431,8 @@ function renderSidebar(state) {
 
   renderNeedsBars(state);
   renderDebtInfo(state);
-  renderDreamSection(state);
+  // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
+  // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
   // if (typeof renderDailyFocusSection === "function") {
   //   renderDailyFocusSection(state);
@@ -1188,6 +1189,9 @@ function renderCurrentTab(state) {
   // 时间槽指示器
   renderTimeSlot(state, area);
 
+  // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
+  renderGoalStrip(state, area);
+
   // 活跃新闻
   renderActiveNews(state, area);
 
@@ -1865,30 +1869,67 @@ function renderTimeSlot(state, parent) {
 
   const ap = state.player.actionPoints || 0;
   const maxAp = state.player.maxActionPoints || 100;
-  // 低AP闪烁警告（≤30时加CSS闪烁动画）
+  // 低AP闪烁警告（≤20时加CSS闪烁动画）
   const lowAp = ap <= 20 && ap > 0;
   const apColor =
     ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
-  div.style.cssText = `display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:8px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  // 改为单行横排左对齐：📅 第 N 天 | ☀️ 上午 ⚡ 100/100 🎒 0/20 · 🌃 露宿街头
+  div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  var phaseLabel =
+    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter}` : "";
   div.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span>📅 第 <strong>${state.player.day}</strong> 天</span>
-      <span>|</span>
-      <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
-      <span style="font-size:11px;margin-left:4px;">
-        ⚡ <strong style="color:${apColor};${lowAp ? "animation: ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
-        ${lowAp ? ` <span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠仅剩${ap}点</span>` : ""}
-      </span>
-      <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">
-        ${state.player.phase === "corporate" ? `Q${state.player.corpQuarter}` : ""}
-      </span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary);padding-left:2px;">
-      <span>🎒 ${itemCount}/${totalCap}${hasStorage}</span>
-      <span style="color:var(--text-muted);">·</span>
-      <span>${houseIcon} ${houseName}</span>
-    </div>
+    <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
+    <span style="color:var(--text-muted);">|</span>
+    <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+    <span style="white-space:nowrap;font-size:12px;">
+      ⚡ <strong style="color:${apColor};${lowAp ? "animation:ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
+      ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
+    </span>
+    <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap;">
+      🎒 ${itemCount}/${totalCap}${hasStorage}
+    </span>
+    <span style="color:var(--text-muted);font-size:10px;">·</span>
+    <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap;">${houseIcon} ${houseName}</span>
+    ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
   `;
+  parent.appendChild(div);
+}
+
+/** 在内容区时间槽下方显示人生目标（🌟 紧凑横条） */
+function renderGoalStrip(state, parent) {
+  if (typeof getCurrentDream !== "function") return;
+  var dream = getCurrentDream(state);
+  if (!dream) return;
+  var progress =
+    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+  var curTitle =
+    typeof getDreamCurrentTitle === "function"
+      ? getDreamCurrentTitle(state)
+      : "";
+  var div = document.createElement("div");
+  div.className = "goal-strip-mobile";
+  div.style.cssText =
+    "display:flex;align-items:center;gap:8px;padding:4px 12px;margin:0 0 6px 0;background:rgba(74,158,92,0.06);border-radius:8px;font-size:12px;";
+  div.innerHTML =
+    '<span style="font-weight:600;color:var(--accent);white-space:nowrap;">🌟 人生目标</span>' +
+    '<span style="font-size:11px;">' +
+    dream.icon +
+    " " +
+    dream.name +
+    "</span>" +
+    '<div style="flex:1;max-width:160px;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+    '<div style="width:' +
+    progress +
+    '%;height:100%;background:var(--accent);border-radius:3px;"></div>' +
+    "</div>" +
+    '<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">' +
+    progress +
+    "%</span>" +
+    (curTitle
+      ? '<span style="font-size:10px;color:var(--text-secondary);">· ' +
+        curTitle +
+        "</span>"
+      : "");
   parent.appendChild(div);
 }
 

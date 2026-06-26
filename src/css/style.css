@@ -3813,10 +3813,20 @@ body {
   /* ====== 内容区 ====== */
   #content-area { padding: 10px; padding-bottom: 16px; }
   #time-slot-indicator {
-    align-items: flex-start;
-    padding: 10px 12px;
+    align-items: center;
+    padding: 8px 10px;
     font-size: 12px;
-    overflow-wrap: anywhere;
+    gap: 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+  }
+  /* 人生目标条（内容区）手机端紧凑 */
+  .goal-strip-mobile {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
   }
 
   /* ====== 行动卡片 ====== */

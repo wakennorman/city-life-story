@@ -152,10 +152,20 @@ function tickPropertyMarket(state) {
     var floor = Math.round((prop.buyPrice || 0) * 0.1);
     if (prop.currentPrice < floor) prop.currentPrice = floor;
 
-    // 月租结算（维持原逻辑）
+    // 月租结算（维持原逻辑，增加收支记录）
     var isSelfLived = inv.selfLivePropertyId === prop.id;
     if (state.player.day % 30 === 0 && !isSelfLived) {
-      state.resources.cash += prop.rent || 0;
+      var rentAmount = prop.rent || 0;
+      state.resources.cash += rentAmount;
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(
+          state,
+          "income",
+          "property_rent",
+          rentAmount,
+          prop.name + " 月租金",
+        );
+      }
     }
   }
 }

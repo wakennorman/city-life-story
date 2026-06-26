@@ -2063,6 +2063,46 @@ function getAvailableActions(state) {
       }
     }
 
+    // === 搬入自住房（拥有房产时显示）===
+    var invProps = state.investment ? state.investment.properties || [] : [];
+    var selfLiveId = state.investment
+      ? state.investment.selfLivePropertyId
+      : null;
+    for (var pi = 0; pi < invProps.length; pi++) {
+      var pp = invProps[pi];
+      if (pp.id === selfLiveId) continue;
+      var housingTier =
+        typeof getPropertyHousingTier === "function"
+          ? getPropertyHousingTier(pp.id)
+          : null;
+      if (housingTier === null) continue;
+      var targetHouse = HOUSING_TIERS[housingTier];
+      if (!targetHouse) continue;
+      (function (propDef, targetHouseData, targetTier) {
+        actions.push({
+          id: "housing_movein_" + propDef.id,
+          name: "🏠 搬入自住房：" + propDef.name,
+          desc:
+            targetHouseData.desc + " 免日租，容量" + targetHouseData.capacity,
+          icon: targetHouseData.icon,
+          disabled: false,
+          handler: function () {
+            var st = StateManager.getState();
+            st.investment.selfLivePropertyId = propDef.id;
+            st.housing.tier = targetTier;
+            st.housing.rentedDay = st.player.day;
+            st.housing.rentedAt = st.trade.currentLocation || "slum";
+            st.inventory.capacity =
+              targetHouseData.capacity + (st.housing.storageCapacity || 0);
+            StateManager.addMessage(
+              "🏠 搬入自住房" + propDef.name + "！每日免租金，生活品质提升。",
+              "success",
+            );
+          },
+        });
+      })(pp, targetHouse, housingTier);
+    }
+
     // === 仓库租赁（批发市场）===
     if (locKey === "wholesaleMarket") {
       const hasStorage = state.housing?.storageRented;

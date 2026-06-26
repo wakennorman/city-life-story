@@ -877,6 +877,46 @@ const PROPERTIES = [
   },
 ];
 
+/**
+ * 房产→住所等级映射表
+ * 将可购买的房产（住宅类）映射到 HOUSING_TIERS 住所等级，
+ * 玩家设定自住时自动升格对应住所品质。
+ * 设计参考真实居住市场分级：
+ * - 城中村握手楼 → 单间级别（¥80k，小但自己的空间）
+ * - 郊区经济房 → 单间级别（¥250k，位置偏但居住舒适）
+ * - 老破小学区/Loft/酒店式公寓 → 一居室级别（¥500k~¥600k）
+ * - 精装两居室 → 一居室级别（¥1.5M，实际对应改善型住房）
+ * - 花园洋房/海景度假屋 → 豪华公寓级别（¥3M~¥3.5M）
+ * - 别墅/江景大平层 → 别墅级别（¥5M~¥8M）
+ * - 古城四合院/豪宅 → 豪宅级别（¥12M+）
+ * - 商铺/写字楼/工业/车位/海外 → 不可自住（null）
+ */
+const PROPERTY_HOUSING_MAP = {
+  apt_cv: 2, // 城中村握手楼 → 单间
+  apt_old: 3, // 老破小学区 → 一居室
+  apt_suburb: 2, // 郊区经济房 → 单间
+  apt_new: 3, // 精装两居室 → 一居室
+  apt_loft: 3, // Loft挑高公寓 → 一居室
+  apt_garden: 4, // 花园洋房 → 豪华公寓
+  luxury: 5, // 江景大平层 → 别墅
+  villa: 5, // 山水别墅 → 别墅
+  apt_sea: 4, // 海景度假屋 → 豪华公寓
+  apt_oldtown: 6, // 古城四合院 → 豪宅
+  hotel_room: 3, // 酒店式公寓 → 一居室（商住两用）
+  // 商铺/写字楼/工业/车位/海外 不可自住
+};
+
+/**
+ * 获取房产对应的住所等级
+ * @param {string} propId - 房产ID
+ * @returns {number|null} 对应 HOUSING_TIERS 的 tier，不可居住返回 null
+ */
+function getPropertyHousingTier(propId) {
+  return PROPERTY_HOUSING_MAP.hasOwnProperty(propId)
+    ? PROPERTY_HOUSING_MAP[propId]
+    : null;
+}
+
 const CAR_TYPES = [
   // === 经济代步（7款） ===
   {
@@ -3485,10 +3525,15 @@ function renderProperties(area, inv, state, parent) {
         var s = StateManager.getState();
         var propId = this.dataset.id;
         if (s.investment.selfLivePropertyId === propId) {
-          // 切换为出租
+          // 切换为出租：退出自住，降级住所到合租床位（玩家可重新租房）
           s.investment.selfLivePropertyId = null;
+          if (typeof HOUSING_TIERS !== "undefined") {
+            s.housing.tier = 1;
+            s.inventory.capacity =
+              HOUSING_TIERS[1].capacity + (s.housing.storageCapacity || 0);
+          }
           StateManager.addMessage(
-            "🏢 已将房产改为出租，恢复日常租房模式。",
+            "🏢 已将房产改为出租，搬回合租床位（可去城中村重新租房升级）。",
             "info",
           );
         } else {
@@ -3500,13 +3545,16 @@ function renderProperties(area, inv, state, parent) {
             return pd.id === propId;
           });
           if (typeof HOUSING_TIERS !== "undefined") {
+            // 使用精确的房产→住所映射表，不再按价格粗略分级
             var newTier = propDef
-              ? propDef.price >= 1000000
-                ? 4
-                : propDef.price >= 200000
-                  ? 3
-                  : 2
-              : 3;
+              ? typeof getPropertyHousingTier === "function"
+                ? getPropertyHousingTier(propDef.id)
+                : null
+              : null;
+            // 如果房产不可自住（商业/海外等），降级到合租床位
+            if (newTier === null) {
+              newTier = 1;
+            }
             if (newTier > (s.housing.tier || 0)) {
               s.housing.tier = newTier;
               s.inventory.capacity =
