@@ -45,3 +45,4 @@
 - 移动端不要把帮助/存档/读档/新游戏长期固定在底部，否则文字模拟游戏主内容会被压住，玩家会误以为只剩工具栏。手机端更稳的做法是隐藏低频顶栏操作，保留菜单、标题、现金和主内容。
 - 侧栏从 Grid 布局改为移动端覆盖层时，追加 CSS 必须显式写 `position: fixed !important`；只写 `left/top/transform` 不够，元素仍可能作为 Grid 子项参与布局，把 `#header/#main` 挤成窄列。
 - 沙盒配置页有内联 `max-height`，手机端必须用 `#sandbox-config { max-height: ... !important; }` 控制配置滚动区，并让开始/返回按钮 sticky 可见。
+- Netlify 部署不走 GitHub Action，构建后必须手动 `npx netlify deploy --prod --dir=dist` 推送；只 `git push` 不会自动更新线上版本。

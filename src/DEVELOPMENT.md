@@ -2158,4 +2158,10 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 
 ### 2026-06-26 移动端二次修复
 
-用户复测发现手机进游戏后只剩左上角菜单和底部“? 存 读 +”，沙盒模式开始按钮不可见。根因是移动端把 `header-actions` 固定到底部后抢占视野，同时 `#sidebar` 未在追加覆盖中显式 `position: fixed`，作为 Grid 子项挤出了隐式列，导致 `#header/#main` 宽度被压到约 16px。修复：手机端隐藏 `header-actions`，侧栏改为菜单按钮打开的全屏状态/位置面板，默认 `translateX(-100%)` 完全离开布局；沙盒配置区限制高度并把底部开始/返回操作做成 sticky。验证：375px Chrome Headless 截图确认主界面标题、现金、tab、行动内容恢复，沙盒“开始游戏”按钮首屏可见，侧栏打开正常。
+用户复测发现手机进游戏后只剩左上角菜单和底部"? 存 读 +"，沙盒模式开始按钮不可见。根因是移动端把 `header-actions` 固定到底部后抢占视野，同时 `#sidebar` 未在追加覆盖中显式 `position: fixed`，作为 Grid 子项挤出了隐式列，导致 `#header/#main` 宽度被压到约 16px。修复：手机端隐藏 `header-actions`，侧栏改为菜单按钮打开的全屏状态/位置面板，默认 `translateX(-100%)` 完全离开布局；沙盒配置区限制高度并把底部开始/返回操作做成 sticky。验证：375px Chrome Headless 截图确认主界面标题、现金、tab、行动内容恢复，沙盒"开始游戏"按钮首屏可见，侧栏打开正常。
+
+### 部署说明
+
+- 本地构建后使用 `npx netlify deploy --prod --dir=dist` 手动推送到 Netlify（不走 GitHub Action 自动部署）
+- 推送到 GitHub 不会自动触发 Netlify 重新构建，需要本地跑完 `python build.py` 后手动部署
+- 部署命令在项目根目录执行，需要先确保 `dist/` 目录是最新构建产物
