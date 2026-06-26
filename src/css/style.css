@@ -413,6 +413,9 @@ body {
 .stat-bar.mental-bar {
   background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color));
 }
+.stat-bar.charm {
+  background: linear-gradient(90deg, #d9789e, #b95f87);
+}
 .stat-bar.hunger {
   background: linear-gradient(90deg, #c9a838, #dec054);
 }

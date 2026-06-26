@@ -178,7 +178,7 @@
             <span class="label">📅 天</span>
             <span class="value" id="header-day">1</span>
           </div>
-          <div class="header-stat">
+          <div class="header-stat" style="display: none">
             <span class="label" id="header-season-label">🌸 春</span>
           </div>
           <div
@@ -194,7 +194,7 @@
             <span class="label">🎂 年龄</span>
             <span class="value age" id="header-age">20</span>
           </div>
-          <div class="header-stat">
+          <div class="header-stat" style="display: none">
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
@@ -269,6 +269,13 @@
             </div>
             <span class="stat-value">26</span>
           </div>
+          <div class="stat-row" id="stat-charm">
+            <span class="stat-label">魅力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar charm"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
         </div>
 
         <!-- 职场属性（Phase 2，初始隐藏） -->
@@ -324,14 +331,10 @@
         </div>
 
         <!-- 基本需求 -->
-        <div
-          class="sidebar-section"
-          id="location-section"
-          style="display: none"
-        >
+        <div class="sidebar-section" id="location-section">
           <h3>📊 状态</h3>
           <div class="stat-row" id="stat-hunger">
-            <span class="stat-label">饥饱</span>
+            <span class="stat-label">饥饿</span>
             <div class="stat-bar-wrap"><div class="stat-bar hunger"></div></div>
             <span class="stat-value">70</span>
           </div>
@@ -408,22 +411,7 @@
           style="display: none"
         ></div>
 
-        <!-- 附近地点快速出行（放在靠前位置，首屏可见） -->
-        <div class="sidebar-section" id="nearby-section" style="display: none">
-          <h3>🚶 附近可前往</h3>
-          <div
-            id="nearby-locations"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 4px;
-              max-height: 200px;
-              overflow-y: auto;
-            "
-          ></div>
-        </div>
-
-        <!-- 当前位置 & 住所 -->
+        <!-- 当前位置 -->
         <div class="sidebar-section">
           <h3>📍 当前位置</h3>
           <div class="location-display">

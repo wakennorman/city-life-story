@@ -27,7 +27,7 @@ function createDefaultState() {
       intelligence: 20, // 智力
       agility: 24, // 敏捷
       mental: 26, // 心智（v3.0：UI 显示为"能力"，字段名保留避免破坏）
-      charm: 20, // 颜值（v3.0 新增：影响 NPC 初遇好感、职场面试、特殊行动）
+      charm: 20, // 魅力（v3.0 新增：影响 NPC 初遇好感、职场面试、特殊行动）
       morality: 50, // 道德（v3.0 新增：0-100，违法行为降低，捐款/义工提升）
       fame: 0, // 名气（基础第五维，从 status.fame 迁移而来）
 

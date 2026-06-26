@@ -615,7 +615,7 @@ function startScenarioGame(scenarioId) {
   // 应用剧本配置
   var state = StateManager.getState();
 
-  // --- 基础属性（v3.0 新增 charm 颜值 + morality 道德）---
+  // --- 基础属性（v3.0 新增 charm 魅力 + morality 道德）---
   state.player.physique = scenario.stats.physique || 22;
   state.player.intelligence = scenario.stats.intelligence || 20;
   state.player.agility = scenario.stats.agility || 24;

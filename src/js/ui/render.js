@@ -124,7 +124,8 @@ function renderHeader(state) {
 
   document.getElementById("header-day").textContent = p.day;
   document.getElementById("header-age").textContent = p.age;
-  document.getElementById("header-phase").textContent = phaseLabel;
+  var phaseEl = document.getElementById("header-phase");
+  if (phaseEl) phaseEl.textContent = phaseLabel;
 
   // 模式指示器
   var modeEl = document.getElementById("header-mode");
@@ -302,7 +303,7 @@ function renderDebtHeader(state) {
   if (!debtArea || !debtLabel || !debtValue) return;
 
   var r = state.resources;
-  var villageDebt = r.villageDebt || r.debt || 0;
+  var villageDebt = r.villageDebt || 0;
   var bankDebt = r.bankDebt || 0;
 
   // 收集非零债务
@@ -446,14 +447,14 @@ function renderReputationBadge(state) {
   }
   var el = document.getElementById("reputation-badge");
   if (!el) {
-    // 动态创建并附加到 edu-section 之后
+    // 动态创建并附加到梦想区之后；学历已移出侧栏。
     el = document.createElement("div");
     el.id = "reputation-badge";
     el.style.cssText =
       "margin-top:6px;padding:6px 10px;background:rgba(74,158,92,0.10);border:1px solid rgba(74,158,92,0.30);border-radius:8px;";
-    var eduEl = document.getElementById("edu-section");
-    if (eduEl && eduEl.parentNode) {
-      eduEl.parentNode.insertBefore(el, eduEl.nextSibling);
+    var anchorEl = document.getElementById("dream-section");
+    if (anchorEl && anchorEl.parentNode) {
+      anchorEl.parentNode.insertBefore(el, anchorEl.nextSibling);
     } else {
       return;
     }
@@ -627,24 +628,15 @@ function renderDreamSection(state) {
 function renderDebtInfo(state) {
   const debtSection = document.getElementById("debt-section");
   if (!debtSection) return;
-  const villageDebt = state.resources.villageDebt || 0;
-  const villageInterest = state.resources.villageDebtInterest || 0;
   const bankDebt = state.resources.bankDebt || 0;
   let html = "";
-  if (villageDebt > 0) {
-    html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(231,76,60,0.08);border-radius:4px;font-size:11px;">
-      🏘️ 欠村长: <strong style="color:var(--danger);">¥${villageDebt.toLocaleString()}</strong>
-      ${villageInterest > 0 ? ` <span style="color:var(--text-muted);">(利息+¥${villageInterest.toLocaleString()})</span>` : ""}
-    </div>`;
-  }
   if (bankDebt > 0) {
     html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(243,156,18,0.08);border-radius:4px;font-size:11px;">
       🏦 欠银行: <strong style="color:var(--warning);">¥${bankDebt.toLocaleString()}</strong>
     </div>`;
   }
   debtSection.innerHTML = html;
-  debtSection.style.display =
-    villageDebt > 0 || bankDebt > 0 ? "block" : "none";
+  debtSection.style.display = bankDebt > 0 ? "block" : "none";
 }
 
 function renderStreetStats(state) {
@@ -653,11 +645,13 @@ function renderStreetStats(state) {
   setStatBar("stat-intelligence", p.intelligence, "intelligence");
   setStatBar("stat-agility", p.agility, "agility");
   setStatBar("stat-mental", p.mental, "mental-bar");
+  setStatBar("stat-charm", p.charm || 0, "charm");
   // 低数值预警（基础属性阈值=10）
   warnStatRow("stat-physique", p.physique, 10, "#c4803a");
   warnStatRow("stat-intelligence", p.intelligence, 10, "#5a8ab4");
   warnStatRow("stat-agility", p.agility, 10, "#5aaa5a");
   warnStatRow("stat-mental", p.mental, 10, "#9b74b8");
+  warnStatRow("stat-charm", p.charm || 0, 10, "#d9789e");
 }
 
 function renderCorporateStats(state) {
@@ -685,6 +679,8 @@ function renderCorporateStats(state) {
 }
 
 function renderNeedsBars(state) {
+  var statusSection = document.getElementById("location-section");
+  if (statusSection) statusSection.style.display = "block";
   const n = state.needs;
   const s = state.status;
   const p = state.player;
@@ -705,7 +701,7 @@ function renderNeedsBars(state) {
     apVal.textContent = p.actionPoints + "/" + (p.maxActionPoints || 100);
 
   // === 紧凑型低数值预警 ===
-  // 状态：饥饱≤15 疲劳≥85 卫生≤15 心情≤10 健康≤20 名气≤5
+  // 状态：饥饿≤15 疲劳≥85 卫生≤15 心情≤10 健康≤20 名气≤5
   warnStatRow("stat-hunger", n.hunger, 15, "#c9a838");
   warnStatRow("stat-fatigue", n.fatigue, 85, "#8a9080", true); // 疲劳高是坏事
   warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
@@ -781,57 +777,6 @@ function renderLocation(state) {
     servicesEl.innerHTML = badgeHtml;
   }
 
-  // 附近可前往地点（仅街头阶段显示）
-  const nearbySection = document.getElementById("nearby-section");
-  if (nearbySection) {
-    nearbySection.style.display = state.player.phase === "street" ? "" : "none";
-  }
-  const nearbyEl = document.getElementById("nearby-locations");
-  if (nearbyEl && state.player.phase === "street") {
-    const reachable = getReachableLocations(locKey);
-    if (reachable.length > 0) {
-      nearbyEl.innerHTML = reachable
-        .map((destKey) => {
-          const dest = getLocation(destKey);
-          if (!dest) return "";
-          const badges = getLocationServiceBadges(destKey);
-          const badgeStr =
-            badges.length > 0
-              ? badges
-                  .slice(0, 2)
-                  .map((b) => `${b.icon}`)
-                  .join(" ")
-              : "";
-          return `
-          <div class="nearby-loc-item" data-dest="${destKey}"
-               style="padding:6px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;"
-               onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';"
-               onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';">
-            <span>🚶 <strong>${dest.name}</strong> <span style="color:var(--text-muted);font-size:10px;">${dest.type === "commercial" ? "商业" : dest.type === "industrial" ? "工业" : dest.type === "residential" ? "居住" : dest.type === "service" ? "服务" : dest.type === "education" ? "教育" : dest.type === "corporate" ? "职场" : dest.type === "recreation" ? "娱乐" : dest.type === "institutional" ? "机构" : ""}</span></span>
-            <span style="font-size:10px;">${badgeStr}</span>
-          </div>`;
-        })
-        .join("");
-      // 绑定点击
-      setTimeout(() => {
-        nearbyEl.querySelectorAll(".nearby-loc-item").forEach((item) => {
-          item.addEventListener("click", () => {
-            StateManager.update("trade.currentLocation", item.dataset.dest);
-            const dest = getLocation(item.dataset.dest);
-            StateManager.addMessage(
-              `🚶 你来到了${dest ? dest.name : item.dataset.dest}。`,
-              "info",
-            );
-            if (typeof consumeAP === "function") consumeAP(15);
-            renderAll();
-          });
-        });
-      }, 0);
-    } else {
-      nearbyEl.innerHTML =
-        '<span style="font-size:11px;color:var(--text-muted);">没有可通行路线</span>';
-    }
-  }
   var houseData =
     (typeof HOUSING_TIERS !== "undefined" &&
       HOUSING_TIERS[state.housing?.tier || 0]) ||
@@ -842,42 +787,8 @@ function renderLocation(state) {
   var curRent = houseData ? houseData.rent : 0;
   var houseEl = document.getElementById("housing-info");
   if (houseEl) {
-    const totalCap = state.inventory.capacity;
-    const itemCount = (state.inventory.items || []).reduce(
-      (s, i) => s + i.qty,
-      0,
-    );
-    // 家居设施指示
-    var homeIndicators = "";
-    if (houseData) {
-      var homeIcons = [];
-      if (houseData.canCook) homeIcons.push("🍳");
-      if (houseData.canBathe) homeIcons.push("🚿");
-      if (houseData.canRest && state.housing.tier >= 1) homeIcons.push("🛏️");
-      if (homeIcons.length > 0) {
-        homeIndicators =
-          '<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">' +
-          homeIcons.join("") +
-          "</span>";
-      }
-    }
-    // 自住房提示
-    var selfLiveNote = "";
-    if (state.investment && state.investment.selfLivePropertyId != null) {
-      selfLiveNote =
-        '<span style="font-size:10px;color:var(--info,#3498db);margin-left:4px;">🏠自住</span>';
-    }
-    houseEl.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-size:12px;">${houseName}${selfLiveNote}${homeIndicators}</span>
-        ${curRent > 0 ? `<span style="font-size:10px;color:var(--warning);">日租¥${curRent}</span>` : ""}
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);">
-        🎒 仓库槽位 ${itemCount}/${totalCap}
-        ${state.housing?.storageRented ? " 📦 已租仓库" : ""}
-      </div>
-      ${state.housing?.tier < 3 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">💡 去<strong style="color:var(--accent);">城中村</strong>可升级住所</div>` : ""}
-    `;
+    houseEl.style.display = "none";
+    houseEl.innerHTML = "";
   }
 
   // 天气面板（天气深化系统）
@@ -892,9 +803,55 @@ function renderHeaderContext(state, loc, weatherDef, seasonDef) {
       HOUSING_TIERS[state.housing?.tier || 0]) ||
     null;
   var houseName = houseData ? houseData.name : "露宿街头";
-  // header-context只显示住所（位置/天气/背包在sidebar已有展示，避免重复）
-  el.innerHTML = '<span class="context-chip">🏠 ' + houseName + "</span>";
-  el.title = "当前住所：" + houseName;
+  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
+  var itemCount = (state.inventory.items || []).reduce(function (sum, item) {
+    return sum + (item.qty || 0);
+  }, 0);
+  var totalCap = state.inventory.capacity || 0;
+  var upgradeTip = getHousingUpgradeTip(state);
+  el.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:2px;min-width:0;">' +
+    '<div style="display:flex;align-items:center;gap:4px;min-width:0;">' +
+    '<span class="context-chip">' +
+    houseIcon +
+    " " +
+    houseName +
+    "</span>" +
+    '<span class="context-chip">🎒 ' +
+    itemCount +
+    "/" +
+    totalCap +
+    (state.housing && state.housing.storageRented ? " · 已租仓库" : "") +
+    "</span>" +
+    "</div>" +
+    (upgradeTip
+      ? '<div style="font-size:10px;color:var(--text-muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">💡 ' +
+        upgradeTip +
+        "</div>"
+      : "") +
+    "</div>";
+  el.title = upgradeTip
+    ? "当前住所：" + houseName + "；" + upgradeTip
+    : "当前住所：" + houseName;
+}
+
+function getHousingUpgradeTip(state) {
+  if (typeof HOUSING_TIERS === "undefined" || !Array.isArray(HOUSING_TIERS)) {
+    return "";
+  }
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  var nextTier = HOUSING_TIERS[currentTier + 1];
+  if (!nextTier) return "";
+  var locationName = "城中村";
+  if (nextTier.tier >= 4 && nextTier.tier <= 6) locationName = "商业区";
+  if (nextTier.tier === 5) locationName = "郊区";
+  return (
+    "去" +
+    locationName +
+    "可升级为" +
+    (nextTier.icon || "🏠") +
+    nextTier.name
+  );
 }
 
 /**
@@ -1593,7 +1550,7 @@ function renderGrowthTab(state, parent) {
   radarInfo.appendChild(radarCanvas);
   radarSection.appendChild(radarInfo);
 
-  // 属性说明（v3.0：心智→能力，新增颜值/道德，标题"属性"取代"基础属性"）
+  // 属性说明（v3.0：心智→能力，新增魅力/道德，标题"属性"取代"基础属性"）
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
@@ -1601,7 +1558,7 @@ function renderGrowthTab(state, parent) {
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
     { label: "能力", value: p.mental, color: "#9b74b8" },
-    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
+    { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
@@ -1961,8 +1918,8 @@ function getDailyActionTips(state) {
 
   // 需求警示（基础层，无门槛）
   if (needs.hunger <= 15)
-    urgent.push("🍚 饥饱极低！再不吃东西会晕倒，先找食物！");
-  else if (needs.hunger <= 30) tips.push("🍚 饥饱不足，记得先吃顿饭再干活。");
+    urgent.push("🍚 饥饿极高！再不吃东西会晕倒，先找食物！");
+  else if (needs.hunger <= 30) tips.push("🍚 已经很饿了，记得先吃顿饭再干活。");
   if (needs.fatigue >= 90)
     urgent.push("😴 体力耗尽！今天必须休息，否则健康会受损。");
   else if (needs.fatigue >= 75)
@@ -6040,9 +5997,9 @@ function renderPgStatTrain(state, content) {
     },
     {
       id: "train_charm_grooming",
-      name: "💇 形象设计",
+      name: "💇 发型设计",
       stat: "charm",
-      statLabel: "颜值",
+      statLabel: "魅力",
       basePrice: 100,
       priceStep: 80,
       gain: [1, 3],
@@ -6051,7 +6008,7 @@ function renderPgStatTrain(state, content) {
       id: "train_charm_surgery",
       name: "💉 整容手术",
       stat: "charm",
-      statLabel: "颜值",
+      statLabel: "魅力",
       basePrice: 2000,
       priceStep: 1500,
       gain: [5, 15],
@@ -6091,7 +6048,7 @@ function renderPgStatTrain(state, content) {
       "</div>";
     if (t.risky) {
       html +=
-        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（颜值-5/健康-15）</div>';
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（魅力-5/健康-15）</div>';
     }
     html +=
       "<button onclick=\"window.__doTrain('" +
@@ -6117,7 +6074,7 @@ function renderPgStatTrain(state, content) {
   html +=
     '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
   html +=
-    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时颜值-5、健康-15、心情-10。建议攒够钱一次到位，避免反复失败。";
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力-5、健康-15、心情-10。发型设计是临时魅力维护，整容成功才是长期改变。";
   html += "</div>";
 
   content.innerHTML = html;
@@ -6163,7 +6120,7 @@ window.__doTrain = function (trainId) {
     },
     train_charm_grooming: {
       stat: "charm",
-      statLabel: "颜值",
+      statLabel: "魅力",
       basePrice: 100,
       priceStep: 80,
       gain: [1, 3],
@@ -6171,7 +6128,7 @@ window.__doTrain = function (trainId) {
     },
     train_charm_surgery: {
       stat: "charm",
-      statLabel: "颜值",
+      statLabel: "魅力",
       basePrice: 2000,
       priceStep: 1500,
       gain: [5, 15],
@@ -6196,7 +6153,7 @@ window.__doTrain = function (trainId) {
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
-      "💉 整容失败！颜值-5，健康-15，心情-10。 surgeon 技术不行...",
+      "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
       "error",
     );
   } else {
@@ -6213,7 +6170,7 @@ window.__doTrain = function (trainId) {
         intelligence: "📚 自习室",
         agility: "🏃 跑步训练",
         mental: "🧘 冥想训练",
-        charm: "💇 形象设计/整容",
+        charm: "💇 发型设计/整容",
       }[t.stat] || "训练") +
       " " +
       t.statLabel +
@@ -6269,7 +6226,7 @@ function renderPgCharts(state, content) {
     { label: "智力", value: p.intelligence, color: "#5a8ab4" },
     { label: "敏捷", value: p.agility, color: "#5aaa5a" },
     { label: "能力", value: p.mental, color: "#9b74b8" },
-    { label: "颜值", value: (p && p.charm) || 20, color: "#e08aa8" },
+    { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
   ];
