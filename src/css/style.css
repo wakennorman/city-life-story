@@ -3180,53 +3180,26 @@ body {
   }
 
   .header-actions {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    z-index: 260;
-    display: flex;
-    gap: 8px;
-    padding: 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: rgba(250, 247, 240, 0.96);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  }
-
-  .header-actions .btn {
-    width: 44px;
-    min-width: 44px;
-    height: 44px;
-    padding: 0 8px;
-    overflow: hidden;
-    white-space: nowrap;
-    font-size: 0;
-  }
-
-  .header-actions .btn::before {
-    font-size: 18px;
-    color: var(--text-primary);
-    line-height: 1;
-  }
-
-  #btn-help::before {
-    content: "?";
-  }
-
-  #btn-save::before {
-    content: "存";
-  }
-
-  #btn-load::before {
-    content: "读";
-  }
-
-  #btn-new-game-header::before {
-    content: "+";
+    display: none;
   }
 
   #main {
     min-width: 0;
+  }
+
+  #sidebar {
+    position: fixed !important;
+    left: -100%;
+    top: var(--header-height);
+    bottom: 0;
+    width: var(--sidebar-width);
+    z-index: 240;
+    transition: left 0.28s ease;
+    box-shadow: 2px 0 18px rgba(0, 0, 0, 0.16);
+  }
+
+  #sidebar.open {
+    left: 0;
   }
 
   #tab-bar {
@@ -3253,7 +3226,7 @@ body {
   #content-area {
     padding: 12px;
     gap: 12px;
-    padding-bottom: 96px;
+    padding-bottom: 16px;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
@@ -3404,6 +3377,34 @@ body {
     width: 100%;
   }
 
+  #sandbox-screen {
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  #sandbox-screen #sandbox-config {
+    width: min(100%, 500px);
+    max-height: min(48vh, 420px) !important;
+  }
+
+  #sandbox-screen > div:last-child {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(100%, 320px);
+    margin-top: 8px !important;
+    padding: 10px 0 4px;
+    background: linear-gradient(180deg, rgba(245, 241, 232, 0), var(--bg-primary) 28%);
+  }
+
+  #sandbox-screen > div:last-child .btn {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
   .mode-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -3502,31 +3503,21 @@ body {
     font-size: 13px;
   }
 
-  .header-actions {
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    justify-content: space-between;
-  }
-
-  .header-actions .btn {
-    flex: 1 1 44px;
-  }
-
   #sidebar {
+    position: fixed !important;
     left: 0 !important;
     right: 0;
-    top: auto !important;
-    bottom: 0;
+    top: var(--header-height) !important;
+    bottom: auto;
     width: 100vw;
-    height: min(72vh, 560px);
+    height: calc(100vh - var(--header-height));
     max-height: calc(100vh - var(--header-height));
-    padding: 10px 12px 76px;
+    padding: 12px;
     border-right: none;
     border-top: 1px solid var(--border);
-    border-radius: 14px 14px 0 0;
-    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.18);
-    transform: translateY(calc(100% - 34px));
+    border-radius: 0;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.18);
+    transform: translateX(-100%);
     transition: transform 0.28s ease;
     z-index: 240;
     gap: 10px;
@@ -3534,20 +3525,21 @@ body {
   }
 
   #sidebar::before {
-    content: "";
+    content: "状态与位置";
     position: sticky;
-    top: 0;
+    top: -12px;
     display: block;
-    width: 42px;
-    height: 4px;
-    margin: 0 auto 8px;
-    border-radius: 999px;
-    background: var(--border);
+    margin: -12px -12px 10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--accent);
+    font-weight: 700;
   }
 
   #sidebar.open {
     left: 0 !important;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 
   #sidebar .sidebar-section {
@@ -3602,7 +3594,7 @@ body {
 
   #content-area {
     padding: 10px;
-    padding-bottom: 118px;
+    padding-bottom: 16px;
   }
 
   #time-slot-indicator {
@@ -3678,6 +3670,14 @@ body {
   .welcome-screen {
     padding: 22px 14px;
     gap: 12px;
+  }
+
+  #sandbox-screen {
+    padding-top: 14px;
+  }
+
+  #sandbox-screen #sandbox-config {
+    max-height: min(46vh, 380px) !important;
   }
 
   .welcome-subtitle {
