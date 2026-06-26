@@ -46,3 +46,4 @@
 - 侧栏从 Grid 布局改为移动端覆盖层时，追加 CSS 必须显式写 `position: fixed !important`；只写 `left/top/transform` 不够，元素仍可能作为 Grid 子项参与布局，把 `#header/#main` 挤成窄列。
 - 沙盒配置页有内联 `max-height`，手机端必须用 `#sandbox-config { max-height: ... !important; }` 控制配置滚动区，并让开始/返回按钮 sticky 可见。
 - Netlify 部署不走 GitHub Action，构建后必须手动 `npx netlify deploy --prod --dir=dist` 推送；只 `git push` 不会自动更新线上版本。
+- 测试标准必须前置写在需求里：数值改动→跑蒙特卡洛 200次×1000天验证存活率>80%、前7天死亡率<10%、30天前暴富率<5%；UI改动→375px视口截图；构建→python build.py+npm run build+npm run typecheck全部通过。tests/ 目录下有现成脚本和模板。

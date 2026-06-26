@@ -3840,3 +3840,135 @@ body {
     text-align: right;
   }
 }
+
+/* ====== 2026-06-26 mobile completeness: collapse instead of hiding UI ====== */
+#message-log h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#message-log-toggle {
+  display: none;
+  min-height: 32px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  #header {
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .header-left,
+  .header-stats,
+  .header-actions {
+    flex: 0 0 auto;
+  }
+
+  .header-logo {
+    max-width: none;
+  }
+
+  .header-logo span {
+    display: inline;
+  }
+
+  .header-stats {
+    justify-content: flex-start;
+    max-width: none;
+    overflow: visible;
+    gap: 6px;
+  }
+
+  .header-stat {
+    flex: 0 0 auto;
+    padding: 0 8px;
+  }
+
+  .header-stat .label,
+  #header-day,
+  #header-age {
+    display: inline !important;
+  }
+
+  .header-context,
+  #header-mode-stat.has-mode {
+    display: flex !important;
+  }
+
+  .header-context {
+    max-width: none;
+  }
+
+  .header-actions {
+    display: flex !important;
+    gap: 6px;
+  }
+
+  .header-actions .btn {
+    min-height: 38px;
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+
+  #header-cash-area,
+  #header-debt-area {
+    max-width: none;
+    flex: 0 0 auto;
+  }
+
+  #street-stats-section,
+  #corp-stats-section {
+    display: block !important;
+  }
+
+  #sidebar.phase-street #corp-stats-section,
+  #sidebar.phase-corporate #street-stats-section {
+    display: none !important;
+  }
+
+  #location-section .stat-row {
+    display: flex !important;
+  }
+
+  #daily-focus-section,
+  #needs-section,
+  #debt-section,
+  #dream-section,
+  #location-section {
+    display: block;
+  }
+
+  #message-log {
+    max-height: none;
+    overflow: visible;
+  }
+
+  #message-log-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+  }
+
+  #message-log.collapsed .log-content {
+    display: none;
+  }
+
+  #message-log .log-content {
+    max-height: min(42vh, 320px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}

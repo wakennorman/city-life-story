@@ -3997,6 +3997,31 @@ function renderMessageLog(state) {
   content.scrollTop = content.scrollHeight;
 }
 
+function setMessageLogCollapsed(collapsed, userToggled) {
+  const log = document.getElementById("message-log");
+  const toggle = document.getElementById("message-log-toggle");
+  if (!log || !toggle) return;
+
+  log.classList.toggle("collapsed", collapsed);
+  toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  toggle.textContent = collapsed ? "展开" : "收起";
+  if (userToggled) log.dataset.userToggled = "1";
+}
+
+function syncMessageLogForViewport() {
+  const log = document.getElementById("message-log");
+  if (!log || log.dataset.userToggled === "1") return;
+
+  setMessageLogCollapsed(window.innerWidth <= 480, false);
+}
+
+function toggleMessageLog() {
+  const log = document.getElementById("message-log");
+  if (!log) return;
+
+  setMessageLogCollapsed(!log.classList.contains("collapsed"), true);
+}
+
 // ====== 初始化 ======
 function init() {
   // 检查是否有存档
@@ -4068,6 +4093,13 @@ function init() {
   document.getElementById("mobile-menu-btn").addEventListener("click", () => {
     document.getElementById("sidebar").classList.toggle("open");
   });
+
+  const messageLogToggle = document.getElementById("message-log-toggle");
+  if (messageLogToggle) {
+    messageLogToggle.addEventListener("click", toggleMessageLog);
+    syncMessageLogForViewport();
+    window.addEventListener("resize", syncMessageLogForViewport);
+  }
 
   console.log("🏙️ 城市浮生记 initialized.");
 }

@@ -2165,3 +2165,10 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 - 本地构建后使用 `npx netlify deploy --prod --dir=dist` 手动推送到 Netlify（不走 GitHub Action 自动部署）
 - 推送到 GitHub 不会自动触发 Netlify 重新构建，需要本地跑完 `python build.py` 后手动部署
 - 部署命令在项目根目录执行，需要先确保 `dist/` 目录是最新构建产物
+
+### 测试
+
+- `tests/README.md`：完整的测试标准与验收规范模板（冒烟测试、数值平衡、UI回归、概率、存档）
+- `tests/monte_carlo.js`：蒙特卡洛模拟脚本，在浏览器 DevTools 控制台调用 `runMonteCarlo()` 执行 200 次×1000 天模拟
+- 本地开发时脚本自动加载（localhost/?test），生产环境不加载
+- 每次涉及数值/经济/概率改动后，必须跑蒙特卡洛验证存活率 > 80%、前7天死亡率 < 10%、30天前暴富率 < 5%

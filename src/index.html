@@ -492,7 +492,17 @@
 
         <!-- Message Log -->
         <div id="message-log">
-          <h3>📜 事件记录</h3>
+          <h3>
+            <span>📜 事件记录</span>
+            <button
+              id="message-log-toggle"
+              class="btn btn-sm"
+              type="button"
+              aria-expanded="true"
+            >
+              收起
+            </button>
+          </h3>
           <div
             class="log-content"
             style="max-height: 220px; overflow-y: auto"
@@ -684,5 +694,13 @@
     <script src="js/data/scenario_start_chains.js"></script>
     <!-- v3.8 Phase 1: Web App bridge (Vite/TypeScript migration adapter) -->
     <script src="js/app_bridge/webapp_runtime_bridge.js"></script>
+    <!-- 测试工具（仅本地开发加载） -->
+    <script>
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.search.includes('test')) {
+        var s = document.createElement('script');
+        s.src = '../tests/monte_carlo.js';
+        document.body.appendChild(s);
+      }
+    </script>
   </body>
 </html>

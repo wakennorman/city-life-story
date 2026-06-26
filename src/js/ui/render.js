@@ -140,8 +140,10 @@ function renderHeader(state) {
     if (modeLabel) {
       modeEl.textContent = modeLabel;
       modeStat.style.display = "";
+      modeStat.classList.add("has-mode");
     } else {
       modeStat.style.display = "none";
+      modeStat.classList.remove("has-mode");
     }
   }
 
@@ -415,6 +417,11 @@ function initCashCarousel() {
 // ====== Sidebar 渲染 ======
 function renderSidebar(state) {
   const p = state.player;
+  var sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.classList.toggle("phase-street", p.phase === "street");
+    sidebar.classList.toggle("phase-corporate", p.phase !== "street");
+  }
 
   if (p.phase === "street") {
     renderStreetStats(state);
