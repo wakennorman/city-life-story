@@ -52,12 +52,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：城市浮生记审查改进与扩展（2026-06-26）
-  - **审查产出**：已刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md`，本轮重点是正式 legacy 入口的 UI、地点行动、技能门槛、天气/违法/事业联动。
-  - **UI 修复**：顶部去掉重复气候、位置和地点显示，恢复左侧“状态”栏；“附近可前往”整合进“出行”；顶栏显示当前住所、仓库槽位、资金和动态升级提示；左栏新增“魅力”，饥饱文案改为饥饿，学历移到事业总览。
-  - **行动与地点**：行动按地点特性灰显并红字提示条件，技能训练必须到培训中心；个人成长主 Tab 从导航隐藏，发型设计进入行动并按地点繁华度调整花费/效果且逐日衰减。
-  - **系统联动**：天气准备物品有使用次数；偷电瓶等违法行动抓捕概率按地点繁华/监管程度调整；事业页新增上班族路径与创业路径的并列准备度说明。
-  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 全部通过。
+- **最新一次工作**：城市浮生记审查改进第二轮（2026-06-26）
+  - **审查产出**：已刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 为第二轮，基于当前 `HEAD 5b2f662` 重新扫描
+  - **CSS 清理**：移除手机端 @media 中隐藏 `#street-stats-section/#corp-stats-section` 的冗余规则（第 3662-3665 行），消除 `!important` 对抗风险
+  - **CSS 移动端投资防护**：新增 `.investment-holdings-row` 横向滚动溢出防护；新增 `.inv-holdings-mobile-row` 紧凑展示样式
+  - **Wiki 百科增强**：世界参数反馈环条目新增策略提示 section（行业传导链/关注新闻/财富门槛/衰减周期 4 条策略建议）
+  - **创业提示增强**：未满足注册条件时显示”还没累计职场资源”提示文字，引导玩家上班积累行业资源和客户线索
+  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`(4262.3 KB)、`npm run build` 全部通过；commit 21d2d00
 
 - **最新一次工作**：手机端事件记录收起预览 + 展开自动滚动（2026-06-26）
   - **收起预览**：折叠状态时在标题与展开按钮之间显示最新一条日志白框（#message-log-preview），每出现新事件自动替换，点击预览区域可展开

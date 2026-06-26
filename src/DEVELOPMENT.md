@@ -1,10 +1,16 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-26（城市浮生记审查改进与扩展）
+> 最后更新: 2026-06-26（城市浮生记审查改进第二轮）
 
-## 2026-06-26 — 城市浮生记审查改进与扩展
+## 2026-06-26 — 城市浮生记审查改进第二轮
 
-本轮按用户反馈重新刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md`，实装重点落在正式 legacy 入口。顶部 UI 去掉重复的气候、位置、附近地点和左栏仓库/住所堆叠，恢复“状态”栏，把住所、仓库槽位和动态升级提示整合进顶栏；新增“魅力”属性显示，并把饥饱文案改为饥饿。行动页按地点特性灰显不可做的项目并提示应去地点，技能训练必须到培训中心，个人成长主 Tab 隐藏，跑步/冥想/发型设计等转入行动；学历不回左栏，改放进“事业发展”的总览卡片。天气准备物品增加使用次数，违法行动抓捕概率按地点繁华程度调整，发型设计魅力加成会逐日衰减；事业页新增上班族路径与创业路径的并列准备度说明。验证：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 全部通过。
+本轮重新刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 为第二轮版本，基于当前 `HEAD 5b2f662` 实际代码重新扫描。
+
+- **CSS 清理**：移除手机端首段 @media 中隐藏 `#street-stats-section/#corp-stats-section` 的冗余规则（第 3662-3665 行），消除 `!important` 对抗风险
+- **CSS 移动端投资防护**：新增 `.investment-holdings-row` 横向滚动溢出防护；新增 `.inv-holdings-mobile-row` 紧凑展示样式
+- **Wiki 百科增强**：世界参数反馈环(`world_params.js`)增强条目，新增策略提示 section（行业传导链/关注新闻/财富门槛/衰减周期 4 条策略建议）
+- **创业提示增强**：未满足注册条件时显示”还没累计职场资源”提示文字，引导玩家上班积累行业资源和客户线索
+- **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`(4262.3 KB)、`npm run build` 全部通过
 
 ## 2026-06-26 — 文案收口与接力文档修正
 
