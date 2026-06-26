@@ -1505,8 +1505,7 @@ function renderLifeSystemsTab(state, parent) {
     _renderTravelPanel(state) +
     _renderLegalPanel(state) +
     "</div>" +
-    _renderBridgeRecommendations(state) +
-    _renderDataCatalogBridgeStatus();
+    _renderBridgeRecommendations(state);
 
   parent.appendChild(wrap);
 }
@@ -1592,8 +1591,13 @@ function renderGrowthTab(state, parent) {
   var briefSection = document.createElement("div");
   briefSection.style.cssText =
     "background:var(--bg-card);border-radius:8px;padding:14px;border:1px solid var(--border);";
-  var totalAsset =
-    (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  var assetSnapshot =
+    typeof getInvestmentAssetSnapshot === "function"
+      ? getInvestmentAssetSnapshot(state)
+      : null;
+  var totalAsset = assetSnapshot
+    ? Math.round(assetSnapshot.totalAssets)
+    : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
   var debt =
     (state.resources.villageDebt || state.resources.debt || 0) +
     (state.resources.bankDebt || 0);

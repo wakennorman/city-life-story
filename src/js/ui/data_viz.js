@@ -933,9 +933,15 @@ function renderGrowthTab(state, container) {
   var totalEarned = state.resources ? state.resources.totalEarned || 0 : 0;
   var totalDays = p.day || 0;
   var avgIncome = totalDays > 0 ? Math.round(totalEarned / totalDays) : 0;
-  var totalAsset = state.resources
-    ? (state.resources.cash || 0) + (state.resources.bankBalance || 0)
-    : 0;
+  var assetSnapshot =
+    typeof getInvestmentAssetSnapshot === "function"
+      ? getInvestmentAssetSnapshot(state)
+      : null;
+  var totalAsset = assetSnapshot
+    ? Math.round(assetSnapshot.totalAssets)
+    : state.resources
+      ? (state.resources.cash || 0) + (state.resources.bankBalance || 0)
+      : 0;
   var debt = state.resources
     ? (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0)
     : 0;

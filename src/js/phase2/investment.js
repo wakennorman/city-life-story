@@ -1898,6 +1898,290 @@ function renderMarketSentiment(state, inv) {
   return html;
 }
 
+function getInvestmentAssetDef(symbol) {
+  for (var i = 0; i < INV_STOCKS.length; i++) {
+    if (INV_STOCKS[i].symbol === symbol) return INV_STOCKS[i];
+  }
+  return null;
+}
+
+function getInvestmentAssetGroup(symbol) {
+  var def = getInvestmentAssetDef(symbol);
+  if (!def) return "other";
+  if (def.category === "股票") return "stocks";
+  if (def.category === "虚拟币") return "crypto";
+  if (def.category === "贵金属") return "precious";
+  if (def.category === "期货" || def.category === "基金") return "futures";
+  return "other";
+}
+
+function getInvestmentGroupLabel(key) {
+  var labels = {
+    stocks: "股票",
+    crypto: "虚拟币",
+    precious: "贵金属",
+    futures: "期货基金",
+    properties: "房产",
+    cars: "汽车",
+  };
+  return labels[key] || key;
+}
+
+function createInvestmentGroupSummary(key) {
+  return {
+    key: key,
+    label: getInvestmentGroupLabel(key),
+    value: 0,
+    cost: 0,
+    pl: 0,
+    count: 0,
+    rows: [],
+  };
+}
+
+function addInvestmentRowToGroup(group, row) {
+  group.rows.push(row);
+  group.count += 1;
+  group.value += row.value || 0;
+  group.cost += row.cost || 0;
+  group.pl += row.pl || 0;
+}
+
+function formatInvestmentQuantity(qty, unit, decimals) {
+  var n = Number(qty) || 0;
+  var digits = decimals == null ? (Math.abs(n) < 1 ? 4 : 2) : decimals;
+  var text = n.toFixed(digits);
+  text = text.replace(/\.?0+$/g, "");
+  if (text === "") text = "0";
+  return text + (unit ? unit : "");
+}
+
+function getInvestmentAssetSnapshot(state) {
+  var inv = (state && state.investment) || {};
+  var groups = {
+    stocks: createInvestmentGroupSummary("stocks"),
+    crypto: createInvestmentGroupSummary("crypto"),
+    precious: createInvestmentGroupSummary("precious"),
+    futures: createInvestmentGroupSummary("futures"),
+    properties: createInvestmentGroupSummary("properties"),
+    cars: createInvestmentGroupSummary("cars"),
+  };
+
+  var holdings = inv.stockHoldings || [];
+  for (var i = 0; i < holdings.length; i++) {
+    var h = holdings[i];
+    var def = getInvestmentAssetDef(h.symbol);
+    var groupKey = getInvestmentAssetGroup(h.symbol);
+    if (!groups[groupKey]) continue;
+    var market = inv.stockMarket && inv.stockMarket[h.symbol];
+    var price = market ? market.price : h.avgPrice || 0;
+    var qty = Number(h.shares) || 0;
+    var value = price * qty;
+    var cost = (h.avgPrice || price) * qty;
+    var pl = value - cost;
+    var unit = def && def.category === "股票" ? "股" : def && def.unit ? def.unit : "";
+    addInvestmentRowToGroup(groups[groupKey], {
+      symbol: h.symbol,
+      name: def ? def.name : h.symbol,
+      category: def ? def.category : "",
+      unit: unit,
+      quantity: qty,
+      quantityText: formatInvestmentQuantity(qty, unit, def && def.category === "股票" ? 0 : 4),
+      avgPrice: h.avgPrice || 0,
+      price: price,
+      value: value,
+      cost: cost,
+      pl: pl,
+      plPct: cost > 0 ? (pl / cost) * 100 : 0,
+    });
+  }
+
+  // 兼容旧存档或旧事件直接写入的 BTC 持仓。
+  if (inv.btcHoldings && inv.btcHoldings > 0) {
+    var hasUnifiedBtc = false;
+    for (var b = 0; b < holdings.length; b++) {
+      if (holdings[b].symbol === "BTC") {
+        hasUnifiedBtc = true;
+        break;
+      }
+    }
+    if (!hasUnifiedBtc) {
+      var btcPrice =
+        (inv.stockMarket && inv.stockMarket.BTC && inv.stockMarket.BTC.price) ||
+        inv.btcPrice ||
+        inv.btcAvgCost ||
+        0;
+      var btcQty = Number(inv.btcHoldings) || 0;
+      var btcCost = (inv.btcAvgCost || btcPrice) * btcQty;
+      var btcValue = btcPrice * btcQty;
+      addInvestmentRowToGroup(groups.crypto, {
+        symbol: "BTC",
+        name: "比特币",
+        category: "虚拟币",
+        unit: "个",
+        quantity: btcQty,
+        quantityText: formatInvestmentQuantity(btcQty, "个", 4),
+        avgPrice: inv.btcAvgCost || btcPrice,
+        price: btcPrice,
+        value: btcValue,
+        cost: btcCost,
+        pl: btcValue - btcCost,
+        plPct: btcCost > 0 ? ((btcValue - btcCost) / btcCost) * 100 : 0,
+      });
+    }
+  }
+
+  var props = inv.properties || [];
+  for (var p = 0; p < props.length; p++) {
+    var prop = props[p];
+    var propValue = prop.currentPrice || prop.buyPrice || 0;
+    var propCost = prop.buyPrice || propValue;
+    addInvestmentRowToGroup(groups.properties, {
+      symbol: prop.id,
+      name: prop.name || prop.id,
+      category: prop.type || "房产",
+      unit: "套",
+      quantity: 1,
+      quantityText: "1套",
+      avgPrice: propCost,
+      price: propValue,
+      value: propValue,
+      cost: propCost,
+      pl: propValue - propCost,
+      plPct: propCost > 0 ? ((propValue - propCost) / propCost) * 100 : 0,
+    });
+  }
+
+  var cars = inv.cars || [];
+  for (var c = 0; c < cars.length; c++) {
+    var car = cars[c];
+    var carValue = car.currentPrice || car.buyPrice || 0;
+    var carCost = car.buyPrice || carValue;
+    addInvestmentRowToGroup(groups.cars, {
+      symbol: car.id,
+      name: car.name || car.id,
+      category: "汽车",
+      unit: "辆",
+      quantity: 1,
+      quantityText: "1辆",
+      avgPrice: carCost,
+      price: carValue,
+      value: carValue,
+      cost: carCost,
+      pl: carValue - carCost,
+      plPct: carCost > 0 ? ((carValue - carCost) / carCost) * 100 : 0,
+    });
+  }
+
+  var investmentValue = 0;
+  var investmentCost = 0;
+  var keys = Object.keys(groups);
+  for (var gi = 0; gi < keys.length; gi++) {
+    var g = groups[keys[gi]];
+    investmentValue += g.value;
+    investmentCost += g.cost;
+    g.pl = g.value - g.cost;
+  }
+
+  var cash = (state && state.resources && state.resources.cash) || 0;
+  var bank = (state && state.resources && state.resources.bankBalance) || 0;
+  return {
+    groups: groups,
+    cash: cash,
+    bank: bank,
+    investmentValue: investmentValue,
+    investmentCost: investmentCost,
+    investmentPL: investmentValue - investmentCost,
+    totalAssets: cash + bank + investmentValue,
+  };
+}
+
+function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
+  var snapshot = getInvestmentAssetSnapshot(StateManager.getState());
+  var rows = [];
+  var totalValue = 0;
+  var totalPL = 0;
+  for (var i = 0; i < groupKeys.length; i++) {
+    var group = snapshot.groups[groupKeys[i]];
+    if (!group) continue;
+    rows = rows.concat(group.rows);
+    totalValue += group.value;
+    totalPL += group.pl;
+  }
+  if (rows.length === 0) return;
+
+  var panel = document.createElement("div");
+  panel.className = "investment-holding-panel";
+  panel.style.cssText =
+    "margin-bottom:12px;padding:12px;background:rgba(255,255,255,0.04);border:1px solid " +
+    color +
+    ";border-radius:8px;overflow-x:auto;";
+
+  var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
+  var totalSign = totalPL >= 0 ? "+" : "";
+  var rowsHtml = rows
+    .map(function (row) {
+      var plClr = row.pl >= 0 ? "var(--danger)" : "var(--success)";
+      var plSign = row.pl >= 0 ? "+" : "";
+      return (
+        '<div class="investment-holding-row">' +
+        '<span class="inv-h-symbol">' +
+        row.symbol +
+        "</span>" +
+        '<span class="inv-h-name">' +
+        row.name +
+        "</span>" +
+        '<span class="inv-h-qty">' +
+        row.quantityText +
+        "</span>" +
+        '<span class="inv-h-price">均¥' +
+        Number(row.avgPrice || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) +
+        "</span>" +
+        '<span class="inv-h-price">现¥' +
+        Number(row.price || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) +
+        "</span>" +
+        '<span class="inv-h-value">¥' +
+        Math.round(row.value || 0).toLocaleString() +
+        "</span>" +
+        '<span class="inv-h-pl" style="color:' +
+        plClr +
+        ';">' +
+        plSign +
+        "¥" +
+        Math.round(row.pl || 0).toLocaleString() +
+        " (" +
+        plSign +
+        Number(row.plPct || 0).toFixed(1) +
+        "%)</span>" +
+        "</div>"
+      );
+    })
+    .join("");
+
+  panel.innerHTML =
+    '<div class="investment-holding-head">' +
+    '<h4 style="margin:0;font-size:13px;color:' +
+    color +
+    ';">' +
+    title +
+    "</h4>" +
+    '<span style="font-size:11px;">市值 <strong style="color:var(--accent);">¥' +
+    Math.round(totalValue).toLocaleString() +
+    '</strong> | 盈亏 <strong style="color:' +
+    totalClr +
+    ';">' +
+    totalSign +
+    "¥" +
+    Math.round(totalPL).toLocaleString() +
+    "</strong></span>" +
+    "</div>" +
+    '<div class="investment-holding-row investment-holding-row-head">' +
+    '<span class="inv-h-symbol">代码</span><span class="inv-h-name">名称</span><span class="inv-h-qty">数量</span><span class="inv-h-price">均价</span><span class="inv-h-price">现价</span><span class="inv-h-value">市值</span><span class="inv-h-pl">盈亏</span>' +
+    "</div>" +
+    rowsHtml;
+  area.appendChild(panel);
+}
+
 // ============================================================
 //  投资主页面渲染
 // ============================================================
@@ -1913,52 +2197,31 @@ function renderInvestmentTab(state, parent) {
   )
     initInvestment(state);
 
-  // 按类别统计资产市值
-  var stockVal = 0,
-    preciousVal = 0,
-    futuresVal = 0;
-  for (var i = 0; i < inv.stockHoldings.length; i++) {
-    var h = inv.stockHoldings[i];
-    var def = null;
-    for (var j = 0; j < INV_STOCKS.length; j++) {
-      if (INV_STOCKS[j].symbol === h.symbol) {
-        def = INV_STOCKS[j];
-        break;
-      }
-    }
-    if (!def) continue;
-    var val =
-      (inv.stockMarket[h.symbol] ? inv.stockMarket[h.symbol].price : 0) *
-      h.shares;
-    if (def.category === "股票") stockVal += val;
-    else if (def.category === "贵金属") preciousVal += val;
-    else if (def.category === "期货" || def.category === "基金")
-      futuresVal += val;
-  }
-  var btcVal = inv.btcPrice * (inv.btcHoldings || 0);
-  var propVal = 0;
-  for (var i = 0; i < (inv.properties || []).length; i++)
-    propVal += inv.properties[i].currentPrice || inv.properties[i].buyPrice;
-  var carVal = 0;
-  for (var i = 0; i < (inv.cars || []).length; i++)
-    carVal += inv.cars[i].currentPrice || inv.cars[i].buyPrice;
-  var totalInv =
-    stockVal + btcVal + preciousVal + futuresVal + propVal + carVal;
+  var assetSnapshot = getInvestmentAssetSnapshot(state);
+  var totalPL = assetSnapshot.investmentPL;
+  var totalPLColor = totalPL >= 0 ? "var(--danger)" : "var(--success)";
+  var totalPLSign = totalPL >= 0 ? "+" : "";
 
   parent.innerHTML = "";
   var cont = document.createElement("div");
 
   cont.innerHTML =
     '<h3>投资中心 <span style="font-size:12px;color:var(--accent);">总资产 ' +
-    totalInv.toLocaleString() +
+    Math.round(assetSnapshot.totalAssets).toLocaleString() +
+    '</span> <span style="font-size:12px;color:' +
+    totalPLColor +
+    ';">投资盈亏 ' +
+    totalPLSign +
+    "¥" +
+    Math.round(totalPL).toLocaleString() +
     "</span></h3>" +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
-    summaryCard("股票", stockVal) +
-    summaryCard("比特币", btcVal) +
-    summaryCard("贵金属", preciousVal) +
-    summaryCard("期货基金", futuresVal) +
-    summaryCard("房产", propVal) +
-    summaryCard("汽车", carVal) +
+    summaryCard("股票", assetSnapshot.groups.stocks) +
+    summaryCard("虚拟币", assetSnapshot.groups.crypto) +
+    summaryCard("贵金属", assetSnapshot.groups.precious) +
+    summaryCard("期货基金", assetSnapshot.groups.futures) +
+    summaryCard("房产", assetSnapshot.groups.properties) +
+    summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
@@ -2008,15 +2271,30 @@ function renderInvestmentTab(state, parent) {
 }
 
 // ---- 摘要小卡片 ----
-function summaryCard(label, value) {
+function summaryCard(label, group) {
+  var value = group && group.value ? group.value : 0;
+  var pl = group && group.pl ? group.pl : 0;
+  var count = group && group.count ? group.count : 0;
+  var plColor = pl >= 0 ? "var(--danger)" : "var(--success)";
+  var plSign = pl >= 0 ? "+" : "";
   return (
-    '<div class="action-card" style="flex:1;min-width:90px;text-align:center;padding:6px 4px;">' +
+    '<div class="action-card investment-summary-card" style="flex:1;min-width:116px;text-align:center;padding:8px 6px;">' +
     '<div style="font-size:10px;color:var(--text-muted);">' +
     label +
     "</div>" +
     '<strong style="font-size:13px;">' +
+    "¥" +
     Math.round(value).toLocaleString() +
     "</strong>" +
+    '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">持有 ' +
+    count +
+    ' 项</div><div style="font-size:10px;color:' +
+    plColor +
+    ';">' +
+    plSign +
+    "¥" +
+    Math.round(pl).toLocaleString() +
+    "</div>" +
     "</div>"
   );
 }
@@ -2365,7 +2643,9 @@ function bindInvQtyHandlers(area, state, parent, tabFn) {
 
 function renderStocks(area, inv, state, parent) {
   // === 📊 我的持仓汇总 ===
-  var holdings = inv.stockHoldings || [];
+  var holdings = (inv.stockHoldings || []).filter(function (h) {
+    return getInvestmentAssetGroup(h.symbol) === "stocks";
+  });
   var hasHoldings = holdings.length > 0;
 
   if (hasHoldings) {
@@ -2589,6 +2869,8 @@ function renderBtc(area, inv, state, parent) {
     "</div>";
   area.appendChild(header);
 
+  renderInvestmentHoldingPanel(area, inv, ["crypto"], "🪙 我的虚拟币", "#9b74b8");
+
   // 所有虚拟币
   var cryptos = [];
   for (var j = 0; j < INV_STOCKS.length; j++) {
@@ -2716,6 +2998,8 @@ function renderBtc(area, inv, state, parent) {
 
 // ---- 子tab渲染：贵金属 ----
 function renderPrecious(area, inv, state, parent) {
+  renderInvestmentHoldingPanel(area, inv, ["precious"], "🥇 我的贵金属", "#c49a3a");
+
   var grid = document.createElement("div");
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
@@ -2834,6 +3118,8 @@ function renderPrecious(area, inv, state, parent) {
 
 // ---- 子tab渲染：期货基金 ----
 function renderFutures(area, inv, state, parent) {
+  renderInvestmentHoldingPanel(area, inv, ["futures"], "📈 我的期货基金", "#5a8ab4");
+
   var grid = document.createElement("div");
   grid.className = "action-cards";
   grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
@@ -2869,6 +3155,7 @@ function renderFutures(area, inv, state, parent) {
     var clr = chg >= 0 ? "var(--danger)" : "var(--success)";
     var unit = s.unit || "份";
     var cid = "chart-" + sym;
+    var sharesStr = h ? h.shares.toFixed(2) : "";
 
     var card = document.createElement("div");
     card.className = "action-card";

@@ -208,11 +208,13 @@ function collectLifeStats(state) {
   }, 0);
   var btcVal = (inv.btcPrice || 0) * (inv.btcHoldings || 0);
   var totalAssets =
-    (state.resources.cash || 0) +
-    (state.resources.bankBalance || 0) +
-    stockVal +
-    propVal +
-    btcVal;
+    typeof getInvestmentAssetSnapshot === "function"
+      ? Math.round(getInvestmentAssetSnapshot(state).totalAssets)
+      : (state.resources.cash || 0) +
+        (state.resources.bankBalance || 0) +
+        stockVal +
+        propVal +
+        btcVal;
 
   // 统计高好感NPC数量
   var highAffinityNPCs = 0;

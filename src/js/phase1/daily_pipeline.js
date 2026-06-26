@@ -334,8 +334,13 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       // 1. 总资产快照
       if (!state.flags._cashHistory) state.flags._cashHistory = [];
-      var totalAsset =
-        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      var assetSnapshot =
+        typeof getInvestmentAssetSnapshot === "function"
+          ? getInvestmentAssetSnapshot(state)
+          : null;
+      var totalAsset = assetSnapshot
+        ? Math.round(assetSnapshot.totalAssets)
+        : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
       state.flags._cashHistory.push({
         day: state.player.day,
         value: totalAsset,

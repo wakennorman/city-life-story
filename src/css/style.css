@@ -3739,3 +3739,104 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ====== 2026-06-26 player-facing polish: welcome routes + investment holdings ====== */
+.victory-paths {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 8px;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.victory-path {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.victory-path:not(:last-child)::after {
+  content: "·";
+  margin-left: 8px;
+  color: var(--text-muted);
+}
+
+.investment-holding-head,
+.investment-holding-row {
+  display: grid;
+  grid-template-columns: minmax(46px, 0.7fr) minmax(70px, 1.1fr) minmax(58px, 0.8fr) minmax(74px, 1fr) minmax(74px, 1fr) minmax(78px, 1fr) minmax(94px, 1.2fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 680px;
+}
+
+.investment-holding-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.investment-holding-row {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+}
+
+.investment-holding-row-head {
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.investment-holding-row span {
+  min-width: 0;
+}
+
+.inv-h-symbol,
+.inv-h-name {
+  font-weight: 600;
+}
+
+.inv-h-name {
+  color: var(--text-secondary);
+}
+
+.inv-h-qty,
+.inv-h-price,
+.inv-h-value,
+.inv-h-pl {
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .victory-paths {
+    gap: 6px 8px;
+    line-height: 1.9;
+  }
+
+  .victory-path:not(:last-child)::after {
+    margin-left: 8px;
+  }
+
+  .investment-summary-card {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 0 !important;
+  }
+
+  .investment-holding-panel {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .investment-holding-head {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .investment-holding-head span {
+    text-align: right;
+  }
+}

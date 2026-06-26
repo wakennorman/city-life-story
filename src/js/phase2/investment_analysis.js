@@ -444,34 +444,47 @@ function analyzePortfolio(state) {
   const inv = state.investment;
   if (!inv) return null;
 
+  const snapshot =
+    typeof getInvestmentAssetSnapshot === "function"
+      ? getInvestmentAssetSnapshot(state)
+      : null;
   const holdings = inv.stockHoldings || [];
   const properties = inv.properties || [];
   const cars = inv.cars || [];
 
-  // 计算各类资产市值
   let stockValue = 0;
   let stockCost = 0;
-  for (const h of holdings) {
-    const m = inv.stockMarket[h.symbol];
-    if (m) {
-      stockValue += m.price * h.shares;
-      stockCost += h.avgPrice * h.shares;
-    }
-  }
-
   let propertyValue = 0;
-  for (const p of properties) {
-    propertyValue += p.currentPrice || p.buyPrice;
-  }
-
   let carValue = 0;
-  for (const c of cars) {
-    carValue += c.currentPrice || c.buyPrice;
+  let cryptoValue = 0;
+  let preciousValue = 0;
+  let futuresValue = 0;
+  let totalValue = 0;
+
+  if (snapshot) {
+    stockValue = snapshot.groups.stocks.value;
+    stockCost = snapshot.groups.stocks.cost;
+    propertyValue = snapshot.groups.properties.value;
+    carValue = snapshot.groups.cars.value;
+    cryptoValue = snapshot.groups.crypto.value;
+    preciousValue = snapshot.groups.precious.value;
+    futuresValue = snapshot.groups.futures.value;
+    totalValue = snapshot.investmentValue;
+  } else {
+    // 旧兜底：仅在统一快照不可用时使用。
+    for (const h of holdings) {
+      const m = inv.stockMarket[h.symbol];
+      if (m) {
+        stockValue += m.price * h.shares;
+        stockCost += h.avgPrice * h.shares;
+      }
+    }
+    for (const p of properties) propertyValue += p.currentPrice || p.buyPrice;
+    for (const c of cars) carValue += c.currentPrice || c.buyPrice;
+    cryptoValue = (inv.btcHoldings || 0) * (inv.btcPrice || 0);
+    totalValue = stockValue + propertyValue + carValue + cryptoValue;
   }
 
-  const btcValue = (inv.btcHoldings || 0) * (inv.btcPrice || 0);
-
-  const totalValue = stockValue + propertyValue + carValue + btcValue;
   if (totalValue === 0) return { error: "没有任何投资持仓" };
 
   // 资产配置比例
@@ -479,7 +492,9 @@ function analyzePortfolio(state) {
     stocks: Math.round((stockValue / totalValue) * 100),
     properties: Math.round((propertyValue / totalValue) * 100),
     cars: Math.round((carValue / totalValue) * 100),
-    crypto: Math.round((btcValue / totalValue) * 100),
+    crypto: Math.round((cryptoValue / totalValue) * 100),
+    precious: Math.round((preciousValue / totalValue) * 100),
+    futures: Math.round((futuresValue / totalValue) * 100),
   };
 
   // 计算盈亏
@@ -491,6 +506,9 @@ function analyzePortfolio(state) {
     allocation.stocks,
     allocation.properties,
     allocation.crypto,
+    allocation.precious,
+    allocation.futures,
+    allocation.cars,
   );
   let concentrationRisk = "低";
   if (maxSingleAsset > 60) concentrationRisk = "高";
