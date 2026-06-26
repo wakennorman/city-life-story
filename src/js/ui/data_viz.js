@@ -196,21 +196,6 @@ function drawIncomeChart(ctx, state, x, y, w, h) {
     },
   );
   ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.strokeStyle = "#c4553d";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  for (let i = 0; i < expenseHistory.length; i++) {
-    const xPos =
-      x + padding.left + (i / Math.max(expenseHistory.length - 1, 1)) * chartW;
-    const val = Math.max(0, expenseHistory[i] || 0);
-    const yPos = y + padding.top + chartH - (val / maxVal) * chartH;
-    if (i === 0) ctx.moveTo(xPos, yPos);
-    else ctx.lineTo(xPos, yPos);
-  }
-  ctx.stroke();
-  ctx.setLineDash([]);
 
   // 图例
   ctx.font = "11px sans-serif";
