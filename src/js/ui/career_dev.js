@@ -357,18 +357,28 @@ function getStartupReadinessNote(state) {
   var cap = ensureCareerCapital(state);
   var discount = getCareerCapitalStartupDiscount(state);
   if (discount <= 0) {
-    return "暂无可转化的职场资源：裸辞创业成本更高，建议先积累行业资源、客户线索或合伙人信任。";
+    return (
+      "暂无可转化的职场资源：裸辞创业成本更高，建议先积累行业资源、客户线索或合伙人信任。<br>" +
+      '<span style="color:var(--text-secondary);font-size:11px;">' +
+      "行业资源 " + Math.round(cap.industryResources || 0) + "/建议≥30 · " +
+      "客户线索 " + Math.round(cap.clientLeads || 0) + "/建议≥20 · " +
+      "合伙人信任 " + Math.round(cap.partnerTrust || 0) + "/建议≥15</span>"
+    );
   }
+  var burnoutWarning = (cap.burnout || 0) >= 20
+    ? '<span style="color:var(--danger)"> ⚠️ 职业倦怠(' + Math.round(cap.burnout) + ')已抵消部分减免</span>'
+    : "";
   return (
-    "职场积累可转化为创业准备度：注册启动资金约 -" +
+    "职场积累可转化为创业准备度：注册资金约 <strong>-" +
     Math.round(discount * 100) +
-    "%，行业资源 " +
-    Math.round(cap.industryResources || 0) +
-    " / 客户线索 " +
-    Math.round(cap.clientLeads || 0) +
-    " / 声誉 " +
-    Math.round(cap.reputation || 0) +
-    "。"
+    "%</strong> 减免。<br>" +
+    '<span style="font-size:11px;color:var(--text-secondary);">' +
+    "行业资源 " + Math.round(cap.industryResources || 0) + "（×0.5） · " +
+    "客户线索 " + Math.round(cap.clientLeads || 0) + "（×0.8） · " +
+    "声誉 " + Math.round(cap.reputation || 0) + "（×0.4） · " +
+    "合伙人信任 " + Math.round(cap.partnerTrust || 0) + "（×0.3）" +
+    "</span>" +
+    burnoutWarning
   );
 }
 
