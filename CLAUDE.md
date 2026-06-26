@@ -59,10 +59,11 @@
   - **系统联动**：天气准备物品有使用次数；偷电瓶等违法行动抓捕概率按地点繁华/监管程度调整；事业页新增上班族路径与创业路径的并列准备度说明。
   - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 全部通过。
 
-- **最新一次工作**：v3.0 文案收口与接力文档修正（2026-06-26）
-  - **不足修复**：上一轮“AP→行动力”仍有玩家可见漏点，本轮补齐行动卡片、社交按钮、城市服务桥接、状态弹窗、百科和机制注册说明中的 `AP` 露出
-  - **接力文档修正**：合并 941ccc0 事业/创业门槛修复与 3b519f8 UI/社交增强口径，避免 `CLAUDE.md` 未提交改动把最新状态回退到旧提交
-  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`、`npm run build` 重新通过
+- **最新一次工作**：手机端事件记录收起预览 + 展开自动滚动（2026-06-26）
+  - **收起预览**：折叠状态时在标题与展开按钮之间显示最新一条日志白框（#message-log-preview），每出现新事件自动替换，点击预览区域可展开
+  - **展开自动滚动**：点击”展开”按钮时通过 requestAnimationFrame 自动 scroll 到最新记录底部
+  - **触摸滑动**：手机端 `.log-content` 已有 `overflow-y: auto + -webkit-overflow-scrolling: touch`，手指滑动滚动已可用
+  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 全部通过；commit a439d99
 
 - **上一轮工作**：v3.0 审查改进 — 目标/模式/事业联动（2026-06-26）
   - **任务链产出**：按 v3.0 SOP 和用户反馈完成 6 个子任务报告，新增 `plans/2026-06-26-v3-review-execution-context.md` 与 `subagent_result1.md` 至 `subagent_result6.md`
