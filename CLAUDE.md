@@ -52,19 +52,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：城市浮生记审查改进第二轮（2026-06-26）
-  - **审查产出**：已刷新 `memory/overview.md`、`memory/diagnosis.md`、`memory/improvement_plan.md` 为第二轮，基于当前 `HEAD 5b2f662` 重新扫描
-  - **CSS 清理**：移除手机端 @media 中隐藏 `#street-stats-section/#corp-stats-section` 的冗余规则（第 3662-3665 行），消除 `!important` 对抗风险
-  - **CSS 移动端投资防护**：新增 `.investment-holdings-row` 横向滚动溢出防护；新增 `.inv-holdings-mobile-row` 紧凑展示样式
-  - **Wiki 百科增强**：世界参数反馈环条目新增策略提示 section（行业传导链/关注新闻/财富门槛/衰减周期 4 条策略建议）
-  - **创业提示增强**：未满足注册条件时显示”还没累计职场资源”提示文字，引导玩家上班积累行业资源和客户线索
-  - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`(4262.3 KB)、`npm run build` 全部通过；commit 21d2d00
-
-- **最新一次工作**：手机端事件记录收起预览 + 展开自动滚动（2026-06-26）
-  - **收起预览**：折叠状态时在标题与展开按钮之间显示最新一条日志白框（#message-log-preview），每出现新事件自动替换，点击预览区域可展开
-  - **展开自动滚动**：点击”展开”按钮时通过 requestAnimationFrame 自动 scroll 到最新记录底部
-  - **触摸滑动**：手机端 `.log-content` 已有 `overflow-y: auto + -webkit-overflow-scrolling: touch`，手指滑动滚动已可用
-  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 全部通过；commit a439d99
+- **最新一次工作**：第三轮审查：人生事务与城市服务体验修复（2026-06-26）
+  - **CSS 结构修复**：修正 `@media (max-width:480px)` 末尾提前闭合/多余右括号问题，让投资持仓移动端防护规则真正留在手机端媒体查询内
+  - **医疗治疗入口**：人生事务医疗卡片新增"就医治疗 / 医保咨询"双按钮，`medical.js` 新增 `showMedicalTreatmentModal()`，复用既有治疗流程
+  - **城市服务提示**：服务弹窗提前显示现金/行动力不足原因；推荐入口显示中文地点名，不再暴露内部 id
+  - **事件日志滚动**：抽出 `scrollMessageLogToBottom()`，展开和渲染时做 rAF + 延迟二次滚动，改善手机端连续消息后的定位
+  - **移动端触控**：人生事务医疗按钮在 ≤480px 视口下保证 44px 最小触控高度
+  - **医疗 bug 修复**：`startTreatment()` 轻症门诊从旧的 `state.ap` 改为 `state.player.actionPoints`，正确减 3 行动力
+  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`(4268.6 KB)、`npm run build` 全部通过；commit e19f087
 
 - **上一轮工作**：v3.0 审查改进 — 目标/模式/事业联动（2026-06-26）
   - **任务链产出**：按 v3.0 SOP 和用户反馈完成 6 个子任务报告，新增 `plans/2026-06-26-v3-review-execution-context.md` 与 `subagent_result1.md` 至 `subagent_result6.md`
