@@ -3993,8 +3993,24 @@ function renderMessageLog(state) {
     )
     .join("");
 
-  // 滚动到底部
-  content.scrollTop = content.scrollHeight;
+  // 更新收起时的最新一条预览
+  const preview = document.getElementById("message-log-preview");
+  if (preview && state.messageLog.length > 0) {
+    const last = state.messageLog[state.messageLog.length - 1];
+    preview.innerHTML =
+      '<div class="log-preview-inner"><span class="log-day">[第' +
+      last.day +
+      "天]</span>" +
+      escapeHtml(last.text) +
+      "</div>";
+  } else if (preview) {
+    preview.innerHTML = '<div class="log-preview-inner">暂无记录</div>';
+  }
+
+  // 仅在展开状态时滚动到底部
+  if (!log.classList.contains("collapsed")) {
+    content.scrollTop = content.scrollHeight;
+  }
 }
 
 function setMessageLogCollapsed(collapsed, userToggled) {
@@ -4019,7 +4035,19 @@ function toggleMessageLog() {
   const log = document.getElementById("message-log");
   if (!log) return;
 
-  setMessageLogCollapsed(!log.classList.contains("collapsed"), true);
+  const wasCollapsed = log.classList.contains("collapsed");
+  setMessageLogCollapsed(!wasCollapsed, true);
+
+  // 展开时自动滚动到最新一条记录
+  if (wasCollapsed) {
+    const content = log.querySelector(".log-content");
+    if (content) {
+      // 需要等待 DOM 更新完成
+      requestAnimationFrame(() => {
+        content.scrollTop = content.scrollHeight;
+      });
+    }
+  }
 }
 
 // ====== 初始化 ======
@@ -4099,6 +4127,12 @@ function init() {
     messageLogToggle.addEventListener("click", toggleMessageLog);
     syncMessageLogForViewport();
     window.addEventListener("resize", syncMessageLogForViewport);
+  }
+
+  // 收起预览区域点击可展开日志
+  const logPreview = document.getElementById("message-log-preview");
+  if (logPreview) {
+    logPreview.addEventListener("click", toggleMessageLog);
   }
 
   console.log("🏙️ 城市浮生记 initialized.");

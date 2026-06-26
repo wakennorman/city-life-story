@@ -3964,6 +3964,27 @@ body {
   white-space: nowrap;
 }
 
+/* --- Collapsed preview --- */
+#message-log-preview {
+  display: none;
+  overflow: hidden;
+}
+#message-log-preview .log-preview-inner {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0;
+  line-height: 1.5;
+}
+#message-log-preview .log-preview-inner .log-day {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-right: 6px;
+  font-family: var(--font-mono);
+}
+
 @media (max-width: 480px) {
   #header {
     justify-content: flex-start;
@@ -4071,6 +4092,26 @@ body {
   }
 
   #message-log.collapsed .log-content {
+    display: none;
+  }
+
+  #message-log.collapsed #message-log-preview {
+    display: block;
+    background: var(--bg-input, #fff);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 6px 10px;
+    margin: 4px 0 0;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #message-log.collapsed #message-log-preview:active {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  }
+
+  #message-log:not(.collapsed) #message-log-preview {
     display: none;
   }
 
