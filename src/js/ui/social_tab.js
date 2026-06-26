@@ -147,7 +147,7 @@ function renderNpcRelationships(state, content) {
     html +=
       '<button class="btn btn-sm btn-primary" style="font-size:10px;padding:2px 8px;" data-npc-chat="' +
       npcId +
-      '">💬 聊天 (2AP)</button>';
+      '">💬 聊天（2点行动力）</button>';
     html += "</div>";
 
     html += "</div>";

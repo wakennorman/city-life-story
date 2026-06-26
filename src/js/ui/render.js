@@ -2085,7 +2085,7 @@ function getDailyActionTips(state) {
                 upcoming.name +
                 "还有" +
                 daysUntil +
-                "天！提前准备相关商品或攒AP。",
+                "天！提前准备相关商品或攒行动力。",
             );
             break;
           }
@@ -5439,7 +5439,7 @@ function showBranchSelectionModal(skillKey) {
     " — 选择发展方向</h3>" +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' +
     skill.level +
-    "，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>" +
+    "，选择一个发展方向后获得独特加成。消耗 ⚡15点行动力 + ¥200</div>" +
     '<div style="margin-bottom:12px;">';
 
   for (var bi = 0; bi < branches.length; bi++) {

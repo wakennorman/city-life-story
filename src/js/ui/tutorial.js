@@ -86,7 +86,7 @@ function startTutorial() {
       title: "🗑️ 试试第一次赚钱",
       body: `
         <p>点击下方的 <strong>"废品回收"</strong> 行动卡片开始工作</p>
-        <p>每次行动消耗行动力（AP），耗尽后结束一天</p>
+        <p>每次行动都会消耗行动力，耗尽后结束一天</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>废品回收</strong> 行动卡片（高亮处）继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">💡 前15天废品回收有新人加成+¥5</p>
       `,

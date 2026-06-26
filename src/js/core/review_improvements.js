@@ -400,7 +400,7 @@
       trigger: function (st) {
         return (st.resources.cash || 0) >= 300 && !st.flags._hint_first_taxi;
       },
-      message: "💡 提示：现金>300后，打车去远点的地点能省 AP，性价比合适。",
+      message: "💡 提示：现金>300后，打车去远点的地点能省行动力，性价比合适。",
     },
     {
       id: "first_market_dive",

@@ -713,7 +713,7 @@
         },
         {
           text: "🏦 去银行确认",
-          hint: "花AP但最安全",
+          hint: "花行动力但最安全",
           apply: function (st) {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             StateManager.addMessage(
@@ -795,7 +795,7 @@
         },
         {
           text: "💪 自己沿路找找",
-          hint: "花1AP碰运气",
+          hint: "花1点行动力碰运气",
           apply: function (st) {
             var found = Random.chance(0.3);
             if (found) {

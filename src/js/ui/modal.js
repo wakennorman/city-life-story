@@ -1372,7 +1372,7 @@ function showScavengeRouteModal() {
     btn.textContent = disabled
       ? locked
         ? "🔒 未解锁"
-        : "⚡ AP不足"
+        : "⚡ 行动力不足"
       : "走这条路 →";
 
     if (!disabled) {

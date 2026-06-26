@@ -418,15 +418,15 @@ function _wikiListEntries(catId, state) {
       });
       out.push({
         id: "ap",
-        name: "行动力 (AP)",
+        name: "行动力",
         icon: "⚡",
-        brief: "100 AP/天，倍率系统，低 AP 预警",
+        brief: "每天100点，倍率系统，低行动力预警",
       });
       out.push({
         id: "stat_link",
         name: "状态互联",
         icon: "🔗",
-        brief: "饥饿/疲劳/心情多米诺，AP 倍率",
+        brief: "饥饿/疲劳/心情多米诺，行动力倍率",
       });
       out.push({
         id: "synergy",
@@ -480,7 +480,7 @@ function _wikiListEntries(catId, state) {
         id: "weather_link",
         name: "天气联动",
         icon: "☂️",
-        brief: "室外工作/AP/心情",
+        brief: "室外工作/行动力/心情",
       });
       out.push({
         id: "npc_affinity",
@@ -1318,7 +1318,7 @@ function _wikiDetailJob(state, id) {
     var apCost = 20;
     if (job.effects.fatigue)
       apCost = Math.max(15, Math.min(45, job.effects.fatigue));
-    html += "<div><b>预估 AP</b>⚡" + apCost + "</div>";
+    html += "<div><b>预估行动力</b>⚡" + apCost + "</div>";
   }
 
   if (job.risk && (job.risk.injury || job.risk.illness)) {
@@ -1658,7 +1658,7 @@ function _wikiDetailSkill(state, id) {
       " / " +
       (sk.level + 1) * 120 +
       "</div>" +
-      "<div><b>训练消耗</b>⚡15 AP + ¥50</div>" +
+      "<div><b>训练消耗</b>⚡15点行动力 + ¥50</div>" +
       "<div><b>每日上限</b>3 次/技能</div>" +
       "</div>";
   }
@@ -1700,7 +1700,7 @@ function _wikiDetailSkill(state, id) {
     repair: "🛠️ 装备效果 +repair × 0.5%",
     coding: "💻 职场能力 +2/10 级；街头：大学城/科技园解锁「网络外包单」",
     english: "🇬🇧 家教收入 +english × 0.3；解锁外贸/客服协同",
-    driving: "🛵 出行 AP 减免：每 20 级 -1（最多 -5）",
+    driving: "🛵 出行行动力减免：每 20 级 -1（最多 -5）",
     management: "📋 职场向上管理 +1/10 级",
     accounting: "🏦 银行存款日息 +accounting × 0.0005（最多+5%/年）",
     electrician: "🔌 工厂工作收入 +electrician × 0.5%",
@@ -2147,11 +2147,11 @@ function _wikiDetailWeather(state, id) {
       "<div><b>春</b>多雨多雷，温度回升</div>" +
       "<div><b>夏</b>酷暑频发，户外疲劳加重</div>" +
       "<div><b>秋</b>气温适中，最适合工作</div>" +
-      "<div><b>冬</b>大雪/严寒，AP 倍率上升</div>" +
+      "<div><b>冬</b>大雪/严寒，行动力倍率上升</div>" +
       "</div>" +
       '<p class="wiki-tip">💡 在 ' +
       _wkLink("mechanics", "weather_link", "天气联动机制") +
-      " 查看完整天气×AP×心情公式。</p>"
+      " 查看完整天气×行动力×心情公式。</p>"
     );
   }
 
@@ -2187,7 +2187,7 @@ function _wikiDetailWeather(state, id) {
   var extreme = ["stormy", "snowy", "extreme_heat", "extreme_cold"];
   if (extreme.indexOf(w.id) >= 0) {
     html +=
-      '<p class="wiki-tip">⚠️ 极端天气会额外增加 AP 消耗倍率（+0.15~0.20），适合改室内行动。</p>';
+      '<p class="wiki-tip">⚠️ 极端天气会额外增加行动力消耗倍率（+0.15~0.20），适合改室内行动。</p>';
   }
 
   html +=
@@ -2439,7 +2439,7 @@ function _wikiDetailMechanic(state, id) {
       "</ul>" +
       "<h3>🪟 弹窗选项</h3><p>系统列出周边最近的 3 个对应类型 " +
       _wkLink("amenities", null, "恢复点") +
-      '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+      '（含旅行行动力），玩家可：</p><ul class="wiki-list">' +
       "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
       "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
       "</ul>" +
@@ -2474,16 +2474,16 @@ function _wikiDetailMechanic(state, id) {
       "。</p>",
 
     ap:
-      "<h2>⚡ 行动力 (AP) 系统</h2>" +
-      '<p class="wiki-desc">每天 100 AP（满）。所有行动消耗对应 AP（卡片右下显示），AP 耗尽自动 endDay。</p>' +
+      "<h2>⚡ 行动力系统</h2>" +
+      '<p class="wiki-desc">每天 100 点行动力（满）。所有行动都会消耗对应行动力（卡片右下显示），耗尽自动进入下一天。</p>' +
       '<h3>📊 关键规则</h3><ul class="wiki-list">' +
-      "<li>大多数街头工作 ⚡15~38 AP</li>" +
-      "<li>训练技能、做饭、洗澡 ⚡10~15 AP</li>" +
-      "<li>跨地点出行 ⚡15 AP（驾驶 ≥20 级减免）</li>" +
+      "<li>大多数街头工作 ⚡15~38点行动力</li>" +
+      "<li>训练技能、做饭、洗澡 ⚡10~15点行动力</li>" +
+      "<li>跨地点出行 ⚡15点行动力（驾驶 ≥20 级减免）</li>" +
       "<li>极端状态（饿晕/过劳/病危）会跳过当天</li>" +
-      "<li>AP ≤ 20 时顶部和侧栏闪烁预警</li>" +
+      "<li>行动力 ≤ 20 时顶部和侧栏闪烁预警</li>" +
       "</ul>" +
-      "<h3>🔢 AP 倍率</h3><p>实际 AP 消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
+      "<h3>🔢 行动力倍率</h3><p>实际行动力消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
       _wkLink("mechanics", "stat_link", "状态互联") +
       "。</p>",
 
@@ -2500,7 +2500,7 @@ function _wikiDetailMechanic(state, id) {
       "<li>生病 → +8 疲劳/天 + 心情 -5</li>" +
       "</ul>" +
       "<h3>📊 状态 → 属性修正（实时）</h3><p>例如：饥饿 &lt; 15 → 体质 ×0.85, 敏捷 ×0.75；健康 &lt; 30 → 全维度打折。详见侧边栏「实际有效值」。</p>" +
-      '<h3>⚡ AP 倍率加成</h3><ul class="wiki-list">' +
+      '<h3>⚡ 行动力倍率加成</h3><ul class="wiki-list">' +
       "<li>疲劳 70~85 +0.20；85~95 +0.45；&gt;95 +0.80</li>" +
       "<li>饥饿 &lt; 20 +0.30；&lt; 10 +0.50</li>" +
       "<li>生病 +0.50，受伤 +0.30</li>" +
@@ -2586,8 +2586,8 @@ function _wikiDetailMechanic(state, id) {
       "<h2>🎓 学历系统</h2>" +
       '<p class="wiki-desc">大专（默认）→ 本科（自考）→ 研究生。学历是某些工作和职场入职的硬门槛。</p>' +
       '<h3>📋 自考流程</h3><ol class="wiki-list">' +
-      "<li>📖 备考（⚡20 AP）：每次 +1 学习点，需要积累一定点数才能考试</li>" +
-      "<li>📝 参加考试（⚡30 AP）：通过率 = 40% + mental×0.4% + intelligence×0.1%</li>" +
+      "<li>📖 备考（⚡20点行动力）：每次 +1 学习点，需要积累一定点数才能考试</li>" +
+      "<li>📝 参加考试（⚡30点行动力）：通过率 = 40% + mental×0.4% + intelligence×0.1%</li>" +
       "<li>🎓 考过 6 次 → 申请本科认证（在 " +
       _wkLink("locations", "school", "大学城") +
       "）</li>" +
@@ -2622,21 +2622,21 @@ function _wikiDetailMechanic(state, id) {
 
     weather_link:
       "<h2>☂️ 天气联动机制</h2>" +
-      '<p class="wiki-desc">天气深化系统 v2：13种天气全方位影响，包括极端天气持续、天气预报、旅行AP修正、天气诱发疾病。</p>' +
+      '<p class="wiki-desc">天气深化系统 v2：13种天气全方位影响，包括极端天气持续、天气预报、旅行行动力修正、天气诱发疾病。</p>' +
       '<h3>📊 普通天气</h3><ul class="wiki-list">' +
       "<li>☀️ 晴天：室外 ×1.0，心情 +5，客流量高</li>" +
       "<li>⛅ 多云：室外 ×0.95</li>" +
       "<li>🌧️ 小雨：室外 ×0.75，疲劳 +8，心情 -5</li>" +
-      "<li>⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行AP×1.25</li>" +
+      "<li>⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行行动力×1.25</li>" +
       "<li>🌬️ 大风：室外 ×0.80，疲劳 +5，心情 -3</li>" +
-      "<li>❄️ 下雪：室外 ×0.30，疲劳 +10，旅行AP×1.5</li>" +
-      "<li>🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行AP×1.3</li>" +
+      "<li>❄️ 下雪：室外 ×0.30，疲劳 +10，旅行行动力×1.5</li>" +
+      "<li>🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行行动力×1.3</li>" +
       "</ul>" +
       '<h3>🔥 极端天气（持续多天）</h3><ul class="wiki-list">' +
       "<li>🥵 高温预警：持续3-5天，疲劳+10，中暑风险↑</li>" +
       "<li>🥶 寒潮：持续2-3天，室外×0.5，感冒风险↑</li>" +
       "<li>😷 重度雾霾：持续2-3天，健康-2，呼吸道疾病↑</li>" +
-      "<li>🌀 台风：持续1-2天，室外停工，旅行AP×2.0</li>" +
+      "<li>🌀 台风：持续1-2天，室外停工，旅行行动力×2.0</li>" +
       "<li>🌪️ 沙尘暴：持续1-2天，健康-3，呼吸道疾病↑</li>" +
       "<li>🌧️ 梅雨季：持续3-5天，疲劳+8/天，食物易发霉</li>" +
       "</ul>" +
@@ -2690,13 +2690,13 @@ function _wikiDetailMechanic(state, id) {
       '<h3>📋 分支选择</h3><ul class="wiki-list">' +
       "<li>技能达 Lv.30 后，在技能 Tab 点击「选择发展方向」按钮</li>" +
       "<li>每技能有 2~3 个方向可选（编程有前端/后端/安全 3 方向，其余为 2 方向）</li>" +
-      "<li>选择需消耗 ⚡15AP + ¥200</li>" +
-      "<li>已选分支可切换（⚡30AP + ¥500），切换后旧天赋节点重置</li>" +
+      "<li>选择需消耗 ⚡15点行动力 + ¥200</li>" +
+      "<li>已选分支可切换（⚡30点行动力 + ¥500），切换后旧天赋节点重置</li>" +
       "</ul>" +
       '<h3>⭐ 天赋节点</h3><ul class="wiki-list">' +
       "<li>每个分支有 3 个天赋节点，分别于 Lv.10 / Lv.25 / Lv.50 解锁</li>" +
       "<li>节点有前置依赖，须先激活前置节点才能激活后续</li>" +
-      "<li>激活消耗 ⚡20~35AP + ¥300~¥1600（节点越深越贵）</li>" +
+      "<li>激活消耗 ⚡20~35点行动力 + ¥300~¥1600（节点越深越贵）</li>" +
       "<li>效果包括：技能 XP+25%、工作收入加成、新工作解锁、被动收入等</li>" +
       "</ul>" +
       '<h3>🏢 职场联动</h3><ul class="wiki-list">' +
@@ -2714,7 +2714,7 @@ function _wikiDetailMechanic(state, id) {
       "<li>安全攻防：职场风险-30%，解锁安全审计</li>" +
       "<li>商务英语：外语收入+30%，解锁外贸工作</li>" +
       "<li>翻译达人：翻译收入+25%，解锁文档翻译</li>" +
-      "<li>客运驾驶：AP减免翻倍，解锁出租车</li>" +
+      "<li>客运驾驶：行动力减免翻倍，解锁出租车</li>" +
       "<li>货运驾驶：物流收入+30%，解锁跟车助理</li>" +
       "<li>门店销售：折扣上限25%，解锁导购</li>" +
       "<li>商务谈判：溢价上限25%，解锁采购</li>" +
@@ -3327,7 +3327,7 @@ function _wikiDetailAmenity(state, id) {
     "</li>" +
     "<li>消耗：" +
     (a.ap || 0) +
-    " AP（不含旅行）</li>" +
+    " 点行动力（不含旅行）</li>" +
     "</ul>";
 
   if (a.primary) {

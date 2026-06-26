@@ -466,7 +466,7 @@
           action.cost +
           " · " +
           action.apCost +
-          'AP<br><span style="color:var(--text-secondary);">' +
+          '点行动力<br><span style="color:var(--text-secondary);">' +
           action.brief +
           "</span></div>";
       });

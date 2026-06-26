@@ -278,7 +278,7 @@ function travelToAmenityAndUse(amenityId) {
   }
   if (state.player.actionPoints < totalAp) {
     StateManager.addMessage(
-      "⚡ 行动力不足（需要 " + totalAp + " AP）。",
+      "⚡ 行动力不足（需要 " + totalAp + " 点行动力）。",
       "warning",
     );
     return;
@@ -767,7 +767,7 @@ if (typeof window !== "undefined") {
           return (
             "<p>系统列出周边最近的 3 个对应类型 " +
             _wkLink("amenities", null, "恢复点") +
-            '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+            '（含旅行行动力），玩家可：</p><ul class="wiki-list">' +
             "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
             "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
             "</ul>"
@@ -990,7 +990,7 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
   html += '<h2 style="margin:0 0 8px;font-size:16px;">🍳 在家做饭</h2>';
   html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
   html += "烹饪 Lv." + cookLevel + " · 可用食谱 " + recipes.length + " 道";
-  html += " · 消耗 " + (totalAp || 10) + " AP</p>";
+  html += " · 消耗 " + (totalAp || 10) + " 点行动力</p>";
   html += '<div style="max-height:400px;overflow-y:auto;">';
 
   for (var i = 0; i < recipes.length; i++) {

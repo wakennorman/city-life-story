@@ -539,7 +539,7 @@ const ITEMS = [
     slot: null,
     effects: { rainHygiene: 0, travelAp: -1 },
     price: 30,
-    desc: "雨天卫生不下降，出行AP-1。雨天必备。",
+    desc: "雨天卫生不下降，出行行动力-1。雨天必备。",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 
@@ -666,7 +666,7 @@ const ITEMS = [
     slot: null,
     effects: { nightWorkIncome: 0.05, nightExploreAp: -1 },
     price: 25,
-    desc: "夜间工作收入+5%，夜间探索AP-1。夜间工作必备。",
+    desc: "夜间工作收入+5%，夜间探索行动力-1。夜间工作必备。",
     buyLocations: ["wholesaleMarket", "slum"],
   },
   {
@@ -733,7 +733,7 @@ const ITEMS = [
       courier_gig: { incomeMultiplier: 1.12 },
     },
     price: 350,
-    desc: "敏捷+3，每日减疲劳8，旅行AP-2。通勤/配送神器。",
+    desc: "敏捷+3，每日减疲劳8，旅行行动力-2。通勤/配送神器。",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 

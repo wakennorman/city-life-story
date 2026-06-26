@@ -11119,7 +11119,7 @@ function showCreateProductModal(state) {
     catHtml +
     "</div>" +
     "</div>" +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗 AP（行动力）和开发周期，确定后会立即开始开发。</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗行动力和开发周期，确定后会立即开始开发。</div>' +
     "</div>";
 
   if (typeof showModal !== "function") return;

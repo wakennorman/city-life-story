@@ -1372,7 +1372,7 @@
               );
             } else {
               StateManager.addMessage(
-                "↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天AP。",
+                "↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天行动力。",
                 "warning",
               );
             }
@@ -4708,7 +4708,7 @@
         },
         {
           text: "🌗 副业兼职两边压（不舍弃老本行）",
-          hint: "收入两边小赚，AP 消耗略增",
+          hint: "收入两边小赚，行动力消耗略增",
           apply: function (st) {
             st.flags._disruptionPivotSeen = true;
             st.flags._disruptionSidehustle = st.player.day;
@@ -7236,7 +7236,7 @@
       choices: [
         {
           text: "♻️ 回收废铁赚差价",
-          hint: "15AP，预计赚¥200-400",
+          hint: "15点行动力，预计赚¥200-400",
           apply: function (st) {
             st.flags._sharingEconomySeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);

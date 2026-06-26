@@ -2183,7 +2183,7 @@ function getAvailableActions(state) {
           actions.push({
             id: "edu_study",
             name: "自考备考",
-            desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
+            desc: `消耗20点行动力，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
             ap: 20,
             handler: () => {
               if (!state.player.eduProgress)
@@ -2236,7 +2236,7 @@ function getAvailableActions(state) {
         actions.push({
           id: "edu_exam",
           name: "参加考试",
-          desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
+          desc: `消耗30点行动力，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
           ap: 30,
           reqFail: !canExam
             ? ep.studyPoints < 150
@@ -2474,7 +2474,7 @@ function getAvailableActions(state) {
             StateManager.addMessage(
               "⭐ 护士悄悄领你走VIP通道！健康+" +
                 healAmt +
-                "，心情+10，比普通看诊省了一半AP。",
+                "，心情+10，比普通看诊省了一半行动力。",
               "success",
             );
           },
@@ -3101,7 +3101,7 @@ function getAvailableActions(state) {
           actions.push({
             id: "intel_" + npc.id,
             name: "向" + npc.name + "打听消息",
-            desc: "消耗10AP换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
+            desc: "消耗10点行动力换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
             icon: "🗞️",
             apCost: 10,
             handler: (function (capturedNpc) {

@@ -37,7 +37,7 @@
       choices: [
         {
           text: "🔧 帮她修水管",
-          hint: "花1个AP，好感+10",
+          hint: "花1点行动力，好感+10",
           apply: function (st) {
             if (st.skills && st.skills.repair) {
               var level = st.skills.repair.level || 0;

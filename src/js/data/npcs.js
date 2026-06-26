@@ -2404,11 +2404,11 @@ const NPCS = [
       {
         threshold: 60,
         id: "dr_wang_60",
-        desc: "王医生给你优先挂号（医院AP-2）",
+        desc: "王医生给你优先挂号（医院行动力-2）",
         effect: function (st) {
           st.flags.wangPriority = true;
           StateManager.addMessage(
-            "💕 王医生说'找我直接进'，医院AP-2！",
+            "💕 王医生说'找我直接进'，医院行动力-2！",
             "success",
           );
         },

@@ -390,7 +390,7 @@ var SKILL_BRANCHES = {
       id: "passenger_transport",
       name: "客运驾驶",
       icon: "🚕",
-      desc: "专注载客运输，驾驶AP减免翻倍，解锁出租车工作",
+      desc: "专注载客运输，驾驶行动力减免翻倍，解锁出租车工作",
       jobBonuses: ["taxi_driver", "chauffeur"],
       apReductionMult: 2.0,
       talentNodes: [
@@ -407,7 +407,7 @@ var SKILL_BRANCHES = {
         {
           id: "drive_navigation",
           name: "路线精通",
-          desc: "旅行AP额外-2，客运收入+20%",
+          desc: "旅行行动力额外-2，客运收入+20%",
           apCost: 25,
           cashCost: 500,
           prereq: "drive_passenger",
@@ -979,7 +979,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
     return false;
   }
   if (state.player.actionPoints < 15) {
-    StateManager.addMessage("⚠️ 行动力不足，需要15AP选择发展方向", "warning");
+    StateManager.addMessage("⚠️ 行动力不足，需要15点行动力选择发展方向", "warning");
     return false;
   }
   if (state.resources.cash < 200) {
@@ -1091,7 +1091,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
   if (state.player.actionPoints < (node.apCost || 0)) {
     return {
       allowed: false,
-      reason: "行动力不足，需要" + node.apCost + "AP",
+      reason: "行动力不足，需要" + node.apCost + "点行动力",
     };
   }
   if (state.resources.cash < (node.cashCost || 0)) {

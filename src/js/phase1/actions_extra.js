@@ -740,7 +740,7 @@ function addStreetExtras(state, actions) {
         estMin +
         "~" +
         estMax +
-        "。每单消耗30AP。",
+        "。每单消耗30点行动力。",
       icon: "💻",
       apCost: 30,
       payEstimate: estMin + "~" + estMax,
@@ -1381,7 +1381,7 @@ function showGiftModal() {
     buttons: [
       { text: "取消", cls: "", callback: function () {} },
       {
-        text: "送出 (-10AP)",
+        text: "送出（-10点行动力）",
         cls: "btn-primary",
         callback: function () {
           var st = StateManager.getState();

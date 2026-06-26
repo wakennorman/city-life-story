@@ -5809,7 +5809,7 @@ function quarterlyCleanup(state) {
               );
             } else {
               StateManager.addMessage(
-                "↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天AP。",
+                "↩️ 批发商耍赖说验货时没说不行，白跑了一趟，消耗了大半天行动力。",
                 "warning",
               );
             }
@@ -9145,7 +9145,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🌗 副业兼职两边压（不舍弃老本行）",
-          hint: "收入两边小赚，AP 消耗略增",
+          hint: "收入两边小赚，行动力消耗略增",
           apply: function (st) {
             st.flags._disruptionPivotSeen = true;
             st.flags._disruptionSidehustle = st.player.day;
@@ -11673,7 +11673,7 @@ function quarterlyCleanup(state) {
       choices: [
         {
           text: "♻️ 回收废铁赚差价",
-          hint: "15AP，预计赚¥200-400",
+          hint: "15点行动力，预计赚¥200-400",
           apply: function (st) {
             st.flags._sharingEconomySeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
@@ -17637,7 +17637,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "🏦 去银行确认",
-          hint: "花AP但最安全",
+          hint: "花行动力但最安全",
           apply: function (st) {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             StateManager.addMessage(
@@ -17719,7 +17719,7 @@ function quarterlyCleanup(state) {
         },
         {
           text: "💪 自己沿路找找",
-          hint: "花1AP碰运气",
+          hint: "花1点行动力碰运气",
           apply: function (st) {
             var found = Random.chance(0.3);
             if (found) {
@@ -25877,7 +25877,7 @@ if (typeof window !== "undefined") {
       trigger: function (st) {
         return (st.resources.cash || 0) >= 300 && !st.flags._hint_first_taxi;
       },
-      message: "💡 提示：现金>300后，打车去远点的地点能省 AP，性价比合适。",
+      message: "💡 提示：现金>300后，打车去远点的地点能省行动力，性价比合适。",
     },
     {
       id: "first_market_dive",
@@ -28355,7 +28355,7 @@ if (typeof window !== "undefined") {
       choices: [
         {
           text: "🔧 帮她修水管",
-          hint: "花1个AP，好感+10",
+          hint: "花1点行动力，好感+10",
           apply: function (st) {
             if (st.skills && st.skills.repair) {
               var level = st.skills.repair.level || 0;
@@ -32990,7 +32990,7 @@ const ITEMS = [
     slot: null,
     effects: { rainHygiene: 0, travelAp: -1 },
     price: 30,
-    desc: "雨天卫生不下降，出行AP-1。雨天必备。",
+    desc: "雨天卫生不下降，出行行动力-1。雨天必备。",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 
@@ -33117,7 +33117,7 @@ const ITEMS = [
     slot: null,
     effects: { nightWorkIncome: 0.05, nightExploreAp: -1 },
     price: 25,
-    desc: "夜间工作收入+5%，夜间探索AP-1。夜间工作必备。",
+    desc: "夜间工作收入+5%，夜间探索行动力-1。夜间工作必备。",
     buyLocations: ["wholesaleMarket", "slum"],
   },
   {
@@ -33184,7 +33184,7 @@ const ITEMS = [
       courier_gig: { incomeMultiplier: 1.12 },
     },
     price: 350,
-    desc: "敏捷+3，每日减疲劳8，旅行AP-2。通勤/配送神器。",
+    desc: "敏捷+3，每日减疲劳8，旅行行动力-2。通勤/配送神器。",
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 
@@ -41853,11 +41853,11 @@ const NPCS = [
       {
         threshold: 60,
         id: "dr_wang_60",
-        desc: "王医生给你优先挂号（医院AP-2）",
+        desc: "王医生给你优先挂号（医院行动力-2）",
         effect: function (st) {
           st.flags.wangPriority = true;
           StateManager.addMessage(
-            "💕 王医生说'找我直接进'，医院AP-2！",
+            "💕 王医生说'找我直接进'，医院行动力-2！",
             "success",
           );
         },
@@ -44598,13 +44598,13 @@ function hasIllness(state, illnessId) {
   // ============================================================
   MECHANICS.ap = {
     id: "ap",
-    name: "行动力 (AP)",
+    name: "行动力",
     icon: "⚡",
-    brief: "100 AP/天，倍率系统，低 AP 预警",
+    brief: "每天100点，倍率系统，低行动力预警",
     sections: [
       {
         kind: "desc",
-        text: "每天 100 行动力（满）。所有行动消耗对应 AP（卡片右下显示），AP 耗尽自动 endDay。",
+        text: "每天 100 点行动力（满）。所有行动都会消耗对应行动力（卡片右下显示），耗尽自动进入下一天。",
       },
       { kind: "subhead", text: "📊 关键规则" },
       {
@@ -44612,7 +44612,7 @@ function hasIllness(state, illnessId) {
         items: [
           "大多数街头工作 ⚡15~38 行动力",
           "训练技能、做饭、洗澡 ⚡10~15 行动力",
-          "跨地点出行 ⚡15 AP（驾驶 ≥20 级减免）",
+          "跨地点出行 ⚡15点行动力（驾驶 ≥20 级减免）",
           "极端状态（饿晕/过劳/病危）会跳过当天",
           "行动力 ≤ 20 时顶部和侧栏闪烁预警",
         ],
@@ -44621,8 +44621,8 @@ function hasIllness(state, illnessId) {
         kind: "html",
         get: function () {
           return (
-            "<h3>🔢 AP 倍率</h3>" +
-            "<p>实际 AP 消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
+            "<h3>🔢 行动力倍率</h3>" +
+            "<p>实际行动力消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
             _wkLink("mechanics", "stat_link", "状态互联") +
             "。</p>"
           );
@@ -44638,7 +44638,7 @@ function hasIllness(state, illnessId) {
     id: "stat_link",
     name: "状态互联",
     icon: "🔗",
-    brief: "饥饿/疲劳/心情多米诺，AP 倍率",
+    brief: "饥饿/疲劳/心情多米诺，行动力倍率",
     reference: "《这是我的战争》《模拟人生》",
     related: ["mechanics:ap", "mechanics:critical_needs"],
     sections: [
@@ -44664,7 +44664,7 @@ function hasIllness(state, illnessId) {
         kind: "desc",
         text: "例如：饥饿 < 15 → 体质 ×0.85, 敏捷 ×0.75；健康 < 30 → 全维度打折。详见侧边栏「实际有效值」。",
       },
-      { kind: "subhead", text: "⚡ AP 倍率加成" },
+      { kind: "subhead", text: "⚡ 行动力倍率加成" },
       {
         kind: "list",
         items: [
@@ -44854,7 +44854,7 @@ function hasIllness(state, illnessId) {
           return (
             "<p>系统列出周边最近的 3 个对应类型 " +
             _wkLink("amenities", null, "恢复点") +
-            "（含旅行 AP），玩家可：</p>" +
+            "（含旅行行动力），玩家可：</p>" +
             '<ul class="wiki-list">' +
             "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
             "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
@@ -45056,9 +45056,9 @@ function hasIllness(state, illnessId) {
       {
         kind: "list",
         items: [
-          "📖 备考（⚡20 AP）：每次 +1 学习点，需要积累一定点数才能考试",
-          "📝 参加考试（⚡30 AP）：通过率 = 40% + mental×0.4% + intelligence×0.1%",
-          "🎓 考过 6 次 → 在培训中心申请本科认证（需⚡30AP）",
+          "📖 备考（⚡20点行动力）：每次 +1 学习点，需要积累一定点数才能考试",
+          "📝 参加考试（⚡30点行动力）：通过率 = 40% + mental×0.4% + intelligence×0.1%",
+          "🎓 考过 6 次 → 在培训中心申请本科认证（需⚡30点行动力）",
         ],
       },
       { kind: "subhead", text: "📊 学历影响的工作" },
@@ -45142,11 +45142,11 @@ function hasIllness(state, illnessId) {
     id: "weather_link",
     name: "天气联动",
     icon: "☂️",
-    brief: "13种天气全方位影响：收入/疲劳/心情/AP/旅行/疾病",
+    brief: "13种天气全方位影响：收入/疲劳/心情/行动力/旅行/疾病",
     sections: [
       {
         kind: "desc",
-        text: "天气深化系统 v2：极端天气持续多天、3天天气预报、温度体感、舒适度、旅行AP修正、天气诱发疾病。",
+        text: "天气深化系统 v2：极端天气持续多天、3天天气预报、温度体感、舒适度、旅行行动力修正、天气诱发疾病。",
       },
       { kind: "subhead", text: "📊 普通天气影响" },
       {
@@ -45155,22 +45155,22 @@ function hasIllness(state, illnessId) {
           "☀️ 晴天：室外 ×1.0，心情 +5，客流量高",
           "⛅ 多云：室外 ×0.95，客流量稍降",
           "🌧️ 小雨：室外 ×0.75，疲劳 +8，心情 -5，客流量↓",
-          "⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行AP×1.25",
+          "⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行行动力×1.25",
           "🌬️ 大风：室外 ×0.80，疲劳 +5，心情 -3",
-          "❄️ 下雪：室外 ×0.30，疲劳 +10，旅行AP×1.5",
-          "🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行AP×1.3",
+          "❄️ 下雪：室外 ×0.30，疲劳 +10，旅行行动力×1.5",
+          "🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行行动力×1.3",
         ],
       },
       { kind: "subhead", text: "🔥 极端天气（持续多天）" },
       {
         kind: "list",
         items: [
-          "🥵 高温预警：持续3-5天，疲劳+10，旅行AP×1.1，中暑风险↑",
-          "🥶 寒潮：持续2-3天，室外×0.5，旅行AP×1.15，感冒风险↑",
-          "😷 重度雾霾：持续2-3天，健康-2，旅行AP×1.35，呼吸道疾病↑",
-          "🌀 台风：持续1-2天，室外停工，旅行AP×2.0，安全风险",
-          "🌪️ 沙尘暴：持续1-2天，健康-3，旅行AP×1.5，呼吸道疾病↑",
-          "🌧️ 梅雨季：持续3-5天，疲劳+8/天，食物易发霉，旅行AP×1.1",
+          "🥵 高温预警：持续3-5天，疲劳+10，旅行行动力×1.1，中暑风险↑",
+          "🥶 寒潮：持续2-3天，室外×0.5，旅行行动力×1.15，感冒风险↑",
+          "😷 重度雾霾：持续2-3天，健康-2，旅行行动力×1.35，呼吸道疾病↑",
+          "🌀 台风：持续1-2天，室外停工，旅行行动力×2.0，安全风险",
+          "🌪️ 沙尘暴：持续1-2天，健康-3，旅行行动力×1.5，呼吸道疾病↑",
+          "🌧️ 梅雨季：持续3-5天，疲劳+8/天，食物易发霉，旅行行动力×1.1",
         ],
       },
       { kind: "subhead", text: "📅 天气预报" },
@@ -45298,8 +45298,8 @@ function hasIllness(state, illnessId) {
         items: [
           "技能达 Lv.30 后，在技能 Tab 点击「选择发展方向」按钮",
           "每技能有 2~3 个方向可选（编程有前端/后端/安全 3 方向，其余为 2 方向）",
-          "选择需消耗 ⚡15AP + ¥200",
-          "已选分支可切换（⚡30AP + ¥500），切换后旧天赋节点重置",
+          "选择需消耗 ⚡15点行动力 + ¥200",
+          "已选分支可切换（⚡30点行动力 + ¥500），切换后旧天赋节点重置",
         ],
       },
       { kind: "subhead", text: "⭐ 天赋节点" },
@@ -45308,7 +45308,7 @@ function hasIllness(state, illnessId) {
         items: [
           "每个分支有 3 个天赋节点，分别于 Lv.10 / Lv.25 / Lv.50 解锁",
           "节点有前置依赖，须先激活前置节点才能激活后续",
-          "激活消耗 ⚡20~35AP + ¥300~¥1600（节点越深越贵）",
+          "激活消耗 ⚡20~35点行动力 + ¥300~¥1600（节点越深越贵）",
           "效果包括：技能 XP+25%、工作收入加成、新工作解锁、被动收入等",
         ],
       },
@@ -45334,7 +45334,7 @@ function hasIllness(state, illnessId) {
           "安全攻防：职场风险-30%，解锁安全审计",
           "商务英语：外语收入+30%，解锁外贸工作",
           "翻译达人：翻译收入+25%，解锁文档翻译",
-          "客运驾驶：AP减免翻倍，解锁出租车",
+          "客运驾驶：行动力减免翻倍，解锁出租车",
           "货运驾驶：物流收入+30%，解锁跟车助理",
           "门店销售：折扣上限25%，解锁导购",
           "商务谈判：溢价上限25%，解锁采购",
@@ -45774,7 +45774,7 @@ function hasIllness(state, illnessId) {
           "🧾 会计 Lv.20+：侧边栏显示日收支明细 / Lv.40+：投资回报率 / Lv.60+：闲钱理财提示",
           "🍳 烹饪 Lv.20+：食谱食材成本估算 / Lv.40+：在家做 vs 外卖性价比 / Lv.60+：食材价格波动",
           "🔧 维修 Lv.20+：装备品质评级 / Lv.40+：月维护成本 / Lv.60+：二手估值",
-          "🚗 驾驶 Lv.20+：路线 AP 成本明细 / Lv.40+：配送费合理性 / Lv.60+：路线建议",
+          "🚗 驾驶 Lv.20+：路线行动力成本明细 / Lv.40+：配送费合理性 / Lv.60+：路线建议",
           "💻 编程 Lv.20+：外包工时估算 / Lv.40+：报价合理性评价 / Lv.60+：后续维护成本",
         ],
       },
@@ -45792,7 +45792,7 @@ function hasIllness(state, illnessId) {
     id: "main",
     name: "人生模拟核心",
     icon: "🌟",
-    brief: "日循环结算、属性系统、AP 行动力、需求与状态管理",
+    brief: "日循环结算、属性系统、行动力、需求与状态管理",
     reference: "《大多数》《中国式家长》",
     related: [
       "mechanics:ap",
@@ -45802,7 +45802,7 @@ function hasIllness(state, illnessId) {
     sections: [
       {
         kind: "desc",
-        text: "游戏的核心循环：每天 100 行动力，选择行动→消耗 AP→结算状态→进入下一天。所有系统都挂载在这个主循环之上。",
+        text: "游戏的核心循环：每天 100 点行动力，选择行动→消耗行动力→结算状态→进入下一天。所有系统都挂载在这个主循环之上。",
       },
       { kind: "subhead", text: "📋 核心机制" },
       {
@@ -45834,7 +45834,7 @@ function hasIllness(state, illnessId) {
     sections: [
       {
         kind: "desc",
-        text: "系统自动记录每次行动点击，按分类和具体行动统计使用频次。了解自己的游戏习惯，优化每日 AP 分配。",
+        text: "系统自动记录每次行动点击，按分类和具体行动统计使用频次。了解自己的游戏习惯，优化每日行动力分配。",
       },
       {
         kind: "html",
@@ -46023,7 +46023,7 @@ function hasIllness(state, illnessId) {
       {
         kind: "list",
         items: [
-          "行动选项（已启用）：生存必需→赚钱谋生→地点服务→购物装备→学习提升→社交休闲→金融理财→职业发展，同频次优先，低AP优先",
+          "行动选项（已启用）：生存必需→赚钱谋生→地点服务→购物装备→学习提升→社交休闲→金融理财→职业发展，同频次优先，低行动力优先",
           "交易商品（已启用）：食品→日用品→服装→电子→奢侈品→废品，同频次优先，低价优先",
           "技能训练（已启用）：实用型→学术型→体能型，同频次优先，等级优先",
           "股票市场（已启用）：科技→新能源→消费→金融→房地产→医药，同频次优先，低价优先",
@@ -46043,7 +46043,7 @@ function hasIllness(state, illnessId) {
           "第1层 — 分类固定顺序：关键分类先显示（如食物优先于奢侈品）",
           "第2层 — 同类默认优先级：特定条目置顶（如水在大米之前）",
           "第3层 — 交互频次：你最常操作的条目优先",
-          "第4层 — 消耗/价格：低AP/低价格优先显示",
+          "第4层 — 消耗/价格：低行动力/低价格优先显示",
           "第5层 — 名称拼音：最终稳定兜底",
         ],
       },
@@ -54254,7 +54254,7 @@ function travelToAmenityAndUse(amenityId) {
   }
   if (state.player.actionPoints < totalAp) {
     StateManager.addMessage(
-      "⚡ 行动力不足（需要 " + totalAp + " AP）。",
+      "⚡ 行动力不足（需要 " + totalAp + " 点行动力）。",
       "warning",
     );
     return;
@@ -54743,7 +54743,7 @@ if (typeof window !== "undefined") {
           return (
             "<p>系统列出周边最近的 3 个对应类型 " +
             _wkLink("amenities", null, "恢复点") +
-            '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+            '（含旅行行动力），玩家可：</p><ul class="wiki-list">' +
             "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
             "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
             "</ul>"
@@ -54966,7 +54966,7 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
   html += '<h2 style="margin:0 0 8px;font-size:16px;">🍳 在家做饭</h2>';
   html += '<p style="margin:0 0 12px;color:var(--text-muted);font-size:12px;">';
   html += "烹饪 Lv." + cookLevel + " · 可用食谱 " + recipes.length + " 道";
-  html += " · 消耗 " + (totalAp || 10) + " AP</p>";
+  html += " · 消耗 " + (totalAp || 10) + " 点行动力</p>";
   html += '<div style="max-height:400px;overflow-y:auto;">';
 
   for (var i = 0; i < recipes.length; i++) {
@@ -56934,7 +56934,7 @@ function addStreetExtras(state, actions) {
         estMin +
         "~" +
         estMax +
-        "。每单消耗30AP。",
+        "。每单消耗30点行动力。",
       icon: "💻",
       apCost: 30,
       payEstimate: estMin + "~" + estMax,
@@ -57575,7 +57575,7 @@ function showGiftModal() {
     buttons: [
       { text: "取消", cls: "", callback: function () {} },
       {
-        text: "送出 (-10AP)",
+        text: "送出（-10点行动力）",
         cls: "btn-primary",
         callback: function () {
           var st = StateManager.getState();
@@ -62047,7 +62047,7 @@ function chatWithNpc(npcId, state) {
 
   var ap = state.player.actionPoints || 0;
   if (ap < 2) {
-    StateManager.addMessage("行动力不足，需要 2 AP 才能深入聊天。", "warning");
+    StateManager.addMessage("行动力不足，需要 2 点行动力才能深入聊天。", "warning");
     return;
   }
   state.player.actionPoints = ap - 2;
@@ -79315,7 +79315,7 @@ function showCreateProductModal(state) {
     catHtml +
     "</div>" +
     "</div>" +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗 AP（行动力）和开发周期，确定后会立即开始开发。</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">产品开发需要消耗行动力和开发周期，确定后会立即开始开发。</div>' +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -97690,7 +97690,7 @@ var SKILL_BRANCHES = {
       id: "passenger_transport",
       name: "客运驾驶",
       icon: "🚕",
-      desc: "专注载客运输，驾驶AP减免翻倍，解锁出租车工作",
+      desc: "专注载客运输，驾驶行动力减免翻倍，解锁出租车工作",
       jobBonuses: ["taxi_driver", "chauffeur"],
       apReductionMult: 2.0,
       talentNodes: [
@@ -97707,7 +97707,7 @@ var SKILL_BRANCHES = {
         {
           id: "drive_navigation",
           name: "路线精通",
-          desc: "旅行AP额外-2，客运收入+20%",
+          desc: "旅行行动力额外-2，客运收入+20%",
           apCost: 25,
           cashCost: 500,
           prereq: "drive_passenger",
@@ -98279,7 +98279,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
     return false;
   }
   if (state.player.actionPoints < 15) {
-    StateManager.addMessage("⚠️ 行动力不足，需要15AP选择发展方向", "warning");
+    StateManager.addMessage("⚠️ 行动力不足，需要15点行动力选择发展方向", "warning");
     return false;
   }
   if (state.resources.cash < 200) {
@@ -98391,7 +98391,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
   if (state.player.actionPoints < (node.apCost || 0)) {
     return {
       allowed: false,
-      reason: "行动力不足，需要" + node.apCost + "AP",
+      reason: "行动力不足，需要" + node.apCost + "点行动力",
     };
   }
   if (state.resources.cash < (node.cashCost || 0)) {
@@ -103721,7 +103721,7 @@ function getDailyActionTips(state) {
                 upcoming.name +
                 "还有" +
                 daysUntil +
-                "天！提前准备相关商品或攒AP。",
+                "天！提前准备相关商品或攒行动力。",
             );
             break;
           }
@@ -107075,7 +107075,7 @@ function showBranchSelectionModal(skillKey) {
     " — 选择发展方向</h3>" +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">技能Lv.' +
     skill.level +
-    "，选择一个发展方向后获得独特加成。消耗 ⚡15AP + ¥200</div>" +
+    "，选择一个发展方向后获得独特加成。消耗 ⚡15点行动力 + ¥200</div>" +
     '<div style="margin-bottom:12px;">';
 
   for (var bi = 0; bi < branches.length; bi++) {
@@ -110312,7 +110312,7 @@ function showScavengeRouteModal() {
     btn.textContent = disabled
       ? locked
         ? "🔒 未解锁"
-        : "⚡ AP不足"
+        : "⚡ 行动力不足"
       : "走这条路 →";
 
     if (!disabled) {
@@ -111222,7 +111222,7 @@ function startTutorial() {
       title: "🗑️ 试试第一次赚钱",
       body: `
         <p>点击下方的 <strong>"废品回收"</strong> 行动卡片开始工作</p>
-        <p>每次行动消耗行动力（AP），耗尽后结束一天</p>
+        <p>每次行动都会消耗行动力，耗尽后结束一天</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>废品回收</strong> 行动卡片（高亮处）继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">💡 前15天废品回收有新人加成+¥5</p>
       `,
@@ -112884,15 +112884,15 @@ function _wikiListEntries(catId, state) {
       });
       out.push({
         id: "ap",
-        name: "行动力 (AP)",
+        name: "行动力",
         icon: "⚡",
-        brief: "100 AP/天，倍率系统，低 AP 预警",
+        brief: "每天100点，倍率系统，低行动力预警",
       });
       out.push({
         id: "stat_link",
         name: "状态互联",
         icon: "🔗",
-        brief: "饥饿/疲劳/心情多米诺，AP 倍率",
+        brief: "饥饿/疲劳/心情多米诺，行动力倍率",
       });
       out.push({
         id: "synergy",
@@ -112946,7 +112946,7 @@ function _wikiListEntries(catId, state) {
         id: "weather_link",
         name: "天气联动",
         icon: "☂️",
-        brief: "室外工作/AP/心情",
+        brief: "室外工作/行动力/心情",
       });
       out.push({
         id: "npc_affinity",
@@ -113784,7 +113784,7 @@ function _wikiDetailJob(state, id) {
     var apCost = 20;
     if (job.effects.fatigue)
       apCost = Math.max(15, Math.min(45, job.effects.fatigue));
-    html += "<div><b>预估 AP</b>⚡" + apCost + "</div>";
+    html += "<div><b>预估行动力</b>⚡" + apCost + "</div>";
   }
 
   if (job.risk && (job.risk.injury || job.risk.illness)) {
@@ -114124,7 +114124,7 @@ function _wikiDetailSkill(state, id) {
       " / " +
       (sk.level + 1) * 120 +
       "</div>" +
-      "<div><b>训练消耗</b>⚡15 AP + ¥50</div>" +
+      "<div><b>训练消耗</b>⚡15点行动力 + ¥50</div>" +
       "<div><b>每日上限</b>3 次/技能</div>" +
       "</div>";
   }
@@ -114166,7 +114166,7 @@ function _wikiDetailSkill(state, id) {
     repair: "🛠️ 装备效果 +repair × 0.5%",
     coding: "💻 职场能力 +2/10 级；街头：大学城/科技园解锁「网络外包单」",
     english: "🇬🇧 家教收入 +english × 0.3；解锁外贸/客服协同",
-    driving: "🛵 出行 AP 减免：每 20 级 -1（最多 -5）",
+    driving: "🛵 出行行动力减免：每 20 级 -1（最多 -5）",
     management: "📋 职场向上管理 +1/10 级",
     accounting: "🏦 银行存款日息 +accounting × 0.0005（最多+5%/年）",
     electrician: "🔌 工厂工作收入 +electrician × 0.5%",
@@ -114613,11 +114613,11 @@ function _wikiDetailWeather(state, id) {
       "<div><b>春</b>多雨多雷，温度回升</div>" +
       "<div><b>夏</b>酷暑频发，户外疲劳加重</div>" +
       "<div><b>秋</b>气温适中，最适合工作</div>" +
-      "<div><b>冬</b>大雪/严寒，AP 倍率上升</div>" +
+      "<div><b>冬</b>大雪/严寒，行动力倍率上升</div>" +
       "</div>" +
       '<p class="wiki-tip">💡 在 ' +
       _wkLink("mechanics", "weather_link", "天气联动机制") +
-      " 查看完整天气×AP×心情公式。</p>"
+      " 查看完整天气×行动力×心情公式。</p>"
     );
   }
 
@@ -114653,7 +114653,7 @@ function _wikiDetailWeather(state, id) {
   var extreme = ["stormy", "snowy", "extreme_heat", "extreme_cold"];
   if (extreme.indexOf(w.id) >= 0) {
     html +=
-      '<p class="wiki-tip">⚠️ 极端天气会额外增加 AP 消耗倍率（+0.15~0.20），适合改室内行动。</p>';
+      '<p class="wiki-tip">⚠️ 极端天气会额外增加行动力消耗倍率（+0.15~0.20），适合改室内行动。</p>';
   }
 
   html +=
@@ -114905,7 +114905,7 @@ function _wikiDetailMechanic(state, id) {
       "</ul>" +
       "<h3>🪟 弹窗选项</h3><p>系统列出周边最近的 3 个对应类型 " +
       _wkLink("amenities", null, "恢复点") +
-      '（含旅行 AP），玩家可：</p><ul class="wiki-list">' +
+      '（含旅行行动力），玩家可：</p><ul class="wiki-list">' +
       "<li><strong>立即去 XX</strong>：自动旅行 + 消费 + 补充状态</li>" +
       "<li><strong>后续自己再去</strong>：标记延期，今天结束时若仍未恢复，按阶梯式惩罚累积后果</li>" +
       "</ul>" +
@@ -114940,16 +114940,16 @@ function _wikiDetailMechanic(state, id) {
       "。</p>",
 
     ap:
-      "<h2>⚡ 行动力 (AP) 系统</h2>" +
-      '<p class="wiki-desc">每天 100 AP（满）。所有行动消耗对应 AP（卡片右下显示），AP 耗尽自动 endDay。</p>' +
+      "<h2>⚡ 行动力系统</h2>" +
+      '<p class="wiki-desc">每天 100 点行动力（满）。所有行动都会消耗对应行动力（卡片右下显示），耗尽自动进入下一天。</p>' +
       '<h3>📊 关键规则</h3><ul class="wiki-list">' +
-      "<li>大多数街头工作 ⚡15~38 AP</li>" +
-      "<li>训练技能、做饭、洗澡 ⚡10~15 AP</li>" +
-      "<li>跨地点出行 ⚡15 AP（驾驶 ≥20 级减免）</li>" +
+      "<li>大多数街头工作 ⚡15~38点行动力</li>" +
+      "<li>训练技能、做饭、洗澡 ⚡10~15点行动力</li>" +
+      "<li>跨地点出行 ⚡15点行动力（驾驶 ≥20 级减免）</li>" +
       "<li>极端状态（饿晕/过劳/病危）会跳过当天</li>" +
-      "<li>AP ≤ 20 时顶部和侧栏闪烁预警</li>" +
+      "<li>行动力 ≤ 20 时顶部和侧栏闪烁预警</li>" +
       "</ul>" +
-      "<h3>🔢 AP 倍率</h3><p>实际 AP 消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
+      "<h3>🔢 行动力倍率</h3><p>实际行动力消耗 = 基础 × 倍率（保底 0.5×，封顶 2.5×）。详见 " +
       _wkLink("mechanics", "stat_link", "状态互联") +
       "。</p>",
 
@@ -114966,7 +114966,7 @@ function _wikiDetailMechanic(state, id) {
       "<li>生病 → +8 疲劳/天 + 心情 -5</li>" +
       "</ul>" +
       "<h3>📊 状态 → 属性修正（实时）</h3><p>例如：饥饿 &lt; 15 → 体质 ×0.85, 敏捷 ×0.75；健康 &lt; 30 → 全维度打折。详见侧边栏「实际有效值」。</p>" +
-      '<h3>⚡ AP 倍率加成</h3><ul class="wiki-list">' +
+      '<h3>⚡ 行动力倍率加成</h3><ul class="wiki-list">' +
       "<li>疲劳 70~85 +0.20；85~95 +0.45；&gt;95 +0.80</li>" +
       "<li>饥饿 &lt; 20 +0.30；&lt; 10 +0.50</li>" +
       "<li>生病 +0.50，受伤 +0.30</li>" +
@@ -115052,8 +115052,8 @@ function _wikiDetailMechanic(state, id) {
       "<h2>🎓 学历系统</h2>" +
       '<p class="wiki-desc">大专（默认）→ 本科（自考）→ 研究生。学历是某些工作和职场入职的硬门槛。</p>' +
       '<h3>📋 自考流程</h3><ol class="wiki-list">' +
-      "<li>📖 备考（⚡20 AP）：每次 +1 学习点，需要积累一定点数才能考试</li>" +
-      "<li>📝 参加考试（⚡30 AP）：通过率 = 40% + mental×0.4% + intelligence×0.1%</li>" +
+      "<li>📖 备考（⚡20点行动力）：每次 +1 学习点，需要积累一定点数才能考试</li>" +
+      "<li>📝 参加考试（⚡30点行动力）：通过率 = 40% + mental×0.4% + intelligence×0.1%</li>" +
       "<li>🎓 考过 6 次 → 申请本科认证（在 " +
       _wkLink("locations", "school", "大学城") +
       "）</li>" +
@@ -115088,21 +115088,21 @@ function _wikiDetailMechanic(state, id) {
 
     weather_link:
       "<h2>☂️ 天气联动机制</h2>" +
-      '<p class="wiki-desc">天气深化系统 v2：13种天气全方位影响，包括极端天气持续、天气预报、旅行AP修正、天气诱发疾病。</p>' +
+      '<p class="wiki-desc">天气深化系统 v2：13种天气全方位影响，包括极端天气持续、天气预报、旅行行动力修正、天气诱发疾病。</p>' +
       '<h3>📊 普通天气</h3><ul class="wiki-list">' +
       "<li>☀️ 晴天：室外 ×1.0，心情 +5，客流量高</li>" +
       "<li>⛅ 多云：室外 ×0.95</li>" +
       "<li>🌧️ 小雨：室外 ×0.75，疲劳 +8，心情 -5</li>" +
-      "<li>⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行AP×1.25</li>" +
+      "<li>⛈️ 暴雨：室外 ×0.40，疲劳 +15，旅行行动力×1.25</li>" +
       "<li>🌬️ 大风：室外 ×0.80，疲劳 +5，心情 -3</li>" +
-      "<li>❄️ 下雪：室外 ×0.30，疲劳 +10，旅行AP×1.5</li>" +
-      "<li>🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行AP×1.3</li>" +
+      "<li>❄️ 下雪：室外 ×0.30，疲劳 +10，旅行行动力×1.5</li>" +
+      "<li>🌫️ 雾霾：室外 ×0.85，疲劳 +3，心情 -5，旅行行动力×1.3</li>" +
       "</ul>" +
       '<h3>🔥 极端天气（持续多天）</h3><ul class="wiki-list">' +
       "<li>🥵 高温预警：持续3-5天，疲劳+10，中暑风险↑</li>" +
       "<li>🥶 寒潮：持续2-3天，室外×0.5，感冒风险↑</li>" +
       "<li>😷 重度雾霾：持续2-3天，健康-2，呼吸道疾病↑</li>" +
-      "<li>🌀 台风：持续1-2天，室外停工，旅行AP×2.0</li>" +
+      "<li>🌀 台风：持续1-2天，室外停工，旅行行动力×2.0</li>" +
       "<li>🌪️ 沙尘暴：持续1-2天，健康-3，呼吸道疾病↑</li>" +
       "<li>🌧️ 梅雨季：持续3-5天，疲劳+8/天，食物易发霉</li>" +
       "</ul>" +
@@ -115156,13 +115156,13 @@ function _wikiDetailMechanic(state, id) {
       '<h3>📋 分支选择</h3><ul class="wiki-list">' +
       "<li>技能达 Lv.30 后，在技能 Tab 点击「选择发展方向」按钮</li>" +
       "<li>每技能有 2~3 个方向可选（编程有前端/后端/安全 3 方向，其余为 2 方向）</li>" +
-      "<li>选择需消耗 ⚡15AP + ¥200</li>" +
-      "<li>已选分支可切换（⚡30AP + ¥500），切换后旧天赋节点重置</li>" +
+      "<li>选择需消耗 ⚡15点行动力 + ¥200</li>" +
+      "<li>已选分支可切换（⚡30点行动力 + ¥500），切换后旧天赋节点重置</li>" +
       "</ul>" +
       '<h3>⭐ 天赋节点</h3><ul class="wiki-list">' +
       "<li>每个分支有 3 个天赋节点，分别于 Lv.10 / Lv.25 / Lv.50 解锁</li>" +
       "<li>节点有前置依赖，须先激活前置节点才能激活后续</li>" +
-      "<li>激活消耗 ⚡20~35AP + ¥300~¥1600（节点越深越贵）</li>" +
+      "<li>激活消耗 ⚡20~35点行动力 + ¥300~¥1600（节点越深越贵）</li>" +
       "<li>效果包括：技能 XP+25%、工作收入加成、新工作解锁、被动收入等</li>" +
       "</ul>" +
       '<h3>🏢 职场联动</h3><ul class="wiki-list">' +
@@ -115180,7 +115180,7 @@ function _wikiDetailMechanic(state, id) {
       "<li>安全攻防：职场风险-30%，解锁安全审计</li>" +
       "<li>商务英语：外语收入+30%，解锁外贸工作</li>" +
       "<li>翻译达人：翻译收入+25%，解锁文档翻译</li>" +
-      "<li>客运驾驶：AP减免翻倍，解锁出租车</li>" +
+      "<li>客运驾驶：行动力减免翻倍，解锁出租车</li>" +
       "<li>货运驾驶：物流收入+30%，解锁跟车助理</li>" +
       "<li>门店销售：折扣上限25%，解锁导购</li>" +
       "<li>商务谈判：溢价上限25%，解锁采购</li>" +
@@ -115793,7 +115793,7 @@ function _wikiDetailAmenity(state, id) {
     "</li>" +
     "<li>消耗：" +
     (a.ap || 0) +
-    " AP（不含旅行）</li>" +
+    " 点行动力（不含旅行）</li>" +
     "</ul>";
 
   if (a.primary) {
@@ -116826,7 +116826,7 @@ function renderNpcRelationships(state, content) {
     html +=
       '<button class="btn btn-sm btn-primary" style="font-size:10px;padding:2px 8px;" data-npc-chat="' +
       npcId +
-      '">💬 聊天 (2AP)</button>';
+      '">💬 聊天（2点行动力）</button>';
     html += "</div>";
 
     html += "</div>";
@@ -120799,7 +120799,7 @@ function getAvailableActions(state) {
           actions.push({
             id: "edu_study",
             name: "自考备考",
-            desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
+            desc: `消耗20点行动力，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
             ap: 20,
             handler: () => {
               if (!state.player.eduProgress)
@@ -120852,7 +120852,7 @@ function getAvailableActions(state) {
         actions.push({
           id: "edu_exam",
           name: "参加考试",
-          desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
+          desc: `消耗30点行动力，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
           ap: 30,
           reqFail: !canExam
             ? ep.studyPoints < 150
@@ -121090,7 +121090,7 @@ function getAvailableActions(state) {
             StateManager.addMessage(
               "⭐ 护士悄悄领你走VIP通道！健康+" +
                 healAmt +
-                "，心情+10，比普通看诊省了一半AP。",
+                "，心情+10，比普通看诊省了一半行动力。",
               "success",
             );
           },
@@ -121717,7 +121717,7 @@ function getAvailableActions(state) {
           actions.push({
             id: "intel_" + npc.id,
             name: "向" + npc.name + "打听消息",
-            desc: "消耗10AP换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
+            desc: "消耗10点行动力换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
             icon: "🗞️",
             apCost: 10,
             handler: (function (capturedNpc) {
@@ -124313,7 +124313,7 @@ document.addEventListener("DOMContentLoaded", function () {
           action.cost +
           " · " +
           action.apCost +
-          'AP<br><span style="color:var(--text-secondary);">' +
+          '点行动力<br><span style="color:var(--text-secondary);">' +
           action.brief +
           "</span></div>";
       });
