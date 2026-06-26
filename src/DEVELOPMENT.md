@@ -2151,3 +2151,7 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 ### 构建
 
 - python build.py (3461.4 KB)
+
+## 2026-06-26 - 移动端 UI 全量适配（CSS-only）
+
+本次按手机端 H5 文字模拟游戏的使用场景，只修改 `src/css/style.css` 并在文件末尾追加响应式覆盖，不改 JS/HTML。核心结果：`<=768px` 收敛为单栏主布局，`<=480px` 顶栏精简为菜单+标题+现金，侧栏改为底部抽屉，tab 横向滚动，行动卡片单列，背包小格 3 列，地图节点保持 44px 以上触控区域，弹窗宽度改为 `calc(100vw - 20px)`。开始页文案使用 `keep-all` 防止“职场巅峰”断字。参考 BitLife/大多数一类文字人生模拟的信息层级，以及 Apple 44pt、Material 48dp 的触控目标原则。验证：`npm run check:js`、`npm run typecheck`、`python build.py`、`npm run build` 通过；Chrome Headless 375/480 手机视口验证首页、主界面、抽屉、地图、百科、弹窗无页面级横向溢出，按钮最小高度 44px。
