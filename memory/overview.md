@@ -1,52 +1,35 @@
-# 2026-06-26 现状摸底：城市浮生记审查改进与扩展（第二轮）
+# 2026-06-26 现状摸底：城市浮生记审查改进与扩展（第三轮）
 
 ## 双轨架构覆盖
 
-### legacy 侧（正式入口 `src/index.html` → `python build.py` → `dist/index.html`）
+### legacy 侧（正式玩家入口）
 
-- **数据层**（`src/js/data/`）：locations, jobs, goods, items, news, skills, npcs, scenarios, corp, amenities, illnesses, moral_events, crisis35_followups, mechanics_registry, narratives_registry, victories_registry
-- **核心引擎**（`src/js/core/`）：events_street(9827行), events_corp, events_core, state, save, random, weather, festivals, dreams, achievements, skill_tree, social_network, npc_relationships, era_transform, cross_system_events, news_system, news_event_bridge, news_investment_bridge, world_params, life_nodes, medical, travel, legal, life_ribbon, story_chapters, inheritance_chain, enterprise_fate, company_spawner, multi_run_memory, equipment_quality/durability/suites, skill_synergy, action_sort, sound, sort_utils, route_effects, difficulty_system, review_improvements, finance, heritage_coin, illegal_actions, cooking
-- **Phase1 阶段**：trade, needs, interactions, illness, critical, skill_bonuses, actions_extra, daily_pipeline, carry, pricing, npc_event_bridge, npc_location_bridge
-- **Phase2 阶段**：perf, promo, team, stock, corp_ops, investment(3638行), property_market, startup(14443行), workplace_social, investment_analysis, startup_crisis, family_life, personal_growth, side_hustle
-- **UI层**（`src/js/ui/`）：render(6431行), wiki(3760行), modal, corp_ui, heritage_store, tutorial, daily_focus, victory, wiki, daily_report, social_tab, career_dev, data_viz, side_hustle_ui, life_memoir
-- **桥接层**：`src/js/app_bridge/webapp_runtime_bridge.js`（连接新数据目录到旧 UI）
+- **入口与构建**：`src/index.html` 仍是正式可玩入口，按 `<script>` 顺序加载约 80+ 个 legacy 脚本；`python build.py` 打包到 `dist/index.html`。
+- **数据层**：`src/js/data/` 继续承载旧正式入口的主要运行数据，包括地点、职业、商品、装备、新闻、技能、NPC、场景、公司、设施、疾病、道德事件、机制/叙事/胜利注册表等。
+- **核心层**：`src/js/core/` 承载状态、存档、事件、天气、节日、梦想、成就、技能树、社交网络、NPC 关系、时代变迁、世界参数、人生节点、医疗、旅行、法律、企业命运、多周目继承、装备品质/耐久/套装等。
+- **Phase1/Phase2**：`phase1/` 负责行动、交易、需求、疾病、每日管线、地点行动、NPC 桥接；`phase2/` 负责职场、投资、房产、创业、家庭、个人成长、副业等。
+- **UI 层**：`src/js/ui/render.js` 是主 UI 与 Tab 注册中心；`career_dev.js`、`social_tab.js`、`daily_report.js`、`wiki.js`、`modal.js` 等分担子页面和弹窗。
+- **bridge 层**：`src/js/app_bridge/webapp_runtime_bridge.js` 在 `src/index.html` 末尾追加加载，向 legacy 行动列表注入城市服务中心，并写入 `_webApp.schemaVersion=2` 元数据。
 
-### 新架构侧（根目录 `index.html` + `src/app/` + Vite/TypeScript）
+### Vite + TypeScript 新架构侧
 
-- **数据目录**（`src/app/data/`）：events(12), jobs(12), locations(14), items(17), diseases(12), legal(7), travel(8), lifeNodes(4), cityServices(7)
-- **桥接层**：`src/app/core/gameBridge.ts`, `src/app/core/stateAccess.ts`, `src/app/core/saveMigrations.ts`
-- **调试**：`src/app/debug/healthCheck.ts`
-- **UI壳**：`src/app/shell/appShell.ts`, `src/app/ui/panels.ts`
-
-### 关键统计
-
-- legacy JS 文件数：~75 个，总行数 ~85,000+
-- TS 文件数：~15 个，总行数 ~2,200
-- 双构建入口：`python build.py`（legacy）和 `npm run build`（Vite）
+- **入口与构建**：根目录 `index.html` + `src/app/main.ts` + `vite.config.mjs`，`npm run build` 输出 `dist-webapp/`。默认重定向到 legacy 玩家入口，只有 `?debug=1` / `#debug` 显示开发调试壳。
+- **Shell/UI**：`src/app/shell/appShell.ts` 渲染调试面板和 iframe；`src/app/ui/panels.ts` 显示架构健康、内容目录和城市服务。
+- **Facade**：`src/app/core/gameBridge.ts`、`stateAccess.ts`、`saveMigrations.ts` 只封装读取和迁移，不复制真实状态；真实状态仍来自 `window.StateManager`。
+- **TS 数据目录**：`src/app/data/` 已有 cityServices(7)、events(12)、jobs(12)、locations(14)、items(17)、diseases(12)、legal(7)、travel(8)、lifeNodes(4)，并由 `src/app/data/index.ts` 汇总 catalog。
 
 ## 当前完成度
 
-- **内容量**：事件 200+、职业 35+、地点 15、NPC 10、商品 20+、装备 30+、疾病 16 种、食材 23+、食谱 16、创业产品 15+、投资品 5 类
-- **系统模块**：生存需求、天气、节日、技能树、装备品质/耐久/套装、NPC 好感、社交网络、比赛、投资(股票/BTC/贵金属/期货基金/房产/汽车)、创业(6行业/15产品/15模块/6员工/5轮融资/30+事件)、企业命运、时代变迁、多周目继承、人生节点、医疗深度、旅行、法律、副业、人生回忆录、成就(50+)
-- **移动端**：底部抽屉侧栏、横向滚动 tab、单列行动卡片、事件记录可折叠；CSS 已追加两轮适配
+- **已完成**：v3.8 双轨架构壳已存在；legacy 四大扩展系统（人生节点/医疗/旅行/法律）有每日管线和人生事务 Tab；城市服务 bridge 可在政府/医院/商业区/公园/银行等地点触发并产生后续反馈；TS 数据目录不再是空壳；`npm run check:ts-data` 可审计最低覆盖。
+- **仍在迁移中**：TS 目录多数是类型化内容池，真正进入旧游戏的只有城市服务和部分摘要；事件、职业、物品、疾病、法律、旅行的 TS 数据没有统一执行器或同步生成流程，仍需手动在 legacy 层维护一套。
+- **UI 状态**：移动端底部抽屉、横向 Tab、事件记录收起预览已经落地；人生事务 Tab 已可见，但部分措辞仍暴露 Web App/bridge 开发概念。
+- **文档状态**：`CLAUDE.md` 与 `src/DEVELOPMENT.md` 记录了第二轮审查和最新验证；memory 三件套存在但部分内容已落后于当前源码。
 
-## 初步薄弱点
+## 初步薄弱点/异常
 
-### P0 级别
-
-1. **投资系统数据口径不一致**：虚拟币买入走 `stockHoldings` 但汇总读旧 `btcHoldings`，导致虚拟币买了显示为0；虚拟币/贵金属/期货基金混入股票页"我的持仓"；总资产曲线漏算大部分投资品
-2. **移动端 CSS 仍有隐藏逻辑**：第一段 `@media (max-width: 480px)` 仍隐藏 `#street-stats-section` 和 `#corp-stats-section`，后面虽被覆盖但存在时序冲突
-3. **欢迎页胜利路线文案**：连续文本在手机端可能被浏览器拆词，需完整保护
-
-### P1 级别
-
-4. **投资分类 UI 不一致**：各资产子页持仓信息框不统一，部分只显示卡片内局部持仓
-5. **生涯系统联动缺口**：创业触发从上班路径读取不够直观，事业建议可更丰富
-6. **百科系统**：部分条目内容偏薄，缺少跨系统跳转
-7. **事件记录移动端**：折叠/展开已有实现，但自动滚动到最新记录可改进
-
-### P2 级别
-
-8. **整体 UI 细节**：部分面板在移动端有微小溢出
-9. **经济平衡**：中后期仍可能出现资金积累过度
-10. **文档 vs 实况差距**：部分记忆文件内容落后于当前代码
+1. **CSS 存在结构性错误**：`src/css/style.css` 约 3907 行提前闭合 `@media (max-width: 480px)`，后续投资持仓移动端规则缩进在媒体查询外，且 3933 行出现多余 `}`；这会影响 `npm run build` / CSS 解析稳定性，属于当前最明显 P0。
+2. **TS 内容目录与 legacy 大量断连**：`events/jobs/items/diseases/legal/travel` 多为 typed catalog，旧游戏正式入口不会自动消费；新增内容若只写 TS 目录，玩家不可见。
+3. **城市服务弹窗按钮未预先禁用**：`showCityServiceModal()` 展示服务列表，但按钮不显示现金/行动力不足原因，点击后才提示；和“不可用行动灰显并显示条件”的长期规则不一致。
+4. **医疗入口窄**：人生事务医疗卡按钮实际只打开医保购买，`startTreatment()` 没有同一入口；生病时卡片提示“建议看病”，但按钮文案是“医保咨询”，容易断裂。
+5. **开发术语残留**：人生事务说明和城市服务行动描述仍出现 “Web App / bridge / 新架构”等开发术语，不适合正式玩家入口。
+6. **移动端事件日志滚动仍可加强**：已用 `requestAnimationFrame` 滚动一次，但连续消息批量写入后只在 render 时赋值 `scrollTop`，没有稳态二次滚动或复用函数。

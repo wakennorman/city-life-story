@@ -1,117 +1,22 @@
-# 2026-06-26 改进方案（第二轮 — 按当前 HEAD 5b2f662 实际状态）
+# 2026-06-26 改进方案（第三轮 — P0/P1 可执行）
 
-## P0 方案
+CSS 媒体查询结构修复 | `src/css/style.css` | CSS/移动端 | 删除 3907 行提前闭合的 `}` 或将 3909-3932 行投资持仓规则整体移回现有 `@media (max-width:480px)` 内，并删除 3933 行多余 `}`；保持手机端 CSS 只在文件末尾媒体查询追加/整理，不改桌面段 | ~5行 | 恢复 CSS 结构，避免构建或浏览器解析异常 | ≤480px 投资持仓防护真正只在手机端生效，无横向溢出
+人生事务开发术语收口 | `src/js/ui/render.js`, `src/js/app_bridge/webapp_runtime_bridge.js` | legacy UI + bridge | 将“Web App 桥接/新架构/bridge”等玩家可见文案改为“城市公共服务/城市服务中心/跨部门服务”；保留内部函数名不改 | ~8行 | 正式入口不再暴露技术术语 | 纯文案，无布局风险
+城市服务按钮灰显与条件提示 | `src/js/app_bridge/webapp_runtime_bridge.js` | bridge 桥接层 | 在 `showCityServiceModal()` 渲染每个服务时调用 `canPay(state, action)`，卡片显示费用、行动力和不足原因；buttons 中不足项使用非主按钮样式，callback 只提示原因并 `return false`，可用项保持原逻辑 | ~35行 | 玩家打开弹窗即可知道缺现金还是行动力，减少误点 | 按钮继续走 `modal.js`，不自建容器；文字换行自适应
+医疗面板补“治疗/医保”双入口 | `src/js/core/medical.js`, `src/js/ui/render.js` | legacy 扩展系统 + UI | 新增 `showMedicalTreatmentModal()`：列出当前疾病或按 `state.status.sick/injured` 兜底给出轻症/中症/重症治疗按钮，调用既有 `startTreatment(state, grade)`；`_renderMedicalPanel()` 按钮组改为“就医治疗”和“医保咨询” | ~70行 | 生病时从人生事务能直接治疗，不再只有买保险入口 | 按钮组 flex-wrap，≤480px 单列或换行，触控高 44px
+TS 内容目录首个事件 bridge | `src/js/app_bridge/webapp_runtime_bridge.js`, 可选 `src/index.html` 仅末尾追加但本方案不需要 | bridge 桥接层 | 在 bridge 中新增小型 `WEBAPP_TYPED_EVENTS`（从 TS events 选 3-5 条手工同步，不引入构建依赖），提供 `registerTypedEventBridge()` 在脚本加载后向 `RANDOM_EVENTS` push legacy 事件对象；使用既有 `showEventModal()` 选项格式，choice.apply 按 effects 路径更新 state | ~120行 | 证明 TS 事件目录不只是 catalog，首批城市生存事件能进入随机事件池 | 无新增 UI；复用现有 `.modal-box` 事件弹窗，移动端随原样式
+事件日志稳态滚动 | `src/js/main.js` | legacy JS/移动端 | 抽 `scrollMessageLogToBottom(content, smooth)`，在 `renderMessageLog()` 展开时用 rAF + setTimeout 二次滚动；`toggleMessageLog()` 展开时调用同一函数并可用 `scrollTo({top:scrollHeight,behavior:'smooth'})` 兜底 | ~25行 | 连续每日消息后展开能稳定到最新记录 | 正向改善，无新增元素
+城市服务推荐地点中文化 | `src/js/ui/render.js` | legacy UI | 新增 `_lifeSystemsLocationNames(ids)`，优先从 `LOCATIONS` 映射中文名，兜底 id；推荐卡片显示“政府办事大厅 / 公园”等 | ~20行 | 推荐入口对玩家可读 | 纯文本，自适应
+事业创业减免明细 | `src/js/ui/career_dev.js` | legacy UI | 在 `getCareerDualPathHtml()` 创业卡片中追加四项明细：行业资源、客户线索、声誉、合伙人信任当前值/建议目标，并提示 burnout 会抵消减免 | ~35行 | 上班族到创业的资源转化更直观 | 列表单列/auto-fit，不横向溢出
+人生事务移动端按钮触控高度 | `src/css/style.css` | CSS/移动端 | 在末尾 `@media (max-width:480px)` 内追加针对人生事务卡片按钮或通用 `.life-system-actions .btn` 的 `min-height:44px; width:100%`；若先改 HTML，可给按钮组加类名 | ~12行 | 新增常驻面板符合 44px 触控规则 | ≤480px 更易点按
 
-### P0-1: 移除人生事务页开发态信息
+## 建议执行顺序
 
-- **对应问题**: #3 人生事务页展示 TypeScript 接入状态
-- **涉及文件**: `src/js/ui/render.js`
-- **归属层**: legacy UI
-- **改法**: 在 `renderLifeSystemsTab()` 中移除 `_renderDataCatalogBridgeStatus()` 调用（第 1511 行），保留 `_renderBridgeRecommendations()` 城市服务推荐
-- **估计行数**: 1 行删除 + 确认
-- **预期效果**: 玩家不再看到"TS 内容目录"等开发术语
-- **移动端影响**: 无
-
-### P0-2: 事件记录手机端滚动稳定性
-
-- **对应问题**: #4 事件记录连续事件滚动不到位
-- **涉及文件**: `src/js/main.js`, `src/js/ui/render.js`
-- **归属层**: legacy JS
-- **改法**: 优化 `toggleMessageLog()` 展开后的滚动逻辑：使用 `scrollTo({ top: 9999, behavior: 'smooth' })` 替代 timeline-based 滚动；在每日管线中新增事件追加后的自动滚动触发
-- **估计行数**: ~20 行
-- **预期效果**: 手机端展开事件记录后始终滚动到最新一条
-- **移动端影响**: 正向改善
-
-### P0-3: 欢迎页胜利路线词组保护加强
-
-- **对应问题**: #2 胜利路线手机端拆词
-- **涉及文件**: `src/css/style.css`
-- **归属层**: CSS
-- **改法**: 在 `.victory-path` 增加 `white-space: nowrap` 保证每一条路线不拆词；使用 `word-break: keep-all` 兜底
-- **估计行数**: ~3 行
-- **预期效果**: 即使在 280px 宽度下，"职场巅峰"也不会被拆成"职场/巅峰"
-- **移动端影响**: 正向改善，词组整行换行
-
-### P0-4: 移除 CSS 冗余 !important 对抗
-
-- **对应问题**: #1 mobile CSS 冗余隐藏
-- **涉及文件**: `src/css/style.css`
-- **归属层**: CSS
-- **改法**: 删除第一段 media query 中隐藏 `#street-stats-section` 和 `#corp-stats-section` 的规则（第 3662-3665 行），直接保留第二段的显示逻辑
-- **估计行数**: 删除 4 行
-- **预期效果**: CSS 减少 4 行冗余，消除 !important 对抗
-- **移动端影响**: 无变化（功能相同但更干净）
-
-## P1 方案
-
-### P1-1: 统一投资子页持仓信息框
-
-- **对应问题**: #5 各投资子页持仓信息框不统一
-- **涉及文件**: `src/js/phase2/investment.js`
-- **归属层**: legacy 投资层
-- **改法**:
-  - 虚拟币和汽车页面也添加 `renderInvestmentHoldingPanel("crypto")` 调用
-  - 确保每个子页顶部都显示已持有资产的汇总面板
-- **估计行数**: ~30 行
-- **预期效果**: 贵金属/期货/虚拟币/汽车页面顶部都有一致的持仓摘要
-- **移动端影响**: panel 已用 flex-wrap，≤480px 自动换行
-
-### P1-2: 百科系统机制条目增强
-
-- **对应问题**: #6 百科部分条目偏薄
-- **涉及文件**: `src/js/data/mechanics_registry.js`
-- **归属层**: legacy 数据注册层
-- **改法**: 为"技能树""装备品质""世界参数反馈环"等注册条目补充策略提示段（section type: "tip"），告知玩家如何利用该机制
-- **估计行数**: ~60 行
-- **预期效果**: 玩家查阅百科时获得明确的策略引导
-- **移动端影响**: 无（文本类内容自适应宽屏）
-
-### P1-3: 创业门槛条件界面提示
-
-- **对应问题**: #7 创业/上班族入口不够直观
-- **涉及文件**: `src/js/ui/career_dev.js`
-- **归属层**: legacy UI
-- **改法**: 在事业发展 Tab 创业入口增加"注册费减免条件"列表，主动提示玩家哪些条件已达成、哪些未达成
-- **估计行数**: ~40 行
-- **预期效果**: 玩家清楚知道还需要积累什么才能降低创业门槛
-- **移动端影响**: 条件列表单列显示不溢出
-
-### P1-4: 移动端投资持仓行溢出防护
-
-- **对应问题**: #8 移动端投资卡片溢出
-- **涉及文件**: `src/css/style.css`
-- **归属层**: CSS
-- **改法**: 在第二段 `@media (max-width: 480px)` 中追加：投资持仓区域 `.investment-holdings-row` 允许横向滚动，内部的 `min-width` 固定值改为 `min-width: min(80px, 25vw)` 自适应
-- **估计行数**: ~15 行
-- **预期效果**: ≤375px 宽度下持仓行不横向溢出，且横向滚动可在需要时启用
-- **移动端影响**: 无横向溢出
-
-## P2 方案
-
-### P2-1: CSS 媒体查询合并
-
-- **对应问题**: #10 CSS 媒体查询重复
-- **涉及文件**: `src/css/style.css`
-- **改法**: 将三段 `@media (max-width: 480px)` 合并成一段统一管理，删除重复选择器
-- **估计行数**: 纯重组，不增行数
-- **预期效果**: 维护性提升
-
-### P2-2: 经济后期限流
-
-- **对应问题**: #12 后期资金膨胀
-- **涉及文件**: `src/js/core/world_params.js`
-- **改法**: 在每日管线末尾增加"财富税"或"高端消费出口"：资金超过 1000 万后，超出部分每日产生 0.1% 消耗（用于慈善/投资顾问/资产管理费）
-- **估计行数**: ~15 行
-- **预期效果**: 中后期资金不过度堆积
-
-## 执行顺序
-
-1. **P0-4**: CSS 冗余隐藏删除（最安全，无逻辑变化）
-2. **P0-1**: 移除开发态信息
-3. **P0-3**: 胜利路线词组保护
-4. **P0-2**: 事件记录滚动优化
-5. **P1-1**: 投资持仓框统一
-6. **P1-4**: 移动端投资卡片溢出
-7. **P1-2**: 百科机制条目增强
-8. **P1-3**: 创业门槛提示
-9. 验证 + 文档更新
+1. P0 CSS 媒体查询结构修复（先保证样式/构建可解析）
+2. P0 文案术语收口
+3. P0 城市服务按钮灰显与条件提示
+4. P0 医疗治疗入口补齐
+5. P0 TS 事件 bridge 首批接入
+6. P1 事件日志稳态滚动
+7. P1 推荐地点中文化 + 创业减免明细 + 人生事务按钮触控
+8. 更新 `IMPLEMENTATION_PROGRESS.md`、`CLAUDE.md`、`src/DEVELOPMENT.md`，运行 `npm run check:js` / `npm run typecheck` / `python build.py` / `npm run build`；若涉及数值概率，再补 Monte Carlo
