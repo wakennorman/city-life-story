@@ -2211,7 +2211,13 @@ function _startupGenerateCoFounder(index) {
  */
 function getStartupTriggerConditions(state) {
   var scenarioId = state.flags && state.flags._scenarioId;
-  var phase = state.player && state.player.phase;
+  var careerJob = state.career && state.career.currentJob;
+  var phase =
+    state.player && state.player.phase === "corporate"
+      ? "corporate"
+      : careerJob
+        ? "corporate"
+        : "street";
   var cash = (state.resources && state.resources.cash) || 0;
 
   // 各剧本触发条件
@@ -2259,7 +2265,7 @@ function getStartupTriggerConditions(state) {
   if (phase === "corporate" && pc.rank) {
     var rankNames = ["P5", "P6", "P7", "P8", "P9", "P10"];
     var reqIdx = rankNames.indexOf(pc.rank);
-    var playerRank = state.corporate && state.corporate.rank;
+    var playerRank = getStartupEffectiveCareerRank(state);
     var pIdx = rankNames.indexOf(playerRank);
     rankMet = pIdx >= reqIdx;
   }
@@ -2267,13 +2273,33 @@ function getStartupTriggerConditions(state) {
     cashRequired: requiredCash || 200000,
     baseCashRequired: baseCash,
     careerDiscount: discount,
+    phase: phase,
     rankRequired: pc.rank || null,
+    effectiveRank: phase === "corporate" ? getStartupEffectiveCareerRank(state) : null,
     label: pc.label || "资源积累",
     cashOk: cash >= (requiredCash || 50000),
     rankOk: rankMet,
     canRegister: cash >= (requiredCash || 50000) && rankMet,
     met: cash >= (requiredCash || 50000) && rankMet,
   };
+}
+
+function getStartupEffectiveCareerRank(state) {
+  var rankNames = ["P5", "P6", "P7", "P8", "P9", "P10"];
+  var rank = state && state.corporate && state.corporate.rank;
+  var job = state && state.career && state.career.currentJob;
+  if (!job || !job.levelId) return rank || "P5";
+  var jobRank = "P5";
+  if (/_lead|_manager|_director|_head|_partner|_architect/.test(job.levelId)) {
+    jobRank = "P8";
+  } else if (/_senior/.test(job.levelId)) {
+    jobRank = "P7";
+  } else if (/_mid/.test(job.levelId)) {
+    jobRank = "P6";
+  }
+  return rankNames.indexOf(jobRank) > rankNames.indexOf(rank || "P5")
+    ? jobRank
+    : rank || "P5";
 }
 
 function getStartupRegistrationCost(state) {
@@ -11387,8 +11413,10 @@ function renderStartupTab(state, parent) {
         ? getStartupReadinessNote(state)
         : "";
     var rankLabel = stc.rankRequired ? stc.rankRequired + "+" : "不限";
-    var phaseLabel =
-      state.player && state.player.phase === "corporate" ? "职场" : "街头";
+    if (stc.effectiveRank) {
+      rankLabel += "（当前" + stc.effectiveRank + "）";
+    }
+    var phaseLabel = stc.phase === "corporate" ? "职场" : "街头";
     var cashNow = (state.resources && state.resources.cash) || 0;
     var cashColor =
       cashNow >= stc.cashRequired ? "var(--success)" : "var(--danger)";

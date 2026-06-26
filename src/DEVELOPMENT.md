@@ -20,6 +20,7 @@
 - 🔧 网红等级中文显示："none"→"无"、"micro"→"萌芽网红"、"medium"→"中型网红"等
 - 🔧 粉丝增长机制增强：内容长度+配图+名气多因子模型，粉丝增长反哺名气
 - 🔧 "附近可前往"移到sidebar靠前位置，首屏可见
+- 🔧 审查补漏：创业触发条件读取新版“事业发展-上班族”当前岗位，把中级/高级/负责人岗位映射为 P6/P7/P8，并在创业页显示“当前职级”，避免上班族路径和创业门槛继续孤岛化
 
 **影响文件：** main.js, render.js, social_tab.js, social_network.js, index.html, modal.js, wiki.js, mechanics_registry.js, travel.js, actions_extra.js, critical.js, skill_tree.js, skill_intel.js, webapp_runtime_bridge.js, events_street.js, era_events.js（共17个文件）
 
