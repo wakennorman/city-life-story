@@ -193,6 +193,8 @@
       results.push("☂️ 已有伞（剩余" + (prep.umbrellaUses || 1) + "次）");
     }
 
+    cash = state.resources.cash || 0;
+
     // 买暖宝（雪天/寒潮健康损失减半）
     if (!prep.warmPack) {
       if (cash >= 50) {
