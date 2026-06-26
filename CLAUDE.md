@@ -52,12 +52,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：第四轮审查 — 内容扩充与双轨桥接强化（2026-06-27）
-  - **CSS P0修复**：style.css 末尾 `@media(max-width:480px)` 补闭合 `}`，媒体查询结构恢复正确
-  - **TS事件bridge首批接入**：webapp_runtime_bridge.js 新增 `WEBAPP_TYPED_EVENTS`（10个城市生存事件）和 `registerTypedEventBridge()`；bridge脚本加载时自动推入 `RANDOM_EVENTS` 池（去重保护）；事件涵盖 street/corporate 两个 phase，含条件过滤（cash/phase/flags等）
-  - **TS事件目录扩充**：src/app/data/events/index.ts 从 12 个事件扩充至 19 个（+7：劳务中介/停电/借贷广告/办公室摩擦/高温求生/技能换资源/夜市摊位），TS 类型检查零错误
-  - **创业减免明细增强**：`getStartupReadinessNote()` 现在展示行业资源/客户线索/声誉/合伙人信任四维权重系数、建议目标值（≥30/≥20/≥15），burnout≥20 时追加红字警告
-  - **验证**：`check:js` 114文件 / `typecheck` / `python build.py`(4299.2 KB) / `npm run build` 全部通过
+- **最新一次工作**：第四轮审查第二阶段 — TS事件bridge全量同步（2026-06-27）
+  - **TS事件bridge全量同步**：bridge池从11个事件扩充至19个（+8：医疗账单争执/邻居水管漏水/信用卡推销/食安投诉/共享单车/直播搭档/突然停电/办公室摩擦），所有19个TS目录事件已全部注入legacy随机事件池
+  - **verifiedP0已修复**：城市服务按钮灰显（canPay+showCityServiceModal）、医疗双入口（就医治疗+医保咨询）、地点推荐中文化（_lifeSystemsLocationNames）均已确认实装
+  - **memory同步**：diagnosis.md/improvement_plan.md/overview.md 对齐最新源码
+  - **验证**：`check:js` / `typecheck` / `python build.py` / `npm run build` 全部通过
 
 - **上一轮工作**：房产×租房系统深度集成 + UI状态栏重组（2026-06-27）
   - **房产×租房��射**：新增 `PROPERTY_HOUSING_MAP` 精准 ID→住所等级映射（22条），`getPropertyHousingTier()` 查询函数；toggle-self-live 改用映射表替代价格粗分，自住→出租时正确降级住所

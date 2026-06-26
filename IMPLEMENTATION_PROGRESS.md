@@ -3,26 +3,26 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
-## 2026-06-27 第四轮审查：内容扩充与双轨桥接强化
+## 2026-06-27 第四轮审查第二阶段：TS事件bridge全量同步
 
-| #   | 任务                     | 状态 | 说明                                                                                     |
-| --- | ------------------------ | ---- | ---------------------------------------------------------------------------------------- |
-| A   | 现状摸底                 | ✅   | 读取 memory/overview.md/diagnosis.md/improvement_plan.md，确认上轮遗留问题               |
-| B   | P0 CSS闭合修复           | ✅   | style.css 末尾 @media(max-width:480px) 补闭合 `}`                                        |
-| C   | P0 TS事件bridge首批接入  | ✅   | bridge 新增 WEBAPP_TYPED_EVENTS(5个)+registerTypedEventBridge()，事件注入 RANDOM_EVENTS  |
-| D   | P1 TS事件目录扩充        | ✅   | events/index.ts: 12→19个事件（+7城市生存场景）；bridge池：5→10个                        |
-| E   | P1 创业减免明细增强      | ✅   | getStartupReadinessNote() 展示四维权重+burnout警告+建议目标值                            |
-| F   | 验证                     | ✅   | `check:js` 114文件 / `typecheck` / `python build.py` / `npm run build` 全部通过         |
+| #   | 任务                           | 状态 | 说明                                                                             |
+| --- | ------------------------------ | ---- | -------------------------------------------------------------------------------- |
+| A   | 现状摸底（刷新）               | ✅   | 读取memory三件套，确认上轮P0问题已全部修复                        |
+| B   | P0已验证：城市服务按钮灰显     | ✅   | showCityServiceModal() 已用 canPay() 全量实装 |
+| C   | P0已验证：医疗面板双入口       | ✅   | _renderMedicalPanel() 已有就医治疗+医保咨询双按钮 |
+| D   | P0已验证：地点推荐中文化       | ✅   | _lifeSystemsLocationNames() 从 LOCATIONS 映射中文 |
+| E   | P1 TS事件bridge全量同步       | ✅   | bridge池从11→19个事件（+8同步自TS目录），19个全部注入RANDOM_EVENTS |
+| F   | memory文档对齐                | ✅   | overview/diagnosis/improvement_plan 全部刷新 |
+| G   | 验证                           | ✅   | `check:js` / `typecheck` / `python build.py` / `npm run build` 全部通过 |
 
 ### 本轮落地
 
 | #   | 项目                       | 文件                                         | 验证 |
 | --- | -------------------------- | -------------------------------------------- | ---- |
-| 1   | CSS媒体查询闭合修复        | `src/css/style.css`                          | ✅   |
-| 2   | TS事件bridge首批(5个)      | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
-| 3   | TS事件目录19个             | `src/app/data/events/index.ts`               | ✅   |
-| 4   | bridge事件池扩充至10个     | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
-| 5   | 创业减免明细四维展示       | `src/js/ui/career_dev.js`                    | ✅   |
+| 1   | memory三件套刷新         | `memory/overview.md`, `diagnosis.md`, `improvement_plan.md` | ✅   |
+| 2   | TS事件bridge全量同步(8个) | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
+| 3   | 数据目录计数更新           | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
+| 4   | CLAUDE.md 当前状态更新     | `CLAUDE.md`                                  | ✅   |
 
 
 ## 2026-06-26 城市浮生记审查改进与扩展

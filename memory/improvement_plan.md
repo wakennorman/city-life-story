@@ -1,22 +1,39 @@
-# 2026-06-26 改进方案（第三轮 — P0/P1 可执行）
+# 2026-06-27 改进方案（第四轮 — P0/P1 可执行方案）
 
-CSS 媒体查询结构修复 | `src/css/style.css` | CSS/移动端 | 删除 3907 行提前闭合的 `}` 或将 3909-3932 行投资持仓规则整体移回现有 `@media (max-width:480px)` 内，并删除 3933 行多余 `}`；保持手机端 CSS 只在文件末尾媒体查询追加/整理，不改桌面段 | ~5行 | 恢复 CSS 结构，避免构建或浏览器解析异常 | ≤480px 投资持仓防护真正只在手机端生效，无横向溢出
-人生事务开发术语收口 | `src/js/ui/render.js`, `src/js/app_bridge/webapp_runtime_bridge.js` | legacy UI + bridge | 将“Web App 桥接/新架构/bridge”等玩家可见文案改为“城市公共服务/城市服务中心/跨部门服务”；保留内部函数名不改 | ~8行 | 正式入口不再暴露技术术语 | 纯文案，无布局风险
-城市服务按钮灰显与条件提示 | `src/js/app_bridge/webapp_runtime_bridge.js` | bridge 桥接层 | 在 `showCityServiceModal()` 渲染每个服务时调用 `canPay(state, action)`，卡片显示费用、行动力和不足原因；buttons 中不足项使用非主按钮样式，callback 只提示原因并 `return false`，可用项保持原逻辑 | ~35行 | 玩家打开弹窗即可知道缺现金还是行动力，减少误点 | 按钮继续走 `modal.js`，不自建容器；文字换行自适应
-医疗面板补“治疗/医保”双入口 | `src/js/core/medical.js`, `src/js/ui/render.js` | legacy 扩展系统 + UI | 新增 `showMedicalTreatmentModal()`：列出当前疾病或按 `state.status.sick/injured` 兜底给出轻症/中症/重症治疗按钮，调用既有 `startTreatment(state, grade)`；`_renderMedicalPanel()` 按钮组改为“就医治疗”和“医保咨询” | ~70行 | 生病时从人生事务能直接治疗，不再只有买保险入口 | 按钮组 flex-wrap，≤480px 单列或换行，触控高 44px
-TS 内容目录首个事件 bridge | `src/js/app_bridge/webapp_runtime_bridge.js`, 可选 `src/index.html` 仅末尾追加但本方案不需要 | bridge 桥接层 | 在 bridge 中新增小型 `WEBAPP_TYPED_EVENTS`（从 TS events 选 3-5 条手工同步，不引入构建依赖），提供 `registerTypedEventBridge()` 在脚本加载后向 `RANDOM_EVENTS` push legacy 事件对象；使用既有 `showEventModal()` 选项格式，choice.apply 按 effects 路径更新 state | ~120行 | 证明 TS 事件目录不只是 catalog，首批城市生存事件能进入随机事件池 | 无新增 UI；复用现有 `.modal-box` 事件弹窗，移动端随原样式
-事件日志稳态滚动 | `src/js/main.js` | legacy JS/移动端 | 抽 `scrollMessageLogToBottom(content, smooth)`，在 `renderMessageLog()` 展开时用 rAF + setTimeout 二次滚动；`toggleMessageLog()` 展开时调用同一函数并可用 `scrollTo({top:scrollHeight,behavior:'smooth'})` 兜底 | ~25行 | 连续每日消息后展开能稳定到最新记录 | 正向改善，无新增元素
-城市服务推荐地点中文化 | `src/js/ui/render.js` | legacy UI | 新增 `_lifeSystemsLocationNames(ids)`，优先从 `LOCATIONS` 映射中文名，兜底 id；推荐卡片显示“政府办事大厅 / 公园”等 | ~20行 | 推荐入口对玩家可读 | 纯文本，自适应
-事业创业减免明细 | `src/js/ui/career_dev.js` | legacy UI | 在 `getCareerDualPathHtml()` 创业卡片中追加四项明细：行业资源、客户线索、声誉、合伙人信任当前值/建议目标，并提示 burnout 会抵消减免 | ~35行 | 上班族到创业的资源转化更直观 | 列表单列/auto-fit，不横向溢出
-人生事务移动端按钮触控高度 | `src/css/style.css` | CSS/移动端 | 在末尾 `@media (max-width:480px)` 内追加针对人生事务卡片按钮或通用 `.life-system-actions .btn` 的 `min-height:44px; width:100%`；若先改 HTML，可给按钮组加类名 | ~12行 | 新增常驻面板符合 44px 触控规则 | ≤480px 更易点按
+## 执行顺序（P0→P1，互斥文件串行）
 
-## 建议执行顺序
+### P0-1: 城市服务按钮灰显与条件提示
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+城市服务按钮不显示不可用原因 | `src/js/app_bridge/webapp_runtime_bridge.js` | bridge桥接层 | 在`showCityServiceModal()`渲染每个服务卡片时调用`canPay(state, action)`；现金/行动力不足用非主按钮样式+红字提示原因；可用按钮保持原逻辑 | ~40行 | 玩家打开弹窗即可知缺什么，减少无效点击 | 按钮继续`modal.js`，自适应换行
 
-1. P0 CSS 媒体查询结构修复（先保证样式/构建可解析）
-2. P0 文案术语收口
-3. P0 城市服务按钮灰显与条件提示
-4. P0 医疗治疗入口补齐
-5. P0 TS 事件 bridge 首批接入
-6. P1 事件日志稳态滚动
-7. P1 推荐地点中文化 + 创业减免明细 + 人生事务按钮触控
-8. 更新 `IMPLEMENTATION_PROGRESS.md`、`CLAUDE.md`、`src/DEVELOPMENT.md`，运行 `npm run check:js` / `npm run typecheck` / `python build.py` / `npm run build`；若涉及数值概率，再补 Monte Carlo
+### P0-2: 医疗面板补"就医治疗/医保"双入口
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+医疗面板缺治疗入口 | `src/js/ui/render.js`, `src/js/core/medical.js` | legacy UI+核心 | `_renderMedicalPanel()` 按钮组改为"就医治疗"+"医保咨询"双按钮；新增`showMedicalTreatmentModal()`列出疾病/伤势等级的三种治疗方案(轻/中/重)，调既有`startTreatment()` | ~70行 | 生病时能从人生事务直接治疗 | 按钮组flex-wrap，≤480px自动换行，min-height:44px
+
+### P0-3: 桥接层/城市服务文案收口
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+推荐地点显示内部id | `src/js/app_bridge/webapp_runtime_bridge.js`, `src/js/ui/render.js` | legacy UI+bridge | `_renderBridgeRecommendations()`中 `locationIds` 映射中文地名（查 `LOCATIONS` 或兜底翻译表）；城市服务explainer文案批量检查替换 | ~25行 | 玩家不再看到开发内部id | 纯文本，无布局影响
+
+### P0-4: 地点推荐映射中文化
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+推荐地点显示内部id | `src/js/ui/render.js` | legacy UI | 新增 `_lifeSystemsLocationNames(ids)` 函数，从 `LOCATIONS` 映射中文名，兜底清除内部id | ~20行 | 推荐入口对玩家可读 | 纯文本自适应
+
+### P1-1: TS事件bridge池扩充（第二波）
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+bridge事件池不够深 | `src/js/app_bridge/webapp_runtime_bridge.js`, `src/app/data/events/index.ts` | bridge+TS目录 | 从TS目录再选5-10个城市生存事件同步到bridge池；已有去重保护机制 | ~80行 | 事件池翻倍，更多城市场景进游戏 | 无UI变动
+
+### P1-2: 事件日志稳态滚动
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+事件日志展开滚动不稳 | `src/js/main.js` | legacy JS | 抽`scrollMessageLogToBottom()`函数，展开时rAF+setTimeout二次滚动；可用`scrollTo({top:scrollHeight,behavior:'smooth'})`兜底 | ~25行 | 连续消息后展开稳定到最新 | 正向改善
+
+### P1-3: 创业/上班族内容深化（事件链+行业周期）
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+职业内容可继续深化 | `src/js/data/` 或 `src/js/core/` | legacy | 新增上班族阶段事件（如P8晋升瓶颈、行业裁员潮、职场政治事件）与创业crisis事件；创业阶段引入行业周期波动影响 | ~150行 | 职业体验更丰富，行业反馈更真实 | 无UI变动或复用现有弹窗
+
+### P1-4: 世界观自洽性增强
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+城市不够"活" | `src/js/core/world_params.js`, `src/js/data/news.js` | legacy核心+数据 | 城市新闻反馈到世界参数（如新闻事件影响行业热度/治安），联动NPC对话和环境叙事；天气系统与事件联动 | ~100行 | 玩家行为影响城市环境，世界反馈更强 | 无UI变动
+
+### P1-5: 经济后期限流（Monte Carlo验证后）
+对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+经济后期资金膨胀 | `src/js/phase1/daily_pipeline.js` 或投资系统 | legacy | 增加被动消费（物业税、社交维持费、健康检查开支），平衡后期收支曲线 | ~30行 | 后期资金不过度积累 | 仅数值，无UI变动

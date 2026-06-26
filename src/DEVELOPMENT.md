@@ -1,8 +1,41 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-27（综合体验改进6项修复）
+> 最后更新: 2026-06-27（房产×租房系统深度集成 + UI重组）
 
-## 2026-06-27 — 综合体验改进：住所/成就/UI/地图/建议整合
+## 2026-06-27 — 房产×租房系统深度集成 + UI状态栏重组
+
+本轮针对用户反馈进行两项深度改造：
+1. **房产×租房系统对接** - 打通 PROPERTIES 系统与 HOUSING_TIERS 的映射
+2. **UI状态栏重组** - 时间槽+人生目标布局优化
+
+### 改造1：房产×租房深度集成（investment.js / property_market.js / main.js）
+
+- **问题**：此前 `selfLivePropertyId` 的 tier 映射仅是粗放的按价格三分法（<¥200k=tier2 / <¥1M=tier3 / ≥¥1M=tier4），不区分城中村握手楼/别墅/豪宅等具体类型；出租状态切换时住所不降级；月租金收入无交易流水记录；玩家只能在投资页操作自住切换，主行动页无入口
+- **新建** `PROPERTY_HOUSING_MAP` 常量（investment.js）—— 精确 ID 映射（22条：城中村握手楼→tier2 / 老破小学区→tier3 / 精装两居室→tier3 / 花园洋房→tier4 / 别墅→tier5 / 豪宅→tier6 / 商铺/工业/海外→null不可自住）
+- **新建** `getPropertyHousingTier(propId)` 查询函数
+- **自住→出租**：切换时 `housing.tier` 降级到 tier1（合租床位）并清容量
+- **月租流水**：`property_market.js` 月租结算增加 `addDailyTransaction` 调用，租房收入可见于收支记录
+- **行动页入口**：`main.js` 行动列表新增「搬入自住房」快捷入口，使用 `getPropertyHousingTier` 查等级 → 搬入动作免日租
+- **设计参考**：BitLife 的物业系统（property → housing tier 映射）/ 真实中国住宅市场分级
+
+### 改造2：UI状态栏重组（render.js / style.css）
+
+- **问题**：时间槽用两行居中，日常信息和背包/住所分离；人生目标深埋侧边栏，不醒目
+- **修复**：
+  - `renderTimeSlot` 改为单行横排左对齐：`📅 第 N 天 | ☀️ 上午 ⚡ 100/100 🎒 0/20 · 🌃 露宿街头`
+  - 人生目标从侧边栏移除（`renderDreamSection` 注释保留），新建 `renderGoalStrip()` 在内容区时间槽下方显示紧凑横条
+  - 手机端 CSS `#time-slot-indicator` 改为 `overflow-x:auto` 支持横向滚动，新增 `.goal-strip-mobile`
+- **设计参考**：Notion 的紧凑状态栏 / 大多数(The Most) 的顶部信息条
+
+### 影响文件
+- `src/js/phase2/investment.js` — PROPERTY_HOUSING_MAP + getPropertyHousingTier + toggle-self-live 逻辑重写
+- `src/js/phase2/property_market.js` — 月租 addDailyTransaction
+- `src/js/main.js` — 搬入自住房快捷入口
+- `src/js/ui/render.js` — 单行时间槽 + 内容区人生目标
+- `src/css/style.css` — 手机端适配
+- `dist/index.html` — 构建产物（4284.1 KB）
+
+---
 
 本轮针对用户反馈的6个体验问题进行修复，覆盖 legacy 正式入口（`src/` 下）。所有改动在旧单页面架构内完成，不涉及 TS 数据目录。
 

@@ -14,7 +14,7 @@
     catalogs: [
       { id: "cityServices", name: "城市服务", count: 7, status: "playable" },
       { id: "lifeNodes", name: "人生节点", count: 4, status: "partial" },
-      { id: "events", name: "事件", count: 12, status: "typed" },
+      { id: "events", name: "事件", count: 19, status: "typed" },
       { id: "jobs", name: "职业", count: 12, status: "typed" },
       { id: "locations", name: "地点", count: 14, status: "typed" },
       { id: "items", name: "物品", count: 17, status: "typed" },
@@ -827,8 +827,245 @@
         },
       ],
     },
+    // ── 第三批 bridge 事件（2026-06-27 同步自 TS 目录）────────────────────
+    {
+      id: "webapp_medical_bill_argument",
+      phase: "street",
+      icon: "🧾",
+      title: "账单窗口争执",
+      story: "医院收费窗口前有人因为医保报销比例吵了起来。收费单像一串看不懂的数字，围观的人都沉默了一会儿。",
+      choices: [
+        {
+          text: "📋 顺便咨询自己的医保",
+          hint: "获得账单意识",
+          apply: function (st) {
+            st.flags._costAwareness = (st.flags._costAwareness || 0) + 1;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+            StateManager.addMessage("🧾 窗口工作人员讲得很快，但你终于知道哪些票据要留。", "info");
+          },
+        },
+        {
+          text: "👴 帮老人看清条目",
+          hint: "花时间帮忙，换一点名声",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
+            StateManager.addMessage("👴 老人连声道谢，你突然理解了账单背后的焦虑。", "success");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_neighbor_pipe_leak",
+      phase: "street",
+      icon: "🚰",
+      title: "邻居水管漏水",
+      story: "楼上水管漏了，天花板慢慢洇出一圈灰色水痕。盆接住了水，却接不住你对这间屋子的疲惫。",
+      conditions: function (st) {
+        return (st.flags._housingTier || 0) <= 2;
+      },
+      choices: [
+        {
+          text: "🔧 带工具一起修",
+          hint: "维修经验和邻里关系",
+          apply: function (st) {
+            st.flags._neighborTrust = (st.flags._neighborTrust || 0) + 1;
+            StateManager.addMessage("🔧 你们折腾半天，总算把漏点堵住了。邻里关系+1", "success");
+          },
+        },
+        {
+          text: "📞 叫房东处理",
+          hint: "省心，但可能拖延",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            st.flags._landlordRepairCalled = (st.flags._landlordRepairCalled || 0) + 1;
+            StateManager.addMessage("📞 房东说马上来，电话挂断后走廊又安静下来。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_credit_card_call",
+      phase: "corporate",
+      icon: "💳",
+      title: "信用卡推销电话",
+      story: "银行客服说你有机会申请一张额度不低的信用卡。电话那头的声音很专业，像在把未来收入提前递给你。",
+      conditions: function (st) {
+        return st.player.phase === "corporate" && (st.flags._creditChecked || 0) > 0;
+      },
+      choices: [
+        {
+          text: "📖 问清年费和利息",
+          hint: "金融意识提升",
+          apply: function (st) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.flags._creditKnowledge = (st.flags._creditKnowledge || 0) + 1;
+            StateManager.addMessage("📖 你记下几个关键词，决定不让自己被额度牵着走。智力+1", "info");
+          },
+        },
+        {
+          text: "✅ 立刻申请",
+          hint: "获得额度，但诱惑也变多",
+          apply: function (st) {
+            st.flags._creditCardLimit = (st.flags._creditCardLimit || 0) + 3000;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+            StateManager.addMessage("💳 申请通过的短信很快来了，快乐和风险一起到账。额度+¥3000", "success");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_food_safety_complaint",
+      phase: "street",
+      icon: "🍢",
+      title: "小摊食安投诉",
+      story: "你听见有人说附近小摊用的油有问题，摊主急得脸色发白。一口热油能养活一个摊位，也可能毁掉几个人的信任。",
+      choices: [
+        {
+          text: "🏛️ 向市场监管投诉",
+          hint: "维护规则，可能影响摊主",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.flags._foodSafetyReports = (st.flags._foodSafetyReports || 0) + 1;
+            StateManager.addMessage("🏛️ 监管人员记下了线索，你知道这不讨喜，但必要。", "info");
+          },
+        },
+        {
+          text: "🤫 私下提醒摊主",
+          hint: "留情面，但承担不确定性",
+          apply: function (st) {
+            st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
+            st.flags._vendorWarnings = (st.flags._vendorWarnings || 0) + 1;
+            StateManager.addMessage("🤫 摊主沉默了一会儿，把油桶搬到了你看不见的地方。", "warning");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_found_shared_bike",
+      phase: "street",
+      icon: "🚲",
+      title: "坏掉的共享单车",
+      story: "路边一辆共享单车链条掉了，挡在盲道边。车轮歪着，像城市日常里一处没人认领的小麻烦。",
+      choices: [
+        {
+          text: "🔧 顺手修好推开",
+          hint: "维修经验，城市熟悉度",
+          apply: function (st) {
+            st.flags._bikeFixed = (st.flags._bikeFixed || 0) + 1;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+            StateManager.addMessage("🔧 链条重新咬住齿轮，你拍了拍手上的黑油。幸福感+2", "success");
+          },
+        },
+        {
+          text: "🚶 只挪到一边",
+          hint: "快速解决挡路",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+            StateManager.addMessage("🚶 至少盲道空出来了，你继续赶路。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_live_stream_collab",
+      phase: "corporate",
+      icon: "🎥",
+      title: "临时直播搭档",
+      story: "小丽缺一个帮忙试吃的搭档，问你愿不愿意露脸。补光灯一亮，连路边的风都像被收进了镜头。",
+      choices: [
+        {
+          text: "🎬 参与直播",
+          hint: "涨名气，也有社交压力",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            StateManager.addMessage("🎬 弹幕刷得很快，你第一次理解什么叫被看见。名气+4，疲劳+8", "success");
+          },
+        },
+        {
+          text: "🎥 只帮忙拿设备",
+          hint: "低调帮忙",
+          apply: function (st) {
+            st.flags._helpedStreamSetup = (st.flags._helpedStreamSetup || 0) + 1;
+            StateManager.addMessage("🎥 你把线理顺，小丽冲镜头外比了个感谢的手势。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_power_outage_night",
+      phase: "street",
+      icon: "🕯️",
+      title: "突然停电",
+      story: "晚上八点，整栋楼忽然断电，你手机还剩 12% 的电。黑暗来得毫无预告，手机屏幕是房间里唯一的光。",
+      choices: [
+        {
+          text: "🏪 去便利店充电坐一会儿",
+          hint: "花小钱，维持手机续航",
+          apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
+            StateManager.addMessage("🏪 便利店的灯很亮，店员没有催你。-¥15，幸福感+3", "success");
+          },
+        },
+        {
+          text: "😴 干脆早点睡觉",
+          hint: "省电省钱，恢复体力",
+          apply: function (st) {
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage("😴 黑暗里你很快睡着，梦里不需要电。疲劳-15", "info");
+          },
+        },
+        {
+          text: "🔌 去走廊检查空开",
+          hint: "维修技能有用",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage("🔌 跳闸了。你把闸合上，灯一个接一个重新亮了起来。幸福感+8", "success");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_workplace_conflict",
+      phase: "corporate",
+      icon: "😤",
+      title: "办公室摩擦",
+      story: "同事在会议上把你的方案说成了自己的，老板似乎也信了。PPT 里你的名字不见了，却还留着你的逻辑和你的例子。",
+      conditions: function (st) {
+        return st.player.phase === "corporate";
+      },
+      choices: [
+        {
+          text: "🤫 私下找同事谈清楚",
+          hint: "直接沟通，考验情商",
+          apply: function (st) {
+            st.player.charm = Math.min(100, (st.player.charm || 20) + 2);
+            StateManager.addMessage("🤫 他承认了，说是「误会」。你知道这种误会不会只有一次。", "info");
+          },
+        },
+        {
+          text: "📢 下次会议当场澄清",
+          hint: "维护权益，有风险也有收获",
+          apply: function (st) {
+            StateManager.addMessage("📢 老板看了看你，重新翻了翻文件。沉默比掌声更重要。", "info");
+          },
+        },
+        {
+          text: "😌 算了，留条后路",
+          hint: "忍一时，避免正面冲突",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            st.flags._workplaceGrievance = (st.flags._workplaceGrievance || 0) + 1;
+            StateManager.addMessage("😌 你把委屈按进肚子里，告诉自己这不是最后一仗。", "warning");
+          },
+        },
+      ],
+    },
   ];
-
   /** 将 WEBAPP_TYPED_EVENTS 推入 legacy RANDOM_EVENTS 池（去重，避免重复注册） */
   function registerTypedEventBridge() {
     if (typeof RANDOM_EVENTS === "undefined") return;
@@ -888,7 +1125,7 @@
             "社区免费体检：低成本健康检查和预防",
             "城市服务推荐：基于玩家状态自动推荐",
             "TS 数据目录摘要：事件/职业/地点/物品/疾病/法律/旅行已填充",
-            "TS typed 事件 bridge：10 个城市生存事件已注入随机事件池",
+            "TS typed 事件 bridge：19 个城市生存事件已注入随机事件池",
           ],
         },
       ],
