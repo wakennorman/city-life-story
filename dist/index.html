@@ -117860,6 +117860,45 @@ function getCareerDualPathHtml(state) {
   );
 }
 
+function getCareerEducationHtml(state) {
+  var p = state.player || {};
+  var edu = p.education ?? state.education ?? 0;
+  var ep = p.eduProgress ||
+    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  var eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
+  var eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
+  var total = ep.totalExams || 6;
+  var passed = ep.examsPassed || 0;
+  var pct = Math.min(100, Math.round((passed / total) * 100));
+  var nextTip =
+    edu >= eduNames.length - 1
+      ? "学历已到顶级，后续更依赖项目、技能和人脉。"
+      : "想继续提升学历，请去大学城或具备学习条件的地点参加备考。";
+  return (
+    '<div class="section"><h3>🎓 学历与考试</h3>' +
+    '<div class="card" style="padding:12px;">' +
+    '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
+    (eduIcons[edu] || "🎓") +
+    " 当前学历：" +
+    (eduNames[edu] || "未知") +
+    "</div>" +
+    '<div style="margin-top:8px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">' +
+    '<div style="height:100%;width:' +
+    pct +
+    '%;background:var(--accent);"></div></div>' +
+    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
+    "考试进度：" +
+    passed +
+    "/" +
+    total +
+    "；备考点数：" +
+    (ep.studyPoints || 0) +
+    "<br>" +
+    nextTip +
+    "</div></div></div>"
+  );
+}
+
 /** 事业发展Tab主渲染函数 */
 function renderCareerDevTab(state, parent) {
   parent.innerHTML = "";
@@ -118089,6 +118128,7 @@ function renderCareerOverview(state, parent) {
   var html = '<div class="tab-content">';
   html += getCareerGuidanceHtml(state);
   html += getCareerDualPathHtml(state);
+  html += getCareerEducationHtml(state);
 
   // 创业摘要
   var startup = state.startup;
