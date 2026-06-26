@@ -682,6 +682,151 @@
         },
       ],
     },
+    // ── 第二批 bridge 事件（2026-06-27 扩充）──────────────────────────────
+    {
+      id: "webapp_community_volunteer",
+      phase: "street",
+      icon: "🤝",
+      title: "社区志愿者招募",
+      story: "居委会招人帮忙发通知、登记老人需求，报酬不高。公告栏上的纸被胶带贴得皱皱巴巴，却写着很多人的需求。",
+      choices: [
+        {
+          text: "🤝 参加半天志愿服务",
+          hint: "提升名气和幸福感",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.flags._communityService = (st.flags._communityService || 0) + 1;
+            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            StateManager.addMessage("🤝 你跑了几栋楼，累，但觉得自己和这座城市靠近了一点。名气+2，幸福感+5", "success");
+          },
+        },
+        {
+          text: "💰 问有没有补贴岗位",
+          hint: "争取实际收入",
+          apply: function (st) {
+            st.resources.cash += 60;
+            st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
+            StateManager.addMessage("💰 工作人员给你安排了登记补贴岗，+¥60。", "success");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_temp_agency_call",
+      phase: "street",
+      icon: "📞",
+      title: "劳务中介来电",
+      story: "一家劳务中介说有批临时搬运工名额，日结，但要现在确认。号码是陌生的，语气却很熟练。",
+      conditions: function (st) {
+        return st.resources.cash < 500;
+      },
+      choices: [
+        {
+          text: "💪 立刻答应去",
+          hint: "体力换现金，今天就到手",
+          apply: function (st) {
+            st.resources.cash += 180;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 22);
+            st.player.physique = Math.min(100, (st.player.physique || 22) + 1);
+            StateManager.addMessage("💪 下午的货很重，但钱打进来的那一刻什么都值了。+¥180", "success");
+          },
+        },
+        {
+          text: "🤔 先问清楚再决定",
+          hint: "避免陷阱，提升意识",
+          apply: function (st) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 1);
+            StateManager.addMessage("🤔 对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_heatwave_survival",
+      phase: "street",
+      icon: "☀️",
+      title: "高温预警",
+      story: "气温升到 38 度，城中村没有空调，身体开始抗议。城市把所有的热都留在这条街上。",
+      conditions: function (st) {
+        return (st.flags._housingTier || 0) <= 1;
+      },
+      choices: [
+        {
+          text: "🌀 买台电风扇（¥80）",
+          hint: "改善居住条件",
+          apply: function (st) {
+            if (st.resources.cash < 80) {
+              StateManager.addMessage("💸 现金不足 ¥80，买不起电风扇。", "warning");
+              return;
+            }
+            st.resources.cash -= 80;
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            st.flags._hasFan = 1;
+            StateManager.addMessage("🌀 风扇转着，能睡了，虽然还是热，但能睡了。-¥80，疲劳-10", "success");
+          },
+        },
+        {
+          text: "📚 去图书馆蹭空调",
+          hint: "免费避暑，顺便学习",
+          apply: function (st) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
+            StateManager.addMessage("📚 图书馆的冷气均匀，书页翻起来都是凉的。智力+1，疲劳-8", "info");
+          },
+        },
+        {
+          text: "😤 硬撑，省钱优先",
+          hint: "保住现金，健康受损",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            st.status.health = Math.max(0, (st.status.health || 80) - 5);
+            StateManager.addMessage("😤 夜里出了一身汗，早上起来头有点晕。健康-5", "warning");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_payday_loan_ad",
+      phase: "street",
+      icon: "💸",
+      title: "借贷广告诱惑",
+      story: "手机弹出贷款广告：「最快5分钟到账，最高5万，免息3天。」屏幕上的数字很大，字体鲜红。",
+      conditions: function (st) {
+        return st.resources.cash < 300;
+      },
+      choices: [
+        {
+          text: "📖 点开看利率条款",
+          hint: "了解风险，提升金融意识",
+          apply: function (st) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 2);
+            st.flags._loanRiskAware = (st.flags._loanRiskAware || 0) + 1;
+            StateManager.addMessage("📖 年化利率36%——你把计算器关掉，把广告也关掉了。智力+2", "info");
+          },
+        },
+        {
+          text: "⚠️ 借一点度过难关（¥500）",
+          hint: "解燃眉之急，但利息日积月累",
+          apply: function (st) {
+            st.resources.cash += 500;
+            st.resources.debt = (st.resources.debt || 0) + 600;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            StateManager.addMessage("⚠️ 到账短信来了，+¥500，但债务增加¥600。钱是解药，剂量算错了就是毒。", "warning");
+          },
+        },
+        {
+          text: "❌ 关掉广告",
+          hint: "拒绝高息借贷",
+          apply: function (st) {
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+            StateManager.addMessage("❌ 你划掉广告，继续数自己还剩多少现金。", "info");
+          },
+        },
+      ],
+    },
   ];
 
   /** 将 WEBAPP_TYPED_EVENTS 推入 legacy RANDOM_EVENTS 池（去重，避免重复注册） */
@@ -743,7 +888,7 @@
             "社区免费体检：低成本健康检查和预防",
             "城市服务推荐：基于玩家状态自动推荐",
             "TS 数据目录摘要：事件/职业/地点/物品/疾病/法律/旅行已填充",
-            "TS typed 事件 bridge：首批 5 个城市生存事件已注入随机事件池",
+            "TS typed 事件 bridge：10 个城市生存事件已注入随机事件池",
           ],
         },
       ],

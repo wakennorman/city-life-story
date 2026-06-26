@@ -571,6 +571,354 @@ export const EVENTS: GameEvent[] = [
       ),
     tags: ["community", "gov", "social_credit"],
   },
+
+  // ── 第二批扩充事件（2026-06-27）──────────────────────────────
+
+  {
+    id: "webapp_temp_agency_call",
+    name: "劳务中介来电",
+    icon: "📞",
+    description: "一家劳务中介说有批临时搬运工名额，日结，但要现在确认。",
+    trigger: {
+      type: "random",
+      dayMin: 5,
+      weight: 14,
+      prerequisites: ["resources.cash < 500"],
+    },
+    choices: [
+      {
+        id: "accept",
+        text: "立刻答应去",
+        hint: "体力换现金，今天就到手",
+        effects: [
+          { target: "resources.cash", op: "add", value: 180 },
+          { target: "needs.fatigue", op: "add", value: 22 },
+          { target: "player.physique", op: "add", value: 1 },
+        ],
+      },
+      {
+        id: "ask_details",
+        text: "先问清楚再决定",
+        hint: "避免陷阱，但可能错过名额",
+        effects: [
+          { target: "player.intelligence", op: "add", value: 1 },
+          { target: "needs.happiness", op: "add", value: 1 },
+        ],
+      },
+      {
+        id: "decline",
+        text: "拒绝，另找出路",
+        hint: "保存体力，坚持找更合适的工作",
+        effects: [
+          { target: "needs.fatigue", op: "add", value: -5 },
+        ],
+      },
+    ],
+    narrativeBefore: "号码是陌生的，语气却很熟练，像是每天打出几十个这样的电话。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        accept: "下午的货很重，但钱打进来的那一刻什么都值了。",
+        ask_details: "对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。",
+        decline: "你没接这个活。城市里总会有下一个电话。",
+      }, "电话里的嗡嗡声消失在街道噪音里。"),
+    tags: ["labor", "cash", "survival", "street"],
+  },
+
+  {
+    id: "webapp_power_outage_night",
+    name: "突然停电",
+    icon: "🕯️",
+    description: "晚上八点，整栋楼忽然断电，你手机还剩 12% 的电。",
+    trigger: {
+      type: "random",
+      dayMin: 18,
+      weight: 11,
+      location: "slum",
+    },
+    choices: [
+      {
+        id: "go_out",
+        text: "出去便利店充电坐一会儿",
+        hint: "花小钱，维持手机续航",
+        effects: [
+          { target: "resources.cash", op: "add", value: -15 },
+          { target: "needs.happiness", op: "add", value: 3 },
+          { target: "player.actionPoints", op: "add", value: -1 },
+        ],
+      },
+      {
+        id: "sleep_early",
+        text: "干脆早点睡觉",
+        hint: "省电省钱，恢复体力",
+        effects: [
+          { target: "needs.fatigue", op: "add", value: -15 },
+          { target: "needs.happiness", op: "add", value: -2 },
+        ],
+      },
+      {
+        id: "check_breaker",
+        text: "去走廊检查空开",
+        hint: "维修技能有用",
+        requirement: { field: "skills.repair.level", min: 3 },
+        effects: [
+          { target: "skills.repair.xp", op: "add", value: 6 },
+          { target: "needs.happiness", op: "add", value: 8 },
+        ],
+      },
+    ],
+    narrativeBefore: "黑暗来得毫无预告，手机屏幕是房间里唯一的光。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        go_out: "便利店的灯很亮，店员没有催你，你在那里坐到了电来。",
+        sleep_early: "黑暗里你很快睡着，梦里不需要电。",
+        check_breaker: "跳闸了。你把闸合上，灯一个接一个重新亮了起来。",
+      }, "停电带来短暂的安静，城市忘了它自己。"),
+    tags: ["housing", "survival", "repair", "night"],
+  },
+
+  {
+    id: "webapp_payday_loan_ad",
+    name: "借贷广告诱惑",
+    icon: "💸",
+    description: "手机弹出一条贷款广告：「最快5分钟到账，最高5万，免息3天。」",
+    trigger: {
+      type: "random",
+      dayMin: 10,
+      weight: 13,
+      prerequisites: ["resources.cash < 300"],
+    },
+    choices: [
+      {
+        id: "research_terms",
+        text: "点开看看利率条款",
+        hint: "了解风险，提升金融意识",
+        effects: [
+          { target: "player.intelligence", op: "add", value: 2 },
+          { target: "flags._loanRiskAware", op: "add", value: 1 },
+        ],
+      },
+      {
+        id: "apply_small",
+        text: "借一点度过难关（¥500）",
+        hint: "解燃眉之急，但利息日积月累",
+        effects: [
+          { target: "resources.cash", op: "add", value: 500 },
+          { target: "resources.debt", op: "add", value: 600 },
+          { target: "needs.happiness", op: "add", value: -5 },
+        ],
+      },
+      {
+        id: "close_ad",
+        text: "关掉广告",
+        hint: "拒绝高息借贷，坚持硬撑",
+        effects: [
+          { target: "player.morality", op: "add", value: 1 },
+        ],
+      },
+    ],
+    narrativeBefore: "屏幕上的数字很大，字体鲜红，像是专门为穷人设计的颜色。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        research_terms: "年化利率 36%——你把计算器关掉，把广告也关掉了。",
+        apply_small: "到账短信来了，钱是解药，但剂量算错了就是毒。",
+        close_ad: "你划掉广告，继续数自己还剩多少现金。",
+      }, "广告消失了，穷的感觉没有。"),
+    tags: ["finance", "debt", "survival", "decision"],
+  },
+
+  {
+    id: "webapp_workplace_conflict",
+    name: "办公室摩擦",
+    icon: "😤",
+    description: "同事在会议上把你的方案说成了自己的，老板似乎也信了。",
+    trigger: {
+      type: "random",
+      dayMin: 60,
+      weight: 12,
+      prerequisites: ["phase === 'corporate'"],
+    },
+    choices: [
+      {
+        id: "confront_private",
+        text: "私下找同事谈清楚",
+        hint: "直接沟通，考验情商",
+        effects: [
+          { target: "player.charm", op: "add", value: 2 },
+          { target: "player.corporate.popularity", op: "add", value: 3 },
+        ],
+      },
+      {
+        id: "raise_in_meeting",
+        text: "下次会议当场澄清",
+        hint: "维护权益，有风险也有收获",
+        effects: [
+          { target: "player.corporate.kpi", op: "add", value: 5 },
+          { target: "player.corporate.risk", op: "add", value: 5 },
+        ],
+      },
+      {
+        id: "let_it_go",
+        text: "算了，留条后路",
+        hint: "忍一时，避免正面冲突",
+        effects: [
+          { target: "needs.happiness", op: "add", value: -10 },
+          { target: "flags._workplaceGrievance", op: "add", value: 1 },
+        ],
+      },
+    ],
+    narrativeBefore: "PPT 里你的名字不见了，却还留着你的逻辑和你的例子。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        confront_private: "他承认了，说是「误会」。你知道这种误会不会只有一次。",
+        raise_in_meeting: "老板看了看你，重新翻了翻文件。沉默比掌声更重要。",
+        let_it_go: "你把委屈按进肚子里，告诉自己这不是最后一仗。",
+      }, "会议室的玻璃门透明，人心却不是。"),
+    tags: ["corporate", "conflict", "career", "social"],
+  },
+
+  {
+    id: "webapp_heatwave_survival",
+    name: "高温预警",
+    icon: "☀️",
+    description: "气温升到 38 度，城中村没有空调，身体开始抗议。",
+    trigger: {
+      type: "random",
+      dayMin: 30,
+      weight: 10,
+      location: "slum",
+    },
+    choices: [
+      {
+        id: "buy_fan",
+        text: "买台电风扇（¥80）",
+        hint: "投入小钱，改善居住条件",
+        effects: [
+          { target: "resources.cash", op: "add", value: -80 },
+          { target: "needs.fatigue", op: "add", value: -10 },
+          { target: "flags._hasFan", op: "set", value: 1 },
+        ],
+      },
+      {
+        id: "go_library",
+        text: "去图书馆蹭空调",
+        hint: "免费避暑，还能学点东西",
+        effects: [
+          { target: "player.intelligence", op: "add", value: 1 },
+          { target: "needs.fatigue", op: "add", value: -8 },
+          { target: "player.actionPoints", op: "add", value: -1 },
+        ],
+      },
+      {
+        id: "endure",
+        text: "硬撑，省钱优先",
+        hint: "健康受损，但现金没动",
+        effects: [
+          { target: "needs.fatigue", op: "add", value: 15 },
+          { target: "status.health", op: "add", value: -5 },
+        ],
+      },
+    ],
+    narrativeBefore: "城市把所有的热都留在这条街上，没有风，只有湿热的停滞。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        buy_fan: "风扇转着，能睡了，虽然还是热，但能睡了。",
+        go_library: "图书馆的冷气均匀，书页翻起来都是凉的。",
+        endure: "夜里你出了一身汗，早上起来头有点晕。",
+      }, "高温天气对不同的人是不同的事。"),
+    tags: ["weather", "survival", "housing", "health"],
+  },
+
+  {
+    id: "webapp_skill_sharing_chance",
+    name: "技能换资源",
+    icon: "🔧",
+    description: "邻居的锁坏了，他说如果你能修，就请你吃顿饭。",
+    trigger: {
+      type: "random",
+      dayMin: 20,
+      weight: 13,
+      location: "slum",
+    },
+    choices: [
+      {
+        id: "fix_lock",
+        text: "动手修锁",
+        hint: "维修经验 + 邻里关系",
+        requirement: { field: "skills.repair.level", min: 2 },
+        effects: [
+          { target: "skills.repair.xp", op: "add", value: 10 },
+          { target: "flags._neighborTrust", op: "add", value: 2 },
+          { target: "needs.happiness", op: "add", value: 6 },
+        ],
+      },
+      {
+        id: "call_locksmith",
+        text: "帮他联系开锁师傅",
+        hint: "没技能也能帮上忙",
+        effects: [
+          { target: "player.charm", op: "add", value: 1 },
+          { target: "flags._neighborTrust", op: "add", value: 1 },
+        ],
+      },
+      {
+        id: "decline",
+        text: "不擅长，婉拒",
+        hint: "保持距离",
+        effects: [
+          { target: "needs.happiness", op: "add", value: -2 },
+        ],
+      },
+    ],
+    narrativeBefore: "邻居的门半开着，他拿着断掉的锁芯，表情很无助。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        fix_lock: "门锁好了，他端出一碗红烧肉。吃饭的时候没人说话，都觉得够了。",
+        call_locksmith: "师傅很快来了，邻居说：「下次有事还找你。」",
+        decline: "你说不会，他点了点头，转身打电话。",
+      }, "有时候技能是比钱更直接的语言。"),
+    tags: ["neighbor", "repair", "social", "slum"],
+  },
+
+  {
+    id: "webapp_night_market_vendor",
+    name: "夜市摊位机会",
+    icon: "🌙",
+    description: "夜市管理员说有个摊位今晚空出来了，押金 ¥200，当天结算。",
+    trigger: {
+      type: "random",
+      dayMin: 25,
+      weight: 9,
+      prerequisites: ["resources.cash >= 200"],
+    },
+    choices: [
+      {
+        id: "rent_stall",
+        text: "租下摊位试试",
+        hint: "投入押金，可能有收益",
+        effects: [
+          { target: "resources.cash", op: "add", value: -200 },
+          { target: "flags._nightMarketVendor", op: "add", value: 1 },
+          { target: "player.charm", op: "add", value: 2 },
+        ],
+      },
+      {
+        id: "observe_first",
+        text: "先观察今晚的人流",
+        hint: "积累情报，下次更有把握",
+        effects: [
+          { target: "player.intelligence", op: "add", value: 1 },
+          { target: "flags._nightMarketScouted", op: "add", value: 1 },
+        ],
+      },
+    ],
+    narrativeBefore: "夜市的灯亮起来，每个摊位都是一个人的全部。",
+    narrativeAfter: (choiceId) =>
+      pickNarrative(choiceId, {
+        rent_stall: "你把东西摆出来，第一声吆喝很小，后来越来越响。",
+        observe_first: "你在人群里走了一圈，记住了哪种摊位排队最长。",
+      }, "夜市是城市最诚实的经济课。"),
+    tags: ["trade", "side_hustle", "night", "cash"],
+  },
 ];
 
 export const EVENT_CATALOG_STATUS = {
