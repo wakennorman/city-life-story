@@ -423,7 +423,7 @@ if (typeof window !== "undefined") {
     icon: "🕸️",
     brief: "NPC之间也有自己的关系网，玩家行为会触发蝴蝶效应",
     version: "1.0.0",
-    related: ["mechanics:npc_system", "mechanics:cross_system_events"],
+    related: ["mechanics:npc_affinity"],
     sections: [
       {
         kind: "desc",

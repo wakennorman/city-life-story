@@ -645,7 +645,7 @@
     icon: "🕯",
     brief: "上一周目你留下的痕迹——选择、道德、人情、缎带。",
     version: "v3.3",
-    related: ["mechanics:heritage_coin", "narratives:life_ribbon"],
+    related: ["mechanics:new_game_plus", "narratives:ng_plus"],
     sections: _pastLifeSections,
   };
 })();

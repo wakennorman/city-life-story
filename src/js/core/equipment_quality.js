@@ -351,7 +351,7 @@ if (typeof window !== "undefined") {
     brief:
       "装备有普通/稀有/史诗/传说四档品质，品质越高效果越强，并可附带随机附魔效果。",
     version: "1.0",
-    related: ["mechanics:items"],
+    related: ["mechanics:inventory"],
     sections: [
       {
         type: "desc",

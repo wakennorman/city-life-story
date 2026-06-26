@@ -853,11 +853,7 @@ function getHousingUpgradeTip(state) {
   if (nextTier.tier >= 4 && nextTier.tier <= 6) locationName = "商业区";
   if (nextTier.tier === 5) locationName = "郊区";
   return (
-    "去" +
-    locationName +
-    "可升级为" +
-    (nextTier.icon || "🏠") +
-    nextTier.name
+    "去" + locationName + "可升级为" + (nextTier.icon || "🏠") + nextTier.name
   );
 }
 
@@ -2630,7 +2626,6 @@ function renderActionsTab(state, parent) {
     }
     parent.appendChild(fallbackCards);
   }
-
 }
 
 function createActionCard(action, state) {
@@ -4217,7 +4212,8 @@ function renderSkillsTab(state, parent) {
     var gate = document.createElement("div");
     gate.style.cssText =
       "margin-bottom:12px;padding:10px 12px;border:1px solid rgba(196,85,61,0.35);background:rgba(196,85,61,0.08);border-radius:8px;color:var(--danger);font-size:12px;line-height:1.5;";
-    gate.textContent = "技能训练需要前往培训中心；当前地点只能查看技能与解锁条件。";
+    gate.textContent =
+      "技能训练需要前往培训中心；当前地点只能查看技能与解锁条件。";
     parent.appendChild(gate);
   }
 

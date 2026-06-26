@@ -1179,7 +1179,7 @@ if (typeof window !== "undefined") {
     icon: "🚀",
     brief: "创业系统 + 上班族职业路径，从基层到高管的完整职业生涯",
     version: "1.0.0",
-    related: ["mechanics:startup", "mechanics:workplace_social"],
+    related: ["mechanics:startup_system", "mechanics:workplace_social"],
     sections: [
       {
         kind: "desc",

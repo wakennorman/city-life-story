@@ -696,9 +696,13 @@
     <script src="js/app_bridge/webapp_runtime_bridge.js"></script>
     <!-- 测试工具（仅本地开发加载） -->
     <script>
-      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.search.includes('test')) {
-        var s = document.createElement('script');
-        s.src = '../tests/monte_carlo.js';
+      if (
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1" ||
+        location.search.includes("test")
+      ) {
+        var s = document.createElement("script");
+        s.src = "../tests/monte_carlo.js";
         document.body.appendChild(s);
       }
     </script>

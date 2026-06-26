@@ -145,12 +145,12 @@
       return;
     }
 
+    console.log("🧪 蒙特卡洛模拟启动: %d 次 × %d 天", trials, daysPerTrial);
     console.log(
-      "🧪 蒙特卡洛模拟启动: %d 次 × %d 天",
-      trials,
-      daysPerTrial
+      "   初始状态: ¥%d, 健康:%d",
+      baseState.resources.cash,
+      baseState.status.health,
     );
-    console.log("   初始状态: ¥%d, 健康:%d", baseState.resources.cash, baseState.status.health);
 
     var results = [];
     var startTime = Date.now();
@@ -167,7 +167,7 @@
           r.survived ? "✅存活" : "💀死亡",
           r.survived ? daysPerTrial : r.diedOnDay,
           r.finalCash,
-          r.finalHealth
+          r.finalHealth,
         );
       } else if ((i + 1) % 50 === 0) {
         console.log("   ...已完成 %d/%d 次", i + 1, trials);
@@ -202,16 +202,18 @@
         ? (allCash[allCash.length / 2 - 1] + allCash[allCash.length / 2]) / 2
         : allCash[Math.floor(allCash.length / 2)];
 
-    var avgCash = allCash.reduce(function (s, v) {
-      return s + v;
-    }, 0) / allCash.length;
+    var avgCash =
+      allCash.reduce(function (s, v) {
+        return s + v;
+      }, 0) / allCash.length;
 
     var minCash = allCash[0];
     var maxCash = allCash[allCash.length - 1];
 
-    var avgHealth = survived.reduce(function (s, r) {
-      return s + r.finalHealth;
-    }, 0) / (survived.length || 1);
+    var avgHealth =
+      survived.reduce(function (s, r) {
+        return s + r.finalHealth;
+      }, 0) / (survived.length || 1);
 
     var earlyDeaths = died.filter(function (r) {
       return r.diedOnDay <= 7;
@@ -232,16 +234,32 @@
     console.log("  耗时:        %s 秒", elapsed);
     console.log("");
     console.log("  📊 存活统计");
-    console.log("  总存活率:    %d%% (%d/%d)", Math.round((survived.length / trials) * 100), survived.length, trials);
-    console.log("  前7天死亡率: %d%% (%d/%d)", Math.round((earlyDeaths / trials) * 100), earlyDeaths, died.length);
-    console.log("  死亡平均天数: %s 天", midDaysDied > 0 ? midDaysDied.toFixed(1) : "N/A");
+    console.log(
+      "  总存活率:    %d%% (%d/%d)",
+      Math.round((survived.length / trials) * 100),
+      survived.length,
+      trials,
+    );
+    console.log(
+      "  前7天死亡率: %d%% (%d/%d)",
+      Math.round((earlyDeaths / trials) * 100),
+      earlyDeaths,
+      died.length,
+    );
+    console.log(
+      "  死亡平均天数: %s 天",
+      midDaysDied > 0 ? midDaysDied.toFixed(1) : "N/A",
+    );
     console.log("");
     console.log("  💰 经济统计（存活玩家）");
     console.log("  平均现金:    ¥%s", Math.round(avgCash).toLocaleString());
     console.log("  中位现金:    ¥%s", Math.round(midCash).toLocaleString());
     console.log("  最小现金:    ¥%s", Math.round(minCash).toLocaleString());
     console.log("  最大现金:    ¥%s", Math.round(maxCash).toLocaleString());
-    console.log("  30天暴富率:  %d%% (现金>¥50000)", Math.round((richEarly.length / trials) * 100));
+    console.log(
+      "  30天暴富率:  %d%% (现金>¥50000)",
+      Math.round((richEarly.length / trials) * 100),
+    );
     console.log("  平均健康:    %d", Math.round(avgHealth));
     console.log(line);
 
@@ -278,7 +296,10 @@
 
     // 中位现金在合理范围
     if (midCash < 500 || midCash > 50000) {
-      checks.push("❌ 中位现金 ¥%d 超出合理范围 [¥500, ¥50000]", Math.round(midCash));
+      checks.push(
+        "❌ 中位现金 ¥%d 超出合理范围 [¥500, ¥50000]",
+        Math.round(midCash),
+      );
       pass = false;
     } else {
       checks.push("✅ 中位现金 ¥%d 在合理范围内", Math.round(midCash));
@@ -289,7 +310,10 @@
       console.log("  " + checks[j]);
     }
     console.log(line);
-    console.log("  总体: %s", pass ? "✅ 通过" : "❌ 未通过 — 需要调整数值参数");
+    console.log(
+      "  总体: %s",
+      pass ? "✅ 通过" : "❌ 未通过 — 需要调整数值参数",
+    );
     console.log(line + "\n");
 
     return {
@@ -317,7 +341,5 @@
   window.runMonteCarlo = runMonteCarlo;
   window.runProbabilityTest = runProbabilityTest;
 
-  console.log(
-    "🧪 蒙特卡洛模拟器已加载。运行 runMonteCarlo() 开始测试。"
-  );
+  console.log("🧪 蒙特卡洛模拟器已加载。运行 runMonteCarlo() 开始测试。");
 })();

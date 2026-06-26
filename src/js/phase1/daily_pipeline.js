@@ -595,7 +595,10 @@ const DAILY_PIPELINE = [
         );
         if (prep.umbrellaUses <= 0) {
           prep.umbrella = false;
-          StateManager.addMessage("☂️ 雨伞被风雨折腾坏了，需要重新准备。", "warning");
+          StateManager.addMessage(
+            "☂️ 雨伞被风雨折腾坏了，需要重新准备。",
+            "warning",
+          );
         }
       }
 
@@ -614,7 +617,10 @@ const DAILY_PIPELINE = [
         );
         if (prep.warmPackUses <= 0) {
           prep.warmPack = false;
-          StateManager.addMessage("🧣 保暖用品已经用尽，需要重新准备。", "warning");
+          StateManager.addMessage(
+            "🧣 保暖用品已经用尽，需要重新准备。",
+            "warning",
+          );
         }
       }
     },

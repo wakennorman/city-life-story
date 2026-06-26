@@ -505,7 +505,7 @@ if (typeof window !== "undefined") {
     brief:
       "同时装备同套装的多件装备可触发额外加成效果，套装等级随装备数量递增。",
     version: "1.0",
-    related: ["mechanics:items", "mechanics:equipment_quality"],
+    related: ["mechanics:inventory", "mechanics:equipment_quality"],
     sections: [
       {
         type: "desc",

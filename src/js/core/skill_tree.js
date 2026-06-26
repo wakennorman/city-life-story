@@ -979,7 +979,10 @@ function chooseSkillBranch(skillKey, branchId, state) {
     return false;
   }
   if (state.player.actionPoints < 15) {
-    StateManager.addMessage("⚠️ 行动力不足，需要15点行动力选择发展方向", "warning");
+    StateManager.addMessage(
+      "⚠️ 行动力不足，需要15点行动力选择发展方向",
+      "warning",
+    );
     return false;
   }
   if (state.resources.cash < 200) {

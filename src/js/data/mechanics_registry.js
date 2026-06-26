@@ -1208,7 +1208,7 @@
     name: "技能情报",
     icon: "🔍",
     brief: "会计/烹饪/维修/驾驶/编程 5 个技能各 3 档价格价值信息可见度",
-    related: ["mechanics:skill_tree", "mechanics:trade_intel"],
+    related: ["mechanics:skill_tree", "mechanics:intel"],
     sections: [
       {
         kind: "desc",

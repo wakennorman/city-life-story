@@ -2275,7 +2275,8 @@ function getStartupTriggerConditions(state) {
     careerDiscount: discount,
     phase: phase,
     rankRequired: pc.rank || null,
-    effectiveRank: phase === "corporate" ? getStartupEffectiveCareerRank(state) : null,
+    effectiveRank:
+      phase === "corporate" ? getStartupEffectiveCareerRank(state) : null,
     label: pc.label || "资源积累",
     cashOk: cash >= (requiredCash || 50000),
     rankOk: rankMet,

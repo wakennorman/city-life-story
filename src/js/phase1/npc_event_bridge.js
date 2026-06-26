@@ -953,7 +953,10 @@ function chatWithNpc(npcId, state) {
 
   var ap = state.player.actionPoints || 0;
   if (ap < 2) {
-    StateManager.addMessage("行动力不足，需要 2 点行动力才能深入聊天。", "warning");
+    StateManager.addMessage(
+      "行动力不足，需要 2 点行动力才能深入聊天。",
+      "warning",
+    );
     return;
   }
   state.player.actionPoints = ap - 2;

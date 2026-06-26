@@ -726,7 +726,7 @@ if (typeof window !== "undefined") {
     brief:
       "多门技能同时达到一定等级时触发额外加成，包括收入加成、解锁新工作/业务/行动。",
     version: "1.0",
-    related: ["mechanics:skills", "mechanics:skill_tree"],
+    related: ["mechanics:skill_tree"],
     sections: [
       {
         type: "desc",

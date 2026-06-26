@@ -78,7 +78,11 @@ function getLocationProsperityLevel(locKey) {
     return 2;
   if (loc.type === "commercial" || loc.type === "corporate") return 3;
   if (loc.type === "service" || loc.type === "recreation") return 2;
-  if (locKey === "suburb" || locKey === "construction" || locKey === "factoryZone")
+  if (
+    locKey === "suburb" ||
+    locKey === "construction" ||
+    locKey === "factoryZone"
+  )
     return 0;
   return 1;
 }
@@ -351,7 +355,10 @@ function addStreetExtras(state, actions) {
       var cost = [20, 45, 90, 180][Math.max(0, Math.min(3, lvl))];
       var gain = [1, 2, 3, 5][Math.max(0, Math.min(3, lvl))];
       if (st.resources.cash < cost) {
-        StateManager.addMessage("💇 做发型需要¥" + cost + "，现金不足。", "warning");
+        StateManager.addMessage(
+          "💇 做发型需要¥" + cost + "，现金不足。",
+          "warning",
+        );
         return;
       }
       st.resources.cash -= cost;
@@ -1111,7 +1118,12 @@ function addStreetExtras(state, actions) {
 
   for (var gi = 0; gi < actions.length; gi++) {
     if (LOCATION_ACTION_RULES[actions[gi].id]) {
-      applyLocationGate(state, actions[gi], actions[gi].disabled, actions[gi].reqFail);
+      applyLocationGate(
+        state,
+        actions[gi],
+        actions[gi].disabled,
+        actions[gi].reqFail,
+      );
     }
   }
 }

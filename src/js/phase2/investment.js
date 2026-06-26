@@ -1979,14 +1979,19 @@ function getInvestmentAssetSnapshot(state) {
     var value = price * qty;
     var cost = (h.avgPrice || price) * qty;
     var pl = value - cost;
-    var unit = def && def.category === "股票" ? "股" : def && def.unit ? def.unit : "";
+    var unit =
+      def && def.category === "股票" ? "股" : def && def.unit ? def.unit : "";
     addInvestmentRowToGroup(groups[groupKey], {
       symbol: h.symbol,
       name: def ? def.name : h.symbol,
       category: def ? def.category : "",
       unit: unit,
       quantity: qty,
-      quantityText: formatInvestmentQuantity(qty, unit, def && def.category === "股票" ? 0 : 4),
+      quantityText: formatInvestmentQuantity(
+        qty,
+        unit,
+        def && def.category === "股票" ? 0 : 4,
+      ),
       avgPrice: h.avgPrice || 0,
       price: price,
       value: value,
@@ -2135,10 +2140,14 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         row.quantityText +
         "</span>" +
         '<span class="inv-h-price">均¥' +
-        Number(row.avgPrice || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) +
+        Number(row.avgPrice || 0).toLocaleString(undefined, {
+          maximumFractionDigits: 2,
+        }) +
         "</span>" +
         '<span class="inv-h-price">现¥' +
-        Number(row.price || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) +
+        Number(row.price || 0).toLocaleString(undefined, {
+          maximumFractionDigits: 2,
+        }) +
         "</span>" +
         '<span class="inv-h-value">¥' +
         Math.round(row.value || 0).toLocaleString() +
@@ -2869,7 +2878,13 @@ function renderBtc(area, inv, state, parent) {
     "</div>";
   area.appendChild(header);
 
-  renderInvestmentHoldingPanel(area, inv, ["crypto"], "🪙 我的虚拟币", "#9b74b8");
+  renderInvestmentHoldingPanel(
+    area,
+    inv,
+    ["crypto"],
+    "🪙 我的虚拟币",
+    "#9b74b8",
+  );
 
   // 所有虚拟币
   var cryptos = [];
@@ -2998,7 +3013,13 @@ function renderBtc(area, inv, state, parent) {
 
 // ---- 子tab渲染：贵金属 ----
 function renderPrecious(area, inv, state, parent) {
-  renderInvestmentHoldingPanel(area, inv, ["precious"], "🥇 我的贵金属", "#c49a3a");
+  renderInvestmentHoldingPanel(
+    area,
+    inv,
+    ["precious"],
+    "🥇 我的贵金属",
+    "#c49a3a",
+  );
 
   var grid = document.createElement("div");
   grid.className = "action-cards";
@@ -3118,7 +3139,13 @@ function renderPrecious(area, inv, state, parent) {
 
 // ---- 子tab渲染：期货基金 ----
 function renderFutures(area, inv, state, parent) {
-  renderInvestmentHoldingPanel(area, inv, ["futures"], "📈 我的期货基金", "#5a8ab4");
+  renderInvestmentHoldingPanel(
+    area,
+    inv,
+    ["futures"],
+    "📈 我的期货基金",
+    "#5a8ab4",
+  );
 
   var grid = document.createElement("div");
   grid.className = "action-cards";

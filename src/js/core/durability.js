@@ -530,7 +530,7 @@ if (typeof window !== "undefined") {
     brief:
       "日常使用会磨损装备，耐久归零效果失效，维修技能提升可解锁更多信息并修复装备",
     version: "1.0.0",
-    related: ["mechanics:recycling", "skills:repair"],
+    related: ["skills:repair"],
     sections: [
       {
         kind: "desc",

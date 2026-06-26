@@ -24320,7 +24320,7 @@ if (typeof window !== "undefined") {
     brief:
       "装备有普通/稀有/史诗/传说四档品质，品质越高效果越强，并可附带随机附魔效果。",
     version: "1.0",
-    related: ["mechanics:items"],
+    related: ["mechanics:inventory"],
     sections: [
       {
         type: "desc",
@@ -25440,7 +25440,7 @@ if (typeof window !== "undefined") {
     brief:
       "日常使用会磨损装备，耐久归零效果失效，维修技能提升可解锁更多信息并修复装备",
     version: "1.0.0",
-    related: ["mechanics:recycling", "skills:repair"],
+    related: ["skills:repair"],
     sections: [
       {
         kind: "desc",
@@ -37408,7 +37408,7 @@ if (typeof window !== "undefined") {
     icon: "🕸️",
     brief: "NPC之间也有自己的关系网，玩家行为会触发蝴蝶效应",
     version: "1.0.0",
-    related: ["mechanics:npc_system", "mechanics:cross_system_events"],
+    related: ["mechanics:npc_affinity"],
     sections: [
       {
         kind: "desc",
@@ -45800,7 +45800,7 @@ function hasIllness(state, illnessId) {
     name: "技能情报",
     icon: "🔍",
     brief: "会计/烹饪/维修/驾驶/编程 5 个技能各 3 档价格价值信息可见度",
-    related: ["mechanics:skill_tree", "mechanics:trade_intel"],
+    related: ["mechanics:skill_tree", "mechanics:intel"],
     sections: [
       {
         kind: "desc",
@@ -46855,7 +46855,7 @@ function hasIllness(state, illnessId) {
     icon: "🕯",
     brief: "上一周目你留下的痕迹——选择、道德、人情、缎带。",
     version: "v3.3",
-    related: ["mechanics:heritage_coin", "narratives:life_ribbon"],
+    related: ["mechanics:new_game_plus", "narratives:ng_plus"],
     sections: _pastLifeSections,
   };
 })();
@@ -99601,7 +99601,7 @@ if (typeof window !== "undefined") {
     brief:
       "同时装备同套装的多件装备可触发额外加成效果，套装等级随装备数量递增。",
     version: "1.0",
-    related: ["mechanics:items", "mechanics:equipment_quality"],
+    related: ["mechanics:inventory", "mechanics:equipment_quality"],
     sections: [
       {
         type: "desc",
@@ -100011,7 +100011,7 @@ if (typeof window !== "undefined") {
     icon: "🔧",
     brief: "装备使用会消耗耐久，耐久归零时效果失效，需要修理恢复。",
     version: "1.0",
-    related: ["mechanics:items", "mechanics:equipment_quality"],
+    related: ["mechanics:inventory", "mechanics:equipment_quality"],
     sections: [
       {
         type: "desc",
@@ -100768,7 +100768,7 @@ if (typeof window !== "undefined") {
     brief:
       "多门技能同时达到一定等级时触发额外加成，包括收入加成、解锁新工作/业务/行动。",
     version: "1.0",
-    related: ["mechanics:skills", "mechanics:skill_tree"],
+    related: ["mechanics:skill_tree"],
     sections: [
       {
         type: "desc",
@@ -118875,7 +118875,7 @@ if (typeof window !== "undefined") {
     icon: "🚀",
     brief: "创业系统 + 上班族职业路径，从基层到高管的完整职业生涯",
     version: "1.0.0",
-    related: ["mechanics:startup", "mechanics:workplace_social"],
+    related: ["mechanics:startup_system", "mechanics:workplace_social"],
     sections: [
       {
         kind: "desc",

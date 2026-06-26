@@ -548,7 +548,6 @@ body {
   color: #9b74b8;
 }
 
-
 /* --- Action Category Headers --- */
 .action-category-header {
   display: flex;
@@ -556,7 +555,7 @@ body {
   gap: 6px;
   padding: 7px 10px;
   margin: 14px 0 8px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
@@ -568,7 +567,7 @@ body {
   font-weight: 400;
   color: var(--text-muted);
   margin-left: auto;
-  background: rgba(128,128,128,0.08);
+  background: rgba(128, 128, 128, 0.08);
   padding: 1px 7px;
   border-radius: 8px;
 }
@@ -702,8 +701,13 @@ body {
 }
 
 @keyframes badge-new-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 装备品质系统 */
@@ -717,38 +721,54 @@ body {
   border-radius: 4px;
 }
 .quality-common {
-  background: rgba(153,153,153,0.12);
+  background: rgba(153, 153, 153, 0.12);
   color: #888;
-  border: 1px solid rgba(153,153,153,0.3);
+  border: 1px solid rgba(153, 153, 153, 0.3);
 }
 .quality-rare {
-  background: rgba(74,144,217,0.12);
-  color: #5DADE2;
-  border: 1px solid rgba(74,144,217,0.3);
+  background: rgba(74, 144, 217, 0.12);
+  color: #5dade2;
+  border: 1px solid rgba(74, 144, 217, 0.3);
 }
 .quality-epic {
-  background: rgba(155,89,182,0.12);
-  color: #AF7AC5;
-  border: 1px solid rgba(155,89,182,0.3);
+  background: rgba(155, 89, 182, 0.12);
+  color: #af7ac5;
+  border: 1px solid rgba(155, 89, 182, 0.3);
 }
 .quality-legendary {
-  background: rgba(230,126,34,0.12);
-  color: #F39C12;
-  border: 1px solid rgba(230,126,34,0.4);
-  box-shadow: 0 0 8px rgba(230,126,34,0.2);
+  background: rgba(230, 126, 34, 0.12);
+  color: #f39c12;
+  border: 1px solid rgba(230, 126, 34, 0.4);
+  box-shadow: 0 0 8px rgba(230, 126, 34, 0.2);
 }
 @keyframes quality-legendary-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(230,126,34,0.2); }
-  50% { box-shadow: 0 0 16px rgba(230,126,34,0.4); }
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(230, 126, 34, 0.4);
+  }
 }
 .quality-legendary.pulse {
   animation: quality-legendary-pulse 2s ease-in-out infinite;
 }
-.equipment-card.quality-common { border-left: 3px solid #888; }
-.equipment-card.quality-rare { border-left: 3px solid #5DADE2; }
-.equipment-card.quality-epic { border-left: 3px solid #AF7AC5; }
-.equipment-card.quality-legendary { border-left: 3px solid #F39C12; }
-.quality-price { font-size: 12px; color: var(--text-secondary); }
+.equipment-card.quality-common {
+  border-left: 3px solid #888;
+}
+.equipment-card.quality-rare {
+  border-left: 3px solid #5dade2;
+}
+.equipment-card.quality-epic {
+  border-left: 3px solid #af7ac5;
+}
+.equipment-card.quality-legendary {
+  border-left: 3px solid #f39c12;
+}
+.quality-price {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
 
 /* --- Message Log --- */
 #message-log {
@@ -1094,7 +1114,11 @@ body {
 .inheritance-summary .narrative-text {
   margin: 12px 0;
   padding: 10px 12px;
-  background: linear-gradient(135deg, rgba(76,175,80,0.1), rgba(33,150,243,0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.1),
+    rgba(33, 150, 243, 0.1)
+  );
   border-radius: 6px;
   border-left: 3px solid #4caf50;
   font-size: 13px;
@@ -2074,7 +2098,11 @@ body {
 /* ====== 春节事件弹窗专属样式 ====== */
 .spring-fest-modal .modal-box {
   border: 2px solid rgba(231, 76, 60, 0.5);
-  background: linear-gradient(180deg, rgba(196, 85, 61, 0.08), var(--bg-secondary));
+  background: linear-gradient(
+    180deg,
+    rgba(196, 85, 61, 0.08),
+    var(--bg-secondary)
+  );
   border-top: 4px solid #e74c3c;
 }
 
@@ -2138,7 +2166,11 @@ body {
 
 .spring-fest-modal .event-choice:hover:not(.disabled) {
   border-color: #e74c3c;
-  background: linear-gradient(90deg, rgba(231, 76, 60, 0.08), var(--bg-card-hover));
+  background: linear-gradient(
+    90deg,
+    rgba(231, 76, 60, 0.08),
+    var(--bg-card-hover)
+  );
 }
 
 .spring-fest-modal .event-choice .choice-main {
@@ -2172,8 +2204,13 @@ body {
 }
 
 @keyframes springFestFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* 春节弹窗入场动画增强 */
@@ -2205,7 +2242,11 @@ body {
   max-height: 85vh;
   overflow-y: auto;
   border-top: 4px solid #4a9e5c;
-  background: linear-gradient(180deg, rgba(74, 158, 92, 0.06), var(--bg-secondary));
+  background: linear-gradient(
+    180deg,
+    rgba(74, 158, 92, 0.06),
+    var(--bg-secondary)
+  );
 }
 
 .company-history-modal .modal-box::-webkit-scrollbar {
@@ -2399,7 +2440,11 @@ body {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(180deg, rgba(74, 158, 92, 0.3), rgba(74, 158, 92, 0.05));
+  background: linear-gradient(
+    180deg,
+    rgba(74, 158, 92, 0.3),
+    rgba(74, 158, 92, 0.05)
+  );
 }
 
 .ch-timeline-item {
@@ -2543,7 +2588,11 @@ body {
   width: 100%;
   margin-top: 10px;
   padding: 8px 12px;
-  background: linear-gradient(90deg, rgba(74, 158, 92, 0.1), rgba(74, 158, 92, 0.05));
+  background: linear-gradient(
+    90deg,
+    rgba(74, 158, 92, 0.1),
+    rgba(74, 158, 92, 0.05)
+  );
   border: 1px solid rgba(74, 158, 92, 0.25);
   border-radius: 6px;
   color: var(--accent);
@@ -2555,7 +2604,11 @@ body {
 }
 
 .ch-history-btn:hover {
-  background: linear-gradient(90deg, rgba(74, 158, 92, 0.18), rgba(74, 158, 92, 0.1));
+  background: linear-gradient(
+    90deg,
+    rgba(74, 158, 92, 0.18),
+    rgba(74, 158, 92, 0.1)
+  );
   border-color: var(--accent);
   transform: translateY(-1px);
 }
@@ -2568,7 +2621,11 @@ body {
 .ch-ceo-profile {
   margin: 16px 0;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(124, 58, 237, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.06),
+    rgba(124, 58, 237, 0.02)
+  );
   border-radius: 8px;
   border: 1px solid rgba(124, 58, 237, 0.15);
 }
@@ -2736,7 +2793,7 @@ body {
 .scenario-card:hover {
   border-color: var(--accent);
   transform: translateX(3px);
-  box-shadow: 0 3px 12px rgba(74, 158, 92, 0.10);
+  box-shadow: 0 3px 12px rgba(74, 158, 92, 0.1);
 }
 
 .scenario-card-icon {
@@ -2893,15 +2950,56 @@ body {
 }
 
 /* 剧本详情弹窗 */
-.scenario-detail-icon { font-size: 48px; text-align: center; margin-bottom: 8px; }
-.scenario-detail-name { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
-.scenario-detail-diff { text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-.scenario-detail-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 12px; padding: 0 8px; }
-.scenario-detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 12px; margin-bottom: 12px; }
-.scenario-detail-stat { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); }
-.scenario-detail-stat-label { color: var(--text-secondary); }
-.scenario-detail-stat-val { font-weight: 600; color: var(--text-primary); }
-.scenario-detail-start { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 8px; }
+.scenario-detail-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.scenario-detail-name {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.scenario-detail-diff {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.scenario-detail-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+.scenario-detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.scenario-detail-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.scenario-detail-stat-label {
+  color: var(--text-secondary);
+}
+.scenario-detail-stat-val {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.scenario-detail-start {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 8px;
+}
 
 /* ====== 创业系统 UI 样式 ====== */
 
@@ -3048,8 +3146,12 @@ body {
 }
 
 /* 装备品质边框 */
-.quality-rare { border-color: #4a9e5c !important; }
-.quality-epic { border-color: #4a6cf7 !important; }
+.quality-rare {
+  border-color: #4a9e5c !important;
+}
+.quality-epic {
+  border-color: #4a6cf7 !important;
+}
 .quality-legendary {
   border-color: #e8b84c !important;
   animation: quality-legendary-pulse 2s ease-in-out infinite !important;
@@ -3397,7 +3499,11 @@ body {
     width: min(100%, 320px);
     margin-top: 8px !important;
     padding: 10px 0 4px;
-    background: linear-gradient(180deg, rgba(245, 241, 232, 0), var(--bg-primary) 28%);
+    background: linear-gradient(
+      180deg,
+      rgba(245, 241, 232, 0),
+      var(--bg-primary) 28%
+    );
   }
 
   #sandbox-screen > div:last-child .btn {
@@ -3766,7 +3872,9 @@ body {
 .investment-holding-head,
 .investment-holding-row {
   display: grid;
-  grid-template-columns: minmax(46px, 0.7fr) minmax(70px, 1.1fr) minmax(58px, 0.8fr) minmax(74px, 1fr) minmax(74px, 1fr) minmax(78px, 1fr) minmax(94px, 1.2fr);
+  grid-template-columns:
+    minmax(46px, 0.7fr) minmax(70px, 1.1fr) minmax(58px, 0.8fr)
+    minmax(74px, 1fr) minmax(74px, 1fr) minmax(78px, 1fr) minmax(94px, 1.2fr);
   align-items: center;
   gap: 8px;
   min-width: 680px;

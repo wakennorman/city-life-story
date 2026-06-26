@@ -376,7 +376,7 @@ if (typeof window !== "undefined") {
     icon: "🔧",
     brief: "装备使用会消耗耐久，耐久归零时效果失效，需要修理恢复。",
     version: "1.0",
-    related: ["mechanics:items", "mechanics:equipment_quality"],
+    related: ["mechanics:inventory", "mechanics:equipment_quality"],
     sections: [
       {
         type: "desc",
