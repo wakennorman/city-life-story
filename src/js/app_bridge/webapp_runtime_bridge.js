@@ -515,6 +515,187 @@
     });
   }
 
+  // ============================================================
+  // TS 事件目录 bridge — 首批城市生存事件（手工同步自 src/app/data/events/index.ts）
+  // 转换规则：TS effects[] → legacy apply(st)；TS prerequisites[] → conditions(st)
+  // ============================================================
+  var WEBAPP_TYPED_EVENTS = [
+    {
+      id: "webapp_rent_arrears_notice",
+      phase: "street",
+      icon: "🏚️",
+      title: "房租催缴单",
+      story: "房东把一张红色催缴单塞进门缝，月底之前必须给答复。催缴单上的字很短，却让整间屋子都显得更窄。",
+      conditions: function (st) {
+        return st.resources.cash < 1200;
+      },
+      choices: [
+        {
+          text: "💬 找房东商量宽限",
+          hint: "花时间沟通，可能换来几天缓冲",
+          apply: function (st) {
+            st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
+            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage("💬 房东嘴上不耐烦，最后还是给了你几天时间。", "info");
+          },
+        },
+        {
+          text: "💰 先交一部分（¥300）",
+          hint: "现金压力变大，但房东态度缓和",
+          cost: 300,
+          apply: function (st) {
+            if (st.resources.cash < 300) {
+              StateManager.addMessage("💸 现金不足 ¥300，无法先交部分房租。", "warning");
+              return;
+            }
+            st.resources.cash -= 300;
+            st.flags._rentTrust = (st.flags._rentTrust || 0) + 1;
+            StateManager.addMessage("💰 你把零钱凑成一沓，至少今晚能睡得踏实一点。", "success");
+          },
+        },
+        {
+          text: "🙈 先拖着",
+          hint: "保住现金，但后续风险上升",
+          apply: function (st) {
+            st.flags._rentArrears = (st.flags._rentArrears || 0) + 1;
+            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            StateManager.addMessage("🙈 你把单子压在杯子下面，心里知道这事不会自己消失。", "warning");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_factory_overtime_choice",
+      phase: "street",
+      icon: "🏭",
+      title: "临时加班名额",
+      story: "主管问谁愿意留下来赶一批急单，钱不多，但今天就结。机器还在响，工位上的人都在看主管手里的名单。",
+      choices: [
+        {
+          text: "💪 留下加班",
+          hint: "换现金，也换疲劳",
+          apply: function (st) {
+            st.resources.cash += 140;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 18);
+            st.player.physique = Math.max(0, (st.player.physique || 22) - 1);
+            StateManager.addMessage("🏭 你把最后一箱货码好时，天已经黑透。+¥140，体力消耗较大。", "success");
+          },
+        },
+        {
+          text: "😌 婉拒回去休息",
+          hint: "少赚一点，保住状态",
+          apply: function (st) {
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            StateManager.addMessage("😌 你第一次觉得，能按时下班也是一种收入。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_platform_account_ban",
+      phase: "street",
+      icon: "📱",
+      title: "平台账号警告",
+      story: "兼职平台提示你近期接单异常，继续违规可能封号。手机震了一下，系统通知比催债短信还冷。",
+      conditions: function (st) {
+        return (st.flags._sideHustleOrders || 0) > 5;
+      },
+      choices: [
+        {
+          text: "📋 提交申诉材料",
+          hint: "耗费行动力，降低封号风险",
+          apply: function (st) {
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 2);
+            st.flags._platformTrust = (st.flags._platformTrust || 0) + 1;
+            StateManager.addMessage("📋 你把截图和说明一张张传上去，至少留了条后路。行动力-2", "info");
+          },
+        },
+        {
+          text: "🚀 继续冲单",
+          hint: "短期多赚，长期不稳",
+          apply: function (st) {
+            st.resources.cash += 90;
+            st.flags._platformRisk = (st.flags._platformRisk || 0) + 1;
+            StateManager.addMessage("🚀 今晚的单很多，+¥90。但风险在悄悄累积...", "warning");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_subway_help_elder",
+      phase: "street",
+      icon: "🚇",
+      title: "地铁口的老人",
+      story: "一位老人站在闸机前，不知道怎么用手机刷码。人流从你身边擦过去，老人攥着手机显得有点窘迫。",
+      choices: [
+        {
+          text: "🤝 停下来帮忙",
+          hint: "花一点时间，获得小小善意",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            st.needs.happiness = Math.min(100, st.needs.happiness + 4);
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            StateManager.addMessage("🤝 闸机亮起绿灯时，老人笑着对你点了点头。幸福感+4，名气+1", "success");
+          },
+        },
+        {
+          text: "🚶 赶时间离开",
+          hint: "不耽误行程",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, st.needs.happiness - 1);
+            StateManager.addMessage("🚶 你挤进人流，心里仍然浮着那个迟疑的背影。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "webapp_layoff_rumor",
+      phase: "corporate",
+      icon: "📉",
+      title: "裁员传闻",
+      story: "茶水间里有人说公司要缩编，名单可能本周就出来。传闻没有署名，却像一阵冷风吹进每个工位。",
+      conditions: function (st) {
+        return st.player.phase === "corporate";
+      },
+      choices: [
+        {
+          text: "📄 更新简历",
+          hint: "准备后路，以防万一",
+          apply: function (st) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.flags._resumeReady = 1;
+            StateManager.addMessage("📄 你把项目经历重新写了一遍，像给自己留下一条出口。智力+1", "info");
+          },
+        },
+        {
+          text: "💼 主动揽活表现",
+          hint: "增加绩效，也增加压力",
+          apply: function (st) {
+            if (st.player.corporate) {
+              st.player.corporate.kpi = Math.min(100, (st.player.corporate.kpi || 20) + 3);
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
+            StateManager.addMessage("💼 你接下了额外任务，电脑屏幕亮到深夜。绩效+3，疲劳+12", "warning");
+          },
+        },
+      ],
+    },
+  ];
+
+  /** 将 WEBAPP_TYPED_EVENTS 推入 legacy RANDOM_EVENTS 池（去重，避免重复注册） */
+  function registerTypedEventBridge() {
+    if (typeof RANDOM_EVENTS === "undefined") return;
+    WEBAPP_TYPED_EVENTS.forEach(function (evt) {
+      var exists = RANDOM_EVENTS.some(function (e) { return e.id === evt.id; });
+      if (!exists) RANDOM_EVENTS.push(evt);
+    });
+  }
+
+  // 立即注册（bridge 脚本加载时 events_core.js 已就绪）
+  registerTypedEventBridge();
+
   if (typeof window !== "undefined") {
     window.WEBAPP_CITY_SERVICE_ACTIONS = CITY_SERVICE_ACTIONS;
     window.WEBAPP_DATA_CATALOG_SUMMARY = DATA_CATALOG_SUMMARY;
@@ -527,6 +708,8 @@
       tickCityServices: tickWebAppCityServices,
       getRecommendedCityServices: getRecommendedCityServices,
       getDataCatalogSummary: getDataCatalogSummary,
+      registerTypedEventBridge: registerTypedEventBridge,
+      typedEventCount: WEBAPP_TYPED_EVENTS.length,
     };
 
     window.MECHANICS = window.MECHANICS || {};
@@ -560,6 +743,7 @@
             "社区免费体检：低成本健康检查和预防",
             "城市服务推荐：基于玩家状态自动推荐",
             "TS 数据目录摘要：事件/职业/地点/物品/疾病/法律/旅行已填充",
+            "TS typed 事件 bridge：首批 5 个城市生存事件已注入随机事件池",
           ],
         },
       ],
