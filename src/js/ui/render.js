@@ -1121,6 +1121,9 @@ function renderTabBar(state) {
       } else {
         btn.style.display = "none";
       }
+    } else if (btn.dataset.tab === "personal_growth") {
+      // 个人成长不再作为主入口；成长行为拆回具体地点行动，保留 renderer 兼容旧入口。
+      btn.style.display = "none";
     } else {
       btn.style.display = "";
     }
@@ -2617,24 +2620,6 @@ function renderActionsTab(state, parent) {
     parent.appendChild(fallbackCards);
   }
 
-  // === Phase 2 深度交互入口 ===
-  {
-    const phase2Box = document.createElement("div");
-    phase2Box.style.cssText =
-      "margin-top:20px;padding:16px;background:linear-gradient(135deg, rgba(142,119,217,0.08), rgba(255,255,255,0.02));border:1px solid rgba(142,119,217,0.2);border-radius:var(--radius-md);";
-    phase2Box.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <h4 style="color:var(--accent);margin:0;font-size:14px;">🌟 Phase 2 深度交互</h4>
-        <span style="font-size:9px;color:var(--text-muted);">点击打开新系统</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-        <button onclick="StateManager.getState()._socialSubTab='social_workplace';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👥 职场社交</button>
-        <button onclick="StateManager.getState()._socialSubTab='social_family';switchTab('social')" class="btn btn-sm" style="padding:8px 12px;">👨‍👩‍👧 家庭</button>
-        <button onclick="switchTab('personal_growth')" class="btn btn-sm" style="padding:8px 12px;">🌱 个人成长</button>
-      </div>
-    `;
-    parent.appendChild(phase2Box);
-  }
 }
 
 function createActionCard(action, state) {
@@ -4215,6 +4200,15 @@ function renderSkillsTab(state, parent) {
   var skillNamesCache = skillNames;
 
   var skillKeys = Object.keys(state.skills);
+  var skillTrainingLocationOk =
+    state.trade && state.trade.currentLocation === "trainingCenter";
+  if (!skillTrainingLocationOk) {
+    var gate = document.createElement("div");
+    gate.style.cssText =
+      "margin-bottom:12px;padding:10px 12px;border:1px solid rgba(196,85,61,0.35);background:rgba(196,85,61,0.08);border-radius:8px;color:var(--danger);font-size:12px;line-height:1.5;";
+    gate.textContent = "技能训练需要前往培训中心；当前地点只能查看技能与解锁条件。";
+    parent.appendChild(gate);
+  }
 
   // ====== 分类排序系统：实用型→学术型→体能型 → 训练频次 → 等级 → 名称 ======
   if (typeof SortUtils !== "undefined") {
@@ -4301,9 +4295,12 @@ function renderSkillsTab(state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
-    card.style.cursor = "pointer";
+    card.style.cursor = skillTrainingLocationOk ? "pointer" : "not-allowed";
+    if (!skillTrainingLocationOk) card.classList.add("disabled");
     card.setAttribute("data-skill", key);
-    card.title = "⚡15+💰¥50 = 训练" + name;
+    card.title = skillTrainingLocationOk
+      ? "⚡15+💰¥50 = 训练" + name
+      : "前往培训中心才能训练技能";
 
     var jobHtml = "";
     if (unlockedJobs.length > 0) {
@@ -4451,8 +4448,12 @@ function renderSkillsTab(state, parent) {
     // card.innerHTML会重建，这里直接追加到末尾
     var metaDiv = document.createElement("div");
     metaDiv.style.cssText =
-      "font-size:10px;color:var(--warning);margin-top:4px;";
-    metaDiv.textContent = "⚡15 + ¥50 / 次 | EXP ~5~12";
+      "font-size:10px;color:" +
+      (skillTrainingLocationOk ? "var(--warning)" : "var(--danger)") +
+      ";margin-top:4px;";
+    metaDiv.textContent = skillTrainingLocationOk
+      ? "⚡15 + ¥50 / 次 | EXP ~5~12"
+      : "地点不符：请前往培训中心训练";
     card.appendChild(metaDiv);
     var remainDiv = document.createElement("div");
     remainDiv.innerHTML = remainingStr;
@@ -4465,6 +4466,13 @@ function renderSkillsTab(state, parent) {
         var st = StateManager.getState();
         var sk = st.skills[skillKey];
         if (!sk) return;
+        if (!st.trade || st.trade.currentLocation !== "trainingCenter") {
+          StateManager.addMessage(
+            "📚 技能训练需要前往培训中心；当前地点只能查看技能。",
+            "warning",
+          );
+          return;
+        }
         // 每日训练次数检查
         if (!st.flags._dailyTrainingCounts) st.flags._dailyTrainingCounts = {};
         var trained = st.flags._dailyTrainingCounts[skillKey] || 0;

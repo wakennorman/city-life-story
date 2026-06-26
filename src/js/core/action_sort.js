@@ -102,6 +102,7 @@
     movie: "social",
     ktv: "social",
     gym: "social",
+    hair_design: "social",
     gift_npc: "social",
     diary: "social",
     meditation: "social",
@@ -184,6 +185,7 @@
     movie: 65,
     ktv: 70,
     gym: 50,
+    hair_design: 58,
     diary: 75,
     meditation: 76,
 

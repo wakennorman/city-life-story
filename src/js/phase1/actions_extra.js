@@ -7,6 +7,82 @@
  * 用法：getAvailableActions() 末尾会调用 addExtraActions() 把这些行动合并进去
  */
 
+var LOCATION_ACTION_RULES = {
+  internet_bar: {
+    locations: ["slum", "commercialDist", "techPark"],
+    hint: "去城中村、商业区或科技园附近的网吧",
+  },
+  salon_chat: {
+    locations: ["slum", "commercialDist"],
+    hint: "去城中村或商业区的理发店",
+  },
+  self_study: {
+    locations: ["school", "trainingCenter"],
+    hint: "去大学城或培训中心的图书馆",
+  },
+  night_school: {
+    locations: ["school", "trainingCenter"],
+    hint: "去大学城或培训中心报名夜校",
+  },
+  gym: {
+    locations: ["park", "commercialDist", "entertainment"],
+    hint: "去公园、商业区或娱乐城附近的健身场所",
+  },
+  movie: {
+    locations: ["entertainment"],
+    hint: "去娱乐城的影院",
+  },
+  ktv: {
+    locations: ["entertainment"],
+    hint: "去娱乐城的 KTV",
+  },
+  pharmacy: {
+    locations: ["hospital", "commercialDist"],
+    hint: "去医院或商业区药房",
+  },
+  supermarket: {
+    locations: ["commercialDist"],
+    hint: "去商业区超市",
+  },
+  clothing: {
+    locations: ["commercialDist"],
+    hint: "去商业区服装店",
+  },
+};
+
+function getCurrentActionLocation(state) {
+  return state && state.trade ? state.trade.currentLocation : "";
+}
+
+function applyLocationGate(state, action, extraDisabled, extraReqFail) {
+  var rule = LOCATION_ACTION_RULES[action.id];
+  var disabled = !!extraDisabled;
+  var reqFail = extraReqFail || null;
+  if (rule) {
+    var locKey = getCurrentActionLocation(state);
+    if (rule.locations.indexOf(locKey) === -1) {
+      disabled = true;
+      reqFail = "地点不符：" + rule.hint;
+    }
+  }
+  action.disabled = disabled;
+  action.reqFail = reqFail;
+  return action;
+}
+
+function getLocationProsperityLevel(locKey) {
+  var loc = typeof getLocation === "function" ? getLocation(locKey) : null;
+  if (!loc) return 1;
+  if (locKey === "commercialDist" || locKey === "techPark") return 3;
+  if (locKey === "entertainment" || locKey === "hospital" || locKey === "bank")
+    return 2;
+  if (loc.type === "commercial" || loc.type === "corporate") return 3;
+  if (loc.type === "service" || loc.type === "recreation") return 2;
+  if (locKey === "suburb" || locKey === "construction" || locKey === "factoryZone")
+    return 0;
+  return 1;
+}
+
 /** 街头阶段通用行动（不依赖地点） */
 function addStreetExtras(state, actions) {
   // === 街头生存类（任何街头地点都行） ===
@@ -257,6 +333,39 @@ function addStreetExtras(state, actions) {
         "success",
       );
       consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "hair_design",
+    name: "发型设计",
+    desc: "找附近能做造型的小店打理发型。越繁华的地方越贵，短期魅力提升也越明显。",
+    icon: "💇",
+    costEstimate: "20~180",
+    apCost: 15,
+    payEstimate: "魅力临时+1~5",
+    handler: () => {
+      const st = StateManager.getState();
+      var locKey = getCurrentActionLocation(st);
+      var lvl = getLocationProsperityLevel(locKey);
+      var cost = [20, 45, 90, 180][Math.max(0, Math.min(3, lvl))];
+      var gain = [1, 2, 3, 5][Math.max(0, Math.min(3, lvl))];
+      if (st.resources.cash < cost) {
+        StateManager.addMessage("💇 做发型需要¥" + cost + "，现金不足。", "warning");
+        return;
+      }
+      st.resources.cash -= cost;
+      st.player.charm = Math.min(100, (st.player.charm || 20) + gain);
+      st.flags._hairStyleBoost = (st.flags._hairStyleBoost || 0) + gain;
+      st.flags._hairStyleLastDay = st.player.day;
+      st.needs.happiness = Math.min(100, st.needs.happiness + 4 + lvl * 2);
+      StateManager.addMessage(
+        "💇 换了个更精神的发型，魅力+" +
+          gain +
+          "。这个效果会随着时间慢慢变淡。",
+        "success",
+      );
+      consumeAP(15);
     },
   });
 
@@ -998,6 +1107,12 @@ function addStreetExtras(state, actions) {
         consumeAP(10);
       },
     });
+  }
+
+  for (var gi = 0; gi < actions.length; gi++) {
+    if (LOCATION_ACTION_RULES[actions[gi].id]) {
+      applyLocationGate(state, actions[gi], actions[gi].disabled, actions[gi].reqFail);
+    }
   }
 }
 
