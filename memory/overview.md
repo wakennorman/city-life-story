@@ -1,45 +1,25 @@
-# 城市浮生记 v3.8 断点续传审查：现状摸底
+# 城市浮生记：审查改进与扩展摸底
 
 更新时间：2026-06-26
 
-## 双轨架构覆盖范围
+## 目标边界
 
-### legacy 正式入口
+本轮目标不是重写项目，而是在正式可玩入口中修复玩家已指出的 UI 重复、状态栏缺失、地点行动同质化、技能/学习地点门槛、住所提示、债务可见性和事业发展深度问题，并把规则写入项目记忆和开发文档。正式入口仍是 `src/index.html -> python build.py -> dist/index.html`；Vite/TypeScript 入口继续作为并行架构壳和类型化数据目录，不替换旧入口。
 
-- 入口仍是 `src/index.html`，由 `python build.py` 生成 `dist/index.html`。这是当前玩家真正使用的版本。
-- 运行时依赖 `src/index.html` 中 100+ 个 script 顺序加载，`src/js/app_bridge/webapp_runtime_bridge.js` 仍位于末尾，未重排旧脚本顺序。
-- 真实状态来源是 `window.StateManager`。人生节点、医疗、旅行、法律、副业、社交网络、投资、创业、百科等核心系统仍在 `src/js/` 下运行。
-- 旧核心体量很大：`startup.js`、`events_street.js`、`render.js`、`main.js`、`wiki.js` 仍是主要维护风险点。
+## 双轨架构现状
 
-### Vite + TypeScript 新架构
+legacy 层覆盖真实游戏循环、HUD、侧栏、行动系统、地图/交易/技能/事业/投资/社交/个人成长/人生事务等可玩 UI。核心状态仍由 `window.StateManager` 管理，字段分散在 `src/js/core/state.js`、`main.js` 和各 phase 模块中。`src/index.html` 负责脚本顺序，禁止重排。
 
-- 根目录 `index.html` + `package.json` + `vite.config.mjs` 构成并行 Web App 调试壳，产物输出到 `dist-webapp/`，不覆盖 legacy `dist/`。
-- `src/app/core/` 只做 typed facade：`gameBridge.ts`、`stateAccess.ts`、`saveMigrations.ts` 不复制真实状态，只读写 legacy runtime。
-- `src/app/data/` 已从占位目录变为真实类型化内容：cityServices、events、jobs、locations、items、diseases、legal、travel、lifeNodes 共 93 条目录记录。
-- `src/app/ui/panels.ts` 和 `src/app/debug/healthCheck.ts` 只服务开发调试壳，玩家默认入口不会看到。
+TypeScript 新架构位于 `src/app/`，包含 shell、typed facade、save migration、data catalog、debug health check 和 Vite 面板。当前它主要提供类型化目录和桥接摘要；多数玩家可见体验仍要在 legacy 层落地。
 
-### bridge 层
+bridge 层 `src/js/app_bridge/webapp_runtime_bridge.js` 已接入城市服务、推荐和 `_webApp.schemaVersion=2`，但本轮主要问题集中在 legacy UI/行动逻辑，不需要改 script 顺序。
 
-- `src/js/app_bridge/webapp_runtime_bridge.js` 当前版本为 0.3.0，已暴露 `WebAppBridge`、7 个城市服务、推荐服务、TS 数据目录摘要和 `_webApp.schemaVersion=2` 存档元数据。
-- `actions_extra.js` 通过 `addWebAppBridgeActions` 注入城市服务入口，`daily_pipeline.js` 通过 `webapp_city_services_tick` 处理次日反馈。
-- bridge 仍未提供事件/职业/物品等 TS 数据自动注册到 legacy 的通用机制；当前主要承担城市服务与目录状态展示。
+## 当前完成度与薄弱点
 
-## 当前完成度
+已完成：债务字段已经区分 `villageDebt/bankDebt`；场景/沙盒开局能写入 `charm`、债务、住房和地点；`player.charm` 字段已存在；行动已经有大类排序与部分地点特色行动；事业发展 Tab 已有上班族/创业资源和建议。
 
-### 已完成
-
-- TS 数据目录最低可用性已完成，并有 `npm run check:ts-data` 防止回退为空目录。
-- 城市服务中心已从 3 项扩展到 7 项，并能写入 `_webApp` 后续状态。
-- 4 大扩展系统基础玩法已在 legacy 中实现：人生节点有弹窗，医疗有医保和治疗摘要，旅行有 5 个目的地，法律有案件和律师流程。
-- 旧入口仍保持可构建，脚本顺序边界清晰。
-
-### 仍薄弱
-
-- 4 大扩展系统没有常驻玩家面板。玩家只能通过地点行动或每日管线看到弹窗，无法主动查看人生节点、医保状态、旅行记录和案件进度。
-- TS 数据目录虽然已填充，但大多数仍只是 typed source，没有进入旧游戏事件池或行动列表。
-- bridge 的推荐能力没有足够玩家可见的承载面，`getRecommendedCityServices()` 已存在但曝光弱。
-- 超大 legacy 文件仍未拆分，本轮不直接大拆，避免把 UI 可见性修复和架构重构混在一起。
+薄弱点：状态栏容器默认 `display:none` 后未恢复；侧栏“附近可前往”与行动里的出行重复；HUD 住所/仓库/升级提示位置不符合需求；住所升级提示写死城中村；左侧属性缺魅力可见行；个人成长仍承担太多可被地点行动吸收的入口；学习、娱乐、健身等行动过于全地点通用；技能 Tab 缺少“必须到培训中心”的原则性门槛；天气准备物品缺使用次数/耐久；偷电瓶风险没有按地点繁华度变化；职业/事业系统仍可进一步增强玩家可见成长路径。
 
 ## 初步判断
 
-当前不是“项目不可用”，而是“新增系统可玩但不可见”。最优先的止血点是为人生节点、医疗、旅行、法律建立一个独立 Tab 面板，复用已有状态查询和弹窗入口，不迁移核心逻辑，不新建加载脚本，不触碰既有 script 顺序。这样能马上让玩家在旧正式入口看到新系统，同时为后续 TS 数据接入留下稳定展示位。
+本轮 P0 是 UI 可见性与重复入口修复：恢复状态栏、合并附近出行、整理顶部住所/仓库/债务、补魅力显示。P1 是地点差异化行动和条件灰显原则：行动不应所有地点都能做，不能做时要灰色且红字说明去哪里或缺什么条件。P1 同时包括天气物品耐久、偷电瓶风险和事业发展增强。P2 才是更大规模内容扩写或 TS 目录深度接线，避免本轮范围失控。

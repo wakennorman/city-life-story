@@ -1,16 +1,21 @@
-# 城市浮生记 v3.8 断点续传审查：问题诊断
+# 城市浮生记：审查改进与扩展诊断
 
 更新时间：2026-06-26
 
-格式：问题描述 | 所属模块 | 路线 | 优先级 | 判断依据
+格式：问题描述 | 所属模块 | 优先级 | 判断依据
 
-4 大扩展系统缺少常驻玩家面板，新增玩法可玩但不可见 | 人生节点/医疗/旅行/法律 | 完善 | P0 | `life_nodes.js`/`medical.js`/`travel.js`/`legal.js` 均已有状态函数和弹窗，但 `src/index.html` Tab 中没有对应入口，玩家只能靠地点行动或管线触发
-城市服务推荐函数已有但曝光弱 | bridge/UI | 完善 | P1 | `WebAppBridge.getRecommendedCityServices()` 已存在，旧入口缺少集中展示位，玩家不容易知道何时该用社保、信用、体检等服务
-社区体检服务读写了错误的健康字段 | bridge/城市服务 | 完善 | P1 | 主游戏健康条来自 `state.status.health`，但 `community_health_check` 和体检推荐使用 `state.player.health`，会让推荐与效果失真
-TS 数据目录多数未被 legacy 消费 | 新数据目录/bridge | 新增 | P1 | `src/app/data/index.ts` 中 events/jobs/items/diseases/legal 多为 `typed`，只有 cityServices 为 `playable`，travel/lifeNodes 为 `partial`
-超大 legacy 文件继续累积维护风险 | 架构 | 完善 | P1 | `startup.js`、`events_street.js`、`render.js`、`main.js` 仍是大文件，新增系统经常要改 render/main 注册点
-扩展系统之间缺少后果链 | 扩展系统 | 混合 | P1 | 医疗、旅行、法律、人生节点各自可运转，但医疗债务、旅行突发法律/医疗、败诉信用后果等交叉链还少
-lifeNodes 触发节奏偏硬 | 人生节点 | 完善 | P2 | 高考/大学/退休为确定时间点，35 岁危机按日期取模触发，缺少“概率/提前提示/可回顾”打磨
-装备品质系统玩家感知不足 | 装备系统 | 完善 | P2 | `equipment_quality.js`、`equipment_suites.js`、`equipment_durability.js` 已存在，但主 UI 中缺少清晰展示和获取引导
-字段级 TS/legacy 对齐审计仍不完整 | 工具链 | 新增 | P2 | `check:ts-data` 只检查导出数组最低数量，未校验 TS 字段与 legacy 同名系统字段、触发入口和百科注册是否一致
-项目入口文档分散 | 文档 | 完善 | P2 | 新人需要同时读 `CLAUDE.md`、`src/DEVELOPMENT.md`、`memory/*` 才能理解构建和双轨边界
+状态栏被默认隐藏，玩家看不到饥饿/疲劳/卫生/心情/健康/行动力 | UI/侧栏 | P0 | `src/index.html` 中 `location-section` 写了 `display:none`，`renderNeedsBars()` 只更新数值不恢复显示
+附近可前往与行动里的出行重复，且侧栏占据首屏空间 | UI/出行 | P0 | `renderLocation()` 渲染 `nearby-section`，行动系统也已有“出行 — 点击前往其他地点”
+顶部 HUD 住所、仓库、债务和升级提示位置不符合当前需求 | UI/HUD | P0 | `renderHeaderContext()` 只显示住所；仓库槽位和升级提示仍在侧栏 `housing-info`；升级提示写死“城中村”
+左侧属性缺少魅力可见行，`charm` 字段语义仍偏“颜值” | 属性/UI | P0 | `state.player.charm` 已存在，但侧栏只渲染体质/智力/敏捷/心智，个人成长里多处显示“颜值”
+村长债务显示和还款入口需要严格按模式/债务存在性显示 | 债务/行动 | P0 | 顶部和侧栏已有村长债务展示；`main.js` 还款入口已按 `villageDebt > 0` 显示，但侧栏重复展示需要收敛
+学习、健身、电影、KTV 等通用行动未按地点特性限制 | 行动系统 | P1 | `addStreetExtras()` 将图书馆自习、夜校、健身、电影、KTV 等直接推入所有街头地点行动
+住所与仓储行动没有形成独立清晰分组 | 行动系统/住所 | P1 | `addHomeActions()` 只有“回住所”入口，升级/租仓/仓储信息仍散在侧栏和地点提示
+技能 Tab 缺少“必须到培训中心才能学习”的一致门槛 | 技能系统/UI | P1 | 技能页可见逻辑未统一地点门槛；用户要求不符合条件灰色并红字说明
+个人成长 Tab 过宽，地点行动应吸收属性训练 | 成长系统/行动 | P1 | 个人成长包含属性训练、形象、学习等；用户要求取消个人成长作为主入口，训练分配到健身房/医院/图书馆/通用地点
+天气准备物品缺耐久/使用次数反馈 | 天气/物品 | P1 | `weather_prep` 购买伞/暖宝，但缺按极端天气出现和使用次数扣耐久
+偷电瓶风险未按地点繁华发达程度变化 | 违法行动/地点 | P1 | 违法行为存在，但风险与地点繁华、监管强度联动不足
+事业发展仍可增强为上班族与创业双路径的可见成长系统 | 职业/事业 | P1 | 事业 Tab 已有基础，但用户明确要求继续完善职业系统
+行动列表仍有“Phase 2 深度交互”等开发痕迹入口 | UI/行动 | P1 | 玩家可见行动不应出现内部阶段名，可从真实 Tab 或地点进入
+TS 数据目录与 legacy 可玩层仍未完全接线 | 新数据/bridge | P2 | `src/app/data/*` 多数仍是 typed catalog，短期不作为本轮阻断项
+超大 legacy 文件继续是维护风险 | 架构 | P2 | `render.js`、`actions_extra.js`、`startup.js` 等很大，但本轮不做大拆分，避免破坏可玩入口
