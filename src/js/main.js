@@ -3975,6 +3975,24 @@ function checkLoseConditions(state) {
 }
 
 // ====== 消息日志渲染 ======
+function scrollMessageLogToBottom(content, smooth) {
+  if (!content) return;
+  var run = function () {
+    if (typeof content.scrollTo === "function") {
+      content.scrollTo({
+        top: content.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    } else {
+      content.scrollTop = content.scrollHeight;
+    }
+  };
+  requestAnimationFrame(function () {
+    run();
+    setTimeout(run, 80);
+  });
+}
+
 function renderMessageLog(state) {
   const log = document.getElementById("message-log");
   if (!log) return;
@@ -4009,7 +4027,7 @@ function renderMessageLog(state) {
 
   // 仅在展开状态时滚动到底部
   if (!log.classList.contains("collapsed")) {
-    content.scrollTop = content.scrollHeight;
+    scrollMessageLogToBottom(content, false);
   }
 }
 
@@ -4042,10 +4060,7 @@ function toggleMessageLog() {
   if (wasCollapsed) {
     const content = log.querySelector(".log-content");
     if (content) {
-      // 需要等待 DOM 更新完成
-      requestAnimationFrame(() => {
-        content.scrollTop = content.scrollHeight;
-      });
+      scrollMessageLogToBottom(content, true);
     }
   }
 }

@@ -1,8 +1,8 @@
 /**
  * Web App runtime bridge (Phase 1)
  *
- * 让新架构的第一批数据化玩法进入旧游戏，不替代 legacy runtime。
- * v3.8+: 从 3 个城市服务扩展到 7 个，新增自动推荐和 TS 数据目录摘要。
+ * 让第一批数据化城市服务进入旧游戏，不替代 legacy runtime。
+ * v3.8+: 从 3 个城市服务扩展到 7 个，新增自动推荐和内容目录摘要。
  */
 (function () {
   var APP_SAVE_SCHEMA_VERSION = 2;
@@ -456,6 +456,7 @@
     } else {
       body += '<div style="display:grid;gap:8px;">';
       actions.forEach(function (action) {
+        var blocked = canPay(state, action);
         body +=
           '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
           "<strong>" +
@@ -468,17 +469,28 @@
           action.apCost +
           '点行动力<br><span style="color:var(--text-secondary);">' +
           action.brief +
-          "</span></div>";
+          "</span>" +
+          (blocked
+            ? '<br><span style="color:var(--danger);">暂不可用：' +
+              blocked +
+              "</span>"
+            : "") +
+          "</div>";
       });
       body += "</div>";
     }
     body += "</div>";
 
     var buttons = actions.map(function (action) {
+      var blocked = canPay(state, action);
       return {
         text: action.icon + " " + action.title,
-        cls: "btn-primary",
+        cls: blocked ? "" : "btn-primary",
         callback: function () {
+          if (blocked) {
+            StateManager.addMessage("⚠️ " + blocked, "warning");
+            return false;
+          }
           return applyCityService(action.id);
         },
       };
@@ -495,7 +507,7 @@
     actions.push({
       id: "webapp_city_services",
       name: "城市服务中心",
-      desc: "Web App 新架构接入的政务/金融/健康/医疗/旅行服务入口。",
+      desc: "政务、金融、健康、医疗、旅行等城市公共服务入口。",
       icon: "🏙️",
       category: "生活服务",
       apCost: 0,

@@ -1233,6 +1233,20 @@ function _lifeSystemsMoney(value) {
   return "¥" + Math.round(value || 0).toLocaleString();
 }
 
+function _lifeSystemsLocationNames(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return "当前地点";
+  return ids
+    .map(function (id) {
+      var loc =
+        Array.isArray(window.LOCATIONS) &&
+        window.LOCATIONS.find(function (item) {
+          return item && item.id === id;
+        });
+      return (loc && (loc.name || loc.title)) || id;
+    })
+    .join(" / ");
+}
+
 function _lifeSystemsLines(lines, emptyText) {
   if (!Array.isArray(lines) || lines.length === 0) {
     lines = [emptyText || "暂无记录"];
@@ -1283,12 +1297,20 @@ function openLifeSystemsPendingNode() {
   StateManager.addMessage("当前没有待处理的人生节点。", "info");
 }
 
-function openLifeSystemsMedical() {
+function openLifeSystemsMedicalTreatment() {
+  if (typeof showMedicalTreatmentModal === "function") {
+    showMedicalTreatmentModal();
+    return;
+  }
+  StateManager.addMessage("医疗治疗入口尚未加载。", "warning");
+}
+
+function openLifeSystemsMedicalInsurance() {
   if (typeof showMedicalInsuranceModal === "function") {
     showMedicalInsuranceModal();
     return;
   }
-  StateManager.addMessage("医疗系统尚未加载。", "warning");
+  StateManager.addMessage("医保咨询入口尚未加载。", "warning");
 }
 
 function openLifeSystemsTravel() {
@@ -1315,7 +1337,7 @@ function openLifeSystemsCityServices() {
     window.WebAppBridge.showCityServiceModal();
     return;
   }
-  StateManager.addMessage("Web App 城市服务桥接尚未加载。", "warning");
+  StateManager.addMessage("城市服务中心尚未加载。", "warning");
 }
 
 function _renderLifeNodePanel(state) {
@@ -1369,7 +1391,10 @@ function _renderMedicalPanel(state) {
     '<ul style="margin:0;padding-left:18px;">' +
       _lifeSystemsLines(lines, "暂无医疗记录") +
       "</ul>",
-    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedical()">医保咨询</button>',
+    '<div class="life-system-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;">' +
+      '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>' +
+      '<button class="btn btn-sm" onclick="openLifeSystemsMedicalInsurance()">医保咨询</button>' +
+      "</div>",
   );
 }
 
@@ -1430,9 +1455,7 @@ function _renderBridgeRecommendations(state) {
             " · " +
             (action.apCost || 0) +
             "行动力 · 入口：" +
-            _lifeSystemsEscape(
-              (action.locationIds || []).join(" / ") || "当前地点",
-            ) +
+            _lifeSystemsEscape(_lifeSystemsLocationNames(action.locationIds)) +
             "</div>" +
             "</div>"
           );
@@ -1500,7 +1523,7 @@ function renderLifeSystemsTab(state, parent) {
   wrap.innerHTML =
     '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);padding:12px;">' +
     '<h2 style="margin:0 0 6px;font-size:16px;color:var(--text-primary);">🧭 人生事务</h2>' +
-    '<p style="margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;">集中查看会影响长期人生的事务：关键节点、医保治疗、旅行记录、法律案件，以及 Web App 桥接进来的城市服务。</p>' +
+    '<p style="margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;">集中查看会影响长期人生的事务：关键节点、医保治疗、旅行记录、法律案件，以及城市公共服务。</p>' +
     "</section>" +
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">' +
     _renderLifeNodePanel(state) +

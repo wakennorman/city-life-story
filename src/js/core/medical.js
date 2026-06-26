@@ -220,6 +220,72 @@ function getMedicalSummary(state) {
   return lines;
 }
 
+function showMedicalTreatmentModal() {
+  if (typeof showModal !== "function") return;
+  var state = StateManager.getState();
+  initMedicalState(state);
+  var illnesses =
+    (state.status && state.status.illnesses && state.status.illnesses.length) ||
+    0;
+  var body =
+    '<div style="font-size:13px;line-height:1.7;">' +
+    "<p>根据当前身体状况选择治疗强度。医保会自动抵扣治疗费，治疗期间可能进入康复或住院状态。</p>" +
+    '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
+    getMedicalSummary(state).join("<br>") +
+    (illnesses > 0
+      ? "<br>当前记录疾病：" + illnesses + " 种"
+      : "<br>当前没有明确疾病记录，仍可做轻症门诊或体检式处理。") +
+    "</div>" +
+    '<div style="display:grid;gap:8px;">';
+
+  Object.keys(ILLNESS_GRADES).forEach(function (gradeKey) {
+    var grade = ILLNESS_GRADES[gradeKey];
+    var plan = state.medical.insurance
+      ? INSURANCE_PLANS.find(function (p) {
+          return p.id === state.medical.insurance;
+        })
+      : null;
+    var actualCost = Math.round(
+      grade.treatCost * (1 - (plan ? plan.coverage : 0)),
+    );
+    body +=
+      '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
+      "<strong>" +
+      grade.icon +
+      " " +
+      grade.name +
+      "</strong> · 预计自付 ¥" +
+      actualCost.toLocaleString() +
+      " · " +
+      grade.treatDays +
+      '天<br><span style="color:var(--text-secondary);">适合' +
+      (gradeKey === "mild"
+        ? "感冒、擦伤、疲劳过度等轻微问题。"
+        : gradeKey === "moderate"
+          ? "持续发烧、骨折、肠胃炎等需要连续治疗的问题。"
+          : gradeKey === "severe"
+            ? "严重疾病或住院治疗。"
+            : "危重症抢救，费用极高，请谨慎选择。") +
+      "</span></div>";
+  });
+  body += "</div></div>";
+
+  var buttons = Object.keys(ILLNESS_GRADES).map(function (gradeKey) {
+    var grade = ILLNESS_GRADES[gradeKey];
+    return {
+      text: grade.icon + " " + grade.name,
+      cls: gradeKey === "mild" ? "btn-primary" : "btn-warning",
+      callback: function () {
+        var result = startTreatment(StateManager.getState(), gradeKey);
+        StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
+        if (!result.ok) return false;
+        if (typeof renderAll === "function") renderAll();
+      },
+    };
+  });
+  buttons.push({ text: "暂不治疗", cls: "" });
+  showModal({ title: "🏥 就医治疗", body: body, buttons: buttons });
+}
 function showMedicalInsuranceModal() {
   if (typeof showModal !== "function") return;
   var state = StateManager.getState();
@@ -274,6 +340,7 @@ if (typeof window !== "undefined") {
   window.tickMedical = tickMedical;
   window.tickRecovery = tickRecovery;
   window.getMedicalSummary = getMedicalSummary;
+  window.showMedicalTreatmentModal = showMedicalTreatmentModal;
   window.showMedicalInsuranceModal = showMedicalInsuranceModal;
 
   window.MECHANICS = window.MECHANICS || {};
