@@ -174,6 +174,7 @@
       if (cash >= 20) {
         state.resources.cash -= 20;
         prep.umbrella = true;
+        prep.umbrellaUses = 3;
         addVisiblePrepItem("umbrella");
         if (typeof addDailyTransaction === "function") {
           addDailyTransaction(
@@ -184,12 +185,12 @@
             "天气准备：雨伞",
           );
         }
-        results.push("☂️ 买了伞（¥20）");
+        results.push("☂️ 买了伞（¥20，可挡雨3次）");
       } else {
         results.push("⚠️ 钱不够买伞（需¥20）");
       }
     } else {
-      results.push("☂️ 已有伞");
+      results.push("☂️ 已有伞（剩余" + (prep.umbrellaUses || 1) + "次）");
     }
 
     // 买暖宝（雪天/寒潮健康损失减半）
@@ -197,6 +198,7 @@
       if (cash >= 50) {
         state.resources.cash -= 50;
         prep.warmPack = true;
+        prep.warmPackUses = 2;
         addVisiblePrepItem("thermal_underwear");
         if (typeof addDailyTransaction === "function") {
           addDailyTransaction(
@@ -207,12 +209,12 @@
             "天气准备：保暖用品",
           );
         }
-        results.push("🧣 买了暖宝（¥50）");
+        results.push("🧣 买了暖宝（¥50，可抗寒2次）");
       } else {
         results.push("⚠️ 钱不够买暖宝（需¥50）");
       }
     } else {
-      results.push("🧣 已有暖宝");
+      results.push("🧣 已有暖宝（剩余" + (prep.warmPackUses || 1) + "次）");
     }
 
     StateManager.addMessage("🌤️ 天气准备：" + results.join("，"), "info");

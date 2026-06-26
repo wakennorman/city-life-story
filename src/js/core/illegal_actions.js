@@ -230,6 +230,31 @@
     }
   }
 
+  function getLocationLawRiskMultiplier(locKey) {
+    var loc = typeof getLocation === "function" ? getLocation(locKey) : null;
+    if (!loc) return 1;
+    var mult = 1;
+    if (loc.type === "commercial" || loc.type === "institutional") mult += 0.25;
+    if (loc.type === "corporate" || locKey === "techPark") mult += 0.2;
+    if (loc.type === "industrial") mult -= 0.12;
+    if (loc.type === "residential") mult -= 0.05;
+    if (locKey === "slum") mult -= 0.08;
+    if (locKey === "suburb") mult -= 0.18;
+    if (locKey === "bank" || locKey === "gov_office" || locKey === "hospital")
+      mult += 0.3;
+    if (loc.footfall) {
+      mult += Math.max(-0.1, Math.min(0.2, (loc.footfall - 1) * 0.12));
+    }
+    return Math.max(0.65, Math.min(1.6, mult));
+  }
+
+  function getEffectiveCatchProb(action, locKey) {
+    return Math.max(
+      0.05,
+      Math.min(0.8, action.catchProb * getLocationLawRiskMultiplier(locKey)),
+    );
+  }
+
   // ====== 追加违法行为行动卡片 ======
   function addIllegalActions(state, actions) {
     if (state.player.phase !== "street") return;
@@ -241,6 +266,7 @@
 
     ILLEGAL_ACTIONS.forEach(function (a) {
       if (a.location && a.location !== loc) return;
+      var catchProb = getEffectiveCatchProb(a, loc);
       actions.push({
         id: a.id,
         name: a.name,
@@ -249,22 +275,22 @@
           "（道德-" +
           Math.abs(a.moralityDelta) +
           "，被抓率" +
-          Math.round(a.catchProb * 100) +
+          Math.round(catchProb * 100) +
           "%）",
         icon: a.icon,
         apCost: a.apCost,
         handler: function () {
-          _executeIllegalAction(state, a);
+          _executeIllegalAction(state, a, catchProb);
         },
       });
     });
   }
 
   // ====== 执行违法行为（内部）======
-  function _executeIllegalAction(state, action) {
+  function _executeIllegalAction(state, action, effectiveCatchProb) {
     var day = state.player.day || 0;
     // 判定是否被抓
-    var caught = Math.random() < action.catchProb;
+    var caught = Math.random() < (effectiveCatchProb || action.catchProb);
     if (caught) {
       // 被抓：拘留+罚款+道德扣
       var p = action.penalty;

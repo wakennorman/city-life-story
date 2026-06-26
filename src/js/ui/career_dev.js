@@ -412,7 +412,7 @@ function getCareerGuidanceHtml(state) {
           ? getDreamBonusText(dream)
           : dream.name) +
         "</div>"
-      : "<div>人生目标：未选择，可在个人成长中设定来获得路线加成。</div>") +
+      : "<div>人生目标：未选择；开局目标可提供路线加成，当前仍可自由发展。</div>") +
     "</div>" +
     '<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;font-size:10px;color:var(--text-muted);">' +
     "<div>行业<br><b>" +
@@ -426,6 +426,72 @@ function getCareerGuidanceHtml(state) {
     "</b></div><div>消耗<br><b>" +
     Math.round(cap.burnout || 0) +
     "</b></div></div></div>"
+  );
+}
+
+function getCareerRequirementText(level) {
+  if (!level) return "已到达当前路径顶层";
+  var parts = [];
+  if (level.reqEducation) parts.push("学历本科+");
+  if (level.reqWorkDays) parts.push("在职" + level.reqWorkDays + "天");
+  if (level.reqSocial) parts.push("人脉" + level.reqSocial + "+");
+  if (level.reqSkills) {
+    Object.keys(level.reqSkills).forEach(function (k) {
+      var skillLabel = typeof getSkillName === "function" ? getSkillName(k) : k;
+      parts.push(skillLabel + "Lv." + level.reqSkills[k]);
+    });
+  }
+  if (level.reqAttrs) {
+    var attrNames = {
+      physique: "体质",
+      intelligence: "智力",
+      agility: "敏捷",
+      mental: "心智",
+      charm: "魅力",
+    };
+    Object.keys(level.reqAttrs).forEach(function (k) {
+      parts.push((attrNames[k] || k) + level.reqAttrs[k] + "+");
+    });
+  }
+  return parts.length ? parts.join(" / ") : "无硬性门槛";
+}
+
+function getCareerDualPathHtml(state) {
+  var career = state.career || {};
+  var current = career.currentJob;
+  var nextLevel = current
+    ? getNextCareerLevel(current.path, current.levelId)
+    : null;
+  var cash = state.resources ? state.resources.cash || 0 : 0;
+  var discount = getCareerCapitalStartupDiscount(state);
+  var startupNeed = Math.max(0, Math.round(200000 * (1 - discount) - cash));
+  var jobTitle = current
+    ? (current.levelName || "当前职位") +
+      (nextLevel ? " → " + nextLevel.name : " → 已到路径顶层")
+    : "尚未入职 → 先选择一个职业路径";
+  var jobReq = current
+    ? getCareerRequirementText(nextLevel)
+    : "查看“上班族”子页，选择当前最接近条件的岗位";
+  return (
+    '<div class="section"><h3>🧭 事业双路径</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">' +
+    '<div class="card" style="padding:12px;">' +
+    '<div style="font-weight:700;color:var(--text-primary);">💼 上班族路径</div>' +
+    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
+    "<div>" +
+    jobTitle +
+    "</div><div>下一门槛：" +
+    jobReq +
+    "</div></div></div>" +
+    '<div class="card" style="padding:12px;">' +
+    '<div style="font-weight:700;color:var(--text-primary);">🚀 创业路径</div>' +
+    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
+    "<div>" +
+    getStartupReadinessNote(state) +
+    "</div><div>启动资金缺口：¥" +
+    startupNeed.toLocaleString() +
+    "</div></div></div>" +
+    "</div></div>"
   );
 }
 
@@ -657,6 +723,7 @@ function renderCareerJobs(state, parent) {
 function renderCareerOverview(state, parent) {
   var html = '<div class="tab-content">';
   html += getCareerGuidanceHtml(state);
+  html += getCareerDualPathHtml(state);
 
   // 创业摘要
   var startup = state.startup;

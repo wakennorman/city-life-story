@@ -579,19 +579,55 @@ const DAILY_PIPELINE = [
 
       // 雨伞：雨天直接减免疲劳
       if (prep.umbrella && isRainy) {
+        if (prep.umbrellaUses == null) prep.umbrellaUses = 3;
         state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 5);
+        prep.umbrellaUses -= 1;
         StateManager.addMessage(
-          "☂️ 雨伞挡住了风雨，疲劳感减轻了不少。",
+          "☂️ 雨伞挡住了风雨，疲劳感减轻了不少。（剩余" +
+            Math.max(0, prep.umbrellaUses) +
+            "次）",
           "info",
         );
+        if (prep.umbrellaUses <= 0) {
+          prep.umbrella = false;
+          StateManager.addMessage("☂️ 雨伞被风雨折腾坏了，需要重新准备。", "warning");
+        }
       }
 
       // 暖宝：寒冷天气健康保护
       if (prep.warmPack && isCold) {
+        if (prep.warmPackUses == null) prep.warmPackUses = 2;
         if (state.status) {
           state.status.health = Math.min(100, (state.status.health || 100) + 3);
         }
-        StateManager.addMessage("🧣 暖宝让你在寒风中感到一丝温暖。", "info");
+        prep.warmPackUses -= 1;
+        StateManager.addMessage(
+          "🧣 暖宝让你在寒风中感到一丝温暖。（剩余" +
+            Math.max(0, prep.warmPackUses) +
+            "次）",
+          "info",
+        );
+        if (prep.warmPackUses <= 0) {
+          prep.warmPack = false;
+          StateManager.addMessage("🧣 保暖用品已经用尽，需要重新准备。", "warning");
+        }
+      }
+    },
+  },
+
+  // === 发型设计临时魅力衰减 ===
+  {
+    name: "hair_style_decay",
+    fn: function (state) {
+      var flags = state.flags || {};
+      var boost = flags._hairStyleBoost || 0;
+      if (boost <= 0 || !state.player) return;
+      if (state.player.day === flags._hairStyleLastDay) return;
+      var decay = Math.min(boost, 1);
+      flags._hairStyleBoost = Math.max(0, boost - decay);
+      state.player.charm = Math.max(0, (state.player.charm || 0) - decay);
+      if (flags._hairStyleBoost <= 0) {
+        StateManager.addMessage("💇 发型带来的魅力加成已经自然消退。", "info");
       }
     },
   },
