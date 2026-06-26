@@ -292,29 +292,6 @@ const ACHIEVEMENTS = [
     },
   },
   {
-    id: "hidden_friend_all_npc",
-    name: "人缘极好",
-    desc: "你和每一个认识的NPC好感度都达到了60+。",
-    story: "每个人都记得你，每个人都愿意帮你。人脉，是另一种形式的财富。",
-    icon: "🤝",
-    category: "隐藏",
-    hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      var npcIds = [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ];
-      return npcIds.every(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity >= 60;
-      });
-    },
-  },
-  {
     id: "hidden_no_beg",
     name: "从不低头",
     desc: "生存了100天，从未乞讨过。",
@@ -2186,25 +2163,41 @@ const ACHIEVEMENTS = [
     },
   },
   {
-    id: "no_hate",
+    id: "hidden_friend_all_npc",
     name: "人缘极好",
-    desc: "从未让任何NPC好感降到负数",
-    story: "你得罪不了任何人。不是因为你圆滑，是因为你懂得尊重。",
-    icon: "😊",
+    desc: "你和每一个认识的NPC好感度都达到了60+。",
+    story: "每个人都记得你，每个人都愿意帮你。人脉，是另一种形式的财富。",
+    icon: "🤝",
     category: "隐藏",
     hidden: true,
     check: function (st) {
-      if (!st.relationships) return true;
-      return ![
+      if (!st.relationships) return false;
+      if (!st.player || st.player.day < 30) return false;
+      var rels = st.relationships;
+      var metAny = false;
+      var allHigh = true;
+      var npcIds = [
         "aunt_wang",
         "boss_li",
         "sister_zhang",
         "old_zhou",
         "xiao_mei",
         "chef_chen",
-      ].some(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity < 0;
-      });
+        "zhao_jie",
+        "chen_ge",
+        "a_jie",
+      ];
+      for (var i = 0; i < npcIds.length; i++) {
+        var r = rels[npcIds[i]];
+        if (r && typeof r.affinity === "number" && r.affinity > 0) {
+          metAny = true;
+          if (r.affinity < 60) {
+            allHigh = false;
+            break;
+          }
+        }
+      }
+      return metAny && allHigh;
     },
   },
   {

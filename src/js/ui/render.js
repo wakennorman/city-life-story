@@ -432,9 +432,10 @@ function renderSidebar(state) {
   renderNeedsBars(state);
   renderDebtInfo(state);
   renderDreamSection(state);
-  if (typeof renderDailyFocusSection === "function") {
-    renderDailyFocusSection(state);
-  }
+  // 今日重点已整合到行动页的"今日智能建议"中
+  // if (typeof renderDailyFocusSection === "function") {
+  //   renderDailyFocusSection(state);
+  // }
   // 学历已移到个人成长Tab的"🎓 学历"子Tab中
   // renderEduSection(state);
   renderReputationBadge(state);
@@ -811,49 +812,47 @@ function renderHeaderContext(state, loc, weatherDef, seasonDef) {
     null;
   var houseName = houseData ? houseData.name : "露宿街头";
   var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
-  var itemCount = (state.inventory.items || []).reduce(function (sum, item) {
-    return sum + (item.qty || 0);
-  }, 0);
-  var totalCap = state.inventory.capacity || 0;
-  var upgradeTip = getHousingUpgradeTip(state);
+  // 住所和背包信息已移到时间槽下方展示，此处只做简洁展示
   el.innerHTML =
-    '<div style="display:flex;flex-direction:column;gap:2px;min-width:0;">' +
-    '<div style="display:flex;align-items:center;gap:4px;min-width:0;">' +
-    '<span class="context-chip">' +
+    '<span class="context-chip" style="font-size:11px;">' +
     houseIcon +
     " " +
     houseName +
-    "</span>" +
-    '<span class="context-chip">🎒 ' +
-    itemCount +
-    "/" +
-    totalCap +
-    (state.housing && state.housing.storageRented ? " · 已租仓库" : "") +
-    "</span>" +
-    "</div>" +
-    (upgradeTip
-      ? '<div style="font-size:10px;color:var(--text-muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">💡 ' +
-        upgradeTip +
-        "</div>"
-      : "") +
-    "</div>";
-  el.title = upgradeTip
-    ? "当前住所：" + houseName + "；" + upgradeTip
-    : "当前住所：" + houseName;
+    "</span>";
+  el.title = "当前住所：" + houseName;
 }
 
 function getHousingUpgradeTip(state) {
   if (typeof HOUSING_TIERS === "undefined" || !Array.isArray(HOUSING_TIERS)) {
     return "";
   }
+  if (typeof getAvailableHousingTiersAtLocation !== "function") return "";
+  var locKey = state.trade ? state.trade.currentLocation : "slum";
+  var availableTiers = getAvailableHousingTiersAtLocation(locKey);
   var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  var nextTier = HOUSING_TIERS[currentTier + 1];
+  // 找到当前地点可选的、比当前高的最低档
+  var nextTier = null;
+  for (var i = 0; i < availableTiers.length; i++) {
+    if (availableTiers[i] > currentTier) {
+      nextTier = HOUSING_TIERS[availableTiers[i]];
+      break;
+    }
+  }
   if (!nextTier) return "";
-  var locationName = "城中村";
-  if (nextTier.tier >= 4 && nextTier.tier <= 6) locationName = "商业区";
-  if (nextTier.tier === 5) locationName = "郊区";
+  var locName = getLocationChineseName(locKey);
+  var actualRent =
+    typeof getHousingRentAtLocation === "function"
+      ? getHousingRentAtLocation(locKey, nextTier.tier)
+      : nextTier.rent;
   return (
-    "去" + locationName + "可升级为" + (nextTier.icon || "🏠") + nextTier.name
+    "在" +
+    locName +
+    "可升级为" +
+    (nextTier.icon || "🏠") +
+    nextTier.name +
+    "（¥" +
+    actualRent +
+    "/天）"
   );
 }
 
@@ -1837,7 +1836,7 @@ function _growthStat(label, value, color) {
   );
 }
 
-/** 属性雷达图 (Canvas) */
+/** 时间槽 + 住所/背包信息 */
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",
@@ -1847,24 +1846,48 @@ function renderTimeSlot(state, parent) {
   const slot = state.player.timeSlot;
   const div = document.createElement("div");
   div.id = "time-slot-indicator";
+
+  // 住所和数据
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData ? houseData.name : "露宿街头";
+  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
+  var itemCount = 0;
+  if (state.inventory && state.inventory.items) {
+    itemCount = state.inventory.items.reduce(function (sum, item) {
+      return sum + (item.qty || 0);
+    }, 0);
+  }
+  var totalCap = state.inventory ? state.inventory.capacity || 0 : 0;
+  var hasStorage = state.housing && state.housing.storageRented ? "📦仓" : "";
+
   const ap = state.player.actionPoints || 0;
   const maxAp = state.player.maxActionPoints || 100;
   // 低AP闪烁警告（≤30时加CSS闪烁动画）
   const lowAp = ap <= 20 && ap > 0;
   const apColor =
     ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
-  div.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:8px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  div.style.cssText = `display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:8px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
   div.innerHTML = `
-    <span>📅 第 <strong>${state.player.day}</strong> 天</span>
-    <span>|</span>
-    <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
-    <span style="font-size:11px;margin-left:8px;">
-      ⚡ <strong style="color:${apColor};${lowAp ? "animation: ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
-      ${lowAp ? ` <span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠仅剩${ap}点</span>` : ""}
-    </span>
-    <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">
-      ${state.player.phase === "corporate" ? `Q${state.player.corpQuarter}` : ""}
-    </span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span>📅 第 <strong>${state.player.day}</strong> 天</span>
+      <span>|</span>
+      <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+      <span style="font-size:11px;margin-left:4px;">
+        ⚡ <strong style="color:${apColor};${lowAp ? "animation: ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
+        ${lowAp ? ` <span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠仅剩${ap}点</span>` : ""}
+      </span>
+      <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">
+        ${state.player.phase === "corporate" ? `Q${state.player.corpQuarter}` : ""}
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary);padding-left:2px;">
+      <span>🎒 ${itemCount}/${totalCap}${hasStorage}</span>
+      <span style="color:var(--text-muted);">·</span>
+      <span>${houseIcon} ${houseName}</span>
+    </div>
   `;
   parent.appendChild(div);
 }
@@ -1982,6 +2005,55 @@ function getDailyActionTips(state) {
     tips.push("💸 现金快用完了，今天务必赚点钱补充。");
   if (villageDebt > 0 && day % 10 === 0)
     tips.push("🏘️ 村长贷款日息0.35%，欠款越久越多，有钱就去还一点。");
+
+  // === 今日重点整合（原daily_focus内容）===
+  // 装备耐久预警
+  var equipped = (state.equipment && state.equipment.equipped) || {};
+  var dur = state._equipmentDurability || {};
+  Object.keys(equipped).forEach(function (slot) {
+    var itemId = equipped[slot];
+    if (!itemId) return;
+    var d = dur[itemId];
+    if (!d || typeof d.current !== "number" || typeof d.max !== "number")
+      return;
+    var pct = d.current / d.max;
+    if (pct < 0.2) {
+      urgent.push(
+        "🔧 " + itemId + "耐久仅" + Math.round(pct * 100) + "%，快修理别报废！",
+      );
+    }
+  });
+  // 露宿街头提示
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  if (currentTier === 0 && day > 3) {
+    urgent.push("💡露宿街头不利于身心健康，请至少去城中村升级为🛏️合租床位");
+  }
+  // 35岁危机预警
+  if (p.phase === "street" && p.age >= 33 && p.age < 36) {
+    tips.push("⏳ 接近35岁分水岭，现在还来得及转型或上岸！");
+  }
+  // 极低属性预警
+  if ((p.intelligence || 0) < 15 && day > 20) {
+    tips.push(
+      "📚 智力过低（" + (p.intelligence || 0) + "），去图书馆或夜校提升一下。",
+    );
+  }
+  if ((p.physique || 0) < 15 && day > 20) {
+    tips.push(
+      "💪 体质过低（" +
+        (p.physique || 0) +
+        "），影响体力工作，多锻炼或补充营养。",
+    );
+  }
+  // 梦想进度
+  if (typeof getDreamProgress === "function" && day > 30) {
+    try {
+      var dreamProg = getDreamProgress(state);
+      if (dreamProg >= 60 && dreamProg < 100) {
+        tips.push("🌟 梦想进度 " + dreamProg + "%！继续努力完成下一阶段。");
+      }
+    } catch (e) {}
+  }
 
   // ===== 基础层建议（mental≥0，所有人可见）=====
 
@@ -2368,6 +2440,16 @@ function getDailyActionTips(state) {
 
 function renderActionsTab(state, parent) {
   var actions = getAvailableActions(state);
+
+  // 移除"地点不符"的冗余行动（不在当前地点的行动直接不展示）
+  actions = actions.filter(function (a) {
+    return !(
+      a.disabled &&
+      a.reqFail &&
+      typeof a.reqFail === "string" &&
+      a.reqFail.indexOf("地点不符") === 0
+    );
+  });
 
   // === 地点氛围描写（每日轮换，让城市有生命感）===
   if (typeof getLocationFlavor === "function") {
@@ -2761,7 +2843,7 @@ function renderMapTab(state, parent) {
            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';">
           <div style="font-weight:600;color:var(--accent);">📍 ${dest.name}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${destType}</div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</div>
         </button>
       `;
     }
@@ -2782,8 +2864,7 @@ function renderMapTab(state, parent) {
     <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;">
       点击上方"快速出行"选择目的地后，下方按钮激活；或直接点选交通方式查看可达地点。
     </p>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-      <button class="transit-btn" data-mode="bike" style="
+    <div id="transit-buttons" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;"><button class="transit-btn" data-mode="bike" style="
         padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
         border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
         <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
@@ -2807,6 +2888,24 @@ function renderMapTab(state, parent) {
     </div>
     <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
   `;
+  // v4.0 自驾出行按钮（有车时动态添加）
+  var ownCars =
+    state.investment && state.investment.cars ? state.investment.cars : [];
+  if (ownCars.length > 0) {
+    var transitBtns = transitWrap.querySelector("#transit-buttons");
+    if (transitBtns) {
+      var carBtn = document.createElement("button");
+      carBtn.className = "transit-btn car-btn";
+      carBtn.dataset.mode = "car";
+      carBtn.style.cssText =
+        "padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;";
+      carBtn.innerHTML =
+        '<div style="font-weight:600;color:var(--accent);">🚗 自驾</div>' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥5油费 · 任意直达</div>' +
+        '<div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">用自己的车出行，不限跳数</div>';
+      transitBtns.appendChild(carBtn);
+    }
+  }
   container.appendChild(transitWrap);
 
   // v3.2 地铁沿线大站定义（扩展：新增城中村+批发市场）
@@ -2872,6 +2971,10 @@ function renderMapTab(state, parent) {
           available = reachableList.slice();
           priceInfo = "¥10-40（按距离）";
           apInfo = "行动力 -3（最快但最贵）";
+        } else if (mode === "car") {
+          available = reachableList.slice();
+          priceInfo = "¥5油费";
+          apInfo = "行动力 -2（自驾快捷）";
         }
         if (available.length === 0) {
           result.innerHTML =
@@ -2881,7 +2984,12 @@ function renderMapTab(state, parent) {
         result.innerHTML =
           '<div style="margin-bottom:6px;">' +
           "<strong>" +
-          { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[mode] +
+          {
+            bike: "🚲 共享单车",
+            metro: "🚇 地铁",
+            taxi: "🚕 打车",
+            car: "🚗 自驾",
+          }[mode] +
           "</strong> · " +
           priceInfo +
           " · " +
@@ -2898,7 +3006,14 @@ function renderMapTab(state, parent) {
                   : mode === "metro"
                     ? 4
                     : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
-              const ap = mode === "bike" ? 6 : mode === "metro" ? 5 : 3; // v3.2 单车AP-8→AP-6
+              const ap =
+                mode === "bike"
+                  ? 6
+                  : mode === "metro"
+                    ? 5
+                    : mode === "car"
+                      ? 2
+                      : 3; // v3.2 单车AP-8→AP-6
               return (
                 '<button class="transit-go-btn" data-dest="' +
                 k +
@@ -2970,24 +3085,24 @@ function renderMapTab(state, parent) {
   const mapGrid = document.createElement("div");
   mapGrid.style.cssText = "position:relative;width:100%;min-height:460px;";
 
-  // 地点坐标映射（百分比定位）
-  // v3.0 修复：补齐 suburb/entertainment/temple 三个地点的坐标
-  // 旧版只有 9 个坐标，导致这 3 个地点在地图网格上根本不显示
+  // v4.0 地图坐标重构：按真实城市地理重新排布
+  // 商业区在中心，郊区/工业区在边缘，寺/校在远端
   const positions = {
-    techPark: { x: 65, y: 5 },
-    commercialDist: { x: 58, y: 22 },
-    wholesaleMarket: { x: 28, y: 18 },
-    construction: { x: 70, y: 38 },
-    factoryZone: { x: 35, y: 40 },
-    hospital: { x: 78, y: 30 },
-    slum: { x: 30, y: 55 },
-    bank: { x: 12, y: 50 },
-    park: { x: 50, y: 62 },
-    school: { x: 42, y: 72 },
-    trainingCenter: { x: 55, y: 85 },
-    suburb: { x: 75, y: 70 }, // 居住区（右下）
-    entertainment: { x: 65, y: 80 }, // 娱乐区（中下）
-    temple: { x: 18, y: 75 }, // 寺庙（左下）
+    commercialDist: { x: 50, y: 38 }, // 市中心
+    bank: { x: 58, y: 22 }, // 金融区（市中心偏上）
+    gov_office: { x: 42, y: 18 }, // 政务区（市中心偏上）
+    techPark: { x: 72, y: 22 }, // 科技园（东侧）
+    entertainment: { x: 78, y: 42 }, // 娱乐城（东侧偏下）
+    hospital: { x: 62, y: 52 }, // 医院（南侧偏右）
+    slum: { x: 30, y: 48 }, // 城中村（西侧）
+    wholesaleMarket: { x: 22, y: 32 }, // 批发市场（西北）
+    construction: { x: 42, y: 58 }, // 建筑工地（南侧）
+    park: { x: 35, y: 68 }, // 公园（南侧偏左）
+    school: { x: 55, y: 72 }, // 大学城（南侧偏右）
+    trainingCenter: { x: 62, y: 82 }, // 培训中心（最下偏右）
+    temple: { x: 35, y: 82 }, // 寺庙（最下偏左）
+    factoryZone: { x: 18, y: 58 }, // 工业区（西南）
+    suburb: { x: 18, y: 75 }, // 郊区（最下偏左）
   };
 
   // SVG连线
@@ -3001,6 +3116,8 @@ function renderMapTab(state, parent) {
   const drawConnections = () => {
     svg.innerHTML = "";
     const mapRect = mapGrid.getBoundingClientRect();
+    const curKey = locKey;
+    const currentReachable = TRAVEL_GRAPH[curKey] || [];
     for (const [from, toList] of Object.entries(TRAVEL_GRAPH)) {
       const fromEl = mapGrid.querySelector(`[data-map-loc="${from}"]`);
       if (!fromEl) continue;
@@ -3013,14 +3130,20 @@ function renderMapTab(state, parent) {
         const y1 = fromRect.top + fromRect.height / 2 - mapRect.top;
         const x2 = toRect.left + toRect.width / 2 - mapRect.left;
         const y2 = toRect.top + toRect.height / 2 - mapRect.top;
+        const isFromCurrent = from === curKey;
+        const isToCurrent = to === curKey;
+        const isCurrentPath = isFromCurrent || isToCurrent;
         const line = document.createElementNS(svgNS, "line");
         line.setAttribute("x1", x1);
         line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
-        line.setAttribute("stroke", "rgba(0,180,216,0.2)");
-        line.setAttribute("stroke-width", "1.5");
-        line.setAttribute("stroke-dasharray", "4,3");
+        line.setAttribute(
+          "stroke",
+          isCurrentPath ? "rgba(0,180,216,0.5)" : "rgba(0,180,216,0.12)",
+        );
+        line.setAttribute("stroke-width", isCurrentPath ? "2.5" : "1");
+        line.setAttribute("stroke-dasharray", isCurrentPath ? "6,3" : "3,4");
         svg.appendChild(line);
       }
     }
@@ -3143,7 +3266,7 @@ function renderMapTab(state, parent) {
           <strong style="color:${isCur ? "var(--accent)" : "var(--text-primary)"};">${isCur ? "📍 " : ""}${mapLoc.name}</strong>
           <span style="font-size:9px;color:var(--text-muted);">${mapLoc.type === "commercial" ? "商业" : mapLoc.type === "industrial" ? "工业" : mapLoc.type === "residential" ? "居住" : mapLoc.type === "service" ? "服务" : mapLoc.type === "education" ? "教育" : mapLoc.type === "corporate" ? "职场" : mapLoc.type === "recreation" ? "休闲" : mapLoc.type === "institutional" ? "机构" : ""}</span>
         </div>
-        <div style="margin-top:2px;color:var(--text-secondary);font-size:10px;">${mapLoc.desc}</div>
+        <div style="margin-top:2px;color:var(--text-secondary);font-size:10px;">${mapLoc.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${isCur ? "📍 当前位置" : canReach ? "🚶 " + getLocationHops(locKey, key) + "跳可达" : "🔒 需先探索中间区"}</div>
         ${badgeStr ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;">${badgeStr}</div>` : ""}
       </div>`;
   }

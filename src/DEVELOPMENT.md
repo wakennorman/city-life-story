@@ -1,6 +1,82 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-26（第三轮审查：人生事务与城市服务体验修复）
+> 最后更新: 2026-06-27（综合体验改进6项修复）
+
+## 2026-06-27 — 综合体验改进：住所/成就/UI/地图/建议整合
+
+本轮针对用户反馈的6个体验问题进行修复，覆盖 legacy 正式入口（`src/` 下）。所有改动在旧单页面架构内完成，不涉及 TS 数据目录。
+
+### 修复1：住所系统地点合理化（items.js / main.js / state.js / daily_pipeline.js / render.js）
+
+- **问题**：城中村"住所"选项中出现别墅、豪华公寓、豪宅等不合理选项（灰色不可选）
+- **修复**：引入 `HOUSING_LOCATION_AVAIL` 和 `HOUSING_LOCATION_RENT_MOD` 系统
+  - 城中村(slum)：合租床位/单间/一居室（tier 1-3）
+  - 郊区(suburb)：合租床位/单间/一居室/别墅（tier 1-3, 5），租金打8折
+  - 商业区(commercialDist)：合租床位/单间/一居室/豪华公寓/豪宅（tier 1-4, 6），租金×1.6
+  - 其他地点按地理和经济规律分配档次和租金倍率
+  - 每日租金按 `rentedAt` 地点计算实际金额
+  - 新增 `getHousingRentAtLocation()` / `getAvailableHousingTiersAtLocation()` 辅助函数
+  - 新增 `state.housing.rentedAt` 字段记录租房地点
+
+### 修复2：移除"地点不符"冗余行动（render.js）
+
+- **问题**：不在正确地点时，行动卡显示为"地点不符：xxx"禁用状态，冗余且混乱
+- **修复**：在 `renderActionsTab()` 入口处立即过滤掉 `disabled && reqFail 以"地点不符"开头`的行动
+
+### 修复3："人缘极好"成就开局弹出（achievements.js）
+
+- **问题**：`no_hate` 成就 `check()` 中 `if (!st.relationships) return true` 导致开局即解锁
+- **修复**：改为 `return false`（无关系数据时不解锁），重写为双版本检测：
+  - `hidden_friend_all_npc`：所有NPC好感≥60（条件收紧），Day≥30且至少认识1人
+
+### 修复4：地图系统重构（locations.js / render.js）
+
+- **问题**：TRAVEL_GRAPH 连接线过多过乱，地理逻辑不清，郊区不知道如何到达
+- **修复**：
+  - 重新设计 TRAVEL_GRAPH（每个节点2-4条连接，商业区=核心枢纽，郊区=最外围）
+  - 重新排布地图坐标（商业区居中，工业区/郊区在边缘）
+  - SVG连接线从当前位置出发的高亮显示（更粗/更低透明度/更显眼）
+  - 快速出行和地点速查表添加跳数（hop count）显示
+  - 新增自驾出行按钮（有车时显示，¥5油费+2AP，任意直达）
+
+### 修复5：今日重点合并入今日建议（daily_focus.js / render.js / index.html）
+
+- **问题**："今日重点"与"今日建议"内容重叠
+- **修复**：
+  - 将daily_focus中的关键项（装备耐久/极低属性/青春危机预警/梦想进度）整合进 `getDailyActionTips()`
+  - 隐藏侧边栏 `#daily-focus-section`（CSS `display:none !important`）
+  - 从 `renderSidebar()` 移除调用
+  - 露宿街头提示改为移到"今日建议"中（仅tier0时显示）
+
+### 修复6：UI布局重新组织（render.js / index.html）
+
+- **问题**："🌃 露宿街头"和"🎒 0/20"放在顶部header-area中，与时间槽分离
+- **修复**：
+  - `renderTimeSlot()` 增加子行显示"🎒 0/20 | 🌃 住所名"
+  - `renderHeaderContext()` 精简为只显示住所图标+名称（小尺寸）
+  - 住所升级提示仅tier0时在header显示，其他情况移到"今日建议"中
+
+### 验证
+
+- `node --check` 全部9个修改文件语法通过 ✅
+- `npm run check:js` 114文件全通过 ✅
+- `npm run typecheck` 通过 ✅
+- `python build.py`（4277.2 KB）✅
+- `npm run build`（Vite构建）✅
+
+### 影响文件
+
+| 文件                              | 改动说明                                                             |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `src/js/data/items.js`            | +HOUSING_LOCATION_AVAIL/RENT_MOD系统，住所层级增加可用地点字段       |
+| `src/js/data/locations.js`        | TRAVEL_GRAPH完全重构，连接数简化，地理逻辑优化                       |
+| `src/js/main.js`                  | 住所升级改用地点过滤，显示实际租金和地点名                           |
+| `src/js/phase1/daily_pipeline.js` | 房租扣除改为读取地点计算实际租金                                     |
+| `src/js/core/state.js`            | housing新增rentedAt字段                                              |
+| `src/js/core/achievements.js`     | 人缘极好成就check逻辑修复，去除开局弹出bug                           |
+| `src/js/ui/render.js`             | 地图坐标/连接/跳数/自驾；行动过滤；时间槽+住所；header精简；建议整合 |
+| `src/js/ui/daily_focus.js`        | 核心逻辑保留但不再由renderSidebar调用                                |
+| `src/index.html`                  | daily-focus-section隐藏标记                                          |
 
 ## 2026-06-26 — 第三轮审查：人生事务与城市服务体验修复
 

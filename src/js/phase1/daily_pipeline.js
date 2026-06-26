@@ -114,8 +114,13 @@ const DAILY_PIPELINE = [
       var house = getCurrentHousing(state);
       var selfLiving =
         state.investment && state.investment.selfLivePropertyId != null;
-      if (house.rent > 0 && !selfLiving) {
-        var rentAmount = house.rent;
+      var locKey = state.housing?.rentedAt || "slum";
+      var actualRent =
+        typeof getHousingRentAtLocation === "function"
+          ? getHousingRentAtLocation(locKey, house.tier)
+          : house.rent;
+      if (actualRent > 0 && !selfLiving) {
+        var rentAmount = actualRent;
         // 王大婶好感60解锁租房折扣（-¥50/天）
         if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
           rentAmount -= 50;

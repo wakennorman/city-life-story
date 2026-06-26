@@ -875,6 +875,64 @@ function isItemNpcGift(itemId, npcId) {
 }
 
 // ====== 住所层级定义 ======
+// 每层住所可在哪些地点升级（tier 0=露宿，任意地点）
+// 各地点租金倍率：城中村=1.0(基准), 郊区=0.8(更便宜),
+//   工业区=1.1, 大学城=1.0, 商业区=1.5(最贵), 科技园=1.3
+const HOUSING_LOCATION_RENT_MOD = {
+  slum: 1.0,
+  suburb: 0.8,
+  factoryZone: 1.1,
+  construction: 1.2,
+  school: 1.0,
+  commercialDist: 1.6,
+  techPark: 1.3,
+  park: 1.0,
+  wholesaleMarket: 1.1,
+  entertainment: 1.4,
+  hospital: 1.2,
+  bank: 1.3,
+  gov_office: 1.0,
+  temple: 0.7,
+  trainingCenter: 1.1,
+};
+// 哪些地点可以租到哪些档位的住所
+// key=地点, value=可租的tier数组(不包括tier0, tier0任意地点都可)
+const HOUSING_LOCATION_AVAIL = {
+  slum: [1, 2, 3],
+  suburb: [1, 2, 3, 5],
+  commercialDist: [1, 2, 3, 4, 6],
+  factoryZone: [1, 2, 3],
+  construction: [1, 2],
+  school: [1, 2, 3],
+  techPark: [2, 3],
+  park: [1, 2],
+  wholesaleMarket: [1, 2],
+  entertainment: [1, 2, 3],
+  hospital: [1],
+  bank: [2, 3],
+  gov_office: [1],
+  temple: [1],
+  trainingCenter: [1, 2],
+};
+/** 计算指定地点、指定住所tier的实际租金 */
+function getHousingRentAtLocation(locKey, tier) {
+  if (tier <= 0) return 0;
+  var baseRent = 0;
+  var tData = HOUSING_TIERS[tier];
+  if (tData) baseRent = tData.rent || 0;
+  var mod = HOUSING_LOCATION_RENT_MOD[locKey] || 1.0;
+  return Math.round(baseRent * mod);
+}
+/** 获取当前地点可选住所tier列表（不含tier0） */
+function getAvailableHousingTiersAtLocation(locKey) {
+  return HOUSING_LOCATION_AVAIL[locKey] || [1];
+}
+/** 获取地点中文名 */
+function getLocationChineseName(locKey) {
+  var loc = typeof getLocation === "function" ? getLocation(locKey) : null;
+  return loc ? loc.name : locKey;
+}
+
 const HOUSING_TIERS = [
   {
     tier: 0,
@@ -900,7 +958,7 @@ const HOUSING_TIERS = [
     capacity: 50,
     fatigueRecovery: 25,
     hygieneBonus: 5,
-    desc: "城中村合租屋的一个床位，好歹有个遮风挡雨的地方。",
+    desc: "合租屋的一个床位，好歹有个遮风挡雨的地方。",
     icon: "🛏️",
     happinessBonus: 0,
     canCook: false,
@@ -944,7 +1002,7 @@ const HOUSING_TIERS = [
     tier: 4,
     name: "豪华公寓",
     cost: 10000,
-    rent: 150,
+    rent: 200,
     capacity: 400,
     fatigueRecovery: 70,
     hygieneBonus: 25,
@@ -960,7 +1018,7 @@ const HOUSING_TIERS = [
     tier: 5,
     name: "别墅",
     cost: 50000,
-    rent: 500,
+    rent: 600,
     capacity: 1000,
     fatigueRecovery: 100,
     desc: "郊区独立别墅，花园、车库、书房一应俱全。真正的成功人士住所。",
@@ -982,7 +1040,7 @@ const HOUSING_TIERS = [
     tier: 6,
     name: "豪宅",
     cost: 200000,
-    rent: 1000,
+    rent: 1500,
     capacity: 2000,
     fatigueRecovery: 150,
     desc: "市中心顶级豪宅，私人电梯、空中花园、270度江景。站在顶层俯瞰这座城市。",

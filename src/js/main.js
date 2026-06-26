@@ -1984,45 +1984,82 @@ function getAvailableActions(state) {
       });
     }
 
-    // === 住所系统 ===
-    if (locKey === "slum") {
-      const currentTier = state.housing?.tier || 0;
-      // HOUSING_TIERS 定义在 data/items.js 中（全局常量）
+    // === 住所系统（多处地点均可租房，各地点档次和价格不同）===
+    var housingLocs = Object.keys(HOUSING_LOCATION_AVAIL);
+    if (housingLocs.indexOf(locKey) >= 0) {
+      var availableTiers = getAvailableHousingTiersAtLocation(locKey);
+      var currentTier = state.housing?.tier || 0;
 
       // 显示当前住所
-      const curHouse = HOUSING_TIERS[currentTier];
+      var curHouse = HOUSING_TIERS[currentTier];
+      var curRent = getHousingRentAtLocation(
+        state.housing?.rentedAt || locKey,
+        currentTier,
+      );
       actions.push({
         id: "housing_current",
-        name: `当前住所：${curHouse.name}`,
-        desc: `容量+${curHouse.capacity} | 睡眠恢复疲劳-${curHouse.fatigueRecovery} | ${curHouse.desc}${curHouse.rent > 0 ? ` | 日租¥${curHouse.rent}/天` : ""}`,
+        name: "当前住所：" + curHouse.name,
+        desc:
+          "容量+" +
+          curHouse.capacity +
+          " | 睡眠恢复疲劳-" +
+          curHouse.fatigueRecovery +
+          " | " +
+          curHouse.desc +
+          (curRent > 0 ? " | 日租¥" + curRent + "/天" : ""),
         icon: curHouse.icon,
         disabled: true,
       });
 
-      // 可升级的住所
-      for (let t = currentTier + 1; t < HOUSING_TIERS.length; t++) {
-        const house = HOUSING_TIERS[t];
-        const canAfford = state.resources.cash >= house.cost;
-        actions.push({
-          id: "housing_upgrade_" + t,
-          name: `升级到${house.name}`,
-          desc: `${house.desc} 一次性付¥${house.cost} + 日租¥${house.rent}/天`,
-          icon: house.icon,
-          costEstimate: house.cost,
-          disabled: !canAfford,
-          reqFail: !canAfford ? `需 ¥${house.cost}` : null,
-          handler: () => {
-            state.resources.cash -= house.cost;
-            state.housing.tier = t;
-            state.housing.rentedDay = state.player.day;
-            state.inventory.capacity =
-              house.capacity + (state.housing.storageCapacity || 0);
-            StateManager.addMessage(
-              `🏠 搬进了${house.name}！容量提升至${state.inventory.capacity}。`,
-              "success",
-            );
-          },
-        });
+      // 可升级的住所（只显示当前地点可选的档次，且比当前高）
+      for (var tI = 0; tI < availableTiers.length; tI++) {
+        var t = availableTiers[tI];
+        if (t <= currentTier) continue;
+        var house = HOUSING_TIERS[t];
+        if (!house) continue;
+        var actualRent = getHousingRentAtLocation(locKey, t);
+        var canAfford = state.resources.cash >= house.cost;
+        (function (tier, tierHouse, tierRent) {
+          actions.push({
+            id: "housing_upgrade_" + tier,
+            name:
+              "租" +
+              tierHouse.name +
+              "（" +
+              getLocationChineseName(locKey) +
+              "）",
+            desc:
+              tierHouse.desc +
+              " 一次性¥" +
+              tierHouse.cost +
+              " + 日租¥" +
+              tierRent +
+              "/天",
+            icon: tierHouse.icon,
+            costEstimate: tierHouse.cost,
+            disabled: !canAfford,
+            reqFail: !canAfford ? "需 ¥" + tierHouse.cost : null,
+            handler: function () {
+              state.resources.cash -= tierHouse.cost;
+              state.housing.tier = tier;
+              state.housing.rentedDay = state.player.day;
+              state.housing.rentedAt = locKey;
+              var baseCap = tierHouse.capacity;
+              state.inventory.capacity =
+                baseCap + (state.housing.storageCapacity || 0);
+              StateManager.addMessage(
+                "🏠 搬进了" +
+                  tierHouse.name +
+                  "！容量提升至" +
+                  state.inventory.capacity +
+                  "。日租¥" +
+                  tierRent +
+                  "/天。",
+                "success",
+              );
+            },
+          });
+        })(t, house, actualRent);
       }
     }
 
