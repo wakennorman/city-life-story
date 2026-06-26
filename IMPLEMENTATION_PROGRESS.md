@@ -3,15 +3,27 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
-## 2026-06-26 第三轮审查：人生事务与城市服务体验修复
+## 2026-06-27 第四轮审查：内容扩充与双轨桥接强化
 
-| #   | 任务                  | 状态 | 说明                                                                  |
-| --- | --------------------- | ---- | --------------------------------------------------------------------- |
-| A   | 现状摸底              | ✅   | 刷新 `memory/overview.md` 为第三轮双轨架构实况                        |
-| B   | 问题诊断              | ✅   | 刷新 `memory/diagnosis.md`，定位 CSS 结构、医疗入口、服务提示等       |
-| C   | 改进方案              | ✅   | 刷新 `memory/improvement_plan.md`，列出 P0/P1 可执行方案              |
-| D   | 人生事务/城市服务修复 | ✅   | CSS 结构、医疗治疗入口、服务灰显提示、地点中文、日志滚动              |
-| E   | 验证                  | ✅   | `check:js` / `typecheck` / `python build.py` / `npm run build` 均通过 |
+| #   | 任务                     | 状态 | 说明                                                                                     |
+| --- | ------------------------ | ---- | ---------------------------------------------------------------------------------------- |
+| A   | 现状摸底                 | ✅   | 读取 memory/overview.md/diagnosis.md/improvement_plan.md，确认上轮遗留问题               |
+| B   | P0 CSS闭合修复           | ✅   | style.css 末尾 @media(max-width:480px) 补闭合 `}`                                        |
+| C   | P0 TS事件bridge首批接入  | ✅   | bridge 新增 WEBAPP_TYPED_EVENTS(5个)+registerTypedEventBridge()，事件注入 RANDOM_EVENTS  |
+| D   | P1 TS事件目录扩充        | ✅   | events/index.ts: 12→19个事件（+7城市生存场景）；bridge池：5→10个                        |
+| E   | P1 创业减免明细增强      | ✅   | getStartupReadinessNote() 展示四维权重+burnout警告+建议目标值                            |
+| F   | 验证                     | ✅   | `check:js` 114文件 / `typecheck` / `python build.py` / `npm run build` 全部通过         |
+
+### 本轮落地
+
+| #   | 项目                       | 文件                                         | 验证 |
+| --- | -------------------------- | -------------------------------------------- | ---- |
+| 1   | CSS媒体查询闭合修复        | `src/css/style.css`                          | ✅   |
+| 2   | TS事件bridge首批(5个)      | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
+| 3   | TS事件目录19个             | `src/app/data/events/index.ts`               | ✅   |
+| 4   | bridge事件池扩充至10个     | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
+| 5   | 创业减免明细四维展示       | `src/js/ui/career_dev.js`                    | ✅   |
+
 
 ## 2026-06-26 城市浮生记审查改进与扩展
 

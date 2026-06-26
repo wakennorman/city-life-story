@@ -52,16 +52,22 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：综合体验改进6项修复（2026-06-27）
-  - **住所系统地点化**：城中村不再出现别墅/豪华公寓/豪宅；引入 `HOUSING_LOCATION_AVAIL/RENT_MOD` 按地点分档次和租金倍率；郊区可租别墅（8折），商业区可租豪华公寓/豪宅（1.6倍）；每日租金按实际租房地点计算
-  - **移除"地点不符"行动**：不在正确地点的行动不再以禁用卡片显示，直接过滤
-  - **"人缘极好"成就修复**：改 check 逻辑为"所有NPC好感≥60、Day≥30、至少认识1人"；修复开局即弹出的bug
-  - **地图重构**：TRAVEL_GRAPH 重新设计为"商业区=核心枢纽，郊区=最外围"的树状拓扑（每节点2-4条连接）；地图坐标重新排布（中心→商业区，外围→工业区/郊区）；连接线从当前位置高亮；跳数显示；自驾出行按钮（有车时显示，¥5+2AP，任意直达）
-  - **今日重点→今日建议整合**：侧边栏"今日重点"移除，内容合并进行动页"今日智能建议"；露宿街头提示移入建议面板
-  - **UI布局重组**：住所/背包信息移到时间槽子行（`renderTimeSlot`），header 仅保留住所图标
-  - **验证**：`node --check` 9文件、`npm run check:js`、`npm run typecheck`、`python build.py`(4277.2 KB)、`npm run build` 全部通过
+- **最新一次工作**：第四轮审查 — 内容扩充与双轨桥接强化（2026-06-27）
+  - **CSS P0修复**：style.css 末尾 `@media(max-width:480px)` 补闭合 `}`，媒体查询结构恢复正确
+  - **TS事件bridge首批接入**：webapp_runtime_bridge.js 新增 `WEBAPP_TYPED_EVENTS`（10个城市生存事件）和 `registerTypedEventBridge()`；bridge脚本加载时自动推入 `RANDOM_EVENTS` 池（去重保护）；事件涵盖 street/corporate 两个 phase，含条件过滤（cash/phase/flags等）
+  - **TS事件目录扩充**：src/app/data/events/index.ts 从 12 个事件扩充至 19 个（+7：劳务中介/停电/借贷广告/办公室摩擦/高温求生/技能换资源/夜市摊位），TS 类型检查零错误
+  - **创业减免明细增强**：`getStartupReadinessNote()` 现在展示行业资源/客户线索/声誉/合伙人信任四维权重系数、建议目标值（≥30/≥20/≥15），burnout≥20 时追加红字警告
+  - **验证**：`check:js` 114文件 / `typecheck` / `python build.py`(4299.2 KB) / `npm run build` 全部通过
 
-- **上一轮工作**：v3.0 审查改进 — 目标/模式/事业联动（2026-06-26）
+- **上一轮工作**：房产×租房系统深度集成 + UI状态栏重组（2026-06-27）
+  - **房产×租房��射**：新增 `PROPERTY_HOUSING_MAP` 精准 ID→住所等级映射（22条），`getPropertyHousingTier()` 查询函数；toggle-self-live 改用映射表替代价格粗分，自住→出租时正确降级住所
+  - **月租流水**：property_market.js 月租结算增加 addDailyTransaction 收支记录
+  - **行动页入口**：main.js 新增「搬入自住房」快捷行动
+  - **UI单行状态栏**：renderTimeSlot 改为单行横排左对齐：📅 第 N 天 | ☀️ 上午 ⚡ 100/100 🎒 0/20 · 🌃 露宿街头
+  - **人生目标上移**：从侧边栏移到内容区时间槽下方（renderGoalStrip 紧凑横条），手机端 CSS 适配
+  - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`(4284.1 KB) 全部通过
+
+
   - **任务链产出**：按 v3.0 SOP 和用户反馈完成 6 个子任务报告，新增 `plans/2026-06-26-v3-review-execution-context.md` 与 `subagent_result1.md` 至 `subagent_result6.md`
   - **目标机制**：开局人生目标改为推荐选择，可跳过；选择目标会显示并生效轻量路线加成，覆盖技能 XP、街头/上班收入和银行利息等口径
   - **模式修复**：经典、剧本、沙盒统一走 `initializeCommonGameSystems()`，补齐天气、装备、时代、副业、NPC、医疗、旅行、法律等通用初始化；沙盒默认改为无村长债的自由练习
