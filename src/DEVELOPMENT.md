@@ -2165,6 +2165,7 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 - 本地构建后使用 `npx netlify deploy --prod --dir=dist` 手动推送到 Netlify（不走 GitHub Action 自动部署）
 - 推送到 GitHub 不会自动触发 Netlify 重新构建，需要本地跑完 `python build.py` 后手动部署
 - 部署命令在项目根目录执行，需要先确保 `dist/` 目录是最新构建产物
+- `git push` 失败时（网络原因）必须明确告知用户、说明原因（如"Karing 代理未开启"），不能跳过或忽略
 
 ### 测试
 
