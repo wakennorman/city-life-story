@@ -119,7 +119,10 @@ function startTreatment(state, grade) {
 
   if (grade === "mild") {
     // 轻症门诊治疗，减部分AP
-    state.ap = Math.max(0, (state.ap || 0) - 20);
+    state.player.actionPoints = Math.max(
+      0,
+      ((state.player && state.player.actionPoints) || 0) - 3,
+    );
     state.status.health = Math.min(100, (state.status.health || 100) + 15);
     return {
       ok: true,
