@@ -1,11 +1,117 @@
-# 2026-06-26 改进方案
+# 2026-06-26 改进方案（第二轮 — 按当前 HEAD 5b2f662 实际状态）
 
-开始页词组断裂 | `src/index.html`, `src/css/style.css` | legacy UI + CSS | 将胜利路线改成独立 `.victory-paths`/`.victory-path` 片段，CSS 用 inline-flex/flex-wrap 让整条路线作为不可拆词组换行 | ~35行 | “职场巅峰”整体换行，不再拆字 | <=480px 两列/单列自然换行，首屏文案更稳定
-投资统一估值口径 | `src/js/phase2/investment.js` | legacy 投资层 | 新增 `getInvestmentAssetSnapshot()`、`getInvestmentHoldingCategory()`、`renderInvestmentHoldingPanel()`，统一计算各类资产市值、成本、数量、盈亏 | ~180行 | 虚拟币/贵金属/期货基金/股票/房产/汽车都用同一套统计 | 持仓信息框添加 class，手机端可横向滚动不溢出页面
-修复投资中心汇总 | `src/js/phase2/investment.js` | legacy 投资 UI | `renderInvestmentTab()` 改读统一 snapshot，标题显示投资资产总市值、总盈亏、纳入现金存款后的总资产 | ~40行 | 分类数量、市值、盈亏和整体盈亏准确 | 小卡片 flex-wrap，<=480px 自动两列/单列
-修复股票页串仓 | `src/js/phase2/investment.js` | legacy 投资 UI | `renderStocks()` 只显示 `category === "股票"` 的持仓；虚拟币/贵金属/期货基金页分别插入自身持仓信息框 | ~60行 | 买虚拟币不会出现在股票持仓，其他品类也能看到自己的明细 | 明细框内部滚动，按钮保留 44px 触控
-补全总资产统计 | `src/js/phase1/daily_pipeline.js`, `src/js/ui/render.js`, `src/js/ui/data_viz.js`, `src/js/core/life_ribbon.js` | legacy 共享统计 | 有 `getInvestmentAssetSnapshot` 时纳入全部投资资产，否则保留旧现金/存款兜底 | ~50行 | 成长页、曲线、人生结算总资产不再漏投资品 | 无额外 UI，仅数值更准确
-事件记录折叠 | `src/index.html`, `src/js/main.js`, `src/css/style.css` | legacy UI + CSS | 给事件记录标题加按钮，新增 `toggleMessageLog()`；手机端默认折叠，展开后限制高度并内部滚动，桌面默认展开 | ~70行 | 手机端不用拖住屏幕看最后一条记录 | <=480px 有明确“展开/收起”按钮，日志不压住主内容
-移动端不阉割 UI | `src/css/style.css` | CSS | 追加覆盖：手机端不隐藏属性/今日重点/header-actions/header-context/mode-stat；改为横向滚动、抽屉内分组和紧凑排版 | ~90行 | 手机端和桌面端信息一致，只是折叠/滚动收纳 | <=480px 无横向页面溢出，侧栏内容可完整滚动
-隐藏玩家不可见开发状态 | `src/js/ui/render.js` | legacy UI | `renderLifeSystemsTab()` 移除 `_renderDataCatalogBridgeStatus()` 调用，保留 TS 调试面板在 Vite 壳中 | ~1行 | 人生事务不再出现 TypeScript 接入状态 | 无移动端风险
-文档和记忆更新 | `IMPLEMENTATION_PROGRESS.md`, `CLAUDE.md`, `src/DEVELOPMENT.md`, `memory/long_term_lessons.md` | 文档 | 记录本轮修复、核心原则和验证命令 | ~80行 | 下个接手者知道移动端不能删 UI、投资统计口径统一 | 明确后续 CSS 只追加不破坏已有布局
+## P0 方案
+
+### P0-1: 移除人生事务页开发态信息
+
+- **对应问题**: #3 人生事务页展示 TypeScript 接入状态
+- **涉及文件**: `src/js/ui/render.js`
+- **归属层**: legacy UI
+- **改法**: 在 `renderLifeSystemsTab()` 中移除 `_renderDataCatalogBridgeStatus()` 调用（第 1511 行），保留 `_renderBridgeRecommendations()` 城市服务推荐
+- **估计行数**: 1 行删除 + 确认
+- **预期效果**: 玩家不再看到"TS 内容目录"等开发术语
+- **移动端影响**: 无
+
+### P0-2: 事件记录手机端滚动稳定性
+
+- **对应问题**: #4 事件记录连续事件滚动不到位
+- **涉及文件**: `src/js/main.js`, `src/js/ui/render.js`
+- **归属层**: legacy JS
+- **改法**: 优化 `toggleMessageLog()` 展开后的滚动逻辑：使用 `scrollTo({ top: 9999, behavior: 'smooth' })` 替代 timeline-based 滚动；在每日管线中新增事件追加后的自动滚动触发
+- **估计行数**: ~20 行
+- **预期效果**: 手机端展开事件记录后始终滚动到最新一条
+- **移动端影响**: 正向改善
+
+### P0-3: 欢迎页胜利路线词组保护加强
+
+- **对应问题**: #2 胜利路线手机端拆词
+- **涉及文件**: `src/css/style.css`
+- **归属层**: CSS
+- **改法**: 在 `.victory-path` 增加 `white-space: nowrap` 保证每一条路线不拆词；使用 `word-break: keep-all` 兜底
+- **估计行数**: ~3 行
+- **预期效果**: 即使在 280px 宽度下，"职场巅峰"也不会被拆成"职场/巅峰"
+- **移动端影响**: 正向改善，词组整行换行
+
+### P0-4: 移除 CSS 冗余 !important 对抗
+
+- **对应问题**: #1 mobile CSS 冗余隐藏
+- **涉及文件**: `src/css/style.css`
+- **归属层**: CSS
+- **改法**: 删除第一段 media query 中隐藏 `#street-stats-section` 和 `#corp-stats-section` 的规则（第 3662-3665 行），直接保留第二段的显示逻辑
+- **估计行数**: 删除 4 行
+- **预期效果**: CSS 减少 4 行冗余，消除 !important 对抗
+- **移动端影响**: 无变化（功能相同但更干净）
+
+## P1 方案
+
+### P1-1: 统一投资子页持仓信息框
+
+- **对应问题**: #5 各投资子页持仓信息框不统一
+- **涉及文件**: `src/js/phase2/investment.js`
+- **归属层**: legacy 投资层
+- **改法**:
+  - 虚拟币和汽车页面也添加 `renderInvestmentHoldingPanel("crypto")` 调用
+  - 确保每个子页顶部都显示已持有资产的汇总面板
+- **估计行数**: ~30 行
+- **预期效果**: 贵金属/期货/虚拟币/汽车页面顶部都有一致的持仓摘要
+- **移动端影响**: panel 已用 flex-wrap，≤480px 自动换行
+
+### P1-2: 百科系统机制条目增强
+
+- **对应问题**: #6 百科部分条目偏薄
+- **涉及文件**: `src/js/data/mechanics_registry.js`
+- **归属层**: legacy 数据注册层
+- **改法**: 为"技能树""装备品质""世界参数反馈环"等注册条目补充策略提示段（section type: "tip"），告知玩家如何利用该机制
+- **估计行数**: ~60 行
+- **预期效果**: 玩家查阅百科时获得明确的策略引导
+- **移动端影响**: 无（文本类内容自适应宽屏）
+
+### P1-3: 创业门槛条件界面提示
+
+- **对应问题**: #7 创业/上班族入口不够直观
+- **涉及文件**: `src/js/ui/career_dev.js`
+- **归属层**: legacy UI
+- **改法**: 在事业发展 Tab 创业入口增加"注册费减免条件"列表，主动提示玩家哪些条件已达成、哪些未达成
+- **估计行数**: ~40 行
+- **预期效果**: 玩家清楚知道还需要积累什么才能降低创业门槛
+- **移动端影响**: 条件列表单列显示不溢出
+
+### P1-4: 移动端投资持仓行溢出防护
+
+- **对应问题**: #8 移动端投资卡片溢出
+- **涉及文件**: `src/css/style.css`
+- **归属层**: CSS
+- **改法**: 在第二段 `@media (max-width: 480px)` 中追加：投资持仓区域 `.investment-holdings-row` 允许横向滚动，内部的 `min-width` 固定值改为 `min-width: min(80px, 25vw)` 自适应
+- **估计行数**: ~15 行
+- **预期效果**: ≤375px 宽度下持仓行不横向溢出，且横向滚动可在需要时启用
+- **移动端影响**: 无横向溢出
+
+## P2 方案
+
+### P2-1: CSS 媒体查询合并
+
+- **对应问题**: #10 CSS 媒体查询重复
+- **涉及文件**: `src/css/style.css`
+- **改法**: 将三段 `@media (max-width: 480px)` 合并成一段统一管理，删除重复选择器
+- **估计行数**: 纯重组，不增行数
+- **预期效果**: 维护性提升
+
+### P2-2: 经济后期限流
+
+- **对应问题**: #12 后期资金膨胀
+- **涉及文件**: `src/js/core/world_params.js`
+- **改法**: 在每日管线末尾增加"财富税"或"高端消费出口"：资金超过 1000 万后，超出部分每日产生 0.1% 消耗（用于慈善/投资顾问/资产管理费）
+- **估计行数**: ~15 行
+- **预期效果**: 中后期资金不过度堆积
+
+## 执行顺序
+
+1. **P0-4**: CSS 冗余隐藏删除（最安全，无逻辑变化）
+2. **P0-1**: 移除开发态信息
+3. **P0-3**: 胜利路线词组保护
+4. **P0-2**: 事件记录滚动优化
+5. **P1-1**: 投资持仓框统一
+6. **P1-4**: 移动端投资卡片溢出
+7. **P1-2**: 百科机制条目增强
+8. **P1-3**: 创业门槛提示
+9. 验证 + 文档更新

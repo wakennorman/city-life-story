@@ -1,23 +1,52 @@
-# 2026-06-26 现状摸底：城市浮生记审查改进与扩展
+# 2026-06-26 现状摸底：城市浮生记审查改进与扩展（第二轮）
 
 ## 双轨架构覆盖
 
-- `src/index.html` 是当前正式可玩入口，使用原生 HTML/CSS/Vanilla JS，依赖 `python build.py` 生成 `dist/index.html`。主 UI、存档、行动、交易、投资、事业、社交、人生事务等玩家实际流程仍由 legacy 脚本驱动。
-- 根目录 `index.html` + `src/app/` + Vite/TypeScript 是 v3.8 并行架构壳，默认作为调试和迁移通道，不替代正式入口。`src/app/shell/appShell.ts` 只挂载调试面板和 legacy iframe。
-- `src/app/data/*` 已有事件、职业、地点、物品、疾病、法律、旅行、人生节点和城市服务等类型化目录；当前多数目录仍是 typed 数据源，真正可玩接入主要靠 `src/js/app_bridge/webapp_runtime_bridge.js` 的城市服务桥接。
-- `StateManager` 仍是唯一真实状态来源。TS facade 只读写 legacy 全局状态，不复制存档结构；存档键继续兼容旧版。
+### legacy 侧（正式入口 `src/index.html` → `python build.py` → `dist/index.html`）
+
+- **数据层**（`src/js/data/`）：locations, jobs, goods, items, news, skills, npcs, scenarios, corp, amenities, illnesses, moral_events, crisis35_followups, mechanics_registry, narratives_registry, victories_registry
+- **核心引擎**（`src/js/core/`）：events_street(9827行), events_corp, events_core, state, save, random, weather, festivals, dreams, achievements, skill_tree, social_network, npc_relationships, era_transform, cross_system_events, news_system, news_event_bridge, news_investment_bridge, world_params, life_nodes, medical, travel, legal, life_ribbon, story_chapters, inheritance_chain, enterprise_fate, company_spawner, multi_run_memory, equipment_quality/durability/suites, skill_synergy, action_sort, sound, sort_utils, route_effects, difficulty_system, review_improvements, finance, heritage_coin, illegal_actions, cooking
+- **Phase1 阶段**：trade, needs, interactions, illness, critical, skill_bonuses, actions_extra, daily_pipeline, carry, pricing, npc_event_bridge, npc_location_bridge
+- **Phase2 阶段**：perf, promo, team, stock, corp_ops, investment(3638行), property_market, startup(14443行), workplace_social, investment_analysis, startup_crisis, family_life, personal_growth, side_hustle
+- **UI层**（`src/js/ui/`）：render(6431行), wiki(3760行), modal, corp_ui, heritage_store, tutorial, daily_focus, victory, wiki, daily_report, social_tab, career_dev, data_viz, side_hustle_ui, life_memoir
+- **桥接层**：`src/js/app_bridge/webapp_runtime_bridge.js`（连接新数据目录到旧 UI）
+
+### 新架构侧（根目录 `index.html` + `src/app/` + Vite/TypeScript）
+
+- **数据目录**（`src/app/data/`）：events(12), jobs(12), locations(14), items(17), diseases(12), legal(7), travel(8), lifeNodes(4), cityServices(7)
+- **桥接层**：`src/app/core/gameBridge.ts`, `src/app/core/stateAccess.ts`, `src/app/core/saveMigrations.ts`
+- **调试**：`src/app/debug/healthCheck.ts`
+- **UI壳**：`src/app/shell/appShell.ts`, `src/app/ui/panels.ts`
+
+### 关键统计
+
+- legacy JS 文件数：~75 个，总行数 ~85,000+
+- TS 文件数：~15 个，总行数 ~2,200
+- 双构建入口：`python build.py`（legacy）和 `npm run build`（Vite）
 
 ## 当前完成度
 
-- legacy 内容量很大：投资系统已经拥有股票、虚拟币、贵金属、期货/基金、房产、汽车数据和交易入口；人生事务面板也已接入医疗、旅行、法律、人生节点。
-- 移动端 CSS 已在 `src/css/style.css` 文件末尾追加过适配，但上一轮为“减少遮挡”隐藏了部分 header/sidebar 内容，违反本轮“手机端不阉割任何电脑端 UI，只允许折叠或滑动收纳”的原则。
-- 开始页胜利路线文案仍是普通连续文本，`word-break: keep-all` 不能保证“职场巅峰”这类词组不被浏览器在狭窄宽度中硬断。
-- 投资系统的交易层共用 `investment.stockHoldings`，但汇总层仍把虚拟币按旧 `btcHoldings` 统计，股票页持仓也未按类别过滤，导致买虚拟币后投资中心为 0、虚拟币出现在股票持仓。
+- **内容量**：事件 200+、职业 35+、地点 15、NPC 10、商品 20+、装备 30+、疾病 16 种、食材 23+、食谱 16、创业产品 15+、投资品 5 类
+- **系统模块**：生存需求、天气、节日、技能树、装备品质/耐久/套装、NPC 好感、社交网络、比赛、投资(股票/BTC/贵金属/期货基金/房产/汽车)、创业(6行业/15产品/15模块/6员工/5轮融资/30+事件)、企业命运、时代变迁、多周目继承、人生节点、医疗深度、旅行、法律、副业、人生回忆录、成就(50+)
+- **移动端**：底部抽屉侧栏、横向滚动 tab、单列行动卡片、事件记录可折叠；CSS 已追加两轮适配
 
 ## 初步薄弱点
 
-- P0：投资资产缺少统一估值/盈亏口径，`renderInvestmentTab`、各子页、总资产曲线/简报各自计算，容易漏掉虚拟币、贵金属、期货基金、汽车。
-- P0：移动端“不可隐藏 UI 内容”的产品原则未文档化，CSS 仍隐藏 `header-actions`、街头属性、职场属性等核心内容。
-- P0：事件记录在手机端固定底部阅读体验差，最底部记录需要手按屏幕维持滚动，应改为可折叠/展开且展开后内部滚动。
-- P1：人生事务页把“TypeScript 内容接入状态”展示给玩家，属于开发态信息泄漏，应从 legacy 玩家 UI 移除。
-- P1：双轨架构接入状态已有 TS 调试面板可看，不应在正式 legacy 面板重复暴露。
+### P0 级别
+
+1. **投资系统数据口径不一致**：虚拟币买入走 `stockHoldings` 但汇总读旧 `btcHoldings`，导致虚拟币买了显示为0；虚拟币/贵金属/期货基金混入股票页"我的持仓"；总资产曲线漏算大部分投资品
+2. **移动端 CSS 仍有隐藏逻辑**：第一段 `@media (max-width: 480px)` 仍隐藏 `#street-stats-section` 和 `#corp-stats-section`，后面虽被覆盖但存在时序冲突
+3. **欢迎页胜利路线文案**：连续文本在手机端可能被浏览器拆词，需完整保护
+
+### P1 级别
+
+4. **投资分类 UI 不一致**：各资产子页持仓信息框不统一，部分只显示卡片内局部持仓
+5. **生涯系统联动缺口**：创业触发从上班路径读取不够直观，事业建议可更丰富
+6. **百科系统**：部分条目内容偏薄，缺少跨系统跳转
+7. **事件记录移动端**：折叠/展开已有实现，但自动滚动到最新记录可改进
+
+### P2 级别
+
+8. **整体 UI 细节**：部分面板在移动端有微小溢出
+9. **经济平衡**：中后期仍可能出现资金积累过度
+10. **文档 vs 实况差距**：部分记忆文件内容落后于当前代码

@@ -11453,7 +11453,7 @@ function renderStartupTab(state, parent) {
         ? '<div style="font-size:11px;color:var(--accent);margin-top:6px;">职场资源已抵扣约 ' +
           Math.round(stc.careerDiscount * 100) +
           "% 启动资金</div>"
-        : "") +
+        : '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">还没累计职场资源：上班积累行业资源、客户线索可减免注册费</div>') +
       "</div>" +
       (readinessNote
         ? '<div style="margin:0 auto 12px;padding:10px;max-width:360px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.18);border-radius:8px;text-align:left;font-size:12px;color:var(--text-secondary);">💼 ' +

@@ -3659,11 +3659,6 @@ body {
     letter-spacing: 0;
   }
 
-  #street-stats-section,
-  #corp-stats-section {
-    display: none !important;
-  }
-
   #location-section .stat-row:nth-of-type(n + 6) {
     display: none;
   }
@@ -4119,5 +4114,31 @@ body {
     max-height: min(42vh, 320px) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+  /* 投资持仓行移动端溢出防护 */
+  .investment-holdings-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .investment-holdings-row > div {
+    min-width: 480px;
+  }
+  .inv-holdings-mobile-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding: 6px 0;
+    font-size: 11px;
+    align-items: center;
+  }
+  .inv-holdings-mobile-row > span {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .investment-summary-card {
+    min-width: 0 !important;
   }
 }
