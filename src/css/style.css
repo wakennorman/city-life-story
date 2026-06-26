@@ -3578,258 +3578,6 @@ body {
   }
 }
 
-@media (max-width: 480px) {
-  :root {
-    --sidebar-width: 100vw;
-    --header-height: 54px;
-  }
-
-  html,
-  body {
-    font-size: 16px;
-  }
-
-  #header {
-    padding: 0 8px;
-  }
-
-  .header-logo {
-    max-width: 34vw;
-    font-size: 15px;
-  }
-
-  #header-cash-area,
-  #header-debt-area {
-    max-width: 46vw;
-    height: 40px;
-  }
-
-  #header-cash,
-  #header-debt {
-    font-size: 13px;
-  }
-
-  #sidebar {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0;
-    top: var(--header-height) !important;
-    bottom: auto;
-    width: 100vw;
-    height: calc(100vh - var(--header-height));
-    max-height: calc(100vh - var(--header-height));
-    padding: 12px;
-    border-right: none;
-    border-top: 1px solid var(--border);
-    border-radius: 0;
-    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.18);
-    transform: translateX(-100%);
-    transition: transform 0.28s ease;
-    z-index: 240;
-    gap: 10px;
-    overscroll-behavior: contain;
-  }
-
-  #sidebar::before {
-    content: "状态与位置";
-    position: sticky;
-    top: -12px;
-    display: block;
-    margin: -12px -12px 10px;
-    padding: 12px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  #sidebar.open {
-    left: 0 !important;
-    transform: translateX(0);
-  }
-
-  #sidebar .sidebar-section {
-    padding: 10px;
-    border-color: var(--border);
-  }
-
-  #sidebar .sidebar-section h3 {
-    margin-bottom: 8px;
-    font-size: 12px;
-    letter-spacing: 0;
-  }
-
-  #location-section .stat-row:nth-of-type(n + 6) {
-    display: none;
-  }
-
-  .stat-row {
-    min-height: 32px;
-    margin-bottom: 8px;
-    gap: 8px;
-  }
-
-  .stat-label {
-    width: 54px;
-    font-size: 12px;
-  }
-
-  .stat-value {
-    width: 42px;
-    font-size: 12px;
-  }
-
-  .stat-bar-wrap {
-    height: 18px;
-  }
-
-  #tab-bar {
-    padding: 0 8px;
-  }
-
-  .tab-btn {
-    min-width: 76px;
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  #content-area {
-    padding: 10px;
-    padding-bottom: 16px;
-  }
-
-  #time-slot-indicator {
-    align-items: flex-start;
-    padding: 10px 12px;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-  }
-
-  .action-cards {
-    grid-template-columns: 1fr !important;
-    gap: 9px;
-  }
-
-  .action-card {
-    min-height: 92px;
-    padding: 10px;
-  }
-
-  .action-card .card-icon {
-    min-height: 24px;
-    font-size: 20px;
-  }
-
-  .card-meta {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .inventory-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .inventory-item {
-    min-height: 82px;
-    padding: 8px 6px;
-    font-size: 12px;
-  }
-
-  .inventory-item .item-name,
-  .inventory-item .item-effects {
-    overflow-wrap: anywhere;
-  }
-
-  .city-map {
-    min-height: 330px !important;
-    padding: 10px !important;
-  }
-
-  .city-map > div {
-    min-width: 560px !important;
-    min-height: 330px !important;
-  }
-
-  .city-map .map-node,
-  .map-node {
-    min-width: 78px !important;
-    padding: 8px 9px !important;
-  }
-
-  .modal-box h2 {
-    font-size: 18px;
-    line-height: 1.35;
-  }
-
-  .modal-box p,
-  .wiki-detail-body p,
-  .wiki-detail-body ul,
-  .wiki-detail-body ol {
-    font-size: 13px;
-  }
-
-  .welcome-screen {
-    padding: 22px 14px;
-    gap: 12px;
-  }
-
-  #sandbox-screen {
-    padding-top: 14px;
-  }
-
-  #sandbox-screen #sandbox-config {
-    max-height: min(46vh, 380px) !important;
-  }
-
-  .welcome-subtitle {
-    font-size: 15px;
-    max-width: 92vw;
-  }
-
-  .mode-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mode-card {
-    min-height: 112px;
-    display: grid;
-    grid-template-columns: 46px 1fr;
-    column-gap: 10px;
-    text-align: left;
-    align-items: center;
-  }
-
-  .mode-card-icon {
-    grid-row: span 3;
-    margin-bottom: 0;
-    font-size: 32px;
-    text-align: center;
-  }
-
-  .mode-card-title,
-  .mode-card-brief,
-  .mode-card-diff {
-    margin: 0;
-  }
-
-  .scenario-card {
-    min-height: 92px;
-    padding: 12px;
-  }
-
-  .wiki-nav-btn {
-    min-width: 70px;
-    padding: 8px;
-  }
-
-  .wiki-content {
-    padding: 12px;
-  }
-
-  .wiki-entries {
-    grid-template-columns: 1fr;
-  }
-}
 
 @media (max-width: 360px) {
   .header-logo {
@@ -3915,34 +3663,6 @@ body {
   text-align: right;
 }
 
-@media (max-width: 480px) {
-  .victory-paths {
-    gap: 6px 8px;
-    line-height: 1.9;
-  }
-
-  .victory-path:not(:last-child)::after {
-    margin-left: 8px;
-  }
-
-  .investment-summary-card {
-    flex: 1 1 calc(50% - 6px) !important;
-    min-width: 0 !important;
-  }
-
-  .investment-holding-panel {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .investment-holding-head {
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .investment-holding-head span {
-    text-align: right;
-  }
-}
 
 /* ====== 2026-06-26 mobile completeness: collapse instead of hiding UI ====== */
 #message-log h3 {
@@ -3981,7 +3701,16 @@ body {
 }
 
 @media (max-width: 480px) {
+  /* ====== 根 & 基础 ====== */
+  :root {
+    --sidebar-width: 100vw;
+    --header-height: 54px;
+  }
+  html, body { font-size: 16px; }
+
+  /* ====== 头部 ====== */
   #header {
+    padding: 0 8px;
     justify-content: flex-start;
     gap: 6px;
     overflow-x: auto;
@@ -3989,107 +3718,173 @@ body {
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
-
-  #header::-webkit-scrollbar {
-    display: none;
-  }
-
-  .header-left,
-  .header-stats,
-  .header-actions {
-    flex: 0 0 auto;
-  }
-
+  #header::-webkit-scrollbar { display: none; }
   .header-logo {
     max-width: none;
+    font-size: 15px;
   }
-
-  .header-logo span {
-    display: inline;
+  .header-logo span { display: inline; }
+  #header-cash-area, #header-debt-area {
+    max-width: none;
+    flex: 0 0 auto;
+    height: 40px;
   }
-
+  #header-cash, #header-debt { font-size: 13px; }
+  .header-left,
+  .header-stats,
+  .header-actions { flex: 0 0 auto; }
   .header-stats {
     justify-content: flex-start;
     max-width: none;
     overflow: visible;
     gap: 6px;
   }
-
-  .header-stat {
-    flex: 0 0 auto;
-    padding: 0 8px;
-  }
-
+  .header-stat { flex: 0 0 auto; padding: 0 8px; }
   .header-stat .label,
   #header-day,
-  #header-age {
-    display: inline !important;
-  }
-
+  #header-age { display: inline !important; }
   .header-context,
-  #header-mode-stat.has-mode {
-    display: flex !important;
-  }
-
-  .header-context {
-    max-width: none;
-  }
-
-  .header-actions {
-    display: flex !important;
-    gap: 6px;
-  }
-
+  #header-mode-stat.has-mode { display: flex !important; }
+  .header-context { max-width: none; }
+  .header-actions { display: flex !important; gap: 6px; }
   .header-actions .btn {
     min-height: 38px;
     padding: 7px 10px;
     white-space: nowrap;
   }
 
-  #header-cash-area,
-  #header-debt-area {
-    max-width: none;
-    flex: 0 0 auto;
+  /* ====== 侧栏 ====== */
+  #sidebar {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0;
+    top: var(--header-height) !important;
+    bottom: auto;
+    width: 100vw;
+    height: calc(100vh - var(--header-height));
+    max-height: calc(100vh - var(--header-height));
+    padding: 12px;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.18);
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    z-index: 240;
+    gap: 10px;
+    overscroll-behavior: contain;
   }
-
-  #street-stats-section,
-  #corp-stats-section {
-    display: block !important;
+  #sidebar::before {
+    content: "状态与位置";
+    position: sticky;
+    top: -12px;
+    display: block;
+    margin: -12px -12px 10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--accent);
+    font-weight: 700;
   }
-
+  #sidebar.open { left: 0 !important; transform: translateX(0); }
+  #sidebar .sidebar-section { padding: 10px; border-color: var(--border); }
+  #sidebar .sidebar-section h3 { margin-bottom: 8px; font-size: 12px; letter-spacing: 0; }
+  #street-stats-section, #corp-stats-section { display: block !important; }
   #sidebar.phase-street #corp-stats-section,
-  #sidebar.phase-corporate #street-stats-section {
-    display: none !important;
-  }
+  #sidebar.phase-corporate #street-stats-section { display: none !important; }
 
-  #location-section .stat-row {
-    display: flex !important;
-  }
-
+  /* ====== 位置 & 状态值行 ====== */
+  #location-section .stat-row:nth-of-type(n + 6) { display: none; }
+  #location-section .stat-row { display: flex !important; }
+  .stat-row { min-height: 32px; margin-bottom: 8px; gap: 8px; }
+  .stat-label { width: 54px; font-size: 12px; }
+  .stat-value { width: 42px; font-size: 12px; }
+  .stat-bar-wrap { height: 18px; }
   #daily-focus-section,
   #needs-section,
   #debt-section,
   #dream-section,
-  #location-section {
-    display: block;
+  #location-section { display: block; }
+
+  /* ====== Tab 栏 ====== */
+  #tab-bar { padding: 0 8px; }
+  .tab-btn { min-width: 76px; padding: 10px 12px; font-size: 13px; }
+
+  /* ====== 内容区 ====== */
+  #content-area { padding: 10px; padding-bottom: 16px; }
+  #time-slot-indicator {
+    align-items: flex-start;
+    padding: 10px 12px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
   }
 
-  #message-log {
-    max-height: none;
-    overflow: visible;
-  }
+  /* ====== 行动卡片 ====== */
+  .action-cards { grid-template-columns: 1fr !important; gap: 9px; }
+  .action-card { min-height: 92px; padding: 10px; }
+  .action-card .card-icon { min-height: 24px; font-size: 20px; }
+  .card-meta { gap: 8px; flex-wrap: wrap; }
 
+  /* ====== 背包 ====== */
+  .inventory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .inventory-item { min-height: 82px; padding: 8px 6px; font-size: 12px; }
+  .inventory-item .item-name,
+  .inventory-item .item-effects { overflow-wrap: anywhere; }
+
+  /* ====== 地图 ====== */
+  .city-map { min-height: 330px !important; padding: 10px !important; }
+  .city-map > div { min-width: 560px !important; min-height: 330px !important; }
+  .city-map .map-node,
+  .map-node { min-width: 78px !important; padding: 8px 9px !important; }
+
+  /* ====== 弹窗 & 百科 ====== */
+  .modal-box h2 { font-size: 18px; line-height: 1.35; }
+  .modal-box p,
+  .wiki-detail-body p,
+  .wiki-detail-body ul,
+  .wiki-detail-body ol { font-size: 13px; }
+  .wiki-nav-btn { min-width: 70px; padding: 8px; }
+  .wiki-content { padding: 12px; }
+  .wiki-entries { grid-template-columns: 1fr; }
+
+  /* ====== 欢迎/选模式 ====== */
+  .welcome-screen { padding: 22px 14px; gap: 12px; }
+  #sandbox-screen { padding-top: 14px; }
+  .welcome-subtitle { font-size: 15px; max-width: 92vw; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .mode-card {
+    min-height: 112px;
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    column-gap: 10px;
+    text-align: left;
+    align-items: center;
+  }
+  .mode-card-icon { grid-row: span 3; margin-bottom: 0; font-size: 32px; text-align: center; }
+  .mode-card-title,
+  .mode-card-brief,
+  .mode-card-diff { margin: 0; }
+  .scenario-card { min-height: 92px; padding: 12px; }
+
+  /* ====== 胜利路线 ====== */
+  .victory-paths { gap: 6px 8px; line-height: 1.9; }
+  .victory-path:not(:last-child)::after { margin-left: 8px; }
+
+  /* ====== 投资 ====== */
+  .investment-summary-card { flex: 1 1 calc(50% - 6px) !important; min-width: 0 !important; }
+  .investment-holding-panel { -webkit-overflow-scrolling: touch; }
+  .investment-holding-head { align-items: flex-start; gap: 6px; }
+  .investment-holding-head span { text-align: right; }
+
+  /* ====== 消息日志 ====== */
+  #message-log { max-height: none; overflow: visible; }
   #message-log-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: 36px;
   }
-
-  #message-log.collapsed .log-content {
-    display: none;
-  }
-
+  #message-log.collapsed .log-content { display: none; }
   #message-log.collapsed #message-log-preview {
     display: block;
     background: var(--bg-input, #fff);
@@ -4102,14 +3897,8 @@ body {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  #message-log.collapsed #message-log-preview:active {
-    background: var(--bg-hover, rgba(0, 0, 0, 0.04));
-  }
-
-  #message-log:not(.collapsed) #message-log-preview {
-    display: none;
-  }
-
+  #message-log.collapsed #message-log-preview:active { background: var(--bg-hover, rgba(0, 0, 0, 0.04)); }
+  #message-log:not(.collapsed) #message-log-preview { display: none; }
   #message-log .log-content {
     max-height: min(42vh, 320px) !important;
     overflow-y: auto !important;

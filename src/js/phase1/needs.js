@@ -169,4 +169,19 @@ function applyWealthBasedOverhead(state) {
     var socialDecay = Math.min(8, Math.floor(totalAssets / 200000) * 0.8);
     state.needs.happiness = Math.max(0, state.needs.happiness - socialDecay);
   }
+
+  // 高额资产管理费：资产超 1000 万后每日 0.1% 消耗（防止资金无限膨胀）
+  if (totalAssets > 10000000) {
+    var excessWealth = totalAssets - 10000000;
+    var wealthFee = Math.round(excessWealth * 0.001);
+    if (wealthFee > 0) {
+      state.resources.cash -= wealthFee;
+      StateManager.addMessage(
+        "💼 财富管理费 ¥" +
+          wealthFee.toLocaleString() +
+          "（资产超千万的专项管理费用）",
+        "info",
+      );
+    }
+  }
 }
