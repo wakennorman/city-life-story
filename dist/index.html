@@ -119223,6 +119223,36 @@ function renderCareerJobs(state, parent) {
       '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
     html += "</div></div>";
 
+    // ---- 跳槽机会（P1-2：主动跳槽） ----
+    var jobOffers = generateJobOffers(state);
+    if (jobOffers.length) {
+      html +=
+        '<div style="margin-top:12px;"><h3 style="font-size:13px;">🔍 跳槽机会</h3>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">客户线索或声誉打开新机会（接受后30天冷却）</div>';
+      for (var oi = 0; oi < jobOffers.length; oi++) {
+        var of = jobOffers[oi];
+        html +=
+          '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
+        html +=
+          "<div><strong>" +
+          of.levelName +
+          "</strong> · 月薪¥" +
+          of.salary.toLocaleString() +
+          "</div>";
+        html +=
+          '<div style="font-size:10px;color:var(--text-muted);margin:2px 0 6px;">' +
+          of.desc +
+          "</div>";
+        html +=
+          '<button class="btn btn-xs" style="min-height:44px;font-size:11px;padding:4px 10px;" onclick="applyJobhop(\'' +
+          of.id +
+          "')\">接受offer</button>";
+        html += "</div>";
+      }
+      html += "</div>";
+    }
+
     // ---- 职场社交（P0-2：主动社交UI） ----
     var colleagues =
       state.corporate &&
@@ -119672,6 +119702,154 @@ function careerTakeBreak() {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
   clampCareerCapital(cap);
   StateManager.addMessage("😴 调休一天：倦怠-15，心情+5，业绩-2", "success");
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 生成跳槽offer（P1-2：主动跳槽，需门路+30天冷却）
+ * 设计参考：BitLife 主动换工作 / 现实中国职场跳槽年均涨薪20-30%
+ */
+function generateJobOffers(state) {
+  if (!state.career || !state.career.currentJob) return [];
+  var job = state.career.currentJob;
+  var path = CAREER_PATHS[job.path];
+  if (!path) return [];
+  var cap = ensureCareerCapital(state);
+  // 门路检查：有客户线索或声誉才能拿到offer
+  var hasLeads = (cap.clientLeads || 0) >= 15 || (cap.reputation || 0) >= 30;
+  if (!hasLeads) return [];
+  // 30天冷却
+  var lastHop = job._lastJobhopDay || -999;
+  if (state.player.day - lastHop < 30) return [];
+
+  var curIdx = -1;
+  for (var i = 0; i < path.levels.length; i++) {
+    if (path.levels[i].id === job.levelId) {
+      curIdx = i;
+      break;
+    }
+  }
+  var offers = [];
+  // offer1: 同路径高半级（晋升式跳槽，到顶则无）
+  if (curIdx >= 0 && curIdx < path.levels.length - 1) {
+    var nl = path.levels[curIdx + 1];
+    offers.push({
+      id: "hop_promo",
+      path: job.path,
+      levelId: nl.id,
+      levelName: nl.name,
+      salary: Math.round(nl.salary * 0.95),
+      desc: "同行业晋升跳（职级升半级，月薪随职级）",
+    });
+  }
+  // offer2/3: 跨路径（用day种子确定性挑选，避免每次刷新变化）
+  var otherPaths = [];
+  for (var k in CAREER_PATHS) {
+    if (k !== job.path) otherPaths.push(k);
+  }
+  if (otherPaths.length) {
+    var seed = state.player.day;
+    var pick1 = otherPaths[seed % otherPaths.length];
+    var p1 = CAREER_PATHS[pick1];
+    var idx1 = Math.min(p1.levels.length - 1, Math.max(0, curIdx));
+    if (p1.levels[idx1]) {
+      offers.push({
+        id: "hop_cross1",
+        path: pick1,
+        levelId: p1.levels[idx1].id,
+        levelName: p1.levels[idx1].name,
+        salary: Math.round(p1.levels[idx1].salary * 1.1),
+        desc: "跨行平级跳，涨薪10%",
+      });
+    }
+    if (otherPaths.length > 1) {
+      var pick2 = otherPaths[(seed + 1) % otherPaths.length];
+      var p2 = CAREER_PATHS[pick2];
+      var idx2 = Math.min(p2.levels.length - 1, Math.max(0, curIdx + 1));
+      if (p2.levels[idx2] && !(pick2 === pick1 && idx2 === idx1)) {
+        offers.push({
+          id: "hop_cross2",
+          path: pick2,
+          levelId: p2.levels[idx2].id,
+          levelName: p2.levels[idx2].name,
+          salary: Math.round(p2.levels[idx2].salary * 1.2),
+          desc: "跨行高半级跳，涨薪20%",
+        });
+      }
+    }
+  }
+  return offers;
+}
+
+/** 执行跳槽（P1-2） */
+function applyJobhop(offerId) {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+  var offers = generateJobOffers(state);
+  var offer = null;
+  for (var i = 0; i < offers.length; i++) {
+    if (offers[i].id === offerId) {
+      offer = offers[i];
+      break;
+    }
+  }
+  if (!offer) {
+    StateManager.addMessage("⚠️ 该offer已失效", "warning");
+    return;
+  }
+  var targetPath = CAREER_PATHS[offer.path];
+  if (!targetPath) return;
+  var targetLevel = null;
+  for (var j = 0; j < targetPath.levels.length; j++) {
+    if (targetPath.levels[j].id === offer.levelId) {
+      targetLevel = targetPath.levels[j];
+      break;
+    }
+  }
+  if (!targetLevel) return;
+  // 仍需满足目标职级门槛（技能/属性/人脉）
+  if (!checkCareerPromotion(state, offer.path, targetLevel)) {
+    StateManager.addMessage(
+      "⚠️ 不满足「" + offer.levelName + "」的门槛（技能/属性/人脉）",
+      "warning",
+    );
+    return;
+  }
+  var job = state.career.currentJob;
+  var cap = ensureCareerCapital(state);
+  var oldName = job.levelName;
+  state.career.history.push({
+    day: state.player.day,
+    event:
+      "跳槽：" +
+      oldName +
+      " → " +
+      offer.levelName +
+      "（" +
+      CAREER_PATHS[offer.path].name +
+      "）",
+  });
+  job.path = offer.path;
+  job.levelId = offer.levelId;
+  job.levelName = offer.levelName;
+  job.salary = offer.salary;
+  job.workDays = 0;
+  job.startDay = state.player.day;
+  job.performance = 50;
+  job._lastJobhopDay = state.player.day;
+  // 跳槽消耗人脉、换环境减压
+  cap.clientLeads = Math.max(0, (cap.clientLeads || 0) - 5);
+  cap.reputation = (cap.reputation || 0) + 3;
+  cap.burnout = Math.max(0, (cap.burnout || 0) - 5);
+  clampCareerCapital(cap);
+  StateManager.addMessage(
+    "🎉 跳槽成功！" +
+      oldName +
+      " → " +
+      offer.levelName +
+      "，月薪¥" +
+      offer.salary.toLocaleString(),
+    "success",
+  );
   if (typeof renderAll === "function") renderAll();
 }
 
