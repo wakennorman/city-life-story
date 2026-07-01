@@ -979,16 +979,20 @@ function getStatChineseName(key) {
  */
 function getItemJobBonus(jobId, state) {
   var multiplier = 1.0;
-  if (!state || !state.equipment || !state.inventory) return multiplier;
+  if (!state || !state.inventory || !state.inventory.equipment)
+    return multiplier;
 
-  for (var slotKey in state.equipment) {
-    var equippedId = state.equipment[slotKey];
+  for (var slotKey in state.inventory.equipment) {
+    var equippedId = state.inventory.equipment[slotKey];
     if (!equippedId) continue;
     var item = getItemById(equippedId);
     if (!item || !item.jobBonuses) continue;
     var bonus = item.jobBonuses[jobId];
     if (bonus && bonus.incomeMultiplier) {
-      multiplier *= bonus.incomeMultiplier;
+      // 品质效果倍率：高品质装备放大工作收入加成（common×1.0 ~ legendary×1.5）
+      var inst = getEquippedInstance(state, slotKey);
+      var qMult = getQualityEffectMult(inst ? inst.quality : "common");
+      multiplier *= bonus.incomeMultiplier * qMult;
     }
   }
   return multiplier;

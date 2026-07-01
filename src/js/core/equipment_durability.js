@@ -82,36 +82,34 @@ function initItemDurability(itemInstance, itemDef) {
  * @param {number} costMultiplier - 消耗倍率（某些工作可能消耗更快）
  */
 function consumeEquipmentDurability(state, actionType, costMultiplier) {
-  if (!state || !state.equipment || !state.equipment.equipped) return;
+  if (!state || !state.inventory || !state.inventory.equipment) return;
 
   var cost = DURABILITY_COST[actionType] || DURABILITY_COST.other;
   cost *= costMultiplier || 1.0;
 
   if (cost <= 0) return;
 
-  var equipped = state.equipment.equipped;
-  for (var slot in equipped) {
-    var item = equipped[slot];
-    if (item && item.durability !== undefined) {
-      // 耐久归零的装备不消耗
-      if (item.isBroken) continue;
+  for (var slot in state.inventory.equipment) {
+    var inst = getEquippedInstance(state, slot);
+    if (!inst || inst.durability === undefined) continue;
+    // 耐久归零的装备不消耗
+    if (inst.isBroken) continue;
 
-      var oldDurability = item.durability;
-      item.durability = Math.max(0, item.durability - cost);
+    inst.durability = Math.max(0, inst.durability - cost);
 
-      // 检查是否耐久归零
-      if (item.durability <= 0 && !item.isBroken) {
-        item.isBroken = true;
-        item.durability = 0;
-        // 触发装备损坏消息
-        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-          StateManager.addMessage(
-            "⚠️ 您的「" +
-              (item.name || slot) +
-              "」耐久耗尽，效果失效！需要修理。",
-            "warning",
-          );
-        }
+    // 检查是否耐久归零
+    if (inst.durability <= 0 && !inst.isBroken) {
+      inst.isBroken = true;
+      inst.durability = 0;
+      var def =
+        typeof getItemById === "function" ? getItemById(inst.itemId) : null;
+      var itemName = (def && def.name) || slot;
+      // 触发装备损坏消息
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage(
+          "⚠️ 您的「" + itemName + "」耐久耗尽，效果失效！需要修理。",
+          "warning",
+        );
       }
     }
   }
@@ -125,48 +123,34 @@ function consumeEquipmentDurability(state, actionType, costMultiplier) {
  * @returns {object} { success, cost, repairedAmount, message }
  */
 function repairEquipment(state, itemId, repairAmount) {
-  if (!state || !state.equipment || !state.equipment.equipped) {
+  if (!state || !state.inventory || !state.inventory.equipment) {
     return { success: false, message: "没有可修理的装备" };
   }
 
-  // 查找装备（可能在已装备或背包中）
-  var item = null;
+  // 查找已装备的装备（按 slot 键，equipment[slot] = itemId 字符串）
   var itemSlot = null;
-
-  // 检查已装备
-  for (var slot in state.equipment.equipped) {
-    if (state.equipment.equipped[slot].id === itemId) {
-      item = state.equipment.equipped[slot];
-      itemSlot = slot;
+  for (var s in state.inventory.equipment) {
+    if (state.inventory.equipment[s] === itemId) {
+      itemSlot = s;
       break;
     }
   }
-
-  // 检查背包
-  if (!item && state.equipment.inventory) {
-    for (var i = 0; i < state.equipment.inventory.length; i++) {
-      if (state.equipment.inventory[i].id === itemId) {
-        item = state.equipment.inventory[i];
-        break;
-      }
-    }
+  if (!itemSlot) {
+    return { success: false, message: "找不到该装备（仅可修理已装备的物品）" };
   }
 
-  if (!item) {
-    return { success: false, message: "找不到该装备" };
-  }
-
-  if (!item.durability !== undefined) {
+  var inst = getEquippedInstance(state, itemSlot);
+  if (!inst || inst.durability === undefined) {
     return { success: false, message: "该装备不支持耐久系统" };
   }
 
-  if (item.isBroken && item.durability <= 0) {
+  if (inst.isBroken && inst.durability <= 0) {
     return { success: false, message: "装备已完全损坏，需要大修（花费更多）" };
   }
 
   // 计算修理费用
-  var maxDur = item.maxDurability || 100;
-  var currentDur = item.durability || 0;
+  var maxDur = inst.maxDurability || 100;
+  var currentDur = inst.durability || 0;
   var repairTarget =
     repairAmount > 0 ? Math.min(maxDur, currentDur + repairAmount) : maxDur;
   var repairNeeded = repairTarget - currentDur;
@@ -177,12 +161,12 @@ function repairEquipment(state, itemId, repairAmount) {
 
   // 修理费用：每点耐久 ¥1-5，取决于品质
   var pricePerPoint = 1;
-  if (item.quality === "rare") pricePerPoint = 2;
-  else if (item.quality === "epic") pricePerPoint = 3;
-  else if (item.quality === "legendary") pricePerPoint = 5;
+  if (inst.quality === "rare") pricePerPoint = 2;
+  else if (inst.quality === "epic") pricePerPoint = 3;
+  else if (inst.quality === "legendary") pricePerPoint = 5;
 
   // 完全损坏的装备修理费翻倍
-  if (item.isBroken) pricePerPoint *= 2;
+  if (inst.isBroken) pricePerPoint *= 2;
 
   var repairCost = Math.floor(repairNeeded * pricePerPoint);
 
@@ -197,22 +181,25 @@ function repairEquipment(state, itemId, repairAmount) {
 
   // 执行修理
   state.resources.cash -= repairCost;
-  item.durability = repairTarget;
-  item.isBroken = false;
+  inst.durability = repairTarget;
+  inst.isBroken = false;
+
+  var def = typeof getItemById === "function" ? getItemById(itemId) : null;
+  var itemName = (def && def.name) || itemId;
 
   return {
     success: true,
     cost: repairCost,
     repairedAmount: repairNeeded,
-    newDurability: item.durability,
-    maxDurability: item.maxDurability,
+    newDurability: inst.durability,
+    maxDurability: inst.maxDurability,
     message:
       "✅ 「" +
-      (item.name || itemId) +
+      itemName +
       "」修理完成，耐久 " +
       Math.floor(currentDur) +
       " → " +
-      Math.floor(item.durability) +
+      Math.floor(inst.durability) +
       "，花费 ¥" +
       repairCost,
   };
@@ -324,14 +311,14 @@ function renderDurabilityBar(item) {
  * @param {object} state - 游戏状态
  */
 function tickEquipmentDurability(state) {
-  if (!state || !state.equipment || !state.equipment.equipped) return;
+  if (!state || !state.inventory || !state.inventory.equipment) return;
 
   // 检查是否有装备耐久归零
   var brokenItems = [];
-  for (var slot in state.equipment.equipped) {
-    var item = state.equipment.equipped[slot];
-    if (item && item.durability !== undefined && item.isBroken) {
-      brokenItems.push(item);
+  for (var slot in state.inventory.equipment) {
+    var inst = getEquippedInstance(state, slot);
+    if (inst && inst.durability !== undefined && inst.isBroken) {
+      brokenItems.push(inst);
     }
   }
 

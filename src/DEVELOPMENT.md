@@ -1,6 +1,43 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-01（第五轮：新闻→世界参数联动 / 行业周期事件 / 日志滚动）
+> 最后更新: 2026-07-01（装备品质系统激活 / P2 实装）
+
+## 2026-07-01 — 装备品质系统激活（P2 实装）
+
+激活整套「死代码」装备品质系统：品质/价格/工作收入加成从此真正生效，并移除奇幻色彩的附魔系统。
+
+### 病灶（激活前）
+
+- **实例 key 永远对不上**：`buyItemFromShop` 写入用 `itemId_时间戳_随机`，读取用 `itemId_instance` / `slot_instance`，存进去的品质/耐久永远取不出
+- **幽灵存储 `state.equipment.equipped`**：5 文件读它但无人写 → `getItemJobBonus` 恒返回 1.0、`checkEquipmentSuites` 恒返回 `{}`、耐久消耗/修复全空转
+- **3 渠道未接**：拾荒只给现金；NPC 只给 flag/钱；smartphone 事件把装备塞进物品袋且无品质
+- **`rollEquipmentDrop`（items.js:1077-1183）死代码**：引用不存在的 `eq_*` 假 id
+
+### 改造
+
+1. **存储格式统一**：`equipmentInstances` 改按 slot 确定性键；新增 `getEquippedInstance(state, slot)` 统一读取入口；durability.js / equipment_durability.js / render.js / daily_focus.js 全部重定向
+2. **effectMult 接入工作收入**：`getItemJobBonus` 修复读真实 store + 乘 `getQualityEffectMult(quality)`（common×1.0 ~ legendary×1.5）
+3. **去附魔**：删 ENCHANTMENTS / rollEnchantments / describeItemQuality / formatEnchantmentDesc / createItemWithQuality；`createEquipmentInstance` 实例不含 enchantments，补 itemId 字段
+4. **3 渠道接入 createEquipmentInstance**：
+   - 拾荒 `executeScavengeRoute`：4 路线 8-15% 掉装备（loot 分布 85/12/3/0），slot 空则装备/占用则 50% 折现
+   - smartphone 事件：装备到 accessory 槽（event 分布 40/35/20/5），slot 占用按成交价折现避套利
+   - old_zhou NPC 95 档：赠 work_gloves（reward 分布 50/35/12/3），带 flag 防重复
+5. **`buyItemFromShop` 修键**：时间戳键 → slot 键；删 slotless 死路径的 enchantments 字段
+6. **迁移 `migrateEquipmentInstances`**：注入 `StateManager.importState`，旧存档按 slot 重建实例，找不到旧品质降 common
+7. **清理死代码**：删 items.js rollEquipmentDrop 块（1069-1183）
+8. **`checkEquipmentSuites` 重定向**：套装检测从恒返回 `{}` 变 live（effects 仍仅展示）
+
+### 连带影响
+
+- **耐久磨损 live**：修存储后耐久消耗真实生效（此前恒满）。基数沿用 DURABILITY_BASE(slot, 200-400)，日磨损 1-3，约 100 天磨损期，节奏温和；现金修理无技能门槛
+- **`getItemJobBonus` 平衡**：common work_gloves 建筑 +8%，legendary +62%；多件叠乘，legendary 仅 2% 掉率天然抑制
+
+### 验证
+
+- `npm run check:js` ✅（114文件）
+- `npm run typecheck` ✅
+- `python build.py` ✅（dist/index.html 4329.1 KB）
+- `npm run build` ✅（dist-webapp/）
 
 ## 2026-07-01 — 第五轮审查：3个留待项实装
 

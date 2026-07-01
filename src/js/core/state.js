@@ -133,6 +133,7 @@ function createDefaultState() {
         hand: null,
         accessory: null,
       },
+      equipmentInstances: {}, // { slot: { itemId, quality, qualityName, durability, ... } } 按 slot 键存储装备实例
     },
 
     // --- 住所 ---
@@ -740,6 +741,11 @@ class GameStateManager {
     // 叙事体验追踪
     if (s.flags && !s.flags._experiencedNarratives) {
       s.flags._experiencedNarratives = [];
+    }
+    // v1.9 → v2.0 迁移：装备实例按 slot 键统一（修复品质系统存储格式不一致）
+    // 旧键（itemId_时间戳 / itemId_instance）统一迁到 slot 键；找不到旧品质降为 common
+    if (typeof migrateEquipmentInstances === "function") {
+      migrateEquipmentInstances(s);
     }
     // 版本升级标记
     if (!s.version) s.version = "1.0.0";

@@ -159,25 +159,36 @@ function getDurabilityVisibility(state, durability, maxDurability) {
  */
 function initEquipmentDurability(state) {
   if (!state.inventory || !state.inventory.equipment) return;
-  if (!state.inventory.equipmentInstances) return;
+  if (!state.inventory.equipmentInstances)
+    state.inventory.equipmentInstances = {};
 
   for (var slot in state.inventory.equipment) {
     var itemId = state.inventory.equipment[slot];
     if (!itemId) continue;
-    var instanceId = itemId + "_instance";
-    var inst = state.inventory.equipmentInstances[instanceId];
+    var inst = getEquippedInstance(state, slot);
     if (!inst) {
-      // 旧格式：没有 instance，创建一个
-      var base = getDurabilityBase(itemId);
-      // 检查是否已有 durability（兼容迁移）
-      if (!state.inventory.equipmentInstances[instanceId]) {
-        state.inventory.equipmentInstances[instanceId] = {};
+      // 兜底：实例缺失（迁移后不应发生），补一个 common 实例
+      var def = typeof getItemById === "function" ? getItemById(itemId) : null;
+      if (def && typeof createEquipmentInstance === "function") {
+        inst = createEquipmentInstance(def, "migrate", {
+          forceQuality: "common",
+        });
+      } else {
+        var base = getDurabilityBase(itemId);
+        inst = {
+          itemId: itemId,
+          durability: base.max,
+          maxDurability: base.max,
+          isBroken: false,
+        };
       }
-      inst = state.inventory.equipmentInstances[instanceId];
+      state.inventory.equipmentInstances[slot] = inst;
+      continue;
     }
     if (inst.durability === undefined) {
-      inst.durability = base.max;
-      inst.maxDurability = base.max;
+      var base2 = getDurabilityBase(itemId);
+      inst.durability = base2.max;
+      inst.maxDurability = base2.max;
     }
   }
 }
@@ -226,10 +237,7 @@ function applyDailyWear(state) {
     if (!itemId) continue;
 
     var base = getDurabilityBase(itemId);
-    var instanceId = itemId + "_instance";
-    var inst =
-      state.inventory.equipmentInstances &&
-      state.inventory.equipmentInstances[instanceId];
+    var inst = getEquippedInstance(state, slot);
     if (!inst || inst.durability === undefined || inst.durability <= 0)
       continue;
 
@@ -300,10 +308,7 @@ function repairEquipment(state, itemId) {
     return false;
   }
 
-  var instanceId = itemId + "_instance";
-  var inst =
-    state.inventory.equipmentInstances &&
-    state.inventory.equipmentInstances[instanceId];
+  var inst = getEquippedInstance(state, slot);
   if (!inst || inst.durability === undefined) {
     StateManager.addMessage("❌ 该装备没有耐久度数据", "warning");
     return false;
@@ -409,21 +414,18 @@ function buildRepairPreview(state, itemDef) {
   var itemId = itemDef && itemDef.id;
   if (!itemId) return null;
 
-  // 检查该物品是否在装备中
-  var isEquipped = false;
+  // 检查该物品是否在装备中，并记录 slot
+  var itemSlot = null;
   for (var s in state.inventory.equipment) {
     if (state.inventory.equipment[s] === itemId) {
-      isEquipped = true;
+      itemSlot = s;
       break;
     }
   }
-  if (!isEquipped) return null;
+  if (!itemSlot) return null;
 
   // 检查耐久度实例
-  var instanceId = itemId + "_instance";
-  var inst =
-    state.inventory.equipmentInstances &&
-    state.inventory.equipmentInstances[instanceId];
+  var inst = getEquippedInstance(state, itemSlot);
   if (!inst || inst.durability === undefined) return null;
 
   var vis = getDurabilityVisibility(state, inst.durability, inst.maxDurability);
@@ -484,21 +486,18 @@ function buildRepairPreview(state, itemDef) {
 function getEffectiveEffects(state, itemId, effects) {
   if (!state.inventory || !state.inventory.equipment) return effects;
 
-  // 检查该装备是否当前装备中
-  var isEquipped = false;
+  // 检查该装备是否当前装备中，并记录 slot
+  var itemSlot = null;
   for (var s in state.inventory.equipment) {
     if (state.inventory.equipment[s] === itemId) {
-      isEquipped = true;
+      itemSlot = s;
       break;
     }
   }
-  if (!isEquipped) return effects;
+  if (!itemSlot) return effects;
 
   // 检查耐久度
-  var instanceId = itemId + "_instance";
-  var inst =
-    state.inventory.equipmentInstances &&
-    state.inventory.equipmentInstances[instanceId];
+  var inst = getEquippedInstance(state, itemSlot);
   if (!inst || inst.durability === undefined) return effects;
 
   if (inst.durability <= 0) {
@@ -512,10 +511,17 @@ function getEffectiveEffects(state, itemId, effects) {
  * 检查装备是否已损坏（耐久≤0）。
  */
 function isEquipmentBroken(state, itemId) {
-  var instanceId = itemId + "_instance";
-  var inst =
-    state.inventory.equipmentInstances &&
-    state.inventory.equipmentInstances[instanceId];
+  if (!state.inventory || !state.inventory.equipment) return false;
+  // 从 itemId 反查 slot
+  var itemSlot = null;
+  for (var s in state.inventory.equipment) {
+    if (state.inventory.equipment[s] === itemId) {
+      itemSlot = s;
+      break;
+    }
+  }
+  if (!itemSlot) return false;
+  var inst = getEquippedInstance(state, itemSlot);
   if (!inst || inst.durability === undefined) return false;
   return inst.durability <= 0;
 }

@@ -1,12 +1,13 @@
 /**
  * 装备品质系统 (Equipment Quality System)
  *
- * 为装备/道具添加品质等级和随机附魔。
- * 参考：《暗黑破坏神》装备品质、《魔兽世界》物品稀有度、《Stardew Valley》工具等级
+ * 为装备添加品质等级（普通/稀有/史诗/传说），影响基础价格与工作收入加成倍率。
+ * 参考：《暗黑破坏神》装备品质、《魔兽世界》物品稀有度
  *
  * 品质等级: common(普通) → rare(稀有) → epic(史诗) → legendary(传说)
- * 品质影响：基础属性倍率、价格倍率、附魔数量
- * 附魔：随机附加特殊效果（如收入+5%、疲劳恢复+10%等）
+ * 品质影响：价格倍率（priceMult）、工作收入加成倍率（effectMult）
+ *
+ * v2.0：移除附魔系统（奇幻色彩不符写实调性）；实例按 slot 键存储；新增迁移与统一读取入口。
  */
 
 const EQUIPMENT_QUALITIES = {
@@ -17,7 +18,6 @@ const EQUIPMENT_QUALITIES = {
     icon: "⬜",
     priceMult: 1.0,
     effectMult: 1.0,
-    enchantCount: 0,
     weight: 70,
   },
   rare: {
@@ -27,7 +27,6 @@ const EQUIPMENT_QUALITIES = {
     icon: "🟩",
     priceMult: 1.3,
     effectMult: 1.1,
-    enchantCount: 1,
     weight: 20,
   },
   epic: {
@@ -37,7 +36,6 @@ const EQUIPMENT_QUALITIES = {
     icon: "🟦",
     priceMult: 1.8,
     effectMult: 1.2,
-    enchantCount: 2,
     weight: 8,
   },
   legendary: {
@@ -47,154 +45,44 @@ const EQUIPMENT_QUALITIES = {
     icon: "🟨",
     priceMult: 2.5,
     effectMult: 1.5,
-    enchantCount: 3,
     weight: 2,
   },
 };
 
-const ENCHANTMENTS = [
-  {
-    id: "lucky",
-    name: "幸运",
-    icon: "🍀",
-    desc: "收入+5%",
-    weight: 15,
-    apply: function () {
-      return { incomeBonus: 0.05 };
-    },
-  },
-  {
-    id: "endurance",
-    name: "耐力",
-    icon: "💪",
-    desc: "疲劳恢复+10%",
-    weight: 15,
-    apply: function () {
-      return { fatigueRecoveryBonus: 0.1 };
-    },
-  },
-  {
-    id: "wisdom",
-    name: "智慧",
-    icon: "🧠",
-    desc: "学习XP+10%",
-    weight: 12,
-    apply: function () {
-      return { skillXpBonus: 0.1 };
-    },
-  },
-  {
-    id: "vitality",
-    name: "活力",
-    icon: "✨",
-    desc: "健康恢复+10%",
-    weight: 12,
-    apply: function () {
-      return { healthRecoveryBonus: 0.1 };
-    },
-  },
-  {
-    id: "agility_up",
-    name: "轻快",
-    icon: "🏃",
-    desc: "敏捷+2",
-    weight: 12,
-    apply: function () {
-      return { agility: 2 };
-    },
-  },
-  {
-    id: "strength_up",
-    name: "力量",
-    icon: "🦾",
-    desc: "体质+2",
-    weight: 12,
-    apply: function () {
-      return { physique: 2 };
-    },
-  },
-  {
-    id: "hygiene_up",
-    name: "洁净",
-    icon: "✨",
-    desc: "卫生+3",
-    weight: 10,
-    apply: function () {
-      return { hygiene: 3 };
-    },
-  },
-  {
-    id: "fame_up",
-    name: "名望",
-    icon: "⭐",
-    desc: "名气+1",
-    weight: 8,
-    apply: function () {
-      return { fame: 1 };
-    },
-  },
-  {
-    id: "fortune",
-    name: "财运",
-    icon: "💰",
-    desc: "交易收入+8%",
-    weight: 4,
-    apply: function () {
-      return { tradeIncomeBonus: 0.08 };
-    },
-  },
-];
+// 品质固定顺序（common → rare → epic → legendary）
+var QUALITY_ORDER = ["common", "rare", "epic", "legendary"];
 
-function rollItemQuality() {
+/**
+ * 按来源的品质分布权重 [common, rare, epic, legendary]
+ * 对应 DEVELOPMENT.md:2167 设计意图
+ */
+var QUALITY_WEIGHTS_BY_SOURCE = {
+  buy: [70, 20, 8, 2],
+  loot: [85, 12, 3, 0],
+  reward: [50, 35, 12, 3],
+  event: [40, 35, 20, 5],
+  migrate: [100, 0, 0, 0],
+};
+
+/**
+ * 随机品质
+ * @param {number[]} weights - [w_common, w_rare, w_epic, w_legendary]，缺省用 EQUIPMENT_QUALITIES 的 weight
+ * @returns {string} 品质 id
+ */
+function rollItemQuality(weights) {
+  var w =
+    weights ||
+    QUALITY_ORDER.map(function (q) {
+      return EQUIPMENT_QUALITIES[q].weight;
+    });
   var totalWeight = 0;
-  for (var q in EQUIPMENT_QUALITIES) {
-    if (EQUIPMENT_QUALITIES.hasOwnProperty(q))
-      totalWeight += EQUIPMENT_QUALITIES[q].weight;
-  }
+  for (var i = 0; i < w.length; i++) totalWeight += w[i];
   var roll = Random.float(0, totalWeight);
-  for (var qid in EQUIPMENT_QUALITIES) {
-    if (!EQUIPMENT_QUALITIES.hasOwnProperty(qid)) continue;
-    roll -= EQUIPMENT_QUALITIES[qid].weight;
-    if (roll <= 0) return qid;
+  for (var i = 0; i < QUALITY_ORDER.length; i++) {
+    roll -= w[i] || 0;
+    if (roll <= 0) return QUALITY_ORDER[i];
   }
   return "common";
-}
-
-function rollEnchantments(quality) {
-  var qDef = EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
-  var count = qDef.enchantCount;
-  if (count <= 0) return [];
-  var totalWeight = 0;
-  for (var i = 0; i < ENCHANTMENTS.length; i++)
-    totalWeight += ENCHANTMENTS[i].weight;
-  var result = [];
-  var usedIds = {};
-  for (var e = 0; e < count; e++) {
-    var attempts = 0;
-    while (attempts < 10) {
-      var roll = Random.float(0, totalWeight);
-      for (var j = 0; j < ENCHANTMENTS.length; j++) {
-        roll -= ENCHANTMENTS[j].weight;
-        if (roll <= 0) {
-          var ench = ENCHANTMENTS[j];
-          if (!usedIds[ench.id]) {
-            usedIds[ench.id] = true;
-            result.push({
-              id: ench.id,
-              name: ench.name,
-              icon: ench.icon,
-              desc: ench.desc,
-              effects: ench.apply(),
-            });
-            attempts = 999;
-          }
-          break;
-        }
-      }
-      attempts++;
-    }
-  }
-  return result;
 }
 
 function getQualityColor(quality) {
@@ -222,17 +110,35 @@ function getQualityEffectMult(quality) {
   return qDef.effectMult;
 }
 
+function getQualityInfo(quality) {
+  return EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
+}
+
+function getQualityClass(quality) {
+  return "quality-" + quality;
+}
+
+/**
+ * 生成品质信息（不含附魔）
+ * @param {object} itemDef - 装备定义
+ * @param {object} options - { forceQuality, qualityWeights }
+ * @returns {object|null} 品质信息，食材/证书返回 null
+ */
 function generateItemQuality(itemDef, options) {
   if (!itemDef) return null;
   if (itemDef.isIngredient) return null;
   if (itemDef.id && itemDef.id.indexOf("cert_") === 0) return null;
-  var quality =
-    options && options.forceQuality ? options.forceQuality : rollItemQuality();
-  var enchantments = rollEnchantments(quality);
+  var quality;
+  if (options && options.forceQuality) {
+    quality = options.forceQuality;
+  } else if (options && options.qualityWeights) {
+    quality = rollItemQuality(options.qualityWeights);
+  } else {
+    quality = rollItemQuality();
+  }
   var qDef = EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
   return {
     quality: quality,
-    enchantments: enchantments,
     qualityName: qDef.name,
     qualityColor: qDef.color,
     qualityIcon: qDef.icon,
@@ -246,74 +152,42 @@ function getItemPriceWithQuality(basePrice, qualityInfo) {
   return Math.round(basePrice * (qualityInfo.priceMult || 1.0));
 }
 
-function describeItemQuality(qualityInfo) {
-  if (!qualityInfo || qualityInfo.quality === "common") return "";
-  var parts = [];
-  if (qualityInfo.enchantments && qualityInfo.enchantments.length > 0) {
-    qualityInfo.enchantments.forEach(function (e) {
-      parts.push(e.icon + " " + e.desc);
-    });
-  }
-  return parts.join(" ");
-}
-
-function createItemWithQuality(itemId, options) {
-  options = options || {};
-  var def = null;
-  if (typeof ITEMS !== "undefined") {
-    def = ITEMS.find(function (i) {
-      return i.id === itemId;
-    });
-  }
-  var qualityInfo = def ? generateItemQuality(def, options) : null;
-  var item = { id: itemId, qty: options.qty || 1 };
-  if (qualityInfo) {
-    item.quality = qualityInfo.quality;
-    item.enchantments = qualityInfo.enchantments;
-  }
-  return item;
-}
-
-function getQualityInfo(quality) {
-  return EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
-}
-
-function formatEnchantmentDesc(enchantments) {
-  if (!enchantments || enchantments.length === 0) return "";
-  return enchantments
-    .map(function (e) {
-      return e.icon + " " + e.desc;
-    })
-    .join(" ");
-}
-
-function getQualityClass(quality) {
-  return "quality-" + quality;
-}
-
 /**
- * 创建设备实例（带品质 + 耐久）
- * 被 modal.js 的 buyItemFromShop 调用
- * @param {object} itemDef - 装备定义对象（来自 ITEMS 数组）
- * @param {string} source - "buy" | "loot" | "reward"
- * @returns {object} { instanceId, quality, qualityName, qualityColor, qualityIcon, enchantments, actualPrice, durability, maxDurability, isBroken }
+ * 创建装备实例（带品质 + 耐久，不含附魔）
+ * 被 modal.js buyItemFromShop / 拾荒 / 事件 / NPC 赠予调用
+ * @param {object} itemDef - 装备定义对象（来自 ITEMS 数组，必须有 slot）
+ * @param {string} source - "buy" | "loot" | "reward" | "event" | "migrate"
+ * @param {object} options - { forceQuality, qualityWeights }（forceQuality 绕过 RNG，用于迁移）
+ * @returns {object|null} 实例对象（含 itemId），无 slot 返回 null
  */
-function createEquipmentInstance(itemDef, source) {
+function createEquipmentInstance(itemDef, source, options) {
   if (!itemDef || !itemDef.slot) return null;
+  source = source || "buy";
+  options = options || {};
 
-  var qualityInfo = generateItemQuality(itemDef, {});
+  // 组装品质选项：forceQuality > qualityWeights > 按来源默认权重
+  var qOpts = {};
+  if (options.forceQuality) {
+    qOpts.forceQuality = options.forceQuality;
+  } else if (options.qualityWeights) {
+    qOpts.qualityWeights = options.qualityWeights;
+  } else {
+    var srcWeights = QUALITY_WEIGHTS_BY_SOURCE[source];
+    if (srcWeights) qOpts.qualityWeights = srcWeights;
+  }
+
+  var qualityInfo = generateItemQuality(itemDef, qOpts);
   if (!qualityInfo) {
-    // 回退到普通品质
+    // 非品质物品兜底（食材/证书已在上游过滤）
     var basicInstance = {
+      itemId: itemDef.id,
       instanceId: itemDef.id + "_inst",
       quality: "common",
       qualityName: "普通",
       qualityColor: "#99958e",
       qualityIcon: "⬜",
-      enchantments: [],
       actualPrice: itemDef.price || 0,
     };
-    // 添加耐久
     if (typeof initItemDurability === "function") {
       basicInstance =
         initItemDurability(basicInstance, itemDef) || basicInstance;
@@ -321,15 +195,15 @@ function createEquipmentInstance(itemDef, source) {
     return basicInstance;
   }
 
-  var actualPrice = Math.round((itemDef.price || 0) * qualityInfo.priceMult);
+  var actualPrice = getItemPriceWithQuality(itemDef.price || 0, qualityInfo);
   var instanceId = itemDef.id + "_" + Date.now() + "_" + Random.int(0, 999);
   var instance = {
+    itemId: itemDef.id,
     instanceId: instanceId,
     quality: qualityInfo.quality,
     qualityName: qualityInfo.qualityName,
     qualityColor: qualityInfo.qualityColor,
     qualityIcon: qualityInfo.qualityIcon,
-    enchantments: qualityInfo.enchantments,
     actualPrice: actualPrice,
   };
 
@@ -341,6 +215,94 @@ function createEquipmentInstance(itemDef, source) {
   return instance;
 }
 
+/**
+ * 读取某槽位的已装备实例（统一入口）
+ * 所有读装备实例的代码都应走这里，避免 key 不一致。
+ * @param {object} state - 游戏状态
+ * @param {string} slot - 槽位名 head/body/feet/hand/accessory
+ * @returns {object|null} 实例对象（含 itemId/quality/durability...）
+ */
+function getEquippedInstance(state, slot) {
+  if (!state || !state.inventory || !state.inventory.equipmentInstances)
+    return null;
+  var inst = state.inventory.equipmentInstances[slot];
+  if (inst && inst.itemId) return inst;
+  return null;
+}
+
+/**
+ * 迁移旧存档的 equipmentInstances 到按 slot 确定性键
+ * 旧键可能是 itemId_时间戳_随机 或 itemId_instance；统一迁到 slot 键。
+ * 找不到旧品质则降为 common（品质系统此前完全失效，无玩家受损）。
+ * 在 StateManager.importState 末尾调用，覆盖 load + import。
+ */
+function migrateEquipmentInstances(state) {
+  if (!state || !state.inventory) return;
+  if (!state.inventory.equipment) {
+    state.inventory.equipment = {
+      head: null,
+      body: null,
+      feet: null,
+      hand: null,
+      accessory: null,
+    };
+  }
+  if (!state.inventory.equipmentInstances) {
+    state.inventory.equipmentInstances = {};
+  }
+
+  var SLOTS = ["head", "body", "feet", "hand", "accessory"];
+  var oldMap = state.inventory.equipmentInstances;
+  var newMap = {};
+
+  for (var s = 0; s < SLOTS.length; s++) {
+    var slot = SLOTS[s];
+    var itemId = state.inventory.equipment[slot];
+    if (!itemId) continue;
+
+    // 1) 已有 slot 键且匹配
+    if (oldMap[slot] && oldMap[slot].itemId === itemId) {
+      newMap[slot] = oldMap[slot];
+      continue;
+    }
+
+    // 2) 扫旧键（时间戳 / itemId_instance），找 value.itemId 匹配的
+    var found = null;
+    for (var k in oldMap) {
+      if (!oldMap.hasOwnProperty(k) || k === slot) continue;
+      var v = oldMap[k];
+      if (v && v.itemId === itemId) {
+        found = v;
+        break;
+      }
+    }
+    if (found) {
+      found.itemId = itemId;
+      newMap[slot] = found;
+    } else {
+      // 3) 重建 common 实例（forceQuality 绕过 RNG，确定性）
+      var def = typeof getItemById === "function" ? getItemById(itemId) : null;
+      if (def) {
+        newMap[slot] = createEquipmentInstance(def, "migrate", {
+          forceQuality: "common",
+        });
+      } else {
+        newMap[slot] = {
+          itemId: itemId,
+          instanceId: itemId + "_inst",
+          quality: "common",
+          qualityName: "普通",
+          qualityColor: "#99958e",
+          qualityIcon: "⬜",
+          actualPrice: 0,
+        };
+      }
+    }
+  }
+
+  state.inventory.equipmentInstances = newMap;
+}
+
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.MECHANICS = window.MECHANICS || {};
@@ -349,23 +311,23 @@ if (typeof window !== "undefined") {
     name: "装备品质",
     icon: "💎",
     brief:
-      "装备有普通/稀有/史诗/传说四档品质，品质越高效果越强，并可附带随机附魔效果。",
-    version: "1.0",
+      "装备有普通/稀有/史诗/传说四档品质，品质越高价格越高、工作收入加成越强。",
+    version: "2.0",
     related: ["mechanics:inventory"],
     sections: [
       {
         type: "desc",
         content:
-          "购买装备时随机生成品质。品质越高，基础属性倍率越高，还可获得额外附魔效果。",
+          "购买/拾取/获赠装备时随机生成品质。品质越高，价格倍率越高，对应工作的收入加成也按效果倍率放大。",
       },
       {
         type: "table",
-        headers: ["品质", "图标", "出现概率", "价格倍率", "效果倍率", "附魔数"],
+        headers: ["品质", "图标", "购买出现概率", "价格倍率", "效果倍率"],
         rows: [
-          ["普通", "⬜", "70%", "×1.0", "×1.0", "无"],
-          ["稀有", "🟩", "20%", "×1.3", "×1.1", "1个"],
-          ["史诗", "🟦", "8%", "×1.8", "×1.2", "2个"],
-          ["传说", "🟨", "2%", "×2.5", "×1.5", "3个"],
+          ["普通", "⬜", "70%", "×1.0", "×1.0"],
+          ["稀有", "🟩", "20%", "×1.3", "×1.1"],
+          ["史诗", "🟦", "8%", "×1.8", "×1.2"],
+          ["传说", "🟨", "2%", "×2.5", "×1.5"],
         ],
       },
     ],

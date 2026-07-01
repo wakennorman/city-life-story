@@ -90,15 +90,20 @@
     }
 
     // 装备耐久
-    var equipped = (state.equipment && state.equipment.equipped) || {};
-    var dur = state._equipmentDurability || {};
+    var equipped = (state.inventory && state.inventory.equipment) || {};
     Object.keys(equipped).forEach(function (slot) {
-      var itemId = equipped[slot];
-      if (!itemId) return;
-      var d = dur[itemId];
-      if (!d || typeof d.current !== "number" || typeof d.max !== "number")
+      var inst =
+        typeof getEquippedInstance === "function"
+          ? getEquippedInstance(state, slot)
+          : null;
+      if (
+        !inst ||
+        typeof inst.durability !== "number" ||
+        typeof inst.maxDurability !== "number" ||
+        inst.maxDurability <= 0
+      )
         return;
-      var pct = d.current / d.max;
+      var pct = inst.durability / inst.maxDurability;
       if (pct < 0.2) {
         out.push({
           w: 70,

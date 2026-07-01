@@ -1642,20 +1642,50 @@
             if (Random.chance(0.7)) {
               st.resources.cash -= 150;
               st.player.fame = Math.min(100, st.player.fame + 2);
-              // 添加到背包
-              if (!st.inventory.items) st.inventory.items = [];
-              var existPhone = st.inventory.items.find(function (x) {
-                return x.id === "smartphone";
-              });
-              if (existPhone) {
-                existPhone.qty = (existPhone.qty || 1) + 1;
+              // smartphone 是 accessory 装备：装备到槽位（带品质）
+              var phoneDef =
+                typeof getItemById === "function"
+                  ? getItemById("smartphone")
+                  : null;
+              if (!st.inventory.equipment) st.inventory.equipment = {};
+              if (!st.inventory.equipmentInstances)
+                st.inventory.equipmentInstances = {};
+              if (st.inventory.equipment.accessory) {
+                // 已有配件：按成交价折现（避免 actualPrice 套利）
+                st.resources.cash += 150;
+                st.resources.totalEarned += 150;
+                StateManager.addMessage(
+                  "📱 买到一部成色不错的手机，但你已有配件，转手卖了¥150。跑外卖的路仍敞开，名气+2。",
+                  "success",
+                );
+              } else if (
+                phoneDef &&
+                typeof createEquipmentInstance === "function"
+              ) {
+                var phoneInst = createEquipmentInstance(phoneDef, "event", {
+                  qualityWeights:
+                    typeof QUALITY_WEIGHTS_BY_SOURCE !== "undefined"
+                      ? QUALITY_WEIGHTS_BY_SOURCE.event
+                      : null,
+                });
+                st.inventory.equipment.accessory = "smartphone";
+                st.inventory.equipmentInstances.accessory = phoneInst;
+                var qTag =
+                  phoneInst.qualityName && phoneInst.qualityName !== "普通"
+                    ? "「" + phoneInst.qualityName + "」"
+                    : "";
+                StateManager.addMessage(
+                  "📱 买到一部" +
+                    qTag +
+                    "成色不错的手机，已装备！跑外卖的路敞开了，名气+2。",
+                  "success",
+                );
               } else {
-                st.inventory.items.push({ id: "smartphone", qty: 1 });
+                StateManager.addMessage(
+                  "📱 手机买到了，跑外卖的路敞开了，名气+2。",
+                  "success",
+                );
               }
-              StateManager.addMessage(
-                "📱 手机买到了，成色还不错！已放入背包，跑外卖的路敞开了，名气+2。",
-                "success",
-              );
             } else {
               st.resources.cash -= 150;
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
@@ -1676,22 +1706,58 @@
             );
             const price = Random.int(100, 179);
             st.resources.cash -= price;
-            // 添加到背包
-            if (!st.inventory.items) st.inventory.items = [];
-            var existPhone2 = st.inventory.items.find(function (x) {
-              return x.id === "smartphone";
-            });
-            if (existPhone2) {
-              existPhone2.qty = (existPhone2.qty || 1) + 1;
+            // smartphone 是 accessory 装备：装备到槽位（带品质）
+            var phoneDef2 =
+              typeof getItemById === "function"
+                ? getItemById("smartphone")
+                : null;
+            if (!st.inventory.equipment) st.inventory.equipment = {};
+            if (!st.inventory.equipmentInstances)
+              st.inventory.equipmentInstances = {};
+            if (st.inventory.equipment.accessory) {
+              // 已有配件：按成交价折现
+              st.resources.cash += price;
+              st.resources.totalEarned += price;
+              StateManager.addMessage(
+                "🔍 你仔细测试了30分钟，砍价到¥" +
+                  price +
+                  "成交，没有暗病。但你已有配件，转手卖了¥" +
+                  price +
+                  "。",
+                "success",
+              );
+            } else if (
+              phoneDef2 &&
+              typeof createEquipmentInstance === "function"
+            ) {
+              var phoneInst2 = createEquipmentInstance(phoneDef2, "event", {
+                qualityWeights:
+                  typeof QUALITY_WEIGHTS_BY_SOURCE !== "undefined"
+                    ? QUALITY_WEIGHTS_BY_SOURCE.event
+                    : null,
+              });
+              st.inventory.equipment.accessory = "smartphone";
+              st.inventory.equipmentInstances.accessory = phoneInst2;
+              var qTag2 =
+                phoneInst2.qualityName && phoneInst2.qualityName !== "普通"
+                  ? "「" + phoneInst2.qualityName + "」"
+                  : "";
+              StateManager.addMessage(
+                "🔍 你仔细测试了30分钟，砍价到¥" +
+                  price +
+                  "成交，没有暗病。" +
+                  qTag2 +
+                  "手机已装备！",
+                "success",
+              );
             } else {
-              st.inventory.items.push({ id: "smartphone", qty: 1 });
+              StateManager.addMessage(
+                "🔍 你仔细测试了30分钟，砍价到¥" +
+                  price +
+                  "成交，没有暗病。手机已装备。",
+                "success",
+              );
             }
-            StateManager.addMessage(
-              "🔍 你仔细测试了30分钟，砍价到¥" +
-                price +
-                "成交，没有暗病。手机已放入背包。",
-              "success",
-            );
           },
         },
         {

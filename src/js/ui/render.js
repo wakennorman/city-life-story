@@ -2049,18 +2049,26 @@ function getDailyActionTips(state) {
 
   // === 今日重点整合（原daily_focus内容）===
   // 装备耐久预警
-  var equipped = (state.equipment && state.equipment.equipped) || {};
-  var dur = state._equipmentDurability || {};
+  var equipped = (state.inventory && state.inventory.equipment) || {};
   Object.keys(equipped).forEach(function (slot) {
-    var itemId = equipped[slot];
-    if (!itemId) return;
-    var d = dur[itemId];
-    if (!d || typeof d.current !== "number" || typeof d.max !== "number")
+    var inst =
+      typeof getEquippedInstance === "function"
+        ? getEquippedInstance(state, slot)
+        : null;
+    if (
+      !inst ||
+      typeof inst.durability !== "number" ||
+      typeof inst.maxDurability !== "number" ||
+      inst.maxDurability <= 0
+    )
       return;
-    var pct = d.current / d.max;
+    var pct = inst.durability / inst.maxDurability;
     if (pct < 0.2) {
+      var def =
+        typeof getItemById === "function" ? getItemById(inst.itemId) : null;
+      var nm = (def && def.name) || inst.itemId;
       urgent.push(
-        "🔧 " + itemId + "耐久仅" + Math.round(pct * 100) + "%，快修理别报废！",
+        "🔧 " + nm + "耐久仅" + Math.round(pct * 100) + "%，快修理别报废！",
       );
     }
   });
@@ -4254,26 +4262,10 @@ function renderInventoryTab(state, parent) {
         qualityStyle =
           "border-left:3px solid " + getQualityColor(item.quality) + ";";
       }
-      // 附魔描述
-      var enchantHtml = "";
-      if (
-        item.enchantments &&
-        item.enchantments.length > 0 &&
-        typeof describeItemQuality === "function"
-      ) {
-        enchantHtml =
-          '<div style="font-size:9px;color:var(--accent);margin-top:2px;">' +
-          describeItemQuality({
-            quality: item.quality,
-            enchantments: item.enchantments,
-          }) +
-          "</div>";
-      }
       el.innerHTML = `
         <div class="item-name" style="${qualityStyle}">${def ? def.name : item.id}</div>
         <div class="item-qty">数量: ${item.qty}</div>
         ${def ? `<div class="item-effects">${describeItemEffects(def)}</div>` : ""}
-        ${enchantHtml}
       `;
       grid.appendChild(el);
     }
@@ -4307,10 +4299,9 @@ function renderInventoryTab(state, parent) {
   equipGrid.style.gridTemplateColumns = "repeat(auto-fill, minmax(130px, 1fr))";
   for (const slot of slots) {
     const itemId = equip[slot.key];
-    const instanceId = equip[slot.key + "_instance"];
     const equipInstance =
-      instanceId && state.inventory?.equipmentInstances
-        ? state.inventory.equipmentInstances[instanceId]
+      itemId && state.inventory?.equipmentInstances
+        ? state.inventory.equipmentInstances[slot.key]
         : null;
     const itemDef =
       itemId && typeof ITEMS !== "undefined"
@@ -4322,11 +4313,6 @@ function renderInventoryTab(state, parent) {
       qualityId && typeof getQualityInfo === "function"
         ? getQualityInfo(qualityId)
         : null;
-    const enchantments = equipInstance?.enchantments || [];
-    const enchantDesc =
-      enchantments.length > 0 && typeof formatEnchantmentDesc === "function"
-        ? formatEnchantmentDesc(enchantments)
-        : "";
 
     const card = document.createElement("div");
     card.className =
@@ -4355,7 +4341,6 @@ function renderInventoryTab(state, parent) {
       <div style="font-size:12px;color:${displayItem ? "var(--success)" : "var(--text-muted)"};display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
         ${displayItem ? displayItem.name : "(空)"} ${qualityBadge}
       </div>
-      ${enchantDesc ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${enchantDesc}</div>` : ""}
       ${priceDisplay}
       ${repairHtml}
     `;

@@ -1036,41 +1036,29 @@ function buyItemFromShop(itemId) {
     "购买" + (item.icon || "") + item.name,
   );
 
-  // 装备类（有slot）：放入 equipment 槽位（带品质信息）
+  // 装备类（有slot）：放入 equipment 槽位（带品质信息，按 slot 键存储实例）
   if (item.slot) {
     if (!state.inventory.equipment) state.inventory.equipment = {};
-    var curItemId = state.inventory.equipment[item.slot];
-    var curItem = curItemId
-      ? state.inventory.equipmentInstances?.[curItemId + "_instance"] ||
-        getItemById(curItemId)
-      : null;
+    if (!state.inventory.equipmentInstances)
+      state.inventory.equipmentInstances = {};
 
-    if (curItem) {
+    var curInst = getEquippedInstance(state, item.slot);
+    if (curInst) {
+      var curDef =
+        typeof getItemById === "function" ? getItemById(curInst.itemId) : null;
       StateManager.addMessage(
         "👕 替换了旧的" +
-          (curItem.name || curItemId) +
+          ((curDef && curDef.name) || curInst.itemId) +
           "，装备了" +
-          (equippedItem ? equippedItem.name : item.name),
+          item.name,
         "info",
       );
     } else {
-      StateManager.addMessage(
-        "✅ 购买并装备了：" + (equippedItem ? equippedItem.name : item.name),
-        "success",
-      );
+      StateManager.addMessage("✅ 购买并装备了：" + item.name, "success");
     }
     state.inventory.equipment[item.slot] = itemId;
     if (equippedItem) {
-      if (!state.inventory.equipmentInstances)
-        state.inventory.equipmentInstances = {};
-      var instanceId =
-        itemId +
-        "_" +
-        Date.now() +
-        "_" +
-        Math.random().toString(36).slice(2, 7);
-      equippedItem.instanceId = instanceId;
-      state.inventory.equipmentInstances[instanceId] = equippedItem;
+      state.inventory.equipmentInstances[item.slot] = equippedItem;
     }
     // 初始化耐久度（新装备立即有耐久度）
     if (typeof initEquipmentDurability === "function") {
@@ -1086,12 +1074,6 @@ function buyItemFromShop(itemId) {
       existing.qty = (existing.qty || 1) + 1;
     } else {
       var itemInstance = { id: itemId, qty: 1 };
-      if (equippedItem) {
-        itemInstance.quality = equippedItem.quality;
-        itemInstance.enchantments = equippedItem.enchantments;
-        itemInstance.actualEffects = equippedItem.actualEffects;
-        itemInstance.actualPrice = equippedItem.actualPrice;
-      }
       state.inventory.items.push(itemInstance);
     }
     StateManager.addMessage("✅ 购买了：" + item.name, "success");
@@ -1516,6 +1498,76 @@ function executeScavengeRoute(routeId) {
   );
   st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
   st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
+
+  // 装备掉落：拾荒偶尔捡到可用装备（捡破烂换钱/自用）
+  var dropChance =
+    {
+      alley: 0.08,
+      depot: 0.12,
+      factory: 0.15,
+      zhou_channel: 0.1,
+    }[routeId] || 0;
+  if (Random.chance(dropChance)) {
+    var SCAVENGE_EQUIPMENT_POOL = [
+      "straw_hat",
+      "work_gloves",
+      "sturdy_shoes",
+      "backpack",
+    ];
+    var dropId =
+      SCAVENGE_EQUIPMENT_POOL[
+        Random.int(0, SCAVENGE_EQUIPMENT_POOL.length - 1)
+      ];
+    var dropDef =
+      typeof getItemById === "function" ? getItemById(dropId) : null;
+    if (
+      dropDef &&
+      dropDef.slot &&
+      typeof createEquipmentInstance === "function"
+    ) {
+      var dropInst = createEquipmentInstance(dropDef, "loot", {
+        qualityWeights:
+          typeof QUALITY_WEIGHTS_BY_SOURCE !== "undefined"
+            ? QUALITY_WEIGHTS_BY_SOURCE.loot
+            : null,
+      });
+      var dropSlot = dropDef.slot;
+      if (!st.inventory.equipment) st.inventory.equipment = {};
+      if (!st.inventory.equipmentInstances)
+        st.inventory.equipmentInstances = {};
+      var curDrop = st.inventory.equipment[dropSlot];
+      if (!curDrop) {
+        // 槽位空：直接装备
+        st.inventory.equipment[dropSlot] = dropId;
+        st.inventory.equipmentInstances[dropSlot] = dropInst;
+        var dropQ =
+          dropInst.qualityName && dropInst.qualityName !== "普通"
+            ? "「" + dropInst.qualityName + "」"
+            : "";
+        msg += " 顺便捡到一副" + dropQ + dropDef.name + "，戴上正合适！";
+      } else {
+        // 槽位占用：按实际价 50% 折现（捡破烂换钱）
+        var sellPrice = Math.floor(
+          (dropInst.actualPrice || dropDef.price || 0) * 0.5,
+        );
+        st.resources.cash += sellPrice;
+        st.resources.totalEarned += sellPrice;
+        addDailyTransaction(
+          st,
+          "income",
+          "scavenge",
+          sellPrice,
+          "拾荒卖装备 - " + dropDef.name,
+        );
+        msg +=
+          " 捡到一副" +
+          dropDef.name +
+          "，但已有同类，转手卖了¥" +
+          sellPrice +
+          "。";
+      }
+    }
+  }
 
   StateManager.addMessage(msg, msgType);
   consumeAP(apCost);

@@ -830,6 +830,59 @@ const NPCS = [
           );
         },
       },
+      {
+        threshold: 95,
+        id: "old_zhou_95_gear",
+        desc: "老周送你一副他用顺手的旧劳保手套",
+        effect: function (st) {
+          if (st.flags._npcGearReward_old_zhou) return; // 已赠过，防重复
+          var gloveDef =
+            typeof getItemById === "function"
+              ? getItemById("work_gloves")
+              : null;
+          if (!st.inventory.equipment) st.inventory.equipment = {};
+          if (!st.inventory.equipmentInstances)
+            st.inventory.equipmentInstances = {};
+          if (gloveDef && typeof createEquipmentInstance === "function") {
+            var gloveInst = createEquipmentInstance(gloveDef, "reward", {
+              qualityWeights:
+                typeof QUALITY_WEIGHTS_BY_SOURCE !== "undefined"
+                  ? QUALITY_WEIGHTS_BY_SOURCE.reward
+                  : null,
+            });
+            if (!st.inventory.equipment.hand) {
+              st.inventory.equipment.hand = "work_gloves";
+              st.inventory.equipmentInstances.hand = gloveInst;
+              var gq =
+                gloveInst.qualityName && gloveInst.qualityName !== "普通"
+                  ? "「" + gloveInst.qualityName + "」"
+                  : "";
+              StateManager.addMessage(
+                "🧤 老周递来一副磨旧的劳保手套：" +
+                  gq +
+                  "「戴上，别把手磨破了。」",
+                "success",
+              );
+            } else {
+              var gSell = Math.floor(
+                (gloveInst.actualPrice || gloveDef.price || 0) * 0.5,
+              );
+              st.resources.cash += gSell;
+              st.resources.totalEarned += gSell;
+              StateManager.addMessage(
+                "🧤 老周给了副手套，你手上已有，转手换了¥" + gSell + "。",
+                "success",
+              );
+            }
+          } else {
+            StateManager.addMessage(
+              "🧤 老周拍了拍你的肩：「好好干。」",
+              "info",
+            );
+          }
+          st.flags._npcGearReward_old_zhou = true;
+        },
+      },
     ],
     favor: {
       story:

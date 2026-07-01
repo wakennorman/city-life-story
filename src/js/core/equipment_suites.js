@@ -267,19 +267,19 @@ const EQUIPMENT_SUITES = {
  * @returns {object} 每个套装的已装备数量和最高达成等级
  */
 function checkEquipmentSuites(state) {
-  if (!state || !state.equipment || !state.equipment.equipped) {
+  if (!state || !state.inventory || !state.inventory.equipment) {
     return {};
   }
 
   var equippedIds = {};
   var equippedSlots = {};
 
-  // 收集已装备的装备ID和槽位
-  for (var slot in state.equipment.equipped) {
-    var item = state.equipment.equipped[slot];
-    if (item && item.id) {
-      equippedIds[item.id] = true;
-      equippedSlots[slot] = item.id;
+  // 收集已装备的装备ID和槽位（equipment[slot] = itemId 字符串）
+  for (var slot in state.inventory.equipment) {
+    var itemId = state.inventory.equipment[slot];
+    if (itemId) {
+      equippedIds[itemId] = true;
+      equippedSlots[slot] = itemId;
     }
   }
 
