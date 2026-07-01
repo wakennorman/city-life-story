@@ -226,7 +226,10 @@ function tickLegal(state) {
       // 败诉连锁：精神受损 + 产生额外诉讼债务（律师费尾款）
       state.needs.mental = Math.max(0, (state.needs.mental || 50) - 8);
       var extraDebt = caseData ? Math.round(caseData.cost * 0.2) : 500;
-      state.resources.cash = Math.max(0, (state.resources.cash || 0) - extraDebt);
+      state.resources.cash = Math.max(
+        0,
+        (state.resources.cash || 0) - extraDebt,
+      );
       state._lastLegalResult = "败诉，已支付的诉讼费无法追回。";
       // v3.8 P1：法律结果通知玩家（败诉）
       if (typeof StateManager !== "undefined") {

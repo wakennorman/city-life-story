@@ -4069,4 +4069,18 @@ body {
     flex: 1 1 120px;
     min-height: 44px;
   }
+
+  /* === 事业发展Tab移动端兜底（P1-6） === */
+  .career-capital-bar {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 3px !important;
+    font-size: 9px !important;
+  }
+  .career-capital-bar b {
+    font-size: 11px !important;
+  }
+  .career-path-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
 }

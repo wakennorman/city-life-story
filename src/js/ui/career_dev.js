@@ -441,7 +441,7 @@ function getCareerGuidanceHtml(state) {
         "</div>"
       : "<div>人生目标：未选择；开局目标可提供路线加成，当前仍可自由发展。</div>") +
     "</div>" +
-    '<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;font-size:10px;color:var(--text-muted);">' +
+    '<div class="career-capital-bar" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;font-size:10px;color:var(--text-muted);">' +
     "<div>行业<br><b>" +
     Math.round(cap.industryResources || 0) +
     "</b></div><div>客户<br><b>" +
@@ -559,7 +559,7 @@ function getCareerEducationHtml(state) {
     eduNames[edu] +
     "</div>" +
     '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">' +
-    '目标：<strong>' +
+    "目标：<strong>" +
     eduNames[nextLevel] +
     "</strong>（需" +
     threshold +
@@ -576,7 +576,7 @@ function getCareerEducationHtml(state) {
     threshold +
     "<br>" +
     '<button class="btn btn-sm" style="margin-top:6px;min-height:44px;" ' +
-        "onclick=\"document.querySelector('[data-tab=action]')?.click()\">🏛️ 去大学城备考</button>" +
+    "onclick=\"document.querySelector('[data-tab=action]')?.click()\">🏛️ 去大学城备考</button>" +
     "</div></div></div>"
   );
 }
@@ -716,35 +716,63 @@ function renderCareerJobs(state, parent) {
     }
 
     // ---- 工作行动：业绩/调休（P0-4+P0-5） ----
-    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
+    html +=
+      '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
-    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
-    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
-    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
-    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
-    html += '</div></div>';
+    html +=
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
+    html +=
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
+    html +=
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
+    html +=
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+    html += "</div></div>";
 
     // ---- 职场社交（P0-2：主动社交UI） ----
-    var colleagues = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
-    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">🤝 职场社交</h3>';
-    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">与同事维护关系有助于晋升和获取内推</div>';
+    var colleagues =
+      state.corporate &&
+      state.corporate.colleagues &&
+      state.corporate.colleagues.network;
+    html +=
+      '<div style="margin-top:12px;"><h3 style="font-size:13px;">🤝 职场社交</h3>';
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">与同事维护关系有助于晋升和获取内推</div>';
     if (colleagues && colleagues.length) {
       for (var ci = 0; ci < colleagues.length; ci++) {
         var co = colleagues[ci];
-        html += '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">';
-        html += '<div><strong>' + (co.name || "同事") + '</strong> <span style="color:var(--text-muted);font-size:10px;">关系' + (co.relationship || 0) + ' 信任' + (co.trust || 0) + '</span></div>';
+        html +=
+          '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">';
+        html +=
+          "<div><strong>" +
+          (co.name || "同事") +
+          '</strong> <span style="color:var(--text-muted);font-size:10px;">关系' +
+          (co.relationship || 0) +
+          " 信任" +
+          (co.trust || 0) +
+          "</span></div>";
         html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
-        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'meal\',\'' + co.id + '\')">🍚请客</button>';
-        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'chat\',\'' + co.id + '\')">💬闲聊</button>';
-        if ((co.relationship || 0) >= 60 && co.role !== 'mentor') {
-          html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'mentor\',\'' + co.id + '\')">👨‍🏫拜师</button>';
+        html +=
+          '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'meal\',\'' +
+          co.id +
+          "')\">🍚请客</button>";
+        html +=
+          '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'chat\',\'' +
+          co.id +
+          "')\">💬闲聊</button>";
+        if ((co.relationship || 0) >= 60 && co.role !== "mentor") {
+          html +=
+            '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'mentor\',\'' +
+            co.id +
+            "')\">👨‍🏫拜师</button>";
         }
-        html += '</div></div>';
+        html += "</div></div>";
       }
     } else {
-      html += '<div style="font-size:10px;color:var(--text-muted);padding:8px 0;">暂无同事数据，入职后自动生成</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);padding:8px 0;">暂无同事数据，入职后自动生成</div>';
     }
-    html += '</div>';
+    html += "</div>";
 
     // 离职按钮
     html +=
@@ -762,7 +790,8 @@ function renderCareerJobs(state, parent) {
   // ---- 职业路径选择（没有工作时显示） ----
   if (!currentJob) {
     html += '<div class="section"><h3>🔍 选择职业方向</h3>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    html +=
+      '<div class="career-path-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
 
     for (var pathKey in CAREER_PATHS) {
       var pData = CAREER_PATHS[pathKey];
@@ -908,7 +937,20 @@ function initCareerColleagues(state) {
   }
   var net = state.corporate.colleagues.network;
   if (net.length) return;
-  var names = ["老王", "小张", "小李", "小刘", "小陈", "小赵", "小周", "小吴", "小郑", "小孙", "小徐", "小高"];
+  var names = [
+    "老王",
+    "小张",
+    "小李",
+    "小刘",
+    "小陈",
+    "小赵",
+    "小周",
+    "小吴",
+    "小郑",
+    "小孙",
+    "小徐",
+    "小高",
+  ];
   var traits = [
     { type: "热心肠", bonus: "愿意帮忙" },
     { type: "老油条", bonus: "经验丰富" },
@@ -922,7 +964,13 @@ function initCareerColleagues(state) {
   var n = 2 + Math.floor(Math.random() * 2);
   for (var i = 0; i < n; i++) {
     net.push({
-      id: "colleague_" + state.player.day + "_" + i + "_" + Math.random().toString(36).slice(2, 8),
+      id:
+        "colleague_" +
+        state.player.day +
+        "_" +
+        i +
+        "_" +
+        Math.random().toString(36).slice(2, 8),
       name: names[Math.floor(Math.random() * names.length)],
       role: "neutral",
       personality: traits[Math.floor(Math.random() * traits.length)],
@@ -940,22 +988,37 @@ function careerSocialAction(action, colleagueId) {
     StateManager.addMessage("⚠️ 你目前没有工作", "warning");
     return;
   }
-  var net = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
+  var net =
+    state.corporate &&
+    state.corporate.colleagues &&
+    state.corporate.colleagues.network;
   if (!net || !net.length) {
     StateManager.addMessage("⚠️ 同事网络未初始化", "warning");
     return;
   }
   var c = null;
   for (var i = 0; i < net.length; i++) {
-    if (net[i].id === colleagueId) { c = net[i]; break; }
+    if (net[i].id === colleagueId) {
+      c = net[i];
+      break;
+    }
   }
-  if (!c) { StateManager.addMessage("⚠️ 找不到该同事", "warning"); return; }
+  if (!c) {
+    StateManager.addMessage("⚠️ 找不到该同事", "warning");
+    return;
+  }
   var p = state.player;
   var cap = ensureCareerCapital(state);
 
   if (action === "meal") {
-    if (state.resources.cash < 50) { StateManager.addMessage("⚠️ 现金不足¥50", "warning"); return; }
-    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    if (state.resources.cash < 50) {
+      StateManager.addMessage("⚠️ 现金不足¥50", "warning");
+      return;
+    }
+    if (p.actionPoints < 2) {
+      StateManager.addMessage("⚠️ 行动力不足(需2)", "warning");
+      return;
+    }
     state.resources.cash -= 50;
     p.actionPoints -= 2;
     var gain = Math.round(5 + c.relationship / 20);
@@ -964,9 +1027,15 @@ function careerSocialAction(action, colleagueId) {
     c.lastInteraction = p.day;
     cap.reputation = (cap.reputation || 0) + 0.5;
     clampCareerCapital(cap);
-    StateManager.addMessage("🍚 请" + c.name + "吃饭，关系+" + gain + "，信任+3", "success");
+    StateManager.addMessage(
+      "🍚 请" + c.name + "吃饭，关系+" + gain + "，信任+3",
+      "success",
+    );
   } else if (action === "chat") {
-    if (p.actionPoints < 1) { StateManager.addMessage("⚠️ 行动力不足(需1)", "warning"); return; }
+    if (p.actionPoints < 1) {
+      StateManager.addMessage("⚠️ 行动力不足(需1)", "warning");
+      return;
+    }
     p.actionPoints -= 1;
     var cg = 2 + Math.floor(Math.random() * 3);
     c.relationship = Math.min(100, (c.relationship || 0) + cg);
@@ -974,18 +1043,41 @@ function careerSocialAction(action, colleagueId) {
     var lead = Math.random() < 0.3;
     if (lead) cap.clientLeads = (cap.clientLeads || 0) + 1;
     clampCareerCapital(cap);
-    StateManager.addMessage("💬 和" + c.name + "闲聊，关系+" + cg + (lead ? "，获得客户线索+1" : ""), "info");
+    StateManager.addMessage(
+      "💬 和" + c.name + "闲聊，关系+" + cg + (lead ? "，获得客户线索+1" : ""),
+      "info",
+    );
   } else if (action === "mentor") {
-    if ((c.relationship || 0) < 60) { StateManager.addMessage("⚠️ 需与" + c.name + "关系≥60才能拜师", "warning"); return; }
-    if (state.corporate.colleagues.mentorship) { StateManager.addMessage("⚠️ 你已有导师，先解除", "warning"); return; }
-    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    if ((c.relationship || 0) < 60) {
+      StateManager.addMessage(
+        "⚠️ 需与" + c.name + "关系≥60才能拜师",
+        "warning",
+      );
+      return;
+    }
+    if (state.corporate.colleagues.mentorship) {
+      StateManager.addMessage("⚠️ 你已有导师，先解除", "warning");
+      return;
+    }
+    if (p.actionPoints < 2) {
+      StateManager.addMessage("⚠️ 行动力不足(需2)", "warning");
+      return;
+    }
     p.actionPoints -= 2;
-    state.corporate.colleagues.mentorship = { mentorId: c.id, mentorName: c.name, startedDay: p.day, level: 80 };
+    state.corporate.colleagues.mentorship = {
+      mentorId: c.id,
+      mentorName: c.name,
+      startedDay: p.day,
+      level: 80,
+    };
     c.role = "mentor";
     c.relationship = Math.min(100, (c.relationship || 0) + 5);
     cap.partnerTrust = (cap.partnerTrust || 0) + 5;
     clampCareerCapital(cap);
-    StateManager.addMessage("👨‍🏫 拜" + c.name + "为师！晋升推荐与危机保护已解锁", "success");
+    StateManager.addMessage(
+      "👨‍🏫 拜" + c.name + "为师！晋升推荐与危机保护已解锁",
+      "success",
+    );
   }
   if (typeof renderAll === "function") renderAll();
 }
@@ -999,7 +1091,10 @@ function careerWorkAction(type) {
   var cap = ensureCareerCapital(state);
 
   if (type === "project") {
-    if (p.actionPoints < 3) { StateManager.addMessage("⚠️ 行动力不足(需3)", "warning"); return; }
+    if (p.actionPoints < 3) {
+      StateManager.addMessage("⚠️ 行动力不足(需3)", "warning");
+      return;
+    }
     p.actionPoints -= 3;
     job.performance = Math.min(100, (job.performance || 50) + 8);
     cap.burnout = (cap.burnout || 0) + 3;
@@ -1007,28 +1102,47 @@ function careerWorkAction(type) {
     var leadP = Math.random() < 0.1;
     if (leadP) cap.clientLeads = (cap.clientLeads || 0) + 3;
     clampCareerCapital(cap);
-    StateManager.addMessage("💼 完成项目：业绩+8，行业资源+2" + (leadP ? "，意外获得客户线索+3" : ""), "success");
+    StateManager.addMessage(
+      "💼 完成项目：业绩+8，行业资源+2" + (leadP ? "，意外获得客户线索+3" : ""),
+      "success",
+    );
   } else if (type === "overtime") {
-    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    if (p.actionPoints < 2) {
+      StateManager.addMessage("⚠️ 行动力不足(需2)", "warning");
+      return;
+    }
     p.actionPoints -= 2;
     job.performance = Math.min(100, (job.performance || 50) + 5);
     var ot = Math.round((job.salary || 5000) / 30);
     state.resources.cash += ot;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + ot;
     cap.burnout = (cap.burnout || 0) + 5;
-    if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 2);
+    if (state.status)
+      state.status.health = Math.max(0, (state.status.health || 100) - 2);
     clampCareerCapital(cap);
-    StateManager.addMessage("🌙 加班：业绩+5，加班费¥" + ot + "，倦怠+5，健康-2", "info");
+    StateManager.addMessage(
+      "🌙 加班：业绩+5，加班费¥" + ot + "，倦怠+5，健康-2",
+      "info",
+    );
   } else if (type === "kpi") {
-    if ((job.performance || 50) < 40) { StateManager.addMessage("⚠️ 业绩需≥40才能冲刺KPI", "warning"); return; }
-    if (p.actionPoints < 4) { StateManager.addMessage("⚠️ 行动力不足(需4)", "warning"); return; }
+    if ((job.performance || 50) < 40) {
+      StateManager.addMessage("⚠️ 业绩需≥40才能冲刺KPI", "warning");
+      return;
+    }
+    if (p.actionPoints < 4) {
+      StateManager.addMessage("⚠️ 行动力不足(需4)", "warning");
+      return;
+    }
     p.actionPoints -= 4;
     job.performance = Math.min(100, (job.performance || 50) + 12);
     cap.burnout = (cap.burnout || 0) + 6;
     cap.industryResources = (cap.industryResources || 0) + 5;
     cap.reputation = (cap.reputation || 0) + 3;
     clampCareerCapital(cap);
-    StateManager.addMessage("🎯 冲刺KPI成功：业绩+12，行业资源+5，声誉+3", "success");
+    StateManager.addMessage(
+      "🎯 冲刺KPI成功：业绩+12，行业资源+5，声誉+3",
+      "success",
+    );
   }
   if (typeof renderAll === "function") renderAll();
 }
@@ -1040,15 +1154,28 @@ function careerTakeBreak() {
   var job = state.career.currentJob;
   var p = state.player;
   var cap = ensureCareerCapital(state);
-  if ((job.workDays || 0) < 20) { StateManager.addMessage("⚠️ 需在职≥20天才能调休", "warning"); return; }
+  if ((job.workDays || 0) < 20) {
+    StateManager.addMessage("⚠️ 需在职≥20天才能调休", "warning");
+    return;
+  }
   var lastBreak = job._lastBreakDay || -999;
-  if (p.day - lastBreak < 30) { StateManager.addMessage("⚠️ 每月只能调休1次（上次第" + lastBreak + "天）", "warning"); return; }
-  if (p.actionPoints < 1) { StateManager.addMessage("⚠️ 行动力不足(需1)", "warning"); return; }
+  if (p.day - lastBreak < 30) {
+    StateManager.addMessage(
+      "⚠️ 每月只能调休1次（上次第" + lastBreak + "天）",
+      "warning",
+    );
+    return;
+  }
+  if (p.actionPoints < 1) {
+    StateManager.addMessage("⚠️ 行动力不足(需1)", "warning");
+    return;
+  }
   p.actionPoints -= 1;
   cap.burnout = Math.max(0, (cap.burnout || 0) - 15);
   job.performance = Math.max(0, (job.performance || 50) - 2);
   job._lastBreakDay = p.day;
-  if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
+  if (state.needs)
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
   clampCareerCapital(cap);
   StateManager.addMessage("😴 调休一天：倦怠-15，心情+5，业绩-2", "success");
   if (typeof renderAll === "function") renderAll();
@@ -1352,13 +1479,19 @@ function resignCareerJob() {
 function tickCareerJobDaily(state) {
   // ----- 退休人员只发养老金（P0-3） -----
   if (state.flags && state.flags._retired) {
-    var pension = (state.career && state.career.pensionBase) ? Math.round(state.career.pensionBase * 0.40) : 2000;
+    var pension =
+      state.career && state.career.pensionBase
+        ? Math.round(state.career.pensionBase * 0.4)
+        : 2000;
     var payCycle = state.career && (state.career._pensionPayCycle || 0);
     state.career = state.career || {};
     state.career._pensionPayCycle = (payCycle || 0) + 1;
     if (state.career._pensionPayCycle % 30 === 0) {
       state.resources.cash = (state.resources.cash || 0) + pension;
-      StateManager.addMessage("🏖️ 收到养老金 ¥" + pension.toLocaleString(), "info");
+      StateManager.addMessage(
+        "🏖️ 收到养老金 ¥" + pension.toLocaleString(),
+        "info",
+      );
     }
     return;
   }
@@ -1495,7 +1628,7 @@ if (typeof window !== "undefined") {
       },
       {
         kind: "tip",
-        text: "💡 提示：创业需要¥200,000启动资金和承担风险的能力；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需要维护好同事关系才能顺利晋升。",
+        text: "💡 提示：创业启动资金按剧本+职业资本动态计算（职业资本越高减免越多，最低¥2万，最高减免15%）；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需维护好同事关系才能顺利晋升；倦怠过高会过劳病假，记得调休。",
       },
     ],
   };

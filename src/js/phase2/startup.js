@@ -2270,7 +2270,7 @@ function getStartupTriggerConditions(state) {
     rankMet = pIdx >= reqIdx;
   }
   return {
-    cashRequired: requiredCash || 200000,
+    cashRequired: requiredCash,
     baseCashRequired: baseCash,
     careerDiscount: discount,
     phase: phase,

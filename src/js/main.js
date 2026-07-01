@@ -2303,12 +2303,11 @@ function getAvailableActions(state) {
         actions.push({
           id: "edu_exam",
           name: `📝 参加${eduNames[nextLevel]}考试`,
-          desc: `消耗30行动力，需学习点≥${threshold}（当前${sp}）。通过率${passRate.toFixed(0)}%` +
+          desc:
+            `消耗30行动力，需学习点≥${threshold}（当前${sp}）。通过率${passRate.toFixed(0)}%` +
             `（越往高层越难）。考过后学历升至${eduNames[nextLevel]}。`,
           ap: 30,
-          reqFail: !canExam
-            ? `学习点不足（${sp}/${threshold}）`
-            : null,
+          reqFail: !canExam ? `学习点不足（${sp}/${threshold}）` : null,
           handler: () => {
             consumeAP(30);
             const rate = Math.min(
@@ -2330,7 +2329,10 @@ function getAvailableActions(state) {
                 "success",
               );
             } else {
-              StateManager.addMessage("😞 考试未通过，继续备考再战！", "danger");
+              StateManager.addMessage(
+                "😞 考试未通过，继续备考再战！",
+                "danger",
+              );
             }
             if (typeof renderAll === "function") renderAll();
           },
