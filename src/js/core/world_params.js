@@ -479,6 +479,12 @@ function decayWorldParams(state) {
 
   // volatilityTrend 也衰减
   params.volatilityTrend *= 0.95;
+
+  // 新闻情绪偏移衰减（每日向 0 回归 30%，约 3-4 天消散）
+  if (params._newsMoodShift) {
+    params._newsMoodShift *= 0.7;
+    if (Math.abs(params._newsMoodShift) < 0.005) params._newsMoodShift = 0;
+  }
 }
 
 /**
@@ -500,6 +506,11 @@ function updateMarketMood(state) {
     heats.reduce(function (a, b) {
       return a + b;
     }, 0) / heats.length;
+  // 新闻情绪偏移：applyNewsEffect 累积的 _newsMoodShift 叠加到 avg，
+  // 让重大新闻能短期把市场情绪推向乐观/悲观（±0.03 量级）
+  if (params._newsMoodShift) {
+    avg += params._newsMoodShift;
+  }
   var maxHeat = Math.max.apply(null, heats);
   var minHeat = Math.min.apply(null, heats);
   var spread = maxHeat - minHeat;

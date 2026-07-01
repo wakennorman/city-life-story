@@ -64,6 +64,7 @@ const NEWS_EVENTS = [
         { industry: "新能源", mul: 1.12 },
         { symbols: ["HUAW", "SMIC"], mul: 1.1 },
       ],
+      sectorHeat: { 科技: 0.06 },
       duration: 5,
     },
     type: "job",
@@ -135,6 +136,7 @@ const NEWS_EVENTS = [
         { symbols: ["ESTATE"], mul: 1.18 },
         { category: "贵金属", mul: 1.05 },
       ],
+      sectorHeat: { 房地产: 0.08 },
       duration: 6,
     },
     type: "job",
@@ -190,6 +192,7 @@ const NEWS_EVENTS = [
         { industry: "科技", mul: 1.22 },
         { symbols: ["NVDA", "HUAW", "SMIC"], mul: 1.3 },
       ],
+      sectorHeat: { 科技: 0.07 },
       duration: 3,
     },
     type: "price",
@@ -257,6 +260,7 @@ const NEWS_EVENTS = [
         { industry: "医药", mul: 1.14 },
         { industry: "消费", mul: 1.03 },
       ],
+      sectorHeat: { 医药: 0.08 },
       duration: 6,
     },
     type: "job",
@@ -591,6 +595,7 @@ const NEWS_EVENTS = [
         { industry: "金融", mul: 0.95 },
         { category: "贵金属", mul: 1.05 },
       ],
+      sectorHeat: { 房地产: -0.07, 金融: -0.03 },
       duration: 8,
     },
     type: "investment",
@@ -605,6 +610,7 @@ const NEWS_EVENTS = [
         { industry: "金融", mul: 1.08 },
         { category: "贵金属", mul: 0.97 },
       ],
+      sectorHeat: { 房地产: 0.07, 金融: 0.03 },
       duration: 7,
     },
     type: "investment",
@@ -619,6 +625,8 @@ const NEWS_EVENTS = [
         { industry: "科技", mul: 0.94 },
         { btc: true, mul: 0.92 },
       ],
+      sectorHeat: { 科技: -0.04 },
+      marketMoodShift: -0.03,
       duration: 5,
     },
     type: "investment",
@@ -649,6 +657,7 @@ const NEWS_EVENTS = [
         { symbols: ["NVDA", "BYTE", "BAID", "HUAW"], mul: 1.32 },
         { symbols: ["LITH", "COPPER"], mul: 1.1 },
       ],
+      sectorHeat: { 科技: 0.1, 新能源: 0.04 },
       duration: 5,
     },
     type: "investment",
@@ -663,6 +672,8 @@ const NEWS_EVENTS = [
         { btc: true, mul: 1.28 },
         { category: "虚拟币", mul: 1.18 },
       ],
+      sectorHeat: { 金融: 0.05 },
+      marketMoodShift: 0.02,
       duration: 4,
     },
     type: "investment",
@@ -678,6 +689,8 @@ const NEWS_EVENTS = [
         { category: "虚拟币", mul: 0.75 },
         { category: "贵金属", mul: 1.08 },
       ],
+      sectorHeat: { 金融: -0.05 },
+      marketMoodShift: -0.02,
       duration: 3,
     },
     type: "investment",
@@ -694,6 +707,7 @@ const NEWS_EVENTS = [
         { symbols: ["LITH", "NICKEL"], mul: 1.15 },
         { industry: "消费", mul: 0.94 },
       ],
+      sectorHeat: { 新能源: 0.06 },
       duration: 6,
     },
     type: "investment",
@@ -832,6 +846,7 @@ const NEWS_EVENTS = [
         { symbols: ["ALIM", "TENC", "MEIT", "BYTE"], mul: 0.83 },
         { industry: "消费", mul: 0.96 },
       ],
+      sectorHeat: { 科技: -0.07 },
       duration: 7,
     },
     type: "price",
@@ -868,6 +883,7 @@ const NEWS_EVENTS = [
         { symbols: ["ALIM", "MEIT", "JD"], mul: 1.15 },
         { industry: "消费", mul: 1.08 },
       ],
+      sectorHeat: { 消费: 0.06 },
       duration: 5,
     },
     type: "job",
@@ -1748,6 +1764,32 @@ function applyNewsEffect(news, state) {
           }
         }
       }
+    }
+  }
+
+  // ── 世界参数联动（新闻→行业热度/市场情绪）────────────────────
+  // 新闻是行业热度的主要外部驱动力（见 world_params.js 设计注释）。
+  // sectorHeat: { 行业: delta } —— 直接叠加到 _worldParams.sectorHeat
+  // marketMoodShift: number —— 情绪偏移（正=乐观/负=悲观），updateMarketMood 重算
+  if (effects.sectorHeat || effects.marketMoodShift) {
+    var wp = state._worldParams;
+    if (!wp && typeof createDefaultWorldParams === "function") {
+      wp = createDefaultWorldParams();
+      state._worldParams = wp;
+    }
+    if (wp && wp.sectorHeat && effects.sectorHeat) {
+      for (var sectorKey in effects.sectorHeat) {
+        if (
+          typeof WORLD_SECTORS !== "undefined" &&
+          WORLD_SECTORS.indexOf(sectorKey) >= 0
+        ) {
+          wp.sectorHeat[sectorKey] =
+            (wp.sectorHeat[sectorKey] || 1.0) + effects.sectorHeat[sectorKey];
+        }
+      }
+    }
+    if (wp && effects.marketMoodShift) {
+      wp._newsMoodShift = (wp._newsMoodShift || 0) + effects.marketMoodShift;
     }
   }
 
