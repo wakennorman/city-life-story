@@ -189,6 +189,7 @@ function tickLegal(state) {
       day: state.player.day,
     });
 
+    var caseName = caseData ? caseData.name : "案件";
     if (won) {
       var reward = caseData
         ? Math.round(
@@ -200,9 +201,44 @@ function tickLegal(state) {
       state.legal.totalLegalWon = (state.legal.totalLegalWon || 0) + reward;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
       state._lastLegalResult = "胜诉，获得赔偿¥" + reward;
+      // v3.8 P1：法律结果通知玩家（胜诉）
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🎉 【法律结算】" +
+            caseName +
+            " 胜诉！获得赔偿¥" +
+            reward +
+            "，心情大振！",
+          "success",
+        );
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(
+            state,
+            "income",
+            "legal",
+            reward,
+            caseName + "胜诉赔偿",
+          );
+        }
+      }
     } else {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 10);
+      // 败诉连锁：精神受损 + 产生额外诉讼债务（律师费尾款）
+      state.needs.mental = Math.max(0, (state.needs.mental || 50) - 8);
+      var extraDebt = caseData ? Math.round(caseData.cost * 0.2) : 500;
+      state.resources.cash = Math.max(0, (state.resources.cash || 0) - extraDebt);
       state._lastLegalResult = "败诉，已支付的诉讼费无法追回。";
+      // v3.8 P1：法律结果通知玩家（败诉）
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "😞 【法律结算】" +
+            caseName +
+            " 败诉。追加律师尾款¥" +
+            extraDebt +
+            "，心情低落、精神受损。",
+          "danger",
+        );
+      }
     }
 
     state.legal.activeCase = null;

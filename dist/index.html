@@ -39336,6 +39336,7 @@ function tickLegal(state) {
       day: state.player.day,
     });
 
+    var caseName = caseData ? caseData.name : "案件";
     if (won) {
       var reward = caseData
         ? Math.round(
@@ -39347,9 +39348,44 @@ function tickLegal(state) {
       state.legal.totalLegalWon = (state.legal.totalLegalWon || 0) + reward;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
       state._lastLegalResult = "胜诉，获得赔偿¥" + reward;
+      // v3.8 P1：法律结果通知玩家（胜诉）
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🎉 【法律结算】" +
+            caseName +
+            " 胜诉！获得赔偿¥" +
+            reward +
+            "，心情大振！",
+          "success",
+        );
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(
+            state,
+            "income",
+            "legal",
+            reward,
+            caseName + "胜诉赔偿",
+          );
+        }
+      }
     } else {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 10);
+      // 败诉连锁：精神受损 + 产生额外诉讼债务（律师费尾款）
+      state.needs.mental = Math.max(0, (state.needs.mental || 50) - 8);
+      var extraDebt = caseData ? Math.round(caseData.cost * 0.2) : 500;
+      state.resources.cash = Math.max(0, (state.resources.cash || 0) - extraDebt);
       state._lastLegalResult = "败诉，已支付的诉讼费无法追回。";
+      // v3.8 P1：法律结果通知玩家（败诉）
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "😞 【法律结算】" +
+            caseName +
+            " 败诉。追加律师尾款¥" +
+            extraDebt +
+            "，心情低落、精神受损。",
+          "danger",
+        );
+      }
     }
 
     state.legal.activeCase = null;
@@ -119281,6 +119317,166 @@ function renderCareerOverview(state, parent) {
 }
 
 // ====== 工具函数 ======
+
+// ====== 事业主动行动（v3.9：社交/业绩/调休，激活同事网络数据流） ======
+
+/** 入职时初始化同事网络（initColleagueNetwork 只建空壳，这里生成初始同事） */
+function initCareerColleagues(state) {
+  if (typeof initColleagueNetwork === "function") {
+    initColleagueNetwork(state);
+  } else {
+    if (!state.corporate) state.corporate = {};
+    if (!state.corporate.colleagues) {
+      state.corporate.colleagues = { network: [], factions: [], mentees: [] };
+    }
+  }
+  var net = state.corporate.colleagues.network;
+  if (net.length) return;
+  var names = ["老王", "小张", "小李", "小刘", "小陈", "小赵", "小周", "小吴", "小郑", "小孙", "小徐", "小高"];
+  var traits = [
+    { type: "热心肠", bonus: "愿意帮忙" },
+    { type: "老油条", bonus: "经验丰富" },
+    { type: "卷王", bonus: "工作能力强" },
+    { type: "和事佬", bonus: "调解能力" },
+    { type: "八卦王", bonus: "信息灵通" },
+    { type: "老实人", bonus: "可靠" },
+    { type: "社交达人", bonus: "人脉广" },
+    { type: "技术宅", bonus: "技术强" },
+  ];
+  var n = 2 + Math.floor(Math.random() * 2);
+  for (var i = 0; i < n; i++) {
+    net.push({
+      id: "colleague_" + state.player.day + "_" + i + "_" + Math.random().toString(36).slice(2, 8),
+      name: names[Math.floor(Math.random() * names.length)],
+      role: "neutral",
+      personality: traits[Math.floor(Math.random() * traits.length)],
+      relationship: 20 + Math.floor(Math.random() * 20),
+      trust: 15 + Math.floor(Math.random() * 15),
+      lastInteraction: state.player.day,
+    });
+  }
+}
+
+/** 职场社交行动（请客/闲聊/拜师），操作 state.corporate.colleagues.network */
+function careerSocialAction(action, colleagueId) {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) {
+    StateManager.addMessage("⚠️ 你目前没有工作", "warning");
+    return;
+  }
+  var net = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
+  if (!net || !net.length) {
+    StateManager.addMessage("⚠️ 同事网络未初始化", "warning");
+    return;
+  }
+  var c = null;
+  for (var i = 0; i < net.length; i++) {
+    if (net[i].id === colleagueId) { c = net[i]; break; }
+  }
+  if (!c) { StateManager.addMessage("⚠️ 找不到该同事", "warning"); return; }
+  var p = state.player;
+  var cap = ensureCareerCapital(state);
+
+  if (action === "meal") {
+    if (state.resources.cash < 50) { StateManager.addMessage("⚠️ 现金不足¥50", "warning"); return; }
+    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    state.resources.cash -= 50;
+    p.actionPoints -= 2;
+    var gain = Math.round(5 + c.relationship / 20);
+    c.relationship = Math.min(100, (c.relationship || 0) + gain);
+    c.trust = Math.min(100, (c.trust || 0) + 3);
+    c.lastInteraction = p.day;
+    cap.reputation = (cap.reputation || 0) + 0.5;
+    clampCareerCapital(cap);
+    StateManager.addMessage("🍚 请" + c.name + "吃饭，关系+" + gain + "，信任+3", "success");
+  } else if (action === "chat") {
+    if (p.actionPoints < 1) { StateManager.addMessage("⚠️ 行动力不足(需1)", "warning"); return; }
+    p.actionPoints -= 1;
+    var cg = 2 + Math.floor(Math.random() * 3);
+    c.relationship = Math.min(100, (c.relationship || 0) + cg);
+    c.lastInteraction = p.day;
+    var lead = Math.random() < 0.3;
+    if (lead) cap.clientLeads = (cap.clientLeads || 0) + 1;
+    clampCareerCapital(cap);
+    StateManager.addMessage("💬 和" + c.name + "闲聊，关系+" + cg + (lead ? "，获得客户线索+1" : ""), "info");
+  } else if (action === "mentor") {
+    if ((c.relationship || 0) < 60) { StateManager.addMessage("⚠️ 需与" + c.name + "关系≥60才能拜师", "warning"); return; }
+    if (state.corporate.colleagues.mentorship) { StateManager.addMessage("⚠️ 你已有导师，先解除", "warning"); return; }
+    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    p.actionPoints -= 2;
+    state.corporate.colleagues.mentorship = { mentorId: c.id, mentorName: c.name, startedDay: p.day, level: 80 };
+    c.role = "mentor";
+    c.relationship = Math.min(100, (c.relationship || 0) + 5);
+    cap.partnerTrust = (cap.partnerTrust || 0) + 5;
+    clampCareerCapital(cap);
+    StateManager.addMessage("👨‍🏫 拜" + c.name + "为师！晋升推荐与危机保护已解锁", "success");
+  }
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 业绩主动行动（做项目/加班/冲刺KPI） */
+function careerWorkAction(type) {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var p = state.player;
+  var cap = ensureCareerCapital(state);
+
+  if (type === "project") {
+    if (p.actionPoints < 3) { StateManager.addMessage("⚠️ 行动力不足(需3)", "warning"); return; }
+    p.actionPoints -= 3;
+    job.performance = Math.min(100, (job.performance || 50) + 8);
+    cap.burnout = (cap.burnout || 0) + 3;
+    cap.industryResources = (cap.industryResources || 0) + 2;
+    var leadP = Math.random() < 0.1;
+    if (leadP) cap.clientLeads = (cap.clientLeads || 0) + 3;
+    clampCareerCapital(cap);
+    StateManager.addMessage("💼 完成项目：业绩+8，行业资源+2" + (leadP ? "，意外获得客户线索+3" : ""), "success");
+  } else if (type === "overtime") {
+    if (p.actionPoints < 2) { StateManager.addMessage("⚠️ 行动力不足(需2)", "warning"); return; }
+    p.actionPoints -= 2;
+    job.performance = Math.min(100, (job.performance || 50) + 5);
+    var ot = Math.round((job.salary || 5000) / 30);
+    state.resources.cash += ot;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + ot;
+    cap.burnout = (cap.burnout || 0) + 5;
+    if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 2);
+    clampCareerCapital(cap);
+    StateManager.addMessage("🌙 加班：业绩+5，加班费¥" + ot + "，倦怠+5，健康-2", "info");
+  } else if (type === "kpi") {
+    if ((job.performance || 50) < 40) { StateManager.addMessage("⚠️ 业绩需≥40才能冲刺KPI", "warning"); return; }
+    if (p.actionPoints < 4) { StateManager.addMessage("⚠️ 行动力不足(需4)", "warning"); return; }
+    p.actionPoints -= 4;
+    job.performance = Math.min(100, (job.performance || 50) + 12);
+    cap.burnout = (cap.burnout || 0) + 6;
+    cap.industryResources = (cap.industryResources || 0) + 5;
+    cap.reputation = (cap.reputation || 0) + 3;
+    clampCareerCapital(cap);
+    StateManager.addMessage("🎯 冲刺KPI成功：业绩+12，行业资源+5，声誉+3", "success");
+  }
+  if (typeof renderAll === "function") renderAll();
+}
+
+/** 调休减压（每月1次，需在职≥20天） */
+function careerTakeBreak() {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var p = state.player;
+  var cap = ensureCareerCapital(state);
+  if ((job.workDays || 0) < 20) { StateManager.addMessage("⚠️ 需在职≥20天才能调休", "warning"); return; }
+  var lastBreak = job._lastBreakDay || -999;
+  if (p.day - lastBreak < 30) { StateManager.addMessage("⚠️ 每月只能调休1次（上次第" + lastBreak + "天）", "warning"); return; }
+  if (p.actionPoints < 1) { StateManager.addMessage("⚠️ 行动力不足(需1)", "warning"); return; }
+  p.actionPoints -= 1;
+  cap.burnout = Math.max(0, (cap.burnout || 0) - 15);
+  job.performance = Math.max(0, (job.performance || 50) - 2);
+  job._lastBreakDay = p.day;
+  if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
+  clampCareerCapital(cap);
+  StateManager.addMessage("😴 调休一天：倦怠-15，心情+5，业绩-2", "success");
+  if (typeof renderAll === "function") renderAll();
+}
 
 /** 获取职业路径的下一级 */
 function getNextCareerLevel(pathId, currentLevelId) {
