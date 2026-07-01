@@ -30818,7 +30818,9 @@ const STREET_JOBS = [
     payCalc(state) {
       const base = Random.float(20, 55);
       const multi = 1 + state.skills.sales.level * 0.005;
-      return Math.floor(base * Math.min(multi, 2));
+      // v3.8 P1修复：zhouScrapBonus（老周好感奖励→废品+20%）
+      const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;
+      return Math.floor(base * Math.min(multi, 2) * zhouBonus);
     },
     risk: { injury: 0.04, illness: 0.03 },
   },
@@ -30922,9 +30924,12 @@ const STREET_JOBS = [
         typeof getFactoryBonus === "function"
           ? getFactoryBonus(state.skills.electrician.level || 0)
           : 0;
+      // v3.8 P1修复：zhangFactoryBonus（张姐好感80奖励→工厂+15%）
+      const zhangBonus =
+        state.flags && state.flags.zhangFactoryBonus ? 0.15 : 0;
       return Math.floor(
         (80 + state.player.agility * 0.3 + Random.float(0, 18)) *
-          (1 + elecBonus),
+          (1 + elecBonus + zhangBonus),
       );
     },
     risk: { injury: 0.03, illness: 0.02 },
@@ -30946,7 +30951,9 @@ const STREET_JOBS = [
         typeof getVendingFootfallMod === "function"
           ? getVendingFootfallMod(state.trade.currentLocation, state)
           : 1.0;
-      return Math.floor(base * footfall);
+      // v3.8 P1修复：bossLiStallBonus（李工头好感奖励→摊位+10%）
+      const liBonus = state.flags && state.flags.bossLiStallBonus ? 1.1 : 1.0;
+      return Math.floor(base * footfall * liBonus);
     },
     startupCost: 50,
     risk: {},
@@ -42943,12 +42950,20 @@ function ensureNpcAffinityEvents() {
         desc: reward
           ? reward.desc
           : "好感达到 " + threshold + " 后触发一次关系进展。",
+        // v3.8 P0修复：将 affinityRewards.effect 传入事件，否则 checkNpcAffinityEvents
+        // 只能显示 message 而无法触发解锁职业/发放奖励等核心效果
+        effect:
+          reward && typeof reward.effect === "function"
+            ? reward.effect
+            : undefined,
         message:
-          "💕 你和" +
-          npc.name +
-          "的关系更近了一步，解锁了" +
-          tierNames[threshold] +
-          "。",
+          reward && typeof reward.effect === "function"
+            ? null // 有effect时由effect函数自带消息，避免重复提示
+            : "💕 你和" +
+              npc.name +
+              "的关系更近了一步，解锁了" +
+              tierNames[threshold] +
+              "。",
       };
     });
   }
@@ -59701,8 +59716,9 @@ const DAILY_PIPELINE = [
   {
     name: "workplace_social_tick",
     fn: function (state) {
-      if (typeof tickWorkplaceSocialDaily === "function") {
-        tickWorkplaceSocialDaily(state);
+      // 修复：实际函数名为 tickColleagueRelationships（workplace_social.js:436）
+      if (typeof tickColleagueRelationships === "function") {
+        tickColleagueRelationships(state);
       }
     },
   },
@@ -119365,21 +119381,23 @@ function getCareerPerformanceScore(state) {
 }
 
 function getCareerTrustedNetworkCount(state) {
+  // 主读路径与写入方(initColleagueNetwork→state.corporate.colleagues)一致
   var colleagues = [];
   if (
-    state.workplaceSocial &&
-    state.workplaceSocial.colleagues &&
-    Array.isArray(state.workplaceSocial.colleagues.network)
-  ) {
-    colleagues = state.workplaceSocial.colleagues.network;
-  }
-  if (
-    !colleagues.length &&
     state.corporate &&
     state.corporate.colleagues &&
     Array.isArray(state.corporate.colleagues.network)
   ) {
     colleagues = state.corporate.colleagues.network;
+  }
+  // fallback：兼容旧路径
+  if (
+    !colleagues.length &&
+    state.workplaceSocial &&
+    state.workplaceSocial.colleagues &&
+    Array.isArray(state.workplaceSocial.colleagues.network)
+  ) {
+    colleagues = state.workplaceSocial.colleagues.network;
   }
   return colleagues.filter(function (c) {
     return (c.relationship || c.trust || c.affinity || 0) >= 60;
