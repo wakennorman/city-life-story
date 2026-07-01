@@ -942,21 +942,23 @@ function getCareerPerformanceScore(state) {
 }
 
 function getCareerTrustedNetworkCount(state) {
+  // 主读路径与写入方(initColleagueNetwork→state.corporate.colleagues)一致
   var colleagues = [];
   if (
-    state.workplaceSocial &&
-    state.workplaceSocial.colleagues &&
-    Array.isArray(state.workplaceSocial.colleagues.network)
-  ) {
-    colleagues = state.workplaceSocial.colleagues.network;
-  }
-  if (
-    !colleagues.length &&
     state.corporate &&
     state.corporate.colleagues &&
     Array.isArray(state.corporate.colleagues.network)
   ) {
     colleagues = state.corporate.colleagues.network;
+  }
+  // fallback：兼容旧路径
+  if (
+    !colleagues.length &&
+    state.workplaceSocial &&
+    state.workplaceSocial.colleagues &&
+    Array.isArray(state.workplaceSocial.colleagues.network)
+  ) {
+    colleagues = state.workplaceSocial.colleagues.network;
   }
   return colleagues.filter(function (c) {
     return (c.relationship || c.trust || c.affinity || 0) >= 60;

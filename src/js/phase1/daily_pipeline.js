@@ -459,8 +459,9 @@ const DAILY_PIPELINE = [
   {
     name: "workplace_social_tick",
     fn: function (state) {
-      if (typeof tickWorkplaceSocialDaily === "function") {
-        tickWorkplaceSocialDaily(state);
+      // 修复：实际函数名为 tickColleagueRelationships（workplace_social.js:436）
+      if (typeof tickColleagueRelationships === "function") {
+        tickColleagueRelationships(state);
       }
     },
   },

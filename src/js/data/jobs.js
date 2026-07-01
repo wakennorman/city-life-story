@@ -32,7 +32,9 @@ const STREET_JOBS = [
     payCalc(state) {
       const base = Random.float(20, 55);
       const multi = 1 + state.skills.sales.level * 0.005;
-      return Math.floor(base * Math.min(multi, 2));
+      // v3.8 P1修复：zhouScrapBonus（老周好感奖励→废品+20%）
+      const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;
+      return Math.floor(base * Math.min(multi, 2) * zhouBonus);
     },
     risk: { injury: 0.04, illness: 0.03 },
   },
@@ -136,9 +138,12 @@ const STREET_JOBS = [
         typeof getFactoryBonus === "function"
           ? getFactoryBonus(state.skills.electrician.level || 0)
           : 0;
+      // v3.8 P1修复：zhangFactoryBonus（张姐好感80奖励→工厂+15%）
+      const zhangBonus =
+        state.flags && state.flags.zhangFactoryBonus ? 0.15 : 0;
       return Math.floor(
         (80 + state.player.agility * 0.3 + Random.float(0, 18)) *
-          (1 + elecBonus),
+          (1 + elecBonus + zhangBonus),
       );
     },
     risk: { injury: 0.03, illness: 0.02 },
@@ -160,7 +165,9 @@ const STREET_JOBS = [
         typeof getVendingFootfallMod === "function"
           ? getVendingFootfallMod(state.trade.currentLocation, state)
           : 1.0;
-      return Math.floor(base * footfall);
+      // v3.8 P1修复：bossLiStallBonus（李工头好感奖励→摊位+10%）
+      const liBonus = state.flags && state.flags.bossLiStallBonus ? 1.1 : 1.0;
+      return Math.floor(base * footfall * liBonus);
     },
     startupCost: 50,
     risk: {},

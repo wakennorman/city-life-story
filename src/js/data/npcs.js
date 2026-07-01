@@ -3168,12 +3168,20 @@ function ensureNpcAffinityEvents() {
         desc: reward
           ? reward.desc
           : "好感达到 " + threshold + " 后触发一次关系进展。",
+        // v3.8 P0修复：将 affinityRewards.effect 传入事件，否则 checkNpcAffinityEvents
+        // 只能显示 message 而无法触发解锁职业/发放奖励等核心效果
+        effect:
+          reward && typeof reward.effect === "function"
+            ? reward.effect
+            : undefined,
         message:
-          "💕 你和" +
-          npc.name +
-          "的关系更近了一步，解锁了" +
-          tierNames[threshold] +
-          "。",
+          reward && typeof reward.effect === "function"
+            ? null // 有effect时由effect函数自带消息，避免重复提示
+            : "💕 你和" +
+              npc.name +
+              "的关系更近了一步，解锁了" +
+              tierNames[threshold] +
+              "。",
       };
     });
   }
