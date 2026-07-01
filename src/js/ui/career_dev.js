@@ -1732,6 +1732,16 @@ function tickCareerJobDaily(state) {
         "。这些积累未来可转化为跳槽或创业优势。",
       "success",
     );
+    // P1-3：项目完成记入职业历程（历程颗粒度从入职/晋升/辞职/跳槽4类→含项目完成）
+    state.career.history.push({
+      day: state.player.day,
+      event:
+        "完成项目（业绩" +
+        (job.performance || 0) +
+        "，资源+" +
+        projectGain +
+        "）",
+    });
   }
 
   // ----- burnout 过劳后果（P0-5） -----
@@ -1754,6 +1764,68 @@ function tickCareerJobDaily(state) {
     if (Math.random() < 0.05) {
       StateManager.addMessage(
         "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
+        "warning",
+      );
+    }
+  }
+
+  // ----- 年度考核调薪（P1-3） -----
+  // 设计参考：现实中国职场年度考核涨薪5-15%
+  var lastReview = job._lastReviewDay || job.startDay || state.player.day;
+  if (state.player.day - lastReview >= 365) {
+    var perf = job.performance || 50;
+    var oldSalary = job.salary || 5000;
+    var raise = 0;
+    var grade = "";
+    if (perf >= 85) {
+      raise = 0.12;
+      grade = "S（卓越）";
+    } else if (perf >= 70) {
+      raise = 0.08;
+      grade = "A（优秀）";
+    } else if (perf >= 50) {
+      raise = 0.03;
+      grade = "B（合格）";
+    } else {
+      raise = 0;
+      grade = "C（待改进）";
+    }
+    job._lastReviewDay = state.player.day;
+    if (raise > 0) {
+      job.salary = Math.round(oldSalary * (1 + raise));
+      state.career.history.push({
+        day: state.player.day,
+        event:
+          "年度考核" +
+          grade +
+          "：涨薪" +
+          Math.round(raise * 100) +
+          "%（¥" +
+          oldSalary.toLocaleString() +
+          "→¥" +
+          job.salary.toLocaleString() +
+          "）",
+      });
+      StateManager.addMessage(
+        "📊 年度考核" +
+          grade +
+          "！月薪涨" +
+          Math.round(raise * 100) +
+          "%：¥" +
+          oldSalary.toLocaleString() +
+          " → ¥" +
+          job.salary.toLocaleString(),
+        "success",
+      );
+    } else {
+      cap.burnout = (cap.burnout || 0) + 5;
+      clampCareerCapital(cap);
+      state.career.history.push({
+        day: state.player.day,
+        event: "年度考核" + grade + "：未涨薪，倦怠+5",
+      });
+      StateManager.addMessage(
+        "📊 年度考核" + grade + "：业绩不达标未涨薪，注意提升表现，倦怠+5",
         "warning",
       );
     }
