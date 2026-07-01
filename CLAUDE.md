@@ -52,11 +52,16 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：第八轮 — 事业发展Tab完善（社交接通/业绩行动/跳槽/调薪/退休停薪/注册费口径/移动端）（2026-07-02）
-  - **P0 核心断连修复**（多 agent 协作）：①职场社交每日tick接通（`daily_pipeline.js` 函数名 `tickWorkplaceSocialDaily`→`tickColleagueRelationships` + `career_dev.js` 人脉读取路径改 `corporate.colleagues`）②职场社交主动行动UI（入职生成同事 + 请客/闲聊/拜师按钮，激活死代码）③退休停薪+养老金（`_retired`+`pensionBase`，退休只发40%养老金）④业绩主动提升（做项目/加班/冲刺KPI）⑤burnout减压+过劳后果（调休+过劳病假+慢性过劳）⑥学历研究生/博士入口（edu门槛递增6级全可达）⑦注册费口径统一（删 `||200000` 兜底 + 百科/wiki 改动态计算）
-  - **P1 体验提升**：①主动跳槽（`generateJobOffers`/`applyJobhop`，3类offer+门路门槛+30天冷却）②年度考核调薪（每365天 S12%/A8%/B3%/C不涨 + 项目记history）③移动端网格兜底（`.career-capital-bar`/`.career-path-grid` @media480px !important）
-  - **设计参考**：BitLife（跳槽/退休）/《大多数》（过劳/主动工作）/中国式家长（升学链）/Stardew Valley（关系维护）/现实中国职场（年度调薪5-15%）
-  - **验证**：`check:js`(114) / `typecheck` / `build.py`(4351.6KB) / `npm run build` 全过；commits: `40a973c`→`d768603`→`d07508a`→`6e89f75`
+- **最新一次工作**：第九轮 — 蓝图制定 + P1-4/5/7/8实装（2026-07-02）
+  - **GAME_BLUEPRINT.md**（新建）：世界级游戏设计蓝图v1.0，参考BitLife/Papers Please/大多数/Football Manager等，覆盖设计公理/现状诊断/12系统重构/叙事框架/6轮路线图
+  - **P1-8** 新增3条职业路径（`CAREER_PATHS`）：🏫教育培训/🚚物流快递/🍜餐饮服务，各4级，薪资¥3.5k~¥22k
+  - **BugFix** 跨路径offer薪资下限：平级≥当前×85%、高半级≥当前×95%，防止跳槽反降薪
+  - **P1-5** 证书→月薪加成：`_calcCertSalaryBonus()`，路径专属+通用英语加成，发薪消息明示
+  - **P1-7** 总览页数据可视化：重写`renderCareerOverview`，含职位卡/晋升进度条/业绩倦怠条/5维资本雷达/跳槽预览/智能建议
+  - **P1-4** 副业主业冲突：`performHustle`，在职时副业收入×0.80，倦怠≥60×0.65，副业消耗burnout+3
+  - **验证**：`check:js`(114) / `typecheck` / `build.py`(4365.3KB) / `npm run build` 全过；commit: `b999470`
+- **上一轮工作**：第八轮 — 事业发展Tab完善（2026-07-02）commits: `40a973c`→`eb99ced`
+  - P0断连×7（职场社交/退休养老/业绩行动/burnout/学历/注册费）；P1跳槽/年度调薪/移动端兜底
 - **上一轮工作**：第七轮审查 — NPC好感奖励P0根修 + 3职业奖励消费点 + 法律结案通知（2026-07-02）
   - NPC好感奖励系统修复（`ensureNpcAffinityEvents` 补 `effect` 字段，13个NPC奖励全部激活）；3个奖励消费点（废品+20%/摊位+10%/工厂+15%）；法律结案通知+败诉连锁惩罚
   - **验证**：`check:js`(114) / `typecheck` / `build.py`(4337.7KB) / `npm run build` 全过；commits: `a50f805` + `fb55fdf`
