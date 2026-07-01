@@ -157,6 +157,176 @@
         },
       ],
     },
+    // === 行业寒冬联动事件（负向，sectorHeat < 0.85 触发）===
+    {
+      id: "sector_cold_layoff_risk",
+      phase: "street",
+      icon: "🥶",
+      title: "行业寒冬",
+      story: `新闻里铺天盖地都是"XX行业遇冷""企业缩编"的消息。你认识几个同行，已经在抱怨活越来越少、价钱越压越低。\n风口过了，日子得重新算计。`,
+      conditions: function (st) {
+        if (!st._worldParams || !st._worldParams.sectorHeat) return false;
+        if (st.player.day < 15) return false;
+        if (
+          st.flags._sectorColdLastDay &&
+          st.player.day - st.flags._sectorColdLastDay < 7
+        )
+          return false;
+        for (var sector in st._worldParams.sectorHeat) {
+          if (st._worldParams.sectorHeat[sector] < 0.85) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🛠️ 转行试试别的活",
+          hint: "花2行动力，心智+3，可能找到新方向",
+          cost: 2,
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
+            if (Random.chance(0.5)) {
+              var tip = Random.int(20, 60);
+              st.resources.cash += tip;
+              StateManager.addMessage(
+                "🛠️ 你试了试别的行当，赚了¥" + tip + "，似乎能糊口。心智+3。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🛠️ 转行不易，跑了半天没接到活。但至少拓宽了思路，心智+3。",
+                "info",
+              );
+            }
+            st.flags._sectorColdLastDay = st.player.day;
+          },
+        },
+        {
+          text: "💰 硬扛，降价接活",
+          hint: "现金-30，保住客源",
+          apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 6);
+            StateManager.addMessage(
+              "💰 行情差，你咬咬牙降价接活。少赚了¥30，但保住了几个老主顾。",
+              "warning",
+            );
+            st.flags._sectorColdLastDay = st.player.day;
+          },
+        },
+        {
+          text: "📚 趁闲充电学技能",
+          hint: "心智+4，疲劳+8，为下一波风口做准备",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            if (st.skills) {
+              var keys = Object.keys(st.skills);
+              if (keys.length > 0) {
+                var k = Random.fromArray(keys);
+                if (st.skills[k] && typeof st.skills[k].xp !== "undefined") {
+                  st.skills[k].xp = (st.skills[k].xp || 0) + 25;
+                  StateManager.addMessage(
+                    "📚 你趁着淡季自学充电，" +
+                      k +
+                      " 经验+25，心智+4。寒冬里攒的本事，春天会用上。",
+                    "hint",
+                  );
+                }
+              }
+            }
+            if (!st.skills || Object.keys(st.skills || {}).length === 0) {
+              StateManager.addMessage(
+                "📚 你趁着淡季自学充电，心智+4。寒冬里攒的本事，春天会用上。",
+                "hint",
+              );
+            }
+            st.flags._sectorColdLastDay = st.player.day;
+          },
+        },
+      ],
+    },
+    // === 行业红利期·创业侧反馈（sectorHeat > 1.15 且玩家有公司）===
+    {
+      id: "sector_boom_startup_windfall",
+      phase: "corp",
+      icon: "🚀",
+      title: "行业红利期",
+      story: `你所在的行业正处在风口上——订单暴增、客户主动找上门、媒体都在报道赛道火爆。\n公司的财务跑来兴奋地说："这个月营收比预期高了不止一成！"`,
+      conditions: function (st) {
+        if (!st._worldParams || !st._worldParams.sectorHeat) return false;
+        if (
+          !st.enterprise ||
+          !st.enterprise.company ||
+          !st.enterprise.company.industry
+        )
+          return false;
+        if (
+          st.flags._sectorBoomLastDay &&
+          st.player.day - st.flags._sectorBoomLastDay < 14
+        )
+          return false;
+        var heat = st._worldParams.sectorHeat[st.enterprise.company.industry];
+        return typeof heat === "number" && heat > 1.15;
+      },
+      choices: [
+        {
+          text: "📈 乘势扩张，吞下红利",
+          hint: "营收红利入账，声誉+，心智+",
+          apply: function (st) {
+            var company = st.enterprise.company;
+            var base = 800;
+            var share = company.marketShare || 0;
+            var scale = 1 + share / 50;
+            var windfall = Math.round(
+              base * scale * (0.8 + Random.float(0, 0.6)),
+            );
+            st.resources.cash += windfall;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + windfall;
+            company.reputation = Math.min(100, (company.reputation || 0) + 4);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            StateManager.addMessage(
+              "🚀 风口红利入账 ¥" +
+                windfall +
+                "！公司声誉+4。趁势扩张，把红利吃进肚里。",
+              "success",
+            );
+            st.flags._sectorBoomLastDay = st.player.day;
+          },
+        },
+        {
+          text: "🏦 落袋为安，存进公司账户",
+          hint: "稳健：红利较少但无风险",
+          apply: function (st) {
+            var windfall = Math.round(500 * (0.8 + Random.float(0, 0.4)));
+            st.resources.cash += windfall;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + windfall;
+            StateManager.addMessage(
+              "🏦 你把 ¥" + windfall + " 红利稳妥入账，不贪不冒，细水长流。",
+              "info",
+            );
+            st.flags._sectorBoomLastDay = st.player.day;
+          },
+        },
+        {
+          text: "📢 投品牌营销，把红利变长期资产",
+          hint: "现金少入账，但声誉显著提升",
+          apply: function (st) {
+            var company = st.enterprise.company;
+            company.reputation = Math.min(100, (company.reputation || 0) + 10);
+            company.brand = Math.min(100, (company.brand || 0) + 6);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "📢 你把红利投进了品牌营销。短期少赚，但公司声誉+10、品牌+6，长远看更值。",
+              "hint",
+            );
+            st.flags._sectorBoomLastDay = st.player.day;
+          },
+        },
+      ],
+    },
     // === 世界状态联动事件 ===
     {
       id: "market_crash_opportunity",
