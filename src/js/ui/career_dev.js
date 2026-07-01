@@ -695,6 +695,37 @@ function renderCareerJobs(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
+    // ---- 工作行动：业绩/调休（P0-4+P0-5） ----
+    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+    html += '</div></div>';
+
+    // ---- 职场社交（P0-2：主动社交UI） ----
+    var colleagues = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
+    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">🤝 职场社交</h3>';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">与同事维护关系有助于晋升和获取内推</div>';
+    if (colleagues && colleagues.length) {
+      for (var ci = 0; ci < colleagues.length; ci++) {
+        var co = colleagues[ci];
+        html += '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">';
+        html += '<div><strong>' + (co.name || "同事") + '</strong> <span style="color:var(--text-muted);font-size:10px;">关系' + (co.relationship || 0) + ' 信任' + (co.trust || 0) + '</span></div>';
+        html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'meal\',\'' + co.id + '\')">🍚请客</button>';
+        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'chat\',\'' + co.id + '\')">💬闲聊</button>';
+        if ((co.relationship || 0) >= 60 && co.role !== 'mentor') {
+          html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'mentor\',\'' + co.id + '\')">👨‍🏫拜师</button>';
+        }
+        html += '</div></div>';
+      }
+    } else {
+      html += '<div style="font-size:10px;color:var(--text-muted);padding:8px 0;">暂无同事数据，入职后自动生成</div>';
+    }
+    html += '</div>';
+
     // 离职按钮
     html +=
       '<button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="if(confirm(\'确定要辞职吗？\'))resignCareerJob()">🚪 辞职</button>';
@@ -1211,6 +1242,10 @@ function applyCareerJob(pathId, levelId) {
     startDay: state.player.day,
     performance: 50,
   };
+  // 初始化同事网络（P0-2：入职时生成初始同事）
+  if (typeof initCareerColleagues === "function") {
+    initCareerColleagues(state);
+  }
   cap.reputation = (cap.reputation || 0) + 2;
   cap.industryResources = (cap.industryResources || 0) + 1;
   clampCareerCapital(cap);
@@ -1295,6 +1330,19 @@ function resignCareerJob() {
 
 /** 每日固定工作结算 */
 function tickCareerJobDaily(state) {
+  // ----- 退休人员只发养老金（P0-3） -----
+  if (state.flags && state.flags._retired) {
+    var pension = (state.career && state.career.pensionBase) ? Math.round(state.career.pensionBase * 0.40) : 2000;
+    var payCycle = state.career && (state.career._pensionPayCycle || 0);
+    state.career = state.career || {};
+    state.career._pensionPayCycle = (payCycle || 0) + 1;
+    if (state.career._pensionPayCycle % 30 === 0) {
+      state.resources.cash = (state.resources.cash || 0) + pension;
+      StateManager.addMessage("🏖️ 收到养老金 ¥" + pension.toLocaleString(), "info");
+    }
+    return;
+  }
+
   if (!state.career || !state.career.currentJob) return;
 
   var job = state.career.currentJob;
@@ -1353,6 +1401,31 @@ function tickCareerJobDaily(state) {
         "。这些积累未来可转化为跳槽或创业优势。",
       "success",
     );
+  }
+
+  // ----- burnout 过劳后果（P0-5） -----
+  if (cap.burnout >= 80 && Math.random() < 0.15) {
+    // 强制过劳病假
+    state.status = state.status || {};
+    state.status.health = Math.max(0, (state.status.health || 100) - 10);
+    cap.burnout = Math.max(0, cap.burnout - 30);
+    job.performance = Math.max(0, (job.performance || 50) - 5);
+    clampCareerCapital(cap);
+    StateManager.addMessage(
+      "🏥 过度劳累导致病倒！被迫休养，健康-10，倦怠-30，业绩-5",
+      "danger",
+    );
+  } else if (cap.burnout >= 50) {
+    // 慢性过劳：每日降绩效+轻微掉健康
+    job.performance = Math.max(0, (job.performance || 50) - 1);
+    state.status = state.status || {};
+    state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
+    if (Math.random() < 0.05) {
+      StateManager.addMessage(
+        "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
+        "warning",
+      );
+    }
   }
 }
 

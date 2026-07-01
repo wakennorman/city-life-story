@@ -287,14 +287,30 @@ function applyNodeChoice(state, nodeId, choiceKey) {
 
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
+      state.flags._retired = true;
+      if (state.career && state.career.currentJob) {
+        state.career.pensionBase = state.career.currentJob.salary || 5000;
+      } else {
+        state.career = state.career || {};
+        state.career.pensionBase = 5000;
+      }
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":
       state.flags._retirementType = "advisor";
+      state.flags._retired = true;
+      if (state.career && state.career.currentJob) {
+        state.career.pensionBase = state.career.currentJob.salary || 5000;
+      } else {
+        state.career = state.career || {};
+        state.career.pensionBase = 5000;
+      }
       state.resources.cash = (state.resources.cash || 0) + 2000;
       break;
     case "retire_continue":
       state.flags._retirementType = "continue";
+      // 退而不休不设 _retired，继续正常工作
+      state.flags._lifeNode_retirement_done = true;
       break;
   }
   state.flags["_lifeNode_" + nodeId + "_done"] = true;

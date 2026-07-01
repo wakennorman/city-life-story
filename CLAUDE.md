@@ -52,18 +52,19 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：城市服务消费点接入 + 装备品质3档化（普通/优质/高档·仅价格）（2026-07-01）
-  - **城市服务消费点**：公积金→购房 5% 抵扣（`investment.js::buyProperty`）；体检→降大病概率 ×0.5（`illness.js::rollDailyIllness`）；bridge 注释「已接」；城市服务 4 个 followUp 消费点全部接通
-  - **装备品质3档化**（写实调性）：四档「普通/稀有/史诗/传说」→ 三档「普通/优质/高档」；价格倍率 ×1.0/1.2/1.5；**删 `effectMult` 魔法收入加成**（工作收入只看装备 jobBonuses，与品质无关）；删奇幻命名与附魔（附魔早已删）；品质标签标对应价格（「优质 ¥240」）
-  - **同步改动**：`equipment_quality.js`（3档表+去effectMult+去getQualityEffectMult）；`skill_bonuses.js::getItemJobBonus`（去品质倍率）；`equipment_durability.js`（修理/耐久 3 档）；`render.js`（品质徽章标价格）；`style.css`（3档色，删 legendary 脉冲动画）；百科 `MECHANICS.equipment_quality` 改 3 档表
-  - **保留**（上轮 bug 修复不动）：slot 键统一存储 / `getEquippedInstance` / `migrateEquipmentInstances` / 耐久激活 / 去附魔 / 3 渠道装备获取（拾荒/smartphone事件/old_zhou NPC）
+- **最新一次工作**：第七轮审查 — NPC好感奖励P0根修 + 3职业奖励消费点 + 法律结案通知（2026-07-02）
+  - **P0 NPC好感奖励系统**（`src/js/data/npcs.js::ensureNpcAffinityEvents`）：生成的 affinityEvents 对象从未包含 `effect` 字段，导致 `checkNpcAffinityEvents` 永远只能显示通用消息、无法触发解锁职业/发放奖励等核心效果；补加 `effect: reward.effect` + `message: null`（有 effect 时避免重复提示）；受益：13个 NPC 的好感奖励全部激活，5个 NPC 限定职业（`premium_engineering`/`old_zhou_recycling`/`sister_zhang_vending`/`xiao_mei_tutoring`/`restaurant_assistant`）可正常解锁，王大妈免费餐/租金折扣等 flag 效果生效
+  - **P1 NPC奖励消费点**（`src/js/data/jobs.js`）：`zhouScrapBonus`→废品回收+20%（`waste_recycling`）；`bossLiStallBonus`→街头摊位+10%（`street_vending_food`）；`zhangFactoryBonus`→工厂+15%（`factory_work_assembly`）；3个 flag 消费点均已在 payCalc 内联实装
+  - **P1 法律结案通知**（`src/js/core/legal.js::tickLegal`）：判决后补 `StateManager.addMessage()`；胜诉显示赔偿金额 + `addDailyTransaction`；败诉触发连锁惩罚（幸福-10、精神-8、追加律师尾款 = 案件费×20%）
+  - **验证**：`check:js`(114) / `typecheck` / `build.py`(4337.7KB) / `npm run build` 全过；commits: `a50f805` + `fb55fdf`
+- **上一轮工作**：城市服务消费点接入 + 装备品质3档化（普通/优质/高档·仅价格）（2026-07-01）
+  - **城市服务消费点**：公积金→购房 5% 抵扣；体检→降大病概率 ×0.5；城市服务 4 个 followUp 消费点全部接通
+  - **装备品质3档化**（写实调性）：四档→三档「普通/优质/高档」；删 `effectMult` 魔法收入加成；删奇幻命名；品质标签标对应价格
   - **验证**：`check:js`(114) / `typecheck` / `build.py` 全过
-- **上一轮工作**：装备品质系统激活（P2 实装，已被本轮改为 3 档仅价格）（2026-07-01）
-  - 存储统一/耐久激活/去附魔/3渠道接入落地；品质档位本身已在本轮改为 3 档
-  - **pre-commit 钩子基准同步**：会话中每次 commit 需先 `git rev-parse HEAD > .claude/last_known_head` 同步基准，否则钩子误判"其他窗口改动"阻止提交（非 `--no-verify`，是修复过期基准）
 
-- **再上一轮工作**：第六轮 — 收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁（2026-07-01）
-  - 删 `nul` + 15 Prettier chore；`webapp_runtime_bridge` 补 4 分支 + `finance.js` 接入征信/社保；新建 `tools/monte_carlo_runner.js`；验证全过
+- **再上一轮工作**：装备品质系统激活 + 第六轮收尾清理（2026-07-01）
+  - 存储统一/耐久激活/去附魔/3渠道接入落地；`webapp_runtime_bridge` 补 4 分支 + `finance.js` 接入征信/社保；新建 `tools/monte_carlo_runner.js`；验证全过
+  - **pre-commit 钩子基准同步**：会话中每次 commit 需先 `git rev-parse HEAD > .claude/last_known_head` 同步基准，否则钩子误判"其他窗口改动"阻止提交（非 `--no-verify`，是修复过期基准）
 
 - **上一轮工作**：第四轮审查第二阶段 — TS事件bridge全量同步（2026-06-27）
   - **房产×租房��射**：新增 `PROPERTY_HOUSING_MAP` 精准 ID→住所等级映射（22条），`getPropertyHousingTier()` 查询函数；toggle-self-live 改用映射表替代价格粗分，自住→出租时正确降级住所
