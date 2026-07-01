@@ -351,6 +351,16 @@ function calculateLoanCapacity(state) {
   let rawLimit =
     monthlyIncome * baseMultiple * eduMod * dtiMod * ageFactor * creditFactor;
 
+  // 社保信用佐证：激活社保卡 → 额度 +10%（来源：城市服务·社保查询累计≥3次）
+  if (state.flags && state.flags._socialCardReady) {
+    rawLimit *= 1.1;
+    reasons.push({
+      key: "social_credit",
+      status: "ok",
+      text: "社保信用佐证: 社保卡已激活（+10% 额度）",
+    });
+  }
+
   // 资产增信
   rawLimit += assetBonus;
 
@@ -370,6 +380,16 @@ function calculateLoanCapacity(state) {
   else if (stabilityMod < 0.8) riskAdjustment = 1.15;
   if (dtiMod <= 0.4) riskAdjustment *= 1.2; // 高负债 → 再上浮 20%
   if (creditFactor < 1.0) riskAdjustment *= 1.1;
+
+  // 征信报告：查过信用报告且记录良好 → 利率降 15%（来源：城市服务·个人信用报告）
+  if (state.flags && state.flags._creditInfoReady) {
+    riskAdjustment *= 0.85;
+    reasons.push({
+      key: "credit_report",
+      status: "ok",
+      text: "征信报告: 记录良好（利率 -15%）",
+    });
+  }
 
   const interestRate = Math.min(0.006, baseDailyRate * riskAdjustment); // 最高日息 0.6%
 

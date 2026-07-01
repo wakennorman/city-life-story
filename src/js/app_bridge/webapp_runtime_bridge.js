@@ -361,13 +361,54 @@
       );
     }
 
-    // 信用报告后续：解锁贷款利率信息
+    // 信用报告后续：解锁贷款利率信息（消费点：finance.js calculateLoanCapacity 读 _creditInfoReady 降利率一档）
     if (
       used.credit_report_query > 0 &&
       markFollowUp(meta, "credit_loan_info")
     ) {
+      state.flags._creditInfoReady = true;
       StateManager.addMessage(
-        "💳 你的信用报告已归档。以后贷款时记得告诉银行你有良好信用记录，利率可以谈。",
+        "💳 你的信用报告已归档（记录良好）。以后贷款利率可降一档，创业融资额度也会上调。",
+        "success",
+      );
+    }
+
+    // 社保查询后续：累计≥3次激活社保卡（消费点：finance.js 读 _socialCardReady 作贷款信用佐证加成额度）
+    if (
+      used.social_security_query > 0 &&
+      (state.flags._socialCredit || 0) >= 3 &&
+      !state.flags._socialCardReady &&
+      markFollowUp(meta, "social_card_ready")
+    ) {
+      state.flags._socialCardReady = true;
+      StateManager.addMessage(
+        "🏛️ 社保缴纳累计达标，社保卡已激活。以后可作为银行贷款的信用佐证，提升贷款额度。",
+        "success",
+      );
+    }
+
+    // 公积金咨询后续：标记公积金可用（消费点待接：investment.js buyProperty 房贷读 _housingFundAvailable 走公积金利率分支）
+    if (
+      used.housing_fund_query > 0 &&
+      markFollowUp(meta, "housing_fund_ready")
+    ) {
+      state.flags._housingFundAvailable = true;
+      StateManager.addMessage(
+        "💰 公积金账户确认可用。未来购房时可走公积金贷款利率（低于商贷）。",
+        "info",
+      );
+    }
+
+    // 体检后续：建立健康基线（消费点待接：疾病触发函数读 medical.healthCheckDone 降低大病概率）
+    if (
+      used.community_health_check > 0 &&
+      markFollowUp(meta, "health_baseline")
+    ) {
+      state.medical = state.medical || {};
+      state.medical.healthCheckDone = true;
+      state.medical.lastCheckupDay = state.player.day || 0;
+      StateManager.addMessage(
+        "🏥 体检建立了你的健康基线。日后若出现大病征兆，能更早预警、降低恶化概率。",
         "info",
       );
     }
@@ -525,7 +566,8 @@
       phase: "street",
       icon: "🏚️",
       title: "房租催缴单",
-      story: "房东把一张红色催缴单塞进门缝，月底之前必须给答复。催缴单上的字很短，却让整间屋子都显得更窄。",
+      story:
+        "房东把一张红色催缴单塞进门缝，月底之前必须给答复。催缴单上的字很短，却让整间屋子都显得更窄。",
       conditions: function (st) {
         return st.resources.cash < 1200;
       },
@@ -536,7 +578,10 @@
           apply: function (st) {
             st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
-            StateManager.addMessage("💬 房东嘴上不耐烦，最后还是给了你几天时间。", "info");
+            StateManager.addMessage(
+              "💬 房东嘴上不耐烦，最后还是给了你几天时间。",
+              "info",
+            );
           },
         },
         {
@@ -545,12 +590,18 @@
           cost: 300,
           apply: function (st) {
             if (st.resources.cash < 300) {
-              StateManager.addMessage("💸 现金不足 ¥300，无法先交部分房租。", "warning");
+              StateManager.addMessage(
+                "💸 现金不足 ¥300，无法先交部分房租。",
+                "warning",
+              );
               return;
             }
             st.resources.cash -= 300;
             st.flags._rentTrust = (st.flags._rentTrust || 0) + 1;
-            StateManager.addMessage("💰 你把零钱凑成一沓，至少今晚能睡得踏实一点。", "success");
+            StateManager.addMessage(
+              "💰 你把零钱凑成一沓，至少今晚能睡得踏实一点。",
+              "success",
+            );
           },
         },
         {
@@ -559,7 +610,10 @@
           apply: function (st) {
             st.flags._rentArrears = (st.flags._rentArrears || 0) + 1;
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-            StateManager.addMessage("🙈 你把单子压在杯子下面，心里知道这事不会自己消失。", "warning");
+            StateManager.addMessage(
+              "🙈 你把单子压在杯子下面，心里知道这事不会自己消失。",
+              "warning",
+            );
           },
         },
       ],
@@ -569,7 +623,8 @@
       phase: "street",
       icon: "🏭",
       title: "临时加班名额",
-      story: "主管问谁愿意留下来赶一批急单，钱不多，但今天就结。机器还在响，工位上的人都在看主管手里的名单。",
+      story:
+        "主管问谁愿意留下来赶一批急单，钱不多，但今天就结。机器还在响，工位上的人都在看主管手里的名单。",
       choices: [
         {
           text: "💪 留下加班",
@@ -578,7 +633,10 @@
             st.resources.cash += 140;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 18);
             st.player.physique = Math.max(0, (st.player.physique || 22) - 1);
-            StateManager.addMessage("🏭 你把最后一箱货码好时，天已经黑透。+¥140，体力消耗较大。", "success");
+            StateManager.addMessage(
+              "🏭 你把最后一箱货码好时，天已经黑透。+¥140，体力消耗较大。",
+              "success",
+            );
           },
         },
         {
@@ -587,7 +645,10 @@
           apply: function (st) {
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
-            StateManager.addMessage("😌 你第一次觉得，能按时下班也是一种收入。", "info");
+            StateManager.addMessage(
+              "😌 你第一次觉得，能按时下班也是一种收入。",
+              "info",
+            );
           },
         },
       ],
@@ -597,7 +658,8 @@
       phase: "street",
       icon: "📱",
       title: "平台账号警告",
-      story: "兼职平台提示你近期接单异常，继续违规可能封号。手机震了一下，系统通知比催债短信还冷。",
+      story:
+        "兼职平台提示你近期接单异常，继续违规可能封号。手机震了一下，系统通知比催债短信还冷。",
       conditions: function (st) {
         return (st.flags._sideHustleOrders || 0) > 5;
       },
@@ -606,9 +668,15 @@
           text: "📋 提交申诉材料",
           hint: "耗费行动力，降低封号风险",
           apply: function (st) {
-            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 2);
+            st.player.actionPoints = Math.max(
+              0,
+              (st.player.actionPoints || 0) - 2,
+            );
             st.flags._platformTrust = (st.flags._platformTrust || 0) + 1;
-            StateManager.addMessage("📋 你把截图和说明一张张传上去，至少留了条后路。行动力-2", "info");
+            StateManager.addMessage(
+              "📋 你把截图和说明一张张传上去，至少留了条后路。行动力-2",
+              "info",
+            );
           },
         },
         {
@@ -617,7 +685,10 @@
           apply: function (st) {
             st.resources.cash += 90;
             st.flags._platformRisk = (st.flags._platformRisk || 0) + 1;
-            StateManager.addMessage("🚀 今晚的单很多，+¥90。但风险在悄悄累积...", "warning");
+            StateManager.addMessage(
+              "🚀 今晚的单很多，+¥90。但风险在悄悄累积...",
+              "warning",
+            );
           },
         },
       ],
@@ -627,7 +698,8 @@
       phase: "street",
       icon: "🚇",
       title: "地铁口的老人",
-      story: "一位老人站在闸机前，不知道怎么用手机刷码。人流从你身边擦过去，老人攥着手机显得有点窘迫。",
+      story:
+        "一位老人站在闸机前，不知道怎么用手机刷码。人流从你身边擦过去，老人攥着手机显得有点窘迫。",
       choices: [
         {
           text: "🤝 停下来帮忙",
@@ -635,9 +707,15 @@
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             st.needs.happiness = Math.min(100, st.needs.happiness + 4);
-            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
+            st.player.actionPoints = Math.max(
+              0,
+              (st.player.actionPoints || 0) - 1,
+            );
             st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
-            StateManager.addMessage("🤝 闸机亮起绿灯时，老人笑着对你点了点头。幸福感+4，名气+1", "success");
+            StateManager.addMessage(
+              "🤝 闸机亮起绿灯时，老人笑着对你点了点头。幸福感+4，名气+1",
+              "success",
+            );
           },
         },
         {
@@ -645,7 +723,10 @@
           hint: "不耽误行程",
           apply: function (st) {
             st.needs.happiness = Math.max(0, st.needs.happiness - 1);
-            StateManager.addMessage("🚶 你挤进人流，心里仍然浮着那个迟疑的背影。", "info");
+            StateManager.addMessage(
+              "🚶 你挤进人流，心里仍然浮着那个迟疑的背影。",
+              "info",
+            );
           },
         },
       ],
@@ -655,7 +736,8 @@
       phase: "corporate",
       icon: "📉",
       title: "裁员传闻",
-      story: "茶水间里有人说公司要缩编，名单可能本周就出来。传闻没有署名，却像一阵冷风吹进每个工位。",
+      story:
+        "茶水间里有人说公司要缩编，名单可能本周就出来。传闻没有署名，却像一阵冷风吹进每个工位。",
       conditions: function (st) {
         return st.player.phase === "corporate";
       },
@@ -664,9 +746,15 @@
           text: "📄 更新简历",
           hint: "准备后路，以防万一",
           apply: function (st) {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 1,
+            );
             st.flags._resumeReady = 1;
-            StateManager.addMessage("📄 你把项目经历重新写了一遍，像给自己留下一条出口。智力+1", "info");
+            StateManager.addMessage(
+              "📄 你把项目经历重新写了一遍，像给自己留下一条出口。智力+1",
+              "info",
+            );
           },
         },
         {
@@ -674,10 +762,16 @@
           hint: "增加绩效，也增加压力",
           apply: function (st) {
             if (st.player.corporate) {
-              st.player.corporate.kpi = Math.min(100, (st.player.corporate.kpi || 20) + 3);
+              st.player.corporate.kpi = Math.min(
+                100,
+                (st.player.corporate.kpi || 20) + 3,
+              );
             }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
-            StateManager.addMessage("💼 你接下了额外任务，电脑屏幕亮到深夜。绩效+3，疲劳+12", "warning");
+            StateManager.addMessage(
+              "💼 你接下了额外任务，电脑屏幕亮到深夜。绩效+3，疲劳+12",
+              "warning",
+            );
           },
         },
       ],
@@ -688,7 +782,8 @@
       phase: "street",
       icon: "🤝",
       title: "社区志愿者招募",
-      story: "居委会招人帮忙发通知、登记老人需求，报酬不高。公告栏上的纸被胶带贴得皱皱巴巴，却写着很多人的需求。",
+      story:
+        "居委会招人帮忙发通知、登记老人需求，报酬不高。公告栏上的纸被胶带贴得皱皱巴巴，却写着很多人的需求。",
       choices: [
         {
           text: "🤝 参加半天志愿服务",
@@ -698,7 +793,10 @@
             st.flags._communityService = (st.flags._communityService || 0) + 1;
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
-            StateManager.addMessage("🤝 你跑了几栋楼，累，但觉得自己和这座城市靠近了一点。名气+2，幸福感+5", "success");
+            StateManager.addMessage(
+              "🤝 你跑了几栋楼，累，但觉得自己和这座城市靠近了一点。名气+2，幸福感+5",
+              "success",
+            );
           },
         },
         {
@@ -707,7 +805,10 @@
           apply: function (st) {
             st.resources.cash += 60;
             st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
-            StateManager.addMessage("💰 工作人员给你安排了登记补贴岗，+¥60。", "success");
+            StateManager.addMessage(
+              "💰 工作人员给你安排了登记补贴岗，+¥60。",
+              "success",
+            );
           },
         },
       ],
@@ -717,7 +818,8 @@
       phase: "street",
       icon: "📞",
       title: "劳务中介来电",
-      story: "一家劳务中介说有批临时搬运工名额，日结，但要现在确认。号码是陌生的，语气却很熟练。",
+      story:
+        "一家劳务中介说有批临时搬运工名额，日结，但要现在确认。号码是陌生的，语气却很熟练。",
       conditions: function (st) {
         return st.resources.cash < 500;
       },
@@ -729,16 +831,25 @@
             st.resources.cash += 180;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 22);
             st.player.physique = Math.min(100, (st.player.physique || 22) + 1);
-            StateManager.addMessage("💪 下午的货很重，但钱打进来的那一刻什么都值了。+¥180", "success");
+            StateManager.addMessage(
+              "💪 下午的货很重，但钱打进来的那一刻什么都值了。+¥180",
+              "success",
+            );
           },
         },
         {
           text: "🤔 先问清楚再决定",
           hint: "避免陷阱，提升意识",
           apply: function (st) {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 1,
+            );
             st.needs.happiness = Math.min(100, st.needs.happiness + 1);
-            StateManager.addMessage("🤔 对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。", "info");
+            StateManager.addMessage(
+              "🤔 对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。",
+              "info",
+            );
           },
         },
       ],
@@ -748,7 +859,8 @@
       phase: "street",
       icon: "☀️",
       title: "高温预警",
-      story: "气温升到 38 度，城中村没有空调，身体开始抗议。城市把所有的热都留在这条街上。",
+      story:
+        "气温升到 38 度，城中村没有空调，身体开始抗议。城市把所有的热都留在这条街上。",
       conditions: function (st) {
         return (st.flags._housingTier || 0) <= 1;
       },
@@ -758,23 +870,38 @@
           hint: "改善居住条件",
           apply: function (st) {
             if (st.resources.cash < 80) {
-              StateManager.addMessage("💸 现金不足 ¥80，买不起电风扇。", "warning");
+              StateManager.addMessage(
+                "💸 现金不足 ¥80，买不起电风扇。",
+                "warning",
+              );
               return;
             }
             st.resources.cash -= 80;
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
             st.flags._hasFan = 1;
-            StateManager.addMessage("🌀 风扇转着，能睡了，虽然还是热，但能睡了。-¥80，疲劳-10", "success");
+            StateManager.addMessage(
+              "🌀 风扇转着，能睡了，虽然还是热，但能睡了。-¥80，疲劳-10",
+              "success",
+            );
           },
         },
         {
           text: "📚 去图书馆蹭空调",
           hint: "免费避暑，顺便学习",
           apply: function (st) {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 1,
+            );
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
-            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
-            StateManager.addMessage("📚 图书馆的冷气均匀，书页翻起来都是凉的。智力+1，疲劳-8", "info");
+            st.player.actionPoints = Math.max(
+              0,
+              (st.player.actionPoints || 0) - 1,
+            );
+            StateManager.addMessage(
+              "📚 图书馆的冷气均匀，书页翻起来都是凉的。智力+1，疲劳-8",
+              "info",
+            );
           },
         },
         {
@@ -783,7 +910,10 @@
           apply: function (st) {
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             st.status.health = Math.max(0, (st.status.health || 80) - 5);
-            StateManager.addMessage("😤 夜里出了一身汗，早上起来头有点晕。健康-5", "warning");
+            StateManager.addMessage(
+              "😤 夜里出了一身汗，早上起来头有点晕。健康-5",
+              "warning",
+            );
           },
         },
       ],
@@ -793,7 +923,8 @@
       phase: "street",
       icon: "💸",
       title: "借贷广告诱惑",
-      story: "手机弹出贷款广告：「最快5分钟到账，最高5万，免息3天。」屏幕上的数字很大，字体鲜红。",
+      story:
+        "手机弹出贷款广告：「最快5分钟到账，最高5万，免息3天。」屏幕上的数字很大，字体鲜红。",
       conditions: function (st) {
         return st.resources.cash < 300;
       },
@@ -802,9 +933,15 @@
           text: "📖 点开看利率条款",
           hint: "了解风险，提升金融意识",
           apply: function (st) {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 2);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 2,
+            );
             st.flags._loanRiskAware = (st.flags._loanRiskAware || 0) + 1;
-            StateManager.addMessage("📖 年化利率36%——你把计算器关掉，把广告也关掉了。智力+2", "info");
+            StateManager.addMessage(
+              "📖 年化利率36%——你把计算器关掉，把广告也关掉了。智力+2",
+              "info",
+            );
           },
         },
         {
@@ -814,7 +951,10 @@
             st.resources.cash += 500;
             st.resources.debt = (st.resources.debt || 0) + 600;
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            StateManager.addMessage("⚠️ 到账短信来了，+¥500，但债务增加¥600。钱是解药，剂量算错了就是毒。", "warning");
+            StateManager.addMessage(
+              "⚠️ 到账短信来了，+¥500，但债务增加¥600。钱是解药，剂量算错了就是毒。",
+              "warning",
+            );
           },
         },
         {
@@ -822,7 +962,10 @@
           hint: "拒绝高息借贷",
           apply: function (st) {
             st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
-            StateManager.addMessage("❌ 你划掉广告，继续数自己还剩多少现金。", "info");
+            StateManager.addMessage(
+              "❌ 你划掉广告，继续数自己还剩多少现金。",
+              "info",
+            );
           },
         },
       ],
@@ -833,7 +976,8 @@
       phase: "street",
       icon: "🧾",
       title: "账单窗口争执",
-      story: "医院收费窗口前有人因为医保报销比例吵了起来。收费单像一串看不懂的数字，围观的人都沉默了一会儿。",
+      story:
+        "医院收费窗口前有人因为医保报销比例吵了起来。收费单像一串看不懂的数字，围观的人都沉默了一会儿。",
       choices: [
         {
           text: "📋 顺便咨询自己的医保",
@@ -841,7 +985,10 @@
           apply: function (st) {
             st.flags._costAwareness = (st.flags._costAwareness || 0) + 1;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
-            StateManager.addMessage("🧾 窗口工作人员讲得很快，但你终于知道哪些票据要留。", "info");
+            StateManager.addMessage(
+              "🧾 窗口工作人员讲得很快，但你终于知道哪些票据要留。",
+              "info",
+            );
           },
         },
         {
@@ -849,8 +996,14 @@
           hint: "花时间帮忙，换一点名声",
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
-            StateManager.addMessage("👴 老人连声道谢，你突然理解了账单背后的焦虑。", "success");
+            st.player.actionPoints = Math.max(
+              0,
+              (st.player.actionPoints || 0) - 1,
+            );
+            StateManager.addMessage(
+              "👴 老人连声道谢，你突然理解了账单背后的焦虑。",
+              "success",
+            );
           },
         },
       ],
@@ -860,7 +1013,8 @@
       phase: "street",
       icon: "🚰",
       title: "邻居水管漏水",
-      story: "楼上水管漏了，天花板慢慢洇出一圈灰色水痕。盆接住了水，却接不住你对这间屋子的疲惫。",
+      story:
+        "楼上水管漏了，天花板慢慢洇出一圈灰色水痕。盆接住了水，却接不住你对这间屋子的疲惫。",
       conditions: function (st) {
         return (st.flags._housingTier || 0) <= 2;
       },
@@ -870,7 +1024,10 @@
           hint: "维修经验和邻里关系",
           apply: function (st) {
             st.flags._neighborTrust = (st.flags._neighborTrust || 0) + 1;
-            StateManager.addMessage("🔧 你们折腾半天，总算把漏点堵住了。邻里关系+1", "success");
+            StateManager.addMessage(
+              "🔧 你们折腾半天，总算把漏点堵住了。邻里关系+1",
+              "success",
+            );
           },
         },
         {
@@ -878,8 +1035,12 @@
           hint: "省心，但可能拖延",
           apply: function (st) {
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
-            st.flags._landlordRepairCalled = (st.flags._landlordRepairCalled || 0) + 1;
-            StateManager.addMessage("📞 房东说马上来，电话挂断后走廊又安静下来。", "info");
+            st.flags._landlordRepairCalled =
+              (st.flags._landlordRepairCalled || 0) + 1;
+            StateManager.addMessage(
+              "📞 房东说马上来，电话挂断后走廊又安静下来。",
+              "info",
+            );
           },
         },
       ],
@@ -889,18 +1050,27 @@
       phase: "corporate",
       icon: "💳",
       title: "信用卡推销电话",
-      story: "银行客服说你有机会申请一张额度不低的信用卡。电话那头的声音很专业，像在把未来收入提前递给你。",
+      story:
+        "银行客服说你有机会申请一张额度不低的信用卡。电话那头的声音很专业，像在把未来收入提前递给你。",
       conditions: function (st) {
-        return st.player.phase === "corporate" && (st.flags._creditChecked || 0) > 0;
+        return (
+          st.player.phase === "corporate" && (st.flags._creditChecked || 0) > 0
+        );
       },
       choices: [
         {
           text: "📖 问清年费和利息",
           hint: "金融意识提升",
           apply: function (st) {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 1);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 1,
+            );
             st.flags._creditKnowledge = (st.flags._creditKnowledge || 0) + 1;
-            StateManager.addMessage("📖 你记下几个关键词，决定不让自己被额度牵着走。智力+1", "info");
+            StateManager.addMessage(
+              "📖 你记下几个关键词，决定不让自己被额度牵着走。智力+1",
+              "info",
+            );
           },
         },
         {
@@ -909,7 +1079,10 @@
           apply: function (st) {
             st.flags._creditCardLimit = (st.flags._creditCardLimit || 0) + 3000;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-            StateManager.addMessage("💳 申请通过的短信很快来了，快乐和风险一起到账。额度+¥3000", "success");
+            StateManager.addMessage(
+              "💳 申请通过的短信很快来了，快乐和风险一起到账。额度+¥3000",
+              "success",
+            );
           },
         },
       ],
@@ -919,15 +1092,20 @@
       phase: "street",
       icon: "🍢",
       title: "小摊食安投诉",
-      story: "你听见有人说附近小摊用的油有问题，摊主急得脸色发白。一口热油能养活一个摊位，也可能毁掉几个人的信任。",
+      story:
+        "你听见有人说附近小摊用的油有问题，摊主急得脸色发白。一口热油能养活一个摊位，也可能毁掉几个人的信任。",
       choices: [
         {
           text: "🏛️ 向市场监管投诉",
           hint: "维护规则，可能影响摊主",
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-            st.flags._foodSafetyReports = (st.flags._foodSafetyReports || 0) + 1;
-            StateManager.addMessage("🏛️ 监管人员记下了线索，你知道这不讨喜，但必要。", "info");
+            st.flags._foodSafetyReports =
+              (st.flags._foodSafetyReports || 0) + 1;
+            StateManager.addMessage(
+              "🏛️ 监管人员记下了线索，你知道这不讨喜，但必要。",
+              "info",
+            );
           },
         },
         {
@@ -936,7 +1114,10 @@
           apply: function (st) {
             st.player.charm = Math.min(100, (st.player.charm || 20) + 1);
             st.flags._vendorWarnings = (st.flags._vendorWarnings || 0) + 1;
-            StateManager.addMessage("🤫 摊主沉默了一会儿，把油桶搬到了你看不见的地方。", "warning");
+            StateManager.addMessage(
+              "🤫 摊主沉默了一会儿，把油桶搬到了你看不见的地方。",
+              "warning",
+            );
           },
         },
       ],
@@ -946,7 +1127,8 @@
       phase: "street",
       icon: "🚲",
       title: "坏掉的共享单车",
-      story: "路边一辆共享单车链条掉了，挡在盲道边。车轮歪着，像城市日常里一处没人认领的小麻烦。",
+      story:
+        "路边一辆共享单车链条掉了，挡在盲道边。车轮歪着，像城市日常里一处没人认领的小麻烦。",
       choices: [
         {
           text: "🔧 顺手修好推开",
@@ -954,7 +1136,10 @@
           apply: function (st) {
             st.flags._bikeFixed = (st.flags._bikeFixed || 0) + 1;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-            StateManager.addMessage("🔧 链条重新咬住齿轮，你拍了拍手上的黑油。幸福感+2", "success");
+            StateManager.addMessage(
+              "🔧 链条重新咬住齿轮，你拍了拍手上的黑油。幸福感+2",
+              "success",
+            );
           },
         },
         {
@@ -962,7 +1147,10 @@
           hint: "快速解决挡路",
           apply: function (st) {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
-            StateManager.addMessage("🚶 至少盲道空出来了，你继续赶路。", "info");
+            StateManager.addMessage(
+              "🚶 至少盲道空出来了，你继续赶路。",
+              "info",
+            );
           },
         },
       ],
@@ -972,7 +1160,8 @@
       phase: "corporate",
       icon: "🎥",
       title: "临时直播搭档",
-      story: "小丽缺一个帮忙试吃的搭档，问你愿不愿意露脸。补光灯一亮，连路边的风都像被收进了镜头。",
+      story:
+        "小丽缺一个帮忙试吃的搭档，问你愿不愿意露脸。补光灯一亮，连路边的风都像被收进了镜头。",
       choices: [
         {
           text: "🎬 参与直播",
@@ -980,15 +1169,22 @@
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-            StateManager.addMessage("🎬 弹幕刷得很快，你第一次理解什么叫被看见。名气+4，疲劳+8", "success");
+            StateManager.addMessage(
+              "🎬 弹幕刷得很快，你第一次理解什么叫被看见。名气+4，疲劳+8",
+              "success",
+            );
           },
         },
         {
           text: "🎥 只帮忙拿设备",
           hint: "低调帮忙",
           apply: function (st) {
-            st.flags._helpedStreamSetup = (st.flags._helpedStreamSetup || 0) + 1;
-            StateManager.addMessage("🎥 你把线理顺，小丽冲镜头外比了个感谢的手势。", "info");
+            st.flags._helpedStreamSetup =
+              (st.flags._helpedStreamSetup || 0) + 1;
+            StateManager.addMessage(
+              "🎥 你把线理顺，小丽冲镜头外比了个感谢的手势。",
+              "info",
+            );
           },
         },
       ],
@@ -998,7 +1194,8 @@
       phase: "street",
       icon: "🕯️",
       title: "突然停电",
-      story: "晚上八点，整栋楼忽然断电，你手机还剩 12% 的电。黑暗来得毫无预告，手机屏幕是房间里唯一的光。",
+      story:
+        "晚上八点，整栋楼忽然断电，你手机还剩 12% 的电。黑暗来得毫无预告，手机屏幕是房间里唯一的光。",
       choices: [
         {
           text: "🏪 去便利店充电坐一会儿",
@@ -1006,8 +1203,14 @@
           apply: function (st) {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 1);
-            StateManager.addMessage("🏪 便利店的灯很亮，店员没有催你。-¥15，幸福感+3", "success");
+            st.player.actionPoints = Math.max(
+              0,
+              (st.player.actionPoints || 0) - 1,
+            );
+            StateManager.addMessage(
+              "🏪 便利店的灯很亮，店员没有催你。-¥15，幸福感+3",
+              "success",
+            );
           },
         },
         {
@@ -1016,7 +1219,10 @@
           apply: function (st) {
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
-            StateManager.addMessage("😴 黑暗里你很快睡着，梦里不需要电。疲劳-15", "info");
+            StateManager.addMessage(
+              "😴 黑暗里你很快睡着，梦里不需要电。疲劳-15",
+              "info",
+            );
           },
         },
         {
@@ -1024,7 +1230,10 @@
           hint: "维修技能有用",
           apply: function (st) {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
-            StateManager.addMessage("🔌 跳闸了。你把闸合上，灯一个接一个重新亮了起来。幸福感+8", "success");
+            StateManager.addMessage(
+              "🔌 跳闸了。你把闸合上，灯一个接一个重新亮了起来。幸福感+8",
+              "success",
+            );
           },
         },
       ],
@@ -1034,7 +1243,8 @@
       phase: "corporate",
       icon: "😤",
       title: "办公室摩擦",
-      story: "同事在会议上把你的方案说成了自己的，老板似乎也信了。PPT 里你的名字不见了，却还留着你的逻辑和你的例子。",
+      story:
+        "同事在会议上把你的方案说成了自己的，老板似乎也信了。PPT 里你的名字不见了，却还留着你的逻辑和你的例子。",
       conditions: function (st) {
         return st.player.phase === "corporate";
       },
@@ -1044,14 +1254,20 @@
           hint: "直接沟通，考验情商",
           apply: function (st) {
             st.player.charm = Math.min(100, (st.player.charm || 20) + 2);
-            StateManager.addMessage("🤫 他承认了，说是「误会」。你知道这种误会不会只有一次。", "info");
+            StateManager.addMessage(
+              "🤫 他承认了，说是「误会」。你知道这种误会不会只有一次。",
+              "info",
+            );
           },
         },
         {
           text: "📢 下次会议当场澄清",
           hint: "维护权益，有风险也有收获",
           apply: function (st) {
-            StateManager.addMessage("📢 老板看了看你，重新翻了翻文件。沉默比掌声更重要。", "info");
+            StateManager.addMessage(
+              "📢 老板看了看你，重新翻了翻文件。沉默比掌声更重要。",
+              "info",
+            );
           },
         },
         {
@@ -1059,8 +1275,12 @@
           hint: "忍一时，避免正面冲突",
           apply: function (st) {
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
-            st.flags._workplaceGrievance = (st.flags._workplaceGrievance || 0) + 1;
-            StateManager.addMessage("😌 你把委屈按进肚子里，告诉自己这不是最后一仗。", "warning");
+            st.flags._workplaceGrievance =
+              (st.flags._workplaceGrievance || 0) + 1;
+            StateManager.addMessage(
+              "😌 你把委屈按进肚子里，告诉自己这不是最后一仗。",
+              "warning",
+            );
           },
         },
       ],
@@ -1070,7 +1290,9 @@
   function registerTypedEventBridge() {
     if (typeof RANDOM_EVENTS === "undefined") return;
     WEBAPP_TYPED_EVENTS.forEach(function (evt) {
-      var exists = RANDOM_EVENTS.some(function (e) { return e.id === evt.id; });
+      var exists = RANDOM_EVENTS.some(function (e) {
+        return e.id === evt.id;
+      });
       if (!exists) RANDOM_EVENTS.push(evt);
     });
   }
