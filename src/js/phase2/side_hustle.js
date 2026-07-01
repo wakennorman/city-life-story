@@ -181,6 +181,21 @@
       income += Random.int(hustle.incomeVar[0], hustle.incomeVar[1]);
     }
 
+    // P1-4：主业在职→副业冲突惩罚（利用晚上/周末时间，精力打折）
+    const hasMainJob = state.career && state.career.currentJob && !(state.flags && state.flags._retired);
+    if (hasMainJob) {
+      const careerCap = typeof ensureCareerCapital === "function" ? ensureCareerCapital(state) : null;
+      const curBurnout = careerCap ? (careerCap.burnout || 0) : 0;
+      // 主业占用主要精力，副业效率基础-20%；高倦怠时再-15%
+      let conflictMult = curBurnout >= 60 ? 0.65 : 0.80;
+      income = Math.round(income * conflictMult);
+      // 副业也加剧职业倦怠（偷用工作时间/精力）
+      if (careerCap && typeof clampCareerCapital === "function") {
+        careerCap.burnout = Math.min(100, (careerCap.burnout || 0) + 3);
+        clampCareerCapital(careerCap);
+      }
+    }
+
     // 特殊加成
     if (hustle.specialBonus) {
       if (hustle.specialBonus.time === state.player.timeSlot) {

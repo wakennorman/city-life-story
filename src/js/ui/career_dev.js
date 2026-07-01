@@ -307,9 +307,177 @@ const CAREER_PATHS = {
       },
     ],
   },
+
+  // ===== P1-8：扩充路径（教育/物流/餐饮） =====
+  education: {
+    name: "教育培训",
+    icon: "🏫",
+    levels: [
+      {
+        id: "edu_assist",
+        name: "教学助理",
+        minAge: 20,
+        reqSkills: {},
+        reqAttrs: { intelligence: 20, charm: 20 },
+        salary: 4000,
+        desc: "辅助教学、批改作业、课件制作",
+      },
+      {
+        id: "edu_teacher",
+        name: "教师",
+        minAge: 22,
+        reqSkills: { english: 10, management: 5 },
+        reqAttrs: { intelligence: 30, charm: 25, mental: 20 },
+        salary: 7500,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "独立授课、班级管理、家长沟通",
+      },
+      {
+        id: "edu_headteacher",
+        name: "骨干教师/教研主任",
+        minAge: 28,
+        reqSkills: { management: 20, english: 15 },
+        reqAttrs: { intelligence: 42, charm: 35, mental: 30 },
+        salary: 13000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "课程研发、带教新人、教学管理",
+      },
+      {
+        id: "edu_principal",
+        name: "副校长/校长",
+        minAge: 34,
+        reqSkills: { management: 38, english: 20 },
+        reqAttrs: { intelligence: 52, charm: 45, mental: 40 },
+        salary: 22000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "学校行政管理、师资培养、政府对接",
+        reqSocial: 50,
+      },
+    ],
+  },
+
+  logistics: {
+    name: "物流快递",
+    icon: "🚚",
+    levels: [
+      {
+        id: "log_sorter",
+        name: "仓储分拣工",
+        minAge: 18,
+        reqSkills: {},
+        reqAttrs: { physique: 20 },
+        salary: 4500,
+        desc: "仓库分拣、打包装货、库存盘点",
+      },
+      {
+        id: "log_courier",
+        name: "快递员",
+        minAge: 20,
+        reqSkills: {},
+        reqAttrs: { physique: 25, agility: 25 },
+        salary: 7000,
+        reqWorkDays: 180,
+        desc: "日均派件200+、建立客户关系",
+      },
+      {
+        id: "log_supervisor",
+        name: "站点主管",
+        minAge: 24,
+        reqSkills: { management: 15 },
+        reqAttrs: { agility: 35, mental: 28, intelligence: 28 },
+        salary: 11500,
+        reqWorkDays: 730,
+        desc: "管理快递站点、协调派送、处理投诉",
+      },
+      {
+        id: "log_manager",
+        name: "区域运营经理",
+        minAge: 28,
+        reqSkills: { management: 30, sales: 15 },
+        reqAttrs: { intelligence: 40, mental: 38, agility: 32 },
+        salary: 20000,
+        reqWorkDays: 1825,
+        desc: "区域配送网络管理、KPI考核、成本控制",
+        reqSocial: 40,
+      },
+    ],
+  },
+
+  catering: {
+    name: "餐饮服务",
+    icon: "🍜",
+    levels: [
+      {
+        id: "cat_server",
+        name: "服务员/洗碗工",
+        minAge: 16,
+        reqSkills: {},
+        reqAttrs: { physique: 15 },
+        salary: 3500,
+        desc: "餐厅服务、清洁打扫、收银开单",
+      },
+      {
+        id: "cat_cook",
+        name: "厨师/领班",
+        minAge: 20,
+        reqSkills: { cooking: 20 },
+        reqAttrs: { physique: 25, charm: 20 },
+        salary: 7000,
+        reqWorkDays: 365,
+        desc: "烹饪制作、备料管理、小团队协调",
+      },
+      {
+        id: "cat_chef",
+        name: "厨师长",
+        minAge: 26,
+        reqSkills: { cooking: 38, management: 15 },
+        reqAttrs: { physique: 28, charm: 30, mental: 25 },
+        salary: 13500,
+        reqWorkDays: 1095,
+        desc: "菜单设计、厨房管理、食材成本控制",
+      },
+      {
+        id: "cat_manager",
+        name: "餐厅店长",
+        minAge: 30,
+        reqSkills: { management: 32, sales: 18, cooking: 25 },
+        reqAttrs: { charm: 38, intelligence: 38, mental: 32 },
+        salary: 21000,
+        reqWorkDays: 2190,
+        desc: "全店运营、人员招聘、外卖平台维护",
+        reqSocial: 40,
+      },
+    ],
+  },
 };
 
 // ====== ======
+
+/**
+ * P1-5：证书→职业薪资加成（每月额外补贴，不修改job.salary基准）
+ * 返回当月额外收入（整数），0表示无加成
+ */
+function _calcCertSalaryBonus(state, pathId, baseSalary) {
+  var certs = state.certificates || [];
+  var rate = 0;
+  // 路径专属证书
+  if (pathId === "tech" && certs.indexOf("coding_basic") >= 0) rate += 0.05;
+  if (pathId === "finance" && certs.indexOf("accounting_cert") >= 0) rate += 0.08;
+  if ((pathId === "operations" || pathId === "sales") && certs.indexOf("management_cert") >= 0) rate += 0.06;
+  if (pathId === "sales" && certs.indexOf("sales_cert") >= 0) rate += 0.08;
+  if (pathId === "legal" && certs.indexOf("management_cert") >= 0) rate += 0.05;
+  if (pathId === "catering" && certs.indexOf("cooking_cert") >= 0) rate += 0.10;
+  if (pathId === "logistics" && certs.indexOf("driver_license") >= 0) rate += 0.08;
+  if (pathId === "education" && certs.indexOf("english_cert") >= 0) rate += 0.06;
+  // 通用英语加成（所有路径+3%）
+  if (certs.indexOf("english_cert") >= 0) rate += 0.03;
+  // 通用心理咨询师加成（高级管理岗+4%）
+  if (certs.indexOf("psychologist") >= 0 && (pathId === "operations" || pathId === "legal" || pathId === "education")) rate += 0.04;
+  return Math.round((baseSalary || 0) * rate);
+}
 
 function ensureCareerCapital(state) {
   if (!state.careerCapital) {
@@ -896,58 +1064,144 @@ function renderCareerJobs(state, parent) {
 }
 
 /** 事业概览子面板 */
+/** P1-7：增强版事业总览——数据可视化 */
 function renderCareerOverview(state, parent) {
   var html = '<div class="tab-content">';
-  html += getCareerGuidanceHtml(state);
-  html += getCareerDualPathHtml(state);
-  html += getCareerEducationHtml(state);
 
-  // 创业摘要
+  // === 一、当前职业状态卡 ===
+  var career = state.career || {};
+  var job = career.currentJob;
+  var cap = ensureCareerCapital(state);
+  if (job) {
+    var pathData = CAREER_PATHS[job.path];
+    var levelData = pathData ? pathData.levels.find(function(l){ return l.id === job.levelId; }) : null;
+    var nextLevel = getNextCareerLevel(job.path, job.levelId);
+    var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
+    html += '<div class="section"><h3>💼 当前职位</h3><div class="card" style="padding:12px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;">';
+    html += '<div>';
+    html += '<div style="font-size:14px;font-weight:bold;">' + (pathData ? pathData.icon : "💼") + ' ' + (job.levelName || "在职") + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + (pathData ? pathData.name : "") + ' · 在职第 ' + (job.workDays || 0) + ' 天</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;">';
+    html += '<div style="font-size:15px;color:var(--accent);font-weight:bold;">¥' + (job.salary || 0).toLocaleString() + '/月</div>';
+    if (certBonus > 0) html += '<div style="font-size:10px;color:var(--success);">+ 证书加成 ¥' + certBonus.toLocaleString() + '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    // 业绩 & 倦怠条
+    var perf = job.performance || 50;
+    var burnout = cap.burnout || 0;
+    var perfColor = perf >= 70 ? "var(--success)" : perf >= 40 ? "var(--warning)" : "var(--danger)";
+    var burnColor = burnout >= 80 ? "var(--danger)" : burnout >= 50 ? "var(--warning)" : "var(--accent)";
+    html += '<div style="margin-top:10px;">';
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;color:var(--text-muted);">';
+    html += '<span>📊 业绩 ' + perf + '%</span>';
+    html += '<div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">';
+    html += '<div style="height:100%;width:' + perf + '%;background:' + perfColor + ';border-radius:3px;transition:width 0.3s;"></div></div></div>';
+    html += '<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);">';
+    html += '<span>🔥 倦怠 ' + Math.round(burnout) + '%</span>';
+    html += '<div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">';
+    html += '<div style="height:100%;width:' + Math.min(100,burnout) + '%;background:' + burnColor + ';border-radius:3px;transition:width 0.3s;"></div></div></div>';
+    html += '</div>';
+
+    // 晋升进度
+    if (nextLevel) {
+      var canPromote = checkCareerPromotion(state, job.path, nextLevel);
+      html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+      html += '<div style="font-size:10px;font-weight:bold;margin-bottom:4px;">⬆️ 下一级：' + nextLevel.name + ' ¥' + nextLevel.salary.toLocaleString() + '/月</div>';
+      html += '<div style="font-size:9px;color:' + (canPromote ? 'var(--success)' : 'var(--text-muted)') + ';">' + renderPromotionReqs(state, job.path, nextLevel) + '</div>';
+      if (canPromote) html += '<button class="btn btn-sm" style="margin-top:4px;" onclick="applyCareerPromotion(\'' + job.path + "','" + nextLevel.id + '\')">⬆️ 立即晋升</button>';
+      html += '</div>';
+    } else {
+      html += '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达路径最高级！考虑跳槽或创业</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // === 二、职业资本雷达卡 ===
+  html += '<div class="section" style="margin-top:8px;"><h3>📊 职业资本</h3><div class="card" style="padding:10px;">';
+  var capitals = [
+    { key: "industryResources", label: "行业资源", icon: "🏭", color: "#4fc3f7" },
+    { key: "clientLeads",       label: "客户线索", icon: "🤝", color: "#81c784" },
+    { key: "reputation",        label: "职业声誉", icon: "⭐", color: "#ffb74d" },
+    { key: "partnerTrust",      label: "合作信任", icon: "🔗", color: "#ce93d8" },
+    { key: "burnout",           label: "职业倦怠", icon: "🔥", color: "#ef5350" },
+  ];
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+  capitals.forEach(function(c) {
+    var val = Math.round(cap[c.key] || 0);
+    var pct = Math.min(100, val);
+    var isBurnout = c.key === "burnout";
+    var barColor = isBurnout ? (val >= 80 ? "#ef5350" : val >= 50 ? "#ffb74d" : "#81c784") : c.color;
+    html += '<div style="font-size:10px;">';
+    html += '<div style="display:flex;justify-content:space-between;color:var(--text-muted);margin-bottom:2px;">';
+    html += '<span>' + c.icon + ' ' + c.label + '</span><span>' + val + '</span></div>';
+    html += '<div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">';
+    html += '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;"></div></div></div>';
+  });
+  html += '</div>';
+  // 证书加成提示
+  if (job) {
+    var certB = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
+    var certs = state.certificates || [];
+    html += '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);">🎓 证书加成：每月额外 ¥' + certB.toLocaleString() + '（持有 ' + certs.length + ' 张证书）</div>';
+  }
+  html += '</div></div>';
+
+  // === 三、跳槽机会提示（有offer时） ===
+  if (job) {
+    var offers = generateJobOffers(state);
+    if (offers.length) {
+      html += '<div class="section" style="margin-top:8px;"><h3>🔍 跳槽机会</h3>';
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">切换到「上班族」Tab可查看详情并接受offer</div>';
+      offers.forEach(function(of) {
+        html += '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span>' + of.levelName + '</span><span style="color:var(--accent);font-weight:bold;">¥' + of.salary.toLocaleString() + '</span></div>';
+      });
+      html += '</div>';
+    }
+  }
+
+  // === 四、创业状态 ===
   var startup = state.startup;
   if (startup && startup.status !== "none" && startup.company) {
-    html += '<div class="section"><h3>🚀 创业状态</h3>';
-    html += '<div class="card" style="padding:12px;">';
-    html += "<p>🏢 " + (startup.company.name || "未命名公司") + "</p>";
-    html +=
-      "<p>📊 估值：¥" +
-      (startup.company.valuation || 0).toLocaleString() +
-      "</p>";
-    html +=
-      "<p>💰 现金流：¥" + (startup.company.cash || 0).toLocaleString() + "</p>";
-    html +=
-      "<p>👥 团队：" + (startup.company.employees || []).length + "人</p>";
-    html += "</div></div>";
+    html += '<div class="section" style="margin-top:8px;"><h3>🚀 创业状态</h3><div class="card" style="padding:10px;font-size:11px;">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+    html += '<div>🏢 ' + (startup.company.name || "未命名") + '</div>';
+    html += '<div>📊 估值 ¥' + (startup.company.valuation || 0).toLocaleString() + '</div>';
+    html += '<div>💰 现金 ¥' + (startup.company.cash || 0).toLocaleString() + '</div>';
+    html += '<div>👥 ' + (startup.company.employees || []).length + ' 人</div>';
+    html += '</div></div></div>';
   }
 
-  // 固定工作摘要
-  var career = state.career || {};
-  if (career.currentJob) {
-    html += '<div class="section"><h3>💼 当前职业</h3>';
-    html += '<div class="card" style="padding:12px;">';
-    html += "<p>" + (career.currentJob.levelName || "在职") + "</p>";
-    html += "<p>📅 在职 " + (career.currentJob.workDays || 0) + " 天</p>";
-    html += "</div></div>";
+  // === 五、智能建议 ===
+  html += '<div class="card" style="padding:10px;background:var(--bg-warning);margin-top:8px;">';
+  html += '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">💡 当前建议</div>';
+  html += '<ul style="font-size:10px;color:var(--text-muted);margin:0 0 0 14px;padding:0;line-height:1.8;">';
+  if (!job) {
+    html += '<li>投递一份固定工作，获得稳定收入和晋升路径</li>';
+  } else {
+    var _perf = job.performance || 50;
+    var _burnout = cap.burnout || 0;
+    var _wdays = job.workDays || 0;
+    if (_burnout >= 70) html += '<li>⚠️ 倦怠过高（' + Math.round(_burnout) + '%），优先调休或旅行降压</li>';
+    if (_perf < 50) html += '<li>📈 业绩不足，每天做项目（AP3）提升绩效</li>';
+    if ((cap.clientLeads || 0) < 15 && (cap.reputation || 0) < 30) html += '<li>🤝 多闲聊同事、做项目积累线索，达到跳槽门槛</li>';
+    if (_wdays >= 365 && _perf >= 70) html += '<li>💰 年度考核业绩' + _perf + '分，有望获得' + (_perf >= 85 ? 'S级（+12%）' : 'A级（+8%）') + '调薪</li>';
+    var nextL = getNextCareerLevel(job.path, job.levelId);
+    if (nextL && checkCareerPromotion(state, job.path, nextL)) html += '<li>⬆️ 晋升条件已满足，可立即申请！</li>';
   }
-
-  // 事业建议
-  html +=
-    '<div class="card" style="padding:12px;background:var(--bg-warning);margin-top:8px;">';
-  html +=
-    '<p style="font-size:11px;color:var(--text-muted);">💡 事业建议：</p>';
-  html +=
-    '<ul style="font-size:11px;color:var(--text-muted);margin:4px 0 0 16px;padding:0;">';
   if (!startup || startup.status === "none") {
-    html += "<li>🚀 积累够¥200,000可以尝试创业</li>";
+    var cash = state.resources && state.resources.cash || 0;
+    var disc = getCareerCapitalStartupDiscount(state);
+    var startupCost = Math.max(20000, Math.round(cash * (1 - disc)));
+    html += '<li>🚀 创业启动资金约¥' + startupCost.toLocaleString() + '，职业资本折扣 ' + Math.round(disc * 100) + '%</li>';
   }
-  if (!career.currentJob) {
-    html += "<li>💼 找一份固定工作，获得稳定月收入</li>";
-  }
-  html += "<li>🤝 职场社交关系会影响晋升——多维护同事关系</li>";
-  html += "<li>📚 提升技能可以解锁更高级的职位</li>";
-  html += "</ul>";
-  html += "</div>";
+  html += '</ul></div>';
 
-  html += "</div>";
+  html += getCareerEducationHtml(state);
+  html += '</div>';
   parent.innerHTML = html;
 }
 
@@ -1258,13 +1512,18 @@ function generateJobOffers(state) {
     var p1 = CAREER_PATHS[pick1];
     var idx1 = Math.min(p1.levels.length - 1, Math.max(0, curIdx));
     if (p1.levels[idx1]) {
+      // 跨路径薪资下限：不低于当前薪资×0.85，避免跳槽反而降薪
+      var cross1Salary = Math.max(
+        Math.round((job.salary || 5000) * 0.85),
+        Math.round(p1.levels[idx1].salary * 1.1)
+      );
       offers.push({
         id: "hop_cross1",
         path: pick1,
         levelId: p1.levels[idx1].id,
         levelName: p1.levels[idx1].name,
-        salary: Math.round(p1.levels[idx1].salary * 1.1),
-        desc: "跨行平级跳，涨薪10%",
+        salary: cross1Salary,
+        desc: "跨行平级跳（市场价+10%，不低于当前85%）",
       });
     }
     if (otherPaths.length > 1) {
@@ -1272,13 +1531,17 @@ function generateJobOffers(state) {
       var p2 = CAREER_PATHS[pick2];
       var idx2 = Math.min(p2.levels.length - 1, Math.max(0, curIdx + 1));
       if (p2.levels[idx2] && !(pick2 === pick1 && idx2 === idx1)) {
+        var cross2Salary = Math.max(
+          Math.round((job.salary || 5000) * 0.95),
+          Math.round(p2.levels[idx2].salary * 1.2)
+        );
         offers.push({
           id: "hop_cross2",
           path: pick2,
           levelId: p2.levels[idx2].id,
           levelName: p2.levels[idx2].name,
-          salary: Math.round(p2.levels[idx2].salary * 1.2),
-          desc: "跨行高半级跳，涨薪20%",
+          salary: cross2Salary,
+          desc: "跨行高半级跳（市场价+20%，不低于当前95%）",
         });
       }
     }
@@ -1689,12 +1952,13 @@ function tickCareerJobDaily(state) {
     if (typeof applyDreamIncomeBonus === "function") {
       salary = applyDreamIncomeBonus(state, salary, "salary");
     }
-    state.resources.cash += salary;
-    state.resources.totalEarned += salary;
-    StateManager.addMessage(
-      "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）",
-      "success",
-    );
+    // P1-5：证书→职业薪资加成
+    var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
+    state.resources.cash += salary + certBonus;
+    state.resources.totalEarned += salary + certBonus;
+    var salaryMsg = "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
+    if (certBonus > 0) salaryMsg += " + 证书加成 ¥" + certBonus.toLocaleString();
+    StateManager.addMessage(salaryMsg, "success");
 
     // 高阶职位需要维持社交关系
     var path = CAREER_PATHS[job.path];
