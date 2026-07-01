@@ -112,6 +112,14 @@ function rollDailyIllness(state) {
 
     // 概率掷骰
     var ch = ill.triggerChance || 0.5;
+    // 消费点：城市服务·社区免费体检 medical.healthCheckDone → 建立健康基线，降低大病（severity≥4 或危急重症）触发概率
+    if (
+      state.medical &&
+      state.medical.healthCheckDone &&
+      (ill.isCritical || (ill.severity || 1) >= 4)
+    ) {
+      ch *= 0.5;
+    }
     if (!Random.chance(ch)) continue;
 
     // 患病！

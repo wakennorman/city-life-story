@@ -1463,11 +1463,19 @@ function buyProperty(propId) {
     return p.id === propId;
   });
   if (!prop) return;
-  if (state.resources.cash < prop.price) {
+
+  // 消费点：城市服务·公积金查询激活 _housingFundAvailable → 公积金贷款利率优惠（5% 抵扣，代表公积金贷款相对商贷的利息节省）
+  var housingFundDiscount = 0;
+  if (state.flags && state.flags._housingFundAvailable) {
+    housingFundDiscount = Math.round(prop.price * 0.05);
+  }
+  var payPrice = prop.price - housingFundDiscount;
+
+  if (state.resources.cash < payPrice) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= prop.price;
+  state.resources.cash -= payPrice;
   inv.properties.push({
     id: prop.id,
     name: prop.name,
@@ -1481,7 +1489,14 @@ function buyProperty(propId) {
     currentPrice: prop.price,
     buyDay: state.player.day,
   });
-  StateManager.addMessage("购入" + prop.name, "success");
+  var msg = "购入" + prop.name;
+  if (housingFundDiscount > 0) {
+    msg +=
+      "（💰 公积金贷款利率优惠抵扣¥" +
+      housingFundDiscount.toLocaleString() +
+      "）";
+  }
+  StateManager.addMessage(msg, "success");
 }
 
 function sellProperty(propId) {

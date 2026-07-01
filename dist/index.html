@@ -3150,9 +3150,10 @@
       .investment-holding-head,
       .investment-holding-row {
         display: grid;
-        grid-template-columns:
-          minmax(46px, 0.7fr) minmax(70px, 1.1fr) minmax(58px, 0.8fr)
-          minmax(74px, 1fr) minmax(74px, 1fr) minmax(78px, 1fr) minmax(
+        grid-template-columns: minmax(46px, 0.7fr) minmax(70px, 1.1fr) minmax(
+            58px,
+            0.8fr
+          ) minmax(74px, 1fr) minmax(74px, 1fr) minmax(78px, 1fr) minmax(
             94px,
             1.2fr
           );
@@ -58855,6 +58856,14 @@
 
           // 概率掷骰
           var ch = ill.triggerChance || 0.5;
+          // 消费点：城市服务·社区免费体检 medical.healthCheckDone → 建立健康基线，降低大病（severity≥4 或危急重症）触发概率
+          if (
+            state.medical &&
+            state.medical.healthCheckDone &&
+            (ill.isCritical || (ill.severity || 1) >= 4)
+          ) {
+            ch *= 0.5;
+          }
           if (!Random.chance(ch)) continue;
 
           // 患病！
@@ -72277,11 +72286,19 @@
           return p.id === propId;
         });
         if (!prop) return;
-        if (state.resources.cash < prop.price) {
+
+        // 消费点：城市服务·公积金查询激活 _housingFundAvailable → 公积金贷款利率优惠（5% 抵扣，代表公积金贷款相对商贷的利息节省）
+        var housingFundDiscount = 0;
+        if (state.flags && state.flags._housingFundAvailable) {
+          housingFundDiscount = Math.round(prop.price * 0.05);
+        }
+        var payPrice = prop.price - housingFundDiscount;
+
+        if (state.resources.cash < payPrice) {
           StateManager.addMessage("现金不足", "danger");
           return;
         }
-        state.resources.cash -= prop.price;
+        state.resources.cash -= payPrice;
         inv.properties.push({
           id: prop.id,
           name: prop.name,
@@ -72299,7 +72316,14 @@
           currentPrice: prop.price,
           buyDay: state.player.day,
         });
-        StateManager.addMessage("购入" + prop.name, "success");
+        var msg = "购入" + prop.name;
+        if (housingFundDiscount > 0) {
+          msg +=
+            "（💰 公积金贷款利率优惠抵扣¥" +
+            housingFundDiscount.toLocaleString() +
+            "）";
+        }
+        StateManager.addMessage(msg, "success");
       }
 
       function sellProperty(propId) {
@@ -133886,7 +133910,7 @@
             );
           }
 
-          // 公积金咨询后续：标记公积金可用（消费点待接：investment.js buyProperty 房贷读 _housingFundAvailable 走公积金利率分支）
+          // 公积金咨询后续：标记公积金可用（消费点已接：investment.js buyProperty 读 _housingFundAvailable → 公积金利率优惠 5% 抵扣）
           if (
             used.housing_fund_query > 0 &&
             markFollowUp(meta, "housing_fund_ready")
@@ -133898,7 +133922,7 @@
             );
           }
 
-          // 体检后续：建立健康基线（消费点待接：疾病触发函数读 medical.healthCheckDone 降低大病概率）
+          // 体检后续：建立健康基线（消费点已接：illness.js rollDailyIllness 读 medical.healthCheckDone → 大病触发概率×0.5）
           if (
             used.community_health_check > 0 &&
             markFollowUp(meta, "health_baseline")

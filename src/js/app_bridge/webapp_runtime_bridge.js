@@ -387,7 +387,7 @@
       );
     }
 
-    // 公积金咨询后续：标记公积金可用（消费点待接：investment.js buyProperty 房贷读 _housingFundAvailable 走公积金利率分支）
+    // 公积金咨询后续：标记公积金可用（消费点已接：investment.js buyProperty 读 _housingFundAvailable → 公积金利率优惠 5% 抵扣）
     if (
       used.housing_fund_query > 0 &&
       markFollowUp(meta, "housing_fund_ready")
@@ -399,7 +399,7 @@
       );
     }
 
-    // 体检后续：建立健康基线（消费点待接：疾病触发函数读 medical.healthCheckDone 降低大病概率）
+    // 体检后续：建立健康基线（消费点已接：illness.js rollDailyIllness 读 medical.healthCheckDone → 大病触发概率×0.5）
     if (
       used.community_health_check > 0 &&
       markFollowUp(meta, "health_baseline")

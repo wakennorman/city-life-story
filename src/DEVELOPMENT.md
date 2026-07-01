@@ -1,6 +1,26 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-01（装备品质系统激活 / P2 实装）
+> 最后更新: 2026-07-01（城市服务消费点接入）
+
+## 2026-07-01 — 城市服务消费点接入
+
+接上轮城市服务 followUp 补的真实效果，本轮把剩余 2 个「消费点待接」落地：bridge 已埋的 flag 终于被游戏逻辑读取。
+
+### 改造
+
+1. **公积金 → 购房优惠**（`phase2/investment.js::buyProperty`）：读 `state.flags._housingFundAvailable`，命中则购房享公积金贷款利率优惠 = 价格 5% 抵扣（代表公积金贷款相对商贷的利息节省），现金只扣 `prop.price × 0.95`，资产仍按市价记入持仓。消息提示抵扣金额
+2. **体检 → 降大病概率**（`phase1/illness.js::rollDailyIllness`）：读 `state.medical.healthCheckDone`，命中则大病（`isCritical` 或 `severity ≥ 4`）触发概率 ×0.5。仅作用于每日概率掷骰，事件强制触发的 `triggerIllness` 不受影响
+
+### 关联
+
+- bridge 两处「消费点待接」注释改为「已接」
+- 征信/社保 2 个消费点上轮已接 `core/finance.js::calculateLoanCapacity`（征信降利率 15%、社保卡加额度 10%），本轮补齐剩余 2 个，城市服务 4 个 followUp 消费点全部接通
+
+### 验证
+
+- `npm run check:js` ✅（114文件）
+- `npm run typecheck` ✅
+- `python build.py` ✅（dist/index.html 4330.1 KB）
 
 ## 2026-07-01 — 装备品质系统激活（P2 实装）
 
