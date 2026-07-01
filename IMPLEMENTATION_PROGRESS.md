@@ -3,6 +3,40 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
+## 2026-07-01 第六轮：收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁
+
+| #   | 任务                   | 状态 | 说明                                                                                                                                          |
+| --- | ---------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | 工作树清理             | ✅   | 删 nul（tasklist 误产生）；15 个 Prettier 格式化单独 chore 提交（已逐一核实零逻辑）                                                           |
+| B   | 城市服务占位补真实效果 | ✅   | bridge.js followUp 补 4 分支：征信→_creditInfoReady / 社保≥3次→_socialCardReady / 公积金→_housingFundAvailable / 体检→medical.healthCheckDone |
+| C   | 城市服务消费点接入     | ◑    | finance.js calculateLoanCapacity：征信降利率15% + 社保卡加额度10%；公积金/体检消费点待接（见待排期清单）                                      |
+| D   | Monte Carlo 浏览器脚本 | ✅   | tools/monte_carlo_runner.js + README：拦截 showModal + 循环 endDay + 事件频率采样；P2 缺口最小补丁，限制见 README                             |
+| E   | 装备品质激活           | ⏸    | 探查后发现是系统性工程（实例格式不一致 + 数值乘数零调用 + 3 渠道未接 + 旧 rollEquipmentDrop 并存），推迟单独排期（见待排期清单）              |
+| F   | TODO 提醒落档          | ✅   | 见下方「待排期清单」                                                                                                                          |
+| G   | 验证 + push            | ⏳   | 待 Bash 稳定：check:js / typecheck / build.py / build 全通过 + git push origin main                                                           |
+
+### 本轮落地
+
+| #   | 项目                       | 文件                                             |
+| --- | -------------------------- | ------------------------------------------------ |
+| 1   | 城市服务 followUp 4 分支   | `src/js/app_bridge/webapp_runtime_bridge.js`     |
+| 2   | 贷款利率/额度接入征信+社保 | `src/js/core/finance.js`                         |
+| 3   | Monte Carlo 跑分工具       | `tools/monte_carlo_runner.js`, `tools/README.md` |
+| 4   | nul 清理 + Prettier chore  | （git commit）                                   |
+
+### 待排期清单（防遗忘·单独一轮集中做）
+
+- [ ] **startup.js 拆分**（`src/js/phase2/startup.js`，488KB/14443行/57章节/7大块）：单独一轮集中做，用「同位置单 script 换多条连续子文件」顺序保持法，全量验证。**禁止改 index.html script 顺序**。
+- [ ] **events_street.js 拆分**（9827 行）+ **render.js 拆分**（6024 行）：CLAUDE.md 接力清单原列 3 大文件，与 startup 同等处理。
+- [ ] **装备品质系统激活**（系统性工程，单独一轮，涉及核心数值需充分验证）：
+  - 实例存取格式统一：`createEquipmentInstance`（equipment_quality.js:325）生成 `instanceId=id_timestamp_random`，但 `buyItemFromShop`（modal.js:1044）读取用 `id+"_instance"`，不一致需统一
+  - `getQualityPriceMult` / `getQualityEffectMult`（equipment_quality.js:215/220）**零调用**，需接入价格计算与装备效果计算（jobBonuses 应用点）
+  - 获取渠道单一（仅 `modal.js::buyItemFromShop`）：拾荒 / NPC好感奖励 / 事件掉落需接 `createEquipmentInstance`
+  - 旧 `rollEquipmentDrop`（items.js:1077，自带 `rollEquipmentQuality`，零调用）与新系统并存，需清理或迁移
+  - CSS 动画（`.quality-legendary` 脉冲，style.css:738-755）**已存在**，无需做
+- [ ] **城市服务层3消费点**：公积金 `_housingFundAvailable` → `investment.js::buyProperty` 房贷加公积金利率分支；体检 `medical.healthCheckDone` → 疾病触发函数（定位在 main.js/diseases.js，非 medical.js）降大病概率
+- [ ] **Monte Carlo 增强**：智能行动模拟（`getAvailableActions(state)[0].handler`）+ 多策略对比 + 自动事件选择（见 `tools/README.md`「后续增强方向」）
+
 ## 2026-07-01 第五轮审查：3个留待项实装（新闻→世界参数 / 行业周期事件 / 日志滚动）
 
 | #   | 任务                   | 状态 | 说明                                                                                                |
