@@ -609,18 +609,21 @@ export const EVENTS: GameEvent[] = [
         id: "decline",
         text: "拒绝，另找出路",
         hint: "保存体力，坚持找更合适的工作",
-        effects: [
-          { target: "needs.fatigue", op: "add", value: -5 },
-        ],
+        effects: [{ target: "needs.fatigue", op: "add", value: -5 }],
       },
     ],
-    narrativeBefore: "号码是陌生的，语气却很熟练，像是每天打出几十个这样的电话。",
+    narrativeBefore:
+      "号码是陌生的，语气却很熟练，像是每天打出几十个这样的电话。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        accept: "下午的货很重，但钱打进来的那一刻什么都值了。",
-        ask_details: "对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。",
-        decline: "你没接这个活。城市里总会有下一个电话。",
-      }, "电话里的嗡嗡声消失在街道噪音里。"),
+      pickNarrative(
+        choiceId,
+        {
+          accept: "下午的货很重，但钱打进来的那一刻什么都值了。",
+          ask_details: "对方沉默了一秒，然后挂了电话。你记下了号码，以后再说。",
+          decline: "你没接这个活。城市里总会有下一个电话。",
+        },
+        "电话里的嗡嗡声消失在街道噪音里。",
+      ),
     tags: ["labor", "cash", "survival", "street"],
   },
 
@@ -668,11 +671,15 @@ export const EVENTS: GameEvent[] = [
     ],
     narrativeBefore: "黑暗来得毫无预告，手机屏幕是房间里唯一的光。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        go_out: "便利店的灯很亮，店员没有催你，你在那里坐到了电来。",
-        sleep_early: "黑暗里你很快睡着，梦里不需要电。",
-        check_breaker: "跳闸了。你把闸合上，灯一个接一个重新亮了起来。",
-      }, "停电带来短暂的安静，城市忘了它自己。"),
+      pickNarrative(
+        choiceId,
+        {
+          go_out: "便利店的灯很亮，店员没有催你，你在那里坐到了电来。",
+          sleep_early: "黑暗里你很快睡着，梦里不需要电。",
+          check_breaker: "跳闸了。你把闸合上，灯一个接一个重新亮了起来。",
+        },
+        "停电带来短暂的安静，城市忘了它自己。",
+      ),
     tags: ["housing", "survival", "repair", "night"],
   },
 
@@ -711,18 +718,20 @@ export const EVENTS: GameEvent[] = [
         id: "close_ad",
         text: "关掉广告",
         hint: "拒绝高息借贷，坚持硬撑",
-        effects: [
-          { target: "player.morality", op: "add", value: 1 },
-        ],
+        effects: [{ target: "player.morality", op: "add", value: 1 }],
       },
     ],
     narrativeBefore: "屏幕上的数字很大，字体鲜红，像是专门为穷人设计的颜色。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        research_terms: "年化利率 36%——你把计算器关掉，把广告也关掉了。",
-        apply_small: "到账短信来了，钱是解药，但剂量算错了就是毒。",
-        close_ad: "你划掉广告，继续数自己还剩多少现金。",
-      }, "广告消失了，穷的感觉没有。"),
+      pickNarrative(
+        choiceId,
+        {
+          research_terms: "年化利率 36%——你把计算器关掉，把广告也关掉了。",
+          apply_small: "到账短信来了，钱是解药，但剂量算错了就是毒。",
+          close_ad: "你划掉广告，继续数自己还剩多少现金。",
+        },
+        "广告消失了，穷的感觉没有。",
+      ),
     tags: ["finance", "debt", "survival", "decision"],
   },
 
@@ -768,11 +777,16 @@ export const EVENTS: GameEvent[] = [
     ],
     narrativeBefore: "PPT 里你的名字不见了，却还留着你的逻辑和你的例子。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        confront_private: "他承认了，说是「误会」。你知道这种误会不会只有一次。",
-        raise_in_meeting: "老板看了看你，重新翻了翻文件。沉默比掌声更重要。",
-        let_it_go: "你把委屈按进肚子里，告诉自己这不是最后一仗。",
-      }, "会议室的玻璃门透明，人心却不是。"),
+      pickNarrative(
+        choiceId,
+        {
+          confront_private:
+            "他承认了，说是「误会」。你知道这种误会不会只有一次。",
+          raise_in_meeting: "老板看了看你，重新翻了翻文件。沉默比掌声更重要。",
+          let_it_go: "你把委屈按进肚子里，告诉自己这不是最后一仗。",
+        },
+        "会议室的玻璃门透明，人心却不是。",
+      ),
     tags: ["corporate", "conflict", "career", "social"],
   },
 
@@ -820,11 +834,15 @@ export const EVENTS: GameEvent[] = [
     ],
     narrativeBefore: "城市把所有的热都留在这条街上，没有风，只有湿热的停滞。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        buy_fan: "风扇转着，能睡了，虽然还是热，但能睡了。",
-        go_library: "图书馆的冷气均匀，书页翻起来都是凉的。",
-        endure: "夜里你出了一身汗，早上起来头有点晕。",
-      }, "高温天气对不同的人是不同的事。"),
+      pickNarrative(
+        choiceId,
+        {
+          buy_fan: "风扇转着，能睡了，虽然还是热，但能睡了。",
+          go_library: "图书馆的冷气均匀，书页翻起来都是凉的。",
+          endure: "夜里你出了一身汗，早上起来头有点晕。",
+        },
+        "高温天气对不同的人是不同的事。",
+      ),
     tags: ["weather", "survival", "housing", "health"],
   },
 
@@ -864,18 +882,21 @@ export const EVENTS: GameEvent[] = [
         id: "decline",
         text: "不擅长，婉拒",
         hint: "保持距离",
-        effects: [
-          { target: "needs.happiness", op: "add", value: -2 },
-        ],
+        effects: [{ target: "needs.happiness", op: "add", value: -2 }],
       },
     ],
     narrativeBefore: "邻居的门半开着，他拿着断掉的锁芯，表情很无助。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        fix_lock: "门锁好了，他端出一碗红烧肉。吃饭的时候没人说话，都觉得够了。",
-        call_locksmith: "师傅很快来了，邻居说：「下次有事还找你。」",
-        decline: "你说不会，他点了点头，转身打电话。",
-      }, "有时候技能是比钱更直接的语言。"),
+      pickNarrative(
+        choiceId,
+        {
+          fix_lock:
+            "门锁好了，他端出一碗红烧肉。吃饭的时候没人说话，都觉得够了。",
+          call_locksmith: "师傅很快来了，邻居说：「下次有事还找你。」",
+          decline: "你说不会，他点了点头，转身打电话。",
+        },
+        "有时候技能是比钱更直接的语言。",
+      ),
     tags: ["neighbor", "repair", "social", "slum"],
   },
 
@@ -913,10 +934,14 @@ export const EVENTS: GameEvent[] = [
     ],
     narrativeBefore: "夜市的灯亮起来，每个摊位都是一个人的全部。",
     narrativeAfter: (choiceId) =>
-      pickNarrative(choiceId, {
-        rent_stall: "你把东西摆出来，第一声吆喝很小，后来越来越响。",
-        observe_first: "你在人群里走了一圈，记住了哪种摊位排队最长。",
-      }, "夜市是城市最诚实的经济课。"),
+      pickNarrative(
+        choiceId,
+        {
+          rent_stall: "你把东西摆出来，第一声吆喝很小，后来越来越响。",
+          observe_first: "你在人群里走了一圈，记住了哪种摊位排队最长。",
+        },
+        "夜市是城市最诚实的经济课。",
+      ),
     tags: ["trade", "side_hustle", "night", "cash"],
   },
 ];

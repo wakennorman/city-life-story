@@ -1,10 +1,5 @@
 export type MessageType =
-  | "info"
-  | "success"
-  | "danger"
-  | "event"
-  | "warning"
-  | "hint";
+  "info" | "success" | "danger" | "event" | "warning" | "hint";
 
 export interface PlayerState {
   day: number;

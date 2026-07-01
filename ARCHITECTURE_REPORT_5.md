@@ -12,7 +12,7 @@
 | --- | ---------------------------------- | ---------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | **checkChainEventQueue函数缺失**   | 函数不存在                         | ✅ **已修复** | `events_core.js` L388-430 函数完整定义；L55/L78 调用处已添加 `typeof checkChainEventQueue === "function"` 守卫                                         |
 | 2   | **天气→摆摊收益闭环断裂**          | outdoorMod定义不消费               | ✅ **已修复** | `trade.js` 中 `getOutdoorWorkMod` 函数消费 `WEATHER_TYPES.outdoorMod`；`weather.js` 中台风天 `outdoorJobsBlocked: true` 生效                           |
-| 3   | **经济指数膨胀**                   | NVDA trend +1.5%/天，创业估值1000x | ✅ **已修复** | `investment.js` NVDA trend=0.006（年化~200%），其他股票0.001-0.007；`startup.js` baseValuation 科技140万~教育56万，上限控制                            |
+| 3   | **经济指数膨胀**                   | NVDA trend +1.5%/天，创业估值1000x | ✅ **已修复** | `investment.js` NVDA trend=0.006（年化~~200%），其他股票0.001-0.007；`startup.js` baseValuation 科技140万~~教育56万，上限控制                          |
 | 4   | **NPC好感→事件/装备/技能链路中断** | 仅1个NPC事件检查好感≥30            | ✅ **已修复** | `npcs.js` 每个NPC都有 `affinityRewards`（30/60/80阈值）、`skillThresholds`（好感80+技能40）、`tradeInfo`；`cross_system_events.js` 新增多个NPC联动事件 |
 
 ### 5.2 P1 问题修复状态

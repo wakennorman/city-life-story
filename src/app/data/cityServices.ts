@@ -1,10 +1,5 @@
 export type CityServiceCategory =
-  | "medical"
-  | "legal"
-  | "travel"
-  | "financial"
-  | "social"
-  | "health";
+  "medical" | "legal" | "travel" | "financial" | "social" | "health";
 
 export interface CityServiceAction {
   id: string;

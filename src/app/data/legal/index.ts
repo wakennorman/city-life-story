@@ -1,8 +1,5 @@
 export type LegalCaseCategory =
-  | "labor"
-  | "civil"
-  | "criminal"
-  | "administrative";
+  "labor" | "civil" | "criminal" | "administrative";
 
 export interface LegalStage {
   name: string;

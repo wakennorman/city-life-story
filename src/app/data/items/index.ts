@@ -1,9 +1,5 @@
 export type ItemCategory =
-  | "tool"
-  | "consumable"
-  | "equipment"
-  | "souvenir"
-  | "special";
+  "tool" | "consumable" | "equipment" | "souvenir" | "special";
 export type ItemRarity = "common" | "uncommon" | "rare" | "legendary";
 
 export interface ItemEffect {

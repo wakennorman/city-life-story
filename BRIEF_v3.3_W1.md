@@ -164,9 +164,7 @@ grep -n "flag:" src/js/data/moral_events.js | head -40
       icon: "🕯",
       brief: "上一周目你留下的痕迹...",
       version: "v3.3",
-      sections: [
-        /* dynamic via () => functions */
-      ],
+      sections: [/* dynamic via () => functions */],
     };
   }
   ```

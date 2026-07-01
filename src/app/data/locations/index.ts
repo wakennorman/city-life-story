@@ -1,9 +1,5 @@
 export type LocationCategory =
-  | "work"
-  | "life"
-  | "gov"
-  | "entertainment"
-  | "service";
+  "work" | "life" | "gov" | "entertainment" | "service";
 
 export interface LocationAction {
   id: string;
