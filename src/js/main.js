@@ -626,10 +626,7 @@ function startScenarioGame(scenarioId) {
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
-  state.player.eduProgress =
-    scenario.education >= 1
-      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
-      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  state.player.eduStudyPoints = 0;
 
   // --- 资源 ---
   state.resources.cash = scenario.resources.cash || 1500;
@@ -1178,10 +1175,7 @@ function startSandboxGame() {
   // --- 学历 ---
   state.player.education = cfg.education || 0;
   state.education = cfg.education || 0;
-  state.player.eduProgress =
-    cfg.education >= 1
-      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
-      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  state.player.eduStudyPoints = 0;
 
   // --- 技能 ---
   var skillKeys = [
@@ -2242,137 +2236,111 @@ function getAvailableActions(state) {
       }
     }
 
-    // === 学历系统（大学城）===
+    // === 学历系统 v3.9（P0-6：门槛递进）===
     if (locKey === "school") {
+      const eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
+      const eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
+      const eduThresholds = [0, 50, 100, 150, 300, 500];
       const edu = state.player.education ?? state.education ?? 0;
-      const ep = state.player.eduProgress ||
-        state.eduProgress || {
-          studyPoints: 0,
-          examsPassed: 0,
-          totalExams: 6,
-        };
-      state.player.education = edu;
-      state.player.eduProgress = ep;
-      if (edu < 1) {
-        // 备考行动
-        const studyReady = ep.examsPassed < ep.totalExams;
-        if (studyReady) {
-          actions.push({
-            id: "edu_study",
-            name: "自考备考",
-            desc: `消耗20点行动力，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
-            ap: 20,
-            handler: () => {
-              if (!state.player.eduProgress)
-                state.player.eduProgress = {
-                  studyPoints: 0,
-                  examsPassed: 0,
-                  totalExams: 6,
-                };
-              // 小美在场加成：学习点额外+2
-              var studyAdd = 5;
-              if (typeof NPCS !== "undefined" && state.relationships) {
-                var xiaoMei = NPCS.find(function (n) {
-                  return n.id === "xiao_mei";
-                });
-                if (xiaoMei && xiaoMei.studyPresenceBonus) {
-                  var xmRel = state.relationships.xiao_mei;
-                  var xmAff = xmRel ? xmRel.affinity || 0 : 0;
-                  if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
-                    studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
-                  }
+
+      if (edu < eduNames.length - 1) {
+        const nextLevel = edu + 1;
+        const threshold = eduThresholds[nextLevel];
+        const sp = state.player.eduStudyPoints || 0;
+
+        // 备考
+        actions.push({
+          id: "edu_study",
+          name: `${eduIcons[nextLevel]} 备考${eduNames[nextLevel]}`,
+          desc: `消耗20行动力，+5学习点（当前${sp}，需${threshold}升至${eduNames[nextLevel]}）。10%概率智力+1。`,
+          ap: 20,
+          handler: () => {
+            var studyAdd = 5;
+            // 小美加成
+            if (typeof NPCS !== "undefined" && state.relationships) {
+              var xiaoMei = NPCS.find(function (n) {
+                return n.id === "xiao_mei";
+              });
+              if (xiaoMei && xiaoMei.studyPresenceBonus) {
+                var xmRel = state.relationships.xiao_mei;
+                var xmAff = xmRel ? xmRel.affinity || 0 : 0;
+                if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
+                  studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
                 }
               }
-              state.player.eduProgress.studyPoints =
-                (state.player.eduProgress.studyPoints || 0) + studyAdd;
-              consumeAP(20);
-              if (Random.chance(0.1)) {
-                state.player.intelligence = Math.min(
-                  100,
-                  (state.player.intelligence || 0) + 1,
-                );
-                StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
-              } else {
-                StateManager.addMessage(
-                  `📖 备考中…学习点+${studyAdd}（${state.player.eduProgress.studyPoints}/150）`,
-                  "info",
-                );
-              }
-            },
-          });
-        }
-        // 参加考试
-        const canExam =
-          (ep.studyPoints || 0) >= 150 && ep.examsPassed < ep.totalExams;
-        const examPassRate = Math.min(
+            }
+            state.player.eduStudyPoints =
+              (state.player.eduStudyPoints || 0) + studyAdd;
+            consumeAP(20);
+            if (Random.chance(0.1)) {
+              state.player.intelligence = Math.min(
+                100,
+                (state.player.intelligence || 0) + 1,
+              );
+              StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
+            } else {
+              StateManager.addMessage(
+                `📖 备考中…学习点+${studyAdd}（${state.player.eduStudyPoints}/${threshold}）`,
+                "info",
+              );
+            }
+            if (typeof renderAll === "function") renderAll();
+          },
+        });
+
+        // 参加考试（达到阈值后可考）
+        const canExam = sp >= threshold;
+        const passRate = Math.min(
           85,
-          40 +
-            (state.player.mental || 0) * 0.4 +
-            (state.player.intelligence || 0) * 0.1,
+          Math.max(
+            25,
+            60 -
+              edu * 8 +
+              (state.player.intelligence || 0) * 0.1 +
+              (state.player.mental || 0) * 0.3,
+          ),
         );
         actions.push({
           id: "edu_exam",
-          name: "参加考试",
-          desc: `消耗30点行动力，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
+          name: `📝 参加${eduNames[nextLevel]}考试`,
+          desc: `消耗30行动力，需学习点≥${threshold}（当前${sp}）。通过率${passRate.toFixed(0)}%` +
+            `（越往高层越难）。考过后学历升至${eduNames[nextLevel]}。`,
           ap: 30,
           reqFail: !canExam
-            ? ep.studyPoints < 150
-              ? `学习点不足（${ep.studyPoints}/150）`
-              : "全部考试已通过"
+            ? `学习点不足（${sp}/${threshold}）`
             : null,
           handler: () => {
-            if (!state.player.eduProgress)
-              state.player.eduProgress = {
-                studyPoints: 0,
-                examsPassed: 0,
-                totalExams: 6,
-              };
             consumeAP(30);
             const rate = Math.min(
               85,
-              40 +
-                (state.player.mental || 0) * 0.4 +
-                (state.player.intelligence || 0) * 0.1,
+              Math.max(
+                25,
+                60 -
+                  edu * 8 +
+                  (state.player.intelligence || 0) * 0.1 +
+                  (state.player.mental || 0) * 0.3,
+              ),
             );
             if (Random.chance(rate / 100)) {
-              state.player.eduProgress.examsPassed =
-                (state.player.eduProgress.examsPassed || 0) + 1;
-              state.player.eduProgress.studyPoints = 0;
+              state.player.education = nextLevel;
+              state.education = nextLevel;
+              state.player.eduStudyPoints = 0;
               StateManager.addMessage(
-                `🎉 第${state.player.eduProgress.examsPassed}门科目通过！还差${6 - state.player.eduProgress.examsPassed}门。`,
+                `🎉 恭喜通过${eduNames[nextLevel]}考试！学历已提升至${eduNames[nextLevel]}。`,
                 "success",
               );
             } else {
-              StateManager.addMessage(
-                "😞 考试未通过，继续备考再战！",
-                "danger",
-              );
+              StateManager.addMessage("😞 考试未通过，继续备考再战！", "danger");
             }
+            if (typeof renderAll === "function") renderAll();
           },
         });
-        // 申请学历认证
-        if (ep.examsPassed >= ep.totalExams) {
-          actions.push({
-            id: "edu_cert",
-            name: "申请本科学历认证",
-            desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
-            ap: 0,
-            handler: () => {
-              state.player.education = 1;
-              state.education = 1;
-              StateManager.addMessage(
-                "🎓 恭喜！你已取得本科学历，人生新起点！",
-                "success",
-              );
-              renderAll();
-            },
-          });
-        }
-      } else if (edu === 1) {
+      } else {
+        // 最高学历
         actions.push({
           id: "edu_done",
-          name: "本科学历持有者",
-          desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
+          name: `${eduIcons[edu]} ${eduNames[edu]}学历`,
+          desc: "你已经达到了最高学历水平！",
           disabled: true,
         });
       }

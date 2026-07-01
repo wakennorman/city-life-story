@@ -525,38 +525,58 @@ function getCareerDualPathHtml(state) {
 function getCareerEducationHtml(state) {
   var p = state.player || {};
   var edu = p.education ?? state.education ?? 0;
-  var ep = p.eduProgress ||
-    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
   var eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
   var eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
-  var total = ep.totalExams || 6;
-  var passed = ep.examsPassed || 0;
-  var pct = Math.min(100, Math.round((passed / total) * 100));
-  var nextTip =
-    edu >= eduNames.length - 1
-      ? "学历已到顶级，后续更依赖项目、技能和人脉。"
-      : "想继续提升学历，请去大学城或具备学习条件的地点参加备考。";
+  var eduThresholds = [0, 50, 100, 150, 300, 500];
+  var sp = p.eduStudyPoints || 0;
+
+  if (edu >= eduNames.length - 1) {
+    // 已到顶
+    return (
+      '<div class="section"><h3>🎓 学历与考试</h3>' +
+      '<div class="card" style="padding:12px;">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
+      eduIcons[edu] +
+      " 当前学历：" +
+      eduNames[edu] +
+      "</div>" +
+      '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">' +
+      "学历已到顶级，后续更依赖项目、技能和人脉。" +
+      "</div></div></div>"
+    );
+  }
+
+  var nextLevel = edu + 1;
+  var threshold = eduThresholds[nextLevel];
+  var pct = Math.min(100, Math.round((sp / threshold) * 100));
+
   return (
     '<div class="section"><h3>🎓 学历与考试</h3>' +
     '<div class="card" style="padding:12px;">' +
     '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-    (eduIcons[edu] || "🎓") +
+    eduIcons[edu] +
     " 当前学历：" +
-    (eduNames[edu] || "未知") +
+    eduNames[edu] +
+    "</div>" +
+    '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">' +
+    '目标：<strong>' +
+    eduNames[nextLevel] +
+    "</strong>（需" +
+    threshold +
+    "学习点）" +
     "</div>" +
     '<div style="margin-top:8px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">' +
     '<div style="height:100%;width:' +
     pct +
     '%;background:var(--accent);"></div></div>' +
     '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "考试进度：" +
-    passed +
+    "学习点：" +
+    sp +
     "/" +
-    total +
-    "；备考点数：" +
-    (ep.studyPoints || 0) +
+    threshold +
     "<br>" +
-    nextTip +
+    '<button class="btn btn-sm" style="margin-top:6px;min-height:44px;" ' +
+        "onclick=\"document.querySelector('[data-tab=action]')?.click()\">🏛️ 去大学城备考</button>" +
     "</div></div></div>"
   );
 }

@@ -38243,14 +38243,30 @@ function applyNodeChoice(state, nodeId, choiceKey) {
 
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
+      state.flags._retired = true;
+      if (state.career && state.career.currentJob) {
+        state.career.pensionBase = state.career.currentJob.salary || 5000;
+      } else {
+        state.career = state.career || {};
+        state.career.pensionBase = 5000;
+      }
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":
       state.flags._retirementType = "advisor";
+      state.flags._retired = true;
+      if (state.career && state.career.currentJob) {
+        state.career.pensionBase = state.career.currentJob.salary || 5000;
+      } else {
+        state.career = state.career || {};
+        state.career.pensionBase = 5000;
+      }
       state.resources.cash = (state.resources.cash || 0) + 2000;
       break;
     case "retire_continue":
       state.flags._retirementType = "continue";
+      // 退而不休不设 _retired，继续正常工作
+      state.flags._lifeNode_retirement_done = true;
       break;
   }
   state.flags["_lifeNode_" + nodeId + "_done"] = true;
@@ -119000,38 +119016,58 @@ function getCareerDualPathHtml(state) {
 function getCareerEducationHtml(state) {
   var p = state.player || {};
   var edu = p.education ?? state.education ?? 0;
-  var ep = p.eduProgress ||
-    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
   var eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
   var eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
-  var total = ep.totalExams || 6;
-  var passed = ep.examsPassed || 0;
-  var pct = Math.min(100, Math.round((passed / total) * 100));
-  var nextTip =
-    edu >= eduNames.length - 1
-      ? "学历已到顶级，后续更依赖项目、技能和人脉。"
-      : "想继续提升学历，请去大学城或具备学习条件的地点参加备考。";
+  var eduThresholds = [0, 50, 100, 150, 300, 500];
+  var sp = p.eduStudyPoints || 0;
+
+  if (edu >= eduNames.length - 1) {
+    // 已到顶
+    return (
+      '<div class="section"><h3>🎓 学历与考试</h3>' +
+      '<div class="card" style="padding:12px;">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
+      eduIcons[edu] +
+      " 当前学历：" +
+      eduNames[edu] +
+      "</div>" +
+      '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">' +
+      "学历已到顶级，后续更依赖项目、技能和人脉。" +
+      "</div></div></div>"
+    );
+  }
+
+  var nextLevel = edu + 1;
+  var threshold = eduThresholds[nextLevel];
+  var pct = Math.min(100, Math.round((sp / threshold) * 100));
+
   return (
     '<div class="section"><h3>🎓 学历与考试</h3>' +
     '<div class="card" style="padding:12px;">' +
     '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-    (eduIcons[edu] || "🎓") +
+    eduIcons[edu] +
     " 当前学历：" +
-    (eduNames[edu] || "未知") +
+    eduNames[edu] +
+    "</div>" +
+    '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">' +
+    '目标：<strong>' +
+    eduNames[nextLevel] +
+    "</strong>（需" +
+    threshold +
+    "学习点）" +
     "</div>" +
     '<div style="margin-top:8px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">' +
     '<div style="height:100%;width:' +
     pct +
     '%;background:var(--accent);"></div></div>' +
     '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "考试进度：" +
-    passed +
+    "学习点：" +
+    sp +
     "/" +
-    total +
-    "；备考点数：" +
-    (ep.studyPoints || 0) +
+    threshold +
     "<br>" +
-    nextTip +
+    '<button class="btn btn-sm" style="margin-top:6px;min-height:44px;" ' +
+        "onclick=\"document.querySelector('[data-tab=action]')?.click()\">🏛️ 去大学城备考</button>" +
     "</div></div></div>"
   );
 }
@@ -119169,6 +119205,37 @@ function renderCareerJobs(state, parent) {
       html +=
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
+
+    // ---- 工作行动：业绩/调休（P0-4+P0-5） ----
+    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
+    html += '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+    html += '</div></div>';
+
+    // ---- 职场社交（P0-2：主动社交UI） ----
+    var colleagues = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
+    html += '<div style="margin-top:12px;"><h3 style="font-size:13px;">🤝 职场社交</h3>';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">与同事维护关系有助于晋升和获取内推</div>';
+    if (colleagues && colleagues.length) {
+      for (var ci = 0; ci < colleagues.length; ci++) {
+        var co = colleagues[ci];
+        html += '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">';
+        html += '<div><strong>' + (co.name || "同事") + '</strong> <span style="color:var(--text-muted);font-size:10px;">关系' + (co.relationship || 0) + ' 信任' + (co.trust || 0) + '</span></div>';
+        html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'meal\',\'' + co.id + '\')">🍚请客</button>';
+        html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'chat\',\'' + co.id + '\')">💬闲聊</button>';
+        if ((co.relationship || 0) >= 60 && co.role !== 'mentor') {
+          html += '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'mentor\',\'' + co.id + '\')">👨‍🏫拜师</button>';
+        }
+        html += '</div></div>';
+      }
+    } else {
+      html += '<div style="font-size:10px;color:var(--text-muted);padding:8px 0;">暂无同事数据，入职后自动生成</div>';
+    }
+    html += '</div>';
 
     // 离职按钮
     html +=
@@ -119686,6 +119753,10 @@ function applyCareerJob(pathId, levelId) {
     startDay: state.player.day,
     performance: 50,
   };
+  // 初始化同事网络（P0-2：入职时生成初始同事）
+  if (typeof initCareerColleagues === "function") {
+    initCareerColleagues(state);
+  }
   cap.reputation = (cap.reputation || 0) + 2;
   cap.industryResources = (cap.industryResources || 0) + 1;
   clampCareerCapital(cap);
@@ -119770,6 +119841,19 @@ function resignCareerJob() {
 
 /** 每日固定工作结算 */
 function tickCareerJobDaily(state) {
+  // ----- 退休人员只发养老金（P0-3） -----
+  if (state.flags && state.flags._retired) {
+    var pension = (state.career && state.career.pensionBase) ? Math.round(state.career.pensionBase * 0.40) : 2000;
+    var payCycle = state.career && (state.career._pensionPayCycle || 0);
+    state.career = state.career || {};
+    state.career._pensionPayCycle = (payCycle || 0) + 1;
+    if (state.career._pensionPayCycle % 30 === 0) {
+      state.resources.cash = (state.resources.cash || 0) + pension;
+      StateManager.addMessage("🏖️ 收到养老金 ¥" + pension.toLocaleString(), "info");
+    }
+    return;
+  }
+
   if (!state.career || !state.career.currentJob) return;
 
   var job = state.career.currentJob;
@@ -119828,6 +119912,31 @@ function tickCareerJobDaily(state) {
         "。这些积累未来可转化为跳槽或创业优势。",
       "success",
     );
+  }
+
+  // ----- burnout 过劳后果（P0-5） -----
+  if (cap.burnout >= 80 && Math.random() < 0.15) {
+    // 强制过劳病假
+    state.status = state.status || {};
+    state.status.health = Math.max(0, (state.status.health || 100) - 10);
+    cap.burnout = Math.max(0, cap.burnout - 30);
+    job.performance = Math.max(0, (job.performance || 50) - 5);
+    clampCareerCapital(cap);
+    StateManager.addMessage(
+      "🏥 过度劳累导致病倒！被迫休养，健康-10，倦怠-30，业绩-5",
+      "danger",
+    );
+  } else if (cap.burnout >= 50) {
+    // 慢性过劳：每日降绩效+轻微掉健康
+    job.performance = Math.max(0, (job.performance || 50) - 1);
+    state.status = state.status || {};
+    state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
+    if (Math.random() < 0.05) {
+      StateManager.addMessage(
+        "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
+        "warning",
+      );
+    }
   }
 }
 
@@ -120784,10 +120893,7 @@ function startScenarioGame(scenarioId) {
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
-  state.player.eduProgress =
-    scenario.education >= 1
-      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
-      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  state.player.eduStudyPoints = 0;
 
   // --- 资源 ---
   state.resources.cash = scenario.resources.cash || 1500;
@@ -121336,10 +121442,7 @@ function startSandboxGame() {
   // --- 学历 ---
   state.player.education = cfg.education || 0;
   state.education = cfg.education || 0;
-  state.player.eduProgress =
-    cfg.education >= 1
-      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
-      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  state.player.eduStudyPoints = 0;
 
   // --- 技能 ---
   var skillKeys = [
@@ -122400,137 +122503,111 @@ function getAvailableActions(state) {
       }
     }
 
-    // === 学历系统（大学城）===
+    // === 学历系统 v3.9（P0-6：门槛递进）===
     if (locKey === "school") {
+      const eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
+      const eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
+      const eduThresholds = [0, 50, 100, 150, 300, 500];
       const edu = state.player.education ?? state.education ?? 0;
-      const ep = state.player.eduProgress ||
-        state.eduProgress || {
-          studyPoints: 0,
-          examsPassed: 0,
-          totalExams: 6,
-        };
-      state.player.education = edu;
-      state.player.eduProgress = ep;
-      if (edu < 1) {
-        // 备考行动
-        const studyReady = ep.examsPassed < ep.totalExams;
-        if (studyReady) {
-          actions.push({
-            id: "edu_study",
-            name: "自考备考",
-            desc: `消耗20点行动力，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
-            ap: 20,
-            handler: () => {
-              if (!state.player.eduProgress)
-                state.player.eduProgress = {
-                  studyPoints: 0,
-                  examsPassed: 0,
-                  totalExams: 6,
-                };
-              // 小美在场加成：学习点额外+2
-              var studyAdd = 5;
-              if (typeof NPCS !== "undefined" && state.relationships) {
-                var xiaoMei = NPCS.find(function (n) {
-                  return n.id === "xiao_mei";
-                });
-                if (xiaoMei && xiaoMei.studyPresenceBonus) {
-                  var xmRel = state.relationships.xiao_mei;
-                  var xmAff = xmRel ? xmRel.affinity || 0 : 0;
-                  if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
-                    studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
-                  }
+
+      if (edu < eduNames.length - 1) {
+        const nextLevel = edu + 1;
+        const threshold = eduThresholds[nextLevel];
+        const sp = state.player.eduStudyPoints || 0;
+
+        // 备考
+        actions.push({
+          id: "edu_study",
+          name: `${eduIcons[nextLevel]} 备考${eduNames[nextLevel]}`,
+          desc: `消耗20行动力，+5学习点（当前${sp}，需${threshold}升至${eduNames[nextLevel]}）。10%概率智力+1。`,
+          ap: 20,
+          handler: () => {
+            var studyAdd = 5;
+            // 小美加成
+            if (typeof NPCS !== "undefined" && state.relationships) {
+              var xiaoMei = NPCS.find(function (n) {
+                return n.id === "xiao_mei";
+              });
+              if (xiaoMei && xiaoMei.studyPresenceBonus) {
+                var xmRel = state.relationships.xiao_mei;
+                var xmAff = xmRel ? xmRel.affinity || 0 : 0;
+                if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
+                  studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
                 }
               }
-              state.player.eduProgress.studyPoints =
-                (state.player.eduProgress.studyPoints || 0) + studyAdd;
-              consumeAP(20);
-              if (Random.chance(0.1)) {
-                state.player.intelligence = Math.min(
-                  100,
-                  (state.player.intelligence || 0) + 1,
-                );
-                StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
-              } else {
-                StateManager.addMessage(
-                  `📖 备考中…学习点+${studyAdd}（${state.player.eduProgress.studyPoints}/150）`,
-                  "info",
-                );
-              }
-            },
-          });
-        }
-        // 参加考试
-        const canExam =
-          (ep.studyPoints || 0) >= 150 && ep.examsPassed < ep.totalExams;
-        const examPassRate = Math.min(
+            }
+            state.player.eduStudyPoints =
+              (state.player.eduStudyPoints || 0) + studyAdd;
+            consumeAP(20);
+            if (Random.chance(0.1)) {
+              state.player.intelligence = Math.min(
+                100,
+                (state.player.intelligence || 0) + 1,
+              );
+              StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
+            } else {
+              StateManager.addMessage(
+                `📖 备考中…学习点+${studyAdd}（${state.player.eduStudyPoints}/${threshold}）`,
+                "info",
+              );
+            }
+            if (typeof renderAll === "function") renderAll();
+          },
+        });
+
+        // 参加考试（达到阈值后可考）
+        const canExam = sp >= threshold;
+        const passRate = Math.min(
           85,
-          40 +
-            (state.player.mental || 0) * 0.4 +
-            (state.player.intelligence || 0) * 0.1,
+          Math.max(
+            25,
+            60 -
+              edu * 8 +
+              (state.player.intelligence || 0) * 0.1 +
+              (state.player.mental || 0) * 0.3,
+          ),
         );
         actions.push({
           id: "edu_exam",
-          name: "参加考试",
-          desc: `消耗30点行动力，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
+          name: `📝 参加${eduNames[nextLevel]}考试`,
+          desc: `消耗30行动力，需学习点≥${threshold}（当前${sp}）。通过率${passRate.toFixed(0)}%` +
+            `（越往高层越难）。考过后学历升至${eduNames[nextLevel]}。`,
           ap: 30,
           reqFail: !canExam
-            ? ep.studyPoints < 150
-              ? `学习点不足（${ep.studyPoints}/150）`
-              : "全部考试已通过"
+            ? `学习点不足（${sp}/${threshold}）`
             : null,
           handler: () => {
-            if (!state.player.eduProgress)
-              state.player.eduProgress = {
-                studyPoints: 0,
-                examsPassed: 0,
-                totalExams: 6,
-              };
             consumeAP(30);
             const rate = Math.min(
               85,
-              40 +
-                (state.player.mental || 0) * 0.4 +
-                (state.player.intelligence || 0) * 0.1,
+              Math.max(
+                25,
+                60 -
+                  edu * 8 +
+                  (state.player.intelligence || 0) * 0.1 +
+                  (state.player.mental || 0) * 0.3,
+              ),
             );
             if (Random.chance(rate / 100)) {
-              state.player.eduProgress.examsPassed =
-                (state.player.eduProgress.examsPassed || 0) + 1;
-              state.player.eduProgress.studyPoints = 0;
+              state.player.education = nextLevel;
+              state.education = nextLevel;
+              state.player.eduStudyPoints = 0;
               StateManager.addMessage(
-                `🎉 第${state.player.eduProgress.examsPassed}门科目通过！还差${6 - state.player.eduProgress.examsPassed}门。`,
+                `🎉 恭喜通过${eduNames[nextLevel]}考试！学历已提升至${eduNames[nextLevel]}。`,
                 "success",
               );
             } else {
-              StateManager.addMessage(
-                "😞 考试未通过，继续备考再战！",
-                "danger",
-              );
+              StateManager.addMessage("😞 考试未通过，继续备考再战！", "danger");
             }
+            if (typeof renderAll === "function") renderAll();
           },
         });
-        // 申请学历认证
-        if (ep.examsPassed >= ep.totalExams) {
-          actions.push({
-            id: "edu_cert",
-            name: "申请本科学历认证",
-            desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
-            ap: 0,
-            handler: () => {
-              state.player.education = 1;
-              state.education = 1;
-              StateManager.addMessage(
-                "🎓 恭喜！你已取得本科学历，人生新起点！",
-                "success",
-              );
-              renderAll();
-            },
-          });
-        }
-      } else if (edu === 1) {
+      } else {
+        // 最高学历
         actions.push({
           id: "edu_done",
-          name: "本科学历持有者",
-          desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
+          name: `${eduIcons[edu]} ${eduNames[edu]}学历`,
+          desc: "你已经达到了最高学历水平！",
           disabled: true,
         });
       }
