@@ -52,15 +52,16 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：第七轮审查 — NPC好感奖励P0根修 + 3职业奖励消费点 + 法律结案通知（2026-07-02）
-  - **P0 NPC好感奖励系统**（`src/js/data/npcs.js::ensureNpcAffinityEvents`）：生成的 affinityEvents 对象从未包含 `effect` 字段，导致 `checkNpcAffinityEvents` 永远只能显示通用消息、无法触发解锁职业/发放奖励等核心效果；补加 `effect: reward.effect` + `message: null`（有 effect 时避免重复提示）；受益：13个 NPC 的好感奖励全部激活，5个 NPC 限定职业（`premium_engineering`/`old_zhou_recycling`/`sister_zhang_vending`/`xiao_mei_tutoring`/`restaurant_assistant`）可正常解锁，王大妈免费餐/租金折扣等 flag 效果生效
-  - **P1 NPC奖励消费点**（`src/js/data/jobs.js`）：`zhouScrapBonus`→废品回收+20%（`waste_recycling`）；`bossLiStallBonus`→街头摊位+10%（`street_vending_food`）；`zhangFactoryBonus`→工厂+15%（`factory_work_assembly`）；3个 flag 消费点均已在 payCalc 内联实装
-  - **P1 法律结案通知**（`src/js/core/legal.js::tickLegal`）：判决后补 `StateManager.addMessage()`；胜诉显示赔偿金额 + `addDailyTransaction`；败诉触发连锁惩罚（幸福-10、精神-8、追加律师尾款 = 案件费×20%）
+- **最新一次工作**：第八轮 — 事业发展Tab完善（社交接通/业绩行动/跳槽/调薪/退休停薪/注册费口径/移动端）（2026-07-02）
+  - **P0 核心断连修复**（多 agent 协作）：①职场社交每日tick接通（`daily_pipeline.js` 函数名 `tickWorkplaceSocialDaily`→`tickColleagueRelationships` + `career_dev.js` 人脉读取路径改 `corporate.colleagues`）②职场社交主动行动UI（入职生成同事 + 请客/闲聊/拜师按钮，激活死代码）③退休停薪+养老金（`_retired`+`pensionBase`，退休只发40%养老金）④业绩主动提升（做项目/加班/冲刺KPI）⑤burnout减压+过劳后果（调休+过劳病假+慢性过劳）⑥学历研究生/博士入口（edu门槛递增6级全可达）⑦注册费口径统一（删 `||200000` 兜底 + 百科/wiki 改动态计算）
+  - **P1 体验提升**：①主动跳槽（`generateJobOffers`/`applyJobhop`，3类offer+门路门槛+30天冷却）②年度考核调薪（每365天 S12%/A8%/B3%/C不涨 + 项目记history）③移动端网格兜底（`.career-capital-bar`/`.career-path-grid` @media480px !important）
+  - **设计参考**：BitLife（跳槽/退休）/《大多数》（过劳/主动工作）/中国式家长（升学链）/Stardew Valley（关系维护）/现实中国职场（年度调薪5-15%）
+  - **验证**：`check:js`(114) / `typecheck` / `build.py`(4351.6KB) / `npm run build` 全过；commits: `40a973c`→`d768603`→`d07508a`→`6e89f75`
+- **上一轮工作**：第七轮审查 — NPC好感奖励P0根修 + 3职业奖励消费点 + 法律结案通知（2026-07-02）
+  - NPC好感奖励系统修复（`ensureNpcAffinityEvents` 补 `effect` 字段，13个NPC奖励全部激活）；3个奖励消费点（废品+20%/摊位+10%/工厂+15%）；法律结案通知+败诉连锁惩罚
   - **验证**：`check:js`(114) / `typecheck` / `build.py`(4337.7KB) / `npm run build` 全过；commits: `a50f805` + `fb55fdf`
-- **上一轮工作**：城市服务消费点接入 + 装备品质3档化（普通/优质/高档·仅价格）（2026-07-01）
-  - **城市服务消费点**：公积金→购房 5% 抵扣；体检→降大病概率 ×0.5；城市服务 4 个 followUp 消费点全部接通
-  - **装备品质3档化**（写实调性）：四档→三档「普通/优质/高档」；删 `effectMult` 魔法收入加成；删奇幻命名；品质标签标对应价格
-  - **验证**：`check:js`(114) / `typecheck` / `build.py` 全过
+- **再上一轮工作**：城市服务消费点接入 + 装备品质3档化（普通/优质/高档·仅价格）（2026-07-01）
+  - 公积金→购房5%抵扣；体检→降大病概率×0.5；4个followUp消费点全通；装备品质四档→三档+去effectMult魔法加成
 
 - **再上一轮工作**：装备品质系统激活 + 第六轮收尾清理（2026-07-01）
   - 存储统一/耐久激活/去附魔/3渠道接入落地；`webapp_runtime_bridge` 补 4 分支 + `finance.js` 接入征信/社保；新建 `tools/monte_carlo_runner.js`；验证全过

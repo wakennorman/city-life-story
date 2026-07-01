@@ -3,6 +3,30 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
+## 2026-07-02 第八轮：事业发展Tab完善（审查改进与扩展）
+
+| #   | 任务                       | 状态 | 说明                                                                                         |
+| --- | -------------------------- | ---- | -------------------------------------------------------------------------------------------- |
+| 1   | 现状摸底/诊断/方案         | ✅   | memory/overview.md, diagnosis.md, improvement_plan.md 第八轮版                               |
+| 2   | P0-1 职场社交每日tick接通  | ✅   | daily_pipeline 函数名 tickWorkplaceSocialDaily→tickColleagueRelationships + 路径改 corporate |
+| 3   | P0-2 职场社交主动行动UI    | ✅   | 入职生成同事 + 请客/闲聊/拜师按钮，激活死代码                                                |
+| 4   | P0-3 退休停薪+养老金       | ✅   | _retired+pensionBase，tickCareerJobDaily 退休分支发40%养老金                                 |
+| 5   | P0-4 业绩主动提升行动      | ✅   | 做项目/加班/冲刺KPI 按钮                                                                     |
+| 6   | P0-5 burnout减压+过劳后果  | ✅   | 调休按钮 + 过劳病假 + 慢性过劳                                                               |
+| 7   | P0-6 学历研究生/博士入口   | ✅   | edu门槛递增（本科150/研究生300/博士500），6级全可达                                          |
+| 8   | P0-7 注册费口径统一        | ✅   | 删 \|\|200000 兜底 + 百科/wiki 改动态计算说明                                                |
+| 9   | P1-2 主动跳槽机制          | ✅   | generateJobOffers/applyJobhop，3类offer+门路门槛+30天冷却                                    |
+| 10  | P1-3 年度考核调薪+历程补全 | ✅   | 每365天 S12%/A8%/B3%/C不涨 + 项目完成记history                                               |
+| 11  | P1-6 移动端网格兜底        | ✅   | career-capital-bar/career-path-grid @media480px !important 覆盖                              |
+| 12  | 验证                       | ✅   | check:js(114)/typecheck/build.py(4351KB)/build 全过                                          |
+
+### 待排期（下轮）
+
+- [ ] **P1-4 副业主业冲突**（`side_hustle.js` 检查 `career.currentJob`，上班日不能跑副业 + burnout≥60效率-30%）
+- [ ] **P1-5 证书职称加成**（`main.js` 证书考试写 `career.certs` + `career_dev.js` 晋升/薪资读证书加成）
+- [ ] **P1-7 总览页增强**（`career_dev.js` renderCareerOverview：晋升进度条/资本趋势/同行参考薪资）
+- [ ] **P1-8 扩充职业路径**（医疗/教育/公务员/制造 4 路径，CAREER_PATHS 数据扩充）
+
 ## 2026-07-01 第六轮：收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁
 
 | #   | 任务                   | 状态 | 说明                                                                                                                                          |

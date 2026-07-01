@@ -1,6 +1,59 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-01（装备品质3档化·仅价格）
+> 最后更新: 2026-07-02（事业发展Tab完善·社交/业绩/跳槽/调薪/退休）
+
+## 2026-07-02 — 事业发展Tab完善（第八轮·审查改进与扩展）
+
+> 聚焦用户要求的「事业发展 tap 完善」，参考 BitLife（职业深度/跳槽/退休）/《大多数》（中国职场写实+过劳）/中国式家长（升学链）/Stardew Valley（关系维护主动行动）/现实中国职场（考证/绩效/调薪/跳槽）综合考量。
+> 产出 `memory/overview.md` `memory/diagnosis.md` `memory/improvement_plan.md`（第八轮版）。
+
+### 子任务1-3：现状摸底/诊断/方案
+
+- 摸底：事业发展Tab 6路径24职位+职业资本+多门槛晋升，**架子完整但上下游接线断裂**——要人脉晋升却无法维护人脉、要业绩晋升却无法主动做项目、要减压却无休假、要退休却停不下工资
+- 诊断：识别 P0 断连8项 + P1 缺口9项 + P2 打磨4项
+
+### 子任务4：实装交付（P0 优先 → P1 → 打磨）
+
+**P0 核心断连修复**（多 agent 协作）：
+
+- **P0-1 职场社交每日tick接通**（`daily_pipeline.js`+`career_dev.js`）：`tickWorkplaceSocialDaily`→`tickColleagueRelationships`（函数名不匹配致关系衰减/导师/徒弟每日演化全死）；`getCareerTrustedNetworkCount` 主读路径改 `state.corporate.colleagues.network`（与写入方一致）
+- **P0-2 职场社交主动行动UI**（`career_dev.js`）：入职时 `initCareerColleagues` 生成初始同事；当前工作卡新增「🤝 职场社交」区块（请客¥50/闲聊/拜师按钮），激活 `treatColleagueMeal` 等死代码
+- **P0-3 退休停薪+养老金**（`life_nodes.js`+`career_dev.js`）：退休选项设 `_retired=true`+`pensionBase`；`tickCareerJobDaily` 退休分支只发40%养老金、跳过正常工作逻辑
+- **P0-4 业绩主动提升行动**（`career_dev.js`）：当前工作卡新增「⚡ 工作行动」3按钮（做项目AP3/加班AP2/冲刺KPI AP4）
+- **P0-5 burnout减压+过劳后果**（`career_dev.js`）：调休按钮（每月1次，倦怠-15）；`tickCareerJobDaily` burnout≥80过劳病假（健康-10）、≥50慢性过劳（每日降绩效+掉健康）
+- **P0-6 学历研究生/博士入口**（`main.js`+`career_dev.js`）：edu行动门槛递增（本科150/研究生300/博士500），6级学历全可达
+- **P0-7 注册费口径统一**（`startup.js`+`career_dev.js`+`wiki.js`）：删 `requiredCash || 200000` 无意义兜底；百科tip+wiki硬编码页改"按剧本+职业资本动态计算（最低¥2万，最高减免15%）"
+
+**P1 体验提升**：
+
+- **P1-2 主动跳槽机制**（`career_dev.js`）：`generateJobOffers`/`applyJobhop`——基于当前职级+careerCapital生成3类offer（同路径晋升跳/跨行平级涨10%/跨行高半级涨20%），需门路（clientLeads≥15或reputation≥30）+30天冷却，记history
+- **P1-3 年度考核调薪+历程补全**（`career_dev.js`）：每365天按业绩分级涨薪（S12%/A8%/B3%/C不涨+倦怠+5）；项目完成记入career.history
+- **P1-6 移动端网格兜底**（`career_dev.js`+`style.css`）：5列资本条加 `.career-capital-bar`、路径卡加 `.career-path-grid`；`@media(480px)` 追加 !important 兜底
+
+### 验证
+
+- `npm run check:js` ✅（114 files）/ `npm run typecheck` ✅ / `python build.py` ✅（4351.6 KB）/ `npm run build` ✅
+
+### 设计参考总结
+
+| 改进项           | 参考                         | 借鉴核心             |
+| ---------------- | ---------------------------- | -------------------- |
+| 职场社交主动行动 | Stardew Valley NPC           | 主动维护而非挂机衰减 |
+| 业绩主动提升     | 《大多数》主动工作           | 玩家行为影响绩效     |
+| 退休停薪+养老金  | BitLife 退休                 | 退休≠继续上班        |
+| burnout过劳后果  | 现实过劳降健康               | burnout有出口和后果  |
+| 主动跳槽         | BitLife换工作/现实涨薪20-30% | 跳槽是核心加薪手段   |
+| 年度考核调薪     | 现实年度考核5-15%            | 薪资动态化           |
+| 学历升学链       | 中国式家长                   | 完整6级升学          |
+
+### 待排期（下轮）
+
+- P1-4 副业主业冲突（side_hustle 检查 career.currentJob）
+- P1-5 证书职称加成（CPA/PMP 对薪资晋升加成）
+- P1-7 总览页增强（晋升进度条/资本趋势/同行参考薪资）
+- P1-8 扩充职业路径（医疗/教育/公务员/制造 4 路径）
+
+---
 
 ## 2026-07-01 — 装备品质3档化（普通/优质/高档·仅价格）
 
