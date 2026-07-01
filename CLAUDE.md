@@ -52,20 +52,20 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：第四轮审查第二阶段 — TS事件bridge全量同步（2026-06-27）
-  - **TS事件bridge全量同步**：bridge池从11个事件扩充至19个（+8：医疗账单争执/邻居水管漏水/信用卡推销/食安投诉/共享单车/直播搭档/突然停电/办公室摩擦），所有19个TS目录事件已全部注入legacy随机事件池
-  - **verifiedP0已修复**：城市服务按钮灰显（canPay+showCityServiceModal）、医疗双入口（就医治疗+医保咨询）、地点推荐中文化（_lifeSystemsLocationNames）均已确认实装
-  - **memory同步**：diagnosis.md/improvement_plan.md/overview.md 对齐最新源码
-  - **验证**：`check:js` / `typecheck` / `python build.py` / `npm run build` 全部通过
+- **最新一次工作**：第五轮审查 — 3个留待项实装（2026-07-01）
+  - **P1-4 新闻→世界参数联动（关键节点）**：`applyNewsEffect`(news.js) 新增处理 `effects.sectorHeat`（{行业:delta}）与 `effects.marketMoodShift`；为13条行业特征明显的 NEWS_EVENTS（factory_boom/construction_boom/tech_fair/ai_boom/energy_crisis/tech_layoff/property_cooling/property_stimulus/e_commerce_festival/flu_surge/crypto_bull/crypto_crash/geopolitical_crisis）补 sectorHeat 字段（幅度 ±0.04~±0.10，与 longtail trade_war_chip -0.08 / ev_subsidy +0.12 同量级）；`updateMarketMood` 折入 `_newsMoodShift`，`decayWorldParams` 每日衰减70%（约3-4天消散）。打通新闻→行业热度→下游 cross_system 事件链路
+  - **P1-3 行业周期事件链**：`cross_system_events.js` 新增"行业寒冬"（sectorHeat<0.85 触发，转行/降价/充电三选一，7日冷却）与"行业红利期·创业侧"（sectorHeat>1.15 且玩家有公司，扩张/落袋/品牌营销三选一，14日冷却），补齐正负双向行业周期消费方
+  - **P1-2 日志滚动稳态**：`renderMessageLog`(main.js) 加"近底部判断"（28px阈值），上翻阅读历史时不被新消息强制拉回底部
+  - **memory三件套刷新**：overview/diagnosis/improvement_plan 对齐第五轮
+  - **验证**：`check:js`(114文件) / `typecheck` / `python build.py`(4321.7KB) / `npm run build` 全部通过；Monte Carlo 浏览器验收为已知P2缺口（无node自动化脚本），改动为加性且受2%/日衰减约束
 
-- **上一轮工作**：房产×租房系统深度集成 + UI状态栏重组（2026-06-27）
+- **上一轮工作**：第四轮审查第二阶段 — TS事件bridge全量同步（2026-06-27）
   - **房产×租房��射**：新增 `PROPERTY_HOUSING_MAP` 精准 ID→住所等级映射（22条），`getPropertyHousingTier()` 查询函数；toggle-self-live 改用映射表替代价格粗分，自住→出租时正确降级住所
   - **月租流水**：property_market.js 月租结算增加 addDailyTransaction 收支记录
   - **行动页入口**：main.js 新增「搬入自住房」快捷行动
   - **UI单行状态栏**：renderTimeSlot 改为单行横排左对齐：📅 第 N 天 | ☀️ 上午 ⚡ 100/100 🎒 0/20 · 🌃 露宿街头
   - **人生目标上移**：从侧边栏移到内容区时间槽下方（renderGoalStrip 紧凑横条），手机端 CSS 适配
   - **验证**：`npm run check:js`、`npm run typecheck`、`python build.py`(4284.1 KB) 全部通过
-
 
   - **任务链产出**：按 v3.0 SOP 和用户反馈完成 6 个子任务报告，新增 `plans/2026-06-26-v3-review-execution-context.md` 与 `subagent_result1.md` 至 `subagent_result6.md`
   - **目标机制**：开局人生目标改为推荐选择，可跳过；选择目标会显示并生效轻量路线加成，覆盖技能 XP、街头/上班收入和银行利息等口径

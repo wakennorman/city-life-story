@@ -4077,6 +4077,13 @@ function renderMessageLog(state) {
   const content = log.querySelector(".log-content");
   if (!content) return;
 
+  // 渲染前判断用户是否贴在底部（近底部阈值 28px）。
+  // 上翻阅读历史时保留位置，新消息仅在已贴底时跟随滚动。
+  const wasCollapsed = log.classList.contains("collapsed");
+  const wasNearBottom = wasCollapsed
+    ? true
+    : content.scrollHeight - content.scrollTop - content.clientHeight < 28;
+
   const messages = state.messageLog.slice(-50); // 最近50条
   content.innerHTML = messages
     .map(
@@ -4102,8 +4109,9 @@ function renderMessageLog(state) {
     preview.innerHTML = '<div class="log-preview-inner">暂无记录</div>';
   }
 
-  // 仅在展开状态时滚动到底部
-  if (!log.classList.contains("collapsed")) {
+  // 仅在展开状态、且渲染前已贴底（或刚从收起展开）时自动滚动到底部，
+  // 避免用户上翻阅读历史时被新消息强制拉回。
+  if (!wasCollapsed && wasNearBottom) {
     scrollMessageLogToBottom(content, false);
   }
 }

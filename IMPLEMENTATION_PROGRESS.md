@@ -3,27 +3,51 @@
 > 每完成一步，把 ❌ 改成 ✅
 > 下个 Agent 读这个就知道从哪继续
 
-## 2026-06-27 第四轮审查第二阶段：TS事件bridge全量同步
+## 2026-07-01 第五轮审查：3个留待项实装（新闻→世界参数 / 行业周期事件 / 日志滚动）
 
-| #   | 任务                           | 状态 | 说明                                                                             |
-| --- | ------------------------------ | ---- | -------------------------------------------------------------------------------- |
-| A   | 现状摸底（刷新）               | ✅   | 读取memory三件套，确认上轮P0问题已全部修复                        |
-| B   | P0已验证：城市服务按钮灰显     | ✅   | showCityServiceModal() 已用 canPay() 全量实装 |
-| C   | P0已验证：医疗面板双入口       | ✅   | _renderMedicalPanel() 已有就医治疗+医保咨询双按钮 |
-| D   | P0已验证：地点推荐中文化       | ✅   | _lifeSystemsLocationNames() 从 LOCATIONS 映射中文 |
-| E   | P1 TS事件bridge全量同步       | ✅   | bridge池从11→19个事件（+8同步自TS目录），19个全部注入RANDOM_EVENTS |
-| F   | memory文档对齐                | ✅   | overview/diagnosis/improvement_plan 全部刷新 |
-| G   | 验证                           | ✅   | `check:js` / `typecheck` / `python build.py` / `npm run build` 全部通过 |
+| #   | 任务                   | 状态 | 说明                                                                                                |
+| --- | ---------------------- | ---- | --------------------------------------------------------------------------------------------------- |
+| A   | 现状摸底（刷新）       | ✅   | memory/overview.md 刷新；确认3个留待项的源码实况                                                    |
+| B   | 问题诊断（刷新）       | ✅   | memory/diagnosis.md；定位关键瓶颈=applyNewsEffect 不写 _worldParams                                 |
+| C   | 改进方案（刷新）       | ✅   | memory/improvement_plan.md；P1-4 为关键节点（P1-3 的信号源）                                        |
+| D   | P1-4 新闻→世界参数联动 | ✅   | applyNewsEffect 处理 effects.sectorHeat/marketMoodShift；13条NEWS_EVENTS 改装 sectorHeat 字段       |
+| E   | P1-4 世界参数消费      | ✅   | updateMarketMood 折入 _newsMoodShift；decayWorldParams 每日衰减70%                                  |
+| F   | P1-3 行业周期事件链    | ✅   | cross_system_events.js 新增"行业寒冬"(sectorHeat<0.85)+"行业红利期·创业侧"(>1.15 且有公司) 双向事件 |
+| G   | P1-2 日志滚动稳态      | ✅   | renderMessageLog 加"近底部判断"，上翻阅读时不被新消息强制拉回                                       |
+| H   | 验证                   | ✅   | check:js(114) / typecheck / python build.py(4321.7KB) / npm run build 全通过                        |
+| I   | Monte Carlo 浏览器验收 | ⏸    | 无自动化node脚本（P2已知缺口）；改动为加性+一次幅±0.04~0.10且受2%/日衰减约束，风险低，留待浏览器跑  |
 
 ### 本轮落地
 
-| #   | 项目                       | 文件                                         | 验证 |
-| --- | -------------------------- | -------------------------------------------- | ---- |
-| 1   | memory三件套刷新         | `memory/overview.md`, `diagnosis.md`, `improvement_plan.md` | ✅   |
-| 2   | TS事件bridge全量同步(8个) | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
-| 3   | 数据目录计数更新           | `src/js/app_bridge/webapp_runtime_bridge.js` | ✅   |
-| 4   | CLAUDE.md 当前状态更新     | `CLAUDE.md`                                  | ✅   |
+| #   | 项目                                       | 文件                                 | 验证 |
+| --- | ------------------------------------------ | ------------------------------------ | ---- |
+| 1   | applyNewsEffect 写世界参数                 | `src/js/data/news.js`                | ✅   |
+| 2   | 13条新闻补 sectorHeat/marketMoodShift 字段 | `src/js/data/news.js`                | ✅   |
+| 3   | updateMarketMood/decayWorldParams 消费偏移 | `src/js/core/world_params.js`        | ✅   |
+| 4   | 行业寒冬 + 行业红利期·创业侧 事件          | `src/js/core/cross_system_events.js` | ✅   |
+| 5   | 日志滚动近底部判断                         | `src/js/main.js`                     | ✅   |
+| 6   | memory三件套刷新                           | `memory/overview.md` 等              | ✅   |
 
+## 2026-06-27 第四轮审查第二阶段：TS事件bridge全量同步
+
+| #   | 任务                       | 状态 | 说明                                                                    |
+| --- | -------------------------- | ---- | ----------------------------------------------------------------------- |
+| A   | 现状摸底（刷新）           | ✅   | 读取memory三件套，确认上轮P0问题已全部修复                              |
+| B   | P0已验证：城市服务按钮灰显 | ✅   | showCityServiceModal() 已用 canPay() 全量实装                           |
+| C   | P0已验证：医疗面板双入口   | ✅   | _renderMedicalPanel() 已有就医治疗+医保咨询双按钮                       |
+| D   | P0已验证：地点推荐中文化   | ✅   | _lifeSystemsLocationNames() 从 LOCATIONS 映射中文                       |
+| E   | P1 TS事件bridge全量同步    | ✅   | bridge池从11→19个事件（+8同步自TS目录），19个全部注入RANDOM_EVENTS      |
+| F   | memory文档对齐             | ✅   | overview/diagnosis/improvement_plan 全部刷新                            |
+| G   | 验证                       | ✅   | `check:js` / `typecheck` / `python build.py` / `npm run build` 全部通过 |
+
+### 本轮落地
+
+| #   | 项目                      | 文件                                                        | 验证 |
+| --- | ------------------------- | ----------------------------------------------------------- | ---- |
+| 1   | memory三件套刷新          | `memory/overview.md`, `diagnosis.md`, `improvement_plan.md` | ✅   |
+| 2   | TS事件bridge全量同步(8个) | `src/js/app_bridge/webapp_runtime_bridge.js`                | ✅   |
+| 3   | 数据目录计数更新          | `src/js/app_bridge/webapp_runtime_bridge.js`                | ✅   |
+| 4   | CLAUDE.md 当前状态更新    | `CLAUDE.md`                                                 | ✅   |
 
 ## 2026-06-26 城市浮生记审查改进与扩展
 

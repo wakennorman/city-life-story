@@ -1,10 +1,47 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-06-27（房产×租房系统深度集成 + UI重组）
+> 最后更新: 2026-07-01（第五轮：新闻→世界参数联动 / 行业周期事件 / 日志滚动）
+
+## 2026-07-01 — 第五轮审查：3个留待项实装
+
+本轮聚焦上轮遗留的3个 P1 延续性改善，核心是打通"新闻→世界参数→事件"的自洽闭环。
+
+### 改造1：新闻→世界参数联动（news.js / world_params.js）— P1-4 关键节点
+
+- **问题**：`applyNewsEffect`(news.js:1626) 处理 priceMod/jobBonus/investmentEffect 等却不写 `_worldParams`；仅 `NEWS_LONGTAIL_EFFECTS` 7条长尾写 sectorHeat。导致 `cross_system_events.js` 的行业热度事件只能靠随机日漂移触发，新闻与世界脱节，世界不"活"。
+- **改法**：
+  - `applyNewsEffect` 末尾新增分支：处理 `effects.sectorHeat`（{行业:delta}，校验 WORLD_SECTORS）直接叠加到 `state._worldParams.sectorHeat`；处理 `effects.marketMoodShift` 累积到 `wp._newsMoodShift`
+  - `updateMarketMood`(world_params.js) 把 `_newsMoodShift` 折入 avg 后再判 bullish/bearish/neutral
+  - `decayWorldParams` 每日把 `_newsMoodShift` 衰减70%，<0.005 清零（约3-4天消散）
+  - 为13条行业特征明显的 NEWS_EVENTS 补 `sectorHeat` 字段：factory_boom(科技+0.06)、construction_boom(房地产+0.08)、tech_fair(科技+0.07)、ai_boom(科技+0.10/新能源+0.04)、energy_crisis(新能源+0.06)、tech_layoff(科技-0.07)、property_cooling(房地产-0.07/金融-0.03)、property_stimulus(房地产+0.07/金融+0.03)、e_commerce_festival(消费+0.06)、flu_surge(医药+0.08)、crypto_bull(金融+0.05)、crypto_crash(金融-0.05)、geopolitical_crisis(科技-0.04 + marketMoodShift-0.03)。幅度与 longtail trade_war_chip(-0.08)/ev_subsidy(+0.12) 同量级
+- **效果**：新闻即时改变行业热度与市场情绪，驱动下游 cross_system 事件，世界对新闻有可见反馈
+
+### 改造2：行业周期事件链（cross_system_events.js）— P1-3
+
+- **问题**：行业周期事件只有正向（sector_heat_temp_job 在 >1.2 触发），缺少负向"行业寒冬"链；创业侧无行业周期对营收的直接反馈，行业热度信号消费方不足
+- **改法**：复用现有 IIFE 注入 RANDOM_EVENTS 的 trigger/conditions/choices 结构，新增两条事件
+  - `sector_cold_layoff_risk`（street 相位，sectorHeat<0.85 触发，15日后，7日冷却）：转行试活/降价硬扛/趁闲充电三选一，影响现金、心智、技能经验
+  - `sector_boom_startup_windfall`（corp 相位，sectorHeat>1.15 且玩家有公司，14日冷却）：乘势扩张/落袋为安/品牌营销三选一，红利规模随市场份额放大，影响现金、声誉、品牌
+- **效果**：行业热度信号有正负双向消费方，与改造1形成"新闻→热度→职业事件"闭环；职业体验更真实
+
+### 改造3：日志滚动稳态（main.js）— P1-2
+
+- **问题**：`renderMessageLog` 每次重渲后无条件 `scrollMessageLogToBottom`，用户在展开状态上翻阅读历史时，每条新消息强制把视图拉回底部，打断阅读
+- **改法**：渲染前记录"近底部"判断（`scrollHeight - scrollTop - clientHeight < 28`，收起状态视为贴底）；仅当展开且近底部时才自动滚动，否则保留用户阅读位置
+- **效果**：上翻阅读历史不被打断，新消息仅在已贴底时跟随
+
+### 验证
+
+- `npm run check:js` ✅（114文件）
+- `npm run typecheck` ✅
+- `python build.py` ✅（dist/index.html 4321.7 KB）
+- `npm run build` ✅（dist-webapp/）
+- Monte Carlo 浏览器验收 ⏸：无 node 自动化脚本（已知 P2 缺口）；本轮改动为加性内容 + 一次性 sectorHeat 幅度 ±0.04~0.10，受 `decayWorldParams` 2%/日衰减约束，未触及核心经济曲线（利率/工作乘数/每日管线成本），平衡风险低
 
 ## 2026-06-27 — 房产×租房系统深度集成 + UI状态栏重组
 
 本轮针对用户反馈进行两项深度改造：
+
 1. **房产×租房系统对接** - 打通 PROPERTIES 系统与 HOUSING_TIERS 的映射
 2. **UI状态栏重组** - 时间槽+人生目标布局优化
 
@@ -28,6 +65,7 @@
 - **设计参考**：Notion 的紧凑状态栏 / 大多数(The Most) 的顶部信息条
 
 ### 影响文件
+
 - `src/js/phase2/investment.js` — PROPERTY_HOUSING_MAP + getPropertyHousingTier + toggle-self-live 逻辑重写
 - `src/js/phase2/property_market.js` — 月租 addDailyTransaction
 - `src/js/main.js` — 搬入自住房快捷入口
@@ -2264,7 +2302,7 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 
 - 32种装备的耐久度基底定义（max + category）
 - 四级可见性：Lv0不可见 → Lv20模糊描述 → Lv40精确数值 → Lv60可维修
-- 每日磨损：基础-1~3，高风险工作+1~2，恶劣天气+1~2，消耗品翻倍，轻量减半
+- 每日磨损：基础-1~~3，高风险工作+1~~2，恶劣天气+1~2，消耗品翻倍，轻量减半
 - 维修消耗回收废料（scrap_metal），每点缺失耐久消耗0.3个废料
 - 维修成功给10点维修技能经验
 

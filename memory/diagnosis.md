@@ -1,15 +1,18 @@
-# 2026-06-27 问题诊断（第四轮 — 基于最新源码实况）
+# 2026-07-01 问题诊断（第五轮 — 聚焦3个留待项）
 
-## 审查发现：上轮记忆文件中的 P0 问题实际上已被修复
+## 上轮 P1 已落地确认
 
-1. ✅ 城市服务按钮灰显与条件提示 — showCityServiceModal() 已用 canPay() 全量实现（bridge.js:459）
-2. ✅ 医疗面板补治疗/医保双入口 — _renderMedicalPanel() 已有"就医治疗"+"医保咨询"两个按钮（render.js:1398-1399）
-3. ✅ 桥接层文案收口 — 推荐地点已用 _lifeSystemsLocationNames() 从 LOCATIONS 映射中文（render.js:1239-1251）
-4. ✅ CSS 媒体查询结构 — 已修复闭合，当前 3948 行结构完整
+- ✅ TS事件bridge全量同步 11→19（commit f7d36c5）
+- ✅ memory 三件套对齐
+- 城市服务占位反馈、Monte Carlo 自动化仍为 P2，本轮不动。
 
-## 真正的 P0/P1 问题
+## 本轮 3 项留待的精确诊断
 
-TS事件bridge池同步不足（TS目录19个→bridge仅11个） | bridge桥接/数据 | P1 | TS目录有19个webapp_事件，bridge池只同步了11个；社区志愿者/heatwave/夜市摊位/技能换资源/工作量冲突等8个事件已存在于TS但未进入legacy游戏 | ~200行 | 内容量明显差距 | 无UI变动，复用现有事件弹窗
-IMPROVEMENT_PLAN.md/memory文件与最新源码漂移 | 文档 | P1 | 上次diagnosis将已修复问题列为P0，后续接力Agent会浪费tokens做已做完的事；需要重新对齐
-城市服务7个中有无实际状态反馈的 | bridge/内容 | P1 | 部分服务（信用报告/公积金查询）给出的是占位反馈而非真实游戏影响；需要补充后续效果
-Monte Carlo验收无自动化脚本 | 测试/CI | P2 | 数值改动后需手动到浏览器执行，无npm script或自动化入口
+新闻不喂世界参数 → 世界自洽性断裂 | 世界参数系统 | P1 | applyNewsEffect(news.js:1626) 处理 priceMod/job/investmentEffect 等但不写 _worldParams；仅 NEWS_LONGTAIL_EFFECTS 7条长尾写 sectorHeat，覆盖面窄；导致 cross_system_events.js 的行业热度事件只能靠随机漂移触发，新闻与世界脱节
+行业周期事件只有正向无负向 | 事件系统/内容 | P1 | cross_system_events.js 仅有 sectorHeat>1.2 的人才缺口推送，缺少 sectorHeat<0.85 的"行业寒冬"链；创业侧无行业周期对营收的直接反馈，行业热度信号消费方不足
+事件日志展开时新消息强制拉回底部 | UI/体验 | P1 | renderMessageLog 每次重渲后无条件 scrollMessageLogToBottom，用户上翻阅读历史时被每条新消息打断；缺少"近底部才自动滚动"判断
+
+## 非留待项的轻量观察（本轮不实装，仅记录）
+
+- startup.js 488KB 超大文件拆分仍欠（P1，跨轮大工程，不在本轮范围）
+- 装备品质系统未激活（P2，跨轮）
