@@ -4329,9 +4329,11 @@ function renderInventoryTab(state, parent) {
           rp +
           "</div>";
     }
-    var qualityBadge = qualityInfo
-      ? `<span class="quality-badge quality-${qualityId}">${qualityInfo.icon} ${qualityInfo.name}</span>`
-      : "";
+    var qualityBadge = "";
+    if (qualityInfo && displayItem && displayItem.actualPrice) {
+      // 品质标签同时标对应价格：贵即好货（普通不显示徽章）
+      qualityBadge = `<span class="quality-badge quality-${qualityId}">${qualityInfo.icon} ${qualityInfo.name} ¥${displayItem.actualPrice}</span>`;
+    }
     var priceDisplay = displayItem?.actualPrice
       ? `<div class="quality-price">¥${displayItem.actualPrice}</div>`
       : "";

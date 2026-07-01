@@ -52,12 +52,11 @@ function initItemDurability(itemInstance, itemDef) {
   var slot = itemDef.slot || null;
   var baseDurability = DURABILITY_BASE[slot] || DURABILITY_BASE.null;
 
-  // 品质加成：高品质装备耐久更高
+  // 品质加成：高品质装备耐久更高（3 档：普通/优质/高档）
   var qualityMult = 1.0;
   if (itemInstance.quality) {
-    if (itemInstance.quality === "rare") qualityMult = 1.2;
-    else if (itemInstance.quality === "epic") qualityMult = 1.5;
-    else if (itemInstance.quality === "legendary") qualityMult = 2.0;
+    if (itemInstance.quality === "fine") qualityMult = 1.2;
+    else if (itemInstance.quality === "premium") qualityMult = 1.5;
   }
 
   var maxDurability = Math.floor(baseDurability * qualityMult);
@@ -159,11 +158,10 @@ function repairEquipment(state, itemId, repairAmount) {
     return { success: false, message: "装备耐久已满" };
   }
 
-  // 修理费用：每点耐久 ¥1-5，取决于品质
+  // 修理费用：每点耐久 ¥1-3，取决于品质（3 档：普通/优质/高档）
   var pricePerPoint = 1;
-  if (inst.quality === "rare") pricePerPoint = 2;
-  else if (inst.quality === "epic") pricePerPoint = 3;
-  else if (inst.quality === "legendary") pricePerPoint = 5;
+  if (inst.quality === "fine") pricePerPoint = 2;
+  else if (inst.quality === "premium") pricePerPoint = 3;
 
   // 完全损坏的装备修理费翻倍
   if (inst.isBroken) pricePerPoint *= 2;

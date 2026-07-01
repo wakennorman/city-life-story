@@ -710,7 +710,7 @@ body {
   }
 }
 
-/* 装备品质系统 */
+/* 装备品质系统（3 档：普通/优质/高档，仅价格反映品质） */
 .quality-badge {
   display: inline-flex;
   align-items: center;
@@ -721,49 +721,28 @@ body {
   border-radius: 4px;
 }
 .quality-common {
-  background: rgba(153, 153, 153, 0.12);
-  color: #888;
-  border: 1px solid rgba(153, 153, 153, 0.3);
+  background: rgba(153, 149, 142, 0.12);
+  color: #99958e;
+  border: 1px solid rgba(153, 149, 142, 0.3);
 }
-.quality-rare {
-  background: rgba(74, 144, 217, 0.12);
-  color: #5dade2;
-  border: 1px solid rgba(74, 144, 217, 0.3);
+.quality-fine {
+  background: rgba(74, 158, 92, 0.12);
+  color: #4a9e5c;
+  border: 1px solid rgba(74, 158, 92, 0.3);
 }
-.quality-epic {
-  background: rgba(155, 89, 182, 0.12);
-  color: #af7ac5;
-  border: 1px solid rgba(155, 89, 182, 0.3);
-}
-.quality-legendary {
-  background: rgba(230, 126, 34, 0.12);
-  color: #f39c12;
-  border: 1px solid rgba(230, 126, 34, 0.4);
-  box-shadow: 0 0 8px rgba(230, 126, 34, 0.2);
-}
-@keyframes quality-legendary-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 8px rgba(230, 126, 34, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba(230, 126, 34, 0.4);
-  }
-}
-.quality-legendary.pulse {
-  animation: quality-legendary-pulse 2s ease-in-out infinite;
+.quality-premium {
+  background: rgba(232, 184, 76, 0.12);
+  color: #e8b84c;
+  border: 1px solid rgba(232, 184, 76, 0.4);
 }
 .equipment-card.quality-common {
-  border-left: 3px solid #888;
+  border-left: 3px solid #99958e;
 }
-.equipment-card.quality-rare {
-  border-left: 3px solid #5dade2;
+.equipment-card.quality-fine {
+  border-left: 3px solid #4a9e5c;
 }
-.equipment-card.quality-epic {
-  border-left: 3px solid #af7ac5;
-}
-.equipment-card.quality-legendary {
-  border-left: 3px solid #f39c12;
+.equipment-card.quality-premium {
+  border-left: 3px solid #e8b84c;
 }
 .quality-price {
   font-size: 12px;
@@ -3145,16 +3124,12 @@ body {
   margin-top: 2px;
 }
 
-/* 装备品质边框 */
-.quality-rare {
+/* 装备品质边框（3 档：优质/高档，普通不显边框） */
+.quality-fine {
   border-color: #4a9e5c !important;
 }
-.quality-epic {
-  border-color: #4a6cf7 !important;
-}
-.quality-legendary {
+.quality-premium {
   border-color: #e8b84c !important;
-  animation: quality-legendary-pulse 2s ease-in-out infinite !important;
 }
 
 /* 成就解锁飘窗动画 */

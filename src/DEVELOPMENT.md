@@ -1,6 +1,29 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-01（城市服务消费点接入）
+> 最后更新: 2026-07-01（装备品质3档化·仅价格）
+
+## 2026-07-01 — 装备品质3档化（普通/优质/高档·仅价格）
+
+接上轮「装备品质系统激活」曾误用四档（普通/稀有/史诗/传说）+ effectMult 魔法收入加成，不符写实调性。本轮改为 3 档仅价格。
+
+### 改造
+
+1. **3 档品质表**（`core/equipment_quality.js::EQUIPMENT_QUALITIES`）：common(普通,priceMult×1.0) / fine(优质,×1.2) / premium(高档,×1.5)；删 `effectMult` 字段；删奇幻命名（稀有/史诗/传说）与图标；附魔早已移除
+2. **去 effectMult 收入加成**（`phase1/skill_bonuses.js::getItemJobBonus`）：去掉 `getQualityEffectMult` 倍率，回到 `multiplier *= bonus.incomeMultiplier`。工作收入加成只看装备本身 jobBonuses，与品质无关
+3. **品质标签标价格**（`ui/render.js` 装备卡片）：品质徽章合并显示「档位名 ¥实际售价」（如「优质 ¥240」），普通不显示徽章——贵即好货
+4. **修理/耐久同步 3 档**（`core/equipment_durability.js`）：耐久倍率 fine×1.2/premium×1.5；修理单价 fine ¥2/点、premium ¥3/点
+5. **CSS 3 档**（`css/style.css`）：`.quality-fine`/`.quality-premium` 柔和色（绿/金），删 `.quality-rare/epic/legendary` 与 legendary 脉冲动画
+6. **百科注册**（`equipment_quality.js` 末尾 `MECHANICS.equipment_quality`）：3 档表 + 「品质仅影响售价，不影响工作收入」说明
+
+### 保留（上轮 bug 修复不动）
+
+- slot 键统一存储 / `getEquippedInstance` / `migrateEquipmentInstances` / 耐久激活 / 去附魔 / 3 渠道装备获取（拾荒/smartphone事件/old_zhou NPC）
+
+### 验证
+
+- `npm run check:js` ✅（114文件）
+- `npm run typecheck` ✅
+- `python build.py` ✅
 
 ## 2026-07-01 — 城市服务消费点接入
 
@@ -22,9 +45,11 @@
 - `npm run typecheck` ✅
 - `python build.py` ✅（dist/index.html 4330.1 KB）
 
-## 2026-07-01 — 装备品质系统激活（P2 实装）
+## 2026-07-01 — 装备品质系统激活（P2 实装，v3.0 已改为 3 档仅价格）
 
-激活整套「死代码」装备品质系统：品质/价格/工作收入加成从此真正生效，并移除奇幻色彩的附魔系统。
+> ⚠️ 本轮曾用四档（普通/稀有/史诗/传说）+ effectMult 魔法收入加成。**v3.0 已改为 3 档（普通/优质/高档）仅价格、去 effectMult**——见上方「装备品质3档化」段。本段保留作存储/耐久 bug 修复的历史记录。
+
+激活整套「死代码」装备品质系统：存储统一/耐久激活/去附魔/3渠道接入落地（品质档位本身已在 v3.0 改为 3 档）。
 
 ### 病灶（激活前）
 
@@ -50,7 +75,7 @@
 ### 连带影响
 
 - **耐久磨损 live**：修存储后耐久消耗真实生效（此前恒满）。基数沿用 DURABILITY_BASE(slot, 200-400)，日磨损 1-3，约 100 天磨损期，节奏温和；现金修理无技能门槛
-- **`getItemJobBonus` 平衡**：common work_gloves 建筑 +8%，legendary +62%；多件叠乘，legendary 仅 2% 掉率天然抑制
+- ~~**`getItemJobBonus` 平衡**：common work_gloves 建筑 +8%，legendary +62%~~（v3.0 已去 effectMult，工作收入不再受品质放大）
 
 ### 验证
 

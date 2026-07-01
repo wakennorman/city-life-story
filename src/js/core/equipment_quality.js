@@ -1,13 +1,13 @@
 /**
  * 装备品质系统 (Equipment Quality System)
  *
- * 为装备添加品质等级（普通/稀有/史诗/传说），影响基础价格与工作收入加成倍率。
- * 参考：《暗黑破坏神》装备品质、《魔兽世界》物品稀有度
+ * 装备分 3 档品质（普通/优质/高档），**仅影响售价**，不影响工作收入。
+ * 写实调性：用价格高低反映品质，不搞奇幻命名（稀有/史诗/传说）与附魔。
  *
- * 品质等级: common(普通) → rare(稀有) → epic(史诗) → legendary(传说)
- * 品质影响：价格倍率（priceMult）、工作收入加成倍率（effectMult）
+ * 品质等级: common(普通) → fine(优质) → premium(高档)
+ * 品质影响：价格倍率（priceMult）——越贵越好货
  *
- * v2.0：移除附魔系统（奇幻色彩不符写实调性）；实例按 slot 键存储；新增迁移与统一读取入口。
+ * v3.0：3 档化（普通/优质/高档），去 effectMult 收入加成与奇幻命名；实例按 slot 键存储；附魔已移除。
  */
 
 const EQUIPMENT_QUALITIES = {
@@ -15,58 +15,45 @@ const EQUIPMENT_QUALITIES = {
     id: "common",
     name: "普通",
     color: "#99958e",
-    icon: "⬜",
+    icon: "▪",
     priceMult: 1.0,
-    effectMult: 1.0,
     weight: 70,
   },
-  rare: {
-    id: "rare",
-    name: "稀有",
+  fine: {
+    id: "fine",
+    name: "优质",
     color: "#4a9e5c",
-    icon: "🟩",
-    priceMult: 1.3,
-    effectMult: 1.1,
-    weight: 20,
+    icon: "◆",
+    priceMult: 1.2,
+    weight: 22,
   },
-  epic: {
-    id: "epic",
-    name: "史诗",
-    color: "#4a6cf7",
-    icon: "🟦",
-    priceMult: 1.8,
-    effectMult: 1.2,
-    weight: 8,
-  },
-  legendary: {
-    id: "legendary",
-    name: "传说",
+  premium: {
+    id: "premium",
+    name: "高档",
     color: "#e8b84c",
-    icon: "🟨",
-    priceMult: 2.5,
-    effectMult: 1.5,
-    weight: 2,
+    icon: "★",
+    priceMult: 1.5,
+    weight: 8,
   },
 };
 
-// 品质固定顺序（common → rare → epic → legendary）
-var QUALITY_ORDER = ["common", "rare", "epic", "legendary"];
+// 品质固定顺序（common → fine → premium）
+var QUALITY_ORDER = ["common", "fine", "premium"];
 
 /**
- * 按来源的品质分布权重 [common, rare, epic, legendary]
- * 对应 DEVELOPMENT.md:2167 设计意图
+ * 按来源的品质分布权重 [common, fine, premium]
  */
 var QUALITY_WEIGHTS_BY_SOURCE = {
-  buy: [70, 20, 8, 2],
-  loot: [85, 12, 3, 0],
-  reward: [50, 35, 12, 3],
-  event: [40, 35, 20, 5],
-  migrate: [100, 0, 0, 0],
+  buy: [70, 22, 8],
+  loot: [85, 13, 2],
+  reward: [55, 30, 15],
+  event: [45, 35, 20],
+  migrate: [100, 0, 0],
 };
 
 /**
  * 随机品质
- * @param {number[]} weights - [w_common, w_rare, w_epic, w_legendary]，缺省用 EQUIPMENT_QUALITIES 的 weight
+ * @param {number[]} weights - [w_common, w_fine, w_premium]，缺省用 EQUIPMENT_QUALITIES 的 weight
  * @returns {string} 品质 id
  */
 function rollItemQuality(weights) {
@@ -105,11 +92,6 @@ function getQualityPriceMult(quality) {
   return qDef.priceMult;
 }
 
-function getQualityEffectMult(quality) {
-  var qDef = EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
-  return qDef.effectMult;
-}
-
 function getQualityInfo(quality) {
   return EQUIPMENT_QUALITIES[quality] || EQUIPMENT_QUALITIES.common;
 }
@@ -143,7 +125,6 @@ function generateItemQuality(itemDef, options) {
     qualityColor: qDef.color,
     qualityIcon: qDef.icon,
     priceMult: qDef.priceMult,
-    effectMult: qDef.effectMult,
   };
 }
 
@@ -311,23 +292,22 @@ if (typeof window !== "undefined") {
     name: "装备品质",
     icon: "💎",
     brief:
-      "装备有普通/稀有/史诗/传说四档品质，品质越高价格越高、工作收入加成越强。",
-    version: "2.0",
+      "装备分普通/优质/高档三档品质，品质越高价格越贵——贵即好货，但不影响工作收入。",
+    version: "3.0",
     related: ["mechanics:inventory"],
     sections: [
       {
         type: "desc",
         content:
-          "购买/拾取/获赠装备时随机生成品质。品质越高，价格倍率越高，对应工作的收入加成也按效果倍率放大。",
+          "购买/拾取/获赠装备时随机生成品质。品质只影响售价：品质越高价格倍率越高。工作收入加成只看装备本身的工作加成，与品质无关。",
       },
       {
         type: "table",
-        headers: ["品质", "图标", "购买出现概率", "价格倍率", "效果倍率"],
+        headers: ["品质", "图标", "购买出现概率", "价格倍率"],
         rows: [
-          ["普通", "⬜", "70%", "×1.0", "×1.0"],
-          ["稀有", "🟩", "20%", "×1.3", "×1.1"],
-          ["史诗", "🟦", "8%", "×1.8", "×1.2"],
-          ["传说", "🟨", "2%", "×2.5", "×1.5"],
+          ["普通", "▪", "70%", "×1.0"],
+          ["优质", "◆", "22%", "×1.2"],
+          ["高档", "★", "8%", "×1.5"],
         ],
       },
     ],

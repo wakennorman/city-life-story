@@ -737,35 +737,8 @@ const ITEMS = [
     buyLocations: ["wholesaleMarket", "commercialDist"],
   },
 
-  // ============================================================
-  // 待完成：装备品质系统 — 参考《暗黑破坏神》《魔兽世界》《Stardew Valley》
-  // 实现提示：在 ITEMS 数组中每项追加 quality 字段，新增品质判定逻辑
-  // 参考来源：《暗黑破坏神》装备品质、《魔兽世界》物品稀有度、《Stardew Valley》工具等级
-  // ============================================================
-  // TODO: 待实现 - 装备品质系统
-  // 品质等级定义：
-  // {
-  //   quality: "common", // common / rare / epic / legendary
-  //   qualityMods: {     // 品质加成（由品质决定）
-  //     priceMultiplier: 1.0,  // common=1.0, rare=1.3, epic=1.8, legendary=2.5
-  //     effectMultiplier: 1.0, // common=1.0, rare=1.1, epic=1.2, legendary=1.5
-  //   },
-  //   enchantments: [], // 随机附魔（0-2个）
-  // }
-  //
-  // 附魔特效：
-  // { id: "lucky", effect: { incomeBonus: 0.05 }, desc: "幸运：收入+5%" }
-  // { id: "endurance", effect: { fatigueRecoveryBonus: 0.1 }, desc: "耐力：疲劳恢复+10%" }
-  // { id: "wisdom", effect: { skillXpBonus: 0.1 }, desc: "智慧：学习XP+10%" }
-  // { id: "vitality", effect: { healthRecoveryBonus: 0.1 }, desc: "活力：健康恢复+10%" }
-  // { id: "agility_up", effect: { agility: 2 }, desc: "敏捷+2" }
-  // { id: "strength_up", effect: { physique: 2 }, desc: "力量+2" }
-  // { id: "hygiene_up", effect: { hygiene: 3 }, desc: "卫生+3" }
-  // { id: "fame_up", effect: { fame: 1 }, desc: "名气+1" }
-  //
-  // 品质出现概率：common 70%, rare 20%, epic 8%, legendary 2%
-  // 来源：普通购买（common为主）、抽奖/活动（rare+）、NPC赠送（随机）、隐藏商店（epic+）
-  // 实现提示：在 buyItem() 函数中新增品质判定，在 renderEquipment() 中显示品质颜色
+  // 装备品质系统已在 src/js/core/equipment_quality.js 实现：
+  // 3 档（普通/优质/高档），仅影响售价（×1.0/1.2/1.5），不影响工作收入；附魔已移除。
 ];
 
 function getItemById(itemId) {

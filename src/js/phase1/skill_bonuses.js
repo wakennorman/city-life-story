@@ -989,10 +989,8 @@ function getItemJobBonus(jobId, state) {
     if (!item || !item.jobBonuses) continue;
     var bonus = item.jobBonuses[jobId];
     if (bonus && bonus.incomeMultiplier) {
-      // 品质效果倍率：高品质装备放大工作收入加成（common×1.0 ~ legendary×1.5）
-      var inst = getEquippedInstance(state, slotKey);
-      var qMult = getQualityEffectMult(inst ? inst.quality : "common");
-      multiplier *= bonus.incomeMultiplier * qMult;
+      // 工作收入加成只看装备本身的 jobBonuses，与品质无关（品质仅影响售价）
+      multiplier *= bonus.incomeMultiplier;
     }
   }
   return multiplier;
