@@ -52,13 +52,17 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：第六轮 — 收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁（2026-07-01）
-  - **工作树清理**：删 `nul`（tasklist 误产生的保留名文件）；15 个 Prettier 格式化单独 chore 提交（已逐一核实零逻辑改动）
-  - **城市服务占位补真实效果**：`webapp_runtime_bridge.js` followUp 补 4 分支（征信→`_creditInfoReady` / 社保≥3次→`_socialCardReady` / 公积金→`_housingFundAvailable` / 体检→`medical.healthCheckDone`）；`finance.js::calculateLoanCapacity` 接入：征信降利率 15% + 社保卡加额度 10%（消费点真实生效）
-  - **Monte Carlo 浏览器脚本**：新建 `tools/monte_carlo_runner.js` + README，拦截 showModal + 循环 endDay + 事件频率采样，补 P2 已知缺口（限制：不模拟主动行动，聚焦被动演化；详见 README）
-  - **装备品质激活推迟**：探查发现是系统性工程（实例存取格式不一致 + `getQualityPriceMult`/`EffectMult` 零调用 + 3 渠道未接 + 旧 `rollEquipmentDrop` 并存；CSS 动画已存在），标 `[待排期·单独一轮]`
-  - **待排期清单**（防遗忘）：startup/events_street/render 三大文件拆分、装备品质激活、城市服务层3消费点（公积金/体检）、Monte Carlo 增强 — 详见 `IMPLEMENTATION_PROGRESS.md`
-  - **验证**：`check:js`(114) / `typecheck` 已通过；`build.py` + `npm run build` + `git push` 待 Bash 分类器恢复
+- **最新一次工作**：装备品质系统激活（P2 实装）（2026-07-01）
+  - **病灶修复**：实例 key 不一致（写入 `itemId_时间戳_随机` / 读取 `itemId_instance`、`slot_instance` 永远对不上）+ 幽灵 `state.equipment.equipped`（5 文件读但无人写 → `getItemJobBonus` 恒返回1.0、`checkEquipmentSuites` 恒返回 `{}`、耐久全空转）
+  - **存储统一**：`equipmentInstances` 改按 slot 确定性键；新增 `getEquippedInstance(state,slot)` 统一入口；durability/equipment_durability/render/daily_focus 全部重定向
+  - **effectMult 接入工作收入**：`getItemJobBonus` 修读真实 store + 乘 `getQualityEffectMult(quality)`（common×1.0 ~ legendary×1.5），装备工作加成真实生效
+  - **去附魔**：删 ENCHANTMENTS/rollEnchantments/describeItemQuality/formatEnchantmentDesc/createItemWithQuality（奇幻色彩不符写实调性）；`createEquipmentInstance` 实例补 `itemId` 字段
+  - **3 渠道接入 createEquipmentInstance**：拾荒 `executeScavengeRoute`（4 路线 8-15% 掉装备，loot 分布 85/12/3/0，slot 空装备/占用 50% 折现）/ smartphone 事件（accessory 槽，event 分布，成交价折现避套利）/ old_zhou NPC 95 档（赠 work_gloves，reward 分布，带 flag 防重复）
+  - **迁移 + 清理**：`migrateEquipmentInstances` 注入 `importState`（旧存档按 slot 重建，找不到降 common）；删 items.js `rollEquipmentDrop` 死代码块（1069-1183，引用假 `eq_*` id）
+  - **连带影响**：耐久磨损 live（修存储正面副作用，基数 200-400 约 100 天磨损期，现金修理无门槛）；套装检测 live（effects 仍仅展示）
+  - **验证**：`check:js`(114) / `typecheck` / `build.py`(4329.1KB) / `npm build` 全过；commit e904d86 已 push
+- **上一轮工作**：第六轮 — 收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁（2026-07-01）
+  - 删 `nul` + 15 Prettier chore；`webapp_runtime_bridge` 补 4 分支 + `finance.js` 接入征信/社保；新建 `tools/monte_carlo_runner.js`；验证全过
   - **pre-commit 钩子基准同步**：会话中每次 commit 需先 `git rev-parse HEAD > .claude/last_known_head` 同步基准，否则钩子误判"其他窗口改动"阻止提交（非 `--no-verify`，是修复过期基准）
 
 - **上一轮工作**：第四轮审查第二阶段 — TS事件bridge全量同步（2026-06-27）
