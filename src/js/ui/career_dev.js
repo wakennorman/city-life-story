@@ -452,6 +452,106 @@ const CAREER_PATHS = {
       },
     ],
   },
+  medical: {
+    name: "医疗护理",
+    icon: "🏥",
+    levels: [
+      {
+        id: "med_aide",
+        name: "护理员",
+        minAge: 18,
+        reqSkills: {},
+        reqAttrs: { physique: 20, mental: 15 },
+        salary: 4500,
+        desc: "协助护士完成基础护理工作",
+      },
+      {
+        id: "med_nurse",
+        name: "注册护士",
+        minAge: 21,
+        reqSkills: { medicine: 20 },
+        reqAttrs: { physique: 28, mental: 25, intelligence: 25 },
+        salary: 8500,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "独立负责病区护理，值班执行医嘱",
+      },
+      {
+        id: "med_senior_nurse",
+        name: "主管护师",
+        minAge: 26,
+        reqSkills: { medicine: 38, management: 12 },
+        reqAttrs: { physique: 30, mental: 38, intelligence: 38 },
+        salary: 15000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "带教新护士，参与科室管理",
+      },
+      {
+        id: "med_head_nurse",
+        name: "护士长",
+        minAge: 30,
+        reqSkills: { medicine: 50, management: 30 },
+        reqAttrs: { physique: 30, mental: 48, intelligence: 48, charm: 35 },
+        salary: 24000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "主管科室护理质量，协调医护团队",
+        reqSocial: 45,
+      },
+    ],
+  },
+  civil: {
+    name: "公务员",
+    icon: "🏛️",
+    levels: [
+      {
+        id: "civil_clerk",
+        name: "基层公务员",
+        minAge: 22,
+        reqSkills: { management: 10 },
+        reqAttrs: { intelligence: 28, mental: 20 },
+        salary: 5500,
+        reqEducation: 1,
+        desc: "办理日常行政事务，接待群众来访",
+      },
+      {
+        id: "civil_officer",
+        name: "科员/主任科员",
+        minAge: 25,
+        reqSkills: { management: 25, english: 8 },
+        reqAttrs: { intelligence: 38, mental: 32, charm: 25 },
+        salary: 9000,
+        reqEducation: 1,
+        reqWorkDays: 730,
+        desc: "独立承担专项工作，撰写政策报告",
+      },
+      {
+        id: "civil_deputy",
+        name: "副科长/副主任",
+        minAge: 30,
+        reqSkills: { management: 40, english: 15 },
+        reqAttrs: { intelligence: 48, mental: 42, charm: 38 },
+        salary: 16000,
+        reqEducation: 1,
+        reqWorkDays: 1825,
+        desc: "协助科长分管业务，带领小组完成任务",
+        reqSocial: 50,
+      },
+      {
+        id: "civil_chief",
+        name: "科长/处长",
+        minAge: 35,
+        reqSkills: { management: 55, english: 20, sales: 15 },
+        reqAttrs: { intelligence: 55, mental: 52, charm: 48 },
+        salary: 26000,
+        reqEducation: 1,
+        reqWorkDays: 3650,
+        desc: "主管科室全面工作，承担政策制定与执行",
+        reqSocial: 65,
+      },
+    ],
+  },
 };
 
 // ====== ======
@@ -472,10 +572,14 @@ function _calcCertSalaryBonus(state, pathId, baseSalary) {
   if (pathId === "catering" && certs.indexOf("cooking_cert") >= 0) rate += 0.10;
   if (pathId === "logistics" && certs.indexOf("driver_license") >= 0) rate += 0.08;
   if (pathId === "education" && certs.indexOf("english_cert") >= 0) rate += 0.06;
+  if (pathId === "medical" && certs.indexOf("nursing_cert") >= 0) rate += 0.10;
+  if (pathId === "medical" && certs.indexOf("psychologist") >= 0) rate += 0.05;
+  if (pathId === "civil" && certs.indexOf("management_cert") >= 0) rate += 0.06;
+  if (pathId === "civil" && certs.indexOf("english_cert") >= 0) rate += 0.05;
   // 通用英语加成（所有路径+3%）
   if (certs.indexOf("english_cert") >= 0) rate += 0.03;
   // 通用心理咨询师加成（高级管理岗+4%）
-  if (certs.indexOf("psychologist") >= 0 && (pathId === "operations" || pathId === "legal" || pathId === "education")) rate += 0.04;
+  if (certs.indexOf("psychologist") >= 0 && (pathId === "operations" || pathId === "legal" || pathId === "education" || pathId === "civil")) rate += 0.04;
   return Math.round((baseSalary || 0) * rate);
 }
 
