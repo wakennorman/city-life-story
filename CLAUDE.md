@@ -29,12 +29,14 @@
 | **"按 v3.0 审查改进"**           | `memory/review-improve-v3.0.md`         | 全方位评估+改进（代码/架构/机制/剧情/UI/留存），自动评分+落地+commit |
 | **"按 v2.1 提示词继续内容扩充"** | `memory/content-expansion-v2.1.md`      | 成套添加地点/NPC/商品/事件                                           |
 | **"按 1.4 标准检查"**            | `memory/1-4-standard-implementation.md` | 世界自洽性四维度审计                                                 |
+| **"按蓝图开发"**                 | `GAME_BLUEPRINT.md` 第二节（优先级矩阵）+ 第三节（系统重构清单） | 确认待实装功能的 P 优先级，对齐设计公理后再动手 |
 
 **执行规约**：
 
 - 看到触发短语→`Read` SOP 文件全文（每个 ≤8KB）→按其中流程执行
 - 不要在没读 SOP 的情况下凭记忆做事
 - 完成时引用所用 SOP 版本号写在 commit message 和 DEVELOPMENT.md
+- **每轮新功能实装前**：必须先读 `GAME_BLUEPRINT.md` 第二节（P 优先级矩阵），确认当前任务的优先级编号（P0/P1/P2）并写在 commit message 里；P2 功能不得抢在 P0/P1 之前落地
 
 ---
 
