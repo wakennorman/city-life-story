@@ -1575,6 +1575,12 @@ body {
   #mobile-menu-btn {
     display: none !important;
   }
+  /* 桌面端：隐藏移动端专属行 */
+  .mobile-title-strip,
+  .mobile-location-strip,
+  .mobile-stats-strip {
+    display: none !important;
+  }
 }
 
 /* ====== Tutorial System ====== */
@@ -3769,17 +3775,6 @@ body {
     white-space: nowrap;
   }
 
-  /* ===== 桌面端：隐藏移动端专属行 ===== */
-  .mobile-title-strip {
-    display: none !important;
-  }
-  .mobile-location-strip {
-    display: none !important;
-  }
-  .mobile-stats-strip {
-    display: none !important;
-  }
-
   /* ====== 侧栏 ====== */
   #sidebar {
     position: fixed !important;
@@ -3945,13 +3940,21 @@ body {
     background: linear-gradient(90deg, #c48e4a, var(--physique-color, #c4803a));
   }
   .mss-fill.intelligence {
-    background: linear-gradient(90deg, #5a94ba, var(--intelligence-color, #5a8ab4));
+    background: linear-gradient(
+      90deg,
+      #5a94ba,
+      var(--intelligence-color, #5a8ab4)
+    );
   }
   .mss-fill.agility {
     background: linear-gradient(90deg, #56a64e, var(--agility-color, #5aaa5a));
   }
   .mss-fill.mental-bar {
-    background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color, #9b74b8));
+    background: linear-gradient(
+      90deg,
+      #9672b4,
+      var(--mental-attrs-color, #9b74b8)
+    );
   }
   .mss-fill.charm {
     background: linear-gradient(90deg, #d9789e, #b95f87);
@@ -3974,9 +3977,17 @@ body {
   }
   /* 窄屏（<=360px）进一步压字号、去空白 */
   @media (max-width: 360px) {
-    .mss-label { font-size: 8px; width: 14px; }
-    .mobile-stats-strip { gap: 2px; padding: 3px 5px; }
-    .mss-val { font-size: 8px !important; }
+    .mss-label {
+      font-size: 8px;
+      width: 14px;
+    }
+    .mobile-stats-strip {
+      gap: 2px;
+      padding: 3px 5px;
+    }
+    .mss-val {
+      font-size: 8px !important;
+    }
   }
   .mss-val {
     display: inline-block;
