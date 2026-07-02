@@ -1,0 +1,13 @@
+# ── Netlify 部署配置（版本控制，杜绝 build/publish 目录错配） ─────────────────
+#
+#   工作流：push → Netlify 运行 build.command → 产物输出到 dist/ → 发布 dist/
+#   dist/ 在 .gitignore 中（不入库），每次部署都是干净构建。
+#
+#   本地验证：npm run deploy  （= build:legacy + verify:deploy）
+
+[build]
+  command = "npm run build:legacy && npm run verify:deploy"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

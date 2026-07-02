@@ -11,7 +11,9 @@
     "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
     "check:ts-data": "node scripts/audit-ts-data.mjs",
     "check:js": "node scripts/check-js-syntax.mjs",
-    "build:legacy": "python build.py"
+    "verify:deploy": "node scripts/verify-deploy.mjs",
+    "build:legacy": "python build.py",
+    "deploy": "npm run build:legacy && npm run verify:deploy && echo '✅ 构建+校验通过，可 push 触发 Netlify 部署'"
   },
   "devDependencies": {
     "typescript": "6.0.3",
