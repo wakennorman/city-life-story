@@ -22,6 +22,9 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
+      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
+      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
+      state.flags._dayStartCash = state.resources.cash || 0;
     },
   },
 
@@ -107,6 +110,39 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 住房升级提示 ===
+  {
+    name: "housing_upgrade_hint",
+    fn: function (state) {
+      if (!state || !state.housing) return;
+      try {
+        var ct = state.housing.tier || 0;
+        var ch = state.resources.cash;
+        if (ct === 0 && ch >= 300) {
+          if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+            StateManager.addMessage(
+              "💡 你有 ¥" +
+                ch +
+                "，可以租个合租床位（¥300+¥12/天）改善睡眠和卫生。去城中村看看？",
+              "info",
+            );
+          }
+        } else if (ct === 1 && ch >= 800) {
+          if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+            StateManager.addMessage(
+              "💡 你有 ¥" +
+                ch +
+                "，单间（¥800+¥25/天）有独立空间，还能做饭洗澡。去城中村找房东？",
+              "info",
+            );
+          }
+        }
+      } catch (e) {
+        // 无头模式下静默失败
+      }
+    },
+  },
+
   // === 房租 ===
   {
     name: "rent",
@@ -114,13 +150,8 @@ const DAILY_PIPELINE = [
       var house = getCurrentHousing(state);
       var selfLiving =
         state.investment && state.investment.selfLivePropertyId != null;
-      var locKey = state.housing?.rentedAt || "slum";
-      var actualRent =
-        typeof getHousingRentAtLocation === "function"
-          ? getHousingRentAtLocation(locKey, house.tier)
-          : house.rent;
-      if (actualRent > 0 && !selfLiving) {
-        var rentAmount = actualRent;
+      if (house.rent > 0 && !selfLiving) {
+        var rentAmount = house.rent;
         // 王大婶好感60解锁租房折扣（-¥50/天）
         if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
           rentAmount -= 50;
@@ -170,84 +201,6 @@ const DAILY_PIPELINE = [
           var baseCap = houseInfo ? houseInfo.capacity : 20;
           state.inventory.capacity = baseCap;
         }
-      }
-    },
-  },
-
-  // === v3.8: 住房维护费（按住房等级月度扣除） ===
-  {
-    name: "housing_maintenance",
-    fn: function (state) {
-      if (!state.housing) return;
-      var day = state.player.day || 1;
-      // 每月第 1 天结算（不是每天）
-      if (day % 30 !== 1) return;
-      var tier = state.housing.tier || 0;
-      // 住房等级：0=无/1=城中村/2=老旧小区/3=普通公寓/4=高档小区/5=管家服务
-      var maintenanceFee = 0;
-      if (tier <= 1) maintenanceFee = 0;
-      else if (tier === 2) maintenanceFee = 150;
-      else if (tier === 3) maintenanceFee = 300;
-      else if (tier === 4) maintenanceFee = 800;
-      else if (tier >= 5) maintenanceFee = 2000;
-      if (maintenanceFee > 0 && state.resources.cash >= maintenanceFee) {
-        state.resources.cash -= maintenanceFee;
-        addDailyTransaction(
-          state,
-          "expense",
-          "housing_maintenance",
-          maintenanceFee,
-          "住房物业维护费",
-        );
-      } else if (maintenanceFee > 0) {
-        StateManager.addMessage(
-          "⚠️ 付不起住房维护费 ¥" + maintenanceFee + "，房屋状况变差。",
-          "warning",
-        );
-        // 维护费付不起不降级，但累积欠费标记
-        state.flags._maintenanceArrears =
-          (state.flags._maintenanceArrears || 0) + 1;
-      }
-    },
-  },
-
-  // === v3.8: 社交圈维护费（每月基于 NPC 好感总值扣除） ===
-  {
-    name: "social_maintenance",
-    fn: function (state) {
-      if (!state.npcRelationships) return;
-      var day = state.player.day || 1;
-      // 每月第 1 天结算
-      if (day % 30 !== 1) return;
-      var totalAffinity = 0;
-      var npcCount = 0;
-      for (var npcId in state.npcRelationships) {
-        var rel = state.npcRelationships[npcId];
-        if (rel && typeof rel.affinity === "number" && rel.affinity >= 10) {
-          totalAffinity += rel.affinity;
-          npcCount++;
-        }
-      }
-      if (npcCount === 0) return;
-      // 每 100 好感 = ¥50/月
-      var socialCost = Math.round(totalAffinity / 100) * 50;
-      if (socialCost <= 0) return;
-      socialCost = Math.min(socialCost, 500); // 上限 ¥500/月
-      if (state.resources.cash >= socialCost) {
-        state.resources.cash -= socialCost;
-        addDailyTransaction(
-          state,
-          "expense",
-          "social_maintenance",
-          socialCost,
-          "人情往来（" + npcCount + "位朋友）",
-        );
-      } else {
-        state.resources.cash = 0;
-        StateManager.addMessage(
-          "⚠️ 连人情钱都凑不出… 朋友可能觉得你在疏远他们。",
-          "warning",
-        );
       }
     },
   },
@@ -339,19 +292,14 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       // 1. 总资产快照
       if (!state.flags._cashHistory) state.flags._cashHistory = [];
-      var assetSnapshot =
-        typeof getInvestmentAssetSnapshot === "function"
-          ? getInvestmentAssetSnapshot(state)
-          : null;
-      var totalAsset = assetSnapshot
-        ? Math.round(assetSnapshot.totalAssets)
-        : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      var totalAsset =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
       state.flags._cashHistory.push({
         day: state.player.day,
         value: totalAsset,
       });
-      if (state.flags._cashHistory.length > 180) {
-        state.flags._cashHistory = state.flags._cashHistory.slice(-180);
+      if (state.flags._cashHistory.length > 90) {
+        state.flags._cashHistory = state.flags._cashHistory.slice(-90);
       }
 
       // 2. 收入/支出历史（供 incomeChart 使用）
@@ -366,9 +314,9 @@ const DAILY_PIPELINE = [
       }
       state.history.income.push(dailyIncome);
       state.history.expense.push(dailyExpense);
-      if (state.history.income.length > 180) {
-        state.history.income = state.history.income.slice(-180);
-        state.history.expense = state.history.expense.slice(-180);
+      if (state.history.income.length > 90) {
+        state.history.income = state.history.income.slice(-90);
+        state.history.expense = state.history.expense.slice(-90);
       }
 
       // 3. 属性快照（每 7 天记录一次，供雷达图历史对比）
@@ -459,9 +407,8 @@ const DAILY_PIPELINE = [
   {
     name: "workplace_social_tick",
     fn: function (state) {
-      // 修复：实际函数名为 tickColleagueRelationships（workplace_social.js:436）
-      if (typeof tickColleagueRelationships === "function") {
-        tickColleagueRelationships(state);
+      if (typeof tickWorkplaceSocialDaily === "function") {
+        tickWorkplaceSocialDaily(state);
       }
     },
   },
@@ -476,23 +423,11 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === Phase 2 社交网络每日 tick ===
-  {
-    name: "social_network_daily",
-    fn: function (state) {
-      if (typeof tickSocialNetwork === "function") {
-        tickSocialNetwork(state);
-      }
-    },
-  },
-
   // === 固定工作（上班族）每日 tick ===
   {
     name: "career_job_daily",
     fn: function (state) {
-      if (typeof tickCareerDaily === "function") {
-        tickCareerDaily(state);
-      } else if (typeof tickCareerJobDaily === "function") {
+      if (typeof tickCareerJobDaily === "function") {
         tickCareerJobDaily(state);
       }
     },
@@ -592,61 +527,19 @@ const DAILY_PIPELINE = [
 
       // 雨伞：雨天直接减免疲劳
       if (prep.umbrella && isRainy) {
-        if (prep.umbrellaUses == null) prep.umbrellaUses = 3;
         state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 5);
-        prep.umbrellaUses -= 1;
         StateManager.addMessage(
-          "☂️ 雨伞挡住了风雨，疲劳感减轻了不少。（剩余" +
-            Math.max(0, prep.umbrellaUses) +
-            "次）",
+          "☂️ 雨伞挡住了风雨，疲劳感减轻了不少。",
           "info",
         );
-        if (prep.umbrellaUses <= 0) {
-          prep.umbrella = false;
-          StateManager.addMessage(
-            "☂️ 雨伞被风雨折腾坏了，需要重新准备。",
-            "warning",
-          );
-        }
       }
 
       // 暖宝：寒冷天气健康保护
       if (prep.warmPack && isCold) {
-        if (prep.warmPackUses == null) prep.warmPackUses = 2;
         if (state.status) {
           state.status.health = Math.min(100, (state.status.health || 100) + 3);
         }
-        prep.warmPackUses -= 1;
-        StateManager.addMessage(
-          "🧣 暖宝让你在寒风中感到一丝温暖。（剩余" +
-            Math.max(0, prep.warmPackUses) +
-            "次）",
-          "info",
-        );
-        if (prep.warmPackUses <= 0) {
-          prep.warmPack = false;
-          StateManager.addMessage(
-            "🧣 保暖用品已经用尽，需要重新准备。",
-            "warning",
-          );
-        }
-      }
-    },
-  },
-
-  // === 发型设计临时魅力衰减 ===
-  {
-    name: "hair_style_decay",
-    fn: function (state) {
-      var flags = state.flags || {};
-      var boost = flags._hairStyleBoost || 0;
-      if (boost <= 0 || !state.player) return;
-      if (state.player.day === flags._hairStyleLastDay) return;
-      var decay = Math.min(boost, 1);
-      flags._hairStyleBoost = Math.max(0, boost - decay);
-      state.player.charm = Math.max(0, (state.player.charm || 0) - decay);
-      if (flags._hairStyleBoost <= 0) {
-        StateManager.addMessage("💇 发型带来的魅力加成已经自然消退。", "info");
+        StateManager.addMessage("🧣 暖宝让你在寒风中感到一丝温暖。", "info");
       }
     },
   },
@@ -932,22 +825,12 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === v3.6 P0-2: 时代变迁每日演化 ===
+  // === v3.6 P0-1: NPC关系网每日演化 ===
   {
-    name: "era_tick",
+    name: "npc_relationships_tick",
     fn: function (state) {
-      if (typeof eraTick === "function") {
-        eraTick(state);
-      }
-    },
-  },
-
-  // === v3.6 P0-3: 副业系统每日演化 ===
-  {
-    name: "side_hustle_tick",
-    fn: function (state) {
-      if (typeof sideHustleTick === "function") {
-        sideHustleTick(state);
+      if (typeof npcRelationshipsTick === "function") {
+        npcRelationshipsTick(state);
       }
     },
   },
@@ -1082,70 +965,6 @@ const DAILY_PIPELINE = [
       }
     },
   },
-
-  // === v3.7 Expansion v1: 人生节点检查 ===
-  {
-    name: "life_node_check",
-    fn: function (state) {
-      if (typeof checkLifeNodes === "function") {
-        checkLifeNodes(state);
-      }
-    },
-  },
-
-  // === v3.7 Expansion v1: 医疗系统每日tick ===
-  {
-    name: "medical_tick",
-    fn: function (state) {
-      if (typeof tickMedical === "function") {
-        tickMedical(state);
-      }
-    },
-  },
-
-  // === v3.7 Expansion v1: 康复期tick ===
-  {
-    name: "recovery_tick",
-    fn: function (state) {
-      if (typeof tickRecovery === "function") {
-        tickRecovery(state);
-      }
-    },
-  },
-
-  // === v3.7 Expansion v1: 旅行每日tick ===
-  {
-    name: "travel_tick",
-    fn: function (state) {
-      if (typeof tickTravel === "function") {
-        tickTravel(state);
-      }
-    },
-  },
-
-  // === v3.7 Expansion v1: 法律系统每日tick ===
-  {
-    name: "legal_tick",
-    fn: function (state) {
-      if (typeof tickLegal === "function") {
-        tickLegal(state);
-      }
-    },
-  },
-
-  // === v3.8 Web App bridge: 城市服务后续反馈 ===
-  {
-    name: "webapp_city_services_tick",
-    fn: function (state) {
-      if (
-        typeof WebAppBridge !== "undefined" &&
-        WebAppBridge &&
-        typeof WebAppBridge.tickCityServices === "function"
-      ) {
-        WebAppBridge.tickCityServices(state);
-      }
-    },
-  },
 ];
 
 /** 生成每日一句话总结 */
@@ -1270,7 +1089,6 @@ function runDailyPipeline(state) {
           var lateStep = DAILY_PIPELINE[j];
           if (
             lateStep.name === "finance" ||
-            lateStep.name === "lose" ||
             lateStep.name === "autosave" ||
             lateStep.name === "daily_report"
           ) {

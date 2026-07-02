@@ -4,10 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>城市浮生记 — City Life Story</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='56' font-size='56'%3E🏙️%3C/text%3E%3C/svg%3E"
-    />
     <link rel="stylesheet" href="css/style.css" />
     <style>
       /* 内联关键样式（防止FOUC） */
@@ -139,15 +135,8 @@
       <div class="welcome-title">城市浮生记</div>
       <div class="welcome-subtitle">
         从城中村的废品回收开始，你的路你自己选<br />
-        <span class="victory-paths" aria-label="六条成功路线">
-          <span class="victory-path">🏪 经商大亨</span>
-          <span class="victory-path">⭐ 城市名人</span>
-          <span class="victory-path">🎓 技能大师</span>
-          <span class="victory-path">💰 投资天才</span>
-          <span class="victory-path">🏢 职场巅峰</span>
-          <span class="victory-path">💵 财务自由</span>
-        </span>
-        <br />
+        🏪 经商大亨 · ⭐ 城市名人 · 🎓 技能大师 · 💰 投资天才 · 🏢 职场巅峰 · 💵
+        财务自由<br />
         六条路，每一种活法都能通往成功
       </div>
       <div class="welcome-buttons">
@@ -189,7 +178,7 @@
             <span class="label">📅 天</span>
             <span class="value" id="header-day">1</span>
           </div>
-          <div class="header-stat" style="display: none">
+          <div class="header-stat">
             <span class="label" id="header-season-label">🌸 春</span>
           </div>
           <div
@@ -205,11 +194,10 @@
             <span class="label">🎂 年龄</span>
             <span class="value age" id="header-age">20</span>
           </div>
-          <div class="header-stat" style="display: none">
+          <div class="header-stat">
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
-          <div class="header-stat header-context" id="header-context"></div>
           <div class="header-stat" id="header-mode-stat" style="display: none">
             <span class="label">🎮</span>
             <span class="value" id="header-mode"></span>
@@ -280,13 +268,6 @@
             </div>
             <span class="stat-value">26</span>
           </div>
-          <div class="stat-row" id="stat-charm">
-            <span class="stat-label">魅力</span>
-            <div class="stat-bar-wrap">
-              <div class="stat-bar charm"></div>
-            </div>
-            <span class="stat-value">20</span>
-          </div>
         </div>
 
         <!-- 职场属性（Phase 2，初始隐藏） -->
@@ -342,10 +323,10 @@
         </div>
 
         <!-- 基本需求 -->
-        <div class="sidebar-section" id="location-section">
+        <div class="sidebar-section">
           <h3>📊 状态</h3>
           <div class="stat-row" id="stat-hunger">
-            <span class="stat-label">饥饿</span>
+            <span class="stat-label">饥饱</span>
             <div class="stat-bar-wrap"><div class="stat-bar hunger"></div></div>
             <span class="stat-value">70</span>
           </div>
@@ -401,11 +382,11 @@
           style="display: none"
         ></div>
 
-        <!-- 今日重点（已整合到行动页"今日建议"，此容器保持隐藏） -->
+        <!-- 今日重点（动态生成） -->
         <div
           id="daily-focus-section"
           class="sidebar-section"
-          style="display: none !important"
+          style="display: none"
         ></div>
 
         <!-- 学历 -->
@@ -422,7 +403,7 @@
           style="display: none"
         ></div>
 
-        <!-- 当前位置 -->
+        <!-- 当前位置 & 住所 -->
         <div class="sidebar-section">
           <h3>📍 当前位置</h3>
           <div class="location-display">
@@ -455,7 +436,21 @@
             "
           ></div>
         </div>
-        <div class="sidebar-version-footer">🏙️ 城市浮生记 v1.0</div>
+
+        <!-- 附近地点快速出行 -->
+        <div class="sidebar-section" id="nearby-section">
+          <h3>🚶 附近可前往</h3>
+          <div
+            id="nearby-locations"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
       </aside>
 
       <!-- Main Content -->
@@ -484,10 +479,6 @@
           <button class="tab-btn" data-tab="personal_growth">
             🌱 个人成长
           </button>
-          <button class="tab-btn" data-tab="life_systems">🧭 人生事务</button>
-          <button class="tab-btn" data-tab="side_hustle" style="display: none">
-            💼 副业
-          </button>
           <button class="tab-btn" data-tab="achievements">🏅 成就</button>
           <button class="tab-btn" data-tab="wiki">📖 百科</button>
         </div>
@@ -497,20 +488,7 @@
 
         <!-- Message Log -->
         <div id="message-log">
-          <h3>
-            <span>📜 事件记录</span>
-            <button
-              id="message-log-toggle"
-              class="btn btn-sm"
-              type="button"
-              aria-expanded="true"
-            >
-              收起
-            </button>
-          </h3>
-          <div id="message-log-preview" class="log-preview">
-            <div class="log-preview-inner"></div>
-          </div>
+          <h3>📜 事件记录</h3>
           <div
             class="log-content"
             style="max-height: 220px; overflow-y: auto"
@@ -588,8 +566,6 @@
     <script src="js/core/route_effects.js"></script>
     <!-- v3.1: Cross-System Events (NPC/sector/world state linkage) -->
     <script src="js/core/cross_system_events.js"></script>
-    <!-- v3.10: 职业专属随机事件（医疗/公务员/IT/金融/销售/教育/物流/餐饮） -->
-    <script src="js/core/career_path_events.js"></script>
 
     <!-- Data -->
     <script src="js/data/locations.js"></script>
@@ -601,14 +577,6 @@
     <script src="js/core/news_system.js"></script>
     <script src="js/core/news_investment_bridge.js"></script>
     <script src="js/core/world_params.js"></script>
-    <!-- v3.6 NPC关系链 -->
-    <script src="js/core/npc_relationships.js"></script>
-    <script src="js/core/social_network.js"></script>
-    <!-- v3.7 Expansion v1: 人生节点/医疗深度/旅行/法律 -->
-    <script src="js/core/life_nodes.js"></script>
-    <script src="js/core/medical.js"></script>
-    <script src="js/core/travel.js"></script>
-    <script src="js/core/legal.js"></script>
     <script src="js/data/skills.js"></script>
     <script src="js/data/npcs.js"></script>
     <script src="js/data/scenarios.js"></script>
@@ -637,8 +605,7 @@
     <script src="js/phase1/pricing.js"></script>
     <script src="js/phase1/npc_event_bridge.js"></script>
     <script src="js/core/npc_location_bridge.js"></script>
-    <script src="js/core/era_transform.js"></script>
-    <script src="js/data/era_events.js"></script>
+    <script src="js/core/npc_relationships.js"></script>
 
     <!-- Phase 2 -->
     <script src="js/phase2/perf.js"></script>
@@ -658,10 +625,6 @@
     <script src="js/phase2/startup_crisis.js"></script>
     <script src="js/phase2/family_life.js"></script>
     <script src="js/phase2/personal_growth.js"></script>
-    <!-- v3.6 P0-3: 副业系统深化 -->
-    <script src="js/phase2/side_hustle.js"></script>
-    <script src="js/data/side_hustle_events.js"></script>
-    <script src="js/ui/side_hustle_ui.js"></script>
 
     <!-- Enterprise Fate System -->
     <script src="js/core/enterprise_fate.js"></script>
@@ -689,34 +652,16 @@
     <script src="js/ui/modal.js"></script>
     <script src="js/ui/heritage_store.js"></script>
     <script src="js/ui/tutorial.js"></script>
-    <!-- v3.11: 今日目标卡 + 人生旅程弧（解决"不知道干什么"留存痛点） -->
-    <script src="js/ui/daily_quest.js"></script>
     <script src="js/ui/daily_focus.js"></script>
     <script src="js/ui/victory.js"></script>
     <script src="js/ui/wiki.js"></script>
     <script src="js/ui/daily_report.js"></script>
     <script src="js/ui/social_tab.js"></script>
     <script src="js/ui/career_dev.js"></script>
-    <!-- v3.6 P1-4: 人生回忆录系统 -->
-    <script src="js/ui/life_memoir.js"></script>
 
     <!-- Main -->
     <script src="js/main.js"></script>
     <!-- v3.3 W2-T3: Scenario Start Chains (剧本专属开局事件链) -->
     <script src="js/data/scenario_start_chains.js"></script>
-    <!-- v3.8 Phase 1: Web App bridge (Vite/TypeScript migration adapter) -->
-    <script src="js/app_bridge/webapp_runtime_bridge.js"></script>
-    <!-- 测试工具（仅本地开发加载） -->
-    <script>
-      if (
-        location.hostname === "localhost" ||
-        location.hostname === "127.0.0.1" ||
-        location.search.includes("test")
-      ) {
-        var s = document.createElement("script");
-        s.src = "../tests/monte_carlo.js";
-        document.body.appendChild(s);
-      }
-    </script>
   </body>
 </html>

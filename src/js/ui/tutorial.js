@@ -1204,6 +1204,20 @@ var DYNAMIC_HINTS = [
     message: "📜 你考到了第一张证书！证书能提升求职竞争力和收入。",
   },
   {
+    id: "corporate_access_hint",
+    trigger: function (st) {
+      return (
+        st.player.day >= 15 &&
+        st.player.phase === "street" &&
+        (st.resources.cash || 0) >= 3000 &&
+        st.player.intelligence >= 40 &&
+        !st.flags._hint_corporate_access
+      );
+    },
+    message:
+      "🏢 你的智力和存款都够了！去科技园（techPark）看看，那里有正经的互联网公司工作机会，薪资远超街头零活。",
+  },
+  {
     id: "day30_dream_tip",
     trigger: function (st) {
       return (

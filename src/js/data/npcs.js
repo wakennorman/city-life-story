@@ -830,59 +830,6 @@ const NPCS = [
           );
         },
       },
-      {
-        threshold: 95,
-        id: "old_zhou_95_gear",
-        desc: "老周送你一副他用顺手的旧劳保手套",
-        effect: function (st) {
-          if (st.flags._npcGearReward_old_zhou) return; // 已赠过，防重复
-          var gloveDef =
-            typeof getItemById === "function"
-              ? getItemById("work_gloves")
-              : null;
-          if (!st.inventory.equipment) st.inventory.equipment = {};
-          if (!st.inventory.equipmentInstances)
-            st.inventory.equipmentInstances = {};
-          if (gloveDef && typeof createEquipmentInstance === "function") {
-            var gloveInst = createEquipmentInstance(gloveDef, "reward", {
-              qualityWeights:
-                typeof QUALITY_WEIGHTS_BY_SOURCE !== "undefined"
-                  ? QUALITY_WEIGHTS_BY_SOURCE.reward
-                  : null,
-            });
-            if (!st.inventory.equipment.hand) {
-              st.inventory.equipment.hand = "work_gloves";
-              st.inventory.equipmentInstances.hand = gloveInst;
-              var gq =
-                gloveInst.qualityName && gloveInst.qualityName !== "普通"
-                  ? "「" + gloveInst.qualityName + "」"
-                  : "";
-              StateManager.addMessage(
-                "🧤 老周递来一副磨旧的劳保手套：" +
-                  gq +
-                  "「戴上，别把手磨破了。」",
-                "success",
-              );
-            } else {
-              var gSell = Math.floor(
-                (gloveInst.actualPrice || gloveDef.price || 0) * 0.5,
-              );
-              st.resources.cash += gSell;
-              st.resources.totalEarned += gSell;
-              StateManager.addMessage(
-                "🧤 老周给了副手套，你手上已有，转手换了¥" + gSell + "。",
-                "success",
-              );
-            }
-          } else {
-            StateManager.addMessage(
-              "🧤 老周拍了拍你的肩：「好好干。」",
-              "info",
-            );
-          }
-          st.flags._npcGearReward_old_zhou = true;
-        },
-      },
     ],
     favor: {
       story:
@@ -2457,11 +2404,11 @@ const NPCS = [
       {
         threshold: 60,
         id: "dr_wang_60",
-        desc: "王医生给你优先挂号（医院行动力-2）",
+        desc: "王医生给你优先挂号（医院AP-2）",
         effect: function (st) {
           st.flags.wangPriority = true;
           StateManager.addMessage(
-            "💕 王医生说'找我直接进'，医院行动力-2！",
+            "💕 王医生说'找我直接进'，医院AP-2！",
             "success",
           );
         },
@@ -3140,54 +3087,6 @@ const NPCS = [
     },
   },
 ];
-
-function ensureNpcAffinityEvents() {
-  var tierNames = {
-    30: "熟人事件",
-    60: "好友事件",
-    80: "挚友事件",
-  };
-
-  for (var i = 0; i < NPCS.length; i++) {
-    var npc = NPCS[i];
-    if (npc.affinityEvents && npc.affinityEvents.length > 0) continue;
-
-    var rewards = npc.affinityRewards || [];
-    npc.affinityEvents = [30, 60, 80].map(function (threshold) {
-      var reward = null;
-      for (var r = 0; r < rewards.length; r++) {
-        if (rewards[r].threshold === threshold) {
-          reward = rewards[r];
-          break;
-        }
-      }
-      return {
-        id: npc.id + "_affinity_event_" + threshold,
-        threshold: threshold,
-        title: npc.name + "的" + tierNames[threshold],
-        desc: reward
-          ? reward.desc
-          : "好感达到 " + threshold + " 后触发一次关系进展。",
-        // v3.8 P0修复：将 affinityRewards.effect 传入事件，否则 checkNpcAffinityEvents
-        // 只能显示 message 而无法触发解锁职业/发放奖励等核心效果
-        effect:
-          reward && typeof reward.effect === "function"
-            ? reward.effect
-            : undefined,
-        message:
-          reward && typeof reward.effect === "function"
-            ? null // 有effect时由effect函数自带消息，避免重复提示
-            : "💕 你和" +
-              npc.name +
-              "的关系更近了一步，解锁了" +
-              tierNames[threshold] +
-              "。",
-      };
-    });
-  }
-}
-
-ensureNpcAffinityEvents();
 
 /** 获取NPC */
 function getNpcById(npcId) {

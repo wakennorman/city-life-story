@@ -130,6 +130,39 @@
         if (needs.happiness !== undefined)
           needs.happiness = Math.min(100, needs.happiness + 3);
       }
+      // 住房升级检查（只在制定策略时模拟玩家的选择）
+      var house = state.housing || {};
+      if (
+        house.tier === 0 &&
+        state.resources.cash >= 500 &&
+        state.player.day > 5
+      ) {
+        state.resources.cash -= 300;
+        state.housing.tier = 1;
+        state.housing.rentedDay = state.player.day;
+        if (state.inventory) state.inventory.capacity = 50;
+      }
+      if (
+        house.tier === 1 &&
+        state.resources.cash >= 1200 &&
+        state.player.day > 20
+      ) {
+        state.resources.cash -= 800;
+        state.housing.tier = 2;
+        state.housing.rentedDay = state.player.day;
+        if (state.inventory) state.inventory.capacity = 100;
+      }
+
+      // 公司阶段入口
+      if (
+        state.player.phase === "street" &&
+        state.player.intelligence >= 45 &&
+        state.resources.cash >= 2000 &&
+        state.player.day > 60
+      ) {
+        state.player.phase = "corporate";
+      }
+
       if (needs.fatigue > 70 && ap >= 15) {
         needs.fatigue = Math.max(0, needs.fatigue - 25);
         ap -= 15;

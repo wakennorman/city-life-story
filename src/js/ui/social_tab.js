@@ -8,34 +8,6 @@
  * 4. NPC关系网可视化（新增）
  */
 
-// ====== NPC中文名查找 ======
-function getNpcChineseName(npcId) {
-  if (typeof NPCS !== "undefined" && Array.isArray(NPCS)) {
-    var found = NPCS.find(function (n) {
-      return n.id === npcId;
-    });
-    if (found && found.name) return found.name;
-  }
-  // 兜底：英文ID转中文
-  var nameMap = {
-    aunt_wang: "王大婶",
-    boss_li: "李工头",
-    sister_zhang: "张姐",
-    old_zhou: "老周",
-    xiao_mei: "小美",
-    chef_chen: "陈师傅",
-    auntie_lin: "林阿姨",
-    master_zhao: "赵师傅",
-    xiaoli: "小丽",
-    dr_wang: "王医生",
-    zhaojie: "赵姐",
-    chen_ge: "陈哥",
-    ajie: "阿杰",
-    uncle_chen_bank: "老陈",
-  };
-  return nameMap[npcId] || npcId.replace(/_/g, " ");
-}
-
 // ====== NPC关系网渲染 ======
 function renderNpcRelationships(state, content) {
   if (!state.relationships) {
@@ -59,9 +31,6 @@ function renderNpcRelationships(state, content) {
     var npcId = npcIds[i];
     var rel = state.relationships[npcId];
     var affinity = rel ? rel.affinity || 0 : 0;
-
-    // 获取NPC中文名
-    var npcDisplayName = getNpcChineseName(npcId);
 
     // 颜色根据好感度
     var colorClass = "neutral";
@@ -92,7 +61,9 @@ function renderNpcRelationships(state, content) {
     html += 'border:1px solid var(--border);background:var(--bg-secondary);">';
     html += '<div style="display:flex;align-items:center;gap:4px;">';
     html += "<span>" + icon + "</span>";
-    html += '<span style="font-weight:bold;">' + npcDisplayName + "</span>";
+    html +=
+      '<span style="font-weight:bold;">' +
+      (npcId.replace(/_/g, " ") + "</span>");
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";
@@ -119,36 +90,6 @@ function renderNpcRelationships(state, content) {
       html += "⚠ 衰减" + rel._lastDecay.toFixed(1);
       html += "</div>";
     }
-
-    // 对话记录（最近 3 条）
-    if (rel.interactionHistory && rel.interactionHistory.length > 0) {
-      var hist = rel.interactionHistory.slice(-3);
-      html +=
-        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">';
-      html +=
-        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px;">💬 最近对话</div>';
-      for (var hi = 0; hi < hist.length; hi++) {
-        var h = hist[hi];
-        html +=
-          '<div style="font-size:10px;line-height:1.4;color:var(--text-secondary);">';
-        html += "第" + h.day + "天 · ";
-        if (h.delta > 0)
-          html += '<span style="color:var(--success);">+' + h.delta + "</span>";
-        else if (h.delta < 0)
-          html += '<span style="color:var(--danger);">' + h.delta + "</span>";
-        else html += '<span style="color:var(--text-muted);">0</span>';
-        html += " " + h.message + "</div>";
-      }
-      html += "</div>";
-    }
-
-    // 深入聊天按钮
-    html += '<div style="margin-top:6px;">';
-    html +=
-      '<button class="btn btn-sm btn-primary" style="font-size:10px;padding:2px 8px;" data-npc-chat="' +
-      npcId +
-      '">💬 聊天（2点行动力）</button>';
-    html += "</div>";
 
     html += "</div>";
   }
@@ -192,28 +133,6 @@ function renderNpcRelationships(state, content) {
   html += "</div></div>";
 
   content.innerHTML = html;
-
-  // 绑定深入聊天按钮事件
-  var chatBtns = content.querySelectorAll("[data-npc-chat]");
-  for (var cb = 0; cb < chatBtns.length; cb++) {
-    (function (btn) {
-      btn.onclick = function () {
-        var npcId = btn.getAttribute("data-npc-chat");
-        if (typeof chatWithNpc === "function") {
-          var state =
-            typeof StateManager !== "undefined"
-              ? StateManager.getState()
-              : null;
-          if (state) {
-            chatWithNpc(npcId, state);
-            renderNpcRelationships(state, content);
-          }
-        } else {
-          StateManager.addMessage("聊天功能暂不可用。", "warning");
-        }
-      };
-    })(chatBtns[cb]);
-  }
 }
 
 // ====== 社交Tab主渲染函数 ======
@@ -224,7 +143,6 @@ function renderSocialTab(state, parent) {
   var subTabs = [
     { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
     { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
-    { id: "social_network", label: "📱 社交网络", icon: "📱" },
     { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
     { id: "social_overview", label: "📊 关系总览", icon: "📊" },
   ];
@@ -256,9 +174,6 @@ function renderSocialTab(state, parent) {
       break;
     case "social_workplace":
       renderSocialWorkplaceTab(state, content);
-      break;
-    case "social_network":
-      renderSocialNetworkTab(state, content);
       break;
     case "social_npc":
       renderNpcRelationships(state, content);
@@ -339,193 +254,6 @@ function renderSocialOverviewTab(state, content) {
 
   html += "</div>";
   content.innerHTML = html;
-}
-
-function socialNetworkEscape(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function renderSocialNetworkTab(state, content) {
-  if (typeof ensureSocialNetworkState === "function") {
-    ensureSocialNetworkState(state);
-  } else if (!state.socialNetwork) {
-    state.socialNetwork = {
-      posts: [],
-      weiboHotlist: [],
-      npcFeeds: [],
-      playerFans: 0,
-    };
-  }
-  var sn = state.socialNetwork;
-  var incomeInfo =
-    typeof calculateInfluencerIncome === "function"
-      ? calculateInfluencerIncome(state)
-      : {
-          level: sn.playerInfluencerLevel || "none",
-          income: sn.influencerIncome || 0,
-        };
-
-  // 网红等级中文映射
-  var LEVEL_CN = {
-    none: "无",
-    micro: "萌芽网红",
-    medium: "中型网红",
-    large: "大型网红",
-    top: "顶级网红",
-  };
-  var levelLabel = LEVEL_CN[incomeInfo.level] || incomeInfo.level;
-
-  var html = '<div class="tab-content">';
-  html += '<div class="section"><h3>📱 社交网络</h3>';
-  html +=
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">';
-  html +=
-    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">粉丝</div><strong>' +
-    (sn.playerFans || 0).toLocaleString() +
-    "</strong></div>";
-  html +=
-    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">网红等级</div><strong>' +
-    socialNetworkEscape(levelLabel) +
-    "</strong></div>";
-  html +=
-    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">日收入</div><strong>¥' +
-    Math.round(incomeInfo.income || 0).toLocaleString() +
-    "</strong></div>";
-  html +=
-    '<div class="card" style="padding:10px;"><div style="font-size:11px;color:var(--text-muted);">舆论</div><strong>' +
-    (sn.舆论危机 && sn.舆论危机.active ? "危机中" : "平稳") +
-    "</strong></div>";
-  html += "</div>";
-  html +=
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
-  html +=
-    '<button class="btn btn-sm btn-primary sn-post-btn">✍️ 发朋友圈</button>';
-  html += '<button class="btn btn-sm sn-refresh-btn">🔥 刷新热搜</button>';
-  html += "</div>";
-
-  if (sn.舆论危机 && sn.舆论危机.active) {
-    html +=
-      '<div class="card" style="padding:10px;margin-bottom:10px;border-left:3px solid var(--danger);">';
-    html +=
-      '<strong>⚠️ 舆论危机</strong><div style="font-size:12px;color:var(--text-muted);">严重度 ' +
-      sn.舆论危机.severity +
-      "，剩余 " +
-      sn.舆论危机.daysRemaining +
-      " 天</div>";
-    html += "</div>";
-  }
-
-  html += '<div class="section"><h4>💬 朋友圈</h4>';
-  var posts = sn.posts || [];
-  if (posts.length === 0) {
-    html += '<p style="color:var(--text-muted);">还没有发布过朋友圈。</p>';
-  } else {
-    for (var p = 0; p < Math.min(posts.length, 5); p++) {
-      var post = posts[p];
-      html += '<div class="card" style="padding:10px;margin:6px 0;">';
-      html +=
-        '<div style="font-size:12px;">' +
-        socialNetworkEscape(post.content) +
-        "</div>";
-      html +=
-        '<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">第' +
-        post.postedDay +
-        "天 · " +
-        socialNetworkEscape(post.visibility) +
-        " · 👍 " +
-        (post.likes ? post.likes.length : 0) +
-        "</div>";
-      html += "</div>";
-    }
-  }
-  html += "</div>";
-
-  html += '<div class="section"><h4>👥 NPC动态</h4>';
-  var feeds = sn.npcFeeds || [];
-  if (feeds.length === 0) {
-    html += '<p style="color:var(--text-muted);">暂无 NPC 动态。</p>';
-  } else {
-    for (var f = 0; f < Math.min(feeds.length, 5); f++) {
-      var feed = feeds[f];
-      var npc =
-        typeof getNpcById === "function" ? getNpcById(feed.npcId) : null;
-      html += '<div class="card" style="padding:10px;margin:6px 0;">';
-      html +=
-        "<strong>" +
-        socialNetworkEscape(npc ? npc.name : feed.npcId) +
-        "</strong>";
-      html +=
-        '<div style="font-size:12px;margin-top:4px;">' +
-        socialNetworkEscape(feed.content) +
-        "</div>";
-      html +=
-        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">第' +
-        feed.postedDay +
-        "天 · " +
-        socialNetworkEscape(feed.type || "daily") +
-        "</div>";
-      html += "</div>";
-    }
-  }
-  html += "</div>";
-
-  html += '<div class="section"><h4>🔥 围脖热搜</h4>';
-  var hotlist = sn.weiboHotlist || [];
-  if (hotlist.length === 0) {
-    html += '<p style="color:var(--text-muted);">还没有刷新热搜。</p>';
-  } else {
-    for (var h = 0; h < Math.min(hotlist.length, 10); h++) {
-      var hot = hotlist[h];
-      html +=
-        '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">';
-      html +=
-        '<span style="width:24px;color:var(--accent);font-weight:bold;">#' +
-        hot.rank +
-        "</span>";
-      html +=
-        '<span style="flex:1;">' + socialNetworkEscape(hot.title) + "</span>";
-      html +=
-        '<span style="color:var(--text-muted);">' +
-        socialNetworkEscape(hot.category) +
-        " · " +
-        Math.round((hot.heat || 0) / 10000) +
-        "万热度</span>";
-      html += "</div>";
-    }
-  }
-  html += "</div></div></div>";
-  content.innerHTML = html;
-
-  var postBtn = content.querySelector(".sn-post-btn");
-  if (postBtn) {
-    postBtn.onclick = function () {
-      var text = prompt("写点什么发到朋友圈：", "今天也在努力生活。");
-      if (!text) return;
-      var result = postToMoments(state, text, [], "public");
-      if (result && result.ok === false) {
-        StateManager.addMessage(result.message, "warning");
-      } else {
-        StateManager.addMessage("📱 朋友圈发布成功。", "success");
-      }
-      renderSocialNetworkTab(state, content);
-      if (typeof renderAll === "function") renderAll();
-    };
-  }
-  var refreshBtn = content.querySelector(".sn-refresh-btn");
-  if (refreshBtn) {
-    refreshBtn.onclick = function () {
-      if (typeof refreshWeiboHotlist === "function") {
-        refreshWeiboHotlist(state);
-        StateManager.addMessage("🔥 围脖热搜已刷新。", "info");
-      }
-      renderSocialNetworkTab(state, content);
-    };
-  }
 }
 
 // ====== 家庭生活子tab ======

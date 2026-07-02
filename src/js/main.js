@@ -577,31 +577,6 @@ function startClassicGame() {
   startNewGame();
 }
 
-function initializeCommonGameSystems(state) {
-  if (typeof initEnterpriseFate === "function") initEnterpriseFate(state);
-  if (typeof initWeather === "function") initWeather(state);
-  if (typeof initEquipmentDurability === "function") {
-    initEquipmentDurability(state);
-  }
-  if (
-    typeof eraTransform !== "undefined" &&
-    typeof eraTransform.init === "function"
-  ) {
-    eraTransform.init(state);
-  }
-  if (
-    typeof sideHustle !== "undefined" &&
-    typeof sideHustle.init === "function"
-  ) {
-    sideHustle.init(state);
-  }
-  if (typeof seedWorldFromReality === "function") seedWorldFromReality(state);
-  if (typeof initNpcRelationships === "function") initNpcRelationships(state);
-  if (typeof initMedicalState === "function") initMedicalState(state);
-  if (typeof initTravelState === "function") initTravelState(state);
-  if (typeof initLegalState === "function") initLegalState(state);
-}
-
 /** 剧本模式开局 */
 function startScenarioGame(scenarioId) {
   var scenario = getScenarioById(scenarioId);
@@ -615,7 +590,7 @@ function startScenarioGame(scenarioId) {
   // 应用剧本配置
   var state = StateManager.getState();
 
-  // --- 基础属性（v3.0 新增 charm 魅力 + morality 道德）---
+  // --- 基础属性（v3.0 新增 charm 颜值 + morality 道德）---
   state.player.physique = scenario.stats.physique || 22;
   state.player.intelligence = scenario.stats.intelligence || 20;
   state.player.agility = scenario.stats.agility || 24;
@@ -626,7 +601,10 @@ function startScenarioGame(scenarioId) {
   state.player.age = scenario.age || 20;
   state.player.fame = scenario.fame || 0;
   state.player.education = scenario.education || 0;
-  state.player.eduStudyPoints = 0;
+  state.player.eduProgress =
+    scenario.education >= 1
+      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
+      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
 
   // --- 资源 ---
   state.resources.cash = scenario.resources.cash || 1500;
@@ -676,8 +654,10 @@ function startScenarioGame(scenarioId) {
   state.flags._scenarioTags = scenario.narrativeTags || [];
   state.flags._isScenarioMode = true;
 
-  // --- 通用系统初始化：与经典模式保持同一套底层状态 ---
-  initializeCommonGameSystems(state);
+  // --- 初始化企业命运系统 ---
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(state);
+  }
 
   // --- 开场消息 ---
   var msg = scenario.startingMessage;
@@ -739,7 +719,7 @@ function startScenarioGame(scenarioId) {
     }, 300);
   }
 
-  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
+  // v3.2: 强制选择人生目标（不可跳过）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -802,7 +782,7 @@ function renderSandboxConfig() {
     "<label>姓名</label>" +
     '<input type="text" id="sandbox-name" value="' +
     cfg.name +
-    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxName(this.value)">' +
+    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxConfig(\'name\', this.value)">' +
     "</div>" +
     '<div class="sandbox-row">' +
     "<label>年龄</label>" +
@@ -1004,9 +984,9 @@ function renderSandboxConfig() {
     '<div class="sandbox-section">' +
     '<div class="sandbox-section-title">⚡ 快速预设</div>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'balanced\')">⚖️ 自由练习</button> ' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'strong\')">💪 体力挑战</button> ' +
-    '<button class="btn btn-sm" onclick="applySandboxPreset(\'smart\')">🧠 智力挑战</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'balanced\')">⚖️ 均衡型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'strong\')">💪 体力型</button> ' +
+    '<button class="btn btn-sm" onclick="applySandboxPreset(\'smart\')">🧠 智力型</button> ' +
     '<button class="btn btn-sm" onclick="applySandboxPreset(\'rich\')">💰 富裕型</button>' +
     "</div>" +
     "</div>" +
@@ -1065,27 +1045,6 @@ function updateSandboxConfig(key, value) {
   renderSandboxConfig();
 }
 
-function updateSandboxName(value) {
-  if (!_sandboxConfig) return;
-  _sandboxConfig.name = value;
-  var summary = document.getElementById("sandbox-summary");
-  if (summary) {
-    summary.textContent =
-      "📋 " +
-      (_sandboxConfig.name || "无名") +
-      "，" +
-      _sandboxConfig.age +
-      "岁 · 现金¥" +
-      _sandboxConfig.cash.toLocaleString() +
-      " · 属性" +
-      (_sandboxConfig.physique +
-        _sandboxConfig.intelligence +
-        _sandboxConfig.agility +
-        _sandboxConfig.mental) +
-      "点";
-  }
-}
-
 /** 应用沙盒预设 */
 function applySandboxPreset(preset) {
   if (!_sandboxConfig)
@@ -1097,9 +1056,8 @@ function applySandboxPreset(preset) {
       _sandboxConfig.agility = 22;
       _sandboxConfig.mental = 22;
       _sandboxConfig.cash = 5000;
-      _sandboxConfig.villageDebt = 0;
+      _sandboxConfig.villageDebt = 3000;
       _sandboxConfig.bankDebt = 0;
-      _sandboxConfig.health = 90;
       break;
     case "strong":
       _sandboxConfig.physique = 40;
@@ -1175,7 +1133,10 @@ function startSandboxGame() {
   // --- 学历 ---
   state.player.education = cfg.education || 0;
   state.education = cfg.education || 0;
-  state.player.eduStudyPoints = 0;
+  state.player.eduProgress =
+    cfg.education >= 1
+      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
+      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
 
   // --- 技能 ---
   var skillKeys = [
@@ -1221,8 +1182,10 @@ function startSandboxGame() {
   // --- 沙盒标记 ---
   state.flags._isSandboxMode = true;
 
-  // --- 通用系统初始化：沙盒只改开局参数，不跳过底层系统 ---
-  initializeCommonGameSystems(state);
+  // --- 企业命运 ---
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(state);
+  }
 
   StateManager.addMessage(
     "⚙️ 沙盒模式开始！你自定义了开局条件。" +
@@ -1260,7 +1223,7 @@ function startSandboxGame() {
     }, 300);
   }
 
-  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
+  // v3.2: 强制选择人生目标（不可跳过）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -1276,7 +1239,32 @@ function startNewGame() {
   StateManager.getState().flags._dayStartCash =
     StateManager.getState().resources.cash || 0;
 
-  initializeCommonGameSystems(StateManager.getState());
+  // 初始化企业命运系统
+
+  // 初始化企业命运系统
+  if (typeof initEnterpriseFate === "function") {
+    initEnterpriseFate(StateManager.getState());
+  }
+
+  // 初始化天气系统（随机开局季节）
+  if (typeof initWeather === "function") {
+    initWeather(StateManager.getState());
+  }
+
+  // 初始化装备耐久度
+  if (typeof initEquipmentDurability === "function") {
+    initEquipmentDurability(StateManager.getState());
+  }
+
+  // v3.6 P0-1: 初始化NPC关系网
+  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
+    npcRelationships.init(StateManager.getState());
+  }
+
+  // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
+  if (typeof seedWorldFromReality === "function") {
+    seedWorldFromReality(StateManager.getState());
+  }
 
   // Phase 3: 多周目继承系统 — 检查并应用上局遗产
   var inheritanceApplied = false;
@@ -1340,7 +1328,7 @@ function startNewGame() {
     setTimeout(() => startTutorial(), 300);
   }
 
-  // v3.2/v3.9: 推荐选择人生目标（可跳过，选择有加成）
+  // v3.2: 强制选择人生目标（不可跳过）
   setTimeout(function () {
     if (typeof showForcedDreamModal === "function") {
       showForcedDreamModal();
@@ -1978,123 +1966,46 @@ function getAvailableActions(state) {
       });
     }
 
-    // === 住所系统（多处地点均可租房，各地点档次和价格不同）===
-    var housingLocs = Object.keys(HOUSING_LOCATION_AVAIL);
-    if (housingLocs.indexOf(locKey) >= 0) {
-      var availableTiers = getAvailableHousingTiersAtLocation(locKey);
-      var currentTier = state.housing?.tier || 0;
+    // === 住所系统 ===
+    if (locKey === "slum") {
+      const currentTier = state.housing?.tier || 0;
+      // HOUSING_TIERS 定义在 data/items.js 中（全局常量）
 
       // 显示当前住所
-      var curHouse = HOUSING_TIERS[currentTier];
-      var curRent = getHousingRentAtLocation(
-        state.housing?.rentedAt || locKey,
-        currentTier,
-      );
+      const curHouse = HOUSING_TIERS[currentTier];
       actions.push({
         id: "housing_current",
-        name: "当前住所：" + curHouse.name,
-        desc:
-          "容量+" +
-          curHouse.capacity +
-          " | 睡眠恢复疲劳-" +
-          curHouse.fatigueRecovery +
-          " | " +
-          curHouse.desc +
-          (curRent > 0 ? " | 日租¥" + curRent + "/天" : ""),
+        name: `当前住所：${curHouse.name}`,
+        desc: `容量+${curHouse.capacity} | 睡眠恢复疲劳-${curHouse.fatigueRecovery} | ${curHouse.desc}${curHouse.rent > 0 ? ` | 日租¥${curHouse.rent}/天` : ""}`,
         icon: curHouse.icon,
         disabled: true,
       });
 
-      // 可升级的住所（只显示当前地点可选的档次，且比当前高）
-      for (var tI = 0; tI < availableTiers.length; tI++) {
-        var t = availableTiers[tI];
-        if (t <= currentTier) continue;
-        var house = HOUSING_TIERS[t];
-        if (!house) continue;
-        var actualRent = getHousingRentAtLocation(locKey, t);
-        var canAfford = state.resources.cash >= house.cost;
-        (function (tier, tierHouse, tierRent) {
-          actions.push({
-            id: "housing_upgrade_" + tier,
-            name:
-              "租" +
-              tierHouse.name +
-              "（" +
-              getLocationChineseName(locKey) +
-              "）",
-            desc:
-              tierHouse.desc +
-              " 一次性¥" +
-              tierHouse.cost +
-              " + 日租¥" +
-              tierRent +
-              "/天",
-            icon: tierHouse.icon,
-            costEstimate: tierHouse.cost,
-            disabled: !canAfford,
-            reqFail: !canAfford ? "需 ¥" + tierHouse.cost : null,
-            handler: function () {
-              state.resources.cash -= tierHouse.cost;
-              state.housing.tier = tier;
-              state.housing.rentedDay = state.player.day;
-              state.housing.rentedAt = locKey;
-              var baseCap = tierHouse.capacity;
-              state.inventory.capacity =
-                baseCap + (state.housing.storageCapacity || 0);
-              StateManager.addMessage(
-                "🏠 搬进了" +
-                  tierHouse.name +
-                  "！容量提升至" +
-                  state.inventory.capacity +
-                  "。日租¥" +
-                  tierRent +
-                  "/天。",
-                "success",
-              );
-            },
-          });
-        })(t, house, actualRent);
-      }
-    }
-
-    // === 搬入自住房（拥有房产时显示）===
-    var invProps = state.investment ? state.investment.properties || [] : [];
-    var selfLiveId = state.investment
-      ? state.investment.selfLivePropertyId
-      : null;
-    for (var pi = 0; pi < invProps.length; pi++) {
-      var pp = invProps[pi];
-      if (pp.id === selfLiveId) continue;
-      var housingTier =
-        typeof getPropertyHousingTier === "function"
-          ? getPropertyHousingTier(pp.id)
-          : null;
-      if (housingTier === null) continue;
-      var targetHouse = HOUSING_TIERS[housingTier];
-      if (!targetHouse) continue;
-      (function (propDef, targetHouseData, targetTier) {
+      // 可升级的住所
+      for (let t = currentTier + 1; t < HOUSING_TIERS.length; t++) {
+        const house = HOUSING_TIERS[t];
+        const canAfford = state.resources.cash >= house.cost;
         actions.push({
-          id: "housing_movein_" + propDef.id,
-          name: "🏠 搬入自住房：" + propDef.name,
-          desc:
-            targetHouseData.desc + " 免日租，容量" + targetHouseData.capacity,
-          icon: targetHouseData.icon,
-          disabled: false,
-          handler: function () {
-            var st = StateManager.getState();
-            st.investment.selfLivePropertyId = propDef.id;
-            st.housing.tier = targetTier;
-            st.housing.rentedDay = st.player.day;
-            st.housing.rentedAt = st.trade.currentLocation || "slum";
-            st.inventory.capacity =
-              targetHouseData.capacity + (st.housing.storageCapacity || 0);
+          id: "housing_upgrade_" + t,
+          name: `升级到${house.name}`,
+          desc: `${house.desc} 一次性付¥${house.cost} + 日租¥${house.rent}/天`,
+          icon: house.icon,
+          costEstimate: house.cost,
+          disabled: !canAfford,
+          reqFail: !canAfford ? `需 ¥${house.cost}` : null,
+          handler: () => {
+            state.resources.cash -= house.cost;
+            state.housing.tier = t;
+            state.housing.rentedDay = state.player.day;
+            state.inventory.capacity =
+              house.capacity + (state.housing.storageCapacity || 0);
             StateManager.addMessage(
-              "🏠 搬入自住房" + propDef.name + "！每日免租金，生活品质提升。",
+              `🏠 搬进了${house.name}！容量提升至${state.inventory.capacity}。`,
               "success",
             );
           },
         });
-      })(pp, targetHouse, housingTier);
+      }
     }
 
     // === 仓库租赁（批发市场）===
@@ -2236,96 +2147,104 @@ function getAvailableActions(state) {
       }
     }
 
-    // === 学历系统 v3.9（P0-6：门槛递进）===
+    // === 学历系统（大学城）===
     if (locKey === "school") {
-      const eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
-      const eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
-      const eduThresholds = [0, 50, 100, 150, 300, 500];
       const edu = state.player.education ?? state.education ?? 0;
-
-      if (edu < eduNames.length - 1) {
-        const nextLevel = edu + 1;
-        const threshold = eduThresholds[nextLevel];
-        const sp = state.player.eduStudyPoints || 0;
-
-        // 备考
-        actions.push({
-          id: "edu_study",
-          name: `${eduIcons[nextLevel]} 备考${eduNames[nextLevel]}`,
-          desc: `消耗20行动力，+5学习点（当前${sp}，需${threshold}升至${eduNames[nextLevel]}）。10%概率智力+1。`,
-          ap: 20,
-          handler: () => {
-            var studyAdd = 5;
-            // 小美加成
-            if (typeof NPCS !== "undefined" && state.relationships) {
-              var xiaoMei = NPCS.find(function (n) {
-                return n.id === "xiao_mei";
-              });
-              if (xiaoMei && xiaoMei.studyPresenceBonus) {
-                var xmRel = state.relationships.xiao_mei;
-                var xmAff = xmRel ? xmRel.affinity || 0 : 0;
-                if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
-                  studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
+      const ep = state.player.eduProgress ||
+        state.eduProgress || {
+          studyPoints: 0,
+          examsPassed: 0,
+          totalExams: 6,
+        };
+      state.player.education = edu;
+      state.player.eduProgress = ep;
+      if (edu < 1) {
+        // 备考行动
+        const studyReady = ep.examsPassed < ep.totalExams;
+        if (studyReady) {
+          actions.push({
+            id: "edu_study",
+            name: "自考备考",
+            desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
+            ap: 20,
+            handler: () => {
+              if (!state.player.eduProgress)
+                state.player.eduProgress = {
+                  studyPoints: 0,
+                  examsPassed: 0,
+                  totalExams: 6,
+                };
+              // 小美在场加成：学习点额外+2
+              var studyAdd = 5;
+              if (typeof NPCS !== "undefined" && state.relationships) {
+                var xiaoMei = NPCS.find(function (n) {
+                  return n.id === "xiao_mei";
+                });
+                if (xiaoMei && xiaoMei.studyPresenceBonus) {
+                  var xmRel = state.relationships.xiao_mei;
+                  var xmAff = xmRel ? xmRel.affinity || 0 : 0;
+                  if (xmAff >= xiaoMei.studyPresenceBonus.minAffinity) {
+                    studyAdd += xiaoMei.studyPresenceBonus.studyPointBonus;
+                  }
                 }
               }
-            }
-            state.player.eduStudyPoints =
-              (state.player.eduStudyPoints || 0) + studyAdd;
-            consumeAP(20);
-            if (Random.chance(0.1)) {
-              state.player.intelligence = Math.min(
-                100,
-                (state.player.intelligence || 0) + 1,
-              );
-              StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
-            } else {
-              StateManager.addMessage(
-                `📖 备考中…学习点+${studyAdd}（${state.player.eduStudyPoints}/${threshold}）`,
-                "info",
-              );
-            }
-            if (typeof renderAll === "function") renderAll();
-          },
-        });
-
-        // 参加考试（达到阈值后可考）
-        const canExam = sp >= threshold;
-        const passRate = Math.min(
+              state.player.eduProgress.studyPoints =
+                (state.player.eduProgress.studyPoints || 0) + studyAdd;
+              consumeAP(20);
+              if (Random.chance(0.1)) {
+                state.player.intelligence = Math.min(
+                  100,
+                  (state.player.intelligence || 0) + 1,
+                );
+                StateManager.addMessage("📚 备考中顿悟！智力+1。", "success");
+              } else {
+                StateManager.addMessage(
+                  `📖 备考中…学习点+${studyAdd}（${state.player.eduProgress.studyPoints}/150）`,
+                  "info",
+                );
+              }
+            },
+          });
+        }
+        // 参加考试
+        const canExam =
+          (ep.studyPoints || 0) >= 150 && ep.examsPassed < ep.totalExams;
+        const examPassRate = Math.min(
           85,
-          Math.max(
-            25,
-            60 -
-              edu * 8 +
-              (state.player.intelligence || 0) * 0.1 +
-              (state.player.mental || 0) * 0.3,
-          ),
+          40 +
+            (state.player.mental || 0) * 0.4 +
+            (state.player.intelligence || 0) * 0.1,
         );
         actions.push({
           id: "edu_exam",
-          name: `📝 参加${eduNames[nextLevel]}考试`,
-          desc:
-            `消耗30行动力，需学习点≥${threshold}（当前${sp}）。通过率${passRate.toFixed(0)}%` +
-            `（越往高层越难）。考过后学历升至${eduNames[nextLevel]}。`,
+          name: "参加考试",
+          desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
           ap: 30,
-          reqFail: !canExam ? `学习点不足（${sp}/${threshold}）` : null,
+          reqFail: !canExam
+            ? ep.studyPoints < 150
+              ? `学习点不足（${ep.studyPoints}/150）`
+              : "全部考试已通过"
+            : null,
           handler: () => {
+            if (!state.player.eduProgress)
+              state.player.eduProgress = {
+                studyPoints: 0,
+                examsPassed: 0,
+                totalExams: 6,
+              };
             consumeAP(30);
             const rate = Math.min(
               85,
-              Math.max(
-                25,
-                60 -
-                  edu * 8 +
-                  (state.player.intelligence || 0) * 0.1 +
-                  (state.player.mental || 0) * 0.3,
-              ),
+              40 +
+                (state.player.mental || 0) * 0.4 +
+                (state.player.intelligence || 0) * 0.1,
             );
             if (Random.chance(rate / 100)) {
-              state.player.education = nextLevel;
-              state.education = nextLevel;
-              state.player.eduStudyPoints = 0;
+              state.player.eduProgress.examsPassed =
+                (state.player.eduProgress.examsPassed || 0) + 1;
+              state.player.eduProgress.studyPoints = 0;
               StateManager.addMessage(
-                `🎉 恭喜通过${eduNames[nextLevel]}考试！学历已提升至${eduNames[nextLevel]}。`,
+                `🎉 第${state.player.eduProgress.examsPassed}门科目通过！还差${6 - state.player.eduProgress.examsPassed}门。`,
                 "success",
               );
             } else {
@@ -2334,15 +2253,31 @@ function getAvailableActions(state) {
                 "danger",
               );
             }
-            if (typeof renderAll === "function") renderAll();
           },
         });
-      } else {
-        // 最高学历
+        // 申请学历认证
+        if (ep.examsPassed >= ep.totalExams) {
+          actions.push({
+            id: "edu_cert",
+            name: "申请本科学历认证",
+            desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
+            ap: 0,
+            handler: () => {
+              state.player.education = 1;
+              state.education = 1;
+              StateManager.addMessage(
+                "🎓 恭喜！你已取得本科学历，人生新起点！",
+                "success",
+              );
+              renderAll();
+            },
+          });
+        }
+      } else if (edu === 1) {
         actions.push({
           id: "edu_done",
-          name: `${eduIcons[edu]} ${eduNames[edu]}学历`,
-          desc: "你已经达到了最高学历水平！",
+          name: "本科学历持有者",
+          desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
           disabled: true,
         });
       }
@@ -2358,7 +2293,7 @@ function getAvailableActions(state) {
         var festJobs = FESTIVAL_JOBS[curFest.id] || [];
         for (var fji = 0; fji < festJobs.length; fji++) {
           var fj = festJobs[fji];
-          if (fj.location && fj.location !== locKey) continue;
+          if (fj.location && fj.location !== loc) continue;
           if (fj.intReq && (state.player.intelligence || 0) < fj.intReq)
             continue;
           if ((state.player.actionPoints || 0) < (fj.apCost || 20)) continue;
@@ -2367,7 +2302,7 @@ function getAvailableActions(state) {
             actions.push({
               id: fjob.id,
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
-              desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "行动力）",
+              desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
                 state.resources.cash += pay;
@@ -2521,7 +2456,7 @@ function getAvailableActions(state) {
             StateManager.addMessage(
               "⭐ 护士悄悄领你走VIP通道！健康+" +
                 healAmt +
-                "，心情+10，比普通看诊省了一半行动力。",
+                "，心情+10，比普通看诊省了一半AP。",
               "success",
             );
           },
@@ -3148,7 +3083,7 @@ function getAvailableActions(state) {
           actions.push({
             id: "intel_" + npc.id,
             name: "向" + npc.name + "打听消息",
-            desc: "消耗10点行动力换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
+            desc: "消耗10AP换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
             icon: "🗞️",
             apCost: 10,
             handler: (function (capturedNpc) {
@@ -3641,9 +3576,6 @@ function doStreetJob(job) {
     }
   }
 
-  if (typeof applyDreamIncomeBonus === "function") {
-    pay = applyDreamIncomeBonus(state, pay, "job");
-  }
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
   addDailyTransaction(
@@ -3832,12 +3764,6 @@ function addSkillXp(skillKey, amount) {
   const state = StateManager.getState();
   const skill = state.skills[skillKey];
   if (!skill) return;
-  if (typeof getDreamSkillXpMultiplier === "function") {
-    amount = Math.max(
-      1,
-      Math.floor(amount * getDreamSkillXpMultiplier(state, skillKey)),
-    );
-  }
   skill.xp += amount;
   var xpNeeded = (skill.level + 1) * 120;
   // 支持连续升级
@@ -4022,37 +3948,12 @@ function checkLoseConditions(state) {
 }
 
 // ====== 消息日志渲染 ======
-function scrollMessageLogToBottom(content, smooth) {
-  if (!content) return;
-  var run = function () {
-    if (typeof content.scrollTo === "function") {
-      content.scrollTo({
-        top: content.scrollHeight,
-        behavior: smooth ? "smooth" : "auto",
-      });
-    } else {
-      content.scrollTop = content.scrollHeight;
-    }
-  };
-  requestAnimationFrame(function () {
-    run();
-    setTimeout(run, 80);
-  });
-}
-
 function renderMessageLog(state) {
   const log = document.getElementById("message-log");
   if (!log) return;
 
   const content = log.querySelector(".log-content");
   if (!content) return;
-
-  // 渲染前判断用户是否贴在底部（近底部阈值 28px）。
-  // 上翻阅读历史时保留位置，新消息仅在已贴底时跟随滚动。
-  const wasCollapsed = log.classList.contains("collapsed");
-  const wasNearBottom = wasCollapsed
-    ? true
-    : content.scrollHeight - content.scrollTop - content.clientHeight < 28;
 
   const messages = state.messageLog.slice(-50); // 最近50条
   content.innerHTML = messages
@@ -4065,59 +3966,8 @@ function renderMessageLog(state) {
     )
     .join("");
 
-  // 更新收起时的最新一条预览
-  const preview = document.getElementById("message-log-preview");
-  if (preview && state.messageLog.length > 0) {
-    const last = state.messageLog[state.messageLog.length - 1];
-    preview.innerHTML =
-      '<div class="log-preview-inner"><span class="log-day">[第' +
-      last.day +
-      "天]</span>" +
-      escapeHtml(last.text) +
-      "</div>";
-  } else if (preview) {
-    preview.innerHTML = '<div class="log-preview-inner">暂无记录</div>';
-  }
-
-  // 仅在展开状态、且渲染前已贴底（或刚从收起展开）时自动滚动到底部，
-  // 避免用户上翻阅读历史时被新消息强制拉回。
-  if (!wasCollapsed && wasNearBottom) {
-    scrollMessageLogToBottom(content, false);
-  }
-}
-
-function setMessageLogCollapsed(collapsed, userToggled) {
-  const log = document.getElementById("message-log");
-  const toggle = document.getElementById("message-log-toggle");
-  if (!log || !toggle) return;
-
-  log.classList.toggle("collapsed", collapsed);
-  toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
-  toggle.textContent = collapsed ? "展开" : "收起";
-  if (userToggled) log.dataset.userToggled = "1";
-}
-
-function syncMessageLogForViewport() {
-  const log = document.getElementById("message-log");
-  if (!log || log.dataset.userToggled === "1") return;
-
-  setMessageLogCollapsed(window.innerWidth <= 480, false);
-}
-
-function toggleMessageLog() {
-  const log = document.getElementById("message-log");
-  if (!log) return;
-
-  const wasCollapsed = log.classList.contains("collapsed");
-  setMessageLogCollapsed(!wasCollapsed, true);
-
-  // 展开时自动滚动到最新一条记录
-  if (wasCollapsed) {
-    const content = log.querySelector(".log-content");
-    if (content) {
-      scrollMessageLogToBottom(content, true);
-    }
-  }
+  // 滚动到底部
+  content.scrollTop = content.scrollHeight;
 }
 
 // ====== 初始化 ======
@@ -4191,19 +4041,6 @@ function init() {
   document.getElementById("mobile-menu-btn").addEventListener("click", () => {
     document.getElementById("sidebar").classList.toggle("open");
   });
-
-  const messageLogToggle = document.getElementById("message-log-toggle");
-  if (messageLogToggle) {
-    messageLogToggle.addEventListener("click", toggleMessageLog);
-    syncMessageLogForViewport();
-    window.addEventListener("resize", syncMessageLogForViewport);
-  }
-
-  // 收起预览区域点击可展开日志
-  const logPreview = document.getElementById("message-log-preview");
-  if (logPreview) {
-    logPreview.addEventListener("click", toggleMessageLog);
-  }
 
   console.log("🏙️ 城市浮生记 initialized.");
 }
