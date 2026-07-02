@@ -223,6 +223,23 @@
       }
     }
 
+    // NPC好感度进度
+    if (p.day > 5 && state.relationships) {
+      var lowRels = 0;
+      for (var nk in state.relationships) {
+        var r = state.relationships[nk];
+        if (r && r.met && r.affinity < 60 && r.affinity > 10) lowRels++;
+      }
+      if (lowRels > 0) {
+        out.push({
+          w: 38,
+          icon: "🤝",
+          text: "NPC好感+" + lowRels + "人可提升",
+          hint: "送礼聊天解锁推荐工作",
+        });
+      }
+    }
+
     // 企业阶段就绪度（street → corporate）
     if (p.phase === "street" && p.day > 15) {
       var intelPct = Math.min(
