@@ -178,9 +178,9 @@
       // 公司阶段
       if (
         state.player.phase === "street" &&
-        state.player.intelligence >= 45 &&
-        state.resources.cash >= 2000 &&
-        state.player.day > 60
+        ((state.player.intelligence >= 45 && state.player.day > 60) ||
+          (state.player.day >= 200 &&
+            (state.resources.totalEarned || 0) > 5000))
       ) {
         state.player.phase = "corporate";
       }
@@ -297,7 +297,23 @@
         state.housing.rentedDay = state.player.day;
       }
 
+      // 公司阶段
+      if (
+        state.player.phase === "street" &&
+        ((state.player.intelligence >= 45 && state.player.day > 60) ||
+          (state.player.day >= 200 &&
+            (state.resources.totalEarned || 0) > 5000))
+      ) {
+        state.player.phase = "corporate";
+      }
+
       // 学习优先（每天 25 AP 学 coding/english）
+      if (state.player && state.player.intelligence < 45) {
+        state.player.intelligence = Math.min(
+          100,
+          (state.player.intelligence || 20) + 2,
+        );
+      }
       if (ap >= 25 && needs.fatigue < 65 && state.skills) {
         var order = ["coding", "english", "management", "sales", "cooking"];
         var cs = null;

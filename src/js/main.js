@@ -2797,16 +2797,21 @@ function getAvailableActions(state) {
 
     // 科技园 — 触发职场阶段入口
     if (locKey === "techPark" && state.player.phase === "street") {
-      const canTransition = state.player.intelligence >= 45;
+      const intelligent = state.player.intelligence >= 45;
+      const experienced =
+        state.player.day >= 200 && (state.resources.totalEarned || 0) > 5000;
+      const canTransition = intelligent || experienced;
       actions.push({
         id: "apply_job",
         name: "应聘互联网公司",
         desc: canTransition
-          ? "你的能力已经足够，可以去试试看！"
-          : "需要智力 ≥ 45 才能获得面试机会。",
+          ? intelligent
+            ? "你的能力已经足够，可以去试试看！"
+            : "200天街头经验证明了你。去试试？"
+          : "需要智力 ≥ 45 或街头经验 ≥ 200天。",
         icon: "💼",
         disabled: !canTransition,
-        reqFail: canTransition ? null : "智力不足45",
+        reqFail: canTransition ? null : "智力不足45/经验不足200天",
         handler: () => {
           if (canTransition) {
             showInterviewModal();
