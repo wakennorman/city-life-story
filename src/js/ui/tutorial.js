@@ -1189,7 +1189,7 @@ var DYNAMIC_HINTS = [
       return met >= 1 && !st.flags._hint_first_npc_tip;
     },
     message:
-      "💡 提示：认识了NPC！多送礼提升好感度，好感度高的NPC会提供特殊帮助和奖励。",
+      "💡 提示：认识了NPC！多送礼提升好感度，高好感NPC会推荐高薪工作（收入翻倍+），还能解锁特殊任务和折扣。",
   },
   {
     id: "first_npc_50_affinity",
@@ -1200,7 +1200,8 @@ var DYNAMIC_HINTS = [
       }).length;
       return high >= 1 && !st.flags._hint_first_npc_50_affinity;
     },
-    message: "❤️ 你和一个NPC建立了深厚关系！好感度50+会解锁特殊对话和任务。",
+    message:
+      "❤️ 好感度50+解锁特殊任务和推荐工作！高好感NPC推荐的工作收入比普通工作高100-200%。",
   },
   {
     id: "first_skill_cert",
