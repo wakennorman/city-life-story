@@ -223,6 +223,33 @@
       }
     }
 
+    // 企业阶段就绪度（street → corporate）
+    if (p.phase === "street" && p.day > 15) {
+      var intelPct = Math.min(
+        100,
+        Math.round(((p.intelligence || 20) / 45) * 100),
+      );
+      var expPct = Math.min(
+        100,
+        Math.round(
+          ((p.day || 0) / 200) * 50 + ((r.totalEarned || 0) / 5000) * 50,
+        ),
+      );
+      var ready =
+        p.intelligence >= 45 || (p.day >= 200 && (r.totalEarned || 0) > 5000);
+      if (!ready) {
+        var best = Math.max(intelPct, expPct);
+        if (best > 30) {
+          out.push({
+            w: 45 + Math.floor(best / 10),
+            icon: "🏢",
+            text: "企业就绪 " + best + "%",
+            hint: "智力" + intelPct + "% | 经验" + expPct + "% → 去科技园",
+          });
+        }
+      }
+    }
+
     return out;
   }
 
