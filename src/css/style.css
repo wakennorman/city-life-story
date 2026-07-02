@@ -3201,23 +3201,14 @@ body {
   }
 
   .header-logo {
-    max-width: 38vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 16px;
-    letter-spacing: 0;
-  }
-
-  .header-logo span {
-    display: none;
+    display: none !important;
   }
 
   .header-stats {
     flex: 1 1 auto;
     min-width: 0;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
     overflow: hidden;
   }
 
@@ -3229,11 +3220,13 @@ body {
     display: none;
   }
 
+  #header-season-label,
+  #header-phase-stat,
+  #header-mode-stat,
+  #header-festival-stat,
   .header-context,
   #header-day,
-  #header-age,
-  #header-mode-stat,
-  #header-festival-stat {
+  #header-age {
     display: none !important;
   }
 
@@ -3241,11 +3234,24 @@ body {
   #header-debt-area {
     min-width: 0 !important;
     flex: 0 1 auto;
-    max-width: 42vw;
-    padding: 0 8px !important;
+    max-width: 40vw;
+    min-height: 36px;
+    padding: 0 10px !important;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-card);
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  #header-cash-area {
+    border-color: rgba(74, 158, 92, 0.35);
+    background: rgba(74, 158, 92, 0.06);
+  }
+
+  #header-debt-area {
+    border-color: rgba(196, 85, 61, 0.35);
+    background: rgba(196, 85, 61, 0.06);
   }
 
   #header-cash,
@@ -3253,11 +3259,23 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .header-actions {
     display: none;
+  }
+
+  /* ===== 移动端优化：标题行 / 状态行 ===== */
+
+  /* 标题行（城市浮生记 v1.0） */
+  .mobile-title-strip {
+    display: flex !important;
+  }
+
+  /* 位置+背包状态行 */
+  .mobile-location-strip {
+    display: flex !important;
   }
 
   #main {
@@ -3749,6 +3767,14 @@ body {
     min-height: 38px;
     padding: 7px 10px;
     white-space: nowrap;
+  }
+
+  /* ===== 桌面端：隐藏移动端专属行 ===== */
+  .mobile-title-strip {
+    display: none !important;
+  }
+  .mobile-location-strip {
+    display: none !important;
   }
 
   /* ====== 侧栏 ====== */

@@ -1226,7 +1226,8 @@ function renderCurrentTab(state, anchorGoodId) {
     anchorOldCardScreenTop = _firstVisibleActionCardTop(area);
   }
 
-  // 2. 内层滚动容器 scrollTop 备份（事业 tab 等拥有独立内层滚动容器的情况）
+  // 2. 内层滚动容器 scrollTop 备份 + 锚点内容坐标（事业 tab 等拥有独立内层滚动容器的情况）
+  //    同时记录容器内 [data-scroll-anchor] 在内容坐标系中的位置，用于修正上方区块伸缩导致的按钮位移
   var innerScrollRestore = null;
   for (var _ci = 0; _ci < area.children.length; _ci++) {
     var _child = area.children[_ci];
@@ -1234,16 +1235,34 @@ function renderCurrentTab(state, anchorGoodId) {
       _child.style && _child.style.overflowY
         ? _child.style.overflowY
         : getComputedStyle(_child).overflowY;
-    if ((_oy === "auto" || _oy === "scroll") && _child.scrollTop > 0) {
-      innerScrollRestore = { childIndex: _ci, scrollTop: _child.scrollTop };
+    if (_oy === "auto" || _oy === "scroll") {
+      innerScrollRestore = {
+        childIndex: _ci,
+        scrollTop: _child.scrollTop,
+        anchorContentPos: null,
+      };
+      var _anchor = _child.querySelector("[data-scroll-anchor]");
+      if (_anchor) {
+        // 锚点在内容坐标系中的位置 = 屏幕相对位置 + 已滚动偏移（与 position 无关的稳健算法）
+        innerScrollRestore.anchorContentPos =
+          _anchor.getBoundingClientRect().top -
+          _child.getBoundingClientRect().top +
+          _child.scrollTop;
+      }
       break;
     }
   }
 
   area.innerHTML = "";
 
-  // 时间槽指示器
+  // 时间槽指示器（日期 + 时段 + AP）
   renderTimeSlot(state, area);
+
+  // 移动端专属：标题行（品牌 + 紧急提示）
+  renderTitleBar(state, area);
+
+  // 移动端专属：背包 + 住所状态条
+  renderLocationBar(state, area);
 
   // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
   renderGoalStrip(state, area);
@@ -1275,7 +1294,7 @@ function renderCurrentTab(state, anchorGoodId) {
   }
 
   // ===== 阶段二（重绘后）：恢复滚动状态 =====
-  // 1. 恢复内层滚动容器 scrollTop（优先执行，修正 #content-area 自身的 scrollTop）
+  // 1. 恢复内层滚动容器 scrollTop，并按锚点位移差修正（优先执行）
   if (innerScrollRestore) {
     var newChild = area.children[innerScrollRestore.childIndex];
     if (newChild) {
@@ -1284,7 +1303,21 @@ function renderCurrentTab(state, anchorGoodId) {
           ? newChild.style.overflowY
           : getComputedStyle(newChild).overflowY;
       if (newOy === "auto" || newOy === "scroll") {
-        newChild.scrollTop = innerScrollRestore.scrollTop;
+        var restoredScroll = innerScrollRestore.scrollTop;
+        // 若存在锚点，按内容位移差修正 scrollTop，保持锚点屏幕位置不变
+        if (innerScrollRestore.anchorContentPos != null) {
+          var newAnchor = newChild.querySelector("[data-scroll-anchor]");
+          if (newAnchor) {
+            var newAnchorContentPos =
+              newAnchor.getBoundingClientRect().top -
+              newChild.getBoundingClientRect().top +
+              newChild.scrollTop; // 此时 scrollTop 刚被 innerHTML="" 归零，≈ 0
+            var delta =
+              newAnchorContentPos - innerScrollRestore.anchorContentPos;
+            restoredScroll = innerScrollRestore.scrollTop + delta;
+          }
+        }
+        newChild.scrollTop = Math.max(0, restoredScroll);
       }
     }
   }
@@ -1935,6 +1968,100 @@ function _growthStat(label, value, color) {
 }
 
 /** 时间槽 + 住所/背包信息 */
+/**
+ * 移动端顶部标题行：显示品牌（城市浮生记 v1.0）+ 紧急住宿提示
+ * 仅在移动端激活（桌面端通过 CSS 隐藏，桌面端品牌保留在 header 内）
+ */
+function renderTitleBar(state, parent) {
+  var div = document.createElement("div");
+  div.className = "mobile-title-strip";
+  div.style.cssText =
+    "display:flex;align-items:center;gap:8px;padding:4px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;";
+
+  // 左侧：品牌
+  var titleSpan = document.createElement("span");
+  titleSpan.style.cssText =
+    "font-weight:700;color:var(--accent);white-space:nowrap;letter-spacing:0.3px;";
+  var ver = "v1.0";
+  // 优先用脚本注入的全局版本号（若有）
+  if (typeof GAME_VERSION === "string" && GAME_VERSION) {
+    ver = GAME_VERSION;
+  } else if (typeof VERSION === "string" && VERSION) {
+    ver = VERSION;
+  }
+  titleSpan.textContent = "🏙️ 城市浮生记 " + ver;
+  div.appendChild(titleSpan);
+
+  // 右侧：露宿街头时的紧急住宿提示
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  if (currentTier === 0 && state.player.day > 3) {
+    var tipSpan = document.createElement("span");
+    tipSpan.style.cssText =
+      "font-size:11px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
+    div.appendChild(tipSpan);
+  }
+
+  parent.appendChild(div);
+}
+
+/**
+ * 移动端位置+背包状态行（时间指示器下方）
+ * 结构：🎒 X/Y · 🌃 住所名  （常显，一目了然）
+ */
+function renderLocationBar(state, parent) {
+  var div = document.createElement("div");
+  div.className = "mobile-location-strip";
+  div.style.cssText =
+    "display:flex;align-items:center;gap:8px;padding:4px 12px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:6px;font-size:12px;";
+
+  // 背包容量
+  var itemCount = 0;
+  if (state.inventory && state.inventory.items) {
+    itemCount = state.inventory.items.reduce(function (sum, item) {
+      return sum + (item.qty || 0);
+    }, 0);
+  }
+  var totalCap = state.inventory ? state.inventory.capacity || 0 : 0;
+  var hasStorage = state.housing && state.housing.storageRented ? " 📦仓" : "";
+
+  var bagSpan = document.createElement("span");
+  bagSpan.style.cssText = "white-space:nowrap;font-weight:600;";
+  bagSpan.textContent = "🎒 " + itemCount + "/" + totalCap + hasStorage;
+  div.appendChild(bagSpan);
+
+  // 分隔符
+  var sep = document.createElement("span");
+  sep.style.cssText = "color:var(--text-muted);font-size:10px;";
+  sep.textContent = "·";
+  div.appendChild(sep);
+
+  // 住所
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData ? houseData.name : "露宿街头";
+  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
+
+  var houseSpan = document.createElement("span");
+  houseSpan.style.cssText = "color:var(--text-secondary);white-space:nowrap;";
+  houseSpan.textContent = houseIcon + " " + houseName;
+  div.appendChild(houseSpan);
+
+  // 升级提示（早期露宿）
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  if (currentTier === 0 && state.player.day <= 3) {
+    var tipSpan = document.createElement("span");
+    tipSpan.style.cssText =
+      "font-size:10px;color:var(--warning);white-space:nowrap;margin-left:auto;";
+    tipSpan.textContent = "💡可升级为🛏️合租床位";
+    div.appendChild(tipSpan);
+  }
+
+  parent.appendChild(div);
+}
+
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",
@@ -1945,21 +2072,9 @@ function renderTimeSlot(state, parent) {
   const div = document.createElement("div");
   div.id = "time-slot-indicator";
 
-  // 住所和数据
-  var houseData =
-    (typeof HOUSING_TIERS !== "undefined" &&
-      HOUSING_TIERS[state.housing?.tier || 0]) ||
-    null;
-  var houseName = houseData ? houseData.name : "露宿街头";
-  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
-  var itemCount = 0;
-  if (state.inventory && state.inventory.items) {
-    itemCount = state.inventory.items.reduce(function (sum, item) {
-      return sum + (item.qty || 0);
-    }, 0);
-  }
-  var totalCap = state.inventory ? state.inventory.capacity || 0 : 0;
-  var hasStorage = state.housing && state.housing.storageRented ? "📦仓" : "";
+  // 住所数据（用于 "· Qn" 企业季标签）
+  var phaseLabel =
+    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter}` : "";
 
   const ap = state.player.actionPoints || 0;
   const maxAp = state.player.maxActionPoints || 100;
@@ -1967,23 +2082,16 @@ function renderTimeSlot(state, parent) {
   const lowAp = ap <= 20 && ap > 0;
   const apColor =
     ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
-  // 改为单行横排左对齐：📅 第 N 天 | ☀️ 上午 ⚡ 100/100 🎒 0/20 · 🌃 露宿街头
+  // 底部独立行：🎒 背包 / 🌃 已提取到 renderLocationBar，此处仅保留日期 + 时段 + AP
   div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
-  var phaseLabel =
-    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter}` : "";
   div.innerHTML = `
     <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
     <span style="color:var(--text-muted);">|</span>
     <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
-    <span style="white-space:nowrap;font-size:12px;">
+    <span style="white-space:nowrap;font-size:12px;margin-left:auto;">
       ⚡ <strong style="color:${apColor};${lowAp ? "animation:ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
     </span>
-    <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap;">
-      🎒 ${itemCount}/${totalCap}${hasStorage}
-    </span>
-    <span style="color:var(--text-muted);font-size:10px;">·</span>
-    <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap;">${houseIcon} ${houseName}</span>
     ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
   `;
   parent.appendChild(div);

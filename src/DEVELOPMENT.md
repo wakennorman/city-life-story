@@ -2576,3 +2576,53 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 - `tests/monte_carlo.js`：蒙特卡洛模拟脚本，在浏览器 DevTools 控制台调用 `runMonteCarlo()` 执行 200 次×1000 天模拟
 - 本地开发时脚本自动加载（localhost/?test），生产环境不加载
 - 每次涉及数值/经济/概率改动后，必须跑蒙特卡洛验证存活率 > 80%、前7天死亡率 < 10%、30天前暴富率 < 5%
+
+---
+
+## 2026-07-02 — 移动端顶部栏重组 + 状态条显性化（v3.1 审查改进的一部分）
+
+**用户原诉求**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性被隐藏，无法直观看到；顶部栏的"日期"与時間槽重复，"城市浮生记 v1.0"挤占宝贵水平空间；"钱"被挤到后面需横划才能看到。
+
+### 设计参考
+- Apple HIG / Material 3 状态栏 & 导航栏划分
+- BitLife/Mostly（大多数）手机端：顶部只放最关键的两个数（年龄+钱），其余赶到底部状态条
+- iOS/Android 系统状态栏思维：顶部两行放 ≤3 个关键数值，一屏内可见、不需滚动
+
+### 设计结构（手机端 3 行信息栏）
+
+```
+第1行（header 顶栏）:  [☰]  [💰 ¥N]  [💸 ¥M]
+第2行（时间槽）      :  📅 第 N 天 | ☀️ 上午  ⚡ 100/100
+第3行（状态条）      :  🎒 0/20 · 🌃 露宿街头 （💡 去城中村可升级为🛏️合租床位）  [品牌]
+```
+
+- 顶栏去日期/标题，只留 💰/💸 现金与欠款（玩家最关心的两个数）
+- 时间槽去掉背包/住址包袱，只负责"时间+行动力"
+- 品牌（🏙️ 城市浮生记 v1.0）移到状态条右侧（替代旧"城市浮生记 v1.0"顶栏位置）
+- 状态条：背包放最左，住址中间，升级提示在 3 天后显式出现，更显性
+
+### 修改文件
+
+- `src/js/ui/render.js`：
+  - 新增 `renderTitleBar(state, parent)`：品牌 + 紧急住宿提示条
+  - 新增 `renderLocationBar(state, parent)`：🎒 + 🌃 住所 + 升级提示
+  - `renderTimeSlot`：去掉背包/住址，AP 右对齐
+  - `renderContent` 在 `renderTimeSlot` 之后依次调用	renderTitleBar / renderLocationBar
+- `src/css/style.css`：
+  - <=768px 隐藏 `.header-logo / #header-season-label / #header-phase-stat`，显性化现金/欠款颜色带
+  - <=768px 显性显示 `.mobile-title-strip` 和 `.mobile-location-strip`
+  - >=769px 隐藏两条移动端专属行（桌面端保持原桌面三层不变）
+- `src/index.html`：仅调整了 script 引入顺序无任何变动
+
+### 交叉验证（按 1.4 标准）
+- `renderHeaderContext` 原职责（在顶栏显示住所 chip）与新增 `renderLocationBar` 重复 → 已通过 CSS 隐藏手机端的 `.header-context`，保留桌面端
+- 品牌名在桌面端 `header-logo` 保留，仅手机端隐藏，避免文案重复
+- 紧急住宿提示在 `getDailyActionTips`（urgent）中已经推入数组；新 `renderTitleBar` 是针对顶条位置的独立显性入口，Urgent 仍在行动页提示卡片中保留，两者不再冲突（ urgents 仍通过 `getDailyActionTips` 注入行动 tab，仅在顶条显示最紧急的那一条）
+
+### 验证
+- `node --check js/ui/render.js` ✓
+- `npm run check:js` (116) ✓
+- `npm run typecheck` ✓
+- `python build.py` (4500.5 KB) ✓
+- `npm run build` (vite 68.55 kB gzip 24.98 kB) ✓
+
