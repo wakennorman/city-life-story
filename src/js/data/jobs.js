@@ -36,7 +36,7 @@ const STREET_JOBS = [
       const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;
       return Math.floor(base * Math.min(multi, 2) * zhouBonus);
     },
-    risk: { injury: 0.04, illness: 0.03 },
+    risk: { injury: 0.01, illness: 0.005 },
   },
   {
     id: "old_zhou_recycling",
@@ -84,7 +84,7 @@ const STREET_JOBS = [
           bossBonus,
       );
     },
-    risk: { injury: 0.1, illness: 0.04 },
+    risk: { injury: 0.03, illness: 0.02 },
   },
   {
     id: "premium_engineering",
@@ -114,7 +114,7 @@ const STREET_JOBS = [
           (1 + weldBonus),
       );
     },
-    risk: { injury: 0.03 },
+    risk: { injury: 0.015 },
   },
 
   // ====== 工业区 — 工厂（1个）=====
