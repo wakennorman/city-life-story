@@ -2767,6 +2767,13 @@ function getAvailableActions(state) {
             );
           }
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+          if (Random.chance(0.1) && st.player.intelligence < 100) {
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 20) + 1,
+            );
+            StateManager.addMessage("🧠 你的智力提升了！", "success");
+          }
           StateManager.addMessage(
             `📚 你花时间学习了${getSkillName(key)}。`,
             "info",
