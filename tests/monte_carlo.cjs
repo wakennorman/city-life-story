@@ -224,15 +224,13 @@
       if (day > 90 && state.resources.cash >= 8000) loc = "techPark";
       state.trade.currentLocation = loc;
 
-      // 健康<60时最多工作3轮，否则工作到ap用完
-      var maxWork = Math.min(
-        state.status.health >= 60 ? 6 : 3,
-        Math.floor(ap / 12),
-      );
-      for (var wi = 0; wi < maxWork; wi++) {
+      // 工作循环: 最多4次，疲劳过高则停止
+      var worked = 0;
+      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
         var job = findJobAtLocation(state, loc);
         applyJobPay(state, job);
-        ap -= 12;
+        ap -= 14;
+        worked++;
       }
       state.player.actionPoints = Math.max(0, ap);
     };
@@ -248,13 +246,13 @@
         needs.hunger = Math.max(0, needs.hunger - 25);
         ap -= 10;
       }
-      if (needs.fatigue > 80 && ap >= 15) {
+      if (needs.fatigue > 60 && ap >= 15) {
         needs.fatigue = Math.max(0, needs.fatigue - 20);
         ap -= 15;
       }
 
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 5) {
+      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 7) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
         state.housing.rentedDay = state.player.day;
@@ -262,20 +260,15 @@
 
       var day = state.player.day;
       var loc = "slum";
-      if (day > 30 && state.resources.cash >= 2000) loc = "factoryZone";
+      if (day > 60 && state.resources.cash >= 5000) loc = "factoryZone";
 
-      if (state.status.health < 40 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 20);
-        ap -= 15;
-      }
-      var maxW = Math.min(
-        state.status.health >= 60 ? 6 : 3,
-        Math.floor(ap / 12),
-      );
-      for (var wi2 = 0; wi2 < maxW; wi2++) {
+      // 工作循环: 最多3次，每次检查疲劳
+      var worked = 0;
+      while (ap >= 14 && worked < 3 && needs.fatigue < 60) {
         var job = findJobAtLocation(state, loc);
         applyJobPay(state, job);
-        ap -= 12;
+        ap -= 14;
+        worked++;
       }
       state.player.actionPoints = Math.max(0, ap);
     };
@@ -344,8 +337,14 @@
         loc = "techPark";
       state.trade.currentLocation = loc;
 
-      var job = findJobAtLocation(state, loc);
-      applyJobPay(state, job);
+      // 工作循环: 最多3次，疲劳过高则停止
+      var worked = 0;
+      while (ap >= 14 && worked < 3 && needs.fatigue < 60) {
+        var job = findJobAtLocation(state, loc);
+        applyJobPay(state, job);
+        ap -= 14;
+        worked++;
+      }
       state.player.actionPoints = Math.max(0, ap);
     };
   }
