@@ -37,7 +37,6 @@
   }
 
   var EVENTS = [
-
     // ================================================================
     //  医疗护理路径（medical）
     // ================================================================
@@ -59,9 +58,15 @@
           hint: "损点声誉，但化解危机",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.max(0, cap.reputation - 5); _clamp(cap); }
+            if (cap) {
+              cap.reputation = Math.max(0, cap.reputation - 5);
+              _clamp(cap);
+            }
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 8);
-            _msg("🙇 你平静道歉并处置了渗液，家属情绪稳定下来。声誉-5，心理-8。", "warning");
+            _msg(
+              "🙇 你平静道歉并处置了渗液，家属情绪稳定下来。声誉-5，心理-8。",
+              "warning",
+            );
           },
         },
         {
@@ -70,11 +75,20 @@
           apply: function (st) {
             if (_chance(0.6)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 8); _clamp(cap); }
-              _msg("📋 护理记录显示操作无误。家属看后沉默，主任为你出头了。声誉+8。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 8);
+                _clamp(cap);
+              }
+              _msg(
+                "📋 护理记录显示操作无误。家属看后沉默，主任为你出头了。声誉+8。",
+                "success",
+              );
             } else {
               st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
-              _msg("😰 家属不依不饶升级到投诉，医院让你写检查报告。心理-15。", "warning");
+              _msg(
+                "😰 家属不依不饶升级到投诉，医院让你写检查报告。心理-15。",
+                "warning",
+              );
             }
           },
         },
@@ -82,7 +96,10 @@
           text: "📞 立即呼叫护士长",
           hint: "转移压力给上级",
           apply: function (st) {
-            _msg("📞 护士长赶来，用老练的方式化解了矛盾。你背了半小时骂，心里憋屈。", "info");
+            _msg(
+              "📞 护士长赶来，用老练的方式化解了矛盾。你背了半小时骂，心里憋屈。",
+              "info",
+            );
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 5);
           },
         },
@@ -107,10 +124,16 @@
           hint: "身体透支但收获认可",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 6); _clamp(cap); }
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 6);
+              _clamp(cap);
+            }
             st.player.physique = Math.max(0, (st.player.physique || 30) - 8);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            _msg("💪 你撑过了这个夜班。主任悄悄说「你是最能扛的护士」。声誉+6，体力-8，疲劳+25。", "warning");
+            _msg(
+              "💪 你撑过了这个夜班。主任悄悄说「你是最能扛的护士」。声誉+6，体力-8，疲劳+25。",
+              "warning",
+            );
           },
         },
         {
@@ -118,9 +141,15 @@
           hint: "理智但影响绩效",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.burnout = Math.max(0, cap.burnout - 10); _clamp(cap); }
+            if (cap) {
+              cap.burnout = Math.max(0, cap.burnout - 10);
+              _clamp(cap);
+            }
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
-            _msg("🛌 你换到了白班。倦怠值-10，疲劳-15。同事有些微辞但你感觉好多了。", "success");
+            _msg(
+              "🛌 你换到了白班。倦怠值-10，疲劳-15。同事有些微辞但你感觉好多了。",
+              "success",
+            );
           },
         },
         {
@@ -128,12 +157,21 @@
           hint: "撑一时，后患无穷",
           apply: function (st) {
             if (_chance(0.7)) {
-              _msg("☕ 咖啡管用！撑过了今晚，但手腕的抖动让你开始担心自己的健康状况。", "info");
+              _msg(
+                "☕ 咖啡管用！撑过了今晚，但手腕的抖动让你开始担心自己的健康状况。",
+                "info",
+              );
               st.player.physique = Math.max(0, (st.player.physique || 30) - 3);
             } else {
-              _msg("😴 咖啡没抗住，你在值班室打盹被巡查主任发现，被警告一次。", "warning");
+              _msg(
+                "😴 咖啡没抗住，你在值班室打盹被巡查主任发现，被警告一次。",
+                "warning",
+              );
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 8); _clamp(cap); }
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 8);
+                _clamp(cap);
+              }
             }
           },
         },
@@ -167,14 +205,20 @@
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
             st.flags = st.flags || {};
             st.flags._medVolunteerHonor = true;
-            _msg("🏅 你报名并完成了援助任务。回来后科室为你挂横幅，医院记三等功。声誉+20。", "success");
+            _msg(
+              "🏅 你报名并完成了援助任务。回来后科室为你挂横幅，医院记三等功。声誉+20。",
+              "success",
+            );
           },
         },
         {
           text: "🤔 我有家人要照顾，无法前往",
           hint: "正当理由，无惩罚",
           apply: function (st) {
-            _msg("👨‍👩‍👧 你以家庭原因婉拒，同事理解。科里另一位护士去了，大家送行时你心里五味杂陈。", "info");
+            _msg(
+              "👨‍👩‍👧 你以家庭原因婉拒，同事理解。科里另一位护士去了，大家送行时你心里五味杂陈。",
+              "info",
+            );
           },
         },
       ],
@@ -198,9 +242,15 @@
           hint: "诚实会被记录，但这是职业操守",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.max(0, cap.reputation - 3); _clamp(cap); }
+            if (cap) {
+              cap.reputation = Math.max(0, cap.reputation - 3);
+              _clamp(cap);
+            }
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
-            _msg("📝 你上报了险情。护士长说「发现了就是好的，感谢你的诚实」，科室据此改了排班流程。", "info");
+            _msg(
+              "📝 你上报了险情。护士长说「发现了就是好的，感谢你的诚实」，科室据此改了排班流程。",
+              "info",
+            );
           },
         },
         {
@@ -208,11 +258,20 @@
           hint: "侥幸心理，但隐患未消",
           apply: function (st) {
             if (_chance(0.8)) {
-              _msg("🤫 没人发现，你换好了药，这件事就此过去。但你做梦都在出汗。", "warning");
+              _msg(
+                "🤫 没人发现，你换好了药，这件事就此过去。但你做梦都在出汗。",
+                "warning",
+              );
             } else {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 20); _clamp(cap); }
-              _msg("😱 事情还是被发现了！领导翻监控追责，你被通报批评。声誉-20。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 20);
+                _clamp(cap);
+              }
+              _msg(
+                "😱 事情还是被发现了！领导翻监控追责，你被通报批评。声誉-20。",
+                "warning",
+              );
             }
           },
         },
@@ -221,8 +280,14 @@
           hint: "从系统角度解决问题",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 10); _clamp(cap); }
-            _msg("✅ 你的建议被采纳，科室新增了「双人核查」规定。护士长在会上表扬了你的职业素养。声誉+10。", "success");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+            }
+            _msg(
+              "✅ 你的建议被采纳，科室新增了「双人核查」规定。护士长在会上表扬了你的职业素养。声誉+10。",
+              "success",
+            );
           },
         },
       ],
@@ -247,10 +312,19 @@
           apply: function (st) {
             if (st.needs && (st.needs.mental || 0) >= 50) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 6); _clamp(cap); }
-              _msg("💬 你据理力争，老师只好补上了你的名字作为第二作者。以后她也不敢小看你了。声誉+6。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 6);
+                _clamp(cap);
+              }
+              _msg(
+                "💬 你据理力争，老师只好补上了你的名字作为第二作者。以后她也不敢小看你了。声誉+6。",
+                "success",
+              );
             } else {
-              _msg("😔 你鼓足勇气说了几句，但声音发抖，她态度敷衍，你最终没争到什么。", "warning");
+              _msg(
+                "😔 你鼓足勇气说了几句，但声音发抖，她态度敷衍，你最终没争到什么。",
+                "warning",
+              );
               st.needs.mental = Math.max(0, (st.needs.mental || 50) - 5);
             }
           },
@@ -261,10 +335,19 @@
           apply: function (st) {
             if (_chance(0.5)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 4); _clamp(cap); }
-              _msg("🏛️ 护士长调查后认定你有贡献，论文已更新署名，但气氛很尴尬。声誉+4。", "info");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 4);
+                _clamp(cap);
+              }
+              _msg(
+                "🏛️ 护士长调查后认定你有贡献，论文已更新署名，但气氛很尴尬。声誉+4。",
+                "info",
+              );
             } else {
-              _msg("😶 护士长含糊其辞，说「以后自己多留心」。你意识到科室有些事是潜规则。", "warning");
+              _msg(
+                "😶 护士长含糊其辞，说「以后自己多留心」。你意识到科室有些事是潜规则。",
+                "warning",
+              );
             }
           },
         },
@@ -272,9 +355,15 @@
           text: "💭 算了，以后留好证据",
           hint: "忍气吞声，吃一堑长一智",
           apply: function (st) {
-            _msg("📒 你默默咽下这口气，但开始用笔记记录每天的工作细节。以后再也不会这样了。", "info");
+            _msg(
+              "📒 你默默咽下这口气，但开始用笔记记录每天的工作细节。以后再也不会这样了。",
+              "info",
+            );
             var cap = _cap(st);
-            if (cap) { cap.industryResources = Math.min(100, cap.industryResources + 3); _clamp(cap); }
+            if (cap) {
+              cap.industryResources = Math.min(100, cap.industryResources + 3);
+              _clamp(cap);
+            }
           },
         },
       ],
@@ -290,8 +379,11 @@
       probability: 0.02,
       repeatable: false,
       conditions: function (st) {
-        return _path(st, "medical") && _workDays(st) > 730
-          && st.career.currentJob.id !== "med_head_nurse";
+        return (
+          _path(st, "medical") &&
+          _workDays(st) > 730 &&
+          st.career.currentJob.id !== "med_head_nurse"
+        );
       },
       choices: [
         {
@@ -300,11 +392,20 @@
           apply: function (st) {
             if (_chance(0.65)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 12); _clamp(cap); }
-              _msg("🎓 你顺利通过了职称考试！护士长说下次晋升你是优先候选人。声誉+12。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 12);
+                _clamp(cap);
+              }
+              _msg(
+                "🎓 你顺利通过了职称考试！护士长说下次晋升你是优先候选人。声誉+12。",
+                "success",
+              );
             } else {
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
-              _msg("😓 没过，题目太难了，你烦躁了两周。但下次你知道考试方向了，疲劳+20。", "warning");
+              _msg(
+                "😓 没过，题目太难了，你烦躁了两周。但下次你知道考试方向了，疲劳+20。",
+                "warning",
+              );
             }
           },
         },
@@ -312,7 +413,10 @@
           text: "⏳ 今年太忙，等下次",
           hint: "保持现状",
           apply: function (st) {
-            _msg("📅 你决定推迟一年。这个决定没有错，但时间总是过得很快。", "info");
+            _msg(
+              "📅 你决定推迟一年。这个决定没有错，但时间总是过得很快。",
+              "info",
+            );
           },
         },
       ],
@@ -345,14 +449,20 @@
                 _clamp(cap);
                 if (st.career.currentJob) {
                   st.career.currentJob.salary = Math.round(
-                    st.career.currentJob.salary * 1.05
+                    st.career.currentJob.salary * 1.05,
                   );
                 }
-                _msg("📈 领导认可你的业绩材料，绩效评「优秀」，薪资+5%。声誉+10。", "success");
+                _msg(
+                  "📈 领导认可你的业绩材料，绩效评「优秀」，薪资+5%。声誉+10。",
+                  "success",
+                );
               } else {
                 cap.reputation = Math.min(100, cap.reputation + 4);
                 _clamp(cap);
-                _msg("📋 考核结果「良好」，正常过关。你的材料准备很充分，但今年指标压力大。声誉+4。", "info");
+                _msg(
+                  "📋 考核结果「良好」，正常过关。你的材料准备很充分，但今年指标压力大。声誉+4。",
+                  "info",
+                );
               }
             }
           },
@@ -365,16 +475,25 @@
             if (socialScore >= 50 || _chance(0.5)) {
               st.resources.cash = Math.max(0, st.resources.cash - 800);
               var cap = _cap(st);
-              if (cap) { cap.partnerTrust = Math.min(100, cap.partnerTrust + 8); _clamp(cap); }
+              if (cap) {
+                cap.partnerTrust = Math.min(100, cap.partnerTrust + 8);
+                _clamp(cap);
+              }
               if (st.career.currentJob) {
                 st.career.currentJob.salary = Math.round(
-                  st.career.currentJob.salary * 1.06
+                  st.career.currentJob.salary * 1.06,
                 );
               }
-              _msg("🍽️ 饭局气氛融洽，领导给了「优秀」评定，薪资+6%。花了¥800，合伙人信任+8。", "success");
+              _msg(
+                "🍽️ 饭局气氛融洽，领导给了「优秀」评定，薪资+6%。花了¥800，合伙人信任+8。",
+                "success",
+              );
             } else {
               st.resources.cash = Math.max(0, st.resources.cash - 800);
-              _msg("😐 领导客气地吃完了，考核结果还是「良好」。钱没白花，关系维护住了。花了¥800。", "info");
+              _msg(
+                "😐 领导客气地吃完了，考核结果还是「良好」。钱没白花，关系维护住了。花了¥800。",
+                "info",
+              );
             }
           },
         },
@@ -382,7 +501,10 @@
           text: "😐 无所谓，随便填填",
           hint: "佛系应对",
           apply: function (st) {
-            _msg("🗂️ 你草草填完自评交上去，结果「合格」。在单位继续默默无闻。", "info");
+            _msg(
+              "🗂️ 你草草填完自评交上去，结果「合格」。在单位继续默默无闻。",
+              "info",
+            );
           },
         },
       ],
@@ -406,8 +528,14 @@
           hint: "按程序走，压力不大",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 5); _clamp(cap); }
-            _msg("✅ 你认真记录并开了转办函。大爷临走说「总算碰到个办实事的」。声誉+5。", "success");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 5);
+              _clamp(cap);
+            }
+            _msg(
+              "✅ 你认真记录并开了转办函。大爷临走说「总算碰到个办实事的」。声誉+5。",
+              "success",
+            );
           },
         },
         {
@@ -421,7 +549,10 @@
               _clamp(cap);
             }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
-            _msg("🤝 你帮大爷联系到了土地局专员，问题有了进展。口碑在单位传开了。声誉+10，疲劳+12。", "success");
+            _msg(
+              "🤝 你帮大爷联系到了土地局专员，问题有了进展。口碑在单位传开了。声誉+10，疲劳+12。",
+              "success",
+            );
           },
         },
         {
@@ -430,8 +561,14 @@
           apply: function (st) {
             if (_chance(0.3)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 12); _clamp(cap); }
-              _msg("😡 大爷在门口大声说「这里的人根本不管事」，被巡视组听到了，你被约谈。声誉-12。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 12);
+                _clamp(cap);
+              }
+              _msg(
+                "😡 大爷在门口大声说「这里的人根本不管事」，被巡视组听到了，你被约谈。声誉-12。",
+                "warning",
+              );
             } else {
               _msg("😐 大爷悻悻而去，今天就这样过去了，什么也没解决。", "info");
             }
@@ -458,8 +595,14 @@
           hint: "清者自清",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 8); _clamp(cap); }
-            _msg("✅ 检查组查了你的档案，没有问题。领导事后表扬你「工作规范」。声誉+8。", "success");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+            }
+            _msg(
+              "✅ 检查组查了你的档案，没有问题。领导事后表扬你「工作规范」。声誉+8。",
+              "success",
+            );
           },
         },
         {
@@ -468,11 +611,20 @@
           apply: function (st) {
             if (_chance(0.25)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 25); _clamp(cap); }
-              _msg("😱 检查组发现了痕迹，要求你配合调查。事情比想象中严重。声誉-25。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 25);
+                _clamp(cap);
+              }
+              _msg(
+                "😱 检查组发现了痕迹，要求你配合调查。事情比想象中严重。声誉-25。",
+                "warning",
+              );
               st.needs.mental = Math.max(0, (st.needs.mental || 50) - 20);
             } else {
-              _msg("😮‍💨 检查顺利结束，没有问题。这次算过去了，但心理阴影留下了。", "info");
+              _msg(
+                "😮‍💨 检查顺利结束，没有问题。这次算过去了，但心理阴影留下了。",
+                "info",
+              );
             }
           },
         },
@@ -486,7 +638,10 @@
               cap.partnerTrust = Math.min(100, cap.partnerTrust + 10);
               _clamp(cap);
             }
-            _msg("🤝 你主动说明了一件模糊的事，组织认定不构成问题，并表扬你的自觉。声誉+5，信任+10。", "success");
+            _msg(
+              "🤝 你主动说明了一件模糊的事，组织认定不构成问题，并表扬你的自觉。声誉+5，信任+10。",
+              "success",
+            );
           },
         },
       ],
@@ -502,8 +657,11 @@
       probability: 0.02,
       repeatable: false,
       conditions: function (st) {
-        return _path(st, "civil") && _workDays(st) > 730
-          && st.career.currentJob.id !== "civil_chief";
+        return (
+          _path(st, "civil") &&
+          _workDays(st) > 730 &&
+          st.career.currentJob.id !== "civil_chief"
+        );
       },
       choices: [
         {
@@ -519,17 +677,23 @@
             }
             if (st.career.currentJob) {
               st.career.currentJob.salary = Math.round(
-                st.career.currentJob.salary * 1.15
+                st.career.currentJob.salary * 1.15,
               );
             }
-            _msg("🏛️ 你成为副局长秘书，薪资+15%，处于权力核心。但随时待命的压力很大。声誉+12，倦怠+15。", "success");
+            _msg(
+              "🏛️ 你成为副局长秘书，薪资+15%，处于权力核心。但随时待命的压力很大。声誉+12，倦怠+15。",
+              "success",
+            );
           },
         },
         {
           text: "🙏 婉拒，继续做业务工作",
           hint: "保持独立，慢慢晋升",
           apply: function (st) {
-            _msg("📊 你礼貌地表达了希望继续做专业业务的想法。领导点头，也许过段时间还会再问。", "info");
+            _msg(
+              "📊 你礼貌地表达了希望继续做专业业务的想法。领导点头，也许过段时间还会再问。",
+              "info",
+            );
           },
         },
       ],
@@ -553,10 +717,16 @@
           hint: "高质量报告，身体代价",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 8); _clamp(cap); }
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+            }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
             st.player.physique = Math.max(0, (st.player.physique || 30) - 5);
-            _msg("📄 你熬夜写完并获得领导好评。「这篇写得很扎实」。声誉+8，疲劳+30，体力-5。", "success");
+            _msg(
+              "📄 你熬夜写完并获得领导好评。「这篇写得很扎实」。声誉+8，疲劳+30，体力-5。",
+              "success",
+            );
           },
         },
         {
@@ -570,7 +740,10 @@
               _clamp(cap);
             }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-            _msg("🤝 你组织了3个同事分工完成报告，虽然质量参差不齐，但准时交了。信任+8，声誉+4，疲劳+15。", "info");
+            _msg(
+              "🤝 你组织了3个同事分工完成报告，虽然质量参差不齐，但准时交了。信任+8，声誉+4，疲劳+15。",
+              "info",
+            );
           },
         },
         {
@@ -579,8 +752,14 @@
           apply: function (st) {
             if (_chance(0.4)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 8); _clamp(cap); }
-              _msg("😓 领导扫了一眼说「这些数据都是三年前的」，当场退回，让你重写。声誉-8。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 8);
+                _clamp(cap);
+              }
+              _msg(
+                "😓 领导扫了一眼说「这些数据都是三年前的」，当场退回，让你重写。声誉-8。",
+                "warning",
+              );
             } else {
               _msg("😅 幸好上级部门也来不及仔细看，报告糊弄过去了。", "info");
             }
@@ -607,9 +786,15 @@
           hint: "服从命令，快速完事",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.burnout = Math.min(100, cap.burnout + 8); _clamp(cap); }
+            if (cap) {
+              cap.burnout = Math.min(100, cap.burnout + 8);
+              _clamp(cap);
+            }
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 8);
-            _msg("🏗️ 视察顺利，领导满意。但你看着那些三天后就会枯死的盆栽，心情很复杂。倦怠+8，心理-8。", "warning");
+            _msg(
+              "🏗️ 视察顺利，领导满意。但你看着那些三天后就会枯死的盆栽，心情很复杂。倦怠+8，心理-8。",
+              "warning",
+            );
           },
         },
         {
@@ -622,7 +807,10 @@
               cap.industryResources = Math.min(100, cap.industryResources + 5);
               _clamp(cap);
             }
-            _msg("📋 视察完成，你附上的后续方案也获得了处长的关注。声誉+6，行业资源+5。", "success");
+            _msg(
+              "📋 视察完成，你附上的后续方案也获得了处长的关注。声誉+6，行业资源+5。",
+              "success",
+            );
           },
         },
         {
@@ -631,11 +819,23 @@
           apply: function (st) {
             var cap = _cap(st);
             if ((cap && cap.partnerTrust >= 40) || _chance(0.35)) {
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 8); _clamp(cap); }
-              _msg("💬 主任听进去了，稍微修改了方案。你赢得了他的信任。声誉+8。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 8);
+                _clamp(cap);
+              }
+              _msg(
+                "💬 主任听进去了，稍微修改了方案。你赢得了他的信任。声誉+8。",
+                "success",
+              );
             } else {
-              if (cap) { cap.partnerTrust = Math.max(0, cap.partnerTrust - 10); _clamp(cap); }
-              _msg("😶 主任脸色不好看地说「你先做好执行，方向由我定」。关系有点紧张，信任-10。", "warning");
+              if (cap) {
+                cap.partnerTrust = Math.max(0, cap.partnerTrust - 10);
+                _clamp(cap);
+              }
+              _msg(
+                "😶 主任脸色不好看地说「你先做好执行，方向由我定」。关系有点紧张，信任-10。",
+                "warning",
+              );
             }
           },
         },
@@ -663,9 +863,15 @@
           hint: "投资未来",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.industryResources = Math.min(100, cap.industryResources + 10); _clamp(cap); }
+            if (cap) {
+              cap.industryResources = Math.min(100, cap.industryResources + 10);
+              _clamp(cap);
+            }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
-            _msg("🧑‍💻 你报了架构设计课程，开始向技术管理转型。短期很累，行业资源+10，疲劳+20。", "info");
+            _msg(
+              "🧑‍💻 你报了架构设计课程，开始向技术管理转型。短期很累，行业资源+10，疲劳+20。",
+              "info",
+            );
           },
         },
         {
@@ -678,7 +884,10 @@
               cap.reputation = Math.min(100, cap.reputation + 8);
               _clamp(cap);
             }
-            _msg("💡 你开始整理人脉和资源，评估出路。客户线索+12，声誉+8。机会在慢慢成形。", "success");
+            _msg(
+              "💡 你开始整理人脉和资源，评估出路。客户线索+12，声誉+8。机会在慢慢成形。",
+              "success",
+            );
           },
         },
         {
@@ -687,8 +896,14 @@
           apply: function (st) {
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
             var cap = _cap(st);
-            if (cap) { cap.burnout = Math.min(100, cap.burnout + 12); _clamp(cap); }
-            _msg("😔 你陷入焦虑，刷了一周招聘帖子什么都没投。心理-15，倦怠+12。", "warning");
+            if (cap) {
+              cap.burnout = Math.min(100, cap.burnout + 12);
+              _clamp(cap);
+            }
+            _msg(
+              "😔 你陷入焦虑，刷了一周招聘帖子什么都没投。心理-15，倦怠+12。",
+              "warning",
+            );
           },
         },
       ],
@@ -713,11 +928,20 @@
           apply: function (st) {
             if (_chance(0.6)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 12); _clamp(cap); }
-              _msg("🚀 你两小时内定位问题并热修复上线。老板在群里@全员说「这就是关键时刻的人才」。声誉+12。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 12);
+                _clamp(cap);
+              }
+              _msg(
+                "🚀 你两小时内定位问题并热修复上线。老板在群里@全员说「这就是关键时刻的人才」。声誉+12。",
+                "success",
+              );
             } else {
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-              _msg("😰 折腾了五个小时才解决，你的脑子已经烧成了灰。过程很痛苦，但问题解决了。疲劳+25。", "warning");
+              _msg(
+                "😰 折腾了五个小时才解决，你的脑子已经烧成了灰。过程很痛苦，但问题解决了。疲劳+25。",
+                "warning",
+              );
             }
           },
         },
@@ -726,8 +950,14 @@
           hint: "聪明的方式",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.industryResources = Math.min(100, cap.industryResources + 5); _clamp(cap); }
-            _msg("🔄 回滚稳定后你找到了根因，写了详细的RCA报告。老板更欣赏你的系统思维。行业资源+5。", "success");
+            if (cap) {
+              cap.industryResources = Math.min(100, cap.industryResources + 5);
+              _clamp(cap);
+            }
+            _msg(
+              "🔄 回滚稳定后你找到了根因，写了详细的RCA报告。老板更欣赏你的系统思维。行业资源+5。",
+              "success",
+            );
           },
         },
       ],
@@ -756,7 +986,10 @@
               cap.burnout = Math.min(100, cap.burnout + 8);
               _clamp(cap);
             }
-            _msg("📈 你开始每周发进度周报，主动承担新需求。领导注意到了你。声誉+6，倦怠+8。", "info");
+            _msg(
+              "📈 你开始每周发进度周报，主动承担新需求。领导注意到了你。声誉+6，倦怠+8。",
+              "info",
+            );
           },
         },
         {
@@ -764,15 +997,24 @@
           hint: "人情味，但有时间代价",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.partnerTrust = Math.min(100, cap.partnerTrust + 12); _clamp(cap); }
-            _msg("💬 你帮同事梳理了几个难搞的模块。她顺利渡过了考察期，现在你们关系更铁了。信任+12。", "success");
+            if (cap) {
+              cap.partnerTrust = Math.min(100, cap.partnerTrust + 12);
+              _clamp(cap);
+            }
+            _msg(
+              "💬 你帮同事梳理了几个难搞的模块。她顺利渡过了考察期，现在你们关系更铁了。信任+12。",
+              "success",
+            );
           },
         },
         {
           text: "😶 低调观望，什么都不做",
           hint: "沉默是金？",
           apply: function (st) {
-            _msg("🔍 你缩着头，结果发现PIP只是裁员的前奏……但还没轮到你。今天算过去了。", "info");
+            _msg(
+              "🔍 你缩着头，结果发现PIP只是裁员的前奏……但还没轮到你。今天算过去了。",
+              "info",
+            );
           },
         },
       ],
@@ -802,7 +1044,10 @@
               _clamp(cap);
             }
             st.resources.cash += 8000;
-            _msg("🎉 你接了几个小商业合作，额外收入¥8000，同时在行业建立了个人品牌。声誉+18，客户线索+15。", "success");
+            _msg(
+              "🎉 你接了几个小商业合作，额外收入¥8000，同时在行业建立了个人品牌。声誉+18，客户线索+15。",
+              "success",
+            );
           },
         },
         {
@@ -810,8 +1055,14 @@
           hint: "均衡发展",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 10); _clamp(cap); }
-            _msg("🌟 你维护着开源项目，没有刻意商业化。在社区有了一定知名度，简历亮眼了很多。声誉+10。", "info");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+            }
+            _msg(
+              "🌟 你维护着开源项目，没有刻意商业化。在社区有了一定知名度，简历亮眼了很多。声誉+10。",
+              "info",
+            );
           },
         },
       ],
@@ -839,13 +1090,25 @@
           apply: function (st) {
             if (_chance(0.5)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 20); _clamp(cap); }
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 20);
+                _clamp(cap);
+              }
               st.resources.cash += 5000;
-              _msg("🏆 你举报属实，合规部门认定你立了大功，获得¥5000奖励，声誉大涨。声誉+20。", "success");
+              _msg(
+                "🏆 你举报属实，合规部门认定你立了大功，获得¥5000奖励，声誉大涨。声誉+20。",
+                "success",
+              );
             } else {
               var cap2 = _cap(st);
-              if (cap2) { cap2.reputation = Math.max(0, cap2.reputation - 10); _clamp(cap2); }
-              _msg("😬 调查后发现是正常的关联交易，你的判断有误。被上级说「不要乱揣测」。声誉-10。", "warning");
+              if (cap2) {
+                cap2.reputation = Math.max(0, cap2.reputation - 10);
+                _clamp(cap2);
+              }
+              _msg(
+                "😬 调查后发现是正常的关联交易，你的判断有误。被上级说「不要乱揣测」。声誉-10。",
+                "warning",
+              );
             }
           },
         },
@@ -855,10 +1118,19 @@
           apply: function (st) {
             if (_chance(0.2)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 20); _clamp(cap); }
-              _msg("😱 事后监管介入调查，你被问到「当时为何没报告」。职业信誉受损。声誉-20。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 20);
+                _clamp(cap);
+              }
+              _msg(
+                "😱 事后监管介入调查，你被问到「当时为何没报告」。职业信誉受损。声誉-20。",
+                "warning",
+              );
             } else {
-              _msg("😮‍💨 什么都没发生，这件事过去了。但你睡眠变差了，总觉得有什么事没做对。", "info");
+              _msg(
+                "😮‍💨 什么都没发生，这件事过去了。但你睡眠变差了，总觉得有什么事没做对。",
+                "info",
+              );
             }
           },
         },
@@ -867,8 +1139,14 @@
           hint: "让领导来决定",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.partnerTrust = Math.min(100, cap.partnerTrust + 8); _clamp(cap); }
-            _msg("🔒 领导说「知道了，我来处理」，之后什么消息都没有。你懂了一些事情。信任+8。", "info");
+            if (cap) {
+              cap.partnerTrust = Math.min(100, cap.partnerTrust + 8);
+              _clamp(cap);
+            }
+            _msg(
+              "🔒 领导说「知道了，我来处理」，之后什么消息都没有。你懂了一些事情。信任+8。",
+              "info",
+            );
           },
         },
       ],
@@ -898,7 +1176,10 @@
               _clamp(cap);
             }
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-            _msg("📞 你接了电话，安抚了客户两小时。明天他还是你的客户。客户线索+10，声誉+6，疲劳+15。", "success");
+            _msg(
+              "📞 你接了电话，安抚了客户两小时。明天他还是你的客户。客户线索+10，声誉+6，疲劳+15。",
+              "success",
+            );
           },
         },
         {
@@ -907,10 +1188,19 @@
           apply: function (st) {
             if (_chance(0.35)) {
               var cap = _cap(st);
-              if (cap) { cap.clientLeads = Math.max(0, cap.clientLeads - 15); _clamp(cap); }
-              _msg("😡 客户第二天找了你的竞品，走了。你少了一个大客户，客户线索-15。", "warning");
+              if (cap) {
+                cap.clientLeads = Math.max(0, cap.clientLeads - 15);
+                _clamp(cap);
+              }
+              _msg(
+                "😡 客户第二天找了你的竞品，走了。你少了一个大客户，客户线索-15。",
+                "warning",
+              );
             } else {
-              _msg("😌 你睡了觉。第二天客户自己冷静了，见面时也理解了你。", "info");
+              _msg(
+                "😌 你睡了觉。第二天客户自己冷静了，见面时也理解了你。",
+                "info",
+              );
             }
           },
         },
@@ -939,8 +1229,14 @@
           apply: function (st) {
             st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 5); _clamp(cap); }
-            _msg("💼 你没有走灰色渠道。这个单子没了，但你在圈子里的口碑更干净了。心理-10，声誉+5。", "info");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 5);
+              _clamp(cap);
+            }
+            _msg(
+              "💼 你没有走灰色渠道。这个单子没了，但你在圈子里的口碑更干净了。心理-10，声誉+5。",
+              "info",
+            );
           },
         },
         {
@@ -949,9 +1245,17 @@
           apply: function (st) {
             if (_chance(0.3)) {
               var cap = _cap(st);
-              if (cap) { cap.clientLeads = Math.min(100, cap.clientLeads + 12); _clamp(cap); }
-              st.resources.cash += Math.round((_job(st) && _job(st).salary || 8000) * 0.3);
-              _msg("🔄 对方内部有变化，你抓住机会谈成了一部分合作。客户线索+12，意外奖金到账。", "success");
+              if (cap) {
+                cap.clientLeads = Math.min(100, cap.clientLeads + 12);
+                _clamp(cap);
+              }
+              st.resources.cash += Math.round(
+                ((_job(st) && _job(st).salary) || 8000) * 0.3,
+              );
+              _msg(
+                "🔄 对方内部有变化，你抓住机会谈成了一部分合作。客户线索+12，意外奖金到账。",
+                "success",
+              );
             } else {
               _msg("📵 对方没有接你的电话，彻底凉了。", "info");
             }
@@ -980,11 +1284,20 @@
             if (_chance(0.55)) {
               st.resources.cash += 6000;
               var cap = _cap(st);
-              if (cap) { cap.clientLeads = Math.min(100, cap.clientLeads + 8); _clamp(cap); }
-              _msg("🏆 最后时刻你签下了两单，团队达标！提成¥6000到账！客户线索+8。", "success");
+              if (cap) {
+                cap.clientLeads = Math.min(100, cap.clientLeads + 8);
+                _clamp(cap);
+              }
+              _msg(
+                "🏆 最后时刻你签下了两单，团队达标！提成¥6000到账！客户线索+8。",
+                "success",
+              );
             } else {
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-              _msg("😰 拼到凌晨，签了一单但还是差，最终降薪……疲劳+25，这个月很难过。", "warning");
+              _msg(
+                "😰 拼到凌晨，签了一单但还是差，最终降薪……疲劳+25，这个月很难过。",
+                "warning",
+              );
             }
           },
         },
@@ -994,9 +1307,15 @@
           apply: function (st) {
             if (_chance(0.7)) {
               st.resources.cash += 4000;
-              _msg("🎯 精准攻克，最重要的那单签了，团队差一点达标。提成¥4000。老板也认可了你的判断力。", "success");
+              _msg(
+                "🎯 精准攻克，最重要的那单签了，团队差一点达标。提成¥4000。老板也认可了你的判断力。",
+                "success",
+              );
             } else {
-              _msg("😓 那个客户还是没签，目标没达成。但你复盘了哪里出了问题，下次会不一样。", "info");
+              _msg(
+                "😓 那个客户还是没签，目标没达成。但你复盘了哪里出了问题，下次会不一样。",
+                "info",
+              );
             }
           },
         },
@@ -1025,11 +1344,20 @@
           apply: function (st) {
             if (_chance(0.65)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 5); _clamp(cap); }
-              _msg("📞 家长接了电话，原来是误解，沟通后他在群里道歉了。化解了危机，声誉+5。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 5);
+                _clamp(cap);
+              }
+              _msg(
+                "📞 家长接了电话，原来是误解，沟通后他在群里道歉了。化解了危机，声誉+5。",
+                "success",
+              );
             } else {
               st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
-              _msg("😡 家长态度很差，坚持说你有问题。你心里委屈但无话可说。心理-10。", "warning");
+              _msg(
+                "😡 家长态度很差，坚持说你有问题。你心里委屈但无话可说。心理-10。",
+                "warning",
+              );
             }
           },
         },
@@ -1038,8 +1366,14 @@
           hint: "专业反击",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 8); _clamp(cap); }
-            _msg("📈 你晒出了详细的学习进步表，家长群里风向转了。校长私信说「处理得好」。声誉+8。", "success");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+            }
+            _msg(
+              "📈 你晒出了详细的学习进步表，家长群里风向转了。校长私信说「处理得好」。声誉+8。",
+              "success",
+            );
           },
         },
         {
@@ -1048,10 +1382,19 @@
           apply: function (st) {
             if (_chance(0.4)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.max(0, cap.reputation - 8); _clamp(cap); }
-              _msg("😤 校长找你谈话，说「下次及时沟通，不要让事情发酵」。声誉-8。", "warning");
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 8);
+                _clamp(cap);
+              }
+              _msg(
+                "😤 校长找你谈话，说「下次及时沟通，不要让事情发酵」。声誉-8。",
+                "warning",
+              );
             } else {
-              _msg("😌 风波自动平息了，其他家长觉得那位家长过分了，纷纷帮你说话。", "success");
+              _msg(
+                "😌 风波自动平息了，其他家长觉得那位家长过分了，纷纷帮你说话。",
+                "success",
+              );
             }
           },
         },
@@ -1078,10 +1421,19 @@
             if (_chance(0.45)) {
               st.resources.cash += 3000;
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 15); _clamp(cap); }
-              _msg("🏆 你获得了优秀教师称号，附带¥3000奖金！声誉大涨。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 15);
+                _clamp(cap);
+              }
+              _msg(
+                "🏆 你获得了优秀教师称号，附带¥3000奖金！声誉大涨。",
+                "success",
+              );
             } else {
-              _msg("😐 结果如预期，老王拿了。但你的材料被存档了，明年还有机会。", "info");
+              _msg(
+                "😐 结果如预期，老王拿了。但你的材料被存档了，明年还有机会。",
+                "info",
+              );
             }
           },
         },
@@ -1093,12 +1445,24 @@
             if (_chance(0.6)) {
               st.resources.cash += 3000;
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 15); _clamp(cap); }
-              _msg("🏆 你精心维护了关系，最终校长在关键时刻投了你一票。优秀教师！花了¥500但赚了¥3000。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 15);
+                _clamp(cap);
+              }
+              _msg(
+                "🏆 你精心维护了关系，最终校长在关键时刻投了你一票。优秀教师！花了¥500但赚了¥3000。",
+                "success",
+              );
             } else {
               var cap2 = _cap(st);
-              if (cap2) { cap2.partnerTrust = Math.min(100, cap2.partnerTrust + 6); _clamp(cap2); }
-              _msg("😐 还是没拿到，但你和校长的关系近了一步，信任+6。下次有机会。花了¥500。", "info");
+              if (cap2) {
+                cap2.partnerTrust = Math.min(100, cap2.partnerTrust + 6);
+                _clamp(cap2);
+              }
+              _msg(
+                "😐 还是没拿到，但你和校长的关系近了一步，信任+6。下次有机会。花了¥500。",
+                "info",
+              );
             }
           },
         },
@@ -1126,9 +1490,15 @@
           hint: "按规矩走",
           apply: function (st) {
             if (_chance(0.7)) {
-              _msg("✅ 核实后属于运输损坏，走保险赔付。流程正规，平台评分没有受影响。", "success");
+              _msg(
+                "✅ 核实后属于运输损坏，走保险赔付。流程正规，平台评分没有受影响。",
+                "success",
+              );
             } else {
-              _msg("😒 买家提的图片根本看不出问题，可能是碰瓷。上报后最终不了了之。", "info");
+              _msg(
+                "😒 买家提的图片根本看不出问题，可能是碰瓷。上报后最终不了了之。",
+                "info",
+              );
             }
           },
         },
@@ -1138,8 +1508,14 @@
           apply: function (st) {
             st.resources.cash = Math.max(0, st.resources.cash - 150);
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 4); _clamp(cap); }
-            _msg("💸 你自掏¥150垫付了赔偿，买家撤了投诉。好评到账，站点评分+。声誉+4。", "success");
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 4);
+              _clamp(cap);
+            }
+            _msg(
+              "💸 你自掏¥150垫付了赔偿，买家撤了投诉。好评到账，站点评分+。声誉+4。",
+              "success",
+            );
           },
         },
       ],
@@ -1163,10 +1539,16 @@
           hint: "肉身扛，赢声誉",
           apply: function (st) {
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.min(100, cap.reputation + 10); _clamp(cap); }
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+            }
             st.player.physique = Math.max(0, (st.player.physique || 30) - 8);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
-            _msg("🏆 你带队连续作战，三天内清了仓。总部通报表扬，声誉+10，体力-8，疲劳+30。", "success");
+            _msg(
+              "🏆 你带队连续作战，三天内清了仓。总部通报表扬，声誉+10，体力-8，疲劳+30。",
+              "success",
+            );
           },
         },
         {
@@ -1174,7 +1556,10 @@
           hint: "花钱解决问题",
           apply: function (st) {
             st.resources.cash = Math.max(0, st.resources.cash - 1200);
-            _msg("🛵 花¥1200找了10个临时工，两天清完，投诉量回落。成本控制不算完美但解决了问题。", "info");
+            _msg(
+              "🛵 花¥1200找了10个临时工，两天清完，投诉量回落。成本控制不算完美但解决了问题。",
+              "info",
+            );
           },
         },
       ],
@@ -1202,11 +1587,20 @@
           apply: function (st) {
             if (_chance(0.6)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 6); _clamp(cap); }
-              _msg("✅ 你反应迅速处置了问题，检查官看到后说「处理得好」，店铺顺利通过。声誉+6。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 6);
+                _clamp(cap);
+              }
+              _msg(
+                "✅ 你反应迅速处置了问题，检查官看到后说「处理得好」，店铺顺利通过。声誉+6。",
+                "success",
+              );
             } else {
               st.resources.cash = Math.max(0, st.resources.cash - 2000);
-              _msg("😰 还是被发现了，罚款¥2000并责令整改。但因你积极处置，没有关店。", "warning");
+              _msg(
+                "😰 还是被发现了，罚款¥2000并责令整改。但因你积极处置，没有关店。",
+                "warning",
+              );
             }
           },
         },
@@ -1216,8 +1610,14 @@
           apply: function (st) {
             st.resources.cash = Math.max(0, st.resources.cash - 5000);
             var cap = _cap(st);
-            if (cap) { cap.reputation = Math.max(0, cap.reputation - 10); _clamp(cap); }
-            _msg("😱 检查官记录了多处违规，罚款¥5000，被列入重点监察名单。声誉-10。", "warning");
+            if (cap) {
+              cap.reputation = Math.max(0, cap.reputation - 10);
+              _clamp(cap);
+            }
+            _msg(
+              "😱 检查官记录了多处违规，罚款¥5000，被列入重点监察名单。声誉-10。",
+              "warning",
+            );
           },
         },
       ],
@@ -1248,7 +1648,10 @@
             }
             st.resources.cash += 8000;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            _msg("🏆 你们撑过了爆单期，额外收入¥8000，积累了大量回头客。声誉+15，客户线索+20，疲劳+25。", "success");
+            _msg(
+              "🏆 你们撑过了爆单期，额外收入¥8000，积累了大量回头客。声誉+15，客户线索+20，疲劳+25。",
+              "success",
+            );
           },
         },
         {
@@ -1261,14 +1664,20 @@
               _clamp(cap);
             }
             st.resources.cash += 3000;
-            _msg("🍜 你控制了接单节奏，口碑评分没有下滑，稳稳赚了¥3000，声誉+8。长远来看是对的。", "success");
+            _msg(
+              "🍜 你控制了接单节奏，口碑评分没有下滑，稳稳赚了¥3000，声誉+8。长远来看是对的。",
+              "success",
+            );
           },
         },
         {
           text: "😩 应付不来，关掉了外卖接单",
           hint: "错失机会",
           apply: function (st) {
-            _msg("😔 流量来了又去，你没能把握住。这次错过了，但至少店里没有翻车。", "info");
+            _msg(
+              "😔 流量来了又去，你没能把握住。这次错过了，但至少店里没有翻车。",
+              "info",
+            );
           },
         },
       ],
@@ -1293,10 +1702,19 @@
           apply: function (st) {
             if (_chance(0.6)) {
               var cap = _cap(st);
-              if (cap) { cap.clientLeads = Math.min(100, cap.clientLeads + 6); _clamp(cap); }
-              _msg("✅ 对方是误解，沟通后删除了差评并道歉。你送了一张优惠券，赚了个回头客。客户线索+6。", "success");
+              if (cap) {
+                cap.clientLeads = Math.min(100, cap.clientLeads + 6);
+                _clamp(cap);
+              }
+              _msg(
+                "✅ 对方是误解，沟通后删除了差评并道歉。你送了一张优惠券，赚了个回头客。客户线索+6。",
+                "success",
+              );
             } else {
-              _msg("😒 对方态度强硬，坚持不删。你只能让平台介入，流程很慢。", "info");
+              _msg(
+                "😒 对方态度强硬，坚持不删。你只能让平台介入，流程很慢。",
+                "info",
+              );
             }
           },
         },
@@ -1306,16 +1724,488 @@
           apply: function (st) {
             if (_chance(0.5)) {
               var cap = _cap(st);
-              if (cap) { cap.reputation = Math.min(100, cap.reputation + 5); _clamp(cap); }
-              _msg("🗑️ 平台经核实认定是恶意差评，已删除，并给了补偿流量。声誉+5。", "success");
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 5);
+                _clamp(cap);
+              }
+              _msg(
+                "🗑️ 平台经核实认定是恶意差评，已删除，并给了补偿流量。声誉+5。",
+                "success",
+              );
             } else {
-              _msg("⏳ 平台说「正在处理中」，已经等了两周，没有回音。差评还挂着。", "warning");
+              _msg(
+                "⏳ 平台说「正在处理中」，已经等了两周，没有回音。差评还挂着。",
+                "warning",
+              );
             }
           },
         },
       ],
     },
 
+    // ================================================================
+    //  医师路径（doctor）— v3.11 新增
+    // ================================================================
+    {
+      id: "doc_misdiagnosis_scare",
+      phase: "street",
+      icon: "🔬",
+      title: "险些误诊",
+      story:
+        "急诊来了一位胸痛患者，心电图为阴性，你差点按一般肌肉拉伤处理。但就在准备让病人回去时，你多看了一眼——氧饱和度偏低。",
+      probability: 0.035,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "doctor") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📋 立即收住院做冠脉CTA",
+          hint: "谨慎为上",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 10);
+            _clamp(cap);
+            _msg(
+              "📋 CTA显示前降支狭窄90%！急诊介入后患者转危为安。患者家属送来锦旗。声誉+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🧪 先做个心梗三项+心电图复查",
+          hint: "保险但可能错过时间窗",
+          apply: function (st) {
+            if (_chance(0.65)) {
+              _msg(
+                "📊 心梗三项果然异常！你紧急呼叫心内科会诊，患者及时接受了治疗。",
+                "success",
+              );
+            } else {
+              _msg(
+                "😰 等待结果时患者病情加重……虽然最终确诊了，但你被主任严厉批评。",
+                "warning",
+              );
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 5);
+              _clamp(cap);
+            }
+          },
+        },
+        {
+          text: "🙏 让患者回家休息，开点止痛药",
+          hint: "轻率决定，有风险",
+          apply: function (st) {
+            if (_chance(0.8)) {
+              _msg(
+                "😅 患者回去了，第二天回来说吃了药好些了。但你一整天都在回想这个病例。",
+                "info",
+              );
+            } else {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 20);
+              _clamp(cap);
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 20);
+              _msg(
+                "⚠️ 患者后来在别的医院确诊心梗并投诉了你，医务科找你谈话。声誉-20，心理-20。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_night_emergency_crisis",
+      phase: "street",
+      icon: "🚑",
+      title: "午夜急救大出血",
+      story:
+        "凌晨3点，急诊收治了一名严重车祸伤者，多部位复合伤。你刚独立值班，麻醉科和外科主任都在赶来的路上。",
+      probability: 0.03,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "doctor") && _workDays(st) > 365;
+      },
+      choices: [
+        {
+          text: "⚡ 就地紧急处置，建立三路静脉通道",
+          hint: "争分夺秒",
+          apply: function (st) {
+            if (_chance(0.55)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              _msg(
+                "🏆 你沉着处置稳住了患者生命体征！外科主任赶到后说「处理得很专业」。声誉+15。",
+                "success",
+              );
+            } else {
+              _msg(
+                "😰 患者腹腔出血太快，你拼尽全力也只维持了基本循环。主任接手后批评了你的液体管理。",
+                "warning",
+              );
+            }
+            st.player.physique = Math.max(0, (st.player.physique || 30) - 5);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+          },
+        },
+        {
+          text: "📞 持续电话催促主任，保守维持",
+          hint: "安全但缺乏主动性",
+          apply: function (st) {
+            _msg(
+              "📞 主任10分钟后赶到，接手了抢救。患者最终转危为安，但没人夸你也没人骂你。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_medical_license_exam",
+      phase: "street",
+      icon: "📖",
+      title: "执业医师资格考试",
+      story:
+        "医院通知你参加执业医师资格考试。这是从实习医生转为正式医生的必经之路。通过率只有60%，但不过就要再等一年。",
+      probability: 0.025,
+      repeatable: false,
+      conditions: function (st) {
+        return (
+          _path(st, "doctor") &&
+          _workDays(st) > 180 &&
+          st.career.currentJob.id !== "doc_attending"
+        );
+      },
+      choices: [
+        {
+          text: "📚 全职备考一个月",
+          hint: "全力冲刺",
+          apply: function (st) {
+            if (_chance(0.75)) {
+              st.flags = st.flags || {};
+              st.flags._passedMedLicense = true;
+              var certs = st.certificates || [];
+              if (certs.indexOf("medical_license") < 0)
+                certs.push("medical_license");
+              st.certificates = certs;
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+              _msg(
+                "🎉 你通过了执业医师考试！获得医师资格证。从此可以独立行医了！声誉+10。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+              _msg(
+                "😔 差了几分没过。明年再战，这次有了经验会更有把握。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📋 边工作边备考",
+          hint: "平衡但通过率较低",
+          apply: function (st) {
+            if (_chance(0.45)) {
+              st.flags = st.flags || {};
+              st.flags._passedMedLicense = true;
+              var certs = st.certificates || [];
+              if (certs.indexOf("medical_license") < 0)
+                certs.push("medical_license");
+              st.certificates = certs;
+              _msg(
+                "🎉 辛苦了一年，终于通过了执业医师考试！获得医师资格证。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              _msg("📅 太忙了，复习时间不够。下次得全职备考才行。", "info");
+            }
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_conflict_with_pharma",
+      phase: "street",
+      icon: "💊",
+      title: "医药代表拜访",
+      story:
+        "一名医药代表找到你，暗示只要你在处方中多用他们公司的药，每月会有「额外津贴」。这药效果和现有药物差不多，但价格高出三倍。",
+      probability: 0.025,
+      repeatable: false,
+      conditions: function (st) {
+        return (
+          _path(st, "doctor") &&
+          _workDays(st) > 365 &&
+          st.career.currentJob.id !== "doc_intern"
+        );
+      },
+      choices: [
+        {
+          text: "🚫 严词拒绝，并上报医德医风办公室",
+          hint: "坚守原则",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 12);
+            _clamp(cap);
+            _msg(
+              "✅ 你将情况报告了医德办。医院决定在全院通报警示该代表，你的职业道德获得一致好评。声誉+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤫 收下名片但不表态",
+          hint: "不得罪，也不违规",
+          apply: function (st) {
+            _msg(
+              "💼 你收了名片但没有承诺什么。留条后路，但这个圈子比你想象的小。",
+              "info",
+            );
+            var cap = _cap(st);
+            if (cap)
+              cap.industryResources = Math.min(100, cap.industryResources + 3);
+            _clamp(cap);
+          },
+        },
+        {
+          text: "💰 接受合作",
+          hint: "有道德风险",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              st.resources.cash += 3000;
+              _msg(
+                "💸 你每个月多拿了约¥3000「学术费」。你知道这不是完全合规的。",
+                "warning",
+              );
+            } else {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 15);
+              _clamp(cap);
+              _msg(
+                "⚠️ 事情败露了！有人举报了你，医务科找你约谈。声誉-15。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ================================================================
+    //  事业单位路径（public_institution）— v3.11 新增
+    // ================================================================
+    {
+      id: "pi_bianzhi_exam",
+      phase: "street",
+      icon: "📋",
+      title: "编制考试机会",
+      story:
+        "单位通知：2026年度事业编制公开招聘开始报名。你现在的岗位还是合同制，考上编制才能真正稳定下来。",
+      probability: 0.03,
+      repeatable: false,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📚 全力备考事业编考试",
+          hint: "争取铁饭碗",
+          apply: function (st) {
+            if (_chance(0.5)) {
+              st.flags = st.flags || {};
+              st.flags._hasBianzhi = true;
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              st.resources.cash += 5000;
+              _msg(
+                "🎉 你成功考上事业编制！从此有了「铁饭碗」，单位奖励¥5000，声誉+15。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+              _msg(
+                "📖 笔试过了但面试被刷。明年继续，这次攒了经验。心理-10，疲劳+20。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "⏳ 再等等，过两年准备充分了再考",
+          hint: "推迟机会",
+          apply: function (st) {
+            _msg("📅 你决定先积累经验和人脉，等时机成熟再考编。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_assessment_year_end",
+      phase: "street",
+      icon: "📊",
+      title: "年终述职考评",
+      story:
+        "单位年度考核开始了。处长要求每人做5分钟PPT述职。你平时工作勤恳但不善言辞，隔壁工位的小王年年考核第一。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📊 花一周精心准备PPT和数据",
+          hint: "用实力说话",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+              if (st.career.currentJob) {
+                st.career.currentJob.salary = Math.round(
+                  st.career.currentJob.salary * 1.05,
+                );
+              }
+              _msg(
+                "📈 述职结果优秀！处长在大会上表扬了你，年度考核「优秀」，薪资+5%。声誉+8。",
+                "success",
+              );
+            } else {
+              _msg(
+                "📋 述职平稳完成，考核「称职」。你的努力处长看到了，但不善表达还是吃亏。",
+                "info",
+              );
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          },
+        },
+        {
+          text: "🍵 向分管领导提前沟通工作成果",
+          hint: "先做铺垫",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.partnerTrust = Math.min(100, cap.partnerTrust + 5);
+              var score = cap.partnerTrust || 0;
+              _clamp(cap);
+              _msg(
+                "💬 领导提前了解了你全年的工作，述职时帮你补充了几个亮点。考核顺利过关，信任+5。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "😐 随便应付，反正大家都差不多",
+          hint: "表现平平",
+          apply: function (st) {
+            _msg(
+              "📝 你匆匆交了述职报告。考核结果「基本称职」，无功无过。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_policy_writing_opportunity",
+      phase: "street",
+      icon: "📜",
+      title: "参与政策文件起草",
+      story:
+        "处长点名让你参与一项市级政策的起草工作。这是展现能力的好机会，但也意味着连续一段时间的加班和巨大压力。",
+      probability: 0.02,
+      repeatable: false,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 365;
+      },
+      choices: [
+        {
+          text: "✅ 接下任务，全力以赴",
+          hint: "高风险高收益",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              st.resources.cash += 3000;
+              _msg(
+                "🏆 你起草的政策文件获得市领导批示肯定！单位通报表扬，名声大噪。声誉+15，奖金¥3000。",
+                "success",
+              );
+            } else {
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 12);
+              _msg(
+                "📄 政策被退回修改了好几轮。虽然最终通过了，但过程极其痛苦。疲劳+30，心理-12。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🙏 以目前工作已满为由婉拒",
+          hint: "保守稳妥",
+          apply: function (st) {
+            _msg("😮‍💨 你婉拒了。别的同事接了任务，你的生活暂时清净了。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_public_service_campaign",
+      phase: "street",
+      icon: "🤝",
+      title: "社区服务公益活动",
+      story:
+        "单位牵头组织一次社区公益活动——为老年人免费体检和健康咨询。处长希望大家自愿报名参加。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 90;
+      },
+      choices: [
+        {
+          text: "✋ 报名参加，周末去社区服务",
+          hint: "积累群众基础和领导印象",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 6);
+            _clamp(cap);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _msg(
+              "🤝 你在活动中表现积极，社区书记说「这小伙子/姑娘不错」。月末总结被点名表扬。声誉+6，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😐 有事去不了",
+          hint: "不参加也没事",
+          apply: function (st) {
+            _msg(
+              "📋 你没报名，处长也没说什么。但去参加的同事月底得了表扬。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   // 推入全局随机事件池

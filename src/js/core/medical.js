@@ -111,6 +111,13 @@ function startTreatment(state, grade) {
     if (plan) coverage = plan.coverage;
   }
   var actualCost = Math.round(cost * (1 - coverage));
+  // v3.11：医师/护理职业折扣
+  if (typeof getCareerMedicalDiscount === "function") {
+    var careerDiscount = getCareerMedicalDiscount(state);
+    if (careerDiscount > 0) {
+      actualCost = Math.round(actualCost * (1 - careerDiscount));
+    }
+  }
   if ((state.resources.cash || 0) < actualCost)
     return { ok: false, msg: "现金不足，治疗费需¥" + actualCost };
   state.resources.cash -= actualCost;

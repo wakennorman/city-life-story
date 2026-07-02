@@ -31731,6 +31731,470 @@ if (typeof window !== "undefined") {
         },
       ],
     },
+
+    // ================================================================
+    //  医师路径（doctor）— v3.11 新增
+    // ================================================================
+    {
+      id: "doc_misdiagnosis_scare",
+      phase: "street",
+      icon: "🔬",
+      title: "险些误诊",
+      story:
+        "急诊来了一位胸痛患者，心电图为阴性，你差点按一般肌肉拉伤处理。但就在准备让病人回去时，你多看了一眼——氧饱和度偏低。",
+      probability: 0.035,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "doctor") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📋 立即收住院做冠脉CTA",
+          hint: "谨慎为上",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 10);
+            _clamp(cap);
+            _msg(
+              "📋 CTA显示前降支狭窄90%！急诊介入后患者转危为安。患者家属送来锦旗。声誉+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🧪 先做个心梗三项+心电图复查",
+          hint: "保险但可能错过时间窗",
+          apply: function (st) {
+            if (_chance(0.65)) {
+              _msg(
+                "📊 心梗三项果然异常！你紧急呼叫心内科会诊，患者及时接受了治疗。",
+                "success",
+              );
+            } else {
+              _msg(
+                "😰 等待结果时患者病情加重……虽然最终确诊了，但你被主任严厉批评。",
+                "warning",
+              );
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 5);
+              _clamp(cap);
+            }
+          },
+        },
+        {
+          text: "🙏 让患者回家休息，开点止痛药",
+          hint: "轻率决定，有风险",
+          apply: function (st) {
+            if (_chance(0.8)) {
+              _msg(
+                "😅 患者回去了，第二天回来说吃了药好些了。但你一整天都在回想这个病例。",
+                "info",
+              );
+            } else {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 20);
+              _clamp(cap);
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 20);
+              _msg(
+                "⚠️ 患者后来在别的医院确诊心梗并投诉了你，医务科找你谈话。声誉-20，心理-20。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_night_emergency_crisis",
+      phase: "street",
+      icon: "🚑",
+      title: "午夜急救大出血",
+      story:
+        "凌晨3点，急诊收治了一名严重车祸伤者，多部位复合伤。你刚独立值班，麻醉科和外科主任都在赶来的路上。",
+      probability: 0.03,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "doctor") && _workDays(st) > 365;
+      },
+      choices: [
+        {
+          text: "⚡ 就地紧急处置，建立三路静脉通道",
+          hint: "争分夺秒",
+          apply: function (st) {
+            if (_chance(0.55)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              _msg(
+                "🏆 你沉着处置稳住了患者生命体征！外科主任赶到后说「处理得很专业」。声誉+15。",
+                "success",
+              );
+            } else {
+              _msg(
+                "😰 患者腹腔出血太快，你拼尽全力也只维持了基本循环。主任接手后批评了你的液体管理。",
+                "warning",
+              );
+            }
+            st.player.physique = Math.max(0, (st.player.physique || 30) - 5);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+          },
+        },
+        {
+          text: "📞 持续电话催促主任，保守维持",
+          hint: "安全但缺乏主动性",
+          apply: function (st) {
+            _msg(
+              "📞 主任10分钟后赶到，接手了抢救。患者最终转危为安，但没人夸你也没人骂你。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_medical_license_exam",
+      phase: "street",
+      icon: "📖",
+      title: "执业医师资格考试",
+      story:
+        "医院通知你参加执业医师资格考试。这是从实习医生转为正式医生的必经之路。通过率只有60%，但不过就要再等一年。",
+      probability: 0.025,
+      repeatable: false,
+      conditions: function (st) {
+        return (
+          _path(st, "doctor") &&
+          _workDays(st) > 180 &&
+          st.career.currentJob.id !== "doc_attending"
+        );
+      },
+      choices: [
+        {
+          text: "📚 全职备考一个月",
+          hint: "全力冲刺",
+          apply: function (st) {
+            if (_chance(0.75)) {
+              st.flags = st.flags || {};
+              st.flags._passedMedLicense = true;
+              var certs = st.certificates || [];
+              if (certs.indexOf("medical_license") < 0)
+                certs.push("medical_license");
+              st.certificates = certs;
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+              _msg(
+                "🎉 你通过了执业医师考试！获得医师资格证。从此可以独立行医了！声誉+10。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+              _msg(
+                "😔 差了几分没过。明年再战，这次有了经验会更有把握。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📋 边工作边备考",
+          hint: "平衡但通过率较低",
+          apply: function (st) {
+            if (_chance(0.45)) {
+              st.flags = st.flags || {};
+              st.flags._passedMedLicense = true;
+              var certs = st.certificates || [];
+              if (certs.indexOf("medical_license") < 0)
+                certs.push("medical_license");
+              st.certificates = certs;
+              _msg(
+                "🎉 辛苦了一年，终于通过了执业医师考试！获得医师资格证。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              _msg("📅 太忙了，复习时间不够。下次得全职备考才行。", "info");
+            }
+          },
+        },
+      ],
+    },
+
+    {
+      id: "doc_conflict_with_pharma",
+      phase: "street",
+      icon: "💊",
+      title: "医药代表拜访",
+      story:
+        "一名医药代表找到你，暗示只要你在处方中多用他们公司的药，每月会有「额外津贴」。这药效果和现有药物差不多，但价格高出三倍。",
+      probability: 0.025,
+      repeatable: false,
+      conditions: function (st) {
+        return (
+          _path(st, "doctor") &&
+          _workDays(st) > 365 &&
+          st.career.currentJob.id !== "doc_intern"
+        );
+      },
+      choices: [
+        {
+          text: "🚫 严词拒绝，并上报医德医风办公室",
+          hint: "坚守原则",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 12);
+            _clamp(cap);
+            _msg(
+              "✅ 你将情况报告了医德办。医院决定在全院通报警示该代表，你的职业道德获得一致好评。声誉+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤫 收下名片但不表态",
+          hint: "不得罪，也不违规",
+          apply: function (st) {
+            _msg(
+              "💼 你收了名片但没有承诺什么。留条后路，但这个圈子比你想象的小。",
+              "info",
+            );
+            var cap = _cap(st);
+            if (cap)
+              cap.industryResources = Math.min(100, cap.industryResources + 3);
+            _clamp(cap);
+          },
+        },
+        {
+          text: "💰 接受合作",
+          hint: "有道德风险",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              st.resources.cash += 3000;
+              _msg(
+                "💸 你每个月多拿了约¥3000「学术费」。你知道这不是完全合规的。",
+                "warning",
+              );
+            } else {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.max(0, cap.reputation - 15);
+              _clamp(cap);
+              _msg(
+                "⚠️ 事情败露了！有人举报了你，医务科找你约谈。声誉-15。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ================================================================
+    //  事业单位路径（public_institution）— v3.11 新增
+    // ================================================================
+    {
+      id: "pi_bianzhi_exam",
+      phase: "street",
+      icon: "📋",
+      title: "编制考试机会",
+      story:
+        "单位通知：2026年度事业编制公开招聘开始报名。你现在的岗位还是合同制，考上编制才能真正稳定下来。",
+      probability: 0.03,
+      repeatable: false,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📚 全力备考事业编考试",
+          hint: "争取铁饭碗",
+          apply: function (st) {
+            if (_chance(0.5)) {
+              st.flags = st.flags || {};
+              st.flags._hasBianzhi = true;
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              st.resources.cash += 5000;
+              _msg(
+                "🎉 你成功考上事业编制！从此有了「铁饭碗」，单位奖励¥5000，声誉+15。",
+                "success",
+              );
+            } else {
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+              _msg(
+                "📖 笔试过了但面试被刷。明年继续，这次攒了经验。心理-10，疲劳+20。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "⏳ 再等等，过两年准备充分了再考",
+          hint: "推迟机会",
+          apply: function (st) {
+            _msg("📅 你决定先积累经验和人脉，等时机成熟再考编。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_assessment_year_end",
+      phase: "street",
+      icon: "📊",
+      title: "年终述职考评",
+      story:
+        "单位年度考核开始了。处长要求每人做5分钟PPT述职。你平时工作勤恳但不善言辞，隔壁工位的小王年年考核第一。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "📊 花一周精心准备PPT和数据",
+          hint: "用实力说话",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+              if (st.career.currentJob) {
+                st.career.currentJob.salary = Math.round(
+                  st.career.currentJob.salary * 1.05,
+                );
+              }
+              _msg(
+                "📈 述职结果优秀！处长在大会上表扬了你，年度考核「优秀」，薪资+5%。声誉+8。",
+                "success",
+              );
+            } else {
+              _msg(
+                "📋 述职平稳完成，考核「称职」。你的努力处长看到了，但不善表达还是吃亏。",
+                "info",
+              );
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          },
+        },
+        {
+          text: "🍵 向分管领导提前沟通工作成果",
+          hint: "先做铺垫",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.partnerTrust = Math.min(100, cap.partnerTrust + 5);
+              var score = cap.partnerTrust || 0;
+              _clamp(cap);
+              _msg(
+                "💬 领导提前了解了你全年的工作，述职时帮你补充了几个亮点。考核顺利过关，信任+5。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "😐 随便应付，反正大家都差不多",
+          hint: "表现平平",
+          apply: function (st) {
+            _msg(
+              "📝 你匆匆交了述职报告。考核结果「基本称职」，无功无过。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_policy_writing_opportunity",
+      phase: "street",
+      icon: "📜",
+      title: "参与政策文件起草",
+      story:
+        "处长点名让你参与一项市级政策的起草工作。这是展现能力的好机会，但也意味着连续一段时间的加班和巨大压力。",
+      probability: 0.02,
+      repeatable: false,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 365;
+      },
+      choices: [
+        {
+          text: "✅ 接下任务，全力以赴",
+          hint: "高风险高收益",
+          apply: function (st) {
+            if (_chance(0.6)) {
+              var cap = _cap(st);
+              if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
+              _clamp(cap);
+              st.resources.cash += 3000;
+              _msg(
+                "🏆 你起草的政策文件获得市领导批示肯定！单位通报表扬，名声大噪。声誉+15，奖金¥3000。",
+                "success",
+              );
+            } else {
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
+              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 12);
+              _msg(
+                "📄 政策被退回修改了好几轮。虽然最终通过了，但过程极其痛苦。疲劳+30，心理-12。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🙏 以目前工作已满为由婉拒",
+          hint: "保守稳妥",
+          apply: function (st) {
+            _msg("😮‍💨 你婉拒了。别的同事接了任务，你的生活暂时清净了。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "pi_public_service_campaign",
+      phase: "street",
+      icon: "🤝",
+      title: "社区服务公益活动",
+      story:
+        "单位牵头组织一次社区公益活动——为老年人免费体检和健康咨询。处长希望大家自愿报名参加。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "public_institution") && _workDays(st) > 90;
+      },
+      choices: [
+        {
+          text: "✋ 报名参加，周末去社区服务",
+          hint: "积累群众基础和领导印象",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) cap.reputation = Math.min(100, cap.reputation + 6);
+            _clamp(cap);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _msg(
+              "🤝 你在活动中表现积极，社区书记说「这小伙子/姑娘不错」。月末总结被点名表扬。声誉+6，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😐 有事去不了",
+          hint: "不参加也没事",
+          apply: function (st) {
+            _msg(
+              "📋 你没报名，处长也没说什么。但去参加的同事月底得了表扬。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   // 推入全局随机事件池
@@ -40267,6 +40731,13 @@ function startTreatment(state, grade) {
     if (plan) coverage = plan.coverage;
   }
   var actualCost = Math.round(cost * (1 - coverage));
+  // v3.11：医师/护理职业折扣
+  if (typeof getCareerMedicalDiscount === "function") {
+    var careerDiscount = getCareerMedicalDiscount(state);
+    if (careerDiscount > 0) {
+      actualCost = Math.round(actualCost * (1 - careerDiscount));
+    }
+  }
   if ((state.resources.cash || 0) < actualCost)
     return { ok: false, msg: "现金不足，治疗费需¥" + actualCost };
   state.resources.cash -= actualCost;
@@ -41038,6 +41509,14 @@ function fileLawsuit(state, caseId, lawyerId) {
       return l.id === lawyerId;
     }) || LAWYER_LEVELS[0];
   var totalCost = caseData.cost + lawyer.caseFee;
+
+  // v3.11：公务员/事业单位法律费用折扣
+  if (typeof getCareerLegalDiscount === "function") {
+    var legalDiscount = getCareerLegalDiscount(state);
+    if (legalDiscount > 0) {
+      totalCost = Math.round(totalCost * (1 - legalDiscount));
+    }
+  }
 
   if ((state.resources.cash || 0) < totalCost)
     return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
@@ -61558,7 +62037,9 @@ const DAILY_PIPELINE = [
   {
     name: "career_job_daily",
     fn: function (state) {
-      if (typeof tickCareerJobDaily === "function") {
+      if (typeof tickCareerDaily === "function") {
+        tickCareerDaily(state);
+      } else if (typeof tickCareerJobDaily === "function") {
         tickCareerJobDaily(state);
       }
     },
@@ -122597,6 +123078,143 @@ const CAREER_PATHS = {
       },
     ],
   },
+  /**
+   * 👨‍⚕️ 医师路径（v3.11 新增）
+   * 中国医生职称体系：实习→住院→主治→副高→正高
+   * 参考：真实中国医师晋升制度 / BitLife医生职业 / 大多数职业系统
+   * 与 medical.js 联动：医师职业可享受治疗折扣和医疗资源
+   */
+  doctor: {
+    name: "医师",
+    icon: "👨‍⚕️",
+    levels: [
+      {
+        id: "doc_intern",
+        name: "实习医生",
+        minAge: 22,
+        reqSkills: { medicine: 15, english: 10 },
+        reqAttrs: { intelligence: 30, mental: 25 },
+        salary: 4000,
+        reqEducation: 1,
+        desc: "临床轮转、写病历、跟台手术",
+      },
+      {
+        id: "doc_resident",
+        name: "住院医师",
+        minAge: 24,
+        reqSkills: { medicine: 30, english: 15 },
+        reqAttrs: { intelligence: 38, mental: 35, physique: 25 },
+        salary: 8000,
+        reqEducation: 1,
+        reqWorkDays: 365,
+        desc: "独立管床、值夜班、急诊处置",
+      },
+      {
+        id: "doc_attending",
+        name: "主治医师",
+        minAge: 28,
+        reqSkills: { medicine: 50, english: 20, management: 10 },
+        reqAttrs: { intelligence: 48, mental: 45, charm: 25 },
+        salary: 15000,
+        reqEducation: 1,
+        reqWorkDays: 1095,
+        desc: "门诊主诊、带教住院医、科室课题",
+      },
+      {
+        id: "doc_associate_chief",
+        name: "副主任医师",
+        minAge: 33,
+        reqSkills: { medicine: 65, english: 28, management: 25 },
+        reqAttrs: { intelligence: 55, mental: 52, charm: 35 },
+        salary: 25000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "专家门诊、科研课题、亚专科带头人",
+        reqSocial: 40,
+      },
+      {
+        id: "doc_chief",
+        name: "主任医师",
+        minAge: 38,
+        reqSkills: { medicine: 80, english: 30, management: 35 },
+        reqAttrs: { intelligence: 62, mental: 58, charm: 42 },
+        salary: 38000,
+        reqEducation: 1,
+        reqWorkDays: 3650,
+        desc: "科室主任/学科带头人、重大手术、学术领军",
+        reqSocial: 55,
+      },
+    ],
+  },
+  /**
+   * 🏢 事业单位路径（v3.11 新增）
+   * 中国事业编制体系：办事员→科员→副科级→科级→副处级
+   * 参考：真实中国事业编制体系 / 公务员与事业编双轨制
+   * 与 legal.js 联动：公职身份提供法律资源和行政保护
+   */
+  public_institution: {
+    name: "事业单位",
+    icon: "🏢",
+    levels: [
+      {
+        id: "pi_clerk",
+        name: "办事员",
+        minAge: 20,
+        reqSkills: { management: 5 },
+        reqAttrs: { intelligence: 22, mental: 18 },
+        salary: 4500,
+        reqEducation: 1,
+        desc: "窗口服务、文件归档、基础行政",
+      },
+      {
+        id: "pi_officer",
+        name: "科员",
+        minAge: 23,
+        reqSkills: { management: 18, english: 5 },
+        reqAttrs: { intelligence: 30, mental: 25, charm: 20 },
+        salary: 7000,
+        reqEducation: 1,
+        reqWorkDays: 730,
+        desc: "专项工作执行、项目协调、公文起草",
+      },
+      {
+        id: "pi_deputy_section",
+        name: "副科长级",
+        minAge: 27,
+        reqSkills: { management: 32, english: 10 },
+        reqAttrs: { intelligence: 40, mental: 35, charm: 30 },
+        salary: 11000,
+        reqEducation: 1,
+        reqWorkDays: 1460,
+        desc: "分管专项领域、带领小组、政策研究",
+        reqSocial: 30,
+      },
+      {
+        id: "pi_section_chief",
+        name: "科长级",
+        minAge: 32,
+        reqSkills: { management: 45, english: 15, sales: 10 },
+        reqAttrs: { intelligence: 48, mental: 42, charm: 40 },
+        salary: 16000,
+        reqEducation: 1,
+        reqWorkDays: 2190,
+        desc: "部门管理、预算审批、上下协调",
+        reqSocial: 45,
+      },
+      {
+        id: "pi_deputy_div",
+        name: "副处长级",
+        minAge: 38,
+        reqSkills: { management: 58, english: 20, sales: 15 },
+        reqAttrs: { intelligence: 55, mental: 50, charm: 48 },
+        salary: 23000,
+        reqEducation: 1,
+        reqWorkDays: 3650,
+        desc: "分管单位整体业务、政策制定与执行",
+        reqSocial: 55,
+      },
+    ],
+  },
   civil: {
     name: "公务员",
     icon: "🏛️",
@@ -122677,6 +123295,20 @@ function _calcCertSalaryBonus(state, pathId, baseSalary) {
     rate += 0.06;
   if (pathId === "medical" && certs.indexOf("nursing_cert") >= 0) rate += 0.1;
   if (pathId === "medical" && certs.indexOf("psychologist") >= 0) rate += 0.05;
+  // 👨‍⚕️ 医师路径证书加成
+  if (pathId === "doctor" && certs.indexOf("medical_license") >= 0) rate += 0.2;
+  if (pathId === "doctor" && certs.indexOf("english_cert") >= 0) rate += 0.05;
+  if (pathId === "doctor" && certs.indexOf("psychologist") >= 0) rate += 0.06;
+  // 🏢 事业单位证书加成
+  if (
+    pathId === "public_institution" &&
+    certs.indexOf("professional_title_cert") >= 0
+  )
+    rate += 0.1;
+  if (pathId === "public_institution" && certs.indexOf("management_cert") >= 0)
+    rate += 0.06;
+  if (pathId === "public_institution" && certs.indexOf("english_cert") >= 0)
+    rate += 0.05;
   if (pathId === "civil" && certs.indexOf("management_cert") >= 0) rate += 0.06;
   if (pathId === "civil" && certs.indexOf("english_cert") >= 0) rate += 0.05;
   // 通用英语加成（所有路径+3%）
@@ -123032,7 +123664,7 @@ function renderCareerJobs(state, parent) {
   html += getCareerGuidanceHtml(state);
   html += '<h2 style="font-size:15px;">💼 上班族职业路径</h2>';
   html +=
-    '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">v3.2：6条路径×22个职位。晋升需要技能+属性(体质/智力/敏捷/能力/颜值)+人脉。</p>';
+    '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">v3.11：10条路径×42个职位。晋升需要技能+属性+证书+人脉。新增医师路径(👨‍⚕️5级)和事业单位路径(🏢5级)。</p>';
 
   // ---- 当前工作状态 ----
   if (currentJob) {
@@ -123221,7 +123853,7 @@ function renderCareerJobs(state, parent) {
         (meetReqs ? "1" : "0.6") +
         ';" onclick="' +
         (meetReqs
-          ? "applyCareerJob('" + pathKey + "','" + entryLevel.id + "')"
+          ? "enhancedApplyCareerJob('" + pathKey + "','" + entryLevel.id + "')"
           : "") +
         '">';
       html +=
@@ -123246,7 +123878,7 @@ function renderCareerJobs(state, parent) {
         "</div>";
       if (meetReqs) {
         html +=
-          '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历</button>';
+          '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历（含面试）</button>';
       } else {
         html +=
           '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
@@ -124444,19 +125076,327 @@ function tickCareerJobDaily(state) {
   }
 }
 
+// ============================================================
+// 🏥 医疗路径 × 疾病系统 跨系统联动（v3.11）
+// 设计参考：真实医生看病打折 / 《大多数》技能联动 / This War of Mine 职业特长
+// ============================================================
+
+/**
+ * 获取医疗职业的治疗折扣
+ * 医师路径：利用专业知识和人脉获取医疗优惠
+ * 护理路径：利用医院工作福利获取优惠
+ */
+function getCareerMedicalDiscount(state) {
+  if (!state.career || !state.career.currentJob) return 0;
+  var job = state.career.currentJob;
+  // 👨‍⚕️ 医师路径：随职级递增，主任医师可免费治疗自己
+  if (job.path === "doctor") {
+    var discounts = {
+      doc_intern: 0.05,
+      doc_resident: 0.1,
+      doc_attending: 0.18,
+      doc_associate_chief: 0.25,
+      doc_chief: 0.35,
+    };
+    return discounts[job.levelId] || 0;
+  }
+  // 🏥 护理路径：医院工作福利
+  if (job.path === "medical") {
+    var nurseDiscounts = {
+      med_aide: 0.03,
+      med_nurse: 0.08,
+      med_senior_nurse: 0.12,
+      med_head_nurse: 0.18,
+    };
+    return nurseDiscounts[job.levelId] || 0;
+  }
+  return 0;
+}
+
+/**
+ * 医师/护理职业对健康的影响（每日加成）
+ */
+function tickCareerHealthBonus(state) {
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var p = state.player;
+  // 👨‍⚕️ 医师：医学知识带来日常健康维护
+  if (job.path === "doctor") {
+    var medicineLevel =
+      (state.skills && state.skills.medicine && state.skills.medicine.level) ||
+      0;
+    if (medicineLevel >= 20 && Math.random() < 0.3) {
+      state.status = state.status || {};
+      state.status.health = Math.min(100, (state.status.health || 100) + 0.5);
+    }
+  }
+  // 🏥 护理：医疗环境工作，疾病抵抗力更强
+  if (job.path === "medical") {
+    if (Math.random() < 0.2) {
+      state.status = state.status || {};
+      state.status.health = Math.min(100, (state.status.health || 100) + 0.3);
+    }
+  }
+}
+
+// ============================================================
+// ⚖️ 公职路径 × 法律系统 跨系统联动（v3.11）
+// 设计参考：真实中国公务员法律保护 / Papers Please 体制内优势
+// ============================================================
+
+/**
+ * 获取公职人员的法律费用折扣
+ * 公务员/事业单位：通过体制内资源获得法律服务优惠
+ */
+function getCareerLegalDiscount(state) {
+  if (!state.career || !state.career.currentJob) return 0;
+  var job = state.career.currentJob;
+  // 🏛️ 公务员路径
+  if (job.path === "civil") {
+    var civilDiscounts = {
+      civil_clerk: 0.05,
+      civil_officer: 0.1,
+      civil_deputy: 0.18,
+      civil_chief: 0.25,
+    };
+    return civilDiscounts[job.levelId] || 0;
+  }
+  // 🏢 事业单位路径
+  if (job.path === "public_institution") {
+    var piDiscounts = {
+      pi_clerk: 0.03,
+      pi_officer: 0.08,
+      pi_deputy_section: 0.15,
+      pi_section_chief: 0.2,
+      pi_deputy_div: 0.28,
+    };
+    return piDiscounts[job.levelId] || 0;
+  }
+  return 0;
+}
+
+// ============================================================
+// 💼 面试/试用期/解雇机制（v3.11）
+// 设计参考：真实中国职场流程 / BitLife 雇佣系统 / Papers Please 绩效压力
+// ============================================================
+
+/**
+ * 获取试用期剩余天数（入职前90天为试用期，薪资80%）
+ */
+function getProbationRemaining(state) {
+  if (!state.career || !state.career.currentJob) return 0;
+  var job = state.career.currentJob;
+  var workDays = job.workDays || 0;
+  return Math.max(0, 90 - workDays);
+}
+
+function isInProbation(state) {
+  return getProbationRemaining(state) > 0;
+}
+
+/**
+ * 计算实际工资（试用期只发80%）
+ */
+function calcActualSalary(state) {
+  if (!state.career || !state.career.currentJob) return 0;
+  var job = state.career.currentJob;
+  var base = job.salary || 0;
+  if (isInProbation(state)) {
+    return Math.round(base * 0.8);
+  }
+  return base;
+}
+
+/**
+ * 每日检视解雇条件
+ * 连续30天业绩低于20将被解雇
+ */
+function tickCareerFiringRisk(state) {
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var perf = job.performance || 50;
+  if (perf < 20) {
+    job._lowPerfDays = (job._lowPerfDays || 0) + 1;
+  } else {
+    job._lowPerfDays = 0;
+  }
+  if ((job._lowPerfDays || 0) >= 30) {
+    StateManager.addMessage(
+      "⚠️ 因长期业绩不达标，你被公司解雇了！职场不相信眼泪。",
+      "danger",
+    );
+    state.career.history.push({
+      day: state.player.day,
+      event: "因业绩不达标被解雇（" + job.levelName + "）",
+    });
+    state.career.currentJob = null;
+    if (typeof renderAll === "function") renderAll();
+  }
+}
+
+/**
+ * 为applyCareerJob增加面试检查和试用期
+ * 在原有入职流程中嵌入
+ */
+function enhancedApplyCareerJob(pathId, levelId) {
+  var state = StateManager.getState();
+  var path = CAREER_PATHS[pathId];
+  if (!path) {
+    StateManager.addMessage("⚠️ 该职业路径不存在", "warning");
+    return;
+  }
+  var level = path.levels.find(function (l) {
+    return l.id === levelId;
+  });
+  if (!level) return;
+
+  // --- 面试检测 ---
+  var meetReqs = checkCareerPromotion(state, pathId, level);
+  if (!meetReqs) {
+    StateManager.addMessage("⚠️ 你不满足该职位的条件，面试失败", "warning");
+    return;
+  }
+
+  // --- 面试成功率：基于属性+技能 ---
+  var interviewChance = 0.7;
+  if (level.reqAttrs) {
+    for (var a in level.reqAttrs) {
+      var p = state.player;
+      var attrVal = p[a] || 0;
+      var req = level.reqAttrs[a];
+      if (attrVal >= req * 1.5) interviewChance += 0.05;
+      else if (attrVal < req) interviewChance -= 0.15;
+    }
+  }
+  interviewChance = Math.max(0.3, Math.min(0.95, interviewChance));
+
+  var randVal =
+    typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+  if (randVal > interviewChance) {
+    StateManager.addMessage(
+      "📄 面试未通过。" + level.name + "的竞争很激烈，继续提升自己再来试试。",
+      "warning",
+    );
+    return;
+  }
+
+  // --- 原有入职流程 ---
+  if (!state.career) state.career = { currentJob: null, history: [] };
+  var cap = ensureCareerCapital(state);
+  if (state.career.currentJob) {
+    StateManager.addMessage(
+      "⚠️ 你已经有工作了，先辞职才能投递新职位",
+      "warning",
+    );
+    return;
+  }
+
+  state.career.currentJob = {
+    path: pathId,
+    levelId: levelId,
+    levelName: level.name,
+    salary: level.salary,
+    workDays: 0,
+    startDay: state.player.day,
+    performance: 50,
+  };
+  if (typeof initCareerColleagues === "function") {
+    initCareerColleagues(state);
+  }
+  cap.reputation = (cap.reputation || 0) + 2;
+  cap.industryResources = (cap.industryResources || 0) + 1;
+  clampCareerCapital(cap);
+
+  var probationMsg = isInProbation(state)
+    ? "（前90天为试用期，薪资按80%发放）"
+    : "";
+
+  StateManager.addMessage(
+    "✅ 面试通过！入职成功！你成为" +
+      getCareerPathLabel(pathId) +
+      "的" +
+      level.name +
+      "，月薪¥" +
+      level.salary.toLocaleString() +
+      probationMsg,
+    "success",
+  );
+
+  if (typeof renderAll === "function") renderAll();
+}
+
+/**
+ * 每日职业综合tick（v3.11：含健康加成+解雇检查+试用期提示）
+ * 由 daily_pipeline 的 career_tick 步骤调用
+ */
+function tickCareerDaily(state) {
+  tickCareerJobDaily(state);
+  // 跨系统：医师/护理健康加成
+  if (typeof tickCareerHealthBonus === "function") {
+    tickCareerHealthBonus(state);
+  }
+  // 雇佣安全：解雇检测
+  if (typeof tickCareerFiringRisk === "function") {
+    tickCareerFiringRisk(state);
+  }
+  // 试用期提示
+  if (state.career && state.career.currentJob) {
+    var probRemain = getProbationRemaining(state);
+    if (probRemain > 0 && probRemain % 30 === 0 && probRemain < 90) {
+      StateManager.addMessage(
+        "📋 试用期还剩" + probRemain + "天，转正后薪资将恢复100%。",
+        "info",
+      );
+    }
+  }
+  // 医师职业证书自动获取（满365天实习医生自动获资格）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    state.career.currentJob.path === "doctor"
+  ) {
+    var job = state.career.currentJob;
+    var wd = job.workDays || 0;
+    var certs = state.certificates || [];
+    if (
+      wd >= 365 &&
+      certs.indexOf("medical_license") < 0 &&
+      job.levelId !== "doc_intern"
+    ) {
+      certs.push("medical_license");
+      state.certificates = certs;
+      StateManager.addMessage(
+        "🎓 获得医师资格证！正式执业资格已解锁。",
+        "success",
+      );
+    }
+  }
+}
+
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.ensureCareerCapital = ensureCareerCapital;
   window.getCareerCapitalStartupDiscount = getCareerCapitalStartupDiscount;
   window.getStartupReadinessNote = getStartupReadinessNote;
+  // v3.11 跨系统联动暴露
+  window.getCareerMedicalDiscount = getCareerMedicalDiscount;
+  window.getCareerLegalDiscount = getCareerLegalDiscount;
+  window.tickCareerDaily = tickCareerDaily;
+  window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.career_dev = {
     id: "career_dev",
     name: "事业发展",
     icon: "🚀",
-    brief: "创业系统 + 上班族职业路径，从基层到高管的完整职业生涯",
-    version: "1.0.0",
-    related: ["mechanics:startup_system", "mechanics:workplace_social"],
+    brief:
+      "创业系统 + 上班族职业路径（10路径×42职位），从基层到高管的完整职业生涯",
+    version: "3.11.0",
+    related: [
+      "mechanics:startup_system",
+      "mechanics:workplace_social",
+      "mechanics:medical",
+      "mechanics:legal",
+    ],
     sections: [
       {
         kind: "desc",
@@ -124473,6 +125413,15 @@ if (typeof window !== "undefined") {
           "📊 金融财务：财务助理→会计/分析师→高级分析师→财务经理",
           "💼 销售市场：销售助理→销售代表→高级销售→销售经理",
           "⚙️ 运营管理：运营助理→运营专员→运营主管→运营经理",
+          "🎨 设计创意：初级设计师→资深设计师→设计主管→创意总监",
+          "⚖️ 法律服务：法务助理→法务专员→高级法务→法务总监",
+          "🏫 教育培训：教学助理→教师→骨干教师→副校长/校长",
+          "🚚 物流快递：仓储分拣→快递员→站点主管→区域运营经理",
+          "🍜 餐饮服务：服务员→厨师→厨师长→餐厅店长",
+          "🏥 医疗护理：护理员→注册护士→主管护师→护士长",
+          "👨‍⚕️ 医师：实习医生→住院医师→主治医师→副主任医师→主任医师",
+          "🏢 事业单位：办事员→科员→副科长级→科长级→副处长级",
+          "🏛️ 公务员：基层公务员→科员→副科长→科长",
         ],
       },
       {

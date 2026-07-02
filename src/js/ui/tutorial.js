@@ -22,7 +22,10 @@ function isTutorialDone() {
   try {
     if (localStorage.getItem(_tutorialKey()) === "1") return true;
     // 兼容旧key：经典模式下若已完成旧key也算完成
-    if (!_currentTutorialScenarioId || _currentTutorialScenarioId === "classic") {
+    if (
+      !_currentTutorialScenarioId ||
+      _currentTutorialScenarioId === "classic"
+    ) {
       return localStorage.getItem(TUTORIAL_KEY) === "1";
     }
     return false;
@@ -36,7 +39,10 @@ function markTutorialDone() {
   try {
     localStorage.setItem(_tutorialKey(), "1");
     // 兼容：经典模式同时标记旧key
-    if (!_currentTutorialScenarioId || _currentTutorialScenarioId === "classic") {
+    if (
+      !_currentTutorialScenarioId ||
+      _currentTutorialScenarioId === "classic"
+    ) {
       localStorage.setItem(TUTORIAL_KEY, "1");
     }
   } catch (e) {
@@ -63,10 +69,12 @@ function resetTutorial() {
 function startTutorial() {
   // 检测当前剧本
   try {
-    var st = typeof StateManager !== "undefined" ? StateManager.getState() : null;
-    var sid = st && st.flags && st.flags._currentScenario
-      ? st.flags._currentScenario
-      : "classic";
+    var st =
+      typeof StateManager !== "undefined" ? StateManager.getState() : null;
+    var sid =
+      st && st.flags && st.flags._currentScenario
+        ? st.flags._currentScenario
+        : "classic";
     _currentTutorialScenarioId = sid;
   } catch (e) {
     _currentTutorialScenarioId = "classic";
@@ -75,17 +83,18 @@ function startTutorial() {
   if (isTutorialDone()) return;
 
   // 选择剧本专属步骤（找不到则回退到经典模式）
-  var steps = SCENARIO_TUTORIAL_STEPS[_currentTutorialScenarioId]
-    || SCENARIO_TUTORIAL_STEPS["classic"];
+  var steps =
+    SCENARIO_TUTORIAL_STEPS[_currentTutorialScenarioId] ||
+    SCENARIO_TUTORIAL_STEPS["classic"];
   showTutorialStep(steps, 0);
 }
 
 // ====== 沙盒/经典模式 经典步骤（v3.0 原版） ======
 // 保留在此供 SCENARIO_TUTORIAL_STEPS["classic"] 引用
 var _CLASSIC_STEPS = [
-    {
-      title: "🏙️ 你来到这座城市",
-      body: `
+  {
+    title: "🏙️ 你来到这座城市",
+    body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——2003年，春天。</p>
         <p style="line-height:1.85;font-size:13px;color:var(--text-primary);">
           你背着一个蛇皮袋从绿皮火车上走下来。<br>
@@ -104,67 +113,67 @@ var _CLASSIC_STEPS = [
           💡 每天行动力有限，怎么用——决定你能成为谁。
         </p>
       `,
-      highlight: null,
-      waitForClick: null,
-    },
-    {
-      title: "📊 左侧是你的状态面板",
-      body: `
+    highlight: null,
+    waitForClick: null,
+  },
+  {
+    title: "📊 左侧是你的状态面板",
+    body: `
         <p><strong>4维属性</strong>：体质、智力、敏捷、心智 — 影响工作和学习效率</p>
         <p><strong>4项需求</strong>：饥饱、疲劳、卫生、心情 — 低于30会触发危险提示</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong> 任意位置继续</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
-    },
-    {
-      title: "🏘️ 你在城中村，这是你的起点",
-      body: `
+    highlight: "#sidebar",
+    waitForClick: "#sidebar",
+  },
+  {
+    title: "🏘️ 你在城中村，这是你的起点",
+    body: `
         <p>每个地点有不同的 <strong>工作机会</strong> 和 <strong>商品价格</strong></p>
         <p>点击行动卡片上的 <strong>"前往 XX"</strong> 可移动到其他地点</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击下方 <strong>行动区</strong> 任意位置继续</p>
       `,
-      highlight: "#content-area",
-      waitForClick: "#content-area",
-    },
-    {
-      title: "🗑️ 试试第一次赚钱",
-      body: `
+    highlight: "#content-area",
+    waitForClick: "#content-area",
+  },
+  {
+    title: "🗑️ 试试第一次赚钱",
+    body: `
         <p>点击下方的 <strong>"废品回收"</strong> 行动卡片开始工作</p>
         <p>每次行动都会消耗行动力，耗尽后结束一天</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>废品回收</strong> 行动卡片（高亮处）继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">💡 前15天废品回收有新人加成+¥5</p>
       `,
-      highlight: '[data-action-id="waste_recycling"]',
-      waitForClick: '[data-action-id="waste_recycling"]',
-      hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
-    },
-    {
-      title: "🍚 吃饱了才有力气干活",
-      body: `
+    highlight: '[data-action-id="waste_recycling"]',
+    waitForClick: '[data-action-id="waste_recycling"]',
+    hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
+  },
+  {
+    title: "🍚 吃饱了才有力气干活",
+    body: `
         <p>赚到钱后点 <strong>"吃顿饭"</strong> 补充饥饱</p>
         <p style="color:var(--success);font-size:11px;">💡 新人福利：前10天吃饭只要¥5（平时¥10）</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>吃顿饭</strong> 行动卡片继续</p>
         <p style="color:var(--text-secondary);font-size:11px;">每天结束会自动扣房租、算利息、更新天气</p>
       `,
-      highlight: '[data-action-id="eat"]',
-      waitForClick: '[data-action-id="eat"]',
-      hint: "吃顿饭通常和废品回收一样在行动卡片列表里。",
-    },
-    {
-      title: "🗺️ 查看地图探索城市",
-      body: `
+    highlight: '[data-action-id="eat"]',
+    waitForClick: '[data-action-id="eat"]',
+    hint: "吃顿饭通常和废品回收一样在行动卡片列表里。",
+  },
+  {
+    title: "🗺️ 查看地图探索城市",
+    body: `
         <p>点击顶部 <strong>"🗺️ 地图"</strong> 标签查看城市全景</p>
         <p>地图显示所有地点、旅行路线和当前所在位置</p>
         <p style="color:var(--accent);font-size:11px;">💡 最快赚钱路线：批发市场进货 → 商业区卖出赚差价！</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击顶部 <strong>🗺️ 地图</strong> 标签按钮继续</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
-    },
-    {
-      title: "🎯 准备好了——出发！",
-      body: `
+    highlight: '[data-tab="map"]',
+    waitForClick: '[data-tab="map"]',
+  },
+  {
+    title: "🎯 准备好了——出发！",
+    body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🎯 今天先做这3件事：</p>
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
           <div style="font-size:12px;padding:3px 0;">💵 去捡废品赚到¥100</div>
@@ -179,21 +188,20 @@ var _CLASSIC_STEPS = [
         </p>
         <p style="color:var(--success);font-size:12px;margin-top:8px;">祝你在这座城市混出名堂！🏆</p>
       `,
-      highlight: null,
-      waitForClick: null,
-    },
-  ];
+    highlight: null,
+    waitForClick: null,
+  },
+];
 
 // ====== 所有剧本的专属新手引导步骤 v4.0 ======
 // 设计参考：BitLife即时钩子 / Papers Please第一天压力任务 / Stardew Valley目标锚定
 // 每个剧本：开场钩子→你的处境→你的优势→今天的行动→3天目标→出发
 var SCENARIO_TUTORIAL_STEPS = {
-
   // ── 经典：城市务工者 ──────────────────────────────────────────────
-  "classic": _CLASSIC_STEPS,
+  classic: _CLASSIC_STEPS,
 
   // ── 下岗再就业者 ──────────────────────────────────────────────────
-  "laid_off": [
+  laid_off: [
     {
       title: "🏭 十五年，一纸通知",
       body: `
@@ -282,7 +290,7 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 
   // ── 小镇做题家 ────────────────────────────────────────────────────
-  "small_town_grinder": [
+  small_town_grinder: [
     {
       title: "📚 全村第一个大学生",
       body: `
@@ -366,7 +374,7 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 
   // ── 外来打工者 ────────────────────────────────────────────────────
-  "foreign_worker": [
+  foreign_worker: [
     {
       title: "🌏 离家千里，为了那点工资差价",
       body: `
@@ -449,7 +457,7 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 
   // ── 二代创业者 ────────────────────────────────────────────────────
-  "second_gen": [
+  second_gen: [
     {
       title: "💎 有钱，但不知道怎么用",
       body: `
@@ -534,7 +542,7 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 
   // ── 中年危机职场人 ────────────────────────────────────────────────
-  "midlife_crisis": [
+  midlife_crisis: [
     {
       title: "👔 35岁，被裁那天",
       body: `
@@ -617,7 +625,7 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 
   // ── 应届毕业生 ────────────────────────────────────────────────────
-  "fresh_grad": [
+  fresh_grad: [
     {
       title: "🎓 第一次靠自己",
       body: `
@@ -1513,7 +1521,9 @@ var DYNAMIC_HINTS = [
       return (
         st.flags._isScenarioMode &&
         st.flags._currentScenario === "foreign_worker" &&
-        st.skills && st.skills.welding && st.skills.welding.level >= 15 &&
+        st.skills &&
+        st.skills.welding &&
+        st.skills.welding.level >= 15 &&
         !st.flags._hint_foreign_worker_skill_up
       );
     },

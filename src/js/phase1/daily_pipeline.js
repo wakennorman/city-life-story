@@ -490,7 +490,9 @@ const DAILY_PIPELINE = [
   {
     name: "career_job_daily",
     fn: function (state) {
-      if (typeof tickCareerJobDaily === "function") {
+      if (typeof tickCareerDaily === "function") {
+        tickCareerDaily(state);
+      } else if (typeof tickCareerJobDaily === "function") {
         tickCareerJobDaily(state);
       }
     },

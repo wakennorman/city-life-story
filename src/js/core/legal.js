@@ -120,6 +120,14 @@ function fileLawsuit(state, caseId, lawyerId) {
     }) || LAWYER_LEVELS[0];
   var totalCost = caseData.cost + lawyer.caseFee;
 
+  // v3.11：公务员/事业单位法律费用折扣
+  if (typeof getCareerLegalDiscount === "function") {
+    var legalDiscount = getCareerLegalDiscount(state);
+    if (legalDiscount > 0) {
+      totalCost = Math.round(totalCost * (1 - legalDiscount));
+    }
+  }
+
   if ((state.resources.cash || 0) < totalCost)
     return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
 
