@@ -2513,6 +2513,14 @@ function renderActionsTab(state, parent) {
     }
   }
 
+  // === 人生旅程弧 + 今日目标卡（v3.11：解决"不知道干什么"留存痛点）===
+  if (typeof renderLifeArcStrip === "function") {
+    renderLifeArcStrip(state, parent);
+  }
+  if (typeof renderDailyQuestCard === "function") {
+    renderDailyQuestCard(state, parent);
+  }
+
   // === 今日智能建议（心智驱动，不限数量，滚动展示）===
   {
     var tips = getDailyActionTips(state);
