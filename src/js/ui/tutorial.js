@@ -1150,6 +1150,20 @@ var DYNAMIC_HINTS = [
       "💡 提示：智力达到35！培训中心的课程学得更快了，再提升到45就能应聘互联网职场。或者累计打工200天+总收入¥5000也能凭经验入场。",
   },
   {
+    id: "first_trade_margin",
+    trigger: function (st) {
+      return (
+        st.player.day >= 15 &&
+        st.trade &&
+        st.flags._visitedWholesaleMarket &&
+        st.flags._visitedCommercialDist &&
+        !st.flags._hint_trade_margin
+      );
+    },
+    message:
+      "💰 批发市场的价格比商业区低30-50%！在批发市场进货再到商业区卖出，利润可观。试试看？",
+  },
+  {
     id: "first_skill_30",
     trigger: function (st) {
       var skills = st.skills || {};
