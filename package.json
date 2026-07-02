@@ -13,7 +13,8 @@
     "check:js": "node scripts/check-js-syntax.mjs",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "build:legacy": "python build.py",
-    "deploy": "npm run build:legacy && npm run verify:deploy && echo '✅ 构建+校验通过，可 push 触发 Netlify 部署'"
+    "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
+    "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist"
   },
   "devDependencies": {
     "typescript": "6.0.3",

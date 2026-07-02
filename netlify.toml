@@ -1,12 +1,16 @@
-# ── Netlify 部署配置（版本控制，杜绝 build/publish 目录错配） ─────────────────
+# ── Netlify 部署配置 ───────────────────────────────────────────────────────────
 #
-#   工作流：push → Netlify 运行 build.command → 产物输出到 dist/ → 发布 dist/
-#   dist/ 在 .gitignore 中（不入库），每次部署都是干净构建。
+#   本项目不走 Netlify CI/CD（GitHub webhook 被 strict contributor verification
+#   拦截）。部署流程为本地构建 + `netlify deploy` 直接推送：
 #
-#   本地验证：npm run deploy  （= build:legacy + verify:deploy）
+#     npm run deploy   →  python build.py → dist/index.html
+#                      →  verify:deploy（校验产物）
+#                      →  netlify deploy --dir=dist --prod（直推 CDN）
+#
+#   此文件保留供 `netlify deploy` CLI 读取配置，不再用于 CI 自动构建。
 
 [build]
-  command = "npm run build:legacy && npm run verify:deploy"
+  command = "npm run build:legacy"
   publish = "dist"
 
 [build.environment]
