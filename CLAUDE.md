@@ -73,7 +73,16 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：滚动锚定修复 — 连续点击买到错位物品（2026-07-02）
+- **最新一次工作**：移动端顶栏三行重组 + 状态条显性化（2026-07-02，按 v3.1 审查改进触发）
+  - **问题**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性被隐藏；顶部栏"日期/城市浮生记 v1.0"与时间槽重复且挤占关键数值位置；现金被挤到后面需横划才能看到
+  - **移动端三行顶栏**：顶栏 [☰][💰][💸] / 时间槽 [📅 第N天 | ☀️ 时段 ⚡AP] / 状态条 [🎒 X/Y · 🌃 住所（💡升级提示）][🏙️ 品牌]
+  - `render.js`：新增 `renderTitleBar` + `renderLocationBar`，`renderTimeSlot` 去掉背包/住址包袱
+  - `style.css` <= 768px：折叠 `.header-logo/.header-context/.header-day` 等，显性化现金欠款色带；>= 769px 隐藏两条移动端专属行，保持桌面三层原装
+  - 新增 `memory/review-improve-v3.1.md` 完整的 v3.1 审查 SOP（CLAUDE.md 触发短语引用的缺失文件）、`memory/mobile-design-principles.md` 沉淀 mob-first 顶栏三行范式
+  - **设计参考**：Apple HIG 状态栏、Material 3 顶栏、BitLife/Mostly 手机端信息层级、中式文字生存布局
+  - **验证**：`check:js`(116) / `typecheck` / `build.py`(4500.5KB) / `npm run build` 全过；commit: `1ca6a85`；已 push 到 origin/main（用户明确要求）
+  - **SOP 自评**：v3.1 审查 SOP 已落地首次实战；下一代可增加"留存 A/B 模拟测试"维度
+- **上一轮工作**：滚动锚定修复 — 连续点击买到错位物品（2026-07-02）
   - **问题**：交易页每次购买/卖出后 `renderCurrentTab` 整体重建把 scrollTop 归零，"背包区"出现/消失推走市场格子，光标漂到上一项，连点就买错
   - **render.js +107/-8**：三套滚动锚定 — 精确 goodId 锚定（交易页）/ 通用首张 `.action-card` 锚定（行动/技能 tab）/ 内层滚动容器 scrollTop 保存恢复（事业 tab）
   - **其他 tab 排查**：行动/技能/事业已覆盖；社交/投资/地图/人生事务等审计安全
