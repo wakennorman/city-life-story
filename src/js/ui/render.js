@@ -1181,9 +1181,65 @@ const TAB_RENDERERS = {
   wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
 };
 
+// ====== 通用滚动锚定辅助函数 ======
+// 返回当前在 #content-area 视口内、位置最靠上的那张 .action-card 的屏幕 top，
+// 作为通用锚点（不含 goodId 时使用，覆盖行动/技能等 tab）。没有则返回 null。
+function _firstVisibleActionCardTop(area) {
+  var cards = area.querySelectorAll(".action-card");
+  if (!cards.length) return null;
+  var areaTop = area.getBoundingClientRect().top;
+  for (var i = 0; i < cards.length; i++) {
+    var t = cards[i].getBoundingClientRect().top;
+    if (t >= areaTop - 1) return t; // 首张位于（或刚好没过）容器顶的卡片
+  }
+  // 全部卡片滚到上方视口外时，回退到首张卡片
+  return cards[0].getBoundingClientRect().top;
+}
+
 // ====== Tab Content 渲染 ======
-function renderCurrentTab(state) {
+// anchorGoodId（可选，仅交易页）: 传入被操作商品的 id。
+// 重绘后通过滚动锚定把目标卡片拉回重绘前的视口位置，避免上方区块出现/消失
+// 把内容推离光标导致连点错位。
+//   - 传入 anchorGoodId：精确定位到该商品所在卡片（交易页专用）；
+//   - 未传入：自动锚定首张可见 .action-card（行动/技能等 tab 通用）。
+function renderCurrentTab(state, anchorGoodId) {
   const area = document.getElementById("content-area");
+
+  // ===== 阶段一（重绘前）：保存滚动状态 =====
+  // 1. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移，交易/行动/技能 tab）
+  var anchorOldCardScreenTop = null;
+  var useSpecific = false;
+  if (anchorGoodId) {
+    // 精确定位：锚定用户刚点击的那张商品卡片（交易页）
+    var oldCardEl = area.querySelector(
+      '#trade-market-grid [data-good="' + anchorGoodId + '"]',
+    );
+    var oldActionCard =
+      oldCardEl && oldCardEl.closest ? oldCardEl.closest(".action-card") : null;
+    if (oldActionCard) {
+      anchorOldCardScreenTop = oldActionCard.getBoundingClientRect().top;
+      useSpecific = true;
+    }
+  }
+  if (anchorOldCardScreenTop === null) {
+    // 通用定位：锚定首张可见的 .action-card（行动/技能等 tab）
+    anchorOldCardScreenTop = _firstVisibleActionCardTop(area);
+  }
+
+  // 2. 内层滚动容器 scrollTop 备份（事业 tab 等拥有独立内层滚动容器的情况）
+  var innerScrollRestore = null;
+  for (var _ci = 0; _ci < area.children.length; _ci++) {
+    var _child = area.children[_ci];
+    var _oy =
+      _child.style && _child.style.overflowY
+        ? _child.style.overflowY
+        : getComputedStyle(_child).overflowY;
+    if ((_oy === "auto" || _oy === "scroll") && _child.scrollTop > 0) {
+      innerScrollRestore = { childIndex: _ci, scrollTop: _child.scrollTop };
+      break;
+    }
+  }
+
   area.innerHTML = "";
 
   // 时间槽指示器
@@ -1216,6 +1272,44 @@ function renderCurrentTab(state) {
     }
   } else {
     area.innerHTML += '<p style="color:var(--text-muted)">📌 开发中...</p>';
+  }
+
+  // ===== 阶段二（重绘后）：恢复滚动状态 =====
+  // 1. 恢复内层滚动容器 scrollTop（优先执行，修正 #content-area 自身的 scrollTop）
+  if (innerScrollRestore) {
+    var newChild = area.children[innerScrollRestore.childIndex];
+    if (newChild) {
+      var newOy =
+        newChild.style && newChild.style.overflowY
+          ? newChild.style.overflowY
+          : getComputedStyle(newChild).overflowY;
+      if (newOy === "auto" || newOy === "scroll") {
+        newChild.scrollTop = innerScrollRestore.scrollTop;
+      }
+    }
+  }
+
+  // 2. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移）
+  if (anchorOldCardScreenTop === null) return;
+
+  var newCardScreenTop;
+  if (useSpecific) {
+    var newCardEl = area.querySelector(
+      '#trade-market-grid [data-good="' + anchorGoodId + '"]',
+    );
+    var newActionCard =
+      newCardEl && newCardEl.closest ? newCardEl.closest(".action-card") : null;
+    if (!newActionCard) return; // 商品不再显示，放弃锚定
+    newCardScreenTop = newActionCard.getBoundingClientRect().top;
+  } else {
+    newCardScreenTop = _firstVisibleActionCardTop(area);
+    if (newCardScreenTop === null) return; // 新页面没有卡片，放弃锚定
+  }
+  var delta = newCardScreenTop - anchorOldCardScreenTop;
+  if (delta !== 0) {
+    area.scrollTop += delta;
+    // 防止上方区块缩小时滚到负值
+    if (area.scrollTop < 0) area.scrollTop = 0;
   }
 }
 
@@ -3622,6 +3716,7 @@ function renderTradeTab(state, parent) {
 
   const grid = document.createElement("div");
   grid.className = "action-cards";
+  grid.id = "trade-market-grid";
   grid.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
 
   for (const good of goodsList) {
@@ -3929,7 +4024,8 @@ function renderTradeTab(state, parent) {
             st.stats.tradeFreq[goodId] =
               (st.stats.tradeFreq[goodId] || 0) + qty;
           }
-          renderCurrentTab(st, parent.parentElement);
+          // 传入 goodId 作为滚动锚点，避免重绘后布局伸缩导致光标错位
+          renderCurrentTab(st, goodId);
           renderSidebar(st);
           renderHeader(st);
           renderMessageLog(st);
@@ -3937,7 +4033,7 @@ function renderTradeTab(state, parent) {
       });
     });
 
-    // 批发按钮
+    // 批发按钮（与买1/买5 同路径：带锚定重绘，UI 一致且不跳位）
     parent.querySelectorAll(".wholesale-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -3950,7 +4046,10 @@ function renderTradeTab(state, parent) {
             st.stats.tradeFreq[goodId] =
               (st.stats.tradeFreq[goodId] || 0) + qty;
           }
-          renderMessageLog(StateManager.getState());
+          renderCurrentTab(st, goodId);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
         }
       });
     });
@@ -3966,7 +4065,7 @@ function renderTradeTab(state, parent) {
           if (st && st.stats) {
             st.stats.tradeFreq[goodId] = (st.stats.tradeFreq[goodId] || 0) + 1;
           }
-          renderCurrentTab(st, parent.parentElement);
+          renderCurrentTab(st, goodId);
           renderSidebar(st);
           renderHeader(st);
           renderMessageLog(st);
@@ -3986,7 +4085,7 @@ function renderTradeTab(state, parent) {
             st.stats.tradeFreq[goodId] =
               (st.stats.tradeFreq[goodId] || 0) + item.qty;
           }
-          renderCurrentTab(st, parent.parentElement);
+          renderCurrentTab(st, goodId);
           renderSidebar(st);
           renderHeader(st);
           renderMessageLog(st);
@@ -4191,7 +4290,7 @@ function renderTradeTab(state, parent) {
           toggle.style.background = "";
         }
 
-        renderCurrentTab(StateManager.getState(), parent.parentElement);
+        renderCurrentTab(StateManager.getState(), goodId);
         renderSidebar(StateManager.getState());
         renderHeader(StateManager.getState());
         renderMessageLog(StateManager.getState());
@@ -4214,7 +4313,7 @@ function renderTradeTab(state, parent) {
             result.message,
             result.success ? "success" : "warning",
           );
-          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderCurrentTab(StateManager.getState());
           renderSidebar(StateManager.getState());
           renderHeader(StateManager.getState());
           renderMessageLog(StateManager.getState());
