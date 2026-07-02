@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-02（滚动锚定修复 — 连续点击买到错位物品）
+> 最后更新: 2026-07-03（移动端顶栏精简 + 阶段文案动态化）
 
 ---
 
@@ -26,6 +26,36 @@
 - [ ] 逐剧本过一遍触发路径，无断链
 
 > **背景**：第11轮（2026-07-02）发现 tutorial.js 所有剧本共用经典模式步骤，导致换剧本后引导完全失效。此类缺陷根因是"只想着 classic"。多剧本适配是**交付门槛**，不是加分项。
+
+---
+
+## 2026-07-03 — 移动端顶栏精简 + 阶段文案动态化
+
+> 需求来源：用户反馈移动端顶栏信息重复、空间浪费；阶段提示"还清债务"不适用于无债剧本。
+> 影响文件：`src/js/ui/render.js`、`src/js/ui/daily_quest.js`、`src/css/style.css`、`src/index.html`
+
+### 已上线（netlify 直推，deploy `6a46aef993084a6387c2001a`）
+
+1. **移除移动端顶部标题行**（`renderTitleBar` 函数删除 + 调用删除）
+   - 品牌号「🏙️ 城市浮生记 v1.0」移至侧栏底部 `.sidebar-version-footer`
+   - 桌面端 sidebar footer 隐藏（header 已有 `.header-logo`）
+2. **隐藏顶部重复的「露宿街头」紧急提示**（`renderTitleBar` 内的 tier===0 && day>3 提示整组删掉）
+   - `renderLocationBar` 已含完整住所信息，无重复
+3. **位置+背包行（🎒 X/Y · 🌃 住所 💡升级提示）上移一行**
+   - 移除 `renderTitleBar` 调用后，`renderLocationBar` 自然上移至时间槽下方
+   - 间隔收紧：gap 8px→4px，padding 4/12→3/8，margin-bottom 6→4
+   - 住所名+升级提示组成 `rightGroup`（gap:2px，margin-left:auto 右对齐）
+   - 升级提示与住所名紧贴，不单独占右侧全区
+4. **状态条（属性+需求）标签由单字恢复为两字**
+   - 属性行：体/智/敏/心/魅 → 体质/智力/敏捷/心智/魅力
+   - 需求行：饿/疲/卫/情/健 → 饥饿/疲劳/卫生/心情/健康
+   - 视觉放大：label width 16→26px，font-size 9→10px，track height 4→5px
+   - mss-cell padding/gap 放大，行 gap 3→4
+5. **「站稳脚跟」阶段下一阶段提示按实际债务动态化**（`daily_quest.js`）
+   - 新增 `_dynamicNextDesc(stage, state)`：debt 阶段检测 `villageDebt+bankDebt`
+   - 有债（>0）："还清债务，攒到¥5000"
+   - 无债（=0）："攒下¥5000启动资金"
+   - 解决 classic/second_gen 等无债剧本显示"还清债务"的文案错误
 
 ---
 
