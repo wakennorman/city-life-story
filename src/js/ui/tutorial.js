@@ -1147,7 +1147,7 @@ var DYNAMIC_HINTS = [
       return st.player.intelligence >= 35 && !st.flags._hint_first_intel_tip;
     },
     message:
-      "💡 提示：智力达到35！培训中心的课程学得更快了，再提升到45就能应聘互联网职场。",
+      "💡 提示：智力达到35！培训中心的课程学得更快了，再提升到45就能应聘互联网职场。或者累计打工200天+总收入¥5000也能凭经验入场。",
   },
   {
     id: "first_skill_30",
