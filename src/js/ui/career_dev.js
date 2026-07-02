@@ -2349,7 +2349,7 @@ function tickCareerJobDaily(state) {
 
   // 每月1日发薪
   if (state.player.day % 30 === 1) {
-    var salary = job.salary || 5000;
+    var salary = calcActualSalary(state);
     if (typeof applyDreamIncomeBonus === "function") {
       salary = applyDreamIncomeBonus(state, salary, "salary");
     }
@@ -2359,6 +2359,7 @@ function tickCareerJobDaily(state) {
     state.resources.totalEarned += salary + certBonus;
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
+    if (isInProbation(state)) salaryMsg += "（试用期八折）";
     if (certBonus > 0)
       salaryMsg += " + 证书加成 ¥" + certBonus.toLocaleString();
     StateManager.addMessage(salaryMsg, "success");
@@ -2610,7 +2611,9 @@ function getProbationRemaining(state) {
   if (!state.career || !state.career.currentJob) return 0;
   var job = state.career.currentJob;
   var workDays = job.workDays || 0;
-  return Math.max(0, 90 - workDays);
+  // v3.1：跳槽等特殊情况可自定义试用期天数（默认90天）
+  var totalProbation = job._probationDays || 90;
+  return Math.max(0, totalProbation - workDays);
 }
 
 function isInProbation(state) {
@@ -2806,6 +2809,7 @@ if (typeof window !== "undefined") {
   window.getCareerLegalDiscount = getCareerLegalDiscount;
   window.tickCareerDaily = tickCareerDaily;
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
+  window.clampCareerCapital = clampCareerCapital;
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.career_dev = {
     id: "career_dev",

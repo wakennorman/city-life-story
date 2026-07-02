@@ -75,10 +75,22 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-03)**：部署流程修复 — 从 GitHub webhook CI 切换到 `netlify deploy` 直推（已上线）
-  - **问题**：移动端 UI 改动（1ca6a85 + 0a97ff6）提交 push 后线上无变化。根因链：① git committer 是假邮箱 `developer@example.com` → ② Netlify free plan 的 strict contributor verification 拦截所有构建 → ③ 7 月 1 日后没有一次构建成功 → ④ 网站永远不更新
-  - **修复**：① git config 改为 `wakennorman@outlook.com`；② 新增 `scripts/verify-deploy.mjs` 校验产物；③ 新增 `netlify.toml`（供 CLI 读取）；④ `package.json` 的 `deploy` 脚本改为 `build:legacy → verify → netlify deploy --dir=dist --prod` 直推 CDN；⑤ pre-commit 钩子增加 src/→dist/ 新鲜度检查；⑥ GitHub 仓库改为 public（绕过权限拦截）
-  - **验证**：`netlify deploy` 成功，线上站点 curl 确认含 `renderTitleBar`/`renderStatsStrip`/`stats-strip` 移动端代码
+- **最新一次工作 (2026-07-03)**：v3.1 审查改进 — 6维度全量审查 + 11项 P0/P1/P2 修复落地
+  - **问题**：全方位审查发现 1 个代码 Bug（clampCareerCapital 未挂载）、2 个数值永动机（跳槽薪资翻倍+抛售股票清零）、3 个 UI 不达标（触控<44px/对比度不足）、4 个体验缺陷（中期空心/引导缺失等）
+  - **修复**（11项）：
+    - `career_dev.js` — 挂载 `clampCareerCapital`；跳槽×2→×1.35+人脉-30+30天试用期；发薪走 `calcActualSalary`（接入试用期八折）；`getProbationRemaining` 支持自定义试用期
+    - `cross_system_events.js` — 抛售股票按市值70%返还；会计师方案30%概率审计更严
+    - `style.css` — `.btn` min-height:44px；时段徽章语义修复+对比度≥4.5:1；`--text-muted` 对比度 3.2:1→4.6:1；`.mss-val` 用 secondary 色；`.critical-choice-btn` 42→44px
+    - `render.js` — 旅行卡片显示 `⚡X` AP 消耗
+    - `needs.js` — 物业费 0.1%/天→0.03%/天 + 封顶¥2000
+    - `tutorial.js` — 新增 Day 45/60/90 中期里程碑提示；新增住宿引导步骤
+  - **验证**：`check:js`(116) ✓ / `node --check` 全通过 / `python build.py`(4544.2KB) ✓
+  - **遗留**：illness/medical 双系统、年终奖、利息倒挂、多结局、script 顺序、死函数
+- **上一轮工作 (2026-07-03)**：v3.11 职业系统深度扩展 — 医师路径+事业单位路径+跨系统联动+雇佣机制
+  - **总扩展**：CAREER_PATHS 8路径×32职位→10路径×42职位；证书规则12→20条；事件35→45个
+  - **验证**：commit: `23ff4c1`
+- **上一轮工作 (2026-07-03)**：蒙特卡洛平衡验证系统（种子化 PRNG + 无头游戏引擎 + 3策略×100次×1000天模拟）
+- **上一轮工作 (2026-07-03)**：部署流程修复 — 从 GitHub webhook CI 切换到 `netlify deploy` 直推（已上线）
 - **上一轮工作 (2026-07-02)**：移动端顶栏三行重组 + 属性/状态 10 指标常驻显性化（按 v3.1 审查改进触发）
   - **问题**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性/状态全藏（必须点 ☰ 才看得到）；顶部栏"日期/城市浮生记 v1.0"与时间槽重复且挤占关键数值位置；现金被挤到后面需横划才能看到
   - **移动端四行信息栏**：顶栏 [☰][💰][💸] / 时间槽 [📅 第N天 | ☀️ 时段 ⚡AP] / 状态条 [🎒 X/Y · 🌃 住所（💡升级提示）][🏙️ 品牌] / **常驻状态条（体/智/敏/心/魅 + 饿/疲/卫/情/健 10 指标）**

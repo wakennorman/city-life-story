@@ -3052,7 +3052,9 @@ function renderActionsTab(state, parent) {
         '<div class="card-title" style="font-size:15px;color:var(--accent);">' +
         (dest ? dest.name : destKey) +
         "</div>" +
-        '<span style="font-size:10px;color:var(--text-muted);">🚶 前往</span>' +
+        '<span style="font-size:10px;color:var(--text-muted);">🚶 前往 ⚡' +
+        (dest && dest.apCost ? dest.apCost : 1) +
+        "</span>" +
         "</div>" +
         '<div class="card-desc" style="font-size:11px;margin:4px 0;">' +
         (dest ? dest.desc : "") +

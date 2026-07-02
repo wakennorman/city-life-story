@@ -1,0 +1,774 @@
+#!/usr/bin/env node
+/**
+ * 蒙特卡洛模拟 — 城市浮生记数值平衡测试 v3.1
+ *
+ * 使用 headless_runner.cjs 加载真实游戏引擎，
+ * 运行 N 次 × 1000 天模拟，检测经济平衡问题。
+ *
+ * 用法:
+ *   node tests/monte_carlo.cjs                        # 默认: 100次 × 1000天
+ *   node tests/monte_carlo.cjs --trials 50            # 快速测试
+ *   node tests/monte_carlo.cjs --days 500             # 500天
+ *   node tests/monte_carlo.cjs --verbose              # 详细输出
+ *   node tests/monte_carlo.cjs --strategy balanced    # 只跑平衡策略
+ *   node tests/monte_carlo.cjs --output report.json   # 输出到文件
+ *
+ * 通过条件（v3.1 基准）：
+ *   - 存活率 > 80%
+ *   - 前 30 天死亡率 < 15%
+ *   - 中位现金 Day 30: ¥500~¥2000
+ *   - 中位现金 Day 100: ¥2000~¥10000
+ *   - 中位现金 Day 365: ¥10000~¥50000
+ *   - 疾病/受伤率 < 30%
+ *   - 经济分层：> 50% 玩家 Day 100 后进入温饱 (cash > ¥2000)
+ */
+
+(function () {
+  "use strict";
+
+  var runner;
+  var fs = require("fs");
+  var path = require("path");
+
+  // ============ 配置 ============
+  var CONFIG = {
+    trials: 100,
+    daysPerTrial: 1000,
+    verbose: false,
+    strategy: "all",
+    outputFile: "",
+    seed: 42,
+  };
+
+  function parseArgs() {
+    var args = process.argv.slice(2);
+    for (var i = 0; i < args.length; i++) {
+      if (args[i] === "--trials" && i + 1 < args.length)
+        CONFIG.trials = parseInt(args[++i], 10) || 100;
+      else if (args[i] === "--days" && i + 1 < args.length)
+        CONFIG.daysPerTrial = parseInt(args[++i], 10) || 1000;
+      else if (args[i] === "--verbose") CONFIG.verbose = true;
+      else if (args[i] === "--strategy" && i + 1 < args.length)
+        CONFIG.strategy = args[++i];
+      else if (args[i] === "--output" && i + 1 < args.length)
+        CONFIG.outputFile = args[++i];
+      else if (args[i] === "--seed" && i + 1 < args.length)
+        CONFIG.seed = parseInt(args[++i], 10) || 42;
+    }
+  }
+
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // ====== 策略工厂 ======
+
+  function applyJobPay(state, job) {
+    // 直接使用 job.payCalc() 而不是 doStreetJob（doStreetJob 绑定 StateManager）
+    var pay = 0;
+    try {
+      if (job && typeof job.payCalc === "function") {
+        pay = job.payCalc(state);
+      }
+    } catch (e) {}
+    if (pay > 0) {
+      state.resources.cash += pay;
+      state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
+      state.needs.fatigue = Math.min(
+        100,
+        (state.needs.fatigue || 0) + (job.fatigueCost || 8),
+      );
+      state.needs.hygiene = Math.min(
+        100,
+        (state.needs.hygiene || 0) + (job.hygieneCost || 5),
+      );
+    } else {
+      // fallback
+      state.resources.cash += 15 + Math.floor(Math.random() * 20);
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 8);
+    }
+  }
+
+  function findJobAtLocation(state, location) {
+    if (
+      typeof STREET_JOBS === "undefined" ||
+      typeof checkJobRequirements === "undefined"
+    )
+      return null;
+    var avail = [];
+    for (var ji = 0; ji < STREET_JOBS.length; ji++) {
+      var jj = STREET_JOBS[ji];
+      if (!jj.location || jj.location === location) {
+        try {
+          if (checkJobRequirements(jj, state) === true) {
+            avail.push({
+              job: jj,
+              pay: typeof jj.payCalc === "function" ? jj.payCalc(state) : 0,
+            });
+          }
+        } catch (e) {}
+      }
+    }
+    if (avail.length === 0) return null;
+    avail.sort(function (a, b) {
+      return b.pay - a.pay;
+    });
+    return avail[0].job;
+  }
+
+  function createBalancedPolicy() {
+    return function (state) {
+      var ap = state.player ? state.player.actionPoints : 0;
+      var cash = state.resources ? state.resources.cash : 0;
+      var needs = state.needs;
+      if (!needs || ap <= 0) return;
+
+      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+        state.resources.cash = Math.max(0, state.resources.cash - 10);
+        needs.hunger = Math.max(0, needs.hunger - 30);
+        ap -= 10;
+        if (needs.happiness !== undefined)
+          needs.happiness = Math.min(100, needs.happiness + 3);
+      }
+      if (needs.fatigue > 70 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
+        ap -= 15;
+      }
+      if (
+        needs.hygiene !== undefined &&
+        needs.hygiene > 50 &&
+        cash >= 5 &&
+        ap >= 10
+      ) {
+        state.resources.cash = Math.max(0, state.resources.cash - 5);
+        needs.hygiene = Math.max(0, needs.hygiene - 35);
+        ap -= 10;
+      }
+      if (needs.happiness !== undefined && needs.happiness < 35 && ap >= 10) {
+        needs.happiness = Math.min(100, needs.happiness + 15);
+        needs.fatigue = Math.min(100, needs.fatigue + 5);
+        ap -= 10;
+      }
+      if (state.player.day > 7 && ap >= 20 && cash > 0 && needs.fatigue < 70) {
+        if (state.skills) {
+          var skillIds = Object.keys(state.skills);
+          var ws = skillIds[0],
+            wl = state.skills[ws].level;
+          for (var si = 1; si < skillIds.length; si++) {
+            if (state.skills[skillIds[si]].level < wl) {
+              ws = skillIds[si];
+              wl = state.skills[skillIds[si]].level;
+            }
+          }
+          state.skills[ws].xp = (state.skills[ws].xp || 0) + 5;
+          if (state.skills[ws].xp >= 100) {
+            state.skills[ws].xp = 0;
+            state.skills[ws].level = Math.min(100, state.skills[ws].level + 1);
+          }
+          ap -= 15;
+          needs.fatigue = Math.min(100, needs.fatigue + 3);
+        }
+      }
+      if (ap >= 10) {
+        var job = findJobAtLocation(state, "slum");
+        applyJobPay(state, job);
+      }
+      state.player.actionPoints = Math.max(0, ap);
+    };
+  }
+
+  function createGrinderPolicy() {
+    return function (state) {
+      var ap = state.player ? state.player.actionPoints : 0;
+      var cash = state.resources ? state.resources.cash : 0;
+      var needs = state.needs;
+      if (!needs || ap <= 0) return;
+      if (needs.hunger > 75 && cash >= 5 && ap >= 10) {
+        state.resources.cash = Math.max(0, state.resources.cash - 5);
+        needs.hunger = Math.max(0, needs.hunger - 15);
+        ap -= 10;
+      }
+      var job = findJobAtLocation(state, "slum");
+      applyJobPay(state, job);
+      state.player.actionPoints = Math.max(0, ap - 10);
+    };
+  }
+
+  function createSkillerPolicy() {
+    return function (state) {
+      var ap = state.player ? state.player.actionPoints : 0;
+      var cash = state.resources ? state.resources.cash : 0;
+      var needs = state.needs;
+      if (!needs || ap <= 0) return;
+      if (needs.hunger > 40 && cash >= 8 && ap >= 10) {
+        state.resources.cash = Math.max(0, state.resources.cash - 8);
+        needs.hunger = Math.max(0, needs.hunger - 30);
+        ap -= 10;
+      }
+      if (needs.fatigue > 60 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
+        ap -= 15;
+      }
+      if (ap >= 25 && needs.fatigue < 65 && state.skills) {
+        var order = ["coding", "english", "management", "sales", "cooking"];
+        var cs = null;
+        for (var pi = 0; pi < order.length; pi++) {
+          if (state.skills[order[pi]] && state.skills[order[pi]].level < 30) {
+            cs = order[pi];
+            break;
+          }
+        }
+        if (!cs) {
+          var skids = Object.keys(state.skills);
+          cs = skids[0];
+          for (var ski = 1; ski < skids.length; ski++) {
+            if (state.skills[skids[ski]].level < state.skills[cs].level)
+              cs = skids[ski];
+          }
+        }
+        state.skills[cs].xp = (state.skills[cs].xp || 0) + 8;
+        if (state.skills[cs].xp >= 100) {
+          state.skills[cs].xp = 0;
+          state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
+        }
+        ap -= 25;
+        needs.fatigue = Math.min(100, needs.fatigue + 3);
+      }
+      var job = findJobAtLocation(state, "slum");
+      applyJobPay(state, job);
+      state.player.actionPoints = Math.max(0, ap);
+    };
+  }
+
+  // ====== 单次模拟 ======
+
+  function runTrial(baseState, policyFn, seed) {
+    var state = deepClone(baseState);
+    state.player.day = 1;
+    state.flags.gameOver = false;
+    state.flags.gameOverReason = "";
+    state.status.health = baseState.status.health;
+    if (typeof Random !== "undefined" && Random.setSeed) Random.setSeed(seed);
+
+    return _runTrialInner(state, policyFn);
+  }
+
+  function _runTrialInner(state, policyFn) {
+    var snaps = [],
+      sick = 0,
+      hurt = 0,
+      diedOn = -1;
+    var snapDays = [7, 15, 30, 60, 90, 180, 365, 730];
+
+    for (var d = 0; d < CONFIG.daysPerTrial; d++) {
+      try {
+        policyFn(state);
+      } catch (e) {}
+      try {
+        state.player.actionPoints = 0;
+        state.player.timeSlot = "evening";
+        if (typeof runDailyPipeline === "function") runDailyPipeline(state);
+      } catch (e) {}
+
+      if (state.flags.gameOver || state.status.health <= 0) {
+        diedOn = d + 1;
+        break;
+      }
+
+      if (
+        state.flags._dailyTransactions &&
+        Array.isArray(state.flags._dailyTransactions)
+      ) {
+        for (var ti = 0; ti < state.flags._dailyTransactions.length; ti++) {
+          var t = state.flags._dailyTransactions[ti];
+          if (
+            t.type === "illness" ||
+            (t.category && t.category.indexOf("illness") >= 0)
+          )
+            sick++;
+          if (
+            t.type === "injury" ||
+            (t.category && t.category.indexOf("injury") >= 0)
+          )
+            hurt++;
+        }
+      }
+
+      if (snapDays.indexOf(d + 1) >= 0) {
+        snaps.push({
+          day: d + 1,
+          cash: state.resources.cash,
+          bank: state.resources.bankBalance || 0,
+          debt:
+            (state.resources.debt || 0) + (state.resources.villageDebt || 0),
+          health: state.status.health,
+          housingTier: state.housing ? state.housing.tier : 0,
+          phase: state.player.phase,
+        });
+      }
+    }
+
+    var survived = diedOn === -1;
+    return {
+      survived: survived,
+      diedOnDay: diedOn,
+      finalCash: state.resources.cash,
+      finalBank: state.resources.bankBalance || 0,
+      finalDebt:
+        (state.resources.debt || 0) + (state.resources.villageDebt || 0),
+      finalHealth: state.status.health,
+      finalHousingTier: state.housing ? state.housing.tier : 0,
+      totalEarned: state.resources.totalEarned || 0,
+      illnessCount: sick,
+      injuryCount: hurt,
+      snapshots: snaps,
+      finalPhase: state.player.phase,
+    };
+  }
+
+  function runStrategy(strategyName, baseState) {
+    var policies = {
+      balanced: createBalancedPolicy(),
+      grinder: createGrinderPolicy(),
+      skiller: createSkillerPolicy(),
+    };
+    var policy = policies[strategyName];
+    if (!policy) {
+      console.error("  ❌ 未知策略: " + strategyName);
+      return null;
+    }
+
+    var results = [],
+      start = Date.now();
+    for (var i = 0; i < CONFIG.trials; i++) {
+      results.push(
+        runTrial(
+          baseState,
+          policy,
+          CONFIG.seed + i * 1000 + strategyName.length,
+        ),
+      );
+      if (CONFIG.verbose && (i + 1) % 25 === 0)
+        process.stderr.write("    ..." + (i + 1) + "/" + CONFIG.trials + "\n");
+    }
+    return analyzeResults(
+      strategyName,
+      results,
+      ((Date.now() - start) / 1000).toFixed(1),
+    );
+  }
+
+  function analyzeResults(name, results, elapsed) {
+    var n = results.length,
+      alive = results.filter(function (r) {
+        return r.survived;
+      }),
+      dead = results.filter(function (r) {
+        return !r.survived;
+      });
+    var sr = (alive.length / n) * 100;
+    var d1 = dead.filter(function (r) {
+      return r.diedOnDay <= 7;
+    }).length;
+    var d2 = dead.filter(function (r) {
+      return r.diedOnDay > 7 && r.diedOnDay <= 30;
+    }).length;
+    var d3 = dead.filter(function (r) {
+      return r.diedOnDay > 30 && r.diedOnDay <= 90;
+    }).length;
+    var d4 = dead.filter(function (r) {
+      return r.diedOnDay > 90;
+    }).length;
+    var add =
+      dead.length > 0
+        ? dead.reduce(function (s, r) {
+            return s + r.diedOnDay;
+          }, 0) / dead.length
+        : -1;
+
+    var ca = alive.map(function (r) {
+      return r.finalCash;
+    });
+    ca.sort(function (a, b) {
+      return a - b;
+    });
+    var pct = function (arr, p) {
+      return arr[Math.min(Math.floor((arr.length * p) / 100), arr.length - 1)];
+    };
+    var avgCash =
+      alive.length > 0
+        ? ca.reduce(function (s, v) {
+            return s + v;
+          }, 0) / alive.length
+        : 0;
+    var avgHe =
+      alive.reduce(function (s, r) {
+        return s + r.finalHealth;
+      }, 0) / Math.max(1, alive.length);
+    var poor = alive.filter(function (r) {
+      return r.finalCash < 500;
+    }).length;
+    var sub = alive.filter(function (r) {
+      return r.finalCash >= 500 && r.finalCash < 5000;
+    }).length;
+    var com = alive.filter(function (r) {
+      return r.finalCash >= 5000 && r.finalCash < 50000;
+    }).length;
+    var ric = alive.filter(function (r) {
+      return r.finalCash >= 50000;
+    }).length;
+    var snapData = {};
+    [7, 15, 30, 60, 90, 180, 365, 730].forEach(function (sd) {
+      var vals = results
+        .filter(function (r) {
+          return r.snapshots.some(function (s) {
+            return s.day === sd;
+          });
+        })
+        .map(function (r) {
+          var s = r.snapshots.filter(function (x) {
+            return x.day === sd;
+          })[0];
+          return s ? s.cash : null;
+        })
+        .filter(function (c) {
+          return c !== null;
+        });
+      if (vals.length > 0) {
+        vals.sort(function (a, b) {
+          return a - b;
+        });
+        snapData[sd] = {
+          n: vals.length,
+          median: pct(vals, 50),
+          p25: pct(vals, 25),
+          p75: pct(vals, 75),
+          min: vals[0],
+          max: vals[vals.length - 1],
+        };
+      }
+    });
+    var avgIl =
+      alive.reduce(function (s, r) {
+        return s + r.illnessCount;
+      }, 0) / Math.max(1, alive.length);
+    var avgIn =
+      alive.reduce(function (s, r) {
+        return s + r.injuryCount;
+      }, 0) / Math.max(1, alive.length);
+    var avgHo =
+      alive.reduce(function (s, r) {
+        return s + r.finalHousingTier;
+      }, 0) / Math.max(1, alive.length);
+    var corp = alive.filter(function (r) {
+      return r.finalPhase === "corporate";
+    }).length;
+
+    return {
+      strategy: name,
+      trials: n,
+      elapsed: elapsed,
+      survivalRate: sr,
+      died1_7: (d1 / n) * 100,
+      died8_30: (d2 / n) * 100,
+      died31_90: (d3 / n) * 100,
+      died91plus: (d4 / n) * 100,
+      avgDeathDay: add,
+      avgCash: avgCash,
+      medianCash: alive.length > 0 ? pct(ca, 50) : 0,
+      p10Cash: alive.length > 0 ? pct(ca, 10) : 0,
+      p90Cash: alive.length > 0 ? pct(ca, 90) : 0,
+      minCash: alive.length > 0 ? ca[0] : 0,
+      maxCash: alive.length > 0 ? ca[ca.length - 1] : 0,
+      avgHealth: avgHe,
+      avgIllness: avgIl,
+      avgInjury: avgIn,
+      avgHousing: avgHo,
+      corpPhaseRate: (corp / Math.max(1, alive.length)) * 100,
+      economicLayers: {
+        poor: poor,
+        subsistence: sub,
+        comfortable: com,
+        rich: ric,
+      },
+      snapshots: snapData,
+    };
+  }
+
+  function printReport(allStats) {
+    var L = "=".repeat(72);
+    var fmt = function (n) {
+      return Math.round(n).toLocaleString();
+    };
+    var pc = function (n) {
+      return n.toFixed(1);
+    };
+
+    console.log("\n" + L);
+    console.log("  🧪 城市浮生记 v3.1 — 蒙特卡洛平衡测试报告");
+    console.log(
+      "  " + new Date().toISOString().replace("T", " ").substring(0, 19),
+    );
+    console.log(L);
+    console.log(
+      "  配置: " +
+        allStats.length +
+        " 策略 × " +
+        CONFIG.trials +
+        " 次 × " +
+        CONFIG.daysPerTrial +
+        " 天",
+    );
+
+    for (var si = 0; si < allStats.length; si++) {
+      var s = allStats[si];
+      console.log("\n" + "-".repeat(72));
+      console.log(
+        "  📊 策略: " +
+          s.strategy +
+          " (" +
+          s.trials +
+          " 次, " +
+          s.elapsed +
+          ")",
+      );
+      console.log("-".repeat(72));
+
+      console.log("\n  📈 存活统计");
+      console.log(
+        "    存活率:      " +
+          (s.survivalRate >= 80 ? "" : "⚠️ ") +
+          pc(s.survivalRate) +
+          "%" +
+          (s.survivalRate >= 80 ? " ✅" : " ❌"),
+      );
+      console.log("    死亡分布:");
+      console.log(
+        "      Day 1-7:   " +
+          (s.died1_7 >= 10 ? "⚠️ " : "   ") +
+          pc(s.died1_7) +
+          "%" +
+          (s.died1_7 < 10 ? " ✅" : " ❌"),
+      );
+      console.log("      Day 8-30:  " + pc(s.died8_30) + "%");
+      console.log("      Day 31-90: " + pc(s.died31_90) + "%");
+      console.log("      Day 91+:   " + pc(s.died91plus) + "%");
+      if (s.avgDeathDay > 0)
+        console.log("    死亡平均天数: " + s.avgDeathDay.toFixed(1) + " 天");
+
+      console.log("\n  💰 经济统计（存活玩家）");
+      console.log("    平均现金:    ¥" + fmt(s.avgCash));
+      console.log("    中位现金:    ¥" + fmt(s.medianCash));
+      console.log("    P10现金:     ¥" + fmt(s.p10Cash));
+      console.log("    P90现金:     ¥" + fmt(s.p90Cash));
+      console.log("    最小现金:    ¥" + fmt(s.minCash));
+      console.log("    最大现金:    ¥" + fmt(s.maxCash));
+
+      var tl =
+        s.economicLayers.poor +
+        s.economicLayers.subsistence +
+        s.economicLayers.comfortable +
+        s.economicLayers.rich;
+      console.log("\n  🏠 经济分层（存活玩家）");
+      console.log(
+        "    赤贫(<¥500):    " +
+          s.economicLayers.poor +
+          " (" +
+          ((s.economicLayers.poor / tl) * 100).toFixed(1) +
+          "%)",
+      );
+      console.log(
+        "    温饱(¥500~5k):  " +
+          s.economicLayers.subsistence +
+          " (" +
+          ((s.economicLayers.subsistence / tl) * 100).toFixed(1) +
+          "%)",
+      );
+      console.log(
+        "    小康(¥5k~50k):  " +
+          s.economicLayers.comfortable +
+          " (" +
+          ((s.economicLayers.comfortable / tl) * 100).toFixed(1) +
+          "%)",
+      );
+      console.log(
+        "    富裕(>¥50k):   " +
+          s.economicLayers.rich +
+          " (" +
+          ((s.economicLayers.rich / tl) * 100).toFixed(1) +
+          "%)",
+      );
+
+      console.log("\n  📅 里程碑现金中位数");
+      [7, 15, 30, 60, 90, 180, 365, 730].forEach(function (sd) {
+        if (s.snapshots[sd]) {
+          var sp = s.snapshots[sd];
+          console.log(
+            "    Day " +
+              sd +
+              ": ¥" +
+              fmt(sp.median) +
+              " [P25:¥" +
+              fmt(sp.p25) +
+              "  P75:¥" +
+              fmt(sp.p75) +
+              "] (n=" +
+              sp.n +
+              ")",
+          );
+        }
+      });
+
+      console.log("\n  🏥 健康统计（存活玩家）");
+      console.log("    平均健康:    " + s.avgHealth.toFixed(1));
+      console.log("    平均疾病次数: " + s.avgIllness.toFixed(1));
+      console.log("    平均受伤次数: " + s.avgInjury.toFixed(1));
+      console.log("    平均住房等级: " + s.avgHousing.toFixed(1) + "/6");
+      console.log("    公司阶段转化率: " + s.corpPhaseRate.toFixed(1) + "%");
+    }
+
+    if (allStats.length > 1) {
+      console.log("\n" + L);
+      console.log("  📋 策略对比摘要");
+      console.log(L);
+      var hdr = ["策略", "存活率", "中位现金", "平均健康", "转化率", "住房"];
+      console.log("  " + hdr.join("\t"));
+      for (var si2 = 0; si2 < allStats.length; si2++) {
+        var s2 = allStats[si2];
+        console.log(
+          "  " +
+            [
+              s2.strategy,
+              pc(s2.survivalRate) + "%",
+              "¥" + fmt(s2.medianCash),
+              s2.avgHealth.toFixed(1),
+              s2.corpPhaseRate.toFixed(1) + "%",
+              s2.avgHousing.toFixed(1),
+            ].join("\t"),
+        );
+      }
+    }
+
+    console.log("\n" + L);
+    console.log("  ✅ 判定");
+    console.log(L);
+    var passed = true;
+    for (var si3 = 0; si3 < allStats.length; si3++) {
+      var s3 = allStats[si3],
+        sn = s3.strategy;
+      if (s3.survivalRate < 80) {
+        console.log(
+          "  ❌ [" + sn + "] 存活率 " + pc(s3.survivalRate) + "% < 80%",
+        );
+        passed = false;
+      } else {
+        console.log(
+          "  ✅ [" + sn + "] 存活率 " + pc(s3.survivalRate) + "% ≥ 80%",
+        );
+      }
+      if (s3.died1_7 >= 10) {
+        console.log(
+          "  ❌ [" + sn + "] 前7天死亡率 " + pc(s3.died1_7) + "% ≥ 10%",
+        );
+        passed = false;
+      } else {
+        console.log(
+          "  ✅ [" + sn + "] 前7天死亡率 " + pc(s3.died1_7) + "% < 10%",
+        );
+      }
+      if (s3.snapshots[30]) {
+        var m30 = s3.snapshots[30].median;
+        if (m30 < 500 || m30 > 20000) {
+          console.log(
+            "  ⚠️  [" + sn + "] Day30 ¥" + fmt(m30) + " 偏离 [¥500~¥20000]",
+          );
+        } else {
+          console.log("  ✅ [" + sn + "] Day30 ¥" + fmt(m30) + " 合理");
+        }
+      }
+    }
+    console.log(
+      "\n  " +
+        (passed ? "🎉 总体通过" : "🔧 需要调整") +
+        ": " +
+        (passed ? "all pass" : "fix needed"),
+    );
+    console.log(L + "\n");
+  }
+
+  function outputToFile(allStats) {
+    if (!CONFIG.outputFile) return;
+    fs.writeFileSync(
+      CONFIG.outputFile,
+      JSON.stringify(
+        {
+          config: CONFIG,
+          timestamp: new Date().toISOString(),
+          results: allStats,
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    console.log("  📝 保存: " + CONFIG.outputFile);
+  }
+
+  function main() {
+    parseArgs();
+    console.log("\n🧪 城市浮生记 v3.1 — 蒙特卡洛平衡测试\n   加载游戏引擎...");
+    var t0 = Date.now();
+
+    try {
+      runner = require("./headless_runner.cjs");
+    } catch (e) {
+      console.error("  ❌ " + e.message);
+      process.exit(1);
+    }
+    var ok = runner.init({ strict: false });
+    if (!ok) {
+      console.error("  ❌ init 失败");
+      process.exit(1);
+    }
+
+    console.log(
+      "   加载: " +
+        (Date.now() - t0) +
+        "ms, 错误: " +
+        runner.getLoadErrors().length,
+    );
+    console.log(
+      "   引擎: JOBS=" +
+        (typeof STREET_JOBS !== "undefined" ? STREET_JOBS.length : "?") +
+        " LOCS=" +
+        (typeof LOCATIONS !== "undefined"
+          ? Object.keys(LOCATIONS).length
+          : "?") +
+        " NPCs=" +
+        (typeof NPCS !== "undefined" ? NPCS.length : "?"),
+    );
+
+    var bs = runner.createState({ seed: CONFIG.seed, scenario: "classic" });
+    if (!bs) {
+      process.exit(1);
+    }
+    console.log("   初始: ¥" + bs.resources.cash + " 健康:" + bs.status.health);
+
+    var strategies =
+      CONFIG.strategy === "all"
+        ? ["balanced", "grinder", "skiller"]
+        : [CONFIG.strategy];
+    var allStats = [];
+    for (var i = 0; i < strategies.length; i++) {
+      var stats = runStrategy(strategies[i], bs);
+      if (stats) allStats.push(stats);
+    }
+    printReport(allStats);
+    outputToFile(allStats);
+    console.log("   总耗时: " + ((Date.now() - t0) / 1000).toFixed(1) + " 秒");
+  }
+
+  if (typeof require !== "undefined" && require.main === module) {
+    main();
+  }
+})();

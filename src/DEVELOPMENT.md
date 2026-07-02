@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-03（v3.11 职业系统深度扩展——医师路径+事业单位+跨系统联动+雇佣机制）
+> 最后更新: 2026-07-03（v3.1 审查改进 — 6维度全量审查+11项P0/P1/P2修复落地）
 
 ---
 
@@ -2753,3 +2753,100 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 - `python build.py` (4506.8 KB) ✓
 - `npm run build` (vite 68.55 kB gzip 24.98 kB) ✓
 - STUB-DOM runtime test：5 cells × 2 rows 结构正确；有疾病时追加 illnessDiv；默认状态仅 2 行
+
+---
+
+### v3.1 审查改进记录 — 2026-07-03
+
+**触发语**：按 v3.1 审查改进
+**覆盖维度**：全部 6 维度（代码&架构 / 机制&数值 / 叙事&内容 / UI&UX / 留存&体验 / Blueprint对齐）
+**参考 SOP**：`memory/review-improve-v3.1.md`
+
+**本轮发现的高优先级问题**：
+
+1. `clampCareerCapital` 未挂载到 window → 职业倦怠值突破 100 上限（P0 Bug）
+2. `career_promo_offer` 薪资翻倍无代价 + 可重复触发 → 永动机（P0 数值崩溃）
+3. `economic_downturn` 抛售股票不返还现金 → 玩家投资归零（P0 数值崩溃）
+4. 主按钮触控区 <44px（Apple HIG 不达标）（P0 UI）
+5. 时段徽章绿色背景配警告橙字 → 语义倒置 + 对比度 2.1:1（P0 UI）
+6. `--text-muted` 对比度 3.2:1（WCAG AA 不达标）（P1 UI）
+7. 旅行卡片不显示 AP 消耗 → 盲点行动（P1 体验）
+8. 物业费年化 36.5% → 高资产玩家被过度抽血（P1 数值）
+9. Day 30-90 无叙事锚点 → 中期空心（P1 留存）
+10. 新手引导缺失住宿环节（P2 体验）
+11. `wealth_tax` 会计师方案永远最优 → 无选择困境（P2 玩法）
+
+**本轮改进**：
+
+- Fix 1 `js/ui/career_dev.js:2809` — 挂载 `clampCareerCapital` 到 window
+- Fix 2 `js/core/cross_system_events.js:555-574` — 跳槽薪资×2→×1.35，增加人脉-30代价 + 30天试用期
+- Fix 3 `js/core/cross_system_events.js:710-729` — 抛售股票按市值70%返还现金（而非清零）
+- Fix 4 `css/style.css:841-857` — `.btn` 增加 `min-height:44px` + padding 8→10px
+- Fix 5 `css/style.css:538-549` — 时段徽章语义修复：上午深橙/下午深绿/晚上深紫，对比度≥4.5:1
+- Fix 6 `css/style.css:32` — `--text-muted` #99958e→#77736c，对比度 3.2:1→4.6:1
+- Fix 7 `js/ui/render.js:3055` — 旅行卡片增加 `⚡X` 显示 AP 消耗
+- Fix 8 `js/phase1/needs.js:147-148` — 物业费 0.1%/天→0.03%/天 + 封顶¥2000/天
+- Fix 9 `js/ui/tutorial.js:1212-1240` — 新增 Day 45/60/90 中期里程碑提示
+- Fix 10 `js/ui/tutorial.js:194-208` — 新增住宿引导步骤（第7步）
+- Fix 11 `js/core/cross_system_events.js:809-828` — 会计师方案 30% 概率审计更严（税率4%→6%）
+- 附带 `js/ui/career_dev.js:2609-2614` — `getProbationRemaining` 支持自定义试用期天数
+- 附带 `js/ui/career_dev.js:2351-2364` — 发薪改用 `calcActualSalary`（接入试用期八折）
+
+**遗留（下轮处理）**：
+
+- illness.js / medical.js 双系统并行（需统一为单一权威系统，工作量大）
+- 年终奖系统（Blueprint P0-C，Blueprint 3.1.2 已给公式）
+- 存款-贷款利息倒挂（存款年化3.6% vs 贷款年化73-182%）
+- 多结局体系仅实现 50%（6/12）
+- script 加载顺序混乱（data/core/phase 互相穿插）
+- ≥12 个死函数清理
+
+**验证**：check:js (116) ✓ / node --check 全部改动文件 ✓ / python build.py (4544.2 KB) ✓
+**SOP 自评**：SOP 六维度覆盖完整，本次全量执行有效；建议下轮增加"性能/包体积"维度（当前 dist 4.5MB）
+
+---
+
+## 变更记录
+
+### 2026-07-02 — v3.1 蒙特卡洛平衡验证系统
+
+**问题**：游戏大量数据/经济系统缺乏可复现的自动化验证手段；已有的 `monte_carlo.js` 使用硬编码收益而非真实游戏函数。
+
+**变更**：
+
+1. **Random.js 种子化改造** (`src/js/core/random.js`)
+   - 添加 `Random.setSeed(seed)` / `Random.getSeed()` / `Random.resetSeed()` 方法
+   - 种子模式下使用 LCG PRNG（a=1664525, c=1013904223, m=2³²），确定性可复现
+   - 无种子时保持 Math.random() 向后兼容
+   - 版本号 2.0.0 → 2.1.0
+
+2. **无头游戏引擎** (`tests/headless_runner.cjs`)
+   - 新文件，Node.js 环境下加载全部 115+ 游戏脚本
+   - 最小 DOM/浏览器 API 存根（document, localStorage, navigator 等）
+   - 全部 UI 渲染函数存根为空操作
+   - 暴露 API：init(), createState(), advanceDay(), getStrategy(), getMetrics()
+
+3. **蒙特卡洛测试重写** (`tests/monte_carlo.js` → `tests/monte_carlo.cjs`)
+   - 从 DevTools 浏览器-only 改为 Node.js CLI 工具
+   - 从硬编码 fake simulation 改为调用真实 `payCalc()` / `runDailyPipeline()`
+   - 支持 balanced / grinder / skiller 三种玩家策略
+   - 命令行：`--trials N --days N --strategy X --output file.json --verbose`
+   - 丰富指标：存活率/Death分布/现金轨迹/P10-P90分位数/经济分层/住房/健康
+
+4. **tutorial.js 语法修复** (`src/js/ui/tutorial.js`：混用引号导致 `SyntaxError: Invalid or unexpected token`)
+
+**基准测试结果**（3 策略 × 100 次 × 1000 天）：
+
+- 所有策略 100% 存活，通过基准条件
+- Day30 中位现金 ¥1,029-¥1,040（预期范围 ¥500-¥2000 ✅）
+- Day365 中位现金 ¥9,227-¥9,244
+- 问题：策略无差异化、住房升级 0%、公司阶段转化 0%
+- 详见解：`memory/balance-monte-carlo-v3.1.md`
+
+**验证**：
+
+- `node --check` ✅ 语法通过
+- `npm run check:js` (116) ✅
+- `npm run typecheck` ✅
+- `python build.py` (4544.4 KB) ✅
+- `node tests/monte_carlo.cjs --trials 3` ✅ 模拟可用

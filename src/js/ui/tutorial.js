@@ -191,6 +191,13 @@ var _CLASSIC_STEPS = [
     highlight: null,
     waitForClick: null,
   },
+  // v3.1：新增住宿引导步骤（填补引导流缺失）
+  {
+    title: "租个床位，好好休息",
+    body: '<p style="font-size:12px;margin-bottom:8px;">露宿街头会掉健康、降心情。<strong>租个床位</strong>是最划算的投资。</p><div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;padding:2px 0;">打开地图，去城中村找到出租屋</div><div style="font-size:12px;padding:2px 0;">合租床位30/天，单间80/天</div><div style="font-size:12px;padding:2px 0;">入住后每晚自动恢复疲劳</div></div><p style="font-size:11px;color:var(--text-muted);">点下方地图按钮，去城中村租个床位吧！</p>',
+    highlight: '[data-tab="map"]',
+    waitForClick: '[data-tab="map"]',
+  },
 ];
 
 // ====== 所有剧本的专属新手引导步骤 v4.0 ======
@@ -1207,6 +1214,43 @@ var DYNAMIC_HINTS = [
     },
     message:
       "💡 提示：在城市打拼一个月了！去公园或城中村可以「确立人生目标」，设定梦想让努力更有方向感。",
+  },
+
+  // ===== v3.1 中期里程碑提示（填补 Day 30-90 空心） =====
+  {
+    id: "day45_skill_tip",
+    trigger: function (st) {
+      return st.player.day >= 45 && !st.flags._hint_day45_skill_tip;
+    },
+    message:
+      "💡 提示：进城快一个半月了！去培训中心学个技能或考个证书，能让收入迈上新台阶。",
+  },
+  {
+    id: "day60_career_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 60 &&
+        st.career &&
+        st.career.currentJob &&
+        !st.flags._hint_day60_career_tip
+      );
+    },
+    message:
+      "💡 提示：入职两个月了！关注一下业绩和倦怠，业绩好可以争取晋升，倦怠太高记得休息。",
+  },
+  {
+    id: "day90_review_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 90 &&
+        st.career &&
+        st.career.currentJob &&
+        (st.career.currentJob.workDays || 0) >= 30 &&
+        !st.flags._hint_day90_review_tip
+      );
+    },
+    message:
+      "💡 提示：入职满三个月试用期了！正式员工薪资恢复100%，可以考虑规划下一步——跳槽、考证还是攒钱买房？",
   },
 
   // ===== 职场阶段提示 =====

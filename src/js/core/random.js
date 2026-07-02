@@ -80,16 +80,54 @@
 
   // ====== 命名空间 ======
   const Random = {
-    VERSION: "2.0.0",
+    VERSION: "2.1.0",
     _seed: null,
     _useSeed: false,
+    _lcgState: 0,
   };
 
   // ====== 内部统一随机源 ======
-  // 使用 Math.random() 作为底层源。游戏不依赖可预测性/种子。
-  // 若未来需要种子化（如录像回放），在此处替换即可。
+  // 默认使用 Math.random()。setSeed(seed) 后切换到 LCG PRNG
+  // LCG 参数: Numerical Recipes (a=1664525, c=1013904223, m=2^32)
+  // 适用于 Monte Carlo 模拟和回放测试，不用于密码学。
   const _rng = function () {
+    if (Random._useSeed && Random._seed !== null) {
+      Random._lcgState = (1664525 * Random._lcgState + 1013904223) >>> 0;
+      return (Random._lcgState >>> 8) / 0x1000000; // 24-bit mantissa, [0,1)
+    }
     return Math.random();
+  };
+
+  /**
+   * 设置随机种子（启用确定性 PRNG）
+   * @param {number|string} seed - 种子值
+   */
+  Random.setSeed = function (seed) {
+    Random._seed =
+      typeof seed === "string"
+        ? seed.split("").reduce(function (acc, c) {
+            return ((acc << 5) - acc + c.charCodeAt(0)) | 0;
+          }, 0)
+        : seed >>> 0;
+    Random._lcgState = Random._seed;
+    Random._useSeed = true;
+  };
+
+  /**
+   * 获取当前种子
+   * @returns {number|null}
+   */
+  Random.getSeed = function () {
+    return Random._seed;
+  };
+
+  /**
+   * 重置为 Math.random()（关闭确定性模式）
+   */
+  Random.resetSeed = function () {
+    Random._seed = null;
+    Random._useSeed = false;
+    Random._lcgState = 0;
   };
 
   // ====== 核心 API ======

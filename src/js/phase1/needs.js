@@ -144,8 +144,8 @@ function applyWealthBasedOverhead(state) {
   var totalAssets = state.resources.cash + (state.resources.bankBalance || 0);
   if (totalAssets < 50000) return; // 仅资产 > 5W 触发
 
-  // 物业费：按资产 0.1%/天（¥50K→¥50/天，¥500K→¥500/天，¥5M→¥5000/天）
-  var propertyFee = Math.round(totalAssets * 0.001);
+  // 物业费：按资产 0.03%/天（v3.1：0.1%→0.03%，¥500K→¥150/天封顶¥2000/天）
+  var propertyFee = Math.min(2000, Math.round(totalAssets * 0.0003));
   if (propertyFee > 0) {
     state.resources.cash -= propertyFee;
     StateManager.addMessage(

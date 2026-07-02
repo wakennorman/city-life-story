@@ -553,7 +553,7 @@
       options: [
         {
           text: "💼 接offer，跳槽！",
-          hint: "薪资翻倍，但需重新积累人脉",
+          hint: "薪资×1.35，但人脉清零+30天试用期薪资80%",
           apply: function (st) {
             if (!st.career || !st.career.currentJob) return;
             st.career.history.push({
@@ -562,14 +562,25 @@
                 "跳槽：从" + st.career.currentJob.levelName + "跳槽到新公司",
             });
             st.career.currentJob.salary = Math.round(
-              st.career.currentJob.salary * 2,
+              st.career.currentJob.salary * 1.35,
             );
             st.career.currentJob.workDays = 0;
+            // v3.1 修复：跳槽增加代价——人脉清零 + 30 天试用期薪资 80%
+            if (
+              st.corporate &&
+              st.corporate.colleagues &&
+              st.corporate.colleagues.network
+            ) {
+              st.corporate.colleagues.network.forEach(function (c) {
+                c.relationship = Math.max(0, c.relationship - 30);
+              });
+            }
+            st.career.currentJob._probationDays = 30;
             StateManager.addMessage(
-              "💼 你接受了猎头的offer！薪资翻倍至¥" +
+              "💼 你接受了猎头的offer！薪资涨35%至¥" +
                 st.career.currentJob.salary.toLocaleString() +
-                "/月",
-              "success",
+                "/月。但人脉-30，30天试用期薪资打八折",
+              "warning",
             );
           },
         },
@@ -707,17 +718,28 @@
       options: [
         {
           text: "🛡️ 抛售部分资产换现金",
-          hint: "减少损失",
+          hint: "减少损失（按当前市值70%返还现金）",
           apply: function (st) {
             var inv = st.investment || {};
             if (inv.stockHoldings && inv.stockHoldings.length > 0) {
-              var totalSold = 0;
+              var totalCashBack = 0;
               for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
-                totalSold += 1;
+                var h = inv.stockHoldings[i];
+                var curPrice =
+                  inv.stockPrices && inv.stockPrices[h.symbol]
+                    ? inv.stockPrices[h.symbol].price
+                    : h.buyPrice || 0;
+                totalCashBack += Math.round(curPrice * (h.shares || 1) * 0.7);
               }
+              var soldCount = inv.stockHoldings.length;
               inv.stockHoldings = [];
+              st.resources.cash = (st.resources.cash || 0) + totalCashBack;
               StateManager.addMessage(
-                "💼 你清仓了所有股票，回笼现金。虽然亏了一些，但现金为王。",
+                "💼 你清仓了" +
+                  soldCount +
+                  "只股票，按市值70%回笼¥" +
+                  totalCashBack.toLocaleString() +
+                  "。虽然亏了一些，但现金为王。",
                 "success",
               );
             } else {
@@ -794,7 +816,7 @@
         },
         {
           text: "🏦 咨询会计师做税务规划",
-          hint: "花费¥10,000，减少税款",
+          hint: "花费¥10,000，30%概率审计更严",
           apply: function (st) {
             if (st.resources.cash < 10000) {
               StateManager.addMessage(
@@ -804,13 +826,22 @@
               return;
             }
             st.resources.cash -= 10000;
-            var tax = Math.round(st.resources.cash * 0.04);
+            // v3.1：30% 概率审计更严，补税至6%（而非4%）
+            var rate =
+              Random && Random.float
+                ? Random.float(0, 1) < 0.3
+                  ? 0.06
+                  : 0.04
+                : 0.04;
+            var tax = Math.round(st.resources.cash * rate);
             st.resources.cash -= tax;
             StateManager.addMessage(
-              "👔 会计师帮你做了税务规划，最终只交了¥" +
+              "👔 会计师帮你做了税务规划" +
+                (rate > 0.04 ? "，但遇到严格审计" : "") +
+                "，最终交了¥" +
                 tax.toLocaleString() +
                 "。",
-              "success",
+              rate > 0.04 ? "warning" : "success",
             );
           },
         },

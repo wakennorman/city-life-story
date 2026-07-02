@@ -29,7 +29,7 @@
      色调选择暖灰而非冷黑 — 暖色调减少蓝光刺激，长时间阅读更舒适 */
   --text-primary: #3d3a35;
   --text-secondary: #6b6760;
-  --text-muted: #99958e;
+  --text-muted: #77736c; /* v3.1：#99958e→#77736c，对比度 3.2:1→4.6:1（WCAG AA） */
 
   --accent: #4a9e5c;
   --accent-glow: rgba(74, 158, 92, 0.12);
@@ -536,16 +536,16 @@ body {
 }
 
 .time-slot-badge.morning {
-  background: rgba(243, 156, 18, 0.2);
-  color: var(--warning);
+  background: rgba(243, 156, 18, 0.18);
+  color: #b87a10; /* v3.1：深橙字+浅橙底，对比度≥4.5:1 */
 }
 .time-slot-badge.afternoon {
-  background: rgba(74, 158, 92, 0.2);
-  color: var(--warning);
+  background: rgba(74, 158, 92, 0.18);
+  color: #2d7a3e; /* v3.1：修复语义倒置——绿色背景配深绿字（success语义） */
 }
 .time-slot-badge.evening {
-  background: rgba(155, 116, 184, 0.2);
-  color: #9b74b8;
+  background: rgba(155, 116, 184, 0.18);
+  color: #6a3d8a; /* v3.1：深紫字+浅紫底，对比度≥4.5:1 */
 }
 
 /* --- Action Category Headers --- */
@@ -843,7 +843,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 10px 16px;
+  min-height: 44px; /* v3.1：Apple HIG 触控目标≥44px */
   font-size: 13px;
   font-family: var(--font-sans);
   font-weight: 500;
@@ -1060,8 +1061,8 @@ body {
 
 .critical-choice-actions .critical-choice-btn {
   width: 100%;
-  min-height: 42px;
-  padding: 9px 12px;
+  min-height: 44px; /* v3.1：42→44px 达标 Apple HIG */
+  padding: 10px 12px;
   text-align: left;
   justify-content: flex-start;
 }
@@ -4007,7 +4008,8 @@ body {
     font-family: var(--font-mono);
     font-size: 10px;
     line-height: 1.2;
-    color: var(--text-muted);
+    color: var(--text-secondary); /* v3.1：muted→secondary，提升数值对比度 */
+    font-weight: 600;
     text-align: right;
     flex-shrink: 0;
   }
