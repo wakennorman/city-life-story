@@ -468,6 +468,61 @@
       state.player.actionPoints = Math.max(0, ap);
     };
   }
+
+  // ====== 社交策略 ======
+  function createSocialPolicy() {
+    return function (state) {
+      var ap = state.player ? state.player.actionPoints : 0;
+      var cash = state.resources ? state.resources.cash : 0;
+      var needs = state.needs;
+      if (!needs || ap <= 0) return;
+      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+        state.resources.cash = Math.max(0, state.resources.cash - 10);
+        needs.hunger = Math.max(0, needs.hunger - 30);
+        ap -= 10;
+      }
+      if (needs.fatigue > 70 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
+        ap -= 15;
+      }
+      var ht = state.housing ? state.housing.tier : 0;
+      if (ht === 0 && cash >= 500 && state.player.day > 7) {
+        state.resources.cash -= 300;
+        state.housing.tier = 1;
+      }
+      if (ht === 1 && cash >= 1200 && state.player.day > 25) {
+        state.resources.cash -= 800;
+        state.housing.tier = 2;
+      }
+
+      var day = state.player.day;
+      // 解锁NPC推荐工作
+      if (day > 15) state.flags.oldZhouReferred = true;
+      if (day > 25) state.flags.bossLiReferred = true;
+      if (day > 20) state.flags.sisterZhangReferred = true;
+      if (day > 20) state.flags.chefChenAssistant = true;
+      if (day > 30 && state.player.intelligence >= 25)
+        state.flags.xiaoMeiReferred = true;
+
+      // 地点进阶：利用NPC关系获取高薪工作
+      var loc = "slum";
+      if (day > 20 && cash >= 400) loc = "construction";
+      if (day > 35 && cash >= 800) loc = "commercialDist";
+      if (day > 60 && cash >= 3000 && state.player.intelligence >= 30)
+        loc = "school";
+      state.trade.currentLocation = loc;
+
+      var worked = 0;
+      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
+        var job = findJobAtLocation(state, loc);
+        applyJobPay(state, job);
+        ap -= 14;
+        worked++;
+      }
+      state.player.actionPoints = Math.max(0, ap);
+    };
+  }
+
   function runTrial(baseState, policyFn, seed) {
     var state = deepClone(baseState);
     state.player.day = 1;
@@ -558,6 +613,7 @@
       grinder: createGrinderPolicy(),
       skiller: createSkillerPolicy(),
       trader: createTraderPolicy(),
+      social: createSocialPolicy(),
     };
     var policy = policies[strategyName];
     if (!policy) {
@@ -983,7 +1039,7 @@
 
     var strategies =
       CONFIG.strategy === "all"
-        ? ["balanced", "grinder", "skiller", "trader"]
+        ? ["balanced", "grinder", "skiller", "trader", "social"]
         : [CONFIG.strategy];
     var allStats = [];
     for (var i = 0; i < strategies.length; i++) {
