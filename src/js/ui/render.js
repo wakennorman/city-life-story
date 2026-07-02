@@ -1258,10 +1258,7 @@ function renderCurrentTab(state, anchorGoodId) {
   // 时间槽指示器（日期 + 时段 + AP）
   renderTimeSlot(state, area);
 
-  // 移动端专属：标题行（品牌 + 紧急提示）
-  renderTitleBar(state, area);
-
-  // 移动端专属：背包 + 住所状态条
+  // 移动端专属：背包 + 住所状态条（上移至标题行位置，标题行已移除）
   renderLocationBar(state, area);
 
   // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
@@ -1972,43 +1969,6 @@ function _growthStat(label, value, color) {
 
 /** 时间槽 + 住所/背包信息 */
 /**
- * 移动端顶部标题行：显示品牌（城市浮生记 v1.0）+ 紧急住宿提示
- * 仅在移动端激活（桌面端通过 CSS 隐藏，桌面端品牌保留在 header 内）
- */
-function renderTitleBar(state, parent) {
-  var div = document.createElement("div");
-  div.className = "mobile-title-strip";
-  div.style.cssText =
-    "display:flex;align-items:center;gap:8px;padding:4px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;";
-
-  // 左侧：品牌
-  var titleSpan = document.createElement("span");
-  titleSpan.style.cssText =
-    "font-weight:700;color:var(--accent);white-space:nowrap;letter-spacing:0.3px;";
-  var ver = "v1.0";
-  // 优先用脚本注入的全局版本号（若有）
-  if (typeof GAME_VERSION === "string" && GAME_VERSION) {
-    ver = GAME_VERSION;
-  } else if (typeof VERSION === "string" && VERSION) {
-    ver = VERSION;
-  }
-  titleSpan.textContent = "🏙️ 城市浮生记 " + ver;
-  div.appendChild(titleSpan);
-
-  // 右侧：露宿街头时的紧急住宿提示
-  var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  if (currentTier === 0 && state.player.day > 3) {
-    var tipSpan = document.createElement("span");
-    tipSpan.style.cssText =
-      "font-size:11px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
-    div.appendChild(tipSpan);
-  }
-
-  parent.appendChild(div);
-}
-
-/**
  * 移动端位置+背包状态行（时间指示器下方）
  * 结构：🎒 X/Y · 🌃 住所名  （常显，一目了然）
  */
@@ -2016,7 +1976,7 @@ function renderLocationBar(state, parent) {
   var div = document.createElement("div");
   div.className = "mobile-location-strip";
   div.style.cssText =
-    "display:flex;align-items:center;gap:8px;padding:4px 12px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:6px;font-size:12px;";
+    "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
 
   // 背包容量
   var itemCount = 0;
@@ -2030,7 +1990,7 @@ function renderLocationBar(state, parent) {
 
   var bagSpan = document.createElement("span");
   bagSpan.style.cssText = "white-space:nowrap;font-weight:600;";
-  bagSpan.textContent = "🎒 " + itemCount + "/" + totalCap + hasStorage;
+  bagSpan.textContent = "🎒" + itemCount + "/" + totalCap + hasStorage;
   div.appendChild(bagSpan);
 
   // 分隔符
@@ -2039,7 +1999,7 @@ function renderLocationBar(state, parent) {
   sep.textContent = "·";
   div.appendChild(sep);
 
-  // 住所
+  // 住所 + 住所名紧贴升级提示（均与住所名紧邻，右对齐组）
   var houseData =
     (typeof HOUSING_TIERS !== "undefined" &&
       HOUSING_TIERS[state.housing?.tier || 0]) ||
@@ -2047,20 +2007,26 @@ function renderLocationBar(state, parent) {
   var houseName = houseData ? houseData.name : "露宿街头";
   var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
 
-  var houseSpan = document.createElement("span");
-  houseSpan.style.cssText = "color:var(--text-secondary);white-space:nowrap;";
-  houseSpan.textContent = houseIcon + " " + houseName;
-  div.appendChild(houseSpan);
+  // 右侧组（住所名 + 升级提示 紧贴，作为整体右对齐）
+  var rightGroup = document.createElement("span");
+  rightGroup.style.cssText =
+    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;";
 
-  // 升级提示（早期露宿）
+  var houseSpan = document.createElement("span");
+  houseSpan.style.cssText = "color:var(--text-secondary);";
+  houseSpan.textContent = houseIcon + houseName;
+  rightGroup.appendChild(houseSpan);
+
   var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  if (currentTier === 0 && state.player.day <= 3) {
+  // 升级提示：露宿时引导升级（提示随住所变化而变化）
+  if (currentTier === 0) {
     var tipSpan = document.createElement("span");
-    tipSpan.style.cssText =
-      "font-size:10px;color:var(--warning);white-space:nowrap;margin-left:auto;";
-    tipSpan.textContent = "💡可升级为🛏️合租床位";
-    div.appendChild(tipSpan);
+    tipSpan.style.cssText = "font-size:10px;color:var(--warning);";
+    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
+    rightGroup.appendChild(tipSpan);
   }
+
+  div.appendChild(rightGroup);
 
   parent.appendChild(div);
 }
@@ -2091,9 +2057,7 @@ function renderStatsStrip(state, parent) {
 
       // 预警：低数值（或高即坏如疲劳）时用该要素本身色值予以薄边+数值变色
       var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
-      var warnStyle = isBad
-        ? "border-bottom:2px solid " + cfg.color + ";"
-        : "";
+      var warnStyle = isBad ? "border-bottom:2px solid " + cfg.color + ";" : "";
 
       cell.style.cssText =
         "flex:1;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.02);" +
@@ -2130,29 +2094,100 @@ function renderStatsStrip(state, parent) {
   }
 
   var attrs = [
-    { label: "体", cls: "physique", color: "#c4803a", threshold: 10,
-      getVal: function () { return p.physique || 0; } },
-    { label: "智", cls: "intelligence", color: "#5a8ab4", threshold: 10,
-      getVal: function () { return p.intelligence || 0; } },
-    { label: "敏", cls: "agility", color: "#5aaa5a", threshold: 10,
-      getVal: function () { return p.agility || 0; } },
-    { label: "心", cls: "mental-bar", color: "#9b74b8", threshold: 10,
-      getVal: function () { return p.mental || 0; } },
-    { label: "魅", cls: "charm", color: "#d9789e", threshold: 10,
-      getVal: function () { return p.charm || 0; } },
+    {
+      label: "体质",
+      cls: "physique",
+      color: "#c4803a",
+      threshold: 10,
+      getVal: function () {
+        return p.physique || 0;
+      },
+    },
+    {
+      label: "智力",
+      cls: "intelligence",
+      color: "#5a8ab4",
+      threshold: 10,
+      getVal: function () {
+        return p.intelligence || 0;
+      },
+    },
+    {
+      label: "敏捷",
+      cls: "agility",
+      color: "#5aaa5a",
+      threshold: 10,
+      getVal: function () {
+        return p.agility || 0;
+      },
+    },
+    {
+      label: "心智",
+      cls: "mental-bar",
+      color: "#9b74b8",
+      threshold: 10,
+      getVal: function () {
+        return p.mental || 0;
+      },
+    },
+    {
+      label: "魅力",
+      cls: "charm",
+      color: "#d9789e",
+      threshold: 10,
+      getVal: function () {
+        return p.charm || 0;
+      },
+    },
   ];
 
   var needs = [
-    { label: "饿", cls: "hunger", color: "#c9a838", threshold: 15,
-      getVal: function () { return n.hunger != null ? n.hunger : 100; } },
-    { label: "疲", cls: "fatigue", color: "#8a9080", threshold: 85, inverted: true,
-      getVal: function () { return n.fatigue != null ? n.fatigue : 0; } },
-    { label: "卫", cls: "hygiene", color: "#4a9490", threshold: 15,
-      getVal: function () { return n.hygiene != null ? n.hygiene : 100; } },
-    { label: "情", cls: "happiness", color: "#cc7868", threshold: 10,
-      getVal: function () { return n.happiness != null ? n.happiness : 100; } },
-    { label: "健", cls: "health", color: "#cc7868", threshold: 20,
-      getVal: function () { return s.health != null ? s.health : 100; } },
+    {
+      label: "饥饿",
+      cls: "hunger",
+      color: "#c9a838",
+      threshold: 15,
+      getVal: function () {
+        return n.hunger != null ? n.hunger : 100;
+      },
+    },
+    {
+      label: "疲劳",
+      cls: "fatigue",
+      color: "#8a9080",
+      threshold: 85,
+      inverted: true,
+      getVal: function () {
+        return n.fatigue != null ? n.fatigue : 0;
+      },
+    },
+    {
+      label: "卫生",
+      cls: "hygiene",
+      color: "#4a9490",
+      threshold: 15,
+      getVal: function () {
+        return n.hygiene != null ? n.hygiene : 100;
+      },
+    },
+    {
+      label: "心情",
+      cls: "happiness",
+      color: "#cc7868",
+      threshold: 10,
+      getVal: function () {
+        return n.happiness != null ? n.happiness : 100;
+      },
+    },
+    {
+      label: "健康",
+      cls: "health",
+      color: "#cc7868",
+      threshold: 20,
+      getVal: function () {
+        return s.health != null ? s.health : 100;
+      },
+    },
   ];
 
   container.appendChild(buildRow(attrs));
@@ -2162,10 +2197,12 @@ function renderStatsStrip(state, parent) {
   if (s.illnesses && s.illnesses.length > 0) {
     var illnessDiv = document.createElement("div");
     illnessDiv.className = "mss-illness";
-    var names = s.illnesses.map(function (d) {
-      var nm = typeof d === "string" ? d : (d.name || d.id || "");
-      return nm;
-    }).filter(Boolean);
+    var names = s.illnesses
+      .map(function (d) {
+        var nm = typeof d === "string" ? d : d.name || d.id || "";
+        return nm;
+      })
+      .filter(Boolean);
     illnessDiv.textContent = "🤒 " + names.join("、");
     container.appendChild(illnessDiv);
   }

@@ -50,7 +50,8 @@
     var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
     if (p.day <= 7) return "survival";
     if (debt > 0) return "debt";
-    if (p.phase === "corporate") return cash >= 50000 ? "advanced" : "corporate";
+    if (p.phase === "corporate")
+      return cash >= 50000 ? "advanced" : "corporate";
     if ((p.intelligence || 0) >= 40 && p.day > 60) return "growth";
     return "growth";
   }
@@ -60,6 +61,16 @@
       if (LIFE_STAGES[i].id === stage) return i;
     }
     return 0;
+  }
+
+  // 动态生成下一阶段提示文案（不同剧本/状态下文案不同）
+  function _dynamicNextDesc(stage, state) {
+    if (stage.id === "debt") {
+      var r = state.resources || {};
+      var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+      return debt > 0 ? "还清债务，攒到¥5000" : "攒下¥5000启动资金";
+    }
+    return stage.nextDesc;
   }
 
   // ─── 目标检查函数 ──────────────────────────────────────────────
@@ -461,7 +472,12 @@
   function generateDailyQuests(state) {
     var day = state.player.day;
     var stored = state.flags && state.flags._dailyQuests;
-    if (stored && stored.day === day && stored.quests && stored.quests.length > 0) {
+    if (
+      stored &&
+      stored.day === day &&
+      stored.quests &&
+      stored.quests.length > 0
+    ) {
       return stored.quests;
     }
     var pool = _buildPool(state);
@@ -603,7 +619,12 @@
       hint.style.cssText =
         "font-size:10px;color:var(--text-secondary);padding:3px 4px 0;line-height:1.4;";
       hint.textContent =
-        "▸ 下一阶段「" + next.icon + " " + next.label + "」：" + next.nextDesc;
+        "▸ 下一阶段「" +
+        next.icon +
+        " " +
+        next.label +
+        "」：" +
+        _dynamicNextDesc(next, state);
       wrap.appendChild(hint);
     }
 

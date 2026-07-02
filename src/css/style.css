@@ -1581,6 +1581,10 @@ body {
   .mobile-stats-strip {
     display: none !important;
   }
+  /* 桌面端品牌已在 header 显示，侧栏底部版本号隐藏 */
+  .sidebar-version-footer {
+    display: none !important;
+  }
 }
 
 /* ====== Tutorial System ====== */
@@ -3272,16 +3276,24 @@ body {
     display: none;
   }
 
-  /* ===== 移动端优化：标题行 / 状态行 ===== */
-
-  /* 标题行（城市浮生记 v1.0） */
-  .mobile-title-strip {
-    display: flex !important;
-  }
+  /* ===== 移动端优化：状态行 ===== */
 
   /* 位置+背包状态行 */
   .mobile-location-strip {
     display: flex !important;
+  }
+
+  /* 侧栏底部版本号（替代顶部标题行） */
+  .sidebar-version-footer {
+    display: block;
+    margin-top: auto;
+    padding: 10px 4px 4px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
   }
 
   #main {
@@ -3897,16 +3909,16 @@ body {
   .mobile-stats-strip {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 4px 8px;
-    margin-bottom: 4px;
+    gap: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: 8px;
   }
   .mss-row {
     display: flex;
-    gap: 3px;
+    gap: 4px;
   }
   .mss-cell {
     flex: 1;
@@ -3914,17 +3926,17 @@ body {
   }
   .mss-label {
     display: inline-block;
-    width: 16px;
-    font-size: 9px;
-    line-height: 1;
+    width: 26px;
+    font-size: 10px;
+    line-height: 1.2;
     color: var(--text-secondary);
     flex-shrink: 0;
   }
   .mss-track {
     flex: 1;
-    height: 4px;
+    height: 5px;
     background: var(--bg-input);
-    border-radius: 2px;
+    border-radius: 3px;
     overflow: hidden;
     min-width: 18px;
   }
@@ -3978,23 +3990,23 @@ body {
   /* 窄屏（<=360px）进一步压字号、去空白 */
   @media (max-width: 360px) {
     .mss-label {
-      font-size: 8px;
-      width: 14px;
+      font-size: 9px;
+      width: 22px;
     }
     .mobile-stats-strip {
-      gap: 2px;
-      padding: 3px 5px;
+      gap: 3px;
+      padding: 4px 6px;
     }
     .mss-val {
-      font-size: 8px !important;
+      font-size: 9px !important;
     }
   }
   .mss-val {
     display: inline-block;
-    min-width: 16px;
+    min-width: 18px;
     font-family: var(--font-mono);
-    font-size: 9px;
-    line-height: 1;
+    font-size: 10px;
+    line-height: 1.2;
     color: var(--text-muted);
     text-align: right;
     flex-shrink: 0;
