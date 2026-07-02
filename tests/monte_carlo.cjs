@@ -382,12 +382,16 @@
         ap -= 15;
       }
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && cash >= 500 && state.player.day > 7) {
+      if (ht === 0 && cash >= 500 && state.player.day > 10) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
       }
+
       var day = state.player.day;
-      if (day <= 7) {
+      var survived = state.status.health > 0;
+
+      // 阶段1（Day1-15）：纯打工攒本金
+      if (day <= 15 || cash < 150) {
         state.trade.currentLocation = "slum";
         var w1 = 0;
         while (ap >= 14 && w1 < 3 && needs.fatigue < 60) {
@@ -395,12 +399,24 @@
           ap -= 14;
           w1++;
         }
+        // 有经验后去商业区赚更多
+        if (day > 10 && cash >= 300) {
+          state.trade.currentLocation = "commercialDist";
+          applyJobPay(state, findJobAtLocation(state, "commercialDist"));
+          ap -= 14;
+        }
         state.player.actionPoints = Math.max(0, ap);
         return;
       }
-      // 倒买倒卖：批发市场低价进→商业区高价出
-      // 保留至少¥50生活费
-      if (cash >= 120 && ap >= 20) {
+
+      // 确保生活费
+      var reserve = 100;
+      var surplus = Math.max(0, cash - reserve);
+
+      // 阶段2：打工+套利混合
+      // 每3天做一次贸易，其他时间打工
+      if (surplus >= 50 && ap >= 24 && day % 3 === 0) {
+        // 批发市场进货
         state.trade.currentLocation = "wholesaleMarket";
         var goodsList = [
           "fruits",
@@ -417,14 +433,17 @@
           if (g && g[chosen]) baseP = g[chosen].basePrice;
         } catch (e) {}
         var buyPrice = Math.floor(baseP * 0.78);
-        var cashForInv = Math.max(0, cash - 80);
-        var qty = Math.min(Math.floor(cashForInv / Math.max(buyPrice, 1)), 6);
+        // 只用50%的盈余现金进货
+        var investCash = Math.floor(surplus * 0.5);
+        var qty = Math.min(Math.floor(investCash / Math.max(buyPrice, 1)), 10);
         if (qty > 0) {
           state.resources.cash -= buyPrice * qty;
           if (!state._mcInv) state._mcInv = {};
           state._mcInv[chosen] = (state._mcInv[chosen] || 0) + qty;
-          ap -= 10;
+          ap -= 12;
         }
+
+        // 卖到商业区
         state.trade.currentLocation = "commercialDist";
         var sellPrice = Math.floor(baseP * 1.15);
         var haveQty = state._mcInv ? state._mcInv[chosen] || 0 : 0;
@@ -433,14 +452,19 @@
           state.resources.totalEarned =
             (state.resources.totalEarned || 0) + sellPrice * haveQty;
           delete state._mcInv[chosen];
-          ap -= 10;
+          ap -= 12;
         }
       }
-      if (ap >= 14) {
-        state.trade.currentLocation = "commercialDist";
+
+      // 剩余AP去商业区打工
+      state.trade.currentLocation = "commercialDist";
+      var w2 = 0;
+      while (ap >= 14 && w2 < 2 && needs.fatigue < 65) {
         applyJobPay(state, findJobAtLocation(state, "commercialDist"));
         ap -= 14;
+        w2++;
       }
+
       state.player.actionPoints = Math.max(0, ap);
     };
   }
