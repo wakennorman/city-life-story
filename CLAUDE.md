@@ -73,15 +73,15 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作**：移动端顶栏三行重组 + 状态条显性化（2026-07-02，按 v3.1 审查改进触发）
-  - **问题**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性被隐藏；顶部栏"日期/城市浮生记 v1.0"与时间槽重复且挤占关键数值位置；现金被挤到后面需横划才能看到
-  - **移动端三行顶栏**：顶栏 [☰][💰][💸] / 时间槽 [📅 第N天 | ☀️ 时段 ⚡AP] / 状态条 [🎒 X/Y · 🌃 住所（💡升级提示）][🏙️ 品牌]
-  - `render.js`：新增 `renderTitleBar` + `renderLocationBar`，`renderTimeSlot` 去掉背包/住址包袱
-  - `style.css` <= 768px：折叠 `.header-logo/.header-context/.header-day` 等，显性化现金欠款色带；>= 769px 隐藏两条移动端专属行，保持桌面三层原装
-  - 新增 `memory/review-improve-v3.1.md` 完整的 v3.1 审查 SOP（CLAUDE.md 触发短语引用的缺失文件）、`memory/mobile-design-principles.md` 沉淀 mob-first 顶栏三行范式
-  - **设计参考**：Apple HIG 状态栏、Material 3 顶栏、BitLife/Mostly 手机端信息层级、中式文字生存布局
-  - **验证**：`check:js`(116) / `typecheck` / `build.py`(4500.5KB) / `npm run build` 全过；commit: `1ca6a85`；已 push 到 origin/main（用户明确要求）
-  - **SOP 自评**：v3.1 审查 SOP 已落地首次实战；下一代可增加"留存 A/B 模拟测试"维度
+- **最新一次工作 (2026-07-02)**：移动端顶栏三行重组 + 属性/状态 10 指标常驻显性化（按 v3.1 审查改进触发）
+  - **问题**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性/状态全藏（必须点 ☰ 才看得到）；顶部栏"日期/城市浮生记 v1.0"与时间槽重复且挤占关键数值位置；现金被挤到后面需横划才能看到
+  - **移动端四行信息栏**：顶栏 [☰][💰][💸] / 时间槽 [📅 第N天 | ☀️ 时段 ⚡AP] / 状态条 [🎒 X/Y · 🌃 住所（💡升级提示）][🏙️ 品牌] / **常驻状态条（体/智/敏/心/魅 + 饿/疲/卫/情/健 10 指标）**
+  - `render.js`：第一轮新增 `renderTitleBar` + `renderLocationBar`；第二轮新增 `renderStatsStrip`（常驻状态条，2 行 × 5 细色带 + 疾病行）
+  - `style.css`：<=768px 折叠 `.header-logo/.header-context/.header-day` 等，显性化现金欠款色带；追加 `.mobile-stats-strip/.mss-row/.mss-cell/.mss-label/.mss-track/.mss-fill/.mss-val/.mss-illness` 全套 + 8 个 `.mss-fill.<cls>` 渐变配色类；>=769px 隐藏所有移动端专属行，保持桌面三层原装
+  - 新增记忆文件：`memory/review-improve-v3.1.md`（完整 v3.1 审查 SOP）、`memory/mobile-design-principles.md`（mob-first 顶栏范式）
+  - **设计参考**：Apple HIG 状态栏 / Material 3 顶栏 / BitLife & Mostly 手机端信息层级 / Stardew Valley 状态条 / Papers Please 底部常驻章
+  - **验证**：`check:js`(116) / `typecheck` / `build.py`(4506.8KB) / `npm run build` 全过；STUB-DOM runtime test 5×2 结构正确；commits `1ca6a85`+`b009fa3`+本轮commit 待定；用户明确要求上传 git
+  - **SOP 自评**：移动端 4 行信息栏范式稳定（顶栏/时间槽/位置+背包/状态）+ 5 属性+5 状态常驻显性化；下一代可增加"留存 A/B 模拟测试"维度
 - **上一轮工作**：滚动锚定修复 — 连续点击买到错位物品（2026-07-02）
   - **问题**：交易页每次购买/卖出后 `renderCurrentTab` 整体重建把 scrollTop 归零，"背包区"出现/消失推走市场格子，光标漂到上一项，连点就买错
   - **render.js +107/-8**：三套滚动锚定 — 精确 goodId 锚定（交易页）/ 通用首张 `.action-card` 锚定（行动/技能 tab）/ 内层滚动容器 scrollTop 保存恢复（事业 tab）

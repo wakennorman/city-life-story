@@ -2584,6 +2584,7 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 **用户原诉求**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性被隐藏，无法直观看到；顶部栏的"日期"与時間槽重复，"城市浮生记 v1.0"挤占宝贵水平空间；"钱"被挤到后面需横划才能看到。
 
 ### 设计参考
+
 - Apple HIG / Material 3 状态栏 & 导航栏划分
 - BitLife/Mostly（大多数）手机端：顶部只放最关键的两个数（年龄+钱），其余赶到底部状态条
 - iOS/Android 系统状态栏思维：顶部两行放 ≤3 个关键数值，一屏内可见、不需滚动
@@ -2607,22 +2608,81 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
   - 新增 `renderTitleBar(state, parent)`：品牌 + 紧急住宿提示条
   - 新增 `renderLocationBar(state, parent)`：🎒 + 🌃 住所 + 升级提示
   - `renderTimeSlot`：去掉背包/住址，AP 右对齐
-  - `renderContent` 在 `renderTimeSlot` 之后依次调用	renderTitleBar / renderLocationBar
+  - `renderContent` 在 `renderTimeSlot` 之后依次调用 renderTitleBar / renderLocationBar
 - `src/css/style.css`：
   - <=768px 隐藏 `.header-logo / #header-season-label / #header-phase-stat`，显性化现金/欠款颜色带
   - <=768px 显性显示 `.mobile-title-strip` 和 `.mobile-location-strip`
-  - >=769px 隐藏两条移动端专属行（桌面端保持原桌面三层不变）
+  - > =769px 隐藏两条移动端专属行（桌面端保持原桌面三层不变）
 - `src/index.html`：仅调整了 script 引入顺序无任何变动
 
 ### 交叉验证（按 1.4 标准）
+
 - `renderHeaderContext` 原职责（在顶栏显示住所 chip）与新增 `renderLocationBar` 重复 → 已通过 CSS 隐藏手机端的 `.header-context`，保留桌面端
 - 品牌名在桌面端 `header-logo` 保留，仅手机端隐藏，避免文案重复
 - 紧急住宿提示在 `getDailyActionTips`（urgent）中已经推入数组；新 `renderTitleBar` 是针对顶条位置的独立显性入口，Urgent 仍在行动页提示卡片中保留，两者不再冲突（ urgents 仍通过 `getDailyActionTips` 注入行动 tab，仅在顶条显示最紧急的那一条）
 
 ### 验证
+
 - `node --check js/ui/render.js` ✓
 - `npm run check:js` (116) ✓
 - `npm run typecheck` ✓
 - `python build.py` (4500.5 KB) ✓
 - `npm run build` (vite 68.55 kB gzip 24.98 kB) ✓
 
+---
+
+## 2026-07-02 (续2) — 属性/状态常驻迷你条（10 指标显性化，第二轮）
+
+**用户原诉求**：左侧导航栏"状态与位置"里的属性在手机端默认隐藏、必须点 ☰ 才看得到 → **一定要直观显示出来**。上一轮已把住所/背包/品牌/UP 顶到 3 行状态条，但 10 个属性/状态（体质/智力/敏捷/心智/魅力/心情/饥饿/疲劳/卫生/健康）仍然藏在本轮画布里。本轮落地常驻显性化。
+
+### 设计
+
+```
+第1行（header 顶栏）:  [☰]  [💰 ¥N]  [💸 ¥M]
+第2行（时间槽）      :  📅 第 N 天 | ☀️ 上午  ⚡ 100/100
+第3行（状态条）      :  🎒 0/20 · 🌃 住所   🏙️ 品牌
+第4行（常驻状态条）  :  ██体NN ██智NN ██敏NN ██心NN ██魅NN
+                       ██饿NN ██疲NN ██卫NN ██情NN ██健NN
+第5行（人生目标）    :  🌟 人生目标
+```
+
+- **常驻不可折叠**（"直观显性化" = 零交互成本，多点一次 ☰ 就是回退）
+- 2 行 × 5 细色带：每条「细标签（1~2 字）+ 细色带（4px 高）+ 数值」
+- 颜色类与侧栏同名（`.physique/.intelligence/.agility/.mental-bar/.charm` + `.hunger/.fatigue/.hygiene/.happiness/.health`），渐变配色完全复用
+- 预警阈值完全对齐 `renderStreetStats/renderNeedsBars` 调用 `warnStatRow` 的阈值集（体/智/敏/心/魅≤10、饿≤15、疲≥85、卫≤15、情≤10、健≤20），触发时该条底部出现 2px 同色边线 + 数值变色
+- 疾病行：仅在有 `state.status.illnesses` 时追加一行 "🤒 感冒、…"，显性交代为什么健康在掉
+- 桌面端（>=769px）：`.mobile-stats-strip { display:none !important }` — 完全走侧栏 `renderStreetStats/renderNeedsBars`，无回归
+
+### 取舍说明
+
+- 为什么不折叠？"直观显性化" = 零交互成本；隐藏会回到"要点 ☰ 才看得到"的原问题
+- 为什么不放人生目标上面？视觉重量从 immediate → aspirational：钱 → 时间 → 住所处境 → 角色状态 → 人生目标。Apple HIG "递减重量"
+- 为什么是细色带不是粗条？粗条 16px×10 = 160px（整屏 1/3 没了），细条 4px×2+padding ≈ 18px，约 1.5 行字高
+
+### 修改文件
+
+- `src/js/ui/render.js`：
+  - 新增 `renderStatsStrip(state, parent)`：常驻状态条（DOM 创建 + 双行 + 疾病行）
+  - 在 `renderCurrentTab` 调用序列中：`renderLocationBar` 之后、`renderGoalStrip` 之前
+- `src/css/style.css`：
+  - `@media (max-width: 768px)` 内追加 `.mobile-stats-strip / .mss-row / .mss-cell / .mss-label / .mss-track / .mss-fill / .mss-val / .mss-illness` 全套
+  - 8 个 `.mss-fill.<cls>` 渐变配色类（与侧栏同色）
+  - 嵌套 `@media (max-width: 360px)` 进一步压字号/空白
+  - `@media (min-width: 769px)` 追加 `.mobile-stats-strip { display:none !important }`
+
+### 交叉验证（按 v3.1 SOP § 2/4/7）
+
+- 阈值完全对齐：直接复用 `renderStreetStats/renderNeedsBars` `warnStatRow` 调用中使用的阈值集，保证玩家在整个游戏里的"这条要素是否在告急"判断一致
+- 疾病行驱动：仅读 `state.status.illnesses`（已由 `renderIllnessRow` 同步写 `#stat-fame` 之后），不引入新的 flag
+- 数值读取 `getVal` 全部带 null 兜底（如 `n.hunger != null ? n.hunger : 100`），防御初始状态缺失某个字段
+- CSS 变量 fallback：`var(--physique-color, #c4803a)`，即使主题未定义变量也能显示
+- 桌面端无新增元素：仅通过 `display:none !important` 隐藏，桌面端 HTML 结构与 git log 完全一致
+
+### 验证
+
+- `node --check js/ui/render.js` ✓
+- `npm run check:js` (116) ✓
+- `npm run typecheck` ✓
+- `python build.py` (4506.8 KB) ✓
+- `npm run build` (vite 68.55 kB gzip 24.98 kB) ✓
+- STUB-DOM runtime test：5 cells × 2 rows 结构正确；有疾病时追加 illnessDiv；默认状态仅 2 行

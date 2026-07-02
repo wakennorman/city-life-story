@@ -1264,6 +1264,9 @@ function renderCurrentTab(state, anchorGoodId) {
   // 移动端专属：背包 + 住所状态条
   renderLocationBar(state, area);
 
+  // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
+  renderStatsStrip(state, area);
+
   // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
   renderGoalStrip(state, area);
 
@@ -2060,6 +2063,114 @@ function renderLocationBar(state, parent) {
   }
 
   parent.appendChild(div);
+}
+
+/**
+ * 移动端常驻状态条（位置/背包 与 人生目标 之间）
+ * 结构：2 行 × 5 条，每条「细标签 + 细色带 + 数值」
+ *  第1行：体/智/敏/心/魅  5基础属性
+ *  第2行：饿/疲/卫/情/健  5状态
+ * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
+ */
+function renderStatsStrip(state, parent) {
+  var p = state.player;
+  var n = state.needs || {};
+  var s = state.status || {};
+
+  var container = document.createElement("div");
+  container.className = "mobile-stats-strip";
+
+  // 单行 5 条紧凑型细色带
+  function buildRow(items) {
+    var row = document.createElement("div");
+    row.className = "mss-row";
+    items.forEach(function (cfg) {
+      var val = cfg.getVal();
+      var cell = document.createElement("div");
+      cell.className = "mss-cell";
+
+      // 预警：低数值（或高即坏如疲劳）时用该要素本身色值予以薄边+数值变色
+      var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
+      var warnStyle = isBad
+        ? "border-bottom:2px solid " + cfg.color + ";"
+        : "";
+
+      cell.style.cssText =
+        "flex:1;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.02);" +
+        warnStyle;
+
+      // 细标签（1~2 中文字）
+      var label = document.createElement("span");
+      label.className = "mss-label";
+      label.textContent = cfg.label;
+      cell.appendChild(label);
+
+      // 细色带（复用侧栏同名 CSS 渐变色，不重新定义）
+      var track = document.createElement("div");
+      track.className = "mss-track";
+      var fill = document.createElement("div");
+      fill.className = "mss-fill " + cfg.cls;
+      fill.style.width = Math.max(0, Math.min(100, val)) + "%";
+      track.appendChild(fill);
+      cell.appendChild(track);
+
+      // 数值（坏值时变色）
+      var num = document.createElement("span");
+      num.className = "mss-val";
+      num.textContent = Math.round(val);
+      if (isBad) {
+        num.style.color = cfg.color;
+        num.style.fontWeight = "700";
+      }
+      cell.appendChild(num);
+
+      row.appendChild(cell);
+    });
+    return row;
+  }
+
+  var attrs = [
+    { label: "体", cls: "physique", color: "#c4803a", threshold: 10,
+      getVal: function () { return p.physique || 0; } },
+    { label: "智", cls: "intelligence", color: "#5a8ab4", threshold: 10,
+      getVal: function () { return p.intelligence || 0; } },
+    { label: "敏", cls: "agility", color: "#5aaa5a", threshold: 10,
+      getVal: function () { return p.agility || 0; } },
+    { label: "心", cls: "mental-bar", color: "#9b74b8", threshold: 10,
+      getVal: function () { return p.mental || 0; } },
+    { label: "魅", cls: "charm", color: "#d9789e", threshold: 10,
+      getVal: function () { return p.charm || 0; } },
+  ];
+
+  var needs = [
+    { label: "饿", cls: "hunger", color: "#c9a838", threshold: 15,
+      getVal: function () { return n.hunger != null ? n.hunger : 100; } },
+    { label: "疲", cls: "fatigue", color: "#8a9080", threshold: 85, inverted: true,
+      getVal: function () { return n.fatigue != null ? n.fatigue : 0; } },
+    { label: "卫", cls: "hygiene", color: "#4a9490", threshold: 15,
+      getVal: function () { return n.hygiene != null ? n.hygiene : 100; } },
+    { label: "情", cls: "happiness", color: "#cc7868", threshold: 10,
+      getVal: function () { return n.happiness != null ? n.happiness : 100; } },
+    { label: "健", cls: "health", color: "#cc7868", threshold: 20,
+      getVal: function () { return s.health != null ? s.health : 100; } },
+  ];
+
+  container.appendChild(buildRow(attrs));
+  container.appendChild(buildRow(needs));
+
+  // 疾病行：有疾病时在第2行之后追加（保持 5+急性病的紧凑信息）
+  if (s.illnesses && s.illnesses.length > 0) {
+    var illnessDiv = document.createElement("div");
+    illnessDiv.className = "mss-illness";
+    var names = s.illnesses.map(function (d) {
+      var nm = typeof d === "string" ? d : (d.name || d.id || "");
+      return nm;
+    }).filter(Boolean);
+    illnessDiv.textContent = "🤒 " + names.join("、");
+    container.appendChild(illnessDiv);
+  }
+
+  parent.appendChild(container);
 }
 
 function renderTimeSlot(state, parent) {

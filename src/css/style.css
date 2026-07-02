@@ -3776,6 +3776,9 @@ body {
   .mobile-location-strip {
     display: none !important;
   }
+  .mobile-stats-strip {
+    display: none !important;
+  }
 
   /* ====== 侧栏 ====== */
   #sidebar {
@@ -3893,6 +3896,105 @@ body {
     gap: 4px;
     padding: 4px 10px;
     font-size: 11px;
+  }
+
+  /* ====== 移动端常驻状态条（属性 + 需求 2 行 × 5 细色带） ====== */
+  .mobile-stats-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+  }
+  .mss-row {
+    display: flex;
+    gap: 3px;
+  }
+  .mss-cell {
+    flex: 1;
+    min-width: 0;
+  }
+  .mss-label {
+    display: inline-block;
+    width: 16px;
+    font-size: 9px;
+    line-height: 1;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .mss-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-input);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 18px;
+  }
+  .mss-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.35s ease;
+    /* 默认回退色（无颜色类时） */
+    background: var(--text-muted);
+  }
+  /* 基础属性色带（与侧栏 #stat-* 同名 class 保持一致的渐变配色） */
+  .mss-fill.physique {
+    background: linear-gradient(90deg, #c48e4a, var(--physique-color, #c4803a));
+  }
+  .mss-fill.intelligence {
+    background: linear-gradient(90deg, #5a94ba, var(--intelligence-color, #5a8ab4));
+  }
+  .mss-fill.agility {
+    background: linear-gradient(90deg, #56a64e, var(--agility-color, #5aaa5a));
+  }
+  .mss-fill.mental-bar {
+    background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color, #9b74b8));
+  }
+  .mss-fill.charm {
+    background: linear-gradient(90deg, #d9789e, #b95f87);
+  }
+  /* 状态色带（与侧栏 #stat-* 同名 class 保持一致的渐变配色） */
+  .mss-fill.hunger {
+    background: linear-gradient(90deg, #c9a838, #dec054);
+  }
+  .mss-fill.fatigue {
+    background: linear-gradient(90deg, #949a88, #b4baa2);
+  }
+  .mss-fill.hygiene {
+    background: linear-gradient(90deg, #4a9490, #5ebeb2);
+  }
+  .mss-fill.happiness {
+    background: linear-gradient(90deg, #cc7868, #e09080);
+  }
+  .mss-fill.health {
+    background: linear-gradient(90deg, #d47058, #56b468);
+  }
+  /* 窄屏（<=360px）进一步压字号、去空白 */
+  @media (max-width: 360px) {
+    .mss-label { font-size: 8px; width: 14px; }
+    .mobile-stats-strip { gap: 2px; padding: 3px 5px; }
+    .mss-val { font-size: 8px !important; }
+  }
+  .mss-val {
+    display: inline-block;
+    min-width: 16px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    line-height: 1;
+    color: var(--text-muted);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .mss-illness {
+    margin-top: 2px;
+    font-size: 10px;
+    color: var(--danger);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ====== 行动卡片 ====== */
