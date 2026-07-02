@@ -783,9 +783,13 @@
     // eval() 会把 var/const/let 限制在 eval 函数内部作用域，其他脚本看不到。
     // vm.runInThisContext() 保留顶层声明的全局可访问性，与浏览器一致。
     try {
+      var savedModule = globalThis.module;
+      globalThis.module = undefined;
       vm.runInThisContext(code, { filename: filePath });
+      globalThis.module = savedModule;
       return true;
     } catch (err) {
+      globalThis.module = savedModule;
       loadErrors.push({ file: filePath, error: err.message, stack: err.stack });
       console.error("[HEADLESS] LOAD ERROR:", filePath, "-", err.message);
       return false;
