@@ -4237,3 +4237,208 @@ body {
     gap: 8px !important;
   }
 }
+
+/* ======================================================================
+   移动端底部导航栏 v1.0  (2026-07-03)
+   设计参考：大多数 / BitLife / Stardew Valley Mobile / iOS HIG
+
+   核心改动：
+     • 12+个水平滚动Tab → 5个底部大组 + 组内pill子Tab
+     • 拇指热区（屏幕底部40%），单手可操作
+     • 桌面端（>768px）完全不受影响
+   ====================================================================== */
+
+/* --- 桌面端：底部导航隐藏 --- */
+#bottom-nav {
+  display: none;
+}
+#mobile-sub-tabs {
+  display: none;
+}
+
+/* --- 移动端激活（≤768px 与现有断点对齐） --- */
+@media (max-width: 768px) {
+
+  /* === 顶部Tab栏隐藏（由底部导航取代） === */
+  #tab-bar {
+    display: none !important;
+  }
+
+  /* === 子Tab pill 栏 === */
+  #mobile-sub-tabs {
+    display: none; /* JS控制显示 */
+    flex-direction: row;
+    gap: 7px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  #mobile-sub-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-sub-tab {
+    flex: 0 0 auto;
+    padding: 7px 16px;
+    font-size: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    white-space: nowrap;
+    min-height: 34px;
+    line-height: 1.2;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .mobile-sub-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .mobile-sub-tab:active {
+    opacity: 0.75;
+  }
+
+  /* === 底部导航栏主体 === */
+  #bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    z-index: 300;
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
+    /* 安全区域适配 (iPhone底部Home Bar) */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* === 底部导航按钮 === */
+  .bottom-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 2px 6px;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    transition: color 0.15s ease;
+    min-height: 60px;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .bottom-nav-btn .bnb-icon {
+    font-size: 22px;
+    line-height: 1;
+    display: block;
+  }
+
+  .bottom-nav-btn .bnb-label {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    line-height: 1;
+    display: block;
+  }
+
+  /* 激活状态：颜色 + 顶部指示线 */
+  .bottom-nav-btn.active {
+    color: var(--accent);
+  }
+  .bottom-nav-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 2.5px;
+    background: var(--accent);
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* 点击反馈 */
+  .bottom-nav-btn:active {
+    background: rgba(255, 255, 255, 0.06);
+    transform: scale(0.95);
+  }
+
+  /* 角标（数字提示，备用） */
+  .bottom-nav-btn .bnb-badge {
+    position: absolute;
+    top: 5px;
+    right: calc(50% - 18px);
+    min-width: 16px;
+    height: 16px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    pointer-events: none;
+  }
+
+  /* === 主区域底部padding — 防止内容被底部导航遮挡 === */
+  #main {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  #content-area {
+    padding-bottom: 24px !important;
+  }
+  #message-log {
+    margin-bottom: 8px;
+  }
+}
+
+/* ≤480px 紧凑优化 */
+@media (max-width: 480px) {
+  #bottom-nav {
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+  .bottom-nav-btn {
+    min-height: 56px;
+    gap: 2px;
+  }
+  .bottom-nav-btn .bnb-icon {
+    font-size: 20px;
+  }
+  .bottom-nav-btn .bnb-label {
+    font-size: 9px;
+  }
+  #main {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  #mobile-sub-tabs {
+    padding: 7px 10px;
+    gap: 6px;
+  }
+  .mobile-sub-tab {
+    padding: 6px 13px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+}
