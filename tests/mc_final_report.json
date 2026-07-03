@@ -1,0 +1,577 @@
+{
+  "config": {
+    "trials": 100,
+    "daysPerTrial": 1000,
+    "verbose": false,
+    "strategy": "all",
+    "outputFile": "tests/mc_final_report.json",
+    "seed": 42
+  },
+  "timestamp": "2026-07-03T02:51:37.969Z",
+  "results": [
+    {
+      "strategy": "balanced",
+      "trials": 100,
+      "elapsed": "1.2",
+      "survivalRate": 100,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 0,
+      "died91plus": 0,
+      "avgDeathDay": -1,
+      "avgCash": 5389.09,
+      "medianCash": 1120,
+      "p10Cash": 408,
+      "p90Cash": 17436,
+      "minCash": 221,
+      "maxCash": 17650,
+      "avgHealth": 55.49,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 1.6,
+      "corpPhaseRate": 31,
+      "economicLayers": {
+        "poor": 19,
+        "subsistence": 52,
+        "comfortable": 29,
+        "rich": 0
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 481,
+          "p25": 464,
+          "p75": 501,
+          "min": 349,
+          "max": 542
+        },
+        "15": {
+          "n": 100,
+          "median": 329,
+          "p25": 306,
+          "p75": 353,
+          "min": 221,
+          "max": 450
+        },
+        "30": {
+          "n": 100,
+          "median": 596,
+          "p25": 561,
+          "p75": 638,
+          "min": 221,
+          "max": 715
+        },
+        "60": {
+          "n": 100,
+          "median": 1114,
+          "p25": 533,
+          "p75": 1166,
+          "min": 221,
+          "max": 1236
+        },
+        "90": {
+          "n": 100,
+          "median": 878,
+          "p25": 562,
+          "p75": 945,
+          "min": 221,
+          "max": 1165
+        },
+        "180": {
+          "n": 100,
+          "median": 1120,
+          "p25": 562,
+          "p75": 3996,
+          "min": 221,
+          "max": 4831
+        },
+        "365": {
+          "n": 100,
+          "median": 1120,
+          "p25": 562,
+          "p75": 9428,
+          "min": 221,
+          "max": 9800
+        },
+        "730": {
+          "n": 100,
+          "median": 1120,
+          "p25": 562,
+          "p75": 13835,
+          "min": 221,
+          "max": 14389
+        }
+      }
+    },
+    {
+      "strategy": "grinder",
+      "trials": 100,
+      "elapsed": "1.3",
+      "survivalRate": 100,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 0,
+      "died91plus": 0,
+      "avgDeathDay": -1,
+      "avgCash": 4299.07,
+      "medianCash": 4197,
+      "p10Cash": 558,
+      "p90Cash": 8769,
+      "minCash": 211,
+      "maxCash": 13929,
+      "avgHealth": 47.2,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 0.96,
+      "corpPhaseRate": 0,
+      "economicLayers": {
+        "poor": 8,
+        "subsistence": 53,
+        "comfortable": 39,
+        "rich": 0
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 557,
+          "p25": 532,
+          "p75": 572,
+          "min": 394,
+          "max": 613
+        },
+        "15": {
+          "n": 100,
+          "median": 506,
+          "p25": 472,
+          "p75": 540,
+          "min": 211,
+          "max": 610
+        },
+        "30": {
+          "n": 100,
+          "median": 972,
+          "p25": 765,
+          "p75": 1020,
+          "min": 211,
+          "max": 1080
+        },
+        "60": {
+          "n": 100,
+          "median": 1855,
+          "p25": 1031,
+          "p75": 1975,
+          "min": 211,
+          "max": 2084
+        },
+        "90": {
+          "n": 100,
+          "median": 2396,
+          "p25": 1135,
+          "p75": 2929,
+          "min": 211,
+          "max": 3138
+        },
+        "180": {
+          "n": 100,
+          "median": 2980,
+          "p25": 1390,
+          "p75": 4742,
+          "min": 211,
+          "max": 8737
+        },
+        "365": {
+          "n": 100,
+          "median": 3832,
+          "p25": 1390,
+          "p75": 5932,
+          "min": 211,
+          "max": 13929
+        },
+        "730": {
+          "n": 100,
+          "median": 4197,
+          "p25": 1390,
+          "p75": 6611,
+          "min": 211,
+          "max": 13929
+        }
+      }
+    },
+    {
+      "strategy": "skiller",
+      "trials": 100,
+      "elapsed": "1.6",
+      "survivalRate": 100,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 0,
+      "died91plus": 0,
+      "avgDeathDay": -1,
+      "avgCash": 26169.29,
+      "medianCash": 31163,
+      "p10Cash": 13633,
+      "p90Cash": 31486,
+      "minCash": 4312,
+      "maxCash": 31744,
+      "avgHealth": 66.9,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 1,
+      "corpPhaseRate": 100,
+      "economicLayers": {
+        "poor": 0,
+        "subsistence": 10,
+        "comfortable": 90,
+        "rich": 0
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 296,
+          "p25": 278,
+          "p75": 322,
+          "min": 211,
+          "max": 544
+        },
+        "15": {
+          "n": 100,
+          "median": 606,
+          "p25": 558,
+          "p75": 640,
+          "min": 237,
+          "max": 697
+        },
+        "30": {
+          "n": 100,
+          "median": 1766,
+          "p25": 1677,
+          "p75": 1816,
+          "min": 286,
+          "max": 1890
+        },
+        "60": {
+          "n": 100,
+          "median": 4010,
+          "p25": 3865,
+          "p75": 4070,
+          "min": 515,
+          "max": 4249
+        },
+        "90": {
+          "n": 100,
+          "median": 6152,
+          "p25": 5927,
+          "p75": 6235,
+          "min": 720,
+          "max": 6434
+        },
+        "180": {
+          "n": 100,
+          "median": 8630,
+          "p25": 8444,
+          "p75": 8737,
+          "min": 1493,
+          "max": 8923
+        },
+        "365": {
+          "n": 100,
+          "median": 13721,
+          "p25": 13431,
+          "p75": 13859,
+          "min": 2369,
+          "max": 14111
+        },
+        "730": {
+          "n": 100,
+          "median": 23716,
+          "p25": 23266,
+          "p75": 23937,
+          "min": 3462,
+          "max": 24287
+        }
+      }
+    },
+    {
+      "strategy": "trader",
+      "trials": 100,
+      "elapsed": "1.8",
+      "survivalRate": 100,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 0,
+      "died91plus": 0,
+      "avgDeathDay": -1,
+      "avgCash": 68343.37,
+      "medianCash": 64653,
+      "p10Cash": 32325,
+      "p90Cash": 113066,
+      "minCash": 14031,
+      "maxCash": 149046,
+      "avgHealth": 30.2,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 1,
+      "corpPhaseRate": 0,
+      "economicLayers": {
+        "poor": 0,
+        "subsistence": 0,
+        "comfortable": 27,
+        "rich": 73
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 701,
+          "p25": 668,
+          "p75": 734,
+          "min": 496,
+          "max": 803
+        },
+        "15": {
+          "n": 100,
+          "median": 1331,
+          "p25": 1244,
+          "p75": 1383,
+          "min": 911,
+          "max": 1531
+        },
+        "30": {
+          "n": 100,
+          "median": 4799,
+          "p25": 3522,
+          "p75": 4917,
+          "min": 1111,
+          "max": 5184
+        },
+        "60": {
+          "n": 100,
+          "median": 10846,
+          "p25": 7186,
+          "p75": 11072,
+          "min": 1511,
+          "max": 11347
+        },
+        "90": {
+          "n": 100,
+          "median": 15512,
+          "p25": 11010,
+          "p75": 17153,
+          "min": 1911,
+          "max": 17665
+        },
+        "180": {
+          "n": 100,
+          "median": 26612,
+          "p25": 22173,
+          "p75": 35367,
+          "min": 3111,
+          "max": 37027
+        },
+        "365": {
+          "n": 100,
+          "median": 47019,
+          "p25": 34570,
+          "p75": 56496,
+          "min": 5551,
+          "max": 73811
+        },
+        "730": {
+          "n": 100,
+          "median": 62121,
+          "p25": 48376,
+          "p75": 80268,
+          "min": 10431,
+          "max": 128804
+        }
+      }
+    },
+    {
+      "strategy": "social",
+      "trials": 100,
+      "elapsed": "1.5",
+      "survivalRate": 100,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 0,
+      "died91plus": 0,
+      "avgDeathDay": -1,
+      "avgCash": 39897.77,
+      "medianCash": 38640,
+      "p10Cash": 1216,
+      "p90Cash": 91266,
+      "minCash": 246,
+      "maxCash": 162305,
+      "avgHealth": 34.4,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 1.96,
+      "corpPhaseRate": 0,
+      "economicLayers": {
+        "poor": 2,
+        "subsistence": 20,
+        "comfortable": 45,
+        "rich": 33
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 701,
+          "p25": 668,
+          "p75": 734,
+          "min": 496,
+          "max": 803
+        },
+        "15": {
+          "n": 100,
+          "median": 813,
+          "p25": 736,
+          "p75": 871,
+          "min": 246,
+          "max": 1000
+        },
+        "30": {
+          "n": 100,
+          "median": 1607,
+          "p25": 1123,
+          "p75": 1951,
+          "min": 246,
+          "max": 2194
+        },
+        "60": {
+          "n": 100,
+          "median": 4150,
+          "p25": 2970,
+          "p75": 5903,
+          "min": 246,
+          "max": 7593
+        },
+        "90": {
+          "n": 100,
+          "median": 7289,
+          "p25": 4364,
+          "p75": 9293,
+          "min": 246,
+          "max": 13378
+        },
+        "180": {
+          "n": 100,
+          "median": 14714,
+          "p25": 6601,
+          "p75": 18954,
+          "min": 246,
+          "max": 30966
+        },
+        "365": {
+          "n": 100,
+          "median": 24319,
+          "p25": 6601,
+          "p75": 38835,
+          "min": 246,
+          "max": 66500
+        },
+        "730": {
+          "n": 100,
+          "median": 38640,
+          "p25": 6601,
+          "p75": 55984,
+          "min": 246,
+          "max": 127294
+        }
+      }
+    },
+    {
+      "strategy": "corporate",
+      "trials": 100,
+      "elapsed": "1.7",
+      "survivalRate": 99,
+      "died1_7": 0,
+      "died8_30": 0,
+      "died31_90": 1,
+      "died91plus": 0,
+      "avgDeathDay": 47,
+      "avgCash": 1551177.98989899,
+      "medianCash": 1551178,
+      "p10Cash": 1551107,
+      "p90Cash": 1551240,
+      "minCash": 1551045,
+      "maxCash": 1551310,
+      "avgHealth": 60.60606060606061,
+      "avgIllness": 0,
+      "avgInjury": 0,
+      "avgHousing": 2,
+      "corpPhaseRate": 100,
+      "economicLayers": {
+        "poor": 0,
+        "subsistence": 0,
+        "comfortable": 0,
+        "rich": 99
+      },
+      "snapshots": {
+        "7": {
+          "n": 100,
+          "median": 560,
+          "p25": 543,
+          "p75": 578,
+          "min": 496,
+          "max": 630
+        },
+        "15": {
+          "n": 100,
+          "median": 554,
+          "p25": 530,
+          "p75": 584,
+          "min": 448,
+          "max": 702
+        },
+        "30": {
+          "n": 100,
+          "median": 1106,
+          "p25": 1071,
+          "p75": 1132,
+          "min": 491,
+          "max": 1227
+        },
+        "60": {
+          "n": 99,
+          "median": 1417,
+          "p25": 1368,
+          "p75": 1464,
+          "min": 1243,
+          "max": 1610
+        },
+        "90": {
+          "n": 99,
+          "median": 16417,
+          "p25": 16368,
+          "p75": 16464,
+          "min": 16243,
+          "max": 16610
+        },
+        "180": {
+          "n": 99,
+          "median": 61033,
+          "p25": 60984,
+          "p75": 61080,
+          "min": 60859,
+          "max": 61210
+        },
+        "365": {
+          "n": 99,
+          "median": 188233,
+          "p25": 188187,
+          "p75": 188276,
+          "min": 188066,
+          "max": 188394
+        },
+        "730": {
+          "n": 99,
+          "median": 707639,
+          "p25": 707598,
+          "p75": 707681,
+          "min": 707488,
+          "max": 707783
+        }
+      }
+    }
+  ]
+}
