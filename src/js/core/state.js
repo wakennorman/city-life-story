@@ -50,8 +50,9 @@ function createDefaultState() {
       timeSlot: "morning", // 'morning' | 'afternoon' | 'evening' (显示用)
       actionPoints: 100, // 当前行动力 (0-100)
       maxActionPoints: 100, // 每日行动力上限
-      education: 0, // 0=大专, 1=本科, 2=研究生
+      education: 0, // 0=大专, 1=本科, 2=研究生, 3=博士
       eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 },
+      research: 0, // 发表论文数（学术胜利路线）
     },
 
     // --- 经济 ---

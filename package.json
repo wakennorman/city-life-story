@@ -14,7 +14,8 @@
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
-    "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist"
+    "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist",
+    "check:balance": "node scripts/check-balance.mjs"
   },
   "devDependencies": {
     "typescript": "6.0.3",

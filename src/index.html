@@ -591,7 +591,6 @@
     <script src="js/core/events_core.js"></script>
     <script src="js/core/events_street.js"></script>
     <script src="js/core/events_corp.js"></script>
-    <script src="js/phase1/extra_events.js"></script>
     <script src="js/core/news_event_bridge.js"></script>
     <script src="js/core/weather.js"></script>
     <!-- v3.3 W2-T2: 气象预报系统 -->
@@ -618,6 +617,29 @@
     <script src="js/core/route_effects.js"></script>
     <!-- v3.1: Cross-System Events (NPC/sector/world state linkage) -->
     <script src="js/core/cross_system_events.js"></script>
+    <!-- core/news_system.js + bridges + world_params (core files interleaved into Data block) -->
+    <script src="js/core/news_system.js"></script>
+    <script src="js/core/news_investment_bridge.js"></script>
+    <script src="js/core/world_params.js"></script>
+    <!-- core/skill_intel.js (core file interleaved into Phase1 block) -->
+    <script src="js/core/skill_intel.js"></script>
+    <!-- core/npc_bridge files (core files interleaved into Phase1 block) -->
+    <script src="js/core/npc_location_bridge.js"></script>
+    <script src="js/core/npc_relationships.js"></script>
+    <!-- core files interleaved into Phase2/Post-Phase2 block -->
+    <script src="js/core/enterprise_fate.js"></script>
+    <script src="js/core/multi_run_memory.js"></script>
+    <script src="js/core/company_spawner.js"></script>
+    <script src="js/core/inheritance_chain.js"></script>
+    <script src="js/core/skill_tree.js"></script>
+    <script src="js/core/equipment_suites.js"></script>
+    <script src="js/core/equipment_durability.js"></script>
+    <script src="js/core/skill_synergy.js"></script>
+    <!-- data files interleaved into Phase2 block -->
+    <script src="js/data/startup_events.js"></script>
+    <script src="js/data/startup_competition.js"></script>
+    <!-- data file after main.js -->
+    <script src="js/data/scenario_start_chains.js"></script>
 
     <!-- Data -->
     <script src="js/data/locations.js"></script>
@@ -626,9 +648,6 @@
     <script src="js/data/goods.js"></script>
     <script src="js/data/items.js"></script>
     <script src="js/data/news.js"></script>
-    <script src="js/core/news_system.js"></script>
-    <script src="js/core/news_investment_bridge.js"></script>
-    <script src="js/core/world_params.js"></script>
     <script src="js/data/skills.js"></script>
     <script src="js/data/npcs.js"></script>
     <script src="js/data/scenarios.js"></script>
@@ -645,7 +664,6 @@
     <!-- Phase 1 -->
     <script src="js/phase1/trade.js"></script>
     <script src="js/phase1/trade_intel.js"></script>
-    <script src="js/core/skill_intel.js"></script>
     <script src="js/phase1/needs.js"></script>
     <script src="js/phase1/interactions.js"></script>
     <script src="js/phase1/illness.js"></script>
@@ -656,8 +674,8 @@
     <script src="js/phase1/carry.js"></script>
     <script src="js/phase1/pricing.js"></script>
     <script src="js/phase1/npc_event_bridge.js"></script>
-    <script src="js/core/npc_location_bridge.js"></script>
-    <script src="js/core/npc_relationships.js"></script>
+    <!-- extra_events.js (phase1 file, moved from core block) -->
+    <script src="js/phase1/extra_events.js"></script>
 
     <!-- Phase 2 -->
     <script src="js/phase2/perf.js"></script>
@@ -668,8 +686,6 @@
     <script src="js/phase2/investment.js"></script>
     <script src="js/phase2/property_market.js"></script>
     <script src="js/phase2/startup.js"></script>
-    <script src="js/data/startup_events.js"></script>
-    <script src="js/data/startup_competition.js"></script>
 
     <!-- Phase 2: Deep Interaction Modules -->
     <script src="js/phase2/workplace_social.js"></script>
@@ -678,22 +694,7 @@
     <script src="js/phase2/family_life.js"></script>
     <script src="js/phase2/personal_growth.js"></script>
 
-    <!-- Enterprise Fate System -->
-    <script src="js/core/enterprise_fate.js"></script>
-    <script src="js/core/multi_run_memory.js"></script>
-    <!-- Phase3: New Company Spawner -->
-    <script src="js/core/company_spawner.js"></script>
-    <!-- Phase3: Inheritance Chain -->
-    <script src="js/core/inheritance_chain.js"></script>
-    <!-- Skill Tree System -->
-    <script src="js/core/skill_tree.js"></script>
-    <!-- Equipment Suite System (v3.5) -->
-    <script src="js/core/equipment_suites.js"></script>
-    <!-- Equipment Durability System (v3.5) -->
-    <script src="js/core/equipment_durability.js"></script>
-    <!-- Skill Synergy System (v3.5) -->
-    <script src="js/core/skill_synergy.js"></script>
-    <!-- Company History Book Component -->
+    <!-- Company History Book Component (moved before UI block) -->
     <script src="js/components/companyHistory.js"></script>
 
     <!-- Data Visualization (必须在 render.js 之前加载，提供 renderGrowthTab 实现) -->

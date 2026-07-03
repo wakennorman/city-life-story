@@ -920,45 +920,6 @@ function getCareerRequirementText(level) {
   return parts.length ? parts.join(" / ") : "无硬性门槛";
 }
 
-function getCareerDualPathHtml(state) {
-  var career = state.career || {};
-  var current = career.currentJob;
-  var nextLevel = current
-    ? getNextCareerLevel(current.path, current.levelId)
-    : null;
-  var cash = state.resources ? state.resources.cash || 0 : 0;
-  var discount = getCareerCapitalStartupDiscount(state);
-  var startupNeed = Math.max(0, Math.round(200000 * (1 - discount) - cash));
-  var jobTitle = current
-    ? (current.levelName || "当前职位") +
-      (nextLevel ? " → " + nextLevel.name : " → 已到路径顶层")
-    : "尚未入职 → 先选择一个职业路径";
-  var jobReq = current
-    ? getCareerRequirementText(nextLevel)
-    : "查看“上班族”子页，选择当前最接近条件的岗位";
-  return (
-    '<div class="section"><h3>🧭 事业双路径</h3>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">' +
-    '<div class="card" style="padding:12px;">' +
-    '<div style="font-weight:700;color:var(--text-primary);">💼 上班族路径</div>' +
-    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "<div>" +
-    jobTitle +
-    "</div><div>下一门槛：" +
-    jobReq +
-    "</div></div></div>" +
-    '<div class="card" style="padding:12px;">' +
-    '<div style="font-weight:700;color:var(--text-primary);">🚀 创业路径</div>' +
-    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "<div>" +
-    getStartupReadinessNote(state) +
-    "</div><div>启动资金缺口：¥" +
-    startupNeed.toLocaleString() +
-    "</div></div></div>" +
-    "</div></div>"
-  );
-}
-
 function getCareerEducationHtml(state) {
   var p = state.player || {};
   var edu = p.education ?? state.education ?? 0;
@@ -2816,54 +2777,6 @@ function enhancedApplyCareerJob(pathId, levelId) {
   if (typeof renderAll === "function") renderAll();
 }
 
-/**
- * 每日职业综合tick（v3.11：含健康加成+解雇检查+试用期提示）
- * 由 daily_pipeline 的 career_tick 步骤调用
- */
-function tickCareerDaily(state) {
-  tickCareerJobDaily(state);
-  // 跨系统：医师/护理健康加成
-  if (typeof tickCareerHealthBonus === "function") {
-    tickCareerHealthBonus(state);
-  }
-  // 雇佣安全：解雇检测
-  if (typeof tickCareerFiringRisk === "function") {
-    tickCareerFiringRisk(state);
-  }
-  // 试用期提示
-  if (state.career && state.career.currentJob) {
-    var probRemain = getProbationRemaining(state);
-    if (probRemain > 0 && probRemain % 30 === 0 && probRemain < 90) {
-      StateManager.addMessage(
-        "📋 试用期还剩" + probRemain + "天，转正后薪资将恢复100%。",
-        "info",
-      );
-    }
-  }
-  // 医师职业证书自动获取（满365天实习医生自动获资格）
-  if (
-    state.career &&
-    state.career.currentJob &&
-    state.career.currentJob.path === "doctor"
-  ) {
-    var job = state.career.currentJob;
-    var wd = job.workDays || 0;
-    var certs = state.certificates || [];
-    if (
-      wd >= 365 &&
-      certs.indexOf("medical_license") < 0 &&
-      job.levelId !== "doc_intern"
-    ) {
-      certs.push("medical_license");
-      state.certificates = certs;
-      StateManager.addMessage(
-        "🎓 获得医师资格证！正式执业资格已解锁。",
-        "success",
-      );
-    }
-  }
-}
-
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.ensureCareerCapital = ensureCareerCapital;
@@ -2872,7 +2785,6 @@ if (typeof window !== "undefined") {
   // v3.11 跨系统联动暴露
   window.getCareerMedicalDiscount = getCareerMedicalDiscount;
   window.getCareerLegalDiscount = getCareerLegalDiscount;
-  window.tickCareerDaily = tickCareerDaily;
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.clampCareerCapital = clampCareerCapital;
   window.MECHANICS = window.MECHANICS || {};
