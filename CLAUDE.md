@@ -68,20 +68,19 @@
 - 开发文档: `src/DEVELOPMENT.md`（每次改动必须同步更新）
 - 技术栈: legacy 正式运行时仍是 HTML5 + CSS + Vanilla JS；v3.8 起新增 Vite + TypeScript 作为并行 Web App 架构壳和类型化迁移通道
 - **核心架构: 世界参数反馈环（v1.7）** — `src/js/core/world_params.js` 定义统一的 `_worldParams` 状态，将行业热度/市场情绪/财富等级纳入单一反馈闭环。行业热度由随机漂移+传导+新闻驱动（玩家个人不直接影响），财富反馈由玩家总资产决定，所有参数以 2%/天向基线衰减
-- 所有 JS 文件通过 `<script src="...">` 在 index.html 中按序加载，**禁止改变 script 标签顺序**
+- 所有 JS 文件通过 `<script src="...">` 在 index.html 中按序加载，**改变 script 标签顺序前必须确认无依赖断裂**（v3.1第40轮已将8处乱序归位）
 - Web App 迁移提醒：后续新增事件、职业、地点、疾病、法律、旅行、人生节点等配置，优先进入 `src/app/data/*`；需要写入旧游戏时再通过 bridge/facade 接入。新增存档字段优先挂在 `_webApp` 并配套迁移函数，避免继续把所有兼容逻辑塞进 `state.js`。
 
 ## 当前状态
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-03)**：第39轮 — 全面MC基准验证 + victory.js语法修复
-  - **运行**：6策略×100次×1000天最终基准，115/115文件加载成功
-  - **结果**：全策略通过，经济跨度1384倍（¥1,120→¥1,551,178），差异化显著
-  - **修复**：`victory.js:173` 中文引号冲突语法错误修复
-  - **验证**：`node --check`通过 / `node tests/monte_carlo.cjs --trials 5`通过
-  - **文档**：更新 memory/balance-monte-carlo-v3.1.md 最终报告
-  - **提交**：`0d3c8a3`
+- **最新一次工作 (2026-07-03)**：第40轮 — v3.1遗留6项问题修复（年终奖/6新结局/script顺序/死函数/利息/疾病协调）
+  - **运行**：check:js 117文件通过 / build.py 4323.3 KB通过
+  - **新增**：年终奖系统（Blueprint P0-C）、6个Blueprint结局补齐（12/12完成）、script加载顺序整理（8处归位）
+  - **修复**：存贷利息倒挂（bankDebt开始计息，利率对齐显示值）、疾病双系统协调（医院清除illnesses/工作致病走triggerIllness）
+  - **清理**：删除死函数getCareerDualPathHtml、tickCareerDaily
+  - **文档**：更新 memory/review-improve-v3.1-round3-2026-07-03.md
   - **问题**：全方位审查发现 1 个代码 Bug（clampCareerCapital 未挂载）、2 个数值永动机（跳槽薪资翻倍+抛售股票清零）、3 个 UI 不达标（触控<44px/对比度不足）、4 个体验缺陷（中期空心/引导缺失等）
   - **修复**（11项）：
     - `career_dev.js` — 挂载 `clampCareerCapital`；跳槽×2→×1.35+人脉-30+30天试用期；发薪走 `calcActualSalary`（接入试用期八折）；`getProbationRemaining` 支持自定义试用期

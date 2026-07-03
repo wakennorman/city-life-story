@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-03（第39轮 — 6策略×100次×1000天最终验证 + victory.js语法修复）
+> 最后更新: 2026-07-03（第40轮 — v3.1遗留6项问题修复）
 
 ---
 
@@ -26,6 +26,71 @@
 - [ ] 逐剧本过一遍触发路径，无断链
 
 > **背景**：第11轮（2026-07-02）发现 tutorial.js 所有剧本共用经典模式步骤，导致换剧本后引导完全失效。此类缺陷根因是"只想着 classic"。多剧本适配是**交付门槛**，不是加分项。
+
+---
+
+## 2026-07-03 — 第40轮：v3.1遗留6项问题修复（年终奖/结局/脚本顺序/死函数/利息/疾病协调）
+
+> 触发：用户要求继续处理v3.1审查遗留问题
+> 影响文件：career_dev.js、victory.js、victories_registry.js、state.js、index.html、skill_bonuses.js、finance.js、main.js、illness.js
+
+### A1: 年终奖系统（Blueprint P0-C 补齐）
+
+- `career_dev.js::tickCareerJobDaily` 新增年终奖发放逻辑
+- 触发：每工作满365天（`job.workDays - _lastBonusWorkDays >= 365`）
+- 公式：`年终奖 = 月薪 × 系数`
+- 系数由 业绩(30%) + 司龄(20%) + 倦怠<50(20%) + 随机(30%) 加权
+- 系数分5档：0（不合格）/ 0.5（低于预期）/ 1（达标）/ 1.5（优秀）/ 3（超额完成）
+- 接入 `applyDreamIncomeBonus` 梦想收入加成
+
+### A2: 补齐6个Blueprint结局（12/12完成）
+
+- `victory.js::checkVictoryPaths` 新增6个结局判定：
+  1. 🎓 学术大师：education≥3 + research≥3
+  2. 🏠 中产稳稳：月薪>¥2万 + 有房产 + 流动资金≥¥5万
+  3. 👨‍👩‍👧 幸福家庭：有配偶 + 所有子女成年
+  4. 🛠️ 匠人一生：技能满级 + 证书≥5 + 同职业≥15年
+  5. 🏚️ 流浪终老（暗）：≥35岁 + 无房 + 赤贫 + 失业
+  6. 🏛️ 体制内消失（暗）：公务员路径 + 15年未晋升
+  7. 🏙️ 城市套牢（暗）：负债>收入80% + 持续≥5年
+- `state.js` 新增 `player.research` 字段（论文数）
+- `victories_registry.js` 新增7个VICTORIES百科条目
+
+### A3: script 加载顺序整理
+
+- `index.html` 8处乱序归位：
+  - core/news_system.js、news_investment_bridge.js、world_params.js → 移回Core块
+  - core/skill_intel.js、npc_location_bridge.js、npc_relationships.js → 移回Core块
+  - core/enterprise_fate.js等8个core文件 → 移回Core块
+  - data/startup_events.js、startup_competition.js → 移回Data块
+  - data/scenario_start_chains.js → 从main.js后移回Data块
+  - phase1/extra_events.js → 移回Phase1块
+  - components/companyHistory.js → 移到UI块前
+
+### A4: 死函数清理
+
+- 删除 `getCareerDualPathHtml`（career_dev.js，定义但零调用）
+- 删除 `tickCareerDaily`（career_dev.js，注释称"由career_tick步骤调用"但该步骤不存在）
+- 同步移除 `window.tickCareerDaily` 挂载
+
+### B1: 存款-贷款利息修复
+
+- `skill_bonuses.js::settleDailyFinance` 新增 bankDebt 日息累积（0.012%/天≈年化4.4%）
+- `finance.js::calculateLoanCapacity` 利率从0.3-0.6%/天→0.012-0.02%/天（与实际计息一致）
+- 修复：此前贷款展示高利率但实际不扣息，存款3.65%年化vs贷款0%的不对称
+
+### C1: illness/medical 双系统协调
+
+- `main.js` 医院治疗handler：新增清除 `illnesses[]` 数组（此前只清sick/injured，不清疾病实例）
+- `main.js` 工作致病：改用 `triggerIllness(state, "cold", "job")` 走疾病系统（此前直接设sick=true）
+- `illness.js::tickIllnessDecay`：新增住院协调guard——medical.js住院期间暂停症状恶化
+- 未做：medical.js完整合并到illness.js（因medical.js的保险UI仍在活跃使用，合并风险过高）
+
+### 验证
+
+- `node --check` 全部8个改动文件通过
+- `npm run check:js` 117文件通过
+- `python build.py` → dist\index.html (4323.3 KB) 通过
 
 ---
 
