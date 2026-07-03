@@ -18,47 +18,47 @@
 // ===== 底部导航分组配置表 =====
 var BOTTOM_NAV_GROUPS = {
   actions: {
-    icon: '⚡',
-    label: '行动',
-    tabs: ['actions'],
-    tabLabels: {}
+    icon: "⚡",
+    label: "行动",
+    tabs: ["actions"],
+    tabLabels: {},
   },
   explore: {
-    icon: '🗺️',
-    label: '探索',
-    tabs: ['map', 'trade'],
-    tabLabels: { map: '🗺️ 地图', trade: '📦 交易' }
+    icon: "🗺️",
+    label: "探索",
+    tabs: ["map", "trade"],
+    tabLabels: { map: "🗺️ 地图", trade: "📦 交易" },
   },
   career: {
-    icon: '💼',
-    label: '职业',
-    tabs: ['skills', 'corp', 'career_dev'],
-    tabLabels: { skills: '📚 技能', corp: '🏢 职场', career_dev: '🚀 事业' }
+    icon: "💼",
+    label: "职业",
+    tabs: ["skills", "corp", "career_dev"],
+    tabLabels: { skills: "📚 技能", corp: "🏢 职场", career_dev: "🚀 事业" },
   },
   wealth: {
-    icon: '💰',
-    label: '财富',
-    tabs: ['inventory', 'investment'],
-    tabLabels: { inventory: '🎒 物品', investment: '💹 投资' }
+    icon: "💰",
+    label: "财富",
+    tabs: ["inventory", "investment"],
+    tabLabels: { inventory: "🎒 物品", investment: "💹 投资" },
   },
   profile: {
-    icon: '👤',
-    label: '我的',
-    tabs: ['social', 'achievements', 'wiki'],
-    tabLabels: { social: '👥 社交', achievements: '🏅 成就', wiki: '📖 百科' }
-  }
+    icon: "👤",
+    label: "我的",
+    tabs: ["social", "achievements", "wiki"],
+    tabLabels: { social: "👥 社交", achievements: "🏅 成就", wiki: "📖 百科" },
+  },
 };
 
 // Tab → Group 反向查找表
 var _TAB_TO_GROUP = {};
-Object.keys(BOTTOM_NAV_GROUPS).forEach(function(group) {
-  BOTTOM_NAV_GROUPS[group].tabs.forEach(function(tab) {
+Object.keys(BOTTOM_NAV_GROUPS).forEach(function (group) {
+  BOTTOM_NAV_GROUPS[group].tabs.forEach(function (tab) {
     _TAB_TO_GROUP[tab] = group;
   });
 });
 
 // 当前活跃的底部导航组
-var _currentBnGroup = 'actions';
+var _currentBnGroup = "actions";
 
 // ===== 工具函数 =====
 
@@ -70,18 +70,23 @@ function _isMobileViewport() {
 /** 判断某个Tab在当前游戏状态下是否可见（与render.js的Tab可见性逻辑同步） */
 function _isTabVisibleMobile(tabName) {
   // 兜底：state未加载时默认全部可见
-  if (typeof state === 'undefined' || !state || !state.player) return true;
+  if (typeof state === "undefined" || !state || !state.player) return true;
   var phase = state.player.phase;
 
   switch (tabName) {
-    case 'trade':
-      return phase === 'street';
-    case 'corp':
-      return phase === 'corporate';
-    case 'career_dev':
-      if (phase === 'street') return true;
-      if (phase === 'corporate' && typeof state.startup !== 'undefined' &&
-          state.startup && state.startup.status !== 'none') return true;
+    case "trade":
+      return phase === "street";
+    case "corp":
+      return phase === "corporate";
+    case "career_dev":
+      if (phase === "street") return true;
+      if (
+        phase === "corporate" &&
+        typeof state.startup !== "undefined" &&
+        state.startup &&
+        state.startup.status !== "none"
+      )
+        return true;
       return false;
     default:
       return true;
@@ -101,9 +106,9 @@ function switchBottomNavGroup(groupName) {
   _currentBnGroup = groupName;
 
   // 更新底部导航按钮激活状态
-  var btns = document.querySelectorAll('.bottom-nav-btn');
+  var btns = document.querySelectorAll(".bottom-nav-btn");
   for (var i = 0; i < btns.length; i++) {
-    btns[i].classList.toggle('active', btns[i].dataset.group === groupName);
+    btns[i].classList.toggle("active", btns[i].dataset.group === groupName);
   }
 
   // 计算该组内可见的Tab
@@ -113,20 +118,21 @@ function switchBottomNavGroup(groupName) {
   if (visibleTabs.length <= 1) {
     _hideMobileSubTabs();
     var targetTab = visibleTabs.length === 1 ? visibleTabs[0] : cfg.tabs[0];
-    if (typeof switchTab === 'function') switchTab(targetTab);
+    if (typeof switchTab === "function") switchTab(targetTab);
     return;
   }
 
   // 多Tab组：决定跳哪个Tab
-  var activeCurrent = (typeof currentTab !== 'undefined') ? currentTab : '';
-  var targetTab = visibleTabs.indexOf(activeCurrent) >= 0 ? activeCurrent : visibleTabs[0];
+  var activeCurrent = typeof currentTab !== "undefined" ? currentTab : "";
+  var targetTab =
+    visibleTabs.indexOf(activeCurrent) >= 0 ? activeCurrent : visibleTabs[0];
 
   // 显示子Tab pill栏
   _renderMobileSubTabs(groupName, visibleTabs, targetTab);
 
   // 如果当前Tab不在此组，切换到组内首个可见Tab
   if (activeCurrent !== targetTab) {
-    if (typeof switchTab === 'function') switchTab(targetTab);
+    if (typeof switchTab === "function") switchTab(targetTab);
   }
 }
 
@@ -134,33 +140,40 @@ function switchBottomNavGroup(groupName) {
  * 渲染子Tab pill栏
  */
 function _renderMobileSubTabs(groupName, visibleTabs, activeTab) {
-  var container = document.getElementById('mobile-sub-tabs');
+  var container = document.getElementById("mobile-sub-tabs");
   if (!container) return;
 
   var cfg = BOTTOM_NAV_GROUPS[groupName];
   var labels = cfg ? cfg.tabLabels : {};
 
-  var html = '';
+  var html = "";
   for (var i = 0; i < visibleTabs.length; i++) {
     var tab = visibleTabs[i];
     var isActive = tab === activeTab;
-    html += '<button class="mobile-sub-tab' + (isActive ? ' active' : '') +
-            '" data-tab="' + tab + '" onclick="switchTabFromMobileSubTab(\'' + tab + '\')">' +
-            (labels[tab] || tab) + '</button>';
+    html +=
+      '<button class="mobile-sub-tab' +
+      (isActive ? " active" : "") +
+      '" data-tab="' +
+      tab +
+      '" onclick="switchTabFromMobileSubTab(\'' +
+      tab +
+      "')\">" +
+      (labels[tab] || tab) +
+      "</button>";
   }
 
   container.innerHTML = html;
-  container.style.display = 'flex';
+  container.style.display = "flex";
 }
 
 /**
  * 隐藏子Tab pill栏
  */
 function _hideMobileSubTabs() {
-  var container = document.getElementById('mobile-sub-tabs');
+  var container = document.getElementById("mobile-sub-tabs");
   if (container) {
-    container.style.display = 'none';
-    container.innerHTML = '';
+    container.style.display = "none";
+    container.innerHTML = "";
   }
 }
 
@@ -170,11 +183,11 @@ function _hideMobileSubTabs() {
  */
 function switchTabFromMobileSubTab(tabName) {
   // 更新pill激活状态
-  var pills = document.querySelectorAll('.mobile-sub-tab');
+  var pills = document.querySelectorAll(".mobile-sub-tab");
   for (var i = 0; i < pills.length; i++) {
-    pills[i].classList.toggle('active', pills[i].dataset.tab === tabName);
+    pills[i].classList.toggle("active", pills[i].dataset.tab === tabName);
   }
-  if (typeof switchTab === 'function') switchTab(tabName);
+  if (typeof switchTab === "function") switchTab(tabName);
 }
 
 /**
@@ -184,22 +197,22 @@ function switchTabFromMobileSubTab(tabName) {
 function syncBottomNavState() {
   if (!_isMobileViewport()) return;
 
-  var tabName = (typeof currentTab !== 'undefined') ? currentTab : 'actions';
-  var group = _TAB_TO_GROUP[tabName] || 'actions';
+  var tabName = typeof currentTab !== "undefined" ? currentTab : "actions";
+  var group = _TAB_TO_GROUP[tabName] || "actions";
 
   // 同步大组按钮高亮
   if (group !== _currentBnGroup) {
     _currentBnGroup = group;
-    var btns = document.querySelectorAll('.bottom-nav-btn');
+    var btns = document.querySelectorAll(".bottom-nav-btn");
     for (var i = 0; i < btns.length; i++) {
-      btns[i].classList.toggle('active', btns[i].dataset.group === group);
+      btns[i].classList.toggle("active", btns[i].dataset.group === group);
     }
   }
 
   // 同步子Tab pill高亮
-  var pills = document.querySelectorAll('.mobile-sub-tab');
+  var pills = document.querySelectorAll(".mobile-sub-tab");
   for (var i = 0; i < pills.length; i++) {
-    pills[i].classList.toggle('active', pills[i].dataset.tab === tabName);
+    pills[i].classList.toggle("active", pills[i].dataset.tab === tabName);
   }
 
   // 确保多Tab组的子Tab栏已显示
@@ -207,8 +220,8 @@ function syncBottomNavState() {
   if (cfg && cfg.tabs.length > 1) {
     var visibleTabs = cfg.tabs.filter(_isTabVisibleMobile);
     if (visibleTabs.length > 1) {
-      var container = document.getElementById('mobile-sub-tabs');
-      if (container && container.style.display === 'none') {
+      var container = document.getElementById("mobile-sub-tabs");
+      if (container && container.style.display === "none") {
         _renderMobileSubTabs(group, visibleTabs, tabName);
       }
     }
@@ -216,11 +229,11 @@ function syncBottomNavState() {
 }
 
 // ===== Hook renderAll — 零侵入式集成 =====
-window.addEventListener('load', function() {
+window.addEventListener("load", function () {
   // 等渲染系统就绪后再挂钩（renderAll 在 render.js 中定义）
-  if (typeof renderAll === 'function') {
+  if (typeof renderAll === "function") {
     var _origRenderAll = renderAll;
-    renderAll = function() {
+    renderAll = function () {
       _origRenderAll.apply(this, arguments);
       syncBottomNavState();
     };
@@ -228,20 +241,22 @@ window.addEventListener('load', function() {
 });
 
 // ===== 初始化 =====
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
   if (!_isMobileViewport()) return;
 
   // 初始隐藏子Tab栏
-  var subTabs = document.getElementById('mobile-sub-tabs');
-  if (subTabs) subTabs.style.display = 'none';
+  var subTabs = document.getElementById("mobile-sub-tabs");
+  if (subTabs) subTabs.style.display = "none";
 
   // 初始高亮"行动"组
-  var firstBtn = document.querySelector('.bottom-nav-btn[data-group="actions"]');
-  if (firstBtn) firstBtn.classList.add('active');
+  var firstBtn = document.querySelector(
+    '.bottom-nav-btn[data-group="actions"]',
+  );
+  if (firstBtn) firstBtn.classList.add("active");
 });
 
 // ===== 视口变化适配 =====
-window.addEventListener('resize', function() {
+window.addEventListener("resize", function () {
   if (!_isMobileViewport()) {
     // 桌面端：清理移动端状态
     _hideMobileSubTabs();

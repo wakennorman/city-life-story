@@ -4258,7 +4258,6 @@ body {
 
 /* --- 移动端激活（≤768px 与现有断点对齐） --- */
 @media (max-width: 768px) {
-
   /* === 顶部Tab栏隐藏（由底部导航取代） === */
   #tab-bar {
     display: none !important;
@@ -4297,7 +4296,10 @@ body {
     white-space: nowrap;
     min-height: 34px;
     line-height: 1.2;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -4367,7 +4369,7 @@ body {
     color: var(--accent);
   }
   .bottom-nav-btn.active::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 20%;
