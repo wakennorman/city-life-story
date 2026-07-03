@@ -332,6 +332,25 @@ function generateDailyReportSummary(state, incomes, expenses) {
   else if (reportDay === 100) highlights.push("💪 百天了，城市没把你打倒");
   else if (reportDay === 365) highlights.push("🌟 一年了，从头到今天");
 
+  var totalEarned = (state.resources && state.resources.totalEarned) || 0;
+  var maxEarned = state.flags._maxEarnedMilestone || 0;
+  if (totalEarned >= 10000 && maxEarned < 10000) {
+    highlights.push("💰 累计收入破万！你已经不是穷光蛋了");
+    state.flags._maxEarnedMilestone = 10000;
+  } else if (totalEarned >= 5000 && maxEarned < 5000) {
+    highlights.push("💵 累计收入五千，站稳了脚跟");
+    state.flags._maxEarnedMilestone = 5000;
+  } else if (totalEarned >= 1000 && maxEarned < 1000) {
+    highlights.push("💴 赚到第一个一千块");
+    state.flags._maxEarnedMilestone = 1000;
+  }
+  if (state.player && state.player.phase === "corporate") {
+    if (!state.flags._corpMilestoneReached) {
+      highlights.push("🏢 进入职场！新的人生阶段开始了");
+      state.flags._corpMilestoneReached = true;
+    }
+  }
+
   if (!highlights.length) highlights.push("🌛 平凡的一天，活着就是赢了");
 
   var summary = highlights.slice(0, 2).join("，") + "。";
