@@ -322,6 +322,13 @@ function calcFinalPrice(state, locKey, goodId) {
   // 天气影响
   if (typeof getWeatherGoodPriceMod === "function")
     price *= getWeatherGoodPriceMod(state, goodId);
+  var rl = state.relationships
+    ? Object.keys(state.relationships).filter(function (k) {
+        return state.relationships[k] && state.relationships[k].met;
+      }).length
+    : 0;
+  var npcP = Math.min(10, Math.floor(rl / 2) * 0.5);
+  if (npcP > 0) price *= 1 + npcP / 100;
   price = Math.max(good.basePrice * 0.2, Math.min(good.basePrice * 6, price));
   return Math.round(price * 100) / 100;
 }
