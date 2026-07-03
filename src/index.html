@@ -522,7 +522,10 @@
     <script src="js/core/finance.js"></script>
     <script src="js/core/save.js"></script>
     <script src="js/core/events_core.js"></script>
-    <script src="js/core/events_street.js"></script>
+    <!-- v3.13: Street Random Events — split into 3 themed files -->
+    <script src="js/core/events_street_survival.js"></script>
+    <script src="js/core/events_street_wealth.js"></script>
+    <script src="js/core/events_street_life.js"></script>
     <script src="js/core/events_corp.js"></script>
     <script src="js/core/news_event_bridge.js"></script>
     <script src="js/core/weather.js"></script>
@@ -634,6 +637,7 @@
     <script src="js/phase2/corp_ops.js"></script>
     <script src="js/phase2/investment.js"></script>
     <script src="js/phase2/property_market.js"></script>
+    <script src="js/phase2/startup_data.js"></script>
     <script src="js/phase2/startup.js"></script>
 
     <!-- Phase 2: Deep Interaction Modules -->
@@ -649,6 +653,9 @@
     <!-- Data Visualization (必须在 render.js 之前加载，提供 renderGrowthTab 实现) -->
     <script src="js/ui/data_viz.js"></script>
     <!-- UI -->
+    <!-- v3.13: 渲染模块拆分为 Core/Infra/Tabs 三文件 -->
+    <script src="js/ui/render_core.js"></script>
+    <script src="js/ui/render_infra.js"></script>
     <script src="js/ui/render.js"></script>
     <script src="js/ui/corp_ui.js"></script>
     <script src="js/ui/modal.js"></script>
