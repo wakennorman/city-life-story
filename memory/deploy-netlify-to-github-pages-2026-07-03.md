@@ -44,16 +44,16 @@ metadata:
 
 ### 核心原则
 
-> **本地验过再推** — 一次改动从"几十次 push"变成"一次精准 push"
+> **本地验过再推** — 调试时先在本地 F5 验证，确认功能正常后再 commit + push。
 
 ### 本地预览方法（任选其一）
 
 ```powershell
-# 方法1：直接启动开发服务器（推荐，有热重载）
+# 方法1：开发服务器（推荐，有热重载）
 cd city-life-story
 npm run dev    # 浏览器打开 http://localhost:5173
 
-# 方法2：构建后用 Python 简易服务器预览
+# 方法2：构建后简易服务器
 cd city-life-story
 python build.py
 python -m http.server 8080  # 浏览器打开 http://localhost:8080
@@ -66,18 +66,36 @@ python -m http.server 8080  # 浏览器打开 http://localhost:8080
 ```
 改代码 → 本地浏览器 F5 看效果 → 满意 → git add/commit/push
     ↑
-每天推 0-2 次，而不是 20-50 次
+每个 commit 应该是一个完整、可独立运行的改动
 ```
+
+### Commit 质量标准
+
+| ✅                  | ❌              |
+| ------------------- | --------------- |
+| 一个完整功能点      | "wip: 改了一半" |
+| 一个 bug 的完整修复 | "test: 试试看"  |
+| 本地验证通过        | 无意义提交信息  |
 
 ### 养成习惯
 
 1. 改代码前：先在本地启动服务器跑起来
 2. 改动过程中：用 F5 反复看效果，不 push
-3. 满意后再：一次性 add + commit + push
-4. 复杂的改动：分阶段 commit，但**每个阶段都在本地验证通过后再推**
+3. 满意后再：一次性 add + commit + push（描述清楚改了什么）
+4. 复杂的改动：分阶段 commit，但**每个阶段都是完整的、本地验证通过的改动**
+
+### GitHub Pages 下 push 无忧
+
+| 项目                  | 数值                  |
+| --------------------- | --------------------- |
+| GitHub Actions 月限额 | 2000 分钟/月          |
+| 你单次构建耗时        | ~21 秒                |
+| 每天 push 50 次       | 月耗 ~525 分钟（26%） |
+
+**结论：GitHub Pages 不用担心 build credits，commit 质量比 push 频率更重要。**
 
 ---
 
-**Why:** 频繁 push 烧完了 Netlify build credits 导致站点禁用。切到 GitHub Pages 后 build 不再受限，但养成"本地先验再推"的习惯可以一招解决未来所有平台的 build credits 问题。
+**Why:** 频繁 push 烧完了 Netlify build credits 导致站点禁用。切到 GitHub Pages 后不再有 build credits 墙，但保持"本地先验再推"习惯能让提交历史干净、问题定位快速。
 
 **How to apply:** 每次调试新功能时，先用 `python -m http.server 8080` 或 `npm run dev` 本地跑起来，确认功能正常再 push。详见 [[long_term_lessons]]
