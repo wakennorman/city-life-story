@@ -1,3 +1,4 @@
 - [Location-Aware Action Category Ordering](location-aware-action-category-ordering.md) — 16个地点按功能优先级的行动分类重排系统
 - [Achievement System Audit 2026-07-03](achievement-system-audit-2026-07-03.md) — 成就系统全面审计：首日触发/逻辑错误/flag挂钩/技术债务
 - [Mobile Tab Debug Lesson 2026-07-04](mobile-tab-debug-lesson-2026-07-04.md) — 缺失`</aside>`导致移动端Tab栏消失的调试教训
+- [File Splitting v3.13](file-splitting-v3-13.md) — P1 超大文件按主题拆分（events_street×3 + startup×2 + render×3）

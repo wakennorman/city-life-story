@@ -76,7 +76,12 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.12d — 修复缺失`</aside>`导致的移动端Tab栏消失
+- **最新一次工作 (2026-07-04)**：v3.13 — P2装备品质激活 + P1四大系统深度联动 + P1超大文件拆分
+  - **P2 装备品质系统激活**：商店显示品质价格区间（¥base~max）和品质概率提示；买装备消息显示品质等级；套装效果（getSuiteJobBonus）接入 income 计算（estimateJobPay/estimateJobPayDetailed/doStreetJob 三处套装加成 🎯+X%）；装备 Tab 新增耐久条（renderDurabilityBar）+ 套装状态面板（renderSuiteCard）+ 品质徽章常驻
+  - **P1 四大系统深度联动**：life_node_check/medical_tick/travel_tick/legal_tick 四条管线步骤接入每日结算；新增 tickMedical() 月度保险自动扣费+未治疗提醒+旅行健康消耗；新建 cross_system_integration.js（5条联动链：人生节点→医疗、旅行→医疗、医疗→法律、旅行→法律、人生节点→旅行）；修复 travel.js/legal.js 使用 Math.random → 种子化 Random；修复 4 个系统文件未在 index.html 注册（life_nodes/medical/travel/legal 在 code 中存在但从未加载）
+  - **P1 超大文件拆分**：events_street.js(9,894行) → events_street_survival/wealth/life ×3 IIFE 文件；startup.js(14,444行) → startup_data.js(2,126行常量) + startup.js(12,317行函数)；render.js(7,056行) → render_core.js(1,218行) + render_infra.js(1,137行) + render.js(4,702行)。同位置多连续子文件替换法，未改 index.html 整体 script 顺序
+  - **验证**：`node --check` 全部通过，`python build.py`(4517KB) 成功
+  - **commits**：`e648ffc`(P2装备品质) / `da6120b`(P1深度联动) / `7d5b277`(P1文件拆分)
   - **问题**：用户反馈移动端（以及桌面端）Tab栏全部消失（行动/地图/交易/物品/技能等）。CSS无`display:none`，JS无报错，浏览器缓存刷新无效。
   - **Debug历程**：其他Agent排查了CSS/JS/git冲突残留/浏览器缓存均无效 — 始终没看DOM结构
   - **根因**：`commit 66c11fe`精简侧边栏时误删了`</aside>`关闭标签。`<aside>`在移动端`position: fixed; left: -100%`，缺失`</aside>`导致`<main>`被浏览器解析为`<aside>`子元素，整块内容偏移出屏幕
