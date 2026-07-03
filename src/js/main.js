@@ -704,27 +704,32 @@ function startScenarioGame(scenarioId) {
   // v3.2 修复: 记录第1天日初现金
   state.flags._dayStartCash = state.resources.cash || 0;
 
-  // --- 进入游戏 ---
+  // --- 显示开局世界新闻，然后进入游戏 ---
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("scenario-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
   document.getElementById("sandbox-screen").style.display = "none";
-  document.getElementById("app").style.display = "";
-  gameStarted = true;
-  renderAll();
-  if (typeof initCashCarousel === "function") initCashCarousel();
-  if (typeof startTutorial === "function") {
-    setTimeout(function () {
-      startTutorial();
-    }, 300);
-  }
 
-  // v3.2: 强制选择人生目标（不可跳过）
-  setTimeout(function () {
-    if (typeof showForcedDreamModal === "function") {
-      showForcedDreamModal();
+  var _enterScenarioGame = function() {
+    document.getElementById("app").style.display = "";
+    gameStarted = true;
+    renderAll();
+    if (typeof initCashCarousel === "function") initCashCarousel();
+    if (typeof startTutorial === "function") {
+      setTimeout(function () { startTutorial(); }, 300);
     }
-  }, 500);
+    setTimeout(function () {
+      if (typeof showForcedDreamModal === "function") {
+        showForcedDreamModal();
+      }
+    }, 500);
+  };
+
+  if (typeof startWithWorldNewsIntro === "function") {
+    startWithWorldNewsIntro(state, scenarioId, _enterScenarioGame);
+  } else {
+    _enterScenarioGame();
+  }
 }
 
 // ====== 沙盒模式 ======
@@ -1213,22 +1218,27 @@ function startSandboxGame() {
   document.getElementById("sandbox-screen").style.display = "none";
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
-  document.getElementById("app").style.display = "";
-  gameStarted = true;
-  renderAll();
-  if (typeof initCashCarousel === "function") initCashCarousel();
-  if (typeof startTutorial === "function") {
-    setTimeout(function () {
-      startTutorial();
-    }, 300);
-  }
 
-  // v3.2: 强制选择人生目标（不可跳过）
-  setTimeout(function () {
-    if (typeof showForcedDreamModal === "function") {
-      showForcedDreamModal();
+  var _enterSandboxGame = function() {
+    document.getElementById("app").style.display = "";
+    gameStarted = true;
+    renderAll();
+    if (typeof initCashCarousel === "function") initCashCarousel();
+    if (typeof startTutorial === "function") {
+      setTimeout(function () { startTutorial(); }, 300);
     }
-  }, 500);
+    setTimeout(function () {
+      if (typeof showForcedDreamModal === "function") {
+        showForcedDreamModal();
+      }
+    }, 500);
+  };
+
+  if (typeof startWithWorldNewsIntro === "function") {
+    startWithWorldNewsIntro(state, null, _enterSandboxGame);
+  } else {
+    _enterSandboxGame();
+  }
 }
 
 function startNewGame() {
@@ -1328,22 +1338,28 @@ function startNewGame() {
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("scenario-select-screen").style.display = "none";
   document.getElementById("sandbox-screen").style.display = "none";
-  document.getElementById("app").style.display = "";
-  gameStarted = true;
-  renderAll();
-  if (typeof initCashCarousel === "function") initCashCarousel();
 
-  // 新手引导（首次游戏）
-  if (typeof startTutorial === "function") {
-    setTimeout(() => startTutorial(), 300);
-  }
-
-  // v3.2: 强制选择人生目标（不可跳过）
-  setTimeout(function () {
-    if (typeof showForcedDreamModal === "function") {
-      showForcedDreamModal();
+  var _classicState = StateManager.getState();
+  var _enterClassicGame = function() {
+    document.getElementById("app").style.display = "";
+    gameStarted = true;
+    renderAll();
+    if (typeof initCashCarousel === "function") initCashCarousel();
+    if (typeof startTutorial === "function") {
+      setTimeout(function() { startTutorial(); }, 300);
     }
-  }, 500);
+    setTimeout(function () {
+      if (typeof showForcedDreamModal === "function") {
+        showForcedDreamModal();
+      }
+    }, 500);
+  };
+
+  if (typeof startWithWorldNewsIntro === "function") {
+    startWithWorldNewsIntro(_classicState, "classic", _enterClassicGame);
+  } else {
+    _enterClassicGame();
+  }
 }
 
 function loadExistingGame(slot) {
