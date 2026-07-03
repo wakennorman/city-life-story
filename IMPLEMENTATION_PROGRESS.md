@@ -60,13 +60,14 @@
 
 ## 2026-07-03 第十二轮：移动端底部导航栏 v1.0
 
-| #   | 任务                                     | 状态 | commit  |
-| --- | ---------------------------------------- | ---- | ------- |
-| 1   | UX诊断：12+Tab水平滚动为行业级反模式     | ✅   | b4ff356 |
-| 2   | 新增 src/js/ui/mobile_nav.js（核心逻辑） | ✅   | b4ff356 |
-| 3   | src/css/style.css：底部导航样式+布局适配 | ✅   | b4ff356 |
-| 4   | src/index.html：DOM植入+脚本注册         | ✅   | b4ff356 |
-| 5   | python build.py 构建验证                 | ✅   | 全通过  |
+| #   | 任务                                                       | 状态 | commit  |
+| --- | ---------------------------------------------------------- | ---- | ------- |
+| 1   | UX诊断：12+Tab水平滚动为行业级反模式                       | ✅   | b4ff356 |
+| 2   | 新增 src/js/ui/mobile_nav.js（核心逻辑）                   | ✅   | b4ff356 |
+| 3   | src/css/style.css：底部导航样式+布局适配                   | ✅   | b4ff356 |
+| 4   | src/index.html：DOM植入+脚本注册                           | ✅   | b4ff356 |
+| 5   | npm run deploy（build→verify→Netlify）                     | ✅   | 全通过  |
+| 6   | BugFix：#bottom-nav移出#app，修复iOS Safari position:fixed逃脱display:none遮挡欢迎页 | ✅   | cc6e463 |
 
 ### 改动摘要
 
