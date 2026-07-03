@@ -1557,9 +1557,20 @@ body {
   transform: translateX(2px);
 }
 
-/* Location services badges area */
+/* Location services badges area — 服务标签已移至地图 Tab，sidebar 容器仅保留兜底 */
 #location-services {
   min-height: 20px;
+}
+#location-services:empty {
+  display: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* 地图 Tab 服务标签条 + 声望条（桌面/移动端共用） */
+.map-location-services-strip {
+  transition: opacity 0.2s ease;
 }
 
 #mobile-menu-btn {
@@ -3592,6 +3603,13 @@ body {
 
   .wiki-back {
     min-height: 44px;
+  }
+
+  /* 地图 Tab 服务条移动端紧凑：缩小字号 + 减少间距 */
+  .map-location-services-strip {
+    padding: 4px 6px !important;
+    gap: 3px !important;
+    font-size: 10px !important;
   }
 }
 

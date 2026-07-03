@@ -742,94 +742,8 @@ function renderLocation(state) {
   // location-name 仅显示地点名（天气详情由下方 weather-panel 展示，避免冗余）
   renderHeaderContext(state, loc, weatherDef, seasonDef);
 
-  // 服务标签
-  const servicesEl = document.getElementById("location-services");
-  if (servicesEl) {
-    const badges = getLocationServiceBadges(locKey);
-    let badgeHtml = badges
-      .map(
-        (b) =>
-          `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`,
-      )
-      .join("");
-    // 客流量徽章（摆摊选址策略）
-    if (
-      typeof getVendingFootfallMod === "function" &&
-      typeof getFootfallStars === "function" &&
-      loc &&
-      loc.footfall
-    ) {
-      const footfall = getVendingFootfallMod(locKey, state);
-      const stars = getFootfallStars(footfall);
-      const note = loc.vendingNote || "";
-      badgeHtml +=
-        `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
-        `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
-        `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
-    }
-    if (typeof getLocationNewsBadges === "function") {
-      const pulseBadges = getLocationNewsBadges(locKey, state);
-      pulseBadges.forEach(function (b) {
-        const color = b.positive ? "var(--success)" : "var(--warning)";
-        const bg = b.positive
-          ? "rgba(46,204,113,0.10)"
-          : "rgba(243,156,18,0.10)";
-        badgeHtml +=
-          `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
-          `background:${bg};color:${color};border:1px solid ${color};" ` +
-          `title="${_esc(b.tip || "")}">📰 ${_esc(b.label)}</span>`;
-      });
-    }
-    servicesEl.innerHTML = badgeHtml;
-  }
-
-  // v3.1 第39轮：街坊声望显示
-  (function showLocationRep() {
-    if (typeof getReputationUIData !== "function") return;
-    var repData = getReputationUIData(state, locKey);
-    var repEl = document.getElementById("location-reputation");
-    if (!repEl) {
-      repEl = document.createElement("div");
-      repEl.id = "location-reputation";
-      repEl.style.cssText =
-        "margin-top:4px;padding:4px 8px;background:rgba(243,156,18,0.08);" +
-        "border:1px solid rgba(243,156,18,0.25);border-radius:6px;" +
-        "font-size:11px;display:flex;align-items:center;justify-content:space-between;";
-      var insertAfter = document.getElementById("location-services");
-      if (insertAfter && insertAfter.parentNode) {
-        insertAfter.parentNode.insertBefore(repEl, insertAfter.nextSibling);
-      }
-    }
-    if (!repEl) return;
-    var title = repData.title;
-    var level = repData.level;
-    var bonus = repData.bonus;
-    var progress = repData.progress;
-    var stars = "";
-    for (var i = 0; i < level; i++) stars += "⭐";
-    if (level === 0) stars = "〇";
-    var bonusText = bonus > 0 ? " +" + Math.round(bonus * 100) + "%收入" : "";
-    var progressBar =
-      level < 5
-        ? '<span style="display:inline-block;width:50px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:4px;">' +
-          '<span style="display:block;height:100%;width:' +
-          progress +
-          '%;background:var(--accent);border-radius:2px;"></span></span>'
-        : "✨MAX";
-    var nextText = repData.nextTitle ? " → " + repData.nextTitle : "";
-    repEl.innerHTML =
-      '<span><span style="font-weight:600;">👥 ' +
-      _esc(title) +
-      "</span>" +
-      bonusText +
-      "</span>" +
-      '<span style="font-size:10px;color:var(--text-secondary);">' +
-      stars +
-      progressBar +
-      nextText +
-      "</span>";
-    repEl.style.display = "flex";
-  })();
+  // 服务标签 + 街坊声望已移至地图 Tab（renderMapTab → appendLocationServicesStrip）
+  // sidebar 的 location-services / location-reputation 容器保持空占位，避免其他代码 getElementById 报错
 
   var houseData =
     (typeof HOUSING_TIERS !== "undefined" &&
@@ -1225,6 +1139,86 @@ const TAB_RENDERERS = {
   },
   wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
 };
+
+/**
+ * 📍 当前地点服务条 + 声望条（地图 Tab 顶部通用件）
+ * - 服务标签：仓库 / 工作 / 银行 / 医院 / 客流量...
+ * - 街坊声望：⭐⭐ + 进度条 + 下一档称号
+ * 移入地图 Tab 后桌面/移动端均可见（替代原 sidebar 位置）
+ */
+function appendLocationServicesStrip(container, state, locKey) {
+  if (!container || !locKey) return;
+  const loc = getLocation(locKey);
+  if (!loc) return;
+
+  const strip = document.createElement("div");
+  strip.className = "map-location-services-strip";
+  strip.style.cssText =
+    "display:flex;flex-direction:column;gap:4px;padding:6px 8px;" +
+    "background:var(--bg-card);border:1px solid var(--border-light);border-radius:6px;" +
+    "font-size:11px;margin-bottom:4px;";
+
+  const badges = getLocationServiceBadges(locKey);
+  let badgeHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+  badges.forEach((b) => {
+    badgeHtml += `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`;
+  });
+  if (
+    typeof getVendingFootfallMod === "function" &&
+    typeof getFootfallStars === "function" &&
+    loc.footfall
+  ) {
+    const footfall = getVendingFootfallMod(locKey, state);
+    const stars = getFootfallStars(footfall);
+    const note = loc.vendingNote || "";
+    badgeHtml +=
+      `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
+      `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
+      `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
+  }
+  if (typeof getLocationNewsBadges === "function") {
+    const pulseBadges = getLocationNewsBadges(locKey, state);
+    pulseBadges.forEach((b) => {
+      const color = b.positive ? "var(--success)" : "var(--warning)";
+      const bg = b.positive
+        ? "rgba(46,204,113,0.10)"
+        : "rgba(243,156,18,0.10)";
+      badgeHtml +=
+        `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
+        `background:${bg};color:${color};border:1px solid ${color};" ` +
+        `title="${_esc(b.tip || "")}">📰 ${_esc(b.label)}</span>`;
+    });
+  }
+  badgeHtml += `</div>`;
+  strip.innerHTML = badgeHtml;
+
+  // 街坊声望
+  if (typeof getReputationUIData === "function") {
+    const repData = getReputationUIData(state, locKey);
+    let stars = "";
+    for (let i = 0; i < repData.level; i++) stars += "⭐";
+    if (repData.level === 0) stars = "〇";
+    const bonusText =
+      repData.bonus > 0
+        ? ` +${Math.round(repData.bonus * 100)}%收入`
+        : "";
+    const progressBar =
+      repData.level < 5
+        ? `<span style="display:inline-block;width:40px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:3px;"><span style="display:block;height:100%;width:${repData.progress}%;background:var(--accent);border-radius:2px;"></span></span>`
+        : "✨MAX";
+    const nextText = repData.nextTitle ? ` → ${repData.nextTitle}` : "";
+    const repEl = document.createElement("div");
+    repEl.style.cssText =
+      "display:flex;align-items:center;justify-content:space-between;" +
+      "padding:3px 6px;background:rgba(243,156,18,0.06);border:1px solid rgba(243,156,18,0.2);border-radius:4px;";
+    repEl.innerHTML =
+      `<span><span style="font-weight:600;">👥 ${_esc(repData.title)}</span>${bonusText}</span>` +
+      `<span style="font-size:10px;color:var(--text-secondary);">${stars}${progressBar}${nextText}</span>`;
+    strip.appendChild(repEl);
+  }
+
+  container.appendChild(strip);
+}
 
 // ====== 通用滚动锚定辅助函数 ======
 // 返回当前在 #content-area 视口内、位置最靠上的那张 .action-card 的屏幕 top，
@@ -3266,6 +3260,9 @@ function renderMapTab(state, parent) {
     </p>
   `;
   container.appendChild(title);
+
+  // 服务标签 + 声望条（从 sidebar 迁移到地图 Tab 顶部）
+  appendLocationServicesStrip(container, state, locKey);
 
   // === ⭐ 快速出行置顶区（解决"地图没了"问题） ===
   const reachableList = Array.from(reachable).filter((k) => k !== locKey);
