@@ -2627,10 +2627,9 @@ function calcActualSalary(state) {
   if (!state.career || !state.career.currentJob) return 0;
   var job = state.career.currentJob;
   var base = job.salary || 0;
-  if (isInProbation(state)) {
-    return Math.round(base * 0.8);
-  }
-  return base;
+  if (isInProbation(state)) base = Math.round(base * 0.8);
+  var cb = typeof _calcCertSalaryBonus === "function" ? _calcCertSalaryBonus(state, job.path, job.salary || 5000) : 0;
+  return base + cb;
 }
 
 /**
