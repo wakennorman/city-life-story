@@ -372,8 +372,9 @@ function calculateLoanCapacity(state) {
   finalLimit = Math.max(0, Math.floor(finalLimit / 1000) * 1000);
 
   // Step 10: 计算利率和月供
-  // 基础日息 0.3%，根据风险调整
-  const baseDailyRate = 0.003;
+  // v3.1：基础日息 0.012%（年化≈4.4%），与存款利率（3.65%）保持合理利差
+  // 根据风险上下浮动，最高日息 0.02%（年化≈7.3%）
+  const baseDailyRate = 0.00012;
   let riskAdjustment = 1.0;
   if (stabilityMod < 0.5)
     riskAdjustment = 1.3; // 高风险 → 利率上浮 30%
@@ -391,7 +392,7 @@ function calculateLoanCapacity(state) {
     });
   }
 
-  const interestRate = Math.min(0.006, baseDailyRate * riskAdjustment); // 最高日息 0.6%
+  const interestRate = Math.min(0.0002, baseDailyRate * riskAdjustment); // 最高日息 0.02%
 
   // 月供：月收入 30%
   const monthlyRepaymentCap = Math.round(monthlyIncome * 0.3);
@@ -469,7 +470,7 @@ function grantLoan(state, amount) {
   });
 
   StateManager.addMessage(
-    `📝 银行贷款 ¥${amount.toLocaleString()}，日息 ${(capacity.interestRate * 100).toFixed(2)}%（复利）。请按时还款！`,
+    `📝 银行贷款 ¥${amount.toLocaleString()}，日息 ${(capacity.interestRate * 100).toFixed(3)}%（复利）。请按时还款！`,
     "warning",
   );
 

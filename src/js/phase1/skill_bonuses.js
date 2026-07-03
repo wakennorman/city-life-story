@@ -788,6 +788,37 @@ function settleDailyFinance(state) {
       );
     }
   }
+
+  // === v3.1 银行贷款利息累积 ===
+  // 修复：bankDebt 此前从不计息（贷款展示日息0.3-0.6%但实际不扣）。
+  // 采用合理利率：日息0.012%（年化≈4.4%），与存款利率（3.65%）保持合理利差。
+  var bd = state.resources.bankDebt || 0;
+  if (bd > 0) {
+    var bdRate = 0.00012;
+    var bdInterest = Math.max(1, Math.floor(bd * bdRate));
+    state.resources.bankDebt = bd + bdInterest;
+    state.resources.debt =
+      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "expense",
+        "bank_debt_interest",
+        bdInterest,
+        "银行贷款利息（日息0.012%）",
+      );
+    }
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "🏦 银行贷款 +¥" +
+          bdInterest +
+          " 利息（日息0.012%，欠款¥" +
+          state.resources.bankDebt.toLocaleString() +
+          "）",
+        "warning",
+      );
+    }
+  }
 }
 
 /**

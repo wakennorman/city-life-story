@@ -253,6 +253,16 @@ function tickIllnessDecay(state) {
       }
     }
 
+    // v3.1：若正在住院（medical.js），暂停症状恶化（两套系统协调）
+    if (
+      state.medical &&
+      state.medical.hospitalized &&
+      state.medical.treatment
+    ) {
+      remaining.push(inst);
+      continue;
+    }
+
     // 累计症状（health 持续掉、需要的 needs 加成）
     if (ill.symptom) {
       if (ill.symptom.health) {

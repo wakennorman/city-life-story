@@ -100,8 +100,15 @@ function checkVictoryPaths(state) {
   }
 
   // 🏠 中产稳稳（月薪>2万+有房产/产业+流动资金5万+）
-  var _vcCurrentSalary = state.career && state.career.currentJob ? state.career.currentJob.salary || 0 : 0;
-  var _vcOwnsHouse = (state.housing && state.housing.tier >= 2) || ((state.investment && state.investment.properties ? state.investment.properties.length : 0) > 0);
+  var _vcCurrentSalary =
+    state.career && state.career.currentJob
+      ? state.career.currentJob.salary || 0
+      : 0;
+  var _vcOwnsHouse =
+    (state.housing && state.housing.tier >= 2) ||
+    (state.investment && state.investment.properties
+      ? state.investment.properties.length
+      : 0) > 0;
   var _vcLiquid = state.resources.cash + (state.resources.bankBalance || 0);
   if (_vcCurrentSalary > 20000 && _vcOwnsHouse && _vcLiquid >= 50000) {
     triggerVictory(
@@ -117,7 +124,9 @@ function checkVictoryPaths(state) {
   var _vcFam = state.family || {};
   if (_vcFam.spouse && _vcFam.children && _vcFam.children.length > 0) {
     var _vcAllGrown = _vcFam.children.every(function (c) {
-      return (c.age || 0) >= 18 || c.stage === "working" || c.stage === "graduated";
+      return (
+        (c.age || 0) >= 18 || c.stage === "working" || c.stage === "graduated"
+      );
     });
     if (_vcAllGrown) {
       triggerVictory(
@@ -133,10 +142,16 @@ function checkVictoryPaths(state) {
   // 🛠️ 匠人一生（单项技能满级+证书>=5+同职业>=15年）
   var _vcHasMasterSkill = false;
   for (var _vcSk in state.skills) {
-    if (state.skills[_vcSk] && state.skills[_vcSk].level >= 100) { _vcHasMasterSkill = true; break; }
+    if (state.skills[_vcSk] && state.skills[_vcSk].level >= 100) {
+      _vcHasMasterSkill = true;
+      break;
+    }
   }
   var _vcCertLen = (state.certificates || []).length;
-  var _vcJobYears = ((state.career && state.career.currentJob ? state.career.currentJob.workDays || 0 : 0) / 365);
+  var _vcJobYears =
+    (state.career && state.career.currentJob
+      ? state.career.currentJob.workDays || 0
+      : 0) / 365;
   if (_vcHasMasterSkill && _vcCertLen >= 5 && _vcJobYears >= 15) {
     triggerVictory(
       state,
@@ -149,7 +164,12 @@ function checkVictoryPaths(state) {
 
   // 🏚️ 流浪终老（暗结局：35岁后+无房+赤贫+失业）
   var _vcAgeYear = state.player.day / 365;
-  if (_vcAgeYear >= 35 && (!state.housing || state.housing.tier === 0) && state.resources.cash < 500 && !state.career.currentJob) {
+  if (
+    _vcAgeYear >= 35 &&
+    (!state.housing || state.housing.tier === 0) &&
+    state.resources.cash < 500 &&
+    !state.career.currentJob
+  ) {
     triggerVictory(
       state,
       "homeless",
@@ -160,17 +180,26 @@ function checkVictoryPaths(state) {
   }
 
   // 🏛️ 体制内消失（暗结局：公务员路径+15年未晋升）
-  var _vcCurPath = state.career && state.career.currentJob ? state.career.currentJob.path || "" : "";
-  if ((_vcCurPath.indexOf("gov") >= 0 || _vcCurPath.indexOf("civil") >= 0) && _vcJobYears >= 15) {
+  var _vcCurPath =
+    state.career && state.career.currentJob
+      ? state.career.currentJob.path || ""
+      : "";
+  if (
+    (_vcCurPath.indexOf("gov") >= 0 || _vcCurPath.indexOf("civil") >= 0) &&
+    _vcJobYears >= 15
+  ) {
     var _vcHistory = (state.career.history || []).filter(function (h) {
-      return h.event && (h.event.indexOf("晋升") >= 0 || h.event.indexOf("promo") >= 0);
+      return (
+        h.event &&
+        (h.event.indexOf("晋升") >= 0 || h.event.indexOf("promo") >= 0)
+      );
     });
     if (_vcHistory.length <= 1) {
       triggerVictory(
         state,
         "civil_servant",
         "🏛️ 体制内消失",
-        "上岸十五年，原地踏步。你成了单位里那个"还在的老同志"。",
+        "上岸十五年，原地踏步。你成了单位里那个「还在的老同志」。",
       );
       return;
     }
@@ -178,7 +207,13 @@ function checkVictoryPaths(state) {
 
   // 🏙️ 城市套牢（暗结局：房贷车贷占收入>80%持续5年+）
   var _vcMonthlyIncome = _vcCurrentSalary || 1;
-  var _vcMonthlyDebt = (state.family && state.family.expenses ? state.family.expenses.monthlyMortgage || 0 : 0) + (state.resources.bankDebt > 0 ? Math.round(state.resources.bankDebt * 0.05) : 0);
+  var _vcMonthlyDebt =
+    (state.family && state.family.expenses
+      ? state.family.expenses.monthlyMortgage || 0
+      : 0) +
+    (state.resources.bankDebt > 0
+      ? Math.round(state.resources.bankDebt * 0.05)
+      : 0);
   var _vcDebtRatio = _vcMonthlyDebt / _vcMonthlyIncome;
   if (_vcDebtRatio > 0.8 && _vcAgeYear >= 5) {
     triggerVictory(

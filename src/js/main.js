@@ -2733,8 +2733,12 @@ function getAvailableActions(state) {
           const st = StateManager.getState();
           st.resources.cash -= 50;
           st.status.health = Math.min(100, st.status.health + 40);
-          st.status.sick = false;
           st.status.injured = false;
+          // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
+          if (st.status.illnesses && st.status.illnesses.length > 0) {
+            st.status.illnesses = [];
+          }
+          st.status.sick = false;
           StateManager.addMessage("🏥 看了医生，健康恢复了不少。", "success");
           consumeAP(20);
         },
@@ -3723,8 +3727,13 @@ function doStreetJob(job) {
       job.risk.illness &&
       Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
     ) {
-      state.status.sick = true;
       state.status.health = Math.max(0, state.status.health - 10);
+      // v3.1：工作环境致病走illness.js疾病系统（不再直接设sick=true）
+      if (typeof triggerIllness === "function") {
+        triggerIllness(state, "cold", "job");
+      } else {
+        state.status.sick = true;
+      }
       StateManager.addMessage(
         "🤒 你生病了！健康-10。注意休息或去医院。",
         "danger",
