@@ -125,6 +125,7 @@ function rollDailyIllness(state) {
     // 患病！
     _addIllness(state, key);
     state.flags._everGotSick = true; // 成就追踪
+    state.flags._everHadIllness = true; // 成就：疾病幸存者
 
     // 部分清零相关 habit（避免立刻再得一次）
     if (habitName === "lowHungerStreak")
@@ -188,6 +189,7 @@ function _addIllness(state, illnessId) {
 function recordIllnessCure(state, illnessId) {
   var ill = ILLNESSES[illnessId];
   if (!ill) return;
+  state.flags._everCuredIllness = true; // 成就：疾病幸存者
   var h = (state.flags._habits = state.flags._habits || {});
 
   // 将痊愈的疾病计入演化历史

@@ -66,6 +66,8 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: false,
     check: function (st) {
+      // 生存满3天再判定：部分剧本（二代创业者/中年危机）开局自带银行存款
+      if ((st.player.day || 0) < 3) return false;
       return (st.resources.bankBalance || 0) > 0;
     },
   },
@@ -90,6 +92,8 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: false,
     check: function (st) {
+      // 生存满5天再判定：部分剧本（下岗/二代创业者/中年危机）开局住所tier≥1
+      if ((st.player.day || 0) < 5) return false;
       return (st.housing.tier || 0) >= 1;
     },
   },
@@ -102,6 +106,8 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: false,
     check: function (st) {
+      // 生存满3天再判定：6/7剧本开局自带至少一项技能≥1级
+      if ((st.player.day || 0) < 3) return false;
       return Object.values(st.skills).some(function (s) {
         return s.level >= 1;
       });
@@ -166,6 +172,8 @@ const ACHIEVEMENTS = [
     category: "里程碑",
     hidden: false,
     check: function (st) {
+      // 生存满15天再判定：部分剧本（经典/二代创业者）开局无债
+      if ((st.player.day || 0) < 15) return false;
       return (
         (st.resources.villageDebt || 0) <= 0 &&
         (st.resources.bankDebt || 0) <= 0
@@ -320,7 +328,12 @@ const ACHIEVEMENTS = [
       for (var cid in st.enterpriseFate.companies) {
         var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
         for (var i = 0; i < h.length; i++) {
-          if (h[i].eventType === "merger_acquire") return true;
+          // 公司倒闭事件：company_death（正式倒闭事件）或 merger_acquire（濒死收购）
+          if (
+            h[i].eventType === "company_death" ||
+            h[i].eventType === "merger_acquire"
+          )
+            return true;
         }
       }
       return false;

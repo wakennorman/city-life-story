@@ -202,6 +202,11 @@ const DAILY_PIPELINE = [
           state.inventory.capacity = baseCap;
         }
       }
+      // 露宿天数追踪（成就用）
+      if ((state.housing.tier || 0) === 0) {
+        state.flags._everHomeless = true;
+        state.flags._homelessDays = (state.flags._homelessDays || 0) + 1;
+      }
     },
   },
 

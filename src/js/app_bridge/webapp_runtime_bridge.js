@@ -289,6 +289,7 @@
       // -- 新增：健康 --
     } else if (action.id === "community_health_check") {
       state.flags._healthChecked = true;
+      state.flags._firstCheckup = true; // 成就：体检
       addPlayerHealth(state, 2);
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
       StateManager.addMessage(
