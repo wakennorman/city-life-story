@@ -197,6 +197,24 @@ function switchTabFromMobileSubTab(tabName) {
 function syncBottomNavState() {
   if (!_isMobileViewport()) return;
 
+  // === 根据游戏状态显示/隐藏底部导航 ===
+  // #bottom-nav 在 #app 之外，初始 style="display:none"
+  // 游戏激活（#app 可见）时才显示，欢迎/选模式界面隐藏
+  var bottomNav = document.getElementById("bottom-nav");
+  var appEl = document.getElementById("app");
+  if (bottomNav && appEl) {
+    var gameActive =
+      appEl.style.display !== "none" && appEl.style.display !== "";
+    // appEl.style.display === "" 表示 CSS 控制（即 display:none 被清除，游戏已启动）
+    // 准确判断：app 不是 display:none 就是游戏状态
+    var isAppVisible = appEl.style.display !== "none";
+    if (isAppVisible && typeof gameStarted !== "undefined" && gameStarted) {
+      bottomNav.style.display = "flex";
+    } else if (!isAppVisible) {
+      bottomNav.style.display = "none";
+    }
+  }
+
   var tabName = typeof currentTab !== "undefined" ? currentTab : "actions";
   var group = _TAB_TO_GROUP[tabName] || "actions";
 
