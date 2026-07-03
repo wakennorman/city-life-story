@@ -2119,13 +2119,15 @@ const ACHIEVEMENTS = [
   {
     id: "clean_record",
     name: "清白之身",
-    desc: "从未做过任何违法工作",
+    desc: "在城市生活满30天，从未做过任何违法工作。",
     story:
       "这座城市有很多灰色的路。你没走。不是因为胆小，是因为你知道——有些线不能跨。",
     icon: "⚖️",
     category: "道德档案",
     hidden: true,
     check: function (st) {
+      // 必须生存满30天，确保玩家有足够机会接触到违法工作，再判断是否从未做过
+      if ((st.player.day || 0) < 30) return false;
       return !(
         st.flags &&
         (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
