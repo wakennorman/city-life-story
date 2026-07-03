@@ -72,9 +72,6 @@ function initMedicalState(state) {
   if (!state.medical) {
     state.medical = {
       insurance: null,
-      treatment: null, // { type, grade, daysRemaining, cost, hospital }
-      hospitalized: false,
-      recoveryDays: 0,
       totalMedicalSpent: 0,
     };
   }
@@ -98,11 +95,39 @@ function buyMedicalInsurance(state, planId) {
 }
 
 // ====== 开始治疗 ======
+// v3.1：委托 illness.js::treatIllness 处理每个疾病实例，本函数负责保险折扣+汇总
 function startTreatment(state, grade) {
   initMedicalState(state);
   var gradeInfo = ILLNESS_GRADES[grade];
   if (!gradeInfo) return { ok: false, msg: "无效的治疗等级" };
-  var cost = gradeInfo.treatCost;
+
+  var illnesses = state.status.illnesses || [];
+  if (illnesses.length === 0 && grade === "mild") {
+    // 无疾病记录时的轻症门诊：休息+小额花费
+    var restCost = Math.round(gradeInfo.treatCost * 0.4);
+    if (state.medical && state.medical.insurance) {
+      var restPlan = INSURANCE_PLANS.find(function (p) {
+        return p.id === state.medical.insurance;
+      });
+      if (restPlan) restCost = Math.round(restCost * (1 - restPlan.coverage));
+    }
+    if ((state.resources.cash || 0) < restCost)
+      return { ok: false, msg: "现金不足，需¥" + restCost };
+    state.resources.cash -= restCost;
+    state.medical.totalMedicalSpent =
+      (state.medical.totalMedicalSpent || 0) + restCost;
+    if (state.player) {
+      state.player.actionPoints = Math.max(
+        0,
+        (state.player.actionPoints || 0) - 3,
+      );
+    }
+    state.status.health = Math.min(100, (state.status.health || 100) + 15);
+    return { ok: true, msg: "去药店买了药，花费¥" + restCost + "。注意休息。" };
+  }
+
+  // 有疾病记录：按grade选tier，遍历治疗
+  var tier = grade === "mild" ? "pharmacy" : "hospital";
   var coverage = 0;
   if (state.medical && state.medical.insurance) {
     var plan = INSURANCE_PLANS.find(function (p) {
@@ -110,91 +135,64 @@ function startTreatment(state, grade) {
     });
     if (plan) coverage = plan.coverage;
   }
-  var actualCost = Math.round(cost * (1 - coverage));
-  // v3.11：医师/护理职业折扣
+  var careerDiscount = 0;
   if (typeof getCareerMedicalDiscount === "function") {
-    var careerDiscount = getCareerMedicalDiscount(state);
-    if (careerDiscount > 0) {
-      actualCost = Math.round(actualCost * (1 - careerDiscount));
-    }
+    careerDiscount = getCareerMedicalDiscount(state);
   }
+
+  // 筛选本轮要治疗的疾病（有对应tier费用的）
+  var toTreat = [];
+  var totalBaseCost = 0;
+  for (var i = 0; i < illnesses.length; i++) {
+    var inst = illnesses[i];
+    var def = typeof ILLNESSES !== "undefined" ? ILLNESSES[inst.id] : null;
+    if (!def || !def.treatCost) continue;
+    var baseCost = def.treatCost[tier];
+    if (!baseCost && tier === "pharmacy") continue;
+    if (!baseCost && tier === "hospital")
+      baseCost = def.treatCost.pharmacy || 0;
+    if (baseCost <= 0) continue;
+    toTreat.push({ id: inst.id, tier: tier, baseCost: baseCost });
+    totalBaseCost += baseCost;
+  }
+  if (toTreat.length === 0) {
+    return {
+      ok: false,
+      msg: "当前没有适合该治疗强度的疾病。换个强度试试。",
+    };
+  }
+
+  var actualCost = Math.round(
+    totalBaseCost * (1 - coverage) * (1 - careerDiscount),
+  );
   if ((state.resources.cash || 0) < actualCost)
     return { ok: false, msg: "现金不足，治疗费需¥" + actualCost };
+
   state.resources.cash -= actualCost;
   state.medical.totalMedicalSpent =
     (state.medical.totalMedicalSpent || 0) + actualCost;
 
-  if (grade === "mild") {
-    // 轻症门诊治疗，减部分AP
-    state.player.actionPoints = Math.max(
-      0,
-      ((state.player && state.player.actionPoints) || 0) - 3,
-    );
-    state.status.health = Math.min(100, (state.status.health || 100) + 15);
-    return {
-      ok: true,
-      msg: "去药店买了药，花费¥" + actualCost + "。注意休息。",
-    };
+  var curedCount = 0;
+  for (var j = 0; j < toTreat.length; j++) {
+    var tx2 = toTreat[j];
+    // 设置state.currentTreatContext供treatIllness使用
+    var before = state.status.illnesses.length;
+    treatIllness(tx2.id, tx2.tier);
+    var after = state.status.illnesses.length;
+    if (tx2.tier === "hospital" && after < before) curedCount++;
   }
 
-  state.medical.treatment = {
-    type: "treatment",
-    grade: grade,
-    daysRemaining: gradeInfo.treatDays,
-    cost: actualCost,
-  };
-  state.medical.hospitalized = grade === "severe" || grade === "critical";
-  return {
-    ok: true,
-    msg:
-      (state.medical.hospitalized ? "办理了住院" : "接受门诊治疗") +
-      "，花费¥" +
-      actualCost +
-      "，需要" +
-      gradeInfo.treatDays +
-      "天治疗期。",
-  };
-}
-
-// ====== 每日医疗 tick（管线步骤） ======
-function tickMedical(state) {
-  initMedicalState(state);
-  if (!state.medical || !state.medical.treatment) return;
-
-  var tx = state.medical.treatment;
-  tx.daysRemaining--;
-
-  // 住院每日消耗
-  if (state.medical.hospitalized) {
-    var dailyCost = 200;
-    if (state.medical.insurance) {
-      var plan = INSURANCE_PLANS.find(function (p) {
-        return p.id === state.medical.insurance;
-      });
-      if (plan) dailyCost = Math.round(dailyCost * (1 - plan.coverage));
-    }
-    state.resources.cash = (state.resources.cash || 0) - dailyCost;
-    state.medical.totalMedicalSpent =
-      (state.medical.totalMedicalSpent || 0) + dailyCost;
-  }
-
-  // 治疗完成
-  if (tx.daysRemaining <= 0) {
-    var gradeInfo = ILLNESS_GRADES[tx.grade] || ILLNESS_GRADES.mild;
-    state.status.health = Math.min(100, (state.status.health || 50) + 20);
-    state.medical.recoveryDays = gradeInfo.recoveryDays;
-    state.medical.treatment = null;
-    state.medical.hospitalized = false;
-  }
-}
-
-// ====== 康复期处理（每日管线 recovery 步骤调用） ======
-function tickRecovery(state) {
-  if (!state.medical || !state.medical.recoveryDays) return;
-  state.medical.recoveryDays--;
-  if (state.medical.recoveryDays <= 0) {
-    state.medical.recoveryDays = 0;
-  }
+  var msg =
+    "完成" +
+    gradeInfo.name +
+    "治疗 ¥" +
+    actualCost +
+    "（" +
+    toTreat.length +
+    "项疾病";
+  if (coverage > 0) msg += "，医保报销" + Math.round(coverage * 100) + "%";
+  msg += "）。";
+  return { ok: true, msg: msg };
 }
 
 // ====== 医疗摘要 ======
@@ -212,19 +210,10 @@ function getMedicalSummary(state) {
   } else {
     lines.push("⚠️ 未购买医疗保险");
   }
-  if (m.treatment) {
-    var gi = ILLNESS_GRADES[m.treatment.grade] || null;
-    lines.push(
-      "🏥 治疗中：" +
-        (gi ? gi.name : "治疗") +
-        "，剩余" +
-        m.treatment.daysRemaining +
-        "天",
-    );
-  }
-  if (m.hospitalized)
-    lines.push("🛏️ 住院中，每日费用¥" + (m.insurance ? "200(保险后)" : "200"));
-  if (m.recoveryDays > 0) lines.push("🌱 康复期：" + m.recoveryDays + "天");
+  var illnessCount =
+    (state.status && state.status.illnesses && state.status.illnesses.length) ||
+    0;
+  if (illnessCount > 0) lines.push("🤒 当前疾病：" + illnessCount + " 种");
   if (m.totalMedicalSpent > 0)
     lines.push("💰 累计医疗支出：¥" + m.totalMedicalSpent);
   return lines;
@@ -234,48 +223,53 @@ function showMedicalTreatmentModal() {
   if (typeof showModal !== "function") return;
   var state = StateManager.getState();
   initMedicalState(state);
-  var illnesses =
-    (state.status && state.status.illnesses && state.status.illnesses.length) ||
-    0;
+  var illnesses = state.status.illnesses || [];
   var body =
     '<div style="font-size:13px;line-height:1.7;">' +
-    "<p>根据当前身体状况选择治疗强度。医保会自动抵扣治疗费，治疗期间可能进入康复或住院状态。</p>" +
+    "<p>根据当前身体状况选择治疗强度。医保会自动抵扣治疗费。</p>" +
     '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
-    getMedicalSummary(state).join("<br>") +
-    (illnesses > 0
-      ? "<br>当前记录疾病：" + illnesses + " 种"
-      : "<br>当前没有明确疾病记录，仍可做轻症门诊或体检式处理。") +
-    "</div>" +
-    '<div style="display:grid;gap:8px;">';
+    getMedicalSummary(state).join("<br>");
+
+  // 显示当前疾病明细
+  if (illnesses.length > 0) {
+    body += "<br><strong>当前疾病明细：</strong>";
+    for (var i = 0; i < illnesses.length; i++) {
+      var inst = illnesses[i];
+      var def = typeof ILLNESSES !== "undefined" ? ILLNESSES[inst.id] : null;
+      if (!def) continue;
+      var pharCost = (def.treatCost && def.treatCost.pharmacy) || "-";
+      var hospCost = (def.treatCost && def.treatCost.hospital) || "-";
+      body +=
+        "<br>• " +
+        (def.icon || "🤒") +
+        " " +
+        def.name +
+        "（药¥" +
+        pharCost +
+        " / 院¥" +
+        hospCost +
+        "）";
+    }
+  }
+  body += "</div>" + '<div style="display:grid;gap:8px;">';
 
   Object.keys(ILLNESS_GRADES).forEach(function (gradeKey) {
     var grade = ILLNESS_GRADES[gradeKey];
-    var plan = state.medical.insurance
-      ? INSURANCE_PLANS.find(function (p) {
-          return p.id === state.medical.insurance;
-        })
-      : null;
-    var actualCost = Math.round(
-      grade.treatCost * (1 - (plan ? plan.coverage : 0)),
-    );
     body +=
       '<div style="padding:8px;border:1px solid var(--border);border-radius:6px;">' +
       "<strong>" +
       grade.icon +
       " " +
       grade.name +
-      "</strong> · 预计自付 ¥" +
-      actualCost.toLocaleString() +
-      " · " +
-      grade.treatDays +
-      '天<br><span style="color:var(--text-secondary);">适合' +
+      "</strong><br>" +
+      '<span style="color:var(--text-secondary);">适合' +
       (gradeKey === "mild"
-        ? "感冒、擦伤、疲劳过度等轻微问题。"
+        ? "轻症药店处理（标记治疗，康复加速）。"
         : gradeKey === "moderate"
-          ? "持续发烧、骨折、肠胃炎等需要连续治疗的问题。"
+          ? "中症医院治疗（立刻康复）。"
           : gradeKey === "severe"
-            ? "严重疾病或住院治疗。"
-            : "危重症抢救，费用极高，请谨慎选择。") +
+            ? "重症立刻康复所有可治疾病。"
+            : "危重症全力治疗。") +
       "</span></div>";
   });
   body += "</div></div>";
@@ -347,8 +341,6 @@ if (typeof window !== "undefined") {
   window.initMedicalState = initMedicalState;
   window.buyMedicalInsurance = buyMedicalInsurance;
   window.startTreatment = startTreatment;
-  window.tickMedical = tickMedical;
-  window.tickRecovery = tickRecovery;
   window.getMedicalSummary = getMedicalSummary;
   window.showMedicalTreatmentModal = showMedicalTreatmentModal;
   window.showMedicalInsuranceModal = showMedicalInsuranceModal;

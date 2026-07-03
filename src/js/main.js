@@ -1256,6 +1256,11 @@ function startNewGame() {
     initEquipmentDurability(StateManager.getState());
   }
 
+  // v3.1 第39轮：初始化街坊声望系统
+  if (typeof initReputation === "function") {
+    initReputation(StateManager.getState());
+  }
+
   // v3.6 P0-1: 初始化NPC关系网
   if (typeof npcRelationships && typeof npcRelationships.init === "function") {
     npcRelationships.init(StateManager.getState());
@@ -3302,6 +3307,20 @@ function doStreetJob(job) {
       );
     }
   }
+
+  // v3.1 第39轮：街坊声望收入加成
+  if (typeof getRepPayMultiplier === "function") {
+    var locKey =
+      state.trade && state.trade.currentLocation
+        ? state.trade.currentLocation
+        : null;
+    if (locKey) {
+      var repMulti = getRepPayMultiplier(state, locKey);
+      if (repMulti > 1.0) {
+        pay = Math.floor(pay * repMulti);
+      }
+    }
+  }
   if (typeof getNewsJobMultiplier === "function") {
     var newsJobMult = getNewsJobMultiplier(job.id, state);
     if (newsJobMult !== 1.0) {
@@ -3776,8 +3795,28 @@ function doStreetJob(job) {
     consumeEquipmentDurability(state, actionType, 1.0);
   }
 
+  // v3.1 第39轮：工作后获取街坊声望
+  gainRepFromWork(state, job);
+
   // 推进时间
   advanceTimeSlot();
+}
+
+/**
+ * 在 doStreetJob 工作后获取声望增益
+ * 在 doStreetJob 末尾调用，根据当前工作地点增加声望
+ */
+function gainRepFromWork(state, job) {
+  if (typeof gainReputation !== "function") return;
+  var locKey = state.trade && state.trade.currentLocation;
+  if (!locKey) return;
+  if (!job || !job.location) return;
+  // 给当前地点 +1 声望
+  gainReputation(state, locKey, 1, "工作");
+  // 如果工作地点与当前地点一致，额外 +0.5
+  if (job.location === locKey) {
+    gainReputation(state, locKey, 0.5, "本行工作");
+  }
 }
 
 function addSkillXp(skillKey, amount) {
