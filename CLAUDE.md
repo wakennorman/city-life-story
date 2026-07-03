@@ -62,9 +62,10 @@
 ## 项目信息
 
 - 入口: `src/index.html`（开发）/ `dist/index.html`（部署）
-- **构建 + 部署**: `npm run deploy`（= `python build.py` → `verify:deploy` → `netlify deploy --dir=dist --prod`）
-- **部署方式**: 本地 `netlify deploy` 直推 CDN（不走 Netlify CI/CD，因为 free plan 的 strict contributor verification 会拦截 GitHub webhook 构建）
-- **部署配置**: 根目录 `netlify.toml`（供 CLI 读取），`publish = dist`
+- **构建**: `python build.py`（将 src/ 内联为单文件 dist/index.html，约 4.5MB）
+- **部署方式**: **GitHub Pages** — push 到 main 触发 GitHub Actions（`.github/workflows/deploy.yml`），自动构建并部署到 `gh-pages` 分支
+- **线上地址**: `https://<username>.github.io/<repo>/`（需在 GitHub 仓库 Settings → Pages → Source 选 "GitHub Actions"）
+- **本地预览**: `python -m http.server 8080`（在 `city-life-story/` 目录下运行，浏览器打开 http://localhost:8080）
 - 开发文档: `src/DEVELOPMENT.md`（每次改动必须同步更新）
 - 技术栈: legacy 正式运行时仍是 HTML5 + CSS + Vanilla JS；v3.8 起新增 Vite + TypeScript 作为并行 Web App 架构壳和类型化迁移通道
 - **核心架构: 世界参数反馈环（v1.7）** — `src/js/core/world_params.js` 定义统一的 `_worldParams` 状态，将行业热度/市场情绪/财富等级纳入单一反馈闭环。行业热度由随机漂移+传导+新闻驱动（玩家个人不直接影响），财富反馈由玩家总资产决定，所有参数以 2%/天向基线衰减
@@ -101,7 +102,7 @@
   - **总扩展**：CAREER_PATHS 8路径×32职位→10路径×42职位；证书规则12→20条；事件35→45个
   - **验证**：commit: `23ff4c1`
 - **上一轮工作 (2026-07-03)**：蒙特卡洛平衡验证系统（种子化 PRNG + 无头游戏引擎 + 3策略×100次×1000天模拟）
-- **上一轮工作 (2026-07-03)**：部署流程修复 — 从 GitHub webhook CI 切换到 `netlify deploy` 直推（已上线）
+- **上一轮工作 (2026-07-03)**：部署平台迁移 — Netlify build credits 耗尽 → 切到 GitHub Pages（GitHub Actions 自动部署，无 build credits 限制）
 - **上一轮工作 (2026-07-02)**：移动端顶栏三行重组 + 属性/状态 10 指标常驻显性化（按 v3.1 审查改进触发）
   - **问题**：手机端 UI 排布不合理；左侧导航栏"状态与位置"里的属性/状态全藏（必须点 ☰ 才看得到）；顶部栏"日期/城市浮生记 v1.0"与时间槽重复且挤占关键数值位置；现金被挤到后面需横划才能看到
   - **移动端四行信息栏**：顶栏 [☰][💰][💸] / 时间槽 [📅 第N天 | ☀️ 时段 ⚡AP] / 状态条 [🎒 X/Y · 🌃 住所（💡升级提示）][🏙️ 品牌] / **常驻状态条（体/智/敏/心/魅 + 饿/疲/卫/情/健 10 指标）**

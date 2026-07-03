@@ -1261,6 +1261,11 @@ function startNewGame() {
     initReputation(StateManager.getState());
   }
 
+  // v3.1 第41轮：初始化人生抉择系统
+  if (typeof initLifeDecisions === "function") {
+    initLifeDecisions(StateManager.getState());
+  }
+
   // v3.6 P0-1: 初始化NPC关系网
   if (typeof npcRelationships && typeof npcRelationships.init === "function") {
     npcRelationships.init(StateManager.getState());
@@ -3320,6 +3325,27 @@ function doStreetJob(job) {
         pay = Math.floor(pay * repMulti);
       }
     }
+  }
+  // v3.1 第41轮：人生抉择收入加成（专注/耐心/深耕/雄心/进取）
+  if (typeof getFocusBonus === "function") {
+    var focusM = getFocusBonus(state);
+    if (focusM > 1.0) pay = Math.floor(pay * focusM);
+  }
+  if (typeof getPatientBonus === "function") {
+    var patientM = getPatientBonus(state);
+    if (patientM > 1.0) pay = Math.floor(pay * patientM);
+  }
+  if (typeof getLocalFocusBonus === "function") {
+    var localM = getLocalFocusBonus(state);
+    if (localM > 1.0) pay = Math.floor(pay * localM);
+  }
+  if (typeof getAmbitionBonus === "function") {
+    var ambitM = getAmbitionBonus(state);
+    if (ambitM > 1.0) pay = Math.floor(pay * ambitM);
+  }
+  if (typeof getDrivenBonus === "function") {
+    var drivenM = getDrivenBonus(state);
+    if (drivenM > 1.0) pay = Math.floor(pay * drivenM);
   }
   if (typeof getNewsJobMultiplier === "function") {
     var newsJobMult = getNewsJobMultiplier(job.id, state);

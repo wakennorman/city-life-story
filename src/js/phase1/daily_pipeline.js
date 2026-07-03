@@ -286,6 +286,38 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1 第41轮：人生抉择检查 ===
+  {
+    name: "life_decision_check",
+    fn: function (state) {
+      if (typeof checkLifeDecision === "function") {
+        checkLifeDecision(state);
+      }
+    },
+  },
+
+  // === v3.1 第41轮：摊位合伙收入 ===
+  {
+    name: "stall_income",
+    fn: function (state) {
+      if (typeof getStallIncome === "function") {
+        var income = getStallIncome(state);
+        if (income > 0) {
+          state.resources.cash += income;
+          state.resources.totalEarned =
+            (state.resources.totalEarned || 0) + income;
+          addDailyTransaction(
+            state,
+            "income",
+            "stall_partnership",
+            income,
+            "摊位合伙分成",
+          );
+        }
+      }
+    },
+  },
+
   // === 财务结算 ===
   {
     name: "finance",

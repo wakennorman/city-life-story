@@ -2711,9 +2711,13 @@ UI 上新增 **✨新** 徽章（CSS 脉冲动画）和新行动专属置顶卡�
 
 ### 部署说明
 
-- 本地构建后使用 `npx netlify deploy --prod --dir=dist` 手动推送到 Netlify（不走 GitHub Action 自动部署）
-- 推送到 GitHub 不会自动触发 Netlify 重新构建，需要本地跑完 `python build.py` 后手动部署
-- 部署命令在项目根目录执行，需要先确保 `dist/` 目录是最新构建产物
+> **（2026-07-03 更新）已从 Netlify 迁移到 GitHub Pages**
+
+- **线上地址**: `https://<username>.github.io/<repo>/`（在 GitHub 仓库 Settings → Pages → Source 选 "GitHub Actions"）
+- **自动部署**: push 到 main 分支 → GitHub Actions（`.github/workflows/deploy.yml`）自动运行 `python build.py` 并部署到 gh-pages
+- **本地预览**: `python -m http.server 8080`（在 `city-life-story/` 目录下，打开 http://localhost:8080）
+- **GitHub Pages 免费额度**: 100GB/月带宽（当前月均 ~3GB，非常充裕）、无 build credits 限制
+- **与 Netlify 对比**: 不再有 build credits 耗尽导致站点禁用问题；超限只会被限速/跳过构建，不会导致整个站下线
 - `git push` 失败时（网络原因）必须明确告知用户、说明原因（如"Karing 代理未开启"），不能跳过或忽略
 
 ### 测试

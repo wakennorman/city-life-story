@@ -45,7 +45,7 @@
 - 移动端不要把帮助/存档/读档/新游戏长期固定在底部，否则文字模拟游戏主内容会被压住，玩家会误以为只剩工具栏。手机端更稳的做法是隐藏低频顶栏操作，保留菜单、标题、现金和主内容。
 - 侧栏从 Grid 布局改为移动端覆盖层时，追加 CSS 必须显式写 `position: fixed !important`；只写 `left/top/transform` 不够，元素仍可能作为 Grid 子项参与布局，把 `#header/#main` 挤成窄列。
 - 沙盒配置页有内联 `max-height`，手机端必须用 `#sandbox-config { max-height: ... !important; }` 控制配置滚动区，并让开始/返回按钮 sticky 可见。
-- Netlify 部署不走 GitHub Action，构建后必须手动 `npx netlify deploy --prod --dir=dist` 推送；只 `git push` 不会自动更新线上版本。
+- **（2026-07-03 更新）部署已从 Netlify 迁移到 GitHub Pages**：push 到 main → GitHub Actions 自动构建部署；不再有 build credits 耗尽导致站点禁用问题。本地预览用 `python -m http.server 8080`。
 - 测试标准必须前置写在需求里：数值改动→跑蒙特卡洛 200次×1000天验证存活率>80%、前7天死亡率<10%、30天前暴富率<5%；UI改动→375px视口截图；构建→python build.py+npm run build+npm run typecheck全部通过。tests/ 目录下有现成脚本和模板。
 - `git push` 失败时必须明确告知用户原因（如 Karing 代理未开、网络超时等），不能跳过或忽略。
 - Canvas 绘制图表时，同一条数据的绘制代码不要写两遍（如 data_viz.js 支出线重复绘制 bug），避免浪费性能和导致视觉重叠。
