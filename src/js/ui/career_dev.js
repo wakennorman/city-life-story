@@ -2437,6 +2437,69 @@ function tickCareerJobDaily(state) {
     }
   }
 
+  // ----- 年终奖（P0-C, Blueprint 3.1.2） -----
+  // 每工作满365天发放一次，系数由业绩+司龄+倦怠+随机加权
+  var lastBonusDay = job._lastBonusDay || job.startDay || state.player.day;
+  if (job.workDays > 0 && job.workDays - (job._lastBonusWorkDays || 0) >= 365) {
+    var perfScore = (job.performance || 50) / 100; // 0-1
+    var years = Math.floor(job.workDays / 365);
+    var tenureScore = Math.min(1, years / 10); // 10年封顶
+    var burnoutOk =
+      (cap.burnout || 0) < 50 ? 1 : (cap.burnout || 0) < 70 ? 0.5 : 0;
+    var randomScore = Random ? Random.float(0, 1) : 0.5;
+    var raw =
+      perfScore * 0.3 + tenureScore * 0.2 + burnoutOk * 0.2 + randomScore * 0.3;
+    var coeff;
+    if (raw < 0.25) coeff = 0;
+    else if (raw < 0.45) coeff = 0.5;
+    else if (raw < 0.65) coeff = 1;
+    else if (raw < 0.82) coeff = 1.5;
+    else coeff = 3;
+    var baseMonthly = calcActualSalary(state);
+    var bonus = Math.round(baseMonthly * coeff);
+    job._lastBonusWorkDays = job.workDays;
+    if (coeff <= 0) {
+      StateManager.addMessage(
+        "📊 年终考核不合格，取消年终奖。继续加油！",
+        "warning",
+      );
+      state.career.history.push({
+        day: state.player.day,
+        event: "年终奖：系数0（不合格）",
+      });
+    } else {
+      var dreamBonus = bonus;
+      if (typeof applyDreamIncomeBonus === "function") {
+        dreamBonus = applyDreamIncomeBonus(state, bonus, "bonus");
+      }
+      var finalBonus = dreamBonus;
+      state.resources.cash += finalBonus;
+      state.resources.totalEarned += finalBonus;
+      var coeffLabel =
+        coeff === 3
+          ? "超额完成(×3)"
+          : coeff === 1.5
+            ? "优秀(×1.5)"
+            : coeff === 1
+              ? "达标(×1)"
+              : "低于预期(×0.5)";
+      StateManager.addMessage(
+        "🎉 年终奖 " +
+          coeffLabel +
+          "：+¥" +
+          finalBonus.toLocaleString() +
+          "（" +
+          Math.round(raw * 100) +
+          "分）",
+        "success",
+      );
+      state.career.history.push({
+        day: state.player.day,
+        event: "年终奖：系数" + coeff + "，+¥" + finalBonus.toLocaleString(),
+      });
+    }
+  }
+
   // ----- 年度考核调薪（P1-3） -----
   // 设计参考：现实中国职场年度考核涨薪5-15%
   var lastReview = job._lastReviewDay || job.startDay || state.player.day;
