@@ -710,13 +710,15 @@ function startScenarioGame(scenarioId) {
   document.getElementById("welcome-screen").style.display = "none";
   document.getElementById("sandbox-screen").style.display = "none";
 
-  var _enterScenarioGame = function() {
+  var _enterScenarioGame = function () {
     document.getElementById("app").style.display = "";
     gameStarted = true;
     renderAll();
     if (typeof initCashCarousel === "function") initCashCarousel();
     if (typeof startTutorial === "function") {
-      setTimeout(function () { startTutorial(); }, 300);
+      setTimeout(function () {
+        startTutorial();
+      }, 300);
     }
     setTimeout(function () {
       if (typeof showForcedDreamModal === "function") {
@@ -1219,13 +1221,15 @@ function startSandboxGame() {
   document.getElementById("mode-select-screen").style.display = "none";
   document.getElementById("welcome-screen").style.display = "none";
 
-  var _enterSandboxGame = function() {
+  var _enterSandboxGame = function () {
     document.getElementById("app").style.display = "";
     gameStarted = true;
     renderAll();
     if (typeof initCashCarousel === "function") initCashCarousel();
     if (typeof startTutorial === "function") {
-      setTimeout(function () { startTutorial(); }, 300);
+      setTimeout(function () {
+        startTutorial();
+      }, 300);
     }
     setTimeout(function () {
       if (typeof showForcedDreamModal === "function") {
@@ -1274,11 +1278,6 @@ function startNewGame() {
   // v3.1 第41轮：初始化人生抉择系统
   if (typeof initLifeDecisions === "function") {
     initLifeDecisions(StateManager.getState());
-  }
-
-  // v3.6 P0-1: 初始化NPC关系网
-  if (typeof npcRelationships && typeof npcRelationships.init === "function") {
-    npcRelationships.init(StateManager.getState());
   }
 
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
@@ -1340,13 +1339,15 @@ function startNewGame() {
   document.getElementById("sandbox-screen").style.display = "none";
 
   var _classicState = StateManager.getState();
-  var _enterClassicGame = function() {
+  var _enterClassicGame = function () {
     document.getElementById("app").style.display = "";
     gameStarted = true;
     renderAll();
     if (typeof initCashCarousel === "function") initCashCarousel();
     if (typeof startTutorial === "function") {
-      setTimeout(function() { startTutorial(); }, 300);
+      setTimeout(function () {
+        startTutorial();
+      }, 300);
     }
     setTimeout(function () {
       if (typeof showForcedDreamModal === "function") {

@@ -22,7 +22,6 @@
 // ============================================================
 
 const WORLD_NEWS_DB = {
-
   // ======== 经济/就业 ========
   employment: [
     {
@@ -32,7 +31,11 @@ const WORLD_NEWS_DB = {
       tag: "就业",
       headline: "全国高校毕业生再破历史新高，就业压力延续",
       detail: "招聘季竞争白热化，技能证书和实习经历成为关键筹码。",
-      worldEffect: { sectorHeat: { 科技: -0.05, 消费: 0.03 }, marketMood: "bearish", note: "就业压力大，IT/金融岗位竞争激烈" },
+      worldEffect: {
+        sectorHeat: { 科技: -0.05, 消费: 0.03 },
+        marketMood: "bearish",
+        note: "就业压力大，IT/金融岗位竞争激烈",
+      },
       scenarioTags: ["fresh_grad", "small_town_grinder"],
     },
     {
@@ -42,7 +45,11 @@ const WORLD_NEWS_DB = {
       tag: "就业",
       headline: "互联网大厂新一轮「优化」，裁员比例5%-15%",
       detail: "AI工具替代重复性岗位，高级研发和产品经理需求反增。",
-      worldEffect: { sectorHeat: { 科技: -0.08 }, marketMood: "bearish", note: "IT行业普通岗位薪资承压" },
+      worldEffect: {
+        sectorHeat: { 科技: -0.08 },
+        marketMood: "bearish",
+        note: "IT行业普通岗位薪资承压",
+      },
       scenarioTags: ["laid_off", "midlife_crisis"],
     },
     {
@@ -52,7 +59,11 @@ const WORLD_NEWS_DB = {
       tag: "就业",
       headline: "新能源工厂用工荒！技工月薪突破1.2万",
       detail: "新能源产业链爆发，焊工、电工、数控等技工需求激增。",
-      worldEffect: { sectorHeat: { 新能源: 0.12, 科技: 0.05 }, marketMood: "bullish", note: "制造业/蓝领岗位收入提升" },
+      worldEffect: {
+        sectorHeat: { 新能源: 0.12, 科技: 0.05 },
+        marketMood: "bullish",
+        note: "制造业/蓝领岗位收入提升",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -62,7 +73,11 @@ const WORLD_NEWS_DB = {
       tag: "就业",
       headline: "灵活就业人数破2亿，外卖骑手月均收入7800元",
       detail: "平台经济为「夹缝中的人」提供托底，但缺乏社保保障。",
-      worldEffect: { sectorHeat: { 消费: 0.08 }, marketMood: "neutral", note: "跑腿/外卖/零工收入稳定" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.08 },
+        marketMood: "neutral",
+        note: "跑腿/外卖/零工收入稳定",
+      },
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -72,7 +87,11 @@ const WORLD_NEWS_DB = {
       tag: "就业",
       headline: "国考报名再破300万，「上岸」成年轻人首选",
       detail: "就业焦虑推动公务员热，县城编制竞争比高达300:1。",
-      worldEffect: { sectorHeat: { 科技: -0.03, 金融: -0.02 }, marketMood: "neutral", note: "稳定岗位溢价，创业/私企吸引力下滑" },
+      worldEffect: {
+        sectorHeat: { 科技: -0.03, 金融: -0.02 },
+        marketMood: "neutral",
+        note: "稳定岗位溢价，创业/私企吸引力下滑",
+      },
       scenarioTags: ["small_town_grinder", "fresh_grad"],
     },
     {
@@ -82,7 +101,11 @@ const WORLD_NEWS_DB = {
       tag: "科技",
       headline: "AI大模型加速落地，客服/翻译/设计岗位首当其冲",
       detail: "会用AI是加分项，被AI替代是警报。掌握工具者吃肉，不进步者喝汤。",
-      worldEffect: { sectorHeat: { 科技: 0.10 }, marketMood: "volatile", note: "AI赋能岗位收入+15%，传统基础岗位薪资承压" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.1 },
+        marketMood: "volatile",
+        note: "AI赋能岗位收入+15%，传统基础岗位薪资承压",
+      },
       scenarioTags: ["classic", "laid_off", "midlife_crisis"],
     },
   ],
@@ -96,7 +119,11 @@ const WORLD_NEWS_DB = {
       tag: "消费",
       headline: "以旧换新政策落地，家电汽车消费旺季来袭",
       detail: "政府补贴刺激内需，家电、新能源车、手机换机潮并起。",
-      worldEffect: { sectorHeat: { 消费: 0.10, 新能源: 0.08 }, marketMood: "bullish", note: "消费行业景气，零售/服务收入有提升" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.1, 新能源: 0.08 },
+        marketMood: "bullish",
+        note: "消费行业景气，零售/服务收入有提升",
+      },
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -106,7 +133,11 @@ const WORLD_NEWS_DB = {
       tag: "经济",
       headline: "CPI连续走低，通缩担忧引发价格战全面升级",
       detail: "商品降价对消费者是好事，但对小商贩和工厂利润冲击明显。",
-      worldEffect: { sectorHeat: { 消费: -0.06, 金融: -0.04 }, marketMood: "bearish", note: "物价下行，街头摊位/商品利润空间收窄" },
+      worldEffect: {
+        sectorHeat: { 消费: -0.06, 金融: -0.04 },
+        marketMood: "bearish",
+        note: "物价下行，街头摊位/商品利润空间收窄",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -116,7 +147,11 @@ const WORLD_NEWS_DB = {
       tag: "市场",
       headline: "A股政策利好频出，沪指单月涨幅超8%",
       detail: "险资入市、汇金增持，市场情绪由悲转喜，散户纷纷入场。",
-      worldEffect: { sectorHeat: { 金融: 0.12, 科技: 0.08 }, marketMood: "bullish", note: "股市投资机会，但风险同增" },
+      worldEffect: {
+        sectorHeat: { 金融: 0.12, 科技: 0.08 },
+        marketMood: "bullish",
+        note: "股市投资机会，但风险同增",
+      },
       scenarioTags: ["second_gen", "midlife_crisis"],
     },
     {
@@ -126,7 +161,11 @@ const WORLD_NEWS_DB = {
       tag: "产业",
       headline: "中国新能源车出口创新高，全球份额超35%",
       detail: "比亚迪、奇瑞等品牌出海，带动整条产业链高景气。",
-      worldEffect: { sectorHeat: { 新能源: 0.15, 科技: 0.06 }, marketMood: "bullish", note: "新能源/制造业岗位需求旺盛" },
+      worldEffect: {
+        sectorHeat: { 新能源: 0.15, 科技: 0.06 },
+        marketMood: "bullish",
+        note: "新能源/制造业岗位需求旺盛",
+      },
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -136,7 +175,11 @@ const WORLD_NEWS_DB = {
       tag: "经济",
       headline: "小微企业生存调查：三成个体户营收不及去年七成",
       detail: "房租、人工成本居高，平台抽成压缩，街边小店关门潮蔓延。",
-      worldEffect: { sectorHeat: { 消费: -0.08 }, marketMood: "bearish", note: "实体店生意艰难，摆摊/外卖等低门槛谋生更重要" },
+      worldEffect: {
+        sectorHeat: { 消费: -0.08 },
+        marketMood: "bearish",
+        note: "实体店生意艰难，摆摊/外卖等低门槛谋生更重要",
+      },
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -146,7 +189,11 @@ const WORLD_NEWS_DB = {
       tag: "金融",
       headline: "央行再度降准降息，释放万亿流动性",
       detail: "贷款利率历史低位，购房、创业融资成本下行，储蓄收益缩水。",
-      worldEffect: { sectorHeat: { 房地产: 0.08, 金融: -0.04 }, marketMood: "bullish", note: "贷款/创业启动成本降低，存款收益下滑" },
+      worldEffect: {
+        sectorHeat: { 房地产: 0.08, 金融: -0.04 },
+        marketMood: "bullish",
+        note: "贷款/创业启动成本降低，存款收益下滑",
+      },
       scenarioTags: ["second_gen", "midlife_crisis", "classic"],
     },
   ],
@@ -160,7 +207,11 @@ const WORLD_NEWS_DB = {
       tag: "房产",
       headline: "70城二手房价格连续下调，核心区亦现松动",
       detail: "购房门槛下移是机遇，但观望情绪让成交低迷，房东急于出手。",
-      worldEffect: { sectorHeat: { 房地产: -0.10 }, marketMood: "bearish", note: "租房成本相对稳定，购房可以议价" },
+      worldEffect: {
+        sectorHeat: { 房地产: -0.1 },
+        marketMood: "bearish",
+        note: "租房成本相对稳定，购房可以议价",
+      },
       scenarioTags: ["classic", "midlife_crisis"],
     },
     {
@@ -170,7 +221,11 @@ const WORLD_NEWS_DB = {
       tag: "房产",
       headline: "「保交楼」专项债落地，数十万套烂尾楼有望复工",
       detail: "购房者终于等来曙光，但施工队、钢材商迎来新一波需求。",
-      worldEffect: { sectorHeat: { 房地产: 0.06, 新能源: 0.03 }, marketMood: "neutral", note: "工程类工作需求上涨，房产市场预期回暖" },
+      worldEffect: {
+        sectorHeat: { 房地产: 0.06, 新能源: 0.03 },
+        marketMood: "neutral",
+        note: "工程类工作需求上涨，房产市场预期回暖",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -180,7 +235,11 @@ const WORLD_NEWS_DB = {
       tag: "城市",
       headline: "城中村改造提速，城市核心区拆迁赔偿引争议",
       detail: "被纳入改造范围的居民喜忧参半：赔偿金丰厚，但去哪里住成难题。",
-      worldEffect: { sectorHeat: { 房地产: 0.05 }, marketMood: "volatile", note: "城中村附近租金上涨，部分地段居民被迫迁移" },
+      worldEffect: {
+        sectorHeat: { 房地产: 0.05 },
+        marketMood: "volatile",
+        note: "城中村附近租金上涨，部分地段居民被迫迁移",
+      },
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -190,7 +249,11 @@ const WORLD_NEWS_DB = {
       tag: "租房",
       headline: "长租公寓扩张放缓，个人房东直租回归主流",
       detail: "中介费竞争加剧，租金议价空间扩大，押一付一渐成标准。",
-      worldEffect: { sectorHeat: { 消费: 0.02 }, marketMood: "neutral", note: "租房支出压力略减，村子/城郊租金更实惠" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.02 },
+        marketMood: "neutral",
+        note: "租房支出压力略减，村子/城郊租金更实惠",
+      },
       scenarioTags: ["classic", "foreign_worker", "fresh_grad"],
     },
   ],
@@ -204,7 +267,11 @@ const WORLD_NEWS_DB = {
       tag: "科技",
       headline: "DeepSeek等国产大模型震撼全球，AI能力追平甚至超越国际对手",
       detail: "中国AI自立能力浮现，芯片封锁效果打折，技术人才身价暴涨。",
-      worldEffect: { sectorHeat: { 科技: 0.15 }, marketMood: "bullish", note: "AI/科技相关岗位薪资+10-20%" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.15 },
+        marketMood: "bullish",
+        note: "AI/科技相关岗位薪资+10-20%",
+      },
       scenarioTags: ["classic", "second_gen", "fresh_grad"],
     },
     {
@@ -214,7 +281,11 @@ const WORLD_NEWS_DB = {
       tag: "科技",
       headline: "人形机器人量产进入倒计时，多地工厂启动试点",
       detail: "效率革命来临，但流水线工人的未来令人担忧，技能升级迫在眉睫。",
-      worldEffect: { sectorHeat: { 科技: 0.12, 新能源: 0.08 }, marketMood: "volatile", note: "高端制造/编程岗位热，普工岗位长期承压" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.12, 新能源: 0.08 },
+        marketMood: "volatile",
+        note: "高端制造/编程岗位热，普工岗位长期承压",
+      },
       scenarioTags: ["classic", "laid_off", "foreign_worker"],
     },
     {
@@ -224,7 +295,11 @@ const WORLD_NEWS_DB = {
       tag: "科技",
       headline: "国产芯片制造工艺取得突破，7nm量产在望",
       detail: "「卡脖子」环节逐步松动，半导体全链条人才缺口巨大。",
-      worldEffect: { sectorHeat: { 科技: 0.18 }, marketMood: "bullish", note: "芯片/半导体相关岗位薪资水涨船高" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.18 },
+        marketMood: "bullish",
+        note: "芯片/半导体相关岗位薪资水涨船高",
+      },
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -234,7 +309,11 @@ const WORLD_NEWS_DB = {
       tag: "新媒体",
       headline: "短视频直播经济规模破3万亿，主播已成新兴职业",
       detail: "流量变现已经有成熟路径，但头部垄断效应强，99%的人在内卷底层。",
-      worldEffect: { sectorHeat: { 消费: 0.08, 科技: 0.05 }, marketMood: "neutral", note: "社交网络/直播副业收入可观，但竞争激烈" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.08, 科技: 0.05 },
+        marketMood: "neutral",
+        note: "社交网络/直播副业收入可观，但竞争激烈",
+      },
       scenarioTags: ["classic", "fresh_grad", "second_gen"],
     },
   ],
@@ -248,7 +327,11 @@ const WORLD_NEWS_DB = {
       tag: "社会",
       headline: "出生率连续下降，养老金收支压力引发广泛讨论",
       detail: "少子老龄化加速，年轻人「躺平」背后是现实的重压。",
-      worldEffect: { sectorHeat: { 医药: 0.08, 消费: -0.03 }, marketMood: "bearish", note: "老龄产业/医疗岗位需求增，年轻消费市场收缩" },
+      worldEffect: {
+        sectorHeat: { 医药: 0.08, 消费: -0.03 },
+        marketMood: "bearish",
+        note: "老龄产业/医疗岗位需求增，年轻消费市场收缩",
+      },
       scenarioTags: ["midlife_crisis", "classic"],
     },
     {
@@ -258,7 +341,11 @@ const WORLD_NEWS_DB = {
       tag: "社会",
       headline: "职场心理健康报告：三成员工存在中高度焦虑",
       detail: "「35岁危机」「内卷」「躺平」成社会情绪主轴，心理咨询需求暴增。",
-      worldEffect: { sectorHeat: { 医药: 0.06 }, marketMood: "bearish", note: "心理健康相关行业兴起，职场压力影响生产力" },
+      worldEffect: {
+        sectorHeat: { 医药: 0.06 },
+        marketMood: "bearish",
+        note: "心理健康相关行业兴起，职场压力影响生产力",
+      },
       scenarioTags: ["midlife_crisis", "laid_off", "small_town_grinder"],
     },
     {
@@ -268,7 +355,11 @@ const WORLD_NEWS_DB = {
       tag: "社会",
       headline: "「新贫困陷阱」：月入过万却存不下钱的城市中产",
       detail: "房贷、娃的教育、父母赡养三座大山同压，中产悄悄滑向脆弱层。",
-      worldEffect: { sectorHeat: { 消费: -0.05, 金融: -0.04 }, marketMood: "bearish", note: "消费降级，精打细算成为城市生存主旋律" },
+      worldEffect: {
+        sectorHeat: { 消费: -0.05, 金融: -0.04 },
+        marketMood: "bearish",
+        note: "消费降级，精打细算成为城市生存主旋律",
+      },
       scenarioTags: ["midlife_crisis", "second_gen"],
     },
     {
@@ -278,7 +369,11 @@ const WORLD_NEWS_DB = {
       tag: "社会",
       headline: "逆城市化初现：部分年轻人返乡创业，县城经济重启",
       detail: "「小镇做题家」的逆流者选择回头，但机会仍少于城市。",
-      worldEffect: { sectorHeat: { 消费: 0.03 }, marketMood: "neutral", note: "小镇/县城房价低、压力小，但上升通道窄" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.03 },
+        marketMood: "neutral",
+        note: "小镇/县城房价低、压力小，但上升通道窄",
+      },
       scenarioTags: ["small_town_grinder", "classic"],
     },
     {
@@ -288,7 +383,11 @@ const WORLD_NEWS_DB = {
       tag: "社会",
       headline: "银发经济万亿赛道爆发，老年护理人才严重短缺",
       detail: "护工、老年康复师、上门服务成高需求蓝海，薪资超越白领。",
-      worldEffect: { sectorHeat: { 医药: 0.10, 消费: 0.05 }, marketMood: "bullish", note: "养老/医疗服务行业机会多，报酬不低" },
+      worldEffect: {
+        sectorHeat: { 医药: 0.1, 消费: 0.05 },
+        marketMood: "bullish",
+        note: "养老/医疗服务行业机会多，报酬不低",
+      },
       scenarioTags: ["classic", "midlife_crisis", "foreign_worker"],
     },
     {
@@ -298,7 +397,11 @@ const WORLD_NEWS_DB = {
       tag: "教育",
       headline: "职业教育扶持力度加大，「工匠精神」重新被提倡",
       detail: "技能型人才补贴增加，职校毕业生就业率高于部分本科专业。",
-      worldEffect: { sectorHeat: { 科技: 0.04, 新能源: 0.06 }, marketMood: "neutral", note: "技能证书和职业技术的价值提升" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.04, 新能源: 0.06 },
+        marketMood: "neutral",
+        note: "技能证书和职业技术的价值提升",
+      },
       scenarioTags: ["small_town_grinder", "foreign_worker", "classic"],
     },
   ],
@@ -312,7 +415,11 @@ const WORLD_NEWS_DB = {
       tag: "国际",
       headline: "中美贸易摩擦持续，关税壁垒波及多个出口行业",
       detail: "出口企业压力剧增，但也倒逼产业链加速国内升级替代。",
-      worldEffect: { sectorHeat: { 科技: -0.07, 新能源: 0.05 }, marketMood: "volatile", note: "外贸相关岗位受冲击，内循环消费机会反增" },
+      worldEffect: {
+        sectorHeat: { 科技: -0.07, 新能源: 0.05 },
+        marketMood: "volatile",
+        note: "外贸相关岗位受冲击，内循环消费机会反增",
+      },
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -322,7 +429,11 @@ const WORLD_NEWS_DB = {
       tag: "政策",
       headline: "平台经济强监管持续，算法透明化和骑手权益保护落地",
       detail: "外卖、滴滴、主播等平台用工者待遇改善，但平台利润受压。",
-      worldEffect: { sectorHeat: { 消费: 0.05, 科技: -0.04 }, marketMood: "neutral", note: "外卖/跑腿/平台零工收入略有改善" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.05, 科技: -0.04 },
+        marketMood: "neutral",
+        note: "外卖/跑腿/平台零工收入略有改善",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -332,7 +443,11 @@ const WORLD_NEWS_DB = {
       tag: "政策",
       headline: "乡村振兴专项基金到位，农村产业创业补贴最高达20万",
       detail: "回乡创业、农业科技改造获政策支持，但落地执行参差不齐。",
-      worldEffect: { sectorHeat: { 消费: 0.04 }, marketMood: "neutral", note: "小镇/乡镇创业门槛降低，补贴可观" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.04 },
+        marketMood: "neutral",
+        note: "小镇/乡镇创业门槛降低，补贴可观",
+      },
       scenarioTags: ["small_town_grinder", "laid_off"],
     },
     {
@@ -342,7 +457,11 @@ const WORLD_NEWS_DB = {
       tag: "金融",
       headline: "数字人民币试点城市扩展至50+，消费红包刺激效果显著",
       detail: "活动期间消费券使用率超预期，线下小商户获益明显。",
-      worldEffect: { sectorHeat: { 消费: 0.07, 金融: 0.04 }, marketMood: "bullish", note: "消费补贴期间实体经营收入有提升" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.07, 金融: 0.04 },
+        marketMood: "bullish",
+        note: "消费补贴期间实体经营收入有提升",
+      },
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -351,8 +470,13 @@ const WORLD_NEWS_DB = {
       icon: "⏰",
       tag: "劳工",
       headline: "劳动法执法趋严，多家大厂因加班违规被罚款",
-      detail: "「打工人」权益意识抬升，但执法力度仍待观察，自我保护意识更重要。",
-      worldEffect: { sectorHeat: { 科技: -0.03 }, marketMood: "neutral", note: "职场权益保护增强，但短期内裁员阻力更大" },
+      detail:
+        "「打工人」权益意识抬升，但执法力度仍待观察，自我保护意识更重要。",
+      worldEffect: {
+        sectorHeat: { 科技: -0.03 },
+        marketMood: "neutral",
+        note: "职场权益保护增强，但短期内裁员阻力更大",
+      },
       scenarioTags: ["midlife_crisis", "laid_off"],
     },
   ],
@@ -366,7 +490,11 @@ const WORLD_NEWS_DB = {
       tag: "节日",
       headline: "春节消费旺季：返乡客流创历史峰值，零售业迎来黄金周",
       detail: "餐饮、礼品、出行全面爆发，一年中最能赚到钱的两周。",
-      worldEffect: { sectorHeat: { 消费: 0.18, 科技: -0.05 }, marketMood: "bullish", note: "春节黄金期！摆摊/餐饮/服务收入高峰" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.18, 科技: -0.05 },
+        marketMood: "bullish",
+        note: "春节黄金期！摆摊/餐饮/服务收入高峰",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -376,7 +504,11 @@ const WORLD_NEWS_DB = {
       tag: "节日",
       headline: "618年中大促破纪录，直播间带货单日成交超3000亿",
       detail: "主播、仓储、物流全面动员，电商淡季过后迎来消费狂欢。",
-      worldEffect: { sectorHeat: { 消费: 0.12, 科技: 0.06 }, marketMood: "bullish", note: "618期间电商/物流/零工收入有额外奖励" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.12, 科技: 0.06 },
+        marketMood: "bullish",
+        note: "618期间电商/物流/零工收入有额外奖励",
+      },
       scenarioTags: ["classic", "second_gen", "fresh_grad"],
     },
     {
@@ -386,7 +518,11 @@ const WORLD_NEWS_DB = {
       tag: "毕业",
       headline: "毕业季来临！应届生大量涌入城市，租房市场骤然承压",
       detail: "简历洪流涌入招聘市场，但实习和应届的差距已经打开。",
-      worldEffect: { sectorHeat: { 科技: -0.04, 消费: 0.04 }, marketMood: "neutral", note: "应届生竞争激烈，租房需求拉升城区租金" },
+      worldEffect: {
+        sectorHeat: { 科技: -0.04, 消费: 0.04 },
+        marketMood: "neutral",
+        note: "应届生竞争激烈，租房需求拉升城区租金",
+      },
       scenarioTags: ["fresh_grad", "small_town_grinder"],
     },
     {
@@ -395,8 +531,13 @@ const WORLD_NEWS_DB = {
       icon: "🛒",
       tag: "节日",
       headline: "双十一提前开门！物流业全员上阵，快递峰值破60亿单",
-      detail: "全年最大消费节，物流、仓储、客服爆发式用工，计件工人单月收入翻倍。",
-      worldEffect: { sectorHeat: { 消费: 0.20, 科技: 0.05 }, marketMood: "bullish", note: "双十一期间物流/零工收入激增！" },
+      detail:
+        "全年最大消费节，物流、仓储、客服爆发式用工，计件工人单月收入翻倍。",
+      worldEffect: {
+        sectorHeat: { 消费: 0.2, 科技: 0.05 },
+        marketMood: "bullish",
+        note: "双十一期间物流/零工收入激增！",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -406,7 +547,11 @@ const WORLD_NEWS_DB = {
       tag: "招聘",
       headline: "金三银四招聘旺季开启！企业发力抢人，薪资谈判空间扩大",
       detail: "跳槽窗口期来临，有经验的打工人此时谈薪最有底气。",
-      worldEffect: { sectorHeat: { 科技: 0.06, 金融: 0.05 }, marketMood: "bullish", note: "招聘旺季，跳槽和求职成功率更高" },
+      worldEffect: {
+        sectorHeat: { 科技: 0.06, 金融: 0.05 },
+        marketMood: "bullish",
+        note: "招聘旺季，跳槽和求职成功率更高",
+      },
       scenarioTags: ["classic", "laid_off", "midlife_crisis"],
     },
     {
@@ -416,7 +561,11 @@ const WORLD_NEWS_DB = {
       tag: "天气",
       headline: "极端高温天气持续！多地气温突破40℃，户外作业受限",
       detail: "室内工作成为抢手岗位，外卖和建筑工人收入挂高温补贴。",
-      worldEffect: { sectorHeat: { 消费: 0.07, 新能源: 0.05 }, marketMood: "neutral", note: "高温季节体力劳动收入有高温补贴，但消耗大" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.07, 新能源: 0.05 },
+        marketMood: "neutral",
+        note: "高温季节体力劳动收入有高温补贴，但消耗大",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -426,7 +575,11 @@ const WORLD_NEWS_DB = {
       tag: "季节",
       headline: "金秋消费旺季到来，国庆黄金周旅游、消费双旺",
       detail: "国庆+中秋双节叠加，景区爆满，线下消费加速复苏。",
-      worldEffect: { sectorHeat: { 消费: 0.14 }, marketMood: "bullish", note: "国庆旺季！餐饮/旅游/服务类收入高峰" },
+      worldEffect: {
+        sectorHeat: { 消费: 0.14 },
+        marketMood: "bullish",
+        note: "国庆旺季！餐饮/旅游/服务类收入高峰",
+      },
       scenarioTags: ["classic", "second_gen", "foreign_worker"],
     },
     {
@@ -436,11 +589,629 @@ const WORLD_NEWS_DB = {
       tag: "冬季",
       headline: "寒潮来袭！南方多城市气温创10年最低，采暖需求爆发",
       detail: "能源需求激增、快递配送减速，但冬季保暖品价格上涨是商机。",
-      worldEffect: { sectorHeat: { 新能源: 0.08, 消费: 0.05 }, marketMood: "neutral", note: "冬季保暖品需求旺盛，户外劳动收入受天气影响" },
+      worldEffect: {
+        sectorHeat: { 新能源: 0.08, 消费: 0.05 },
+        marketMood: "neutral",
+        note: "冬季保暖品需求旺盛，户外劳动收入受天气影响",
+      },
       scenarioTags: ["classic", "foreign_worker"],
     },
   ],
 };
+
+// ============================================================
+//  六、实时新闻抓取系统 v2.0（2026-07-03 新增）
+//  设计目标：开局时从互联网抓取当日真实新闻，营造"此时此刻"的氛围
+//  设计参考：
+//    - Papers Please：每天报纸建立世界感
+//    - 现实新闻APP：今日头条式的信息流
+//    - 3层降级：实时RSS → 天行数据API → 预存新闻（离线可用）
+// ============================================================
+
+// ——— 配置 ———
+var REAL_TIME_NEWS_CONFIG = {
+  enabled: true, // 全局开关
+  timeout: 5000, // 单次抓取超时（ms）
+  maxItems: 6, // 最多保留几条实时新闻
+  displayCount: 4, // 弹窗展示几条
+  sources: {
+    // 源1：RSS转JSON（无需API Key，通过rss2json.com中转）
+    rss: {
+      enabled: true,
+      converterUrl: "https://api.rss2json.com/v1/api.json",
+      feeds: [
+        {
+          name: "新浪新闻",
+          url: "https://rss.sina.com.cn/news/china/focus15.xml",
+          category: "社会",
+        },
+        {
+          name: "新浪科技",
+          url: "https://rss.sina.com.cn/tech/focus15.xml",
+          category: "科技",
+        },
+        {
+          name: "网易新闻",
+          url: "http://news.163.com/special/00011K6L/rss_newstop.xml",
+          category: "社会",
+        },
+        {
+          name: "人民网时政",
+          url: "http://www.people.com.cn/rss/politics.xml",
+          category: "政策",
+        },
+      ],
+    },
+    // 源2：天行数据API（需注册免费Key，更稳定）
+    //   注册地址：https://www.tianapi.com/ → 申请「国内新闻」接口
+    tianapi: {
+      enabled: false,
+      apiKey: "", // 填入你的天行数据API Key
+      endpoint: "https://api.tianapi.com/txapi/guonei/index",
+      params: "num=10&rand=1", // 随机10条
+    },
+  },
+};
+
+// ——— 缓存 ———
+var _cachedRealNews = null; // 缓存的最新实时新闻（数组）
+var _cachedRealNewsTime = null; // 缓存时间戳
+var _realNewsStatus = "idle"; // idle | loading | ready | failed | expired
+var _realNewsError = null; // 最后一次错误信息
+
+// ——— 关键词分类引擎 ———
+// 将实时新闻标题/内容映射到游戏的 sectorHeat / marketMood / tag
+var _NEWS_CLASSIFIER_RULES = [
+  {
+    id: "employment",
+    patterns: [
+      /\b(?:裁员|失业|降薪|辞退|优化|毕业|就业|招聘|求职|岗位|打工|薪资|收入|工资|应届|找工作|offer)\b/,
+    ],
+    sector: { 科技: -0.05, 消费: 0.03 },
+    mood: "bearish",
+    tag: "就业",
+    getMood: function (text) {
+      return /涨薪|加薪|抢人|扩招|补贴|上涨/.test(text) ? "bullish" : "bearish";
+    },
+    getSector: function (text) {
+      return /涨薪|加薪|抢人|扩招/.test(text)
+        ? { 科技: 0.06, 消费: 0.04 }
+        : { 科技: -0.05, 消费: 0.03 };
+    },
+  },
+  {
+    id: "housing",
+    patterns: [
+      /\b(?:房价|楼市|租房|房产|城中村|拆迁|房贷|地产|租金|购房|卖房)\b/,
+    ],
+    sector: { 房地产: 0 },
+    mood: "neutral",
+    tag: "房产",
+    getMood: function (text) {
+      return /涨|升|回暖|复苏|反弹/.test(text)
+        ? "bullish"
+        : /跌|降|冷|下调|滞销/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /涨|升|回暖/.test(text)
+        ? { 房地产: 0.08 }
+        : /跌|降|冷|下调/.test(text)
+          ? { 房地产: -0.08 }
+          : { 房地产: 0.02 };
+    },
+  },
+  {
+    id: "tech",
+    patterns: [
+      /\b(?:科技|AI|人工智能|芯片|互联网|数字化|5G|大数据|软件|程序|算法|机器人|半导体|新能源|自动驾驶)\b/,
+    ],
+    sector: { 科技: 0.1 },
+    mood: "bullish",
+    tag: "科技",
+    getMood: function (text) {
+      return /突破|超越|增长|上市|融资|热|爆/.test(text)
+        ? "bullish"
+        : /裁员|下滑|监管|限制/.test(text)
+          ? "bearish"
+          : "volatile";
+    },
+    getSector: function (text) {
+      return /突破|超越|增长/.test(text)
+        ? { 科技: 0.15 }
+        : /裁员|下滑|限制/.test(text)
+          ? { 科技: -0.05 }
+          : { 科技: 0.08 };
+    },
+  },
+  {
+    id: "economy",
+    patterns: [
+      /\b(?:经济|消费|GDP|通胀|通缩|CPI|利率|降准|降息|股市|A股|基金|理财|投资|出口|贸易)\b/,
+    ],
+    sector: { 金融: 0.05, 消费: 0.03 },
+    mood: "bullish",
+    tag: "经济",
+    getMood: function (text) {
+      return /涨|升|热|复苏|刺激/.test(text)
+        ? "bullish"
+        : /跌|降|冷|萎缩|风险|危机/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /涨|升|热|复苏/.test(text)
+        ? { 金融: 0.1, 消费: 0.05 }
+        : /跌|降|冷|萎缩/.test(text)
+          ? { 金融: -0.06, 消费: -0.04 }
+          : { 金融: 0.03, 消费: 0.02 };
+    },
+  },
+  {
+    id: "policy",
+    patterns: [
+      /\b(?:政策|法规|监管|政府|税收|补贴|乡村振兴|改革|立法|新规|央行|银保监)\b/,
+    ],
+    sector: { 消费: 0.04, 金融: 0.03 },
+    mood: "neutral",
+    tag: "政策",
+    getMood: function (text) {
+      return /利好|支持|补贴|减税/.test(text)
+        ? "bullish"
+        : /监管|限制|罚款|整顿/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /利好|支持|补贴|减税/.test(text)
+        ? { 消费: 0.08, 金融: 0.06 }
+        : { 消费: 0.02 };
+    },
+  },
+  {
+    id: "social",
+    patterns: [
+      /\b(?:社会|民生|养老|教育|医疗|健康|出生率|人口|心理|焦虑|躺平|内卷|灵活就业|社保)\b/,
+    ],
+    sector: { 医药: 0.05, 消费: 0.02 },
+    mood: "neutral",
+    tag: "社会",
+    getMood: function (text) {
+      return /改善|提升|利好|补贴/.test(text)
+        ? "bullish"
+        : /危机|焦虑|下滑|压力|问题/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /医疗|养老|健康/.test(text)
+        ? { 医药: 0.08 }
+        : { 医药: 0.03, 消费: 0.02 };
+    },
+  },
+  {
+    id: "seasonal",
+    patterns: [
+      /\b(?:春节|中秋|国庆|端午|清明|五一|618|双十一|双11|黄金周|寒潮|高温|台风|暴雨|雪灾|洪水)\b/,
+    ],
+    sector: { 消费: 0.08 },
+    mood: "bullish",
+    tag: "节日",
+    getMood: function (text) {
+      return /消费|热|旺|爆发/.test(text)
+        ? "bullish"
+        : /灾|寒潮|暴雨|台风/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /消费|热|旺|爆发/.test(text)
+        ? { 消费: 0.12 }
+        : /灾|寒潮|暴雨/.test(text)
+          ? { 消费: -0.05 }
+          : { 消费: 0.05 };
+    },
+  },
+  {
+    id: "energy",
+    patterns: [
+      /\b(?:新能源|光伏|风电|锂电池|电动车|充电桩|能源|油价|电力|煤炭|天然气)\b/,
+    ],
+    sector: { 新能源: 0.1, 科技: 0.05 },
+    mood: "bullish",
+    tag: "产业",
+    getMood: function (text) {
+      return /增长|突破|出口|热销/.test(text)
+        ? "bullish"
+        : /降价|过剩|下滑/.test(text)
+          ? "bearish"
+          : "volatile";
+    },
+    getSector: function (text) {
+      return /增长|突破|出口/.test(text) ? { 新能源: 0.15 } : { 新能源: 0.06 };
+    },
+  },
+];
+
+/**
+ * 通过关键词将实时新闻标题分类，转化为游戏世界效果
+ * @param {string} title - 新闻标题
+ * @param {string} desc  - 新闻描述（可选）
+ * @returns {Object} { tag, sectorHeat, marketMood, note }
+ */
+function classifyRealNews(title, desc) {
+  var text = (title + " " + (desc || "")).toLowerCase();
+  var result = {
+    tag: "社会",
+    sectorHeat: {},
+    marketMood: "neutral",
+    note: "",
+  };
+
+  for (var ri = 0; ri < _NEWS_CLASSIFIER_RULES.length; ri++) {
+    var rule = _NEWS_CLASSIFIER_RULES[ri];
+    for (var pi = 0; pi < rule.patterns.length; pi++) {
+      if (rule.patterns[pi].test(text)) {
+        // 命中规则
+        result.tag = rule.tag;
+        // 动态计算 mood 和 sector
+        if (typeof rule.getMood === "function") {
+          result.marketMood = rule.getMood(text);
+        } else {
+          result.marketMood = rule.mood;
+        }
+        if (typeof rule.getSector === "function") {
+          result.sectorHeat = rule.getSector(text);
+        } else {
+          result.sectorHeat = rule.sector;
+        }
+        // 生成 note
+        var moodMap = {
+          bullish: "利好",
+          bearish: "利空",
+          neutral: "中性",
+          volatile: "波动",
+        };
+        result.note =
+          "实时新闻·" +
+          result.tag +
+          "行业" +
+          (moodMap[result.marketMood] || "中性");
+        return result;
+      }
+    }
+  }
+
+  // 无匹配规则 → 默认轻微影响
+  result.sectorHeat = { 消费: 0.02 };
+  result.note = "实时新闻·社会综合";
+  return result;
+}
+
+/**
+ * 从RSS源抓取实时新闻（通过rss2json中转）
+ * @param {Object} feed - RSS源配置 { name, url, category }
+ * @returns {Promise<Array>} 新闻条目数组
+ */
+function fetchFromRSS(feed) {
+  var converterUrl = REAL_TIME_NEWS_CONFIG.sources.rss.converterUrl;
+  var requestUrl = converterUrl + "?rss_url=" + encodeURIComponent(feed.url);
+
+  return new Promise(function (resolve, reject) {
+    var timeoutId = setTimeout(function () {
+      reject(new Error("RSS timeout: " + feed.name));
+    }, REAL_TIME_NEWS_CONFIG.timeout);
+
+    fetch(requestUrl)
+      .then(function (response) {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status + " for " + feed.name);
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (
+          data &&
+          data.status === "ok" &&
+          data.items &&
+          data.items.length > 0
+        ) {
+          // 将RSS条目转换为游戏新闻格式
+          var newsItems = [];
+          for (var i = 0; i < data.items.length; i++) {
+            var item = data.items[i];
+            if (!item.title) continue;
+            var classification = classifyRealNews(
+              item.title,
+              item.description || "",
+            );
+            newsItems.push({
+              id: "realtime_" + feed.name + "_" + i,
+              icon: getNewsIconByTag(classification.tag),
+              tag: classification.tag,
+              headline: item.title
+                .replace(/<[^>]+>/g, "")
+                .trim()
+                .substring(0, 80),
+              detail: (item.description || item.title || "")
+                .replace(/<[^>]+>/g, "")
+                .trim()
+                .substring(0, 120),
+              worldEffect: {
+                sectorHeat: classification.sectorHeat,
+                marketMood: classification.marketMood,
+                note: classification.note,
+              },
+              source: "实时·" + feed.name,
+              url: item.link || "",
+              _isRealTime: true,
+            });
+          }
+          resolve(newsItems);
+        } else {
+          reject(new Error("Empty RSS response from " + feed.name));
+        }
+      })
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+        reject(err);
+      });
+  });
+}
+
+/**
+ * 从天行数据API抓取实时新闻
+ * @returns {Promise<Array>} 新闻条目数组
+ */
+function fetchFromTianAPI() {
+  var cfg = REAL_TIME_NEWS_CONFIG.sources.tianapi;
+  if (!cfg.enabled || !cfg.apiKey) {
+    return Promise.reject(new Error("TianAPI not configured"));
+  }
+
+  var url = cfg.endpoint + "?key=" + cfg.apiKey + "&" + cfg.params;
+
+  return new Promise(function (resolve, reject) {
+    var timeoutId = setTimeout(function () {
+      reject(new Error("TianAPI timeout"));
+    }, REAL_TIME_NEWS_CONFIG.timeout);
+
+    fetch(url)
+      .then(function (response) {
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      })
+      .then(function (data) {
+        if (
+          data &&
+          data.code === 200 &&
+          data.newslist &&
+          data.newslist.length > 0
+        ) {
+          var newsItems = [];
+          for (var i = 0; i < data.newslist.length; i++) {
+            var item = data.newslist[i];
+            if (!item.title) continue;
+            var classification = classifyRealNews(
+              item.title,
+              item.description || "",
+            );
+            newsItems.push({
+              id: "tianapi_" + i,
+              icon: getNewsIconByTag(classification.tag),
+              tag: classification.tag,
+              headline: item.title.substring(0, 80),
+              detail: (item.description || "").substring(0, 120),
+              worldEffect: {
+                sectorHeat: classification.sectorHeat,
+                marketMood: classification.marketMood,
+                note: classification.note,
+              },
+              source: "实时·天行数据",
+              url: item.url || "",
+              _isRealTime: true,
+            });
+          }
+          resolve(newsItems);
+        } else {
+          reject(
+            new Error(
+              "TianAPI response error: " + ((data && data.msg) || "unknown"),
+            ),
+          );
+        }
+      })
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+        reject(err);
+      });
+  });
+}
+
+/**
+ * 根据分类标签获取图标
+ */
+function getNewsIconByTag(tag) {
+  var iconMap = {
+    就业: "💼",
+    房产: "🏘️",
+    科技: "💻",
+    经济: "📊",
+    政策: "📋",
+    社会: "👥",
+    节日: "🎉",
+    产业: "🏭",
+    国际: "🌏",
+    教育: "📚",
+    金融: "🏦",
+    消费: "🛒",
+    市场: "📈",
+    天气: "🌤️",
+    季节: "🍂",
+    招聘: "📢",
+    新媒体: "📱",
+    劳工: "⚖️",
+    租房: "🔑",
+    城市: "🏙️",
+  };
+  return iconMap[tag] || "📰";
+}
+
+/**
+ * 主入口：从所有可用源抓取实时新闻，合并去重后缓存
+ * @returns {Promise<Array>} 抓取到的新闻数组
+ */
+function fetchRealTimeNews() {
+  if (!REAL_TIME_NEWS_CONFIG.enabled) {
+    return Promise.reject(new Error("Real-time news disabled"));
+  }
+
+  _realNewsStatus = "loading";
+  var promises = [];
+
+  // 添加RSS源
+  var rssCfg = REAL_TIME_NEWS_CONFIG.sources.rss;
+  if (rssCfg.enabled && rssCfg.feeds && rssCfg.feeds.length > 0) {
+    for (var fi = 0; fi < rssCfg.feeds.length; fi++) {
+      promises.push(fetchFromRSS(rssCfg.feeds[fi]));
+    }
+  }
+
+  // 添加天行数据（如果配置了）
+  if (
+    REAL_TIME_NEWS_CONFIG.sources.tianapi.enabled &&
+    REAL_TIME_NEWS_CONFIG.sources.tianapi.apiKey
+  ) {
+    promises.push(fetchFromTianAPI());
+  }
+
+  if (promises.length === 0) {
+    _realNewsStatus = "failed";
+    _realNewsError = "No news sources configured";
+    return Promise.reject(new Error("No news sources configured"));
+  }
+
+  // 使用 Promise.allSettled — 部分失败不影响整体
+  return Promise.allSettled(promises)
+    .then(function (results) {
+      var allNews = [];
+      var seenHeadlines = {};
+
+      for (var ri = 0; ri < results.length; ri++) {
+        var result = results[ri];
+        if (
+          result.status === "fulfilled" &&
+          result.value &&
+          result.value.length > 0
+        ) {
+          for (var ni = 0; ni < result.value.length; ni++) {
+            var news = result.value[ni];
+            // 去重（相同标题只保留一条）
+            var dedupKey = news.headline.substring(0, 20);
+            if (!seenHeadlines[dedupKey]) {
+              seenHeadlines[dedupKey] = true;
+              allNews.push(news);
+            }
+          }
+        }
+      }
+
+      if (allNews.length === 0) {
+        _realNewsStatus = "failed";
+        _realNewsError = "All sources returned empty";
+        throw new Error("All sources returned empty");
+      }
+
+      // 随机打乱以保证多样性
+      var shuffled = deterministicShuffle(allNews, Date.now() % 100000);
+      // 限制数量
+      var limited = shuffled.slice(0, REAL_TIME_NEWS_CONFIG.maxItems || 6);
+
+      // 缓存
+      _cachedRealNews = limited;
+      _cachedRealNewsTime = Date.now();
+      _realNewsStatus = "ready";
+      _realNewsError = null;
+
+      return limited;
+    })
+    .catch(function (err) {
+      _realNewsStatus = "failed";
+      _realNewsError = err.message || "Unknown error";
+      throw err;
+    });
+}
+
+/**
+ * 后台预加载实时新闻（在页面加载时自动调用）
+ */
+function fetchRealTimeNewsInBackground() {
+  // 仅在浏览器环境且有fetch支持时执行
+  if (typeof fetch !== "function" || typeof Promise === "undefined") {
+    _realNewsStatus = "failed";
+    _realNewsError = "Environment not supported";
+    return;
+  }
+
+  _realNewsStatus = "loading";
+  fetchRealTimeNews()
+    .then(function (news) {
+      // 成功 — 缓存已由 fetchRealTimeNews 设置
+    })
+    .catch(function (err) {
+      // 失败 — 状态已由 fetchRealTimeNews 设置
+    });
+}
+
+/**
+ * 获取缓存的实时新闻，若无则返回 null
+ * @param {number} maxAge - 缓存有效期（毫秒，默认30分钟）
+ * @returns {Array|null}
+ */
+function getCachedRealNews(maxAge) {
+  maxAge = maxAge || 30 * 60 * 1000; // 默认30分钟
+  if (_realNewsStatus === "ready" && _cachedRealNews && _cachedRealNewsTime) {
+    if (Date.now() - _cachedRealNewsTime < maxAge) {
+      return _cachedRealNews;
+    } else {
+      _realNewsStatus = "expired";
+    }
+  }
+  return null;
+}
+
+/**
+ * 获取实时新闻状态描述文本
+ */
+function getRealNewsStatusText() {
+  switch (_realNewsStatus) {
+    case "idle":
+      return "📡 新闻待获取";
+    case "loading":
+      return "📡 正在获取今日实时新闻...";
+    case "ready":
+      return "📰 今日实时新闻已就绪";
+    case "failed":
+      return "📰 使用本地新闻背景";
+    case "expired":
+      return "📡 新闻缓存已过期";
+    default:
+      return "📰 新闻系统就绪";
+  }
+}
+
+// ——— 启动：页面加载时自动后台抓取 ———
+(function () {
+  // 延迟启动，让页面先渲染完成
+  if (typeof setTimeout !== "undefined") {
+    setTimeout(function () {
+      fetchRealTimeNewsInBackground();
+    }, 1000);
+  }
+})();
 
 // ============================================================
 //  二、按月份和剧本构建新闻候选池
@@ -472,7 +1243,11 @@ function selectWorldNewsForGame(scenarioId) {
       if (news.months.indexOf(month) !== -1) {
         // 剧本适配加权（匹配剧本的新闻权重更高）
         var weight = 1;
-        if (scenarioId && news.scenarioTags && news.scenarioTags.indexOf(scenarioId) !== -1) {
+        if (
+          scenarioId &&
+          news.scenarioTags &&
+          news.scenarioTags.indexOf(scenarioId) !== -1
+        ) {
           weight = 2; // 剧本相关新闻出现概率翻倍
         }
         for (var w = 0; w < weight; w++) {
@@ -532,13 +1307,26 @@ function ensureDiversity(shuffled, month) {
       var item = shuffled[si];
       // 用 tag 匹配类别
       var tagToCat = {
-        "就业": "employment", "科技": "tech", "市场": "economy",
-        "产业": "economy", "金融": "economy", "消费": "economy",
-        "房产": "housing", "租房": "housing", "城市": "housing",
-        "社会": "social", "教育": "social", "新媒体": "tech",
-        "政策": "policy", "劳工": "policy", "国际": "policy",
-        "节日": "seasonal", "毕业": "seasonal", "天气": "seasonal",
-        "季节": "seasonal", "招聘": "seasonal",
+        就业: "employment",
+        科技: "tech",
+        市场: "economy",
+        产业: "economy",
+        金融: "economy",
+        消费: "economy",
+        房产: "housing",
+        租房: "housing",
+        城市: "housing",
+        社会: "social",
+        教育: "social",
+        新媒体: "tech",
+        政策: "policy",
+        劳工: "policy",
+        国际: "policy",
+        节日: "seasonal",
+        毕业: "seasonal",
+        天气: "seasonal",
+        季节: "seasonal",
+        招聘: "seasonal",
       };
       var itemCat = tagToCat[item.tag] || "other";
       if (itemCat === pcat && !usedCats[pcat]) {
@@ -554,9 +1342,19 @@ function ensureDiversity(shuffled, month) {
     var xitem = shuffled[xi];
     var alreadyIn = false;
     for (var ri = 0; ri < result.length; ri++) {
-      if (result[ri].id === xitem.id) { alreadyIn = true; break; }
+      if (result[ri].id === xitem.id) {
+        alreadyIn = true;
+        break;
+      }
     }
-    if (!alreadyIn && (xitem.tag === "节日" || xitem.tag === "季节" || xitem.tag === "天气" || xitem.tag === "毕业" || xitem.tag === "招聘")) {
+    if (
+      !alreadyIn &&
+      (xitem.tag === "节日" ||
+        xitem.tag === "季节" ||
+        xitem.tag === "天气" ||
+        xitem.tag === "毕业" ||
+        xitem.tag === "招聘")
+    ) {
       result.push(xitem);
       break;
     }
@@ -567,7 +1365,10 @@ function ensureDiversity(shuffled, month) {
     var yitem = shuffled[yi];
     var alreadyIn2 = false;
     for (var rj = 0; rj < result.length; rj++) {
-      if (result[rj].id === yitem.id) { alreadyIn2 = true; break; }
+      if (result[rj].id === yitem.id) {
+        alreadyIn2 = true;
+        break;
+      }
     }
     if (!alreadyIn2) {
       result.push(yitem);
@@ -602,7 +1403,10 @@ function applyWorldNewsToParams(state, selectedNews) {
       for (var sec in eff.sectorHeat) {
         if (eff.sectorHeat.hasOwnProperty(sec)) {
           if (wp.sectorHeat[sec] !== undefined) {
-            wp.sectorHeat[sec] = Math.max(0.5, Math.min(2.0, wp.sectorHeat[sec] + eff.sectorHeat[sec]));
+            wp.sectorHeat[sec] = Math.max(
+              0.5,
+              Math.min(2.0, wp.sectorHeat[sec] + eff.sectorHeat[sec]),
+            );
             wp.initialSectorBias[sec] = wp.sectorHeat[sec];
           }
         }
@@ -638,15 +1442,36 @@ var _worldNewsSelected = null; // 存储本局选中的新闻
  * 显示开局世界新闻弹窗
  * @param {string|null} scenarioId - 当前剧本ID
  * @param {Function} onConfirm - 点击确认后的回调
+ * @param {Array|null} externalNews - 外部传入的新闻（如实时新闻），null则从预存库选取
  */
-function showWorldNewsIntro(scenarioId, onConfirm) {
-  // 选择新闻
-  _worldNewsSelected = selectWorldNewsForGame(scenarioId);
+function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
+  // 选择新闻：优先使用外部传入的实时新闻
+  if (externalNews && externalNews.length > 0) {
+    // 确保最多 displayCount 条
+    var displayCount = REAL_TIME_NEWS_CONFIG.displayCount || 4;
+    _worldNewsSelected = externalNews.slice(0, displayCount);
+  } else {
+    _worldNewsSelected = selectWorldNewsForGame(scenarioId);
+  }
 
   // 构建时间描述
   var now = new Date();
-  var months = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
-  var dateStr = now.getFullYear() + "年" + months[now.getMonth()] + now.getDate() + "日";
+  var months = [
+    "一月",
+    "二月",
+    "三月",
+    "四月",
+    "五月",
+    "六月",
+    "七月",
+    "八月",
+    "九月",
+    "十月",
+    "十一月",
+    "十二月",
+  ];
+  var dateStr =
+    now.getFullYear() + "年" + months[now.getMonth()] + now.getDate() + "日";
 
   // 构建新闻HTML
   var newsHtml = "";
@@ -655,53 +1480,79 @@ function showWorldNewsIntro(scenarioId, onConfirm) {
     var news = newsItems[i];
     var moodClass = "";
     if (news.worldEffect) {
-      if (news.worldEffect.marketMood === "bullish") moodClass = "world-news-mood-up";
-      else if (news.worldEffect.marketMood === "bearish") moodClass = "world-news-mood-down";
-      else if (news.worldEffect.marketMood === "volatile") moodClass = "world-news-mood-volatile";
+      if (news.worldEffect.marketMood === "bullish")
+        moodClass = "world-news-mood-up";
+      else if (news.worldEffect.marketMood === "bearish")
+        moodClass = "world-news-mood-down";
+      else if (news.worldEffect.marketMood === "volatile")
+        moodClass = "world-news-mood-volatile";
     }
 
     newsHtml +=
-      '<div class="world-news-item ' + moodClass + '">' +
-        '<div class="world-news-item-header">' +
-          '<span class="world-news-icon">' + news.icon + '</span>' +
-          '<span class="world-news-tag">' + news.tag + '</span>' +
-        '</div>' +
-        '<div class="world-news-headline">' + news.headline + '</div>' +
-        '<div class="world-news-detail">' + news.detail + '</div>' +
-        (news.worldEffect && news.worldEffect.note ?
-          '<div class="world-news-effect">💡 ' + news.worldEffect.note + '</div>' : '') +
-      '</div>';
+      '<div class="world-news-item ' +
+      moodClass +
+      '">' +
+      '<div class="world-news-item-header">' +
+      '<span class="world-news-icon">' +
+      news.icon +
+      "</span>" +
+      '<span class="world-news-tag">' +
+      news.tag +
+      "</span>" +
+      "</div>" +
+      '<div class="world-news-headline">' +
+      news.headline +
+      "</div>" +
+      '<div class="world-news-detail">' +
+      news.detail +
+      "</div>" +
+      (news.worldEffect && news.worldEffect.note
+        ? '<div class="world-news-effect">💡 ' +
+          news.worldEffect.note +
+          "</div>"
+        : "") +
+      "</div>";
   }
 
   // 剧本特色描述
   var scenarioIntro = getScenarioWorldContext(scenarioId);
 
   // 构建完整HTML
+  // 判断是否为实时新闻
+  var isRealTime =
+    externalNews && externalNews.length > 0 && externalNews[0]._isRealTime;
+  var realTimeBadge = isRealTime
+    ? '<span class="world-news-realtime-badge">🔴 实时</span>'
+    : "";
+
   var html =
     '<div id="world-news-intro-overlay" class="world-news-overlay">' +
-      '<div class="world-news-panel">' +
-
-        // 顶部标题区
-        '<div class="world-news-header">' +
-          '<div class="world-news-title-row">' +
-            '<span class="world-news-logo">📺</span>' +
-            '<span class="world-news-title">今日头条</span>' +
-            '<span class="world-news-date">' + dateStr + '</span>' +
-          '</div>' +
-          '<div class="world-news-subtitle">' + scenarioIntro + '</div>' +
-        '</div>' +
-
-        // 新闻列表
-        '<div class="world-news-list">' + newsHtml + '</div>' +
-
-        // 底部说明
-        '<div class="world-news-footer">' +
-          '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。</div>' +
-          '<button class="world-news-start-btn" id="world-news-start-btn">▶ 带着这个世界，出发</button>' +
-        '</div>' +
-
-      '</div>' +
-    '</div>';
+    '<div class="world-news-panel">' +
+    // 顶部标题区
+    '<div class="world-news-header">' +
+    '<div class="world-news-title-row">' +
+    '<span class="world-news-logo">📺</span>' +
+    '<span class="world-news-title">今日头条</span>' +
+    realTimeBadge +
+    '<span class="world-news-date">' +
+    dateStr +
+    "</span>" +
+    "</div>" +
+    '<div class="world-news-subtitle">' +
+    scenarioIntro +
+    "</div>" +
+    "</div>" +
+    // 新闻列表
+    '<div class="world-news-list">' +
+    newsHtml +
+    "</div>" +
+    // 底部说明
+    '<div class="world-news-footer">' +
+    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。</div>' +
+    '<button class="world-news-start-btn" id="world-news-start-btn">▶ 带着这个世界，出发</button>' +
+    "</div>" +
+    "</div>" +
+    "</div>";
 
   // 注入DOM
   var container = document.createElement("div");
@@ -712,12 +1563,12 @@ function showWorldNewsIntro(scenarioId, onConfirm) {
   // 绑定按钮事件
   var startBtn = document.getElementById("world-news-start-btn");
   if (startBtn) {
-    startBtn.addEventListener("click", function() {
+    startBtn.addEventListener("click", function () {
       // 移除弹窗
       var c = document.getElementById("world-news-intro-container");
       if (c) {
         c.classList.add("world-news-fadeout");
-        setTimeout(function() {
+        setTimeout(function () {
           if (c.parentNode) c.parentNode.removeChild(c);
         }, 400);
       }
@@ -729,7 +1580,7 @@ function showWorldNewsIntro(scenarioId, onConfirm) {
   }
 
   // 入场动画
-  setTimeout(function() {
+  setTimeout(function () {
     var overlay = document.getElementById("world-news-intro-overlay");
     if (overlay) overlay.classList.add("world-news-visible");
   }, 50);
@@ -740,13 +1591,14 @@ function showWorldNewsIntro(scenarioId, onConfirm) {
  */
 function getScenarioWorldContext(scenarioId) {
   var contexts = {
-    "classic":           "你揣着几百块钱，第一次踏进这座没有给你留位置的城市。",
-    "laid_off":          "厂子黄了，工牌交出去的那天，你知道必须找条新路。",
-    "small_town_grinder":"十几年寒窗，你带着全家的期望，来到这座比想象中更残酷的大城市。",
-    "foreign_worker":    "语言不通，人脸不熟，但月月还要往老家汇钱——这是你的现实。",
-    "second_gen":        "你不缺钱，但你缺少一件东西：证明自己的机会。",
-    "midlife_crisis":    "四十岁，上有老下有小，公司突然把你叫进了HR办公室。",
-    "fresh_grad":        "拿着一张文凭，对着陌生城市，你意识到学校没教你最重要的一课。",
+    classic: "你揣着几百块钱，第一次踏进这座没有给你留位置的城市。",
+    laid_off: "厂子黄了，工牌交出去的那天，你知道必须找条新路。",
+    small_town_grinder:
+      "十几年寒窗，你带着全家的期望，来到这座比想象中更残酷的大城市。",
+    foreign_worker: "语言不通，人脸不熟，但月月还要往老家汇钱——这是你的现实。",
+    second_gen: "你不缺钱，但你缺少一件东西：证明自己的机会。",
+    midlife_crisis: "四十岁，上有老下有小，公司突然把你叫进了HR办公室。",
+    fresh_grad: "拿着一张文凭，对着陌生城市，你意识到学校没教你最重要的一课。",
   };
   return contexts[scenarioId] || "你站在城市的入口，准备开始这段旅程。";
 }
@@ -759,27 +1611,235 @@ function getScenarioWorldContext(scenarioId) {
  * 开局世界新闻系统主入口
  * 在游戏状态初始化完成、进入游戏之前调用
  *
+ * 流程：
+ *   1. 优先使用缓存的实时新闻（从互联网抓取）
+ *   2. 实时新闻不可用则使用预存数据库（按月份+剧本筛选）
+ *   3. 显示弹窗 → 用户确认 → 应用世界参数 → 进入游戏
+ *
  * @param {Object} state         - 已初始化的游戏状态
  * @param {string|null} scenarioId - 剧本ID
  * @param {Function} enterGame   - 进入游戏的回调（执行显示app、renderAll等）
  */
 function startWithWorldNewsIntro(state, scenarioId, enterGame) {
-  showWorldNewsIntro(scenarioId, function(selectedNews) {
-    // 将新闻效果写入世界参数
-    if (selectedNews && selectedNews.length > 0) {
-      applyWorldNewsToParams(state, selectedNews);
-      // 在消息日志里写入一条氛围背景
-      var headlineList = selectedNews.map(function(n) { return n.icon + n.headline; });
-      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-        StateManager.addMessage(
-          "📺 今日头条·时代背景：" + headlineList.slice(0, 2).join(" | "),
-          "event"
-        );
-      }
+  // 尝试获取缓存的实时新闻
+  var realNews = getCachedRealNews();
+
+  if (realNews && realNews.length >= 2) {
+    // ── 有实时新闻，直接展示 ──
+    showWorldNewsIntro(
+      scenarioId,
+      function (selectedNews) {
+        applyNewsAndEnter(selectedNews, state, enterGame, scenarioId);
+      },
+      realNews,
+    );
+  } else if (_realNewsStatus === "loading") {
+    // ── 实时新闻还在加载中，显示加载等待 ──
+    showLoadingAndWaitForNews(scenarioId, state, enterGame);
+  } else {
+    // ── 实时新闻不可用，使用预存新闻 ──
+    showWorldNewsIntro(
+      scenarioId,
+      function (selectedNews) {
+        applyNewsAndEnter(selectedNews, state, enterGame, scenarioId);
+      },
+      null,
+    );
+  }
+}
+
+/**
+ * 显示加载等待界面，等待实时新闻抓取完成
+ */
+function showLoadingAndWaitForNews(scenarioId, state, enterGame) {
+  var now = new Date();
+  var months = [
+    "一月",
+    "二月",
+    "三月",
+    "四月",
+    "五月",
+    "六月",
+    "七月",
+    "八月",
+    "九月",
+    "十月",
+    "十一月",
+    "十二月",
+  ];
+  var dateStr =
+    now.getFullYear() + "年" + months[now.getMonth()] + now.getDate() + "日";
+  var scenarioIntro = getScenarioWorldContext(scenarioId);
+
+  var html =
+    '<div id="world-news-intro-overlay" class="world-news-overlay">' +
+    '<div class="world-news-panel world-news-loading-panel">' +
+    // 顶部标题区
+    '<div class="world-news-header">' +
+    '<div class="world-news-title-row">' +
+    '<span class="world-news-logo">📡</span>' +
+    '<span class="world-news-title">正在获取今日新闻</span>' +
+    '<span class="world-news-date">' +
+    dateStr +
+    "</span>" +
+    "</div>" +
+    '<div class="world-news-subtitle">' +
+    scenarioIntro +
+    "</div>" +
+    "</div>" +
+    // 加载动画
+    '<div class="world-news-loading">' +
+    '<div class="world-news-loading-spinner"></div>' +
+    '<div class="world-news-loading-text">正在从互联网获取今日实时新闻...</div>' +
+    '<div class="world-news-loading-sub">这将成为你本局游戏的<strong>世界基调</strong></div>' +
+    '<div class="world-news-loading-progress">' +
+    '<div class="world-news-loading-bar" id="news-loading-bar"></div>' +
+    "</div>" +
+    "</div>" +
+    // 底部按钮
+    '<div class="world-news-footer">' +
+    '<button class="world-news-skip-btn" id="world-news-skip-btn">跳过等待，使用本地新闻 →</button>' +
+    "</div>" +
+    "</div>" +
+    "</div>";
+
+  var container = document.createElement("div");
+  container.id = "world-news-intro-container";
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  // 入场动画
+  setTimeout(function () {
+    var overlay = document.getElementById("world-news-intro-overlay");
+    if (overlay) overlay.classList.add("world-news-visible");
+  }, 50);
+
+  // 加载进度条动画
+  var progressBar = document.getElementById("news-loading-bar");
+  if (progressBar) {
+    // 3秒内逐步前进到 85%，然后等待完成或超时
+    progressBar.style.transition = "width 2.5s ease-in-out";
+    setTimeout(function () {
+      progressBar.style.width = "85%";
+    }, 100);
+  }
+
+  // 最大等待时间 — 3.5秒后如果还没加载完成，自动降级
+  var fallbackTimer = setTimeout(function () {
+    finishLoadingFallback(scenarioId, state, enterGame);
+  }, 3500);
+
+  // 轮询检查实时新闻是否加载完成
+  var pollInterval = setInterval(function () {
+    var cached = getCachedRealNews();
+    if (cached && cached.length >= 2) {
+      clearTimeout(fallbackTimer);
+      clearInterval(pollInterval);
+      // 加载完成，显示实时新闻
+      replaceLoadingWithNews(scenarioId, state, enterGame, cached);
     }
-    // 进入游戏
-    if (typeof enterGame === "function") {
-      enterGame();
+  }, 200);
+
+  // 绑定"跳过"按钮
+  var skipBtn = document.getElementById("world-news-skip-btn");
+  if (skipBtn) {
+    skipBtn.addEventListener("click", function () {
+      clearTimeout(fallbackTimer);
+      clearInterval(pollInterval);
+      finishLoadingFallback(scenarioId, state, enterGame);
+    });
+  }
+
+  // 保存清理函数
+  _loadingCleanup = function () {
+    clearTimeout(fallbackTimer);
+    clearInterval(pollInterval);
+  };
+}
+
+var _loadingCleanup = null; // 加载等待页面清理函数
+
+/**
+ * 加载等待降级：使用预存新闻
+ */
+function finishLoadingFallback(scenarioId, state, enterGame) {
+  if (_loadingCleanup) {
+    _loadingCleanup();
+    _loadingCleanup = null;
+  }
+
+  // 移除加载界面
+  var container = document.getElementById("world-news-intro-container");
+  if (container) {
+    container.classList.add("world-news-fadeout");
+    setTimeout(function () {
+      if (container.parentNode) container.parentNode.removeChild(container);
+      // 用预存新闻展示
+      showWorldNewsIntro(
+        scenarioId,
+        function (selectedNews) {
+          applyNewsAndEnter(selectedNews, state, enterGame, scenarioId);
+        },
+        null,
+      );
+    }, 300);
+  } else {
+    showWorldNewsIntro(
+      scenarioId,
+      function (selectedNews) {
+        applyNewsAndEnter(selectedNews, state, enterGame, scenarioId);
+      },
+      null,
+    );
+  }
+}
+
+/**
+ * 加载完成后，将加载界面替换为实时新闻展示
+ */
+function replaceLoadingWithNews(scenarioId, state, enterGame, realNews) {
+  if (_loadingCleanup) {
+    _loadingCleanup();
+    _loadingCleanup = null;
+  }
+
+  // 移除加载界面
+  var container = document.getElementById("world-news-intro-container");
+  if (container) {
+    if (container.parentNode) container.parentNode.removeChild(container);
+  }
+
+  // 用实时新闻展示
+  showWorldNewsIntro(
+    scenarioId,
+    function (selectedNews) {
+      applyNewsAndEnter(selectedNews, state, enterGame, scenarioId);
+    },
+    realNews,
+  );
+}
+
+/**
+ * 应用新闻效果并进入游戏（统一回调）
+ */
+function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
+  if (selectedNews && selectedNews.length > 0) {
+    applyWorldNewsToParams(state, selectedNews);
+    // 在消息日志里写入氛围背景
+    var headlineList = selectedNews.map(function (n) {
+      return n.icon + n.headline;
+    });
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "📺 " +
+          (selectedNews[0]._isRealTime ? "实时" : "今日") +
+          "头条·时代背景：" +
+          headlineList.slice(0, 2).join(" | "),
+        "event",
+      );
     }
-  });
+  }
+  if (typeof enterGame === "function") {
+    enterGame();
+  }
 }
