@@ -1012,6 +1012,56 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === v3.13 人生节点每日检查 ===
+  {
+    name: "life_node_check",
+    fn: function (state) {
+      if (typeof checkLifeNodes === "function") {
+        checkLifeNodes(state);
+      }
+    },
+  },
+
+  // === v3.13 医疗每日tick（保险扣费+康复）===
+  {
+    name: "medical_tick",
+    fn: function (state) {
+      if (typeof tickMedical === "function") {
+        tickMedical(state);
+      }
+    },
+  },
+
+  // === v3.13 旅行每日tick ===
+  {
+    name: "travel_tick",
+    fn: function (state) {
+      if (typeof tickTravel === "function") {
+        tickTravel(state);
+      }
+    },
+  },
+
+  // === v3.13 法律每日tick ===
+  {
+    name: "legal_tick",
+    fn: function (state) {
+      if (typeof tickLegal === "function") {
+        tickLegal(state);
+      }
+    },
+  },
+
+  // === v3.13 四大系统深度联动检查 ===
+  {
+    name: "cross_system_integration",
+    fn: function (state) {
+      if (typeof checkCrossSystemEvents === "function") {
+        checkCrossSystemEvents(state);
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */

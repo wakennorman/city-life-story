@@ -189,7 +189,10 @@ function tickLegal(state) {
       );
     }
 
-    var won = Math.random() < winChance;
+    var won =
+      typeof Random !== "undefined"
+        ? Random.chance(winChance)
+        : Math.random() < winChance;
     ac.result = won ? "won" : "lost";
     state.legal.completedCases.push({
       caseId: ac.caseId,
@@ -199,12 +202,11 @@ function tickLegal(state) {
 
     var caseName = caseData ? caseData.name : "案件";
     if (won) {
-      var reward = caseData
-        ? Math.round(
-            caseData.rewardMin +
-              Math.random() * (caseData.rewardMax - caseData.rewardMin),
-          )
-        : 5000;
+      var rewardMin = caseData.rewardMin || 0;
+      var rewardMax = caseData.rewardMax || 5000;
+      var r =
+        typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+      var reward = Math.round(rewardMin + r * (rewardMax - rewardMin));
       state.resources.cash = (state.resources.cash || 0) + reward;
       state.legal.totalLegalWon = (state.legal.totalLegalWon || 0) + reward;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);

@@ -334,6 +334,90 @@ function showMedicalInsuranceModal() {
   showModal({ title: "🪪 医保咨询", body: body, buttons: buttons });
 }
 
+// ====== 每日医疗tick（保险扣费+康复检测） ======
+/**
+ * 每日医疗结算：
+ * - 每月初自动扣除医保保费
+ * - 检测玩家疾病状态并提示就医
+ * - 与旅行/法律系统的交叉事件触发
+ */
+function tickMedical(state) {
+  initMedicalState(state);
+  var day = state.player && state.player.day;
+
+  // 每月1号（每30天）自动扣医保
+  if (day && day > 0 && day % 30 === 1 && state.medical.insurance) {
+    var plan = INSURANCE_PLANS.find(function (p) {
+      return p.id === state.medical.insurance;
+    });
+    if (plan) {
+      if ((state.resources.cash || 0) >= plan.monthly) {
+        state.resources.cash -= plan.monthly;
+        state.medical.totalMedicalSpent =
+          (state.medical.totalMedicalSpent || 0) + plan.monthly;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "🪪 医保月费自动扣除：¥" + plan.monthly,
+            "info",
+          );
+        }
+      } else {
+        // 现金不足，暂停医保
+        state.medical.insurance = null;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "⚠️ 现金不足，医保已暂停。尽快续费！",
+            "warning",
+          );
+        }
+      }
+    }
+  }
+
+  // 检测玩家是否有未治疗的疾病
+  var illnesses = state.status && state.status.illnesses;
+  if (illnesses && illnesses.length > 0) {
+    // 检查是否正在治疗
+    var underTreatment = false;
+    for (var i = 0; i < illnesses.length; i++) {
+      if (illnesses[i].treatmentDays && illnesses[i].treatmentDays > 0) {
+        underTreatment = true;
+        break;
+      }
+    }
+    // 有疾病但未治疗 → 每3天提示一次
+    if (!underTreatment && day && day % 3 === 0) {
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🏥 你还有" +
+            illnesses.length +
+            "种疾病未治疗，去「人生事务」Tab就医！",
+          "warning",
+        );
+      }
+    }
+  }
+
+  // 旅行期间的健康风险
+  if (state.travel && state.travel.active && day && day % 2 === 0) {
+    if (typeof Random !== "undefined" && Random.chance(0.15)) {
+      // 旅行中水土不服
+      var healthDrop = Random.int(1, 3);
+      state.status = state.status || {};
+      state.status.health = Math.max(
+        0,
+        (state.status.health || 100) - healthDrop,
+      );
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "✈️ 旅途奔波，健康 -" + healthDrop + "。注意休息！",
+          "warning",
+        );
+      }
+    }
+  }
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.ILLNESS_GRADES = ILLNESS_GRADES;
@@ -344,6 +428,7 @@ if (typeof window !== "undefined") {
   window.getMedicalSummary = getMedicalSummary;
   window.showMedicalTreatmentModal = showMedicalTreatmentModal;
   window.showMedicalInsuranceModal = showMedicalInsuranceModal;
+  window.tickMedical = tickMedical;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.medical_system = {

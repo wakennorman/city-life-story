@@ -176,9 +176,17 @@ function tickTravel(state) {
   state.travel.daysRemaining--;
   var dest = TRAVEL_DESTINATIONS[state.travel.destination];
   if (dest) {
-    // 随机旅行事件
-    if (dest.events && dest.events.length > 0 && Math.random() < 0.4) {
-      var evt = dest.events[Math.floor(Math.random() * dest.events.length)];
+    // 随机旅行事件（使用种子化随机数）
+    if (
+      dest.events &&
+      dest.events.length > 0 &&
+      (typeof Random === "undefined" ? Math.random() < 0.4 : Random.chance(0.4))
+    ) {
+      var evtIdx =
+        typeof Random !== "undefined"
+          ? Random.int(0, dest.events.length - 1)
+          : Math.floor(Math.random() * dest.events.length);
+      var evt = dest.events[evtIdx];
       // 简单效果
       if (evt.effect.indexOf("心情+") !== -1) {
         var match = evt.effect.match(/心情\+(\d+)/);
@@ -198,12 +206,24 @@ function tickTravel(state) {
     }
   }
 
+  // 旅行中触发医疗/法律联动事件
+  if (typeof checkTravelMedicalEvents === "function") {
+    checkTravelMedicalEvents(state);
+  }
+  if (typeof checkTravelLegalEvents === "function") {
+    checkTravelLegalEvents(state);
+  }
+
   // 旅行结束
   if (state.travel.daysRemaining <= 0) {
     // 获得纪念品
     if (dest && dest.souvenirs && dest.souvenirs.length > 0) {
       var gift =
-        dest.souvenirs[Math.floor(Math.random() * dest.souvenirs.length)];
+        dest.souvenirs[
+          typeof Random !== "undefined"
+            ? Random.int(0, dest.souvenirs.length - 1)
+            : Math.floor(Math.random() * dest.souvenirs.length)
+        ];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
       if (typeof StateManager !== "undefined") {
