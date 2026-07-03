@@ -240,6 +240,39 @@
       }
     }
 
+    // 主动目标建议
+    if (p.day > 3 && p.phase === "street") {
+      if (state.housing && state.housing.tier === 0 && (r.cash || 0) < 500) {
+        out.push({
+          w: 35,
+          icon: "🛏️",
+          text: "攒¥500租床位",
+          hint: "改善睡眠恢复行动力",
+        });
+      }
+      var metNpcs = state.relationships
+        ? Object.keys(state.relationships).filter(function (k) {
+            return state.relationships[k].met;
+          }).length
+        : 0;
+      if (metNpcs < 2) {
+        out.push({
+          w: 33,
+          icon: "🤝",
+          text: "认识更多NPC",
+          hint: "NPC关系解锁高薪工作",
+        });
+      }
+      if ((p.intelligence || 20) < 35 && p.day > 7) {
+        out.push({
+          w: 30,
+          icon: "🧠",
+          text: "去培训中心学习",
+          hint: "智力提升可入职科技园",
+        });
+      }
+    }
+
     // 企业阶段就绪度（street → corporate）
     if (p.phase === "street" && p.day > 15) {
       var intelPct = Math.min(
