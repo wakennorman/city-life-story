@@ -523,6 +523,77 @@
     };
   }
 
+  // ====== 企业晋升策略 ======
+  function createCorporatePolicy() {
+    return function (state) {
+      var ap = state.player ? state.player.actionPoints : 0;
+      var cash = state.resources ? state.resources.cash : 0;
+      var needs = state.needs;
+      if (!needs || ap <= 0) return;
+      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+        state.resources.cash = Math.max(0, state.resources.cash - 10);
+        needs.hunger = Math.max(0, needs.hunger - 30);
+        ap -= 10;
+      }
+      if (needs.fatigue > 70 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
+        ap -= 15;
+      }
+      var ht = state.housing ? state.housing.tier : 0;
+      if (ht === 0 && cash >= 500 && state.player.day > 7) {
+        state.resources.cash -= 300;
+        state.housing.tier = 1;
+      }
+      if (ht === 1 && cash >= 1200 && state.player.day > 25) {
+        state.resources.cash -= 800;
+        state.housing.tier = 2;
+      }
+
+      var day = state.player.day;
+      // 前60天：学习并积累
+      if (day <= 60) {
+        if ((state.player.intelligence || 20) < 45 && needs.fatigue < 65) {
+          state.player.intelligence = Math.min(
+            100,
+            (state.player.intelligence || 20) + 2,
+          );
+          ap -= 20;
+        }
+        state.trade.currentLocation = "slum";
+        applyJobPay(state, findJobAtLocation(state, "slum"));
+        ap -= 14;
+        state.player.actionPoints = Math.max(0, ap);
+        return;
+      }
+
+      // 60天后：进入企业阶段
+      if (state.player.phase === "street") {
+        state.player.phase = "corporate";
+        state.corporate = state.corporate || {};
+        state.corporate.rank = "P5";
+        state.corporate.company = "star_tech";
+      }
+
+      // 企业工作：每日薪资
+      var ranks = ["P5", "P6", "P7", "P8", "P9", "P10"];
+      var salaries = [15000, 25000, 40000, 65000, 100000, 180000];
+      var idx = Math.max(0, ranks.indexOf(state.corporate.rank));
+      var dailySalary = Math.round(salaries[idx] / 30);
+      state.resources.cash += dailySalary;
+      state.resources.totalEarned =
+        (state.resources.totalEarned || 0) + dailySalary;
+
+      // 每180天晋升一次
+      var daysAtRank = day - (state.corporate.rankSince || 60);
+      if (daysAtRank > 180 && idx < ranks.length - 1) {
+        state.corporate.rank = ranks[idx + 1];
+        state.corporate.rankSince = day;
+      }
+
+      state.player.actionPoints = Math.max(0, ap);
+    };
+  }
+
   function runTrial(baseState, policyFn, seed) {
     var state = deepClone(baseState);
     state.player.day = 1;
@@ -614,6 +685,7 @@
       skiller: createSkillerPolicy(),
       trader: createTraderPolicy(),
       social: createSocialPolicy(),
+      corporate: createCorporatePolicy(),
     };
     var policy = policies[strategyName];
     if (!policy) {
@@ -1039,7 +1111,7 @@
 
     var strategies =
       CONFIG.strategy === "all"
-        ? ["balanced", "grinder", "skiller", "trader", "social"]
+        ? ["balanced", "grinder", "skiller", "trader", "social", "corporate"]
         : [CONFIG.strategy];
     var allStats = [];
     for (var i = 0; i < strategies.length; i++) {
