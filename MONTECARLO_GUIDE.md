@@ -79,6 +79,8 @@ MC发现原版胜利条件（经商¥500k/投资¥10M/财务自由¥20M）在100
 | 胜利条件不可达     | `victory.js` 降低门槛                   | 20    |
 | 证书效果未生效     | `career_dev.js` 修复calcActualSalary    | 23    |
 | 职场社交函数未注册 | `workplace_social.js` + `career_dev.js` | 24/25 |
+| Wiki注册费口径     | `wiki.js` 修正                          | 24    |
+| NPC×交易联动       | `pricing.js` 新增人脉溢价               | 21    |
 
 ## 添加新策略
 
