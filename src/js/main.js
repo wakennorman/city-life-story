@@ -732,6 +732,15 @@ function startScenarioGame(scenarioId) {
   } else {
     _enterScenarioGame();
   }
+  // 诊断Fallback: 3秒后若 #app 仍 display:none，强制显示（仅测试）
+  setTimeout(function () {
+    var appEl = document.getElementById("app");
+    if (appEl && appEl.style.display === "none") {
+      console.warn("[DIAG] app 仍 display:none，强制显示");
+      appEl.style.display = "";
+      if (typeof renderAll === "function") renderAll();
+    }
+  }, 3000);
 }
 
 // ====== 沙盒模式 ======
