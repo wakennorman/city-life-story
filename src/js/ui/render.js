@@ -1180,9 +1180,7 @@ function appendLocationServicesStrip(container, state, locKey) {
     const pulseBadges = getLocationNewsBadges(locKey, state);
     pulseBadges.forEach((b) => {
       const color = b.positive ? "var(--success)" : "var(--warning)";
-      const bg = b.positive
-        ? "rgba(46,204,113,0.10)"
-        : "rgba(243,156,18,0.10)";
+      const bg = b.positive ? "rgba(46,204,113,0.10)" : "rgba(243,156,18,0.10)";
       badgeHtml +=
         `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
         `background:${bg};color:${color};border:1px solid ${color};" ` +
@@ -1199,9 +1197,7 @@ function appendLocationServicesStrip(container, state, locKey) {
     for (let i = 0; i < repData.level; i++) stars += "⭐";
     if (repData.level === 0) stars = "〇";
     const bonusText =
-      repData.bonus > 0
-        ? ` +${Math.round(repData.bonus * 100)}%收入`
-        : "";
+      repData.bonus > 0 ? ` +${Math.round(repData.bonus * 100)}%收入` : "";
     const progressBar =
       repData.level < 5
         ? `<span style="display:inline-block;width:40px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:3px;"><span style="display:block;height:100%;width:${repData.progress}%;background:var(--accent);border-radius:2px;"></span></span>`
