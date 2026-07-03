@@ -703,6 +703,11 @@ function getColleagueSummary(state) {
  * 百科注册
  */
 if (typeof window !== "undefined") {
+  window.treatColleagueMeal = treatColleagueMeal;
+  window.chatWithColleague = chatWithColleague;
+  window.getColleagueSummary = getColleagueSummary;
+  window.generateColleague = generateColleague;
+  window.increaseColleagueRelationship = increaseColleagueRelationship;
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.workplace_social = {
     id: "workplace_social",
