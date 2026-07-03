@@ -58,7 +58,31 @@
 | 5   | index.html注册新文件                        | ✅   | 60f7d24 |
 | 6   | 验证 check:js(115)/typecheck/build.py/build | ✅   | 全通过  |
 
-### 待排期（第十一轮）
+## 2026-07-03 第十二轮：移动端底部导航栏 v1.0
+
+| #   | 任务                                         | 状态 | commit  |
+| --- | -------------------------------------------- | ---- | ------- |
+| 1   | UX诊断：12+Tab水平滚动为行业级反模式          | ✅   | b4ff356 |
+| 2   | 新增 src/js/ui/mobile_nav.js（核心逻辑）      | ✅   | b4ff356 |
+| 3   | src/css/style.css：底部导航样式+布局适配      | ✅   | b4ff356 |
+| 4   | src/index.html：DOM植入+脚本注册              | ✅   | b4ff356 |
+| 5   | python build.py 构建验证                      | ✅   | 全通过  |
+
+### 改动摘要
+
+**问题根因**：12+个水平滚动Tab是行业公认的移动端反模式，顶部Tab在拇指热区之外，无功能分组。  
+**解决方案**（参考大多数/BitLife/Stardew Mobile）：
+- **5组底部导航**（≤768px）：⚡行动 / 🗺️探索 / 💼职业 / 💰财富 / 👤我的
+- **子Tab pill栏**：组内多个Tab时，顶部显示胶囊pill选择器（节省垂直空间）
+- **零侵入集成**：hook renderAll()同步状态，不破坏桌面端任何逻辑
+- **安全区域适配**：iPhone safe-area-inset 底部Home Bar不被遮挡
+- **Tab分组映射**：
+  - 探索 → map / trade(街头)
+  - 职业 → skills / corp(职场) / career_dev(事业)
+  - 财富 → inventory / investment
+  - 我的 → social / achievements / wiki
+
+### 待排期（第十一/十二轮后续）
 
 > 蓝图对应见 `GAME_BLUEPRINT.md` 第二节。每轮实装前先读蓝图确认 P 优先级。
 
@@ -66,6 +90,7 @@
 - [ ] **城市服务层3消费点**（公积金→buyProperty；体检→降大病概率）— 蓝图 P1-D（系统间后果联动）
 - [ ] **装备品质系统激活**（effectMult接入+3渠道）— 蓝图 P1-E
 - [ ] **startup.js拆分**（14443行，系统性工程，架构债）— 蓝图 P2（技术债，不阻断玩法）
+- [ ] **底部导航角标**：成就解锁/事件待处理时在对应底部导航按钮显示红点badge
 
 ## 2026-07-01 第六轮：收尾清理 + 城市服务真实效果 + Monte Carlo 最小补丁
 
