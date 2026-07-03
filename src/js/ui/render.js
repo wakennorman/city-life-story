@@ -739,10 +739,7 @@ function renderLocation(state) {
     typeof SEASONS !== "undefined"
       ? SEASONS.find((s) => s.id === weather.season)
       : null;
-  const locNameEl = document.getElementById("location-name");
-  if (locNameEl && loc && weatherDef && seasonDef) {
-    locNameEl.innerHTML = `${loc.name} <span style="font-size:11px;color:var(--text-secondary);">${seasonDef.icon}${seasonDef.name} ${weatherDef.icon}${weatherDef.name} ${Math.round(weather.temperature || 22)}°C</span>`;
-  }
+  // location-name 仅显示地点名（天气详情由下方 weather-panel 展示，避免冗余）
   renderHeaderContext(state, loc, weatherDef, seasonDef);
 
   // 服务标签
