@@ -4751,6 +4751,15 @@ function renderInventoryTab(state, parent) {
           rp +
           "</div>";
     }
+    // 耐久条
+    var durBarHtml = "";
+    if (
+      equipInstance &&
+      equipInstance.durability !== undefined &&
+      typeof renderDurabilityBar === "function"
+    ) {
+      durBarHtml = renderDurabilityBar(equipInstance);
+    }
     var qualityBadge = "";
     if (qualityInfo && displayItem && displayItem.actualPrice) {
       // 品质标签同时标对应价格：贵即好货（普通不显示徽章）
@@ -4766,12 +4775,32 @@ function renderInventoryTab(state, parent) {
         ${displayItem ? displayItem.name : "(空)"} ${qualityBadge}
       </div>
       ${priceDisplay}
+      ${durBarHtml}
       ${repairHtml}
     `;
     equipGrid.appendChild(card);
   }
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
+
+  // ====== 装备套装状态（装备栏下方） ======
+  if (state.equipmentSuites && Object.keys(state.equipmentSuites).length > 0) {
+    var suiteTitle = document.createElement("h3");
+    suiteTitle.style.cssText =
+      "color:var(--text-muted);margin-top:16px;margin-bottom:8px;";
+    suiteTitle.textContent = "🎯 装备套装效果";
+    div.appendChild(suiteTitle);
+
+    for (var sid in state.equipmentSuites) {
+      var sr = state.equipmentSuites[sid];
+      if (sr && typeof renderSuiteCard === "function") {
+        var suiteHtml = renderSuiteCard(sr);
+        var suiteWrapper = document.createElement("div");
+        suiteWrapper.innerHTML = suiteHtml;
+        div.appendChild(suiteWrapper.firstElementChild);
+      }
+    }
+  }
 
   parent.appendChild(div);
 }

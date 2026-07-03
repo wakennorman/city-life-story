@@ -1050,11 +1050,31 @@ function buyItemFromShop(itemId) {
         "👕 替换了旧的" +
           ((curDef && curDef.name) || curInst.itemId) +
           "，装备了" +
-          item.name,
+          item.name +
+          (equippedItem &&
+          equippedItem.qualityName &&
+          equippedItem.qualityName !== "普通"
+            ? "（" +
+              (equippedItem.qualityIcon || "") +
+              equippedItem.qualityName +
+              "品质）"
+            : ""),
         "info",
       );
     } else {
-      StateManager.addMessage("✅ 购买并装备了：" + item.name, "success");
+      StateManager.addMessage(
+        "✅ 购买并装备了：" +
+          item.name +
+          (equippedItem &&
+          equippedItem.qualityName &&
+          equippedItem.qualityName !== "普通"
+            ? "（" +
+              (equippedItem.qualityIcon || "") +
+              equippedItem.qualityName +
+              "品质）"
+            : ""),
+        "success",
+      );
     }
     state.inventory.equipment[item.slot] = itemId;
     if (equippedItem) {
@@ -1122,7 +1142,11 @@ function showItemShopModal(locationId) {
     grid.appendChild(empty);
   } else {
     available.forEach(function (item) {
-      var canAfford = state.resources.cash >= item.price;
+      // 品质系统预览：计算价格范围（不消耗RNG，只展示理论值）
+      var actualPrice = item.price;
+      var hasQuality = item.slot && typeof getQualityPriceMult === "function";
+      var maxPrice = hasQuality ? Math.round(item.price * 1.5) : item.price;
+      var canAfford = state.resources.cash >= actualPrice;
       // 检查是否已装备
       var equipped =
         state.inventory.equipment &&
@@ -1147,7 +1171,12 @@ function showItemShopModal(locationId) {
       nameSpan.textContent = (item.icon || "") + " " + item.name;
       var priceSpan = document.createElement("span");
       priceSpan.style.cssText = "color:var(--warning);font-size:12px;";
-      priceSpan.textContent = "¥" + item.price;
+      // 显示价格范围（品质系统：品质影响实际价格）
+      if (hasQuality && maxPrice > item.price) {
+        priceSpan.textContent = "¥" + item.price + "~" + maxPrice;
+      } else {
+        priceSpan.textContent = "¥" + item.price;
+      }
       topRow.appendChild(nameSpan);
       topRow.appendChild(priceSpan);
 
@@ -1159,9 +1188,16 @@ function showItemShopModal(locationId) {
       var slotEl = document.createElement("div");
       slotEl.style.cssText =
         "font-size:10px;color:var(--text-secondary);margin-bottom:6px;";
-      slotEl.textContent = item.slot
-        ? "槽位：" + item.slot
-        : "道具（放入背包）";
+      if (item.slot) {
+        var slotText = "槽位：" + item.slot;
+        if (hasQuality) {
+          slotText +=
+            ' <span style="color:var(--accent);">◆品质随机（普通70%/优质22%/高档8%）</span>';
+        }
+        slotEl.innerHTML = slotText;
+      } else {
+        slotEl.textContent = "道具（放入背包）";
+      }
 
       var btnRow = document.createElement("div");
       if (equipped) {

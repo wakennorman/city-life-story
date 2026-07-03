@@ -199,6 +199,12 @@ function estimateJobPay(job, state) {
         pay = Math.floor(pay * equipMulti);
       }
     }
+    if (typeof getSuiteJobBonus === "function") {
+      var suiteMulti = getSuiteJobBonus(job.id, state);
+      if (suiteMulti !== 1.0) {
+        pay = Math.floor(pay * suiteMulti);
+      }
+    }
     if (typeof getNewsJobMultiplier === "function") {
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
     }
@@ -270,6 +276,14 @@ function estimateJobPayDetailed(job, state) {
     if (equipMulti !== 1.0) {
       tags.push("🎒+" + Math.round((equipMulti - 1) * 100) + "%");
       base = Math.floor(base * equipMulti);
+    }
+  }
+  // 套装加成
+  if (typeof getSuiteJobBonus === "function") {
+    var suiteMulti = getSuiteJobBonus(job.id, state);
+    if (suiteMulti !== 1.0) {
+      tags.push("🎯+" + Math.round((suiteMulti - 1) * 100) + "%");
+      base = Math.floor(base * suiteMulti);
     }
   }
   // 连击加成
@@ -3334,6 +3348,17 @@ function doStreetJob(job) {
       pay = Math.floor(pay * equipMulti);
       StateManager.addMessage(
         "🎒 装备加成：+" + Math.round((equipMulti - 1) * 100) + "%",
+        "success",
+      );
+    }
+  }
+  // 套装加成
+  if (typeof getSuiteJobBonus === "function") {
+    var suiteMulti = getSuiteJobBonus(job.id, state);
+    if (suiteMulti !== 1.0) {
+      pay = Math.floor(pay * suiteMulti);
+      StateManager.addMessage(
+        "🎯 套装加成：+" + Math.round((suiteMulti - 1) * 100) + "%",
         "success",
       );
     }

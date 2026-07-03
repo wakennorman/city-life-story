@@ -1026,3 +1026,56 @@ function getItemJobBonus(jobId, state) {
   }
   return multiplier;
 }
+
+/**
+ * 获取装备套装对特定工作的收入加成倍率
+ * 套装效果基于同时装备的同主题装备数量递增，
+ * 在 getItemJobBonus 之外额外叠加。
+ * @param {string} jobId 工作ID
+ * @param {object} state 游戏状态
+ * @returns {number} 套装加成倍率（1.0 = 无加成）
+ */
+function getSuiteJobBonus(jobId, state) {
+  if (!state || !state.equipmentSuites) return 1.0;
+  var allEffects = {};
+  for (var suiteId in state.equipmentSuites) {
+    var result = state.equipmentSuites[suiteId];
+    if (result && result.achievedTier && result.achievedTier.effects) {
+      var te = result.achievedTier.effects;
+      for (var k in te) {
+        allEffects[k] = Math.max(allEffects[k] || 0, te[k]);
+      }
+    }
+  }
+  if (Object.keys(allEffects).length === 0) return 1.0;
+
+  // 工作ID → 套装效果键映射
+  var JOB_SUITE_MAP = {
+    // 街头工作
+    street_vending_food: "streetIncomeBonus",
+    sister_zhang_vending: "streetIncomeBonus",
+    waste_recycling: "streetIncomeBonus",
+    old_zhou_recycling: "streetIncomeBonus",
+    manual_labor_construction: "constructionIncomeBonus",
+    premium_engineering: "constructionIncomeBonus",
+    steel_worker: "constructionIncomeBonus",
+    // 配送工作
+    delivery_rider: "deliveryIncomeBonus",
+    courier_gig: "deliveryIncomeBonus",
+    wholesale_delivery: "deliveryIncomeBonus",
+    // 科技工作
+    content_writing: "techIncomeBonus",
+    factory_work_assembly: "techIncomeBonus",
+    training_assistant: "techIncomeBonus",
+    // 金融工作
+    bank_security: "financeIncomeBonus",
+    hospital_companion: "financeIncomeBonus",
+    restaurant_assistant: "financeIncomeBonus",
+  };
+
+  var bonusKey = JOB_SUITE_MAP[jobId];
+  if (!bonusKey) return 1.0;
+
+  var bonus = allEffects[bonusKey] || 0;
+  return bonus > 0 ? 1.0 + bonus : 1.0;
+}
