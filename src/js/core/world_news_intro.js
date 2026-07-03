@@ -132,6 +132,62 @@ const WORLD_NEWS_DB = {
       ],
       scenarioTags: ["classic", "laid_off", "midlife_crisis"],
     },
+    {
+      id: "emp_finance_hiring",
+      months: [2, 3, 4, 8, 9, 10],
+      icon: "🏦",
+      tag: "就业",
+      headline: "券商基金逆势扩招！投研、量化、风控岗位年薪百万抢人",
+      detail:
+        "虽然市场整体低迷，但头部金融机构为下一轮行情提前储备人才，CFA/FRM持证者优先。",
+      worldEffect: {
+        sectorHeat: { 金融: 0.1, 科技: 0.04 },
+        marketMood: "bullish",
+        note: "金融/投资岗位薪资走高，财会/金融类证书价值提升",
+      },
+      investmentEffect: [
+        { industry: "金融", mul: 1.1 },
+        { allStocks: true, mul: 1.03 },
+      ],
+      scenarioTags: ["fresh_grad", "second_gen"],
+    },
+    {
+      id: "emp_logistics_recruit",
+      months: [6, 7, 10, 11, 12],
+      icon: "🚚",
+      tag: "就业",
+      headline: "快递物流旺季用工缺口80万，临时工日薪突破400元",
+      detail: "双十一+年货节电商旺季到来，仓储分拣、快递配送、装卸工需求暴增。",
+      worldEffect: {
+        sectorHeat: { 消费: 0.08 },
+        marketMood: "bullish",
+        note: "物流/零工旺季收入可观，强度大但门槛低",
+      },
+      investmentEffect: [
+        { industry: "消费", mul: 1.06 },
+        { symbols: ["BABA"], mul: 1.04 },
+      ],
+      scenarioTags: ["classic", "foreign_worker", "laid_off"],
+    },
+    {
+      id: "emp_healthcare_demand",
+      months: [1, 3, 5, 7, 9, 11],
+      icon: "🏥",
+      tag: "就业",
+      headline: "医疗健康行业人才缺口持续扩大，护理/康复/医技岗位供不应求",
+      detail:
+        "人口老龄化+基层医疗建设催生百万级岗位需求，护士、康复师起薪连年上涨。",
+      worldEffect: {
+        sectorHeat: { 医药: 0.1, 消费: 0.03 },
+        marketMood: "bullish",
+        note: "医疗/护理/养老行业就业机会增加，薪资稳步上涨",
+      },
+      investmentEffect: [
+        { industry: "医药", mul: 1.1 },
+        { industry: "消费", mul: 1.04 },
+      ],
+      scenarioTags: ["classic", "small_town_grinder", "laid_off"],
+    },
   ],
 
   // ======== 经济/市场 ========
@@ -246,6 +302,160 @@ const WORLD_NEWS_DB = {
         { symbols: ["BTC"], mul: 1.1 },
       ],
       scenarioTags: ["second_gen", "midlife_crisis", "classic"],
+    },
+    {
+      id: "eco_export_surge",
+      months: [2, 3, 4, 5, 9, 10, 11],
+      icon: "🚢",
+      tag: "经济",
+      headline: "出口订单激增！外贸企业产能拉满，海运价格再度攀升",
+      detail:
+        "海外库存回补叠加汇率优势，纺织、机械、电子出口全线回暖，外贸跟单员成抢手人才。",
+      worldEffect: {
+        sectorHeat: { 科技: 0.06, 新能源: 0.08, 消费: 0.05 },
+        marketMood: "bullish",
+        note: "外贸/物流/制造岗位需求上升，海运成本上涨传导至商品价格",
+      },
+      investmentEffect: [
+        { industry: "科技", mul: 1.06 },
+        { industry: "新能源", mul: 1.1 },
+        { allStocks: true, mul: 1.03 },
+      ],
+      scenarioTags: ["classic", "foreign_worker"],
+    },
+    {
+      id: "eco_investment_cold",
+      months: [1, 2, 6, 7, 8, 12],
+      icon: "🧊",
+      tag: "金融",
+      headline: "一级市场募资寒冬：VC/PE出资额同比腰斩，创业公司艰难求生",
+      detail:
+        "LP出资意愿降至冰点，估值回调成为主旋律，烧钱模式彻底终结，盈利成为唯一标准。",
+      worldEffect: {
+        sectorHeat: { 科技: -0.08, 金融: -0.06 },
+        marketMood: "bearish",
+        note: "创业融资难度加大，但自带现金流的传统行业反而受青睐",
+      },
+      investmentEffect: [
+        { industry: "科技", mul: 0.85 },
+        { industry: "金融", mul: 0.9 },
+      ],
+      scenarioTags: ["second_gen", "classic"],
+    },
+    {
+      id: "eco_consumption_downgrade",
+      months: [2, 3, 4, 7, 8, 9],
+      icon: "🥬",
+      tag: "消费",
+      headline: "消费降级趋势深化：「平替经济学」席卷年轻消费者",
+      detail:
+        "白牌商品、社区团购、二手交易平台流量暴增，消费者从「买贵的」转向「买对的」。",
+      worldEffect: {
+        sectorHeat: { 消费: 0.06 },
+        marketMood: "bearish",
+        note: "平价商品/二手交易有利可图，高端消费承压",
+      },
+      investmentEffect: [
+        { industry: "消费", mul: 0.92 },
+        { symbols: ["BABA", "TCEHY"], mul: 0.96 },
+      ],
+      scenarioTags: ["classic", "laid_off", "fresh_grad"],
+    },
+    {
+      id: "eco_bond_yield",
+      months: [3, 4, 5, 6, 9, 10],
+      icon: "📜",
+      tag: "金融",
+      headline: "国债收益率持续走低，储蓄国债受追捧，「资产荒」蔓延",
+      detail:
+        "安全资产稀缺推动债市走牛，银行存款利率下调引发储蓄搬家，理财市场格局重塑。",
+      worldEffect: {
+        sectorHeat: { 金融: 0.07 },
+        marketMood: "neutral",
+        note: "银行存款收益降低，理财/基金产品吸引力上升",
+      },
+      investmentEffect: [
+        { industry: "金融", mul: 1.05 },
+        { allStocks: true, mul: 1.02 },
+      ],
+      scenarioTags: ["midlife_crisis", "second_gen", "classic"],
+    },
+    {
+      id: "eco_real_estate_debt",
+      months: [1, 3, 6, 7, 8, 11, 12],
+      icon: "🏚️",
+      tag: "金融",
+      headline: "房企债务重组进程加速，银行不良率承压但系统性风险可控",
+      detail:
+        "头部房企化债方案陆续落地，银行股估值承压，但地方政府纾困基金托底预期明确。",
+      worldEffect: {
+        sectorHeat: { 房地产: -0.06, 金融: -0.04 },
+        marketMood: "bearish",
+        note: "地产相关投资风险上升，银行股面临回调压力",
+      },
+      investmentEffect: [
+        { industry: "房地产", mul: 0.82 },
+        { industry: "金融", mul: 0.9 },
+      ],
+      scenarioTags: ["classic", "midlife_crisis"],
+    },
+    {
+      id: "eco_gold_rally",
+      months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      icon: "🥇",
+      tag: "市场",
+      headline: "金价再创历史新高！全球央行持续增持黄金储备",
+      detail:
+        "地缘政治不确定性+去美元化趋势下，黄金成为最热门的避险资产，金店回收价同步飙升。",
+      worldEffect: {
+        sectorHeat: { 消费: 0.04, 金融: 0.06 },
+        marketMood: "bullish",
+        note: "黄金饰品/投资金条价格上涨，典当行回收价水涨船高",
+      },
+      investmentEffect: [
+        { industry: "金融", mul: 1.06 },
+        { symbols: ["BTC"], mul: 1.08 },
+      ],
+      scenarioTags: ["classic", "second_gen", "midlife_crisis"],
+    },
+    {
+      id: "eco_logistics_boom",
+      months: [3, 4, 5, 6, 9, 10, 11, 12],
+      icon: "📦",
+      tag: "产业",
+      headline: "物流行业竞争白热化：顺丰京东入局下沉市场，运费价格战再起",
+      detail:
+        "快递单价跌破2元大关，末端网点利润微薄，快递员每票派送费降至0.7元。",
+      worldEffect: {
+        sectorHeat: { 消费: 0.06 },
+        marketMood: "bearish",
+        note: "物流/快递岗位工作量大但单价降，做得多不一定赚得多",
+      },
+      investmentEffect: [
+        { industry: "消费", mul: 0.94 },
+        { symbols: ["BABA"], mul: 0.92 },
+      ],
+      scenarioTags: ["classic", "foreign_worker", "laid_off"],
+    },
+    {
+      id: "eco_semiconductor_cycle",
+      months: [2, 4, 6, 8, 10, 12],
+      icon: "💾",
+      tag: "科技",
+      headline: "全球半导体进入上行周期，存储芯片价格连续三个季度上涨",
+      detail:
+        "AI算力需求+消费电子回暖推动芯片需求复苏，国产替代进程加速，晶圆厂扩产招工。",
+      worldEffect: {
+        sectorHeat: { 科技: 0.12, 新能源: 0.05 },
+        marketMood: "bullish",
+        note: "芯片/半导体相关岗位薪资上涨，科技股行情看好",
+      },
+      investmentEffect: [
+        { industry: "科技", mul: 1.15 },
+        { symbols: ["NVDA", "AMD"], mul: 1.18 },
+        { allStocks: true, mul: 1.04 },
+      ],
+      scenarioTags: ["classic", "second_gen"],
     },
   ],
 
@@ -729,29 +939,31 @@ var REAL_TIME_NEWS_CONFIG = {
   displayCount: 4, // 弹窗展示几条
   sources: {
     // 源1：RSS转JSON（无需API Key，通过rss2json.com中转）
+    // 设计原则：摒弃「宏大叙事」类主流媒体，选用专业财经/商业/科技新闻源
+    // 参考 Bloomberg Terminal / Reuters Eikon 的信息源选择标准——客观、数据驱动、领域专注
     rss: {
       enabled: true,
       converterUrl: "https://api.rss2json.com/v1/api.json",
       feeds: [
         {
-          name: "新浪新闻",
-          url: "https://rss.sina.com.cn/news/china/focus15.xml",
-          category: "社会",
+          name: "新浪财经",
+          url: "https://rss.sina.com.cn/finance/hotnews.xml",
+          category: "经济",
+        },
+        {
+          name: "36氪",
+          url: "https://36kr.com/feed",
+          category: "科技",
+        },
+        {
+          name: "华尔街见闻",
+          url: "https://www.wallstreetcn.com/rss",
+          category: "金融",
         },
         {
           name: "新浪科技",
           url: "https://rss.sina.com.cn/tech/focus15.xml",
           category: "科技",
-        },
-        {
-          name: "网易新闻",
-          url: "http://news.163.com/special/00011K6L/rss_newstop.xml",
-          category: "社会",
-        },
-        {
-          name: "人民网时政",
-          url: "http://www.people.com.cn/rss/politics.xml",
-          category: "政策",
         },
       ],
     },
@@ -840,25 +1052,50 @@ var _NEWS_CLASSIFIER_RULES = [
   },
   {
     id: "economy",
+    // 经济/宏观类：覆盖宏观经济指标、政策、市场趋势等
     patterns: [
-      /\b(?:经济|消费|GDP|通胀|通缩|CPI|利率|降准|降息|股市|A股|基金|理财|投资|出口|贸易)\b/,
+      /\b(?:经济|GDP|通胀|通缩|CPI|PPI|PMI|利率|降准|降息|加息|准备金率|流动性|货币|财政|赤字|国债|地方债|人民币|汇率|美元|美联储|央行|货币政策|宏观经济|经济数据|经济指标|经济增速|经济增长|放缓|复苏|景气|衰退|萧条)\b/,
     ],
     sector: { 金融: 0.05, 消费: 0.03 },
     mood: "bullish",
     tag: "经济",
     getMood: function (text) {
-      return /涨|升|热|复苏|刺激/.test(text)
+      return /涨|升|热|复苏|刺激|增长|扩张|回暖/.test(text)
         ? "bullish"
-        : /跌|降|冷|萎缩|风险|危机/.test(text)
+        : /跌|降|冷|萎缩|风险|危机|放缓|衰退|下行|通缩/.test(text)
           ? "bearish"
           : "neutral";
     },
     getSector: function (text) {
-      return /涨|升|热|复苏/.test(text)
+      return /涨|升|热|复苏|增长/.test(text)
         ? { 金融: 0.1, 消费: 0.05 }
-        : /跌|降|冷|萎缩/.test(text)
+        : /跌|降|冷|萎缩|放缓|衰退/.test(text)
           ? { 金融: -0.06, 消费: -0.04 }
           : { 金融: 0.03, 消费: 0.02 };
+    },
+  },
+  {
+    id: "finance",
+    // 金融/投资类：覆盖股市、基金、理财、投融资等
+    patterns: [
+      /\b(?:股市|A股|港股|美股|基金|ETF|理财|投资|股票|指数|沪指|深指|创业板|科创板|北向资金|南向资金|主力资金|外资|流入|流出|开户|交易量|成交额|牛市|熊市|反弹|回调|震荡|涨停|跌停|IPO|上市|退市|分红|股息|回购|融资|配股|可转债|债券|收益率|年化|净值)\b/,
+    ],
+    sector: { 金融: 0.08, 科技: 0.03 },
+    mood: "bullish",
+    tag: "金融",
+    getMood: function (text) {
+      return /涨|升|牛|反弹|流入|增长|热|爆发/.test(text)
+        ? "bullish"
+        : /跌|降|熊|回调|流出|退市|风险|崩/.test(text)
+          ? "bearish"
+          : "volatile";
+    },
+    getSector: function (text) {
+      return /涨|牛|反弹|流入/.test(text)
+        ? { 金融: 0.12, 科技: 0.04 }
+        : /跌|熊|回调|流出/.test(text)
+          ? { 金融: -0.08, 科技: -0.03 }
+          : { 金融: 0.05 };
     },
   },
   {
@@ -883,9 +1120,34 @@ var _NEWS_CLASSIFIER_RULES = [
     },
   },
   {
-    id: "social",
+    id: "consumption",
+    // 消费/零售/电商类：覆盖消费市场、零售、电商、物价等
     patterns: [
-      /\b(?:社会|民生|养老|教育|医疗|健康|出生率|人口|心理|焦虑|躺平|内卷|灵活就业|社保)\b/,
+      /\b(?:消费|零售|电商|网购|购物|商品|物价|涨价|降价|促销|打折|双十一|618|直播带货|外卖|餐饮|旅游|酒店|票房|客流量|营收|销售额|门店|商家|商超|便利店|供销)\b/,
+    ],
+    sector: { 消费: 0.08, 科技: 0.03 },
+    mood: "bullish",
+    tag: "消费",
+    getMood: function (text) {
+      return /涨|升|热|旺|爆发|增长|新高|复苏|反弹/.test(text)
+        ? "bullish"
+        : /跌|降|冷|萎缩|下滑|关闭|亏损|下降|疲软/.test(text)
+          ? "bearish"
+          : "neutral";
+    },
+    getSector: function (text) {
+      return /涨|升|热|旺|增长|新高/.test(text)
+        ? { 消费: 0.1, 科技: 0.04 }
+        : /跌|降|冷|下滑|亏损/.test(text)
+          ? { 消费: -0.07, 科技: -0.03 }
+          : { 消费: 0.05 };
+    },
+  },
+  {
+    id: "social",
+    // 社会/民生类：限制在真正社会话题而非泛化匹配
+    patterns: [
+      /\b(?:养老|老龄化|社保|医保|退休|生育|出生率|人口|落户|户籍|低保|救助|慈善|公益|志愿者|社区|居委会|公共服务|入学|学区|摇号)\b/,
     ],
     sector: { 医药: 0.05, 消费: 0.02 },
     mood: "neutral",
@@ -996,9 +1258,57 @@ function classifyRealNews(title, desc) {
     }
   }
 
-  // 无匹配规则 → 默认轻微影响
-  result.sectorHeat = { 消费: 0.02 };
-  result.note = "实时新闻·社会综合";
+  // ——— 无规则命中时的智能兜底 ———
+  // 不再一刀切「社会综合」，而是根据文本特征智能推断
+  // 参考 Bloomberg Terminal 的「其他新闻」归类逻辑：尽量找到最小共同类别
+
+  // 1. 检查是否有数字 + 百分比 → 很可能含经济/市场数据
+  if (/\d+\.?\d*%|百分点|增长率|增速/.test(text)) {
+    result.tag = "经济";
+    result.sectorHeat = { 金融: 0.03, 消费: 0.02 };
+    result.marketMood = /\d+\.?\d*%/.test(text) ? "neutral" : "neutral";
+    result.note = "实时新闻·经济（含数据指标）";
+    return result;
+  }
+
+  // 2. 检查是否有金额/货币符号 → 很可能与商业/金融相关
+  if (/[¥$￥]|亿元|万元|元\/|融资|营收|利润|成本|预算/.test(text)) {
+    result.tag = "经济";
+    result.sectorHeat = { 金融: 0.04, 消费: 0.02 };
+    result.marketMood = "neutral";
+    result.note = "实时新闻·经济";
+    return result;
+  }
+
+  // 3. 检查是否有企业/机构/市场类词汇
+  if (
+    /公司|集团|企业|厂|市场|行业|业务|产能|产量|订单|合同|合作|签约|招标|投标/.test(
+      text,
+    )
+  ) {
+    result.tag = "产业";
+    result.sectorHeat = { 科技: 0.03, 新能源: 0.02 };
+    result.marketMood = "neutral";
+    result.note = "实时新闻·产业";
+    return result;
+  }
+
+  // 4. 检查是否有城市/交通/基建类词汇
+  if (
+    /城市|地铁|公交|高铁|机场|公路|基建|工程|建设|规划|新区|开发区/.test(text)
+  ) {
+    result.tag = "城市";
+    result.sectorHeat = { 房地产: 0.04, 消费: 0.02 };
+    result.marketMood = "neutral";
+    result.note = "实时新闻·城市发展";
+    return result;
+  }
+
+  // 5. 真正无匹配 → 用「综合」而非「社会」，情绪中性，轻微正面影响
+  //    设计理由：完全不相关的新闻对游戏世界的影响应该最小化而非负面化
+  result.sectorHeat = { 消费: 0.01 };
+  result.marketMood = "neutral";
+  result.note = "实时新闻·综合";
   return result;
 }
 
@@ -1021,7 +1331,7 @@ function generateInvestmentEffectFromTag(tag, mood) {
     消费: { industry: "消费", up: 1.08, down: 0.92 },
     产业: { industry: "新能源", up: 1.1, down: 0.92 },
     市场: { industry: "金融", up: 1.08, down: 0.94 },
-    社会: { industry: "医药", up: 1.06, down: 0.96 },
+    社会: { industry: "医药", up: 1.04, down: 0.97 },
     教育: { industry: "科技", up: 1.04, down: 0.97 },
     节日: { industry: "消费", up: 1.1, down: 0.98 },
     季节: { industry: "消费", up: 1.04, down: 0.97 },
@@ -1215,6 +1525,10 @@ function getNewsIconByTag(tag) {
     劳工: "⚖️",
     租房: "🔑",
     城市: "🏙️",
+    // 兜底标签
+    综合: "📰",
+    毕业: "🎓",
+    冬季: "❄️",
   };
   return iconMap[tag] || "📰";
 }
