@@ -2727,6 +2727,11 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  /* iOS Safari: 消除 300ms 延迟，确保 div onclick 响应 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(74, 158, 92, 0.12);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mode-card:hover {

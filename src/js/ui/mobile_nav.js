@@ -246,14 +246,43 @@ function syncBottomNavState() {
   }
 }
 
-// ===== Hook renderAll — 零侵入式集成 =====
+// ===== 隐藏底部导航（欢迎/选模式界面调用）=====
+/**
+ * 立即隐藏底部导航栏，供 showWelcome / showModeSelect 调用
+ * 解决「从游戏返回主菜单后 bottom-nav 残留可见，遮挡模式卡片点击」的 bug
+ */
+function _hideMobileNav() {
+  var bottomNav = document.getElementById("bottom-nav");
+  if (bottomNav) bottomNav.style.display = "none";
+  _hideMobileSubTabs();
+}
+
+// ===== Hook renderAll / showWelcome / showModeSelect — 零侵入式集成 =====
 window.addEventListener("load", function () {
-  // 等渲染系统就绪后再挂钩（renderAll 在 render.js 中定义）
+  // 1. 挂钩 renderAll（游戏内状态同步）
   if (typeof renderAll === "function") {
     var _origRenderAll = renderAll;
     renderAll = function () {
       _origRenderAll.apply(this, arguments);
       syncBottomNavState();
+    };
+  }
+
+  // 2. 挂钩 showWelcome — 返回欢迎界面时立即隐藏底部导航
+  if (typeof showWelcome === "function") {
+    var _origShowWelcome = showWelcome;
+    showWelcome = function () {
+      _origShowWelcome.apply(this, arguments);
+      _hideMobileNav();
+    };
+  }
+
+  // 3. 挂钩 showModeSelect — 进入模式选择界面时立即隐藏底部导航
+  if (typeof showModeSelect === "function") {
+    var _origShowModeSelect = showModeSelect;
+    showModeSelect = function () {
+      _origShowModeSelect.apply(this, arguments);
+      _hideMobileNav();
     };
   }
 });
