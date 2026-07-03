@@ -36,6 +36,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bearish",
         note: "就业压力大，IT/金融岗位竞争激烈",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 0.95 },
+        { industry: "消费", mul: 0.97 },
+      ],
       scenarioTags: ["fresh_grad", "small_town_grinder"],
     },
     {
@@ -50,6 +54,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bearish",
         note: "IT行业普通岗位薪资承压",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 0.85 },
+        { symbols: ["BABA", "TCEHY"], mul: 0.9 },
+      ],
       scenarioTags: ["laid_off", "midlife_crisis"],
     },
     {
@@ -64,6 +72,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "制造业/蓝领岗位收入提升",
       },
+      investmentEffect: [
+        { industry: "新能源", mul: 1.18 },
+        { industry: "科技", mul: 1.05 },
+      ],
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -78,6 +90,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "跑腿/外卖/零工收入稳定",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.06 },
+        { symbols: ["BABA", "TCEHY"], mul: 0.95 },
+      ],
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -92,6 +108,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "稳定岗位溢价，创业/私企吸引力下滑",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 0.95 },
+        { industry: "金融", mul: 0.92 },
+      ],
       scenarioTags: ["small_town_grinder", "fresh_grad"],
     },
     {
@@ -106,6 +126,10 @@ const WORLD_NEWS_DB = {
         marketMood: "volatile",
         note: "AI赋能岗位收入+15%，传统基础岗位薪资承压",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 1.15 },
+        { symbols: ["NVDA", "AMD"], mul: 1.2 },
+      ],
       scenarioTags: ["classic", "laid_off", "midlife_crisis"],
     },
   ],
@@ -124,6 +148,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "消费行业景气，零售/服务收入有提升",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.12 },
+        { industry: "新能源", mul: 1.1 },
+      ],
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -138,6 +166,11 @@ const WORLD_NEWS_DB = {
         marketMood: "bearish",
         note: "物价下行，街头摊位/商品利润空间收窄",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 0.9 },
+        { industry: "金融", mul: 0.92 },
+        { allStocks: true, mul: 0.95 },
+      ],
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -152,6 +185,11 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "股市投资机会，但风险同增",
       },
+      investmentEffect: [
+        { allStocks: true, mul: 1.08 },
+        { industry: "金融", mul: 1.15 },
+        { industry: "科技", mul: 1.1 },
+      ],
       scenarioTags: ["second_gen", "midlife_crisis"],
     },
     {
@@ -166,6 +204,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "新能源/制造业岗位需求旺盛",
       },
+      investmentEffect: [
+        { industry: "新能源", mul: 1.22 },
+        { industry: "科技", mul: 1.08 },
+      ],
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -180,6 +222,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bearish",
         note: "实体店生意艰难，摆摊/外卖等低门槛谋生更重要",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 0.88 },
+        { industry: "金融", mul: 0.95 },
+      ],
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -194,6 +240,11 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "贷款/创业启动成本降低，存款收益下滑",
       },
+      investmentEffect: [
+        { industry: "房地产", mul: 1.12 },
+        { industry: "金融", mul: 0.92 },
+        { symbols: ["BTC"], mul: 1.1 },
+      ],
       scenarioTags: ["second_gen", "midlife_crisis", "classic"],
     },
   ],
@@ -212,6 +263,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bearish",
         note: "租房成本相对稳定，购房可以议价",
       },
+      investmentEffect: [
+        { industry: "房地产", mul: 0.85 },
+        { industry: "金融", mul: 0.92 },
+      ],
       scenarioTags: ["classic", "midlife_crisis"],
     },
     {
@@ -226,6 +281,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "工程类工作需求上涨，房产市场预期回暖",
       },
+      investmentEffect: [
+        { industry: "房地产", mul: 1.08 },
+        { symbols: ["COPPER"], mul: 1.1 },
+      ],
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -240,6 +299,7 @@ const WORLD_NEWS_DB = {
         marketMood: "volatile",
         note: "城中村附近租金上涨，部分地段居民被迫迁移",
       },
+      investmentEffect: [{ industry: "房地产", mul: 1.06 }],
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -272,6 +332,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "AI/科技相关岗位薪资+10-20%",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 1.18 },
+        { symbols: ["NVDA", "AMD"], mul: 1.25 },
+      ],
       scenarioTags: ["classic", "second_gen", "fresh_grad"],
     },
     {
@@ -286,6 +350,10 @@ const WORLD_NEWS_DB = {
         marketMood: "volatile",
         note: "高端制造/编程岗位热，普工岗位长期承压",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 1.15 },
+        { industry: "新能源", mul: 1.1 },
+      ],
       scenarioTags: ["classic", "laid_off", "foreign_worker"],
     },
     {
@@ -300,6 +368,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "芯片/半导体相关岗位薪资水涨船高",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 1.22 },
+        { symbols: ["NVDA", "AMD"], mul: 1.3 },
+      ],
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -314,6 +386,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "社交网络/直播副业收入可观，但竞争激烈",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.08 },
+        { industry: "科技", mul: 1.04 },
+      ],
       scenarioTags: ["classic", "fresh_grad", "second_gen"],
     },
   ],
@@ -388,6 +464,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "养老/医疗服务行业机会多，报酬不低",
       },
+      investmentEffect: [
+        { industry: "医药", mul: 1.12 },
+        { industry: "消费", mul: 1.05 },
+      ],
       scenarioTags: ["classic", "midlife_crisis", "foreign_worker"],
     },
     {
@@ -402,6 +482,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "技能证书和职业技术的价值提升",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 1.05 },
+        { industry: "新能源", mul: 1.06 },
+      ],
       scenarioTags: ["small_town_grinder", "foreign_worker", "classic"],
     },
   ],
@@ -420,6 +504,11 @@ const WORLD_NEWS_DB = {
         marketMood: "volatile",
         note: "外贸相关岗位受冲击，内循环消费机会反增",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 0.85 },
+        { industry: "新能源", mul: 1.08 },
+        { allStocks: true, mul: 0.92 },
+      ],
       scenarioTags: ["classic", "second_gen"],
     },
     {
@@ -434,6 +523,11 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "外卖/跑腿/平台零工收入略有改善",
       },
+      investmentEffect: [
+        { industry: "科技", mul: 0.88 },
+        { symbols: ["BABA", "TCEHY"], mul: 0.85 },
+        { industry: "消费", mul: 1.06 },
+      ],
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -448,6 +542,7 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "小镇/乡镇创业门槛降低，补贴可观",
       },
+      investmentEffect: [{ industry: "消费", mul: 1.05 }],
       scenarioTags: ["small_town_grinder", "laid_off"],
     },
     {
@@ -462,6 +557,11 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "消费补贴期间实体经营收入有提升",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.08 },
+        { industry: "金融", mul: 1.06 },
+        { allStocks: true, mul: 1.03 },
+      ],
       scenarioTags: ["classic", "foreign_worker", "laid_off"],
     },
     {
@@ -477,6 +577,7 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "职场权益保护增强，但短期内裁员阻力更大",
       },
+      investmentEffect: [{ industry: "科技", mul: 0.92 }],
       scenarioTags: ["midlife_crisis", "laid_off"],
     },
   ],
@@ -495,6 +596,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "春节黄金期！摆摊/餐饮/服务收入高峰",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.2 },
+        { allStocks: true, mul: 1.05 },
+      ],
       scenarioTags: ["classic", "foreign_worker"],
     },
     {
@@ -509,6 +614,10 @@ const WORLD_NEWS_DB = {
         marketMood: "bullish",
         note: "618期间电商/物流/零工收入有额外奖励",
       },
+      investmentEffect: [
+        { industry: "消费", mul: 1.15 },
+        { industry: "科技", mul: 1.06 },
+      ],
       scenarioTags: ["classic", "second_gen", "fresh_grad"],
     },
     {
@@ -523,6 +632,10 @@ const WORLD_NEWS_DB = {
         marketMood: "neutral",
         note: "应届生竞争激烈，租房需求拉升城区租金",
       },
+      investmentEffect: [
+        { industry: "房地产", mul: 0.95 },
+        { industry: "科技", mul: 0.94 },
+      ],
       scenarioTags: ["fresh_grad", "small_town_grinder"],
     },
     {
@@ -890,6 +1003,44 @@ function classifyRealNews(title, desc) {
 }
 
 /**
+ * 根据分类标签和市场情绪生成 investmentEffect（让实时新闻也能影响投资市场）
+ * @param {string} tag  - 分类标签
+ * @param {string} mood - 市场情绪
+ * @returns {Array} investmentEffect 数组
+ */
+function generateInvestmentEffectFromTag(tag, mood) {
+  var isUp = mood === "bullish";
+  var isDown = mood === "bearish";
+  // 按标签映射行业和乘数
+  var map = {
+    就业: { industry: "科技", up: 1.06, down: 0.92 },
+    房产: { industry: "房地产", up: 1.08, down: 0.88 },
+    科技: { industry: "科技", up: 1.12, down: 0.9 },
+    经济: { industry: "金融", up: 1.06, down: 0.93 },
+    金融: { industry: "金融", up: 1.1, down: 0.92 },
+    消费: { industry: "消费", up: 1.08, down: 0.92 },
+    产业: { industry: "新能源", up: 1.1, down: 0.92 },
+    市场: { industry: "金融", up: 1.08, down: 0.94 },
+    社会: { industry: "医药", up: 1.06, down: 0.96 },
+    教育: { industry: "科技", up: 1.04, down: 0.97 },
+    节日: { industry: "消费", up: 1.1, down: 0.98 },
+    季节: { industry: "消费", up: 1.04, down: 0.97 },
+    天气: { industry: "消费", up: 0.96, down: 0.95 },
+    国际: { industry: "科技", up: 0.94, down: 0.88 },
+    政策: { industry: "消费", up: 1.05, down: 0.94 },
+    劳工: { industry: "科技", up: 0.96, down: 0.94 },
+    新媒体: { industry: "科技", up: 1.06, down: 0.95 },
+    租房: { industry: "房地产", up: 1.02, down: 0.96 },
+    城市: { industry: "房地产", up: 1.04, down: 0.95 },
+  };
+  var entry = map[tag];
+  if (!entry) return [];
+  var mul = isUp ? entry.up : isDown ? entry.down : 1.0;
+  if (mul === 1.0) return [];
+  return [{ industry: entry.industry, mul: mul }];
+}
+
+/**
  * 从RSS源抓取实时新闻（通过rss2json中转）
  * @param {Object} feed - RSS源配置 { name, url, category }
  * @returns {Promise<Array>} 新闻条目数组
@@ -944,6 +1095,10 @@ function fetchFromRSS(feed) {
                 marketMood: classification.marketMood,
                 note: classification.note,
               },
+              investmentEffect: generateInvestmentEffectFromTag(
+                classification.tag,
+                classification.marketMood,
+              ),
               source: "实时·" + feed.name,
               url: item.link || "",
               _isRealTime: true,
@@ -1010,6 +1165,10 @@ function fetchFromTianAPI() {
                 marketMood: classification.marketMood,
                 note: classification.note,
               },
+              investmentEffect: generateInvestmentEffectFromTag(
+                classification.tag,
+                classification.marketMood,
+              ),
               source: "实时·天行数据",
               url: item.url || "",
               _isRealTime: true,
@@ -1821,10 +1980,44 @@ function replaceLoadingWithNews(scenarioId, state, enterGame, realNews) {
 
 /**
  * 应用新闻效果并进入游戏（统一回调）
+ * 流程：
+ *   1. 应用世界参数偏差（sectorHeat + marketMood）
+ *   2. 将开局新闻注入 state.activeNews（让投资/价格/事件等引擎读取）
+ *   3. 在消息日志写入氛围背景
+ *   4. 进入游戏
  */
 function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
   if (selectedNews && selectedNews.length > 0) {
     applyWorldNewsToParams(state, selectedNews);
+
+    // ——— 将开局新闻注入 activeNews 队列 ———
+    // 让 news_investment_bridge / news_event_bridge / tickInvestmentDaily 等都能读取
+    state.activeNews = state.activeNews || [];
+    for (var ai = 0; ai < selectedNews.length; ai++) {
+      var nn = selectedNews[ai];
+      // 只有在有 investmentEffect 时才注入
+      if (!nn.investmentEffect || nn.investmentEffect.length === 0) continue;
+      // 检查是否已存在（防止重复注入）
+      var exists = false;
+      for (var ei = 0; ei < state.activeNews.length; ei++) {
+        if (state.activeNews[ei].id === "intro_" + nn.id) {
+          exists = true;
+          break;
+        }
+      }
+      if (exists) continue;
+      state.activeNews.push({
+        id: "intro_" + nn.id,
+        headline: nn.icon + nn.headline,
+        effects: {
+          investmentEffect: nn.investmentEffect,
+          duration: 365,
+        },
+        _appliedDay: state.player ? state.player.day : 0,
+        _isIntroNews: true,
+      });
+    }
+
     // 在消息日志里写入氛围背景
     var headlineList = selectedNews.map(function (n) {
       return n.icon + n.headline;

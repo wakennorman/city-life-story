@@ -3110,3 +3110,70 @@ python build.py → 4431.0 KB，成功
 - 实时新闻的分类精度决定了游戏体验：关键词引擎需要覆盖行业术语、地域变体
 - 3.5 秒的加载等待阈值是平衡点：太短则实时新闻总是来不及，太长则影响游戏启动体验
 - 后台预加载最优雅：用户浏览菜单时通常有 5-15 秒"思考时间"，足够完成抓取
+
+---
+
+## 2026-07-03 — 第43轮：世界新闻UI配色改造 + 全系统影响扩展
+
+> **触发**：用户指出新闻UI"暗色科技感"与游戏温暖基调不匹配，要求新闻涵盖多领域、影响多系统
+> **影响文件**：`style.css`（世界新闻区全部重写）、`world_news_intro.js`（+investmentEffect + activeNews注入）
+
+### 一、UI配色改造：GitHub暗色 → 温暖报刊风
+
+**问题**：世界新闻弹窗使用 GitHub Dark 风格（`#0d1117`黑底、`#58a6ff`蓝光、`#e74c3c`红底），与游戏"奶油白+鼠尾草绿"大基调完全割裂
+
+**改造要点**：
+
+| 区域     | 旧（暗色科技）             | 新（温暖报刊）                        |
+| -------- | -------------------------- | ------------------------------------- |
+| 遮罩层   | `rgba(0,0,0,0.92)`         | `rgba(245,241,232,0.93)` 暖白半透明   |
+| 主面板   | `#0d1117` 黑底             | `#ffffff` 白底                        |
+| 标题栏   | 深色渐变 + 红色底边        | 奶油渐变 + 绿色底边 `var(--accent)`   |
+| 标题文字 | 白色 + 红色辉光            | `var(--text-primary)` 暖黑 + 干净排版 |
+| 新闻条目 | `#161b22` 深色卡           | `var(--bg-card)` 白卡，暖边框         |
+| 标签     | 蓝色 `#58a6ff` 大写        | 绿色 `var(--accent)` 小写             |
+| 正文     | 白色 `#e6edf3`             | `var(--text-primary)` 暖黑            |
+| 按钮     | 蓝色渐变 `#1f6feb→#388bfd` | 绿色 `var(--accent)` 一致按钮         |
+| 加载动画 | 蓝色转圈                   | 绿色转圈 `var(--accent)`              |
+| 阴影     | 蓝色辉光                   | 暖灰自然阴影                          |
+
+**设计参考**：《大多数》开场报纸 / Papers Please 每日公报 / 经济学人排版 / Notion Light
+
+### 二、新闻影响范围扩展：投资 + 多系统联动
+
+**核心问题**：开局新闻只设置 `_worldParams.sectorHeat`，没有进入 `state.activeNews`，导致 `news_investment_bridge`（投资影响）、`news_event_bridge`（事件权重/NPC评论/长尾效应）全部无法读取
+
+**三处改动**：
+
+1. **WORLD_NEWS_DB 新增 `investmentEffect` 字段**
+   - 为 20+ 条预存新闻（经济/就业/房产/科技/政策/社会/节日）添加 `investmentEffect` 数组
+   - 每条包含 `{ industry, mul }` 或 `{ symbols, mul }` 或 `{ allStocks, mul }`
+   - 利好新闻乘数 1.06~~1.22，利空 0.85~~0.95
+   - 示例：`emp_ai_replace` → `{ industry: "科技", mul: 1.15 }, { symbols: ["NVDA", "AMD"], mul: 1.2 }`
+
+2. **实时新闻分类引擎新增 `investmentEffect` 生成**
+   - 新增 `generateInvestmentEffectFromTag(tag, mood)` 函数
+   - 覆盖 20 个分类标签，按 bullish/bearish/neutral 映射行业乘数
+   - RSS 和 TianAPI 新闻构建时自动附带
+
+3. **`applyNewsAndEnter` 将开局新闻注入 `state.activeNews`**
+   - 有 `investmentEffect` 的新闻以 `intro_` 前缀注入 activeNews
+   - `duration: 365` 整局有效（作为世界底色）
+   - `_isIntroNews: true` 标记
+   - 所有 bridge 基础设施自动读取
+
+**影响链路**：
+
+```
+开局新闻 → state.activeNews → tickInvestmentDaily(读取newsMul) → 股票/BTC/房产价格
+                           → getNewsJobBoost → 工作收入加成
+                           → applyNewsEventWeights → 事件权重加成
+                           → applyNewsPriceSentiment → 商品价格漂移
+                           → applyNewsLongTail → 长尾效应
+```
+
+### 验证
+
+- `node --check` ✓
+- `npm run check:js` 120 文件 ✓
+- `python build.py` 4438.5 KB ✓
