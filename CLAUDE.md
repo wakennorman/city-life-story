@@ -76,7 +76,7 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.13 — P2装备品质激活 + P1四大系统深度联动 + P1超大文件拆分
+- **最新一次工作 (2026-07-04)**：v3.13d — TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训文档化
   - **P2 装备品质系统激活**：商店显示品质价格区间（¥base~max）和品质概率提示；买装备消息显示品质等级；套装效果（getSuiteJobBonus）接入 income 计算（estimateJobPay/estimateJobPayDetailed/doStreetJob 三处套装加成 🎯+X%）；装备 Tab 新增耐久条（renderDurabilityBar）+ 套装状态面板（renderSuiteCard）+ 品质徽章常驻
   - **P1 四大系统深度联动**：life_node_check/medical_tick/travel_tick/legal_tick 四条管线步骤接入每日结算；新增 tickMedical() 月度保险自动扣费+未治疗提醒+旅行健康消耗；新建 cross_system_integration.js（5条联动链：人生节点→医疗、旅行→医疗、医疗→法律、旅行→法律、人生节点→旅行）；修复 travel.js/legal.js 使用 Math.random → 种子化 Random；修复 4 个系统文件未在 index.html 注册（life_nodes/medical/travel/legal 在 code 中存在但从未加载）
   - **P1 超大文件拆分**：events_street.js(9,894行) → events_street_survival/wealth/life ×3 IIFE 文件；startup.js(14,444行) → startup_data.js(2,126行常量) + startup.js(12,317行函数)；render.js(7,056行) → render_core.js(1,218行) + render_infra.js(1,137行) + render.js(4,702行)。同位置多连续子文件替换法，未改 index.html 整体 script 顺序
@@ -88,6 +88,8 @@
   - **修复**：`src/index.html` 补回`</aside>`（+1行），重建`dist/index.html`
   - **记忆文件**：`memory/mobile-tab-debug-lesson-2026-07-04.md`
   - **经验**：调试"元素神秘消失"三步法 — CSS有无隐藏 → JS有无报错 → **DOM树结构是否异常**（最后一步最容易被忽略）。`position: fixed/absolute`父元素的未关闭标签会意外吞掉子元素
+    - **文件拆分铁律（Write vs Edit）**：`Write` 工具覆盖**整个文件**，只用于创建新文件；修改已有文件部分内容必须用 `Edit` 精确替换。v3.13 拆分后用 `Write` 修 TAB_RENDERERS 导致 1217 行的 `render_core.js` 缩为 49 行，`switchTab`/`renderAll`/`renderTabBar` 全部丢失。
+    - **跨文件引用铁律**：`TAB_RENDERERS` 等注册表对象在 const 创建时，后加载文件中的函数值还是 `undefined`。必须用 `{ fnName: "xxx", fallback: "..." }` 模式 + 运行时 `window[fnName]` 动态解析。记忆文件：`memory/write-vs-edit-lesson-2026-07-04.md`
 - **上一轮工作 (2026-07-03)**：v3.11 职业系统深度扩展 — 医师路径+事业单位路径+跨系统联动+雇佣机制
   - **总扩展**：CAREER_PATHS 8路径×32职位→10路径×42职位；证书规则12→20条；事件35→45个
   - **验证**：commit: `23ff4c1`

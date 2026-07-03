@@ -1,10 +1,49 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.12d — 修复缺失`</aside>`导致的移动端Tab栏消失）
+> 最后更新: 2026-07-04（v3.13d — Write-editor 事故 + TAB_RENDERERS 加载顺序修复）
 
 ---
 
-## 2026-07-04 — v3.12d：修复缺失`</aside>`导致的移动端 Tab 栏消失
+## 2026-07-04 — v3.13d：TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训
+
+> 问题：v3.13 拆分 render.js 后，点击 Tab 无内容切换。
+> 根因：
+>
+> 1. **TAB_RENDERERS 加载顺序** — `render_core.js`（第657行加载）中定义了 TAB_RENDERERS，直接引用了后加载的 `render.js`（第659行）和 `render_infra.js`（第658行）中的渲染函数（如 `renderActionsTab`）。const 创建时这些函数值为 `undefined`。
+> 2. **Write 工具误用（AI 工具教训）** — 首次修复时用了 `Write` 工具只写 TAB_RENDERERS 部分，`Write` 覆盖了整个文件，导致 `switchTab`/`renderAll`/`renderTabBar` 等核心函数丢失（1217行 → 49行），Tab 依然不工作。
+>    修复：
+>
+> - 从 `git show 8e33f4a:src/js/ui/render_core.js` 恢复完整文件
+> - TAB_RENDERERS 中所有跨文件渲染函数统一改用 `{ fnName: 'xxx', fallback: '...' }` 模式，运行时通过 `window[fnName]` 动态解析
+> - 受影响：actions/map/trade/inventory/skills/corp/achievements/enterprise/life_systems/personal_growth 共10个Tab
+>   影响文件：`src/js/ui/render_core.js`（仅 TAB_RENDERERS 段，+16/-25）
+>   记忆文件：`memory/write-vs-edit-lesson-2026-07-04.md`
+
+### 🔴 Write vs Edit 工具选择铁律（后续拆分必读）
+
+| 工具      | 行为                                 | 何时用               |
+| --------- | ------------------------------------ | -------------------- |
+| **Write** | **全文件覆盖**                       | 仅用于**创建新文件** |
+| **Edit**  | `old_string` → `new_string` 精确替换 | 修改文件**部分内容** |
+
+**事故代价：** ~15分钟恢复时间 + 1 次错误 commit + 用户等待。
+
+**修复后验证清单：**
+
+```bash
+# 1. 语法检查
+node --check src/js/ui/render_core.js
+
+# 2. 关键函数存在性检查
+grep -n "^function switchTab\|^function renderAll\|^function renderTabBar" src/js/ui/render_core.js
+
+# 3. 构建
+python build.py
+
+# 4. 确认 dist 包含修复
+grep "fnName.*renderActionsTab" dist/index.html
+grep "function switchTab" dist/index.html
+```
 
 > 问题：移动端 Tab 栏（行动/地图/交易/物品/技能等）全部消失，CSS 无 `display:none`，JS 无报错。
 > 根因：`commit 66c11fe` 精简侧边栏时误删了 `</aside>` 关闭标签。`<aside>` 在移动端 `position: fixed; left: -100%`，缺失关闭标签导致 `<main>` 被解析为 `<aside>` 子元素，整块内容偏移出屏幕。
