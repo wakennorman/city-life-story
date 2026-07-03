@@ -76,7 +76,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-03)**：v3.12 — 地点感知行动分类重排系统
+- **最新一次工作 (2026-07-03)**：v3.12c — 成就系统全面审计修复
+  - **问题**：用户反馈"清白之身"成就第一天就弹出。同一成就类bug可能蔓延。
+  - **审计**：subagent 全面审查103个成就check函数
+  - **发现**：4类问题 — 5项首日触发（否定检查/剧本初始状态差异）、2项逻辑错误（错误事件类型/未设flag）、1项flag挂钩未连（已有系统但flag未设）、8项未实现系统flag（规划内容）
+  - **修复**：首日触发5项加day守卫（3~30天）、witness_fall改检查company_death、homeless_to_roof/no_home_7days加daily_pipeline露宿追踪、disease_survivor加illness.js患病+痊愈flag、first_checkup加webapp_bridge体检flag
+  - **文件**：`achievements.js`(+110/-3) / `daily_pipeline.js`(+5) / `illness.js`(+2) / `webapp_runtime_bridge.js`(+1)
+  - **验证**：check:js(120) / build(4462.1KB) / commit: `09decb5`
+  - **经验**：否定检查`!flag`在flag不存在时总是true，需加day守卫；剧本初始状态差异导致原本安全的成就条件变成首日触发
   - **问题**：玩家到不同地点后，[行动] Tab 分类固定为 生存→工作→购物→学习→社交→金融→职业→其他 的顺序，与所在地点功能不匹配
   - **解决**：`action_sort.js` 新增 `LOCATION_CATEGORY_REORDER` 映射表（16个地点×8分类）+ 3个新函数
   - **实现**：`getCategoryOrder()` 新增可选 `locationId` 参数 / `sortActions()` 自动提取地点 / `render.js` 改用 `getLocationCategories(locKey)` 渲染

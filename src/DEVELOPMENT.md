@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-03（v3.12b — 成就bug修复：清白之身防首日解锁）
+> 最后更新: 2026-07-03（v3.12c — 成就系统全面审计修复）
 
 ---
 
@@ -9,6 +9,59 @@
 > 问题：玩家到不同地点后，[行动] Tab 的分类固定为「🌾生存必需→💼短期工作→……」的顺序，与所在地点功能不匹配。
 > 触发：用户反馈"到银行应该金融理财最前面","其他地点也遵循这种逻辑"
 > 影响文件：`src/js/core/action_sort.js` (+90行) / `src/js/ui/render.js` (+20行)
+
+### 2026-07-03 — v3.12c：成就系统全面审计修复
+
+> 用户反馈"清白之身"成就第一天就弹出。经全面审计103个成就，发现4类问题。
+> 触发：用户实测发现"清白之身"成就首日触发。
+> 影响文件：`src/js/core/achievements.js` +110/-3 / `src/js/phase1/daily_pipeline.js` +5 / `src/js/phase1/illness.js` +2 / `src/js/app_bridge/webapp_runtime_bridge.js` +1
+> 审计流程：subagent全面审计103个成就check函数 → 人工分类修复 → 4轮本地验证 → 构建+push
+
+#### 审计结果
+
+| 问题类型       | 数量 | 说明                          |
+| -------------- | ---- | ----------------------------- |
+| 首日触发       | 5项  | 否定检查/初始状态导致day1解锁 |
+| 逻辑错误       | 2项  | 错误事件类型/未设置flag       |
+| flag挂钩未连   | 1项  | 已有系统但flag未设            |
+| 未实现系统flag | 8项  | 规划中系统未开发，暂不可解锁  |
+
+#### 修复清单
+
+**Batch 1 — 首日触发（5项，加day守卫）**
+
+| 成就                             | 根因                | 修复       |
+| -------------------------------- | ------------------- | ---------- |
+| clean_record 清白之身            | 否定检查!false=true | day≥30守卫 |
+| first_bank 第一次存钱            | 二代/中年开局带存款 | day≥3守卫  |
+| first_upgrade_housing 第一次搬家 | 3个剧本开局tier≥1   | day≥5守卫  |
+| first_skill_level 第一次技能升级 | 6/7剧本开局技能≥1   | day≥3守卫  |
+| repay_debt 还清欠债              | 2个剧本开局无债     | day≥15守卫 |
+
+**Batch 2 — 逻辑错误（2项）**
+
+| 成就                          | 根因                             | 修复                       |
+| ----------------------------- | -------------------------------- | -------------------------- |
+| witness_fall 见证陨落         | 检查merger_acquire(收购)而非倒闭 | 加company_death检查        |
+| homeless_to_roof 从街头到屋顶 | _everHomeless从未设置            | daily_pipeline每日露宿追踪 |
+| no_home_7days 流浪者          | _homelessDays从未设置            | 同上，每日递增             |
+
+**Batch 3 — flag挂钩修复（1项）**
+
+| 成就                        | 根因                                  | 修复                          |
+| --------------------------- | ------------------------------------- | ----------------------------- |
+| disease_survivor 疾病幸存者 | _everHadIllness/_everCuredIllness未设 | illness.js患病处+痊愈处设flag |
+| first_checkup 体检          | _firstCheckup未设                     | webapp_bridge体检处设flag     |
+
+**技术债务 — 8项未实现系统flag**
+成就依赖的flag对应游戏系统尚未开发，标记为TODO：
+`office_newbie_project` / `first_meal` / `first_gift_received` / `gym_member` / `share_when_poor` / `last_money_donation` / `refused_illegal_job` / `mentor_student`
+
+#### 经验教训
+
+- "否定检查"成就是典型的首日触发bug模式：`!flag`在flag不存在时返回true
+- 剧本系统引入后，初始状态差异导致原本安全的条件（如"无债"）变成首日触发
+- 成就审计应作为新功能开发的标准检查项
 
 ### 成就bug修复：清白之身防首日解锁
 
