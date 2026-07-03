@@ -12,7 +12,7 @@ function checkVictoryPaths(state) {
 
   // 🏪 经商大亨：累计交易利润 >= ¥500,000
   const totalProfit = state.trade?.totalProfit || 0;
-  if (totalProfit >= 500000) {
+  if (totalProfit >= 50000) {
     triggerVictory(
       state,
       "merchant",
@@ -78,7 +78,7 @@ function checkVictoryPaths(state) {
     return s + (c.currentPrice || c.buyPrice || 0);
   }, 0);
   var totalInv = stockVal + btcVal + propVal + carVal;
-  if (totalInv >= 10000000) {
+  if (totalInv >= 1000000) {
     triggerVictory(
       state,
       "investor",
@@ -100,7 +100,7 @@ function checkVictoryPaths(state) {
   }
 
   // 💵 财务自由（保留原有 ¥20,000,000）
-  if (state.resources.cash + (state.resources.bankBalance || 0) >= 20000000) {
+  if (state.resources.cash + (state.resources.bankBalance || 0) >= 2000000) {
     triggerVictory(
       state,
       "money",
