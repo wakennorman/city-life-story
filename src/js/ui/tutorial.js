@@ -1219,6 +1219,20 @@ var DYNAMIC_HINTS = [
     message: "📜 你考到了第一张证书！证书能提升求职竞争力和收入。",
   },
   {
+    id: "first_equipment_tip",
+    trigger: function (st) {
+      return (
+        st.player.day >= 5 &&
+        (st.resources.cash || 0) >= 100 &&
+        st.inventory &&
+        Object.keys(st.inventory.equipment || {}).length === 0 &&
+        !st.flags._hint_first_equipment
+      );
+    },
+    message:
+      "💡 提示：你可以买一些装备！城中村的杂货店有劳保手套、解放鞋等，能减少疲劳和受伤风险。",
+  },
+  {
     id: "corporate_access_hint",
     trigger: function (st) {
       return (
