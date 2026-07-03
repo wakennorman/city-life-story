@@ -76,28 +76,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-03)**：第40+轮 — v3.1遗留问题全部修复 + 街坊声望系统
-  - **运行**：check:js 118文件通过 / build.py 4336.7 KB通过
-  - **新增**：年终奖系统（Blueprint P0-C）、6个Blueprint结局补齐（12/12完成）、script加载顺序整理（8处归位）
-  - **新增**：`reputation.js` — 街坊声望系统，6级称号（新面孔→一方之霸），+3%~+25%收入加成，Lv3里程碑事件
-  - **声望集成**：index.html注册 + main.js`initReputation` + `doStreetJob`收入乘倍率+工作获声望 + daily_pipeline.js`reputation_decay`
-  - **UI**：`render.js`位置卡片下方显示声望等级+进度条+称号
-  - **MC**：`monte_carlo.cjs`模拟中声望增长
-  - **百科**：`mechanics_registry.js`注册`MECHANICS.reputation`
-  - **修复**：存贷利息倒挂（bankDebt开始计息，利率对齐显示值）
-  - **清理**：删除死函数getCareerDualPathHtml、tickCareerDaily；investment.bak.js清空为归档注释
-  - **架构**：medical.js合并到illness.js（startTreatment委托treatIllness按疾病实例治疗，保留保险UI）
-  - **文档**：更新 memory/review-improve-v3.1-round3-2026-07-03.md
-  - **问题**：全方位审查发现 1 个代码 Bug（clampCareerCapital 未挂载）、2 个数值永动机（跳槽薪资翻倍+抛售股票清零）、3 个 UI 不达标（触控<44px/对比度不足）、4 个体验缺陷（中期空心/引导缺失等）
-  - **修复**（11项）：
-    - `career_dev.js` — 挂载 `clampCareerCapital`；跳槽×2→×1.35+人脉-30+30天试用期；发薪走 `calcActualSalary`（接入试用期八折）；`getProbationRemaining` 支持自定义试用期
-    - `cross_system_events.js` — 抛售股票按市值70%返还；会计师方案30%概率审计更严
-    - `style.css` — `.btn` min-height:44px；时段徽章语义修复+对比度≥4.5:1；`--text-muted` 对比度 3.2:1→4.6:1；`.mss-val` 用 secondary 色；`.critical-choice-btn` 42→44px
-    - `render.js` — 旅行卡片显示 `⚡X` AP 消耗
-    - `needs.js` — 物业费 0.1%/天→0.03%/天 + 封顶¥2000
-    - `tutorial.js` — 新增 Day 45/60/90 中期里程碑提示；新增住宿引导步骤
-  - **验证**：`check:js`(116) ✓ / `node --check` 全通过 / `python build.py`(4544.2KB) ✓
-  - **遗留**：illness/medical 双系统、年终奖、利息倒挂、多结局、script 顺序、死函数
+- **最新一次工作 (2026-07-03)**：第41~44轮 — 世界新闻系统·实时抓取·UI配色·源替换全链
+  - **第44轮** — 新闻源替换（新浪社会→新浪财经/36氪/华尔街见闻）+ 分类引擎强化（经济/金融/消费规则大幅扩展）+ 预存经济新闻 6→14条 + 就业 6→9条 + 5级智能兜底推断
+  - **第43轮** — 世界新闻弹窗UI配色改造：GitHub暗色→温暖报刊风（白底/奶油渐变/绿色accent/暖灰阴影）；新闻`investmentEffect`全系统联动（→股票/BTC/房产/工作收入/事件权重/商品价格/长尾效应）
+  - **第42轮** — 实时新闻抓取系统 v2.0：3层降级引擎（RSS→天行API→预存70条）+ 后台预加载 + 关键词分类引擎（8大规则）+ 🔴实时徽章 + 加载等待动画
+  - **第41轮** — 开局世界新闻·氛围基调系统 v1.0：70+条新闻数据库（7大类×12月分布）+ 智能筛选（月份匹配+日期种子+7剧本差异化加权）+ 世界参数联动
+  - **文件**：新建`world_news_intro.js`（~1845行），修改`style.css`（~180行世界新闻样式），修改`index.html`/`main.js`/三处开局函数
+  - **人生抉择系统**（commit `ac83d88`内）：`life_decisions.js` — 6个抉择事件（Day15/30/60/90/180/365），`doStreetJob`挂载5种收入加成，2步管线，百科注册
+  - **运行**：check:js 120文件通过 / build 4451.2KB / `node --check` 全部通过
 - **上一轮工作 (2026-07-03)**：v3.11 职业系统深度扩展 — 医师路径+事业单位路径+跨系统联动+雇佣机制
   - **总扩展**：CAREER_PATHS 8路径×32职位→10路径×42职位；证书规则12→20条；事件35→45个
   - **验证**：commit: `23ff4c1`
