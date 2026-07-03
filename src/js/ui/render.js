@@ -786,6 +786,54 @@ function renderLocation(state) {
     servicesEl.innerHTML = badgeHtml;
   }
 
+  // v3.1 第39轮：街坊声望显示
+  (function showLocationRep() {
+    if (typeof getReputationUIData !== "function") return;
+    var repData = getReputationUIData(state, locKey);
+    var repEl = document.getElementById("location-reputation");
+    if (!repEl) {
+      repEl = document.createElement("div");
+      repEl.id = "location-reputation";
+      repEl.style.cssText =
+        "margin-top:4px;padding:4px 8px;background:rgba(243,156,18,0.08);" +
+        "border:1px solid rgba(243,156,18,0.25);border-radius:6px;" +
+        "font-size:11px;display:flex;align-items:center;justify-content:space-between;";
+      var insertAfter = document.getElementById("location-services");
+      if (insertAfter && insertAfter.parentNode) {
+        insertAfter.parentNode.insertBefore(repEl, insertAfter.nextSibling);
+      }
+    }
+    if (!repEl) return;
+    var title = repData.title;
+    var level = repData.level;
+    var bonus = repData.bonus;
+    var progress = repData.progress;
+    var stars = "";
+    for (var i = 0; i < level; i++) stars += "⭐";
+    if (level === 0) stars = "〇";
+    var bonusText = bonus > 0 ? " +" + Math.round(bonus * 100) + "%收入" : "";
+    var progressBar =
+      level < 5
+        ? '<span style="display:inline-block;width:50px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:4px;">' +
+          '<span style="display:block;height:100%;width:' +
+          progress +
+          '%;background:var(--accent);border-radius:2px;"></span></span>'
+        : "✨MAX";
+    var nextText = repData.nextTitle ? " → " + repData.nextTitle : "";
+    repEl.innerHTML =
+      '<span><span style="font-weight:600;">👥 ' +
+      _esc(title) +
+      "</span>" +
+      bonusText +
+      "</span>" +
+      '<span style="font-size:10px;color:var(--text-secondary);">' +
+      stars +
+      progressBar +
+      nextText +
+      "</span>";
+    repEl.style.display = "flex";
+  })();
+
   var houseData =
     (typeof HOUSING_TIERS !== "undefined" &&
       HOUSING_TIERS[state.housing?.tier || 0]) ||

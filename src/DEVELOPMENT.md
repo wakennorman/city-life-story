@@ -83,14 +83,28 @@
 
 - `main.js` 医院治疗handler：新增清除 `illnesses[]` 数组（此前只清sick/injured，不清疾病实例）
 - `main.js` 工作致病：改用 `triggerIllness(state, "cold", "job")` 走疾病系统（此前直接设sick=true）
-- `illness.js::tickIllnessDecay`：新增住院协调guard——medical.js住院期间暂停症状恶化
-- 未做：medical.js完整合并到illness.js（因medical.js的保险UI仍在活跃使用，合并风险过高）
+
+### D1: medical.js 合并 illness.js 治疗逻辑
+
+- `startTreatment(state, grade)` 完全重写：按grade选tier（mild=pharmacy，其他=hospital），遍历 `state.status.illnesses`，逐项调用 `illness.js::treatIllness(id, tier)`
+- 保险抵扣作用于每项疾病费用（`totalBaseCost × (1-coverage) × (1-careerDiscount)`）
+- 无疾病时轻症走"买药休息"路径（cost×0.4，AP-3，健康+15）
+- **保留**：`INSURANCE_PLANS`、`initMedicalState`、`buyMedicalInsurance`、`showMedicalInsuranceModal`、`showMedicalTreatmentModal`（UI入口不变）
+- **保留**：`state.medical.insurance`、`totalMedicalSpent`（webapp_runtime_bridge.js读取）
+- **删除**：`tickMedical`、`tickRecovery`等管线步骤（不再需要）
+- **删除**：`state.medical.treatment`/`hospitalized`/`recoveryDays`字段（与illness.js重复）
+- 净减约472行（medical.js从396行→约150行）
+
+### D2: investment.bak.js 清空
+
+- 文件内容替换为单行归档注释（CLAUDE.md禁止删.js文件，不清空会持续污染IDE/indexer）
 
 ### 验证
 
-- `node --check` 全部8个改动文件通过
-- `npm run check:js` 117文件通过
-- `python build.py` → dist\index.html (4323.3 KB) 通过
+- `node --check` 全部改动文件通过
+- `npm run check:js` 118文件通过
+- `python build.py` → dist\index.html (4335.1 KB) 通过
+- git提交: `9ca2dd3`
 
 ---
 

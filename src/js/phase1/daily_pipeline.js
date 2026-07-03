@@ -276,6 +276,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1 第39轮：街坊声望衰减 ===
+  {
+    name: "reputation_decay",
+    fn: function (state) {
+      if (typeof decayReputation === "function") {
+        decayReputation(state);
+      }
+    },
+  },
+
   // === 财务结算 ===
   {
     name: "finance",

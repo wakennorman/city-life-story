@@ -75,11 +75,17 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-03)**：第40轮 — v3.1遗留6项问题修复（年终奖/6新结局/script顺序/死函数/利息/疾病协调）
-  - **运行**：check:js 117文件通过 / build.py 4323.3 KB通过
+- **最新一次工作 (2026-07-03)**：第40+轮 — v3.1遗留问题全部修复 + 街坊声望系统
+  - **运行**：check:js 118文件通过 / build.py 4336.7 KB通过
   - **新增**：年终奖系统（Blueprint P0-C）、6个Blueprint结局补齐（12/12完成）、script加载顺序整理（8处归位）
-  - **修复**：存贷利息倒挂（bankDebt开始计息，利率对齐显示值）、疾病双系统协调（医院清除illnesses/工作致病走triggerIllness）
-  - **清理**：删除死函数getCareerDualPathHtml、tickCareerDaily
+  - **新增**：`reputation.js` — 街坊声望系统，6级称号（新面孔→一方之霸），+3%~+25%收入加成，Lv3里程碑事件
+  - **声望集成**：index.html注册 + main.js`initReputation` + `doStreetJob`收入乘倍率+工作获声望 + daily_pipeline.js`reputation_decay`
+  - **UI**：`render.js`位置卡片下方显示声望等级+进度条+称号
+  - **MC**：`monte_carlo.cjs`模拟中声望增长
+  - **百科**：`mechanics_registry.js`注册`MECHANICS.reputation`
+  - **修复**：存贷利息倒挂（bankDebt开始计息，利率对齐显示值）
+  - **清理**：删除死函数getCareerDualPathHtml、tickCareerDaily；investment.bak.js清空为归档注释
+  - **架构**：medical.js合并到illness.js（startTreatment委托treatIllness按疾病实例治疗，保留保险UI）
   - **文档**：更新 memory/review-improve-v3.1-round3-2026-07-03.md
   - **问题**：全方位审查发现 1 个代码 Bug（clampCareerCapital 未挂载）、2 个数值永动机（跳槽薪资翻倍+抛售股票清零）、3 个 UI 不达标（触控<44px/对比度不足）、4 个体验缺陷（中期空心/引导缺失等）
   - **修复**（11项）：

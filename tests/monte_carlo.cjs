@@ -73,6 +73,14 @@
     if (pay > 0) {
       state.resources.cash += pay;
       state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
+      // v3.1 第39轮：工作获得街坊声望
+      if (
+        typeof gainReputation === "function" &&
+        state.trade &&
+        state.trade.currentLocation
+      ) {
+        gainReputation(state, state.trade.currentLocation, 1, "工作(MC)");
+      }
       state.needs.fatigue = Math.min(
         100,
         (state.needs.fatigue || 0) + (job.fatigueCost || 8),
