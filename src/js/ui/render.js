@@ -3142,10 +3142,29 @@ function renderActionsTab(state, parent) {
     parent.appendChild(houseSection);
   }
 
-  // === 分类行动（取代旧平铺“其他行动”） ===
+  // === 分类行动（地点感知重排） ===
   if (otherActions.length > 0 && typeof ActionSort !== "undefined") {
     var groups = ActionSort.groupActionsByCategory(otherActions, state);
-    var cats = ActionSort.CATEGORIES || [];
+    var locKey_cat = state.trade && state.trade.currentLocation;
+    var cats =
+      typeof ActionSort.getLocationCategories === "function"
+        ? ActionSort.getLocationCategories(locKey_cat)
+        : ActionSort.CATEGORIES || [];
+
+    // === 分类置顶提示（展示当前地点的分类编排策略） ===
+    if (
+      locKey_cat &&
+      typeof ActionSort.getLocationCategoryHint === "function"
+    ) {
+      var catHintText = ActionSort.getLocationCategoryHint(locKey_cat);
+      if (catHintText) {
+        var catHintBox = document.createElement("div");
+        catHintBox.style.cssText =
+          "margin-bottom:10px;padding:6px 10px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.12);border-radius:var(--radius-sm);font-size:11px;color:var(--text-muted);text-align:center;";
+        catHintBox.textContent = catHintText;
+        parent.appendChild(catHintBox);
+      }
+    }
 
     // 按分类顺序渲染
     for (var _ci = 0; _ci < cats.length; _ci++) {

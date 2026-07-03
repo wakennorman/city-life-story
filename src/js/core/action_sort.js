@@ -33,10 +33,208 @@
     { id: "other", name: "其他", icon: "📌", order: 100 },
   ];
 
+  /**
+   * 地点感知分类重排 — 根据所在地点调整行动分类显示顺序
+   *
+   * 每个地点指定哪些分类优先展示（按数组顺序），其余分类按默认顺序排后。
+   * 设计原则：
+   *   - 银行 → 金融理财优先（存款/取款/贷款是核心功能）
+   *   - 医院 → 生存必需优先（看病/治疗是首要需求）
+   *   - 大学城/培训中心 → 学习提升优先（教育机构核心功能）
+   *   - 科技园 → 职业发展优先（与职业/创业相关）
+   *   - 批发市场 → 购物装备优先（进货/买卖是主要目的）
+   *   - 建筑工地/工业区 → 短期临时工作优先（体力劳动者聚集）
+   *   - 商业区 → 短期临时工作优先（商业活动中心）
+   *   - 公园/寺庙/娱乐城 → 社交休闲优先（放松娱乐场所）
+   *   - 城中村/郊区 → 生存必需优先（基本生活需求）
+   *   - 政府办事大厅 → 地点服务优先（办证/社保是核心功能）
+   */
+  var LOCATION_CATEGORY_REORDER = {
+    // 🏦 银行：金融理财 → 生存必需 → 短期工作 → 社交休闲 → 学习 → 职业 → 服务 → 购物
+    bank: [
+      "finance",
+      "survival",
+      "work",
+      "social",
+      "education",
+      "career",
+      "appliance",
+      "shopping",
+    ],
+
+    // 🏥 医院：生存必需 → 短期工作 → 学习 → 社交 → 金融 → 职业 → 服务 → 购物
+    hospital: [
+      "survival",
+      "work",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+      "shopping",
+    ],
+
+    // 🎓 大学城：学习提升 → 社交休闲 → 短期工作 → 生存必需 → 金融 → 职业 → 服务 → 购物
+    school: [
+      "education",
+      "social",
+      "work",
+      "survival",
+      "finance",
+      "career",
+      "appliance",
+      "shopping",
+    ],
+
+    // 📚 培训中心：学习提升 → 职业发展 → 短期工作 → 生存必需 → 金融 → 社交 → 服务 → 购物
+    trainingCenter: [
+      "education",
+      "career",
+      "work",
+      "survival",
+      "finance",
+      "social",
+      "appliance",
+      "shopping",
+    ],
+
+    // 🌳 公园：社交休闲 → 生存必需 → 短期工作 → 学习 → 金融 → 职业 → 服务 → 购物
+    park: [
+      "social",
+      "survival",
+      "work",
+      "education",
+      "finance",
+      "career",
+      "appliance",
+      "shopping",
+    ],
+
+    // 🏢 科技园：职业发展 → 学习提升 → 短期工作 → 金融 → 生存必需 → 社交 → 服务 → 购物
+    techPark: [
+      "career",
+      "education",
+      "work",
+      "finance",
+      "survival",
+      "social",
+      "appliance",
+      "shopping",
+    ],
+
+    // 🏘️ 城中村：生存必需 → 短期工作 → 购物 → 学习 → 社交 → 金融 → 职业 → 服务
+    slum: [
+      "survival",
+      "work",
+      "shopping",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+    ],
+
+    // 🏪 批发市场：购物装备 → 短期工作 → 金融 → 生存必需 → 社交 → 学习 → 职业 → 服务
+    wholesaleMarket: [
+      "shopping",
+      "work",
+      "finance",
+      "survival",
+      "social",
+      "education",
+      "career",
+      "appliance",
+    ],
+
+    // 🏗️ 建筑工地：短期临时工作 → 生存必需 → 购物 → 学习 → 社交 → 金融 → 职业 → 服务
+    construction: [
+      "work",
+      "survival",
+      "shopping",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+    ],
+
+    // 🏭 工业区：短期临时工作 → 生存必需 → 购物 → 学习 → 社交 → 金融 → 职业 → 服务
+    factoryZone: [
+      "work",
+      "survival",
+      "shopping",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+    ],
+
+    // 🏙️ 商业区：短期临时工作 → 购物 → 社交 → 生存必需 → 金融 → 学习 → 职业 → 服务
+    commercialDist: [
+      "work",
+      "shopping",
+      "social",
+      "survival",
+      "finance",
+      "education",
+      "career",
+      "appliance",
+    ],
+
+    // 🎪 娱乐城：社交休闲 → 购物 → 短期工作 → 生存必需 → 金融 → 学习 → 职业 → 服务
+    entertainment: [
+      "social",
+      "shopping",
+      "work",
+      "survival",
+      "finance",
+      "education",
+      "career",
+      "appliance",
+    ],
+
+    // 🏡 郊区：生存必需 → 短期工作 → 购物 → 学习 → 社交 → 金融 → 职业 → 服务
+    suburb: [
+      "survival",
+      "work",
+      "shopping",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+    ],
+
+    // 🏛️ 政府办事大厅：地点服务 → 金融 → 生存必需 → 短期工作 → 社交 → 学习 → 职业 → 购物
+    gov_office: [
+      "appliance",
+      "finance",
+      "survival",
+      "work",
+      "social",
+      "education",
+      "career",
+      "shopping",
+    ],
+
+    // ⛩️ 寺庙：社交休闲 → 生存必需 → 学习 → 短期工作 → 金融 → 职业 → 服务 → 购物
+    temple: [
+      "social",
+      "survival",
+      "education",
+      "work",
+      "finance",
+      "career",
+      "appliance",
+      "shopping",
+    ],
+  };
+
   // 快速查找：categoryId → CATEGORIES 索引
   var CATEGORY_INDEX = {};
-  for (var ci = 0; ci < CATEGORIES.length; ci++) {
-    CATEGORY_INDEX[CATEGORIES[ci].id] = ci;
+  for (var ci2 = 0; ci2 < CATEGORIES.length; ci2++) {
+    CATEGORY_INDEX[CATEGORIES[ci2].id] = ci2;
   }
 
   // ====== ID → 分类映射 ======
@@ -241,9 +439,25 @@
   /**
    * 获取分类在 CATEGORIES 数组中的顺序
    * @param {string} categoryId
+   * @param {string} [locationId] - 可选，当前地点ID，启用感知重排
    * @returns {number}
    */
-  function getCategoryOrder(categoryId) {
+  function getCategoryOrder(categoryId, locationId) {
+    // 如果指定了地点且该地点有重排规则 → 使用地点感知顺序
+    if (locationId && LOCATION_CATEGORY_REORDER.hasOwnProperty(locationId)) {
+      var reorder = LOCATION_CATEGORY_REORDER[locationId];
+      var pos = reorder.indexOf(categoryId);
+      if (pos !== -1) {
+        return pos; // 0=最前
+      }
+      // 未在重排列表中的分类：排在所有重排分类之后，保留默认相对位置
+      var defaultIdx = CATEGORY_INDEX[categoryId];
+      return (
+        (defaultIdx !== undefined ? defaultIdx : CATEGORIES.length - 1) +
+        reorder.length
+      );
+    }
+    // 默认顺序（无地点或地点无重排规则）
     var idx = CATEGORY_INDEX[categoryId];
     return idx !== undefined ? idx : CATEGORIES.length - 1; // 未识别分类排最后
   }
@@ -326,14 +540,20 @@
         ? state.stats.actionFreq
         : {};
 
+    // v3.12：提取当前地点用于地点感知分类重排
+    var currentLocation =
+      state && state.trade && state.trade.currentLocation
+        ? state.trade.currentLocation
+        : null;
+
     var sorted = actions.slice(); // 不修改原数组
 
     sorted.sort(function (a, b) {
-      // Level 1: 分类顺序
+      // Level 1: 分类顺序（地点感知）
       var catA = getActionCategory(a.id);
       var catB = getActionCategory(b.id);
-      var catOrdA = getCategoryOrder(catA);
-      var catOrdB = getCategoryOrder(catB);
+      var catOrdA = getCategoryOrder(catA, currentLocation);
+      var catOrdB = getCategoryOrder(catB, currentLocation);
       if (catOrdA !== catOrdB) return catOrdA - catOrdB;
 
       // Level 2: 同类内默认优先级 + 新行动临时加成
@@ -384,6 +604,52 @@
     }
 
     return groups;
+  }
+
+  /**
+   * 获取地点感知的分类顺序（用于UI渲染迭代）
+   * 返回按地点优先级排序的 CATEGORIES 数组副本
+   * 若地点无重排规则，返回默认顺序
+   * @param {string} [locationId] - 当前地点ID
+   * @returns {Array} 排序后的分类数组
+   */
+  function getLocationCategories(locationId) {
+    if (!locationId || !LOCATION_CATEGORY_REORDER.hasOwnProperty(locationId)) {
+      return CATEGORIES; // 默认顺序
+    }
+    var reordered = CATEGORIES.slice();
+    reordered.sort(function (a, b) {
+      return (
+        getCategoryOrder(a.id, locationId) - getCategoryOrder(b.id, locationId)
+      );
+    });
+    return reordered;
+  }
+
+  /**
+   * 获取当前地点的分类推荐文案（智能标题提示）
+   * @param {string} locationId
+   * @returns {string|null}
+   */
+  function getLocationCategoryHint(locationId) {
+    var hints = {
+      bank: "💰 金融理财服务已置顶 — 存取款/贷款优先展示",
+      hospital: "🏥 看病治疗置顶 — 生存必需优先展示",
+      school: "📖 学习提升置顶 — 教育培训优先展示",
+      trainingCenter: "📚 考证学习置顶 — 职业发展/培训优先展示",
+      park: "🌳 休闲放松置顶 — 社交休闲优先展示",
+      techPark: "💼 职业发展置顶 — 科技园相关行动优先展示",
+      slum: "🏘️ 基本生存置顶 — 城中村生活需求优先展示",
+      wholesaleMarket: "🛒 进货买卖置顶 — 批发交易优先展示",
+      construction: "🏗️ 体力工作置顶 — 工地工作优先展示",
+      factoryZone: "🏭 工厂工作置顶 — 工业区优先展示",
+      commercialDist: "🏙️ 商业活动置顶 — 赚钱/购物优先展示",
+      entertainment: "🎪 娱乐休闲置顶 — 社交/购物优先展示",
+      suburb: "🏡 基本生活置顶 — 郊区生活需求优先展示",
+      gov_office: "🏛️ 政务服务置顶 — 办证/社保优先展示",
+      temple: "⛩️ 心灵休憩置顶 — 祈福/社交优先展示",
+    };
+    return hints[locationId] || null;
   }
 
   // ====== 处理 travel_ / housing_ / storage_ 分类特殊放行 ======
@@ -472,6 +738,7 @@
   // ====== 全局注册 ======
   window.ActionSort = {
     CATEGORIES: CATEGORIES,
+    LOCATION_CATEGORY_REORDER: LOCATION_CATEGORY_REORDER,
     getActionCategory: getActionCategory,
     getCategoryOrder: getCategoryOrder,
     getActionPriority: getActionPriority,
@@ -479,6 +746,8 @@
     getActionNewBoost: getActionNewBoost,
     sortActions: sortActions,
     groupActionsByCategory: groupActionsByCategory,
+    getLocationCategories: getLocationCategories,
+    getLocationCategoryHint: getLocationCategoryHint,
     runAudit: runAudit,
   };
 })();
