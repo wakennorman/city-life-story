@@ -351,6 +351,27 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   }
 
+  // 30天回顾
+  if (reportDay > 0 && reportDay % 30 === 0 && state.flags._cashHistory) {
+    var history = state.flags._cashHistory;
+    var prevCash = 0;
+    for (var h = history.length - 1; h >= 0; h--) {
+      if (history[h].day === reportDay - 30) {
+        prevCash = history[h].value || history[h].cash || 0;
+        break;
+      }
+    }
+    var diff =
+      state.resources.cash + (state.resources.bankBalance || 0) - prevCash;
+    if (diff > 0) {
+      highlights.push("📈 过去30天财富增长 ¥" + diff.toLocaleString());
+    } else if (diff < 0) {
+      highlights.push(
+        "📉 过去30天财富缩水 ¥" + Math.abs(diff).toLocaleString(),
+      );
+    }
+  }
+
   if (!highlights.length) highlights.push("🌛 平凡的一天，活着就是赢了");
 
   var summary = highlights.slice(0, 2).join("，") + "。";
