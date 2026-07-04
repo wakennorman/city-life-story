@@ -101,6 +101,12 @@ function endQuarter() {
   const state = StateManager.getState();
   const c = state.corporate;
 
+  // 已退休人员停发工资（查 career_dev 退休标记）
+  if (state.flags && state.flags._retired) {
+    StateManager.addMessage("🏖️ 已退休，季度工资停发。", "info");
+    return;
+  }
+
   // 绩效考核
   const perfResult = calculatePerfScore(state);
   const grade = assignGrade(perfResult.score, state);

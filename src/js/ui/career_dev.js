@@ -794,18 +794,41 @@ function getStartupReadinessNote(state) {
   var cap = ensureCareerCapital(state);
   var discount = getCareerCapitalStartupDiscount(state);
   if (discount <= 0) {
+    // 街头阶段：显示技能和NPC好感准备进度
+    var prepTips = [];
+    var skills = state.skills || {};
+    var skillCount = 0;
+    for (var k in skills) {
+      if (skills[k] && skills[k].level >= 12) skillCount++;
+    }
+    if (skillCount < 2)
+      prepTips.push("技能等级≥12还需" + (2 - skillCount) + "项");
+    else prepTips.push("✅ 技能达标（" + skillCount + "项≥12级）");
+    var rels = state.relationships || {};
+    var highAffNpcs = 0;
+    for (var nid in rels) {
+      if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
+    }
+    if (highAffNpcs < 2)
+      prepTips.push("好感≥40的NPC还需" + (2 - highAffNpcs) + "位");
+    else prepTips.push("✅ 人脉达标（" + highAffNpcs + "位好感≥40）");
+    if ((state.resources.cash || 0) < 30000) prepTips.push("现金¥30k+");
+    var careerNote =
+      state.career && state.career.currentJob
+        ? "建议先积累行业资源、客户线索或合伙人信任"
+        : "暂无工作积累，建议先上班攒职场资源";
     return (
-      "暂无可转化的职场资源：裸辞创业成本更高，建议先积累行业资源、客户线索或合伙人信任。<br>" +
+      careerNote +
+      "。<br>" +
       '<span style="color:var(--text-secondary);font-size:11px;">' +
+      prepTips.join(" · ") +
+      " · " +
       "行业资源 " +
       Math.round(cap.industryResources || 0) +
       "/建议≥30 · " +
       "客户线索 " +
       Math.round(cap.clientLeads || 0) +
-      "/建议≥20 · " +
-      "合伙人信任 " +
-      Math.round(cap.partnerTrust || 0) +
-      "/建议≥15</span>"
+      "/建议≥20</span>"
     );
   }
   var burnoutWarning =
@@ -1817,13 +1840,13 @@ function careerTakeBreak() {
     return;
   }
   p.actionPoints -= 1;
-  cap.burnout = Math.max(0, (cap.burnout || 0) - 15);
+  cap.burnout = Math.max(0, (cap.burnout || 0) - 25);
   job.performance = Math.max(0, (job.performance || 50) - 2);
   job._lastBreakDay = p.day;
   if (state.needs)
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
   clampCareerCapital(cap);
-  StateManager.addMessage("😴 调休一天：倦怠-15，心情+5，业绩-2", "success");
+  StateManager.addMessage("😴 调休一天：倦怠-25，心情+5，业绩-2", "success");
   if (typeof renderAll === "function") renderAll();
 }
 
@@ -2306,7 +2329,11 @@ function tickCareerJobDaily(state) {
   job.workDays = (job.workDays || 0) + 1;
   job.performance = Math.max(0, Math.min(100, job.performance || 50));
   cap.reputation = (cap.reputation || 0) + 0.1;
-  cap.burnout = Math.max(0, (cap.burnout || 0) + 0.04);
+  // 职业倦怠：工作日常量增长，但有被动恢复（周末/休息自然降低）
+  var dailyBurnoutChange = 0.04;
+  // 周末（第7天）有额外恢复，模拟休息日
+  if (state.player.day % 7 === 0) dailyBurnoutChange -= 2;
+  cap.burnout = Math.max(0, (cap.burnout || 0) + dailyBurnoutChange);
 
   // 每月1日发薪
   if (state.player.day % 30 === 1) {

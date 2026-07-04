@@ -2016,46 +2016,67 @@ function getAvailableActions(state) {
       });
     }
 
-    // === 住所系统 ===
-    if (locKey === "slum") {
-      const currentTier = state.housing?.tier || 0;
-      // HOUSING_TIERS 定义在 data/items.js 中（全局常量）
-
-      // 显示当前住所
-      const curHouse = HOUSING_TIERS[currentTier];
+    // === 住所系统（地点感知：不同地点可升级不同档位） ===
+    var currentTier = state.housing ? state.housing.tier || 0 : 0;
+    var curHouse = HOUSING_TIERS[currentTier];
+    // 显示当前住所（所有地点都显示）
+    actions.push({
+      id: "housing_current",
+      name: "当前住所：" + curHouse.name,
+      desc:
+        "容量+" +
+        curHouse.capacity +
+        " | 睡眠恢复疲劳-" +
+        curHouse.fatigueRecovery +
+        " | " +
+        curHouse.desc +
+        (curHouse.rent > 0 ? " | 日租¥" + curHouse.rent + "/天" : ""),
+      icon: curHouse.icon,
+      disabled: true,
+    });
+    // 获取当前地点可升级的住所
+    var availableTiers =
+      typeof getAvailableHousingTiersAtLocation === "function"
+        ? getAvailableHousingTiersAtLocation(locKey)
+        : [1, 2, 3];
+    for (var i = 0; i < availableTiers.length; i++) {
+      var t = availableTiers[i];
+      if (t <= currentTier) continue;
+      var house = HOUSING_TIERS[t];
+      if (!house) continue;
+      var canAfford = (state.resources.cash || 0) >= house.cost;
       actions.push({
-        id: "housing_current",
-        name: `当前住所：${curHouse.name}`,
-        desc: `容量+${curHouse.capacity} | 睡眠恢复疲劳-${curHouse.fatigueRecovery} | ${curHouse.desc}${curHouse.rent > 0 ? ` | 日租¥${curHouse.rent}/天` : ""}`,
-        icon: curHouse.icon,
-        disabled: true,
-      });
-
-      // 可升级的住所
-      for (let t = currentTier + 1; t < HOUSING_TIERS.length; t++) {
-        const house = HOUSING_TIERS[t];
-        const canAfford = state.resources.cash >= house.cost;
-        actions.push({
-          id: "housing_upgrade_" + t,
-          name: `升级到${house.name}`,
-          desc: `${house.desc} 一次性付¥${house.cost} + 日租¥${house.rent}/天`,
-          icon: house.icon,
-          costEstimate: house.cost,
-          disabled: !canAfford,
-          reqFail: !canAfford ? `需 ¥${house.cost}` : null,
-          handler: () => {
-            state.resources.cash -= house.cost;
-            state.housing.tier = t;
+        id: "housing_upgrade_" + t,
+        name: "升级到" + house.name,
+        desc:
+          house.desc +
+          " 一次性付¥" +
+          house.cost +
+          " + 日租¥" +
+          house.rent +
+          "/天",
+        icon: house.icon,
+        costEstimate: house.cost,
+        disabled: !canAfford,
+        reqFail: !canAfford ? "需 ¥" + house.cost : null,
+        handler: (function (tier, h) {
+          return function () {
+            state.resources.cash -= h.cost;
+            state.housing.tier = tier;
             state.housing.rentedDay = state.player.day;
             state.inventory.capacity =
-              house.capacity + (state.housing.storageCapacity || 0);
+              h.capacity + (state.housing.storageCapacity || 0);
             StateManager.addMessage(
-              `🏠 搬进了${house.name}！容量提升至${state.inventory.capacity}。`,
+              "🏠 搬进了" +
+                h.name +
+                "！容量提升至" +
+                state.inventory.capacity +
+                "。",
               "success",
             );
-          },
-        });
-      }
+          };
+        })(t, house),
+      });
     }
 
     // === 仓库租赁（批发市场）===

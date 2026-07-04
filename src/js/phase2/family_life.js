@@ -259,25 +259,12 @@ const DATING_EVENTS = {
  * 初始化家庭系统
  */
 function initFamilySystem(state) {
-  if (!state.family) {
-    state.family = {
-      relationship: null,
-      spouse: null,
-      children: [],
-      parents: {
-        father: { age: 55, health: "healthy", name: "父亲" },
-        mother: { age: 53, health: "healthy", name: "母亲" },
-      },
-      expenses: {
-        monthlyMortgage: 0,
-        monthlyLiving: 3000,
-        monthlyChildren: 0,
-        monthlyParents: 0,
-      },
-      events: [],
-    };
-  }
-  if (!state.family.children) state.family.children = [];
+  // 合并初始化：兼容 createDefaultState 的 family 模式与旧存档
+  state.family = state.family || {};
+  state.family.relationship =
+    state.family.relationship || state.family.relationshipStage || null;
+  state.family.spouse = state.family.spouse || state.family.partner || null;
+  state.family.children = state.family.children || [];
   if (!state.family.parents) {
     state.family.parents = {
       father: { age: 55, health: "healthy", name: "父亲" },
@@ -300,12 +287,11 @@ function initFamilySystem(state) {
     state.family.expenses.monthlyChildren || 0;
   state.family.expenses.monthlyParents =
     state.family.expenses.monthlyParents || 0;
-  if (state.family.partner && !state.family.spouse) {
+  state.family.events = state.family.events || [];
+  if (state.family.partner && !state.family.spouse)
     state.family.spouse = state.family.partner;
-  }
-  if (state.family.spouse && !state.family.partner) {
+  if (state.family.spouse && !state.family.partner)
     state.family.partner = state.family.spouse;
-  }
 }
 
 function getFamilyTotalAssets(state) {
@@ -382,6 +368,7 @@ function proposeToNpc(state, npcId) {
     children: [],
     happiness: 85,
     marriedDay: state.player.day,
+    lastInteraction: state.player.day,
   };
 
   state.family.spouse = spouse;
@@ -609,6 +596,7 @@ function getMarried(state) {
     relationship: 100,
     children: [],
     happiness: 80,
+    lastInteraction: state.player.day,
   };
 
   state.family.datingTarget = null;

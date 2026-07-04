@@ -96,8 +96,8 @@ function getStartupTriggerConditions(state) {
   // 各剧本触发条件
   var conditions = {
     classic: {
-      street: { cash: 50000, label: "街头发家" },
-      corporate: { rank: "P5", cash: 50000, label: "职场攒够启动金" },
+      street: { cash: 30000, label: "街头发家" },
+      corporate: { rank: "P5", cash: 30000, label: "职场攒够启动金" },
     },
     laid_off: {
       street: { cash: 30000, label: "摆摊/零工攒够本钱" },
@@ -116,8 +116,8 @@ function getStartupTriggerConditions(state) {
       corporate: { rank: "P5", cash: 100000, label: "家里支持启动资金" },
     },
     midlife_crisis: {
-      street: { cash: 80000, label: "补偿金/积蓄转型" },
-      corporate: { rank: "P6", cash: 80000, label: "P6+管理经验转型" },
+      street: { cash: 50000, label: "补偿金/积蓄转型" },
+      corporate: { rank: "P6", cash: 50000, label: "P6+管理经验转型" },
     },
     fresh_grad: {
       street: { cash: 30000, label: "实习+兼职攒钱" },
@@ -296,13 +296,13 @@ function showStartupRegisterModal() {
 function canStartStartup(state) {
   var reasons = [];
 
-  // 1. 技能门槛：至少 3 项技能达到 15 级（有足够的综合能力创业）
+  // 1. 技能门槛：至少 2 项技能达到 12 级（有基础能力即可起步）
   var skillCount = 0;
   var skills = state.skills || {};
   for (var k in skills) {
-    if (skills[k] && skills[k].level >= 15) skillCount++;
+    if (skills[k] && skills[k].level >= 12) skillCount++;
   }
-  if (skillCount < 3) reasons.push("至少 3 项技能达到 15 级");
+  if (skillCount < 2) reasons.push("至少 2 项技能达到 12 级");
 
   // 2. 社会关系：需要至少 2 个 NPC 好感 ≥ 40（商业合作基础）
   var highAffNpcs = 0;
