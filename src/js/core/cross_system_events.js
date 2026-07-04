@@ -2662,6 +2662,1389 @@
         },
       ],
     },
+
+    // ====== 事件11：天气社交——暴雨中的临时避难点 ======
+    // 设计意图：暴雨/台风天露宿玩家被迫找避雨处，遇到其他处境相似的人
+    // 突发天气+底层社交+信息交换
+    {
+      id: "storm_shelter_meet",
+      phase: "street",
+      icon: "🏚️",
+      title: "同一屋檐下",
+      story:
+        "暴雨突然倾盆而下，你浑身湿透地冲进一座废弃楼的屋檐下。里面已经蹲着两个人——一个裹着军大衣的老人，一个抱着书包的学生。\\n\\n老人抬头看了你一眼，往旁边挪了挪：「挤挤，雨大。」学生也往旁边让了让。",
+      conditions: function (st) {
+        // 暴雨/台风天气 + 露宿或低档住所
+        if (st.player.day < 5) return false;
+        if (
+          !st.weather ||
+          (st.weather.current !== "stormy" && st.weather.current !== "typhoon")
+        )
+          return false;
+        if (!st.housing || st.housing.tier === undefined || st.housing.tier > 1)
+          return false;
+        if (
+          st.flags._stormShelterDay &&
+          st.player.day - st.flags._stormShelterDay < 15
+        )
+          return false;
+        return true;
+      },
+      probability: 0.06,
+      repeatable: true,
+      choices: [
+        {
+          text: "🤝 跟老人聊聊天",
+          hint: "获得城市生存技巧，心智+2",
+          apply: function (st) {
+            st.flags._stormShelterDay = st.player.day;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (Random.chance(0.3)) {
+              st.flags._oldManTip = true;
+              StateManager.addMessage(
+                "🤝 老人自称老刘，在这座城市流浪了十几年。他指了指远处的天桥：「那边晚上暖和，冬天我都在那过夜。」又塞给你一张皱巴巴的纸条，上面写着一个施粥点的地址。心智+2，心情+8，获得流浪者生存指点。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🤝 老人讲起他在城里的经历——年轻时在工地干活，后来干不动了就在街上晃荡。他说话很慢，但每句话都带着日子磨出来的味道。心智+2，心情+8。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "📚 跟学生聊聊",
+          hint: "智力+1，获得免费学习资料",
+          apply: function (st) {
+            st.flags._stormShelterDay = st.player.day;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 1,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (st.skills && st.skills.english) {
+              st.skills.english.xp = (st.skills.english.xp || 0) + 25;
+            }
+            StateManager.addMessage(
+              "📚 学生叫小张，在城东技校上学。他掏出手机说：「我在学英语，这个APP免费的，你要不要试试？」他教了你几个常用的商务英语短语。智力+1，英语XP+25，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😐 缩在角落不说话",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._stormShelterDay = st.player.day;
+            StateManager.addMessage(
+              "😐 你缩在墙角，抱着膝盖等雨停。老人和学生也各自沉默。雨打在屋檐上的声音填满了整个空间。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件12：NPC联动——陈师傅教新菜 ======
+    // 设计意图：陈师傅好感≥40时在商业区触发，教玩家一道新菜
+    // NPC+技能+心情，让烹饪成为有温度的互动
+    {
+      id: "chef_chen_teaching",
+      phase: "street",
+      icon: "🍳",
+      title: "陈师傅的新菜",
+      story:
+        "你路过陈师傅的摊子时，他正在捣鼓一个新酱料，满手都是红彤彤的辣椒碎。\\n\\n看到你，他眼睛一亮：「来得正好！我新研制了个麻辣配方，你帮我尝尝咸淡——别光尝，来来来，我教你怎么调。」",
+      conditions: function (st) {
+        if (st.player.day < 20) return false;
+        if (!st.relationships || !st.relationships.chef_chen) return false;
+        if ((st.relationships.chef_chen.affinity || 0) < 40) return false;
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "commercialDist") return false;
+        if (
+          st.flags._chefChenTaughtRecipeDay &&
+          st.player.day - st.flags._chefChenTaughtRecipeDay < 20
+        )
+          return false;
+        return true;
+      },
+      probability: 0.035,
+      repeatable: true,
+      choices: [
+        {
+          text: "🙏 好！正好学一手",
+          hint: "烹饪XP+80，心情+10，陈师傅好感+5",
+          apply: function (st) {
+            st.flags._chefChenTaughtRecipeDay = st.player.day;
+            if (st.skills && st.skills.cooking) {
+              st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 80;
+            }
+            st.relationships.chef_chen.affinity = Math.min(
+              100,
+              (st.relationships.chef_chen.affinity || 0) + 5,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🙏 陈师傅手把手教你调酱：「辣椒先焙一下出香味，蒜末最后放才不苦。」你学了一手地道的麻辣调料配方，以后做饭效果更好了！烹饪XP+80，心情+10，陈师傅好感+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😋 尝一口给意见",
+          hint: "心情+8，陈师傅好感+3",
+          apply: function (st) {
+            st.flags._chefChenTaughtRecipeDay = st.player.day;
+            st.relationships.chef_chen.affinity = Math.min(
+              100,
+              (st.relationships.chef_chen.affinity || 0) + 3,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
+            StateManager.addMessage(
+              "😋 你尝了一口——辣得直呼气但确实香！陈师傅得意地笑了：「是吧？我琢磨了一礼拜。」心情+8，好感+3，饥饿+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🚶 今天没空，改天吧",
+          hint: "什么也不发生",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你说赶时间。陈师傅摆摆手：「行，有空再来，这酱我给你留着。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件13：装备联动——装备突然损坏 ======
+    // 设计意图：装备系统联动，低耐久装备在关键时刻掉链子
+    // 装备+经济+心情，让维护装备成为必要
+    {
+      id: "equipment_break_alert",
+      phase: "street",
+      icon: "🔧",
+      title: "家伙事儿不行了",
+      story:
+        "你正准备干活，手里的工具突然发出一声不妙的响动——把手松了，刀刃钝了，或者带子断了。\\n\\n这套装备跟了你有一阵子了，一直在将就用，但今天它终于扛不住了。",
+      conditions: function (st) {
+        if (st.player.day < 10) return false;
+        // 检查是否有任何装备实例耐久≤20
+        if (!st.inventory || !st.inventory.equipmentInstances) return false;
+        var equip = st.inventory.equipmentInstances;
+        var hasLowDurability = false;
+        for (var slot in equip) {
+          if (
+            equip[slot] &&
+            equip[slot].durability !== undefined &&
+            equip[slot].durability <= 20
+          ) {
+            hasLowDurability = true;
+            break;
+          }
+        }
+        if (!hasLowDurability) return false;
+        if (
+          st.flags._equipBreakDay &&
+          st.player.day - st.flags._equipBreakDay < 10
+        )
+          return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "🔧 自己修一下继续用",
+          hint: "需修理技能≥15，恢复耐久+25",
+          apply: function (st) {
+            st.flags._equipBreakDay = st.player.day;
+            var repLevel =
+              st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+            if (repLevel >= 15) {
+              // 找到耐久最低的装备维修
+              var equip = st.inventory.equipmentInstances;
+              var worstSlot = null;
+              var worstDur = 999;
+              for (var slot in equip) {
+                if (
+                  equip[slot] &&
+                  equip[slot].durability !== undefined &&
+                  equip[slot].durability < worstDur
+                ) {
+                  worstDur = equip[slot].durability;
+                  worstSlot = slot;
+                }
+              }
+              if (worstSlot) {
+                equip[worstSlot].durability = Math.min(
+                  100,
+                  (equip[worstSlot].durability || 0) + 25,
+                );
+                if (st.skills && st.skills.repair) {
+                  st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+                }
+              }
+              StateManager.addMessage(
+                "🔧 你拆开检查了一下——还好问题不大，螺丝紧一紧、油上一点就好了。修理XP+15，装备耐久+25。手艺在身，省了一笔维修费。",
+                "success",
+              );
+            } else {
+              // 修理技能不够，修不好
+              if (st.skills && st.skills.repair) {
+                st.skills.repair.xp = (st.skills.repair.xp || 0) + 5;
+              }
+              st.player.mental = Math.max(0, (st.player.mental || 0) - 2);
+              StateManager.addMessage(
+                "🔧 你试着修了一下，但手艺不到家，越弄越糟。放弃。修理XP+5（至少学了点），心智-2。看来得找专业师傅或者买新的了。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💰 买新的替换",
+          hint: "¥100-300，换上新装备",
+          apply: function (st) {
+            st.flags._equipBreakDay = st.player.day;
+            var cost = Random.int(100, 300);
+            if (st.resources.cash < cost) {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，连¥" +
+                  cost +
+                  "都拿不出来……只好凑合着用坏掉的装备。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= cost;
+            // 修复所有装备耐久
+            var equip = st.inventory.equipmentInstances;
+            for (var slot in equip) {
+              if (equip[slot] && equip[slot].durability !== undefined) {
+                equip[slot].durability = Math.min(
+                  100,
+                  (equip[slot].durability || 0) + 40,
+                );
+              }
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "💰 你花了¥" +
+                cost +
+                "买了新的替换件装上。肉疼是肉疼，但工具顺了干活才顺。心情-5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😤 将就用，等彻底坏了再说",
+          hint: "免费，但效率降低",
+          apply: function (st) {
+            st.flags._equipBreakDay = st.player.day;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "😤 你用胶带缠了缠勉强继续用。干活时总有点使不上劲，心里也烦躁。心情-5。你知道这样撑不了多久。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件14：职业倦怠——长期同工后的疲软 ======
+    // 设计意图：连续多天干同一类工作触发倦怠事件，防止"无脑刷"
+    // 工作+健康+心智，鼓励工作多样性
+    {
+      id: "job_burnout_warning",
+      phase: "street",
+      icon: "😩",
+      title: "干腻了",
+      story:
+        "你今天照常去干活，但一到地方就觉得胸口发闷。同样的动作、同样的路线、同样的吆喝——你已经重复了不知道多少遍。\\n\\n你坐在路沿石上，看着别的摊位发呆。脑子里有个声音在说：「还要这样干多久？」",
+      conditions: function (st) {
+        if (st.player.day < 20) return false;
+        // 通过高疲劳和低心情间接判断倦怠
+        if (!st.needs) return false;
+        if ((st.needs.happiness || 50) > 30) return false;
+        if ((st.needs.fatigue || 0) < 60) return false;
+        if (
+          st.flags._jobBurnoutDay &&
+          st.player.day - st.flags._jobBurnoutDay < 14
+        )
+          return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: true,
+      choices: [
+        {
+          text: "💪 换个活干几天",
+          hint: "心智+3，疲劳-10，可能找到新方向",
+          apply: function (st) {
+            st.flags._jobBurnoutDay = st.player.day;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "💪 你决定换个活法。去批发市场转了转，发现有个摊位在招临时搬运工。虽然也是体力活，但新鲜感让精神好了不少。心智+3，疲劳-10，心情+5。有时候换个环境比硬撑有用。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📚 请半天假去学习充电",
+          hint: "心智+4，疲劳+5，技能XP+30",
+          apply: function (st) {
+            st.flags._jobBurnoutDay = st.player.day;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            if (st.skills) {
+              var keys = Object.keys(st.skills);
+              if (keys.length > 0) {
+                var k = Random.fromArray(keys);
+                if (st.skills[k] && typeof st.skills[k].xp !== "undefined") {
+                  st.skills[k].xp = (st.skills[k].xp || 0) + 30;
+                  StateManager.addMessage(
+                    "📚 你跑到图书馆窝了半天，随手翻了一本关于" +
+                      k +
+                      "的书。虽然没看完，但学到了一些新东西。" +
+                      k +
+                      " XP+30，心智+4。",
+                    "success",
+                  );
+                }
+              }
+            } else {
+              StateManager.addMessage(
+                "📚 你跑到图书馆窝了半天，翻了翻书。虽然没完全看进去，但脑子总算换了个频道。心智+4。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "😤 咬咬牙接着干",
+          hint: "心情-8，但今天收入+20%",
+          apply: function (st) {
+            st.flags._jobBurnoutDay = st.player.day;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            st.flags._burnoutHardWorkDay = st.player.day;
+            StateManager.addMessage(
+              "😤 你咬咬牙站起来接着干。虽然心里一万个不情愿，但手没停。今天比平时多干了一些——但你知道这样撑不了太久。心情-8。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件15：带病工作的代价 ======
+    // 设计意图：疾病系统联动，让生病不再是"带着也无所谓"的状态
+    // 疾病+工作+社交，工友/顾客会注意到你状态不对
+    {
+      id: "sick_work_notice",
+      phase: "street",
+      icon: "🤒",
+      title: "被看出来了",
+      story:
+        "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\\n\\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
+      conditions: function (st) {
+        if (st.player.day < 10) return false;
+        if (
+          !st.status ||
+          !st.status.illnesses ||
+          st.status.illnesses.length === 0
+        )
+          return false;
+        if ((st.status.health || 70) > 50) return false;
+        if (st.flags._sickWorkDay && st.player.day - st.flags._sickWorkDay < 20)
+          return false;
+        return true;
+      },
+      probability: 0.06,
+      repeatable: true,
+      choices: [
+        {
+          text: "🏥 听劝，去诊所看看",
+          hint: "¥100-200，健康+15，但耽误半天活",
+          apply: function (st) {
+            st.flags._sickWorkDay = st.player.day;
+            var cost = Random.int(100, 200);
+            if (st.resources.cash < cost) {
+              var charged = st.resources.cash;
+              st.resources.cash = 0;
+              st.resources.debt = (st.resources.debt || 0) + (cost - charged);
+              StateManager.addMessage(
+                "🏥 你到了诊所，医生量了体温说烧到38度5。开了药打了针，花了¥" +
+                  charged +
+                  "，欠了¥" +
+                  (cost - charged) +
+                  "。健康+15。虽然花了不少钱，但至少不是硬扛到倒下。",
+                "warning",
+              );
+            } else {
+              st.resources.cash -= cost;
+              StateManager.addMessage(
+                "🏥 你去了诊所，医生量了体温说烧到38度5。打了一针开了药，花了¥" +
+                  cost +
+                  "。健康+15。躺在病床上你心想：早该来的。",
+                "info",
+              );
+            }
+            st.status.health = Math.min(100, (st.status.health || 70) + 15);
+          },
+        },
+        {
+          text: "😤 谢谢关心，我还能撑",
+          hint: "健康-5，但留下勤恳印象",
+          apply: function (st) {
+            st.flags._sickWorkDay = st.player.day;
+            st.status.health = Math.max(0, (st.status.health || 70) - 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "😤 你挤出笑容说没事。老主顾摇了摇头，多给了你¥20小费：「拿着买点药吃。」你收下钱，心里有点酸。健康-5，名气+2。",
+              "warning",
+            );
+            st.resources.cash += 20;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + 20;
+          },
+        },
+        {
+          text: "😅 回去休息半天",
+          hint: "健康+5，但不干活没收入",
+          apply: function (st) {
+            st.flags._sickWorkDay = st.player.day;
+            st.status.health = Math.min(100, (st.status.health || 70) + 5);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            StateManager.addMessage(
+              "😅 你收了摊往回走。虽然今天没赚到钱，但身体是革命的本钱——你把这句话想了三遍才安心躺下。健康+5，疲劳-15。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件16：低心情情绪危机 ======
+    // 设计意图：长期低心情不止是数字，而是触发"一切都没意义"的自我怀疑
+    // 心情+心智+道德，三岔口：积极自救/佛系躺平/迁怒他人
+    {
+      id: "low_mood_despair",
+      phase: "street",
+      icon: "🌧️",
+      title: "一切都没意义",
+      story:
+        "你今天醒来就不想动。不是身体累，是心里空了一块。\\n\\n你盯着天花板想：每天醒来→干活→吃饭→睡觉→再醒来，到底图什么？这座城市有千万人，但没有一个人真的在意你。\\n\\n你翻了个身，把脸埋进枕头里。",
+      conditions: function (st) {
+        if (st.player.day < 15) return false;
+        if (!st.needs || (st.needs.happiness || 50) >= 20) return false;
+        if (!st.status || (st.status.health || 70) < 20) return false;
+        if (st.flags._lowMoodDay && st.player.day - st.flags._lowMoodDay < 20)
+          return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "💪 强迫自己出门走走",
+          hint: "心智+4，心情+10，可能遇到好事",
+          apply: function (st) {
+            st.flags._lowMoodDay = st.player.day;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (Random.chance(0.35)) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              StateManager.addMessage(
+                "💪 你逼自己出了门，在街上漫无目的地走。路过公园时，一个追球跑的小女孩撞到你腿上摔倒了，她抬头看了看你，递给你半块饼干：「哥哥，给你吃。」你愣在原地，突然笑了出来。心智+4，心情+18。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "💪 你逼自己出了门，在街上走了一圈。阳光晒在肩膀上，虽然问题没解决，但至少动起来了。心智+4，心情+10。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "😐 躺着发呆，等情绪过去",
+          hint: "心情-3，但不会更糟",
+          apply: function (st) {
+            st.flags._lowMoodDay = st.player.day;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            st.player.mental = Math.max(0, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "😐 你躺着盯着天花板，什么都不想干。迷迷糊糊睡了一觉，醒来时天已经暗了。虽然状态没变好，但至少休息了一下。心智+1，心情-3。有些日子，熬过去就是胜利。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😠 心里憋屈，找人吵架",
+          hint: "道德-3，后果不确定",
+          apply: function (st) {
+            st.flags._lowMoodDay = st.player.day;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+            if (st.flags.moral) {
+              st.flags.moral.score = Math.max(
+                -100,
+                (st.flags.moral.score || 0) - 3,
+              );
+            }
+            if (Random.chance(0.4)) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "😠 你跑到小卖部跟老板吵了一架——因为一个¥2的打火机。老板被你吼懵了，反而给你递了根烟：「小伙子，有啥过不去的？来，抽根烟缓缓。」你突然觉得自己很可笑。道德-3，心情+5。",
+                "warning",
+              );
+            } else {
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              st.player.fame = Math.max(0, (st.player.fame || 0) - 2);
+              StateManager.addMessage(
+                "😠 你莫名其妙对着路边发传单的人吼了一通。那人愣愣地看着你走开，什么都没说。走远了你才觉得自己像个混蛋。道德-3，心情-5，名气-2。",
+                "danger",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ====== 事件17：小美学习小组 ======
+    // 设计意图：小美好感+智力门槛解锁共同学习机会
+    // NPC+学习+技能，社交型学习
+    {
+      id: "xiao_mei_study_group",
+      phase: "street",
+      icon: "📖",
+      title: "一起学习吧",
+      story:
+        "小美在信息栏上贴了张纸条：「周末自习小组，互相督促，免费入场。」\\n\\n她看到你在看纸条，凑过来小声说：「我拉了几个同学一起复习考证，你也来吧！别怕跟不上，我从基础讲起。」",
+      conditions: function (st) {
+        if (st.player.day < 20) return false;
+        if (!st.relationships || !st.relationships.xiao_mei) return false;
+        if ((st.relationships.xiao_mei.affinity || 0) < 40) return false;
+        if ((st.player.intelligence || 0) < 25) return false;
+        if (st.flags._xiaoMeiStudyDone) return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "📚 去！正好想学点东西",
+          hint: "智力+3，英语/编程XP各+40，心情+10",
+          apply: function (st) {
+            st.flags._xiaoMeiStudyDone = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
+            if (st.skills && st.skills.english) {
+              st.skills.english.xp = (st.skills.english.xp || 0) + 40;
+            }
+            if (st.skills && st.skills.coding) {
+              st.skills.coding.xp = (st.skills.coding.xp || 0) + 40;
+            }
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              (st.relationships.xiao_mei.affinity || 0) + 8,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "📚 你跟着小美和她的同学在图书馆泡了一下午。虽然一开始有点跟不上，但小美很有耐心地给你讲解。临走时她还借了你一本英语语法书。智力+3，英语XP+40，编程XP+40，心情+10。有同伴一起学，感觉没那么难了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 我怕跟不上，下次吧",
+          hint: "保留机会",
+          apply: function (st) {
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              (st.relationships.xiao_mei.affinity || 0) + 2,
+            );
+            StateManager.addMessage(
+              "😅 你说自己基础太差怕拖后腿。小美笑了：「没事，谁不是从零开始的。你想来随时找我。」好感+2。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙅 学习不适合我",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._xiaoMeiStudyDone = true;
+            StateManager.addMessage(
+              "🙅 你摇了摇头。小美有点失望，但也没强求：「好吧，有需要再找我。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件18：科技园——创业灵光一现 ======
+    // 设计意图：玩家在科技园且有一定编程基础时，触发技术创业思绪
+    // 地点+技能+cash门槛→创业铺垫
+    {
+      id: "techpark_startup_idea",
+      phase: "street",
+      icon: "💻",
+      title: "科技园的诱惑",
+      story:
+        "你在科技园门口看到一群年轻人在拍合影，胸前挂着工牌——上面印着各种互联网公司的logo。\\n\\n你低头看了看自己满是灰尘的衣服，又看了看他们。一个念头冒出来：你也会写代码，为什么不能像他们一样？",
+      conditions: function (st) {
+        if (st.player.day < 30) return false;
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "techPark") return false;
+        if (
+          !st.skills ||
+          !st.skills.coding ||
+          (st.skills.coding.level || 0) < 20
+        )
+          return false;
+        if (st.flags._techparkIdeaDone) return false;
+        return true;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "💡 认真思考创业方向",
+          hint: "心智+5，获得创业灵感flag",
+          apply: function (st) {
+            st.flags._techparkIdeaDone = true;
+            st.flags._techparkInspiration = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "💡 你找了个角落坐下，掏出手机记下了几个想法：帮小商家做外卖小程序、写一个二手物品交易工具……你越写越兴奋。心智+5，心情+10。获得创业灵感储备——以后创业项目选择时多一个选项。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📄 去科技园里面问问招不招人",
+          hint: "智力+2，可能获得面试机会",
+          apply: function (st) {
+            st.flags._techparkIdeaDone = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 2,
+            );
+            if (Random.chance(0.3)) {
+              st.flags._techparkInterview = true;
+              StateManager.addMessage(
+                "📄 你鼓起勇气走进一栋写字楼，在前台问有没有招人。前台给了你一个二维码让你投简历——是一家做AI数据标注的公司。智力+2，获得面试机会。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "📄 你在科技园转了一圈，保安问你是哪家公司的。你说找工作，保安指了指门口的招聘栏：「都在那呢。」智力+2。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 跟我不相干，走了",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._techparkIdeaDone = true;
+            StateManager.addMessage(
+              "🚶 你拉紧了外套，低头走开了。科技园的世界和你的世界，中间隔着一道玻璃门。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件19：社交孤独——连续独处的代价 ======
+    // 设计意图：社交系统联动，长期不与NPC互动触发孤独感
+    // 社交+心情+心智，让玩家有动力维持社交联系
+    {
+      id: "social_loneliness",
+      phase: "street",
+      icon: "🕊️",
+      title: "一个人的城市",
+      story:
+        "晚上你回到住处，打开手机——没有消息，没有未接来电。你翻了一遍通讯录，发现不知道该打给谁。\\n\\n窗外万家灯火，街上有情侣在笑，有朋友在打闹。你拉上窗帘，把热闹关在外面。",
+      conditions: function (st) {
+        if (st.player.day < 20) return false;
+        // 判断是否长期独处：没有任何NPC好感>20
+        if (!st.relationships) return false;
+        var hasFriend = false;
+        for (var nid in st.relationships) {
+          if (
+            st.relationships[nid] &&
+            (st.relationships[nid].affinity || 0) >= 20
+          ) {
+            hasFriend = true;
+            break;
+          }
+        }
+        if (hasFriend) return false;
+        if (
+          st.flags._lonelinessDay &&
+          st.player.day - st.flags._lonelinessDay < 25
+        )
+          return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: true,
+      choices: [
+        {
+          text: "📱 主动联系一个认识的人",
+          hint: "心情+10，可能增进关系",
+          apply: function (st) {
+            st.flags._lonelinessDay = st.player.day;
+            // 找好感最高的NPC（即使<20）
+            var bestNpc = null;
+            var bestAff = -100;
+            if (st.relationships) {
+              for (var nid in st.relationships) {
+                if (
+                  st.relationships[nid] &&
+                  (st.relationships[nid].affinity || 0) > bestAff
+                ) {
+                  bestAff = st.relationships[nid].affinity;
+                  bestNpc = nid;
+                }
+              }
+            }
+            if (bestNpc && bestAff > -50) {
+              st.relationships[bestNpc].affinity = Math.min(
+                100,
+                (st.relationships[bestNpc].affinity || 0) + 5,
+              );
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 10,
+              );
+              StateManager.addMessage(
+                "📱 你鼓起勇气发了一条消息。对方居然很快回复了——虽然只是寒暄了几句，但有人回应的感觉真好。心情+10，好感+5。",
+                "success",
+              );
+            } else {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "📱 你翻了半天通讯录，最后给家里打了个电话。妈妈接了，问吃过饭没有。你说吃了，她说那就好。挂了电话，心里暖了一点。心情+5。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🏪 去楼下便利店跟老板聊两句",
+          hint: "心情+5，可能遇到邻居",
+          apply: function (st) {
+            st.flags._lonelinessDay = st.player.day;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (Random.chance(0.3)) {
+              st.flags._neighborMet = true;
+              StateManager.addMessage(
+                "🏪 你去便利店买水，跟老板多聊了几句。原来他也是外地人，在这开了八年店。临走时他说：「没事来坐坐，晚上人少，我也想有人说说话。」心情+5，认识了邻居。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🏪 你去便利店买了瓶水，和老板有一搭没一搭聊了几句。虽然都是废话，但有人说说话总是好的。心情+5。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🎵 戴上耳机，自己待着",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._lonelinessDay = st.player.day;
+            StateManager.addMessage(
+              "🎵 你戴上耳机，随便放了首歌。歌词唱的是关于离开和远方。你闭着眼睛，跟着旋律轻轻哼。至少，还有音乐陪你。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件20：负债压力——偶遇债主 ======
+    // 设计意图：债务系统联动，有债时可能在市场上遇到债主
+    // 经济+道德+剧情，让债务不只是数字
+    {
+      id: "debt_meet_creditor",
+      phase: "street",
+      icon: "😰",
+      title: "躲不掉的债",
+      story:
+        "你在市场上买东西时，一抬头——对面站着的人有点眼熟。\\n\\n那人也看到了你，脸色变了变，大步走过来。你想起他是谁了——上个月借你钱的工地工头。他说这几天老家急用钱，问你能不能先还一部分。",
+      conditions: function (st) {
+        if (st.player.day < 15) return false;
+        var totalDebt =
+          (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+        if (totalDebt < 500) return false;
+        if (st.flags._debtMeetDay && st.player.day - st.flags._debtMeetDay < 30)
+          return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: true,
+      choices: [
+        {
+          text: "🙏 先还一部分",
+          hint: "还¥200-500，信誉+，心情不稳",
+          apply: function (st) {
+            st.flags._debtMeetDay = st.player.day;
+            var repay = Math.min(
+              500,
+              Math.max(200, Math.floor((st.resources.cash || 0) * 0.3)),
+            );
+            if (st.resources.cash >= repay) {
+              st.resources.cash -= repay;
+              st.resources.debt = Math.max(0, (st.resources.debt || 0) - repay);
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "🙏 你数了¥" +
+                  repay +
+                  "递过去：「先还这些，剩下的下个月再给。」他接过钱数了数叹了口气：「行吧，知道你也不容易。」心情-5，债务减少¥" +
+                  repay +
+                  "。",
+                "warning",
+              );
+            } else {
+              st.resources.cash = 0;
+              st.resources.debt = Math.max(
+                0,
+                (st.resources.debt || 0) - st.resources.cash,
+              );
+              StateManager.addMessage(
+                "🙏 你翻遍口袋，只有¥" +
+                  (st.resources.cash || 0) +
+                  "。全部给了他。他接过去，一句话没说就走了。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😓 再宽限几天，一定还",
+          hint: "道德-2，但保住现金",
+          apply: function (st) {
+            st.flags._debtMeetDay = st.player.day;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 2);
+            if (st.flags.moral) {
+              st.flags.moral.score = Math.max(
+                -100,
+                (st.flags.moral.score || 0) - 2,
+              );
+            }
+            if (Random.chance(0.5)) {
+              StateManager.addMessage(
+                "😓 你说了困难，他沉默了一会儿说：「一周，最多一周。我老婆还在医院等着。」道德-2。你躲过了一次，但压力更大了。",
+                "warning",
+              );
+            } else {
+              st.flags._debterAngry = true;
+              StateManager.addMessage(
+                "😓 他听了你的话脸色铁青：「上次你也是这么说的。一周，再不还我只能找别的办法了。」道德-2。你感觉事情在往不好的方向发展。",
+                "danger",
+              );
+            }
+          },
+        },
+        {
+          text: "🏃 假装没看见，转头就走",
+          hint: "道德-5，可能后果严重",
+          apply: function (st) {
+            st.flags._debtMeetDay = st.player.day;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
+            if (st.flags.moral) {
+              st.flags.moral.score = Math.max(
+                -100,
+                (st.flags.moral.score || 0) - 5,
+              );
+            }
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            StateManager.addMessage(
+              "🏃 你低头转身挤进人群。背后传来一声喊：「喂！我看到你了！」你加快脚步，直到听不见那个声音才停下来。道德-5，心情-8。你觉得自己像个逃犯。",
+              "danger",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件21：张姐的培训推荐 ======
+    // 设计意图：张姐好感≥50时提供技能培训机会
+    // NPC+教育+工作，社交型成长路径
+    {
+      id: "zhang_training_tip",
+      phase: "street",
+      icon: "📋",
+      title: "张姐的培训消息",
+      story:
+        "张姐发来一条消息：「市里有政府补贴的技能培训班，电工、焊工、护理都有，学费减免一半。我手上有几个名额，要不要帮你报一个？」",
+      conditions: function (st) {
+        if (st.player.day < 30) return false;
+        if (!st.relationships || !st.relationships.sister_zhang) return false;
+        if ((st.relationships.sister_zhang.affinity || 0) < 50) return false;
+        if (st.flags._zhangTrainingDone) return false;
+        return true;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "📚 报电工班！实用",
+          hint: "电工XP+80，智力+2，学费¥300",
+          apply: function (st) {
+            st.flags._zhangTrainingDone = true;
+            var cost = 300;
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
+              if (st.skills && st.skills.electrician) {
+                st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 80;
+                st.skills.electrician.level = Math.min(
+                  100,
+                  (st.skills.electrician.level || 0) + 2,
+                );
+              }
+              st.player.intelligence = Math.min(
+                100,
+                (st.player.intelligence || 0) + 2,
+              );
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 0) + 8,
+              );
+              StateManager.addMessage(
+                "📚 你报了电工培训班。课程持续两周，每天晚上两小时。虽然累，但老师讲得很实用——从家庭电路到工厂配电都涉及。电工XP+80，电工等级+2，智力+2，张姐好感+8。技能在手，心里踏实多了。",
+                "success",
+              );
+            } else {
+              st.flags._zhangTrainingPending = true;
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 0) + 3,
+              );
+              StateManager.addMessage(
+                "😅 学费¥300，你摸了摸口袋不够。张姐说：「名额我给你留一周，你凑够了跟我说。」好感+3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🔧 报焊工班！手艺活",
+          hint: "焊接XP+80，心智+2，学费¥300",
+          apply: function (st) {
+            st.flags._zhangTrainingDone = true;
+            var cost = 300;
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
+              if (st.skills && st.skills.welding) {
+                st.skills.welding.xp = (st.skills.welding.xp || 0) + 80;
+                st.skills.welding.level = Math.min(
+                  100,
+                  (st.skills.welding.level || 0) + 2,
+                );
+              }
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 0) + 8,
+              );
+              StateManager.addMessage(
+                "📚 你报了焊工培训班。老师说焊工是越老越吃香的手艺——第一个月练平焊，第二个月练立焊。焊接XP+80，焊接等级+2，心智+2，张姐好感+8。",
+                "success",
+              );
+            } else {
+              st.flags._zhangTrainingPending = true;
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 0) + 3,
+              );
+              StateManager.addMessage(
+                "😅 学费¥300，你暂时拿不出来。张姐说：「名额我给你留一周，你凑够了跟我说。」好感+3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🙅 暂时不需要",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._zhangTrainingDone = true;
+            StateManager.addMessage(
+              "🙅 你说现在太忙了。张姐说：「行，有需要随时找我，这政策不是天天有。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件22：公园健身习惯 ======
+    // 设计意图：连续在公园活动的玩家触发健康正向循环
+    // 地点+健康+体质，正向激励机制
+    {
+      id: "park_exercise_habit",
+      phase: "street",
+      icon: "🏋️",
+      title: "公园里的坚持",
+      story:
+        "你又来到了公园——这几天你都在这里活动，已经混了个脸熟。\\n\\n一个打太极的大爷朝你点了点头：「小伙子，我看你天天来，挺能坚持啊。来，跟我练两招，比你瞎跑强。」",
+      conditions: function (st) {
+        if (st.player.day < 15) return false;
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "park") return false;
+        if (
+          st.flags._parkHabitDay &&
+          st.player.day - st.flags._parkHabitDay < 20
+        )
+          return false;
+        if (st.flags._parkVisitCount < 5) return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "🙏 跟大爷学太极",
+          hint: "体质+3，心智+3，健康+8",
+          apply: function (st) {
+            st.flags._parkHabitDay = st.player.day;
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.status.health = Math.min(100, (st.status.health || 70) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🙏 大爷教你几招太极拳——野马分鬃、白鹤亮翅。一开始你手脚不协调，但大爷说你「筋骨不错」。打完一套，你感觉浑身舒畅。体质+3，心智+3，健康+8，心情+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 自己跑几圈",
+          hint: "体质+2，健康+5",
+          apply: function (st) {
+            st.flags._parkHabitDay = st.player.day;
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
+            st.status.health = Math.min(100, (st.status.health || 70) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "💪 你在公园跑了四圈。虽然没有大爷的太极那么有门道，但出了一身汗的感觉也不错。体质+2，健康+5，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😮‍💨 今天太累了，歇一天",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._parkHabitDay = st.player.day;
+            StateManager.addMessage(
+              "😮‍💨 你跟大爷打了声招呼说今天不练了。大爷摆摆手：「歇一天也好，练功不在一天。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件23：工地小事故 ======
+    // 设计意图：工地地点专属事件，李工头好感影响后果
+    // 地点+工作+NPC+健康
+    {
+      id: "construction_minor_accident",
+      phase: "street",
+      icon: "⚠️",
+      title: "工地上出了点事",
+      story:
+        "你在工地上干活时，突然听到一声喊——上面掉下来一捆钢管！虽然没砸到人，但碎砖块溅到了你这边。\\n\\n工头跑过来看了一圈：「没事没事，散了吧。」但你的手臂被划了一道口子，血渗了出来。",
+      conditions: function (st) {
+        if (st.player.day < 20) return false;
+        var curLoc = st.trade && st.trade.currentLocation;
+        if (curLoc !== "construction") return false;
+        if (
+          st.flags._constructionAccidentDay &&
+          st.player.day - st.flags._constructionAccidentDay < 20
+        )
+          return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: true,
+      choices: [
+        {
+          text: "🏥 去处理一下伤口",
+          hint: "¥50-100，健康+5，不影响后续工作",
+          apply: function (st) {
+            st.flags._constructionAccidentDay = st.player.day;
+            var cost = Random.int(50, 100);
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
+              st.status.health = Math.min(100, (st.status.health || 70) + 5);
+              StateManager.addMessage(
+                "🏥 你到附近诊所清洗了伤口，缝了两针。花了¥" +
+                  cost +
+                  "，健康+5。护士说运气好，再深一点就得打破伤风针了。",
+                "info",
+              );
+            } else {
+              st.status.health = Math.max(0, (st.status.health || 70) - 3);
+              StateManager.addMessage(
+                "🏥 你去了诊所，但是¥" +
+                  cost +
+                  "的处置费拿不出来。护士只好简单包扎了一下说：「注意别感染。」健康-3。",
+                "warning",
+              );
+            }
+            // 检查李工头好感
+            if (
+              st.relationships &&
+              st.relationships.boss_li &&
+              (st.relationships.boss_li.affinity || 0) >= 30
+            ) {
+              st.resources.cash += 80;
+              st.relationships.boss_li.affinity = Math.min(
+                100,
+                (st.relationships.boss_li.affinity || 0) + 3,
+              );
+              StateManager.addMessage(
+                "👷 李工头知道你受伤了，走过来塞了¥80：「去买点营养品。以后小心点。」好感+3。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "💪 没事，擦擦继续干",
+          hint: "健康-5，但显得硬气",
+          apply: function (st) {
+            st.flags._constructionAccidentDay = st.player.day;
+            st.status.health = Math.max(0, (st.status.health || 70) - 5);
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 1);
+            StateManager.addMessage(
+              "💪 你撕了块布条包扎了一下继续干。工友们看了你一眼，没说什么。体质+1，健康-5。你的硬气在这个工地上被记住了。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "😤 找工头理论：安全措施不到位",
+          hint: "需要李工头好感≥40或社交能力",
+          apply: function (st) {
+            st.flags._constructionAccidentDay = st.player.day;
+            var hasPull = false;
+            if (
+              st.relationships &&
+              st.relationships.boss_li &&
+              (st.relationships.boss_li.affinity || 0) >= 40
+            )
+              hasPull = true;
+            if (
+              st.skills &&
+              st.skills.sales &&
+              (st.skills.sales.level || 0) >= 20
+            )
+              hasPull = true;
+            if (hasPull) {
+              st.flags._siteSafetyImproved = true;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              StateManager.addMessage(
+                "😤 你去找工头说了安全问题。他本来想打发你走，但看你态度坚决，加上认识你，同意了加强安全措施。工友们对你刮目相看。名气+5，心情+8，工地安全改善了。",
+                "success",
+              );
+            } else {
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "😤 你去找工头反映，他没当回事：「干这行哪有不擦破皮的？不想干可以走。」心情-5。你站了一会儿，转身回去继续干活。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ====== 事件24：技能被路人认出 ======
+    // 设计意图：高技能不是白练的——在街上可能被有需要的人认出来
+    // 技能+社交+经济，能力转化为机会
+    {
+      id: "skill_noticed_stranger",
+      phase: "street",
+      icon: "🎯",
+      title: "行家一出手",
+      story:
+        "你在街上走着，路边一个修电动车的人正在对着一堆零件发愁。\\n\\n他抬头看了看你——也许是看你手上常年干活留下的茧子和工具痕迹——试探着问：「兄弟，你懂这个不？我这车拆了装不回去了。」",
+      conditions: function (st) {
+        if (st.player.day < 30) return false;
+        if (!st.skills) return false;
+        // 任意技能≥50
+        var hasHighSkill = false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && (st.skills[sk].level || 0) >= 50) {
+            hasHighSkill = true;
+            break;
+          }
+        }
+        if (!hasHighSkill) return false;
+        if (
+          st.flags._skillNoticedDay &&
+          st.player.day - st.flags._skillNoticedDay < 20
+        )
+          return false;
+        return true;
+      },
+      probability: 0.035,
+      repeatable: true,
+      choices: [
+        {
+          text: "🔧 帮忙看看，举手之劳",
+          hint: "相关技能XP+30，现金¥50-150，名气+3",
+          apply: function (st) {
+            st.flags._skillNoticedDay = st.player.day;
+            // 找到最高技能加XP
+            var bestSkill = null;
+            var bestLvl = 0;
+            for (var sk in st.skills) {
+              if (st.skills[sk] && (st.skills[sk].level || 0) > bestLvl) {
+                bestLvl = st.skills[sk].level;
+                bestSkill = sk;
+              }
+            }
+            if (bestSkill && st.skills[bestSkill]) {
+              st.skills[bestSkill].xp = (st.skills[bestSkill].xp || 0) + 30;
+            }
+            var tip = Random.int(50, 150);
+            st.resources.cash += tip;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + tip;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🔧 你蹲下看了看，三两下就帮他装好了。他惊讶地说：「高手啊！比修车铺还快。」非要塞给你¥" +
+                tip +
+                "。技能XP+30，名气+3，心情+10。你的手艺不会说谎。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "👀 告诉他附近哪能修",
+          hint: "好人好事，名气+1",
+          apply: function (st) {
+            st.flags._skillNoticedDay = st.player.day;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "👀 你说自己也不太会，指了前面修车铺的位置给他。他道了谢推着车走了。名气+1，心情+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 假装没听见走过去",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._skillNoticedDay = st.player.day;
+            StateManager.addMessage(
+              "🚶 你低着头走过去了。不是不想帮忙，只是今天实在没心情。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件25：图书馆指路人 ======
+    // 设计意图：学习遇瓶颈时在图书馆遇到热心人指点
+    // 教育+心智+社交，给自学玩家一个"导师"
+    {
+      id: "library_mentor_meet",
+      phase: "street",
+      icon: "📚",
+      title: "遇见了老师",
+      story:
+        "你在图书馆的自习区埋头苦读，但一道题卡了你半小时。你咬着笔帽，盯着书页上的公式发呆。\\n\\n对面一个戴眼镜的中年人合上自己的书，看了你一眼：「卡住了？来，我看看。」",
+      conditions: function (st) {
+        if (st.player.day < 25) return false;
+        if ((st.player.intelligence || 0) < 35) return false;
+        // 得有一定的学历提升意愿（学过习或用过学习类行动）
+        if (st.flags._libraryMentorDone) return false;
+        return true;
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🙏 太好了，这个公式弄不懂",
+          hint: "智力+4，心智+3，获得持续指导机会",
+          apply: function (st) {
+            st.flags._libraryMentorDone = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 4,
+            );
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.flags._libraryMentorContact = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            StateManager.addMessage(
+              "🙏 中年人姓方，是退休的大学老师。他花了半小时用最浅显的方式给你讲清楚了那个公式，还顺手帮你梳理了一章的知识框架。临走时他给了你一个微信号：「有问题可以问我，反正退休了没事。」智力+4，心智+3，心情+12。免费的导师，比黄金还珍贵。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 谢谢，我自己再琢磨琢磨",
+          hint: "心智+1，独立解决",
+          apply: function (st) {
+            st.flags._libraryMentorDone = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "😅 你说想自己先试试。他笑了笑：「也好，自己悟出来的记得更牢。我就在那边，实在不行再叫我。」心智+1。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙅 不用，我不需要",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._libraryMentorDone = true;
+            StateManager.addMessage(
+              "🙅 你冷淡地回了一句。他点点头，戴上眼镜继续看自己的书。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
