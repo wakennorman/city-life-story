@@ -205,8 +205,9 @@
         "连续几天的暴雨让城市多处积水，低洼地段的路面变成了小河。很多人被困在家里，急需有人帮忙送东西。",
       conditions: function (st) {
         // 必须当前正在下雨（暴雨或大雨），且不在室内专属地点
-        var weatherNow = (st.weather && st.weather.current) || "晴";
-        if (weatherNow !== "暴雨" && weatherNow !== "大雨") return false;
+        // [自洽修复] st.weather.current 存储英文值，原比较中文"暴雨"/"大雨"永不匹配
+        var weatherNow = (st.weather && st.weather.current) || "sunny";
+        if (weatherNow !== "rainy" && weatherNow !== "stormy") return false;
         var locKey = st.trade && st.trade.currentLocation;
         // 排除完全室内/非现实地点（银行、培训中心等）
         if (locKey === "bank" || locKey === "trainingCenter") return false;
