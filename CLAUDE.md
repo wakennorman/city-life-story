@@ -76,7 +76,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.5 移动端事件记录默认3条 + 天气内联显示
+- **最新一次工作 (2026-07-04)**：v3.7 交易系统全面优化+事件修复+移动端弹窗居中
+  - **问题**：交易Tab显示「undefined」/ 「卖出好时机：服装、电子涨价中」始终不变 / 批发→商业区单一最优路线 / 移动端弹窗偏上 / 暴雨送货事件误导
+  - **undefined根因**：`var skillTag` 声明在模板字符串之后，hoisting 为 undefined
+  - **卖出好时机根因**：SEASONAL_PRICE_MODS 只覆盖 4 个分类且混入 goodId 级 key
+  - **单一路线根因**：批发市场 priceMod 0.8 + 商业区 1.15 固定差价
+  - **修复**：skillTag 提前声明；CATEGORY_NAMES_TRADE 补齐 10 分类；SEASONAL_PRICE_MODS 重构全覆盖+4 季差异化；新增 `getBestTradeRoutes` 动态路线推荐（Top 3）；市场事件扩充 +8 条；移动端 modal-overlay align-items:center；暴雨事件叙事泛化
+  - **验证**：`node --check` × 5 全部通过 / `python build.py` (4566.0 KB) / commit 5eaa899
   - **问题**：事件记录完全看不到（折叠为1行预览）；天气信息藏在侧栏需点汉堡菜单才可见
   - **事件记录3条默认**：`.collapsed` 不再隐藏全部，而是用 nth-child(n+4) 显示前3条；预览条显示「📜 共N条记录，点击▾展开」
   - **天气内联**：时间槽添加 `☀️晴天 28°C（温暖）舒适`（时段与AP之间）；位置行添加3天预报（住所名右侧）

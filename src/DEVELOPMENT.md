@@ -1,6 +1,66 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.5 — 移动端事件3条默认+天气内联+预报交替闪烁）
+> 最后更新: 2026-07-04（v3.7 — 交易系统全面优化+事件修复+移动端弹窗居中）
+>
+> commit: `5eaa899`
+
+---
+
+## 2026-07-04 — v3.7：交易系统全面优化+事件修复+移动端弹窗居中
+
+> 设计参考：BitLife 交易系统 / 模拟人生经济系统 / 真实中国批发零售市场波动
+> 影响文件：src/js/phase1/pricing.js（+176行）、src/js/ui/render.js（+90行）、src/js/core/festivals.js（+42行）、src/css/style.css（+2行）、src/js/phase1/extra_events.js（+6行）、src/js/core/cross_system_events.js（+6行）
+> 触发：用户反馈3个问题 → 全量排查修复
+
+### 修复1：交易Tab「undefined」显示bug
+
+**根因**：`renderTradeTab()` 中 `skillTag` 变量用 `var` 声明在函数中部（line 1517），但模板字符串在 line 1436 就使用了它。JS var hoisting 导致 `skillTag` 初始化为 `undefined`，渲染为「undefined」文字。
+
+**修复**：将 `skillTag` 及其依赖（`salesLvl`、`visitedLocs`）移到 headerDiv 创建之前（line 1418-1437）。
+
+### 修复2：CATEGORY_NAMES_TRADE / getFestivalCategoryName 不完整
+
+**问题**：goods.js 有 10 个分类（daily/food/luxury/clothing/electronics/scrap/books/flowers/medicine/stationery），但中文名映射表只覆盖前 6 个，导致新增分类显示原始英文 key。
+
+**修复**：两处映射表补齐全部 10 个分类。
+
+### 修复3：SEASONAL_PRICE_MODS 重构
+
+**问题**：原季节价格修正只覆盖 4-5 个分类，且混杂 goodId 级 key（"water"/"drinks"），导致「卖出好时机」始终只显示服装/电子。
+
+**修复**：重新设计 10 个分类全覆盖的季节价格矩阵，每季 3-4 个品类有显著波动（>1.1或<0.9），买卖推荐随季节动态变化。
+
+### 修复4：新增动态路线推荐
+
+**新增** `getBestTradeRoutes(state)` 函数，实时计算所有商品×地点组合的利润率，考虑价格修正、市场事件、交通成本，在交易Tab顶部显示 Top 3 最佳路线。
+
+### 修复5：市场事件扩充 +8 条
+
+新增：书籍热/情人节花市/流感爆发/基建项目/快递旺季/文具促销/医疗物资/品牌清仓，覆盖更多品类和场景。
+
+### 修复6：移动端弹窗居中
+
+**问题**：CSS 媒体查询中 `.modal-overlay` 使用 `align-items: flex-start`，弹窗偏上。
+
+**修复**：改为 `align-items: center`，弹窗垂直居中。
+
+### 修复7：暴雨送货事件语境修复
+
+**问题**：extra_events.js/cross_system_events.js 的暴雨事件中「蹚水送外卖」选项的 apply 消息写死「送货」「小费」，暗示玩家是配送员，但实际上任何玩家都可能触发该随机事件。
+
+**修复**：叙事改为「蹚水跑腿」「帮人送东西」，避免误导。
+
+### 验证
+
+```
+node --check pricing.js ✓
+node --check render.js ✓
+node --check festivals.js ✓
+node --check extra_events.js ✓
+node --check cross_system_events.js ✓
+python build.py ✓ (4566.0 KB)
+git commit 5eaa899 ✓
+```
 
 ---
 
