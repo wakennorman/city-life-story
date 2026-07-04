@@ -76,11 +76,10 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-05)**：v3.17 跨系统联动事件扩充（空白区填充）
-  - **新增5个联动事件**：跑腿老主顾问候（老手特遇）/ 一眼识假货（专业人士视角）/ 老周批发市场暗线（NPC好感秘密）/ 路遇扒手三档道德分叉（道德分叉）/ 连续饥饿健康崩溃（积累爆发）
-  - **新增2个链式后续**：`zhou_channel_first_deal`（3天后首单高价回收）、`moral_pickpocket_followup_kindness`（3天后感谢信）
-  - **设计亮点**：Event4 choices 为函数动态生成三套选项（morality≥60/≤35/中间）；Event5 找朋友分支按好感最高NPC触发专属对话；Event3 仅在批发市场触发+链式调度
-  - **验证**：`node --check cross_system_events.js` ✅ / `node --check main.js` ✅ / `python build.py` (4605.9 KB) ✅ / `commit 57cf587` ✅ / `git push` ✅
+- **最新一次工作 (2026-07-05)**：v3.17b 联动事件扩充第二波（5个空白区填充）
+  - **新增5个联动事件**：疲劳过劳危机（积累爆发·对称补充饥饿事件）/ 技能跨界洞察（烹饪+管理→餐饮创业 / 修理+销售→翻新转卖）/ 双NPC联动推荐（王大婶+老周好感均≥50联手推荐物流园工作）/ 道德正向回报（moral.score≥15触发路人回馈，30天冷却）/ 低卫生社交尴尬（连续卫生<30面馆被嫌弃，40%概率暖心送荷包蛋）
+  - **设计亮点**：Event7 choices 按技能组合动态生成叙事；Event8 双NPC条件产生"1+1>2"效应；Event9 与 moral_pickpocket_split 形成互补（积累 vs 单次）
+  - **验证**：`node --check cross_system_events.js` ✅ / `python build.py` (4626.9 KB) ✅ / `commit 3658492` ✅
   - **天气内联**：时间槽添加 `☀️晴天 28°C（温暖）舒适`（时段与AP之间）；位置行添加3天预报（住所名右侧）
   - **仅移动端**：`window.innerWidth <= 768` 控制，桌面端侧栏天气不受影响
   - **验证**：`node --check main.js` ✅ / `node --check render_infra.js` ✅ / `python build.py`(4557.2 KB) ✅

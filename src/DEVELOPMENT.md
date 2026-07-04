@@ -1,8 +1,41 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-05（v3.17 — 新增5个跨系统联动事件+2个链式后续）
+> 最后更新: 2026-07-05（v3.17b — 新增5个联动事件（疲劳/技能组合/双NPC/道德积累/低卫生））
 >
-> commit: `57cf587`
+> commit: `3658492`
+
+---
+
+## 2026-07-05 — v3.17b：联动事件扩充第二波（5个空白区填充）
+
+> SOP: 自主设计，按空白区分析自主选题
+> 影响文件：cross_system_events.js（+506行）
+> 设计参考：This War of Mine / 大多数 / Papers Please / Stardew Valley
+
+### 新增5个联动事件
+
+| 事件ID                    | 类型       | 联动系统                        | 触发条件                                | 后续           |
+| ------------------------- | ---------- | ------------------------------- | --------------------------------------- | -------------- |
+| `fatigue_streak_collapse` | 积累爆发   | 疲劳+健康+经济                  | highFatigueStreak≥3, fatigue≥75, day>10 | 无             |
+| `skill_combo_insight`     | 技能组合   | 烹饪+管理→餐饮 / 修理+销售→翻新 | 两项技能≥30/20, day>30, 不可重复        | 无             |
+| `npc_duo_referral`        | 双NPC联动  | 王大婶+老周好感+工作            | 两人好感均≥50, day>40, 不可重复         | 解锁物流园工作 |
+| `moral_good_karma`        | 道德积累   | 道德+名气+经济                  | moral.score≥15, day>20, 30天冷却        | 无             |
+| `hygiene_social_awkward`  | 低卫生后果 | 卫生+社交+心情                  | lowHygieneStreak≥2, hygiene<30, day>5   | 无             |
+
+### 设计亮点
+
+- **疲劳过劳危机**：与hunger_streak_collapse对称，露宿街头时30%概率被驱赶
+- **技能跨界洞察**：两种组合（cooking+management / repair+sales），每种给出不同叙事文本
+- **双NPC联动**：1+1>2效应，王大婶和老周同时好感≥50才触发
+- **道德正向回报**：moral.score累计版，30天冷却可重复触发，区别于单次道德选择
+- **低卫生社交惩罚**：面馆老板可能送荷包蛋（40%概率暖心分支）
+
+### 验证
+
+- `node --check cross_system_events.js` ✅
+- `python build.py` (4626.9 KB) ✅
+- `commit 3658492` ✅
+- `git push` ❌（代理网络不通，需手动重试）
 
 ---
 
