@@ -2,36 +2,42 @@
  * 需求系统 — 饥饱/疲劳/卫生/心情衰减 + 情绪状态判定 + 伤病效果
  */
 
-/** 每日需求衰减 */
+/** 每日需求衰减 (v3.2 蒙特卡洛平衡：饥饱衰减从18→13，防止开局饿死) */
 function applyNeedsDecay(state) {
   const n = state.needs;
-  n.hunger = Math.max(0, n.hunger - 18);
-  n.hygiene = Math.max(0, n.hygiene - 8);
-  n.happiness = Math.max(0, n.happiness - 5);
+  n.hunger = Math.max(0, n.hunger - 13);
+  n.hygiene = Math.max(0, n.hygiene - 7);
+  n.happiness = Math.max(0, n.happiness - 4);
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 
-/** 检查需求阈值并施加惩罚 */
+/** 检查需求阈值并施加惩罚 (v3.2 蒙特卡洛平衡：降低阈值惩罚，前30天减半) */
 function checkNeedsThresholds(state) {
   const n = state.needs;
   const msgs = [];
+  // v3.2 新手保护：前30天需求惩罚减半
+  const dayMul = state.player.day <= 30 ? 0.5 : 1.0;
 
   if (n.hunger < 10) {
-    state.status.health = Math.max(0, state.status.health - 5);
+    const dmg = Math.round(3 * dayMul);
+    state.status.health = Math.max(0, state.status.health - dmg);
     if (n.hunger <= 0) state.flags._everStarved = true; // 成就追踪
-    msgs.push("⚠️ 极度饥饿！健康-5。赶紧吃点什么！");
-  } else if (n.hunger < 30) {
-    state.status.health = Math.max(0, state.status.health - 2);
+    msgs.push("⚠️ 极度饥饿！健康-" + dmg + "。赶紧吃点什么！");
+  } else if (n.hunger < 25) {
+    const dmg = Math.round(1 * dayMul);
+    state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("🍞 肚子饿了，工作效率下降。");
   }
 
   if (n.hygiene < 10) {
-    state.status.health = Math.max(0, state.status.health - 3);
+    const dmg = Math.round(2 * dayMul);
+    state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("🦠 卫生极差！容易生病。去洗个澡吧。");
   }
 
   if (n.fatigue > 90) {
-    state.status.health = Math.max(0, state.status.health - 3);
+    const dmg = Math.round(2 * dayMul);
+    state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("😵 极度疲劳！需要休息或睡眠。");
   }
 
@@ -59,13 +65,13 @@ function tickHealthStatus(state) {
       StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
     }
   }
-  // 自然恢复（无病无伤时）
-  if (
-    !st.injured &&
-    (!st.illnesses || st.illnesses.length === 0) &&
-    st.health < 100
-  ) {
-    st.health = Math.min(100, st.health + 1);
+  // v3.2 MC平衡：始终允许自然恢复（防止"吸收态"死亡螺旋）
+  // 无病无伤: +2/天；有疾病但不受伤: +1/天（参考RimWorld免疫系统/This War休息恢复）
+  // 机制意图：小病能扛住（延缓恶化），但慢性病持续玩家仍须治疗打破负循环
+  if (!st.injured && st.health < 100) {
+    var hasIllness = st.illnesses && st.illnesses.length > 0;
+    var regen = hasIllness ? 1 : 2;
+    st.health = Math.min(100, st.health + regen);
   }
 }
 
@@ -155,9 +161,9 @@ function applyWealthBasedOverhead(state) {
   }
 
   // 住房维护费：住房等级越高越贵
-  // tier 0=¥0/天, tier 1=¥30/天, tier 2=¥100/天, tier 3=¥500/天
+  // v3.2: tier 0=¥0, tier 1=¥10, tier 2=¥40, tier 3=¥200 (降低中期负担)
   var houseTier = (state.housing && state.housing.tier) || 0;
-  var UPKEEP = [0, 30, 100, 500];
+  var UPKEEP = [0, 10, 40, 200];
   var houseCost = UPKEEP[houseTier] || 0;
   if (houseCost > 0) {
     state.resources.cash -= houseCost;

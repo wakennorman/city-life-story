@@ -148,93 +148,58 @@
       var needs = state.needs;
       if (!needs || ap <= 0) return;
 
-      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.max(0, needs.hunger - 30);
+      // v3.2.1 修复: 优先生存 + 住房 + 工作/休息交替循环
+      // 原 bug: AP 全花在技能/洗澡/娱乐，疲劳日增而休息不足 → Day 80 死亡螺旋
+      // 1. 吃饭
+      if (needs.hunger < 50 && cash >= 6 && ap >= 10) {
+        var foodCost = 10;
+        var foodRecover = 38;
+        if (cash >= 35 && needs.hunger < 25) {
+          foodCost = 35;
+          foodRecover = 65;
+        }
+        state.resources.cash = Math.max(0, state.resources.cash - foodCost);
+        needs.hunger = Math.min(100, needs.hunger + foodRecover);
+        needs.happiness = Math.min(100, needs.happiness + 3);
         ap -= 10;
       }
-      if (needs.fatigue > 70 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
-      if (needs.hygiene > 50 && cash >= 5 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 5);
-        needs.hygiene = Math.max(0, needs.hygiene - 35);
-        ap -= 10;
-      }
-      if (needs.happiness < 35 && ap >= 10) {
-        needs.happiness = Math.min(100, needs.happiness + 15);
-        needs.fatigue = Math.min(100, needs.fatigue + 5);
-        ap -= 10;
-      }
-
-      // 住房升级
+      // 2. 积极住房升级（寿命 = tier² × 恢复力，越早升级越好）
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 5) {
+      var day = state.player.day;
+      if (ht === 0 && cash >= 500 && day > 2) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
-        state.housing.rentedDay = state.player.day;
+        state.housing.rentedDay = day;
         if (state.inventory) state.inventory.capacity = 50;
-      }
-      if (ht === 1 && state.resources.cash >= 1200 && state.player.day > 20) {
+      } else if (ht === 1 && cash >= 1500 && day > 12) {
         state.resources.cash -= 800;
         state.housing.tier = 2;
-        state.housing.rentedDay = state.player.day;
+        state.housing.rentedDay = day;
         if (state.inventory) state.inventory.capacity = 100;
+      } else if (ht === 2 && cash >= 4000 && day > 40) {
+        state.resources.cash -= 2000;
+        state.housing.tier = 3;
+        state.housing.rentedDay = day;
+        if (state.inventory) state.inventory.capacity = 200;
       }
-
-      // 公司阶段
-      if (
-        state.player.phase === "street" &&
-        ((state.player.intelligence >= 45 && state.player.day > 60) ||
-          (state.player.day >= 200 &&
-            (state.resources.totalEarned || 0) > 5000))
-      ) {
-        state.player.phase = "corporate";
-      }
-
-      // 技能学习
-      if (
-        state.player.day > 7 &&
-        ap >= 20 &&
-        cash > 0 &&
-        needs.fatigue < 70 &&
-        state.skills
-      ) {
-        var skIds = Object.keys(state.skills);
-        var ws = skIds[0],
-          wl = state.skills[ws].level;
-        for (var si = 1; si < skIds.length; si++) {
-          if (state.skills[skIds[si]].level < wl) {
-            ws = skIds[si];
-            wl = state.skills[skIds[si]].level;
-          }
-        }
-        state.skills[ws].xp = (state.skills[ws].xp || 0) + 5;
-        if (state.skills[ws].xp >= 100) {
-          state.skills[ws].xp = 0;
-          state.skills[ws].level = Math.min(100, state.skills[ws].level + 1);
-        }
-        ap -= 15;
-        needs.fatigue = Math.min(100, needs.fatigue + 3);
-      }
-
-      // 健康管理：健康<40就休息
-      if (state.status.health < 40 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 20);
-        ap -= 15;
-      }
-
-      // 地点进阶
-      var day = state.player.day;
+      // 3. 地点进阶
       var loc = "slum";
-      if (day > 30 && state.resources.cash >= 2000) loc = "commercialDist";
-      if (day > 90 && state.resources.cash >= 8000) loc = "techPark";
+      if (day > 18 && cash >= 1200) loc = "commercialDist";
+      if (day > 50 && cash >= 4000) loc = "techPark";
       state.trade.currentLocation = loc;
-
-      // 工作循环: 最多4次，疲劳过高则停止
+      // 4. 工作/休息交替循环（核心修复：每工作一轮检查疲劳，累了先休息）
       var worked = 0;
-      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
+      while (ap >= 14 && worked < 10) {
+        if (needs.fatigue > 50 && ap >= 12) {
+          needs.fatigue = Math.max(0, needs.fatigue - 30);
+          ap -= 12;
+          continue;
+        }
+        if (state.status.health < 35 && ap >= 15) {
+          needs.fatigue = Math.max(0, needs.fatigue - 20);
+          ap -= 15;
+          continue;
+        }
         var job = findJobAtLocation(state, loc);
         applyJobPay(state, job);
         ap -= 14;
@@ -249,30 +214,37 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs || ap <= 0) return;
-      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
         state.resources.cash = Math.max(0, state.resources.cash - 8);
-        needs.hunger = Math.max(0, needs.hunger - 25);
+        needs.hunger = Math.min(100, needs.hunger + 25);
         ap -= 10;
       }
-      if (needs.fatigue > 60 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 20);
+      if (needs.fatigue > 70 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
         ap -= 15;
       }
 
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 7) {
+      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 5) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
+        state.housing.rentedDay = state.player.day;
+      }
+      if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
+        state.resources.cash -= 800;
+        state.housing.tier = 2;
         state.housing.rentedDay = state.player.day;
       }
 
       var day = state.player.day;
       var loc = "slum";
-      if (day > 60 && state.resources.cash >= 5000) loc = "factoryZone";
+      if (day > 40 && state.resources.cash >= 3000) loc = "factoryZone";
+      if (day > 80 && state.resources.cash >= 8000) loc = "commercialDist";
+      state.trade.currentLocation = loc;
 
-      // 工作循环: 最多3次，每次检查疲劳
+      // v3.2.1 对齐social: worked<4, fatigue<65
       var worked = 0;
-      while (ap >= 14 && worked < 3 && needs.fatigue < 60) {
+      while (ap >= 14 && worked < 4 && needs.fatigue < 65) {
         var job = findJobAtLocation(state, loc);
         applyJobPay(state, job);
         ap -= 14;
@@ -287,9 +259,9 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs || ap <= 0) return;
-      if (needs.hunger > 40 && cash >= 8 && ap >= 10) {
+      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
         state.resources.cash = Math.max(0, state.resources.cash - 8);
-        needs.hunger = Math.max(0, needs.hunger - 30);
+        needs.hunger = Math.min(100, needs.hunger + 30);
         ap -= 10;
       }
       if (needs.fatigue > 60 && ap >= 15) {
@@ -299,71 +271,59 @@
 
       // 住房升级
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 5) {
+      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 4) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
         state.housing.rentedDay = state.player.day;
       }
+      if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
+        state.resources.cash -= 800;
+        state.housing.tier = 2;
+        state.housing.rentedDay = state.player.day;
+      }
 
-      // 公司阶段
+      // v3.2.1: 降低技能AP消耗优先级，先住房后学习
+      var day = state.player.day;
       if (
-        state.player.phase === "street" &&
-        ((state.player.intelligence >= 45 && state.player.day > 60) ||
-          (state.player.day >= 200 &&
-            (state.resources.totalEarned || 0) > 5000))
+        day > 10 &&
+        day % 4 === 0 &&
+        state.skills &&
+        ap >= 18 &&
+        needs.fatigue < 50
       ) {
-        state.player.phase = "corporate";
-      }
-
-      // 学习优先（每天 25 AP 学 coding/english）
-      if (state.player && state.player.intelligence < 45) {
-        state.player.intelligence = Math.min(
-          100,
-          (state.player.intelligence || 20) + 2,
-        );
-      }
-      if (ap >= 25 && needs.fatigue < 65 && state.skills) {
-        var order = ["coding", "english", "management", "sales", "cooking"];
+        // 隔天学一次，不抢占工作AP
+        var skids = Object.keys(state.skills);
         var cs = null;
-        for (var pi = 0; pi < order.length; pi++) {
-          if (state.skills[order[pi]] && state.skills[order[pi]].level < 30) {
-            cs = order[pi];
+        for (var i = 0; i < skids.length; i++) {
+          if (
+            skids[i] === "coding" ||
+            skids[i] === "english" ||
+            skids[i] === "management"
+          ) {
+            cs = skids[i];
             break;
           }
         }
-        if (!cs) {
-          var skids = Object.keys(state.skills);
-          cs = skids[0];
-          for (var ski = 1; ski < skids.length; ski++) {
-            if (state.skills[skids[ski]].level < state.skills[cs].level)
-              cs = skids[ski];
+        if (!cs) cs = skids[0];
+        if (state.skills[cs].level < 60) {
+          state.skills[cs].xp = (state.skills[cs].xp || 0) + 5;
+          if (state.skills[cs].xp >= 100) {
+            state.skills[cs].xp = 0;
+            state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
           }
+          ap -= 15;
+          needs.fatigue = Math.min(100, needs.fatigue + 3);
         }
-        state.skills[cs].xp = (state.skills[cs].xp || 0) + 8;
-        if (state.skills[cs].xp >= 100) {
-          state.skills[cs].xp = 0;
-          state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
-        }
-        ap -= 25;
-        needs.fatigue = Math.min(100, needs.fatigue + 3);
       }
 
-      // 地点进阶：slum→school→trainingCenter→techPark
-      var day = state.player.day;
       var loc = "slum";
-      if (day > 15 && state.player.intelligence >= 25) loc = "school";
-      if (day > 45 && state.player.intelligence >= 35) loc = "trainingCenter";
-      if (
-        day > 90 &&
-        state.player.intelligence >= 40 &&
-        state.resources.cash >= 2000
-      )
-        loc = "techPark";
+      if (day > 25 && state.resources.cash >= 2000) loc = "commercialDist";
+      if (day > 50 && state.resources.cash >= 4000) loc = "techPark";
       state.trade.currentLocation = loc;
 
-      // 工作循环: 最多3次，疲劳过高则停止
+      // v3.2.1 对齐social: worked<4
       var worked = 0;
-      while (ap >= 14 && worked < 3 && needs.fatigue < 60) {
+      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
         var job = findJobAtLocation(state, loc);
         applyJobPay(state, job);
         ap -= 14;
@@ -380,9 +340,9 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs || ap <= 0) return;
-      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
         state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.max(0, needs.hunger - 30);
+        needs.hunger = Math.min(100, needs.hunger + 30);
         ap -= 10;
       }
       if (needs.fatigue > 70 && ap >= 15) {
@@ -464,10 +424,10 @@
         }
       }
 
-      // 剩余AP去商业区打工
+      // v3.2.1: 对齐social模式(worked<4, fatigue<65, 留AP给endDay恢复)
       state.trade.currentLocation = "commercialDist";
       var w2 = 0;
-      while (ap >= 14 && w2 < 2 && needs.fatigue < 65) {
+      while (ap >= 14 && w2 < 4 && needs.fatigue < 65) {
         applyJobPay(state, findJobAtLocation(state, "commercialDist"));
         ap -= 14;
         w2++;
@@ -484,9 +444,9 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs || ap <= 0) return;
-      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
         state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.max(0, needs.hunger - 30);
+        needs.hunger = Math.min(100, needs.hunger + 30);
         ap -= 10;
       }
       if (needs.fatigue > 70 && ap >= 15) {
@@ -538,9 +498,9 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs || ap <= 0) return;
-      if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
         state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.max(0, needs.hunger - 30);
+        needs.hunger = Math.min(100, needs.hunger + 30);
         ap -= 10;
       }
       if (needs.fatigue > 70 && ap >= 15) {
@@ -558,49 +518,50 @@
       }
 
       var day = state.player.day;
-      // 前60天：学习并积累
-      if (day <= 60) {
-        if ((state.player.intelligence || 20) < 45 && needs.fatigue < 65) {
-          state.player.intelligence = Math.min(
-            100,
-            (state.player.intelligence || 20) + 2,
-          );
-          ap -= 20;
+      // 前60天：技能积累+打工（不直接改intelligence，改用skill study）
+      if (day <= 60 && state.skills && ap >= 18 && needs.fatigue < 55) {
+        var skids = Object.keys(state.skills);
+        var cs = null;
+        for (var i = 0; i < skids.length; i++) {
+          if (
+            skids[i] === "coding" ||
+            skids[i] === "english" ||
+            skids[i] === "management"
+          ) {
+            cs = skids[i];
+            break;
+          }
         }
-        state.trade.currentLocation = "slum";
-        applyJobPay(state, findJobAtLocation(state, "slum"));
+        if (!cs) cs = skids[0];
+        if (state.skills[cs].level < 60) {
+          state.skills[cs].xp = (state.skills[cs].xp || 0) + 5;
+          if (state.skills[cs].xp >= 100) {
+            state.skills[cs].xp = 0;
+            state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
+          }
+          ap -= 15;
+          needs.fatigue = Math.min(100, needs.fatigue + 3);
+        }
+      }
+
+      var loc = "slum";
+      if (day > 20 && cash >= 1200) loc = "commercialDist";
+      if (day > 50 && cash >= 4000) loc = "techPark";
+      state.trade.currentLocation = loc;
+
+      // v3.2.1 对齐social: worked<4, fatigue<60
+      var worked = 0;
+      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
+        var job = findJobAtLocation(state, loc);
+        applyJobPay(state, job);
         ap -= 14;
-        state.player.actionPoints = Math.max(0, ap);
-        return;
+        worked++;
       }
-
-      // 60天后：进入企业阶段
-      if (state.player.phase === "street") {
-        state.player.phase = "corporate";
-        state.corporate = state.corporate || {};
-        state.corporate.rank = "P5";
-        state.corporate.company = "star_tech";
-      }
-
-      // 企业工作：每日薪资
-      var ranks = ["P5", "P6", "P7", "P8", "P9", "P10"];
-      var salaries = [15000, 25000, 40000, 65000, 100000, 180000];
-      var idx = Math.max(0, ranks.indexOf(state.corporate.rank));
-      var dailySalary = Math.round(salaries[idx] / 30);
-      state.resources.cash += dailySalary;
-      state.resources.totalEarned =
-        (state.resources.totalEarned || 0) + dailySalary;
-
-      // 每180天晋升一次
-      var daysAtRank = day - (state.corporate.rankSince || 60);
-      if (daysAtRank > 180 && idx < ranks.length - 1) {
-        state.corporate.rank = ranks[idx + 1];
-        state.corporate.rankSince = day;
-      }
-
       state.player.actionPoints = Math.max(0, ap);
     };
   }
+
+  // (corporate phase: street job → corporate job offers via game mechanics)
 
   function runTrial(baseState, policyFn, seed) {
     var state = deepClone(baseState);
@@ -617,24 +578,81 @@
     var snaps = [],
       sick = 0,
       hurt = 0,
-      diedOn = -1;
+      diedOn = -1,
+      deathCause = "",
+      dayCash = [],
+      dayHealth = [],
+      dayHunger = [],
+      dayFatigue = [],
+      jobsWorked = {},
+      totalWorks = 0,
+      phaseTransitionDay = -1,
+      maxHousingTier = 0,
+      housingUpgradeDays = [],
+      rentPaid = 0,
+      foodSpent = 0,
+      amenityUsed = 0,
+      eventsTriggered = 0;
+
     var snapDays = [7, 15, 30, 60, 90, 180, 365, 730];
+    var dayCashWindow = [];
+    var recentCash = [];
 
     for (var d = 0; d < CONFIG.daysPerTrial; d++) {
+      var startHealth = state.status.health;
+      var startCash = state.resources.cash;
+
       try {
         policyFn(state);
       } catch (e) {}
       try {
         state.player.actionPoints = 0;
         state.player.timeSlot = "evening";
+        var prePipelineHealth = state.status.health;
         if (typeof runDailyPipeline === "function") runDailyPipeline(state);
-      } catch (e) {}
+      } catch (e) {
+        if (state.flags) state.flags.gameOver = true;
+        state.flags.gameOverReason = "pipeline_error: " + e.message;
+      }
 
+      // Track phase transition
+      if (
+        phaseTransitionDay < 0 &&
+        state.player.phase === "corporate" &&
+        d > 0
+      ) {
+        phaseTransitionDay = d + 1;
+      }
+
+      // Track housing upgrades
+      var curTier = state.housing ? state.housing.tier : 0;
+      if (curTier > maxHousingTier) {
+        if (
+          housingUpgradeDays.length === 0 ||
+          housingUpgradeDays[housingUpgradeDays.length - 1] !== curTier
+        ) {
+          housingUpgradeDays.push({ tier: curTier, day: d + 1 });
+        }
+        maxHousingTier = curTier;
+      }
+
+      // Death detection with cause
       if (state.flags.gameOver || state.status.health <= 0) {
         diedOn = d + 1;
+        deathCause = state.flags.gameOverReason || "";
+        if (!deathCause) {
+          if (state.status.health <= 0) deathCause = "health_depleted";
+          else if (
+            (state.resources.debt || 0) + (state.resources.villageDebt || 0) >
+            50000
+          )
+            deathCause = "debt_over_50000";
+          else deathCause = "unknown";
+        }
         break;
       }
 
+      // Count illness/injury
       if (
         state.flags._dailyTransactions &&
         Array.isArray(state.flags._dailyTransactions)
@@ -651,6 +669,10 @@
             (t.category && t.category.indexOf("injury") >= 0)
           )
             hurt++;
+          if (t.category === "rent") rentPaid += t.amount || 0;
+          if (t.category === "food" || t.category === "amenity_food")
+            foodSpent += t.amount || 0;
+          if (t.type === "event") eventsTriggered++;
         }
       }
 
@@ -662,8 +684,12 @@
           debt:
             (state.resources.debt || 0) + (state.resources.villageDebt || 0),
           health: state.status.health,
+          hunger: state.needs.hunger,
+          fatigue: state.needs.fatigue,
+          happiness: state.needs.happiness,
           housingTier: state.housing ? state.housing.tier : 0,
           phase: state.player.phase,
+          emotionalState: state.status.emotionalState,
         });
       }
     }
@@ -672,17 +698,24 @@
     return {
       survived: survived,
       diedOnDay: diedOn,
+      deathCause: deathCause,
       finalCash: state.resources.cash,
       finalBank: state.resources.bankBalance || 0,
       finalDebt:
         (state.resources.debt || 0) + (state.resources.villageDebt || 0),
       finalHealth: state.status.health,
+      finalHousingTierMax: maxHousingTier,
       finalHousingTier: state.housing ? state.housing.tier : 0,
       totalEarned: state.resources.totalEarned || 0,
       illnessCount: sick,
       injuryCount: hurt,
       snapshots: snaps,
       finalPhase: state.player.phase,
+      phaseTransitionDay: phaseTransitionDay,
+      housingUpgradeDays: housingUpgradeDays,
+      rentPaid: rentPaid,
+      foodSpent: foodSpent,
+      eventsTriggered: eventsTriggered,
     };
   }
 
@@ -821,11 +854,41 @@
       }, 0) / Math.max(1, alive.length);
     var avgHo =
       alive.reduce(function (s, r) {
-        return s + r.finalHousingTier;
+        return s + (r.finalHousingTierMax || r.finalHousingTier);
       }, 0) / Math.max(1, alive.length);
-    var corp = alive.filter(function (r) {
+    var corp3 = alive.filter(function (r) {
       return r.finalPhase === "corporate";
     }).length;
+    var avgFood =
+      alive.reduce(function (s, r) {
+        return s + (r.foodSpent || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgEvt =
+      alive.reduce(function (s, r) {
+        return s + (r.eventsTriggered || 0);
+      }, 0) / Math.max(1, alive.length);
+    var transitioned2 = alive.filter(function (r) {
+      return r.phaseTransitionDay > 0;
+    });
+    var avgPhaseDay2 =
+      transitioned2.length > 0
+        ? transitioned2.reduce(function (s, r) {
+            return s + r.phaseTransitionDay;
+          }, 0) / transitioned2.length
+        : -1;
+
+    // Housing tier distribution
+    var housingTiers = {};
+    for (var hi3 = 0; hi3 < alive.length; hi3++) {
+      var ht3 = alive[hi3].finalHousingTierMax || alive[hi3].finalHousingTier;
+      housingTiers[ht3] = (housingTiers[ht3] || 0) + 1;
+    }
+    // Death cause breakdown
+    var deathCauses = {};
+    for (var di3 = 0; di3 < dead.length; di3++) {
+      var cause3 = dead[di3].deathCause || "unknown";
+      deathCauses[cause3] = (deathCauses[cause3] || 0) + 1;
+    }
 
     return {
       strategy: name,
@@ -837,6 +900,7 @@
       died31_90: (d3 / n) * 100,
       died91plus: (d4 / n) * 100,
       avgDeathDay: add,
+      deathCauses: deathCauses,
       avgCash: avgCash,
       medianCash: alive.length > 0 ? pct(ca, 50) : 0,
       p10Cash: alive.length > 0 ? pct(ca, 10) : 0,
@@ -847,7 +911,11 @@
       avgIllness: avgIl,
       avgInjury: avgIn,
       avgHousing: avgHo,
-      corpPhaseRate: (corp / Math.max(1, alive.length)) * 100,
+      housingTiersReached: housingTiers,
+      avgFoodSpentTotal: avgFood,
+      avgEventsTriggered: avgEvt,
+      corpPhaseRate: (corp3 / Math.max(1, alive.length)) * 100,
+      avgPhaseTransitionDay: isNaN(avgPhaseDay2) ? -1 : avgPhaseDay2,
       economicLayers: {
         poor: poor,
         subsistence: sub,
@@ -868,7 +936,7 @@
     };
 
     console.log("\n" + L);
-    console.log("  🧪 城市浮生记 v3.1 — 蒙特卡洛平衡测试报告");
+    console.log("  城市浮生记 v3.2 — 蒙特卡洛平衡测试报告");
     console.log(
       "  " + new Date().toISOString().replace("T", " ").substring(0, 19),
     );
@@ -876,9 +944,9 @@
     console.log(
       "  配置: " +
         allStats.length +
-        " 策略 × " +
+        " 策略 x " +
         CONFIG.trials +
-        " 次 × " +
+        " 次 x " +
         CONFIG.daysPerTrial +
         " 天",
     );
@@ -916,8 +984,19 @@
       console.log("      Day 8-30:  " + pc(s.died8_30) + "%");
       console.log("      Day 31-90: " + pc(s.died31_90) + "%");
       console.log("      Day 91+:   " + pc(s.died91plus) + "%");
-      if (s.avgDeathDay > 0)
+      if (s.avgDeathDay > 0) {
         console.log("    死亡平均天数: " + s.avgDeathDay.toFixed(1) + " 天");
+        // Death causes
+        var causeKeys = Object.keys(s.deathCauses || {});
+        if (causeKeys.length > 0) {
+          console.log("    死亡原因:");
+          for (var dc = 0; dc < causeKeys.length; dc++) {
+            console.log(
+              "      " + causeKeys[dc] + ": " + s.deathCauses[causeKeys[dc]],
+            );
+          }
+        }
+      }
 
       console.log("\n  💰 经济统计（存活玩家）");
       console.log("    平均现金:    ¥" + fmt(s.avgCash));
@@ -986,8 +1065,26 @@
       console.log("    平均健康:    " + s.avgHealth.toFixed(1));
       console.log("    平均疾病次数: " + s.avgIllness.toFixed(1));
       console.log("    平均受伤次数: " + s.avgInjury.toFixed(1));
-      console.log("    平均住房等级: " + s.avgHousing.toFixed(1) + "/6");
+
+      // Housing tier distribution
+      var htKeys = Object.keys(s.housingTiersReached || {}).sort();
+      if (htKeys.length > 0) {
+        var htStr = htKeys
+          .map(function (k) {
+            return "T" + k + ":" + s.housingTiersReached[k];
+          })
+          .join(" ");
+        console.log("    住房等级分布: " + htStr);
+      }
       console.log("    公司阶段转化率: " + s.corpPhaseRate.toFixed(1) + "%");
+      if (s.avgPhaseTransitionDay > 0)
+        console.log(
+          "    平均转公司阶段天: " + s.avgPhaseTransitionDay.toFixed(0),
+        );
+      console.log("    总食品花费:   ¥" + fmt(s.avgFoodSpentTotal || 0));
+      console.log(
+        "    总事件触发:   " + (s.avgEventsTriggered || 0).toFixed(1) + "次",
+      );
     }
 
     if (allStats.length > 1) {

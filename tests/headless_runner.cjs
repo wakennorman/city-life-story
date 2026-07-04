@@ -165,6 +165,12 @@
           }
           return child;
         },
+        remove: function () {
+          // Stub for toast/popup removal
+          if (el.parentNode && el.parentNode.removeChild) {
+            el.parentNode.removeChild(el);
+          }
+        },
         removeChild: function (child) {
           var idx = el.children.indexOf(child);
           if (idx >= 0) el.children.splice(idx, 1);
@@ -459,6 +465,24 @@
         removeEventListener: function () {},
       };
     });
+    // setTimeout: run immediately (no deferred execution in headless)
+    globalThis.setTimeout = function (fn) {
+      if (typeof fn === "function") {
+        try {
+          fn();
+        } catch (e) {}
+      }
+      return 0;
+    };
+    globalThis.clearTimeout = function () {};
+    globalThis.setInterval = function () {
+      return 0;
+    };
+    globalThis.clearInterval = function () {};
+    globalThis.queueMicrotask = function (fn) {
+      if (typeof fn === "function") fn();
+    };
+
     globalThis.HTMLElement = function () {};
     globalThis.HTMLDivElement = function () {};
     globalThis.HTMLSpanElement = function () {};
@@ -622,9 +646,9 @@
   }
 
   // ====== 获取脚本加载顺序 ======
+  // 与 city-life-story/src/index.html 保持同步
   function getScriptOrder() {
     return [
-      // Core (batch 1)
       "js/core/random.js",
       "js/core/state.js",
       "js/core/action_sort.js",
@@ -632,9 +656,10 @@
       "js/core/finance.js",
       "js/core/save.js",
       "js/core/events_core.js",
-      "js/core/events_street.js",
+      "js/core/events_street_survival.js",
+      "js/core/events_street_wealth.js",
+      "js/core/events_street_life.js",
       "js/core/events_corp.js",
-      "js/phase1/extra_events.js",
       "js/core/news_event_bridge.js",
       "js/core/weather.js",
       "js/core/weather_forecast.js",
@@ -653,23 +678,38 @@
       "js/core/story_chapters.js",
       "js/core/route_effects.js",
       "js/core/cross_system_events.js",
+      "js/core/life_decisions.js",
+      "js/core/life_nodes.js",
+      "js/core/medical.js",
+      "js/core/travel.js",
+      "js/core/legal.js",
+      "js/core/cross_system_integration.js",
       "js/core/career_path_events.js",
-      // Data
+      "js/core/news_system.js",
+      "js/core/news_investment_bridge.js",
+      "js/core/world_params.js",
+      "js/core/world_news_intro.js",
+      "js/core/skill_intel.js",
+      "js/core/npc_location_bridge.js",
+      "js/core/npc_relationships.js",
+      "js/core/social_network.js",
+      "js/core/enterprise_fate.js",
+      "js/core/multi_run_memory.js",
+      "js/core/company_spawner.js",
+      "js/core/inheritance_chain.js",
+      "js/core/skill_tree.js",
+      "js/core/equipment_suites.js",
+      "js/core/equipment_durability.js",
+      "js/core/skill_synergy.js",
+      "js/data/startup_events.js",
+      "js/data/startup_competition.js",
+      "js/data/scenario_start_chains.js",
       "js/data/locations.js",
       "js/data/location_flavor.js",
       "js/data/jobs.js",
       "js/data/goods.js",
       "js/data/items.js",
       "js/data/news.js",
-      "js/core/news_system.js",
-      "js/core/news_investment_bridge.js",
-      "js/core/world_params.js",
-      "js/core/npc_relationships.js",
-      "js/core/social_network.js",
-      "js/core/life_nodes.js",
-      "js/core/medical.js",
-      "js/core/travel.js",
-      "js/core/legal.js",
       "js/data/skills.js",
       "js/data/npcs.js",
       "js/data/scenarios.js",
@@ -681,10 +721,9 @@
       "js/data/victories_registry.js",
       "js/data/moral_events.js",
       "js/data/crisis35_followups.js",
-      // Phase 1
+      "js/data/era_events.js",
       "js/phase1/trade.js",
       "js/phase1/trade_intel.js",
-      "js/core/skill_intel.js",
       "js/phase1/needs.js",
       "js/phase1/interactions.js",
       "js/phase1/illness.js",
@@ -694,11 +733,9 @@
       "js/phase1/daily_pipeline.js",
       "js/phase1/carry.js",
       "js/phase1/pricing.js",
+      "js/phase1/reputation.js",
       "js/phase1/npc_event_bridge.js",
-      "js/core/npc_location_bridge.js",
-      "js/core/era_transform.js",
-      "js/data/era_events.js",
-      // Phase 2
+      "js/phase1/extra_events.js",
       "js/phase2/perf.js",
       "js/phase2/promo.js",
       "js/phase2/team.js",
@@ -706,10 +743,8 @@
       "js/phase2/corp_ops.js",
       "js/phase2/investment.js",
       "js/phase2/property_market.js",
+      "js/phase2/startup_data.js",
       "js/phase2/startup.js",
-      "js/data/startup_events.js",
-      "js/data/startup_competition.js",
-      // Phase 2 depth
       "js/phase2/workplace_social.js",
       "js/phase2/investment_analysis.js",
       "js/phase2/startup_crisis.js",
@@ -717,26 +752,15 @@
       "js/phase2/personal_growth.js",
       "js/phase2/side_hustle.js",
       "js/data/side_hustle_events.js",
-      "js/ui/side_hustle_ui.js",
-      // Enterprise fate
-      "js/core/enterprise_fate.js",
-      "js/core/multi_run_memory.js",
-      "js/core/company_spawner.js",
-      "js/core/inheritance_chain.js",
-      "js/core/skill_tree.js",
-      "js/core/equipment_suites.js",
-      "js/core/equipment_durability.js",
-      "js/core/skill_synergy.js",
       "js/components/companyHistory.js",
-      // Data viz (before render)
       "js/ui/data_viz.js",
-      // UI
+      "js/ui/render_core.js",
+      "js/ui/render_infra.js",
       "js/ui/render.js",
       "js/ui/corp_ui.js",
       "js/ui/modal.js",
       "js/ui/heritage_store.js",
       "js/ui/tutorial.js",
-      "js/ui/daily_quest.js",
       "js/ui/daily_focus.js",
       "js/ui/victory.js",
       "js/ui/wiki.js",
@@ -744,11 +768,8 @@
       "js/ui/social_tab.js",
       "js/ui/career_dev.js",
       "js/ui/life_memoir.js",
-      // Main
+      "js/ui/daily_quest.js",
       "js/main.js",
-      // Scenario chains
-      "js/data/scenario_start_chains.js",
-      // WebApp bridge
       "js/app_bridge/webapp_runtime_bridge.js",
     ];
   }
@@ -870,6 +891,11 @@
     if (!state) {
       console.error("[HEADLESS] createDefaultState 返回 null");
       return null;
+    }
+
+    // 确保 StateManager 已初始化（headless 模式下无 UI 调用 newGame/importState）
+    if (typeof StateManager !== "undefined" && StateManager._state === null) {
+      StateManager._state = state;
     }
 
     // 如果提供了覆盖
