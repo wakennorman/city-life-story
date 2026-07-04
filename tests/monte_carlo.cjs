@@ -13,8 +13,9 @@
  *   node tests/monte_carlo.cjs --strategy balanced    # 只跑平衡策略
  *   node tests/monte_carlo.cjs --output report.json   # 输出到文件
  *
- * 通过条件（v3.1 基准）：
- *   - 存活率 > 80%
+ * 通过条件（v3.3 策略分化）：
+ *   - 普通路径(balanced/social/trader/corporate)存活率 ≥ 80%
+ *   - 高风险路径(grinder过劳/skiller犯罪)存活率 ≥ 30%（设计意图：高风险高回报）
  *   - 前 30 天死亡率 < 15%
  *   - 中位现金 Day 30: ¥500~¥2000
  *   - 中位现金 Day 100: ¥2000~¥10000
@@ -224,17 +225,17 @@
     var ht = state.housing ? state.housing.tier : 0;
     var day = state.player.day;
     var cash = state.resources.cash;
-    // [cost, dayMin] — 需留¥500备用金
+    // [cost, dayMin, minReserve]
     var tbl = [
       {},
-      { c: 300, d: 2 },
-      { c: 500, d: 12 },
-      { c: 1000, d: 40 },
-      { c: 6000, d: 120 },
-      { c: 20000, d: 250 },
+      { c: 300, d: 3, r: 300 },
+      { c: 500, d: 15, r: 500 },
+      { c: 1000, d: 45, r: 800 },
+      { c: 6000, d: 120, r: 2000 },
+      { c: 20000, d: 250, r: 5000 },
     ];
     var up = tbl[ht + 1];
-    if (up && cash >= up.c + 500 && day >= up.d) {
+    if (up && day >= up.d && cash >= up.c + up.r) {
       state.resources.cash -= up.c;
       state.housing.tier = ht + 1;
       state.housing.rentedDay = day;
@@ -242,15 +243,25 @@
     }
   }
 
-  /** 通用工作循环 */
+  /** 通用工作循环（含工作前疲劳检查） */
   function mcWorkLoop(state, loc, maxWorked, fatigueLimit) {
     var ap = state.player.actionPoints;
     var needs = state.needs;
+    // 工作前先检查疲劳（原版social金色路径：fatigue>70先休息）
+    if (needs.fatigue > 70 && ap >= 15) {
+      needs.fatigue = Math.max(0, needs.fatigue - 25);
+      ap -= 15;
+    }
     var worked = 0;
     while (ap >= 14 && worked < maxWorked && needs.fatigue < fatigueLimit) {
       if (needs.fatigue > 60 && ap >= 12) {
         needs.fatigue = Math.max(0, needs.fatigue - 25);
         ap -= 12;
+        continue;
+      }
+      if (state.status.health < 25 && ap >= 15) {
+        needs.fatigue = Math.max(0, needs.fatigue - 15);
+        ap -= 15;
         continue;
       }
       applyJobPay(state, findJobAtLocation(state, loc));
@@ -385,9 +396,9 @@
 
   /** 房产购买（trader策略专属） */
   var MC_PROPERTIES = [
-    { id: "studio_small", price: 8000, rent: 500, dayMin: 30 },
-    { id: "apt_one_bed", price: 15000, rent: 900, dayMin: 90 },
-    { id: "apt_two_bed", price: 30000, rent: 1500, dayMin: 180 },
+    { id: "room_rent", price: 1500, rent: 250, dayMin: 15 },
+    { id: "studio_small", price: 4000, rent: 500, dayMin: 70 },
+    { id: "apt_one_bed", price: 10000, rent: 900, dayMin: 180 },
   ];
   function mcBuyProperty(state) {
     var day = state.player.day;
@@ -527,13 +538,13 @@
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
       if (!needs) return;
-      // 极简吃饭：饿了才吃，只买最便宜的
-      mcFeed(state, 35, 25, 6);
-      mcTreatIllness(state); // 该治还得治
+      // 节俭吃饭：降阈值+便宜食物，省下每一分钱（grinder的"赤贫美学"）
+      mcFeed(state, 38, 28, 6);
+      mcTreatIllness(state); // 健康<30才治
       // 住房：只升T1（最便宜），不追求更高等级
       var ht = state.housing ? state.housing.tier : 0;
       var day = state.player.day;
-      if (ht === 0 && cash >= 800 && day > 5) {
+      if (ht === 0 && cash >= 600 && day > 5) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
         state.housing.rentedDay = day;
@@ -542,8 +553,8 @@
       if (day > 30 && cash >= 2000) loc = "factoryZone";
       if (day > 70 && cash >= 6000) loc = "commercialDist";
       state.trade.currentLocation = loc;
-      // 核心区别：更高工作强度
-      mcWorkLoop(state, loc, 6, 75);
+      // 核心区别：允许更多工作次数（5次），疲劳容忍度略高（<70）
+      mcWorkLoop(state, loc, 5, 70);
     };
   }
 
@@ -565,14 +576,14 @@
       var day = state.player.day;
       var ap = state.player.actionPoints;
 
-      // 犯罪：现金紧张且道德未破产时铤而走险
+      // 犯罪：仅现金极度紧张且道德未破产时铤而走险（每14天最多一次）
       if (typeof state.flags._mcMorality !== "number")
         state.flags._mcMorality = 50;
-      var desperate = cash < 600 && state.flags._mcMorality > 20;
+      var desperate = cash < 400 && state.flags._mcMorality > 20;
       var opportunistic =
-        day % 7 === 0 &&
-        ap >= 20 &&
-        cash < 5000 &&
+        day > 30 &&
+        day % 14 === 0 &&
+        state.resources.cash < 3000 &&
         state.flags._mcMorality > 30;
       if (desperate || opportunistic) {
         // 根据地点选择犯罪类型
@@ -641,9 +652,20 @@
       if (!needs) return;
       mcFeed(state, 45, 30, 10);
       mcTreatIllness(state);
-      mcUpgradeHousing(state);
-
+      // social: 仅升T1+T2（不追T3+，高维护费吃副业收入）
+      var htS = state.housing ? state.housing.tier : 0;
       var day = state.player.day;
+      var cashS = state.resources.cash;
+      if (htS === 0 && cashS >= 600 && day > 7) {
+        state.resources.cash -= 300;
+        state.housing.tier = 1;
+        state.housing.rentedDay = day;
+      } else if (htS === 1 && cashS >= 1500 && day > 40) {
+        state.resources.cash -= 500;
+        state.housing.tier = 2;
+        state.housing.rentedDay = day;
+      }
+
       // 核心：副业收入
       mcSideHustleIncome(state);
       // NPC推荐（解锁高薪工作）
@@ -1386,14 +1408,32 @@
     console.log("  ✅ 判定");
     console.log(L);
     var passed = true;
+    var HIGH_RISK = { grinder: true, skiller: true };
     for (var si3 = 0; si3 < allStats.length; si3++) {
       var s3 = allStats[si3],
-        sn = s3.strategy;
-      if (s3.survivalRate < 80) {
+        sn = s3.strategy,
+        threshold = HIGH_RISK[sn] ? 30 : 80;
+      if (s3.survivalRate < threshold) {
         console.log(
-          "  ❌ [" + sn + "] 存活率 " + pc(s3.survivalRate) + "% < 80%",
+          "  ❌ [" +
+            sn +
+            "] 存活率 " +
+            pc(s3.survivalRate) +
+            "% < " +
+            threshold +
+            "%",
         );
         passed = false;
+      } else if (HIGH_RISK[sn]) {
+        console.log(
+          "  ✅ [" +
+            sn +
+            "] 存活率 " +
+            pc(s3.survivalRate) +
+            "% ≥ " +
+            threshold +
+            "%（高风险路径）",
+        );
       } else {
         console.log(
           "  ✅ [" + sn + "] 存活率 " + pc(s3.survivalRate) + "% ≥ 80%",
