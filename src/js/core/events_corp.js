@@ -349,6 +349,10 @@
     },
     {
       id: "corp_overtime",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 20 && (st.needs.health || 100) >= 25;
+      },
       phase: "corporate",
       icon: "🌙",
       title: "老板要求周末加班",
@@ -443,6 +447,12 @@
     },
     {
       id: "corp_credit",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return (
+          st.player.day >= 30 && (st.player.corporate.popularity || 0) >= 20
+        );
+      },
       phase: "corporate",
       icon: "🏆",
       title: "同事让你挂名项目",
@@ -519,6 +529,10 @@
     },
     {
       id: "corp_complaint",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 15;
+      },
       phase: "corporate",
       icon: "😡",
       title: "客户无理投诉",
@@ -595,6 +609,14 @@
     },
     {
       id: "corp_headhunter",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return (
+          st.player.day >= 60 &&
+          ((st.player.fame || 0) >= 5 ||
+            (st.player.corporate.ability || 0) >= 30)
+        );
+      },
       phase: "corporate",
       icon: "📞",
       title: "猎头联系你",
@@ -667,6 +689,10 @@
     },
     {
       id: "corp_ppt",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 10;
+      },
       phase: "corporate",
       icon: "📊",
       title: "紧急汇报PPT",
@@ -748,6 +774,10 @@
     },
     {
       id: "corp_leak",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 45 && (st.player.corporate.ability || 0) >= 15;
+      },
       phase: "corporate",
       icon: "💧",
       title: "线上事故追责",
@@ -850,6 +880,10 @@
     },
     {
       id: "corp_year_end",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 60;
+      },
       phase: "corporate",
       icon: "🎉",
       title: "公司年会",
@@ -923,6 +957,14 @@
     },
     {
       id: "corp_mentor",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return (
+          st.player.day >= 60 &&
+          (st.player.corporate.ability || 0) >= 25 &&
+          (st.player.corporate.popularity || 0) >= 20
+        );
+      },
       phase: "corporate",
       icon: "🧑‍🏫",
       title: "新人请你当导师",
@@ -988,6 +1030,10 @@
     },
     {
       id: "crypto_fomo",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 30 && (st.resources.cash || 0) >= 2000;
+      },
       phase: "corporate",
       icon: "🚀",
       title: "同事都在聊虚拟币",
@@ -1050,6 +1096,10 @@
     },
     {
       id: "corp_stock_ipo",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 90 && (st.resources.cash || 0) >= 5000;
+      },
       phase: "corporate",
       icon: "🔔",
       title: "公司发内部股",
@@ -1114,6 +1164,10 @@
     },
     {
       id: "trade_war_news",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 60;
+      },
       phase: "corporate",
       icon: "⚔️",
       title: "贸易摩擦升级",
@@ -1192,6 +1246,10 @@
     },
     {
       id: "tesla_recall",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 40;
+      },
       phase: "corporate",
       icon: "⚡",
       title: "哥斯拉大规模召回",
@@ -1270,6 +1328,10 @@
     },
     {
       id: "btc_halving_event",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 100 && (st.resources.cash || 0) >= 1000;
+      },
       phase: "corporate",
       icon: "₿",
       title: "比特币减半倒计时",
@@ -1421,6 +1483,7 @@
     },
     {
       id: "founder_humiliation",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "📉",
       title: "新 CEO 让你写 PPT",
@@ -1513,6 +1576,7 @@
     },
     {
       id: "founder_buyback",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "♟️",
       title: "老朋友凑钱要帮你买回来",
@@ -1665,6 +1729,7 @@
     },
     {
       id: "workplace_scapegoat",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "😡",
       title: "项目出问题了",
@@ -1793,6 +1858,7 @@
     },
     {
       id: "workplace_boss_grudge",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "😈",
       title: "老板开始穿小鞋",
@@ -1901,6 +1967,7 @@
     },
     {
       id: "workplace_rumors",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "🗣️",
       title: "办公室谣言四起",
@@ -1985,6 +2052,7 @@
     },
     {
       id: "workplace_headhunter",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "💼",
       title: "猎头主动联系",
@@ -2060,6 +2128,7 @@
     },
     {
       id: "workplace_deadline",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "⏰",
       title: "最后通牒",
@@ -2114,6 +2183,7 @@
     },
     {
       id: "insider_report",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "📋",
       title: "你不该看到的那份报告",
@@ -2159,6 +2229,7 @@
     },
     {
       id: "insider_cashout",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "💰",
       title: "财报发布股价涨停",
@@ -2206,6 +2277,7 @@
     },
     {
       id: "insider_investigation",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "🔍",
       title: "证监会约谈",
@@ -2265,6 +2337,7 @@
     },
     {
       id: "career_setup",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "🪤",
       title: "这份报告你签个字",
@@ -2336,6 +2409,7 @@
     },
     {
       id: "career_investigation",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "🔎",
       title: "审计来了",
@@ -2386,6 +2460,7 @@
     },
     {
       id: "career_retaliation",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "😤",
       title: "张总给你穿小鞋",
@@ -2446,6 +2521,7 @@
     },
     {
       id: "career_evidence_payoff",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "♟️",
       title: "证据派上用场",
@@ -2488,6 +2564,7 @@
     },
     {
       id: "career_aftermath",
+      _isChainEvent: true,
       phase: "corporate",
       icon: "👔",
       title: "前上司东山再起",
@@ -2649,6 +2726,258 @@
             );
             StateManager.addMessage(
               "你默默截了图。不是为了交易——是万一被裁了有谈判筹码。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 新链：职场派系斗争（3步链） ======
+    {
+      id: "office_faction_approach",
+      _isChainEvent: true,
+      phase: "corporate",
+      icon: "🤝",
+      title: "公司里的派系",
+      story:
+        "午休时，部门副经理老张把你拉到楼梯间，压低声音说：'年底要竞聘了，现在公司里分两派——王副总那一派要推自己的人上去，但李总这边还缺人。你跟了我这几年，我看好你。'他拍拍你的肩膀，等你表态。",
+      conditions: function (st) {
+        return (
+          st.player.day >= 90 &&
+          st.player.corporate &&
+          st.player.corporate.popularity >= 25 &&
+          !st.flags._officeFactionApproached
+        );
+      },
+      choices: [
+        {
+          text: "✅ 加入老张的阵营",
+          hint: "获得靠山，但得罪另一派",
+          apply: function (st) {
+            st.flags._officeFactionApproached = true;
+            st.flags._officeFactionJoined = "zhang";
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 5,
+            );
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 50) + 8,
+            );
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 10,
+            );
+            StateManager.addMessage(
+              "🤝 你握住了老张的手。有了靠山，但也埋下了雷。",
+              "event",
+            );
+            scheduleChainEvent(
+              st,
+              "office_faction_escalation",
+              30,
+              "corporate",
+            );
+          },
+        },
+        {
+          text: "🙅 婉拒，保持中立",
+          hint: "安全但可能被两边冷落",
+          apply: function (st) {
+            st.flags._officeFactionApproached = true;
+            st.flags._officeFactionNeutral = true;
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 10,
+            );
+            st.player.corporate.popularity = Math.max(
+              0,
+              (st.player.corporate.popularity || 50) - 5,
+            );
+            StateManager.addMessage(
+              "🙅 '我想专心做好本职工作。'老张脸色不太好看。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📱 偷偷告诉王副总",
+          hint: "两边下注，但风险极高",
+          apply: function (st) {
+            st.flags._officeFactionApproached = true;
+            st.flags._officeFactionDoubleAgent = true;
+            st.player.corporate.upwardMgmt = Math.min(
+              100,
+              (st.player.corporate.upwardMgmt || 50) + 15,
+            );
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 25,
+            );
+            st.player.corporate.dignity = Math.max(
+              0,
+              (st.player.corporate.dignity || 50) - 10,
+            );
+            StateManager.addMessage(
+              "📱 你偷偷给王副总发了消息。划船不靠桨，全靠浪。",
+              "warning",
+            );
+            scheduleChainEvent(
+              st,
+              "office_faction_escalation",
+              25,
+              "corporate",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "office_faction_escalation",
+      _isChainEvent: true,
+      phase: "corporate",
+      icon: "⚔️",
+      title: "派系斗争白热化",
+      story:
+        "办公室里弥漫着一种微妙的紧张。王副总的人和老张的人已经开始公开对峙了——会议上互相拆台，邮件抄送名单越来越长，连前台都能感觉到气氛不对。HR开始'私下了解情况'。",
+      conditions: function (st) {
+        return !st.flags._officeFactionEscalationDone;
+      },
+      choices: [
+        {
+          text: "🗣️ 帮阵营拉拢更多人",
+          hint: "扩大影响力",
+          apply: function (st) {
+            st.flags._officeFactionEscalationDone = true;
+            st.flags._officeFactionLoyalist = true;
+            st.player.corporate.popularity = Math.min(
+              100,
+              (st.player.corporate.popularity || 50) + 10,
+            );
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 15,
+            );
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 5,
+            );
+            StateManager.addMessage(
+              "🗣️ 你帮老张拉了三个支持者。'你小子有前途！'老张笑道。",
+              "event",
+            );
+            scheduleChainEvent(st, "office_faction_outcome", 40, "corporate");
+          },
+        },
+        {
+          text: "📋 专注干活，不掺和",
+          hint: "用KPI说话",
+          apply: function (st) {
+            st.flags._officeFactionEscalationDone = true;
+            st.flags._officeFactionWorker = true;
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 50) + 15,
+            );
+            st.player.corporate.ability = Math.min(
+              100,
+              (st.player.corporate.ability || 50) + 5,
+            );
+            StateManager.addMessage(
+              "📋 你埋头苦干，把项目做了出来。业绩是最好的护身符。",
+              "success",
+            );
+            scheduleChainEvent(st, "office_faction_outcome", 35, "corporate");
+          },
+        },
+        {
+          text: "📝 悄悄留下证据",
+          hint: "保护自己",
+          apply: function (st) {
+            st.flags._officeFactionEscalationDone = true;
+            st.flags._officeFactionEvidence = true;
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 50) + 5,
+            );
+            st.player.corporate.risk = Math.max(
+              0,
+              (st.player.corporate.risk || 0) - 10,
+            );
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 3,
+            );
+            StateManager.addMessage(
+              "📝 你学会了留一手。职场保命技能+1。",
+              "info",
+            );
+            scheduleChainEvent(st, "office_faction_outcome", 30, "corporate");
+          },
+        },
+      ],
+    },
+    {
+      id: "office_faction_outcome",
+      _isChainEvent: true,
+      phase: "corporate",
+      icon: "🏁",
+      title: "派系斗争尘埃落定",
+      story:
+        "三个月过去了。公司宣布了组织架构调整——老张升任总监，王副总调去子公司。尘埃落定后，老张在办公室里请大家喝了庆功茶。你的表现，他看在眼里。",
+      conditions: function (st) {
+        return !st.flags._officeFactionOutcomeDone;
+      },
+      choices: [
+        {
+          text: "🏆 争取竞聘机会",
+          hint: "找老张要晋升",
+          apply: function (st) {
+            st.flags._officeFactionOutcomeDone = true;
+            var bonus = st.flags._officeFactionWorker
+              ? 15
+              : st.flags._officeFactionLoyalist
+                ? 20
+                : 8;
+            var fameGain = st.flags._officeFactionDoubleAgent ? -10 : bonus;
+            if (st.player.corporate) {
+              st.player.corporate.kpi = Math.min(
+                100,
+                (st.player.corporate.kpi || 50) + bonus,
+              );
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 10,
+              );
+            }
+            st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
+            st.resources.cash += 5000;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            StateManager.addMessage(
+              "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😌 低调回归本职工作",
+          hint: "远离是非",
+          apply: function (st) {
+            st.flags._officeFactionOutcomeDone = true;
+            if (st.player.corporate) {
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 50) + 10,
+              );
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 5,
+              );
+            }
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "😌 你选择低调。远离风暴中心也是一种智慧。",
               "info",
             );
           },

@@ -7,6 +7,10 @@
   var EVENTS = [
     {
       id: "found_wallet",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 5;
+      },
       phase: "street",
       icon: "👛",
       title: "捡到了一个钱包",
@@ -38,6 +42,9 @@
               "🏛️ 钱包交给了警察，警察夸你拾金不昧，心情大好！",
               "success",
             );
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "wallet_owner_finds_you", 3, "street");
+            }
           },
         },
         {
@@ -116,6 +123,10 @@
     },
     {
       id: "stranger_invest",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 15 && (st.resources.cash || 0) >= 300;
+      },
       phase: "street",
       icon: "💹",
       title: "陌生人推荐「内部消息」",
@@ -176,6 +187,10 @@
     },
     {
       id: "old_man_help",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 3;
+      },
       phase: "street",
       icon: "👴",
       title: "老大爷需要帮助",
@@ -224,6 +239,10 @@
     },
     {
       id: "free_clinic",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 10 || (st.needs.health || 100) <= 70;
+      },
       phase: "street",
       icon: "💊",
       title: "街头免费义诊",
@@ -270,6 +289,10 @@
     },
     {
       id: "thrift_find",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 20 && (st.resources.cash || 0) >= 100;
+      },
       phase: "street",
       icon: "🛍️",
       title: "二手店捡漏",
@@ -324,6 +347,14 @@
     },
     {
       id: "neighbor_fight",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return (
+          st.player.day >= 10 &&
+          ((st.player.fame || 0) >= 3 ||
+            (st.player.corporate && st.player.corporate.popularity >= 10))
+        );
+      },
       phase: "street",
       icon: "🤼",
       title: "邻居吵架请你评理",
@@ -372,6 +403,10 @@
     },
     {
       id: "lost_pet",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 5;
+      },
       phase: "street",
       icon: "🐕",
       title: "走失的小狗",
@@ -834,6 +869,10 @@
     },
     {
       id: "lottery_scratch",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 15 && (st.resources.cash || 0) >= 20;
+      },
       phase: "street",
       icon: "🎫",
       title: "刮刮乐诱惑",
@@ -908,6 +947,10 @@
     },
     {
       id: "gold_surge",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return st.player.day >= 30;
+      },
       phase: "street",
       icon: "🥇",
       title: "黄金暴涨！",
@@ -1145,6 +1188,14 @@
     },
     {
       id: "business_district_chance",
+      _isChainEvent: false,
+      conditions: function (st) {
+        return (
+          st.player.day >= 40 &&
+          (st.resources.cash || 0) >= 500 &&
+          (st.player.intelligence || 0) >= 25
+        );
+      },
       phase: "street",
       icon: "🏢",
       title: "商业区创业大赛",
@@ -3263,6 +3314,111 @@
             StateManager.addMessage(
               "📞 你当着他面拨了110。他立刻转身就走。警察来了记了笔录，建议你注意人身安全。名气+6，威胁消除。",
               "success",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 链式续：钱包主人找上门（由found_wallet的"交派出所"触发） ======
+    {
+      id: "wallet_owner_finds_you",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "🙏",
+      title: "钱包主人找来了",
+      story:
+        "一个中年男人提着水果篮在巷口打听你。看到你之后，他快步走过来握住你的手：'太感谢了！我身份证和银行卡都在里面，补办太麻烦了。'他硬要把果篮塞给你，又从口袋里掏出一个信封。",
+      conditions: function (st) {
+        return !!st.flags._returnedWallet && !st.flags._walletOwnerVisited;
+      },
+      choices: [
+        {
+          text: "🎁 收下果篮和信封",
+          hint: "好心有好报",
+          apply: function (st) {
+            st.flags._walletOwnerVisited = true;
+            st.flags._walletOwnerFriend = true;
+            var reward = Random.int(200, 499);
+            st.resources.cash += reward;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "🎁 信封里有¥" +
+                reward +
+                "。'交个朋友，以后有事找我！'他递了名片。",
+              "success",
+            );
+            // 远期：可能触发更多人脉事件
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "wallet_owner_connection", 60, "street");
+            }
+          },
+        },
+        {
+          text: "🙌 只收果篮，不收钱",
+          hint: "纯粹的善意",
+          apply: function (st) {
+            st.flags._walletOwnerVisited = true;
+            st.flags._walletOwnerPure = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+            if (
+              typeof getReputationBadges === "function" ||
+              typeof calculateReputationBadges === "function"
+            ) {
+              st._reputationPendingRecompute = true;
+            }
+            StateManager.addMessage(
+              "🙌 '好人啊！'他眼眶有点红。'这年头像你这样的人不多了。'",
+              "event",
+            );
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "wallet_owner_connection", 45, "street");
+            }
+          },
+        },
+      ],
+    },
+    {
+      id: "wallet_owner_connection",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "📋",
+      title: "好心人的回报",
+      story:
+        "几个月前你捡到钱包的那个人——他原来是一家小工厂的老板。他托人带话：厂里缺个靠谱的管仓库的，活不累，待遇比外面强。如果你有兴趣，随时可以过去看看。",
+      conditions: function (st) {
+        return (
+          (!!st.flags._walletOwnerFriend || !!st.flags._walletOwnerPure) &&
+          !st.flags._walletJobOffered
+        );
+      },
+      choices: [
+        {
+          text: "💼 去看看，合适就干",
+          hint: "获得稳定工作机会",
+          apply: function (st) {
+            st.flags._walletJobOffered = true;
+            st.flags._walletJobAccepted = true;
+            st.resources.cash += 2000;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "💼 仓库管理员的工作还不错，月薪¥4500，包吃住。好人有好报。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 婉拒，但保持联系",
+          hint: "不欠人情",
+          apply: function (st) {
+            st.flags._walletJobOffered = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage(
+              "🙏 '谢谢好意，我现在还有别的打算。' '行，随时来找我。'",
+              "info",
             );
           },
         },

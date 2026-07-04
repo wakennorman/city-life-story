@@ -2416,6 +2416,7 @@
     },
     {
       id: "re_gamble",
+      _isChainEvent: true,
       phase: "street",
       icon: "🏗️",
       title: "拆迁规划图流出",
@@ -2462,6 +2463,7 @@
     },
     {
       id: "re_demolition",
+      _isChainEvent: true,
       phase: "street",
       icon: "📏",
       title: "拆迁办来了",
@@ -2525,6 +2527,7 @@
     },
     {
       id: "re_settle",
+      _isChainEvent: true,
       phase: "street",
       icon: "💰",
       title: "拆迁款到账，然后呢？",
@@ -2590,6 +2593,7 @@
     },
     {
       id: "re_coalition_result",
+      _isChainEvent: true,
       phase: "street",
       icon: "⚖️",
       title: "团结阵线破裂",
@@ -2637,6 +2641,7 @@
     },
     {
       id: "re_holdout_end",
+      _isChainEvent: true,
       phase: "street",
       icon: "🏚️",
       title: "钉子户的结局",
@@ -2684,6 +2689,7 @@
     },
     {
       id: "startup_meet_coder",
+      _isChainEvent: true,
       phase: "street",
       icon: "💻",
       title: "咖啡馆里的创业梦",
@@ -2747,6 +2753,7 @@
     },
     {
       id: "startup_progress",
+      _isChainEvent: true,
       phase: "street",
       icon: "📊",
       title: "App数据出来了",
@@ -2804,6 +2811,7 @@
     },
     {
       id: "startup_exit",
+      _isChainEvent: true,
       phase: "street",
       icon: "🎢",
       title: "创业的终点",
@@ -2859,6 +2867,7 @@
     },
     {
       id: "gray_offer",
+      _isChainEvent: true,
       phase: "street",
       icon: "😈",
       title: "老张的「路子」",
@@ -2919,6 +2928,7 @@
     },
     {
       id: "gray_collect",
+      _isChainEvent: true,
       phase: "street",
       icon: "📸",
       title: "第一次收钱",
@@ -2959,6 +2969,7 @@
     },
     {
       id: "gray_cleanup",
+      _isChainEvent: true,
       phase: "street",
       icon: "🚔",
       title: "警察回访调查",
@@ -3000,6 +3011,7 @@
     },
     {
       id: "gray_aftermath_reported",
+      _isChainEvent: true,
       phase: "street",
       icon: "⚖️",
       title: "老张被抓了",
@@ -3038,6 +3050,7 @@
     },
     {
       id: "edu_rumor",
+      _isChainEvent: true,
       phase: "street",
       icon: "📰",
       title: "教育行业要变天了",
@@ -3089,6 +3102,7 @@
     },
     {
       id: "edu_crash",
+      _isChainEvent: true,
       phase: "street",
       icon: "💥",
       title: "「双减」真的来了",
@@ -3138,6 +3152,7 @@
     },
     {
       id: "edu_aftermath",
+      _isChainEvent: true,
       phase: "street",
       icon: "♻️",
       title: "风暴过后",
@@ -3196,6 +3211,7 @@
     },
     {
       id: "ev_frenzy",
+      _isChainEvent: true,
       phase: "street",
       icon: "⚡",
       title: "新能源车补贴退坡",
@@ -3250,6 +3266,7 @@
     },
     {
       id: "ev_shakeout",
+      _isChainEvent: true,
       phase: "street",
       icon: "🏭",
       title: "行业洗牌开始了",
@@ -3303,6 +3320,7 @@
     },
     {
       id: "ev_recovery",
+      _isChainEvent: true,
       phase: "street",
       icon: "📈",
       title: "时间的答案",
@@ -3343,6 +3361,201 @@
             StateManager.addMessage(
               "✅ 锁定了¥" + reward2.toLocaleString() + "的利润。",
               "event",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 新链：黄金投机泡沫（3步链） ======
+    {
+      id: "gold_rush_start",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "🥇",
+      title: "黄金暴涨！",
+      story:
+        "新闻在播报：国际金价突破历史新高，国内金饰价格已经冲到每克¥800。街边金店门口排起了长队，黄牛在门口加价收金条。你翻出手机看了眼——之前零散买的几克黄金已经涨了40%。要不要趁机操作一波？",
+      conditions: function (st) {
+        return st.player.day >= 30 && (st.resources.cash || 0) >= 2000;
+      },
+      choices: [
+        {
+          text: "💰 跟风买入¥5000",
+          hint: "追高风险",
+          cost: 5000,
+          apply: function (st) {
+            if (st.resources.cash < 5000) {
+              StateManager.addMessage("💰 钱不够！", "warning");
+              return;
+            }
+            st.resources.cash -= 5000;
+            st.flags._goldBought = true;
+            st.flags._goldPrice = 5000;
+            StateManager.addMessage(
+              "🥇 你冲进金店买了¥5000的金条。店员说'有眼光！'",
+              "event",
+            );
+            scheduleChainEvent(st, "gold_rush_peak", 15, "street");
+          },
+        },
+        {
+          text: "💵 小买¥1000试试",
+          hint: "谨慎参与",
+          cost: 1000,
+          apply: function (st) {
+            if (st.resources.cash < 1000) {
+              StateManager.addMessage("💵 钱不够！", "warning");
+              return;
+            }
+            st.resources.cash -= 1000;
+            st.flags._goldBought = true;
+            st.flags._goldPrice = 1000;
+            StateManager.addMessage(
+              "🥇 你买了¥1000的金条。不算多，但至少参与了。",
+              "info",
+            );
+            scheduleChainEvent(st, "gold_rush_peak", 15, "street");
+          },
+        },
+        {
+          text: "📊 观望不买",
+          hint: "不追高",
+          apply: function (st) {
+            st.flags._goldWatched = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "📊 你忍住没买。追涨杀跌是散户亏钱的第一原因。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "gold_rush_peak",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "📈",
+      title: "金价冲到顶了",
+      story:
+        "半个月过去，金价已经涨到了令人瞠目的程度——每克¥950！新闻里专家们还在喊'黄金看到¥1000'，但街边收金条的黄牛已经悄悄减少了收购量。你手里的金条现在浮盈不少。",
+      conditions: function (st) {
+        return !!st.flags._goldBought && !st.flags._goldPeakDone;
+      },
+      choices: [
+        {
+          text: "✅ 全部卖出，落袋为安",
+          hint: "锁定利润",
+          apply: function (st) {
+            st.flags._goldPeakDone = true;
+            st.flags._goldSold = true;
+            var profit = Math.round((st.flags._goldPrice || 1000) * 0.6);
+            st.resources.cash += (st.flags._goldPrice || 1000) + profit;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "✅ 你卖出所有金条，净赚¥" + profit + "！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤞 再等等，还能涨",
+          hint: "贪婪可能酿成大错",
+          apply: function (st) {
+            st.flags._goldPeakDone = true;
+            st.flags._goldHeld = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🤞 你决定再等等。'还能涨，还能涨...'你念叨着。",
+              "info",
+            );
+            scheduleChainEvent(st, "gold_rush_crash", 20, "street");
+          },
+        },
+      ],
+    },
+    {
+      id: "gold_rush_crash",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "📉",
+      title: "金价暴跌！",
+      story:
+        "最坏的情况发生了——国际金价一夜暴跌15%！原因是美联储突然加息，美元走强。国内金价跟着跳水，你手里的金条现在不但没赚，反而亏了本金。金店门口又开始排队，这次是卖金的人。",
+      conditions: function (st) {
+        return !!st.flags._goldHeld && !st.flags._goldCrashDone;
+      },
+      choices: [
+        {
+          text: "😰 割肉卖出",
+          hint: "止损离场",
+          apply: function (st) {
+            st.flags._goldCrashDone = true;
+            var loss = Math.round((st.flags._goldPrice || 1000) * 0.35);
+            st.resources.cash += (st.flags._goldPrice || 1000) - loss;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
+            StateManager.addMessage(
+              "😰 你割肉卖出，亏损¥" + loss + "。贪婪的教训。",
+              "danger",
+            );
+          },
+        },
+        {
+          text: "🧘 拿着不动，等反弹",
+          hint: "长线持有",
+          apply: function (st) {
+            st.flags._goldCrashDone = true;
+            st.flags._goldHeldLong = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage(
+              "🧘 你决定不看账户了。三五年后又是一条好汉。",
+              "hint",
+            );
+            // 30天后部分反弹
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "gold_rush_rebound", 30, "street");
+            }
+          },
+        },
+      ],
+    },
+    {
+      id: "gold_rush_rebound",
+      _isChainEvent: true,
+      phase: "street",
+      icon: "🔄",
+      title: "金价反弹",
+      story:
+        "一个月后，金价慢慢回升到了中位线。虽然没回到最高点，但比你割肉时强多了。你当初坚持持有的决定，现在看来是对的。",
+      conditions: function (st) {
+        return !!st.flags._goldHeldLong && !st.flags._goldReboundDone;
+      },
+      choices: [
+        {
+          text: "✅ 趁反弹卖出",
+          hint: "小亏出局",
+          apply: function (st) {
+            st.flags._goldReboundDone = true;
+            var loss = Math.round((st.flags._goldPrice || 1000) * 0.12);
+            st.resources.cash += (st.flags._goldPrice || 1000) - loss;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "✅ 反弹中卖出，亏损¥" + loss + "。比割肉强多了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤝 继续持有",
+          hint: "佛系投资",
+          apply: function (st) {
+            st.flags._goldReboundDone = true;
+            st.flags._goldDiamondHands = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            StateManager.addMessage(
+              "🤝 你选择了长期持有。时间是投资的朋友。",
+              "success",
             );
           },
         },

@@ -1,10 +1,84 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.14 — 事件弹窗修复+剧情合理化+模态框强制点击+新闻智能分析）
+> 最后更新: 2026-07-04（v3.15 — 事件全面审计+链式事件扩充+触发条件全覆盖）
 
 ---
 
-## 2026-07-04 — v3.14：事件弹窗修复+剧情合理化+模态框强制点击+新闻智能分析
+## 2026-07-04 — v3.15：事件全面审计+链式事件扩充+触发条件全覆盖
+
+> 设计参考：Capitalism Lab（事件链/行业传导）、Democracy 4（条件触发）、BitLife（叙事弧线）、This War of Mine（道德选择的连锁反应）
+> 影响文件：events_street_wealth.js / events_corp.js / events_street_survival.js / extra_events.js + dist
+
+### 全面事件审计（347个事件）
+
+**问题**：用户反馈"链式事件只有8个不合理"。全面审计发现：
+
+- 仅8个链式事件标记 `_isChainEvent: true`，但10个使用 `scheduleChainEvent()` 调度的链式事件序列**缺少标记** → 它们随机乱弹
+- 13个corp事件**完全无conditions** → 刚入职第1天就弹出"公司年会""内部股"
+- 10个survival事件**无conditions** → "捡钱包""黄金暴涨"等事件在任何阶段都会弹出
+- 2个extra_events事件在conditions中消费随机数 → 设计反模式
+
+### Phase 1: events_street_wealth.js — 18个链式事件补标记
+
+- `re_gamble` / `re_demolition` / `re_settle` / `re_coalition_result` / `re_holdout_end`（拆迁赌局5步链）
+- `startup_meet_coder` / `startup_progress` / `startup_exit`（创业投资3步链）
+- `gray_offer` / `gray_collect` / `gray_cleanup` / `gray_aftermath_reported`（灰色收入4步链）
+- `edu_rumor` / `edu_crash` / `edu_aftermath`（教育双减3步链）
+- `ev_frenzy` / `ev_shakeout` / `ev_recovery`（新能源补贴3步链）
+
+### Phase 2: events_corp.js — 13个事件加conditions + 16个链式补标记
+
+**新增conditions**（13个事件）：
+
+- corp_overtime: day>=20, health>=25 | corp_credit: day>=30, popularity>=20
+- corp_complaint: day>=15 | corp_headhunter: day>=60, fame>=5或ability>=30
+- corp_ppt: day>=10 | corp_leak: day>=45, ability>=15
+- corp_year_end: day>=60 | corp_mentor: day>=60, ability>=25, popularity>=20
+- crypto_fomo: day>=30, cash>=2000 | corp_stock_ipo: day>=90, cash>=5000
+- trade_war_news: day>=60 | tesla_recall: day>=40 | btc_halving_event: day>=100, cash>=1000
+
+**补标记**（16个链式事件）：workplace_scapegoat/grudge/rumors/headhunter/deadline、insider_report/cashout/investigation、career_setup/investigation/retaliation/evidence_payoff/aftermath、founder_oust/humiliation/buyback
+
+### Phase 3: events_street_survival.js — 10个事件加conditions
+
+found_wallet: day>=5 | stranger_invest: day>=15, cash>=300 | old_man_help: day>=3
+free_clinic: day>=10或health<=70 | thrift_find: day>=20, cash>=100 | neighbor_fight: day>=10, fame>=3
+lost_pet: day>=5 | lottery_scratch: day>=15, cash>=20 | gold_surge: day>=30
+business_district_chance: day>=40, cash>=500, intel>=25
+
+### Phase 4: extra_events.js — 修复conditions消费随机数
+
+- crisis_gearbreak: 移除 `Random.chance(0.03)`，改为 `day>=20`
+- street_fight: 移除 `Random.chance(0.5)`，仅保留 `day>10`
+
+### Phase 5: 新增3条链式事件序列（11个新事件）
+
+**黄金投机泡沫链**（gold_rush_start → gold_rush_peak → gold_rush_crash → gold_rush_rebound）
+
+- 4步链：黄金暴涨→金价见顶→暴跌→反弹
+- 叙事弧：30天触发→15天见顶→20天暴跌→30天反弹
+- 设计参考：真实黄金市场波动（2020-2024金价走势）
+
+**职场派系斗争链**（office_faction_approach → office_faction_escalation → office_faction_outcome）
+
+- 3步链：被拉拢→站队→尘埃落定
+- 分支：忠诚派/中立派/双面谍，后续影响大不相同
+- 设计参考：Capitalism Lab 职场政治 / 真实中国职场派系
+
+**捡钱包回报链**（found_wallet交派出所 → wallet_owner_finds_you → wallet_owner_connection）
+
+- 3步链：拾金不昧→失主登门致谢→长期工作机遇
+- 分支：收钱/不收钱，远期影响不同
+- 设计参考：BitLife 好人好事因果链
+
+### 统计小结
+
+| 指标                 | 修复前 | 修复后 | 变化     |
+| -------------------- | ------ | ------ | -------- |
+| 链式事件数           | 8      | 51     | +43      |
+| 缺conditions事件     | 25     | 0      | 全部修复 |
+| conditions消费随机数 | 2      | 0      | 全部修复 |
+| 总事件数             | 347    | 358    | +11      |
 
 > 设计参考：BitLife（事件冷静期）、Papers Please（强制按钮关闭）、This War of Mine（事件条件链）
 > 影响文件：events_core.js / events_street_survival.js / events_corp.js / modal.js / world_params.js + dist

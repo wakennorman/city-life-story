@@ -733,7 +733,7 @@
         "你的关键装备出了问题——工作用的手套磨破了底，鞋底也快掉了。没有趁手的工具，接下来的工作效率会大打折扣。",
       conditions: function (st) {
         return (
-          Object.keys(st.equipment || {}).length > 0 && Random.chance(0.03)
+          st.player.day >= 20 && Object.keys(st.equipment || {}).length > 0
         );
       },
       choices: [
@@ -886,7 +886,7 @@
       story:
         "你路过小吃街时，几个人因为排队问题吵了起来。其中一个人推了你一把，差点把你推到路边的污水沟里。",
       conditions: function (st) {
-        return st.player.day > 10 && Random.chance(0.5);
+        return st.player.day > 10;
       },
       choices: [
         {
