@@ -278,10 +278,17 @@
       title: "一条视频惹的祸",
       story:
         "送外卖时被网红蹭到，她直播说你撞人想跑。3万人围观，你的照片被贴了出来。",
+      // [自洽修复] conditions 新增：送外卖职业检查（story 明确"送外卖时"，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
+        var isDelivery =
+          (st.sideHustle && st.sideHustle.type === "driving") ||
+          (st.career &&
+            st.career.currentJob &&
+            st.career.currentJob.path === "logistics");
         return (
           st.player.phase === "street" &&
           st.player.day >= 30 &&
+          isDelivery &&
           !st.flags._viralHarassmentSeen
         );
       },
@@ -323,10 +330,17 @@
       icon: "🛵",
       title: "配送费又降了",
       story: "单价从¥7.5降到¥5.8。有人号召罢工——但总有人愿意跑。",
+      // [自洽修复] conditions 新增：送外卖职业检查（story/options 提及骑手服，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
+        var isDelivery =
+          (st.sideHustle && st.sideHustle.type === "driving") ||
+          (st.career &&
+            st.career.currentJob &&
+            st.career.currentJob.path === "logistics");
         return (
           st.player.phase === "street" &&
           st.player.day >= 30 &&
+          isDelivery &&
           !st.flags._deliveryPriceSeen
         );
       },

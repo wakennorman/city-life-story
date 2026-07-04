@@ -249,24 +249,22 @@
     // === 行业红利期·创业侧反馈（sectorHeat > 1.15 且玩家有公司）===
     {
       id: "sector_boom_startup_windfall",
-      phase: "corp",
+      // [自洽修复] phase "corp" 不是合法值（合法值为 "street"/"corporate"），改为 "street"
+      phase: "street",
       icon: "🚀",
       title: "行业红利期",
       story: `你所在的行业正处在风口上——订单暴增、客户主动找上门、媒体都在报道赛道火爆。\n公司的财务跑来兴奋地说："这个月营收比预期高了不止一成！"`,
+      // [自洽修复] conditions 新增：st.startup.company 检查（原用 st.enterprise，字段不存在于 state.js）
       conditions: function (st) {
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
-        if (
-          !st.enterprise ||
-          !st.enterprise.company ||
-          !st.enterprise.company.industry
-        )
+        if (!st.startup || !st.startup.company || !st.startup.company.industry)
           return false;
         if (
           st.flags._sectorBoomLastDay &&
           st.player.day - st.flags._sectorBoomLastDay < 14
         )
           return false;
-        var heat = st._worldParams.sectorHeat[st.enterprise.company.industry];
+        var heat = st._worldParams.sectorHeat[st.startup.company.industry];
         return typeof heat === "number" && heat > 1.15;
       },
       choices: [
@@ -274,7 +272,7 @@
           text: "📈 乘势扩张，吞下红利",
           hint: "营收红利入账，声誉+，心智+",
           apply: function (st) {
-            var company = st.enterprise.company;
+            var company = st.startup.company;
             var base = 800;
             var share = company.marketShare || 0;
             var scale = 1 + share / 50;
@@ -314,7 +312,7 @@
           text: "📢 投品牌营销，把红利变长期资产",
           hint: "现金少入账，但声誉显著提升",
           apply: function (st) {
-            var company = st.enterprise.company;
+            var company = st.startup.company;
             company.reputation = Math.min(100, (company.reputation || 0) + 10);
             company.brand = Math.min(100, (company.brand || 0) + 6);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
@@ -866,10 +864,11 @@
       name: "暴雨中的商机",
       icon: "🌧️",
       phase: "street",
+      // [自洽修复] conditions 新增：st.weather.current 天气检查（原用 st.weather.weather，字段不存在）
       trigger: function (st) {
         return (
           st.weather &&
-          (st.weather.weather === "rainy" || st.weather.weather === "stormy") &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy") &&
           st.resources.cash < 10000
         );
       },
