@@ -1136,11 +1136,15 @@ function startSandboxGame() {
   var _sbAssets = (cfg.cash || 0) + (cfg.bankBalance || 0);
   var _sbIntroBody =
     "你在城市里找了一张椅子坐下，把自己的账列了出来：<br><br>" +
-    "家底 <b>¥" + _sbAssets.toLocaleString() + "</b>" +
+    "家底 <b>¥" +
+    _sbAssets.toLocaleString() +
+    "</b>" +
     (_sbDebt > 0
       ? "，背负 <b>¥" + _sbDebt.toLocaleString() + "</b> 的债"
       : "，零债出发") +
-    "，今年 <b>" + (cfg.age || 20) + "</b> 岁。<br><br>" +
+    "，今年 <b>" +
+    (cfg.age || 20) +
+    "</b> 岁。<br><br>" +
     "城市不知道你从哪儿来，也不在乎你的计划。<br><br>" +
     "这段人生，你想证明什么？";
 
@@ -1249,7 +1253,10 @@ function startSandboxGame() {
         "event",
       );
     }
-    StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+    StateManager.addMessage(
+      '💡 提示：点击"🗺️ 地图"标签可查看城市全景。',
+      "info",
+    );
     StateManager.addMessage(
       '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。',
       "info",

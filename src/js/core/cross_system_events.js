@@ -1590,6 +1590,614 @@
         },
       ],
     },
+    // ====== 事件1：老手特遇——跑腿老主顾的谢礼 ======
+    // 设计意图：玩家长期跑腿/配送后遇到回头客，体现"城市开始认识你"的成长感
+    {
+      id: "delivery_regular_treat",
+      phase: "street",
+      icon: "🎁",
+      title: "老主顾的问候",
+      story:
+        "你正在街上走着，一个中年男人快步迎上来——你认出来了，这是你一个月前帮忙送过紧急文件的那位客户。\\n\\n他笑着说：「可算碰上你了！上次你帮我送的那份标书中了！一直想谢谢你。」说着递过来一个袋子。",
+      conditions: function (st) {
+        // 检查玩家是否具备长期跑腿/配送的特征：driving技能≥15 或 agility≥28（经常行动）
+        // 且游戏天数>30说明有足够时间积累客户
+        if (st.player.day < 30) return false;
+        if (st.skills && st.skills.driving && st.skills.driving.level >= 15)
+          return true;
+        if (
+          st.player &&
+          typeof st.player.agility === "number" &&
+          st.player.agility >= 28
+        )
+          return true;
+        // 如果totalEarned > 2000说明活跃，也可触发
+        if (
+          st.resources &&
+          st.resources.totalEarned &&
+          st.resources.totalEarned > 2000
+        )
+          return true;
+        return false;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "🙏 谢谢！太客气了",
+          hint: "心情+12，获得实用礼物",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            // 礼物：一些食品，帮助缓解饥饿
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
+            // 随机给一点感谢费
+            var tip = Random.int(30, 80);
+            st.resources.cash += tip;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + tip;
+            StateManager.addMessage(
+              "🎁 袋子里有一盒点心和¥" +
+                tip +
+                "。他说：「以后有需要还找你！」这座城市的某个角落，有人记住了你的好。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😊 举手之劳，不用破费",
+          hint: "名气+3，给人留下好印象",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "😊 他坚持把点心塞给你：「拿着，别客气。现在像你这样认真做事的人不多了。」名气+3，心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📱 加个微信，以后有活直接找我",
+          hint: "解锁长期客户，未来偶尔有额外收入",
+          apply: function (st) {
+            st.flags._regularClient = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "📱 你加了微信。他说：「好！我公司经常要送文件，以后优先找你。」名气+2，心情+5。未来可能偶尔有额外配送单。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件2：专业人士视角——火眼金睛识假货 ======
+    // 设计意图：高修理/电工技能的玩家在市场上能识别假冒工具，让技能在日常生活中有实际用处
+    {
+      id: "skilled_eye_fake_goods",
+      phase: "street",
+      icon: "🔍",
+      title: "一眼识假",
+      story:
+        "路边有人摆摊卖「名牌电动工具」，价格只有商场的三分之一。电钻、角磨机堆了一地，摊主吆喝着「厂家直销，保修一年」。\\n\\n旁边有人掏钱要买，但你扫了一眼那做工——焊缝粗糙、标牌印刷模糊。你心里有了数。",
+      conditions: function (st) {
+        // 检查玩家是否具备识别假货的专业技能
+        if (st.player.day < 15) return false;
+        var repLevel =
+          st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+        var elecLevel =
+          st.skills && st.skills.electrician
+            ? st.skills.electrician.level || 0
+            : 0;
+        // 修理≥40 或 电工≥35 能识别
+        return repLevel >= 40 || elecLevel >= 35;
+      },
+      probability: 0.03,
+      repeatable: true,
+      choices: [
+        {
+          text: "🚨 当场揭穿卖假货",
+          hint: "名气+5，但可能被记恨",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            // 小概率被摊主找麻烦
+            if (Random.chance(0.2)) {
+              st.status.health = Math.max(0, (st.status.health || 70) - 3);
+              StateManager.addMessage(
+                "🚨 你指出焊接缝粗糙、标牌有重影，摊主脸色大变骂骂咧咧收摊走了。旁边想买的人感激地朝你点头。名气+5，心情+10。刚才推搡中被蹭了一下，健康-3。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🚨 你指出几处明显造假痕迹，摊主嘴硬了几句，但围观的人渐渐散了。有人悄悄跟你道谢。名气+5，心情+10。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "🔧 买一个拆开研究",
+          hint: "维修XP+40，损失¥50",
+          apply: function (st) {
+            if (st.resources.cash < 50) {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，连¥50的假货都买不起……",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 50;
+            if (st.skills && st.skills.repair) {
+              st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
+            }
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "🔧 你买了一个假电钻，回去拆开一看——里面电机是劣质品，线圈缠绕也不规范，怪不得便宜。不过倒是学到了不少，维修XP+40，心智+2。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 不关我事，走开",
+          hint: "什么也不发生",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你摇了摇头走开了。这种事在这座城市每天都有，管不过来。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件3：NPC好感秘密——老周的批发市场渠道 ======
+    // 设计意图：老周好感≥60后在批发市场透露私家渠道，NPC好感积累的实质性回报
+    {
+      id: "old_zhou_wholesale_tip",
+      phase: "street",
+      icon: "🤫",
+      title: "老周的暗线",
+      story:
+        "你正在批发市场闲逛，突然有人拉了你一把——是老周。他压低声音说：「别出声，跟我来。」\\n\\n他带你拐进一条窄巷，七拐八拐到了一个不起眼的铁皮棚前：「这家回收站不对外，但关系到位的话收货价比外面高三成——我带你认个门。」",
+      conditions: function (st) {
+        // 老周好感≥60 + 在批发市场 + 天数>40
+        if (st.player.day < 40) return false;
+        if (
+          !st.relationships ||
+          !st.relationships.old_zhou ||
+          (st.relationships.old_zhou.affinity || 0) < 60
+        )
+          return false;
+        // 检查是否在批发市场
+        var curLoc = st.trade && st.trade.currentLocation;
+        return curLoc === "wholesaleMarket";
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 跟着认门！谢谢周叔",
+          hint: "解锁废品高价渠道+30%，老周好感+8",
+          apply: function (st) {
+            st.flags._zhouWholesaleChannel = true;
+            st.flags.zhouScrapBonus = true; // 叠加废品加成
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 8,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🤝 老周跟铁皮棚里的人打了声招呼：「这是我小兄弟，以后他的货按内部价走。」你记下了地址，以后废品回收收入永久+30%。老周好感+8。",
+              "success",
+            );
+            // 3天后渠道正式派上用场——第一笔高价回收
+            if (typeof queueChainEvent === "function") {
+              queueChainEvent(st, "zhou_channel_first_deal", 3, {});
+            }
+          },
+        },
+        {
+          text: "📝 记下地址，改天再来",
+          hint: "以后再说，好感+3",
+          apply: function (st) {
+            st.flags._zhouWholesaleChannelKnown = true;
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 3,
+            );
+            StateManager.addMessage(
+              "📝 你记下了地址。老周说：「随时来，报我名字就行。」好感+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤷 先不去了，不方便",
+          hint: "好感-3，错过机会",
+          apply: function (st) {
+            st.relationships.old_zhou.affinity = Math.max(
+              0,
+              (st.relationships.old_zhou.affinity || 0) - 3,
+            );
+            StateManager.addMessage(
+              "🤷 老周有点失望：「也行，以后有机会再说。」他独自走进了巷子深处。好感-3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件4：道德分叉——路遇扒手 ======
+    // 设计意图：相同的「看到扒手」场景，高道德和低道德玩家有截然不同的选择和后果
+    {
+      id: "moral_pickpocket_split",
+      phase: "street",
+      icon: "👤",
+      title: "街头的暗影",
+      story:
+        "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\\n\\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
+      conditions: function (st) {
+        // 天数>10，不重复
+        if (st.player.day < 10) return false;
+        if (st.flags._moralPickpocketSeen) return false;
+        return true;
+      },
+      probability: 0.025,
+      repeatable: false,
+      choices: function (st) {
+        var morality =
+          st.player && st.player.morality !== undefined
+            ? st.player.morality
+            : 50;
+        // 高道德（≥60）
+        if (morality >= 60) {
+          return [
+            {
+              text: "💪 冲上去抓住他的手！",
+              hint: "见义勇为，但可能受伤",
+              apply: function (s) {
+                s.flags._moralPickpocketSeen = true;
+                s.flags._moralScore = (s.flags._moralScore || 0) + 3;
+                s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
+                s.player.morality = Math.min(
+                  100,
+                  (s.player.morality || 50) + 3,
+                );
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) + 15,
+                );
+                // 随机受伤风险
+                if (Random.chance(0.3)) {
+                  s.status.health = Math.max(0, (s.status.health || 70) - 6);
+                  StateManager.addMessage(
+                    "💪 你一把抓住那只手！扒手挣扎中给了你一拳，但被旁边的人按住。姑娘的钱包保住了，她连连道谢。围观的人把你围住鼓掌。名气+8，道德+3，心情+15。挨了一拳健康-6。",
+                    "success",
+                  );
+                } else {
+                  StateManager.addMessage(
+                    "💪 你大喝一声抓住那只手！扒手吓了一跳想跑，被你和路人一起拦住。姑娘的钱包保住了，她眼眶红红地不停道谢。名气+8，道德+3，心情+15。",
+                    "success",
+                  );
+                }
+                // 后续：3天后可能收到感谢信（链式）
+                if (typeof queueChainEvent === "function") {
+                  queueChainEvent(
+                    s,
+                    "moral_pickpocket_followup_kindness",
+                    3,
+                    {},
+                  );
+                }
+              },
+            },
+            {
+              text: "🗣️ 大声喊「有小偷！」",
+              hint: "安全地提醒，扒手会跑",
+              apply: function (s) {
+                s.flags._moralPickpocketSeen = true;
+                s.flags._moralScore = (s.flags._moralScore || 0) + 2;
+                s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+                s.player.morality = Math.min(
+                  100,
+                  (s.player.morality || 50) + 1,
+                );
+                StateManager.addMessage(
+                  "🗣️ 你一声大喊，扒手缩回手挤进人群跑了。姑娘赶紧捂住背包，感激地朝声音方向看了一眼。名气+3，道德+1。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "📸 拍下证据报警",
+              hint: "理智处理，警方记录",
+              apply: function (s) {
+                s.flags._moralPickpocketSeen = true;
+                s.flags._moralScore = (s.flags._moralScore || 0) + 2;
+                s.player.intelligence = Math.min(
+                  100,
+                  (s.player.intelligence || 0) + 1,
+                );
+                StateManager.addMessage(
+                  "📸 你悄悄拍了照片，走到远处打电话报警。警方说会调取监控。虽然没有当场制止，但留下了证据。智力+1。",
+                  "info",
+                );
+              },
+            },
+          ];
+        }
+        // 低道德（≤35）
+        if (morality <= 35) {
+          return [
+            {
+              text: "💰 等扒手得手后跟上他",
+              hint: "黑吃黑，道德-5，可能获利",
+              apply: function (s) {
+                s.flags._moralPickpocketSeen = true;
+                s.flags._moralScore = (s.flags._moralScore || 0) - 5;
+                s.player.morality = Math.max(0, (s.player.morality || 50) - 5);
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) - 5,
+                );
+                // 可能获利
+                var loot = Random.int(80, 200);
+                s.resources.cash += loot;
+                s.resources.totalEarned = (s.resources.totalEarned || 0) + loot;
+                StateManager.addMessage(
+                  "💰 你尾随扒手到角落，压低声音：「见面分一半。」他愣了愣，不情愿地扔出¥" +
+                    loot +
+                    "。你拿着钱走了，心里说不上是什么滋味。道德-5，心情-5。",
+                  "warning",
+                );
+              },
+            },
+            {
+              text: "👀 假装没看见走开",
+              hint: "什么也不做，但内心不安",
+              apply: function (s) {
+                s.flags._moralPickpocketSeen = true;
+                s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 8);
+                StateManager.addMessage(
+                  "👀 你低下头快步走开。身后传来一声惊呼——姑娘发现钱包没了。你加快脚步，不想让自己卷入其中。心情-8。",
+                  "warning",
+                );
+              },
+            },
+          ];
+        }
+        // 中间道德（36-59）：中性选择
+        return [
+          {
+            text: "👀 假装没看见走开",
+            hint: "不惹事，但良心不安",
+            apply: function (s) {
+              s.flags._moralPickpocketSeen = true;
+              s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "👀 你转过头走了。这座城市每天都有人在丢失东西，你不想惹麻烦。心情-5。",
+                "warning",
+              );
+            },
+          },
+          {
+            text: "🗣️ 远远喊一声「注意背包！」",
+            hint: "不直接冲突，模糊提醒",
+            apply: function (s) {
+              s.flags._moralPickpocketSeen = true;
+              s.flags._moralScore = (s.flags._moralScore || 0) + 1;
+              s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
+              StateManager.addMessage(
+                "🗣️ 你远远喊了一声。姑娘警觉地捂住背包，扒手装作路人走开了。虽然没抓到人，但至少没让她损失。名气+1。",
+                "info",
+              );
+            },
+          },
+        ];
+      },
+    },
+
+    // ====== 事件5：积累爆发——连续饥饿后的健康危机 ======
+    // 设计意图：连续多天饥饿值<20的玩家会触发健康崩溃事件，让需求系统不再只是数字
+    {
+      id: "hunger_streak_collapse",
+      phase: "street",
+      icon: "💫",
+      title: "撑不住了",
+      story:
+        "你走在路上，眼前突然一阵发黑。天旋地转，你赶紧扶住旁边的墙壁，但腿已经软了。\\n\\n路人的声音变得模糊而遥远——你已经记不清上次好好吃一顿饭是什么时候了。身体的忍耐到了极限。",
+      conditions: function (st) {
+        // 连续饥饿爆发：lowHungerStreak≥3（连续3天饥饿<25）
+        // 且当前健康较差
+        if (st.player.day < 10) return false;
+        if (
+          !st.flags ||
+          !st.flags._habits ||
+          (st.flags._habits.lowHungerStreak || 0) < 3
+        )
+          return false;
+        if (!st.status || (st.status.health || 70) >= 50) return false;
+        return true;
+      },
+      probability: 0.15, // 条件严格，满足后高概率触发
+      repeatable: true, // 只要满足条件可能再次发生
+      choices: [
+        {
+          text: "🏥 去医院看看",
+          hint: "强制的，¥150-300，健康恢复+15",
+          apply: function (st) {
+            var cost = Random.int(150, 300);
+            if (st.resources.cash < cost) {
+              // 钱不够也要去，欠费
+              var actualCost = st.resources.cash;
+              st.resources.cash = 0;
+              st.resources.debt =
+                (st.resources.debt || 0) + (cost - actualCost);
+              StateManager.addMessage(
+                "🏥 你被路人送进了医院。医生说你严重营养不良加低血糖。打了一针开了药，花了¥" +
+                  actualCost +
+                  "，还欠了¥" +
+                  (cost - actualCost) +
+                  "。",
+                "warning",
+              );
+            } else {
+              st.resources.cash -= cost;
+            }
+            st.status.health = Math.min(100, (st.status.health || 50) + 15);
+            // 重置饥饿积累
+            if (st.flags && st.flags._habits) {
+              st.flags._habits.lowHungerStreak = 0;
+            }
+            // 强制补充一些饥饿
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 30);
+            StateManager.addMessage(
+              "🏥 医生说：「年轻人，再这样下去会出大事的。饭一定要吃，再穷也得吃。」你躺在病床上，盯着天花板发呆。健康+15。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤝 找朋友帮忙",
+          hint: "需要NPC好感≥40，免费吃饭恢复",
+          apply: function (st) {
+            var hasHelp = false;
+            // 检查是否有好感≥40的NPC
+            if (st.relationships) {
+              for (var nid in st.relationships) {
+                if (
+                  st.relationships[nid] &&
+                  (st.relationships[nid].affinity || 0) >= 40
+                ) {
+                  hasHelp = true;
+                  // 找其中好感最高的
+                  var bestNpc = nid;
+                  var maxAff = st.relationships[nid].affinity;
+                  for (var nid2 in st.relationships) {
+                    if (
+                      st.relationships[nid2] &&
+                      (st.relationships[nid2].affinity || 0) > maxAff
+                    ) {
+                      bestNpc = nid2;
+                      maxAff = st.relationships[nid2].affinity;
+                    }
+                  }
+                  if (bestNpc === "aunt_wang") {
+                    st.needs.hunger = Math.min(
+                      100,
+                      (st.needs.hunger || 0) + 40,
+                    );
+                    st.status.health = Math.min(
+                      100,
+                      (st.status.health || 50) + 8,
+                    );
+                    st.relationships.aunt_wang.affinity = Math.min(
+                      100,
+                      (st.relationships.aunt_wang.affinity || 0) + 3,
+                    );
+                    StateManager.addMessage(
+                      "🤝 你找到王大婶。她一看到你的脸色就骂开了：「作死啊！不吃饭省钱省到医院去了？」然后端出一大碗热腾腾的面条。王大婶好感+3，饥饿+40，健康+8。",
+                      "success",
+                    );
+                  } else if (bestNpc === "chef_chen") {
+                    st.needs.hunger = Math.min(
+                      100,
+                      (st.needs.hunger || 0) + 45,
+                    );
+                    st.status.health = Math.min(
+                      100,
+                      (st.status.health || 50) + 10,
+                    );
+                    st.relationships.chef_chen.affinity = Math.min(
+                      100,
+                      (st.relationships.chef_chen.affinity || 0) + 3,
+                    );
+                    StateManager.addMessage(
+                      "🤝 陈师傅看你脸色不对，二话不说给你炒了一大盘炒饭。「吃！不收你钱。人吃饱了才有力气活。」饥饿+45，健康+10。",
+                      "success",
+                    );
+                  } else {
+                    // 通用处理
+                    st.needs.hunger = Math.min(
+                      100,
+                      (st.needs.hunger || 0) + 35,
+                    );
+                    st.status.health = Math.min(
+                      100,
+                      (st.status.health || 50) + 8,
+                    );
+                    StateManager.addMessage(
+                      "🤝 你找到了一位朋友，他们一看你的样子就拉你去吃饭。虽然不好意思，但你还是吃了。饥饿+35，健康+8。",
+                      "success",
+                    );
+                  }
+                  break;
+                }
+              }
+            }
+            if (!hasHelp) {
+              StateManager.addMessage(
+                "😅 你想找个人帮忙，掏出手机翻了一遍通讯录，好像跟谁也没熟到那个份上……",
+                "warning",
+              );
+              // fallback: 钱减半
+              StateManager.addMessage(
+                "你咬着牙在路边小摊买了俩包子，花了¥8。饥饿+15。",
+                "info",
+              );
+              if (st.resources.cash >= 8) {
+                st.resources.cash -= 8;
+              }
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+            }
+            // 重置饥饿积累
+            if (st.flags && st.flags._habits) {
+              st.flags._habits.lowHungerStreak = 0;
+            }
+          },
+        },
+        {
+          text: "😤 咬牙硬撑",
+          hint: "不花钱，但健康-10，可能真的出事",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 50) - 10);
+            // 小概率真的昏倒被送医院（强制更高费用）
+            if (Random.chance(0.3)) {
+              var forcedCost = Random.int(200, 400);
+              if (st.resources.cash >= forcedCost) {
+                st.resources.cash -= forcedCost;
+              } else {
+                st.resources.debt =
+                  (st.resources.debt || 0) +
+                  forcedCost -
+                  (st.resources.cash || 0);
+                st.resources.cash = 0;
+              }
+              st.status.health = Math.min(
+                100,
+                Math.max(0, (st.status.health || 50) + 5),
+              );
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+              if (st.flags && st.flags._habits) {
+                st.flags._habits.lowHungerStreak = 0;
+              }
+              StateManager.addMessage(
+                "😤 你硬撑着走了几步，眼前一黑倒在了地上。醒来时已经在医院，手上扎着点滴。护士说：「低血糖昏迷，再晚送来就危险了。」花了¥" +
+                  forcedCost +
+                  "，欠了债。健康+5，饥饿+20。",
+                "danger",
+              );
+            } else {
+              StateManager.addMessage(
+                "😤 你咬着牙挺过来了。但身体在强烈抗议，你知道这样下去不是办法。健康-10。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
@@ -1615,4 +2223,77 @@
       repeatable: careerEvent.repeatable,
     });
   }
+
+  // ====== 链式后续事件（仅通过 queueChainEvent 触发）======
+  // 链式事件1：老周渠道首单高价回收（Event 3 后续）
+  RANDOM_EVENTS.push({
+    id: "zhou_channel_first_deal",
+    _isChainEvent: true,
+    phase: "street",
+    icon: "♻️",
+    title: "内部渠道开张",
+    story:
+      "几天前老周带你认的铁皮棚回收站，今天你试着拖了一车废品过去。那人看了一眼说：「老周打过招呼了，称重点，按内部价算。」\\n\\n你看着称上的数字，感觉比平时沉了不少。",
+    choices: [
+      {
+        text: "♻️ 称重结账",
+        hint: "第一笔高价回收！",
+        apply: function (st) {
+          var bonus = Random.int(200, 400);
+          st.resources.cash += bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "♻️ 废品称重完，老板拍给你¥" +
+              bonus +
+              "——比外面多卖了将近一倍！「老周介绍的人，我信得过，以后有货尽管来。」心情+10。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 链式事件2：见义勇为后续——被救姑娘送来感谢信（Event 4 后续）
+  RANDOM_EVENTS.push({
+    id: "moral_pickpocket_followup_kindness",
+    _isChainEvent: true,
+    phase: "street",
+    icon: "💌",
+    title: "迟来的感谢",
+    story:
+      "有人托王大婶带了个信封给你——打开一看，是几天前那个差点被偷的姑娘写的。\\n\\n字迹有些歪扭，但很认真：「那天太慌乱了没当面向你道谢，问了旁边的人才打听到你住这片。一点心意，请一定收下。」",
+    choices: [
+      {
+        text: "💌 收下信和礼物",
+        hint: "心情+15，收到感谢费¥100",
+        apply: function (st) {
+          st.resources.cash += 100;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 100;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.flags._moralGoodDeedDone = true;
+          StateManager.addMessage(
+            "💌 信封里除了感谢信还有¥100。你看了两遍那封信，虽然只有短短几行字，但在这座冷漠的城市里，它比一百块钱更暖。好心情+15，名气+3，收到¥100。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📬 回一封信，不收她的钱",
+        hint: "真正的善意，道德+2，名气+5",
+        apply: function (st) {
+          st.resources.cash += 100; // 信里夹的钱
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          st.flags._moralGoodDeedDone = true;
+          StateManager.addMessage(
+            "📬 你回了一封短信：「不用谢，下次小心就好。」把¥100夹在信里托王大婶带回去。你不知道她收到后会怎么想，但你心里很踏实。道德+2，名气+5，心情+20。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
 })();
