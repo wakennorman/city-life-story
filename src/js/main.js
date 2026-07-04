@@ -1131,141 +1131,199 @@ function startSandboxGame() {
   }
   var cfg = _sandboxConfig;
 
-  StateManager.newGame();
-  initializePrices();
+  // ——— 先展示"命运定锚"弹窗，让玩家选定挑战目标，再初始化游戏 ———
+  var _sbDebt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+  var _sbAssets = (cfg.cash || 0) + (cfg.bankBalance || 0);
+  var _sbIntroBody =
+    "你在城市里找了一张椅子坐下，把自己的账列了出来：<br><br>" +
+    "家底 <b>¥" + _sbAssets.toLocaleString() + "</b>" +
+    (_sbDebt > 0
+      ? "，背负 <b>¥" + _sbDebt.toLocaleString() + "</b> 的债"
+      : "，零债出发") +
+    "，今年 <b>" + (cfg.age || 20) + "</b> 岁。<br><br>" +
+    "城市不知道你从哪儿来，也不在乎你的计划。<br><br>" +
+    "这段人生，你想证明什么？";
 
-  var state = StateManager.getState();
+  function _doStartSandbox(challengeLabel) {
+    StateManager.newGame();
+    initializePrices();
 
-  // --- 身份 ---
-  state.player.name = cfg.name || "无名";
-  state.player.gender = cfg.gender || "male";
-  state.player.age = cfg.age || 20;
-  state.player.fame = cfg.fame || 0;
+    var state = StateManager.getState();
 
-  // --- 属性 ---
-  state.player.physique = Math.max(10, Math.min(100, cfg.physique || 22));
-  state.player.intelligence = Math.max(
-    10,
-    Math.min(100, cfg.intelligence || 22),
-  );
-  state.player.agility = Math.max(10, Math.min(100, cfg.agility || 22));
-  state.player.mental = Math.max(10, Math.min(100, cfg.mental || 22));
+    // --- 身份 ---
+    state.player.name = cfg.name || "无名";
+    state.player.gender = cfg.gender || "male";
+    state.player.age = cfg.age || 20;
+    state.player.fame = cfg.fame || 0;
 
-  // --- 资源 ---
-  state.resources.cash = cfg.cash || 5000;
-  state.resources.bankBalance = cfg.bankBalance || 0;
-  state.resources.villageDebt = cfg.villageDebt || 0;
-  state.resources.bankDebt = cfg.bankDebt || 0;
-  state.resources.debt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
-  state.resources.loanPrincipal = cfg.villageDebt || 0;
-  state.resources.loanDay = 0;
+    // --- 属性 ---
+    state.player.physique = Math.max(10, Math.min(100, cfg.physique || 22));
+    state.player.intelligence = Math.max(
+      10,
+      Math.min(100, cfg.intelligence || 22),
+    );
+    state.player.agility = Math.max(10, Math.min(100, cfg.agility || 22));
+    state.player.mental = Math.max(10, Math.min(100, cfg.mental || 22));
 
-  // --- 学历 ---
-  state.player.education = cfg.education || 0;
-  state.education = cfg.education || 0;
-  state.player.eduProgress =
-    cfg.education >= 1
-      ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
-      : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+    // --- 资源 ---
+    state.resources.cash = cfg.cash || 5000;
+    state.resources.bankBalance = cfg.bankBalance || 0;
+    state.resources.villageDebt = cfg.villageDebt || 0;
+    state.resources.bankDebt = cfg.bankDebt || 0;
+    state.resources.debt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+    state.resources.loanPrincipal = cfg.villageDebt || 0;
+    state.resources.loanDay = 0;
 
-  // --- 技能 ---
-  var skillKeys = [
-    "cooking",
-    "repair",
-    "coding",
-    "english",
-    "driving",
-    "sales",
-    "management",
-    "accounting",
-    "electrician",
-    "welding",
-  ];
-  for (var i = 0; i < skillKeys.length; i++) {
-    var sk = skillKeys[i];
-    if (state.skills[sk]) {
-      var lvl = Math.max(0, Math.min(100, cfg[sk] || 0));
-      state.skills[sk].level = lvl;
-      state.skills[sk].xp = 0;
-    }
-  }
+    // --- 学历 ---
+    state.player.education = cfg.education || 0;
+    state.education = cfg.education || 0;
+    state.player.eduProgress =
+      cfg.education >= 1
+        ? { studyPoints: 0, examsPassed: 6, totalExams: 6 }
+        : { studyPoints: 0, examsPassed: 0, totalExams: 6 };
 
-  // --- 健康 ---
-  state.status.health = cfg.health || 100;
-
-  // --- 住所 ---
-  state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
-  state.housing.rentedDay = state.player.day;
-  state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
-
-  // --- 起始地点 ---
-  if (cfg.startLocation) {
-    state.trade.currentLocation = cfg.startLocation;
-  }
-
-  // --- 需求 ---
-  state.needs.hunger = 70;
-  state.needs.fatigue = 15;
-  state.needs.hygiene = 75;
-  state.needs.happiness = 55;
-
-  // --- 沙盒标记 ---
-  state.flags._isSandboxMode = true;
-
-  // --- 企业命运 ---
-  if (typeof initEnterpriseFate === "function") {
-    initEnterpriseFate(state);
-  }
-
-  StateManager.addMessage(
-    "⚙️ 沙盒模式开始！你自定义了开局条件。" +
-      (cfg.villageDebt > 0
-        ? "欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息0.35%。"
-        : ""),
-    "event",
-  );
-  StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
-
-  // === v3.0 P2-B-2 + P2-E-1：沙盒模式也接入难度 + 传承币 ===
-  if (
-    typeof applyDifficultyToState === "function" &&
-    window._selectedDifficulty
-  ) {
-    applyDifficultyToState(state, window._selectedDifficulty);
-  }
-  if (typeof applyHeritageUnlocks === "function") {
-    applyHeritageUnlocks(state);
-  }
-
-  // v3.2 修复: 记录第1天日初现金
-  state.flags._dayStartCash = state.resources.cash || 0;
-
-  document.getElementById("sandbox-screen").style.display = "none";
-  document.getElementById("mode-select-screen").style.display = "none";
-  document.getElementById("welcome-screen").style.display = "none";
-
-  var _enterSandboxGame = function () {
-    document.getElementById("app").style.display = "";
-    gameStarted = true;
-    renderAll();
-    if (typeof initCashCarousel === "function") initCashCarousel();
-    if (typeof startTutorial === "function") {
-      setTimeout(function () {
-        startTutorial();
-      }, 300);
-    }
-    setTimeout(function () {
-      if (typeof showForcedDreamModal === "function") {
-        showForcedDreamModal();
+    // --- 技能 ---
+    var skillKeys = [
+      "cooking",
+      "repair",
+      "coding",
+      "english",
+      "driving",
+      "sales",
+      "management",
+      "accounting",
+      "electrician",
+      "welding",
+    ];
+    for (var i = 0; i < skillKeys.length; i++) {
+      var sk = skillKeys[i];
+      if (state.skills[sk]) {
+        var lvl = Math.max(0, Math.min(100, cfg[sk] || 0));
+        state.skills[sk].level = lvl;
+        state.skills[sk].xp = 0;
       }
-    }, 500);
-  };
+    }
 
-  if (typeof startWithWorldNewsIntro === "function") {
-    startWithWorldNewsIntro(state, null, _enterSandboxGame);
-  } else {
-    _enterSandboxGame();
+    // --- 健康 ---
+    state.status.health = cfg.health || 100;
+
+    // --- 住所 ---
+    state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
+    state.housing.rentedDay = state.player.day;
+    state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
+
+    // --- 起始地点 ---
+    if (cfg.startLocation) {
+      state.trade.currentLocation = cfg.startLocation;
+    }
+
+    // --- 需求 ---
+    state.needs.hunger = 70;
+    state.needs.fatigue = 15;
+    state.needs.hygiene = 75;
+    state.needs.happiness = 55;
+
+    // --- 沙盒标记 & 挑战 ---
+    state.flags._isSandboxMode = true;
+    if (challengeLabel) {
+      state.flags._sandboxChallenge = challengeLabel;
+    }
+
+    // --- 企业命运 ---
+    if (typeof initEnterpriseFate === "function") {
+      initEnterpriseFate(state);
+    }
+
+    // --- 开场消息 ---
+    if (challengeLabel) {
+      StateManager.addMessage(
+        "📐 你给自己定下了挑战：" + challengeLabel + "。从第1天开始。",
+        "event",
+      );
+    } else {
+      StateManager.addMessage(
+        "⚙️ 沙盒模式开始" +
+          (cfg.villageDebt > 0
+            ? "，欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息0.35%。"
+            : "，自由探索。"),
+        "event",
+      );
+    }
+    StateManager.addMessage('💡 提示：点击"🗺️ 地图"标签可查看城市全景。', "info");
+    StateManager.addMessage(
+      '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。',
+      "info",
+    );
+
+    // === v3.0 P2-B-2 + P2-E-1：沙盒模式也接入难度 + 传承币 ===
+    if (
+      typeof applyDifficultyToState === "function" &&
+      window._selectedDifficulty
+    ) {
+      applyDifficultyToState(state, window._selectedDifficulty);
+    }
+    if (typeof applyHeritageUnlocks === "function") {
+      applyHeritageUnlocks(state);
+    }
+
+    // v3.2 修复: 记录第1天日初现金
+    state.flags._dayStartCash = state.resources.cash || 0;
+
+    document.getElementById("sandbox-screen").style.display = "none";
+    document.getElementById("mode-select-screen").style.display = "none";
+    document.getElementById("welcome-screen").style.display = "none";
+
+    var _enterSandboxGame = function () {
+      document.getElementById("app").style.display = "";
+      gameStarted = true;
+      renderAll();
+      if (typeof initCashCarousel === "function") initCashCarousel();
+      if (typeof startTutorial === "function") {
+        setTimeout(function () {
+          startTutorial();
+        }, 300);
+      }
+      setTimeout(function () {
+        if (typeof showForcedDreamModal === "function") {
+          showForcedDreamModal();
+        }
+      }, 500);
+    };
+
+    if (typeof startWithWorldNewsIntro === "function") {
+      startWithWorldNewsIntro(state, null, _enterSandboxGame);
+    } else {
+      _enterSandboxGame();
+    }
   }
+
+  showModal({
+    title: "📐 你设计了自己的命运",
+    body: _sbIntroBody,
+    buttons: [
+      {
+        text: "💰 百日攒够¥50,000",
+        cls: "",
+        callback: function () {
+          _doStartSandbox("100天内攒到¥50,000");
+        },
+      },
+      {
+        text: "📈 打工人逆袭开公司",
+        cls: "",
+        callback: function () {
+          _doStartSandbox("从打工人到开公司当老板");
+        },
+      },
+      {
+        text: "🚀 自由探索，随心而走",
+        cls: "btn-primary",
+        callback: function () {
+          _doStartSandbox(null);
+        },
+      },
+    ],
+  });
 }
 
 function startNewGame() {
