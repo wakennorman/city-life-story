@@ -843,6 +843,42 @@ function renderLocationBar(state, parent) {
     rightGroup.appendChild(tipSpan);
   }
 
+  // 移动端：在住所后添加天气预报
+  if (
+    window.innerWidth <= 768 &&
+    state.weather &&
+    state.weather.forecast &&
+    state.weather.forecast.length > 0
+  ) {
+    var forecastSep = document.createElement("span");
+    forecastSep.style.cssText =
+      "color:var(--text-muted);font-size:10px;margin-left:3px;";
+    forecastSep.textContent = "|";
+    rightGroup.appendChild(forecastSep);
+
+    var forecastSpan = document.createElement("span");
+    forecastSpan.style.cssText =
+      "font-size:10px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;";
+    var forecastText = "📅";
+    var forecastArr = state.weather.forecast;
+    for (var fi = 0; fi < forecastArr.length; fi++) {
+      var f = forecastArr[fi];
+      var fDef =
+        typeof WEATHER_TYPES !== "undefined"
+          ? WEATHER_TYPES.find(function (wt) {
+              return wt.id === f.weatherId;
+            })
+          : null;
+      var fic = fDef ? fDef.icon : "\u{1F324}️";
+      var fnm = fDef ? fDef.name : "未知";
+      var pct = Math.round(f.confidence * 100);
+      forecastText += fic + fnm + pct + "%";
+      if (fi < forecastArr.length - 1) forecastText += " ";
+    }
+    forecastSpan.textContent = forecastText;
+    rightGroup.appendChild(forecastSpan);
+  }
+
   div.appendChild(rightGroup);
 
   parent.appendChild(div);
@@ -1049,10 +1085,68 @@ function renderTimeSlot(state, parent) {
     ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
   // 底部独立行：🎒 背包 / 🌃 已提取到 renderLocationBar，此处仅保留日期 + 时段 + AP
   div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  // 移动端：在时段和AP之间插入天气简况
+  var weatherHTML = "";
+  if (window.innerWidth <= 768 && state.weather && state.weather.current) {
+    var wDef =
+      typeof WEATHER_TYPES !== "undefined"
+        ? WEATHER_TYPES.find(function (wt) {
+            return wt.id === state.weather.current;
+          })
+        : null;
+    if (wDef) {
+      var temp = Math.round(state.weather.temperature || 22);
+      var tempEffect =
+        typeof getTempEffect === "function"
+          ? getTempEffect(state.weather.temperature || 22)
+          : null;
+      var comfort =
+        state.status && state.status.comfort != null
+          ? state.status.comfort
+          : 50;
+      var comfortLabel =
+        comfort >= 80
+          ? "舒适"
+          : comfort >= 60
+            ? "还行"
+            : comfort >= 40
+              ? "不适"
+              : comfort >= 20
+                ? "难受"
+                : "恶劣";
+      var comfortColor =
+        comfort >= 60
+          ? "var(--success)"
+          : comfort >= 40
+            ? "var(--warning)"
+            : "var(--danger)";
+      weatherHTML =
+        '<span style="color:var(--text-muted);font-size:10px;">|</span>' +
+        '<span style="font-size:11px;white-space:nowrap;">' +
+        wDef.icon +
+        wDef.name +
+        " " +
+        temp +
+        "°C" +
+        (tempEffect
+          ? '<span style="font-size:10px;color:var(--text-muted);">(' +
+            tempEffect.name +
+            ")</span>"
+          : "") +
+        '<span style="font-size:10px;color:' +
+        comfortColor +
+        ';margin-left:2px;">' +
+        comfortLabel +
+        "</span>" +
+        "</span>";
+    }
+  }
+
   div.innerHTML = `
     <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
     <span style="color:var(--text-muted);">|</span>
     <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+    ${weatherHTML}
     <span style="white-space:nowrap;font-size:12px;margin-left:auto;">
       ⚡ <strong style="color:${apColor};${lowAp ? "animation:ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}

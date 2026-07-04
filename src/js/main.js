@@ -4130,16 +4130,15 @@ function renderMessageLog(state) {
   // 滚动到底部
   content.scrollTop = content.scrollHeight;
 
-  // 移动端：更新折叠预览条（最新一条事件）
+  // 移动端：更新折叠预览条（显示总条数）
   if (isMobile) {
     var preview = document.getElementById("message-log-preview");
-    var previewInner = preview
-      ? preview.querySelector(".log-preview-inner")
-      : null;
-    if (previewInner && state.messageLog.length > 0) {
-      var last = state.messageLog[state.messageLog.length - 1];
-      previewInner.innerHTML =
-        '<span class="log-day">[第' + last.day + "天]</span>" + last.text;
+    if (preview) {
+      var total = state.messageLog.length;
+      preview.innerHTML =
+        '<div class="log-preview-inner">📜 共' +
+        total +
+        "条记录，点击▾展开</div>";
     }
   }
 }
@@ -4254,7 +4253,7 @@ function setupMobileMessageLog() {
   var preview = document.createElement("div");
   preview.id = "message-log-preview";
   preview.innerHTML =
-    '<div class="log-preview-inner">📜 点击查看完整事件记录</div>';
+    '<div class="log-preview-inner">📜 点击▾展开完整记录</div>';
   content.parentNode.insertBefore(preview, content.nextSibling);
 
   // 默认折叠

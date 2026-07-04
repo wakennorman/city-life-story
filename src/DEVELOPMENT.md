@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.4 — 移动端UI紧凑化）
+> 最后更新: 2026-07-04（v3.5 — 移动端事件3条默认+天气内联）
 
 ---
 
@@ -54,6 +54,44 @@
 - `npm run check:js`（125 files）✅
 - `npm run typecheck` ✅
 - `python build.py`（4554.6 KB）✅
+
+## 2026-07-04 — v3.5：移动端事件记录默认3条 + 天气内联显示
+
+> 设计参考：BitLife（事件默认可见数条）、Stardew Valley 移动端（天气集成于主UI）、Material Design 内容优先原则
+> 影响文件：src/css/style.css（collapsed nth-child）、src/js/main.js（预览文案）、src/js/ui/render_infra.js（时间槽+位置条天气注入）、dist/index.html
+
+### 动机
+
+用户反馈 iPhone XR 上两个痛点：
+
+1. **事件记录完全看不到** — v3.4 默认折叠为 1 行预览，需主动点击才能看到事件详情。要求默认可见最新 3 条。
+2. **天气信息藏在侧栏** — 移动端侧栏需点汉堡菜单才可见，天气/温度/体感舒适度/未来预报对决策重要，应直接显示。
+
+### 事件记录：默认显示 3 条
+
+- **机制不变**：保留 `.collapsed` 类 + 展开/折叠切换
+- **折叠含义改变**：折叠时不再是隐藏全部条目，而是显示前 3 条最新事件
+- **CSS 实现**：`#message-log.collapsed .log-content .log-entry:nth-child(n+4) { display: none; }`
+- **预览条**：位于 3 条事件下方，显示「📜 共N条记录，点击▾展开」
+- **不足 3 条**：全部显示，无第 4 条规则触发
+- **展开后**：显示全部 25 条（同 v3.4）
+
+### 天气内联显示
+
+- **当前天气**插入时间槽（`renderTimeSlot`）：`☀️晴天 28°C（温暖）舒适`，位于时段标签和⚡ AP之间
+  - 格式：天气图标 + 名称 + 温度 + 体感名（括号）+ 舒适度标签（着色）
+  - 紧凑文字，不占卡片空间
+- **3 天预报**插入位置行（`renderLocationBar`）：`📅☀️晴天85% 🌤️多云65% ☀️晴天45%`，位于住所名右侧
+  - 预报按置信度降序排列（85%/65%/45%）
+  - overflow:ellipsis 防溢出
+- **仅移动端**：`window.innerWidth <= 768` 控制，桌面端不受影响（侧栏已有天气面板）
+
+### 验证
+
+- `node --check main.js` ✅
+- `node --check render_infra.js` ✅
+- `python build.py`（4557.2 KB）✅
+- 本地 http://localhost:8080 已启动
 
 ## 2026-07-04 — v3.15：事件全面审计+链式事件扩充+触发条件全覆盖
 

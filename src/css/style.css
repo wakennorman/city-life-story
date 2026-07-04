@@ -4190,6 +4190,11 @@ body {
     min-height: 36px;
   }
   #message-log.collapsed .log-content {
+    display: block;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #message-log.collapsed .log-content .log-entry:nth-child(n+4) {
     display: none;
   }
   #message-log.collapsed #message-log-preview {

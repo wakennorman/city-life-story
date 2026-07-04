@@ -76,14 +76,12 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.4 移动端UI紧凑化 `cc113d8`
-  - **问题**：手机端事件记录太大太长遮挡内容；交易/物品/技能等 Tab 卡片太大纵排低效；需滑动太多才能获取信息
-  - **事件记录折叠**：默认折叠，仅显示 1 行最新事件预览条；展开后 max-height 30vh（≈200px）；条目 font-size 10px, padding 1px 0；移动端限 25 条
-  - **卡片两列化**：`#content-area .action-cards` 强制 `repeat(2, 1fr) !important` 覆盖 JS 内联单列；全局 padding 12→8px, min-height 96→64px
-  - **按钮紧凑**：卡内 btn-sm min-height 44→28px；Tab 按钮 44→36px；Tab 栏 gap 4→2px
-  - **全覆盖**：交易/物品/技能/投资/股票/地图/行动/个人成长/成就 Tab 同步紧凑
-  - **设计参考**：BitLife 信息密度 / Material 3 密集模式 / Stardew Valley 移动端
-  - **验证**：`check:js`(125) / `typecheck` / `build.py`(4554.6KB) 全过；commit: `cc113d8`
+- **最新一次工作 (2026-07-04)**：v3.5 移动端事件记录默认3条 + 天气内联显示
+  - **问题**：事件记录完全看不到（折叠为1行预览）；天气信息藏在侧栏需点汉堡菜单才可见
+  - **事件记录3条默认**：`.collapsed` 不再隐藏全部，而是用 nth-child(n+4) 显示前3条；预览条显示「📜 共N条记录，点击▾展开」
+  - **天气内联**：时间槽添加 `☀️晴天 28°C（温暖）舒适`（时段与AP之间）；位置行添加3天预报（住所名右侧）
+  - **仅移动端**：`window.innerWidth <= 768` 控制，桌面端侧栏天气不受影响
+  - **验证**：`node --check main.js` ✅ / `node --check render_infra.js` ✅ / `python build.py`(4557.2 KB) ✅
   - 新增20+策略辅助函数（mcTreatIllness/mcBuyProperty/mcStartupIncome/mcAttemptCrime等）
   - 技能学习加速（每次+1级模拟多渠道XP）
   - second_gen创业门槛 ¥200k→¥50k (commit eaad1ba)
