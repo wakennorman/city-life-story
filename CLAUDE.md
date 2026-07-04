@@ -76,15 +76,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.7 交易系统全面优化+事件修复+移动端弹窗居中
-  - **问题**：交易Tab显示「undefined」/ 「卖出好时机：服装、电子涨价中」始终不变 / 批发→商业区单一最优路线 / 移动端弹窗偏上 / 暴雨送货事件误导
-  - **undefined根因**：`var skillTag` 声明在模板字符串之后，hoisting 为 undefined
-  - **卖出好时机根因**：SEASONAL_PRICE_MODS 只覆盖 4 个分类且混入 goodId 级 key
-  - **单一路线根因**：批发市场 priceMod 0.8 + 商业区 1.15 固定差价
-  - **修复**：skillTag 提前声明；CATEGORY_NAMES_TRADE 补齐 10 分类；SEASONAL_PRICE_MODS 重构全覆盖+4 季差异化；新增 `getBestTradeRoutes` 动态路线推荐（Top 3）；市场事件扩充 +8 条；移动端 modal-overlay align-items:center；暴雨事件叙事泛化
-  - **验证**：`node --check` × 5 全部通过 / `python build.py` (4566.0 KB) / commit 5eaa899
-  - **问题**：事件记录完全看不到（折叠为1行预览）；天气信息藏在侧栏需点汉堡菜单才可见
-  - **事件记录3条默认**：`.collapsed` 不再隐藏全部，而是用 nth-child(n+4) 显示前3条；预览条显示「📜 共N条记录，点击▾展开」
+- **最新一次工作 (2026-07-05)**：v3.17 跨系统联动事件扩充（空白区填充）
+  - **新增5个联动事件**：跑腿老主顾问候（老手特遇）/ 一眼识假货（专业人士视角）/ 老周批发市场暗线（NPC好感秘密）/ 路遇扒手三档道德分叉（道德分叉）/ 连续饥饿健康崩溃（积累爆发）
+  - **新增2个链式后续**：`zhou_channel_first_deal`（3天后首单高价回收）、`moral_pickpocket_followup_kindness`（3天后感谢信）
+  - **设计亮点**：Event4 choices 为函数动态生成三套选项（morality≥60/≤35/中间）；Event5 找朋友分支按好感最高NPC触发专属对话；Event3 仅在批发市场触发+链式调度
+  - **验证**：`node --check cross_system_events.js` ✅ / `node --check main.js` ✅ / `python build.py` (4605.9 KB) ✅ / `commit 57cf587` ✅ / `git push` ✅
   - **天气内联**：时间槽添加 `☀️晴天 28°C（温暖）舒适`（时段与AP之间）；位置行添加3天预报（住所名右侧）
   - **仅移动端**：`window.innerWidth <= 768` 控制，桌面端侧栏天气不受影响
   - **验证**：`node --check main.js` ✅ / `node --check render_infra.js` ✅ / `python build.py`(4557.2 KB) ✅

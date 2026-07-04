@@ -1,8 +1,42 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.7.1 — 交易深度优化第二轮：路线多样性+事件条件+分类显示修复）
+> 最后更新: 2026-07-05（v3.17 — 新增5个跨系统联动事件+2个链式后续）
 >
-> commit: `40af6cc`
+> commit: `57cf587`
+
+---
+
+## 2026-07-05 — v3.17：跨系统联动事件扩充（空白区填充）
+
+> SOP: 自主设计（按 v2.1 内容扩充标准）
+> 影响文件：cross_system_events.js
+> 设计参考：This War of Mine 道德困境 / Papers Please 人设分叉 / Stardew Valley 好感积累 / 大多数 需求系统
+
+### 新增5个联动事件
+
+| 事件ID                   | 类型         | 联动系统              | 链式后续                                      |
+| ------------------------ | ------------ | --------------------- | --------------------------------------------- |
+| `delivery_regular_treat` | 老手特遇     | 技能+天数+经济        | 无                                            |
+| `skilled_eye_fake_goods` | 专业人士视角 | 修理/电工技能         | 无                                            |
+| `old_zhou_wholesale_tip` | NPC好感秘密  | 老周好感+批发市场地点 | `zhou_channel_first_deal`（3天后）            |
+| `moral_pickpocket_split` | 道德分叉     | 道德值三档分支        | `moral_pickpocket_followup_kindness`（3天后） |
+| `hunger_streak_collapse` | 积累爆发     | 连续饥饿+健康状态     | 无                                            |
+
+### 设计亮点
+
+- **Event1 老主顾的问候**：driving≥15 或 agility≥28 或 totalEarned>2000 三种触发条件，覆盖不同玩家路径
+- **Event2 一眼识假**：修理≥40 或电工≥35，揭穿有20%受伤风险，买假货研究可获XP
+- **Event3 老周的暗线**：仅在批发市场触发，`queueChainEvent` 调度3天后链式事件
+- **Event4 街头的暗影**：`choices` 为函数动态生成，按 morality≥60/≤35/中间三档提供完全不同选项，最高道德选项有链式后续
+- **Event5 撑不住了**：`lowHungerStreak≥3` + `health<50`，条件严格但触发后概率0.15；找朋友分支按NPC好感最高者触发专属对话（王大婶/陈师傅）
+
+### 验证
+
+- `node --check cross_system_events.js` ✅
+- `node --check main.js` ✅
+- `python build.py` (4605.9 KB) ✅
+- `commit 57cf587` ✅
+- `git push` ✅
 
 ---
 

@@ -2198,6 +2198,470 @@
         },
       ],
     },
+
+    // ====== 事件6：积累爆发——连续疲劳后的过劳危机 ======
+    // 设计意图：与 hunger_streak_collapse 对称，但针对疲劳系统。
+    // 连续3天疲劳>80的玩家会触发过劳危机，让"疲劳"不只是个数字，
+    // 而是真正有后果的游戏机制。同时给"休息"行动赋予战略价值。
+    {
+      id: "fatigue_streak_collapse",
+      phase: "street",
+      icon: "😵",
+      title: "身体被掏空",
+      story:
+        "你走在路上，脚步越来越沉，视线开始模糊。这几天你几乎没怎么休息，身体已经到了极限。\\n\\n你扶着墙喘气，心跳快得像要从嗓子眼蹦出来。路过的行人看了你一眼，又匆匆走开——这座城市的每个人都忙着赶自己的路。",
+      conditions: function (st) {
+        // 连续3天疲劳>80
+        if (st.player.day < 10) return false;
+        if (
+          !st.flags ||
+          !st.flags._habits ||
+          (st.flags._habits.highFatigueStreak || 0) < 3
+        )
+          return false;
+        // 当前也要疲劳高
+        if (!st.needs || (st.needs.fatigue || 0) < 75) return false;
+        return true;
+      },
+      probability: 0.15,
+      repeatable: true,
+      choices: [
+        {
+          text: "🏥 去诊所挂水",
+          hint: "强制的，¥200-400，疲劳-30，健康+10",
+          apply: function (st) {
+            var cost = Random.int(200, 400);
+            if (st.resources.cash < cost) {
+              var actualCost = st.resources.cash;
+              st.resources.cash = 0;
+              st.resources.debt =
+                (st.resources.debt || 0) + (cost - actualCost);
+              StateManager.addMessage(
+                "🏥 你被送到诊所，医生说你这是严重过劳。打了点滴开了药，花了¥" +
+                  actualCost +
+                  "，还欠了¥" +
+                  (cost - actualCost) +
+                  "。",
+                "warning",
+              );
+            } else {
+              st.resources.cash -= cost;
+              StateManager.addMessage(
+                "🏥 你到诊所挂了两瓶水，医生说：「年轻人，再这样下去心脏会出问题。」花了¥" +
+                  cost +
+                  "。",
+                "info",
+              );
+            }
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+            st.status.health = Math.min(100, (st.status.health || 70) + 10);
+            // 重置疲劳积累
+            if (st.flags && st.flags._habits) {
+              st.flags._habits.highFatigueStreak = 0;
+            }
+            StateManager.addMessage(
+              "🏥 休息了半天，疲劳-30，健康+10。你躺在病床上，盯着天花板，决定不能再这样透支了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😴 找个地方睡一觉",
+          hint: "免费，恢复慢，疲劳-15",
+          apply: function (st) {
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            st.status.health = Math.min(100, (st.status.health || 70) + 3);
+            // 小概率被驱赶（露宿街头时）
+            if ((!st.housing || st.housing.tier === 0) && Random.chance(0.3)) {
+              StateManager.addMessage(
+                "😴 你在桥洞下找了个角落眯了一会儿，但被路过的保安赶走了。只睡了不到一小时，疲劳-15，健康+3。",
+                "warning",
+              );
+            } else {
+              if (st.flags && st.flags._habits) {
+                st.flags._habits.highFatigueStreak = 0;
+              }
+              StateManager.addMessage(
+                "😴 你找了个能遮风挡雨的地方，蜷缩着睡了一觉。醒来时感觉好了一些，虽然还远远不够。疲劳-15，健康+3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "💊 买瓶功能饮料硬撑",
+          hint: "¥15，疲劳-8，但治标不治本",
+          apply: function (st) {
+            if (st.resources.cash < 15) {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，连¥15的功能饮料都买不起……",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 15;
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            st.status.health = Math.max(0, (st.status.health || 70) - 3);
+            StateManager.addMessage(
+              "💊 你灌了一瓶功能饮料，苦涩的液体滑过喉咙。心跳又加速了，但你告诉自己还能撑。疲劳-8，健康-3，心情-3。你知道这只是在透支明天。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件7：技能组合——跨界商业洞察 ======
+    // 设计意图：当玩家同时拥有多个技能且达到一定水平后，
+    // 解锁纯靠单一技能无法获得的跨界洞察。
+    // 鼓励玩家全面发展，而不是只刷一个技能。
+    // 联动：烹饪+管理→餐饮创业灵感，修理+销售→二手翻新商机
+    {
+      id: "skill_combo_insight",
+      phase: "street",
+      icon: "💡",
+      title: "一通百通",
+      story:
+        "你蹲在路边吃盒饭的时候，脑子里突然闪过一个念头——你会的这几样本事，好像可以串起来。\\n\\n你见过太多人只会一门手艺，但很少有人能把两样本事结合起来。也许……这就是你的机会？",
+      conditions: function (st) {
+        if (st.player.day < 30) return false;
+        if (st.flags._skillComboInsightTriggered) return false;
+        // 检查技能组合：两项技能都≥20/30
+        if (!st.skills) return false;
+        var cooking = st.skills.cooking ? st.skills.cooking.level || 0 : 0;
+        var management = st.skills.management
+          ? st.skills.management.level || 0
+          : 0;
+        var repair = st.skills.repair ? st.skills.repair.level || 0 : 0;
+        var sales = st.skills.sales ? st.skills.sales.level || 0 : 0;
+        // 烹饪+管理 (餐饮创业线)
+        if (cooking >= 30 && management >= 20) return true;
+        // 修理+销售 (翻新转卖线)
+        if (repair >= 30 && sales >= 20) return true;
+        return false;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "💡 认真琢磨这个想法",
+          hint: "心智+5，获得商业灵感buff",
+          apply: function (st) {
+            st.flags._skillComboInsightTriggered = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            // 判断哪种组合触发
+            var cooking = st.skills.cooking ? st.skills.cooking.level || 0 : 0;
+            var management = st.skills.management
+              ? st.skills.management.level || 0
+              : 0;
+            var repair = st.skills.repair ? st.skills.repair.level || 0 : 0;
+            var sales = st.skills.sales ? st.skills.sales.level || 0 : 0;
+            if (cooking >= 30 && management >= 20) {
+              st.flags._comboCookingMgmt = true;
+              StateManager.addMessage(
+                "💡 你突然想通了：你既懂做菜又懂管理，完全可以先从小吃摊做起，积累资金再开正式餐厅。这条路可行！心智+5，心情+10。解锁了「餐饮创业」的思路。",
+                "success",
+              );
+            } else if (repair >= 30 && sales >= 20) {
+              st.flags._comboRepairSales = true;
+              StateManager.addMessage(
+                "💡 你灵光一闪：你既会修东西又会卖东西，可以低价回收旧家具家电，翻新后高价转卖！这门生意几乎零成本起步。心智+5，心情+10。解锁了「翻新转卖」的思路。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "📝 记下来，以后再说",
+          hint: "保留想法，心智+2",
+          apply: function (st) {
+            st.flags._skillComboInsightTriggered = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "📝 你在手机备忘录里记下了这个想法。也许以后会用到，也许不会。但至少证明你的脑子还在转。心智+2。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🍚 先把饭吃完再说",
+          hint: "什么也不发生",
+          apply: function (st) {
+            st.flags._skillComboInsightTriggered = true;
+            StateManager.addMessage(
+              "🍚 你摇了摇头，专心把盒饭吃完。想法太多也没用，先把眼前的日子过好再说。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件8：双NPC好感联动——王婶和老周的联手推荐 ======
+    // 设计意图：当玩家和两个NPC都有深度关系时，NPC之间会互相联动，
+    // 产生1+1>2的效果。让玩家感觉经营多人际关系有回报，
+    // 而不是只跟一个NPC搞好关系就够了。
+    {
+      id: "npc_duo_referral",
+      phase: "street",
+      icon: "🤝",
+      title: "两位老熟人的心意",
+      story:
+        "你刚回到城中村，就看到王大婶和老周站在巷口说话，看到你一起招手。\\n\\n王大婶先开口：「我跟老周商量了一下，你在这城里也混了这么久了，踏实肯干，我们俩想给你牵个线——」\\n老周接话：「城西物流园在招固定工，包吃住，月薪¥3500起。我侄子在那边当主管，你跟他说是我介绍的就行。」",
+      conditions: function (st) {
+        // 王大婶好感≥50 且 老周好感≥50
+        if (st.player.day < 40) return false;
+        if (
+          !st.relationships ||
+          !st.relationships.aunt_wang ||
+          !st.relationships.old_zhou
+        )
+          return false;
+        var wangAff = st.relationships.aunt_wang.affinity || 0;
+        var zhouAff = st.relationships.old_zhou.affinity || 0;
+        if (wangAff < 50 || zhouAff < 50) return false;
+        if (st.flags._npcDuoReferralDone) return false;
+        return true;
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🙏 太感谢了！我一定去",
+          hint: "获得稳定工作机会，月薪¥3500+",
+          apply: function (st) {
+            st.flags._npcDuoReferralDone = true;
+            st.flags._logisticsJobReferral = true;
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
+            );
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 5,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            StateManager.addMessage(
+              "🙏 你连声道谢。王大婶笑着说：「好好干，别给我们丢脸。」老周拍了拍你的肩膀：「物流园里活不重，比你在外面风吹日晒强。」心情+15，王大婶好感+5，老周好感+5。解锁了物流园固定工作机会。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😊 谢谢两位，我考虑一下",
+          hint: "好感+3，保留机会",
+          apply: function (st) {
+            st.flags._npcDuoReferralDone = true;
+            st.flags._logisticsJobReferral = true;
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 3,
+            );
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 3,
+            );
+            StateManager.addMessage(
+              "😊 你说想考虑一下。王大婶说：「行，你想好了跟我们说，位置给你留着。」好感各+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 我暂时还不想固定下来",
+          hint: "婉拒，但好感不变",
+          apply: function (st) {
+            st.flags._npcDuoReferralDone = true;
+            StateManager.addMessage(
+              "🤷 你说现在还不想定下来。王大婶和老周对视一眼，老周说：「也行，年轻人想多闯闯是好事。有需要随时说。」",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件9：道德积累——善有善报 ======
+    // 设计意图：道德系统不只是惩罚，也要有正向激励。
+    // 累计道德分≥15后，触发路人回报事件，让玩家感受到"好人好报"。
+    // 与moral_pickpocket事件不同，这不是单次选择，而是长期积累的回馈。
+    {
+      id: "moral_good_karma",
+      phase: "street",
+      icon: "🌟",
+      title: "陌生的善意",
+      story:
+        "你在街上走着，一个中年女人突然叫住你。你愣了一下——你不认识她。\\n\\n她笑着说：「你不记得我了？上个月在菜市场，我钱包被偷了，是你帮我报警还垫了车费让我回家。我一直想找机会谢谢你！」\\n\\n你这才想起来，确实有这么回事。当时你也没多想，顺手帮了一把。",
+      conditions: function (st) {
+        // 道德累计分≥15（多次善行的积累）
+        if (st.player.day < 20) return false;
+        if (!st.flags || !st.flags.moral) return false;
+        var moralScore = st.flags.moral.score || 0;
+        if (moralScore < 15) return false;
+        // 30天冷却
+        if (
+          st.flags._moralKarmaDay &&
+          st.player.day - st.flags._moralKarmaDay < 30
+        )
+          return false;
+        return true;
+      },
+      probability: 0.03,
+      repeatable: true,
+      choices: [
+        {
+          text: "😊 举手之劳，不用放心上",
+          hint: "道德+3，名气+5，对方坚持答谢",
+          apply: function (st) {
+            st.flags._moralKarmaDay = st.player.day;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            if (st.flags.moral) {
+              st.flags.moral.score = Math.min(
+                100,
+                (st.flags.moral.score || 0) + 2,
+              );
+            }
+            // 对方坚持给答谢
+            var reward = Random.int(50, 150);
+            st.resources.cash += reward;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + reward;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            StateManager.addMessage(
+              "😊 你摆摆手说不用。她硬是塞给你一袋水果和¥" +
+                reward +
+                "：「你这样的人不多了，拿着吧，别客气。」道德+3，名气+5，心情+20，收到¥" +
+                reward +
+                "。你发现做好事的感觉，比赚钱更让人开心。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢，有心了",
+          hint: "接受感谢，心情+15",
+          apply: function (st) {
+            st.flags._moralKarmaDay = st.player.day;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            // 对方给答谢
+            var reward = Random.int(30, 100);
+            st.resources.cash += reward;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + reward;
+            StateManager.addMessage(
+              "🙏 你笑了笑说：「谁都有困难的时候。」她感动地点点头，塞给你¥" +
+                reward +
+                "。心情+15。这座城市虽然冷漠，但善意总会以某种方式回到你身边。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 其实我那天也是碰巧",
+          hint: "诚实，道德+1，心智+1",
+          apply: function (st) {
+            st.flags._moralKarmaDay = st.player.day;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "😅 你挠了挠头说：「那天也是碰巧遇到，换了谁都会帮忙的。」她说：「但帮了就是帮了，我记在心里。」道德+1，心智+1，心情+10。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件10：低卫生社交后果——被嫌弃的一天 ======
+    // 设计意图：卫生系统长期被忽略，因为"不洗澡"没有即时后果。
+    // 连续低卫生让玩家在社交场合遭遇尴尬，
+    // 使卫生维护成为一个有意义的战略决策。
+    {
+      id: "hygiene_social_awkward",
+      phase: "street",
+      icon: "😰",
+      title: "一身汗味",
+      story:
+        "你走进一家小面馆，刚坐下，旁边的大姐就皱了皱眉，往旁边挪了挪。\\n\\n老板端着面过来，放下碗的时候也偏过头去。你低头闻了闻自己——一股酸臭味。你记不清上次洗澡是什么时候了。",
+      conditions: function (st) {
+        // 连续2天卫生<30
+        if (st.player.day < 5) return false;
+        if (
+          !st.flags ||
+          !st.flags._habits ||
+          (st.flags._habits.lowHygieneStreak || 0) < 2
+        )
+          return false;
+        if (!st.needs || (st.needs.hygiene || 100) >= 30) return false;
+        return true;
+      },
+      probability: 0.12,
+      repeatable: true,
+      choices: [
+        {
+          text: "😅 尴尬地快速吃完离开",
+          hint: "心情-8，但省钱",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "😅 你低着头快速吃完面，放下钱就走了。走到门口你深吸一口气——下次一定记得洗澡。心情-8，但这段尴尬让你长了记性，心智+1。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "💪 自嘲一下，跟老板道歉",
+          hint: "心智+2，可能获得理解",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            // 小概率获得理解
+            if (Random.chance(0.4)) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "💪 你自嘲地笑了笑说：「老板，不好意思，最近忙得连澡都没洗。」老板愣了一下，反而笑了：「没事，年轻人谁没狼狈过。来，送你个荷包蛋。」心情-3，心智+2，但老板的善意让你稍微好受了些。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage(
+                "💪 你自嘲地笑了笑，老板没说什么，但也没再皱眉。你快速吃完离开。心智+2，心情-3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🏃 赶紧去澡堂洗个澡",
+          hint: "¥15，卫生+30，但可能耽误事",
+          apply: function (st) {
+            if (st.resources.cash < 15) {
+              StateManager.addMessage(
+                "😅 你摸了摸口袋，连¥15的澡堂钱都没有……只好尴尬地离开。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 15;
+            st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 30);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            // 重置卫生积累
+            if (st.flags && st.flags._habits) {
+              st.flags._habits.lowHygieneStreak = 0;
+            }
+            StateManager.addMessage(
+              "🏃 你冲出面馆，直奔附近的公共澡堂。热水冲刷下来的时候，你感觉整个人都活过来了。卫生+30，心情+8。花了¥15，但这一身清爽，值了。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
