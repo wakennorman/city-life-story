@@ -202,16 +202,16 @@
       icon: "🌧️",
       title: "雨季城市内涝",
       story:
-        "连续几天的暴雨让城市多处积水，低洼地段的路面变成了小河。外卖和快递都延迟了，但有些生意反而好了起来。",
+        "连续几天的暴雨让城市多处积水，低洼地段的路面变成了小河。很多人被困在家里，急需有人帮忙送东西。",
       choices: [
         {
-          text: "🚣 蹚水送外卖",
+          text: "🚣 蹚水跑腿送货",
           hint: "溢价但危险",
           apply: function (st) {
             st.resources.cash += Random.int(130, 209);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
             StateManager.addMessage(
-              "🌧️ 你在暴雨中奋力送货，收到了不少小费！",
+              "🌧️ 你蹚着积水帮人跑了几趟腿，收到了不少小费！",
               "success",
             );
           },

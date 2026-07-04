@@ -3444,7 +3444,7 @@ body {
   }
 
   .modal-overlay {
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     padding: 10px;
     overflow-y: auto;

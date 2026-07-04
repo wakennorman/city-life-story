@@ -590,33 +590,57 @@ var SPRING_FESTIVAL_EVENTS = [
 ];
 
 // ====== 季节性价格波动定义 ======
+// 键 = 商品分类（category），值 = 价格修正系数
+// <0.9 → 进货好时机（降价） | >1.1 → 卖出好时机（涨价）
+// 覆盖所有 10 个分类，确保每季都有不同的买卖推荐
 var SEASONAL_PRICE_MODS = {
   spring: {
-    electronics: 0.85, // 开学季清仓
+    electronics: 0.85, // 开学季数码清仓
     food: 1.15, // 春节余波
     clothing: 0.9, // 冬装清仓
     daily: 1.05,
+    books: 0.8, // 开学季教辅热卖后降价
+    stationery: 0.85, // 新学期文具促销
+    flowers: 1.2, // 春天花季需求涨
+    scrap: 0.95,
+    medicine: 1.0,
+    luxury: 1.0,
   },
   summer: {
-    water: 1.4, // 高温需求
-    drinks: 1.5, // 饮料需求
-    clothing: 0.8, // 换季清仓
+    clothing: 0.8, // 夏装换季清仓
     electronics: 0.95,
     food: 1.05,
+    daily: 1.0,
+    scrap: 1.15, // 夏季建筑废料回收旺
+    medicine: 1.2, // 夏季中暑/空调病增多
+    flowers: 0.9, // 夏季鲜花易凋谢，降价
+    books: 0.95,
+    stationery: 0.95,
+    luxury: 1.0,
   },
   autumn: {
-    food: 1.2, // 中秋/国庆
+    food: 1.2, // 中秋/国庆送礼需求
     luxury: 1.15, // 礼品需求
     electronics: 1.1, // 双十一预热
-    clothing: 1.05, // 秋装
+    clothing: 1.05, // 秋装上新
     daily: 1.05,
+    scrap: 0.9, // 秋季建筑淡季，废料降价
+    medicine: 1.0,
+    flowers: 1.1, // 秋季鲜花需求稳
+    books: 1.05,
+    stationery: 0.95,
   },
   winter: {
-    clothing: 1.2, // 冬装
+    clothing: 1.2, // 冬装热销
     daily: 1.1, // 保暖用品
     electronics: 1.15, // 双十二/年货节
     food: 1.1,
     luxury: 1.1,
+    scrap: 0.85, // 冬季停工，废料价跌
+    medicine: 1.15, // 冬季流感高发
+    flowers: 1.3, // 冬季鲜花稀缺涨价
+    books: 0.95,
+    stationery: 0.9,
   },
 };
 
@@ -741,6 +765,10 @@ function getFestivalCategoryName(cat) {
     electronics: "电子",
     clothing: "服装",
     scrap: "废品",
+    books: "书籍",
+    flowers: "鲜花",
+    medicine: "药品",
+    stationery: "文具",
   };
   return names[cat] || cat;
 }

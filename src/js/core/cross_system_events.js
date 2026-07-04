@@ -893,19 +893,19 @@
           },
         },
         {
-          text: "🏃 帮人送货跑腿，雨天人少单多",
+          text: "🏃 冒雨跑腿帮人送东西，雨天人少单多",
           hint: "¥200 + 可能有好人缘",
           apply: function (st) {
             st.resources.cash += 200;
             if (Random.chance(0.3)) {
               StateManager.addMessage(
-                "🏃 客户看你冒雨送货，多给了¥50小费。",
+                "🏃 客户看你冒雨跑腿，多给了¥50小费。",
                 "success",
               );
               st.resources.cash += 50;
             } else {
               StateManager.addMessage(
-                "🏃 你顶着暴雨跑了三趟，浑身湿透赚了¥200。",
+                "🏃 你顶着暴雨跑了几趟，浑身湿透赚了¥200。",
                 "info",
               );
             }

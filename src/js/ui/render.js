@@ -1415,6 +1415,28 @@ function renderTradeTab(state, parent) {
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
+
+  // ====== 提前计算 skillTag（放在 header 模板之前，避免 var 提升 = undefined） ======
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
   // v3.0 BUGFIX: 原为 const goodsList，但下方 SortUtils.sortInteractiveList 会重新赋值，
   // 触发 "Assignment to constant variable" 错误导致整个交易Tab崩溃。改为 let。
   let goodsList =
@@ -1465,6 +1487,10 @@ function renderTradeTab(state, parent) {
         clothing: "服装",
         electronics: "电子",
         scrap: "废品",
+        books: "书籍",
+        flowers: "鲜花",
+        medicine: "药品",
+        stationery: "文具",
       };
       for (var cat in seasonMods) {
         var catName = CATEGORY_NAMES_TRADE[cat] || cat;
@@ -1501,33 +1527,11 @@ function renderTradeTab(state, parent) {
     resetDailyTradeXp(state);
   }
 
-  // 已访问区域数量提示
-  var visitedLocs =
-    typeof getRememberedLocations === "function"
-      ? getRememberedLocations(state)
-      : [];
-  var salesLvl =
-    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  // 是否可跨区比价（留在原位供下游使用）
   var canCompare =
     typeof canSeePriceMarkers === "function"
       ? canSeePriceMarkers(state)
       : false;
-
-  // 技能等级标签
-  var skillTag = "";
-  if (salesLvl < 20) {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 仅看本地价格</span>";
-  } else {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 可对比" +
-      visitedLocs.length +
-      "个区域</span>";
-  }
 
   // 模糊记忆提示条
   var memoryHints =
@@ -1553,6 +1557,46 @@ function renderTradeTab(state, parent) {
     parent.innerHTML +=
       '<p style="color:var(--text-muted)">商品数据加载中...</p>';
     return;
+  }
+
+  // ====== 动态路线推荐（根据季节、市场事件综合计算） ======
+  if (typeof getBestTradeRoutes === "function") {
+    var routeData = getBestTradeRoutes(state);
+    if (routeData && routeData.tips && routeData.tips.length > 0) {
+      var routeBox = document.createElement("div");
+      routeBox.style.cssText =
+        "background:linear-gradient(135deg,rgba(40,167,69,0.06),rgba(102,126,234,0.06));" +
+        "border:1px solid rgba(40,167,69,0.2);border-radius:6px;" +
+        "padding:8px 10px;margin-bottom:12px;font-size:12px;";
+      var routeHtml =
+        '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">🛤️ 当前最佳路线</div>';
+      var shownCount = 0;
+      for (var rti = 0; rti < routeData.tips.length && shownCount < 3; rti++) {
+        var rt = routeData.tips[rti];
+        if (rt.profitRate >= 8) {
+          var pctColor =
+            rt.profitRate >= 40
+              ? "var(--success)"
+              : rt.profitRate >= 20
+                ? "#d4a017"
+                : "var(--text-muted)";
+          routeHtml +=
+            '<div style="padding:2px 0;color:var(--text-secondary);">' +
+            "  <span style='color:" +
+            pctColor +
+            ";font-weight:600;'>+" +
+            rt.profitRate +
+            "%</span> " +
+            rt.route +
+            "</div>";
+          shownCount++;
+        }
+      }
+      if (shownCount > 0) {
+        routeBox.innerHTML = routeHtml;
+        parent.appendChild(routeBox);
+      }
+    }
   }
 
   // ====== 分类排序系统：品类优先 → 频次辅助 → 价格 → 名称 ======

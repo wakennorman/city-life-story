@@ -235,6 +235,88 @@ var MARKET_EVENTS = [
     season: null,
     desc: "烟草税上调，香烟价格普涨",
   },
+
+  // ====== 新增多样化市场事件（v3.6 扩展） ======
+  {
+    id: "book_craze",
+    name: "读书热",
+    goodId: "second_hand_book",
+    priceMod: 1.5,
+    duration: 3,
+    prob: 0.02,
+    season: ["spring", "autumn"],
+    desc: "新学期开学，二手书需求暴增",
+  },
+  {
+    id: "flower_valentine",
+    name: "情人节花市",
+    goodId: "rose",
+    priceMod: 2.0,
+    duration: 2,
+    prob: 0.015,
+    season: null,
+    desc: "情人节/七夕临近，玫瑰花价格暴涨",
+  },
+  {
+    id: "flu_medicine",
+    name: "流感爆发",
+    goodId: "cold_medicine",
+    priceMod: 1.8,
+    duration: 4,
+    prob: 0.03,
+    season: ["winter", "autumn"],
+    desc: "季节性流感来袭，感冒药供不应求",
+  },
+  {
+    id: "construction_boom",
+    name: "基建项目启动",
+    goodId: "scrap_metal",
+    priceMod: 1.6,
+    duration: 5,
+    prob: 0.025,
+    season: ["spring", "summer"],
+    desc: "市政工程项目启动，废金属回收价大涨",
+  },
+  {
+    id: "delivery_surge",
+    name: "快递旺季",
+    goodId: "scrap_paper",
+    priceMod: 1.4,
+    duration: 3,
+    prob: 0.03,
+    season: ["autumn", "winter"],
+    desc: "电商促销旺季，废纸板回收价上涨",
+  },
+  {
+    id: "stationery_sale",
+    name: "文具促销",
+    goodId: "notebook_item",
+    priceMod: 0.6,
+    duration: 3,
+    prob: 0.02,
+    season: ["summer"],
+    desc: "暑期文具促销大减价",
+  },
+  {
+    id: "med_supply",
+    name: "医疗物资补充",
+    goodId: "painkiller",
+    priceMod: 0.7,
+    duration: 3,
+    prob: 0.02,
+    season: ["spring"],
+    desc: "医疗机构统一采购补货，止痛药批发价下降",
+  },
+  {
+    id: "clothes_clearance",
+    name: "品牌清仓",
+    goodId: "clothing",
+    priceMod: 0.55,
+    duration: 3,
+    prob: 0.02,
+    season: ["summer", "winter"],
+    desc: "品牌换季清仓大甩卖",
+  },
 ];
 
 /** 检查并触发市场事件 */
@@ -341,6 +423,88 @@ function calcTradeProfitRate(fromLoc, toLoc, goodId) {
   return Math.round(((toPrice - fromPrice) / fromPrice) * 100);
 }
 
+/**
+ * 获取当前动态最佳交易路线推荐（考虑季节、市场事件、供需等综合因素）
+ * @param {object} state - 游戏状态
+ * @returns {object} { tips: [{ route, goods, profitRate }] }
+ */
+function getBestTradeRoutes(state) {
+  var tips = [];
+  if (!state || !state.trade) return { tips: [] };
+
+  var locKeys = Object.keys(LOCATIONS);
+  var seasonMods =
+    typeof getSeasonalPriceMod === "function" ? getSeasonalPriceMod(state) : {};
+  var marketEvents = state.trade.marketEvents || [];
+  var currentLoc = state.trade.currentLocation;
+
+  // 遍历所有消费品类（非食材），找从当前地出发的最佳路线
+  var tradeGoods = GOODS.filter(function (g) {
+    return !g.isIngredient && g.buyLocations && g.sellLocations;
+  });
+
+  // 按利润率排序，取 Top 5
+  var routeProfits = [];
+  for (var gi = 0; gi < tradeGoods.length; gi++) {
+    var g = tradeGoods[gi];
+    for (var li = 0; li < locKeys.length; li++) {
+      var fromKey = locKeys[li];
+      // 这个商品可以在 fromKey 买到吗？
+      if (g.buyLocations.indexOf(fromKey) < 0) continue;
+
+      // 从 fromKey 出发可以到哪些地方卖？
+      var toKeys = g.sellLocations.filter(function (tk) {
+        return tk !== fromKey && getLocationHops(fromKey, tk) < 99;
+      });
+      for (var ti = 0; ti < toKeys.length; ti++) {
+        var toKey = toKeys[ti];
+        var fromPrice = calcFinalPrice(state, fromKey, g.id);
+        var toPrice = calcFinalPrice(state, toKey, g.id);
+        if (fromPrice <= 0) continue;
+        var profitRate = Math.round(((toPrice - fromPrice) / fromPrice) * 100);
+        var hops = getLocationHops(fromKey, toKey);
+        var score = profitRate - hops * 3; // 扣掉交通成本
+        routeProfits.push({
+          goodId: g.id,
+          goodName: g.name,
+          fromLoc: fromKey,
+          fromLocName: getLocation(fromKey)
+            ? getLocation(fromKey).name
+            : fromKey,
+          toLoc: toKey,
+          toLocName: getLocation(toKey) ? getLocation(toKey).name : toKey,
+          profitRate: profitRate,
+          hops: hops,
+          score: score,
+        });
+      }
+    }
+  }
+
+  // 按分数排序，去重（同商品只保留最佳路线）
+  routeProfits.sort(function (a, b) {
+    return b.profitRate - a.profitRate;
+  });
+
+  var seen = {};
+  for (var ri = 0; ri < routeProfits.length; ri++) {
+    var rp = routeProfits[ri];
+    if (seen[rp.goodId]) continue;
+    seen[rp.goodId] = true;
+    if (rp.profitRate > 0) {
+      tips.push({
+        route:
+          rp.fromLocName + " → " + rp.toLocName + "（" + rp.goodName + "）",
+        profitRate: rp.profitRate,
+        hops: rp.hops,
+      });
+    }
+    if (tips.length >= 5) break;
+  }
+
+  return { tips: tips };
+}
+
 // 全局导出
 if (typeof window !== "undefined") {
   Object.assign(window, {
@@ -359,6 +523,7 @@ if (typeof window !== "undefined") {
     getSkillPriceInfoLevel: getSkillPriceInfoLevel,
     calcFinalPrice: calcFinalPrice,
     calcTradeProfitRate: calcTradeProfitRate,
+    getBestTradeRoutes: getBestTradeRoutes,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
