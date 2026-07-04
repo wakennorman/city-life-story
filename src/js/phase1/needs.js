@@ -19,7 +19,7 @@ function checkNeedsThresholds(state) {
   const dayMul = state.player.day <= 30 ? 0.5 : 1.0;
 
   if (n.hunger < 10) {
-    const dmg = Math.round(3 * dayMul);
+    const dmg = Math.round(2 * dayMul);
     state.status.health = Math.max(0, state.status.health - dmg);
     if (n.hunger <= 0) state.flags._everStarved = true; // 成就追踪
     msgs.push("⚠️ 极度饥饿！健康-" + dmg + "。赶紧吃点什么！");
@@ -65,13 +65,13 @@ function tickHealthStatus(state) {
       StateManager.addMessage("🩹 伤好了，可以正常干活了。", "info");
     }
   }
-  // v3.2 MC平衡：始终允许自然恢复（防止"吸收态"死亡螺旋）
-  // 无病无伤: +2/天；有疾病但不受伤: +1/天（参考RimWorld免疫系统/This War休息恢复）
-  // 机制意图：小病能扛住（延缓恶化），但慢性病持续玩家仍须治疗打破负循环
+  // v3.2.2 MC长期恢复：无受伤时始终+2/天
+  // 150-300天MC显示：+2 recovery vs (需求阈值惩罚 + 工作疲劳 > 90 penalty + 慢性病月扣)
+  // 勉强平衡但长期有净流失。观察玩家死于Day 69-107。
+  // 提高至 +3 recovery 提供更宽的安全余量，仍能被重度受伤/疾病combo击穿
+  // 参考：《大多数》稳定的日恢复=让慢性病的"可管理"设计意图成立
   if (!st.injured && st.health < 100) {
-    var hasIllness = st.illnesses && st.illnesses.length > 0;
-    var regen = hasIllness ? 1 : 2;
-    st.health = Math.min(100, st.health + regen);
+    st.health = Math.min(100, st.health + 3);
   }
 }
 

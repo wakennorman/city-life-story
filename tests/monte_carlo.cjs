@@ -172,12 +172,12 @@
         state.housing.rentedDay = day;
         if (state.inventory) state.inventory.capacity = 50;
       } else if (ht === 1 && cash >= 1500 && day > 12) {
-        state.resources.cash -= 800;
+        state.resources.cash -= 500;
         state.housing.tier = 2;
         state.housing.rentedDay = day;
         if (state.inventory) state.inventory.capacity = 100;
       } else if (ht === 2 && cash >= 4000 && day > 40) {
-        state.resources.cash -= 2000;
+        state.resources.cash -= 1000;
         state.housing.tier = 3;
         state.housing.rentedDay = day;
         if (state.inventory) state.inventory.capacity = 200;
@@ -231,7 +231,7 @@
         state.housing.rentedDay = state.player.day;
       }
       if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
-        state.resources.cash -= 800;
+        state.resources.cash -= 500;
         state.housing.tier = 2;
         state.housing.rentedDay = state.player.day;
       }
@@ -277,7 +277,7 @@
         state.housing.rentedDay = state.player.day;
       }
       if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
-        state.resources.cash -= 800;
+        state.resources.cash -= 500;
         state.housing.tier = 2;
         state.housing.rentedDay = state.player.day;
       }
@@ -459,7 +459,7 @@
         state.housing.tier = 1;
       }
       if (ht === 1 && cash >= 1200 && state.player.day > 25) {
-        state.resources.cash -= 800;
+        state.resources.cash -= 500;
         state.housing.tier = 2;
       }
 
@@ -513,7 +513,7 @@
         state.housing.tier = 1;
       }
       if (ht === 1 && cash >= 1200 && state.player.day > 25) {
-        state.resources.cash -= 800;
+        state.resources.cash -= 500;
         state.housing.tier = 2;
       }
 
@@ -594,7 +594,7 @@
       amenityUsed = 0,
       eventsTriggered = 0;
 
-    var snapDays = [7, 15, 30, 60, 90, 180, 365, 730];
+    var snapDays = [30, 90, 365];
     var dayCashWindow = [];
     var recentCash = [];
 
@@ -678,18 +678,11 @@
 
       if (snapDays.indexOf(d + 1) >= 0) {
         snaps.push({
-          day: d + 1,
-          cash: state.resources.cash,
-          bank: state.resources.bankBalance || 0,
-          debt:
-            (state.resources.debt || 0) + (state.resources.villageDebt || 0),
-          health: state.status.health,
-          hunger: state.needs.hunger,
-          fatigue: state.needs.fatigue,
-          happiness: state.needs.happiness,
-          housingTier: state.housing ? state.housing.tier : 0,
-          phase: state.player.phase,
-          emotionalState: state.status.emotionalState,
+          d: d + 1,
+          c: state.resources.cash,
+          h: state.status.health,
+          ht: state.housing ? state.housing.tier : 0,
+          p: state.player.phase,
         });
       }
     }
@@ -814,18 +807,18 @@
       return r.finalCash >= 50000;
     }).length;
     var snapData = {};
-    [7, 15, 30, 60, 90, 180, 365, 730].forEach(function (sd) {
+    [30, 90, 365].forEach(function (sd) {
       var vals = results
         .filter(function (r) {
           return r.snapshots.some(function (s) {
-            return s.day === sd;
+            return s.d === sd;
           });
         })
         .map(function (r) {
           var s = r.snapshots.filter(function (x) {
-            return x.day === sd;
+            return x.d === sd;
           })[0];
-          return s ? s.cash : null;
+          return s ? s.c : null;
         })
         .filter(function (c) {
           return c !== null;
@@ -1042,7 +1035,7 @@
       );
 
       console.log("\n  📅 里程碑现金中位数");
-      [7, 15, 30, 60, 90, 180, 365, 730].forEach(function (sd) {
+      [30, 90, 365].forEach(function (sd) {
         if (s.snapshots[sd]) {
           var sp = s.snapshots[sd];
           console.log(
