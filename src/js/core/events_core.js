@@ -135,8 +135,9 @@ function queueRandomEvent(state, phase) {
   // ponytail: 排除链式事件——它们只能通过 scheduleChainEvent 触发
   var eligible = pool.filter(function (e) {
     if (e._isChainEvent) return false;
-    // 通用条件函数检查
+    // 通用条件函数检查（兼容 conditions / trigger 两种写法）
     if (e.conditions && !e.conditions(state)) return false;
+    if (e.trigger && !e.trigger(state)) return false;
     // 财富检查：太有钱时不出贫穷主题事件
     if (
       e.maxCash &&
