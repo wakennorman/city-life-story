@@ -4,3 +4,4 @@
 - [File Splitting v3.13](file-splitting-v3-13.md) — P1 超大文件按主题拆分（events_street×3 + startup×2 + render×3）
 - [Write vs Edit Lesson 2026-07-04](write-vs-edit-lesson-2026-07-04.md) — 误用 Write 覆盖整个文件导致 switchTab 丢失的教训
 - [P0/P1 Fix 2026-07-04](p0-p1-fix-2026-07-04.md) — v3.13e 全面修复：6项Bug+经济平衡调参
+- [v3.5 事件3条+天气内联](mobile-ui-v3.5-weather-log.md) — 事件记录默认3条+天气内联显示+预报交替闪烁
