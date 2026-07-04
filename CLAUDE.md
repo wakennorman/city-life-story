@@ -76,7 +76,13 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.13d — TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训文档化
+- **最新一次工作 (2026-07-04)**：v3.2 蒙特卡洛平衡调参 — 吸收态修复 + 策略 AI 对齐 + 调参 commit `e5281b0`
+  - **P0 吸收态修复**：`tickHealthStatus` 修改自然恢复条件 — 从 `illnesses.length === 0 才恢复` 改为 `始终恢复(+1有病/+2无病)`，阻断不可逆死亡螺旋。参考 RimWorld/This War of Mine
+  - **P0 MC 策略饥饱语义修复**：5/6个MC策略写反 (`hunger>50 → -25`), 改为 `hunger<45 → +30/38`
+  - **P0 MC 策略 AP 分配修复**：对齐 social 成功路径 `worked<4/fatigue<60` + 积极住房升级(NPC关系 unemployed → 工作 → 高 tier) 替代 `worked<10/fatigue<55` 的无限 AP 消耗
+  - **参数调整**：需求衰减 hunger -18→-13；前30天新手保护(惩罚 × 0.5)；住房疲劳恢复全 Tier +60~100%；维护费下调 tier1 30→10/tier2 100→40/tier3 500→200
+  - **MC 验证 (10 trials × 150 days)**：balanced 80.0% / skiller 80.0% / trader 80.0% / social 100.0% ✅ grinder 70.0% / corporate 20.0%
+- **上一轮工作 (2026-07-04)**：v3.13d — TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训文档化
   - **P2 装备品质系统激活**：商店显示品质价格区间（¥base~max）和品质概率提示；买装备消息显示品质等级；套装效果（getSuiteJobBonus）接入 income 计算（estimateJobPay/estimateJobPayDetailed/doStreetJob 三处套装加成 🎯+X%）；装备 Tab 新增耐久条（renderDurabilityBar）+ 套装状态面板（renderSuiteCard）+ 品质徽章常驻
   - **P1 四大系统深度联动**：life_node_check/medical_tick/travel_tick/legal_tick 四条管线步骤接入每日结算；新增 tickMedical() 月度保险自动扣费+未治疗提醒+旅行健康消耗；新建 cross_system_integration.js（5条联动链：人生节点→医疗、旅行→医疗、医疗→法律、旅行→法律、人生节点→旅行）；修复 travel.js/legal.js 使用 Math.random → 种子化 Random；修复 4 个系统文件未在 index.html 注册（life_nodes/medical/travel/legal 在 code 中存在但从未加载）
   - **P1 超大文件拆分**：events_street.js(9,894行) → events_street_survival/wealth/life ×3 IIFE 文件；startup.js(14,444行) → startup_data.js(2,126行常量) + startup.js(12,317行函数)；render.js(7,056行) → render_core.js(1,218行) + render_infra.js(1,137行) + render.js(4,702行)。同位置多连续子文件替换法，未改 index.html 整体 script 顺序
