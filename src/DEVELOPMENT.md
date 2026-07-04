@@ -1,8 +1,83 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.7 — 交易系统全面优化+事件修复+移动端弹窗居中）
+> 最后更新: 2026-07-04（v3.7.1 — 交易深度优化第二轮：路线多样性+事件条件+分类显示修复）
 >
-> commit: `5eaa899`
+> commit: 待提交
+
+---
+
+## 2026-07-04 — v3.7.1：交易深度优化第二轮（按 v3.1 审查改进）
+
+> SOP: `memory/review-improve-v3.1.md` v3.1 | 覆盖维度：2(机制/数值) + 4(UI) + 7(全剧本)
+> 影响文件：render.js / pricing.js / extra_events.js / daily_pipeline.js
+> 设计参考：Capitalism Lab 价格波动系统 / 《大多数》交易路线多样性 / Stardew Valley 季节性经济
+
+### 修复1：分类标签显示英文（books/flowers/medicine/stationery）
+
+**根因**：`render.js` line 1793（原位置）内联分类名映射 `{ daily:"日用品", ... }` 只有 6 类，新增的 4 类（books/flowers/medicine/stationery）全部回退到英文 `|| good.category`。
+
+**修复**：
+
+- 将 `CATEGORY_NAMES_TRADE`（10 分类完整映射）提升为函数顶部变量（line 1420），替代条件块内的重复定义
+- 卡片的分类标签改用 `CATEGORY_NAMES_TRADE[good.category]` 引用统一映射
+- SortUtils 分类排序数组补齐 4 个新分类（medicine→books→stationery→flowers）
+
+### 修复2：暴雨跑腿事件无条件触发
+
+**根因**：`extra_events.js` "rainy_season_flood" 事件没有 `conditions` 函数，任何街头玩家任何天气都会触发。
+
+**修复**：
+
+- 新增 `conditions`：必须当前天气为"暴雨"或"大雨"，且不在室内专属地点（bank/trainingCenter）
+- 叙事泛化：消息改为"在积水中帮人跑腿送东西"，不暗示"小费"这类特定职业用语
+- 待在屋里选项增加心情恢复（+3），更具选择价值
+
+### 增强1：每日价格随机波动系统（打破固定最优路线）
+
+**设计**：每天为 3~~8 个随机商品×地点组合注入 ±5%~~±25% 的价格冲击，每天刷新，创造每日不同的套利机会。
+
+**实现**：
+
+- `pricing.js` 新增 `tickDailyPriceShocks()`（生成每日波动）→ 接入 `daily_pipeline.js` pricing_market 步骤
+- `getDailyPriceShock(locKey, goodId)` 读取当天冲击值
+- `calcFinalPrice()` **×** shockMod（路线推荐可感知每日波动）
+- `getCurrentPrice()` 挂钩 **×** shockMod（UI 价格实时反映）
+
+### 增强2：路线饱和惩罚机制
+
+**设计**：同一条路线使用越多，利润越低（模拟市场被玩家"做穿"）。
+
+**实现**：
+
+- `pricing.js` 新增 `_routeUsage` 字典追踪每条路线使用次数
+- `sellGood` 挂钩在卖出时捕获 `boughtAt` 并调用 `recordRouteUsage()`
+- `getRouteSaturationPenalty(fromLoc, toLoc, goodId)`：0次=1.0 → 5次=0.75 → 10次=0.5
+- 每天自动衰减 −1 次（市场缓慢恢复）
+- `getBestTradeRoutes()` 调整利润率 = 原始利润率 − 饱和惩罚%
+
+### 增强3：全面升级 getBestTradeRoutes
+
+**改进点**：
+
+- **全地点扫描**：不再只看当前位置出发的路线，扫描所有 buyLoc→sellLoc 组合
+- **综合成本**：交通成本从 `hops×3` 升级为 `hops×2.5`（含 AP+疲劳+风险）
+- **就近优先**：当前位置出发的路线额外 +5% 加成
+- **饱和标记**：路线被过度使用时显示 ⚠️ 标签
+- **需前往标记**：非当前位置路线显示 📍 标识
+- **兜底提示**：无利润路线时显示"市场暂时平稳"
+
+### 增强4：render.js 路线展示升级
+
+- 路线卡片显示图标区分：📍（就近）/ 🗺️（需前往）
+- 降低显示门槛：从 `≥8%` 到 `≥5%`
+- 利润率颜色分 4 档：绿(≥40%) / 金(≥20%) / 灰(≥8%) / 次级(<8%)
+- 无利润路线时显示兜底提示而非空白
+
+### 验证
+
+- `node --check` × 4 全部通过
+- `python build.py` (4568.4 KB)
+- 当前 commit 待提交
 
 ---
 

@@ -401,12 +401,14 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === 市场事件（供需随机波动）===
+  // === 市场事件（供需随机波动 + 每日价格冲击）===
   {
     name: "pricing_market",
     fn: function (state) {
       if (typeof checkMarketEvents === "function") checkMarketEvents(state);
       if (typeof decaySupplyDemand === "function") decaySupplyDemand(state);
+      if (typeof tickDailyPriceShocks === "function")
+        tickDailyPriceShocks(state);
     },
   },
 

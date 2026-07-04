@@ -404,6 +404,8 @@ function calcFinalPrice(state, locKey, goodId) {
   // 天气影响
   if (typeof getWeatherGoodPriceMod === "function")
     price *= getWeatherGoodPriceMod(state, goodId);
+  // 每日随机价格冲击
+  price *= getDailyPriceShock(locKey, goodId);
   var rl = state.relationships
     ? Object.keys(state.relationships).filter(function (k) {
         return state.relationships[k] && state.relationships[k].met;
@@ -433,27 +435,24 @@ function getBestTradeRoutes(state) {
   if (!state || !state.trade) return { tips: [] };
 
   var locKeys = Object.keys(LOCATIONS);
-  var seasonMods =
-    typeof getSeasonalPriceMod === "function" ? getSeasonalPriceMod(state) : {};
-  var marketEvents = state.trade.marketEvents || [];
   var currentLoc = state.trade.currentLocation;
 
-  // 遍历所有消费品类（非食材），找从当前地出发的最佳路线
+  // 遍历所有消费品类（非食材），找所有可行路线
   var tradeGoods = GOODS.filter(function (g) {
     return !g.isIngredient && g.buyLocations && g.sellLocations;
   });
 
-  // 按利润率排序，取 Top 5
+  // 综合评分：利润率 - 交通成本(AP+疲劳) - 饱和惩罚 - 门槛
   var routeProfits = [];
   for (var gi = 0; gi < tradeGoods.length; gi++) {
     var g = tradeGoods[gi];
     for (var li = 0; li < locKeys.length; li++) {
       var fromKey = locKeys[li];
       // 这个商品可以在 fromKey 买到吗？
-      if (g.buyLocations.indexOf(fromKey) < 0) continue;
+      if (!g.buyLocations || g.buyLocations.indexOf(fromKey) < 0) continue;
 
       // 从 fromKey 出发可以到哪些地方卖？
-      var toKeys = g.sellLocations.filter(function (tk) {
+      var toKeys = (g.sellLocations || []).filter(function (tk) {
         return tk !== fromKey && getLocationHops(fromKey, tk) < 99;
       });
       for (var ti = 0; ti < toKeys.length; ti++) {
@@ -461,9 +460,26 @@ function getBestTradeRoutes(state) {
         var fromPrice = calcFinalPrice(state, fromKey, g.id);
         var toPrice = calcFinalPrice(state, toKey, g.id);
         if (fromPrice <= 0) continue;
-        var profitRate = Math.round(((toPrice - fromPrice) / fromPrice) * 100);
+        var rawProfitRate = Math.round(
+          ((toPrice - fromPrice) / fromPrice) * 100,
+        );
         var hops = getLocationHops(fromKey, toKey);
-        var score = profitRate - hops * 3; // 扣掉交通成本
+
+        // 综合成本：每跳 −2% 利润 + 疲劳消耗影响未来效率
+        var transportCost = hops * 2.5;
+        // 路线饱和惩罚（用得越多利润越低）
+        var saturationPenalty = 0;
+        if (typeof getRouteSaturationPenalty === "function") {
+          var sat = getRouteSaturationPenalty(fromKey, toKey, g.id);
+          saturationPenalty = Math.round((1 - sat) * 100);
+        }
+        // 是否从当前位置出发（就近优先）
+        var isNearby = fromKey === currentLoc;
+        var nearbyBonus = isNearby ? 5 : 0;
+
+        var adjustedRate =
+          rawProfitRate - transportCost - saturationPenalty + nearbyBonus;
+
         routeProfits.push({
           goodId: g.id,
           goodName: g.name,
@@ -473,30 +489,43 @@ function getBestTradeRoutes(state) {
             : fromKey,
           toLoc: toKey,
           toLocName: getLocation(toKey) ? getLocation(toKey).name : toKey,
-          profitRate: profitRate,
+          profitRate: rawProfitRate,
+          adjustedRate: adjustedRate,
           hops: hops,
-          score: score,
+          saturationPenalty: saturationPenalty,
+          isNearby: isNearby,
         });
       }
     }
   }
 
-  // 按分数排序，去重（同商品只保留最佳路线）
+  // 按调整后利润率排序
   routeProfits.sort(function (a, b) {
-    return b.profitRate - a.profitRate;
+    return b.adjustedRate - a.adjustedRate;
   });
 
+  // 去重（同商品只保留最佳路线），取前 5 条
   var seen = {};
   for (var ri = 0; ri < routeProfits.length; ri++) {
     var rp = routeProfits[ri];
     if (seen[rp.goodId]) continue;
     seen[rp.goodId] = true;
-    if (rp.profitRate > 0) {
+    if (rp.adjustedRate > -5) {
+      // 至少别亏太多
+      var label =
+        rp.fromLocName + " → " + rp.toLocName + "（" + rp.goodName + "）";
+      if (!rp.isNearby) label += " 📍需前往";
+      if (rp.saturationPenalty > 5) label += " ⚠️过度使用";
       tips.push({
-        route:
-          rp.fromLocName + " → " + rp.toLocName + "（" + rp.goodName + "）",
-        profitRate: rp.profitRate,
+        route: label,
+        profitRate: rp.adjustedRate,
+        rawRate: rp.profitRate,
         hops: rp.hops,
+        fromLoc: rp.fromLoc,
+        toLoc: rp.toLoc,
+        goodId: rp.goodId,
+        goodName: rp.goodName,
+        isNearby: rp.isNearby,
       });
     }
     if (tips.length >= 5) break;

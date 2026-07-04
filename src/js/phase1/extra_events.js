@@ -203,15 +203,25 @@
       title: "雨季城市内涝",
       story:
         "连续几天的暴雨让城市多处积水，低洼地段的路面变成了小河。很多人被困在家里，急需有人帮忙送东西。",
+      conditions: function (st) {
+        // 必须当前正在下雨（暴雨或大雨），且不在室内专属地点
+        var weatherNow = (st.weather && st.weather.current) || "晴";
+        if (weatherNow !== "暴雨" && weatherNow !== "大雨") return false;
+        var locKey = st.trade && st.trade.currentLocation;
+        // 排除完全室内/非现实地点（银行、培训中心等）
+        if (locKey === "bank" || locKey === "trainingCenter") return false;
+        return true;
+      },
       choices: [
         {
           text: "🚣 蹚水跑腿送货",
-          hint: "溢价但危险",
+          hint: "溢价但危险，疲劳+25",
           apply: function (st) {
-            st.resources.cash += Random.int(130, 209);
+            var earnAmt = Random.int(130, 209);
+            st.resources.cash += earnAmt;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
             StateManager.addMessage(
-              "🌧️ 你蹚着积水帮人跑了几趟腿，收到了不少小费！",
+              "🌧️ 你在积水中帮人跑腿送东西，浑身湿透但赚了¥" + earnAmt + "。",
               "success",
             );
           },
@@ -221,8 +231,9 @@
           hint: "安全但没收入",
           apply: function (st) {
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 5);
+            st.needs.mood = Math.min(100, (st.needs.mood || 50) + 3);
             StateManager.addMessage(
-              "🌧️ 你在屋里躲了一天雨，读了一会儿书。",
+              "🌧️ 你在屋里躲了一天雨，读了一会书，心情平静。",
               "hint",
             );
           },

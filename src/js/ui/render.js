@@ -1416,7 +1416,19 @@ function renderTradeTab(state, parent) {
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
 
-  // ====== 提前计算 skillTag（放在 header 模板之前，避免 var 提升 = undefined） ======
+  // ====== 提前计算变量（放在 header 模板之前，避免 var 提升 = undefined） ======
+  var CATEGORY_NAMES_TRADE = {
+    daily: "日用品",
+    luxury: "奢侈品",
+    food: "食品",
+    clothing: "服装",
+    electronics: "电子",
+    scrap: "废品",
+    books: "书籍",
+    flowers: "鲜花",
+    medicine: "药品",
+    stationery: "文具",
+  };
   var visitedLocs =
     typeof getRememberedLocations === "function"
       ? getRememberedLocations(state)
@@ -1480,18 +1492,6 @@ function renderTradeTab(state, parent) {
     if (Object.keys(seasonMods).length > 0) {
       var hotBuy = [];
       var hotSell = [];
-      var CATEGORY_NAMES_TRADE = {
-        daily: "日用品",
-        luxury: "奢侈品",
-        food: "食品",
-        clothing: "服装",
-        electronics: "电子",
-        scrap: "废品",
-        books: "书籍",
-        flowers: "鲜花",
-        medicine: "药品",
-        stationery: "文具",
-      };
       for (var cat in seasonMods) {
         var catName = CATEGORY_NAMES_TRADE[cat] || cat;
         if (seasonMods[cat] < 0.9) {
@@ -1569,30 +1569,44 @@ function renderTradeTab(state, parent) {
         "border:1px solid rgba(40,167,69,0.2);border-radius:6px;" +
         "padding:8px 10px;margin-bottom:12px;font-size:12px;";
       var routeHtml =
-        '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">🛤️ 当前最佳路线</div>';
+        '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">🛤️ 当前最佳路线 <span style="font-size:10px;font-weight:normal;color:var(--text-muted);">（综合考虑市场/季节/饱和）</span></div>';
       var shownCount = 0;
       for (var rti = 0; rti < routeData.tips.length && shownCount < 3; rti++) {
         var rt = routeData.tips[rti];
-        if (rt.profitRate >= 8) {
+        if (rt.profitRate >= 5 || (rt.rawRate && rt.rawRate >= 15)) {
           var pctColor =
             rt.profitRate >= 40
               ? "var(--success)"
               : rt.profitRate >= 20
                 ? "#d4a017"
-                : "var(--text-muted)";
+                : rt.profitRate >= 8
+                  ? "var(--text-muted)"
+                  : "var(--text-secondary)";
+          var icon = rt.isNearby ? "📍" : "🗺️";
+          var extraInfo = "";
+          if (!rt.isNearby) extraInfo += " (需前往)";
+          if (rt.profitRate >= 8 && rt.profitRate < 20) extraInfo = "";
           routeHtml +=
             '<div style="padding:2px 0;color:var(--text-secondary);">' +
             "  <span style='color:" +
             pctColor +
-            ";font-weight:600;'>+" +
+            ";font-weight:600;'>" +
+            icon +
+            " +" +
             rt.profitRate +
             "%</span> " +
             rt.route +
+            extraInfo +
             "</div>";
           shownCount++;
         }
       }
-      if (shownCount > 0) {
+      if (shownCount === 0 && routeData.tips && routeData.tips.length > 0) {
+        // 当前无明显利润路线时显示兜底提示
+        routeHtml +=
+          '<div style="padding:2px 0;color:var(--text-muted);font-size:11px;">💡 市场暂时平稳，可关注季节性或节日价格波动</div>';
+      }
+      if (shownCount > 0 || routeData.tips.length > 0) {
         routeBox.innerHTML = routeHtml;
         parent.appendChild(routeBox);
       }
@@ -1611,6 +1625,10 @@ function renderTradeTab(state, parent) {
           "electronics",
           "luxury",
           "scrap",
+          "medicine",
+          "books",
+          "stationery",
+          "flowers",
         ],
         priorityMap: {
           water: 10,
@@ -1790,7 +1808,7 @@ function renderTradeTab(state, parent) {
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="card-title" style="margin:0;">${good.name}</div>
-        <span class="slot-tag">${{ daily: "日用品", luxury: "奢侈品", food: "食品", clothing: "服装", electronics: "电子", scrap: "废品" }[good.category] || good.category}</span>
+        <span class="slot-tag">${CATEGORY_NAMES_TRADE[good.category] || good.category}</span>
         ${seasonTag}
       </div>
       <div class="card-desc" style="margin:4px 0;">
