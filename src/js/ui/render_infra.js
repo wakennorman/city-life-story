@@ -843,24 +843,15 @@ function renderLocationBar(state, parent) {
     rightGroup.appendChild(tipSpan);
   }
 
-  // 移动端：在住所后添加天气预报
+  // 移动端：在住所后添加天气预报（交替闪烁）
   if (
     window.innerWidth <= 768 &&
     state.weather &&
     state.weather.forecast &&
     state.weather.forecast.length > 0
   ) {
-    var forecastSep = document.createElement("span");
-    forecastSep.style.cssText =
-      "color:var(--text-muted);font-size:10px;margin-left:3px;";
-    forecastSep.textContent = "|";
-    rightGroup.appendChild(forecastSep);
-
-    var forecastSpan = document.createElement("span");
-    forecastSpan.style.cssText =
-      "font-size:10px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;";
-    var forecastText = "📅";
     var forecastArr = state.weather.forecast;
+    var forecastText = "";
     for (var fi = 0; fi < forecastArr.length; fi++) {
       var f = forecastArr[fi];
       var fDef =
@@ -875,8 +866,22 @@ function renderLocationBar(state, parent) {
       forecastText += fic + fnm + pct + "%";
       if (fi < forecastArr.length - 1) forecastText += " ";
     }
-    forecastSpan.textContent = forecastText;
-    rightGroup.appendChild(forecastSpan);
+
+    var altContainer = document.createElement("span");
+    altContainer.className = "mobile-forecast-alt";
+    altContainer.title = "未来天气预报";
+
+    var labelSpan = document.createElement("span");
+    labelSpan.className = "f-label";
+    labelSpan.textContent = "📅明日天气预报";
+    altContainer.appendChild(labelSpan);
+
+    var valueSpan = document.createElement("span");
+    valueSpan.className = "f-value";
+    valueSpan.textContent = forecastText;
+    altContainer.appendChild(valueSpan);
+
+    rightGroup.appendChild(altContainer);
   }
 
   div.appendChild(rightGroup);

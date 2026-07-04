@@ -4489,6 +4489,44 @@ body {
   }
 }
 
+/* ====== 移动端天气预报交替闪烁（v3.5） ====== */
+.mobile-forecast-alt {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  width: 170px;
+  height: 1.4em;
+  overflow: hidden;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+.mobile-forecast-alt .f-label,
+.mobile-forecast-alt .f-value {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: var(--text-secondary);
+}
+.mobile-forecast-alt .f-label {
+  animation: forecastAlt 3.6s ease-in-out infinite;
+}
+.mobile-forecast-alt .f-value {
+  animation: forecastAlt 3.6s ease-in-out infinite;
+  animation-delay: 1.8s;
+}
+
+@keyframes forecastAlt {
+  0%, 42% { opacity: 1; }
+  50%, 92% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 @media (max-width: 360px) {
   .header-logo {
     max-width: 28vw;
