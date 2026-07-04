@@ -1,8 +1,59 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.15 — 事件全面审计+链式事件扩充+触发条件全覆盖）
+> 最后更新: 2026-07-04（v3.4 — 移动端UI紧凑化）
 
 ---
+
+---
+
+## 2026-07-04 — v3.4：移动端UI紧凑化
+
+> 设计参考：BitLife 信息密度 / Material 3 密集模式（Compact Density）/ Stardew Valley 移动端卡片布局 / 大多数（The Most）左侧紧凑信息栏
+> 影响文件：src/css/style.css（+170行移动端紧凑规则）、src/js/main.js（+60行折叠功能）、dist/index.html
+
+### 动机
+
+用户反馈手机端"事件记录太大太长遮挡内容""交易卡太大""装备卡排成纵列""滑动太多才能获取信息"。
+
+### 事件记录（Message Log）
+
+- **默认折叠**：移动端 `#message-log` 初始化为 `collapsed` 类，仅显示 1 行预览条（展示最新事件文本）
+- **点击展开**：点击预览行或标题栏按钮「▼ 展开」展开完整 log；展开后 max-height 30vh（≈200px）
+- **条目紧凑**：font-size 12→10px, padding 3px→1px 0, 行高 1.5→1.4, 移除分隔线和动画
+- **DOM轻量化**：移动端最多保留 25 条（桌面端 50 条）
+- **预览实时更新**：每次 `renderMessageLog()` 更新预览条内容为最新事件
+
+### Tab 页内容卡片
+
+- **全局 `.action-card` 紧凑化**：padding 12→8px, min-height 96→64px, 标题 font-size 14→12px
+- **两列网格**：`#content-area .action-cards` 强制 `grid-template-columns: repeat(2, 1fr) !important`（覆盖 JS 内联 `minmax(200px,1fr)` 单列）
+- **卡内按钮缩小**：btn-sm min-height 44→28px, padding 8px→6px, font-size 13→10px
+- **商品分类标签缩小**：slot-tag font-size 11→9px
+- **自定义数量输入框紧凑**：input width 48px→36px, step-btn min-height 26px
+
+### Tab 按钮栏
+
+- gap 4→2px, padding 0 10→6px, min-height 44→36px, font-size 13→12px
+- 超小屏（≤360px）：min-height 32px, font-size 11px
+
+### 综合覆盖
+
+- 交易 Tab：商品卡片 / 背包卡片 / 价格对比表
+- 物品 Tab：装备卡片（两列紧凑）
+- 技能 Tab：技能卡片（两列紧凑）
+- 投资/股票 Tab：卡片 padding 缩减
+- 地图 Tab：地点列表 padding 缩减
+- 行动 Tab：行动卡片紧凑化
+- 个人成长/成就 Tab：section 统一 padding 缩减
+- 价格对比区域：字号 10px, padding 2px 4px
+
+### 验证
+
+- `node --check main.js` ✅
+- `node --check render.js` ✅
+- `npm run check:js`（125 files）✅
+- `npm run typecheck` ✅
+- `python build.py`（4554.6 KB）✅
 
 ## 2026-07-04 — v3.15：事件全面审计+链式事件扩充+触发条件全覆盖
 

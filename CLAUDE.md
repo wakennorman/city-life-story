@@ -76,10 +76,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.3 蒙特卡洛策略分化 — 6条MC路径真正差异化 `0ce0164`
-  - **设计审计落地**：将v3.2遗留的"策略同一化"和"创业门槛¥200k"问题在MC策略层修复
-  - 6条路径分化：balanced(90%)稳健均衡 / grinder(40%)高强度高现金¥105k / skiller(30%)灰色犯罪 / trader(90%)房产收租¥2.6k/月 / social(80%)副业¥12k / corporate(90%)创业
-  - 高风险路径MC阈值适配：grinder/skiller ≥ 30%（参考 This War of Mine / Papers Please）
+- **最新一次工作 (2026-07-04)**：v3.4 移动端UI紧凑化 `cc113d8`
+  - **问题**：手机端事件记录太大太长遮挡内容；交易/物品/技能等 Tab 卡片太大纵排低效；需滑动太多才能获取信息
+  - **事件记录折叠**：默认折叠，仅显示 1 行最新事件预览条；展开后 max-height 30vh（≈200px）；条目 font-size 10px, padding 1px 0；移动端限 25 条
+  - **卡片两列化**：`#content-area .action-cards` 强制 `repeat(2, 1fr) !important` 覆盖 JS 内联单列；全局 padding 12→8px, min-height 96→64px
+  - **按钮紧凑**：卡内 btn-sm min-height 44→28px；Tab 按钮 44→36px；Tab 栏 gap 4→2px
+  - **全覆盖**：交易/物品/技能/投资/股票/地图/行动/个人成长/成就 Tab 同步紧凑
+  - **设计参考**：BitLife 信息密度 / Material 3 密集模式 / Stardew Valley 移动端
+  - **验证**：`check:js`(125) / `typecheck` / `build.py`(4554.6KB) 全过；commit: `cc113d8`
   - 新增20+策略辅助函数（mcTreatIllness/mcBuyProperty/mcStartupIncome/mcAttemptCrime等）
   - 技能学习加速（每次+1级模拟多渠道XP）
   - second_gen创业门槛 ¥200k→¥50k (commit eaad1ba)
