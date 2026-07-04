@@ -1,12 +1,56 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-05（v3.17b — 新增5个联动事件（疲劳/技能组合/双NPC/道德积累/低卫生））
+> 最后更新: 2026-07-05（v3.17c — 完成20个联动事件指令，补充15个）
 >
-> commit: `3658492`
+> commit: `3c7dcc1`
 
 ---
 
-## 2026-07-05 — v3.17b：联动事件扩充第二波（5个空白区填充）
+## 2026-07-05 — v3.17c：完成20个联动事件指令（补充15个）
+
+> SOP: 自主设计，按空白区分析自主选题
+> 影响文件：cross_system_events.js（+1384行）
+> commit: `3c7dcc1`
+
+### 第三波补充的15个事件
+
+| 事件ID                        | 类型      | 触发条件                       | 联动系统           |
+| ----------------------------- | --------- | ------------------------------ | ------------------ |
+| `storm_shelter_meet`          | 天气+社交 | stormy/typhoon+露宿+15天冷却   | 天气+社交+心智     |
+| `chef_chen_teaching`          | NPC教学   | 陈师傅好感≥40+商业区+20天冷却  | NPC+技能+心情      |
+| `equipment_break_alert`       | 装备损坏  | 装备耐久≤20+10天冷却           | 装备+修理+经济     |
+| `job_burnout_warning`         | 职业倦怠  | 心情<30+疲劳>60+14天冷却       | 工作+心智+心情     |
+| `sick_work_notice`            | 疾病联动  | illnesses>0+health<50+20天冷却 | 疾病+工作+社交     |
+| `low_mood_despair`            | 情绪危机  | 心情<20+health>20+20天冷却     | 心情+心智+道德     |
+| `xiao_mei_study_group`        | 学习小组  | 小美好感≥40+智力≥25+不可重复   | NPC+教育+技能      |
+| `techpark_startup_idea`       | 创业灵感  | 科技园+coding≥20+不可重复      | 地点+技能+创业     |
+| `social_loneliness`           | 社交孤独  | 无NPC好感>20+25天冷却          | 社交+心情          |
+| `debt_meet_creditor`          | 债务压力  | 总负债>500+30天冷却            | 经济+道德+剧情     |
+| `zhang_training_tip`          | 培训推荐  | 张姐好感≥50+不可重复           | NPC+教育+工作      |
+| `park_exercise_habit`         | 健身习惯  | park+连续5次到达+20天冷却      | 地点+健康+体质     |
+| `construction_minor_accident` | 工地事故  | 工地+20天冷却                  | 地点+工作+NPC+健康 |
+| `skill_noticed_stranger`      | 技能回报  | 任意技能≥50+20天冷却           | 技能+社交+经济     |
+| `library_mentor_meet`         | 导师事件  | 智力≥35+不可重复               | 教育+心智+社交     |
+
+### 设计覆盖
+
+- Weather+location combo: event 11
+- NPC好感×地点: events 12, 17, 21
+- 装备系统: event 13
+- 积累爆发: events 14, 16, 19
+- 疾病系统: event 15
+- 地点专属: events 18, 22, 23
+- 债务系统: event 20
+- 技能回报: event 24
+- 学习路径: event 25
+
+### 验证
+
+- `node --check cross_system_events.js` ✅
+- `python build.py` (4686.3 KB) ✅
+- `commit 3c7dcc1` ✅
+
+---
 
 > SOP: 自主设计，按空白区分析自主选题
 > 影响文件：cross_system_events.js（+506行）
