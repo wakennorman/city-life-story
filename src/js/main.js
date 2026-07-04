@@ -4113,7 +4113,10 @@ function renderMessageLog(state) {
   const content = log.querySelector(".log-content");
   if (!content) return;
 
-  const messages = state.messageLog.slice(-50); // 最近50条
+  // 移动端最多显示25条，桌面端50条
+  const isMobile = window.innerWidth <= 768;
+  const maxEntries = isMobile ? 25 : 50;
+  const messages = state.messageLog.slice(-maxEntries);
   content.innerHTML = messages
     .map(
       (m) => `
@@ -4126,6 +4129,19 @@ function renderMessageLog(state) {
 
   // 滚动到底部
   content.scrollTop = content.scrollHeight;
+
+  // 移动端：更新折叠预览条（最新一条事件）
+  if (isMobile) {
+    var preview = document.getElementById("message-log-preview");
+    var previewInner = preview
+      ? preview.querySelector(".log-preview-inner")
+      : null;
+    if (previewInner && state.messageLog.length > 0) {
+      var last = state.messageLog[state.messageLog.length - 1];
+      previewInner.innerHTML =
+        '<span class="log-day">[第' + last.day + "天]</span>" + last.text;
+    }
+  }
 }
 
 // ====== 初始化 ======
@@ -4200,7 +4216,65 @@ function init() {
     document.getElementById("sidebar").classList.toggle("open");
   });
 
+  // 移动端事件记录折叠开关（CSS 已就绪，补完 JS 联动）
+  if (window.innerWidth <= 768) {
+    setupMobileMessageLog();
+  }
+
   console.log("🏙️ 城市浮生记 initialized.");
+}
+
+/**
+ * 移动端事件记录折叠功能
+ * 在 #message-log h3 中添加折叠按钮，在 log-content 后添加预览条
+ * 默认折叠，点击预览/按钮展开
+ */
+function setupMobileMessageLog() {
+  var log = document.getElementById("message-log");
+  if (!log) return;
+
+  // 添加折叠按钮
+  var h3 = log.querySelector("h3");
+  if (!h3) return;
+
+  // 防止重复添加
+  if (document.getElementById("message-log-toggle")) return;
+
+  var toggle = document.createElement("button");
+  toggle.id = "message-log-toggle";
+  toggle.className = "btn btn-sm";
+  toggle.textContent = "▼ 展开";
+  toggle.setAttribute("aria-label", "展开/折叠事件记录");
+  h3.appendChild(toggle);
+
+  // 添加预览行（在 log-content 后面）
+  var content = log.querySelector(".log-content");
+  if (!content) return;
+
+  var preview = document.createElement("div");
+  preview.id = "message-log-preview";
+  preview.innerHTML =
+    '<div class="log-preview-inner">📜 点击查看完整事件记录</div>';
+  content.parentNode.insertBefore(preview, content.nextSibling);
+
+  // 默认折叠
+  log.classList.add("collapsed");
+
+  // 点击预览展开
+  preview.addEventListener("click", function (e) {
+    e.stopPropagation();
+    log.classList.remove("collapsed");
+    toggle.textContent = "▲ 收起";
+  });
+
+  // 点击 toggle 切换
+  toggle.addEventListener("click", function (e) {
+    e.stopPropagation();
+    log.classList.toggle("collapsed");
+    toggle.textContent = log.classList.contains("collapsed")
+      ? "▼ 展开"
+      : "▲ 收起";
+  });
 }
 
 // ====== P2#12 技能树分支/节点事件处理 ======

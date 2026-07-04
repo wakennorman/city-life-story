@@ -4259,12 +4259,260 @@ body {
     grid-template-columns: 1fr !important;
     gap: 8px !important;
   }
+
+  /* ====== 移动端紧凑卡片（v3.4） ====== */
+
+  /* 全局卡片紧凑化：更小 padding、更小字号、更小 min-height */
+  .action-card {
+    min-height: 64px;
+    padding: 8px;
+  }
+
+  .action-card .card-title {
+    font-size: 12px;
+  }
+
+  .action-card .card-desc,
+  .action-card .card-meta {
+    font-size: 11px;
+  }
+
+  .action-card .card-sub {
+    font-size: 10px;
+  }
+
+  /* 卡片网格：紧凑间距，自动两列 */
+  .action-cards {
+    gap: 6px;
+  }
+
+  /* 强制覆盖 JS 内联的 grid-template-columns（如 minmax(200px,1fr)），移动端走两列 */
+  #content-area .action-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 商品列表密集布局：更紧凑的两列 */
+  #trade-market-grid,
+  [class*="trade-grid"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 背包商品区：收购列表也是两列 */
+  #content-area .action-cards[style*="minmax(180px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 装备槽：一行两个，更小 */
+  .equip-grid,
+  #content-area .action-cards[style*="minmax(130px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 技能卡：两列紧凑 */
+  #content-area .action-cards[style*="minmax(200px"]:not(#trade-market-grid) {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 卡内按钮紧凑化 */
+  .action-card .btn-sm,
+  .action-card .btn {
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .action-card .qty-toggle-btn {
+    min-height: 28px;
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .action-card .qty-input-group {
+    gap: 2px;
+  }
+
+  .action-card .qty-num-input {
+    width: 36px;
+    min-height: 26px;
+    font-size: 10px;
+  }
+
+  .action-card .qty-step-btn {
+    min-height: 26px;
+    min-width: 22px;
+    font-size: 10px;
+  }
+
+  /* 商品分类标签缩小 */
+  .action-card .slot-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  /* ====== 移动端紧凑事件记录（v3.4） ====== */
+  #message-log {
+    padding: 4px 8px;
+  }
+
+  #message-log h3 {
+    font-size: 9px;
+    margin-bottom: 1px;
+    letter-spacing: 0.3px;
+  }
+
+  .log-entry {
+    padding: 1px 0;
+    font-size: 10px;
+    line-height: 1.4;
+    border-bottom: none;
+    animation: none;
+  }
+
+  .log-entry .log-day {
+    font-size: 8px;
+    margin-right: 4px;
+    opacity: 0.7;
+  }
+
+  .log-entry.hint {
+    padding-left: 4px;
+  }
+
+  /* 折叠预览行同样紧凑 */
+  #message-log.collapsed #message-log-preview {
+    padding: 3px 8px;
+    margin: 2px 0 0;
+  }
+
+  #message-log-preview .log-preview-inner {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  #message-log-preview .log-preview-inner .log-day {
+    font-size: 9px;
+  }
+
+  #message-log-toggle {
+    min-height: 28px;
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  #message-log .log-content {
+    max-height: min(30vh, 200px) !important;
+  }
+
+  /* ====== 移动端 Tab 按钮紧凑化（v3.4） ====== */
+  #tab-bar {
+    gap: 2px;
+    padding: 0 6px;
+  }
+
+  .tab-btn {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* ====== 移动端内容区紧凑（v3.4） ====== */
+  #content-area {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* ====== 移动端表格/价格对比区域紧凑化 ====== */
+  .price-table,
+  [class*="compare-table"] {
+    font-size: 10px !important;
+  }
+
+  .price-table td,
+  .price-table th,
+  [class*="compare-table"] td,
+  [class*="compare-table"] th {
+    padding: 2px 4px !important;
+    font-size: 10px !important;
+  }
+
+  /* ====== 投资/股票Tab移动端紧凑 ====== */
+  .investment-card,
+  .stock-card {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .investment-card .btn-sm,
+  .stock-card .btn-sm {
+    min-height: 26px;
+    font-size: 10px;
+  }
+
+  /* ====== 移动端地图区域紧凑 ====== */
+  .map-location-list {
+    gap: 4px;
+  }
+
+  .map-location-item {
+    padding: 6px 8px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+
+  .map-location-services-strip {
+    padding: 2px 4px !important;
+    gap: 2px !important;
+    font-size: 9px !important;
+  }
+
+  /* ====== 个人成长/成就Tab紧凑 ====== */
+  .personal-growth-section,
+  .achievement-grid > div {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  /* ====== 行动页卡片紧凑 ====== */
+  .action-card .card-effect {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .action-card .card-cost {
+    font-size: 10px;
+    gap: 4px;
+  }
 }
 
-/* ============================================================
-   世界新闻·开局氛围基调系统 — UI样式
-   参考：Papers Please 报纸风 + 电视新闻 + 现代新闻App
-   ============================================================ */
+@media (max-width: 360px) {
+  .header-logo {
+    max-width: 28vw;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 超小屏：缩小两列卡片的 min-width */
+  #content-area .action-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .action-card {
+    padding: 6px;
+    min-height: 56px;
+  }
+
+  .action-card .card-title {
+    font-size: 11px;
+  }
+
+  .tab-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+}
 
 /* ========== 开局世界新闻弹窗 ========== */
 /* 设计风格：温暖报刊风，匹配游戏奶油白+鼠尾草绿基调 */
