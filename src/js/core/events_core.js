@@ -132,8 +132,9 @@ function queueRandomEvent(state, phase) {
   const pool = RANDOM_EVENTS.filter((e) => e.phase === phase);
   if (pool.length === 0) return;
 
-  // 过滤掉不满足条件的事件
+  // ponytail: 排除链式事件——它们只能通过 scheduleChainEvent 触发
   var eligible = pool.filter(function (e) {
+    if (e._isChainEvent) return false;
     // 通用条件函数检查
     if (e.conditions && !e.conditions(state)) return false;
     // 财富检查：太有钱时不出贫穷主题事件
@@ -346,14 +347,10 @@ function showEventModal(evt) {
     });
   });
 
-  // 点击遮罩关闭也清理事件悬挂
+  // ponytail: 事件弹窗必须点击按钮，不允许点击遮罩关闭
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
-      const s = StateManager.getState();
-      s._pendingEvent = null;
-      s._pendingEventId = null;
-      document.body.removeChild(overlay);
-      renderAll();
+      // 不做任何事——玩家必须点击按钮选择
     }
   });
 }
@@ -506,6 +503,91 @@ function showNewsBriefingModal(news, state) {
     var duration = news.duration
       ? "影响约" + news.duration + "天"
       : "影响持续观察";
+
+    // ponytail: 智力和技能影响新闻深度见解
+    var intel = state.player.intelligence || 0;
+    var engLvl =
+      state.skills && state.skills.english
+        ? state.skills.english.level || 0
+        : 0;
+    var acctLvl =
+      state.skills && state.skills.accounting
+        ? state.skills.accounting.level || 0
+        : 0;
+    var codingLvl =
+      state.skills && state.skills.coding ? state.skills.coding.level || 0 : 0;
+    var insightParts = [];
+
+    // 智力 >= 25: 基础新闻解读
+    if (intel >= 25) {
+      if (news.type === "investment" || news.industry) {
+        insightParts.push(
+          "💡 这条新闻可能影响 " +
+            (news.industry || "相关行业") +
+            " 的市场走向",
+        );
+      } else if (news.effects && news.effects.jobMultiplier) {
+        insightParts.push("💡 注意：部分行业收入可能因此波动");
+      } else {
+        insightParts.push("💡 你隐约感觉到这条新闻背后有更大的趋势");
+      }
+    }
+
+    // 智力 >= 40 + 会计 >= 15: 财务分析级见解
+    if (intel >= 40 && acctLvl >= 15) {
+      insightParts.push(
+        "📊 根据财务分析，此类政策/事件通常影响周期约3-6个月，建议提前布局",
+      );
+    }
+
+    // 智力 >= 50 + 英语 >= 20: 国际视野级见解
+    if (intel >= 50 && engLvl >= 20) {
+      var engSuffix =
+        "🌍 从国际视角看，此事件与全球趋势高度相关——外语能力让你能直接阅读外媒深度分析";
+      if (
+        news.type === "investment" ||
+        (news.id &&
+          (news.id.includes("exchange") ||
+            news.id.includes("tariff") ||
+            news.id.includes("export")))
+      ) {
+        engSuffix =
+          "🌍 你通过外媒了解到，国际市场对此事件的反应比国内报道更剧烈——汇率波动风险需要关注";
+      }
+      insightParts.push(engSuffix);
+    }
+
+    // 智力 >= 60: 系统性见解
+    if (intel >= 60) {
+      insightParts.push(
+        "🎯 你看到的不仅是事件本身——你发现这是系统性变化的信号，值得重新评估自己的职业和投资方向",
+      );
+    }
+
+    // 编码 >= 25: 技术类新闻深入解读
+    if (codingLvl >= 25 && news.industry === "科技") {
+      insightParts.push(
+        "💻 从技术角度看，这项变化将影响整个产业链——编程背景让你能理解其真实技术含量",
+      );
+    }
+
+    var insightHtml = "";
+    if (insightParts.length > 0) {
+      insightHtml =
+        '<div style="margin-top:10px;padding:10px 12px;background:linear-gradient(135deg,rgba(102,126,234,0.08),rgba(46,204,113,0.05));border:1px solid rgba(102,126,234,0.2);border-radius:6px;">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px;">🧠 你的分析</div>' +
+        insightParts
+          .map(function (p) {
+            return (
+              '<div style="font-size:11px;color:var(--text-secondary);margin:3px 0;">' +
+              p +
+              "</div>"
+            );
+          })
+          .join("") +
+        "</div>";
+    }
+
     showModal({
       title: "📰 新闻快报",
       body:
@@ -525,6 +607,7 @@ function showNewsBriefingModal(news, state) {
         '<div style="padding:8px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);">' +
         (news.desc || "这条新闻正在影响城市里的价格、工作和人心。") +
         "</div>" +
+        insightHtml +
         "</div>",
       buttons: [
         { text: "知道了", cls: "btn-primary", callback: function () {} },

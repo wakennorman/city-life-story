@@ -13,6 +13,7 @@
     {
       id: "insider_rumor_start",
       phase: "corporate",
+      _isChainEvent: true,
       icon: "👂",
       title: "投资圈风声",
       story:
@@ -91,6 +92,7 @@
     {
       id: "insider_verify",
       phase: "corporate",
+      _isChainEvent: true,
       icon: "🔍",
       title: "消息验证结果",
       story:
@@ -193,6 +195,7 @@
     {
       id: "insider_aftermath_success",
       phase: "corporate",
+      _isChainEvent: true,
       icon: "⚖️",
       title: "监管调查来了",
       story:
@@ -276,6 +279,7 @@
     {
       id: "insider_aftermath_fail",
       phase: "corporate",
+      _isChainEvent: true,
       icon: "😰",
       title: "投资失败后的麻烦",
       story:

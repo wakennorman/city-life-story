@@ -71,18 +71,10 @@ function showModal({ title, body, buttons }) {
   box.appendChild(actionsDiv);
 
   overlay.appendChild(box);
-  // v3.0 修复：tutorial overlay 不允许点击空白处关闭
-  // 旧版任何 modal 点击 overlay 空白都会 removeChild，导致 tutorial 被意外关掉、高亮残留
+  // ponytail: 所有弹窗必须点击按钮关闭，不允许点击外部关闭
   overlay.addEventListener("click", (e) => {
-    if (
-      e.target === overlay &&
-      !overlay.classList.contains("tutorial-overlay")
-    ) {
-      try {
-        document.body.removeChild(overlay);
-      } catch (err) {
-        // 忽略
-      }
+    if (e.target === overlay) {
+      // 不做任何事——玩家必须点击按钮
     }
   });
   document.body.appendChild(overlay);
@@ -1239,7 +1231,9 @@ function showItemShopModal(locationId) {
 
   overlay.appendChild(box);
   overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) document.body.removeChild(overlay);
+    if (e.target === overlay) {
+      /* 必须点击按钮关闭 */
+    }
   });
   document.body.appendChild(overlay);
 }
@@ -1419,7 +1413,9 @@ function showScavengeRouteModal() {
 
   overlay.appendChild(box);
   overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) document.body.removeChild(overlay);
+    if (e.target === overlay) {
+      /* 必须点击按钮关闭 */
+    }
   });
   document.body.appendChild(overlay);
 }

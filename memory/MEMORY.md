@@ -3,3 +3,4 @@
 - [Mobile Tab Debug Lesson 2026-07-04](mobile-tab-debug-lesson-2026-07-04.md) — 缺失`</aside>`导致移动端Tab栏消失的调试教训
 - [File Splitting v3.13](file-splitting-v3-13.md) — P1 超大文件按主题拆分（events_street×3 + startup×2 + render×3）
 - [Write vs Edit Lesson 2026-07-04](write-vs-edit-lesson-2026-07-04.md) — 误用 Write 覆盖整个文件导致 switchTab 丢失的教训
+- [P0/P1 Fix 2026-07-04](p0-p1-fix-2026-07-04.md) — v3.13e 全面修复：6项Bug+经济平衡调参

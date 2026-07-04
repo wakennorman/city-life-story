@@ -141,330 +141,512 @@
     return avail[0].job;
   }
 
+  // ============ 策略辅助函数（v3.3 策略分化） ============
+
+  /**
+   * 疾病治疗（所有策略共用）
+   * v3.3: 仅健康<30且现金>¥500时治疗，轻症依赖pipeline的+3/天自然恢复
+   */
+  function mcTreatIllness(state) {
+    if (!state.status.illnesses || state.status.illnesses.length === 0) return;
+    if (state.status.health > 30) return;
+    if (state.resources.cash < 500) return;
+    var ILL = typeof ILLNESSES !== "undefined" ? ILLNESSES : null;
+    if (!ILL) return;
+    var worst = null,
+      worstSev = 0;
+    for (var i = 0; i < state.status.illnesses.length; i++) {
+      var inst = state.status.illnesses[i];
+      var ill = ILL[inst.id];
+      if (!ill || !ill.treatCost) continue;
+      var sev =
+        ill.severity === "critical"
+          ? 4
+          : ill.severity === "severe"
+            ? 3
+            : ill.severity === "moderate"
+              ? 2
+              : 1;
+      if (sev > worstSev) {
+        worstSev = sev;
+        worst = { inst: inst, ill: ill };
+      }
+    }
+    if (!worst) return;
+    var tier = null,
+      cost = 0;
+    if (worst.ill.treatCost.pharmacy > 0) {
+      tier = "pharmacy";
+      cost = worst.ill.treatCost.pharmacy;
+    }
+    if (
+      worstSev >= 3 &&
+      worst.ill.treatCost.hospital > 0 &&
+      state.resources.cash > worst.ill.treatCost.hospital + 200
+    ) {
+      tier = "hospital";
+      cost = worst.ill.treatCost.hospital;
+    }
+    if (!tier || state.resources.cash < cost + 200) return;
+    state.resources.cash -= cost;
+    state._mcMedicalSpent = (state._mcMedicalSpent || 0) + cost;
+    if (tier === "hospital") {
+      for (var j = 0; j < state.status.illnesses.length; j++) {
+        if (state.status.illnesses[j].id === worst.inst.id) {
+          state.status.illnesses.splice(j, 1);
+          break;
+        }
+      }
+    } else {
+      worst.inst.treated = true;
+    }
+  }
+
+  /** 通用吃饭：低饱即吃 */
+  function mcFeed(state, threshold, recover, cost) {
+    var ap = state.player.actionPoints;
+    if (
+      state.needs.hunger < threshold &&
+      state.resources.cash >= cost &&
+      ap >= 10
+    ) {
+      state.resources.cash = Math.max(0, state.resources.cash - cost);
+      state.needs.hunger = Math.min(100, state.needs.hunger + recover);
+      state.needs.happiness = Math.min(100, state.needs.happiness + 3);
+      state.player.actionPoints = ap - 10;
+      return true;
+    }
+    return false;
+  }
+
+  /** 通用住房升级 */
+  function mcUpgradeHousing(state) {
+    var ht = state.housing ? state.housing.tier : 0;
+    var day = state.player.day;
+    var cash = state.resources.cash;
+    // [cost, dayMin] — 需留¥500备用金
+    var tbl = [
+      {},
+      { c: 300, d: 2 },
+      { c: 500, d: 12 },
+      { c: 1000, d: 40 },
+      { c: 6000, d: 120 },
+      { c: 20000, d: 250 },
+    ];
+    var up = tbl[ht + 1];
+    if (up && cash >= up.c + 500 && day >= up.d) {
+      state.resources.cash -= up.c;
+      state.housing.tier = ht + 1;
+      state.housing.rentedDay = day;
+      state._mcHousingUpgrades = (state._mcHousingUpgrades || 0) + 1;
+    }
+  }
+
+  /** 通用工作循环 */
+  function mcWorkLoop(state, loc, maxWorked, fatigueLimit) {
+    var ap = state.player.actionPoints;
+    var needs = state.needs;
+    var worked = 0;
+    while (ap >= 14 && worked < maxWorked && needs.fatigue < fatigueLimit) {
+      if (needs.fatigue > 60 && ap >= 12) {
+        needs.fatigue = Math.max(0, needs.fatigue - 25);
+        ap -= 12;
+        continue;
+      }
+      applyJobPay(state, findJobAtLocation(state, loc));
+      ap -= 14;
+      worked++;
+    }
+    state.player.actionPoints = ap;
+  }
+
+  /**
+   * 技能学习（每4天一次）
+   * v3.3: 每次+100 XP = 1级（模拟真实游戏中工作/事件/学习多渠道XP获取的累积效果）
+   * 真实游戏中技能升级更快（工作给XP、事件给XP），MC仅模拟学习单一渠道，故加速
+   */
+  function mcStudySkill(state, preferList) {
+    var ap = state.player.actionPoints;
+    var day = state.player.day;
+    if (day <= 10 || day % 4 !== 0 || !state.skills || ap < 18) return false;
+    if (state.needs.fatigue > 50) return false;
+    var skids = Object.keys(state.skills);
+    // 在偏好列表中选等级最低的（平衡提升多个技能，满足创业"2技能≥12"门槛）
+    var cs = null,
+      csLvl = 999;
+    for (var i = 0; i < skids.length; i++) {
+      for (var j = 0; j < preferList.length; j++) {
+        if (skids[i] === preferList[j]) {
+          var lvl = state.skills[skids[i]].level || 0;
+          if (lvl < csLvl) {
+            cs = skids[i];
+            csLvl = lvl;
+          }
+          break;
+        }
+      }
+    }
+    if (!cs) cs = skids[0];
+    if (state.skills[cs].level < 60) {
+      // 每次直接+1级（100 XP），模拟多渠道XP累积
+      state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
+      state.skills[cs].xp = 0;
+      state.player.actionPoints = ap - 15;
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + 3);
+      state._mcSkillUps = (state._mcSkillUps || 0) + 1;
+      return true;
+    }
+    return false;
+  }
+
+  /** 犯罪执行（skiller策略专属） */
+  function mcAttemptCrime(state, actionId) {
+    if (typeof state.flags._mcMorality !== "number")
+      state.flags._mcMorality = 50;
+    var CRIMES = {
+      steal_battery: {
+        loc: "slum",
+        reward: [150, 300],
+        catchRate: 0.35,
+        morality: 15,
+        fine: 500,
+        healthDmg: 5,
+        name: "偷电瓶",
+      },
+      pickpocket: {
+        loc: "commercialDist",
+        reward: [80, 200],
+        catchRate: 0.3,
+        morality: 12,
+        fine: 300,
+        healthDmg: 3,
+        name: "扒窃",
+      },
+      blackmarket: {
+        loc: "wholesaleMarket",
+        reward: [300, 600],
+        catchRate: 0.4,
+        morality: 20,
+        fine: 1000,
+        healthDmg: 8,
+        name: "黑市倒卖",
+      },
+      shop_theft: {
+        loc: "commercialDist",
+        reward: [200, 500],
+        catchRate: 0.4,
+        morality: 18,
+        fine: 800,
+        healthDmg: 6,
+        name: "盗窃店铺",
+      },
+      scam: {
+        loc: "commercialDist",
+        reward: [100, 300],
+        catchRate: 0.45,
+        morality: 15,
+        fine: 500,
+        healthDmg: 4,
+        name: "碰瓷",
+      },
+    };
+    var crime = CRIMES[actionId];
+    if (!crime) return false;
+    state._mcCrimeAttempts = (state._mcCrimeAttempts || 0) + 1;
+    // 地点风险修正
+    var locKey = state.trade.currentLocation || "slum";
+    var locMul = 1.0;
+    if (locKey === "bank" || locKey === "government") locMul = 1.3;
+    if (locKey === "slum") locMul = 0.9;
+    var effCatch = Math.min(0.95, crime.catchRate * locMul);
+    if (Random.chance(effCatch)) {
+      // 被抓
+      state.resources.cash = Math.max(0, state.resources.cash - crime.fine);
+      state.flags._mcMorality = Math.max(0, state.flags._mcMorality - 5);
+      state._mcCrimeCaught = (state._mcCrimeCaught || 0) + 1;
+      state.status.health = Math.max(0, state.status.health - crime.healthDmg);
+      state.needs.happiness = Math.max(0, state.needs.happiness - 10);
+      return false;
+    } else {
+      var reward =
+        crime.reward[0] +
+        Math.floor(Math.random() * (crime.reward[1] - crime.reward[0]));
+      state.resources.cash += reward;
+      state.resources.totalEarned = (state.resources.totalEarned || 0) + reward;
+      state.flags._mcMorality = Math.max(
+        0,
+        state.flags._mcMorality - crime.morality,
+      );
+      state._mcCrimeSuccess = (state._mcCrimeSuccess || 0) + 1;
+      state.needs.happiness = Math.min(100, state.needs.happiness + 3);
+      return true;
+    }
+  }
+
+  /** 房产购买（trader策略专属） */
+  var MC_PROPERTIES = [
+    { id: "studio_small", price: 8000, rent: 500, dayMin: 30 },
+    { id: "apt_one_bed", price: 15000, rent: 900, dayMin: 90 },
+    { id: "apt_two_bed", price: 30000, rent: 1500, dayMin: 180 },
+  ];
+  function mcBuyProperty(state) {
+    var day = state.player.day;
+    for (var i = 0; i < MC_PROPERTIES.length; i++) {
+      var p = MC_PROPERTIES[i];
+      // 是否已拥有
+      var owned =
+        state.investments && state.investments.properties
+          ? state.investments.properties.some(function (pr) {
+              return pr.id === p.id;
+            })
+          : false;
+      if (owned) continue;
+      if (day >= p.dayMin && state.resources.cash >= p.price + 3000) {
+        state.resources.cash -= p.price;
+        if (!state.investments) state.investments = {};
+        if (!state.investments.properties) state.investments.properties = [];
+        state.investments.properties.push({
+          id: p.id,
+          buyPrice: p.price,
+          currentPrice: p.price,
+          rent: p.rent,
+          selfLive: false,
+          boughtDay: day,
+        });
+        state._mcPropertyCount = (state._mcPropertyCount || 0) + 1;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** 月度房租收入（trader策略，在runDailyPipeline月结算之外MC主动模拟） */
+  function mcCollectRent(state) {
+    var props = state.investments && state.investments.properties;
+    if (!props || props.length === 0) return;
+    var day = state.player.day;
+    if (day % 30 !== 0) return;
+    var totalRent = 0;
+    for (var i = 0; i < props.length; i++) {
+      if (!props[i].selfLive) totalRent += props[i].rent;
+    }
+    if (totalRent > 0) {
+      state.resources.cash += totalRent;
+      state._mcTotalRentEarned = (state._mcTotalRentEarned || 0) + totalRent;
+    }
+  }
+
+  /** 创业注册（corporate策略专属） */
+  function mcRegisterStartup(state) {
+    if (state._mcStartup) return false; // 已注册
+    var day = state.player.day;
+    if (day < 60) return false;
+    // 技能门槛：2个技能>=12级
+    var skillsMet = 0;
+    if (state.skills) {
+      for (var key in state.skills) {
+        if (state.skills[key].level >= 12) skillsMet++;
+      }
+    }
+    if (skillsMet < 2) return false;
+    // 现金门槛：classic=30k
+    var threshold = 30000;
+    if (state.resources.cash < threshold + 10000) return false;
+    state.resources.cash -= threshold;
+    state._mcStartup = {
+      foundedDay: day,
+      valuation: 100000 + Math.floor(Math.random() * 150000),
+      phase: "seed",
+    };
+    state.player.phase = "corporate";
+    return true;
+  }
+
+  /** 创业月度收入（corporate策略） */
+  function mcStartupIncome(state) {
+    if (!state._mcStartup) return;
+    var day = state.player.day;
+    if (day % 30 !== 0) return;
+    // 早期亏损期(前6月)无收入，之后收益递增
+    var monthsSince = (day - state._mcStartup.foundedDay) / 30;
+    if (monthsSince < 6) return;
+    // 月利润 = 估值 × (0.5% ~ 2%) × 随机因子
+    var rate = 0.005 + Math.random() * 0.015;
+    var profit = Math.floor(state._mcStartup.valuation * rate);
+    if (profit > 0) {
+      state.resources.cash += profit;
+      state._mcTotalStartupProfit = (state._mcTotalStartupProfit || 0) + profit;
+    }
+  }
+
+  /** 副业收入（social策略专属） */
+  function mcSideHustleIncome(state) {
+    var day = state.player.day;
+    if (day % 5 !== 0) return; // 每5天一次
+    // 副业收益：¥80-250（简化模拟 side_hustle.js 的兼职系统）
+    var amt = 80 + Math.floor(Math.random() * 170);
+    state.resources.cash += amt;
+    state._mcSideHustleEarned = (state._mcSideHustleEarned || 0) + amt;
+  }
+
+  // ============ 策略工厂（v3.3 分化版） ============
+
+  /**
+   * 策略1: balanced（稳健均衡型）
+   * 路径: 工作+住房+治病 — 最安全的活法
+   * 特点: 平衡支出与储蓄，升级住房优先
+   */
   function createBalancedPolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-
-      // v3.2.1 修复: 优先生存 + 住房 + 工作/休息交替循环
-      // 原 bug: AP 全花在技能/洗澡/娱乐，疲劳日增而休息不足 → Day 80 死亡螺旋
-      // 1. 吃饭
-      if (needs.hunger < 50 && cash >= 6 && ap >= 10) {
-        var foodCost = 10;
-        var foodRecover = 38;
-        if (cash >= 35 && needs.hunger < 25) {
-          foodCost = 35;
-          foodRecover = 65;
-        }
-        state.resources.cash = Math.max(0, state.resources.cash - foodCost);
-        needs.hunger = Math.min(100, needs.hunger + foodRecover);
-        needs.happiness = Math.min(100, needs.happiness + 3);
-        ap -= 10;
-      }
-      // 2. 积极住房升级（寿命 = tier² × 恢复力，越早升级越好）
-      var ht = state.housing ? state.housing.tier : 0;
+      if (!needs) return;
+      mcFeed(state, 50, 38, 10);
+      mcTreatIllness(state);
+      mcUpgradeHousing(state);
       var day = state.player.day;
-      if (ht === 0 && cash >= 500 && day > 2) {
-        state.resources.cash -= 300;
-        state.housing.tier = 1;
-        state.housing.rentedDay = day;
-        if (state.inventory) state.inventory.capacity = 50;
-      } else if (ht === 1 && cash >= 1500 && day > 12) {
-        state.resources.cash -= 500;
-        state.housing.tier = 2;
-        state.housing.rentedDay = day;
-        if (state.inventory) state.inventory.capacity = 100;
-      } else if (ht === 2 && cash >= 4000 && day > 40) {
-        state.resources.cash -= 1000;
-        state.housing.tier = 3;
-        state.housing.rentedDay = day;
-        if (state.inventory) state.inventory.capacity = 200;
-      }
-      // 3. 地点进阶
-      var loc = "slum";
-      if (day > 18 && cash >= 1200) loc = "commercialDist";
-      if (day > 50 && cash >= 4000) loc = "techPark";
+      var loc =
+        day > 50 && cash >= 4000
+          ? "techPark"
+          : day > 18 && cash >= 1200
+            ? "commercialDist"
+            : "slum";
       state.trade.currentLocation = loc;
-      // 4. 工作/休息交替循环（核心修复：每工作一轮检查疲劳，累了先休息）
-      var worked = 0;
-      while (ap >= 14 && worked < 10) {
-        if (needs.fatigue > 50 && ap >= 12) {
-          needs.fatigue = Math.max(0, needs.fatigue - 30);
-          ap -= 12;
-          continue;
-        }
-        if (state.status.health < 35 && ap >= 15) {
-          needs.fatigue = Math.max(0, needs.fatigue - 20);
-          ap -= 15;
-          continue;
-        }
-        var job = findJobAtLocation(state, loc);
-        applyJobPay(state, job);
-        ap -= 14;
-        worked++;
-      }
-      state.player.actionPoints = Math.max(0, ap);
+      mcWorkLoop(state, loc, 4, 60);
     };
   }
+
+  /**
+   * 策略2: grinder（拼命工作狂）
+   * 路径: 高强度工作换取现金流，牺牲生活质量
+   * 特点: worked<6, fatigue<75，极少休息，不升级住房（省租金）
+   * 风险: 高受伤率，但现金积累最快
+   */
   function createGrinderPolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 8);
-        needs.hunger = Math.min(100, needs.hunger + 25);
-        ap -= 10;
-      }
-      if (needs.fatigue > 70 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
-
+      if (!needs) return;
+      // 极简吃饭：饿了才吃，只买最便宜的
+      mcFeed(state, 35, 25, 6);
+      mcTreatIllness(state); // 该治还得治
+      // 住房：只升T1（最便宜），不追求更高等级
       var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 5) {
+      var day = state.player.day;
+      if (ht === 0 && cash >= 800 && day > 5) {
         state.resources.cash -= 300;
         state.housing.tier = 1;
-        state.housing.rentedDay = state.player.day;
+        state.housing.rentedDay = day;
       }
-      if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
-        state.resources.cash -= 500;
-        state.housing.tier = 2;
-        state.housing.rentedDay = state.player.day;
-      }
-
-      var day = state.player.day;
       var loc = "slum";
-      if (day > 40 && state.resources.cash >= 3000) loc = "factoryZone";
-      if (day > 80 && state.resources.cash >= 8000) loc = "commercialDist";
+      if (day > 30 && cash >= 2000) loc = "factoryZone";
+      if (day > 70 && cash >= 6000) loc = "commercialDist";
       state.trade.currentLocation = loc;
-
-      // v3.2.1 对齐social: worked<4, fatigue<65
-      var worked = 0;
-      while (ap >= 14 && worked < 4 && needs.fatigue < 65) {
-        var job = findJobAtLocation(state, loc);
-        applyJobPay(state, job);
-        ap -= 14;
-        worked++;
-      }
-      state.player.actionPoints = Math.max(0, ap);
+      // 核心区别：更高工作强度
+      mcWorkLoop(state, loc, 6, 75);
     };
   }
+
+  /**
+   * 策略3: skiller（灰色路径）
+   * 路径: 技能学习 + 犯罪（高风险高回报）
+   * 特点: 高风险，现金波动大，道德值下降
+   * 风险: 被抓 → 罚款+健康扣血
+   */
   function createSkillerPolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 8);
-        needs.hunger = Math.min(100, needs.hunger + 30);
-        ap -= 10;
-      }
-      if (needs.fatigue > 60 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
+      if (!needs) return;
+      mcFeed(state, 45, 30, 8);
+      mcTreatIllness(state);
+      mcUpgradeHousing(state);
 
-      // 住房升级
-      var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && state.resources.cash >= 500 && state.player.day > 4) {
-        state.resources.cash -= 300;
-        state.housing.tier = 1;
-        state.housing.rentedDay = state.player.day;
-      }
-      if (ht === 1 && state.resources.cash >= 1500 && state.player.day > 15) {
-        state.resources.cash -= 500;
-        state.housing.tier = 2;
-        state.housing.rentedDay = state.player.day;
-      }
-
-      // v3.2.1: 降低技能AP消耗优先级，先住房后学习
       var day = state.player.day;
-      if (
-        day > 10 &&
-        day % 4 === 0 &&
-        state.skills &&
-        ap >= 18 &&
-        needs.fatigue < 50
-      ) {
-        // 隔天学一次，不抢占工作AP
-        var skids = Object.keys(state.skills);
-        var cs = null;
-        for (var i = 0; i < skids.length; i++) {
-          if (
-            skids[i] === "coding" ||
-            skids[i] === "english" ||
-            skids[i] === "management"
-          ) {
-            cs = skids[i];
-            break;
-          }
-        }
-        if (!cs) cs = skids[0];
-        if (state.skills[cs].level < 60) {
-          state.skills[cs].xp = (state.skills[cs].xp || 0) + 5;
-          if (state.skills[cs].xp >= 100) {
-            state.skills[cs].xp = 0;
-            state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
-          }
-          ap -= 15;
-          needs.fatigue = Math.min(100, needs.fatigue + 3);
+      var ap = state.player.actionPoints;
+
+      // 犯罪：现金紧张且道德未破产时铤而走险
+      if (typeof state.flags._mcMorality !== "number")
+        state.flags._mcMorality = 50;
+      var desperate = cash < 600 && state.flags._mcMorality > 20;
+      var opportunistic =
+        day % 7 === 0 &&
+        ap >= 20 &&
+        cash < 5000 &&
+        state.flags._mcMorality > 30;
+      if (desperate || opportunistic) {
+        // 根据地点选择犯罪类型
+        var locKey = state.trade.currentLocation || "slum";
+        var crimeId = null;
+        if (locKey === "slum") crimeId = "steal_battery";
+        else if (locKey === "wholesaleMarket") crimeId = "blackmarket";
+        else if (locKey === "commercialDist")
+          crimeId = Random.chance(0.5) ? "pickpocket" : "scam";
+        if (crimeId) {
+          mcAttemptCrime(state, crimeId);
+          ap = state.player.actionPoints;
         }
       }
+
+      // 偶尔学技能（不抢占犯罪/工作AP）
+      mcStudySkill(state, ["coding", "english", "management"]);
 
       var loc = "slum";
-      if (day > 25 && state.resources.cash >= 2000) loc = "commercialDist";
-      if (day > 50 && state.resources.cash >= 4000) loc = "techPark";
+      if (day > 25 && cash >= 1500) loc = "commercialDist";
+      if (day > 50 && cash >= 3000) loc = "techPark";
       state.trade.currentLocation = loc;
-
-      // v3.2.1 对齐social: worked<4
-      var worked = 0;
-      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
-        var job = findJobAtLocation(state, loc);
-        applyJobPay(state, job);
-        ap -= 14;
-        worked++;
-      }
-      state.player.actionPoints = Math.max(0, ap);
+      mcWorkLoop(state, loc, 4, 60);
     };
   }
 
-  // ====== 商人策略 ======
+  /**
+   * 策略4: trader（房产投资者）
+   * 路径: 打工攒首付 → 买房收租 → 积累被动收入
+   * 特点: 中期现金流紧张，后期被动收入稳定
+   * 目标: 拥有2-3套房产，每月固定租金收入
+   */
   function createTraderPolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.min(100, needs.hunger + 30);
-        ap -= 10;
-      }
-      if (needs.fatigue > 70 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
-      var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && cash >= 500 && state.player.day > 10) {
-        state.resources.cash -= 300;
-        state.housing.tier = 1;
-      }
+      if (!needs) return;
+      mcFeed(state, 45, 30, 10);
+      mcTreatIllness(state);
+      mcUpgradeHousing(state);
 
       var day = state.player.day;
-      var survived = state.status.health > 0;
 
-      // 阶段1（Day1-15）：纯打工攒本金
-      if (day <= 15 || cash < 150) {
-        state.trade.currentLocation = "slum";
-        var w1 = 0;
-        while (ap >= 14 && w1 < 3 && needs.fatigue < 60) {
-          applyJobPay(state, findJobAtLocation(state, "slum"));
-          ap -= 14;
-          w1++;
-        }
-        // 有经验后去商业区赚更多
-        if (day > 10 && cash >= 300) {
-          state.trade.currentLocation = "commercialDist";
-          applyJobPay(state, findJobAtLocation(state, "commercialDist"));
-          ap -= 14;
-        }
-        state.player.actionPoints = Math.max(0, ap);
-        return;
-      }
+      // 核心：攒钱买房
+      mcBuyProperty(state);
+      // 收房租（月度）
+      mcCollectRent(state);
 
-      // 确保生活费
-      var reserve = 100;
-      var surplus = Math.max(0, cash - reserve);
-
-      // 阶段2：打工+套利混合
-      // 每3天做一次贸易，其他时间打工
-      if (surplus >= 50 && ap >= 24 && day % 3 === 0) {
-        // 批发市场进货
-        state.trade.currentLocation = "wholesaleMarket";
-        var goodsList = [
-          "fruits",
-          "vegetables",
-          "snacks",
-          "cigarettes",
-          "clothing",
-          "electronics",
-        ];
-        var chosen = goodsList[day % goodsList.length];
-        var baseP = 10;
-        try {
-          var g = typeof GOODS !== "undefined" ? GOODS : null;
-          if (g && g[chosen]) baseP = g[chosen].basePrice;
-        } catch (e) {}
-        var buyPrice = Math.floor(baseP * 0.78);
-        // 只用50%的盈余现金进货
-        var investCash = Math.floor(surplus * 0.5);
-        var qty = Math.min(Math.floor(investCash / Math.max(buyPrice, 1)), 10);
-        if (qty > 0) {
-          state.resources.cash -= buyPrice * qty;
-          if (!state._mcInv) state._mcInv = {};
-          state._mcInv[chosen] = (state._mcInv[chosen] || 0) + qty;
-          ap -= 12;
-        }
-
-        // 卖到商业区
-        state.trade.currentLocation = "commercialDist";
-        var sellPrice = Math.floor(baseP * 1.15);
-        var haveQty = state._mcInv ? state._mcInv[chosen] || 0 : 0;
-        if (haveQty > 0) {
-          state.resources.cash += sellPrice * haveQty;
-          state.resources.totalEarned =
-            (state.resources.totalEarned || 0) + sellPrice * haveQty;
-          delete state._mcInv[chosen];
-          ap -= 12;
-        }
-      }
-
-      // v3.2.1: 对齐social模式(worked<4, fatigue<65, 留AP给endDay恢复)
-      state.trade.currentLocation = "commercialDist";
-      var w2 = 0;
-      while (ap >= 14 && w2 < 4 && needs.fatigue < 65) {
-        applyJobPay(state, findJobAtLocation(state, "commercialDist"));
-        ap -= 14;
-        w2++;
-      }
-
-      state.player.actionPoints = Math.max(0, ap);
+      var loc = "slum";
+      if (day > 20 && cash >= 1200) loc = "commercialDist";
+      if (day > 60 && cash >= 5000) loc = "techPark";
+      state.trade.currentLocation = loc;
+      mcWorkLoop(state, loc, 4, 60);
     };
   }
 
-  // ====== 社交策略 ======
+  /**
+   * 策略5: social（社交+副业型）
+   * 路径: NPC关系 + 副业兼职 — 靠人脉赚钱
+   * 特点: 稳定副业收入，NPC推荐解锁高薪工作
+   */
   function createSocialPolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.min(100, needs.hunger + 30);
-        ap -= 10;
-      }
-      if (needs.fatigue > 70 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
-      var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && cash >= 500 && state.player.day > 7) {
-        state.resources.cash -= 300;
-        state.housing.tier = 1;
-      }
-      if (ht === 1 && cash >= 1200 && state.player.day > 25) {
-        state.resources.cash -= 500;
-        state.housing.tier = 2;
-      }
+      if (!needs) return;
+      mcFeed(state, 45, 30, 10);
+      mcTreatIllness(state);
+      mcUpgradeHousing(state);
 
       var day = state.player.day;
-      // 解锁NPC推荐工作
+      // 核心：副业收入
+      mcSideHustleIncome(state);
+      // NPC推荐（解锁高薪工作）
       if (day > 15) state.flags.oldZhouReferred = true;
       if (day > 25) state.flags.bossLiReferred = true;
       if (day > 20) state.flags.sisterZhangReferred = true;
@@ -472,96 +654,83 @@
       if (day > 30 && state.player.intelligence >= 25)
         state.flags.xiaoMeiReferred = true;
 
-      // 地点进阶：利用NPC关系获取高薪工作
       var loc = "slum";
       if (day > 20 && cash >= 400) loc = "construction";
       if (day > 35 && cash >= 800) loc = "commercialDist";
       if (day > 60 && cash >= 3000 && state.player.intelligence >= 30)
         loc = "school";
       state.trade.currentLocation = loc;
-
-      var worked = 0;
-      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
-        var job = findJobAtLocation(state, loc);
-        applyJobPay(state, job);
-        ap -= 14;
-        worked++;
-      }
-      state.player.actionPoints = Math.max(0, ap);
+      mcWorkLoop(state, loc, 4, 60);
     };
   }
 
-  // ====== 企业晋升策略 ======
+  /**
+   * 策略6: crowner（创业路径）
+   * 路径: 攒钱+学技能 → 注册公司 → 被动创业收入
+   * 特点: 前60天拼命攒钱+学技能，之后创业获取被动收入
+   * 目标: Day 60+ 注册公司
+   */
   function createCorporatePolicy() {
     return function (state) {
-      var ap = state.player ? state.player.actionPoints : 0;
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
-      if (!needs || ap <= 0) return;
-      if (needs.hunger < 45 && cash >= 8 && ap >= 10) {
-        state.resources.cash = Math.max(0, state.resources.cash - 10);
-        needs.hunger = Math.min(100, needs.hunger + 30);
-        ap -= 10;
-      }
-      if (needs.fatigue > 70 && ap >= 15) {
-        needs.fatigue = Math.max(0, needs.fatigue - 25);
-        ap -= 15;
-      }
-      var ht = state.housing ? state.housing.tier : 0;
-      if (ht === 0 && cash >= 500 && state.player.day > 7) {
-        state.resources.cash -= 300;
-        state.housing.tier = 1;
-      }
-      if (ht === 1 && cash >= 1200 && state.player.day > 25) {
-        state.resources.cash -= 500;
-        state.housing.tier = 2;
-      }
+      if (!needs) return;
+      mcFeed(state, 45, 30, 10);
+      mcTreatIllness(state);
+      mcUpgradeHousing(state);
 
       var day = state.player.day;
-      // 前60天：技能积累+打工（不直接改intelligence，改用skill study）
-      if (day <= 60 && state.skills && ap >= 18 && needs.fatigue < 55) {
-        var skids = Object.keys(state.skills);
-        var cs = null;
-        for (var i = 0; i < skids.length; i++) {
-          if (
-            skids[i] === "coding" ||
-            skids[i] === "english" ||
-            skids[i] === "management"
-          ) {
-            cs = skids[i];
-            break;
+
+      // 核心：攒钱+学技能 → 创业
+      if (!state._mcStartup) {
+        // v3.3: 每天优先学技能（前90天冲刺），每2天一次，专攻2个技能
+        if (
+          day <= 90 &&
+          day > 10 &&
+          day % 2 === 0 &&
+          state.player.actionPoints >= 18
+        ) {
+          var skids2 = Object.keys(state.skills);
+          var cs2 = null,
+            csLvl2 = 999;
+          var prefers = ["coding", "english"];
+          for (var si = 0; si < skids2.length; si++) {
+            for (var pi = 0; pi < prefers.length; pi++) {
+              if (skids2[si] === prefers[pi]) {
+                var lv = state.skills[skids2[si]].level || 0;
+                if (lv < csLvl2) {
+                  cs2 = skids2[si];
+                  csLvl2 = lv;
+                }
+                break;
+              }
+            }
+          }
+          if (cs2 && state.skills[cs2].level < 60 && state.needs.fatigue < 50) {
+            state.skills[cs2].level = Math.min(
+              100,
+              state.skills[cs2].level + 1,
+            );
+            state.skills[cs2].xp = 0;
+            state.player.actionPoints -= 15;
+            state.needs.fatigue = Math.min(100, state.needs.fatigue + 3);
+            state._mcSkillUps = (state._mcSkillUps || 0) + 1;
           }
         }
-        if (!cs) cs = skids[0];
-        if (state.skills[cs].level < 60) {
-          state.skills[cs].xp = (state.skills[cs].xp || 0) + 5;
-          if (state.skills[cs].xp >= 100) {
-            state.skills[cs].xp = 0;
-            state.skills[cs].level = Math.min(100, state.skills[cs].level + 1);
-          }
-          ap -= 15;
-          needs.fatigue = Math.min(100, needs.fatigue + 3);
-        }
+        // 尝试注册
+        mcRegisterStartup(state);
+      } else {
+        // 创业收入
+        mcStartupIncome(state);
       }
 
       var loc = "slum";
       if (day > 20 && cash >= 1200) loc = "commercialDist";
       if (day > 50 && cash >= 4000) loc = "techPark";
       state.trade.currentLocation = loc;
-
-      // v3.2.1 对齐social: worked<4, fatigue<60
-      var worked = 0;
-      while (ap >= 14 && worked < 4 && needs.fatigue < 60) {
-        var job = findJobAtLocation(state, loc);
-        applyJobPay(state, job);
-        ap -= 14;
-        worked++;
-      }
-      state.player.actionPoints = Math.max(0, ap);
+      mcWorkLoop(state, loc, 4, 60);
     };
   }
-
-  // (corporate phase: street job → corporate job offers via game mechanics)
 
   function runTrial(baseState, policyFn, seed) {
     var state = deepClone(baseState);
@@ -676,6 +845,8 @@
         }
       }
 
+      // v3.3 差异化指标在 trial 结束时统一读取（state字段为累积计数器）
+
       if (snapDays.indexOf(d + 1) >= 0) {
         snaps.push({
           d: d + 1,
@@ -709,6 +880,19 @@
       rentPaid: rentPaid,
       foodSpent: foodSpent,
       eventsTriggered: eventsTriggered,
+      // v3.3 差异化指标
+      medicalSpent: state._mcMedicalSpent || 0,
+      crimeAttempts: state._mcCrimeAttempts || 0,
+      crimeSuccess: state._mcCrimeSuccess || 0,
+      crimeCaught: state._mcCrimeCaught || 0,
+      propertyCount: state._mcPropertyCount || 0,
+      totalRentEarned: state._mcTotalRentEarned || 0,
+      totalStartupProfit: state._mcTotalStartupProfit || 0,
+      sideHustleEarned: state._mcSideHustleEarned || 0,
+      housingUpgrades: state._mcHousingUpgrades || 0,
+      skillUps: state._mcSkillUps || 0,
+      startupFoundedDay: state._mcStartup ? state._mcStartup.foundedDay : -1,
+      finalMorality: state.flags._mcMorality || 50,
     };
   }
 
@@ -860,6 +1044,48 @@
       alive.reduce(function (s, r) {
         return s + (r.eventsTriggered || 0);
       }, 0) / Math.max(1, alive.length);
+    // v3.3 差异化指标
+    var avgMedical =
+      alive.reduce(function (s, r) {
+        return s + (r.medicalSpent || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgCrime =
+      alive.reduce(function (s, r) {
+        return s + (r.crimeAttempts || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgCrimeSucc =
+      alive.reduce(function (s, r) {
+        return s + (r.crimeSuccess || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgProperty =
+      alive.reduce(function (s, r) {
+        return s + (r.propertyCount || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgRent =
+      alive.reduce(function (s, r) {
+        return s + (r.totalRentEarned || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgStartupP =
+      alive.reduce(function (s, r) {
+        return s + (r.totalStartupProfit || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgSideHustle =
+      alive.reduce(function (s, r) {
+        return s + (r.sideHustleEarned || 0);
+      }, 0) / Math.max(1, alive.length);
+    var avgSkillUps =
+      alive.reduce(function (s, r) {
+        return s + (r.skillUps || 0);
+      }, 0) / Math.max(1, alive.length);
+    var startupFounders = alive.filter(function (r) {
+      return r.startupFoundedDay > 0;
+    });
+    var avgStartupDay =
+      startupFounders.length > 0
+        ? startupFounders.reduce(function (s, r) {
+            return s + r.startupFoundedDay;
+          }, 0) / startupFounders.length
+        : -1;
     var transitioned2 = alive.filter(function (r) {
       return r.phaseTransitionDay > 0;
     });
@@ -909,6 +1135,18 @@
       avgEventsTriggered: avgEvt,
       corpPhaseRate: (corp3 / Math.max(1, alive.length)) * 100,
       avgPhaseTransitionDay: isNaN(avgPhaseDay2) ? -1 : avgPhaseDay2,
+      // v3.3 差异化指标
+      avgMedicalSpent: avgMedical,
+      avgCrimeAttempts: avgCrime,
+      avgCrimeSuccess: avgCrimeSucc,
+      avgPropertyCount: avgProperty,
+      avgRentEarned: avgRent,
+      avgStartupProfit: avgStartupP,
+      avgSideHustleEarned: avgSideHustle,
+      avgSkillUps: avgSkillUps,
+      startupFounderRate:
+        (startupFounders.length / Math.max(1, alive.length)) * 100,
+      avgStartupFoundDay: avgStartupDay,
       economicLayers: {
         poor: poor,
         subsistence: sub,
@@ -1078,25 +1316,67 @@
       console.log(
         "    总事件触发:   " + (s.avgEventsTriggered || 0).toFixed(1) + "次",
       );
+
+      // v3.3 差异化路径摘要（每个策略展示其独特路径指标）
+      console.log("\n  🎯 路径特征（v3.3 策略分化）");
+      if (s.strategy === "skiller") {
+        console.log(
+          "    平均犯罪尝试: " + s.avgCrimeAttempts.toFixed(1) + "次",
+        );
+        console.log("    平均犯罪成功: " + s.avgCrimeSuccess.toFixed(1) + "次");
+      } else if (s.strategy === "trader") {
+        console.log(
+          "    平均房产数量: " + s.avgPropertyCount.toFixed(1) + "套",
+        );
+        console.log("    累计租金收入: ¥" + fmt(s.avgRentEarned));
+      } else if (s.strategy === "crowner" || s.strategy === "corporate") {
+        console.log(
+          "    创业成功率:   " + s.startupFounderRate.toFixed(1) + "%",
+        );
+        console.log(
+          "    平均创业天:   " +
+            (s.avgStartupFoundDay > 0
+              ? s.avgStartupFoundDay.toFixed(0)
+              : "未创业"),
+        );
+        console.log("    累计创业收益: ¥" + fmt(s.avgStartupProfit));
+      } else if (s.strategy === "social") {
+        console.log("    累计副业收入: ¥" + fmt(s.avgSideHustleEarned));
+      } else if (s.strategy === "grinder") {
+        console.log("    累计医疗支出: ¥" + fmt(s.avgMedicalSpent));
+      }
     }
 
     if (allStats.length > 1) {
       console.log("\n" + L);
-      console.log("  📋 策略对比摘要");
+      console.log("  📋 策略对比摘要（v3.3 分化）");
       console.log(L);
-      var hdr = ["策略", "存活率", "中位现金", "平均健康", "转化率", "住房"];
+      var hdr = ["策略", "存活率", "中位现金", "特征指标"];
       console.log("  " + hdr.join("\t"));
       for (var si2 = 0; si2 < allStats.length; si2++) {
         var s2 = allStats[si2];
+        var feature = "";
+        if (s2.strategy === "skiller")
+          feature = "犯罪" + s2.avgCrimeSuccess.toFixed(0) + "次";
+        else if (s2.strategy === "trader")
+          feature =
+            "房产" +
+            s2.avgPropertyCount.toFixed(1) +
+            "套/租¥" +
+            fmt(s2.avgRentEarned);
+        else if (s2.strategy === "social")
+          feature = "副业¥" + fmt(s2.avgSideHustleEarned);
+        else if (s2.strategy === "grinder") feature = "住房T1/低消费";
+        else if (s2.strategy === "corporate" || s2.strategy === "crowner")
+          feature = "创业" + s2.startupFounderRate.toFixed(0) + "%";
+        else feature = "均衡";
         console.log(
           "  " +
             [
               s2.strategy,
               pc(s2.survivalRate) + "%",
               "¥" + fmt(s2.medianCash),
-              s2.avgHealth.toFixed(1),
-              s2.corpPhaseRate.toFixed(1) + "%",
-              s2.avgHousing.toFixed(1),
+              feature,
             ].join("\t"),
         );
       }

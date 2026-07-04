@@ -112,8 +112,8 @@ function getStartupTriggerConditions(state) {
       corporate: { rank: "P5", cash: 20000, label: "技术移民转创业" },
     },
     second_gen: {
-      street: { cash: 200000, label: "家里支持启动资金" },
-      corporate: { rank: "P5", cash: 100000, label: "家里支持启动资金" },
+      street: { cash: 50000, label: "家里支持启动资金" },
+      corporate: { rank: "P5", cash: 50000, label: "家里支持启动资金" },
     },
     midlife_crisis: {
       street: { cash: 50000, label: "补偿金/积蓄转型" },

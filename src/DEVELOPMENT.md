@@ -1,10 +1,95 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-04（v3.13d — Write-editor 事故 + TAB_RENDERERS 加载顺序修复）
+> 最后更新: 2026-07-04（v3.14 — 事件弹窗修复+剧情合理化+模态框强制点击+新闻智能分析）
 
 ---
 
-## 2026-07-04 — v3.13d：TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训
+## 2026-07-04 — v3.14：事件弹窗修复+剧情合理化+模态框强制点击+新闻智能分析
+
+> 设计参考：BitLife（事件冷静期）、Papers Please（强制按钮关闭）、This War of Mine（事件条件链）
+> 影响文件：events_core.js / events_street_survival.js / events_corp.js / modal.js / world_params.js + dist
+
+### 1. 事件"鬼出"修复——链式事件不再随机触发
+
+**问题**：`real_estate_aftermath_win`（财不外露）等链式事件无视上下文随机弹出。玩家什么都没做就出现"横财让你出了名"。
+
+**根因**：链式事件由 `scheduleChainEvent()` 调度，但它们没有 `conditions` 守卫函数，且未被标记为链式事件，导致 `queueRandomEvent()` 将它们纳入随机池。
+
+**修复**：
+
+- 8个链式事件添加 `_isChainEvent: true` 标记：`real_estate_rumour` / `real_estate_insider` / `real_estate_aftermath_win` / `real_estate_aftermath_lose`（street）+ `insider_rumor_start` / `insider_verify` / `insider_aftermath_success` / `insider_aftermath_fail`（corporate）
+- `queueRandomEvent()` 过滤 `e._isChainEvent === true` 的事件 —— 链式事件只能通过 `scheduleChainEvent()` 的定时触发
+
+### 2. "开局结果与现实脱钩"消息修复
+
+**问题**：即使玩家联网，浏览器 CORS 限制导致 Yahoo Finance 回退，却显示"（本地模式：开局结果与现实脱钩）"，暗示用户主动选择了离线模式。
+
+**修复**：
+
+- `world_params.js`：将消息改为"（浏览器模式：使用本地随机种子）"，如实反映技术限制而非用户选择
+
+### 3. 所有弹窗强制点击按钮关闭
+
+**问题**：`showModal()` 和多个独立弹窗允许点击遮罩外部关闭弹窗，玩家可以跳过剧情、错过重要选择。
+
+**修复**：
+
+- `modal.js`：`showModal()` 的 overlay 点击处理改为空操作——3处独立弹窗（含 `showItemShopModal`/`showScavengeRouteModal`）全部改为不响应遮罩点击
+- `events_core.js`：`showEventModal()` 的事件弹窗遮罩点击改为空操作
+- 所有弹窗现在只能通过弹窗内的按钮关闭
+
+### 4. 智力和技能影响新闻深度/建议
+
+**新增**：`showNewsBriefingModal()` 增加新闻分析层，根据玩家属性和技能显示递进式见解：
+
+| 条件             | 见解                                |
+| ---------------- | ----------------------------------- |
+| 智力≥25          | 基础分析：新闻对行业/职位的影响提示 |
+| 智力≥40+会计≥15  | 财务级：周期判断、提前布局建议      |
+| 智力≥50+英语≥20  | 国际级：外媒视角、汇率/贸易风险预警 |
+| 智力≥60          | 系统级：职业和投资方向重新评估      |
+| 编码≥25+科技新闻 | 技术级：产业链影响深度解读          |
+
+### 验证
+
+- `node --check` 全部修改文件通过 ✅
+- `python build.py` 4523.7KB ✅
+
+## 2026-07-04 — v3.13e：P0/P1 全面修复（6项Bug修复+经济平衡调参）
+
+> 触发：用户要求综合优化P0 Bug、经济平衡、文件拆分三大方向
+> 参考游戏：BitLife（职业倦怠/退休）、Stardew Valley（NPC好感/Housing）、《大多数》（生存压力曲线）、Rimworld（技能恢复机制）
+> 影响文件：6个JS文件 + dist/index.html
+
+### P0 Bug修复
+
+| 问题                     | 文件             | 修复                                                                                                      |
+| ------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| 职业倦怠永不减少         | `career_dev.js`  | 新增周末被动恢复（周日-2）；调休恢复-15→-25；日常+0.04→+0.04-2/周日                                       |
+| 社交系统 family 模式断裂 | `family_life.js` | `initFamilySystem` 从 `if(!state.family)` 守卫改为无条件合并初始化，兼容 `createDefaultState` 的旧 schema |
+| 配偶关系衰减失效         | `family_life.js` | `proposeToNpc` 和 `getMarried` 创建 spouse 对象时新增 `lastInteraction: state.player.day` 字段            |
+| 退休后还在发工资         | `corp_ops.js`    | `endQuarter()` 季度工资发放前增加 `_retired` 检查，已退休直接 return                                      |
+
+### P1 经济平衡
+
+| 问题                   | 文件                          | 修复                                                                                                                  |
+| ---------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 住房升级仅限城中村     | `main.js`                     | 改为全地点感知，使用 `getAvailableHousingTiersAtLocation()` 动态获取当前地点可升级档位（商业区可升T4/T6）             |
+| 交易利润远低于街头工作 | `trade.js`                    | 税收10%→5%；技能溢价上限15%→20%；批量折扣（买5件+2%/10件+5%）；进货折扣上限25%→30%                                    |
+| 创业门槛过高           | `startup.js`、`career_dev.js` | 技能要求3项≥15→2项≥12；经典现金¥50k→¥30k；中年危机¥80k→¥50k；`getStartupReadinessNote` 新增街头阶段技能/NPC准备度展示 |
+
+### 蒙特卡洛平衡衍生（来自并行研究）
+
+- **住房成本分层**：T0-3 租金下调（T1:¥12→¥10, T2:¥25→¥22, T3:¥50→¥45）+ 疲劳恢复上调（T1:25→40, T2:35→55, T3:50→70）
+- **需求衰减降低**：饥饿-18→-13/天，卫生-8→-7/天，心情-5→-4/天
+- **新手保护**：前30天需求惩罚减半
+
+### 验证
+
+- `node --check` 全部6个修改文件通过 ✅
+- `python build.py` 4520.5KB ✅
+- `git commit 8e7225c` + `git push` ✅
+- GitHub Pages 自动部署（dist/index.html 已更新）
 
 > 问题：v3.13 拆分 render.js 后，点击 Tab 无内容切换。
 > 根因：

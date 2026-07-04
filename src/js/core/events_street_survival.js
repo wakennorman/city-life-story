@@ -422,6 +422,7 @@
     {
       id: "real_estate_rumour",
       phase: "street",
+      _isChainEvent: true,
       icon: "🏗️",
       title: "楼盘烂尾传闻",
       story:
@@ -479,6 +480,7 @@
     {
       id: "real_estate_insider",
       phase: "street",
+      _isChainEvent: true,
       icon: "🎲",
       title: "内幕消息：赌局来了",
       story:
@@ -592,6 +594,7 @@
     {
       id: "real_estate_aftermath_win",
       phase: "street",
+      _isChainEvent: true,
       icon: "😰",
       title: "财不外露：麻烦来了",
       story:
@@ -650,6 +653,7 @@
     {
       id: "real_estate_aftermath_lose",
       phase: "street",
+      _isChainEvent: true,
       icon: "😞",
       title: "赌输之后的烂摊子",
       story:

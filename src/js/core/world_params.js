@@ -238,7 +238,7 @@ function seedWorldFromReality(state) {
     params.seedDate = null;
 
     StateManager.addMessage(
-      "🌐 世界参数已随机初始化（本地模式：开局结果与现实脱钩）",
+      "🌐 世界参数已随机初始化（浏览器模式：使用本地随机种子）",
       "info",
     );
   }
