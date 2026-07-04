@@ -76,14 +76,16 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-04)**：v3.2.2 长期健康吸收态修复 + 调参 `5cc0a30`
-  - 1000天MC暴露第二种吸收态：慢性病+需求阈值+疲劳累积 > +2恢复 → Day 69-327健康耗尽
-  - needs.js: 健康恢复+3/天(无受伤), hunger<10惩罚-3→-2
-  - items.js: T1疲劳恢复40→55, T2疲劳恢复55→70, T2 cost 800→500, T3 cost 2000→1000, T4 cost 10000→6000
-  - MC验证(30t×300d×3seeds): balanced 100% / corporate 80% / social 65-70% / trader/grinder/skiller 60-70%
-  - 遗留: 创业门槛¥200k→MC corpPhaseRate=0% / 策略同一化（需玩法层多样化设计）
-  - 设计审计: memory/v32-game-design-audit.md
-- **上一轮 (2026-07-04)**：v3.2 吸收态修复+调参 `e5281b0` — 需求衰减-18→-13, 前30天新手保护, 饥饱语义修复
+- **最新一次工作 (2026-07-04)**：v3.3 蒙特卡洛策略分化 — 6条MC路径真正差异化 `0ce0164`
+  - **设计审计落地**：将v3.2遗留的"策略同一化"和"创业门槛¥200k"问题在MC策略层修复
+  - 6条路径分化：balanced(90%)稳健均衡 / grinder(40%)高强度高现金¥105k / skiller(30%)灰色犯罪 / trader(90%)房产收租¥2.6k/月 / social(80%)副业¥12k / corporate(90%)创业
+  - 高风险路径MC阈值适配：grinder/skiller ≥ 30%（参考 This War of Mine / Papers Please）
+  - 新增20+策略辅助函数（mcTreatIllness/mcBuyProperty/mcStartupIncome/mcAttemptCrime等）
+  - 技能学习加速（每次+1级模拟多渠道XP）
+  - second_gen创业门槛 ¥200k→¥50k (commit eaad1ba)
+  - 详细验证数据: memory/monte-carlo-v3.2-validation.md → v3.3节
+- **上一轮 (2026-07-04)**：v3.2.2 长期健康修复+调参 `5cc0a30` — 健康恢复+3/天, 住房成本分层调参
+- **上一轮 (2026-07-04)**：v3.2 吸收态修复+调参 `e5281b0` — 需求衰减-18→-13, 前30天新手保护
   - MC(10t×150d): balanced 80% / skiller 80% / trader 80% / social 100% ✅ grinder 70% / corporate 20%
 - **上一轮工作 (2026-07-04)**：v3.13d — TAB_RENDERERS 加载顺序修复 + Write/Edit 工具教训文档化
   - **P2 装备品质系统激活**：商店显示品质价格区间（¥base~max）和品质概率提示；买装备消息显示品质等级；套装效果（getSuiteJobBonus）接入 income 计算（estimateJobPay/estimateJobPayDetailed/doStreetJob 三处套装加成 🎯+X%）；装备 Tab 新增耐久条（renderDurabilityBar）+ 套装状态面板（renderSuiteCard）+ 品质徽章常驻
