@@ -393,6 +393,43 @@ function getSkillPriceInfoLevel(state) {
 
 // ====== 综合定价引擎 ======
 
+/**
+ * 每日随机价格冲击 — 给价格增加小幅日常波动，避免价格完全静态。
+ * 使用确定性种子（天 + 地点 + 商品），保证同一天内同一商品价格一致。
+ * @param {string} locKey - 地点 ID
+ * @param {string} goodId - 商品 ID
+ * @returns {number} 价格乘数，通常在 0.93～1.07 之间
+ */
+function getDailyPriceShock(locKey, goodId) {
+  // 使用全局游戏天数作为种子一部分（无法从函数参数直接获取 state）
+  var day = 1;
+  if (typeof StateManager !== "undefined") {
+    try {
+      var st = StateManager.getState();
+      if (st && st.player && st.player.day) day = st.player.day;
+    } catch (e) {
+      /* 静默降级 */
+    }
+  }
+  var seed = day * 31 + locKey.length * 17 + goodId.length * 13 + 7;
+  var rng;
+  if (typeof createSeededRandom === "function") {
+    rng = createSeededRandom(seed);
+  } else {
+    // 降级：简单 hash 伪随机
+    var s = seed >>> 0;
+    s = (s + 0x9e3779b9) | 0;
+    s = Math.imul(s ^ (s >>> 16), 0x85ebca6b);
+    s = Math.imul(s ^ (s >>> 13), 0xc2b2ae35);
+    s = (s ^ (s >>> 16)) >>> 0;
+    rng = function () {
+      return (s % 1000) / 1000;
+    };
+  }
+  // ±7% 的价格波动：0.93 ~ 1.07
+  return 0.93 + rng() * 0.14;
+}
+
 /** 计算某商品在某地的最终零售价（所有因素叠加） */
 function calcFinalPrice(state, locKey, goodId) {
   var good = getGoodById(goodId);

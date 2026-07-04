@@ -1,8 +1,103 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-05（v3.17c — 完成20个联动事件指令，补充15个）
+> 最后更新: 2026-07-05（v3.18.1 — BugFix: 交易Tab不显示商品，getDailyPriceShock 函数缺失导致渲染崩溃）
 >
-> commit: `3c7dcc1`
+> commit: `当前待commit`
+
+---
+
+## 2026-07-05 — v3.18.1：BugFix — 交易Tab不显示商品（getDailyPriceShock 缺失）
+
+> **问题**：交易Tab点击后只显示标题栏和季节横幅，商品网格完全空白。浏览器控制台报 "getDailyPriceShock is not defined"。
+>
+> **根因**：`pricing.js` 的 `calcFinalPrice()` 在第408行调用了 `getDailyPriceShock(locKey, goodId)` 但该函数从未被定义。这导致商品价格计算循环中抛出 ReferenceError，渲染中断，商品网格未能生成。
+>
+> **修复**：在 `pricing.js` 新增 `getDailyPriceShock()` 函数实现，使用确定性种子（天数+地点+商品）生成 ±7% 的价格波动乘数（0.93~1.07）。复用 `trade_intel.js` 的 `createSeededRandom`（已保证加载顺序），降级回退为简单 hash 伪随机。
+>
+> **验证**：puppeteer 自动化测试确认 30 张商品卡片正常显示，`getDailyPriceShock is not defined` 错误归零。
+>
+> **影响文件**：`src/js/phase1/pricing.js`（+26 行）
+> **commit**: 待 commit
+
+---
+
+## 2026-07-05 — v3.18：跨系统事件联动扩展（20个新联动事件）
+
+> 设计理念：421个事件打通5大主题联动网络
+> 影响文件：cross_system_events.js(+1132行) + moral_events.js(7处) + side_hustle_events.js(4处)
+> commit: `13fba78`
+
+### 联动机制说明
+
+**实现方式**：在「源事件」的 apply/immediate 里注入 `st.flags.X = true`，在「目标事件」的 conditions 里检查这些 flags，形成跨文件、跨系统的事件联动链。
+
+### 11处flag注入点
+
+| 文件                  | 事件                  | 选项         | 注入flag                |
+| --------------------- | --------------------- | ------------ | ----------------------- |
+| moral_events.js       | found_wallet          | 送到派出所   | moralWalletReturner     |
+| moral_events.js       | found_wallet          | 收进口袋     | moralWalletStolen       |
+| moral_events.js       | beggar_ask            | 买盒饭       | moralFedBeggar          |
+| moral_events.js       | see_pickpocket        | 大声提醒     | moralStoppedThiefPublic |
+| moral_events.js       | stray_dog_rain        | 喂流浪狗     | moralFedDog             |
+| moral_events.js       | old_fall              | 扶起老人     | moralHelpedElder        |
+| moral_events.js       | stranger_help         | 推车到充电站 | moralPushedCar          |
+| side_hustle_events.js | side_daigou_complaint | 全额退款     | daigouHonestService     |
+| side_hustle_events.js | side_media_ban        | 换平台起步   | selfMediaPivoted        |
+| side_hustle_events.js | side_tutor_difficult  | 游戏教学成功 | tutorInnovative         |
+| side_hustle_events.js | side_invest_crash     | 抄底成功     | investBottomed          |
+
+### 新增20个跨系统联动事件
+
+**主题A·道德回响（5个）**
+
+| 事件ID                     | 触发条件                     | 叙事主轴             |
+| -------------------------- | ---------------------------- | -------------------- |
+| moral_wallet_return_reward | moralWalletReturner + 3天后  | 失主专程找来感谢     |
+| moral_elder_connection     | moralHelpedElder + 5天后     | 老人儿子提供工作机会 |
+| moral_dog_reunion          | moralFedDog + 雨天           | 流浪狗认出你跟着你   |
+| moral_beggar_tip           | moralFedBeggar + 3天后       | 乞丐老人的街市情报   |
+| moral_karma_windfall       | 道德≥65 + 名气≥15 + 善行done | 城市积累的善意回响   |
+
+**主题B·副业进化（4个）**
+
+| 事件ID                   | 触发条件                     | 叙事主轴               |
+| ------------------------ | ---------------------------- | ---------------------- |
+| hustle_daigou_biz_idea   | daigouHonestService + 20天后 | 口碑客户提议合伙做生意 |
+| hustle_media_brand_deal  | selfMediaPivoted + 14天后    | 品牌方主动发来合作私信 |
+| hustle_invest_guru       | investBottomed + 7天后       | 工友请教投资判断逻辑   |
+| hustle_tutor_institution | tutorInnovative + 10天后     | 培训机构来挖创新老师   |
+
+**主题C·时代里程碑后续（4个）**
+
+| 事件ID                    | 触发条件                        | 叙事主轴               |
+| ------------------------- | ------------------------------- | ---------------------- |
+| era_trend_bubble_pop      | trendJobUnlocked + day≥270      | 风口泡沫破裂的反思     |
+| era_career_pivot_result   | careerShift + day≥540           | 转行半年的阶段性复盘   |
+| era_small_biz_rival       | smallBusinessUnlocked + day≥560 | 连锁店入驻逼迫差异化   |
+| era_startup_mentor_chance | startupUnlocked + day≥730       | 工商局等号遇到创业导师 |
+
+**主题D·副业负面反噬（3个）**
+
+| 事件ID                      | 触发条件                | 叙事主轴             |
+| --------------------------- | ----------------------- | -------------------- |
+| hustle_ban_recovery         | deliveryBan             | 外卖封号逼出新生路   |
+| hustle_daigou_review_crisis | daigouBadReview + 5天后 | 差评在群里扩散危机   |
+| hustle_invest_hold_result   | investHold + 14天后     | 观望仓位到了关键节点 |
+
+**主题E·跨阶段桥接（4个）**
+
+| 事件ID                     | 触发条件                    | 叙事主轴             |
+| -------------------------- | --------------------------- | -------------------- |
+| corp_integrity_recognition | 职场阶段 + 道德flags        | 主管认可你的诚信品格 |
+| career_startup_epiphany    | 在职≥300天 + 未创业         | 客户会议触发创业顿悟 |
+| city_influence_leverage    | cityInfluencer + day≥910    | 社区顾问委员会招募   |
+| moral_wallet_stolen_shadow | moralWalletStolen + 道德<50 | 昧下钱包的心理阴影   |
+
+### 验证结果
+
+- `node --check` 三文件全通过 ✅
+- `python build.py` → 4730.2 KB ✅
 
 ---
 
