@@ -4101,6 +4101,1115 @@
     ],
   });
 
+  // ====================================================================
+  // v3.18 — 跨系统联动扩展（20个事件，5大主题）
+  // 设计理念：让玩家感受到每一个选择都有"尾巴"——
+  //   道德行为→3-7天后现实回响；
+  //   副业成败→转化为主线职业/创业机遇；
+  //   时代里程碑→触发后续世界变化；
+  //   副业负面→逼玩家转型；
+  //   跨阶段积累→职业⇄创业双向桥接。
+  // ====================================================================
+
+  // ========== 主题A：道德行为的长尾 (5个) ==========
+
+  // A1：失主感谢——归还钱包3天后的惊喜
+  RANDOM_EVENTS.push({
+    id: "moral_wallet_return_reward",
+    phase: "street",
+    icon: "💌",
+    title: "失主找来了",
+    story:
+      "你刚出门，一个气喘吁吁的年轻人追上来：\n「是你前几天在派出所帮忙登记的那位吗？我终于找到你了！那个钱包是我的，里面有我妈妈的住院押金，谢谢你……」\n他眼眶有些红。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.moralWalletReturner &&
+        !st.flags._walletReturnRewarded &&
+        st.player.day >= (st.flags._walletReturnDay || 0) + 3
+      );
+    },
+    probability: 0.6,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接受他的感谢，随便聊了聊",
+        hint: "名气+5，认识新朋友",
+        apply: function (st) {
+          st.flags._walletReturnRewarded = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          // 记录这段相遇，为后续NPC关系提供可能
+          st.flags.walletOwnerMet = true;
+          StateManager.addMessage(
+            "🤝 你们聊了很久。他叫小林，刚来这座城市，在找工作。你说有消息会告诉他。名气+5，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 说不用了，顺手帮了而已",
+        hint: "道德+3，对方留下联系方式",
+        apply: function (st) {
+          st.flags._walletReturnRewarded = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.flags.walletOwnerMet = true;
+          StateManager.addMessage(
+            "💰 你摆摆手说没事，对方还是硬塞给你一张写了号码的纸条：「以后有什么需要帮忙的，说一声。」道德+3，心情+15。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // A2：老人家属联系你——帮扶老人一周后的意外惊喜
+  RANDOM_EVENTS.push({
+    id: "moral_elder_connection",
+    phase: "street",
+    icon: "📞",
+    title: "老人的儿子打来电话",
+    story:
+      "你的手机响了，是个陌生号码。\n「我是上次你在路上扶起来的老头的儿子，在上海做工程。听我爸说了你的事，我联系了好多人才打听到你号码……」\n停顿了一下。「你手头有没有在找活干的朋友？我这边工地要人，待遇不错。」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.moralHelpedElder &&
+        !st.flags._elderConnectionDone &&
+        st.player.day >= (st.flags._elderHelpDay || 0) + 5
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔨 推荐自己过去",
+        hint: "获得工地日薪+30%的特别优待",
+        apply: function (st) {
+          st.flags._elderConnectionDone = true;
+          st.flags.elderSonIntro = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          // 解锁工资加成标记
+          st.flags._elderWageBonus = true;
+          StateManager.addMessage(
+            "🔨 你说自己正好在找活。对方爽快地说：「来吧，就说是老刘介绍的，日薪多¥50。」好事多磨，没想到扶了一把能有这回报。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "👥 推荐认识的人过去",
+        hint: "名气+8，积累人情网络",
+        apply: function (st) {
+          st.flags._elderConnectionDone = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "👥 你想了想，把认识的老周介绍了过去。对方很感激，说你这个人靠谱。名气+8，心情+8。你的口碑在工友圈里悄悄传开。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // A3：流浪狗再次出现——雨天里的小重逢
+  RANDOM_EVENTS.push({
+    id: "moral_dog_reunion",
+    phase: "street",
+    icon: "🐕",
+    title: "那只狗又来了",
+    story:
+      "下雨了。你路过上次的屋檐，那只流浪狗又蜷缩在那里——它抬起头，尾巴微微摆了摆，像是认出了你。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.moralFedDog &&
+        !st.flags._dogFollowing &&
+        st.weather &&
+        (st.weather.current === "rainy" || st.weather.current === "stormy")
+      );
+    },
+    probability: 0.45,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍖 再买根火腿肠给它",
+        hint: "花¥3，心情+10，狗狗成为你的小跟班",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3);
+          st.flags._dogFollowing = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🐕 小狗吃完抬起头，竟然站起来跟着你走了。你想赶它走，但它那双湿漉漉的眼睛让你开不了口。心情+10，心智+3。它好像认定了你是它的人。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😔 叹口气继续走",
+        hint: "什么也不做",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "😔 你低头继续走。雨声盖过了它轻轻的叫声，你没有回头。心情-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // A4：乞丐的情报——施舍后的意外回报
+  RANDOM_EVENTS.push({
+    id: "moral_beggar_tip",
+    phase: "street",
+    icon: "🧓",
+    title: "老头认出了你",
+    story:
+      "你路过菜市场，那个乞丐老人主动开口：\n「你，就是上次给我买盒饭的那个后生。我记得你。」\n他压低声音：「我在这街上混了二十年，哪块地方今天收摊早、哪里客商多，我都清楚。你要不要听？」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.moralFedBeggar &&
+        !st.flags._beggarTipGiven &&
+        st.player.day >= 3
+      );
+    },
+    probability: 0.55,
+    repeatable: false,
+    choices: [
+      {
+        text: "👂 认真听他说",
+        hint: "获得「老街市」情报，摆摊收益+15%持续3天",
+        apply: function (st) {
+          st.flags._beggarTipGiven = true;
+          st.flags._oldStreetBonus = st.player.day + 3;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "👂 老人说了几个你从没注意过的时机和地点。你试了一天，发现真的好使——摊位附近人流明显多了。摆摊收益+15%，持续3天。心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😌 随手给他几块钱道谢",
+        hint: "花¥5，道德+2",
+        apply: function (st) {
+          st.flags._beggarTipGiven = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😌 你掏了¥5给他，说「谢谢你。」老人收下，点了点头。道德+2，心情+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // A5：善行积累的共鸣——道德分高时的城市回响
+  RANDOM_EVENTS.push({
+    id: "moral_karma_windfall",
+    phase: "street",
+    icon: "🌟",
+    title: "这座城市记得你",
+    story:
+      "今天不知怎么就顺——陌生人主动让路，摊位旁边有人帮你搭手，甚至有个大爷专门拉着你问路聊了半小时，临走留下一句：「后生，好好干，会有出路的。」\n你说不清楚这些偶然背后是什么，但你知道，你平日里的那些小善意在这座城市里留下了痕迹。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags._moralGoodDeedDone &&
+        (st.player.morality || 50) >= 65 &&
+        (st.player.fame || 0) >= 15 &&
+        !st.flags._karmaWindfallDone
+      );
+    },
+    probability: 0.3,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 静静感受这一刻",
+        hint: "心情+20，心智+3，名气+5",
+        apply: function (st) {
+          st.flags._karmaWindfallDone = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "🌟 你停下来，深吸一口气。这座城市冷漠吗？不全是。只要你先伸出手，它也会在某个时刻轻轻托着你。心情+20，心智+3，名气+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ========== 主题B：副业→职业/创业进化 (4个) ==========
+
+  // B1：代购口碑带来商业合作机会
+  RANDOM_EVENTS.push({
+    id: "hustle_daigou_biz_idea",
+    phase: "street",
+    icon: "🛍️",
+    title: "代购客户提议合伙",
+    story:
+      "那个你全额退款的客户又来找你了。这次她带来了个女伴：\n「这是我姐，她说你处事公道，想和你合伙——做个小规模的进货直卖，不用你出钱，主要用你的渠道和诚信度……」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.daigouHonestService &&
+        !st.flags._daigouBizProposed &&
+        st.player.day >= 20
+      );
+    },
+    probability: 0.4,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 试试看，先小规模合作",
+        hint: "每周额外¥200-¥500收入，信誉系统开启",
+        apply: function (st) {
+          st.flags._daigouBizProposed = true;
+          st.flags.daigouPartnership = true;
+          var income = Random.int(200, 500);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🤝 你们谈妥了。第一批货进来你净赚了¥" +
+              income +
+              "。口碑变成了资本——这是比技术更难复制的东西。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 谢了，现在还不想分心",
+        hint: "拒绝，但对方留下联系方式",
+        apply: function (st) {
+          st.flags._daigouBizProposed = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🙅 你说暂时不想，对方把微信留了下来：「想好了随时找我。」心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // B2：换平台后品牌方主动联系
+  RANDOM_EVENTS.push({
+    id: "hustle_media_brand_deal",
+    phase: "street",
+    icon: "📱",
+    title: "品牌方私信你了",
+    story:
+      "你的新平台账号涨了一些粉，突然收到一条私信：\n「您好，我是某某品牌的市场专员，我们在寻找生活类达人合作推广，看了您的内容，调性很符合……」\n合作费用¥300。你盯着这条消息，有点不敢相信。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.selfMediaPivoted &&
+        !st.flags._mediaBrandDeal &&
+        st.player.day >= 14
+      );
+    },
+    probability: 0.45,
+    repeatable: false,
+    choices: [
+      {
+        text: "✅ 接！先开这个口",
+        hint: "获得¥300，粉丝+200，开启自媒体收入轨道",
+        apply: function (st) {
+          st.flags._mediaBrandDeal = true;
+          st.flags.selfMediaMonetized = true;
+          st.resources.cash += 300;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 300;
+          if (st._sideHustleData && st._sideHustleData.selfMedia) {
+            st._sideHustleData.selfMedia.followers =
+              (st._sideHustleData.selfMedia.followers || 0) + 200;
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "✅ 你发了条测评视频，收到了¥300和一批新粉丝。那个「换平台」的决定，或许是对的。心情+15，粉丝+200。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先问清楚条件再说",
+        hint: "可能谈成更高价格，也可能吹了",
+        apply: function (st) {
+          st.flags._mediaBrandDeal = true;
+          if (Random.chance(0.5)) {
+            var deal = Random.int(400, 600);
+            st.resources.cash += deal;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + deal;
+            st.flags.selfMediaMonetized = true;
+            StateManager.addMessage(
+              "🤔 你谈到了¥" + deal + "。会谈条件的人，不吃亏。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🤔 你提了些条件，对方说「那不合适」，沉默了。这单黄了。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // B3：抄底成功后被人请教投资
+  RANDOM_EVENTS.push({
+    id: "hustle_invest_guru",
+    phase: "street",
+    icon: "📈",
+    title: "「你上次说的真准」",
+    story:
+      "工友老赵今天特意来找你：\n「上次听你说那个股跌到底了可以抄底，我试了，真的涨回来了！你是怎么判断的？」\n他掏出手机，把他的账户截图给你看——确实赚了不少。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.investBottomed &&
+        !st.flags._investGuruDone &&
+        st.player.day >= 7
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 认真给他讲逻辑",
+        hint: "智力+3，名气+5，建立工友信任",
+        apply: function (st) {
+          st.flags._investGuruDone = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "📚 你说了一些基本的判断逻辑，老赵听得入神。有时候能把复杂的事说清楚，比赚钱本身更值钱。智力+3，名气+5，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 运气好而已，别太当真",
+        hint: "谦虚处理，但对方以后会更信任你",
+        apply: function (st) {
+          st.flags._investGuruDone = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😅 你说纯属运气，老赵半信半疑，但对你的印象好了不少——不吹牛，踏实。心情+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // B4：创新教法被教育机构看中
+  RANDOM_EVENTS.push({
+    id: "hustle_tutor_institution",
+    phase: "street",
+    icon: "🏫",
+    title: "培训机构找上门",
+    story:
+      "那个家长和另一位家长聊起了你的「游戏教学法」，消息传到了附近一家小培训机构的老板耳朵里。\n「我想请你来试讲一次——如果效果好，可以长期合作，课时费比市面上高30%。」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.tutorInnovative &&
+        !st.flags._tutorInstitutionOffer &&
+        st.player.day >= 10
+      );
+    },
+    probability: 0.4,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎓 去试讲！",
+        hint: "获得机构长期合作，家教收入稳定化",
+        apply: function (st) {
+          st.flags._tutorInstitutionOffer = true;
+          st.flags.tutorInstitutionPartner = true;
+          var income = Random.int(300, 500);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "🎓 试讲很成功！孩子们一直追着你问问题。老板当场拍板：每周3课时，课时费¥" +
+              Math.round(income / 3) +
+              "，到手¥" +
+              income +
+              "。心情+12，名气+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 考虑一下，先保持灵活",
+        hint: "不绑定，但错失稳定收入",
+        apply: function (st) {
+          st.flags._tutorInstitutionOffer = true;
+          StateManager.addMessage(
+            "🤔 你说再想想，机构老板点点头：「随时欢迎。」稳定未必是最好，但机会就在这里。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ========== 主题C：时代里程碑的后续 (4个) ==========
+
+  // C1：风口泡沫破裂——Day 270+ 后对「抓住风口」的玩家
+  RANDOM_EVENTS.push({
+    id: "era_trend_bubble_pop",
+    phase: "street",
+    icon: "💥",
+    title: "风口没了",
+    story:
+      "新闻说那个「行业蓝海」其实早就被资本玩烂了——一大批做这行的人被裁员，日薪回到了原来的水平，甚至更低。\n张姐来找你：「你还记得当初你来那个风口行业的日子吗？我早就觉得不对劲。」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.trendJobUnlocked &&
+        !st.flags._trendBubblePop &&
+        st.player.day >= 270
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "📊 反思：这次学到了什么？",
+        hint: "智力+5，心智+3，获得「泡沫识别者」经验",
+        apply: function (st) {
+          st.flags._trendBubblePop = true;
+          st.flags.bubbleRecognizer = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "📊 你冷静复盘了整件事——进入时机的判断、行业周期的规律、人群跟风的心理。学费交了，但这些认知以后不会再买单。智力+5，心智+3，心情-5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😔 随风而逝，再找下一个出路",
+        hint: "接受，继续前行",
+        apply: function (st) {
+          st.flags._trendBubblePop = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          StateManager.addMessage(
+            "😔 你叹了口气。能怎么办呢？只能再找活干。心情-10。但也许，这次你会看得更清楚。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // C2：转行后的阶段性结果
+  RANDOM_EVENTS.push({
+    id: "era_career_pivot_result",
+    phase: "street",
+    icon: "🔄",
+    title: "转行满半年了",
+    story:
+      "你算了算，转行到新领域已经快半年了。老周问你：「换了行当，比之前强吗？」\n你认真想了想……",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.careerShift &&
+        !st.flags._careerPivotResult &&
+        st.player.day >= 540
+      );
+    },
+    probability: 0.6,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 「强多了，虽然开始很难」",
+        hint: "心智+5，智力+3，解锁「转型成功者」路径",
+        apply: function (st) {
+          st.flags._careerPivotResult = true;
+          st.flags.pivotSuccess = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "💪 你列举了这半年赚到的、学到的和认识的人。老周竖起大拇指：「你比我强，我当年没勇气转。」心智+5，智力+3，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😔 「说不清楚，还在摸索」",
+        hint: "真实的答案——继续积累",
+        apply: function (st) {
+          st.flags._careerPivotResult = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "😔 「还在适应。」老周拍拍你肩膀：「正常，哪有那么快。」他说他自己都摸索了两年。心智+2。慢慢来。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // C3：小店遭遇连锁竞争
+  RANDOM_EVENTS.push({
+    id: "era_small_biz_rival",
+    phase: "street",
+    icon: "🏪",
+    title: "旁边开了家连锁",
+    story:
+      "你的小店刚开起来没多久，旁边的铺子突然换了块牌子——一家大连锁便利店入驻了。\n第一天，你的客流量少了三分之一。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.smallBusinessUnlocked &&
+        !st.flags._smallBizRival &&
+        st.player.day >= 560
+      );
+    },
+    probability: 0.55,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎯 做差异化，主打熟客服务",
+        hint: "智力+4，长期留住老客，小店存活率提升",
+        apply: function (st) {
+          st.flags._smallBizRival = true;
+          st.flags.smallBizDifferentiated = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 4,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🎯 你开始记老客的口味、存货帮他们留着、电话通知到货——连锁店做不到这些。客流慢慢回来了一些。智力+4，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💸 打价格战",
+        hint: "短期有效，但伤血本",
+        apply: function (st) {
+          st.flags._smallBizRival = true;
+          var loss = Random.int(200, 500);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          StateManager.addMessage(
+            "💸 你跟着降价，赢回了部分客流，但亏了¥" +
+              loss +
+              "。打价格战对小商家来说从来不是好路子。心情-8。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🤝 和连锁店老板聊聊",
+        hint: "可能找到合作机会",
+        apply: function (st) {
+          st.flags._smallBizRival = true;
+          if (Random.chance(0.4)) {
+            st.flags.chainStorePartner = true;
+            var income = Random.int(300, 600);
+            st.resources.cash += income;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🤝 连锁店的负责人很年轻，愿意转介绍特殊商品客户给你。当月多了¥" +
+                income +
+                "的营业额。心情+5。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🤝 对方客气但拒绝了合作，说公司有规定。你只好各自为战。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // C4：创业道路上的导师相遇
+  RANDOM_EVENTS.push({
+    id: "era_startup_mentor_chance",
+    phase: "street",
+    icon: "🧑‍💼",
+    title: "楼道里遇到的人",
+    story:
+      "你去工商局办手续，在等号的时候旁边坐了个五十多岁的中年人，西装但不扎领带，看着像创业老手。\n他主动说：「第一次注册公司？」\n你点点头。他笑了笑，开始讲一段故事。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.startupUnlocked &&
+        !st.flags._startupMentorMet &&
+        st.player.day >= 730
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "👂 认真听他说",
+        hint: "智力+5，心智+5，获得「导师指点」创业加速效果",
+        apply: function (st) {
+          st.flags._startupMentorMet = true;
+          st.flags.startupMentorBonus = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "👂 他讲了三件事：找合伙人比找客户重要；第一年的现金流比利润重要；做你真正懂的行业。号叫到了，他起身，只留下一张名片。「有问题打我。」智力+5，心智+5，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😌 礼貌回应，各办各的",
+        hint: "错过一次机缘",
+        apply: function (st) {
+          st.flags._startupMentorMet = true;
+          StateManager.addMessage(
+            "😌 你礼貌点头，各自低头看手机。号叫到了，他先走了。你想想，其实可以多聊两句的。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ========== 主题D：副业负面反噬 (3个) ==========
+
+  // D1：外卖封号后找新出路
+  RANDOM_EVENTS.push({
+    id: "hustle_ban_recovery",
+    phase: "street",
+    icon: "🛵",
+    title: "封号了怎么办",
+    story:
+      "外卖平台真的停了你的接单权限，消息提示「已暂停，请联系客服」。\n你坐在车上，计算了一下：如果接下来三天没收入，房租就要缺口了。",
+    conditions: function (st) {
+      return st.flags && st.flags.deliveryBan && !st.flags._deliveryBanRecovery;
+    },
+    probability: 0.75,
+    repeatable: false,
+    choices: [
+      {
+        text: "📦 临时转做包裹快递",
+        hint: "收入-30%，但不断档，健康-5",
+        apply: function (st) {
+          st.flags._deliveryBanRecovery = true;
+          st.flags.deliveryBanRecovered = true;
+          var income = Random.int(60, 120);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          st.status.health = Math.max(0, (st.status.health || 70) - 5);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "📦 你联系了附近的快递站，临时接了几单手工分拣+派件。比外卖累，赚了¥" +
+              income +
+              "。封号三天内，先把这个撑过去。健康-5，疲劳+15。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏪 临时摆摊补收入",
+        hint: "灵活适应，行动力-20",
+        apply: function (st) {
+          st.flags._deliveryBanRecovery = true;
+          st.player.actionPoints = Math.max(
+            0,
+            (st.player.actionPoints || 100) - 20,
+          );
+          var income = Random.int(40, 100);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🏪 你在路口摆了个小摊，卖点小零食。赚了¥" +
+              income +
+              "，不多，但够应急。心情+5，行动力-20。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🙏 申诉，争取早点解封",
+        hint: "等待结果，3天后可能恢复",
+        apply: function (st) {
+          st.flags._deliveryBanRecovery = true;
+          st.flags._deliveryBanAppealing = true;
+          st.flags._deliveryAppealDay = st.player.day;
+          StateManager.addMessage(
+            "🙏 你提交了申诉材料，客服说3个工作日处理。这三天没有收入，你在计算手头的余额。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // D2：代购差评发酵——社交网络扩散
+  RANDOM_EVENTS.push({
+    id: "hustle_daigou_review_crisis",
+    phase: "street",
+    icon: "😡",
+    title: "差评在群里传开了",
+    story:
+      "那个给你差评的客户，把对话记录截图发到了三个微信群里。你在不同的群里收到了同样的消息：\n「大家注意，这个代购有问题……」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.daigouBadReview &&
+        !st.flags._daigouCrisis &&
+        st.player.day >= 5
+      );
+    },
+    probability: 0.6,
+    repeatable: false,
+    choices: [
+      {
+        text: "📢 公开道歉并说明情况",
+        hint: "损失部分名气，但止血",
+        apply: function (st) {
+          st.flags._daigouCrisis = true;
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "📢 你在每个群里都发了说明，承认了商品的问题，并表示会改进。大多数人认可你的态度，事件逐渐平息。名气-5，道德+3，心情-8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤐 沉默处理，不公开回应",
+        hint: "短期平静，但信誉受损",
+        apply: function (st) {
+          st.flags._daigouCrisis = true;
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 12);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "🤐 你选择沉默。几天后事情热度消散，但你的代购订单少了两成——口碑圈子就这么大。名气-12，心情-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // D3：观望的投资终于到了关键节点
+  RANDOM_EVENTS.push({
+    id: "hustle_invest_hold_result",
+    phase: "street",
+    icon: "📊",
+    title: "你之前持有的那个仓位……",
+    story:
+      "两周前你选择「持有观望」的那笔投资，今天突然有了动静——价格涨回来了，而且超过了买入价5%。\n你盯着屏幕上的绿色数字，手指悬在「卖出」按钮上。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.investHold &&
+        !st.flags._investHoldResult &&
+        st.player.day >= 14
+      );
+    },
+    probability: 0.55,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 止盈卖出，落袋为安",
+        hint: "获得¥200-¥600盈利",
+        apply: function (st) {
+          st.flags._investHoldResult = true;
+          var profit = Random.int(200, 600);
+          st.resources.cash += profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          st.flags.investBottomed = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "💰 你卖出了，获利¥" +
+              profit +
+              "。坚持等待的人，有时候是对的。心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📈 继续拿，相信它还能涨",
+        hint: "40%概率再赚，60%概率震荡回落",
+        apply: function (st) {
+          st.flags._investHoldResult = true;
+          if (Random.chance(0.4)) {
+            var bonus = Random.int(300, 800);
+            st.resources.cash += bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+            st.flags.investBottomed = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            StateManager.addMessage(
+              "📈 你继续持有，三天后又涨了！最终获利¥" +
+                bonus +
+                "。贪心有时候是对的。心情+15。",
+              "success",
+            );
+          } else {
+            var loss = Random.int(50, 200);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            StateManager.addMessage(
+              "📉 你没卖，结果又跌回去了，还亏了¥" +
+                loss +
+                "。不落袋的利润，不算利润。心情-10。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // ========== 主题E：跨阶段综合桥接 (4个) ==========
+
+  // E1：职场道德声誉的长期回报
+  RANDOM_EVENTS.push({
+    id: "corp_integrity_recognition",
+    phase: "corporate",
+    icon: "🏅",
+    title: "主管找你谈话",
+    story:
+      "主管今天专门过来找你，关上了办公室的门：\n「公司在筛选一批诚信档案，你的名字在名单里。这不是奖励，是考察——我想知道你是否愿意承担更多责任？」",
+    conditions: function (st) {
+      return (
+        st.player &&
+        st.player.phase === "corporate" &&
+        st.flags &&
+        (st.flags.moralWalletReturner || st.flags.moralRefusedFraud) &&
+        !st.flags._corpIntegrityRecognized
+      );
+    },
+    probability: 0.4,
+    repeatable: false,
+    choices: [
+      {
+        text: "💼 「我愿意。」",
+        hint: "职场声誉+15，提前解锁晋升机会",
+        apply: function (st) {
+          st.flags._corpIntegrityRecognized = true;
+          if (st.player.corporate) {
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 60) + 15,
+            );
+            st.player.corporate.upward = Math.min(
+              100,
+              (st.player.corporate.upward || 50) + 10,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "💼 主管点了点头，在某个表格上打了钩。你不知道这会带来什么，但你选择了说真话。职场尊严+15，晋升意向+10，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 「我需要了解更多才能决定」",
+        hint: "谨慎，维持现状",
+        apply: function (st) {
+          st.flags._corpIntegrityRecognized = true;
+          StateManager.addMessage(
+            "🤔 主管说：「没关系，这个机会一直在。」他起身开门，谈话结束了。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E2：多年职场积累触发创业灵感
+  RANDOM_EVENTS.push({
+    id: "career_startup_epiphany",
+    phase: "corporate",
+    icon: "💡",
+    title: "那个一直放在心里的想法",
+    story:
+      "你在一次客户会议上，听到对方吐槽一个行业痛点——那个问题你工作以来见过不知道多少次，你甚至知道怎么解决。\n坐地铁回公司的路上，你把方案思路写满了备忘录，关掉屏幕，看着车窗外，心里某个东西动了一下。",
+    conditions: function (st) {
+      var workDays =
+        st.career && st.career.currentJob && st.career.currentJob.workDays;
+      return (
+        st.player &&
+        st.player.phase === "corporate" &&
+        (workDays || 0) >= 300 &&
+        !(st.startup && st.startup.company) &&
+        !st.flags._startupEpiphany
+      );
+    },
+    probability: 0.35,
+    repeatable: false,
+    choices: [
+      {
+        text: "📓 整理成完整方案，认真研究可行性",
+        hint: "智力+5，解锁「创业可行性研究」任务链",
+        apply: function (st) {
+          st.flags._startupEpiphany = true;
+          st.flags.startupEpiphanyDone = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "📓 你花了两周把这个想法梳理成了一份可行性文档。越写越兴奋，越写越害怕——但你知道，这个想法值得认真对待。智力+5，心智+4，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😔 算了，做好眼前的工作",
+        hint: "理性压制，但想法还在",
+        apply: function (st) {
+          st.flags._startupEpiphany = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "😔 你锁上手机，回去加班。那个备忘录一直没删——你知道你还会打开它的。心情-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // E3：城市影响者被人拉拢
+  RANDOM_EVENTS.push({
+    id: "city_influence_leverage",
+    phase: "street",
+    icon: "🌆",
+    title: "有人专门找到你",
+    story:
+      "一个年轻人自我介绍说是某个社区组织的负责人：\n「我们听说过你，在这片区域你的口碑很高。我们希望你能加入社区顾问委员会——这是义务的，但有些资源我们可以帮你对接。」",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.cityInfluencer &&
+        !st.flags._cityInfluenceLeveraged &&
+        st.player.day >= 910
+      );
+    },
+    probability: 0.55,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏙️ 加入，扩展人脉网络",
+        hint: "名气+10，解锁「社区资源」每周固定事件",
+        apply: function (st) {
+          st.flags._cityInfluenceLeveraged = true;
+          st.flags.communityAdvisor = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "🏙️ 你答应了。第一次会议上你认识了十来个在各行业小有名气的人。这些人脉，某一天会派上用场。名气+10，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 谢谢，我更想低调做事",
+        hint: "拒绝，但影响力自然积累",
+        apply: function (st) {
+          st.flags._cityInfluenceLeveraged = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🙅 你礼貌地拒绝了。有些人不需要标签，影响力自然会在的。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E4：昧下钱包后的心理阴影
+  RANDOM_EVENTS.push({
+    id: "moral_wallet_stolen_shadow",
+    phase: "street",
+    icon: "😰",
+    title: "那个钱包的主人……",
+    story:
+      "你经过派出所门口，看到一张寻找失物的告示——一个钱包，描述和你那次捡到的几乎一模一样。联系人是个女学生。\n你停下脚步，盯着那张纸看了很久。",
+    conditions: function (st) {
+      return (
+        st.flags &&
+        st.flags.moralWalletStolen &&
+        !st.flags._walletShadowDone &&
+        (st.player.morality || 50) < 50
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "😔 主动去派出所说明情况",
+        hint: "道德+8，心情-5，心智+3（做了一件难但正确的事）",
+        apply: function (st) {
+          st.flags._walletShadowDone = true;
+          st.flags.moralWalletConfessed = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "😔 你推开了警局的门。告诉了警察真相。警察很意外，你被批评了一顿，但那个学生后来打来电话道了谢——钱已经还不回来，但她说「至少你说了真话」。道德+8，心智+3，心情-5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 快步离开，假装没看见",
+        hint: "道德-3，这件事会在某个地方积压着",
+        apply: function (st) {
+          st.flags._walletShadowDone = true;
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          StateManager.addMessage(
+            "🚶 你低着头走开了。那张告示的内容，很长时间里你都记得清清楚楚。道德-3，心情-8。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
   // 链式事件2：见义勇为后续——被救姑娘送来感谢信（Event 4 后续）
   RANDOM_EVENTS.push({
     id: "moral_pickpocket_followup_kindness",

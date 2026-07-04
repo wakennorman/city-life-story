@@ -19,6 +19,8 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_return",
         score: 12,
         immediate: function (s) {
+          // [联动flag] 触发"失主感谢"后续事件
+          s.flags.moralWalletReturner = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
@@ -32,6 +34,8 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_keep",
         score: -15,
         immediate: function (s) {
+          // [联动flag] 触发"昧下钱包的阴影"后续事件
+          s.flags.moralWalletStolen = true;
           s.resources.cash += 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
@@ -68,6 +72,8 @@ const MORAL_EVENTS = [
         flag: "moral_beggar_feed",
         score: 8,
         immediate: function (s) {
+          // [联动flag] 触发"乞丐的线报"后续事件
+          s.flags.moralFedBeggar = true;
           s.resources.cash -= 15;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           StateManager.addMessage("🎭 老人眼眶湿润，连声道谢。", "success");
@@ -155,6 +161,8 @@ const MORAL_EVENTS = [
         flag: "moral_stop_thief",
         score: 15,
         immediate: function (s) {
+          // [联动flag] 触发"被路人认出英雄"后续事件
+          s.flags.moralStoppedThiefPublic = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.status.health = Math.max(0, s.status.health - 2);
@@ -278,6 +286,8 @@ const MORAL_EVENTS = [
         flag: "moral_dog_feed",
         score: 8,
         immediate: function (s) {
+          // [联动flag] 触发"流浪狗再次相遇"后续事件
+          s.flags.moralFedDog = true;
           s.resources.cash -= 3;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
@@ -312,6 +322,8 @@ const MORAL_EVENTS = [
         flag: "moral_help_fallen",
         score: 15,
         immediate: function (s) {
+          // [联动flag] 触发"老人家属联系你"后续事件
+          s.flags.moralHelpedElder = true;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
           StateManager.addMessage(
@@ -403,6 +415,8 @@ const MORAL_EVENTS = [
         flag: "moral_push_car",
         score: 10,
         immediate: function (s) {
+          // [联动flag] 触发"年轻妈妈再次相遇"后续事件
+          s.flags.moralPushedCar = true;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);

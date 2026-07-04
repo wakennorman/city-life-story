@@ -19,6 +19,8 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "损失¥130+，但保住信誉",
         cost: 130,
         apply: function (st) {
+          // [联动flag] 触发"口碑传播"后续事件
+          st.flags.daigouHonestService = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
           StateManager.addMessage(
             "💰 你全额退款并赔偿了¥50。虽然亏了钱，但客户说以后还会找你。",
@@ -190,6 +192,8 @@ const SIDE_HUSTLE_EVENTS = [
         text: "🔄 换平台重新起步",
         hint: "粉丝清零，但获得新平台经验",
         apply: function (st) {
+          // [联动flag] 触发"新平台品牌合作"后续事件
+          st.flags.selfMediaPivoted = true;
           if (st._sideHustleData && st._sideHustleData.selfMedia) {
             st._sideHustleData.selfMedia.followers = 0;
           }
@@ -251,6 +255,8 @@ const SIDE_HUSTLE_EVENTS = [
           st.resources.cash -= 200;
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
+            // [联动flag] 触发"被人请教投资"后续事件
+            st.flags.investBottomed = true;
             st.resources.cash += profit;
             StateManager.addMessage(
               "🔥 你抄底成功了！赚了¥" + profit + "。胆子大的人运气好。",
@@ -298,6 +304,8 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "需要创意，可能成功",
         apply: function (st) {
           if (Random.chance(0.6)) {
+            // [联动flag] 触发"教育机构挖角"后续事件
+            st.flags.tutorInnovative = true;
             StateManager.addMessage(
               "🎮 你用游戏的方式教学，学生突然感兴趣了。家长很惊喜。",
               "success",
