@@ -87,120 +87,84 @@ function seedWorldFromReality(state) {
   var params = state._worldParams || createDefaultWorldParams();
   params.seedDate = new Date().toISOString().slice(0, 10);
 
-  // 尝试拉取真实市场数据（使用 Yahoo Finance 免费查询接口）
-  // 中国A股：000001.SS（上证指数）
-  var fetchUrl =
-    "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d";
-
-  // 浏览器环境：CORS 限制导致 Yahoo Finance 无法获取，跳过直接使用随机种子
+  // 尝试拉取真实市场数据
+  // 浏览器环境下 Yahoo Finance 有 CORS 限制，通过免费 CORS 代理绕过
+  // 如代理不可用则尝试其他数据源，最终回退到随机种子
   var isBrowser =
     typeof window !== "undefined" && typeof window.navigator !== "undefined";
   var success = false;
 
   try {
-    if (isBrowser) throw new Error("skip: browser CORS");
+    if (!isBrowser) {
+      // Node.js 环境：直接请求
+      success = fetchYahooFinanceData(params);
+    } else {
+      // 浏览器环境：依次尝试多个数据源/CORS代理
+      success = fetchMarketDataViaProxy(params);
+    }
+  } catch (e) {
+    // 所有方式失败：静默回退
+  }
 
-    // 使用 XMLHttpRequest 的同步风格（保持脚本加载顺序兼容性）
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", fetchUrl, false); // 同步请求（开局时阻塞可接受）
-    xhr.timeout = 5000;
-    xhr.send(null);
+  if (!success) {
+    // ====== 离线/网络失败回退：随机种子 ======
+    seedRandomFallback(params);
+  }
 
-    if (xhr.status === 200) {
-      var data = JSON.parse(xhr.responseText);
-      if (
-        data &&
-        data.chart &&
-        data.chart.result &&
-        data.chart.result.length > 0
-      ) {
-        var result = data.chart.result[0];
-        var closes =
-          result.indicators && result.indicators.quote
-            ? result.indicators.quote[0].close
-            : null;
+  state._worldParams = params;
+  return params;
+}
 
-        if (closes && closes.length >= 2) {
-          // 计算最近两个交易日的涨跌幅
-          var prevClose = closes[closes.length - 2];
-          var latestClose = closes[closes.length - 1];
-          var changePercent = (latestClose - prevClose) / prevClose;
+/**
+ * 通过 CORS 代理拉取 Yahoo Finance 数据（浏览器环境）
+ * 尝试多个代理服务 + Sina Finance 免CORS接口作为备用
+ */
+function fetchMarketDataViaProxy(params) {
+  // 候选数据源列表（按优先级）
+  var sources = [
+    // 源1：Yahoo Finance 通过 allorigins CORS 代理
+    {
+      url:
+        "https://api.allorigins.win/raw?url=" +
+        encodeURIComponent(
+          "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d",
+        ),
+      parser: parseYahooFinanceResponse,
+    },
+    // 源2：Yahoo Finance 通过 corsproxy.io 代理
+    {
+      url:
+        "https://corsproxy.io/?url=" +
+        encodeURIComponent(
+          "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d",
+        ),
+      parser: parseYahooFinanceResponse,
+    },
+    // 源3：新浪财经（部分浏览器免CORS，直接用 XHR 尝试）
+    // 格式：var hq_str_sh000001="上证指数,昨收,今开,最新价,..."
+    {
+      url: "https://hq.sinajs.cn/list=sh000001",
+      parser: parseSinaFinanceResponse,
+    },
+    // 源4：腾讯财经接口（免CORS，国内速度快）
+    // 格式：JSONP 风格的股票数据
+    {
+      url: "https://web.ifzg.gtimg.cn/appstock/app/minute/query?_var=min_data_sh000001&code=sh000001",
+      parser: parseTencentFinanceResponse,
+    },
+  ];
 
-          // 计算5日波动率（用最近5个close的标准差/均值）
-          var n = Math.min(closes.length, 5);
-          var sum = 0;
-          for (var ci = closes.length - n; ci < closes.length; ci++) {
-            sum += closes[ci];
-          }
-          var mean = sum / n;
-          var variance = 0;
-          for (var cj = closes.length - n; cj < closes.length; cj++) {
-            variance += (closes[cj] - mean) * (closes[cj] - mean);
-          }
-          var stddev = Math.sqrt(variance / n);
-          var cv = stddev / mean; // 变异系数（波动率指标）
+  for (var si = 0; si < sources.length; si++) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", sources[si].url, false);
+      xhr.timeout = 5000;
+      xhr.send(null);
 
-          // 设置市场情绪
-          if (changePercent > 0.015) {
-            params.marketMood = "bullish";
-          } else if (changePercent < -0.015) {
-            params.marketMood = "bearish";
-          } else if (cv > 0.02) {
-            params.marketMood = "volatile";
-          } else {
-            params.marketMood = "neutral";
-          }
-
-          // 设置波动率
-          params.baseVolatility = Math.max(0.5, Math.min(2.0, 1.0 + cv * 10));
-
-          // 设置行业初始偏移（基于市场情绪）
-          for (var si = 0; si < WORLD_SECTORS.length; si++) {
-            var sec = WORLD_SECTORS[si];
-            switch (sec) {
-              case "科技":
-                params.initialSectorBias[sec] =
-                  params.marketMood === "bullish" ? 1.1 : 0.95;
-                break;
-              case "消费":
-                params.initialSectorBias[sec] = 1.0;
-                break;
-              case "金融":
-                params.initialSectorBias[sec] =
-                  params.marketMood === "bearish" ? 0.9 : 1.05;
-                break;
-              case "房地产":
-                // 房地产波动范围更宽（0.70-1.30），反映真实市场大起大落
-                switch (params.marketMood) {
-                  case "bullish":
-                    params.initialSectorBias[sec] = Random.float(1.0, 1.3);
-                    break;
-                  case "bearish":
-                    params.initialSectorBias[sec] = Random.float(0.7, 0.9);
-                    break;
-                  default:
-                    params.initialSectorBias[sec] = Random.float(0.8, 1.2);
-                }
-                break;
-              case "医药":
-                params.initialSectorBias[sec] = 1.02;
-                break;
-              case "新能源":
-                params.initialSectorBias[sec] = 1.08;
-                break;
-              default:
-                params.initialSectorBias[sec] = 1.0;
-            }
-          }
-
-          // 将 initialSectorBias 复制到 sectorHeat
-          for (var sk in params.initialSectorBias) {
-            params.sectorHeat[sk] = params.initialSectorBias[sk];
-          }
-
+      if (xhr.status === 200) {
+        var result = sources[si].parser(xhr.responseText, params);
+        if (result) {
           params.seedSource = "realtime";
-          success = true;
-
           StateManager.addMessage(
             "🌐 世界参数已根据今日市场数据初始化（" +
               params.marketMood +
@@ -209,43 +173,269 @@ function seedWorldFromReality(state) {
               "）",
             "info",
           );
+          return true;
         }
       }
+    } catch (e) {
+      // 当前源失败，尝试下一个
+      continue;
     }
-  } catch (e) {
-    // 网络失败：静默回退，不报错
   }
+  return false;
+}
 
-  if (!success) {
-    // ====== 离线/网络失败回退：随机种子 ======
-    params.marketMood = ["bullish", "bearish", "neutral", "volatile"][
-      Random.int(0, 3)
-    ];
-    params.baseVolatility = Random.float(0.8, 1.6);
+/** 解析 Yahoo Finance JSON 响应 */
+function parseYahooFinanceResponse(text, params) {
+  try {
+    var data = JSON.parse(text);
+    if (
+      data &&
+      data.chart &&
+      data.chart.result &&
+      data.chart.result.length > 0
+    ) {
+      var result = data.chart.result[0];
+      var closes =
+        result.indicators && result.indicators.quote
+          ? result.indicators.quote[0].close
+          : null;
 
-    for (var si2 = 0; si2 < WORLD_SECTORS.length; si2++) {
-      var sec2 = WORLD_SECTORS[si2];
-      // 房地产行业波动范围更宽（0.70-1.30），其余行业范围较窄（0.85-1.15）
-      if (sec2 === "房地产") {
-        params.initialSectorBias[sec2] = Random.float(0.7, 1.3);
-      } else {
-        params.initialSectorBias[sec2] = Random.float(0.85, 1.15);
+      if (closes && closes.length >= 2) {
+        var prevClose = closes[closes.length - 2];
+        var latestClose = closes[closes.length - 1];
+        var changePercent = (latestClose - prevClose) / prevClose;
+
+        // 计算5日波动率
+        var n = Math.min(closes.length, 5);
+        var sum = 0;
+        for (var ci = closes.length - n; ci < closes.length; ci++) {
+          sum += closes[ci];
+        }
+        var mean = sum / n;
+        var variance = 0;
+        for (var cj = closes.length - n; cj < closes.length; cj++) {
+          variance += (closes[cj] - mean) * (closes[cj] - mean);
+        }
+        var stddev = Math.sqrt(variance / n);
+        var cv = stddev / mean;
+
+        applyMarketDataToParams(params, changePercent, cv);
+        return true;
       }
-      params.sectorHeat[sec2] = params.initialSectorBias[sec2];
     }
+  } catch (e) {}
+  return false;
+}
 
-    params.seedSource = "random";
-    params.seedDate = null;
+/** 解析腾讯财经文本格式 */
+function parseTencentFinanceResponse(text, params) {
+  try {
+    // 腾讯返回格式: min_data_sh000001={...};
+    // 去掉 JSONP 前缀和后缀，提取 JSON
+    var jsonMatch = text.match(/\{[\s\S]+\}/);
+    if (!jsonMatch) return false;
+    var data = JSON.parse(jsonMatch[0]);
+    // 尝试从 data.data 或 data 中提取收盘价
+    var chartData = data.data || data;
+    if (!chartData) return false;
+    // 腾讯数据中通常有 sh000001 或类似 key
+    var keys = Object.keys(chartData);
+    if (keys.length === 0) return false;
+    // 找收盘价数组
+    var priceArr = null;
+    for (var ki = 0; ki < keys.length; ki++) {
+      if (keys[ki].indexOf("day") >= 0 || keys[ki].indexOf("data") >= 0)
+        continue;
+      var val = chartData[keys[ki]];
+      if (Array.isArray(val) && val.length >= 2) {
+        priceArr = val;
+        break;
+      }
+    }
+    if (!priceArr || priceArr.length < 2) return false;
+    // 取最近两天
+    var lastIdx = priceArr.length - 1;
+    var prevIdx = priceArr.length - 2;
+    var parseVal = function (v) {
+      if (typeof v === "number") return v;
+      if (typeof v === "string") return parseFloat(v);
+      return NaN;
+    };
+    var prevClose = parseVal(priceArr[prevIdx]);
+    var latestClose = parseVal(priceArr[lastIdx]);
+    if (isNaN(prevClose) || isNaN(latestClose) || prevClose === 0) return false;
+    var changePercent = (latestClose - prevClose) / prevClose;
+    var cv = Math.abs(changePercent) * 0.5 + 0.008;
+    applyMarketDataToParams(params, changePercent, cv);
+    return true;
+  } catch (e) {}
+  return false;
+}
 
-    StateManager.addMessage(
-      "🌐 世界参数已随机初始化（浏览器模式：使用本地随机种子）",
-      "info",
-    );
+/** 解析 Sina Finance 文本格式（如：var hq_str_sh000001="上证指数,3040.12,3030.15,..."） */
+function parseSinaFinanceResponse(text, params) {
+  try {
+    // Sina 返回格式: var hq_str_sh000001="上证指数,昨收,今开,最新价,..."
+    var match = text.match(/"([^"]+)"/);
+    if (!match) return false;
+    var parts = match[1].split(",");
+    if (parts.length < 4) return false;
+
+    var prevClose = parseFloat(parts[1]); // 昨收
+    var current = parseFloat(parts[3]); // 最新价
+    if (isNaN(prevClose) || isNaN(current) || prevClose === 0) return false;
+
+    var changePercent = (current - prevClose) / prevClose;
+    // Sina 只有单日数据，用固定波动率 0.015 作为 cv 近似值
+    var cv = Math.abs(changePercent) * 0.5 + 0.008;
+
+    applyMarketDataToParams(params, changePercent, cv);
+    return true;
+  } catch (e) {}
+  return false;
+}
+
+/** 将市场数据应用到世界参数 */
+function applyMarketDataToParams(params, changePercent, cv) {
+  // 设置市场情绪
+  if (changePercent > 0.015) {
+    params.marketMood = "bullish";
+  } else if (changePercent < -0.015) {
+    params.marketMood = "bearish";
+  } else if (cv > 0.02) {
+    params.marketMood = "volatile";
+  } else {
+    params.marketMood = "neutral";
   }
 
-  state._worldParams = params;
-  return params;
-  return params;
+  // 设置波动率
+  params.baseVolatility = Math.max(0.5, Math.min(2.0, 1.0 + cv * 10));
+
+  // 设置行业初始偏移
+  for (var si = 0; si < WORLD_SECTORS.length; si++) {
+    var sec = WORLD_SECTORS[si];
+    switch (sec) {
+      case "科技":
+        params.initialSectorBias[sec] =
+          params.marketMood === "bullish" ? 1.1 : 0.95;
+        break;
+      case "消费":
+        params.initialSectorBias[sec] = 1.0;
+        break;
+      case "金融":
+        params.initialSectorBias[sec] =
+          params.marketMood === "bearish" ? 0.9 : 1.05;
+        break;
+      case "房地产":
+        switch (params.marketMood) {
+          case "bullish":
+            params.initialSectorBias[sec] = Random.float(1.0, 1.3);
+            break;
+          case "bearish":
+            params.initialSectorBias[sec] = Random.float(0.7, 0.9);
+            break;
+          default:
+            params.initialSectorBias[sec] = Random.float(0.8, 1.2);
+        }
+        break;
+      case "医药":
+        params.initialSectorBias[sec] = 1.02;
+        break;
+      case "新能源":
+        params.initialSectorBias[sec] = 1.08;
+        break;
+      default:
+        params.initialSectorBias[sec] = 1.0;
+    }
+  }
+
+  // 将 initialSectorBias 复制到 sectorHeat
+  for (var sk in params.initialSectorBias) {
+    params.sectorHeat[sk] = params.initialSectorBias[sk];
+  }
+}
+
+/** Node.js 环境直接请求 Yahoo Finance（原逻辑保留） */
+function fetchYahooFinanceData(params) {
+  var fetchUrl =
+    "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", fetchUrl, false);
+  xhr.timeout = 5000;
+  xhr.send(null);
+
+  if (xhr.status === 200) {
+    var data = JSON.parse(xhr.responseText);
+    if (
+      data &&
+      data.chart &&
+      data.chart.result &&
+      data.chart.result.length > 0
+    ) {
+      var result = data.chart.result[0];
+      var closes =
+        result.indicators && result.indicators.quote
+          ? result.indicators.quote[0].close
+          : null;
+      if (closes && closes.length >= 2) {
+        var prevClose = closes[closes.length - 2];
+        var latestClose = closes[closes.length - 1];
+        var changePercent = (latestClose - prevClose) / prevClose;
+
+        var n = Math.min(closes.length, 5);
+        var sum = 0;
+        for (var ci = closes.length - n; ci < closes.length; ci++)
+          sum += closes[ci];
+        var mean = sum / n;
+        var variance = 0;
+        for (var cj = closes.length - n; cj < closes.length; cj++) {
+          variance += (closes[cj] - mean) * (closes[cj] - mean);
+        }
+        var stddev = Math.sqrt(variance / n);
+        var cv = stddev / mean;
+
+        applyMarketDataToParams(params, changePercent, cv);
+
+        params.seedSource = "realtime";
+        StateManager.addMessage(
+          "🌐 世界参数已根据今日市场数据初始化（" +
+            params.marketMood +
+            "，波动率" +
+            params.baseVolatility.toFixed(2) +
+            "）",
+          "info",
+        );
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** 随机种子回退 */
+function seedRandomFallback(params) {
+  params.marketMood = ["bullish", "bearish", "neutral", "volatile"][
+    Random.int(0, 3)
+  ];
+  params.baseVolatility = Random.float(0.8, 1.6);
+
+  for (var si2 = 0; si2 < WORLD_SECTORS.length; si2++) {
+    var sec2 = WORLD_SECTORS[si2];
+    if (sec2 === "房地产") {
+      params.initialSectorBias[sec2] = Random.float(0.7, 1.3);
+    } else {
+      params.initialSectorBias[sec2] = Random.float(0.85, 1.15);
+    }
+    params.sectorHeat[sec2] = params.initialSectorBias[sec2];
+  }
+
+  params.seedSource = "random";
+  params.seedDate = null;
+
+  StateManager.addMessage(
+    "🌐 世界参数已随机初始化（浏览器模式：使用本地随机种子）",
+    "info",
+  );
 }
 
 // ====== 每日参数更新 ======

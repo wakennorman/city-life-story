@@ -943,7 +943,11 @@ var REAL_TIME_NEWS_CONFIG = {
     // 参考 Bloomberg Terminal / Reuters Eikon 的信息源选择标准——客观、数据驱动、领域专注
     rss: {
       enabled: true,
+      // 主转换服务
       converterUrl: "https://api.rss2json.com/v1/api.json",
+      // 备用转换服务（主服务超时/失败时使用，也是免费无需key）
+      fallbackConverterUrl:
+        "https://rss-to-json-server.onrender.com/api/convert",
       feeds: [
         {
           name: "新浪财经",
@@ -968,12 +972,33 @@ var REAL_TIME_NEWS_CONFIG = {
       ],
     },
     // 源2：天行数据API（需注册免费Key，更稳定）
-    //   注册地址：https://www.tianapi.com/ → 申请「国内新闻」接口
+    // ═══════════════════════════════════════════════════════════════════
+    //  🔑 如何获取：
+    //     1. 浏览器打开 https://www.tianapi.com/ → 注册账号
+    //     2. 登录后在控制台 → 「申请接口」→ 搜索「国内新闻」
+    //     3. 申请通过后，在「我的接口」查看 API Key
+    //     4. 把下方 apiKey 的值替换成你申请到的 key
+    //     5. 把 enabled 改为 true
+    // ═══════════════════════════════════════════════════════════════════
     tianapi: {
-      enabled: false,
-      apiKey: "", // 填入你的天行数据API Key
+      enabled: true,
+      apiKey: "cb2b289821c96231530dd050662ef0a9", // ← 你的天行数据 API Key
       endpoint: "https://api.tianapi.com/txapi/guonei/index",
       params: "num=10&rand=1", // 随机10条
+    },
+    // 源3：通过 CORS 代理直接抓取新闻页面（无需API Key，兜底用）
+    //   国内无法访问 rss2json.com 时的最终备选
+    direct: {
+      enabled: true,
+      // 使用与 world_params.js 相同的 CORS 代理
+      proxyUrl: "https://api.allorigins.win/raw?url=",
+      sources: [
+        {
+          name: "百度热搜",
+          url: "https://top.baidu.com/board?tab=realtime",
+          parser: "baidu",
+        },
+      ],
     },
   },
 };
@@ -1356,7 +1381,50 @@ function generateInvestmentEffectFromTag(tag, mood) {
  * @returns {Promise<Array>} 新闻条目数组
  */
 function fetchFromRSS(feed) {
-  var converterUrl = REAL_TIME_NEWS_CONFIG.sources.rss.converterUrl;
+  var rssCfg = REAL_TIME_NEWS_CONFIG.sources.rss;
+  var primaryUrl =
+    rssCfg.converterUrl + "?rss_url=" + encodeURIComponent(feed.url);
+  var fallbackUrl = rssCfg.fallbackConverterUrl
+    ? rssCfg.fallbackConverterUrl + "?rss_url=" + encodeURIComponent(feed.url)
+    : null;
+
+  return new Promise(function (resolve, reject) {
+    // 尝试主转换服务
+    tryFetchRSS(primaryUrl, feed)
+      .then(function (items) {
+        if (items && items.length > 0) {
+          resolve(items);
+        } else {
+          throw new Error("Empty items from primary");
+        }
+      })
+      .catch(function (primaryErr) {
+        // 主服务失败，尝试备用转换服务
+        if (fallbackUrl) {
+          tryFetchRSS(fallbackUrl, feed)
+            .then(function (fallbackItems) {
+              if (fallbackItems && fallbackItems.length > 0) {
+                resolve(fallbackItems);
+              } else {
+                reject(
+                  new Error("Both RSS converters failed for " + feed.name),
+                );
+              }
+            })
+            .catch(function () {
+              reject(
+                new Error("RSS failed (primary+fallback) for " + feed.name),
+              );
+            });
+        } else {
+          reject(primaryErr);
+        }
+      });
+  });
+}
+
+/** 尝试用指定的转换URL抓取RSS并转换为游戏新闻格式 */
+function tryFetchRSS(converterUrl, feed) {
   var requestUrl = converterUrl + "?rss_url=" + encodeURIComponent(feed.url);
 
   return new Promise(function (resolve, reject) {
@@ -1373,30 +1441,36 @@ function fetchFromRSS(feed) {
         return response.json();
       })
       .then(function (data) {
-        if (
-          data &&
-          data.status === "ok" &&
-          data.items &&
-          data.items.length > 0
-        ) {
-          // 将RSS条目转换为游戏新闻格式
+        // 兼容不同转换服务的响应格式
+        var items = null;
+        if (data && data.status === "ok" && data.items) {
+          items = data.items; // rss2json 格式
+        } else if (data && data.items && data.items.length > 0) {
+          items = data.items; // 某些服务的直接格式
+        } else if (data && data.feed && data.items) {
+          items = data.items; // 另一种常见格式
+        } else if (Array.isArray(data)) {
+          items = data; // 直接返回数组
+        }
+
+        if (items && items.length > 0) {
           var newsItems = [];
-          for (var i = 0; i < data.items.length; i++) {
-            var item = data.items[i];
-            if (!item.title) continue;
-            var classification = classifyRealNews(
-              item.title,
-              item.description || "",
-            );
+          for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var title = item.title || item.headline || "";
+            if (!title) continue;
+            var description =
+              item.description || item.content || item.contentSnippet || "";
+            var classification = classifyRealNews(title, description);
             newsItems.push({
               id: "realtime_" + feed.name + "_" + i,
               icon: getNewsIconByTag(classification.tag),
               tag: classification.tag,
-              headline: item.title
+              headline: title
                 .replace(/<[^>]+>/g, "")
                 .trim()
                 .substring(0, 80),
-              detail: (item.description || item.title || "")
+              detail: description
                 .replace(/<[^>]+>/g, "")
                 .trim()
                 .substring(0, 120),
@@ -1410,13 +1484,13 @@ function fetchFromRSS(feed) {
                 classification.marketMood,
               ),
               source: "实时·" + feed.name,
-              url: item.link || "",
+              url: item.link || item.url || "",
               _isRealTime: true,
             });
           }
           resolve(newsItems);
         } else {
-          reject(new Error("Empty RSS response from " + feed.name));
+          reject(new Error("Empty or invalid RSS response from " + feed.name));
         }
       })
       .catch(function (err) {
@@ -1501,6 +1575,141 @@ function fetchFromTianAPI() {
 }
 
 /**
+ * 通过 CORS 代理直接抓取新闻页面（兜底方式，不需要第三方转换服务）
+ * 当 rss2json 等转换服务不可用时使用
+ * @returns {Promise<Array>} 新闻条目数组
+ */
+function fetchFromDirect() {
+  var cfg = REAL_TIME_NEWS_CONFIG.sources.direct;
+  if (!cfg.enabled || !cfg.sources || cfg.sources.length === 0) {
+    return Promise.reject(new Error("Direct sources not configured"));
+  }
+
+  return new Promise(function (resolve, reject) {
+    var promises = [];
+
+    for (var di = 0; di < cfg.sources.length; di++) {
+      var src = cfg.sources[di];
+      var proxyUrl = cfg.proxyUrl + encodeURIComponent(src.url);
+
+      // 根据解析器类型分发
+      if (src.parser === "baidu") {
+        promises.push(
+          fetchBaiduHotSearch(proxyUrl, src.name)
+            .then(function (items) {
+              return items;
+            })
+            .catch(function () {
+              return [];
+            }),
+        );
+      }
+    }
+
+    if (promises.length === 0) {
+      reject(new Error("No parsable direct sources"));
+      return;
+    }
+
+    Promise.all(promises)
+      .then(function (results) {
+        var allNews = [];
+        for (var ri = 0; ri < results.length; ri++) {
+          if (results[ri] && results[ri].length > 0) {
+            allNews = allNews.concat(results[ri]);
+          }
+        }
+        if (allNews.length > 0) {
+          resolve(allNews);
+        } else {
+          reject(new Error("All direct sources returned empty"));
+        }
+      })
+      .catch(function () {
+        reject(new Error("Direct fetch failed"));
+      });
+  });
+}
+
+/**
+ * 抓取百度热搜榜（通过 CORS 代理）
+ * 百度热搜的 HTML 结构：class="category-wrap_iQLoo" 下的标题
+ */
+function fetchBaiduHotSearch(proxyUrl, sourceName) {
+  return new Promise(function (resolve, reject) {
+    var timeoutId = setTimeout(function () {
+      reject(new Error("Baidu hot search timeout"));
+    }, REAL_TIME_NEWS_CONFIG.timeout);
+
+    fetch(proxyUrl)
+      .then(function (response) {
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.text();
+      })
+      .then(function (html) {
+        // 从 HTML 中提取热搜标题
+        var titles = [];
+        // 尝试匹配百度热搜的标题结构
+        var titleRegex =
+          /<div[^>]*class="c-single-text-ellipsis"[^>]*>([^<]+)<\/div>/g;
+        var match;
+        while ((match = titleRegex.exec(html)) !== null) {
+          var t = match[1].trim();
+          if (t.length > 4 && titles.indexOf(t) === -1) {
+            titles.push(t);
+          }
+        }
+        // 如果上面的正则没匹配到，尝试备选结构
+        if (titles.length === 0) {
+          var altRegex = /class="title[^"]*"[^>]*>[\s]*<[^>]+>([^<]+)</g;
+          while ((match = altRegex.exec(html)) !== null) {
+            var t2 = match[1].trim();
+            if (t2.length > 4 && titles.indexOf(t2) === -1) {
+              titles.push(t2);
+            }
+          }
+        }
+
+        if (titles.length === 0) {
+          reject(new Error("No titles found in Baidu hot search"));
+          return;
+        }
+
+        // 转为游戏新闻格式
+        var newsItems = [];
+        for (var ti = 0; ti < Math.min(titles.length, 10); ti++) {
+          var classification = classifyRealNews(titles[ti], "");
+          newsItems.push({
+            id: "direct_baidu_" + ti,
+            icon: getNewsIconByTag(classification.tag),
+            tag: classification.tag,
+            headline: titles[ti],
+            detail: "百度热搜" + (ti + 1) + "位",
+            worldEffect: {
+              sectorHeat: classification.sectorHeat,
+              marketMood: classification.marketMood,
+              note: classification.note,
+            },
+            investmentEffect: generateInvestmentEffectFromTag(
+              classification.tag,
+              classification.marketMood,
+            ),
+            source: "实时·" + sourceName,
+            url: "",
+            _isRealTime: true,
+          });
+        }
+        resolve(newsItems);
+      })
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+        reject(err);
+      });
+  });
+}
+
+/**
  * 根据分类标签获取图标
  */
 function getNewsIconByTag(tag) {
@@ -1559,6 +1768,12 @@ function fetchRealTimeNews() {
     REAL_TIME_NEWS_CONFIG.sources.tianapi.apiKey
   ) {
     promises.push(fetchFromTianAPI());
+  }
+
+  // 添加直连兜底源（通过 CORS 代理）
+  var directCfg = REAL_TIME_NEWS_CONFIG.sources.direct;
+  if (directCfg.enabled && directCfg.sources && directCfg.sources.length > 0) {
+    promises.push(fetchFromDirect());
   }
 
   if (promises.length === 0) {

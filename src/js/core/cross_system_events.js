@@ -531,7 +531,7 @@
       name: "猎头挖角",
       icon: "📞",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         return (
           st.career &&
           st.career.currentJob &&
@@ -624,7 +624,7 @@
       name: "公司裁员风波",
       icon: "📉",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         return st.career && st.career.currentJob && st.player.day > 90;
       },
       probability: 0.015,
@@ -707,7 +707,7 @@
       name: "经济下行周期",
       icon: "📉",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         return st.player.day > 200 && st.resources.cash > 50000;
       },
       probability: 0.02,
@@ -788,7 +788,7 @@
       name: "资产核查通知",
       icon: "🏛️",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         return (
           st.player.day > 300 &&
           st.resources.cash + (st.resources.bankBalance || 0) > 500000
@@ -864,8 +864,8 @@
       name: "暴雨中的商机",
       icon: "🌧️",
       phase: "street",
-      // [自洽修复] conditions 新增：st.weather.current 天气检查（原用 st.weather.weather，字段不存在）
-      trigger: function (st) {
+      // [自洽修复] trigger→conditions 统一 + weather 字段名修复
+      conditions: function (st) {
         return (
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy") &&
@@ -930,7 +930,7 @@
       name: "王大婶的租房信息",
       icon: "🏠",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var rel = st.relationships && st.relationships.aunt_wang;
         return (
           rel &&
@@ -1014,7 +1014,7 @@
       name: "公园里的老师傅",
       icon: "🌳",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var curLoc = st.trade && st.trade.currentLocation;
         if (curLoc !== "park") return false;
         var hasHighSkill = false;
@@ -1089,7 +1089,7 @@
       name: "张姐工厂裁员",
       icon: "🏭",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var rel = st.relationships && st.relationships.sister_zhang;
         var heat = st._worldParams && st._worldParams.sectorHeat;
         var mfgHeat = heat && heat["制造"];
@@ -1176,7 +1176,7 @@
       name: "科技园地摊机会",
       icon: "📱",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var curLoc = st.trade && st.trade.currentLocation;
         var heat = st._worldParams && st._worldParams.sectorHeat;
         var techHeat = heat && heat["科技"];
@@ -1253,7 +1253,7 @@
       name: "换季时节",
       icon: "🍂",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var day = st.player.day;
         var seasonEdgeDays = [91, 183, 274, 365];
         for (var si = 0; si < seasonEdgeDays.length; si++) {
@@ -1332,7 +1332,7 @@
       name: "老周的废品大单",
       icon: "♻️",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var rel = st.relationships && st.relationships.old_zhou;
         return rel && rel.met && rel.affinity >= 60 && st.player.day > 120;
       },
@@ -1414,7 +1414,7 @@
       name: "小美的副业机会",
       icon: "💼",
       phase: "street",
-      trigger: function (st) {
+      conditions: function (st) {
         var rel = st.relationships && st.relationships.xiao_mei;
         return (
           rel &&
@@ -5247,6 +5247,222 @@
           StateManager.addMessage(
             "📬 你回了一封短信：「不用谢，下次小心就好。」把¥100夹在信里托王大婶带回去。你不知道她收到后会怎么想，但你心里很踏实。道德+2，名气+5，心情+20。",
             "success",
+          );
+        },
+      },
+    ],
+  });
+  // ====================================================================
+  // v3.19 — 联动空白区填充（3个事件）
+  // 设计理念：让"长期积累"和"环境组合"产生有意义的叙事交汇
+  // ====================================================================
+
+  // 主题1：跑腿老手→客户转介绍商机
+  // 设计意图：玩家长期配送/驾驶后遇到回头客，口头推荐变成稳定订单来源
+  RANDOM_EVENTS.push({
+    id: "delivery_veteran_referral",
+    phase: "street",
+    icon: "📋",
+    title: "老客户的推荐",
+    story:
+      "你正在路边歇脚，一个穿格子衫的中年男人快步走过来——有点眼熟。\\n\\n「你不就是上次帮我们公司送标书那位吗？我同事上次也找你跑了一趟，说你效率高。」\\n他递来一张名片：「有个长期合作——每周三趟固定配送，价格好商量。你接不接？」",
+    conditions: function (st) {
+      // 有配送/驾驶经历且天数>30（有足够积累）
+      if (st.player.day < 30) return false;
+      var driveLvl =
+        st.skills && st.skills.driving ? st.skills.driving.level || 0 : 0;
+      if (driveLvl < 15) return false;
+      if (
+        st.flags._deliveryReferralDay &&
+        st.player.day - st.flags._deliveryReferralDay < 40
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🤝 接！长期合作稳当",
+        hint: "解锁固定配送收入+心智",
+        apply: function (st) {
+          st.flags._deliveryReferralDay = st.player.day;
+          st.flags._fixedDeliveryRoute = true;
+          var income = Random.int(200, 400);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🤝 你接下了这份长期订单。每周三趟配送，比跑散单稳定多了。对方拍板说「就按¥" +
+              income +
+              "一周先试跑」。心智+2，心情+8，解锁固定配送收入。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 加微信，有需要再联系",
+        hint: "保留机会，不绑定",
+        apply: function (st) {
+          st.flags._deliveryReferralDay = st.player.day;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "📱 你加了微信。对方说「行，随时联系。」名气+2。在这座城市，多一个朋友就是多一条路。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😅 最近太忙了，下次吧",
+        hint: "拒绝",
+        apply: function (st) {
+          st.flags._deliveryReferralDay = st.player.day;
+          StateManager.addMessage(
+            "😅 你婉拒了。他点点头走开了。名片你没丢——也许下次打过去还有用。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 主题2：修理技能→工厂设备抢修
+  // 设计意图：高修理技能的玩家在街头被工厂主管看中，临时抢修设备——技能不再是"数据"
+  RANDOM_EVENTS.push({
+    id: "repair_factory_emergency",
+    phase: "street",
+    icon: "⚙️",
+    title: "机器坏了",
+    story:
+      "你路过一家小加工厂门口，一个满手机油的人冲出来，看到你手里拎着的工具袋眼前一亮。\\n\\n「兄弟！你会修机器不？我这台冲床坏了，今天不修好明天交不了货。修好了给你这个数——」他比了个手势。",
+    conditions: function (st) {
+      if (st.player.day < 20) return false;
+      var repLevel =
+        st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+      if (repLevel < 35) return false;
+      if (
+        st.flags._repairFactoryDay &&
+        st.player.day - st.flags._repairFactoryDay < 30
+      )
+        return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "🔧 看看去！能修就修",
+        hint: "修理技能实战，报酬丰厚",
+        apply: function (st) {
+          st.flags._repairFactoryDay = st.player.day;
+          var repLevel =
+            st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+          var fee = 150 + Math.floor(repLevel * 3);
+          st.resources.cash += fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          if (st.skills && st.skills.repair) {
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 50;
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🔧 你蹲下来检查了半小时——传动皮带断了，齿轮卡死。你拆开、清理、换上备件，一气呵成。机器重新轰鸣的那一刻，主管冲你竖起了大拇指。拿着¥" +
+              fee +
+              "走出厂门时，你觉得这门手艺没白学。修理XP+50，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我就是个半吊子，怕耽误你",
+        hint: "谦虚，不接",
+        apply: function (st) {
+          st.flags._repairFactoryDay = st.player.day;
+          StateManager.addMessage(
+            "😅 你摆摆手走了。他失望地打电话找别人。下次再有这样的机会，你会更有把握吗？",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 主题3：暴雨+市场→雨具紧急需求
+  // 设计意图：天气+当前位置组合产生即时商机，让玩家学会利用环境
+  RANDOM_EVENTS.push({
+    id: "rain_market_umbrella_windfall",
+    phase: "street",
+    icon: "🌂",
+    title: "暴雨天的雨伞生意",
+    story:
+      "你正在批发市场附近，天突然暗了下来——暴雨说来就来。\\n\\n周围的人开始狂奔躲雨，但菜市场门口有个小贩在卖雨伞——¥25一把，3分钟卖了20把。你看了看旁边的批发店，门口堆着一箱箱的库存折叠伞。",
+    conditions: function (st) {
+      if (st.player.day < 10) return false;
+      if (!st.weather) return false;
+      if (st.weather.current !== "rainy" && st.weather.current !== "stormy")
+        return false;
+      var curLoc = st.trade && st.trade.currentLocation;
+      if (curLoc !== "wholesaleMarket" && curLoc !== "market") return false;
+      if (
+        st.flags._rainMarketUmbrellaDay &&
+        st.player.day - st.flags._rainMarketUmbrellaDay < 30
+      )
+        return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "💰 进一批伞就地卖！",
+        hint: "¥200进货，可赚¥300-¥500",
+        apply: function (st) {
+          st.flags._rainMarketUmbrellaDay = st.player.day;
+          if (st.resources.cash >= 200) {
+            st.resources.cash -= 200;
+            var profit = Random.int(300, 500);
+            st.resources.cash += profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            StateManager.addMessage(
+              "💰 你冲进批发店¥200拿了20把折叠伞，在市场门口就地摆摊。雨越大人越好卖——不到一小时全卖光了！净赚¥" +
+                profit +
+                "。有的人甚至不要找零就跑了。心情+12，疲劳+10。暴雨天对有些人来说是麻烦，对你是生意。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "💰 你看了看口袋——连¥200的进货钱都没有。只能看着别人赚钱。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏪 躲雨，顺便帮旁边小店理货",
+        hint: "好人缘，可能被记住",
+        apply: function (st) {
+          st.flags._rainMarketUmbrellaDay = st.player.day;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🏪 你躲进旁边的小店，顺手帮老板把门口的货搬进了里面。老板连声道谢，塞了瓶水给你。名气+3，心情+3。有时候举手之劳也能积攒人情。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 淋着雨走，不管了",
+        hint: "健康可能下降",
+        apply: function (st) {
+          st.flags._rainMarketUmbrellaDay = st.player.day;
+          st.status.health = Math.max(0, (st.status.health || 70) - 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "😤 你冒雨走回住处，浑身湿透。打了几个喷嚏——可别感冒了。健康-5，心情-3。",
+            "warning",
           );
         },
       },
