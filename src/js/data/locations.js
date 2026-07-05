@@ -242,7 +242,8 @@ const LOCATIONS = {
     specialties: ["vegetables", "fruits"],
     dailyProbability: 0.3,
     specialCategory: ["food"],
-    jobs: ["suburb_cleaning", "suburb_security"],
+    // 注：suburb_cleaning/suburb_security 尚未在 jobs.js 定义，暂不开放
+    jobs: [],
     priceMod: {
       water: 0.85,
       vegetables: 0.8,
@@ -352,7 +353,8 @@ const LOCATIONS = {
     specialties: ["snacks", "beer", "electronics"],
     dailyProbability: 0.6,
     specialCategory: ["luxury", "food"],
-    jobs: ["entertainment_staff", "game_attendant"],
+    // 注：entertainment_staff/game_attendant 尚未在 jobs.js 定义，暂不开放
+    jobs: [],
     priceMod: {
       snacks: 1.2,
       beer: 1.3,

@@ -139,7 +139,7 @@ function createDefaultState() {
 
     // --- 住所 ---
     housing: {
-      tier: 0, // 0=露宿, 1=合租床位, 2=单间, 3=一居室
+      tier: 0, // 0=露宿 1=合租床位 2=单间 3=一居室 4=豪华公寓 5=郊区独栋 6=江景豪宅（详见 items.js HOUSING_TIERS）
       rentedDay: 0, // 租房日
       rentedAt: "slum", // 在哪个地点租的（用于计算实际租金）
       storageRented: false, // 是否租了仓库

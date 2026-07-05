@@ -65,10 +65,33 @@
 
   // 动态生成下一阶段提示文案（不同剧本/状态下文案不同）
   function _dynamicNextDesc(stage, state) {
+    var p = state.player || {};
     if (stage.id === "debt") {
       var r = state.resources || {};
       var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
       return debt > 0 ? "还清债务，攒到¥5000" : "攒下¥5000启动资金";
+    }
+    // 快到职场门槛时，提示玩家智力路线 → techPark
+    if (
+      stage.id === "growth" &&
+      p.phase === "street" &&
+      (p.intelligence || 0) >= 35 &&
+      (p.intelligence || 0) < 45
+    ) {
+      return (
+        "智力 " +
+        (p.intelligence || 0) +
+        " / 45 —— 再提升 " +
+        (45 - (p.intelligence || 0)) +
+        " 点就能去科技园应聘职场！前往培训中心自学"
+      );
+    }
+    if (
+      stage.id === "growth" &&
+      p.phase === "street" &&
+      (p.intelligence || 0) >= 45
+    ) {
+      return "智力已达 45，去科技园应聘互联网公司开启职场人生！";
     }
     return stage.nextDesc;
   }
