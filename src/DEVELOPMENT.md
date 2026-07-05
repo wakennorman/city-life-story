@@ -4239,3 +4239,36 @@ python build.py → 4431.0 KB，成功
 
 - `node --check` 全部 3 个修改文件 ✅
 - `python build.py` 4843.8 KB ✅
+
+---
+
+### v3.1 审查改进 — 死代码清理 + 注释修正 + 职场路径引导 (2026-07-06)
+
+**commit**: `5aa85f7`
+
+**覆盖维度 (SOP)**：1（代码/架构 — 悬空引用、注释修正）+ 4（UI/UX — UI 引导文案）+ 5（留存/动机 — 职场路径提示）
+
+**本轮发现的高优先级问题**：
+
+| # | 文件 | 问题 | 严重度 |
+| --- | --- | --- | --- |
+| 1 | `jobs.js` | 底部 ~514 行全是注释掉的占位符自由职业工作，引用的 skills（drone/design/videoEditing/writing 等）未在 state 中声明，如果将来误取消注释会触发 payCalc 静默收入 0 | 🔴P0（代码误导） |
+| 2 | `locations.js` | 郊区(suburb) 和 娱乐城(entertainment) 的 jobs 数组包含未定义的工作 ID（suburb_cleaning/suburb_security/entertainment_staff/game_attendant），getJobById 静默返回 null，工作永远不显示，玩家无法在此工作 | 🔴P1 |
+| 3 | `state.js` | housing.tier 注释声称"0-3"，但 items.js HOUSING_TIERS 实际定义 0-6，注释过时导致开发者误解 | 🟡P2 |
+| 4 | `daily_quest.js` | 玩家智力接近 45 时无任何提示引导去 techPark，职场入口对新玩家不透明 | 🟡P2 |
+
+**本轮改进**：
+
+- `jobs.js`：移除全部注释掉的占位符工作，保留 1 行标记说明，+862/-1351 行净删
+- `locations.js`：悬空 ID 所在 jobs 改为 []（预留注释说明暂不开放）
+- `state.js`：tier 注释更新为"0-6"完整映射
+- `daily_quest.js`：_dynamicNextDesc 扩展 2 条智力路线引导文案
+
+**遗留（下轮处理）**：
+- MC 1000 天 OOM 问题（monte_carlo.cjs 内存管理）
+- 被移除的自由职业设计（摄影/翻译/咨询等）在 memory/ 留档
+- suburb/entertainment 地点恢复时需要配套实现对应工作
+
+**验证**：node --check ✅ (127 文件) / build.py 4814.3KB ✅ / MC 30×365 ✅
+
+**SOP 自评**：本 SOP 是否需要修订？否（本轮按 v3.1 SOP 第 8 节 checklist 走完 — 1-6 维度 ✓，全剧本自查 ✓：清理无剧本分支条件，7 剧本均受益）

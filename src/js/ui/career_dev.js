@@ -697,9 +697,27 @@ const CAREER_PATHS = {
  * P1-5：证书→职业薪资加成（每月额外补贴，不修改job.salary基准）
  * 返回当月额外收入（整数），0表示无加成
  */
+/**
+ * P1-5：证书→职业薪资加成（每月额外补贴，不修改job.salary基准）
+ * 约定式自动归类：证书声明 salaryBonus 字段，系统自动扫描应用
+ * 返回当月额外收入（整数），0表示无加成
+ */
 function _calcCertSalaryBonus(state, pathId, baseSalary) {
   var certs = state.certificates || [];
   var rate = 0;
+
+  // 约定式优先：扫描所有证书，自动应用 salaryBonus 字段
+  for (var ci = 0; ci < certs.length; ci++) {
+    var certDef = getCertificateById(certs[ci]);
+    if (!certDef || !certDef.salaryBonus) continue;
+    var sb = certDef.salaryBonus;
+    // 路径专属加成: { tech: 0.05, finance: 0.08 }
+    if (sb[pathId]) rate += sb[pathId];
+    // 通用加成: { universal: 0.03 }
+    if (sb.universal) rate += sb.universal;
+  }
+
+  // 兼容旧写法：手动 if-else（保留向后兼容，新证书应使用 salaryBonus）
   // 路径专属证书
   if (pathId === "tech" && certs.indexOf("coding_basic") >= 0) rate += 0.05;
   if (pathId === "finance" && certs.indexOf("accounting_cert") >= 0)

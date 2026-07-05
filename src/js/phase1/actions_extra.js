@@ -95,6 +95,7 @@ function addStreetExtras(state, actions) {
     name: "规划拾荒路线",
     desc: "选择今天的拾荒区域：城中村小巷(稳)/废品站边缘(中)/工业区(高)/老周专线(⭐)。不同路线收益和风险各异。",
     icon: "🗺️",
+    category: "work",
     apCost: 15,
     payEstimate: "2~65",
     handler: () => {
@@ -107,6 +108,7 @@ function addStreetExtras(state, actions) {
     name: "摆摊选址建议",
     desc: "根据天气、节日、周末等因素，智能推荐今日最佳摆摊地点。",
     icon: "📍",
+    category: "work",
     apCost: 5,
     handler: () => {
       if (typeof showVendingLocationAdviceModal === "function") {
@@ -123,6 +125,7 @@ function addStreetExtras(state, actions) {
     name: "准备应对天气",
     desc: "查看明日天气，购买雨伞（¥20，雨天疲劳减半）或暖宝（¥50，寒冷健康保护）。未雨绸缪总没错。",
     icon: "🌤️",
+    category: "survival",
     apCost: 5,
     handler: () => {
       var st = StateManager.getState();
@@ -147,6 +150,7 @@ function addStreetExtras(state, actions) {
     name: "街头卖唱",
     desc: "在地铁口或天桥上唱歌赚打赏。需要胆子大。",
     icon: "🎤",
+    category: "work",
     apCost: 20,
     payEstimate: "5~25",
     handler: () => {
@@ -180,6 +184,7 @@ function addStreetExtras(state, actions) {
     name: "街头乞讨",
     desc: "放下尊严，跪地要饭。（有尊严损失）",
     icon: "🙏",
+    category: "work",
     apCost: 20,
     payEstimate: "1~5",
     handler: () => {
@@ -204,6 +209,7 @@ function addStreetExtras(state, actions) {
     name: "路边赌骰子",
     desc: "和地摊小贩玩骰子，押 50 赢了翻倍，输了打水漂。",
     icon: "🎲",
+    category: "work",
     costEstimate: 50,
     apCost: 20,
     payEstimate: "0或100",
@@ -236,6 +242,7 @@ function addStreetExtras(state, actions) {
     name: "给家里打电话",
     desc: "用公用电话给爸妈报平安，听听唠叨。",
     icon: "📞",
+    category: "social",
     costEstimate: 2,
     handler: () => {
       const st = StateManager.getState();
@@ -270,6 +277,7 @@ function addStreetExtras(state, actions) {
     name: "给家里汇款",
     desc: "把一部分钱寄回老家。",
     icon: "💌",
+    category: "social",
     costEstimate: "200~1000",
     handler: () => {
       showRemitModal();
@@ -281,6 +289,7 @@ function addStreetExtras(state, actions) {
     name: "网吧上网",
     desc: "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
     icon: "💻",
+    category: "appliance",
     costEstimate: 5,
     apCost: 20,
     payEstimate: "智力+0.3, 随机技能XP",
@@ -312,6 +321,7 @@ function addStreetExtras(state, actions) {
     name: "路边理发店聊天",
     desc: "花 10 块剪个头发，顺便听听老板吹牛。需要敏捷≥18才能帮上忙。",
     icon: "💈",
+    category: "social",
     costEstimate: 10,
     apCost: 20,
     payEstimate: "心情+10",
@@ -345,6 +355,7 @@ function addStreetExtras(state, actions) {
     name: "发型设计",
     desc: "找附近能做造型的小店打理发型。越繁华的地方越贵，短期魅力提升也越明显。",
     icon: "💇",
+    category: "social",
     costEstimate: "20~180",
     apCost: 15,
     payEstimate: "魅力临时+1~5",
@@ -382,6 +393,7 @@ function addStreetExtras(state, actions) {
     name: "图书馆自习",
     desc: "去图书馆（商业区旁）安静看书。",
     icon: "📖",
+    category: "education",
     apCost: 20,
     payEstimate: "技能XP+30",
     handler: () => {
@@ -410,6 +422,7 @@ function addStreetExtras(state, actions) {
     name: "上夜校",
     desc: "晚上上夜校，提升智力+相关技能。需要 ¥50 学费，智力≥25。",
     icon: "🌃",
+    category: "education",
     costEstimate: 50,
     apCost: 20,
     payEstimate: "智力+1, 技能+",
@@ -446,6 +459,7 @@ function addStreetExtras(state, actions) {
     name: "办健身卡锻炼",
     desc: "去健身房办月卡，提升体质和敏捷。",
     icon: "🏋️",
+    category: "social",
     costEstimate: 200,
     apCost: 20,
     payEstimate: "体质+1, 敏捷+0.5",
@@ -474,6 +488,7 @@ function addStreetExtras(state, actions) {
     name: "看场电影",
     desc: "去影院看场电影放松一下。",
     icon: "🎬",
+    category: "social",
     costEstimate: 35,
     apCost: 20,
     payEstimate: "心情+18",
@@ -500,6 +515,7 @@ function addStreetExtras(state, actions) {
     name: "KTV 唱歌",
     desc: "约朋友去 KTV 吼两小时。",
     icon: "🎤",
+    category: "social",
     costEstimate: 80,
     apCost: 20,
     payEstimate: "心情+25, 人缘+",
@@ -527,6 +543,7 @@ function addStreetExtras(state, actions) {
     name: "买药/买营养品",
     desc: "去药房买维生素、补品等。需要 ¥30~80。",
     icon: "💊",
+    category: "survival",
     costEstimate: 30,
     apCost: 20,
     payEstimate: "健康+5",
@@ -552,6 +569,7 @@ function addStreetExtras(state, actions) {
     name: "去超市采购",
     desc: "去超市买点吃的用的。需要 ¥30~60。",
     icon: "🛒",
+    category: "shopping",
     costEstimate: 30,
     apCost: 20,
     payEstimate: "饥饱+30, 卫生+",
@@ -578,6 +596,7 @@ function addStreetExtras(state, actions) {
     name: "买件新衣服",
     desc: "去服装店买件像样的衣服，提升卫生/心情/名气。",
     icon: "👕",
+    category: "shopping",
     costEstimate: 80,
     apCost: 20,
     payEstimate: "卫生+10, 名气+",
@@ -605,6 +624,7 @@ function addStreetExtras(state, actions) {
     name: "买张彩票",
     desc: "花 2 块买注彩票，搏一搏单车变摩托。",
     icon: "🎰",
+    category: "finance",
     costEstimate: 2,
     apCost: 20,
     payEstimate: "0或50万",
@@ -643,6 +663,7 @@ function addStreetExtras(state, actions) {
     name: "买余额宝理财",
     desc: "把闲钱存进余额宝，每天 0.01% 收益。",
     icon: "💰",
+    category: "finance",
     costEstimate: "100起",
     apCost: 20,
     payEstimate: "日息0.01%",
@@ -656,6 +677,7 @@ function addStreetExtras(state, actions) {
     name: "买保险",
     desc: "花 200 买份意外险，下次受伤/生病能赔 500。",
     icon: "🛡️",
+    category: "finance",
     costEstimate: 200,
     handler: () => {
       const st = StateManager.getState();
@@ -680,6 +702,7 @@ function addStreetExtras(state, actions) {
     name: "写日记",
     desc: "记录今天的心情。回顾一下，反思成长。",
     icon: "📓",
+    category: "social",
     handler: () => {
       const st = StateManager.getState();
       st.needs.happiness = Math.min(100, st.needs.happiness + 8);
@@ -698,6 +721,7 @@ function addStreetExtras(state, actions) {
     name: "冥想打坐",
     desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
     icon: "🧘",
+    category: "social",
     handler: () => {
       const st = StateManager.getState();
       st.player.mental = Math.min(100, st.player.mental + 1);
@@ -721,6 +745,7 @@ function addStreetExtras(state, actions) {
         : "无加成") +
       "）。",
     icon: "🏪",
+    category: "work",
     costEstimate: 200,
     apCost: 20,
     payEstimate: "100~350",
@@ -830,6 +855,7 @@ function addStreetExtras(state, actions) {
       name: "送礼联络感情",
       desc: "将背包里的商品送给附近的NPC。送对口的礼物好感+15，普通礼物好感+5。每天每人限一次。",
       icon: "🎁",
+      category: "social",
       apCost: 10,
       handler: function () {
         showGiftModal();
@@ -858,6 +884,7 @@ function addStreetExtras(state, actions) {
         estMax +
         "。每单消耗30点行动力。",
       icon: "💻",
+      category: "work",
       apCost: 30,
       payEstimate: estMin + "~" + estMax,
       pricePreview:
@@ -920,6 +947,7 @@ function addStreetExtras(state, actions) {
         morality +
         "。",
       icon: "💰",
+      category: "social",
       apCost: 5,
       handler: function () {
         var st = StateManager.getState();
@@ -974,6 +1002,7 @@ function addStreetExtras(state, actions) {
         morality +
         "。",
       icon: "🤝",
+      category: "social",
       apCost: 15,
       handler: function () {
         var st = StateManager.getState();
@@ -1021,12 +1050,13 @@ function addStreetExtras(state, actions) {
   var weekendMarketDoneKey =
     "_weekendMarket_" + Math.floor(state.player.day / 7);
   if (isWeekend && atMarketLoc && !state.flags[weekendMarketDoneKey]) {
-    actions.push({
-      id: "weekend_market",
-      name: "周末集市摆摊",
-      desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
-      icon: "🏪",
-      apCost: 25,
+actions.push({
+    id: "weekend_market",
+    name: "周末集市摆摊",
+    desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
+    icon: "🏪",
+    category: "work",
+    apCost: 25,
       handler: function () {
         var st = StateManager.getState();
         var dk = "_weekendMarket_" + Math.floor(st.player.day / 7);
@@ -1065,12 +1095,13 @@ function addStreetExtras(state, actions) {
   // === 周一打听消息（每逢day%7=1出现：任意地点，每周限一次） ===
   var mondayInfoKey = "_mondayInfo_" + Math.floor(state.player.day / 7);
   if (dayOfWeek === 1 && !state.flags[mondayInfoKey]) {
-    actions.push({
-      id: "monday_job_board",
-      name: "打听本周零工机会",
-      desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
-      icon: "📋",
-      apCost: 10,
+actions.push({
+    id: "monday_job_board",
+    name: "打听本周零工机会",
+    desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
+    icon: "📋",
+    category: "work",
+    apCost: 10,
       handler: function () {
         var st = StateManager.getState();
         var mk = "_mondayInfo_" + Math.floor(st.player.day / 7);

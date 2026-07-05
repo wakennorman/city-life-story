@@ -1919,6 +1919,46 @@ function _wikiDetailSkill(state, id) {
       }
       html += "</ul>";
     }
+
+    // 约定式自动归类：职业路径中也需要此技能的职位
+    if (typeof CAREER_PATHS !== "undefined") {
+      var careerPositions = [];
+      for (var pathKey in CAREER_PATHS) {
+        var path = CAREER_PATHS[pathKey];
+        if (!path.levels) continue;
+        for (var li = 0; li < path.levels.length; li++) {
+          var lvl = path.levels[li];
+          if (lvl.reqSkills && lvl.reqSkills[id]) {
+            careerPositions.push({
+              pathIcon: path.icon,
+              pathName: path.name,
+              posName: lvl.name,
+              lv: lvl.reqSkills[id],
+            });
+          }
+        }
+      }
+      if (careerPositions.length > 0) {
+        html += '<h3>🏢 该技能在职场中的用途</h3><ul class="wiki-list">';
+        careerPositions.sort(function (a, b) {
+          return a.lv - b.lv;
+        });
+        for (var cp = 0; cp < careerPositions.length; cp++) {
+          var p = careerPositions[cp];
+          html +=
+            "<li>" +
+            p.pathIcon +
+            " <b>" +
+            _wkE(p.posName) +
+            "</b>（" +
+            _wkE(p.pathName) +
+            "）— 需 Lv." +
+            p.lv +
+            "</li>";
+        }
+        html += "</ul>";
+      }
+    }
   }
 
   // 衍生加成

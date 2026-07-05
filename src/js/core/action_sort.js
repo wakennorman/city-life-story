@@ -412,12 +412,22 @@
   // ====== 公共API ======
 
   /**
-   * 根据 action ID 返回分类 ID
-   * @param {string} actionId
+   * 根据 action 对象或 ID 返回分类 ID
+   * 约定式自动归类：行动对象声明 category 字段，系统自动读取
+   * @param {Object|string} actionOrId - 行动对象（含 category/id）或行动 ID 字符串
    * @returns {string} 分类 ID
    */
-  function getActionCategory(actionId) {
-    if (!actionId) return "other";
+  function getActionCategory(actionOrId) {
+    if (!actionOrId) return "other";
+
+    // 约定式优先：行动对象声明了 category 字段直接读取
+    if (typeof actionOrId === "object" && actionOrId.category) {
+      return actionOrId.category;
+    }
+
+    // 兼容旧调用：传入的是字符串 ID
+    var actionId =
+      typeof actionOrId === "string" ? actionOrId : actionOrId.id || "";
 
     // 1. 精确匹配
     if (EXACT_MAP.hasOwnProperty(actionId)) {
@@ -464,11 +474,25 @@
 
   /**
    * 获取行动在同类内的默认优先级
-   * @param {string} actionId
+   * 约定式自动归类：行动对象声明 priority 字段，系统自动读取
+   * @param {Object|string} actionOrId - 行动对象（含 priority/id）或行动 ID 字符串
    * @returns {number}
    */
-  function getActionPriority(actionId) {
-    if (!actionId) return 999;
+  function getActionPriority(actionOrId) {
+    if (!actionOrId) return 999;
+
+    // 约定式优先：行动对象声明了 priority 字段直接读取
+    if (
+      typeof actionOrId === "object" &&
+      typeof actionOrId.priority === "number"
+    ) {
+      return actionOrId.priority;
+    }
+
+    // 兼容旧调用：传入的是字符串 ID
+    var actionId =
+      typeof actionOrId === "string" ? actionOrId : actionOrId.id || "";
+
     if (IN_CATEGORY_PRIORITY.hasOwnProperty(actionId)) {
       return IN_CATEGORY_PRIORITY[actionId];
     }
@@ -549,16 +573,16 @@
     var sorted = actions.slice(); // 不修改原数组
 
     sorted.sort(function (a, b) {
-      // Level 1: 分类顺序（地点感知）
-      var catA = getActionCategory(a.id);
-      var catB = getActionCategory(b.id);
+      // Level 1: 分类顺序（地点感知）— 传入完整行动对象以支持约定式 category 字段
+      var catA = getActionCategory(a);
+      var catB = getActionCategory(b);
       var catOrdA = getCategoryOrder(catA, currentLocation);
       var catOrdB = getCategoryOrder(catB, currentLocation);
       if (catOrdA !== catOrdB) return catOrdA - catOrdB;
 
-      // Level 2: 同类内默认优先级 + 新行动临时加成
-      var priA = getActionPriority(a.id) + getActionNewBoost(a.id, state);
-      var priB = getActionPriority(b.id) + getActionNewBoost(b.id, state);
+      // Level 2: 同类内默认优先级 + 新行动临时加成 — 传入完整行动对象
+      var priA = getActionPriority(a) + getActionNewBoost(a.id, state);
+      var priB = getActionPriority(b) + getActionNewBoost(b.id, state);
       if (priA !== priB) return priA - priB;
 
       // Level 3: 禁用项排同类末尾
@@ -596,7 +620,7 @@
 
     for (var i = 0; i < actions.length; i++) {
       var action = actions[i];
-      var cat = getActionCategory(action.id);
+      var cat = getActionCategory(action);
       if (!groups[cat]) {
         groups[cat] = [];
       }
@@ -690,13 +714,15 @@
       lines.push("");
       lines.push("行动审计 (" + actions.length + " 个行动):");
       var auditMap = {};
+      var totalDeclared = 0;
       for (var ai2 = 0; ai2 < actions.length; ai2++) {
         var act = actions[ai2];
         if (!act || !act.id) continue;
-        var cat = getActionCategory(act.id);
+        var cat = getActionCategory(act);
         if (!auditMap[cat]) auditMap[cat] = [];
         auditMap[cat].push(act.id + "(" + (act.name || "") + ")");
         if (cat === "other") totalOther++;
+        else if (typeof act.category === "string") totalDeclared++;
         else if (EXACT_MAP.hasOwnProperty(act.id)) totalExact++;
         else totalPrefix++;
       }
@@ -718,7 +744,9 @@
       }
       lines.push("");
       lines.push(
-        "精确匹配: " +
+        "约定式声明: " +
+          totalDeclared +
+          " | 精确匹配: " +
           totalExact +
           " | 前缀匹配: " +
           totalPrefix +

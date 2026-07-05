@@ -124,7 +124,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.22 — 职业里程碑叙事事件 + 带薪年假（commit: `2dfec45`）
+- **最新一次工作 (2026-07-06)**：v3.1 审查改进 — 死代码清理 + 注释修正 + 职场路径引导（commit: `5aa85f7`）
+  - **jobs.js 清理**：移除底部 ~514 行注释掉的占位符自由职业工作（引用的 drone/design/videoEditing/writing 等 skills 在 state 中未声明，导致 payCalc 静默收入 0），1348 行 → 834 行
+  - **locations.js 悬空引用清理**：郊区(suburb) 和 娱乐城(entertainment) 的 jobs 数组原包含未定义的工作 ID（suburb_cleaning/suburb_security/entertainment_staff/game_attendant），改为空数组 [] 消除引用死链
+  - **state.js 注释修正**：housing.tier 注释从"0-3"更新为"0-6"，匹配 items.js HOUSING_TIERS 实际范围（0=露宿 1=合租床位 2=单间 3=一居室 4=豪华公寓 5=郊区独栋 6=江景豪宅）
+  - **职场路径引导**：daily_quest.js `_dynamicNextDesc` 新增 2 条动态提示 — 智力 35-44 → 提示再提升 N 点即可去科技园；智力 ≥ 45 → 直接引导去科技园应聘互联网公司
+  - **全剧本适用**：所有改动均无剧本分支条件，7 剧本均能受益（尤其是小镇做题家 fresh_grad 智力路线）
+  - **验证**：全部 127 个 JS 文件 node --check 通过 / python build.py 4814.3KB 构建成功 / MC 回归 30 trials × 365 days 所有策略存活率、Day30 现金区间正常
+  - **影响文件**：jobs.js(-514), locations.js(+注释), state.js(+注释), daily_quest.js(+22)
+  - **待 push**：commit 已落本地，代理连通后 push 即可
+- **上一轮 (2026-07-06)**：v3.22 — 职业里程碑叙事事件 + 带薪年假（commit: `2dfec45`）
   - **9个街头工作里程碑叙事事件**：`job_milestone_events.js`（新建+430行），7/30/100天触发，真实中国打工场景对话+有后果的选择（金钱/道德/机会取舍），自动解锁已有NPC推荐flag（老周/老李/陈师傅/小美等）
   - **带薪年假系统**：`career_dev.js` 新增 `careerTakePaidLeave()`（+47行），需在职90天+冷却180天+倦怠≥30，效果：倦怠-45/心情+25/精神+15/健康+8，代价扣5天薪资
   - **工作行动UI**：新增「🏖️ 带薪年假（180天）」按钮（调休按钮旁），仅在职玩家可见

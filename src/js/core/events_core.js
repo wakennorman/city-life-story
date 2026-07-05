@@ -32,6 +32,27 @@ function queueChainEvent(state, eventId, delayDays, conditions) {
  * 二、事件触发与队列管理
  * ========================================================= */
 
+/**
+ * 统一事件触发匹配器：支持 triggers 数据对象 + conditions 函数
+ * @param {Object} event - 事件定义对象
+ * @param {Object} state - 游戏状态
+ * @returns {boolean}
+ */
+function eTriggersMatch(event, state) {
+  if (!event) return false;
+  // 约定式优先：triggers 数据对象
+  if (event.triggers && typeof event.triggers === "object") {
+    return evaluateTriggers(event.triggers, state);
+  }
+  // 兼容旧写法：conditions 函数
+  if (typeof event.conditions === "function") {
+    return event.conditions(state);
+  }
+  // 有 triggers 定义但 evaluateTriggers 不可用 → 默认放行（向前兼容）
+  if (event.triggers) return true;
+  return false;
+}
+
 /** 街头每日事件判定 */
 function rollStreetEvent(state) {
   // 基础 18% 触发率，已存在待弹事件时不重复触发
@@ -47,7 +68,7 @@ function rollStreetEvent(state) {
     var mce = RANDOM_EVENTS.find(function (e) {
       return e.id === mentalCrisisIds[mci];
     });
-    if (mce && typeof mce.conditions === "function" && mce.conditions(state)) {
+    if (mce && eTriggersMatch(mce, state)) {
       state._pendingEvent = mce;
       state.flags._todayMentalEvent = true;
       return;
@@ -64,7 +85,7 @@ function rollStreetEvent(state) {
     var dce = RANDOM_EVENTS.find(function (e) {
       return e.id === debtEventIds[dci];
     });
-    if (dce && typeof dce.conditions === "function" && dce.conditions(state)) {
+    if (dce && eTriggersMatch(dce, state)) {
       state._pendingEvent = dce;
       state.flags._todayDebtEvent = true;
       return;
@@ -128,6 +149,109 @@ function isCrisis35FollowupEvent(evt, state) {
   );
 }
 
+/**
+ * 约定式事件触发条件评估
+ * 事件声明 triggers 数据对象，系统自动匹配条件，无需手写 conditions 函数
+ *
+ * triggers 支持字段：
+ *   minDay / maxDay       — 天数范围
+ *   minCash / maxCash     — 财富范围（cash + bankBalance）
+ *   minStat               — { physique: 20, intelligence: 25 } 属性下限
+ *   maxStat               — { physique: 40 } 属性上限
+ *   minSkill              — { cooking: 10, coding: 15 } 技能等级下限
+ *   maxSkill              — { cooking: 30 } 技能等级上限
+ *   requireFlags          — 必须全部存在: ["_oldZhouReferred"]
+ *   excludeFlags          — 必须全部不存在: ["_eraEvent_90"]
+ *   minAge / maxAge       — 年龄范围
+ *   educationMin          — 最低学历等级
+ *   moralityMin / moralityMax — 道德范围
+ *   phase                 — 阶段过滤: ["street"]（已有独立过滤）
+ *
+ * @param {Object} triggers - 触发条件数据对象
+ * @param {Object} state    - 游戏状态
+ * @returns {boolean} 是否满足所有条件
+ */
+function evaluateTriggers(triggers, state) {
+  if (!triggers || typeof triggers !== "object") return true;
+  var p = state.player || {};
+
+  // 天数范围
+  if (triggers.minDay !== undefined && p.day < triggers.minDay) return false;
+  if (triggers.maxDay !== undefined && p.day > triggers.maxDay) return false;
+
+  // 财富范围
+  if (triggers.minCash !== undefined) {
+    var cash = (state.resources && state.resources.cash) || 0;
+    cash += (state.resources && state.resources.bankBalance) || 0;
+    if (cash < triggers.minCash) return false;
+  }
+  if (triggers.maxCash !== undefined) {
+    var cash2 = (state.resources && state.resources.cash) || 0;
+    cash2 += (state.resources && state.resources.bankBalance) || 0;
+    if (cash2 > triggers.maxCash) return false;
+  }
+
+  // 属性下限
+  if (triggers.minStat && typeof triggers.minStat === "object") {
+    for (var sk in triggers.minStat) {
+      var attrVal = p[sk] || 0;
+      if (attrVal < triggers.minStat[sk]) return false;
+    }
+  }
+  // 属性上限
+  if (triggers.maxStat && typeof triggers.maxStat === "object") {
+    for (var sk2 in triggers.maxStat) {
+      var attrVal2 = p[sk2] || 0;
+      if (attrVal2 > triggers.maxStat[sk2]) return false;
+    }
+  }
+
+  // 技能等级下限
+  if (triggers.minSkill && typeof triggers.minSkill === "object") {
+    for (var skl in triggers.minSkill) {
+      var skillDef = state.skills && state.skills[skl];
+      var skillLvl = skillDef ? (skillDef.level || 0) : 0;
+      if (skillLvl < triggers.minSkill[skl]) return false;
+    }
+  }
+  // 技能等级上限
+  if (triggers.maxSkill && typeof triggers.maxSkill === "object") {
+    for (var skl2 in triggers.maxSkill) {
+      var skillDef2 = state.skills && state.skills[skl2];
+      var skillLvl2 = skillDef2 ? (skillDef2.level || 0) : 0;
+      if (skillLvl2 > triggers.maxSkill[skl2]) return false;
+    }
+  }
+
+  // Flag 必须存在
+  if (triggers.requireFlags && Array.isArray(triggers.requireFlags)) {
+    var flags = state.flags || {};
+    for (var fi = 0; fi < triggers.requireFlags.length; fi++) {
+      if (!flags[triggers.requireFlags[fi]]) return false;
+    }
+  }
+  // Flag 必须不存在
+  if (triggers.excludeFlags && Array.isArray(triggers.excludeFlags)) {
+    var flags2 = state.flags || {};
+    for (var fi2 = 0; fi2 < triggers.excludeFlags.length; fi2++) {
+      if (flags2[triggers.excludeFlags[fi2]]) return false;
+    }
+  }
+
+  // 年龄范围
+  if (triggers.minAge !== undefined && p.age < triggers.minAge) return false;
+  if (triggers.maxAge !== undefined && p.age > triggers.maxAge) return false;
+
+  // 学历下限
+  if (triggers.educationMin !== undefined && (p.education ?? 0) < triggers.educationMin) return false;
+
+  // 道德范围
+  if (triggers.moralityMin !== undefined && (p.morality ?? 50) < triggers.moralityMin) return false;
+  if (triggers.moralityMax !== undefined && (p.morality ?? 50) > triggers.moralityMax) return false;
+
+  return true;
+}
+
 function queueRandomEvent(state, phase) {
   const pool = RANDOM_EVENTS.filter((e) => e.phase === phase);
   if (pool.length === 0) return;
@@ -135,9 +259,16 @@ function queueRandomEvent(state, phase) {
   // ponytail: 排除链式事件——它们只能通过 scheduleChainEvent 触发
   var eligible = pool.filter(function (e) {
     if (e._isChainEvent) return false;
-    // 通用条件函数检查（兼容 conditions / trigger 两种写法）
-    if (e.conditions && !e.conditions(state)) return false;
+
+    // 约定式触发条件评估（triggers 数据对象）
+    // 优先级：triggers > conditions 函数（兼容旧代码）
+    if (e.triggers && typeof e.triggers === "object") {
+      if (!evaluateTriggers(e.triggers, state)) return false;
+    } else if (e.conditions && !e.conditions(state)) {
+      return false;
+    }
     if (e.trigger && !e.trigger(state)) return false;
+
     // 财富检查：太有钱时不出贫穷主题事件
     if (
       e.maxCash &&
