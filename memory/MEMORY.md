@@ -1,3 +1,4 @@
+- [v3.1 NG+ 继承增强](v3.1-ng-plus-inheritance.md) — 继承摘要弹窗可视化 + 35岁路径/道德分/NPC巅峰好感展示 + 加成消费断链修复
 - [Career Milestone Events v3.22](career-milestone-events-v3.22.md) — 9个街头工作×3阶段里程碑叙事事件 + 带薪年假机制
 - [Review Improve v3.1](review-improve-v3.1.md) — 审查改进 v3.1 SOP（继承 v3.0 + 全剧本适配/峰终定律/留存机制）
 - [Location-Aware Action Category Ordering](location-aware-action-category-ordering.md) — 16个地点按功能优先级的行动分类重排系统
