@@ -76,7 +76,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-05)**：v3.18.1 — BugFix: 交易Tab不显示商品（commit: `3222e88`）
+- **最新一次工作 (2026-07-05)**：v3.19 — 交易Tab进阶信息门控 + 商品卡片紧凑化（commit: `7ecda93`）
+  - **季节横幅/路线提示门控**：季节横幅需销售≥10级，最佳路线需销售≥15级+已访问≥2地点；探索提示改为3态智能文案
+  - **商品卡片2行紧凑化**：`.trade-item-card`新CSS类，tic-header(名称+标签)/tic-body(价格+按钮行)，padding 8px（移动端6px），去掉space-between留白
+  - **验证**：node --check ✅ / build.py 4755.3KB ✅（push待网络恢复）
+- **上一轮 (2026-07-05)**：v3.18.1 — BugFix: 交易Tab不显示商品（commit: `3222e88`）
   - **根因**：`pricing.js` 的 `calcFinalPrice()` 调用了未定义的 `getDailyPriceShock()`，价格计算循环抛出 ReferenceError，渲染中断，商品网格空白
   - **修复**：新增 `getDailyPriceShock()` 函数，使用确定性种子生成 ±7% 的日常价格波动乘数（0.93~1.07）
   - **验证**：puppeteer 自动化测试确认 30 张商品卡片正常显示，错误归零
