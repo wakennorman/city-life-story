@@ -1307,8 +1307,17 @@
       title: "工友在工地受伤了",
       story:
         '你的工友老刘从脚手架上摔下来，工头悄悄跟你说"别声张，私了了事，你多分200块"。老刘疼得直哼。',
+      // [自洽修复] conditions 新增：建筑工地职业/地点/行动频次 检查
       conditions: function (st) {
-        return st.player.phase === "street";
+        var hasConstruction =
+          (st.employment &&
+            st.employment.currentJob &&
+            st.employment.currentJob.id === "manual_labor_construction") ||
+          (st.trade && st.trade.currentLocation === "construction") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            st.stats.actionFreq["manual_labor_construction"] > 0);
+        return st.player.phase === "street" && hasConstruction;
       },
       choices: [
         {
@@ -1368,8 +1377,24 @@
       title: "发现进了假货",
       story:
         "你从批发市场进了一批电子产品，摆摊时才发现全是山寨货。你手里还有20件，进货成本已经付了¥800。",
+      // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
-        return st.player.phase === "street" && st.resources.cash > 0;
+        var hasStall =
+          (st.employment &&
+            st.employment.currentJob &&
+            [
+              "food_stall",
+              "street_vending_food",
+              "street_vending_goods",
+            ].includes(st.employment.currentJob.id)) ||
+          (st.sideHustle && st.sideHustle.type === "stall") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["food_stall"] > 0 ||
+              st.stats.actionFreq["start_business"] > 0));
+        return (
+          st.player.phase === "street" && st.resources.cash > 0 && hasStall
+        );
       },
       choices: [
         {
@@ -1633,10 +1658,25 @@
       title: "摆摊时被老板相中",
       story:
         "今天摆摊，一个穿着体面的中年女人在你摊位前停了很久，说她在一家公司负责采购，问你有没有兴趣合作供货。",
+      // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        var hasStall =
+          (st.employment &&
+            st.employment.currentJob &&
+            [
+              "food_stall",
+              "street_vending_food",
+              "street_vending_goods",
+            ].includes(st.employment.currentJob.id)) ||
+          (st.sideHustle && st.sideHustle.type === "stall") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["food_stall"] > 0 ||
+              st.stats.actionFreq["start_business"] > 0));
         return (
           st.player.phase === "street" &&
-          (st.skills.sales ? st.skills.sales.level >= 5 : false)
+          (st.skills.sales ? st.skills.sales.level >= 5 : false) &&
+          hasStall
         );
       },
       choices: [
@@ -1885,8 +1925,25 @@
       title: "暴雨来了，摊子怎么办",
       story:
         "下午突然电闪雷鸣，暴雨将至。你刚摆好的货还没收，跑一趟要20分钟。同时有个生意正谈到关键处。",
+      // [自洽修复] conditions 新增：暴雨天气 检查 + 摆摊职业/副业/行动频次 检查
       conditions: function (st) {
-        return st.player.phase === "street";
+        var isRainy =
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy");
+        var hasStall =
+          (st.employment &&
+            st.employment.currentJob &&
+            [
+              "food_stall",
+              "street_vending_food",
+              "street_vending_goods",
+            ].includes(st.employment.currentJob.id)) ||
+          (st.sideHustle && st.sideHustle.type === "stall") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["food_stall"] > 0 ||
+              st.stats.actionFreq["start_business"] > 0));
+        return st.player.phase === "street" && isRainy && hasStall;
       },
       choices: [
         {
@@ -2287,8 +2344,16 @@
       title: "暴雨前的争夺",
       story:
         "天气预报说今晚有暴雨。你平时躲雨的那个桥洞位置，已经被另一个人占了。他看着你，你也看着他。雨还有两小时就到。",
+      // [自洽修复] conditions 新增：暴雨天气 检查
       conditions: function (st) {
-        return st.player.phase === "street" && (st.housing.tier || 0) === 0;
+        var isRainy =
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy");
+        return (
+          st.player.phase === "street" &&
+          (st.housing.tier || 0) === 0 &&
+          isRainy
+        );
       },
       choices: [
         {
