@@ -1,8 +1,79 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（v3.21b — 约定式自动导航）
+> 最后更新: 2026-07-06（v3.1 审查改进 — 难度系统全面接入 + 终局体验强化）
 >
-> commit: `3d28143`
+> commit: `2aa6a45`(v3.23) + 本轮 commit 待定
+
+---
+
+## 2026-07-06 — v3.1 审查改进：难度系统全面接入 + 终局体验强化
+
+### 审查发现
+
+按 v3.1 SOP 执行全面审查，核心发现：
+
+**难度系统已创建但未完全接入**：`difficulty_system.js` 定义了 4 个乘数参数，但 `needsDecayMultiplier` 和 `eventPenaltyMultiplier` 从未被任何代码消费（死参数），`wageMultiplier`/`priceMultiplier`/`illnessRateMultiplier` 尚未定义。
+
+### P1 难度系统全面接入（4 个系统，5 个文件）
+
+| 修改点                              | 文件                                      | 影响                         |
+| ----------------------------------- | ----------------------------------------- | ---------------------------- |
+| `needsDecayMultiplier` 接入需求衰减 | `phase1/needs.js::applyNeedsDecay`        | 休闲衰减×0.85，地狱×1.40     |
+| `needsDecayMultiplier` 接入需求惩罚 | `phase1/needs.js::checkNeedsThresholds`   | 饥饿/卫生/疲劳惩罚按难度缩放 |
+| `wageMultiplier` 接入工作收入       | `main.js::doStreetJob` + `estimateJobPay` | 休闲+15%，地狱-30%           |
+| `priceMultiplier` 接入物价计算      | `phase1/pricing.js::calcFinalPrice`       | 休闲-10%，地狱+30%           |
+
+### P1 难度系统升级：3→4 档 + 6 乘数
+
+| 难度    | 日息  | 工资  | 物价  | 疾病率 | 需求衰减 | 事件惩罚 | 中产税 |
+| ------- | ----- | ----- | ----- | ------ | -------- | -------- | ------ |
+| 🍵 休闲 | 0.20% | ×1.15 | ×0.90 | ×0.60  | ×0.85    | ×0.70    | 20%    |
+| ⚖️ 标准 | 0.35% | ×1.00 | ×1.00 | ×1.00  | ×1.00    | ×1.00    | 35%    |
+| 🔥 困难 | 0.50% | ×0.85 | ×1.15 | ×1.50  | ×1.15    | ×1.30    | 50%    |
+| 💀 地狱 | 0.70% | ×0.70 | ×1.30 | ×2.00  | ×1.40    | ×1.60    | 70%    |
+
+**难度选择器 UI 升级**：选择器卡片现在显示工资/物价/日息/疾病率四维参数，一目了然。
+
+### P2 终局体验强化（峰终定律）
+
+胜利弹窗新增三大模块：
+
+1. **人生总结统计**：换工作次数/结交好友数/精通技能数/考证数/是否创办公司/是否拥有房产
+2. **NG+ 继承激励**：清晰展示可继承的徽章/现金/装备/技能分支/梦想进度
+3. **难度成就标签**：地狱难度通关显示「💀 地狱难度通关！你是真正的生存大师」，困难难度显示「🔥 困难难度通关」
+
+**设计参考**：《大多数》终局人生总结 / 《中国式家长》成就激励 / 《Papers Please》难度标签
+
+### MC 平衡验证
+
+`tests/mc_difficulty_balance.cjs` — 4 难度 × 4 策略 × 100 次 × 1000 天
+
+| 难度 | balanced 中位现金 | 存活率 |
+| ---- | ----------------- | ------ |
+| 休闲 | ¥11,827           | 100%   |
+| 标准 | ¥7,045            | 100%   |
+| 困难 | ¥1,535            | 100%   |
+| 地狱 | -¥306             | 0%     |
+
+**验证结论**：难度分层有效，梯度清晰，地狱档极限挑战成立。
+
+### 影响文件
+
+| 文件                              | 操作                                                 |
+| --------------------------------- | ---------------------------------------------------- |
+| `core/difficulty_system.js`       | 升级 3→4 档，新增 wage/price/illness 3 乘数，UI 升级 |
+| `phase1/needs.js`                 | 接入 needsDecayMultiplier（衰减 + 惩罚）             |
+| `main.js`                         | 接入 wageMultiplier（doStreetJob + estimateJobPay）  |
+| `phase1/pricing.js`               | 接入 priceMultiplier（calcFinalPrice）               |
+| `ui/corp_ui.js`                   | 终局体验强化（人生总结 + NG+ 激励 + 难度成就）       |
+| `memory/review-improve-v3.1.md`   | 新增 v3.1 SOP                                        |
+| `tests/mc_difficulty_balance.cjs` | 新建 MC 平衡验证脚本                                 |
+
+### 验证
+
+- `node --check` 5 文件全部通过 ✅
+- `python build.py` 4831.5 KB ✅
+- MC 4×4×100×1000 验证通过 ✅
 
 ---
 
@@ -4250,12 +4321,12 @@ python build.py → 4431.0 KB，成功
 
 **本轮发现的高优先级问题**：
 
-| # | 文件 | 问题 | 严重度 |
-| --- | --- | --- | --- |
-| 1 | `jobs.js` | 底部 ~514 行全是注释掉的占位符自由职业工作，引用的 skills（drone/design/videoEditing/writing 等）未在 state 中声明，如果将来误取消注释会触发 payCalc 静默收入 0 | 🔴P0（代码误导） |
-| 2 | `locations.js` | 郊区(suburb) 和 娱乐城(entertainment) 的 jobs 数组包含未定义的工作 ID（suburb_cleaning/suburb_security/entertainment_staff/game_attendant），getJobById 静默返回 null，工作永远不显示，玩家无法在此工作 | 🔴P1 |
-| 3 | `state.js` | housing.tier 注释声称"0-3"，但 items.js HOUSING_TIERS 实际定义 0-6，注释过时导致开发者误解 | 🟡P2 |
-| 4 | `daily_quest.js` | 玩家智力接近 45 时无任何提示引导去 techPark，职场入口对新玩家不透明 | 🟡P2 |
+| #   | 文件             | 问题                                                                                                                                                                                                    | 严重度           |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | `jobs.js`        | 底部 ~514 行全是注释掉的占位符自由职业工作，引用的 skills（drone/design/videoEditing/writing 等）未在 state 中声明，如果将来误取消注释会触发 payCalc 静默收入 0                                         | 🔴P0（代码误导） |
+| 2   | `locations.js`   | 郊区(suburb) 和 娱乐城(entertainment) 的 jobs 数组包含未定义的工作 ID（suburb_cleaning/suburb_security/entertainment_staff/game_attendant），getJobById 静默返回 null，工作永远不显示，玩家无法在此工作 | 🔴P1             |
+| 3   | `state.js`       | housing.tier 注释声称"0-3"，但 items.js HOUSING_TIERS 实际定义 0-6，注释过时导致开发者误解                                                                                                              | 🟡P2             |
+| 4   | `daily_quest.js` | 玩家智力接近 45 时无任何提示引导去 techPark，职场入口对新玩家不透明                                                                                                                                     | 🟡P2             |
 
 **本轮改进**：
 
@@ -4265,6 +4336,7 @@ python build.py → 4431.0 KB，成功
 - `daily_quest.js`：_dynamicNextDesc 扩展 2 条智力路线引导文案
 
 **遗留（下轮处理）**：
+
 - MC 1000 天 OOM 问题（monte_carlo.cjs 内存管理）
 - 被移除的自由职业设计（摄影/翻译/咨询等）在 memory/ 留档
 - suburb/entertainment 地点恢复时需要配套实现对应工作

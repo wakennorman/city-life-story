@@ -208,6 +208,11 @@ function estimateJobPay(job, state) {
     if (typeof getNewsJobMultiplier === "function") {
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
     }
+    // v3.1: 难度工资乘数
+    if (typeof getDifficultyMultiplier === "function") {
+      var wageMult = getDifficultyMultiplier(state, "wage");
+      if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
+    }
     total += pay;
   }
   return Math.floor(total / 10);
@@ -3778,6 +3783,12 @@ function doStreetJob(job) {
         Math.min(100, state.needs.happiness + weatherHappiness),
       );
     }
+  }
+
+  // v3.1: 难度工资乘数（休闲档+15%，地狱档-30%）
+  if (typeof getDifficultyMultiplier === "function") {
+    var wageMult = getDifficultyMultiplier(state, "wage");
+    if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
   }
 
   state.resources.cash += pay;

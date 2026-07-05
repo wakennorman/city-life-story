@@ -5,9 +5,14 @@
 /** 每日需求衰减 (v3.2 蒙特卡洛平衡：饥饱衰减从18→13，防止开局饿死) */
 function applyNeedsDecay(state) {
   const n = state.needs;
-  n.hunger = Math.max(0, n.hunger - 13);
-  n.hygiene = Math.max(0, n.hygiene - 7);
-  n.happiness = Math.max(0, n.happiness - 4);
+  // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
+  const decayMul =
+    typeof getDifficultyMultiplier === "function"
+      ? getDifficultyMultiplier(state, "needsDecay")
+      : 1.0;
+  n.hunger = Math.max(0, n.hunger - Math.round(13 * decayMul));
+  n.hygiene = Math.max(0, n.hygiene - Math.round(7 * decayMul));
+  n.happiness = Math.max(0, n.happiness - Math.round(4 * decayMul));
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 
@@ -17,26 +22,32 @@ function checkNeedsThresholds(state) {
   const msgs = [];
   // v3.2 新手保护：前30天需求惩罚减半
   const dayMul = state.player.day <= 30 ? 0.5 : 1.0;
+  // v3.1: 接入难度乘数 — 困难/地狱档惩罚更重
+  const diffMul =
+    typeof getDifficultyMultiplier === "function"
+      ? getDifficultyMultiplier(state, "needsDecay")
+      : 1.0;
+  const combinedMul = dayMul * diffMul;
 
   if (n.hunger < 10) {
-    const dmg = Math.round(2 * dayMul);
+    const dmg = Math.round(2 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
     if (n.hunger <= 0) state.flags._everStarved = true; // 成就追踪
     msgs.push("⚠️ 极度饥饿！健康-" + dmg + "。赶紧吃点什么！");
   } else if (n.hunger < 25) {
-    const dmg = Math.round(1 * dayMul);
+    const dmg = Math.round(1 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("🍞 肚子饿了，工作效率下降。");
   }
 
   if (n.hygiene < 10) {
-    const dmg = Math.round(2 * dayMul);
+    const dmg = Math.round(2 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("🦠 卫生极差！容易生病。去洗个澡吧。");
   }
 
   if (n.fatigue > 90) {
-    const dmg = Math.round(2 * dayMul);
+    const dmg = Math.round(2 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
     msgs.push("😵 极度疲劳！需要休息或睡眠。");
   }

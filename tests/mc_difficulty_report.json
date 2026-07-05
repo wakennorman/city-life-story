@@ -1,0 +1,227 @@
+{
+  "version": "v3.1-difficulty-balance",
+  "date": "2026-07-05T21:27:21.381Z",
+  "params": {
+    "runs": 100,
+    "days": 1000
+  },
+  "difficulties": {
+    "easy": {
+      "balanced": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 11827,
+        "avgCash": 11820,
+        "p10": 11487,
+        "p90": 12188,
+        "avgHealth": 96.1,
+        "avgTotalEarned": 25915
+      },
+      "grinder": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": 8296,
+        "avgCash": 8193,
+        "p10": 7049,
+        "p90": 9604,
+        "avgHealth": 0,
+        "avgTotalEarned": 7846
+      },
+      "skiller": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 1259,
+        "avgCash": 1247,
+        "p10": 927,
+        "p90": 1568,
+        "avgHealth": 94.9,
+        "avgTotalEarned": 15332
+      },
+      "trader": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 14621,
+        "avgCash": 14673,
+        "p10": 13977,
+        "p90": 15406,
+        "avgHealth": 94.8,
+        "avgTotalEarned": 28807
+      }
+    },
+    "normal": {
+      "balanced": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 7045,
+        "avgCash": 7029,
+        "p10": 6687,
+        "p90": 7342,
+        "avgHealth": 95.6,
+        "avgTotalEarned": 22526
+      },
+      "grinder": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": 5676,
+        "avgCash": 5567,
+        "p10": 4491,
+        "p90": 6772,
+        "avgHealth": 0,
+        "avgTotalEarned": 5455
+      },
+      "skiller": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": -308,
+        "avgCash": -310,
+        "p10": -320,
+        "p90": -301,
+        "avgHealth": 0,
+        "avgTotalEarned": 3901
+      },
+      "trader": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 9496,
+        "avgCash": 9527,
+        "p10": 8995,
+        "p90": 10084,
+        "avgHealth": 97,
+        "avgTotalEarned": 25027
+      }
+    },
+    "hard": {
+      "balanced": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 1535,
+        "avgCash": 1516,
+        "p10": 1135,
+        "p90": 1891,
+        "avgHealth": 96.4,
+        "avgTotalEarned": 19140
+      },
+      "grinder": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": 4425,
+        "avgCash": 4231,
+        "p10": 3271,
+        "p90": 5263,
+        "avgHealth": 0,
+        "avgTotalEarned": 4173
+      },
+      "skiller": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": -308,
+        "avgCash": -311,
+        "p10": -322,
+        "p90": -302,
+        "avgHealth": 0,
+        "avgTotalEarned": 1311
+      },
+      "trader": {
+        "n": 100,
+        "survivedCount": 100,
+        "survivalRate": 1,
+        "medianCash": 3737,
+        "avgCash": 3730,
+        "p10": 3192,
+        "p90": 4274,
+        "avgHealth": 94.3,
+        "avgTotalEarned": 21323
+      }
+    },
+    "hell": {
+      "balanced": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": -306,
+        "avgCash": -311,
+        "p10": -334,
+        "p90": -301,
+        "avgHealth": 0,
+        "avgTotalEarned": 2299
+      },
+      "grinder": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": 3199,
+        "avgCash": 3124,
+        "p10": 2310,
+        "p90": 3840,
+        "avgHealth": 0,
+        "avgTotalEarned": 3031
+      },
+      "skiller": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": -311,
+        "avgCash": -314,
+        "p10": -320,
+        "p90": -302,
+        "avgHealth": 0,
+        "avgTotalEarned": 609
+      },
+      "trader": {
+        "n": 100,
+        "survivedCount": 0,
+        "survivalRate": 0,
+        "medianCash": -309,
+        "avgCash": -312,
+        "p10": -328,
+        "p90": -301,
+        "avgHealth": 0,
+        "avgTotalEarned": 3743
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "休闲档中位现金 > 标准档",
+      "pass": true,
+      "detail": "休闲¥11,827 vs 标准¥7,045"
+    },
+    {
+      "name": "困难档中位现金 < 标准档",
+      "pass": true,
+      "detail": "困难¥1,535 vs 标准¥7,045"
+    },
+    {
+      "name": "地狱档中位现金 < 困难档",
+      "pass": true,
+      "detail": "地狱¥-306 vs 困难¥1,535"
+    },
+    {
+      "name": "标准档存活率 >= 50%",
+      "pass": true,
+      "detail": "存活率 100%"
+    },
+    {
+      "name": "休闲档存活率 > 标准档",
+      "pass": false,
+      "detail": "休闲100% vs 标准100%"
+    },
+    {
+      "name": "地狱档存活率 < 标准档",
+      "pass": true,
+      "detail": "地狱0% vs 标准100%"
+    }
+  ],
+  "allPass": false
+}

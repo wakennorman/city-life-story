@@ -450,6 +450,11 @@ function calcFinalPrice(state, locKey, goodId) {
     : 0;
   var npcP = Math.min(10, Math.floor(rl / 2) * 0.5);
   if (npcP > 0) price *= 1 + npcP / 100;
+  // v3.1: 难度物价乘数（休闲档-10%，地狱档+30%）
+  if (typeof getDifficultyMultiplier === "function") {
+    var priceMult = getDifficultyMultiplier(state, "price");
+    if (priceMult !== 1.0) price *= priceMult;
+  }
   price = Math.max(good.basePrice * 0.2, Math.min(good.basePrice * 6, price));
   return Math.round(price * 100) / 100;
 }

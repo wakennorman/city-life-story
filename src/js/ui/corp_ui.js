@@ -444,6 +444,132 @@ function showVictoryModal() {
       "</div>";
   }
 
+  // 计算人生总结统计数据
+  var lifeStats = {
+    jobsHeld:
+      (state.career && state.career.history ? state.career.history.length : 0) +
+      1,
+    npFellowships: Object.keys(state.relationships || {}).filter(
+      function (npcId) {
+        var r = state.relationships[npcId];
+        return r && r.met && (r.affinity || 0) >= 30;
+      },
+    ).length,
+    skillsMastered: Object.values(state.skills || {}).filter(function (s) {
+      return s && s.level >= 80;
+    }).length,
+    certsEarned: (state.certificates || []).length,
+    achievements:
+      state.flags && state.flags._achievementsEarned
+        ? state.flags._achievementsEarned.length
+        : 0,
+    companyFounded: !!(state.corporate && state.corporate.company),
+    houseOwned: !!(state.housing && state.housing.tier >= 2),
+    maxHealth: 100,
+    maxHappiness: 100,
+    totalDays: state.player.day,
+    ageAtEnd: state.player.age,
+    difficulty: state._difficulty || "normal",
+  };
+
+  // 计算难度标签
+  var diffLabel = "";
+  if (typeof getDifficultyConfig === "function") {
+    var diffCfg = getDifficultyConfig(lifeStats.difficulty);
+    diffLabel = diffCfg.icon + " " + diffCfg.name;
+  }
+
+  // 构建生活统计表格
+  var statsTableHtml =
+    '<table class="stats-summary">' +
+    "<tr><td>总天数</td><td>" +
+    lifeStats.totalDays +
+    " 天</td></tr>" +
+    "<tr><td>年龄</td><td>" +
+    lifeStats.ageAtEnd +
+    " 岁</td></tr>" +
+    "<tr><td>难度</td><td>" +
+    diffLabel +
+    "</td></tr>" +
+    "<tr><td>职级</td><td>" +
+    (state.corporate && state.corporate.rank ? state.corporate.rank : "—") +
+    "</td></tr>" +
+    "<tr><td>现金</td><td>¥" +
+    state.resources.cash.toLocaleString() +
+    "</td></tr>" +
+    "<tr><td>总收入</td><td>¥" +
+    (state.resources.totalEarned || 0).toLocaleString() +
+    "</td></tr>" +
+    "</table>";
+
+  // 构建人生总结
+  var summaryHtml =
+    '<div style="margin-top:15px;padding:12px 15px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">' +
+    '<div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">📊 人生总结</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;">' +
+    "<div>👔 换工作 <strong>" +
+    lifeStats.jobsHeld +
+    "</strong> 次</div>" +
+    "<div>👥 结交好友 <strong>" +
+    lifeStats.npFellowships +
+    "</strong> 人</div>" +
+    "<div>🎓 精通技能 <strong>" +
+    lifeStats.skillsMastered +
+    "/10</strong></div>" +
+    "<div>📜 考取证书 <strong>" +
+    lifeStats.certsEarned +
+    "</strong> 张</div>" +
+    (lifeStats.companyFounded
+      ? "<div>🏢 创办公司 <strong>是</strong></div>"
+      : "") +
+    (lifeStats.houseOwned ? "<div>🏠 拥有房产 <strong>是</strong></div>" : "") +
+    "</div>" +
+    "</div>";
+
+  // 构建NG+激励
+  var ngPlusHtml = "";
+  if (badges.length > 0 || inheritanceData.cashInfo) {
+    var ngPlusItems = [];
+    if (badges.length > 0)
+      ngPlusItems.push("🏅 " + badges.length + " 枚声誉徽章");
+    if (inheritanceData.cashInfo && inheritanceData.cashInfo.total > 0) {
+      ngPlusItems.push(
+        "💰 ¥" + inheritanceData.cashInfo.total.toLocaleString() + " 继承现金",
+      );
+    }
+    if (inheritanceData.itemCount > 0)
+      ngPlusItems.push("🎁 " + inheritanceData.itemCount + " 件稀有装备");
+    if (inheritanceData.skillTree && inheritanceData.skillTree.branches) {
+      var branchCount = Object.keys(inheritanceData.skillTree.branches).length;
+      if (branchCount > 0)
+        ngPlusItems.push("🌳 " + branchCount + " 个技能分支");
+    }
+    if (inheritanceData.dreamProgress) ngPlusItems.push("💭 未完成梦想可继承");
+    if (ngPlusItems.length > 0) {
+      ngPlusHtml =
+        '<div style="margin-top:12px;padding:10px 12px;background:linear-gradient(135deg,rgba(100,149,237,0.1),rgba(100,149,237,0.05));border:1px solid rgba(100,149,237,0.3);border-radius:8px;">' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔄 新游戏+ 可继承</div>' +
+        '<div style="font-size:12px;color:var(--text-primary);">' +
+        ngPlusItems.join("<br>") +
+        "</div>" +
+        "</div>";
+    }
+  }
+
+  // 计算难度成就标签
+  var diffAchievement = "";
+  if (lifeStats.difficulty === "hell") {
+    diffAchievement =
+      '<div style="margin-top:10px;padding:8px 12px;background:linear-gradient(135deg,rgba(255,69,0,0.15),rgba(255,69,0,0.05));border:1px solid rgba(255,69,0,0.4);border-radius:6px;text-align:center;">' +
+      '<span style="font-size:13px;color:#FF4500;font-weight:700;">💀 地狱难度通关！你是真正的生存大师。</span>' +
+      "</div>";
+  } else if (lifeStats.difficulty === "hard") {
+    diffAchievement =
+      '<div style="margin-top:10px;padding:8px 12px;background:linear-gradient(135deg,rgba(255,140,0,0.15),rgba(255,140,0,0.05));border:1px solid rgba(255,140,0,0.4);border-radius:6px;text-align:center;">' +
+      '<span style="font-size:13px;color:#FF8C00;font-weight:600;">🔥 困难难度通关！坚韧不拔的精神值得敬佩。</span>' +
+      "</div>";
+  }
+
   showModal({
     title,
     body: `
@@ -451,15 +577,12 @@ function showVictoryModal() {
         <div class="end-icon">${state.flags.victoryType === "p10" ? "🏆" : "💰"}</div>
         <div class="end-title">${title}</div>
         <div class="end-subtitle">${desc}</div>
-        <table class="stats-summary">
-          <tr><td>总天数</td><td>${state.player.day} 天</td></tr>
-          <tr><td>年龄</td><td>${state.player.age} 岁</td></tr>
-          <tr><td>职级</td><td>${state.corporate.rank}</td></tr>
-          <tr><td>现金</td><td>¥${state.resources.cash.toLocaleString()}</td></tr>
-          <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
-        </table>
+        ${statsTableHtml}
+        ${summaryHtml}
         ${badgeText}
         ${ribbonText}
+        ${ngPlusHtml}
+        ${diffAchievement}
       </div>`,
     buttons: [
       {

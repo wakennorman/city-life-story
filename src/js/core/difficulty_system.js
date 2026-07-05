@@ -45,12 +45,15 @@
       level: "easy",
       name: "休闲",
       icon: "🍵",
-      desc: "压力更小，叙事优先。村长债日息 0.20%，反向闸门较弱。",
+      desc: "压力更小，叙事优先。物价低、工资高、疾病少、需求衰减慢。",
       color: "var(--success)",
       dailyInterestBase: 0.002, // 0.20% / 日
       wealthTaxProbability: 0.2,
       eventPenaltyMultiplier: 0.7,
       needsDecayMultiplier: 0.85,
+      wageMultiplier: 1.15,
+      priceMultiplier: 0.9,
+      illnessRateMultiplier: 0.6,
       startingCashBonus: 500, // 休闲档给一点启动资金缓冲
     },
     normal: {
@@ -63,18 +66,39 @@
       wealthTaxProbability: 0.35,
       eventPenaltyMultiplier: 1.0,
       needsDecayMultiplier: 1.0,
+      wageMultiplier: 1.0,
+      priceMultiplier: 1.0,
+      illnessRateMultiplier: 1.0,
       startingCashBonus: 0,
     },
     hard: {
       level: "hard",
       name: "困难",
       icon: "🔥",
-      desc: "为老玩家准备。村长债日息 0.50%，反向闸门全开，需求衰减更快。",
+      desc: "为老玩家准备。物价高、工资低、疾病多、需求衰减快、反向闸门全开。",
       color: "var(--danger)",
       dailyInterestBase: 0.005, // 0.50% / 日
       wealthTaxProbability: 0.5,
       eventPenaltyMultiplier: 1.3,
       needsDecayMultiplier: 1.15,
+      wageMultiplier: 0.85,
+      priceMultiplier: 1.15,
+      illnessRateMultiplier: 1.5,
+      startingCashBonus: 0,
+    },
+    hell: {
+      level: "hell",
+      name: "地狱",
+      icon: "💀",
+      desc: "极限生存。全面数值惩罚，只为挑战自我的硬核玩家。",
+      color: "var(--danger)",
+      dailyInterestBase: 0.007, // 0.70% / 日
+      wealthTaxProbability: 0.7,
+      eventPenaltyMultiplier: 1.6,
+      needsDecayMultiplier: 1.4,
+      wageMultiplier: 0.7,
+      priceMultiplier: 1.3,
+      illnessRateMultiplier: 2.0,
       startingCashBonus: 0,
     },
   };
@@ -120,6 +144,9 @@
     if (key === "needsDecay") return cfg.needsDecayMultiplier;
     if (key === "wealthTaxProb") return cfg.wealthTaxProbability;
     if (key === "dailyInterest") return cfg.dailyInterestBase;
+    if (key === "wage") return cfg.wageMultiplier;
+    if (key === "price") return cfg.priceMultiplier;
+    if (key === "illness") return cfg.illnessRateMultiplier;
     return 1.0;
   }
 
@@ -128,10 +155,22 @@
     _pickerChangeCb = onChange;
     var html =
       '<div class="difficulty-picker" style="margin:12px 0 8px;padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">' +
-      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">⚙️ 难度选择（影响利率/反向闸门/事件惩罚，不影响收益曲线）</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">⚙️ 难度选择（影响工资/物价/疾病率/需求衰减/事件惩罚/利率，不影响属性成长）</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
     Object.keys(DIFFICULTY_LEVELS).forEach(function (k) {
       var d = DIFFICULTY_LEVELS[k];
+      var wageTag =
+        d.wageMultiplier === 1.0
+          ? "标准"
+          : (d.wageMultiplier > 1
+              ? "+" + Math.round((d.wageMultiplier - 1) * 100)
+              : Math.round((d.wageMultiplier - 1) * 100)) + "%";
+      var priceTag =
+        d.priceMultiplier === 1.0
+          ? "标准"
+          : (d.priceMultiplier > 1
+              ? "+" + Math.round((d.priceMultiplier - 1) * 100)
+              : Math.round((d.priceMultiplier - 1) * 100)) + "%";
       html +=
         '<button type="button" class="difficulty-btn" data-level="' +
         k +
@@ -145,9 +184,16 @@
         '<div style="font-weight:600;margin-top:2px;">' +
         d.name +
         "</div>" +
-        '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">日息 ' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">工资' +
+        wageTag +
+        " 物价" +
+        priceTag +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">日息' +
         (d.dailyInterestBase * 100).toFixed(2) +
-        "%</div>" +
+        "% 疾病×" +
+        d.illnessRateMultiplier +
+        "</div>" +
         "</button>";
     });
     html += "</div></div>";
