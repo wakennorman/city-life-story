@@ -52,6 +52,9 @@ function checkPromotion(state) {
     let chance = 0.6;
     chance += c.popularity * 0.002;
     chance += c.upwardMgmt * 0.002;
+    var promoBonus =
+      (state.inheritanceBonuses && state.inheritanceBonuses.promoChance) || 0;
+    chance += promoBonus;
     if (!Random.chance(chance)) {
       StateManager.addMessage("🏛️ 董事会投票未通过...下次再试。", "warning");
       return null;

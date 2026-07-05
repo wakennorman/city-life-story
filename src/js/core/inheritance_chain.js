@@ -333,17 +333,20 @@ function inheritCrisisPath(prevState) {
     grind: {
       label: "再卷职场",
       statBonus: { mental: 3 },
-      note: "上辈子的卷王气质延续",
+      bonus: { promoChance: 0.03, corpSalaryBonus: 0.05 },
+      note: "上辈子的卷王气质延续——新周目职场晋升+3%，月薪+5%",
     },
     civil: {
       label: "备考公",
       statBonus: { intelligence: 3 },
-      note: "上辈子埋首题海的余温",
+      bonus: { examSuccessBonus: 0.10, civilSalaryBonus: 0.03 },
+      note: "上辈子埋首题海的余温——新周目考试成功率+10%，公职月薪+3%",
     },
     lie_flat: {
       label: "摆烂",
       statBonus: { happiness: 5 },
-      note: "上辈子的松弛感传承",
+      bonus: { recoveryRateBonus: 0.10, stressReduction: 3 },
+      note: "上辈子的松弛感传承——新周目体力恢复+10%，每日压力-3",
     },
   };
   var info = pathMap[path];
@@ -352,6 +355,7 @@ function inheritCrisisPath(prevState) {
     path: path,
     label: info.label,
     statBonus: info.statBonus,
+    bonus: info.bonus,
     note: info.note,
   };
 }
@@ -364,6 +368,10 @@ function inheritMoralScore(prevState) {
   var good = prevState?.flags?.moralGoodChoices || 0;
   var bad = prevState?.flags?.moralBadChoices || 0;
   var score = good - bad;
+  // 业力→NPC初始好感偏移（-8~+8）
+  var npcAffinityAdjust = Math.max(-8, Math.min(8, Math.floor(score * 0.8)));
+  // 业力→道德事件触发率调整（-15%~+15%）
+  var moralEventRateAdjust = Math.max(-0.15, Math.min(0.15, score * 0.03));
   return {
     score: score,
     good: good,
@@ -376,7 +384,19 @@ function inheritMoralScore(prevState) {
           : score >= -5
             ? "小恶"
             : "恶人",
-    note: "前世业力 " + (score >= 0 ? "+" : "") + score + "，影响新周目幸运",
+    npcAffinityAdjust: npcAffinityAdjust,
+    moralEventRateAdjust: moralEventRateAdjust,
+    note:
+      "前世业力 " +
+      (score >= 0 ? "+" : "") +
+      score +
+      "，NPC初始好感" +
+      (npcAffinityAdjust >= 0 ? "+" : "") +
+      npcAffinityAdjust +
+      "，道德事件率" +
+      (moralEventRateAdjust >= 0 ? "+" : "") +
+      Math.round(moralEventRateAdjust * 100) +
+      "%",
   };
 }
 
@@ -545,7 +565,7 @@ function applyInheritance(newState, prevState, inheritanceData) {
     newState.flags._inheritanceCashBase = inheritanceData.cashInfo.base;
   }
 
-  // v3.0 P2-B-1：应用 35 岁路径继承（微小属性加成）
+  // v3.0 P2-B-1：应用 35 岁路径继承（属性加成 + 职场/考试/恢复加成）
   if (inheritanceData.crisisPath && inheritanceData.crisisPath.statBonus) {
     var sb = inheritanceData.crisisPath.statBonus;
     for (var k in sb) {
@@ -554,15 +574,50 @@ function applyInheritance(newState, prevState, inheritanceData) {
       }
     }
     newState.flags._prevCrisis35Path = inheritanceData.crisisPath.path;
+    // 职场/考试/恢复加成
+    var bonus = inheritanceData.crisisPath.bonus;
+    if (bonus) {
+      newState.inheritanceBonuses = newState.inheritanceBonuses || {};
+      if (bonus.promoChance) {
+        newState.inheritanceBonuses.promoChance =
+          (newState.inheritanceBonuses.promoChance || 0) + bonus.promoChance;
+      }
+      if (bonus.corpSalaryBonus) {
+        newState.inheritanceBonuses.corpSalaryBonus =
+          (newState.inheritanceBonuses.corpSalaryBonus || 0) + bonus.corpSalaryBonus;
+      }
+      if (bonus.examSuccessBonus) {
+        newState.inheritanceBonuses.examSuccessBonus =
+          (newState.inheritanceBonuses.examSuccessBonus || 0) + bonus.examSuccessBonus;
+      }
+      if (bonus.recoveryRateBonus) {
+        newState.inheritanceBonuses.recoveryRate =
+          (newState.inheritanceBonuses.recoveryRate || 0) + bonus.recoveryRateBonus;
+      }
+      if (bonus.stressReduction) {
+        newState.inheritanceBonuses.stressReduction =
+          (newState.inheritanceBonuses.stressReduction || 0) + bonus.stressReduction;
+      }
+    }
   }
 
-  // v3.0 P2-B-1：应用道德分继承（幸运加成，封顶 +5）
+  // v3.0 P2-B-1：应用道德分继承（幸运 + NPC 好感偏移 + 道德事件率）
   if (inheritanceData.moralScore) {
     var ms = inheritanceData.moralScore.score;
     var luckBonus = Math.max(-3, Math.min(5, Math.floor(ms / 5)));
     newState.inheritanceBonuses = newState.inheritanceBonuses || {};
     newState.inheritanceBonuses.luckBonus =
       (newState.inheritanceBonuses.luckBonus || 0) + luckBonus;
+    if (inheritanceData.moralScore.npcAffinityAdjust) {
+      newState.inheritanceBonuses.npcInitialAffinity =
+        (newState.inheritanceBonuses.npcInitialAffinity || 0) +
+        inheritanceData.moralScore.npcAffinityAdjust;
+    }
+    if (inheritanceData.moralScore.moralEventRateAdjust) {
+      newState.inheritanceBonuses.moralEventRate =
+        (newState.inheritanceBonuses.moralEventRate || 0) +
+        inheritanceData.moralScore.moralEventRateAdjust;
+    }
     newState.flags._prevMoralScore = ms;
   }
 

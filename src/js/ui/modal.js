@@ -207,6 +207,7 @@ function showGameOverModal() {
       typeof inheritPeakAffinity === "function"
         ? inheritPeakAffinity(state)
         : null,
+    totalDays: state.player?.day || 0,
   };
 
   // 计算继承现金
@@ -1993,6 +1994,10 @@ function showInheritanceSummaryModal(inheritanceData) {
   var dreamProgress = inheritanceData.dreamProgress;
   var skillTree = inheritanceData.skillTree;
   var narrative = inheritanceData.narrative || "";
+  var crisisPath = inheritanceData.crisisPath;
+  var moralScore = inheritanceData.moralScore;
+  var peakAffinity = inheritanceData.peakAffinity;
+  var totalDays = inheritanceData.totalDays || 0;
 
   // 构建徽章HTML
   var badgeHtml = "";
@@ -2089,6 +2094,86 @@ function showInheritanceSummaryModal(inheritanceData) {
     }
   }
 
+  var crisisPath = inheritanceData.crisisPath;
+  var moralScore = inheritanceData.moralScore;
+  var peakAffinity = inheritanceData.peakAffinity;
+  var totalDays = inheritanceData.totalDays || 0;
+
+  // === 35 岁分水岭路径继承 ===
+  var crisisHtml = "";
+  if (crisisPath && crisisPath.path) {
+    crisisHtml =
+      '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
+    crisisHtml +=
+      '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">📋 上辈子的 35 岁选择</div>';
+    crisisHtml +=
+      '<div style="font-size:12px;color:var(--text-secondary);">';
+    crisisHtml +=
+      '<span style="background:var(--bg-input);padding:2px 8px;border-radius:4px;">' +
+      crisisPath.label +
+      "</span> ";
+    crisisHtml += crisisPath.note || "";
+    crisisHtml += "</div></div>";
+  }
+
+  // === 道德分（前世业力） ===
+  var moralHtml = "";
+  if (moralScore && moralScore.score !== undefined) {
+    var moralColor =
+      moralScore.score >= 10
+        ? "var(--success)"
+        : moralScore.score >= 0
+          ? "var(--text-primary)"
+          : moralScore.score >= -5
+            ? "var(--warning)"
+            : "var(--danger)";
+    moralHtml =
+      '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
+    moralHtml +=
+      '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">⚖️ 前世业力</div>';
+    moralHtml +=
+      '<div style="font-size:12px;color:var(--text-secondary);">';
+    moralHtml +=
+      '善恶净值: <strong style="color:' +
+      moralColor +
+      ';">' +
+      (moralScore.score >= 0 ? "+" : "") +
+      moralScore.score +
+      "</strong> " +
+      '(' +
+      moralScore.label +
+      ')';
+    if (moralScore.good > 0 || moralScore.bad > 0) {
+      moralHtml +=
+        ' <span style="color:var(--text-muted);">善行' +
+        moralScore.good +
+        ' / 恶行' +
+        moralScore.bad +
+        "</span>";
+    }
+    moralHtml += "</div></div>";
+  }
+
+  // === NPC 巅峰好感（老熟人） ===
+  var peakHtml = "";
+  if (peakAffinity && peakAffinity.npcs && peakAffinity.count > 0) {
+    peakHtml =
+      '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
+    peakHtml +=
+      '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">👥 老熟人（上局巅峰好感）</div>';
+    peakHtml += '<div style="font-size:12px;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">';
+    for (var npcId in peakAffinity.npcs) {
+      var pa = peakAffinity.npcs[npcId];
+      peakHtml +=
+        '<span style="background:var(--bg-input);padding:2px 8px;border-radius:4px;">' +
+        npcId +
+        ' ❤️' +
+        pa.peakAffinity +
+        "</span>";
+    }
+    peakHtml += "</div></div>";
+  }
+
   // 叙事文案
   var narrativeHtml = "";
   if (narrative) {
@@ -2107,6 +2192,16 @@ function showInheritanceSummaryModal(inheritanceData) {
   html += itemHtml;
   html += dreamHtml;
   html += skillHtml;
+  html += crisisHtml;
+  html += moralHtml;
+  html += peakHtml;
+  // 总存活天数提示
+  if (totalDays > 0) {
+    html +=
+      '<div style="margin-bottom:12px;font-size:12px;color:var(--text-muted);text-align:center;">上局存活 ' +
+      totalDays +
+      " 天</div>";
+  }
   html += "</div>";
 
   showModal({

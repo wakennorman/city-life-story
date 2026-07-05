@@ -453,6 +453,10 @@ function showEventModal(evt) {
       if (!choice) return;
       const state = StateManager.getState();
       try {
+        // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
+        var _preEvtCash = state.resources.cash;
+        var _preEvtHealth = state.stats ? state.stats.health : 0;
+        var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
           choice.apply(state);
           // NPC事件桥接：事件结算后自动触发NPC好感变化
@@ -469,6 +473,27 @@ function showEventModal(evt) {
         }
       } catch (e) {
         console.error("Event choice apply error:", e);
+      }
+      // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
+      try {
+        if (typeof getDifficultyMultiplier === "function") {
+          var epMult = getDifficultyMultiplier(state, "eventPenalty");
+          if (epMult !== 1.0) {
+            // 仅对负向 delta（惩罚）应用倍率，不放大正向收益
+            var dCash = state.resources.cash - _preEvtCash;
+            if (dCash < 0) state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
+            if (state.stats) {
+              var dHealth = state.stats.health - _preEvtHealth;
+              if (dHealth < 0) state.stats.health = _preEvtHealth + Math.round(dHealth * epMult);
+            }
+            if (state.player) {
+              var dMental = state.player.mental - _preEvtMental;
+              if (dMental < 0) state.player.mental = _preEvtMental + Math.round(dMental * epMult);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("v3.1 eventPenalty apply error:", e);
       }
       // 清掉待弹事件（三字段全部清理）
       state._pendingEvent = null;

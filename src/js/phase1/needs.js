@@ -82,7 +82,14 @@ function tickHealthStatus(state) {
   // 提高至 +3 recovery 提供更宽的安全余量，仍能被重度受伤/疾病combo击穿
   // 参考：《大多数》稳定的日恢复=让慢性病的"可管理"设计意图成立
   if (!st.injured && st.health < 100) {
-    st.health = Math.min(100, st.health + 3);
+    var baseRecovery = 3;
+    var recoveryBonus =
+      (state.inheritanceBonuses && state.inheritanceBonuses.recoveryRate) || 0;
+    var totalRecovery = Math.max(
+      1,
+      Math.round(baseRecovery * (1 + recoveryBonus)),
+    );
+    st.health = Math.min(100, st.health + totalRecovery);
   }
 }
 

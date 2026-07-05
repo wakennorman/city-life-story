@@ -4131,9 +4131,11 @@ function consumeAP(cost) {
     }
   }
 
-  // 道德事件判定（5%概率，每日最多一次，用showModal展示选择）
+  // 道德事件判定（基础5% + NG+ 道德罗盘/业力加成）
   if (!state._pendingEvent && typeof triggerMoralEvent === "function") {
-    if (Random.chance(0.05)) {
+    var moralRate = 0.05;
+    moralRate += (state.inheritanceBonuses && state.inheritanceBonuses.moralEventRate) || 0;
+    if (Random.chance(moralRate)) {
       triggerMoralEvent(state);
     }
   }
