@@ -3656,6 +3656,8 @@ function doStreetJob(job) {
       "👑 职业大师！" + job.name + "累计100天，收入永久+15%！",
       "success",
     );
+    if (typeof checkJobMilestoneEvent === "function")
+      checkJobMilestoneEvent(job.id, 3, state);
   } else if (totalShifts >= 30 && currentTitle < 2) {
     state.flags._jobTitles[job.id] = 2;
     pay = Math.floor(pay * 1.08);
@@ -3663,12 +3665,16 @@ function doStreetJob(job) {
       "🎖️ 熟练老手！" + job.name + "累计30天，收入永久+8%！",
       "success",
     );
+    if (typeof checkJobMilestoneEvent === "function")
+      checkJobMilestoneEvent(job.id, 2, state);
   } else if (totalShifts >= 7 && currentTitle < 1) {
     state.flags._jobTitles[job.id] = 1;
     StateManager.addMessage(
       "📋 入门新人期已过，" + job.name + "工作已上手。",
       "hint",
     );
+    if (typeof checkJobMilestoneEvent === "function")
+      checkJobMilestoneEvent(job.id, 1, state);
   }
   // 已获称号加成持续生效
   var titleBonus = state.flags._jobTitles[job.id] || 0;
@@ -3988,11 +3994,18 @@ function addSkillXp(skillKey, amount) {
   const skill = state.skills[skillKey];
   if (!skill) return;
   skill.xp += amount;
-  var xpNeeded = (skill.level + 1) * 120;
+  // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
+  // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
+  var xpNeeded = Math.floor(
+    (skill.level + 1) * 120 * Math.pow(1.01, skill.level),
+  );
   // 支持连续升级
   while (skill.xp >= xpNeeded && skill.level < 100) {
     skill.level++;
     skill.xp -= xpNeeded;
+    xpNeeded = Math.floor(
+      (skill.level + 1) * 120 * Math.pow(1.01, skill.level),
+    );
     // 升级时提升关联属性
     if (typeof applySkillLevelUpBonus === "function") {
       applySkillLevelUpBonus(skillKey, state);
@@ -4001,7 +4014,6 @@ function addSkillXp(skillKey, amount) {
       "⭐ " + getSkillName(skillKey) + "升级到 Lv." + skill.level + "！",
       "success",
     );
-    xpNeeded = (skill.level + 1) * 120;
   }
 }
 
@@ -4099,18 +4111,18 @@ function consumeAP(cost) {
   else if (pct > 0.33) state.player.timeSlot = "afternoon";
   else state.player.timeSlot = "evening";
 
-  // Per-action 随机事件判定 (6%基础概率)
+  // Per-action 随机事件判定 (4%基础概率，v3.1 审查：降低通知疲劳)
   if (!state._pendingEvent) {
     const phase = state.player.phase === "corporate" ? "corporate" : "street";
-    if (Random.chance(0.06)) {
+    if (Random.chance(0.04)) {
       if (typeof queueRandomEvent === "function")
         queueRandomEvent(state, phase);
     }
   }
 
-  // 道德事件判定（8%概率，每日最多一次，用showModal展示选择）
+  // 道德事件判定（5%概率，每日最多一次，用showModal展示选择）
   if (!state._pendingEvent && typeof triggerMoralEvent === "function") {
-    if (Random.chance(0.08)) {
+    if (Random.chance(0.05)) {
       triggerMoralEvent(state);
     }
   }
@@ -4137,6 +4149,193 @@ function advanceTimeSlot() {
 // endDay 和 settleDailyFinance 已迁移至 js/phase1/daily_pipeline.js
 // 管线声明式架构：新增结算步骤只需 push {name, fn} 到 DAILY_PIPELINE 数组
 
+// ============================================================
+// "下一步目标" 系统 — P0 玩家方向感 (v3.1 审查改进)
+// 设计参考：《大多数》"下一步" / 《星露谷》小电视 / 《大多数》进度条
+// ============================================================
+
+/** 获取当前最相关的 1-3 个短期目标 */
+function getNextGoals(state) {
+  const goals = [];
+  const r = state.resources || {};
+  const n = state.needs || {};
+  const sk = state.skills || {};
+  const p = state.player || {};
+  const s = state.startup || {};
+  const day = p.day || 1;
+
+  // 紧急：生存需求
+  if (n.hunger < 15)
+    goals.push({ title: "🍚 吃饭", desc: "快饿死了", priority: 100 });
+  if (n.fatigue > 95)
+    goals.push({ title: "😴 休息", desc: "极度疲惫", priority: 100 });
+  if (n.hygiene < 10)
+    goals.push({ title: "🚿 洗澡", desc: "太脏了", priority: 100 });
+
+  const cash = r.cash || 0;
+  const debt = (r.villageDebt || 0) + (r.bankDebt || 0);
+  const hasInvestment = !!state.investment?.stockHoldings?.length;
+
+  // 街头阶段
+  if (p.phase === "street") {
+    if (cash < 100)
+      goals.push({
+        title: "💰 第一桶金",
+        desc: "先赚¥200活下去",
+        priority: 90,
+      });
+    else if (cash < 300)
+      goals.push({
+        title: "💼 找稳定工作",
+        desc: `攒¥${300 - cash}`,
+        priority: 85,
+      });
+    if (debt > 500)
+      goals.push({
+        title: "💸 还债",
+        desc: `债¥${debt.toLocaleString()}（日息0.35%）`,
+        priority: 80,
+      });
+    if (state.housing?.tier === 0)
+      goals.push({
+        title: "🏠 找个住处",
+        desc: "去城中村租个床位",
+        priority: 80,
+      });
+
+    if (cash >= 1000 && !hasInvestment)
+      goals.push({ title: "📈 试试投资", desc: "去科技园投资", priority: 50 });
+
+    // 最高技能
+    let best = { key: "cooking", level: 0 };
+    for (const k in sk)
+      if (sk[k]?.level > best.level) best = { key: k, level: sk[k].level };
+    if (best.level < 30)
+      goals.push({
+        title: `📚 ${getSkillName(best.key)}`,
+        desc: `Lv.${best.level}→30`,
+        priority: 60,
+      });
+    else if (best.level < 50)
+      goals.push({
+        title: `📚 ${getSkillName(best.key)}`,
+        desc: `Lv.${best.level}→50`,
+        priority: 55,
+      });
+
+    const intel = p.intelligence || 20;
+    const earned = r.totalEarned || 0;
+    if (
+      (intel >= 45 || (day >= 200 && earned > 5000)) &&
+      !state.flags?._corpPhaseUnlocked
+    ) {
+      goals.push({
+        title: "💼 准备进职场",
+        desc: "去科技园应聘",
+        priority: 70,
+      });
+    }
+    if (cash + r.bankBalance >= 30000 && !s.status && s.status !== "none") {
+      goals.push({ title: "🚀 考虑创业", desc: "去科技园注册", priority: 60 });
+    }
+  }
+
+  // 职场阶段
+  if (p.phase === "corporate") {
+    goals.push({
+      title: "📈 职级晋升",
+      desc: `当前${state.corporate?.rank || "P5"}`,
+      priority: 60,
+    });
+    if (cash + r.bankBalance < 50000)
+      goals.push({
+        title: "💰 存钱",
+        desc: `攒¥${50000 - (cash + r.bankBalance)}`,
+        priority: 55,
+      });
+    if (cash + r.bankBalance >= 50000 && (!s.status || s.status === "none")) {
+      goals.push({ title: "🚀 创业", desc: "注册自己的公司", priority: 55 });
+    }
+  }
+
+  // 全局
+  if (hasInvestment) {
+    const v =
+      state.investment?.stockHoldings?.reduce((a, h) => {
+        const m = state.investment?.stockMarket?.[h.symbol];
+        return a + (m ? m.price * h.shares : 0);
+      }, 0) || 0;
+    if (v > 0)
+      goals.push({
+        title: "📊 投资表现",
+        desc: `持仓¥${v.toLocaleString()}`,
+        priority: 40,
+      });
+  }
+  if (s.status && s.status !== "none" && s.status !== "exited") {
+    goals.push({ title: "🏢 公司发展", desc: `${s.status}阶段`, priority: 50 });
+  }
+
+  // 场景专属
+  const sc = state.flags?._currentScenario;
+  if (sc === "laid_off" && p.phase === "street")
+    goals.push({ title: "📋 重新就业", desc: "找到新工作", priority: 95 });
+  else if (sc === "small_town_grinder" && p.phase === "street")
+    goals.push({ title: "📚 投资大脑", desc: "提升技能", priority: 80 });
+  else if (sc === "foreign_worker" && p.phase === "street")
+    goals.push({ title: "💪 站稳脚跟", desc: "熟悉城市", priority: 80 });
+  else if (sc === "second_gen" && p.phase === "street")
+    goals.push({ title: "🎯 证明自己", desc: "靠本事", priority: 80 });
+
+  return goals.sort((a, b) => b.priority - a.priority).slice(0, 3);
+}
+
+function renderWhatsNext(state) {
+  const goals = getNextGoals(state);
+  const container = document.getElementById("whats-next-panel");
+  if (!container) return;
+  if (!goals.length) {
+    container.innerHTML = "";
+    return;
+  }
+  container.innerHTML = goals
+    .map(
+      (
+        g,
+      ) => `<div class="whats-next-item" style="padding:3px 0;font-size:11px;">
+        <span style="font-weight:600;">${g.title}</span>
+        <span style="color:var(--text-muted);">${g.desc}</span>
+      </div>`,
+    )
+    .join("");
+}
+
+function checkDebtCeiling(state) {
+  const debt =
+    (state.resources?.villageDebt || 0) + (state.resources?.bankDebt || 0);
+  if (debt < 2000) return;
+  const history = state.history?.income || [];
+  const recent = history.slice(-7);
+  const avg =
+    recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+  const ratio = avg > 0 ? debt / (avg * 30) : Infinity;
+  if (ratio > 2 && !state.flags._debtCeilingWarned) {
+    StateManager.addMessage(
+      `⚠️ 债务已达月收入的${ratio.toFixed(1)}倍，利滚利正在吞噬现金流。建议优先还债。`,
+      "danger",
+    );
+    state.flags._debtCeilingWarned = true;
+    state.flags._debtCeilingWarnedDay = state.player.day;
+  }
+  if (
+    ratio > 5 &&
+    state.player.day - (state.flags._debtCeilingWarnedDay || 0) > 7
+  ) {
+    StateManager.addMessage("⚠️ 债务滚雪球失控！必须立刻还债。", "danger");
+    state.flags._debtCeilingWarnedDay = state.player.day;
+  }
+}
+
 function triggerRandomEvent(state) {
   const events = [
     { text: "街头有人发传单，给了你一张优惠券", type: "info" },
@@ -4147,267 +4346,3 @@ function triggerRandomEvent(state) {
   const evt = Random.fromArray(events);
   StateManager.addMessage(`📰 ${evt.text}`, evt.type);
 }
-
-function checkLoseConditions(state) {
-  if (state.status.health <= 0) {
-    state.flags.gameOver = true;
-    state.flags.gameOverReason = "健康耗尽，你倒在了这座城市的街头...";
-    showGameOverModal();
-    return;
-  }
-  if (state.resources.debt > 50000) {
-    state.flags.gameOver = true;
-    state.flags.gameOverReason = "利滚利债务超过5万元，讨债的人堵住了你的门...";
-    showGameOverModal();
-    return;
-  }
-  // 职场失败条件
-  if (
-    state.player.phase === "corporate" &&
-    typeof checkCorpLoseConditions === "function"
-  ) {
-    if (checkCorpLoseConditions(state)) return;
-  }
-}
-
-// ====== 消息日志渲染 ======
-function renderMessageLog(state) {
-  const log = document.getElementById("message-log");
-  if (!log) return;
-
-  const content = log.querySelector(".log-content");
-  if (!content) return;
-
-  // 移动端最多显示25条，桌面端50条
-  const isMobile = window.innerWidth <= 768;
-  const maxEntries = isMobile ? 25 : 50;
-  const messages = state.messageLog.slice(-maxEntries);
-  content.innerHTML = messages
-    .map(
-      (m) => `
-    <div class="log-entry ${m.type}">
-      <span class="log-day">[第${m.day}天]</span>${m.text}
-    </div>
-  `,
-    )
-    .join("");
-
-  // 滚动到底部
-  content.scrollTop = content.scrollHeight;
-
-  // 移动端：更新折叠预览条（显示总条数）
-  if (isMobile) {
-    var preview = document.getElementById("message-log-preview");
-    if (preview) {
-      var total = state.messageLog.length;
-      preview.innerHTML =
-        '<div class="log-preview-inner">📜 共' +
-        total +
-        "条记录，点击▾展开</div>";
-    }
-  }
-}
-
-// ====== 初始化 ======
-function init() {
-  // 检查是否有存档
-  if (hasSave()) {
-    // 显示欢迎界面
-  }
-
-  // 注册状态变更回调
-  StateManager.onChange(() => {
-    if (gameStarted) {
-      // 函数节流：每 100ms 最多渲染一次
-      if (!init._renderTimeout) {
-        init._renderTimeout = setTimeout(() => {
-          renderAll();
-          init._renderTimeout = null;
-        }, 100);
-      }
-    }
-  });
-
-  // 显示欢迎界面
-  showWelcome();
-
-  // 全局点击事件委托（Tab 切换）
-  document.getElementById("tab-bar").addEventListener("click", (e) => {
-    const btn = e.target.closest(".tab-btn");
-    if (btn && btn.dataset.tab) {
-      switchTab(btn.dataset.tab);
-    }
-  });
-
-  // 存档按钮
-  // 帮助按钮
-  document.getElementById("btn-help").addEventListener("click", () => {
-    showHelpModal();
-  });
-
-  // 存档按钮
-  document.getElementById("btn-save").addEventListener("click", () => {
-    if (gameStarted) showSaveMenu();
-  });
-
-  // 读档按钮
-  document.getElementById("btn-load").addEventListener("click", () => {
-    showLoadMenu();
-  });
-
-  // 新游戏按钮（Header）
-  document
-    .getElementById("btn-new-game-header")
-    .addEventListener("click", () => {
-      if (gameStarted) {
-        showModal({
-          title: "开始新游戏？",
-          body: "<p>当前进度将会丢失。建议先存档。</p>",
-          buttons: [
-            { text: "取消", cls: "", callback: () => {} },
-            {
-              text: "确认新游戏",
-              cls: "btn-danger",
-              callback: () => showWelcome(),
-            },
-          ],
-        });
-      }
-    });
-
-  // 移动端菜单按钮
-  document.getElementById("mobile-menu-btn").addEventListener("click", () => {
-    document.getElementById("sidebar").classList.toggle("open");
-  });
-
-  // 移动端事件记录折叠开关（CSS 已就绪，补完 JS 联动）
-  if (window.innerWidth <= 768) {
-    setupMobileMessageLog();
-  }
-
-  console.log("🏙️ 城市浮生记 initialized.");
-}
-
-/**
- * 移动端事件记录折叠功能
- * 在 #message-log h3 中添加折叠按钮，在 log-content 后添加预览条
- * 默认折叠，点击预览/按钮展开
- */
-function setupMobileMessageLog() {
-  var log = document.getElementById("message-log");
-  if (!log) return;
-
-  // 添加折叠按钮
-  var h3 = log.querySelector("h3");
-  if (!h3) return;
-
-  // 防止重复添加
-  if (document.getElementById("message-log-toggle")) return;
-
-  var toggle = document.createElement("button");
-  toggle.id = "message-log-toggle";
-  toggle.className = "btn btn-sm";
-  toggle.textContent = "▼ 展开";
-  toggle.setAttribute("aria-label", "展开/折叠事件记录");
-  h3.appendChild(toggle);
-
-  // 添加预览行（在 log-content 后面）
-  var content = log.querySelector(".log-content");
-  if (!content) return;
-
-  var preview = document.createElement("div");
-  preview.id = "message-log-preview";
-  preview.innerHTML =
-    '<div class="log-preview-inner">📜 点击▾展开完整记录</div>';
-  content.parentNode.insertBefore(preview, content.nextSibling);
-
-  // 默认折叠
-  log.classList.add("collapsed");
-
-  // 点击预览展开
-  preview.addEventListener("click", function (e) {
-    e.stopPropagation();
-    log.classList.remove("collapsed");
-    toggle.textContent = "▲ 收起";
-  });
-
-  // 点击 toggle 切换
-  toggle.addEventListener("click", function (e) {
-    e.stopPropagation();
-    log.classList.toggle("collapsed");
-    toggle.textContent = log.classList.contains("collapsed")
-      ? "▼ 展开"
-      : "▲ 收起";
-  });
-}
-
-// ====== P2#12 技能树分支/节点事件处理 ======
-
-/**
- * 处理技能分支选择（从弹窗回调调用）
- * @param {string} skillKey - 技能ID
- * @param {string} branchId - 分支ID
- */
-function handleChooseBranch(skillKey, branchId) {
-  var st = StateManager.getState();
-  if (!st) {
-    StateManager.addMessage("⚠️ 存档异常", "warning");
-    return;
-  }
-  if (typeof chooseSkillBranch === "function") {
-    chooseSkillBranch(skillKey, branchId, st);
-    if (typeof renderAll === "function") renderAll(st);
-  }
-}
-
-/**
- * 处理天赋节点激活（从技能卡片圆点点击调用）
- * @param {string} skillKey - 技能ID
- * @param {string} nodeId - 天赋节点ID
- */
-function handleActivateTalentNode(skillKey, nodeId) {
-  var st = StateManager.getState();
-  if (!st) {
-    StateManager.addMessage("⚠️ 存档异常", "warning");
-    return;
-  }
-
-  // 检查资源并确认
-  var branchId = st.skillBranches && st.skillBranches[skillKey];
-  if (!branchId) {
-    StateManager.addMessage("⚠️ 请先选择发展方向", "warning");
-    return;
-  }
-
-  if (typeof activateTalentNode === "function") {
-    var result = activateTalentNode(skillKey, nodeId, st);
-    if (result && typeof renderAll === "function") renderAll(st);
-  }
-}
-
-/**
- * 处理分支切换（从技能卡片的切换按钮调用）
- * @param {string} skillKey - 技能ID
- * @param {string} newBranchId - 新分支ID
- */
-function handleSwitchBranch(skillKey, newBranchId) {
-  var st = StateManager.getState();
-  if (!st) return;
-  if (typeof switchSkillBranch === "function") {
-    switchSkillBranch(skillKey, newBranchId, st);
-    if (typeof renderAll === "function") renderAll(st);
-  }
-}
-
-// ====== 启动 ======
-document.addEventListener("DOMContentLoaded", function () {
-  init();
-  // 百科自检：列出未命中的引用、缺字段等
-  if (typeof runMechanicsAudit === "function") {
-    try {
-      runMechanicsAudit();
-    } catch (e) {
-      console.warn("[mechanics-audit] 异常：", e);
-    }
-  }
-});

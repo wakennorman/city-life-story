@@ -1140,6 +1140,13 @@ function _wikiRenderDetail(state, parent) {
     });
   }
 
+  // 绑定游戏内导航按钮
+  if (typeof bindAllNavButtons === "function") {
+    setTimeout(function () {
+      bindAllNavButtons();
+    }, 0);
+  }
+
   parent.appendChild(detail);
 }
 
@@ -1279,6 +1286,19 @@ function _wikiDetailLocation(state, id) {
       html += "</div>";
     }
   }
+
+  // 导航按钮：前往此地 + 地图 + 交易
+  html +=
+    '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>' +
+    navActionButton("location", id, "🚶 前往" + loc.name) +
+    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+    navActionButton("tab", "map", "🗺️ 在地图上查看") +
+    (loc.jobs && loc.jobs.length > 0
+      ? ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+        navActionButton("tab", "actions", "⚡ 查看行动")
+      : "") +
+    "</div>";
 
   return html;
 }
@@ -1468,6 +1488,17 @@ function _wikiDetailJob(state, id) {
     }
   }
 
+  // 导航按钮：前往地点 + 查看需求技能
+  if (loc) {
+    html +=
+      '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>' +
+      navActionButton("location", job.location, "🚶 前往" + loc.name + "工作") +
+      ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+      navActionButton("tab", "actions", "⚡ 查看行动") +
+      "</div>";
+  }
+
   return html;
 }
 
@@ -1632,6 +1663,48 @@ function _wikiDetailItem(state, id) {
     }
     html += "</div>";
   }
+  // 导航按钮：前往购物地点
+  if (good && good.buyLocations && good.buyLocations.length > 0) {
+    var buyLocs = good.buyLocations.filter(function (bl) {
+      return typeof LOCATIONS !== "undefined" && LOCATIONS[bl];
+    });
+    if (buyLocs.length > 0) {
+      html +=
+        '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>';
+      buyLocs.slice(0, 3).forEach(function (bl) {
+        html +=
+          navActionButton(
+            "location",
+            bl,
+            "🛒 去" + LOCATIONS[bl].name + "购买",
+          ) + " ";
+      });
+      html += "</div>";
+    }
+  }
+
+  // 导航按钮：前往购买地点
+  if (item.buyLocations && item.buyLocations.length > 0) {
+    html +=
+      '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>';
+    item.buyLocations.slice(0, 3).forEach(function (bl) {
+      if (typeof LOCATIONS !== "undefined" && LOCATIONS[bl]) {
+        html +=
+          navActionButton(
+            "location",
+            bl,
+            "🛒 去" + LOCATIONS[bl].name + "购买",
+          ) + " ";
+      }
+    });
+    html +=
+      ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+      navActionButton("tab", "inventory", "🎒 查看背包") +
+      "</div>";
+  }
+
   return html;
 }
 
@@ -1747,6 +1820,19 @@ function _wikiDetailSkill(state, id) {
       html += "</div>";
     }
   }
+  // 导航按钮：前往培训中心训练
+  html +=
+    '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>' +
+    navActionButton(
+      "location",
+      "trainingCenter",
+      "📚 前往培训中心训练 " + skName,
+    ) +
+    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+    navActionButton("tab", "skills", "📖 查看全部技能") +
+    "</div>";
+
   return html;
 }
 
@@ -2052,6 +2138,21 @@ function _wikiDetailNpc(state, id) {
         "</li>";
     }
     html += "</ul>";
+  }
+
+  // 导航按钮：前往NPC所在地点
+  if (typeof LOCATIONS !== "undefined" && LOCATIONS[npc.location]) {
+    html +=
+      '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 游戏内导航</div>' +
+      navActionButton(
+        "location",
+        npc.location,
+        "🚶 前往" + LOCATIONS[npc.location].name + "找" + npc.name,
+      ) +
+      ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+      navActionButton("tab", "social", "👥 社交互动") +
+      "</div>";
   }
 
   return html;

@@ -76,7 +76,11 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-05)**：v3.19 — 交易Tab进阶信息门控 + 商品卡片紧凑化（commit: `7ecda93`）
+- **最新一次工作 (2026-07-06)**：v3.20 — 开局定基调新闻过滤 + 移动端天气预报显示两条（commit: `5c62b72`）
+  - **开局新闻过滤**：`renderActiveNews()` 跳过 `_isIntroNews:true` 条目；开局新闻的 worldParams 效果已在 `applyWorldNewsToParams()` 写入，不需要在日常新闻栏重复展示（该新闻 duration:365，会霸占新闻位并让玩家误以为内容永远不变）
+  - **天气预报只显示两条**：移动端 `render_infra.js` 的 forecast 循环改为 `Math.min(2, forecastArr.length)`，只显示置信度最高的两条，符合手机端空间限制
+  - **验证**：`node --check` ✅ / `build.py 4754.2KB` ✅
+- **上一轮 (2026-07-05)**：v3.19 — 交易Tab进阶信息门控 + 商品卡片紧凑化（commit: `7ecda93`）
   - **季节横幅/路线提示门控**：季节横幅需销售≥10级，最佳路线需销售≥15级+已访问≥2地点；探索提示改为3态智能文案
   - **商品卡片2行紧凑化**：`.trade-item-card`新CSS类，tic-header(名称+标签)/tic-body(价格+按钮行)，padding 8px（移动端6px），去掉space-between留白
   - **验证**：node --check ✅ / build.py 4755.3KB ✅（push待网络恢复）

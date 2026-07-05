@@ -1799,16 +1799,31 @@ function renderTradeTab(state, parent) {
       var cat = good.category;
       var seasonMod = getSeasonalPriceMod(state)[cat];
       if (seasonMod && seasonMod < 0.85) {
-        seasonTag = '<span style="color:var(--success);font-size:10px;white-space:nowrap;">🟢低价季</span>';
+        seasonTag =
+          '<span style="color:var(--success);font-size:10px;white-space:nowrap;">🟢低价季</span>';
       } else if (seasonMod && seasonMod > 1.15) {
-        seasonTag = '<span style="color:var(--danger);font-size:10px;white-space:nowrap;">🔴高价季</span>';
+        seasonTag =
+          '<span style="color:var(--danger);font-size:10px;white-space:nowrap;">🔴高价季</span>';
       }
     }
 
     // 价格行文案：批发市场显示批/零对比，零售市场显示基准→当前
     var priceLineHtml = wholesalePrice
-      ? '批<strong style="color:var(--success)">¥' + wholesalePrice.toFixed(1) + '</strong> 零¥' + price.toFixed(1)
-      : '基¥' + good.basePrice + ' → <strong style="color:' + priceColor + '">¥' + price.toFixed(1) + '</strong>' + trendHtml + (priceLabel ? '<span style="font-size:10px;">' + priceLabel + '</span>' : '');
+      ? '批<strong style="color:var(--success)">¥' +
+        wholesalePrice.toFixed(1) +
+        "</strong> 零¥" +
+        price.toFixed(1)
+      : "基¥" +
+        good.basePrice +
+        ' → <strong style="color:' +
+        priceColor +
+        '">¥' +
+        price.toFixed(1) +
+        "</strong>" +
+        trendHtml +
+        (priceLabel
+          ? '<span style="font-size:10px;">' + priceLabel + "</span>"
+          : "");
 
     const card = document.createElement("div");
     card.className = "action-card trade-item-card";
@@ -2561,6 +2576,21 @@ function renderSkillsTab(state, parent) {
       "margin-bottom:12px;padding:10px 12px;border:1px solid rgba(196,85,61,0.35);background:rgba(196,85,61,0.08);border-radius:8px;color:var(--danger);font-size:12px;line-height:1.5;";
     gate.textContent =
       "技能训练需要前往培训中心；当前地点只能查看技能与解锁条件。";
+
+    // 添加导航按钮
+    var navGate = document.createElement("div");
+    navGate.style.cssText = "margin-top:8px;text-align:center;";
+    if (typeof navActionButton === "function") {
+      navGate.innerHTML = navActionButton(
+        "location",
+        "trainingCenter",
+        "📚 前往培训中心训练技能",
+      );
+    } else {
+      navGate.innerHTML =
+        '<button class="btn btn-sm" style="min-height:36px;" onclick="navToLocation(\'trainingCenter\')">📚 前往培训中心训练技能</button>';
+    }
+    gate.appendChild(navGate);
     parent.appendChild(gate);
   }
 
@@ -4773,6 +4803,18 @@ function renderPgEdu(state, content) {
       eduNames[edu] +
       "。</div>";
   }
+  // 导航按钮区
+  html +=
+    '<div style="margin-top:12px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 快速行动</div>' +
+    (edu === 0
+      ? navActionButton("location", "school", "🏛️ 去大学城备考") +
+        ' <span style="font-size:10px;color:var(--text-muted);">|</span> '
+      : "") +
+    navActionButton("location", "school", "📚 去大学城图书馆") +
+    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+    navActionButton("location", "trainingCenter", "📖 去培训中心学习") +
+    "</div>";
   html += "</div></div>";
   content.innerHTML = html;
 }

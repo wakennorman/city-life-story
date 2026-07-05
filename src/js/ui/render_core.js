@@ -113,6 +113,11 @@ function renderAll() {
   renderCurrentTab(state);
   renderMessageLog(state);
 
+  // 绑定所有导航按钮（跨系统链接 + 确认弹窗导航）
+  if (typeof bindAllNavButtons === "function") {
+    bindAllNavButtons();
+  }
+
   StateManager.cleanAllDirty();
 }
 

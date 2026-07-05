@@ -996,8 +996,8 @@ function getCareerEducationHtml(state) {
     "/" +
     threshold +
     "<br>" +
-    '<button class="btn btn-sm" style="margin-top:6px;min-height:44px;" ' +
-    "onclick=\"document.querySelector('[data-tab=action]')?.click()\">🏛️ 去大学城备考</button>" +
+    '<button class="btn btn-sm nav-action-btn" style="margin-top:6px;min-height:44px;" ' +
+    'data-nav-type="location" data-nav-target=\'{"type":"location","key":"school"}\'>🏛️ 去大学城备考</button>' +
     "</div></div></div>"
   );
 }
@@ -1585,6 +1585,21 @@ function renderCareerOverview(state, parent) {
   }
   html += "</ul></div>";
 
+  // 导航按钮
+  html +=
+    '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 快速跳转</div>' +
+    navActionButton("subTab", "career_jobs", "💼 查看上班族职位", {
+      tab: "career_dev",
+    }) +
+    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+    navActionButton("subTab", "career_startup", "🚀 创业系统", {
+      tab: "career_dev",
+    }) +
+    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
+    navActionButton("location", "school", "🎓 去大学城提升学历") +
+    "</div>";
+
   html += getCareerEducationHtml(state);
   html += "</div>";
   parent.innerHTML = html;
@@ -1847,6 +1862,56 @@ function careerTakeBreak() {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 5);
   clampCareerCapital(cap);
   StateManager.addMessage("😴 调休一天：倦怠-25，心情+5，业绩-2", "success");
+  if (typeof renderAll === "function") renderAll();
+}
+
+/**
+ * 带薪休假（每180天1次，需在职≥90天，倦怠≥30）
+ * 参考：现实中国企业年假制度（1-15天/年）
+ * 效果：真正清空倦怠、回血心情精神，但损失5天薪资
+ */
+function careerTakePaidLeave() {
+  var state = StateManager.getState();
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var p = state.player;
+  var cap = ensureCareerCapital(state);
+  if ((job.workDays || 0) < 90) {
+    StateManager.addMessage("⚠️ 需在职满90天才能申请年假", "warning");
+    return;
+  }
+  var lastLeave = job._lastPaidLeaveDay || -999;
+  if (p.day - lastLeave < 180) {
+    var nextDay = lastLeave + 180;
+    StateManager.addMessage(
+      "⚠️ 年假每180天1次，第" + nextDay + "天后可用",
+      "warning",
+    );
+    return;
+  }
+  var burnout = cap.burnout || 0;
+  if (burnout < 30) {
+    StateManager.addMessage("⚠️ 倦怠低于30，还不到需要年假的程度", "hint");
+    return;
+  }
+  // 扣除5天薪资
+  var dailySalary = Math.floor((job.salary || 5000) / 22);
+  var leaveCost = dailySalary * 5;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - leaveCost);
+  // 清倦怠、回血
+  cap.burnout = Math.max(0, burnout - 45);
+  if (state.needs) {
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 25);
+    state.needs.health = Math.min(100, (state.needs.health || 70) + 8);
+  }
+  p.mental = Math.min(100, (p.mental || 30) + 15);
+  job._lastPaidLeaveDay = p.day;
+  job.performance = Math.max(0, (job.performance || 50) - 3);
+  clampCareerCapital(cap);
+  StateManager.addMessage(
+    "🏖️ 年假已批！倦怠-45，心情+25，精神+15，健康+8（扣薪¥" + leaveCost + "）",
+    "success",
+  );
   if (typeof renderAll === "function") renderAll();
 }
 
