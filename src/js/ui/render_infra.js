@@ -852,7 +852,7 @@ function renderLocationBar(state, parent) {
   ) {
     var forecastArr = state.weather.forecast;
     var forecastText = "";
-    for (var fi = 0; fi < forecastArr.length; fi++) {
+    for (var fi = 0; fi < Math.min(2, forecastArr.length); fi++) {
       var f = forecastArr[fi];
       var fDef =
         typeof WEATHER_TYPES !== "undefined"
@@ -1202,6 +1202,8 @@ function renderGoalStrip(state, parent) {
 function renderActiveNews(state, parent) {
   if (state.activeNews && state.activeNews.length > 0) {
     for (const news of state.activeNews) {
+      // 开局定基调新闻只影响 _worldParams，不在日常新闻栏重复展示
+      if (news._isIntroNews) continue;
       const banner = document.createElement("div");
       banner.className = "news-banner";
       banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
