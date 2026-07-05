@@ -2106,8 +2106,7 @@ function showInheritanceSummaryModal(inheritanceData) {
       '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
     crisisHtml +=
       '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">📋 上辈子的 35 岁选择</div>';
-    crisisHtml +=
-      '<div style="font-size:12px;color:var(--text-secondary);">';
+    crisisHtml += '<div style="font-size:12px;color:var(--text-secondary);">';
     crisisHtml +=
       '<span style="background:var(--bg-input);padding:2px 8px;border-radius:4px;">' +
       crisisPath.label +
@@ -2131,8 +2130,7 @@ function showInheritanceSummaryModal(inheritanceData) {
       '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
     moralHtml +=
       '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">⚖️ 前世业力</div>';
-    moralHtml +=
-      '<div style="font-size:12px;color:var(--text-secondary);">';
+    moralHtml += '<div style="font-size:12px;color:var(--text-secondary);">';
     moralHtml +=
       '善恶净值: <strong style="color:' +
       moralColor +
@@ -2140,14 +2138,14 @@ function showInheritanceSummaryModal(inheritanceData) {
       (moralScore.score >= 0 ? "+" : "") +
       moralScore.score +
       "</strong> " +
-      '(' +
+      "(" +
       moralScore.label +
-      ')';
+      ")";
     if (moralScore.good > 0 || moralScore.bad > 0) {
       moralHtml +=
         ' <span style="color:var(--text-muted);">善行' +
         moralScore.good +
-        ' / 恶行' +
+        " / 恶行" +
         moralScore.bad +
         "</span>";
     }
@@ -2161,13 +2159,14 @@ function showInheritanceSummaryModal(inheritanceData) {
       '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
     peakHtml +=
       '<div style="font-size:13px;font-weight:bold;color:var(--accent);margin-bottom:4px;">👥 老熟人（上局巅峰好感）</div>';
-    peakHtml += '<div style="font-size:12px;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">';
+    peakHtml +=
+      '<div style="font-size:12px;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">';
     for (var npcId in peakAffinity.npcs) {
       var pa = peakAffinity.npcs[npcId];
       peakHtml +=
         '<span style="background:var(--bg-input);padding:2px 8px;border-radius:4px;">' +
         npcId +
-        ' ❤️' +
+        " ❤️" +
         pa.peakAffinity +
         "</span>";
     }

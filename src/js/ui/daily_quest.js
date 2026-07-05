@@ -100,16 +100,31 @@
     var cash = (state.resources && state.resources.cash) || 0;
     if (stage.id === "growth" && p.phase === "street") {
       // 城市务工者 / 外来打工者：现金≥2000 仍租房引导（禀赋效应前置 — 有积蓄更珍惜住所）
-      if ((scenarioId === "classic" || scenarioId === "foreign_worker") && cash >= 2000) {
-        return "🎯 现金已满¥2000——去租房中介看看，露宿街头生活质量太低！再撑 " + Math.max(1, 30 - day) + " 天就能签约";
+      if (
+        (scenarioId === "classic" || scenarioId === "foreign_worker") &&
+        cash >= 2000
+      ) {
+        return (
+          "🎯 现金已满¥2000——去租房中介看看，露宿街头生活质量太低！再撑 " +
+          Math.max(1, 30 - day) +
+          " 天就能签约"
+        );
       }
       // 下岗再就业：再就业引导（损失厌恶 — 强调每待业一天都在损失工龄）
       if (scenarioId === "laid_off") {
-        return "🎯 失业 " + day + " 天了——去社区服务中心登记再就业培训，每天损失 ¥200+ 潜在收入";
+        return (
+          "🎯 失业 " +
+          day +
+          " 天了——去社区服务中心登记再就业培训，每天损失 ¥200+ 潜在收入"
+        );
       }
       // 小镇做题家：培训/考证引导（禀赋效应 — 技能是你一辈子带不走的资本）
       if (scenarioId === "small_town_grinder") {
-        return "🎯 你的智力比 80% 乘客都高 —— 去培训中心自学，技能考到证书就是一辈子资本！再考 " + Math.max(1, 90 - day) + " 天拿第一证";
+        return (
+          "🎯 你的智力比 80% 乘客都高 —— 去培训中心自学，技能考到证书就是一辈子资本！再考 " +
+          Math.max(1, 90 - day) +
+          " 天拿第一证"
+        );
       }
       // 二代创业者：家族资源引导（禀赋效应 — 人脉是你父辈留下的隐形资产）
       if (scenarioId === "second_gen") {
@@ -121,7 +136,11 @@
       }
       // 应届生：考证/培训入口（禀赋效应 — 每一本证书都让你离 offer 更近一步）
       if (scenarioId === "fresh_grad") {
-        return "🎯 毕业生起薪 ¥4500 起点太低——考一本职业资格证起薪能涨 ¥2000！再拼 " + Math.max(1, 60 - day) + " 天";
+        return (
+          "🎯 毕业生起薪 ¥4500 起点太低——考一本职业资格证起薪能涨 ¥2000！再拼 " +
+          Math.max(1, 60 - day) +
+          " 天"
+        );
       }
     }
     return stage.nextDesc;

@@ -15,7 +15,8 @@
  *   events_core.js::checkChainEventQueue() 到期弹出。
  */
 (function () {
-  if (typeof RANDOM_EVENTS === "undefined" || !Array.isArray(RANDOM_EVENTS)) return;
+  if (typeof RANDOM_EVENTS === "undefined" || !Array.isArray(RANDOM_EVENTS))
+    return;
   if (RANDOM_EVENTS._sideHustleConsequencesLoaded) return;
   RANDOM_EVENTS._sideHustleConsequencesLoaded = true;
 

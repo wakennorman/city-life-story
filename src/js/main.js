@@ -4134,7 +4134,9 @@ function consumeAP(cost) {
   // 道德事件判定（基础5% + NG+ 道德罗盘/业力加成）
   if (!state._pendingEvent && typeof triggerMoralEvent === "function") {
     var moralRate = 0.05;
-    moralRate += (state.inheritanceBonuses && state.inheritanceBonuses.moralEventRate) || 0;
+    moralRate +=
+      (state.inheritanceBonuses && state.inheritanceBonuses.moralEventRate) ||
+      0;
     if (Random.chance(moralRate)) {
       triggerMoralEvent(state);
     }

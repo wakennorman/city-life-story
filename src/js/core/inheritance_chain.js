@@ -339,13 +339,13 @@ function inheritCrisisPath(prevState) {
     civil: {
       label: "备考公",
       statBonus: { intelligence: 3 },
-      bonus: { examSuccessBonus: 0.10, civilSalaryBonus: 0.03 },
+      bonus: { examSuccessBonus: 0.1, civilSalaryBonus: 0.03 },
       note: "上辈子埋首题海的余温——新周目考试成功率+10%，公职月薪+3%",
     },
     lie_flat: {
       label: "摆烂",
       statBonus: { happiness: 5 },
-      bonus: { recoveryRateBonus: 0.10, stressReduction: 3 },
+      bonus: { recoveryRateBonus: 0.1, stressReduction: 3 },
       note: "上辈子的松弛感传承——新周目体力恢复+10%，每日压力-3",
     },
   };
@@ -584,19 +584,23 @@ function applyInheritance(newState, prevState, inheritanceData) {
       }
       if (bonus.corpSalaryBonus) {
         newState.inheritanceBonuses.corpSalaryBonus =
-          (newState.inheritanceBonuses.corpSalaryBonus || 0) + bonus.corpSalaryBonus;
+          (newState.inheritanceBonuses.corpSalaryBonus || 0) +
+          bonus.corpSalaryBonus;
       }
       if (bonus.examSuccessBonus) {
         newState.inheritanceBonuses.examSuccessBonus =
-          (newState.inheritanceBonuses.examSuccessBonus || 0) + bonus.examSuccessBonus;
+          (newState.inheritanceBonuses.examSuccessBonus || 0) +
+          bonus.examSuccessBonus;
       }
       if (bonus.recoveryRateBonus) {
         newState.inheritanceBonuses.recoveryRate =
-          (newState.inheritanceBonuses.recoveryRate || 0) + bonus.recoveryRateBonus;
+          (newState.inheritanceBonuses.recoveryRate || 0) +
+          bonus.recoveryRateBonus;
       }
       if (bonus.stressReduction) {
         newState.inheritanceBonuses.stressReduction =
-          (newState.inheritanceBonuses.stressReduction || 0) + bonus.stressReduction;
+          (newState.inheritanceBonuses.stressReduction || 0) +
+          bonus.stressReduction;
       }
     }
   }

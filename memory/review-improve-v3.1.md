@@ -157,7 +157,7 @@ metadata:
 | 优先级 | 缺陷                                                              | 涉及文件                | 方案要点        |
 | ------ | ----------------------------------------------------------------- | ----------------------- | --------------- |
 | P1     | main.js `startNewGame/startScenarioGame` → core/game_lifecycle.js | main.js → core/         | 纯搬移，解耦    |
-| P1     | 多周目继承字段扩展（35岁路径/道德score/NPC巅峰好感）              | inheritance_chain.js    | 追加字段        |
+| P1     | 多周目继承字段扩展（35岁路径/道德score/NPC巅峰好感）              | inheritance_chain.js    | ✅ 已落地 `0edacac` |
 | P1     | 难度曲线分层（休闲/标准/困难）                                    | scenarios.js + state.js | 开局选项        |
 | P2     | 主线/副本 fork（3 章式结局路线）                                  | 新系统                  | 开放沙盒+方向感 |
 | P2     | UI tab 折叠 12→3 大组                                             | index.html + render.js  | 信息分层        |

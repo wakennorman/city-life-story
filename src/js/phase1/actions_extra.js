@@ -1050,13 +1050,13 @@ function addStreetExtras(state, actions) {
   var weekendMarketDoneKey =
     "_weekendMarket_" + Math.floor(state.player.day / 7);
   if (isWeekend && atMarketLoc && !state.flags[weekendMarketDoneKey]) {
-actions.push({
-    id: "weekend_market",
-    name: "周末集市摆摊",
-    desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
-    icon: "🏪",
-    category: "work",
-    apCost: 25,
+    actions.push({
+      id: "weekend_market",
+      name: "周末集市摆摊",
+      desc: "周末人流量翻倍！临时在集市摆个摊，收益远超平时。一周一次机会。",
+      icon: "🏪",
+      category: "work",
+      apCost: 25,
       handler: function () {
         var st = StateManager.getState();
         var dk = "_weekendMarket_" + Math.floor(st.player.day / 7);
@@ -1095,13 +1095,13 @@ actions.push({
   // === 周一打听消息（每逢day%7=1出现：任意地点，每周限一次） ===
   var mondayInfoKey = "_mondayInfo_" + Math.floor(state.player.day / 7);
   if (dayOfWeek === 1 && !state.flags[mondayInfoKey]) {
-actions.push({
-    id: "monday_job_board",
-    name: "打听本周零工机会",
-    desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
-    icon: "📋",
-    category: "work",
-    apCost: 10,
+    actions.push({
+      id: "monday_job_board",
+      name: "打听本周零工机会",
+      desc: "周一是信息最新鲜的时候。四处打听，可能发现本周收入最高的临时活。每周限一次。",
+      icon: "📋",
+      category: "work",
+      apCost: 10,
       handler: function () {
         var st = StateManager.getState();
         var mk = "_mondayInfo_" + Math.floor(st.player.day / 7);

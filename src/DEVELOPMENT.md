@@ -1,8 +1,69 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（v3.1 审查改进 — 难度系统全面接入 + 终局体验强化）
+> 最后更新: 2026-07-06（v3.1 审查改进 — NG+ 继承数据可视化 + 加成消费接入）
 >
-> commit: `2aa6a45`(v3.23) + 本轮 commit 待定
+> commit: `0edacac`(v3.1 NG+继承) + `da0832c`(v3.1④) + `2aa6a45`(v3.23)
+>
+> ---
+
+---
+
+## 2026-07-06 — v3.1 审查改进：NG+ 继承数据可视化 + 加成消费接入
+
+### 审查发现
+
+`inheritance_chain.js` 定义了 `inheritCrisisPath`/`inheritMoralScore`/`inheritPeakAffinity` 三个继承函数，在 game over 时计算并存储到 `_lastGameInheritance`。但 `showInheritanceSummaryModal` 从未展示这些字段——玩家开新档看到继承摘要弹窗，只有徽章/现金/关系数/物品数/梦想/技能树，完全看不到 35 岁路径/道德分/NPC 巅峰好感。
+
+**加成消费断链**：`inheritanceBonuses` 中的 `promoChance`/`moralEventRate`/`recoveryRate` 等字段在徽章和路径继承中被 SET，但从未在 gameplay 代码中被 READ/CONSUMED。
+
+### P1 修复：继承摘要弹窗展示全部字段（+95行）
+
+| 新增模块 | 内容 |
+| -------- | ---- |
+| 📋 35 岁路径 | 显示路径标签（再卷职场/备考公/摆烂）、属性加成、特殊加成（晋升+3%/月薪+5%等） |
+| ⚖️ 前世业力 | 显示善恶净值、善恶标签（善人/普通人/小恶/恶人）、善行/恶行次数、NPC好感偏移、道德事件率调整 |
+| 👥 老熟人 | 以 chip 形式展示每个 NPC 的上局巅峰好感（≥50） |
+| 📊 总存活天数 | 底部显示上局存活天数 |
+
+**数据补全**：`totalDays` 字段已加入 `inheritanceData`（game over 时写入），供弹窗消费。
+
+### P2 增强：35 岁路径继承 + 特殊加成（+40行）
+
+| 路径 | 原加成 | 新增加成 |
+| ---- | ------- | --------- |
+| 再卷职场 | 心智+3 | 晋升概率+3%，月薪+5% |
+| 备考公 | 智力+3 | 考试成功率+10%，公职月薪+3% |
+| 摆烂 | 心情+5 | 体力恢复+10%，每日压力-3 |
+
+### P2 增强：道德分 → 业力系统（+30行）
+
+| 原效果 | 新增效果 |
+| ------ | --------- |
+| 幸运加成(-3~+5) | NPC初始好感偏移(-8~+8)，道德事件率调整(-15%~+15%) |
+
+### P2 接入：加成消费断链修复（3处）
+
+| 字段 | 消费点 | 效果 |
+| ---- | ------ | ---- |
+| `promoChance` | `phase2/promo.js::checkPromotion` P9→P10 | P9→P10 晋升概率叠加 |
+| `moralEventRate` | `main.js` 每日道德事件判定 | 5% 基础率 + 业力加成 |
+| `recoveryRate` | `phase1/needs.js::tickHealthStatus` | 日健康恢复 3×(1+recoveryRate) |
+
+### 影响文件
+
+| 文件 | 操作 |
+| ---- | ---- |
+| `ui/modal.js` | `showInheritanceSummaryModal` 新增 3 个显示模块 + `totalDays` |
+| `core/inheritance_chain.js` | `inheritCrisisPath`/`inheritMoralScore` 增强 + `applyInheritance` 消费扩展 |
+| `phase2/promo.js` | P9→P10 晋升概率叠加 `promoChance` |
+| `main.js` | 道德事件率叠加 `moralEventRate` |
+| `phase1/needs.js` | 日健康恢复叠加 `recoveryRate` |
+
+### 验证
+
+- `node --check` 5 文件全部通过 ✅
+- `python build.py` 4856.6 KB ✅
+- 无 MC 变动（纯 UI + 已有 bonus 消费）
 
 ---
 
