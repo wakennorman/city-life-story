@@ -1,29 +1,86 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（v3.19.1 — 事件叙事-触发自洽性修复 A 类×5）
+> 最后更新: 2026-07-06（v3.21b — 约定式自动导航）
 >
-> commit: `752017c`
+> commit: `3d28143`
 
 ---
 
-## 2026-07-06 — v3.21：全游戏导航系统升级（navigation.js）
+## 2026-07-06 — v3.21b：约定式自动导航（零配置）
+
+### 核心变更
+
+将导航从**手动添加模式**升级为**约定式自动生成**。
+
+#### `_wikiAutoAppendNav()` — 集中式导航后处理
+
+在 `_wikiRenderDetail()` 末尾统一调用，根据 `catId` 和数据字段自动生成导航按钮，不再需要每个 `_wikiDetailXxx()` 手动添加。
+
+**自动规则表（按数据 schema 驱动，零代码修改）：**
+
+| wiki 分类 | 自动生成的导航按钮                         | 数据来源            |
+| --------- | ------------------------------------------ | ------------------- |
+| locations | 「🚶 前往此地」「🗺️ 在地图上查看」         | `LOCATIONS[id]`     |
+| jobs      | 「🚶 前往该地工作」「⚡ 查看行动」         | `job.location`      |
+| npcs      | 「🚶 前往该地找TA」「👥 社交互动」         | `npc.location`      |
+| items     | 「🛒 去某地购买」（每个 buyLocations）     | `item.buyLocations` |
+| goods     | 「🛒 去某地购买」（每个 buyLocations）     | `good.buyLocations` |
+| skills    | 「📚 前往培训中心训练」「📖 查看全部技能」 | 固定 trainingCenter |
+| certs     | 「📚 前往培训中心考取证书」                | 固定 trainingCenter |
+
+#### 数据驱动扩展点：`navHints` 字段
+
+任何数据条目添加 `navHints` 数组，自动生成额外导航按钮：
+
+```js
+// 在 locations.js 中某个地点
+navHints: [
+  {
+    type: "subTab",
+    tab: "personal_growth",
+    subTab: "pg_edu",
+    key: "pg_edu",
+    label: "🎓 查看学历",
+  },
+];
+```
+
+已为大学城添加 `navHints` 演示：「查看学历」「查看职业路径」。
+
+#### 清理工作
+
+- 移除 6 个 `_wikiDetailXxx()` 中的手动 `navActionButton` 调用（~40行）
+- 新增 `_wikiGetNavHints()` 读取任意数据条目的 `navHints` 字段
+
+### 影响文件
+
+| 文件           | 操作                                               |
+| -------------- | -------------------------------------------------- |
+| `wiki.js`      | 新增 `_wikiAutoAppendNav()` + `_wikiGetNavHints()` |
+| `wiki.js`      | 移除 6 处手动 navActionButton 代码                 |
+| `locations.js` | 大学城新增 `navHints` 演示                         |
+
+### 验证
+
+- `node --check` 全部通过 ✅
+- `python build.py` 4843.2 KB ✅
 
 ### 核心变更
 
 #### P0 — 创建集中式导航系统（`src/js/ui/navigation.js`，+1500行）
 
-| 功能 | 说明 |
-|------|------|
-| `navigateTo(state, target, opts)` | 统一导航入口，支持五种导航类型 |
-| `navToTab(tabName)` | 一键Tab切换（免确认） |
-| `navToLocation(locKey, opts)` | 一键前往某地（带消耗确认弹窗） |
-| `navToWiki(catId, entryId)` | 一键百科跳转 |
-| `navToEducation()` | 一键前往学历子面板 |
-| `navToUniversity()` | 一键前往大学城（含AP消耗确认） |
-| `navLink(target, label)` | 生成导航链接HTML |
-| `navActionButton(type, key, label)` | 生成导航按钮HTML |
-| `bindAllNavButtons()` | 绑定所有导航按钮点击事件 |
-| `initTabNavigation()` | 事件委托修复tab按钮无点击事件的Bug |
+| 功能                                | 说明                               |
+| ----------------------------------- | ---------------------------------- |
+| `navigateTo(state, target, opts)`   | 统一导航入口，支持五种导航类型     |
+| `navToTab(tabName)`                 | 一键Tab切换（免确认）              |
+| `navToLocation(locKey, opts)`       | 一键前往某地（带消耗确认弹窗）     |
+| `navToWiki(catId, entryId)`         | 一键百科跳转                       |
+| `navToEducation()`                  | 一键前往学历子面板                 |
+| `navToUniversity()`                 | 一键前往大学城（含AP消耗确认）     |
+| `navLink(target, label)`            | 生成导航链接HTML                   |
+| `navActionButton(type, key, label)` | 生成导航按钮HTML                   |
+| `bindAllNavButtons()`               | 绑定所有导航按钮点击事件           |
+| `initTabNavigation()`               | 事件委托修复tab按钮无点击事件的Bug |
 
 **资源消耗确认弹窗机制**：导航到需要消耗行动力/金钱的目标时，显示不可跳过的弹窗（标题+描述+消耗明细+确定/取消按钮）。不足时直接阻止并显示警告消息。设计参照《Papers Please》强制确认、《中国式家长》行动确认。
 
@@ -33,14 +90,14 @@
 
 百科条目详情页底部新增导航按钮：
 
-| 条目类型 | 新增导航按钮 |
-|----------|-------------|
-| 地点 | 「前往此地」「在地图上查看」 |
-| 工作 | 「前往该地工作」「查看行动」 |
-| NPC | 「前往该地找NPC」「社交互动」 |
-| 商品 | 「去某地购买」（根据buyLocations动态生成）|
-| 技能 | 「前往培训中心训练」「查看全部技能」|
-| 装备 | 「去某地购买」「查看背包」|
+| 条目类型 | 新增导航按钮                               |
+| -------- | ------------------------------------------ |
+| 地点     | 「前往此地」「在地图上查看」               |
+| 工作     | 「前往该地工作」「查看行动」               |
+| NPC      | 「前往该地找NPC」「社交互动」              |
+| 商品     | 「去某地购买」（根据buyLocations动态生成） |
+| 技能     | 「前往培训中心训练」「查看全部技能」       |
+| 装备     | 「去某地购买」「查看背包」                 |
 
 #### P1 — 修复关键导航断链
 
@@ -52,14 +109,14 @@
 
 ### 影响文件
 
-| 文件 | 操作 | 说明 |
-|------|------|------|
-| `src/js/ui/navigation.js` | **新建** | 核心导航系统，~1500行 |
-| `src/js/ui/wiki.js` | 修改 | 百科6个详情函数导航按钮 |
-| `src/js/ui/render.js` | 修改 | 学历面板+技能面板导航按钮 |
-| `src/js/ui/render_core.js` | 修改 | renderAll绑定导航按钮 |
-| `src/js/ui/career_dev.js` | 修改 | 备考按钮+总览导航 |
-| `src/index.html` | 修改 | 加载navigation.js |
+| 文件                       | 操作     | 说明                      |
+| -------------------------- | -------- | ------------------------- |
+| `src/js/ui/navigation.js`  | **新建** | 核心导航系统，~1500行     |
+| `src/js/ui/wiki.js`        | 修改     | 百科6个详情函数导航按钮   |
+| `src/js/ui/render.js`      | 修改     | 学历面板+技能面板导航按钮 |
+| `src/js/ui/render_core.js` | 修改     | renderAll绑定导航按钮     |
+| `src/js/ui/career_dev.js`  | 修改     | 备考按钮+总览导航         |
+| `src/index.html`           | 修改     | 加载navigation.js         |
 
 ### 设计参考
 

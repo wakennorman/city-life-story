@@ -10,19 +10,20 @@ metadata:
 ## 核心API
 
 所有导航通过 `navigateTo(state, target, opts)` 统一入口，自动处理：
+
 1. 目标可达性检查（阶段限制、资源检查）
 2. 资源消耗确认弹窗（行动力/金钱不足自动阻止）
 3. 实际执行导航（tab切换 / 地点旅行 / wiki跳转 / 子Tab导航）
 
 ## 导航类型
 
-| `target.type` | 说明 | 必填字段 |
-|---------------|------|----------|
-| `tab` | 切换到指定Tab | `name` (tab名) |
-| `location` | 前往某地点（含AP消耗） | `key` (地点key) |
-| `wiki` | 百科条目跳转 | `cat`, `entry` |
-| `subTab` | 子Tab导航 | `tab`, `subTab` |
-| `action` | 执行游戏行动 | `actionId` |
+| `target.type` | 说明                   | 必填字段        |
+| ------------- | ---------------------- | --------------- |
+| `tab`         | 切换到指定Tab          | `name` (tab名)  |
+| `location`    | 前往某地点（含AP消耗） | `key` (地点key) |
+| `wiki`        | 百科条目跳转           | `cat`, `entry`  |
+| `subTab`      | 子Tab导航              | `tab`, `subTab` |
+| `action`      | 执行游戏行动           | `actionId`      |
 
 ## 快捷函数
 

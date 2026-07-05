@@ -1073,7 +1073,11 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
     case "locations": {
       var loc = typeof LOCATIONS !== "undefined" ? LOCATIONS[entryId] : null;
       if (!loc) break;
-      buttons.push({ type: "location", key: entryId, label: "🚶 前往" + loc.name });
+      buttons.push({
+        type: "location",
+        key: entryId,
+        label: "🚶 前往" + loc.name,
+      });
       buttons.push({ type: "tab", key: "map", label: "🗺️ 在地图上查看" });
       if (loc.jobs && loc.jobs.length > 0) {
         buttons.push({ type: "tab", key: "actions", label: "⚡ 查看行动" });
@@ -1083,7 +1087,8 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
     case "jobs": {
       var job = typeof getJobById === "function" ? getJobById(entryId) : null;
       if (!job) break;
-      var jobLoc = typeof LOCATIONS !== "undefined" ? LOCATIONS[job.location] : null;
+      var jobLoc =
+        typeof LOCATIONS !== "undefined" ? LOCATIONS[job.location] : null;
       if (jobLoc) {
         buttons.push({
           type: "location",
@@ -1098,21 +1103,30 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       if (typeof NPCS === "undefined") break;
       var npcData = null;
       for (var ni = 0; ni < NPCS.length; ni++) {
-        if (NPCS[ni].id === entryId) { npcData = NPCS[ni]; break; }
+        if (NPCS[ni].id === entryId) {
+          npcData = NPCS[ni];
+          break;
+        }
       }
       if (!npcData) break;
       if (typeof LOCATIONS !== "undefined" && LOCATIONS[npcData.location]) {
         buttons.push({
           type: "location",
           key: npcData.location,
-          label: "🚶 前往" + LOCATIONS[npcData.location].name + "找" + npcData.name,
+          label:
+            "🚶 前往" + LOCATIONS[npcData.location].name + "找" + npcData.name,
         });
       }
       buttons.push({ type: "tab", key: "social", label: "👥 社交互动" });
       break;
     }
     case "items": {
-      var itemDef = typeof ITEMS !== "undefined" ? ITEMS.find(function (it) { return it.id === entryId; }) : null;
+      var itemDef =
+        typeof ITEMS !== "undefined"
+          ? ITEMS.find(function (it) {
+              return it.id === entryId;
+            })
+          : null;
       if (itemDef && itemDef.buyLocations && itemDef.buyLocations.length > 0) {
         itemDef.buyLocations.slice(0, 3).forEach(function (bl) {
           if (typeof LOCATIONS !== "undefined" && LOCATIONS[bl]) {
@@ -1128,7 +1142,8 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       break;
     }
     case "goods": {
-      var good = typeof getGoodById === "function" ? getGoodById(entryId) : null;
+      var good =
+        typeof getGoodById === "function" ? getGoodById(entryId) : null;
       if (good && good.buyLocations && good.buyLocations.length > 0) {
         good.buyLocations.slice(0, 3).forEach(function (bl) {
           if (typeof LOCATIONS !== "undefined" && LOCATIONS[bl]) {
@@ -1143,7 +1158,10 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       break;
     }
     case "skills": {
-      var skName = typeof getSkillChineseName === "function" ? getSkillChineseName(entryId) : entryId;
+      var skName =
+        typeof getSkillChineseName === "function"
+          ? getSkillChineseName(entryId)
+          : entryId;
       buttons.push({
         type: "location",
         key: "trainingCenter",
@@ -1182,12 +1200,15 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
     var b = buttons[bi];
     // subTab 需要额外传递 tab 参数
     if (b.type === "subTab") {
-      navHtml += navActionButton(b.type, b.key, b.label, { tab: b.tab || "personal_growth" });
+      navHtml += navActionButton(b.type, b.key, b.label, {
+        tab: b.tab || "personal_growth",
+      });
     } else {
       navHtml += navActionButton(b.type, b.key, b.label);
     }
     if (bi < buttons.length - 1) {
-      navHtml += '<span style="font-size:10px;color:var(--text-muted);">|</span>';
+      navHtml +=
+        '<span style="font-size:10px;color:var(--text-muted);">|</span>';
     }
   }
 
@@ -1216,7 +1237,10 @@ function _wikiGetNavHints(catId, entryId) {
     case "jobs": {
       if (typeof STREET_JOBS !== "undefined") {
         for (var ji = 0; ji < STREET_JOBS.length; ji++) {
-          if (STREET_JOBS[ji].id === entryId) { entry = STREET_JOBS[ji]; break; }
+          if (STREET_JOBS[ji].id === entryId) {
+            entry = STREET_JOBS[ji];
+            break;
+          }
         }
       }
       break;
@@ -1224,13 +1248,21 @@ function _wikiGetNavHints(catId, entryId) {
     case "npcs": {
       if (typeof NPCS !== "undefined") {
         for (var ni2 = 0; ni2 < NPCS.length; ni2++) {
-          if (NPCS[ni2].id === entryId) { entry = NPCS[ni2]; break; }
+          if (NPCS[ni2].id === entryId) {
+            entry = NPCS[ni2];
+            break;
+          }
         }
       }
       break;
     }
     case "items":
-      entry = typeof ITEMS !== "undefined" ? ITEMS.find(function (it) { return it.id === entryId; }) : null;
+      entry =
+        typeof ITEMS !== "undefined"
+          ? ITEMS.find(function (it) {
+              return it.id === entryId;
+            })
+          : null;
       break;
     case "goods":
       entry = typeof getGoodById === "function" ? getGoodById(entryId) : null;

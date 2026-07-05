@@ -98,8 +98,20 @@ const LOCATIONS = {
     jobs: ["tutoring", "xiao_mei_tutoring"],
     // navHints 演示：百科条目会自动读取此字段生成额外导航按钮
     navHints: [
-      { type: "subTab", tab: "personal_growth", subTab: "pg_edu", key: "pg_edu", label: "🎓 查看学历" },
-      { type: "subTab", tab: "career_dev", subTab: "career_jobs", key: "career_jobs", label: "💼 查看职业路径" },
+      {
+        type: "subTab",
+        tab: "personal_growth",
+        subTab: "pg_edu",
+        key: "pg_edu",
+        label: "🎓 查看学历",
+      },
+      {
+        type: "subTab",
+        tab: "career_dev",
+        subTab: "career_jobs",
+        key: "career_jobs",
+        label: "💼 查看职业路径",
+      },
     ],
     priceMod: {
       water: 0.8,

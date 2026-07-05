@@ -13,16 +13,16 @@
 
 ### 自动规则表
 
-| catId | 自动生成什么 | 数据来源 |
-|-------|-------------|---------|
-| `locations` | 「🚶 前往此地」「🗺️ 在地图上查看」 | LOCATIONS[id] |
-| `jobs` | 「🚶 前往该地工作」（跳转到 job.location）| getJobById(id).location |
-| `npcs` | 「🚶 前往该地找TA」（跳转到 npc.location）| NPCS.find(id).location |
-| `items` | 「🛒 去XX购买」（每个 buyLocations） | item.buyLocations |
-| `goods` | 「🛒 去XX购买」（每个 buyLocations） | good.buyLocations |
-| `skills` | 「📚 前往培训中心训练」 | 固定 trainingCenter |
-| `certs` | 「📚 查看关联技能」| certificate.skillRequired |
-| 其他 | 无自动导航 | — |
+| catId       | 自动生成什么                               | 数据来源                  |
+| ----------- | ------------------------------------------ | ------------------------- |
+| `locations` | 「🚶 前往此地」「🗺️ 在地图上查看」         | LOCATIONS[id]             |
+| `jobs`      | 「🚶 前往该地工作」（跳转到 job.location） | getJobById(id).location   |
+| `npcs`      | 「🚶 前往该地找TA」（跳转到 npc.location） | NPCS.find(id).location    |
+| `items`     | 「🛒 去XX购买」（每个 buyLocations）       | item.buyLocations         |
+| `goods`     | 「🛒 去XX购买」（每个 buyLocations）       | good.buyLocations         |
+| `skills`    | 「📚 前往培训中心训练」                    | 固定 trainingCenter       |
+| `certs`     | 「📚 查看关联技能」                        | certificate.skillRequired |
+| 其他        | 无自动导航                                 | —                         |
 
 ### 移除手动 navActionButton 调用
 
@@ -57,12 +57,12 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
 
 ### 影响文件
 
-| 文件 | 变更 |
-|------|------|
-| `wiki.js` | 新增 `_wikiAutoAppendNav()`，在 `_wikiRenderDetail` 末尾调用 |
-| `wiki.js` | 移除 6 个 `_wikiDetailXxx()` 中手动 navActionButton 代码 |
-| `navigation.js` | 新增 `_autoNavRules` 注册表，可动态注册新规则 |
-| 数据文件（可选）| 个别数据可加 `navHints` 字段 |
+| 文件             | 变更                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| `wiki.js`        | 新增 `_wikiAutoAppendNav()`，在 `_wikiRenderDetail` 末尾调用 |
+| `wiki.js`        | 移除 6 个 `_wikiDetailXxx()` 中手动 navActionButton 代码     |
+| `navigation.js`  | 新增 `_autoNavRules` 注册表，可动态注册新规则                |
+| 数据文件（可选） | 个别数据可加 `navHints` 字段                                 |
 
 ### 验证
 
