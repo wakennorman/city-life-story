@@ -124,7 +124,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.21b — 约定式自动导航 + 核心方法论确立（commit: `3d28143`）
+- **最新一次工作 (2026-07-06)**：v3.22 — 职业里程碑叙事事件 + 带薪年假（commit: pending）
+  - **9个街头工作里程碑叙事事件**：`job_milestone_events.js`（新建+430行），7/30/100天触发，真实中国打工场景对话+有后果的选择（金钱/道德/机会取舍），自动解锁已有NPC推荐flag（老周/老李/陈师傅/小美等）
+  - **带薪年假系统**：`career_dev.js` 新增 `careerTakePaidLeave()`（+47行），需在职90天+冷却180天+倦怠≥30，效果：倦怠-45/心情+25/精神+15/健康+8，代价扣5天薪资
+  - **工作行动UI**：新增「🏖️ 带薪年假（180天）」按钮（调休按钮旁），仅在职玩家可见
+  - **触发集成**：main.js doStreetJob 3个称号升级点各追加 milestone 事件调用
+  - **设计参考**：大多数成长感/Papers Please压力选择/BitLife里程碑时刻/真实中国企业年假制度
+  - **影响文件**：job_milestone_events.js(新), main.js(+3), career_dev.js(+49), index.html(+1)
+  - **验证**：`node --check` ✅ / `python build.py` 4843.8KB ✅
   - **约定式自动导航**：`_wikiAutoAppendNav()` 在百科渲染集中点按数据 schema 自动生成导航按钮
   - **移除 6 处手动代码**：`_wikiDetailLocation/Job/Npc/Item/Good/Skill` 末尾的手动 navActionButton 全部移除
   - **数据扩展点 navHints**：大学城演示「查看学历」「查看职业路径」自定义导航

@@ -1149,6 +1149,8 @@ function renderCareerJobs(state, parent) {
       '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
     html +=
       '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+    html +=
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakePaidLeave()">🏖️ 带薪年假（180天）</button>';
     html += "</div></div>";
 
     // ---- 跳槽机会（P1-2：主动跳槽） ----
