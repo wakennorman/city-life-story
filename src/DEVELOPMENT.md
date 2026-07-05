@@ -1,8 +1,34 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-05（v3.19 — 交易Tab：进阶信息技能门控 + 商品卡片紧凑化重构）
+> 最后更新: 2026-07-06（v3.19.1 — 事件叙事-触发自洽性修复 A 类×5）
 >
-> commit: `7ecda93`
+> commit: `752017c`
+
+---
+
+## 2026-07-06 — v3.19.1：事件叙事-触发自洽性修复（A类×5）
+
+### 修复内容
+
+针对「叙事描述的场景与触发条件不自洽」做全面审查，修复所有 A 类缺陷。
+
+| 事件 id                 | 原缺陷描述                                                                                          | 修复内容                                                                                  | 类别 |
+| ----------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---- |
+| `coworker_injured`      | 叙事为"工友从脚手架摔下"，conditions 只检查 `phase === "street"`，任何职业都可能触发                | 新增建筑工地职业（`manual_labor_construction`）/ 地点（`construction`）/ 行动频次三重检查 | A    |
+| `fake_goods`            | 叙事为"摆摊时才发现是山寨货"，conditions 只检查 `cash > 0`，非摊主玩家也可能触发                    | 新增摆摊职业（`food_stall`等）/ 副业（`sideHustle.type === 'stall'`）/ 行动频次检查       | A    |
+| `street_talent_scout`   | 叙事为"今天摆摊，被采购女士相中"，conditions 只检查销售等级，非摊主玩家也可能触发                   | 新增摆摊职业 / 副业 / 行动频次检查（与 `fake_goods` 相同逻辑）                            | A    |
+| `rainy_day_dilemma`     | 叙事为"暴雨将至，你刚摆好的货还没收"，conditions 只检查 `phase === "street"`，晴天 + 非摊主都可触发 | 新增暴雨天气（`rainy / stormy`）检查 + 摆摊职业 / 副业检查                                | A    |
+| `homeless_rain_shelter` | 叙事为"天气预报说今晚有暴雨"，conditions 只检查露宿状态，晴天也可触发                               | 新增暴雨天气（`rainy / stormy`）检查                                                      | A    |
+
+### 影响文件
+
+- `src/js/core/events_street_survival.js`：5处 conditions 修复，每处附 `// [自洽修复]` 注释
+
+### 验证
+
+- `node --check src/js/core/events_street_survival.js` ✅
+- `python build.py` → 4757.5 KB ✅
+- commit: `752017c`
 
 ---
 
