@@ -14,6 +14,7 @@ function createDefaultState() {
     createdAt: now,
     lastPlayedAt: now,
     playTime: 0,
+    _difficulty: "normal", // 难度档位: 'easy' | 'normal' | 'hard' | 'hell'（v3.1 ④ 默认 normal）
 
     // --- 玩家身份 ---
     player: {

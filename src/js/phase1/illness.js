@@ -120,6 +120,10 @@ function rollDailyIllness(state) {
     ) {
       ch *= 0.5;
     }
+    // v3.1 ④ 难度病率乘数：休闲 ×0.6、标准 ×1.0、困难 ×1.5、地狱 ×2.0
+    if (typeof getDifficultyMultiplier === "function") {
+      ch *= getDifficultyMultiplier(state, "illness");
+    }
     if (!Random.chance(ch)) continue;
 
     // 患病！
