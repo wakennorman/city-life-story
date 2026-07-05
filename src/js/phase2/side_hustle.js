@@ -251,6 +251,15 @@
         FATIGUE_CONFIG.penaltyRate;
     }
 
+    // v3.1 — 副业执行后 8% 概率触发随机副业事件（当日无其他待弹事件时）
+    if (
+      !state._pendingEvent &&
+      typeof triggerSideHustleEvent === "function" &&
+      Random.chance(0.08)
+    ) {
+      triggerSideHustleEvent(state, hustleId);
+    }
+
     return {
       success: true,
       income,

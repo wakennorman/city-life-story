@@ -16,14 +16,17 @@ const SIDE_HUSTLE_EVENTS = [
     choices: [
       {
         text: "💰 全额退款+赔偿¥50",
-        hint: "损失¥130+，但保住信誉",
+        hint: "损失¥130+，但保住信誉（7天后可能推荐新客）",
         cost: 130,
         apply: function (st) {
-          // [联动flag] 触发"口碑传播"后续事件
+          // [联动flag] 触发"口碑传播"后续事件（v3.1 链式回响）
           st.flags.daigouHonestService = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
+          if (typeof scheduleChainEvent === "function") {
+            scheduleChainEvent(st, "side_daigou_referral", 7, "street");
+          }
           StateManager.addMessage(
-            "💰 你全额退款并赔偿了¥50。虽然亏了钱，但客户说以后还会找你。",
+            "💰 你全额退款并赔偿了¥50。客户说会推荐朋友来——7 天后验证。",
             "warning",
           );
         },
@@ -301,13 +304,16 @@ const SIDE_HUSTLE_EVENTS = [
       },
       {
         text: "🎮 用游戏教学法",
-        hint: "需要创意，可能成功",
+        hint: "需要创意（成功后 12 天机构挖角）",
         apply: function (st) {
           if (Random.chance(0.6)) {
-            // [联动flag] 触发"教育机构挖角"后续事件
+            // [联动flag] 触发"教育机构挖角"后续事件（v3.1 链式回响）
             st.flags.tutorInnovative = true;
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "side_tutor_recruit", 12, "street");
+            }
             StateManager.addMessage(
-              "🎮 你用游戏的方式教学，学生突然感兴趣了。家长很惊喜。",
+              "🎮 你用游戏的方式教学，学生突然感兴趣了。家长很惊喜——她说要推荐你给机构，12 天后联系你。",
               "success",
             );
           } else {
@@ -334,7 +340,63 @@ const SIDE_HUSTLE_EVENTS = [
   },
 ];
 
+/**
+ * 随机触发一个副业事件（v3.1 链式事件 ② 新增）
+ *
+ * 被 performHustle 在副业执行后以 ~8% 概率调用。
+ * 仅当玩家当前拥有对应副业 hustle 且当日未触发过同类事件时才弹出。
+ *
+ * @param {Object} state - 游戏状态
+ * @param {string} currentHustleId - 当前刚执行完的副业ID（仅触发相关事件）
+ */
+function triggerSideHustleEvent(state, currentHustleId) {
+  if (!state || !state.player || state._pendingEvent) return false;
+
+  // 当日最多触发一次
+  var todayKey = "side_hustle_event_" + state.player.day;
+  if (state.flags[todayKey]) return false;
+
+  // 候选：与当前 hustle 匹配 + 未在本周重复
+  var week = Math.floor(state.player.day / 7);
+  var eligible = [];
+  for (var i = 0; i < SIDE_HUSTLE_EVENTS.length; i++) {
+    var evt = SIDE_HUSTLE_EVENTS[i];
+    if (evt.hustle && evt.hustle !== currentHustleId) continue;
+    if (!evt.hustle && currentHustleId) continue;
+    // 本周去重
+    var lastKey = "side_hustle_last_" + evt.id;
+    if (state.flags[lastKey] && state.flags[lastKey] === week) continue;
+    eligible.push(evt);
+  }
+  if (eligible.length === 0) return false;
+
+  var evt = eligible[Math.floor(Random.next() * eligible.length)];
+  state.flags[todayKey] = true;
+  state.flags["side_hustle_last_" + evt.id] = week;
+
+  // 构造弹窗按钮
+  var buttons = evt.choices.map(function (choice) {
+    return {
+      text: choice.text,
+      cls: choice.cost > 0 ? "btn-warning" : "btn-primary",
+      callback: function () {
+        var s = StateManager.getState();
+        if (choice.apply) choice.apply(s);
+        renderAll();
+      },
+    };
+  });
+
+  showModal({
+    title: (evt.icon ? evt.icon + " " : "") + evt.title,
+    body: '<p style="line-height:1.7;">' + evt.story + "</p>",
+    buttons: buttons,
+  });
+  return true;
+}
+
 // 导出
 if (typeof window !== "undefined") {
   window.SIDE_HUSTLE_EVENTS = SIDE_HUSTLE_EVENTS;
+  window.triggerSideHustleEvent = triggerSideHustleEvent;
 }
