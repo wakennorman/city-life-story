@@ -639,6 +639,37 @@ body {
   font-size: 11px;
 }
 
+/* ====== 交易Tab紧凑商品卡片 ====== */
+.trade-item-card {
+  padding: 8px 10px;
+}
+.trade-item-card .tic-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+.trade-item-card .tic-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.trade-item-card .tic-price {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+}
+.trade-item-card .tic-btns {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .card-meta .ap-cost {
   color: var(--warning);
   font-weight: 600;
@@ -4352,6 +4383,24 @@ body {
   .action-card .slot-tag {
     font-size: 9px;
     padding: 1px 5px;
+  }
+
+  /* 交易商品卡片移动端进一步紧凑 */
+  .trade-item-card {
+    padding: 6px 8px;
+  }
+  .trade-item-card .tic-header {
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+  .trade-item-card .tic-body {
+    gap: 4px;
+  }
+  .trade-item-card .tic-price {
+    font-size: 10px;
+  }
+  .trade-item-card .tic-btns {
+    gap: 3px;
   }
 
   /* ====== 移动端紧凑事件记录（v3.4） ====== */

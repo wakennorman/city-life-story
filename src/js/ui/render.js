@@ -1486,8 +1486,8 @@ function renderTradeTab(state, parent) {
     }
   }
 
-  // 季节性价格波动提示横幅
-  if (typeof getSeasonalPriceMod === "function") {
+  // 季节性价格波动提示横幅（需销售≥10级才能看出季节规律）
+  if (salesLvl >= 10 && typeof getSeasonalPriceMod === "function") {
     var seasonMods = getSeasonalPriceMod(state);
     if (Object.keys(seasonMods).length > 0) {
       var hotBuy = [];
@@ -1559,8 +1559,12 @@ function renderTradeTab(state, parent) {
     return;
   }
 
-  // ====== 动态路线推荐（根据季节、市场事件综合计算） ======
-  if (typeof getBestTradeRoutes === "function") {
+  // ====== 动态路线推荐（需销售≥15级+已访问≥2地点，才能分析出有价值的路线） ======
+  if (
+    salesLvl >= 15 &&
+    visitedLocs.length >= 2 &&
+    typeof getBestTradeRoutes === "function"
+  ) {
     var routeData = getBestTradeRoutes(state);
     if (routeData && routeData.tips && routeData.tips.length > 0) {
       var routeBox = document.createElement("div");
@@ -1789,47 +1793,45 @@ function renderTradeTab(state, parent) {
         "</span>"
       : "";
 
-    // 季节性价格标签
+    // 季节性价格标签（需已有销售经验才能认出季节规律，与横幅同步门控）
     var seasonTag = "";
-    if (typeof getSeasonalPriceMod === "function") {
+    if (salesLvl >= 10 && typeof getSeasonalPriceMod === "function") {
       var cat = good.category;
       var seasonMod = getSeasonalPriceMod(state)[cat];
       if (seasonMod && seasonMod < 0.85) {
-        seasonTag =
-          '<span style="color:var(--success);font-size:10px;margin-left:8px;">🟢 季节性低价</span>';
+        seasonTag = '<span style="color:var(--success);font-size:10px;white-space:nowrap;">🟢低价季</span>';
       } else if (seasonMod && seasonMod > 1.15) {
-        seasonTag =
-          '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔴 季节性高价</span>';
+        seasonTag = '<span style="color:var(--danger);font-size:10px;white-space:nowrap;">🔴高价季</span>';
       }
     }
 
+    // 价格行文案：批发市场显示批/零对比，零售市场显示基准→当前
+    var priceLineHtml = wholesalePrice
+      ? '批<strong style="color:var(--success)">¥' + wholesalePrice.toFixed(1) + '</strong> 零¥' + price.toFixed(1)
+      : '基¥' + good.basePrice + ' → <strong style="color:' + priceColor + '">¥' + price.toFixed(1) + '</strong>' + trendHtml + (priceLabel ? '<span style="font-size:10px;">' + priceLabel + '</span>' : '');
+
     const card = document.createElement("div");
-    card.className = "action-card";
+    card.className = "action-card trade-item-card";
     card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="card-title" style="margin:0;">${good.name}</div>
+      <div class="tic-header">
+        <span class="card-title" style="margin:0;">${good.name}</span>
         <span class="slot-tag">${CATEGORY_NAMES_TRADE[good.category] || good.category}</span>
         ${seasonTag}
       </div>
-      <div class="card-desc" style="margin:4px 0;">
-        基准: ¥${good.basePrice}/${good.unit}
-        ${wholesalePrice ? `<br>批发价: <strong style="color:var(--success)">¥${wholesalePrice.toFixed(1)}</strong>/件 (零售 ¥${price.toFixed(1)})` : ""}
-      </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
-        当前零售价: <strong style="color:${priceColor}">¥${price.toFixed(1)}</strong>${trendHtml}
-        ${priceLabel}
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
-        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
-        ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批发×10</button>` : ""}
-        <button class="qty-toggle-btn" data-good="${good.id}" data-side="buy" title="自定义数量">✏️</button>
-        <div class="qty-input-group" data-good="${good.id}" data-side="buy" style="display:none;">
-          <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
-          <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
-          <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
-          <button class="btn btn-sm btn-success qty-action-btn" data-good="${good.id}" data-side="buy">买</button>
+      <div class="tic-body">
+        <span class="tic-price">${priceLineHtml}</span>
+        <div class="tic-btns">
+          <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
+          <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
+          ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批×10</button>` : ""}
+          <button class="qty-toggle-btn" data-good="${good.id}" data-side="buy" title="自定义数量">✏️</button>
         </div>
+      </div>
+      <div class="qty-input-group" data-good="${good.id}" data-side="buy" style="display:none;margin-top:4px;">
+        <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
+        <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
+        <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
+        <button class="btn btn-sm btn-success qty-action-btn" data-good="${good.id}" data-side="buy">买</button>
       </div>
     `;
     grid.appendChild(card);
@@ -1956,20 +1958,33 @@ function renderTradeTab(state, parent) {
     compareTable.innerHTML = tableHtml;
     compareDiv.appendChild(compareTable);
     parent.appendChild(compareDiv);
-  } else if (visitedLocs2.length < 2) {
-    // 还没跑够2个区域 → 提示探索
+  } else {
+    // 未满足条件 → 根据差距给出针对性提示
     var exploreHint = document.createElement("div");
     exploreHint.style.cssText =
       "margin-top:16px;padding:10px;background:rgba(102,126,234,0.06);border-radius:6px;font-size:12px;color:var(--text-muted);text-align:center;";
-    var remainCount = allLocKeys.length - visitedLocs2.length;
-    exploreHint.innerHTML =
-      "🧭 已访问 " +
-      visitedLocs2.length +
-      "/" +
-      allLocKeys.length +
-      " 个区域。再逛 " +
-      remainCount +
-      " 个区域就能解锁价格对比！（需销售≥20级）";
+    var remainCount2 = allLocKeys.length - visitedLocs2.length;
+    var hintText = "";
+    if (salesLvl < 20 && visitedLocs2.length < 2) {
+      hintText = "🗺️ 多跑几处市集、多做几笔买卖，慢慢就能摸清各地行情";
+    } else if (salesLvl < 20) {
+      hintText =
+        "📊 已走访 " +
+        visitedLocs2.length +
+        " 处市集！销售升至20级后可开启跨区比价（当前" +
+        salesLvl +
+        "级）";
+    } else {
+      hintText =
+        "🧭 已访问 " +
+        visitedLocs2.length +
+        "/" +
+        allLocKeys.length +
+        " 个区域，再走访 " +
+        (2 - visitedLocs2.length) +
+        " 个区域即可解锁价格对比！";
+    }
+    exploreHint.innerHTML = hintText;
     parent.appendChild(exploreHint);
   }
 
