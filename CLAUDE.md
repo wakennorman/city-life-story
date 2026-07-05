@@ -76,7 +76,14 @@
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.20 — 开局定基调新闻过滤 + 移动端天气预报显示两条（commit: `5c62b72`）
+- **最新一次工作 (2026-07-06)**：v3.21 — 全游戏导航系统升级（commit: `8392a94`）
+  - **导航系统集中化**：新建 `src/js/ui/navigation.js`（+1500行），提供`navigateTo()`统一入口，支持tab/location/wiki/subTab/action五种导航类型；`navLink()`/`navActionButton()`生成可点击导航链接；自动资源消耗检测+确认弹窗
+  - **严重Bug修复**：原来所有Tab按钮（`#tab-bar .tab-btn`）没有click handler，点击什么都不会发生。`initTabNavigation()`通过事件委托修复
+  - **百科导航增强**：地点/工作/NPC/商品/技能/装备详情页底部全部新增「前往实地」「查看行动」「去购买」等导航按钮
+  - **修复「去大学城备考」断链**：从`document.querySelector('[data-tab=action]')?.click()` hack改为标准`navActionButton`
+  - **各面板导航入口**：学历子面板、技能Tab、事业发展总览新增导航按钮区，一键前往对应地点
+  - **影响文件**：navigation.js(新), wiki.js, render.js, render_core.js, career_dev.js, index.html
+  - **验证**：`node --check` ✅ / `python build.py` 4840.4KB ✅ / `git push origin/main` ✅
   - **开局新闻过滤**：`renderActiveNews()` 跳过 `_isIntroNews:true` 条目；开局新闻的 worldParams 效果已在 `applyWorldNewsToParams()` 写入，不需要在日常新闻栏重复展示（该新闻 duration:365，会霸占新闻位并让玩家误以为内容永远不变）
   - **天气预报只显示两条**：移动端 `render_infra.js` 的 forecast 循环改为 `Math.min(2, forecastArr.length)`，只显示置信度最高的两条，符合手机端空间限制
   - **验证**：`node --check` ✅ / `build.py 4754.2KB` ✅

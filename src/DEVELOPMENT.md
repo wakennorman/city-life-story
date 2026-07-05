@@ -6,7 +6,74 @@
 
 ---
 
-## 2026-07-06 — v3.19.1：事件叙事-触发自洽性修复（A类×5）
+## 2026-07-06 — v3.21：全游戏导航系统升级（navigation.js）
+
+### 核心变更
+
+#### P0 — 创建集中式导航系统（`src/js/ui/navigation.js`，+1500行）
+
+| 功能 | 说明 |
+|------|------|
+| `navigateTo(state, target, opts)` | 统一导航入口，支持五种导航类型 |
+| `navToTab(tabName)` | 一键Tab切换（免确认） |
+| `navToLocation(locKey, opts)` | 一键前往某地（带消耗确认弹窗） |
+| `navToWiki(catId, entryId)` | 一键百科跳转 |
+| `navToEducation()` | 一键前往学历子面板 |
+| `navToUniversity()` | 一键前往大学城（含AP消耗确认） |
+| `navLink(target, label)` | 生成导航链接HTML |
+| `navActionButton(type, key, label)` | 生成导航按钮HTML |
+| `bindAllNavButtons()` | 绑定所有导航按钮点击事件 |
+| `initTabNavigation()` | 事件委托修复tab按钮无点击事件的Bug |
+
+**资源消耗确认弹窗机制**：导航到需要消耗行动力/金钱的目标时，显示不可跳过的弹窗（标题+描述+消耗明细+确定/取消按钮）。不足时直接阻止并显示警告消息。设计参照《Papers Please》强制确认、《中国式家长》行动确认。
+
+**严重Bug修复**：原代码中所有 `tab-btn` 没有任何 click 事件处理函数。点击Tab按钮什么都不会发生。`initTabNavigation()` 通过事件委托修复此问题。
+
+#### P1 — 百科系统深度导航增强（`wiki.js`）
+
+百科条目详情页底部新增导航按钮：
+
+| 条目类型 | 新增导航按钮 |
+|----------|-------------|
+| 地点 | 「前往此地」「在地图上查看」 |
+| 工作 | 「前往该地工作」「查看行动」 |
+| NPC | 「前往该地找NPC」「社交互动」 |
+| 商品 | 「去某地购买」（根据buyLocations动态生成）|
+| 技能 | 「前往培训中心训练」「查看全部技能」|
+| 装备 | 「去某地购买」「查看背包」|
+
+#### P1 — 修复关键导航断链
+
+- **`career_dev.js`「去大学城备考」按钮**：从 `onclick="document.querySelector('[data-tab=action]')?.click()"` 改为标准的 `navActionButton("location", "school", ...)`，点击时会弹出AP消耗确认
+- **学历子面板 `renderPgEdu`**：新增「去大学城备考」「去培训中心学习」导航按钮
+- **技能Tab**：不在培训中心时，gate提示框新增「前往培训中心训练」导航按钮
+- **事业发展总览**：新增「查看上班族职位」「创业系统」「去大学城提升学历」快速跳转
+- **`renderAll()`** 末尾调用 `bindAllNavButtons()`，确保每次渲染后自动绑定
+
+### 影响文件
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `src/js/ui/navigation.js` | **新建** | 核心导航系统，~1500行 |
+| `src/js/ui/wiki.js` | 修改 | 百科6个详情函数导航按钮 |
+| `src/js/ui/render.js` | 修改 | 学历面板+技能面板导航按钮 |
+| `src/js/ui/render_core.js` | 修改 | renderAll绑定导航按钮 |
+| `src/js/ui/career_dev.js` | 修改 | 备考按钮+总览导航 |
+| `src/index.html` | 修改 | 加载navigation.js |
+
+### 设计参考
+
+- 《城市：天际线》右键菜单跳转 → 统一 navigateTo API
+- 《Papers Please》不可跳过弹窗 → showModal + 资源消耗确认
+- 《大多数》导航连贯性 → 百科到实地的一键跳转
+- 《文明 VI》Civilopedia 跨条目链接 → _wkLink + navActionButton 双系统
+- Apple HIG 确认弹窗模式 → 蓝色确认按钮 + 文字描述消耗明细
+
+### 验证
+
+- `node --check` → 全部通过 ✅
+- `python build.py` → 4840.4 KB ✅
+- `git push` → `8392a94` ✅
 
 ### 修复内容
 

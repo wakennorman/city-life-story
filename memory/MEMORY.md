@@ -6,3 +6,4 @@
 - [P0/P1 Fix 2026-07-04](p0-p1-fix-2026-07-04.md) — v3.13e 全面修复：6项Bug+经济平衡调参
 - [v3.5 事件3条+天气内联](mobile-ui-v3.5-weather-log.md) — 事件记录默认3条+天气内联显示+预报交替闪烁
 - [v3.7 交易/事件/弹窗修复](v3.7-trade-event-modal-fix.md) — 交易系统全面优化（undefined/卖推荐单一/单一路径）+ 暴雨事件语境 + 移动端弹窗居中
+- [navigation-system-v1](navigation-system-v1.md) — 全游戏统一导航系统 (navigation.js)
