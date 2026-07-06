@@ -938,34 +938,14 @@ var REAL_TIME_NEWS_CONFIG = {
   maxItems: 6, // 最多保留几条实时新闻
   displayCount: 4, // 弹窗展示几条
   sources: {
-    // 源1：RSS转JSON（2026-07-06 已禁用 — rss2json 返回 500，render.com 返回 404/CORS）
-    // 恢复前提：找到可用的 RSS 转 JSON 服务
-    rss: {
-      enabled: false,
-      // 主转换服务
-      converterUrl: "https://api.rss2json.com/v1/api.json",
-      // 备用转换服务（主服务超时/失败时使用，也是免费无需key）
-      fallbackConverterUrl:
-        "https://rss-to-json-server.onrender.com/api/convert",
+    // 源1：直接抓取 RSS XML 解析（无需第三方转换服务，DOMParser 原生支持）
+    rss_direct: {
+      enabled: true,
+      timeout: 5000,
       feeds: [
-        {
-          name: "新浪财经",
-          url: "https://rss.sina.com.cn/finance/hotnews.xml",
-          category: "经济",
-        },
         {
           name: "36氪",
           url: "https://36kr.com/feed",
-          category: "科技",
-        },
-        {
-          name: "华尔街见闻",
-          url: "https://www.wallstreetcn.com/rss",
-          category: "金融",
-        },
-        {
-          name: "新浪科技",
-          url: "https://rss.sina.com.cn/tech/focus15.xml",
           category: "科技",
         },
       ],
@@ -1375,49 +1355,94 @@ function generateInvestmentEffectFromTag(tag, mood) {
 }
 
 /**
- * 从RSS源抓取实时新闻（通过rss2json中转）
- * @param {Object} feed - RSS源配置 { name, url, category }
- * @returns {Promise<Array>} 新闻条目数组
+ * 从 RSS XML 直接抓取并解析（不需要第三方转换服务）
+ * 使用浏览器原生 DOMParser 解析 XML
  */
-function fetchFromRSS(feed) {
-  var rssCfg = REAL_TIME_NEWS_CONFIG.sources.rss;
-  var primaryUrl =
-    rssCfg.converterUrl + "?rss_url=" + encodeURIComponent(feed.url);
-  var fallbackUrl = rssCfg.fallbackConverterUrl
-    ? rssCfg.fallbackConverterUrl + "?rss_url=" + encodeURIComponent(feed.url)
-    : null;
+function fetchFromRSSDirect(feed) {
+  var timeout = REAL_TIME_NEWS_CONFIG.sources.rss_direct.timeout || 5000;
 
   return new Promise(function (resolve, reject) {
-    // 尝试主转换服务
-    tryFetchRSS(primaryUrl, feed)
-      .then(function (items) {
-        if (items && items.length > 0) {
-          resolve(items);
+    var timeoutId = setTimeout(function () {
+      reject(new Error("RSS timeout: " + feed.name));
+    }, timeout);
+
+    fetch(feed.url)
+      .then(function (response) {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status + " for " + feed.name);
+        }
+        return response.text();
+      })
+      .then(function (xmlText) {
+        // 使用 DOMParser 解析 XML
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+        // 检查解析错误
+        var parseError = xmlDoc.querySelector("parsererror");
+        if (parseError) {
+          throw new Error("XML parse error for " + feed.name);
+        }
+
+        var items = xmlDoc.querySelectorAll("item");
+        if (!items || items.length === 0) {
+          throw new Error("No items in RSS feed: " + feed.name);
+        }
+
+        var newsItems = [];
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          var titleEl = item.querySelector("title");
+          var descEl = item.querySelector("description");
+          var linkEl = item.querySelector("link");
+          var dateEl = item.querySelector("pubDate");
+
+          var title = titleEl ? titleEl.textContent : "";
+          if (!title) continue;
+
+          var description = descEl ? descEl.textContent : "";
+          var link = linkEl ? linkEl.textContent : "";
+          var pubDate = dateEl ? dateEl.textContent : "";
+
+          var classification = classifyRealNews(title, description);
+
+          newsItems.push({
+            id: "realtime_" + feed.name + "_" + i,
+            icon: getNewsIconByTag(classification.tag),
+            tag: classification.tag,
+            headline: title
+              .replace(/<[^>]+>/g, "")
+              .trim()
+              .substring(0, 80),
+            detail: description
+              .replace(/<[^>]+>/g, "")
+              .trim()
+              .substring(0, 120),
+            worldEffect: {
+              sectorHeat: classification.sectorHeat,
+              marketMood: classification.marketMood,
+              note: classification.note,
+            },
+            investmentEffect: generateInvestmentEffectFromTag(
+              classification.tag,
+              classification.marketMood,
+            ),
+            source: "实时·" + feed.name,
+            url: link,
+            _isRealTime: true,
+          });
+        }
+
+        if (newsItems.length > 0) {
+          resolve(newsItems);
         } else {
-          throw new Error("Empty items from primary");
+          reject(new Error("Empty items after parsing RSS: " + feed.name));
         }
       })
-      .catch(function (primaryErr) {
-        // 主服务失败，尝试备用转换服务
-        if (fallbackUrl) {
-          tryFetchRSS(fallbackUrl, feed)
-            .then(function (fallbackItems) {
-              if (fallbackItems && fallbackItems.length > 0) {
-                resolve(fallbackItems);
-              } else {
-                reject(
-                  new Error("Both RSS converters failed for " + feed.name),
-                );
-              }
-            })
-            .catch(function () {
-              reject(
-                new Error("RSS failed (primary+fallback) for " + feed.name),
-              );
-            });
-        } else {
-          reject(primaryErr);
-        }
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+        reject(err);
       });
   });
 }
@@ -1753,11 +1778,15 @@ function fetchRealTimeNews() {
   _realNewsStatus = "loading";
   var promises = [];
 
-  // 添加RSS源
-  var rssCfg = REAL_TIME_NEWS_CONFIG.sources.rss;
-  if (rssCfg.enabled && rssCfg.feeds && rssCfg.feeds.length > 0) {
-    for (var fi = 0; fi < rssCfg.feeds.length; fi++) {
-      promises.push(fetchFromRSS(rssCfg.feeds[fi]));
+  // 添加RSS直接抓取源（直接解析XML，无需第三方转换）
+  var rssDirectCfg = REAL_TIME_NEWS_CONFIG.sources.rss_direct;
+  if (
+    rssDirectCfg.enabled &&
+    rssDirectCfg.feeds &&
+    rssDirectCfg.feeds.length > 0
+  ) {
+    for (var fi = 0; fi < rssDirectCfg.feeds.length; fi++) {
+      promises.push(fetchFromRSSDirect(rssDirectCfg.feeds[fi]));
     }
   }
 
