@@ -938,11 +938,10 @@ var REAL_TIME_NEWS_CONFIG = {
   maxItems: 6, // 最多保留几条实时新闻
   displayCount: 4, // 弹窗展示几条
   sources: {
-    // 源1：RSS转JSON（无需API Key，通过rss2json.com中转）
-    // 设计原则：摒弃「宏大叙事」类主流媒体，选用专业财经/商业/科技新闻源
-    // 参考 Bloomberg Terminal / Reuters Eikon 的信息源选择标准——客观、数据驱动、领域专注
+    // 源1：RSS转JSON（2026-07-06 已禁用 — rss2json 返回 500，render.com 返回 404/CORS）
+    // 恢复前提：找到可用的 RSS 转 JSON 服务
     rss: {
-      enabled: true,
+      enabled: false,
       // 主转换服务
       converterUrl: "https://api.rss2json.com/v1/api.json",
       // 备用转换服务（主服务超时/失败时使用，也是免费无需key）
@@ -987,9 +986,9 @@ var REAL_TIME_NEWS_CONFIG = {
       params: "num=10&rand=1", // 随机10条
     },
     // 源3：通过 CORS 代理直接抓取新闻页面（无需API Key，兜底用）
-    //   国内无法访问 rss2json.com 时的最终备选
+    // 源3：直连 CORS 代理（2026-07-06 已禁用 — allorigins.win 返回 408/CORS）
     direct: {
-      enabled: true,
+      enabled: false,
       // 使用与 world_params.js 相同的 CORS 代理
       proxyUrl: "https://api.allorigins.win/raw?url=",
       sources: [
