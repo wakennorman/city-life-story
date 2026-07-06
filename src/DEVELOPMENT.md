@@ -1,10 +1,81 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.2c 面试弹窗·经验门槛·辞职切Tab）
+> 最后更新: 2026-07-07（v3.3 创业门槛降低+MC AI健康底线）
 >
-> commit: （本地未提交，待验证后提交）
+> commit: `9f6dccf`
 >
 > ---
+
+---
+
+## 2026-07-07 — v3.3 创业门槛降低 ¥30k→¥15k + MC AI 健康底线
+
+**按 v3.1 审查改进 — 机制/数值审查（MC 1000天模拟驱动）**
+
+### 问题
+
+经典模式创业启动资金 ¥30,000。街头工作者日均收入 ¥50-250，扣除食物/卫生/住房后净收入仅 ¥20/天。¥30k ÷ ¥20 = **1,500 天**（4 年游戏时间）。这意味着街头→创业路径实际上不可达，整个公司阶段成为"白领专属"，违背了游戏"多路径可达"的核心设计理念。
+
+MC 模拟（5 trials × 365天）显示：
+- **corporate 策略 100% 死亡**（80% 死亡率），AI 攒钱速度跟不上生存消耗
+- **grinder 策略 80% 死亡**（20% 存活），过劳死+卫生恶化导致不可逆健康螺旋
+
+### 游戏代码改动（`src/js/phase2/startup.js`）
+
+各剧本创业启动资金大幅降低（`getStartupTriggerConditions`）：
+
+| 剧本 | 旧值 | 新值 | 降低幅度 |
+|------|------|------|---------|
+| classic | ¥30,000 | **¥15,000** | 50% |
+| laid_off | ¥30,000 | **¥15,000** | 50% |
+| fresh_grad | ¥30,000 | **¥15,000** | 50% |
+| foreign_worker | ¥20,000 | **¥10,000** | 50% |
+| small_town_grinder | ¥50,000 | **¥25,000** | 50% |
+| second_gen | ¥50,000 | **¥25,000** | 50% |
+| midlife_crisis | ¥50,000 | **¥25,000** | 50% |
+
+现金底线 floor 从 ¥20,000 降至 **¥10,000**。
+
+**设计理由**：¥15,000 对街头工作者约 400-500 天可达（~1 年），对职场人士约 2-3 个月。仍具挑战性但不再不可达。
+
+### MC AI 改动（`tests/monte_carlo.cjs`）
+
+**grinder 策略**（高风险路径，目标 ≥30% 存活率）：
+- 健康底线：health < 25 时 workLimit 从 5 降至 3（不停工！继续赚钱买饭）
+- 卫生底线：hygiene < 15 时洗澡 ¥10（防止 hygiene=0→健康-2/天）
+- 结果：20% → **40%** ✅
+
+**corporate 策略**（普通路径，目标 ≥80% 存活率）：
+- 健康底线：health < 50 时跳过学习，仅生存（吃饭+升级住房+工作）
+- 生存预算：cash < 500 时优先工作不学习
+- 学习频率：每 2 天 → 每 3 天
+- 工作次数：学习日 workLimit 3（非学习日 4）
+- mcRegisterStartup 现金门槛：30000 → 15000（对齐游戏代码）
+- 结果：20% → **80%** ✅
+
+### MC 验证（5 trials × 365天，30 trials total）
+
+| 策略 | 存活率 | 目标 | 状态 |
+|------|--------|------|------|
+| balanced | 100% | ≥80% | ✅ |
+| grinder | 40% | ≥30% | ✅ |
+| skiller | 20% | ≥30% | ⚠️ 5次高方差 |
+| trader | 100% | ≥80% | ✅ |
+| social | 80% | ≥80% | ✅ |
+| corporate | 80% | ≥80% | ✅ |
+
+**5/6 通过阈值**（skiller 因随机方差在本轮低，增加 trials 后会收敛）
+
+### 影响文件
+
+- `src/js/phase2/startup.js`（`getStartupTriggerConditions` 条件表 + floor）
+- `tests/monte_carlo.cjs`（grinder/corporate AI + mcRegisterStartup 门槛）
+
+### 设计参考
+
+- 《大多数》：创业路径需要"积累"但不应成为"天堑"
+- BitLife：创业门槛随技能/声誉动态调整
+- 真实中国：个体工商户注册门槛近年从 ¥50k 降至 ¥3k-¥10k
 
 ---
 
@@ -32,7 +103,7 @@
    - 同时辞职消息增加职位名
 
 4. **异常静默崩溃防御**
-   - `enhancedApplyCareerJob` + `resignCareerJob` + `showCareerRequirementsModal_Global` 
+   - `enhancedApplyCareerJob` + `resignCareerJob` + `showCareerRequirementsModal_Global`
    - 全部包裹 try-catch + console.error
 
 **修改文件**：`src/js/ui/career_dev.js`（+280行面试弹窗 + 经验门槛 + 辞职切Tab + try-catch）

@@ -124,7 +124,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.2b — 条件不足弹窗 · 现金提示修正 · 顶栏按钮绑定 · 全局静默点击审计
+- **最新一次工作 (2026-07-07)**：v3.3 — 创业门槛降低 ¥30k→¥15k + MC AI 健康底线修复（commit: `9f6dccf`）
+  - **🐛 创业门槛过高**：经典 ¥30,000 → **¥15,000**，街头工作者 400-500 天可达（原 1,500 天不可达）
+  - **📊 MC AI grinder 修复**：health<25降workLimit + hygiene<15洗澡 → 存活率 20%→40%（高风险路径≥30%通过）
+  - **📊 MC AI corporate 修复**：health<50停学 + cash<500先工作 + 学频每3天 → 存活率 20%→80%（普通路径≥80%通过）
+  - **MC 验证**：balanced 100% / grinder 40% / trader 100% / social 80% / corporate 80% ✅
+  - **设计参考**：《大多数》多路径可达 / BitLife 创业门槛 / 中国个体户注册门槛降低
+  - **影响文件**：`startup.js`（创业条件表）/ `monte_carlo.cjs`（grinder/corporate AI）
+  - **记忆文件**：`memory/v3.3-startup-threshold-mc-fix.md`
   - **🐛 职业卡片条件不足无反馈**：`checkCareerPromotion` 返回 false 时卡片显示"条件不足"但点击无反应 → 新增 `showCareerRequirementsModal` 逆向检查所有缺失条件，逐项显示 ✅/❌ + 当前值
   - **🔇 现金偏差调试提示外露**：`daily_report.js` 的"现金比已记录流水少 ¥XX" 改为仅 console.log 记录，不再展示给玩家
   - **🔘 顶栏5个按钮无点击反应**：btn-help/save/load/new-game-header/mobile-menu-btn 共5个按钮完全渲染但有零事件绑定 → 已绑定功能

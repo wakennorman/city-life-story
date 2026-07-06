@@ -2024,6 +2024,43 @@ function _wikiDetailSkill(state, id) {
       html += "</div>";
     }
   }
+
+  // 🔗 相似工作推荐：具有相同技能要求的其他工作
+  if (typeof STREET_JOBS !== "undefined" && job.requirements) {
+    var sharedSkillJobs = [];
+    var reqKeys = Object.keys(job.requirements);
+    for (var k = 0; k < reqKeys.length; k++) {
+      var skName_k = reqKeys[k];
+      if (!/^[a-z]+$/i.test(skName_k)) continue; // 只检查技能字段
+      var skLv = job.requirements[skName_k];
+      for (var j2 = 0; j2 < STREET_JOBS.length; j2++) {
+        var other = STREET_JOBS[j2];
+        if (!other || other.id === id) continue;
+        if (
+          other.requirements &&
+          other.requirements[skName_k] === skLv &&
+          sharedSkillJobs.indexOf(other.id) === -1
+        ) {
+          sharedSkillJobs.push(other.id);
+        }
+      }
+    }
+    if (sharedSkillJobs.length > 0) {
+      html +=
+        '<h3>🔗 需要同样技能的其他工作</h3><ul class="wiki-list">';
+      for (var sj = 0; sj < sharedSkillJobs.length; sj++) {
+        var sjDef = getJobById(sharedSkillJobs[sj]);
+        if (sjDef) {
+          html +=
+            "<li>" +
+            _wkLink("jobs", sjDef.id, sjDef.name, sjDef.icon) +
+            "</li>";
+        }
+      }
+      html += "</ul>";
+    }
+  }
+
   return html;
 }
 

@@ -2076,6 +2076,7 @@ function getAvailableActions(state) {
 
       actions.push({
         id: "job_" + jobId,
+        category: "work",
         name: job.name,
         desc: job.desc + footfallLabel,
         icon: job.icon,
@@ -2116,6 +2117,7 @@ function getAvailableActions(state) {
     if (jobIds.length === 0) {
       actions.push({
         id: "no_jobs",
+        category: "other",
         name: "当前地点没有工作机会",
         desc: "尝试旅行到其他地点寻找工作。",
         icon: "🚫",
@@ -2127,6 +2129,7 @@ function getAvailableActions(state) {
     if (locKey === "wholesaleMarket") {
       actions.push({
         id: "wholesale_header",
+        category: "work",
         name: "批发进货",
         desc: "在批发市场以折扣价批量购入商品，转手到商业区卖出赚差价！点击后自动切换到交易Tab进行采购。",
         icon: "📦",
@@ -2144,6 +2147,7 @@ function getAvailableActions(state) {
     ) {
       actions.push({
         id: "trade_header",
+        category: "work",
         name: "买卖商品",
         desc: "查看当前市场价格，低买高卖赚取差价。点击后自动切换到交易Tab。",
         icon: "🛒",
@@ -2160,6 +2164,7 @@ function getAvailableActions(state) {
     // 显示当前住所（所有地点都显示）
     actions.push({
       id: "housing_current",
+      category: "survival",
       name: "当前住所：" + curHouse.name,
       desc:
         "容量+" +
@@ -2185,6 +2190,7 @@ function getAvailableActions(state) {
       var canAfford = (state.resources.cash || 0) >= house.cost;
       actions.push({
         id: "housing_upgrade_" + t,
+        category: "survival",
         name: "升级到" + house.name,
         desc:
           house.desc +
@@ -2242,6 +2248,7 @@ function getAvailableActions(state) {
       if (hasStorage) {
         actions.push({
           id: "storage_current",
+          category: "survival",
           name: `已租仓库 (额外+${state.housing.storageCapacity || 0}容量)`,
           desc: `日租¥${STORAGE_OPTIONS.find((s) => s.capacity === state.housing.storageCapacity)?.rent || "?"}/天`,
           icon: "📦",
@@ -2252,6 +2259,7 @@ function getAvailableActions(state) {
           const canAfford = state.resources.cash >= opt.cost;
           actions.push({
             id: "storage_rent_" + opt.id,
+            category: "survival",
             name: `租用${opt.name}`,
             desc: `额外+${opt.capacity}商品存储容量。一次性¥${opt.cost} + 日租¥${opt.rent}/天`,
             icon: opt.icon,
@@ -2308,6 +2316,7 @@ function getAvailableActions(state) {
         const canAfford = state.resources.cash >= pack.cost;
         actions.push({
           id: "buy_" + pack.id,
+          category: "shopping",
           name: `购买${pack.name}`,
           desc: `随身容量+${pack.capacity}。一次性购买，永久拥有。`,
           icon: pack.icon,
@@ -2344,6 +2353,7 @@ function getAvailableActions(state) {
         };
         actions.push({
           id: "item_shop_" + locKey,
+          category: "shopping",
           name: shopNames[locKey] || "装备商店",
           desc: "共" + shopItems.length + "件装备可选，含服装/工具/道具",
           icon: "🛍️",
@@ -2373,6 +2383,7 @@ function getAvailableActions(state) {
         if (studyReady) {
           actions.push({
             id: "edu_study",
+            category: "education",
             name: "自考备考",
             desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
             ap: 20,
@@ -2426,6 +2437,7 @@ function getAvailableActions(state) {
         );
         actions.push({
           id: "edu_exam",
+          category: "education",
           name: "参加考试",
           desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
           ap: 30,
@@ -2468,6 +2480,7 @@ function getAvailableActions(state) {
         if (ep.examsPassed >= ep.totalExams) {
           actions.push({
             id: "edu_cert",
+            category: "education",
             name: "申请本科学历认证",
             desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
             ap: 0,
@@ -2485,6 +2498,7 @@ function getAvailableActions(state) {
       } else if (edu === 1) {
         actions.push({
           id: "edu_done",
+          category: "education",
           name: "本科学历持有者",
           desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
           disabled: true,
@@ -2510,6 +2524,7 @@ function getAvailableActions(state) {
           (function (fjob) {
             actions.push({
               id: fjob.id,
+              category: "work",
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
@@ -2560,6 +2575,7 @@ function getAvailableActions(state) {
       ) {
         actions.push({
           id: "fame_commercial_vip",
+          category: "appliance",
           name: "本地名人效应",
           desc: `名气${fame}点，商家请你站台推广，收现金并涨粉。(每天一次)`,
           ap: 15,
@@ -2592,6 +2608,7 @@ function getAvailableActions(state) {
       if (locKey === "park" && fame >= 20 && !fameFlag.parkFan) {
         actions.push({
           id: "fame_park_fan",
+          category: "appliance",
           name: "粉丝认出你了",
           desc: `有人认出你（名气${fame}），主动来搭话聊天，心情好极了。(每天一次)`,
           ap: 5,
@@ -2618,6 +2635,7 @@ function getAvailableActions(state) {
       ) {
         actions.push({
           id: "fame_training_vip",
+          category: "appliance",
           name: "名人专属指导课",
           desc: `名气${fame}点，教练/老师主动找你，提供一次免费专项训练。(每天一次)`,
           ap: 20,
@@ -2649,6 +2667,7 @@ function getAvailableActions(state) {
       if (locKey === "hospital" && fame >= 35 && !fameFlag.hospitalVip) {
         actions.push({
           id: "fame_hospital_vip",
+          category: "appliance",
           name: "VIP就诊通道",
           desc: `名气${fame}点，护士认出你直接带去优先诊室，挂号费减半。(每天一次)`,
           ap: 10,
@@ -2676,6 +2695,7 @@ function getAvailableActions(state) {
       if (locKey === "techPark" && fame >= 50 && !fameFlag.techTalkVip) {
         actions.push({
           id: "fame_tech_talk",
+          category: "appliance",
           name: "科技论坛演讲嘉宾",
           desc: `名气${fame}点，主办方邀请你做嘉宾分享，演讲费+名气暴增。(每天一次)`,
           ap: 25,
@@ -2726,6 +2746,7 @@ function getAvailableActions(state) {
       })();
       actions.push({
         id: "travel_" + destKey,
+        category: "other",
         name: `前往 ${dest.name}`,
         desc: dest.desc,
         icon: "🚶",
@@ -2773,6 +2794,7 @@ function getAvailableActions(state) {
     // 3. 通用行动
     actions.push({
       id: "rest",
+      category: "survival",
       name: "休息一会",
       desc: "找个地方坐坐，恢复一些疲劳。",
       icon: "😴",
@@ -2794,6 +2816,7 @@ function getAvailableActions(state) {
     if ((state.resources.villageDebt || 0) > 0) {
       actions.push({
         id: "repay_village",
+        category: "finance",
         name: "还村长钱",
         desc: "随时还一部分或全部村长的账，无债一身轻。",
         icon: "🏘️",
@@ -2806,6 +2829,7 @@ function getAvailableActions(state) {
 
     actions.push({
       id: "eat",
+      category: "survival",
       name: "吃顿饭",
       desc: "在路边摊吃个快餐，填饱肚子。烹饪技能越高自己做越省钱。",
       icon: "🍚",
@@ -2863,6 +2887,7 @@ function getAvailableActions(state) {
 
     actions.push({
       id: "shower",
+      category: "survival",
       name: "洗澡",
       desc: "花8元去公共澡堂洗个澡。",
       apCost: 10,
@@ -2886,6 +2911,7 @@ function getAvailableActions(state) {
     if (locKey === "bank") {
       actions.push({
         id: "deposit",
+        category: "finance",
         name: "存款",
         desc: "把钱存入银行，吃利息也更安全。",
         icon: "🏦",
@@ -2896,6 +2922,7 @@ function getAvailableActions(state) {
       });
       actions.push({
         id: "withdraw",
+        category: "finance",
         name: "取款",
         desc: "从银行取出存款。",
         icon: "💰",
@@ -2906,6 +2933,7 @@ function getAvailableActions(state) {
       });
       actions.push({
         id: "loan",
+        category: "finance",
         name: "贷款",
         desc: "向银行贷款（动态额度评估，日息0.3%复利），解燃眉之急。",
         icon: "📝",
@@ -2915,6 +2943,7 @@ function getAvailableActions(state) {
       });
       actions.push({
         id: "repay",
+        category: "finance",
         name: "还银行贷款",
         desc: "偿还银行贷款。",
         icon: "💸",
@@ -2932,6 +2961,7 @@ function getAvailableActions(state) {
     if (locKey === "hospital") {
       actions.push({
         id: "heal",
+        category: "survival",
         name: "看病治疗",
         desc: "花50元看病，恢复健康、治疗伤病。",
         icon: "🏥",
@@ -2958,6 +2988,7 @@ function getAvailableActions(state) {
     if (locKey === "trainingCenter") {
       actions.push({
         id: "study",
+        category: "education",
         name: "自学提升",
         desc: "花时间看书学习，提升技能等级。",
         icon: "📚",
@@ -3000,6 +3031,7 @@ function getAvailableActions(state) {
     if (locKey === "park") {
       actions.push({
         id: "relax_park",
+        category: "survival",
         name: "公园放松",
         desc: "在公园散步、看风景，放松身心。",
         icon: "🌳",
@@ -3023,6 +3055,7 @@ function getAvailableActions(state) {
       const canTransition = intelligent || experienced;
       actions.push({
         id: "apply_job",
+        category: "work",
         name: "应聘互联网公司",
         desc: canTransition
           ? intelligent
@@ -3080,6 +3113,7 @@ function getAvailableActions(state) {
 
       actions.push({
         id: "corp_" + action.id,
+        category: "career",
         name: action.name,
         desc: action.desc,
         icon: action.icon,
@@ -3097,6 +3131,7 @@ function getAvailableActions(state) {
     if (state.corporate.team.length > 0 || rankData.canManageTeam) {
       actions.push({
         id: "corp_team_view",
+        category: "career",
         name: "查看团队详情",
         desc: `管理你的${state.corporate.team.length}名团队成员。Q2可招聘。`,
         icon: "👥",
@@ -3124,6 +3159,7 @@ function getAvailableActions(state) {
     if (startupSummary) {
       actions.push({
         id: "startup_header",
+        category: "career",
         name: "「" + startupSummary.name + "」创业中",
         desc:
           "阶段：" +
@@ -3148,6 +3184,7 @@ function getAvailableActions(state) {
         var actionApCost = sa.apCost;
         actions.push({
           id: "startup_" + actionId,
+          category: "career",
           name: sa.name,
           desc: sa.desc + (sa.meta ? "（可选：" + sa.meta + "）" : ""),
           icon: sa.icon,
@@ -3185,6 +3222,7 @@ function getAvailableActions(state) {
       const canAfford = state.resources.cash >= cert.requirements.cash;
       actions.push({
         id: "cert_" + cert.id,
+        category: "education",
         name: `考取${cert.name}`,
         desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
         icon: "📜",
@@ -3248,6 +3286,7 @@ function getAvailableActions(state) {
           : "";
       actions.push({
         id: "npc_" + npc.id,
+        category: "social",
         name: `与${npc.name}交谈`,
         desc: `${npc.role} — ${affLabel}`,
         icon: "💬",
@@ -3307,6 +3346,7 @@ function getAvailableActions(state) {
         if ((rel.affinity || 0) >= 30) {
           actions.push({
             id: "intel_" + npc.id,
+            category: "social",
             name: "向" + npc.name + "打听消息",
             desc: "消耗10AP换取一条可能提前兑现的街头情报；好感和心智越高，判断越可靠。",
             icon: "🗞️",
@@ -3332,6 +3372,7 @@ function getAvailableActions(state) {
         } else {
           actions.push({
             id: "intel_locked_" + npc.id,
+            category: "social",
             name: "打听消息（好感30解锁）",
             desc: npc.name + "还不够信任你，多交谈几次再来问可靠风声。",
             icon: "🗞️",
@@ -3348,6 +3389,7 @@ function getAvailableActions(state) {
         if (!state.flags[favorKey] && (rel2.affinity || 0) >= 30) {
           actions.push({
             id: "favor_" + npc.id,
+            category: "social",
             name: npc.name + "有个请求",
             desc: npc.favor.story.slice(0, 40) + "...",
             icon: "❤️",
@@ -3411,6 +3453,7 @@ function getAvailableActions(state) {
         if (!state.flags[deepKey] && (relDeep.affinity || 0) >= deepReqAff) {
           actions.push({
             id: "deeptask_" + npc.id,
+            category: "social",
             name: npc.name + "想聊个重要的事",
             desc: npc.deepTask.story.slice(0, 45) + "...",
             icon: "💌",
