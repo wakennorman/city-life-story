@@ -830,7 +830,7 @@ function renderLocationBar(state, parent) {
 
   var rightGroup = document.createElement("span");
   rightGroup.style.cssText =
-    "display:flex;align-items:center;gap:3px;margin-left:auto;white-space:nowrap;flex-shrink:0;";
+    "display:flex;align-items:center;gap:3px;white-space:nowrap;";
 
   var houseSpan = document.createElement("span");
   houseSpan.style.cssText = "color:var(--text-secondary);";
