@@ -165,7 +165,12 @@ function isCrisis35FollowupEvent(evt, state) {
  *   minAge / maxAge       — 年龄范围
  *   educationMin          — 最低学历等级
  *   moralityMin / moralityMax — 道德范围
- *   phase                 — 阶段过滤: ["street"]（已有独立过滤）
+ *   phase                 — 阶段过滤: "street" / "corporate"
+ *   minNeeds / maxNeeds   — 需求范围: { health: 30, hunger: 20 }
+ *   hasDebt               — 是否负债: true/false
+ *   hasCert               — 证书判定: "cooking_cert" 或 ["cooking_cert"]
+ *   hasFlag               — requireFlags 别名
+ *   weather               — 天气过滤: ["rainy", "stormy"]
  *
  * @param {Object} triggers - 触发条件数据对象
  * @param {Object} state    - 游戏状态
@@ -260,6 +265,62 @@ function evaluateTriggers(triggers, state) {
     (p.morality ?? 50) > triggers.moralityMax
   )
     return false;
+
+  // 需求下限（state.needs 中对应维度 ≥ 值即匹配）
+  if (triggers.minNeeds && typeof triggers.minNeeds === "object") {
+    var needs = state.needs || {};
+    for (var mn in triggers.minNeeds) {
+      if ((needs[mn] || 0) < triggers.minNeeds[mn]) return false;
+    }
+  }
+  // 需求上限（同上取反）
+  if (triggers.maxNeeds && typeof triggers.maxNeeds === "object") {
+    var needs2 = state.needs || {};
+    for (var mxn in triggers.maxNeeds) {
+      if ((needs2[mxn] || 0) > triggers.maxNeeds[mxn]) return false;
+    }
+  }
+
+  // 负债判定
+  if (triggers.hasDebt !== undefined) {
+    var debt = (state.resources && state.resources.debt) || 0;
+    if (triggers.hasDebt && debt <= 0) return false;
+    if (!triggers.hasDebt && debt > 0) return false;
+  }
+
+  // 证书判定（字符串或数组，state.certificates 包含即匹配）
+  if (triggers.hasCert !== undefined) {
+    var certs = state.certificates || [];
+    var reqCert = Array.isArray(triggers.hasCert)
+      ? triggers.hasCert
+      : [triggers.hasCert];
+    for (var ci = 0; ci < reqCert.length; ci++) {
+      if (certs.indexOf(reqCert[ci]) < 0) return false;
+    }
+  }
+
+  // Flag 别名（兼容 trigger_registry 模板风格）
+  if (triggers.hasFlag !== undefined) {
+    var reqF = Array.isArray(triggers.hasFlag)
+      ? triggers.hasFlag
+      : [triggers.hasFlag];
+    var fState = state.flags || {};
+    for (var hfi = 0; hfi < reqF.length; hfi++) {
+      if (!fState[reqF[hfi]]) return false;
+    }
+  }
+
+  // 阶段过滤（state.player.phase 等于值）
+  if (triggers.phase !== undefined && p.phase !== triggers.phase) return false;
+
+  // 天气过滤（state.weather.current 在数组中）
+  if (triggers.weather !== undefined) {
+    var curWeather = state.weather && state.weather.current;
+    var weatherArr = Array.isArray(triggers.weather)
+      ? triggers.weather
+      : [triggers.weather];
+    if (weatherArr.indexOf(curWeather) < 0) return false;
+  }
 
   return true;
 }

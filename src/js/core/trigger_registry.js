@@ -1,9 +1,21 @@
+/**
+ * 约定式触发 —— 双轨统一说明（v3.6）
+ * 主路径：events_core.evaluateTriggers ({minDay, minCash, ...} 数据对象)，已接入 queueRandomEvent 主流程。
+ * 本文件（trigger_registry）保留：槽位注册、冷却管理、权重随机；用于"时机驱动"型事件（after_work/monthly/...）。
+ * 两者通过 checkEventTrigger 兼容 —— 事件可任选一种声明式，勿混用。
+ */
 // ========================================
 // src/js/core/trigger_registry.js — 事件触发数据化系统（v3.4）
 // ========================================
 // 约定式编程：事件声明 triggers 数组，系统自动匹配触发时机
 // 替代手写 conditions() 函数 + 手写在 main.js/daily_pipeline.js 的触发位置
 // ========================================
+//
+// ⚠️ 双轨统一决策（v3.6）：
+//   主路径 = events_core.evaluateTriggers（数据对象式，已接入 queueRandomEvent 主循环）
+//   本文件 保留 注册/冷却/权重 功能，作为"时机驱动型"事件的注册入口（槽位调度）
+//   两者通过 checkEventTrigger 兼容：数组式 triggers:["daily_start"] 与数据对象式
+//   triggers:{minDay:4} 分别走不同路径，互不冲突；新事件优先用数据对象式。
 
 (function () {
   "use strict";
@@ -13,18 +25,18 @@
    * 每个 slot 有：name（系统内名）/ label（调试标签）/ timing（何时触发）
    */
   var TRIGGER_SLOTS = {
-    daily_start:     { label: "每日开始",     timing: "day_tick_before" },
-    after_work:      { label: "工作后",       timing: "after_street_job" },
-    after_travel:    { label: "旅行后",       timing: "after_travel" },
-    after_trade:     { label: "交易后",       timing: "after_trade" },
-    after_heal:      { label: "治疗后",       timing: "after_heal" },
-    daily_mid:       { label: "每日结算中",   timing: "day_tick_mid" },
-    daily_end:       { label: "每日结算后",   timing: "day_tick_after" },
-    monthly:         { label: "每月",         timing: "month_tick" },
-    weekly:          { label: "每周",         timing: "week_tick" },
-    career_promo:    { label: "职业晋升",     timing: "after_career_promo" },
-    corp_startup:    { label: "创业注册",     timing: "after_startup_register" },
-    random_encounter:{ label: "随机遭遇",     timing: "random" },
+    daily_start: { label: "每日开始", timing: "day_tick_before" },
+    after_work: { label: "工作后", timing: "after_street_job" },
+    after_travel: { label: "旅行后", timing: "after_travel" },
+    after_trade: { label: "交易后", timing: "after_trade" },
+    after_heal: { label: "治疗后", timing: "after_heal" },
+    daily_mid: { label: "每日结算中", timing: "day_tick_mid" },
+    daily_end: { label: "每日结算后", timing: "day_tick_after" },
+    monthly: { label: "每月", timing: "month_tick" },
+    weekly: { label: "每周", timing: "week_tick" },
+    career_promo: { label: "职业晋升", timing: "after_career_promo" },
+    corp_startup: { label: "创业注册", timing: "after_startup_register" },
+    random_encounter: { label: "随机遭遇", timing: "random" },
   };
 
   /**
@@ -33,14 +45,30 @@
    * 事件也可以自定义 conditions() 函数（渐进式增强）
    */
   var TRIGGER_TEMPLATES = {
-    has_debt:        function (state) { return state.debt && state.debt > 0; },
-    cash_above_100:  function (state) { return state.cash >= 100; },
-    day_above_7:     function (state) { return state.day >= 7; },
-    day_above_30:    function (state) { return state.day >= 30; },
-    has_health_issue:function (state) { return state.health < 50; },
-    has_debt_urgent: function (state) { return state.debt && state.debt > 5000; },
-    in_company:      function (state) { return state.phase && state.phase > 1; },
-    low_cash:        function (state) { return state.cash < 500; },
+    has_debt: function (state) {
+      return state.debt && state.debt > 0;
+    },
+    cash_above_100: function (state) {
+      return state.cash >= 100;
+    },
+    day_above_7: function (state) {
+      return state.day >= 7;
+    },
+    day_above_30: function (state) {
+      return state.day >= 30;
+    },
+    has_health_issue: function (state) {
+      return state.health < 50;
+    },
+    has_debt_urgent: function (state) {
+      return state.debt && state.debt > 5000;
+    },
+    in_company: function (state) {
+      return state.phase && state.phase > 1;
+    },
+    low_cash: function (state) {
+      return state.cash < 500;
+    },
   };
 
   /**
@@ -151,7 +179,9 @@
   function getCooldownRemaining(eventId, state) {
     if (!state._eventCooldowns) state._eventCooldowns = {};
     var day = state.day || 0;
-    return Math.max(0, _eventCooldowns[eventId] - day);
+    var lastFire = state._eventCooldowns[eventId];
+    if (!lastFire) return 0;
+    return Math.max(0, lastFire - day);
   }
   function setCooldown(eventId, state, days) {
     if (!state._eventCooldowns) state._eventCooldowns = {};

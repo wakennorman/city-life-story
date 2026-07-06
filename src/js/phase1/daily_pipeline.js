@@ -44,14 +44,21 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (!window.TriggerRegistry) return;
       if (!state || !state.day) return;
-      if (state.day < 7) return;
+      if (state.day < 4) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("daily_start", state);
         if (event) {
-          StateManager.addMessage(
-            "⚡ 系统触发事件：" + event.title,
-            "info",
-          );
+          // 延迟展示事件弹窗（避免阻塞管线执行）
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") {
+                showEventModal(event);
+              }
+            }
+          }, 50);
         }
       } catch (e) {
         console.warn("TriggerRegistry daily_start 触发失败:", e);
@@ -727,6 +734,33 @@ const DAILY_PIPELINE = [
     name: "autosave",
     fn: function (state) {
       autoSave();
+    },
+  },
+
+  // === v3.6: 约定式触发槽（daily_end 时机）===
+  {
+    name: "trigger_slot_daily_end",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      if (state.day < 7) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("daily_end", state);
+        if (event) {
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") {
+                showEventModal(event);
+              }
+            }
+          }, 100);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry daily_end 触发失败:", e);
+      }
     },
   },
 

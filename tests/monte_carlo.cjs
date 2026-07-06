@@ -762,7 +762,11 @@
                 }
               }
             }
-            if (cs2 && state.skills[cs2].level < 60 && state.needs.fatigue < 50) {
+            if (
+              cs2 &&
+              state.skills[cs2].level < 60 &&
+              state.needs.fatigue < 50
+            ) {
               state.skills[cs2].level = Math.min(
                 100,
                 state.skills[cs2].level + 1,

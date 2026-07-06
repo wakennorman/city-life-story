@@ -4089,6 +4089,25 @@ function doStreetJob(job) {
   // v3.1 第39轮：工作后获取街坊声望
   gainRepFromWork(state, job);
 
+  // v3.6: 约定式触发槽（after_work 时机）
+  if (window.TriggerRegistry && state.day >= 7) {
+    try {
+      var workEvent = window.TriggerRegistry.triggerRandom("after_work", state);
+      if (workEvent) {
+        state._pendingEvent = workEvent;
+        state._pendingEventId = workEvent.id;
+        setTimeout(function () {
+          var s = StateManager.getState();
+          if (s._pendingEvent && s._pendingEventId === workEvent.id) {
+            if (typeof showEventModal === "function") showEventModal(workEvent);
+          }
+        }, 50);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry after_work 触发失败:", e);
+    }
+  }
+
   // 推进时间
   advanceTimeSlot();
 }
@@ -4475,8 +4494,17 @@ function triggerRandomEvent(state) {
 
 // === v3.4: 约定式触发注册表初始化 ===
 (function () {
-  if (typeof window.TriggerRegistry !== "undefined" && typeof RANDOM_EVENTS !== "undefined") {
+  if (
+    typeof window.TriggerRegistry !== "undefined" &&
+    typeof RANDOM_EVENTS !== "undefined"
+  ) {
     window.TriggerRegistry.loadAll();
-    console.log("[TriggerRegistry] 已加载 " + RANDOM_EVENTS.filter(function(e){ return Array.isArray(e.triggers); }).length + " 个约定式事件");
+    console.log(
+      "[TriggerRegistry] 已加载 " +
+        RANDOM_EVENTS.filter(function (e) {
+          return Array.isArray(e.triggers);
+        }).length +
+        " 个约定式事件",
+    );
   }
 })();

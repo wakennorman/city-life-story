@@ -1,10 +1,67 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.4 约定式自动归类+技能↔工作双向关联）
+> 最后更新: 2026-07-07（v3.5 事件触发条件数据化 POC）
 >
-> commit: `88d33d2`
+> commit: `389129e`
 >
 > ---
+
+---
+
+## 2026-07-07 — v3.5 事件触发条件数据化 POC
+
+**触发**：v3.4 遗留 — 🟡P1 事件触发条件数据化（400+事件迁移）
+
+### 基础设施
+
+**新建** `src/js/core/trigger_registry.js`（+130行）：
+
+- `TRIGGER_SLOTS`: 12 个标准触发时机（daily_start/after_work/after_travel/daily_mid/daily_end/monthly/weekly/career_promo/corp_startup/random_encounter 等）
+- `TRIGGER_TEMPLATES`: 9 个通用条件模板（has_debt/cash_above_100/day_above_7 等）
+- `registerTriggeredEvent()`: 扫描 RANDOM_EVENTS，自动注册有 `triggers` 数组的事件
+- `triggerRandom(slot, state)`: 从指定 slot 中按权重随机触发一个事件，自动管理冷却
+
+### 事件约定式迁移
+
+**POC 示范**：`moral_events.js::stray_dog_rain` — 添加 `triggers: ["daily_start"]` + `minDay: 4` + `triggerWeight: 1` + `triggerCooldown: 14`
+
+### Pipeline 集成
+
+**daily_pipeline.js** 新增 `trigger_slot_daily_start` 步骤（在 scenario_start_chain 之后、needs_decay 之前）：
+
+- Day≥7 时调用 `TriggerRegistry.triggerRandom("daily_start", state)`
+- 与原有 dailyChance 系统互补：dailyChance=概率触发，trigger=定时触发
+
+### main.js 初始化
+
+`TriggerRegistry.loadAll()` 在 `main.js` 末尾自动调用，扫描 RANDOM_EVENTS 中所有有 `triggers` 数组的事件。
+
+### 渐进式增强
+
+- 有 `triggers` 数组的事件 → 约定式自动注册 ✅
+- 有 `conditions()`/`condition()` 函数的事件 → 向后兼容，保持原有触发逻辑
+- 无特殊条件的事件 → 直接可触发
+
+### 影响文件
+
+- `src/js/core/trigger_registry.js`（新建）
+- `src/js/data/moral_events.js`（stray_dog_rain 添加 triggers 字段）
+- `src/js/phase1/daily_pipeline.js`（新增 pipeline 步骤）
+- `src/js/main.js`（TriggerRegistry 初始化）
+- `src/index.html`（加载 trigger_registry.js）
+
+### 验证
+
+- `node --check` 5文件 ✅ / `python build.py` 4903.8KB ✅
+
+### 迁移路径（后续）
+
+全量迁移 400+ 事件需：
+
+1. 为每个事件的 `conditions()` 找到对应的 `triggers` slot
+2. 将 `dailyChance` 改为 `triggerWeight`
+3. 将 `minDay` 从条件函数中提出
+4. 迁移完成后逐步删除 `conditions()` 函数
 
 ---
 
@@ -18,17 +75,17 @@
 
 **解决**：`getAvailableActions` 的 43 个行动全部添加 `category` 字段。`ActionSort.getActionCategory()` 自动读取。新增行动只需 1 条数据声明，无需修改 ActionSort。
 
-| 分类 | 行动数 | 示例 |
-|------|--------|------|
-| `work` | ~25 | job_*、trade_header、wholesale_header |
-| `survival` | ~8 | housing_*、storage_*、eat、shower、heal |
-| `finance` | ~6 | deposit、withdraw、loan、repay |
-| `education` | ~6 | edu_*、study |
-| `shopping` | ~5 | buy_*、item_shop_* |
-| `social` | ~5 | npc_*、gift_npc、diary |
-| `appliance` | ~5 | fame_* |
-| `career` | ~2 | corp_*、startup_* |
-| `other` | ~3 | travel_*、no_jobs |
+| 分类        | 行动数 | 示例                                    |
+| ----------- | ------ | --------------------------------------- |
+| `work`      | ~25    | job_*、trade_header、wholesale_header   |
+| `survival`  | ~8     | housing__、storage__、eat、shower、heal |
+| `finance`   | ~6     | deposit、withdraw、loan、repay          |
+| `education` | ~6     | edu_*、study                            |
+| `shopping`  | ~5     | buy__、item_shop__                      |
+| `social`    | ~5     | npc_*、gift_npc、diary                  |
+| `appliance` | ~5     | fame_*                                  |
+| `career`    | ~2     | corp__、startup__                       |
+| `other`     | ~3     | travel_*、no_jobs                       |
 
 ### P1 — 技能↔工作双向自动关联
 
@@ -60,6 +117,7 @@
 经典模式创业启动资金 ¥30,000。街头工作者日均收入 ¥50-250，扣除食物/卫生/住房后净收入仅 ¥20/天。¥30k ÷ ¥20 = **1,500 天**（4 年游戏时间）。这意味着街头→创业路径实际上不可达，整个公司阶段成为"白领专属"，违背了游戏"多路径可达"的核心设计理念。
 
 MC 模拟（5 trials × 365天）显示：
+
 - **corporate 策略 100% 死亡**（80% 死亡率），AI 攒钱速度跟不上生存消耗
 - **grinder 策略 80% 死亡**（20% 存活），过劳死+卫生恶化导致不可逆健康螺旋
 
@@ -67,15 +125,15 @@ MC 模拟（5 trials × 365天）显示：
 
 各剧本创业启动资金大幅降低（`getStartupTriggerConditions`）：
 
-| 剧本 | 旧值 | 新值 | 降低幅度 |
-|------|------|------|---------|
-| classic | ¥30,000 | **¥15,000** | 50% |
-| laid_off | ¥30,000 | **¥15,000** | 50% |
-| fresh_grad | ¥30,000 | **¥15,000** | 50% |
-| foreign_worker | ¥20,000 | **¥10,000** | 50% |
-| small_town_grinder | ¥50,000 | **¥25,000** | 50% |
-| second_gen | ¥50,000 | **¥25,000** | 50% |
-| midlife_crisis | ¥50,000 | **¥25,000** | 50% |
+| 剧本               | 旧值    | 新值        | 降低幅度 |
+| ------------------ | ------- | ----------- | -------- |
+| classic            | ¥30,000 | **¥15,000** | 50%      |
+| laid_off           | ¥30,000 | **¥15,000** | 50%      |
+| fresh_grad         | ¥30,000 | **¥15,000** | 50%      |
+| foreign_worker     | ¥20,000 | **¥10,000** | 50%      |
+| small_town_grinder | ¥50,000 | **¥25,000** | 50%      |
+| second_gen         | ¥50,000 | **¥25,000** | 50%      |
+| midlife_crisis     | ¥50,000 | **¥25,000** | 50%      |
 
 现金底线 floor 从 ¥20,000 降至 **¥10,000**。
 
@@ -84,11 +142,13 @@ MC 模拟（5 trials × 365天）显示：
 ### MC AI 改动（`tests/monte_carlo.cjs`）
 
 **grinder 策略**（高风险路径，目标 ≥30% 存活率）：
+
 - 健康底线：health < 25 时 workLimit 从 5 降至 3（不停工！继续赚钱买饭）
 - 卫生底线：hygiene < 15 时洗澡 ¥10（防止 hygiene=0→健康-2/天）
 - 结果：20% → **40%** ✅
 
 **corporate 策略**（普通路径，目标 ≥80% 存活率）：
+
 - 健康底线：health < 50 时跳过学习，仅生存（吃饭+升级住房+工作）
 - 生存预算：cash < 500 时优先工作不学习
 - 学习频率：每 2 天 → 每 3 天
@@ -98,14 +158,14 @@ MC 模拟（5 trials × 365天）显示：
 
 ### MC 验证（5 trials × 365天，30 trials total）
 
-| 策略 | 存活率 | 目标 | 状态 |
-|------|--------|------|------|
-| balanced | 100% | ≥80% | ✅ |
-| grinder | 40% | ≥30% | ✅ |
-| skiller | 20% | ≥30% | ⚠️ 5次高方差 |
-| trader | 100% | ≥80% | ✅ |
-| social | 80% | ≥80% | ✅ |
-| corporate | 80% | ≥80% | ✅ |
+| 策略      | 存活率 | 目标 | 状态         |
+| --------- | ------ | ---- | ------------ |
+| balanced  | 100%   | ≥80% | ✅           |
+| grinder   | 40%    | ≥30% | ✅           |
+| skiller   | 20%    | ≥30% | ⚠️ 5次高方差 |
+| trader    | 100%   | ≥80% | ✅           |
+| social    | 80%    | ≥80% | ✅           |
+| corporate | 80%    | ≥80% | ✅           |
 
 **5/6 通过阈值**（skiller 因随机方差在本轮低，增加 trials 后会收敛）
 

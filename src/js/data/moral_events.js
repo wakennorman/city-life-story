@@ -272,18 +272,10 @@ const MORAL_EVENTS = [
     id: "stray_dog_rain",
     title: "🐕 雨中的流浪狗",
     desc: "大雨中，一只瑟瑟发抖的流浪狗蜷缩在屋檐下，用湿漉漉的眼睛看着你。它看起来很虚弱。",
-    // 约定式触发：声明触发时机（v3.4）
-    triggers: ["daily_start"],
-    minDay: 4,
+    // 约定式触发（v3.6 统一为数据对象式，走 evaluateTriggers 主路径）
+    triggers: { minDay: 4, weather: ["rainy", "stormy"] },
     triggerWeight: 1,
     triggerCooldown: 14,
-    // 原有 condition 保留向后兼容
-    condition: function (s) {
-      return (
-        s.weather &&
-        (s.weather.current === "rainy" || s.weather.current === "stormy")
-      );
-    },
     choices: [
       {
         text: "🍖 买根火腿肠喂它，引到避雨处",
@@ -1304,6 +1296,155 @@ const MORAL_EVENTS = [
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           StateManager.addMessage(
             "📋 他犹豫了一下还是写了借条。你收好纸条——至少有个凭证。",
+            "hint",
+          );
+        },
+      },
+    ],
+  },
+
+  // === v3.6: 工作后触发事件（after_work 触发槽）===
+  {
+    id: "after_work_find_coin",
+    title: "🪙 工友留下的硬币",
+    desc: "下班收工时，你在工具堆里摸到几枚散落的硬币，一共¥3。不知道是哪个粗心工友落下的。",
+    minDay: 5,
+    triggers: ["after_work"],
+    triggerWeight: 5,
+    triggerCooldown: 25,
+    choices: [
+      {
+        text: "🎒 收进口袋，积少成多",
+        flag: "moral_find_coin_keep",
+        score: 2,
+        immediate: function (s) {
+          s.resources.cash += 3;
+          s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          StateManager.addMessage("口袋里多了¥3，虽然不多但聊胜于无。", "info");
+        },
+      },
+      {
+        text: '📢 喊一声"谁掉了硬币"',
+        flag: "moral_find_coin_return",
+        score: 6,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
+          StateManager.addMessage("工友们投来赞许的目光。", "success");
+        },
+      },
+      {
+        text: "🤷 无所谓，走自己的路",
+        flag: "moral_find_coin_ignore",
+        score: 0,
+        immediate: function (s) {
+          StateManager.addMessage("你没理会，继续收拾工具。", "hint");
+        },
+      },
+    ],
+  },
+  {
+    id: "after_work_rain_shelter",
+    title: "☔ 暴雨突至",
+    desc: "刚干完活走出工地，天空突然下起暴雨。你浑身湿透，得赶紧找个地方避雨。",
+    minDay: 8,
+    triggers: ["after_work"],
+    triggerWeight: 3,
+    triggerCooldown: 40,
+    condition: function (s) {
+      return (
+        s.weather &&
+        (s.weather.current === "rainy" || s.weather.current === "stormy")
+      );
+    },
+    choices: [
+      {
+        text: "🏪 进附近便利店躲雨，买瓶热饮暖身",
+        flag: "moral_rain_shelter_cafe",
+        score: 3,
+        immediate: function (s) {
+          if (s.resources.cash >= 5) {
+            s.resources.cash -= 5;
+            s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
+            s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+            StateManager.addMessage(
+              "热饮下肚，身上暖和多了。疲劳感也消了些。",
+              "success",
+            );
+          } else {
+            s.needs.fatigue = Math.max(0, s.needs.fatigue - 5);
+            StateManager.addMessage(
+              "店员让你进去躲雨，虽然没买饮料但也算避了。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🏃 硬着头皮跑回家",
+        flag: "moral_rain_shelter_run",
+        score: 0,
+        immediate: function (s) {
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 15);
+          s.status.health = Math.max(0, (s.status.health || 100) - 5);
+          StateManager.addMessage(
+            "淋成落汤鸡，但总算到家了。注意别感冒。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🚇 等到雨小点再走",
+        flag: "moral_rain_shelter_wait",
+        score: 1,
+        immediate: function (s) {
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 5);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 3);
+          StateManager.addMessage("在屋檐下等了半小时，雨终于小了。", "info");
+        },
+      },
+    ],
+  },
+  {
+    id: "after_work_fellow_story",
+    title: "🍺 工友的酒话",
+    desc: "收工后，一个老工友请你喝瓶啤酒。他絮絮叨叨地说起自己年轻时的经历——也曾满怀梦想，后来却在这座城市混得并不如意。",
+    minDay: 15,
+    triggers: ["after_work"],
+    triggerWeight: 2,
+    triggerCooldown: 60,
+    choices: [
+      {
+        text: "👂 认真听他说，偶尔应和两句",
+        flag: "moral_fellow_listen",
+        score: 3,
+        immediate: function (s) {
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "听了别人的故事，你似乎对自己的人生有了新的理解。",
+            "hint",
+          );
+        },
+      },
+      {
+        text: "🍺 陪他喝一瓶，聊聊自己",
+        flag: "moral_fellow_drink",
+        score: 1,
+        immediate: function (s) {
+          s.resources.cash = Math.max(0, s.resources.cash - 3);
+          s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 8);
+          StateManager.addMessage("两瓶啤酒下肚，心里那点疲惫都散了。", "info");
+        },
+      },
+      {
+        text: "🚶 笑笑点点头，借口有事先走",
+        flag: "moral_fellow_leave",
+        score: 0,
+        immediate: function (s) {
+          StateManager.addMessage(
+            "你找了个借口脱身。回家路上心情有点复杂。",
             "hint",
           );
         },
