@@ -226,7 +226,15 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 >
 > **铁律**：每 patch ≤20 行 / 单文件单 commit / MC 30 trials × 1000 天回归（仅 ②④⑤a 触发）
 > **进度**：①②③④⑤a⑤b⑥⑦ 全部落地 — v3.1 七子迭代完成 ✅；当前 HEAD 已推送到 origin/main
->
+
+**v3.3 创业门槛+MC AI**：① 创业启动资金各剧本降低50%（经典¥30k→¥15k）+ MC AI grinder/corporate 健康底线 → 5/6策略通过 MC 验证 ✅（commit `9f6dccf`）
+
+**v3.4 约定式自动归类**：① 行动自动归类（43行动添加category字段）+ ② 技能↔工作双向关联（工作百科新增相似工作推荐）+ ③ 证书工资加成确认（16证书已声明salaryBonus）→ 3/3完成 ✅（commit `88d33d2`）
+
+**v3.5 事件触发条件数据化 POC**：① 新建 `trigger_registry.js`（12个触发槽+9个条件模板+冷却管理）+ ② `stray_dog_rain` 事件迁移示范 + ③ pipeline 步骤集成 → 基础设施就绪，全量迁移待后续 ✅（commit `389129e`）
+
+**v3.6 约定式闭环 + 事件数据化提速**：① 修证书双叠加 bug（删 20 条 if-else + 补全 medical_license/professional_title_cert 2 动态证书 → 18 本全覆盖）+ ② 修 wiki.js var 提升残留（删 `_wikiDetailSkill` bug 段 + 在 `_wikiDetailJob` 末尾重建「🔗 需要同样技能的其他工作」交叉查询）+ ③ 注册 restore 分类（action_sort.js CATEGORIES 插入 id:"restore"）+ ④ 事件触发架构统一（evaluateTriggers 已内置 minNeeds/maxNeeds/phase/weather 字段；stray_dog_rain 已走数据对象式；daily_pipeline day<4 与 minDay 对齐；trigger_registry.js 顶部加双轨统一注释）+ ⑤ pipeline 接入 after_work + daily_end 触发槽 + 3 个 after_work 事件 + cooldown NaN 修复 + mc_verify_v3.6.cjs 验证 → 4/4完成 ✅（commits `a2929ea`+`70fdc22`+`1194740`+`0e5ab02`，本地待推）
+
 > **MC 回归用法（v3.1 ③ 后）**：
 >
 > ```
