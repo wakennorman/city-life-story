@@ -1,14 +1,52 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（导航navTab修复 + 面试平衡大修 v3.2）
+> 最后更新: 2026-07-06（v3.2a passMsg修复·工资分离·事件滚动·导航弹窗）
 >
-> commit: 待定 | 历史: `a24d633`(欢迎页) + `07636a1`(P0 BugFix) + `0edacac`(v3.1) + `da0832c`(v3.1④)
+> commit: `12bbb0a`(submodule) + `c2fcfc1`(parent) 本地已commit，push因代理未通
 >
 > ---
 
 ---
 
-## 2026-07-06 — 导航系统 fix: navTab 到达后目的地Tab + 约定式自动归类完善
+## 2026-07-06 — v3.2a passMsg修复 · 工资要求分离 · 事件记录强制滚动 · 导航弹窗
+
+**问题反馈与修复**：
+
+1. **上班族"餐饮服务"和"物流快递"投递按钮无反应**
+   - 根因：`enhancedApplyCareerJob` 第3065行使用未定义变量 `passMsg`（上一轮面试重写时遗漏）
+   - 效果：所有职业路径面试通过后 `ReferenceError` 崩溃，UI无声无息
+   - 修复：构建入职成功消息（继承旧 `applyCareerJob` 模式）
+   - 全部 13 条职业路径恢复正常可投递
+
+2. **职业要求里混进了工资**
+   - `renderPromotionReqs` 第2288行将薪资混入"要求"字符串
+   - 修复：移除薪资行，工资在卡片标题区独立显示
+   - 晋升面板也在标题区显示目标薪资
+
+3. **事件记录滚动不及时**
+   - `scrollMessageLogToBottom` 仅在用户已接近底部时滚动（<40px判断）
+   - 用户滑动过进度条后，新消息不再自动滚到底部
+   - 修复：新增 `force` 参数；`renderMessageLog` 检测 `hasNewEntries` → 强制滚到底
+   - 展开/预览点击也 force 滚动
+
+4. **导航按钮缺弹窗**
+   - 💼查看上班族职位 / 🚀创业系统 / 🎓去大学城提升学历 / 🏛️去大学城备考
+   - 新增 `showCareerNavModal` / `showLocationNavModal` / `showStudyNavModal` 三个辅助函数
+   - 弹窗展示说明→确认/取消→跳转
+   - 约定式：函数接受任意 subTab/location 参数，新路径可复用
+
+**影响文件**：
+
+| 文件             | 改动                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `career_dev.js`  | passMsg修复(-2/+2)；renderPromotionReqs移工资行(-1)；晋升卡片加薪资(+2)；nav按钮改弹窗(+20)；三个modal helper(+95)             |
+| `render.js`      | scrollMessageLogToBottom force参数(+5/-6)；renderMessageLog newEntry检测(+8)；toggle/click加force=true；showStudyNavModal(+35) |
+| `CLAUDE.md`      | 当前状态更新                                                                                                                   |
+| `DEVELOPMENT.md` | 本文档更新                                                                                                                     |
+
+**memory**：新建 `memory/passmsg-eventlog-scroll-modal.md`
+
+**验证**：build.py 4879.2KB ✅ | brace/paren 全部匹配 ✅
 
 **问题**：
 
