@@ -1509,6 +1509,10 @@ body {
   word-break: keep-all;
 }
 
+.goal-item {
+  white-space: nowrap;
+}
+
 .welcome-buttons {
   display: flex;
   gap: 12px;
