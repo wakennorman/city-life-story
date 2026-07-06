@@ -1504,7 +1504,7 @@ body {
 .welcome-subtitle {
   font-size: 14px;
   color: var(--text-muted);
-  max-width: 400px;
+  max-width: 560px;
   line-height: 1.6;
   word-break: keep-all;
 }
