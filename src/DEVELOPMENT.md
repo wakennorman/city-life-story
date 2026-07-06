@@ -1,10 +1,78 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.5 事件触发条件数据化 POC）
+> 最后更新: 2026-07-07（v3.6 事件触发数据化 — Pipeline 完善）
 >
-> commit: `389129e`
+> commit: `1194740`
 >
 > ---
+
+---
+
+## 2026-07-07 — v3.6 事件触发数据化 — Pipeline 完善 + 触发槽扩展 + cooldown NaN 修复
+
+**触发**：v3.5 遗留 — 触发槽基础设施就绪但 `daily_start` 只加消息不弹事件；`after_work`/`daily_end` 槽未接入
+
+### P0 — 修复 `trigger_slot_daily_start` 实际展示事件弹窗
+
+**根因**：`daily_pipeline.js::trigger_slot_daily_start` 调用 `TriggerRegistry.triggerRandom` 后只 `addMessage`，未设置 `_pendingEvent` / 未调用 `showEventModal`，导致事件被"吞掉"——玩家完全看不到触发的事件。
+
+**修复**：参照 `events_core.js::showDailyEvent` 模式，设置 `state._pendingEvent` + `state._pendingEventId` + `setTimeout` 延迟展示模态框。
+
+### P1 — 新增 `after_work` 触发槽
+
+**接入点**：`main.js::doStreetJob` 末尾（`gainRepFromWork` 之后、`advanceTimeSlot` 之前）
+
+- 完成街头工作后自动触发 `after_work` 槽事件
+- 冷却管理：每个事件独立冷却，避免连续触发同一事件
+- 天气联动：`after_work_rain_shelter` 仅雨天触发（`condition` 函数检查天气）
+
+### P1 — 新增 `daily_end` 触发槽
+
+**接入点**：`daily_pipeline.js` 自动存档之后（`autosave` 步骤后）
+
+- 每日结算结束后触发，适合"日终反思"类事件
+- 当前无注册事件，预留扩展点
+
+### P1 — 新增 3 个 `after_work` 事件（moral_events.js +161行）
+
+| 事件 ID | 标题 | 触发条件 | 冷却 | 选项数 |
+|---------|------|---------|------|--------|
+| `after_work_find_coin` | 🪙 工友留下的硬币 | minDay 5 | 25天 | 3 |
+| `after_work_rain_shelter` | ☔ 暴雨突至 | minDay 8 + 雨天 | 40天 | 3 |
+| `after_work_fellow_story` | 🍺 工友的酒话 | minDay 15 | 60天 | 3 |
+
+**叙事特色**：所有事件含道德抉择（拾金/诚实/社交），选项有金钱/道德/心情/声望等多维影响。
+
+### P2 — 修复 `getCooldownRemaining` NaN bug
+
+**根因**：`getCooldownRemaining` 读取模块级 `_eventCooldowns[eventId]`，但 `setCooldown` 写入 `state._eventCooldowns[eventId]`——两个不同对象。`undefined - day = NaN`，`NaN <= 0 = false`，导致所有事件永远无法通过冷却检查。
+
+**修复**：统一从 `state._eventCooldowns[eventId]` 读取（与写入一致）。
+
+### 影响文件
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `core/trigger_registry.js` | 修复 | `getCooldownRemaining` 统一读写 `state._eventCooldowns` |
+| `phase1/daily_pipeline.js` | 修改 | `trigger_slot_daily_start` 加 `showEventModal`；新增 `trigger_slot_daily_end` |
+| `main.js` | 修改 | `doStreetJob` 末尾接入 `after_work` 触发槽 |
+| `data/moral_events.js` | 新增 | 3 个 after_work 事件（+161行） |
+| `tools/mc_verify_v3.6.cjs` | 新建 | Node.js 验证脚本（6项检查全部通过） |
+
+### MC 验证
+
+`tools/mc_verify_v3.6.cjs` — 6 项验证全部通过：
+- ✅ 12 SLOTS 完整 / 8 TEMPLATES 完整
+- ✅ daily_start: 1 事件 / after_work: 3 事件（注册正确）
+- ✅ 1000 天模拟: 326 daily_start 触发 + 996 after_work 触发
+- ✅ 冷却机制: 同一天不会重复触发同一事件
+- ✅ 天气条件: 晴天→非雨事件 / 雨天→含雨事件均可触发
+- ✅ `node --check` 4 文件通过 / `build.py` 4912.7KB ✅
+
+### 设计参考
+
+- 《Stardew Valley》工作后遇 NPC / 《大多数》街头偶遇 / 《This War of Mine》天气→事件链
+- 事件触发数据化的"约定式"扩展：从 POC（1事件）到可用（4事件 × 3槽位）
 
 ---
 

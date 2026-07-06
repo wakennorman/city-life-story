@@ -131,7 +131,15 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-07)**：v3.4 — 约定式自动归类完成 + 技能↔工作双向关联（commit: `88d33d2`）
+- **最新一次工作 (2026-07-07)**：v3.6 — 事件触发数据化 Pipeline 完善 + 触发槽扩展（commit: `1194740`）
+  - **P0 修复 trigger_slot_daily_start**：原只 addMessage 不弹事件 → 改设 _pendingEvent + setTimeout 展示 showEventModal
+  - **P1 新增 after_work 触发槽**：main.js doStreetJob 末尾接入，完成街头工作后自动触发事件
+  - **P1 新增 daily_end 触发槽**：daily_pipeline 自动存档后接入，预留"日终反思"事件
+  - **P1 新增 3 个 after_work 事件**：🪙工友留下的硬币(minDay5/cooldown25) + ☔暴雨突至(minDay8/cooldown40+雨天限定) + 🍺工友的酒话(minDay15/cooldown60)
+  - **P2 修复 getCooldownRemaining NaN bug**：模块级 _eventCooldowns 与 state._eventCooldowns 不一致 → 统一读 state._eventCooldowns
+  - **验证**：tools/mc_verify_v3.6.cjs 6项全部通过（12 SLOTS/8 TEMPLATES/注册数/1000天模拟326+996/冷却机制/天气条件）
+  - **验证**：`node --check` 4文件 ✅ / `build.py` 4912.7KB ✅
+  - **影响文件**：trigger_registry.js(修复) + daily_pipeline.js(2步骤) + main.js(after_work接入) + moral_events.js(+161行3事件) + mc_verify_v3.6.cjs(新建)
   - **🔴 P0 行动自动归类**：`getAvailableActions` 43 行动全部添加 `category` 字段，ActionSort 自动读取。新增行动从改 2 个文件→1 条数据声明
   - **🟡 P1 技能↔工作双向关联**：工作百科新增"🔗 需要同样技能的其他工作"推荐区，自动扫描 STREET_JOBS 中相同技能要求的工作
   - **🟢 P2 证书工资加成确认**：全部 16 个证书已声明 `salaryBonus` 字段，`_calcCertSalaryBonus` 自动扫描应用（旧 if-else 保留向后兼容）
