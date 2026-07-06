@@ -790,10 +790,14 @@ function _growthStat(label, value, color) {
  * 结构：🎒 X/Y · 🌃 住所名  （常显，一目了然）
  */
 function renderLocationBar(state, parent) {
+  var container = document.createElement("div");
+  container.style.cssText = "margin-bottom:4px;";
+
+  // ---- 主行：🎒X/Y · 🌃住所 + 天气（右对齐）----
   var div = document.createElement("div");
   div.className = "mobile-location-strip";
   div.style.cssText =
-    "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
+    "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;font-size:12px;";
 
   // 背包容量
   var itemCount = 0;
@@ -816,7 +820,7 @@ function renderLocationBar(state, parent) {
   sep.textContent = "·";
   div.appendChild(sep);
 
-  // 住所 + 住所名紧贴升级提示（均与住所名紧邻，右对齐组）
+  // 住所 + 天气预报（右侧组，与背包不抢空间）
   var houseData =
     (typeof HOUSING_TIERS !== "undefined" &&
       HOUSING_TIERS[state.housing?.tier || 0]) ||
@@ -824,31 +828,16 @@ function renderLocationBar(state, parent) {
   var houseName = houseData ? houseData.name : "露宿街头";
   var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
 
-  // 右侧组（住所名 + 升级提示 紧贴，作为整体右对齐）
   var rightGroup = document.createElement("span");
   rightGroup.style.cssText =
-    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;";
+    "display:flex;align-items:center;gap:3px;margin-left:auto;white-space:nowrap;flex-shrink:0;";
 
   var houseSpan = document.createElement("span");
   houseSpan.style.cssText = "color:var(--text-secondary);";
   houseSpan.textContent = houseIcon + houseName;
   rightGroup.appendChild(houseSpan);
 
-  var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  // 升级提示：露宿时引导升级（手机端精简文案）
-  if (currentTier === 0) {
-    var tipSpan = document.createElement("span");
-    tipSpan.style.cssText =
-      "font-size:10px;color:var(--warning);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-    tipSpan.textContent =
-      window.innerWidth <= 480
-        ? "💡可升级🛏️合租"
-        : "💡去城中村可升级为🛏️合租床位";
-    tipSpan.title = "去城中村上工，攒够钱可升级为🛏️合租床位";
-    rightGroup.appendChild(tipSpan);
-  }
-
-  // 移动端：在住所后添加天气预报（交替闪烁）
+  // 移动端：天气预报（仅天气，不带升级提示）
   if (
     window.innerWidth <= 768 &&
     state.weather &&
@@ -888,8 +877,20 @@ function renderLocationBar(state, parent) {
   }
 
   div.appendChild(rightGroup);
+  container.appendChild(div);
 
-  parent.appendChild(div);
+  // ---- 第二行：升级提示（露宿时单独一行，不与主行抢空间）----
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  if (currentTier === 0) {
+    var hintDiv = document.createElement("div");
+    hintDiv.className = "mobile-housing-hint";
+    hintDiv.style.cssText =
+      "font-size:11px;color:var(--warning);padding:2px 8px 3px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:6px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+    hintDiv.textContent = "💡去城中村上工，攒够钱可升级为🛏️合租床位";
+    container.appendChild(hintDiv);
+  }
+
+  parent.appendChild(container);
 }
 
 /**
