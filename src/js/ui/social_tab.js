@@ -68,6 +68,40 @@ function renderNpcRelationships(state, content) {
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";
 
+    // v3.1 ⑥ 社会比较心理抓手：好感≥20 时透露对方月薪，制造羡慕/优越感
+    var _npcDef =
+      typeof NPCS !== "undefined" &&
+      NPCS.find(function (n) {
+        return n.id === npcId;
+      });
+    if (_npcDef && _npcDef.monthlyIncome && affinity >= 20) {
+      var _playerSalary =
+        (state.corporate &&
+          state.corporate.job &&
+          state.corporate.job.salary) ||
+        (state.career &&
+          state.career.currentJob &&
+          state.career.currentJob.salary) ||
+        0;
+      if (_playerSalary > 0) {
+        var _diff = _npcDef.monthlyIncome - _playerSalary;
+        var _cmpColor = _diff > 0 ? "var(--warning)" : "var(--success)";
+        var _cmpIcon = _diff > 0 ? "⬆" : "⬇";
+        var _cmpText = _diff > 0 ? "比你高" : "比你低";
+        html +=
+          '<div style="font-size:10px;color:' +
+          _cmpColor +
+          ';margin-top:3px;">' +
+          "💰 据说月薪 ¥" +
+          _npcDef.monthlyIncome.toLocaleString() +
+          " · " +
+          _cmpText +
+          " ¥" +
+          Math.abs(_diff).toLocaleString() +
+          "</div>";
+      }
+    }
+
     // 关系传导信息
     if (rel._propagationLog && rel._propagationLog.length > 0) {
       var lastProp = rel._propagationLog[rel._propagationLog.length - 1];
