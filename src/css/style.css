@@ -4548,12 +4548,10 @@ body {
 /* ====== 移动端天气预报交替闪烁（v3.5） ====== */
 .mobile-forecast-alt {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   font-size: 10px;
-  width: 110px;
+  min-width: 130px;
   height: 1.4em;
-  overflow: hidden;
   margin-left: 2px;
   vertical-align: middle;
   flex-shrink: 0;
@@ -4565,9 +4563,6 @@ body {
   top: 50%;
   transform: translateY(-50%);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
   color: var(--text-secondary);
 }
 .mobile-forecast-alt .f-label {
