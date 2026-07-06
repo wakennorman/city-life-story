@@ -574,6 +574,18 @@ function getJobsAtLocation(locKey) {
   return loc.jobs || [];
 }
 
+/**
+ * 打车费用：按距离（跳数）递增，可达任意地点
+ *   1跳=¥12, 2跳=¥16, 3跳=¥20 ... 封顶¥40
+ *   不可达（hops>=99）时按远距离 fallback=¥35
+ */
+function getTaxiCost(fromKey, toKey) {
+  if (fromKey === toKey) return 0;
+  var hops = getLocationHops(fromKey, toKey);
+  if (hops >= 99) return 35; // 远距离 fallback
+  return Math.min(40, 8 + hops * 4);
+}
+
 /** BFS 计算两地最短跳数（同地=0，无连通=99） */
 function getLocationHops(fromKey, toKey) {
   if (fromKey === toKey) return 0;

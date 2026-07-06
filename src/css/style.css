@@ -3945,12 +3945,18 @@ body {
   }
   #time-slot-indicator {
     align-items: center;
-    padding: 8px 10px;
-    font-size: 12px;
-    gap: 4px;
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 3px;
     overflow-x: auto;
     white-space: nowrap;
     flex-wrap: nowrap;
+  }
+  .mobile-location-strip {
+    overflow: hidden;
+    gap: 2px !important;
+    padding: 2px 6px !important;
+    font-size: 11px !important;
   }
   /* 人生目标条（内容区）手机端紧凑 */
   .goal-strip-mobile {
@@ -3964,16 +3970,16 @@ body {
   .mobile-stats-strip {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px 10px;
-    margin-bottom: 6px;
+    gap: 3px;
+    padding: 5px 6px;
+    margin-bottom: 5px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: 8px;
   }
   .mss-row {
     display: flex;
-    gap: 4px;
+    gap: 2px;
   }
   .mss-cell {
     flex: 1;
@@ -3981,19 +3987,19 @@ body {
   }
   .mss-label {
     display: inline-block;
-    width: 26px;
-    font-size: 10px;
+    width: 20px;
+    font-size: 9px;
     line-height: 1.2;
     color: var(--text-secondary);
     flex-shrink: 0;
   }
   .mss-track {
     flex: 1;
-    height: 5px;
+    height: 4px;
     background: var(--bg-input);
     border-radius: 3px;
     overflow: hidden;
-    min-width: 18px;
+    min-width: 10px;
   }
   .mss-fill {
     height: 100%;
@@ -4058,9 +4064,9 @@ body {
   }
   .mss-val {
     display: inline-block;
-    min-width: 18px;
+    min-width: 14px;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
     line-height: 1.2;
     color: var(--text-secondary); /* v3.1：muted→secondary，提升数值对比度 */
     font-weight: 600;
@@ -4110,17 +4116,18 @@ body {
 
   /* ====== 地图 ====== */
   .city-map {
-    min-height: 330px !important;
-    padding: 10px !important;
+    min-height: 240px !important;
+    padding: 8px !important;
   }
   .city-map > div {
-    min-width: 560px !important;
-    min-height: 330px !important;
+    min-width: 480px !important;
+    min-height: 240px !important;
   }
   .city-map .map-node,
   .map-node {
-    min-width: 78px !important;
-    padding: 8px 9px !important;
+    min-width: 70px !important;
+    padding: 6px 7px !important;
+    font-size: 11px !important;
   }
 
   /* ====== 弹窗 & 百科 ====== */
@@ -4544,11 +4551,12 @@ body {
   display: inline-flex;
   align-items: center;
   font-size: 10px;
-  width: 170px;
+  width: 110px;
   height: 1.4em;
   overflow: hidden;
   margin-left: 2px;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 .mobile-forecast-alt .f-label,
 .mobile-forecast-alt .f-value {

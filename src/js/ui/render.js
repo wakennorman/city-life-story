@@ -6,6 +6,121 @@ function _esc(str) {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * 渲染事件记录（📜 事件记录）
+ * 支持折叠/展开：默认折叠显示最近3条 + 预览行，点击展开全部
+ * 桌面端：直接显示全部（max-height 滚动）
+ * 移动端：折叠态显示预览 + 展开/关闭按钮
+ */
+function renderMessageLog(state) {
+  var logEl = document.getElementById("message-log");
+  if (!logEl) return;
+  var contentEl = logEl.querySelector(".log-content");
+  if (!contentEl) return;
+
+  // --- 一次性注入：折叠按钮 + 预览行 ---
+  if (!logEl.querySelector("#message-log-toggle")) {
+    // 标题加折叠按钮
+    var h3 = logEl.querySelector("h3");
+    if (h3) {
+      var toggleBtn = document.createElement("button");
+      toggleBtn.id = "message-log-toggle";
+      toggleBtn.className = "btn btn-sm";
+      toggleBtn.textContent = "▾ 展开";
+      toggleBtn.style.cssText =
+        "font-size:11px;padding:2px 8px;margin-left:auto;white-space:nowrap;";
+      toggleBtn.addEventListener("click", function () {
+        var isCollapsed = logEl.classList.contains("collapsed");
+        if (isCollapsed) {
+          logEl.classList.remove("collapsed");
+          toggleBtn.textContent = "▴ 关闭";
+          scrollMessageLogToBottom();
+        } else {
+          logEl.classList.add("collapsed");
+          toggleBtn.textContent = "▾ 展开";
+        }
+      });
+      h3.appendChild(toggleBtn);
+    }
+
+    // 预览行（折叠态显示最近一条摘要）
+    var previewEl = document.createElement("div");
+    previewEl.id = "message-log-preview";
+    previewEl.innerHTML = '<div class="log-preview-inner"></div>';
+    previewEl.addEventListener("click", function () {
+      logEl.classList.remove("collapsed");
+      var btn = logEl.querySelector("#message-log-toggle");
+      if (btn) btn.textContent = "▴ 关闭";
+      scrollMessageLogToBottom();
+    });
+    logEl.insertBefore(previewEl, contentEl);
+
+    // 默认折叠（移动端由 CSS 控制显示，桌面端始终展开）
+    if (window.innerWidth <= 768) {
+      logEl.classList.add("collapsed");
+    }
+  }
+
+  // --- 渲染日志条目 ---
+  var entries = state.messageLog || [];
+  var html = "";
+  // 桌面端全部显示，移动端展开态最多50条
+  var maxEntries = window.innerWidth <= 768 ? 50 : entries.length;
+  var startIdx = Math.max(0, entries.length - maxEntries);
+  for (var i = startIdx; i < entries.length; i++) {
+    var e = entries[i];
+    var type = e.type || "info";
+    html +=
+      '<div class="log-entry ' +
+      type +
+      '">' +
+      '<span class="log-day">第' +
+      (e.day || 0) +
+      "天</span>" +
+      _esc(e.text || "") +
+      "</div>";
+  }
+  contentEl.innerHTML = html;
+
+  // --- 更新预览行（最近一条） ---
+  var previewInner = logEl.querySelector(".log-preview-inner");
+  if (previewInner && entries.length > 0) {
+    var last = entries[entries.length - 1];
+    previewInner.innerHTML =
+      '<span class="log-day">第' +
+      (last.day || 0) +
+      "天</span>" +
+      _esc(last.text || "");
+    previewEl = logEl.querySelector("#message-log-preview");
+    if (previewEl) {
+      previewEl.title = "共 " + entries.length + " 条记录，点击展开";
+    }
+  }
+
+  // --- 自动滚动（仅在展开且用户已在底部时） ---
+  if (!logEl.classList.contains("collapsed")) {
+    scrollMessageLogToBottom();
+  }
+}
+
+/** 事件记录滚动到底部（仅在接近底部时自动滚，避免打断阅读） */
+function scrollMessageLogToBottom() {
+  var logEl = document.getElementById("message-log");
+  if (!logEl) return;
+  var contentEl = logEl.querySelector(".log-content");
+  if (!contentEl) return;
+  // 折叠态不滚动
+  if (logEl.classList.contains("collapsed")) return;
+  // 接近底部才自动滚（< 40px）
+  var nearBottom =
+    contentEl.scrollHeight - contentEl.scrollTop - contentEl.clientHeight < 40;
+  if (nearBottom) {
+    requestAnimationFrame(function () {
+      contentEl.scrollTop = contentEl.scrollHeight;
+    });
+  }
+}
+
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
 function getDailyActionTips(state) {
   var urgent = []; // 紧急（最前）
@@ -1079,8 +1194,12 @@ function renderMapTab(state, parent) {
           priceInfo = "¥4/次";
           apInfo = "行动力 -5（地铁最快）";
         } else if (mode === "taxi") {
-          available = reachableList.slice();
-          priceInfo = "¥10-40（按距离）";
+          // 打车可达全部地点（按距离定价）
+          var allLocKeys = Object.keys(LOCATIONS);
+          available = allLocKeys.filter(function (k) {
+            return k !== locKey;
+          });
+          priceInfo = "¥10-40 按距离，直达全城";
           apInfo = "行动力 -3（最快但最贵）";
         } else if (mode === "car") {
           available = reachableList.slice();
@@ -1116,7 +1235,11 @@ function renderMapTab(state, parent) {
                   ? 3 // v3.2 从¥2→¥3
                   : mode === "metro"
                     ? 4
-                    : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
+                    : mode === "car"
+                      ? 5
+                      : typeof getTaxiCost === "function"
+                        ? getTaxiCost(locKey, k)
+                        : 10 + Math.floor(Math.random() * 31);
               const ap =
                 mode === "bike"
                   ? 6

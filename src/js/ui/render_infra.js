@@ -835,11 +835,16 @@ function renderLocationBar(state, parent) {
   rightGroup.appendChild(houseSpan);
 
   var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  // 升级提示：露宿时引导升级（提示随住所变化而变化）
+  // 升级提示：露宿时引导升级（手机端精简文案）
   if (currentTier === 0) {
     var tipSpan = document.createElement("span");
-    tipSpan.style.cssText = "font-size:10px;color:var(--warning);";
-    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
+    tipSpan.style.cssText =
+      "font-size:10px;color:var(--warning);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+    tipSpan.textContent =
+      window.innerWidth <= 480
+        ? "💡可升级🛏️合租"
+        : "💡去城中村可升级为🛏️合租床位";
+    tipSpan.title = "去城中村上工，攒够钱可升级为🛏️合租床位";
     rightGroup.appendChild(tipSpan);
   }
 
@@ -871,13 +876,11 @@ function renderLocationBar(state, parent) {
     altContainer.className = "mobile-forecast-alt";
     altContainer.title = "未来天气预报";
 
-    var labelSpan = document.createElement("span");
-    labelSpan.className = "f-label";
-    labelSpan.textContent = "📅明日天气预报";
-    altContainer.appendChild(labelSpan);
-
     var valueSpan = document.createElement("span");
     valueSpan.className = "f-value";
+    valueSpan.style.position = "";
+    valueSpan.style.transform = "";
+    valueSpan.style.top = "";
     valueSpan.textContent = forecastText;
     altContainer.appendChild(valueSpan);
 
@@ -917,8 +920,13 @@ function renderStatsStrip(state, parent) {
       var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
       var warnStyle = isBad ? "border-bottom:2px solid " + cfg.color + ";" : "";
 
+      var isMobile = window.innerWidth <= 480;
       cell.style.cssText =
-        "flex:1;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.02);" +
+        "flex:1;min-width:0;display:flex;align-items:center;gap:" +
+        (isMobile ? "2px" : "3px") +
+        ";padding:" +
+        (isMobile ? "2px 2px" : "2px 3px") +
+        ";border-radius:4px;background:rgba(0,0,0,0.02);" +
         warnStyle;
 
       // 细标签（1~2 中文字）
@@ -1125,22 +1133,15 @@ function renderTimeSlot(state, parent) {
           : comfort >= 40
             ? "var(--warning)"
             : "var(--danger)";
+      // 手机端精简天气：仅 图标+温度+舒适度，去掉天气名和括号描述
       weatherHTML =
-        '<span style="color:var(--text-muted);font-size:10px;">|</span>' +
         '<span style="font-size:11px;white-space:nowrap;">' +
         wDef.icon +
-        wDef.name +
-        " " +
         temp +
         "°C" +
-        (tempEffect
-          ? '<span style="font-size:10px;color:var(--text-muted);">(' +
-            tempEffect.name +
-            ")</span>"
-          : "") +
         '<span style="font-size:10px;color:' +
         comfortColor +
-        ';margin-left:2px;">' +
+        ';margin-left:1px;">' +
         comfortLabel +
         "</span>" +
         "</span>";

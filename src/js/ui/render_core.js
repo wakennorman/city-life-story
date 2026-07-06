@@ -111,7 +111,7 @@ function renderAll() {
   renderSidebar(state);
   renderTabBar(state);
   renderCurrentTab(state);
-  renderMessageLog(state);
+  if (typeof renderMessageLog === "function") renderMessageLog(state);
 
   // 绑定所有导航按钮（跨系统链接 + 确认弹窗导航）
   if (typeof bindAllNavButtons === "function") {
