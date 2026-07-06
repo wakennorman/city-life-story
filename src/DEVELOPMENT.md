@@ -1,10 +1,120 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（v3.1 审查改进 — NG+ 继承数据可视化 + 加成消费接入）
+> 最后更新: 2026-07-06（导航navTab修复 + 面试平衡大修 v3.2）
 >
-> commit: `0edacac`(v3.1 NG+继承) + `da0832c`(v3.1④) + `2aa6a45`(v3.23)
+> commit: 待定 | 历史: `a24d633`(欢迎页) + `07636a1`(P0 BugFix) + `0edacac`(v3.1) + `da0832c`(v3.1④)
 >
 > ---
+
+---
+
+## 2026-07-06 — 导航系统 fix: navTab 到达后目的地Tab + 约定式自动归类完善
+
+**问题**：
+
+- "前往培训中心训练技能"点击后到达培训中心但切换到"行动"Tab，玩家无法立即训练
+- 所有百科导航按钮都存在同样的问题（到达后总是切到行动Tab）
+- 导航系统缺少"到达目的地后切换到指定Tab"的能力
+
+**导航系统增强**：
+
+- `navigation.js` `_doNavigate` 新增 `target.navTab` 支持，到达后切换到指定Tab（默认"actions"）
+- `navActionButton` 新增 `opts.navTab` 参数 → 传入 `target.navTab`
+- 已到达目标地点时同样尊重 `navTab`
+
+**各导航按钮 navTab 配置**：
+
+| 按钮                  | navTab          | 位置                       |
+| --------------------- | --------------- | -------------------------- |
+| 前往培训中心训练技能  | skills          | render.js 技能Tab门控      |
+| 去培训中心学习        | skills          | render.js 教育面板         |
+| 去大学城提升学历      | personal_growth | career_dev.js              |
+| 百科地点→前往         | map             | wiki.js _wikiAutoAppendNav |
+| 百科NPC→前往找TA      | social          | wiki.js                    |
+| 百科物品/商品→购买    | trade           | wiki.js                    |
+| 百科技能→培训中心训练 | skills          | wiki.js                    |
+| 百科证书→培训中心考证 | skills          | wiki.js                    |
+
+**约定式自动归类完善**：
+
+- 所有导航按钮通过 `_wikiAutoAppendNav` 自动生成，新增数据条目无需修改导航代码
+- 各类型导航自动匹配最合适的到达后Tab
+
+**影响文件**：`navigation.js` / `wiki.js` / `render.js` / `career_dev.js`
+
+## 2026-07-06 — 面试机制大修 v3.2：技能×状态×履历×装备联动
+
+**问题**：经典模式开局轻松获得固定职业（教学助理¥4,000/月），临时工作全鸡肋。面试通过率70%，无状态/装备/履历要求。
+
+**改动**：
+
+1. **基础概率大修**：基础 25% + 工作经验天数×1%（0天→25%，15天→40%，30天→55%）
+2. **状态惩罚系统**：饥饿(-12%)、疲劳(-15%)、健康差(-12%)、心情差(-10%)、衣衫不整(-10%)、露宿(-15%)等
+3. **装备加成**：正装（suit/formal_shoes等）→ +15%
+4. **技能优势细化**：超要求每5级+2%（上限+15%）
+5. **反馈消息**：面试失败/成功时显示具体原因（资历浅、状态差、着装加分等）
+6. **职业路径入门要求补全**：教学助理 `english:5, management:3`（原空），护理员 `medicine:5`（原空）
+
+**设计参考**：《大多数》求职门槛 / 《Papers Please》状态影响 / 中国职场现实
+
+**影响文件**：`career_dev.js`（面试逻辑+职业路径数据+反馈链）
+
+## 2026-07-06 — 欢迎页"六条路"路内断行修复
+
+**问题**：桌面端欢迎页 `🏪 经商大亨 · ⭐ 城市名人 · 🎓 技能大师 · 💰 投资天才 · 🏢 职场巅峰 · 💵 财务自由` 在窗口宽度不足时，单条路（如 "🏢 职场巅峰"）被浏览器拆开换行，icon 在上半行、文字在下半行。
+
+**根因**：6 条路是纯文本塞在一个 `<div class="welcome-subtitle">` 里用 `<br>` 硬换行，浏览器排版时把空格当作可断点，导致路内断开。
+
+**修复**：
+
+- `index.html`：每条路包 `<span class="goal-item">...</span>`，路间用 `·` 分隔符（分隔符在 span 外，作为合法换行点）
+- `style.css`：`.goal-item { white-space: nowrap; }` 禁止路内断行
+- 效果：窗口不够宽时，整条路（icon+文字）一起换到下一行，绝不会拆开
+
+**影响文件**：`src/index.html` / `src/css/style.css` · commit `a24d633`（push 待网络恢复）
+
+## 2026-07-06 — P0 BugFix：事件记录丢失 + 打车不可达全城 + 手机端UI溢出
+
+### Bug 1：renderMessageLog is not defined（事件记录不显示 + 展开按钮消失）
+
+**根因**：`renderMessageLog`/`scrollMessageLogToBottom` 两个函数在 v3.13 render.js 拆分时被丢弃——函数被 9 处调用但 0 处定义。CSS 完整（折叠/预览/展开样式）但无 JS 创建对应 DOM，导致整个事件记录系统失效。
+
+**修复**（`render.js +85行`）：
+
+- 重新实现 `renderMessageLog(state)`：一次性注入 `#message-log-toggle` 按钮 + `#message-log-preview` 预览行；渲染日志条目（桌面端全部/移动端50条）；更新预览行文本；自动滚动。
+- `scrollMessageLogToBottom()`：仅在展开态且接近底部（<40px）时自动滚，避免打断阅读。
+- 默认移动端折叠（显示最近3条+预览），桌面端展开。
+- `render_core.js` 的 `renderAll` 加 `typeof renderMessageLog === "function"` 守卫。
+
+**统一展开/关闭**：只有一处 toggle 逻辑（`#message-log-toggle` 按钮 + `#message-log-preview` 预览行均绑定同一 toggle），无重复。
+
+### Bug 2：打车不能到达任意地点 + 价格随机
+
+**根因**：打车分支用 `reachableList.slice()`（和骑车一样只到1-hop邻居），价格用 `10 + Math.random()*31` 随机数。
+
+**修复**：
+
+- `locations.js` 新增 `getTaxiCost(fromKey, toKey)`：¥8 + 4×跳数，封顶¥40，不可达 fallback ¥35。
+- 打车分支改为 `Object.keys(LOCATIONS)` 过滤当前地点 = 全城可达。
+- 价格计算改为 `getTaxiCost(locKey, k)`（确定性，与扣除金额一致）。
+
+### Bug 3：手机端UI排版溢出
+
+**根因**：固定宽度元素（170px 天气预报 + 150px 升级提示 + 5×70px 属性栏 + 330px 地图）在小屏（≤360px）总宽溢出。
+
+**修复**（`render_infra.js` + `style.css`）：
+
+| 元素           | 修改                                                                           |
+| -------------- | ------------------------------------------------------------------------------ |
+| 地点栏升级提示 | ≤480px 时缩短为"💡可升级🛏️合租" + max-width:100px + ellipsis                   |
+| 天气预报容器   | 170→110px，去掉"📅明日天气预报"label，加 flex-shrink:0                         |
+| 时间槽天气     | 去掉天气名、温度效应括号，仅保留 图标+温度+舒适度                              |
+| 地图           | min-height 330→240px，节点 min-width 78→70px                                   |
+| 属性栏         | cell 间距 3→2px，label 26→20px，track min-width 18→10px，val min-width 18→14px |
+| 地点栏         | 加 overflow:hidden 防止溢出                                                    |
+
+**验证**：`node --check` 4 文件通过 / `build.py` 4868.3KB ✅
+**Commit**: `07636a1`
 
 ---
 

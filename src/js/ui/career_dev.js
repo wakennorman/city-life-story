@@ -317,8 +317,8 @@ const CAREER_PATHS = {
         id: "edu_assist",
         name: "教学助理",
         minAge: 20,
-        reqSkills: {},
-        reqAttrs: { intelligence: 20, charm: 20 },
+        reqSkills: { english: 5, management: 3 },
+        reqAttrs: { intelligence: 25, charm: 22 },
         salary: 4000,
         desc: "辅助教学、批改作业、课件制作",
       },
@@ -460,7 +460,7 @@ const CAREER_PATHS = {
         id: "med_aide",
         name: "护理员",
         minAge: 18,
-        reqSkills: {},
+        reqSkills: { medicine: 5 },
         reqAttrs: { physique: 20, mental: 15 },
         salary: 4500,
         desc: "协助护士完成基础护理工作",
@@ -1683,7 +1683,9 @@ function renderCareerOverview(state, parent) {
       tab: "career_dev",
     }) +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
-    navActionButton("location", "school", "🎓 去大学城提升学历") +
+    navActionButton("location", "school", "🎓 去大学城提升学历", {
+      navTab: "personal_growth",
+    }) +
     "</div>";
 
   html += getCareerEducationHtml(state);
@@ -2887,30 +2889,148 @@ function enhancedApplyCareerJob(pathId, levelId) {
     return;
   }
 
-  // --- 面试成功率：基于属性+技能 ---
-  var interviewChance = 0.7;
+  // --- 面试成功率 v3.2 大修：技能 × 状态 × 履历 × 装备 ---
+  // 设计原则：街头→职场应有显著门槛，临时工不鸡肋，职场不白给
+
+  var p = state.player;
+  var totalWorkDays = p.day || 0;
+
+  // (A) 基础概率：基于工作经验天数，职场需要"磨"出来
+  // 0天 → 25%，15天 → 40%，30天 → 55%，60天 → 85%
+  // 让街头工作成为必需品
+  var workExpBonus = Math.min(0.6, totalWorkDays * 0.01);
+  var interviewChance = 0.25 + workExpBonus;
+
+  // (B) 属性优势：属性远超要求 → +5%/项
   if (level.reqAttrs) {
     for (var a in level.reqAttrs) {
-      var p = state.player;
       var attrVal = p[a] || 0;
       var req = level.reqAttrs[a];
       if (attrVal >= req * 1.5) interviewChance += 0.05;
       else if (attrVal < req) interviewChance -= 0.15;
     }
   }
-  interviewChance = Math.max(0.3, Math.min(0.95, interviewChance));
+
+  // (C) 技能优势：相关技能超过要求 → 每高5级+2%
+  if (level.reqSkills) {
+    for (var sk in level.reqSkills) {
+      var skReq = level.reqSkills[sk];
+      var skActual = 0;
+      if (state.skills && state.skills[sk])
+        skActual = state.skills[sk].level || 0;
+      var skOver = skActual - skReq;
+      if (skOver > 0) interviewChance += Math.min(0.15, skOver * 0.02);
+    }
+  }
+
+  // (D) 状态惩罚（重要：生存状态差的角色面试成功率暴跌）
+  var statePenaltyMessages = [];
+  var needs = state.needs || {};
+  if ((needs.food || 100) < 25) {
+    statePenaltyMessages.push("饥饿");
+    interviewChance -= 0.12;
+  } else if ((needs.food || 100) < 45) {
+    statePenaltyMessages.push("半饥饿状态");
+    interviewChance -= 0.05;
+  }
+  if ((needs.stamina || 100) < 20) {
+    statePenaltyMessages.push("极度疲劳");
+    interviewChance -= 0.15;
+  } else if ((needs.stamina || 100) < 45) {
+    statePenaltyMessages.push("疲劳");
+    interviewChance -= 0.06;
+  }
+  if ((p.health || 100) < 50) {
+    statePenaltyMessages.push("健康状况差");
+    interviewChance -= 0.12;
+  } else if ((p.health || 100) < 75) {
+    statePenaltyMessages.push("亚健康");
+    interviewChance -= 0.04;
+  }
+  if ((needs.mood || 100) < 20) {
+    statePenaltyMessages.push("心情极差");
+    interviewChance -= 0.1;
+  } else if ((needs.mood || 100) < 45) {
+    statePenaltyMessages.push("心情不佳");
+    interviewChance -= 0.05;
+  }
+  if ((needs.hygiene || 100) < 20) {
+    statePenaltyMessages.push("衣衫不整");
+    interviewChance -= 0.1;
+  } else if ((needs.hygiene || 100) < 45) {
+    statePenaltyMessages.push("形象欠佳");
+    interviewChance -= 0.04;
+  }
+
+  // (E) 住房惩罚：露宿街头 → 面试大减分
+  var housing = state.housing || state.home || null;
+  var loc =
+    typeof LOCATIONS !== "undefined"
+      ? LOCATIONS[state.trade && state.trade.currentLocation]
+      : null;
+  var homeless = !housing;
+  if (homeless || (state.trade && state.trade.currentLocation === "slum")) {
+    statePenaltyMessages.push("无固定住所");
+    interviewChance -= 0.15;
+  }
+
+  // (F) 装备加成：得体着装大幅提升面试成功率
+  var hasFormalClothes = false;
+  var hasMarketVendorOutfit = false;
+  var inventory = state.inventory || [];
+  for (var ii = 0; ii < inventory.length; ii++) {
+    var invItem = inventory[ii];
+    var itemId = typeof invItem === "string" ? invItem : invItem.id;
+    if (itemId === "suit" || itemId === "formal_shoes") {
+      hasFormalClothes = true;
+      break;
+    }
+    if (itemId === "decent_outfit" || itemId === "blazer") {
+      hasFormalClothes = true;
+    }
+  }
+  if (hasFormalClothes) {
+    interviewChance += 0.15;
+  }
+
+  // (G) 最新消息加分：最近30天内NPC好感>-5 +3%
+  var npcAff = state.npcAffinity || {};
+  var anyGoodRelation = false;
+  for (var ni in npcAff) {
+    if (npcAff[ni] > -5) {
+      anyGoodRelation = true;
+      break;
+    }
+  }
+  if (anyGoodRelation) interviewChance += 0.03;
+
+  interviewChance = Math.max(0.1, Math.min(0.95, interviewChance));
+
+  // 构建反馈信息
+  var feedbackParts = [];
+  if (totalWorkDays < 30) {
+    feedbackParts.push("📊 资历较浅（仅" + totalWorkDays + "天经验）");
+  }
+  if (statePenaltyMessages.length > 0) {
+    feedbackParts.push("😰 状态劣势：" + statePenaltyMessages.join("、"));
+  }
+  if (hasFormalClothes) {
+    feedbackParts.push("👔 着装得体 +15%");
+  }
 
   var randVal =
     typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
   if (randVal > interviewChance) {
-    StateManager.addMessage(
-      "📄 面试未通过。" + level.name + "的竞争很激烈，继续提升自己再来试试。",
-      "warning",
-    );
+    var failMsg = "📄 面试未通过。" + level.name + "的竞争很激烈";
+    if (feedbackParts.length > 0) {
+      failMsg += "（" + feedbackParts.join("；") + "）";
+    }
+    failMsg += "，继续提升自己再来试试。";
+    StateManager.addMessage(failMsg, "warning");
     return;
   }
 
-  // --- 原有入职流程 ---
+  // --- 入职流程 ---
   if (!state.career) state.career = { currentJob: null, history: [] };
   var cap = ensureCareerCapital(state);
   if (state.career.currentJob) {
@@ -2941,16 +3061,10 @@ function enhancedApplyCareerJob(pathId, levelId) {
     ? "（前90天为试用期，薪资按80%发放）"
     : "";
 
-  StateManager.addMessage(
-    "✅ 面试通过！入职成功！你成为" +
-      getCareerPathLabel(pathId) +
-      "的" +
-      level.name +
-      "，月薪¥" +
-      level.salary.toLocaleString() +
-      probationMsg,
-    "success",
-  );
+  // 最终入职消息
+  var finalMsg = passMsg;
+  if (probationMsg) finalMsg += "，" + probationMsg;
+  StateManager.addMessage(finalMsg, "success");
 
   if (typeof renderAll === "function") renderAll();
 }

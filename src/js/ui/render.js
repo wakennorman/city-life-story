@@ -2708,6 +2708,7 @@ function renderSkillsTab(state, parent) {
         "location",
         "trainingCenter",
         "📚 前往培训中心训练技能",
+        { navTab: "skills" },
       );
     } else {
       navGate.innerHTML =
@@ -4936,7 +4937,9 @@ function renderPgEdu(state, content) {
       : "") +
     navActionButton("location", "school", "📚 去大学城图书馆") +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
-    navActionButton("location", "trainingCenter", "📖 去培训中心学习") +
+    navActionButton("location", "trainingCenter", "📖 去培训中心学习", {
+      navTab: "skills",
+    }) +
     "</div>";
   html += "</div></div>";
   content.innerHTML = html;

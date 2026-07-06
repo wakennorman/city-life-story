@@ -449,8 +449,9 @@ function _doNavigate(state, target, options) {
       var locKey = target.key;
       var curLoc = state.trade && state.trade.currentLocation;
       if (curLoc === locKey) {
-        // 已在该地点，切换到地图Tab展示
-        if (typeof switchTab === "function") switchTab("map");
+        // 已在该地点，切换到指定Tab或地图Tab
+        var alreadyHereTab = target.navTab || "map";
+        if (typeof switchTab === "function") switchTab(alreadyHereTab);
         StateManager.addMessage(
           "📍 已在" + (LOCATIONS[locKey] ? LOCATIONS[locKey].name : locKey),
           "info",
@@ -506,8 +507,9 @@ function _doNavigate(state, target, options) {
         LOCATIONS && LOCATIONS[locKey] ? LOCATIONS[locKey].name : locKey;
       StateManager.addMessage("🚶 你来到了" + locName + "。", "info");
 
-      // 导航到行动Tab
-      if (typeof switchTab === "function") switchTab("actions");
+      // 到达后导航到指定Tab（默认行动Tab，可传target.navTab覆盖）
+      var postNavTab = target.navTab || "actions";
+      if (typeof switchTab === "function") switchTab(postNavTab);
       else if (typeof renderAll === "function") renderAll();
       break;
     }
@@ -905,6 +907,7 @@ function navActionButton(destType, destKey, label, opts) {
     };
   } else if (destType === "location") {
     target = { type: "location", key: destKey, displayName: label };
+    if (opts.navTab) target.navTab = opts.navTab;
   }
   return (
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +

@@ -1077,6 +1077,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: entryId,
         label: "🚶 前往" + loc.name,
+        navTab: "map",
       });
       buttons.push({ type: "tab", key: "map", label: "🗺️ 在地图上查看" });
       if (loc.jobs && loc.jobs.length > 0) {
@@ -1115,6 +1116,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
           key: npcData.location,
           label:
             "🚶 前往" + LOCATIONS[npcData.location].name + "找" + npcData.name,
+          navTab: "social",
         });
       }
       buttons.push({ type: "tab", key: "social", label: "👥 社交互动" });
@@ -1134,6 +1136,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
               type: "location",
               key: bl,
               label: "🛒 去" + LOCATIONS[bl].name + "购买",
+              navTab: "trade",
             });
           }
         });
@@ -1151,6 +1154,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
               type: "location",
               key: bl,
               label: "🛒 去" + LOCATIONS[bl].name + "购买",
+              navTab: "trade",
             });
           }
         });
@@ -1166,6 +1170,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: "trainingCenter",
         label: "📚 前往培训中心训练 " + skName,
+        navTab: "skills",
       });
       buttons.push({ type: "tab", key: "skills", label: "📖 查看全部技能" });
       break;
@@ -1175,6 +1180,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: "trainingCenter",
         label: "📚 前往培训中心考取证书",
+        navTab: "skills",
       });
       buttons.push({ type: "tab", key: "skills", label: "📖 查看技能与证书" });
       break;
@@ -1203,6 +1209,8 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       navHtml += navActionButton(b.type, b.key, b.label, {
         tab: b.tab || "personal_growth",
       });
+    } else if (b.type === "location" && b.navTab) {
+      navHtml += navActionButton(b.type, b.key, b.label, { navTab: b.navTab });
     } else {
       navHtml += navActionButton(b.type, b.key, b.label);
     }
