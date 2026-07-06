@@ -1560,7 +1560,49 @@ function renderCareerOverview(state, parent) {
     html += "</div></div></div>";
   }
 
-  // === 五、智能建议 ===
+  // === 五、Phase2 过渡仪式（峰终定律·最后一峰）===
+  // 打工末期达标 → 一次性引导弹窗，避免每天刷屏
+  if (
+    state.startup &&
+    state.startup.status === "none" &&
+    !state.flags._phase2RitualShown
+  ) {
+    var _totalCash =
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    var _workDays =
+      (state.career &&
+        state.career.currentJob &&
+        state.career.currentJob.workDays) ||
+      0;
+    if (_totalCash >= 30000 && _workDays >= 90) {
+      state.flags._phase2RitualShown = true;
+      // 异步弹仪式弹窗（避免 DOM 嵌套）
+      setTimeout(function () {
+        if (typeof showStartupRegisterModal === "function") {
+          showStartupRegisterModal();
+        }
+      }, 50);
+      html +=
+        '<div class="card" style="padding:10px;margin-top:8px;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 10%, var(--bg-card));">';
+      html +=
+        '<div style="font-size:13px;font-weight:bold;">🎉 你已具备创业基础</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;line-height:1.6;">' +
+        "总资产 ¥" +
+        _totalCash.toLocaleString() +
+        " · 在职 " +
+        _workDays +
+        " 天<br>" +
+        "系统将为你弹出创业注册引导。如果暂时不创业，可在事业发展页随时点击「开公司」。</div>";
+      html +=
+        '<button class="btn btn-sm btn-primary" style="margin-top:6px;font-size:11px;padding:5px 10px;" ' +
+        "onclick=\"typeof showStartupRegisterModal === 'function' &amp;&amp; showStartupRegisterModal()\">" +
+        "🚀 去开公司</button>";
+      html += "</div>";
+    }
+  }
+
+  // === 六、智能建议 ===
   html +=
     '<div class="card" style="padding:10px;background:var(--bg-warning);margin-top:8px;">';
   html +=
