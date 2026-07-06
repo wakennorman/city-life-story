@@ -28,6 +28,7 @@
     { id: "shopping", name: "购物装备", icon: "🛒", order: 30 },
     { id: "education", name: "学习提升", icon: "🎓", order: 40 },
     { id: "social", name: "社交休闲", icon: "🎭", order: 50 },
+    { id: "restore", name: "生活服务", icon: "🏠", order: 55 },
     { id: "finance", name: "金融理财", icon: "💳", order: 60 },
     { id: "career", name: "职业发展", icon: "🏢", order: 70 },
     { id: "other", name: "其他", icon: "📌", order: 100 },
