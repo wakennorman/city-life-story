@@ -1148,7 +1148,12 @@ function renderCareerJobs(state, parent) {
           "')\">⬆️ 申请晋升</button>";
       } else {
         html +=
-          '<div style="font-size:10px;color:var(--warning);margin-top:4px;">⚠️ 条件不足，继续努力</div>';
+          '<div style="font-size:10px;color:var(--warning);margin-top:4px;cursor:pointer;" onclick="showCareerRequirementsModal_Global(' +
+          "'" +
+          currentJob.path +
+          "','" +
+          nextLevel.id +
+          "\x27)\x22>⚠️ 条件不足，点击查看详情</div>";
       }
       html += "</div>";
     } else {
@@ -1276,14 +1281,16 @@ function renderCareerJobs(state, parent) {
       var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
 
       html +=
-        '<div class="card" style="padding:10px;cursor:' +
-        (meetReqs ? "pointer" : "default") +
-        ";opacity:" +
-        (meetReqs ? "1" : "0.6") +
+        '<div class="card" style="padding:10px;cursor:pointer;opacity:' +
+        (meetReqs ? "1" : "0.75") +
         ';" onclick="' +
         (meetReqs
           ? "enhancedApplyCareerJob('" + pathKey + "','" + entryLevel.id + "')"
-          : "") +
+          : "showCareerRequirementsModal_Global('" +
+            pathKey +
+            "','" +
+            entryLevel.id +
+            "')") +
         '">';
       html +=
         '<div style="font-size:13px;font-weight:bold;">' +
@@ -3166,6 +3173,136 @@ function showLocationNavModal(locKey, label, navTab, desc) {
   });
 }
 
+// ====== 条件不足详细弹窗（约定式：自动解释缺失条件） ======
+/** 根据 checkCareerPromotion 逆向生成 "你差什么" 说明，并弹窗 */
+function showCareerRequirementsModal(state, pathKey, level) {
+  if (typeof showModal !== "function") {
+    StateManager.addMessage("⚠️ 条件不足，请查看要求提升自己", "warning");
+    return;
+  }
+  var p = state.player;
+  var path = CAREER_PATHS[pathKey];
+  if (!path || !level) return;
+  var labels = {
+    coding: "编程",
+    english: "英语",
+    accounting: "财务",
+    management: "管理",
+    sales: "销售",
+    cooking: "烹饪",
+    intelligence: "智力",
+    mental: "能力",
+    physique: "体质",
+    agility: "敏捷",
+    charm: "颜值",
+    fame: "名气",
+    morality: "道德",
+  };
+
+  var rows = [];
+
+  // 年龄
+  if (level.minAge) {
+    var curAge = p.age || 20;
+    var ok = curAge >= level.minAge;
+    rows.push(
+      (ok ? "✅" : "❌") + " 年龄≥" + level.minAge + "（当前" + curAge + "）",
+    );
+  }
+
+  // 学历
+  if (level.reqEducation) {
+    var ok = !!p.education;
+    rows.push(
+      (ok ? "✅" : "❌") +
+        " 大专以上学历（当前" +
+        (p.education ? "已具备" : "无") +
+        "）",
+    );
+  }
+
+  // 技能/属性
+  if (level.reqSkills) {
+    for (var s in level.reqSkills) {
+      var required = level.reqSkills[s];
+      var actual = 0;
+      if (s === "intelligence") actual = p.intelligence || 0;
+      else if (s === "mental") actual = p.mental || 0;
+      else if (s === "physique") actual = p.physique || 0;
+      else if (s === "agility") actual = p.agility || 0;
+      else if (s === "charm") actual = p.charm || 0;
+      else if (state.skills && state.skills[s])
+        actual = state.skills[s].level || 0;
+      var ok = actual >= required;
+      rows.push(
+        (ok ? "✅" : "❌") +
+          " " +
+          (labels[s] || s) +
+          "≥" +
+          required +
+          "（当前" +
+          actual +
+          "）",
+      );
+    }
+  }
+
+  // 属性要求
+  if (level.reqAttrs) {
+    for (var a in level.reqAttrs) {
+      var required = level.reqAttrs[a];
+      var actual = 0;
+      if (a === "physique") actual = p.physique || 0;
+      else if (a === "intelligence") actual = p.intelligence || 0;
+      else if (a === "agility") actual = p.agility || 0;
+      else if (a === "mental") actual = p.mental || 0;
+      else if (a === "charm") actual = p.charm || 0;
+      else if (a === "fame") actual = p.fame || 0;
+      else if (a === "morality") actual = p.morality || 0;
+      var ok = actual >= required;
+      rows.push(
+        (ok ? "✅" : "❌") +
+          " " +
+          (labels[a] || a) +
+          "≥" +
+          required +
+          "（当前" +
+          actual +
+          "）",
+      );
+    }
+  }
+
+  var body =
+    '<div style="text-align:left;font-size:13px;line-height:2;">' +
+    '<p style="font-size:14px;font-weight:bold;margin-bottom:8px;">📋 ' +
+    path.icon +
+    " " +
+    path.name +
+    " — " +
+    level.name +
+    " 条件</p>" +
+    '<div style="border-top:1px solid var(--border);padding-top:8px;">' +
+    rows.join("<br>") +
+    "</div>" +
+    '<p style="margin-top:10px;font-size:12px;color:var(--text-muted);font-style:italic;">💡 提升对应属性/技能后再来尝试</p>' +
+    "</div>";
+
+  showModal({
+    title: "⚠️ 条件不足",
+    body: body,
+    buttons: [
+      {
+        text: "知道了",
+        cls: "btn-primary",
+        callback: function () {
+          return true;
+        },
+      },
+    ],
+  });
+}
+
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.ensureCareerCapital = ensureCareerCapital;
@@ -3178,6 +3315,23 @@ if (typeof window !== "undefined") {
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;
   window.showLocationNavModal = showLocationNavModal;
+  /** 全局条件不足弹窗（供 inline onclick 调用） */
+  window.showCareerRequirementsModal_Global = function (pathKey, levelId) {
+    var st =
+      typeof StateManager !== "undefined" &&
+      typeof StateManager.getState === "function"
+        ? StateManager.getState()
+        : null;
+    if (!st) return;
+    var path = CAREER_PATHS[pathKey];
+    if (!path) return;
+    var level = path.levels.find(function (l) {
+      return l.id === levelId;
+    });
+    if (!level) return;
+    showCareerRequirementsModal(st, pathKey, level);
+  };
+
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.career_dev = {
     id: "career_dev",

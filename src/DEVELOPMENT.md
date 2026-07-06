@@ -1,8 +1,8 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-06（v3.2a passMsg修复·工资分离·事件滚动·导航弹窗）
+> 最后更新: 2026-07-06（v3.2b 条件不足弹窗·现金提示修正·顶栏按钮绑定）
 >
-> commit: `12bbb0a`(submodule) + `c2fcfc1`(parent) 本地已commit，push因代理未通
+> commit: （本地未提交，待验证后提交）
 >
 > ---
 
@@ -4551,5 +4551,53 @@ python build.py → 4431.0 KB，成功
 - suburb/entertainment 地点恢复时需要配套实现对应工作
 
 **验证**：node --check ✅ (127 文件) / build.py 4814.3KB ✅ / MC 30×365 ✅
+
+---
+
+## 2026-07-06 — v3.2b 条件不足弹窗 · 现金提示修正 · 顶栏按钮绑定 · 全局静默点击审计
+
+### 问题反馈与修复
+
+**① 职业卡片条件不足无反馈**（餐饮服务/物流快递等）
+
+- **问题**：`checkCareerPromotion` 返回 `false` 时，卡片显示"⚠️ 条件不足"但点击无任何反应，不说明缺什么
+- **修复**：
+  - 新增 `showCareerRequirementsModal(state, pathKey, level)` 函数，逆向检查所有缺失条件（年龄/学历/技能/属性），逐项显示 ✅/❌ + 当前值
+  - 在卡片的 `onclick` 中，条件不足时调用 `showCareerRequirementsModal_Global(pathKey, levelId)` 弹窗
+  - 晋升面板的"条件不足"同理改为可点击查看详情
+  - 已注册到 `window` 供 inline onclick 使用
+- **效果**：点击任意不可投递职业卡片 → 弹窗显示具体缺什么（"❌ 体质≥20（当前15）"等）
+
+**② 现金偏差调试提示外露**
+
+- **问题**：`daily_report.js` 在每日收支报告中显示 "⚠️ 现金比已记录流水少 ¥83。这不是自动计入的收入或支出……" — 这是开发调试信息，不应展示给玩家
+- **修复**：改为仅 `console.log` 记录，不再渲染到玩家界面
+
+**③ 顶栏5个按钮无点击反应**
+
+- **问题**：游戏 header 的 btn-help / btn-save / btn-load / btn-new-game-header / mobile-menu-btn 共5个按钮，完全渲染但有零事件绑定
+- **修复**（`main.js` _enterScenarioGame）：
+  - 💾 存档 → `showSaveMenu()`
+  - 📂 读档 → `showLoadMenu()`
+  - ❓ 帮助 → `showHelpModal()`
+  - 🆕 新游戏 → 确认弹窗 → `location.reload()`
+  - ☰ 移动端菜单 → 切换 `.sidebar` 的 `.open` class
+
+**④ 全局静默点击审计**：
+
+- 搜索了所有 `<button>` 元素 + onclick 属性 + cursor:pointer 元素
+- 全部 `data-*` 属性绑定/事件委托均有对应的事件监听
+- 未发现其他遗漏的点击交互
+
+**影响文件**：
+
+| 文件              | 改动                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| `career_dev.js`   | 新增 `showCareerRequirementsModal`(+80行) + 全局包装函数(+12行) + 卡片/promotion onclick改为反馈弹窗(+4行) |
+| `daily_report.js` | 现金偏差提示改为console.log（-6/+5行）                                                                     |
+| `main.js`         | 5个顶栏按钮事件绑定(+65行)                                                                                 |
+| `DEVELOPMENT.md`  | 本文档                                                                                                     |
+
+**验证**：build.py 4885.7KB ✅ | brace/paren 全部平衡 ✅
 
 **SOP 自评**：本 SOP 是否需要修订？否（本轮按 v3.1 SOP 第 8 节 checklist 走完 — 1-6 维度 ✓，全剧本自查 ✓：清理无剧本分支条件，7 剧本均受益）

@@ -124,12 +124,12 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.2a — passMsg修复 · 工资与要求分离 · 事件记录强制滚动 · 导航按钮弹窗（commit pending push）
-  - **🐛 passMsg 未定义修复**：`enhancedApplyCareerJob` 第3065行 `passMsg` 崩溃导致全部面试通过后无声无息（餐饮/物流等路径"投递简历"点了没反应）→ 构建入职成功消息
-  - **📋 工资与要求分离**：`renderPromotionReqs` 移除薪资行文案；晋升卡片标题区单独显示升职目标薪资
-  - **🔄 事件记录强制滚动**：`scrollMessageLogToBottom(force)` 支持 force 参数；`renderMessageLog` 检测新条目后强制滚到底；展开/预览点击也 force 滚动
-  - **🪟 导航按钮弹窗**：💼查看上班族职位 / 🚀创业系统 / 🎓去大学城提升学历 / 🏛️去大学城备考 → 弹窗说明+确认/取消后跳转，新增 `showCareerNavModal`/`showLocationNavModal`/`showStudyNavModal` 三个辅助函数
-  - **约定式自动归类**：所有职业路径通过 `CAREER_PATHS` 遍历，新增路径零代码修改；modal 辅助函数接受任意 subTab/location 参数可复用
+- **最新一次工作 (2026-07-06)**：v3.2b — 条件不足弹窗 · 现金提示修正 · 顶栏按钮绑定 · 全局静默点击审计
+  - **🐛 职业卡片条件不足无反馈**：`checkCareerPromotion` 返回 false 时卡片显示"条件不足"但点击无反应 → 新增 `showCareerRequirementsModal` 逆向检查所有缺失条件，逐项显示 ✅/❌ + 当前值
+  - **🔇 现金偏差调试提示外露**：`daily_report.js` 的"现金比已记录流水少 ¥XX" 改为仅 console.log 记录，不再展示给玩家
+  - **🔘 顶栏5个按钮无点击反应**：btn-help/save/load/new-game-header/mobile-menu-btn 共5个按钮完全渲染但有零事件绑定 → 已绑定功能
+  - **🔍 全局静默点击审计**：搜索所有 button 元素 + onclick 属性 + cursor:pointer 元素，全部 data-* 属性绑定/事件委托均有对应监听
+  - **约定式自动归类**：`showCareerRequirementsModal_Global(pathKey, levelId)` 注册到 window，新增职业路径/晋升条件可复用
   - **影响文件**：career_dev.js / render.js / CLAUDE.md
   - **验证**：`python build.py` 4878.6KB ✅ / brace/paren 全部匹配 ✅
   - **导航navTab支持**：`_doNavigate` 新增 `target.navTab`，到达后切换到指定Tab而非固定actions。所有百科导航按钮兼容

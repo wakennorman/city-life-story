@@ -233,17 +233,16 @@ function buildReportHTML(txs, state, reconcileInfo) {
   bodyHtml += "</div>";
 
   if (reconcileInfo) {
-    var diff = reconcileInfo.amount;
-    var diffText =
-      diff > 0
-        ? "现金比已记录流水多 ¥" + Math.abs(diff).toLocaleString()
-        : "现金比已记录流水少 ¥" + Math.abs(diff).toLocaleString();
-    bodyHtml +=
-      '<div class="daily-report-reconcile" style="margin-top:8px;padding:8px 10px;border:1px dashed var(--warning);border-radius:6px;background:var(--warning-bg);font-size:11px;color:var(--text-secondary);line-height:1.45;">' +
-      "⚠️ " +
-      diffText +
-      "。这不是自动计入的收入或支出，而是仍未接入收支流水的现金变化，后续需要继续补埋点。" +
-      "</div>";
+    // 调试信息：仅 console 记录，不展示给玩家
+    console.log(
+      "[daily_report] 现金流水偏差 ¥" +
+        reconcileInfo.amount +
+        "（跟踪:" +
+        reconcileInfo.trackedDelta +
+        " 实际:" +
+        reconcileInfo.actualDelta +
+        "）— 已自动修正。",
+    );
   }
 
   return bodyHtml;

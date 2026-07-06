@@ -734,6 +734,74 @@ function startScenarioGame(scenarioId) {
     gameStarted = true;
     renderAll();
     if (typeof initCashCarousel === "function") initCashCarousel();
+
+    // ---- 绑定顶栏按钮 ----
+    setTimeout(function () {
+      var btnSave = document.getElementById("btn-save");
+      if (btnSave && !btnSave._bound) {
+        btnSave.onclick = function () {
+          if (typeof showSaveMenu === "function") showSaveMenu();
+          else StateManager.addMessage("⚠️ 存档功能不可用", "warning");
+        };
+        btnSave._bound = true;
+      }
+      var btnLoad = document.getElementById("btn-load");
+      if (btnLoad && !btnLoad._bound) {
+        btnLoad.onclick = function () {
+          if (typeof showLoadMenu === "function") showLoadMenu();
+          else StateManager.addMessage("⚠️ 读档功能不可用", "warning");
+        };
+        btnLoad._bound = true;
+      }
+      var btnNewGame = document.getElementById("btn-new-game-header");
+      if (btnNewGame && !btnNewGame._bound) {
+        btnNewGame.onclick = function () {
+          if (typeof showModal === "function") {
+            showModal({
+              title: "🆕 重新开始",
+              body: '<p style="text-align:center;font-size:14px;line-height:1.8;">确定要放弃当前游戏吗？<br><span style="font-size:12px;color:var(--warning);">⚠️ 未保存的进度将丢失</span></p>',
+              buttons: [
+                {
+                  text: "取消",
+                  cls: "btn-secondary",
+                  callback: function () {
+                    return true;
+                  },
+                },
+                {
+                  text: "确定重开",
+                  cls: "btn-danger",
+                  callback: function () {
+                    // 刷新页面重置所有状态
+                    location.reload();
+                    return true;
+                  },
+                },
+              ],
+            });
+          }
+        };
+        btnNewGame._bound = true;
+      }
+      var btnHelp = document.getElementById("btn-help");
+      if (btnHelp && !btnHelp._bound) {
+        btnHelp.onclick = function () {
+          if (typeof showHelpModal === "function") showHelpModal();
+        };
+        btnHelp._bound = true;
+      }
+      var mobileBtn = document.getElementById("mobile-menu-btn");
+      if (mobileBtn && !mobileBtn._bound) {
+        mobileBtn.onclick = function () {
+          var sidebar = document.querySelector(".sidebar");
+          if (sidebar) {
+            sidebar.classList.toggle("open");
+          }
+        };
+        mobileBtn._bound = true;
+      }
+    }, 100);
+
     if (typeof startTutorial === "function") {
       setTimeout(function () {
         startTutorial();
