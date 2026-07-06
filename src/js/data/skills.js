@@ -221,6 +221,26 @@ const CERTIFICATES = [
     examPassRate: 0.5,
     trainingDays: 14,
   },
+  {
+    id: "medical_license",
+    name: "医师资格证",
+    desc: "取得医师执业资格，可独立从事医疗诊断与处方。医生路径薪资+20%（通过事件推入，不可直接考取）。",
+    requirements: {},
+    effects: {},
+    salaryBonus: { doctor: 0.2 },
+    examPassRate: 1,
+    trainingDays: 1,
+  },
+  {
+    id: "professional_title_cert",
+    name: "事业单位职称证",
+    desc: "事业单位专业技术职务资格证明，与薪级工资直接挂钩。事业单位路径薪资+10%（通过事件推入，不可直接考取）。",
+    requirements: {},
+    effects: {},
+    salaryBonus: { public_institution: 0.1 },
+    examPassRate: 1,
+    trainingDays: 1,
+  },
 ];
 
 /** 获取证书定义 */

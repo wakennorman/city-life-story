@@ -717,52 +717,6 @@ function _calcCertSalaryBonus(state, pathId, baseSalary) {
     if (sb.universal) rate += sb.universal;
   }
 
-  // 兼容旧写法：手动 if-else（保留向后兼容，新证书应使用 salaryBonus）
-  // 路径专属证书
-  if (pathId === "tech" && certs.indexOf("coding_basic") >= 0) rate += 0.05;
-  if (pathId === "finance" && certs.indexOf("accounting_cert") >= 0)
-    rate += 0.08;
-  if (
-    (pathId === "operations" || pathId === "sales") &&
-    certs.indexOf("management_cert") >= 0
-  )
-    rate += 0.06;
-  if (pathId === "sales" && certs.indexOf("sales_cert") >= 0) rate += 0.08;
-  if (pathId === "legal" && certs.indexOf("management_cert") >= 0) rate += 0.05;
-  if (pathId === "catering" && certs.indexOf("cooking_cert") >= 0) rate += 0.1;
-  if (pathId === "logistics" && certs.indexOf("driver_license") >= 0)
-    rate += 0.08;
-  if (pathId === "education" && certs.indexOf("english_cert") >= 0)
-    rate += 0.06;
-  if (pathId === "medical" && certs.indexOf("nursing_cert") >= 0) rate += 0.1;
-  if (pathId === "medical" && certs.indexOf("psychologist") >= 0) rate += 0.05;
-  // 👨‍⚕️ 医师路径证书加成
-  if (pathId === "doctor" && certs.indexOf("medical_license") >= 0) rate += 0.2;
-  if (pathId === "doctor" && certs.indexOf("english_cert") >= 0) rate += 0.05;
-  if (pathId === "doctor" && certs.indexOf("psychologist") >= 0) rate += 0.06;
-  // 🏢 事业单位证书加成
-  if (
-    pathId === "public_institution" &&
-    certs.indexOf("professional_title_cert") >= 0
-  )
-    rate += 0.1;
-  if (pathId === "public_institution" && certs.indexOf("management_cert") >= 0)
-    rate += 0.06;
-  if (pathId === "public_institution" && certs.indexOf("english_cert") >= 0)
-    rate += 0.05;
-  if (pathId === "civil" && certs.indexOf("management_cert") >= 0) rate += 0.06;
-  if (pathId === "civil" && certs.indexOf("english_cert") >= 0) rate += 0.05;
-  // 通用英语加成（所有路径+3%）
-  if (certs.indexOf("english_cert") >= 0) rate += 0.03;
-  // 通用心理咨询师加成（高级管理岗+4%）
-  if (
-    certs.indexOf("psychologist") >= 0 &&
-    (pathId === "operations" ||
-      pathId === "legal" ||
-      pathId === "education" ||
-      pathId === "civil")
-  )
-    rate += 0.04;
   return Math.round((baseSalary || 0) * rate);
 }
 
