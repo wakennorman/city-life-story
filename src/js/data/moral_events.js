@@ -272,8 +272,12 @@ const MORAL_EVENTS = [
     id: "stray_dog_rain",
     title: "🐕 雨中的流浪狗",
     desc: "大雨中，一只瑟瑟发抖的流浪狗蜷缩在屋檐下，用湿漉漉的眼睛看着你。它看起来很虚弱。",
+    // 约定式触发：声明触发时机（v3.4）
+    triggers: ["daily_start"],
     minDay: 4,
-    dailyChance: 0.04,
+    triggerWeight: 1,
+    triggerCooldown: 14,
+    // 原有 condition 保留向后兼容
     condition: function (s) {
       return (
         s.weather &&

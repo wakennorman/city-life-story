@@ -1,10 +1,53 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.3 创业门槛降低+MC AI健康底线）
+> 最后更新: 2026-07-07（v3.4 约定式自动归类+技能↔工作双向关联）
 >
-> commit: `9f6dccf`
+> commit: `88d33d2`
 >
 > ---
+
+---
+
+## 2026-07-07 — v3.4 约定式自动归类完成 + 技能↔工作双向关联
+
+**触发**：`memory/review-improve-v3.1.md` — P0/P1/P2 高潜力领域落地
+
+### P0 — 行动自动归类（核心摩擦消除）
+
+**问题**：加一个新行动要改 `getAvailableActions()` + `ActionSort.EXACT_MAP` 两处。
+
+**解决**：`getAvailableActions` 的 43 个行动全部添加 `category` 字段。`ActionSort.getActionCategory()` 自动读取。新增行动只需 1 条数据声明，无需修改 ActionSort。
+
+| 分类 | 行动数 | 示例 |
+|------|--------|------|
+| `work` | ~25 | job_*、trade_header、wholesale_header |
+| `survival` | ~8 | housing_*、storage_*、eat、shower、heal |
+| `finance` | ~6 | deposit、withdraw、loan、repay |
+| `education` | ~6 | edu_*、study |
+| `shopping` | ~5 | buy_*、item_shop_* |
+| `social` | ~5 | npc_*、gift_npc、diary |
+| `appliance` | ~5 | fame_* |
+| `career` | ~2 | corp_*、startup_* |
+| `other` | ~3 | travel_*、no_jobs |
+
+### P1 — 技能↔工作双向自动关联
+
+**问题**：技能百科已有"该技能解锁的工作"，但工作百科缺少反向关联。
+
+**解决**：`_wikiDetailJob` 新增"🔗 需要同样技能的其他工作"推荐区。自动扫描 STREET_JOBS 中要求相同技能的工作，用 `_wkLink` 渲染可点击跳转。
+
+### P2 — 证书工资加成自动注册
+
+**现状确认**：全部 16 个证书已声明 `salaryBonus` 字段（`skills.js`）。`_calcCertSalaryBonus` 自动扫描应用。旧 if-else 保留为向后兼容（含 `medical_license`/`professional_title_cert` 等职业路径专属证书）。
+
+### 影响文件
+
+- `src/js/main.js`（getAvailableActions 43 行动添加 category）
+- `src/js/ui/wiki.js`（_wikiDetailJob 新增相似工作推荐）
+
+### 验证
+
+- `node --check` 2文件 ✅ / `python build.py` 4895.4KB ✅
 
 ---
 

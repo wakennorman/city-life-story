@@ -38,6 +38,27 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.4: 约定式触发槽（daily_start 时机）===
+  {
+    name: "trigger_slot_daily_start",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      if (state.day < 7) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("daily_start", state);
+        if (event) {
+          StateManager.addMessage(
+            "⚡ 系统触发事件：" + event.title,
+            "info",
+          );
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry daily_start 触发失败:", e);
+      }
+    },
+  },
+
   // === 需求衰减 ===
   {
     name: "needs_decay",

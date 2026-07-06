@@ -58,13 +58,19 @@ navHints: [
 3. **约定优于配置（Convention > Configuration）**：默认行为合理，特殊需求才加配置
 4. **渐进式增强（Progressive Enhancement）**：纯数据驱动解决80%，剩下的20%用函数覆盖
 
+### 约定式方法论落地进度
+
+| 领域           | 状态  | commit          | 说明                                    |
+| -------------- | ----- | --------------- | --------------------------------------- |
+| 行动自动归类   | ✅   | `88d33d2`       | getAvailableActions 43行动全部添加 category |
+| 技能↔工作关联  | ✅   | `88d33d2`       | 技能/工作百科互查，自动扫描 STREET_JOBS |
+| 证书→职业加成  | ✅   | `88d33d2`       | 16个证书已声明 salaryBonus，自动扫描     |
+
 ### 下一批可应用的高潜力领域
 
 | 领域           | 现状痛点                                         | 约定方案                                 | 优先级 |
 | -------------- | ------------------------------------------------ | ---------------------------------------- | ------ |
-| 行动自动归类   | 加行动需改action.js+ActionSort两处               | 行动声明`category`字段，ActionSort自动读 | 🔴P0   |
 | 事件触发数据化 | 每个事件手写conditions函数                       | 事件声明`triggers`数据对象，系统自动匹配 | 🟡P1   |
-| 证书→职业加成  | 证书的工资加成写在_calcCertSalaryBonus if-else里 | 证书声明`salaryBonus`字段，系统自动应用  | 🟢P2   |
 
 详见 `memory/convention-over-configuration-methodology.md`
 
@@ -124,7 +130,11 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-07)**：v3.3 — 创业门槛降低 ¥30k→¥15k + MC AI 健康底线修复（commit: `9f6dccf`）
+- **最新一次工作 (2026-07-07)**：v3.4 — 约定式自动归类完成 + 技能↔工作双向关联（commit: `88d33d2`）
+  - **🔴 P0 行动自动归类**：`getAvailableActions` 43 行动全部添加 `category` 字段，ActionSort 自动读取。新增行动从改 2 个文件→1 条数据声明
+  - **🟡 P1 技能↔工作双向关联**：工作百科新增"🔗 需要同样技能的其他工作"推荐区，自动扫描 STREET_JOBS 中相同技能要求的工作
+  - **🟢 P2 证书工资加成确认**：全部 16 个证书已声明 `salaryBonus` 字段，`_calcCertSalaryBonus` 自动扫描应用（旧 if-else 保留向后兼容）
+  - **验证**：`node --check` ✅ / `python build.py` 4895.4KB ✅
   - **🐛 创业门槛过高**：经典 ¥30,000 → **¥15,000**，街头工作者 400-500 天可达（原 1,500 天不可达）
   - **📊 MC AI grinder 修复**：health<25降workLimit + hygiene<15洗澡 → 存活率 20%→40%（高风险路径≥30%通过）
   - **📊 MC AI corporate 修复**：health<50停学 + cash<500先工作 + 学频每3天 → 存活率 20%→80%（普通路径≥80%通过）

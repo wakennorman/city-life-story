@@ -4472,3 +4472,11 @@ function triggerRandomEvent(state) {
   const evt = Random.fromArray(events);
   StateManager.addMessage(`📰 ${evt.text}`, evt.type);
 }
+
+// === v3.4: 约定式触发注册表初始化 ===
+(function () {
+  if (typeof window.TriggerRegistry !== "undefined" && typeof RANDOM_EVENTS !== "undefined") {
+    window.TriggerRegistry.loadAll();
+    console.log("[TriggerRegistry] 已加载 " + RANDOM_EVENTS.filter(function(e){ return Array.isArray(e.triggers); }).length + " 个约定式事件");
+  }
+})();
