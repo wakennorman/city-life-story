@@ -93,35 +93,35 @@ function getStartupTriggerConditions(state) {
         : "street";
   var cash = (state.resources && state.resources.cash) || 0;
 
-  // 各剧本触发条件
+  // 各剧本触发条件（v3.3 降低经典/下岗/应届门槛，使街头→创业路径可达）
   var conditions = {
     classic: {
-      street: { cash: 30000, label: "街头发家" },
-      corporate: { rank: "P5", cash: 30000, label: "职场攒够启动金" },
+      street: { cash: 15000, label: "街头发家" },
+      corporate: { rank: "P5", cash: 15000, label: "职场攒够启动金" },
     },
     laid_off: {
-      street: { cash: 30000, label: "摆摊/零工攒够本钱" },
-      corporate: { rank: "P5", cash: 30000, label: "技术岗转创业" },
+      street: { cash: 15000, label: "摆摊/零工攒够本钱" },
+      corporate: { rank: "P5", cash: 15000, label: "技术岗转创业" },
     },
     small_town_grinder: {
-      street: { cash: 50000, label: "白领工作积累" },
-      corporate: { rank: "P5", cash: 50000, label: "大厂经验+启动金" },
+      street: { cash: 25000, label: "白领工作积累" },
+      corporate: { rank: "P5", cash: 25000, label: "大厂经验+启动金" },
     },
     foreign_worker: {
-      street: { cash: 20000, label: "省吃俭用攒下第一桶金" },
-      corporate: { rank: "P5", cash: 20000, label: "技术移民转创业" },
+      street: { cash: 10000, label: "省吃俭用攒下第一桶金" },
+      corporate: { rank: "P5", cash: 10000, label: "技术移民转创业" },
     },
     second_gen: {
-      street: { cash: 50000, label: "家里支持启动资金" },
-      corporate: { rank: "P5", cash: 50000, label: "家里支持启动资金" },
+      street: { cash: 25000, label: "家里支持启动资金" },
+      corporate: { rank: "P5", cash: 25000, label: "家里支持启动资金" },
     },
     midlife_crisis: {
-      street: { cash: 50000, label: "补偿金/积蓄转型" },
-      corporate: { rank: "P6", cash: 50000, label: "P6+管理经验转型" },
+      street: { cash: 25000, label: "补偿金/积蓄转型" },
+      corporate: { rank: "P6", cash: 25000, label: "P6+管理经验转型" },
     },
     fresh_grad: {
-      street: { cash: 30000, label: "实习+兼职攒钱" },
-      corporate: { rank: "P5", cash: 30000, label: "职场新人创业梦" },
+      street: { cash: 15000, label: "实习+兼职攒钱" },
+      corporate: { rank: "P5", cash: 15000, label: "职场新人创业梦" },
     },
   };
 
@@ -133,7 +133,7 @@ function getStartupTriggerConditions(state) {
     typeof getCareerCapitalStartupDiscount === "function"
       ? getCareerCapitalStartupDiscount(state)
       : 0;
-  var requiredCash = Math.max(20000, Math.floor(baseCash * (1 - discount)));
+  var requiredCash = Math.max(10000, Math.floor(baseCash * (1 - discount)));
   var rankMet = true;
   if (phase === "corporate" && pc.rank) {
     var rankNames = ["P5", "P6", "P7", "P8", "P9", "P10"];

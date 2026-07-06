@@ -460,8 +460,8 @@
       }
     }
     if (skillsMet < 2) return false;
-    // 现金门槛：classic=30k
-    var threshold = 30000;
+    // 现金门槛：经典=15k（v3.3 降低使街头→创业可达）
+    var threshold = 15000;
     if (state.resources.cash < threshold + 10000) return false;
     state.resources.cash -= threshold;
     state._mcStartup = {
@@ -537,9 +537,25 @@
     return function (state) {
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
+      var health = state.status ? state.status.health : 100;
+      var hygiene = needs ? needs.hygiene : 50;
       if (!needs) return;
+
+      // 健康底线：health<25 时降低工作次数（但不停工！继续赚钱买饭）
+      var workLimit = health < 25 ? 3 : 5;
+      // 健康差时多买点吃的
+      var foodBudget = health < 40 ? 12 : 8;
+      var feedThreshold = health < 40 ? 48 : 42;
+
       // 节俭吃饭：降阈值+便宜食物，省下每一分钱（grinder的"赤贫美学"）
-      mcFeed(state, 38, 28, 6);
+      mcFeed(state, feedThreshold, 30, foodBudget);
+
+      // 卫生底线：hygiene<15时洗澡一次（¥10），防止hygiene=0→健康-2/天
+      if (hygiene < 15 && cash >= 15) {
+        needs.hygiene = Math.min(100, hygiene + 40);
+        state.resources.cash -= 10;
+      }
+
       mcTreatIllness(state); // 健康<30才治
       // 住房：只升T1（最便宜），不追求更高等级
       var ht = state.housing ? state.housing.tier : 0;
@@ -553,8 +569,8 @@
       if (day > 30 && cash >= 2000) loc = "factoryZone";
       if (day > 70 && cash >= 6000) loc = "commercialDist";
       state.trade.currentLocation = loc;
-      // 核心区别：允许更多工作次数（5次），疲劳容忍度略高（<70）
-      mcWorkLoop(state, loc, 5, 70);
+      // 核心区别：workLimit 随健康动态调整
+      mcWorkLoop(state, loc, workLimit, 70);
     };
   }
 
@@ -689,14 +705,29 @@
   /**
    * 策略6: crowner（创业路径）
    * 路径: 攒钱+学技能 → 注册公司 → 被动创业收入
-   * 特点: 前60天拼命攒钱+学技能，之后创业获取被动收入
+   * 特点: 前60天攒钱+学技能，之后创业获取被动收入
    * 目标: Day 60+ 注册公司
+   * v3.3 修复: 健康底线(health<50停学)+ 生存预算(cash<500先工作)+ 降学频(每3天一次)
    */
   function createCorporatePolicy() {
     return function (state) {
       var cash = state.resources ? state.resources.cash : 0;
       var needs = state.needs;
+      var health = state.status ? state.status.health : 100;
       if (!needs) return;
+
+      // 健康底线：health<50 时跳过学习，只生存
+      if (health < 50) {
+        mcFeed(state, 50, 35, 12);
+        mcTreatIllness(state);
+        mcUpgradeHousing(state);
+        var loc = "slum";
+        if (cash >= 1200) loc = "commercialDist";
+        state.trade.currentLocation = loc;
+        mcWorkLoop(state, loc, 5, 60);
+        return;
+      }
+
       mcFeed(state, 45, 30, 10);
       mcTreatIllness(state);
       mcUpgradeHousing(state);
@@ -705,38 +736,43 @@
 
       // 核心：攒钱+学技能 → 创业
       if (!state._mcStartup) {
-        // v3.3: 每天优先学技能（前90天冲刺），每2天一次，专攻2个技能
-        if (
-          day <= 90 &&
-          day > 10 &&
-          day % 2 === 0 &&
-          state.player.actionPoints >= 18
-        ) {
-          var skids2 = Object.keys(state.skills);
-          var cs2 = null,
-            csLvl2 = 999;
-          var prefers = ["coding", "english"];
-          for (var si = 0; si < skids2.length; si++) {
-            for (var pi = 0; pi < prefers.length; pi++) {
-              if (skids2[si] === prefers[pi]) {
-                var lv = state.skills[skids2[si]].level || 0;
-                if (lv < csLvl2) {
-                  cs2 = skids2[si];
-                  csLvl2 = lv;
+        // v3.3 修复: 生存预算 — cash<500时优先工作不学习
+        var studying = false;
+        if (cash >= 500) {
+          // 每3天学一次（从每2天降低频率），专攻2个技能
+          if (
+            day <= 120 &&
+            day > 10 &&
+            day % 3 === 0 &&
+            state.player.actionPoints >= 18
+          ) {
+            var skids2 = Object.keys(state.skills);
+            var cs2 = null,
+              csLvl2 = 999;
+            var prefers = ["coding", "english"];
+            for (var si = 0; si < skids2.length; si++) {
+              for (var pi = 0; pi < prefers.length; pi++) {
+                if (skids2[si] === prefers[pi]) {
+                  var lv = state.skills[skids2[si]].level || 0;
+                  if (lv < csLvl2) {
+                    cs2 = skids2[si];
+                    csLvl2 = lv;
+                  }
+                  break;
                 }
-                break;
               }
             }
-          }
-          if (cs2 && state.skills[cs2].level < 60 && state.needs.fatigue < 50) {
-            state.skills[cs2].level = Math.min(
-              100,
-              state.skills[cs2].level + 1,
-            );
-            state.skills[cs2].xp = 0;
-            state.player.actionPoints -= 15;
-            state.needs.fatigue = Math.min(100, state.needs.fatigue + 3);
-            state._mcSkillUps = (state._mcSkillUps || 0) + 1;
+            if (cs2 && state.skills[cs2].level < 60 && state.needs.fatigue < 50) {
+              state.skills[cs2].level = Math.min(
+                100,
+                state.skills[cs2].level + 1,
+              );
+              state.skills[cs2].xp = 0;
+              state.player.actionPoints -= 15;
+              state.needs.fatigue = Math.min(100, state.needs.fatigue + 3);
+              state._mcSkillUps = (state._mcSkillUps || 0) + 1;
+              studying = true;
+            }
           }
         }
         // 尝试注册
@@ -750,7 +786,9 @@
       if (day > 20 && cash >= 1200) loc = "commercialDist";
       if (day > 50 && cash >= 4000) loc = "techPark";
       state.trade.currentLocation = loc;
-      mcWorkLoop(state, loc, 4, 60);
+      // 学习后减少工作次数保留AP
+      var workLimit = studying ? 3 : 4;
+      mcWorkLoop(state, loc, workLimit, 60);
     };
   }
 
