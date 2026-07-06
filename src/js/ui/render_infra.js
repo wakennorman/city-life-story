@@ -837,7 +837,7 @@ function renderLocationBar(state, parent) {
   houseSpan.textContent = houseIcon + houseName;
   rightGroup.appendChild(houseSpan);
 
-  // 移动端：天气预报（仅天气，不带升级提示）
+  // 移动端：天气预报——"📅 未来天气展望" 与具体天气值交替闪烁
   if (
     window.innerWidth <= 768 &&
     state.weather &&
@@ -865,28 +865,31 @@ function renderLocationBar(state, parent) {
     altContainer.className = "mobile-forecast-alt";
     altContainer.title = "未来天气预报";
 
+    // 两层绝对定位重叠，CSS forecastAlt 动画交替 opacity（3.6s 循环）
+    var labelSpan = document.createElement("span");
+    labelSpan.className = "f-label";
+    labelSpan.textContent = "📅 未来天气展望";
+
     var valueSpan = document.createElement("span");
     valueSpan.className = "f-value";
-    valueSpan.style.position = "";
-    valueSpan.style.transform = "";
-    valueSpan.style.top = "";
     valueSpan.textContent = forecastText;
-    altContainer.appendChild(valueSpan);
 
+    altContainer.appendChild(labelSpan);
+    altContainer.appendChild(valueSpan);
     rightGroup.appendChild(altContainer);
   }
 
   div.appendChild(rightGroup);
   container.appendChild(div);
 
-  // ---- 第二行：升级提示（露宿时单独一行，不与主行抢空间）----
+  // ---- 第二行：住所升级提示（根据当前 tier 动态显示下一阶，最高级不显示）----
   var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  if (currentTier === 0) {
+  if (houseData && houseData.upgradeTip && currentTier < 6) {
     var hintDiv = document.createElement("div");
     hintDiv.className = "mobile-housing-hint";
     hintDiv.style.cssText =
       "font-size:11px;color:var(--warning);padding:2px 8px 3px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:6px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-    hintDiv.textContent = "💡去城中村上工，攒够钱可升级为🛏️合租床位";
+    hintDiv.textContent = houseData.upgradeTip;
     container.appendChild(hintDiv);
   }
 

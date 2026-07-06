@@ -922,6 +922,7 @@ const HOUSING_TIERS = [
     canBathe: false,
     canRest: false,
     homeType: "none",
+    upgradeTip: "💡去城中村¥300升🛏️合租（遮风挡雨）",
   },
   {
     tier: 1,
@@ -938,6 +939,7 @@ const HOUSING_TIERS = [
     canBathe: false,
     canRest: true,
     homeType: "shared",
+    upgradeTip: "💡去人才市场¥500升🚪单间（可做饭洗衣）",
   },
   {
     tier: 2,
@@ -954,6 +956,7 @@ const HOUSING_TIERS = [
     canBathe: true,
     canRest: true,
     homeType: "single",
+    upgradeTip: "💡去中介¥1000升🏠一居室（独立卫浴）",
   },
   {
     tier: 3,
@@ -970,6 +973,7 @@ const HOUSING_TIERS = [
     canBathe: true,
     canRest: true,
     homeType: "full",
+    upgradeTip: "💡去市中心¥6000升🏙️豪华公寓（健身房泳池）",
   },
   {
     tier: 4,
@@ -986,6 +990,7 @@ const HOUSING_TIERS = [
     canBathe: true,
     canRest: true,
     homeType: "luxury",
+    upgradeTip: "💡去郊区¥50000升🏡别墅（花园车库）",
   },
   {
     tier: 5,
@@ -1002,6 +1007,7 @@ const HOUSING_TIERS = [
     canBathe: true,
     canRest: true,
     homeType: "villa",
+    upgradeTip: "💡¥200000升🏰豪宅（私人电梯+江景）",
     extraFeatures: { canHostNPC: true, garden: true, garage: true },
     effects: {
       healthRecovery: 5,

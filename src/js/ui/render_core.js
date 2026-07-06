@@ -916,7 +916,7 @@ function renderWeatherPanel(state) {
     html +=
       '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">📅 未来天气展望：</div>';
     html += '<div style="display:flex;gap:3px;">';
-    for (var i = 0; i < w.forecast.length; i++) {
+    for (var i = 0; i < Math.min(2, w.forecast.length); i++) {
       var f = w.forecast[i];
       var fDef =
         typeof WEATHER_TYPES !== "undefined"
