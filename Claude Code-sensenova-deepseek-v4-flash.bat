@@ -1,0 +1,5 @@
+@echo off
+chcp 65001 > nul
+title Claude Code SenseNova DeepSeek V4 Flash
+cd /d "D:\Claude Code+DeepSeekV4"
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "D:\Claude Code+DeepSeekV4\start-sensenova-deepseek-v4-flash.ps1" %*

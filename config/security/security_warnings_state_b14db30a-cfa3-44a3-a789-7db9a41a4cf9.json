@@ -1,0 +1,13 @@
+{
+  "shown_warnings": [
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\render.js-innerHTML_xss",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase2\\investment.js-innerHTML_xss"
+  ],
+  "untracked_at_baseline": {
+    "test-results/.last-run.json": 1781712127206529800
+  },
+  "touched_paths": [],
+  "baseline_sha": "4b9f3c7cae970acb82d89f6104dfecc110ead7a1",
+  "head_at_capture": "58cea9cb367f95ca39b7b2a703d7b36d6e37a00c",
+  "pending_warnings": {}
+}

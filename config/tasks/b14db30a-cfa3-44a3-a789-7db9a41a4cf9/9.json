@@ -1,0 +1,9 @@
+{
+  "id": "9",
+  "subject": "Node语法检查所有改动的JS文件",
+  "description": "对19个修改过的js文件逐个运行 node --check，确认无语法错误",
+  "activeForm": "运行node --check语法检查",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

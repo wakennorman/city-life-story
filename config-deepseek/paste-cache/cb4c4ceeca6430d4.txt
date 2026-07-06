@@ -1,0 +1,143 @@
+
+任务：城市浮生记 审查改进与扩展
+
+项目位置：D:/Claude Code+DeepSeekV4/city-life-story/
+
+执行方式：你直接执行，不需要调用外部工具
+
+项目架构说明（重要，请先读）：
+
+本项目已从纯单文件 HTML5 架构（legacy）迁移为 Vite + TypeScript + legacy 桥接式双轨架构（v3.8）。
+
+- 旧游戏入口：src/index.html → python build.py → dist/index.html（正式可玩版本，负责主 UI、存档、行动系统、经济等核心流程）
+- 新开发架构：根目录 index.html + package.json + vite.config.mjs → npm run build → dist-webapp/（并行 TS 架构壳）
+- 桥接层：src/js/app_bridge/webapp_runtime_bridge.js 连接新数据到旧 UI，不重排旧 script 顺序
+- 类型化数据目录：src/app/data/events/、jobs/、locations/、items/、diseases/、legal/、travel/、lifeNodes/（新增内容优先写这里）
+- 核心状态来源：window.StateManager（legacy 全局单例），src/app/core/ 封装了 typed facade 但不复制真实状态
+- 存档：localStorage 键不变（city_life_story_slot_N 等），新增 _webApp.schemaVersion=2 元数据
+
+架构边界：
+- 新增事件、职业、地点、物品、疾病、法律、旅行、人生节点 → 优先进入 src/app/data/* 的 TS 目录
+- 需要在旧游戏行动列表中触发的新入口 → 通过 src/js/app_bridge/ 桥接脚本注入
+- 旧正式入口仍由 python build.py 构建，禁止重排 src/index.html 的 script 顺序
+- TS 数据目录和 legacy JS 数据双轨并存期间，bridge 负责连接
+
+验证命令：
+- python build.py（旧构建，必须通过）
+- npm run typecheck（TS 类型检查，必须通过）
+- npm run check:js（legacy JS 语法检查，必须通过）
+- npm run build（Vite 构建到 dist-webapp/，必须通过）
+
+工作流（4个子任务，串行执行）
+
+子任务1：现状摸底（约4000 tokens）
+
+目标：理解项目长什么样，不是读完每一行。
+
+做法：
+1. 读项目文档（CLAUDE.md / IMPLEMENTATION_PROGRESS.md / src/DEVELOPMENT.md / memory/long_term_lessons.md）
+2. 读 src/index.html 了解 legacy 模块加载顺序
+3. 读 src/app/ 下的架构文件了解新架构覆盖范围（至少看 shell、bridge、类型目录）
+4. 看目录结构，识别已落地的新旧模块分区
+5. 挑核心模块的文件头 50 行确认架构风格
+
+产出（写入 memory/overview.md）：
+- 项目双轨架构中各自覆盖了哪些系统
+- 当前版本的完成度（已做了什么，还在做什么）
+- 初步感觉：哪些地方薄弱、异常或缺失，特别关注新旧架构之间是否有断连
+
+子任务2：问题诊断（约4000 tokens）
+
+目标：找出项目中的具体问题，按优先级分类。
+
+做法：扫描以下通用维度（注意新旧两套各自的问题）：
+
+数据维度：
+- legacy JS 数据文件有没有溢出、缺失或不合理
+- src/app/data/ 的 TS 目录覆盖率够不够，字段是否对齐
+
+系统维度：
+- 双轨之间有没有明显断连（新数据写了但 bridge 没接线）
+- 模块之间是否独立运作，缺不缺联动
+
+内容维度：
+- 事件/职业/物品/疾病/法律/旅行/人生节点的内容量够不够
+- 新数据目录的入口、触发逻辑、百科注册是否完整
+
+体验维度（含移动端）：
+- 玩家在手机（≤480px 视口）上能正常看到并操作所有核心功能吗
+- 新增内容在底部抽屉侧栏和横向滚动 tab 下排版是否正常
+- 所有弹窗是否使用现有 .modal-box 样式，不自建容器
+- bridge 层是否把新功能正确暴露给 legacy UI
+
+代码维度：
+- TS 类型错误、legacy JS 语法错误、桥接逻辑漏洞
+- 新旧代码之间有没有命名冲突或重复逻辑
+
+优先级定义（通用，不限项目版本）：
+- P0 = 不做则项目不可用或核心体验断裂
+  判断：有没有影响正常运行或核心功能缺失的 bug？手机端功能不可见或无法操作？
+- P1 = 做了体验明显提升
+  判断：有没有内容单薄但架子在的地方？系统联动缺口？手机端排版不好但勉强能用？
+- P2 = 锦上添花，打磨细节
+  判断：纯扩充、美化、锦上添花
+
+产出（写入 memory/diagnosis.md）：
+每条问题一行，格式：问题描述 | 所属模块 | 优先级 | 判断依据
+
+例如（不是固定字段，是格式示范）：
+道德事件太少且缺乏后果链 | 事件系统 | P1 | 有框架但内容单薄，bridge 已就绪但 TS 数据目录中事件数不够
+创业后期资金溢出无消耗出口 | 经济系统 | P0 | 后期收入远超支出，缺少资金消耗出口
+
+子任务3：改进方案（约4000 tokens）
+
+目标：对 P0 和 P1 问题给出具体可执行的改动方案。
+
+规则：
+- 每条方案写明：改哪里 + 怎么改 + 预期效果
+- 说明改动归属哪一侧（src/app/ 新数据目录 / src/js/ legacy 层 / bridge 桥接层 / 两侧都要改）
+- 不要在此阶段写完整代码，但要足够明确让实装者直接上手
+- 方案之间考虑互斥性（两个方案改同一个文件的话，顺序很重要）
+- 估计每条方案需要的行数
+- 涉及 UI 的改动，必须注明移动端（≤480px）上的表现预期
+
+产出（写入 memory/improvement_plan.md）：
+每条方案一行，格式：对应问题 | 涉及文件 | 归属层 | 改法 | 估计行数 | 预期效果 | 移动端影响
+
+例如（不是固定字段）：
+道德事件扩充 | src/app/data/events/ | 新数据目录 | 在 TS 目录新增 30 个极端生存事件 + bridge 注册到旧行动列表 | ~200行 | 事件池翻倍，链式后果覆盖 | 无 UI 变动，不影响移动端
+经济后期限流 | src/js/phase1/daily_pipeline.js | legacy 层 | 在每日管线中增加被动消费项（物业/社交/健康） | ~30行 | 后期资金不过度积累 | 仅数值变化，无 UI 影响
+
+子任务4：实装交付（约8000 tokens）
+
+目标：按 P0 优先、P1 其次、P2 最后的顺序，依次实装所有改进方案。
+
+通用规约：
+1. 每完成一个功能点（不是每改一个文件）就 git add + git commit
+2. 修改 src/app/ 后必须跑 npm run typecheck 验证 TS 类型
+3. 修改 src/js/ 后必须跑 npm run check:js 验证 JS 语法
+4. 不管改哪一侧，最终必须同时跑 python build.py + npm run build 通过（双构建验证）
+5. 禁止重排 src/index.html 的已有 script 顺序，只允许在末尾追加 bridge 脚本
+6. 更新 IMPLEMENTATION_PROGRESS.md 标记已完成的条目
+7. 更新 CLAUDE.md 的"当前状态"段
+8. 禁止引入项目未使用的外部依赖，除非方案明确要求
+9. 移动端兼容：所有新增界面元素（弹窗、面板、按钮、列表）必须在 ≤480px 视口下正常显示，不得横向溢出。JS 动态生成的 HTML 避免固定 px 宽度，使用 max-width:100% + box-sizing:border-box。新增弹窗使用现有 .modal-box 样式和 modal.js 系统，不自建容器。新增按钮尺寸遵循 44px 最小触控高度规范。必要时在 src/css/style.css 末尾的 @media (max-width: 480px) 中追加对应覆盖
+10. CSS 修改规范：手机端 CSS 只能追加到 style.css 末尾已有媒体查询中，不修改文件中间部分的桌面样式。不改乱原有手机端布局（底部抽屉侧栏、横向滚动 tab、单列行动卡片等已定稿）
+11. 验证增加：除现有构建验证外，额外在 Chrome DevTools 用 375px 视口检查确认新增功能排版正常、无横向溢出
+12. 如果只剩最后一点额度或时间，先 commit 当前进度，不要硬撑
+13. 数值验收：改完数值/经济/概率后，必须在浏览器控制台执行 runMonteCarlo()，输出结果必须全是 ✅
+14. UI 验收：改完 UI 后，必须在 Chrome DevTools 用 375px 手机视图截图，布局不能溢出屏幕
+
+产出：
+- 所有改动已提交 git（commit message 标注改动归属层）
+- 一段总结：改了哪些文件、归属哪个架构层、加了什么功能、还剩什么没做
+- 进度文档已更新，下一个人可无缝继续
+
+断点续传
+
+任意子任务中断后：
+1. 读 memory/ 目录下的产出文件，知道前一步的结果
+2. 读 IMPLEMENTATION_PROGRESS.md，知道哪些条目已完成（✅）哪些还没（❌）
+3. 从第一个 ❌ 的条目继续
+
+不需要重跑整个流程。

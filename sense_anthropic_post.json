@@ -1,0 +1,5 @@
+﻿{
+  "model": "sensenova-6.7-flash-lite",
+  "max_tokens": 16,
+  "messages": [{ "role": "user", "content": "hi" }]
+}

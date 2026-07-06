@@ -1,0 +1,9 @@
+{
+  "id": "14",
+  "subject": "打破固定套路 — 新增多种胜利路线",
+  "description": "参考Stardew Valley多路线设计，新增：经商路线(开店→连锁)、声望路线(名气100+投票)、技能大师路线(全技能80+)、投资路线(资产1000万)。让玩家可选不同活法。",
+  "activeForm": "添加多种胜利路线",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

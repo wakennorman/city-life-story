@@ -1,0 +1,76 @@
+/**
+ * 团队管理系统 (P7+ 专属)
+ */
+
+/** 招聘团队成员 */
+function hireTeamMember(memberTypeId) {
+  const state = StateManager.getState();
+  const rankData = CORP_RANKS[state.corporate.rank];
+  if (!rankData || !rankData.canManageTeam) {
+    StateManager.addMessage('⚠️ P7以上才能管理团队。', 'warning');
+    return false;
+  }
+  if (state.corporate.team.length >= (rankData.maxTeamSize || 5)) {
+    StateManager.addMessage('⚠️ 团队已满员。', 'warning');
+    return false;
+  }
+
+  const template = TEAM_MEMBERS.find(m => m.id === memberTypeId);
+  if (!template) return false;
+
+  // 招聘成本
+  const cost = 10000;
+  if (state.resources.cash < cost) {
+    StateManager.addMessage(`⚠️ 招聘需要 ¥${cost.toLocaleString()}。`, 'warning');
+    return false;
+  }
+
+  state.resources.cash -= cost;
+
+  // 创建成员（加入随机性）
+  const member = {
+    ...template,
+    productivity: template.productivity + Math.floor(Math.random() * 4) - 2,
+    loyalty: template.loyalty + Math.floor(Math.random() * 10) - 5,
+    hiredDay: state.player.day,
+  };
+
+  state.corporate.team.push(member);
+
+  // 降低现有团队士气
+  for (const m of state.corporate.team) {
+    if (m !== member) m.loyalty = Math.max(0, m.loyalty - 3);
+  }
+
+  StateManager.addMessage(`👥 招聘了 ${member.name}（${member.role}）加入团队！`, 'success');
+  return true;
+}
+
+/** 解雇团队成员 */
+function fireTeamMember(index) {
+  const state = StateManager.getState();
+  if (index < 0 || index >= state.corporate.team.length) return false;
+
+  const member = state.corporate.team[index];
+  state.corporate.team.splice(index, 1);
+
+  // 团队士气影响
+  for (const m of state.corporate.team) {
+    m.loyalty = Math.max(0, m.loyalty - 5);
+  }
+  state.player.corporate.popularity = Math.max(0, state.player.corporate.popularity - 5);
+
+  StateManager.addMessage(`👋 ${member.name} 离开了团队。`, 'warning');
+  return true;
+}
+
+/** 计算团队产出系数 */
+function getTeamProductivity(state) {
+  if (state.corporate.team.length === 0) return 1.0;
+
+  const totalProductivity = state.corporate.team.reduce((s, m) => s + Math.max(1, m.productivity), 0);
+  const avgLoyalty = state.corporate.team.reduce((s, m) => s + Math.max(1, m.loyalty), 0) / state.corporate.team.length;
+  const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
+
+  return (totalProductivity / state.corporate.team.length) * (avgLoyalty / 100) * sizeBonus;
+}

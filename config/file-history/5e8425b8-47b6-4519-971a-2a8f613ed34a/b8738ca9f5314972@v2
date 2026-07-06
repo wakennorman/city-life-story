@@ -1,0 +1,153 @@
+# 城市浮生记 (City Life Story) — 开发文档
+
+> 最后更新: 2026-06-16
+
+## 项目概述
+
+一款融合《北京浮生记》《大多数》《互联网大厂模拟器》玩法的综合性文字模拟经营网页游戏。玩家从城中村一无所有开始，通过废品回收、打工、倒买倒卖等方式在城市生存，最终进入互联网职场，从P5晋升到P10实现财务自由。
+
+**技术栈**: 纯 HTML5 + CSS + Vanilla JS（零框架依赖），localStorage 存档，模块化开发 → 构建内联为单文件部署。
+
+## 快速开始
+
+```bash
+# 开发模式 — 直接打开 src/index.html 即可
+# 构建生产版本
+python build.py
+# 输出: dist/index.html (单文件，可直接部署)
+```
+
+## 文件结构
+
+```
+src/
+  index.html              # 开发外壳（HTML结构 + 外部JS/CSS引用）
+  css/
+    style.css              # 全局样式（布局、组件、主题、响应式）
+  js/
+    main.js                # 主入口：初始化、行动列表、时间推进、模态框
+    core/
+      state.js             # GameState — 唯一状态源 (SSOT)，Proxy 变更追踪
+      save.js              # localStorage 多槽位存档 (5手动+1自动)
+      events.js            # 随机事件引擎（街头/职场分支 + 选项模态框）
+    data/
+      locations.js         # 11个地点 + 旅行图
+      jobs.js              # 18种街头工作
+      goods.js             # 13种交易商品
+      items.js             # 10种装备/道具
+      news.js              # 18条随机新闻（价格/工作/个人/政策影响）
+      skills.js            # 8种可考取证书
+      npcs.js              # 6个NPC（含好感度系统）
+      corp.js              # 职场数据（6职级 + 5公司 + 9种职场行动 + 5种团队成员）
+    phase1/
+      trade.js             # 买卖交易 + 价格波动 + 批发进货
+      needs.js             # 需求衰减 + 情绪状态 + 伤病系统
+      actions_extra.js     # 扩展行动库（30+种额外行动）
+    phase2/
+      corp_ops.js          # 职场行动执行 + 季度循环 + 阶段转换
+      perf.js              # 绩效考核 (加权评分+同行对比+评级)
+      promo.js             # 晋升判定 (P5→P10完整逻辑)
+      team.js              # 团队管理 (招聘/解雇/产出系数)
+      stock.js             # 股票交易 (8只多行业股票+K线+新闻)
+    ui/
+      render.js            # 主渲染调度 + 6个Tab渲染 + 地图 + 交易UI
+      corp_ui.js           # 职场专用UI + 胜败判定
+```
+
+## 核心架构
+
+### 状态管理 (SSOT)
+
+所有游戏数据集中在 `GameStateManager` 单例中，通过 `getState()` / `update(path, value)` 读写。使用脏标记系统驱动按需渲染，避免不必要的 DOM 操作。
+
+```
+玩家属性(4维街头+7维职场) → 需求(5项) → 状态(派生) → 经济 → 技能 → 物品 → 关系
+```
+
+### 游戏循环
+
+**街头阶段** — 上午/下午/晚上 3时段 → 每日结算 → 需求衰减 → 伤病 → 利息 → 随机事件
+
+**职场阶段** — 每季度N次行动(P5→3次, P10→5次) → 季末绩效 → Q3晋升答辩 → 年年龄增长
+
+### 关键系统
+
+| 系统 | 文件 | 状态 |
+|------|------|------|
+| 18种街头工作 | data/jobs.js, main.js | ✅ 完成 |
+| 交易/套利 | phase1/trade.js | ✅ 完成 |
+| 随机遭遇事件 | core/events.js (16个事件) | ✅ 完成 |
+| 需求+情绪 | phase1/needs.js | ✅ 完成 |
+| 技能+证书 | data/skills.js | ✅ 完成 |
+| NPC好感度 | data/npcs.js | ✅ 完成 |
+| 住所/仓库 | main.js getAvailableActions() | ✅ 完成 |
+| 银行/保险/余额宝 | main.js + actions_extra.js | ✅ 完成 |
+| 职场行动(9种) | data/corp.js + phase2/corp_ops.js | ✅ 完成 |
+| 绩效考核 | phase2/perf.js | ✅ 完成 |
+| 晋升引擎 | phase2/promo.js | ✅ 完成 |
+| 团队管理 | phase2/team.js | ✅ 完成 |
+| 股票交易 | phase2/stock.js | ✅ 完成 |
+| 存档系统(6槽位) | core/save.js | ✅ 完成 |
+| 构建脚本 | build.py | ✅ 完成 |
+| 新手引导 | — | ❌ 未实现 |
+| 音效/音乐 | — | ❌ MVP外 |
+| 移动端深度适配 | style.css 部分 | ⚠️ 基础适配 |
+
+## 当前实现进度
+
+| PLAN 阶段 | 描述 | 状态 |
+|-----------|------|------|
+| Phase 0 | 基础骨架 | ✅ 100% |
+| Phase 1 | 街头生存核心 | ✅ 95% |
+| Phase 2 | 街头生活丰富 | ✅ 90% |
+| Phase 3 | 职场过渡 | ✅ 100% |
+| Phase 4 | 职场生涯 | ✅ 90% |
+| Phase 5 | 胜负判定 | ✅ 95% |
+| Phase 6 | 移动端+打包 | ✅ 80% |
+
+## 已知问题
+
+### Bugs
+- [x] ~~`endDay()` 中的 HOUSING_TIERS 与 `getAvailableActions()` 中重复定义~~ → 已提取到 data/items.js
+- [x] ~~股票市场数据仅在打开交易面板时初始化~~ → 在 enterCorporatePhase + endQuarter 中初始化
+- [x] ~~职场事件库偏少（仅4个）~~ → 新增4个职场事件(PPT/事故/年会/导师)
+- [ ] `state._pendingEvent` 清理时机偶有遗漏
+- [ ] 部分工作收入完全依赖 RNG，缺少技能加权
+
+### 设计改进项
+- [ ] 街头初期（前30天）经济可微调收入/支出比例
+- [ ] 缺少阶段2到阶段1的"降级"机制（被开除后回到街头？）
+- [ ] 移动端地图操作困难，地点节点太小
+
+### 代码质量
+- [x] ~~HOUSING_TIERS 常量应在 data 层统一定义~~ → 已迁移到 data/items.js
+- [ ] `main.js` 过大 (~1750行)，模态框逻辑可提取为独立文件
+- [ ] 缺少错误边界处理（data文件加载失败等）
+
+## 数据平衡参考
+
+- 初期日收入: ¥45-130（废品回收/苦力）
+- 中期单次批发利润: ¥100-500
+- 职场 P5 月薪: ¥15,000（季度 ¥45,000）
+- P10 月薪: ¥180,000（季度 ¥540,000）
+- 胜利条件: P10 或 ¥20,000,000
+- 初始债务: ¥5,500（日息 0.3% → 约 ¥16.5/天）
+
+## 开发约定
+
+1. **状态修改** 必须通过 `StateManager.update()` 或直接操作 `getState()` 返回的引用
+2. **新行动** 添加到 `getAvailableActions()` 或 `actions_extra.js` 的 `addStreetExtras()`
+3. **新数据** 放入 `src/js/data/` 对应文件
+4. **UI 渲染** 在 `render.js` 中添加对应函数
+5. **修改后** 更新本 DEVELOPEMENT.md 的变更记录
+
+## 变更记录
+
+| 日期 | 变更内容 |
+|------|---------|
+| 2026-06-16 | 创建开发文档，审计全部代码，修复HOUSING_TIERS重复/events.js bare state/stock init/pay multiplier等bug |
+| 2026-06-16 | 新增4个职场随机事件(紧急PPT/线上事故/公司年会/新人导师)，共8个职场事件 |
+| 2026-06-16 | 新增帮助系统(❓帮助按钮 + 完整游戏指南弹窗) |
+| 2026-06-16 | 工作收入现在正确应用新闻事件倍率和情绪修正 |
+| 2026-06-16 | 股票市场初始化移至 enterCorporatePhase + endQuarter 延迟初始化 |
+| 2026-06-16 | 新增 stat-bar flash 动画 CSS，HOUSING_TIERS 常量化到 data/items.js |

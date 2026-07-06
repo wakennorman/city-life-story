@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""Proxy: converts x-api-key (Claude Code) -> Bearer (LongCat), supports SSE streaming."""
+
+import http.server
+import http.client
+import json
+import sys
+import signal
+import urllib.parse
+
+TARGET_HOST = "api.longcat.chat"
+TARGET_PATH = "/anthropic"
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8087
+
+
+class ProxyHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "proxy running", "target": f"https://{TARGET_HOST}{TARGET_PATH}"}).encode())
+
+    def do_POST(self):
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+
+        # Get API key from x-api-key header (Claude Code default)
+        api_key = self.headers.get("x-api-key", "")
+        if not api_key:
+            self.send_error(401, "Missing x-api-key header")
+            return
+
+        # Determine if this is a streaming request
+        req_body = json.loads(body)
+        is_stream = req_body.get("stream", False)
+
+        # Forward to LongCat
+        conn = http.client.HTTPSConnection(TARGET_HOST)
+        conn.request(
+            "POST",
+            TARGET_PATH + self.path,
+            body=body,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "anthropic-version": self.headers.get("anthropic-version", "2023-06-01"),
+            },
+        )
+        resp = conn.getresponse()
+
+        # Forward status and headers
+        self.send_response(resp.status)
+        for key, val in resp.getheaders():
+            key_lower = key.lower()
+            if key_lower not in ("transfer-encoding", "connection", "content-encoding", "content-length"):
+                self.send_header(key, val)
+        if is_stream:
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Transfer-Encoding", "chunked")
+        self.end_headers()
+
+        # Stream the response chunk by chunk
+        try:
+            while True:
+                chunk = resp.read(4096)
+                if not chunk:
+                    break
+                if is_stream:
+                    # For SSE: send as chunked transfer
+                    self.wfile.write(f"{len(chunk):x}\r\n".encode())
+                    self.wfile.write(chunk)
+                    self.wfile.write(b"\r\n")
+                    self.wfile.flush()
+                else:
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+            if is_stream:
+                self.wfile.write(b"0\r\n\r\n")
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # Client disconnected
+        finally:
+            conn.close()
+
+    def log_message(self, format, *args):
+        pass  # Quiet
+
+
+server = http.server.HTTPServer(("127.0.0.1", PORT), ProxyHandler)
+print(f"Proxy running on http://127.0.0.1:{PORT} -> https://{TARGET_HOST}{TARGET_PATH}")
+signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
+server.serve_forever()

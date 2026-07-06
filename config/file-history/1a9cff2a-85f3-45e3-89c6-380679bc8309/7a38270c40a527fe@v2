@@ -1,0 +1,975 @@
+/**
+ * 主渲染调度器
+ *
+ * 管理整个 UI 的渲染。使用脏标记 (dirty flag) 按需更新 DOM。
+ * 渲染函数命名: render<Section>()
+ */
+
+// 当前激活的 Tab
+let currentTab = 'actions';
+
+// ====== 主渲染入口 ======
+function renderAll() {
+  const state = StateManager.getState();
+
+  renderHeader(state);
+  renderSidebar(state);
+  renderTabBar(state);
+  renderCurrentTab(state);
+  renderMessageLog(state);
+
+  StateManager.cleanAllDirty();
+}
+
+// ====== Header 渲染 ======
+function renderHeader(state) {
+  const p = state.player;
+  const r = state.resources;
+  const phaseLabel = p.phase === 'corporate' ? '🏢 职场' : '🏘️ 街头';
+
+  document.getElementById('header-day').textContent = p.day;
+  document.getElementById('header-age').textContent = p.age;
+  document.getElementById('header-phase').textContent = phaseLabel;
+  document.getElementById('header-cash').textContent = '¥' + r.cash.toLocaleString();
+}
+
+// ====== Sidebar 渲染 ======
+function renderSidebar(state) {
+  const p = state.player;
+
+  if (p.phase === 'street') {
+    renderStreetStats(state);
+  } else {
+    renderCorporateStats(state);
+  }
+
+  renderNeedsBars(state);
+  renderLocation(state);
+}
+
+function renderStreetStats(state) {
+  const p = state.player;
+  setStatBar('stat-physique', p.physique, 'physique');
+  setStatBar('stat-intelligence', p.intelligence, 'intelligence');
+  setStatBar('stat-agility', p.agility, 'agility');
+  setStatBar('stat-mental', p.mental, 'mental-bar');
+}
+
+function renderCorporateStats(state) {
+  const c = state.player.corporate;
+  // 切换侧边栏区域显示
+  document.getElementById('street-stats-section').style.display = 'none';
+  document.getElementById('corp-stats-section').style.display = 'block';
+
+  setStatBar('stat-hair', c.hair, 'hair');
+  setStatBar('stat-dignity', c.dignity, 'dignity');
+  setStatBar('stat-kpi', c.kpi, 'kpi');
+  setStatBar('stat-ability', c.ability, 'intelligence');
+  setStatBar('stat-upward', c.upwardMgmt, 'physique');
+  setStatBar('stat-popularity', c.popularity, 'happiness');
+  setStatBar('stat-risk', c.risk, 'risk');
+}
+
+function renderNeedsBars(state) {
+  const n = state.needs;
+  const s = state.status;
+  setStatBar('stat-hunger', n.hunger, 'hunger');
+  setStatBar('stat-fatigue', n.fatigue, 'fatigue');
+  setStatBar('stat-hygiene', n.hygiene, 'hygiene');
+  setStatBar('stat-happiness', n.happiness, 'happiness');
+  setStatBar('stat-health', s.health, 'health');
+  setStatBar('stat-fame', s.fame, 'fame');
+}
+
+function renderLocation(state) {
+  const locKey = state.trade.currentLocation;
+  const loc = getLocation(locKey);
+  if (loc) {
+    document.getElementById('location-name').textContent = loc.name;
+    document.getElementById('location-desc').textContent = loc.desc;
+  }
+
+  // 服务标签
+  const servicesEl = document.getElementById('location-services');
+  if (servicesEl) {
+    const badges = getLocationServiceBadges(locKey);
+    servicesEl.innerHTML = badges.map(b =>
+      `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`
+    ).join('');
+  }
+
+  // 附近可前往地点（仅街头阶段显示）
+  const nearbySection = document.getElementById('nearby-section');
+  if (nearbySection) {
+    nearbySection.style.display = state.player.phase === 'street' ? '' : 'none';
+  }
+  const nearbyEl = document.getElementById('nearby-locations');
+  if (nearbyEl && state.player.phase === 'street') {
+    const reachable = getReachableLocations(locKey);
+    if (reachable.length > 0) {
+      nearbyEl.innerHTML = reachable.map(destKey => {
+        const dest = getLocation(destKey);
+        if (!dest) return '';
+        const badges = getLocationServiceBadges(destKey);
+        const badgeStr = badges.length > 0 ? badges.slice(0,2).map(b => `${b.icon}`).join(' ') : '';
+        return `
+          <div class="nearby-loc-item" data-dest="${destKey}"
+               style="padding:6px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;"
+               onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';"
+               onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';">
+            <span>🚶 <strong>${dest.name}</strong> <span style="color:var(--text-muted);font-size:10px;">${dest.type==='commercial'?'商业':dest.type==='industrial'?'工业':dest.type==='residential'?'居住':dest.type==='service'?'服务':dest.type==='education'?'教育':dest.type==='corporate'?'职场':dest.type==='recreation'?'娱乐':dest.type==='institutional'?'机构':''}</span></span>
+            <span style="font-size:10px;">${badgeStr}</span>
+          </div>`;
+      }).join('');
+      // 绑定点击
+      setTimeout(() => {
+        nearbyEl.querySelectorAll('.nearby-loc-item').forEach(item => {
+          item.addEventListener('click', () => {
+            StateManager.update('trade.currentLocation', item.dataset.dest);
+            const dest = getLocation(item.dataset.dest);
+            StateManager.addMessage(`🚶 你来到了${dest ? dest.name : item.dataset.dest}。`, 'info');
+            renderAll();
+          });
+        });
+      }, 0);
+    } else {
+      nearbyEl.innerHTML = '<span style="font-size:11px;color:var(--text-muted);">没有可通行路线</span>';
+    }
+  }
+  const HOUSING_NAMES = ['🌃 露宿街头', '🛏️ 合租床位', '🚪 单间', '🏠 一居室'];
+  const houseName = HOUSING_NAMES[state.housing?.tier || 0] || HOUSING_NAMES[0];
+  const houseEl = document.getElementById('housing-info');
+  if (houseEl) {
+    const totalCap = state.inventory.capacity;
+    const itemCount = (state.inventory.items || []).reduce((s, i) => s + i.qty, 0);
+    const HOUSING_RENTS = [0, 12, 25, 50];
+    const curRent = HOUSING_RENTS[state.housing?.tier || 0] || 0;
+    houseEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:12px;">${houseName}</span>
+        ${curRent > 0 ? `<span style="font-size:10px;color:var(--warning);">日租¥${curRent}</span>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);">
+        🎒 背包 ${itemCount}/${totalCap}
+        ${state.housing?.storageRented ? ' 📦 已租仓库' : ''}
+      </div>
+      ${state.housing?.tier < 3 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">💡 去<strong style="color:var(--accent);">城中村</strong>可升级住所</div>` : ''}
+    `;
+  }
+}
+
+/** 获取地点服务标签 */
+function getLocationServiceBadges(locKey) {
+  const badges = [];
+  const loc = getLocation(locKey);
+  if (!loc) return badges;
+
+  // 可租房
+  if (locKey === 'slum') {
+    badges.push({ icon: '🏠', label: '租房', bg: 'rgba(46,204,113,0.1)', color: '#2ecc71' });
+  }
+  // 可租仓库 & 批发
+  if (locKey === 'wholesaleMarket') {
+    badges.push({ icon: '📦', label: '仓库+批发', bg: 'rgba(243,156,18,0.1)', color: '#f39c12' });
+  }
+  // 医院
+  if (locKey === 'hospital') {
+    badges.push({ icon: '🏥', label: '看病', bg: 'rgba(231,76,60,0.1)', color: '#e74c3c' });
+  }
+  // 银行
+  if (locKey === 'bank') {
+    badges.push({ icon: '🏦', label: '存取款', bg: 'rgba(52,152,219,0.1)', color: '#3498db' });
+  }
+  // 培训
+  if (locKey === 'trainingCenter') {
+    badges.push({ icon: '📚', label: '学习考证', bg: 'rgba(155,89,182,0.1)', color: '#9b59b6' });
+  }
+  // 公园
+  if (locKey === 'park') {
+    badges.push({ icon: '🌳', label: '放松', bg: 'rgba(46,204,113,0.1)', color: '#2ecc71' });
+  }
+  // 科技园
+  if (locKey === 'techPark') {
+    badges.push({ icon: '💼', label: '应聘', bg: 'rgba(0,180,216,0.1)', color: '#00b4d8' });
+  }
+  // 商业区
+  if (locKey === 'commercialDist') {
+    badges.push({ icon: '🛍️', label: '购物+摆摊', bg: 'rgba(0,180,216,0.1)', color: '#00b4d8' });
+  }
+  // 工作数量
+  if (loc.jobs && loc.jobs.length > 0) {
+    badges.push({ icon: '💼', label: loc.jobs.length + '种工作', bg: 'rgba(243,156,18,0.1)', color: '#f39c12' });
+  }
+
+  return badges;
+}
+
+// ====== Tab Bar ======
+function renderTabBar(state) {
+  const tabs = document.querySelectorAll('#tab-bar .tab-btn');
+  tabs.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === currentTab);
+
+    // 某些 Tab 在特定阶段隐藏
+    if (btn.dataset.tab === 'corp' && state.player.phase !== 'corporate') {
+      btn.style.display = 'none';
+    } else if (btn.dataset.tab === 'trade' && state.player.phase !== 'street') {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+    }
+  });
+}
+
+function switchTab(tabName) {
+  currentTab = tabName;
+  renderAll();
+}
+
+// ====== Tab Content 渲染 ======
+function renderCurrentTab(state) {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '';
+
+  // 时间槽指示器
+  renderTimeSlot(state, area);
+
+  // 活跃新闻
+  renderActiveNews(state, area);
+
+  switch (currentTab) {
+    case 'actions':
+      renderActionsTab(state, area);
+      break;
+    case 'map':
+      renderMapTab(state, area);
+      break;
+    case 'trade':
+      renderTradeTab(state, area);
+      break;
+    case 'inventory':
+      renderInventoryTab(state, area);
+      break;
+    case 'skills':
+      renderSkillsTab(state, area);
+      break;
+    case 'corp':
+      renderCorpTab(state, area);
+      break;
+    default:
+      area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
+  }
+}
+
+function renderTimeSlot(state, parent) {
+  const slotNames = { morning: '☀️ 上午', afternoon: '🌤️ 下午', evening: '🌙 晚上' };
+  const slot = state.player.timeSlot;
+  const div = document.createElement('div');
+  div.id = 'time-slot-indicator';
+  div.innerHTML = `
+    <span>📅 第 <strong>${state.player.day}</strong> 天</span>
+    <span>|</span>
+    <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">
+      ${state.player.phase === 'corporate' ? `Q${state.player.corpQuarter}` : ''}
+    </span>
+  `;
+  parent.appendChild(div);
+}
+
+function renderActiveNews(state, parent) {
+  if (state.activeNews && state.activeNews.length > 0) {
+    for (const news of state.activeNews) {
+      const banner = document.createElement('div');
+      banner.className = 'news-banner';
+      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+      parent.appendChild(banner);
+    }
+  }
+}
+
+// ====== Actions Tab ======
+function renderActionsTab(state, parent) {
+  const actions = getAvailableActions(state);
+
+  // 分离出行和其他行动
+  const travelActions = actions.filter(a => a.id.startsWith('travel_'));
+  const housingActions = actions.filter(a => a.id.startsWith('housing_') || a.id.startsWith('storage_'));
+  const otherActions = actions.filter(a => !a.id.startsWith('travel_') && !a.id.startsWith('housing_') && !a.id.startsWith('storage_'));
+
+  // === 🌍 出行区域（置顶，醒目） ===
+  if (travelActions.length > 0) {
+    const travelSection = document.createElement('div');
+    travelSection.style.cssText = 'margin-bottom:16px;';
+    travelSection.innerHTML = '<h3 style="color:var(--accent);margin-bottom:8px;font-size:14px;">🌍 出行 — 点击前往其他地点</h3>';
+
+    const travelGrid = document.createElement('div');
+    travelGrid.className = 'action-cards';
+    travelGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+
+    for (const action of travelActions) {
+      const destKey = action.id.replace('travel_', '');
+      const dest = typeof getLocation === 'function' ? getLocation(destKey) : null;
+      const jobCount = dest ? (dest.jobs || []).length : 0;
+
+      // 服务标签
+      const badges = typeof getLocationServiceBadges === 'function' ? getLocationServiceBadges(destKey) : [];
+      const badgeStr = badges.length > 0 ? badges.map(b =>
+        `<span style="font-size:9px;padding:2px 5px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`
+      ).join(' ') : '';
+
+      // 检查该地点的最佳买卖机会
+      let tradeHint = '';
+      if (typeof GOODS !== 'undefined' && state.trade.goodsPrices[destKey]) {
+        const opportunities = [];
+        for (const good of GOODS) {
+          const destPrice = state.trade.goodsPrices[destKey]?.[good.id];
+          const curPrice = state.trade.goodsPrices[state.trade.currentLocation]?.[good.id];
+          if (destPrice && curPrice && destPrice > curPrice * 1.3) {
+            opportunities.push(`${good.name}📈`);
+          }
+        }
+        if (opportunities.length > 0) tradeHint = `<br>🤑 可卖: ${opportunities.slice(0,2).join(' ')}`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'action-card';
+      card.style.borderColor = 'var(--accent)';
+      card.style.background = 'linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.05))';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="card-title" style="font-size:15px;color:var(--accent);">${dest ? dest.name : destKey}</div>
+          <span style="font-size:10px;color:var(--text-muted);">🚶 前往</span>
+        </div>
+        <div class="card-desc" style="font-size:11px;margin:4px 0;">
+          ${dest ? dest.desc : ''}
+          ${jobCount > 0 ? `<br>💼 ${jobCount}种工作机会` : ''}
+          ${tradeHint}
+        </div>
+        ${badgeStr ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">${badgeStr}</div>` : ''}
+      `;
+      card.addEventListener('click', () => {
+        action.handler();
+        renderAll();
+      });
+      travelGrid.appendChild(card);
+    }
+    travelSection.appendChild(travelGrid);
+    parent.appendChild(travelSection);
+  }
+
+  // === 🏠 住所/仓储区域（醒目） ===
+  if (housingActions.length > 0) {
+    const houseSection = document.createElement('div');
+    houseSection.style.cssText = 'margin-bottom:16px;padding:12px;background:rgba(243,156,18,0.05);border:1px solid rgba(243,156,18,0.2);border-radius:var(--radius-md);';
+    houseSection.innerHTML = '<h3 style="color:var(--warning);margin-bottom:8px;font-size:14px;">🏠 住所 & 仓储 — 提升生活质量</h3>';
+    const houseGrid = document.createElement('div');
+    houseGrid.className = 'action-cards';
+    houseGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+    for (const action of housingActions) {
+      houseGrid.appendChild(createActionCard(action, state));
+    }
+    houseSection.appendChild(houseGrid);
+    parent.appendChild(houseSection);
+  }
+
+  // === 其他行动 ===
+  if (otherActions.length > 0) {
+    const otherLabel = document.createElement('h3');
+    otherLabel.style.cssText = 'color:var(--text-muted);margin-bottom:6px;font-size:13px;';
+    otherLabel.textContent = '⚡ 行动';
+    parent.appendChild(otherLabel);
+
+    const cards = document.createElement('div');
+    cards.className = 'action-cards';
+    for (const action of otherActions) {
+      cards.appendChild(createActionCard(action, state));
+    }
+    parent.appendChild(cards);
+  }
+}
+
+function createActionCard(action, state) {
+  const card = document.createElement('div');
+  card.className = 'action-card';
+  if (action.disabled) {
+    card.classList.add('disabled');
+  }
+
+  card.innerHTML = `
+    <div class="card-icon">${action.icon}</div>
+    <div class="card-title">${action.name}</div>
+    <div class="card-desc">${action.desc}</div>
+    <div class="card-meta">
+      ${action.payEstimate ? `<span class="pay-estimate">💰 ¥${action.payEstimate}</span>` : ''}
+      ${action.costEstimate ? `<span class="cost-estimate">💸 ¥${action.costEstimate}</span>` : ''}
+      ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ''}
+    </div>
+  `;
+
+  if (!action.disabled) {
+    card.addEventListener('click', () => {
+      if (action.handler) {
+        action.handler();
+        renderAll();
+      }
+    });
+  }
+
+  return card;
+}
+
+// ====== Map Tab ======
+function renderMapTab(state, parent) {
+  const locKey = state.trade.currentLocation;
+  const loc = getLocation(locKey);
+
+  const container = document.createElement('div');
+  container.style.cssText = 'display:flex;flex-direction:column;gap:16px;';
+
+  // 标题
+  const title = document.createElement('div');
+  title.innerHTML = `
+    <h3 style="color:var(--text-muted);margin-bottom:4px;">🗺️ 城市地图</h3>
+    <p style="font-size:12px;color:var(--text-secondary);">
+      当前在 <strong style="color:var(--accent);">${loc ? loc.name : '未知'}</strong> — 点击地点直接前往（仅显示已探索的相邻地点可到达的）
+    </p>
+  `;
+  container.appendChild(title);
+
+  // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
+  const mapWrap = document.createElement('div');
+  mapWrap.className = 'city-map';
+  mapWrap.style.cssText = 'position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;min-height:500px;overflow:auto;';
+
+  // 地图网格（用绝对定位模拟地理位置）
+  const mapGrid = document.createElement('div');
+  mapGrid.style.cssText = 'position:relative;width:100%;min-height:460px;';
+
+  // 地点坐标映射（百分比定位）
+  const positions = {
+    techPark:         { x: 65, y: 5 },
+    commercialDist:   { x: 58, y: 22 },
+    wholesaleMarket:  { x: 28, y: 18 },
+    construction:     { x: 70, y: 38 },
+    factoryZone:      { x: 35, y: 40 },
+    hospital:         { x: 78, y: 30 },
+    slum:             { x: 30, y: 55 },
+    bank:             { x: 12, y: 50 },
+    park:             { x: 50, y: 62 },
+    school:           { x: 42, y: 72 },
+    trainingCenter:   { x: 55, y: 85 },
+  };
+
+  // SVG连线
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+  mapGrid.appendChild(svg);
+
+  // 延迟绘制连线（需要等节点渲染后获取位置）
+  const drawConnections = () => {
+    svg.innerHTML = '';
+    const mapRect = mapGrid.getBoundingClientRect();
+    for (const [from, toList] of Object.entries(TRAVEL_GRAPH)) {
+      const fromEl = mapGrid.querySelector(`[data-map-loc="${from}"]`);
+      if (!fromEl) continue;
+      for (const to of toList) {
+        const toEl = mapGrid.querySelector(`[data-map-loc="${to}"]`);
+        if (!toEl) continue;
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+        const x1 = fromRect.left + fromRect.width/2 - mapRect.left;
+        const y1 = fromRect.top + fromRect.height/2 - mapRect.top;
+        const x2 = toRect.left + toRect.width/2 - mapRect.left;
+        const y2 = toRect.top + toRect.height/2 - mapRect.top;
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', 'rgba(0,180,216,0.2)');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '4,3');
+        svg.appendChild(line);
+      }
+    }
+  };
+
+  // 检查从当前位置可达的地点
+  const reachable = new Set(getReachableLocations(locKey));
+  reachable.add(locKey); // 当前位置也算"可达"（高亮）
+
+  // 放置节点
+  for (const [key, pos] of Object.entries(positions)) {
+    const mapLoc = getLocation(key);
+    if (!mapLoc) continue;
+    const badges = getLocationServiceBadges(key);
+    const badgeStr = badges.length > 0 ? badges.map(b => `<span style="font-size:9px;padding:1px 4px;border-radius:2px;background:${b.bg};color:${b.color};">${b.icon}${b.label}</span>`).join(' ') : '';
+    const isCurrent = key === locKey;
+    const isReachable = reachable.has(key);
+    const canTravel = isReachable && !isCurrent;
+
+    const node = document.createElement('div');
+    node.className = 'map-node';
+    node.dataset.mapLoc = key;
+    node.style.cssText = `
+      position:absolute; left:${pos.x}%; top:${pos.y}%;
+      transform:translate(-50%,-50%);
+      padding:8px 12px;
+      background:${isCurrent ? 'linear-gradient(135deg, rgba(0,180,216,0.3), var(--bg-card))' : 'var(--bg-card)'};
+      border:2px solid ${isCurrent ? 'var(--accent)' : isReachable ? 'var(--border-light)' : 'rgba(255,255,255,0.06)'};
+      border-radius:8px;
+      cursor:${canTravel ? 'pointer' : isCurrent ? 'default' : 'not-allowed'};
+      z-index:2;
+      transition:all 0.2s;
+      opacity:${isReachable ? 1 : 0.35};
+      min-width:80px;
+      text-align:center;
+      box-shadow:${isCurrent ? '0 0 16px rgba(0,180,216,0.3)' : 'none'};
+    `;
+    node.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:${isCurrent ? 'var(--accent)' : 'var(--text-primary)'};margin-bottom:2px;">
+        ${isCurrent ? '📍 ' : ''}${mapLoc.name}
+      </div>
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type==='commercial'?'🛒商业':mapLoc.type==='industrial'?'🏭工业':mapLoc.type==='residential'?'🏘️居住':mapLoc.type==='service'?'🏥服务':mapLoc.type==='education'?'📚教育':mapLoc.type==='corporate'?'🏢职场':mapLoc.type==='recreation'?'🌳休闲':mapLoc.type==='institutional'?'🏫机构':''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;">${badgeStr}</div>
+      ${canTravel ? '<div style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ''}
+      ${!isReachable && !isCurrent ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ''}
+    `;
+
+    if (canTravel) {
+      node.addEventListener('mouseenter', () => {
+        node.style.borderColor = 'var(--accent)';
+        node.style.boxShadow = '0 0 12px rgba(0,180,216,0.3)';
+        node.style.transform = 'translate(-50%,-50%) scale(1.05)';
+      });
+      node.addEventListener('mouseleave', () => {
+        node.style.borderColor = 'var(--border-light)';
+        node.style.boxShadow = 'none';
+        node.style.transform = 'translate(-50%,-50%) scale(1)';
+      });
+      node.addEventListener('click', () => {
+        StateManager.update('trade.currentLocation', key);
+        const dest = getLocation(key);
+        StateManager.addMessage(`🚶 你来到了${dest ? dest.name : key}。`, 'info');
+        renderAll();
+      });
+    }
+
+    mapGrid.appendChild(node);
+  }
+
+  mapWrap.appendChild(mapGrid);
+  container.appendChild(mapWrap);
+
+  // 图例
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);padding:8px 0;';
+  legend.innerHTML = `
+    <span>🟦 蓝框 = 当前位置</span>
+    <span>⬜ 亮框 = 可前往</span>
+    <span>🔒 暗色 = 未探索</span>
+    <span>🏠 绿标 = 可租房</span>
+    <span>📦 橙标 = 仓库/批发</span>
+    <span>🏥 红标 = 医院</span>
+  `;
+  container.appendChild(legend);
+
+  // 地点速查表
+  const quickTable = document.createElement('div');
+  quickTable.innerHTML = '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 地点速查表</h4>';
+  const table = document.createElement('div');
+  table.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;';
+  for (const [key, mapLoc] of Object.entries(LOCATIONS)) {
+    const badges = getLocationServiceBadges(key);
+    const badgeStr = badges.length > 0 ? badges.map(b => `<span style="font-size:9px;padding:1px 4px;border-radius:2px;background:${b.bg};color:${b.color};">${b.icon}${b.label}</span>`).join(' ') : '';
+    const canReach = reachable.has(key);
+    const isCur = key === locKey;
+    table.innerHTML += `
+      <div style="padding:8px 10px;background:var(--bg-card);border:1px solid ${isCur?'var(--accent)':canReach?'var(--border)':'rgba(255,255,255,0.04)'};border-radius:6px;font-size:11px;opacity:${canReach?1:0.4};">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:${isCur?'var(--accent)':'var(--text-primary)'};">${isCur?'📍 ':''}${mapLoc.name}</strong>
+          <span style="font-size:9px;color:var(--text-muted);">${mapLoc.type==='commercial'?'商业':mapLoc.type==='industrial'?'工业':mapLoc.type==='residential'?'居住':mapLoc.type==='service'?'服务':mapLoc.type==='education'?'教育':mapLoc.type==='corporate'?'职场':mapLoc.type==='recreation'?'休闲':mapLoc.type==='institutional'?'机构':''}</span>
+        </div>
+        <div style="margin-top:2px;color:var(--text-secondary);font-size:10px;">${mapLoc.desc}</div>
+        ${badgeStr ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;">${badgeStr}</div>` : ''}
+      </div>`;
+  }
+  quickTable.appendChild(table);
+  container.appendChild(quickTable);
+
+  parent.appendChild(container);
+
+  // 延迟绘制 SVG 连线
+  setTimeout(drawConnections, 100);
+  // 再绘制一次确保
+  setTimeout(drawConnections, 500);
+}
+
+// ====== Trade Tab ======
+function renderTradeTab(state, parent) {
+  const locKey = state.trade.currentLocation;
+  const loc = getLocation(locKey);
+  const prices = state.trade.goodsPrices[locKey] || {};
+  const isWholesale = locKey === 'wholesaleMarket';
+  const goodsList = typeof GOODS !== 'undefined' ? GOODS : [];
+
+  // 标题区
+  const headerDiv = document.createElement('div');
+  headerDiv.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
+  headerDiv.innerHTML = `
+    <h3 style="color:var(--text-muted);margin:0;">
+      📦 ${loc ? loc.name : '当前地点'} — ${isWholesale ? '批发市场（进货价低）' : '零售市场'}
+    </h3>
+    <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+  `;
+  parent.appendChild(headerDiv);
+
+  if (goodsList.length === 0) {
+    parent.innerHTML += '<p style="color:var(--text-muted)">商品数据加载中...</p>';
+    return;
+  }
+
+  // 背包中的商品（方便快速卖出）
+  const ownedGoods = state.inventory.items || [];
+  if (ownedGoods.length > 0) {
+    const ownedDiv = document.createElement('div');
+    ownedDiv.style.marginBottom = '16px';
+    ownedDiv.innerHTML = '<h4 style="color:var(--text-muted);margin-bottom:8px;">🎒 背包中的商品（可卖出）</h4>';
+    const ownedGrid = document.createElement('div');
+    ownedGrid.className = 'action-cards';
+    ownedGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+
+    for (const item of ownedGoods) {
+      const good = getGoodById(item.id);
+      if (!good) continue;
+      const price = prices[good.id] || good.basePrice;
+      const profitInfo = item.avgBuyPrice
+        ? (price > item.avgBuyPrice
+            ? `<span style="color:var(--success)">📈 +¥${((price - item.avgBuyPrice) * item.qty).toFixed(1)}</span>`
+            : `<span style="color:var(--danger)">📉 -¥${((item.avgBuyPrice - price) * item.qty).toFixed(1)}</span>`)
+        : '';
+
+      const card = document.createElement('div');
+      card.className = 'action-card';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="card-title" style="margin:0;">${good.name}</div>
+          <span class="slot-tag">×${item.qty}</span>
+        </div>
+        <div class="card-desc" style="margin:4px 0;">
+          买入均价: ¥${(item.avgBuyPrice || '?')} | 当前价: ¥${price.toFixed(1)}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;">${profitInfo}</span>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm btn-danger sell-one-btn" data-good="${good.id}">卖1</button>
+            <button class="btn btn-sm btn-danger sell-all-btn" data-good="${good.id}">全卖</button>
+          </div>
+        </div>
+      `;
+      ownedGrid.appendChild(card);
+    }
+    ownedDiv.appendChild(ownedGrid);
+    parent.appendChild(ownedDiv);
+  }
+
+  // 市场价格表
+  const marketLabel = document.createElement('h4');
+  marketLabel.style.cssText = 'color:var(--text-muted);margin-bottom:8px;';
+  marketLabel.textContent = isWholesale ? '📋 批发商品（最低5件起批，批发价 = 零售价×0.7）' : '📋 市场商品';
+  parent.appendChild(marketLabel);
+
+  const grid = document.createElement('div');
+  grid.className = 'action-cards';
+  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+
+  for (const good of goodsList) {
+    const price = prices[good.id] || good.basePrice;
+    const wholesalePrice = isWholesale ? Math.round(price * 0.7 * 100) / 100 : null;
+
+    // 价格对比：最低价和最高价
+    const lowest = getLowestPrice(good.id);
+    const highest = getHighestPrice(good.id);
+    const isLowest = lowest.location === locKey;
+    const isHighest = highest.location === locKey;
+
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" style="margin:0;">${good.name}</div>
+        <span class="slot-tag">${good.category}</span>
+      </div>
+      <div class="card-desc" style="margin:4px 0;">
+        基准: ¥${good.basePrice}/${good.unit}
+        ${wholesalePrice ? `<br>批发价: <strong style="color:var(--success)">¥${wholesalePrice.toFixed(1)}</strong>/件 (零售 ¥${price.toFixed(1)})` : ''}
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
+        当前零售价: <strong style="color:${isLowest ? 'var(--success)' : isHighest ? 'var(--danger)' : 'var(--text-primary)'}">¥${price.toFixed(1)}</strong>
+        ${isLowest ? ' 🟢 全城最低' : ''}${isHighest ? ' 🔴 全城最高' : ''}
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
+        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
+        ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批发×10</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+  parent.appendChild(grid);
+
+  // 价格对比速查表
+  const compareDiv = document.createElement('div');
+  compareDiv.style.marginTop = '20px';
+  compareDiv.innerHTML = '<h4 style="color:var(--text-muted);margin-bottom:8px;">📍 各地价格对比</h4>';
+
+  const compareTable = document.createElement('div');
+  compareTable.style.cssText = 'overflow-x:auto;font-size:11px;';
+  let tableHtml = '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
+  for (const lk of Object.keys(LOCATIONS)) {
+    const l = LOCATIONS[lk];
+    tableHtml += `<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">${l.name.substring(0,2)}</th>`;
+  }
+  tableHtml += '</tr></thead><tbody>';
+
+  for (const good of goodsList) {
+    tableHtml += `<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">${good.name}</td>`;
+    for (const lk of Object.keys(LOCATIONS)) {
+      const p = (state.trade.goodsPrices[lk] || {})[good.id] || good.basePrice;
+      const isLow = getLowestPrice(good.id).location === lk;
+      const isHigh = getHighestPrice(good.id).location === lk;
+      const cellStyle = isLow ? 'color:var(--success);font-weight:bold;' : isHigh ? 'color:var(--danger);' : 'color:var(--text-secondary);';
+      tableHtml += `<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);${cellStyle}">${p.toFixed(1)}</td>`;
+    }
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table>';
+  compareTable.innerHTML = tableHtml;
+  compareDiv.appendChild(compareTable);
+  parent.appendChild(compareDiv);
+
+  // 绑定事件（延迟执行，等 DOM 插入完成）
+  setTimeout(() => {
+    // 购买按钮
+    parent.querySelectorAll('.buy-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const qty = parseInt(btn.dataset.qty) || 1;
+        if (typeof buyGood === 'function') {
+          buyGood(goodId, qty);
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
+      });
+    });
+
+    // 批发按钮
+    parent.querySelectorAll('.wholesale-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const qty = parseInt(btn.dataset.qty) || 10;
+        if (typeof buyWholesale === 'function') {
+          buyWholesale(goodId, qty);
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
+      });
+    });
+
+    // 卖出按钮（背包区）
+    parent.querySelectorAll('.sell-one-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        if (typeof sellGood === 'function') {
+          sellGood(goodId, 1);
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
+      });
+    });
+
+    parent.querySelectorAll('.sell-all-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const goodId = btn.dataset.good;
+        const item = StateManager.getState().inventory.items.find(i => i.id === goodId);
+        if (item && typeof sellGood === 'function') {
+          sellGood(goodId, item.qty);
+          renderCurrentTab(StateManager.getState(), parent.parentElement);
+          renderSidebar(StateManager.getState());
+          renderHeader(StateManager.getState());
+          renderMessageLog(StateManager.getState());
+        }
+      });
+    });
+  }, 0);
+}
+
+// ====== Inventory Tab ======
+function renderInventoryTab(state, parent) {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
+      <span style="font-size:11px;color:var(--text-muted)">
+        (${state.inventory.items.length}/${state.inventory.capacity})
+      </span>
+    </h3>
+  `;
+
+  const items = state.inventory.items;
+  if (items.length === 0) {
+    div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
+  } else {
+    const grid = document.createElement('div');
+    grid.className = 'inventory-grid';
+    for (const item of items) {
+      const def = typeof ITEMS !== 'undefined'
+        ? ITEMS.find(i => i.id === item.id)
+        : null;
+      const el = document.createElement('div');
+      el.className = 'inventory-item';
+      el.innerHTML = `
+        <div class="item-name">${def ? def.name : item.id}</div>
+        <div class="item-qty">数量: ${item.qty}</div>
+        ${def ? `<div class="item-effects">${describeItemEffects(def)}</div>` : ''}
+      `;
+      grid.appendChild(el);
+    }
+    div.appendChild(grid);
+  }
+
+  // 装备栏
+  const equip = state.inventory.equipment;
+  const equipDiv = document.createElement('div');
+  equipDiv.style.marginTop = '16px';
+  equipDiv.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:8px;">🛡️ 装备</h3>';
+  const slots = [
+    { key: 'head', name: '头部', icon: '⛑️' },
+    { key: 'body', name: '身体', icon: '👕' },
+    { key: 'feet', name: '脚部', icon: '👟' },
+    { key: 'hand', name: '手部', icon: '🧤' },
+    { key: 'accessory', name: '配件', icon: '📿' },
+  ];
+  const equipGrid = document.createElement('div');
+  equipGrid.className = 'action-cards';
+  equipGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(130px, 1fr))';
+  for (const slot of slots) {
+    const itemId = equip[slot.key];
+    const itemDef = itemId && typeof ITEMS !== 'undefined'
+      ? ITEMS.find(i => i.id === itemId)
+      : null;
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div style="font-size:11px;color:var(--text-muted)">${slot.icon} ${slot.name}</div>
+      <div style="font-size:12px;color:${itemDef ? 'var(--success)' : 'var(--text-muted)'}">
+        ${itemDef ? itemDef.name : '(空)'}
+      </div>
+    `;
+    equipGrid.appendChild(card);
+  }
+  equipDiv.appendChild(equipGrid);
+  div.appendChild(equipDiv);
+
+  parent.appendChild(div);
+}
+
+// ====== Skills Tab ======
+function renderSkillsTab(state, parent) {
+  const div = document.createElement('div');
+  div.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:12px;">📚 技能</h3>';
+
+  const grid = document.createElement('div');
+  grid.className = 'action-cards';
+  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+
+  const skillNames = {
+    cooking: '🍳 烹饪', repair: '🔧 维修', coding: '💻 编程',
+    english: '🌐 英语', driving: '🚗 驾驶', sales: '💼 销售',
+    management: '📋 管理', accounting: '📊 会计',
+    electrician: '⚡ 电工', welding: '🔥 焊接',
+  };
+
+  for (const [key, skill] of Object.entries(state.skills)) {
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    const name = skillNames[key] || key;
+    const xpNeeded = (skill.level + 1) * 100;
+    const xpPct = Math.min(100, Math.round((skill.xp / xpNeeded) * 100));
+    card.innerHTML = `
+      <div class="card-title">${name}</div>
+      <div class="card-desc">等级 ${skill.level} / 100</div>
+      <div style="margin-top:6px;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;">
+        <div style="width:${xpPct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">EXP: ${skill.xp}/${xpNeeded}</div>
+    `;
+    grid.appendChild(card);
+  }
+  div.appendChild(grid);
+
+  // 证书
+  if (state.certificates.length > 0) {
+    const certDiv = document.createElement('div');
+    certDiv.style.marginTop = '16px';
+    certDiv.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:8px;">📜 证书</h3>';
+    const certList = document.createElement('div');
+    certList.className = 'flex gap-2';
+    certList.style.flexWrap = 'wrap';
+    for (const certId of state.certificates) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'padding:4px 10px;background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:4px;font-size:11px;color:var(--success);';
+      badge.textContent = certId;
+      certList.appendChild(badge);
+    }
+    certDiv.appendChild(certList);
+    div.appendChild(certDiv);
+  }
+
+  parent.appendChild(div);
+}
+
+// ====== Corp Tab（职场中才有效） ======
+function renderCorpTab(state, parent) {
+  if (state.player.phase !== 'corporate') {
+    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 进入职场后解锁</p>';
+    return;
+  }
+
+  const c = state.corporate;
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h3 style="color:var(--text-muted);margin-bottom:12px;">🏢 职场信息</h3>
+    <div class="action-cards" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+      <div class="action-card">
+        <div class="card-title">职级</div>
+        <div class="card-desc" style="font-size:18px;color:var(--accent)">${c.rank}</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">绩效历史</div>
+        <div class="card-desc">${c.perfHistory.length} 次评审</div>
+        <div style="font-size:10px;color:var(--text-muted)">连续C: ${c.consecutiveC}</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">团队</div>
+        <div class="card-desc">${c.team.length} 人</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">股票</div>
+        <div class="card-desc">${c.stocks.length} 持仓</div>
+      </div>
+    </div>
+  `;
+  parent.appendChild(div);
+}

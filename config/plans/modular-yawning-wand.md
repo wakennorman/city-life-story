@@ -1,0 +1,211 @@
+# 城市浮生记 — 五大系统完善计划
+
+## Context
+
+用户提出5个方向的改进，覆盖房产/住所双系统整合、今日建议升级、装备商店、投资全买+顶部轮播、以及全新的学历系统。
+
+---
+
+## 功能一：房产市场租赁选项 + 住所&仓储与房产关系梳理
+
+### 现状分析
+
+- **住所系统**（`items.js` HOUSING_TIERS + `main.js` 行动）：玩家作为**租客**，每天付租金（12/25/50/天），tier 0-3，提供疲劳恢复/卫生/心情加成
+- **投资房产**（`investment.js` PROPERTIES）：玩家作为**房东**，买下房产出租给NPC，每30天收月租，同时房产增值。两者目前完全独立，没有交叉
+
+### 改进方案
+
+1. **已持有投资房产添加"自住/出租"切换**（`investment.js` `renderProperties` 函数）
+   - 新增 `state.investment.selfLivePropertyId: null`（当前自住的房产ID）
+   - "自住"状态：`state.housing.tier` 升至对应档次（小公寓→tier3，豪华公寓→tier4新档），同时每日不再扣住所租金（在 `endDay` 里判断 `selfLivePropertyId != null` 时跳过 housing rent）；不收月租
+   - "出租"状态（默认）：按月收租，玩家需自行租住
+   - 持有卡片上加"自住 ↔ 出租"切换按钮
+
+2. **房产市场新增"租赁房源"区域**（在 `renderProperties` 函数顶部新增一块）
+   - 这里的"租赁"指**玩家作为租客**可选租更好的住所（比tier3一居室更高档）
+   - 新增 tier 4：豪华公寓（押金¥10000，每天¥150，疲劳恢复+70，舒适度+30）
+   - 与 HOUSING_TIERS 联动，行动Tab的住所区块也展示
+
+3. **UI提示**：在住所区块顶部加一行说明："租房 = 日常居住开销；买房 = 投资出租/自住，可升格住所"
+
+### 修改文件
+
+- `js/phase2/investment.js`：`renderProperties` 添加租赁区、自住/出租切换；`tickInvestmentDaily` 判断自住时不收月租
+- `js/data/items.js`：HOUSING_TIERS 添加 tier 4 豪华公寓
+- `js/main.js`：`endDay` 里 housing rent 逻辑加自住判断
+- `js/core/state.js`：`createDefaultInvestmentState` 添加 `selfLivePropertyId: null`
+
+---
+
+## 功能二：今日建议全面升级
+
+### 现状
+
+- `getDailyActionTips()` 在 `render.js:910`，只返回最多2条（`tips.slice(0, 2)`）
+- 银行存款提示阈值 `cash > 500` 太低
+
+### 改进方案
+
+**2.1 阈值修正**
+
+- 银行存款提示：`cash > 500` → `cash > 10000`
+
+**2.2 去掉数量上限**（`render.js:1017`）
+
+- 删除 `tips.slice(0, 2)`，改为全量展示
+- 建议盒子改为可滚动：`max-height:100px; overflow-y:auto`
+
+**2.3 心智(mental)影响建议质量**（在 `getDailyActionTips` 里分档）
+
+- mental < 30：只给基础警示（饿/累/穷/生病）
+- mental 30-59：+天气/周期/NPC生日/技能升级建议
+- mental 60-79：+投资/交易/新闻联动建议（定性：如"房地产股票近期有压力"）
+- mental ≥ 80：+精确数字建议（"电子股近3天均涨12%，现价高位，可考虑止盈"）
+
+**2.4 新增建议类别**（全部在 `getDailyActionTips` 里追加）
+
+| 类别     | 触发条件            | 示例文本                                         |
+| -------- | ------------------- | ------------------------------------------------ |
+| 属性警示 | physique<15影响负重 | "体质过低，负重上限不足15kg，今天先休息补体力"   |
+| 属性解锁 | intelligence≥40     | "智力达到40，可以学习编程技能了！"               |
+| 健康     | health<50           | "健康危险，今天必须去诊所或休息"                 |
+| 技能建议 | 某技能XP>80%        | "销售技能快升级了，再做几次交易就能解锁新加成！" |
+| 交易机会 | 市场事件+当前在场   | "本地有数码热销活动，电子产品卖价高，快出货！"   |
+| 新闻联动 | activeNews含关键词  | 见下方新闻规则表                                 |
+| 学历提示 | 有备考进度          | "本科备考已完成65%，继续每天学习！"              |
+
+**2.5 新闻联动投资建议**（遍历 `state.activeNews`，关键词匹配）
+
+```
+新闻关键词 → 建议
+"房地产" → "房产市场受影响，工地工作收入可能下降，谨慎买入房产"
+"科技/电子" → "科技新闻利好，电子股和科技园工作机会增加"
+"通货膨胀/物价" → "物价上涨，现金贬值，考虑将余钱存银行或买入贵金属"
+"比特币/加密" → "加密市场波动，建议减仓或持币观望"
+"股市下跌" → "大盘下行，持股者注意止损，现金为王"
+```
+
+### 修改文件
+
+- `js/ui/render.js`：`getDailyActionTips` 函数全面扩充；渲染部分修改滚动展示
+
+---
+
+## 功能三：装备购买地点明确化
+
+### 现状
+
+- `ITEMS` 数组定义了装备（items.js），但 main.js 里没有 buyItem 类行动
+- 玩家不知道去哪买装备
+
+### 改进方案
+
+1. **在 `ITEMS` 定义里添加 `buyLocations` 字段**，标明可购买地点
+
+   ```js
+   { id: "work_gloves", buyLocations: ["market", "construction"], ... }
+   { id: "smartphone", buyLocations: ["mall", "tech_park"], ... }
+   ```
+
+2. **在各地点行动里添加"🛍️ 装备商店"行动**（`main.js` `getAvailableActions`）
+   - 批发市场：劳保/工具类装备
+   - 商业区/购物中心：衣物/电子/生活类装备
+   - 大学城：考证教材
+   - 触发后弹出 modal，列出可买装备（价格+效果+购买按钮）
+
+3. **背包Tab装备区块顶部加提示**（`render.js` `renderInventoryTab`）
+   - "装备购买地点：劳保→批发市场，电子→商业区，书本→大学城"
+
+4. **消耗品与装备UI区分**：现有的 inventory tab 已经把"商品"和"装备"分开tab展示，本次只需确保装备有明确购买入口
+
+### 修改文件
+
+- `js/data/items.js`：每个 ITEM 添加 `buyLocations` 字段
+- `js/main.js`：`getAvailableActions` 在相关地点添加"装备商店"行动 + `doShopItems` 函数
+- `js/ui/render.js`：装备区块顶部提示；装备购买modal渲染
+
+---
+
+## 功能四：投资"全买"+ 顶部现金/储蓄/债务轮播
+
+### 4.1 投资"全买"按钮
+
+- 现有股票：有"买10/买100/卖10/全卖"，添加**"全买"**按钮
+- 全买逻辑：`Math.floor(state.resources.cash / price)` 股，最少1股
+- BTC/贵金属/期货：同样添加全买按钮（单位不同，BTC是小数精度）
+
+**修改位置**（`investment.js`）：
+
+- `renderStocks` 第1650行附近：`买10/买100` 后面加 `<button class="btn btn-sm btn-success ibuy" data-s="..." data-q="MAX">全买</button>`
+- 绑定事件时处理 `data-q="MAX"` → 计算 `Math.floor(cash/price)`
+- `renderBtc`、`renderPrecious`、`renderFutures` 同理
+
+### 4.2 顶部轮播：现金 → 储蓄 → 债务
+
+**现有header**（`index.html` 第82-85行）：只显示 `header-cash`
+
+**改进方案**：
+
+- 将 cash stat 区域改为支持3种状态的循环显示
+- 无存款无债务：只显示现金，不轮播
+- 有存款或有债务：每4秒切换，顺序：现金 → 储蓄（有则显示）→ 债务（有则显示，分村长/银行两条，若只有一种则只显示一条）
+- 在 `renderHeader` 里更新数据，用 `setInterval` 驱动轮播（初始化一次，后续 header 更新只更新数据不重置计时器）
+- header stat 区域添加 `id="header-cash-area"` 做容器
+
+**修改文件**：
+
+- `src/index.html`：cash stat 添加容器id
+- `js/ui/render.js`：`renderHeader` 更新轮播数据；页面初始化时启动轮播 interval
+
+---
+
+## 功能五：学历系统
+
+### 设计背景
+
+- 中国自考本科：大专可报名，考14门课，每年4次考试机会，约3年完成
+- 游戏压缩：6门课，每门需30次"备考"行动积累学习点，达标后可参加考试（通过率=40%+智力×0.5%，上限90%），全部6门通过=获得本科学历
+
+### 状态数据（`state.js` `createDefaultState`）
+
+- `state.player.education: 0`（已存在）含义：0=大专, 1=本科, 2=研究生
+- 新增：`state.player.eduProgress: { studyPoints: 0, examsPassed: 0, totalExams: 6 }`
+
+### 行动设计（`main.js`）
+
+- 在**大学城**、**图书馆**（如有）位置添加行动：
+  - "📖 自考备考"（消耗20AP，增加5学习点，每次有10%概率智力+1）
+  - "📝 参加考试"（消耗30AP，需学习点≥150，通过率=40%+mental×0.4%+intelligence×0.1%，上限85%；通过后examsPassed+1，学习点清零进入下一门）
+  - "🎓 申请学历认证"（仅当examsPassed>=6时显示，点击后education升为1）
+
+### 学历影响
+
+- **工作门槛**（`jobs.js`）：在部分工作定义里添加 `educationRequired: 1`
+  - 例：办公室文员/程序员/银行柜员 需要本科（education≥1）
+- **技能解锁**（`skills.js`）：部分高级技能要求 education≥1
+- **侧边栏显示**：在基础属性下方显示"🎓 大专/本科/研究生 | 备考进度X/6门"
+- **今日建议联动**：备考进度>0时每天显示"继续备考，还差N门拿到本科学历"
+
+### 修改文件
+
+- `js/core/state.js`：`createDefaultState` 添加 `eduProgress` 字段
+- `js/main.js`：大学城地点行动添加备考/考试/认证；`doStudyExam`/`doAttendExam` 函数
+- `js/data/jobs.js`：部分工作添加 `educationRequired` 字段
+- `js/ui/render.js`：侧边栏显示学历；`getDailyActionTips` 学历建议
+
+---
+
+## 开发顺序
+
+1. **功能四**（全买+顶部轮播）— 改动最小，先做热身
+2. **功能二**（今日建议升级）— 纯逻辑，不依赖其他功能
+3. **功能三**（装备商店）— 添加行动+modal
+4. **功能一**（房产租赁+住所关联）— 涉及多文件但逻辑清晰
+5. **功能五**（学历系统）— 最复杂，需要跨多个数据文件
+
+每完成一个功能立即 git commit，并更新 `src/DEVELOPMENT.md`。
+
+## 验证方式
+
+- 启动服务器：`cd /d "D:\Claude Code+DeepSeekV4\city-life-story\src" && python -m http.server 8080`
+- 每个功能完成后浏览器测试：检查UI显示、数据流、边界情况（无债务时不轮播、无学习点不能考试等）

@@ -1,0 +1,337 @@
+/**
+ * 交易系统 — 买卖商品、价格波动、批发进货
+ *
+ * 提供: buyGood(), sellGood(), buyWholesale(), updatePrices()
+ */
+
+/** 玩家购买商品 */
+function buyGood(goodId, qty) {
+  const state = StateManager.getState();
+  const good = getGoodById(goodId);
+  if (!good) {
+    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+    return false;
+  }
+
+  const locKey = state.trade.currentLocation;
+  const price = getCurrentPrice(locKey, goodId);
+
+  // 销售技能折扣（最高15%）
+  const salesLvl = state.skills.sales.level || 0;
+  const discount = Math.min(0.15, salesLvl * 0.002);
+  const totalCost = Math.round(price * qty * (1 - discount) * 100) / 100;
+
+  // 检查现金
+  if (state.resources.cash < totalCost) {
+    StateManager.addMessage(
+      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${state.resources.cash}。`,
+      "danger",
+    );
+    return false;
+  }
+
+  // 检查背包容量
+  const currentItems = state.inventory.items.reduce(
+    (sum, item) => sum + item.qty,
+    0,
+  );
+  if (currentItems + qty > state.inventory.capacity) {
+    StateManager.addMessage(
+      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+      "danger",
+    );
+    return false;
+  }
+
+  // 扣钱
+  state.resources.cash -= totalCost;
+
+  // 加入背包
+  const existing = state.inventory.items.find((i) => i.id === goodId);
+  if (existing) {
+    existing.qty += qty;
+    existing.boughtAt = locKey;
+  } else {
+    state.inventory.items.push({ id: goodId, qty, boughtAt: locKey });
+  }
+
+  // 买入后该商品在当地涨价 0.5~1.5%（原1~3%，缩小波动）
+  const buyDelta = 0.005 + Math.random() * 0.01;
+  adjustPriceAfterTrade(locKey, goodId, buyDelta);
+  const newPrice = getCurrentPrice(locKey, goodId);
+
+  StateManager.addMessage(
+    `🛒 购买了 ${qty}${good.unit}${good.name}，单价 ¥${price.toFixed(1)}，共 ¥${totalCost.toFixed(1)}。${newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : ""}`,
+    "success",
+  );
+  return true;
+}
+
+/** 玩家卖出商品 */
+function sellGood(goodId, qty) {
+  const state = StateManager.getState();
+  const good = getGoodById(goodId);
+  if (!good) {
+    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+    return false;
+  }
+
+  // 检查背包
+  const existing = state.inventory.items.find((i) => i.id === goodId);
+  if (!existing || existing.qty < qty) {
+    StateManager.addMessage(`⚠️ 背包中没有足够的${good.name}！`, "danger");
+    return false;
+  }
+
+  const locKey = state.trade.currentLocation;
+  let price = getCurrentPrice(locKey, goodId);
+
+  // 同地转卖惩罚：如果卖出地点就是购买地点，售价打4.5折（现实：原地倒卖几乎必亏）
+  let sameLocationPenalty = false;
+  if (existing.boughtAt === locKey) {
+    price = Math.round(price * 0.45 * 100) / 100;
+    sameLocationPenalty = true;
+  }
+
+  // 销售技能溢价（最高15%）
+  const salesLvl = state.skills.sales.level || 0;
+  const premium = Math.min(0.15, salesLvl * 0.002);
+  const totalEarned = Math.round(price * qty * (1 + premium) * 100) / 100;
+
+  // 加钱
+  state.resources.cash += totalEarned;
+  state.resources.totalEarned += totalEarned;
+  // 追踪累计交易利润
+  const avgBuy = getAvgBuyPrice(state, goodId);
+  if (avgBuy > 0) {
+    const unitProfit = totalEarned / qty - avgBuy;
+    if (unitProfit > 0) {
+      state.trade.totalProfit = (state.trade.totalProfit || 0) + unitProfit * qty;
+    }
+  }
+
+  // 从背包移除
+  existing.qty -= qty;
+  if (existing.qty <= 0) {
+    state.inventory.items = state.inventory.items.filter(
+      (i) => i.id !== goodId,
+    );
+  }
+
+  // 低买高卖时显示利润
+  const buyPrice = getAvgBuyPrice(state, goodId); // 估算买入价
+  let profitMsg = "";
+  if (sameLocationPenalty) {
+    profitMsg = " ⚠️ 同地转卖，贬值严重！";
+  } else if (buyPrice > 0) {
+    const profit = totalEarned - buyPrice * qty;
+    if (profit > 0) {
+      profitMsg = ` 📈 获利 ¥${profit.toFixed(1)}！`;
+    } else if (profit < 0) {
+      profitMsg = ` 📉 亏损 ¥${Math.abs(profit).toFixed(1)}。`;
+    }
+  }
+
+  // 卖出后该商品在当地降价 0.5~1.5%（原1~3%，缩小波动）
+  const sellDelta = -(0.005 + Math.random() * 0.01);
+  adjustPriceAfterTrade(locKey, goodId, sellDelta);
+  const newPrice = getCurrentPrice(locKey, goodId);
+  const priceMsg =
+    newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : "";
+
+  StateManager.addMessage(
+    `💰 卖出了 ${qty}${good.unit}${good.name}，单价 ¥${price.toFixed(1)}，共 ¥${totalEarned.toFixed(1)}。${profitMsg}${priceMsg}`,
+    "success",
+  );
+  return true;
+}
+
+/** 批发进货（批发市场专属） */
+function buyWholesale(goodId, qty) {
+  const state = StateManager.getState();
+  const good = getGoodById(goodId);
+  if (!good) {
+    StateManager.addMessage("⚠️ 不存在的商品。", "danger");
+    return false;
+  }
+
+  const locKey = state.trade.currentLocation;
+  const price = getCurrentPrice(locKey, goodId);
+
+  // 批发折扣：批发市场的价格 × 0.9（批量价，现实批发仅10%折扣）
+  const wholesalePrice = Math.round(price * 0.9 * 100) / 100;
+  const totalCost = Math.round(wholesalePrice * qty * 100) / 100;
+
+  // 最低起批量
+  if (qty < 5) {
+    StateManager.addMessage("⚠️ 批发最少购买5件。", "warning");
+    return false;
+  }
+
+  // 检查现金
+  if (state.resources.cash < totalCost) {
+    StateManager.addMessage(
+      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}。`,
+      "danger",
+    );
+    return false;
+  }
+
+  // 检查背包
+  const currentItems = state.inventory.items.reduce(
+    (sum, item) => sum + item.qty,
+    0,
+  );
+  if (currentItems + qty > state.inventory.capacity) {
+    StateManager.addMessage(
+      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+      "danger",
+    );
+    return false;
+  }
+
+  // 扣钱
+  state.resources.cash -= totalCost;
+
+  // 记录买入价（用于后续利润计算）
+  const existing = state.inventory.items.find((i) => i.id === goodId);
+  if (existing) {
+    // 加权平均买入价
+    const oldTotal = (existing.avgBuyPrice || wholesalePrice) * existing.qty;
+    const newTotal = wholesalePrice * qty;
+    existing.qty += qty;
+    existing.boughtAt = locKey;
+    existing.avgBuyPrice =
+      Math.round(((oldTotal + newTotal) / existing.qty) * 100) / 100;
+  } else {
+    state.inventory.items.push({
+      id: goodId,
+      qty,
+      avgBuyPrice: wholesalePrice,
+      boughtAt: locKey,
+    });
+  }
+
+  StateManager.addMessage(
+    `📦 批发进货 ${qty}${good.unit}${good.name}，批发价 ¥${wholesalePrice.toFixed(1)}/件，共 ¥${totalCost.toFixed(1)}。`,
+    "success",
+  );
+  return true;
+}
+
+/** 快速出售（从背包里选一个商品卖） */
+function quickSell(goodId) {
+  const state = StateManager.getState();
+  const existing = state.inventory.items.find((i) => i.id === goodId);
+  if (!existing || existing.qty <= 0) {
+    StateManager.addMessage(`⚠️ 背包中没有该商品。`, "warning");
+    return false;
+  }
+  const qty = Math.min(existing.qty, 1); // 默认卖1个
+  return sellGood(goodId, qty);
+}
+
+/** 交易后动态调价：买入涨价，卖出降价 */
+function adjustPriceAfterTrade(locKey, goodId, delta) {
+  const state = StateManager.getState();
+  const good = getGoodById(goodId);
+  if (!good) return;
+  const prices = state.trade.goodsPrices[locKey];
+  if (!prices) return;
+  const oldPrice = prices[goodId] || good.basePrice;
+  const change = oldPrice * delta;
+  let newPrice = oldPrice + change;
+  // 限制范围
+  newPrice = Math.max(
+    good.basePrice * 0.3,
+    Math.min(good.basePrice * 5, newPrice),
+  );
+  newPrice = Math.round(newPrice * 100) / 100;
+  prices[goodId] = newPrice;
+}
+
+/** 获取当前地点某商品的零售价 */
+function getCurrentPrice(locKey, goodId) {
+  const state = StateManager.getState();
+  const prices = state.trade.goodsPrices[locKey];
+  if (prices && prices[goodId] !== undefined) {
+    return prices[goodId];
+  }
+  const good = getGoodById(goodId);
+  return good ? good.basePrice : 1;
+}
+
+/** 获取某商品在所有地点的最低价格（用于价格对比） */
+function getLowestPrice(goodId) {
+  const state = StateManager.getState();
+  let lowest = Infinity;
+  let lowestLoc = null;
+  for (const locKey of Object.keys(LOCATIONS)) {
+    const prices = state.trade.goodsPrices[locKey] || {};
+    const price = prices[goodId];
+    if (price && price < lowest) {
+      lowest = price;
+      lowestLoc = locKey;
+    }
+  }
+  return { price: lowest, location: lowestLoc };
+}
+
+/** 获取某商品在所有地点的最高价格 */
+function getHighestPrice(goodId) {
+  const state = StateManager.getState();
+  let highest = 0;
+  let highestLoc = null;
+  for (const locKey of Object.keys(LOCATIONS)) {
+    const prices = state.trade.goodsPrices[locKey] || {};
+    const price = prices[goodId];
+    if (price && price > highest) {
+      highest = price;
+      highestLoc = locKey;
+    }
+  }
+  return { price: highest, location: highestLoc };
+}
+
+/** 估算平均买入价 */
+function getAvgBuyPrice(state, goodId) {
+  const item = state.inventory.items.find((i) => i.id === goodId);
+  return item ? item.avgBuyPrice || 0 : 0;
+}
+
+/** 更新所有地点所有商品的价格（每3天调用一次） */
+function updateAllPrices(state) {
+  for (const locKey of Object.keys(LOCATIONS)) {
+    const loc = LOCATIONS[locKey];
+    // 确保价格对象存在
+    if (!state.trade.goodsPrices[locKey]) {
+      state.trade.goodsPrices[locKey] = {};
+    }
+    for (const good of GOODS) {
+      let price = good.basePrice;
+
+      // 1. 地点倍率
+      if (loc.priceMod && loc.priceMod[good.id]) {
+        price *= loc.priceMod[good.id];
+      }
+
+      // 2. 随机波动 ±12%（原 ±15%，现实级差价）
+      const fluctuation = 0.88 + Math.random() * 0.24;
+      price *= fluctuation;
+
+      // 3. 均值回归（10%向旧价格靠拢）
+      const oldPrice = state.trade.goodsPrices[locKey][good.id] || price;
+      price = price + (oldPrice - price) * 0.1;
+
+      // 4. 限制在合理范围（现实级差价空间：0.5x~3x）
+      price = Math.max(
+        good.basePrice * 0.5,
+        Math.min(good.basePrice * 3, price),
+      );
+      price = Math.round(price * 100) / 100;
+
+      state.trade.goodsPrices[locKey][good.id] = price;
+    }
+  }
+  state.trade.lastPriceUpdate = state.player.day;
+}

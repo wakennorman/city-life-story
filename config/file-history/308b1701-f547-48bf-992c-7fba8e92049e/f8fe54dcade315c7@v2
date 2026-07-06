@@ -1,0 +1,404 @@
+# 城市浮生记 — 四大系统深度完善计划
+
+## Context
+
+用户要求对游戏的四个核心系统进行深度完善，参照《北京浮生记》《大多数》《The Sims》《This War of Mine》等成熟模拟经营游戏的设计理念，提升游戏的策略深度和真实感。
+
+---
+
+## 一、投资资产扩容（20+每种可交易类别）
+
+### 现状
+| 类别 | 现有数量 | 目标 |
+|------|---------|------|
+| 股票 | 30 | ✅ 已达标 |
+| 虚拟币 | 10 | → 20 |
+| 贵金属 | 8 | ✅ 用户认可 |
+| 期货+基金 | 12（混合） | → 拆分为期货20 + 基金10 |
+| 房产 | 20 | ✅ 已达标 |
+| 汽车 | 20 | ✅ 已达标 |
+
+### 实施方案
+
+**修改文件**: `js/phase2/investment.js`
+
+**1. 虚拟币新增 10 种**（在 SHIB 之后插入）：
+```
+DOT(波卡币,跨链之王,basePrice:35,vol:0.13), 
+LINK(链环币,预言机龙头,basePrice:55,vol:0.15),
+UNI(优尼币,DeFi之王,basePrice:18,vol:0.18),
+LTC(莱特币,数字白银,basePrice:320,vol:0.09),
+TRX(波场币,孙哥概念,basePrice:0.3,vol:0.22),
+TON(电报币,社交公链,basePrice:12,vol:0.16),
+NEAR(近邻协议,AI公链,basePrice:8,vol:0.17),
+APT(阿普托斯,新公链,basePrice:15,vol:0.2),
+ARB(阿比币,L2龙头,basePrice:3,vol:0.19),
+OP(乐观币,超级链,basePrice:5,vol:0.18)
+```
+
+**2. 期货新增 8 种**（在白糖期货之后插入，使期货独立成 16 种）：
+```
+活牛期货(LIVE_CATTLE,basePrice:85,vol:0.05,desc:"肉类消费,季节性波动"),
+瘦肉猪期货(HOG,basePrice:56,vol:0.07,desc:"猪肉周期,中国需求"),
+可可期货(COCOA,basePrice:22,vol:0.09,desc:"巧克力原料,非洲产量"),
+橙汁期货(OJ,basePrice:6.5,vol:0.08,desc:"佛州飓风敏感"),
+黄金期货(GC,basePrice:445,vol:0.05,desc:"COMEX主力,与现货联动"),
+白银期货(SI,basePrice:5.1,vol:0.07,desc:"工业+避险双驱动"),
+铜期货(HG,basePrice:0.058,vol:0.04,desc:"经济晴雨表,绿色需求"),
+螺纹钢期货(RB,basePrice:24,vol:0.06,desc:"基建命脉,房地产风向标")
+```
+
+**3. 基金新增 8 种**（使基金从 4 种扩至 12 种）：
+```
+纳斯达克100ETF(QQQ,basePrice:380,vol:0.05,desc:"科技巨头一篮子"),
+恒生ETF(HSI,basePrice:65,vol:0.06,desc:"港股龙头,低估修复"),
+日经ETF(N225,basePrice:170,vol:0.05,desc:"日企龙头,日元敏感"),
+黄金ETF(GLD,basePrice:180,vol:0.03,desc:"黄金实物背书,避险配置"),
+货币基金(MMF,basePrice:1.0,vol:0.001,desc:"活期替代,几乎无风险",unit:"份"),
+国债逆回购(REPO,basePrice:100,vol:0.002,desc:"无风险套利,年化2%",unit:"手"),
+红利ETF(DIV,basePrice:25,vol:0.04,desc:"高股息策略,熊市防御"),
+科创50ETF(STAR,basePrice:12,vol:0.08,desc:"中国硬科技,国家大基金")
+```
+
+**4. UI 适配**：在 `investment.js` 的 `renderInvestTab()` 中拆分「期货基金」子标签为「期货」和「基金」两个独立子标签，各自渲染。
+
+---
+
+## 二、技能 ↔ 行动/交易/工作 深度联动
+
+### 2.1 移除摆地摊技能前置
+
+**修改文件**: `js/phase1/actions_extra.js`
+- 摆地摊创业(`start_business`)：删除 `sales >= 10` 的硬性限制
+- 改为：sales 等级影响收益倍率（0级时仅获60%收益，每级+0.8%，50级满100%基础收益，50级以上额外加成）
+
+### 2.2 所有工作/行动赋予关联技能 XP
+
+**修改文件**: `js/main.js` 的 `doStreetJob()` 函数 + `js/phase1/actions_extra.js`
+
+新增 `grantActionSkillXp(actionId, state)` 函数，在工作执行后调用：
+
+| 行动 | 获得技能XP | 获得属性微量增长 |
+|------|-----------|----------------|
+| 废品回收 | — | 体质+0.1/次 |
+| 摆摊卖小吃 | cooking +2~5 | — |
+| 摆摊卖小商品 | sales +2~5 | — |
+| 建筑苦力 | — | 体质+0.2/次 |
+| 技术工 | repair +3~6 | 体质+0.1 |
+| 工厂流水线 | — | 敏捷+0.2/次 |
+| 工厂加班 | — | 体质+0.1, 敏捷+0.1 |
+| 餐饮摊贩 | cooking +3~7 | — |
+| 理发师 | sales +2~4 | 敏捷+0.1 |
+| 家电维修 | repair +4~8 | — |
+| 家教 | english +2~4 | 智力+0.1 |
+| 外卖骑手 | driving +3~6 | 敏捷+0.2 |
+| 街头卖艺 | — | 心智+0.1, 名气+1 |
+| 摆地摊创业 | sales +5~12(成功) / +1~3(失败) | — |
+| 街头卖唱 | — | 心智+0.1, 名气+0.5 |
+| 健身房 | — | 体质+0.5~1.0(花¥30) |
+| 上夜校 | coding/english/accounting 各+2~4 | 智力+0.2 |
+| 冥想打坐 | — | 心智+0.3 |
+| 写日记 | — | 心智+0.1 |
+
+### 2.3 技能对多系统的衍生影响
+
+**修改文件**: `js/phase1/trade.js` + 新增 `js/phase1/skill_bonuses.js`
+
+| 技能 | 影响的系统 | 效果公式 |
+|------|-----------|---------|
+| cooking | 吃饭花费 | 自己做饭：花费=¥15*(1-cooking*0.008)，最低¥5 |
+| repair | 装备耐久 | 装备效果+repair*0.5% |
+| coding | 职场能力 | corp.ability+2 per 10 coding levels |
+| english | 家教收入 | 家教收入+english*0.3 |
+| driving | 旅行AP | 出行AP-1 per 20 driving levels（最低减3） |
+| sales | 买卖价格 | (已实现) buy折扣+15%, sell溢价+15% |
+| management | 职场向上管理 | corp.upwardMgmt+1 per 10 management levels |
+| accounting | 银行利息 | 银行存款利率+accounting*0.0005（最高+5%/年） |
+| electrician | 工厂工作 | 工厂类工作收入+electrician*0.5% |
+| welding | 建筑工作 | 建筑类工作收入+welding*0.8% |
+
+### 2.4 新增文件
+
+**新建 `js/phase1/skill_bonuses.js`**：
+```js
+// getCookingDiscount(cookingLevel) → 吃饭折扣系数
+// getTravelApReduction(drivingLevel) → 旅行AP减免
+// getTutoringBonus(englishLevel) → 家教额外收入
+// getBankRateBonus(accountingLevel) → 银行利率加成
+// getFactoryBonus(electricianLevel) → 工厂工作加成
+// getConstructionBonus(weldingLevel) → 建筑工作加成
+// getCorpAbilityBonus(codingLevel) → 职场能力加成
+// getCorpUpwardBonus(managementLevel) → 向上管理加成
+// grantJobSkillXp(jobId, state) → 工作后分发技能XP
+```
+
+---
+
+## 三、技能学习时间拉长 10 倍
+
+### 现状计算
+- 每次训练：⚡10AP + ¥20，获得 15~34 EXP（智力加成额外+0~30）
+- 升到100级需 505,000 EXP = 约 20,200 次训练（无加成）→ 2,020 天
+- 有智力加成(50智力=+15)：12,625次 → 1,263天
+- 实际上已经相当漫长
+
+### 调整方案
+
+**修改文件**: `js/ui/render.js` 的 `renderSkillsTab()`
+
+| 参数 | 旧值 | 新值 | 倍数 |
+|------|------|------|------|
+| AP消耗 | 10 | 15 | 1.5x |
+| 金钱消耗 | ¥20 | ¥50 | 2.5x |
+| 基础EXP | 15~34 (均值~25) | 5~12 (均值~8) | 3.1x |
+| 智力加成 | floor(int/10)*3 | floor(int/20)*2 | ~2x |
+| 升级阈值 | (level+1)*100 | (level+1)*120 | 1.2x |
+
+**综合效果**（以智力50的happy玩家为例）：
+- 旧：每训 EXP=25+15=40，505,000/40=12,625次，约1263天
+- 新：每训 EXP=8+4=12，606,000/12=50,500次，约3367天（约9.2年游戏时间）
+- 净效果：约 **6~7倍** 更慢
+
+**但行动中获得技能XP可大幅加速**：
+- 做外卖骑手每天5次(5*4=20 driving XP) + 1次训练(12 XP) = 每天32 driving XP
+- 606,000/32 = 18,938天 → 仍很长，但到 level 30 只需 (30*31/2)*120 = 55,800 XP → 55,800/32 = 1,744天
+- 实用技能 level 20~30 是合理的中期目标
+
+### 新增：每日训练次数限制
+- 每种技能每天最多训练 3 次（防止无限刷训练）
+- 技能卡上显示「今日已训 X/3」
+
+---
+
+## 四、状态 ↔ 基础属性 ↔ 状态 深度互联
+
+### 4.1 新增交互系统文件
+
+**新建 `js/phase1/interactions.js`** — 包含所有交叉影响的计算逻辑
+
+#### 核心函数：
+```
+getStatusCrossEffects(state) → 返回所有活跃的交叉修正值
+getEffectiveStats(state) → 返回经过状态修正后的真实属性值
+getApCostMultiplier(state) → 返回当前AP消耗倍率
+applyStatusInteractions(state) → 每日结算时调用，施加交叉影响
+checkExtremeConditions(state) → 极端状态检测（饿晕/过劳/病危）
+```
+
+### 4.2 状态→状态交叉影响（每日结算）
+
+```js
+// 在 endDay 的 applyNeedsDecay 之后调用 applyStatusInteractions
+function applyStatusInteractions(state) {
+  const n = state.needs;
+  const st = state.status;
+  
+  // 饥饿→加速疲劳
+  if (n.hunger < 30) n.fatigue = Math.min(100, n.fatigue + 5);
+  if (n.hunger < 15) n.fatigue = Math.min(100, n.fatigue + 8);
+  
+  // 饥饿→心情下降
+  if (n.hunger < 20) n.happiness = Math.max(0, n.happiness - 5);
+  
+  // 疲劳→心情下降
+  if (n.fatigue > 70) n.happiness = Math.max(0, n.happiness - 3);
+  if (n.fatigue > 85) n.happiness = Math.max(0, n.happiness - 5);
+  
+  // 疲劳→懒得洗漱
+  if (n.fatigue > 85) n.hygiene = Math.max(0, n.hygiene - 3);
+  
+  // 心情差→疲劳恢复减半
+  if (n.happiness < 20) state._fatigueRecoveryPenalty = 0.5; // endDay中乘此系数
+  
+  // 健康差→疲劳增长
+  if (st.health < 30) n.fatigue = Math.min(100, n.fatigue + 5);
+  
+  // 生病→疲劳+心情
+  if (st.sick) { n.fatigue = Math.min(100, n.fatigue + 8); n.happiness = Math.max(0, n.happiness - 5); }
+  if (st.injured) { n.fatigue = Math.min(100, n.fatigue + 5); n.happiness = Math.max(0, n.happiness - 3); }
+  
+  // 高体质→减缓疲劳
+  if (state.player.physique > 60) n.fatigue = Math.max(0, n.fatigue - 2);
+  
+  // 高心智→减缓心情下降
+  if (state.player.mental > 60) n.happiness = Math.min(100, n.happiness + 2);
+}
+```
+
+### 4.3 状态→基础属性修正（实时计算）
+
+```js
+function getEffectiveStats(state) {
+  const n = state.needs, st = state.status, p = state.player;
+  let mult = { physique: 1.0, intelligence: 1.0, agility: 1.0, mental: 1.0 };
+  
+  // 饥饿影响（饿到没力气/脑子转不动）
+  if (n.hunger < 30) { mult.agility *= 0.85; mult.mental *= 0.9; }
+  if (n.hunger < 15) { mult.agility *= 0.75; mult.mental *= 0.8; mult.physique *= 0.85; }
+  if (n.hunger < 5)  { mult.agility *= 0.5; mult.mental *= 0.5; mult.physique *= 0.6; }
+  
+  // 疲劳影响
+  if (n.fatigue > 70) { mult.agility *= 0.85; mult.mental *= 0.9; }
+  if (n.fatigue > 85) { mult.agility *= 0.7; mult.mental *= 0.75; mult.physique *= 0.85; }
+  if (n.fatigue > 95) { mult.agility *= 0.5; mult.mental *= 0.5; mult.physique *= 0.7; }
+  
+  // 健康影响
+  if (st.health < 50) { mult.physique *= 0.85; }
+  if (st.health < 30) { mult.physique *= 0.7; mult.agility *= 0.85; }
+  if (st.health < 15) { mult.physique *= 0.5; mult.agility *= 0.7; mult.intelligence *= 0.85; }
+  
+  // 心情影响
+  if (n.happiness < 20) { mult.mental *= 0.8; mult.intelligence *= 0.9; }
+  if (n.happiness < 10) { mult.mental *= 0.6; mult.intelligence *= 0.8; }
+  
+  // 生病/受伤
+  if (st.sick) { mult.physique *= 0.85; mult.agility *= 0.9; mult.mental *= 0.9; }
+  if (st.injured) { mult.physique *= 0.75; mult.agility *= 0.7; }
+  
+  // 高基础属性正向反馈
+  if (p.agility > 50) mult.agility *= 1.05;   // 敏捷高→动作更敏捷
+  if (p.mental > 50) mult.mental *= 1.05;      // 心智高→抗压
+  
+  return {
+    physique: Math.round(p.physique * Math.max(0.3, mult.physique)),
+    intelligence: Math.round(p.intelligence * Math.max(0.3, mult.intelligence)),
+    agility: Math.round(p.agility * Math.max(0.3, mult.agility)),
+    mental: Math.round(p.mental * Math.max(0.3, mult.mental)),
+    multipliers: mult
+  };
+}
+```
+
+### 4.4 AP消耗倍率（实时计算）
+
+```js
+function getApCostMultiplier(state) {
+  const n = state.needs, st = state.status, p = state.player;
+  let mult = 1.0;
+  
+  if (n.fatigue > 70) mult += 0.2;
+  if (n.fatigue > 85) mult += 0.25;  // 累计+0.45
+  if (n.fatigue > 95) mult += 0.35;  // 累计+0.8
+  
+  if (n.hunger < 20) mult += 0.3;
+  if (n.hunger < 10) mult += 0.2;    // 累计+0.5
+  
+  if (st.sick) mult += 0.5;
+  if (st.injured) mult += 0.3;
+  
+  if (n.happiness < 15) mult += 0.2;
+  
+  // 高敏捷减免
+  if (p.agility > 50) mult -= 0.1;
+  if (p.agility > 75) mult -= 0.1;   // 累计-0.2
+  
+  // 保底：AP消耗至少为原始的50%，最多为200%
+  return Math.max(0.5, Math.min(2.0, mult));
+}
+```
+
+**使用方式**：修改 `js/main.js` 的 `consumeAP()` → `const actualCost = Math.round(cost * getApCostMultiplier(state))`
+
+### 4.5 极端状态触发
+
+```js
+function checkExtremeConditions(state) {
+  const n = state.needs, st = state.status;
+  
+  // 饿晕 → 跳过一整天
+  if (n.hunger <= 5) {
+    StateManager.addMessage("💀 你饿晕在街头，醒来已经是第二天了...健康严重受损！", "danger");
+    st.health = Math.max(0, st.health - 15);
+    n.hunger = 10; // 好心人给了点吃的
+    n.fatigue = Math.min(100, n.fatigue + 20);
+    n.happiness = Math.max(0, n.happiness - 20);
+    // 强制结束当天（跳过所有剩余行动）
+    return 'skip_day';
+  }
+  
+  // 过劳 → 强制结束当天
+  if (n.fatigue >= 98) {
+    StateManager.addMessage("😵 你累倒了！身体撑不住了...", "danger");
+    st.health = Math.max(0, st.health - 10);
+    st.sick = true; // 过劳生病
+    return 'skip_day';
+  }
+  
+  // 病危送医
+  if (st.health <= 5 && !state.flags._forcedHospital) {
+    state.flags._forcedHospital = true;
+    if (state.resources.cash >= 500) {
+      state.resources.cash -= 500;
+      st.health = Math.min(50, st.health + 20);
+      StateManager.addMessage("🏥 你被好心人送进医院，花了¥500急救...", "warning");
+    } else {
+      StateManager.addMessage("🏥 你病危被送医，但付不起医药费...欠下¥500", "danger");
+      state.resources.bankDebt += 500;
+      state.resources.debt += 500;
+      st.health = Math.min(30, st.health + 10);
+    }
+  }
+  
+  // 重置医院标记（健康恢复到>20后）
+  if (st.health > 20) state.flags._forcedHospital = false;
+  
+  return null; // 正常
+}
+```
+
+### 4.6 修改 endDay 流程
+
+**修改文件**: `js/main.js` 的 `endDay()`
+
+在现有流程中插入：
+1. `applyNeedsDecay()` 之后 → 调用 `applyStatusInteractions(state)`
+2. 睡眠恢复时应用 `_fatigueRecoveryPenalty`（心情差恢复减半）
+3. 在健康结算之后 → 调用 `checkExtremeConditions(state)`
+4. 如果返回 `'skip_day'`，直接跳到次日（不执行价格更新/投资tick/新闻等日常事件），但利息和自动存档仍然执行
+
+### 4.7 侧边栏显示有效属性
+
+**修改文件**: `js/ui/render.js` 的 `renderSidebar()`
+
+- 基础属性同时显示名义值和有效值（如「体质 22 (实际 18)」→ 用灰色小字显示修正后值）
+- 当有效值 < 名义值时数值变红
+- AP消耗倍率在AP数值旁显示（如「AP 45/100 ⚠️×1.5」）
+
+---
+
+## 修改文件汇总
+
+| 文件 | 改动类型 | 涉及需求 |
+|------|---------|---------|
+| `js/phase2/investment.js` | 修改：新增18+条资产数据 + 拆分子标签 | 需求1 |
+| `js/phase1/actions_extra.js` | 修改：移除摆摊销售前置 + 增加XP分发 | 需求2 |
+| `js/phase1/skill_bonuses.js` | **新建**：技能→系统加成函数 | 需求2 |
+| `js/main.js` | 修改：doStreetJob加XP、consumeAP加倍率、endDay加交互+极端检测 | 需求2+4 |
+| `js/phase1/needs.js` | 修改：增强情绪判定（含有效属性影响） | 需求4 |
+| `js/phase1/interactions.js` | **新建**：状态互联核心逻辑 | 需求4 |
+| `js/ui/render.js` | 修改：训练费用/EXP调整 + 每日训练限次 + 侧边栏有效属性 | 需求3+4 |
+| `DEVELOPMENT.md` | 修改：更新开发文档 | 全部 |
+
+---
+
+## 实现顺序
+
+1. **先建 `interactions.js`**（需求4核心）— 独立模块，无依赖
+2. **修改 `needs.js`**（需求4）— 增强情绪判定引用有效属性
+3. **修改 `endDay` 和 `consumeAP`**（需求4）— 接入互联系统
+4. **修改 `render.js` 侧边栏**（需求4+3）— 显示有效属性+训练调整
+5. **新建 `skill_bonuses.js`**（需求2核心）— 技能→系统映射
+6. **修改 `actions_extra.js`**（需求2）— 移除前置+XP分发
+7. **修改 `main.js` doStreetJob**（需求2）— 接入XP分发
+8. **修改 `investment.js`**（需求1）— 数据+UI扩容
+9. **更新 `DEVELOPMENT.md`**
+
+---
+
+## 验证方式
+
+1. **投资扩容**：打开游戏→投资tab→验证虚拟币20种、期货16种、基金12种，子标签切换正确
+2. **技能联动**：摆地摊不要求销售技能；做外卖骑手几次→检查driving XP增长；技能提升后→检查吃饭折扣/旅行AP减免
+3. **训练变慢**：训练一次skill→验证AP扣15、钱扣50、EXP 5~12、每日限3次
+4. **状态互联**：让玩家饥饿→检查敏捷/心智有效值下降、AP消耗倍率上升；饥饿到5→触发饿晕跳日；疲劳到98→触发过劳
+5. **整体回归**：完整走10天游戏循环，确认无JS报错、存档正常

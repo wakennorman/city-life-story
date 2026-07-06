@@ -1,0 +1,9 @@
+{
+  "id": "4",
+  "subject": "网约车补贴大战弧线事件",
+  "description": "实现三段弧线事件：subsidy_war_join（加入补贴窗口）→ subsidy_war_crash（补贴战落幕）→ rider_rights_resolve（维权结果），联动 platform_subsidy_war 和 rider_winter 新闻链",
+  "activeForm": "实现网约车补贴大战事件弧",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

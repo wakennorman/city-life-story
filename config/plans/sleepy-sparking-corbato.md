@@ -1,0 +1,36 @@
+# 剩余工作：安装 3 个插件
+
+## 背景
+
+用户要求在 Claude Code 中安装 3 个插件：
+
+1. `commit-commands` — 来自 `anthropics/claude-code` 官方仓库
+2. `security-guidance` — 来自 `anthropics/claude-code` 官方仓库
+3. `content-creator` — 来自 `ccplugins/awesome-claude-code-plugins` 社区仓库
+
+## 方案
+
+### 1. 探索插件 marketplace 结构
+
+- 查看 `/tmp/claude-code-plugins/plugins/` 下 `commit-commands` 和 `security-guidance` 的插件清单
+- 查看 `/tmp/ccplugins/` 下 `content-creator` 的插件清单和 `.claude-plugin/marketplace.json`
+
+### 2. 配置 settings.json
+
+在 `.claude/settings.json` 中添加：
+
+- `enabledPlugins`: 启用 3 个插件
+  - `commit-commands@claude-plugins-official`
+  - `security-guidance@claude-plugins-official`
+  - `content-creator@ccplugins`
+- `extraKnownMarketplaces`: 注册社区 marketplace
+  - `ccplugins` → `github:ccplugins/awesome-claude-code-plugins`
+
+### 3. 清理临时文件
+
+- 删除 `/tmp/claude-code-plugins` 和 `/tmp/ccplugins`
+
+## 验证
+
+- 检查 settings.json JSON 语法
+- 确认插件 ID 和 marketplace 名称与仓库中的实际定义匹配

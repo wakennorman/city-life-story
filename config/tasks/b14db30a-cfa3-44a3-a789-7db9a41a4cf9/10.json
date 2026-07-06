@@ -1,0 +1,9 @@
+{
+  "id": "10",
+  "subject": "运行build.py重新构建dist/index.html",
+  "description": "语法检查通过后执行 python build.py，确认dist/index.html正确生成",
+  "activeForm": "运行build.py构建",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

@@ -1,0 +1,46 @@
+@echo off
+setlocal
+chcp 65001 > nul
+title Claude Freemodel sonnet46
+
+cd /d "%USERPROFILE%"
+set "CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude-freemodel"
+set "ANTHROPIC_API_KEY="
+set "ANTHROPIC_AUTH_TOKEN=fe_oa_aad7e9b78f8780a783ef2d4a5b5a8f681e65a143508b7fa1"
+set "ANTHROPIC_BASE_URL=https://cc.freemodel.dev"
+set "ANTHROPIC_MODEL=claude-sonnet-4-6"
+set "ANTHROPIC_DEFAULT_OPUS_MODEL=claude-sonnet-4-6"
+set "ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6"
+set "ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-4-6"
+set "CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-6"
+set "CLAUDE_CODE_EFFORT_LEVEL=max"
+set "CLAUDE_CODE_ATTRIBUTION_HEADER=1"
+set "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
+set "SECURITY_GUIDANCE_DISABLE=1"
+set "ENABLE_STOP_REVIEW=0"
+set "MAX_STOP_HOOK_FIRINGS=0"
+set "PATH=%APPDATA%\npm;%PATH%"
+
+if not exist "%CLAUDE_CONFIG_DIR%\settings.json" (
+  echo Missing "%CLAUDE_CONFIG_DIR%\settings.json"
+  pause
+  exit /b 1
+)
+
+if not exist "%APPDATA%\npm\claude.cmd" (
+    echo.
+    echo Claude Code is not installed, or %%APPDATA%%\npm\claude.cmd is missing.
+    pause
+    exit /b 1
+)
+
+call "%APPDATA%\npm\claude.cmd" --model claude-sonnet-4-6 %*
+set "CLAUDE_EXIT_CODE=%ERRORLEVEL%"
+
+if not "%CLAUDE_EXIT_CODE%"=="0" (
+    echo.
+    echo Claude Code exited with an error. See the message above.
+    pause
+)
+
+exit /b %CLAUDE_EXIT_CODE%

@@ -1,0 +1,8 @@
+{
+  "id": "10",
+  "subject": "P1-6: 35岁危机追访事件优先级增强",
+  "description": "crisis35_followups.js 已有追访事件，需在 events_core.js rollStreetEvent 中增加 Day340-370 范围内追访事件权重×3，确保触发率≥80%",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

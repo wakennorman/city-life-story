@@ -1,0 +1,218 @@
+city-life-story\src\addmsg.txt:86:D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:501:          StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
+city-life-story\src\DEVELOPMENT.md:54:      weather.js           # 天气系统 (7种天气+4季+温度)
+city-life-story\src\DEVELOPMENT.md:95:| 天气系统                | core/weather.js                   | ✅ 完成     |
+city-life-story\src\DEVELOPMENT.md:128:- [x] ~~街头初期（前30天）经济可微调收入/支出比例~~ → 新人保护：前10天吃饭¥5、前30天利息减半、前15天废品回收+¥5
+city-life-story\src\DEVELOPMENT.md:166:| 2026-06-16 | Phase 1: 修复时间流逝 — 旅行/吃饭/休息/洗澡/银行/医院/NPC等所有行动现在消耗AP                         |
+city-life-story\src\DEVELOPMENT.md:172:| 2026-06-16 | Phase 3: 城管执法 — 摆摊积累heat、突击检查、警告/没收、每日衰减                                       |
+city-life-story\src\DEVELOPMENT.md:177:| 2026-06-16 | 经济平衡: 新人保护 前10天吃饭¥5 前30天利息减半+银行利率翻倍 前15天废品回收+¥5/体力活+¥3               |
+city-life-story\src\DEVELOPMENT.md:181:| 2026-06-16 | 经济平衡: 工作收入-25~30%、交易差价收窄15~20%、起始现金1500、吃饭涨价、日息0.35%、批发折扣降低           |
+city-life-story\src\css\style.css:417:  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+city-life-story\src\css\style.css:551:  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+city-life-story\src\css\style.css:711:.end-screen.defeat .end-title {
+city-life-story\src\index.html:295:    <script src="js/core/weather.js"></script>
+city-life-story\src\htmlassign.txt:32:D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:112:    locNameEl.innerHTML = `${loc.name} <span style="font-size:11px;color:var(--text-secondary);">${seasonDef.icon}${seasonDef.name} ${weatherDef.icon}${weatherDef.name} ${Math.round(weather.temperature || 22)}°C</span>`;
+city-life-story\src\js\core\events.js:1147:  const overlay = document.createElement("div");
+city-life-story\src\js\core\save.js:178:          savedAt: data.lastPlayedAt || data.createdAt,
+city-life-story\src\js\core\state.js:9:function createDefaultState() {
+city-life-story\src\js\core\state.js:14:    createdAt: now,
+city-life-story\src\js\core\state.js:171:    weather: {
+city-life-story\src\js\core\state.js:180:      heat: 0,
+city-life-story\src\js\core\state.js:214:    this._state = createDefaultState();
+city-life-story\src\js\main.js:489:      id: "eat",
+city-life-story\src\js\main.js:497:        // 新手上路：前10天吃饭半价
+city-life-story\src\js\main.js:501:          StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
+city-life-story\src\js\main.js:990:    const weatherMod =
+city-life-story\src\js\main.js:991:      typeof getWeatherWorkMod === "function" ? getWeatherWorkMod(state) : 1;
+city-life-story\src\js\main.js:993:      typeof getWeatherFatigue === "function" ? getWeatherFatigue(state) : 0;
+city-life-story\src\js\main.js:994:    const weatherHappiness =
+city-life-story\src\js\main.js:995:      typeof getWeatherHappiness === "function"
+city-life-story\src\js\main.js:996:        ? getWeatherHappiness(state)
+city-life-story\src\js\main.js:998:    if (weatherMod !== 1) {
+city-life-story\src\js\main.js:999:      pay = Math.floor(pay * weatherMod);
+city-life-story\src\js\main.js:1001:        `🌤️ 天气影响：收入×${weatherMod.toFixed(1)}。`,
+city-life-story\src\js\main.js:1008:    if (weatherHappiness !== 0) {
+city-life-story\src\js\main.js:1011:        Math.min(100, state.needs.happiness + weatherHappiness),
+city-life-story\src\js\main.js:1023:    state.chengguan.heat = Math.min(
+city-life-story\src\js\main.js:1025:      state.chengguan.heat + 3 + Math.floor(Math.random() * 5),
+city-life-story\src\js\main.js:1027:    const raidChance = (state.chengguan.heat / 100) * 0.35;
+city-life-story\src\js\main.js:1030:      state.chengguan.heat = Math.max(0, state.chengguan.heat - 25);
+city-life-story\src\js\main.js:1330:  if (typeof rollWeather === "function") rollWeather(state);
+city-life-story\src\js\main.js:1338:    state.chengguan.heat = Math.max(
+city-life-story\src\js\main.js:1340:      state.chengguan.heat - 5 - Math.floor(Math.random() * 5),
+city-life-story\src\js\main.jsn:478:      id: "eat",
+city-life-story\src\js\main.jsn:487:          StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
+city-life-story\src\js\main.jsn:942:    const weatherMod =
+city-life-story\src\js\main.jsn:943:      typeof getWeatherWorkMod === "function" ? getWeatherWorkMod(state) : 1;
+city-life-story\src\js\main.jsn:945:      typeof getWeatherFatigue === "function" ? getWeatherFatigue(state) : 0;
+city-life-story\src\js\main.jsn:946:    const weatherHappiness =
+city-life-story\src\js\main.jsn:947:      typeof getWeatherHappiness === "function"
+city-life-story\src\js\main.jsn:948:        ? getWeatherHappiness(state)
+city-life-story\src\js\main.jsn:950:    if (weatherMod !== 1) {
+city-life-story\src\js\main.jsn:951:      pay = Math.floor(pay * weatherMod);
+city-life-story\src\js\main.jsn:953:        `🌤️ 天气影响：收入×${weatherMod.toFixed(1)}。`,
+city-life-story\src\js\main.jsn:960:    if (weatherHappiness !== 0) {
+city-life-story\src\js\main.jsn:963:        Math.min(100, state.needs.happiness + weatherHappiness),
+city-life-story\src\js\main.jsn:975:    state.chengguan.heat = Math.min(
+city-life-story\src\js\main.jsn:977:      state.chengguan.heat + 3 + Math.floor(Math.random() * 5),
+city-life-story\src\js\main.jsn:979:    const raidChance = (state.chengguan.heat / 100) * 0.35;
+city-life-story\src\js\main.jsn:982:      state.chengguan.heat = Math.max(0, state.chengguan.heat - 25);
+city-life-story\src\js\main.jsn:1211:  if (typeof rollWeather === "function") rollWeather(state);
+city-life-story\src\js\main.jsn:1219:    state.chengguan.heat = Math.max(
+city-life-story\src\js\main.jsn:1221:      state.chengguan.heat - 5 - Math.floor(Math.random() * 5),
+city-life-story\src\js\main.jsn:1286:  const overlay = document.createElement("div");
+city-life-story\src\js\main.jsn:1289:  const box = document.createElement("div");
+city-life-story\src\js\main.jsn:1299:    const btnEl = document.createElement("button");
+city-life-story\src\js\data\corp.js:176:    desc: "和同事吃饭聚会、交流信息、建立同盟。",
+city-life-story\src\js\core\weather.js:7:const WEATHER_TYPES = [
+city-life-story\src\js\core\weather.js:72:    weatherWeights: {
+city-life-story\src\js\core\weather.js:85:    weatherWeights: {
+city-life-story\src\js\core\weather.js:98:    weatherWeights: {
+city-life-story\src\js\core\weather.js:111:    weatherWeights: {
+city-life-story\src\js\core\weather.js:132:function rollWeather(state) {
+city-life-story\src\js\core\weather.js:133:  if (!state.weather) {
+city-life-story\src\js\core\weather.js:134:    state.weather = {
+city-life-story\src\js\core\weather.js:143:  state.weather.season = season.id;
+city-life-story\src\js\core\weather.js:146:  if (Math.random() < 0.25 || !state.weather.current) {
+city-life-story\src\js\core\weather.js:147:    const weights = season.weatherWeights;
+city-life-story\src\js\core\weather.js:150:    let newWeather = "sunny";
+city-life-story\src\js\core\weather.js:154:        newWeather = wid;
+city-life-story\src\js\core\weather.js:158:    state.weather.current = newWeather;
+city-life-story\src\js\core\weather.js:159:    state.weather.lastChanged = state.player.day;
+city-life-story\src\js\core\weather.js:164:  const weatherDef = WEATHER_TYPES.find((w) => w.id === state.weather.current);
+city-life-story\src\js\core\weather.js:166:  const weatherOffset = weatherDef ? (weatherDef.outdoorMod - 1) * 10 : 0;
+city-life-story\src\js\core\weather.js:168:  state.weather.temperature = Math.round(
+city-life-story\src\js\core\weather.js:169:    Math.max(-15, Math.min(45, tempBase + weatherOffset + noise)),
+city-life-story\src\js\core\weather.js:174:function getWeatherWorkMod(state) {
+city-life-story\src\js\core\weather.js:175:  if (!state.weather) return 1.0;
+city-life-story\src\js\core\weather.js:176:  const w = WEATHER_TYPES.find((w) => w.id === state.weather.current);
+city-life-story\src\js\core\weather.js:181:function getWeatherFatigue(state) {
+city-life-story\src\js\core\weather.js:182:  if (!state.weather) return 0;
+city-life-story\src\js\core\weather.js:183:  const w = WEATHER_TYPES.find((w) => w.id === state.weather.current);
+city-life-story\src\js\core\weather.js:188:function getWeatherHappiness(state) {
+city-life-story\src\js\core\weather.js:189:  if (!state.weather) return 0;
+city-life-story\src\js\core\weather.js:190:  const w = WEATHER_TYPES.find((w) => w.id === state.weather.current);
+city-life-story\src\js\data\locations.js:136:    type: "recreation",
+city-life-story\src\js\phase2\investment.bak.js:372:  const cont = document.createElement("div");
+city-life-story\src\js\phase2\investment.bak.js:404:      const grid = document.createElement("div");
+city-life-story\src\js\phase2\investment.bak.js:406:      grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(220px,1fr))";
+city-life-story\src\js\phase2\investment.bak.js:418:        const card = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:11:  const qDiv = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:29:    const progDiv = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:51:  const cards = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:55:    const card = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:120:    const teamDiv = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:124:    const teamGrid = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:127:      "repeat(auto-fill, minmax(160px, 1fr))";
+city-life-story\src\js\ui\corp_ui.js:131:      const card = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:146:      const hireDiv = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:150:      const hireGrid = document.createElement("div");
+city-life-story\src\js\ui\corp_ui.js:153:        "repeat(auto-fill, minmax(160px, 1fr))";
+city-life-story\src\js\ui\corp_ui.js:156:        const hCard = document.createElement("div");
+city-life-story\src\js\data\news.js:17:    id: "heatwave",
+city-life-story\src\js\data\news.js:101:    id: "free_meal",
+city-life-story\src\js\ui\modal.js:9:  const overlay = document.createElement("div");
+city-life-story\src\js\ui\modal.js:12:  const box = document.createElement("div");
+city-life-story\src\js\ui\modal.js:22:    const btnEl = document.createElement("button");
+city-life-story\src\js\phase2\investment.js:616:  var grad = ctx.createLinearGradient(0, padT, 0, H - padB);
+city-life-story\src\js\phase2\investment.js:697:  var cont = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:764:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:766:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\investment.js:789:    var card = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:879:  var div = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:957:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:959:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\investment.js:989:    var card = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1075:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1077:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\investment.js:1107:    var card = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1200:  var div = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1211:    var card = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1271:  var div = document.createElement("div");
+city-life-story\src\js\phase2\investment.js:1282:    var card = document.createElement("div");
+city-life-story\src\js\ui\render.js:125:  const weather = state.weather || {};
+city-life-story\src\js\ui\render.js:126:  const weatherDef =
+city-life-story\src\js\ui\render.js:127:    typeof WEATHER_TYPES !== "undefined"
+city-life-story\src\js\ui\render.js:128:      ? WEATHER_TYPES.find((w) => w.id === weather.current)
+city-life-story\src\js\ui\render.js:132:      ? SEASONS.find((s) => s.id === weather.season)
+city-life-story\src\js\ui\render.js:135:  if (locNameEl && weatherDef && seasonDef) {
+city-life-story\src\js\ui\render.js:136:    locNameEl.innerHTML = `${loc.name} <span style="font-size:11px;color:var(--text-secondary);">${seasonDef.icon}${seasonDef.name} ${weatherDef.icon}${weatherDef.name} ${Math.round(weather.temperature || 22)}°C</span>`;
+city-life-story\src\js\ui\render.js:177:            <span>🚶 <strong>${dest.name}</strong> <span style="color:var(--text-muted);font-size:10px;">${dest.type === "commercial" ? "商业" : dest.type === "industrial" ? "工业" : dest.type === "residential" ? "居住" : dest.type === "service" ? "服务" : dest.type === "education" ? "教育" : dest.type === "corporate" ? "职场" : dest.type === "recreation" ? "娱乐" : dest.type === "institutional" ? "机构" : ""}</span></span>
+city-life-story\src\js\ui\render.js:389:  const div = document.createElement("div");
+city-life-story\src\js\ui\render.js:410:      const banner = document.createElement("div");
+city-life-story\src\js\ui\render.js:436:    const travelSection = document.createElement("div");
+city-life-story\src\js\ui\render.js:441:    const travelGrid = document.createElement("div");
+city-life-story\src\js\ui\render.js:444:      "repeat(auto-fill, minmax(180px, 1fr))";
+city-life-story\src\js\ui\render.js:483:      const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:512:    const houseSection = document.createElement("div");
+city-life-story\src\js\ui\render.js:517:    const houseGrid = document.createElement("div");
+city-life-story\src\js\ui\render.js:520:      "repeat(auto-fill, minmax(200px, 1fr))";
+city-life-story\src\js\ui\render.js:522:      houseGrid.appendChild(createActionCard(action, state));
+city-life-story\src\js\ui\render.js:530:    const otherLabel = document.createElement("h3");
+city-life-story\src\js\ui\render.js:536:    const cards = document.createElement("div");
+city-life-story\src\js\ui\render.js:539:      cards.appendChild(createActionCard(action, state));
+city-life-story\src\js\ui\render.js:545:function createActionCard(action, state) {
+city-life-story\src\js\ui\render.js:546:  const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:582:  const container = document.createElement("div");
+city-life-story\src\js\ui\render.js:586:  const title = document.createElement("div");
+city-life-story\src\js\ui\render.js:598:    const quick = document.createElement("div");
+city-life-story\src\js\ui\render.js:606:      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+city-life-story\src\js\ui\render.js:624:                    : dest.type === "recreation"
+city-life-story\src\js\ui\render.js:653:  const mapWrap = document.createElement("div");
+city-life-story\src\js\ui\render.js:659:  const mapGrid = document.createElement("div");
+city-life-story\src\js\ui\render.js:679:  const svg = document.createElementNS(svgNS, "svg");
+city-life-story\src\js\ui\render.js:700:        const line = document.createElementNS(svgNS, "line");
+city-life-story\src\js\ui\render.js:733:    const node = document.createElement("div");
+city-life-story\src\js\ui\render.js:755:      <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
+city-life-story\src\js\ui\render.js:791:  const legend = document.createElement("div");
+city-life-story\src\js\ui\render.js:805:  const quickTable = document.createElement("div");
+city-life-story\src\js\ui\render.js:808:  const table = document.createElement("div");
+city-life-story\src\js\ui\render.js:810:    "display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;";
+city-life-story\src\js\ui\render.js:828:          <span style="font-size:9px;color:var(--text-muted);">${mapLoc.type === "commercial" ? "商业" : mapLoc.type === "industrial" ? "工业" : mapLoc.type === "residential" ? "居住" : mapLoc.type === "service" ? "服务" : mapLoc.type === "education" ? "教育" : mapLoc.type === "corporate" ? "职场" : mapLoc.type === "recreation" ? "休闲" : mapLoc.type === "institutional" ? "机构" : ""}</span>
+city-life-story\src\js\ui\render.js:871:  const headerDiv = document.createElement("div");
+city-life-story\src\js\ui\render.js:891:    const ownedDiv = document.createElement("div");
+city-life-story\src\js\ui\render.js:895:    const ownedGrid = document.createElement("div");
+city-life-story\src\js\ui\render.js:898:      "repeat(auto-fill, minmax(180px, 1fr))";
+city-life-story\src\js\ui\render.js:910:      const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:935:  const marketLabel = document.createElement("h4");
+city-life-story\src\js\ui\render.js:942:  const grid = document.createElement("div");
+city-life-story\src\js\ui\render.js:944:  grid.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
+city-life-story\src\js\ui\render.js:958:    const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:984:  const compareDiv = document.createElement("div");
+city-life-story\src\js\ui\render.js:989:  const compareTable = document.createElement("div");
+city-life-story\src\js\ui\render.js:1090:  const div = document.createElement("div");
+city-life-story\src\js\ui\render.js:1103:    const grid = document.createElement("div");
+city-life-story\src\js\ui\render.js:1110:      const el = document.createElement("div");
+city-life-story\src\js\ui\render.js:1124:  const equipDiv = document.createElement("div");
+city-life-story\src\js\ui\render.js:1135:  const equipGrid = document.createElement("div");
+city-life-story\src\js\ui\render.js:1137:  equipGrid.style.gridTemplateColumns = "repeat(auto-fill, minmax(130px, 1fr))";
+city-life-story\src\js\ui\render.js:1144:    const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:1163:  const div = document.createElement("div");
+city-life-story\src\js\ui\render.js:1167:  const grid = document.createElement("div");
+city-life-story\src\js\ui\render.js:1169:  grid.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+city-life-story\src\js\ui\render.js:1185:    const card = document.createElement("div");
+city-life-story\src\js\ui\render.js:1204:    const certDiv = document.createElement("div");
+city-life-story\src\js\ui\render.js:1208:    const certList = document.createElement("div");
+city-life-story\src\js\ui\render.js:1212:      const badge = document.createElement("span");
+city-life-story\src\js\ui\render.js:1235:  const div = document.createElement("div");
+city-life-story\src\js\ui\render.js:1238:    <div class="action-cards" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+city-life-story\src\js\ui\tutorial.js:62:        <p style="color:var(--text-secondary);font-size:11px;">💡 属性靠技能和工作提升，需求靠吃饭/休息/洗澡维持</p>
+city-life-story\src\js\ui\tutorial.js:88:        <p style="color:var(--success);font-size:11px;">💡 新人福利：前10天吃饭只要¥5（平时¥10）</p>
+city-life-story\src\js\ui\tutorial.js:198:  const hl = document.createElement("div");
+city-life-story\src\js\phase2\stock.js:499:    <div style="max-height:55vh;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;">
+city-life-story\src\js\phase2\update_inv.py:316:  var grad = ctx.createLinearGradient(0, padT, 0, H - padB);
+city-life-story\src\js\phase2\update_inv.py:385:  var cont = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:447:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:449:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\update_inv.py:466:    var card = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:528:  var div = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:574:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:576:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\update_inv.py:597:    var card = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:647:  var grid = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:649:  grid.style.gridTemplateColumns = "repeat(auto-fill,minmax(230px,1fr))";
+city-life-story\src\js\phase2\update_inv.py:670:    var card = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:726:  var div = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:737:    var card = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:779:  var div = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:790:    var card = document.createElement("div");
+city-life-story\src\js\phase2\update_inv.py:821:        print("Backup created:", BACKUP)

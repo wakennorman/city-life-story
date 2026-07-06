@@ -1,0 +1,8 @@
+{
+  "id": "3",
+  "subject": "P0-3: 后期开支增强 (needs.js applyWealthBasedOverhead)",
+  "description": "needs.js 已有 applyWealthBasedOverhead，但资产¥50K已触发，物业费仅0.1%/天。需增强：添加子女教育/社交应酬/健康管理/商业保险等分类开支，按资产¥50W+/¥1M+/¥5M+梯度",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

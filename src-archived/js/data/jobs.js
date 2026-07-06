@@ -1,0 +1,319 @@
+/**
+ * 街头工作定义（15+种）
+ *
+ * 每项工作格式:
+ * {
+ *   id, name, desc, icon,                    // 显示
+ *   location: '...',                          // 需要在此地点
+ *   requirements: { ... },                    // 属性/技能/年龄要求
+ *   effects: { ... },                         // 执行后属性变化
+ *   payCalc(state),                           // 收入计算函数（引用 state）
+ *   risk: { injury, illness },                // 风险概率
+ *   startupCost: 0,                           // 启动资金（可选）
+ * }
+ */
+
+const STREET_JOBS = [
+  // ====== 城中村 ======
+  {
+    id: "waste_recycling",
+    name: "废品回收",
+    desc: "走街串巷收废纸板、废金属、废塑料，转手卖给回收站。脏活累活但门槛最低。",
+    icon: "♻️",
+    location: "slum",
+    requirements: { minAge: 16, maxAge: 65 },
+    effects: {
+      fatigue: 22,
+      hygiene: -15,
+      happiness: -5,
+      physiqueXp: 2,
+      agilityXp: 1,
+    },
+    payCalc(state) {
+      const base = Random.float(45, 100);
+      const multi = 1 + state.skills.sales.level * 0.005;
+      return Math.floor(base * Math.min(multi, 2));
+    },
+    risk: { injury: 0.04, illness: 0.02 },
+  },
+
+  // ====== 商业区 — 摆摊 ======
+  {
+    id: "street_vending_food",
+    name: "摆摊卖小吃",
+    desc: "在街边支个小摊卖烤串、煎饼果子。手艺越好，回头客越多。",
+    icon: "🍢",
+    location: "commercialDist",
+    requirements: { minAge: 16, maxAge: 60 },
+    effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
+    payCalc(state) {
+      const skillBonus = state.skills.cooking.level * 0.8;
+      return Math.floor(60 + skillBonus + Random.float(0, 50));
+    },
+    startupCost: 50,
+    risk: {},
+  },
+  {
+    id: "street_vending_goods",
+    name: "摆摊卖小商品",
+    desc: "从批发市场进些日用品、小电子产品，在商业区摆摊赚差价。",
+    icon: "🧦",
+    location: "commercialDist",
+    requirements: { minAge: 16, maxAge: 60 },
+    effects: { fatigue: 14, happiness: 2, salesXp: 3 },
+    payCalc(state) {
+      const skillBonus = state.skills.sales.level * 0.6;
+      return Math.floor(50 + skillBonus + Random.float(0, 40));
+    },
+    startupCost: 30,
+    risk: { injury: 0.02 },
+  },
+
+  // ====== 建筑工地 ======
+  {
+    id: "manual_labor_construction",
+    name: "建筑工地苦力",
+    desc: "在工地搬砖、扛水泥、推砂石。纯体力活，工资日结不拖欠。",
+    icon: "🧱",
+    location: "construction",
+    requirements: { physique: 20, minAge: 18, maxAge: 55 },
+    effects: { fatigue: 38, hygiene: -22, physiqueXp: 6, happiness: -10 },
+    payCalc(state) {
+      return Math.floor(90 + state.player.physique * 0.6 + Random.float(0, 40));
+    },
+    risk: { injury: 0.1, illness: 0.03 },
+  },
+  {
+    id: "skilled_labor_construction",
+    name: "工地技术工",
+    desc: "会手艺的工地活——水电安装、木工、钢筋工。收入比苦力高不少。",
+    icon: "🔨",
+    location: "construction",
+    requirements: {
+      physique: 25,
+      repair: 15,
+      agility: 20,
+      minAge: 20,
+      maxAge: 60,
+    },
+    effects: { fatigue: 28, hygiene: -12, physiqueXp: 3, repairXp: 5 },
+    payCalc(state) {
+      return Math.floor(
+        160 +
+          state.skills.repair.level * 1.5 +
+          state.player.physique * 0.3 +
+          Random.float(0, 50),
+      );
+    },
+    risk: { injury: 0.05 },
+  },
+
+  // ====== 工业区 — 工厂 ======
+  {
+    id: "factory_work_assembly",
+    name: "工厂流水线",
+    desc: "在电子厂做装配工。机械重复手不停，但收入稳定包吃住。",
+    icon: "🏭",
+    location: "factoryZone",
+    requirements: { agility: 15, minAge: 18, maxAge: 45 },
+    effects: {
+      fatigue: 28,
+      hygiene: -5,
+      happiness: -15,
+      mental: -2,
+      agilityXp: 3,
+    },
+    payCalc(state) {
+      return Math.floor(110 + state.player.agility * 0.4 + Random.float(0, 25));
+    },
+    risk: { injury: 0.03, illness: 0.015 },
+  },
+  {
+    id: "factory_overtime",
+    name: "工厂加班",
+    desc: "晚上加班赶订单，加班费可观，但这钱是用身体换的。",
+    icon: "🌙",
+    location: "factoryZone",
+    requirements: { agility: 15, physique: 18, minAge: 18, maxAge: 45 },
+    effects: { fatigue: 42, hygiene: -3, happiness: -20, mental: -4 },
+    payCalc(state) {
+      return Math.floor(
+        160 + state.player.physique * 0.5 + Random.float(0, 35),
+      );
+    },
+    risk: { illness: 0.04 },
+  },
+
+  // ====== 商业区 — 餐饮服务 ======
+  {
+    id: "food_stall",
+    name: "餐饮摊贩",
+    desc: "租个小摊位卖早餐、夜宵。辛苦但利润不错，手艺好能赚更多。",
+    icon: "🍜",
+    location: "commercialDist",
+    requirements: { cooking: 10, minAge: 18, maxAge: 55 },
+    effects: { fatigue: 22, hygiene: -8, cookingXp: 5, happiness: 2 },
+    payCalc(state) {
+      return Math.floor(
+        130 + state.skills.cooking.level * 2 + Random.float(0, 70),
+      );
+    },
+    startupCost: 200,
+    risk: { injury: 0.02 },
+  },
+
+  // ====== 商业区 — 服务业 ======
+  {
+    id: "barber",
+    name: "理发师",
+    desc: "在街边理发店做理发师。手艺活，环境干净，收入稳定。",
+    icon: "💇",
+    location: "commercialDist",
+    requirements: { agility: 20, minAge: 18, maxAge: 60 },
+    effects: { fatigue: 16, happiness: 5, agilityXp: 2 },
+    payCalc(state) {
+      return Math.floor(65 + state.player.agility * 0.3 + Random.float(0, 45));
+    },
+    risk: {},
+  },
+  {
+    id: "cleaning_service",
+    name: "保洁/家政",
+    desc: "帮人打扫卫生、收拾屋子。活不重，收入不高但稳定。",
+    icon: "🧹",
+    location: "commercialDist",
+    requirements: { minAge: 18, maxAge: 55 },
+    effects: { fatigue: 20, hygiene: -8, physiqueXp: 2 },
+    payCalc(state) {
+      return Math.floor(55 + state.player.physique * 0.2 + Random.float(0, 35));
+    },
+    risk: {},
+  },
+  {
+    id: "repair_service",
+    name: "家电维修",
+    desc: "帮人修家电、手机、电脑。技术活，口碑好了收入越来越高。",
+    icon: "🔧",
+    location: "commercialDist",
+    requirements: { repair: 20, intelligence: 20, minAge: 18, maxAge: 65 },
+    effects: { fatigue: 14, repairXp: 5, happiness: 8 },
+    payCalc(state) {
+      return Math.floor(
+        90 + state.skills.repair.level * 2.5 + Random.float(0, 60),
+      );
+    },
+    risk: {},
+  },
+
+  // ====== 工业区 ======
+  {
+    id: "security_guard",
+    name: "保安",
+    desc: "在工厂或小区看大门。活不多，能坐着，但工资不高。",
+    icon: "👮",
+    location: "factoryZone",
+    requirements: { minAge: 20, maxAge: 55 },
+    effects: { fatigue: 10, happiness: -3, physiqueXp: 1 },
+    payCalc(state) {
+      return Math.floor(45 + Random.float(0, 25));
+    },
+    risk: {},
+  },
+  {
+    id: "warehouse_worker",
+    name: "仓库搬运",
+    desc: "在物流仓库搬货、分拣包裹。体力消耗大但按件计酬。",
+    icon: "📦",
+    location: "factoryZone",
+    requirements: { physique: 18, minAge: 18, maxAge: 50 },
+    effects: { fatigue: 32, hygiene: -10, physiqueXp: 4 },
+    payCalc(state) {
+      return Math.floor(80 + state.player.physique * 0.5 + Random.float(0, 35));
+    },
+    risk: { injury: 0.05 },
+  },
+
+  // ====== 大学城 ======
+  {
+    id: "school_maintenance",
+    name: "学校勤杂工",
+    desc: "在学校做维修、绿化、清洁等杂活。环境好，氛围轻松。",
+    icon: "🏫",
+    location: "school",
+    requirements: { minAge: 18, maxAge: 60 },
+    effects: { fatigue: 16, hygiene: -5, happiness: 8, repairXp: 2 },
+    payCalc(state) {
+      return Math.floor(60 + Random.float(0, 30));
+    },
+    risk: {},
+  },
+  {
+    id: "package_delivery",
+    name: "校园/社区快递",
+    desc: "帮学生和社区居民收发快递包裹。腿脚麻利跑得快是核心竞争力。",
+    icon: "📬",
+    location: "school",
+    requirements: { agility: 15, minAge: 18, maxAge: 50 },
+    effects: { fatigue: 24, hygiene: -5, agilityXp: 4 },
+    payCalc(state) {
+      return Math.floor(55 + state.player.agility * 0.55 + Random.float(0, 35));
+    },
+    risk: { injury: 0.03 },
+  },
+  {
+    id: "tutoring",
+    name: "家教",
+    desc: "给中小学生辅导功课。知识就是金钱，智力越高收入越好。",
+    icon: "📖",
+    location: "school",
+    requirements: { intelligence: 30, minAge: 18, maxAge: 65 },
+    effects: { fatigue: 12, intelligenceXp: 3, englishXp: 2, happiness: 10 },
+    payCalc(state) {
+      return Math.floor(
+        85 +
+          state.player.intelligence * 0.6 +
+          state.skills.english.level * 0.4 +
+          Random.float(0, 45),
+      );
+    },
+    risk: {},
+  },
+
+  // ====== 商业区 — 更多 ======
+  {
+    id: "delivery_rider",
+    name: "外卖骑手",
+    desc: "平台众包骑手，接单送餐。多劳多得，风里来雨里去。",
+    icon: "🛵",
+    location: "commercialDist",
+    requirements: { agility: 22, minAge: 18, maxAge: 45 },
+    effects: { fatigue: 34, hygiene: -8, agilityXp: 5, happiness: -5 },
+    payCalc(state) {
+      return Math.floor(70 + state.player.agility * 0.9 + Random.float(0, 70));
+    },
+    risk: { injury: 0.07 },
+  },
+  {
+    id: "street_performer",
+    name: "街头卖艺",
+    desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+    icon: "🎸",
+    location: "commercialDist",
+    requirements: { mental: 30, minAge: 16, maxAge: 60 },
+    effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+    payCalc(state) {
+      return Math.floor(
+        25 +
+          state.player.mental * 0.25 +
+          state.status.fame * 0.4 +
+          Random.float(0, 60),
+      );
+    },
+    risk: {},
+  },
+];
+
+/** 根据 ID 获取工作定义 */
+function getJobById(jobId) {
+  return STREET_JOBS.find((j) => j.id === jobId) || null;
+}

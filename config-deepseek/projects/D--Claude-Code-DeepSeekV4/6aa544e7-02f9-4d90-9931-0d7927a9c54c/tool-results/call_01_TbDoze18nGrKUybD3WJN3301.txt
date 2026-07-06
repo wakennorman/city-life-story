@@ -1,0 +1,252 @@
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-94-src/js/data/events.js             # 创业相关随机事件（补充）
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-95-```
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-96-
+city-life-story\plans\phase2-startup-insider-trading.md:97:### 1.4 核心模块设计（startup.js）
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-98-
+city-life-story\plans\phase2-startup-insider-trading.md:99:#### 1.4.1 公司注册
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-100-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-101-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-102-// 注册新公司
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-116-- 每个联合创始人有：技能专长、性格特质、要求持股比例
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-117-- 性格特质影响公司命运事件权重（类似企业命运系统的CEO_TRAITS）
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-118-
+city-life-story\plans\phase2-startup-insider-trading.md:119:#### 1.4.2 产品开发
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-120-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-121-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-122-// 创建新产品
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-136-}
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-137-```
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-138-
+city-life-story\plans\phase2-startup-insider-trading.md:139:#### 1.4.3 招聘系统
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-140-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-141-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-142-// 招聘员工
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-156-};
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-157-```
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-158-
+city-life-story\plans\phase2-startup-insider-trading.md:159:#### 1.4.4 融资系统
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-160-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-161-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-162-// 融资轮次
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-193-- 玩家谈判：接受条款 / 拒绝 / 反提议
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-194-- 对赌协议：达标则投资人放弃回购权，不达标则玩家需回购股份
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-195-
+city-life-story\plans\phase2-startup-insider-trading.md:196:#### 1.4.5 季度运营
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-197-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-198-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-199-// 每季度公司自动运营
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-207-}
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-208-```
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-209-
+city-life-story\plans\phase2-startup-insider-trading.md:210:#### 1.4.6 退出机制
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-211-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-212-```javascript
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-213-// IPO
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-473-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-474-| 文件                             | 改动                                                       | 优先级 |
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-475-| -------------------------------- | ---------------------------------------------------------- | ------ |
+city-life-story\plans\phase2-startup-insider-trading.md:476:| `src/js/core/state.js`           | 新增 `startup` 和 `insiderTrading` 状态块 + v1.4→v1.5 迁移 | P0     |
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-477-| `src/js/phase2/investment.js`    | 内幕交易审查逻辑 + 交易日志记录                            | P0     |
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-478-| `src/js/core/enterprise_fate.js` | 风声生成 + pendingEvents 队列 + 风声可信度更新             | P0     |
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-479-| `src/js/main.js`                 | 创业行动入口 + 创业Tab切换                                 | P0     |
+--
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-503-
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-504-- [ ] 新增 `startup` 状态块
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-505-- [ ] 新增 `insiderTrading` 状态块
+city-life-story\plans\phase2-startup-insider-trading.md:506:- [ ] 新增 v1.4→v1.5 存档迁移逻辑
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-507-
+city-life-story\plans\phase2-startup-insider-trading.md-508-### Step 2: 创业核心引擎（startup.js）
+D:\Claude Code+DeepSeekV4\city-life-story\plans\phase2-startup-insider-trading.md-509-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-17-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-18-### 方向一：构建有生命感的微型世界
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-19-
+city-life-story\src\DEVELOPMENT.md:20:**核心命题**：游戏不是一个任务清单，而是一个可感知的、自洽运转的小社会。玩家在其中的每一个决策都应当感受到来自"世界"的回响。
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-21-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-22-#### 1.1 四层新闻生态系统
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-23-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-324-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-325-> 每个NPC的一句台词都应该是一句可以独立成篇的人生观——不说教，但让玩家自己感受到重量。
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-326-
+city-life-story\src\DEVELOPMENT.md:327:#### 1.4 世界自洽性标准
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-328-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-329-每新增一个世界事件或叙事内容，必须通过以下校验：
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-330-
+city-life-story\src\DEVELOPMENT.md:331:1. **逻辑自洽**：事件原因→经过→结果符合基本商业/社会逻辑，不能为了有趣违背常识
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-332-2. **系统联动**：该事件至少影响2个不同的游戏子系统
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-333-3. **玩家可感知**：玩家无需读说明书，在游玩过程中能自然发现这个事件的存在和影响
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-334-4. **重复价值**：多周目游玩时，这个事件是否仍然有趣（避免"看过一次就没意思"的一次性内容）
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1344-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1345-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1346-[Omitted long context line]
+city-life-story\src\DEVELOPMENT.md:1347:[Omitted long matching line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1348-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1349-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1350-[Omitted long context line]
+city-life-story\src\DEVELOPMENT.md:1351:[Omitted long matching line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1352-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1353-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1354-[Omitted long context line]
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1402-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1403-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1404-[Omitted long context line]
+city-life-story\src\DEVELOPMENT.md:1405:[Omitted long matching line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1406-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1407-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1408-[Omitted long context line]
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1410-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1411-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1412-[Omitted long context line]
+city-life-story\src\DEVELOPMENT.md:1413:[Omitted long matching line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1414-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1415-[Omitted long context line]
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1416-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1503-| 真实合并系统      | `enterprise_fate.js` 新增 `applyRealMerger()` + `generateMergedCompanyName()`     | ✅ 完成 |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1504-| 行业板块传导      | `enterprise_fate.js` 新增 `applyIndustryContagion()` + `INDUSTRY_SECTORS`         | ✅ 完成 |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1505-| 季度企业报告      | `enterprise_fate.js` 新增 `generateQuarterlyReport()` + `renderQuarterlyReport()` | ✅ 完成 |
+city-life-story\src\DEVELOPMENT.md:1506:| 存档迁移兼容      | `state.js` v1.3→v1.4 迁移                                                         | ✅ 完成 |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1507-| 百科新增条目      | `wiki.js` 企业命运/创业系统条目+详情页                                            | ✅ 完成 |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1508-| CEO人格化（预留） | `enterprise_fate.js` 新增 `CEO_TRAITS` 模板（Phase 2 启用）                       | ✅ 预留 |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1509-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1584-2. **真实合并保留历史**：被收购公司标记 `absorbedBy` + `absorbedAt`，记录到 `mergedCompaniesMap`，多周目可追溯
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1585-3. **行业传导温和**：传导系数 0.4~0.8，同板块公司仅受到健康度-5~10、情绪-8~15 的温和影响
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1586-4. **季度报告非阻塞**：`generateQuarterlyReport` 返回数据数组，`renderQuarterlyReport` 可选渲染到任意DOM容器
+city-life-story\src\DEVELOPMENT.md:1587:5. **存档兼容**：v1.3→v1.4 迁移自动补全所有新字段，旧存档无缝升级
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1588-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1589-### 验证方式
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1590-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1706-| 文件                             | 改动                                                       | 状态      |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1707-| -------------------------------- | ---------------------------------------------------------- | --------- |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1708-| `src/js/phase2/startup.js`       | **新建** 创业系统完整引擎（~1500行）                       | ✅ 完成   |
+city-life-story\src\DEVELOPMENT.md:1709:| `src/js/core/state.js`           | 新增 `startup` 和 `insiderTrading` 状态块 + v1.4→v1.5 迁移 | ✅ 完成   |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1710-| `src/js/core/enterprise_fate.js` | 风声生成 + pendingEvents 队列 + 合规审查 + 风声感知渠道    | ✅ 完成   |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1711-| `src/js/phase2/stock.js`         | 交易日志记录（buyStock/sellStock 调用 logTrade）           | ✅ 完成   |
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1712-| `src/js/phase2/corp_ops.js`      | 季末内幕交易审查 + 创业系统结算 + 收购要约检查             | ✅ 完成   |
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1746-3. **玩家公司进入企业命运系统**：与NPC公司同等对待，参与零和博弈、行业传导、合并
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1747-4. **内幕交易风声延迟**：事件实际触发前3-5天发布风声，给玩家反应窗口
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1748-5. **合规审查概率**：基于获利金额和交易频率，获利越高审查概率越高
+city-life-story\src\DEVELOPMENT.md:1749:6. **存档兼容**：v1.4→v1.5 迁移自动补全 startup 和 insiderTrading 状态块
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1750-
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1751----
+D:\Claude Code+DeepSeekV4\city-life-story\src\DEVELOPMENT.md-1752-
+--
+city-life-story\src\css\style.css-577-  font-size: 11px;
+city-life-story\src\css\style.css-578-  color: var(--text-muted);
+city-life-story\src\css\style.css-579-  margin-bottom: 8px;
+city-life-story\src\css\style.css:580:  line-height: 1.4;
+D:\Claude Code+DeepSeekV4\city-life-story\src\css\style.css-581-}
+D:\Claude Code+DeepSeekV4\city-life-story\src\css\style.css-582-
+D:\Claude Code+DeepSeekV4\city-life-story\src\css\style.css-583-.action-card .card-meta {
+--
+city-life-story\src\js\core\company_spawner.js-148-    icon: "💻",
+city-life-story\src\js\core\company_spawner.js-149-    desc: "技术驱动，能力至上，对技术大牛友好",
+city-life-story\src\js\core\company_spawner.js-150-    mods: {
+city-life-story\src\js\core\company_spawner.js:151:      abilityGain: 1.4,
+city-life-story\src\js\core\company_spawner.js-152-      kpiReq: 1.0,
+city-life-story\src\js\core\company_spawner.js-153-      promoChance: 1.1,
+city-life-story\src\js\core\company_spawner.js-154-      intelligenceGain: 1.3,
+--
+city-life-story\src\js\core\company_spawner.js-175-    id: "创业氛围",
+city-life-story\src\js\core\company_spawner.js-176-    icon: "🚀",
+city-life-story\src\js\core\company_spawner.js-177-    desc: "节奏快机会多，可能暴富也可能暴毙",
+city-life-story\src\js\core\company_spawner.js:178:    mods: { promoChance: 1.5, kpiReq: 1.4, riskGain: 1.3, stockBonus: 2.0 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\company_spawner.js-179-  },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\company_spawner.js-180-  {
+city-life-story\src\js\core\company_spawner.js-181-    id: "国企风格",
+--
+city-life-story\src\js\data\corp.js-121-    name: "字节龙",
+city-life-story\src\js\data\corp.js-122-    industry: "短视频/推荐",
+city-life-story\src\js\data\corp.js-123-    culture: "狼性文化，卷王聚集地",
+city-life-story\src\js\data\corp.js:124:    salaryMod: 1.4,
+city-life-story\src\js\data\corp.js-125-    riskMod: 1.5,
+city-life-story\src\js\data\corp.js-126-    growthRate: 1.8,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\corp.js-127-  },
+--
+city-life-story\src\js\data\mechanics_registry.js-884-        kind: "list",
+city-life-story\src\js\data\mechanics_registry.js-885-        items: [
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\mechanics_registry.js-886-          "IPO：估值最高，需估值≥¥5亿 + B轮 + 连续盈利，上市溢价1.5-3倍",
+city-life-story\src\js\data\mechanics_registry.js:887:          "收购：快速变现，大企业出价0.8-1.4倍估值",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\mechanics_registry.js-888-          "破产：Runway≤0时触发，资产回收30%，声誉受损",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\mechanics_registry.js-889-        ],
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\mechanics_registry.js-890-      },
+--
+city-life-story\src\js\core\enterprise_fate.js-90-    name: "愿景驱动",
+city-life-story\src\js\core\enterprise_fate.js-91-    icon: "🌟",
+city-life-story\src\js\core\enterprise_fate.js-92-    desc: "长期主义，衰退期恢复概率+40%，合并事件权重+25%",
+city-life-story\src\js\core\enterprise_fate.js:93:    fateWeightMod: { recovery: 1.4, merger: 1.25 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\enterprise_fate.js-94-  },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\enterprise_fate.js-95-];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\enterprise_fate.js-96-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1251-
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1252-    var descEl = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1253-    descEl.style.cssText =
+city-life-story\src\js\ui\modal.js:1254:      "color:var(--text-secondary);font-size:12px;margin-bottom:6px;line-height:1.4;";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1255-    descEl.textContent = r.desc;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1256-    card.appendChild(descEl);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1257-
+--
+city-life-story\src\js\ui\modal.js-1641-      baseFootfall: 0.5,
+city-life-story\src\js\ui\modal.js-1642-      bestFor: ["food"],
+city-life-story\src\js\ui\modal.js-1643-      weatherMod: 1.0,
+city-life-story\src\js\ui\modal.js:1644:      weekendMod: 1.4,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1645-    },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1646-  ];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\modal.js-1647-
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2695-      "<h3>🚀 退出方式</h3>" +
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2696-      '<ul class="wiki-list">' +
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2697-      "<li><b>IPO</b>：估值最高，需估值≥¥5亿 + B轮 + 连续盈利，上市溢价1.5-3倍</li>" +
+city-life-story\src\js\ui\wiki.js:2698:      "<li><b>收购</b>：快速变现，大企业出价0.8-1.4倍估值</li>" +
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2699-      "<li><b>破产</b>：Runway≤0时触发，资产回收30%，声誉受损</li>" +
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2700-      "</ul>" +
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\wiki.js-2701-      "<h3>🔗 与企业命运联动</h3>" +
+--
+city-life-story\src\js\phase1\skill_bonuses.js-290-    id: "flu_surge",
+city-life-story\src\js\phase1\skill_bonuses.js-291-    label: "流感高峰",
+city-life-story\src\js\phase1\skill_bonuses.js-292-    test: /流感|发热门诊|医院|护工紧缺|口罩/,
+city-life-story\src\js\phase1\skill_bonuses.js:293:    footfall: { hospital: 1.45, commercialDist: 0.95 },
+city-life-story\src\js\phase1\skill_bonuses.js-294-    jobs: {
+city-life-story\src\js\phase1\skill_bonuses.js-295-      hospital_caregiver: 1.35,
+city-life-story\src\js\phase1\skill_bonuses.js-296-      delivery_rider: 1.08,
+--
+city-life-story\src\js\core\events.js.bak-6939-        apply: function (st) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js.bak-6940-          st.flags._arbitrageTechparkPayoffSeen = true;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js.bak-6941-          var invest = st.flags._arbitrageTechparkInvest || 1000;
+city-life-story\src\js\core\events.js.bak:6942:          var ret = Math.round(invest * 1.4);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js.bak-6943-          st.resources.cash += ret;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js.bak-6944-          st.resources.totalEarned += ret;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js.bak-6945-          StateManager.addMessage(
+--
+city-life-story\src\js\phase2\startup.js-356-    baseCost: 200000,
+city-life-story\src\js\phase2\startup.js-357-    revenueModel: "服务订阅/按次收费",
+city-life-story\src\js\phase2\startup.js-358-    features: ["医疗数据", "合规认证", "远程诊疗", "健康管理"],
+city-life-story\src\js\phase2\startup.js:359:    growthFactor: 1.4,
+city-life-story\src\js\phase2\startup.js-360-    churnRate: 0.02,
+city-life-story\src\js\phase2\startup.js-361-    description: "数字健康/远程医疗，监管严格但壁垒极高",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-362-  },
+--
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1815-  const acquirerName = getCompanyNameById(acquirerCid);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1816-
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1817-  // 生成收购报价 - 考虑公司表现
+city-life-story\src\js\phase2\startup.js:1818:  let offerMultiplier = 0.8 + Math.random() * 0.6; // 基础 0.8-1.4倍
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1819-  // 表现好加成
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1820-  if (company.revenue > company.expenses) offerMultiplier += 0.15;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\startup.js-1821-  if (company.reputation > 60) offerMultiplier += 0.1;
+--
+
+[Showing results with pagination = limit: 250]

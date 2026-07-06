@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "subject": "赚钱变难 - 降低废品回收收入+缩小差价空间",
+  "description": "1. payCalc base从30+random*40(¥30-70)降为25+random*30(¥25-55)\n2. 新人保护奖金从+¥5降为+¥3\n3. 吃饭¥15保持不变（差价空间更紧）",
+  "activeForm": "降低废品回收收益",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

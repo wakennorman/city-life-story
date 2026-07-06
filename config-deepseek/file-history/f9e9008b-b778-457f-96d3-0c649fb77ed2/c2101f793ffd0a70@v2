@@ -1,0 +1,93 @@
+---
+name: version-consistency-lesson
+description: 城市浮生记项目版本混乱导致多次工作白费的血泪教训，以及强制一致性规则
+metadata:
+  type: feedback
+  updated: 2026-06-21
+---
+
+# 版本一致性铁律
+
+> **教训：** 城市浮生记项目有两个版本，多次会话因改错版本导致工作白费。
+> 这是一个反复发生且代价高昂的错误，必须用系统化规则杜绝。
+
+**Why:** 项目存在两个游戏版本（根 `src/` 遗留版 和 `city-life-story/src/` 活跃版），Claude Code 有多个配置目录（config、config-deepseek、config-minimax），每个配置目录加载不同的项目上下文。当模型/窗口切换时，如果不主动确认当前修改的是哪个版本，极容易操作到错误的目标。已经有至少 3-4 个独立会话因此损失了数以千行计的工作量。
+
+**How to apply:** 每次开始编辑文件前，必须执行以下检查。
+
+---
+
+## 🔴 铁律一：编辑前先确认版本
+
+在修改任何文件前，先运行以下命令确认当前工作目录：
+
+```bash
+pwd
+# 期望输出：/d/Claude Code+DeepSeekV4/city-life-story
+# 如果是 /d/Claude Code+DeepSeekV4，则 90% 概率要操作的是根版本！
+```
+
+如果路径是 `D:\Claude Code+DeepSeekV4`（根目录），改的是根 `src/`。
+如果路径是 `D:\Claude Code+DeepSeekV4\city-life-story\`，改的是 `city-life-story/src/`。
+
+**🚨 当前活跃开发版是 `city-life-story/src/`！根 `src/` 已弃用！**
+
+---
+
+## 🔴 铁律二：Git 状态确认法
+
+修改前先检查 Git，确认自己在正确版本：
+
+```bash
+# 确认在 city-life-story 仓库内
+cd D:/Claude Code+DeepSeekV4/city-life-story && git status
+
+# 有 git 输出 → 在正确版本 ✅
+# "fatal: not a git repository" → 在根版本，立刻停止 ❌
+```
+
+---
+
+## 🔴 铁律三：文件定位规则
+
+编辑文件时，必须使用 `city-life-story/` 前缀路径：
+
+| 错误操作 ❌            | 正确操作 ✅                            |
+| ---------------------- | -------------------------------------- |
+| 写 `src/js/main.js`    | 写 `city-life-story/src/js/main.js`    |
+| 读 `src/index.html`    | 读 `city-life-story/src/index.html`    |
+| 改 `src/css/style.css` | 改 `city-life-story/src/css/style.css` |
+
+> 当使用 Read/Write/Edit 工具时，路径中**必须包含 `city-life-story/`**。任何不包含 `city-life-story/` 的 `src/` 路径都指向错误版本。
+
+---
+
+## 🔴 铁律四：新文件/新模块必须进 city-life-story
+
+创建新文件时，必须先验证路径前缀：
+
+```bash
+# 新文件检查清单：
+# 1. 文件路径是否包含 city-life-story？ → 必须 ✅
+# 2. city-life-story/src/index.html 是否加载了这个文件？ → 必须 ✅
+# 3. 如果根 src/ 也有同名文件，是否需要同步？ → 评估 ⚠️
+```
+
+---
+
+## 🟡 建议：根 src/ 不应再被编辑
+
+根 `src/` 中的独特内容应通过迁移到 `city-life-story/` 来处理，而不是直接在根版本上修改。
+
+---
+
+## 经验教训来源
+
+[[版本全景地图]] — 详细记录了每次误编辑的时间、会话和影响文件。
+[[待迁移内容清单]] — 根版本中需要迁移的独特功能模块。
+
+## 迁移状态
+
+- [[版本全景地图]] 已记录根 `src/` 中 3 个独有的完整模块（ingredients.js, carry.js, pricing.js）和 2 个不同实现的模块（diseases.js→illnesses.js, weather.js）
+- `moral_events.js` 根版本 (1049行) 与 city版 (963行) 有 86 行差异，需要合并
+- `index.html` 根版本有不同实现，需确认是否 city 版需要更新

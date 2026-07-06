@@ -1,0 +1,28 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-ed5b96225594485e83c0344daa6ae257",
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "ANTHROPIC_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-v4-flash",
+    "CLAUDE_CODE_EFFORT_LEVEL": "medium",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+  },
+  "model": "deepseek-v4-flash",
+  "autoMemoryEnabled": true,
+  "theme": "dark",
+  "apiProvider": "anthropic",
+  "statusLine": {
+    "type": "command",
+    "command": "node -e \"process.stdin.on('data',d=>{const c=JSON.parse(d).context_window||{};const p=c.used_percentage??0;const bar='█'.repeat(Math.round(p/10))+'░'.repeat(10-Math.round(p/10));console.log(`Context ${bar} ${p}% (${(c.total_input_tokens??0).toLocaleString()} tok)`)})\""
+  }
+}

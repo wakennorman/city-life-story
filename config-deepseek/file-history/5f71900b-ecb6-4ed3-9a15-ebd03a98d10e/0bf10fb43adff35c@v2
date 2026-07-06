@@ -1,0 +1,7 @@
+feat: 行动选项分类排序系统 v1.7
+
+新增 action_sort.js 模块，8个分类的分类分组 + 多层排序
+（参考《大多数》《中国式家长》《Stardew Valley》的设计）
+排序层级：分类顺序 -> 同类优先级 -> 点击频次 -> AP消耗 -> 名称
+
+Co-Authored-By: Claude <noreply@anthropic.com>

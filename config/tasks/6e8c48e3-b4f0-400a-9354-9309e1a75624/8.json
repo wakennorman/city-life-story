@@ -1,0 +1,8 @@
+{
+  "id": "8",
+  "subject": "P1-4: 家庭系统 - 结婚/生子/子女教育增强",
+  "description": "family_life.js 已有婚恋系统，需增加: (1)结婚条件联动NPC好感 (2)生子系统怀孕→生子→教育开支 (3)每日管线中子女教育支出检查",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

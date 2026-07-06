@@ -1,0 +1,22 @@
+node_modules/
+.DS_Store
+*.local
+.vscode/
+.idea/
+
+# Claude 运行时配置（多 API 隔离）
+.claude-*/
+.claude-home-*/
+.claude*/
+.settings.json
+
+# 个体记忆（不需要入库）
+memory/
+
+# 本地预览产物
+dist/
+*.log
+*.tmp
+
+# 系统
+Thumbs.db

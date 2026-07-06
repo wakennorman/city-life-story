@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "subject": "Task 1: render.js 拆分",
+  "description": "将 src/js/ui/render.js（~5949行）拆分为 render_ui.js、render_tab.js、render_modal.js，在 index.html 中按序加载新文件，保持原有功能不变",
+  "activeForm": "拆分 render.js",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

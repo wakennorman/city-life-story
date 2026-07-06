@@ -1,0 +1,24 @@
+﻿{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-1nvoYqnpzVWkltyr4cwkFMLa516sgK78puAzhjPCCur635WF",
+    "ANTHROPIC_BASE_URL": "https://api.iamhc.cn",
+    "ANTHROPIC_MODEL": "auto",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "auto",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "auto",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "auto",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)"
+    ]
+  },
+  "theme": "auto",
+  "autoMemoryEnabled": true
+}

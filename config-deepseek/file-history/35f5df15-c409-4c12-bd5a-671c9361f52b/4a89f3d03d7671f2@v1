@@ -1,0 +1,5 @@
+@echo off
+chcp 65001 > nul
+title Claude Helpcoder gpt5cx
+cd /d "D:\Claude Code+DeepSeekV4"
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "%~dp0Claude-helpcoder-gpt5cx.ps1" %*

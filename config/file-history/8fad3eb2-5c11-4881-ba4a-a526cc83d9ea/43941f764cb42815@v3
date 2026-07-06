@@ -1,0 +1,10 @@
+---
+name: find-skill
+description: 根据用户需求查找和安装来自 agent skill 开放生态的技能
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: 8fad3eb2-5c11-4881-ba4a-a526cc83d9ea
+---
+
+Find-Skill — 根据用户需求，查找和安装来自 agent skill 开放生态的技能。下载链接：https://github.com/vercel-labs/skills/tree/main/skills/find-skills

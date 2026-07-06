@@ -1,0 +1,10 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "D:\\Claude Code+DeepSeekV4\\config-deepseek\\plugins\\marketplaces\\claude-plugins-official",
+    "lastUpdated": "2026-06-21T10:15:30.057Z"
+  }
+}

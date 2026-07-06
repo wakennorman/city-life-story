@@ -1,0 +1,8 @@
+{
+  "id": "11",
+  "subject": "构建+验证+git commit+更新文档",
+  "description": "python build.py 构建，检查 dist/index.html，git commit，更新 CLAUDE.md 和 src/DEVELOPMENT.md",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

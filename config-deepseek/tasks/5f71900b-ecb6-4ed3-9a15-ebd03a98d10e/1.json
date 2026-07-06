@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "subject": "创建 action_sort.js 模块",
+  "description": "新建分类定义、ID映射、排序函数、分组函数",
+  "activeForm": "创建 action_sort.js",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

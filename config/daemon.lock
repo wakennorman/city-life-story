@@ -1,0 +1,15 @@
+{
+  "pid": 85812,
+  "version": "2.1.178",
+  "jsonPath": "D:\\Claude Code+DeepSeekV4\\config\\daemon.json",
+  "logPath": "D:\\Claude Code+DeepSeekV4\\config\\daemon.log",
+  "startedAt": 1781581457856,
+  "origin": "transient",
+  "spawnedBy": {
+    "label": "claude",
+    "cwd": "D:\\Claude Code+DeepSeekV4",
+    "pid": 86204
+  },
+  "procStart": "639172070573782090",
+  "launchTarget": "C:\\Users\\陈恒稳\\AppData\\Roaming\\npm\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe"
+}

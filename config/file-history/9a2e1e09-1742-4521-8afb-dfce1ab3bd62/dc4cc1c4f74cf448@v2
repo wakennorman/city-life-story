@@ -1,0 +1,11 @@
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "ark-7cfaba66-34e9-4957-897d-4661d7388078-5f8f1",
+    "ANTHROPIC_BASE_URL": "https://ark.cn-beijing.volces.com/api/coding"
+  },
+  "model": "glm-5.2",
+  "permissions": {
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+  },
+  "autoMemoryEnabled": true
+}

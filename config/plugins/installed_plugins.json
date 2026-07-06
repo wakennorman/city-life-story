@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "plugins": {
+    "commit-commands@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "D:\\Claude Code+DeepSeekV4",
+        "installPath": "D:\\Claude Code+DeepSeekV4\\config\\plugins\\cache\\claude-plugins-official\\commit-commands\\4e8962d6afc3",
+        "version": "4e8962d6afc3",
+        "installedAt": "2026-06-15T13:44:31.607Z",
+        "lastUpdated": "2026-06-18T02:02:25.253Z",
+        "gitCommitSha": "4e8962d6afc3c5db3efc92497ec10605a67d4c19"
+      }
+    ],
+    "security-guidance@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "D:\\Claude Code+DeepSeekV4",
+        "installPath": "D:\\Claude Code+DeepSeekV4\\config\\plugins\\cache\\claude-plugins-official\\security-guidance\\2.0.6",
+        "version": "2.0.6",
+        "installedAt": "2026-06-15T13:44:31.607Z",
+        "lastUpdated": "2026-06-15T13:44:31.607Z",
+        "gitCommitSha": "be88f154f6ab4f0c5142585ede3d9763aca38bd4"
+      }
+    ]
+  }
+}

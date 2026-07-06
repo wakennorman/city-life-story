@@ -1,0 +1,2 @@
+- [build-workflow](build-workflow.md) — src → build.py → dist，每次改源码后必须构建
+- [action-sort-system](action-sort-system.md) — 行动选项分类排序系统 v1.7，分类分组+多层排序取代平铺

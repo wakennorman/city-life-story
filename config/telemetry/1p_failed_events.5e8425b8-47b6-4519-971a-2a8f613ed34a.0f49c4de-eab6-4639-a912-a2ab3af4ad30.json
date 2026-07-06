@@ -1,0 +1,41 @@
+{
+  "event_type": "ClaudeCodeInternalEvent",
+  "event_data": {
+    "event_name": "tengu_feature_bad",
+    "client_timestamp": "2026-06-15T20:42:14.614Z",
+    "model": "deepseek-v4-pro[1m]",
+    "session_id": "5e8425b8-47b6-4519-971a-2a8f613ed34a",
+    "user_type": "external",
+    "betas": "claude-code-20250219,context-1m-2025-08-07,interleaved-thinking-2025-05-14,redact-thinking-2026-02-12,context-management-2025-06-27,prompt-caching-scope-2026-01-05,mid-conversation-system-2026-04-07",
+    "env": {
+      "platform": "win32",
+      "node_version": "v24.3.0",
+      "terminal": "windows-terminal",
+      "package_managers": "npm",
+      "runtimes": "node",
+      "is_running_with_bun": true,
+      "is_ci": false,
+      "is_claubbit": false,
+      "is_github_action": false,
+      "is_claude_code_action": false,
+      "is_claude_ai_auth": false,
+      "version": "2.1.177",
+      "arch": "x64",
+      "is_claude_code_remote": false,
+      "deployment_environment": "unknown-win32",
+      "is_conductor": false,
+      "version_base": "2.1.177",
+      "build_time": "2026-06-13T00:21:57Z",
+      "is_local_agent_mode": false,
+      "platform_raw": "win32",
+      "shell": "bash"
+    },
+    "entrypoint": "cli",
+    "is_interactive": true,
+    "client_type": "cli",
+    "process": "eyJ1cHRpbWUiOjM1MTguODUwMTk4MiwicnNzIjo1NTAwMzk1NTIsImhlYXBUb3RhbCI6MTI4NzQzNDI0LCJoZWFwVXNlZCI6MTkwMDc0NTEzLCJleHRlcm5hbCI6ODg2NDU4ODksImFycmF5QnVmZmVycyI6MTE0NjczODgsImNvbnN0cmFpbmVkTWVtb3J5IjoxNzA5NTE4NDM4NCwiY3B1VXNhZ2UiOnsidXNlciI6NDEyMzEyMDAwLCJzeXN0ZW0iOjkyNDUzMDAwfSwiY3B1UGVyY2VudCI6MS41NDEzNTkwNjExNDc5NzkzfQ==",
+    "additional_metadata": "eyJyZW5kZXJlcl9tb2RlIjoiZGVmYXVsdCIsImZlYXR1cmVfbmFtZSI6InVwZGF0ZV9jaGVjayIsImVycm9yX2NvZGUiOiJ1cGRhdGVfY2hlY2tfbnBtX3ZpZXdfZmFpbGVkIn0=",
+    "event_id": "488f78dc-4d35-4afa-b742-d9aaccb5b04e",
+    "device_id": "2a8e177693d4a0f9180e65064210e0b8cca137e73e1a9329ff4b3b708a908031"
+  }
+}

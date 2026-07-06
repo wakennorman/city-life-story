@@ -1,0 +1,252 @@
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\state.js:48:      actionPoints: 100, // 行动力点数 (0-100), 每个行动消耗不同AP
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\state.js:67:      happiness: 55,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\state.js:74:      emotionalState: "stable", // stable|happy|sad|angry|stressed|depressed
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\state.js:98:      capacity: 20, // 基础容量
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\state.js:113:      storageCapacity: 0, // 仓库额外容量
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:14:  const wrap = document.getElementById(id);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:15:  if (!wrap) return;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:16:  const bar = wrap.querySelector(".stat-bar");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:17:  const valEl = wrap.querySelector(".stat-value");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:32:    if (key === "capacity") parts.push(`容量+${val}`);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:83:  document.getElementById("app").style.display = "none";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:128:  document.getElementById("app").style.display = "";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:139:    document.getElementById("app").style.display = "";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:302:        desc: `容量+${curHouse.capacity} | 睡眠恢复疲劳-${curHouse.fatigueRecovery} | ${curHouse.desc}${curHouse.rent > 0 ? ` | 日租¥${curHouse.rent}/天` : ""}`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:323:            state.inventory.capacity =
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:324:              house.capacity + (state.housing.storageCapacity || 0);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:326:              `🏠 搬进了${house.name}！容量提升至${state.inventory.capacity}。`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:343:          capacity: 150,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:351:          capacity: 500,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:359:          name: `📦 已租仓库 (额外+${state.housing.storageCapacity || 0}容量)`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:360:          desc: `日租¥${STORAGE_OPTIONS.find((s) => s.capacity === state.housing.storageCapacity)?.rent || "?"}/天`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:370:            desc: `额外+${opt.capacity}商品存储容量。一次性¥${opt.cost} + 日租¥${opt.rent}/天`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:378:              state.housing.storageCapacity = opt.capacity;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:379:              const baseCap = [20, 50, 100, 200][state.housing.tier || 0];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:380:              state.inventory.capacity = baseCap + opt.capacity;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:382:                `📦 租下了${opt.name}！总容量提升至${state.inventory.capacity}。`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:398:          capacity: 5,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:405:          capacity: 15,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:412:          capacity: 30,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:426:          desc: `随身容量+${pack.capacity}。一次性购买，永久拥有。`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:433:            state.inventory.capacity += pack.capacity;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:435:              `🎒 购买了${pack.name}，随身容量+${pack.capacity}！`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:470:        state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:490:        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:623:          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:637:        id: "apply_job",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:813:          state.needs.happiness = Math.min(100, state.needs.happiness + 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:874:    if (job.effects.happiness)
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:875:      state.needs.happiness = Math.max(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:877:        Math.min(100, state.needs.happiness + job.effects.happiness),
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1010:  if (typeof applyNeedsDecay === "function") applyNeedsDecay(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1025:  state.needs.happiness = Math.max(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1027:    Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1040:      state.inventory.capacity = 20 + (state.housing?.storageCapacity || 0);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1044:  if (state.housing?.storageRented && state.housing?.storageCapacity > 0) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1045:    const storageRent = state.housing.storageCapacity >= 500 ? 50 : 20;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1051:      state.housing.storageCapacity = 0;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1052:      const baseCap = [20, 50, 100, 200][state.housing.tier || 0];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1053:      state.inventory.capacity = baseCap;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1189:    actionsDiv.appendChild(btnEl);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1192:  overlay.appendChild(box);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1196:  document.body.appendChild(overlay);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1650:    .map(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:29:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:32:          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:42:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:43:          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:54:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:75:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:77:          st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:87:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:107:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:109:            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:116:            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:138:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:166:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:176:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:178:          st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:199:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:205:            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:211:            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:222:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:223:          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:241:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:259:            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:270:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:289:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:308:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:315:          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:325:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:342:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:343:          st.needs.happiness = Math.min(100, st.needs.happiness - 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:354:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:356:            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:363:            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:374:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:392:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:394:          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:408:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:420:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:421:          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:442:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:467:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:479:            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:490:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:531:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:550:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:564:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:605:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:611:          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:621:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:631:            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:648:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:658:          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:678:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:685:            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:712:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:726:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:752:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:772:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:802:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:830:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:853:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:886:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:929:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:939:          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:949:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:953:            st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:962:            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:970:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:999:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1019:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1034:        apply: (st) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1062:  if (state.needs.happiness < 30) mod += 0.05;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1114:    .map((ch, i) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1150:  document.body.appendChild(overlay);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1160:        if (typeof choice.apply === "function") {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1161:          choice.apply(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1164:        console.error("Event choice apply error:", e);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1219: * 四、兼容旧 API
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1222:/** 每日新闻判定（旧 API，保持兼容） */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1234:      news._appliedDay = state.player.day;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\core\events.js:1237:      applyNewsEffect(news, state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:5: * category: daily | food | luxury | clothing | electronics | scrap
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:62:    id: "scrap_metal",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:66:    category: "scrap",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:69:    id: "scrap_paper",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:73:    category: "scrap",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:76:    id: "scrap_plastic",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:80:    category: "scrap",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\goods.js:91:  return GOODS.map((g) => g.id);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:49:        st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:55:        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:76:      st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:103:        st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:106:        st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:127:      st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:176:      st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:200:      st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:277:      st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:302:      st.needs.happiness = Math.min(100, st.needs.happiness + 18);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:326:      st.needs.happiness = Math.min(100, st.needs.happiness + 25);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:378:      st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:402:      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:431:        st.needs.happiness = Math.min(100, st.needs.happiness + 50);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:440:        st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:443:        st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:493:      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:513:      st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:563:        st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:596:          state.needs.happiness = Math.min(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\actions_extra.js:598:            state.needs.happiness + (amt / 100) * 3,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\corp.js:177:    effects: { popularity: 10, happiness: 8, upwardMgmt: 2 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\corp.js:184:    effects: { ability: 10, intelligence: 3, fatigue: 5, happiness: 3 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\corp.js:218:      happiness: 10,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:70:  if (effects.happiness)
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:71:    state.needs.happiness = Math.max(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:73:      Math.min(100, state.needs.happiness + effects.happiness),
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:131:      applyPromotion(state, promoResult);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:216:    if (typeof bootstrapStockHistory === "function") {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\corp_ops.js:217:      bootstrapStockHistory(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:38:    effects: { capacity: 10 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:89:    capacity: 20,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:94:    happinessBonus: 0,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:101:    capacity: 50,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:106:    happinessBonus: 0,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:113:    capacity: 100,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:116:    happinessBonus: 5,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:125:    capacity: 200,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\items.js:128:    happinessBonus: 10,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:170:function bootstrapStockHistory(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:184:    market.high20 = Math.max(...market.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:185:    market.low20 = Math.min(...market.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:228:    market.high20 = Math.max(...market.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:229:    market.low20 = Math.min(...market.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:437:  btc.high20 = Math.max(...btc.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:438:  btc.low20 = Math.min(...btc.history.map((h) => h.price));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:513:    id: "apartment_small",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:518:    appreciation: 0.001, // 日升值率
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:524:    id: "apartment_mid",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:529:    appreciation: 0.0015,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:535:    id: "apartment_luxury",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:540:    appreciation: 0.002,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:551:    appreciation: 0.001,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:562:    appreciation: 0.0012,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:597:    appreciation: prop.appreciation,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:637:    const change = 1 + prop.appreciation + (Math.random() - 0.5) * 0.004;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:669:    travelApBonus: 5, // 出行AP消耗减少
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:679:    travelApBonus: 10,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:689:    travelApBonus: 15,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:724:    travelApBonus: car.travelApBonus,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:797:/** 获取汽车出行AP加成 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:798:function getCarTravelApBonus(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:802:    bonus = Math.max(bonus, car.travelApBonus);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:875:  const prices = history.map((h) => h.price);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:883:    .map(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:954:      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1032:      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1050:    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;">';
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1060:          💰 ¥${prop.price.toLocaleString()} | 📅 月租 ¥${prop.monthlyRent.toLocaleString()} | 📈 日升值${(prop.appreciation * 100).toFixed(1)}%
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1085:    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;">';
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1095:          💰 ¥${car.price.toLocaleString()} | 📉 日贬值${(car.depreciation * 100).toFixed(2)}% | ⚡ 出行AP-${car.travelApBonus} | 🔧 月费¥${car.monthlyCost}
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1101:            ✅ 已持有 | 当前估值: ¥${owned.currentValue.toLocaleString()} | 出行AP-${owned.travelApBonus}
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1120:  bootstrapStockHistory(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1147:    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;font-size:11px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1155:    <div style="display:flex;gap:4px;margin-bottom:12px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1167:      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;">';
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1311:  bootstrapStockHistory(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:28:      happiness: -5,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:48:    effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:63:    effects: { fatigue: 14, happiness: 2, salesXp: 3 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:80:    effects: { fatigue: 38, hygiene: -22, physiqueXp: 6, happiness: -10 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:122:      happiness: -15,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:138:    effects: { fatigue: 42, hygiene: -3, happiness: -20, mental: -4 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:153:    effects: { fatigue: 22, hygiene: -8, cookingXp: 5, happiness: 2 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:171:    effects: { fatigue: 16, happiness: 5, agilityXp: 2 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:197:    effects: { fatigue: 14, repairXp: 5, happiness: 8 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:214:    effects: { fatigue: 10, happiness: -3, physiqueXp: 1 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:242:    effects: { fatigue: 16, hygiene: -5, happiness: 8, repairXp: 2 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:268:    effects: { fatigue: 12, intelligenceXp: 3, englishXp: 2, happiness: 10 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:288:    effects: { fatigue: 34, hygiene: -8, agilityXp: 5, happiness: -5 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\data\jobs.js:301:    effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\trade.js:35:  if (currentItems + qty > state.inventory.capacity) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\trade.js:37:      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\trade.js:149:  if (currentItems + qty > state.inventory.capacity) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\trade.js:151:      `⚠️ 背包空间不足！（${currentItems}/${state.inventory.capacity}）`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:6:function applyNeedsDecay(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:10:  n.happiness = Math.max(0, n.happiness - 3);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:37:  if (n.happiness < 15) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:75:  score += (n.happiness - 50) * 0.3;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:92:  else if (score < 80) emotionalState = "happy";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:93:  else emotionalState = "happy";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:107:    happy: { pay: 1.25, injury: 0.7, skillXp: 1.5 },
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase1\needs.js:119:    happy: "😊",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:24:  area.appendChild(qDiv);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:38:          <div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:47:    area.appendChild(progDiv);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:110:    cards.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:113:  area.appendChild(cards);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:138:      teamGrid.appendChild(card);
+
+[Showing results with pagination = limit: 250]

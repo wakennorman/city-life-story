@@ -1,0 +1,252 @@
+city-life-story\src\js\main.js:3397:          if (Math.random() < 0.3) {
+city-life-story\src\js\core\company_spawner.js:304:    "comp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+city-life-story\src\js\core\company_spawner.js:500:    "comp_ruins_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+city-life-story\src\js\phase1\actions_extra.js:50:      const earned = Math.floor(5 + Math.random() * 20 + (skill - 25) * 0.3);
+city-life-story\src\js\phase1\actions_extra.js:56:      if (Math.random() < 0.2) {
+city-life-story\src\js\phase1\actions_extra.js:82:      const earned = 1 + Math.floor(Math.random() * 5);
+city-life-story\src\js\phase1\actions_extra.js:113:      if (Math.random() < 0.45) {
+city-life-story\src\js\phase1\actions_extra.js:145:      if (Math.random() < 0.3) {
+city-life-story\src\js\phase1\actions_extra.js:194:      const sk = skills[Math.floor(Math.random() * skills.length)];
+city-life-story\src\js\phase1\actions_extra.js:195:      st.skills[sk].xp += 5 + Math.floor(Math.random() * 10);
+city-life-story\src\js\phase1\actions_extra.js:250:      const key = skills[Math.floor(Math.random() * skills.length)];
+city-life-story\src\js\phase1\actions_extra.js:253:      var xpGain = Math.floor((30 + Math.floor(Math.random() * 20)) * xpMult);
+city-life-story\src\js\phase1\actions_extra.js:477:      const roll = Math.random();
+city-life-story\src\js\phase1\actions_extra.js:487:        const prize = 50 + Math.floor(Math.random() * 200);
+city-life-story\src\js\phase1\actions_extra.js:602:      var luck = Math.random();
+city-life-story\src\js\phase1\actions_extra.js:607:        baseEarned = 150 + Math.floor(Math.random() * 200);
+city-life-story\src\js\phase1\actions_extra.js:608:        xpGain = 8 + Math.floor(Math.random() * 7); // 8~14 XP
+city-life-story\src\js\phase1\actions_extra.js:612:        baseEarned = 30 + Math.floor(Math.random() * 90);
+city-life-story\src\js\phase1\actions_extra.js:613:        xpGain = 4 + Math.floor(Math.random() * 5); // 4~8 XP
+city-life-story\src\js\phase1\actions_extra.js:616:        baseEarned = 180 + Math.floor(Math.random() * 40);
+city-life-story\src\js\phase1\actions_extra.js:617:        xpGain = 2 + Math.floor(Math.random() * 3); // 2~4 XP
+city-life-story\src\js\phase1\actions_extra.js:627:        xpGain = 1 + Math.floor(Math.random() * 3); // 1~3 XP（失败也能学点教训）
+city-life-story\src\js\phase1\actions_extra.js:725:        const earned = Math.floor(80 + lvl * 1.5 + Math.random() * 50);
+city-life-story\src\js\phase1\actions_extra.js:733:          Math.floor(Math.random() * 12) +
+city-life-story\src\js\phase1\actions_extra.js:828:        var base = 180 + Math.floor(Math.random() * 150);
+city-life-story\src\js\phase1\actions_extra.js:831:        var fameGain = 3 + Math.floor(Math.random() * 5);
+city-life-story\src\js\phase1\actions_extra.js:868:        var roll = Math.random();
+city-life-story\src\js\phase1\actions_extra.js:870:          var cashTip = 100 + Math.floor(Math.random() * 150);
+city-life-story\src\js\phase1\actions_extra.js:887:          var xpGainM = 25 + Math.floor(Math.random() * 25);
+city-life-story\src\js\phase1\actions_extra.js:889:          var sk = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+city-life-story\src\js\core\enterprise_fate.js:362:        (100 + Math.floor(Math.random() * 200)) +
+city-life-story\src\js\core\enterprise_fate.js:786:      Math.min(100, co.sentiment + (Math.random() - 0.5) * 4),
+city-life-story\src\js\core\enterprise_fate.js:972:    if (Math.random() < baseProb) {
+city-life-story\src\js\core\enterprise_fate.js:993:        var roll = Math.random() * totalWeight;
+city-life-story\src\js\core\enterprise_fate.js:1319:  var suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+city-life-story\src\js\core\enterprise_fate.js:1475:    if (co.health > 70 && co.trend === "up" && Math.random() < 0.15) {
+city-life-story\src\js\core\enterprise_fate.js:1476:      var gain = 0.3 + Math.random() * 0.5;
+city-life-story\src\js\core\enterprise_fate.js:1485:    if (Math.random() < 0.08) {
+city-life-story\src\js\core\enterprise_fate.js:1543:    "rumor_" + state.player.day + "_" + Math.random().toString(36).substr(2, 9);
+city-life-story\src\js\core\enterprise_fate.js:1557:        estimatedImpact = 0.15 + Math.random() * 0.1;
+city-life-story\src\js\core\enterprise_fate.js:1562:        estimatedImpact = 0.12 + Math.random() * 0.13;
+city-life-story\src\js\core\enterprise_fate.js:1564:        estimatedImpact = 0.08 + Math.random() * 0.07;
+city-life-story\src\js\core\enterprise_fate.js:1566:        estimatedImpact = 0.05 + Math.random() * 0.08;
+city-life-story\src\js\core\enterprise_fate.js:1577:    confidence: 30 + Math.floor(Math.random() * 40), // 30-70%
+city-life-story\src\js\core\enterprise_fate.js:1583:    triggerDay: state.player.day + 3 + Math.floor(Math.random() * 3), // 3-5天后触发
+city-life-story\src\js\core\enterprise_fate.js:1625:  if (channel === "work") confidenceGain = 8 + Math.random() * 12;
+city-life-story\src\js\core\enterprise_fate.js:1626:  else if (channel === "social") confidenceGain = 10 + Math.random() * 15;
+city-life-story\src\js\core\enterprise_fate.js:1627:  else if (channel === "npc") confidenceGain = 8 + Math.random() * 12;
+city-life-story\src\js\core\enterprise_fate.js:1628:  else if (channel === "news") confidenceGain = 4 + Math.random() * 8;
+city-life-story\src\js\core\enterprise_fate.js:1629:  else if (channel === "report") confidenceGain = 3 + Math.random() * 6;
+city-life-story\src\js\core\enterprise_fate.js:1699:          var approved = Math.random() < 0.5;
+city-life-story\src\js\core\enterprise_fate.js:1906:      if (Math.random() < auditProb) {
+city-life-story\src\js\core\enterprise_fate.js:1908:        var penalty = profit * (1 + Math.random()); // 1-2倍罚款
+city-life-story\src\js\core\enterprise_fate.js:1909:        var bannedDays = 30 + Math.floor(Math.random() * 60); // 30-90天
+city-life-story\src\js\core\enterprise_fate.js:1942:    10 + Math.floor(Math.random() * 20);
+city-life-story\src\js\core\enterprise_fate.js:2179:  else if (scale >= 15) eventCount = 2 + (Math.random() < 0.5 ? 1 : 0);
+city-life-story\src\js\core\enterprise_fate.js:2180:  else eventCount = 1 + (Math.random() < 0.3 ? 1 : 0);
+city-life-story\src\js\core\enterprise_fate.js:2205:    var roll = Math.random() * totalWeight;
+city-life-story\src\js\core\enterprise_fate.js:2261:    (deceasedCo.productScore || 50) * 0.6 + (Math.random() - 0.5) * 20;
+city-life-story\src\js\core\enterprise_fate.js:2269:    (deceasedCo.talentScore || 50) * 0.5 + (Math.random() - 0.5) * 20;
+city-life-story\src\js\core\enterprise_fate.js:2282:  newCo.marketShare = Math.round((3 + Math.random() * 5) * 100) / 100;
+city-life-story\src\js\core\enterprise_fate.js:2331:  var position = positions[Math.floor(Math.random() * positions.length)];
+city-life-story\src\js\core\enterprise_fate.js:2333:    Math.floor(Math.random() * 5)
+city-life-story\src\js\core\enterprise_fate.js:2395:    candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
+city-life-story\src\js\core\enterprise_fate.js:2399:  var productBoost = 5 + Math.floor(Math.random() * 10);
+city-life-story\src\js\core\enterprise_fate.js:2406:  var talentBoost = 3 + Math.floor(Math.random() * 7);
+city-life-story\src\js\core\enterprise_fate.js:2413:  var shareBoost = Math.round((1 + Math.random() * 2) * 100) / 100;
+city-life-story\src\js\core\enterprise_fate.js:2431:    Math.round(500 + Math.random() * 2000) +
+city-life-story\src\js\core\enterprise_fate.js:2511:    var talentGain = 3 + Math.floor(Math.random() * 6);
+city-life-story\src\js\core\enterprise_fate.js:2516:    var productGain = Math.floor(Math.random() * 3);
+city-life-story\src\js\core\events_core.js:68:  if (Math.random() < baseChance + mod) {
+city-life-story\src\js\core\events_core.js:85:  if (Math.random() < baseChance + mod) {
+city-life-story\src\js\core\events_core.js:116:  var roll = Math.random() * totalWeight;
+city-life-story\src\js\core\events_core.js:429:    if (Math.random() < 0.08 && typeof getRandomNewsEvent === "function") {
+city-life-story\src\js\core\events_core.js:456:  if (Math.random() < newsChance) {
+city-life-story\src\js\phase1\critical.js:378:      if (Math.random() < ch) {
+city-life-story\src\js\phase1\critical.js:517:      if (Math.random() < 0.4) {
+city-life-story\src\js\phase1\critical.js:535:      var fee = 300 + Math.floor(Math.random() * 700);
+city-life-story\src\js\phase1\critical.js:565:      if (Math.random() < 0.35) {
+city-life-story\src\js\phase1\critical.js:566:        _contractIllness(state, Math.random() < 0.5 ? "overwork" : "insomnia");
+city-life-story\src\js\phase1\critical.js:604:      if (Math.random() < 0.4) {
+city-life-story\src\js\phase1\critical.js:607:          Math.random() < 0.5 ? "skin_infection" : "cold",
+city-life-story\src\js\phase1\critical.js:626:      if (Math.random() < 0.5) _contractIllness(state, "cold");
+city-life-story\src\js\phase1\critical.js:677:      if (Math.random() < 0.3) {
+city-life-story\src\js\phase2\family_life.js:296:  if (Math.random() > loc.probability) {
+city-life-story\src\js\phase2\family_life.js:325:    partnerTypeKeys[Math.floor(Math.random() * partnerTypeKeys.length)];
+city-life-story\src\js\phase2\family_life.js:327:  const name = names[Math.floor(Math.random() * names.length)];
+city-life-story\src\js\phase2\family_life.js:334:      Math.random().toString(36).substr(2, 9),
+city-life-story\src\js\phase2\family_life.js:393:    event.cost[0] + Math.floor(Math.random() * (event.cost[1] - event.cost[0]));
+city-life-story\src\js\phase2\family_life.js:404:  if (Math.random() < successChance) {
+city-life-story\src\js\phase2\family_life.js:472:  const weddingCost = 50000 + Math.floor(Math.random() * 100000);
+city-life-story\src\js\phase2\family_life.js:483:    age: 25 + Math.floor(Math.random() * 5),
+city-life-story\src\js\phase2\family_life.js:510:  const birthCost = 5000 + Math.floor(Math.random() * 10000);
+city-life-story\src\js\phase2\family_life.js:528:  const gender = genders[Math.floor(Math.random() * genders.length)];
+city-life-story\src\js\phase2\family_life.js:529:  const name = names[Math.floor(Math.random() * names.length)];
+city-life-story\src\js\phase2\family_life.js:536:      Math.random().toString(36).substr(2, 9),
+city-life-story\src\js\phase2\family_life.js:542:    intelligence: 50 + Math.floor(Math.random() * 30),
+city-life-story\src\js\phase2\family_life.js:544:      Math.floor(Math.random() * 6)
+city-life-story\src\js\phase2\family_life.js:640:    if (Math.random() < 0.05) {
+city-life-story\src\js\phase2\family_life.js:659:    if (Math.random() < 0.02) {
+city-life-story\src\js\phase2\family_life.js:660:      const parentKey = Math.random() < 0.5 ? "father" : "mother";
+city-life-story\src\js\phase2\family_life.js:716:    parent.health = Math.random() < 0.3 ? "minor_illness" : "healthy";
+city-life-story\src\js\phase2\family_life.js:718:    const rand = Math.random();
+city-life-story\src\js\phase2\family_life.js:723:    const rand = Math.random();
+city-life-story\src\js\phase2\family_life.js:871:    Math.floor(Math.random() * (activity.cost[1] - activity.cost[0]));
+city-life-story\src\js\core\events_corp.js:52:              Math.random() < 0.4 + (st.player.intelligence - 30) * 0.02;
+city-life-story\src\js\core\events_corp.js:108:            const success = Math.random() < 0.7;
+city-life-story\src\js\core\events_corp.js:110:              const profit = 3000 + Math.floor(Math.random() * 2000) + 1000;
+city-life-story\src\js\core\events_corp.js:156:            const success = Math.random() < 0.7;
+city-life-story\src\js\core\events_corp.js:158:              const profit = 1000 + Math.floor(Math.random() * 600) + 300;
+city-life-story\src\js\core\events_corp.js:207:            const safe = Math.random() < 0.8;
+city-life-story\src\js\core\events_corp.js:232:            const ok = Math.random() < 0.6;
+city-life-story\src\js\core\events_corp.js:254:            const safe = Math.random() < 0.5;
+city-life-story\src\js\core\events_corp.js:289:            const recovered = Math.random() < 0.15;
+city-life-story\src\js\core\events_corp.js:291:              const back = 300 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_corp.js:322:            const extra = 50 + Math.floor(Math.random() * 50);
+city-life-story\src\js\core\events_corp.js:388:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_corp.js:543:            if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+city-life-story\src\js\core\events_corp.js:602:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_corp.js:698:            if (Math.random() < 0.55) {
+city-life-story\src\js\core\events_corp.js:782:            if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_corp.js:881:            const roll = Math.random();
+city-life-story\src\js\core\events_corp.js:999:              if (Math.random() < 0.3) {
+city-life-story\src\js\core\events_corp.js:1000:                st.resources.cash += 8000 + Math.floor(Math.random() * 15000);
+city-life-story\src\js\core\events_corp.js:1006:              } else if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_corp.js:1007:                st.resources.cash += 3000 + Math.floor(Math.random() * 4000);
+city-life-story\src\js\core\events_corp.js:1153:            var cost = 1000 + Math.floor(Math.random() * 3000);
+city-life-story\src\js\core\events_corp.js:1622:            var severance = 50000 + Math.floor(Math.random() * 20000);
+city-life-story\src\js\core\events_corp.js:1674:              Math.random() <
+city-life-story\src\js\core\events_corp.js:1746:              Math.random() < 0.25 + (st.player.corporate.ability - 30) * 0.02;
+city-life-story\src\js\core\events_corp.js:1802:              Math.random() <
+city-life-story\src\js\core\events_corp.js:1846:              Math.random() <
+city-life-story\src\js\core\events_corp.js:1909:              Math.random() <
+city-life-story\src\js\core\events_corp.js:2171:            var profit = 150000 + Math.floor(Math.random() * 20000);
+city-life-story\src\js\core\events_corp.js:2189:            var profit = 80000 + Math.floor(Math.random() * 40000);
+city-life-story\src\js\core\events_corp.js:2239:            if (Math.random() < 0.35) {
+city-life-story\src\js\core\festivals.js:123:          if (Math.random() < 0.6) {
+city-life-story\src\js\core\festivals.js:124:            const红包 = 150 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\festivals.js:163:          const 找到 = Math.random() < 0.4;
+city-life-story\src\js\core\festivals.js:165:            const收入 = 80 + Math.floor(Math.random() * 40);
+city-life-story\src\js\core\festivals.js:268:          const xp = 20 + Math.floor(Math.random() * 10);
+city-life-story\src\js\core\festivals.js:322:          if (Math.random() < 0.3) {
+city-life-story\src\js\core\festivals.js:323:            const 意外 = 100 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\festivals.js:406:          const 找到 = Math.random() < 0.5;
+city-life-story\src\js\core\festivals.js:408:            const收入 = 100 + Math.floor(Math.random() * 50);
+city-life-story\src\js\core\festivals.js:430:          const 找到 = Math.random() < 0.6;
+city-life-story\src\js\core\festivals.js:432:            const收入 = 80 + Math.floor(Math.random() * 30);
+city-life-story\src\js\core\festivals.js:473:          var报酬 = 120 + Math.floor(Math.random() * 60);
+city-life-story\src\js\core\festivals.js:526:          var废品收入 = 40 + Math.floor(Math.random() * 30);
+city-life-story\src\js\core\events_street.js:25:            const cash = 80 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:84:            if (Math.random() < 0.5 + (st.player.agility - 20) * 0.02) {
+city-life-story\src\js\core\events_street.js:104:            if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:143:            if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:144:              const profit = 300 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:195:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:196:              const reward = 50 + Math.floor(Math.random() * 80);
+city-life-story\src\js\core\events_street.js:295:            const key = skills[Math.floor(Math.random() * skills.length)];
+city-life-story\src\js\core\events_street.js:296:            st.skills[key].xp += 40 + Math.floor(Math.random() * 30);
+city-life-story\src\js\core\events_street.js:353:            if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+city-life-story\src\js\core\events_street.js:507:            const success = Math.random() < 0.6;
+city-life-story\src\js\core\events_street.js:509:              const profit = 2000 + Math.floor(Math.random() * 1500) + 500;
+city-life-story\src\js\core\events_street.js:558:            const success = Math.random() < 0.6;
+city-life-story\src\js\core\events_street.js:560:              const profit = 500 + Math.floor(Math.random() * 500) + 200;
+city-life-story\src\js\core\events_street.js:622:            const win = Math.random() < 0.3 + (st.player.physique - 20) * 0.02;
+city-life-story\src\js\core\events_street.js:686:            const extra = 30 + Math.floor(Math.random() * 40);
+city-life-story\src\js\core\events_street.js:699:            const success = Math.random() < 0.3 + st.player.fame * 0.01;
+city-life-story\src\js\core\events_street.js:768:            var buyAmt = 500 + Math.floor(Math.random() * 1500);
+city-life-story\src\js\core\events_street.js:806:            var g = goods[Math.floor(Math.random() * goods.length)];
+city-life-story\src\js\core\events_street.js:807:            var qty = 10 + Math.floor(Math.random() * 20);
+city-life-story\src\js\core\events_street.js:851:              if (Math.random() < 0.15) {
+city-life-story\src\js\core\events_street.js:852:                var win = 200 + Math.floor(Math.random() * 500);
+city-life-story\src\js\core\events_street.js:874:              if (Math.random() < 0.1) {
+city-life-story\src\js\core\events_street.js:875:                var win = 5000 + Math.floor(Math.random() * 15000);
+city-life-story\src\js\core\events_street.js:882:              } else if (Math.random() < 0.3) {
+city-life-story\src\js\core\events_street.js:883:                var win2 = 100 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:1027:              if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:1164:              if (Math.random() < 0.2 + skillScore * 0.005) {
+city-life-story\src\js\core\events_street.js:1210:            if (Math.random() < 0.15) {
+city-life-story\src\js\core\events_street.js:1211:              const fine = 300 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:1329:            const earned = 400 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:1332:            if (Math.random() < 0.3) {
+city-life-story\src\js\core\events_street.js:1364:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:1365:              const refund = 400 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:1398:            const loss = 500 + Math.floor(Math.random() * 500);
+city-life-story\src\js\core\events_street.js:1460:            if (Math.random() < 0.45) {
+city-life-story\src\js\core\events_street.js:1467:              const paid = 1200 + Math.floor(Math.random() * 800);
+city-life-story\src\js\core\events_street.js:1483:            const recovered = 600 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:1530:            } else if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:1597:            if (Math.random() < 0.6) {
+city-life-story\src\js\core\events_street.js:1598:              const bonus = 800 + Math.floor(Math.random() * 1200);
+city-life-story\src\js\core\events_street.js:1642:            if (Math.random() < 0.7) {
+city-life-story\src\js\core\events_street.js:1667:            const price = 100 + Math.floor(Math.random() * 80);
+city-life-story\src\js\core\events_street.js:1705:              const tip = Math.random();
+city-life-story\src\js\core\events_street.js:1707:                const cash = 200 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:1758:            const saved = 100 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:1771:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:1772:              const deal = 150 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:1894:            const bribe = 100 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\events_street.js:1947:            const earned = 250 + Math.floor(Math.random() * 150);
+city-life-story\src\js\core\events_street.js:2001:                ? 500 + Math.floor(Math.random() * 300)
+city-life-story\src\js\core\events_street.js:2003:                  ? 200 + Math.floor(Math.random() * 200)
+city-life-story\src\js\core\events_street.js:2004:                  : 50 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\events_street.js:2017:            const small = 50 + Math.floor(Math.random() * 80);
+city-life-story\src\js\core\events_street.js:2043:            if (Math.random() < 0.6) {
+city-life-story\src\js\core\events_street.js:2129:            if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:2266:            if (Math.random() < 0.4) {
+city-life-story\src\js\core\events_street.js:2267:              const earned = 20 + Math.floor(Math.random() * 30);
+city-life-story\src\js\core\events_street.js:2367:            var earned = 120 + Math.floor(Math.random() * 60);
+city-life-story\src\js\core\events_street.js:2395:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:2396:              var earned2 = 100 + Math.floor(Math.random() * 50);
+city-life-story\src\js\core\events_street.js:2431:            if (Math.random() < 0.6) {
+city-life-story\src\js\core\events_street.js:2432:              var reward = 200 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:2453:            var earn = 600 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:2471:            var rewardB = 100 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:2549:            if (Math.random() < 0.2) {
+city-life-story\src\js\core\events_street.js:2550:              var cost = 200 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:2769:            var remit = 200 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:2801:            var pay = 300 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:2846:            var repaid = 100 + Math.floor(Math.random() * 80);
+city-life-story\src\js\core\events_street.js:2893:            var bonus = 500 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:2938:            var award = 200 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\events_street.js:2955:            var award = 200 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\events_street.js:3054:            const earned = 160 + Math.floor(Math.random() * 80);
+city-life-story\src\js\core\events_street.js:3098:            var bonus = 600 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:3310:            var bonus = 400 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:4865:            var profit = 5000 + Math.floor(Math.random() * 3000);
+city-life-story\src\js\core\events_street.js:5379:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:5427:            if (Math.random() < 0.35 + (st.player.agility || 20) * 0.01) {
+city-life-story\src\js\core\events_street.js:5491:            if (Math.random() < 0.6) {
+city-life-story\src\js\core\events_street.js:5511:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:5738:            var bonus = 60000 + Math.floor(Math.random() * 80000);
+city-life-story\src\js\core\events_street.js:6003:              Math.round(base * multi) + Math.floor(Math.random() * 50000);
+city-life-story\src\js\core\events_street.js:6334:            var earn = 7000 + Math.floor(Math.random() * 3000);
+city-life-story\src\js\core\events_street.js:6361:            var income = 3000 + Math.floor(Math.random() * 5000);
+city-life-story\src\js\core\events_street.js:6499:            var reward = 25000 + Math.floor(Math.random() * 25000);
+city-life-story\src\js\core\events_street.js:6516:            var reward2 = 30000 + Math.floor(Math.random() * 10000);
+city-life-story\src\js\core\events_street.js:6570:            var earn = 200 + Math.floor(Math.random() * 100);
+city-life-story\src\js\core\events_street.js:6639:            if (Math.random() < 0.3) {
+city-life-story\src\js\core\events_street.js:6652:            var earn = 400 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:6722:            var earn = 3000 + Math.floor(Math.random() * 2000);
+city-life-story\src\js\core\events_street.js:6770:            var earn = 1200 + Math.floor(Math.random() * 800);
+city-life-story\src\js\core\events_street.js:6783:            var earn2 = 800 + Math.floor(Math.random() * 400);
+city-life-story\src\js\core\events_street.js:6813:            if (Math.random() < 0.5) {
+city-life-story\src\js\core\events_street.js:6868:            var earn = 300 + Math.floor(Math.random() * 300);
+city-life-story\src\js\core\events_street.js:6951:            var earn = 1500 + Math.floor(Math.random() * 800);
+city-life-story\src\js\core\events_street.js:7033:            if (Math.random() < 0.15) {
+city-life-story\src\js\core\events_street.js:7221:            var earn = 200 + Math.floor(Math.random() * 200);
+city-life-story\src\js\core\events_street.js:9020:            var luck = Math.random();
+city-life-story\src\js\core\events_street.js:9176:            var danger = Math.random();
+city-life-story\src\js\core\events_street.js:9241:              var luck = Math.random();
+
+[Showing results with pagination = limit: 250]

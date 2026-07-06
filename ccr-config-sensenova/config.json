@@ -1,0 +1,25 @@
+{
+  "HOST": "127.0.0.1",
+  "PORT": 3457,
+  "LOG": true,
+  "APIKEY": "any-string-is-ok",
+  "API_TIMEOUT_MS": 300000,
+  "Providers": [
+    {
+      "name": "sensenova",
+      "api_base_url": "https://api.sensenova.cn/compatible-mode/v2/chat/completions",
+      "api_key": "sk-z6UWAWZ1uXFzpraB6HBWAXFzBuu7hIvg",
+      "models": ["deepseek-v4-flash"],
+      "transformer": {
+        "use": ["deepseek"]
+      }
+    }
+  ],
+  "Router": {
+    "default": "sensenova,deepseek-v4-flash",
+    "background": "sensenova,deepseek-v4-flash",
+    "think": "sensenova,deepseek-v4-flash",
+    "longContext": "sensenova,deepseek-v4-flash",
+    "webSearch": "sensenova,deepseek-v4-flash"
+  }
+}

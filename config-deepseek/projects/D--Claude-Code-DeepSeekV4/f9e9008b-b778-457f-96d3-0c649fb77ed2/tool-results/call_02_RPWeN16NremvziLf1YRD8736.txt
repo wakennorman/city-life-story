@@ -1,0 +1,252 @@
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:73:      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:99:      "api_base_url": "http://localhost:11434/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:105:      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:114:      "api_base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:116:      "models": ["deepseek-v3-250324", "deepseek-r1-250528"],
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:123:      "api_base_url": "https://api-inference.modelscope.cn/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:143:      "api_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:160:      "api_base_url": "https://aihubmix.com/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:260:- **版本控制**：每个预设包含版本元数据，用于跟踪更新
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:313:       "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:341:      "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:476:为了在运行时更好的查看claude-code-router的状态，claude-code-router在v1.0.40内置了一个statusline工具，你可以在UI中启用它，
+ccr-config\node_modules\@musistudio\claude-code-router\README_zh.md:507:        uses: actions/checkout@v4
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:75:      "api_base_url": "https://api.openai.com/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:97:      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:123:      "api_base_url": "http://localhost:11434/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:129:      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:138:      "api_base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:140:      "models": ["deepseek-v3-250324", "deepseek-r1-250528"],
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:147:      "api_base_url": "https://api-inference.modelscope.cn/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:167:      "api_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:184:      "api_base_url": "https://aihubmix.com/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:285:- **Version Control**: Each preset includes version metadata for tracking updates
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:338:    "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:367:    "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:503:To better monitor the status of claude-code-router at runtime, version v1.0.40 includes a built-in statusline tool, which you can enable in the UI.
+ccr-config\node_modules\@musistudio\claude-code-router\README.md:534:        uses: actions/checkout@v4
+README.md:14:Claude Code 从 2.1.36 版本开始，在每个 API 请求的 system prompt 开头添加了：
+README.md:17:x-anthropic-billing-header: cc_version=2.1.143.f09; cc_entrypoint=cli; cch=0f646;
+README.md:68:  "version": "2.1.173"
+README.md:148:  "version": "2.1.173"
+README.md:200:x-anthropic-billing-header: cc_version=...; cch=...;
+README.md:229:如果你使用的是旧版本 vLLM，升级到 0.17.1+ 或设置 `CLAUDE_CODE_ATTRIBUTION_HEADER=0`。
+.claude\skills\build-web-apps\skills\react-best-practices\README.md:12:- `metadata.json` - Document metadata (version, organization, abstract)
+config\plugins\cache\claude-plugins-official\security-guidance\2.0.6\README.md:21:- Claude Code CLI ≥ v2.1.144
+config\plugins\cache\claude-plugins-official\security-guidance\2.0.6\README.md:99:This is a best-effort assistive tool, not a guarantee. Treat findings as suggestions, not as a substitute for human code review, SAST/DAST, dependency scanning, or pen-testing. The reviewer can miss vulnerabilities, produce false positives, and may behave differently across codebases, languages, and model versions. **No warranty is provided** — use is subject to Anthropic's [Commercial Terms](https://www.anthropic.com/legal/commercial-terms).
+config\plugins\cache\claude-plugins-official\security-guidance\2.0.6\README.md:105:**Review never finds anything** — verify your API path works. On 3P providers, check `SECURITY_REVIEW_MODEL` is set to a provider-specific id (not a bare `claude-opus-4-7`). On LLM gateways, check the gateway's logs for `POST /v1/messages` traffic from the plugin.
+config\plugins\cache\claude-plugins-official\security-guidance\2.0.6\README.md:115:- The Claude Code CLI version (`claude --version`)
+config\plugins\marketplaces\claude-plugins-official\plugins\security-guidance\README.md:21:- Claude Code CLI ≥ v2.1.144
+config\plugins\marketplaces\claude-plugins-official\plugins\security-guidance\README.md:99:This is a best-effort assistive tool, not a guarantee. Treat findings as suggestions, not as a substitute for human code review, SAST/DAST, dependency scanning, or pen-testing. The reviewer can miss vulnerabilities, produce false positives, and may behave differently across codebases, languages, and model versions. **No warranty is provided** — use is subject to Anthropic's [Commercial Terms](https://www.anthropic.com/legal/commercial-terms).
+config\plugins\marketplaces\claude-plugins-official\plugins\security-guidance\README.md:105:**Review never finds anything** — verify your API path works. On 3P providers, check `SECURITY_REVIEW_MODEL` is set to a provider-specific id (not a bare `claude-opus-4-7`). On LLM gateways, check the gateway's logs for `POST /v1/messages` traffic from the plugin.
+config\plugins\marketplaces\claude-plugins-official\plugins\security-guidance\README.md:115:- The Claude Code CLI version (`claude --version`)
+.agents\skills\cloudflare\skills\cloudflare\references\wrangler\README.md:46:wrangler versions list            # List versions
+.agents\skills\cloudflare\skills\cloudflare\references\workflows\README.md:37:      return await this.env.DB.prepare("SELECT * FROM users WHERE id = ?")
+.agents\skills\cloudflare\skills\cloudflare\references\workers-for-platforms\README.md:46:Request → Dispatch Worker → Determines user Worker → env.DISPATCHER.get("customer")
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:27:    const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:49:- **Fastest/cheapest**: `@cf/mistral/mistral-7b-instruct-v0.1` (~50 neurons)
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:63:- **Best**: `@cf/baai/bge-large-en-v1.5` (1024 dims, highest quality)
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:64:- **Balanced**: `@cf/baai/bge-base-en-v1.5` (768 dims, good quality)
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:65:- **Fast**: `@cf/baai/bge-small-en-v1.5` (384 dims, lower quality but fast)
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:69:- Use `@hf/sentence-transformers/paraphrase-multilingual-minilm-l12-v2`
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:90:await env.AI.run(model, input);
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:99:curl https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/run/@cf/meta/llama-3.1-8b-instruct \
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:113:  baseURL: "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1",
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:150:const stream = await env.AI.run(model, { messages, stream: true });
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:156:const { data } = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:161:const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+.agents\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:198:- [api.md](./api.md) - env.AI.run(), streaming, function calling, REST API, response types
+config\plugins\marketplaces\claude-plugins-official\plugins\plugin-dev\skills\plugin-structure\README.md:113:4. Update version in SKILL.md frontmatter
+.agents\skills\cloudflare\skills\cloudflare\references\workerd\README.md:63:workerd is in **active development**. Breaking changes possible. Pin versions in production.
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:7:The Agent SDK Development Plugin streamlines the entire lifecycle of building Agent SDK applications, from initial scaffolding to verification against best practices. It helps you quickly start new projects with the latest SDK versions and ensures your applications follow official documentation patterns.
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:18:- Checks for and installs the latest SDK version
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:20:- Sets up proper environment files (.env.example, .gitignore)
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:51:# → Installs latest SDK version
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:61:- SDK installation and version
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:98:- SDK installation and version
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:176:- **Always use the latest SDK version**: `/new-sdk-app` checks for and installs the latest version
+config\plugins\marketplaces\claude-plugins-official\plugins\agent-sdk-dev\README.md:199:- If errors persist, check that you're using the latest SDK version
+config\plugins\marketplaces\claude-plugins-official\plugins\example-plugin\README.md:33:version: 1.0.0
+.agents\skills\cloudflare\skills\cloudflare\references\waf\README.md:30:const client = new Cloudflare({ apiToken: process.env.CF_API_TOKEN });
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:17:const matches = await env.VECTORIZE.query(queryVector, { topK: 5 });
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:89:const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [query] });
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:92:const matches = await env.VECTORIZE.query(result.data[0], {
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:102:const embedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:107:const matches = await env.VECTORIZE.query(embedding.data[0], { topK: 5 });
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:112:    env.R2.get(m.metadata.key).then((obj) => obj?.text()),
+.agents\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:117:const answer = await env.AI.run("@cf/meta/llama-3-8b-instruct", {
+.agents\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:24:  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+.agents\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:40:<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+.agents\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:59:      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+.agents\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:64:          secret: env.TURNSTILE_SECRET,
+config\plugins\marketplaces\claude-plugins-official\plugins\plugin-dev\skills\command-development\README.md:183:argument-hint: [environment] [version]
+config\plugins\marketplaces\claude-plugins-official\plugins\plugin-dev\skills\command-development\README.md:186:Deploy to $1 environment using version $2
+config\plugins\marketplaces\claude-plugins-official\plugins\plugin-dev\skills\command-development\README.md:279:**v0.1.0** (2025-01-15):
+.agents\skills\cloudflare\skills\cloudflare\references\tunnel\README.md:61:├─ Yes → Local config (version controlled)
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:10:- **Version pinning**: Always pin provider version with `~>` for predictable upgrades
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:17:| 5.x     | Current | Auto-generated from OpenAPI, breaking changes from v4 |
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:20:**Critical:** v5 renamed many resources (`cloudflare_record` → `cloudflare_dns_record`, `cloudflare_worker_*` → `cloudflare_workers_*`). See [gotchas.md](./gotchas.md#v5-breaking-changes) for migration details.
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:28:  required_version = ">= 1.0"
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:33:      version = "~> 5.15.0"
+.agents\skills\cloudflare\skills\cloudflare\references\terraform\README.md:89:5. Read [gotchas.md](./gotchas.md) for state drift, v5 breaking changes, and troubleshooting
+.agents\skills\cloudflare\skills\cloudflare\references\tail-workers\README.md:76:      fetch(env.LOG_ENDPOINT, {
+.agents\skills\cloudflare\skills\cloudflare\references\ai-search\README.md:55:    const answer = await env.AI.autorag("my-search-instance").aiSearch({
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:35:  accountId: process.env.CF_ACCOUNT_ID,
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:36:  gateway: process.env.CF_GATEWAY_ID,
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:40:  apiKey: process.env.OPENAI_API_KEY,
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:69:  apiKey: process.env.OPENAI_API_KEY,
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:70:  baseURL: `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/compat`,
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:90:    const response = await env.AI.run(
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:150:- Unified API (OpenAI-compatible): `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat/chat/completions`
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:151:- Provider-specific: `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/{provider}/{endpoint}`
+.agents\skills\cloudflare\skills\cloudflare\references\ai-gateway\README.md:167:- [Workers AI](../workers-ai/README.md) - For `env.AI.run()` details
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:35:const { results, success, meta } = await env.DB.prepare(
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:40:const user = await env.DB.prepare("SELECT * FROM users WHERE id = ?")
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:49:const results = await env.DB.batch([
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:50:  env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(1),
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:51:  env.DB.prepare("SELECT * FROM posts WHERE author_id = ?").bind(1),
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:52:  env.DB.prepare("UPDATE users SET last_access = ? WHERE id = ?").bind(
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:63:const session = env.DB.withSession();
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:76:const user = await env.DB_REPLICA.prepare("SELECT * FROM users WHERE id = ?")
+.agents\skills\cloudflare\skills\cloudflare\references\d1\README.md:81:await env.DB.prepare("UPDATE users SET last_login = ? WHERE id = ?")
+.agents\skills\cloudflare\skills\cloudflare\references\stream\README.md:55:  "https://api.cloudflare.com/client/v4/accounts/{account_id}/stream/copy" \
+.agents\skills\cloudflare\skills\cloudflare\references\stream\README.md:78:  "https://api.cloudflare.com/client/v4/accounts/{account_id}/stream/live_inputs" \
+.agents\skills\cloudflare\skills\cloudflare\references\static-assets\README.md:23:    return env.ASSETS.fetch(request);
+.agents\skills\cloudflare\skills\cloudflare\references\containers\README.md:33:    const container = env.MY_CONTAINER.getByName("instance-1");
+.agents\skills\cloudflare\skills\cloudflare\references\spectrum\README.md:5:Cloudflare Spectrum provides security and acceleration for ANY TCP or UDP-based application. It's a global Layer 4 (L4) reverse proxy running on Cloudflare's edge nodes that routes MQTT, email, file transfer, version control, games, and more through Cloudflare to mask origins and protect from DDoS attacks.
+.agents\skills\cloudflare\skills\cloudflare\references\cache-reserve\README.md:116:curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/cache/cache_reserve" \
+.agents\skills\cloudflare\skills\cloudflare\references\cache-reserve\README.md:120:curl -X PATCH "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/cache/cache_reserve" \
+config\plugins\marketplaces\claude-plugins-official\plugins\code-modernization\README.md:15:- **`uplift`** — same-stack version bump (e.g. .NET Framework → .NET 8) that _preserves_ the code and fixes only the version deltas.
+config\plugins\marketplaces\claude-plugins-official\plugins\code-modernization\README.md:65:[Omitted long matching line]
+config\plugins\marketplaces\claude-plugins-official\plugins\code-modernization\README.md:80:- **`version-delta-analyst`** — Finds the breaking changes between two versions of one stack that bite _this_ codebase, and drives the ecosystem migration tool. _(uplift)_
+config\plugins\marketplaces\claude-plugins-official\plugins\code-modernization\README.md:116:**Secrets stay out of shared artifacts.** Discovered credentials are masked (`AKIA****`) and inventoried in a gitignored `SECRETS.local.md` (or `~/.modernize/<system>/` on non-git projects); `/modernize-harden` keeps credential-removal hunks in a separate gitignored patch. Pass `--show-secrets` to include raw values in the quarantine file only. If you ran an early version of this plugin on a real system, check whether `analysis/` artifacts were committed and rotate anything exposed.
+.agents\skills\cloudflare\skills\cloudflare\references\smart-placement\README.md:107:  https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/services/$WORKER_NAME \
+.claude\skills\cloudflare\skills\cloudflare\references\wrangler\README.md:46:wrangler versions list            # List versions
+.claude\skills\cloudflare\skills\cloudflare\references\workflows\README.md:37:      return await this.env.DB.prepare("SELECT * FROM users WHERE id = ?")
+.agents\skills\cloudflare\skills\cloudflare\references\api\README.md:22:| Go         | `cloudflare-go/v4` | CLI tools, microservices       | 10              |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:23:| **KV**              | Key-value cache, CDN-backed reads | `env.MY_KV.get(key)`          |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:24:| **R2**              | Object storage (S3-compatible)    | `env.MY_BUCKET.get(key)`      |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:25:| **D1**              | SQL database (SQLite)             | `env.DB.prepare(sql).all()`   |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:26:| **Durable Objects** | Coordination, real-time state     | `env.MY_DO.get(id)`           |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:27:| **Vectorize**       | Vector embeddings search          | `env.VECTORIZE.query(vector)` |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:28:| **Queues**          | Async message processing          | `env.MY_QUEUE.send(msg)`      |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:34:| **Service**           | Worker-to-Worker RPC | `env.MY_SERVICE.fetch(req)` |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:35:| **Workers AI**        | LLM inference        | `env.AI.run(model, input)`  |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:36:| **Browser Rendering** | Headless Chrome      | `env.BROWSER.fetch(url)`    |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:42:| **Analytics Engine** | Custom metrics         | `env.ANALYTICS.writeDataPoint(data)` |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:43:| **mTLS**             | Client certificates    | `env.MY_CERT` (string)               |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:44:| **Hyperdrive**       | Database pooling       | `env.HYPERDRIVE.connectionString`    |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:45:| **Rate Limiting**    | Request throttling     | `env.RATE_LIMITER.limit(id)`         |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:46:| **Workflows**        | Long-running workflows | `env.MY_WORKFLOW.create()`           |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:52:| **Environment Variables** | Non-sensitive config | `env.API_URL` (string)             |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:53:| **Secrets**               | Sensitive values     | `env.API_KEY` (string)             |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:54:| **Text/Data Blobs**       | Static files         | `env.MY_BLOB` (string)             |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:55:| **WASM**                  | WebAssembly modules  | `env.MY_WASM` (WebAssembly.Module) |
+.agents\skills\cloudflare\skills\cloudflare\references\bindings\README.md:102:    await env.MY_KV.put("key", "value");
+.agents\skills\cloudflare\skills\cloudflare\references\analytics-engine\README.md:69:env.ANALYTICS.writeDataPoint({
+.agents\skills\cloudflare\skills\cloudflare\references\argo-smart-routing\README.md:14:curl -X PATCH "https://api.cloudflare.com/client/v4/zones/{zone_id}/argo/smart_routing" \
+.agents\skills\cloudflare\skills\cloudflare\references\argo-smart-routing\README.md:25:const client = new Cloudflare({ apiToken: process.env.CLOUDFLARE_API_TOKEN });
+.claude\skills\cloudflare\skills\cloudflare\references\workers-for-platforms\README.md:46:Request → Dispatch Worker → Determines user Worker → env.DISPATCHER.get("customer")
+.agents\skills\cloudflare\skills\cloudflare\references\queues\README.md:26:await env.MY_QUEUE.send({ userId: 123, action: "notify" });
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:15:**v1 (Classic)**: GRE tunnel support, VLAN/BFD/LACP, asymmetric MTU (1500↓/1476↑), peering support.
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:17:**v2 (Beta)**: No GRE, 1500 MTU both ways, no VLAN/BFD/LACP yet, ECMP instead.
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:21:- **Magic Transit DSR**: DDoS protection, egress via ISP (v1/v2)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:22:- **Magic Transit + Egress**: DDoS + egress via CF (v1/v2)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:23:- **Magic WAN + Zero Trust**: Private backbone (v1 needs GRE, v2 native)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:24:- **Peering**: Public routes at PoP (v1 only)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:25:- **App Security**: WAF/Cache/LB (v1/v2 over Magic Transit)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:30:- IPv4 /24+ or IPv6 /48+ prefixes
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:31:- BGP ASN for v1
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:90:- VLAN assignment (v1)
+.agents\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:91:- Configuration document generation (v1)
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:13:- Go: `github.com/pulumi/pulumi-cloudflare/sdk/v6/go/cloudflare`
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:16:**Version:** v6.x
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:33:  apiToken: process.env.CLOUDFLARE_API_TOKEN,
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:38:  apiKey: process.env.CLOUDFLARE_API_KEY,
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:39:  email: process.env.CLOUDFLARE_EMAIL,
+.agents\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:44:  apiUserServiceKey: process.env.CLOUDFLARE_API_USER_SERVICE_KEY,
+.agents\skills\cloudflare\skills\cloudflare\references\pipelines\README.md:53:    ctx.waitUntil(env.STREAM.send([event]));
+.agents\skills\cloudflare\skills\cloudflare\references\kv\README.md:45:await env.MY_KV.put("key", "value", { expirationTtl: 300 });
+.agents\skills\cloudflare\skills\cloudflare\references\kv\README.md:48:const value = await env.MY_KV.get("key");
+.agents\skills\cloudflare\skills\cloudflare\references\kv\README.md:49:const json = await env.MY_KV.get<Config>("config", "json");
+.agents\skills\cloudflare\skills\cloudflare\references\images\README.md:41:| `env.IMAGES.input().transform()` | Transform in Worker   | [api.md:11](api.md)  |
+.agents\skills\cloudflare\skills\cloudflare\references\images\README.md:42:| REST API `/images/v1`            | Upload images         | [api.md:57](api.md)  |
+.agents\skills\cloudflare\skills\cloudflare\references\hyperdrive\README.md:40:      connectionString: env.HYPERDRIVE.connectionString,
+.agents\skills\cloudflare\skills\cloudflare\references\graphql-api\README.md:7:- **Single endpoint** for all analytics: `https://api.cloudflare.com/client/v4/graphql`
+.agents\skills\cloudflare\skills\cloudflare\references\graphql-api\README.md:34:| **Endpoint**          | `POST https://api.cloudflare.com/client/v4/graphql`                                             |
+.agents\skills\cloudflare\skills\cloudflare\references\durable-objects\README.md:119:    const id = env.COUNTER.idFromName("global");
+.agents\skills\cloudflare\skills\cloudflare\references\durable-objects\README.md:120:    const stub = env.COUNTER.get(id);
+.agents\skills\cloudflare\skills\cloudflare\references\r2-data-catalog\README.md:142:- Need versioning, schema changes, or concurrent access
+.agents\skills\cloudflare\skills\cloudflare\references\r2\README.md:26:await env.MY_BUCKET.put(key, data, {
+.agents\skills\cloudflare\skills\cloudflare\references\r2\README.md:31:const object = await env.MY_BUCKET.get(key);
+.agents\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:27:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/apps' \
+.agents\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:32:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/<app_id>/meetings' \
+.agents\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:37:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/<app_id>/meetings/<meeting_id>/participants' \
+config\plugins\marketplaces\claude-plugins-official\plugins\hookify\README.md:153:| `\.env$`         | files ending in .env | .env, .env.local    |
+config\plugins\marketplaces\claude-plugins-official\plugins\hookify\README.md:337:- Ensure Python 3 is available: `python3 --version`
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:27:    const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:49:- **Fastest/cheapest**: `@cf/mistral/mistral-7b-instruct-v0.1` (~50 neurons)
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:63:- **Best**: `@cf/baai/bge-large-en-v1.5` (1024 dims, highest quality)
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:64:- **Balanced**: `@cf/baai/bge-base-en-v1.5` (768 dims, good quality)
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:65:- **Fast**: `@cf/baai/bge-small-en-v1.5` (384 dims, lower quality but fast)
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:69:- Use `@hf/sentence-transformers/paraphrase-multilingual-minilm-l12-v2`
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:90:await env.AI.run(model, input);
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:99:curl https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/run/@cf/meta/llama-3.1-8b-instruct \
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:113:  baseURL: "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1",
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:150:const stream = await env.AI.run(model, { messages, stream: true });
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:156:const { data } = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:161:const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+.claude\skills\cloudflare\skills\cloudflare\references\workers-ai\README.md:198:- [api.md](./api.md) - env.AI.run(), streaming, function calling, REST API, response types
+.claude\skills\cloudflare\skills\cloudflare\references\workerd\README.md:63:workerd is in **active development**. Breaking changes possible. Pin versions in production.
+.agents\skills\cloudflare\skills\cloudflare\references\sandbox\README.md:28:    const sandbox = getSandbox(env.Sandbox, "my-sandbox");
+.agents\skills\cloudflare\skills\cloudflare\references\sandbox\README.md:58:      "tag": "v1",
+.claude\skills\cloudflare\skills\cloudflare\references\waf\README.md:30:const client = new Cloudflare({ apiToken: process.env.CF_API_TOKEN });
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:17:const matches = await env.VECTORIZE.query(queryVector, { topK: 5 });
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:89:const result = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [query] });
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:92:const matches = await env.VECTORIZE.query(result.data[0], {
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:102:const embedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:107:const matches = await env.VECTORIZE.query(embedding.data[0], { topK: 5 });
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:112:    env.R2.get(m.metadata.key).then((obj) => obj?.text()),
+.claude\skills\cloudflare\skills\cloudflare\references\vectorize\README.md:117:const answer = await env.AI.run("@cf/meta/llama-3-8b-instruct", {
+.claude\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:24:  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+.claude\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:40:<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+.claude\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:59:      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+.claude\skills\cloudflare\skills\cloudflare\references\turnstile\README.md:64:          secret: env.TURNSTILE_SECRET,
+.claude\skills\cloudflare\skills\cloudflare\references\tunnel\README.md:61:├─ Yes → Local config (version controlled)
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:10:- **Version pinning**: Always pin provider version with `~>` for predictable upgrades
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:17:| 5.x     | Current | Auto-generated from OpenAPI, breaking changes from v4 |
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:20:**Critical:** v5 renamed many resources (`cloudflare_record` → `cloudflare_dns_record`, `cloudflare_worker_*` → `cloudflare_workers_*`). See [gotchas.md](./gotchas.md#v5-breaking-changes) for migration details.
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:28:  required_version = ">= 1.0"
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:33:      version = "~> 5.15.0"
+.claude\skills\cloudflare\skills\cloudflare\references\terraform\README.md:89:5. Read [gotchas.md](./gotchas.md) for state drift, v5 breaking changes, and troubleshooting
+.claude\skills\cloudflare\skills\cloudflare\references\tail-workers\README.md:76:      fetch(env.LOG_ENDPOINT, {
+.claude\skills\cloudflare\skills\cloudflare\references\stream\README.md:55:  "https://api.cloudflare.com/client/v4/accounts/{account_id}/stream/copy" \
+.claude\skills\cloudflare\skills\cloudflare\references\stream\README.md:78:  "https://api.cloudflare.com/client/v4/accounts/{account_id}/stream/live_inputs" \
+.claude\skills\cloudflare\skills\cloudflare\references\static-assets\README.md:23:    return env.ASSETS.fetch(request);
+.claude\skills\cloudflare\skills\cloudflare\references\spectrum\README.md:5:Cloudflare Spectrum provides security and acceleration for ANY TCP or UDP-based application. It's a global Layer 4 (L4) reverse proxy running on Cloudflare's edge nodes that routes MQTT, email, file transfer, version control, games, and more through Cloudflare to mask origins and protect from DDoS attacks.
+.claude\skills\cloudflare\skills\cloudflare\references\smart-placement\README.md:107:  https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/services/$WORKER_NAME \
+.claude\skills\cloudflare\skills\cloudflare\references\sandbox\README.md:28:    const sandbox = getSandbox(env.Sandbox, "my-sandbox");
+.claude\skills\cloudflare\skills\cloudflare\references\sandbox\README.md:58:      "tag": "v1",
+.claude\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:27:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/apps' \
+.claude\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:32:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/<app_id>/meetings' \
+.claude\skills\cloudflare\skills\cloudflare\references\realtimekit\README.md:37:curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtime/kit/<app_id>/meetings/<meeting_id>/participants' \
+.claude\skills\cloudflare\skills\cloudflare\references\r2-data-catalog\README.md:142:- Need versioning, schema changes, or concurrent access
+.claude\skills\cloudflare\skills\cloudflare\references\r2\README.md:26:await env.MY_BUCKET.put(key, data, {
+.claude\skills\cloudflare\skills\cloudflare\references\r2\README.md:31:const object = await env.MY_BUCKET.get(key);
+.claude\skills\cloudflare\skills\cloudflare\references\queues\README.md:26:await env.MY_QUEUE.send({ userId: 123, action: "notify" });
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:13:- Go: `github.com/pulumi/pulumi-cloudflare/sdk/v6/go/cloudflare`
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:16:**Version:** v6.x
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:33:  apiToken: process.env.CLOUDFLARE_API_TOKEN,
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:38:  apiKey: process.env.CLOUDFLARE_API_KEY,
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:39:  email: process.env.CLOUDFLARE_EMAIL,
+.claude\skills\cloudflare\skills\cloudflare\references\pulumi\README.md:44:  apiUserServiceKey: process.env.CLOUDFLARE_API_USER_SERVICE_KEY,
+.claude\skills\cloudflare\skills\cloudflare\references\pipelines\README.md:53:    ctx.waitUntil(env.STREAM.send([event]));
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:15:**v1 (Classic)**: GRE tunnel support, VLAN/BFD/LACP, asymmetric MTU (1500↓/1476↑), peering support.
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:17:**v2 (Beta)**: No GRE, 1500 MTU both ways, no VLAN/BFD/LACP yet, ECMP instead.
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:21:- **Magic Transit DSR**: DDoS protection, egress via ISP (v1/v2)
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:22:- **Magic Transit + Egress**: DDoS + egress via CF (v1/v2)
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:23:- **Magic WAN + Zero Trust**: Private backbone (v1 needs GRE, v2 native)
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:24:- **Peering**: Public routes at PoP (v1 only)
+.claude\skills\cloudflare\skills\cloudflare\references\network-interconnect\README.md:25:- **App Security**: WAF/Cache/LB (v1/v2 over Magic Transit)
+
+[Showing results with pagination = limit: 250]

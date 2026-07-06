@@ -1,0 +1,5 @@
+﻿{
+  "model": "deepseek-v4-flash",
+  "max_tokens": 16,
+  "messages": [{ "role": "user", "content": "hi" }]
+}

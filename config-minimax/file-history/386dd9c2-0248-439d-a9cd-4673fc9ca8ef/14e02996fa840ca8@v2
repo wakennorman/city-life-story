@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>SVG 词根配图样例</title>
+<style>
+body{font-family:Georgia,serif;background:#fffbf4;color:#2b2b2b;padding:40px;}
+h1{color:#a93226;border-bottom:2px solid #a93226;padding-bottom:8px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:24px;}
+.card{background:#fff;border:1px solid #ddd;border-radius:4px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.04);}
+.card img{width:100%;height:auto;display:block;border:1px solid #eee;}
+.label{margin-top:10px;font-size:14px;color:#666;}
+.meaning{color:#a93226;font-style:italic;font-size:12px;margin-top:4px;}
+.preview-note{background:#fff3e0;padding:14px;border-left:4px solid #b58a3c;margin:20px 0;}
+table{width:100%;border-collapse:collapse;margin-top:24px;}
+th,td{padding:10px;text-align:left;border-bottom:1px solid #eee;}
+th{background:#f4eee2;color:#a93226;}
+</style>
+</head>
+<body>
+
+<h1>📚 SVG 词根配图 · 风格样例</h1>
+
+<div class="preview-note">
+<b>风格选型：</b>极简几何 + 黑墨主线 + 暗红强调（指示动作方向/前缀方向）+ 金色辅助。<br>
+匹配配图原则：<i>简洁低画质 + simple icon style + 强相关、直观、形象、具体</i>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <img src="svg_samples/act.svg" alt="act">
+    <div class="label">act</div>
+    <div class="meaning">ACT = do / 起跑姿势的人 + 动作弧线</div>
+  </div>
+  <div class="card">
+    <img src="svg_samples/react.svg" alt="react">
+    <div class="label">react</div>
+    <div class="meaning">re-(回) + ACT / 入射红箭头 → 反射金箭头</div>
+  </div>
+  <div class="card">
+    <img src="svg_samples/dict.svg" alt="dict">
+    <div class="label">dict</div>
+    <div class="meaning">DICT = say / 嘴 + 感叹号话泡</div>
+  </div>
+  <div class="card">
+    <img src="svg_samples/fluctuate.svg" alt="fluctuate">
+    <div class="label">fluctuate</div>
+    <div class="meaning">FLU = flow / 波浪 + 上下波动箭头</div>
+  </div>
+  <div class="card">
+    <img src="svg_samples/exclude.svg" alt="exclude">
+    <div class="label">exclude</div>
+    <div class="meaning">ex-(出) + CLUD(关) / 圆圈 + 推开圈外的人</div>
+  </div>
+</div>
+
+<h2>1768 张全量生成时会做什么</h2>
+<table>
+<tr><th>步骤</th><th>说明</th></tr>
+<tr><td>1. 视觉构件库</td><td>建 ~60 个核心构件（人 / 嘴 / 眼 / 门 / 容器 / 箭头 / 波 / 齿轮 ...）每个词根映射一个</td></tr>
+<tr><td>2. 前缀方向覆盖</td><td>re- 反向箭头、ex- 向外箭头、in- 向内箭头、sub- 向下、super- 向上...</td></tr>
+<tr><td>3. 后缀视觉装饰</td><td>-tion/-sion 加上结果环、-er/-or 加上人头、-able 加上"OK"标</td></tr>
+<tr><td>4. 防重复保险</td><td>每词单独哈希用作变体微调（位移/角度/装饰点数），保证 1768 张全不一样</td></tr>
+<tr><td>5. 标签栏</td><td>底部黑字写英文词，红字斜体写词根/前缀</td></tr>
+</table>
+
+<h2>对比一下</h2>
+<table>
+<tr><th></th><th>Seedream（外部 API）</th><th>SVG（我自己写）</th></tr>
+<tr><td>风格</td><td>插画/照片感</td><td>简笔几何，<b>更贴近"simple icon"原意</b></td></tr>
+<tr><td>速度</td><td>1283 张 × 5s ≈ 1.5h</td><td>1768 张 < <b>1 分钟</b></td></tr>
+<tr><td>依赖</td><td>本地 18432 + 智谱额度</td><td>零</td></tr>
+<tr><td>含义对应</td><td>取决于模型理解，偶有走样</td><td>按词根/前后缀<b>规则精确控制</b></td></tr>
+<tr><td>重复率</td><td>近义词易出近似图</td><td>哈希微调 <b>0 重复</b></td></tr>
+<tr><td>文件大小</td><td>每张几十 KB PNG</td><td>每张 1-2 KB SVG，<b>整包 ~3MB</b></td></tr>
+</table>
+
+<p style="margin-top:30px;color:#888;text-align:center;">
+打开方式：在浏览器里直接拖入这个 HTML 文件，或双击；样例 SVG 也能单独打开。
+</p>
+
+</body>
+</html>

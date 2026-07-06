@@ -1,0 +1,10 @@
+﻿{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-z6UWAWZ1uXFzpraB6HBWAXFzBuu7hIvg",
+    "ANTHROPIC_BASE_URL": "https://token.sensenova.cn",
+    "ANTHROPIC_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-flash"
+  }
+}

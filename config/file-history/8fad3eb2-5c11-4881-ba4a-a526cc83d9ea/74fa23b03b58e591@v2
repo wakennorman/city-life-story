@@ -1,0 +1,4 @@
+- [Find-Skill](find-skill.md) — 根据用户需求查找和安装来自 agent skill 开放生态的技能
+- [Frontend-Design](frontend-design-skill.md) — 创建具有独特风格、生产级品质且设计精良的前端界面
+- [Skill-Creator](skill-creator-skill.md) — 创建新skill、修改和改进现有skill，并衡量skill表现
+- [卡帕西skill](karpathy-skill.md) — 依据卡帕西经验总结，用于提升 Claude Code 编码表现的 skill

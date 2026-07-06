@@ -1,0 +1,320 @@
+# Claude Code 配置开发文档
+
+## ✅ 版本迁移完成通知：城市浮生记
+
+> **2026-06-21：所有独特内容已从根 `src/` 迁移到 `city-life-story/src/`，旧版已清理。**
+>
+> 当前只有一个活跃版本：`city-life-story/src/`
+> 详见 `VERSION_MAP.md` | `memory/待迁移内容清单.md`
+
+---
+
+## 项目说明
+
+本项目 `D:\Claude Code+DeepSeekV4` 是 Claude Code 的工作目录，支持多个第三方 API 配置（sensenova、火山引擎、freemodel）和官方 Claude API。
+
+---
+
+## Windows 多 API 隔离启动方案
+
+> 目标：一个 Claude Code CLI 跑多套独立配置，通过独立配置目录 + 独立启动脚本实现完全隔离，支持不同服务商、不同 API key、不同模型之间自由切换。
+
+### 核心原理
+
+Claude Code 的配置来自三个层级（优先级从高到低）：
+
+1. **命令行参数**（`--model xxx`）— 最高优先级
+2. **环境变量**（`ANTHROPIC_MODEL`、`ANTHROPIC_AUTH_TOKEN` 等）
+3. **配置文件**（`settings.json` 里的 `env` 节）
+
+隔离的关键：**每个配置一套独立的 `CLAUDE_CONFIG_DIR` 目录**，里面放独立的 `settings.json`，并通过 bat 脚本注入独立的环境变量。
+
+---
+
+## 六个必避的坑（按踩坑频率排序）
+
+### 坑1：CLAUDE_CONFIG_DIR 被旧目录覆盖（最隐蔽）
+
+- **现象**：新 bat 启动后的 key 被旧配置覆盖
+- **解决**：每个配置必须有自己的独立目录，命名规则 `~/.claude-<服务商>-<模型>`
+
+### 坑2：settings.json 模型名与 `--model` 参数不一致
+
+- **现象**：报错 "There's an issue with the selected model"，提示的模型名不一致
+- **解决**：用一个变量统一两处：
+  ```ps1
+  $model = "<模型名>"
+  # settings.json 和命令行都用 $model
+  & $claude --model $model @args
+  ```
+
+### 坑3：Base URL 与模型名不匹配
+
+- **现象**：key 和模型名都对，但报 model not found
+- **解决**：先用已知能工作的端点和模型名验证 key 有效
+
+### 坑4：ANTHROPIC_API_KEY 格式校验拒收非标准 key
+
+- **现象**：key 传进去但静默失败，回落到 `api.anthropic.com`
+- **解决**：用 `ANTHROPIC_AUTH_TOKEN` 传 key（不做格式校验），同时清空 `ANTHROPIC_API_KEY`
+
+### 坑5：bat 中文 title 在 GBK 解码下乱码闪退
+
+- **现象**：双击闪退，看不到错误
+- **解决**：`chcp 65001 > nul` 第一行，title 用纯 ASCII
+
+### 坑6：第三方 API + 插件市场 Stop 钩子 → 死循环 ← 本次修复重点
+
+- **现象**：Claude Code 反复输出同一段话，一直重复不停止
+- **原因**：项目级 `.claude/settings.json` 有 `enabledPlugins` → Claude Code 自动 clone 了整个 `claude-plugins-official` 市场到配置目录 → 市场中的 `security-guidance` 插件带 `asyncRewake` Stop 钩子 → 会话退出时用第三方 API 做安全审查 → API 不稳定 → 不断重新唤醒会话 → **死循环**
+- **解决**：在配置目录 `settings.json` 的 env 节加三行：
+  ```json
+  "SECURITY_GUIDANCE_DISABLE": "1",
+  "ENABLE_STOP_REVIEW": "0",
+  "MAX_STOP_HOOK_FIRINGS": "0"
+  ```
+- **预防**：项目级 `.claude/settings.json` **不要写 `enabledPlugins` 和 `extraKnownMarketplaces`**
+- **官方 API 不受影响**
+
+---
+
+## 标准四步流程
+
+### 第一步：建独立配置目录
+
+```
+~/.claude-home-<服务商>-<模型>/   ← 会话状态 (.claude.json)
+~/.claude-<服务商>-<模型>/        ← 独立配置 (settings.json)
+```
+
+### 第二步：写启动脚本 (ps1)
+
+```ps1
+$ErrorActionPreference = "Stop"
+
+$projectDir = $PSScriptRoot
+$realUserProfile = [Environment]::GetFolderPath("UserProfile")
+
+$claudeHome = Join-Path $realUserProfile ".claude-home-<服务商>-<模型>"
+$claudeConfigDir = Join-Path $realUserProfile ".claude-<服务商>-<模型>"
+
+$settingsPath = Join-Path $claudeConfigDir "settings.json"
+$statePath = Join-Path $claudeHome ".claude.json"
+$claude = Join-Path $env:APPDATA "npm\claude.cmd"
+
+if (-not (Test-Path -LiteralPath $claude)) {
+    throw "Claude Code is not installed."
+}
+
+New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
+New-Item -ItemType Directory -Force -Path $claudeConfigDir | Out-Null
+
+$model = "<模型名>"
+$apiKey = "<API Key>"
+$baseUrl = "<Base URL>"
+
+$settings = @"
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "$apiKey",
+    "ANTHROPIC_BASE_URL": "$baseUrl",
+    "ANTHROPIC_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "$model",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+  },
+  "theme": "auto",
+  "autoMemoryEnabled": true
+}
+"@
+Set-Content -LiteralPath $settingsPath -Value $settings -Encoding UTF8
+
+$state = @'
+{
+  "hasCompletedOnboarding": true
+}
+'@
+Set-Content -LiteralPath $statePath -Value $state -Encoding UTF8
+
+$env:HOME = $claudeHome
+$env:USERPROFILE = $claudeHome
+$env:CLAUDE_CONFIG_DIR = $claudeConfigDir
+$env:ANTHROPIC_API_KEY = ""
+
+Set-Location -LiteralPath $projectDir
+
+& $claude --model $model @args
+```
+
+> **注意**：以上模板已内置 `SECURITY_GUIDANCE_DISABLE` 三行，第三方 API 天然免疫死循环。切换官方 API 需删除这三行才能用插件。
+
+### 第三步：写桌面 bat
+
+```bat
+@echo off
+chcp 65001 > nul
+title Claude Code <服务商>-<模型>
+cd /d "<工作目录>"
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
+```
+
+| 字段               | 说明                                                                                                 |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `chcp 65001 > nul` | **必须第一行**，否则中文乱码闪退                                                                     |
+| `title`            | 纯 ASCII，避免 GBK 解码吞掉字符                                                                      |
+| `cd /d`            | 跨盘符加 `/d`；含空格/中文必须加引号；工作目录下 `.claude/settings.json` **不能有 `enabledPlugins`** |
+| `powershell -File` | 指向独立 ps1 脚本                                                                                    |
+
+### 第四步：验证
+
+- **正常启动**：双击 bat，出现 Claude Code 界面
+- **闪退诊断**：`cmd /k "path\to\xxx.bat"` 或 `cmd //c "C:\path\to\xxx.bat"`
+
+---
+
+## 给 agent 的最简协议
+
+用户只给两条：**服务商名 + API key**。其余 agent 自行 WebSearch 查找。
+
+### 前置确认
+
+配置前先问：**「您的 key 走的是 Coding Plan 还是通用 API？」**
+某些第三方原生协议是 OpenAI，只有 Coding Plan 入口才有 Anthropic 兼容协议。
+
+### 目录命名规则
+
+`.claude-<服务商>-<模型>`，例如 `.claude-volcano-hunyuan`、`.claude-zhipu-glm-4`。
+
+---
+
+## 排错口诀
+
+> 闪退时直接：`cmd /k "path\to\xxx.bat"` 或 `cmd //c "C:\path\to\xxx.bat"`
+
+| 错误现象                 | 排查方向                                          |
+| ------------------------ | ------------------------------------------------- |
+| 双击闪退无提示           | `chcp 65001` 没加 / title 含中文                  |
+| "model not found"        | Base URL 不对 / 模型名不在该端点                  |
+| 认证失败 / 401           | API key 无效 / 用了 `API_KEY` 而非 `AUTH_TOKEN`   |
+| 配置互相覆盖             | `CLAUDE_CONFIG_DIR` 不独立                        |
+| 模型名不一致报错         | settings 的 `ANTHROPIC_MODEL` 和 `--model` 不一致 |
+| 静默回落到 anthropic.com | `ANTHROPIC_API_KEY` 没清空                        |
+| 死循环重复同一段话       | 插件 Stop 钩子 → 加 `SECURITY_GUIDANCE_DISABLE`   |
+
+### 工作目录的三个隐形坑
+
+用户常希望 bat 启动后直接落在项目目录。三个坑：
+
+1. 跨盘符不加 `/d` 切不过去
+2. 路径含空格/`+`/中文不加引号被拆成多参数
+3. 工作目录下若有含 `enabledPlugins` 的 `.claude/settings.json`，项目级配置反向覆盖独立配置
+
+---
+
+## 当前配置目录一览
+
+| 配置目录                              | API 提供商                  | 对应 bat 文件                                 |  Stop 钩子禁用？   |
+| ------------------------------------- | --------------------------- | --------------------------------------------- | :----------------: |
+| `.claude-sensenova-deepseek-v4-flash` | sensenova deepseek-v4-flash | `Claude Code-sensenova-deepseek-v4-flash.bat` |         ✅         |
+| `.claude-sensenova-flash`             | sensenova 6.7-flash-lite    | （bat 已删除）                                |         ✅         |
+| `.claude-volcano-ds4`                 | 火山引擎 deepseek-v4-flash  | `Claude-DeepSeekV4-Flash.bat`                 |         ✅         |
+| `.claude-volcano`                     | 火山引擎 glm-5.2            | `Claude-火山GLM5.2.bat`                       |         ✅         |
+| `.claude-freemodel`                   | freemodel                   | `Claude Code - Freemodel.bat`                 | ✅（从未装过插件） |
+
+---
+
+## 新增配置 SOP（给 agent 的 Checklist）
+
+- [ ] 确认 key 类型（Coding Plan / 通用 API）
+- [ ] 确认 Base URL（文档页 vs API 端点）
+- [ ] 确认模型名在该端点下可用
+- [ ] 生成独立目录名 `~/.claude-<服务商>-<模型>`
+- [ ] 写 ps1 脚本（统一 `$model` 变量；env 节带三行禁用变量）
+- [ ] 写桌面 bat（chcp + ASCII title + cd /d + powershell -File）
+- [ ] 验证启动：`cmd /k "bat 路径"`
+- [ ] 记录到经验文档
+
+---
+
+## 多窗口 API 抢调用说明
+
+| 场景               | 配置目录 | API key | 结果                            |
+| ------------------ | -------- | ------- | ------------------------------- |
+| 同一 key，不同目录 | ✅ 独立  | ❌ 相同 | 配置不互相覆盖，但 API 仍会限流 |
+| 不同 key，不同目录 | ✅ 独立  | ✅ 不同 | 完全隔离                        |
+| 同一 key，同一目录 | ❌ 覆盖  | ❌ 相同 | 配置互相覆盖 + API 限流         |
+
+**缓解限流策略**：准备多个 key，每个 key 一个独立配置，轮流切换。
+
+---
+
+## 游戏项目代码地图（降本关键：AI 少读文件 = 省 token）
+
+> 本游戏是一个中文文字模拟经营游戏（类"人生重开"风格），单页 HTML + 原生 JS + CSS，无框架无构建。
+
+### 项目结构一览
+
+```
+src/
+├── index.html          # 入口页面
+├── css/style.css       # 全部样式 (969 行)
+└── js/
+    ├── main.js         # 【核心】主循环 + 游戏引擎 (3238 行)
+    ├── core/
+    │   ├── events.js   # 事件系统
+    │   ├── random.js   # 随机数/RNG
+    │   ├── save.js     # 存档/读档
+    │   └── state.js    # 游戏状态字段定义
+    ├── data/           # 【所有配置数据都在这里】
+    │   ├── achievements.js  # 成就系统
+    │   ├── corp.js         # 公司/企业数据
+    │   ├── diseases.js     # 16种疾病5大类 (580 行)
+    │   ├── goods.js        # 商品数据
+    │   ├── ingredients.js  # 23种食材16个配方 (522 行)
+    │   ├── items.js        # 装备/道具 (80 行)
+    │   ├── jobs.js         # 工作定义 (319 行)
+    │   ├── locations.js    # 地点定义
+    │   ├── news.js         # 新闻事件
+    │   ├── npcs.js         # NPC 定义
+    │   └── skills.js       # 技能定义
+    ├── phase1/         # 打工阶段逻辑
+    │   ├── carry.js    # 搬运系统
+    │   ├── needs.js    # 需求系统
+    │   ├── pricing.js  # 定价系统
+    │   ├── trade.js    # 交易系统
+    │   └── weather.js  # 天气系统
+    ├── phase2/         # 公司阶段逻辑
+    │   ├── corp_ops.js # 公司运营
+    │   ├── investment.js  # 投资系统
+    │   ├── perf.js     # 绩效系统
+    │   ├── promo.js    # 晋升/营销
+    │   ├── stock.js    # 股票系统
+    │   └── team.js     # 团队管理
+    └── ui/
+        ├── render.js   # 【主要 UI 渲染】侧边栏+主界面 (2001 行)
+        └── corp_ui.js  # 公司 UI
+```
+
+### 关键文件速查
+
+| 你要做什么         | 改哪个文件                                            |
+| ------------------ | ----------------------------------------------------- |
+| 调整游戏数值/平衡  | `data/` 下对应的 js 文件（不要改 main.js）            |
+| 新增 UI 元素       | `ui/render.js`                                        |
+| 新玩法逻辑         | 新建 `phase1/` 或 `phase2/` 下文件，在 `main.js` 注册 |
+| 新增疾病/食材/装备 | `data/` 对应文件 + `ui/render.js` 加展示              |
+| 存档格式           | `core/save.js`                                        |
+
+### 核心设计理念
+
+1. **全中文 UI**：所有玩家可见文本只用中文，无任何英文
+2. **状态驱动**：游戏状态在 `state.js` 定义，各系统读取/修改 state
+3. **两阶段**：Phase1 = 打工生存 → Phase2 = 开公司当老板
+4. **data 目录** 只有纯数据定义，不包含逻辑

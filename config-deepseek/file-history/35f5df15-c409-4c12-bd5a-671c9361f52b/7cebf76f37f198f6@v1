@@ -1,0 +1,20 @@
+@echo off
+chcp 65001 > nul
+title Claude Volcano ds4f
+
+REM Isolated config dir (avoid env-node override from old .claude-volcano)
+set "CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude-volcano-ds4"
+
+REM Clear ANTHROPIC_API_KEY (format check rejects non sk-ant- keys)
+set "ANTHROPIC_API_KEY="
+
+REM Pass ark- key via AUTH_TOKEN (no format check)
+set "ANTHROPIC_AUTH_TOKEN=ark-7cfaba66-34e9-4957-897d-4661d7388078-5f8f1"
+set "ANTHROPIC_BASE_URL=https://ark.cn-beijing.volces.com/api/coding"
+set "ANTHROPIC_MODEL=deepseek-v4-flash"
+set "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
+
+REM Drop into project dir (quoted: path has space and +; /d for drive switch)
+cd /d "D:\Claude Code+DeepSeekV4"
+
+claude

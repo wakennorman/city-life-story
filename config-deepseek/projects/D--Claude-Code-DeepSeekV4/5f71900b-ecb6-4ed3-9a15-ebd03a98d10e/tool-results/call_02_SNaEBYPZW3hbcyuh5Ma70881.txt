@@ -1,0 +1,252 @@
+city-life-story\src\js\main.js:745:    '" maxlength="6" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;" oninput="updateSandboxConfig(\'name\', this.value)">' +
+city-life-story\src\js\main.js:1525:      '<div style="padding:10px;margin-bottom:12px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;text-align:center;">' +
+city-life-story\src\js\main.js:1538:        '<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">' +
+city-life-story\src\js\main.js:1549:      var borderStyle = isSelected
+city-life-story\src\js\main.js:1550:        ? "border:2px solid var(--accent);"
+city-life-story\src\js\main.js:1551:        : "border:1px solid var(--border);";
+city-life-story\src\js\main.js:1554:        '<div style="padding:10px;margin:4px 0;background:var(--bg-card);border-radius:4px;cursor:pointer;transition:all 0.2s;' +
+city-life-story\src\js\main.js:1555:        borderStyle +
+city-life-story\src\js\main.js:1557:        " onmouseover=\"this.style.borderColor='var(--accent)'\" onmouseout=\"this.style.borderColor='" +
+city-life-story\src\js\main.js:1558:        (_compareMode ? "var(--accent)" : "var(--border)") +
+city-life-story\src\js\data\amenities.js:490:/** 获取所有地点中能提供 type 的 amenities，按距离当前位置排序（最近优先） */
+city-life-story\src\js\phase1\actions_extra.js:913:      '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
+city-life-story\src\js\phase1\actions_extra.js:914:      "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"> " +
+city-life-story\src\js\phase1\actions_extra.js:969:        '<div style="padding:8px 12px;margin:4px 0;border-radius:5px;background:' +
+city-life-story\src\js\phase1\actions_extra.js:975:        ";border:1px solid " +
+city-life-story\src\js\phase1\actions_extra.js:980:            : "var(--border)") +
+city-life-story\src\js\phase1\actions_extra.js:1002:      '<div style="background:var(--bg-input);border-radius:4px;height:8px;overflow:hidden;">' +
+city-life-story\src\js\phase1\actions_extra.js:1005:      '%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.5s;"></div>' +
+city-life-story\src\js\phase1\actions_extra.js:1019:           <label>汇款金额: <input id="remit-amount" type="number" min="100" max="${state.resources.cash}" value="200" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+city-life-story\src\js\phase1\actions_extra.js:1069:      <label>转入金额: <input id="yue-amount" type="number" min="100" max="${state.resources.cash}" value="${Math.floor(state.resources.cash)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>
+city-life-story\src\js\phase1\actions_extra.js:1218:      '<select id="gift-npc" style="width:100%;padding:8px;margin-top:4px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;">' +
+city-life-story\src\js\phase1\actions_extra.js:1222:      '<select id="gift-good" style="width:100%;padding:8px;margin-top:4px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;">' +
+city-life-story\src\js\phase1\actions_extra.js:1517:        'border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">';
+city-life-story\src\js\phase1\actions_extra.js:1810:      '<div class="action-card" style="margin-bottom:8px;padding:10px;cursor:pointer;border:1px solid var(--border);border-radius:8px;" data-amenity-id="' +
+city-life-story\src\js\core\enterprise_fate.js:1439:      "background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:6px;";
+city-life-story\src\js\ui\corp_ui.js:45:      "padding:10px;margin:8px 0;background:var(--bg-card);border-radius:6px;";
+city-life-story\src\js\ui\corp_ui.js:54:            <div style="flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;">
+city-life-story\src\js\ui\corp_ui.js:55:              <div style="width:${pct}%;height:100%;background:${met ? "var(--success)" : "var(--accent)"};border-radius:4px;"></div>
+city-life-story\src\js\ui\corp_ui.js:482:      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;border-left:4px solid var(--accent);">' +
+city-life-story\src\js\ui\corp_ui.js:562:    '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:565:    '<div style="position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);"></div>';
+city-life-story\src\js\ui\corp_ui.js:573:      '<div class="ch-timeline-dot" style="position:absolute;left:-16px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-card);z-index:1;">' +
+city-life-story\src\js\ui\corp_ui.js:593:      '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+city-life-story\src\js\ui\corp_ui.js:595:      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">季度</th>' +
+city-life-story\src\js\ui\corp_ui.js:596:      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">绩效</th>' +
+city-life-story\src\js\ui\corp_ui.js:597:      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">KPI</th>' +
+city-life-story\src\js\ui\corp_ui.js:598:      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">能力</th>' +
+city-life-story\src\js\ui\corp_ui.js:599:      '<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">备注</th>' +
+city-life-story\src\js\ui\corp_ui.js:615:        '<tr style="border-bottom:1px solid var(--border);">' +
+city-life-story\src\js\ui\corp_ui.js:638:      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:654:        '<div style="padding:12px;background:var(--bg-secondary);border-radius:6px;">' +
+city-life-story\src\js\ui\corp_ui.js:672:      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:687:        '<div style="padding:8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:12px;">' +
+city-life-story\src\js\ui\corp_ui.js:707:      '<div style="padding:16px;margin-bottom:16px;background:var(--bg-card);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:728:    '<div style="padding:16px;background:var(--bg-card);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:731:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:737:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:743:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:749:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:755:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\ui\corp_ui.js:761:    '<div style="text-align:center;padding:12px;background:var(--bg-secondary);border-radius:8px;">' +
+city-life-story\src\js\core\events_core.js:380:  // 按触发日排序，最急的在前
+city-life-story\src\js\phase2\family_life.js:368:  const stageOrder = [
+city-life-story\src\js\phase2\family_life.js:775:  const healthOrder = [
+city-life-story\src\js\phase2\family_life.js:782:  const currentIndex = healthOrder.indexOf(parent.health);
+city-life-story\src\js\phase2\family_life.js:784:    parent.health = healthOrder[currentIndex - 1];
+city-life-story\src\js\phase2\investment.bak.js:420:        card.style.borderLeft = "3px solid " + clr;
+city-life-story\src\js\ui\data_viz.js:26:    "width:" + w + "px;height:" + h + "px;max-width:100%;border-radius:8px;";
+city-life-story\src\js\ui\data_viz.js:738:      "background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;";
+city-life-story\src\js\ui\data_viz.js:818:      '<div style="flex:1;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+city-life-story\src\js\ui\data_viz.js:823:      ';border-radius:3px;"></div>' +
+city-life-story\src\js\ui\data_viz.js:847:        "margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);";
+city-life-story\src\js\ui\data_viz.js:906:        '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
+city-life-story\src\js\ui\data_viz.js:912:        '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
+city-life-story\src\js\ui\data_viz.js:996:      ";border-radius:8px;padding:12px;text-align:center;" +
+city-life-story\src\js\ui\data_viz.js:997:      (stat.color ? "border:1px solid rgba(196,85,51,0.2);" : "") +
+city-life-story\src\js\ui\daily_report.js:112: * 按类型分类交易并生成排序后的HTML
+city-life-story\src\js\ui\daily_report.js:174:    '<div class="daily-report-section-title income" style="font-size:14px;font-weight:700;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid var(--success);color:var(--success);">🟢 收入</div>';
+city-life-story\src\js\ui\daily_report.js:185:    '<div class="daily-report-section-total income" style="display:flex;justify-content:space-between;padding:5px 0 2px;margin-top:3px;border-top:1px dashed var(--border);font-weight:700;font-size:14px;color:var(--success);">';
+city-life-story\src\js\ui\daily_report.js:194:    '<div class="daily-report-section-title expense" style="font-size:14px;font-weight:700;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid var(--danger);color:var(--danger);">🔴 支出</div>';
+city-life-story\src\js\ui\daily_report.js:205:    '<div class="daily-report-section-total expense" style="display:flex;justify-content:space-between;padding:5px 0 2px;margin-top:3px;border-top:1px dashed var(--border);font-weight:700;font-size:14px;color:var(--danger);">';
+city-life-story\src\js\ui\daily_report.js:215:    '" style="text-align:center;padding:10px 0;margin:8px 0;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:18px;font-weight:700;">';
+city-life-story\src\js\ui\daily_report.js:239:    '<div class="daily-report-summary" style="font-size:12px;color:var(--text-secondary);text-align:center;padding:6px 0;font-style:italic;border-top:1px solid var(--border);">';
+city-life-story\src\js\ui\daily_report.js:258:    '<span class="daily-report-item-cat" style="font-size:10px;color:var(--text-muted);min-width:32px;text-align:center;flex-shrink:0;background:var(--bg-card);padding:1px 4px;border-radius:3px;margin:0 6px;">' +
+city-life-story\src\js\ui\daily_report.js:369:    "display:flex;justify-content:center;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);";
+city-life-story\src\js\core\inheritance_chain.js:183:    const rankOrder = ["P5", "P6", "P7", "P8", "P9", "P10"];
+city-life-story\src\js\core\inheritance_chain.js:184:    const currentRank = rankOrder.indexOf(state.corporate.rank);
+city-life-story\src\js\phase2\investment_analysis.js:530:  if (!inv.stopLossOrders) inv.stopLossOrders = [];
+city-life-story\src\js\phase2\investment_analysis.js:532:  const order = {
+city-life-story\src\js\phase2\investment_analysis.js:541:  inv.stopLossOrders.push(order);
+city-life-story\src\js\phase2\investment_analysis.js:546:  return { success: true, order: order };
+city-life-story\src\js\phase2\investment_analysis.js:554:  if (!inv || !inv.stopLossOrders) return;
+city-life-story\src\js\phase2\investment_analysis.js:557:  const triggeredOrders = [];
+city-life-story\src\js\phase2\investment_analysis.js:559:  for (const order of inv.stopLossOrders) {
+city-life-story\src\js\phase2\investment_analysis.js:560:    if (order.triggered) continue;
+city-life-story\src\js\phase2\investment_analysis.js:562:    const market = inv.stockMarket[order.symbol];
+city-life-story\src\js\phase2\investment_analysis.js:566:    const holding = inv.stockHoldings.find((h) => h.symbol === order.symbol);
+city-life-story\src\js\phase2\investment_analysis.js:573:    switch (order.type) {
+city-life-story\src\js\phase2\investment_analysis.js:576:        if (lossPercent >= order.params.threshold) {
+city-life-story\src\js\phase2\investment_analysis.js:586:        if (dropFromHigh >= order.params.trailingPercent) {
+city-life-story\src\js\phase2\investment_analysis.js:597:        if (today - holding.buyDay >= order.params.holdDays) {
+city-life-story\src\js\phase2\investment_analysis.js:605:      order.triggered = true;
+city-life-story\src\js\phase2\investment_analysis.js:606:      order.triggerPrice = triggerPrice;
+city-life-story\src\js\phase2\investment_analysis.js:607:      triggeredOrders.push(order);
+city-life-story\src\js\phase2\investment_analysis.js:611:      sellInvStock(order.symbol, sharesToSell);
+city-life-story\src\js\phase2\investment_analysis.js:614:        `🛑 ${order.symbol}止损触发！在¥${triggerPrice.toFixed(2)}卖出${sharesToSell}股`,
+city-life-story\src\js\phase2\investment_analysis.js:620:  return triggeredOrders;
+city-life-story\src\js\data\mechanics_registry.js:7: * 用法（推荐顺序）：
+city-life-story\src\js\data\mechanics_registry.js:23: *     sections: Section[]               // 顺序渲染
+city-life-story\src\js\ui\modal.js:240:           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${state.resources.cash}" value="${state.resources.cash}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+city-life-story\src\js\ui\modal.js:294:           <label>取出金额: <input id="withdraw-amount" type="number" min="1" max="${state.resources.bankBalance}" value="${state.resources.bankBalance}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+city-life-story\src\js\ui\modal.js:333:      '<div style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.15);border-radius:6px;">';
+city-life-story\src\js\ui\modal.js:373:    body = `<div style="padding:12px;background:rgba(231,76,60,0.08);border-radius:6px;border-left:3px solid var(--danger);">`;
+city-life-story\src\js\ui\modal.js:386:    body += `<div style="flex:1;padding:10px;background:rgba(46,204,113,0.08);border-radius:6px;text-align:center;">`;
+city-life-story\src\js\ui\modal.js:390:    body += `<div style="flex:1;padding:10px;background:rgba(241,196,15,0.08);border-radius:6px;text-align:center;">`;
+city-life-story\src\js\ui\modal.js:398:    body += `<div style="flex:1;padding:8px;background:var(--bg-card);border-radius:6px;">`;
+city-life-story\src\js\ui\modal.js:402:    body += `<div style="flex:1;padding:8px;background:var(--bg-card);border-radius:6px;">`;
+city-life-story\src\js\ui\modal.js:408:    body += `<div style="padding:8px;background:rgba(231,76,60,0.05);border-radius:4px;margin-bottom:8px;">`;
+city-life-story\src\js\ui\modal.js:414:    body += `<input id="loan-amount-input" type="number" min="1000" max="${capacity.maxLoan}" value="${Math.min(recommendedLoan, capacity.maxLoan)}" step="1000" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:14px;">`;
+city-life-story\src\js\ui\modal.js:464:            this.style.borderColor = "var(--danger)";
+city-life-story\src\js\ui\modal.js:465:            this.style.borderWidth = "2px";
+city-life-story\src\js\ui\modal.js:478:            this.style.borderColor = "var(--success)";
+city-life-story\src\js\ui\modal.js:479:            this.style.borderWidth = "2px";
+city-life-story\src\js\ui\modal.js:489:            this.style.borderColor = "var(--border)";
+city-life-story\src\js\ui\modal.js:490:            this.style.borderWidth = "1px";
+city-life-story\src\js\ui\modal.js:527:  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+city-life-story\src\js\ui\modal.js:531:  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+city-life-story\src\js\ui\modal.js:536:  body += `<div style="flex:1;padding:10px;background:var(--bg-card);border-radius:6px;text-align:center;">`;
+city-life-story\src\js\ui\modal.js:546:  body += `<input id="repay-loan-amount" type="number" min="100" max="${maxRepay}" value="${maxRepay}" step="100" style="width:100%;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:14px;">`;
+city-life-story\src\js\ui\modal.js:596:          this.style.borderColor = "var(--danger)";
+city-life-story\src\js\ui\modal.js:597:          this.style.borderWidth = "2px";
+city-life-story\src\js\ui\modal.js:605:          this.style.borderColor = "var(--success)";
+city-life-story\src\js\ui\modal.js:606:          this.style.borderWidth = "2px";
+city-life-story\src\js\ui\modal.js:614:          this.style.borderColor = "var(--border)";
+city-life-story\src\js\ui\modal.js:615:          this.style.borderWidth = "1px";
+city-life-story\src\js\ui\modal.js:640:           <label>还款金额: <input id="repay-village-amount" type="number" min="1" max="${Math.min(state.resources.cash, villageDebt)}" value="${Math.min(state.resources.cash, villageDebt)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+city-life-story\src\js\ui\modal.js:690:        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+city-life-story\src\js\ui\modal.js:699:        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+city-life-story\src\js\ui\modal.js:732:          slotEl.style.borderColor = "var(--warning)";
+city-life-story\src\js\ui\modal.js:741:              slotEl.style.borderColor = "var(--border)";
+city-life-story\src\js\ui\modal.js:762:      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
+city-life-story\src\js\ui\modal.js:768:        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color 0.15s;">
+city-life-story\src\js\ui\modal.js:779:          ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
+city-life-story\src\js\ui\modal.js:836:      <div class="del-slot-card" data-slot="${s.slot}" style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+city-life-story\src\js\ui\modal.js:904:      '<div style="margin-top:12px;padding:8px;background:var(--bg-card);border:1px dashed var(--border);border-radius:6px;">';
+city-life-story\src\js\ui\modal.js:931:        card.style.borderColor = "var(--accent)";
+city-life-story\src\js\ui\modal.js:934:        card.style.borderColor = "var(--border)";
+city-life-story\src\js\ui\modal.js:945:    '" style="padding:12px;margin:6px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;">' +
+city-life-story\src\js\ui\modal.js:1068:        "border-left:3px solid " +
+city-life-story\src\js\ui\modal.js:1073:            : "var(--border)") +
+city-life-story\src\js\ui\modal.js:1228:      "border:1px solid " +
+city-life-story\src\js\ui\modal.js:1229:      (disabled ? "#e0e0e0" : "var(--border)") +
+city-life-story\src\js\ui\modal.js:1230:      ";border-radius:8px;padding:10px 12px;" +
+city-life-story\src\js\ui\modal.js:1247:      "background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;";
+city-life-story\src\js\ui\modal.js:1686:  // 排序
+city-life-story\src\js\ui\modal.js:1719:      '<div style="padding:8px 12px;background:var(--bg-input);border-radius:6px;margin-bottom:12px;">';
+city-life-story\src\js\ui\modal.js:1725:      '<div style="padding:8px 12px;background:#fff3cd;border-radius:6px;margin-bottom:12px;color:#856404;">';
+city-life-story\src\js\ui\modal.js:1733:    '<div style="text-align:center;padding:12px;background:linear-gradient(135deg,#4a9e5c20,#4a9e5c10);border-radius:8px;margin-bottom:12px;border:2px solid #4a9e5c;">';
+city-life-story\src\js\ui\modal.js:1752:      '<div style="display:flex;align-items:center;padding:8px 10px;border-radius:6px;background:' +
+city-life-story\src\js\ui\modal.js:1767:      '<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:' +
+city-life-story\src\js\ui\modal.js:1781:    '<div style="margin-top:12px;padding:10px 12px;background:var(--bg-card);border-radius:6px;font-size:12px;color:var(--text-secondary);">';
+city-life-story\src\js\ui\modal.js:1826:        '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;text-align:center;">';
+city-life-story\src\js\ui\modal.js:1849:      '<div style="margin-bottom:12px;background:var(--bg-card);border-radius:6px;padding:10px;">';
+city-life-story\src\js\ui\modal.js:1915:      '<div style="margin:12px 0;padding:10px 12px;background:linear-gradient(135deg, rgba(76,175,80,0.1), rgba(33,150,243,0.1));border-radius:6px;border-left:3px solid #4caf50;font-size:13px;color:var(--text-primary);font-style:italic;">';
+city-life-story\src\js\phase2\investment.js:1243:      // 按强度排序
+city-life-story\src\js\phase2\investment.js:1679:    '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;">';
+city-life-story\src\js\phase2\investment.js:1703:        '<div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.04);">📊 市场驱动：';
+city-life-story\src\js\phase2\investment.js:2272:      "margin-bottom:12px;padding:12px;background:rgba(0,180,216,0.06);border:1px solid var(--accent);border-radius:8px;";
+city-life-story\src\js\phase2\investment.js:2297:        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+city-life-story\src\js\phase2\investment.js:2315:      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border);margin-bottom:4px;">
+city-life-story\src\js\phase2\investment.js:2350:    card.style.borderLeft = "3px solid " + clr;
+city-life-story\src\js\phase2\investment.js:2385:      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+city-life-story\src\js\phase2\investment.js:2488:    card.style.borderLeft = "3px solid " + clr;
+city-life-story\src\js\phase2\investment.js:2539:      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+city-life-story\src\js\phase2\investment.js:2625:    card.style.borderLeft = "3px solid " + clr;
+city-life-story\src\js\phase2\investment.js:2660:      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+city-life-story\src\js\phase2\investment.js:2743:    card.style.borderLeft = "3px solid " + clr;
+city-life-story\src\js\phase2\investment.js:2778:      '" width="160" height="40" style="width:160px;height:40px;margin-top:4px;background:rgba(0,0,0,0.15);border-radius:3px;"></canvas>';
+city-life-story\src\js\phase2\investment.js:2828:    "font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 10px;margin-bottom:10px;";
+city-life-story\src\js\phase2\investment.js:2839:        "margin-bottom:12px;padding:10px;background:rgba(52,152,219,0.08);border:1px solid var(--info,#3498db);border-radius:8px;";
+city-life-story\src\js\phase2\investment.js:2940:    card.style.borderLeft =
+city-life-story\src\js\phase2\investment.js:2980:      "margin-bottom:12px;padding:12px;background:rgba(46,204,113,0.06);border:1px solid var(--success);border-radius:8px;";
+city-life-story\src\js\phase2\investment.js:2997:        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+city-life-story\src\js\phase2\investment.js:3015:      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border);margin-bottom:4px;">
+city-life-story\src\js\phase2\investment.js:3108:    card.style.borderLeft =
+city-life-story\src\js\phase2\investment.js:3145:      "margin-bottom:12px;padding:12px;background:rgba(243,156,18,0.06);border:1px solid var(--warning);border-radius:8px;";
+city-life-story\src\js\phase2\investment.js:3160:        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+city-life-story\src\js\phase2\investment.js:3175:      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border);margin-bottom:4px;">
+city-life-story\src\js\ui\render.js:27:      "border-left:3px solid " +
+city-life-story\src\js\ui\render.js:33:      "padding-left:6px;margin:1px 0;border-radius:0 4px 4px 0;" +
+city-life-story\src\js\ui\render.js:395:      "margin-top:6px;padding:6px 10px;background:rgba(74,158,92,0.10);border:1px solid rgba(74,158,92,0.30);border-radius:8px;";
+city-life-story\src\js\ui\render.js:477:      '<div style="background:var(--bg-input);border-radius:3px;height:5px;overflow:hidden;margin:4px 0;">' +
+city-life-story\src\js\ui\render.js:480:      '%;height:100%;background:var(--accent);border-radius:3px;"></div></div>' +
+city-life-story\src\js\ui\render.js:527:    '<div style="background:var(--bg-input);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;">' +
+city-life-story\src\js\ui\render.js:530:    '%;height:100%;background:var(--accent);border-radius:4px;"></div>' +
+city-life-story\src\js\ui\render.js:548:    html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(231,76,60,0.08);border-radius:4px;font-size:11px;">
+city-life-story\src\js\ui\render.js:554:    html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(243,156,18,0.08);border-radius:4px;font-size:11px;">
+city-life-story\src\js\ui\render.js:662:          `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`,
+city-life-story\src\js\ui\render.js:676:        `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
+city-life-story\src\js\ui\render.js:677:        `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
+city-life-story\src\js\ui\render.js:688:          `<span style="font-size:10px;padding:2px 6px;border-radius:3px;` +
+city-life-story\src\js\ui\render.js:689:          `background:${bg};color:${color};border:1px solid ${color};" ` +
+city-life-story\src\js\ui\render.js:719:               style="padding:6px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;"
+city-life-story\src\js\ui\render.js:720:               onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';"
+city-life-story\src\js\ui\render.js:721:               onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';">
+city-life-story\src\js\ui\render.js:1006:    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+city-life-story\src\js\ui\render.js:1020:    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;";
+city-life-story\src\js\ui\render.js:1052:      '<div style="flex:1;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+city-life-story\src\js\ui\render.js:1057:      ';border-radius:3px;"></div>' +
+city-life-story\src\js\ui\render.js:1070:    "background:var(--bg-card);border-radius:8px;padding:14px;border:1px solid var(--border);";
+city-life-story\src\js\ui\render.js:1112:      "background:var(--bg-card);border-radius:8px;padding:14px;margin-top:12px;border:1px solid var(--border);";
+city-life-story\src\js\ui\render.js:1127:        '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
+city-life-story\src\js\ui\render.js:1133:        '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
+city-life-story\src\js\ui\render.js:1179:        "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+city-life-story\src\js\ui\render.js:1209:          "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+city-life-story\src\js\ui\render.js:1215:          "margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);";
+city-life-story\src\js\ui\render.js:1273:    '<div style="background:var(--bg-input);border-radius:6px;padding:8px;text-align:center;">' +
+city-life-story\src\js\ui\render.js:1302:  div.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:8px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+city-life-story\src\js\ui\render.js:1337:    intelBanner.style.borderColor = "rgba(255, 193, 7, 0.35)";
+city-life-story\src\js\ui\render.js:1376:  // NPC生日置顶
+city-life-story\src\js\ui\render.js:1821:        "margin-bottom:12px;padding:9px 12px;background:rgba(255,255,255,0.03);border-left:3px solid var(--border);border-radius:0 6px 6px 0;color:var(--text-muted);font-size:12px;font-style:italic;line-height:1.5;";
+city-life-story\src\js\ui\render.js:1833:        "margin-bottom:14px;padding:10px 12px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.25);border-radius:8px;";
+city-life-story\src\js\ui\render.js:1858:          "font-size:12px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
+city-life-story\src\js\ui\render.js:1879:  // === 🌍 出行区域（置顶，醒目） ===
+city-life-story\src\js\ui\render.js:1907:                  `<span style="font-size:9px;padding:2px 5px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`,
+city-life-story\src\js\ui\render.js:1930:      card.style.borderColor = "var(--accent)";
+city-life-story\src\js\ui\render.js:1959:      "margin-bottom:16px;padding:12px;background:rgba(243,156,18,0.05);border:1px solid rgba(243,156,18,0.2);border-radius:var(--radius-md);";
+city-life-story\src\js\ui\render.js:1993:      "margin-top:20px;padding:16px;background:linear-gradient(135deg, rgba(142,119,217,0.08), rgba(255,255,255,0.02));border:1px solid rgba(142,119,217,0.2);border-radius:var(--radius-md);";
+city-life-story\src\js\ui\render.js:2061:  // === ⭐ 快速出行置顶区（解决"地图没了"问题） ===
+city-life-story\src\js\ui\render.js:2066:      "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
+city-life-story\src\js\ui\render.js:2099:          border:1px solid var(--border);
+city-life-story\src\js\ui\render.js:2100:          border-radius:6px;
+city-life-story\src\js\ui\render.js:2106:        " onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(0,180,216,0.06)';"
+city-life-story\src\js\ui\render.js:2107:           onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';">
+city-life-story\src\js\ui\render.js:2122:    "position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;min-height:500px;overflow:auto;";
+city-life-story\src\js\ui\render.js:2191:                `<span style="font-size:9px;padding:1px 4px;border-radius:2px;background:${b.bg};color:${b.color};">${b.icon}${b.label}</span>`,
+city-life-story\src\js\ui\render.js:2207:      border:2px solid ${isCurrent ? "var(--accent)" : isReachable ? "var(--border-light)" : "rgba(255,255,255,0.06)"};
+city-life-story\src\js\ui\render.js:2208:      border-radius:8px;
+city-life-story\src\js\ui\render.js:2229:        node.style.borderColor = "var(--accent)";
+city-life-story\src\js\ui\render.js:2234:        node.style.borderColor = "var(--border-light)";
+city-life-story\src\js\ui\render.js:2284:                `<span style="font-size:9px;padding:1px 4px;border-radius:2px;background:${b.bg};color:${b.color};">${b.icon}${b.label}</span>`,
+city-life-story\src\js\ui\render.js:2291:      <div style="padding:8px 10px;background:var(--bg-card);border:1px solid ${isCur ? "var(--accent)" : canReach ? "var(--border)" : "rgba(255,255,255,0.04)"};border-radius:6px;font-size:11px;opacity:${canReach ? 1 : 0.4};">
+city-life-story\src\js\ui\render.js:2354:        "background:rgba(196,85,61,0.08);border:1px solid rgba(196,85,61,0.2);border-radius:6px;" +
+city-life-story\src\js\ui\render.js:2386:          "background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:6px;" +
+city-life-story\src\js\ui\render.js:2540:    '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-muted);">商品</th>';
+city-life-story\src\js\ui\render.js:2543:    tableHtml += `<th style="padding:4px 6px;text-align:right;border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;">${l.name.substring(0, 2)}</th>`;
+city-life-story\src\js\ui\render.js:2548:    tableHtml += `<tr><td style="padding:3px 8px;border-bottom:1px solid rgba(255,255,255,0.03);">${good.name}</td>`;
+city-life-story\src\js\ui\render.js:2558:      tableHtml += `<td style="padding:3px 6px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.03);${cellStyle}">${p.toFixed(1)}</td>`;
+city-life-story\src\js\ui\render.js:2873:    "font-size:10px;color:var(--text-muted);margin-bottom:8px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:4px;";
+city-life-story\src\js\ui\render.js:3033:              ? "background:rgba(255,200,50,0.2);color:var(--warning);cursor:pointer;border:1px solid var(--warning);"
+city-life-story\src\js\ui\render.js:3037:            '<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;' +
+city-life-story\src\js\ui\render.js:3048:              '<div style="width:8px;height:1px;background:var(--border-color, rgba(255,255,255,0.1));"></div>';
+city-life-story\src\js\ui\render.js:3067:          '<div style="margin-top:6px;padding:4px 8px;background:var(--accent);color:#fff;border-radius:4px;font-size:10px;text-align:center;cursor:pointer;" data-branch-select="' +
+city-life-story\src\js\ui\render.js:3081:      '<div style="margin-top:6px;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;">' +
+city-life-story\src\js\ui\render.js:3086:      ';border-radius:3px;"></div></div>' +
+city-life-story\src\js\ui\render.js:3277:      "margin-top:14px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);";
+city-life-story\src\js\ui\render.js:3308:          "padding:6px 8px;margin-bottom:5px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:6px;";
+city-life-story\src\js\ui\render.js:3354:        "padding:4px 10px;background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:4px;font-size:11px;color:var(--success);";
+city-life-story\src\js\ui\render.js:3445:        '<div style="display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;">' +
+city-life-story\src\js\ui\render.js:3462:      '<div style="margin-top:12px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">' +
+
+[Showing results with pagination = limit: 250]

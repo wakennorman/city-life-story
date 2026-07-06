@@ -1,0 +1,8 @@
+{
+  "id": "6",
+  "subject": "P1-2: NPC好感链路 - affinityEvents 门控事件",
+  "description": "在 npcs.js 为主要NPC添加 affinityEvents 数组(30/60/80阈值)，在 npc_event_bridge.js 添加 checkNpcAffinityEvents 函数并在daily_pipeline中调用",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

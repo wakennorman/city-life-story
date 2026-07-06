@@ -1,0 +1,8 @@
+{
+  "id": "5",
+  "subject": "P1-1: 新闻→投资UI (已实现，验证)",
+  "description": "investment.js L1717处已实现 getNewsInvestmentSummary 调用和\"今日市场驱动\"渲染，只需验证",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

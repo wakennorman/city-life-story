@@ -1,0 +1,80 @@
+/**
+ * 装备/道具定义
+ */
+
+const ITEMS = [
+  {
+    id: "straw_hat",
+    name: "草帽",
+    slot: "head",
+    effects: { hygiene: 2 },
+    price: 10,
+  },
+  {
+    id: "work_gloves",
+    name: "劳保手套",
+    slot: "hand",
+    effects: { physique: 3, injury: -0.02 },
+    price: 15,
+  },
+  {
+    id: "mask",
+    name: "口罩",
+    slot: "head",
+    effects: { hygiene: 5, illness: -0.03 },
+    price: 5,
+  },
+  {
+    id: "sturdy_shoes",
+    name: "解放鞋",
+    slot: "feet",
+    effects: { agility: 3, fatigue: -5 },
+    price: 25,
+  },
+  {
+    id: "backpack",
+    name: "大背包",
+    slot: "accessory",
+    effects: { capacity: 10 },
+    price: 40,
+  },
+  {
+    id: "work_uniform",
+    name: "工作服",
+    slot: "body",
+    effects: { hygiene: 3, fame: 2 },
+    price: 35,
+  },
+  {
+    id: "safety_helmet",
+    name: "安全帽",
+    slot: "head",
+    effects: { injury: -0.05 },
+    price: 20,
+  },
+  {
+    id: "smartphone",
+    name: "智能手机",
+    slot: "accessory",
+    effects: { intelligence: 2, fame: 3 },
+    price: 500,
+  },
+  {
+    id: "bicycle",
+    name: "自行车",
+    slot: null,
+    effects: { agility: 5, fatigue_reduction: 10 },
+    price: 200,
+  },
+  {
+    id: "cert_exam_book",
+    name: "考证教材",
+    slot: null,
+    effects: { skillStudy: 1.5 },
+    price: 30,
+  },
+];
+
+function getItemById(itemId) {
+  return ITEMS.find((i) => i.id === itemId) || null;
+}

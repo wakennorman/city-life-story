@@ -1,0 +1,9 @@
+{
+  "id": "4",
+  "subject": "注册 action_sort.js 到 index.html 和 style.css",
+  "description": "添加 script 标签（state.js 之后，events_core.js 之前），添加 .action-category-header 样式",
+  "activeForm": "注册脚本+样式",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

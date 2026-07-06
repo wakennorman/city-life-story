@@ -1,0 +1,32 @@
+# Refactoring 3: MiniMax 友好重构 — 执行完毕
+
+## Done
+
+### 1. 消除 typeof 桥接 (74 → ~10)
+
+所有 `typeof x === "function"` 检查已删除，改为直接调用。
+剩余约 10 个是合理的（检测可选模块：tutorial/markTutorialDone/startTutorial/tryTriggerLocationEvent）
+这 10 个保留。
+
+### 2. endDay 管线声明式化
+
+新建 `js/phase1/daily_pipeline.js` — 声明式步骤数组，endDay 遍历执行加 skip_day 短路。
+endDay 从 170 行缩减到 ~40 行。
+
+### 3. 大文件拆分
+
+- events.js 拆为 events_data.js(数据) + events_engine.js(引擎)
+- investment.js 拆为 inv_data.js(数据) + inv_ui.js(UI渲染)
+- render.js 拆为 render_tabs.js(tab主调度+6tab) + render_sidebar.js(侧边栏) + render_trade.js(交易UI)
+
+### 4. index.html 脚本加载顺序更新
+
+加入新文件，调整顺序确保依赖正确。
+
+### 5. DEVELOPMENT.md 更新
+
+记录重构经验。
+
+### 6. 记忆文件
+
+写入 MiniMax 友好架构经验。

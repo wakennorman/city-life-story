@@ -1,0 +1,9 @@
+{
+  "id": "4",
+  "subject": "设计双 API 路由方案",
+  "description": "设计一个能同时路由 DeepSeek（代码）和 MiniMax（多模态）的方案，使用 claude-code-router 作为代理层",
+  "activeForm": "设计双 API 路由方案",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

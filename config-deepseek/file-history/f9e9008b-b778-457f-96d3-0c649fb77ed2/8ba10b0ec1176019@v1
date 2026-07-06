@@ -1,0 +1,9 @@
+- [全中文 UI 原则](全中文UI原则.md) — 游戏中所有玩家可见文本必须是纯中文，禁止任何英文/其他语言
+- [JS 字符串内嵌引号转义规则](js-string-escaping.md) — 中文引号也会破坏 JS 字符串边界
+- [showModal 参数默认值](showModal-default-params.md) — 解构数组参数必须设默认空数组
+- [showModal 传字符串参数报错](showModal-string-param.md) — 必须传对象 {title, body, buttons}，不能传字符串
+- [公司历史书 UI 已实现](company-history-ui-done.md) — ✅ 2026/6/20 完成，含时间线/绩效/项目/团队面板
+- [存档快照已实现](save-snapshot-done.md) — ✅ 2026/6/20 完成，含"那时候你..."回忆文案
+- [疾病演化系统已实现](disease-evolution-done.md) — ✅ 2026/6/20 完成，16种疾病5大分类，胃溃疡→胃癌等演化链
+- [食材库存联动已实现](ingredient-system-done.md) — ✅ 2026/6/20 完成，23种食材16个配方，保质期+烹饪系统
+- [平衡调参已完成](balance-tuning-done.md) — ✅ 2026/6/20 完成，装备价格/illness阈值/新闻事件调整

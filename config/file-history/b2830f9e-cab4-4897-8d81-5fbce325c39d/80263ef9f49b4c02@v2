@@ -1,0 +1,46 @@
+---
+name: git-commit
+description: 自动分析暂存区变更并生成规范的 Git 提交信息。
+argument-hint: [type: feat/fix/refactor/docs...]
+---
+
+# Git Commit 助手
+
+当用户调用此 Skill 时，请执行以下步骤：
+
+## 1. 检查暂存区
+
+首先运行 `git diff --cached --stat` 查看暂存的文件列表。
+如果没有暂存文件，运行 `git status` 提示用户先 `git add`。
+
+## 2. 分析变更内容
+
+运行 `git diff --cached` 查看具体的代码变更，理解这次提交做了什么。
+
+## 3. 生成提交信息
+
+根据变更内容，按照 Conventional Commits 规范生成提交信息：
+
+```
+<type>(<scope>): <subject>
+
+<body>
+```
+
+type 可选值：
+- `feat`: 新功能
+- `fix`: 修复 bug
+- `refactor`: 重构（既非新功能也非修复）
+- `docs`: 文档变更
+- `style`: 格式调整（不影响代码含义）
+- `test`: 添加或修改测试
+- `chore`: 构建/工具/依赖变更
+- `perf`: 性能优化
+
+如果用户提供了 type 参数，优先使用用户指定的 type。
+
+## 4. 提供选项
+
+给出 2-3 个备选的提交信息，让用户选择，格式美观清晰。
+
+用户确认后执行 `git commit -m "<message>"`。

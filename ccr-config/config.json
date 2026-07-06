@@ -1,0 +1,34 @@
+{
+  "host": "127.0.0.1",
+  "port": 3456,
+  "PROXY_URL": "",
+  "LOG": true,
+  "APIKEY": "any-string-is-ok",
+  "Providers": [
+    {
+      "name": "minimax",
+      "api_base_url": "https://api.minimaxi.com/anthropic",
+      "api_key": "sk-cp-7TpzP8MK7IdHB4vm9l4Eb2_07U8NEef6joQT7CRR04Ho6vJjEN32YkBP9iZHT4CvMLWFI3Iq3nXKyf7kCB4YAJGLCJscAly22Lflp01b-ANNDXJyYPl0WHk",
+      "models": ["MiniMax-M3"]
+    },
+    {
+      "name": "juziai",
+      "api_base_url": "https://api.juziai.cc/v1",
+      "api_key": "sk-mZICrogsmoolTEg3rilOXrII9YpohVdrJeRIGlFnkJ0nf0Y6",
+      "models": [
+        "deepseek-v4-pro",
+        "deepseek-v4-flash",
+        "deepseek-v3",
+        "qwen3-235b-a22b-thinking"
+      ]
+    }
+  ],
+  "Router": {
+    "default": "juziai,deepseek-v4-pro",
+    "background": "juziai,deepseek-v4-flash",
+    "think": "juziai,qwen3-235b-a22b-thinking",
+    "longContext": "juziai,deepseek-v4-pro",
+    "webSearch": "juziai,deepseek-v4-pro",
+    "image": "minimax,MiniMax-M3"
+  }
+}

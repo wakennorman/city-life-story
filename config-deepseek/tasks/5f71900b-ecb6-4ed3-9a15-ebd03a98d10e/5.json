@@ -1,0 +1,9 @@
+{
+  "id": "5",
+  "subject": "构建、更新文档、git 提交",
+  "description": "python build.py，更新 DEVELOPMENT.md，git add+commit，更新记忆文件",
+  "activeForm": "构建+提交",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

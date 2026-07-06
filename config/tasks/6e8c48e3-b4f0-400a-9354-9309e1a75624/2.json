@@ -1,0 +1,8 @@
+{
+  "id": "2",
+  "subject": "P0-2: 经济平衡 - 压缩创业收益 growthFactor",
+  "description": "在 startup.js 找到 growthFactor: 2.5 处（finance科技）降至 1.8，并在P10(corp.js)月薪已是180K，核实数值是否需要调整",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

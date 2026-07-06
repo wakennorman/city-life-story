@@ -1,0 +1,8 @@
+{
+  "id": "7",
+  "subject": "P1-3: 事件奖励缩放 scaleEventReward",
+  "description": "在 events_core.js 添加 scaleEventReward(baseReward, state) 函数，在街头事件中调用",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

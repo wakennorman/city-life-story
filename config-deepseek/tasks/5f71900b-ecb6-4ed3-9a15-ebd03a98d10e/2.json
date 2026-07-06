@@ -1,0 +1,9 @@
+{
+  "id": "2",
+  "subject": "给 state.js 添加 stats 字段",
+  "description": "在 createDefaultState() 中添加 stats.actionFreq / actionFirstUse，在 importState() 中添加迁移",
+  "activeForm": "修改 state.js",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

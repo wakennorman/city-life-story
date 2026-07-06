@@ -1,0 +1,967 @@
+/**
+ * 城市浮生记 — 主入口
+ *
+ * 初始化游戏、管理渲染循环、绑定事件。
+ */
+
+// ====== 全局游戏实例 ======
+let gameStarted = false;
+
+// ====== 工具函数 ======
+
+/** 设置属性条 */
+function setStatBar(id, value, cssClass) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  const bar = wrap.querySelector('.stat-bar');
+  const valEl = wrap.querySelector('.stat-value');
+  if (bar) {
+    bar.style.width = Math.max(0, Math.min(100, value)) + '%';
+    bar.className = 'stat-bar ' + cssClass;
+  }
+  if (valEl) {
+    valEl.textContent = Math.round(value);
+  }
+}
+
+/** 描述装备效果 */
+function describeItemEffects(itemDef) {
+  if (!itemDef || !itemDef.effects) return '';
+  const parts = [];
+  for (const [key, val] of Object.entries(itemDef.effects)) {
+    if (key === 'capacity') parts.push(`容量+${val}`);
+    else if (key === 'injury') parts.push(`受伤率${val < 0 ? val : '+' + val}`);
+    else if (key === 'illness') parts.push(`生病率${val < 0 ? val : '+' + val}`);
+    else if (key === 'fatigue') parts.push(`疲劳${val < 0 ? val : '+' + val}`);
+    else if (typeof val === 'number') parts.push(`${key}${val > 0 ? '+' + val : val}`);
+  }
+  return parts.join(', ');
+}
+
+/** 检查工作需求是否满足 */
+function checkJobRequirements(job, state) {
+  const reqs = job.requirements || {};
+  const p = state.player;
+  const s = state.skills;
+
+  if (reqs.minAge && p.age < reqs.minAge) return `需要年满${reqs.minAge}岁`;
+  if (reqs.maxAge && p.age > reqs.maxAge) return `年龄超过${reqs.maxAge}岁限制`;
+  if (reqs.physique && p.physique < reqs.physique) return `体质不足 (需要${reqs.physique})`;
+  if (reqs.intelligence && p.intelligence < reqs.intelligence) return `智力不足 (需要${reqs.intelligence})`;
+  if (reqs.agility && p.agility < reqs.agility) return `敏捷不足 (需要${reqs.agility})`;
+  if (reqs.mental && p.mental < reqs.mental) return `心智不足 (需要${reqs.mental})`;
+  if (reqs.cooking && s.cooking.level < reqs.cooking) return `烹饪技能不足 (需要${reqs.cooking})`;
+  if (reqs.repair && s.repair.level < reqs.repair) return `维修技能不足 (需要${reqs.repair})`;
+  if (reqs.sales && s.sales.level < reqs.sales) return `销售技能不足 (需要${reqs.sales})`;
+  if (reqs.english && s.english.level < reqs.english) return `英语技能不足 (需要${reqs.english})`;
+
+  return null; // 通过
+}
+
+/** 估算工作收入 */
+function estimateJobPay(job, state) {
+  // 模拟3次取平均
+  let total = 0;
+  for (let i = 0; i < 10; i++) {
+    total += job.payCalc(state);
+  }
+  return Math.floor(total / 10);
+}
+
+// ====== 欢迎界面 ======
+function showWelcome() {
+  document.getElementById('app').style.display = 'none';
+  const welcome = document.getElementById('welcome-screen');
+  welcome.style.display = 'flex';
+
+  const hasExistingSave = hasSave();
+
+  document.getElementById('btn-new-game').onclick = () => startNewGame();
+  document.getElementById('btn-load-game').style.display = hasExistingSave ? '' : 'none';
+  if (hasExistingSave) {
+    const info = getSaveInfo();
+    document.getElementById('btn-load-game').textContent =
+      `📂 继续游戏 (第${info.day}天, ¥${info.cash.toLocaleString()})`;
+    document.getElementById('btn-load-game').onclick = () => loadExistingGame();
+  }
+}
+
+function startNewGame() {
+  StateManager.newGame();
+  initializePrices();
+  StateManager.addMessage('🏘️ 你揣着2000元来到了这座城市。欠村长5500元，日息0.3%。活下去，活出个人样来！', 'event');
+  StateManager.addMessage('💡 提示：去城中村收废品是最简单的起步方式。有了本钱可以去批发市场进货摆摊。', 'info');
+
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  gameStarted = true;
+  renderAll();
+}
+
+function loadExistingGame() {
+  const saveData = loadGame();
+  if (saveData) {
+    StateManager.importState(saveData);
+    StateManager.addMessage('📂 存档已加载，欢迎回来！', 'info');
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('app').style.display = '';
+    gameStarted = true;
+    renderAll();
+  }
+}
+
+/** 初始化各地商品价格 */
+function initializePrices() {
+  const state = StateManager.getState();
+  for (const locKey of Object.keys(LOCATIONS)) {
+    state.trade.goodsPrices[locKey] = {};
+    const loc = LOCATIONS[locKey];
+    for (const good of GOODS) {
+      let price = good.basePrice;
+      if (loc.priceMod && loc.priceMod[good.id]) {
+        price *= loc.priceMod[good.id];
+      }
+      // 随机波动 ±10%
+      price *= 0.9 + Math.random() * 0.2;
+      price = Math.round(price * 100) / 100;
+      state.trade.goodsPrices[locKey][good.id] = price;
+    }
+  }
+  state.trade.lastPriceUpdate = state.player.day;
+}
+
+// ====== 可用行动列表 ======
+function getAvailableActions(state) {
+  const actions = [];
+
+  if (state.player.phase === 'street') {
+    // --- 街头阶段行动 ---
+
+    // 1. 工作
+    const locKey = state.trade.currentLocation;
+    const jobIds = getJobsAtLocation(locKey);
+    for (const jobId of jobIds) {
+      const job = getJobById(jobId);
+      if (!job) continue;
+      const reqFail = checkJobRequirements(job, state);
+      const payEstimate = reqFail ? null : estimateJobPay(job, state);
+
+      actions.push({
+        id: 'job_' + jobId,
+        name: job.name,
+        desc: job.desc,
+        icon: job.icon,
+        payEstimate: payEstimate ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}` : null,
+        costEstimate: job.startupCost || null,
+        reqFail,
+        disabled: !!reqFail || (job.startupCost && state.resources.cash < job.startupCost
+          ? `启动资金不足(需¥${job.startupCost})` : null) || null,
+        handler: () => {
+          const finalReq = checkJobRequirements(job, state);
+          if (finalReq) { StateManager.addMessage(`⚠️ ${finalReq}`, 'warning'); return; }
+          if (job.startupCost && state.resources.cash < job.startupCost) {
+            StateManager.addMessage(`⚠️ 启动资金不足，需要 ¥${job.startupCost}`, 'warning');
+            return;
+          }
+          doStreetJob(job);
+        },
+      });
+    }
+
+    // 如果没有可用工作
+    if (jobIds.length === 0) {
+      actions.push({
+        id: 'no_jobs',
+        name: '当前地点没有工作机会',
+        desc: '尝试旅行到其他地点寻找工作。',
+        icon: '🚫',
+        disabled: true,
+      });
+    }
+
+    // 2. 旅行
+    const reachable = getReachableLocations(locKey);
+    for (const destKey of reachable) {
+      const dest = getLocation(destKey);
+      if (!dest) continue;
+      actions.push({
+        id: 'travel_' + destKey,
+        name: `前往 ${dest.name}`,
+        desc: dest.desc,
+        icon: '🚶',
+        handler: () => {
+          StateManager.update('trade.currentLocation', destKey);
+          StateManager.addMessage(`🚶 你来到了${dest.name}。`, 'info');
+        },
+      });
+    }
+
+    // 3. 通用行动
+    actions.push({
+      id: 'rest',
+      name: '休息一会',
+      desc: '找个地方坐坐，恢复一些疲劳。',
+      icon: '😴',
+      handler: () => {
+        const state = StateManager.getState();
+        const recovery = 25 + Math.floor(Math.random() * 15);
+        state.needs.fatigue = Math.max(0, state.needs.fatigue - recovery);
+        state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+        StateManager.addMessage(`😴 你休息了一会，疲劳-${recovery}。`, 'info');
+      },
+    });
+
+    actions.push({
+      id: 'eat',
+      name: '吃顿饭',
+      desc: '花10元在路边摊吃个快餐，填饱肚子。',
+      icon: '🍚',
+      costEstimate: 10,
+      disabled: state.resources.cash < 10 ? true : false,
+      handler: () => {
+        const st = StateManager.getState();
+        if (st.resources.cash < 10) {
+          StateManager.addMessage('⚠️ 钱不够吃饭了！', 'danger');
+          return;
+        }
+        st.resources.cash -= 10;
+        st.needs.hunger = Math.min(100, st.needs.hunger + 35);
+        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+        StateManager.addMessage('🍚 你花10元吃了顿饭，肚子饱了心情好了。', 'success');
+      },
+    });
+
+    actions.push({
+      id: 'shower',
+      name: '洗澡',
+      desc: '花5元去公共澡堂洗个澡。',
+      icon: '🚿',
+      costEstimate: 5,
+      disabled: state.resources.cash < 5 ? true : false,
+      handler: () => {
+        const st = StateManager.getState();
+        if (st.resources.cash < 5) {
+          StateManager.addMessage('⚠️ 不够钱洗澡。', 'danger');
+          return;
+        }
+        st.resources.cash -= 5;
+        st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
+        StateManager.addMessage('🚿 洗了个澡，神清气爽。', 'success');
+      },
+    });
+
+    // 银行相关行动
+    if (locKey === 'bank') {
+      actions.push({
+        id: 'deposit',
+        name: '存款',
+        desc: '把钱存入银行，吃利息也更安全。',
+        icon: '🏦',
+        disabled: state.resources.cash <= 0 ? true : false,
+        handler: () => {
+          showDepositModal();
+        },
+      });
+      actions.push({
+        id: 'withdraw',
+        name: '取款',
+        desc: '从银行取出存款。',
+        icon: '💰',
+        disabled: state.resources.bankBalance <= 0 ? true : false,
+        handler: () => {
+          showWithdrawModal();
+        },
+      });
+      actions.push({
+        id: 'loan',
+        name: '贷款',
+        desc: '向银行贷款（日息0.3%），解燃眉之急。',
+        icon: '📝',
+        handler: () => {
+          showLoanModal();
+        },
+      });
+      actions.push({
+        id: 'repay',
+        name: '还债',
+        desc: '偿还部分或全部欠款。',
+        icon: '💸',
+        disabled: state.resources.debt <= 0 && state.resources.cash <= 0 ? true : false,
+        handler: () => {
+          showRepayModal();
+        },
+      });
+    }
+
+    // 医院
+    if (locKey === 'hospital') {
+      actions.push({
+        id: 'heal',
+        name: '看病治疗',
+        desc: '花50元看病，恢复健康、治疗伤病。',
+        icon: '🏥',
+        costEstimate: 50,
+        disabled: state.resources.cash < 50 ? true : false,
+        handler: () => {
+          const st = StateManager.getState();
+          st.resources.cash -= 50;
+          st.status.health = Math.min(100, st.status.health + 40);
+          st.status.sick = false;
+          st.status.injured = false;
+          StateManager.addMessage('🏥 看了医生，健康恢复了不少。', 'success');
+        },
+      });
+    }
+
+    // 培训中心
+    if (locKey === 'trainingCenter') {
+      actions.push({
+        id: 'study',
+        name: '自学提升',
+        desc: '花时间看书学习，提升技能等级。',
+        icon: '📚',
+        handler: () => {
+          const st = StateManager.getState();
+          // 随机提升一个技能
+          const skillKeys = Object.keys(st.skills);
+          const key = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+          st.skills[key].xp += 20 + Math.floor(Math.random() * 30);
+          // 检查升级
+          const skill = st.skills[key];
+          const xpNeeded = (skill.level + 1) * 100;
+          if (skill.xp >= xpNeeded && skill.level < 100) {
+            skill.level++;
+            skill.xp -= xpNeeded;
+            StateManager.addMessage(`📚 你的${getSkillName(key)}提升到了等级 ${skill.level}！`, 'success');
+          }
+          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+          StateManager.addMessage(`📚 你花时间学习了${getSkillName(key)}。`, 'info');
+        },
+      });
+    }
+
+    // 公园
+    if (locKey === 'park') {
+      actions.push({
+        id: 'relax_park',
+        name: '公园放松',
+        desc: '在公园散步、看风景，放松身心。',
+        icon: '🌳',
+        handler: () => {
+          const st = StateManager.getState();
+          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          StateManager.addMessage('🌳 在公园散了会步，心情舒畅多了。', 'success');
+        },
+      });
+    }
+
+    // 科技园 — 触发职场阶段入口
+    if (locKey === 'techPark' && state.player.phase === 'street') {
+      const canTransition = state.player.intelligence >= 45;
+      actions.push({
+        id: 'apply_job',
+        name: '应聘互联网公司',
+        desc: canTransition
+          ? '你的能力已经足够，可以去试试看！'
+          : '需要智力 ≥ 45 才能获得面试机会。',
+        icon: '💼',
+        disabled: !canTransition,
+        reqFail: canTransition ? null : '智力不足45',
+        handler: () => {
+          if (canTransition) {
+            showInterviewModal();
+          }
+        },
+      });
+    }
+  }
+
+  // --- 职场阶段行动（简化桩） ---
+  if (state.player.phase === 'corporate') {
+    actions.push({
+      id: 'corp_project',
+      name: '做项目',
+      desc: '埋头干活，提升KPI和能力。消耗发量。',
+      icon: '💻',
+      handler: () => {
+        const st = StateManager.getState();
+        st.player.corporate.kpi = Math.min(150, st.player.corporate.kpi + 15);
+        st.player.corporate.ability = Math.min(100, st.player.corporate.ability + 5);
+        st.player.corporate.hair = Math.max(0, st.player.corporate.hair - 3);
+        st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+        StateManager.addMessage('💻 你完成了一个项目迭代，KPI+15，能力+5。', 'success');
+      },
+    });
+    actions.push({
+      id: 'corp_network',
+      name: '向上社交',
+      desc: '和领导搞好关系，汇报工作成果。',
+      icon: '🤝',
+      handler: () => {
+        const st = StateManager.getState();
+        st.player.corporate.upwardMgmt = Math.min(100, st.player.corporate.upwardMgmt + 12);
+        st.player.corporate.popularity = Math.min(100, st.player.corporate.popularity + 3);
+        st.player.corporate.dignity = Math.max(0, st.player.corporate.dignity - 3);
+        StateManager.addMessage('🤝 你和领导沟通了项目进展，向上管理+12。', 'success');
+      },
+    });
+    actions.push({
+      id: 'corp_rest',
+      name: '摸鱼休息',
+      desc: '正常下班，好好休息。恢复发量和尊严。',
+      icon: '🎮',
+      handler: () => {
+        const st = StateManager.getState();
+        st.player.corporate.hair = Math.min(100, st.player.corporate.hair + 8);
+        st.player.corporate.dignity = Math.min(100, st.player.corporate.dignity + 5);
+        st.needs.fatigue = Math.max(0, st.needs.fatigue - 20);
+        st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+        st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 5);
+        StateManager.addMessage('🎮 你按时下班休息了，发量+8，尊严+5。但KPI-5。', 'info');
+      },
+    });
+  }
+
+  return actions;
+}
+
+/** 执行街头工作 */
+function doStreetJob(job) {
+  const state = StateManager.getState();
+
+  // 扣除启动资金
+  if (job.startupCost) {
+    state.resources.cash -= job.startupCost;
+  }
+
+  // 计算收入
+  const pay = job.payCalc(state);
+  state.resources.cash += pay;
+  state.resources.totalEarned += pay;
+  state.employment.completedShifts[job.id] = (state.employment.completedShifts[job.id] || 0) + 1;
+
+  // 应用效果
+  if (job.effects) {
+    if (job.effects.fatigue) state.needs.fatigue = Math.min(100, state.needs.fatigue + job.effects.fatigue);
+    if (job.effects.hygiene) state.needs.hygiene = Math.max(0, Math.min(100, state.needs.hygiene + job.effects.hygiene));
+    if (job.effects.happiness) state.needs.happiness = Math.max(0, Math.min(100, state.needs.happiness + job.effects.happiness));
+    if (job.effects.mental) state.player.mental = Math.max(0, Math.min(100, state.player.mental + job.effects.mental));
+    if (job.effects.fame) state.status.fame = Math.max(0, Math.min(100, state.status.fame + job.effects.fame));
+
+    // 技能经验
+    addSkillXp('cooking', job.effects.cookingXp || 0);
+    addSkillXp('repair', job.effects.repairXp || 0);
+    addSkillXp('agility', job.effects.agilityXp || 0);
+    addSkillXp('sales', job.effects.salesXp || 0);
+    addSkillXp('physique', job.effects.physiqueXp || 0);
+    addSkillXp('intelligence', job.effects.intelligenceXp || 0);
+    addSkillXp('english', job.effects.englishXp || 0);
+  }
+
+  // 属性经验转化
+  if (job.effects) {
+    if (job.effects.agilityXp) state.player.agility = Math.min(100, state.player.agility + job.effects.agilityXp * 0.1);
+    if (job.effects.physiqueXp) state.player.physique = Math.min(100, state.player.physique + job.effects.physiqueXp * 0.1);
+    if (job.effects.intelligenceXp) state.player.intelligence = Math.min(100, state.player.intelligence + job.effects.intelligenceXp * 0.1);
+  }
+
+  // 受伤/生病风险
+  if (job.risk) {
+    if (job.risk.injury && Math.random() < job.risk.injury) {
+      state.status.injured = true;
+      state.status.health = Math.max(0, state.status.health - 15);
+      StateManager.addMessage('🤕 工作中受伤了！健康-15。建议去医院看看。', 'danger');
+    }
+    if (job.risk.illness && Math.random() < job.risk.illness) {
+      state.status.sick = true;
+      state.status.health = Math.max(0, state.status.health - 10);
+      StateManager.addMessage('🤒 你生病了！健康-10。注意休息或去医院。', 'danger');
+    }
+  }
+
+  StateManager.addMessage(`💰 ${job.name}完成，赚了 ¥${pay}。`, 'success');
+
+  // 推进时间
+  advanceTimeSlot();
+}
+
+function addSkillXp(skillKey, amount) {
+  if (!amount || amount <= 0) return;
+  const state = StateManager.getState();
+  const skill = state.skills[skillKey];
+  if (!skill) return;
+  skill.xp += amount;
+  const xpNeeded = (skill.level + 1) * 100;
+  if (skill.xp >= xpNeeded && skill.level < 100) {
+    skill.level++;
+    skill.xp -= xpNeeded;
+    StateManager.addMessage(`⭐ ${getSkillName(skillKey)}升级到 Lv.${skill.level}！`, 'success');
+  }
+}
+
+function getSkillName(key) {
+  const names = {
+    cooking: '烹饪', repair: '维修', coding: '编程', english: '英语',
+    driving: '驾驶', sales: '销售', management: '管理', accounting: '会计',
+    electrician: '电工', welding: '焊接',
+  };
+  return names[key] || key;
+}
+
+// ====== 时间推进 ======
+function advanceTimeSlot() {
+  const state = StateManager.getState();
+  const slots = ['morning', 'afternoon', 'evening'];
+  const idx = slots.indexOf(state.player.timeSlot);
+
+  if (idx < 2) {
+    // 推进到下一个时段
+    state.player.timeSlot = slots[idx + 1];
+  } else {
+    // 一天结束
+    endDay();
+    state.player.timeSlot = 'morning';
+  }
+}
+
+function endDay() {
+  const state = StateManager.getState();
+
+  state.player.day++;
+
+  // 需求衰减
+  state.needs.hunger = Math.max(0, state.needs.hunger - 18);
+  state.needs.hygiene = Math.max(0, state.needs.hygiene - 8);
+  state.needs.fatigue = Math.max(0, state.needs.fatigue - 25); // 睡眠恢复
+  state.needs.happiness = Math.max(0, state.needs.happiness - 3);
+
+  // 健康自然恢复
+  if (!state.status.sick && !state.status.injured) {
+    state.status.health = Math.min(100, state.status.health + 1);
+  }
+
+  // 伤病影响
+  if (state.status.sick) {
+    state.status.health = Math.max(0, state.status.health - 3);
+    if (Math.random() < 0.1) state.status.sick = false; // 10% 自愈
+  }
+  if (state.status.injured) {
+    state.status.health = Math.max(0, state.status.health - 2);
+    if (Math.random() < 0.05) state.status.injured = false;
+  }
+
+  // 饥饿/卫生极端惩罚
+  if (state.needs.hunger < 15) {
+    state.status.health = Math.max(0, state.status.health - 5);
+    StateManager.addMessage('⚠️ 你已经饿得不行了！健康-5。快去吃点什么！', 'danger');
+  }
+  if (state.needs.hygiene < 15) {
+    state.status.health = Math.max(0, state.status.health - 5);
+    StateManager.addMessage('⚠️ 身上太脏了，开始生病！健康-5。去洗个澡吧。', 'danger');
+  }
+
+  // 贷款利息
+  if (state.resources.debt > 0) {
+    const interest = Math.floor(state.resources.debt * state.resources.dailyInterest);
+    if (interest > 0) {
+      state.resources.debt += interest;
+      StateManager.addMessage(`🏦 欠款利息：+¥${interest}（当前欠款 ¥${state.resources.debt.toLocaleString()}）`, 'warning');
+    }
+  }
+
+  // 银行存款利息
+  if (state.resources.bankBalance > 0) {
+    const bankInterest = Math.floor(state.resources.bankBalance * 0.001); // 日息 0.1%
+    if (bankInterest > 0) {
+      state.resources.bankBalance += bankInterest;
+    }
+  }
+
+  // 每3天更新价格
+  if (state.player.day - state.trade.lastPriceUpdate >= 3) {
+    updateAllPrices(state);
+  }
+
+  // 随机事件（10%概率）
+  if (Math.random() < 0.1) {
+    triggerRandomEvent(state);
+  }
+
+  // 每年年龄增长
+  if (state.player.day % 365 === 0) {
+    state.player.age++;
+    StateManager.addMessage(`🎂 又过了一年，你现在${state.player.age}岁了。`, 'event');
+  }
+
+  // 失败条件检查
+  checkLoseConditions(state);
+
+  // 自动存档
+  autoSave();
+
+  StateManager.addMessage(`🌙 第${state.player.day}天结束了。新的一天开始。`, 'info');
+}
+
+/** 价格更新 */
+function updateAllPrices(state) {
+  for (const locKey of Object.keys(LOCATIONS)) {
+    const loc = LOCATIONS[locKey];
+    for (const good of GOODS) {
+      let price = good.basePrice;
+      if (loc.priceMod && loc.priceMod[good.id]) {
+        price *= loc.priceMod[good.id];
+      }
+      // 随机波动 ±20%
+      price *= 0.8 + Math.random() * 0.4;
+      // 均值回归
+      const oldPrice = state.trade.goodsPrices[locKey]?.[good.id] || price;
+      price = price + (oldPrice - price) * 0.1;
+      price = Math.max(good.basePrice * 0.3, Math.min(good.basePrice * 5, price));
+      price = Math.round(price * 100) / 100;
+      state.trade.goodsPrices[locKey][good.id] = price;
+    }
+  }
+  state.trade.lastPriceUpdate = state.player.day;
+}
+
+/** 随机事件 */
+function triggerRandomEvent(state) {
+  const events = [
+    { text: '街头有人发传单，给了你一张优惠券（没用）', type: 'info' },
+    { text: '看到路边有人在摆摊，生意好像不错', type: 'info' },
+    { text: '天气突然变冷，街上的行人少了', type: 'info' },
+    { text: '邻居向你抱怨最近废品价格又跌了', type: 'warning' },
+  ];
+  const evt = events[Math.floor(Math.random() * events.length)];
+  StateManager.addMessage(`📰 ${evt.text}`, evt.type);
+}
+
+/** 失败条件检查 */
+function checkLoseConditions(state) {
+  if (state.status.health <= 0) {
+    state.flags.gameOver = true;
+    state.flags.gameOverReason = '健康耗尽，你倒在了这座城市的街头...';
+    showGameOverModal();
+  }
+  if (state.resources.debt > 50000) {
+    state.flags.gameOver = true;
+    state.flags.gameOverReason = '债务超过5万元，讨债的人找上门来...';
+    showGameOverModal();
+  }
+}
+
+// ====== 模态对话框 ======
+function showModal({ title, body, buttons }) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const box = document.createElement('div');
+  box.className = 'modal-box';
+  box.innerHTML = `
+    <h2>${title}</h2>
+    <div class="modal-body">${body}</div>
+    <div class="modal-actions"></div>
+  `;
+
+  const actionsDiv = box.querySelector('.modal-actions');
+  for (const btn of buttons) {
+    const btnEl = document.createElement('button');
+    btnEl.className = 'btn ' + (btn.cls || 'btn-primary');
+    btnEl.textContent = btn.text;
+    btnEl.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      if (btn.callback) btn.callback();
+    });
+    actionsDiv.appendChild(btnEl);
+  }
+
+  overlay.appendChild(box);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+  document.body.appendChild(overlay);
+}
+
+function showGameOverModal() {
+  const state = StateManager.getState();
+  showModal({
+    title: '💀 游戏结束',
+    body: `
+      <p>${state.flags.gameOverReason}</p>
+      <table class="stats-summary">
+        <tr><td>存活天数</td><td>${state.player.day} 天</td></tr>
+        <tr><td>年龄</td><td>${state.player.age} 岁</td></tr>
+        <tr><td>现金</td><td>¥${state.resources.cash.toLocaleString()}</td></tr>
+        <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
+        <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
+      </table>
+    `,
+    buttons: [
+      { text: '重新开始', cls: 'btn-primary', callback: () => startNewGame() },
+      { text: '返回标题', cls: '', callback: () => { location.reload(); } },
+    ],
+  });
+}
+
+function showDepositModal() {
+  const state = StateManager.getState();
+  showModal({
+    title: '🏦 存款',
+    body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
+           <p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
+           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${state.resources.cash}" value="${state.resources.cash}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+    buttons: [
+      { text: '取消', cls: '', callback: () => {} },
+      {
+        text: '存入全部', cls: 'btn-success',
+        callback: () => {
+          const amt = state.resources.cash;
+          state.resources.bankBalance += amt;
+          state.resources.cash = 0;
+          StateManager.addMessage(`🏦 存入 ¥${amt.toLocaleString()} 到银行。`, 'success');
+          renderAll();
+        },
+      },
+    ],
+  });
+  // 延迟绑定输入框事件
+  setTimeout(() => {
+    const input = document.getElementById('deposit-amount');
+    if (input) {
+      input.addEventListener('input', () => {
+        const val = parseInt(input.value) || 0;
+        // update last button
+        const btns = document.querySelectorAll('.modal-actions .btn');
+        const lastBtn = btns[btns.length - 1];
+        if (lastBtn && !lastBtn.classList.contains('btn-success')) {
+          lastBtn.textContent = `存入 ¥${val.toLocaleString()}`;
+          lastBtn.onclick = () => {
+            const amt = Math.min(val, state.resources.cash);
+            state.resources.bankBalance += amt;
+            state.resources.cash -= amt;
+            StateManager.addMessage(`🏦 存入 ¥${amt.toLocaleString()} 到银行。`, 'success');
+            document.querySelector('.modal-overlay')?.remove();
+            renderAll();
+          };
+        }
+      });
+    }
+  }, 50);
+}
+
+function showWithdrawModal() {
+  const state = StateManager.getState();
+  showModal({
+    title: '💰 取款',
+    body: `<p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
+           <label>取出金额: <input id="withdraw-amount" type="number" min="1" max="${state.resources.bankBalance}" value="${state.resources.bankBalance}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+    buttons: [
+      { text: '取消', cls: '', callback: () => {} },
+      {
+        text: `取出全部 ¥${state.resources.bankBalance.toLocaleString()}`,
+        cls: 'btn-primary',
+        callback: () => {
+          const amt = state.resources.bankBalance;
+          state.resources.cash += amt;
+          state.resources.bankBalance = 0;
+          StateManager.addMessage(`💰 从银行取出 ¥${amt.toLocaleString()}。`, 'success');
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
+function showLoanModal() {
+  const state = StateManager.getState();
+  const maxLoan = 10000;
+  showModal({
+    title: '📝 贷款',
+    body: `<p>可贷金额: ¥${maxLoan.toLocaleString()}</p>
+           <p style="color:var(--danger)">⚠️ 日息 0.3%（复利），请谨慎！</p>
+           <p>当前欠款: ¥${state.resources.debt.toLocaleString()}</p>`,
+    buttons: [
+      { text: '取消', cls: '', callback: () => {} },
+      {
+        text: '贷款 ¥3,000', cls: 'btn-warning',
+        callback: () => {
+          state.resources.cash += 3000;
+          state.resources.debt += 3000;
+          StateManager.addMessage('📝 贷款 ¥3,000，日息0.3%。记得按时还款！', 'warning');
+          renderAll();
+        },
+      },
+      {
+        text: '贷款 ¥5,000', cls: 'btn-warning',
+        callback: () => {
+          state.resources.cash += 5000;
+          state.resources.debt += 5000;
+          StateManager.addMessage('📝 贷款 ¥5,000。', 'warning');
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
+function showRepayModal() {
+  const state = StateManager.getState();
+  showModal({
+    title: '💸 还债',
+    body: `<p>当前欠款: ¥${state.resources.debt.toLocaleString()}</p>
+           <p>现金: ¥${state.resources.cash.toLocaleString()}</p>`,
+    buttons: [
+      { text: '取消', cls: '', callback: () => {} },
+      {
+        text: '能还多少还多少',
+        cls: 'btn-primary',
+        callback: () => {
+          const amt = Math.min(state.resources.cash, state.resources.debt);
+          state.resources.cash -= amt;
+          state.resources.debt -= amt;
+          StateManager.addMessage(`💸 还款 ¥${amt.toLocaleString()}。${state.resources.debt > 0 ? `还剩 ¥${state.resources.debt.toLocaleString()}。` : '债务已还清！'}`, 'success');
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
+function showInterviewModal() {
+  showModal({
+    title: '💼 应聘互联网公司',
+    body: `<p>你的能力已经足够进入科技行业了！</p>
+           <p>面试官看了你的简历，问了一个技术问题...</p>
+           <p style="color:var(--accent)">"请简述你对软件工程的理解"</p>
+           <p>你深吸一口气，开始了回答...</p>
+           <p style="color:var(--success)">面试很顺利！你收到了 Offer！</p>
+           <p>—— 职场阶段即将解锁 ——</p>`,
+    buttons: [
+      { text: '再考虑考虑', cls: '', callback: () => {} },
+      {
+        text: '🏢 接受 Offer！进入职场',
+        cls: 'btn-primary',
+        callback: () => {
+          enterCorporatePhase();
+        },
+      },
+    ],
+  });
+}
+
+/** 进入职场阶段 */
+function enterCorporatePhase() {
+  const state = StateManager.getState();
+  const p = state.player;
+
+  p.phase = 'corporate';
+  p.corpYear = 1;
+  p.corpQuarter = 1;
+
+  // 从街头属性映射到职场属性
+  p.corporate.hair = 100;
+  p.corporate.dignity = Math.min(100, Math.round(p.mental * 1.2));
+  p.corporate.upwardMgmt = Math.min(100, Math.round(state.skills.sales.level * 1.5 + 10));
+  p.corporate.kpi = Math.min(150, Math.round(p.agility * 0.5 + state.skills.coding.level * 0.5 + 10));
+  p.corporate.ability = Math.min(100, Math.round(p.intelligence * 0.8 + state.skills.coding.level * 0.5 + 10));
+  p.corporate.risk = Math.min(100, 10 + Math.floor(Math.random() * 15));
+  p.corporate.popularity = Math.min(100, Math.round(state.status.fame * 0.5 + 20));
+
+  state.corporate.rank = 'P5';
+  state.corporate.company = {
+    name: '星辰科技有限公司',
+    industry: '互联网/AI',
+    size: '2000+人',
+  };
+  state.corporate.joinedDay = p.day;
+
+  StateManager.addMessage('🏢 你正式入职了！从P5开始你的职场生涯。', 'success');
+  StateManager.addMessage('💡 提示：做项目提升KPI，向上社交获取领导信任。季度末会有绩效考核。', 'info');
+
+  document.querySelector('.modal-overlay')?.remove();
+  renderAll();
+}
+
+// ====== 消息日志渲染 ======
+function renderMessageLog(state) {
+  const log = document.getElementById('message-log');
+  if (!log) return;
+
+  const content = log.querySelector('.log-content');
+  if (!content) return;
+
+  const messages = state.messageLog.slice(-50); // 最近50条
+  content.innerHTML = messages.map(m => `
+    <div class="log-entry ${m.type}">
+      <span class="log-day">[第${m.day}天]</span>${m.text}
+    </div>
+  `).join('');
+
+  // 滚动到底部
+  content.scrollTop = content.scrollHeight;
+}
+
+// ====== 初始化 ======
+function init() {
+  // 检查是否有存档
+  if (hasSave()) {
+    // 显示欢迎界面
+  }
+
+  // 注册状态变更回调
+  StateManager.onChange(() => {
+    if (gameStarted) {
+      // 函数节流：每 100ms 最多渲染一次
+      if (!init._renderTimeout) {
+        init._renderTimeout = setTimeout(() => {
+          renderAll();
+          init._renderTimeout = null;
+        }, 100);
+      }
+    }
+  });
+
+  // 显示欢迎界面
+  showWelcome();
+
+  // 全局点击事件委托（Tab 切换）
+  document.getElementById('tab-bar').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (btn && btn.dataset.tab) {
+      switchTab(btn.dataset.tab);
+    }
+  });
+
+  // 存档按钮
+  document.getElementById('btn-save').addEventListener('click', () => {
+    if (gameStarted) {
+      saveGame();
+      renderAll();
+    }
+  });
+
+  // 新游戏按钮（Header）
+  document.getElementById('btn-new-game-header').addEventListener('click', () => {
+    if (gameStarted) {
+      showModal({
+        title: '开始新游戏？',
+        body: '<p>当前进度将会丢失。建议先存档。</p>',
+        buttons: [
+          { text: '取消', cls: '', callback: () => {} },
+          { text: '确认新游戏', cls: 'btn-danger', callback: () => startNewGame() },
+        ],
+      });
+    }
+  });
+
+  // 移动端菜单按钮
+  document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  console.log('🏙️ 城市浮生记 initialized.');
+}
+
+// ====== 启动 ======
+document.addEventListener('DOMContentLoaded', init);

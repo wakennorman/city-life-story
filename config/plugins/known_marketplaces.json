@@ -1,0 +1,18 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "D:\\Claude Code+DeepSeekV4\\config\\plugins\\marketplaces\\claude-plugins-official",
+    "lastUpdated": "2026-06-24T17:31:13.931Z"
+  },
+  "awesome-claude-code-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "ccplugins/awesome-claude-code-plugins"
+    },
+    "installLocation": "D:\\Claude Code+DeepSeekV4\\config\\plugins\\marketplaces\\awesome-claude-code-plugins",
+    "lastUpdated": "2026-06-15T13:44:59.864Z"
+  }
+}

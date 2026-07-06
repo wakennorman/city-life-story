@@ -1,0 +1,22 @@
+---
+name: cant-natively-generate-images
+description: "我是 Claude（纯文本 LLM），没有原生位图生成能力；用户问\"你能生图吗\"必须先讲清楚"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 386dd9c2-0248-439d-a9cd-4673fc9ca8ef
+---
+
+我是 Anthropic 的 Claude，**原生只能生成文字**。「输入文字 → 输出 PNG/JPG 照片」属于多模态合成（DALL-E / Midjourney / Seedream / Imagen 的事），Anthropic API **没有这个端点**。
+
+**Why:** 2026-06-14 W哥让我"生 1768 张词根配图"，我用 Python 调 Seedream API 跑了 485 张。中途 W哥认为「图是我生的」，于是 Token 服务挂时反复说「你不是能生图吗」。我必须把"调外部 API 生图"和"自己生图"分清楚，否则用户对故障定位的期望会偏。
+
+**How to apply:**
+- 用户第一次问"你能不能生图"时就要明确："不能直接生成位图照片"
+- 我**能**做的：
+  - 写 SVG 矢量图（真·图片，浏览器/Anki 原生支持，零依赖）
+  - 写 HTML/CSS 可视化（Canvas / Three.js）
+  - 调用外部图源 API（Seedream / Pixabay / Bing 图搜，但要 key 或本地 Token 服务）
+  - 写代码调 Pillow / matplotlib / PIL 等生程序化的图
+- SVG 风格被 W哥评为"太抽象"，照片型才能过他的关。所以默认走 Pixabay 这种真实照片库
+- 相关：[[china-image-sources-survey]] [[pixabay-anki-pipeline]]

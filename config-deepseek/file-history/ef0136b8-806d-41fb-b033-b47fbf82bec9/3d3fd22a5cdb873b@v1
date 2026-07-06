@@ -1,0 +1,254 @@
+# Claude Code 配置开发文档
+
+## ✅ 版本迁移完成通知：城市浮生记
+
+> **2026-06-21：所有独特内容已从根 `src/` 迁移到 `city-life-story/src/`，旧版已清理。**
+>
+> 当前只有一个活跃版本：`city-life-story/src/`
+> 详见 `VERSION_MAP.md` | `memory/待迁移内容清单.md`
+
+---
+
+## Windows 多 API 隔离启动方案
+
+一个 Claude Code CLI 跑多套独立配置（不同服务商、不同 API key、不同模型）。
+
+### 核心原理
+
+配置优先级：**命令行参数**（`--model`）> **环境变量**（`ANTHROPIC_MODEL`、`ANTHROPIC_AUTH_TOKEN` 等）> **配置文件**（`settings.json` 的 env 节）。
+
+隔离关键：每套配置用独立 `CLAUDE_CONFIG_DIR` 目录 + 独立 `settings.json` + 独立 bat 启动脚本。
+
+---
+
+## 桌面 Bat 命名规则（重要）
+
+### 通用格式
+
+```
+Claude-<服务商>-<模型>[-api].bat
+```
+
+| 部分       | 要求                                          | 示例                                         |
+| ---------- | --------------------------------------------- | -------------------------------------------- |
+| `Claude-`  | 统一前缀，C 大写                              | 固定                                         |
+| `<服务商>` | 英文小写，一眼识别                            | `volcano` `sensenova` `deepseek` `freemodel` |
+| `<模型>`   | 短标识，统一缩写风格                          | `ds4f` `glm52` `sonnet46`                    |
+| `[-api]`   | 有 `-api` = **官方直连**；无 = **第三方中转** | `deepseek-api-ds4f` vs `volcano-ds4f`        |
+
+**禁止：** 中文、空格、下划线、点号、大小写混用（容易混淆、GBK 乱码）。
+
+### 模型缩写对照表
+
+| 完整模型名                 | 缩写       | 说明          |
+| -------------------------- | ---------- | ------------- |
+| `deepseek-v4-flash`        | `ds4f`     | 每段取首字母  |
+| `glm-5.2`                  | `glm52`    | 去点号        |
+| `claude-sonnet-4-6`        | `sonnet46` | 取关键名+版本 |
+| `gpt-5-codex`              | `gpt5cx`   | 最简特征字母  |
+| `sensenova-6.7-flash-lite` | `flash`    | 取特征词      |
+
+### 本项目实际映射表
+
+| 新命名（建议）                  | 旧命名（待废弃）                              | 服务商           | 业务          |
+| ------------------------------- | --------------------------------------------- | ---------------- | ------------- |
+| `Claude-deepseek-api-ds4f.bat`  | `Claude Code-DeepSeekAPI.bat`                 | DeepSeek 官方    | ✅ 直连       |
+| `Claude-volcano-ds4f.bat`       | `Claude-DeepSeekV4-Flash.bat`                 | 火山引擎         | 第三方        |
+| `Claude-volcano-glm52.bat`      | `Claude-火山GLM5.2.bat`                       | 火山引擎         | 第三方        |
+| `Claude-sensenova-ds4f.bat`     | `Claude Code-sensenova-deepseek-v4-flash.bat` | SenseNova        | 第三方        |
+| `Claude-sensenova-flash.bat`    | `Claude Code-sensenova-6.7-flash-lite.bat`    | SenseNova        | 第三方        |
+| `Claude-sensenova-glm52.bat`    | `Claude Code-sensenova-glm5.2.bat`            | SenseNova(proxy) | 第三方        |
+| `Claude-freemodel-sonnet46.bat` | `Claude Code - Freemodel.bat`                 | Freemodel        | 第三方        |
+| `Claude-helpcoder-gpt5cx.bat`   | `claude code-helpcoder-gpt-5-codex.bat`       | HelpCoder(local) | 第三方        |
+| `Claude-longcat-cat20.bat`      | —                                             | LongCat(美团)    | 第三方(proxy) |
+
+> **一眼分辨**：`-api-` 出现 = 官方直连；服务商名出现 = 知道是谁提供的 API。
+
+---
+
+## 快速上手（四步）
+
+### 1. 建独立目录
+
+```
+~/.claude-home-<服务商>-<模型>/   ← 会话状态 (.claude.json)
+~/.claude-<服务商>-<模型>/        ← 配置 (settings.json)
+```
+
+### 2. 写 ps1 启动脚本
+
+```ps1
+$realUserProfile = [Environment]::GetFolderPath("UserProfile")
+$claudeHome = Join-Path $realUserProfile ".claude-home-<服务商>-<模型>"
+$claudeConfigDir = Join-Path $realUserProfile ".claude-<服务商>-<模型>"
+$claude = Join-Path $env:APPDATA "npm\claude.cmd"
+
+New-Item -ItemType Directory -Force -Path $claudeHome, $claudeConfigDir | Out-Null
+
+$model = "<模型名>"
+$apiKey = "<API Key>"
+$baseUrl = "<Base URL>"
+
+$settings = @"
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "$apiKey",
+    "ANTHROPIC_BASE_URL": "$baseUrl",
+    "ANTHROPIC_MODEL": "$model",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {"allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]},
+  "theme": "auto", "autoMemoryEnabled": true
+}
+"@ | Set-Content -LiteralPath (Join-Path $claudeConfigDir "settings.json") -Encoding UTF8
+
+'{"hasCompletedOnboarding":true}' | Set-Content -LiteralPath (Join-Path $claudeHome ".claude.json") -Encoding UTF8
+
+$env:HOME = $claudeHome; $env:USERPROFILE = $claudeHome
+$env:CLAUDE_CONFIG_DIR = $claudeConfigDir; $env:ANTHROPIC_API_KEY = ""
+
+Set-Location $PSScriptRoot
+& $claude --model $model @args
+```
+
+> 第三方 API 必须内置 `SECURITY_GUIDANCE_DISABLE` 三行防死循环。官方 API 去掉这三行才能用插件。
+
+### 3. 写桌面 bat
+
+```bat
+@echo off
+chcp 65001 > nul
+title Claude Code <服务商>-<模型>
+cd /d "<工作目录>"
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
+```
+
+| 字段               | 说明                                                            |
+| ------------------ | --------------------------------------------------------------- |
+| `chcp 65001 > nul` | **必须第一行**，否则中文乱码闪退                                |
+| `title`            | 纯 ASCII，避免 GBK 解码吞掉字符                                 |
+| `cd /d`            | `/d` 跨盘符；含空格/中文加引号；工作目录不可有 `enabledPlugins` |
+| `powershell -File` | 指向独立 ps1 脚本                                               |
+
+### 4. 验证
+
+- 双击 bat 启动
+- 闪退诊断：`cmd /k "bat完整路径"` 或 `cmd //c "C:\路径\xxx.bat"`
+
+---
+
+## 踩坑备忘录
+
+### 六大致命坑（按频率排序）
+
+| #   | 现象                                       | 根因                                              | 解决                                          |
+| --- | ------------------------------------------ | ------------------------------------------------- | --------------------------------------------- |
+| 1   | 新 bat 启动后 key 被旧配置覆盖             | `CLAUDE_CONFIG_DIR` 不独立                        | 每套配置用不同目录                            |
+| 2   | "There's an issue with the selected model" | settings 模型名 ≠ `--model` 参数                  | 用一个变量统一两处                            |
+| 3   | key 和模型名都对，报 model not found       | Base URL 与模型名不匹配                           | 先 curl 验证端点                              |
+| 4   | key 传进去但静默回落 `api.anthropic.com`   | `ANTHROPIC_API_KEY` 格式校验拒收非 `sk-ant-` 开头 | 用 `AUTH_TOKEN` 传 key，清空 `API_KEY`        |
+| 5   | 双击闪退无提示                             | `chcp 65001` 没加 / title 含中文                  | bat 第一行 `chcp 65001 > nul`，title 纯 ASCII |
+| 6   | 反复输出同一段话 → 死循环                  | 插件 Stop 钩子 + 第三方 API 不稳定                | settings.json 加三行禁用变量（见上）          |
+
+### 工作目录三个隐形坑
+
+1. 跨盘符不加 `/d` 切不过去
+2. 路径含空格/`+`/中文不加引号被拆成多参数
+3. 工作目录下 `.claude/settings.json` 若含 `enabledPlugins`，项目级配置反向覆盖独立配置
+
+---
+
+## Agent 配置 Checklist
+
+用户给「服务商名 + API key」即可。agent 需自行：
+
+- [ ] 确认 key 类型：Coding Plan（有 Anthropic 兼容协议） vs 通用 API（原生 OpenAI）
+- [ ] 确认 Base URL（查文档的 API 端点章节，不是官网首页）
+- [ ] 确认模型名在该端点下可用
+- [ ] 按命名规则生成：bat 名 `Claude-<服务商>-<模型>[-api].bat`、目录 `~/.claude-<服务商>-<模型>`
+- [ ] 写 ps1：统一 `$model` 变量；env 节带三行禁用变量
+- [ ] 写 bat：chcp + ASCII title + cd /d + powershell -File
+- [ ] 验证启动：`cmd /k "bat路径"`
+- [ ] 记录到经验文档（更新本文件映射表）
+
+---
+
+## 游戏项目代码地图（降本关键：AI 少读文件 = 省 token）
+
+> 本游戏是一个中文文字模拟经营游戏（类"人生重开"风格），单页 HTML + 原生 JS + CSS，无框架无构建。
+
+### 项目结构一览
+
+```
+src/
+├── index.html          # 入口页面
+├── css/style.css       # 全部样式 (969 行)
+└── js/
+    ├── main.js         # 【核心】主循环 + 游戏引擎 (3238 行)
+    ├── core/
+    │   ├── events.js   # 事件系统
+    │   ├── random.js   # 随机数/RNG
+    │   ├── save.js     # 存档/读档
+    │   └── state.js    # 游戏状态字段定义
+    ├── data/           # 【所有配置数据都在这里】
+    │   ├── achievements.js  # 成就系统
+    │   ├── corp.js         # 公司/企业数据
+    │   ├── diseases.js     # 16种疾病5大类 (580 行)
+    │   ├── goods.js        # 商品数据
+    │   ├── ingredients.js  # 23种食材16个配方 (522 行)
+    │   ├── items.js        # 装备/道具 (80 行)
+    │   ├── jobs.js         # 工作定义 (319 行)
+    │   ├── locations.js    # 地点定义
+    │   ├── news.js         # 新闻事件
+    │   ├── npcs.js         # NPC 定义
+    │   └── skills.js       # 技能定义
+    ├── phase1/         # 打工阶段逻辑
+    │   ├── carry.js    # 搬运系统
+    │   ├── needs.js    # 需求系统
+    │   ├── pricing.js  # 定价系统
+    │   ├── trade.js    # 交易系统
+    │   └── weather.js  # 天气系统
+    ├── phase2/         # 公司阶段逻辑
+    │   ├── corp_ops.js # 公司运营
+    │   ├── investment.js  # 投资系统
+    │   ├── perf.js     # 绩效系统
+    │   ├── promo.js    # 晋升/营销
+    │   ├── stock.js    # 股票系统
+    │   └── team.js     # 团队管理
+    └── ui/
+        ├── render.js   # 【主要 UI 渲染】侧边栏+主界面 (2001 行)
+        └── corp_ui.js  # 公司 UI
+```
+
+### 关键文件速查
+
+| 你要做什么         | 改哪个文件                                            |
+| ------------------ | ----------------------------------------------------- |
+| 调整游戏数值/平衡  | `data/` 下对应的 js 文件（不要改 main.js）            |
+| 新增 UI 元素       | `ui/render.js`                                        |
+| 新玩法逻辑         | 新建 `phase1/` 或 `phase2/` 下文件，在 `main.js` 注册 |
+| 新增疾病/食材/装备 | `data/` 对应文件 + `ui/render.js` 加展示              |
+| 存档格式           | `core/save.js`                                        |
+
+### 核心设计理念
+
+1. **全中文 UI**：所有玩家可见文本只用中文，无任何英文
+2. **状态驱动**：游戏状态在 `state.js` 定义，各系统读取/修改 state
+3. **两阶段**：Phase1 = 打工生存 → Phase2 = 开公司当老板
+4. **data 目录** 只有纯数据定义，不包含逻辑
+
+---
+
+## 内容扩充快捷指令
+
+用户说 **"按 v2.1 提示词继续内容扩充"** =
+Read `D:\Claude Code+DeepSeekV4\memory\content-expansion-v2.1.md` 并执行其中的 SOP（20职业上限/行业代表制/成套添加/交叉验证/分批commit）
+
+---
+
+## Agent 分身策略
+
+**任务复杂时主动开分身**：当任务涉及多文件修改、多步骤并行、或需要独立探索/验证时，Claude 自行判断使用 `Agent` 工具创建子代理（如 `general-purpose`、`Plan`、`Explore` 等），无需用户额外提醒。

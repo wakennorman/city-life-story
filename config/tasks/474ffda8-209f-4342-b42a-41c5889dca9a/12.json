@@ -1,0 +1,9 @@
+{
+  "id": "12",
+  "subject": "添加还村长钱按钮 + 独立村长债务追踪",
+  "description": "将村长债务与银行贷款分开追踪，银行页面添加「还村长钱」按钮，日息每日滚动计入本金并在侧边栏显示",
+  "activeForm": "添加还村长钱功能",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

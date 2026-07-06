@@ -1,0 +1,13 @@
+@echo off
+chcp 65001 > nul
+title Claude Code - Volcano GLM-5.2
+cd /d %USERPROFILE%
+set CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude
+set ANTHROPIC_AUTH_TOKEN=
+set ANTHROPIC_MODEL=
+set ANTHROPIC_API_KEY=ark-7cfaba66-34e9-4957-897d-4661d7388078-5f8f1
+set ANTHROPIC_BASE_URL=https://ark.cn-beijing.volces.com/api/coding
+echo API_KEY=%ANTHROPIC_API_KEY%
+echo BASE_URL=%ANTHROPIC_BASE_URL%
+echo AUTH_TOKEN=%ANTHROPIC_AUTH_TOKEN%
+claude --model glm-5.2

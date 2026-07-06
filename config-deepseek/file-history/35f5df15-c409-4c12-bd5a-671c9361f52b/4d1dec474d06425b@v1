@@ -1,0 +1,22 @@
+﻿@echo off
+chcp 65001 > nul
+title Claude SenseNova glm52
+cd /d "D:\Claude Code+DeepSeekV4"
+
+:: Find Python
+set PYTHON_CMD=
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe set PYTHON_CMD=%LOCALAPPDATA%\Programs\Python\Python311\python.exe
+if not defined PYTHON_CMD if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe set PYTHON_CMD=%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe
+if not defined PYTHON_CMD if exist "D:\Hermes\hermes-agent\venv\Scripts\python.exe set PYTHON_CMD=D:\Hermes\hermes-agent\venv\Scripts\python.exe
+if not defined PYTHON_CMD set PYTHON_CMD=python.exe
+
+:: Start proxy in background
+echo Starting auth proxy on port 8088...
+start /B "" "%PYTHON_CMD%" "D:\Claude Code+DeepSeekV4\proxy-sensenova.py" 8088
+timeout /t 2 /nobreak >nul
+
+:: Launch Claude Code
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "D:\Claude Code+DeepSeekV4\start-sensenova-glm5.2.ps1" %*
+
+:: Kill proxy when done
+taskkill /f /im python.exe /fi "WINDOWTITLE eq proxy-sensenova" >nul 2>&1

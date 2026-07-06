@@ -1,0 +1,9 @@
+{
+  "id": "3",
+  "subject": "修改 render.js renderActionsTab 使用分类排序",
+  "description": "重构 renderActionsTab() 使用 ActionSort 进行排序和分组渲染，替换平铺的\"其他行动\"部分",
+  "activeForm": "修改 render.js",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

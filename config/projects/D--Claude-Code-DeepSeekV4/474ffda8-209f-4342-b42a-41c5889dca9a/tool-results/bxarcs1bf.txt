@@ -1,0 +1,1289 @@
+     1	/**
+     2	 * 事件引擎 — 随机事件判定、新闻应用、过期清理
+     3	 *
+     4	 * 重大改造：除原有的"广播式"新闻（仅记日志）外，
+     5	 * 新增「街头/职场随机事件 → 弹出带选项的剧情模态框」系统。
+     6	 * 事件触发后，玩家必须做出选择（2-4 个），每个选项会改变数值。
+     7	 *
+     8	 * 事件队列：state._pendingEvent — 等待弹出的事件
+     9	 * 弹窗由 showEventModal 渲染，玩家点击选项 → 结算 → 关闭
+    10	 */
+    11	
+    12	/* =========================================================
+    13	 * 一、事件定义库
+    14	 * ========================================================= */
+    15	
+    16	const RANDOM_EVENTS = [
+    17	  // === 街头 — 道德抉择 ===
+    18	  {
+    19	    id: "found_wallet",
+    20	    phase: "street",
+    21	    icon: "👛",
+    22	    title: "捡到了一个钱包",
+    23	    story:
+    24	      "路边有个黑色钱包，打开一看里面有一叠现金和一张身份证。失主看起来住在附近。",
+    25	    choices: [
+    26	      {
+    27	        text: "💰 据为己有",
+    28	        hint: "拿钱走人",
+    29	        apply: (st) => {
+    30	          const cash = 80 + Math.floor(Math.random() * 200);
+    31	          st.resources.cash += cash;
+    32	          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+    33	          StateManager.addMessage(
+    34	            `💰 钱包里翻出了 ¥${cash}，但心里有点虚...`,
+    35	            "warning",
+    36	          );
+    37	        },
+    38	      },
+    39	      {
+    40	        text: "🏛️ 交给派出所",
+    41	        hint: "良心选择",
+    42	        apply: (st) => {
+    43	          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+    44	          st.status.fame = Math.min(100, st.status.fame + 3);
+    45	          StateManager.addMessage(
+    46	            "🏛️ 钱包交给了警察，警察夸你拾金不昧，心情大好！",
+    47	            "success",
+    48	          );
+    49	        },
+    50	      },
+    51	      {
+    52	        text: "🚶 当作没看见",
+    53	        hint: "怕惹麻烦",
+    54	        apply: (st) => {
+    55	          // 啥也不发生
+    56	          StateManager.addMessage("🚶 你假装没看见走了过去。", "info");
+    57	        },
+    58	      },
+    59	    ],
+    60	  },
+    61	
+    62	  {
+    63	    id: "street_mugging",
+    64	    phase: "street",
+    65	    icon: "😱",
+    66	    title: "遇到小混混敲诈",
+    67	    story:
+    68	      "几个小混混拦住你，说最近手头紧，要借点钱花花。对方有 3 个人，你孤身一人。",
+    69	    conditions: (st) => st.resources.cash >= 50,
+    70	    choices: [
+    71	      {
+    72	        text: "💸 破财消灾 (¥80)",
+    73	        hint: "认怂保平安",
+    74	        cost: 80,
+    75	        apply: (st) => {
+    76	          st.resources.cash = Math.max(0, st.resources.cash - 80);
+    77	          st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+    78	          StateManager.addMessage(
+    79	            "💸 给了 80 块，混混笑着走了。心里憋屈。",
+    80	            "warning",
+    81	          );
+    82	        },
+    83	      },
+    84	      {
+    85	        text: "🏃 撒腿就跑",
+    86	        hint: "考验敏捷",
+    87	        apply: (st) => {
+    88	          if (Math.random() < 0.5 + (st.player.agility - 20) * 0.02) {
+    89	            StateManager.addMessage(
+    90	              "🏃 你转身就跑，甩开了混混，逃过一劫！",
+    91	              "success",
+    92	            );
+    93	          } else {
+    94	            st.status.injured = true;
+    95	            st.status.health = Math.max(0, st.status.health - 20);
+    96	            st.resources.cash = Math.max(0, st.resources.cash - 100);
+    97	            StateManager.addMessage(
+    98	              "🏃 没跑掉，挨了一顿拳脚，被抢了 100 块！",
+    99	              "danger",
+   100	            );
+   101	          }
+   102	        },
+   103	      },
+   104	      {
+   105	        text: "📱 假装打电话报警",
+   106	        hint: "虚张声势",
+   107	        apply: (st) => {
+   108	          if (Math.random() < 0.4) {
+   109	            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+   110	            StateManager.addMessage(
+   111	              "📱 混混看你报警，一哄而散。你真聪明！",
+   112	              "success",
+   113	            );
+   114	          } else {
+   115	            st.resources.cash = Math.max(0, st.resources.cash - 50);
+   116	            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+   117	            StateManager.addMessage(
+   118	              "📱 被识破了！还是被抢了 50 块，混混也走了。",
+   119	              "warning",
+   120	            );
+   121	          }
+   122	        },
+   123	      },
+   124	    ],
+   125	  },
+   126	
+   127	  {
+   128	    id: "stranger_invest",
+   129	    phase: "street",
+   130	    icon: "💹",
+   131	    title: "陌生人推荐「内部消息」",
+   132	    story:
+   133	      "一个穿西装的人凑过来，神神秘秘地说他知道一只股票的内幕消息，明天必涨，现在买入稳赚。",
+   134	    choices: [
+   135	      {
+   136	        text: "💰 信了，押 ¥500",
+   137	        hint: "赌一把",
+   138	        apply: (st) => {
+   139	          if (st.resources.cash < 500) {
+   140	            StateManager.addMessage(
+   141	              "💰 现金不足 500，错失良机（坑）",
+   142	              "warning",
+   143	            );
+   144	            return;
+   145	          }
+   146	          st.resources.cash -= 500;
+   147	          // 50% 概率赚一倍，50% 概率打水漂
+   148	          if (Math.random() < 0.4) {
+   149	            const profit = 300 + Math.floor(Math.random() * 400);
+   150	            st.resources.cash += profit;
+   151	            StateManager.addMessage(
+   152	              `💰 消息是真的！赚了 ¥${profit - 500}。`,
+   153	              "success",
+   154	            );
+   155	          } else {
+   156	            StateManager.addMessage(
+   157	              "💰 假消息！500 块打了水漂，人也跑了。",
+   158	              "danger",
+   159	            );
+   160	          }
+   161	        },
+   162	      },
+   163	      {
+   164	        text: "🚶 礼貌拒绝走人",
+   165	        hint: "理性选择",
+   166	        apply: (st) => {
+   167	          StateManager.addMessage(
+   168	            "🚶 你礼貌地摆摆手走开了。天上不会掉馅饼。",
+   169	            "info",
+   170	          );
+   171	        },
+   172	      },
+   173	      {
+   174	        text: "📱 反手举报给警察",
+   175	        hint: "正义感",
+   176	        apply: (st) => {
+   177	          st.status.fame = Math.min(100, st.status.fame + 5);
+   178	          st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+   179	          StateManager.addMessage(
+   180	            "📱 警察抓到了诈骗团伙，给你点了个赞！",
+   181	            "success",
+   182	          );
+   183	        },
+   184	      },
+   185	    ],
+   186	  },
+   187	
+   188	  {
+   189	    id: "old_man_help",
+   190	    phase: "street",
+   191	    icon: "👴",
+   192	    title: "老大爷需要帮助",
+   193	    story:
+   194	      "路边一位老大爷拎着两袋米，气喘吁吁地站在那儿。他想让你帮忙把米送回家，就在附近。",
+   195	    choices: [
+   196	      {
+   197	        text: "🤝 帮忙送米",
+   198	        hint: "可能有好报",
+   199	        apply: (st) => {
+   200	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+   201	          if (Math.random() < 0.5) {
+   202	            const reward = 50 + Math.floor(Math.random() * 80);
+   203	            st.resources.cash += reward;
+   204	            st.status.fame = Math.min(100, st.status.fame + 2);
+   205	            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+   206	            StateManager.addMessage(
+   207	              `🤝 老大爷非要给你 ¥${reward}，还夸你是个好孩子！`,
+   208	              "success",
+   209	            );
+   210	          } else {
+   211	            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+   212	            StateManager.addMessage(
+   213	              "🤝 把米送到了，大爷连声道谢。虽然没给钱，但心里暖暖的。",
+   214	              "success",
+   215	            );
+   216	          }
+   217	        },
+   218	      },
+   219	      {
+   220	        text: "🚶 装作赶时间走开",
+   221	        hint: "爱莫能助",
+   222	        apply: (st) => {
+   223	          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+   224	          StateManager.addMessage("🚶 你低着头快步走开了。", "info");
+   225	        },
+   226	      },
+   227	    ],
+   228	  },
+   229	
+   230	  {
+   231	    id: "free_clinic",
+   232	    phase: "street",
+   233	    icon: "💊",
+   234	    title: "街头免费义诊",
+   235	    story:
+   236	      "社区在广场办免费义诊活动。志愿者医生说你最近看起来气色不好，可以免费做个基础检查。",
+   237	    choices: [
+   238	      {
+   239	        text: "🩺 接受检查",
+   240	        hint: "了解身体状况",
+   241	        apply: (st) => {
+   242	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+   243	          if (st.status.sick) {
+   244	            st.status.sick = false;
+   245	            st.status.health = Math.min(100, st.status.health + 20);
+   246	            StateManager.addMessage(
+   247	              "🩺 医生发现你在生病，免费开了药！病好了，健康+20。",
+   248	              "success",
+   249	            );
+   250	          } else if (st.status.injured) {
+   251	            st.status.injured = false;
+   252	            st.status.health = Math.min(100, st.status.health + 15);
+   253	            StateManager.addMessage(
+   254	              "🩺 医生处理了你的伤口，上了点药。健康+15。",
+   255	              "success",
+   256	            );
+   257	          } else {
+   258	            st.status.health = Math.min(100, st.status.health + 5);
+   259	            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+   260	            StateManager.addMessage(
+   261	              "🩺 一切正常！医生夸你身体不错，心情也好了。",
+   262	              "success",
+   263	            );
+   264	          }
+   265	        },
+   266	      },
+   267	      {
+   268	        text: "🚶 没空，继续忙",
+   269	        hint: "省时间",
+   270	        apply: (st) => {
+   271	          StateManager.addMessage("🚶 你摇摇头继续忙自己的事了。", "info");
+   272	        },
+   273	      },
+   274	    ],
+   275	  },
+   276	
+   277	  {
+   278	    id: "thrift_find",
+   279	    phase: "street",
+   280	    icon: "🛍️",
+   281	    title: "二手店捡漏",
+   282	    story:
+   283	      "路过一家二手店，老板说今天清仓，全场 5 折！你注意到有件还不错的东西。",
+   284	    choices: [
+   285	      {
+   286	        text: "🛍️ 买本技能书 (¥50)",
+   287	        hint: "可能加技能",
+   288	        cost: 50,
+   289	        apply: (st) => {
+   290	          if (st.resources.cash < 50) {
+   291	            StateManager.addMessage("🛍️ 钱不够买！", "warning");
+   292	            return;
+   293	          }
+   294	          st.resources.cash -= 50;
+   295	          const skills = Object.keys(st.skills);
+   296	          const key = skills[Math.floor(Math.random() * skills.length)];
+   297	          st.skills[key].xp += 40 + Math.floor(Math.random() * 30);
+   298	          StateManager.addMessage(
+   299	            `🛍️ 买到了《${key}入门》，翻了几页，受益匪浅。`,
+   300	            "success",
+   301	          );
+   302	        },
+   303	      },
+   304	      {
+   305	        text: "🧥 淘件二手衣服 (¥30)",
+   306	        hint: "提升卫生/心情",
+   307	        cost: 30,
+   308	        apply: (st) => {
+   309	          if (st.resources.cash < 30) {
+   310	            StateManager.addMessage("🧥 钱不够买！", "warning");
+   311	            return;
+   312	          }
+   313	          st.resources.cash -= 30;
+   314	          st.needs.hygiene = Math.min(100, st.needs.hygiene + 15);
+   315	          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+   316	          StateManager.addMessage(
+   317	            "🧥 买到了件干净的旧衣服，焕然一新！",
+   318	            "success",
+   319	          );
+   320	        },
+   321	      },
+   322	      {
+   323	        text: "🚶 啥都不需要",
+   324	        hint: "理性消费",
+   325	        apply: (st) => {
+   326	          StateManager.addMessage("🚶 家里啥都不缺，看看就好。", "info");
+   327	        },
+   328	      },
+   329	    ],
+   330	  },
+   331	
+   332	  {
+   333	    id: "neighbor_fight",
+   334	    phase: "street",
+   335	    icon: "🤼",
+   336	    title: "邻居吵架请你评理",
+   337	    story: "楼上的两口子又在吵架，女方哭着跑下来向你诉苦。男的说她无理取闹。",
+   338	    choices: [
+   339	      {
+   340	        text: "🫂 安慰女方 (听听她说话)",
+   341	        hint: "提升好感",
+   342	        apply: (st) => {
+   343	          st.needs.happiness = Math.min(100, st.needs.happiness - 5);
+   344	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+   345	          StateManager.addMessage(
+   346	            "🫂 听她哭诉了半天，搞得你也很烦躁。",
+   347	            "warning",
+   348	          );
+   349	        },
+   350	      },
+   351	      {
+   352	        text: "🧠 理智劝和",
+   353	        hint: "考验智力",
+   354	        apply: (st) => {
+   355	          if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+   356	            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+   357	            st.status.fame = Math.min(100, st.status.fame + 3);
+   358	            StateManager.addMessage(
+   359	              "🧠 你一番话说得两人都服气了，握手言和！还夸你通情达理。",
+   360	              "success",
+   361	            );
+   362	          } else {
+   363	            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+   364	            StateManager.addMessage(
+   365	              "🧠 你越劝越乱，两口子矛头转向了你...赶紧溜。",
+   366	              "warning",
+   367	            );
+   368	          }
+   369	        },
+   370	      },
+   371	      {
+   372	        text: "🚶 装作没听见",
+   373	        hint: "管闲事",
+   374	        apply: (st) => {
+   375	          StateManager.addMessage("🚶 你戴上耳机假装没听见。", "info");
+   376	        },
+   377	      },
+   378	    ],
+   379	  },
+   380	
+   381	  {
+   382	    id: "lost_pet",
+   383	    phase: "street",
+   384	    icon: "🐕",
+   385	    title: "走失的小狗",
+   386	    story:
+   387	      "一只脏兮兮的小狗跟着你，可怜巴巴的。它脖子上有项圈但没联系方式，看着已经流浪几天了。",
+   388	    choices: [
+   389	      {
+   390	        text: "🏠 收养它",
+   391	        hint: "需要花钱照顾",
+   392	        apply: (st) => {
+   393	          st.resources.cash = Math.max(0, st.resources.cash - 30);
+   394	          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+   395	          st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+   396	          st.status.fame = Math.min(100, st.status.fame + 1);
+   397	          StateManager.addMessage(
+   398	            "🐕 收养了一只小狗！花了 30 块买了狗粮，心情大好！疲劳-5。",
+   399	            "success",
+   400	          );
+   401	          // 标记有宠物
+   402	          st.flags.hasPet = true;
+   403	        },
+   404	      },
+   405	      {
+   406	        text: "📞 帮它找主人",
+   407	        hint: "贴寻狗启事",
+   408	        apply: (st) => {
+   409	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+   410	          st.status.fame = Math.min(100, st.status.fame + 2);
+   411	          StateManager.addMessage(
+   412	            "📞 主人找到了！你好人有好报，心情不错。",
+   413	            "success",
+   414	          );
+   415	        },
+   416	      },
+   417	      {
+   418	        text: "🚶 爱莫能助",
+   419	        hint: "没办法",
+   420	        apply: (st) => {
+   421	          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+   422	          StateManager.addMessage(
+   423	            "🚶 你狠心走开了...希望它能自己找到家。",
+   424	            "info",
+   425	          );
+   426	        },
+   427	      },
+   428	    ],
+   429	  },
+   430	
+   431	  // === 职场 — 风险/机会 ===
+   432	  {
+   433	    id: "corp_overtime",
+   434	    phase: "corporate",
+   435	    icon: "🌙",
+   436	    title: "老板要求周末加班",
+   437	    story: "领导突然在群里说：项目紧急，周末全员加班！完成有奖励，但确实很累。",
+   438	    choices: [
+   439	      {
+   440	        text: "💪 咬牙加班",
+   441	        hint: "高风险高回报",
+   442	        apply: (st) => {
+   443	          st.player.corporate.ability = Math.min(
+   444	            100,
+   445	            st.player.corporate.ability + 3,
+   446	          );
+   447	          st.player.corporate.kpi = Math.min(150, st.player.corporate.kpi + 12);
+   448	          st.player.corporate.upwardMgmt = Math.min(
+   449	            100,
+   450	            st.player.corporate.upwardMgmt + 5,
+   451	          );
+   452	          st.player.corporate.hair = Math.max(0, st.player.corporate.hair - 8);
+   453	          st.player.corporate.risk = Math.min(
+   454	            100,
+   455	            st.player.corporate.risk + 3,
+   456	          );
+   457	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+   458	          StateManager.addMessage(
+   459	            "💪 周末连续加班！KPI+12，能力+3，发量-8，疲劳+20。",
+   460	            "event",
+   461	          );
+   462	        },
+   463	      },
+   464	      {
+   465	        text: "😴 装病请假",
+   466	        hint: "需要演技",
+   467	        apply: (st) => {
+   468	          if (Math.random() < 0.5) {
+   469	            st.player.corporate.upwardMgmt = Math.max(
+   470	              0,
+   471	              st.player.corporate.upwardMgmt - 8,
+   472	            );
+   473	            StateManager.addMessage(
+   474	              "😴 装病被识破！领导在群里阴阳怪气，向上管理-8。",
+   475	              "warning",
+   476	            );
+   477	          } else {
+   478	            st.needs.fatigue = Math.max(0, st.needs.fatigue - 15);
+   479	            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+   480	            StateManager.addMessage(
+   481	              "😴 成功装病！在家睡了一天，疲劳-15。",
+   482	              "success",
+   483	            );
+   484	          }
+   485	        },
+   486	      },
+   487	      {
+   488	        text: "💬 提议平摊工作量",
+   489	        hint: "考验管理能力",
+   490	        apply: (st) => {
+   491	          if (st.corporate.team.length > 0) {
+   492	            st.player.corporate.popularity = Math.min(
+   493	              100,
+   494	              st.player.corporate.popularity + 4,
+   495	            );
+   496	            st.player.corporate.kpi = Math.min(
+   497	              150,
+   498	              st.player.corporate.kpi + 6,
+   499	            );
+   500	            st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+   501	            StateManager.addMessage(
+   502	              "💬 提议平摊工作！团队协作，效率还不错，KPI+6，疲劳+8。",
+   503	              "success",
+   504	            );
+   505	          } else {
+   506	            st.player.corporate.upwardMgmt = Math.max(
+   507	              0,
+   508	              st.player.corporate.upwardMgmt - 3,
+   509	            );
+   510	            StateManager.addMessage(
+   511	              "💬 一个人提议平摊？被领导婉拒，向上管理-3。",
+   512	              "warning",
+   513	            );
+   514	          }
+   515	        },
+   516	      },
+   517	    ],
+   518	  },
+   519	
+   520	  {
+   521	    id: "corp_credit",
+   522	    phase: "corporate",
+   523	    icon: "🏆",
+   524	    title: "同事让你挂名项目",
+   525	    story:
+   526	      "一个关系不错的同事私下找你：他的项目快黄了，想把你的名字加进去当共同负责人，救他一命。",
+   527	    choices: [
+   528	      {
+   529	        text: "🤝 帮一把",
+   530	        hint: "维护关系",
+   531	        apply: (st) => {
+   532	          st.player.corporate.popularity = Math.min(
+   533	            100,
+   534	            st.player.corporate.popularity + 8,
+   535	          );
+   536	          st.player.corporate.kpi = Math.min(150, st.player.corporate.kpi + 5);
+   537	          st.player.corporate.risk = Math.min(
+   538	            100,
+   539	            st.player.corporate.risk + 4,
+   540	          );
+   541	          StateManager.addMessage(
+   542	            "🤝 帮同事挂名！人缘+8，KPI+5，但万一项目出事你也有连带责任，风险+4。",
+   543	            "event",
+   544	          );
+   545	        },
+   546	      },
+   547	      {
+   548	        text: "🚫 婉言拒绝",
+   549	        hint: "自保",
+   550	        apply: (st) => {
+   551	          st.player.corporate.popularity = Math.max(
+   552	            0,
+   553	            st.player.corporate.popularity - 5,
+   554	          );
+   555	          StateManager.addMessage(
+   556	            "🚫 婉拒了同事。人缘-5，但保住了自己的羽毛。",
+   557	            "info",
+   558	          );
+   559	        },
+   560	      },
+   561	      {
+   562	        text: "💰 谈条件 (要分成)",
+   563	        hint: "考验向上管理",
+   564	        apply: (st) => {
+   565	          if (st.player.corporate.upwardMgmt >= 40) {
+   566	            st.resources.cash += 200;
+   567	            st.player.corporate.popularity = Math.max(
+   568	              0,
+   569	              st.player.corporate.popularity - 2,
+   570	            );
+   571	            st.player.corporate.upwardMgmt = Math.min(
+   572	              100,
+   573	              st.player.corporate.upwardMgmt + 3,
+   574	            );
+   575	            StateManager.addMessage(
+   576	              "💰 谈下条件拿到 ¥200 分成！向上管理+3，但同事有点不爽。",
+   577	              "success",
+   578	            );
+   579	          } else {
+   580	            st.player.corporate.popularity = Math.max(
+   581	              0,
+   582	              st.player.corporate.popularity - 8,
+   583	            );
+   584	            StateManager.addMessage(
+   585	              "💰 谈崩了。同事觉得你太势利，人缘-8。",
+   586	              "warning",
+   587	            );
+   588	          }
+   589	        },
+   590	      },
+   591	    ],
+   592	  },
+   593	
+   594	  {
+   595	    id: "corp_complaint",
+   596	    phase: "corporate",
+   597	    icon: "😡",
+   598	    title: "客户无理投诉",
+   599	    story:
+   600	      "客户打电话过来骂了 20 分钟，其实根本不是你的错，但他指名要投诉到你头上。",
+   601	    choices: [
+   602	      {
+   603	        text: "🙏 忍气吞声道歉",
+   604	        hint: "保住 KPI",
+   605	        apply: (st) => {
+   606	          st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 5);
+   607	          st.player.corporate.dignity = Math.max(
+   608	            0,
+   609	            st.player.corporate.dignity - 8,
+   610	          );
+   611	          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+   612	          StateManager.addMessage(
+   613	            "🙏 忍了。KPI-5，尊严-8，心里憋屈。",
+   614	            "warning",
+   615	          );
+   616	        },
+   617	      },
+   618	      {
+   619	        text: "📋 摆事实讲道理",
+   620	        hint: "考验智力",
+   621	        apply: (st) => {
+   622	          if (Math.random() < 0.4 + (st.player.intelligence - 20) * 0.02) {
+   623	            st.player.corporate.kpi = Math.min(
+   624	              150,
+   625	              st.player.corporate.kpi + 3,
+   626	            );
+   627	            st.player.corporate.dignity = Math.min(
+   628	              100,
+   629	              st.player.corporate.dignity + 5,
+   630	            );
+   631	            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+   632	            StateManager.addMessage(
+   633	              "📋 讲得清清楚楚！客户心服口服道歉了，尊严+5，KPI+3。",
+   634	              "success",
+   635	            );
+   636	          } else {
+   637	            st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 8);
+   638	            StateManager.addMessage(
+   639	              "📋 讲道理被骂得更惨，KPI-8，还得听领导训话。",
+   640	              "warning",
+   641	            );
+   642	          }
+   643	        },
+   644	      },
+   645	      {
+   646	        text: "😡 直接挂电话",
+   647	        hint: "爽但有后果",
+   648	        apply: (st) => {
+   649	          st.player.corporate.dignity = Math.min(
+   650	            100,
+   651	            st.player.corporate.dignity + 10,
+   652	          );
+   653	          st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 10);
+   654	          st.player.corporate.risk = Math.min(
+   655	            100,
+   656	            st.player.corporate.risk + 5,
+   657	          );
+   658	          st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+   659	          StateManager.addMessage(
+   660	            "😡 直接挂了电话！爽是爽了，KPI-10，风险+5，尊严+10。",
+   661	            "event",
+   662	          );
+   663	        },
+   664	      },
+   665	    ],
+   666	  },
+   667	
+   668	  {
+   669	    id: "corp_headhunter",
+   670	    phase: "corporate",
+   671	    icon: "📞",
+   672	    title: "猎头联系你",
+   673	    story: "一个猎头打电话来：另一家公司开出 50% 涨幅挖你，让你去面试。",
+   674	    choices: [
+   675	      {
+   676	        text: "💼 去面试看看",
+   677	        hint: "了解一下行情",
+   678	        apply: (st) => {
+   679	          if (Math.random() < 0.5) {
+   680	            const offer = Math.round(
+   681	              (st.resources.totalEarned / Math.max(1, st.player.corpYear * 4)) *
+   682	                1.5,
+   683	            );
+   684	            st.corporate.jobOffer = { salary: offer, company: "新公司" };
+   685	            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+   686	            st.player.corporate.upwardMgmt = Math.max(
+   687	              0,
+   688	              st.player.corporate.upwardMgmt - 5,
+   689	            );
+   690	            StateManager.addMessage(
+   691	              `📞 面试拿了 offer：年薪 ¥${offer.toLocaleString()}，诱惑很大！`,
+   692	              "event",
+   693	            );
+   694	            // 弹跳槽决策框
+   695	            setTimeout(() => showJobOfferModal(), 200);
+   696	          } else {
+   697	            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+   698	            st.player.corporate.upwardMgmt = Math.max(
+   699	              0,
+   700	              st.player.corporate.upwardMgmt - 3,
+   701	            );
+   702	            StateManager.addMessage(
+   703	              "📞 面试没成。领导听说你去面试了，脸色不太好看，向上管理-3。",
+   704	              "warning",
+   705	            );
+   706	          }
+   707	        },
+   708	      },
+   709	      {
+   710	        text: "📵 礼貌拒绝",
+   711	        hint: "保持忠诚",
+   712	        apply: (st) => {
+   713	          st.player.corporate.upwardMgmt = Math.min(
+   714	            100,
+   715	            st.player.corporate.upwardMgmt + 3,
+   716	          );
+   717	          StateManager.addMessage(
+   718	            "📵 拒了猎头。领导不知怎么知道了，对你更器重了，向上管理+3。",
+   719	            "success",
+   720	          );
+   721	        },
+   722	      },
+   723	      {
+   724	        text: "💬 把联系方式给同事",
+   725	        hint: "卖人情",
+   726	        apply: (st) => {
+   727	          st.player.corporate.popularity = Math.min(
+   728	            100,
+   729	            st.player.corporate.popularity + 8,
+   730	          );
+   731	          StateManager.addMessage(
+   732	            "💬 把猎头介绍给了同事，人缘+8。这小子请你吃了顿大餐！",
+   733	            "success",
+   734	          );
+   735	        },
+   736	      },
+   737	    ],
+   738	  },
+   739	
+   740	  // === 职场 — 更多事件 ===
+   741	  {
+   742	    id: "corp_ppt",
+   743	    phase: "corporate",
+   744	    icon: "📊",
+   745	    title: "紧急汇报PPT",
+   746	    story:
+   747	      "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
+   748	    choices: [
+   749	      {
+   750	        text: "🌙 熬夜做好",
+   751	        hint: "能力+向上管理",
+   752	        apply: (st) => {
+   753	          st.player.corporate.ability = Math.min(
+   754	            100,
+   755	            st.player.corporate.ability + 4,
+   756	          );
+   757	          st.player.corporate.upwardMgmt = Math.min(
+   758	            100,
+   759	            st.player.corporate.upwardMgmt + 8,
+   760	          );
+   761	          st.player.corporate.hair = Math.max(0, st.player.corporate.hair - 6);
+   762	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 18);
+   763	          StateManager.addMessage(
+   764	            "📊 连夜赶完PPT，领导表示很满意！向上管理+8，发量-6。",
+   765	            "success",
+   766	          );
+   767	        },
+   768	      },
+   769	      {
+   770	        text: "🤖 用AI生成",
+   771	        hint: "省力但有风险",
+   772	        apply: (st) => {
+   773	          if (Math.random() < 0.55) {
+   774	            st.player.corporate.ability = Math.min(
+   775	              100,
+   776	              st.player.corporate.ability + 2,
+   777	            );
+   778	            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+   779	            StateManager.addMessage(
+   780	              "🤖 AI生成的PPT还不错，加点修改就交差了。",
+   781	              "success",
+   782	            );
+   783	          } else {
+   784	            st.player.corporate.upwardMgmt = Math.max(
+   785	              0,
+   786	              st.player.corporate.upwardMgmt - 6,
+   787	            );
+   788	            st.player.corporate.risk = Math.min(
+   789	              100,
+   790	              st.player.corporate.risk + 5,
+   791	            );
+   792	            StateManager.addMessage(
+   793	              "🤖 AI生成的内容有明显错误，被VP当场指出。向上管理-6。",
+   794	              "warning",
+   795	            );
+   796	          }
+   797	        },
+   798	      },
+   799	      {
+   800	        text: "🙏 推给同事",
+   801	        hint: "耍小聪明",
+   802	        apply: (st) => {
+   803	          st.player.corporate.popularity = Math.max(
+   804	            0,
+   805	            st.player.corporate.popularity - 10,
+   806	          );
+   807	          st.player.corporate.upwardMgmt = Math.min(
+   808	            100,
+   809	            st.player.corporate.upwardMgmt - 3,
+   810	          );
+   811	          StateManager.addMessage(
+   812	            "🙏 推给同事了。大家都看在眼里，人缘-10。",
+   813	            "warning",
+   814	          );
+   815	        },
+   816	      },
+   817	    ],
+   818	  },
+   819	  {
+   820	    id: "corp_leak",
+   821	    phase: "corporate",
+   822	    icon: "💧",
+   823	    title: "线上事故追责",
+   824	    story:
+   825	      "生产环境出了个P0故障，影响了几万用户。现在在排查责任人...结果发现是你三个月前提交的代码导致的。",
+   826	    choices: [
+   827	      {
+   828	        text: "🛠️ 主动认错并修复",
+   829	        hint: "诚实且专业",
+   830	        apply: (st) => {
+   831	          st.player.corporate.ability = Math.min(
+   832	            100,
+   833	            st.player.corporate.ability + 3,
+   834	          );
+   835	          st.player.corporate.dignity = Math.max(
+   836	            0,
+   837	            st.player.corporate.dignity - 5,
+   838	          );
+   839	          st.player.corporate.upwardMgmt = Math.max(
+   840	            0,
+   841	            st.player.corporate.upwardMgmt - 3,
+   842	          );
+   843	          st.player.corporate.risk = Math.max(0, st.player.corporate.risk - 10);
+   844	          StateManager.addMessage(
+   845	            "🛠️ 坦白从宽！主动认错并给出了改进方案，风险-10。",
+   846	            "success",
+   847	          );
+   848	        },
+   849	      },
+   850	      {
+   851	        text: "🫥 假装不知道",
+   852	        hint: "看运气",
+   853	        apply: (st) => {
+   854	          if (Math.random() < 0.4) {
+   855	            st.player.corporate.upwardMgmt = Math.max(
+   856	              0,
+   857	              st.player.corporate.upwardMgmt - 15,
+   858	            );
+   859	            st.player.corporate.risk = Math.min(
+   860	              100,
+   861	              st.player.corporate.risk + 25,
+   862	            );
+   863	            st.player.corporate.dignity = Math.max(
+   864	              0,
+   865	              st.player.corporate.dignity - 10,
+   866	            );
+   867	            StateManager.addMessage(
+   868	              "🫥 被发现了！领导暴怒，向上管理-15，风险+25！",
+   869	              "danger",
+   870	            );
+   871	          } else {
+   872	            st.player.corporate.risk = Math.min(
+   873	              100,
+   874	              st.player.corporate.risk + 8,
+   875	            );
+   876	            StateManager.addMessage(
+   877	              "🫥 侥幸没被追到，但心里不安。风险+8。",
+   878	              "warning",
+   879	            );
+   880	          }
+   881	        },
+   882	      },
+   883	      {
+   884	        text: "🤝 找人分担责任",
+   885	        hint: "考验人缘",
+   886	        apply: (st) => {
+   887	          if (st.player.corporate.popularity >= 50) {
+   888	            st.player.corporate.risk = Math.max(
+   889	              0,
+   890	              st.player.corporate.risk - 5,
+   891	            );
+   892	            st.player.corporate.popularity = Math.max(
+   893	              0,
+   894	              st.player.corporate.popularity - 8,
+   895	            );
+   896	            StateManager.addMessage(
+   897	              "🤝 团队帮忙扛了一部分责任，风险仅-5，但人缘-8。",
+   898	              "info",
+   899	            );
+   900	          } else {
+   901	            st.player.corporate.risk = Math.min(
+   902	              100,
+   903	              st.player.corporate.risk + 12,
+   904	            );
+   905	            st.player.corporate.popularity = Math.max(
+   906	              0,
+   907	              st.player.corporate.popularity - 5,
+   908	            );
+   909	            StateManager.addMessage(
+   910	              "🤝 没人愿意帮你！人缘太低，自食其果。",
+   911	              "danger",
+   912	            );
+   913	          }
+   914	        },
+   915	      },
+   916	    ],
+   917	  },
+   918	  {
+   919	    id: "corp_year_end",
+   920	    phase: "corporate",
+   921	    icon: "🎉",
+   922	    title: "公司年会",
+   923	    story:
+   924	      "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
+   925	    choices: [
+   926	      {
+   927	        text: "🍻 主动社交敬酒",
+   928	        hint: "提升社交属性",
+   929	        apply: (st) => {
+   930	          st.player.corporate.upwardMgmt = Math.min(
+   931	            100,
+   932	            st.player.corporate.upwardMgmt + 8,
+   933	          );
+   934	          st.player.corporate.popularity = Math.min(
+   935	            100,
+   936	            st.player.corporate.popularity + 12,
+   937	          );
+   938	          st.player.corporate.hair = Math.max(0, st.player.corporate.hair - 2);
+   939	          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+   940	          StateManager.addMessage(
+   941	            "🍻 和各路大佬喝了一圈！向上管理+8，人缘+12。",
+   942	            "success",
+   943	          );
+   944	        },
+   945	      },
+   946	      {
+   947	        text: "🎰 就等着抽奖",
+   948	        hint: "碰运气",
+   949	        apply: (st) => {
+   950	          const roll = Math.random();
+   951	          if (roll < 0.05) {
+   952	            st.resources.cash += 10000;
+   953	            st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+   954	            StateManager.addMessage(
+   955	              "🎰 中了大奖 ¥10,000！全场欢呼！",
+   956	              "success",
+   957	            );
+   958	          } else if (roll < 0.3) {
+   959	            st.resources.cash += 500;
+   960	            StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
+   961	          } else {
+   962	            st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+   963	            StateManager.addMessage("🎰 啥也没中。", "info");
+   964	          }
+   965	        },
+   966	      },
+   967	      {
+   968	        text: "😴 请假不去",
+   969	        hint: "省事但减分",
+   970	        apply: (st) => {
+   971	          st.player.corporate.popularity = Math.max(
+   972	            0,
+   973	            st.player.corporate.popularity - 8,
+   974	          );
+   975	          st.player.corporate.upwardMgmt = Math.max(
+   976	            0,
+   977	            st.player.corporate.upwardMgmt - 3,
+   978	          );
+   979	          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+   980	          StateManager.addMessage(
+   981	            "😴 在家躺平一晚。疲劳-10，但同事都觉得你不合群。",
+   982	            "warning",
+   983	          );
+   984	        },
+   985	      },
+   986	    ],
+   987	  },
+   988	  {
+   989	    id: "corp_mentor",
+   990	    phase: "corporate",
+   991	    icon: "🧑‍🏫",
+   992	    title: "新人请你当导师",
+   993	    story:
+   994	      "部门来了个实习生，Leader安排你当他 mentor。带新人费时间，但也是培养领导力的机会。",
+   995	    choices: [
+   996	      {
+   997	        text: "📖 认真带教",
+   998	        hint: "培养管理能力",
+   999	        apply: (st) => {
+  1000	          st.player.corporate.ability = Math.min(
+  1001	            100,
+  1002	            st.player.corporate.ability + 2,
+  1003	          );
+  1004	          st.player.corporate.popularity = Math.min(
+  1005	            100,
+  1006	            st.player.corporate.popularity + 10,
+  1007	          );
+  1008	          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+  1009	          st.player.corporate.kpi = Math.min(150, st.player.corporate.kpi + 5);
+  1010	          StateManager.addMessage(
+  1011	            "📖 带出来的实习生进步神速！人缘+10，能力+2。",
+  1012	            "success",
+  1013	          );
+  1014	        },
+  1015	      },
+  1016	      {
+  1017	        text: "📋 丢给他杂活",
+  1018	        hint: "省心省力",
+  1019	        apply: (st) => {
+  1020	          st.player.corporate.kpi = Math.min(150, st.player.corporate.kpi + 3);
+  1021	          st.player.corporate.popularity = Math.max(
+  1022	            0,
+  1023	            st.player.corporate.popularity - 3,
+  1024	          );
+  1025	          StateManager.addMessage(
+  1026	            "📋 杂活交给实习生，自己轻松了但实习生暗自不满。",
+  1027	            "info",
+  1028	          );
+  1029	        },
+  1030	      },
+  1031	      {
+  1032	        text: "🙅 拒绝带人",
+  1033	        hint: "得罪领导",
+  1034	        apply: (st) => {
+  1035	          st.player.corporate.upwardMgmt = Math.max(
+  1036	            0,
+  1037	            st.player.corporate.upwardMgmt - 8,
+  1038	          );
+  1039	          StateManager.addMessage(
+  1040	            "🙅 拒绝了领导安排，领导不太高兴。向上管理-8。",
+  1041	            "warning",
+  1042	          );
+  1043	        },
+  1044	      },
+  1045	    ],
+  1046	  },
+  1047	];
+  1048	
+  1049	/* =========================================================
+  1050	 * 二、事件触发与队列管理
+  1051	 * ========================================================= */
+  1052	
+  1053	/** 街头每日事件判定 */
+  1054	function rollStreetEvent(state) {
+  1055	  // 基础 18% 触发率，已存在待弹事件时不重复触发
+  1056	  if (state._pendingEvent) return;
+  1057	  const baseChance = 0.18;
+  1058	  // 健康差或债务高时提高触发率
+  1059	  let mod = 0;
+  1060	  if (state.status.health < 50) mod += 0.1;
+  1061	  if (state.resources.debt > 3000) mod += 0.05;
+  1062	  if (state.needs.happiness < 30) mod += 0.05;
+  1063	  if (Math.random() < baseChance + mod) {
+  1064	    queueRandomEvent(state, "street");
+  1065	  }
+  1066	}
+  1067	
+  1068	/** 职场每日事件判定 */
+  1069	function rollCorporateEvent(state) {
+  1070	  if (state._pendingEvent) return;
+  1071	  const baseChance = 0.22;
+  1072	  let mod = 0;
+  1073	  if (state.player.corporate.risk > 50) mod += 0.1;
+  1074	  if (state.player.corporate.popularity < 30) mod += 0.05;
+  1075	  if (state.player.corporate.upwardMgmt < 20) mod += 0.05;
+  1076	  if (Math.random() < baseChance + mod) {
+  1077	    queueRandomEvent(state, "corporate");
+  1078	  }
+  1079	}
+  1080	
+  1081	/** 把一个随机事件塞进待弹队列 */
+  1082	function queueRandomEvent(state, phase) {
+  1083	  const pool = RANDOM_EVENTS.filter((e) => e.phase === phase);
+  1084	  if (pool.length === 0) return;
+  1085	
+  1086	  // 过滤掉不满足条件的事件
+  1087	  const eligible = pool.filter((e) => !e.conditions || e.conditions(state));
+  1088	  if (eligible.length === 0) return;
+  1089	
+  1090	  const evt = eligible[Math.floor(Math.random() * eligible.length)];
+  1091	  // 使用唯一事件ID替代引用比较，避免引用失效导致事件卡住
+  1092	  state._pendingEvent = evt;
+  1093	  state._pendingEventId = evt.id;
+  1094	  // 触发延迟到 render 阶段弹（避免在 tick 内部阻塞）
+  1095	  setTimeout(() => {
+  1096	    const s = StateManager.getState();
+  1097	    if (s._pendingEvent && s._pendingEventId === evt.id) {
+  1098	      showEventModal(evt);
+  1099	      // 超时兜底：10秒后若事件仍未清理，强制清除（玩家可能忽略了弹窗）
+  1100	      s._pendingEventTimeout = setTimeout(() => {
+  1101	        if (s._pendingEventId === evt.id) {
+  1102	          s._pendingEvent = null;
+  1103	          s._pendingEventId = null;
+  1104	          document.querySelector(".modal-overlay.event-modal")?.remove();
+  1105	          console.warn("Event timed out, auto-cleaned:", evt.id);
+  1106	        }
+  1107	      }, 10000);
+  1108	    }
+  1109	  }, 50);
+  1110	}
+  1111	
+  1112	/* =========================================================
+  1113	 * 三、事件弹窗 UI
+  1114	 * ========================================================= */
+  1115	
+  1116	/**
+  1117	 * 渲染并展示一个事件模态框
+  1118	 * @param {Object} evt - 事件对象
+  1119	 */
+  1120	function showEventModal(evt) {
+  1121	  // 先卸掉任何旧弹窗
+  1122	  document.querySelector(".modal-overlay")?.remove();
+  1123	
+  1124	  // 构建选项HTML
+  1125	  const choicesHtml = evt.choices
+  1126	    .map((ch, i) => {
+  1127	      const hintStr = ch.hint
+  1128	        ? `<div class="choice-hint">${ch.hint}</div>`
+  1129	        : "";
+  1130	      // 检查现金是否够
+  1131	      let disabled = false;
+  1132	      if (ch.cost && StateManager.getState().resources.cash < ch.cost) {
+  1133	        disabled = true;
+  1134	      }
+  1135	      const costTag = ch.cost
+  1136	        ? ` <span style="color:var(--warning);font-size:11px;">需 ¥${ch.cost}</span>`
+  1137	        : "";
+  1138	      return `
+  1139	        <button class="event-choice ${disabled ? "disabled" : ""}" data-idx="${i}" ${disabled ? "disabled" : ""}>
+  1140	          <div class="choice-main">${ch.text}${costTag}</div>
+  1141	          ${hintStr}
+  1142	        </button>
+  1143	      `;
+  1144	    })
+  1145	    .join("");
+  1146	
+  1147	  const overlay = document.createElement("div");
+  1148	  overlay.className = "modal-overlay event-modal";
+  1149	  overlay.innerHTML = `
+  1150	    <div class="modal-box event-box">
+  1151	      <div class="event-header">
+  1152	        <div class="event-icon">${evt.icon}</div>
+  1153	        <h2 class="event-title">${evt.title}</h2>
+  1154	      </div>
+  1155	      <p class="event-story">${evt.story}</p>
+  1156	      <div class="event-choices">${choicesHtml}</div>
+  1157	      <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text-muted);">
+  1158	        ⏰ 这是一个会影响数值的选择，请谨慎决定
+  1159	      </div>
+  1160	    </div>
+  1161	  `;
+  1162	  document.body.appendChild(overlay);
+  1163	
+  1164	  // 绑定选项点击
+  1165	  overlay.querySelectorAll(".event-choice").forEach((btn) => {
+  1166	    btn.addEventListener("click", () => {
+  1167	      const idx = parseInt(btn.dataset.idx);
+  1168	      const choice = evt.choices[idx];
+  1169	      if (!choice) return;
+  1170	      const state = StateManager.getState();
+  1171	      try {
+  1172	        if (typeof choice.apply === "function") {
+  1173	          choice.apply(state);
+  1174	        }
+  1175	      } catch (e) {
+  1176	        console.error("Event choice apply error:", e);
+  1177	      }
+  1178	      // 清掉待弹事件（三字段全部清理）
+  1179	      state._pendingEvent = null;
+  1180	      state._pendingEventId = null;
+  1181	      if (state._pendingEventTimeout) {
+  1182	        clearTimeout(state._pendingEventTimeout);
+  1183	        state._pendingEventTimeout = null;
+  1184	      }
+  1185	      // 关闭弹窗 + 重新渲染
+  1186	      document.body.removeChild(overlay);
+  1187	      renderAll();
+  1188	    });
+  1189	  });
+  1190	
+  1191	  // 点击遮罩关闭也清理事件悬挂
+  1192	  overlay.addEventListener("click", (e) => {
+  1193	    if (e.target === overlay) {
+  1194	      const s = StateManager.getState();
+  1195	      s._pendingEvent = null;
+  1196	      s._pendingEventId = null;
+  1197	      if (s._pendingEventTimeout) {
+  1198	        clearTimeout(s._pendingEventTimeout);
+  1199	        s._pendingEventTimeout = null;
+  1200	      }
+  1201	      document.body.removeChild(overlay);
+  1202	      renderAll();
+  1203	    }
+  1204	  });
+  1205	}
+  1206	
+  1207	/** 跳槽 offer 决策弹窗（被 corp_headhunter 事件调用） */
+  1208	function showJobOfferModal() {
+  1209	  const state = StateManager.getState();
+  1210	  const offer = state.corporate.jobOffer;
+  1211	  if (!offer) return;
+  1212	  showModal({
+  1213	    title: "💼 跳槽 Offer 决策",
+  1214	    body: `
+  1215	      <p>另一家公司开出了 <strong style="color:var(--success);">年薪 ¥${offer.salary.toLocaleString()}</strong> 的条件挖你！</p>
+  1216	      <p style="font-size:12px;color:var(--text-secondary);">跳槽有风险：人缘归零、向上管理归零、KPI 减半、需重新建立关系。</p>
+  1217	    `,
+  1218	    buttons: [
+  1219	      { text: "继续考虑", cls: "", callback: () => {} },
+  1220	      {
+  1221	        text: `接受 Offer (¥${offer.salary.toLocaleString()})`,
+  1222	        cls: "btn-success",
+  1223	        callback: () => {
+  1224	          // 简化版：直接加钱 + 重置属性
+  1225	          state.resources.cash += offer.salary;
+  1226	          state.player.corporate.kpi = Math.max(
+  1227	            0,
+  1228	            state.player.corporate.kpi * 0.5,
+  1229	          );
+  1230	          state.player.corporate.popularity = Math.max(
+  1231	            0,
+  1232	            state.player.corporate.popularity - 30,
+  1233	          );
+  1234	          state.player.corporate.upwardMgmt = Math.max(
+  1235	            0,
+  1236	            state.player.corporate.upwardMgmt - 30,
+  1237	          );
+  1238	          state.corporate.jobOffer = null;
+  1239	          StateManager.addMessage(
+  1240	            `💼 接受了新公司的 offer，拿到 ¥${offer.salary.toLocaleString()} 签字费！`,
+  1241	            "event",
+  1242	          );
+  1243	          renderAll();
+  1244	        },
+  1245	      },
+  1246	    ],
+  1247	  });
+  1248	}
+  1249	
+  1250	/* =========================================================
+  1251	 * 四、兼容旧 API
+  1252	 * ========================================================= */
+  1253	
+  1254	/** 每日新闻判定（旧 API，保持兼容） */
+  1255	function rollDailyNews(state) {
+  1256	  // 街头阶段不再发广播新闻，改用事件弹窗
+  1257	  if (state.player.phase === "street") {
+  1258	    rollStreetEvent(state);
+  1259	    return;
+  1260	  }
+  1261	  // 职场阶段：保留少量市场新闻 + 事件弹窗
+  1262	  const newsChance = state.activeNews.length > 0 ? 0.05 : 0.12;
+  1263	  if (Math.random() < newsChance) {
+  1264	    const news = getRandomNewsEvent();
+  1265	    if (news && !state.flags.seenNewsToday.includes(news.id)) {
+  1266	      news._appliedDay = state.player.day;
+  1267	      state.activeNews.push(news);
+  1268	      state.flags.seenNewsToday.push(news.id);
+  1269	      applyNewsEffect(news, state);
+  1270	      StateManager.addMessage(`📰 ${news.headline}`, "event");
+  1271	    }
+  1272	  }
+  1273	  // 职场事件
+  1274	  rollCorporateEvent(state);
+  1275	  // 清理今日已见新闻列表
+  1276	  if (state.player.day % 3 === 0) {
+  1277	    state.flags.seenNewsToday = [];
+  1278	  }
+  1279	}
+  1280	
+  1281	/** 每日结束时的清理 */
+  1282	function dailyCleanup(state) {
+  1283	  cleanupExpiredNews(state);
+  1284	}
+  1285	
+  1286	/** 季度结束时的职场清理 */
+  1287	function quarterlyCleanup(state) {
+  1288	  // 占位（兼容旧调用）
+  1289	}

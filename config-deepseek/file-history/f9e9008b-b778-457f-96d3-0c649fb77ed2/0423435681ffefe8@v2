@@ -1,0 +1,102 @@
+---
+name: version-landscape
+description: 城市浮生记项目两个版本的完整目录结构、差异分析和开发历史
+metadata:
+  type: project
+  updated: 2026-06-21
+---
+
+# 城市浮生记 — 版本全景地图
+
+> ⚠️ **核心警告：项目存在两个版本，修改前必须先确认目标版本！**
+> 已有多次工作因改错版本而白费的教训，详见 [[版本一致性铁律]]
+
+---
+
+## 版本概览
+
+| 维度         | 根目录 `src/` (遗留版)           | `city-life-story/src/` (活跃版)                  |
+| ------------ | -------------------------------- | ------------------------------------------------ |
+| **路径**     | `D:\Claude Code+DeepSeekV4\src\` | `D:\Claude Code+DeepSeekV4\city-life-story\src\` |
+| **状态**     | ⛔ 遗留/已弃用，不再主动开发     | ✅ 当前活跃开发版本                              |
+| **Git**      | ❌ 无版本控制                    | ✅ Git 仓库，58次提交 (2026-06-17~06-20)         |
+| **页面标题** | "城市浮生记"                     | "城市浮生记 — City Life Story"                   |
+| **主题色**   | 深色海军蓝 `#0a1628`             | 浅色泥土色 `#f5f1e8`                             |
+| **游戏模式** | 单一模式直接开始                 | 经典/剧情/沙盒三种模式选择                       |
+| **JS模块数** | ~27个文件                        | ~57+个文件                                       |
+| **CSS行数**  | 969行                            | 2,856行                                          |
+| **构建产物** | `dist/index.html` 490KB          | `city-life-story/dist/index.html` 2.6MB          |
+| **开发文档** | `DEVELOPMENT.md` 641行           | `DEVELOPMENT.md` 2,688行                         |
+| **最后编辑** | 2026-06-20 23:20 (疑似误编辑)    | 2026-06-20 23:46 (持续活跃)                      |
+
+---
+
+## 共享文件（同名但内容已分叉）
+
+> 注意：以下文件两个版本都有，但**内容已大幅分化**，字节数差异明显。
+
+| 文件名            | 根 `src/` 大小 | `city-life-story/` 大小 | 差异程度                        |
+| ----------------- | -------------- | ----------------------- | ------------------------------- |
+| `events.js`       | 3,707 B        | 468,981 B               | 🔴 天壤之别                     |
+| `main.js`         | 109,271 B      | 127,814 B               | 🔴 差异大                       |
+| `state.js`        | 11,956 B       | 17,894 B                | 🟡 差异中                       |
+| `render.js`       | 79,933 B       | 146,054 B               | 🔴 差异大                       |
+| `corp_ui.js`      | 21,289 B       | 29,132 B                | 🟡 差异中                       |
+| `investment.js`   | 37,104 B       | 82,482 B                | 🔴 差异大                       |
+| `npcs.js`         | 8,762 B        | 40,510 B                | 🔴 差异大                       |
+| `news.js`         | 6,986 B        | 43,019 B                | 🔴 差异大                       |
+| `moral_events.js` | 34,275 B       | 31,766 B                | 🟡 实现不同(箭头函数vs普通函数) |
+| `random.js`       | 9,522 B        | 13,760 B                | 🟡 差异中                       |
+| `stock.js`        | 1,230 B        | 20,977 B                | 🔴 天壤之别                     |
+
+---
+
+## 根 `src/` 独有的文件（未迁移到 city-life-story）
+
+> 这些文件的内容应评估并迁移到活跃版。
+
+| 文件                         | 行数  | 功能描述                                                                   | 优先级 |
+| ---------------------------- | ----- | -------------------------------------------------------------------------- | ------ |
+| `src/js/data/ingredients.js` | 522   | 23种食材6大类、16个配方4个技能等级、保质期/过期系统                        | ⭐⭐⭐ |
+| `src/js/phase1/carry.js`     | 1,037 | 物品物理属性(重量/体积/易碎)、9种容器类型、6级负重、运输服务、运输随机事件 | ⭐⭐⭐ |
+| `src/js/phase1/pricing.js`   | 367   | 地区定价标签、供需追踪、8种市场事件、技能影响定价                          | ⭐⭐   |
+| `src/js/data/diseases.js`    | —     | 4阶段疾病进化系统（与city的`illnesses.js`习惯触发式不同）                  | ⭐⭐   |
+| `src/js/phase1/weather.js`   | 810   | 14种天气类型、温度系统、舒适度系统（city版仅231行更简单）                  | ⭐⭐   |
+
+---
+
+## `city-life-story/` 独有的文件（约40个）
+
+> 核心新增系统，根版本完全没有。
+
+**Core层：** `achievements.js`, `company_spawner.js`, `cooking.js`, `dreams.js`, `enterprise_fate.js`, `festivals.js`, `finance.js`, `inheritance_chain.js`, `multi_run_memory.js`, `news_event_bridge.js`, `news_investment_bridge.js`, `news_system.js`, `skill_tree.js`, `sound.js`, `weather.js`
+
+**Data层：** `amenities.js`, `illnesses.js`, `location_flavor.js`, `mechanics_registry.js`, `narratives_registry.js`, `scenarios.js`, `startup_competition.js`, `startup_events.js`, `victories_registry.js`
+
+**Phase1层：** `actions_extra.js`, `critical.js`, `daily_pipeline.js`, `illness.js`, `interactions.js`, `npc_event_bridge.js`, `skill_bonuses.js`
+
+**Phase2层：** `startup.js`
+
+**UI层：** `daily_report.js`, `data_viz.js`, `modal.js`, `tutorial.js`, `victory.js`, `wiki.js`
+
+**Components层：** `companyHistory.js`
+
+---
+
+## 错误编辑历史（已确认的工作损失）
+
+| 时间                   | 会话     | 错误目标  | 影响文件                                                                                                             | 后果                                                                                                          |
+| ---------------------- | -------- | --------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 2026-06-20 04:40~13:35 | 多个会话 | 根 `src/` | events.js, news.js, investment.js, needs.js, pricing.js, carry.js, random.js, achievements.js, jobs.js, 等约15个文件 | 这些文件在旧版上的改动不会反映到Git版本中，且可能因后续覆盖丢失                                               |
+| 2026-06-20 19:09       | 某会话   | 根 `src/` | promo.js, corp_ops.js, team.js                                                                                       | 工作丢失                                                                                                      |
+| 2026-06-20 21:49~23:20 | 本会话   | 根 `src/` | state.js, moral_events.js, npcs.js, main.js, trade.js, weather.js, perf.js, render.js, index.html                    | **本会话也发生了误编辑！** root moral_events.js (1049行) 与 city版 (963行) 内容不同，root index.html 也被误改 |
+
+> **经验：** 即使本会话也未能幸免于改错版本的错误。[[版本一致性铁律]]
+
+---
+
+## 相关文档
+
+- [[版本一致性铁律]] — 如何避免改错版本的规则
+- [[待迁移内容清单]] — 根版本中值得迁移到city-life-story的独特内容
+- `city-life-story/CLAUDE.md` — 活跃版开发规则

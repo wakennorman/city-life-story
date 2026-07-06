@@ -1,0 +1,30 @@
+@echo off
+chcp 65001 > nul
+title Claude LongCat cat20
+cd /d "D:\Claude Code+DeepSeekV4"
+
+:: Kill any existing process on port 8087 (from previous runs)
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":8087 " ^| findstr "LISTENING"') do taskkill /f /pid %%p >nul 2>&1
+
+:: Find Python
+set PYTHON_CMD=
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set PYTHON_CMD=%LOCALAPPDATA%\Programs\Python\Python311\python.exe
+if not defined PYTHON_CMD if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe" set PYTHON_CMD=%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe
+if not defined PYTHON_CMD set PYTHON_CMD=python.exe
+
+:: Start proxy in background (port 8087)
+echo Starting auth proxy on port 8087...
+start /B "" "%PYTHON_CMD%" "D:\Claude Code+DeepSeekV4\proxy-longcat.py" 8087
+timeout /t 2 /nobreak >nul
+
+:: Verify proxy is running
+netstat -ano | findstr "127.0.0.1:8087" | findstr "LISTENING" >nul 2>&1
+if errorlevel 1 (
+    echo WARNING: Proxy may not have started on port 8087
+)
+
+:: Launch Claude Code
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "D:\Claude Code+DeepSeekV4\start-longcat-cat20.ps1" %*
+
+:: Kill proxy when done
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":8087 " ^| findstr "LISTENING"') do taskkill /f /pid %%p >nul 2>&1

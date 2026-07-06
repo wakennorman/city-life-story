@@ -1,0 +1,88 @@
+---
+name: content-to-port
+description: 根 src/ 版本中存在的独特功能内容，需评估并迁移到 city-life-story/src/ 活跃版
+metadata:
+  type: project
+  updated: 2026-06-21
+---
+
+# 待迁移内容清单
+
+> 以下内容在根 `src/` 中存在但 `city-life-story/` 中没有对应实现。
+> 评估优先级、迁移到活跃版后，这项任务才算完成。
+
+---
+
+## P0 — 高优先级（完整功能模块，直接可用）
+
+### 1. `ingredients.js` → 整合到 `cooking.js`
+
+- **来源：** `src/js/data/ingredients.js` (522行)
+- **目标：** 整合到 `city-life-story/src/js/core/cooking.js`
+- **内容：** 23种食材（6大类）、16个配方（4个技能等级）、保质期/过期系统
+- **现状：** city版 `cooking.js` 有简单的 `COOKING_RECIPES` 数组但没有食材系统
+- **迁移难度：** ⭐⭐⭐ — 需要重构 cooking.js，添加食材消耗逻辑
+- **接口：** `getAvailableRecipes()`, `isIngredientExpired()`
+
+### 2. `carry.js` — 搬运/负重系统
+
+- **来源：** `src/js/phase1/carry.js` (1,037行)
+- **目标：** 新文件 `city-life-story/src/js/phase1/carry.js`
+- **内容：** 物品物理属性(重量/体积/易碎/保质期)、9种容器类型、6级负重(移动AP惩罚)、3种运输服务、运输随机事件(盗窃/损坏/事故/纠纷)
+- **现状：** city版没有任何负重系统
+- **迁移难度：** ⭐⭐⭐⭐ — 需要修改 trade.js、main.js、state.js 以集成
+- **接口：** `buyGoodV2()`, `sellGoodV2()`, `tickPerishableGoods()`, 容器选择UI
+- **关联文件：** `state.js` 需加 `inventory.container`, `inventory.encumbrance` 字段
+
+---
+
+## P1 — 中优先级（可选的增强功能）
+
+### 3. `pricing.js` — 地区定价/供需系统
+
+- **来源：** `src/js/phase1/pricing.js` (367行)
+- **目标：** 新文件 `city-life-story/src/js/phase1/pricing.js`
+- **内容：** `LOCATION_GOODS_TAGS` (每个地点有特产/稀缺标签)、供需追踪(买涨卖跌±25%)、8种市场事件、技能影响定价
+- **现状：** city版 trade.js 使用固定价格
+- **迁移难度：** ⭐⭐⭐ — 需要修改 trade.js 以接入 `calcFinalPrice()`
+
+### 4. `weather.js` — 增强天气系统
+
+- **来源：** `src/js/phase1/weather.js` (810行)
+- **目标：** 替换 `city-life-story/src/js/core/weather.js` (231行) 或合并
+- **内容：** 14种天气类型、温度系统(季节影响)、舒适度系统(衣物交互)、天气对价格/事件影响
+- **现状：** city版 weather.js 只有简单天气模拟（5种天气）
+- **迁移难度：** ⭐⭐⭐ — city 版的 daily_pipeline.js 已接入 weather，需要适配接口
+
+---
+
+## P2 — 低优先级（不同实现，合并价值有限）
+
+### 5. `diseases.js` — 疾病系统
+
+- **来源：** `src/js/data/diseases.js`
+- **目标：** 对比 `city-life-story/src/js/data/illnesses.js`
+- **差异：** 根版采用4阶段进化(轻/中/重/危)，city版采用习惯触发(垃圾食品/卫生习惯)
+- **建议：** 可在 city 版基础上吸收阶段进化设计，但不优先
+
+### 6. `achievements.js` — 成就系统
+
+- **来源：** `src/js/data/achievements.js`
+- **目标：** 对比 `city-life-story/src/js/core/achievements.js`
+- **差异：** 根版用 `ACHIEVEMENT_DEFS` 简单检查，city版有叙事/故事/分类
+- **建议：** city 版已更完善，无需迁移
+
+---
+
+## 紧急修复：`moral_events.js` 内容合并
+
+- **问题：** 根 `src/js/data/moral_events.js` (1049行) 与 `city-life-story/src/js/data/moral_events.js` (963行) 有 86 行差异
+- **原因：** 2026-06-20 23:20 根版本被误写入，之后 23:46 才写到正确版本，两个版本使用不同的代码风格（箭头函数 vs 普通函数）
+- **处理：** 需要对比并合并两个版本的独有内容
+
+---
+
+## 关联记忆
+
+- [[版本全景地图]] — 完整版本差异分析
+- [[版本一致性铁律]] — 防止再次改错版本的规则

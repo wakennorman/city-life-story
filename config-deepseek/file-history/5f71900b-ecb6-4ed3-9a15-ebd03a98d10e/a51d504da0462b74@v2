@@ -1,0 +1,51 @@
+---
+name: action-sort-system
+description: 行动选项分类排序系统 v1.7，解决50+种行动平铺排列难以导航的问题
+metadata: 
+  node_type: memory
+  type: project
+  related: city-life-story
+  originSessionId: 5f71900b-ecb6-4ed3-9a15-ebd03a98d10e
+---
+
+# 行动选项分类排序系统
+
+2026-06-22 实施。为城市浮生记游戏引入分类分组+多层排序，替代原始的插入顺序平铺渲染。
+
+## 方案选择
+
+**推荐分类分组（Category-based），而非纯频率排序**。参考《大多数》《中国式家长》《Stardew Valley》均使用分类导航，纯频率排序会埋没新/冷门内容。
+
+## 排序层级
+
+1. 分类顺序（固定）→ 2. 同类内优先级（关键行动置顶）→ 3. 点击频次 → 4. AP消耗 → 5. 名称（保底）
+
+## 分类体系
+
+| 顺序 | 分类 | Icon | 覆盖行动 |
+|------|------|------|----------|
+| 10 | survival 生存必需 | 🌾 | eat, rest, shower, heal, see_doctor, relax_park, pharmacy |
+| 20 | work 赚钱谋生 | 💼 | job_*, scavenge_trash, busking, beg, play_dice, apply_job |
+| 25 | appliance 地点服务 | 🏪 | amenity_*, fame_*, wholesale_header, trade_header |
+| 30 | shopping 购物装备 | 🛒 | item_shop_*, buy_*, buy_ingredients |
+| 40 | education 学习提升 | 🎓 | edu_*, study, self_study, night_school, cert_* |
+| 50 | social 社交休闲 | 🎭 | npc_*, intel_*, favor_*, deeptask_*, call_home, internet_bar, movie, ktv, gym |
+| 60 | finance 金融理财 | 💳 | deposit, withdraw, loan, repay, repay_village |
+| 70 | career 职业发展 | 🏢 | corp_*, startup_* |
+| 100 | other 其他 | 📌 | 兜底 |
+
+## 映射策略
+
+精确ID匹配 > 前缀规则匹配（如 `job_*` → work）> 兜底 other
+
+## 关键文件
+
+- `city-life-story/src/js/core/action_sort.js` — 核心逻辑
+- `city-life-story/src/js/ui/render.js` — 渲染集成（`renderActionsTab`）
+- `city-life-story/src/js/core/state.js` — `stats.actionFreq/actionFirstUse`
+
+## 注意事项
+
+- 出行（travel_*）和住所（housing_*/storage_*）保持独立高亮区域不动
+- 存在兜底机制：如 ActionSort 未加载则回退到旧平铺模式
+- 频次数据随存档自动保存

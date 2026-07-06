@@ -1,0 +1,39 @@
+@echo off
+setlocal
+chcp 65001 > nul
+title Claude Volcano ds4f
+cd /d "D:\Claude Code+DeepSeekV4"
+
+set "CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude-volcano-ds4"
+set "ANTHROPIC_API_KEY="
+set "ANTHROPIC_AUTH_TOKEN=ark-7cfaba66-34e9-4957-897d-4661d7388078-5f8f1"
+set "ANTHROPIC_BASE_URL=https://ark.cn-beijing.volces.com/api/coding"
+set "ANTHROPIC_MODEL=deepseek-v4-flash"
+set "ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-flash"
+set "ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-flash"
+set "ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash"
+set "CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash"
+set "CLAUDE_CODE_EFFORT_LEVEL=medium"
+set "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
+set "SECURITY_GUIDANCE_DISABLE=1"
+set "ENABLE_STOP_REVIEW=0"
+set "MAX_STOP_HOOK_FIRINGS=0"
+set "PATH=%APPDATA%\npm;%PATH%"
+
+if not exist "%APPDATA%\npm\claude.cmd" (
+    echo.
+    echo Claude Code is not installed, or %%APPDATA%%\npm\claude.cmd is missing.
+    pause
+    exit /b 1
+)
+
+call "%APPDATA%\npm\claude.cmd" %*
+set "CLAUDE_EXIT_CODE=%ERRORLEVEL%"
+
+if not "%CLAUDE_EXIT_CODE%"=="0" (
+    echo.
+    echo Claude Code exited with an error. See the message above.
+    pause
+)
+
+exit /b %CLAUDE_EXIT_CODE%

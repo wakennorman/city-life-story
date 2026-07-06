@@ -1,0 +1,9 @@
+{
+  "id": "15",
+  "subject": "投资中心首日数据初始化",
+  "description": "进入职场阶段时立即随机生成初始行情数据，消除「等待数据..」占位文字，保持玩家代入感",
+  "activeForm": "修复投资首日数据",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

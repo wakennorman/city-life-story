@@ -1,0 +1,33 @@
+Microsoft Windows [版本 10.0.26200.7840]
+(c) Microsoft Corporation。保留所有权利。
+
+C:\Users\陈恒稳>cmd /k "C:\Users\陈恒稳\Desktop\Claude-火山GLM5.2.bat"
+'aude' 不是内部或外部命令，也不是可运行的程序
+或批处理文件。
+Welcome to Claude Code v2.1.181
+..........................................................
+
+     *                                       █████▓▓░
+                                 *         ███▓░     ░░
+            ░░░░░░                        ███▓░
+    ░░░   ░░░░░░░░░░                      ███▓░
+   ░░░░░░░░░░░░░░░░░░░    *                ██▓░░      ▓
+                                             ░▓▓███▓▓░
+ *                                 ░░░░
+                                 ░░░░░░░░
+                               ░░░░░░░░░░░░░░░░
+       █████████                                        *
+      ██▄█████▄██                        *
+       █████████      *
+.......█ █   █ █..........................................
+
+ Unable to connect to Anthropic services
+
+ Failed to connect to api.anthropic.com: ERR_BAD_REQUEST
+
+ Please check your internet connection and network settings.
+
+ Note: Claude Code might not be available in your country. Check supported countries at
+ https://anthropic.com/supported-countries
+
+C:\Users\陈恒稳>

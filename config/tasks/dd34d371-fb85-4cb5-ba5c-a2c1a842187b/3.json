@@ -1,0 +1,9 @@
+{
+  "id": "3",
+  "subject": "Task 3: 法律系统",
+  "description": "新建 src/js/core/legal_system.js，实现犯罪记录、通缉等级0-5、坐牢后果、出狱后影响，与道德/就业/社交系统联动",
+  "activeForm": "实现法律系统",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>城市浮生记 — City Life Story</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* 内联关键样式（防止FOUC） */
+      body {
+        background: #0a1628;
+        color: #e8edf5;
+      }
+      .welcome-screen {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ====== 欢迎界面 ====== -->
+    <div id="welcome-screen" class="welcome-screen">
+      <div style="font-size: 64px; margin-bottom: 8px">🏙️</div>
+      <div class="welcome-title">城市浮生记</div>
+      <div class="welcome-subtitle">
+        从城中村的废品回收到科技园的职场巅峰<br />
+        这是一条充满汗水、眼泪和希望的生存之路<br />
+        你能从一无所有走到财务自由的那一天吗？
+      </div>
+      <div class="welcome-buttons">
+        <button id="btn-new-game" class="btn btn-primary btn-lg">
+          🆕 开始新游戏
+        </button>
+      </div>
+      <div id="load-section" style="display: none; margin-top: 8px"></div>
+      <div style="margin-top: 32px; font-size: 11px; color: var(--text-muted)">
+        灵感来源：北京浮生记 · 大多数 · 互联网大厂模拟器
+      </div>
+    </div>
+
+    <!-- ====== 游戏界面 ====== -->
+    <div id="app" style="display: none">
+      <!-- Header -->
+      <header id="header">
+        <div class="header-left">
+          <button id="mobile-menu-btn" aria-label="菜单">☰</button>
+          <span class="header-logo">城市浮生记<span>v1.0</span></span>
+        </div>
+
+        <div class="header-stats">
+          <div class="header-stat">
+            <span class="label">📅 天</span>
+            <span class="value" id="header-day">1</span>
+          </div>
+          <div class="header-stat">
+            <span class="label">🎂 年龄</span>
+            <span class="value age" id="header-age">20</span>
+          </div>
+          <div class="header-stat">
+            <span class="label">📍</span>
+            <span class="value" id="header-phase">🏘️ 街头</span>
+          </div>
+          <div class="header-stat">
+            <span class="label">💰</span>
+            <span class="value cash" id="header-cash">¥2,000</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="btn-help" class="btn btn-sm" title="帮助">❓ 帮助</button>
+          <button id="btn-save" class="btn btn-sm" title="保存游戏">
+            💾 存档
+          </button>
+          <button id="btn-load" class="btn btn-sm" title="读取存档">
+            📂 读档
+          </button>
+          <button id="btn-new-game-header" class="btn btn-sm" title="新游戏">
+            🆕
+          </button>
+        </div>
+      </header>
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <!-- 街头属性（Phase 1） -->
+        <div id="street-stats-section" class="sidebar-section">
+          <h3>💪 基础属性</h3>
+          <div class="stat-row" id="stat-physique">
+            <span class="stat-label">体质</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar physique"></div>
+            </div>
+            <span class="stat-value">22</span>
+          </div>
+          <div class="stat-row" id="stat-intelligence">
+            <span class="stat-label">智力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar intelligence"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-agility">
+            <span class="stat-label">敏捷</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar agility"></div>
+            </div>
+            <span class="stat-value">24</span>
+          </div>
+          <div class="stat-row" id="stat-mental">
+            <span class="stat-label">心智</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar mental-bar"></div>
+            </div>
+            <span class="stat-value">26</span>
+          </div>
+        </div>
+
+        <!-- 职场属性（Phase 2，初始隐藏） -->
+        <div
+          id="corp-stats-section"
+          class="sidebar-section"
+          style="display: none"
+        >
+          <h3>🏢 职场属性</h3>
+          <div class="stat-row" id="stat-hair">
+            <span class="stat-label">发量</span>
+            <div class="stat-bar-wrap"><div class="stat-bar hair"></div></div>
+            <span class="stat-value">100</span>
+          </div>
+          <div class="stat-row" id="stat-dignity">
+            <span class="stat-label">尊严</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar dignity"></div>
+            </div>
+            <span class="stat-value">60</span>
+          </div>
+          <div class="stat-row" id="stat-kpi">
+            <span class="stat-label">KPI</span>
+            <div class="stat-bar-wrap"><div class="stat-bar kpi"></div></div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-ability">
+            <span class="stat-label">能力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar intelligence"></div>
+            </div>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat-row" id="stat-upward">
+            <span class="stat-label">向上管理</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar physique"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-popularity">
+            <span class="stat-label">人缘</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar happiness"></div>
+            </div>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat-row" id="stat-risk">
+            <span class="stat-label">风险</span>
+            <div class="stat-bar-wrap"><div class="stat-bar risk"></div></div>
+            <span class="stat-value">0</span>
+          </div>
+        </div>
+
+        <!-- 基本需求 -->
+        <div class="sidebar-section">
+          <h3>📊 状态</h3>
+          <div class="stat-row" id="stat-hunger">
+            <span class="stat-label">饥饱</span>
+            <div class="stat-bar-wrap"><div class="stat-bar hunger"></div></div>
+            <span class="stat-value">70</span>
+          </div>
+          <div class="stat-row" id="stat-fatigue">
+            <span class="stat-label">疲劳</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar fatigue"></div>
+            </div>
+            <span class="stat-value">15</span>
+          </div>
+          <div class="stat-row" id="stat-hygiene">
+            <span class="stat-label">卫生</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar hygiene"></div>
+            </div>
+            <span class="stat-value">75</span>
+          </div>
+          <div class="stat-row" id="stat-happiness">
+            <span class="stat-label">心情</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar happiness"></div>
+            </div>
+            <span class="stat-value">55</span>
+          </div>
+          <div class="stat-row" id="stat-health">
+            <span class="stat-label">健康</span>
+            <div class="stat-bar-wrap"><div class="stat-bar health"></div></div>
+            <span class="stat-value">100</span>
+          </div>
+          <div class="stat-row" id="stat-fame">
+            <span class="stat-label">名气</span>
+            <div class="stat-bar-wrap"><div class="stat-bar fame"></div></div>
+            <span class="stat-value">0</span>
+          </div>
+          <div class="stat-row" id="stat-ap">
+            <span class="stat-label">⚡行动力</span>
+            <div class="stat-bar-wrap"><div class="stat-bar ap-bar"></div></div>
+            <span class="stat-value">100/100</span>
+          </div>
+        </div>
+
+        <!-- 当前位置 & 住所 -->
+        <div class="sidebar-section">
+          <h3>📍 当前位置</h3>
+          <div class="location-display">
+            <span class="location-name" id="location-name">城中村</span>
+          </div>
+          <div class="location-desc" id="location-desc">鱼龙混杂的城中村</div>
+          <div
+            class="location-services"
+            id="location-services"
+            style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px"
+          ></div>
+          <div
+            id="housing-info"
+            style="
+              margin-top: 8px;
+              border-top: 1px solid var(--border);
+              padding-top: 8px;
+            "
+          ></div>
+        </div>
+
+        <!-- 附近地点快速出行 -->
+        <div class="sidebar-section" id="nearby-section">
+          <h3>🚶 附近可前往</h3>
+          <div
+            id="nearby-locations"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main id="main">
+        <!-- Tab Bar -->
+        <div id="tab-bar">
+          <button class="tab-btn active" data-tab="actions">⚡ 行动</button>
+          <button class="tab-btn" data-tab="map">🗺️ 地图</button>
+          <button class="tab-btn" data-tab="trade">📦 交易</button>
+          <button class="tab-btn" data-tab="inventory">🎒 物品</button>
+          <button class="tab-btn" data-tab="skills">📚 技能</button>
+          <button class="tab-btn" data-tab="corp">🏢 职场</button>
+          <button class="tab-btn" data-tab="investment">💰 投资</button>
+        </div>
+
+        <!-- Content Area (dynamically rendered) -->
+        <div id="content-area"></div>
+
+        <!-- Message Log -->
+        <div id="message-log">
+          <h3>📜 事件记录</h3>
+          <div
+            class="log-content"
+            style="max-height: 220px; overflow-y: auto"
+          ></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ====== Scripts (开发阶段独立加载) ====== -->
+    <!-- Core -->
+    <script src="js/core/state.js"></script>
+    <script src="js/core/save.js"></script>
+    <script src="js/core/events.js"></script>
+    <script src="js/core/weather.js"></script>
+
+    <!-- Data -->
+    <script src="js/data/locations.js"></script>
+    <script src="js/data/jobs.js"></script>
+    <script src="js/data/goods.js"></script>
+    <script src="js/data/items.js"></script>
+    <script src="js/data/news.js"></script>
+    <script src="js/data/skills.js"></script>
+    <script src="js/data/npcs.js"></script>
+    <script src="js/data/corp.js"></script>
+
+    <!-- Phase 1 -->
+    <script src="js/phase1/trade.js"></script>
+    <script src="js/phase1/needs.js"></script>
+    <script src="js/phase1/actions_extra.js"></script>
+
+    <!-- Phase 2 -->
+    <script src="js/phase2/perf.js"></script>
+    <script src="js/phase2/promo.js"></script>
+    <script src="js/phase2/team.js"></script>
+    <script src="js/phase2/stock.js"></script>
+    <script src="js/phase2/corp_ops.js"></script>
+    <script src="js/phase2/investment.js"></script>
+
+    <!-- UI -->
+    <script src="js/ui/render.js"></script>
+    <script src="js/ui/corp_ui.js"></script>
+    <script src="js/ui/modal.js"></script>
+    <script src="js/ui/tutorial.js"></script>
+
+    <!-- Main -->
+    <script src="js/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+﻿{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-IdEfmM1c24SslPh7mngPApkQ7moB30NcfkDzazGbNDBrGyaY",
+    "ANTHROPIC_BASE_URL": "http://localhost:3000",
+    "ANTHROPIC_MODEL": "gpt-5-codex",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-5-codex",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-5-codex",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "gpt-5-codex",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+  },
+  "theme": "auto",
+  "autoMemoryEnabled": true
+}

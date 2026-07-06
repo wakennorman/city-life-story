@@ -1,0 +1,8 @@
+{
+  "id": "16",
+  "subject": "Read all existing game files to understand current structure",
+  "description": "Read state.js, main.js, modal.js, render.js, index.html and any other relevant files to understand the current codebase before making changes.",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

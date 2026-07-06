@@ -1,0 +1,241 @@
+city-life-story\src\js\phase2\investment.bak.js:164:        price: s.basePrice * (0.85 + Math.random() * 0.3),
+city-life-story\src\js\phase2\investment.bak.js:180:      m.price * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility),
+city-life-story\src\js\phase2\investment.bak.js:189:      Math.min(95, (inv.btcFearGreed || 50) + (Math.random() - 0.5) * 10),
+city-life-story\src\js\phase2\investment.bak.js:196:            (Math.random() - 0.5) * 0.08 +
+city-life-story\src\js\phase2\investment.bak.js:209:        (1 + p.appreciation + (Math.random() - 0.5) * 0.002),
+city-life-story\src\js\phase1\daily_pipeline.js:80:        if (Math.random() < 0.3) {
+city-life-story\src\js\phase1\daily_pipeline.js:332:        if (Math.random() < 0.08 && typeof triggerStartupEvent === "function") {
+city-life-story\src\js\phase1\daily_pipeline.js:474:          state.chengguan.heat - 5 - Math.floor(Math.random() * 5),
+city-life-story\src\js\phase1\extra_events.js:34:            st.resources.cash += 150 + Math.floor(Math.random() * 100);
+city-life-story\src\js\phase1\extra_events.js:80:            st.resources.cash += 80 + Math.floor(Math.random() * 50);
+city-life-story\src\js\phase1\extra_events.js:139:            var profit = 40 + Math.floor(Math.random() * 50);
+city-life-story\src\js\phase1\extra_events.js:172:            st.resources.cash += 120 + Math.floor(Math.random() * 60);
+city-life-story\src\js\phase1\extra_events.js:174:            if (Math.random() < 0.3) {
+city-life-story\src\js\phase1\extra_events.js:202:            st.resources.cash += 130 + Math.floor(Math.random() * 80);
+city-life-story\src\js\phase1\extra_events.js:263:            if (Math.random() < 0.6) {
+city-life-story\src\js\phase1\extra_events.js:305:            st.resources.cash += 300 + Math.floor(Math.random() * 100);
+city-life-story\src\js\phase1\extra_events.js:307:            if (Math.random() < 0.1) {
+city-life-story\src\js\phase1\extra_events.js:316:                  (300 + Math.floor(Math.random() * 100)) +
+city-life-story\src\js\phase1\extra_events.js:409:            var profit = 80 + Math.floor(Math.random() * 120);
+city-life-story\src\js\phase1\extra_events.js:426:            var skillGain = Math.floor(Math.random() * 15) + 5;
+city-life-story\src\js\phase1\extra_events.js:691:            if (Math.random() < 0.3) {
+city-life-story\src\js\phase1\extra_events.js:692:              st.resources.cash += Math.floor(Math.random() * 100);
+city-life-story\src\js\phase1\extra_events.js:727:          Object.keys(st.equipment || {}).length > 0 && Math.random() < 0.03
+city-life-story\src\js\phase1\illness.js:115:    if (Math.random() >= ch) continue;
+city-life-story\src\js\phase1\illness.js:259:        Math.random() < ill.symptom.randomFaintCh
+city-life-story\src\js\phase1\illness.js:271:        Math.random() < ill.symptom.randomVomitCh
+city-life-story\src\js\phase1\illness.js:283:        Math.random() < ill.symptom.hallucinationCh
+city-life-story\src\js\phase1\illness.js:294:        Math.random() < ill.symptom.dailyDeathChance
+city-life-story\src\js\phase1\illness.js:307:      if (ill.symptom.dizzinessCh && Math.random() < ill.symptom.dizzinessCh) {
+city-life-story\src\js\phase1\illness.js:319:      if (Math.random() < cureChance) {
+city-life-story\src\js\phase1\interactions.js:263:    if (Math.random() < 0.4) st.sick = true; // 40%概率过劳生病
+city-life-story\src\js\phase1\npc_event_bridge.js:227:  if (Math.random() > 0.2) return;
+city-life-story\src\js\phase1\npc_event_bridge.js:241:  var roll = Math.random() * totalWeight;
+city-life-story\src\js\phase1\npc_event_bridge.js:351:  if (Math.random() > 0.3) return;
+city-life-story\src\js\phase1\npc_event_bridge.js:438:  if (Math.random() > locData.chance) return;
+city-life-story\src\js\phase2\investment.js:1081:          seedPrice * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility);
+city-life-story\src\js\phase2\investment.js:1102:    var btcSeed = inv.btcPrice * (0.85 + Math.random() * 0.3);
+city-life-story\src\js\phase2\investment.js:1103:    var btcPoints = 5 + Math.floor(Math.random() * 4);
+city-life-story\src\js\phase2\investment.js:1105:      btcSeed = btcSeed * (1 + (Math.random() - 0.5) * 0.08);
+city-life-story\src\js\phase2\investment.js:1144:    var baseChange = 1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility;
+city-life-story\src\js\phase2\investment.js:1170:      Math.min(95, (inv.btcFearGreed || 50) + (Math.random() - 0.5) * 10),
+city-life-story\src\js\phase2\investment.js:1181:            (Math.random() - 0.5) * 0.08 +
+city-life-story\src\js\phase2\investment.js:1210:          (1 + (prop.appreciation || 0.0001) + (Math.random() - 0.5) * 0.002) *
+city-life-story\src\js\phase1\skill_bonuses.js:431:    entry.min + Math.floor(Math.random() * (entry.max - entry.min + 1));
+city-life-story\src\js\phase1\skill_bonuses.js:515:    gym: { physique: 0.5 + Math.random() * 0.5 },
+city-life-story\src\js\phase2\personal_growth.js:538:    hobby.baseCost + Math.floor(Math.random() * hobby.baseCost * 0.5);
+city-life-story\src\js\phase2\personal_growth.js:557:  const expGain = 10 + Math.floor(Math.random() * 10);
+city-life-story\src\js\phase2\personal_growth.js:704:  const cost = 500 + Math.floor(Math.random() * 500);
+city-life-story\src\js\phase2\personal_growth.js:717:    physical: pg.health.physical + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\personal_growth.js:718:    mental: pg.health.mental + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\personal_growth.js:719:    metabolic: pg.health.metabolic + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\personal_growth.js:720:    dental: pg.health.dental + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\personal_growth.js:721:    vision: pg.health.vision + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\personal_growth.js:834:      Math.random().toString(36).substr(2, 9),
+city-life-story\src\js\phase2\personal_growth.js:892:  const reward = 1000 + Math.floor(Math.random() * 2000);
+city-life-story\src\js\data\moral_events.js:854:  var evt = eligible[Math.floor(Math.random() * eligible.length)];
+city-life-story\src\js\data\moral_events.js:855:  if (Math.random() > evt.dailyChance) return false;
+city-life-story\src\js\core\news_event_bridge.js:334:  if (activeNews.length > 0 && Math.random() < 0.15) {
+city-life-story\src\js\core\news_system.js:466:    if (Math.random() > conduit.chance) continue;
+city-life-story\src\js\core\news_system.js:473:    var targetNews = candidates[Math.floor(Math.random() * candidates.length)];
+city-life-story\src\js\core\news_system.js:477:        Math.random() * (conduit.delayRange[1] - conduit.delayRange[0] + 1),
+city-life-story\src\js\core\news_system.js:568:  return candidates[Math.floor(Math.random() * candidates.length)];
+city-life-story\src\js\phase2\workplace_social.js:241:  const name = names[Math.floor(Math.random() * names.length)];
+city-life-story\src\js\phase2\workplace_social.js:243:    personalities[Math.floor(Math.random() * personalities.length)];
+city-life-story\src\js\phase2\workplace_social.js:245:  const roleKey = roleKeys[Math.floor(Math.random() * roleKeys.length)];
+city-life-story\src\js\phase2\workplace_social.js:252:      Math.random().toString(36).substr(2, 9),
+city-life-story\src\js\phase2\workplace_social.js:256:    relationship: Math.floor(Math.random() * 40) + 20, // 20-60 初始
+city-life-story\src\js\phase2\workplace_social.js:257:    trust: Math.floor(Math.random() * 30) + 20, // 20-50 初始信任
+city-life-story\src\js\phase2\workplace_social.js:460:      if (Math.random() < 0.3) {
+city-life-story\src\js\phase2\workplace_social.js:462:        const benefit = benefits[Math.floor(Math.random() * benefits.length)];
+city-life-story\src\js\phase2\workplace_social.js:651:  const topic = topics[Math.floor(Math.random() * topics.length)];
+city-life-story\src\js\phase2\startup_crisis.js:341:    if (Math.random() > crisis.trigger.probability) continue;
+city-life-story\src\js\phase2\startup_crisis.js:478:  const success = Math.random() < option.successChance;
+city-life-story\src\js\phase2\startup_crisis.js:487:      const dilution = 0.1 + Math.random() * 0.1;
+city-life-story\src\js\phase2\startup_crisis.js:542:      const cost = 5000 + Math.floor(Math.random() * 15000);
+city-life-story\src\js\phase2\startup_crisis.js:548:      const cost = 20000 + Math.floor(Math.random() * 30000);
+city-life-story\src\js\phase2\startup_crisis.js:554:      const cost = 50000 + Math.floor(Math.random() * 150000);
+city-life-story\src\js\data\startup_competition.js:235:      template.suffixes[Math.floor(Math.random() * template.suffixes.length)];
+city-life-story\src\js\data\startup_competition.js:242:      valuation: playerCompany.valuation * (0.3 + Math.random() * 0.7),
+city-life-story\src\js\data\startup_competition.js:246:          playerCompany.employees.length * (0.3 + Math.random() * 0.8),
+city-life-story\src\js\data\startup_competition.js:251:        playerCompany.technologyScore * (0.5 + Math.random() * 0.6),
+city-life-story\src\js\data\startup_competition.js:255:        playerCompany.marketScore * (0.5 + Math.random() * 0.6),
+city-life-story\src\js\data\startup_competition.js:259:        playerCompany.reputation * (0.4 + Math.random() * 0.7),
+city-life-story\src\js\data\startup_competition.js:271:          p.technologyScore - 5 + Math.floor(Math.random() * 15),
+city-life-story\src\js\data\startup_competition.js:275:          p.marketScore - 5 + Math.floor(Math.random() * 15),
+city-life-story\src\js\data\startup_competition.js:279:      trend: Math.random() > 0.5 ? "up" : "stable",
+city-life-story\src\js\data\startup_competition.js:292:    const growth = (Math.random() - 0.4) * 5; // 轻微负偏（玩家有优势）
+city-life-story\src\js\data\startup_competition.js:301:    if (Math.random() < 0.05) {
+city-life-story\src\js\data\startup_competition.js:309:      const event = events[Math.floor(Math.random() * events.length)];
+city-life-story\src\js\data\startup_competition.js:954:      if (Math.random() < 0.03) {
+city-life-story\src\js\data\startup_competition.js:956:          Math.random() < 0.6
+city-life-story\src\js\data\startup_competition.js:967:          discount: Math.floor(15 + Math.random() * 25),
+city-life-story\src\js\data\startup_competition.js:968:          percent: Math.floor(30 + Math.random() * 40),
+city-life-story\src\js\data\startup_competition.js:974:    if (comp.marketScore > company.marketScore && Math.random() < 0.02) {
+city-life-story\src\js\data\startup_competition.js:992:        salaryIncrease: Math.floor(20 + Math.random() * 40),
+city-life-story\src\js\data\startup_competition.js:994:          company.employees.length * (0.1 + Math.random() * 0.2),
+city-life-story\src\js\data\startup_competition.js:1003:      Math.random() < 0.025
+city-life-story\src\js\data\startup_competition.js:1010:      const template = templates[Math.floor(Math.random() * templates.length)];
+city-life-story\src\js\data\startup_competition.js:1018:        adRatio: Math.floor(1.5 + Math.random() * 3),
+city-life-story\src\js\data\startup_competition.js:1021:            ? ["质量", "安全", "服务"][Math.floor(Math.random() * 3)]
+city-life-story\src\js\data\startup_competition.js:1029:      Math.random() < 0.02
+city-life-story\src\js\data\startup_competition.js:1036:      const template = templates[Math.floor(Math.random() * templates.length)];
+city-life-story\src\js\data\startup_competition.js:1053:          technologies[Math.floor(Math.random() * technologies.length)],
+city-life-story\src\js\data\startup_competition.js:1054:        gap: Math.floor(10 + Math.random() * 30),
+city-life-story\src\js\data\startup_competition.js:1132:  const success = Math.random() < response.successChance;
+city-life-story\src\js\data\startup_competition.js:1900:          Math.random() < 0.015
+city-life-story\src\js\data\startup_competition.js:1904:            affectedPercent: Math.floor(30 + Math.random() * 50),
+city-life-story\src\js\data\startup_competition.js:1915:          Math.random() < 0.02
+city-life-story\src\js\data\startup_competition.js:1920:            featureName: features[Math.floor(Math.random() * features.length)],
+city-life-story\src\js\data\startup_competition.js:1927:            ][Math.floor(Math.random() * 5)],
+city-life-story\src\js\data\startup_competition.js:1939:  if (company.complianceLevel < 40 && Math.random() < 0.008) {
+city-life-story\src\js\data\startup_competition.js:1948:      leakType: leakTypes[Math.floor(Math.random() * leakTypes.length)],
+city-life-story\src\js\data\startup_competition.js:1949:      leakCount: Math.floor(1000 + Math.random() * 50000),
+city-life-story\src\js\data\startup_competition.js:1960:    Math.random() < 0.005
+city-life-story\src\js\data\startup_competition.js:1965:        Math.floor(Math.random() * 4)
+city-life-story\src\js\data\startup_competition.js:1967:      leakCount: Math.floor(100 + Math.random() * 5000),
+city-life-story\src\js\data\startup_competition.js:1978:    Math.random() < 0.003
+city-life-story\src\js\data\startup_competition.js:1984:        scandalTypes[Math.floor(Math.random() * scandalTypes.length)],
+city-life-story\src\js\data\startup_competition.js:1996:    if (keyEngineers.length > 0 && Math.random() < 0.01) {
+city-life-story\src\js\data\startup_competition.js:2000:          Math.floor(Math.random() * 4)
+city-life-story\src\js\data\startup_competition.js:2012:    if (Math.random() < 0.006) {
+city-life-story\src\js\data\startup_competition.js:2021:        supplierName: suppliers[Math.floor(Math.random() * suppliers.length)],
+city-life-story\src\js\data\startup_competition.js:2023:          Math.floor(Math.random() * 4)
+city-life-story\src\js\data\startup_competition.js:2025:        daysLeft: Math.floor(5 + Math.random() * 15),
+city-life-story\src\js\data\startup_competition.js:2041:    if (Math.random() < 0.004) {
+city-life-story\src\js\data\startup_competition.js:2045:        defectType: defects[Math.floor(Math.random() * defects.length)],
+city-life-story\src\js\data\startup_competition.js:2046:        affectedUnits: Math.floor(1000 + Math.random() * 50000),
+city-life-story\src\js\data\startup_competition.js:2123:  const success = Math.random() < response.successChance;
+city-life-story\src\js\data\startup_competition.js:2896:  const template = templates[Math.floor(Math.random() * templates.length)];
+city-life-story\src\js\data\startup_competition.js:2904:      ["科技", "集团", "控股", "股份"][Math.floor(Math.random() * 4)],
+city-life-story\src\js\data\startup_competition.js:2906:    trust: 50 + Math.random() * 20, // 初始信任度50-70
+city-life-story\src\js\data\startup_competition.js:2912:    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90), // 6-9个月合同
+city-life-story\src\js\data\startup_competition.js:3036:      if (partner.trust >= 60 && Math.random() < 0.7) {
+city-life-story\src\js\data\startup_competition.js:3037:        partner.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+city-life-story\src\js\data\startup_competition.js:3045:      } else if (partner.trust < 40 || Math.random() < 0.3) {
+city-life-story\src\js\data\startup_competition.js:3052:    if (partner.trust < 40 && Math.random() < 0.05) {
+city-life-story\src\js\data\startup_competition.js:3198:  const conversionA = 0.05 + Math.random() * 0.05; // 5-10%转化率
+city-life-story\src\js\data\startup_competition.js:3199:  const conversionB = 0.05 + Math.random() * 0.05;
+city-life-story\src\js\data\startup_competition.js:3368:  const template = templates[Math.floor(Math.random() * templates.length)];
+city-life-story\src\js\data\startup_competition.js:3374:    Math.random() *
+city-life-story\src\js\data\startup_competition.js:3378:    Math.random() *
+city-life-story\src\js\data\startup_competition.js:3382:      Math.random() *
+city-life-story\src\js\data\startup_competition.js:3391:      ["科技", "实业", "集团", "材料"][Math.floor(Math.random() * 4)],
+city-life-story\src\js\data\startup_competition.js:3396:    reliability: 70 + Math.random() * 20, // 可靠性70-90
+city-life-story\src\js\data\startup_competition.js:3399:    contractExpiryDay: day + 180 + Math.floor(Math.random() * 90),
+city-life-story\src\js\data\startup_competition.js:3560:      Math.min(100, supplier.quality + (Math.random() - 0.5) * 4),
+city-life-story\src\js\data\startup_competition.js:3571:        Math.random() < 0.6
+city-life-story\src\js\data\startup_competition.js:3573:        supplier.contractExpiryDay = day + 180 + Math.floor(Math.random() * 90);
+city-life-story\src\js\data\startup_competition.js:3580:      } else if (Math.random() < 0.4) {
+city-life-story\src\js\phase2\property_market.js:208:  if (!shouldTransition && daysInPhase >= 10 && Math.random() < 0.1) {
+city-life-story\src\js\phase2\property_market.js:347:  var r = Math.random() * totalWeight;
+city-life-story\src\js\phase2\property_market.js:403:  var noise = (Math.random() - 0.5) * 2 * vol;
+city-life-story\src\js\phase2\property_market.js:429:  return def.driftMin + Math.random() * (def.driftMax - def.driftMin);
+city-life-story\src\js\phase2\property_market.js:440:    Math.floor(Math.random() * (def.maxDuration - def.minDuration + 1))
+city-life-story\src\js\core\random.js:67: * 游戏中所有随机判定必须通过 Random.* API，禁止使用裸 Math.random()。
+city-life-story\src\js\core\random.js:89:  // 使用 Math.random() 作为底层源。游戏不依赖可预测性/种子。
+city-life-story\src\js\core\random.js:92:    return Math.random();
+city-life-story\src\js\phase2\team.js:36:    productivity: template.productivity + Math.floor(Math.random() * 4) - 2,
+city-life-story\src\js\phase2\team.js:37:    loyalty: template.loyalty + Math.floor(Math.random() * 10) - 5,
+city-life-story\src\js\phase2\stock.js:159:      price: stock.basePrice * (0.85 + Math.random() * 0.3),
+city-life-story\src\js\phase2\stock.js:178:      let p = market.price / (0.85 + Math.random() * 0.3);
+city-life-story\src\js\phase2\stock.js:180:        const change = 1 + (Math.random() - 0.5) * def.volatility;
+city-life-story\src\js\phase2\stock.js:200:    const noise = (Math.random() - 0.5) * 2 * stock.volatility;
+city-life-story\src\js\phase2\stock.js:213:    if (forceNews || Math.random() < 0.05) {
+city-life-story\src\js\phase2\stock.js:220:            Math.floor(Math.random() * newsPool.headlines.length)
+city-life-story\src\js\phase2\update_inv.py:56:        price: s.basePrice * (0.85 + Math.random() * 0.3),
+city-life-story\src\js\phase2\update_inv.py:77:      m.price * (1 + s.trend + (Math.random() - 0.5) * 2 * s.volatility),
+city-life-story\src\js\phase2\update_inv.py:88:      Math.min(95, (inv.btcFearGreed || 50) + (Math.random() - 0.5) * 10),
+city-life-story\src\js\phase2\update_inv.py:95:            (Math.random() - 0.5) * 0.08 +
+city-life-story\src\js\phase2\update_inv.py:115:        (1 + prop.appreciation + (Math.random() - 0.5) * 0.002),
+city-life-story\src\js\phase2\startup.js:2130:  return "sid_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+city-life-story\src\js\phase2\startup.js:2157:    industryPrefixes[Math.floor(Math.random() * industryPrefixes.length)];
+city-life-story\src\js\phase2\startup.js:2158:  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+city-life-story\src\js\phase2\startup.js:2191:  const skill = skills[Math.floor(Math.random() * skills.length)];
+city-life-story\src\js\phase2\startup.js:2193:    personalities[Math.floor(Math.random() * personalities.length)];
+city-life-story\src\js\phase2\startup.js:2194:  const equityReq = 5 + Math.floor(Math.random() * 15);
+city-life-story\src\js\phase2\startup.js:2200:    skillLevel: 50 + Math.floor(Math.random() * 30),
+city-life-story\src\js\phase2\startup.js:2204:    loyalty: 70 + Math.floor(Math.random() * 20),
+city-life-story\src\js\phase2\startup.js:2523:  const numCoFounders = Math.random() < 0.6 ? 1 : 2;
+city-life-story\src\js\phase2\startup.js:2746:  const randomFactor = 0.8 + Math.random() * 0.4;
+city-life-story\src\js\phase2\startup.js:2764:    const debtGain = 0.5 + Math.random() * 1;
+city-life-story\src\js\phase2\startup.js:3117:    const debtGain = 2 + Math.random() * 3;
+city-life-story\src\js\phase2\startup.js:3233:    loyalty: 60 + Math.floor(Math.random() * 30),
+city-life-story\src\js\phase2\startup.js:3235:    skillLevel: 30 + Math.floor(Math.random() * 30),
+city-life-story\src\js\phase2\startup.js:3238:    satisfaction: 50 + Math.floor(Math.random() * 30), // 综合满意度（0-100）
+city-life-story\src\js\phase2\startup.js:3240:      salary: 50 + Math.floor(Math.random() * 30), // 薪资满意度
+city-life-story\src\js\phase2\startup.js:3241:      workload: 60 + Math.floor(Math.random() * 20), // 工作强度满意度
+city-life-story\src\js\phase2\startup.js:3242:      growth: 40 + Math.floor(Math.random() * 40), // 成长空间满意度
+city-life-story\src\js\phase2\startup.js:3243:      atmosphere: 50 + Math.floor(Math.random() * 30), // 团队氛围满意度
+city-life-story\src\js\phase2\startup.js:3247:    stressLevel: 30 + Math.floor(Math.random() * 30), // 压力水平
+city-life-story\src\js\phase2\startup.js:3250:    health: 80 + Math.floor(Math.random() * 20), // 健康值
+city-life-story\src\js\phase2\startup.js:3361:        Math.floor(Math.random() * roundDef.investorTypes.length)
+city-life-story\src\js\phase2\startup.js:3366:    roundDef.maxRaise * (0.5 + Math.random() * 0.5),
+city-life-story\src\js\phase2\startup.js:3370:    Math.random() * (roundDef.equityDilution[1] - roundDef.equityDilution[0]);
+city-life-story\src\js\phase2\startup.js:3468:    names[Math.floor(Math.random() * names.length)] || investorType.name;
+city-life-story\src\js\phase2\startup.js:3485:    satisfaction: 60 + Math.floor(Math.random() * 20), // 初始满意度 60-80
+city-life-story\src\js\phase2\startup.js:3486:    trust: 50 + Math.floor(Math.random() * 20), // 初始信任度 50-70
+city-life-story\src\js\phase2\startup.js:4264:          (1 + Math.random() * 0.2 - 0.1),
+city-life-story\src\js\phase2\startup.js:4318:    company.valuation *= 1 + valuationUpMod + Math.random() * valuationUpMod;
+city-life-story\src\js\phase2\startup.js:4321:      1 - valuationDownMod - Math.random() * valuationDownMod;
+city-life-story\src\js\phase2\startup.js:4339:    if (emp.loyalty < 20 && Math.random() < DAILY_FIRE_PROB * timeMult) {
+city-life-story\src\js\phase2\startup.js:4371:        Math.random() < DAILY_WORD_OF_MOUTH_PROB * timeMult ? 0.05 : 0;
+city-life-story\src\js\phase2\startup.js:4384:        ((Math.random() - 0.5) * 0.1) / timeMult;
+city-life-story\src\js\phase2\startup.js:4410:      if (lost > 0 && Math.random() < 0.2 / timeMult) {
+city-life-story\src\js\phase2\startup.js:4873:  if (Math.random() < baseChance) {
+city-life-story\src\js\phase2\startup.js:4896:    availableRiskTypes[Math.floor(Math.random() * availableRiskTypes.length)];
+city-life-story\src\js\phase2\startup.js:4906:    eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+city-life-story\src\js\phase2\startup.js:5463:  if (Math.random() < baseChance) {
+city-life-story\src\js\phase2\startup.js:5509:  let random = Math.random() * totalWeight;
+city-life-story\src\js\phase2\startup.js:5785:  const success = Math.random() < eventTemplate.successChance;
+city-life-story\src\js\phase2\startup.js:5971:    if (Math.random() < 0.0006) {
+city-life-story\src\js\phase2\startup.js:6050:      if (Math.random() < fireChance) {
+city-life-story\src\js\phase2\startup.js:6314:  if (emp.burnoutLevel >= 3 && Math.random() < 0.3) {
+city-life-story\src\js\phase2\startup.js:7177:    (0.8 + Math.random() * 0.4);
+city-life-story\src\js\phase2\startup.js:7185:    Math.random() < 0.01 * timeMult
+city-life-story\src\js\phase2\startup.js:7320:      Math.random() *
+city-life-story\src\js\phase2\startup.js:7422:  if (product.onboardingCompleteRate < 0.8 && Math.random() < 0.05) {
+city-life-story\src\js\phase2\startup.js:7727:  const actualGrowth = Math.round(estimatedUsers * (0.8 + Math.random() * 0.4));
+city-life-story\src\js\phase2\startup.js:7806:      (0.8 + Math.random() * 0.4),
+city-life-story\src\js\phase2\startup.js:7811:      (0.8 + Math.random() * 0.4),
+city-life-story\src\js\phase2\startup.js:7866:    if (Math.random() < 0.3) {
+city-life-story\src\js\phase2\startup.js:7968:    const ipoValuation = company.valuation * (1.5 + Math.random() * 1.5); // 上市溢价
+city-life-story\src\js\phase2\startup.js:8011:  if (Math.random() > offerProb) return null;
+city-life-story\src\js\phase2\startup.js:8030:  let offerMultiplier = 0.8 + Math.random() * 0.6; // 基础 0.8-1.4倍
+city-life-story\src\js\phase2\startup.js:8052:  const acquirerComment = 评语[Math.floor(Math.random() * 评语.length)];
+city-life-story\src\js\phase2\startup.js:8143:            offer.offerMultiplier + 0.2 + Math.random() * 0.3;
+city-life-story\src\js\phase2\startup.js:8159:                  对方有 ${Math.round(30 + Math.random() * 40)}% 的概率接受。
+city-life-story\src\js\phase2\startup.js:8169:                  const accepted = Math.random() < 0.3 + Math.random() * 0.4;
+city-life-story\src\js\phase2\startup.js:8663:    investorTypes[Math.floor(Math.random() * investorTypes.length)];
+city-life-story\src\js\phase2\startup.js:8664:  const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
+city-life-story\src\js\phase2\startup.js:8667:    (10 + Math.floor(Math.random() * 20));
+city-life-story\src\js\phase2\startup.js:8698:    gain: Math.floor(5 + Math.random() * 15),
+city-life-story\src\js\phase2\startup.js:8827:          const effectiveness = 0.7 + Math.random() * 0.6;
+city-life-story\src\js\core\world_params.js:172:                    params.initialSectorBias[sec] = 1.0 + Math.random() * 0.3;
+city-life-story\src\js\core\world_params.js:175:                    params.initialSectorBias[sec] = 0.7 + Math.random() * 0.2;
+city-life-story\src\js\core\world_params.js:178:                    params.initialSectorBias[sec] = 0.8 + Math.random() * 0.4;
+city-life-story\src\js\core\world_params.js:218:      Math.floor(Math.random() * 4)
+city-life-story\src\js\core\world_params.js:220:    params.baseVolatility = 0.8 + Math.random() * 0.8;
+city-life-story\src\js\core\world_params.js:226:        params.initialSectorBias[sec2] = 0.7 + Math.random() * 0.6;
+city-life-story\src\js\core\world_params.js:228:        params.initialSectorBias[sec2] = 0.85 + Math.random() * 0.3;
+city-life-story\src\js\core\world_params.js:368:    var drift = (Math.random() - 0.4) * 0.025 * vol;

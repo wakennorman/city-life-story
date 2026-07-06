@@ -1,0 +1,52 @@
+{
+  "proto": 1,
+  "supervisorPid": 85812,
+  "updatedAt": 1781581494952,
+  "workers": {
+    "0366c570": {
+      "pid": 83684,
+      "sessionId": "0366c570-c521-459d-89f6-304513fe3721",
+      "rendezvousSock": "\\\\.\\pipe\\cc-daemon-cb2d034b51bcbd0e-rv-0366c570",
+      "ptySock": "\\\\.\\pipe\\cc-daemon-cb2d034b51bcbd0e-pty-0366c570",
+      "cliVersion": "2.1.178",
+      "startedAt": 1781581459257,
+      "attempt": 1,
+      "cwd": "D:\\Claude Code+DeepSeekV4",
+      "dispatch": {
+        "proto": 1,
+        "short": "0366c570",
+        "nonce": "9071f2f7",
+        "sessionId": "0366c570-c521-459d-89f6-304513fe3721",
+        "createdAt": 1781581456179,
+        "source": "slash",
+        "cwd": "D:\\Claude Code+DeepSeekV4",
+        "launch": {
+          "mode": "resume",
+          "sessionId": "D:\\Claude Code+DeepSeekV4\\config\\projects\\D--Claude-Code-DeepSeekV4\\31a686f7-0d06-4d7e-8c98-e15c1fdd7a43.jsonl",
+          "fork": true,
+          "flagArgs": ["--permission-mode", "default"]
+        },
+        "env": {
+          "CLAUDE_CONFIG_DIR": "D:\\Claude Code+DeepSeekV4\\config",
+          "ANTHROPIC_MODEL": "deepseek-ai/DeepSeek-V4-Pro",
+          "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-ai/DeepSeek-V4-Flash",
+          "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-ai/DeepSeek-V4-Pro",
+          "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-ai/DeepSeek-V4-Pro",
+          "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-ai/DeepSeek-V4-Flash",
+          "CLAUDE_BG_ISOLATION": "none"
+        },
+        "isolation": "none",
+        "respawnFlags": ["--permission-mode", "default"],
+        "seed": {
+          "intent": "继续，你怎么自己停了？",
+          "name": "调整赚钱难度与投资显示"
+        },
+        "cols": 120,
+        "rows": 30
+      },
+      "decModes": [1004, 1000, 1002, 1003, 1006, 2004, 2031],
+      "rvAuth": "82d3a9863183be747dd3fe3d20955bd9",
+      "ptyAuth": "d73fd2e068b590b8dae149dcd3be3ea3"
+    }
+  }
+}

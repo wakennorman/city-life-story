@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""
+HelpCoder proxy: translates Anthropic Messages API ↔ OpenAI Chat Completions API
+so Claude Code can use helpcoder.cc (OpenAI-only endpoint) through the proxy.
+"""
+
+import http.server
+import json
+import sys
+import signal
+import urllib.request
+import urllib.error
+
+TARGET = "https://helpcoder.cc/v1/chat/completions"
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 3001
+
+
+def anthropic_to_openai(body):
+    """Convert Anthropic Messages API request → OpenAI Chat Completions request."""
+    messages = []
+
+    # Extract system prompt and prepend as a system message
+    system = body.pop("system", None)
+    if system:
+        messages.append({"role": "system", "content": system})
+
+    # Copy messages
+    for msg in body.get("messages", []):
+        role = msg["role"]
+        content = msg.get("content", "")
+        if isinstance(content, list):
+            # Anthropic content blocks -> extract text
+            texts = [c["text"] for c in content if c.get("type") == "text"]
+            content = "\n".join(texts)
+        messages.append({"role": role, "content": content})
+
+    # Map model name
+    model = body.get("model", "gpt-5-codex")
+
+    oai_body = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": body.get("max_tokens", 4096),
+        "stream": body.get("stream", False),
+    }
+
+    # Optional params
+    for k in ("temperature", "top_p", "stop"):
+        if k in body:
+            oai_body[k] = body[k]
+
+    return oai_body
+
+
+def openai_to_anthropic(oai_resp, model):
+    """Convert OpenAI Chat Completions response → Anthropic Messages API response."""
+    choice = oai_resp.get("choices", [{}])[0]
+    msg = choice.get("message", {})
+    content_blocks = []
+    text = msg.get("content", "")
+    if text:
+        content_blocks.append({"type": "text", "text": text})
+
+    usage = oai_resp.get("usage", {})
+    anthropic_usage = {
+        "input_tokens": usage.get("prompt_tokens", 0),
+        "output_tokens": usage.get("completion_tokens", 0),
+    }
+
+    return {
+        "id": oai_resp.get("id", "msg_helpcoder"),
+        "type": "message",
+        "role": "assistant",
+        "model": model,
+        "content": content_blocks,
+        "stop_reason": _map_stop_reason(choice.get("finish_reason")),
+        "usage": anthropic_usage,
+    }
+
+
+def _map_stop_reason(finish_reason):
+    mapping = {
+        "stop": "end_turn",
+        "length": "max_tokens",
+        "content_filter": "content_filter",
+    }
+    return mapping.get(finish_reason, "end_turn")
+
+
+def openai_stream_event_to_anthropic(event_type, data, model):
+    """Convert OpenAI streaming chunk → Anthropic SSE event (or None to skip)."""
+    if event_type == "error":
+        return None, None  # Let error handler deal with it
+
+    choice = data.get("choices", [{}])[0]
+    delta = choice.get("delta", {})
+    finish_reason = choice.get("finish_reason")
+
+    # message_start (first event with content)
+    if delta.get("role") == "assistant":
+        return ("message_start", {
+            "type": "message_start",
+            "message": {
+                "id": data.get("id", "msg_helpcoder"),
+                "type": "message",
+                "role": "assistant",
+                "content": [],
+                "model": model,
+                "stop_reason": None,
+                "usage": {
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                },
+            },
+        })
+
+    # content_block_start
+    if delta.get("content") is not None and data.get("index", 0) == 0:
+        # This is the first content chunk -> content_block_start + content_block_delta
+        return ("multi", [
+            ("content_block_start", {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            }),
+            ("content_block_delta", {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": delta.get("content", "")},
+            }),
+        ])
+
+    # content_block_delta
+    if delta.get("content"):
+        return ("content_block_delta", {
+            "type": "content_block_delta",
+            "index": 0,
+            "delta": {"type": "text_delta", "text": delta.get("content", "")},
+        })
+
+    # message_stop
+    if finish_reason:
+        return ("message_stop", {
+            "type": "message_stop",
+            "index": 0,
+        })
+
+    return None, None
+
+
+class ProxyHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "helpcoder proxy running"}).encode())
+
+    def do_POST(self):
+        body_bytes = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        api_key = self.headers.get("x-api-key", "")
+
+        if not api_key:
+            # Also check Authorization: Bearer
+            auth = self.headers.get("Authorization", "")
+            if auth.startswith("Bearer "):
+                api_key = auth[len("Bearer "):]
+
+        if not api_key:
+            self._send_error(401, "Missing x-api-key or Authorization: Bearer header")
+            return
+
+        try:
+            an_body = json.loads(body_bytes)
+        except json.JSONDecodeError as e:
+            self._send_error(400, f"Invalid JSON: {e}")
+            return
+
+        is_stream = an_body.get("stream", False)
+        model = an_body.get("model", "gpt-5-codex")
+        oai_body = anthropic_to_openai(an_body)
+
+        req_body = json.dumps(oai_body).encode()
+        req = urllib.request.Request(TARGET, data=req_body)
+        req.add_header("Content-Type", "application/json")
+        req.add_header("Authorization", f"Bearer {api_key}")
+
+        try:
+            resp = urllib.request.urlopen(req, timeout=120)
+        except urllib.error.HTTPError as e:
+            error_body = e.read()
+            self.send_response(e.code)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            # Try to convert error to Anthropic format
+            try:
+                err_data = json.loads(error_body)
+                anthropic_err = {"error": {"type": "api_error", "message": str(err_data)}}
+                self.wfile.write(json.dumps(anthropic_err).encode())
+            except Exception:
+                self.wfile.write(error_body)
+            return
+        except Exception as e:
+            self._send_error(502, f"Upstream error: {e}")
+            return
+
+        if is_stream:
+            self._handle_streaming(resp, model)
+        else:
+            self._handle_non_streaming(resp, model)
+
+    def _handle_non_streaming(self, resp, model):
+        data = resp.read()
+        try:
+            oai_resp = json.loads(data)
+            an_resp = openai_to_anthropic(oai_resp, model)
+            body = json.dumps(an_resp).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except Exception as e:
+            self._send_error(502, f"Response conversion error: {e}")
+
+    def _handle_streaming(self, resp, model):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        try:
+            buffer = b""
+            while True:
+                chunk = resp.read(4096)
+                if not chunk:
+                    break
+                buffer += chunk
+                # Process complete lines
+                while b"\n" in buffer:
+                    line, buffer = buffer.split(b"\n", 1)
+                    line = line.decode("utf-8", errors="replace").strip()
+                    if not line or line.startswith(":"):
+                        continue
+                    if line.startswith("data: "):
+                        data_str = line[6:]
+                        if data_str.strip() == "[DONE]":
+                            break
+                        try:
+                            oai_data = json.loads(data_str)
+                            self._emit_anthropic_sse(oai_data, model)
+                        except json.JSONDecodeError:
+                            pass
+                if b"[DONE]" in buffer:
+                    break
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception as e:
+            print(f"Stream error: {e}", flush=True)
+        finally:
+            resp.close()
+
+        # Emit message_stop
+        self.wfile.write(f"event: message_stop\ndata: {json.dumps({'type': 'message_stop'})}\n\n".encode())
+        self.wfile.flush()
+
+    def _emit_anthropic_sse(self, oai_data, model):
+        choice = oai_data.get("choices", [{}])[0]
+        delta = choice.get("delta", {})
+        finish_reason = choice.get("finish_reason")
+
+        if delta.get("role") == "assistant":
+            self._write_sse("message_start", {
+                "type": "message_start",
+                "message": {
+                    "id": oai_data.get("id", "msg_helpcoder"),
+                    "type": "message", "role": "assistant",
+                    "content": [], "model": model,
+                    "stop_reason": None,
+                    "usage": {"input_tokens": 0, "output_tokens": 0},
+                },
+            })
+        elif delta.get("content") is not None:
+            self._write_sse("content_block_start", {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            })
+            self._write_sse("content_block_delta", {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": delta.get("content", "")},
+            })
+
+        if finish_reason:
+            self._write_sse("message_delta", {
+                "type": "message_delta",
+                "delta": {"stop_reason": _map_stop_reason(finish_reason), "stop_sequence": None},
+                "usage": {"output_tokens": 0},
+            })
+
+    def _write_sse(self, event, data):
+        try:
+            self.wfile.write(f"event: {event}\ndata: {json.dumps(data)}\n\n".encode())
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _send_error(self, code, message):
+        body = json.dumps({"error": {"type": "api_error", "message": message}}).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass  # Quiet
+
+
+if __name__ == "__main__":
+    from http.server import ThreadingHTTPServer
+    server = ThreadingHTTPServer(("127.0.0.1", PORT), ProxyHandler)
+    print(f"HelpCoder proxy on http://127.0.0.1:{PORT} -> {TARGET}", flush=True)
+    signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
+    server.serve_forever()

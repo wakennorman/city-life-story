@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""
+SenseNova proxy: translates Anthropic Messages API ↔ OpenAI Chat Completions API
+so Claude Code can use token.sensenova.cn (OpenAI-only endpoint).
+
+Usage:  python proxy-sensenova.py [port]
+Default port: 8088
+"""
+
+import http.server
+import json
+import sys
+import signal
+import urllib.request
+import urllib.error
+
+TARGET = "https://token.sensenova.cn"
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8088
+
+
+def anthropic_to_openai(body):
+    """Convert Anthropic Messages API request -> OpenAI Chat Completions request."""
+    messages = []
+
+    # Extract system prompt and prepend as a system message
+    system = body.pop("system", None)
+    if system:
+        messages.append({"role": "system", "content": system})
+
+    # Copy messages
+    for msg in body.get("messages", []):
+        role = msg["role"]
+        content = msg.get("content", "")
+        if isinstance(content, list):
+            # Anthropic content blocks -> extract text (also handle thinking blocks)
+            texts = []
+            for c in content:
+                if c.get("type") == "text":
+                    texts.append(c["text"])
+                elif c.get("type") == "thinking":
+                    texts.append(f"[thinking]{c['thinking']}[/thinking]")
+            content = "\n".join(texts)
+        messages.append({"role": role, "content": content})
+
+    # Map model name (pass through as-is)
+    model = body.get("model", "deepseek-v4-flash")
+
+    oai_body = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": body.get("max_tokens", 4096),
+        "stream": body.get("stream", False),
+    }
+
+    # Optional params
+    for k in ("temperature", "top_p", "stop"):
+        if k in body:
+            oai_body[k] = body[k]
+
+    return oai_body
+
+
+def openai_to_anthropic(oai_resp, model):
+    """Convert OpenAI Chat Completions response -> Anthropic Messages API response."""
+    choice = (oai_resp.get("choices") or [{}])[0]
+    msg = choice.get("message", {})
+    content_blocks = []
+
+    # Reasoning content (DeepSeek-style)
+    reasoning = msg.get("reasoning_content") or msg.get("reasoning")
+    text = msg.get("content", "")
+
+    if reasoning and text:
+        # Both exist: reasoning is chain-of-thought, content is answer
+        content_blocks.append({"type": "thinking", "thinking": reasoning})
+        content_blocks.append({"type": "text", "text": text})
+    elif reasoning and not text:
+        # Only reasoning: treat as text (some models put response in reasoning field)
+        content_blocks.append({"type": "text", "text": reasoning})
+    elif text:
+        # Only text content
+        content_blocks.append({"type": "text", "text": text})
+
+    usage = oai_resp.get("usage", {})
+    anthropic_usage = {
+        "input_tokens": usage.get("prompt_tokens", 0),
+        "output_tokens": usage.get("completion_tokens", 0),
+    }
+
+    return {
+        "id": oai_resp.get("id", "msg_sensenova"),
+        "type": "message",
+        "role": "assistant",
+        "model": model,
+        "content": content_blocks,
+        "stop_reason": _map_stop_reason(choice.get("finish_reason")),
+        "usage": anthropic_usage,
+    }
+
+
+def _map_stop_reason(finish_reason):
+    mapping = {
+        "stop": "end_turn",
+        "length": "max_tokens",
+        "content_filter": "content_filter",
+    }
+    return mapping.get(finish_reason, "end_turn")
+
+
+class ProxyHandler(http.server.BaseHTTPRequestHandler):
+    """HTTP proxy handler: receives Anthropic API -> converts -> forwards to SenseNova."""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "proxy running"}).encode())
+
+    def do_POST(self):
+        body_bytes = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        api_key = self.headers.get("x-api-key", "")
+
+        if not api_key:
+            # Also check Authorization: Bearer
+            auth = self.headers.get("Authorization", "")
+            if auth.startswith("Bearer "):
+                api_key = auth[len("Bearer "):]
+
+        if not api_key:
+            self._send_error(401, "Missing x-api-key or Authorization: Bearer header")
+            return
+
+        try:
+            an_body = json.loads(body_bytes)
+        except json.JSONDecodeError as e:
+            self._send_error(400, f"Invalid JSON: {e}")
+            return
+
+        is_stream = an_body.get("stream", False)
+        model = an_body.get("model", "deepseek-v4-flash")
+        oai_body = anthropic_to_openai(an_body)
+
+        req_body = json.dumps(oai_body).encode()
+        url = f"{TARGET}/v1/chat/completions"
+        req = urllib.request.Request(url, data=req_body)
+        req.add_header("Content-Type", "application/json")
+        req.add_header("Authorization", f"Bearer {api_key}")
+
+        try:
+            resp = urllib.request.urlopen(req, timeout=120)
+        except urllib.error.HTTPError as e:
+            error_body = e.read()
+            self.send_response(e.code)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            try:
+                err_data = json.loads(error_body)
+                anthropic_err = {
+                    "error": {
+                        "type": "api_error",
+                        "message": str(err_data),
+                    }
+                }
+                self.wfile.write(json.dumps(anthropic_err).encode())
+            except Exception:
+                self.wfile.write(error_body)
+            return
+        except Exception as e:
+            self._send_error(502, f"Upstream error: {e}")
+            return
+
+        if is_stream:
+            self._handle_streaming(resp, model)
+        else:
+            self._handle_non_streaming(resp, model)
+
+    def _handle_non_streaming(self, resp, model):
+        data = resp.read()
+        try:
+            oai_resp = json.loads(data)
+            an_resp = openai_to_anthropic(oai_resp, model)
+            body = json.dumps(an_resp).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except Exception as e:
+            self._send_error(502, f"Response conversion error: {e}")
+
+    def _handle_streaming(self, resp, model):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        # Track which block types have been started
+        # 0 = thinking block started, 1 = text block started
+        blocks_started = {"thinking": False, "text": False}
+
+        try:
+            buffer = b""
+            while True:
+                chunk = resp.read(4096)
+                if not chunk:
+                    break
+                buffer += chunk
+                # Process complete lines
+                while b"\n" in buffer:
+                    line, buffer = buffer.split(b"\n", 1)
+                    line = line.decode("utf-8", errors="replace").strip()
+                    if not line or line.startswith(":"):
+                        continue
+                    if line.startswith("data: "):
+                        data_str = line[6:]
+                        if data_str.strip() == "[DONE]":
+                            break
+                        try:
+                            oai_data = json.loads(data_str)
+                            # Skip chunks with no choices
+                            choices = oai_data.get("choices")
+                            if not choices:
+                                continue
+                            blocks_started = self._emit_anthropic_sse(
+                                oai_data, model, blocks_started
+                            )
+                        except json.JSONDecodeError:
+                            pass
+                if b"[DONE]" in buffer:
+                    break
+        except (BrokenPipeError, ConnectionResetError):
+            return  # Client disconnected, end silently
+        except Exception as e:
+            print(f"Stream error: {e}", flush=True)
+        finally:
+            resp.close()
+
+        # Emit message_stop
+        try:
+            self.wfile.write(
+                f"event: message_stop\ndata: {json.dumps({'type': 'message_stop'})}\n\n".encode()
+            )
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _emit_anthropic_sse(self, oai_data, model, blocks_started):
+        """Convert one OpenAI streaming chunk to Anthropic SSE events.
+        Handles reasoning_content (ds4f), reasoning (flash), and content.
+        blocks_started: dict with 'thinking' and 'text' bool keys.
+        Returns updated blocks_started.
+        NOTE: caller already validated oai_data['choices'] is non-empty.
+        """
+        choice = oai_data["choices"][0]
+        delta = choice.get("delta", {})
+        finish_reason = choice.get("finish_reason")
+
+        if delta.get("role") == "assistant":
+            # message_start - first chunk with role
+            self._write_sse("message_start", {
+                "type": "message_start",
+                "message": {
+                    "id": oai_data.get("id", "msg_sensenova"),
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [],
+                    "model": model,
+                    "stop_reason": None,
+                    "usage": {"input_tokens": 0, "output_tokens": 0},
+                },
+            })
+
+        # Reasoning content -> thinking block (ds4f style, index 0)
+        reasoning = delta.get("reasoning_content")
+        if reasoning:
+            if not blocks_started["thinking"]:
+                self._write_sse("content_block_start", {
+                    "type": "content_block_start",
+                    "index": 0,
+                    "content_block": {"type": "thinking", "thinking": ""},
+                })
+                blocks_started["thinking"] = True
+            self._write_sse("content_block_delta", {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "thinking_delta", "thinking": reasoning},
+            })
+
+        # Flash-lite style: reasoning field IS the content (no reasoning_content)
+        reasoning_text = delta.get("reasoning")
+        if reasoning_text and not reasoning:
+            text_index = 1 if blocks_started["thinking"] else 0
+            if not blocks_started["text"]:
+                self._write_sse("content_block_start", {
+                    "type": "content_block_start",
+                    "index": text_index,
+                    "content_block": {"type": "text", "text": ""},
+                })
+                blocks_started["text"] = True
+            self._write_sse("content_block_delta", {
+                "type": "content_block_delta",
+                "index": text_index,
+                "delta": {"type": "text_delta", "text": reasoning_text},
+            })
+
+        # Text content -> text block (ds4f/content style)
+        content = delta.get("content")
+        if content is not None:
+            text = content
+            text_index = 1 if blocks_started["thinking"] else 0
+            if not blocks_started["text"] and text:
+                self._write_sse("content_block_start", {
+                    "type": "content_block_start",
+                    "index": text_index,
+                    "content_block": {"type": "text", "text": ""},
+                })
+                blocks_started["text"] = True
+            if text:
+                self._write_sse("content_block_delta", {
+                    "type": "content_block_delta",
+                    "index": text_index,
+                    "delta": {"type": "text_delta", "text": text},
+                })
+
+        if finish_reason:
+            # Emit message_delta before message_stop
+            self._write_sse("message_delta", {
+                "type": "message_delta",
+                "delta": {
+                    "stop_reason": _map_stop_reason(finish_reason),
+                    "stop_sequence": None,
+                },
+                "usage": {"output_tokens": 0},
+            })
+
+        return blocks_started
+
+    def _write_sse(self, event, data):
+        try:
+            self.wfile.write(f"event: {event}\ndata: {json.dumps(data)}\n\n".encode())
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _send_error(self, code, message):
+        body = json.dumps({
+            "error": {"type": "api_error", "message": message}
+        }).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass  # Quiet
+
+
+if __name__ == "__main__":
+    from http.server import ThreadingHTTPServer
+    server = ThreadingHTTPServer(("127.0.0.1", PORT), ProxyHandler)
+    print(f"Proxy running on http://127.0.0.1:{PORT} -> {TARGET}", flush=True)
+    signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
+    server.serve_forever()

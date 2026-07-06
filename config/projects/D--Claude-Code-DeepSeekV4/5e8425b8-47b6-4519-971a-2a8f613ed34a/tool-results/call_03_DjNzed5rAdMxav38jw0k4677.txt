@@ -1,0 +1,220 @@
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:151:      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:155:        <div style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;"
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1424:        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1433:        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1456:    document.querySelectorAll(".save-slot-card").forEach((card) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1457:      card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1458:        const slot = parseInt(card.dataset.slot);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1462:          const slotEl = card;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1496:      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1501:        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1543:    document.querySelectorAll(".load-slot-card").forEach((card) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1544:      card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1547:          const slot = card.dataset.slot;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1568:      <div class="del-slot-card" data-slot="${s.slot}" style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1585:    document.querySelectorAll(".del-slot-card").forEach((card) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1586:      card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1588:          deleteSave(card.dataset.slot);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1604:      <div class="company-card" data-company="${company.id}" style="padding:12px;margin:6px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1624:    document.querySelectorAll(".company-card").forEach((card) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1625:      card.onclick = () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1628:          enterCorporatePhase(card.dataset.company);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1630:      card.onmouseover = () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1631:        card.style.borderColor = "var(--accent)";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1633:      card.onmouseout = () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\main.js:1634:        card.style.borderColor = "var(--border)";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:31:      "padding:10px;margin:8px 0;background:var(--bg-card);border-radius:6px;";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:51:  const cards = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:52:  cards.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:55:    const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:56:    card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:90:    card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:91:      <div class="card-icon">${action.icon}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:92:      <div class="card-title">${action.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:93:      <div class="card-desc">${action.desc}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:94:      <div class="card-meta">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:102:      card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:107:      card.classList.add("disabled");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:110:    cards.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:113:  area.appendChild(cards);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:125:    teamGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:131:      const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:132:      card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:133:      card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:134:        <div class="card-title">${m.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:135:        <div class="card-desc">${m.role} | 产出:${m.productivity} 忠诚:${m.loyalty}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:138:      teamGrid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:151:      hireGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:156:        const hCard = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:157:        hCard.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:158:        hCard.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:159:          <div class="card-title">${tmpl.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:160:          <div class="card-desc">${tmpl.role} — ${tmpl.desc}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\corp_ui.js:164:        hireGrid.appendChild(hCard);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:128:               style="padding:6px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;"
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:129:               onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';"
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:130:               onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:383:    travelGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:424:      const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:425:      card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:426:      card.style.borderColor = "var(--accent)";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:427:      card.style.background =
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:428:        "linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.05))";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:429:      card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:431:          <div class="card-title" style="font-size:15px;color:var(--accent);">${dest ? dest.name : destKey}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:434:        <div class="card-desc" style="font-size:11px;margin:4px 0;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:441:      card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:445:      travelGrid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:459:    houseGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:463:      houseGrid.appendChild(createActionCard(action, state));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:477:    const cards = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:478:    cards.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:480:      cards.appendChild(createActionCard(action, state));
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:482:    parent.appendChild(cards);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:486:function createActionCard(action, state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:487:  const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:488:  card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:490:    card.classList.add("disabled");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:493:  card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:494:    <div class="card-icon">${action.icon}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:495:    <div class="card-title">${action.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:496:    <div class="card-desc">${action.desc}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:497:    <div class="card-meta">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:505:    card.addEventListener("click", () => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:513:  return card;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:541:      "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:597:    "position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;min-height:500px;overflow:auto;";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:681:      background:${isCurrent ? "linear-gradient(135deg, rgba(0,180,216,0.3), var(--bg-card))" : "var(--bg-card)"};
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:765:      <div style="padding:8px 10px;background:var(--bg-card);border:1px solid ${isCur ? "var(--accent)" : canReach ? "var(--border)" : "rgba(255,255,255,0.04)"};border-radius:6px;font-size:11px;opacity:${canReach ? 1 : 0.4};">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:835:    ownedGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:849:      const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:850:      card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:851:      card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:853:          <div class="card-title" style="margin:0;">${good.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:856:        <div class="card-desc" style="margin:4px 0;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:867:      ownedGrid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:882:  grid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:897:    const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:898:    card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:899:    card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:901:        <div class="card-title" style="margin:0;">${good.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:904:      <div class="card-desc" style="margin:4px 0;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:918:    grid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1074:  equipGrid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1082:    const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1083:    card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1084:    card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1090:    equipGrid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1105:  grid.className = "action-cards";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1122:    const card = document.createElement("div");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1123:    card.className = "action-card";
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1127:    card.innerHTML = `
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1128:      <div class="card-title">${name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1129:      <div class="card-desc">等级 ${skill.level} / 100</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1135:    grid.appendChild(card);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1174:    <div class="action-cards" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1175:      <div class="action-card">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1176:        <div class="card-title">职级</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1177:        <div class="card-desc" style="font-size:18px;color:var(--accent)">${c.rank}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1179:      <div class="action-card">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1180:        <div class="card-title">绩效历史</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1181:        <div class="card-desc">${c.perfHistory.length} 次评审</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1184:      <div class="action-card">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1185:        <div class="card-title">团队</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1186:        <div class="card-desc">${c.team.length} 人</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1188:      <div class="action-card">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1189:        <div class="card-title">股票</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\ui\render.js:1190:        <div class="card-desc">${c.stocks.length} 持仓</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:4: * 包含：股票交易 / 比特币 / 房产 / 汽车
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:11: * - 汽车：3档，贬值资产但有出行效率加成
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:660: * 四、汽车系统
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:663:const CAR_LIST = [
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:665:    id: "car_economy",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:675:    id: "car_mid",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:685:    id: "car_luxury",
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:696:/** 买入汽车 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:697:function buyCar(carId) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:700:  const car = CAR_LIST.find((c) => c.id === carId);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:701:  if (!car) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:705:  if (state.investment.cars.find((c) => c.id === carId)) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:709:  if (state.resources.cash < car.price) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:711:      `⚠️ 需要 ¥${car.price.toLocaleString()}，现金不足。`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:716:  state.resources.cash -= car.price;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:717:  state.investment.cars.push({
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:718:    id: car.id,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:719:    name: car.name,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:720:    buyPrice: car.price,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:722:    currentValue: car.price,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:723:    depreciation: car.depreciation,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:724:    travelApBonus: car.travelApBonus,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:725:    monthlyCost: car.monthlyCost,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:728:    `${car.icon} 购入${car.name}！出行效率提升。`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:734:/** 卖出汽车 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:735:function sellCar(carId) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:738:  const idx = state.investment.cars.findIndex((c) => c.id === carId);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:743:  const car = state.investment.cars[idx];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:744:  const revenue = Math.round(car.currentValue * 0.9); // 10%折价
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:745:  const profit = revenue - car.buyPrice;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:748:  state.investment.cars.splice(idx, 1);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:750:    `🚗 卖出${car.name}，¥${revenue.toLocaleString()}。${profit >= 0 ? "盈利" : "亏损"} ¥${Math.abs(Math.round(profit)).toLocaleString()}`,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:756:/** 每日更新汽车价值 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:757:function updateCarValues(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:759:  for (const car of state.investment.cars) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:760:    const change = 1 - car.depreciation + (Math.random() - 0.5) * 0.001;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:761:    car.currentValue = Math.max(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:762:      car.buyPrice * 0.1,
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:763:      Math.round(car.currentValue * change),
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:768:/** 每月汽车开销（每30天） */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:769:function payCarMaintenance(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:772:  for (const car of state.investment.cars) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:773:    totalCost += car.monthlyCost;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:788:      if (state.investment.cars.length > 0) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:789:        state.investment.cars.sort((a, b) => a.currentValue - b.currentValue);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:790:        const sold = state.investment.cars.shift();
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:797:/** 获取汽车出行AP加成 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:798:function getCarTravelApBonus(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:801:  for (const car of state.investment.cars) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:802:    bonus = Math.max(bonus, car.travelApBonus);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:826:    cars: [],
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:847:  if (!state.investment.cars) state.investment.cars = [];
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:858:  updateCarValues(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:863:    payCarMaintenance(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:899:function renderStockCard(stock, state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:928:    <div class="action-card stock-card" style="border-left:3px solid ${trendColor};">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:931:          <div class="card-title" style="margin:0;">${stock.symbol} ${stock.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1000:    <div class="action-card" style="border-left:3px solid #f7931a;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1003:          <div class="card-title" style="margin:0;">₿ 比特币 Bitcoin</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1056:      <div class="action-card" style="${owned ? "border-left:3px solid var(--success);" : ""}">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1057:        <div class="card-title">${prop.icon} ${prop.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1058:        <div class="card-desc">${prop.desc}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1080:/** 渲染汽车面板 */
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1081:function renderCarPanel(state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1083:  let html = '<h4 style="color:var(--accent);margin:12px 0 8px;">🚗 汽车</h4>';
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1087:  for (const car of CAR_LIST) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1088:    const owned = state.investment.cars.find((c) => c.id === car.id);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1089:    const canAfford = state.resources.cash >= car.price;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1091:      <div class="action-card" style="${owned ? "border-left:3px solid var(--success);" : ""}">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1092:        <div class="card-title">${car.icon} ${car.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1093:        <div class="card-desc">${car.desc}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1095:          💰 ¥${car.price.toLocaleString()} | 📉 日贬值${(car.depreciation * 100).toFixed(2)}% | ⚡ 出行AP-${car.travelApBonus} | 🔧 月费¥${car.monthlyCost}
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1103:          <button class="btn btn-sm btn-danger car-sell" data-id="${car.id}" style="margin-top:6px;">卖出(90%估值)</button>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1106:          <button class="btn btn-sm btn-primary car-buy" data-id="${car.id}" style="margin-top:6px;" ${!canAfford ? "disabled" : ""}>${canAfford ? "购入" : `需 ¥${car.price.toLocaleString()}`}</button>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1134:  const carValue = state.investment.cars.reduce(
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1144:    carValue;
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1147:    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;font-size:11px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1159:      <button class="btn btn-sm inv-tab ${activeTab === "car" ? "btn-primary" : ""}" data-tab="car">🚗 汽车</button>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1168:    for (const stock of STOCK_LIST) body += renderStockCard(stock, state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1174:  } else if (activeTab === "car") {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1175:    body += renderCarPanel(state);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1288:    // 汽车买卖
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1289:    document.querySelectorAll(".car-buy").forEach((btn) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1291:        buyCar(btn.dataset.id);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1292:        showInvestmentModal("car");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1295:    document.querySelectorAll(".car-sell").forEach((btn) => {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1297:        sellCar(btn.dataset.id);
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\investment.js:1298:        showInvestmentModal("car");
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\stock.js:381:function renderStockCard(stock, state) {
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\stock.js:418:    <div class="action-card stock-card" style="border-left:3px solid ${trendColor};">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\stock.js:421:          <div class="card-title" style="margin:0;">${stock.symbol} ${stock.name}</div>
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\stock.js:482:    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;">
+D:\Claude Code+DeepSeekV4\city-life-story\src\js\phase2\stock.js:503:    body += renderStockCard(stock, state);

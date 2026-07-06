@@ -1,0 +1,9612 @@
+{
+  "action": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "actual": {
+    "status": "ok",
+    "icon": "mdi:image-size-select-actual",
+    "size": 222
+  },
+  "activity": {
+    "status": "ok",
+    "icon": "tabler:activity",
+    "size": 223
+  },
+  "active": {
+    "status": "ok",
+    "icon": "codicon:compass-active",
+    "size": 873
+  },
+  "act": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "actually": {
+    "status": "ok",
+    "icon": "mdi:image-size-select-actual",
+    "size": 222
+  },
+  "exact": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "exaction": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "enact": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "interact": {
+    "status": "ok",
+    "icon": "material-symbols:interactive-space",
+    "size": 635
+  },
+  "inaction": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "interaction": {
+    "status": "ok",
+    "icon": "mdi:interaction-double-tap",
+    "size": 625
+  },
+  "overact": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "reaction": {
+    "status": "ok",
+    "icon": "material-symbols:add-reaction",
+    "size": 605
+  },
+  "formal": {
+    "status": "ok",
+    "icon": "mdi:shoe-formal",
+    "size": 218
+  },
+  "form": {
+    "status": "ok",
+    "icon": "mdi:form",
+    "size": 270
+  },
+  "formality": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "format": {
+    "status": "ok",
+    "icon": "material-symbols:format-bold",
+    "size": 391
+  },
+  "formation": {
+    "status": "ok",
+    "icon": "material-symbols:medical-information",
+    "size": 351
+  },
+  "formula": {
+    "status": "ok",
+    "icon": "mingcute:formula-fill",
+    "size": 909
+  },
+  "formalize": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "formulate": {
+    "status": "ok",
+    "icon": "material-symbols:developer-board",
+    "size": 303
+  },
+  "formulation": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "deform": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "react": {
+    "status": "ok",
+    "icon": "twemoji:raised-fist",
+    "query": "fist",
+    "size": 1587
+  },
+  "deformity": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "conform": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "inform": {
+    "status": "ok",
+    "icon": "material-symbols:medical-information",
+    "size": 351
+  },
+  "information": {
+    "status": "ok",
+    "icon": "twemoji:information",
+    "size": 476
+  },
+  "perform": {
+    "status": "ok",
+    "icon": "twemoji:performing-arts",
+    "size": 1458
+  },
+  "transform": {
+    "status": "ok",
+    "icon": "material-symbols:transform",
+    "size": 302
+  },
+  "reform": {
+    "status": "ok",
+    "icon": "material-symbols:shape-line",
+    "size": 593
+  },
+  "uniform": {
+    "status": "ok",
+    "icon": "twemoji:martial-arts-uniform",
+    "size": 927
+  },
+  "performance": {
+    "status": "ok",
+    "icon": "mdi:performance",
+    "size": 160
+  },
+  "dict": {
+    "status": "ok",
+    "icon": "material-symbols:dictionary",
+    "size": 1014
+  },
+  "dictate": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "dictator": {
+    "status": "ok",
+    "icon": "arcticons:dictators-no-peace",
+    "size": 1701
+  },
+  "dictatorship": {
+    "status": "ok",
+    "icon": "carbon:deploy-rules",
+    "size": 214
+  },
+  "dictatorial": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "dictation": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "contradict": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "predict": {
+    "status": "ok",
+    "icon": "material-symbols:batch-prediction",
+    "size": 500
+  },
+  "prediction": {
+    "status": "ok",
+    "icon": "material-symbols:batch-prediction",
+    "size": 500
+  },
+  "contradiction": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "dictum": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "export": {
+    "status": "ok",
+    "icon": "mdi:export",
+    "size": 235
+  },
+  "import": {
+    "status": "ok",
+    "icon": "mdi:import",
+    "size": 233
+  },
+  "jurisdiction": {
+    "status": "ok",
+    "icon": "mdi:pan-right",
+    "size": 198
+  },
+  "port": {
+    "status": "ok",
+    "icon": "mdi:hdmi-port",
+    "size": 294
+  },
+  "portable": {
+    "status": "ok",
+    "icon": "material-symbols:portable-wifi-off",
+    "size": 795
+  },
+  "porter": {
+    "status": "ok",
+    "icon": "carbon:incident-reporter",
+    "size": 467
+  },
+  "vis": {
+    "status": "ok",
+    "icon": "mingcute:visa-fill",
+    "size": 1354
+  },
+  "portfolio": {
+    "status": "ok",
+    "icon": "carbon:portfolio",
+    "size": 262
+  },
+  "vid": {
+    "status": "ok",
+    "icon": "material-symbols:camera-video",
+    "size": 533
+  },
+  "vision": {
+    "status": "ok",
+    "icon": "tabler:device-vision-pro",
+    "size": 765
+  },
+  "visit": {
+    "status": "ok",
+    "icon": "material-symbols:nest-doorbell-visitor",
+    "size": 592
+  },
+  "trace": {
+    "status": "ok",
+    "icon": "tabler:http-trace",
+    "size": 277
+  },
+  "visage": {
+    "status": "ok",
+    "icon": "mdi:eye",
+    "size": 336
+  },
+  "track": {
+    "status": "ok",
+    "icon": "material-symbols:art-track",
+    "size": 286
+  },
+  "traceable": {
+    "status": "ok",
+    "icon": "mdi:source-pull",
+    "size": 588
+  },
+  "traction": {
+    "status": "ok",
+    "icon": "material-symbols:chip-extraction",
+    "size": 317
+  },
+  "tract": {
+    "status": "ok",
+    "icon": "twemoji:tractor",
+    "size": 1802
+  },
+  "attract": {
+    "status": "ok",
+    "icon": "material-symbols:attractions",
+    "size": 1612
+  },
+  "attraction": {
+    "status": "ok",
+    "icon": "material-symbols:attractions",
+    "size": 1612
+  },
+  "contract": {
+    "status": "ok",
+    "icon": "material-symbols:contract",
+    "size": 273
+  },
+  "distract": {
+    "status": "ok",
+    "icon": "game-icons:distraction",
+    "size": 1076
+  },
+  "detract": {
+    "status": "ok",
+    "icon": "mdi:source-pull",
+    "size": 588
+  },
+  "extract": {
+    "status": "ok",
+    "icon": "material-symbols:chip-extraction",
+    "size": 317
+  },
+  "protract": {
+    "status": "ok",
+    "icon": "devicon-plain:protractor",
+    "size": 607
+  },
+  "retract": {
+    "status": "ok",
+    "icon": "streamline-freehand-color:resize-arrow-retract-horizontal",
+    "size": 1220
+  },
+  "tractor": {
+    "status": "ok",
+    "icon": "twemoji:tractor",
+    "size": 1802
+  },
+  "subtract": {
+    "status": "ok",
+    "icon": "ph:subtract",
+    "size": 554
+  },
+  "duc": {
+    "status": "ok",
+    "icon": "twemoji:duck",
+    "size": 1436
+  },
+  "duct": {
+    "status": "ok",
+    "icon": "material-symbols:contacts-product",
+    "size": 464
+  },
+  "conduct": {
+    "status": "ok",
+    "icon": "arcticons:train-conductor-world",
+    "size": 1716
+  },
+  "conductor": {
+    "status": "ok",
+    "icon": "arcticons:train-conductor-world",
+    "size": 1716
+  },
+  "ductile": {
+    "status": "ok",
+    "icon": "material-symbols:contacts-product",
+    "size": 464
+  },
+  "deduce": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "conduction": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "induce": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "deduction": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "deduct": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "inducement": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "induction": {
+    "status": "ok",
+    "icon": "mdi:audio-induction-loop",
+    "size": 671
+  },
+  "produce": {
+    "status": "ok",
+    "icon": "gcp:producer-portal",
+    "size": 332
+  },
+  "product": {
+    "status": "ok",
+    "icon": "carbon:product",
+    "size": 321
+  },
+  "introduction": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "production": {
+    "status": "ok",
+    "icon": "material-symbols:production-quantity-limits",
+    "size": 525
+  },
+  "introduce": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "reduce": {
+    "status": "ok",
+    "icon": "material-symbols:reduce-capacity",
+    "size": 1084
+  },
+  "reduction": {
+    "status": "ok",
+    "icon": "tabler:noise-reduction",
+    "size": 322
+  },
+  "seduce": {
+    "status": "ok",
+    "icon": "material-symbols:leaderboard",
+    "query": "leader",
+    "size": 172
+  },
+  "miss": {
+    "status": "ok",
+    "icon": "material-symbols:call-missed",
+    "size": 178
+  },
+  "missile": {
+    "status": "ok",
+    "icon": "game-icons:missile-launcher",
+    "size": 991
+  },
+  "mit": {
+    "status": "ok",
+    "icon": "material-symbols:commit",
+    "size": 343
+  },
+  "mission": {
+    "status": "ok",
+    "icon": "twemoji:admission-tickets",
+    "size": 996
+  },
+  "commit": {
+    "status": "ok",
+    "icon": "material-symbols:commit",
+    "size": 343
+  },
+  "admit": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "admittance": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "missive": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "committee": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "emit": {
+    "status": "ok",
+    "icon": "arcticons:emit",
+    "size": 376
+  },
+  "compromise": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "omit": {
+    "status": "ok",
+    "icon": "mdi:time-to-leave",
+    "size": 464
+  },
+  "permit": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "premise": {
+    "status": "ok",
+    "icon": "arcticons:premise",
+    "size": 406
+  },
+  "intermit": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "submit": {
+    "status": "ok",
+    "icon": "iconoir:submit-document",
+    "size": 386
+  },
+  "remit": {
+    "status": "ok",
+    "icon": "arcticons:remitly",
+    "size": 865
+  },
+  "transmit": {
+    "status": "ok",
+    "icon": "covid:transmission-virus-human-transmit-1",
+    "size": 764
+  },
+  "promise": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "puls": {
+    "status": "ok",
+    "icon": "material-symbols:pulse-alert",
+    "size": 639
+  },
+  "pel": {
+    "status": "ok",
+    "icon": "carbon:scalpel",
+    "size": 389
+  },
+  "expel": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "propel": {
+    "status": "ok",
+    "icon": "tabler:propeller",
+    "size": 576
+  },
+  "put": {
+    "status": "ok",
+    "icon": "material-symbols:arrows-input",
+    "size": 369
+  },
+  "output": {
+    "status": "ok",
+    "icon": "material-symbols:arrows-output",
+    "size": 368
+  },
+  "input": {
+    "status": "ok",
+    "icon": "material-symbols:input",
+    "size": 312
+  },
+  "compel": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "computable": {
+    "status": "ok",
+    "icon": "material-symbols:computer",
+    "size": 242
+  },
+  "computer": {
+    "status": "ok",
+    "icon": "material-symbols:computer",
+    "size": 242
+  },
+  "manumit": {
+    "status": "ok",
+    "icon": "mdi:envelope",
+    "query": "envelope",
+    "size": 222
+  },
+  "dispute": {
+    "status": "ok",
+    "icon": "mdi:head-thinking",
+    "size": 414
+  },
+  "repute": {
+    "status": "ok",
+    "icon": "mdi:head-thinking",
+    "size": 414
+  },
+  "spect": {
+    "status": "ok",
+    "icon": "material-symbols:aspect-ratio",
+    "size": 264
+  },
+  "reputation": {
+    "status": "ok",
+    "icon": "mdi:head-thinking",
+    "size": 414
+  },
+  "spectacular": {
+    "status": "ok",
+    "icon": "material-symbols:watch",
+    "size": 352
+  },
+  "spectator": {
+    "status": "ok",
+    "icon": "material-symbols:watch",
+    "size": 352
+  },
+  "eject": {
+    "status": "ok",
+    "icon": "material-symbols:eject",
+    "size": 157
+  },
+  "ject": {
+    "status": "ok",
+    "icon": "material-symbols:eject",
+    "size": 157
+  },
+  "ejection": {
+    "status": "ok",
+    "icon": "ph:person-simple-throw",
+    "size": 709
+  },
+  "injection": {
+    "status": "ok",
+    "icon": "mdi:injection",
+    "size": 401
+  },
+  "object": {
+    "status": "ok",
+    "icon": "material-symbols:data-object",
+    "size": 556
+  },
+  "inject": {
+    "status": "ok",
+    "icon": "mdi:injection",
+    "size": 401
+  },
+  "objection": {
+    "status": "ok",
+    "icon": "ph:person-simple-throw",
+    "size": 709
+  },
+  "project": {
+    "status": "ok",
+    "icon": "ant-design:project-filled",
+    "size": 490
+  },
+  "objective": {
+    "status": "ok",
+    "icon": "game-icons:flag-objective",
+    "size": 744
+  },
+  "reject": {
+    "status": "ok",
+    "icon": "fluent:text-change-reject-20-filled",
+    "size": 671
+  },
+  "projection": {
+    "status": "ok",
+    "icon": "fluent:projection-screen-16-filled",
+    "size": 253
+  },
+  "junct": {
+    "status": "ok",
+    "icon": "pinhead:y-junction",
+    "size": 296
+  },
+  "join": {
+    "status": "ok",
+    "icon": "material-symbols:join",
+    "size": 536
+  },
+  "subjection": {
+    "status": "ok",
+    "icon": "ph:person-simple-throw",
+    "size": 709
+  },
+  "trajectory": {
+    "status": "ok",
+    "icon": "ph:person-simple-throw",
+    "size": 709
+  },
+  "adjunct": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "disjoin": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "conjunction": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "rejoin": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "subjoin": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "conjugal": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "conjugate": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "flu": {
+    "status": "ok",
+    "icon": "material-symbols:fluid",
+    "size": 393
+  },
+  "flux": {
+    "status": "ok",
+    "icon": "arcticons:coloreflux",
+    "size": 617
+  },
+  "affluence": {
+    "status": "ok",
+    "icon": "arcticons:affluences",
+    "size": 658
+  },
+  "confluence": {
+    "status": "ok",
+    "icon": "arcticons:confluence",
+    "size": 813
+  },
+  "fluent": {
+    "status": "ok",
+    "icon": "fluent:fluent-20-filled",
+    "size": 302
+  },
+  "influence": {
+    "status": "ok",
+    "icon": "arcticons:influence",
+    "size": 349
+  },
+  "fluid": {
+    "status": "ok",
+    "icon": "material-symbols:fluid",
+    "size": 393
+  },
+  "refluent": {
+    "status": "ok",
+    "icon": "carbon:flow",
+    "size": 334
+  },
+  "reflux": {
+    "status": "ok",
+    "icon": "arcticons:coloreflux",
+    "size": 617
+  },
+  "joint": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "query": "link",
+    "size": 337
+  },
+  "superfluous": {
+    "status": "ok",
+    "icon": "carbon:flow",
+    "size": 334
+  },
+  "numer": {
+    "status": "ok",
+    "icon": "mdi:numeric",
+    "size": 322
+  },
+  "confluent": {
+    "status": "ok",
+    "icon": "carbon:flow",
+    "size": 334
+  },
+  "enjoin": {
+    "status": "ok",
+    "icon": "material-symbols:link",
+    "size": 337
+  },
+  "numb": {
+    "status": "ok",
+    "icon": "material-symbols:confirmation-number",
+    "size": 537
+  },
+  "numeral": {
+    "status": "ok",
+    "icon": "mdi:roman-numeral-1",
+    "size": 155
+  },
+  "numerable": {
+    "status": "ok",
+    "icon": "mdi:numeric",
+    "size": 322
+  },
+  "innumerable": {
+    "status": "ok",
+    "icon": "mdi:number-0",
+    "size": 203
+  },
+  "numerator": {
+    "status": "ok",
+    "icon": "mdi:numeric",
+    "size": 322
+  },
+  "numerous": {
+    "status": "ok",
+    "icon": "mdi:number-0",
+    "size": 203
+  },
+  "numberless": {
+    "status": "ok",
+    "icon": "mdi:number-0",
+    "size": 203
+  },
+  "scrib": {
+    "status": "ok",
+    "icon": "tabler:scribble",
+    "size": 271
+  },
+  "numeric": {
+    "status": "ok",
+    "icon": "mdi:numeric",
+    "size": 322
+  },
+  "script": {
+    "status": "ok",
+    "icon": "material-symbols:script",
+    "size": 1226
+  },
+  "number": {
+    "status": "ok",
+    "icon": "mdi:number-0",
+    "size": 203
+  },
+  "scribe": {
+    "status": "ok",
+    "icon": "material-symbols:unsubscribe",
+    "size": 412
+  },
+  "clus": {
+    "status": "ok",
+    "icon": "carbon:assembly-cluster",
+    "size": 761
+  },
+  "clude": {
+    "status": "ok",
+    "icon": "lucide:squares-exclude",
+    "size": 378
+  },
+  "ascribe": {
+    "status": "ok",
+    "icon": "arcticons:write-in-runic",
+    "size": 360
+  },
+  "clud": {
+    "status": "ok",
+    "icon": "material-symbols:lock",
+    "size": 415
+  },
+  "conclude": {
+    "status": "ok",
+    "icon": "material-symbols:lock",
+    "size": 415
+  },
+  "conclusion": {
+    "status": "ok",
+    "icon": "material-symbols:lock",
+    "size": 415
+  },
+  "exclude": {
+    "status": "ok",
+    "icon": "ph:exclude",
+    "size": 902
+  },
+  "exclusion": {
+    "status": "ok",
+    "icon": "mdi:exclusion",
+    "size": 362
+  },
+  "include": {
+    "status": "ok",
+    "icon": "carbon:usage-included-use-case",
+    "size": 207
+  },
+  "occlude": {
+    "status": "ok",
+    "icon": "material-symbols:stop",
+    "size": 137
+  },
+  "preclude": {
+    "status": "ok",
+    "icon": "material-symbols:data-loss-prevention",
+    "size": 445
+  },
+  "seclude": {
+    "status": "ok",
+    "icon": "material-symbols:lock",
+    "size": 415
+  },
+  "claim": {
+    "status": "ok",
+    "icon": "twemoji:baggage-claim",
+    "size": 507
+  },
+  "seclusion": {
+    "status": "ok",
+    "icon": "material-symbols:lock",
+    "size": 415
+  },
+  "clam": {
+    "status": "ok",
+    "icon": "twemoji:clamp",
+    "size": 801
+  },
+  "acclaim": {
+    "status": "ok",
+    "icon": "academicons:acclaim",
+    "size": 515
+  },
+  "claimant": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "clamorous": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "clamor": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "declaim": {
+    "status": "ok",
+    "icon": "mdi:give-way",
+    "size": 262
+  },
+  "disclaim": {
+    "status": "ok",
+    "icon": "flat-color-icons:disclaimer",
+    "size": 683
+  },
+  "exclaim": {
+    "status": "ok",
+    "icon": "heroicons:exclaimation-circle",
+    "size": 271
+  },
+  "proclaim": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "reclaim": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "fect": {
+    "status": "ok",
+    "icon": "openmoji:disinfect-surface",
+    "size": 2040
+  },
+  "reclamation": {
+    "status": "ok",
+    "icon": "game-icons:lightning-shout",
+    "size": 1266
+  },
+  "fact": {
+    "status": "ok",
+    "icon": "material-symbols:fact-check",
+    "size": 331
+  },
+  "factor": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "size": 218
+  },
+  "affect": {
+    "status": "ok",
+    "icon": "file-icons:affectscript",
+    "size": 315
+  },
+  "factual": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "defect": {
+    "status": "ok",
+    "icon": "fluent-mdl2:defect-solid",
+    "size": 470
+  },
+  "affection": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "effect": {
+    "status": "ok",
+    "icon": "fluent:video-background-effect-16-filled",
+    "size": 595
+  },
+  "defection": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "infect": {
+    "status": "ok",
+    "icon": "openmoji:disinfect-surface",
+    "size": 2040
+  },
+  "effectual": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "infection": {
+    "status": "ok",
+    "icon": "healthicons:viral-lung-infection",
+    "size": 1425
+  },
+  "ineffectual": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "flex": {
+    "status": "ok",
+    "icon": "material-symbols:align-flex-center",
+    "size": 160
+  },
+  "perfection": {
+    "status": "ok",
+    "icon": "material-symbols:factory",
+    "query": "factory",
+    "size": 218
+  },
+  "flect": {
+    "status": "ok",
+    "icon": "mdi:reflect-horizontal",
+    "size": 363
+  },
+  "flexible": {
+    "status": "ok",
+    "icon": "game-icons:flexible-lamp",
+    "size": 744
+  },
+  "deflex": {
+    "status": "ok",
+    "icon": "mdi:reflect-horizontal",
+    "size": 363
+  },
+  "reflection": {
+    "status": "ok",
+    "icon": "fluent:image-reflection-20-filled",
+    "size": 543
+  },
+  "reflect": {
+    "status": "ok",
+    "icon": "mdi:reflect-horizontal",
+    "size": 363
+  },
+  "inflect": {
+    "status": "ok",
+    "icon": "ph:arrow-bend-down-left",
+    "size": 304
+  },
+  "reflex": {
+    "status": "ok",
+    "icon": "arcticons:fastrack-reflex",
+    "size": 632
+  },
+  "grad": {
+    "status": "ok",
+    "icon": "material-symbols:grade",
+    "size": 216
+  },
+  "gress": {
+    "status": "ok",
+    "icon": "material-symbols:arrow-upload-progress",
+    "size": 669
+  },
+  "gradient": {
+    "status": "ok",
+    "icon": "material-symbols:gradient",
+    "size": 400
+  },
+  "grade": {
+    "status": "ok",
+    "icon": "twemoji:japanese-passing-grade-button",
+    "size": 1044
+  },
+  "graduate": {
+    "status": "ok",
+    "icon": "game-icons:graduate-cap",
+    "size": 833
+  },
+  "gradual": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "degrade": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "degradation": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "retrograde": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "progress": {
+    "status": "ok",
+    "icon": "tabler:progress",
+    "size": 379
+  },
+  "digress": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "congress": {
+    "status": "ok",
+    "icon": "game-icons:congress",
+    "size": 1034
+  },
+  "stru": {
+    "status": "ok",
+    "icon": "twemoji:star-struck",
+    "size": 1066
+  },
+  "struct": {
+    "status": "ok",
+    "icon": "openmoji:structural-fire",
+    "size": 1952
+  },
+  "construction": {
+    "status": "ok",
+    "icon": "twemoji:construction",
+    "size": 425
+  },
+  "transgress": {
+    "status": "ok",
+    "icon": "material-symbols:stairs",
+    "size": 302
+  },
+  "instruct": {
+    "status": "ok",
+    "icon": "openmoji:authority-instruction",
+    "size": 1718
+  },
+  "structure": {
+    "status": "ok",
+    "icon": "solar:structure-bold",
+    "size": 702
+  },
+  "fid": {
+    "status": "ok",
+    "icon": "tabler:fidget-spinner",
+    "size": 534
+  },
+  "confide": {
+    "status": "ok",
+    "icon": "mdi:confidential-mode",
+    "size": 438
+  },
+  "fide": {
+    "status": "ok",
+    "icon": "arcticons:fidelity",
+    "size": 988
+  },
+  "confidence": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "diffident": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "fiduciary": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "infidel": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "tens": {
+    "status": "ok",
+    "icon": "game-icons:tension-snowflake",
+    "size": 2530
+  },
+  "tend": {
+    "status": "ok",
+    "icon": "arcticons:es-de-frontend",
+    "size": 711
+  },
+  "affidavit": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "tent": {
+    "status": "ok",
+    "icon": "mdi:tent",
+    "size": 246
+  },
+  "attend": {
+    "status": "ok",
+    "icon": "mdi:notice-board",
+    "size": 269
+  },
+  "attendant": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "attendance": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "extend": {
+    "status": "ok",
+    "icon": "mdi:google-circles-extended",
+    "size": 587
+  },
+  "contend": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "extension": {
+    "status": "ok",
+    "icon": "material-symbols:extension",
+    "size": 411
+  },
+  "tension": {
+    "status": "ok",
+    "icon": "material-symbols:extension",
+    "size": 411
+  },
+  "tentative": {
+    "status": "ok",
+    "icon": "fluent:person-tentative-16-filled",
+    "size": 604
+  },
+  "tense": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "intend": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "pretend": {
+    "status": "ok",
+    "icon": "arcticons:pretend-youre-xyzzy",
+    "size": 657
+  },
+  "trend": {
+    "status": "ok",
+    "icon": "ph:trend-down",
+    "size": 316
+  },
+  "tain": {
+    "status": "ok",
+    "icon": "material-symbols:mountain-flag",
+    "size": 323
+  },
+  "ten": {
+    "status": "ok",
+    "icon": "pinhead:hand-holding-heart",
+    "query": "hand-holding",
+    "size": 501
+  },
+  "tin": {
+    "status": "ok",
+    "icon": "game-icons:tinker",
+    "size": 1649
+  },
+  "contain": {
+    "status": "ok",
+    "icon": "mdi:contain",
+    "size": 204
+  },
+  "abstain": {
+    "status": "ok",
+    "icon": "material-symbols:keep",
+    "size": 177
+  },
+  "content": {
+    "status": "ok",
+    "icon": "material-symbols:content-copy",
+    "size": 269
+  },
+  "continue": {
+    "status": "ok",
+    "icon": "carbon:continue",
+    "size": 247
+  },
+  "detain": {
+    "status": "ok",
+    "icon": "material-symbols:stop",
+    "size": 137
+  },
+  "entertain": {
+    "status": "ok",
+    "icon": "icon-park-outline:entertainment",
+    "size": 542
+  },
+  "obtain": {
+    "status": "ok",
+    "icon": "arcticons:obtainium",
+    "size": 335
+  },
+  "maintain": {
+    "status": "ok",
+    "icon": "mdi:hand",
+    "size": 578
+  },
+  "pertain": {
+    "status": "ok",
+    "icon": "mdi:hand",
+    "size": 578
+  },
+  "retain": {
+    "status": "ok",
+    "icon": "mdi:hand",
+    "size": 578
+  },
+  "sustain": {
+    "status": "ok",
+    "icon": "carbon:ai-financial-sustainability-check",
+    "size": 554
+  },
+  "tang": {
+    "status": "ok",
+    "icon": "twemoji:tangerine",
+    "size": 582
+  },
+  "tact": {
+    "status": "ok",
+    "icon": "material-symbols:contact-emergency",
+    "size": 507
+  },
+  "tag": {
+    "status": "ok",
+    "icon": "material-symbols:tag",
+    "size": 241
+  },
+  "tactic": {
+    "status": "ok",
+    "icon": "material-symbols:tactic",
+    "size": 662
+  },
+  "tactile": {
+    "status": "ok",
+    "icon": "roentgen:tactile-map",
+    "size": 587
+  },
+  "tactful": {
+    "status": "ok",
+    "icon": "material-symbols:touch-app",
+    "size": 509
+  },
+  "tangent": {
+    "status": "ok",
+    "icon": "mdi:math-tangent",
+    "size": 233
+  },
+  "tangible": {
+    "status": "ok",
+    "icon": "material-symbols:touch-app",
+    "size": 509
+  },
+  "contact": {
+    "status": "ok",
+    "icon": "openmoji:add-contact",
+    "size": 3115
+  },
+  "intact": {
+    "status": "ok",
+    "icon": "arcticons:intact",
+    "size": 924
+  },
+  "tax": {
+    "status": "ok",
+    "icon": "material-symbols:local-taxi",
+    "size": 503
+  },
+  "stagnant": {
+    "status": "ok",
+    "icon": "mdi:math-tangent",
+    "size": 233
+  },
+  "vers": {
+    "status": "ok",
+    "icon": "tabler:versions",
+    "size": 284
+  },
+  "vert": {
+    "status": "ok",
+    "icon": "material-symbols:more-vert",
+    "size": 361
+  },
+  "taxonomy": {
+    "status": "ok",
+    "icon": "material-symbols:list",
+    "size": 370
+  },
+  "taxation": {
+    "status": "ok",
+    "icon": "material-symbols:list",
+    "size": 370
+  },
+  "anniversary": {
+    "status": "ok",
+    "icon": "mingcute:anniversary-fill",
+    "size": 993
+  },
+  "adverse": {
+    "status": "ok",
+    "icon": "mdi:rotate-3d",
+    "size": 1526
+  },
+  "converse": {
+    "status": "ok",
+    "icon": "game-icons:converse-shoe",
+    "size": 850
+  },
+  "conversation": {
+    "status": "ok",
+    "icon": "material-symbols:conversation",
+    "size": 636
+  },
+  "conversational": {
+    "status": "ok",
+    "icon": "material-symbols:conversation",
+    "size": 636
+  },
+  "divert": {
+    "status": "ok",
+    "icon": "game-icons:divert",
+    "size": 573
+  },
+  "diverse": {
+    "status": "ok",
+    "icon": "ri:fediverse-fill",
+    "size": 1047
+  },
+  "inverted": {
+    "status": "ok",
+    "icon": "tabler:triangle-inverted",
+    "size": 330
+  },
+  "perverse": {
+    "status": "ok",
+    "icon": "mdi:rotate-3d",
+    "size": 1526
+  },
+  "reverse": {
+    "status": "ok",
+    "icon": "twemoji:reverse-button",
+    "size": 228
+  },
+  "universe": {
+    "status": "ok",
+    "icon": "tabler:universe",
+    "size": 425
+  },
+  "reversible": {
+    "status": "ok",
+    "icon": "mdi:rotate-3d",
+    "size": 1526
+  },
+  "transverse": {
+    "status": "ok",
+    "icon": "mdi:rotate-3d",
+    "size": 1526
+  },
+  "universal": {
+    "status": "ok",
+    "icon": "material-symbols:universal-local",
+    "size": 419
+  },
+  "cur": {
+    "status": "ok",
+    "icon": "openmoji:flag-curacao",
+    "size": 444
+  },
+  "cours": {
+    "status": "ok",
+    "icon": "material-symbols:golf-course",
+    "size": 340
+  },
+  "current": {
+    "status": "ok",
+    "icon": "material-symbols:stay-current-landscape",
+    "size": 360
+  },
+  "concur": {
+    "status": "ok",
+    "icon": "arcticons:sap-concur",
+    "size": 521
+  },
+  "curse": {
+    "status": "ok",
+    "icon": "game-icons:cursed-star",
+    "size": 957
+  },
+  "curt": {
+    "status": "ok",
+    "icon": "material-symbols:curtains",
+    "size": 285
+  },
+  "cursory": {
+    "status": "ok",
+    "icon": "game-icons:hasty-grave",
+    "size": 407
+  },
+  "incursive": {
+    "status": "ok",
+    "icon": "material-symbols:open-run",
+    "size": 357
+  },
+  "excursive": {
+    "status": "ok",
+    "icon": "material-symbols:open-run",
+    "size": 357
+  },
+  "occur": {
+    "status": "ok",
+    "icon": "fluent-mdl2:remove-occurrence",
+    "size": 598
+  },
+  "ven": {
+    "status": "ok",
+    "icon": "material-symbols:oven",
+    "size": 485
+  },
+  "recur": {
+    "status": "ok",
+    "icon": "mdi:recurring-payment",
+    "size": 536
+  },
+  "vent": {
+    "status": "ok",
+    "icon": "material-symbols:event",
+    "size": 356
+  },
+  "advent": {
+    "status": "ok",
+    "icon": "arcticons:adventure-lab",
+    "size": 776
+  },
+  "cap": {
+    "status": "ok",
+    "icon": "twemoji:billed-cap",
+    "size": 1159
+  },
+  "convene": {
+    "status": "ok",
+    "icon": "twemoji:airplane-arrival",
+    "query": "arrival",
+    "size": 1662
+  },
+  "event": {
+    "status": "ok",
+    "icon": "material-symbols:event",
+    "size": 356
+  },
+  "cept": {
+    "status": "ok",
+    "icon": "carbon:accept-action-usage",
+    "size": 419
+  },
+  "cip": {
+    "status": "ok",
+    "icon": "arcticons:keycip",
+    "size": 809
+  },
+  "accept": {
+    "status": "ok",
+    "icon": "twemoji:japanese-acceptable-button",
+    "size": 853
+  },
+  "captive": {
+    "status": "ok",
+    "icon": "material-symbols:captive-portal",
+    "size": 939
+  },
+  "capable": {
+    "status": "ok",
+    "icon": "material-symbols:cable",
+    "size": 515
+  },
+  "capacity": {
+    "status": "ok",
+    "icon": "material-symbols:reduce-capacity",
+    "size": 1084
+  },
+  "capture": {
+    "status": "ok",
+    "icon": "material-symbols:audio-capture",
+    "size": 307
+  },
+  "concept": {
+    "status": "ok",
+    "icon": "carbon:concept",
+    "size": 689
+  },
+  "intercept": {
+    "status": "ok",
+    "icon": "game-icons:interceptor-ship",
+    "size": 1004
+  },
+  "bat": {
+    "status": "ok",
+    "icon": "twemoji:bat",
+    "size": 1838
+  },
+  "except": {
+    "status": "ok",
+    "icon": "carbon:shape-except",
+    "size": 298
+  },
+  "batter": {
+    "status": "ok",
+    "icon": "material-symbols:battery-0-bar",
+    "size": 241
+  },
+  "battle": {
+    "status": "ok",
+    "icon": "mdi:axe-battle",
+    "size": 307
+  },
+  "decapitate": {
+    "status": "ok",
+    "icon": "mdi:head",
+    "size": 237
+  },
+  "combat": {
+    "status": "ok",
+    "icon": "carbon:radio-combat",
+    "size": 488
+  },
+  "debate": {
+    "status": "ok",
+    "icon": "arcticons:debatekeeper",
+    "size": 744
+  },
+  "ced": {
+    "status": "ok",
+    "icon": "material-symbols:airline-seat-legroom-reduced",
+    "size": 290
+  },
+  "flabagbat": {
+    "status": "ok",
+    "icon": "twemoji:beating-heart",
+    "size": 1028
+  },
+  "cess": {
+    "status": "ok",
+    "icon": "material-symbols:beach-access",
+    "size": 466
+  },
+  "accede": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "cede": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "ancestor": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "cedent": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "concede": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "excess": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "intercede": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "procedure": {
+    "status": "ok",
+    "icon": "material-symbols:procedure",
+    "size": 666
+  },
+  "precede": {
+    "status": "ok",
+    "icon": "codicon:sort-precedence",
+    "size": 544
+  },
+  "battlement": {
+    "status": "ok",
+    "icon": "mdi:axe-battle",
+    "size": 307
+  },
+  "secede": {
+    "status": "ok",
+    "icon": "material-symbols:6-ft-apart",
+    "size": 756
+  },
+  "succeed": {
+    "status": "ok",
+    "icon": "lsicon:circle-succeed-filled",
+    "size": 283
+  },
+  "cid": {
+    "status": "ok",
+    "icon": "mdi:acid",
+    "size": 219
+  },
+  "access": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "recede": {
+    "status": "ok",
+    "icon": "twemoji:man-walking",
+    "query": "walking",
+    "size": 3427
+  },
+  "decide": {
+    "status": "ok",
+    "icon": "arcticons:dustsettle",
+    "size": 2053
+  },
+  "decision": {
+    "status": "ok",
+    "icon": "mdi:arrow-decision",
+    "size": 434
+  },
+  "fratricide": {
+    "status": "ok",
+    "icon": "mdi:scissors",
+    "size": 559
+  },
+  "incise": {
+    "status": "ok",
+    "icon": "mdi:scissors",
+    "size": 559
+  },
+  "homicide": {
+    "status": "ok",
+    "icon": "mdi:scissors",
+    "size": 559
+  },
+  "precise": {
+    "status": "ok",
+    "icon": "arcticons:precisevolume",
+    "size": 1007
+  },
+  "suicide": {
+    "status": "ok",
+    "icon": "game-icons:suicide",
+    "size": 470
+  },
+  "decline": {
+    "status": "ok",
+    "icon": "mdi:elevation-decline",
+    "size": 229
+  },
+  "incline": {
+    "status": "ok",
+    "icon": "pinhead:inclined-information-panel",
+    "size": 268
+  },
+  "disinclination": {
+    "status": "ok",
+    "icon": "material-symbols:tilt-arrow-down",
+    "query": "tilt",
+    "size": 284
+  },
+  "clin": {
+    "status": "ok",
+    "icon": "material-symbols:clinical-notes",
+    "size": 562
+  },
+  "recline": {
+    "status": "ok",
+    "icon": "material-symbols:airline-seat-recline-extra",
+    "size": 419
+  },
+  "cor": {
+    "status": "ok",
+    "icon": "material-symbols:rounded-corner",
+    "size": 320
+  },
+  "cord": {
+    "status": "ok",
+    "icon": "mdi:cordova",
+    "size": 501
+  },
+  "accord": {
+    "status": "ok",
+    "icon": "twemoji:accordion",
+    "size": 5546
+  },
+  "concord": {
+    "status": "ok",
+    "icon": "arcticons:concordia",
+    "size": 1018
+  },
+  "cis": {
+    "status": "ok",
+    "icon": "mdi:scissors",
+    "query": "scissors",
+    "size": 559
+  },
+  "core": {
+    "status": "ok",
+    "icon": "openmoji:ice-core-sample",
+    "size": 2885
+  },
+  "concordance": {
+    "status": "ok",
+    "icon": "mdi:heart",
+    "size": 288
+  },
+  "correlate": {
+    "status": "ok",
+    "icon": "arcticons:correspondent",
+    "size": 373
+  },
+  "correspond": {
+    "status": "ok",
+    "icon": "arcticons:correspondent",
+    "size": 373
+  },
+  "record": {
+    "status": "ok",
+    "icon": "mdi:record",
+    "size": 181
+  },
+  "crat": {
+    "status": "ok",
+    "icon": "roentgen:crater",
+    "size": 315
+  },
+  "democrat": {
+    "status": "ok",
+    "icon": "fa-solid:democrat",
+    "size": 1359
+  },
+  "autocrat": {
+    "status": "ok",
+    "icon": "game-icons:king",
+    "query": "king",
+    "size": 776
+  },
+  "aristocrat": {
+    "status": "ok",
+    "icon": "game-icons:king",
+    "query": "king",
+    "size": 776
+  },
+  "aristocratic": {
+    "status": "ok",
+    "icon": "game-icons:king",
+    "query": "king",
+    "size": 776
+  },
+  "cret": {
+    "status": "ok",
+    "icon": "twemoji:japanese-secret-button",
+    "size": 2710
+  },
+  "cre": {
+    "status": "ok",
+    "icon": "mdi:ice-cream",
+    "size": 348
+  },
+  "create": {
+    "status": "ok",
+    "icon": "material-symbols:create-new-folder",
+    "size": 268
+  },
+  "creation": {
+    "status": "ok",
+    "icon": "mdi:creation",
+    "size": 304
+  },
+  "theocrat": {
+    "status": "ok",
+    "icon": "game-icons:king",
+    "query": "king",
+    "size": 776
+  },
+  "creative": {
+    "status": "ok",
+    "icon": "mdi:creative-commons",
+    "size": 904
+  },
+  "creator": {
+    "status": "ok",
+    "icon": "mdi:youtube-creator-studio",
+    "size": 718
+  },
+  "creature": {
+    "status": "ok",
+    "icon": "twemoji:hairy-creature",
+    "size": 4046
+  },
+  "increase": {
+    "status": "ok",
+    "icon": "material-symbols:text-increase",
+    "size": 236
+  },
+  "discord": {
+    "status": "ok",
+    "icon": "mdi:heart",
+    "size": 288
+  },
+  "decreate": {
+    "status": "ok",
+    "icon": "material-symbols:create-new-folder",
+    "size": 268
+  },
+  "decrement": {
+    "status": "ok",
+    "icon": "mdi:decrement",
+    "size": 152
+  },
+  "crit": {
+    "status": "ok",
+    "icon": "material-symbols:badge-critical-battery",
+    "size": 244
+  },
+  "critic": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "size": 1456
+  },
+  "critical": {
+    "status": "ok",
+    "icon": "material-symbols:badge-critical-battery",
+    "size": 244
+  },
+  "curious": {
+    "status": "ok",
+    "icon": "arcticons:curiouscat",
+    "size": 542
+  },
+  "hypercritical": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "query": "critic",
+    "size": 1456
+  },
+  "excrescence": {
+    "status": "ok",
+    "icon": "material-symbols:airline-seat-legroom-extra",
+    "size": 313
+  },
+  "criticism": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "query": "critic",
+    "size": 1456
+  },
+  "curiosity": {
+    "status": "ok",
+    "icon": "game-icons:mars-curiosity",
+    "size": 2497
+  },
+  "secure": {
+    "status": "ok",
+    "icon": "mdi:book-secure",
+    "size": 501
+  },
+  "security": {
+    "status": "ok",
+    "icon": "material-symbols:security",
+    "size": 274
+  },
+  "criticise": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "size": 1456
+  },
+  "dem": {
+    "status": "ok",
+    "icon": "openmoji:demiboy",
+    "size": 533
+  },
+  "democracy": {
+    "status": "ok",
+    "icon": "arcticons:democracy",
+    "size": 823
+  },
+  "di": {
+    "status": "ok",
+    "icon": "mdi:dial",
+    "size": 221
+  },
+  "dia": {
+    "status": "ok",
+    "icon": "material-symbols:diagonal-line",
+    "size": 350
+  },
+  "democratize": {
+    "status": "ok",
+    "icon": "mdi:people",
+    "size": 336
+  },
+  "dialogue": {
+    "status": "ok",
+    "icon": "openmoji:people-dialogue",
+    "size": 1717
+  },
+  "democratic": {
+    "status": "ok",
+    "icon": "mdi:people",
+    "size": 336
+  },
+  "dic": {
+    "status": "ok",
+    "icon": "mdi:dice-1",
+    "size": 253
+  },
+  "diameter": {
+    "status": "ok",
+    "icon": "mdi:diameter",
+    "size": 231
+  },
+  "doctrine": {
+    "status": "ok",
+    "icon": "devicon-plain:doctrine",
+    "size": 1227
+  },
+  "docile": {
+    "status": "ok",
+    "icon": "mingcute:easy-in-out-fill",
+    "size": 986
+  },
+  "doc": {
+    "status": "ok",
+    "icon": "ph:file-doc",
+    "size": 789
+  },
+  "document": {
+    "status": "ok",
+    "icon": "solar:document-bold",
+    "size": 456
+  },
+  "doctor": {
+    "status": "ok",
+    "icon": "openmoji:male-doctor",
+    "size": 5678
+  },
+  "domestic": {
+    "status": "ok",
+    "icon": "arcticons:findomestic",
+    "size": 356
+  },
+  "indoctrinate": {
+    "status": "ok",
+    "icon": "twemoji:man-teacher",
+    "size": 4080
+  },
+  "dominate": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "dominant": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "domination": {
+    "status": "ok",
+    "icon": "material-symbols:center-focus-strong",
+    "size": 375
+  },
+  "dome": {
+    "status": "ok",
+    "icon": "mdi:dome-light",
+    "size": 346
+  },
+  "domain": {
+    "status": "ok",
+    "icon": "material-symbols:domain",
+    "size": 290
+  },
+  "erg": {
+    "status": "ok",
+    "icon": "openmoji:greta-thunberg",
+    "size": 4414
+  },
+  "energy": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "energetic": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "synergy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fac": {
+    "status": "ok",
+    "icon": "material-symbols:face",
+    "size": 650
+  },
+  "facile": {
+    "status": "ok",
+    "icon": "carbon:hybrid-networking",
+    "size": 443
+  },
+  "facility": {
+    "status": "ok",
+    "icon": "carbon:coupling-facility",
+    "size": 239
+  },
+  "fer": {
+    "status": "ok",
+    "icon": "twemoji:ferry",
+    "size": 2578
+  },
+  "facilitate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "confer": {
+    "status": "ok",
+    "icon": "ph:video-conference",
+    "size": 570
+  },
+  "infer": {
+    "status": "ok",
+    "icon": "game-icons:inferno-bomb",
+    "size": 1478
+  },
+  "conference": {
+    "status": "ok",
+    "icon": "mdi:teleconference",
+    "size": 309
+  },
+  "dom": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "query": "house",
+    "size": 260
+  },
+  "offer": {
+    "status": "ok",
+    "icon": "mdi:local-offer",
+    "size": 390
+  },
+  "prefer": {
+    "status": "ok",
+    "icon": "material-symbols:room-preferences",
+    "size": 673
+  },
+  "fin": {
+    "status": "ok",
+    "icon": "material-symbols:finance",
+    "size": 200
+  },
+  "refer": {
+    "status": "ok",
+    "icon": "material-symbols:quick-reference",
+    "size": 519
+  },
+  "confine": {
+    "status": "ok",
+    "icon": "fa6-solid:square-person-confined",
+    "size": 505
+  },
+  "suffer": {
+    "status": "ok",
+    "icon": "arcticons:adobe-experience-manager",
+    "size": 1111
+  },
+  "define": {
+    "status": "ok",
+    "icon": "arcticons:define",
+    "size": 676
+  },
+  "definite": {
+    "status": "ok",
+    "icon": "ri:list-indefinite",
+    "size": 249
+  },
+  "final": {
+    "status": "ok",
+    "icon": "arcticons:final-interface",
+    "size": 507
+  },
+  "finish": {
+    "status": "ok",
+    "icon": "game-icons:finish-line",
+    "size": 550
+  },
+  "infinite": {
+    "status": "ok",
+    "icon": "iconoir:infinite",
+    "size": 267
+  },
+  "refine": {
+    "status": "ok",
+    "icon": "carbon:data-refinery",
+    "size": 443
+  },
+  "affix": {
+    "status": "ok",
+    "icon": "arcticons:photo-affix",
+    "size": 556
+  },
+  "fix": {
+    "status": "ok",
+    "icon": "mdi:auto-fix",
+    "size": 479
+  },
+  "fixture": {
+    "status": "ok",
+    "icon": "mdi:hammer",
+    "size": 282
+  },
+  "prefix": {
+    "status": "ok",
+    "icon": "map:postal-code-prefix",
+    "size": 352
+  },
+  "flict": {
+    "status": "ok",
+    "icon": "tabler:git-pull-request-conflict",
+    "size": 332
+  },
+  "infix": {
+    "status": "ok",
+    "icon": "mdi:hammer",
+    "size": 282
+  },
+  "suffix": {
+    "status": "ok",
+    "icon": "mdi:hammer",
+    "size": 282
+  },
+  "fond": {
+    "status": "ok",
+    "icon": "twemoji:fondue",
+    "size": 2581
+  },
+  "forc": {
+    "status": "ok",
+    "icon": "openmoji:forceps",
+    "size": 579
+  },
+  "fondle": {
+    "status": "ok",
+    "icon": "twemoji:fondue",
+    "size": 2581
+  },
+  "fondness": {
+    "status": "ok",
+    "icon": "mdi:heart",
+    "query": "heart",
+    "size": 288
+  },
+  "force": {
+    "status": "ok",
+    "icon": "openmoji:forceps",
+    "size": 579
+  },
+  "forcible": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "enforce": {
+    "status": "ok",
+    "icon": "gcp:security-key-enforcement",
+    "size": 503
+  },
+  "fug": {
+    "status": "ok",
+    "icon": "cbi:ceiling-fugato-four",
+    "size": 2127
+  },
+  "fugitive": {
+    "status": "ok",
+    "icon": "mdi:fleet",
+    "size": 603
+  },
+  "refuge": {
+    "status": "ok",
+    "icon": "mdi:fleet",
+    "size": 603
+  },
+  "gen": {
+    "status": "ok",
+    "icon": "material-symbols:microwave-gen",
+    "size": 498
+  },
+  "gener": {
+    "status": "ok",
+    "icon": "material-symbols:general-device",
+    "size": 192
+  },
+  "subterfuge": {
+    "status": "ok",
+    "icon": "mdi:fleet",
+    "size": 603
+  },
+  "generate": {
+    "status": "ok",
+    "icon": "carbon:ai-generate",
+    "size": 360
+  },
+  "generation": {
+    "status": "ok",
+    "icon": "mdi:regeneration",
+    "size": 617
+  },
+  "generator": {
+    "status": "ok",
+    "icon": "mdi:generator-mobile",
+    "size": 402
+  },
+  "generic": {
+    "status": "ok",
+    "icon": "fluent:app-generic-20-filled",
+    "size": 457
+  },
+  "generous": {
+    "status": "ok",
+    "icon": "uil:sort-amount-down",
+    "size": 388
+  },
+  "gna": {
+    "status": "ok",
+    "icon": "game-icons:bone-gnawer",
+    "size": 1998
+  },
+  "diagnose": {
+    "status": "ok",
+    "icon": "fa-solid:diagnoses",
+    "size": 949
+  },
+  "degenerate": {
+    "status": "ok",
+    "icon": "twemoji:birthday-cake",
+    "size": 1986
+  },
+  "gnos": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "diagnosis": {
+    "status": "ok",
+    "icon": "material-symbols:diagnosis",
+    "size": 407
+  },
+  "graph": {
+    "status": "ok",
+    "icon": "mdi:graph",
+    "size": 821
+  },
+  "gram": {
+    "status": "ok",
+    "icon": "mdi:hexagram",
+    "size": 228
+  },
+  "prognosis": {
+    "status": "ok",
+    "icon": "hugeicons:estimate-01",
+    "size": 682
+  },
+  "ignorant": {
+    "status": "ok",
+    "icon": "ri:ancient-gate-fill",
+    "size": 374
+  },
+  "ea": {
+    "status": "ok",
+    "icon": "mdi:earth",
+    "size": 403
+  },
+  "grat": {
+    "status": "ok",
+    "icon": "pinhead:graticule-globe",
+    "size": 1050
+  },
+  "congratulate": {
+    "status": "ok",
+    "icon": "arcticons:adobe-express",
+    "size": 554
+  },
+  "gratuity": {
+    "status": "ok",
+    "icon": "mdi:gift",
+    "size": 468
+  },
+  "ingrate": {
+    "status": "ok",
+    "icon": "pinhead:graticule-globe",
+    "size": 1050
+  },
+  "grav": {
+    "status": "ok",
+    "icon": "material-symbols:specific-gravity",
+    "size": 352
+  },
+  "gratitude": {
+    "status": "ok",
+    "icon": "mdi:heart",
+    "size": 288
+  },
+  "her": {
+    "status": "ok",
+    "icon": "twemoji:herb",
+    "size": 1800
+  },
+  "hes": {
+    "status": "ok",
+    "icon": "openmoji:volcano-ashes",
+    "size": 2593
+  },
+  "grev": {
+    "status": "ok",
+    "icon": "material-symbols:specific-gravity",
+    "size": 352
+  },
+  "adhere": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "hib": {
+    "status": "ok",
+    "icon": "twemoji:hibiscus",
+    "size": 2203
+  },
+  "cohere": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "hibit": {
+    "status": "ok",
+    "icon": "ph:prohibit",
+    "size": 318
+  },
+  "hesitate": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "exhibit": {
+    "status": "ok",
+    "icon": "roentgen:statue-exhibit",
+    "size": 438
+  },
+  "prohibit": {
+    "status": "ok",
+    "icon": "mdi:prohibited",
+    "size": 331
+  },
+  "hum": {
+    "status": "ok",
+    "icon": "twemoji:two-hump-camel",
+    "size": 1317
+  },
+  "inhibit": {
+    "status": "ok",
+    "icon": "material-symbols:coffee-maker-outline",
+    "query": "make",
+    "size": 453
+  },
+  "human": {
+    "status": "ok",
+    "icon": "mdi:horse-human",
+    "size": 856
+  },
+  "exhume": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "insul": {
+    "status": "ok",
+    "icon": "arcticons:evil-insult-generator",
+    "size": 2193
+  },
+  "insult": {
+    "status": "ok",
+    "icon": "arcticons:evil-insult-generator",
+    "size": 2193
+  },
+  "humane": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "inhume": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "insulate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "it": {
+    "status": "ok",
+    "icon": "mdi:note-edit",
+    "size": 353
+  },
+  "ambition": {
+    "status": "ok",
+    "icon": "arcticons:ambitionbox",
+    "size": 385
+  },
+  "insulation": {
+    "status": "ok",
+    "icon": "arcticons:evil-insult-generator",
+    "size": 2193
+  },
+  "initial": {
+    "status": "ok",
+    "icon": "lucide:text-initial",
+    "size": 277
+  },
+  "insulator": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "transit": {
+    "status": "ok",
+    "icon": "material-symbols:transit-enterexit",
+    "size": 168
+  },
+  "jud": {
+    "status": "ok",
+    "icon": "twemoji:judge",
+    "size": 3117
+  },
+  "judic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "judicial": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "judicious": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "jug": {
+    "status": "ok",
+    "icon": "openmoji:man-juggling",
+    "size": 1470
+  },
+  "lab": {
+    "status": "ok",
+    "icon": "twemoji:lab-coat",
+    "size": 1655
+  },
+  "subjugate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "laps": {
+    "status": "ok",
+    "icon": "material-symbols:laps",
+    "size": 353
+  },
+  "collapse": {
+    "status": "ok",
+    "icon": "material-symbols:collapse-all",
+    "size": 204
+  },
+  "prejudice": {
+    "status": "ok",
+    "icon": "twemoji:face-without-mouth",
+    "size": 337
+  },
+  "elapse": {
+    "status": "ok",
+    "icon": "material-symbols:settings-timelapse",
+    "size": 552
+  },
+  "lapse": {
+    "status": "ok",
+    "icon": "material-symbols:collapse-all",
+    "size": 204
+  },
+  "lang": {
+    "status": "ok",
+    "icon": "bxl:go-lang",
+    "size": 1137
+  },
+  "prolapse": {
+    "status": "ok",
+    "icon": "material-symbols:work",
+    "size": 292
+  },
+  "relapse": {
+    "status": "ok",
+    "icon": "material-symbols:work",
+    "size": 292
+  },
+  "lingu": {
+    "status": "ok",
+    "icon": "arcticons:linguee",
+    "size": 677
+  },
+  "languag": {
+    "status": "ok",
+    "icon": "material-symbols:emoji-language",
+    "size": 1027
+  },
+  "lat": {
+    "status": "ok",
+    "icon": "openmoji:flag-latvia",
+    "size": 285
+  },
+  "bilingual": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "linguist": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "linguistic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ablate": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "latitude": {
+    "status": "ok",
+    "icon": "mdi:latitude",
+    "size": 347
+  },
+  "collateral": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "translate": {
+    "status": "ok",
+    "icon": "material-symbols:translate",
+    "size": 391
+  },
+  "lav": {
+    "status": "ok",
+    "icon": "mdi:lava-lamp",
+    "size": 416
+  },
+  "oblate": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "lu": {
+    "status": "ok",
+    "icon": "openmoji:rounded-symbol-for-lu",
+    "size": 607
+  },
+  "lavatory": {
+    "status": "ok",
+    "icon": "mdi:lavatory",
+    "size": 312
+  },
+  "lotion": {
+    "status": "ok",
+    "icon": "twemoji:lotion-bottle",
+    "size": 693
+  },
+  "lave": {
+    "status": "ok",
+    "icon": "icon-park-outline:slave",
+    "size": 552
+  },
+  "lect": {
+    "status": "ok",
+    "icon": "material-symbols:24fps-select",
+    "size": 301
+  },
+  "lig": {
+    "status": "ok",
+    "icon": "material-symbols:light",
+    "size": 342
+  },
+  "collect": {
+    "status": "ok",
+    "icon": "mdi:collection",
+    "size": 388
+  },
+  "dilute": {
+    "status": "ok",
+    "icon": "material-symbols:wash",
+    "size": 544
+  },
+  "collection": {
+    "status": "ok",
+    "icon": "mdi:collection",
+    "size": 388
+  },
+  "intellect": {
+    "status": "ok",
+    "icon": "arcticons:intellect",
+    "size": 510
+  },
+  "elegant": {
+    "status": "ok",
+    "icon": "arcticons:elegant-teleprompter",
+    "size": 378
+  },
+  "negligible": {
+    "status": "ok",
+    "icon": "material-symbols:read-more",
+    "size": 227
+  },
+  "select": {
+    "status": "ok",
+    "icon": "material-symbols:select",
+    "size": 389
+  },
+  "leg": {
+    "status": "ok",
+    "icon": "twemoji:leg",
+    "size": 797
+  },
+  "eligible": {
+    "status": "ok",
+    "icon": "arcticons:the-chosen",
+    "size": 736
+  },
+  "lex": {
+    "status": "ok",
+    "icon": "material-symbols:align-flex-end",
+    "size": 151
+  },
+  "legal": {
+    "status": "ok",
+    "icon": "mdi:legal",
+    "size": 451
+  },
+  "legislation": {
+    "status": "ok",
+    "icon": "openmoji:lawn-mower",
+    "size": 1368
+  },
+  "legend": {
+    "status": "ok",
+    "icon": "material-symbols:legend-toggle",
+    "size": 198
+  },
+  "lev": {
+    "status": "ok",
+    "icon": "material-symbols:tools-level",
+    "size": 332
+  },
+  "lesson": {
+    "status": "ok",
+    "icon": "material-symbols:play-lesson",
+    "size": 446
+  },
+  "alleviate": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "liev": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "levity": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "levitate": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "liber": {
+    "status": "ok",
+    "icon": "twemoji:flag-liberia",
+    "size": 716
+  },
+  "relevant": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "liberal": {
+    "status": "ok",
+    "icon": "material-symbols:crop-free",
+    "size": 281
+  },
+  "liberate": {
+    "status": "ok",
+    "icon": "material-symbols:crop-free",
+    "size": 281
+  },
+  "lic": {
+    "status": "ok",
+    "icon": "material-symbols:format-italic",
+    "size": 167
+  },
+  "liberation": {
+    "status": "ok",
+    "icon": "material-symbols:crop-free",
+    "size": 281
+  },
+  "legible": {
+    "status": "ok",
+    "icon": "material-symbols:linear-scale",
+    "query": "scale",
+    "size": 419
+  },
+  "illicit": {
+    "status": "ok",
+    "icon": "material-symbols:license",
+    "size": 410
+  },
+  "licit": {
+    "status": "ok",
+    "icon": "material-symbols:explicit",
+    "size": 261
+  },
+  "license": {
+    "status": "ok",
+    "icon": "material-symbols:license",
+    "size": 410
+  },
+  "ly": {
+    "status": "ok",
+    "icon": "mdi:fly",
+    "size": 711
+  },
+  "ally": {
+    "status": "ok",
+    "icon": "mdi:tally-mark-1",
+    "size": 137
+  },
+  "alliance": {
+    "status": "ok",
+    "icon": "arcticons:the-blue-alliance",
+    "size": 495
+  },
+  "ligament": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "lin": {
+    "status": "ok",
+    "icon": "openmoji:link2",
+    "size": 1501
+  },
+  "rely": {
+    "status": "ok",
+    "icon": "material-symbols:living",
+    "size": 688
+  },
+  "liable": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "line": {
+    "status": "ok",
+    "icon": "solar:4k-line-duotone",
+    "size": 493
+  },
+  "liner": {
+    "status": "ok",
+    "icon": "cib:skyliner",
+    "size": 1941
+  },
+  "delineate": {
+    "status": "ok",
+    "icon": "solar:4k-line-duotone",
+    "size": 493
+  },
+  "linear": {
+    "status": "ok",
+    "icon": "material-symbols:blur-linear",
+    "size": 1145
+  },
+  "liqu": {
+    "status": "ok",
+    "icon": "twemoji:pouring-liquid",
+    "size": 1461
+  },
+  "liquate": {
+    "status": "ok",
+    "icon": "twemoji:pouring-liquid",
+    "size": 1461
+  },
+  "liquor": {
+    "status": "ok",
+    "icon": "material-symbols:liquor",
+    "size": 556
+  },
+  "lit": {
+    "status": "ok",
+    "icon": "mdi:litecoin",
+    "size": 353
+  },
+  "liquid": {
+    "status": "ok",
+    "icon": "twemoji:pouring-liquid",
+    "size": 1461
+  },
+  "liter": {
+    "status": "ok",
+    "icon": "arcticons:7-literoj",
+    "size": 261
+  },
+  "literal": {
+    "status": "ok",
+    "icon": "arcticons:literal",
+    "size": 448
+  },
+  "literary": {
+    "status": "ok",
+    "icon": "material-symbols:book",
+    "size": 253
+  },
+  "loc": {
+    "status": "ok",
+    "icon": "material-symbols:car-lock",
+    "size": 671
+  },
+  "obliterate": {
+    "status": "ok",
+    "icon": "material-symbols:book",
+    "size": 253
+  },
+  "literate": {
+    "status": "ok",
+    "icon": "material-symbols:book",
+    "size": 253
+  },
+  "local": {
+    "status": "ok",
+    "icon": "material-symbols:local-atm",
+    "size": 368
+  },
+  "allocate": {
+    "status": "ok",
+    "icon": "lucide:locate",
+    "size": 267
+  },
+  "location": {
+    "status": "ok",
+    "icon": "mdi:location",
+    "size": 277
+  },
+  "locate": {
+    "status": "ok",
+    "icon": "lucide:locate",
+    "size": 267
+  },
+  "log": {
+    "status": "ok",
+    "icon": "mdi:login",
+    "size": 225
+  },
+  "logue": {
+    "status": "ok",
+    "icon": "openmoji:people-dialogue",
+    "size": 1717
+  },
+  "catalogue": {
+    "status": "ok",
+    "icon": "arcticons:bookcatalogue",
+    "size": 389
+  },
+  "lor": {
+    "status": "ok",
+    "icon": "twemoji:articulated-lorry",
+    "size": 678
+  },
+  "apologise": {
+    "status": "ok",
+    "icon": "openmoji:people-dialogue",
+    "size": 1717
+  },
+  "logic": {
+    "status": "ok",
+    "icon": "mdi:logic-gate-and",
+    "size": 200
+  },
+  "los": {
+    "status": "ok",
+    "icon": "material-symbols:monitor-weight-loss",
+    "size": 593
+  },
+  "collaborate": {
+    "status": "ok",
+    "icon": "carbon:collaborate",
+    "size": 510
+  },
+  "laboratory": {
+    "status": "ok",
+    "icon": "fontisto:laboratory",
+    "size": 646
+  },
+  "elaborate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "lud": {
+    "status": "ok",
+    "icon": "arcticons:flud",
+    "size": 296
+  },
+  "lus": {
+    "status": "ok",
+    "icon": "material-symbols:1k-plus",
+    "size": 360
+  },
+  "collude": {
+    "status": "ok",
+    "icon": "material-symbols:work",
+    "size": 292
+  },
+  "allude": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "collate": {
+    "status": "ok",
+    "icon": "arcticons:droid-examiner",
+    "size": 333
+  },
+  "mag": {
+    "status": "ok",
+    "icon": "twemoji:mage",
+    "size": 2193
+  },
+  "illusion": {
+    "status": "ok",
+    "icon": "twemoji:flag-united-states",
+    "size": 2348
+  },
+  "delude": {
+    "status": "ok",
+    "icon": "mingcute:mind-map-fill",
+    "size": 1056
+  },
+  "ludicrous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "maj": {
+    "status": "ok",
+    "icon": "carbon:version-major",
+    "size": 540
+  },
+  "magnify": {
+    "status": "ok",
+    "icon": "material-symbols:magnify-docked",
+    "size": 277
+  },
+  "max": {
+    "status": "ok",
+    "icon": "material-symbols:home-max",
+    "size": 243
+  },
+  "maximum": {
+    "status": "ok",
+    "icon": "carbon:chart-maximum",
+    "size": 426
+  },
+  "magnificent": {
+    "status": "ok",
+    "icon": "material-symbols:chess-king",
+    "size": 385
+  },
+  "man": {
+    "status": "ok",
+    "icon": "twemoji:man",
+    "size": 1244
+  },
+  "major": {
+    "status": "ok",
+    "icon": "carbon:version-major",
+    "size": 540
+  },
+  "manu": {
+    "status": "ok",
+    "icon": "openmoji:man-in-manual-wheelchair",
+    "size": 1557
+  },
+  "manual": {
+    "status": "ok",
+    "icon": "twemoji:manual-wheelchair",
+    "size": 3615
+  },
+  "manufacture": {
+    "status": "ok",
+    "icon": "pinhead:manufactured-home",
+    "size": 402
+  },
+  "maneuver": {
+    "status": "ok",
+    "icon": "mdi:hand",
+    "size": 578
+  },
+  "manuscript": {
+    "status": "ok",
+    "icon": "arcticons:write-in-runic",
+    "size": 360
+  },
+  "mar": {
+    "status": "ok",
+    "icon": "openmoji:maracas",
+    "size": 3155
+  },
+  "maritime": {
+    "status": "ok",
+    "icon": "twemoji:flag-british-indian-ocean-territory",
+    "size": 8770
+  },
+  "marsh": {
+    "status": "ok",
+    "icon": "twemoji:flag-marshall-islands",
+    "size": 853
+  },
+  "mariner": {
+    "status": "ok",
+    "icon": "twemoji:flag-san-marino",
+    "size": 6035
+  },
+  "med": {
+    "status": "ok",
+    "icon": "material-symbols:error-med",
+    "size": 426
+  },
+  "mid": {
+    "status": "ok",
+    "icon": "material-symbols:car-defrost-mid-left",
+    "size": 929
+  },
+  "immediate": {
+    "status": "ok",
+    "icon": "twemoji:face-without-mouth",
+    "size": 337
+  },
+  "medium": {
+    "status": "ok",
+    "icon": "mingcute:medium-fill",
+    "size": 1066
+  },
+  "middle": {
+    "status": "ok",
+    "icon": "tabler:stack-middle",
+    "size": 329
+  },
+  "mer": {
+    "status": "ok",
+    "icon": "openmoji:merman",
+    "size": 3179
+  },
+  "mr": {
+    "status": "ok",
+    "icon": "twemoji:mrs-claus",
+    "size": 1636
+  },
+  "market": {
+    "status": "ok",
+    "icon": "pinhead:market-stall",
+    "size": 296
+  },
+  "micr": {
+    "status": "ok",
+    "icon": "material-symbols:microbiology",
+    "size": 1289
+  },
+  "merchandise": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "microbe": {
+    "status": "ok",
+    "icon": "twemoji:microbe",
+    "size": 4868
+  },
+  "merchant": {
+    "status": "ok",
+    "icon": "arcticons:bbl-bemerchant",
+    "size": 1023
+  },
+  "microfilm": {
+    "status": "ok",
+    "icon": "mdi:film",
+    "size": 355
+  },
+  "microscope": {
+    "status": "ok",
+    "icon": "mdi:microscope",
+    "size": 377
+  },
+  "migr": {
+    "status": "ok",
+    "icon": "carbon:cloud-infra-migration",
+    "size": 733
+  },
+  "immigrate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "migrate": {
+    "status": "ok",
+    "icon": "carbon:migrate",
+    "size": 370
+  },
+  "min": {
+    "status": "ok",
+    "icon": "mdi:mine",
+    "size": 505
+  },
+  "mine": {
+    "status": "ok",
+    "icon": "mdi:mine",
+    "size": 505
+  },
+  "migratory": {
+    "status": "ok",
+    "icon": "carbon:migrate",
+    "size": 370
+  },
+  "ministry": {
+    "status": "ok",
+    "icon": "material-symbols:moving-ministry",
+    "size": 257
+  },
+  "minor": {
+    "status": "ok",
+    "icon": "material-symbols:minor-crash",
+    "size": 552
+  },
+  "minister": {
+    "status": "ok",
+    "icon": "material-symbols:tile-small",
+    "size": 173
+  },
+  "diminish": {
+    "status": "ok",
+    "icon": "material-symbols:mouse",
+    "query": "mouse",
+    "size": 257
+  },
+  "minus": {
+    "status": "ok",
+    "icon": "mdi:minus",
+    "size": 138
+  },
+  "minute": {
+    "status": "ok",
+    "icon": "mdi:beats-per-minute",
+    "size": 443
+  },
+  "mir": {
+    "status": "ok",
+    "icon": "material-symbols:car-mirror-heat",
+    "size": 1156
+  },
+  "mirror": {
+    "status": "ok",
+    "icon": "twemoji:mirror",
+    "size": 2944
+  },
+  "miracle": {
+    "status": "ok",
+    "icon": "game-icons:miracle-medecine",
+    "size": 1604
+  },
+  "admire": {
+    "status": "ok",
+    "icon": "arcticons:8-bit-wonders",
+    "size": 616
+  },
+  "mis": {
+    "status": "ok",
+    "icon": "material-symbols:call-missed",
+    "size": 178
+  },
+  "mitt": {
+    "status": "ok",
+    "icon": "solar:oven-mitts-bold",
+    "size": 648
+  },
+  "mob": {
+    "status": "ok",
+    "icon": "material-symbols:mobile",
+    "size": 361
+  },
+  "mov": {
+    "status": "ok",
+    "icon": "material-symbols:move",
+    "size": 724
+  },
+  "automobile": {
+    "status": "ok",
+    "icon": "twemoji:automobile",
+    "size": 544
+  },
+  "mot": {
+    "status": "ok",
+    "icon": "twemoji:motor-boat",
+    "size": 697
+  },
+  "motion": {
+    "status": "ok",
+    "icon": "material-symbols:motion-blur",
+    "size": 353
+  },
+  "moment": {
+    "status": "ok",
+    "icon": "mingcute:moment-fill",
+    "size": 1098
+  },
+  "motivate": {
+    "status": "ok",
+    "icon": "carbon:vehicle-api",
+    "size": 965
+  },
+  "move": {
+    "status": "ok",
+    "icon": "material-symbols:move",
+    "size": 724
+  },
+  "mon": {
+    "status": "ok",
+    "icon": "arcticons:g-mon-pro",
+    "size": 437
+  },
+  "monit": {
+    "status": "ok",
+    "icon": "material-symbols:monitor",
+    "size": 246
+  },
+  "motor": {
+    "status": "ok",
+    "icon": "twemoji:motor-boat",
+    "size": 697
+  },
+  "monument": {
+    "status": "ok",
+    "icon": "tabler:building-monument",
+    "size": 245
+  },
+  "mor": {
+    "status": "ok",
+    "icon": "material-symbols:more",
+    "size": 495
+  },
+  "summon": {
+    "status": "ok",
+    "icon": "arcticons:summoners-war",
+    "size": 1702
+  },
+  "monitor": {
+    "status": "ok",
+    "icon": "material-symbols:monitor",
+    "size": 246
+  },
+  "moral": {
+    "status": "ok",
+    "icon": "mdi:death",
+    "size": 179
+  },
+  "admonish": {
+    "status": "ok",
+    "icon": "material-symbols:warning",
+    "size": 242
+  },
+  "morale": {
+    "status": "ok",
+    "icon": "mdi:death",
+    "size": 179
+  },
+  "morality": {
+    "status": "ok",
+    "icon": "mdi:death",
+    "size": 179
+  },
+  "firm": {
+    "status": "ok",
+    "icon": "arcticons:affirm",
+    "size": 698
+  },
+  "affirm": {
+    "status": "ok",
+    "icon": "arcticons:affirm",
+    "size": 698
+  },
+  "finite": {
+    "status": "ok",
+    "icon": "iconoir:infinite",
+    "size": 267
+  },
+  "flat": {
+    "status": "ok",
+    "icon": "streamline-color:alt-flat",
+    "size": 764
+  },
+  "flor": {
+    "status": "ok",
+    "icon": "material-symbols:local-florist",
+    "size": 853
+  },
+  "inflate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "flourish": {
+    "status": "ok",
+    "icon": "cbi:ceiling-flourish",
+    "size": 622
+  },
+  "florist": {
+    "status": "ok",
+    "icon": "material-symbols:local-florist",
+    "size": 853
+  },
+  "deflation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "folio": {
+    "status": "ok",
+    "icon": "carbon:portfolio",
+    "size": 262
+  },
+  "fluct": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "foli": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fluctuate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "foliage": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "front": {
+    "status": "ok",
+    "icon": "material-symbols:door-front",
+    "size": 276
+  },
+  "confront": {
+    "status": "ok",
+    "icon": "game-icons:confrontation",
+    "size": 4937
+  },
+  "frontier": {
+    "status": "ok",
+    "icon": "mdi:chart-production-possibility-frontier",
+    "size": 223
+  },
+  "fut": {
+    "status": "ok",
+    "icon": "twemoji:flag-wallis-and-futuna",
+    "size": 495
+  },
+  "refugee": {
+    "status": "ok",
+    "icon": "mdi:fleet",
+    "size": 603
+  },
+  "future": {
+    "status": "ok",
+    "icon": "carbon:pause-future",
+    "size": 277
+  },
+  "gam": {
+    "status": "ok",
+    "icon": "openmoji:flag-gambia",
+    "size": 386
+  },
+  "futile": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gastr": {
+    "status": "ok",
+    "icon": "material-symbols:gastroenterology",
+    "size": 312
+  },
+  "monogamy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ge": {
+    "status": "ok",
+    "icon": "openmoji:mage",
+    "size": 1869
+  },
+  "gastronomy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gastric": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "geography": {
+    "status": "ok",
+    "icon": "arcticons:europe-geography",
+    "size": 2126
+  },
+  "bigamy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gist": {
+    "status": "ok",
+    "icon": "twemoji:man-technologist",
+    "size": 2176
+  },
+  "ignore": {
+    "status": "ok",
+    "icon": "catppuccin:cursor-ignore",
+    "size": 409
+  },
+  "gnor": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "geology": {
+    "status": "ok",
+    "icon": "hugeicons:geology-crust",
+    "size": 620
+  },
+  "gon": {
+    "status": "ok",
+    "icon": "openmoji:aragon-flag",
+    "size": 3381
+  },
+  "trigonometry": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "polygon": {
+    "status": "ok",
+    "icon": "tabler:polygon",
+    "size": 379
+  },
+  "grave": {
+    "status": "ok",
+    "icon": "mdi:grave-stone",
+    "size": 286
+  },
+  "gravity": {
+    "status": "ok",
+    "icon": "material-symbols:antigravity",
+    "size": 523
+  },
+  "greg": {
+    "status": "ok",
+    "icon": "arcticons:greggs",
+    "size": 806
+  },
+  "harmony": {
+    "status": "ok",
+    "icon": "ant-design:harmony-o-s-outlined",
+    "size": 378
+  },
+  "harmon": {
+    "status": "ok",
+    "icon": "ant-design:harmony-o-s-outlined",
+    "size": 378
+  },
+  "congregate": {
+    "status": "ok",
+    "icon": "material-symbols:group",
+    "size": 566
+  },
+  "gregarious": {
+    "status": "ok",
+    "icon": "material-symbols:group",
+    "size": 566
+  },
+  "harmonize": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "heli": {
+    "status": "ok",
+    "icon": "material-symbols:helicopter",
+    "size": 255
+  },
+  "helicopter": {
+    "status": "ok",
+    "icon": "twemoji:helicopter",
+    "size": 1403
+  },
+  "horr": {
+    "status": "ok",
+    "icon": "streamline-pixel:entertainment-events-hobbies-horror-ghost",
+    "size": 1221
+  },
+  "horrible": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "horror": {
+    "status": "ok",
+    "icon": "streamline-pixel:entertainment-events-hobbies-horror-ghost",
+    "size": 1221
+  },
+  "humanity": {
+    "status": "ok",
+    "icon": "arcticons:no-humanity",
+    "size": 4632
+  },
+  "heliocentric": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hydr": {
+    "status": "ok",
+    "icon": "material-symbols:fire-hydrant",
+    "size": 525
+  },
+  "hydrant": {
+    "status": "ok",
+    "icon": "material-symbols:fire-hydrant",
+    "size": 525
+  },
+  "dehydrate": {
+    "status": "ok",
+    "icon": "material-symbols:water",
+    "size": 909
+  },
+  "idi": {
+    "status": "ok",
+    "icon": "mdi:midi",
+    "size": 344
+  },
+  "idiom": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "idiot": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exit": {
+    "status": "ok",
+    "icon": "openmoji:exit",
+    "size": 587
+  },
+  "circuit": {
+    "status": "ok",
+    "icon": "openmoji:circuit",
+    "size": 809
+  },
+  "insulin": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "jet": {
+    "status": "ok",
+    "icon": "mdi:jet-engine",
+    "size": 720
+  },
+  "labor": {
+    "status": "ok",
+    "icon": "arcticons:laboralkutxa",
+    "size": 347
+  },
+  "later": {
+    "status": "ok",
+    "icon": "mdi:watch-later",
+    "size": 232
+  },
+  "latent": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "judiciary": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disjoint": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "lateral": {
+    "status": "ok",
+    "icon": "icon-park-outline:quadrilateral",
+    "size": 265
+  },
+  "illegal": {
+    "status": "ok",
+    "icon": "openmoji:lawn-mower",
+    "size": 1368
+  },
+  "long": {
+    "status": "ok",
+    "icon": "twemoji:long-drum",
+    "size": 2164
+  },
+  "literature": {
+    "status": "ok",
+    "icon": "material-symbols:book",
+    "size": 253
+  },
+  "bilateral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "oblige": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "longitude": {
+    "status": "ok",
+    "icon": "mdi:longitude",
+    "size": 421
+  },
+  "lumin": {
+    "status": "ok",
+    "icon": "arcticons:lumina-walls",
+    "size": 788
+  },
+  "elongate": {
+    "status": "ok",
+    "icon": "twemoji:long-drum",
+    "size": 2164
+  },
+  "lun": {
+    "status": "ok",
+    "icon": "openmoji:lungs",
+    "size": 1594
+  },
+  "illuminate": {
+    "status": "ok",
+    "icon": "mdi:lamp",
+    "size": 158
+  },
+  "lunar": {
+    "status": "ok",
+    "icon": "game-icons:lunar-module",
+    "size": 1774
+  },
+  "lunatic": {
+    "status": "ok",
+    "icon": "solar:moon-bold",
+    "size": 266
+  },
+  "luminary": {
+    "status": "ok",
+    "icon": "mdi:lamp",
+    "size": 158
+  },
+  "illustrate": {
+    "status": "ok",
+    "icon": "icon-park-outline:adobe-illustrate",
+    "size": 338
+  },
+  "marine": {
+    "status": "ok",
+    "icon": "mdi:submarine",
+    "size": 396
+  },
+  "mend": {
+    "status": "ok",
+    "icon": "twemoji:mending-heart",
+    "size": 1026
+  },
+  "lustr": {
+    "status": "ok",
+    "icon": "material-symbols:star-shine",
+    "size": 330
+  },
+  "lustrous": {
+    "status": "ok",
+    "icon": "material-symbols:star-shine",
+    "size": 330
+  },
+  "amend": {
+    "status": "ok",
+    "icon": "material-symbols:amend",
+    "size": 438
+  },
+  "ment": {
+    "status": "ok",
+    "icon": "material-symbols:add-comment",
+    "size": 238
+  },
+  "emendation": {
+    "status": "ok",
+    "icon": "twemoji:mending-heart",
+    "size": 1026
+  },
+  "mental": {
+    "status": "ok",
+    "icon": "ri:mental-health-fill",
+    "size": 377
+  },
+  "mention": {
+    "status": "ok",
+    "icon": "solar:mention-circle-bold",
+    "size": 574
+  },
+  "comment": {
+    "status": "ok",
+    "icon": "material-symbols:comment",
+    "size": 247
+  },
+  "mod": {
+    "status": "ok",
+    "icon": "material-symbols:mode-cool",
+    "size": 910
+  },
+  "modern": {
+    "status": "ok",
+    "icon": "mdi:home-modern",
+    "size": 215
+  },
+  "modify": {
+    "status": "ok",
+    "icon": "gis:modify-line",
+    "size": 1707
+  },
+  "mol": {
+    "status": "ok",
+    "icon": "twemoji:flag-moldova",
+    "size": 1051
+  },
+  "molecule": {
+    "status": "ok",
+    "icon": "mdi:molecule",
+    "size": 729
+  },
+  "molar": {
+    "status": "ok",
+    "icon": "pinhead:book-with-molar-tooth",
+    "size": 531
+  },
+  "monster": {
+    "status": "ok",
+    "icon": "twemoji:alien-monster",
+    "size": 286
+  },
+  "monstr": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "demonstrate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "morph": {
+    "status": "ok",
+    "icon": "game-icons:morph-ball",
+    "size": 2274
+  },
+  "amorphous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "mortal": {
+    "status": "ok",
+    "icon": "arcticons:diablo-immortal",
+    "size": 1546
+  },
+  "morphology": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "mort": {
+    "status": "ok",
+    "icon": "mdi:mortar-pestle",
+    "size": 183
+  },
+  "mortality": {
+    "status": "ok",
+    "icon": "mdi:death",
+    "size": 179
+  },
+  "community": {
+    "status": "ok",
+    "icon": "iconoir:community",
+    "size": 390
+  },
+  "mun": {
+    "status": "ok",
+    "icon": "arcticons:krungsri-mungmee-shop",
+    "size": 1633
+  },
+  "mut": {
+    "status": "ok",
+    "icon": "material-symbols:volume-mute",
+    "size": 145
+  },
+  "communicate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "nas": {
+    "status": "ok",
+    "icon": "mdi:fruit-ananas",
+    "size": 709
+  },
+  "commute": {
+    "status": "ok",
+    "icon": "material-symbols:commute",
+    "size": 699
+  },
+  "mutual": {
+    "status": "ok",
+    "icon": "arcticons:axis-mutual-fund",
+    "size": 366
+  },
+  "nasal": {
+    "status": "ok",
+    "icon": "icon-park-outline:nasal",
+    "size": 581
+  },
+  "nascent": {
+    "status": "ok",
+    "icon": "material-symbols:digital-wellbeing",
+    "size": 403
+  },
+  "neg": {
+    "status": "ok",
+    "icon": "material-symbols:exposure-neg-1",
+    "size": 184
+  },
+  "negative": {
+    "status": "ok",
+    "icon": "mdi:battery-negative",
+    "size": 275
+  },
+  "negate": {
+    "status": "ok",
+    "icon": "material-symbols:no-food",
+    "size": 343
+  },
+  "faithful": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "fortress": {
+    "status": "ok",
+    "icon": "tabler:building-fortress",
+    "size": 382
+  },
+  "frag": {
+    "status": "ok",
+    "icon": "material-symbols:fragrance",
+    "size": 651
+  },
+  "fort": {
+    "status": "ok",
+    "icon": "material-symbols:fort",
+    "size": 263
+  },
+  "fragile": {
+    "status": "ok",
+    "icon": "mdi:glass-fragile",
+    "size": 359
+  },
+  "reinforce": {
+    "status": "ok",
+    "icon": "gcp:security-key-enforcement",
+    "size": 503
+  },
+  "fragment": {
+    "status": "ok",
+    "icon": "carbon:fragments",
+    "size": 575
+  },
+  "effort": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fracture": {
+    "status": "ok",
+    "icon": "openmoji:fracture-leg",
+    "size": 3006
+  },
+  "fraction": {
+    "status": "ok",
+    "icon": "mdi:fraction-one-half",
+    "size": 258
+  },
+  "refract": {
+    "status": "ok",
+    "icon": "icon-park-outline:refraction",
+    "size": 319
+  },
+  "found": {
+    "status": "ok",
+    "icon": "material-symbols:nest-found-savings",
+    "size": 514
+  },
+  "foundation": {
+    "status": "ok",
+    "icon": "material-symbols:foundation",
+    "size": 265
+  },
+  "fract": {
+    "status": "ok",
+    "icon": "openmoji:fracture-leg",
+    "size": 3006
+  },
+  "refund": {
+    "status": "ok",
+    "icon": "mdi:cash-refund",
+    "size": 316
+  },
+  "gest": {
+    "status": "ok",
+    "icon": "material-symbols:gesture",
+    "size": 776
+  },
+  "infraction": {
+    "status": "ok",
+    "icon": "solar:4k-broken",
+    "size": 487
+  },
+  "fund": {
+    "status": "ok",
+    "icon": "mdi:cash-refund",
+    "size": 316
+  },
+  "gesture": {
+    "status": "ok",
+    "icon": "material-symbols:gesture",
+    "size": 776
+  },
+  "profound": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "digest": {
+    "status": "ok",
+    "icon": "hugeicons:digestion",
+    "size": 461
+  },
+  "register": {
+    "status": "ok",
+    "icon": "mdi:cash-register",
+    "size": 302
+  },
+  "suggest": {
+    "status": "ok",
+    "icon": "material-symbols:prompt-suggestion",
+    "size": 274
+  },
+  "agnostic": {
+    "status": "ok",
+    "icon": "fluent-mdl2:diagnostic",
+    "size": 445
+  },
+  "congest": {
+    "status": "ok",
+    "icon": "material-symbols:heap-snapshot-large",
+    "size": 443
+  },
+  "recognize": {
+    "status": "ok",
+    "icon": "carbon:ibm-knowledge-catalog",
+    "size": 327
+  },
+  "gnit": {
+    "status": "ok",
+    "icon": "arcticons:magnit",
+    "size": 582
+  },
+  "ignite": {
+    "status": "ok",
+    "icon": "devicon-plain:apacheignite-wordmark",
+    "size": 5119
+  },
+  "cognitive": {
+    "status": "ok",
+    "icon": "carbon:cognitive",
+    "size": 579
+  },
+  "transition": {
+    "status": "ok",
+    "icon": "material-symbols:transition-chop",
+    "size": 255
+  },
+  "gniz": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cognizant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "jur": {
+    "status": "ok",
+    "icon": "game-icons:tribunal-jury",
+    "size": 2942
+  },
+  "injury": {
+    "status": "ok",
+    "icon": "material-symbols:personal-injury",
+    "size": 519
+  },
+  "jury": {
+    "status": "ok",
+    "icon": "material-symbols:personal-injury",
+    "size": 519
+  },
+  "adjust": {
+    "status": "ok",
+    "icon": "material-symbols:adjust",
+    "size": 381
+  },
+  "jurist": {
+    "status": "ok",
+    "icon": "arcticons:expertoption",
+    "size": 569
+  },
+  "justice": {
+    "status": "ok",
+    "icon": "mdi:justice",
+    "size": 451
+  },
+  "relate": {
+    "status": "ok",
+    "icon": "mdi:ballot-recount",
+    "size": 544
+  },
+  "lecture": {
+    "status": "ok",
+    "icon": "mdi:lecture",
+    "size": 301
+  },
+  "correlation": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "dialect": {
+    "status": "ok",
+    "icon": "material-symbols:24fps-select",
+    "size": 301
+  },
+  "elect": {
+    "status": "ok",
+    "icon": "material-symbols:24fps-select",
+    "size": 301
+  },
+  "intellectual": {
+    "status": "ok",
+    "icon": "streamline-plump-color:intellectual",
+    "size": 1338
+  },
+  "ignition": {
+    "status": "ok",
+    "icon": "mdi:ignition",
+    "query": "ignition",
+    "size": 705
+  },
+  "prologue": {
+    "status": "ok",
+    "icon": "openmoji:speech-balloon",
+    "size": 996
+  },
+  "apology": {
+    "status": "ok",
+    "icon": "openmoji:speech-balloon",
+    "size": 996
+  },
+  "epilogue": {
+    "status": "ok",
+    "icon": "material-symbols:airline-seat-legroom-extra",
+    "size": 313
+  },
+  "locut": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "eloquent": {
+    "status": "ok",
+    "icon": "material-symbols:cable",
+    "size": 515
+  },
+  "mand": {
+    "status": "ok",
+    "icon": "material-symbols:keyboard-command-key",
+    "size": 755
+  },
+  "interlocutor": {
+    "status": "ok",
+    "icon": "material-symbols:person",
+    "size": 329
+  },
+  "neglect": {
+    "status": "ok",
+    "icon": "material-symbols:linear-scale",
+    "query": "scale",
+    "size": 419
+  },
+  "command": {
+    "status": "ok",
+    "icon": "solar:command-bold",
+    "size": 223
+  },
+  "demand": {
+    "status": "ok",
+    "icon": "ic:baseline-ondemand-video",
+    "size": 242
+  },
+  "recommend": {
+    "status": "ok",
+    "icon": "material-symbols:recommend",
+    "size": 475
+  },
+  "dislocate": {
+    "status": "ok",
+    "icon": "material-symbols:pin",
+    "query": "pin",
+    "size": 803
+  },
+  "colloquial": {
+    "status": "ok",
+    "icon": "material-symbols:line-style",
+    "size": 261
+  },
+  "mont": {
+    "status": "ok",
+    "icon": "openmoji:flag-montenegro",
+    "size": 960
+  },
+  "mount": {
+    "status": "ok",
+    "icon": "twemoji:mount-fuji",
+    "size": 2966
+  },
+  "mountain": {
+    "status": "ok",
+    "icon": "twemoji:mountain",
+    "size": 1188
+  },
+  "remount": {
+    "status": "ok",
+    "icon": "material-symbols:back-hand",
+    "size": 402
+  },
+  "dismount": {
+    "status": "ok",
+    "icon": "twemoji:horse",
+    "size": 2905
+  },
+  "montage": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "nasc": {
+    "status": "ok",
+    "icon": "twemoji:baby",
+    "size": 982
+  },
+  "renascence": {
+    "status": "ok",
+    "icon": "twemoji:baby",
+    "size": 982
+  },
+  "native": {
+    "status": "ok",
+    "icon": "mdi:nativescript",
+    "size": 426
+  },
+  "not": {
+    "status": "ok",
+    "icon": "mdi:gate-not",
+    "size": 289
+  },
+  "nature": {
+    "status": "ok",
+    "icon": "material-symbols:emoji-nature",
+    "size": 1048
+  },
+  "notable": {
+    "status": "ok",
+    "icon": "arcticons:notable",
+    "size": 782
+  },
+  "note": {
+    "status": "ok",
+    "icon": "material-symbols:note",
+    "size": 222
+  },
+  "notice": {
+    "status": "ok",
+    "icon": "mdi:notice-board",
+    "size": 269
+  },
+  "notion": {
+    "status": "ok",
+    "icon": "mingcute:notion-fill",
+    "size": 1179
+  },
+  "mandate": {
+    "status": "err: The read operation timed out",
+    "icon": "",
+    "size": 0
+  },
+  "notify": {
+    "status": "ok",
+    "icon": "arcticons:aodnotify",
+    "size": 375
+  },
+  "nounc": {
+    "status": "ok",
+    "icon": "mdi:megaphone",
+    "size": 258
+  },
+  "announce": {
+    "status": "ok",
+    "icon": "mdi:announcement",
+    "size": 258
+  },
+  "denounce": {
+    "status": "ok",
+    "icon": "material-symbols:select-to-speak",
+    "size": 361
+  },
+  "renounce": {
+    "status": "ok",
+    "icon": "mdi:give-way",
+    "size": 262
+  },
+  "pronounce": {
+    "status": "ok",
+    "icon": "mdi:court-hammer",
+    "size": 585
+  },
+  "repel": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "pulse": {
+    "status": "ok",
+    "icon": "mdi:pulse",
+    "size": 220
+  },
+  "enunciate": {
+    "status": "ok",
+    "icon": "material-symbols:swords",
+    "size": 541
+  },
+  "propulsion": {
+    "status": "ok",
+    "icon": "game-icons:bowling-propulsion",
+    "size": 854
+  },
+  "dispel": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "pulsate": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "pens": {
+    "status": "ok",
+    "icon": "twemoji:pensive-face",
+    "size": 875
+  },
+  "expulsion": {
+    "status": "ok",
+    "icon": "material-symbols:push-pin",
+    "size": 177
+  },
+  "suspend": {
+    "status": "ok",
+    "icon": "mdi:suspended-light",
+    "size": 750
+  },
+  "depend": {
+    "status": "ok",
+    "icon": "mdi:dependency",
+    "size": 821
+  },
+  "expense": {
+    "status": "ok",
+    "icon": "game-icons:expense",
+    "size": 1363
+  },
+  "compensate": {
+    "status": "ok",
+    "icon": "material-symbols:line-weight",
+    "query": "weigh",
+    "size": 175
+  },
+  "policy": {
+    "status": "ok",
+    "icon": "material-symbols:policy",
+    "size": 453
+  },
+  "police": {
+    "status": "ok",
+    "icon": "twemoji:police-car",
+    "size": 958
+  },
+  "spend": {
+    "status": "ok",
+    "icon": "arcticons:blutspende-spenderservice",
+    "size": 396
+  },
+  "politics": {
+    "status": "ok",
+    "icon": "streamline-color:politics-speech",
+    "size": 837
+  },
+  "polic": {
+    "status": "ok",
+    "icon": "material-symbols:local-police",
+    "size": 276
+  },
+  "polit": {
+    "status": "ok",
+    "icon": "map:political",
+    "size": 689
+  },
+  "political": {
+    "status": "ok",
+    "icon": "map:political",
+    "size": 689
+  },
+  "impolite": {
+    "status": "ok",
+    "icon": "material-symbols:how-to-vote",
+    "size": 454
+  },
+  "politician": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "reg": {
+    "status": "ok",
+    "icon": "material-symbols:how-to-reg",
+    "size": 387
+  },
+  "rule": {
+    "status": "ok",
+    "icon": "material-symbols:rule",
+    "size": 306
+  },
+  "regulate": {
+    "status": "ok",
+    "icon": "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries",
+    "size": 588
+  },
+  "regular": {
+    "status": "ok",
+    "icon": "fluent:add-12-regular",
+    "size": 223
+  },
+  "region": {
+    "status": "ok",
+    "icon": "openmoji:regional-indicator-a",
+    "size": 406
+  },
+  "correct": {
+    "status": "ok",
+    "icon": "fluent:autocorrect-20-filled",
+    "size": 396
+  },
+  "kingdom": {
+    "status": "ok",
+    "icon": "twemoji:flag-united-kingdom",
+    "size": 1111
+  },
+  "rect": {
+    "status": "ok",
+    "icon": "material-symbols:rectangle-outline",
+    "query": "rectangle",
+    "size": 156
+  },
+  "direct": {
+    "status": "ok",
+    "icon": "twemoji:direct-hit",
+    "size": 946
+  },
+  "rectify": {
+    "status": "ok",
+    "icon": "material-symbols:rectangle-outline",
+    "query": "rectangle",
+    "size": 156
+  },
+  "rupt": {
+    "status": "ok",
+    "icon": "hugeicons:file-corrupt",
+    "size": 638
+  },
+  "rectangle": {
+    "status": "ok",
+    "icon": "material-symbols:rectangle-outline",
+    "query": "rectangle",
+    "size": 156
+  },
+  "interrupt": {
+    "status": "ok",
+    "icon": "icon-park-outline:link-interrupt",
+    "size": 313
+  },
+  "polite": {
+    "status": "ok",
+    "icon": "material-symbols:local-police",
+    "query": "polic",
+    "size": 276
+  },
+  "erupt": {
+    "status": "ok",
+    "icon": "openmoji:volcano-eruption",
+    "size": 1444
+  },
+  "bankrupt": {
+    "status": "ok",
+    "icon": "hugeicons:file-corrupt",
+    "size": 638
+  },
+  "corrupt": {
+    "status": "ok",
+    "icon": "solar:file-corrupted-bold",
+    "size": 1106
+  },
+  "sect": {
+    "status": "ok",
+    "icon": "mdi:format-section",
+    "size": 691
+  },
+  "section": {
+    "status": "ok",
+    "icon": "mdi:format-section",
+    "size": 691
+  },
+  "disrupt": {
+    "status": "ok",
+    "icon": "tabler:page-break",
+    "size": 335
+  },
+  "insect": {
+    "status": "ok",
+    "icon": "mdi:insect",
+    "size": 711
+  },
+  "sector": {
+    "status": "ok",
+    "icon": "mingcute:sector-fill",
+    "size": 749
+  },
+  "intersect": {
+    "status": "ok",
+    "icon": "ph:intersect",
+    "size": 568
+  },
+  "bisect": {
+    "status": "ok",
+    "icon": "material-symbols:equal",
+    "size": 149
+  },
+  "sent": {
+    "status": "ok",
+    "icon": "material-symbols:co-present",
+    "size": 418
+  },
+  "sentiment": {
+    "status": "ok",
+    "icon": "material-symbols:sentiment-calm",
+    "size": 692
+  },
+  "resent": {
+    "status": "ok",
+    "icon": "material-symbols:co-present",
+    "size": 418
+  },
+  "sentence": {
+    "status": "ok",
+    "icon": "carbon:character-sentence-case",
+    "size": 318
+  },
+  "sense": {
+    "status": "ok",
+    "icon": "arcticons:trailsense",
+    "size": 289
+  },
+  "erect": {
+    "status": "ok",
+    "icon": "mdi:pan-right",
+    "size": 198
+  },
+  "consent": {
+    "status": "ok",
+    "icon": "arcticons:consentid",
+    "size": 594
+  },
+  "sequence": {
+    "status": "ok",
+    "icon": "carbon:flow-sequence",
+    "size": 443
+  },
+  "sequ": {
+    "status": "ok",
+    "icon": "mdi:view-sequential",
+    "size": 159
+  },
+  "consequence": {
+    "status": "ok",
+    "icon": "carbon:flow-sequence",
+    "size": 443
+  },
+  "sequel": {
+    "status": "ok",
+    "icon": "devicon-plain:sequelize",
+    "size": 1030
+  },
+  "consecutive": {
+    "status": "ok",
+    "icon": "gridicons:reader-following",
+    "size": 349
+  },
+  "secut": {
+    "status": "ok",
+    "icon": "material-symbols:follow-the-signs",
+    "size": 493
+  },
+  "execute": {
+    "status": "ok",
+    "icon": "fluent-mdl2:not-executed",
+    "size": 548
+  },
+  "subsequent": {
+    "status": "ok",
+    "icon": "mdi:table-row-plus-after",
+    "size": 257
+  },
+  "execution": {
+    "status": "ok",
+    "icon": "carbon:deployment-unit-execution",
+    "size": 160
+  },
+  "signal": {
+    "status": "ok",
+    "icon": "mdi:signal",
+    "size": 170
+  },
+  "sign": {
+    "status": "ok",
+    "icon": "mdi:sign",
+    "size": 631
+  },
+  "prosecute": {
+    "status": "ok",
+    "icon": "material-symbols:follow-the-signs",
+    "size": 493
+  },
+  "signature": {
+    "status": "ok",
+    "icon": "material-symbols:signature",
+    "size": 822
+  },
+  "assist": {
+    "status": "ok",
+    "icon": "material-symbols:assist-walker",
+    "size": 666
+  },
+  "signify": {
+    "status": "ok",
+    "icon": "mdi:sign",
+    "size": 631
+  },
+  "assign": {
+    "status": "ok",
+    "icon": "material-symbols:assignment",
+    "size": 407
+  },
+  "sist": {
+    "status": "ok",
+    "icon": "material-symbols:assist-walker",
+    "size": 666
+  },
+  "exist": {
+    "status": "ok",
+    "icon": "garden:translation-exists-fill-12",
+    "size": 716
+  },
+  "resist": {
+    "status": "ok",
+    "icon": "mdi:electrical-resistance",
+    "size": 489
+  },
+  "persist": {
+    "status": "ok",
+    "icon": "eos-icons:persistent-volume",
+    "size": 734
+  },
+  "spec": {
+    "status": "ok",
+    "icon": "material-symbols:folder-special",
+    "size": 313
+  },
+  "spectacle": {
+    "status": "ok",
+    "icon": "game-icons:spectacle-lenses",
+    "size": 1508
+  },
+  "insist": {
+    "status": "ok",
+    "icon": "ph:globe-stand",
+    "size": 430
+  },
+  "respect": {
+    "status": "ok",
+    "icon": "icon-park-outline:respect",
+    "size": 535
+  },
+  "suspect": {
+    "status": "ok",
+    "icon": "material-symbols:watch",
+    "size": 352
+  },
+  "instrument": {
+    "status": "ok",
+    "icon": "mdi:instrument-triangle",
+    "size": 254
+  },
+  "destruction": {
+    "status": "ok",
+    "icon": "material-symbols:destruction",
+    "size": 318
+  },
+  "construct": {
+    "status": "ok",
+    "icon": "material-symbols:construction",
+    "size": 538
+  },
+  "persecute": {
+    "status": "ok",
+    "icon": "twemoji:face-without-mouth",
+    "size": 337
+  },
+  "attention": {
+    "status": "ok",
+    "icon": "covid:social-distancing-attention",
+    "size": 461
+  },
+  "adventure": {
+    "status": "ok",
+    "icon": "arcticons:adventure-lab",
+    "size": 776
+  },
+  "extent": {
+    "status": "ok",
+    "icon": "geo:turf-extent",
+    "size": 1218
+  },
+  "intention": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "intense": {
+    "status": "ok",
+    "icon": "material-symbols:align-items-stretch",
+    "size": 174
+  },
+  "prevent": {
+    "status": "ok",
+    "icon": "material-symbols:data-loss-prevention",
+    "size": 445
+  },
+  "acu": {
+    "status": "ok",
+    "icon": "material-symbols:acupuncture",
+    "size": 820
+  },
+  "aculeate": {
+    "status": "ok",
+    "icon": "twemoji:sewing-needle",
+    "size": 1687
+  },
+  "acuity": {
+    "status": "ok",
+    "icon": "twemoji:sewing-needle",
+    "size": 1687
+  },
+  "acumen": {
+    "status": "ok",
+    "icon": "twemoji:sewing-needle",
+    "size": 1687
+  },
+  "acupuncture": {
+    "status": "ok",
+    "icon": "material-symbols:acupuncture",
+    "size": 820
+  },
+  "revenue": {
+    "status": "ok",
+    "icon": "twemoji:airplane-arrival",
+    "query": "arrival",
+    "size": 1662
+  },
+  "aerial": {
+    "status": "ok",
+    "icon": "twemoji:aerial-tramway",
+    "size": 884
+  },
+  "aer": {
+    "status": "ok",
+    "icon": "twemoji:aerial-tramway",
+    "size": 884
+  },
+  "aerolite": {
+    "status": "ok",
+    "icon": "material-symbols:air",
+    "size": 531
+  },
+  "aerify": {
+    "status": "ok",
+    "icon": "material-symbols:air",
+    "size": 531
+  },
+  "malarial": {
+    "status": "ok",
+    "icon": "material-symbols:air",
+    "size": 531
+  },
+  "subaerial": {
+    "status": "ok",
+    "icon": "material-symbols:air",
+    "size": 531
+  },
+  "aerology": {
+    "status": "ok",
+    "icon": "material-symbols:air",
+    "size": 531
+  },
+  "agon": {
+    "status": "ok",
+    "icon": "twemoji:dragon",
+    "size": 3177
+  },
+  "agony": {
+    "status": "ok",
+    "icon": "twemoji:fight-cloud",
+    "size": 4467
+  },
+  "agonistic": {
+    "status": "ok",
+    "icon": "twemoji:fight-cloud",
+    "size": 4467
+  },
+  "agonize": {
+    "status": "ok",
+    "icon": "twemoji:fight-cloud",
+    "size": 4467
+  },
+  "antagonist": {
+    "status": "ok",
+    "icon": "twemoji:fight-cloud",
+    "size": 4467
+  },
+  "agr": {
+    "status": "ok",
+    "icon": "material-symbols:agriculture",
+    "size": 874
+  },
+  "agriculture": {
+    "status": "ok",
+    "icon": "material-symbols:agriculture",
+    "size": 874
+  },
+  "protagonist": {
+    "status": "ok",
+    "icon": "twemoji:fight-cloud",
+    "size": 4467
+  },
+  "agrimotor": {
+    "status": "ok",
+    "icon": "openmoji:farmer",
+    "size": 3371
+  },
+  "agrarian": {
+    "status": "ok",
+    "icon": "openmoji:farmer",
+    "size": 3371
+  },
+  "agronomy": {
+    "status": "ok",
+    "icon": "openmoji:farmer",
+    "size": 3371
+  },
+  "alg": {
+    "status": "ok",
+    "icon": "twemoji:flag-algeria",
+    "size": 597
+  },
+  "agroindustry": {
+    "status": "ok",
+    "icon": "openmoji:farmer",
+    "size": 3371
+  },
+  "analgesic": {
+    "status": "ok",
+    "icon": "openmoji:eye-pain",
+    "size": 1081
+  },
+  "ali": {
+    "status": "ok",
+    "icon": "openmoji:flag-mali",
+    "size": 332
+  },
+  "otalgia": {
+    "status": "ok",
+    "icon": "openmoji:eye-pain",
+    "size": 1081
+  },
+  "nostalgia": {
+    "status": "ok",
+    "icon": "openmoji:eye-pain",
+    "size": 1081
+  },
+  "alien": {
+    "status": "ok",
+    "icon": "mdi:alien",
+    "size": 479
+  },
+  "alienate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "alias": {
+    "status": "ok",
+    "icon": "tabler:table-alias",
+    "size": 362
+  },
+  "antialien": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "alibi": {
+    "status": "ok",
+    "icon": "arcticons:alibi",
+    "size": 859
+  },
+  "inalienable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "altar": {
+    "status": "ok",
+    "icon": "twemoji:flag-gibraltar",
+    "size": 2285
+  },
+  "agrochemical": {
+    "status": "ok",
+    "icon": "openmoji:farmer",
+    "size": 3371
+  },
+  "altimeter": {
+    "status": "ok",
+    "icon": "mdi:altimeter",
+    "size": 232
+  },
+  "alt": {
+    "status": "ok",
+    "icon": "material-symbols:egg-alt",
+    "size": 475
+  },
+  "altitude": {
+    "status": "ok",
+    "icon": "material-symbols:altitude",
+    "size": 224
+  },
+  "altiplano": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gastralgia": {
+    "status": "ok",
+    "icon": "openmoji:eye-pain",
+    "query": "pain",
+    "size": 1081
+  },
+  "alter": {
+    "status": "ok",
+    "icon": "material-symbols:add-photo-alternate",
+    "size": 329
+  },
+  "altocumulus": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exalt": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "alteration": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "alternate": {
+    "status": "ok",
+    "icon": "material-symbols:add-photo-alternate",
+    "size": 329
+  },
+  "ambul": {
+    "status": "ok",
+    "icon": "material-symbols:ambulance",
+    "size": 664
+  },
+  "inalterable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ambulance": {
+    "status": "ok",
+    "icon": "material-symbols:ambulance",
+    "size": 664
+  },
+  "altruism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ambulatory": {
+    "status": "ok",
+    "icon": "healthicons:ambulatory-clinic",
+    "size": 364
+  },
+  "amble": {
+    "status": "ok",
+    "icon": "arcticons:shibuya-scramble-square",
+    "size": 573
+  },
+  "perambulate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ampl": {
+    "status": "ok",
+    "icon": "mdi:amplifier",
+    "size": 460
+  },
+  "circumambulate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "preamble": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "amplidyne": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "amplify": {
+    "status": "ok",
+    "icon": "material-icon-theme:amplify",
+    "size": 176
+  },
+  "amplitude": {
+    "status": "ok",
+    "icon": "mdi:amplitude",
+    "size": 314
+  },
+  "example": {
+    "status": "ok",
+    "icon": "arcticons:example",
+    "size": 438
+  },
+  "andr": {
+    "status": "ok",
+    "icon": "material-symbols:android",
+    "size": 526
+  },
+  "ample": {
+    "status": "ok",
+    "icon": "openmoji:ice-core-sample",
+    "size": 2885
+  },
+  "android": {
+    "status": "ok",
+    "icon": "material-symbols:android",
+    "size": 526
+  },
+  "androgen": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "androgynous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "anandrous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "polyandry": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "angul": {
+    "status": "ok",
+    "icon": "mdi:angular",
+    "size": 253
+  },
+  "angular": {
+    "status": "ok",
+    "icon": "mdi:angular",
+    "size": 253
+  },
+  "monandry": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "equiangular": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "angle": {
+    "status": "ok",
+    "icon": "tabler:angle",
+    "size": 280
+  },
+  "triangle": {
+    "status": "ok",
+    "icon": "mdi:triangle",
+    "size": 136
+  },
+  "anth": {
+    "status": "ok",
+    "icon": "ri:anthropic-fill",
+    "size": 254
+  },
+  "multangular": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chrysanthemum": {
+    "status": "ok",
+    "icon": "dinkie-icons:chrysanthemum-mahjong",
+    "size": 257
+  },
+  "anthesis": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "anther": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "synanthous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "anthology": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "apt": {
+    "status": "ok",
+    "icon": "arcticons:adapt",
+    "size": 446
+  },
+  "adapt": {
+    "status": "ok",
+    "icon": "material-symbols:adaptive-audio-mic",
+    "size": 749
+  },
+  "polyanthus": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "inapt": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "malaptation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aqu": {
+    "status": "ok",
+    "icon": "twemoji:aquarius",
+    "size": 774
+  },
+  "aquarium": {
+    "status": "ok",
+    "icon": "mdi:aquarium",
+    "size": 568
+  },
+  "aptitude": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aqueduct": {
+    "status": "ok",
+    "icon": "game-icons:aqueduct",
+    "size": 1165
+  },
+  "aquaculture": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "subaqueous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aqueous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arbor": {
+    "status": "ok",
+    "icon": "carbon:harbor",
+    "size": 278
+  },
+  "terraqueous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arboreal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arboretum": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arborvirus": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arboriculture": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arborize": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arcane": {
+    "status": "ok",
+    "icon": "pinhead:sugarcane-stalk-with-leaves",
+    "size": 412
+  },
+  "arc": {
+    "status": "ok",
+    "icon": "mdi:chart-arc",
+    "size": 493
+  },
+  "coerce": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "coercion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exercise": {
+    "status": "ok",
+    "icon": "material-symbols:exercise",
+    "size": 616
+  },
+  "exercitation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exercitant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "arm": {
+    "status": "ok",
+    "icon": "twemoji:mechanical-arm",
+    "size": 1442
+  },
+  "armor": {
+    "status": "ok",
+    "icon": "game-icons:abdominal-armor",
+    "size": 880
+  },
+  "armament": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "armada": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "armory": {
+    "status": "ok",
+    "icon": "arcticons:armory-and-machine",
+    "size": 219
+  },
+  "armistice": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disarm": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aster": {
+    "status": "ok",
+    "icon": "material-symbols:asterisk",
+    "size": 289
+  },
+  "alarm": {
+    "status": "ok",
+    "icon": "material-symbols:alarm",
+    "size": 411
+  },
+  "asterisk": {
+    "status": "ok",
+    "icon": "material-symbols:asterisk",
+    "size": 289
+  },
+  "astronaut": {
+    "status": "ok",
+    "icon": "twemoji:astronaut",
+    "size": 3112
+  },
+  "astrology": {
+    "status": "ok",
+    "icon": "arcticons:indian-astrology",
+    "size": 513
+  },
+  "astronomy": {
+    "status": "ok",
+    "icon": "streamline-ultimate-color:astronomy-planet-ring",
+    "size": 1470
+  },
+  "disaster": {
+    "status": "ok",
+    "icon": "carbon:power-virtual-server-disaster-recovery-automation",
+    "size": 943
+  },
+  "aural": {
+    "status": "ok",
+    "icon": "fluent:headphones-monoaural-16-filled",
+    "size": 293
+  },
+  "subastral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aur": {
+    "status": "ok",
+    "icon": "mdi:aurora",
+    "size": 487
+  },
+  "auricular": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "binaural": {
+    "status": "ok",
+    "icon": "arcticons:binauralbeats",
+    "size": 606
+  },
+  "auricle": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "auriscope": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "auto": {
+    "status": "ok",
+    "icon": "material-symbols:hdr-auto",
+    "size": 362
+  },
+  "autograph": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "automat": {
+    "status": "ok",
+    "icon": "material-symbols:automation",
+    "size": 602
+  },
+  "autogamous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "avian": {
+    "status": "ok",
+    "icon": "fa6-brands:avianex",
+    "size": 612
+  },
+  "autonomy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aviation": {
+    "status": "ok",
+    "icon": "icon-park-outline:aviation",
+    "size": 403
+  },
+  "aviary": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aviculture": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "avigation": {
+    "status": "ok",
+    "icon": "material-symbols:assistant-navigation",
+    "size": 347
+  },
+  "axis": {
+    "status": "ok",
+    "icon": "material-symbols:line-axis",
+    "size": 265
+  },
+  "ax": {
+    "status": "ok",
+    "icon": "mdi:axe",
+    "size": 195
+  },
+  "axle": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "axiology": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "axletree": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "biaxial": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ball": {
+    "status": "ok",
+    "icon": "uil:ball",
+    "size": 938
+  },
+  "coax": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ballad": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "avi": {
+    "status": "ok",
+    "icon": "mdi:navi",
+    "query": "avi",
+    "size": 668
+  },
+  "ballade": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "balletomane": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ballet": {
+    "status": "ok",
+    "icon": "twemoji:ballet-dancer",
+    "size": 3426
+  },
+  "barrel": {
+    "status": "ok",
+    "icon": "material-symbols:oil-barrel",
+    "size": 507
+  },
+  "barricade": {
+    "status": "ok",
+    "icon": "ph:barricade",
+    "size": 389
+  },
+  "bar": {
+    "status": "ok",
+    "icon": "material-symbols:wine-bar",
+    "size": 211
+  },
+  "debar": {
+    "status": "ok",
+    "icon": "material-symbols:view-sidebar",
+    "size": 575
+  },
+  "barrier": {
+    "status": "ok",
+    "icon": "mdi:arm-barrier",
+    "size": 402
+  },
+  "embargo": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bell": {
+    "status": "ok",
+    "icon": "mdi:bell",
+    "size": 258
+  },
+  "embarrass": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "belligerent": {
+    "status": "ok",
+    "icon": "material-symbols:ward",
+    "size": 511
+  },
+  "bas": {
+    "status": "ok",
+    "icon": "mdi:base",
+    "size": 219
+  },
+  "bellicose": {
+    "status": "ok",
+    "icon": "material-symbols:ward",
+    "size": 511
+  },
+  "rebel": {
+    "status": "ok",
+    "icon": "arcticons:rebel-inc",
+    "size": 2035
+  },
+  "antebellum": {
+    "status": "ok",
+    "icon": "material-symbols:ward",
+    "size": 511
+  },
+  "postbellum": {
+    "status": "ok",
+    "icon": "material-symbols:ward",
+    "size": 511
+  },
+  "bibli": {
+    "status": "ok",
+    "icon": "arcticons:biblia",
+    "size": 461
+  },
+  "biblical": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bibliography": {
+    "status": "ok",
+    "icon": "material-icon-theme:bibliography",
+    "size": 855
+  },
+  "bibliomania": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bibliophile": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bibliofilm": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "blanch": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "blanket": {
+    "status": "ok",
+    "icon": "material-symbols:blanket",
+    "size": 609
+  },
+  "blanc": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "blank": {
+    "status": "ok",
+    "icon": "ph:note-blank",
+    "size": 338
+  },
+  "bonus": {
+    "status": "ok",
+    "icon": "arcticons:bahnbonus",
+    "size": 464
+  },
+  "bonny": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bon": {
+    "status": "ok",
+    "icon": "mdi:bone",
+    "size": 401
+  },
+  "bonism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bonanza": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "brev": {
+    "status": "ok",
+    "icon": "arcticons:brevent",
+    "size": 766
+  },
+  "bounty": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bona": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "breve": {
+    "status": "ok",
+    "icon": "arcticons:brevent",
+    "size": 766
+  },
+  "breviary": {
+    "status": "ok",
+    "icon": "arcticons:breviary",
+    "size": 434
+  },
+  "semibreve": {
+    "status": "ok",
+    "icon": "material-symbols:blur-short",
+    "size": 332
+  },
+  "breviate": {
+    "status": "ok",
+    "icon": "material-symbols:blur-short",
+    "size": 332
+  },
+  "brief": {
+    "status": "ok",
+    "icon": "twemoji:briefs",
+    "size": 866
+  },
+  "abbreviate": {
+    "status": "ok",
+    "icon": "material-symbols:blur-short",
+    "size": 332
+  },
+  "blancmange": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "burs": {
+    "status": "ok",
+    "icon": "material-symbols:burst-mode",
+    "size": 288
+  },
+  "brevity": {
+    "status": "ok",
+    "icon": "material-symbols:blur-short",
+    "size": 332
+  },
+  "purse": {
+    "status": "ok",
+    "icon": "twemoji:purse",
+    "size": 994
+  },
+  "disburse": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "reimburse": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "purser": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "camp": {
+    "status": "ok",
+    "icon": "material-symbols:campaign",
+    "size": 334
+  },
+  "campaign": {
+    "status": "ok",
+    "icon": "material-symbols:campaign",
+    "size": 334
+  },
+  "campus": {
+    "status": "ok",
+    "icon": "arcticons:campus-student",
+    "size": 256
+  },
+  "decamp": {
+    "status": "ok",
+    "icon": "arcticons:freecodecamp",
+    "size": 706
+  },
+  "campestral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "encamp": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cand": {
+    "status": "ok",
+    "icon": "material-symbols:candle",
+    "size": 549
+  },
+  "champion": {
+    "status": "ok",
+    "icon": "game-icons:champions",
+    "size": 2431
+  },
+  "champagne": {
+    "status": "ok",
+    "icon": "streamline-emojis:champagne-glass-1",
+    "size": 1504
+  },
+  "candle": {
+    "status": "ok",
+    "icon": "material-symbols:candle",
+    "size": 549
+  },
+  "candelabrum": {
+    "status": "ok",
+    "icon": "mdi:candelabrum",
+    "size": 453
+  },
+  "candid": {
+    "status": "ok",
+    "icon": "streamline-freehand-color:job-candidate-target-1",
+    "size": 2741
+  },
+  "candidate": {
+    "status": "ok",
+    "icon": "streamline-freehand-color:job-candidate-target-1",
+    "size": 2741
+  },
+  "bursar": {
+    "status": "no_icon",
+    "icon": "",
+    "size": 0
+  },
+  "incandescent": {
+    "status": "ok",
+    "icon": "material-symbols:wb-incandescent",
+    "size": 393
+  },
+  "captain": {
+    "status": "ok",
+    "icon": "game-icons:captain-hat-profile",
+    "size": 856
+  },
+  "candor": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "capital": {
+    "status": "ok",
+    "icon": "pinhead:alabama-with-capital-star",
+    "size": 286
+  },
+  "car": {
+    "status": "ok",
+    "icon": "mdi:car",
+    "size": 464
+  },
+  "capstone": {
+    "status": "ok",
+    "icon": "mdi:head",
+    "size": 237
+  },
+  "career": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "carry": {
+    "status": "ok",
+    "icon": "material-symbols:carry-on-bag",
+    "size": 375
+  },
+  "carriage": {
+    "status": "ok",
+    "icon": "mdi:baby-carriage",
+    "size": 537
+  },
+  "chariot": {
+    "status": "ok",
+    "icon": "game-icons:chariot",
+    "size": 2021
+  },
+  "cardi": {
+    "status": "ok",
+    "icon": "material-symbols:cardio-load",
+    "size": 493
+  },
+  "charge": {
+    "status": "ok",
+    "icon": "openmoji:charge-plug",
+    "size": 1673
+  },
+  "cardiac": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cardiology": {
+    "status": "ok",
+    "icon": "material-symbols:cardiology",
+    "size": 595
+  },
+  "endocardium": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cardiogram": {
+    "status": "ok",
+    "icon": "healthicons:cardiogram",
+    "size": 538
+  },
+  "carn": {
+    "status": "ok",
+    "icon": "game-icons:carnival-mask",
+    "size": 1972
+  },
+  "carnage": {
+    "status": "ok",
+    "icon": "arcticons:carnagewars",
+    "size": 1329
+  },
+  "pericardium": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "carnal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "carnation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "carnival": {
+    "status": "ok",
+    "icon": "game-icons:carnival-mask",
+    "size": 1972
+  },
+  "capitation": {
+    "status": "ok",
+    "icon": "tabler:hand-grab",
+    "query": "hand-grab",
+    "size": 457
+  },
+  "carnivorous": {
+    "status": "ok",
+    "icon": "game-icons:carnivorous-plant",
+    "size": 2495
+  },
+  "cart": {
+    "status": "ok",
+    "icon": "mdi:cart",
+    "size": 458
+  },
+  "incarnate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "card": {
+    "status": "ok",
+    "icon": "mdi:card",
+    "size": 195
+  },
+  "cartel": {
+    "status": "ok",
+    "icon": "cib:big-cartel",
+    "size": 337
+  },
+  "carton": {
+    "status": "ok",
+    "icon": "roentgen:aseptic-carton",
+    "size": 446
+  },
+  "cartoon": {
+    "status": "ok",
+    "icon": "pinhead:cartoon-bomb-with-lit-fuse",
+    "size": 1255
+  },
+  "discarnate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chart": {
+    "status": "ok",
+    "icon": "mdi:chart-line",
+    "size": 203
+  },
+  "cartography": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "charter": {
+    "status": "ok",
+    "icon": "openmoji:navarra-chartered-community",
+    "size": 1497
+  },
+  "cast": {
+    "status": "ok",
+    "icon": "material-symbols:cast",
+    "size": 439
+  },
+  "chaste": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "caste": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "castigate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chastise": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chasten": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cav": {
+    "status": "ok",
+    "icon": "roentgen:cave",
+    "size": 466
+  },
+  "cave": {
+    "status": "ok",
+    "icon": "lucide:lens-concave",
+    "size": 311
+  },
+  "concave": {
+    "status": "ok",
+    "icon": "lucide:lens-concave",
+    "size": 311
+  },
+  "cavity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cent": {
+    "status": "ok",
+    "icon": "material-symbols:flourescent-outline",
+    "size": 324
+  },
+  "cavern": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "century": {
+    "status": "ok",
+    "icon": "arcticons:centurylink",
+    "size": 822
+  },
+  "excavate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "centipede": {
+    "status": "ok",
+    "icon": "game-icons:centipede",
+    "size": 3792
+  },
+  "percent": {
+    "status": "ok",
+    "icon": "material-symbols:percent",
+    "size": 514
+  },
+  "cert": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "centuplicate": {
+    "status": "ok",
+    "icon": "twemoji:hundred-points",
+    "size": 1671
+  },
+  "certain": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "certify": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "certificate": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "ascertain": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "certitude": {
+    "status": "ok",
+    "icon": "mdi:certificate",
+    "size": 302
+  },
+  "chef": {
+    "status": "ok",
+    "icon": "material-symbols:chef-hat",
+    "size": 376
+  },
+  "chief": {
+    "status": "ok",
+    "icon": "arcticons:chieffollow",
+    "size": 953
+  },
+  "chieftain": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "kerchief": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "handkerchief": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "mischief": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "christ": {
+    "status": "ok",
+    "icon": "mdi:christianity",
+    "size": 162
+  },
+  "mischievous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chrismatory": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chrism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "christian": {
+    "status": "ok",
+    "icon": "mdi:christianity",
+    "size": 162
+  },
+  "christmas": {
+    "status": "ok",
+    "icon": "twemoji:christmas-tree",
+    "size": 2560
+  },
+  "christen": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "chronicle": {
+    "status": "ok",
+    "icon": "arcticons:chronicle-audiobook-player",
+    "size": 936
+  },
+  "chronology": {
+    "status": "ok",
+    "icon": "mdi:clock",
+    "size": 232
+  },
+  "anachronism": {
+    "status": "ok",
+    "icon": "mdi:clock",
+    "size": 232
+  },
+  "diachronic": {
+    "status": "ok",
+    "icon": "mdi:clock",
+    "size": 232
+  },
+  "synchronize": {
+    "status": "ok",
+    "icon": "flat-color-icons:synchronize",
+    "size": 535
+  },
+  "cing": {
+    "status": "ok",
+    "icon": "openmoji:front-facing-baby-chick",
+    "size": 1432
+  },
+  "isochrona": {
+    "status": "ok",
+    "icon": "mdi:clock",
+    "size": 232
+  },
+  "surcingle": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "succinct": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cingulum": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cincture": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "circle": {
+    "status": "ok",
+    "icon": "material-symbols:circle-outline",
+    "query": "circle",
+    "size": 377
+  },
+  "circ": {
+    "status": "ok",
+    "icon": "material-symbols:account-circle",
+    "size": 548
+  },
+  "chron": {
+    "status": "ok",
+    "icon": "mdi:clock",
+    "query": "clock",
+    "size": 232
+  },
+  "precinct": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "circular": {
+    "status": "ok",
+    "icon": "material-symbols:blur-circular",
+    "size": 1249
+  },
+  "circus": {
+    "status": "ok",
+    "icon": "twemoji:circus-tent",
+    "size": 1574
+  },
+  "circulate": {
+    "status": "ok",
+    "icon": "material-symbols:car-fan-recirculate",
+    "size": 560
+  },
+  "encircle": {
+    "status": "ok",
+    "icon": "game-icons:encirclement",
+    "size": 1446
+  },
+  "microcircuit": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cit": {
+    "status": "ok",
+    "icon": "material-symbols:explicit",
+    "size": 261
+  },
+  "cite": {
+    "status": "ok",
+    "icon": "academicons:datacite",
+    "size": 838
+  },
+  "excite": {
+    "status": "ok",
+    "icon": "material-symbols:sentiment-excited",
+    "size": 674
+  },
+  "incite": {
+    "status": "ok",
+    "icon": "arcticons:summoners-war",
+    "size": 1702
+  },
+  "recite": {
+    "status": "ok",
+    "icon": "arcticons:summoners-war",
+    "size": 1702
+  },
+  "resuscitate": {
+    "status": "ok",
+    "icon": "arcticons:summoners-war",
+    "size": 1702
+  },
+  "civic": {
+    "status": "ok",
+    "icon": "cib:civicrm",
+    "size": 1234
+  },
+  "civil": {
+    "status": "ok",
+    "icon": "carbon:navaid-civil",
+    "size": 323
+  },
+  "civ": {
+    "status": "ok",
+    "icon": "carbon:navaid-civil",
+    "size": 323
+  },
+  "solicit": {
+    "status": "ok",
+    "icon": "arcticons:summoners-war",
+    "size": 1702
+  },
+  "civilian": {
+    "status": "ok",
+    "icon": "mdi:city",
+    "size": 259
+  },
+  "civilize": {
+    "status": "ok",
+    "icon": "mdi:city",
+    "size": 259
+  },
+  "citizen": {
+    "status": "ok",
+    "icon": "arcticons:citizen-alert",
+    "size": 599
+  },
+  "citify": {
+    "status": "ok",
+    "icon": "mdi:city",
+    "size": 259
+  },
+  "corn": {
+    "status": "ok",
+    "icon": "twemoji:ear-of-corn",
+    "size": 2193
+  },
+  "cornea": {
+    "status": "ok",
+    "icon": "game-icons:maze-cornea",
+    "size": 2978
+  },
+  "corner": {
+    "status": "ok",
+    "icon": "material-symbols:rounded-corner",
+    "size": 320
+  },
+  "cornet": {
+    "status": "ok",
+    "icon": "wpf:cornet",
+    "size": 1095
+  },
+  "unicorn": {
+    "status": "ok",
+    "icon": "twemoji:unicorn",
+    "size": 2331
+  },
+  "horn": {
+    "status": "ok",
+    "icon": "twemoji:postal-horn",
+    "size": 816
+  },
+  "cornucopia": {
+    "status": "ok",
+    "icon": "game-icons:cornucopia",
+    "size": 3478
+  },
+  "dehorn": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "coron": {
+    "status": "ok",
+    "icon": "material-symbols:coronavirus",
+    "size": 1896
+  },
+  "corona": {
+    "status": "ok",
+    "icon": "material-symbols:coronavirus",
+    "size": 1896
+  },
+  "coronal": {
+    "status": "ok",
+    "icon": "arcticons:coronalert",
+    "size": 796
+  },
+  "coronary": {
+    "status": "ok",
+    "icon": "healthicons:coronary-care-unit",
+    "size": 629
+  },
+  "city": {
+    "status": "ok",
+    "icon": "mdi:city",
+    "query": "city",
+    "size": 259
+  },
+  "coronation": {
+    "status": "ok",
+    "icon": "game-icons:coronation",
+    "size": 2209
+  },
+  "incivism": {
+    "status": "ok",
+    "icon": "mdi:city",
+    "query": "city",
+    "size": 259
+  },
+  "crime": {
+    "status": "ok",
+    "icon": "game-icons:crime-scene-tape",
+    "size": 1493
+  },
+  "coronet": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "criminal": {
+    "status": "ok",
+    "icon": "ri:criminal-fill",
+    "size": 482
+  },
+  "crim": {
+    "status": "ok",
+    "icon": "ri:criminal-fill",
+    "size": 482
+  },
+  "recoronation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "criterion": {
+    "status": "ok",
+    "icon": "arcticons:criterion",
+    "size": 312
+  },
+  "discriminate": {
+    "status": "ok",
+    "icon": "game-icons:crime-scene-tape",
+    "size": 1493
+  },
+  "incriminate": {
+    "status": "ok",
+    "icon": "game-icons:crime-scene-tape",
+    "size": 1493
+  },
+  "recriminate": {
+    "status": "ok",
+    "icon": "game-icons:crime-scene-tape",
+    "size": 1493
+  },
+  "criticize": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "query": "critic",
+    "size": 1456
+  },
+  "cruc": {
+    "status": "ok",
+    "icon": "game-icons:crucifix",
+    "size": 611
+  },
+  "hypocrite": {
+    "status": "ok",
+    "icon": "arcticons:critical-maps",
+    "query": "critic",
+    "size": 1456
+  },
+  "crucifix": {
+    "status": "ok",
+    "icon": "game-icons:crucifix",
+    "size": 611
+  },
+  "crucial": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "crucify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cruciform": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "crypt": {
+    "status": "ok",
+    "icon": "game-icons:crypt-entrance",
+    "size": 2062
+  },
+  "excruciate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "crusade": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "decrypt": {
+    "status": "ok",
+    "icon": "mdi:decrypted",
+    "size": 318
+  },
+  "cryptic": {
+    "status": "ok",
+    "icon": "arcticons:cracking-the-cryptic",
+    "size": 864
+  },
+  "encrypt": {
+    "status": "ok",
+    "icon": "material-symbols:encrypted",
+    "size": 308
+  },
+  "cryptography": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "culp": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "procryptic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "culpable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "culprit": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "inculpate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exculpate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "cuss": {
+    "status": "ok",
+    "icon": "ri:discuss-fill",
+    "size": 250
+  },
+  "discuss": {
+    "status": "ok",
+    "icon": "mdi:discussion",
+    "size": 235
+  },
+  "disculpate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "concuss": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "succuss": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "percussion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "repercussion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "damnable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "damn": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "damnation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "damnify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "condemn": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "indemnity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "de": {
+    "status": "ok",
+    "icon": "twemoji:fleur-de-lis",
+    "size": 1023
+  },
+  "indemnify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deist": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deific": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "dec": {
+    "status": "ok",
+    "icon": "material-symbols:deceased",
+    "size": 422
+  },
+  "decent": {
+    "status": "ok",
+    "icon": "streamline-color:decent-work-and-economic-growth",
+    "size": 612
+  },
+  "deiform": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "decency": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decorate": {
+    "status": "ok",
+    "icon": "lsicon:decorate-filled",
+    "size": 394
+  },
+  "decor": {
+    "status": "ok",
+    "icon": "twemoji:heart-decoration",
+    "size": 459
+  },
+  "decorous": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decorum": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decimal": {
+    "status": "ok",
+    "icon": "material-symbols:decimal-decrease",
+    "size": 417
+  },
+  "december": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decem": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decimalism": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decimate": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decathlon": {
+    "status": "ok",
+    "icon": "arcticons:decathlon",
+    "size": 525
+  },
+  "decade": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "decuple": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "dent": {
+    "status": "ok",
+    "icon": "material-symbols:dentistry",
+    "size": 523
+  },
+  "dental": {
+    "status": "ok",
+    "icon": "mdi:music-accidental-double-flat",
+    "size": 423
+  },
+  "dentist": {
+    "status": "ok",
+    "icon": "material-symbols:dentistry",
+    "size": 523
+  },
+  "indent": {
+    "status": "ok",
+    "icon": "uil:left-indent",
+    "size": 426
+  },
+  "edentate": {
+    "status": "ok",
+    "icon": "twemoji:tooth",
+    "size": 622
+  },
+  "trident": {
+    "status": "ok",
+    "icon": "twemoji:trident-emblem",
+    "size": 860
+  },
+  "interdental": {
+    "status": "ok",
+    "icon": "twemoji:tooth",
+    "size": 622
+  },
+  "indecent": {
+    "status": "ok",
+    "icon": "twemoji:ten-oclock",
+    "query": "ten",
+    "size": 364
+  },
+  "derm": {
+    "status": "ok",
+    "icon": "material-symbols:dermatology",
+    "size": 669
+  },
+  "hypodermic": {
+    "status": "ok",
+    "icon": "game-icons:hypodermic-test",
+    "size": 1608
+  },
+  "epidermal": {
+    "status": "ok",
+    "icon": "twemoji:boy-dark-skin-tone",
+    "size": 1003
+  },
+  "xeroderma": {
+    "status": "ok",
+    "icon": "twemoji:boy-dark-skin-tone",
+    "size": 1003
+  },
+  "dermal": {
+    "status": "ok",
+    "icon": "twemoji:boy-dark-skin-tone",
+    "size": 1003
+  },
+  "dermatitis": {
+    "status": "ok",
+    "icon": "twemoji:boy-dark-skin-tone",
+    "size": 1003
+  },
+  "dermatology": {
+    "status": "ok",
+    "icon": "material-symbols:dermatology",
+    "size": 669
+  },
+  "diary": {
+    "status": "ok",
+    "icon": "mdi:diary",
+    "size": 283
+  },
+  "dial": {
+    "status": "ok",
+    "icon": "mdi:dial",
+    "size": 221
+  },
+  "meridian": {
+    "status": "ok",
+    "icon": "twemoji:globe-with-meridians",
+    "size": 1165
+  },
+  "postmeridian": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "antemeridian": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "dignify": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "dign": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "dignity": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "deign": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "condign": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "indignant": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "dainty": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "indignity": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "disdain": {
+    "status": "ok",
+    "icon": "mdi:medal",
+    "query": "medal",
+    "size": 318
+  },
+  "dogma": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "dogm": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "dogmatism": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "heterodox": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "dogmatic": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "orthodox": {
+    "status": "ok",
+    "icon": "twemoji:orthodox-cross",
+    "size": 599
+  },
+  "dol": {
+    "status": "ok",
+    "icon": "twemoji:japanese-dolls",
+    "size": 2939
+  },
+  "dole": {
+    "status": "ok",
+    "icon": "mdi:girandole",
+    "size": 750
+  },
+  "paradox": {
+    "status": "ok",
+    "icon": "twemoji:thought-balloon",
+    "query": "thought",
+    "size": 475
+  },
+  "dolo": {
+    "status": "ok",
+    "icon": "mingcute:sad-fill",
+    "size": 940
+  },
+  "dolorous": {
+    "status": "ok",
+    "icon": "mingcute:sad-fill",
+    "size": 940
+  },
+  "condole": {
+    "status": "ok",
+    "icon": "mingcute:sad-fill",
+    "size": 940
+  },
+  "indolent": {
+    "status": "ok",
+    "icon": "mingcute:sad-fill",
+    "size": 940
+  },
+  "doleful": {
+    "status": "ok",
+    "icon": "mingcute:sad-fill",
+    "size": 940
+  },
+  "domesticate": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "domical": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "domicile": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "semidome": {
+    "status": "ok",
+    "icon": "material-symbols:house",
+    "size": 260
+  },
+  "dominion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "domin": {
+    "status": "ok",
+    "icon": "twemoji:flag-dominica",
+    "size": 4041
+  },
+  "domino": {
+    "status": "ok",
+    "icon": "material-symbols:domino-mask",
+    "size": 662
+  },
+  "condominium": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "don": {
+    "status": "ok",
+    "icon": "material-symbols:cloud-done",
+    "size": 357
+  },
+  "donor": {
+    "status": "ok",
+    "icon": "arcticons:blood-donor",
+    "size": 607
+  },
+  "predominate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "donee": {
+    "status": "ok",
+    "icon": "mdi:gift",
+    "size": 468
+  },
+  "donate": {
+    "status": "ok",
+    "icon": "mdi:donate",
+    "size": 468
+  },
+  "condone": {
+    "status": "ok",
+    "icon": "mdi:gift",
+    "size": 468
+  },
+  "pardon": {
+    "status": "ok",
+    "icon": "mdi:gift",
+    "size": 468
+  },
+  "dorm": {
+    "status": "ok",
+    "icon": "arcticons:haunted-dorm",
+    "size": 1667
+  },
+  "dormancy": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "dormant": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "dormitive": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "dormouse": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "drom": {
+    "status": "ok",
+    "icon": "arcticons:drom",
+    "size": 1069
+  },
+  "dormitory": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "dormobile": {
+    "status": "ok",
+    "icon": "mdi:sleep",
+    "size": 237
+  },
+  "dromond": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aerodrome": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hippodrome": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "prodrome": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "syndrome": {
+    "status": "ok",
+    "icon": "streamline-freehand-color:disability-down-syndrome-ribbon",
+    "size": 3904
+  },
+  "du": {
+    "status": "ok",
+    "icon": "material-symbols:duo",
+    "size": 313
+  },
+  "dual": {
+    "status": "ok",
+    "icon": "material-symbols:dual-screen",
+    "size": 347
+  },
+  "duet": {
+    "status": "ok",
+    "icon": "arcticons:duet",
+    "size": 648
+  },
+  "dualism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "duel": {
+    "status": "ok",
+    "icon": "game-icons:duel",
+    "size": 720
+  },
+  "duplicate": {
+    "status": "ok",
+    "icon": "openmoji:duplicate",
+    "size": 529
+  },
+  "dur": {
+    "status": "ok",
+    "icon": "tabler:time-duration-0",
+    "size": 372
+  },
+  "reduplicate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "duodenal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "durable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "durance": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "during": {
+    "status": "ok",
+    "icon": "arcticons:kpn-prepaid",
+    "size": 579
+  },
+  "endure": {
+    "status": "ok",
+    "icon": "arcticons:zendure",
+    "size": 379
+  },
+  "dyn": {
+    "status": "ok",
+    "icon": "material-symbols:dynamic-feed",
+    "size": 319
+  },
+  "indurate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "obdurate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "perdure": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "dynamic": {
+    "status": "ok",
+    "icon": "material-symbols:dynamic-feed",
+    "size": 319
+  },
+  "dynasty": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "dyne": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "dynamism": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "dynamite": {
+    "status": "ok",
+    "icon": "game-icons:dynamite",
+    "size": 2339
+  },
+  "dynamo": {
+    "status": "ok",
+    "icon": "devicon-plain:dynamodb",
+    "size": 2255
+  },
+  "adynamia": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "isodynamic": {
+    "status": "ok",
+    "icon": "openmoji:solar-energy",
+    "size": 381
+  },
+  "ego": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "egoism": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "egoist": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "egocentric": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "duress": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "egomania": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "nonego": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "em": {
+    "status": "ok",
+    "icon": "mdi:ember",
+    "size": 522
+  },
+  "superego": {
+    "status": "ok",
+    "icon": "mdi:lego",
+    "size": 211
+  },
+  "exempt": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exemption": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "preempt": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "redeem": {
+    "status": "ok",
+    "icon": "material-symbols:redeem",
+    "size": 609
+  },
+  "preemption": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "redemption": {
+    "status": "ok",
+    "icon": "fluent-mdl2:entitlement-redemption",
+    "size": 374
+  },
+  "prompt": {
+    "status": "ok",
+    "icon": "material-symbols:prompt-suggestion",
+    "size": 274
+  },
+  "ergo": {
+    "status": "ok",
+    "icon": "arcticons:musicplayergo",
+    "size": 572
+  },
+  "allergy": {
+    "status": "ok",
+    "icon": "material-symbols:allergy",
+    "size": 1060
+  },
+  "err": {
+    "status": "ok",
+    "icon": "material-symbols:battery-error",
+    "size": 374
+  },
+  "ergograph": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ergonomics": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "errand": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "errant": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "error": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "erratic": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "erroneous": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "aberrance": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "ess": {
+    "status": "ok",
+    "icon": "material-symbols:chess",
+    "size": 336
+  },
+  "inerrable": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "essence": {
+    "status": "ok",
+    "icon": "arcticons:pure-essence-icon-pack",
+    "size": 498
+  },
+  "essential": {
+    "status": "ok",
+    "icon": "arcticons:essential-space",
+    "size": 569
+  },
+  "present": {
+    "status": "ok",
+    "icon": "material-symbols:co-present",
+    "size": 418
+  },
+  "interest": {
+    "status": "ok",
+    "icon": "material-symbols:interests",
+    "size": 445
+  },
+  "estim": {
+    "status": "ok",
+    "icon": "hugeicons:estimate-01",
+    "size": 682
+  },
+  "quintessence": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "absent": {
+    "status": "ok",
+    "icon": "tabler:x-mark",
+    "query": "x-mark",
+    "size": 514
+  },
+  "estimate": {
+    "status": "ok",
+    "icon": "hugeicons:estimate-01",
+    "size": 682
+  },
+  "estimable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "esteem": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disesteem": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disestimation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ev": {
+    "status": "ok",
+    "icon": "material-symbols:ev-shadow",
+    "size": 408
+  },
+  "ever": {
+    "status": "ok",
+    "icon": "mdi:evernote",
+    "size": 635
+  },
+  "forever": {
+    "status": "ok",
+    "icon": "material-symbols:delete-forever",
+    "size": 299
+  },
+  "medieval": {
+    "status": "ok",
+    "icon": "game-icons:medieval-barracks",
+    "size": 1735
+  },
+  "longevity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "primeval": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fabric": {
+    "status": "ok",
+    "icon": "mdi:fabric",
+    "size": 291
+  },
+  "fabricable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fabricate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fabricant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fabul": {
+    "status": "ok",
+    "icon": "arcticons:fabularium",
+    "size": 567
+  },
+  "prefabricate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fable": {
+    "status": "ok",
+    "icon": "arcticons:fable",
+    "size": 322
+  },
+  "fabulous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "confabulate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "affable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ineffable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fall": {
+    "status": "ok",
+    "icon": "solar:star-fall-2-bold",
+    "size": 1085
+  },
+  "false": {
+    "status": "ok",
+    "icon": "pajamas:false-positive",
+    "size": 568
+  },
+  "infallible": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fallacy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "falsity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fail": {
+    "status": "ok",
+    "icon": "material-symbols:sms-failed",
+    "size": 295
+  },
+  "falsify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "failure": {
+    "status": "ok",
+    "icon": "icon-park-outline:battery-failure",
+    "size": 598
+  },
+  "fam": {
+    "status": "ok",
+    "icon": "material-symbols:family-group",
+    "size": 656
+  },
+  "famous": {
+    "status": "ok",
+    "icon": "streamline-freehand-color:famous-character-pokemon",
+    "size": 1644
+  },
+  "fame": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "infamy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "defamation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "defame": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fanc": {
+    "status": "ok",
+    "icon": "pinhead:fancy-mirror-with-reflection-and-stars",
+    "size": 1373
+  },
+  "fancy": {
+    "status": "ok",
+    "icon": "pinhead:fancy-mirror-with-reflection-and-stars",
+    "size": 1373
+  },
+  "fantastic": {
+    "status": "ok",
+    "icon": "vscode-icons:file-type-fantasticon",
+    "size": 685
+  },
+  "fantasy": {
+    "status": "ok",
+    "icon": "mdi:fantasy",
+    "size": 682
+  },
+  "fanciful": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "phantom": {
+    "status": "ok",
+    "icon": "arcticons:jujutsu-kaisen-phantom-parade",
+    "size": 2833
+  },
+  "phantasm": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "far": {
+    "status": "ok",
+    "icon": "mdi:farewell",
+    "size": 668
+  },
+  "theophany": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "sycophant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fairy": {
+    "status": "ok",
+    "icon": "twemoji:fairy",
+    "size": 2150
+  },
+  "fate": {
+    "status": "ok",
+    "icon": "arcticons:fate-go",
+    "size": 418
+  },
+  "nefarious": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "infant": {
+    "status": "ok",
+    "icon": "guidance:parent-and-infant-priority-seating",
+    "size": 542
+  },
+  "profess": {
+    "status": "ok",
+    "icon": "mdi:professional-hexagon",
+    "size": 689
+  },
+  "confess": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "prophet": {
+    "status": "ok",
+    "icon": "hugeicons:the-prophets-mosque",
+    "size": 419
+  },
+  "feder": {
+    "status": "ok",
+    "icon": "openmoji:united-federation-of-planets-flag-star-trek",
+    "size": 3575
+  },
+  "federal": {
+    "status": "ok",
+    "icon": "arcticons:navy-federal",
+    "size": 637
+  },
+  "federation": {
+    "status": "ok",
+    "icon": "openmoji:united-federation-of-planets-flag-star-trek",
+    "size": 3575
+  },
+  "confederate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fend": {
+    "status": "ok",
+    "icon": "arcticons:fendertune",
+    "size": 1624
+  },
+  "confederacy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "anti-federalist": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fender": {
+    "status": "ok",
+    "icon": "arcticons:bitdefender",
+    "size": 521
+  },
+  "defend": {
+    "status": "ok",
+    "icon": "arcticons:defender-hd",
+    "size": 1104
+  },
+  "fence": {
+    "status": "ok",
+    "icon": "material-symbols:fence",
+    "size": 385
+  },
+  "forfend": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "offend": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "offense": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fencible": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ferv": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fervent": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fervid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fervor": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ferment": {
+    "status": "ok",
+    "icon": "pinhead:storage-fermenter",
+    "size": 329
+  },
+  "fest": {
+    "status": "ok",
+    "icon": "material-symbols:festival",
+    "size": 988
+  },
+  "feast": {
+    "status": "ok",
+    "icon": "arcticons:feast-kwgt",
+    "size": 902
+  },
+  "effervescent": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "perfervid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "festal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "festive": {
+    "status": "ok",
+    "icon": "pinhead:people-wearing-traditional-festive-latin-clothes",
+    "size": 1913
+  },
+  "festival": {
+    "status": "ok",
+    "icon": "material-symbols:festival",
+    "size": 988
+  },
+  "festoon": {
+    "status": "ok",
+    "icon": "cbi:twinkly-festoon",
+    "size": 2665
+  },
+  "festivity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fibr": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fibre": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fibrin": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fibroid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "myofibril": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "neurofibril": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "bifid": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "multifid": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "fissile": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "fission": {
+    "status": "ok",
+    "icon": "game-icons:fission",
+    "size": 1662
+  },
+  "file": {
+    "status": "ok",
+    "icon": "mdi:file",
+    "size": 203
+  },
+  "filament": {
+    "status": "ok",
+    "icon": "mdi:lightbulb-filament",
+    "size": 441
+  },
+  "fillet": {
+    "status": "ok",
+    "icon": "iconoir:fillet-3d",
+    "size": 331
+  },
+  "fissure": {
+    "status": "ok",
+    "icon": "material-symbols:handshake",
+    "query": "handshake",
+    "size": 948
+  },
+  "fil": {
+    "status": "ok",
+    "icon": "material-symbols:audio-file",
+    "size": 338
+  },
+  "defile": {
+    "status": "ok",
+    "icon": "twemoji:thread",
+    "size": 1747
+  },
+  "confirm": {
+    "status": "ok",
+    "icon": "carbon:asset-confirm",
+    "size": 599
+  },
+  "unifilar": {
+    "status": "ok",
+    "icon": "twemoji:thread",
+    "size": 1747
+  },
+  "profile": {
+    "status": "ok",
+    "icon": "material-symbols:lab-profile",
+    "size": 371
+  },
+  "fixate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "transfix": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "infirmary": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "flagr": {
+    "status": "ok",
+    "icon": "game-icons:fulguro-punch",
+    "size": 3163
+  },
+  "infirm": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "flagrant": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "conflagration": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "flagrancy": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "fulgurate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "refulgence": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "flatulent": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "refulgent": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "afflatus": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "deflate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "reflate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "conflate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "deflect": {
+    "status": "ok",
+    "icon": "ph:arrow-bend-down-left",
+    "size": 304
+  },
+  "flig": {
+    "status": "ok",
+    "icon": "material-symbols:flight",
+    "size": 237
+  },
+  "genuflect": {
+    "status": "ok",
+    "icon": "ph:arrow-bend-down-left",
+    "size": 304
+  },
+  "profligate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "conflict": {
+    "status": "ok",
+    "icon": "tabler:git-pull-request-conflict",
+    "size": 332
+  },
+  "afflict": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "deflagrate": {
+    "status": "ok",
+    "icon": "game-icons:muscle-fat",
+    "query": "muscle",
+    "size": 927
+  },
+  "inflict": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "floral": {
+    "status": "ok",
+    "icon": "arcticons:floral",
+    "size": 2343
+  },
+  "florid": {
+    "status": "ok",
+    "icon": "pinhead:florida",
+    "size": 367
+  },
+  "self-inflicted": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "floriculture": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "efflorescence": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "defloration": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exfoliate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "franc": {
+    "status": "ok",
+    "icon": "material-symbols:currency-franc",
+    "size": 166
+  },
+  "reflexive": {
+    "status": "ok",
+    "icon": "twemoji:mirror",
+    "size": 2944
+  },
+  "frank": {
+    "status": "ok",
+    "icon": "mdi:food-frankfurter",
+    "size": 610
+  },
+  "frankfurter": {
+    "status": "ok",
+    "icon": "mdi:food-frankfurter",
+    "size": 610
+  },
+  "frankincense": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "enfranchise": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "franchise": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "frater": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disfranchise": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fraternal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fraternity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "friary": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "confraternity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "refrigerant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "friger": {
+    "status": "ok",
+    "icon": "twemoji:cold-face",
+    "size": 2804
+  },
+  "defoliant": {
+    "status": "err: The read operation timed out",
+    "icon": "",
+    "size": 0
+  },
+  "refrigerator": {
+    "status": "ok",
+    "icon": "mdi:refrigerator",
+    "size": 245
+  },
+  "frigid": {
+    "status": "ok",
+    "icon": "carbon:temperature-frigid",
+    "size": 636
+  },
+  "refrigerate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "frigidity": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "frigorific": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "frontal": {
+    "status": "ok",
+    "icon": "game-icons:frontal-lobe",
+    "size": 3705
+  },
+  "effrontery": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "affront": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "fum": {
+    "status": "ok",
+    "icon": "mingcute:parfum-fill",
+    "size": 884
+  },
+  "digamy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "agamous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "polygamy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "monogamous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gastralgic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gastritis": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "amalgam": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "geometry": {
+    "status": "ok",
+    "icon": "tabler:geometry",
+    "size": 335
+  },
+  "epigastric": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hypogastric": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "apogee": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gloss": {
+    "status": "ok",
+    "icon": "carbon:data-glossary",
+    "size": 599
+  },
+  "glossary": {
+    "status": "ok",
+    "icon": "carbon:data-glossary",
+    "size": 599
+  },
+  "hypogeal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hypoglossal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "glossitis": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "polyglot": {
+    "status": "ok",
+    "icon": "vscode-icons:file-type-polyglot",
+    "size": 2495
+  },
+  "glut": {
+    "status": "ok",
+    "icon": "mdi:gluten",
+    "size": 803
+  },
+  "glottis": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gluey": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "glue": {
+    "status": "ok",
+    "icon": "jam:glue",
+    "size": 324
+  },
+  "glutinous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gluten": {
+    "status": "ok",
+    "icon": "mdi:gluten",
+    "size": 803
+  },
+  "deglutinate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "goniometer": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "perigee": {
+    "status": "err: The read operation timed out",
+    "icon": "",
+    "size": 0
+  },
+  "isogon": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "orthogon": {
+    "status": "ok",
+    "icon": "iconoir:orthogonal-view",
+    "size": 270
+  },
+  "pentagon": {
+    "status": "ok",
+    "icon": "material-symbols:pentagon",
+    "size": 149
+  },
+  "gorg": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gorge": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gorgeous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "trigonal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "disgorge": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "engorge": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "regurgitate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ingurgitate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gran": {
+    "status": "ok",
+    "icon": "carbon:ibm-granite",
+    "size": 625
+  },
+  "granary": {
+    "status": "ok",
+    "icon": "game-icons:granary",
+    "size": 1745
+  },
+  "agglutination": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "graniferous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "granule": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "granular": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "graniform": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "grain": {
+    "status": "ok",
+    "icon": "material-symbols:grain",
+    "size": 747
+  },
+  "ingrain": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "gravid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aggravate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "engrave": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aggregate": {
+    "status": "ok",
+    "icon": "grommet-icons:aggregate",
+    "size": 201
+  },
+  "egregious": {
+    "status": "ok",
+    "icon": "material-symbols:group",
+    "size": 566
+  },
+  "segregate": {
+    "status": "ok",
+    "icon": "material-symbols:group",
+    "size": 566
+  },
+  "hal": {
+    "status": "ok",
+    "icon": "openmoji:hal-9000",
+    "size": 978
+  },
+  "gyn": {
+    "status": "ok",
+    "icon": "material-symbols:gynecology",
+    "size": 1224
+  },
+  "exhale": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "inhale": {
+    "status": "ok",
+    "icon": "covid:transmission-virus-inhale",
+    "size": 804
+  },
+  "inhalant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "exhalation": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hap": {
+    "status": "ok",
+    "icon": "mdi:robot-happy",
+    "size": 551
+  },
+  "halitosis": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "happy": {
+    "status": "ok",
+    "icon": "mingcute:happy-fill",
+    "size": 1219
+  },
+  "happen": {
+    "status": "ok",
+    "icon": "arcticons:happening",
+    "size": 987
+  },
+  "gravitate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "mishap": {
+    "status": "ok",
+    "icon": "mdi:luck",
+    "size": 698
+  },
+  "haphazard": {
+    "status": "ok",
+    "icon": "mdi:luck",
+    "size": 698
+  },
+  "harmonic": {
+    "status": "ok",
+    "icon": "arcticons:harmonic",
+    "size": 431
+  },
+  "perhaps": {
+    "status": "ok",
+    "icon": "mdi:luck",
+    "size": 698
+  },
+  "harmonious": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "helium": {
+    "status": "ok",
+    "icon": "arcticons:helium-wallet",
+    "size": 428
+  },
+  "disharmony": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "enharmonic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "heliogram": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "helioscope": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "perihelion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "aphelion": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hesitant": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "adhesion": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "inhere": {
+    "status": "ok",
+    "icon": "mdi:magnet",
+    "size": 216
+  },
+  "hom": {
+    "status": "ok",
+    "icon": "material-symbols:add-home",
+    "size": 355
+  },
+  "homage": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hombre": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "euhominid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "horrid": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "horrify": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "horrific": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "homuncule": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "horrendous": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hosp": {
+    "status": "ok",
+    "icon": "material-symbols:local-hospital",
+    "size": 272
+  },
+  "abhorrent": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hospice": {
+    "status": "ok",
+    "icon": "healthicons:hospice",
+    "size": 520
+  },
+  "hospital": {
+    "status": "ok",
+    "icon": "mdi:hospital",
+    "size": 155
+  },
+  "hospitable": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hospitality": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hostel": {
+    "status": "ok",
+    "icon": "arcticons:hostelworld",
+    "size": 403
+  },
+  "host": {
+    "status": "ok",
+    "icon": "material-symbols:host",
+    "size": 410
+  },
+  "humble": {
+    "status": "ok",
+    "icon": "mdi:humble-bundle",
+    "size": 460
+  },
+  "humility": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "humiliate": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "humanism": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "inhuman": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "infrahuman": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "prehuman": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hydrogen": {
+    "status": "ok",
+    "icon": "mdi:hydrogen-station",
+    "size": 461
+  },
+  "dehumanize": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "hydrodynamic": {
+    "status": "ok",
+    "icon": "material-symbols:water",
+    "size": 909
+  },
+  "carbohydrate": {
+    "status": "ok",
+    "icon": "healthicons:carbohydrates",
+    "size": 2870
+  },
+  "ide": {
+    "status": "ok",
+    "icon": "openmoji:pride",
+    "size": 998
+  },
+  "idea": {
+    "status": "ok",
+    "icon": "mdi:head-idea",
+    "size": 377
+  },
+  "ideal": {
+    "status": "ok",
+    "icon": "arcticons:idealo-shopping",
+    "size": 851
+  },
+  "ideate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ideogram": {
+    "status": "ok",
+    "icon": "mdi:ideogram-cjk",
+    "size": 211
+  },
+  "ideology": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "idol": {
+    "status": "ok",
+    "icon": "arcticons:idolland-pripara",
+    "size": 903
+  },
+  "posthumous": {
+    "status": "ok",
+    "icon": "twemoji:umbrella-on-ground",
+    "size": 902
+  },
+  "idolatry": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "idiograph": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "idiopathy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "idiosyncrasy": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "insulant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "insular": {
+    "status": "ok",
+    "icon": "arcticons:insular",
+    "size": 463
+  },
+  "hydrology": {
+    "status": "ok",
+    "icon": "material-symbols:water",
+    "size": 909
+  },
+  "peninsula": {
+    "status": "ok",
+    "icon": "pinhead:michigan-lower-peninsula",
+    "size": 476
+  },
+  "journal": {
+    "status": "ok",
+    "icon": "mdi:journal",
+    "size": 283
+  },
+  "isolate": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "journ": {
+    "status": "ok",
+    "icon": "mdi:journal",
+    "size": 283
+  },
+  "journey": {
+    "status": "ok",
+    "icon": "game-icons:journey",
+    "size": 1234
+  },
+  "adjourn": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "sojourner": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "diurnal": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "juven": {
+    "status": "ok",
+    "icon": "twemoji:child",
+    "size": 1156
+  },
+  "juvenile": {
+    "status": "ok",
+    "icon": "twemoji:child",
+    "size": 1156
+  },
+  "juvenescent": {
+    "status": "ok",
+    "icon": "twemoji:child",
+    "size": 1156
+  },
+  "junior": {
+    "status": "ok",
+    "icon": "arcticons:junior",
+    "size": 519
+  },
+  "rejuvenate": {
+    "status": "ok",
+    "icon": "twemoji:child",
+    "size": 1156
+  },
+  "laborious": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "equilateral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "juniority": {
+    "status": "ok",
+    "icon": "twemoji:child",
+    "size": 1156
+  },
+  "multilateral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "patrilateral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "lavish": {
+    "status": "ok",
+    "icon": "material-symbols:wash",
+    "size": 544
+  },
+  "unilateral": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "ablution": {
+    "status": "ok",
+    "icon": "material-symbols:wash",
+    "size": 544
+  },
+  "pollute": {
+    "status": "ok",
+    "icon": "material-symbols:wash",
+    "size": 544
+  },
+  "lax": {
+    "status": "ok",
+    "icon": "material-symbols:relax",
+    "size": 724
+  },
+  "relax": {
+    "status": "ok",
+    "icon": "material-symbols:relax",
+    "size": 724
+  },
+  "laxative": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "lease": {
+    "status": "ok",
+    "icon": "material-symbols:release-alert",
+    "size": 386
+  },
+  "release": {
+    "status": "ok",
+    "icon": "material-symbols:new-releases",
+    "size": 344
+  },
+  "lever": {
+    "status": "ok",
+    "icon": "game-icons:lever",
+    "size": 1996
+  },
+  "belabor": {
+    "status": "no_icon",
+    "icon": "",
+    "size": 0
+  },
+  "elevate": {
+    "status": "ok",
+    "icon": "arcticons:elevate",
+    "size": 1471
+  },
+  "levy": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "relaxant": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "leaven": {
+    "status": "ok",
+    "icon": "tabler:aerial-lift",
+    "size": 287
+  },
+  "relieve": {
+    "status": "ok",
+    "icon": "twemoji:relieved-face",
+    "size": 1067
+  },
+  "liberty": {
+    "status": "ok",
+    "icon": "twemoji:statue-of-liberty",
+    "size": 1343
+  },
+  "livery": {
+    "status": "ok",
+    "icon": "material-symbols:delivery-truck-bolt",
+    "size": 506
+  },
+  "deliver": {
+    "status": "ok",
+    "icon": "material-symbols:delivery-truck-bolt",
+    "size": 506
+  },
+  "libertine": {
+    "status": "ok",
+    "icon": "material-symbols:crop-free",
+    "size": 281
+  },
+  "ligate": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "colligate": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "limi": {
+    "status": "ok",
+    "icon": "material-symbols:folder-limited",
+    "size": 506
+  },
+  "religion": {
+    "status": "ok",
+    "icon": "mdi:religion-buddhist",
+    "size": 842
+  },
+  "obligate": {
+    "status": "ok",
+    "icon": "mdi:jump-rope",
+    "size": 599
+  },
+  "language": {
+    "status": "ok",
+    "icon": "material-symbols:language",
+    "size": 1044
+  },
+  "lingual": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "literacy": {
+    "status": "ok",
+    "icon": "healthicons:health-literacy",
+    "size": 1414
+  },
+  "multilingual": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "lith": {
+    "status": "ok",
+    "icon": "twemoji:flag-lithuania",
+    "size": 270
+  },
+  "transliterate": {
+    "status": "ok",
+    "icon": "material-symbols:book",
+    "size": 253
+  },
+  "lithograph": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "sublingual": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "monolith": {
+    "status": "ok",
+    "icon": "arcticons:monolith",
+    "size": 427
+  },
+  "megalith": {
+    "status": "ok",
+    "icon": "pinhead:megalith",
+    "size": 316
+  },
+  "along": {
+    "status": "ok",
+    "icon": "geo:turf-along",
+    "size": 817
+  },
+  "nephrolith": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "neolithic": {
+    "status": "ok",
+    "icon": "material-symbols:star",
+    "size": 216
+  },
+  "belong": {
+    "status": "ok",
+    "icon": "twemoji:long-drum",
+    "size": 2164
+  },
+  "oblong": {
+    "status": "ok",
+    "icon": "twemoji:long-drum",
+    "size": 2164
+  },
+  "luc": {
+    "status": "ok",
+    "icon": "twemoji:flag-st-lucia",
+    "size": 412
+  },
+  "prolong": {
+    "status": "ok",
+    "icon": "twemoji:long-drum",
+    "size": 2164
+  },
+  "lucency": {
+    "status": "ok",
+    "icon": "material-symbols:light-off",
+    "size": 421
+  },
+  "noctilucent": {
+    "status": "ok",
+    "icon": "material-symbols:light-off",
+    "size": 421
+  },
+  "lucid": {
+    "status": "ok",
+    "icon": "game-icons:extra-lucid",
+    "size": 2467
+  },
+  "translucent": {
+    "status": "ok",
+    "icon": "material-symbols:light-off",
+    "size": 421
+  },
+  "elucidate": {
+    "status": "ok",
+    "icon": "material-symbols:light-off",
+    "size": 421
+  },
+  "luminous": {
+    "status": "ok",
+    "icon": "icon-park-outline:luminous",
+    "size": 270
+  },
+  "pellucid": {
+    "status": "ok",
+    "icon": "material-symbols:light-off",
+    "size": 421
+  },
+  "relumine": {
+    "status": "ok",
+    "icon": "mdi:lamp",
+    "size": 158
+  },
+  "lunate": {
+    "status": "ok",
+    "icon": "solar:moon-bold",
+    "size": 266
+  },
+  "lustre": {
+    "status": "ok",
+    "icon": "material-symbols:star-shine",
+    "size": 330
+  },
+  "semilunar": {
+    "status": "ok",
+    "icon": "solar:moon-bold",
+    "size": 266
+  },
+  "lustrum": {
+    "status": "ok",
+    "icon": "material-symbols:star-shine",
+    "size": 330
+  },
+  "lustrate": {
+    "status": "ok",
+    "icon": "icon-park-outline:adobe-illustrate",
+    "size": 338
+  },
+  "magn": {
+    "status": "ok",
+    "icon": "material-symbols:magnification-large",
+    "size": 241
+  },
+  "magnate": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "size": 163
+  },
+  "magnitude": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "size": 163
+  },
+  "majority": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "size": 163
+  },
+  "mayor": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "size": 163
+  },
+  "maxim": {
+    "status": "ok",
+    "icon": "material-symbols:maximize",
+    "size": 135
+  },
+  "luminosity": {
+    "status": "ok",
+    "icon": "mdi:lamp",
+    "query": "lamp",
+    "size": 158
+  },
+  "marina": {
+    "status": "ok",
+    "icon": "mingcute:marina-bay-sand-fill",
+    "size": 1016
+  },
+  "maximal": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "size": 163
+  },
+  "submarine": {
+    "status": "ok",
+    "icon": "mdi:submarine",
+    "size": 396
+  },
+  "lunacy": {
+    "status": "ok",
+    "icon": "solar:moon-bold",
+    "query": "moon",
+    "size": 266
+  },
+  "mat": {
+    "status": "ok",
+    "icon": "twemoji:mate",
+    "size": 1866
+  },
+  "ultramarine": {
+    "status": "ok",
+    "icon": "twemoji:flag-british-indian-ocean-territory",
+    "size": 8770
+  },
+  "matriarchy": {
+    "status": "ok",
+    "icon": "mdi:mother",
+    "size": 337
+  },
+  "transmarine": {
+    "status": "ok",
+    "icon": "twemoji:flag-british-indian-ocean-territory",
+    "size": 8770
+  },
+  "matrix": {
+    "status": "ok",
+    "icon": "mdi:camera-metering-matrix",
+    "size": 481
+  },
+  "matrimony": {
+    "status": "ok",
+    "icon": "mdi:mother",
+    "size": 337
+  },
+  "matter": {
+    "status": "ok",
+    "icon": "material-symbols:matter",
+    "size": 628
+  },
+  "material": {
+    "status": "ok",
+    "icon": "mdi:material",
+    "size": 493
+  },
+  "matron": {
+    "status": "ok",
+    "icon": "mdi:mother",
+    "size": 337
+  },
+  "maternal": {
+    "status": "ok",
+    "icon": "mdi:mother",
+    "size": 337
+  },
+  "maternity": {
+    "status": "ok",
+    "icon": "mdi:mother",
+    "size": 337
+  },
+  "medi": {
+    "status": "ok",
+    "icon": "material-symbols:media-link",
+    "size": 626
+  },
+  "memor": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "majesty": {
+    "status": "ok",
+    "icon": "material-symbols:tile-large",
+    "query": "large",
+    "size": 163
+  },
+  "memory": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "memorize": {
+    "status": "ok",
+    "icon": "arcticons:memorizepidigits",
+    "size": 417
+  },
+  "memorandum": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "remember": {
+    "status": "ok",
+    "icon": "material-symbols:remember-me",
+    "size": 381
+  },
+  "commemorate": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "immemorial": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "remembrance": {
+    "status": "ok",
+    "icon": "material-symbols:memory",
+    "size": 323
+  },
+  "mendacious": {
+    "status": "ok",
+    "icon": "material-symbols:car-repair",
+    "size": 538
+  },
+  "mendacity": {
+    "status": "ok",
+    "icon": "material-symbols:car-repair",
+    "size": 538
+  },
+  "mendicant": {
+    "status": "ok",
+    "icon": "material-symbols:car-repair",
+    "size": 538
+  },
+  "emend": {
+    "status": "ok",
+    "icon": "material-symbols:car-repair",
+    "size": 538
+  }
+}

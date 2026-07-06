@@ -1,0 +1,245 @@
+# 游戏行动选项分类排序系统
+
+## Context
+
+**问题**：当前 `renderActionsTab()` 将"其他行动"部分（占所有行动的90%+）以**插入顺序**扁平显示。随着游戏内容增加（目前已有50+种行动ID），玩家需要不断滚动翻找。没有分类、没有排序、没有优先级。
+
+**用户的需求**：是否应该改为按玩家点击频率排序？是否有更好的方案？
+
+## 调研结论
+
+**推荐方案：分类分组（Category-based），而非频率排序。**
+
+理由：
+
+1. **同类游戏参考**：《大多数》（Nobody's Majority）→ 按工作/休息/娱乐/教育分组；《中国式家长》→ 学习/娱乐/社交/放松分类；Stardew Valley → 工具/物品/资源分类；This War of Mine → 功能分类（建造/交易/休息）。**无一使用纯频率排序**。
+2. **认知负担**：频率优先导致新/冷门行动永远沉底，玩家形成"只看前5个"的习惯，错过新内容。分类让玩家知道"我想吃饭 → 找🌾生存必需"。
+3. **实施成本**：频率跟踪需要 state 持久化 + 存档迁移 + 排序逻辑，但效果反而差。分类分组只需纯函数映射，无状态风险。
+4. **随着内容增长**：50种时扁平还可忍受，100种时必须有分类。分类方案天然可扩展——新增行动只需要加一条 ID→分类映射规则。
+
+**Frequency 作为三级 Tiebreaker**：在相同分类+相同优先级内，高频率的排在前面。不占主导。
+
+## 设计
+
+### 分类体系
+
+| 优先级 | 分类 ID     | 显示名   | Icon | 行动类型                                                                                                     |
+| ------ | ----------- | -------- | ---- | ------------------------------------------------------------------------------------------------------------ |
+| 10     | `survival`  | 生存必需 | 🌾   | eat, rest, shower, heal, see_doctor, relax_park,                                                             |
+| 20     | `work`      | 赚钱谋生 | 💼   | job\_\* (all jobs), scavenge_trash, busking, beg, vending_advice, play_dice,                                 |
+| 25     | `appliance` | 地点服务 | 🏪   | amenity*\*, fame*\*, wholesale_header, trade_header,                                                         |
+| 30     | `shopping`  | 购物装备 | 🛒   | item*shop*\_, buy\_\_, buy_ingredients, pharmacy,                                                            |
+| 40     | `education` | 学习提升 | 🎓   | edu*\*, study (trainingCenter), self_study, night_school, cert*\*,                                           |
+| 50     | `social`    | 社交休闲 | 🎭   | npc*\*, intel*\_, favor\_\_, deeptask\_\*, call_home, remit_home, salon_chat, internet_bar, movie, ktv, gym, |
+| 60     | `finance`   | 金融理财 | 💳   | deposit, withdraw, loan, repay, repay_village,                                                               |
+| 100    | `other`     | 其他     | 📌   | Fallback for unrecognized IDs                                                                                |
+
+**不归类到分类列表中的行动**：
+
+- `travel_*` → 保留在独立的"出行"高亮区域（不动）
+- `housing_*` / `storage_*` → 保留在独立的"住所与仓储"高亮区域（不动）
+- `corp_*` / `startup_*` → Phase 2 才出现，归入各自分类（career/corp）
+- `no_jobs` / `edu_done` → 归入 other（它们是占位/禁用项）
+
+### ID→分类映射策略
+
+使用 `action_sort.js` 中的映射表：
+
+```js
+// Prefix rules (regex)
+const PREFIX_RULES = [
+  { pattern: /^job_/, category: "work" },
+  { pattern: /^npc_/, category: "social" },
+  { pattern: /^intel_/, category: "social" },
+  { pattern: /^favor_/, category: "social" },
+  { pattern: /^deeptask_/, category: "social" },
+  { pattern: /^edu_/, category: "education" },
+  { pattern: /^cert_/, category: "education" },
+  { pattern: /^corp_/, category: "career" },
+  { pattern: /^startup_/, category: "career" },
+  { pattern: /^fame_/, category: "appliance" },
+  { pattern: /^amenity_/, category: "appliance" },
+  { pattern: /^buy_/, category: "shopping" },
+  { pattern: /^item_shop_/, category: "shopping" },
+  { pattern: /^deposit/, category: "finance" },
+  { pattern: /^withdraw/, category: "finance" },
+  { pattern: /^loan/, category: "finance" },
+  { pattern: /^repay/, category: "finance" },
+];
+
+// Exact ID map
+const EXACT_MAP = {
+  eat: "survival",
+  rest: "survival",
+  shower: "survival",
+  heal: "survival",
+  see_doctor: "survival",
+  relax_park: "survival",
+  pharmacy: "survival",
+  scavenge_trash: "work",
+  busking: "work",
+  beg: "work",
+  vending_advice: "work",
+  play_dice: "work",
+  call_home: "social",
+  remit_home: "social",
+  salon_chat: "social",
+  internet_bar: "social",
+  movie: "social",
+  ktv: "social",
+  gym: "social",
+  self_study: "education",
+  night_school: "education",
+  study: "education",
+  buy_ingredients: "shopping",
+  go_home: "survival",
+  apply_job: "work",
+};
+```
+
+### 同类内排序
+
+每个分类内的行动按以下优先级排序（三级+最终保险）：
+
+1. **Category-specific priority**: 各分类定义默认的关键行动置顶（如 survival 类: eat > rest > shower > 其他）
+2. **Frequency**: 同优先级内，点击次数多的排前面（轻量级频率追踪）
+3. **AP cost**: 同频次内，低消耗排前（方便快速操作）
+4. **Alphabetical by name**: 最终保险
+
+### 频率追踪（轻量）
+
+- `state.stats.actionFreq: { actionId: number }` — 计次
+- 在 `renderActionsTab()` 中包装 handler 时递增
+- 存档自动保存（因为 stats 在 state 对象中）
+- 不设 decay（v1保持简单），游戏流程足够长让数据自然有意义
+
+### UI 变化
+
+每个分类部分渲染为：
+
+```
+🌾 生存必需 (3)
+[eat卡] [rest卡] [shower卡]
+
+💼 赚钱谋生 (5)
+[job卡] [job卡] ...
+
+🎓 学习提升 (2)
+[study卡] ...
+```
+
+- 分类标题：`<h4>` 带 icon + 名称 + `(count)`，浅色背景，细边框
+- 分类标题可点击折叠（可选，v1暂不实现）
+- 空分类不显示
+- 行动卡片本身样式不变（复用 `createActionCard()`）
+
+### 渲染流程图
+
+```
+renderActionsTab(state, parent):
+  1. actions = getAvailableActions(state)
+  2. 包装 handlers → 追踪频率 (state.stats.actionFreq)
+  3. 分离 travel + housing actions（保留现有高亮区）
+  4. 对剩余的 otherActions → sortActions() 排序
+  5. 分组 → groupByCategory()
+  6. 渲染：出行区 → 住所区 → [分类1] → [分类2] → ... → Phase2入口
+```
+
+## 修改的文件
+
+### 新建: `city-life-story/src/js/core/action_sort.js` (~150 lines)
+
+- 分类定义表（CATEGORIES 数组）
+- ID→分类映射（前缀规则 + 精确匹配）
+- `getActionCategory(actionId)` — 返回分类 ID
+- `getCategoryPriority(categoryId)` — 返回分类显示优先级
+- `getActionPriorityInCategory(actionId)` — 同类内默认优先级
+- `sortActions(actions, state)` — 多层排序主函数
+- `groupActionsByCategory(actions, state)` — 按分类分组
+- 全局注册 `window.ActionSort = { ... }`
+
+### 修改: `city-life-story/src/js/core/state.js` (~5 lines)
+
+- `createDefaultState()` 中追加 `stats` 字段：
+  ```js
+  stats: {
+    actionFreq: {},
+    actionFirstUse: {},
+  }
+  ```
+- `importState()` 中追加迁移：
+  ```js
+  if (!s.stats) {
+    s.stats = { actionFreq: {}, actionFirstUse: {} };
+  }
+  ```
+- 版本号更新到 `1.7.0`
+
+### 修改: `city-life-story/src/js/ui/render.js` (~50 lines changed in renderActionsTab)
+
+关键变化在 `renderActionsTab()` 函数（1811-2007行）：
+
+1. 获取 actions 后 → 调用 `ActionSort.sortActions(actions, state)`（不改变 travel/housing 分离逻辑）
+2. 在分离 travel/housing 后，对 otherActions：
+   - `ActionSort.groupActionsByCategory(otherActions, state)` → 得到 `{ categoryId: [actions] }`
+   - 按 CATEGORIES 顺序迭代，每个分类渲染：
+     - `<h4>` 标题（icon + name + count），带浅色背景/边框
+     - `.action-cards` 网格
+   - 空分类跳过
+3. 删除旧的"其他行动"平铺渲染代码（lines 1973-1987）
+
+### 修改: `city-life-story/src/index.html` (~1 line)
+
+在 `state.js` 之后、`render.js` 之前添加：
+
+```html
+<script src="js/core/action_sort.js"></script>
+```
+
+（具体放在 `js/core/save.js` 之后、`js/core/events_core.js` 之前）
+
+### 修改: `city-life-story/src/css/style.css` (~15 lines)
+
+新增分类标题样式：
+
+```css
+.action-category-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  margin: 12px 0 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.action-category-header .cat-count {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+```
+
+## 验证
+
+1. 打开 `src/index.html` → 开始新游戏 → 在城中村/商业区/批发市场等不同地点验证分类是否正确
+2. 确认出行和住所区保持原样（高亮样式不变）
+3. 重复点击"吃饭"5次 → 进入新一天 → 确认"吃饭"在生存类中排在前面
+4. 存档 → 重开 → 读档 → 确认频率计数保留 ✓
+5. 切换到职场阶段 → 确认职场行动出现在正确分类中
+6. `python build.py` → 确认无报错
+7. 打开 `dist/index.html` → 确认效果一致
+8. `git add -A && git commit -m "feat: 行动选项分类排序系统"`
+9. 更新 `DEVELOPMENT.md`
+
+## 不包含在 v1 的内容（未来方向）
+
+- 可折叠分类
+- 玩家手动固定/收藏行动
+- 频率可视化（热度条）
+- 按分类筛选模式
+- 新行动提示/引导

@@ -1,0 +1,9 @@
+{
+  "id": "22",
+  "subject": "Task #27: Corporate Phase — 5 New Office Politics Events",
+  "description": "Add 5 new corporate phase random events to corp_ops.js rollCorporateEvent(): team conflict/budget cut/secret project/headhunted by competitor/rumor mill. Each has 2 choices with meaningful stat consequences. Enriches the corporate phase which currently has fewer events than street phase.",
+  "activeForm": "Adding corporate events",
+  "status": "in_progress",
+  "blocks": [],
+  "blockedBy": []
+}

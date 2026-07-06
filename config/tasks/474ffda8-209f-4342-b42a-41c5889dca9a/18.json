@@ -1,0 +1,8 @@
+{
+  "id": "18",
+  "subject": "修复投资中心首日显示\"等待数据...\"的问题",
+  "description": "1) initInvestment: 为每只股票/BTC生成回溯历史数据点; 2) drawPriceChart: 无历史时显示水平线+首日上市; 3) renderInvestmentTab: 移除\"加载中...\"文案",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

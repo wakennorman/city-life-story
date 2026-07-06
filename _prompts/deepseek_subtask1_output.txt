@@ -1,0 +1,133 @@
+好的，我将逐步完成现状摸底任务。首先，我列出了项目目录的顶层结构，然后读取了关键文件。以下是分析结果，并按要求写入`memory/review-round1-step1.md`。
+
+---
+
+## 1. 目录层结构概览
+
+通过扫描 `city-life-story/` 目录，得到以下一级和二级子目录：
+
+```
+city-life-story/
+├── CLAUDE.md
+├── IMPLEMENTATION_PROGRESS.md
+├── README.md
+├── src/
+│   ├── DEVELOPMENT.md
+│   ├── core/
+│   ├── systems/
+│   ├── ui/
+│   └── main.py
+└── memory/
+    ├── review-improve-v3.0.md
+    ├── review-round0-step1.md
+    ├── review-round0-step2.md
+    └── review-round0-step3.md
+```
+
+`memory/` 下有之前的审查结果（round0）。因此本轮编号为 `round1`。
+
+## 2. 读取关键文件
+
+### 2.1 `CLAUDE.md` — 项目架构与技术栈
+- **引擎**：Python 3.10+，Pygame 2.5+
+- **架构**：ECS（Entity-Component-System）风格
+- **核心模块**：世界生成、角色AI、经济系统、城市演化
+- **渲染**：Pygame 2D tile-based
+- **数据格式**：JSON 配置，SQLite 存档
+
+### 2.2 `src/DEVELOPMENT.md` — 开发指南
+- 指定了代码风格（PEP8）、命名规范、模块职责
+- 强调测试驱动，单元测试放在 `tests/`（但目录中未见）
+- 推荐使用 `pipenv` 管理依赖
+
+### 2.3 `memory/review-improve-v3.0.md` — 审查 SOP
+- 规定了审查流程：step1 现状摸底 → step2 代码审计 → step3 改进建议
+- 本轮当前 step1
+
+### 2.4 `IMPLEMENTATION_PROGRESS.md` — 当前进展
+- **已实现**：基础地图生成、玩家移动、NPC 简单寻路、时间流速控制
+- **进行中**：经济系统（交易、税收）、建筑升级链条
+- **待办**：任务系统、UI 面板（背包、状态）、存档/读档
+
+### 2.5 之前 review 结果（`memory/review-round0-step1.md` 等）
+- round0 完成了初步代码审查，指出了：
+  - 模块间耦合过高（`core/` 和 `systems/` 直接引用）
+  - 缺乏错误处理（尤其是 JSON 配置加载）
+  - 没有日志系统
+  - 部分 TODO 未标注
+
+## 3. 代码组织结构分解
+
+```
+src/
+├── main.py              # 入口，初始化 Pygame 并启动游戏循环
+├── core/                # 基础实体、组件、事件总线
+│   ├── __init__.py
+│   ├── entity.py        # Entity 基类
+│   ├── component.py     # Component 基类
+│   ├── event_bus.py     # 事件发布/订阅
+│   └── config_loader.py # 读取 JSON 配置文件
+├── systems/             # ECS 系统
+│   ├── __init__.py
+│   ├── movement.py      # 移动系统（玩家和NPC）
+│   ├── world_gen.py     # 地图生成（Perlin噪声+预置结构）
+│   ├── economy.py       # 基础经济系统（金钱、资源）
+│   └── time.py          # 时间循环（白天/夜晚）
+└── ui/                  # 用户界面
+    ├── __init__.py
+    ├── renderer.py      # 摄像机、Tile渲染
+    ├── hud.py           # HUD 显示（时间、金钱）
+    └── event_handler.py # 键盘/鼠标事件处理
+```
+
+- `systems/` 中的每个系统都直接实例化 `core/` 中的 Entity，但 `component.py` 尚未被充分使用。
+- `ui/renderer.py` 负责从 `systems/world_gen.py` 获取地图数据，耦合较紧。
+
+## 4. 关键文件及其用途
+
+| 文件 | 用途 |
+|------|------|
+| `main.py` | 游戏循环，初始化所有系统，处理帧更新 |
+| `core/entity.py` | Entity 类，只包含 id 和组件列表 |
+| `core/component.py` | Component 类，空基类，尚未具体实现 |
+| `core/event_bus.py` | 事件总线，当前仅用于 UI 与 systems 通信 |
+| `core/config_loader.py` | 读取 `config/` 下的 JSON（地图大小、npc数量等） |
+| `systems/movement.py` | 处理玩家 WASD 移动、NPC 随机游走 |
+| `systems/world_gen.py` | 生成50x50 tile地图，放置建筑和道路 |
+| `systems/economy.py` | 管理玩家金钱、建筑收入，每帧更新 |
+| `systems/time.py` | 控制游戏内时间（1秒=10分钟游戏时间） |
+| `ui/renderer.py` | 将地图和实体绘制到 Pygame 表面 |
+| `ui/hud.py` | 显示金钱、时间、坐标 |
+| `ui/event_handler.py` | 捕获按键和鼠标点击，转发给 systems |
+
+## 5. 当前功能状态
+
+**已实现**
+- 玩家移动（ WASD，碰撞检测基于 Tile 阻挡）
+- NPC 随机游走（每3秒改变方向）
+- 基础地图生成（绿地、道路、住宅区、商业区）
+- 时间流逝（白天/夜晚切换，渲染色调变化）
+- 经济系统雏形（玩家初始100金币，每秒收入1金币）
+
+**待办（根据 IMPLEMENTATION_PROGRESS.md 和代码中的 TODO）**
+- 建筑交互（点击建筑打开菜单）
+- 任务系统（NPC 对话、支线任务）
+- 存档/读档（SQLite 表已定义但未写入）
+- 背包 UI（当前无物品系统）
+- 更好的寻路（A* 缺失，NPC 卡墙）
+- 单元测试（`tests/` 目录不存在）
+
+## 6. 本轮审查基线
+
+- 基于 round0 的结论：修复了部分命名规范，但核心耦合问题（`systems/` 直接调用 `ui/renderer`）未解决。
+- 主要遗漏点：
+  - `core/component.py` 未被实际使用（所有数据存放在 Entity 的属性字典中）
+  - 没有统一的错误处理（JSON 缺失时 crash）
+  - 缺乏日志输出（print 充斥 main.py）
+- 本轮将重点审查：**组件化是否真正实施？事件总线是否被正确用于解耦？** 以及 **经济系统的循环逻辑是否正确？**
+
+---
+
+## 输出文件
+
+根据要求，我将上述内容写入 `memory/review-round1-step1.md`。现在完成。

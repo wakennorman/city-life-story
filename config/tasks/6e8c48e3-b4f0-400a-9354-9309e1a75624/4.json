@@ -1,0 +1,8 @@
+{
+  "id": "4",
+  "subject": "P0-4: 链式事件填充 (queueChainEvent 调用稀疏)",
+  "description": "添加 queueChainEvent 辅助函数到 events_core.js，在街头事件/NPC好感事件/职场事件/创业事件中调用，提升队列填充率",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

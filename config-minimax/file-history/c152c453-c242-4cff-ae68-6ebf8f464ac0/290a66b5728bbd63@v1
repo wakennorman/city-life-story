@@ -1,0 +1,179 @@
+/**
+ * 股票交易系统
+ * 每季度价格波动 -30% ~ +40%
+ */
+
+const STOCK_LIST = [
+  { symbol: "STAR", name: "星辰科技", basePrice: 120 },
+  { symbol: "BYTE", name: "字节龙", basePrice: 280 },
+  { symbol: "CLOUD", name: "云巨人", basePrice: 85 },
+  { symbol: "GAME", name: "好玩游戏", basePrice: 45 },
+  { symbol: "SAFE", name: "安信金融", basePrice: 65 },
+];
+
+/** 初始化股市 */
+function initStockMarket(state) {
+  for (const stock of STOCK_LIST) {
+    state.corporate.stockMarket[stock.symbol] = {
+      price: stock.basePrice * (0.7 + Math.random() * 0.6),
+      history: [],
+    };
+  }
+}
+
+/** 更新股市价格 */
+function updateStockPrices(state) {
+  for (const stock of STOCK_LIST) {
+    const current = state.corporate.stockMarket[stock.symbol];
+    if (!current) continue;
+
+    // 波动 -30% ~ +40%
+    const change = 0.7 + Math.random() * 0.7;
+    current.price = Math.round(Math.max(1, current.price * change) * 100) / 100;
+    current.history.push(current.price);
+    if (current.history.length > 20) current.history.shift();
+  }
+}
+
+/** 买入股票 */
+function buyStock(symbol, shares) {
+  const state = StateManager.getState();
+  const market = state.corporate.stockMarket[symbol];
+  if (!market) {
+    StateManager.addMessage("⚠️ 不存在的股票。", "danger");
+    return false;
+  }
+
+  const cost = Math.round(market.price * shares);
+  if (state.resources.cash < cost) {
+    StateManager.addMessage(
+      `⚠️ 需要 ¥${cost.toLocaleString()}，现金不足。`,
+      "danger",
+    );
+    return false;
+  }
+
+  state.resources.cash -= cost;
+
+  const existing = state.corporate.stocks.find((s) => s.symbol === symbol);
+  if (existing) {
+    const totalShares = existing.shares + shares;
+    existing.avgPrice =
+      Math.round(
+        ((existing.avgPrice * existing.shares + cost) / totalShares) * 100,
+      ) / 100;
+    existing.shares = totalShares;
+  } else {
+    state.corporate.stocks.push({
+      symbol,
+      name: STOCK_LIST.find((s) => s.symbol === symbol)?.name || symbol,
+      shares,
+      avgPrice: market.price,
+    });
+  }
+
+  StateManager.addMessage(
+    `📈 买入 ${symbol} ×${shares}股，均价 ¥${market.price}，共 ¥${cost.toLocaleString()}`,
+    "success",
+  );
+  return true;
+}
+
+/** 卖出股票 */
+function sellStock(symbol, shares) {
+  const state = StateManager.getState();
+  const holding = state.corporate.stocks.find((s) => s.symbol === symbol);
+  if (!holding || holding.shares < shares) {
+    StateManager.addMessage("⚠️ 持仓不足。", "danger");
+    return false;
+  }
+
+  const market = state.corporate.stockMarket[symbol];
+  const revenue = Math.round(market.price * shares);
+  const profit = revenue - holding.avgPrice * shares;
+
+  state.resources.cash += revenue;
+  state.resources.totalEarned += Math.max(0, profit);
+
+  holding.shares -= shares;
+  if (holding.shares <= 0) {
+    state.corporate.stocks = state.corporate.stocks.filter(
+      (s) => s.symbol !== symbol,
+    );
+  }
+
+  const profitStr =
+    profit >= 0
+      ? `📈 盈利 ¥${Math.round(profit).toLocaleString()}`
+      : `📉 亏损 ¥${Math.abs(Math.round(profit)).toLocaleString()}`;
+  StateManager.addMessage(
+    `💰 卖出 ${symbol} ×${shares}股，¥${revenue.toLocaleString()}。${profitStr}`,
+    "success",
+  );
+  return true;
+}
+
+function showStockTradeModal() {
+  const state = StateManager.getState();
+  let body = '<div style="max-height:400px;overflow-y:auto;">';
+
+  body +=
+    '<h4 style="color:var(--text-muted);margin-bottom:8px;">📊 市场行情</h4>';
+  for (const stock of STOCK_LIST) {
+    const market = state.corporate.stockMarket[stock.symbol];
+    const price = market ? market.price : stock.basePrice;
+    const holding = state.corporate.stocks.find(
+      (s) => s.symbol === stock.symbol,
+    );
+    const shares = holding ? holding.shares : 0;
+    const pnl = holding ? Math.round((price - holding.avgPrice) * shares) : 0;
+    const pnlColor = pnl >= 0 ? "var(--success)" : "var(--danger)";
+
+    body += `
+      <div style="padding:8px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;">
+        <div style="display:flex;justify-content:space-between;">
+          <strong>${stock.symbol}</strong>
+          <span>${stock.name}</span>
+          <span style="color:var(--accent)">¥${price.toFixed(1)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <span style="font-size:11px;color:var(--text-muted);">持仓: ${shares}股 ${holding ? `均价 ¥${holding.avgPrice}` : ""}</span>
+          ${shares > 0 ? `<span style="font-size:11px;color:${pnlColor};">${pnl >= 0 ? "+" : ""}¥${pnl}</span>` : ""}
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm btn-success stock-buy" data-sym="${stock.symbol}" data-qty="10">买10</button>
+            ${shares > 0 ? `<button class="btn btn-sm btn-danger stock-sell" data-sym="${stock.symbol}" data-qty="${Math.min(10, shares)}">卖</button>` : ""}
+          </div>
+        </div>
+      </div>`;
+  }
+  body += "</div>";
+
+  showModal({
+    title: "📈 股票交易",
+    body,
+    buttons: [
+      {
+        text: "关闭",
+        cls: "",
+        callback: () => {
+          renderAll();
+        },
+      },
+    ],
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll(".stock-buy").forEach((btn) => {
+      btn.onclick = () => {
+        buyStock(btn.dataset.sym, parseInt(btn.dataset.qty));
+        showStockTradeModal();
+      };
+    });
+    document.querySelectorAll(".stock-sell").forEach((btn) => {
+      btn.onclick = () => {
+        sellStock(btn.dataset.sym, parseInt(btn.dataset.qty));
+        showStockTradeModal();
+      };
+    });
+  }, 50);
+}

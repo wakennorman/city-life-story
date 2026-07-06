@@ -1,0 +1,23 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "ark-7cfaba66-34e9-4957-897d-4661d7388078-5f8f1",
+    "ANTHROPIC_BASE_URL": "https://ark.cn-beijing.volces.com/api/coding",
+    "ANTHROPIC_MODEL": "deepseek-v4-flash",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_API_KEY": "",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)"
+    ]
+  },
+  "effortLevel": "medium",
+  "autoMemoryEnabled": true,
+  "theme": "auto"
+}

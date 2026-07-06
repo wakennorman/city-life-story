@@ -1,0 +1,178 @@
+# 问题诊断报告 (Round 1 - Step 2)
+
+**项目**: 城市浮生记 (City Life Story)  
+**目录**: `city-life-story/`  
+**审查日期**: 2025-02-19  
+**审查工具**: Playwright (自动化测试 + 手动操作), 静态代码分析  
+
+---
+
+## 优先级分类说明  
+- **P0** – 必须修复：导致崩溃、玩家无法继续、数据丢失  
+- **P1** – 应该修复：影响游戏体验、可维护性、可扩展性  
+- **P2** – 可以修复：代码风格、轻微视觉问题、冗余  
+
+---
+
+## 🔴 P0 – 必须修复  
+
+### 1. 空指针崩溃：`GameLoop.updateEntities` 前未判空  
+- **文件**: `src/js/GameLoop.js`  
+- **行号**: 42  
+- **问题**:  
+  ```js
+  this.entities.forEach(entity => entity.update());   // 42行
+  ```  
+  当游戏重置或加载存档时，`this.entities` 可能为 `null` 或 `undefined`。例如在 `resetGame()` 方法中将 `this.entities = null` 后，下一次 `requestAnimationFrame` 回调直接崩溃。  
+- **影响**: 游戏白屏、控制台报 `Cannot read properties of null`，玩家无法继续。  
+- **修复建议**:  
+  ```js
+  if (this.entities) {
+    this.entities.forEach(entity => entity.update());
+  }
+  ```  
+
+### 2. 事件监听泄漏 & 重复绑定  
+- **文件**: `src/js/EventManager.js`  
+- **行号**: 28-34  
+- **问题**:  
+  ```js
+  window.addEventListener('resize', () => { this.handleResize(); });
+  ```  
+  - 没有在组件销毁时调用 `removeEventListener`。  
+  - 如果玩家多次加载存档或切换场景，会导致同一事件被绑定多次，每次触发时执行多个 `handleResize`，引发性能下降和逻辑错误（如 UI 位置累加偏移）。  
+- **影响**: 内存泄漏，界面响应异常，严重时卡死。  
+- **修复建议**:  
+  - 保存监听器引用，在 `destroy()` 时移除。  
+  - 使用 `AbortController` 或单例模式确保只绑定一次。  
+
+### 3. `localStorage` 读取未处理空值  
+- **文件**: `src/js/SaveManager.js`  
+- **行号**: 35  
+- **问题**:  
+  ```js
+  const data = JSON.parse(localStorage.getItem('save'));   // 35行
+  ```  
+  当 localStorage 中没有 `'save'` 键时，`getItem` 返回 `null`，`JSON.parse(null)` 抛出异常，后续代码无法执行，存档加载彻底失败。  
+- **影响**: 新玩家进入游戏直接白屏（因为某些初始化依赖存档加载），或已有存档损坏时无法降级。  
+- **修复建议**:  
+  ```js
+  const raw = localStorage.getItem('save');
+  if (!raw) return null;
+  const data = JSON.parse(raw);
+  ```  
+
+---
+
+## 🟡 P1 – 应该修复  
+
+### 4. 大量硬编码数值（魔法数字）  
+- **文件**: `src/js/Building.js` (15, 22, 33行), `src/js/Citizen.js` (8, 14行)  
+- **问题**:  
+  - `cost: 100`, `upkeep: 5`, `speed: 0.02` 等直接写在代码中。  
+  - 例如 `Building.js:15`:  
+    ```js
+    this.cost = 100;
+    this.income = 10;
+    ```  
+- **影响**: 平衡性调整困难，容易漏改；多人协作时不知每个数字含义。  
+- **修复建议**: 提取到配置文件 `config/balance.js`，并添加注释。  
+
+### 5. HTML 拼接导致 XSS 风险  
+- **文件**: `src/js/UIManager.js`  
+- **行号**: 88-95  
+- **问题**:  
+  ```js
+  tooltip.innerHTML = `<div>${playerName}</div><span>${income}</span>`;   // 88行
+  ```  
+  `playerName` 可能由用户输入（如改名功能），未转义直接拼入 innerHTML，恶意玩家可注入脚本标签。  
+- **影响**: 跨站脚本攻击（虽然为单机游戏，但若保存到云端或分享存档可能传播）。  
+- **修复建议**: 使用 `textContent` 或 `document.createTextNode` 构建内容，或使用安全的模板引擎。  
+
+### 6. 主循环中频繁创建临时对象  
+- **文件**: `src/js/MapRenderer.js`  
+- **行号**: 120-135  
+- **问题**:  
+  ```js
+  for (let x = 0; x < tileCount; x++) {
+    for (let y = 0; y < tileCount; y++) {
+      const rect = { x, y, w: tileSize, h: tileSize };   // 每帧新建对象
+      ...
+    }
+  }
+  ```  
+  每帧创建数千个临时对象，增加 GC 压力，帧数不稳定。  
+- **影响**: 中低端设备卡顿，电池消耗加剧。  
+- **修复建议**: 对象池复用矩形描述对象，或直接使用 Canvas 参数计算。  
+
+### 7. `setInterval` 未考虑页面可见性  
+- **文件**: `src/js/TimeSystem.js`  
+- **行号**: 12  
+- **问题**:  
+  ```js
+  setInterval(() => { this.tick(); }, 1000);
+  ```  
+  页面隐藏时仍然运行，浪费资源并导致切回时追赶大量 tick。  
+- **影响**: 切换标签页后 CPU 占用持续，重绘时出现时间跳跃。  
+- **修复建议**: 使用 `requestAnimationFrame` + 时间戳计算 delta，或监听 `visibilitychange` 暂停/恢复。  
+
+---
+
+## 🟢 P2 – 可以修复  
+
+### 8. 变量命名不一致  
+- **文件**: `src/js/Util.js`  
+- **行号**: 5, 12  
+- **问题**:  
+  - 第5行: `function getDistance(a, b) {...}`  
+  - 第12行: `function calcDist(point1, point2) {...}`  
+  功能类似但命名风格不同。  
+- **影响**: 阅读困难，容易误用。  
+- **修复建议**: 统一为 `calculateDistance` 或 `getDistance`，并合并重复实现。  
+
+### 9. 控制台日志过多  
+- **文件**: `src/js/AIWorker.js` (3, 8, 16行)  
+- **问题**:  
+  ```js
+  console.log('AI tick', Date.now());
+  console.debug('Decision:', decision);
+  ```  
+  生产环境频繁打印调试信息，干扰排查且影响性能（尤其是移动端 Console 日志缓冲区满）。  
+- **修复建议**: 添加 `DEBUG` 标志或移除。  
+
+### 10. CSS 选择器使用 `!important` 过多  
+- **文件**: `src/css/style.css` (42, 56, 78行)  
+- **问题**:  
+  ```css
+  .ui-overlay { position: absolute !important; z-index: 100 !important; }
+  ```  
+  覆盖了正常的级联规则，导致后续主题/布局定制困难。  
+- **修复建议**: 使用更具体的选择器而非 `!important`。  
+
+### 11. 未使用严格模式  
+- **文件**: 所有 JS 文件开头  
+- **问题**: 没有任何一个文件以 `'use strict';` 开头。全局作用域下易出现变量泄漏。  
+- **修复建议**: 统一添加 `'use strict';`。  
+
+---
+
+## 🔁 之前 Review 指出的问题检查  
+
+| 问题 # | 描述 | 状态 | 备注 |
+|--------|------|------|------|
+| 1 | 全局变量 `game` 污染 window | ✅ 已修复 | 改为模块化导出 |
+| 2 | 未使用 `'use strict'` | ❌ 未修复 | 仍存在于所有文件 |
+| 3 | `onClick` 回调未绑定 `this` | ✅ 已修复 | 改为箭头函数 |
+| 4 | 大量重复的 `getElementById` 调用 | ❌ 未修复 | 应创建 DOM 缓存 |  
+
+---
+
+## 📊 总结  
+- **P0 问题**: 3个（空指针、事件泄漏、localStorage 异常） → 需要立即修复。  
+- **P1 问题**: 4个（硬编码、XSS、性能、时间系统） → 建议在下一个迭代中完成。  
+- **P2 问题**: 4个（命名、日志、CSS、严格模式） → 可安排为低优先级清理。  
+
+经 Playwright 测试，新增存档加载功能在 localStorage 为空时直接崩溃，确认 P0#3 可复现；快速多次切换场景后 UI 出现位置偏移，与 P0#2 相关。其余问题需人工复盘代码进一步确认。
+
+---  
+*报告生成于 `memory/review-round1-step2.md`*

@@ -1,0 +1,9 @@
+{
+  "id": "2",
+  "subject": "投资首日 - 进入职场后立即显示股票走势图",
+  "description": "确保initInvestment在职场进入时就预初始化所有股票数据，让投资Tab首日即显示走势图而非等待数据",
+  "activeForm": "预初始化投资数据",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

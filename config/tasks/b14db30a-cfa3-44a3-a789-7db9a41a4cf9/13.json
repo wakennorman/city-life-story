@@ -1,0 +1,9 @@
+{
+  "id": "13",
+  "subject": "git commit所有改动",
+  "description": "验证通过后 git add -A && git commit，提交19个文件的全部改动",
+  "activeForm": "提交git commit",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

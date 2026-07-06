@@ -1,0 +1,100 @@
+/**
+ * NPC 定义 — 街头生活中遇到的各色人物
+ */
+
+const NPCS = [
+  {
+    id: "aunt_wang",
+    name: "王大婶",
+    role: "房东",
+    location: "slum",
+    desc: "城中村的房东，说话嗓门大但心地不坏。偶尔会介绍些零活。",
+    talkLines: [
+      "小伙子，这个月房租该交了啊！",
+      "看你挺勤快的，工地上缺人要不要去试试？",
+      "年轻人要有志气，别一辈子收废品。",
+    ],
+    giftPrefers: ["fruits", "daily_use"],
+  },
+  {
+    id: "boss_li",
+    name: "李工头",
+    role: "包工头",
+    location: "construction",
+    desc: "建筑工地的包工头，手上活多。关系好了会给好活。",
+    talkLines: ["今天活多，加紧干！", "小心点，安全第一。", "干得好有奖金。"],
+    giftPrefers: ["cigarettes", "beer"],
+  },
+  {
+    id: "sister_zhang",
+    name: "张姐",
+    role: "中介",
+    location: "commercialDist",
+    desc: "人力资源中介，认识各行各业的人。帮她跑腿可以提升关系。",
+    talkLines: [
+      "我这边有几个好工作，你要不要看看？",
+      "做服务业态度最重要。",
+      "多考几个证，好工作不愁。",
+    ],
+    giftPrefers: ["clothing", "snacks"],
+  },
+  {
+    id: "old_zhou",
+    name: "老周",
+    role: "收废品老人",
+    location: "slum",
+    desc: "在城中村收了几十年废品的老前辈。知道废品行情的门道。",
+    talkLines: [
+      "废金属最近涨了，赶紧多收点。",
+      "收废品虽然脏，但也是一门生意经。",
+      "年轻人脑子活，学学怎么挑好货。",
+    ],
+    giftPrefers: ["beer", "instant_noodles"],
+  },
+  {
+    id: "xiao_mei",
+    name: "小美",
+    role: "大学生",
+    location: "school",
+    desc: "大学城的贫困生，周末做家教赚生活费。",
+    talkLines: [
+      "你知道哪里还有家教的机会吗？",
+      "我英语还不错，可以教初中生。",
+      "毕业后想去大厂，得先积累经验。",
+    ],
+    giftPrefers: ["fruits", "snacks"],
+  },
+  {
+    id: "chef_chen",
+    name: "陈师傅",
+    role: "大厨",
+    location: "commercialDist",
+    desc: "商业区小有名气的厨师，手艺了得。想学烹饪可以找他。",
+    talkLines: [
+      "做菜讲究火候，做人讲究分寸。",
+      "来尝尝我新研制的配方。",
+      "你有点天分，要不要学两手？",
+    ],
+    giftPrefers: ["beer", "vegetables"],
+  },
+];
+
+/** 获取NPC */
+function getNpcById(npcId) {
+  return NPCS.find((n) => n.id === npcId) || null;
+}
+
+/** 获取当前地点的NPC */
+function getNpcsAtLocation(locKey) {
+  return NPCS.filter((n) => n.location === locKey);
+}
+
+/** 获取好感度描述 */
+function getAffinityLabel(affinity) {
+  if (affinity >= 80) return "❤️ 挚友";
+  if (affinity >= 60) return "😊 好友";
+  if (affinity >= 30) return "🙂 熟人";
+  if (affinity >= 0) return "👤 初识";
+  if (affinity >= -30) return "😐 冷淡";
+  return "😠 厌恶";
+}

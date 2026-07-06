@@ -1,0 +1,54 @@
+---
+name: pixabay-anki-pipeline
+description: 2026-06-14 跑通的「Pixabay 真实图 + Anki 卡组」完整流水线，1768 词全量
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 386dd9c2-0248-439d-a9cd-4673fc9ca8ef
+---
+
+# Pixabay → Anki 词根卡流水线（1893 卡，2026-06-14 已跑通）
+
+## 用户场景
+
+W哥学英语词根，3 个 markdown 文件里有 359 个词根 + 1768 个去重派生词。要给每张 Anki 卡配独立图片。配图原则在 `~/.openclaw-autoclaw/workspace/memory/word-roots/full_workflow.md` 第 117-145 行：**每张独立、强相关、具体、simple icon style、无重复**。
+
+## 流水线（脚本都在 `D:\Claude Code+DeepSeekV4\`）
+
+| 阶段 | 脚本 | 输入 | 输出 |
+|---|---|---|---|
+| 1. 抽词 | `extract_words.py` | 3 个 `roots_part*.md` | `to_generate.json`（1893 词 + 元数据） |
+| 2. 补释义 | `lookup_meanings.py` | + `~/.openclaw-autoclaw/workspace/all_books_combined.txt`（4MB 词典） | `to_generate_with_meaning.json` |
+| 3. 设 prompt | `design_prompts.py`（实际没用到，Pixabay 不需要） | — | `prompts.json` |
+| 4. **Pixabay 主跑** | `pixabay_batch.py` | key + prompts.json | `pixabay_results.json` + `media/*.jpg` |
+| 5. **失败词兜底** | `pixabay_fallback.py` | 失败词 + 元数据 | 救回剩余（372 个全救回） |
+| 6. 扩 complete_data | `expand_complete_data.py` | records + local_image_map | `~/.openclaw-autoclaw/workspace/anki/complete_data.json`（1893 卡） |
+| 7. 打 apkg | `~/.openclaw-autoclaw/workspace/anki/gen_anki_from_json.py` | complete_data.json + media/ | `EnglishRoot.apkg`（476MB） |
+
+## Pixabay key（W哥的）
+
+`56301016-56b7d4e6af292e4cf31ad7f21` — 注册免费，5000 req/h
+
+## 关键技术细节
+
+- **并发**：4 worker × 1s pause ≈ 80/min（Pixabay 限 100/60s），实测稳定无 429
+- **搜索词构造**：先用原英文词，0 hit 时兜底用 `extract_english_from_meaning(中文释义)` 抽英文核心 → 用词根英文概念（`ROOT_TO_EN` 表）
+- **下载**：`webformatURL` 字段（640px JPG，~50-200KB 一张），不要用 `largeImageURL`（太大）
+- **本地文件名映射**：必须 `os.path.basename(local_path)` 写到 Anki 字段，**不能写 Windows 绝对路径**，否则手机端 Anki 加载失败
+- **Anki 导入**：用户在 Anki 弹窗里**必须选「Update existing notes」**（默认是 Add，会重复建卡）
+
+## 结果
+
+- 1768 唯一词 100% 配图覆盖（主跑 1396 + 兜底 372）
+- 1893 总卡数（含原 488 张旧卡）
+- 476MB .apkg（图本地嵌入，手机能用）
+- 总耗时：主跑 21.5min + 兜底 8min + 打包 1min ≈ **30 分钟**
+
+## 复用提示
+
+下次再有"批量给英文词找图"的活：
+- 直接复用 `pixabay_batch.py` + `pixabay_fallback.py`，改一下 PROMPTS 路径就行
+- 若用户的图源标准换了（比如想要 vector），把 Pixabay 调 `&image_type=vector`
+- complete_data.json 字段名是中文（`词根/词根音标/词根本义/单词/单词音标/单词含义/拆解/配图`），要保持
+
+相关：[[china-image-sources-survey]] [[seedream-token-fragility]] [[cant-natively-generate-images]]

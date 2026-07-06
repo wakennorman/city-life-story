@@ -1,0 +1,74 @@
+# 城市浮生记 — 版本地图
+
+> ⚠️ **所有编辑前必读：确认你正在修改正确版本！**
+
+---
+
+## 版本一览
+
+本仓库包含 **两个游戏版本**：
+
+| 版本         | 路径                                             | 状态            | Git           | 说明                         |
+| ------------ | ------------------------------------------------ | --------------- | ------------- | ---------------------------- |
+| **遗留版**   | `D:\Claude Code+DeepSeekV4\src\`                 | ⛔ 已弃用       | ❌ 无         | 旧版深色主题，单一模式       |
+| **▶ 活跃版** | `D:\Claude Code+DeepSeekV4\city-life-story\src\` | ✅ **当前开发** | ✅ 58 commits | 浅色主题，剧情/沙盒/经典模式 |
+
+---
+
+## 🚨 铁律：开始写代码前先确认目标
+
+```bash
+# 方法一：检查 pwd
+pwd
+# 应当输出：/d/Claude Code+DeepSeekV4/city-life-story
+
+# 方法二：检查 git
+cd D:/Claude Code+DeepSeekV4/city-life-story && git status
+
+# 💀 如果 git status 报 "fatal: not a git repository"
+#    → 你在根目录！立刻停止！切到 city-life-story/
+```
+
+**所有文件路径必须包含 `city-life-story/` 前缀！**
+
+- ✅ `city-life-story/src/js/main.js`
+- ✅ `city-life-story/src/index.html`
+- ❌ `src/js/main.js`（这是根目录旧版！）
+
+---
+
+## 迁移清单
+
+根 `src/` 中有以下独特内容待迁移到 `city-life-story/`：
+
+| 文件                         | 行数  | 功能                          | 优先级 |
+| ---------------------------- | ----- | ----------------------------- | ------ |
+| `src/js/data/ingredients.js` | 522   | 食材系统(23种+16配方+保质期)  | ⭐⭐⭐ |
+| `src/js/phase1/carry.js`     | 1,037 | 搬运/负重/容器/运输服务       | ⭐⭐⭐ |
+| `src/js/phase1/pricing.js`   | 367   | 地区定价/供需/市场事件        | ⭐⭐   |
+| `src/js/phase1/weather.js`   | 810   | 增强天气(14种+温度+舒适度)    | ⭐⭐   |
+| `src/js/data/diseases.js`    | —     | 4阶段疾病(与illnesses.js不同) | ⭐     |
+
+详细对比见：[memory/版本全景地图.md](memory/版本全景地图.md)
+
+---
+
+## 已知风险
+
+1. **根 `src/` 有 26 个 JS 文件是 2026-06-20 之后修改的** — 这些修改可能已丢失，因为它们没有进入 Git 版本
+2. **`moral_events.js` 根版(1049行)与city版(963行)内容不同** — 需要在合并后删除根版本
+3. **本会话的 `index.html` 修改也误写了根版本** — 根 `src/index.html` (23:20) 和 city `index.html` (23:42) 都有修改
+
+---
+
+## 参考文档
+
+- [版本全景地图](memory/版本全景地图.md) — 完整目录结构和差异分析
+- [版本一致性铁律](memory/版本一致性铁律.md) — 防止改错版本的检查清单
+- [待迁移内容清单](memory/待迁移内容清单.md) — 需要迁移的功能评估
+- [city-life-story/CLAUDE.md](city-life-story/CLAUDE.md) — 活跃版开发规则
+
+---
+
+_最后更新：2026-06-21_
+_创建原因：多次会话因改错版本导致工作白费，此为系统性解决方案。_

@@ -1,0 +1,21 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-z6UWAWZ1uXFzpraB6HBWAXFzBuu7hIvg",
+    "ANTHROPIC_BASE_URL": "https://token.sensenova.cn",
+    "ANTHROPIC_MODEL": "sensenova-u1-fast",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "sensenova-u1-fast",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "sensenova-u1-fast",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "sensenova-u1-fast",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)"
+    ]
+  },
+  "autoMemoryEnabled": true,
+  "theme": "auto"
+}

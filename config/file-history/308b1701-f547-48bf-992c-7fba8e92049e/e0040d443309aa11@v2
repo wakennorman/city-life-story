@@ -1,0 +1,196 @@
+/**
+ * 音效系统 — 轻量 Web Audio API 合成音效
+ *
+ * 不依赖任何外部音频文件，所有声音由振荡器实时合成。
+ * 音量适中（masterGain=0.15），提供 click / buy / sell / event 四种音效。
+ *
+ * 用法:
+ *   playSound('click')   — 按钮点击反馈
+ *   playSound('buy')     — 购买/进货运号
+ *   playSound('sell')    — 卖出/收入音效
+ *   playSound('event')   — 事件触发提示
+ *
+ * 参考: 大多数( Nobody ) — 极简 SFX 设计
+ *       北京浮生记 — 无音效纯文字（本作小幅增加沉浸感）
+ */
+
+var Sound = (function() {
+  var ctx = null;
+  var masterGain = null;
+  var MASTER_VOLUME = 0.15;
+  var muted = false;
+
+  function getCtx() {
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = ctx.createGain();
+        masterGain.gain.value = MASTER_VOLUME;
+        masterGain.connect(ctx.destination);
+      } catch (e) {
+        return null;
+      }
+    }
+    // 某些浏览器要求用户交互后才允许 AudioContext
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    return ctx;
+  }
+
+  /** 播放短促正弦波音效 */
+  function tone(freq, duration, type, rampDown) {
+    var ac = getCtx();
+    if (!ac || muted) return;
+    type = type || 'sine';
+    duration = duration || 0.08;
+    rampDown = rampDown !== undefined ? rampDown : 0.03;
+
+    var now = ac.currentTime;
+    var osc = ac.createOscillator();
+    var gain = ac.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + rampDown);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  /** 双音调"叮叮"效果 */
+  function doubleTone(f1, f2, gap, duration, type) {
+    var ac = getCtx();
+    if (!ac || muted) return;
+    type = type || 'sine';
+    duration = duration || 0.07;
+    gap = gap || 0.06;
+
+    var now = ac.currentTime;
+
+    // 第一个音
+    var osc1 = ac.createOscillator();
+    var gain1 = ac.createGain();
+    osc1.type = type;
+    osc1.frequency.setValueAtTime(f1, now);
+    gain1.gain.setValueAtTime(0.25, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc1.connect(gain1);
+    gain1.connect(masterGain);
+    osc1.start(now);
+    osc1.stop(now + duration);
+
+    // 第二个音（稍高/低，形成和声）
+    var osc2 = ac.createOscillator();
+    var gain2 = ac.createGain();
+    osc2.type = type;
+    osc2.frequency.setValueAtTime(f2, now + gap);
+    gain2.gain.setValueAtTime(0.2, now + gap);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + gap + duration);
+    osc2.connect(gain2);
+    gain2.connect(masterGain);
+    osc2.start(now + gap);
+    osc2.stop(now + gap + duration);
+  }
+
+  return {
+    play: function(type) {
+      switch (type) {
+        case 'click':
+          // 短促高频"咔嗒" — 类似 UI 点击反馈
+          tone(800, 0.05, 'sine', 0.02);
+          break;
+
+        case 'buy':
+          // 上升和声 — 购买成功
+          doubleTone(523, 659, 0.05, 0.08, 'sine');
+          break;
+
+        case 'sell':
+          // 下降和声 — 卖出/收钱
+          doubleTone(587, 440, 0.06, 0.09, 'triangle');
+          break;
+
+        case 'event':
+          // 双音提示 — 事件弹出
+          doubleTone(440, 880, 0.08, 0.1, 'sine');
+          break;
+
+        case 'train':
+          // 轻快的上升音阶 — 技能训练
+          doubleTone(660, 880, 0.04, 0.07, 'sine');
+          break;
+
+        case 'levelup':
+          // 三连音 — 等级提升
+          var ac = getCtx();
+          if (!ac || muted) return;
+          var now = ac.currentTime;
+          [523, 659, 784].forEach(function(freq, i) {
+            var osc = ac.createOscillator();
+            var gain = ac.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.07);
+            gain.gain.setValueAtTime(0.22, now + i * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.1);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now + i * 0.07);
+            osc.stop(now + i * 0.07 + 0.1);
+          });
+          break;
+
+        default:
+          tone(600, 0.06, 'sine', 0.02);
+      }
+    },
+
+    get muted() { return muted; },
+    setMuted: function(m) {
+      muted = !!m;
+      if (typeof StateManager !== 'undefined') {
+        var st = StateManager.getState();
+        if (st && st.settings !== undefined) {
+          st.settings = st.settings || {};
+          st.settings.soundMuted = muted;
+        }
+      }
+    },
+
+    toggleMute: function() {
+      this.setMuted(!muted);
+      return muted;
+    }
+  };
+})();
+
+/** 全局快捷调用 */
+function playSound(type) {
+  Sound.play(type);
+}
+
+// ====== 全局点击音效（事件委托） ======
+// 对所有交互元素（按钮、tab、卡片）注入点击音效
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  // 向上查找最近的交互元素
+  while (el && el !== document.body) {
+    var tag = el.tagName;
+    if (tag === 'BUTTON') {
+      Sound.play('click');
+      return;
+    }
+    if (el.classList && (
+      el.classList.contains('action-card') ||
+      el.classList.contains('tab-btn') ||
+      el.classList.contains('event-choice')
+    )) {
+      Sound.play('click');
+      return;
+    }
+    el = el.parentElement;
+  }
+}, true);  // 捕获阶段，确保在任何 stopPropagation 之前触发

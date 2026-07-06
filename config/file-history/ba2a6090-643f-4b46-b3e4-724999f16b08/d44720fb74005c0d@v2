@@ -1,0 +1,153 @@
+/**
+ * 存档系统 — localStorage 持久化
+ *
+ * 提供: saveGame(), loadGame(), deleteSave(), hasSave(), autoSave()
+ * 存档键: 'city_life_story_save'
+ */
+
+const SAVE_KEY = 'city_life_story_save';
+const AUTO_SAVE_KEY = 'city_life_story_autosave';
+
+/**
+ * 序列化并保存游戏状态到 localStorage
+ */
+function saveGame(slot = SAVE_KEY) {
+  try {
+    const state = StateManager.getState();
+
+    // 更新时间戳
+    state.lastPlayedAt = Date.now();
+
+    // 深拷贝以避免循环引用和后续修改
+    const saveData = JSON.parse(JSON.stringify(state));
+
+    // 压缩：移除消息日志中过旧的部分（保留最近 200 条）
+    if (saveData.messageLog && saveData.messageLog.length > 200) {
+      saveData.messageLog = saveData.messageLog.slice(-200);
+    }
+
+    const json = JSON.stringify(saveData);
+    localStorage.setItem(slot, json);
+
+    StateManager.addMessage('💾 游戏已保存', 'info');
+    return true;
+  } catch (e) {
+    console.error('存档失败:', e);
+    StateManager.addMessage('⚠️ 存档失败: ' + e.message, 'danger');
+    return false;
+  }
+}
+
+/**
+ * 自动存档
+ */
+function autoSave() {
+  try {
+    const state = StateManager.getState();
+    const saveData = JSON.parse(JSON.stringify(state));
+    saveData.lastPlayedAt = Date.now();
+    if (saveData.messageLog && saveData.messageLog.length > 200) {
+      saveData.messageLog = saveData.messageLog.slice(-200);
+    }
+    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(saveData));
+  } catch (e) {
+    // 自动存档静默失败
+  }
+}
+
+/**
+ * 从 localStorage 加载存档
+ * @returns {object|null} 存档数据，或 null
+ */
+function loadGame(slot = SAVE_KEY) {
+  try {
+    const json = localStorage.getItem(slot);
+    if (!json) return null;
+
+    const saveData = JSON.parse(json);
+
+    // 版本迁移（未来扩展）
+    if (!saveData.version) {
+      StateManager.addMessage('⚠️ 存档版本过旧，可能无法完全兼容', 'warning');
+    }
+
+    return saveData;
+  } catch (e) {
+    console.error('读档失败:', e);
+    return null;
+  }
+}
+
+/**
+ * 删除存档
+ */
+function deleteSave(slot = SAVE_KEY) {
+  localStorage.removeItem(slot);
+  StateManager.addMessage('🗑️ 存档已删除', 'info');
+}
+
+/**
+ * 检查是否有存档
+ */
+function hasSave(slot = SAVE_KEY) {
+  return localStorage.getItem(slot) !== null;
+}
+
+/**
+ * 获取存档信息（用于显示）
+ */
+function getSaveInfo(slot = SAVE_KEY) {
+  const saveData = loadGame(slot);
+  if (!saveData) return null;
+
+  const date = new Date(saveData.lastPlayedAt || saveData.createdAt);
+  return {
+    day: saveData.player?.day || 1,
+    phase: saveData.player?.phase || 'street',
+    cash: saveData.resources?.cash || 0,
+    date: date.toLocaleString('zh-CN'),
+    age: saveData.player?.age || 20,
+    rank: saveData.player?.corporate?.rank || null,
+  };
+}
+
+/**
+ * 导出存档为 JSON 字符串（用于备份）
+ */
+function exportSave() {
+  const state = StateManager.getState();
+  const data = JSON.parse(JSON.stringify(state));
+  return JSON.stringify(data, null, 2);
+}
+
+/**
+ * 从 JSON 字符串导入存档
+ */
+function importSave(jsonStr) {
+  try {
+    const data = JSON.parse(jsonStr);
+    if (!data.version || !data.player) {
+      throw new Error('无效的存档格式');
+    }
+    StateManager.importState(data);
+    StateManager.addMessage('📥 存档导入成功！', 'success');
+    return true;
+  } catch (e) {
+    StateManager.addMessage('⚠️ 存档导入失败: ' + e.message, 'danger');
+    return false;
+  }
+}
+
+// 挂到全局
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    saveGame,
+    loadGame,
+    deleteSave,
+    hasSave,
+    autoSave,
+    getSaveInfo,
+    exportSave,
+    importSave,
+  });
+}

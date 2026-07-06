@@ -1,0 +1,144 @@
+# 城市浮生记 — 大规模完善计划
+
+## Context
+
+用户累积了大量需求（来自10+轮对话），游戏基础框架已存在但多个核心系统功能缺失或有bug。用户最直接的抱怨：
+1. 时间不流逝（移动地点/吃饭/休息等行动后时间不变）
+2. 随机事件从不弹出
+3. 投资板块看不到
+4. 天气/气候系统没有可视化
+5. 城管系统/恋爱系统/技能影响交易等全部缺失
+
+## 核心发现
+
+| 问题 | 当前状态 | 根因 |
+|------|---------|------|
+| 时间不流逝 | 只有工作类行动调用advanceTimeSlot()，旅行/吃饭/休息/银行等都不消耗时间 | action handler缺少时间消耗调用 |
+| 随机事件不弹 | 仅每天结束时18%概率触发一次 | rollDailyNews只在endDay()调用 |
+| 投资板块不存在 | index.html无"投资"tab，investment.js不存在 | 只有phase2/stock.js藏在职场内部 |
+| 天气系统 | 完全不存在 | 从未实现 |
+| 行动力(AP) | state.js有actionPoints字段但从未使用 | 占位代码 |
+| 绩效公式 | KPI35%+能力25%+向上管理20%+人缘15% | 与spec不符(P5/P6应KPI70%, P7+应向上管理60%) |
+| 人缘惩罚 | 人缘<20才降级A→B | spec要求人缘<40封顶A |
+
+## 实施计划（5个阶段）
+
+### Phase 1: 修复时间系统 + 行动力(AP) + 随机事件 🔴 最高优先
+
+**目标**: 每次行动都消耗时间，旅行消耗时间，随机事件在游戏过程中触发
+
+**修改文件**:
+- `src/js/core/state.js` — 添加 `maxActionPoints: 100` 到玩家状态
+- `src/js/main.js` — 核心改动：
+  - 创建 `consumeAP(cost)` 函数替换 `advanceTimeSlot()`
+  - 旅行handler添加 `consumeAP(15)` 
+  - 吃饭handler添加 `consumeAP(10)`  
+  - 休息handler添加 `consumeAP(15)`
+  - 洗澡handler添加 `consumeAP(10)`
+  - 银行操作添加 `consumeAP(10)`
+  - 医院添加 `consumeAP(20)`
+  - 公园添加 `consumeAP(15)`
+  - NPC对话添加 `consumeAP(10)`
+  - 所有 extra actions 改为 `consumeAP(各自cost)`
+  - `endDay()` 中重置AP: `state.player.actionPoints = state.player.maxActionPoints`
+  - `consumeAP()` 中嵌入per-action随机事件判定(6%概率)
+- `src/js/core/events.js` — 增加per-action触发：`consumeAP`中调用 `rollStreetEvent`/`rollCorporateEvent`
+- `src/js/phase1/actions_extra.js` — 所有 `advanceTimeSlot()` 替换为 `consumeAP(cost)`
+- `src/js/ui/render.js` — 侧边栏添加AP条显示 + time-slot indicator显示剩余AP
+- `src/css/style.css` — AP条样式
+
+**AP成本表**:
+- 工作(街头): 35 | 旅行: 15 | 吃饭: 10 | 休息: 15 | 洗澡: 10
+- 医院: 20 | 银行: 10 | 公园: 15 | NPC: 10 | 学习: 20
+- 扩展行动: 10-25不等
+
+### Phase 2: 绩效公式修正 + 年度周期完善 + 技能影响交易
+
+**修改文件**:
+- `src/js/phase2/perf.js`:
+  - `calculatePerfScore()`: P5/P6用KPI(70%)+向上管理(30%)，P7+用KPI(40%)+向上管理(60%)
+  - `assignGrade()`: 人缘<40封顶A，人缘<20再降一级
+- `src/js/phase2/corp_ops.js`:
+  - `endQuarter()`: Q1发放年终奖(绩效×月薪)，Q4设为冲刺季(所有KPI增益+50%)
+- `src/js/phase1/trade.js`:
+  - `buyGood()`: 销售技能≥30给折扣(最多15%)
+  - `sellGood()`: 销售技能≥30给溢价(最多15%)
+
+### Phase 3: 天气系统 + 城管执法
+
+**新建文件**:
+- `src/js/core/weather.js` — 天气类型(晴/多云/雨/暴雨/大风/雪)、季节(春夏秋冬)、温度系统
+  - 每天20%概率天气变化
+  - 户外工作收入×天气修正系数
+  - 恶劣天气增加疲劳、降低心情
+  - 在header显示天气图标+温度+天气名
+
+**修改文件**:
+- `src/js/core/state.js` — 添加 `weather: {current, temperature, season, lastChanged}` + `chengguan: {heat, lastRaid, warnings}`
+- `src/js/main.js`:
+  - `doStreetJob()`: 应用天气修正 + 城管检查
+  - 添加 `checkChengguan(state, jobId)`: 摆摊类工作积累heat，高heat时触发没收/警告
+  - `endDay()`: 调用 `rollWeather(state)` + chengguan heat每日衰减
+  - 添加城管行贿/说情行动
+- `src/js/ui/render.js` — header/sidebar显示天气
+- `src/css/style.css` — 天气组件样式
+
+### Phase 4: 投资板块（股票+比特币+房产+汽车）
+
+**新建文件**:
+- `src/js/phase2/investment.js` — 整合并扩展投资系统：
+  - **股票**: 复用stock.js的8只股票逻辑，迁移到 `state.investment.stockMarket`
+  - **比特币**: 起始价~¥200,000，减半周期1460天，恐慌贪婪指数，极端行情
+  - **房地产**: 5处房产(50万~500万)，日增值+租金收入
+  - **汽车**: 3款车(3万~50万)，日折旧+保养费+出行AP加成
+  - `showInvestmentModal()` — 4个子tab切换UI
+
+**修改文件**:
+- `src/index.html` — tab bar添加 `<button data-tab="investment">💰 投资</button>`
+- `src/js/ui/render.js` — `renderCurrentTab()` 添加 `investment` case
+- `src/js/phase2/stock.js` — 精简，移除UI渲染代码(迁移到investment.js)
+- `src/js/phase2/corp_ops.js` — 更新股票引用从 `state.corporate.stockMarket` 到 `state.investment.stockMarket`
+- `src/js/main.js` — `endDay()` 调用 `tickInvestmentDaily(state)` 每日更新投资价格
+
+### Phase 5: 恋爱/婚姻 + 装备效果 + 礼物 + 全中文化
+
+**修改文件**:
+- `src/js/core/state.js` — 扩展relationships添加 `romanceStage, giftsGiven, lastDate`、`flags.married/spouse`
+- `src/js/main.js`:
+  - NPC互动扩展：好感≥50出现约会选项，≥80出现求婚选项
+  - 婚姻效果：共同财产加成、心情加成
+  - 添加 `giveGift(npcId, itemId)` 函数
+- `src/js/phase1/actions_extra.js` — 新增送礼、约会、求婚行动
+- `src/js/phase1/needs.js` — 装备效果修正疲劳/受伤/生病率
+- `src/js/ui/render.js` — 装备面板显示实际生效的加成
+- `src/js/data/items.js` — 完善装备效果属性
+- 全中文化: 检查所有用户可见文本，确保无英文
+
+## 依赖关系
+
+```
+Phase 1 (时间+AP+事件) ← 必须先做，所有后续phase依赖
+   ├── Phase 2 (绩效+技能交易) ← 可并行
+   ├── Phase 3 (天气+城管) ← 需要endDay改动
+   ├── Phase 4 (投资) ← 需要endDay每日tick
+   └── Phase 5 (恋爱+装备) ← 可最后做
+```
+
+## 验证方法
+
+每个Phase完成后：
+1. `python build.py` 构建成功无报错
+2. 打开 `dist/index.html` 浏览器测试
+3. Phase 1: 新游戏→旅行→观察AP消耗和时间流逝→多次行动看随机事件是否弹出
+4. Phase 2: 进入职场→季度结束→验证绩效公式和年终奖
+5. Phase 3: 新游戏→看天气显示→摆摊多次→看城管是否触发
+6. Phase 4: 确认投资tab可见→股票/比特币/房产/汽车功能正常
+7. Phase 5: NPC好感提升→约会→求婚→婚姻系统→装备穿戴有效果
+
+## 存档兼容
+
+在 `state.js` 的 `importState()` 中添加迁移逻辑：
+- 旧存档缺少 `maxActionPoints` → 设为100
+- 旧存档缺少 `weather` → 创建默认weather对象
+- 旧存档缺少 `chengguan` → 创建默认chengguan对象
+- 旧存档缺少 `investment` → 创建默认investment对象

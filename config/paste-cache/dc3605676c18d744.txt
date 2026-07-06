@@ -1,0 +1,24 @@
+'aude' 不是内部或外部命令，也不是可运行的程序
+或批处理文件。
+╭─── Claude Code v2.1.179 ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                 │ Tips for getting started                                                           │
+│          Welcome back!          │ Run /init to create a CLAUDE.md file with instructions for Claude                  │
+│                                 │ ────────────────────────────────────────────────────────────────────────────────── │
+│             ▐▛███▜▌             │ What's new                                                                         │
+│            ▝▜█████▛▘            │ Fixed mid-stream connection drops: partial responses are now preserved instead of… │
+│              ▘▘ ▝▝              │ Fixed mouse-wheel scrolling in WSL2 under Windows Terminal and VS Code (regressio… │
+│                                 │ Fixed a sandbox `denyRead`/`allowRead` glob over a large directory tree making th… │
+│   glm-5.2 · API Usage Billing   │ /release-notes for more                                                            │
+│            ~\Desktop            │                                                                                    │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+ ‼ Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set · auth may not work as expected
+   · to use ANTHROPIC_AUTH_TOKEN: Unset the ANTHROPIC_API_KEY environment variable, or claude /logout then say "No" to
+   the API key approval before login.
+   · to use ANTHROPIC_API_KEY: Unset the ANTHROPIC_AUTH_TOKEN environment variable.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts · ← for agents                                                                       ◈ max · /effort

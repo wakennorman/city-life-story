@@ -1,0 +1,2 @@
+[08:16:14] Starting test
+[08:19:15] ERROR: Command '['powershell.exe', '-NoLogo', '-ExecutionPolicy', 'Bypass', '-File', 'D:\\Claude Code+DeepSeekV4\\start-sensenova-glm5.2.ps1', '--print', '--permission-mode', 'bypassPermissions', '--max-turns', '2']' timed out after 120 seconds

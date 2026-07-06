@@ -1,0 +1,526 @@
+/**
+ * 随机新闻事件 — 影响价格、工作收入、玩家状态、投资市场
+ *
+ * investmentEffect: 数组，每项 { industry, category, symbols, btc, allStocks, mul }
+ *   industry  - 匹配 INV_STOCKS.industry（科技/新能源/消费/金融/房地产/医药）
+ *   category  - 匹配 INV_STOCKS.category（股票/贵金属/期货/虚拟币）
+ *   symbols   - 具体标的数组
+ *   btc: true - 专门影响 btcPrice + btcFearGreed
+ *   allStocks - 影响所有 INV_STOCKS 条目
+ *   mul       - 价格乘数（>1 涨价，<1 跌价）
+ */
+
+const NEWS_EVENTS = [
+  // === 价格影响事件 ===
+  {
+    id: "metal_boom",
+    headline: "📈 国际金属价格暴涨！废品回收利润翻倍！",
+    effects: {
+      priceMod: { scrap_metal: 2.0, scrap_plastic: 1.5 },
+      investmentEffect: [
+        { category: "贵金属", mul: 1.20 },
+        { symbols: ["COPPER", "NICKEL", "ALUM"], mul: 1.18 },
+      ],
+      duration: 5,
+    },
+    type: "price",
+  },
+  {
+    id: "heatwave",
+    headline: "☀️ 高温来袭！瓶装水和饮料需求暴增",
+    effects: {
+      priceMod: { water: 1.8, beer: 1.5, snacks: 1.3 },
+      investmentEffect: [
+        { symbols: ["CL"], mul: 1.08 },
+        { industry: "消费", mul: 1.05 },
+      ],
+      duration: 3,
+    },
+    type: "price",
+  },
+  {
+    id: "crackdown",
+    headline: "🚔 城管严查摆摊！商业区摆摊收入减半",
+    effects: {
+      jobPenalty: ["street_vending_food", "street_vending_goods", "food_stall"],
+      jobMultiplier: 0.5,
+      investmentEffect: [
+        { industry: "消费", mul: 0.90 },
+      ],
+      duration: 4,
+    },
+    type: "job",
+  },
+  {
+    id: "factory_boom",
+    headline: "🏭 电子厂订单暴增！工厂加班工资翻倍",
+    effects: {
+      jobBonus: ["factory_work_assembly", "factory_overtime"],
+      jobMultiplier: 1.6,
+      investmentEffect: [
+        { industry: "新能源", mul: 1.12 },
+        { symbols: ["HUAW", "SMIC"], mul: 1.10 },
+      ],
+      duration: 5,
+    },
+    type: "job",
+  },
+  {
+    id: "fruit_glut",
+    headline: "🍎 水果大丰收！批发市场价格暴跌",
+    effects: { priceMod: { fruits: 0.4, vegetables: 0.5 }, duration: 4 },
+    type: "price",
+  },
+  {
+    id: "construction_boom",
+    headline: "🏗️ 新楼盘开工！工地大量招人，工资上涨",
+    effects: {
+      jobBonus: ["manual_labor_construction", "skilled_labor_construction"],
+      jobMultiplier: 1.5,
+      investmentEffect: [
+        { symbols: ["ESTATE"], mul: 1.18 },
+        { category: "贵金属", mul: 1.05 },
+      ],
+      duration: 6,
+    },
+    type: "job",
+  },
+  {
+    id: "cigarette_ban",
+    headline: "🚭 公共场所禁烟令升级！香烟滞销",
+    effects: {
+      priceMod: { cigarettes: 0.3, beer: 0.7 },
+      investmentEffect: [
+        { industry: "消费", mul: 0.92 },
+        { industry: "医药", mul: 1.06 },
+      ],
+      duration: 5,
+    },
+    type: "price",
+  },
+  {
+    id: "back_to_school",
+    headline: "🎒 开学季！大学城快递和家教需求暴涨",
+    effects: {
+      jobBonus: ["package_delivery", "tutoring"],
+      jobMultiplier: 1.8,
+      investmentEffect: [
+        { industry: "科技", mul: 1.08 },
+        { industry: "消费", mul: 1.05 },
+      ],
+      duration: 7,
+    },
+    type: "job",
+  },
+  {
+    id: "cold_wave",
+    headline: "🥶 寒潮来袭！二手衣物和日用品涨价",
+    effects: {
+      priceMod: { clothing: 2.5, daily_use: 1.8 },
+      investmentEffect: [
+        { symbols: ["NG", "CL"], mul: 1.15 },
+        { category: "贵金属", mul: 1.05 },
+      ],
+      duration: 4,
+    },
+    type: "price",
+  },
+  {
+    id: "tech_fair",
+    headline: "📱 科技展会举办！小电子产品价格飙升",
+    effects: {
+      priceMod: { electronics: 2.5 },
+      investmentEffect: [
+        { industry: "科技", mul: 1.22 },
+        { symbols: ["NVDA", "HUAW", "SMIC"], mul: 1.30 },
+      ],
+      duration: 3,
+    },
+    type: "price",
+  },
+  {
+    id: "min_wage",
+    headline: "📋 最低工资标准上调！所有工作收入+20%",
+    effects: {
+      allJobsBonus: 1.2,
+      investmentEffect: [
+        { industry: "消费", mul: 1.06 },
+        { industry: "金融", mul: 0.96 },
+      ],
+      duration: 10,
+    },
+    type: "policy",
+  },
+
+  // === 玩家个人事件 ===
+  {
+    id: "found_money",
+    headline: "🍀 在路边捡到了50块钱！运气不错",
+    effects: { cashBonus: 50 },
+    type: "personal",
+  },
+  {
+    id: "pickpocket",
+    headline: "👛 在公交车上被偷了100块...注意保管财物",
+    effects: { cashLoss: 100 },
+    type: "personal",
+  },
+  {
+    id: "free_meal",
+    headline: "🍱 社区有免费午餐活动，吃了顿饱的",
+    effects: { hungerBonus: 30, cashLoss: 0 },
+    type: "personal",
+  },
+  {
+    id: "rain_storm",
+    headline: "🌧️ 暴雨倾盆！今天不适合户外工作",
+    effects: { fatiguePenalty: 15 },
+    type: "personal",
+  },
+  {
+    id: "good_sleep",
+    headline: "😴 昨晚睡得特别好，今天精神焕发",
+    effects: { fatigueBonus: 20, happinessBonus: 10 },
+    type: "personal",
+  },
+  {
+    id: "friendly_neighbor",
+    headline: "👋 邻居送了些水果，心情不错",
+    effects: { happinessBonus: 15 },
+    type: "personal",
+  },
+  {
+    id: "skill_book",
+    headline: "📖 在二手书店淘到一本有用的教材",
+    effects: { skillXp: 30 },
+    type: "personal",
+  },
+
+  // === 政策事件 ===
+  {
+    id: "subsidy",
+    headline: "🏛️ 政府推出职业技能培训补贴！培训费用减半",
+    effects: { trainingDiscount: 0.5, duration: 8 },
+    type: "policy",
+  },
+
+  // === 投资专项事件（10+）— 直接影响投资市场 ===
+  {
+    id: "rate_cut",
+    headline: "📉 央行宣布降息25个基点！流动性宽松，资本市场全线上涨",
+    effects: {
+      investmentEffect: [
+        { allStocks: true, mul: 1.08 },
+        { btc: true, mul: 1.12 },
+        { category: "贵金属", mul: 1.04 },
+      ],
+      duration: 7,
+    },
+    type: "investment",
+  },
+  {
+    id: "rate_hike",
+    headline: "📈 美联储意外加息50基点！加密市场重挫，科技股承压",
+    effects: {
+      investmentEffect: [
+        { allStocks: true, mul: 0.94 },
+        { btc: true, mul: 0.78 },
+        { industry: "科技", mul: 0.89 },
+      ],
+      duration: 6,
+    },
+    type: "investment",
+  },
+  {
+    id: "property_cooling",
+    headline: "🏛️ 政府出台楼市调控新政！限购限贷升级，房价预期大跌",
+    effects: {
+      investmentEffect: [
+        { symbols: ["ESTATE"], mul: 0.80 },
+        { industry: "金融", mul: 0.95 },
+        { category: "贵金属", mul: 1.05 },
+      ],
+      duration: 8,
+    },
+    type: "investment",
+  },
+  {
+    id: "property_stimulus",
+    headline: "🏠 政府发布楼市刺激政策！降首付、降利率，成交量暴增",
+    effects: {
+      investmentEffect: [
+        { symbols: ["ESTATE"], mul: 1.25 },
+        { industry: "金融", mul: 1.08 },
+        { category: "贵金属", mul: 0.97 },
+      ],
+      duration: 7,
+    },
+    type: "investment",
+  },
+  {
+    id: "geopolitical_crisis",
+    headline: "⚔️ 中东局势骤然升温！原油期货暴涨，避险资产成香饽饽",
+    effects: {
+      investmentEffect: [
+        { symbols: ["CL", "NG"], mul: 1.22 },
+        { category: "贵金属", mul: 1.15 },
+        { industry: "科技", mul: 0.94 },
+        { btc: true, mul: 0.92 },
+      ],
+      duration: 5,
+    },
+    type: "investment",
+  },
+  {
+    id: "trade_war_chip",
+    headline: "🛡️ 中美芯片战升级！出口管制扩大，供应链承压",
+    effects: {
+      investmentEffect: [
+        { symbols: ["SMIC", "HUAW", "NVDA", "TSMC"], mul: 0.85 },
+        { category: "贵金属", mul: 1.08 },
+        { symbols: ["LITH", "COPPER"], mul: 1.12 },
+      ],
+      duration: 6,
+    },
+    type: "investment",
+  },
+  {
+    id: "ai_boom",
+    headline: "🤖 国产AI大模型突破！发布会震惊硅谷，科技股全线飙升",
+    effects: {
+      investmentEffect: [
+        { industry: "科技", mul: 1.20 },
+        { symbols: ["NVDA", "BYTE", "BAID", "HUAW"], mul: 1.32 },
+        { symbols: ["LITH", "COPPER"], mul: 1.10 },
+      ],
+      duration: 5,
+    },
+    type: "investment",
+  },
+  {
+    id: "crypto_bull",
+    headline: "🚀 比特币突破历史新高！加密市场牛市来了",
+    effects: {
+      investmentEffect: [
+        { btc: true, mul: 1.28 },
+        { category: "虚拟币", mul: 1.18 },
+      ],
+      duration: 4,
+    },
+    type: "investment",
+  },
+  {
+    id: "crypto_crash",
+    headline: "💥 加密市场黑色星期一！比特币单日暴跌30%",
+    effects: {
+      investmentEffect: [
+        { btc: true, mul: 0.70 },
+        { category: "虚拟币", mul: 0.75 },
+        { category: "贵金属", mul: 1.08 },
+      ],
+      duration: 3,
+    },
+    type: "investment",
+  },
+  {
+    id: "energy_crisis",
+    headline: "⚡ 全球能源危机！天然气断供引发连锁反应，新能源提速",
+    effects: {
+      investmentEffect: [
+        { symbols: ["CL", "NG"], mul: 1.25 },
+        { industry: "新能源", mul: 1.18 },
+        { symbols: ["LITH", "NICKEL"], mul: 1.15 },
+        { industry: "消费", mul: 0.94 },
+      ],
+      duration: 6,
+    },
+    type: "investment",
+  },
+  {
+    id: "black_swan",
+    headline: "🦢 黑天鹅事件！未知危机引发全球市场恐慌性抛售",
+    effects: {
+      investmentEffect: [
+        { allStocks: true, mul: 0.87 },
+        { btc: true, mul: 0.72 },
+        { category: "贵金属", mul: 1.20 },
+      ],
+      duration: 4,
+    },
+    type: "investment",
+  },
+  {
+    id: "ev_subsidy",
+    headline: "🚗 国家加大新能源车补贴力度！比亚迪、蔚来订单暴增",
+    effects: {
+      investmentEffect: [
+        { industry: "新能源", mul: 1.22 },
+        { symbols: ["LITH", "NICKEL", "COPPER"], mul: 1.15 },
+      ],
+      duration: 5,
+    },
+    type: "investment",
+  },
+  {
+    id: "antitrust_investigation",
+    headline: "⚖️ 反垄断调查突袭！多家科技巨头收到传票",
+    effects: {
+      investmentEffect: [
+        { symbols: ["ALIM", "TENC", "MEIT", "DIDI"], mul: 0.83 },
+        { industry: "金融", mul: 0.96 },
+      ],
+      duration: 5,
+    },
+    type: "investment",
+  },
+];
+
+/** 获取随机新闻事件 */
+function getRandomNewsEvent() {
+  // 按类型加权：价格35%，工作20%，个人20%，政策10%，投资15%
+  var weights = { price: 35, job: 20, personal: 20, policy: 10, investment: 15 };
+  var total = 0;
+  for (var k in weights) total += weights[k];
+  var roll = Math.random() * total;
+
+  for (var type in weights) {
+    roll -= weights[type];
+    if (roll <= 0) {
+      var typeEvents = NEWS_EVENTS.filter(function(e) { return e.type === type; });
+      return typeEvents[Math.floor(Math.random() * typeEvents.length)];
+    }
+  }
+  return NEWS_EVENTS[Math.floor(Math.random() * NEWS_EVENTS.length)];
+}
+
+/** 应用新闻效果 */
+function applyNewsEffect(news, state) {
+  var effects = news.effects;
+
+  // 价格修正（商品市场）
+  if (effects.priceMod) {
+    for (var goodId in effects.priceMod) {
+      var multiplier = effects.priceMod[goodId];
+      for (var locKey in LOCATIONS) {
+        var prices = state.trade.goodsPrices[locKey];
+        if (prices && prices[goodId]) {
+          prices[goodId] = Math.round(prices[goodId] * multiplier * 100) / 100;
+        }
+      }
+    }
+  }
+
+  // 工作奖励/惩罚
+  if (effects.jobBonus) {
+    for (var i = 0; i < effects.jobBonus.length; i++) {
+      var jobId = effects.jobBonus[i];
+      state._jobMultipliers = state._jobMultipliers || {};
+      state._jobMultipliers[jobId] =
+        (state._jobMultipliers[jobId] || 1) * effects.jobMultiplier;
+    }
+  }
+  if (effects.jobPenalty) {
+    for (var j = 0; j < effects.jobPenalty.length; j++) {
+      var penaltyId = effects.jobPenalty[j];
+      state._jobMultipliers = state._jobMultipliers || {};
+      state._jobMultipliers[penaltyId] =
+        (state._jobMultipliers[penaltyId] || 1) * effects.jobMultiplier;
+    }
+  }
+  if (effects.allJobsBonus) {
+    state._allJobsBonus = (state._allJobsBonus || 1) * effects.allJobsBonus;
+  }
+
+  // 现金
+  if (effects.cashBonus) {
+    state.resources.cash += effects.cashBonus;
+    state.resources.totalEarned += effects.cashBonus;
+  }
+  if (effects.cashLoss) {
+    state.resources.cash = Math.max(0, state.resources.cash - effects.cashLoss);
+  }
+
+  // 需求
+  if (effects.hungerBonus)
+    state.needs.hunger = Math.min(100, state.needs.hunger + effects.hungerBonus);
+  if (effects.fatigueBonus)
+    state.needs.fatigue = Math.max(0, state.needs.fatigue - effects.fatigueBonus);
+  if (effects.fatiguePenalty)
+    state.needs.fatigue = Math.min(100, state.needs.fatigue + effects.fatiguePenalty);
+  if (effects.happinessBonus)
+    state.needs.happiness = Math.min(100, state.needs.happiness + effects.happinessBonus);
+
+  // 技能经验
+  if (effects.skillXp) {
+    var skillKeys = Object.keys(state.skills);
+    var key = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+    state.skills[key].xp += effects.skillXp;
+  }
+
+  // ── 投资市场联动 ──────────────────────────────────────────────
+  if (effects.investmentEffect && state.investment) {
+    var rules = effects.investmentEffect;
+    var inv = state.investment;
+    var hasInvStocks = typeof INV_STOCKS !== "undefined";
+
+    for (var ri = 0; ri < rules.length; ri++) {
+      var rule = rules[ri];
+      var mul = rule.mul || rule.multiplier || 1.0;
+      if (mul === 1.0) continue;
+
+      // 比特币专项
+      if (rule.btc) {
+        if (inv.btcPrice) {
+          inv.btcPrice = Math.max(1000, Math.round(inv.btcPrice * mul));
+          inv.btcFearGreed = Math.max(5, Math.min(95,
+            (inv.btcFearGreed || 50) + (mul > 1 ? 18 : -18)));
+        }
+        continue;
+      }
+
+      if (!hasInvStocks || !inv.stockMarket) continue;
+
+      for (var si = 0; si < INV_STOCKS.length; si++) {
+        var stock = INV_STOCKS[si];
+        var mkt = inv.stockMarket[stock.symbol];
+        if (!mkt) continue;
+
+        var hit = false;
+        if (rule.allStocks) hit = true;
+        if (rule.industry && stock.industry === rule.industry) hit = true;
+        if (rule.category && stock.category === rule.category) hit = true;
+        if (rule.symbols && rule.symbols.indexOf(stock.symbol) >= 0) hit = true;
+
+        if (hit) {
+          mkt.price = Math.max(0.000001, mkt.price * mul);
+          // 按价格量级四舍五入，保持精度
+          if (mkt.price >= 100) {
+            mkt.price = Math.round(mkt.price * 100) / 100;
+          } else if (mkt.price >= 0.1) {
+            mkt.price = Math.round(mkt.price * 1000) / 1000;
+          } else if (mkt.price >= 0.0001) {
+            mkt.price = Math.round(mkt.price * 100000) / 100000;
+          } else {
+            mkt.price = Math.round(mkt.price * 10000000) / 10000000;
+          }
+        }
+      }
+    }
+  }
+
+  return effects;
+}
+
+/** 清除过期新闻效果 */
+function cleanupExpiredNews(state) {
+  state.activeNews = (state.activeNews || []).filter(function(news) {
+    if (news._appliedDay === undefined) news._appliedDay = state.player.day;
+    return state.player.day - news._appliedDay < (news.effects.duration || 5);
+  });
+
+  // 恢复工作倍率
+  if (state.activeNews.length === 0) {
+    state._jobMultipliers = {};
+    state._allJobsBonus = 1;
+  }
+}

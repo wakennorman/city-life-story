@@ -1,0 +1,31 @@
+# 开发文档
+
+## 2026-06-14 Claude Code + DeepSeek V4 安装修正
+
+完成最新版 Claude Code 2.1.177 安装，并将项目配置切换到 DeepSeek 官方 Anthropic-compatible 端点 `https://api.deepseek.com/anthropic`。主模型配置为 `deepseek-v4-pro[1m]`，Haiku 与子代理使用 `deepseek-v4-flash`。保留已有 API Key，固化 `CLAUDE_CODE_ATTRIBUTION_HEADER=0`，并重写 Windows 安装及启动脚本，使其从项目目录定位配置、可重复执行且不再修改全局 npm 镜像。
+
+实际验证：项目启动脚本成功调用 DeepSeek V4 Pro 并返回预期内容；同一 session 第二轮请求读取 `23,296` 个缓存 token，仅新增 `103` 个输入 token，确认登录绕过、模型路由和提示词缓存均有效。
+
+修复新 PowerShell 中启动器误报“Claude Code 未安装”的问题：启动脚本不再只依赖 `npm config get prefix`，会优先从当前用户 AppData、npm prefix 和 PATH 多路径查找。Windows Terminal 已检测存在，并创建桌面快捷方式，通过 Windows Terminal 启动以正常显示中文输入法候选框。
+
+双 API 最终采用双入口方案：DeepSeek 入口负责代码、文字和逻辑；MiniMax Multimodal 入口负责图片等多模态任务，两者可以同时打开。曾尝试 Claude Code Router 自动分流，但其在当前 DeepSeek/MiniMax Anthropic-compatible 链路上转发请求挂起，因此已停止 Router 并恢复 DeepSeek 直连，避免 ConnectionRefused 和长时间卡死。视频和语音仍需先提取关键帧或转写。
+
+## 2026-06-17 Freemodel API 配置
+
+主入口已切换到 Freemodel：`ANTHROPIC_BASE_URL=https://cc.freemodel.dev`，模型为 `claude-sonnet-4-6`，Opus/Haiku 分别配置为 freemodel 提供的 Claude 系列模型名。该网关要求保留 Claude Code 官方归属块；`CLAUDE_CODE_ATTRIBUTION_HEADER=0` 会返回 403 “restricted to the official Claude Code client”，因此主配置固定为 `CLAUDE_CODE_ATTRIBUTION_HEADER=1`。已验证最小请求、持久 session 续聊和缓存读取成功。MiniMax 多模态入口保持独立配置。
+
+## 2026-06-17 Freemodel 省额度模式
+
+因 Sonnet 档额度消耗较快，主入口切换为省额度模式：默认模型、Sonnet 映射、Haiku 映射和子代理均使用 `claude-haiku-4-5-20251001`，`CLAUDE_CODE_EFFORT_LEVEL` 从 `max` 降为 `medium`。最小请求验证成功，实际走 `claude-haiku-4-5-20251001`，费用约为此前 Sonnet 测试的三分之一。新增 `use-freemodel-economy.ps1` 和 `use-freemodel-performance.ps1` 用于切换省额度/高性能模式。
+
+## 2026-06-17 city-life-story 玩法深度扩充（凌晨 05:11–08:41）
+
+`city-life-story` 游戏在凌晨集中迭代，共 13 个提交，主要方向：
+
+**NPC 系统**：新增 NPC 生日系统（送礼好感×2、弹窗提醒），NPC 生日对话，NPC 解锁 flag 接入玩法，NPC 委托任务系统（6 个 NPC 各有一次特殊请求），NPC 阈值奖励。
+
+**事件系统**：随机事件扩充至 51 个，节日系统，道德后果事件系统，周末节奏系统，人生里程碑章节事件，中期事件扩充。
+
+**叙事与体验**：梦想追踪系统（人生目标与里程碑叙事），每日今日总结（一句话高光叙事），存档快照回忆文案（"那时候你..."），地点氛围文字，今日智能建议。
+
+**玩法机制**：摆摊选址策略（客流量影响摆摊收益），成就档案系统，动态教程提示，成长数据可视化。

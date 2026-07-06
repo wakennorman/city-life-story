@@ -1,0 +1,24 @@
+﻿{
+    "env":  {
+                "ANTHROPIC_AUTH_TOKEN":  "fe_oa_b1d7c17acd0c32bc7270cbbffaf09cd91994059f8db40e22",
+                "ANTHROPIC_BASE_URL":  "https://cc.freemodel.dev",
+                "CLAUDE_CODE_ATTRIBUTION_HEADER":  "1",
+                "ANTHROPIC_MODEL":  "claude-sonnet-4-6",
+                "ANTHROPIC_DEFAULT_OPUS_MODEL":  "claude-opus-4-8",
+                "ANTHROPIC_DEFAULT_SONNET_MODEL":  "claude-sonnet-4-6",
+                "ANTHROPIC_DEFAULT_HAIKU_MODEL":  "claude-haiku-4-5-20251001",
+                "CLAUDE_CODE_SUBAGENT_MODEL":  "claude-sonnet-4-6",
+                "CLAUDE_CODE_EFFORT_LEVEL":  "max"
+            },
+    "permissions":  {
+                        "allow":  [
+                                      "Bash(*)",
+                                      "Read(*)",
+                                      "Write(*)",
+                                      "Edit(*)"
+                                  ]
+                    },
+    "model":  "claude-sonnet-4-6",
+    "autoMemoryEnabled":  true,
+    "apiProvider":  "anthropic"
+}

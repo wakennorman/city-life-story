@@ -1,0 +1,9 @@
+{
+  "id": "2",
+  "subject": "Task 2: 家庭/子女成长系统",
+  "description": "新建 src/js/core/family_children.js，实现5阶段家庭组建、5维度子女属性、6成长阶段，与现有系统联动",
+  "activeForm": "实现家庭子女系统",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

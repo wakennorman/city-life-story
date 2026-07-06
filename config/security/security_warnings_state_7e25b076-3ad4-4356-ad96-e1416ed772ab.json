@@ -1,0 +1,15 @@
+{
+  "shown_warnings": [],
+  "untracked_at_baseline": {
+    "test-results/.last-run.json": 1781712127206529800
+  },
+  "touched_paths": [
+    "C:\\Users\\\u9648\u6052\u7a33\\.claude\\settings.json",
+    "C:\\Users\\\u9648\u6052\u7a33\\Desktop\\Claude-\u706b\u5c71GLM5.2.bat"
+  ],
+  "rate_limits": {
+    "CommitReview": [1781730240.8410957, 1781730825.0198565, 1781731530.609236]
+  },
+  "baseline_sha": "b5f6fe761fe7b9ee2bd200a25d0228adbcc20424",
+  "head_at_capture": "38252e7e28a3dc171fb38db8c5c3dda76fe79057"
+}

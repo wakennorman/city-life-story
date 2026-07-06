@@ -1,0 +1,729 @@
+/**
+ * 扩展行动库
+ *
+ * 涵盖：街头生存 / 经营 / 社交 / 学习 / 生活 / 投资 / 梦想实现
+ * 参考：《北京浮生记》《大多数》《中国式家长》《这是我的战争》《Stardew Valley》
+ *
+ * 用法：getAvailableActions() 末尾会调用 addExtraActions() 把这些行动合并进去
+ */
+
+/** 街头阶段通用行动（不依赖地点） */
+function addStreetExtras(state, actions) {
+  // === 街头生存类（任何街头地点都行） ===
+  actions.push({
+    id: "scavenge_trash",
+    name: "🗑️ 翻垃圾桶找废品",
+    desc: "在巷子里翻垃圾桶找瓶瓶罐罐卖钱。脏但能赚点零花钱。",
+    icon: "🗑️",
+    apCost: 20,
+    payEstimate: "2~9",
+    handler: () => {
+      const earned = 2 + Math.floor(Math.random() * 8);
+      const st = StateManager.getState();
+      st.resources.cash += earned;
+      st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+      st.resources.totalEarned += earned;
+      StateManager.addMessage(
+        `🗑️ 翻了半天垃圾桶，捡到 ¥${earned}，脏兮兮的。`,
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "busking",
+    name: "🎤 街头卖唱",
+    desc: "在地铁口或天桥上唱歌赚打赏。需要胆子大。",
+    icon: "🎤",
+    apCost: 20,
+    payEstimate: "5~25",
+    handler: () => {
+      const st = StateManager.getState();
+      const skill = st.player.mental; // 心智影响成功率
+      const earned = Math.floor(5 + Math.random() * 20 + (skill - 25) * 0.3);
+      st.resources.cash += earned;
+      st.resources.totalEarned += earned;
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+      st.status.fame = Math.min(100, st.status.fame + 1);
+      if (Math.random() < 0.2) {
+        st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+        StateManager.addMessage(
+          `🎤 唱了半天，城管赶人+路人嫌弃，赚到 ¥${earned}。`,
+          "warning",
+        );
+      } else {
+        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+        StateManager.addMessage(
+          `🎤 卖唱结束，收获 ¥${earned} 打赏！心情好。`,
+          "success",
+        );
+      }
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "beg",
+    name: "🙏 街头乞讨",
+    desc: "放下尊严，跪地要饭。（有尊严损失）",
+    icon: "🙏",
+    apCost: 20,
+    payEstimate: "1~5",
+    handler: () => {
+      const st = StateManager.getState();
+      const earned = 1 + Math.floor(Math.random() * 5);
+      st.resources.cash += earned;
+      st.resources.totalEarned += earned;
+      st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+      st.status.fame = Math.max(0, st.status.fame - 2);
+      StateManager.addMessage(
+        `🙏 跪了半小时，收到 ¥${earned}。心里五味杂陈。`,
+        "warning",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "play_dice",
+    name: "🎲 路边赌骰子",
+    desc: "和地摊小贩玩骰子，押 50 赢了翻倍，输了打水漂。",
+    icon: "🎲",
+    costEstimate: 50,
+    apCost: 20,
+    payEstimate: "0或100",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 50) {
+        StateManager.addMessage("🎲 押不起 50 块。", "warning");
+        return;
+      }
+      st.resources.cash -= 50;
+      if (Math.random() < 0.45) {
+        st.resources.cash += 100;
+        st.resources.totalEarned += 50;
+        st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+        StateManager.addMessage("🎲 赢了！100 块到手！", "success");
+      } else {
+        st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+        StateManager.addMessage("🎲 输了...50 块没了。", "danger");
+      }
+      consumeAP(20);
+    },
+  });
+
+  // === 社交 / 家庭类 ===
+  actions.push({
+    id: "call_home",
+    name: "📞 给家里打电话",
+    desc: "用公用电话给爸妈报平安，听听唠叨。",
+    icon: "📞",
+    costEstimate: 2,
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 2) {
+        StateManager.addMessage("📞 电话费都付不起...", "warning");
+        return;
+      }
+      st.resources.cash -= 2;
+      st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+      st.needs.hunger = Math.max(0, st.needs.hunger - 3);
+      if (Math.random() < 0.3) {
+        st.resources.cash += 200; // 爸妈塞的钱
+        StateManager.addMessage(
+          "📞 妈妈在电话里哭了，让你注意身体，转了 200 块。",
+          "success",
+        );
+        st.resources.totalEarned += 200;
+      } else {
+        StateManager.addMessage(
+          "📞 和爸妈聊了 10 分钟，心情好多了。",
+          "success",
+        );
+      }
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "remit_home",
+    name: "💌 给家里汇款",
+    desc: "把一部分钱寄回老家。",
+    icon: "💌",
+    costEstimate: "200~1000",
+    handler: () => {
+      showRemitModal();
+    },
+  });
+
+  actions.push({
+    id: "internet_bar",
+    name: "💻 网吧上网",
+    desc: "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
+    icon: "💻",
+    costEstimate: 5,
+    apCost: 20,
+    payEstimate: "智力+0.3, 随机技能XP",
+    disabled: state.resources.cash < 5,
+    reqFail: state.resources.cash < 5 ? "现金不足" : null,
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 5) {
+        StateManager.addMessage("💻 5 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 5;
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+      st.player.intelligence = Math.min(100, st.player.intelligence + 0.3);
+      const skills = ["english", "coding", "accounting"];
+      const sk = skills[Math.floor(Math.random() * skills.length)];
+      st.skills[sk].xp += 5 + Math.floor(Math.random() * 10);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+      StateManager.addMessage(
+        "💻 在网吧待了 2 小时，智力+，还有点收获。",
+        "info",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "salon_chat",
+    name: "💈 路边理发店聊天",
+    desc: "花 10 块剪个头发，顺便听听老板吹牛。需要敏捷≥18才能帮上忙。",
+    icon: "💈",
+    costEstimate: 10,
+    apCost: 20,
+    payEstimate: "心情+10",
+    disabled: state.player.agility < 18 || state.resources.cash < 10,
+    reqFail: state.player.agility < 18 ? "需敏捷≥18" : (state.resources.cash < 10 ? "现金不足" : null),
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 10) {
+        StateManager.addMessage("💈 剪不起头。", "warning");
+        return;
+      }
+      st.resources.cash -= 10;
+      st.needs.hygiene = Math.min(100, st.needs.hygiene + 25);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+      st.status.fame = Math.min(100, st.status.fame + 1);
+      StateManager.addMessage(
+        "💈 剪了个利索的短发！清爽多了，运气好像也好了点。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  // === 学习类 ===
+  actions.push({
+    id: "self_study",
+    name: "📖 图书馆自习",
+    desc: "去图书馆（商业区旁）安静看书。",
+    icon: "📖",
+    apCost: 20,
+    payEstimate: "技能XP+30",
+    handler: () => {
+      const st = StateManager.getState();
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
+      const skills = Object.keys(st.skills);
+      const key = skills[Math.floor(Math.random() * skills.length)];
+      st.skills[key].xp += 30 + Math.floor(Math.random() * 20);
+      st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
+      StateManager.addMessage(
+        `📖 在图书馆泡了一下午，${key} 技能经验大涨！`,
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "night_school",
+    name: "🌃 上夜校",
+    desc: "晚上上夜校，提升智力+相关技能。需要 ¥50 学费，智力≥25。",
+    icon: "🌃",
+    costEstimate: 50,
+    apCost: 20,
+    payEstimate: "智力+1, 技能+",
+    disabled: state.player.intelligence < 25 || state.resources.cash < 50,
+    reqFail: state.player.intelligence < 25 ? "需智力≥25" : (state.resources.cash < 50 ? "现金不足" : null),
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 50) {
+        StateManager.addMessage("🌃 学费 50 块都交不起。", "warning");
+        return;
+      }
+      st.resources.cash -= 50;
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+      st.player.intelligence = Math.min(100, st.player.intelligence + 1);
+      st.skills.english.xp += 30;
+      st.skills.coding.xp += 30;
+      st.skills.accounting.xp += 20;
+      StateManager.addMessage(
+        "🌃 夜校下课！智力+1，英语/编程/会计都涨了。累趴。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  // === 生活类 ===
+  actions.push({
+    id: "gym",
+    name: "🏋️ 办健身卡锻炼",
+    desc: "去健身房办月卡，提升体质和敏捷。",
+    icon: "🏋️",
+    costEstimate: 200,
+    apCost: 20,
+    payEstimate: "体质+1, 敏捷+0.5",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 200) {
+        StateManager.addMessage("🏋️ 月卡 200 块都办不起。", "warning");
+        return;
+      }
+      st.resources.cash -= 200;
+      st.player.physique = Math.min(100, st.player.physique + 1);
+      st.player.agility = Math.min(100, st.player.agility + 0.5);
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+      st.status.health = Math.min(100, st.status.health + 3);
+      StateManager.addMessage(
+        "🏋️ 在健身房撸铁 2 小时！体质+1，敏捷+0.5，累了但快乐。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "movie",
+    name: "🎬 看场电影",
+    desc: "去影院看场电影放松一下。",
+    icon: "🎬",
+    costEstimate: 35,
+    apCost: 20,
+    payEstimate: "心情+18",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 35) {
+        StateManager.addMessage("🎬 35 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 35;
+      st.needs.fatigue = Math.max(0, st.needs.fatigue - 8);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 18);
+      st.status.fame = Math.min(100, st.status.fame + 0.5);
+      StateManager.addMessage(
+        "🎬 看了一部催泪电影，感动得稀里哗啦。心情大好！",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "ktv",
+    name: "🎤 KTV 唱歌",
+    desc: "约朋友去 KTV 吼两小时。",
+    icon: "🎤",
+    costEstimate: 80,
+    apCost: 20,
+    payEstimate: "心情+25, 人缘+",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 80) {
+        StateManager.addMessage("🎤 80 块都凑不齐。", "warning");
+        return;
+      }
+      st.resources.cash -= 80;
+      st.needs.happiness = Math.min(100, st.needs.happiness + 25);
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+      st.needs.hunger = Math.max(0, st.needs.hunger - 8);
+      st.status.fame = Math.min(100, st.status.fame + 1);
+      StateManager.addMessage(
+        "🎤 吼了 2 小时，嗓子都哑了！心情+25。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "pharmacy",
+    name: "💊 买药/买营养品",
+    desc: "去药房买维生素、补品等。需要 ¥30~80。",
+    icon: "💊",
+    costEstimate: 30,
+    apCost: 20,
+    payEstimate: "健康+5",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 30) {
+        StateManager.addMessage("💊 30 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 30;
+      st.status.health = Math.min(100, st.status.health + 5);
+      st.player.physique = Math.min(100, st.player.physique + 0.3);
+      StateManager.addMessage(
+        "💊 买了瓶复合维生素，感觉自己又行了。健康+5。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "supermarket",
+    name: "🛒 去超市采购",
+    desc: "去超市买点吃的用的。需要 ¥30~60。",
+    icon: "🛒",
+    costEstimate: 30,
+    apCost: 20,
+    payEstimate: "饥饱+30, 卫生+",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 30) {
+        StateManager.addMessage("🛒 30 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 30;
+      st.needs.hunger = Math.min(100, st.needs.hunger + 30);
+      st.needs.hygiene = Math.min(100, st.needs.hygiene + 15);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+      StateManager.addMessage(
+        "🛒 超市采购了泡面、纸巾、零食。饥饱+30，卫生+15。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "clothing",
+    name: "👕 买件新衣服",
+    desc: "去服装店买件像样的衣服，提升卫生/心情/名气。",
+    icon: "👕",
+    costEstimate: 80,
+    apCost: 20,
+    payEstimate: "卫生+10, 名气+",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 80) {
+        StateManager.addMessage("👕 80 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 80;
+      st.needs.hygiene = Math.min(100, st.needs.hygiene + 10);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+      st.status.fame = Math.min(100, st.status.fame + 1);
+      StateManager.addMessage(
+        "👕 买了一件衬衫！看起来人模人样的。卫生+10，名气+1。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  // === 投资 / 理财类 ===
+  actions.push({
+    id: "lottery",
+    name: "🎰 买张彩票",
+    desc: "花 2 块买注彩票，搏一搏单车变摩托。",
+    icon: "🎰",
+    costEstimate: 2,
+    apCost: 20,
+    payEstimate: "0或50万",
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 2) {
+        StateManager.addMessage("🎰 2 块都掏不出来。", "warning");
+        return;
+      }
+      st.resources.cash -= 2;
+      const roll = Math.random();
+      if (roll < 0.0005) {
+        st.resources.cash += 500000;
+        st.resources.totalEarned += 500000;
+        st.needs.happiness = Math.min(100, st.needs.happiness + 50);
+        StateManager.addMessage(
+          "🎰🎉🎉🎉 中了头奖！¥500,000 到账！财务自由就在眼前！",
+          "success",
+        );
+      } else if (roll < 0.05) {
+        const prize = 50 + Math.floor(Math.random() * 200);
+        st.resources.cash += prize;
+        st.resources.totalEarned += prize;
+        st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+        StateManager.addMessage(`🎰 小赚一笔！中了 ¥${prize}！`, "success");
+      } else {
+        st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+        StateManager.addMessage("🎰 没中。", "info");
+      }
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "yu_e_bao",
+    name: "💰 买余额宝理财",
+    desc: "把闲钱存进余额宝，每天 0.01% 收益。",
+    icon: "💰",
+    costEstimate: "100起",
+    apCost: 20,
+    payEstimate: "日息0.01%",
+    handler: () => {
+      showYuEBaoModal();
+    },
+  });
+
+  actions.push({
+    id: "buy_insurance",
+    name: "🛡️ 买保险",
+    desc: "花 200 买份意外险，下次受伤/生病能赔 500。",
+    icon: "🛡️",
+    costEstimate: 200,
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 200) {
+        StateManager.addMessage("🛡️ 保险都买不起。", "warning");
+        return;
+      }
+      st.resources.cash -= 200;
+      st.flags.hasInsurance = true;
+      st.flags.insuranceExpire = st.player.day + 30;
+      StateManager.addMessage(
+        "🛡️ 买了 30 天意外险！期间受伤/生病赔付 500。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  // === 梦想 / 自我实现类 ===
+  actions.push({
+    id: "diary",
+    name: "📓 写日记",
+    desc: "记录今天的心情。回顾一下，反思成长。",
+    icon: "📓",
+    handler: () => {
+      const st = StateManager.getState();
+      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+      st.player.mental = Math.min(100, st.player.mental + 0.5);
+      st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
+      StateManager.addMessage(
+        "📓 在小本本上写了几页。感觉思路清晰多了。",
+        "info",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "meditation",
+    name: "🧘 冥想打坐",
+    desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
+    icon: "🧘",
+    handler: () => {
+      const st = StateManager.getState();
+      st.player.mental = Math.min(100, st.player.mental + 1);
+      st.needs.fatigue = Math.max(0, st.needs.fatigue - 12);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+      StateManager.addMessage(
+        "🧘 闭眼冥想了 15 分钟。内心平静，疲劳-12。",
+        "success",
+      );
+      consumeAP(20);
+    },
+  });
+
+  actions.push({
+    id: "start_business",
+    name: "🏪 摆地摊创业",
+    desc: "去批发市场进点货，到商业区摆摊卖。需销售≥10+现金≥200。",
+    icon: "🏪",
+    costEstimate: 200,
+    apCost: 20,
+    payEstimate: "100~350",
+    disabled: state.skills.sales.level < 10 || state.resources.cash < 200,
+    reqFail: state.skills.sales.level < 10 ? "需销售≥10" : (state.resources.cash < 200 ? "现金不足" : null),
+    handler: () => {
+      const st = StateManager.getState();
+      if (st.resources.cash < 200) {
+        StateManager.addMessage("🏪 200 块启动资金都没有。", "warning");
+        return;
+      }
+      st.resources.cash -= 200;
+      st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
+      const luck = Math.random();
+      if (luck < 0.3) {
+        // 大赚（现实：摆摊日赚100~350）
+        const earned = 150 + Math.floor(Math.random() * 200);
+        st.resources.cash += earned;
+        st.resources.totalEarned += earned;
+        st.skills.sales.xp += 20;
+        st.status.fame = Math.min(100, st.status.fame + 2);
+        StateManager.addMessage(
+          `🏪 摆摊大成功！赚 ¥${earned}！销售经验++`,
+          "success",
+        );
+      } else if (luck < 0.85) {
+        // 小赚（现实：摆摊日赚30~120）
+        const earned = 30 + Math.floor(Math.random() * 90);
+        st.resources.cash += earned;
+        st.resources.totalEarned += earned;
+        st.skills.sales.xp += 10;
+        StateManager.addMessage(`🏪 摆摊小赚 ¥${earned}。`, "success");
+      } else {
+        // 亏了
+        StateManager.addMessage(
+          "🏪 摆摊失败！货没卖掉，城管还罚了款。",
+          "danger",
+        );
+        st.resources.cash = Math.max(0, st.resources.cash - 50);
+        st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+      }
+      consumeAP(20);
+    },
+  });
+}
+
+/** 汇款模态框 */
+function showRemitModal() {
+  const state = StateManager.getState();
+  showModal({
+    title: "💌 给家里汇款",
+    body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
+           <p style="font-size:11px;color:var(--text-secondary);">每汇 100 元，心情+3，名气+0.5。</p>
+           <label>汇款金额: <input id="remit-amount" type="number" min="100" max="${state.resources.cash}" value="200" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+    buttons: [
+      { text: "取消", cls: "", callback: () => {} },
+      {
+        text: "汇款",
+        cls: "btn-primary",
+        callback: () => {
+          const amt = Math.max(
+            0,
+            Math.min(
+              state.resources.cash,
+              parseInt(document.getElementById("remit-amount")?.value || 0),
+            ),
+          );
+          if (amt < 100) {
+            StateManager.addMessage("💌 至少汇 100 块。", "warning");
+            return;
+          }
+          state.resources.cash -= amt;
+          state.needs.happiness = Math.min(
+            100,
+            state.needs.happiness + (amt / 100) * 3,
+          );
+          state.status.fame = Math.min(
+            100,
+            state.status.fame + (amt / 100) * 0.5,
+          );
+          StateManager.addMessage(
+            `💌 给家里汇了 ¥${amt.toLocaleString()}，爸妈很高兴。`,
+            "success",
+          );
+          document.querySelector(".modal-overlay")?.remove();
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
+/** 余额宝模态框 */
+function showYuEBaoModal() {
+  const state = StateManager.getState();
+  const yue = state.flags.yuEBao || 0;
+  const todayInterest = Math.floor(yue * 0.0001);
+  showModal({
+    title: "💰 余额宝理财",
+    body: `
+      <p>当前余额宝: <strong style="color:var(--success);">¥${yue.toLocaleString()}</strong></p>
+      <p>今日收益预估: <strong>+¥${todayInterest}</strong>（日息 0.01%）</p>
+      <p>现金: ¥${state.resources.cash.toLocaleString()}</p>
+      <label>转入金额: <input id="yue-amount" type="number" min="100" max="${state.resources.cash}" value="${Math.floor(state.resources.cash)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>
+    `,
+    buttons: [
+      { text: "取消", cls: "", callback: () => {} },
+      {
+        text: "全部转出",
+        cls: "btn-warning",
+        callback: () => {
+          state.resources.cash += yue;
+          state.flags.yuEBao = 0;
+          StateManager.addMessage(
+            `💰 从余额宝转出 ¥${yue.toLocaleString()}。`,
+            "info",
+          );
+          document.querySelector(".modal-overlay")?.remove();
+          renderAll();
+        },
+      },
+      {
+        text: "确认转入",
+        cls: "btn-success",
+        callback: () => {
+          const amt = Math.max(
+            0,
+            Math.min(
+              state.resources.cash,
+              parseInt(document.getElementById("yue-amount")?.value || 0),
+            ),
+          );
+          if (amt < 100) {
+            StateManager.addMessage("💰 至少转入 100 块。", "warning");
+            return;
+          }
+          state.resources.cash -= amt;
+          state.flags.yuEBao = (state.flags.yuEBao || 0) + amt;
+          StateManager.addMessage(
+            `💰 转入余额宝 ¥${amt.toLocaleString()}。`,
+            "success",
+          );
+          document.querySelector(".modal-overlay")?.remove();
+          renderAll();
+        },
+      },
+    ],
+  });
+}
+
+/** 给 main.js 调用的统一入口 */
+function addExtraActions(state, actions) {
+  if (state.player.phase === "street") {
+    addStreetExtras(state, actions);
+  }
+  // 余额宝每日利息
+  if (state.flags.yuEBao > 0) {
+    const interest = Math.floor(state.flags.yuEBao * 0.0001);
+    if (interest > 0) {
+      state.flags.yuEBao += interest;
+    }
+  }
+  // 保险检查
+  if (
+    state.flags.hasInsurance &&
+    state.flags.insuranceExpire < state.player.day
+  ) {
+    state.flags.hasInsurance = false;
+    StateManager.addMessage("🛡️ 你的保险到期了，记得续保。", "info");
+  }
+  if (state.flags.hasInsurance && (state.status.injured || state.status.sick)) {
+    if (!state.flags._insurancePaidThisCycle) {
+      state.resources.cash += 500;
+      state.flags._insurancePaidThisCycle = true;
+      StateManager.addMessage("🛡️ 保险赔付了 ¥500！", "success");
+    }
+  }
+  if (!state.status.injured && !state.status.sick) {
+    state.flags._insurancePaidThisCycle = false;
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "3",
+  "subject": "双十一购物狂欢 + 有梗世界事件系统",
+  "description": "在festivals.js+news.js+events.js中实现双十一三段弧线(预热/高峰/余震)，以及1.2节另外2-3个有梗叙事事件(骑手运动/晶芯危机)。",
+  "activeForm": "实现有梗世界事件系统",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

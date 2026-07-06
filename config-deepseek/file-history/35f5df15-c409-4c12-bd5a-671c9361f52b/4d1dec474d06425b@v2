@@ -1,0 +1,49 @@
+@echo off
+setlocal
+chcp 65001 > nul
+title Claude SenseNova glm52
+cd /d "D:\Claude Code+DeepSeekV4"
+
+:: Find Python
+set PYTHON_CMD=
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set "PYTHON_CMD=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+if not defined PYTHON_CMD if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe" set "PYTHON_CMD=%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
+if not defined PYTHON_CMD if exist "D:\Hermes\hermes-agent\venv\Scripts\python.exe" set "PYTHON_CMD=D:\Hermes\hermes-agent\venv\Scripts\python.exe"
+if not defined PYTHON_CMD set "PYTHON_CMD=python.exe"
+
+:: Verify startup script exists
+set "PS1_PATH=D:\Claude Code+DeepSeekV4\start-sensenova-glm5.2.ps1"
+if not exist "%PS1_PATH%" (
+    echo.
+    echo Missing startup script: %PS1_PATH%
+    pause
+    exit /b 1
+)
+
+:: Verify claude.cmd exists
+if not exist "%APPDATA%\npm\claude.cmd" (
+    echo.
+    echo Claude Code is not installed, or %%APPDATA%%\npm\claude.cmd is missing.
+    pause
+    exit /b 1
+)
+
+:: Start proxy in background
+echo Starting auth proxy on port 8088...
+start /B "" "%PYTHON_CMD%" "D:\Claude Code+DeepSeekV4\proxy-sensenova.py" 8088
+timeout /t 2 /nobreak >nul
+
+:: Launch Claude Code
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "%PS1_PATH%" %*
+set "CLAUDE_EXIT_CODE=%ERRORLEVEL%"
+
+:: Kill proxy when done
+taskkill /f /im python.exe /fi "WINDOWTITLE eq proxy-sensenova" >nul 2>&1
+
+if not "%CLAUDE_EXIT_CODE%"=="0" (
+    echo.
+    echo Claude Code exited with an error. See the message above.
+    pause
+)
+
+exit /b %CLAUDE_EXIT_CODE%

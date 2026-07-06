@@ -1,0 +1,61 @@
+$ErrorActionPreference = "Stop"
+
+$projectDir = $PSScriptRoot
+$realUserProfile = [Environment]::GetFolderPath("UserProfile")
+
+$claudeHome = Join-Path $realUserProfile ".claude-home-helpcoder-gpt-5-codex"
+$claudeConfigDir = Join-Path $realUserProfile ".claude-helpcoder-gpt-5-codex"
+
+$settingsPath = Join-Path $claudeConfigDir "settings.json"
+$statePath = Join-Path $claudeHome ".claude.json"
+$claude = Join-Path $env:APPDATA "npm\claude.cmd"
+
+if (-not (Test-Path -LiteralPath $claude)) {
+    throw "Claude Code is not installed."
+}
+
+New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
+New-Item -ItemType Directory -Force -Path $claudeConfigDir | Out-Null
+
+$model = "gpt-5-codex"
+$apiKey = "sk-IdEfmM1c24SslPh7mngPApkQ7moB30NcfkDzazGbNDBrGyaY"
+$baseUrl = "http://localhost:3000"
+
+$settings = @"
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "$apiKey",
+    "ANTHROPIC_BASE_URL": "$baseUrl",
+    "ANTHROPIC_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "$model",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "$model",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "SECURITY_GUIDANCE_DISABLE": "1",
+    "ENABLE_STOP_REVIEW": "0",
+    "MAX_STOP_HOOK_FIRINGS": "0"
+  },
+  "permissions": {
+    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+  },
+  "theme": "auto",
+  "autoMemoryEnabled": true
+}
+"@
+Set-Content -LiteralPath $settingsPath -Value $settings -Encoding UTF8
+
+$state = @'
+{
+  "hasCompletedOnboarding": true
+}
+'@
+Set-Content -LiteralPath $statePath -Value $state -Encoding UTF8
+
+$env:HOME = $claudeHome
+$env:USERPROFILE = $claudeHome
+$env:CLAUDE_CONFIG_DIR = $claudeConfigDir
+$env:ANTHROPIC_API_KEY = ""
+
+Set-Location -LiteralPath $projectDir
+
+& $claude --model $model @args

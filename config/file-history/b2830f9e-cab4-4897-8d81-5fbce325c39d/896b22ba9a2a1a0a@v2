@@ -1,0 +1,25 @@
+{
+    "env": {
+        "ANTHROPIC_AUTH_TOKEN": "sk-cp-7TpzP8MK7IdHB4vm9l4Eb2_07U8NEef6joQT7CRR04Ho6vJjEN32YkBP9iZHT4CvMLWFI3Iq3nXKyf7kCB4YAJGLCJscAly22Lflp01b-ANNDXJyYPl0WHk",
+        "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
+        "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+        "ANTHROPIC_MODEL": "MiniMax-M3",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M3",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M3",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M3",
+        "CLAUDE_CODE_SUBAGENT_MODEL": "MiniMax-M3",
+        "CLAUDE_CODE_EFFORT_LEVEL": "max",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+    },
+    "model": "MiniMax-M3",
+    "permissions": {
+        "allow": [
+            "Bash(*)",
+            "Read(*)",
+            "Write(*)",
+            "Edit(*)"
+        ]
+    },
+    "apiProvider": "anthropic"
+}

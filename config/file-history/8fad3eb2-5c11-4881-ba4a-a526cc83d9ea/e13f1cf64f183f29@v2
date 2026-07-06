@@ -1,0 +1,46 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash D:/Claude Code+DeepSeekV4/.claude/statusline.sh"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"[System.Console]::Beep(800, 300)\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write . 2>/dev/null || true",
+            "if": "Bash(git commit *)",
+            "timeout": 30,
+            "statusMessage": "提交前格式化代码..."
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "commit-commands@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "content-creator@ccplugins": true
+  },
+  "extraKnownMarketplaces": {
+    "ccplugins": {
+      "source": {
+        "source": "github",
+        "repo": "ccplugins/awesome-claude-code-plugins"
+      }
+    }
+  }
+}

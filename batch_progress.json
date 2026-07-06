@@ -1,0 +1,6492 @@
+{
+  "done": 1758,
+  "total": 1758,
+  "failed": [
+    {
+      "word": "extension",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tension",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tentative",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pretend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "trend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ten",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "abstain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "contain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "content",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "continue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "detain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "entertain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maintain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "obtain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pertain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "retain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sustain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tang",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tact",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tag",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tactful",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tactic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tactile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tangent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tangible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "contact",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intact",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "stagnant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "tax",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "taxation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "taxonomy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "vers",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "vert",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adverse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anniversary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "converse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conversation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conversational",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diverse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "divert",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inverted",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perverse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reverse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reversible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transverse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "universe",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "universal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cours",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "current",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "curse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cursory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "curt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excursive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incursive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "occur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ven",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "vent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "advent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "convene",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "event",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cap",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cept",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cip",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "accept",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capacity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "captive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concept",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decapitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "except",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intercept",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "batter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "battle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "battlement",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "combat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "debate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flabagbat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ced",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cess",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "accede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "access",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ancestor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cedent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excess",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intercede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "precede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "procedure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "secede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "succeed",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decide",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fratricide",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decline",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "clin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disinclination",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recline",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incline",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cord",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concord",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "accord",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "correlate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "core",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concordance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "correspond",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "record",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "discord",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aristocrat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aristocratic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "democrat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "theocrat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "autocrat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cret",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "create",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cre",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "creator",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "creation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "creative",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "creature",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decreate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "increase",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excrescence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decrement",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "criticise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "critic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "critical",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypercritical",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "curious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "criticism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "secure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "curiosity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "security",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "democratic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "democracy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dem",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "di",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "democratize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dialogue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diameter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "doc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "docile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "doctor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indoctrinate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "doctrine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "document",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domestic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dominate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domination",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dominant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "erg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "energy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "energetic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "synergy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fac",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "facilitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "facile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "facility",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conference",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "offer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prefer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "suffer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "definite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "define",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "final",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infinite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "finish",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "affix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fixture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prefix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "suffix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fond",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flict",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fondle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fondness",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "forc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "enforce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "force",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "forcible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fugitive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refuge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fug",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subterfuge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gener",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "generator",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "generation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "generate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "generic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "degenerate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "generous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diagnose",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gna",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gnos",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diagnosis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prognosis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ignorant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "graph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ea",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gram",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "congratulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gratitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "grat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ingrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gratuity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "grav",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hes",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "grev",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "her",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cohere",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hesitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adhere",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hibit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exhibit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hib",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhibit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prohibit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "human",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humane",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exhume",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhume",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insul",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insult",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insulator",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insulation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "initial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "it",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ambition",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "judic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jud",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prejudice",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "judicial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "judicious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lab",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jug",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subjugate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collapse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elapse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "laps",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prolapse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lapse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relapse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lang",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lingu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "languag",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "linguistic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bilingual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "linguist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ablate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "latitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "translate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "oblate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lavatory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lav",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lave",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dilute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lotion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lig",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elegant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intellect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collection",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "select",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "negligible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "eligible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "leg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "legal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lex",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "legible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "legislation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "legend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lesson",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liev",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lev",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "levitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "levity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alleviate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liber",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relevant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liberal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liberation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liberate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "license",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "illicit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "licit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alliance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ally",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ly",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ligament",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rely",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "delineate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "line",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liqu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "linear",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liner",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liquate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liquid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liquor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "literal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "literate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "obliterate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "literary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "allocate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "loc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "location",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "locate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "local",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "apologise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "logue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "log",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "catalogue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "logic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "los",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collaborate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elaborate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lud",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "laboratory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "delude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "collude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "allude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mag",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "illusion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ludicrous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maj",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "max",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "magnify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "major",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "magnificent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maximum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "manu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "manual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "man",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maneuver",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "manufacture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "marsh",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mariner",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maritime",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "immediate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "med",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "medium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "middle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "merchandise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "market",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "merchant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "microbe",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "micr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "migr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "microfilm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "microscope",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "immigrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "migrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "migratory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diminish",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "min",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ministry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "minister",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "minor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "minute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "minus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mir",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "admire",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mirror",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "miracle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mob",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mitt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mov",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "automobile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mot",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "motivate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "motion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "moment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "motor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "move",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monitor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "admonish",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "summon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monument",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "morale",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "moral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "morality",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "firm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "finite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "affirm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inflate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deflation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flourish",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "florist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "foliage",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fluct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "foli",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "front",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "folio",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frontier",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refugee",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confront",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gam",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "future",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "futile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bigamy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monogamy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastronomy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "geography",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "geology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gnor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ignore",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gravity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polygon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "trigonometry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "grave",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "greg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gregarious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "congregate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "harmon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "harmony",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "heli",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "helicopter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "harmonize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horrible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "heliocentric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horror",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hydr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humanity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hydrant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dehydrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insulin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idiom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idiot",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circuit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "labor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disjoint",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "judiciary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "latent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "later",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "illegal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bilateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "oblige",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "longitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "long",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "literature",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lumin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elongate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "illuminate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lun",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lunar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "luminary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lunatic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "illustrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lustr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lustrous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "marine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "emendation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mention",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "comment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mental",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "modify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mod",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "modern",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mol",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "molecule",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "molar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monster",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "demonstrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monstr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "morph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "morphology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amorphous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mortality",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mortal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mort",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "communicate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "community",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mun",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mutual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "commute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nascent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nas",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nasal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "neg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "negative",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "negate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fort",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "faithful",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "effort",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fortress",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reinforce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frag",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fracture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fragment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fragile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refract",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fraction",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fract",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "foundation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "found",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infraction",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "profound",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fund",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refund",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gesture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "suggest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "register",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "congest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "digest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gnit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agnostic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recognize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gniz",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ignition",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ignite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transition",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cognizant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cognitive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jury",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "injury",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adjust",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "jurist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "justice",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "correlation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "neglect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dialect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lecture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dislocate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prologue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intellectual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "epilogue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "locut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "apology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "colloquial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "interlocutor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "eloquent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mand",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "demand",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "command",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recommend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mont",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mandate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mountain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dismount",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mount",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "remount",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nasc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "montage",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "native",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "renascence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nature",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "note",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "not",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "notable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "notify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "notion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "notice",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "announce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pronounce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nounc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "enunciate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "denounce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "renounce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pens",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "suspend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pulsate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "spend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "depend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "expense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "compensate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "police",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "politician",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "policy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "politics",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "political",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rule",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "impolite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "regular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "kingdom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "regulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "correct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "region",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "direct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rectify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "erect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "interrupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rectangle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "erupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bankrupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "corrupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "section",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disrupt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sector",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bisect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intersect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sentiment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "resent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sentence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "consent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sequ",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sequence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sequel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subsequent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "consequence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "consecutive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "secut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "execute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prosecute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "persecute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "execution",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "signal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "signature",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "signify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "assign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "resist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "assist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "persist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "spec",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "construct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "destruction",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "instrument",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "extent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "attention",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prevent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "intention",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adventure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "acu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "acuity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "revenue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "acumen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aculeate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aerial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aerology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aerify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "malarial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aerolite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subaerial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agony",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agonistic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agonize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "protagonist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "antagonist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agrarian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agriculture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agrochemical",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agronomy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agrimotor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agroindustry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "analgesic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "otalgia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nostalgia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastralgia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ali",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alienate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alien",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "antialien",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alias",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alibi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inalienable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altimeter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altiplano",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exalt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altocumulus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alteration",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "altruism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alternate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inalterable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ambul",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ambulance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circumambulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ambulatory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perambulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ampl",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amble",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "preamble",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ample",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amplidyne",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amplify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "example",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amplitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "andr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "androgynous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "android",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "androgen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anandrous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polyandry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monandry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "angular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "angul",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "equiangular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "multangular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "angle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "triangle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anther",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anthology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anth",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "synanthous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chrysanthemum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anthesis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polyanthus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "apt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adapt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inapt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "malaptation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aptitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aquarium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aqueduct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aqu",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aqueous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aquaculture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subaqueous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arboreal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "terraqueous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arbor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arborize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arborvirus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arboretum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arcane",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arboriculture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coercion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exercise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coerce",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exercitation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "arm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exercitant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "armada",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "armament",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "armor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "armistice",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "armory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "alarm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aster",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "asterisk",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disarm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "astronaut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "astronomy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "astrology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disaster",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "subastral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aural",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "auricular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "auricle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "auriscope",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "binaural",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "auto",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "automat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "autograph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "autogamous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "autonomy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "avian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "avi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aviation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aviary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aviculture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "axis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "avigation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ax",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "axiology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "axletree",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "axle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ball",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "biaxial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coax",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ballet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ballad",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ballade",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "balletomane",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "barrel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "barrier",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "debar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "barricade",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bas",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "embarrass",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "embargo",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bell",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bellicose",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "belligerent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rebel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "antebellum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "postbellum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bibli",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "biblical",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bibliography",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bibliophile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bibliomania",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bibliofilm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "blanch",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "blancmange",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "blanc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "blank",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "blanket",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bonny",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bonism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bonus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bonanza",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bona",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bounty",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "semibreve",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "breve",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "brev",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "brevity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "breviate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "breviary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "brief",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "abbreviate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "burs",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bursar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reimburse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disburse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "camp",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "purser",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "purse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "campestral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "campus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "campaign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "encamp",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "champion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decamp",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "candle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cand",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "champagne",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "candid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "candelabrum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "candidate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "candor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incandescent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "captain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capital",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capitation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "capstone",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "car",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "career",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carriage",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "charge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chariot",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cardiac",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cardiogram",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cardi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "endocardium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cardiology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pericardium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carnage",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carnal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carnival",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carnivorous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carnation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "discarnate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cart",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incarnate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cartel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "card",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carton",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cartography",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cartoon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chart",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "caste",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cast",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "charter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chasten",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "castigate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chaste",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cav",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cave",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chastise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concave",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cavity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cavern",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "century",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excavate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "centipede",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "centuplicate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "percent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "certify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "certain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cert",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ascertain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "certificate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "certitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chieftain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chief",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chef",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mischief",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "kerchief",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "handkerchief",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chrismatory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mischievous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chrism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "christ",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "christen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "christian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chron",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chronology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "christmas",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diachronic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anachronism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "chronicle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "isochrona",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "synchronize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cing",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "succinct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "surcingle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cingulum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circ",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "precinct",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cincture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "circulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "encircle",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "microcircuit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "resuscitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "solicit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "civ",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "civic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "civilize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "civil",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "civilian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incivism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "citizen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "city",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "corner",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "corn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "citify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cornucopia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cornea",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cornet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dehorn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "unicorn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coronal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "corona",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coron",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coronet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coronary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "coronation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crime",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recoronation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crim",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "incriminate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "criminal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "discriminate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "criticize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "recriminate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "criterion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypocrite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crucial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cruc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crucify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crucifix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cruciform",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crypt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "excruciate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "crusade",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decrypt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cryptic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "encrypt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cryptography",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "culp",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "procryptic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "culprit",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "culpable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inculpate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exculpate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "cuss",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disculpate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "concuss",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "discuss",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "succuss",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "percussion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "repercussion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "damn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "damnable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "damnify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "damnation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indemnity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indemnify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "condemn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "de",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deific",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decency",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dec",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deiform",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indecent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decorum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decorate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decorous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decem",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decimal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "december",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decimate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decimalism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decade",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decathlon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "decuple",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "edentate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dental",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dentist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "trident",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "interdental",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dermal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypodermic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "derm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "epidermal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dermatitis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "xeroderma",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dermatology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "meridian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "antemeridian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "postmeridian",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dignity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dignify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indignant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "condign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deign",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disdain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dainty",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indignity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dogmatic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dogma",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dogm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "heterodox",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "orthodox",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dogmatism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "paradox",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dol",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dole",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "doleful",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dolorous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dolo",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indolent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domesticate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "condole",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "semidome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domicile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domical",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dominion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domino",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "domin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "condominium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "don",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "predominate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "donee",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "donate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "donor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dorm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "condone",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pardon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormobile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormancy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormitive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormouse",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dormitory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dromond",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aerodrome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "drom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prodrome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "syndrome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hippodrome",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dualism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "du",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "duodenal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "duel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "duet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reduplicate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dur",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "duplicate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "during",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "durable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "durance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "indurate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "endure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "duress",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dyn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "obdurate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perdure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dynasty",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dyne",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dynamic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dynamism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dynamo",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dynamite",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ego",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adynamia",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "isodynamic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "egoism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "egoist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "egocentric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "egomania",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "superego",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nonego",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exempt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exemption",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "em",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "preemption",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "redeem",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "preempt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ergo",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prompt",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "redemption",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "allergy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ergonomics",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ergograph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "errant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "errand",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "err",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "erroneous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "error",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "erratic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ess",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inerrable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aberrance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "essence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "quintessence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "essential",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "interest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "present",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "absent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "estimate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "estimable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "estim",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disestimation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disesteem",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "esteem",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ev",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "forever",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ever",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "primeval",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "longevity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "medieval",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabricable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabricate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabul",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prefabricate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabricant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confabulate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fabulous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fall",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ineffable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "affable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "false",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infallible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fallacy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fail",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "falsify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "falsity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fame",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "failure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fam",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "famous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defame",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infamy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defamation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fanc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fancy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fantasy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fanciful",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fantastic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sycophant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "phantasm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "phantom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "theophany",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fairy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "far",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nefarious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prophet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confess",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "profess",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "federal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "feder",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "federation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confederate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "anti-federalist",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confederacy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fender",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "offend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "offense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "forfend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fencible",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ferv",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fervid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fervor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fervent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perfervid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "effervescent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ferment",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fest",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "festal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "feast",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "festivity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "festive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "festival",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "festoon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fibre",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fibr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fibrin",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fibroid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "myofibril",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "multifid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "neurofibril",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "bifid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fissile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fission",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fissure",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "filament",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fil",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "file",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fillet",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "unifilar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "profile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confirm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infirm",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infirmary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transfix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fixate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flagrancy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flagr",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flagrant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conflagration",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fulgurate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deflagrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refulgence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refulgent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flatulent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deflate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reflate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "afflatus",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deflect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "genuflect",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conflate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "reflexive",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "flig",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "profligate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inflict",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "conflict",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "afflict",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "self-inflicted",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "floral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "florid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defloration",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "floriculture",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "efflorescence",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "franc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "defoliant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exfoliate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frankfurter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frank",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frankincense",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "enfranchise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disfranchise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "franchise",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frater",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fraternal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fraternity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "friger",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "friary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "confraternity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refrigerator",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refrigerate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "refrigerant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frigorific",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frigidity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frigid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "effrontery",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "frontal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "affront",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "digamy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agamous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "fum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polygamy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monogamous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "amalgam",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "epigastric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastritis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gastralgic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "geometry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypogastric",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "apogee",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypogeal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perigee",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gloss",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glossary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glossitis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hypoglossal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "polyglot",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glottis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glut",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gluey",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glue",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gluten",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "glutinous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "agglutination",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deglutinate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "goniometer",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "isogon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "orthogon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "trigonal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pentagon",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gorg",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gorge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disgorge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gorgeous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ingurgitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "regurgitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "engorge",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gran",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "granary",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "graniform",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "granular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "granule",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "graniferous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "grain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gravid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ingrain",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aggravate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "engrave",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gravitate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aggregate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "segregate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "egregious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "gyn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exhale",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhale",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhalant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "exhalation",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "halitosis",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "happy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hap",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mishap",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "happen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "haphazard",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "harmonious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "harmonic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perhaps",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "enharmonic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "helium",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "disharmony",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "helioscope",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "heliogram",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "aphelion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "perihelion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hesitant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adhesion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "homage",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hom",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhere",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hombre",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "euhominid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "homuncule",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horrific",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horrify",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horrid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "abhorrent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "horrendous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hosp",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hospice",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hospitable",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hospital",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hospitality",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hostel",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "host",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humiliate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humble",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humility",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "humanism",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "dehumanize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "posthumous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prehuman",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "infrahuman",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "inhuman",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hydrodynamic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hydrogen",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "hydrology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "carbohydrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idea",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ide",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ideogram",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ideal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ideate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idol",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ideology",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idolatry",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idiopathy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idiosyncrasy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "idiograph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insular",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "peninsula",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "insulant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "journal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "journ",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "isolate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "journey",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "adjourn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sojourner",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "juvenile",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "juven",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "diurnal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "juvenescent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "junior",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "rejuvenate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "laborious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "belabor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "juniority",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "multilateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "equilateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "patrilateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lavish",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "unilateral",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ablution",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lax",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "laxative",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pollute",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lease",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relax",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relaxant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "levy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "release",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lever",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elevate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relieve",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "leaven",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "liberty",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "livery",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "libertine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "deliver",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "colligate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ligate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "limi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "obligate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "religion",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "multilingual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lingual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "sublingual",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "literacy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transliterate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "language",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lith",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lithograph",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "megalith",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "nephrolith",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "monolith",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "neolithic",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "belong",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "oblong",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "along",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "luc",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "prolong",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lucency",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "noctilucent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lucid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "translucent",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "elucidate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "pellucid",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "luminous",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lunacy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "luminosity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "relumine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lunate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lustre",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "semilunar",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lustrum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "lustrate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "magn",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "majority",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "magnate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "magnitude",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "majesty",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mayor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maxim",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "submarine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "marina",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maximal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "ultramarine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "transmarine",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mat",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "matriarchy",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "matrimony",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "matrix",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "matter",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "matron",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "material",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maternity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "maternal",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "medi",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "memor",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "memorize",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "memory",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "memorandum",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "immemorial",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "commemorate",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "remember",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mendacious",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "remembrance",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mendicant",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "mendacity",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "word": "emend",
+      "status": "err: Expecting value: line 1 column 1 (char 0)"
+    }
+  ],
+  "started": 1781386649.9320753,
+  "finished": 1781392171.4171543
+}

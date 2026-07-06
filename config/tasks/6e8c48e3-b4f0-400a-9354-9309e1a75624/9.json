@@ -1,0 +1,8 @@
+{
+  "id": "9",
+  "subject": "P1-5: 装备获取来源 - rollEquipmentDrop",
+  "description": "在 equipment_suites.js 或新文件中添加 rollEquipmentDrop 函数；在 items.js 添加装备掉落表；在街头事件/职场晋升/NPC赠送中调用",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

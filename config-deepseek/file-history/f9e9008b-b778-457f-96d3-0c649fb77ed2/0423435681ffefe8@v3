@@ -1,0 +1,40 @@
+---
+name: version-landscape
+description: 城市浮生记项目双版本迁移完成记录 — 旧版已弃用
+metadata:
+  type: project
+  updated: 2026-06-21
+---
+
+# 城市浮生记 — 版本全景地图
+
+> ✅ **2026-06-21：所有内容已迁移，旧版 `src/` 已清理！**
+
+---
+
+## 版本概览
+
+| 维度 | 根目录 `src/` (已弃用) | `city-life-story/src/` (当前唯一版本) |
+|------|----------------------|-------------------------------------|
+| **状态** | 🗑️ 已清理，不再使用 | ✅ 当前唯一活跃开发版本 |
+| **Git** | ❌ 无版本控制 | ✅ Git 仓库，58次提交 |
+| **JS模块数** | ~27个文件（已清理） | ~60个文件（含 new: carry.js, pricing.js） |
+
+## 已完成的迁移
+
+详见 [[待迁移内容清单]]（全部完成）。
+
+| 迁移项 | 结果 |
+|--------|------|
+| `moral_events.js` | city版已完整，加注释头 |
+| `ingredients.js` | city版已有更完善的食材/烹饪系统，无需迁移 |
+| `carry.js` | ✅ 迁移为新文件 `city-life-story/src/js/phase1/carry.js` |
+| `pricing.js` | ✅ 迁移为新文件 `city-life-story/src/js/phase1/pricing.js` |
+| `weather.js` | ✅ 增强 `city-life-story/src/js/core/weather.js` |
+| `diseases.js` | city版 `illnesses.js` 更先进，跳过 |
+
+## 关联文档
+
+- [[待迁移内容清单]] — 迁移详情
+- [[版本一致性铁律]] — 版本一致性规则（已简化）
+- `city-life-story/CLAUDE.md` — 活跃版开发规则

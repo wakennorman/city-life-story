@@ -1,0 +1,42 @@
+{
+  "shown_warnings": [
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\render.js-innerHTML_xss"
+  ],
+  "untracked_at_baseline": {},
+  "touched_paths": [
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\CLAUDE.md",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\core\\events.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\data\\npcs.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase1\\skill_bonuses.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase1\\actions_extra.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\main.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\core\\achievements.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\index.html",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase1\\daily_pipeline.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase1\\needs.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\render.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\DEVELOPMENT.md",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\core\\festivals.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase1\\trade.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\css\\style.css",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\data\\locations.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\data\\jobs.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\core\\dreams.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\tutorial.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\core\\save.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\modal.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\phase2\\corp_ops.js",
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\data\\location_flavor.js"
+  ],
+  "pending_warnings": {
+    "D:\\Claude Code+DeepSeekV4\\city-life-story\\src\\js\\ui\\render.js:innerHTML_xss": true
+  },
+  "rate_limits": {
+    "CommitReview": [
+      1781653753.9977262, 1781654281.6689603, 1781654757.1090426,
+      1781655723.2932825, 1781655965.165445, 1781656905.113255
+    ]
+  },
+  "baseline_sha": "900e7b7dd0035d44088484756046d01de31034a9",
+  "head_at_capture": "900e7b7dd0035d44088484756046d01de31034a9"
+}

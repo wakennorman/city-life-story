@@ -1,0 +1,9 @@
+{
+  "id": "2",
+  "subject": "P1.4 拾荒路线规划系统",
+  "description": "实现P1.4未完成部分：拾荒路线规划。设计4条路线(城中村小巷/废品收购站边缘/工业区深处/老周专线)，通过modal展示选择，与老周好感/体质/当前地点联动。在actions_extra.js和modal.js中实现。",
+  "activeForm": "实现拾荒路线规划系统",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

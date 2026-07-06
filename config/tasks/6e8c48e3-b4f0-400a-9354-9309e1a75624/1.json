@@ -1,0 +1,8 @@
+{
+  "id": "1",
+  "subject": "P0-1: 副业系统接入每日管线 (sideHustle state + 验证)",
+  "description": "daily_pipeline.js 已有 side_hustle_tick 步骤，side_hustle.js 已在 index.html 加载，sideHustleTick 已暴露到 window。需要: 在 state.js createDefaultState() 中初始化 sideHustle 字段，在 importState 中做兼容迁移",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": []
+}

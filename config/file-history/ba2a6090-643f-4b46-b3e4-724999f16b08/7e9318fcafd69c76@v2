@@ -1,0 +1,437 @@
+/**
+ * 主渲染调度器
+ *
+ * 管理整个 UI 的渲染。使用脏标记 (dirty flag) 按需更新 DOM。
+ * 渲染函数命名: render<Section>()
+ */
+
+// 当前激活的 Tab
+let currentTab = 'actions';
+
+// ====== 主渲染入口 ======
+function renderAll() {
+  const state = StateManager.getState();
+
+  renderHeader(state);
+  renderSidebar(state);
+  renderTabBar(state);
+  renderCurrentTab(state);
+  renderMessageLog(state);
+
+  StateManager.cleanAllDirty();
+}
+
+// ====== Header 渲染 ======
+function renderHeader(state) {
+  const p = state.player;
+  const r = state.resources;
+  const phaseLabel = p.phase === 'corporate' ? '🏢 职场' : '🏘️ 街头';
+
+  document.getElementById('header-day').textContent = p.day;
+  document.getElementById('header-age').textContent = p.age;
+  document.getElementById('header-phase').textContent = phaseLabel;
+  document.getElementById('header-cash').textContent = '¥' + r.cash.toLocaleString();
+}
+
+// ====== Sidebar 渲染 ======
+function renderSidebar(state) {
+  const p = state.player;
+
+  if (p.phase === 'street') {
+    renderStreetStats(state);
+  } else {
+    renderCorporateStats(state);
+  }
+
+  renderNeedsBars(state);
+  renderLocation(state);
+}
+
+function renderStreetStats(state) {
+  const p = state.player;
+  setStatBar('stat-physique', p.physique, 'physique');
+  setStatBar('stat-intelligence', p.intelligence, 'intelligence');
+  setStatBar('stat-agility', p.agility, 'agility');
+  setStatBar('stat-mental', p.mental, 'mental-bar');
+}
+
+function renderCorporateStats(state) {
+  const c = state.player.corporate;
+  // 切换侧边栏区域显示
+  document.getElementById('street-stats-section').style.display = 'none';
+  document.getElementById('corp-stats-section').style.display = 'block';
+
+  setStatBar('stat-hair', c.hair, 'hair');
+  setStatBar('stat-dignity', c.dignity, 'dignity');
+  setStatBar('stat-kpi', c.kpi, 'kpi');
+  setStatBar('stat-ability', c.ability, 'intelligence');
+  setStatBar('stat-upward', c.upwardMgmt, 'physique');
+  setStatBar('stat-popularity', c.popularity, 'happiness');
+  setStatBar('stat-risk', c.risk, 'risk');
+}
+
+function renderNeedsBars(state) {
+  const n = state.needs;
+  const s = state.status;
+  setStatBar('stat-hunger', n.hunger, 'hunger');
+  setStatBar('stat-fatigue', n.fatigue, 'fatigue');
+  setStatBar('stat-hygiene', n.hygiene, 'hygiene');
+  setStatBar('stat-happiness', n.happiness, 'happiness');
+  setStatBar('stat-health', s.health, 'health');
+  setStatBar('stat-fame', s.fame, 'fame');
+}
+
+function renderLocation(state) {
+  const locKey = state.trade.currentLocation;
+  const loc = getLocation(locKey);
+  if (loc) {
+    document.getElementById('location-name').textContent = loc.name;
+    document.getElementById('location-desc').textContent = loc.desc;
+  }
+}
+
+// ====== Tab Bar ======
+function renderTabBar(state) {
+  const tabs = document.querySelectorAll('#tab-bar .tab-btn');
+  tabs.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === currentTab);
+
+    // 某些 Tab 在特定阶段隐藏
+    if (btn.dataset.tab === 'corp' && state.player.phase !== 'corporate') {
+      btn.style.display = 'none';
+    } else if (btn.dataset.tab === 'trade' && state.player.phase !== 'street') {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+    }
+  });
+}
+
+function switchTab(tabName) {
+  currentTab = tabName;
+  renderAll();
+}
+
+// ====== Tab Content 渲染 ======
+function renderCurrentTab(state) {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '';
+
+  // 时间槽指示器
+  renderTimeSlot(state, area);
+
+  // 活跃新闻
+  renderActiveNews(state, area);
+
+  switch (currentTab) {
+    case 'actions':
+      renderActionsTab(state, area);
+      break;
+    case 'trade':
+      renderTradeTab(state, area);
+      break;
+    case 'inventory':
+      renderInventoryTab(state, area);
+      break;
+    case 'skills':
+      renderSkillsTab(state, area);
+      break;
+    case 'corp':
+      renderCorpTab(state, area);
+      break;
+    default:
+      area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
+  }
+}
+
+function renderTimeSlot(state, parent) {
+  const slotNames = { morning: '☀️ 上午', afternoon: '🌤️ 下午', evening: '🌙 晚上' };
+  const slot = state.player.timeSlot;
+  const div = document.createElement('div');
+  div.id = 'time-slot-indicator';
+  div.innerHTML = `
+    <span>📅 第 <strong>${state.player.day}</strong> 天</span>
+    <span>|</span>
+    <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">
+      ${state.player.phase === 'corporate' ? `Q${state.player.corpQuarter}` : ''}
+    </span>
+  `;
+  parent.appendChild(div);
+}
+
+function renderActiveNews(state, parent) {
+  if (state.activeNews && state.activeNews.length > 0) {
+    for (const news of state.activeNews) {
+      const banner = document.createElement('div');
+      banner.className = 'news-banner';
+      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+      parent.appendChild(banner);
+    }
+  }
+}
+
+// ====== Actions Tab ======
+function renderActionsTab(state, parent) {
+  const cards = document.createElement('div');
+  cards.className = 'action-cards';
+
+  const actions = getAvailableActions(state);
+  for (const action of actions) {
+    cards.appendChild(createActionCard(action, state));
+  }
+
+  parent.appendChild(cards);
+}
+
+function createActionCard(action, state) {
+  const card = document.createElement('div');
+  card.className = 'action-card';
+  if (action.disabled) {
+    card.classList.add('disabled');
+  }
+
+  card.innerHTML = `
+    <div class="card-icon">${action.icon}</div>
+    <div class="card-title">${action.name}</div>
+    <div class="card-desc">${action.desc}</div>
+    <div class="card-meta">
+      ${action.payEstimate ? `<span class="pay-estimate">💰 ¥${action.payEstimate}</span>` : ''}
+      ${action.costEstimate ? `<span class="cost-estimate">💸 ¥${action.costEstimate}</span>` : ''}
+      ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ''}
+    </div>
+  `;
+
+  if (!action.disabled) {
+    card.addEventListener('click', () => {
+      if (action.handler) {
+        action.handler();
+        renderAll();
+      }
+    });
+  }
+
+  return card;
+}
+
+// ====== Trade Tab ======
+function renderTradeTab(state, parent) {
+  const div = document.createElement('div');
+  div.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:12px;">📦 交易市场</h3>';
+  parent.appendChild(div);
+
+  // 获取当前地点的商品价格
+  const locKey = state.trade.currentLocation;
+  const prices = state.trade.goodsPrices[locKey] || {};
+  const goodsList = typeof GOODS !== 'undefined' ? GOODS : [];
+
+  if (goodsList.length === 0) {
+    div.innerHTML += '<p style="color:var(--text-muted)">商品数据加载中...</p>';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'action-cards';
+  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+
+  for (const good of goodsList) {
+    const price = prices[good.id] || good.basePrice;
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div class="card-title">${good.name}</div>
+      <div class="card-desc">基准价: ¥${good.basePrice} / ${good.unit}</div>
+      <div class="card-meta">
+        <span class="pay-estimate">当前: ¥${price.toFixed(1)}</span>
+        <span class="slot-tag">${good.category}</span>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button class="btn btn-sm btn-success buy-goods" data-good="${good.id}">买</button>
+        <button class="btn btn-sm btn-danger sell-goods" data-good="${good.id}">卖</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+
+  div.appendChild(grid);
+
+  // 绑定事件
+  setTimeout(() => {
+    parent.querySelectorAll('.buy-goods').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const goodId = btn.dataset.good;
+        if (typeof buyGood === 'function') {
+          buyGood(goodId, 1);
+          renderAll();
+        }
+      });
+    });
+    parent.querySelectorAll('.sell-goods').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const goodId = btn.dataset.good;
+        if (typeof sellGood === 'function') {
+          sellGood(goodId, 1);
+          renderAll();
+        }
+      });
+    });
+  }, 0);
+}
+
+// ====== Inventory Tab ======
+function renderInventoryTab(state, parent) {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
+      <span style="font-size:11px;color:var(--text-muted)">
+        (${state.inventory.items.length}/${state.inventory.capacity})
+      </span>
+    </h3>
+  `;
+
+  const items = state.inventory.items;
+  if (items.length === 0) {
+    div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
+  } else {
+    const grid = document.createElement('div');
+    grid.className = 'inventory-grid';
+    for (const item of items) {
+      const def = typeof ITEMS !== 'undefined'
+        ? ITEMS.find(i => i.id === item.id)
+        : null;
+      const el = document.createElement('div');
+      el.className = 'inventory-item';
+      el.innerHTML = `
+        <div class="item-name">${def ? def.name : item.id}</div>
+        <div class="item-qty">数量: ${item.qty}</div>
+        ${def ? `<div class="item-effects">${describeItemEffects(def)}</div>` : ''}
+      `;
+      grid.appendChild(el);
+    }
+    div.appendChild(grid);
+  }
+
+  // 装备栏
+  const equip = state.inventory.equipment;
+  const equipDiv = document.createElement('div');
+  equipDiv.style.marginTop = '16px';
+  equipDiv.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:8px;">🛡️ 装备</h3>';
+  const slots = [
+    { key: 'head', name: '头部', icon: '⛑️' },
+    { key: 'body', name: '身体', icon: '👕' },
+    { key: 'feet', name: '脚部', icon: '👟' },
+    { key: 'hand', name: '手部', icon: '🧤' },
+    { key: 'accessory', name: '配件', icon: '📿' },
+  ];
+  const equipGrid = document.createElement('div');
+  equipGrid.className = 'action-cards';
+  equipGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(130px, 1fr))';
+  for (const slot of slots) {
+    const itemId = equip[slot.key];
+    const itemDef = itemId && typeof ITEMS !== 'undefined'
+      ? ITEMS.find(i => i.id === itemId)
+      : null;
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div style="font-size:11px;color:var(--text-muted)">${slot.icon} ${slot.name}</div>
+      <div style="font-size:12px;color:${itemDef ? 'var(--success)' : 'var(--text-muted)'}">
+        ${itemDef ? itemDef.name : '(空)'}
+      </div>
+    `;
+    equipGrid.appendChild(card);
+  }
+  equipDiv.appendChild(equipGrid);
+  div.appendChild(equipDiv);
+
+  parent.appendChild(div);
+}
+
+// ====== Skills Tab ======
+function renderSkillsTab(state, parent) {
+  const div = document.createElement('div');
+  div.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:12px;">📚 技能</h3>';
+
+  const grid = document.createElement('div');
+  grid.className = 'action-cards';
+  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+
+  const skillNames = {
+    cooking: '🍳 烹饪', repair: '🔧 维修', coding: '💻 编程',
+    english: '🌐 英语', driving: '🚗 驾驶', sales: '💼 销售',
+    management: '📋 管理', accounting: '📊 会计',
+    electrician: '⚡ 电工', welding: '🔥 焊接',
+  };
+
+  for (const [key, skill] of Object.entries(state.skills)) {
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    const name = skillNames[key] || key;
+    const xpNeeded = (skill.level + 1) * 100;
+    const xpPct = Math.min(100, Math.round((skill.xp / xpNeeded) * 100));
+    card.innerHTML = `
+      <div class="card-title">${name}</div>
+      <div class="card-desc">等级 ${skill.level} / 100</div>
+      <div style="margin-top:6px;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;">
+        <div style="width:${xpPct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">EXP: ${skill.xp}/${xpNeeded}</div>
+    `;
+    grid.appendChild(card);
+  }
+  div.appendChild(grid);
+
+  // 证书
+  if (state.certificates.length > 0) {
+    const certDiv = document.createElement('div');
+    certDiv.style.marginTop = '16px';
+    certDiv.innerHTML = '<h3 style="color:var(--text-muted);margin-bottom:8px;">📜 证书</h3>';
+    const certList = document.createElement('div');
+    certList.className = 'flex gap-2';
+    certList.style.flexWrap = 'wrap';
+    for (const certId of state.certificates) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'padding:4px 10px;background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:4px;font-size:11px;color:var(--success);';
+      badge.textContent = certId;
+      certList.appendChild(badge);
+    }
+    certDiv.appendChild(certList);
+    div.appendChild(certDiv);
+  }
+
+  parent.appendChild(div);
+}
+
+// ====== Corp Tab（职场中才有效） ======
+function renderCorpTab(state, parent) {
+  if (state.player.phase !== 'corporate') {
+    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 进入职场后解锁</p>';
+    return;
+  }
+
+  const c = state.corporate;
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h3 style="color:var(--text-muted);margin-bottom:12px;">🏢 职场信息</h3>
+    <div class="action-cards" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+      <div class="action-card">
+        <div class="card-title">职级</div>
+        <div class="card-desc" style="font-size:18px;color:var(--accent)">${c.rank}</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">绩效历史</div>
+        <div class="card-desc">${c.perfHistory.length} 次评审</div>
+        <div style="font-size:10px;color:var(--text-muted)">连续C: ${c.consecutiveC}</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">团队</div>
+        <div class="card-desc">${c.team.length} 人</div>
+      </div>
+      <div class="action-card">
+        <div class="card-title">股票</div>
+        <div class="card-desc">${c.stocks.length} 持仓</div>
+      </div>
+    </div>
+  `;
+  parent.appendChild(div);
+}
