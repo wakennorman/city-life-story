@@ -4,3 +4,7 @@ dist-webapp/
 
 # Local Netlify folder
 .netlify
+
+*.log
+.DS_Store
+Thumbs.db
