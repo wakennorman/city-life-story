@@ -1132,7 +1132,9 @@ function renderCareerJobs(state, parent) {
       html +=
         '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' +
         nextLevel.name +
-        "</div>";
+        "（月薪¥" +
+        nextLevel.salary.toLocaleString() +
+        "）</div>";
       html +=
         '<div style="font-size:10px;color:var(--text-muted);">' +
         renderPromotionReqs(state, currentJob.path, nextLevel) +
@@ -1671,21 +1673,24 @@ function renderCareerOverview(state, parent) {
   }
   html += "</ul></div>";
 
-  // 导航按钮
+  // 导航按钮（带弹窗说明）
   html +=
     '<div style="margin-top:14px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 快速跳转</div>' +
-    navActionButton("subTab", "career_jobs", "💼 查看上班族职位", {
-      tab: "career_dev",
-    }) +
+    '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
+    "onclick=\"showCareerNavModal('career_jobs', 'career_dev', '💼 查看上班族职位', " +
+    "'在这里可以浏览各行业职业路线，从基层做起，逐步晋升至管理层。')" +
+    '">💼 查看上班族职位</button>' +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
-    navActionButton("subTab", "career_startup", "🚀 创业系统", {
-      tab: "career_dev",
-    }) +
+    '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
+    "onclick=\"showCareerNavModal('career_startup', 'career_dev', '🚀 创业系统', " +
+    "'从零开始创办公司，需要足够的资金、人脉和行业经验。')" +
+    '">🚀 创业系统</button>' +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
-    navActionButton("location", "school", "🎓 去大学城提升学历", {
-      navTab: "personal_growth",
-    }) +
+    '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
+    "onclick=\"showLocationNavModal('school', '🎓 去大学城提升学历', 'personal_growth', " +
+    "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。')" +
+    '">🎓 去大学城提升学历</button>' +
     "</div>";
 
   html += getCareerEducationHtml(state);
@@ -2285,7 +2290,6 @@ function getCareerTrustedNetworkCount(state) {
 /** 渲染晋升条件文字（v3.2 更新：显示属性+颜值要求） */
 function renderPromotionReqs(state, pathId, level) {
   var parts = [];
-  if (level.salary) parts.push("月薪¥" + level.salary.toLocaleString());
   if (level.reqSkills) {
     for (var s in level.reqSkills) {
       var labels = {
@@ -3061,12 +3065,105 @@ function enhancedApplyCareerJob(pathId, levelId) {
     ? "（前90天为试用期，薪资按80%发放）"
     : "";
 
-  // 最终入职消息
-  var finalMsg = passMsg;
+  // 最终入职消息（修复 passMsg 未定义 bug）
+  var finalMsg =
+    "✅ 面试通过！入职成功！你成为" +
+    getCareerPathLabel(pathId) +
+    "的" +
+    level.name +
+    "，月薪¥" +
+    level.salary.toLocaleString();
   if (probationMsg) finalMsg += "，" + probationMsg;
   StateManager.addMessage(finalMsg, "success");
 
   if (typeof renderAll === "function") renderAll();
+}
+
+// ====== 导航弹窗辅助函数（约定式：可被未来新增职业路线自动复用） ======
+/** 子Tab导航弹窗：说明 + 确认跳转 */
+function showCareerNavModal(subTab, parentTab, label, desc) {
+  if (typeof showModal !== "function") {
+    return;
+  }
+  showModal({
+    title: label,
+    body:
+      '<div style="text-align:center;padding:8px 0;">' +
+      '<div style="font-size:32px;margin-bottom:10px;">' +
+      (label.indexOf("上班族") >= 0 ? "💼" : "🚀") +
+      "</div>" +
+      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
+      desc +
+      "</p>" +
+      "</div>",
+    buttons: [
+      {
+        text: "取消",
+        cls: "btn-secondary",
+        callback: function () {
+          return true;
+        },
+      },
+      {
+        text: "好的，去那里",
+        cls: "btn-primary",
+        callback: function () {
+          var st =
+            typeof StateManager !== "undefined" &&
+            typeof StateManager.getState === "function"
+              ? StateManager.getState()
+              : null;
+          if (st) st._careerSubTab = subTab;
+          if (typeof switchTab === "function") switchTab(parentTab);
+          return true;
+        },
+      },
+    ],
+  });
+}
+/** 地点导航弹窗：说明 + 确认跳转 */
+function showLocationNavModal(locKey, label, navTab, desc) {
+  if (typeof showModal !== "function") {
+    return;
+  }
+  showModal({
+    title: label,
+    body:
+      '<div style="text-align:center;padding:8px 0;">' +
+      '<div style="font-size:32px;margin-bottom:10px;">🎓</div>' +
+      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
+      desc +
+      "</p>" +
+      "</div>",
+    buttons: [
+      {
+        text: "取消",
+        cls: "btn-secondary",
+        callback: function () {
+          return true;
+        },
+      },
+      {
+        text: "出发",
+        cls: "btn-primary",
+        callback: function () {
+          var st =
+            typeof StateManager !== "undefined" &&
+            typeof StateManager.getState === "function"
+              ? StateManager.getState()
+              : null;
+          if (st && typeof _doNavigate === "function") {
+            _doNavigate(st, {
+              type: "location",
+              key: locKey,
+              navTab: navTab || "actions",
+            });
+          }
+          return true;
+        },
+      },
+    ],
+  });
 }
 
 // ====== 百科注册 ======
@@ -3079,6 +3176,8 @@ if (typeof window !== "undefined") {
   window.getCareerLegalDiscount = getCareerLegalDiscount;
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.clampCareerCapital = clampCareerCapital;
+  window.showCareerNavModal = showCareerNavModal;
+  window.showLocationNavModal = showLocationNavModal;
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.career_dev = {
     id: "career_dev",

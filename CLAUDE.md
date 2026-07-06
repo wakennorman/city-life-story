@@ -124,7 +124,21 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-06)**：v3.1 审查改进 — NG+ 继承数据可视化 + 加成消费接入（commit: `0edacac`）
+- **最新一次工作 (2026-07-06)**：v3.2a — passMsg修复 · 工资与要求分离 · 事件记录强制滚动 · 导航按钮弹窗（commit pending push）
+  - **🐛 passMsg 未定义修复**：`enhancedApplyCareerJob` 第3065行 `passMsg` 崩溃导致全部面试通过后无声无息（餐饮/物流等路径"投递简历"点了没反应）→ 构建入职成功消息
+  - **📋 工资与要求分离**：`renderPromotionReqs` 移除薪资行文案；晋升卡片标题区单独显示升职目标薪资
+  - **🔄 事件记录强制滚动**：`scrollMessageLogToBottom(force)` 支持 force 参数；`renderMessageLog` 检测新条目后强制滚到底；展开/预览点击也 force 滚动
+  - **🪟 导航按钮弹窗**：💼查看上班族职位 / 🚀创业系统 / 🎓去大学城提升学历 / 🏛️去大学城备考 → 弹窗说明+确认/取消后跳转，新增 `showCareerNavModal`/`showLocationNavModal`/`showStudyNavModal` 三个辅助函数
+  - **约定式自动归类**：所有职业路径通过 `CAREER_PATHS` 遍历，新增路径零代码修改；modal 辅助函数接受任意 subTab/location 参数可复用
+  - **影响文件**：career_dev.js / render.js / CLAUDE.md
+  - **验证**：`python build.py` 4878.6KB ✅ / brace/paren 全部匹配 ✅
+  - **导航navTab支持**：`_doNavigate` 新增 `target.navTab`，到达后切换到指定Tab而非固定actions。所有百科导航按钮兼容
+  - **约定式自动归类完善**：培训中心→skills、大学城→personal_growth、NPC→social、物品→trade、地点→map
+  - **面试机制大修**：基础概率 70%→25%+天数×1%，状态惩罚（饥饿-12%/疲劳-15%/健康-12%/形象-10%/露宿-15%）、装备加成（正装+15%）、技能优势（超要求每5级+2%上限+15%）、反馈消息显示具体原因
+  - **职业路径入门要求补全**：教学助理 english:5/management:3（原空），护理员 medicine:5（原空）
+  - **设计参考**：《大多数》求职门槛 / 《Papers Please》状态影响 / 中国职场现实
+  - **验证**：`node --check` 4文件 / `python build.py` 4873.7KB ✅
+  - **记忆文件**：`memory/navigation-postnavtab-fix.md` + `memory/interview-balance-v3.2.md`
   - **审查发现**：`inheritance_chain.js` 定义了 3 个继承函数（`inheritCrisisPath`/`inheritMoralScore`/`inheritPeakAffinity`），数据已计算并存储，但继承摘要弹窗从未展示；`inheritanceBonuses` 中的 `promoChance`/`moralEventRate`/`recoveryRate` 等字段被 SET 但从未被 CONSUMED
   - **P1 继承摘要弹窗增强**：新增 3 个显示模块 — 📋 35 岁路径（含特殊加成）/ ⚖️ 前世业力（善恶净值+标签+NPC好感偏移+道德事件率）/ 👥 老熟人（NPC巅峰好感chip展示）+ 总存活天数
   - **P2 35 岁路径增强**：再卷职场→晋升+3%/月薪+5%；备考公→考试+10%/公职+3%；摆烂→恢复+10%/压力-3

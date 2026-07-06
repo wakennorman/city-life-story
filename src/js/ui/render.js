@@ -34,7 +34,7 @@ function renderMessageLog(state) {
         if (isCollapsed) {
           logEl.classList.remove("collapsed");
           toggleBtn.textContent = "▴ 关闭";
-          scrollMessageLogToBottom();
+          scrollMessageLogToBottom(true);
         } else {
           logEl.classList.add("collapsed");
           toggleBtn.textContent = "▾ 展开";
@@ -51,7 +51,7 @@ function renderMessageLog(state) {
       logEl.classList.remove("collapsed");
       var btn = logEl.querySelector("#message-log-toggle");
       if (btn) btn.textContent = "▴ 关闭";
-      scrollMessageLogToBottom();
+      scrollMessageLogToBottom(true);
     });
     logEl.insertBefore(previewEl, contentEl);
 
@@ -63,6 +63,12 @@ function renderMessageLog(state) {
 
   // --- 渲染日志条目 ---
   var entries = state.messageLog || [];
+
+  // 检测是否有新条目加入 → 强制滚到底（用户交互后的反馈即时可见）
+  var prevCount = parseInt(contentEl.dataset._prevEntryCount || 0, 10);
+  var hasNewEntries = entries.length > prevCount;
+  contentEl.dataset._prevEntryCount = entries.length;
+
   var html = "";
   // 桌面端全部显示，移动端展开态最多50条
   var maxEntries = window.innerWidth <= 768 ? 50 : entries.length;
@@ -97,28 +103,30 @@ function renderMessageLog(state) {
     }
   }
 
-  // --- 自动滚动（仅在展开且用户已在底部时） ---
+  // --- 自动滚动（有新条目则强制到底，否则仅在用户已在底部时跟随） ---
   if (!logEl.classList.contains("collapsed")) {
-    scrollMessageLogToBottom();
+    scrollMessageLogToBottom(hasNewEntries);
   }
 }
 
-/** 事件记录滚动到底部（仅在接近底部时自动滚，避免打断阅读） */
-function scrollMessageLogToBottom() {
+/** 事件记录滚动到底部（用户交互触发时始终滚到底，不依赖阅读位置） */
+function scrollMessageLogToBottom(force) {
   var logEl = document.getElementById("message-log");
   if (!logEl) return;
   var contentEl = logEl.querySelector(".log-content");
   if (!contentEl) return;
   // 折叠态不滚动
   if (logEl.classList.contains("collapsed")) return;
-  // 接近底部才自动滚（< 40px）
-  var nearBottom =
-    contentEl.scrollHeight - contentEl.scrollTop - contentEl.clientHeight < 40;
-  if (nearBottom) {
-    requestAnimationFrame(function () {
-      contentEl.scrollTop = contentEl.scrollHeight;
-    });
+  // force=true（用户交互后）：始终到底 | 否则仅在接近底部时自动滚
+  if (!force) {
+    var nearBottom =
+      contentEl.scrollHeight - contentEl.scrollTop - contentEl.clientHeight <
+      40;
+    if (!nearBottom) return;
   }
+  requestAnimationFrame(function () {
+    contentEl.scrollTop = contentEl.scrollHeight;
+  });
 }
 
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
@@ -4932,7 +4940,8 @@ function renderPgEdu(state, content) {
     '<div style="margin-top:12px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 快速行动</div>' +
     (edu === 0
-      ? navActionButton("location", "school", "🏛️ 去大学城备考") +
+      ? '<button class="btn btn-sm" style="margin:2px 4px;min-height:36px;" ' +
+        'onclick="showStudyNavModal()">🏛️ 去大学城备考</button>' +
         ' <span style="font-size:10px;color:var(--text-muted);">|</span> '
       : "") +
     navActionButton("location", "school", "📚 去大学城图书馆") +
@@ -4944,3 +4953,49 @@ function renderPgEdu(state, content) {
   html += "</div></div>";
   content.innerHTML = html;
 }
+
+/** 大学城备考导航弹窗 */
+function showStudyNavModal() {
+  if (typeof showModal !== "function") return;
+  showModal({
+    title: "🏛️ 去大学城备考",
+    body:
+      '<div style="text-align:center;padding:8px 0;">' +
+      '<div style="font-size:32px;margin-bottom:10px;">📚</div>' +
+      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
+      "在大学城可以参加自考本科备考，提升学历后能解锁更多好工作！<br><br>" +
+      "备考需要花费时间和学习点，每通过一门考试都能累积学分。</p>" +
+      "</div>",
+    buttons: [
+      {
+        text: "先不去",
+        cls: "btn-secondary",
+        callback: function () {
+          return true;
+        },
+      },
+      {
+        text: "出发去大学城",
+        cls: "btn-primary",
+        callback: function () {
+          var st =
+            typeof StateManager !== "undefined" &&
+            typeof StateManager.getState === "function"
+              ? StateManager.getState()
+              : null;
+          if (st && typeof _doNavigate === "function") {
+            _doNavigate(
+              st,
+              { type: "location", key: "school", navTab: "personal_growth" },
+              {},
+            );
+          }
+          return true;
+        },
+      },
+    ],
+  });
+}
+
+// 暴露到全局以便 onclick 调用
+if (typeof window !== "undefined") window.showStudyNavModal = showStudyNavModal;
