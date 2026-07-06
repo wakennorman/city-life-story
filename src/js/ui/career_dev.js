@@ -2891,9 +2891,153 @@ function enhancedApplyCareerJob(pathId, levelId) {
     // 最低经验门槛：需要至少3天的基础历练才能投递正式工作
     if (totalWorkDays < 3) {
       if (typeof showModal === "function") {
+        // 构建具体经验不足弹窗
+        var pathName = path.icon + " " + path.name;
+        var levelName = level.name;
+        var daysNeeded = 3 - totalWorkDays;
+        var reqLines = [];
+
+        // 年龄检测
+        var pAge = p.age || 18;
+        var ageReqs = level.minAge || 0;
+        var ageOk = pAge >= ageReqs;
+        reqLines.push(
+          "<div style='display:flex;justify-content:space-between;padding:2px 0;'>" +
+            "<span>" +
+            (ageOk ? "✅" : "❌") +
+            " 年龄 ≥" +
+            ageReqs +
+            "岁</span>" +
+            "<span style='color:var(--text-muted);font-size:12px;'>当前 " +
+            pAge +
+            "岁</span>" +
+            "</div>",
+        );
+
+        // 属性检测
+        if (level.reqAttrs) {
+          for (var ra in level.reqAttrs) {
+            var curAttr = p[ra] || 0;
+            var reqAttr = level.reqAttrs[ra];
+            var attrMap = {
+              physique: "💪 体质",
+              intelligence: "🧠 智力",
+              agility: "⚡ 敏捷",
+              mental: "❤️ 心智",
+              charm: "🌟 魅力",
+            };
+            var attrLabel = attrMap[ra] || ra;
+            var attrOk = curAttr >= reqAttr;
+            reqLines.push(
+              "<div style='display:flex;justify-content:space-between;padding:2px 0;'>" +
+                "<span>" +
+                (attrOk ? "✅" : "❌") +
+                " " +
+                attrLabel +
+                " ≥" +
+                reqAttr +
+                "</span>" +
+                "<span style='color:var(--text-muted);font-size:12px;'>当前 " +
+                curAttr +
+                "</span>" +
+                "</div>",
+            );
+          }
+        }
+
+        // 技能检测
+        if (level.reqSkills) {
+          for (var rs in level.reqSkills) {
+            var curSkill = (p.skills && p.skills[rs]) || 0;
+            var reqSkill = level.reqSkills[rs];
+            var skillOk = curSkill >= reqSkill;
+            var skillLabelMap = {
+              cooking: "🍳 厨艺",
+              management: "📊 管理",
+              sales: "💼 销售",
+              medicine: "💊 医学",
+              driving: "🚗 驾驶",
+              logistics: "📦 物流",
+              computing: "💻 计算机",
+              construction: "🔨 建造",
+              repair: "🔧 维修",
+              communication: "🗣️ 沟通",
+              fitness: "🏋️ 健身",
+              dodge: "🤸 闪避",
+              stealth: "👤 潜行",
+              crafting: "🔨 制作",
+              planting: "🌱 种植",
+              fishing: "🎣 钓鱼",
+              performance: "🎭 表演",
+              leadership: "⚑ 领导",
+            };
+            var skillLabel = skillLabelMap[rs] || rs;
+            reqLines.push(
+              "<div style='display:flex;justify-content:space-between;padding:2px 0;'>" +
+                (skillOk ? "✅" : "❌") +
+                " " +
+                skillLabel +
+                " Lv." +
+                reqSkill +
+                "<span style='color:var(--text-muted);font-size:12px;'>当前 Lv." +
+                curSkill +
+                "</span>" +
+                "</div>",
+            );
+          }
+        }
+
+        // 教育检测
+        var eduReqs = level.education || 0;
+        var pEdu = p.education || 0;
+        var eduOk = pEdu >= eduReqs;
+        var eduNameMap = ["无", "小学", "初中", "高中/中专", "大专", "本科", "硕士", "博士"];
+        if (eduReqs > 0) {
+          reqLines.push(
+            "<div style='display:flex;justify-content:space-between;padding:2px 0;'>" +
+              (eduOk ? "✅" : "❌") +
+              " 学历 ≥" +
+              (eduNameMap[eduReqs] || eduReqs) +
+              "</span>" +
+              "<span style='color:var(--text-muted);font-size:12px;'>当前 " +
+              (eduNameMap[pEdu] || pEdu) +
+              "</span>" +
+              "</div>",
+          );
+        }
+
+        var progressBar =
+          "<div style='background:#444;border-radius:4px;height:8px;margin:8px 0;overflow:hidden;'>" +
+          "<div style='background:var(--accent,#ff9800);width:" +
+          Math.round((totalWorkDays / 3) * 100) +
+          "%;height:100%;border-radius:4px;'></div>" +
+          "</div>" +
+          "<div style='display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);'>" +
+          "<span>已工作 " +
+          totalWorkDays +
+          " 天</span>" +
+          "<span>还需 " +
+          daysNeeded +
+          " 天</span>" +
+          "</div>";
+
         showModal({
           title: "⏳ 经验不足",
-          body: '<div style="text-align:center;padding:12px;"><p style="font-size:14px;">你才刚刚来到这座城市，还没有任何谋生经验。</p><p style="font-size:13px;margin-top:8px;">先做一些零工或兼职，积累经验和资金后，再来投递正式工作吧。</p><p style="font-size:11px;color:var(--text-muted);margin-top:8px;">💡 点击左侧"⚡ 行动"标签页，找找日结工作</p></div>',
+          body:
+            '<div style="padding:8px 12px;">' +
+            "<p style='font-size:14px;font-weight:bold;margin-bottom:4px;'>" +
+            pathName +
+            " · " +
+            levelName +
+            "</p>" +
+            "<p style='font-size:12px;color:var(--text-muted);margin-bottom:6px;'>需要至少 3 天工作经验才能投递正式工作</p>" +
+            progressBar +
+            "<div style='margin:8px 0;padding:6px 8px;background:rgba(255,255,255,0.05);border-radius:6px;'>" +
+            reqLines.join("") +
+            "</div>" +
+            "<p style='font-size:12px;color:var(--accent,#ff9800);margin-top:6px;'>💡 建议：先去做日结工作积累经验和资金</p>" +
+            "<p style='font-size:11px;color:var(--text-muted);'>👉 点击左侧「⚡ 行动」标签页找日结工作</p>" +
+            "</div>",
           buttons: [
             {
               text: "知道了",
@@ -2906,7 +3050,7 @@ function enhancedApplyCareerJob(pathId, levelId) {
         });
       } else {
         StateManager.addMessage(
-          "⚠️ 经验不足，请先积累一些工作经验再投递简历",
+          "⚠️ 经验不足（当前" + totalWorkDays + "天，需要3天工作经验才能投递正式工作）",
           "warning",
         );
       }

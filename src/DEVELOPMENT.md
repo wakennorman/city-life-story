@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.6 事件触发数据化 — Pipeline 完善）
+> 最后更新: 2026-07-07（v3.2c fix: 经验不足弹窗具体化）
 >
 > commit: `1194740`
 >
@@ -35,11 +35,11 @@
 
 ### P1 — 新增 3 个 `after_work` 事件（moral_events.js +161行）
 
-| 事件 ID | 标题 | 触发条件 | 冷却 | 选项数 |
-|---------|------|---------|------|--------|
-| `after_work_find_coin` | 🪙 工友留下的硬币 | minDay 5 | 25天 | 3 |
-| `after_work_rain_shelter` | ☔ 暴雨突至 | minDay 8 + 雨天 | 40天 | 3 |
-| `after_work_fellow_story` | 🍺 工友的酒话 | minDay 15 | 60天 | 3 |
+| 事件 ID                   | 标题              | 触发条件        | 冷却 | 选项数 |
+| ------------------------- | ----------------- | --------------- | ---- | ------ |
+| `after_work_find_coin`    | 🪙 工友留下的硬币 | minDay 5        | 25天 | 3      |
+| `after_work_rain_shelter` | ☔ 暴雨突至       | minDay 8 + 雨天 | 40天 | 3      |
+| `after_work_fellow_story` | 🍺 工友的酒话     | minDay 15       | 60天 | 3      |
 
 **叙事特色**：所有事件含道德抉择（拾金/诚实/社交），选项有金钱/道德/心情/声望等多维影响。
 
@@ -51,17 +51,18 @@
 
 ### 影响文件
 
-| 文件 | 操作 | 说明 |
-|------|------|------|
-| `core/trigger_registry.js` | 修复 | `getCooldownRemaining` 统一读写 `state._eventCooldowns` |
+| 文件                       | 操作 | 说明                                                                          |
+| -------------------------- | ---- | ----------------------------------------------------------------------------- |
+| `core/trigger_registry.js` | 修复 | `getCooldownRemaining` 统一读写 `state._eventCooldowns`                       |
 | `phase1/daily_pipeline.js` | 修改 | `trigger_slot_daily_start` 加 `showEventModal`；新增 `trigger_slot_daily_end` |
-| `main.js` | 修改 | `doStreetJob` 末尾接入 `after_work` 触发槽 |
-| `data/moral_events.js` | 新增 | 3 个 after_work 事件（+161行） |
-| `tools/mc_verify_v3.6.cjs` | 新建 | Node.js 验证脚本（6项检查全部通过） |
+| `main.js`                  | 修改 | `doStreetJob` 末尾接入 `after_work` 触发槽                                    |
+| `data/moral_events.js`     | 新增 | 3 个 after_work 事件（+161行）                                                |
+| `tools/mc_verify_v3.6.cjs` | 新建 | Node.js 验证脚本（6项检查全部通过）                                           |
 
 ### MC 验证
 
 `tools/mc_verify_v3.6.cjs` — 6 项验证全部通过：
+
 - ✅ 12 SLOTS 完整 / 8 TEMPLATES 完整
 - ✅ daily_start: 1 事件 / after_work: 3 事件（注册正确）
 - ✅ 1000 天模拟: 326 daily_start 触发 + 996 after_work 触发
@@ -73,6 +74,25 @@
 
 - 《Stardew Valley》工作后遇 NPC / 《大多数》街头偶遇 / 《This War of Mine》天气→事件链
 - 事件触发数据化的"约定式"扩展：从 POC（1事件）到可用（4事件 × 3槽位）
+
+---
+
+## 2026-07-07 — v3.2c fix: "经验不足"弹窗具体化
+
+**触发**：用户反馈原弹窗"太宽泛"——只写"先做零工"没有具体数字和要求。
+
+### 修改
+
+`career_dev.js::enhancedApplyCareerJob` — 3天经验门槛弹窗重写：
+
+| 原内容 | 新内容 |
+|--------|--------|
+| "你才刚刚来到这座城市..." | 显示职业名 + 岗位名（🍜 餐饮服务 · 服务员/洗碗工） |
+| 无进度 | 进度条（已工作 X 天 / 还需 Y 天）+ 数字提示 |
+| 无岗位要求 | 该职业完整条件预览：✅/❌ 年龄、💪 体质≥15（当前值）、学历、技能 — 逐项对比 |
+| "找找日结工作" | 💡 建议 + 👉 点击「⚡ 行动」引导，+ 橙色 accent 高亮 |
+
+**commit**: `(待提交)`
 
 ---
 
