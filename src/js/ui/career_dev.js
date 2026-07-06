@@ -1602,13 +1602,37 @@ function renderCareerOverview(state, parent) {
     }
   }
 
-  // === 六、智能建议 ===
+  // === 六、智能建议（剧本专属优先级 hook，损失厌恶抓手）===
   html +=
     '<div class="card" style="padding:10px;background:var(--bg-warning);margin-top:8px;">';
   html +=
     '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">💡 当前建议</div>';
   html +=
     '<ul style="font-size:10px;color:var(--text-muted);margin:0 0 0 14px;padding:0;line-height:1.8;">';
+  // v3.1 ⑦ 剧本专属建议 — 用玩家的"压力源"数字做损失厌恶钩子
+  var _scnId = (state.flags && state.flags._scenarioId) || "";
+  var _debt =
+    state.resources && state.resources.debt ? state.resources.debt : 0;
+  var _day = state.player && state.player.day ? state.player.day : 1;
+  if (_scnId === "fresh_grad" && !job) {
+    html += "<li>🎓 应届起薪低，赶紧投简历+考第一本证书涨¥2k</li>";
+  } else if (_scnId === "laid_off" && _debt > 0) {
+    html +=
+      "<li>⚠️ 下岗再就业培训还 ¥" +
+      _debt.toLocaleString() +
+      "，每天损失 ¥200+ 潜在收入</li>";
+  } else if (_scnId === "foreign_worker" && _debt > 10000) {
+    html += "<li>🏥 家里手术费倒计时，优先攒钱别炒股</li>";
+  } else if (_scnId === "midlife_crisis" && _day > 180) {
+    html += "<li>🔄 职场后浪月薪¥8k，你夜校充电了吗</li>";
+  } else if (
+    _scnId === "second_gen" &&
+    (!startup || startup.status === "none")
+  ) {
+    html += "<li>🏦 家族资源是你优势，认识叔伯攒人脉</li>";
+  } else if (_scnId === "small_town_grinder") {
+    html += "<li>📚 智力是硬通货，培训中心考到证书就是铁饭碗</li>";
+  }
   if (!job) {
     html += "<li>投递一份固定工作，获得稳定收入和晋升路径</li>";
   } else {
