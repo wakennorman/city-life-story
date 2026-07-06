@@ -118,70 +118,36 @@ function seedWorldFromReality(state) {
 /**
  * 通过 CORS 代理拉取 Yahoo Finance 数据（浏览器环境）
  * 尝试多个代理服务 + Sina Finance 免CORS接口作为备用
+ *
+ * 注意：因境外金融 API 在国内访问受限，免费 CORS 代理不稳定，此函数
+ * 已改为直接返回 false 以触发随机种子回退，避免同步 XHR 阻塞游戏启动。
+ * 如需恢复，改回下方循环代码即可。
  */
 function fetchMarketDataViaProxy(params) {
-  // 候选数据源列表（按优先级）
-  var sources = [
-    // 源1：Yahoo Finance 通过 allorigins CORS 代理
-    {
-      url:
-        "https://api.allorigins.win/raw?url=" +
-        encodeURIComponent(
-          "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d",
-        ),
-      parser: parseYahooFinanceResponse,
-    },
-    // 源2：Yahoo Finance 通过 corsproxy.io 代理
-    {
-      url:
-        "https://corsproxy.io/?url=" +
-        encodeURIComponent(
-          "https://query1.finance.yahoo.com/v8/finance/chart/000001.SS?range=5d&interval=1d",
-        ),
-      parser: parseYahooFinanceResponse,
-    },
-    // 源3：新浪财经（部分浏览器免CORS，直接用 XHR 尝试）
-    // 格式：var hq_str_sh000001="上证指数,昨收,今开,最新价,..."
-    {
-      url: "https://hq.sinajs.cn/list=sh000001",
-      parser: parseSinaFinanceResponse,
-    },
-    // 源4：腾讯财经接口（免CORS，国内速度快）
-    // 格式：JSONP 风格的股票数据
-    {
-      url: "https://web.ifzg.gtimg.cn/appstock/app/minute/query?_var=min_data_sh000001&code=sh000001",
-      parser: parseTencentFinanceResponse,
-    },
-  ];
-
-  for (var si = 0; si < sources.length; si++) {
+  return false;
+  /* ══════════════════════════════════════════════════════════════
+     原同步 XHR 代码（已禁用：境外 API 无法访问 + 同步阻塞游戏）
+     如需恢复，删掉上面的 return false 和本段注释标记即可。
+     ══════════════════════════════════════════════════════════════
+  var sources = [ ... ]; // sources array with 4 entries
+  var si, xhr, result;
+  for (si = 0; si < sources.length; si++) {
     try {
-      var xhr = new XMLHttpRequest();
+      xhr = new XMLHttpRequest();
       xhr.open("GET", sources[si].url, false);
       xhr.timeout = 5000;
       xhr.send(null);
-
       if (xhr.status === 200) {
-        var result = sources[si].parser(xhr.responseText, params);
+        result = sources[si].parser(xhr.responseText, params);
         if (result) {
           params.seedSource = "realtime";
-          StateManager.addMessage(
-            "🌐 世界参数已根据今日市场数据初始化（" +
-              params.marketMood +
-              "，波动率" +
-              params.baseVolatility.toFixed(2) +
-              "）",
-            "info",
-          );
+          StateManager.addMessage("...", "info");
           return true;
         }
       }
-    } catch (e) {
-      // 当前源失败，尝试下一个
-      continue;
-    }
+    } catch (e) { continue; }
   }
-  return false;
+  ══════════════════════════════════════════════════════════════ */
 }
 
 /** 解析 Yahoo Finance JSON 响应 */

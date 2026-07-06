@@ -210,7 +210,7 @@ function evaluateTriggers(triggers, state) {
   if (triggers.minSkill && typeof triggers.minSkill === "object") {
     for (var skl in triggers.minSkill) {
       var skillDef = state.skills && state.skills[skl];
-      var skillLvl = skillDef ? (skillDef.level || 0) : 0;
+      var skillLvl = skillDef ? skillDef.level || 0 : 0;
       if (skillLvl < triggers.minSkill[skl]) return false;
     }
   }
@@ -218,7 +218,7 @@ function evaluateTriggers(triggers, state) {
   if (triggers.maxSkill && typeof triggers.maxSkill === "object") {
     for (var skl2 in triggers.maxSkill) {
       var skillDef2 = state.skills && state.skills[skl2];
-      var skillLvl2 = skillDef2 ? (skillDef2.level || 0) : 0;
+      var skillLvl2 = skillDef2 ? skillDef2.level || 0 : 0;
       if (skillLvl2 > triggers.maxSkill[skl2]) return false;
     }
   }
@@ -243,11 +243,23 @@ function evaluateTriggers(triggers, state) {
   if (triggers.maxAge !== undefined && p.age > triggers.maxAge) return false;
 
   // 学历下限
-  if (triggers.educationMin !== undefined && (p.education ?? 0) < triggers.educationMin) return false;
+  if (
+    triggers.educationMin !== undefined &&
+    (p.education ?? 0) < triggers.educationMin
+  )
+    return false;
 
   // 道德范围
-  if (triggers.moralityMin !== undefined && (p.morality ?? 50) < triggers.moralityMin) return false;
-  if (triggers.moralityMax !== undefined && (p.morality ?? 50) > triggers.moralityMax) return false;
+  if (
+    triggers.moralityMin !== undefined &&
+    (p.morality ?? 50) < triggers.moralityMin
+  )
+    return false;
+  if (
+    triggers.moralityMax !== undefined &&
+    (p.morality ?? 50) > triggers.moralityMax
+  )
+    return false;
 
   return true;
 }
@@ -481,14 +493,19 @@ function showEventModal(evt) {
           if (epMult !== 1.0) {
             // 仅对负向 delta（惩罚）应用倍率，不放大正向收益
             var dCash = state.resources.cash - _preEvtCash;
-            if (dCash < 0) state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
+            if (dCash < 0)
+              state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
             if (state.stats) {
               var dHealth = state.stats.health - _preEvtHealth;
-              if (dHealth < 0) state.stats.health = _preEvtHealth + Math.round(dHealth * epMult);
+              if (dHealth < 0)
+                state.stats.health =
+                  _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {
               var dMental = state.player.mental - _preEvtMental;
-              if (dMental < 0) state.player.mental = _preEvtMental + Math.round(dMental * epMult);
+              if (dMental < 0)
+                state.player.mental =
+                  _preEvtMental + Math.round(dMental * epMult);
             }
           }
         }
