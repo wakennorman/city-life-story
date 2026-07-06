@@ -2452,17 +2452,31 @@ function applyCareerPromotion(pathId, levelId) {
 
 /** 辞职 */
 function resignCareerJob() {
-  var state = StateManager.getState();
-  if (!state.career || !state.career.currentJob) return;
+  try {
+    var state = StateManager.getState();
+    if (!state.career || !state.career.currentJob) return;
 
-  state.career.history.push({
-    day: state.player.day,
-    event: "辞职：离开了" + state.career.currentJob.levelName + "岗位",
-  });
-  state.career.currentJob = null;
+    // 记录辞职前的职位名（用于离职消息）
+    var oldJobName = state.career.currentJob.levelName;
 
-  StateManager.addMessage("👋 你已辞去当前工作", "info");
-  if (typeof renderAll === "function") renderAll();
+    state.career.history.push({
+      day: state.player.day,
+      event: "辞职：离开了" + oldJobName + "岗位",
+    });
+    state.career.currentJob = null;
+
+    StateManager.addMessage(
+      "👋 你已辞去当前工作（" + oldJobName + "）",
+      "info",
+    );
+
+    // 自动切换到"上班族"子Tab，方便立刻找工作
+    state._careerSubTab = "career_jobs";
+
+    if (typeof renderAll === "function") renderAll();
+  } catch (e) {
+    console.error("[career_dev] resignCareerJob error:", e);
+  }
 }
 
 /** 每日固定工作结算 */
@@ -2882,208 +2896,373 @@ function tickCareerFiringRisk(state) {
  * 在原有入职流程中嵌入
  */
 function enhancedApplyCareerJob(pathId, levelId) {
-  var state = StateManager.getState();
-  var path = CAREER_PATHS[pathId];
-  if (!path) {
-    StateManager.addMessage("⚠️ 该职业路径不存在", "warning");
-    return;
-  }
-  var level = path.levels.find(function (l) {
-    return l.id === levelId;
-  });
-  if (!level) return;
-
-  // --- 面试检测 ---
-  var meetReqs = checkCareerPromotion(state, pathId, level);
-  if (!meetReqs) {
-    StateManager.addMessage("⚠️ 你不满足该职位的条件，面试失败", "warning");
-    return;
-  }
-
-  // --- 面试成功率 v3.2 大修：技能 × 状态 × 履历 × 装备 ---
-  // 设计原则：街头→职场应有显著门槛，临时工不鸡肋，职场不白给
-
-  var p = state.player;
-  var totalWorkDays = p.day || 0;
-
-  // (A) 基础概率：基于工作经验天数，职场需要"磨"出来
-  // 0天 → 25%，15天 → 40%，30天 → 55%，60天 → 85%
-  // 让街头工作成为必需品
-  var workExpBonus = Math.min(0.6, totalWorkDays * 0.01);
-  var interviewChance = 0.25 + workExpBonus;
-
-  // (B) 属性优势：属性远超要求 → +5%/项
-  if (level.reqAttrs) {
-    for (var a in level.reqAttrs) {
-      var attrVal = p[a] || 0;
-      var req = level.reqAttrs[a];
-      if (attrVal >= req * 1.5) interviewChance += 0.05;
-      else if (attrVal < req) interviewChance -= 0.15;
+  try {
+    var state = StateManager.getState();
+    var path = CAREER_PATHS[pathId];
+    if (!path) {
+      StateManager.addMessage("⚠️ 该职业路径不存在", "warning");
+      return;
     }
-  }
+    var level = path.levels.find(function (l) {
+      return l.id === levelId;
+    });
+    if (!level) return;
 
-  // (C) 技能优势：相关技能超过要求 → 每高5级+2%
-  if (level.reqSkills) {
-    for (var sk in level.reqSkills) {
-      var skReq = level.reqSkills[sk];
-      var skActual = 0;
-      if (state.skills && state.skills[sk])
-        skActual = state.skills[sk].level || 0;
-      var skOver = skActual - skReq;
-      if (skOver > 0) interviewChance += Math.min(0.15, skOver * 0.02);
+    // --- 面试检测 ---
+    var meetReqs = checkCareerPromotion(state, pathId, level);
+    if (!meetReqs) {
+      if (typeof showModal === "function") {
+        showModal({
+          title: "❌ 条件不足",
+          body: '<div style="text-align:center;padding:12px;"><p style="font-size:14px;">你不满足该职位的招聘条件</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">点击卡片上的"⚠️ 条件不足"查看具体缺失项</p></div>',
+          buttons: [
+            {
+              text: "知道了",
+              cls: "btn-primary",
+              callback: function () {
+                return true;
+              },
+            },
+          ],
+        });
+      } else {
+        StateManager.addMessage("⚠️ 你不满足该职位的条件，面试失败", "warning");
+      }
+      return;
     }
-  }
 
-  // (D) 状态惩罚（重要：生存状态差的角色面试成功率暴跌）
-  var statePenaltyMessages = [];
-  var needs = state.needs || {};
-  if ((needs.food || 100) < 25) {
-    statePenaltyMessages.push("饥饿");
-    interviewChance -= 0.12;
-  } else if ((needs.food || 100) < 45) {
-    statePenaltyMessages.push("半饥饿状态");
-    interviewChance -= 0.05;
-  }
-  if ((needs.stamina || 100) < 20) {
-    statePenaltyMessages.push("极度疲劳");
-    interviewChance -= 0.15;
-  } else if ((needs.stamina || 100) < 45) {
-    statePenaltyMessages.push("疲劳");
-    interviewChance -= 0.06;
-  }
-  if ((p.health || 100) < 50) {
-    statePenaltyMessages.push("健康状况差");
-    interviewChance -= 0.12;
-  } else if ((p.health || 100) < 75) {
-    statePenaltyMessages.push("亚健康");
-    interviewChance -= 0.04;
-  }
-  if ((needs.mood || 100) < 20) {
-    statePenaltyMessages.push("心情极差");
-    interviewChance -= 0.1;
-  } else if ((needs.mood || 100) < 45) {
-    statePenaltyMessages.push("心情不佳");
-    interviewChance -= 0.05;
-  }
-  if ((needs.hygiene || 100) < 20) {
-    statePenaltyMessages.push("衣衫不整");
-    interviewChance -= 0.1;
-  } else if ((needs.hygiene || 100) < 45) {
-    statePenaltyMessages.push("形象欠佳");
-    interviewChance -= 0.04;
-  }
+    var p = state.player;
+    var totalWorkDays = p.day || 0;
 
-  // (E) 住房惩罚：露宿街头 → 面试大减分
-  var housing = state.housing || state.home || null;
-  var loc =
-    typeof LOCATIONS !== "undefined"
-      ? LOCATIONS[state.trade && state.trade.currentLocation]
-      : null;
-  var homeless = !housing;
-  if (homeless || (state.trade && state.trade.currentLocation === "slum")) {
-    statePenaltyMessages.push("无固定住所");
-    interviewChance -= 0.15;
-  }
-
-  // (F) 装备加成：得体着装大幅提升面试成功率
-  var hasFormalClothes = false;
-  var hasMarketVendorOutfit = false;
-  var inventory = state.inventory || [];
-  for (var ii = 0; ii < inventory.length; ii++) {
-    var invItem = inventory[ii];
-    var itemId = typeof invItem === "string" ? invItem : invItem.id;
-    if (itemId === "suit" || itemId === "formal_shoes") {
-      hasFormalClothes = true;
-      break;
+    // 最低经验门槛：需要至少3天的基础历练才能投递正式工作
+    if (totalWorkDays < 3) {
+      if (typeof showModal === "function") {
+        showModal({
+          title: "⏳ 经验不足",
+          body: '<div style="text-align:center;padding:12px;"><p style="font-size:14px;">你才刚刚来到这座城市，还没有任何谋生经验。</p><p style="font-size:13px;margin-top:8px;">先做一些零工或兼职，积累经验和资金后，再来投递正式工作吧。</p><p style="font-size:11px;color:var(--text-muted);margin-top:8px;">💡 点击左侧"⚡ 行动"标签页，找找日结工作</p></div>',
+          buttons: [
+            {
+              text: "知道了",
+              cls: "btn-primary",
+              callback: function () {
+                return true;
+              },
+            },
+          ],
+        });
+      } else {
+        StateManager.addMessage(
+          "⚠️ 经验不足，请先积累一些工作经验再投递简历",
+          "warning",
+        );
+      }
+      return;
     }
-    if (itemId === "decent_outfit" || itemId === "blazer") {
-      hasFormalClothes = true;
+
+    // --- 面试成功率 v3.2 大修：技能 × 状态 × 履历 × 装备 ---
+    // 设计原则：街头→职场应有显著门槛，临时工不鸡肋，职场不白给
+
+    // (A) 基础概率：基于工作经验天数，职场需要"磨"出来
+    // 0天 → 25%，15天 → 40%，30天 → 55%，60天 → 85%
+    // 让街头工作成为必需品
+    var workExpBonus = Math.min(0.6, totalWorkDays * 0.01);
+    var interviewChance = 0.25 + workExpBonus;
+
+    // (B) 属性优势：属性远超要求 → +5%/项
+    if (level.reqAttrs) {
+      for (var a in level.reqAttrs) {
+        var attrVal = p[a] || 0;
+        var req = level.reqAttrs[a];
+        if (attrVal >= req * 1.5) interviewChance += 0.05;
+        else if (attrVal < req) interviewChance -= 0.15;
+      }
     }
-  }
-  if (hasFormalClothes) {
-    interviewChance += 0.15;
-  }
 
-  // (G) 最新消息加分：最近30天内NPC好感>-5 +3%
-  var npcAff = state.npcAffinity || {};
-  var anyGoodRelation = false;
-  for (var ni in npcAff) {
-    if (npcAff[ni] > -5) {
-      anyGoodRelation = true;
-      break;
+    // (C) 技能优势：相关技能超过要求 → 每高5级+2%
+    if (level.reqSkills) {
+      for (var sk in level.reqSkills) {
+        var skReq = level.reqSkills[sk];
+        var skActual = 0;
+        if (state.skills && state.skills[sk])
+          skActual = state.skills[sk].level || 0;
+        var skOver = skActual - skReq;
+        if (skOver > 0) interviewChance += Math.min(0.15, skOver * 0.02);
+      }
     }
-  }
-  if (anyGoodRelation) interviewChance += 0.03;
 
-  interviewChance = Math.max(0.1, Math.min(0.95, interviewChance));
-
-  // 构建反馈信息
-  var feedbackParts = [];
-  if (totalWorkDays < 30) {
-    feedbackParts.push("📊 资历较浅（仅" + totalWorkDays + "天经验）");
-  }
-  if (statePenaltyMessages.length > 0) {
-    feedbackParts.push("😰 状态劣势：" + statePenaltyMessages.join("、"));
-  }
-  if (hasFormalClothes) {
-    feedbackParts.push("👔 着装得体 +15%");
-  }
-
-  var randVal =
-    typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
-  if (randVal > interviewChance) {
-    var failMsg = "📄 面试未通过。" + level.name + "的竞争很激烈";
-    if (feedbackParts.length > 0) {
-      failMsg += "（" + feedbackParts.join("；") + "）";
+    // (D) 状态惩罚（重要：生存状态差的角色面试成功率暴跌）
+    var statePenaltyMessages = [];
+    var penaltyLines = [];
+    var needs = state.needs || {};
+    if ((needs.food || 100) < 25) {
+      statePenaltyMessages.push("饥饿");
+      penaltyLines.push("🍖 饥饿 -12%");
+      interviewChance -= 0.12;
+    } else if ((needs.food || 100) < 45) {
+      statePenaltyMessages.push("半饥饿状态");
+      penaltyLines.push("🍖 半饥饿 -5%");
+      interviewChance -= 0.05;
     }
-    failMsg += "，继续提升自己再来试试。";
-    StateManager.addMessage(failMsg, "warning");
-    return;
-  }
+    if ((needs.stamina || 100) < 20) {
+      statePenaltyMessages.push("极度疲劳");
+      penaltyLines.push("😴 极度疲劳 -15%");
+      interviewChance -= 0.15;
+    } else if ((needs.stamina || 100) < 45) {
+      statePenaltyMessages.push("疲劳");
+      penaltyLines.push("😴 疲劳 -6%");
+      interviewChance -= 0.06;
+    }
+    if ((p.health || 100) < 50) {
+      statePenaltyMessages.push("健康状况差");
+      penaltyLines.push("🏥 健康状况差 -12%");
+      interviewChance -= 0.12;
+    } else if ((p.health || 100) < 75) {
+      statePenaltyMessages.push("亚健康");
+      penaltyLines.push("🏥 亚健康 -4%");
+      interviewChance -= 0.04;
+    }
+    if ((needs.mood || 100) < 20) {
+      statePenaltyMessages.push("心情极差");
+      penaltyLines.push("😢 心情极差 -10%");
+      interviewChance -= 0.1;
+    } else if ((needs.mood || 100) < 45) {
+      statePenaltyMessages.push("心情不佳");
+      penaltyLines.push("😢 心情不佳 -5%");
+      interviewChance -= 0.05;
+    }
+    if ((needs.hygiene || 100) < 20) {
+      statePenaltyMessages.push("衣衫不整");
+      penaltyLines.push("🚿 衣衫不整 -10%");
+      interviewChance -= 0.1;
+    } else if ((needs.hygiene || 100) < 45) {
+      statePenaltyMessages.push("形象欠佳");
+      penaltyLines.push("🚿 形象欠佳 -4%");
+      interviewChance -= 0.04;
+    }
 
-  // --- 入职流程 ---
-  if (!state.career) state.career = { currentJob: null, history: [] };
-  var cap = ensureCareerCapital(state);
-  if (state.career.currentJob) {
-    StateManager.addMessage(
-      "⚠️ 你已经有工作了，先辞职才能投递新职位",
-      "warning",
+    // (E) 住房惩罚：露宿街头 → 面试大减分
+    var housing = state.housing || state.home || null;
+    var loc =
+      typeof LOCATIONS !== "undefined"
+        ? LOCATIONS[state.trade && state.trade.currentLocation]
+        : null;
+    var homeless = !housing;
+    if (homeless || (state.trade && state.trade.currentLocation === "slum")) {
+      statePenaltyMessages.push("无固定住所");
+      penaltyLines.push("🏚️ 无固定住所 -15%");
+      interviewChance -= 0.15;
+    }
+
+    // (F) 装备加成：得体着装大幅提升面试成功率
+    var hasFormalClothes = false;
+    var hasMarketVendorOutfit = false;
+    var inventory = state.inventory || [];
+    for (var ii = 0; ii < inventory.length; ii++) {
+      var invItem = inventory[ii];
+      var itemId = typeof invItem === "string" ? invItem : invItem.id;
+      if (itemId === "suit" || itemId === "formal_shoes") {
+        hasFormalClothes = true;
+        break;
+      }
+      if (itemId === "decent_outfit" || itemId === "blazer") {
+        hasFormalClothes = true;
+      }
+    }
+    if (hasFormalClothes) {
+      interviewChance += 0.15;
+    }
+
+    // (G) 最新消息加分：最近30天内NPC好感>-5 +3%
+    var npcAff = state.npcAffinity || {};
+    var anyGoodRelation = false;
+    for (var ni in npcAff) {
+      if (npcAff[ni] > -5) {
+        anyGoodRelation = true;
+        break;
+      }
+    }
+    if (anyGoodRelation) interviewChance += 0.03;
+
+    interviewChance = Math.max(0.1, Math.min(0.95, interviewChance));
+
+    // 构建反馈信息
+    var feedbackParts = [];
+    if (totalWorkDays < 30) {
+      feedbackParts.push("📊 资历较浅（仅" + totalWorkDays + "天经验）");
+    }
+    if (statePenaltyMessages.length > 0) {
+      feedbackParts.push("😰 状态劣势：" + statePenaltyMessages.join("、"));
+    }
+    if (hasFormalClothes) {
+      feedbackParts.push("👔 着装得体 +15%");
+    }
+
+    var randVal =
+      typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+    if (randVal > interviewChance) {
+      // 面试失败 → 弹窗展示详细原因
+      var failChancePct = Math.round(interviewChance * 100);
+      var bodyLines = [
+        '<div style="text-align:center;padding:8px 0;">',
+        '<p style="font-size:24px;margin:4px 0;">❌</p>',
+        '<p style="font-size:15px;font-weight:bold;margin:4px 0;">' +
+          level.name +
+          " 面试未通过</p>",
+        '<p style="font-size:12px;color:var(--text-muted);margin:8px 0;">面试成功率仅 <span style="color:var(--danger);font-weight:bold;">' +
+          failChancePct +
+          "%</span></p>",
+      ];
+      if (penaltyLines.length > 0) {
+        bodyLines.push(
+          '<div style="text-align:left;font-size:11px;color:var(--text-muted);padding:6px 12px;border-top:1px solid var(--border);margin-top:4px;">',
+        );
+        bodyLines.push(
+          '<p style="font-weight:bold;margin:2px 0;">📉 不利因素：</p>',
+        );
+        penaltyLines.forEach(function (pl) {
+          bodyLines.push(
+            '<p style="margin:1px 0;padding-left:8px;">' + pl + "</p>",
+          );
+        });
+        bodyLines.push("</div>");
+      }
+      bodyLines.push(
+        '<p style="font-size:11px;color:var(--text-muted);margin-top:6px;">💡 改善状态、积累经验后再来试试</p>',
+      );
+      bodyLines.push("</div>");
+
+      var failMsg = "📄 面试未通过。" + level.name + "的竞争很激烈";
+      if (feedbackParts.length > 0) {
+        failMsg += "（" + feedbackParts.join("；") + "）";
+      }
+      failMsg += "，继续提升自己再来试试。";
+      StateManager.addMessage(failMsg, "warning");
+
+      if (typeof showModal === "function") {
+        showModal({
+          title: "📄 面试未通过",
+          body: bodyLines.join(""),
+          buttons: [
+            {
+              text: "继续努力",
+              cls: "btn-primary",
+              callback: function () {
+                return true;
+              },
+            },
+          ],
+        });
+      }
+      return;
+    }
+
+    // --- 入职流程 ---
+    if (!state.career) state.career = { currentJob: null, history: [] };
+    var cap = ensureCareerCapital(state);
+    if (state.career.currentJob) {
+      if (typeof showModal === "function") {
+        showModal({
+          title: "⚠️ 已有工作",
+          body: '<div style="text-align:center;padding:12px;"><p style="font-size:14px;">你已经有工作了</p><p style="font-size:12px;color:var(--text-muted);margin-top:4px;">先辞职才能投递新职位</p></div>',
+          buttons: [
+            {
+              text: "知道了",
+              cls: "btn-primary",
+              callback: function () {
+                return true;
+              },
+            },
+          ],
+        });
+      } else {
+        StateManager.addMessage(
+          "⚠️ 你已经有工作了，先辞职才能投递新职位",
+          "warning",
+        );
+      }
+      return;
+    }
+
+    state.career.currentJob = {
+      path: pathId,
+      levelId: levelId,
+      levelName: level.name,
+      salary: level.salary,
+      workDays: 0,
+      startDay: state.player.day,
+      performance: 50,
+    };
+    if (typeof initCareerColleagues === "function") {
+      initCareerColleagues(state);
+    }
+    cap.reputation = (cap.reputation || 0) + 2;
+    cap.industryResources = (cap.industryResources || 0) + 1;
+    clampCareerCapital(cap);
+
+    var probationMsg = isInProbation(state)
+      ? "（前90天为试用期，薪资按80%发放）"
+      : "";
+
+    // 最终入职消息（修复 passMsg 未定义 bug）
+    var finalMsg =
+      "✅ 面试通过！入职成功！你成为" +
+      getCareerPathLabel(pathId) +
+      "的" +
+      level.name +
+      "，月薪¥" +
+      level.salary.toLocaleString();
+    if (probationMsg) finalMsg += "，" + probationMsg;
+    StateManager.addMessage(finalMsg, "success");
+
+    // 面试通过 → 弹窗庆祝
+    var successChancePct = Math.round(interviewChance * 100);
+    var successBody = [
+      '<div style="text-align:center;padding:8px 0;">',
+      '<p style="font-size:24px;margin:4px 0;">🎉</p>',
+      '<p style="font-size:15px;font-weight:bold;margin:4px 0;">恭喜入职 ' +
+        getCareerPathLabel(pathId) +
+        "</p>",
+      '<p style="font-size:13px;color:var(--accent);margin:4px 0;">' +
+        level.name +
+        " · 月薪¥" +
+        level.salary.toLocaleString() +
+        "</p>",
+    ];
+    if (probationMsg) {
+      successBody.push(
+        '<p style="font-size:11px;color:var(--warning);margin:4px 0;">' +
+          probationMsg +
+          "</p>",
+      );
+    }
+    successBody.push(
+      '<p style="font-size:11px;color:var(--text-muted);margin-top:6px;">面试成功率 ' +
+        successChancePct +
+        "% · 脱颖而出！</p>",
     );
-    return;
+    successBody.push("</div>");
+
+    if (typeof showModal === "function") {
+      showModal({
+        title: "✅ 面试通过！",
+        body: successBody.join(""),
+        buttons: [
+          {
+            text: "开始工作！",
+            cls: "btn-primary",
+            callback: function () {
+              return true;
+            },
+          },
+        ],
+      });
+    }
+
+    if (typeof renderAll === "function") renderAll();
+  } catch (e) {
+    console.error("[career_dev] enhancedApplyCareerJob error:", e);
+    StateManager.addMessage("⚠️ 求职过程中出现异常，请查看控制台", "danger");
   }
-
-  state.career.currentJob = {
-    path: pathId,
-    levelId: levelId,
-    levelName: level.name,
-    salary: level.salary,
-    workDays: 0,
-    startDay: state.player.day,
-    performance: 50,
-  };
-  if (typeof initCareerColleagues === "function") {
-    initCareerColleagues(state);
-  }
-  cap.reputation = (cap.reputation || 0) + 2;
-  cap.industryResources = (cap.industryResources || 0) + 1;
-  clampCareerCapital(cap);
-
-  var probationMsg = isInProbation(state)
-    ? "（前90天为试用期，薪资按80%发放）"
-    : "";
-
-  // 最终入职消息（修复 passMsg 未定义 bug）
-  var finalMsg =
-    "✅ 面试通过！入职成功！你成为" +
-    getCareerPathLabel(pathId) +
-    "的" +
-    level.name +
-    "，月薪¥" +
-    level.salary.toLocaleString();
-  if (probationMsg) finalMsg += "，" + probationMsg;
-  StateManager.addMessage(finalMsg, "success");
-
-  if (typeof renderAll === "function") renderAll();
 }
 
 // ====== 导航弹窗辅助函数（约定式：可被未来新增职业路线自动复用） ======
@@ -3317,19 +3496,27 @@ if (typeof window !== "undefined") {
   window.showLocationNavModal = showLocationNavModal;
   /** 全局条件不足弹窗（供 inline onclick 调用） */
   window.showCareerRequirementsModal_Global = function (pathKey, levelId) {
-    var st =
-      typeof StateManager !== "undefined" &&
-      typeof StateManager.getState === "function"
-        ? StateManager.getState()
-        : null;
-    if (!st) return;
-    var path = CAREER_PATHS[pathKey];
-    if (!path) return;
-    var level = path.levels.find(function (l) {
-      return l.id === levelId;
-    });
-    if (!level) return;
-    showCareerRequirementsModal(st, pathKey, level);
+    try {
+      var st =
+        typeof StateManager !== "undefined" &&
+        typeof StateManager.getState === "function"
+          ? StateManager.getState()
+          : null;
+      if (!st) return;
+      var path = CAREER_PATHS[pathKey];
+      if (!path) return;
+      var level = path.levels.find(function (l) {
+        return l.id === levelId;
+      });
+      if (!level) return;
+      showCareerRequirementsModal(st, pathKey, level);
+    } catch (e) {
+      console.error(
+        "[career_dev] showCareerRequirementsModal_Global error:",
+        e,
+      );
+      StateManager.addMessage("⚠️ 查看条件时出现异常", "warning");
+    }
   };
 
   window.MECHANICS = window.MECHANICS || {};
