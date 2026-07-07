@@ -34856,6 +34856,381 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ====== v3.28 新增联动事件（空白区填充） ======
+
+  // 1. 连续多天高强度工作后的「身体崩溃」特遇
+  // 联动：flags._habits.highFatigueStreak + employment + health
+  RANDOM_EVENTS.push({
+    id: "overwork_body_crash",
+    phase: "street",
+    icon: "🫨",
+    title: "身体亮红灯了",
+    story:
+      "你连续加班了一周，今天站在操作台前突然眼前一黑，差点摔倒。同事一把扶住你说：「你是不是没睡觉？」\n\n你摸了摸额头，烫得吓人。身体已经不是累的问题了——它在抗议。",
+    conditions: function (st) {
+      var habits = st.flags && st.flags._habits;
+      // 连续3天以上高疲劳 或 健康已低于35
+      return (
+        st.player.phase === "street" &&
+        ((habits && habits.highFatigueStreak >= 3) ||
+          (st.status && st.status.health != null && st.status.health < 35))
+      );
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 请假看病（¥100）",
+        hint: "花钱买命，健康+15",
+        apply: function (st) {
+          if (st.resources.cash >= 100) {
+            st.resources.cash -= 100;
+            st.status.health = Math.min(100, (st.status.health || 50) + 15);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+            if (st.flags._habits) st.flags._habits.highFatigueStreak = 0;
+            StateManager.addMessage(
+              "🏥 你请了一天病假去医院，医生说是过度劳累。打了针吃了药，舒服了不少。健康+15，疲劳-30。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "😰 你想去看病，但连¥100都凑不齐。只能硬着头皮回去上班。",
+              "warning",
+            );
+            st.status.health = Math.max(0, (st.status.health || 50) - 10);
+          }
+        },
+      },
+      {
+        text: "💊 买药扛过去（¥30）",
+        hint: "临时缓解，不治本",
+        apply: function (st) {
+          if (st.resources.cash >= 30) {
+            st.resources.cash -= 30;
+            st.status.health = Math.min(100, (st.status.health || 50) + 5);
+            StateManager.addMessage(
+              "💊 你买了些退烧药和板蓝根，灌了两大杯水。好点了，但你知道这只是缓兵之计。",
+              "info",
+            );
+          } else {
+            StateManager.addMessage(
+              "😵 连¥30的药都买不起。你靠在墙上喘了口气。",
+              "warning",
+            );
+            st.status.health = Math.max(0, (st.status.health || 50) - 8);
+          }
+        },
+      },
+      {
+        text: "💪 没事，年轻人扛得住",
+        hint: "健康-15，可能触发疾病",
+        apply: function (st) {
+          st.status.health = Math.max(0, (st.status.health || 50) - 15);
+          if (!st.flags._habits) st.flags._habits = {};
+          st.flags._habits.overworkDenialCount =
+            (st.flags._habits.overworkDenialCount || 0) + 1;
+          StateManager.addMessage(
+            "💪 你摇了摇头继续干活。但身体的账迟早要还。健康-15。",
+            "danger",
+          );
+        },
+      },
+    ],
+  },
+
+  // 2. 技能≥50解锁的「专业人士视角」事件
+  // 联动：skills.*.level >= 50 + trade.currentLocation
+  {
+    id: "pro_insight_quality_check",
+    phase: "street",
+    icon: "🔍",
+    title: "行家一眼看出问题",
+    story:
+      "你在批发市场挑货，旁边两个商贩在争论一批货的质量。外行人看不出区别，但你凭经验一眼就看出这批货里掺了次品。\n\n你犹豫了一下——是说还是不说？",
+    conditions: function (st) {
+      // 检查是否有任何技能≥50
+      var hasExpertSkill = false;
+      if (st.skills) {
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 50) {
+            hasExpertSkill = true;
+            break;
+          }
+        }
+      }
+      return (
+        st.player.phase === "street" &&
+        hasExpertSkill &&
+        st.trade &&
+        st.trade.currentLocation === "wholesaleMarket" &&
+        !st.flags._proInsightSeen
+      );
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🗣️ 指出问题，帮他们辨别",
+        hint: "名气+5，商贩好感",
+        apply: function (st) {
+          st.flags._proInsightSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          // 随机选择一个≥50的技能加经验
+          if (st.skills) {
+            for (var sk2 in st.skills) {
+              if (st.skills[sk2] && st.skills[sk2].level >= 50) {
+                st.skills[sk2].xp = (st.skills[sk2].xp || 0) + 30;
+                break;
+              }
+            }
+          }
+          StateManager.addMessage(
+            "🔍 你一眼看出问题所在，两个商贩都惊了：「行家啊！」名气+5，技能经验+30。专业的事还得专业的人来看。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤐 看热闹不说话",
+        hint: "安全但错失机会",
+        apply: function (st) {
+          st.flags._proInsightSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🤐 你看了看热闹。他们吵了半天最后还是买错了——但你没开口。心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 3. NPC好感≥70的「意外信息」事件
+  // 联动：relationships.*.affinity >= 70 + discovered
+  RANDOM_EVENTS.push({
+    id: "npc_secret_info",
+    phase: "street",
+    icon: "🤫",
+    title: "密友的秘密情报",
+    story: "",
+    conditions: function (st) {
+      // 检查是否有任何NPC好感≥70且已解锁deepTask
+      if (!st.relationships) return false;
+      for (var nid in st.relationships) {
+        var rel = st.relationships[nid];
+        if (rel && rel.met && (rel.affinity || 0) >= 70) {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "👂 认真听TA说",
+        hint: "获得隐藏信息，可能有用",
+        apply: function (st) {
+          // 找出好感最高的NPC
+          var bestNpc = null;
+          var bestAff = -200;
+          for (var nid2 in st.relationships) {
+            var rel2 = st.relationships[nid2];
+            if (rel2 && rel2.met && (rel2.affinity || 0) > bestAff) {
+              bestAff = rel2.affinity || 0;
+              bestNpc = nid2;
+            }
+          }
+          if (bestNpc) {
+            st.flags._secretInfoFrom = bestNpc;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 2,
+            );
+            // 根据NPC类型给出不同情报
+            if (bestNpc === "aunt_wang") {
+              st.flags._knowsRentalMarket = true;
+              StateManager.addMessage(
+                "🤫 王大婶拉着你说：「最近城中村要改造，房租可能要涨，你提前做好准备。」——这可是花钱都买不到的情报。智力+2。",
+                "success",
+              );
+            } else if (bestNpc === "old_zhou") {
+              st.flags._knowsScrapPrice = true;
+              StateManager.addMessage(
+                "🤫 老周凑过来说：「下个月废品回收站涨价，现在多囤点能多赚。」——你记在了心里。智力+2。",
+                "success",
+              );
+            } else if (bestNpc === "boss_li") {
+              st.flags._knowsLaborMarket = true;
+              StateManager.addMessage(
+                "🤫 李工头低声说：「下个工地招工，工资比现在高30%，但我先留个位置给你。」——机会来了。智力+2。",
+                "success",
+              );
+            } else {
+              st.flags._npcGeneralSecret = true;
+              StateManager.addMessage(
+                "🤫 " +
+                  (st.npcNames && st.npcNames[bestNpc]
+                    ? st.npcNames[bestNpc]
+                    : "这位朋友") +
+                  "告诉你一个你可能用得上消息。你认真听着，心里记下了。智力+2。",
+                "success",
+              );
+            }
+          }
+        },
+      },
+      {
+        text: "🙏 谢谢TA惦记",
+        hint: "好感+5，安全",
+        apply: function (st) {
+          // 找出好感最高的NPC
+          var bestNpc2 = null;
+          var bestAff2 = -200;
+          for (var nid3 in st.relationships) {
+            var rel3 = st.relationships[nid3];
+            if (rel3 && rel3.met && (rel3.affinity || 0) > bestAff2) {
+              bestAff2 = rel3.affinity || 0;
+              bestNpc2 = nid3;
+            }
+          }
+          if (bestNpc2 && st.relationships[bestNpc2]) {
+            st.relationships[bestNpc2].affinity = Math.min(
+              100,
+              (st.relationships[bestNpc2].affinity || 0) + 5,
+            );
+          }
+          StateManager.addMessage(
+            "🙏 你谢谢对方的关心。有些人愿意把秘密告诉你，本身就是一种信任。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 4. 道德值极端时的「人设分叉」事件
+  // 联动：morality >= 80(高道德) / morality <= 20(低道德)
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_echo",
+    phase: "street",
+    icon: "⚖️",
+    title: "城市记住了你的样子",
+    story: "",
+    conditions: function (st) {
+      var mor = st.player.morality || 50;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 60 &&
+        !st.flags._moralEchoSeen &&
+        (mor >= 80 || mor <= 20)
+      );
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤔 继续做选择",
+        hint: "根据你的道德值触发不同叙事",
+        apply: function (st) {
+          st.flags._moralEchoSeen = true;
+          var mor = st.player.morality || 50;
+          if (mor >= 80) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "⚖️ 你做的每一件小事都被这座城市记住了——帮过的老人给你留了碗面，还过钱的人逢人就夸你。名气+8，心情+10。好人缘是攒出来的。",
+              "success",
+            );
+          } else if (mor <= 20) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
+            StateManager.addMessage(
+              "⚖️ 你发现身边的人开始对你客气了——那种客气里带着距离。你做了很多选择，但没人再完全信任你。心情-10，心智-5。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // 5. 连续3天饥饿后的「社会比较」事件
+  // 联动：flags._habits.lowHungerStreak + needs.happiness
+  RANDOM_EVENTS.push({
+    id: "hunger_social_comparison",
+    phase: "street",
+    icon: "🍱",
+    title: "饭桌上的差距",
+    story:
+      "午休时工友们聚在一起吃盒饭，香味飘过来，你肚子咕咕叫。你看了看他们的菜——有荤有素，而你今天只啃了两个馒头。\n\n有人注意到你，问：「咋不吃好的？钱不够？」",
+    conditions: function (st) {
+      var habits = st.flags && st.flags._habits;
+      return (
+        st.player.phase === "street" &&
+        habits &&
+        habits.lowHungerStreak >= 3 &&
+        !st.flags._hungerComparisonSeen
+      );
+    },
+    probability: 0.1,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 笑着说「习惯了」",
+        hint: "保全面子，心情+5",
+        apply: function (st) {
+          st.flags._hungerComparisonSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🍱 你笑了笑说习惯了。有人往你盒饭里夹了块肉。面子保住了，但胃还在叫。心情+5，心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 不吃了，攒钱干大事",
+        hint: "短期忍饥，长期投资",
+        apply: function (st) {
+          st.flags._hungerComparisonSeen = true;
+          st.flags._starvedForFuture = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "🍱 你推开盒饭走了。有人说你倔，但你知道——现在的每一分省下来的钱，都是为了以后能挺直腰板吃饭。心情-8，心智+5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "😢 说实话，能不能借¥20",
+        hint: "坦诚面对，可能获得帮助",
+        apply: function (st) {
+          st.flags._hungerComparisonSeen = true;
+          if (Random.chance(0.7)) {
+            var help = Random.int(20, 80);
+            st.resources.cash += help;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            StateManager.addMessage(
+              "🍱 你说了实话，工友们凑了¥" +
+                help +
+                "给你。有人拍拍你的肩：「谁还没个难处。」心情+15。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "🍱 你说实话了，但没人接话。你端着馒头走了。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
