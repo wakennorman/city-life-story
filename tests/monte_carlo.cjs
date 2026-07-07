@@ -850,7 +850,10 @@
       } catch (e) {}
       // v3.1 新机制：结算上一日抽到的命运抉择卡（按策略性格选 bold/safe）
       try {
-        if (state._pendingCrossroads && typeof resolveCrossroads === "function") {
+        if (
+          state._pendingCrossroads &&
+          typeof resolveCrossroads === "function"
+        ) {
           var bias = CROSSROADS_BIAS[strategyName] || "safe";
           var opt =
             typeof decideCrossroads === "function"
@@ -1197,9 +1200,10 @@
       var cause3 = dead[di3].deathCause || "unknown";
       deathCauses[cause3] = (deathCauses[cause3] || 0) + 1;
     }
-    var avgCr = results.reduce(function (s, r) {
-      return s + (r.crossroadsTaken || 0);
-    }, 0) / Math.max(1, n);
+    var avgCr =
+      results.reduce(function (s, r) {
+        return s + (r.crossroadsTaken || 0);
+      }, 0) / Math.max(1, n);
 
     return {
       strategy: name,
@@ -1323,7 +1327,9 @@
       }
 
       console.log("\n  🎴 命运抉择卡（v3.1 新机制）");
-      console.log("    平均结算张数: " + s.avgCrossroadsTaken.toFixed(1) + " 张 / 1000天");
+      console.log(
+        "    平均结算张数: " + s.avgCrossroadsTaken.toFixed(1) + " 张 / 1000天",
+      );
 
       console.log("\n  💰 经济统计（存活玩家）");
       console.log("    平均现金:    ¥" + fmt(s.avgCash));

@@ -57,14 +57,8 @@
           apply: function (st) {
             if (st.resources.cash >= 15) {
               st.resources.cash -= 15;
-              st.status.health = Math.min(
-                100,
-                (st.status.health || 0) + 3,
-              );
-              st.needs.fatigue = Math.min(
-                100,
-                (st.needs.fatigue || 0) + 5,
-              );
+              st.status.health = Math.min(100, (st.status.health || 0) + 3);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
               var pay = st.employment.currentJob.payCalc(st);
               st.resources.cash += Math.floor(pay * 0.8);
               st.resources.totalEarned =
@@ -79,10 +73,7 @@
                 "😅 连¥15的冰水都买不起，只能在烈日下硬扛。",
                 "warning",
               );
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 5,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 5);
             }
           },
         },
@@ -108,10 +99,7 @@
           hint: "零收入，健康+8，疲劳-10",
           apply: function (st) {
             st.status.health = Math.min(100, (st.status.health || 0) + 8);
-            st.needs.fatigue = Math.max(
-              0,
-              (st.needs.fatigue || 0) - 10,
-            );
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
             StateManager.addMessage(
               "🏠 你决定今天休息。身体是革命的本钱，健康+8。",
               "info",
@@ -160,8 +148,7 @@
           apply: function (st) {
             var profit = Random.int(80, 180);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (!st.relationships.old_zhou.affinity)
               st.relationships.old_zhou.affinity = 0;
             st.relationships.old_zhou.affinity = Math.min(
@@ -248,14 +235,10 @@
               : 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash += bonus;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             if (Random.chance(0.3)) {
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 10,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 10);
               StateManager.addMessage(
                 "💪 你在台风天送完材料，拿了¥" +
                   bonus +
@@ -354,10 +337,7 @@
                 "success",
               );
             } else {
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 8,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 8);
               StateManager.addMessage(
                 "🔧 你试了半天没修好，还被机器烫了一下。健康-8。",
                 "warning",

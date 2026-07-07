@@ -173,7 +173,13 @@ function applyWealthBasedOverhead(state) {
   if (propertyFee > 0) {
     state.resources.cash -= propertyFee;
     if (typeof addDailyTransaction === "function") {
-      addDailyTransaction(state, "expense", "wealth_overhead", propertyFee, "物业管理费");
+      addDailyTransaction(
+        state,
+        "expense",
+        "wealth_overhead",
+        propertyFee,
+        "物业管理费",
+      );
     }
     StateManager.addMessage(
       "🏠 物业管理费 ¥" + propertyFee.toLocaleString() + "（资产越高维护越贵）",
@@ -189,7 +195,13 @@ function applyWealthBasedOverhead(state) {
   if (houseCost > 0) {
     state.resources.cash -= houseCost;
     if (typeof addDailyTransaction === "function") {
-      addDailyTransaction(state, "expense", "wealth_overhead", houseCost, "住房维护费");
+      addDailyTransaction(
+        state,
+        "expense",
+        "wealth_overhead",
+        houseCost,
+        "住房维护费",
+      );
     }
     StateManager.addMessage("🏡 住房维护费 ¥" + houseCost + "/天", "info");
   }
@@ -207,7 +219,13 @@ function applyWealthBasedOverhead(state) {
     if (wealthFee > 0) {
       state.resources.cash -= wealthFee;
       if (typeof addDailyTransaction === "function") {
-        addDailyTransaction(state, "expense", "wealth_overhead", wealthFee, "财富管理费");
+        addDailyTransaction(
+          state,
+          "expense",
+          "wealth_overhead",
+          wealthFee,
+          "财富管理费",
+        );
       }
       StateManager.addMessage(
         "💼 财富管理费 ¥" +

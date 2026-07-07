@@ -29,7 +29,8 @@
         };
 
   function msg(state, text) {
-    if (typeof StateManager !== "undefined") StateManager.addMessage(text, "event");
+    if (typeof StateManager !== "undefined")
+      StateManager.addMessage(text, "event");
   }
 
   // 把一次数值变动安全落地（记账 + 钳制），便于 MC 对账
@@ -306,7 +307,10 @@
     var result = opt.apply(state);
     state._mcCrossroadsTaken = (state._mcCrossroadsTaken || 0) + 1;
     state._pendingCrossroads = null;
-    msg(state, "🎴 抉择：" + card.title + " → " + opt.label + "（" + result + "）");
+    msg(
+      state,
+      "🎴 抉择：" + card.title + " → " + opt.label + "（" + result + "）",
+    );
     return result;
   }
 
@@ -316,7 +320,11 @@
     var day = state.player.day;
     if (state._pendingCrossroads) {
       if (state._pendingCrossroads.day < day - 2) {
-        resolveCrossroads(state, state._pendingCrossroads.id, decideCrossroads(state, "safe"));
+        resolveCrossroads(
+          state,
+          state._pendingCrossroads.id,
+          decideCrossroads(state, "safe"),
+        );
       }
       return;
     }

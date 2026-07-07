@@ -492,7 +492,10 @@
             if (!st.relationships.old_ma) {
               st.relationships.old_ma = { affinity: 0, met: true };
             }
-            st.relationships.old_ma.affinity = Math.min(100, (st.relationships.old_ma.affinity || 0) + 8);
+            st.relationships.old_ma.affinity = Math.min(
+              100,
+              (st.relationships.old_ma.affinity || 0) + 8,
+            );
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);

@@ -9471,7 +9471,10 @@ function quarterlyCleanup(state) {
             if (!st.relationships.old_ma) {
               st.relationships.old_ma = { affinity: 0, met: true };
             }
-            st.relationships.old_ma.affinity = Math.min(100, (st.relationships.old_ma.affinity || 0) + 8);
+            st.relationships.old_ma.affinity = Math.min(
+              100,
+              (st.relationships.old_ma.affinity || 0) + 8,
+            );
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
@@ -12570,7 +12573,11 @@ function quarterlyCleanup(state) {
         "菜市场冷清了很多。王婶的菜被社区团购冲击——美团优选土豆¥0.99，进货价都不止。批发菜价跌了20%。等平台烧完钱会涨回来的。",
       // [自洽修复] conditions 新增：王婶关系检查
       conditions: function (st) {
-        return st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.met;
+        return (
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met
+        );
       },
       triggers: { minDay: 25, excludeFlags: ["_communityGroupBuySeen"] },
       choices: [
@@ -12987,7 +12994,11 @@ function quarterlyCleanup(state) {
         "灵活就业社保每月¥900。一个月才赚¥4,000~¥6,000。隔壁老周胆囊炎花了¥30,000全自费。",
       // [自洽修复] conditions 新增：老周关系检查
       conditions: function (st) {
-        return st.relationships && st.relationships.old_zhou && st.relationships.old_zhou.met;
+        return (
+          st.relationships &&
+          st.relationships.old_zhou &&
+          st.relationships.old_zhou.met
+        );
       },
       triggers: { minDay: 45, excludeFlags: ["_gigSocialSeen"] },
       choices: [
@@ -35309,14 +35320,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             if (st.resources.cash >= 15) {
               st.resources.cash -= 15;
-              st.status.health = Math.min(
-                100,
-                (st.status.health || 0) + 3,
-              );
-              st.needs.fatigue = Math.min(
-                100,
-                (st.needs.fatigue || 0) + 5,
-              );
+              st.status.health = Math.min(100, (st.status.health || 0) + 3);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
               var pay = st.employment.currentJob.payCalc(st);
               st.resources.cash += Math.floor(pay * 0.8);
               st.resources.totalEarned =
@@ -35331,10 +35336,7 @@ if (typeof window !== "undefined") {
                 "😅 连¥15的冰水都买不起，只能在烈日下硬扛。",
                 "warning",
               );
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 5,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 5);
             }
           },
         },
@@ -35360,10 +35362,7 @@ if (typeof window !== "undefined") {
           hint: "零收入，健康+8，疲劳-10",
           apply: function (st) {
             st.status.health = Math.min(100, (st.status.health || 0) + 8);
-            st.needs.fatigue = Math.max(
-              0,
-              (st.needs.fatigue || 0) - 10,
-            );
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
             StateManager.addMessage(
               "🏠 你决定今天休息。身体是革命的本钱，健康+8。",
               "info",
@@ -35412,8 +35411,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             var profit = Random.int(80, 180);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (!st.relationships.old_zhou.affinity)
               st.relationships.old_zhou.affinity = 0;
             st.relationships.old_zhou.affinity = Math.min(
@@ -35500,14 +35498,10 @@ if (typeof window !== "undefined") {
               : 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash += bonus;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             if (Random.chance(0.3)) {
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 10,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 10);
               StateManager.addMessage(
                 "💪 你在台风天送完材料，拿了¥" +
                   bonus +
@@ -35606,10 +35600,7 @@ if (typeof window !== "undefined") {
                 "success",
               );
             } else {
-              st.status.health = Math.max(
-                0,
-                (st.status.health || 0) - 8,
-              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 8);
               StateManager.addMessage(
                 "🔧 你试了半天没修好，还被机器烫了一下。健康-8。",
                 "warning",
@@ -35714,7 +35705,8 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < NEW_EVENTS.length; i++) {
     RANDOM_EVENTS.push(NEW_EVENTS[i]);
   }
-})();</script>
+})();
+</script>
     <!-- v3.22: 家庭联动事件（接入 family 子系统）-->
     <script>/**
  * 家庭联动事件 — 接入 state.family 子系统
@@ -78509,7 +78501,13 @@ function applyWealthBasedOverhead(state) {
   if (propertyFee > 0) {
     state.resources.cash -= propertyFee;
     if (typeof addDailyTransaction === "function") {
-      addDailyTransaction(state, "expense", "wealth_overhead", propertyFee, "物业管理费");
+      addDailyTransaction(
+        state,
+        "expense",
+        "wealth_overhead",
+        propertyFee,
+        "物业管理费",
+      );
     }
     StateManager.addMessage(
       "🏠 物业管理费 ¥" + propertyFee.toLocaleString() + "（资产越高维护越贵）",
@@ -78525,7 +78523,13 @@ function applyWealthBasedOverhead(state) {
   if (houseCost > 0) {
     state.resources.cash -= houseCost;
     if (typeof addDailyTransaction === "function") {
-      addDailyTransaction(state, "expense", "wealth_overhead", houseCost, "住房维护费");
+      addDailyTransaction(
+        state,
+        "expense",
+        "wealth_overhead",
+        houseCost,
+        "住房维护费",
+      );
     }
     StateManager.addMessage("🏡 住房维护费 ¥" + houseCost + "/天", "info");
   }
@@ -78543,7 +78547,13 @@ function applyWealthBasedOverhead(state) {
     if (wealthFee > 0) {
       state.resources.cash -= wealthFee;
       if (typeof addDailyTransaction === "function") {
-        addDailyTransaction(state, "expense", "wealth_overhead", wealthFee, "财富管理费");
+        addDailyTransaction(
+          state,
+          "expense",
+          "wealth_overhead",
+          wealthFee,
+          "财富管理费",
+        );
       }
       StateManager.addMessage(
         "💼 财富管理费 ¥" +
@@ -110582,7 +110592,8 @@ function manageInventoryAction(state, inventoryType, action, amount) {
         };
 
   function msg(state, text) {
-    if (typeof StateManager !== "undefined") StateManager.addMessage(text, "event");
+    if (typeof StateManager !== "undefined")
+      StateManager.addMessage(text, "event");
   }
 
   // 把一次数值变动安全落地（记账 + 钳制），便于 MC 对账
@@ -110859,7 +110870,10 @@ function manageInventoryAction(state, inventoryType, action, amount) {
     var result = opt.apply(state);
     state._mcCrossroadsTaken = (state._mcCrossroadsTaken || 0) + 1;
     state._pendingCrossroads = null;
-    msg(state, "🎴 抉择：" + card.title + " → " + opt.label + "（" + result + "）");
+    msg(
+      state,
+      "🎴 抉择：" + card.title + " → " + opt.label + "（" + result + "）",
+    );
     return result;
   }
 
@@ -110869,7 +110883,11 @@ function manageInventoryAction(state, inventoryType, action, amount) {
     var day = state.player.day;
     if (state._pendingCrossroads) {
       if (state._pendingCrossroads.day < day - 2) {
-        resolveCrossroads(state, state._pendingCrossroads.id, decideCrossroads(state, "safe"));
+        resolveCrossroads(
+          state,
+          state._pendingCrossroads.id,
+          decideCrossroads(state, "safe"),
+        );
       }
       return;
     }
@@ -119212,6 +119230,7 @@ function renderActiveNews(state, parent) {
  * 在地图上完成"寻址→看价→买卖"的全链条。
  */
 function renderCityTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "city_map", label: "🗺️ 地图" },
@@ -119263,6 +119282,7 @@ function renderCityTab(state, parent) {
  * 在一个页面内完成"我有什么→我会什么→我成长了多少→我身体如何"的自然思考链。
  */
 function renderMeTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "me_inventory", label: "🎒 背包" },
@@ -119294,7 +119314,9 @@ function renderMeTab(state, parent) {
     case "me_inventory": {
       // 背包 + 装备（原物品Tab + 装备套装）
       if (typeof renderInventoryTab === "function") {
-        renderInventoryTab(state, parent);
+        var invContainer = document.createElement("div");
+        parent.appendChild(invContainer);
+        renderInventoryTab(state, invContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🎒 背包加载中...</p>';
@@ -119304,7 +119326,9 @@ function renderMeTab(state, parent) {
     case "me_skills": {
       // 技能 + 证书
       if (typeof renderSkillsTab === "function") {
-        renderSkillsTab(state, parent);
+        var skillContainer = document.createElement("div");
+        parent.appendChild(skillContainer);
+        renderSkillsTab(state, skillContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">📚 技能系统加载中...</p>';
@@ -119314,7 +119338,9 @@ function renderMeTab(state, parent) {
     case "me_growth": {
       // 个人成长（属性训练 + 学历 + 爱好 + 数据图表）
       if (typeof renderMergedPersonalGrowthTab === "function") {
-        renderMergedPersonalGrowthTab(state, parent);
+        var growthContainer = document.createElement("div");
+        parent.appendChild(growthContainer);
+        renderMergedPersonalGrowthTab(state, growthContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🌱 个人成长加载中...</p>';
@@ -119324,7 +119350,9 @@ function renderMeTab(state, parent) {
     case "me_life": {
       // 人生事务（医疗 + 旅行 + 法律 + 人生节点）
       if (typeof renderLifeSystemsTab === "function") {
-        renderLifeSystemsTab(state, parent);
+        var lifeContainer = document.createElement("div");
+        parent.appendChild(lifeContainer);
+        renderLifeSystemsTab(state, lifeContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🏥 人生事务加载中...</p>';
@@ -119343,6 +119371,7 @@ function renderMeTab(state, parent) {
  * 不应拆成 4 个 Tab 来回切。子Tab导航一步到位。
  */
 function renderCareerTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "career_jobs", label: "💼 工作" },
@@ -119377,7 +119406,9 @@ function renderCareerTab(state, parent) {
       // 使用 career_dev 的 "总览" 子Tab 作为默认入口
       if (typeof renderCareerDevTab === "function") {
         state._careerSubTab = state._careerSubTab || "career_overview";
-        renderCareerDevTab(state, parent);
+        var careerJobsContainer = document.createElement("div");
+        parent.appendChild(careerJobsContainer);
+        renderCareerDevTab(state, careerJobsContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💼 工作信息加载中...</p>';
@@ -119387,7 +119418,10 @@ function renderCareerTab(state, parent) {
     case "career_invest": {
       // 投资（股票 + 基金 + 房产 + 贵金属）
       if (typeof renderInvestmentTab === "function") {
-        renderInvestmentTab(state, parent);
+        var investContainer = document.createElement("div");
+        investContainer.id = "career-invest-container";
+        parent.appendChild(investContainer);
+        renderInvestmentTab(state, investContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💰 投资系统加载中...</p>';
@@ -119422,7 +119456,9 @@ function renderCareerTab(state, parent) {
       // 创业（通过 career_dev 的 startup 子Tab）
       if (typeof renderCareerDevTab === "function") {
         state._careerSubTab = "career_startup";
-        renderCareerDevTab(state, parent);
+        var startupContainer = document.createElement("div");
+        parent.appendChild(startupContainer);
+        renderCareerDevTab(state, startupContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🚀 创业系统加载中...</p>';
@@ -119432,7 +119468,9 @@ function renderCareerTab(state, parent) {
     case "career_achievements": {
       // 成就（事业类成就集中展示）
       if (typeof renderAchievementsTab === "function") {
-        renderAchievementsTab(state, parent);
+        var achContainer = document.createElement("div");
+        parent.appendChild(achContainer);
+        renderAchievementsTab(state, achContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🏅 成就系统加载中...</p>';
@@ -122090,10 +122128,121 @@ function renderInventoryTab(state, parent) {
       ${durBarHtml}
       ${repairHtml}
     `;
+
+    // === 空装备槽位 → 提供购买导航（带确认弹窗）===
+    if (
+      !displayItem &&
+      typeof navigateTo === "function" &&
+      typeof ITEMS !== "undefined"
+    ) {
+      var matchingItems = ITEMS.filter(function (i) {
+        return i.slot === slot.key && i.buyLocations;
+      });
+      if (matchingItems.length > 0) {
+        var buyBtn = document.createElement("button");
+        buyBtn.className = "btn btn-sm";
+        buyBtn.style.cssText =
+          "font-size:10px;margin-top:4px;width:100%;padding:3px 6px;";
+        buyBtn.textContent = "🔗 去购买";
+        buyBtn.onclick = (function (slotKey, slotName) {
+          return function () {
+            var locs = [];
+            var miList = ITEMS.filter(function (i) {
+              return i.slot === slotKey && i.buyLocations;
+            });
+            miList.forEach(function (mi) {
+              if (mi.buyLocations) {
+                mi.buyLocations.forEach(function (l) {
+                  if (locs.indexOf(l) === -1) locs.push(l);
+                });
+              }
+            });
+            if (locs.length > 0) {
+              var firstLoc = locs[0];
+              var locName =
+                typeof LOCATIONS !== "undefined" && LOCATIONS[firstLoc]
+                  ? LOCATIONS[firstLoc].name
+                  : firstLoc;
+              navigateTo(
+                state,
+                { type: "location", key: firstLoc, displayName: locName },
+                {
+                  title: "🔗 购买" + slotName + "装备",
+                  skipConfirm: false,
+                  confirmText: "✅ 出发去" + locName,
+                  cancelText: "❌ 算了",
+                },
+              );
+            }
+          };
+        })(slot.key, slot.name);
+        card.appendChild(buyBtn);
+      }
+    }
     equipGrid.appendChild(card);
   }
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
+
+  // ====== 装备采购导航（所有装备的购买地点汇总） ======
+  (function () {
+    if (
+      typeof LOCATIONS === "undefined" ||
+      typeof ITEMS === "undefined" ||
+      typeof navigateTo !== "function"
+    )
+      return;
+    var allEquip = ITEMS.filter(function (i) {
+      return i.slot;
+    });
+    var locMap = {};
+    allEquip.forEach(function (item) {
+      if (item.buyLocations && item.buyLocations.length) {
+        item.buyLocations.forEach(function (lk) {
+          if (!locMap[lk]) locMap[lk] = [];
+          if (locMap[lk].indexOf(item.name) === -1) locMap[lk].push(item.name);
+        });
+      }
+    });
+    var locKeys = Object.keys(locMap);
+    if (locKeys.length === 0) return;
+    var navDiv = document.createElement("div");
+    navDiv.style.cssText =
+      "margin-top:12px;padding:10px 12px;background:rgba(0,180,216,0.04);border:1px solid rgba(0,180,216,0.15);border-radius:8px;";
+    var navTitle = document.createElement("div");
+    navTitle.style.cssText =
+      "font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;";
+    navTitle.textContent = "🏪 装备采购入口";
+    navDiv.appendChild(navTitle);
+    var navRow = document.createElement("div");
+    navRow.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;";
+    locKeys.forEach(function (lk) {
+      var loc = LOCATIONS[lk];
+      var btn = document.createElement("button");
+      btn.className = "btn btn-sm";
+      btn.style.cssText = "font-size:10px;padding:3px 8px;";
+      btn.textContent =
+        (loc ? loc.icon + " " + loc.name : lk) +
+        "(" +
+        locMap[lk].length +
+        "种)";
+      btn.onclick = function () {
+        navigateTo(
+          state,
+          { type: "location", key: lk, displayName: loc ? loc.name : lk },
+          {
+            title: "🔗 前往采购装备",
+            skipConfirm: false,
+            confirmText: "✅ 出发",
+            cancelText: "❌ 算了",
+          },
+        );
+      };
+      navRow.appendChild(btn);
+    });
+    navDiv.appendChild(navRow);
+    div.appendChild(navDiv);
+  })();
 
   // ====== 装备套装状态（装备栏下方） ======
   if (state.equipmentSuites && Object.keys(state.equipmentSuites).length > 0) {
@@ -131984,6 +132133,7 @@ function _goodCatLabel(c) {
 //  主入口：渲染百科 Tab
 // ================================================================
 function renderWikiTab(state, parent) {
+  parent.innerHTML = "";
   // v3.7 合并重构：百科 + 社交合并
   var wikiSubTab = state._wikiSubTab || "wiki_browse";
 
@@ -132008,12 +132158,15 @@ function renderWikiTab(state, parent) {
   });
   parent.appendChild(wikiNav);
 
-  // 社交子Tab
+  // 社交子Tab — 用子容器包裹，保留百科子Tab导航可见
   if (wikiSubTab === "wiki_social") {
+    var socialContainer = document.createElement("div");
+    socialContainer.id = "wiki-social-container";
+    parent.appendChild(socialContainer);
     if (typeof renderSocialTab === "function") {
-      renderSocialTab(state, parent);
+      renderSocialTab(state, socialContainer);
     } else {
-      parent.innerHTML +=
+      socialContainer.innerHTML =
         '<p style="color:var(--text-muted);text-align:center;padding:20px;">👥 社交系统加载中...</p>';
     }
     return;

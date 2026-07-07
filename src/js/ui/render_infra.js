@@ -1254,6 +1254,7 @@ function renderActiveNews(state, parent) {
  * 在地图上完成"寻址→看价→买卖"的全链条。
  */
 function renderCityTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "city_map", label: "🗺️ 地图" },
@@ -1305,6 +1306,7 @@ function renderCityTab(state, parent) {
  * 在一个页面内完成"我有什么→我会什么→我成长了多少→我身体如何"的自然思考链。
  */
 function renderMeTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "me_inventory", label: "🎒 背包" },
@@ -1336,7 +1338,9 @@ function renderMeTab(state, parent) {
     case "me_inventory": {
       // 背包 + 装备（原物品Tab + 装备套装）
       if (typeof renderInventoryTab === "function") {
-        renderInventoryTab(state, parent);
+        var invContainer = document.createElement("div");
+        parent.appendChild(invContainer);
+        renderInventoryTab(state, invContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🎒 背包加载中...</p>';
@@ -1346,7 +1350,9 @@ function renderMeTab(state, parent) {
     case "me_skills": {
       // 技能 + 证书
       if (typeof renderSkillsTab === "function") {
-        renderSkillsTab(state, parent);
+        var skillContainer = document.createElement("div");
+        parent.appendChild(skillContainer);
+        renderSkillsTab(state, skillContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">📚 技能系统加载中...</p>';
@@ -1356,7 +1362,9 @@ function renderMeTab(state, parent) {
     case "me_growth": {
       // 个人成长（属性训练 + 学历 + 爱好 + 数据图表）
       if (typeof renderMergedPersonalGrowthTab === "function") {
-        renderMergedPersonalGrowthTab(state, parent);
+        var growthContainer = document.createElement("div");
+        parent.appendChild(growthContainer);
+        renderMergedPersonalGrowthTab(state, growthContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🌱 个人成长加载中...</p>';
@@ -1366,7 +1374,9 @@ function renderMeTab(state, parent) {
     case "me_life": {
       // 人生事务（医疗 + 旅行 + 法律 + 人生节点）
       if (typeof renderLifeSystemsTab === "function") {
-        renderLifeSystemsTab(state, parent);
+        var lifeContainer = document.createElement("div");
+        parent.appendChild(lifeContainer);
+        renderLifeSystemsTab(state, lifeContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🏥 人生事务加载中...</p>';
@@ -1385,6 +1395,7 @@ function renderMeTab(state, parent) {
  * 不应拆成 4 个 Tab 来回切。子Tab导航一步到位。
  */
 function renderCareerTab(state, parent) {
+  parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
     { id: "career_jobs", label: "💼 工作" },
@@ -1419,7 +1430,9 @@ function renderCareerTab(state, parent) {
       // 使用 career_dev 的 "总览" 子Tab 作为默认入口
       if (typeof renderCareerDevTab === "function") {
         state._careerSubTab = state._careerSubTab || "career_overview";
-        renderCareerDevTab(state, parent);
+        var careerJobsContainer = document.createElement("div");
+        parent.appendChild(careerJobsContainer);
+        renderCareerDevTab(state, careerJobsContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💼 工作信息加载中...</p>';
@@ -1429,7 +1442,10 @@ function renderCareerTab(state, parent) {
     case "career_invest": {
       // 投资（股票 + 基金 + 房产 + 贵金属）
       if (typeof renderInvestmentTab === "function") {
-        renderInvestmentTab(state, parent);
+        var investContainer = document.createElement("div");
+        investContainer.id = "career-invest-container";
+        parent.appendChild(investContainer);
+        renderInvestmentTab(state, investContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💰 投资系统加载中...</p>';
@@ -1464,7 +1480,9 @@ function renderCareerTab(state, parent) {
       // 创业（通过 career_dev 的 startup 子Tab）
       if (typeof renderCareerDevTab === "function") {
         state._careerSubTab = "career_startup";
-        renderCareerDevTab(state, parent);
+        var startupContainer = document.createElement("div");
+        parent.appendChild(startupContainer);
+        renderCareerDevTab(state, startupContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🚀 创业系统加载中...</p>';
@@ -1474,7 +1492,9 @@ function renderCareerTab(state, parent) {
     case "career_achievements": {
       // 成就（事业类成就集中展示）
       if (typeof renderAchievementsTab === "function") {
-        renderAchievementsTab(state, parent);
+        var achContainer = document.createElement("div");
+        parent.appendChild(achContainer);
+        renderAchievementsTab(state, achContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🏅 成就系统加载中...</p>';

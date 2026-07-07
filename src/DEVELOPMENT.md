@@ -14,24 +14,24 @@
 
 ### 叙事自洽修复（4个缺陷）
 
-| 缺陷类型 | 事件ID | 问题 | 修复 |
-|---------|--------|------|------|
-| A类 | `gig_economy_trap` | 叙事"隔壁老周胆囊炎"但未校验 old_zhou 关系 | conditions 新增 old_zhou.met 检查 |
-| A类 | `community_group_buy` | 叙事"王婶的菜被冲击"但未校验 aunt_wang 关系 | conditions 新增 aunt_wang.met 检查 |
-| B类 | `coworker_document_leak` | 选项说"老马好感提升"但代码无好感赋值 | apply 补 old_ma.affinity+=8 |
-| B类 | `rental_apartment_crash` | choice1 说"王婶给了¥100红包"但未初始化 aunt_wang | apply 补 aunt_wang 关系初始化 |
+| 缺陷类型 | 事件ID                   | 问题                                             | 修复                               |
+| -------- | ------------------------ | ------------------------------------------------ | ---------------------------------- |
+| A类      | `gig_economy_trap`       | 叙事"隔壁老周胆囊炎"但未校验 old_zhou 关系       | conditions 新增 old_zhou.met 检查  |
+| A类      | `community_group_buy`    | 叙事"王婶的菜被冲击"但未校验 aunt_wang 关系      | conditions 新增 aunt_wang.met 检查 |
+| B类      | `coworker_document_leak` | 选项说"老马好感提升"但代码无好感赋值             | apply 补 old_ma.affinity+=8        |
+| B类      | `rental_apartment_crash` | choice1 说"王婶给了¥100红包"但未初始化 aunt_wang | apply 补 aunt_wang 关系初始化      |
 
 ### 跨系统联动事件（5个新事件）
 
 **新建** `cross_system_events_v322.js`（+220行）：
 
-| 事件ID | 主题 | 联动系统 |
-|--------|------|----------|
-| `heatwave_outdoor_worker` | 高温天户外工作选择 | weather + employment |
-| `old_zhou_weather_tip` | 老周气象情报 | relationships.old_zhou + weather.forecast |
-| `boss_li_typhoon_warning` | 台风天私活选择 | relationships.boss_li + weather.forecast |
-| `zhang_factory_skill_offer` | 张姐技能晋升机会 | relationships.sister_zhang + skills + employment |
-| `heavy_smog_price_surge` | 雾霾口罩涨价 | weather + resources + health |
+| 事件ID                      | 主题               | 联动系统                                         |
+| --------------------------- | ------------------ | ------------------------------------------------ |
+| `heatwave_outdoor_worker`   | 高温天户外工作选择 | weather + employment                             |
+| `old_zhou_weather_tip`      | 老周气象情报       | relationships.old_zhou + weather.forecast        |
+| `boss_li_typhoon_warning`   | 台风天私活选择     | relationships.boss_li + weather.forecast         |
+| `zhang_factory_skill_offer` | 张姐技能晋升机会   | relationships.sister_zhang + skills + employment |
+| `heavy_smog_price_surge`    | 雾霾口罩涨价       | weather + resources + health                     |
 
 **影响文件**：`events_street_life.js`(修复2个) / `events_street_wealth.js`(修复1个) / `cross_system_events_v322.js`(新建) / `index.html`(+1) / `DEVELOPMENT.md`(更新)
 
@@ -60,14 +60,14 @@
 - **平衡调优**：初版 bold 健康惩罚过狠（grinder/skiller/corporate 仅 12.5% 存活）→ 下调 `startup`/`health_alarm`/`promotion` 的 bold 健康成本；修复 `hometown` 卡 `safe` 严格支配 `bold`（safe +¥3000/+健康 vs bold +¥300）的张力缺失，bold 改为 +¥1500/-5 健康。
 - **最终平衡**（抉择卡 bias：`safe`=balanced/social，`bold`=grinder/skiller/trader/corporate）：
 
-| 策略 | bias | 存活% | 中位现金 | 平均健康 | 抉择张数 |
-| --- | --- | --- | --- | --- | --- |
-| balanced | safe | 68% | ¥4,360 | 88.8 | 27.0 |
-| social | safe | 72% | ¥140,752 | 77.8 | 27.2 |
-| trader | bold | 56% | ¥5,290 | 75.9 | 24.4 |
-| corporate | bold | 24% | ¥4,139 | 64.5 | 16.7 |
-| grinder | bold | 12% | ¥223,183* | 71.0 | 11.8 |
-| skiller | bold | 12% | ¥1,159 | 89.3 | 15.6 |
+| 策略      | bias | 存活% | 中位现金  | 平均健康 | 抉择张数 |
+| --------- | ---- | ----- | --------- | -------- | -------- |
+| balanced  | safe | 68%   | ¥4,360    | 88.8     | 27.0     |
+| social    | safe | 72%   | ¥140,752  | 77.8     | 27.2     |
+| trader    | bold | 56%   | ¥5,290    | 75.9     | 24.4     |
+| corporate | bold | 24%   | ¥4,139    | 64.5     | 16.7     |
+| grinder   | bold | 12%   | ¥223,183* | 71.0     | 11.8     |
+| skiller   | bold | 12%   | ¥1,159    | 89.3     | 15.6     |
 
 \* grinder 幸存者中位现金（高风险高回报幻想）
 

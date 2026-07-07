@@ -2646,10 +2646,121 @@ function renderInventoryTab(state, parent) {
       ${durBarHtml}
       ${repairHtml}
     `;
+
+    // === 空装备槽位 → 提供购买导航（带确认弹窗）===
+    if (
+      !displayItem &&
+      typeof navigateTo === "function" &&
+      typeof ITEMS !== "undefined"
+    ) {
+      var matchingItems = ITEMS.filter(function (i) {
+        return i.slot === slot.key && i.buyLocations;
+      });
+      if (matchingItems.length > 0) {
+        var buyBtn = document.createElement("button");
+        buyBtn.className = "btn btn-sm";
+        buyBtn.style.cssText =
+          "font-size:10px;margin-top:4px;width:100%;padding:3px 6px;";
+        buyBtn.textContent = "🔗 去购买";
+        buyBtn.onclick = (function (slotKey, slotName) {
+          return function () {
+            var locs = [];
+            var miList = ITEMS.filter(function (i) {
+              return i.slot === slotKey && i.buyLocations;
+            });
+            miList.forEach(function (mi) {
+              if (mi.buyLocations) {
+                mi.buyLocations.forEach(function (l) {
+                  if (locs.indexOf(l) === -1) locs.push(l);
+                });
+              }
+            });
+            if (locs.length > 0) {
+              var firstLoc = locs[0];
+              var locName =
+                typeof LOCATIONS !== "undefined" && LOCATIONS[firstLoc]
+                  ? LOCATIONS[firstLoc].name
+                  : firstLoc;
+              navigateTo(
+                state,
+                { type: "location", key: firstLoc, displayName: locName },
+                {
+                  title: "🔗 购买" + slotName + "装备",
+                  skipConfirm: false,
+                  confirmText: "✅ 出发去" + locName,
+                  cancelText: "❌ 算了",
+                },
+              );
+            }
+          };
+        })(slot.key, slot.name);
+        card.appendChild(buyBtn);
+      }
+    }
     equipGrid.appendChild(card);
   }
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
+
+  // ====== 装备采购导航（所有装备的购买地点汇总） ======
+  (function () {
+    if (
+      typeof LOCATIONS === "undefined" ||
+      typeof ITEMS === "undefined" ||
+      typeof navigateTo !== "function"
+    )
+      return;
+    var allEquip = ITEMS.filter(function (i) {
+      return i.slot;
+    });
+    var locMap = {};
+    allEquip.forEach(function (item) {
+      if (item.buyLocations && item.buyLocations.length) {
+        item.buyLocations.forEach(function (lk) {
+          if (!locMap[lk]) locMap[lk] = [];
+          if (locMap[lk].indexOf(item.name) === -1) locMap[lk].push(item.name);
+        });
+      }
+    });
+    var locKeys = Object.keys(locMap);
+    if (locKeys.length === 0) return;
+    var navDiv = document.createElement("div");
+    navDiv.style.cssText =
+      "margin-top:12px;padding:10px 12px;background:rgba(0,180,216,0.04);border:1px solid rgba(0,180,216,0.15);border-radius:8px;";
+    var navTitle = document.createElement("div");
+    navTitle.style.cssText =
+      "font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;";
+    navTitle.textContent = "🏪 装备采购入口";
+    navDiv.appendChild(navTitle);
+    var navRow = document.createElement("div");
+    navRow.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;";
+    locKeys.forEach(function (lk) {
+      var loc = LOCATIONS[lk];
+      var btn = document.createElement("button");
+      btn.className = "btn btn-sm";
+      btn.style.cssText = "font-size:10px;padding:3px 8px;";
+      btn.textContent =
+        (loc ? loc.icon + " " + loc.name : lk) +
+        "(" +
+        locMap[lk].length +
+        "种)";
+      btn.onclick = function () {
+        navigateTo(
+          state,
+          { type: "location", key: lk, displayName: loc ? loc.name : lk },
+          {
+            title: "🔗 前往采购装备",
+            skipConfirm: false,
+            confirmText: "✅ 出发",
+            cancelText: "❌ 算了",
+          },
+        );
+      };
+      navRow.appendChild(btn);
+    });
+    navDiv.appendChild(navRow);
+    div.appendChild(navDiv);
+  })();
 
   // ====== 装备套装状态（装备栏下方） ======
   if (state.equipmentSuites && Object.keys(state.equipmentSuites).length > 0) {

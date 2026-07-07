@@ -754,6 +754,7 @@ function _goodCatLabel(c) {
 //  主入口：渲染百科 Tab
 // ================================================================
 function renderWikiTab(state, parent) {
+  parent.innerHTML = "";
   // v3.7 合并重构：百科 + 社交合并
   var wikiSubTab = state._wikiSubTab || "wiki_browse";
 
@@ -778,12 +779,15 @@ function renderWikiTab(state, parent) {
   });
   parent.appendChild(wikiNav);
 
-  // 社交子Tab
+  // 社交子Tab — 用子容器包裹，保留百科子Tab导航可见
   if (wikiSubTab === "wiki_social") {
+    var socialContainer = document.createElement("div");
+    socialContainer.id = "wiki-social-container";
+    parent.appendChild(socialContainer);
     if (typeof renderSocialTab === "function") {
-      renderSocialTab(state, parent);
+      renderSocialTab(state, socialContainer);
     } else {
-      parent.innerHTML +=
+      socialContainer.innerHTML =
         '<p style="color:var(--text-muted);text-align:center;padding:20px;">👥 社交系统加载中...</p>';
     }
     return;
