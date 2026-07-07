@@ -4045,110 +4045,113 @@
         },
       ],
     },
-,
-
+    ,
     // ====== v3.20 新增事件 ======
-{
-    "id": "heatwave_outdoor_crunch",
-    "phase": "street",
-    "icon": "🦵",
-    "title": "高温下的苦工",
-    "story": "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\\n\\n你看了看手机上的账户余额，又抬头看了看天。\\n\\n工地和街边小摊都需要人。",
-    "probability": 0.08,
-    "repeatable": true,
-    "choices": [
+    {
+      id: "heatwave_outdoor_crunch",
+      phase: "street",
+      icon: "🦵",
+      title: "高温下的苦工",
+      story:
+        "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\\n\\n你看了看手机上的账户余额，又抬头看了看天。\\n\\n工地和街边小摊都需要人。",
+      probability: 0.08,
+      repeatable: true,
+      choices: [
         {
-            "text": "🔥 硬扛！高温补贴也赚了",
-            "hint": "户外收入×1.2但疲劳激增，健康下降"
+          text: "🔥 硬扛！高温补贴也赚了",
+          hint: "户外收入×1.2但疲劳激增，健康下降",
         },
         {
-            "text": "🏪 买西瓜解暑，找阴凉处做点活",
-            "hint": "花小钱保健康，少量收入"
+          text: "🏪 买西瓜解暑，找阴凉处做点活",
+          hint: "花小钱保健康，少量收入",
         },
         {
-            "text": "💪 今天休息，在家避暑",
-            "hint": "保护身体，0收入"
-        }
-    ]
-},
+          text: "💪 今天休息，在家避暑",
+          hint: "保护身体，0收入",
+        },
+      ],
+    },
 
-  // ====================
+    // ====================
 
-{
-    "id": "community_group_buy_expand",
-    "phase": "street",
-    "icon": "📦",
-    "title": "团长邀请你当分单员",
-    "story": "你之前帮社区团购砍价，团长（楼下便利店老板）对你有印象。这次她主动找你，说现在团购规模变大了，想招几个分单员——每天去批发市场取货再送到居民区，每单赚5块钱。",
-    "probability": 0.04,
-    "repeatable": false,
-    "choices": [
+    {
+      id: "community_group_buy_expand",
+      phase: "street",
+      icon: "📦",
+      title: "团长邀请你当分单员",
+      story:
+        "你之前帮社区团购砍价，团长（楼下便利店老板）对你有印象。这次她主动找你，说现在团购规模变大了，想招几个分单员——每天去批发市场取货再送到居民区，每单赚5块钱。",
+      probability: 0.04,
+      repeatable: false,
+      choices: [
         {
-            "text": "📦 接！帮送分单",
-            "hint": "每天稳定赚 ₹30-60"
+          text: "📦 接！帮送分单",
+          hint: "每天稳定赚 ₹30-60",
         },
         {
-            "text": "🤔 了解一下，不急着决定",
-            "hint": "获取信息，不绑定"
+          text: "🤔 了解一下，不急着决定",
+          hint: "获取信息，不绑定",
         },
         {
-            "text": "🙋‍♂️ 婉拒，自己忙",
-            "hint": "放弃机会"
-        }
-    ]
-},
+          text: "🙋‍♂️ 婉拒，自己忙",
+          hint: "放弃机会",
+        },
+      ],
+    },
 
-  // ====================
+    // ====================
 
-{
-    "id": "quant_fund_invite",
-    "phase": "street",
-    "icon": "📈",
-    "title": "量化私募的电话",
-    "story": "你之前关注过量化交易的事——现在收到一个陌生号码的微信：「你好，我们在做量化策略研发，看到你在金融论坛的讨论，觉得你有一定分析能力。有兴趣聊聊吗？」\\n\\n对方自称是一家小型量化私募的合伙人，工作室就在科技园附近。",
-    "probability": 0.025,
-    "repeatable": false,
-    "choices": [
+    {
+      id: "quant_fund_invite",
+      phase: "street",
+      icon: "📈",
+      title: "量化私募的电话",
+      story:
+        "你之前关注过量化交易的事——现在收到一个陌生号码的微信：「你好，我们在做量化策略研发，看到你在金融论坛的讨论，觉得你有一定分析能力。有兴趣聊聊吗？」\\n\\n对方自称是一家小型量化私募的合伙人，工作室就在科技园附近。",
+      probability: 0.025,
+      repeatable: false,
+      choices: [
         {
-            "text": "📈 去见一面，了解一下",
-            "hint": "高风险高回报的社交"
+          text: "📈 去见一面，了解一下",
+          hint: "高风险高回报的社交",
         },
         {
-            "text": "🔒 先验证对方身份",
-            "hint": "谨慎为妙"
+          text: "🔒 先验证对方身份",
+          hint: "谨慎为妙",
         },
         {
-            "text": "🙋‍♂️ 直接忽略",
-            "hint": "不冒险"
-        }
-    ]
-},
+          text: "🙋‍♂️ 直接忽略",
+          hint: "不冒险",
+        },
+      ],
+    },
 
-  // ====================
+    // ====================
 
-{
-    "id": "zhou_deep_bond",
-    "phase": "street",
-    "icon": "🍺",
-    "title": "老周的难题",
-    "story": "老周在夜市收摊时找到你，表情难得严肃：「兄弟，有件事只有你能帮我。我那个儿子……最近跟着不三不四的人混，欠了高利贷。你能不能帮我劝劝他？」\\n\\n你知道这是他第一次对你开口求助。",
-    "probability": 0.03,
-    "repeatable": false,
-    "choices": [
+    {
+      id: "zhou_deep_bond",
+      phase: "street",
+      icon: "🍺",
+      title: "老周的难题",
+      story:
+        "老周在夜市收摊时找到你，表情难得严肃：「兄弟，有件事只有你能帮我。我那个儿子……最近跟着不三不四的人混，欠了高利贷。你能不能帮我劝劝他？」\\n\\n你知道这是他第一次对你开口求助。",
+      probability: 0.03,
+      repeatable: false,
+      choices: [
         {
-            "text": "💥 走！去找那个不三不四的人",
-            "hint": "高风险，高回报"
+          text: "💥 走！去找那个不三不四的人",
+          hint: "高风险，高回报",
         },
         {
-            "text": "🗣️ 我先去跟他谈谈",
-            "hint": "以理服人，需要心智"
+          text: "🗣️ 我先去跟他谈谈",
+          hint: "以理服人，需要心智",
         },
         {
-            "text": "🙋‍♂️ 我帮不了这个忙",
-            "hint": "自保为先"
-        }
-    ]
-}
+          text: "🙋‍♂️ 我帮不了这个忙",
+          hint: "自保为先",
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
@@ -4685,12 +4688,16 @@
     title: "风口没了",
     story:
       "新闻说那个「行业蓝海」其实早就被资本玩烂了——一大批做这行的人被裁员，日薪回到了原来的水平，甚至更低。\n张姐来找你：「你还记得当初你来那个风口行业的日子吗？我早就觉得不对劲。」",
+    // [自洽修复] 叙事中直接称呼"张姐"，conditions 必须校验 sister_zhang 是否已结识
     conditions: function (st) {
       return (
         st.flags &&
         st.flags.trendJobUnlocked &&
         !st.flags._trendBubblePop &&
-        st.player.day >= 270
+        st.player.day >= 270 &&
+        st.relationships &&
+        st.relationships.sister_zhang &&
+        st.relationships.sister_zhang.met === true
       );
     },
     probability: 0.5,
@@ -4737,12 +4744,16 @@
     title: "转行满半年了",
     story:
       "你算了算，转行到新领域已经快半年了。老周问你：「换了行当，比之前强吗？」\n你认真想了想……",
+    // [自洽修复] 叙事中直接称呼"老周"，conditions 必须校验 old_zhou 是否已结识
     conditions: function (st) {
       return (
         st.flags &&
         st.flags.careerShift &&
         !st.flags._careerPivotResult &&
-        st.player.day >= 540
+        st.player.day >= 540 &&
+        st.relationships &&
+        st.relationships.old_zhou &&
+        st.relationships.old_zhou.met === true
       );
     },
     probability: 0.6,

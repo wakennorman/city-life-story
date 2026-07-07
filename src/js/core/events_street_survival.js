@@ -1143,7 +1143,8 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
-          st.trade && st.trade.currentLocation === "bank" &&
+          st.trade &&
+          st.trade.currentLocation === "bank" &&
           st.resources.cash >= 500
         );
       },
@@ -1589,8 +1590,15 @@
       title: "房东突然涨租",
       story:
         '房东王大婶敲门说："下个月房租从300涨到500，不行就搬走。"你现在住的这里还算安全。',
+      // [自洽修复] 叙事中直接称呼"王大婶"(aunt_wang)，conditions 必须校验已结识
       conditions: function (st) {
-        return st.player.phase === "street" && st.housing.tier >= 1;
+        return (
+          st.player.phase === "street" &&
+          st.housing.tier >= 1 &&
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met === true
+        );
       },
       choices: [
         {
@@ -3489,54 +3497,55 @@
         },
       ],
     },
-,
-
+    ,
     // ====== v3.20 新增事件 ======
-{
-    "id": "mechanic_recruited_by_factory",
-    "phase": "street",
-    "icon": "🔧",
-    "title": "工厂技术主管挖人",
-    "story": "你在工厂区闲逛时，一个穿着工装的中年男人拍了拍你的肩膀：\"小伙子，看你手上全是茧子，干过机修吗？我们厂正缺个能修设备的。\",\\n\\n他递了张名片——是一家中型工厂的技术主管。",
-    "probability": 0.04,
-    "repeatable": false,
-    "choices": [
+    {
+      id: "mechanic_recruited_by_factory",
+      phase: "street",
+      icon: "🔧",
+      title: "工厂技术主管挖人",
+      story:
+        '你在工厂区闲逛时，一个穿着工装的中年男人拍了拍你的肩膀："小伙子，看你手上全是茧子，干过机修吗？我们厂正缺个能修设备的。",\\n\\n他递了张名片——是一家中型工厂的技术主管。',
+      probability: 0.04,
+      repeatable: false,
+      choices: [
         {
-            "text": "🔧 去试试！",
-            "hint": "可能获得新工作机会"
+          text: "🔧 去试试！",
+          hint: "可能获得新工作机会",
         },
         {
-            "text": "🔍 先了解一下待遇",
-            "hint": "谨慎行事"
+          text: "🔍 先了解一下待遇",
+          hint: "谨慎行事",
         },
         {
-            "text": "🙋‍♂️ 婉拒，现在忙",
-            "hint": "放弃"
-        }
-    ]
-},
+          text: "🙋‍♂️ 婉拒，现在忙",
+          hint: "放弃",
+        },
+      ],
+    },
 
     // ====================
 
     {
-    "id": "wallet_return_late_reward",
-    "phase": "street",
-    "icon": "💲",
-    "title": "那个钱包改变了什么",
-    "story": "你把钱包还回去已经几个月了。今天在一个社区活动上，你意外遇到了那个钱包的主人——他竟然是个社区志愿者组织的负责人。\\n\\n他认出了你：\"原来是你！上次真是太感谢了！\"",
-    "probability": 0.05,
-    "repeatable": false,
-    "choices": [
+      id: "wallet_return_late_reward",
+      phase: "street",
+      icon: "💲",
+      title: "那个钱包改变了什么",
+      story:
+        '你把钱包还回去已经几个月了。今天在一个社区活动上，你意外遇到了那个钱包的主人——他竟然是个社区志愿者组织的负责人。\\n\\n他认出了你："原来是你！上次真是太感谢了！"',
+      probability: 0.05,
+      repeatable: false,
+      choices: [
         {
-            "text": "🙏 主动打招呼",
-            "hint": "重建联系"
+          text: "🙏 主动打招呼",
+          hint: "重建联系",
         },
         {
-            "text": "👋 假装不认识，默默走开",
-            "hint": "低调"
-        }
-    ]
-}
+          text: "👋 假装不认识，默默走开",
+          hint: "低调",
+        },
+      ],
+    },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);

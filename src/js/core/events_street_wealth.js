@@ -349,7 +349,8 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
-          (st.trade.currentLocation === "market" || st.trade.currentLocation === "wholesaleMarket") &&
+          (st.trade.currentLocation === "market" ||
+            st.trade.currentLocation === "wholesaleMarket") &&
           st.player.day >= 5 &&
           !st.flags._childBeggaredSeen
         );
