@@ -131,47 +131,13 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-07)**：v3.6 — 事件触发数据化 Pipeline 完善 + 触发槽扩展（commit: `1194740`）
-  - **P0 修复 trigger_slot_daily_start**：原只 addMessage 不弹事件 → 改设 _pendingEvent + setTimeout 展示 showEventModal
-  - **P1 新增 after_work 触发槽**：main.js doStreetJob 末尾接入，完成街头工作后自动触发事件
-  - **P1 新增 daily_end 触发槽**：daily_pipeline 自动存档后接入，预留"日终反思"事件
-  - **P1 新增 3 个 after_work 事件**：🪙工友留下的硬币(minDay5/cooldown25) + ☔暴雨突至(minDay8/cooldown40+雨天限定) + 🍺工友的酒话(minDay15/cooldown60)
-  - **P2 修复 getCooldownRemaining NaN bug**：模块级 _eventCooldowns 与 state._eventCooldowns 不一致 → 统一读 state._eventCooldowns
-  - **验证**：tools/mc_verify_v3.6.cjs 6项全部通过（12 SLOTS/8 TEMPLATES/注册数/1000天模拟326+996/冷却机制/天气条件）
-  - **验证**：`node --check` 4文件 ✅ / `build.py` 4912.7KB ✅
-  - **影响文件**：trigger_registry.js(修复) + daily_pipeline.js(2步骤) + main.js(after_work接入) + moral_events.js(+161行3事件) + mc_verify_v3.6.cjs(新建)
-  - **🔴 P0 行动自动归类**：`getAvailableActions` 43 行动全部添加 `category` 字段，ActionSort 自动读取。新增行动从改 2 个文件→1 条数据声明
-  - **🟡 P1 技能↔工作双向关联**：工作百科新增"🔗 需要同样技能的其他工作"推荐区，自动扫描 STREET_JOBS 中相同技能要求的工作
-  - **🟢 P2 证书工资加成确认**：全部 16 个证书已声明 `salaryBonus` 字段，`_calcCertSalaryBonus` 自动扫描应用（旧 if-else 保留向后兼容）
-  - **验证**：`node --check` ✅ / `python build.py` 4895.4KB ✅
-  - **🐛 创业门槛过高**：经典 ¥30,000 → **¥15,000**，街头工作者 400-500 天可达（原 1,500 天不可达）
-  - **📊 MC AI grinder 修复**：health<25降workLimit + hygiene<15洗澡 → 存活率 20%→40%（高风险路径≥30%通过）
-  - **📊 MC AI corporate 修复**：health<50停学 + cash<500先工作 + 学频每3天 → 存活率 20%→80%（普通路径≥80%通过）
-  - **MC 验证**：balanced 100% / grinder 40% / trader 100% / social 80% / corporate 80% ✅
-  - **设计参考**：《大多数》多路径可达 / BitLife 创业门槛 / 中国个体户注册门槛降低
-  - **影响文件**：`startup.js`（创业条件表）/ `monte_carlo.cjs`（grinder/corporate AI）
-  - **记忆文件**：`memory/v3.3-startup-threshold-mc-fix.md`
-  - **🐛 职业卡片条件不足无反馈**：`checkCareerPromotion` 返回 false 时卡片显示"条件不足"但点击无反应 → 新增 `showCareerRequirementsModal` 逆向检查所有缺失条件，逐项显示 ✅/❌ + 当前值
-  - **🔇 现金偏差调试提示外露**：`daily_report.js` 的"现金比已记录流水少 ¥XX" 改为仅 console.log 记录，不再展示给玩家
-  - **🔘 顶栏5个按钮无点击反应**：btn-help/save/load/new-game-header/mobile-menu-btn 共5个按钮完全渲染但有零事件绑定 → 已绑定功能
-  - **🔍 全局静默点击审计**：搜索所有 button 元素 + onclick 属性 + cursor:pointer 元素，全部 data-* 属性绑定/事件委托均有对应监听
-  - **约定式自动归类**：`showCareerRequirementsModal_Global(pathKey, levelId)` 注册到 window，新增职业路径/晋升条件可复用
-  - **影响文件**：career_dev.js / render.js / CLAUDE.md
-  - **验证**：`python build.py` 4878.6KB ✅ / brace/paren 全部匹配 ✅
-  - **导航navTab支持**：`_doNavigate` 新增 `target.navTab`，到达后切换到指定Tab而非固定actions。所有百科导航按钮兼容
-  - **约定式自动归类完善**：培训中心→skills、大学城→personal_growth、NPC→social、物品→trade、地点→map
-  - **面试机制大修**：基础概率 70%→25%+天数×1%，状态惩罚（饥饿-12%/疲劳-15%/健康-12%/形象-10%/露宿-15%）、装备加成（正装+15%）、技能优势（超要求每5级+2%上限+15%）、反馈消息显示具体原因
-  - **职业路径入门要求补全**：教学助理 english:5/management:3（原空），护理员 medicine:5（原空）
-  - **设计参考**：《大多数》求职门槛 / 《Papers Please》状态影响 / 中国职场现实
-  - **验证**：`node --check` 4文件 / `python build.py` 4873.7KB ✅
-  - **记忆文件**：`memory/navigation-postnavtab-fix.md` + `memory/interview-balance-v3.2.md`
-  - **审查发现**：`inheritance_chain.js` 定义了 3 个继承函数（`inheritCrisisPath`/`inheritMoralScore`/`inheritPeakAffinity`），数据已计算并存储，但继承摘要弹窗从未展示；`inheritanceBonuses` 中的 `promoChance`/`moralEventRate`/`recoveryRate` 等字段被 SET 但从未被 CONSUMED
-  - **P1 继承摘要弹窗增强**：新增 3 个显示模块 — 📋 35 岁路径（含特殊加成）/ ⚖️ 前世业力（善恶净值+标签+NPC好感偏移+道德事件率）/ 👥 老熟人（NPC巅峰好感chip展示）+ 总存活天数
-  - **P2 35 岁路径增强**：再卷职场→晋升+3%/月薪+5%；备考公→考试+10%/公职+3%；摆烂→恢复+10%/压力-3
-  - **P2 道德分→业力系统**：NPC初始好感偏移(-8~+8)，道德事件率调整(-15%~+15%)
-  - **P2 加成消费断链修复**：`promoChance`→P9晋升 / `moralEventRate`→道德事件判定 / `recoveryRate`→日健康恢复
-  - **验证**：`node --check` 5 文件通过 / `python build.py` 4856.6KB ✅
-  - **SOP v3.1 更新**：多周目继承字段扩展标记为 ✅ 已落地
+- **最新一次工作 (2026-07-07)**：v3.24 — 日终报告峰终定律增强（commit: `8d1362e`）
+  - **🏆 今日高光**：单笔最大收入高亮（¥100/¥500两档叙事）+ 天数里程碑（D7/D30/D100/D365）+ 累计收入里程碑（¥1k/5k/10k/100k）+ 健康/债务预警（损失厌恶）+ 平凡日温暖收尾
+  - **🔮 明日展望**：集成天气预报（getForecastHTML桥接）+ 状态最低需求建议（饿/累/病/脏触发损失厌恶）+ 持续天数情感锚点（🌱→🌿→🌳→🌲）+ D1/D30/D100情感收尾句
+  - **💎 设计心理学**：峰终定律（Kahneman）— 每日体验由峰值记忆+终点感受决定；损失厌恶— 健康/债务/需求预警驱动行动；留存钩子— 明日预报+建议让玩家期待下一天
+  - **设计参考**：Stardew Valley日常闭环 / Papers Please日报 / 大多数日记
+  - **影响文件**：`daily_report.js`（+183行，新增`generatePeakMomentHTML`/`generateTomorrowPreviewHTML`）
+  - **验证**：`node --check` ✅ / `python build.py` 5061.0KB ✅ / MC 10×500d ✅
 - **上一轮 (2026-07-06)**：v3.1 审查改进 — 难度系统全面接入 + 终局体验强化 + SOP v3.1（commits: `5bd01c6`+`49ba233`+`ad34443`+`da0832c`）
   - **4 档难度**：🍵 休闲 / ⚖️ 标准 / 🔥 困难 / 💀 地狱，7 维参数
   - **MC 验证**：休闲¥11,827 > 标准¥7,045 > 困难¥1,535 > 地狱-¥306 ✅
