@@ -1084,7 +1084,7 @@ const DAILY_PIPELINE = [
       else if (day === 365) greetMsg += " · 🌟 一整年！从零到今天";
       StateManager.addMessage(greetMsg, "info");
 
-      // 2. 连续工作提醒（禀赋效应）
+      // 2. 连续工作提醒 + 目标梯度效应
       if (streak >= 3) {
         var se =
           streak >= 100
@@ -1095,6 +1095,37 @@ const DAILY_PIPELINE = [
                 ? "🔥"
                 : "📋";
         StateManager.addMessage(se + " 已连续工作" + streak + "天", "hint");
+        // 距离下一个里程碑（目标梯度效应）
+        var milestones = [5, 10, 30, 100];
+        var msData = state.flags._workStreakMilestones || {};
+        var nextMS = null;
+        for (var mi = 0; mi < milestones.length; mi++) {
+          if (streak < milestones[mi] && !msData[milestones[mi]]) {
+            nextMS = milestones[mi];
+            break;
+          }
+        }
+        if (nextMS) {
+          var daysLeft = nextMS - streak;
+          var msReward =
+            nextMS === 5
+              ? "¥200"
+              : nextMS === 10
+                ? "¥500"
+                : nextMS === 30
+                  ? "¥2,000"
+                  : "¥10,000";
+          StateManager.addMessage(
+            "🎯 距离连续" +
+              nextMS +
+              "天奖励（" +
+              msReward +
+              "）还有" +
+              daysLeft +
+              "天！",
+            "hint",
+          );
+        }
       }
 
       // 3. 紧急状态预警（损失厌恶）

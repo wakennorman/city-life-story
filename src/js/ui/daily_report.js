@@ -536,7 +536,55 @@ function generateTomorrowPreviewHTML(state) {
     );
   }
 
-  // 3. 持续天数情感锚点
+  // 3. 目标梯度效应：下一个连续工作里程碑预告
+  var streak = state.flags._workStreak || 0;
+  if (streak > 0) {
+    var milestones = [5, 10, 30, 100];
+    var msData = state.flags._workStreakMilestones || {};
+    var nextMS = null;
+    for (var mi = 0; mi < milestones.length; mi++) {
+      if (streak < milestones[mi] && !msData[milestones[mi]]) {
+        nextMS = milestones[mi];
+        break;
+      }
+    }
+    if (nextMS) {
+      var daysLeft = nextMS - streak;
+      var msReward =
+        nextMS === 5
+          ? "¥200"
+          : nextMS === 10
+            ? "¥500+心情"
+            : nextMS === 30
+              ? "¥2,000"
+              : "¥10,000+称号";
+      var msBarWidth = Math.round((streak / nextMS) * 100);
+      parts.push(
+        '<div style="margin-top:4px;padding:4px 6px;background:rgba(74,158,92,0.06);border-radius:4px;font-size:11px;">' +
+          '<div style="display:flex;justify-content:space-between;color:var(--text-secondary);margin-bottom:2px;">' +
+          "<span>🎯 连续工作 <strong>" +
+          streak +
+          "</strong>/" +
+          nextMS +
+          " 天</span>" +
+          '<span style="color:var(--accent);font-weight:600;">+' +
+          daysLeft +
+          "天</span>" +
+          "</div>" +
+          '<div style="height:4px;background:var(--bg-input);border-radius:2px;overflow:hidden;">' +
+          '<div style="width:' +
+          msBarWidth +
+          '%;height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div>' +
+          "</div>" +
+          '<div style="color:var(--text-muted);margin-top:2px;font-size:10px;">🏆 奖励：' +
+          msReward +
+          "</div>" +
+          "</div>",
+      );
+    }
+  }
+
+  // 4. 持续天数情感锚点
   var day = state.player.day || 1;
   var streakEmoji =
     day <= 7 ? "🌱" : day <= 30 ? "🌿" : day <= 100 ? "🌳" : "🌲";
