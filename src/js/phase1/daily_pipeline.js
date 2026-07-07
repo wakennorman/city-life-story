@@ -1057,16 +1057,94 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === 结束日志 ===
+  // === v3.27 增强版结束日志：早安仪式 + 每日热招 ===
   {
     name: "end_log",
     fn: function (state) {
-      var emoIcon = getEmotionIcon(state);
-      StateManager.addMessage(
-        "🌙 第" + state.player.day + "天结束。" + emoIcon + " 新的一天开始了。",
-        "info",
-      );
-      // 今日总结（仅街头阶段，职场有自己的季末总结）
+      var day = state.player.day;
+      var weekDay = ((day - 1) % 7) + 1; // 1=周一 ... 7=周日
+      var weekdayNames = [
+        "周一",
+        "周二",
+        "周三",
+        "周四",
+        "周五",
+        "周六",
+        "周日",
+      ];
+      var streak = state.flags._workStreak || 0;
+      var health = (state.status && state.status.health) || 100;
+
+      // 1. 早安仪式 + 星期
+      var greetMsg = "🌅 第" + day + "天 · " + weekdayNames[weekDay - 1];
+      if (day === 1) greetMsg += " · 第一天，加油！";
+      else if (day === 7) greetMsg += " · 来这座城市一周了";
+      else if (day === 30) greetMsg += " · 一个月整！你还在坚持";
+      else if (day === 100) greetMsg += " · 💪 百天不倒！";
+      else if (day === 365) greetMsg += " · 🌟 一整年！从零到今天";
+      StateManager.addMessage(greetMsg, "info");
+
+      // 2. 连续工作提醒（禀赋效应）
+      if (streak >= 3) {
+        var se =
+          streak >= 100
+            ? "👑"
+            : streak >= 30
+              ? "💪"
+              : streak >= 10
+                ? "🔥"
+                : "📋";
+        StateManager.addMessage(se + " 已连续工作" + streak + "天", "hint");
+      }
+
+      // 3. 紧急状态预警（损失厌恶）
+      if (health < 20) {
+        StateManager.addMessage("🚑 健康危急！今天请务必去医院！", "danger");
+      } else if (health < 40) {
+        StateManager.addMessage("😷 身体不太舒服，今天注意休息。", "warning");
+      }
+      if ((state.needs.fatigue || 0) > 80) {
+        StateManager.addMessage(
+          "😩 非常疲劳！今天少干点活，多休息。",
+          "warning",
+        );
+      }
+
+      // 4. 每日热招（稀缺性原理）— 仅限街头阶段
+      if (
+        state.player.phase === "street" &&
+        day >= 3 &&
+        Random.chance(0.35) &&
+        typeof STREET_JOBS !== "undefined" &&
+        STREET_JOBS.length > 0
+      ) {
+        var pool = [];
+        for (var ji = 0; ji < STREET_JOBS.length; ji++) {
+          var sj = STREET_JOBS[ji];
+          if (sj && sj.id && sj.id !== "none") pool.push(sj);
+        }
+        if (pool.length > 0) {
+          var hotJob = pool[Random.int(0, pool.length - 1)];
+          var bonusMult = 1.3 + Random.float(0, 0.3);
+          state.flags._dailyHotJob = {
+            jobId: hotJob.id,
+            bonusMult: Math.round(bonusMult * 100) / 100,
+          };
+          StateManager.addMessage(
+            "🔥 今日热招：" +
+              hotJob.name +
+              "！工价×" +
+              bonusMult.toFixed(1) +
+              "，仅限今天！",
+            "event",
+          );
+        }
+      } else {
+        delete state.flags._dailyHotJob;
+      }
+
+      // 5. 保留原有日终总结
+      StateManager.addMessage("🌙 第" + day + "天开始。", "info");
       if (state.player.phase === "street") {
         var summary = generateDailySummary(
           state,

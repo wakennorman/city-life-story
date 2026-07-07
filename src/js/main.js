@@ -3904,6 +3904,25 @@ function doStreetJob(job) {
     if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
   }
 
+  // v3.27: 每日热招加成（稀缺性 — 限时高薪机会）
+  if (
+    state.flags &&
+    state.flags._dailyHotJob &&
+    state.flags._dailyHotJob.jobId === job.id
+  ) {
+    var hotMult = state.flags._dailyHotJob.bonusMult || 1.0;
+    if (hotMult > 1.0) {
+      var hotBonus = Math.floor(pay * (hotMult - 1));
+      if (hotBonus > 0) {
+        pay += hotBonus;
+        StateManager.addMessage(
+          "🔥 今日热招加成 +¥" + hotBonus + "！",
+          "success",
+        );
+      }
+    }
+  }
+
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
   addDailyTransaction(
