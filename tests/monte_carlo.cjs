@@ -806,7 +806,7 @@
     };
   }
 
-  function runTrial(baseState, policyFn, seed) {
+  function runTrial(baseState, policyFn, seed, strategyName) {
     var state = deepClone(baseState);
     state.player.day = 1;
     state.flags.gameOver = false;
@@ -814,10 +814,10 @@
     state.status.health = baseState.status.health;
     if (typeof Random !== "undefined" && Random.setSeed) Random.setSeed(seed);
 
-    return _runTrialInner(state, policyFn);
+    return _runTrialInner(state, policyFn, strategyName);
   }
 
-  function _runTrialInner(state, policyFn) {
+  function _runTrialInner(state, policyFn, strategyName) {
     var snaps = [],
       sick = 0,
       hurt = 0,
@@ -850,8 +850,6 @@
       } catch (e) {}
       // v3.1 新机制：结算上一日抽到的命运抉择卡（按策略性格选 bold/safe）
       try {
-        if (state.player && state.player.day === 31)
-          console.error("[DBG d31] typeof resolveCrossroads=" + typeof resolveCrossroads + " pending=" + JSON.stringify(state._pendingCrossroads) + " typeof crossroadsTick=" + typeof crossroadsTick);
         if (state._pendingCrossroads && typeof resolveCrossroads === "function") {
           var bias = CROSSROADS_BIAS[strategyName] || "safe";
           var opt =
@@ -859,13 +857,10 @@
               ? decideCrossroads(state, bias)
               : 0;
           if (opt < 0) opt = 0;
-          var _before = state._mcCrossroadsTaken;
-          var _r = resolveCrossroads(state, state._pendingCrossroads.id, opt);
-          console.error("[DBG] resolved id=" + state._pendingCrossroads.id + " opt=" + opt + " ret=" + _r + " before=" + _before + " after=" + state._mcCrossroadsTaken);
+          var pendId = state._pendingCrossroads.id;
+          resolveCrossroads(state, pendId, opt);
         }
-      } catch (e) {
-        console.error("[DBG ERR] " + (e && e.stack ? e.stack : e));
-      }
+      } catch (e) {}
       try {
         state.player.actionPoints = 0;
         state.player.timeSlot = "evening";
@@ -1012,6 +1007,7 @@
           baseState,
           policy,
           CONFIG.seed + i * 1000 + strategyName.length,
+          strategyName,
         ),
       );
       if (CONFIG.verbose && (i + 1) % 25 === 0)
@@ -1201,6 +1197,9 @@
       var cause3 = dead[di3].deathCause || "unknown";
       deathCauses[cause3] = (deathCauses[cause3] || 0) + 1;
     }
+    var avgCr = results.reduce(function (s, r) {
+      return s + (r.crossroadsTaken || 0);
+    }, 0) / Math.max(1, n);
 
     return {
       strategy: name,
@@ -1223,6 +1222,7 @@
       avgIllness: avgIl,
       avgInjury: avgIn,
       avgHousing: avgHo,
+      avgCrossroadsTaken: avgCr,
       housingTiersReached: housingTiers,
       avgFoodSpentTotal: avgFood,
       avgEventsTriggered: avgEvt,
@@ -1321,6 +1321,9 @@
           }
         }
       }
+
+      console.log("\n  🎴 命运抉择卡（v3.1 新机制）");
+      console.log("    平均结算张数: " + s.avgCrossroadsTaken.toFixed(1) + " 张 / 1000天");
 
       console.log("\n  💰 经济统计（存活玩家）");
       console.log("    平均现金:    ¥" + fmt(s.avgCash));

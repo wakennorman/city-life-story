@@ -85,7 +85,7 @@
             var roll = R.int(-2500, 9000);
             applyDelta(s, {
               cash: roll,
-              health: -5,
+              health: -3,
               happiness: roll > 0 ? 8 : -6,
               cat: "crossroads",
               label: "创业回报",
@@ -129,11 +129,11 @@
           apply: function (s) {
             applyDelta(s, {
               cash: 400,
-              health: -12,
+              health: -6,
               happiness: -4,
               label: "加班",
             });
-            return "硬撑加班，健康-12";
+            return "硬撑加班，健康-6";
           },
         },
       ],
@@ -163,7 +163,7 @@
           apply: function (s) {
             applyDelta(s, {
               cash: 900,
-              health: -8,
+              health: -4,
               happiness: -6,
               fatigue: 10,
               label: "内卷",
@@ -254,8 +254,13 @@
           label: "留在城里继续卷",
           risk: "bold",
           apply: function (s) {
-            applyDelta(s, { cash: 300, happiness: -2, label: "留守" });
-            return "留守城里";
+            applyDelta(s, {
+              cash: 1500,
+              health: -5,
+              happiness: -2,
+              label: "留守卷",
+            });
+            return "留守城里，现金+1500";
           },
         },
       ],

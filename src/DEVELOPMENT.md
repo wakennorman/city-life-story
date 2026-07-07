@@ -1,10 +1,48 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.2c fix: 经验不足弹窗具体化）
+> 最后更新: 2026-07-07（v3.1 命运抉择卡系统 — 新机制 + 平衡性调优）
 >
 > commit: `1194740`
 >
 > ---
+
+---
+
+## 2026-07-07 — v3.1 命运抉择卡系统（新机制）+ 平衡性调优
+
+**设计意图（游戏设计师视角）**：给玩家"周期性的高 stakes 选择"，打破日常 grind 单调性（峰终定律 / 损失厌恶）；提供对"健康死亡计时器"的反制抓手；不同性格的 AI / 玩家会选不同选项 → 蒙特卡洛中自然产生策略分化。
+
+### 新文件 `src/js/phase2/life_crossroads.js`（IIFE，~330 行）
+
+- 暴露 `window.crossroadsTick` / `resolveCrossroads` / `drawCrossroadsCard` / `decideCrossroads` / `CROSSROADS_DECK`
+- 6 张抉择卡：`startup` / `health_alarm` / `promotion` / `wedding` / `sidegig` / `hometown`，每张 2 选项（`bold` 冒险 / `safe` 稳健）
+- `crossroadsTick`：每 30 天抽一张；卡牌 2 天未抉择按 `safe` 自动兜底
+- 数值变动经 `applyDelta` 统一落地（记账 + 钳制），便于 MC 对账
+
+### 接入（遵循 v3.1 SOP）
+
+- `daily_pipeline.js`：在 `day_increment` 之后、`stall_income` 之前插入 `crossroads_tick` 步骤
+- `index.html`：`phase2/life_crossroads.js` 注册于 `startup.js` 之后
+- `tests/headless_runner.cjs`：manifest 追加 `js/phase2/life_crossroads.js`（否则 MC 不加载，123→124 文件）
+
+### 蒙特卡洛平衡验证（1000 天 × 25 trials × 6 策略，真实引擎 `runDailyPipeline`）
+
+- **修复误报**：原结算成功日志在 `resolveCrossroads` 置空 `_pendingCrossroads` 后读取 `.id`，误抛 `[XERR]`，导致机制"看似不生效"——实际一直生效。改为先捕获 `pendId` 再结算。
+- **平衡调优**：初版 bold 健康惩罚过狠（grinder/skiller/corporate 仅 12.5% 存活）→ 下调 `startup`/`health_alarm`/`promotion` 的 bold 健康成本；修复 `hometown` 卡 `safe` 严格支配 `bold`（safe +¥3000/+健康 vs bold +¥300）的张力缺失，bold 改为 +¥1500/-5 健康。
+- **最终平衡**（抉择卡 bias：`safe`=balanced/social，`bold`=grinder/skiller/trader/corporate）：
+
+| 策略 | bias | 存活% | 中位现金 | 平均健康 | 抉择张数 |
+| --- | --- | --- | --- | --- | --- |
+| balanced | safe | 68% | ¥4,360 | 88.8 | 27.0 |
+| social | safe | 72% | ¥140,752 | 77.8 | 27.2 |
+| trader | bold | 56% | ¥5,290 | 75.9 | 24.4 |
+| corporate | bold | 24% | ¥4,139 | 64.5 | 16.7 |
+| grinder | bold | 12% | ¥223,183* | 71.0 | 11.8 |
+| skiller | bold | 12% | ¥1,159 | 89.3 | 15.6 |
+
+\* grinder 幸存者中位现金（高风险高回报幻想）
+
+**结论**：风险/回报轴清晰且依赖生活方式——健康生活方式 + bold 可存活 56%，鲁莽 + bold 仅 12%。机制"好玩且平衡"。
 
 ---
 
