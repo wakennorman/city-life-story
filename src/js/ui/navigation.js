@@ -493,6 +493,16 @@ function _doNavigate(state, target, options) {
 
       // 到达后导航到指定Tab（默认行动Tab，可传target.navTab覆盖）
       var postNavTab = target.navTab || "actions";
+      // 同时设置子Tab（用于培训中心等场景）：到达后切换到"我→技能"而非固定Tab
+      if (target.subTab) {
+        if (postNavTab === "me") {
+          state._meSubTab = target.subTab;
+        } else if (postNavTab === "career") {
+          state._careerTabSubTab = target.subTab;
+        } else if (postNavTab === "city") {
+          state._citySubTab = target.subTab;
+        }
+      }
       if (typeof switchTab === "function") switchTab(postNavTab);
       else if (typeof renderAll === "function") renderAll();
       break;
@@ -892,6 +902,7 @@ function navActionButton(destType, destKey, label, opts) {
   } else if (destType === "location") {
     target = { type: "location", key: destKey, displayName: label };
     if (opts.navTab) target.navTab = opts.navTab;
+    if (opts.subTab) target.subTab = opts.subTab; // 到达后设置子Tab
   }
   return (
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +

@@ -131,18 +131,13 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-08)**：v3.31 — Tab切换系统全面优化（commit: `24f5d91`，✅已推）
-  - **(1) 子Tab内容积累修复**：renderCityTab/renderMeTab/renderCareerTab/renderWikiTab 全部加 `parent.innerHTML=""`，防子Tab点击内容堆积导致按钮失效
-  - **(2) 百科Tab社交返回修复**：社交子Tab用子容器包裹，保留百科导航按钮（百科/社交）始终可见
-  - **(3) 我Tab装备购买导航**：空装备槽位「去购买」按钮（确认弹窗）+ 装备采购入口汇总（按地点分组）
-  - **(4) 全局子容器化审计**：Me/Career 全部子Tab用独立子容器，防内层 `innerHTML=""` 清空外层导航
-  - **影响文件**：render_infra.js(+30)/render.js(+51)/wiki.js(+10)
-  - **验证**：node --check ✅ / build.py 5119KB ✅ / git push ✅
-  - **🎁 聊天12%概率NPC回赠**：食物/现金/心情/技能随机4种，仅好感≥5触发
-  - **💎 互惠原理 (Reciprocity)**：NPC送礼物 → 你更愿意社交 → 城市更有温度
-  - **MC效果**：social 60%→80%！
-  - **影响文件**：`main.js`(+41行)
-  - **验证**：`node --check` ✅ / `build.py` 5084.8KB ✅ / MC 10×500d ✅
+- **最新一次工作 (2026-07-08)**：v3.32 — 导航死按钮修复 + 交通AP按距离×方式动态计算（本地待推）
+  - **(1) 导航死按钮根因修复**：子Tab onclick 直接调用父渲染函数不经过 `renderAll()`，`bindAllNavButtons()` 从未执行。修复：所有子Tab切完后自动绑定导航按钮 + 防御性兜底
+  - **(2) navTab:"skills" 修复**：指向不存在的Tab名，改为 `{ navTab: "me", subTab: "me_skills" }`，到达培训中心后自动切换到"我→技能"子Tab
+  - **(3) 交通AP按距离×方式动态计算**：步行12-24AP(按距离) / 单车5-7AP(2跳内) / 地铁5AP(固定) / 打车4-7AP(封顶) / 自驾3-4AP(需有车)，告别固定值
+  - **(4) 全局排查**：navActionButton 全部调用审查 + wiki百科导航 + career_dev 导航弹窗 + _doNavigate subTab 支持
+  - **影响文件**：render_infra.js(+9)/navigation.js(+12)/render.js(+30)/wiki.js(+8)/career_dev.js(+6)
+  - **验证**：node --check ✅ / build.py 5122KB ✅
 - **上一轮 (2026-07-06)**：v3.1 审查改进 — 难度系统全面接入 + 终局体验强化 + SOP v3.1（commits: `5bd01c6`+`49ba233`+`ad34443`+`da0832c`）
   - **4 档难度**：🍵 休闲 / ⚖️ 标准 / 🔥 困难 / 💀 地狱，7 维参数
   - **MC 验证**：休闲¥11,827 > 标准¥7,045 > 困难¥1,535 > 地狱-¥306 ✅

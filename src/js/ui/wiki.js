@@ -1210,6 +1210,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         key: "trainingCenter",
         label: "📚 前往培训中心训练 " + skName,
         navTab: "me",
+        subTab: "me_skills",
       });
       buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
@@ -1220,6 +1221,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         key: "trainingCenter",
         label: "📚 前往培训中心考取证书",
         navTab: "me",
+        subTab: "me_skills",
       });
       buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
@@ -1248,8 +1250,11 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       navHtml += navActionButton(b.type, b.key, b.label, {
         tab: b.tab || "me",
       });
-    } else if (b.type === "location" && b.navTab) {
-      navHtml += navActionButton(b.type, b.key, b.label, { navTab: b.navTab });
+    } else if (b.type === "location" && (b.navTab || b.subTab)) {
+      navHtml += navActionButton(b.type, b.key, b.label, {
+        navTab: b.navTab,
+        subTab: b.subTab,
+      });
     } else {
       navHtml += navActionButton(b.type, b.key, b.label);
     }

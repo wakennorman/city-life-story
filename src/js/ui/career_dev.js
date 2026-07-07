@@ -1649,7 +1649,7 @@ function renderCareerOverview(state, parent) {
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
     "onclick=\"showLocationNavModal('school', '🎓 去大学城提升学历', 'me', " +
-    "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。')" +
+    "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。', 'me_growth')" +
     '">🎓 去大学城提升学历</button>' +
     "</div>";
 
@@ -3453,7 +3453,7 @@ function showCareerNavModal(subTab, parentTab, label, desc) {
   });
 }
 /** 地点导航弹窗：说明 + 确认跳转 */
-function showLocationNavModal(locKey, label, navTab, desc) {
+function showLocationNavModal(locKey, label, navTab, desc, subTab) {
   if (typeof showModal !== "function") {
     return;
   }
@@ -3488,6 +3488,7 @@ function showLocationNavModal(locKey, label, navTab, desc) {
               type: "location",
               key: locKey,
               navTab: navTab || "actions",
+              subTab: subTab || undefined,
             });
           }
           return true;

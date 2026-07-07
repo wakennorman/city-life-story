@@ -1077,7 +1077,8 @@ function renderMapTab(state, parent) {
            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';">
           <div style="font-weight:600;color:var(--accent);">📍 ${dest.name}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${destType}</div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div>
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳 · ⚡" + (typeof getTravelApCost === "function" ? getTravelApCost(locKey, destKey, state) : 6 + getLocationHops(locKey, destKey) * 4) : "同在"}</div>
         </button>
       `;
     }
@@ -1208,11 +1209,11 @@ function renderMapTab(state, parent) {
             return k !== locKey;
           });
           priceInfo = "¥10-40 按距离，直达全城";
-          apInfo = "行动力 -3（最快但最贵）";
+          apInfo = "行动力 4+" + " 按距离Pg";
         } else if (mode === "car") {
           available = reachableList.slice();
           priceInfo = "¥5油费";
-          apInfo = "行动力 -2（自驾快捷）";
+          apInfo = "行动力 2+" + " 按距离Pg";
         }
         if (available.length === 0) {
           result.innerHTML =
@@ -1248,14 +1249,21 @@ function renderMapTab(state, parent) {
                       : typeof getTaxiCost === "function"
                         ? getTaxiCost(locKey, k)
                         : 10 + Math.floor(Math.random() * 31);
-              const ap =
-                mode === "bike"
-                  ? 6
-                  : mode === "metro"
-                    ? 5
-                    : mode === "car"
-                      ? 2
-                      : 3; // v3.2 单车AP-8→AP-6
+              // v3.32 交通AP按距离×方式动态计算
+              var hops =
+                typeof getLocationHops === "function"
+                  ? getLocationHops(locKey, k)
+                  : 1;
+              var ap = 5; // default fallback
+              if (mode === "bike") {
+                ap = Math.min(7, 3 + hops * 2); // 1跳=5, 2跳=7
+              } else if (mode === "metro") {
+                ap = 5; // 固定，地铁高效
+              } else if (mode === "car") {
+                ap = 2 + hops * 1; // 1跳=3, 2跳=4
+              } else if (mode === "taxi") {
+                ap = Math.min(8, 3 + hops * 1); // 1跳=4, 2跳=5, 4跳=7...
+              }
               return (
                 '<button class="transit-go-btn" data-dest="' +
                 k +
@@ -1517,18 +1525,29 @@ function renderMapTab(state, parent) {
 
   parent.appendChild(container);
 
-  // 绑定快速出行按钮
+  // 绑定快速出行按钮（步行，AP按距离计算）
   setTimeout(() => {
     document.querySelectorAll(".quick-travel-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const destKey = btn.dataset.dest;
+        // v3.32 步行AP按距离：6 + hops*4（1跳=10, 2跳=14, 3跳=18...）
+        var hops =
+          typeof getLocationHops === "function"
+            ? getLocationHops(locKey, destKey)
+            : 1;
+        var apCost = Math.max(6, 6 + hops * 4);
+        if (typeof getTravelApCost === "function") {
+          apCost = getTravelApCost(locKey, destKey, state);
+        }
+        if (typeof consumeAP === "function") {
+          if (!consumeAP(apCost)) return; // consumeAP返回false=行动被阻止
+        }
         StateManager.update("trade.currentLocation", destKey);
         const dest = getLocation(destKey);
         StateManager.addMessage(
-          `🚶 你来到了${dest ? dest.name : destKey}。`,
+          `🚶 你步行来到了${dest ? dest.name : destKey}（-⚡${apCost}）。`,
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(15);
         renderAll();
       });
     });
@@ -2827,7 +2846,7 @@ function renderSkillsTab(state, parent) {
         "location",
         "trainingCenter",
         "📚 前往培训中心训练技能",
-        { navTab: "skills" },
+        { navTab: "me", subTab: "me_skills" },
       );
     } else {
       navGate.innerHTML =
@@ -5058,7 +5077,8 @@ function renderPgEdu(state, content) {
     navActionButton("location", "school", "📚 去大学城图书馆") +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
     navActionButton("location", "trainingCenter", "📖 去培训中心学习", {
-      navTab: "skills",
+      navTab: "me",
+      subTab: "me_skills",
     }) +
     "</div>";
   html += "</div></div>";

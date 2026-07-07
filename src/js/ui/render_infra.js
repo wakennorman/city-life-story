@@ -1274,6 +1274,7 @@ function renderCityTab(state, parent) {
     btn.onclick = function () {
       state._citySubTab = st.id;
       renderCityTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -1295,6 +1296,8 @@ function renderCityTab(state, parent) {
         '<p style="color:var(--text-muted);text-align:center;">📦 交易数据加载中...</p>';
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /**
@@ -1328,6 +1331,7 @@ function renderMeTab(state, parent) {
     btn.onclick = function () {
       state._meSubTab = st.id;
       renderMeTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -1384,6 +1388,8 @@ function renderMeTab(state, parent) {
       break;
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /**
@@ -1418,6 +1424,7 @@ function renderCareerTab(state, parent) {
     btn.onclick = function () {
       state._careerTabSubTab = st.id;
       renderCareerTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -1502,4 +1509,6 @@ function renderCareerTab(state, parent) {
       break;
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }

@@ -119250,6 +119250,7 @@ function renderCityTab(state, parent) {
     btn.onclick = function () {
       state._citySubTab = st.id;
       renderCityTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -119271,6 +119272,8 @@ function renderCityTab(state, parent) {
         '<p style="color:var(--text-muted);text-align:center;">📦 交易数据加载中...</p>';
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /**
@@ -119304,6 +119307,7 @@ function renderMeTab(state, parent) {
     btn.onclick = function () {
       state._meSubTab = st.id;
       renderMeTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -119360,6 +119364,8 @@ function renderMeTab(state, parent) {
       break;
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /**
@@ -119394,6 +119400,7 @@ function renderCareerTab(state, parent) {
     btn.onclick = function () {
       state._careerTabSubTab = st.id;
       renderCareerTab(state, parent);
+      if (typeof bindAllNavButtons === "function") bindAllNavButtons();
     };
     nav.appendChild(btn);
   });
@@ -119478,6 +119485,8 @@ function renderCareerTab(state, parent) {
       break;
     }
   }
+  // 绑定导航按钮（子Tab切换不会经过 renderAll）
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 </script>
     <script>function _esc(str) {
@@ -120559,7 +120568,8 @@ function renderMapTab(state, parent) {
            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';">
           <div style="font-weight:600;color:var(--accent);">📍 ${dest.name}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${destType}</div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div>
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳 · ⚡" + (typeof getTravelApCost === "function" ? getTravelApCost(locKey, destKey, state) : 6 + getLocationHops(locKey, destKey) * 4) : "同在"}</div>
         </button>
       `;
     }
@@ -120690,11 +120700,11 @@ function renderMapTab(state, parent) {
             return k !== locKey;
           });
           priceInfo = "¥10-40 按距离，直达全城";
-          apInfo = "行动力 -3（最快但最贵）";
+          apInfo = "行动力 4+" + " 按距离Pg";
         } else if (mode === "car") {
           available = reachableList.slice();
           priceInfo = "¥5油费";
-          apInfo = "行动力 -2（自驾快捷）";
+          apInfo = "行动力 2+" + " 按距离Pg";
         }
         if (available.length === 0) {
           result.innerHTML =
@@ -120730,14 +120740,21 @@ function renderMapTab(state, parent) {
                       : typeof getTaxiCost === "function"
                         ? getTaxiCost(locKey, k)
                         : 10 + Math.floor(Math.random() * 31);
-              const ap =
-                mode === "bike"
-                  ? 6
-                  : mode === "metro"
-                    ? 5
-                    : mode === "car"
-                      ? 2
-                      : 3; // v3.2 单车AP-8→AP-6
+              // v3.32 交通AP按距离×方式动态计算
+              var hops =
+                typeof getLocationHops === "function"
+                  ? getLocationHops(locKey, k)
+                  : 1;
+              var ap = 5; // default fallback
+              if (mode === "bike") {
+                ap = Math.min(7, 3 + hops * 2); // 1跳=5, 2跳=7
+              } else if (mode === "metro") {
+                ap = 5; // 固定，地铁高效
+              } else if (mode === "car") {
+                ap = 2 + hops * 1; // 1跳=3, 2跳=4
+              } else if (mode === "taxi") {
+                ap = Math.min(8, 3 + hops * 1); // 1跳=4, 2跳=5, 4跳=7...
+              }
               return (
                 '<button class="transit-go-btn" data-dest="' +
                 k +
@@ -120999,18 +121016,29 @@ function renderMapTab(state, parent) {
 
   parent.appendChild(container);
 
-  // 绑定快速出行按钮
+  // 绑定快速出行按钮（步行，AP按距离计算）
   setTimeout(() => {
     document.querySelectorAll(".quick-travel-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const destKey = btn.dataset.dest;
+        // v3.32 步行AP按距离：6 + hops*4（1跳=10, 2跳=14, 3跳=18...）
+        var hops =
+          typeof getLocationHops === "function"
+            ? getLocationHops(locKey, destKey)
+            : 1;
+        var apCost = Math.max(6, 6 + hops * 4);
+        if (typeof getTravelApCost === "function") {
+          apCost = getTravelApCost(locKey, destKey, state);
+        }
+        if (typeof consumeAP === "function") {
+          if (!consumeAP(apCost)) return; // consumeAP返回false=行动被阻止
+        }
         StateManager.update("trade.currentLocation", destKey);
         const dest = getLocation(destKey);
         StateManager.addMessage(
-          `🚶 你来到了${dest ? dest.name : destKey}。`,
+          `🚶 你步行来到了${dest ? dest.name : destKey}（-⚡${apCost}）。`,
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(15);
         renderAll();
       });
     });
@@ -122309,7 +122337,7 @@ function renderSkillsTab(state, parent) {
         "location",
         "trainingCenter",
         "📚 前往培训中心训练技能",
-        { navTab: "skills" },
+        { navTab: "me", subTab: "me_skills" },
       );
     } else {
       navGate.innerHTML =
@@ -124540,7 +124568,8 @@ function renderPgEdu(state, content) {
     navActionButton("location", "school", "📚 去大学城图书馆") +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
     navActionButton("location", "trainingCenter", "📖 去培训中心学习", {
-      navTab: "skills",
+      navTab: "me",
+      subTab: "me_skills",
     }) +
     "</div>";
   html += "</div></div>";
@@ -130207,6 +130236,16 @@ function _doNavigate(state, target, options) {
 
       // 到达后导航到指定Tab（默认行动Tab，可传target.navTab覆盖）
       var postNavTab = target.navTab || "actions";
+      // 同时设置子Tab（用于培训中心等场景）：到达后切换到"我→技能"而非固定Tab
+      if (target.subTab) {
+        if (postNavTab === "me") {
+          state._meSubTab = target.subTab;
+        } else if (postNavTab === "career") {
+          state._careerTabSubTab = target.subTab;
+        } else if (postNavTab === "city") {
+          state._citySubTab = target.subTab;
+        }
+      }
       if (typeof switchTab === "function") switchTab(postNavTab);
       else if (typeof renderAll === "function") renderAll();
       break;
@@ -130606,6 +130645,7 @@ function navActionButton(destType, destKey, label, opts) {
   } else if (destType === "location") {
     target = { type: "location", key: destKey, displayName: label };
     if (opts.navTab) target.navTab = opts.navTab;
+    if (opts.subTab) target.subTab = opts.subTab; // 到达后设置子Tab
   }
   return (
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
@@ -132589,6 +132629,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         key: "trainingCenter",
         label: "📚 前往培训中心训练 " + skName,
         navTab: "me",
+        subTab: "me_skills",
       });
       buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
@@ -132599,6 +132640,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         key: "trainingCenter",
         label: "📚 前往培训中心考取证书",
         navTab: "me",
+        subTab: "me_skills",
       });
       buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
@@ -132627,8 +132669,11 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
       navHtml += navActionButton(b.type, b.key, b.label, {
         tab: b.tab || "me",
       });
-    } else if (b.type === "location" && b.navTab) {
-      navHtml += navActionButton(b.type, b.key, b.label, { navTab: b.navTab });
+    } else if (b.type === "location" && (b.navTab || b.subTab)) {
+      navHtml += navActionButton(b.type, b.key, b.label, {
+        navTab: b.navTab,
+        subTab: b.subTab,
+      });
     } else {
       navHtml += navActionButton(b.type, b.key, b.label);
     }
@@ -138286,7 +138331,7 @@ function renderCareerOverview(state, parent) {
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
     "onclick=\"showLocationNavModal('school', '🎓 去大学城提升学历', 'me', " +
-    "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。')" +
+    "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。', 'me_growth')" +
     '">🎓 去大学城提升学历</button>' +
     "</div>";
 
@@ -140090,7 +140135,7 @@ function showCareerNavModal(subTab, parentTab, label, desc) {
   });
 }
 /** 地点导航弹窗：说明 + 确认跳转 */
-function showLocationNavModal(locKey, label, navTab, desc) {
+function showLocationNavModal(locKey, label, navTab, desc, subTab) {
   if (typeof showModal !== "function") {
     return;
   }
@@ -140125,6 +140170,7 @@ function showLocationNavModal(locKey, label, navTab, desc) {
               type: "location",
               key: locKey,
               navTab: navTab || "actions",
+              subTab: subTab || undefined,
             });
           }
           return true;
