@@ -11,3 +11,5 @@
 - [v3.7 交易/事件/弹窗修复](v3.7-trade-event-modal-fix.md) — 交易系统全面优化（undefined/卖推荐单一/单一路径）+ 暴雨事件语境 + 移动端弹窗居中
 - [navigation-system-v1](navigation-system-v1.md) — 全游戏统一导航系统 (navigation.js)
 - [convention-over-configuration-methodology](convention-over-configuration-methodology.md) — 约定式自动归类核心方法论
+- [v3.24-daily-report-peak-end-rule](v3.24-daily-report-peak-end-rule.md) — v3.24 日终报告峰终定律增强：今日高光+明日展望+留存钩子
+- [v3.25-work-streak-system](v3.25-work-streak-system.md) — v3.25 连续工作系统：劳动节奏+禀赋效应+留存闭环
