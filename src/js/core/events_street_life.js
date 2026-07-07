@@ -12,6 +12,10 @@
       title: "团购大军杀到",
       story:
         "菜市场冷清了很多。王婶的菜被社区团购冲击——美团优选土豆¥0.99，进货价都不止。批发菜价跌了20%。等平台烧完钱会涨回来的。",
+      // [自洽修复] conditions 新增：王婶关系检查
+      conditions: function (st) {
+        return st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.met;
+      },
       triggers: { minDay: 25, excludeFlags: ["_communityGroupBuySeen"] },
       choices: [
         {
@@ -425,6 +429,10 @@
       title: "社保交还是不交",
       story:
         "灵活就业社保每月¥900。一个月才赚¥4,000~¥6,000。隔壁老周胆囊炎花了¥30,000全自费。",
+      // [自洽修复] conditions 新增：老周关系检查
+      conditions: function (st) {
+        return st.relationships && st.relationships.old_zhou && st.relationships.old_zhou.met;
+      },
       triggers: { minDay: 45, excludeFlags: ["_gigSocialSeen"] },
       choices: [
         {
@@ -981,6 +989,10 @@
           apply: function (st) {
             st.flags._rentalCrashSeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            // [自洽修复] 补王婶关系初始化与红包逻辑
+            if (!st.relationships.aunt_wang) {
+              st.relationships.aunt_wang = { affinity: 0, met: true };
+            }
             st.resources.cash += 100;
             StateManager.addMessage(
               "🏠 你介绍了王婶的空房给工友。王婶给了你¥100红包。",

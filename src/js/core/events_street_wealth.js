@@ -488,6 +488,11 @@
           text: "💬 直接告诉老马，他应该知道",
           hint: "坦诚相待，对方会感激你",
           apply: function (st) {
+            // [自洽修复] 补老马好感提升代码
+            if (!st.relationships.old_ma) {
+              st.relationships.old_ma = { affinity: 0, met: true };
+            }
+            st.relationships.old_ma.affinity = Math.min(100, (st.relationships.old_ma.affinity || 0) + 8);
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
