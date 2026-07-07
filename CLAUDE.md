@@ -131,7 +131,13 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-07)**：v3.30 — NPC互惠小礼物（commit: `c72316c`，⏳网络待推）
+- **最新一次工作 (2026-07-08)**：v3.31 — Tab切换系统全面优化（commit: `24f5d91`，✅已推）
+  - **(1) 子Tab内容积累修复**：renderCityTab/renderMeTab/renderCareerTab/renderWikiTab 全部加 `parent.innerHTML=""`，防子Tab点击内容堆积导致按钮失效
+  - **(2) 百科Tab社交返回修复**：社交子Tab用子容器包裹，保留百科导航按钮（百科/社交）始终可见
+  - **(3) 我Tab装备购买导航**：空装备槽位「去购买」按钮（确认弹窗）+ 装备采购入口汇总（按地点分组）
+  - **(4) 全局子容器化审计**：Me/Career 全部子Tab用独立子容器，防内层 `innerHTML=""` 清空外层导航
+  - **影响文件**：render_infra.js(+30)/render.js(+51)/wiki.js(+10)
+  - **验证**：node --check ✅ / build.py 5119KB ✅ / git push ✅
   - **🎁 聊天12%概率NPC回赠**：食物/现金/心情/技能随机4种，仅好感≥5触发
   - **💎 互惠原理 (Reciprocity)**：NPC送礼物 → 你更愿意社交 → 城市更有温度
   - **MC效果**：social 60%→80%！
