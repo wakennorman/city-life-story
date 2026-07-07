@@ -144,6 +144,10 @@ function buildReportHTML(txs, state, reconcileInfo) {
   // 生成今日总结
   var summaryText = generateDailyReportSummary(state, incomes, expenses);
 
+  // 生成今日高光时刻 + 明日展望（峰终定律增强）
+  var peakHTML = generatePeakMomentHTML(state, incomes, expenses);
+  var tomorrowHTML = generateTomorrowPreviewHTML(state);
+
   // 如果没有交易记录
   var hasIncome = incomes.length > 0;
   var hasExpense = expenses.length > 0;
@@ -226,6 +230,20 @@ function buildReportHTML(txs, state, reconcileInfo) {
     "</strong></span>";
   bodyHtml += "</div>";
 
+  // 今日高光时刻（峰终定律 — 凸显今日最难忘瞬间）
+  bodyHtml +=
+    '<div class="daily-report-peak" style="text-align:center;padding:8px 0;margin:4px 0;border-top:1px solid var(--border);font-size:13px;line-height:1.6;">';
+  bodyHtml += peakHTML;
+  bodyHtml += "</div>";
+
+  // 明日展望（留存钩子 — 让玩家期待明天）
+  if (tomorrowHTML) {
+    bodyHtml +=
+      '<div class="daily-report-tomorrow" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:12px;line-height:1.5;">';
+    bodyHtml += tomorrowHTML;
+    bodyHtml += "</div>";
+  }
+
   // 今日总结
   bodyHtml +=
     '<div class="daily-report-summary" style="font-size:12px;color:var(--text-secondary);text-align:center;padding:6px 0;font-style:italic;border-top:1px solid var(--border);">';
@@ -285,6 +303,255 @@ function escapeHtml(text) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// ====== 峰终定律增强：今日高光时刻 ======
+/**
+ * 生成"今日高光"叙事HTML — 提炼每日最值得记住的瞬间
+ *
+ * 设计参考：峰终定律 — 人们体验评价主要取决于峰值和终点。
+ * 本函数锚定"今天最高兴/最难忘的事"作为当日之峰。
+ */
+function generatePeakMomentHTML(state, incomes, expenses) {
+  var day = state.player.day - 1; // day_increment 已执行
+  var highlights = [];
+
+  // 1. 收入高峰 — 单笔最大收入
+  var maxIncome = 0,
+    maxIncomeDesc = "";
+  for (var i = 0; i < incomes.length; i++) {
+    if (incomes[i].amount > maxIncome) {
+      maxIncome = incomes[i].amount;
+      maxIncomeDesc = incomes[i].description || "";
+    }
+  }
+  if (maxIncome >= 500) {
+    highlights.push({
+      icon: "💰",
+      text:
+        "今天最大一笔收入 <strong>¥" +
+        maxIncome.toLocaleString() +
+        "</strong>" +
+        (maxIncomeDesc ? "（" + escapeHtml(maxIncomeDesc) + "）" : ""),
+      type: "positive",
+    });
+  } else if (maxIncome >= 100) {
+    highlights.push({
+      icon: "💵",
+      text:
+        "今天收入了 <strong>¥" +
+        maxIncome.toLocaleString() +
+        "</strong>" +
+        (maxIncomeDesc ? "（" + escapeHtml(maxIncomeDesc) + "）" : ""),
+      type: "positive",
+    });
+  }
+
+  // 2. 里程碑检测
+  if (day === 7) {
+    highlights.push({
+      icon: "🏫",
+      text: "来这座城市整整一周了！",
+      type: "milestone",
+    });
+  } else if (day === 30) {
+    highlights.push({
+      icon: "🎉",
+      text: "整整一个月，你还在这里！",
+      type: "milestone",
+    });
+  } else if (day === 100) {
+    highlights.push({
+      icon: "💪",
+      text: "百天不倒！城市没有把你打倒！",
+      type: "milestone",
+    });
+  } else if (day === 365) {
+    highlights.push({
+      icon: "🌟",
+      text: "一年了！从零到今天，你走了很远！",
+      type: "milestone",
+    });
+  }
+
+  // 3. 累计收入里程碑
+  var totalEarned = (state.resources && state.resources.totalEarned) || 0;
+  if (totalEarned >= 100000 && !state.flags._peakNoted100k) {
+    highlights.push({
+      icon: "🏆",
+      text: "累计收入突破 <strong>¥100,000</strong>！真正的城市人了！",
+      type: "milestone",
+    });
+    state.flags._peakNoted100k = true;
+  } else if (totalEarned >= 10000 && !state.flags._peakNoted10k) {
+    highlights.push({
+      icon: "💎",
+      text: "累计收入突破 <strong>¥10,000</strong>！已不是当初的穷光蛋！",
+      type: "milestone",
+    });
+    state.flags._peakNoted10k = true;
+  } else if (totalEarned >= 5000 && !state.flags._peakNoted5k) {
+    highlights.push({
+      icon: "💪",
+      text: "累计收入 ¥5,000！站稳了脚跟！",
+      type: "milestone",
+    });
+    state.flags._peakNoted5k = true;
+  } else if (totalEarned >= 1000 && !state.flags._peakNoted1k) {
+    highlights.push({
+      icon: "🎯",
+      text: "赚到了人生的第一个 <strong>¥1,000</strong>！",
+      type: "milestone",
+    });
+    state.flags._peakNoted1k = true;
+  }
+
+  // 4. 健康/债务预警（损失厌恶）
+  var health = (state.status && state.status.health) || 100;
+  if (health < 20) {
+    highlights.push({
+      icon: "🚑",
+      text: "健康严重下滑！明天必须去医院！",
+      type: "danger",
+    });
+  } else if (health < 40) {
+    highlights.push({
+      icon: "😷",
+      text: "身体不太舒服，明天注意休息。",
+      type: "warning",
+    });
+  }
+  var debt = state.resources.villageDebt || 0;
+  if (debt > 0 && day % 10 === 0) {
+    highlights.push({
+      icon: "📝",
+      text:
+        "村长那 <strong>¥" + debt.toLocaleString() + "</strong> 的债还在...",
+      type: "neutral",
+    });
+  }
+
+  // 5. 情感收尾 — 如果没有任何高光，给一个温暖的平凡日描述
+  if (highlights.length === 0) {
+    highlights.push({
+      icon: "🌙",
+      text: "平凡的一天，但你依然在努力活着。",
+      type: "neutral",
+    });
+  }
+
+  // 选1-2条展示（优先级：milestone > positive > danger > warning > neutral）
+  var sorted = highlights.sort(function (a, b) {
+    var rank = { milestone: 0, positive: 1, danger: 2, warning: 3, neutral: 4 };
+    return (rank[a.type] || 9) - (rank[b.type] || 9);
+  });
+  var shown = sorted.slice(0, Math.min(2, sorted.length));
+
+  return (
+    '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">🏆 今日高光</div>' +
+    shown
+      .map(function (h) {
+        var color =
+          h.type === "positive"
+            ? "var(--success)"
+            : h.type === "danger"
+              ? "var(--danger)"
+              : h.type === "warning"
+                ? "var(--warning)"
+                : h.type === "milestone"
+                  ? "var(--accent)"
+                  : "var(--text-secondary)";
+        return (
+          '<div style="color:' +
+          color +
+          ';padding:1px 0;">' +
+          h.icon +
+          " " +
+          h.text +
+          "</div>"
+        );
+      })
+      .join("")
+  );
+}
+
+/**
+ * 生成"明日展望"HTML — 天气预报 + 生存建议（留存钩子）
+ *
+ * 设计参考：
+ * - 峰终定律：在"终"处给出积极期待，让玩家愿意明天回来
+ * - Stardew Valley：每天播报明日天气
+ * - 大多数：任务预告系统
+ */
+function generateTomorrowPreviewHTML(state) {
+  var parts = [];
+
+  // 1. 天气预报（如果有）
+  var forecastHTML = "";
+  if (typeof getForecastHTML === "function") {
+    forecastHTML = getForecastHTML(state);
+  }
+  if (forecastHTML) {
+    parts.push(forecastHTML);
+  }
+
+  // 2. 基于状态的最低需求建议（损失厌恶 — 提醒玩家避免惩罚）
+  var needs = state.needs || {};
+  var suggestions = [];
+  if (needs.hunger !== undefined && needs.hunger < 25) {
+    suggestions.push(
+      "🍚 饿了一天了，明天先去吃个饱饭（饥饿" + needs.hunger + "/100）",
+    );
+  }
+  if (needs.fatigue !== undefined && needs.fatigue > 70) {
+    suggestions.push(
+      "😴 太累了！明天少跑点，优先睡一觉（疲劳" + needs.fatigue + "/100）",
+    );
+  }
+  if (needs.health !== undefined && needs.health < 35) {
+    suggestions.push("🏥 身体快扛不住了！明天去医院看看吧！");
+  }
+  if (needs.hygiene !== undefined && needs.hygiene < 20) {
+    suggestions.push("🚿 卫生太差了，去澡堂洗个澡吧。");
+  }
+
+  if (suggestions.length > 0) {
+    // 最多显示1条最紧急的
+    parts.push(
+      '<div style="color:var(--warning);margin-top:4px;font-size:11px;">💡 ' +
+        suggestions[0] +
+        "</div>",
+    );
+  }
+
+  // 3. 持续天数情感锚点
+  var day = state.player.day || 1;
+  var streakEmoji =
+    day <= 7 ? "🌱" : day <= 30 ? "🌿" : day <= 100 ? "🌳" : "🌲";
+  parts.push(
+    '<div style="color:var(--text-muted);margin-top:4px;font-size:11px;text-align:center;">' +
+      streakEmoji +
+      " 第 <strong>" +
+      day +
+      "</strong> 天 · 明天继续加油 💪</div>",
+  );
+
+  // 4. 阶段收尾情感句
+  if (day === 1) {
+    parts.push(
+      '<div style="color:var(--accent);margin-top:2px;font-size:11px;font-style:italic;text-align:center;">这是你在城市的第一步，明天会更好。</div>',
+    );
+  } else if (day === 30) {
+    parts.push(
+      '<div style="color:var(--accent);margin-top:2px;font-size:11px;font-style:italic;text-align:center;">一个月了，这座城市开始认识你了。</div>',
+    );
+  } else if (day === 100) {
+    parts.push(
+      '<div style="color:var(--accent);margin-top:2px;font-size:11px;font-style:italic;text-align:center;">一百天，你已经不是当初来时的你了。</div>',
+    );
+  }
+
+  return parts.join("");
 }
 
 // ====== 今日总结 ======

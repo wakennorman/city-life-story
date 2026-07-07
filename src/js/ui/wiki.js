@@ -767,8 +767,7 @@ function renderWikiTab(state, parent) {
   ];
   wikiSubTabs.forEach(function (st) {
     var btn = document.createElement("button");
-    btn.className =
-      "btn btn-sm" + (wikiSubTab === st.id ? " btn-primary" : "");
+    btn.className = "btn btn-sm" + (wikiSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
     btn.onclick = function () {
