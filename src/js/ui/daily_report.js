@@ -347,6 +347,18 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     });
   }
 
+  // 1b. 连续工作天数展示（禀赋效应 — 让玩家珍惜连续记录）
+  var streak = state.flags._workStreak || 0;
+  if (streak >= 3) {
+    var streakIcon =
+      streak >= 100 ? "👑" : streak >= 30 ? "💪" : streak >= 10 ? "🔥" : "📋";
+    var streakText =
+      streak >= 100
+        ? "劳动模范 · 连续工作 <strong>" + streak + "</strong> 天！"
+        : "已连续工作 <strong>" + streak + "</strong> 天";
+    highlights.push({ icon: streakIcon, text: streakText, type: "positive" });
+  }
+
   // 2. 里程碑检测
   if (day === 7) {
     highlights.push({

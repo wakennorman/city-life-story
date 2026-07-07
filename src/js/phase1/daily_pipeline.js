@@ -763,6 +763,93 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.24: 连续工作 Streak 检查 + 里程碑奖励 ===
+  {
+    name: "work_streak_check",
+    fn: function (state) {
+      if (!state.flags) return;
+      var streak = state.flags._workStreak || 0;
+      var workedToday = state.flags._workedToday;
+      var lastDay = state.flags._lastWorkDay || 0;
+
+      // 本日没有工作：中断连续
+      if (!workedToday && streak > 0 && lastDay < state.player.day) {
+        // 只有之前有连续工作时才显示中断消息
+        if (streak >= 3) {
+          StateManager.addMessage(
+            "📉 连续工作" + streak + "天的记录中断了...明天重新开始吧。",
+            "warning",
+          );
+        }
+        state.flags._workStreak = 0;
+        state.flags._lastWorkDay = 0;
+      }
+
+      // 里程碑奖励（仅首次达到时发放）
+      if (streak > 0 && !state.flags._workStreakMilestones) {
+        state.flags._workStreakMilestones = {};
+      }
+      var ms = state.flags._workStreakMilestones || {};
+
+      // 连续5天 → 小奖金
+      if (streak >= 5 && !ms[5]) {
+        ms[5] = true;
+        var bonus5 = 200;
+        state.resources.cash = (state.resources.cash || 0) + bonus5;
+        StateManager.addMessage(
+          "🎉 连续工作5天！全勤奖金 ¥" + bonus5 + "！",
+          "success",
+        );
+      }
+      // 连续10天 → 额外奖金 + 心情奖励
+      if (streak >= 10 && !ms[10]) {
+        ms[10] = true;
+        var bonus10 = 500;
+        state.resources.cash = (state.resources.cash || 0) + bonus10;
+        state.needs.happiness = Math.min(
+          100,
+          (state.needs.happiness || 50) + 5,
+        );
+        StateManager.addMessage(
+          "🔥 连续工作10天！勤劳奖励 ¥" + bonus10 + "，心情+5！",
+          "success",
+        );
+      }
+      // 连续30天 → 大额奖金
+      if (streak >= 30 && !ms[30]) {
+        ms[30] = true;
+        var bonus30 = 2000;
+        state.resources.cash = (state.resources.cash || 0) + bonus30;
+        StateManager.addMessage(
+          "💪 连续工作30天！毅力可嘉！全勤大奖 ¥" + bonus30 + "！",
+          "success",
+        );
+      }
+      // 连续100天 → 里程碑奖金 + 永久称号
+      if (streak >= 100 && !ms[100]) {
+        ms[100] = true;
+        var bonus100 = 10000;
+        state.resources.cash = (state.resources.cash || 0) + bonus100;
+        state.flags._streakMaster = true; // 永久称号标记
+        StateManager.addMessage(
+          "👑 连续工作100天！你是真正的劳动模范！终身成就奖 ¥" +
+            bonus100 +
+            "！",
+          "success",
+        );
+        StateManager.addMessage(
+          "🏅 获得称号「劳动模范」：你永不退缩的精神感染了所有人。",
+          "success",
+        );
+      }
+
+      state.flags._workStreakMilestones = ms;
+
+      // 清理今日工作标记（为下一天做准备）
+      delete state.flags._workedToday;
+    },
+  },
+
   // === v3.23: 触发槽 — 每日中点（清理后）===
   {
     name: "trigger_slot_daily_mid",

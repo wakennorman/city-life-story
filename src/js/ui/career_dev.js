@@ -2473,6 +2473,17 @@ function tickCareerJobDaily(state) {
 
   if (!state.career || !state.career.currentJob) return;
 
+  // ====== 连续工作天数追踪（上班族版本）======
+  if (!state.flags._workStreak) state.flags._workStreak = 0;
+  if (!state.flags._lastWorkDay) state.flags._lastWorkDay = 0;
+  if (state.flags._lastWorkDay === state.player.day - 1) {
+    state.flags._workStreak = (state.flags._workStreak || 0) + 1;
+  } else if (state.flags._lastWorkDay !== state.player.day) {
+    state.flags._workStreak = 1;
+  }
+  state.flags._lastWorkDay = state.player.day;
+  state.flags._workedToday = true;
+
   var job = state.career.currentJob;
   var cap = ensureCareerCapital(state);
   job.workDays = (job.workDays || 0) + 1;

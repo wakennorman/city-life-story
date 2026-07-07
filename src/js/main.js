@@ -4112,6 +4112,18 @@ function doStreetJob(job) {
 
   // 推进时间
   advanceTimeSlot();
+
+  // ====== 连续工作天数追踪（全局 Work Streak）======
+  // 在 doStreetJob 末尾记录，用于 daily_pipeline 的连续工作奖励判断
+  if (!state.flags._workStreak) state.flags._workStreak = 0;
+  if (!state.flags._lastWorkDay) state.flags._lastWorkDay = 0;
+  if (state.flags._lastWorkDay === state.player.day - 1) {
+    state.flags._workStreak = (state.flags._workStreak || 0) + 1;
+  } else if (state.flags._lastWorkDay !== state.player.day) {
+    state.flags._workStreak = 1;
+  }
+  state.flags._lastWorkDay = state.player.day;
+  state.flags._workedToday = true; // 标记今日已工作，供 pipeline 检测
 }
 
 /**
