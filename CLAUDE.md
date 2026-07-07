@@ -256,8 +256,14 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 - **指令五（4d P0）**：3 个 `after_work_*` 道德事件是死代码（困在 MORAL_EVENTS，`Random.chance(undefined)`=false，且 loadAll 只扫描 RANDOM_EVENTS 无法注册到 after_work 槽）→ 在 moral_events.js 末尾新增翻译 IIFE（desc→story, immediate→apply, 标题首emoji→icon, 不设 phase 避免双触发），让 loadAll 注册到 after_work 槽 → commit `7d1990d`（本地待推）
 - **指令六（v3.22 城管联动）**：state.chengguan {heat/warnings/relationship} 长期只有 main.js 自动巡逻（纯消息无选择）→ 新建 `chengguan_events.js`：热度≥60触发"城管来了"高张力互动事件（4种选择：逃跑/魅力求情/塞钱/50%赌局），读写 heat/relationship/warnings + charm/morality → commit `2701c12`（本地待推）
 
-> **MC 回归用法（v3.1 ③ 后）**：
->
+- **v3.24 日终报告峰终定律增强**（commit `8d1362e`，已推送）：
+  - **🏆 今日高光**：单笔最大收入高亮+天数里程碑+累计收入里程碑+健康/债务预警（损失厌恶）+平凡日温暖收尾
+  - **🔮 明日展望**：集成天气预报+状态需求建议（损失厌恶触发）+天数情感锚点+情感收尾句
+  - **设计心理学**：峰终定律（每日峰值+终点记忆）/损失厌恶（预警驱动行动）/留存钩子（让玩家期待明天）
+  - 影响文件：`daily_report.js`（+183行）| 验证：node --check ✅ / build.py 5061KB ✅ / MC 10×500d ✅
+
+  > **MC 回归用法（v3.1 ③ 后）**：
+
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
 > mc.report();            // 聚合首末+资产区间
