@@ -12,13 +12,7 @@
       title: "团购大军杀到",
       story:
         "菜市场冷清了很多。王婶的菜被社区团购冲击——美团优选土豆¥0.99，进货价都不止。批发菜价跌了20%。等平台烧完钱会涨回来的。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 25 &&
-          !st.flags._communityGroupBuySeen
-        );
-      },
+      triggers: { minDay: 25, excludeFlags: ["_communityGroupBuySeen"] },
       choices: [
         {
           text: "💰 趁低价囤菜等涨价",
@@ -65,13 +59,7 @@
       title: "满街的共享单车",
       story:
         "一夜之间三家共享公司投了上万辆车。运维员¥200/天，把乱停的车搬回去。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          !st.flags._bikeShareSeen
-        );
-      },
+      triggers: { minDay: 20, excludeFlags: ["_bikeShareSeen"] },
       choices: [
         {
           text: "🚲 去做运维赚快钱",
@@ -103,13 +91,7 @@
       title: "直播带货风口",
       story:
         "隔壁小哥一个月流水几十万——批发市场¥20的衣直播卖¥99。你知道这是风口。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 35 &&
-          !st.flags._liveStreamSeen
-        );
-      },
+      triggers: { minDay: 35, excludeFlags: ["_liveStreamSeen"] },
       choices: [
         {
           text: "📱 试播三天",
@@ -147,13 +129,7 @@
       title: "AI冲击打工人",
       story:
         "AI客服替代了300人团队。翻译老李两个月没接到单。但编程技能突然值钱了。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._aiReplaceSeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_aiReplaceSeen"] },
       choices: [
         {
           text: "📚 报名学编程（¥1,000）",
@@ -186,13 +162,7 @@
       icon: "📍",
       title: "黄金摊位争夺战",
       story: "夜市街口位置空出来了。有人出¥3,000租一个月。那位置客流量是三倍。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._stallLocationSeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_stallLocationSeen"] },
       choices: [
         {
           text: "💰 砸¥3,000抢下",
@@ -234,13 +204,7 @@
       icon: "🪫",
       title: "寺庙经济",
       story: "灵隐寺排队比商场还多。卖香烛的大妈一天¥3,000。年轻人全来上香了。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 40 &&
-          !st.flags._templeEconomySeen
-        );
-      },
+      triggers: { minDay: 40, excludeFlags: ["_templeEconomySeen"] },
       choices: [
         {
           text: "🩧 进手串去卖（¥800）",
@@ -388,13 +352,7 @@
       title: "新能源二手崩了",
       story:
         "去年¥120,000的新能源车，二手¥48,000。做二手车的陈哥仓库压了十几台。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 50 &&
-          !st.flags._evUsedCarSeen
-        );
-      },
+      triggers: { minDay: 50, excludeFlags: ["_evUsedCarSeen"] },
       choices: [
         {
           text: "💰 抄底收一台",
@@ -428,13 +386,10 @@
       title: "临期食品生意",
       story:
         "临期食品仓库——¥10一箱进口饼干¥5一瓶橄榄油。¥1,000进货能卖¥2,500。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          st.resources.cash >= 1000 &&
-          !st.flags._nearExpirySeen
-        );
+      triggers: {
+        minDay: 20,
+        excludeFlags: ["_nearExpirySeen"],
+        minCash: 1000,
       },
       choices: [
         {
@@ -470,13 +425,7 @@
       title: "社保交还是不交",
       story:
         "灵活就业社保每月¥900。一个月才赚¥4,000~¥6,000。隔壁老周胆囊炎花了¥30,000全自费。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 45 &&
-          !st.flags._gigSocialSeen
-        );
-      },
+      triggers: { minDay: 45, excludeFlags: ["_gigSocialSeen"] },
       choices: [
         {
           text: "\u2705 交",
@@ -511,13 +460,7 @@
       title: "¥9,999财富自由课",
       story:
         "短视频导师讲普通人如何财富自由。课程¥9,999。评论分两派——真的有用还是割韭菜。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._knowledgePaySeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_knowledgePaySeen"] },
       choices: [
         {
           text: "🎣 买了试试（¥9,999）",
@@ -634,14 +577,7 @@
       title: "全民贷跑路了",
       story:
         "你刷到一条新闻——「全民贷」爆雷，涉及金额¥80亿，线下门店被愤怒的老年人围得水泄不通。有人在门口拉横幅，有人蹲在地上哭。群里有人说内部消息：实际控制人已经飞加拿大。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._p2pCrashSeen &&
-          st.resources.cash >= 500
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_p2pCrashSeen"], minCash: 500 },
       choices: [
         {
           text: "😰 去现场看看能不能低价收购债权",
@@ -699,13 +635,7 @@
       title: "共享单车坟场",
       story:
         "城郊的空地上堆满了五颜六色的共享单车——橙色、黄色、蓝色，层层叠叠像一座钢铁坟场。押金退了三个月还没到账。但有人在回收这些废铁，一辆¥15。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          !st.flags._sharingEconomySeen
-        );
-      },
+      triggers: { minDay: 20, excludeFlags: ["_sharingEconomySeen"] },
       choices: [
         {
           text: "♻️ 回收废铁赚差价",
@@ -752,13 +682,7 @@
       title: "大厂毕业季",
       story:
         "你刷到一篇推送——「辰光网络Q2财报不及预期，裁员30%」。写字楼门口有抱着纸箱出来的人，有人西装革履站在路边抽烟发呆。二手平台上突然多了一批99新的MacBook Pro和人体工学椅。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 40 &&
-          !st.flags._bigTechLayoffSeen
-        );
-      },
+      triggers: { minDay: 40, excludeFlags: ["_bigTechLayoffSeen"] },
       choices: [
         {
           text: "💻 低价收购被裁员工的设备",
@@ -823,13 +747,7 @@
       title: "取消大小周",
       story:
         "新闻炸了——「橙象集团取消大小周，员工月薪普降15%」。群里吵翻了：有人说时薪没变爽啊，有人说降薪了房贷怎么办。楼下便利店老板叹气：「大厂不加班了，夜里没人买夜宵了。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 35 &&
-          !st.flags._tech996Seen
-        );
-      },
+      triggers: { minDay: 35, excludeFlags: ["_tech996Seen"] },
       choices: [
         {
           text: "🎉 高兴——可以找正常下班的朋友玩",
@@ -876,13 +794,7 @@
       title: "中概股退市风暴",
       story:
         "「审计底稿」争端升级，美股市场的中国公司集体面临退市。新闻里专家的嘴一张一合：「对业务没有实质影响。」但股价已经跌了70%。有朋友说他老板之前套现了¥3000万——现在人在新加坡。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 50 &&
-          !st.flags._chinaDelistSeen
-        );
-      },
+      triggers: { minDay: 50, excludeFlags: ["_chinaDelistSeen"] },
       choices: [
         {
           text: "📈 抄底中概股ETF",
@@ -937,13 +849,7 @@
       title: "拆迁公告",
       story:
         "村口的公告栏贴了一张红头文件——「新城街道旧改项目征收公告」。20年的老房子，按补偿方案能赔¥120万或一套安置房。老李头拿着公告手在抖：「等了15年，终于等到了。」但旁边有人悄悄说：「现在签字亏了，等多三个月至少多赔30%。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 60 &&
-          !st.flags._demolitionSeen
-        );
-      },
+      triggers: { minDay: 60, excludeFlags: ["_demolitionSeen"] },
       choices: [
         {
           text: "🏡 劝邻居早签早拿钱",
@@ -1007,13 +913,7 @@
       title: "烂尾楼前",
       story:
         "一栋封顶的大楼矗立在雨中——脚手架还在，但工地上已经没人了。开发商资金链断裂，300多户业主交了首付却拿不到房。有人在楼顶拉横幅，有人在售楼处门口搭了帐篷。七个业主凑钱请了律师，每人摊¥3000。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 45 &&
-          !st.flags._unfinishedSeen
-        );
-      },
+      triggers: { minDay: 45, excludeFlags: ["_unfinishedSeen"] },
       choices: [
         {
           text: "⚖️ 捐¥300支持业主打官司",
@@ -1067,13 +967,7 @@
       title: "长租公寓爆雷",
       story:
         "「城客公寓」爆雷了。房东没收到租金要赶人，租客一次性交了半年房租却被物业贴了催缴单。你住的城中村虽然没有长租公寓，但好几个工友都在群里问：「有没有便宜的单间转租？」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 15 &&
-          !st.flags._rentalCrashSeen
-        );
-      },
+      triggers: { minDay: 15, excludeFlags: ["_rentalCrashSeen"] },
       choices: [
         {
           text: "🏠 帮忙转介绍靠谱房东",
@@ -1120,13 +1014,7 @@
       title: "限购松绑了",
       story:
         "新政出台：社保满一年即可购房，二套房首付从60%降到40%。中介的朋友圈集体沸腾：「上车好时机！」你算了一下自己的存款——距离首付还差一个零。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 70 &&
-          !st.flags._purchaseRelaxSeen
-        );
-      },
+      triggers: { minDay: 70, excludeFlags: ["_purchaseRelaxSeen"] },
       choices: [
         {
           text: "🏦 找中介咨询低首付购房",
@@ -1178,13 +1066,7 @@
       title: "加装电梯风波",
       story:
         "你路过一个老旧小区，看到一楼住户和六楼老太太在吵架——加装电梯，一楼说挡了采光房子贬值，六楼说腿脚不便三年没下楼了。社区调解员两边赔笑脸，手里的本子记满了双方的意见。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 25 &&
-          !st.flags._elevatorSeen
-        );
-      },
+      triggers: { minDay: 25, excludeFlags: ["_elevatorSeen"] },
       choices: [
         {
           text: "🤝 帮忙调解",
@@ -1234,13 +1116,7 @@
       title: "学区房变天",
       story:
         "「多校划片」政策出台，实验小学的学区房一夜跌了40%。群里有个人三天前刚签了合同，多花¥80万买的学区房——现在和隔壁老破小一个学校。中介的电话被打爆了，全是骂人的。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 55 &&
-          !st.flags._schoolDistrictSeen
-        );
-      },
+      triggers: { minDay: 55, excludeFlags: ["_schoolDistrictSeen"] },
       choices: [
         {
           text: "👍 正好——以后孩子上学不拼房子了",
@@ -1295,13 +1171,10 @@
       title: "抢人大战",
       story:
         "二线城市又来抢人了：大专以上学历直接落户，给¥5万生活补贴，人才公寓租金打五折。你算了一下——自己好像符合条件。但要去一个陌生的城市重新开始。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 35 &&
-          !st.flags._talentWarSeen &&
-          (st.player.intelligence || 0) >= 25
-        );
+      triggers: {
+        minDay: 35,
+        excludeFlags: ["_talentWarSeen"],
+        minStat: { intelligence: 25 },
       },
       choices: [
         {
@@ -1352,14 +1225,7 @@
       title: "A股疯了",
       story:
         "大盘连续涨了15天，从2800点冲到了4200点。食堂里、公交上、厕所隔间——所有人都在看手机上的K线。卖菜的老刘把攒了五年的¥20万全扔进去了。你攥着口袋里的几千块，心跳加速。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._stockBoomSeen &&
-          st.resources.cash >= 1000
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_stockBoomSeen"], minCash: 1000 },
       choices: [
         {
           text: "🔥 跟进去——全仓买入",
@@ -1415,13 +1281,7 @@
       title: "比特币又减半了",
       story:
         "比特币第四次减半完成，价格从¥25万冲到¥60万。群里有人说他2018年花¥3000买了0.5个BTC忘了，现在值¥30万。二手电脑城里有人开始攒显卡挖矿，电费¥1.2/度也拦不住。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 50 &&
-          !st.flags._cryptoCycleSeen
-        );
-      },
+      triggers: { minDay: 50, excludeFlags: ["_cryptoCycleSeen"] },
       choices: [
         {
           text: "₿ 买一点比特币试试",
@@ -1481,13 +1341,10 @@
       title: "散户大战华尔街",
       story:
         "「柠檬汽水」被知名做空机构发布17页做空报告，股价暴跌20%。但REDDIT上的散户们不干了——「YOLO！ALL IN！」群里的中文翻译比原文还热闹：「机构做空200%，逼空要爆了！」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 40 &&
-          !st.flags._retailVsWallSeen &&
-          st.resources.cash >= 500
-        );
+      triggers: {
+        minDay: 40,
+        excludeFlags: ["_retailVsWallSeen"],
+        minCash: 500,
       },
       choices: [
         {
@@ -1552,13 +1409,7 @@
       title: "量化基金收割",
       story:
         "「幻方量化」去年收益43%，今年前三个月已经亏了15%。有人说量化基金就是高频割韭菜——散户的每一笔交易都被算法预测。你想起上周自己买了就跌、卖了就涨的股票，后背一凉。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 55 &&
-          !st.flags._quantFundSeen
-        );
-      },
+      triggers: { minDay: 55, excludeFlags: ["_quantFundSeen"] },
       choices: [
         {
           text: "🤖 买量化基金——打不过就加入",
@@ -1618,13 +1469,7 @@
       title: "存款利率又降了",
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          !st.flags._depositRateCutSeen
-        );
-      },
+      triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -1673,13 +1518,7 @@
       title: "汇率破7了",
       story:
         "美元兑人民币汇率突破7.2。做外贸的李哥最近订单接到手软——「人民币贬值了，老外觉得我们的货跟白送一样。」但进口商的脸色很难看——电脑配件进货价涨了15%，整条街的装机店都在调价。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 40 &&
-          !st.flags._exchangeRateSeen
-        );
-      },
+      triggers: { minDay: 40, excludeFlags: ["_exchangeRateSeen"] },
       choices: [
         {
           text: "💵 换点美元避险",
@@ -1743,13 +1582,7 @@
       title: "信托暴雷",
       story:
         "「中诚信托·XX号」逾期了——涉及金额¥300亿，投资者在总部楼下拉起了横幅。你看到新闻里一个穿西装的中年男人对着镜头说：「这是我妈的养老钱，¥200万。」那个人的表情比哭还难看。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 60 &&
-          !st.flags._trustCrashSeen
-        );
-      },
+      triggers: { minDay: 60, excludeFlags: ["_trustCrashSeen"] },
       choices: [
         {
           text: "🔍 打听有没有打折转让的信托份额",
@@ -1805,14 +1638,7 @@
       title: "突发公共卫生事件",
       story:
         "新闻弹窗：某区发现新型流感病例，全市进入三级响应。药店的口罩10分钟被抢光，超市的泡面和矿泉水货架空了一半。社区在招志愿者——包三餐，每天¥100补贴。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 15 &&
-          st.player.day <= 200 &&
-          !st.flags._pandemicSeen
-        );
-      },
+      triggers: { minDay: 15, maxDay: 200, excludeFlags: ["_pandemicSeen"] },
       choices: [
         {
           text: "😷 报名社区志愿者",
@@ -1869,13 +1695,7 @@
       title: "芯片国产化浪潮",
       story:
         "美国又升级了对华芯片出口管制。但新闻里说国产芯片良率突破了70%——虽然跟台积电还有差距，但够用了。工业园区的封装厂到处贴招聘广告：「芯片测试员，月薪¥6000起，包吃住。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 45 &&
-          !st.flags._chipLocalSeen
-        );
-      },
+      triggers: { minDay: 45, excludeFlags: ["_chipLocalSeen"] },
       choices: [
         {
           text: "🏭 去芯片厂面试",
@@ -1949,13 +1769,7 @@
       title: "预制菜入侵",
       story:
         "那条街上的三家小饭馆有两家换上了「预制菜」的招牌——料理包加热3分钟，成本¥3.5，卖¥18。王婶的面馆还在坚持手工拉面——但客人少了四成。冷冻批发市场多了好多卖料理包的摊位。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          !st.flags._preMadeFoodSeen
-        );
-      },
+      triggers: { minDay: 20, excludeFlags: ["_preMadeFoodSeen"] },
       choices: [
         {
           text: "📦 批发料理包来卖",
@@ -2010,13 +1824,7 @@
       title: "平替风暴",
       story:
         "拼多多的市值超过了阿里。街头到处都是「9.9包邮」的广告——隔壁小张在拼多多上进了一样的货，价格只有你的一半。品牌店的老板说：「现在的人只买对的，不买贵的——但对的是指最便宜的。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 25 &&
-          !st.flags._consumptionDownSeen
-        );
-      },
+      triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       choices: [
         {
           text: "📦 调整进货策略——走低价路线",
@@ -2073,13 +1881,7 @@
       title: "出海浪潮",
       story:
         "SHEIN在北美杀疯了——一件裙子$9.9，美国年轻人疯抢。国内供应商跟着吃肉——张老板的服装厂以前接国内订单¥25/件，现在接SHEIN的订单¥35/件，只要质量达标。他满世界找熟练车工。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 50 &&
-          !st.flags._goingGlobalSeen
-        );
-      },
+      triggers: { minDay: 50, excludeFlags: ["_goingGlobalSeen"] },
       choices: [
         {
           text: "🧵 去服装厂上班",
@@ -2140,13 +1942,7 @@
       title: "超市关门潮",
       story:
         "沃尔玛这个月关了第三家店。家乐福的货架越来越空——供应商说账期从30天拖到了120天。关店大清仓：货架¥50一个，冷柜¥200一台，整箱的方便面¥10一箱。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 35 &&
-          !st.flags._retailCollapseSeen
-        );
-      },
+      triggers: { minDay: 35, excludeFlags: ["_retailCollapseSeen"] },
       choices: [
         {
           text: "🛒 去扫货——低价囤日用品",
@@ -2201,13 +1997,7 @@
       title: "新能源价格战",
       story:
         "特斯拉降价¥3万，比亚迪跟进降价¥2万，小鹏汽车直接推出了¥10万的车型。二手车商的朋友圈在哀嚎——「2022年的Model 3，收车价从¥18万跌到¥12万。」充电桩公司倒是笑开了花——车卖得多，桩不够用了。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._evPriceWarSeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_evPriceWarSeen"] },
       choices: [
         {
           text: "⚡ 问充电桩公司需不需要人",
@@ -2262,13 +2052,7 @@
       title: "城管来了",
       story:
         "区里创文创卫检查，城管突然严打——三轮车被没收了五辆。老赵的车被抬上卡车时他差点哭了：「我贷款买的车啊……」但街角那个有固定摊位的人照样做生意——有关系和没关系，就是不一样。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 10 &&
-          !st.flags._vendorCrackdownSeen
-        );
-      },
+      triggers: { minDay: 10, excludeFlags: ["_vendorCrackdownSeen"] },
       choices: [
         {
           text: "🏪 花钱办个固定摊位证",
@@ -2324,13 +2108,7 @@
       title: "最低工资上调",
       story:
         "市人社局发公告了：最低工资从¥2200调到¥2480。餐馆门口贴出了新菜单——「因人工成本上涨，部分菜品价格上调5%~10%」。王婶说：「涨工资是好事——但物价涨得比工资快。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._minWageHikeSeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_minWageHikeSeen"] },
       choices: [
         {
           text: "💰 这是好事——你的收入会涨",
@@ -2379,13 +2157,7 @@
       title: "社保改革来了",
       story:
         "社保入税新政实施——以前最低基数交社保，现在必须按实际工资足额缴纳。灵活就业群里炸了锅：「自己交社保，一个月¥1500——我一个月才赚¥5000！」有人说不交了，有人说老了怎么办。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 40 &&
-          !st.flags._socialSecuritySeen
-        );
-      },
+      triggers: { minDay: 40, excludeFlags: ["_socialSecuritySeen"] },
       choices: [
         {
           text: "💰 咬咬牙按最低档交社保",
@@ -2440,13 +2212,7 @@
       title: "垃圾分类来了",
       story:
         "小区楼下多了四个颜色的垃圾桶。居委会大妈每天早晚站在垃圾桶边：「你这是什么垃圾？」有个人因为没分类被罚了¥50。但有人发现了商机——「代扔垃圾，¥5一次」。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 15 &&
-          !st.flags._garbageClassSeen
-        );
-      },
+      triggers: { minDay: 15, excludeFlags: ["_garbageClassSeen"] },
       choices: [
         {
           text: "👨‍🏫 报名做垃圾分类指导员",
@@ -2498,13 +2264,7 @@
       title: "短视频风口",
       story:
         "这条街上出了个网红——卖炒粉的阿珍，一个「炒粉翻锅」视频涨了10万粉。现在她直播炒粉，一晚流水¥3000。你也掏出手机试了试——拍了三条，播放量分别是12、3、0。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 25 &&
-          !st.flags._shortVideoSeen
-        );
-      },
+      triggers: { minDay: 25, excludeFlags: ["_shortVideoSeen"] },
       choices: [
         {
           text: "🎥 认真做短视频——记录城市打工生活",
@@ -2653,13 +2413,7 @@
       title: "免费体检陷阱",
       story:
         "街口新开了一家「健康理疗中心」，门口写着「免费测血压、测血糖、送鸡蛋一斤」。一群老年人排着队进去了。两个小时后每个人出来都提着一袋¥2980的「纳米磁疗被」。你知道是骗局——但那些老人笑得挺开心。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          !st.flags._healthScamSeen
-        );
-      },
+      triggers: { minDay: 20, excludeFlags: ["_healthScamSeen"] },
       choices: [
         {
           text: "📢 去揭穿骗局——告诉那些老人",
@@ -2718,13 +2472,7 @@
       title: "最后一棒",
       story:
         "这条街上掀起了一股网红脆皮五花肉的热潮——第一家店门口排了30米长队。第二家在对面开张。现在这条街上有8家同款。第一家店的老板已经开始贴转让广告了。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._lastBatonSeen
-        );
-      },
+      triggers: { minDay: 30, excludeFlags: ["_lastBatonSeen"] },
       choices: [
         {
           text: "🥠 趁现在还赚钱开一家",
@@ -2796,14 +2544,7 @@
       title: "沉没成本",
       story:
         "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 60 &&
-          !st.flags._sunkCostSeen &&
-          st.resources.cash >= 50000
-        );
-      },
+      triggers: { minDay: 60, excludeFlags: ["_sunkCostSeen"], minCash: 50000 },
       choices: [
         {
           text: "💰 追加投资",
@@ -2869,13 +2610,7 @@
       title: "灰色地带合法化",
       story:
         "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 90 &&
-          !st.flags._grayToLegitSeen
-        );
-      },
+      triggers: { minDay: 90, excludeFlags: ["_grayToLegitSeen"] },
       choices: [
         {
           text: "💼 申请正规牌照",
@@ -3011,13 +2746,7 @@
       title: "合租室友的矛盾",
       story:
         "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 5 &&
-          !st.flags._roommateConflictSeen
-        );
-      },
+      triggers: { minDay: 5, excludeFlags: ["_roommateConflictSeen"] },
       choices: [
         {
           text: "😤 当面跟他说清楚",
@@ -3128,13 +2857,9 @@
       title: "躲雨时的闲聊",
       story:
         "突如其来的暴雨把你困在便利店门口的屋檐下。旁边有个同样躲雨的中年人，他看着雨叹口气说「这雨下得人心烦。」",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          !st.flags._rainChatSeen &&
-          st.weather &&
-          (st.weather.current === "rainy" || st.weather.current === "stormy")
-        );
+      triggers: {
+        excludeFlags: ["_rainChatSeen"],
+        weather: ["rainy", "stormy"],
       },
       choices: [
         {
@@ -3189,13 +2914,7 @@
       title: "社区招募志愿者",
       story:
         "居委会大妈在楼下贴了告示：周末社区大扫除+独居老人慰问活动，招募8名志愿者。包一顿午饭，还发一张「优秀志愿者」证书。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 6 &&
-          !st.flags._communityVolunteerSeen
-        );
-      },
+      triggers: { minDay: 6, excludeFlags: ["_communityVolunteerSeen"] },
       choices: [
         {
           text: "📋 报名参加志愿者",
@@ -3243,13 +2962,10 @@
       title: "菜市场收摊大甩卖",
       story:
         "傍晚菜市场快收摊了，卖菜的大姐冲你喊：「小伙子，剩的这些全给你，¥10拿走！」一堆蔬菜加起来得有四五斤，平时要¥25以上。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 3 &&
-          !st.flags._clearanceBargainSeen &&
-          st.resources.cash >= 10
-        );
+      triggers: {
+        minDay: 3,
+        excludeFlags: ["_clearanceBargainSeen"],
+        minCash: 10,
       },
       choices: [
         {
