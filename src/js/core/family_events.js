@@ -253,7 +253,7 @@
             st.resources.cash -= cost;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             if (!st.family.parents.father) st.family.parents.father = {};
-            st.family.parents.father.companionsion =
+            st.family.parents.father.companionship =
               (st.family.parents.father.companionship || 10) + 8;
             StateManager.addMessage(
               "💌 群里爸爸发了语音：「收到了收到了，你在外面照顾好自己就行。」听起来很高兴，但总觉得缺了点什么。心情+8。",

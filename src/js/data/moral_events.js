@@ -1453,6 +1453,58 @@ const MORAL_EVENTS = [
   },
 ];
 
+// v3.22: 修复 after_work 道德事件死代码
+// 这 3 个事件使用 triggers:["after_work"] 但被困在 MORAL_EVENTS 中。
+// triggerMoralEvent 通过 Random.chance(evt.dailyChance) 判定 → undefined → 永不被选中。
+// loadAllTriggers 只扫描 RANDOM_EVENTS → 它们从未注册到 after_work 槽。
+// 解决：翻译为 RANDOM_EVENTS 标准格式后注入，让 loadAll 注册到 after_work 槽。
+// 注意：不设置 phase 字段 → 不会被 queueRandomEvent 重复抽取（避免双触发）。
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._moralAfterWorkLoaded) return;
+  RANDOM_EVENTS._moralAfterWorkLoaded = true;
+
+  for (var i = 0; i < MORAL_EVENTS.length; i++) {
+    var m = MORAL_EVENTS[i];
+    if (
+      !m ||
+      !Array.isArray(m.triggers) ||
+      m.triggers.indexOf("after_work") < 0
+    )
+      continue;
+
+    // 翻译 choices: immediate → apply, 保留 flag/score 供后续扩展
+    var translatedChoices = (m.choices || []).map(function (c) {
+      return {
+        text: c.text,
+        hint: c.hint || "",
+        cost: c.cost,
+        apply: c.immediate, // showEventModal 回调调用 choice.apply(state)
+      };
+    });
+
+    // 从标题提取首 emoji 作为图标（标题格式为 "🪙 工友留下的硬币"）
+    var iconMatch = (m.title || "").match(/^(\p{Emoji}️?\s*)/u);
+    var icon = m.icon || (iconMatch ? iconMatch[1].trim() : "⚖️");
+
+    RANDOM_EVENTS.push({
+      id: m.id,
+      // 故意不设 phase → 不进入 queueRandomEvent 每日随机池，仅走 after_work 槽
+      icon: icon,
+      title: m.title,
+      story: m.desc, // showEventModal 读取 evt.story
+      conditions: m.condition, // 自定义门控（如雨天）
+      probability: 1, // 槽位触发不受此字段影响
+      repeatable: false,
+      triggers: m.triggers, // 让 loadAll 注册到 after_work 槽
+      triggerWeight: m.triggerWeight,
+      triggerCooldown: m.triggerCooldown,
+      minDay: m.minDay,
+      choices: translatedChoices,
+    });
+  }
+})();
+
 const EXTREME_MORAL_EVENTS = [
   {
     id: "extreme_steal_medicine",
