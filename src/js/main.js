@@ -3747,17 +3747,13 @@ function doStreetJob(job) {
       );
     }
   }
-  // 新人保护：前15天废品回收+5，苦力类+3
+  // 新人保护：前15天全职业收入+20%（帮助渡过初期生存期）
   if (state.player.day <= 15) {
-    const boostedJobs = [
-      "waste_recycling",
-      "manual_labor_construction",
-      "warehouse_worker",
-      "factory_work_assembly",
-    ];
-    if (boostedJobs.includes(job.id)) {
-      const newbieBonus = job.id === "waste_recycling" ? 2 : 2;
+    var newbieBonus = Math.floor(pay * 0.2);
+    if (newbieBonus > 0) {
       pay += newbieBonus;
+      state.flags._newbieBonusTotal =
+        (state.flags._newbieBonusTotal || 0) + newbieBonus;
     }
   }
   state.employment.completedShifts[job.id] =
