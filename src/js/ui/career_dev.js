@@ -1102,12 +1102,11 @@ function renderCareerJobs(state, parent) {
           "')\">⬆️ 申请晋升</button>";
       } else {
         html +=
-          '<div style="font-size:10px;color:var(--warning);margin-top:4px;cursor:pointer;" onclick="showCareerRequirementsModal_Global(' +
-          "'" +
+          '<div style="font-size:10px;color:var(--warning);margin-top:4px;cursor:pointer;" onclick="showCareerRequirementsModal_Global(\'' +
           currentJob.path +
           "','" +
           nextLevel.id +
-          "\x27)\x22>⚠️ 条件不足，点击查看详情</div>";
+          "')\">⚠️ 条件不足，点击查看详情</div>";
       }
       html += "</div>";
     } else {
@@ -2991,7 +2990,16 @@ function enhancedApplyCareerJob(pathId, levelId) {
         var eduReqs = level.education || 0;
         var pEdu = p.education || 0;
         var eduOk = pEdu >= eduReqs;
-        var eduNameMap = ["无", "小学", "初中", "高中/中专", "大专", "本科", "硕士", "博士"];
+        var eduNameMap = [
+          "无",
+          "小学",
+          "初中",
+          "高中/中专",
+          "大专",
+          "本科",
+          "硕士",
+          "博士",
+        ];
         if (eduReqs > 0) {
           reqLines.push(
             "<div style='display:flex;justify-content:space-between;padding:2px 0;'>" +
@@ -3050,7 +3058,9 @@ function enhancedApplyCareerJob(pathId, levelId) {
         });
       } else {
         StateManager.addMessage(
-          "⚠️ 经验不足（当前" + totalWorkDays + "天，需要3天工作经验才能投递正式工作）",
+          "⚠️ 经验不足（当前" +
+            totalWorkDays +
+            "天，需要3天工作经验才能投递正式工作）",
           "warning",
         );
       }
