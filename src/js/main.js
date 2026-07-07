@@ -4071,6 +4071,14 @@ function doStreetJob(job) {
     "success",
   );
 
+  // ====== v3.25: 打工人情境叙事 ======
+  if (typeof generateWorkFlavorText === "function") {
+    var flavorText = generateWorkFlavorText(state, job);
+    if (flavorText) {
+      StateManager.addMessage(flavorText, "info");
+    }
+  }
+
   // ====== Phase 2: 工作后风声感知 ======
   if (typeof checkRumorFromWork === "function") {
     checkRumorFromWork(state);
