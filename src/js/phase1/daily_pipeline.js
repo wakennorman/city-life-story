@@ -174,12 +174,12 @@ const DAILY_PIPELINE = [
       try {
         var ct = state.housing.tier || 0;
         var ch = state.resources.cash;
-        if (ct === 0 && ch >= 300) {
+        if (ct === 0 && ch >= 150) {
           if (typeof StateManager !== "undefined" && StateManager.addMessage) {
             StateManager.addMessage(
               "💡 你有 ¥" +
                 ch +
-                "，可以租个合租床位（¥300+¥12/天）改善睡眠和卫生。去城中村看看？",
+                "，可以租个合租床位（¥150+¥12/天）改善睡眠和卫生。去城中村看看？",
               "info",
             );
           }
