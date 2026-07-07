@@ -168,6 +168,7 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade && st.trade.currentLocation === "construction" &&
           st.flags._helpedCoworker &&
           st.flags._foughtWageTheft &&
           st.player.day >= 55 &&

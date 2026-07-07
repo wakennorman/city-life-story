@@ -827,7 +827,7 @@
       story:
         "相熟的批发市场老板说有一批货急着清仓，低价卖给你：5折！但得一下子全部吃下。",
       conditions: function (st) {
-        return st.resources.cash >= 1000;
+        return st.resources.cash >= 1000 && st.trade && (st.trade.currentLocation === "wholesaleMarket" || st.trade.currentLocation === "market");
       },
       choices: [
         {
@@ -1194,7 +1194,8 @@
         return (
           st.player.day >= 40 &&
           (st.resources.cash || 0) >= 500 &&
-          (st.player.intelligence || 0) >= 25
+          (st.player.intelligence || 0) >= 25 &&
+          st.trade && st.trade.currentLocation === "commercialDist"
         );
       },
       phase: "street",
@@ -1249,7 +1250,7 @@
       story:
         "菜市场门口，一位老大爷摔倒在地，周围人都在看但没人上前。你要怎么做？",
       conditions: function (st) {
-        return st.player.phase === "street";
+        return st.player.phase === "street" && st.trade && (st.trade.currentLocation === "market" || st.trade.currentLocation === "slum");
       },
       choices: [
         {

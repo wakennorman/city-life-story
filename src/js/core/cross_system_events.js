@@ -335,7 +335,8 @@
         "股市暴跌的新闻铺天盖地。你路过证券营业部，看到大爷大妈们一脸愁容。\n但你想起来有人说过：'别人恐惧时我贪婪'。",
       conditions: function (st) {
         if (!st._worldParams) return false;
-        return st._worldParams.marketMood === "bearish" && st.player.day > 20;
+        if (!st.trade) return false;
+        return st._worldParams.marketMood === "bearish" && st.player.day > 20 && st.trade.currentLocation === "commercialDist";
       },
       choices: [
         {
@@ -398,7 +399,7 @@
       story:
         "路过ATM机时，你注意到地上有一沓现金——目测至少¥500。四下无人，监控似乎也坏了。\n你心跳加速。",
       conditions: function (st) {
-        return st.player.day > 5 && !st.flags._foundATMCash;
+        return st.player.day > 5 && !st.flags._foundATMCash && st.trade && st.trade.currentLocation === "commercialDist";
       },
       choices: [
         {
