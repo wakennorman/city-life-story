@@ -13,3 +13,4 @@
 - [convention-over-configuration-methodology](convention-over-configuration-methodology.md) — 约定式自动归类核心方法论
 - [v3.24-daily-report-peak-end-rule](v3.24-daily-report-peak-end-rule.md) — v3.24 日终报告峰终定律增强：今日高光+明日展望+留存钩子
 - [v3.25-work-streak-system](v3.25-work-streak-system.md) — v3.25 连续工作系统：劳动节奏+禀赋效应+留存闭环
+- [Crossroads Card System v3.1](crossroads-card-system-v3.1.md) — 命运抉择卡机制设计 + 蒙特卡洛平衡验证（safe 68-72% / bold 12-56% 存活，依赖生活方式）
