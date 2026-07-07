@@ -3340,6 +3340,47 @@ function getAvailableActions(state) {
           if (typeof tryRevealNpcInfo === "function") {
             tryRevealNpcInfo(npc.id, state, "chat");
           }
+          // v3.30: 互惠原理 — 12%概率NPC回赠小礼物
+          if (!isBirthday && Random.chance(0.12) && rel.affinity >= 5) {
+            var giftRoll = Random.int(0, 3);
+            var giftMsg = "";
+            switch (giftRoll) {
+              case 0: // 食物
+                var foodGain = 10 + Random.int(0, 10);
+                state.needs.hunger = Math.min(
+                  100,
+                  (state.needs.hunger || 50) + foodGain,
+                );
+                giftMsg = "塞给你一些吃的，饥饱+" + foodGain;
+                break;
+              case 1: // 小钱
+                var cashGift = 5 + Random.int(0, 25);
+                state.resources.cash = (state.resources.cash || 0) + cashGift;
+                giftMsg = "硬塞给你¥" + cashGift + "，说「年轻人别客气」";
+                break;
+              case 2: // 心情
+                var happyGift = 3 + Random.int(0, 4);
+                state.needs.happiness = Math.min(
+                  100,
+                  (state.needs.happiness || 50) + happyGift,
+                );
+                giftMsg = "说了句暖心的话，心情+" + happyGift;
+                break;
+              case 3: // 技能经验
+                var skillGift = 2 + Random.int(0, 3);
+                if (typeof addSkillXp === "function") {
+                  addSkillXp("cooking", skillGift);
+                }
+                giftMsg = "分享了一些生活经验，烹饪经验+" + skillGift;
+                break;
+            }
+            if (giftMsg) {
+              StateManager.addMessage(
+                "🎁 " + npc.name + giftMsg + "。",
+                "success",
+              );
+            }
+          }
           consumeAP(10);
         },
       });
