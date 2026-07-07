@@ -47,6 +47,7 @@ Claude-<服务商>-<模型>[-api].bat
 | `claude-sonnet-4-6`        | `sonnet46` | 取关键名+版本 |
 | `gpt-5-codex`              | `gpt5cx`   | 最简特征字母  |
 | `sensenova-6.7-flash-lite` | `flash`    | 取特征词      |
+| `agnes-2.0-flash`          | `flash`    | 取特征词      |
 
 ### 本项目实际映射表
 
@@ -60,6 +61,7 @@ Claude-<服务商>-<模型>[-api].bat
 | `Claude-sensenova-glm52.bat`    | `Claude Code-sensenova-glm5.2.bat`            | SenseNova(proxy) | 第三方        |
 | `Claude-freemodel-sonnet46.bat` | `Claude Code - Freemodel.bat`                 | Freemodel        | 第三方        |
 | `Claude-longcat-cat20.bat`      | —                                             | LongCat(美团)    | 第三方(proxy) |
+| `Claude-agnes-api-flash.bat`    | —                                             | Agnes AI         | ✅ 直连       |
 
 > **一眼分辨**：`-api-` 出现 = 官方直连；服务商名出现 = 知道是谁提供的 API。
 
@@ -143,14 +145,15 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 
 ### 六大致命坑（按频率排序）
 
-| #   | 现象                                       | 根因                                              | 解决                                          |
-| --- | ------------------------------------------ | ------------------------------------------------- | --------------------------------------------- |
-| 1   | 新 bat 启动后 key 被旧配置覆盖             | `CLAUDE_CONFIG_DIR` 不独立                        | 每套配置用不同目录                            |
-| 2   | "There's an issue with the selected model" | settings 模型名 ≠ `--model` 参数                  | 用一个变量统一两处                            |
-| 3   | key 和模型名都对，报 model not found       | Base URL 与模型名不匹配                           | 先 curl 验证端点                              |
-| 4   | key 传进去但静默回落 `api.anthropic.com`   | `ANTHROPIC_API_KEY` 格式校验拒收非 `sk-ant-` 开头 | 用 `AUTH_TOKEN` 传 key，清空 `API_KEY`        |
-| 5   | 双击闪退无提示                             | `chcp 65001` 没加 / title 含中文                  | bat 第一行 `chcp 65001 > nul`，title 纯 ASCII |
-| 6   | 反复输出同一段话 → 死循环                  | 插件 Stop 钩子 + 第三方 API 不稳定                | settings.json 加三行禁用变量（见上）          |
+| #   | 现象                                         | 根因                                              | 解决                                                        |
+| --- | -------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | 新 bat 启动后 key 被旧配置覆盖               | `CLAUDE_CONFIG_DIR` 不独立                        | 每套配置用不同目录                                          |
+| 2   | "There's an issue with the selected model"   | settings 模型名 ≠ `--model` 参数                  | 用一个变量统一两处                                          |
+| 3   | key 和模型名都对，报 model not found         | Base URL 与模型名不匹配                           | 先 curl 验证端点                                            |
+| 4   | key 传进去但静默回落 `api.anthropic.com`     | `ANTHROPIC_API_KEY` 格式校验拒收非 `sk-ant-` 开头 | 用 `AUTH_TOKEN` 传 key，清空 `API_KEY`                      |
+| 5   | 双击闪退无提示                               | `chcp 65001` 没加 / title 含中文                  | bat 第一行 `chcp 65001 > nul`，title 纯 ASCII               |
+| 6   | 反复输出同一段话 → 死循环                    | 插件 Stop 钩子 + 第三方 API 不稳定                | settings.json 加三行禁用变量（见上）                        |
+| 7   | env 设了 `ANTHROPIC_BASE_URL` 但请求不走代理 | `claude.exe` 原生二进制不读该 env var（v2.1.201） | 用 `--settings '{"env":{"ANTHROPIC_BASE_URL":"..."}}'` 传参 |
 
 ### 工作目录三个隐形坑
 
@@ -242,6 +245,7 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - `era_trend_bubble_pop`（sister_zhang）/ `era_career_pivot_result`（old_zhou）/ `landlord_rent_hike`（aunt_wang）（commit `051c02a`）
   - 修复原则：conditions 新增 `relationships[X].met===true` 门控 + `// [自洽修复]` 注释
   - career_path_events.js / events_street_wealth.js 全量扫描 0 缺陷（已严格遵循 _path 门控 + 通用称谓）
+  - **v3.34 二次审查**：再次全量扫描 7 个文件，A类缺陷 0 个（所有职业/天气/NPC相关事件均已在上次审查中标注 `[自洽修复]` 并完成修复）
 - **指令二（联动扩充）**：新建 `cross_system_events_v321.js`（IIFE 注入模式），5 个事件填补 5 个设计空白（commit `2cd8fea`）：
   | 事件                        | 联动类型     | 触发条件                                       |
   | --------------------------- | ------------ | ---------------------------------------------- |
@@ -255,6 +259,16 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 - **指令四（v3.22 家庭联动）**：发现 `state.family` 子系统（parents.health/mortgage/children）零事件覆盖 → 新建 `family_events.js` 含 3 个高情感温度事件（母亲手术费道德困境 / 房贷逾期 / 父亲六十大寿回乡抉择）+ 基础设施（父母初始年龄55/53 + 默认房贷 + 父母同步衰老 pipeline + 房贷递减/逾期标记）→ commit `72e466e`
 - **指令五（4d P0）**：3 个 `after_work_*` 道德事件是死代码（困在 MORAL_EVENTS，`Random.chance(undefined)`=false，且 loadAll 只扫描 RANDOM_EVENTS 无法注册到 after_work 槽）→ 在 moral_events.js 末尾新增翻译 IIFE（desc→story, immediate→apply, 标题首emoji→icon, 不设 phase 避免双触发），让 loadAll 注册到 after_work 槽 → commit `7d1990d`（本地待推）
 - **指令六（v3.22 城管联动）**：state.chengguan {heat/warnings/relationship} 长期只有 main.js 自动巡逻（纯消息无选择）→ 新建 `chengguan_events.js`：热度≥60触发"城管来了"高张力互动事件（4种选择：逃跑/魅力求情/塞钱/50%赌局），读写 heat/relationship/warnings + charm/morality → commit `2701c12`（本地待推）
+
+- **v3.34 联动事件扩充（2026-07-08）**：在 `cross_system_events.js` 末尾追加 5 个新事件 + 1 个链式后续，填补 5 个联动空白区（commit `468dab0`）：
+  | 事件                        | 联动类型           | 触发条件                                       | 设计意图                                       |
+  | --------------------------- | ------------------ | ---------------------------------------------- | ---------------------------------------------- |
+  | `gig_regular_customer`      | 老手特遇           | sideHustle.freelance 或 courier_gig≥30         | 长期跑腿积累触发熟人回头客，奖励人脉资源       |
+  | `repair_expert_inspection`  | 技能门槛解锁       | repair.level≥40                                | 专业技能赋予识别假冒伪劣能力，体现成长感       |
+  | `xiao_mei_techpark_tip`     | NPC好感溢出        | xiao_mei.affinity≥60 + met                     | 深度关系解锁内幕消息，激励玩家经营NPC关系      |
+  | `storm_market_dilemma`      | 天气×位置情境      | weather.stormy/heavy_rain + wholesaleMarket    | 同一天气在不同位置有不同叙事和选择             |
+  | `moral_extreme_pickpocket`  | 道德极端分叉       | morality≥70 或 ≤30                             | 高道德→见义勇为/报警；低道德→旁观/同流合污     |
+  | `xiao_mei_techpark_payoff`  | 链式后续（事件6）  | 12天后 + 有xiao_mei_tip相关flag                | 兑现小美消息的投资回报，形成完整事件链         |
 
 - **v3.24 日终报告峰终定律增强**（commit `8d1362e`，已推送）：
   - **🏆 今日高光**：单笔最大收入高亮+天数里程碑+累计收入里程碑+健康/债务预警（损失厌恶）+平凡日温暖收尾
