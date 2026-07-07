@@ -261,8 +261,13 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - **🔮 明日展望**：集成天气预报+状态需求建议（损失厌恶触发）+天数情感锚点+情感收尾句
   - **设计心理学**：峰终定律（每日峰值+终点记忆）/损失厌恶（预警驱动行动）/留存钩子（让玩家期待明天）
   - 影响文件：`daily_report.js`（+183行）| 验证：node --check ✅ / build.py 5061KB ✅ / MC 10×500d ✅
-
-  > **MC 回归用法（v3.1 ③ 后）**：
+- **v3.25 连续工作系统**（commit `9d2fee8`，已推送）：
+  - **🎯 连续天数追踪**：`doStreetJob` + `tickCareerJobDaily` 双入口追踪，跨日续接/断档重置
+  - **🏆 里程碑奖金**：5天¥200 / 10天¥500+心情 / 30天¥2000 / 100天¥10000+称号
+  - **📉 中断机制**：连续≥3天中断时损失厌恶消息
+  - **设计心理学**：禀赋效应（珍惜连续记录）/ 损失厌恶（中断驱动）/ 劳动节奏感
+  - 影响文件：`main.js`(+12)/`career_dev.js`(+11)/`daily_pipeline.js`(+82)/`daily_report.js`(+10)
+  - 验证：node --check / build.py 5066KB / MC 10×500d (balanced 90%↑ trader 90%↑) ✅
 
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
