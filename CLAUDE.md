@@ -268,6 +268,12 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - **设计心理学**：禀赋效应（珍惜连续记录）/ 损失厌恶（中断驱动）/ 劳动节奏感
   - 影响文件：`main.js`(+12)/`career_dev.js`(+11)/`daily_pipeline.js`(+82)/`daily_report.js`(+10)
   - 验证：node --check / build.py 5066KB / MC 10×500d (balanced 90%↑ trader 90%↑) ✅
+- **v3.27 早安仪式+每日热招**（commit `6d60a6d`，⚠️ TLS网络问题待推）：
+  - 🌅 早安仪式：星期·天数+里程碑锚点+连续工作提醒+健康/疲劳预警
+  - 🔥 每日热招：35%×1.3~1.6倍工价，仅限当天（稀缺性）
+  - 💎 稀缺性/损失厌恶/禀赋效应/7天节奏感
+  - 影响：`daily_pipeline.js`(+48/-8) / `main.js`(+12)
+  - 验证：node --check / build.py 5080.2KB / MC 10×500d ✅
 
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
