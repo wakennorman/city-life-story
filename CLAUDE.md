@@ -251,6 +251,7 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   | `veteran_city_welcome`      | 老手特遇     | totalEarned≥20000 + day≥100 + fame≥15          |
   | `moral_wallet_camera_twist` | 道德分叉     | 曾捡钱(_foundATMCash/_keptFoundMoney) + 14天后 |
 - **附带修复**：`moral_finding_money` 被 `10404a7` 误损坏（双事件结构 + 游离字符串），恢复为单事件（commit `66652f1`）
+- **指令三（P0）**：8 个 v3.20 事件是死代码（缺 `conditions` + `apply`）→ 全部补全 + 3 个 push 循环加防御性兜底（与 `CAREER_EVENTS` fallback 一致）→ commit `30ed93f`；同步修 `age_30_reflection` 中文句号语法错误；`zhou_deep_bond` conditions 增加 `old_zhou.met` + 好感≥70 门控 [自洽修复]
 
 > **MC 回归用法（v3.1 ③ 后）**：
 >
