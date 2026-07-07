@@ -235,6 +235,23 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 
 **v3.6 约定式闭环 + 事件数据化提速**：① 修证书双叠加 bug（删 20 条 if-else + 补全 medical_license/professional_title_cert 2 动态证书 → 18 本全覆盖）+ ② 修 wiki.js var 提升残留（删 `_wikiDetailSkill` bug 段 + 在 `_wikiDetailJob` 末尾重建「🔗 需要同样技能的其他工作」交叉查询）+ ③ 注册 restore 分类（action_sort.js CATEGORIES 插入 id:"restore"）+ ④ 事件触发架构统一（evaluateTriggers 已内置 minNeeds/maxNeeds/phase/weather 字段；stray_dog_rain 已走数据对象式；daily_pipeline day<4 与 minDay 对齐；trigger_registry.js 顶部加双轨统一注释）+ ⑤ pipeline 接入 after_work + daily_end 触发槽 + 3 个 after_work 事件 + cooldown NaN 修复 + mc_verify_v3.6.cjs 验证 → 4/4完成 ✅（commits `a2929ea`+`70fdc22`+`1194740`+`0e5ab02`，本地待推）
 
+**v3.20/v3.21 叙事-触发自洽性审查 + 联动事件扩充（2026-07-07）**：
+
+- **指令一（审查修复）**：系统性扫描 7 个事件文件 250+ 事件的 A/B/C 类缺陷，修复 5 个 A 类 NPC 断链（叙事直呼已定义 NPC 名但 conditions 未校验 relationships.met）：
+  - `child_beggar_dilemma` / `bank_promo`（另一窗口 commit `10404a7`）
+  - `era_trend_bubble_pop`（sister_zhang）/ `era_career_pivot_result`（old_zhou）/ `landlord_rent_hike`（aunt_wang）（commit `051c02a`）
+  - 修复原则：conditions 新增 `relationships[X].met===true` 门控 + `// [自洽修复]` 注释
+  - career_path_events.js / events_street_wealth.js 全量扫描 0 缺陷（已严格遵循 _path 门控 + 通用称谓）
+- **指令二（联动扩充）**：新建 `cross_system_events_v321.js`（IIFE 注入模式），5 个事件填补 5 个设计空白（commit `2cd8fea`）：
+  | 事件                        | 联动类型     | 触发条件                                       |
+  | --------------------------- | ------------ | ---------------------------------------------- |
+  | `foggy_market_arbitrage`    | 天气+位置    | foggy/heavy_smog + wholesaleMarket + day≥20    |
+  | `starvation_body_alarm`     | 状态积累爆发 | _habits.lowHungerStreak≥3 或 health<30         |
+  | `aunt_wang_secret_ledger`   | NPC意外发现  | aunt_wang 好感≥50 + day≥60 + discovered        |
+  | `veteran_city_welcome`      | 老手特遇     | totalEarned≥20000 + day≥100 + fame≥15          |
+  | `moral_wallet_camera_twist` | 道德分叉     | 曾捡钱(_foundATMCash/_keptFoundMoney) + 14天后 |
+- **附带修复**：`moral_finding_money` 被 `10404a7` 误损坏（双事件结构 + 游离字符串），恢复为单事件（commit `66652f1`）
+
 > **MC 回归用法（v3.1 ③ 后）**：
 >
 > ```
