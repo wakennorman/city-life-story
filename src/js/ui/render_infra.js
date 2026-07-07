@@ -1240,4 +1240,246 @@ function renderActiveNews(state, parent) {
   }
 }
 
-// ====== Actions Tab ======
+// ================================================================
+//  v3.7 Tab 合并重构 — 5 大认知 Tab 渲染函数
+// ================================================================
+
+/**
+ * 🗺️ 城市 Tab — 地图 + 交易合并
+ *
+ * 玩家可在地图上浏览所有地点，并查看当前市场的商品行情。
+ * 选择地点后可查看该地点的交易信息。
+ *
+ * 设计逻辑：交易本质是"在某个地点做的事"，不应单独占一个 Tab。
+ * 在地图上完成"寻址→看价→买卖"的全链条。
+ */
+function renderCityTab(state, parent) {
+  // ---- 子Tab导航 ----
+  var SUB_TABS = [
+    { id: "city_map", label: "🗺️ 地图" },
+    { id: "city_trade", label: "📦 行情" },
+  ];
+  var currentSubTab = state._citySubTab || "city_map";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
+  SUB_TABS.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className =
+      "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._citySubTab = st.id;
+      renderCityTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  // ---- 内容 ----
+  if (currentSubTab === "city_map") {
+    if (typeof renderMapTab === "function") {
+      renderMapTab(state, parent);
+    } else {
+      parent.innerHTML +=
+        '<p style="color:var(--text-muted);text-align:center;">🗺️ 地图加载中...</p>';
+    }
+  } else if (currentSubTab === "city_trade") {
+    if (typeof renderTradeTab === "function") {
+      renderTradeTab(state, parent);
+    } else {
+      parent.innerHTML +=
+        '<p style="color:var(--text-muted);text-align:center;">📦 交易数据加载中...</p>';
+    }
+  }
+}
+
+/**
+ * 👤 我 Tab — 角色面板（背包/技能/成长/人生事务）
+ *
+ * 所有关于"我是谁"的都在这里。5 个子区块，上下滑动看全。
+ *
+ * 设计逻辑：玩家检查自身状态时不必切 4 个 Tab，
+ * 在一个页面内完成"我有什么→我会什么→我成长了多少→我身体如何"的自然思考链。
+ */
+function renderMeTab(state, parent) {
+  // ---- 子Tab导航 ----
+  var SUB_TABS = [
+    { id: "me_inventory", label: "🎒 背包" },
+    { id: "me_skills", label: "📚 技能" },
+    { id: "me_growth", label: "🌱 成长" },
+    { id: "me_life", label: "🏥 人生事务" },
+  ];
+  var currentSubTab = state._meSubTab || "me_inventory";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
+  SUB_TABS.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className =
+      "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._meSubTab = st.id;
+      renderMeTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  // ---- 内容 ----
+  switch (currentSubTab) {
+    case "me_inventory": {
+      // 背包 + 装备（原物品Tab + 装备套装）
+      if (typeof renderInventoryTab === "function") {
+        renderInventoryTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">🎒 背包加载中...</p>';
+      }
+      break;
+    }
+    case "me_skills": {
+      // 技能 + 证书
+      if (typeof renderSkillsTab === "function") {
+        renderSkillsTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">📚 技能系统加载中...</p>';
+      }
+      break;
+    }
+    case "me_growth": {
+      // 个人成长（属性训练 + 学历 + 爱好 + 数据图表）
+      if (typeof renderMergedPersonalGrowthTab === "function") {
+        renderMergedPersonalGrowthTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">🌱 个人成长加载中...</p>';
+      }
+      break;
+    }
+    case "me_life": {
+      // 人生事务（医疗 + 旅行 + 法律 + 人生节点）
+      if (typeof renderLifeSystemsTab === "function") {
+        renderLifeSystemsTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">🏥 人生事务加载中...</p>';
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * 💼 事业 Tab — 经济面板（工作/投资/副业/创业/成就）
+ *
+ * 所有关于"我怎么赚钱"的都在这里。
+ *
+ * 设计逻辑：玩家的事业思考链是"我现在工作咋样→有什么投资机会→有没有副业→要不要创业"，
+ * 不应拆成 4 个 Tab 来回切。子Tab导航一步到位。
+ */
+function renderCareerTab(state, parent) {
+  // ---- 子Tab导航 ----
+  var SUB_TABS = [
+    { id: "career_jobs", label: "💼 工作" },
+    { id: "career_invest", label: "💰 投资" },
+    { id: "career_hustle", label: "🔄 副业" },
+    { id: "career_startup", label: "🚀 创业" },
+    { id: "career_achievements", label: "🏅 成就" },
+  ];
+  var currentSubTab = state._careerTabSubTab || "career_jobs";
+
+  var nav = document.createElement("div");
+  nav.style.cssText =
+    "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
+  SUB_TABS.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className =
+      "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._careerTabSubTab = st.id;
+      renderCareerTab(state, parent);
+    };
+    nav.appendChild(btn);
+  });
+  parent.appendChild(nav);
+
+  // ---- 内容 ----
+  switch (currentSubTab) {
+    case "career_jobs": {
+      // 工作（职场 + 事业发展合并显示）
+      // 使用 career_dev 的 "总览" 子Tab 作为默认入口
+      if (typeof renderCareerDevTab === "function") {
+        state._careerSubTab = state._careerSubTab || "career_overview";
+        renderCareerDevTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">💼 工作信息加载中...</p>';
+      }
+      break;
+    }
+    case "career_invest": {
+      // 投资（股票 + 基金 + 房产 + 贵金属）
+      if (typeof renderInvestmentTab === "function") {
+        renderInvestmentTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">💰 投资系统加载中...</p>';
+      }
+      break;
+    }
+    case "career_hustle": {
+      // 副业 + 企业命运
+      var hustleContainer = document.createElement("div");
+      if (typeof renderSideHustleTab === "function") {
+        renderSideHustleTab(state, hustleContainer);
+      }
+      // 在企业阶段附加企业生态信息
+      if (
+        state.player.phase === "corporate" &&
+        typeof renderEnterpriseFateTab === "function"
+      ) {
+        var sep = document.createElement("hr");
+        sep.style.cssText =
+          "margin:12px 0;border:none;border-top:1px solid var(--border);";
+        hustleContainer.appendChild(sep);
+        var fateTitle = document.createElement("h3");
+        fateTitle.textContent = "🏭 企业生态";
+        fateTitle.style.cssText = "margin-bottom:8px;";
+        hustleContainer.appendChild(fateTitle);
+        renderEnterpriseFateTab(state, hustleContainer);
+      }
+      parent.appendChild(hustleContainer);
+      break;
+    }
+    case "career_startup": {
+      // 创业（通过 career_dev 的 startup 子Tab）
+      if (typeof renderCareerDevTab === "function") {
+        state._careerSubTab = "career_startup";
+        renderCareerDevTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">🚀 创业系统加载中...</p>';
+      }
+      break;
+    }
+    case "career_achievements": {
+      // 成就（事业类成就集中展示）
+      if (typeof renderAchievementsTab === "function") {
+        renderAchievementsTab(state, parent);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">🏅 成就系统加载中...</p>';
+      }
+      break;
+    }
+  }
+}

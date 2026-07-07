@@ -31,7 +31,10 @@
         "周会上，老板拍了一下桌子：「这个项目为什么延期了？！」\\n\\n所有人的目光都往你这边扫。你知道这是小赵负责的部分，但他正一脸无辜地看着老板——而你上周帮他改了那个bug。\\n\\n空气安静了两秒。\\n\\n你必须开口。",
       conditions: function (st) {
         // 有同事关系 + 在职 + 天数足够
-        var cols = st.corporate && st.corporate.colleagues ? st.corporate.colleagues.network : [];
+        var cols =
+          st.corporate && st.corporate.colleagues
+            ? st.corporate.colleagues.network
+            : [];
         return (
           st.player.phase === "corporate" &&
           cols.length > 0 &&
@@ -55,10 +58,14 @@
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             if (!st.workplaceSocial) st.workplaceSocial = {};
-            if (!st.workplaceSocial.officePoliticsLog) st.workplaceSocial.officePoliticsLog = [];
+            if (!st.workplaceSocial.officePoliticsLog)
+              st.workplaceSocial.officePoliticsLog = [];
             st.workplaceSocial.officePoliticsLog.push({
-              day: st.player.day, eventType: "blame_shifting", outcome: "confront",
-              target: target.name, note: "公开对抗",
+              day: st.player.day,
+              eventType: "blame_shifting",
+              outcome: "confront",
+              target: target.name,
+              note: "公开对抗",
             });
             StateManager.addMessage(
               "🛡️ 你说出了实情。小赵脸涨得通红。老板点了点头，没再追问。但你被孤立了——下午路过小赵工位，他拉上了椅子。好感-15。",
@@ -76,10 +83,14 @@
             target.relationship = Math.min(100, target.relationship + 8);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
             if (!st.workplaceSocial) st.workplaceSocial = {};
-            if (!st.workplaceSocial.officePoliticsLog) st.workplaceSocial.officePoliticsLog = [];
+            if (!st.workplaceSocial.officePoliticsLog)
+              st.workplaceSocial.officePoliticsLog = [];
             st.workplaceSocial.officePoliticsLog.push({
-              day: st.player.day, eventType: "blame_shifting", outcome: "absorb",
-              target: target.name, note: "默默背锅",
+              day: st.player.day,
+              eventType: "blame_shifting",
+              outcome: "absorb",
+              target: target.name,
+              note: "默默背锅",
             });
             StateManager.addMessage(
               "🤐 你什么也没说。散会时小赵拍了一下你的肩：「兄弟，谢了。」你笑了笑。心情-10，关系+8。有时候忍一忍能换来长期的东西。",
@@ -97,7 +108,10 @@
               var target = cols[Random.int(0, cols.length - 1)];
               target.relationship = Math.max(0, target.relationship - 5);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
+              st.player.intelligence = Math.min(
+                100,
+                (st.player.intelligence || 0) + 1,
+              );
               StateManager.addMessage(
                 "🧠 你没急着辩解，而是拿出一份方案：「问题出在这里，我已经修复了，这是后续防线的建议。」老板满意了，小赵也没话说。智力+1，名声+5。",
                 "success",
@@ -110,10 +124,14 @@
               );
             }
             if (!st.workplaceSocial) st.workplaceSocial = {};
-            if (!st.workplaceSocial.officePoliticsLog) st.workplaceSocial.officePoliticsLog = [];
+            if (!st.workplaceSocial.officePoliticsLog)
+              st.workplaceSocial.officePoliticsLog = [];
             st.workplaceSocial.officePoliticsLog.push({
-              day: st.player.day, eventType: "blame_shifting", outcome: "solve",
-              note: (st.player.intelligence || 0) >= 50 ? "成功化解" : "表达失败",
+              day: st.player.day,
+              eventType: "blame_shifting",
+              outcome: "solve",
+              note:
+                (st.player.intelligence || 0) >= 50 ? "成功化解" : "表达失败",
             });
           },
         },
@@ -130,7 +148,10 @@
         "午休时，新来的实习生小李端着两杯咖啡找到你。\\n\\n「哥，我入行不久，很多东西不懂。我看你技术挺好的……能不能带我一下？我可以学东西，也可以帮你干活。」\\n\\n他眼睛亮亮的，像刚毕业时的你。",
       conditions: function (st) {
         // 在职 + 有同事网络 + 天数足够
-        var cols = st.corporate && st.corporate.colleagues ? st.corporate.colleagues.network : [];
+        var cols =
+          st.corporate && st.corporate.colleagues
+            ? st.corporate.colleagues.network
+            : [];
         return (
           st.player.phase === "corporate" &&
           cols.length > 0 &&
@@ -151,7 +172,8 @@
             var mentee = cols[Random.int(0, cols.length - 1)];
             mentee.role = "subordinate";
             mentee.relationship = Math.min(100, mentee.relationship + 10);
-            if (!st.corporate.colleagues.mentees) st.corporate.colleagues.mentees = [];
+            if (!st.corporate.colleagues.mentees)
+              st.corporate.colleagues.mentees = [];
             st.corporate.colleagues.mentees.push({
               menteeId: mentee.id,
               menteeName: mentee.name,
@@ -206,7 +228,10 @@
         "你以前传过一些话——关于某个同事的八卦、关于某个领导的流言。\\n\\n你以为这些事烂在了肚子里。\\n\\n但今天午休，你听到茶水间里有人在讲你的事——原来是你以前传的那些话，经过几个人的嘴，最后传成了关于你的版本。\\n\\n而且版本越来越离谱。",
       conditions: function (st) {
         // 在职 + 有过办公室政治记录 + 天数足够
-        var logs = st.workplaceSocial && st.workplaceSocial.officePoliticsLog ? st.workplaceSocial.officePoliticsLog : [];
+        var logs =
+          st.workplaceSocial && st.workplaceSocial.officePoliticsLog
+            ? st.workplaceSocial.officePoliticsLog
+            : [];
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 150 &&
@@ -278,7 +303,10 @@
         "群里@了所有人：「今晚7点XX餐厅团建，K歌+火锅，全员参加！」\\n\\n你看了看时间：今晚你本来打算回去打游戏、早点休息。\\n\\n不去？老板看着，同事也看着。去了？又是吃吃喝喝到半夜。\\n\\n但你发现——这次团建，是和小赵一起。上次甩锅之后，你还没和他正式说过话。",
       conditions: function (st) {
         // 在职 + 有同事网络 + 天数足够
-        var cols = st.corporate && st.corporate.colleagues ? st.corporate.colleagues.network : [];
+        var cols =
+          st.corporate && st.corporate.colleagues
+            ? st.corporate.colleagues.network
+            : [];
         return (
           st.player.phase === "corporate" &&
           cols.length > 0 &&
@@ -305,7 +333,8 @@
             }
             StateManager.addMessage(
               "🍻 你去了。喝酒、唱歌、聊天，一直到凌晨1点。和小赵也聊了几句，关系缓和了不少。花了¥" +
-                cost + "，累但不后悔。",
+                cost +
+                "，累但不后悔。",
               "info",
             );
           },
@@ -338,7 +367,9 @@
               cols[i].relationship = Math.min(100, cols[i].relationship + 1);
             }
             StateManager.addMessage(
-              "😌 你去了两小时，吃了几口就找了个理由走了。老板没注意到，同事也没说什么。花了¥" + cost + "，关系微升。",
+              "😌 你去了两小时，吃了几口就找了个理由走了。老板没注意到，同事也没说什么。花了¥" +
+                cost +
+                "，关系微升。",
               "info",
             );
           },
@@ -356,7 +387,10 @@
         "下午的产品评审会上，老张指着你的方案说：「这个思路我之前提过，你们可以参考一下。」\\n\\n但你清楚记得——这个方案是你上周熬夜做的，邮件抄送了全组。\\n\\n全组看着你，等着你的反应。\\n\\n你深吸了一口气。",
       conditions: function (st) {
         // 在职 + 有同事网络 + 天数足够
-        var cols = st.corporate && st.corporate.colleagues ? st.corporate.colleagues.network : [];
+        var cols =
+          st.corporate && st.corporate.colleagues
+            ? st.corporate.colleagues.network
+            : [];
         return (
           st.player.phase === "corporate" &&
           cols.length > 0 &&
@@ -412,7 +446,10 @@
           hint: "学习经验，长期有益",
           apply: function (st) {
             st.flags._creditStealingSeen = true;
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 1,
+            );
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
             StateManager.addMessage(
               "🤔 你决定从此以后所有方案都留备份、抄送、截屏。职场不是学校，规则不一样。智力+1，心情+3。",

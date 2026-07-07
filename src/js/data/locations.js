@@ -100,14 +100,14 @@ const LOCATIONS = {
     navHints: [
       {
         type: "subTab",
-        tab: "personal_growth",
-        subTab: "pg_edu",
-        key: "pg_edu",
+        tab: "me",
+        subTab: "me_growth",
+        key: "me_growth",
         label: "🎓 查看学历",
       },
       {
         type: "subTab",
-        tab: "career_dev",
+        tab: "career",
         subTab: "career_jobs",
         key: "career_jobs",
         label: "💼 查看职业路径",

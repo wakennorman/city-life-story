@@ -30,7 +30,10 @@
         "你蹲下去捡掉在地上的水杯，再站起来时眼前一黑，直直往后倒去。\\n\\n醒来时你已经躺在医院急诊室里，护士说你是低血糖加严重疲劳送来的。\\n\\n医生看了你的报告：「你这身体，再这么熬下去会出大事。住院观察三天，费用¥2800。」",
       conditions: function (st) {
         // 健康状况低 + 天数足够 + 非冷却期
-        var health = st.personalGrowth && st.personalGrowth.health ? st.personalGrowth.health.physical : 80;
+        var health =
+          st.personalGrowth && st.personalGrowth.health
+            ? st.personalGrowth.health.physical
+            : 80;
         return (
           st.player.day >= 40 &&
           health < 50 &&
@@ -50,12 +53,16 @@
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
-            st.personalGrowth.health.physical = Math.min(100, st.personalGrowth.health.physical + 25);
+            st.personalGrowth.health.physical = Math.min(
+              100,
+              st.personalGrowth.health.physical + 25,
+            );
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             StateManager.addMessage(
               "🏥 你住院三天，医生说你幸亏送来得及时。出了院看着账单¥" +
-                cost + "，心里五味杂陈。健康+25，疲劳-30。身体是革命的本钱。",
+                cost +
+                "，心里五味杂陈。健康+25，疲劳-30。身体是革命的本钱。",
               "warning",
             );
           },
@@ -69,7 +76,10 @@
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
-            st.personalGrowth.health.physical = Math.min(100, st.personalGrowth.health.physical + 8);
+            st.personalGrowth.health.physical = Math.min(
+              100,
+              st.personalGrowth.health.physical + 8,
+            );
             StateManager.addMessage(
               "🚪 你当天办了手续出院。医生劝你至少观察一天，你没听。健康+8。有些便宜以后要加倍还。",
               "warning",
@@ -85,9 +95,13 @@
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
-            st.personalGrowth.health.physical = Math.min(100, st.personalGrowth.health.physical + 15);
+            st.personalGrowth.health.physical = Math.min(
+              100,
+              st.personalGrowth.health.physical + 15,
+            );
             if (!st.personalGrowth.hobbies) st.personalGrowth.hobbies = {};
-            if (!st.personalGrowth.hobbies.running) st.personalGrowth.hobbies.running = { level: 1, exp: 0 };
+            if (!st.personalGrowth.hobbies.running)
+              st.personalGrowth.hobbies.running = { level: 1, exp: 0 };
             st.flags._startedExercise = true;
             st.player.physique = Math.min(100, (st.player.physique || 50) + 2);
             StateManager.addMessage(
@@ -108,7 +122,10 @@
       story:
         "你睁着眼睛盯着天花板。这是今晚第三次爬起来数羊了。\\n\\n手机屏幕上是凌晨3:14。窗外黑漆漆的，你脑子里却在过今天——不，是这一周、这一个月的所有事：房租、工作、家人的电话、还不完的债。\\n\\n胸口像压了块石头。你不确定自己还能撑多久。",
       conditions: function (st) {
-        var psy = st.personalGrowth && st.personalGrowth.psychology ? st.personalGrowth.psychology : { stress: 70, anxiety: 50, depression: 40 };
+        var psy =
+          st.personalGrowth && st.personalGrowth.psychology
+            ? st.personalGrowth.psychology
+            : { stress: 70, anxiety: 50, depression: 40 };
         return (
           st.player.day >= 30 &&
           (psy.stress >= 75 || psy.anxiety >= 70 || psy.depression >= 65) &&
@@ -179,7 +196,10 @@
       story:
         "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
       conditions: function (st) {
-        var img = st.personalGrowth && st.personalGrowth.image ? st.personalGrowth.image : { appearance: 60, style: 50, grooming: 65 };
+        var img =
+          st.personalGrowth && st.personalGrowth.image
+            ? st.personalGrowth.image
+            : { appearance: 60, style: 50, grooming: 65 };
         var avgImg = (img.appearance + img.style + img.grooming) / 3;
         return (
           st.player.day >= 60 &&
@@ -250,9 +270,12 @@
       icon: "⏰",
       title: "还有30天",
       story:
-        "手机日历上有个标记——你的一个目标，deadline是30天后。\\n\\n你点开看：\"30岁前存款¥50,000\"。\\n\\n你查了查余额：¥12,300。还有30天。\\n\\n你想了想自己现在的节奏，按这个速度，大概率完不成。\\n\\n但你又不甘心。",
+        '手机日历上有个标记——你的一个目标，deadline是30天后。\\n\\n你点开看："30岁前存款¥50,000"。\\n\\n你查了查余额：¥12,300。还有30天。\\n\\n你想了想自己现在的节奏，按这个速度，大概率完不成。\\n\\n但你又不甘心。',
       conditions: function (st) {
-        var goals = st.personalGrowth && st.personalGrowth.lifeGoals ? st.personalGrowth.lifeGoals.active : [];
+        var goals =
+          st.personalGrowth && st.personalGrowth.lifeGoals
+            ? st.personalGrowth.lifeGoals.active
+            : [];
         return (
           st.player.day >= 90 &&
           goals.length > 0 &&
@@ -281,7 +304,9 @@
                 var bonus = Random.int(1000, 5000);
                 st.resources.cash += bonus;
                 StateManager.addMessage(
-                  "🔥 30天过去了，你多赚了¥" + bonus + "。目标……差一点，但比以前更接近了。",
+                  "🔥 30天过去了，你多赚了¥" +
+                    bonus +
+                    "。目标……差一点，但比以前更接近了。",
                   "info",
                 );
               } else {
@@ -335,7 +360,10 @@
         "你练了这件事已经很久了。\\n\\n也许是练了三个月的吉他，也许是练了一年的书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
       conditions: function (st) {
         // 有爱好且等级较高 + 天数足够
-        var hobbies = st.personalGrowth && st.personalGrowth.hobbies ? st.personalGrowth.hobbies : {};
+        var hobbies =
+          st.personalGrowth && st.personalGrowth.hobbies
+            ? st.personalGrowth.hobbies
+            : {};
         var hobbyLevels = Object.keys(hobbies).filter(function (k) {
           return hobbies[k].level >= 3;
         });
@@ -354,15 +382,19 @@
           hint: "长期投入，回报丰厚",
           apply: function (st) {
             st.flags._hobbyBreakthrough = true;
-            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(function (k) {
-              return st.personalGrowth.hobbies[k].level >= 3;
-            });
+            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(
+              function (k) {
+                return st.personalGrowth.hobbies[k].level >= 3;
+              },
+            );
             var hobbyId = hobbyLevels[Random.int(0, hobbyLevels.length - 1)];
             st.personalGrowth.hobbies[hobbyId].level += 1;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
             StateManager.addMessage(
-              "🏆 你决定继续精进。一年后，朋友说你的" + hobbyId + "水平已经超出他们所有人了。名气+3，心情+15。坚持是最朴素的力量。",
+              "🏆 你决定继续精进。一年后，朋友说你的" +
+                hobbyId +
+                "水平已经超出他们所有人了。名气+3，心情+15。坚持是最朴素的力量。",
               "success",
             );
           },
@@ -372,9 +404,11 @@
           hint: "社交+技能",
           apply: function (st) {
             st.flags._hobbyBreakthrough = true;
-            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(function (k) {
-              return st.personalGrowth.hobbies[k].level >= 3;
-            });
+            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(
+              function (k) {
+                return st.personalGrowth.hobbies[k].level >= 3;
+              },
+            );
             var hobbyId = hobbyLevels[Random.int(0, hobbyLevels.length - 1)];
             st.personalGrowth.hobbies[hobbyId].level += 1;
             st.player.charm = Math.min(100, (st.player.charm || 0) + 3);
@@ -394,7 +428,9 @@
             st.resources.cash += income;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             StateManager.addMessage(
-              "🎯 你尝试把这个爱好做成副业，头三个月小赚¥" + income + "。不多，但证明了一条路。心情+5。",
+              "🎯 你尝试把这个爱好做成副业，头三个月小赚¥" +
+                income +
+                "。不多，但证明了一条路。心情+5。",
               "info",
             );
           },

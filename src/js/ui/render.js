@@ -4986,7 +4986,7 @@ function showStudyNavModal() {
           if (st && typeof _doNavigate === "function") {
             _doNavigate(
               st,
-              { type: "location", key: "school", navTab: "personal_growth" },
+              { type: "location", key: "school", navTab: "me" },
               {},
             );
           }

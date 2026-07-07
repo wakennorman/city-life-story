@@ -1053,47 +1053,13 @@ function getLocationServiceBadges(locKey) {
   return badges;
 }
 
-// ====== Tab Bar ======
+// ====== Tab Bar（v3.7 Tab 合并重构：5 大认知 Tab）=====
 function renderTabBar(state) {
   const tabs = document.querySelectorAll("#tab-bar .tab-btn");
   tabs.forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.tab === currentTab);
-
-    // 某些 Tab 在特定阶段隐藏
-    if (btn.dataset.tab === "corp" && state.player.phase !== "corporate") {
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "trade" && state.player.phase !== "street") {
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "enterprise") {
-      // 企业命运生态 — 后台系统，不单独显示Tab
-      // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "career_dev") {
-      // 事业发展Tab：街头阶段显示上班族工作引导，公司阶段不冲突时显示
-      if (
-        state.player.phase === "corporate" &&
-        (!state.startup || state.startup.status === "none")
-      ) {
-        btn.style.display = "none";
-      } else {
-        btn.style.display = "";
-      }
-    } else if (btn.dataset.tab === "social") {
-      // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
-      btn.style.display = "";
-    } else if (btn.dataset.tab === "side_hustle") {
-      // 副业Tab：公司阶段显示（Phase 2）
-      if (state.player.phase === "corporate") {
-        btn.style.display = "";
-      } else {
-        btn.style.display = "none";
-      }
-    } else if (btn.dataset.tab === "personal_growth") {
-      // 个人成长不再作为主入口；成长行为拆回具体地点行动，保留 renderer 兼容旧入口。
-      btn.style.display = "none";
-    } else {
-      btn.style.display = "";
-    }
+    // 5 个 Tab 全部常驻显示，没有阶段隐藏逻辑
+    btn.style.display = "";
   });
 }
 
@@ -1102,57 +1068,23 @@ function switchTab(tabName) {
   renderAll();
 }
 
-// ====== Tab 渲染函数注册表 ======
-// 新增标签页只需在这里加一行，无需修改 renderCurrentTab
-//
-// 注意：对于定义在其他 JS 文件中的函数（跨文件），
-// 不能直接用引用（const 创建时函数尚未加载），
-// 要用 fnName 字符串 + 运行时 window[fnName] 动态查找。
-//
-// ⚠️ 所有跨文件的渲染函数必须用 fnName 字符串 + 运行时 window[fnName] 动态查找。
-//    渲染函数定义在 render.js（后加载）或 render_infra.js（后加载）中时，
-//    const 创建时函数还不存在，直接引用/对象 fn 引用的值都是 undefined。
-//    只有同文件或更早加载的函数才可以用直接引用。
+// ====== Tab 渲染函数注册表（v3.7 合并重构：5 个主 Tab）=====
+// 注意：跨文件函数用 fnName 字符串 + 运行时 window[fnName] 动态查找
 const TAB_RENDERERS = {
+  // ⚡ 行动 — 原位行动列表（保持不变，所有阶段核心入口）
   actions: { fnName: "renderActionsTab", fallback: "⚡ 行动加载中..." },
-  map: { fnName: "renderMapTab", fallback: "🗺️ 地图加载中..." },
-  trade: { fnName: "renderTradeTab", fallback: "📦 交易加载中..." },
-  inventory: { fnName: "renderInventoryTab", fallback: "🎒 物品加载中..." },
-  skills: { fnName: "renderSkillsTab", fallback: "📚 技能系统加载中..." },
-  corp: { fnName: "renderCorpTab", fallback: "🏢 职场加载中..." },
-  // renderInvestmentTab 在 investment.js 中定义（跨文件）
-  investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
-  // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
-  career_dev: {
-    fnName: "renderCareerDevTab",
-    fallback: "事业发展系统加载中...",
-  },
-  enterprise: {
-    fnName: "renderEnterpriseFateTab",
-    fallback: "企业生态加载中...",
-  },
-  // renderSideHustleTab 在 side_hustle_ui.js 中定义（跨文件）
-  side_hustle: { fnName: "renderSideHustleTab", fallback: "副业系统加载中..." },
-  achievements: {
-    fnName: "renderAchievementsTab",
-    fallback: "🏅 成就加载中...",
-  },
-  // 社交Tab：合并职场社交+家庭（跨文件）
-  social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
-  life_systems: {
-    fnName: "renderLifeSystemsTab",
-    fallback: "人生事务系统加载中...",
-  },
-  // 个人成长Tab（合并了原成长数据可视化+原个人成长）
-  personal_growth: {
-    fnName: "renderMergedPersonalGrowthTab",
-    fallback: "个人成长系统加载中...",
-  },
-  equipmentSuites: {
-    fnName: "renderEquipmentSuitesTab",
-    fallback: "装备套装加载中...",
-  },
-  wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
+
+  // 🗺️ 城市 — 地图 + 交易合并（所有地点导航 + 内嵌贸易面板）
+  city: { fnName: "renderCityTab", fallback: "🗺️ 城市加载中..." },
+
+  // 👤 我 — 角色面板（物品/技能/成长/健康/人生事务）
+  me: { fnName: "renderMeTab", fallback: "👤 角色面板加载中..." },
+
+  // 💼 事业 — 经济面板（工作/投资/副业/创业/企业命运）
+  career: { fnName: "renderCareerTab", fallback: "💼 事业加载中..." },
+
+  // 📖 百科 — 信息面板（百科/NPC社交/成就/叙事）
+  wiki: { fnName: "renderWikiTab", fallback: "📖 百科加载中..." },
 };
 
 /**

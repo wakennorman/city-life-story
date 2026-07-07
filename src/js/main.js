@@ -2135,7 +2135,8 @@ function getAvailableActions(state) {
         icon: "📦",
         pricePreview: buildTradePricePreview(state, locKey, true),
         handler: () => {
-          switchTab("trade");
+          state._citySubTab = "city_trade";
+          switchTab("city");
         },
       });
     }
@@ -2149,11 +2150,12 @@ function getAvailableActions(state) {
         id: "trade_header",
         category: "work",
         name: "买卖商品",
-        desc: "查看当前市场价格，低买高卖赚取差价。点击后自动切换到交易Tab。",
+        desc: "查看当前市场价格，低买高卖赚取差价。点击后自动切换到城市Tab查看行情。",
         icon: "🛒",
         pricePreview: buildTradePricePreview(state, locKey, false),
         handler: () => {
-          switchTab("trade");
+          state._citySubTab = "city_trade";
+          switchTab("city");
         },
       });
     }

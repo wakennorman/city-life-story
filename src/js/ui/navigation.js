@@ -183,23 +183,7 @@ function _navCheck(state, target) {
         result.message = "找不到 Tab：" + tabName;
         return result;
       }
-      // 检查阶段限制
-      if (
-        tabName === "corp" &&
-        state.player &&
-        state.player.phase !== "corporate"
-      ) {
-        result.message = "职场 Tab 仅在公司阶段可用";
-        return result;
-      }
-      if (
-        tabName === "trade" &&
-        state.player &&
-        state.player.phase !== "street"
-      ) {
-        result.message = "交易 Tab 仅在街头阶段可用";
-        return result;
-      }
+      // v3.7 合并重构：5 个 Tab 全阶段常驻可见，不做阶段限制
       result.valid = true;
       result.title = "📋 切换到 " + (target.displayName || tabName);
       result.message = "";
@@ -539,19 +523,26 @@ function _doNavigate(state, target, options) {
       if (target.tab) {
         // 设置子Tab状态
         var subTabKey = "_" + target.tab.replace(/-/g, "_") + "SubTab";
-        // 适配不同的子Tab状态字段名
-        if (target.tab === "personal_growth") {
-          state._pgSubTab = target.subTab;
-        } else if (target.tab === "career_dev") {
-          state._careerSubTab = target.subTab;
+        // v3.7 合并重构：旧 tab 名映射到新 tab
+        var parentTab = target.tab;
+        if (parentTab === "personal_growth") {
+          parentTab = "me";
+          state._meSubTab = target.subTab;
+        } else if (parentTab === "career_dev") {
+          parentTab = "career";
+          state._careerTabSubTab = target.subTab;
+        } else if (parentTab === "me") {
+          state._meSubTab = target.subTab;
+        } else if (parentTab === "career") {
+          state._careerTabSubTab = target.subTab;
         } else {
           state[subTabKey] = target.subTab;
         }
         // 切换到父Tab
         if (typeof switchTab === "function") {
-          switchTab(target.tab);
+          switchTab(parentTab);
         } else {
-          if (typeof currentTab !== "undefined") currentTab = target.tab;
+          if (typeof currentTab !== "undefined") currentTab = parentTab;
           if (typeof renderAll === "function") renderAll();
         }
       }
@@ -679,8 +670,8 @@ function navToEducation() {
     state,
     {
       type: "subTab",
-      tab: "personal_growth",
-      subTab: "pg_edu",
+      tab: "me",
+      subTab: "me_growth",
       displayName: "🎓 学历",
     },
     { skipConfirm: true },
@@ -720,16 +711,9 @@ function navToUniversity() {
 function _tabDisplayName(tabName) {
   var names = {
     actions: "⚡ 行动",
-    map: "🗺️ 地图",
-    trade: "📦 交易",
-    inventory: "🎒 物品",
-    skills: "📚 技能",
-    corp: "🏢 职场",
-    investment: "💰 投资",
-    career_dev: "🚀 事业发展",
-    social: "👥 社交",
-    personal_growth: "🌱 个人成长",
-    achievements: "🏅 成就",
+    city: "🗺️ 城市",
+    me: "👤 我",
+    career: "💼 事业",
     wiki: "📖 百科",
   };
   return names[tabName] || tabName;
@@ -832,7 +816,7 @@ function initTabNavigation() {
       var tabName = btn.dataset.tab;
       if (!tabName) return;
 
-      // 检查是否被禁用（personal_growth 已经被隐藏）
+      // 检查是否被禁用（v3.7 合并后所有 Tab 常驻可见）
       if (btn.style.display === "none") {
         StateManager.addMessage("⛔ 该 Tab 当前不可用", "warning");
         return;
@@ -902,7 +886,7 @@ function navActionButton(destType, destKey, label, opts) {
     target = {
       type: "subTab",
       subTab: destKey,
-      tab: opts.tab || "personal_growth",
+      tab: opts.tab || "me",
       displayName: label,
     };
   } else if (destType === "location") {

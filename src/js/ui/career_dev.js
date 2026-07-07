@@ -1648,7 +1648,7 @@ function renderCareerOverview(state, parent) {
     '">🚀 创业系统</button>' +
     ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
     '<button class="btn btn-sm nav-action-btn" style="margin:2px 4px;min-height:36px;" ' +
-    "onclick=\"showLocationNavModal('school', '🎓 去大学城提升学历', 'personal_growth', " +
+    "onclick=\"showLocationNavModal('school', '🎓 去大学城提升学历', 'me', " +
     "'大学城有图书馆、培训班，在这里可以参加自考提升学历，接编程外包单赚外快。')" +
     '">🎓 去大学城提升学历</button>' +
     "</div>";
@@ -2403,10 +2403,14 @@ function applyCareerPromotion(pathId, levelId) {
   // === v3.23: 触发槽 — career_promo ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
-      var careerPromoEvent = window.TriggerRegistry.triggerRandom("career_promo", state);
+      var careerPromoEvent = window.TriggerRegistry.triggerRandom(
+        "career_promo",
+        state,
+      );
       if (careerPromoEvent) {
         setTimeout(function () {
-          if (typeof showEventModal === "function") showEventModal(careerPromoEvent);
+          if (typeof showEventModal === "function")
+            showEventModal(careerPromoEvent);
         }, 100);
       }
     } catch (e) {
@@ -3421,8 +3425,16 @@ function showCareerNavModal(subTab, parentTab, label, desc) {
             typeof StateManager.getState === "function"
               ? StateManager.getState()
               : null;
-          if (st) st._careerSubTab = subTab;
-          if (typeof switchTab === "function") switchTab(parentTab);
+          if (st) {
+            // v3.7 合并重构：映射旧 tab 到新 tab
+            if (parentTab === "career_dev" || parentTab === "career") {
+              st._careerTabSubTab = subTab;
+              if (typeof switchTab === "function") switchTab("career");
+            } else {
+              st._careerSubTab = subTab;
+              if (typeof switchTab === "function") switchTab(parentTab);
+            }
+          }
           return true;
         },
       },

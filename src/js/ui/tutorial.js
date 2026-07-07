@@ -163,13 +163,13 @@ var _CLASSIC_STEPS = [
   {
     title: "🗺️ 查看地图探索城市",
     body: `
-        <p>点击顶部 <strong>"🗺️ 地图"</strong> 标签查看城市全景</p>
+        <p>点击顶部 <strong>"🗺️ 城市"</strong> 标签查看城市全景</p>
         <p>地图显示所有地点、旅行路线和当前所在位置</p>
         <p style="color:var(--accent);font-size:11px;">💡 最快赚钱路线：批发市场进货 → 商业区卖出赚差价！</p>
         <p style="color:var(--success);font-size:12px;">👉 请点击顶部 <strong>🗺️ 地图</strong> 标签按钮继续</p>
       `,
-    highlight: '[data-tab="map"]',
-    waitForClick: '[data-tab="map"]',
+    highlight: '[data-tab="city"]',
+    waitForClick: '[data-tab="city"]',
   },
   {
     title: "🎯 准备好了——出发！",
@@ -195,8 +195,8 @@ var _CLASSIC_STEPS = [
   {
     title: "租个床位，好好休息",
     body: '<p style="font-size:12px;margin-bottom:8px;">露宿街头会掉健康、降心情。<strong>租个床位</strong>是最划算的投资。</p><div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;padding:2px 0;">打开地图，去城中村找到出租屋</div><div style="font-size:12px;padding:2px 0;">合租床位30/天，单间80/天</div><div style="font-size:12px;padding:2px 0;">入住后每晚自动恢复疲劳</div></div><p style="font-size:11px;color:var(--text-muted);">点下方地图按钮，去城中村租个床位吧！</p>',
-    highlight: '[data-tab="map"]',
-    waitForClick: '[data-tab="map"]',
+    highlight: '[data-tab="city"]',
+    waitForClick: '[data-tab="city"]',
   },
 ];
 
@@ -274,8 +274,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">先去 🗺️ 地图看看——工厂区/批发市场/商业区都有机会。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击顶部 <strong>🗺️ 地图</strong> 标签看看</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——先活着，再转型",
@@ -359,8 +359,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">先看地图，规划今天要去哪儿。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 标签</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——从学生到打工人",
@@ -442,8 +442,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">等攒到 ¥3000+，可以开始考虑转去批发/零售。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 看城市布局</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——先存钱，再汇款",
@@ -527,8 +527,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">第一周的任务是：学，不是花。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 规划今天的路线</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——定方向，不乱花",
@@ -610,8 +610,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议先去事业发展Tab看看职业路径，想好方向。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 熟悉城市布局</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——算清楚，再出手",
@@ -693,8 +693,8 @@ var SCENARIO_TUTORIAL_STEPS = {
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 规划你的起步路线</p>
       `,
-      highlight: '[data-tab="map"]',
-      waitForClick: '[data-tab="map"]',
+      highlight: '[data-tab="city"]',
+      waitForClick: '[data-tab="city"]',
     },
     {
       title: "🎯 3天目标——从学生到打工人",

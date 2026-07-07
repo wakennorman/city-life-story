@@ -91,10 +91,14 @@ function buyGood(goodId, qty) {
   // === v3.23: 触发槽 — after_trade ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
-      var afterTradeEventBuy = window.TriggerRegistry.triggerRandom("after_trade", state);
+      var afterTradeEventBuy = window.TriggerRegistry.triggerRandom(
+        "after_trade",
+        state,
+      );
       if (afterTradeEventBuy) {
         setTimeout(function () {
-          if (typeof showEventModal === "function") showEventModal(afterTradeEventBuy);
+          if (typeof showEventModal === "function")
+            showEventModal(afterTradeEventBuy);
         }, 100);
       }
     } catch (e) {
@@ -212,10 +216,14 @@ function sellGood(goodId, qty) {
   // === v3.23: 触发槽 — after_trade ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
-      var afterTradeEventSell = window.TriggerRegistry.triggerRandom("after_trade", state);
+      var afterTradeEventSell = window.TriggerRegistry.triggerRandom(
+        "after_trade",
+        state,
+      );
       if (afterTradeEventSell) {
         setTimeout(function () {
-          if (typeof showEventModal === "function") showEventModal(afterTradeEventSell);
+          if (typeof showEventModal === "function")
+            showEventModal(afterTradeEventSell);
         }, 100);
       }
     } catch (e) {

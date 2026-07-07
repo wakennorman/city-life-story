@@ -30,7 +30,11 @@
         "凌晨1点，手机亮了。是一个做投行朋友发的语音，声音压得极低：「明天某科技股开盘前会有个大消息……你看着办，我什么都没说。」\\n\\n你没有回复。翻开了股票账户，盯着那几只熟悉的代码。",
       conditions: function (st) {
         // 有投资行为 + 天数足够 + 非冷却期
-        if (!st.investment || !st.investment.stockHoldings || st.investment.stockHoldings.length === 0)
+        if (
+          !st.investment ||
+          !st.investment.stockHoldings ||
+          st.investment.stockHoldings.length === 0
+        )
           return false;
         return (
           st.player.day >= 60 &&
@@ -47,34 +51,70 @@
           apply: function (st) {
             st.flags._stockTipActive = true;
             // 随机选一只科技股买入
-            var techSymbols = ["ALIM", "TENC", "BAID", "JD", "PDD", "XIAO", "MEIT", "BYTE"];
+            var techSymbols = [
+              "ALIM",
+              "TENC",
+              "BAID",
+              "JD",
+              "PDD",
+              "XIAO",
+              "MEIT",
+              "BYTE",
+            ];
             var sym = techSymbols[Random.int(0, techSymbols.length - 1)];
             var m = st.investment.stockMarket[sym];
-            if (!m) { sym = "ALIM"; m = st.investment.stockMarket[sym]; }
+            if (!m) {
+              sym = "ALIM";
+              m = st.investment.stockMarket[sym];
+            }
             var buyAmount = Math.min(5000, st.resources.cash);
             if (buyAmount <= 100) {
               StateManager.addMessage(
-                "📈 你想追风口，但手里现金太少，只买了" + sym + " ¥100做记录。道德-3。",
+                "📈 你想追风口，但手里现金太少，只买了" +
+                  sym +
+                  " ¥100做记录。道德-3。",
                 "info",
               );
               st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
-              st.investment.stockHoldings.push({ symbol: sym, shares: 0.1, avgPrice: m.price });
+              st.investment.stockHoldings.push({
+                symbol: sym,
+                shares: 0.1,
+                avgPrice: m.price,
+              });
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
             st.resources.cash -= buyAmount;
-            var h = st.investment.stockHoldings.find(function (s) { return s.symbol === sym; });
-            if (h) { h.shares += shares; } else { st.investment.stockHoldings.push({ symbol: sym, shares: shares, avgPrice: m.price }); }
+            var h = st.investment.stockHoldings.find(function (s) {
+              return s.symbol === sym;
+            });
+            if (h) {
+              h.shares += shares;
+            } else {
+              st.investment.stockHoldings.push({
+                symbol: sym,
+                shares: shares,
+                avgPrice: m.price,
+              });
+            }
             // 记录到内幕交易日志
             if (!st.insiderTrading) st.insiderTrading = {};
             if (!st.insiderTrading.tradeLog) st.insiderTrading.tradeLog = [];
             st.insiderTrading.tradeLog.push({
-              day: st.player.day, symbol: sym, action: "buy",
-              shares: shares, price: m.price, relatedRumorId: "rumor_stock_tip",
+              day: st.player.day,
+              symbol: sym,
+              action: "buy",
+              shares: shares,
+              price: m.price,
+              relatedRumorId: "rumor_stock_tip",
             });
             st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
             StateManager.addMessage(
-              "📈 你连夜买了" + sym + " " + shares + "股。如果消息是真的……道德-5。你明白自己在赌什么。",
+              "📈 你连夜买了" +
+                sym +
+                " " +
+                shares +
+                "股。如果消息是真的……道德-5。你明白自己在赌什么。",
               "warning",
             );
             // 第二天：随机结果（涨跌）
@@ -84,14 +124,22 @@
                 var gain = Random.int(800, 3000);
                 st.resources.cash += gain;
                 StateManager.addMessage(
-                  "📈 第二天开盘，" + sym + "果然涨了！你果断出货，净赚¥" + gain + "。但心里五味杂陈。",
+                  "📈 第二天开盘，" +
+                    sym +
+                    "果然涨了！你果断出货，净赚¥" +
+                    gain +
+                    "。但心里五味杂陈。",
                   "success",
                 );
               } else {
                 var loss = Random.int(400, 2000);
                 st.resources.cash = Math.max(0, st.resources.cash - loss);
                 StateManager.addMessage(
-                  "📉 消息是假的，" + sym + "开盘就跌。你亏了¥" + loss + "。消息靠不住，人心更靠不住。",
+                  "📉 消息是假的，" +
+                    sym +
+                    "开盘就跌。你亏了¥" +
+                    loss +
+                    "。消息靠不住，人心更靠不住。",
                   "warning",
                 );
               }
@@ -119,7 +167,9 @@
               "📉 你清仓了所有股票，落袋为安。虽然可能错过机会，但睡得安稳。道德+2。",
               "info",
             );
-            setTimeout(function () { st.flags._stockTipActive = false; }, 100);
+            setTimeout(function () {
+              st.flags._stockTipActive = false;
+            }, 100);
           },
         },
         {
@@ -148,7 +198,9 @@
         // 持有新能源/科技股 + 天数足够 + 非冷却期
         if (!st.investment || !st.investment.stockHoldings) return false;
         var hasRelevant = st.investment.stockHoldings.some(function (h) {
-          return ["TSLA", "BYD", "CATL", "NIO", "XPEV", "LI"].indexOf(h.symbol) >= 0;
+          return (
+            ["TSLA", "BYD", "CATL", "NIO", "XPEV", "LI"].indexOf(h.symbol) >= 0
+          );
         });
         return (
           hasRelevant &&
@@ -167,24 +219,50 @@
             st.flags._earningsLeakActive = true;
             var target = Random.fromArray(["BYD", "CATL", "NIO", "XPEV", "LI"]);
             var m = st.investment.stockMarket[target];
-            if (!m) { StateManager.addMessage("⚠️ 目标股票不存在。", "warning"); return; }
-            var buyAmount = Math.min(8000, st.resources.cash * 0.5, st.resources.cash - 500);
+            if (!m) {
+              StateManager.addMessage("⚠️ 目标股票不存在。", "warning");
+              return;
+            }
+            var buyAmount = Math.min(
+              8000,
+              st.resources.cash * 0.5,
+              st.resources.cash - 500,
+            );
             if (buyAmount <= 100) {
-              StateManager.addMessage("⚠️ 现金不足，无法加仓。", "warning"); return;
+              StateManager.addMessage("⚠️ 现金不足，无法加仓。", "warning");
+              return;
             }
             var shares = Math.floor(buyAmount / m.price);
             st.resources.cash -= buyAmount;
-            var h = st.investment.stockHoldings.find(function (s) { return s.symbol === target; });
-            if (h) { h.shares += shares; } else { st.investment.stockHoldings.push({ symbol: target, shares: shares, avgPrice: m.price }); }
+            var h = st.investment.stockHoldings.find(function (s) {
+              return s.symbol === target;
+            });
+            if (h) {
+              h.shares += shares;
+            } else {
+              st.investment.stockHoldings.push({
+                symbol: target,
+                shares: shares,
+                avgPrice: m.price,
+              });
+            }
             if (!st.insiderTrading) st.insiderTrading = {};
             if (!st.insiderTrading.tradeLog) st.insiderTrading.tradeLog = [];
             st.insiderTrading.tradeLog.push({
-              day: st.player.day, symbol: target, action: "buy",
-              shares: shares, price: m.price, relatedRumorId: "rumor_earnings_leak",
+              day: st.player.day,
+              symbol: target,
+              action: "buy",
+              shares: shares,
+              price: m.price,
+              relatedRumorId: "rumor_earnings_leak",
             });
             st.player.morality = Math.max(0, (st.player.morality || 50) - 8);
             StateManager.addMessage(
-              "💰 你加仓了" + target + " " + shares + "股。如果财报是真的……道德-8。这笔钱来得不太干净。",
+              "💰 你加仓了" +
+                target +
+                " " +
+                shares +
+                "股。如果财报是真的……道德-8。这笔钱来得不太干净。",
               "danger",
             );
             // 3天后回报
@@ -194,14 +272,20 @@
                 var gain = Random.int(2000, 8000);
                 st.resources.cash += gain;
                 StateManager.addMessage(
-                  "💰 三天后公告出炉，" + target + "暴涨！你及时出货，净赚¥" + gain + "。钱是赚了，但每次花都觉得烫手。",
+                  "💰 三天后公告出炉，" +
+                    target +
+                    "暴涨！你及时出货，净赚¥" +
+                    gain +
+                    "。钱是赚了，但每次花都觉得烫手。",
                   "success",
                 );
               } else {
                 var loss = Random.int(1000, 5000);
                 st.resources.cash = Math.max(0, st.resources.cash - loss);
                 StateManager.addMessage(
-                  "💰 公告是利好，但你判断错方向亏了¥" + loss + "。偷鸡不成蚀把米。",
+                  "💰 公告是利好，但你判断错方向亏了¥" +
+                    loss +
+                    "。偷鸡不成蚀把米。",
                   "warning",
                 );
               }
@@ -226,10 +310,14 @@
           hint: "中性选择",
           apply: function (st) {
             if (!st.insiderTrading) st.insiderTrading = {};
-            if (!st.insiderTrading.rumorHistory) st.insiderTrading.rumorHistory = [];
+            if (!st.insiderTrading.rumorHistory)
+              st.insiderTrading.rumorHistory = [];
             st.insiderTrading.rumorHistory.push({
-              day: st.player.day, source: "eavesdrop", symbol: "新能源",
-              action: "none", note: "财报泄密但未操作",
+              day: st.player.day,
+              source: "eavesdrop",
+              symbol: "新能源",
+              action: "none",
+              note: "财报泄密但未操作",
             });
             StateManager.addMessage(
               "📝 你记下了这件事，但不打算行动。有些钱不是自己挣的。",
@@ -250,12 +338,14 @@
         "电脑里收到一封没有发件人的邮件，标题只有两个字：「警告」。\\n\\n内容是一段你的交易记录截图——最近三天，你买入的三只股票在交易后全部大涨，买入时机精准得不像巧合。\\n\\n最后一行字：「我们知道你在玩什么。收手。」",
       conditions: function (st) {
         // 有过内幕交易记录 + 总盈利较高
-        if (!st.insiderTrading || !st.insiderTrading.tradeLog || st.insiderTrading.tradeLog.length === 0)
+        if (
+          !st.insiderTrading ||
+          !st.insiderTrading.tradeLog ||
+          st.insiderTrading.tradeLog.length === 0
+        )
           return false;
         return (
-          st.player.day >= 200 &&
-          !st.flags._auditWarned &&
-          Random.chance(0.02)
+          st.player.day >= 200 && !st.flags._auditWarned && Random.chance(0.02)
         );
       },
       probability: 0.02,
@@ -278,7 +368,8 @@
             }
             StateManager.addMessage(
               "🛑 你当夜清仓了所有股票，共套现¥" +
-                soldTotal + "。从今以后只赚看得见的钱。",
+                soldTotal +
+                "。从今以后只赚看得见的钱。",
               "warning",
             );
           },
@@ -306,9 +397,11 @@
             } else {
               st.flags._auditFlagged = true;
               if (!st.insiderTrading) st.insiderTrading = {};
-              if (!st.insiderTrading.currentPenalty) st.insiderTrading.currentPenalty = {};
+              if (!st.insiderTrading.currentPenalty)
+                st.insiderTrading.currentPenalty = {};
               st.insiderTrading.currentPenalty.tradingBanned = true;
-              st.insiderTrading.currentPenalty.tradingBanEndDay = st.player.day + 60;
+              st.insiderTrading.currentPenalty.tradingBanEndDay =
+                st.player.day + 60;
               StateManager.addMessage(
                 "📧 你回复说自己只是运气好，但对方显然不信。一个月后收到通知——账户被限制交易。道德-3，交易冻结60天。",
                 "danger",
@@ -332,7 +425,9 @@
         // 有投资经验 + 天数足够 + 非已加入过
         return (
           st.player.day >= 100 &&
-          st.investment && st.investment.stockHoldings && st.investment.stockHoldings.length > 0 &&
+          st.investment &&
+          st.investment.stockHoldings &&
+          st.investment.stockHoldings.length > 0 &&
           !st.flags._joinedInsiderGroup &&
           Random.chance(0.015)
         );
@@ -351,7 +446,9 @@
               var gain = Random.int(200, 1000);
               st.resources.cash += gain;
               StateManager.addMessage(
-                "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" + gain + "。运气好是运气好，但这种运气不长久。",
+                "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
+                  gain +
+                  "。运气好是运气好，但这种运气不长久。",
                 "info",
               );
             } else {
@@ -397,7 +494,11 @@
         "初中同学群里突然热闹了。一个叫王浩的同学晒了张合照——背景是陆家嘴某栋写字楼。\\n\\n他私聊你：「好久不见了。我现在做投行，手上有些项目提前知道。我们可以合作——我提供信息，你负责操作。」\\n\\n「当然，有风险，也有规矩。分成按四六来。」",
       conditions: function (st) {
         // 有投资经验 + 有持仓 + 总盈利超过一定阈值 + 天数足够
-        if (!st.investment || !st.investment.stockHoldings || st.investment.stockHoldings.length === 0)
+        if (
+          !st.investment ||
+          !st.investment.stockHoldings ||
+          st.investment.stockHoldings.length === 0
+        )
           return false;
         return (
           st.player.day >= 200 &&
@@ -433,7 +534,8 @@
               st.resources.cash += profit;
               StateManager.addMessage(
                 "🤝 一个月后，第一笔内幕交易落地——净赚¥" +
-                  profit + "。王浩拿到了他的四成。钱是干净的，路却不是。",
+                  profit +
+                  "。王浩拿到了他的四成。钱是干净的，路却不是。",
                 "warning",
               );
             }, 100);
@@ -456,10 +558,14 @@
           apply: function (st) {
             st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
             if (!st.insiderTrading) st.insiderTrading = {};
-            if (!st.insiderTrading.rumorHistory) st.insiderTrading.rumorHistory = [];
+            if (!st.insiderTrading.rumorHistory)
+              st.insiderTrading.rumorHistory = [];
             st.insiderTrading.rumorHistory.push({
-              day: st.player.day, source: "classmate", symbol: "未知",
-              action: "observe", note: "建立了消息渠道但未操作",
+              day: st.player.day,
+              source: "classmate",
+              symbol: "未知",
+              action: "observe",
+              note: "建立了消息渠道但未操作",
             });
             StateManager.addMessage(
               "🤔 你答应了合作，但声明只观看不操作。王浩没多问。道德-3。看和做，有时只差一步。",

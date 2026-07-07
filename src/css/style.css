@@ -475,9 +475,10 @@ body {
   background: var(--bg-primary);
 }
 
-/* --- Tab Bar --- */
+/* --- Tab Bar（v3.7 合并重构：5 大认知 Tab）--- */
 #tab-bar {
   display: flex;
+  justify-content: center;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   padding: 0 12px;
@@ -485,8 +486,8 @@ body {
 }
 
 .tab-btn {
-  padding: 10px 20px;
-  font-size: 13px;
+  padding: 10px 24px;
+  font-size: 14px;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -494,6 +495,9 @@ body {
   cursor: pointer;
   transition: all var(--transition);
   font-family: var(--font-sans);
+  flex: 0 1 auto;
+  min-width: 80px;
+  text-align: center;
 }
 
 .tab-btn:hover {
@@ -3369,24 +3373,18 @@ body {
   }
 
   #tab-bar {
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 4px;
+    justify-content: center;
+    gap: 6px;
     padding: 0 10px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  #tab-bar::-webkit-scrollbar {
-    display: none;
   }
 
   .tab-btn {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     min-height: 44px;
-    padding: 10px 14px;
+    padding: 10px 18px;
     font-size: 13px;
     white-space: nowrap;
+    min-width: auto;
   }
 
   #content-area {
@@ -3933,13 +3931,14 @@ body {
     display: block;
   }
 
-  /* ====== Tab 栏 ====== */
+  /* ====== Tab 栏（5 个 Tab 等宽居中） ====== */
   #tab-bar {
-    padding: 0 8px;
+    padding: 0 6px;
   }
   .tab-btn {
-    min-width: 76px;
-    padding: 10px 12px;
+    flex: 1;
+    min-width: auto;
+    padding: 10px 8px;
     font-size: 13px;
   }
 
@@ -4469,15 +4468,16 @@ body {
     max-height: min(30vh, 200px) !important;
   }
 
-  /* ====== 移动端 Tab 按钮紧凑化（v3.4） ====== */
+  /* ====== 移动端 Tab 按钮紧凑化（v3.7 合并后 5 个 Tab） ====== */
   #tab-bar {
     gap: 2px;
-    padding: 0 6px;
+    padding: 0 4px;
   }
 
   .tab-btn {
+    flex: 1;
     min-height: 36px;
-    padding: 6px 10px;
+    padding: 6px 6px;
     font-size: 12px;
   }
 
@@ -4608,7 +4608,8 @@ body {
   }
 
   .tab-btn {
-    padding: 4px 8px;
+    flex: 1;
+    padding: 4px 4px;
     font-size: 11px;
     min-height: 32px;
   }

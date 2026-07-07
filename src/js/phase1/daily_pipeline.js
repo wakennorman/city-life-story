@@ -74,7 +74,10 @@ const DAILY_PIPELINE = [
       if (!state || !state.day) return;
       if (state.day < 10) return;
       try {
-        var event = window.TriggerRegistry.triggerRandom("random_encounter", state);
+        var event = window.TriggerRegistry.triggerRandom(
+          "random_encounter",
+          state,
+        );
         if (event) {
           state._pendingEvent = event;
           state._pendingEventId = event.id;

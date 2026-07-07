@@ -754,6 +754,42 @@ function _goodCatLabel(c) {
 //  主入口：渲染百科 Tab
 // ================================================================
 function renderWikiTab(state, parent) {
+  // v3.7 合并重构：百科 + 社交合并
+  var wikiSubTab = state._wikiSubTab || "wiki_browse";
+
+  // ---- 子Tab导航 ----
+  var wikiNav = document.createElement("div");
+  wikiNav.style.cssText =
+    "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
+  var wikiSubTabs = [
+    { id: "wiki_browse", label: "📖 百科" },
+    { id: "wiki_social", label: "👥 社交" },
+  ];
+  wikiSubTabs.forEach(function (st) {
+    var btn = document.createElement("button");
+    btn.className =
+      "btn btn-sm" + (wikiSubTab === st.id ? " btn-primary" : "");
+    btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
+    btn.textContent = st.label;
+    btn.onclick = function () {
+      state._wikiSubTab = st.id;
+      renderWikiTab(state, parent);
+    };
+    wikiNav.appendChild(btn);
+  });
+  parent.appendChild(wikiNav);
+
+  // 社交子Tab
+  if (wikiSubTab === "wiki_social") {
+    if (typeof renderSocialTab === "function") {
+      renderSocialTab(state, parent);
+    } else {
+      parent.innerHTML +=
+        '<p style="color:var(--text-muted);text-align:center;padding:20px;">👥 社交系统加载中...</p>';
+    }
+    return;
+  }
+
   var box = document.createElement("div");
   box.className = "wiki-tab";
 
@@ -1077,9 +1113,9 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: entryId,
         label: "🚶 前往" + loc.name,
-        navTab: "map",
+        navTab: "city",
       });
-      buttons.push({ type: "tab", key: "map", label: "🗺️ 在地图上查看" });
+      buttons.push({ type: "tab", key: "city", label: "🗺️ 在城市地图上查看" });
       if (loc.jobs && loc.jobs.length > 0) {
         buttons.push({ type: "tab", key: "actions", label: "⚡ 查看行动" });
       }
@@ -1116,10 +1152,10 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
           key: npcData.location,
           label:
             "🚶 前往" + LOCATIONS[npcData.location].name + "找" + npcData.name,
-          navTab: "social",
+          navTab: "wiki",
         });
       }
-      buttons.push({ type: "tab", key: "social", label: "👥 社交互动" });
+      buttons.push({ type: "tab", key: "wiki", label: "👥 在百科中查看关系" });
       break;
     }
     case "items": {
@@ -1136,12 +1172,12 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
               type: "location",
               key: bl,
               label: "🛒 去" + LOCATIONS[bl].name + "购买",
-              navTab: "trade",
+              navTab: "city",
             });
           }
         });
       }
-      buttons.push({ type: "tab", key: "inventory", label: "🎒 查看背包" });
+      buttons.push({ type: "tab", key: "me", label: "👤 在我·背包中查看" });
       break;
     }
     case "goods": {
@@ -1154,7 +1190,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
               type: "location",
               key: bl,
               label: "🛒 去" + LOCATIONS[bl].name + "购买",
-              navTab: "trade",
+              navTab: "city",
             });
           }
         });
@@ -1170,9 +1206,9 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: "trainingCenter",
         label: "📚 前往培训中心训练 " + skName,
-        navTab: "skills",
+        navTab: "me",
       });
-      buttons.push({ type: "tab", key: "skills", label: "📖 查看全部技能" });
+      buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
     }
     case "certs": {
@@ -1180,9 +1216,9 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
         type: "location",
         key: "trainingCenter",
         label: "📚 前往培训中心考取证书",
-        navTab: "skills",
+        navTab: "me",
       });
-      buttons.push({ type: "tab", key: "skills", label: "📖 查看技能与证书" });
+      buttons.push({ type: "tab", key: "me", label: "👤 在我·技能中查看" });
       break;
     }
   }
@@ -1207,7 +1243,7 @@ function _wikiAutoAppendNav(catId, entryId, detailEl, state) {
     // subTab 需要额外传递 tab 参数
     if (b.type === "subTab") {
       navHtml += navActionButton(b.type, b.key, b.label, {
-        tab: b.tab || "personal_growth",
+        tab: b.tab || "me",
       });
     } else if (b.type === "location" && b.navTab) {
       navHtml += navActionButton(b.type, b.key, b.label, { navTab: b.navTab });

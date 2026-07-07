@@ -657,10 +657,14 @@ function registerStartup(state, name, industry, description) {
   // === v3.23: 触发槽 — corp_startup ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
-      var corpStartupEvent = window.TriggerRegistry.triggerRandom("corp_startup", state);
+      var corpStartupEvent = window.TriggerRegistry.triggerRandom(
+        "corp_startup",
+        state,
+      );
       if (corpStartupEvent) {
         setTimeout(function () {
-          if (typeof showEventModal === "function") showEventModal(corpStartupEvent);
+          if (typeof showEventModal === "function")
+            showEventModal(corpStartupEvent);
         }, 100);
       }
     } catch (e) {

@@ -582,10 +582,14 @@ function treatIllness(illnessId, tier) {
   // === v3.23: 触发槽 — after_heal ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
-      var afterHealEvent = window.TriggerRegistry.triggerRandom("after_heal", state);
+      var afterHealEvent = window.TriggerRegistry.triggerRandom(
+        "after_heal",
+        state,
+      );
       if (afterHealEvent) {
         setTimeout(function () {
-          if (typeof showEventModal === "function") showEventModal(afterHealEvent);
+          if (typeof showEventModal === "function")
+            showEventModal(afterHealEvent);
         }, 100);
       }
     } catch (e) {

@@ -240,10 +240,14 @@ function tickTravel(state) {
     // === v3.23: 触发槽 — after_travel ===
     if (typeof window.TriggerRegistry !== "undefined") {
       try {
-        var afterTravelEvent = window.TriggerRegistry.triggerRandom("after_travel", state);
+        var afterTravelEvent = window.TriggerRegistry.triggerRandom(
+          "after_travel",
+          state,
+        );
         if (afterTravelEvent) {
           setTimeout(function () {
-            if (typeof showEventModal === "function") showEventModal(afterTravelEvent);
+            if (typeof showEventModal === "function")
+              showEventModal(afterTravelEvent);
           }, 100);
         }
       } catch (e) {
