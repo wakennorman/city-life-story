@@ -35231,6 +35231,701 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ====================================================================
+  // v3.23 — 新增5个联动事件（空白区填充）
+  // ====================================================================
+
+  // E1：长期道德积累 → 口碑效应（NPC主动推荐工作/机会）
+  // 设计意图：让道德系统不只是被动惩罚/奖励，而是主动创造机会
+  // 联动：道德值≥70 + 多个NPC关系 + 天数门槛
+  RANDOM_EVENTS.push({
+    id: "moral_reputation_referral",
+    phase: "street",
+    icon: "🌟",
+    title: "有人推荐了你",
+    story:
+      "你今天到一个新地方干活，刚进门就有人认出了你：「你就是那个帮过老王的小伙子？老王说你人特别好，非让我一定要找你。」\n\n你愣了一下——你不记得自己做过什么特别的事，但对方语气里的信任让你心里一暖。",
+    conditions: function (st) {
+      // 检查道德值≥70（长期善意积累）
+      if ((st.player.morality || 50) < 70) return false;
+      // 检查至少有2个不同NPC已结识（口碑传播需要关系网）
+      if (!st.relationships) return false;
+      var metCount = 0;
+      for (var nid in st.relationships) {
+        if (st.relationships[nid] && st.relationships[nid].met) metCount++;
+      }
+      if (metCount < 2) return false;
+      // 游戏进行至少60天（有足够时间积累口碑）
+      if (st.player.day < 60) return false;
+      // 不重复触发
+      if (st.flags._moralReputationReferral) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 谢谢老王抬举",
+        hint: "获得工作机会，口碑+名声",
+        apply: function (st) {
+          st.flags._moralReputationReferral = true;
+          // 找出推荐人（好感最高的已结识NPC）
+          var bestNpc = null;
+          var bestAff = -200;
+          for (var nid in st.relationships) {
+            var rel = st.relationships[nid];
+            if (rel && rel.met && (rel.affinity || 0) > bestAff) {
+              bestAff = rel.affinity || 0;
+              bestNpc = nid;
+            }
+          }
+          var npcName = bestNpc === "aunt_wang" ? "王大婶" : bestNpc === "old_zhou" ? "老周" : bestNpc === "sister_zhang" ? "张姐" : bestNpc === "chef_chen" ? "陈师傅" : "那位朋友";
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          // 推荐人好感提升
+          if (bestNpc && st.relationships[bestNpc]) {
+            st.relationships[bestNpc].affinity = Math.min(
+              100,
+              (st.relationships[bestNpc].affinity || 0) + 5,
+            );
+          }
+          // 解锁长期口碑buff
+          st.flags._reputationReferralActive = true;
+          StateManager.addMessage(
+            "🌟 " +
+              npcName +
+              "把你推荐给了这里。老板说「" +
+              npcName +
+              "推荐的人不会差」，当场给了比市场价高15%的日薪。名气+5，心情+12，" +
+              npcName +
+              "好感+5。你的好名声在这座城市里开始流转了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我真没做什么",
+        hint: "谦虚，但口碑仍在传播",
+        apply: function (st) {
+          st.flags._moralReputationReferral = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🌟 你摆摆手说「真没做什么」。但老板笑着说：「能被人主动推荐的，都不是普通人。」你心里有点不自在，但更多的是温暖。道德+2，心情+8。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E2：技能满级后的「行业声望」事件
+  // 设计意图：单一技能达到80+时解锁隐藏的职业机会
+  // 联动：skills.*.level >= 80 + 对应地点
+  RANDOM_EVENTS.push({
+    id: "skill_master_opportunity",
+    phase: "street",
+    icon: "🏆",
+    title: "行家找上门",
+    story:
+      "你在街上走着，一个穿着得体的人拦住了你。他递过来一张名片：「我在这座城市做了二十年" +
+      "——听说过你的名字。我们正在找一个技术过硬的人，薪资你开。」\n\n名片上印着一家公司，规模不小。你没想到自己的手艺已经出了名。",
+    conditions: function (st) {
+      // 检查是否有任何技能≥80
+      if (!st.skills) return false;
+      var masterSkill = null;
+      var masterSkillName = "";
+      var skillNames = {
+        cooking: "餐饮",
+        repair: "维修",
+        electrician: "电工",
+        welding: "焊接",
+        coding: "编程",
+        sales: "销售",
+        management: "管理",
+        accounting: "会计",
+        driving: "驾驶",
+      };
+      for (var sk in st.skills) {
+        if (st.skills[sk] && (st.skills[sk].level || 0) >= 80) {
+          masterSkill = sk;
+          masterSkillName = skillNames[sk] || "相关领域";
+          break;
+        }
+      }
+      if (!masterSkill) return false;
+      // 游戏进行至少120天（有足够时间积累名声）
+      if (st.player.day < 120) return false;
+      // 不重复触发同一技能
+      if (st.flags["_skillMaster_" + masterSkill]) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "📋 详细聊聊待遇",
+        hint: "可能获得全职工作机会",
+        apply: function (st) {
+          // 找出最高技能
+          var bestSkill = null;
+          var bestLvl = 0;
+          for (var sk in st.skills) {
+            if (st.skills[sk] && (st.skills[sk].level || 0) > bestLvl) {
+              bestLvl = st.skills[sk].level;
+              bestSkill = sk;
+            }
+          }
+          if (!bestSkill) return;
+          st.flags["_skillMaster_" + bestSkill] = true;
+          // 根据技能类型给出不同结果
+          var salary = 0;
+          if (bestSkill === "cooking") salary = Random.int(8000, 15000);
+          else if (bestSkill === "repair" || bestSkill === "electrician" || bestSkill === "welding") salary = Random.int(6000, 12000);
+          else if (bestSkill === "coding") salary = Random.int(12000, 25000);
+          else if (bestSkill === "sales") salary = Random.int(5000, 10000);
+          else if (bestSkill === "management") salary = Random.int(8000, 18000);
+          else salary = Random.int(4000, 8000);
+
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.flags._skillMasterOfferSalary = salary;
+          st.flags._skillMasterOfferSkill = bestSkill;
+          StateManager.addMessage(
+            "🏆 对方开出了月薪¥" +
+              salary.toLocaleString() +
+              "的条件——对于街头起步的人来说是一笔巨款。你的手艺终于被看见了。名气+8，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 保持联系，再想想",
+        hint: "保留机会，心智+3",
+        apply: function (st) {
+          var bestSkill = null;
+          var bestLvl = 0;
+          for (var sk in st.skills) {
+            if (st.skills[sk] && (st.skills[sk].level || 0) > bestLvl) {
+              bestLvl = st.skills[sk].level;
+              bestSkill = sk;
+            }
+          }
+          if (!bestSkill) return;
+          st.flags["_skillMaster_" + bestSkill] = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🤝 你收下名片说「让我考虑一下」。对方笑了：「不着急，好机会不等人但也跑不掉。」心智+3，心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 谢谢，但我现在挺好的",
+        hint: "婉拒，名声不变",
+        apply: function (st) {
+          var bestSkill = null;
+          var bestLvl = 0;
+          for (var sk in st.skills) {
+            if (st.skills[sk] && (st.skills[sk].level || 0) > bestLvl) {
+              bestLvl = st.skills[sk].level;
+              bestSkill = sk;
+            }
+          }
+          if (!bestSkill) return;
+          st.flags["_skillMaster_" + bestSkill] = true;
+          StateManager.addMessage(
+            "🚶 你摇了摇头。对方有些意外，但还是礼貌地离开了。有时候安于现状也是一种选择。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E3：天气+地点组合事件——台风天的不同遭遇
+  // 设计意图：同样的台风天，在市场/公园/工地/桥洞有不同的体验和后果
+  // 联动：weather.current === "typhoon" + trade.currentLocation
+  RANDOM_EVENTS.push({
+    id: "typhoon_location_experience",
+    phase: "street",
+    icon: "🌀",
+    title: "台风过境",
+    story:
+      "台风来了。天空变成诡异的黄绿色，风大到走路需要弯腰。街上的广告牌被吹得哐哐响，塑料袋像幽灵一样在半空中飘。",
+    conditions: function (st) {
+      // 检查台风天气
+      if (!st.weather || st.weather.current !== "typhoon") return false;
+      // 检查是否已在台风事件中
+      if (st.flags._typhoonSeenToday) return false;
+      // 游戏至少进行10天
+      if (st.player.day < 10) return false;
+      return true;
+    },
+    probability: 0.08,
+    repeatable: true,
+    choices: function (st) {
+      var curLoc = st.trade && st.trade.currentLocation;
+      var housingTier = st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
+
+      // 在市场：货物可能被吹走
+      if (curLoc === "market" || curLoc === "wholesaleMarket") {
+        return [
+          {
+            text: "🛡️ 赶紧加固摊位",
+            hint: "体力消耗大，但保住货物",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 20);
+              s.needs.hunger = Math.max(0, (s.needs.hunger || 0) - 10);
+              if (Random.chance(0.7)) {
+                s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+                StateManager.addMessage(
+                  "🛡️ 你用绳子和砖头把摊位固定好了。风刮了一夜，天亮时货还在。虽然累得腰酸背痛，但没损失。心情+5。",
+                  "success",
+                );
+              } else {
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 100);
+                StateManager.addMessage(
+                  "🛡️ 你拼尽全力固定，但一阵狂风还是掀翻了几个箱子。损失了约¥100的货。",
+                  "warning",
+                );
+              }
+            },
+          },
+          {
+            text: "🏃 撤了，安全第一",
+            hint: "放弃货物，保全自己",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "🏃 你收拾好东西赶紧往回跑。回头看了一眼——摊位已经被风吹得东倒西歪。心情-5。至少人没事。",
+                "info",
+              );
+            },
+          },
+        ];
+      }
+
+      // 在公园：树木可能被吹倒
+      if (curLoc === "park") {
+        return [
+          {
+            text: "🏃 赶紧离开公园",
+            hint: "远离大树，安全撤离",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+              StateManager.addMessage(
+                "🏃 你猫着腰穿过公园。身后传来一声巨响——一棵老树被连根拔起了。你后背发凉，心智+2。",
+                "info",
+              );
+            },
+          },
+          {
+            text: "📸 拍几张照发朋友圈",
+            hint: "可能出名，也可能后悔",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+              // 小概率被风吹倒受伤
+              if (Random.chance(0.2)) {
+                s.status.health = Math.max(0, (s.status.health || 70) - 5);
+                StateManager.addMessage(
+                  "📸 你拍了几张台风中的公园发到了网上，没想到火了。但拍照时一阵狂风差点把你吹倒，健康-5。名气+3，心情+8。",
+                  "warning",
+                );
+              } else {
+                StateManager.addMessage(
+                  "📸 你拍了几张台风中的公园发到了网上。朋友圈一片点赞。名气+3，心情+8。",
+                  "success",
+                );
+              }
+            },
+          },
+        ];
+      }
+
+      // 在工地：最危险的地方
+      if (curLoc === "construction") {
+        return [
+          {
+            text: "🏗️ 赶紧回工棚",
+            hint: "避开高空坠物",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.status.health = Math.max(0, (s.status.health || 70) - 3);
+              StateManager.addMessage(
+                "🏗️ 你一路小跑回工棚。回头看了一眼——工地上几块模板被风吹飞了，砸在地上碎成一团。健康-3。",
+                "warning",
+              );
+            },
+          },
+          {
+            text: "😰 帮忙加固脚手架",
+            hint: "义气，但危险",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 15);
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
+              if (Random.chance(0.3)) {
+                s.status.health = Math.max(0, (s.status.health || 70) - 8);
+                StateManager.addMessage(
+                  "🏗️ 你帮工友们加固了脚手架。但一阵大风把你刮倒了，磕破了膝盖。健康-8，心情+10。工友们说下次请你喝酒。",
+                  "warning",
+                );
+              } else {
+                StateManager.addMessage(
+                  "🏗️ 你帮工友们加固了脚手架。大家对你说「谢了兄弟」。虽然累，但心里踏实。疲劳+15，心情+10。",
+                  "success",
+                );
+              }
+            },
+          },
+        ];
+      }
+
+      // 在桥洞/露宿：最惨的情况
+      if (!st.housing || st.housing.tier === 0) {
+        return [
+          {
+            text: "🏃 找地方躲躲",
+            hint: "找地下通道或商店",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              if (Random.chance(0.5)) {
+                s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+                StateManager.addMessage(
+                  "🏃 你跑进了一家24小时便利店。老板看你可怜，让你在后仓躲了一夜。虽然条件差，但至少安全。心情+5。",
+                  "success",
+                );
+              } else {
+                s.status.health = Math.max(0, (s.status.health || 70) - 10);
+                StateManager.addMessage(
+                  "🏃 你找了个地下通道躲着。但风太大，雨水倒灌进来，整个通道都快淹了。你不得不继续跑，健康-10。",
+                  "danger",
+                );
+              }
+            },
+          },
+          {
+            text: "😰 赌一把，回桥洞",
+            hint: "桥洞可能塌，健康-15",
+            apply: function (s) {
+              s.flags._typhoonSeenToday = true;
+              s.status.health = Math.max(0, (s.status.health || 70) - 15);
+              s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 10);
+              StateManager.addMessage(
+                "😰 你冒着台风跑回桥洞。一夜风雨交加，你的栖身之所被水泡得不成样子。健康-15，心情-10。明天得找个更好的地方了。",
+                "danger",
+              );
+            },
+          },
+        ];
+      }
+
+      // 默认（有其他住所或在路上）：中性事件
+      return [
+        {
+          text: "🏠 在家待着",
+          hint: "安全，但可能停电",
+          apply: function (s) {
+            s.flags._typhoonSeenToday = true;
+            if (Random.chance(0.3)) {
+              s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "🏠 你待在家里。半夜停电了，蜡烛很快就烧完了。你听着窗外的风声，一夜没睡好。心情-5。",
+                "warning",
+              );
+            } else {
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 3);
+              StateManager.addMessage(
+                "🏠 你待在家里，煮了碗面看台风新闻。窗外狂风呼啸，屋里温暖安静。难得的安宁。心情+3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 出去看看",
+          hint: "冒险，可能有意外收获",
+          apply: function (s) {
+            s.flags._typhoonSeenToday = true;
+            s.status.health = Math.max(0, (s.status.health || 70) - 5);
+            if (Random.chance(0.4)) {
+              var earn = Random.int(50, 150);
+              s.resources.cash += earn;
+              s.resources.totalEarned = (s.resources.totalEarned || 0) + earn;
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+              StateManager.addMessage(
+                "🚶 你冒雨出门，发现很多店关门了，但也有人趁机卖高价物资。你倒卖了一批雨衣，赚了¥" +
+                  earn +
+                  "。健康-5，心情+8。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🚶 你走在空荡荡的街上，台风天整座城市像被按了暂停键。健康-5。",
+                "info",
+              );
+            }
+          },
+        },
+      ];
+    },
+  });
+
+  // E4：副业长期积累 → 主业转化事件
+  // 设计意图：连续做副业≥30天后，出现将副业转正的机会
+  // 联动：sideHustle + stats.actionFreq + career
+  RANDOM_EVENTS.push({
+    id: "sidehustle_to_main_career",
+    phase: "street",
+    icon: "🔄",
+    title: "副业变主业",
+    story:
+      "你做" +
+      "（副业）已经一段时间了。今天一个老客户拉住你说：「你做得这么好，要不要自己单干？我可以帮你介绍客户。」\n\n你想了想——这确实是个机会，但也意味着要承担更多风险。",
+    conditions: function (st) {
+      // 检查是否有活跃的副业或足够的副业行动记录
+      if (!st.sideHustle) return false;
+      if (!st.sideHustle.active && (!st.stats || !st.stats.actionFreq)) return false;
+      // 检查副业类型和行动频次
+      var hustleType = st.sideHustle.type || "";
+      var totalHustleActions = 0;
+      if (st.sideHustle.active && hustleType) {
+        // 统计该副业类型的行动次数
+        var actionKeyMap = {
+          stall: "stall",
+          driving: "driving",
+          freelance: "freelance",
+          content: "content",
+          sharing: "sharing",
+          community: "community",
+        };
+        var ak = actionKeyMap[hustleType];
+        if (ak && st.stats.actionFreq[ak]) {
+          totalHustleActions = st.stats.actionFreq[ak];
+        }
+      }
+      // 至少30次副业行动
+      if (totalHustleActions < 30) return false;
+      // 游戏进行至少45天
+      if (st.player.day < 45) return false;
+      // 不重复
+      if (st.flags._sideHustleToMain) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "💼 好！我自己干",
+        hint: "启动创业，需要¥1000启动资金",
+        apply: function (st) {
+          st.flags._sideHustleToMain = true;
+          if (st.resources.cash >= 1000) {
+            st.resources.cash -= 1000;
+            st.flags._selfEmployed = true;
+            st.flags._selfEmployedFrom = st.sideHustle.type || "unknown";
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage(
+              "💼 你决定自己单干！花了¥1000置办了设备，注册了个体户。虽然风险大了，但每一分钱都是自己挣的。心情+15，心智+5，名气+5。",
+              "success",
+            );
+          } else {
+            st.flags._selfEmployedPending = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "💼 你想自己干，但摸了摸口袋——¥1000启动资金不够。客户说「没关系，凑够了再来找我。」心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🤝 先帮介绍客户，保持现状",
+        hint: "获得客户资源，不冒险",
+        apply: function (st) {
+          st.flags._sideHustleToMain = true;
+          var newClients = Random.int(2, 5);
+          st.flags._extraClients = newClients;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🤝 你让客户帮你介绍了" +
+              newClients +
+              "个新客户。虽然还是打工，但客源多了。心情+8，名气+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🙅 算了，安稳点好",
+        hint: "维持现状，错失机会",
+        apply: function (st) {
+          st.flags._sideHustleToMain = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "🙅 你说想再等等。客户点点头：「也行，机会总有。」但你心里知道，有些机会错过了就没了。心情-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // E5：高债务累积 → 信用崩塌事件
+  // 设计意图：债务超过一定阈值后触发系统性后果，不只是数字变化
+  // 联动：resources.debt + relationships（催收可能骚扰NPC）
+  RANDOM_EVENTS.push({
+    id: "debt_credit_collapse",
+    phase: "street",
+    icon: "💔",
+    title: "催收电话打到了朋友那",
+    story:
+      "今天你收到一条短信，不是你的——是某个朋友的。短信内容让你心头一紧：\n\n「请问是" +
+      "（你的名字）的朋友吗？他欠了我们一笔钱，现在已经逾期很久了。麻烦你转告他尽快联系我们，否则我们将采取法律措施。」\n\n你的第一个反应不是愤怒，而是羞愧。",
+    conditions: function (st) {
+      // 检查总债务≥5000
+      var totalDebt = 0;
+      if (st.resources) {
+        totalDebt += st.resources.debt || 0;
+        totalDebt += st.resources.villageDebt || 0;
+        totalDebt += st.resources.bankDebt || 0;
+      }
+      if (totalDebt < 5000) return false;
+      // 检查至少有1个已结识的NPC（催收会骚扰到熟人）
+      if (!st.relationships) return false;
+      var hasMetNpc = false;
+      for (var nid in st.relationships) {
+        if (st.relationships[nid] && st.relationships[nid].met) {
+          hasMetNpc = true;
+          break;
+        }
+      }
+      if (!hasMetNpc) return false;
+      // 游戏进行至少30天
+      if (st.player.day < 30) return false;
+      // 不重复
+      if (st.flags._debtCreditCollapse) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 主动联系催收方",
+        hint: "协商分期，道德+2",
+        apply: function (st) {
+          st.flags._debtCreditCollapse = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          // 减少部分债务作为和解
+          var reduction = Math.round((st.resources.debt || 0) * 0.1);
+          st.resources.debt = Math.max(0, (st.resources.debt || 0) - reduction);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📞 你主动打了电话过去，说明了困难情况。对方同意给你三个月分期付款。虽然还是压力大，但至少不用躲了。道德+2，债务减少¥" +
+              reduction +
+              "，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😰 躲着不接电话",
+        hint: "暂时逃避，后果严重",
+        apply: function (st) {
+          st.flags._debtCreditCollapse = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          // 标记催收骚扰开始
+          st.flags._debtHarassmentActive = true;
+          st.flags._debtHarassmentStart = st.player.day;
+          // 可能影响NPC关系
+          for (var nid in st.relationships) {
+            if (
+              st.relationships[nid] &&
+              st.relationships[nid].met &&
+              Random.chance(0.3)
+            ) {
+              st.relationships[nid].affinity = Math.max(
+                -100,
+                (st.relationships[nid].affinity || 0) - 5,
+              );
+              StateManager.addMessage(
+                "💔 催收电话打到了" +
+                  (nid === "aunt_wang" ? "王大婶" : nid === "old_zhou" ? "老周" : nid === "sister_zhang" ? "张姐" : "你的一位朋友") +
+                  "那里。TA很担心你，但也被打扰得不轻。好感-5。",
+                "danger",
+              );
+              break;
+            }
+          }
+          StateManager.addMessage(
+            "😰 你挂了电话，换了号码。但你知道催收不会停止。躲是躲不掉的。心情-15，心智-5。",
+            "danger",
+          );
+        },
+      },
+      {
+        text: "🙏 找朋友借钱一次性还清",
+        hint: "需要NPC好感≥50，面子+关系",
+        apply: function (st) {
+          st.flags._debtCreditCollapse = true;
+          // 找有足够好感的NPC
+          var bestNpc = null;
+          var bestAff = -200;
+          for (var nid in st.relationships) {
+            var rel = st.relationships[nid];
+            if (rel && rel.met && (rel.affinity || 0) >= 50 && (rel.affinity || 0) > bestAff) {
+              bestAff = rel.affinity || 0;
+              bestNpc = nid;
+            }
+          }
+          if (bestNpc) {
+            var borrowAmount = Math.min(
+              3000,
+              Math.round((st.resources.debt || 0) * 0.5),
+            );
+            if (borrowAmount > 0) {
+              st.resources.cash += borrowAmount;
+              st.resources.debt = Math.max(0, (st.resources.debt || 0) - borrowAmount);
+              st.relationships[bestNpc].affinity = Math.min(
+                100,
+                (st.relationships[bestNpc].affinity || 0) + 10,
+              );
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+              var npcName = bestNpc === "aunt_wang" ? "王大婶" : bestNpc === "old_zhou" ? "老周" : bestNpc === "sister_zhang" ? "张姐" : bestNpc === "chef_chen" ? "陈师傅" : bestNpc;
+              StateManager.addMessage(
+                "🙏 你鼓起勇气找了" +
+                  npcName +
+                  "，说明了情况。TA二话没说借了你¥" +
+                  borrowAmount +
+                  "。你还清了部分债务。" +
+                  npcName +
+                  "好感+10，心情+10。",
+                "success",
+              );
+            }
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            StateManager.addMessage(
+              "🙏 你翻遍了通讯录，好像没有一个关系好到能开口借钱的人。你放下了手机。心情-8。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
