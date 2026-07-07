@@ -913,8 +913,12 @@
       title: "烂尾楼前",
       story:
         "一栋封顶的大楼矗立在雨中——脚手架还在，但工地上已经没人了。开发商资金链断裂，300多户业主交了首付却拿不到房。有人在楼顶拉横幅，有人在售楼处门口搭了帐篷。七个业主凑钱请了律师，每人摊¥3000。",
-            conditions: function (st) {
-        return st.player.phase === "street" && st.player.day >= 45 && !st.flags._unfinishedSeen;
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 45 &&
+          !st.flags._unfinishedSeen
+        );
       },
       choices: [
         {

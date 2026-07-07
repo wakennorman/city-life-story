@@ -375,18 +375,24 @@ function createDefaultState() {
       parents: {
         father: {
           health: "healthy",
-          age: 50,
+          age: 55, // v3.22: 从55岁开始，使60大寿在正常游戏进程中可达
           companionship: 10,
           medicalCost: 0,
         },
         mother: {
           health: "healthy",
-          age: 48,
+          age: 53,
           companionship: 10,
           medicalCost: 0,
         },
       },
-      mortgage: null, // { monthlyPayment, remainingDays, ... }
+      // v3.22: 默认房贷（父母在老家贷的房，玩家可帮助偿还）
+      mortgage: {
+        monthlyPayment: 3500, // 月供（元）
+        remainingDays: 360 * 15, // 剩余还款天数（约15年）
+        totalPrincipal: 420000, // 贷款总额
+        late: false, // 是否逾期
+      },
       activities: [], // 家庭活动历史
     },
 

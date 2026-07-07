@@ -685,7 +685,7 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === 年龄增长 ===
+  // === 年龄增长（玩家 + 父母同步衰老）===
   {
     name: "age",
     fn: function (state) {
@@ -695,6 +695,15 @@ const DAILY_PIPELINE = [
           "🎂 又过了一年，你现在" + state.player.age + "岁了。",
           "event",
         );
+        // v3.22: 父母同步衰老（家庭事件系统需要 age 驱动）
+        if (state.family && state.family.parents) {
+          if (state.family.parents.father) {
+            state.family.parents.father.age++;
+          }
+          if (state.family.parents.mother) {
+            state.family.parents.mother.age++;
+          }
+        }
       }
     },
   },
@@ -726,6 +735,35 @@ const DAILY_PIPELINE = [
     name: "lose",
     fn: function (state) {
       checkLoseConditions(state);
+    },
+  },
+
+  // === v3.22: 房贷计时（剩余还款天数递减）===
+  {
+    name: "family_mortgage_tick",
+    fn: function (state) {
+      if (
+        state.family &&
+        state.family.mortgage &&
+        state.family.mortgage.remainingDays > 0
+      ) {
+        // 每30天为一个月供周期：remainingDays - 30，并标记逾期
+        if (state.player.day % 30 === 0) {
+          state.family.mortgage.remainingDays = Math.max(
+            0,
+            (state.family.mortgage.remainingDays || 0) - 30,
+          );
+          // 如果玩家现金不足以支付月供，标记逾期（事件触发条件）
+          if (
+            (state.resources.cash || 0) <
+            (state.family.mortgage.monthlyPayment || 3500)
+          ) {
+            state.family.mortgage.late = true;
+          } else {
+            state.family.mortgage.late = false;
+          }
+        }
+      }
     },
   },
 
