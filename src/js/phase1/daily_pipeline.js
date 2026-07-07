@@ -382,6 +382,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1 新机制：命运抉择卡（每 30 天一次高 stakes 选择） ===
+  {
+    name: "crossroads_tick",
+    fn: function (state) {
+      if (typeof crossroadsTick === "function") {
+        crossroadsTick(state);
+      }
+    },
+  },
+
   // === v3.1 第41轮：摊位合伙收入 ===
   {
     name: "stall_income",

@@ -41,6 +41,16 @@
     seed: 42,
   };
 
+  // v3.1 新机制：各策略的性格倾向（决定命运抉择卡的 bold/safe 选择）
+  var CROSSROADS_BIAS = {
+    balanced: "safe",
+    grinder: "bold",
+    skiller: "bold",
+    trader: "bold",
+    social: "safe",
+    corporate: "bold",
+  };
+
   function parseArgs() {
     var args = process.argv.slice(2);
     for (var i = 0; i < args.length; i++) {
@@ -838,6 +848,24 @@
       try {
         policyFn(state);
       } catch (e) {}
+      // v3.1 新机制：结算上一日抽到的命运抉择卡（按策略性格选 bold/safe）
+      try {
+        if (state.player && state.player.day === 31)
+          console.error("[DBG d31] typeof resolveCrossroads=" + typeof resolveCrossroads + " pending=" + JSON.stringify(state._pendingCrossroads) + " typeof crossroadsTick=" + typeof crossroadsTick);
+        if (state._pendingCrossroads && typeof resolveCrossroads === "function") {
+          var bias = CROSSROADS_BIAS[strategyName] || "safe";
+          var opt =
+            typeof decideCrossroads === "function"
+              ? decideCrossroads(state, bias)
+              : 0;
+          if (opt < 0) opt = 0;
+          var _before = state._mcCrossroadsTaken;
+          var _r = resolveCrossroads(state, state._pendingCrossroads.id, opt);
+          console.error("[DBG] resolved id=" + state._pendingCrossroads.id + " opt=" + opt + " ret=" + _r + " before=" + _before + " after=" + state._mcCrossroadsTaken);
+        }
+      } catch (e) {
+        console.error("[DBG ERR] " + (e && e.stack ? e.stack : e));
+      }
       try {
         state.player.actionPoints = 0;
         state.player.timeSlot = "evening";
@@ -957,6 +985,7 @@
       skillUps: state._mcSkillUps || 0,
       startupFoundedDay: state._mcStartup ? state._mcStartup.foundedDay : -1,
       finalMorality: state.flags._mcMorality || 50,
+      crossroadsTaken: state._mcCrossroadsTaken || 0,
     };
   }
 

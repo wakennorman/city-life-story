@@ -745,6 +745,7 @@
       "js/phase2/property_market.js",
       "js/phase2/startup_data.js",
       "js/phase2/startup.js",
+      "js/phase2/life_crossroads.js",
       "js/phase2/workplace_social.js",
       "js/phase2/investment_analysis.js",
       "js/phase2/startup_crisis.js",

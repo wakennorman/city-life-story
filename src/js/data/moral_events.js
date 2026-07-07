@@ -205,7 +205,21 @@ const MORAL_EVENTS = [
     minDay: 10,
     dailyChance: 0.03,
     condition: function (s) {
-      return s.trade.currentLocation === "commercialDist";
+      // [自洽修复] 叙事"摆摊时"需检查玩家确实在摆摊（职业/副业/行动频次），避免随机弹出与场景不符
+      var hasStall =
+        (s.employment &&
+          s.employment.currentJob &&
+          [
+            "food_stall",
+            "street_vending_food",
+            "street_vending_goods",
+          ].includes(s.employment.currentJob.id)) ||
+        (s.sideHustle && s.sideHustle.type === "stall") ||
+        (s.stats &&
+          s.stats.actionFreq &&
+          (s.stats.actionFreq["food_stall"] > 0 ||
+            s.stats.actionFreq["start_business"] > 0));
+      return s.trade.currentLocation === "commercialDist" && hasStall;
     },
     choices: [
       {
