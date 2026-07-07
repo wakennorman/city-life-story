@@ -253,6 +253,7 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 - **附带修复**：`moral_finding_money` 被 `10404a7` 误损坏（双事件结构 + 游离字符串），恢复为单事件（commit `66652f1`）
 - **指令三（P0）**：8 个 v3.20 事件是死代码（缺 `conditions` + `apply`）→ 全部补全 + 3 个 push 循环加防御性兜底（与 `CAREER_EVENTS` fallback 一致）→ commit `30ed93f`；同步修 `age_30_reflection` 中文句号语法错误；`zhou_deep_bond` conditions 增加 `old_zhou.met` + 好感≥70 门控 [自洽修复]
 - **指令四（v3.22 家庭联动）**：发现 `state.family` 子系统（parents.health/mortgage/children）零事件覆盖 → 新建 `family_events.js` 含 3 个高情感温度事件（母亲手术费道德困境 / 房贷逾期 / 父亲六十大寿回乡抉择）+ 基础设施（父母初始年龄55/53 + 默认房贷 + 父母同步衰老 pipeline + 房贷递减/逾期标记）→ commit `72e466e`
+- **指令五（4d P0）**：3 个 `after_work_*` 道德事件是死代码（困在 MORAL_EVENTS，`Random.chance(undefined)`=false，且 loadAll 只扫描 RANDOM_EVENTS 无法注册到 after_work 槽）→ 在 moral_events.js 末尾新增翻译 IIFE（desc→story, immediate→apply, 标题首emoji→icon, 不设 phase 避免双触发），让 loadAll 注册到 after_work 槽 → commit `7d1990d`（本地待推）
 
 > **MC 回归用法（v3.1 ③ 后）**：
 >
