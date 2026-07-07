@@ -35926,6 +35926,464 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ============================================================
+  // v3.34 新增联动事件（5个）— 空白区填充
+  // 设计意图：长期行为累积触发、技能门槛解锁、NPC好感溢出、天气×位置情境、道德极端分叉
+  // ============================================================
+  CROSS_EVENTS.push(
+    // 1. 长期跑腿后的老手特遇 — 连续跑腿≥30天，老主顾回头
+    {
+      id: "gig_regular_customer",
+      name: "回头客",
+      icon: "🤝",
+      phase: "street",
+      // [自洽修复] conditions 新增：sideHustle.type === 'freelance' 检查（跑腿副业）
+      conditions: function (st) {
+        // 检查玩家是否在做跑腿副业（累计≥30次 courier_gig 行动）
+        var isFreelance =
+          (st.sideHustle && st.sideHustle.type === "freelance") ||
+          (st.stats && st.stats.actionFreq && st.stats.actionFreq["courier_gig"] >= 30);
+        return (
+          st.player.phase === "street" &&
+          isFreelance &&
+          !st.flags._gigRegularCustomerSeen
+        );
+      },
+      probability: 0.03,
+      repeatable: false,
+      text: "你在一个街区跑了快一个月了。今天送完一单，收件人追出来塞给你一杯奶茶：'你每次都准时，以后我的东西都交给你送吧。'他递来一张名片——是一家小型电商公司。",
+      choices: [
+        {
+          text: "📱 加联系方式，接私单",
+          hint: "额外收入来源",
+          apply: function (st) {
+            st.flags._gigRegularCustomerSeen = true;
+            st.flags._gigPrivateOrders = true;
+            var bonus = Random.int(200, 500);
+            st.resources.cash += bonus;
+            st.resources.totalEarned += bonus;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "🤝 加了名片，以后每个月能多赚¥" + bonus + "的私单。这城市里人情就是钱。心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 先观望，不急",
+          hint: "保持节奏",
+          apply: function (st) {
+            st.flags._gigRegularCustomerSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "🤝 你礼貌地收下了名片，说考虑一下。不急，慢慢来。心情+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 2. 修理技能≥40的专业人士视角 — 能识别假冒伪劣商品
+    {
+      id: "repair_expert_inspection",
+      name: "行家眼光",
+      icon: "🔍",
+      phase: "street",
+      // [自洽修复] conditions 新增：修理技能≥40 检查
+      conditions: function (st) {
+        // 检查玩家修理技能是否达到专业门槛
+        var repairLvl = (st.skills && st.skills.repair && st.skills.repair.level) || 0;
+        return (
+          st.player.phase === "street" &&
+          repairLvl >= 40 &&
+          !st.flags._repairExpertSeen
+        );
+      },
+      probability: 0.02,
+      repeatable: false,
+      text: "你在批发市场帮朋友挑货时，一眼看出这批'原装'配件全是高仿——做工粗糙，螺丝孔位都对不上。摊主看你一眼，换了副面孔：'行家啊，要真的吗？'",
+      choices: [
+        {
+          text: "✅ 拿真的，贵点也值",
+          hint: "多花¥200，品质有保障",
+          apply: function (st) {
+            st.flags._repairExpertSeen = true;
+            if (st.resources.cash >= 200) {
+              st.resources.cash -= 200;
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+              StateManager.addMessage(
+                "🔍 你拿到了正品配件，质量远超那些仿品。摊主看你的眼神都变了——从此你在这行有了口碑。心情+10，智力+2。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🔍 你想拿真的但钱不够，只能作罢。行家也有穷的时候。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📸 拍下来当证据，以后防坑",
+          hint: "学到经验",
+          apply: function (st) {
+            st.flags._repairExpertSeen = true;
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            StateManager.addMessage(
+              "🔍 你拍了照片留证，以后看到类似的就知道怎么辨别了。知识就是力量。智力+3。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // 3. NPC好感≥60的意外发现 — 小美透露科技园扩建内幕
+    {
+      id: "xiao_mei_techpark_tip",
+      name: "小美的消息",
+      icon: "📐",
+      phase: "street",
+      // [自洽修复] conditions 新增：小美关系好感≥60 + met 检查
+      conditions: function (st) {
+        // 检查玩家与小美的好感关系是否达到深度交流门槛
+        var rel = st.relationships && st.relationships.xiao_mei;
+        var aff = rel ? (rel.affinity || 0) : 0;
+        var met = rel ? !!rel.met : false;
+        return (
+          st.player.phase === "street" &&
+          aff >= 60 &&
+          met &&
+          !st.flags._xiaoMeiTechparkTipSeen
+        );
+      },
+      probability: 0.02,
+      repeatable: false,
+      text: "小美在图书馆角落里拉你，压低声音说：'我导师在规划局有熟人——科技园东边那片旧厂房要被收储了，规划是扩建三期。消息还没公开，你懂的。'她把一张名片推过来。",
+      choices: [
+        {
+          text: "📐 联系二手房东，谈优先承租权",
+          hint: "¥2000定金，赌扩建",
+          cost: 2000,
+          apply: function (st) {
+            st.flags._xiaoMeiTechparkTipSeen = true;
+            st.flags._xiaoMeiTipActed = st.player.day;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.relationships.xiao_mei.affinity = Math.min(
+              100,
+              (st.relationships.xiao_mei.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              "📐 你付了¥2000定金，以租代持谈下了旧厂房仓库的优先承租权。小美消息灵通，你欠她一个人情。心智+3，好感+5。",
+              "event",
+            );
+            // 链式后续：12天后看结果
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "xiao_mei_techpark_payoff", 12, "street");
+            }
+          },
+        },
+        {
+          text: "📈 小仓位买入科技股",
+          hint: "温和布局，¥1000",
+          cost: 1000,
+          apply: function (st) {
+            st.flags._xiaoMeiTechparkTipSeen = true;
+            st.flags._xiaoMeiTipModerate = st.player.day;
+            st.flags._xiaoMeiTipInvest =
+              (st.flags._xiaoMeiTipInvest || 0) + 1000;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "📐 你不敢all-in，但买了¥1000科技股。小美说'消息靠谱'，但你决定留条后路。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤨 内幕交易违法，当没听过",
+          hint: "安全但可能错过机会",
+          apply: function (st) {
+            st.flags._xiaoMeiTechparkTipSeen = true;
+            st.flags._xiaoMeiTipSkipped = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "🤨 你谢过小美，但没碰那张名片。有些钱烫手，你知道。心智+3，心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 4. 天气×位置组合情境 — 暴雨时在批发市场
+    {
+      id: "storm_market_dilemma",
+      name: "暴雨中的市场",
+      icon: "🌧️",
+      phase: "street",
+      // [自洽修复] conditions 新增：暴雨天气 + 批发市场位置 双重检查
+      conditions: function (st) {
+        // 检查当前是否为暴雨天气
+        var isStorm =
+          st.weather &&
+          (st.weather.current === "stormy" || st.weather.current === "heavy_rain");
+        // 检查玩家是否在批发市场
+        var atMarket =
+          st.trade &&
+          (st.trade.currentLocation === "wholesaleMarket" ||
+            st.trade.currentLocation === "market");
+        return (
+          st.player.phase === "street" &&
+          isStorm &&
+          atMarket &&
+          !st.flags._stormMarketSeen
+        );
+      },
+      probability: 0.04,
+      repeatable: true,
+      text: "暴雨倾盆而下，批发市场瞬间变成了小河。你的摊位刚摆出去的货眼看就要被淹，但生意正做到一半——撤了亏钱，不撤也亏钱。",
+      choices: [
+        {
+          text: "🏃 拼命抢收货物",
+          hint: "损失一半但保住部分",
+          apply: function (st) {
+            st.flags._stormMarketSeen = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            st.needs.hygiene = Math.max(0, (st.needs.hygiene || 0) - 10);
+            var saved = Random.int(100, 300);
+            st.resources.cash += saved;
+            StateManager.addMessage(
+              "🌧️ 你冒着暴雨抢收回一半货物。浑身湿透，但好歹保住了¥" + saved + "的货。疲劳+20，卫生-10。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🤝 帮隔壁林阿姨也收",
+          hint: "花时间帮人，好感+10",
+          apply: function (st) {
+            st.flags._stormMarketSeen = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            if (st.relationships && st.relationships.auntie_lin) {
+              st.relationships.auntie_lin.affinity = Math.min(
+                100,
+                (st.relationships.auntie_lin.affinity || 0) + 10,
+              );
+            }
+            StateManager.addMessage(
+              "🌧️ 你帮林阿姨也抢收了一部分。她感动得直说谢谢，以后进货给你便宜。好感+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏠 先找地方躲雨",
+          hint: "保命要紧",
+          apply: function (st) {
+            st.flags._stormMarketSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2);
+            StateManager.addMessage(
+              "🌧️ 你躲进了一家便利店里。雨太大了，货物保不住了。但至少人没事。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 5. 道德值极端分叉 — 高道德 vs 低道德面对同一事件
+    {
+      id: "moral_extreme_pickpocket",
+      name: "道德的岔路",
+      icon: "⚖️",
+      phase: "street",
+      // [自洽修复] conditions 新增：道德值极端检查（高道德≥70 或 低道德≤30）
+      conditions: function (st) {
+        // 检查玩家道德值是否处于极端区间
+        var morality = st.player.morality || 50;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 20 &&
+          !st.flags._moralExtremSeen &&
+          (morality >= 70 || morality <= 30)
+        );
+      },
+      probability: 0.025,
+      repeatable: false,
+      text: "地铁上，你看到一个小偷正在扒一个学生的包。学生戴着耳机没察觉。周围人都在看手机，仿佛什么都没发生。",
+      choices: function (st) {
+        var morality = st.player.morality || 50;
+        var choices = [];
+        if (morality >= 70) {
+          // 高道德玩家：倾向于正义
+          choices.push({
+            text: "📢 大声制止——有人偷东西！",
+            hint: "英雄行为，可能有风险",
+            apply: function (s) {
+              s.flags._moralExtremSeen = true;
+              if (Random.chance(0.7)) {
+                s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
+                s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 15);
+                StateManager.addMessage(
+                  "📢 你一声大喝，小偷慌了神跑了。学生感激地握住你的手：'谢谢你！'周围人纷纷鼓掌。名气+8，心情+15。",
+                  "success",
+                );
+              } else {
+                s.status.health = Math.max(0, (s.status.health || 100) - 10);
+                s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 10);
+                StateManager.addMessage(
+                  "📢 小偷恼羞成怒动手了。你受了点伤，但学生没事。名气+3，健康-10，心情-10。",
+                  "warning",
+                );
+              }
+            },
+          });
+          choices.push({
+            text: "📱 悄悄报警",
+            hint: "稳妥但效果有限",
+            apply: function (s) {
+              s.flags._moralExtremSeen = true;
+              s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+              StateManager.addMessage(
+                "📱 你悄悄报了警。警察赶到时小偷已经跑了。至少你做了该做的事。心智+2。",
+                "info",
+              );
+            },
+          });
+        } else if (morality <= 30) {
+          // 低道德玩家：倾向于利益
+          choices.push({
+            text: "👀 看好戏，不插手",
+            hint: "旁观者心态",
+            apply: function (s) {
+              s.flags._moralExtremSeen = true;
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 2);
+              StateManager.addMessage(
+                "👀 你选择了旁观。这城市里每个人都在为自己活。心情+2。",
+                "info",
+              );
+            },
+          });
+          choices.push({
+            text: "💰 跟小偷说——'哥们，分我一份'",
+            hint: "道德-5，但可能赚钱",
+            apply: function (s) {
+              s.flags._moralExtremSeen = true;
+              s.player.morality = Math.max(0, (s.player.morality || 50) - 5);
+              if (Random.chance(0.4)) {
+                var steal = Random.int(200, 500);
+                s.resources.cash += steal;
+                StateManager.addMessage(
+                  "💰 你和小偷联手扒了那个学生，分了¥" + steal + "。心里有点不舒服，但钱是真的。道德-5。",
+                  "warning",
+                );
+              } else {
+                StateManager.addMessage(
+                  "💰 小偷嫌你碍事，抢了你的钱跑了。自作孽。",
+                  "danger",
+                );
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 100);
+              }
+            },
+          });
+        } else {
+          // 理论上不会到这里，但防御性兜底
+          choices.push({
+            text: "📢 出声制止",
+            hint: "做正确的事",
+            apply: function (s) {
+              s.flags._moralExtremSeen = true;
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 5);
+              StateManager.addMessage(
+                "📢 你出声了。小偷跑了。学生说了声谢谢。小事一桩。",
+                "info",
+              );
+            },
+          });
+        }
+        return choices;
+      },
+    },
+
+    // 链式后续：小美科技园消息兑现
+    {
+      id: "xiao_mei_techpark_payoff",
+      name: "科技园官宣了！",
+      icon: "🏗️",
+      phase: "street",
+      // [自洽修复] conditions 新增：链式事件触发条件检查
+      conditions: function (st) {
+        return (
+          (!!st.flags._xiaoMeiTipActed || !!st.flags._xiaoMeiTipModerate) &&
+          !st.flags._xiaoMeiPayoffSeen &&
+          st.player.day >=
+            (st.flags._xiaoMeiTipActed || st.flags._xiaoMeiTipModerate || 0) + 12
+        );
+      },
+      probability: 0.05,
+      repeatable: false,
+      text: "新闻推送弹出来：市政府正式公告科技园东区旧厂房改造项目立项，总投资80亿。你记得小美说的那番话——现在，到了看选择的时候了。",
+      choices: function (st) {
+        var choices = [];
+        if (st.flags._xiaoMeiTipActed) {
+          choices.push({
+            text: "💰 把优先承租权转手（溢价300%！）",
+            hint: "净赚¥5000~8000",
+            apply: function (s) {
+              s.flags._xiaoMeiPayoffSeen = true;
+              var profit = Random.int(5000, 7999);
+              s.resources.cash += profit;
+              s.resources.totalEarned += profit;
+              s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
+              StateManager.addMessage(
+                "🏗️ 你把优先承租权转手给了一家连锁品牌，净赚¥" +
+                  profit +
+                  "！小美的消息比黄金还值钱。名气+8。",
+                "success",
+              );
+            },
+          });
+        }
+        if (st.flags._xiaoMeiTipModerate) {
+          choices.push({
+            text: "📉 卖出科技股（获利+40%）",
+            hint: "见好就收",
+            apply: function (s) {
+              s.flags._xiaoMeiPayoffSeen = true;
+              var invest = s.flags._xiaoMeiTipInvest || 1000;
+              var ret = Math.round(invest * 1.4);
+              s.resources.cash += ret;
+              s.resources.totalEarned += ret;
+              StateManager.addMessage(
+                "📉 你卖掉了科技股，到手¥" + ret + "，收益¥" + (ret - invest) + "（+40%）。",
+                "success",
+              );
+            },
+          });
+        }
+        if (st.flags._xiaoMeiTipSkipped) {
+          choices.push({
+            text: "😌 庆幸自己没冒险",
+            hint: "省下的就是赚到的",
+            apply: function (s) {
+              s.flags._xiaoMeiPayoffSeen = true;
+              s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 5);
+              StateManager.addMessage(
+                "😌 你看着新闻，庆幸自己没有冲动。有些钱不该赚。心智+3，心情+5。",
+                "info",
+              );
+            },
+          });
+        }
+        return choices;
+      },
+    },
+  );
+
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
