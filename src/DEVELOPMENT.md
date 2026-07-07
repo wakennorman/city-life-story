@@ -1,10 +1,39 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-07（v3.1 命运抉择卡系统 — 新机制 + 平衡性调优）
+> 最后更新: 2026-07-07（v3.22 叙事自洽修复 + 天气×工作/NPC/消费深度联动）
 >
-> commit: `1194740`
+> commit: `f38a0f6`
 >
 > ---
+>
+> ---
+>
+> ## 2026-07-07 — v3.22 叙事-触发自洽性修复 + 跨系统联动事件扩充
+
+**触发**：系统性扫描 8 个事件文件 250+ 事件，修复叙事文本提到 NPC/副业但条件未校验的自洽性缺陷；新建 5 个联动事件填补天气×工作/NPC/消费空白。
+
+### 叙事自洽修复（4个缺陷）
+
+| 缺陷类型 | 事件ID | 问题 | 修复 |
+|---------|--------|------|------|
+| A类 | `gig_economy_trap` | 叙事"隔壁老周胆囊炎"但未校验 old_zhou 关系 | conditions 新增 old_zhou.met 检查 |
+| A类 | `community_group_buy` | 叙事"王婶的菜被冲击"但未校验 aunt_wang 关系 | conditions 新增 aunt_wang.met 检查 |
+| B类 | `coworker_document_leak` | 选项说"老马好感提升"但代码无好感赋值 | apply 补 old_ma.affinity+=8 |
+| B类 | `rental_apartment_crash` | choice1 说"王婶给了¥100红包"但未初始化 aunt_wang | apply 补 aunt_wang 关系初始化 |
+
+### 跨系统联动事件（5个新事件）
+
+**新建** `cross_system_events_v322.js`（+220行）：
+
+| 事件ID | 主题 | 联动系统 |
+|--------|------|----------|
+| `heatwave_outdoor_worker` | 高温天户外工作选择 | weather + employment |
+| `old_zhou_weather_tip` | 老周气象情报 | relationships.old_zhou + weather.forecast |
+| `boss_li_typhoon_warning` | 台风天私活选择 | relationships.boss_li + weather.forecast |
+| `zhang_factory_skill_offer` | 张姐技能晋升机会 | relationships.sister_zhang + skills + employment |
+| `heavy_smog_price_surge` | 雾霾口罩涨价 | weather + resources + health |
+
+**影响文件**：`events_street_life.js`(修复2个) / `events_street_wealth.js`(修复1个) / `cross_system_events_v322.js`(新建) / `index.html`(+1) / `DEVELOPMENT.md`(更新)
 
 ---
 
