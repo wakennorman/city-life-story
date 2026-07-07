@@ -3497,8 +3497,10 @@
         },
       ],
     },
-    ,
-    // ====== v3.20 新增事件 ======
+
+    // ====== v3.20 新增事件（已补全 conditions + apply，修复死代码）======
+
+    // v3.20-7: 技能进阶里程碑（修理→工厂机会）
     {
       id: "mechanic_recruited_by_factory",
       phase: "street",
@@ -3506,26 +3508,67 @@
       title: "工厂技术主管挖人",
       story:
         '你在工厂区闲逛时，一个穿着工装的中年男人拍了拍你的肩膀："小伙子，看你手上全是茧子，干过机修吗？我们厂正缺个能修设备的。",\\n\\n他递了张名片——是一家中型工厂的技术主管。',
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        var rep = st.skills && st.skills.repair ? st.skills.repair.level : 0;
+        return (
+          st.player.phase === "street" &&
+          rep >= 35 &&
+          st.player.day >= 50 &&
+          !st.flags._mechanicRecruited
+        );
+      },
       probability: 0.04,
       repeatable: false,
       choices: [
         {
           text: "🔧 去试试！",
           hint: "可能获得新工作机会",
+          apply: function (st) {
+            st.flags._mechanicRecruited = true;
+            if ((st.skills.repair.level || 0) >= 50) {
+              st.flags._factoryrepairJob = true;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+              StateManager.addMessage(
+                "🔧 面试很顺利——你的技术让主管当场拍板。以后有活了就找你，稳定的技术兼职之路开启了。名气+3。",
+                "success",
+              );
+            } else {
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+              StateManager.addMessage(
+                "🔧 面试后对方说「技术还差点火候，回去再练练」。你记住了差距，心智+2。手艺这条路没有捷径。",
+                "info",
+              );
+            }
+          },
         },
         {
           text: "🔍 先了解一下待遇",
           hint: "谨慎行事",
+          apply: function (st) {
+            st.flags._mechanicRecruited = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "🔍 你问了问薪资和工时：日结¥200-300，按件计费。心里有底了，决定考虑考虑。心智+2。",
+              "info",
+            );
+          },
         },
         {
           text: "🙋‍♂️ 婉拒，现在忙",
           hint: "放弃",
+          apply: function (st) {
+            st.flags._mechanicRecruited = true;
+            StateManager.addMessage(
+              "🙋‍♂️ 你说现在脱不开身。主管点点头：「想来了随时打电话。」机会留了个尾巴。",
+              "info",
+            );
+          },
         },
       ],
     },
 
-    // ====================
-
+    // v3.20-8: 钱包归还后续（延迟回响·道德长线）
     {
       id: "wallet_return_late_reward",
       phase: "street",
@@ -3533,21 +3576,55 @@
       title: "那个钱包改变了什么",
       story:
         '你把钱包还回去已经几个月了。今天在一个社区活动上，你意外遇到了那个钱包的主人——他竟然是个社区志愿者组织的负责人。\\n\\n他认出了你："原来是你！上次真是太感谢了！"',
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      // 联动 flags._returnedFoundMoney（道德系统长线回响）
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.flags._returnedFoundMoney === true &&
+          st.player.day >= (st.flags._walletReturnDay || 0) + 90 &&
+          !st.flags._walletLateReward
+        );
+      },
       probability: 0.05,
       repeatable: false,
       choices: [
         {
           text: "🙏 主动打招呼",
           hint: "重建联系",
+          apply: function (st) {
+            st.flags._walletLateReward = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            // 获得社区志愿者网络接入
+            st.flags._communityNetwork = true;
+            StateManager.addMessage(
+              "🙏 他拉着你坐下聊了很久，还要推荐你加入志愿者组织。名气+8，心情+10。没想到几个月前的举手之缘，会在今天开花结果。",
+              "success",
+            );
+          },
         },
         {
           text: "👋 假装不认识，默默走开",
           hint: "低调",
+          apply: function (st) {
+            st.flags._walletLateReward = true;
+            StateManager.addMessage(
+              "👋 你低着头快步走开了。他不理解，但你有你的活要干。善意不图回报，也不等人情绑架。",
+              "info",
+            );
+          },
         },
       ],
     },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
+    // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
+    if (!EVENTS[i].conditions && !EVENTS[i].triggers) {
+      EVENTS[i].conditions = function () {
+        return true;
+      };
+    }
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();

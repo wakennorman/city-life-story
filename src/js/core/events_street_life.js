@@ -3009,8 +3009,10 @@
         },
       ],
     },
-    ,
-    // ====== v3.20 新增事件 ======
+
+    // ====== v3.20 新增事件（已补全 conditions + apply，修复死代码）======
+
+    // v3.20-5: 30岁人生转折（年龄里程碑）
     {
       id: "age_30_reflection",
       phase: "street",
@@ -3018,26 +3020,71 @@
       title: "三十而立？",
       story:
         '你今天过了30岁生日。站在镜子前，看着自己——发际线后移了，眼角有了细纹。你在这座城市已经待了这么多年，但说不上来自己到底有没有"站稳脚跟"。\\n\\n手机响了，是老家打来的。你犹豫了一下，接了。',
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.age >= 30 &&
+          st.player.day >= 365 &&
+          !st.flags._age30Reflection
+        );
+      },
       probability: 0.05,
       repeatable: false,
       choices: [
         {
           text: "📱 跟家人聊聊近况",
           hint: "精神充电",
+          apply: function (st) {
+            st.flags._age30Reflection = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+            StateManager.addMessage(
+              "📱 妈妈在电话里说「别太拼了，身体要紧」。你鼻子一酸。心情+15。不管走多远，总有人在家等你。",
+              "success",
+            );
+          },
         },
         {
           text: "📊 认真审视自己的财务状况",
           hint: "理性规划",
+          apply: function (st) {
+            st.flags._age30Reflection = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            var total =
+              (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+            StateManager.addMessage(
+              "📊 你算了一下全部身家：¥" +
+                total.toLocaleString() +
+                "。三十岁，存款是这个数字。你把它写在本子上，心智+5。数字不会骗人，但也不会告诉你值不值得。",
+              "info",
+            );
+          },
         },
         {
           text: "🍺 叫上几个老朋友聚一聚",
           hint: "社交放松",
+          apply: function (st) {
+            st.flags._age30Reflection = true;
+            if (st.resources.cash < 50) {
+              StateManager.addMessage(
+                "🍺 你想请客，但摸了摸口袋——连顿像样的饭都请不起。只好说改天。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 50;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "🍺 老朋友们喝了一晚上，聊起当年的傻事笑得前仰后合。花¥50买了个痛快。心情+12，名气+2。",
+              "success",
+            );
+          },
         },
       ],
     },
 
-    // ====================
-
+    // v3.20-6: 合租矛盾升级（消费陷阱警示）
     {
       id: "rent_mercedes_escalation",
       phase: "street",
@@ -3045,25 +3092,86 @@
       title: "室友的奔驰梦",
       story:
         '你最近发现室友小杨最近变了。他频繁借钱，朋友圈全是豪车和美女，但你从未见过他开什么好车。今天他找你开口："借我五千吧，下个月发工资就还。"',
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.housing &&
+          st.housing.tier >= 1 &&
+          st.player.day >= 45 &&
+          !st.flags._mercedesRoommate
+        );
+      },
       probability: 0.05,
       repeatable: false,
       choices: [
         {
           text: "💰 借给他",
           hint: "花钱买清净",
+          apply: function (st) {
+            st.flags._mercedesRoommate = true;
+            var loan = Math.min(5000, st.resources.cash);
+            st.resources.cash -= loan;
+            // 大概率不还
+            if (Random.chance(0.7)) {
+              StateManager.addMessage(
+                "💰 你借了¥" +
+                  loan +
+                  "。下个月小杨消失了，朋友圈还在发豪车。你当交了学费。",
+                "warning",
+              );
+            } else {
+              st.resources.cash += loan;
+              StateManager.addMessage(
+                "💰 你借了¥" +
+                  loan +
+                  "。没想到下个月真还了，还多给了¥200利息。算你运气好。",
+                "success",
+              );
+              st.resources.cash += 200;
+            }
+          },
         },
         {
           text: "🛡️ 委婉拒绝",
           hint: "保持边界",
+          apply: function (st) {
+            st.flags._mercedesRoommate = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "🛡️ 你说手头也紧。小杨脸色有点不好看，但也没再说什么。心智+2。有些边界一旦退了就收不回来。",
+              "info",
+            );
+          },
         },
         {
           text: "💡 劝他别被欲望绑架",
           hint: "尝试点醒他",
+          apply: function (st) {
+            st.flags._mercedesRoommate = true;
+            if ((st.player.mental || 0) >= 45) {
+              StateManager.addMessage(
+                "💡 你跟他聊了聊消费贷的陷阱和复利的力量。他沉默了很久，最后说「也许你说得对」。不管听没听进，至少种了颗种子。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "💡 你试着劝他，但他笑你「不懂生活」。话不投机半句多。也许你的心智还不够说服别人。",
+                "info",
+              );
+            }
+          },
         },
       ],
     },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
+    // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
+    if (!EVENTS[i].conditions && !EVENTS[i].triggers) {
+      EVENTS[i].conditions = function () {
+        return true;
+      };
+    }
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();

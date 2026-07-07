@@ -4045,8 +4045,10 @@
         },
       ],
     },
-    ,
-    // ====== v3.20 新增事件 ======
+
+    // ====== v3.20 新增事件（已补全 conditions + apply，修复死代码）======
+
+    // v3.20-1: 极端天气+户外工作（高温）
     {
       id: "heatwave_outdoor_crunch",
       phase: "street",
@@ -4054,26 +4056,74 @@
       title: "高温下的苦工",
       story:
         "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\\n\\n你看了看手机上的账户余额，又抬头看了看天。\\n\\n工地和街边小摊都需要人。",
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.weather &&
+          st.weather.current === "heatwave" &&
+          st.player.day >= 15
+        );
+      },
       probability: 0.08,
       repeatable: true,
       choices: [
         {
           text: "🔥 硬扛！高温补贴也赚了",
           hint: "户外收入×1.2但疲劳激增，健康下降",
+          apply: function (st) {
+            var earn = Random.int(80, 160);
+            st.resources.cash += Math.round(earn * 1.2);
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + Math.round(earn * 1.2);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.status.health = Math.max(0, (st.status.health || 70) - 6);
+            StateManager.addMessage(
+              "🔥 你顶着太阳干了一整天，赚了¥" +
+                Math.round(earn * 1.2) +
+                "。但夜里头疼欲裂，疲劳+25，健康-6。这钱是拿命换的。",
+              "warning",
+            );
+          },
         },
         {
           text: "🏪 买西瓜解暑，找阴凉处做点活",
           hint: "花小钱保健康，少量收入",
+          apply: function (st) {
+            if (st.resources.cash < 10) {
+              StateManager.addMessage(
+                "😅 你连¥10的西瓜都买不起，只好找了个树荫干坐着。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 10;
+            var earn = Random.int(30, 80);
+            st.resources.cash += earn;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            StateManager.addMessage(
+              "🏪 你花¥10买了个西瓜，边吃边找阴凉处做了点零活，赚了¥" +
+                earn +
+                "。不算多，但至少没中暑。",
+              "info",
+            );
+          },
         },
         {
           text: "💪 今天休息，在家避暑",
           hint: "保护身体，0收入",
+          apply: function (st) {
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            StateManager.addMessage(
+              "💪 你选择在家里歇着。身体是革命的本钱，今天不进账也不亏。疲劳-10。",
+              "info",
+            );
+          },
         },
       ],
     },
 
-    // ====================
-
+    // v3.20-2: 社区团购生态联动
     {
       id: "community_group_buy_expand",
       phase: "street",
@@ -4081,26 +4131,61 @@
       title: "团长邀请你当分单员",
       story:
         "你之前帮社区团购砍价，团长（楼下便利店老板）对你有印象。这次她主动找你，说现在团购规模变大了，想招几个分单员——每天去批发市场取货再送到居民区，每单赚5块钱。",
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 30 &&
+          (st.skills.driving ? st.skills.driving.level : 0) >= 10 &&
+          !st.flags._groupBuyCourier
+        );
+      },
       probability: 0.04,
       repeatable: false,
       choices: [
         {
           text: "📦 接！帮送分单",
-          hint: "每天稳定赚 ₹30-60",
+          hint: "每天稳定赚 ¥30-60",
+          apply: function (st) {
+            st.flags._groupBuyCourier = true;
+            var earn = Random.int(30, 60);
+            st.resources.cash += earn;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            StateManager.addMessage(
+              "📦 你接了第一单调货单，跑了一下午赚了¥" +
+                earn +
+                "。团长说「明天继续！」这是稳定的新活路。",
+              "success",
+            );
+          },
         },
         {
           text: "🤔 了解一下，不急着决定",
           hint: "获取信息，不绑定",
+          apply: function (st) {
+            st.flags._groupBuyInformed = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "🤔 你问了问具体情况：每单5块、每天6-8单、包午饭。心里有底了，但还没答应。心智+1。",
+              "info",
+            );
+          },
         },
         {
           text: "🙋‍♂️ 婉拒，自己忙",
           hint: "放弃机会",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🙋‍♂️ 你说现在腾不出手。团长笑着说「想通了随时来。」机会先记着。",
+              "info",
+            );
+          },
         },
       ],
     },
 
-    // ====================
-
+    // v3.20-3: 量化基金邀请（金融路径彩蛋）
     {
       id: "quant_fund_invite",
       phase: "street",
@@ -4108,26 +4193,67 @@
       title: "量化私募的电话",
       story:
         "你之前关注过量化交易的事——现在收到一个陌生号码的微信：「你好，我们在做量化策略研发，看到你在金融论坛的讨论，觉得你有一定分析能力。有兴趣聊聊吗？」\\n\\n对方自称是一家小型量化私募的合伙人，工作室就在科技园附近。",
+      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.intelligence >= 45 &&
+          st.player.day >= 90 &&
+          (st.resources.cash >= 5000 || st.player.fame >= 10) &&
+          !st.flags._quantInviteSeen
+        );
+      },
       probability: 0.025,
       repeatable: false,
       choices: [
         {
           text: "📈 去见一面，了解一下",
           hint: "高风险高回报的社交",
+          apply: function (st) {
+            st.flags._quantInviteSeen = true;
+            if (Random.chance(0.5)) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+              st.flags._quantContact = true;
+              StateManager.addMessage(
+                "📈 聊得不错！对方觉得你有潜力，留了联系方式。名气+3，以后可能还有合作机会。",
+                "success",
+              );
+            } else {
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+              StateManager.addMessage(
+                "📈 见面后发现对方只是拉资金的，不太靠谱。但你了解了量化圈的一些门道，心智+2。",
+                "info",
+              );
+            }
+          },
         },
         {
           text: "🔒 先验证对方身份",
           hint: "谨慎为妙",
+          apply: function (st) {
+            st.flags._quantInviteSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "🔒 你查了查对方公司——确实注册过，但规模很小。你决定再观察观察。心智+2。",
+              "info",
+            );
+          },
         },
         {
           text: "🙋‍♂️ 直接忽略",
           hint: "不冒险",
+          apply: function (st) {
+            st.flags._quantInviteSeen = true;
+            StateManager.addMessage(
+              "🙋‍♂️ 你删除了消息。天上不会掉馅饼，这种来路不明的邀约不碰为妙。",
+              "info",
+            );
+          },
         },
       ],
     },
 
-    // ====================
-
+    // v3.20-4: [自洽修复] 直呼"老周"→conditions 必须校验 old_zhou.met
     {
       id: "zhou_deep_bond",
       phase: "street",
@@ -4135,26 +4261,98 @@
       title: "老周的难题",
       story:
         "老周在夜市收摊时找到你，表情难得严肃：「兄弟，有件事只有你能帮我。我那个儿子……最近跟着不三不四的人混，欠了高利贷。你能不能帮我劝劝他？」\\n\\n你知道这是他第一次对你开口求助。",
+      // [自洽修复] 叙事直呼"老周"→门控 old_zhou.met + 好感≥70（深度信托）
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.relationships &&
+          st.relationships.old_zhou &&
+          st.relationships.old_zhou.met === true &&
+          (st.relationships.old_zhou.affinity || 0) >= 70 &&
+          st.player.day >= 80 &&
+          !st.flags._zhouDeepBond
+        );
+      },
       probability: 0.03,
       repeatable: false,
       choices: [
         {
           text: "💥 走！去找那个不三不四的人",
           hint: "高风险，高回报",
+          apply: function (st) {
+            st.flags._zhouDeepBond = true;
+            if (Random.chance(0.5)) {
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 20,
+              );
+              st.status.health = Math.max(0, (st.status.health || 70) - 10);
+              StateManager.addMessage(
+                "💥 你去找那帮人交涉，虽然挨了几下但把事情谈妥了。老周握着手半天说不出话，好感+20。你淤青了几天，健康-10。",
+                "success",
+              );
+            } else {
+              st.status.health = Math.max(0, (st.status.health || 70) - 15);
+              StateManager.addMessage(
+                "💥 对方人多，你挨了一顿。好在事情算是暂时压下去了。老周心疼地帮你擦药。健康-15。",
+                "warning",
+              );
+            }
+          },
         },
         {
           text: "🗣️ 我先去跟他谈谈",
           hint: "以理服人，需要心智",
+          apply: function (st) {
+            st.flags._zhouDeepBond = true;
+            var mental = st.player.mental || 0;
+            if (mental >= 50) {
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 15,
+              );
+              StateManager.addMessage(
+                "🗣️ 你找到老周的儿子，跟他长谈了两个小时。他答应远离那些人。老周知道后老泪纵横，好感+15。",
+                "success",
+              );
+            } else {
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 5,
+              );
+              StateManager.addMessage(
+                "🗣️ 你试着劝了劝，但说服力不够，对方只是敷衍。老周说你尽力了，好感+5。也许你该提升心智再来。",
+                "info",
+              );
+            }
+          },
         },
         {
           text: "🙋‍♂️ 我帮不了这个忙",
           hint: "自保为先",
+          apply: function (st) {
+            st.flags._zhouDeepBond = true;
+            st.relationships.old_zhou.affinity = Math.max(
+              0,
+              (st.relationships.old_zhou.affinity || 0) - 10,
+            );
+            StateManager.addMessage(
+              "🙋‍♂️ 你说这事帮不了。老周沉默半晌：「也行，我自己想办法。」好感-10。有些人情一旦开口被拒，就回不到从前了。",
+              "warning",
+            );
+          },
         },
       ],
     },
   ];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
+    // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
+    if (!CROSS_EVENTS[i].conditions && !CROSS_EVENTS[i].triggers) {
+      CROSS_EVENTS[i].conditions = function () {
+        return true;
+      };
+    }
     RANDOM_EVENTS.push(CROSS_EVENTS[i]);
   }
 
