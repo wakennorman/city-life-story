@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Illness 系统 — 长期不良习惯 → 命名疾病
  *
  * 三大循环：
@@ -578,6 +578,20 @@ function treatIllness(illnessId, tier) {
 
   // 更新派生兼容字段
   state.status.sick = state.status.illnesses.length > 0;
+
+  // === v3.23: 触发槽 — after_heal ===
+  if (typeof window.TriggerRegistry !== "undefined") {
+    try {
+      var afterHealEvent = window.TriggerRegistry.triggerRandom("after_heal", state);
+      if (afterHealEvent) {
+        setTimeout(function () {
+          if (typeof showEventModal === "function") showEventModal(afterHealEvent);
+        }, 100);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry after_heal 触发失败:", e);
+    }
+  }
 }
 
 // ====== 疾病演化提示 ======

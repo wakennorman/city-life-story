@@ -66,6 +66,31 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.23: 触发槽 — 随机遭遇（每日随机事件补充）===
+  {
+    name: "trigger_slot_random_encounter",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      if (state.day < 10) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("random_encounter", state);
+        if (event) {
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") showEventModal(event);
+            }
+          }, 50);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry random_encounter 触发失败:", e);
+      }
+    },
+  },
+
   // === 需求衰减 ===
   {
     name: "needs_decay",
@@ -243,6 +268,31 @@ const DAILY_PIPELINE = [
     name: "health_tick",
     fn: function (state) {
       tickHealthStatus(state);
+    },
+  },
+
+  // === v3.23: 触发槽 — 每周 ===
+  {
+    name: "trigger_slot_weekly",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      if (state.day % 7 !== 0) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("weekly", state);
+        if (event) {
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") showEventModal(event);
+            }
+          }, 50);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry weekly 触发失败:", e);
+      }
     },
   },
 
@@ -500,6 +550,31 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.23: 触发槽 — 每月 ===
+  {
+    name: "trigger_slot_monthly",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      if (state.day % 30 !== 0) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("monthly", state);
+        if (event) {
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") showEventModal(event);
+            }
+          }, 50);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry monthly 触发失败:", e);
+      }
+    },
+  },
+
   // === 固定工作（上班族）每日 tick ===
   {
     name: "career_job_daily",
@@ -682,6 +757,30 @@ const DAILY_PIPELINE = [
     name: "cleanup",
     fn: function (state) {
       dailyCleanup(state);
+    },
+  },
+
+  // === v3.23: 触发槽 — 每日中点（清理后）===
+  {
+    name: "trigger_slot_daily_mid",
+    fn: function (state) {
+      if (!window.TriggerRegistry) return;
+      if (!state || !state.day) return;
+      try {
+        var event = window.TriggerRegistry.triggerRandom("daily_mid", state);
+        if (event) {
+          state._pendingEvent = event;
+          state._pendingEventId = event.id;
+          setTimeout(function () {
+            var s = StateManager.getState();
+            if (s._pendingEvent && s._pendingEventId === event.id) {
+              if (typeof showEventModal === "function") showEventModal(event);
+            }
+          }, 50);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry daily_mid 触发失败:", e);
+      }
     },
   },
 

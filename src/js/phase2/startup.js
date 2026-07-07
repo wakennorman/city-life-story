@@ -1,4 +1,4 @@
-// ====== 生成唯一ID ======
+﻿// ====== 生成唯一ID ======
 function _startupGenerateId() {
   return (
     "sid_" + Date.now() + "_" + Random.float(0, 1).toString(36).substr(2, 9)
@@ -653,6 +653,20 @@ function registerStartup(state, name, industry, description) {
       company.valuation.toLocaleString(),
     "success",
   );
+
+  // === v3.23: 触发槽 — corp_startup ===
+  if (typeof window.TriggerRegistry !== "undefined") {
+    try {
+      var corpStartupEvent = window.TriggerRegistry.triggerRandom("corp_startup", state);
+      if (corpStartupEvent) {
+        setTimeout(function () {
+          if (typeof showEventModal === "function") showEventModal(corpStartupEvent);
+        }, 100);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry corp_startup 触发失败:", e);
+    }
+  }
 
   return {
     success: true,

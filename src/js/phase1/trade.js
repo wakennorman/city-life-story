@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 交易系统 — 买卖商品、价格波动、批发进货
  *
  * 提供: buyGood(), sellGood(), buyWholesale(), updatePrices()
@@ -87,6 +87,20 @@ function buyGood(goodId, qty) {
     "success",
   );
   if (typeof playSound === "function") playSound("buy");
+
+  // === v3.23: 触发槽 — after_trade ===
+  if (typeof window.TriggerRegistry !== "undefined") {
+    try {
+      var afterTradeEventBuy = window.TriggerRegistry.triggerRandom("after_trade", state);
+      if (afterTradeEventBuy) {
+        setTimeout(function () {
+          if (typeof showEventModal === "function") showEventModal(afterTradeEventBuy);
+        }, 100);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry after_trade 触发失败:", e);
+    }
+  }
 
   // 剁手节进货成就追踪
   if (typeof getCurrentFestival === "function") {
@@ -194,6 +208,20 @@ function sellGood(goodId, qty) {
     "success",
   );
   if (typeof playSound === "function") playSound("sell");
+
+  // === v3.23: 触发槽 — after_trade ===
+  if (typeof window.TriggerRegistry !== "undefined") {
+    try {
+      var afterTradeEventSell = window.TriggerRegistry.triggerRandom("after_trade", state);
+      if (afterTradeEventSell) {
+        setTimeout(function () {
+          if (typeof showEventModal === "function") showEventModal(afterTradeEventSell);
+        }, 100);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry after_trade 触发失败:", e);
+    }
+  }
 
   // 剁手节利润成就追踪
   if (typeof getCurrentFestival === "function") {

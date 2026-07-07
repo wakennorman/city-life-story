@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 事业发展Tab — 合并创业系统 + 固定工作/上班族职业路径
  *
  * 包含：
@@ -2399,6 +2399,20 @@ function applyCareerPromotion(pathId, levelId) {
       level.salary.toLocaleString(),
     "success",
   );
+
+  // === v3.23: 触发槽 — career_promo ===
+  if (typeof window.TriggerRegistry !== "undefined") {
+    try {
+      var careerPromoEvent = window.TriggerRegistry.triggerRandom("career_promo", state);
+      if (careerPromoEvent) {
+        setTimeout(function () {
+          if (typeof showEventModal === "function") showEventModal(careerPromoEvent);
+        }, 100);
+      }
+    } catch (e) {
+      console.warn("TriggerRegistry career_promo 触发失败:", e);
+    }
+  }
 
   if (typeof renderAll === "function") renderAll();
 }

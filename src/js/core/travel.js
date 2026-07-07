@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 旅行系统（v3.7 Expansion v1）
  *
  * 离开当前城市去国内目的地旅行
@@ -237,6 +237,19 @@ function tickTravel(state) {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
     state.travel.active = false;
     state.travel.destination = null;
+    // === v3.23: 触发槽 — after_travel ===
+    if (typeof window.TriggerRegistry !== "undefined") {
+      try {
+        var afterTravelEvent = window.TriggerRegistry.triggerRandom("after_travel", state);
+        if (afterTravelEvent) {
+          setTimeout(function () {
+            if (typeof showEventModal === "function") showEventModal(afterTravelEvent);
+          }, 100);
+        }
+      } catch (e) {
+        console.warn("TriggerRegistry after_travel 触发失败:", e);
+      }
+    }
     return true; // 旅行结束
   }
   return false;
