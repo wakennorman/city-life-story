@@ -1,0 +1,10 @@
+---
+name: skill-creator-skill
+description: 创建新skill、修改和改进现有skill，并衡量skill表现
+metadata:
+  node_type: memory
+  type: reference
+  originSessionId: 8fad3eb2-5c11-4881-ba4a-a526cc83d9ea
+---
+
+Skill-Creator — 创建新 skill、修改和改进现有 skill，并衡量 skill 表现。下载链接：https://github.com/anthropics/skills/tree/main/skills/skill-creator

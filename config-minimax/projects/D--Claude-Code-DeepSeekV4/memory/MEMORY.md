@@ -1,0 +1,10 @@
+# Memory Index
+
+- [User Full Autonomy](user-full-autonomy.md) — 用户给了全部权限，不再问，直接执行
+- [Can't Natively Generate Images](cant-natively-generate-images.md) — 我是纯文本 LLM，不能生位图；要分清"我生"和"调 API 生"
+- [China Image Sources Survey](china-image-sources-survey.md) — 国内网络实测各图源：哪些能用、哪些被 GFW 卡、哪些是 JS 渲染抓不到
+- [Pixabay Anki Pipeline](pixabay-anki-pipeline.md) — 跑通的 1893 卡片完整流水线，含脚本路径和关键参数
+- [Seedream Token Fragility](seedream-token-fragility.md) — OpenClaw 的本地 18432 Token 服务高频调用会挂，对策
+- [Background Task Gotchas](background-task-gotchas.md) — Claude Code 后台任务的坑：`&` 孤儿化、stdout 缓冲、10min 硬超时
+- [Anki apkg Media Not Imported](anki-apkg-media-not-imported.md) — apkg 导入 Anki 时新媒体常被漏掉；直接 shutil.copy 同步到 collection.media\{profile}\
+- [Card Meaning Fill Fallback Chain](card-meaning-fill-fallback-chain.md) — 给 Anki 卡补释义的三级降级：字典直查 → 去后缀查 → 同根词推导

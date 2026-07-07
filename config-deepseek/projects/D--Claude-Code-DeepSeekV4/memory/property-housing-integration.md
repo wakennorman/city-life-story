@@ -1,0 +1,33 @@
+---
+name: property-housing-integration
+description: 房产PROPERTIES系统与租房HOUSING_TIERS的深度对接方案
+metadata:
+  node_type: memory
+  type: reference
+  originSessionId: 2ae4661c-9b05-4b05-b3b9-e684f8cf72d1
+---
+
+实现了房产（PROPERTIES）与租房（HOUSING_TIERS）两个系统的完整对接。
+
+**核心方案**：在 `src/js/phase2/investment.js` 中新增 `PROPERTY_HOUSING_MAP` 常量，将每个房产 ID 精确映射到对应 HOUSING_TIERS 等级，配合 `getPropertyHousingTier()` 查询函数。
+
+**映射规则**：
+
+- 城中村握手楼(¥80k)→单间(tier2) | 郊区经济房(¥250k)→单间(tier2)
+- 老破小学区(¥500k)→一居室(tier3) | Loft(¥600k)→一居室(tier3) | 精装两居室(¥1.5M)→一居室(tier3)
+- 花园洋房(¥3M)→豪华公寓(tier4) | 海景度假屋(¥3.5M)→豪华公寓(tier4)
+- 江景大平层(¥5M)→别墅(tier5) | 山水别墅(¥8M)→别墅(tier5)
+- 古城四合院(¥12M)→豪宅(tier6)
+- 商铺/写字楼/工业/车位/海外→null（不可自住）
+
+**改动文件**：
+
+- `investment.js` — 映射表 + 查询函数 + toggle-self-live 重写
+- `property_market.js` — 月租 addDailyTransaction 收支记录
+- `main.js` — 行动页「搬入自住房」快捷入口
+- `render.js` — 单行状态栏 + 内容区人生目标
+- `style.css` — 手机端适配
+
+**Why**: 此前自住 tier 映射仅按价格三分（<¥200k=tier2 / <¥1M=tier3 / >¥1M=tier4），不区分具体房产类型；且无出租收入流水记录，玩家只能在投资页操作自住。
+
+**关联**：[[action-sort-system]]

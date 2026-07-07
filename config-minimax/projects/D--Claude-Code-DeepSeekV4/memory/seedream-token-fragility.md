@@ -1,0 +1,36 @@
+---
+name: seedream-token-fragility
+description: OpenClaw 的 autoglm-generate-image-seedream skill 依赖本地 18432 Token 服务，高频调用下会挂；下次别盲跑
+metadata:
+  node_type: memory
+  type: feedback
+  originSessionId: 386dd9c2-0248-439d-a9cd-4673fc9ca8ef
+---
+
+## 教训
+
+`autoglm-generate-image-seedream` skill 调远程 `https://autoglm-api.zhipuai.cn/...`，但**认证 token 由本地 `http://127.0.0.1:18432/get_token` 服务发**。这个 Token 服务由 OpenClaw / AutoClaw 桌面应用启动时拉起。
+
+**踩坑过程（2026-06-14）：**
+
+1. 我用 3 worker × 1.5s 间隔批跑了 120 张图
+2. 第 120 张之后，**Token 服务突然 connection refused**（`WinError 10061`）
+3. 继续跑的所有调用 stdout 全空，Python json.loads 报 `Expecting value: line 1 column 1 (char 0)`
+4. 我误以为是 ZhiPu API 限流，告诉用户"额度耗尽"
+5. 用户重置 ZhiPu 额度，但 18432 端口还是 connection refused
+6. 真因：**高频认证流把本地 Token 服务搞挂了**，要重启 OpenClaw 桌面应用才能拉回
+
+## 怎么做
+
+- **不要把它当 unlimited 用**：实测 120 张就挂。批跑前**先把并发降到 1-2，间隔 ≥3s**
+- **要做 token 健康检查**：每 100 张调用 `urllib.request.urlopen('http://127.0.0.1:18432/get_token', timeout=3)`，挂了就 sleep 30s
+- **空 stdout = Token 服务死了**（不是 ZhiPu 限流），别盲目重试，要等服务恢复
+- **彻底替代方案**：用 Pixabay（[[pixabay-anki-pipeline]]）比 Seedream 稳定得多，质量也够用
+
+## 文件路径
+
+- Skill 脚本：`C:\Users\陈恒稳\.openclaw-autoclaw\skills\autoglm-generate-image-seedream\generate-image-seedream.py`
+- Token 端点：`http://127.0.0.1:18432/get_token`
+- ZhiPu 接入：`https://autoglm-api.zhipuai.cn/agentdr/v1/assistant/skills/generate-image-seedream`
+
+相关：[[pixabay-anki-pipeline]] [[china-image-sources-survey]]

@@ -1,0 +1,11 @@
+- [Find-Skill](find-skill.md) — 根据用户需求查找和安装来自 agent skill 开放生态的技能
+- [Frontend-Design](frontend-design-skill.md) — 创建具有独特风格、生产级品质且设计精良的前端界面
+- [Skill-Creator](skill-creator-skill.md) — 创建新skill、修改和改进现有skill，并衡量skill表现
+- [卡帕西skill](karpathy-skill.md) — 依据卡帕西经验总结，用于提升 Claude Code 编码表现的 skill
+- [上下文优化技巧](claude-code-context-optimization.md) — 上下文瘦身和 token 优化技巧（/compact、skill审查、cron替代心跳）
+- [模型混搭策略](claude-code-model-tips.md) — 模型选择和混搭（定时任务用便宜模型、子agent用中档模型、模型路由）
+- [安全最佳实践](claude-code-security-practices.md) — 安全使用（下载可信源、权限限制、沙箱隔离、账号隔离）
+- [OpenClaw参考Skill](reference-skills-from-openclaw.md) — OpenClaw 生态的参考 skill 汇总，标注来源和功能
+- [开发文档更新纪律](dev-doc-update-discipline.md) — 每次项目代码修改后必须同步更新DEVELOPMENT.md开发文档
+- [用户数字-271828](user-number-271828.md) — 用户要求记住的数字 271828
+- [Windows 多 API 隔离启动方案](add-new-claude-api-bat.md) — Claude Code 接入第三方服务商时建独立 `~/.claude-<vendor>` 目录 + 桌面 bat，避开三个坑：CLAUDE_CONFIG_DIR 覆盖 / API_KEY 格式拒收 / UTF-8 title 闪退；含 `cd /d` 工作目录改法

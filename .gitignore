@@ -11,7 +11,7 @@ node_modules/
 .settings.json
 
 # 个体记忆（不需要入库）
-memory/
+# memory/
 
 # 本地预览产物
 dist/

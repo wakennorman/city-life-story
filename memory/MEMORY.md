@@ -1,0 +1,34 @@
+- [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗
+- [全中文 UI 原则](全中文UI原则.md) — 游戏中所有玩家可见文本必须是纯中文，禁止任何英文/其他语言
+- [JS 字符串内嵌引号转义规则](js-string-escaping.md) — 中文引号也会破坏 JS 字符串边界
+- [showModal 参数默认值](showModal-default-params.md) — 解构数组参数必须设默认空数组
+- [showModal 传字符串参数报错](showModal-string-param.md) — 必须传对象 {title, body, buttons}，不能传字符串
+- [公司历史书 UI 已实现](company-history-ui-done.md) — ✅ 2026/6/20 完成，含时间线/绩效/项目/团队面板
+- [存档快照已实现](save-snapshot-done.md) — ✅ 2026/6/20 完成，含"那时候你..."回忆文案
+- [疾病演化系统已实现](disease-evolution-done.md) — ✅ 2026/6/20 完成，16种疾病5大分类，胃溃疡→胃癌等演化链
+- [食材库存联动已实现](ingredient-system-done.md) — ✅ 2026/6/20 完成，23种食材16个配方，保质期+烹饪系统
+- [平衡调参已完成](balance-tuning-done.md) — ✅ 2026/6/20 完成，装备价格/illness阈值/新闻事件调整
+- [版本全景地图](版本全景地图.md) — ✅ 城市浮生记双版本迁移完成记录
+- [版本一致性铁律](版本一致性铁律.md) — ✅ 版本问题已解决，保留为教训记录
+- [待迁移内容清单](待迁移内容清单.md) — ✅ 全部迁移完成（carry.js/pricing.js/weather增强）
+- [房产市场波动系统 v2](property-market-v2-fluctuation.md) — 房产不再固定增值，改用市场周期波动+新闻/政策/行业热度联动
+- [v3.4 C3D 内容关联度深化](v3.4-c3d-content-correlation-depth.md) — NPC位置关联+8跨系统联动事件+10地点行动+NPC×技能解锁
+- [v3.1 审查改进 SOP](review-improve-v3.1.md) — 全方位评估+改进六维度，含全剧本适配+蓝图对齐；"按 v3.1 审查改进" 触发
+- [v3.1 审查改进 2026-07-06](review-improve-v3.1-2026-07-06.md) — 第二轮：jobs.js 死代码514行清理 / locations 悬空ID / housing注释修正 / 职场路径引导
+- [手机端顶栏三行设计范式](mobile-design-principles.md) — mob-first 文字生存游戏顶栏/状态条/触控尺寸设计模板
+- [移动端顶栏精简 2026-07-03](mobile-topbar-cleanup-2026-07-03.md) — 删除 renderTitleBar，品牌移至侧栏底部，状态条改两字+放大，阶段文案按债务动态化
+- [git push 在 git-bash 失败 cmd 成功](git-push-via-karing.md) — MSYS2 沙盒不继承系统 TUN 代理；根治是 SSH，不要配 http.proxy
+- [v3.11 职业系统深度扩展](v3.11-career-system-expansion.md) — 医师路径(5级)+事业单位路径(5级)+跨系统联动(医疗↔疾病/公职↔法律)+雇佣机制(面试/试用期/解雇)+10个新职业事件
+- [v3.1 审查改进 2026-07-03](review-improve-v3.1-round2-2026-07-03.md) — 6维度全量审查+11项修复：clampCareerCapital挂载/跳槽永动机修复/抛售返现/触控44px/对比度修复/旅行AP显示/物业费下调/中期提示/住宿引导
+- [v3.1 第三轮遗留修复](review-improve-v3.1-round3-2026-07-03.md) — 年终奖系统/6新结局补齐/script顺序整理/死函数清理/存贷利息修复/疾病双系统协调
+- [v3.1 蒙特卡洛平衡验证](balance-monte-carlo-v3.1.md) — 3策略×100次×1000天模拟报告，含存活率/现金轨迹/经济分层/问题分析
+- [从 Netlify 迁移到 GitHub Pages](deploy-netlify-to-github-pages-2026-07-03.md) — build credits 耗尽是真凶（带宽只用了 3%），已切到 GitHub Pages + "本地先验再推"工作流
+- [实时新闻抓取系统 v2.0](real-time-news-v2.md) — 开局自动从互联网抓取当日真实新闻，3层降级抓取引擎（RSS→天行数据→预存），关键词分类引擎，后台预加载，实时新闻标识；第43轮增加investmentEffect全系统联动+温暖报刊风UI
+- [开局世界新闻 v1.0](world-news-intro-v1.md) — 第41轮初始版本，70+预存新闻数据库+智能筛选+剧本加权，奠定时代氛围基调
+- [新闻UI配色+源替换](news-ui-and-source-expansion.md) — 第43+44轮：GitHub暗色→温暖报刊风UI / investmentEffect全系统联动 / RSS源替换（新浪社会→财经/36氪/华尔街见闻）/ 分类引擎强化（经济/金融/消费规则大扩展）/ 预存经济新闻6→14条
+- [蒙特卡洛 v3.2 平衡验证](monte-carlo-v3.2-validation.md) — 吸收态修复+MC策略饥饱修复+住房调参；v3.3策略分化（6条不同玩法路径）+ 高风险路径阈值30%
+- [v3.2 游戏设计审计](v32-game-design-audit.md) — 与BitLife/大多数/Stardew Valley竞品对照，发现的"多重路径缺失"已在v3.3 MC策略层修复
+- [v3.3 创业门槛降低+MC AI健康底线](v3.3-startup-threshold-mc-fix.md) — 创业启动资金 ¥30k→¥15k + MC AI grinder(40%)/corporate(80%) 健康底线修复
+- [约定式自动归类 v3.4](convention-over-config-v3.4.md) — P0行动自动归类(43行动)+P1技能↔工作双向关联+P2证书工资加成确认+P1事件触发数据化POC
+- [v3.6 约定式闭环](v3.6-convention-close-loop.md) — 证书双叠加if-eless清除+2动态证书补全 / wiki var提升残留修复+_wikiDetailJob交叉查询重建 / restore分类注册 / 事件触发双轨统一为evaluateTriggers主路径+trigger_registry辅 / pipeline+daily_end+after_work触发槽接入+3个after_work事件+cooldownNaN修复 (2026-07-07)
+- [v3.21 联动事件扩充](v3.21-cross-system-events.md) — 自洽性审查5个A类NPC断链修复 + 5个跨系统联动事件(天气+位置/状态积累/NPC秘密/老手特遇/道德分叉) (2026-07-07)

@@ -1,0 +1,26 @@
+---
+name: reference-skills-from-openclaw
+description: 来自 OpenClaw 生态的参考 skill 列表，部分可迁移
+metadata:
+  node_type: memory
+  type: reference
+  originSessionId: 8fad3eb2-5c11-4881-ba4a-a526cc83d9ea
+---
+
+# OpenClaw 参考 Skill 汇总
+
+以下 skill 来自 OpenClaw（龙虾）生态的 Clawhub/lobehub 等 marketplace，部分可能适用于 Claude Code：
+
+| Skill             | 功能                                                                                                 | 来源    |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | ------- |
+| agent-reach       | AI 上网攻略，统一访问 16 个网络平台（Twitter/X、Reddit、YouTube、GitHub、B站、小红书、抖音、微博等） | Clawhub |
+| news-summary      | 轻量新闻聚合，适合每日简报                                                                           | Clawhub |
+| AI Daily Briefing | 晨间简报（逾期任务、今日重点、日程概览、近期会议背景）                                               | Clawhub |
+| model-router      | 根据任务复杂度与成本自动路由到最适合的模型                                                           | Clawhub |
+| Stock Watcher     | A股自选股管理，同花顺实时行情                                                                        | Clawhub |
+| weibo-hot-trend   | 微博热搜榜数据                                                                                       | Clawhub |
+| frontend-ui-ux    | 复盘可视化，HTML/CSS/JS Dashboard                                                                    | lobehub |
+| Skill Vetter      | 安装前检查 skill 权限和风险                                                                          | Clawhub |
+
+**注：** 以上 skill 来自 OpenClaw 的 Clawhub/lobehub marketplace，与 Claude Code marketplace 不同。
+已安装的 Claude Code 版 skill（frontend-design、skill-creator、find-skills、karpathy-guidelines）与上述 skill 无重复。
