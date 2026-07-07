@@ -16,3 +16,4 @@
 - [Crossroads Card System v3.1](crossroads-card-system-v3.1.md) — 命运抉择卡机制设计 + 蒙特卡洛平衡验证（safe 68-72% / bold 12-56% 存活，依赖生活方式）
 - [tab-system-optimization-v3.31](tab-system-optimization-v3.31.md) — Tab切换系统全面优化（子Tab内容积累/社交返回/装备导航/全局审计）
 - [nav-button-binding-fix-v3.32](nav-button-binding-fix-v3.32.md) — 导航死按钮修复 + 交通AP按距离×方式动态计算
+- [commute-system-merge-v3.33](commute-system-merge-v3.33.md) — 通勤方式合并（快速出行+交通方式→通勤方式+步行）
