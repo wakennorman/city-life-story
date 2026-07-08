@@ -1,14 +1,43 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-08（v3.33 通勤方式统一合并 + 步行加入）
+> 最后更新: 2026-07-09（v3.40 事件叙事-触发自洽性修复 + 5个联动事件）
 >
-> commit: `3fa83bf` (v3.32 本地) + v3.33 (待推送，基于 3fa83bf)
->
-> ---
+> commit: `0c60b8e`（A类自洽性修复2个 + 新增5联动事件）
 >
 > ---
 >
-> ## 2026-07-08 — v3.33 通勤方式 unified（快速出行 + 交通方式合并 + 步行加入）
+> ---
+>
+> ## 2026-07-09 — v3.40 事件叙事-触发自洽性修复 + 5个联动事件扩充
+
+**触发**：系统性审查所有事件文件250+事件，修复A类叙事-触发缺陷；新增5个高质量联动事件填补空白区。
+
+### 指令一：叙事-触发自洽性修复
+
+| 事件id | 原缺陷 | 修复内容 | 类别 |
+|--------|--------|----------|------|
+| `old_man_help` | apply中读写st.relationships["old_zhou"].affinity但conditions无met检查 | conditions新增old_zhou.met门控 | A类 |
+| `township_buddy` | story提到"老周头的儿子小周"但conditions无met检查 | conditions新增old_zhou.met + day≥10 | A类 |
+| `pre_made_food_trend` | story/options提到"王婶"但triggers无NPC门控 | conditions新增aunt_wang.met | B类 |
+
+### 指令二：新增5个联动事件
+
+| 事件id | 触发条件 | 联动系统 | 链式后续 |
+|--------|----------|----------|----------|
+| `multi_npc_community_network` | 3+个NPC好感≥60 + day≥90 | 社交网络+心情 | 无 |
+| `cold_snap_construction` | cold_snap天气 + 工地位置/职业 | 天气×地点×工作 | 无 |
+| `cooking_master_night_market` | 烹饪≥50 + 夜市/商业区 | 技能门槛+NPC关系 | 无 |
+| `moral_extreme_echo` | morality≥80或≤20 + day≥60 | 道德极端分叉 | 无 |
+| `hunger_social_comparison` | lowHungerStreak≥3 | 需求积累+社会比较 | 无 |
+
+### 影响文件
+
+- `src/js/core/cross_system_events.js` — 新增5个事件（+350行）
+- `src/js/core/events_street_survival.js` — old_man_help + township_buddy 自洽修复
+- `src/js/core/events_street_life.js` — pre_made_food_trend 自洽修复
+- `dist/index.html` — 5196.4 KB
+
+---
 >
 > **触发**：快速出行与交通方式功能重叠，用户要求融合。合并为单一"通勤方式"系统，新增步行模式。
 >
