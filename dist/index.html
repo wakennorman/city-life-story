@@ -95328,7 +95328,8 @@ function afterEventApplied(eventId, state) {
         "社区卫生服务中心贴出公告：本周有免费体检活动，包括血压、血糖、心电图等基础项目。平时去医院要花好几百呢。",
       conditions: function (st) {
         return (
-          st.player.day > 30 && ((st.needs && st.needs.health) || 100) < 90
+          // [自洽修复] st.needs.health 不存在，改 st.status.health
+          st.player.day > 30 && ((st.status && st.status.health) || 100) < 90
         );
       },
       choices: [
