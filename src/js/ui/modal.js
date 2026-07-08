@@ -80,46 +80,74 @@ function showModal({ title, body, buttons }) {
   document.body.appendChild(overlay);
 }
 
-/** 帮助/教程弹窗 */
+/** 帮助/教程弹窗 — v3.34 全面更新 */
 function showHelpModal() {
   showModal({
     title: "❓ 游戏帮助 — 城市浮生记",
     body: `
-      <div style="max-height:50vh;overflow-y:auto;font-size:12px;line-height:1.6;">
-        <h4 style="color:var(--accent);">🏘️ 街头生存阶段</h4>
+      <div style="max-height:50vh;overflow-y:auto;font-size:12px;line-height:1.7;">
+        <h4 style="color:var(--accent);">🎭 剧本模式（7个专属人生）</h4>
         <ul style="margin-left:16px;color:var(--text-secondary);">
-          <li>初始: ¥2,000现金 + ¥5,500债务（日息0.3%）</li>
-          <li>賺钱方式: 废品回收→摆摊→倒卖商品→技术工种</li>
-          <li>核心循环: 批发市场低价进货 → 商业区/城中村高价卖出</li>
-          <li>每天3个时段（上午/下午/晚上），选择行动消耗1个时段</li>
-          <li>到<strong style="color:var(--accent);">城中村</strong>升级住所，到<strong style="color:var(--accent);">批发市场</strong>租仓库</li>
-          <li>提升智力到45+，去<strong style="color:var(--accent);">科技园</strong>应聘进入职场</li>
+          <li>🏚️ <b>城市务工者</b>：湘西少年，¥300闯城，弟弟等学费</li>
+          <li>🏭 <b>下岗再就业</b>：38岁铁饭碗没了，女儿学费等着</li>
+          <li>📚 <b>小镇做题家</b>：全村第一个大学生，¥20000债压身</li>
+          <li>🌏 <b>外来打工者</b>：异国他乡，母亲手术费倒计时90天</li>
+          <li>💎 <b>二代创业者</b>：¥150000启动金，证明自己不是"败"</li>
+          <li>👔 <b>中年危机职场人</b>：P7被裁，房贷¥14500/月</li>
+          <li>🎓 <b>应届毕业生</b>：月薪¥4200，算到第三行就停了</li>
+          <li>🏖️ 沙盒模式：自由开局 + 百日攒¥5万/逆袭开公司/纯探索</li>
+          <li>📊 <b>4档难度</b>：🍵休闲 / ⚖️标准 / 🔥困难 / 💀地狱，影响收入和病率</li>
         </ul>
-        <h4 style="color:var(--accent);margin-top:12px;">🏢 职场晋升阶段</h4>
+
+        <h4 style="color:var(--accent);margin-top:12px;">🗺️ 核心生存循环</h4>
         <ul style="margin-left:16px;color:var(--text-secondary);">
-          <li>职级: P5→P6→P7→P8→P9→P10（晋升在Q3判定）</li>
-          <li>核心行动: 做项目(KPI+)、向上社交(信任+)、学习(能力+)、排查风险</li>
-          <li>P7+解锁团队管理，Q2可招聘</li>
-          <li>关注发量(勿归零)和风险值(勿满100)</li>
+          <li>每天3个时段（上午/下午/晚上），每个行动消耗行动力</li>
+          <li>街头：废品回收→摆摊→倒卖商品→技术工种→职场</li>
+          <li>商道：批发市场进货 → 商业区/城中村高价卖出赚差价</li>
+          <li>职场：42个职位 × 10条路径（IT/金融/教育/物流/餐饮…）</li>
+          <li>创业：6大行业×15产品×7轮融资，从共享办公到IPO</li>
+          <li>投资：股票/BTC/房产/海外，受世界参数+新闻驱动</li>
         </ul>
-        <h4 style="color:var(--accent);margin-top:12px;">⚠️ 失败条件</h4>
-        <ul style="margin-left:16px;color:var(--danger);">
-          <li>健康归零 | 债务超¥50,000</li>
-          <li>发量归零(过劳) | 尊严归零(崩溃)</li>
-          <li>连续8季度绩效C(淘汰) | 风险100%(开除)</li>
-          <li>年龄≥35且职级<P8(35岁危机)</li>
-        </ul>
-        <h4 style="color:var(--accent);margin-top:12px;">🏆 胜利条件</h4>
-        <ul style="margin-left:16px;color:var(--success);">
-          <li>晋升P10(合伙人) | 累计¥2,000万(财务自由)</li>
-        </ul>
-        <h4 style="color:var(--accent);margin-top:12px;">💡 实用技巧</h4>
+
+        <h4 style="color:var(--accent);margin-top:12px;">🔬 约定式自动归类</h4>
         <ul style="margin-left:16px;color:var(--text-secondary);">
-          <li>🗺️ 地图Tab可查看所有地点和快速出行</li>
-          <li>📦 交易Tab可比较各城市价格，低买高卖赚差价</li>
-          <li>💾 每天结束自动存档，手动存档支持5个槽位</li>
-          <li>📜 培训中心考证书可永久提升属性/技能</li>
-          <li>🏪 扩展行动包含30+种生存/社交/学习/投资玩</li>
+          <li><b>新增即生效</b>：新地点/工作/NPC/商品/技能/证书 → 自动出现在百科+导航</li>
+          <li><b>数据声明即可</b>：加一条 location 数据，百科条目+详情按钮全自动生成</li>
+          <li><b>事件触发数据化</b>：声明 conditions/apply 字段，系统自动注册到触发槽</li>
+          <li><b>行动自动归类</b>：行动加 category 字段即自动分组显示</li>
+          <li>⚡ 开发者添加内容不再需要写胶水代码</li>
+        </ul>
+
+        <h4 style="color:var(--accent);margin-top:12px;">📖 游戏百科（15类·最全指南）</h4>
+        <ul style="margin-left:16px;color:var(--text-secondary);">
+          <li>点击底部 Tab → 📖 百科，查阅全部地点/工作/商品/装备/技能/证书</li>
+          <li>居民/NPC 关系网 + 疾病/节日/天气/投资/系统机制/叙事/成就</li>
+          <li>每个条目底部有导航按钮，一键前往实地</li>
+          <li>💡 玩到不明白的，先去百科查！</li>
+        </ul>
+
+        <h4 style="color:var(--accent);margin-top:12px;">🧠 深度系统（350+事件）</h4>
+        <ul style="margin-left:16px;color:var(--text-secondary);">
+          <li>🏥 <b>医疗</b>：4级疾病×16种，3档医保，门诊→住院→康复</li>
+          <li>⚖️ <b>法律</b>：4种案件×4级律师，立案→证据→庭审→判决</li>
+          <li>✈️ <b>旅行</b>：5个国内目的地，纪念品+特产+事件</li>
+          <li>🎯 <b>人生节点</b>：高考/大学/35岁/退休，属性门槛+分支</li>
+          <li>🎭 <b>节日</b>：春节7天事件链+中秋+剁手节等，季节性价格波动</li>
+          <li>👥 <b>NPC关系</b>：10+NPC好感系统，解锁隐藏任务+奖励+信息</li>
+          <li>🌤️ <b>世界参数</b>：6大行业热度+市场情绪+财富等级，动态反馈闭环</li>
+          <li>🤝 <b>副业系统</b>：6类夜间经济（摆摊/代驾/自媒体/社区…），主业冲突机制</li>
+          <li>🏅 <b>成就/缎带</b>：50+成就 + 12条人生缎带跨周目收集</li>
+        </ul>
+
+        <h4 style="color:var(--accent);margin-top:12px;">💡 新手必备</h4>
+        <ul style="margin-left:16px;color:var(--text-secondary);">
+          <li>🗺️ 地图Tab查看所有地点和通勤方式（步行/单车/地铁/打车/自驾）</li>
+          <li>📦 交易Tab低买高卖赚差价，注意季节/节日价格波动</li>
+          <li>📜 培训中心考证书永久提升属性+技能，证书→月薪加成</li>
+          <li>💾 每日结束自动存档 + 5个手动存档槽位</li>
+          <li>🎯 每日任务+早安仪式+热招提醒，帮你规划每一天</li>
+          <li>📊 每日收支报告（峰终定律设计），回顾高光+明日展望</li>
+          <li>💊 健康<50立刻去医院！疾病会演化升级</li>
         </ul>
       </div>`,
     buttons: [
