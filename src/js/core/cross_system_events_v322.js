@@ -38,8 +38,7 @@
             "waste_recycling",
             "old_zhou_recycling",
             "street_vending_food",
-            "street_vending_goods",
-            "food_stall",
+            "sister_zhang_vending",
           ].includes(st.employment.currentJob.id);
         return (
           st.player.phase === "street" &&

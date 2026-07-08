@@ -37571,6 +37571,145 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ====== 更多专业技能视角事件（v3.41 新增）======
+  // 为cooking/driving/sales/english等技能补充视角事件
+
+  // E14：烹饪技能≥50 → 能分辨食材优劣
+  RANDOM_EVENTS.push({
+    id: "cooking_pro_insight",
+    phase: "street",
+    icon: "👨‍🍳",
+    title: "舌尖上的判断力",
+    story:
+      "你去小餐馆吃饭，一口汤喝下去就觉得不对。\\n\\n不是坏了——是食材不新鲜，而且厨师用味精和辣椒盖住了味道。\\n\\n以前的你绝对喝不出来，但现在的舌头骗不了自己。你看着菜单上「新鲜食材」的广告语，忽然觉得讽刺。",
+    conditions: function (st) {
+      if (!st.skills || !st.skills.cooking) return false;
+      if ((st.skills.cooking.level || 0) < 50) return false;
+      if (st.player.day < 35) return false;
+      if (
+        st.flags._cookingInsightDay &&
+        st.player.day - st.flags._cookingInsightDay < 100
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "📢 跟老板提意见",
+        hint: "道德+3，可能被赶",
+        apply: function (s) {
+          s.flags._cookingInsightDay = s.player.day;
+          s.player.morality = Math.min(100, (s.player.morality || 50) + 3);
+          s.skills.cooking.xp = (s.skills.cooking.xp || 0) + 20;
+          if (Random.chance(0.5)) {
+            StateManager.addMessage(
+              "📢 你跟老板反映了食材问题。老板愣了一下，说「你是行家啊，下次给你用新鲜的」。道德+3，烹饪XP+20。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "📢 老板不耐烦地说「我们一直用新鲜的」。你不再多说，但心里清楚。道德+3。懂行的人，吃点亏也认了。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "😅 算了，吃完走人",
+        hint: "省事，无事发生",
+        apply: function (s) {
+          s.flags._cookingInsightDay = s.player.day;
+          StateManager.addMessage(
+            "😅 你默默吃完走了。有些事，看破不说破也是一种成熟。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🥘 回家自己做一顿好的",
+        hint: "烹饪XP+40，心情+8",
+        apply: function (s) {
+          s.flags._cookingInsightDay = s.player.day;
+          s.skills.cooking.xp = (s.skills.cooking.xp || 0) + 40;
+          s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 25);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🥘 你去菜市场挑了新鲜的食材，回家用心做了一顿。自己做的就是比外面的好吃。烹饪XP+40，心情+8。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // E15：驾驶技能≥40 → 规划最优出行路线
+  RANDOM_EVENTS.push({
+    id: "driving_route_insight",
+    phase: "street",
+    icon: "🗺️",
+    title: "老司机的眼光",
+    story:
+      "你站在公交站台，看着路线图。\\n\\n旁边的人都在等那趟挤满人的车，但你发现了一条小众换乘路线——多走400米换另一趟车，不仅能坐到座位，还能省15分钟。\\n\\n你以前从没注意过这种细节。但现在，整座城市的交通脉络在你眼里越来越清晰。",
+    conditions: function (st) {
+      if (!st.skills || !st.skills.driving) return false;
+      if ((st.skills.driving.level || 0) < 40) return false;
+      if (st.player.day < 30) return false;
+      if (
+        st.flags._drivingInsightDay &&
+        st.player.day - st.flags._drivingInsightDay < 90
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🗺️ 走小众路线，省时间",
+        hint: "行动力+5，省¥10",
+        apply: function (s) {
+          s.flags._drivingInsightDay = s.player.day;
+          s.player.maxActionPoints = Math.min(
+            100,
+            (s.player.maxActionPoints || 100) + 2,
+          );
+          s.player.agility = Math.min(100, (s.player.agility || 0) + 2);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "🗺️ 你走了那条小众路线，果然人少车快。不但有座位，还比预计早到了！敏捷+2，心智+2。会认路的人，在哪个城市都不慌。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 记下来，以后用得着",
+        hint: "心智+3",
+        apply: function (s) {
+          s.flags._drivingInsightDay = s.player.day;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.skills.driving.xp = (s.skills.driving.xp || 0) + 20;
+          StateManager.addMessage(
+            "📝 你在手机备忘录里记下了这条路线。在这个城市待久了，你越来越懂它的脾性。心智+3，驾驶XP+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 不急，跟别人一起等",
+        hint: "无事发生",
+        apply: function (s) {
+          s.flags._drivingInsightDay = s.player.day;
+          StateManager.addMessage(
+            "🚶 你跟着人群上了那辆拥挤的车。虽然你有更好的选择，但今天就随大流吧。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
@@ -38016,8 +38155,7 @@ if (typeof window !== "undefined") {
             "waste_recycling",
             "old_zhou_recycling",
             "street_vending_food",
-            "street_vending_goods",
-            "food_stall",
+            "sister_zhang_vending",
           ].includes(st.employment.currentJob.id);
         return (
           st.player.phase === "street" &&
