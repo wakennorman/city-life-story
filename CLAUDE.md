@@ -19,6 +19,16 @@
 
 隔离关键：每套配置用独立 `CLAUDE_CONFIG_DIR` 目录 + 独立 `settings.json` + 独立 bat 启动脚本。
 
+### 第三方 API 注意事项（2026-07-09 更新）
+
+**问题**：sensenova-6.7-flash-lite 的 Anthropic 兼容端点 (`/v1/messages`) 对 system prompt 有严格限制：
+- 不接受 `messages` 数组中的 `role: "system"` 消息（必须用顶层 `system` 字段）
+- 不接受 system 消息出现在 messages 中间
+
+**解决方案**：使用 `proxy-sensenova.py` 作为本地代理，自动将 Anthropic 格式转换为 OpenAI 格式（转发到 `/v1/chat/completions`），proxy 会正确处理 system prompt 的位置。
+
+**已修复**：`start-sensenova-flash.ps1` 已改为启动 proxy 并指向 `http://127.0.0.1:8088`。
+
 ---
 
 ## 桌面 Bat 命名规则（重要）
@@ -456,7 +466,7 @@ python -m http.server 8080  # http://localhost:8080
 ## 🔄 多窗口协作协议（2026-07-09 新增）
 
 > **当有多个 Claude Code 窗口同时开发 `city-life-story` 时，必须遵守以下协议。**
-> 
+>
 > 详细规则见 `memory/window-coordination.md` + `memory/file-lock.json`
 
 ### 铁律
@@ -469,13 +479,13 @@ python -m http.server 8080  # http://localhost:8080
 
 ### 窗口角色推荐
 
-| 角色 | 负责 | 典型文件 |
-|------|------|---------|
-| 🎨 UI 窗口 | 渲染/样式/HTML | `ui/render.js`, `css/style.css` |
-| 📊 数据窗口 | 数据定义/配置 | `data/jobs.js`, `data/npcs.js` |
-| ⚙️ 逻辑窗口 | 核心逻辑/系统 | `main.js`, `core/events.js` |
-| 🎭 事件窗口 | 事件/触发/叙事 | `data/*_events.js` |
-| 🔧 基建窗口 | 框架/工具 | `core/state.js`, `core/save.js` |
+| 角色        | 负责           | 典型文件                        |
+| ----------- | -------------- | ------------------------------- |
+| 🎨 UI 窗口  | 渲染/样式/HTML | `ui/render.js`, `css/style.css` |
+| 📊 数据窗口 | 数据定义/配置  | `data/jobs.js`, `data/npcs.js`  |
+| ⚙️ 逻辑窗口 | 核心逻辑/系统  | `main.js`, `core/events.js`     |
+| 🎭 事件窗口 | 事件/触发/叙事 | `data/*_events.js`              |
+| 🔧 基建窗口 | 框架/工具      | `core/state.js`, `core/save.js` |
 
 ### 快速检查清单
 

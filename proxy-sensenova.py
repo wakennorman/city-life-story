@@ -278,15 +278,33 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             self._send_error(400, f"Invalid JSON: {e}")
             return
 
+        # Fix: extract system-role messages and put them in top-level system field
+        # (sensenova Anthropic endpoint rejects system in messages array)
+        system_text = an_body.get("system", "")
+        messages = an_body.get("messages", [])
+        fixed_messages = []
+        for msg in messages:
+            if msg.get("role") == "system":
+                content = msg.get("content", "")
+                if isinstance(content, list):
+                    texts = [c.get("text", "") for c in content if isinstance(c, dict)]
+                    content = "\n".join(texts)
+                system_text = (system_text + "\n" + content) if system_text else content
+            else:
+                fixed_messages.append(msg)
+        if system_text:
+            an_body["system"] = system_text
+        an_body["messages"] = fixed_messages
+
         is_stream = an_body.get("stream", False)
         model = an_body.get("model", "sensenova-6.7-flash-lite")
-        oai_body = anthropic_to_openai(an_body)
 
-        req_body = json.dumps(oai_body).encode()
-        url = f"{TARGET}/v1/chat/completions"
+        req_body = json.dumps(an_body).encode()
+        url = f"{TARGET}/v1/messages"
         req = urllib.request.Request(url, data=req_body)
         req.add_header("Content-Type", "application/json")
         req.add_header("Authorization", f"Bearer {api_key}")
+        req.add_header("anthropic-version", "2023-06-01")
 
         try:
             resp = urllib.request.urlopen(req, timeout=120)
@@ -312,23 +330,52 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             return
 
         if is_stream:
-            self._handle_streaming(resp, model)
+            self._handle_streaming_direct(resp)
         else:
-            self._handle_non_streaming(resp, model)
+            self._handle_non_streaming_direct(resp)
 
-    def _handle_non_streaming(self, resp, model):
+    def _handle_non_streaming_direct(self, resp):
         data = resp.read()
         try:
-            oai_resp = json.loads(data)
-            an_resp = openai_to_anthropic(oai_resp, model)
-            body = json.dumps(an_resp).encode()
-            self.send_response(200)
+            resp_json = json.loads(data)
+            # Check if it's an error response (already in Anthropic format)
+            body = json.dumps(resp_json).encode()
+            self.send_response(resp.status if hasattr(resp, 'status') else resp.getcode())
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
         except Exception as e:
             self._send_error(502, f"Response conversion error: {e}")
+
+    def _handle_streaming_direct(self, resp):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+
+        try:
+            buffer = b""
+            while True:
+                chunk = resp.read(4096)
+                if not chunk:
+                    break
+                buffer += chunk
+                while b"\n" in buffer:
+                    line, buffer = buffer.split(b"\n", 1)
+                    line_str = line.decode("utf-8", errors="replace")
+                    self.wfile.write(line_str.encode("utf-8"))
+                    self.wfile.write(b"\n\n")
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception as e:
+            import traceback
+            print(f"Stream error: {e}", flush=True)
+            traceback.print_exc(file=sys.stderr)
+        finally:
+            resp.close()
 
     def _handle_streaming(self, resp, model):
         self.send_response(200)
@@ -589,8 +636,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def log_message(self, format, *args):
-        pass  # Quiet
+    def log_request(self, code='-', size='-'):
+        pass  # Quiet logging
 
 
 if __name__ == "__main__":

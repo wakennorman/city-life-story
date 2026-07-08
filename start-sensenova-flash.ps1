@@ -1,6 +1,9 @@
 $ErrorActionPreference = "Stop"
 
 $projectDir = $PSScriptRoot
+$proxyScript = Join-Path $projectDir "proxy-sensenova.py"
+$proxyPort = 8088
+
 try {
     $realUserProfile = [Environment]::GetFolderPath("UserProfile")
     $claudeHome = Join-Path $realUserProfile ".claude-home-sensenova-flash"
@@ -16,11 +19,23 @@ try {
     New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
     New-Item -ItemType Directory -Force -Path $claudeConfigDir | Out-Null
 
+    # Kill any existing proxy on the port
+    $existingProc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+    if ($existingProc) {
+        Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+
+    # Start proxy in background
+    $proxyProcess = Start-Process python "-u" $proxyScript $proxyPort -PassThru -WindowStyle Hidden
+    Write-Host "Proxy started (PID: $($proxyProcess.Id)) on port $proxyPort" -ForegroundColor Green
+    Start-Sleep -Seconds 2  # Wait for proxy to be ready
+
     $settings = @'
 {
   "env": {
     "ANTHROPIC_AUTH_TOKEN": "sk-Qiag674sOboyfMoJHkUhB1SmF1xSxw3u",
-    "ANTHROPIC_BASE_URL": "https://token.sensenova.cn",
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8088",
     "ANTHROPIC_MODEL": "sensenova-6.7-flash-lite",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "sensenova-6.7-flash-lite",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "sensenova-6.7-flash-lite",
@@ -53,6 +68,7 @@ try {
     $env:USERPROFILE = $claudeHome
     $env:CLAUDE_CONFIG_DIR = $claudeConfigDir
     $env:ANTHROPIC_API_KEY = ""
+    $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$proxyPort"
 
     $rtkPath = Join-Path $env:USERPROFILE ".local\bin"
     if (Test-Path (Join-Path $rtkPath "rtk.exe")) {
@@ -61,9 +77,23 @@ try {
 
     Set-Location -LiteralPath ([string]$projectDir)
 
-    & $claude --model sensenova-6.7-flash-lite @args
+    try {
+        & $claude --model sensenova-6.7-flash-lite @args
+    }
+    finally {
+        # Kill proxy when Claude exits
+        if ($proxyProcess -and -not $proxyProcess.HasExited) {
+            Stop-Process -Id $proxyProcess.Id -Force -ErrorAction SilentlyContinue
+            Write-Host "Proxy stopped." -ForegroundColor Gray
+        }
+    }
 }
 catch {
+    # Cleanup proxy on error
+    try {
+        $proc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+        if ($proc) { Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue }
+    } catch {}
     Write-Host "Start failed: $($_.Exception.Message)" -ForegroundColor Red
     pause
     exit 1
