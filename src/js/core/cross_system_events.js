@@ -900,7 +900,7 @@
           },
         },
       ],
-    }
+    },
   );
 
   // ====== v3.22 天气×工作/NPC/消费深度联动（已合并自 cross_system_events_v322.js） ======
@@ -1034,8 +1034,7 @@
           apply: function (st) {
             var profit = Random.int(80, 180);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (!st.relationships.old_zhou.affinity)
               st.relationships.old_zhou.affinity = 0;
             st.relationships.old_zhou.affinity = Math.min(
@@ -1094,6 +1093,7 @@
         "李工头急匆匆跑到你面前：\\n" +
         "「台风预警了，明天工地必须停工！所有工人明天不要来！\\n" +
         "「不过……我有个私活，台风天送材料到偏远仓库，敢不敢接？」",
+      // [自洽修复] 新增：boss_li affinity≥30（提供高风险私活需最低信任门槛）
       conditions: function (st) {
         var nextDayForecast = st.weather && st.weather._nextDayForecast;
         var isTyphoon =
@@ -1101,10 +1101,11 @@
         var isHeavyRain =
           nextDayForecast &&
           ["rainy", "stormy", "typhoon"].includes(nextDayForecast.weatherId);
+        // [自洽修复] 检查 met + affinity≥30（高风险私活需要最低信任）
+        var rel = st.relationships && st.relationships.boss_li;
+        if (!rel || !rel.met) return false;
         return (
-          st.relationships &&
-          st.relationships.boss_li &&
-          st.relationships.boss_li.met &&
+          rel.affinity >= 30 &&
           (isTyphoon || isHeavyRain) &&
           st.player.day >= 20
         );
@@ -1121,8 +1122,7 @@
               : 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash += bonus;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             if (Random.chance(0.3)) {
               st.status.health = Math.max(0, (st.status.health || 0) - 10);
@@ -1320,7 +1320,7 @@
           },
         },
       ],
-    }
+    },
   );
 
   var CAREER_EVENTS = [

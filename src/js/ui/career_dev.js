@@ -1147,7 +1147,8 @@ function renderCareerJobs(state, parent) {
       "</div>";
 
     // v3.51：职业风险标识
-    var _riskProfile = _CAREER_RISK_PROFILES && _CAREER_RISK_PROFILES[currentJob.path];
+    var _riskProfile =
+      _CAREER_RISK_PROFILES && _CAREER_RISK_PROFILES[currentJob.path];
     if (_riskProfile) {
       html +=
         '<div style="margin-top:6px;display:flex;align-items:center;gap:4px;">' +
@@ -1875,7 +1876,8 @@ function renderCareerOverview(state, parent) {
     '<div class="section" style="margin-top:8px;"><h3>🗺️ 职业路径全景</h3>';
   html +=
     '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
-  html += '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  html +=
+    '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
   for (var _pki = 0; _pki < catOrder.length; _pki++) {
     var _catId = catOrder[_pki];
     for (var _pk2 in CAREER_PATHS) {

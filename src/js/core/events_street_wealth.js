@@ -1613,9 +1613,12 @@
       title: "小美的内幕消息：科技园要扩建",
       story:
         "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
+      // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.xiao_mei;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 50 &&
@@ -1746,9 +1749,12 @@
       title: "张姐透露：摊贩要持证上岗了",
       story:
         "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
+      // [自洽修复] 新增：sister_zhang 关系 met 检查（story 直呼"张姐"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.sister_zhang;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 45 &&
@@ -1884,9 +1890,12 @@
       title: "陈师傅说：卫生评级有补贴",
       story:
         "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
+      // [自洽修复] 新增：chef_chen 关系 met 检查（story 直呼"陈师傅"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.chef_chen;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 40 &&

@@ -2147,11 +2147,13 @@
       title: "王大婶介绍了个活",
       story:
         '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
+      // [自洽修复] 新增：aunt_wang 关系 met 检查（story 直呼"王大婶"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["aunt_wang"];
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
         return (
           st.player.phase === "street" &&
-          rel &&
           rel.affinity >= 20 &&
           (st.housing.tier || 0) >= 1
         );
@@ -2200,9 +2202,12 @@
       title: "李工头发了奖金",
       story:
         "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
+      // [自洽修复] 新增：boss_li 关系 met 检查（story 直呼"李工头"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["boss_li"];
-        return st.player.phase === "street" && rel && rel.affinity >= 10;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        return st.player.phase === "street" && rel.affinity >= 10;
       },
       choices: [
         {
@@ -3263,11 +3268,13 @@
       title: "小美给你介绍了家教单",
       story:
         "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
+      // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["xiao_mei"];
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
         return (
           st.player.phase === "street" &&
-          rel &&
           rel.affinity >= 30 &&
           st.player.intelligence >= 30
         );

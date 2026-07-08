@@ -4351,33 +4351,28 @@ if (typeof window !== "undefined") {
    */
   var TRIGGER_TEMPLATES = {
     has_debt: function (state) {
-      var r = state.resources || {};
-      return (r.debt || r.villageDebt || r.bankDebt) > 0;
+      return state.debt && state.debt > 0;
     },
     cash_above_100: function (state) {
-      var r = state.resources || {};
-      return (r.cash || 0) >= 100;
+      return state.cash >= 100;
     },
     day_above_7: function (state) {
-      return (state.player && state.player.day) >= 7;
+      return state.day >= 7;
     },
     day_above_30: function (state) {
-      return (state.player && state.player.day) >= 30;
+      return state.day >= 30;
     },
     has_health_issue: function (state) {
-      var s = state.status || {};
-      return (s.health || 100) < 50;
+      return state.health < 50;
     },
     has_debt_urgent: function (state) {
-      var r = state.resources || {};
-      return (r.debt || r.villageDebt || r.bankDebt) > 5000;
+      return state.debt && state.debt > 5000;
     },
     in_company: function (state) {
-      return state.player && state.player.phase === "corporate";
+      return state.phase && state.phase > 1;
     },
     low_cash: function (state) {
-      var r = state.resources || {};
-      return (r.cash || 0) < 500;
+      return state.cash < 500;
     },
   };
 
@@ -5083,7 +5078,7 @@ function showEventModal(evt) {
       try {
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
         var _preEvtCash = state.resources.cash;
-        var _preEvtHealth = (state.status && state.status.health) || 100;
+        var _preEvtHealth = state.stats ? state.stats.health : 0;
         var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
           choice.apply(state);
@@ -5111,10 +5106,10 @@ function showEventModal(evt) {
             var dCash = state.resources.cash - _preEvtCash;
             if (dCash < 0)
               state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
-            if (state.status) {
-              var dHealth = state.status.health - _preEvtHealth;
+            if (state.stats) {
+              var dHealth = state.stats.health - _preEvtHealth;
               if (dHealth < 0)
-                state.status.health =
+                state.stats.health =
                   _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {
@@ -7638,11 +7633,13 @@ function quarterlyCleanup(state) {
       title: "王大婶介绍了个活",
       story:
         '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
+      // [自洽修复] 新增：aunt_wang 关系 met 检查（story 直呼"王大婶"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["aunt_wang"];
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
         return (
           st.player.phase === "street" &&
-          rel &&
           rel.affinity >= 20 &&
           (st.housing.tier || 0) >= 1
         );
@@ -7691,9 +7688,12 @@ function quarterlyCleanup(state) {
       title: "李工头发了奖金",
       story:
         "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
+      // [自洽修复] 新增：boss_li 关系 met 检查（story 直呼"李工头"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["boss_li"];
-        return st.player.phase === "street" && rel && rel.affinity >= 10;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        return st.player.phase === "street" && rel.affinity >= 10;
       },
       choices: [
         {
@@ -8754,11 +8754,13 @@ function quarterlyCleanup(state) {
       title: "小美给你介绍了家教单",
       story:
         "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
+      // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships["xiao_mei"];
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
         return (
           st.player.phase === "street" &&
-          rel &&
           rel.affinity >= 30 &&
           st.player.intelligence >= 30
         );
@@ -10749,9 +10751,12 @@ function quarterlyCleanup(state) {
       title: "小美的内幕消息：科技园要扩建",
       story:
         "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
+      // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.xiao_mei;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 50 &&
@@ -10882,9 +10887,12 @@ function quarterlyCleanup(state) {
       title: "张姐透露：摊贩要持证上岗了",
       story:
         "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
+      // [自洽修复] 新增：sister_zhang 关系 met 检查（story 直呼"张姐"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.sister_zhang;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 45 &&
@@ -11020,9 +11028,12 @@ function quarterlyCleanup(state) {
       title: "陈师傅说：卫生评级有补贴",
       story:
         "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
+      // [自洽修复] 新增：chef_chen 关系 met 检查（story 直呼"陈师傅"，需已结识）
       conditions: function (st) {
         var rel = st.relationships && st.relationships.chef_chen;
-        var aff = rel ? rel.affinity || 0 : 0;
+        // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
+        if (!rel || !rel.met) return false;
+        var aff = rel.affinity || 0;
         return (
           st.player.phase === "street" &&
           aff >= 40 &&
@@ -26711,19 +26722,6 @@ if (typeof window !== "undefined") {
     flags["_wt_done_" + evt.id] = true;
 
     var amount = evt.cost(wealth);
-    // v3.1 峰值体验：展示当前税级信息，让玩家理解"为什么是我"
-    var taxTierInfo = "";
-    if (typeof EconomySystem !== "undefined") {
-      var tier = EconomySystem.getActiveTaxTier(wealth);
-      if (tier) {
-        taxTierInfo =
-          '<div style="margin-top:6px;font-size:11px;color:var(--text-muted);">📊 当前税级：' +
-          tier.label +
-          "（边际日税率" +
-          (tier.rate * 100).toFixed(2) +
-          "%）</div>";
-      }
-    }
     showModal({
       title: evt.title,
       body:
@@ -26732,8 +26730,7 @@ if (typeof window !== "undefined") {
         '</p><p style="color:var(--text-muted);font-size:12px;">' +
         "预估支出：<strong style='color:var(--danger);'>¥" +
         amount.toLocaleString() +
-        "</strong></p>" +
-        taxTierInfo,
+        "</strong></p>",
       buttons: [
         {
           text: "💸 接受（按规矩办）",
@@ -30476,6 +30473,7 @@ if (typeof window !== "undefined") {
         "李工头急匆匆跑到你面前：\\n" +
         "「台风预警了，明天工地必须停工！所有工人明天不要来！\\n" +
         "「不过……我有个私活，台风天送材料到偏远仓库，敢不敢接？」",
+      // [自洽修复] 新增：boss_li affinity≥30（提供高风险私活需最低信任门槛）
       conditions: function (st) {
         var nextDayForecast = st.weather && st.weather._nextDayForecast;
         var isTyphoon =
@@ -30483,10 +30481,11 @@ if (typeof window !== "undefined") {
         var isHeavyRain =
           nextDayForecast &&
           ["rainy", "stormy", "typhoon"].includes(nextDayForecast.weatherId);
+        // [自洽修复] 检查 met + affinity≥30（高风险私活需要最低信任）
+        var rel = st.relationships && st.relationships.boss_li;
+        if (!rel || !rel.met) return false;
         return (
-          st.relationships &&
-          st.relationships.boss_li &&
-          st.relationships.boss_li.met &&
+          rel.affinity >= 30 &&
           (isTyphoon || isHeavyRain) &&
           st.player.day >= 20
         );
@@ -48356,20 +48355,12 @@ function buildAccountingPreview(state, context) {
       state.skills.accounting.level) ||
     0;
 
-  // Lv.20: 日收支统计（从 _dailyTransactions 实时计算）
+  // Lv.20: 日收支统计
   if (lvl >= SKILL_INTEL_THRESHOLDS.accounting.PNL) {
-    var todayTxns =
-      state.flags && state.flags._dailyTransactions
-        ? state.flags._dailyTransactions
-        : [];
-    var todayIncome = 0,
-      todayExpense = 0;
-    for (var _ti = 0; _ti < todayTxns.length; _ti++) {
-      if (todayTxns[_ti].type === "income")
-        todayIncome += todayTxns[_ti].amount || 0;
-      else if (todayTxns[_ti].type === "expense")
-        todayExpense += todayTxns[_ti].amount || 0;
-    }
+    var todayIncome =
+      state.stats && state.stats.dailyIncome ? state.stats.dailyIncome : 0;
+    var todayExpense =
+      state.stats && state.stats.dailyExpense ? state.stats.dailyExpense : 0;
     var net = todayIncome - todayExpense;
     parts.push(
       "📊 今日收支: +¥" +
@@ -89122,56 +89113,6 @@ const DAILY_PIPELINE = [
     name: "finance",
     fn: function (state) {
       settleDailyFinance(state);
-      // v3.1 经济系统：累进财富税 + 连续盈利衰减 + 市场饱和度（修复 B1/B4）
-      if (typeof EconomySystem !== "undefined") {
-        try {
-          var _ecoResult = EconomySystem.dailyEconomicSettlement(state);
-          if (_ecoResult.wealthTax > 0) {
-            state.resources.cash = Math.max(
-              0,
-              (state.resources.cash || 0) - _ecoResult.wealthTax,
-            );
-            if (typeof addDailyTransaction === "function") {
-              addDailyTransaction(
-                state,
-                "expense",
-                "wealth_tax",
-                _ecoResult.wealthTax,
-                "累进财富税（" +
-                  (_ecoResult.activeTaxTier
-                    ? _ecoResult.activeTaxTier.label
-                    : "无") +
-                  "）",
-              );
-            }
-            if (
-              typeof StateManager !== "undefined" &&
-              StateManager.addMessage
-            ) {
-              StateManager.addMessage(
-                "📋 财富税 -¥" +
-                  _ecoResult.wealthTax.toLocaleString() +
-                  "（" +
-                  (_ecoResult.activeTaxTier
-                    ? _ecoResult.activeTaxTier.label + "级"
-                    : "免稅") +
-                  "）",
-                "warning",
-              );
-            }
-          }
-          // 连续盈利衰减记录
-          if (_ecoResult.consecutiveWinDecay < 1.0) {
-            state._consecutiveWinDecay = _ecoResult.consecutiveWinDecay;
-          }
-          // 市场饱和度记录
-          if (_ecoResult.marketSaturationPenalty < 1.0) {
-            state._marketSaturationPenalty = _ecoResult.marketSaturationPenalty;
-          }
-        } catch (e) {
-          console.warn("[finance] EconomySystem 执行失败:", e);
-        }
-      }
       // 成就追踪：现金归零
       if ((state.resources.cash || 0) <= 0) state.flags._everBroke = true;
     },
@@ -142284,7 +142225,8 @@ function renderCareerJobs(state, parent) {
       "</div>";
 
     // v3.51：职业风险标识
-    var _riskProfile = _CAREER_RISK_PROFILES && _CAREER_RISK_PROFILES[currentJob.path];
+    var _riskProfile =
+      _CAREER_RISK_PROFILES && _CAREER_RISK_PROFILES[currentJob.path];
     if (_riskProfile) {
       html +=
         '<div style="margin-top:6px;display:flex;align-items:center;gap:4px;">' +
@@ -143012,7 +142954,8 @@ function renderCareerOverview(state, parent) {
     '<div class="section" style="margin-top:8px;"><h3>🗺️ 职业路径全景</h3>';
   html +=
     '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
-  html += '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  html +=
+    '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
   for (var _pki = 0; _pki < catOrder.length; _pki++) {
     var _catId = catOrder[_pki];
     for (var _pk2 in CAREER_PATHS) {
@@ -151577,29 +151520,6 @@ function doStreetJob(job) {
       }
     }
   }
-  // === v3.1 经济系统：连续盈利衰减 + 市场饱和度惩罚 ===
-  if (state._consecutiveWinDecay && state._consecutiveWinDecay < 1.0) {
-    var _cwDecay = state._consecutiveWinDecay;
-    pay = Math.floor(pay * _cwDecay);
-    delete state._consecutiveWinDecay;
-    if (Random.chance(0.15)) {
-      StateManager.addMessage(
-        "📉 连续盈利市场疲劳，收入衰减×" + _cwDecay.toFixed(2),
-        "warning",
-      );
-    }
-  }
-  if (state._marketSaturationPenalty && state._marketSaturationPenalty < 1.0) {
-    var _msp = state._marketSaturationPenalty;
-    pay = Math.floor(pay * _msp);
-    delete state._marketSaturationPenalty;
-    if (Random.chance(0.15)) {
-      StateManager.addMessage(
-        "📊 市场饱和度高，收入受抑制×" + _msp.toFixed(2),
-        "warning",
-      );
-    }
-  }
   // 行业热度反馈：sectorHeat → 街头工作收入（review P0-3）
   if (typeof getSectorJobIncomeMultiplier === "function") {
     var secMult = getSectorJobIncomeMultiplier(job.id, state);
@@ -151689,22 +151609,24 @@ function doStreetJob(job) {
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
 
-  // 职业称号系统：同一工作累计天数解锁称号加成（仅首次触发，持续加成由 estimateJobPay 统一应用）
+  // 职业称号系统：同一工作累计天数解锁称号加成
   if (!state.flags._jobTitles) state.flags._jobTitles = {};
   var totalShifts = state.employment.completedShifts[job.id];
   var currentTitle = state.flags._jobTitles[job.id] || 0;
   if (totalShifts >= 100 && currentTitle < 3) {
     state.flags._jobTitles[job.id] = 3;
+    pay = Math.floor(pay * 1.15);
     StateManager.addMessage(
-      "👑 职业大师！" + job.name + "累计100天，获得永久称号！",
+      "👑 职业大师！" + job.name + "累计100天，收入永久+15%！",
       "success",
     );
     if (typeof checkJobMilestoneEvent === "function")
       checkJobMilestoneEvent(job.id, 3, state);
   } else if (totalShifts >= 30 && currentTitle < 2) {
     state.flags._jobTitles[job.id] = 2;
+    pay = Math.floor(pay * 1.08);
     StateManager.addMessage(
-      "🎖️ 熟练老手！" + job.name + "累计30天，获得永久称号！",
+      "🎖️ 熟练老手！" + job.name + "累计30天，收入永久+8%！",
       "success",
     );
     if (typeof checkJobMilestoneEvent === "function")
@@ -151718,6 +151640,10 @@ function doStreetJob(job) {
     if (typeof checkJobMilestoneEvent === "function")
       checkJobMilestoneEvent(job.id, 1, state);
   }
+  // 已获称号加成持续生效
+  var titleBonus = state.flags._jobTitles[job.id] || 0;
+  if (titleBonus === 2) pay = Math.floor(pay * 1.08);
+  else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
   // 应用效果
   if (job.effects) {
@@ -151840,24 +151766,6 @@ function doStreetJob(job) {
           "success",
         );
       }
-    }
-  }
-
-  // === v3.1 收入上限保护：防止多系统叠加导致荒谬收入 ===
-  // 基础工作收入不应超过玩家当前现金的 20%（单次工作封顶）
-  var _maxReasonablePay = Math.max(500, (state.resources.cash || 300) * 0.2);
-  if (pay > _maxReasonablePay) {
-    var _originalPay = pay;
-    pay = Math.floor(pay * 0.6); // 超限后打 6 折
-    if (Random.chance(0.1)) {
-      StateManager.addMessage(
-        "⚠️ 多重加成叠加过高（原¥" +
-          _originalPay +
-          "→¥" +
-          pay +
-          "），市场调节收入上限",
-        "warning",
-      );
     }
   }
 
