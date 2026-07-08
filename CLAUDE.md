@@ -156,7 +156,23 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-08)**：v3.39 — 专业技能视角事件（2个新增）
+- **最新一次工作 (2026-07-08)**：v3.44 — TRAVEL_GRAPH 全图双向化（修复寺庙598AP bug）
+  - **问题**：寺庙步行显示"99跳·598AP"，根因是TRAVEL_GRAPH有向图孤立节点（temple无入边）
+  - **修复**：`locations.js` 补全5条缺失反向边（commercialDist→construction / factoryZone→suburb / school→hospital / school→temple / park→temple）
+  - **防御**：`render.js _calcCommute` hops≥99时return null，永不显示孤立节点
+  - **结果**：全图15节点完全双向化，图直径=4跳，步行最大AP=28（原598→28）
+  - **影响文件**：locations.js / render.js
+  - **验证**：bank→temple=3跳/22AP ✅ / node --check ✅ / build 5250.3KB ✅ / `commit 66bb2f4` ✅
+
+- **上一轮工作 (2026-07-08)**：v3.43 — 通勤地图逻辑重构
+  - **问题**：步行从银行无法到达科技园（1-hop限制），单车/打车却可以，玩家困惑
+  - **重构**：`render.js _calcCommute` 步行→全城可达 / 地铁→任意位置→所有站点 / 自驾→全城可达
+  - **AP公式**：步行远途代价变大（2跳16AP/3跳22AP），倒逼玩家选择交通工具而非封锁目的地
+  - **地铁扩站**：新增 bank + gov_office 为地铁可达站点（共10站）
+  - **影响文件**：render.js（-13/+11行）
+  - **验证**：`node --check` ✅ / `python build.py` 5250.0KB ✅ / `commit 3ec7212` ✅ / push ✅
+
+- **上一轮工作 (2026-07-08)**：v3.39 — 专业技能视角事件（2个新增）
   - **设计理念**：技能达到门槛后提供「专业人士视角」，让玩家感受成长的世界观变化
   - **新增事件**：
     - `repair_pro_insight` — repair≥40时识别建筑安全隐患（报告/无视/自己修）
@@ -165,7 +181,6 @@ navHints: [
   - **影响文件**：cross_system_events.js（+166行）
   - **验证**：`node --check` ✅ / `python build.py` 5229.8KB ✅ / `commit c3b803b` ✅
   - **记忆文件**：`memory/v3.39-skill-perspective-events.md`
-  - **推送**：⏸️ 网络断连，下一轮循环重试
 
 - **上一轮工作 (2026-07-08)**：v3.38 — 状态积累爆发事件（3个新增叙事事件）
   - **设计理念**：让系统追踪的每一个状态变化都有对应的叙事回响
