@@ -5743,3 +5743,32 @@ corporate 存活率 40% → 60%（+20pp），早期收入保障帮助上班族�
 ### MC效果
 
 social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获得额外生存资源。
+
+---
+
+## 2026-07-09 — v3.49 职业系统UI重构：分类+推荐+总览优化
+
+**目标**：将10+条职业路径按3大分类组织（白领/服务/蓝领-体制），新增技能匹配推荐系统，改善无工作状态下的总览信息。
+
+**变更内容**：
+
+1. **职业路径分类**（`career_dev.js` CAREER_PATHS）：
+   - 每条路径新增 `category` 字段：`white_collar`（👔 白领·专业技术）/ `service`（🛒 服务·销售运营）/ `blue_collar_gov`（🔧 蓝领·体制内）
+   - 新增 `CAREER_CATEGORIES` 映射表 + `getCategoryLabel()` 函数
+
+2. **推荐系统**（`career_dev.js`）：
+   - 新增 `getRecommendedCareerPaths(state)` 函数，基于技能匹配度×属性匹配度加权评分，返回Top3推荐路径
+   - 新增 `switchCareerSubTab()` 全局函数，支持inline onclick跳转子Tab
+
+3. **UI改进**（`career_jobs` 子面板）：
+   - 顶部分类标题 + 按分类顺序展示路径（白领→服务→蓝领-体制）
+   - 推荐路径卡片区（匹配度百分比 + 一键投递）
+   - 路径卡片紧凑化，条件不足/满足更清晰区分
+
+4. **UI改进**（`career_overview` 总览子面板）：
+   - 无工作状态新增「事业准备」卡片：街头经验天数、推荐职业方向、证书统计+引导
+   - 跳转按钮：查看职业路线 / 去考证书
+
+**影响文件**：`career_dev.js`（+~200行分类+推荐函数，~100行UI重构）
+
+**验证**：`node --check` ✅ / `python build.py` 5281.0KB ✅

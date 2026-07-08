@@ -1728,6 +1728,89 @@ function renderCareerOverview(state, parent) {
   }
   html += "</div></div>";
 
+  // === 职业路径全景图（v3.48：鸟瞰所有路径的玩家进度）===
+  html +=
+    '<div class="section" style="margin-top:8px;"><h3>🗺️ 职业路径全景</h3>';
+  html +=
+    '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  for (var _pki = 0; _pki < catOrder.length; _pki++) {
+    var _catId = catOrder[_pki];
+    for (var _pk2 in CAREER_PATHS) {
+      if (CAREER_PATHS[_pk2].category !== _catId) continue;
+      var _pd = CAREER_PATHS[_pk2];
+      var _entryOk = checkCareerPromotion(state, _pk2, _pd.levels[0]);
+      var _curLevel = job && job.path === _pk2 ? job.levelId : null;
+      var _maxLevel = _pd.levels[_pd.levels.length - 1].id;
+      var _status, _statusColor;
+      if (_curLevel) {
+        var _promotable = checkCareerPromotion(
+          state,
+          _pk2,
+          _pd.levels[_pd.levels.length - 1],
+        );
+        if (_curLevel === _maxLevel && _promotable) {
+          _status = "🏆 已满级";
+          _statusColor = "var(--accent)";
+        } else {
+          _status = "⭐ 当前";
+          _statusColor = "var(--success)";
+        }
+      } else if (_entryOk) {
+        _status = "✅ 可投递";
+        _statusColor = "var(--text-secondary)";
+      } else {
+        _status = "🔒 未解锁";
+        _statusColor = "var(--text-muted)";
+      }
+      html +=
+        '<div class="card" style="padding:6px 8px;cursor:pointer;border:1px solid ' +
+        (_curLevel ? "rgba(74,158,92,0.3)" : "var(--border)") +
+        ';" onclick="showCareerPathPreviewModal(\'' +
+        _pk2 +
+        "')\">";
+      html +=
+        '<div style="display:flex;justify-content:space-between;align-items:center;">';
+      html +=
+        '<span style="font-size:11px;font-weight:bold;">' +
+        _pd.icon +
+        " " +
+        _pd.name +
+        "</span>";
+      html +=
+        '<span style="font-size:9px;color:' +
+        _statusColor +
+        ';">' +
+        _status +
+        "</span>";
+      html += "</div>";
+      if (_curLevel) {
+        var _curLvIdx = -1;
+        for (var _li = 0; _li < _pd.levels.length; _li++) {
+          if (_pd.levels[_li].id === _curLevel) {
+            _curLvIdx = _li;
+            break;
+          }
+        }
+        html += '<div style="margin-top:3px;display:flex;gap:2px;">';
+        for (var _pi2 = 0; _pi2 < _pd.levels.length; _pi2++) {
+          html +=
+            '<div style="flex:1;height:3px;border-radius:2px;background:' +
+            (_pi2 <= _curLvIdx ? "var(--accent)" : "rgba(255,255,255,0.1)") +
+            ';"></div>';
+        }
+        html +=
+          '</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">' +
+          job.levelName +
+          " · ¥" +
+          (job.salary || 0).toLocaleString() +
+          "</div>";
+      }
+      html += "</div>";
+    }
+  }
+  html += "</div></div>";
+
   // === 无工作状态：推荐路径 + 证书引导 ===
   if (!job) {
     var _af =
