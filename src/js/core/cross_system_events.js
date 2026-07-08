@@ -10832,6 +10832,7 @@
             (st.player.intelligence || 10) + 1,
           );
           st.flags.chenScamWarning = true;
+          st.flags._uncleChenMetDay = st.player.day;
           StateManager.addMessage(
             "🙏 老陈摆摆手：「不客气，防人之心不可无。」你记住了他的忠告。结识老陈（银行保安），好感+10，智力+1。",
             "success",
@@ -10852,6 +10853,7 @@
             (st.relationships.uncle_chen_bank.affinity || 0) + 3,
           );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.flags._uncleChenMetDay = st.player.day;
           StateManager.addMessage(
             "😅 老陈笑了：「也是，骗子也得挑人下手。但多个心眼总没错。」结识老陈，好感+3，心情+5。",
             "info",
@@ -11122,6 +11124,65 @@
           );
           StateManager.addMessage(
             "📝 你把这事记在心里。阿黄说「好，记着你欠我一顿饭」。好感+5，智力+1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件61：老陈的内部消息（结识5天后）-----
+  // 设计意图：老陈给玩家透露银行招聘信息，建立长期人脉价值
+  RANDOM_EVENTS.push({
+    id: "npc_uncle_chen_followup",
+    phase: "street",
+    icon: "🏦",
+    title: "老陈的消息",
+    story:
+      "你路过银行时，老陈冲你招了招手，压低声音说：\\n\\n「我听说下个月分行要招两个大堂助理，工资¥3500起步，五险一金齐全。我看你人实在，要是感兴趣我帮你递份简历进去。」\\n\\n他拍了拍你的肩膀：「这机会难得，内部招聘，外面不挂网。」",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.uncle_chen_bank;
+      return (
+        st.player.phase === "street" &&
+        rel &&
+        rel.met &&
+        (rel.affinity || 0) >= 5 &&
+        !st.flags._uncleChenFollowupSeen &&
+        st.player.day >= (st.flags._uncleChenMetDay || 0) + 5
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 太谢谢了！我准备简历",
+        hint: "未来银行职位候选资格",
+        apply: function (st) {
+          st.flags._uncleChenFollowupSeen = true;
+          st.flags._chenBankJobLead = true;
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 10,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📋 老陈摆摆手：「简历给我就行，我帮你递到人事科。能不能成看你自己了，但至少能进面试。」老陈好感+10，心情+8，名气+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 谢谢陈叔，我暂时还不考虑",
+        hint: "婉拒，好感+5",
+        apply: function (st) {
+          st.flags._uncleChenFollowupSeen = true;
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 5,
+          );
+          StateManager.addMessage(
+            "🙏 老陈点点头：「行，那等你想来了跟我说一声就行。」老陈好感+5。",
             "info",
           );
         },
