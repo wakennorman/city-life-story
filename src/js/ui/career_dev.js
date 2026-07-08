@@ -1147,21 +1147,45 @@ function renderCareerJobs(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
-    // ---- 工作行动：业绩/调休（P0-4+P0-5） ----
+    // ---- 工作行动（v3.48：分组展示 — 业绩提升 vs 压力缓解）----
     html +=
       '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
+    // 业绩组
+    html +=
+      '<div style="font-size:9px;color:var(--text-muted);margin:4px 0 2px;">📈 提升业绩/资源</div>';
     html +=
       '<div style="display:flex;flex-wrap:wrap;gap:4px;" data-scroll-anchor="career-actions">';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+8, 行业资源+2, 消耗AP3" onclick="careerWorkAction(\'project\')">💼 做项目<span style="font-size:9px;display:block;color:var(--text-muted);">AP3 · 业绩+8</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+3, 消耗AP2" onclick="careerWorkAction(\'overtime\')">🌙 加班<span style="font-size:9px;display:block;color:var(--text-muted);">AP2 · 业绩+3</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+12, 消耗AP4" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI<span style="font-size:9px;display:block;color:var(--text-muted);">AP4 · 业绩+12</span></button>';
+    html += "</div>";
+    // 休息组
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+      '<div style="font-size:9px;color:var(--text-muted);margin:8px 0 2px;">😴 缓解倦怠/恢复状态</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakePaidLeave()">🏖️ 带薪年假（180天）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-8, 心情+5" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-8</span></button>';
+    var _onLeaveCooldown =
+      (state.career.currentJob._lastPaidLeaveDay || 0) > 0 &&
+      state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0) < 180;
+    var _leaveDaysLeft =
+      180 -
+      (state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0));
+    if (!_onLeaveCooldown && (state.career.currentJob.workDays || 0) >= 90) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗5天薪资, 倦怠-45, 心情+25" onclick="careerTakePaidLeave()">🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--accent);">倦怠-45 · 180天CD</span></button>';
+    } else if (_onLeaveCooldown) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled>🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--text-muted);">还需' +
+        _leaveDaysLeft +
+        "天</span></button>";
+    } else {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled>🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--text-muted);">需在职90天</span></button>';
+    }
     html += "</div></div>";
 
     // ---- 跳槽机会（P1-2：主动跳槽） ----

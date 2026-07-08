@@ -141255,21 +141255,45 @@ function renderCareerJobs(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
-    // ---- 工作行动：业绩/调休（P0-4+P0-5） ----
+    // ---- 工作行动（v3.48：分组展示 — 业绩提升 vs 压力缓解）----
     html +=
       '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
+    // 业绩组
+    html +=
+      '<div style="font-size:9px;color:var(--text-muted);margin:4px 0 2px;">📈 提升业绩/资源</div>';
     html +=
       '<div style="display:flex;flex-wrap:wrap;gap:4px;" data-scroll-anchor="career-actions">';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'project\')">💼 做项目（AP3）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+8, 行业资源+2, 消耗AP3" onclick="careerWorkAction(\'project\')">💼 做项目<span style="font-size:9px;display:block;color:var(--text-muted);">AP3 · 业绩+8</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'overtime\')">🌙 加班（AP2）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+3, 消耗AP2" onclick="careerWorkAction(\'overtime\')">🌙 加班<span style="font-size:9px;display:block;color:var(--text-muted);">AP2 · 业绩+3</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI（AP4）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+12, 消耗AP4" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI<span style="font-size:9px;display:block;color:var(--text-muted);">AP4 · 业绩+12</span></button>';
+    html += "</div>";
+    // 休息组
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakeBreak()">😴 调休（AP1）</button>';
+      '<div style="font-size:9px;color:var(--text-muted);margin:8px 0 2px;">😴 缓解倦怠/恢复状态</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" onclick="careerTakePaidLeave()">🏖️ 带薪年假（180天）</button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-8, 心情+5" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-8</span></button>';
+    var _onLeaveCooldown =
+      (state.career.currentJob._lastPaidLeaveDay || 0) > 0 &&
+      state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0) < 180;
+    var _leaveDaysLeft =
+      180 -
+      (state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0));
+    if (!_onLeaveCooldown && (state.career.currentJob.workDays || 0) >= 90) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗5天薪资, 倦怠-45, 心情+25" onclick="careerTakePaidLeave()">🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--accent);">倦怠-45 · 180天CD</span></button>';
+    } else if (_onLeaveCooldown) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled>🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--text-muted);">还需' +
+        _leaveDaysLeft +
+        "天</span></button>";
+    } else {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled>🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--text-muted);">需在职90天</span></button>';
+    }
     html += "</div></div>";
 
     // ---- 跳槽机会（P1-2：主动跳槽） ----
@@ -141833,6 +141857,89 @@ function renderCareerOverview(state, parent) {
       "（持有 " +
       certs.length +
       " 张证书）</div>";
+  }
+  html += "</div></div>";
+
+  // === 职业路径全景图（v3.48：鸟瞰所有路径的玩家进度）===
+  html +=
+    '<div class="section" style="margin-top:8px;"><h3>🗺️ 职业路径全景</h3>';
+  html +=
+    '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  for (var _pki = 0; _pki < catOrder.length; _pki++) {
+    var _catId = catOrder[_pki];
+    for (var _pk2 in CAREER_PATHS) {
+      if (CAREER_PATHS[_pk2].category !== _catId) continue;
+      var _pd = CAREER_PATHS[_pk2];
+      var _entryOk = checkCareerPromotion(state, _pk2, _pd.levels[0]);
+      var _curLevel = job && job.path === _pk2 ? job.levelId : null;
+      var _maxLevel = _pd.levels[_pd.levels.length - 1].id;
+      var _status, _statusColor;
+      if (_curLevel) {
+        var _promotable = checkCareerPromotion(
+          state,
+          _pk2,
+          _pd.levels[_pd.levels.length - 1],
+        );
+        if (_curLevel === _maxLevel && _promotable) {
+          _status = "🏆 已满级";
+          _statusColor = "var(--accent)";
+        } else {
+          _status = "⭐ 当前";
+          _statusColor = "var(--success)";
+        }
+      } else if (_entryOk) {
+        _status = "✅ 可投递";
+        _statusColor = "var(--text-secondary)";
+      } else {
+        _status = "🔒 未解锁";
+        _statusColor = "var(--text-muted)";
+      }
+      html +=
+        '<div class="card" style="padding:6px 8px;cursor:pointer;border:1px solid ' +
+        (_curLevel ? "rgba(74,158,92,0.3)" : "var(--border)") +
+        ';" onclick="showCareerPathPreviewModal(\'' +
+        _pk2 +
+        "')\">";
+      html +=
+        '<div style="display:flex;justify-content:space-between;align-items:center;">';
+      html +=
+        '<span style="font-size:11px;font-weight:bold;">' +
+        _pd.icon +
+        " " +
+        _pd.name +
+        "</span>";
+      html +=
+        '<span style="font-size:9px;color:' +
+        _statusColor +
+        ';">' +
+        _status +
+        "</span>";
+      html += "</div>";
+      if (_curLevel) {
+        var _curLvIdx = -1;
+        for (var _li = 0; _li < _pd.levels.length; _li++) {
+          if (_pd.levels[_li].id === _curLevel) {
+            _curLvIdx = _li;
+            break;
+          }
+        }
+        html += '<div style="margin-top:3px;display:flex;gap:2px;">';
+        for (var _pi2 = 0; _pi2 < _pd.levels.length; _pi2++) {
+          html +=
+            '<div style="flex:1;height:3px;border-radius:2px;background:' +
+            (_pi2 <= _curLvIdx ? "var(--accent)" : "rgba(255,255,255,0.1)") +
+            ';"></div>';
+        }
+        html +=
+          '</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">' +
+          job.levelName +
+          " · ¥" +
+          (job.salary || 0).toLocaleString() +
+          "</div>";
+      }
+      html += "</div>";
+    }
   }
   html += "</div></div>";
 
