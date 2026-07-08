@@ -7790,4 +7790,193 @@
       },
     ],
   });
+
+  // ====== 状态积累爆发事件（v3.38 新增）======
+  // 设计原则：_habits 追踪字段有6个指标但只有2个有事件覆盖，
+  // 填补 lowHappinessStreak / junkFoodMeals / lateNightActions 的叙事空白
+
+  // E6：连续心情低落积累 → 被陌生人关心的温暖
+  RANDOM_EVENTS.push({
+    id: "low_mood_crisis_encounter",
+    phase: "street",
+    icon: "🌈",
+    title: "陌生人的善意",
+    story:
+      "这几天你一直心情低落，对什么事都提不起劲。\\n\\n今天在街边发呆时，一个卖花的老奶奶突然递给你一朵快要蔫了的栀子花：「小伙子/姑娘，花快谢了，送给你吧。人生嘛，跟花一样，蔫了还会再开的。」\\n\\n你接过花，一时说不出话。",
+    conditions: function (st) {
+      // 连续3天心情<20触发
+      if (!st.flags || !st.flags._habits) return false;
+      if ((st.flags._habits.lowHappinessStreak || 0) < 3) return false;
+      if (st.player.day < 10) return false;
+      // 30天冷却
+      if (
+        st.flags._moodCrisisDay &&
+        st.player.day - st.flags._moodCrisisDay < 30
+      )
+        return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🌸 收下花，道谢",
+        hint: "心情+15，心智+3",
+        apply: function (s) {
+          s.flags._moodCrisisDay = s.player.day;
+          s.flags._habits.lowHappinessStreak = 0;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 15);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.player.morality = Math.min(100, (s.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "🌸 你接过花，闻了闻那一丝香气。老奶奶笑着摆摆手走了。你把花带回住处插在瓶子里，心情+15，心智+3，道德+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😞 婉拒，不想说话",
+        hint: "心情-2，但独处",
+        apply: function (s) {
+          s.flags._moodCrisisDay = s.player.day;
+          s.flags._habits.lowHappinessStreak = 0;
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 2);
+          StateManager.addMessage(
+            "😞 你摇摇头没说话。老奶奶叹了口气，把花放在了旁边的台阶上。你走出去几步，又回头看了一眼——那朵花还在那儿，安安静静的。心情-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // E7：垃圾食品积累 → 身体的抗议信号
+  RANDOM_EVENTS.push({
+    id: "junk_food_body_warning",
+    phase: "street",
+    icon: "🤢",
+    title: "身体的抗议",
+    story:
+      "半夜你被一阵胃痛惊醒。\\n\\n最近天天吃泡面、路边摊、速食便当——胃终于受不了了。你蜷缩在床上，额头冒冷汗，翻来覆去睡不着。\\n\\n隔壁的大姐敲了敲门：「你没事吧？要不要帮你叫个救护车？」",
+    conditions: function (st) {
+      // 垃圾食品累计≥10次触发
+      if (!st.flags || !st.flags._habits) return false;
+      if ((st.flags._habits.junkFoodMeals || 0) < 10) return false;
+      if (st.player.day < 15) return false;
+      // 60天冷却
+      if (st.flags._junkFoodDay && st.player.day - st.flags._junkFoodDay < 60)
+        return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🏥 去药店买胃药（¥20）",
+        hint: "健康+8，胃疼缓解",
+        apply: function (s) {
+          s.flags._junkFoodDay = s.player.day;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 20);
+          s.status.health = Math.min(100, (s.status.health || 0) + 8);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🏥 你半夜敲开了药店的窗，买了胃药和暖宝宝。花了¥20，但胃总算舒服了。健康+8，心情+3。你决定以后少吃点泡面。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😣 硬扛着，睡一觉就好了",
+        hint: "健康-5，省钱",
+        apply: function (s) {
+          s.flags._junkFoodDay = s.player.day;
+          s.status.health = Math.max(0, (s.status.health || 0) - 5);
+          s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 10);
+          StateManager.addMessage(
+            "😣 你跟隔壁大姐说没事，又躺了回去。一晚上翻来覆去，天亮时才好一点。健康-5，疲劳+10。",
+            "danger",
+          );
+        },
+      },
+      {
+        text: "🥣 熬点粥养胃（需有住所）",
+        hint: "健康+5，需求食材",
+        apply: function (s) {
+          s.flags._junkFoodDay = s.player.day;
+          s.status.health = Math.min(100, (s.status.health || 0) + 5);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+          s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 10);
+          StateManager.addMessage(
+            "🥣 你爬起来熬了点白粥。热粥下肚，胃暖和了，人也跟着暖和了。健康+5，心情+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // E8：深夜行动积累 → 夜归人的意外邂逅
+  RANDOM_EVENTS.push({
+    id: "night_owl_encounter",
+    phase: "street",
+    icon: "🌙",
+    title: "夜归人",
+    story:
+      "深夜的街道空荡荡的，只有路灯和偶尔经过的出租车。\\n\\n你刚从外面回来，发现便利店门口坐着一个跟自己差不多年纪的人，正在看手机。\\n\\n他/她抬头看见你，笑了笑：「也刚下班？」\\n\\n那笑容里有一种同类人的默契——在这个城市，深夜还在外面晃的，各有各的故事。",
+    conditions: function (st) {
+      // 累计夜生活≥5次触发
+      if (!st.flags || !st.flags._habits) return false;
+      if ((st.flags._habits.lateNightActions || 0) < 5) return false;
+      if (st.player.day < 20) return false;
+      // 90天冷却
+      if (st.flags._nightOwlDay && st.player.day - st.flags._nightOwlDay < 90)
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "☕ 坐下来聊两句",
+        hint: "心情+8，社交+",
+        apply: function (s) {
+          s.flags._nightOwlDay = s.player.day;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "☕ 你们在便利店门口聊了半小时。对方是附近咖啡店的夜班店员，也是刚来这个城市不久。走的时候互相留了个微信——「有空来喝咖啡，我请客。」心情+8，心智+2，名气+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙂 点点头，继续赶路",
+        hint: "独处，心情+2",
+        apply: function (s) {
+          s.flags._nightOwlDay = s.player.day;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 2);
+          StateManager.addMessage(
+            "🙂 你点点头，对方也点点头。两个夜归人的默契——不需要多说。你回到住处，洗洗睡了。心情+2。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🍜 请对方吃个夜宵（¥25）",
+        hint: "心情+12，可能交个朋友",
+        apply: function (s) {
+          s.flags._nightOwlDay = s.player.day;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 25);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 12);
+          s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 15);
+          s.player.charm = Math.min(100, (s.player.charm || 0) + 2);
+          StateManager.addMessage(
+            "🍜 你请对方去旁边还在营业的面馆吃了碗面。聊天中知道对方叫小林，也在为生活打拼。你们交换了联系方式——这座城市的夜，好像没那么冷了。心情+12，魅力+2。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
 })();
