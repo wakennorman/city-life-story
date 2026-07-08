@@ -1214,6 +1214,69 @@ var _NEWS_CLASSIFIER_RULES = [
 ];
 
 /**
+ * 实时新闻分类后的游戏影响说明（让玩家一眼看懂对自己的影响）
+ * 按 ruleId → marketMood → 具体游戏影响说明
+ */
+var _REAL_NEWS_NOTES = {
+  employment: {
+    bullish: "招聘旺季！打工求职竞争力提升，薪资谈判空间扩大",
+    bearish: "裁员降薪潮来袭，摆摊/零工比依赖稳定工作更灵活",
+    neutral: "就业市场平稳，提升技能比频繁跳槽更划算",
+    volatile: "就业两极分化：高技能人才抢手，普工岗位承压",
+  },
+  housing: {
+    bullish: "租金/房价上涨趋势，尽早升级住所可锁定低成本",
+    bearish: "楼市降温，租房可以议价，降低住所开销的好时机",
+    neutral: "租房市场平稳，住所成本无明显变动",
+    volatile: "住房市场波动，城中村租金可能受波及",
+  },
+  tech: {
+    bullish: "科技/AI岗位薪资上涨，编程和数码技能更值钱",
+    bearish: "IT行业裁员，基础技术岗竞争加剧，转型副业是出路",
+    volatile: "科技板块震荡，相关投资需谨慎，把握高低点",
+    neutral: "科技行业平稳，技术学习仍是长期投资",
+  },
+  economy: {
+    bullish: "经济回暖！各行业收入预期改善，投资信心回升",
+    bearish: "经济下行压力大，精打细算比冒险投资更重要",
+    neutral: "宏观经济平稳，对日常打工生活影响有限",
+    volatile: "经济不确定性高，保守储蓄比激进投资更安全",
+  },
+  finance: {
+    bullish: "股市/投资市场走强！理财和股票有收益机会",
+    bearish: "股市下跌，储蓄存银行比激进投资更安全",
+    volatile: "市场震荡，有人赚有人赔，控制仓位为先",
+    neutral: "金融市场平稳，存款/理财收益无明显变化",
+  },
+  policy: {
+    bullish: "政策利好！部分行业享补贴，创业/就业窗口开启",
+    bearish: "政策收紧，部分行业压力加大，灵活应对为上",
+    neutral: "政策调整，短期影响有限，保持观望",
+    volatile: "政策方向未明，避免重仓单一行业",
+  },
+  consumption: {
+    bullish: "消费旺季来临！摆摊/零售/外卖/服务收入高峰期",
+    bearish: "消费降级，街头生意难做，精简成本更关键",
+    neutral: "消费市场平稳，日常摊位收入变化不大",
+  },
+  social: {
+    bullish: "社会民生向好，就业机会增加，生活压力有所缓解",
+    bearish: "社会压力上升，竞争更激烈，注重技能和人脉积累",
+    neutral: "社会热点，对打工收入直接影响有限",
+  },
+  seasonal: {
+    bullish: "节日/旺季来临！服务/零售/外卖收入即将激增",
+    bearish: "恶劣天气/淡季，户外劳动受阻，考虑切换室内工作",
+    neutral: "季节变化，适时调整打工策略",
+  },
+  energy: {
+    bullish: "新能源/制造岗位需求旺盛，技能工匠薪资有溢价",
+    bearish: "能源价格下调，相关岗位招聘放缓",
+    volatile: "能源市场波动，相关行业收入不稳定",
+  },
+};
+
+/**
  * 通过关键词将实时新闻标题分类，转化为游戏世界效果
  * @param {string} title - 新闻标题
  * @param {string} desc  - 新闻描述（可选）
@@ -1245,18 +1308,21 @@ function classifyRealNews(title, desc) {
         } else {
           result.sectorHeat = rule.sector;
         }
-        // 生成 note
-        var moodMap = {
-          bullish: "利好",
-          bearish: "利空",
-          neutral: "中性",
-          volatile: "波动",
-        };
+        // 生成 note：优先用查找表中具体的游戏影响说明
+        var noteGroup = _REAL_NEWS_NOTES[rule.id];
         result.note =
-          "实时新闻·" +
-          result.tag +
-          "行业" +
-          (moodMap[result.marketMood] || "中性");
+          noteGroup && noteGroup[result.marketMood]
+            ? noteGroup[result.marketMood]
+            : noteGroup && noteGroup["neutral"]
+              ? noteGroup["neutral"]
+              : "实时新闻·" +
+                result.tag +
+                "方向" +
+                (result.marketMood === "bullish"
+                  ? "向好"
+                  : result.marketMood === "bearish"
+                    ? "承压"
+                    : "平稳");
         return result;
       }
     }
@@ -1270,8 +1336,8 @@ function classifyRealNews(title, desc) {
   if (/\d+\.?\d*%|百分点|增长率|增速/.test(text)) {
     result.tag = "经济";
     result.sectorHeat = { 金融: 0.03, 消费: 0.02 };
-    result.marketMood = /\d+\.?\d*%/.test(text) ? "neutral" : "neutral";
-    result.note = "实时新闻·经济（含数据指标）";
+    result.marketMood = "neutral";
+    result.note = "经济数据发布，消费和金融板块轻微波动，打工收入短期影响有限";
     return result;
   }
 
@@ -1280,7 +1346,7 @@ function classifyRealNews(title, desc) {
     result.tag = "经济";
     result.sectorHeat = { 金融: 0.04, 消费: 0.02 };
     result.marketMood = "neutral";
-    result.note = "实时新闻·经济";
+    result.note = "商业资金流动，消费市场轻微影响，存款和消费决策可稍作留意";
     return result;
   }
 
@@ -1293,7 +1359,7 @@ function classifyRealNews(title, desc) {
     result.tag = "产业";
     result.sectorHeat = { 科技: 0.03, 新能源: 0.02 };
     result.marketMood = "neutral";
-    result.note = "实时新闻·产业";
+    result.note = "产业动向，科技/新能源板块可能微调，关注相关岗位机会";
     return result;
   }
 
@@ -1304,15 +1370,14 @@ function classifyRealNews(title, desc) {
     result.tag = "城市";
     result.sectorHeat = { 房地产: 0.04, 消费: 0.02 };
     result.marketMood = "neutral";
-    result.note = "实时新闻·城市发展";
+    result.note = "城市基建加速，工程/建筑类岗位需求上升，周边租金可能微调";
     return result;
   }
 
-  // 5. 真正无匹配 → 用「综合」而非「社会」，情绪中性，轻微正面影响
-  //    设计理由：完全不相关的新闻对游戏世界的影响应该最小化而非负面化
+  // 5. 真正无匹配 → 轻微消费影响，给出有用的通用建议
   result.sectorHeat = { 消费: 0.01 };
   result.marketMood = "neutral";
-  result.note = "实时新闻·综合";
+  result.note = "社会热点新闻，对打工生活的直接影响有限，保持日常节奏即可";
   return result;
 }
 
