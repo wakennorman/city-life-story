@@ -945,37 +945,57 @@ function getCareerGuidanceHtml(state) {
     next = "关注现金流、团队稳定和融资可信度，避免烧钱过快。";
     action = "看现金流 / 推进产品 / 处理团队风险";
   }
+  // v3.48：职业资本数值改为迷你进度条（替代纯数字）
+  var _barItems = [
+    { key: "industryResources", label: "行业", color: "#4fc3f7" },
+    { key: "clientLeads", label: "客户", color: "#81c784" },
+    { key: "reputation", label: "声誉", color: "#ffb74d" },
+    { key: "partnerTrust", label: "信任", color: "#ce93d8" },
+    { key: "burnout", label: "倦怠", color: "#ef5350" },
+  ];
+  var _barHtml = "";
+  for (var _bi = 0; _bi < _barItems.length; _bi++) {
+    var _b = _barItems[_bi];
+    var _v = Math.round(cap[_b.key] || 0);
+    _barHtml +=
+      '<div style="text-align:center;font-size:9px;color:var(--text-muted);">';
+    _barHtml +=
+      '<div style="font-size:11px;font-weight:bold;color:var(--text-primary);">' +
+      _v +
+      "</div>";
+    _barHtml +=
+      '<div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:2px 0;overflow:hidden;">';
+    _barHtml +=
+      '<div style="height:100%;width:' +
+      _v +
+      "%;background:" +
+      _b.color +
+      ';border-radius:2px;"></div></div>';
+    _barHtml += _b.label + "</div>";
+  }
+
   return (
     '<div class="card" style="padding:12px;margin-bottom:10px;background:rgba(74,158,92,0.07);border:1px solid rgba(74,158,92,0.22);">' +
-    '<div style="font-weight:700;color:var(--text-primary);margin-bottom:6px;">🧭 今日事业建议</div>' +
+    '<div style="font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:6px;">🧭 今日事业建议</div>' +
     '<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">' +
-    "<div>当前事业：" +
+    "<div>📍 " +
     status +
-    "</div><div>下一步：" +
+    "</div><div>⏭️ " +
     next +
-    "</div><div>可做动作：" +
+    "</div><div>🎯 " +
     action +
     "</div>" +
     (dream
-      ? "<div>人生目标加成：" +
+      ? "<div>💫 人生目标加成：" +
         (typeof getDreamBonusText === "function"
           ? getDreamBonusText(dream)
           : dream.name) +
         "</div>"
-      : "<div>人生目标：未选择；开局目标可提供路线加成，当前仍可自由发展。</div>") +
+      : "") +
     "</div>" +
-    '<div class="career-capital-bar" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;font-size:10px;color:var(--text-muted);">' +
-    "<div>行业<br><b>" +
-    Math.round(cap.industryResources || 0) +
-    "</b></div><div>客户<br><b>" +
-    Math.round(cap.clientLeads || 0) +
-    "</b></div><div>声誉<br><b>" +
-    Math.round(cap.reputation || 0) +
-    "</b></div><div>信任<br><b>" +
-    Math.round(cap.partnerTrust || 0) +
-    "</b></div><div>消耗<br><b>" +
-    Math.round(cap.burnout || 0) +
-    "</b></div></div></div>"
+    '<div class="career-capital-bar" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px;">' +
+    _barHtml +
+    "</div></div>"
   );
 }
 
