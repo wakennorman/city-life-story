@@ -7979,4 +7979,157 @@
       },
     ],
   });
+
+  // ====== 专业技能视角事件（v3.39 新增）======
+  // 设计原则：技能达到门槛后提供"专业人士视角"，让玩家感受到成长带来的世界观变化
+
+  // E9：修理技能≥40 → 识别建筑安全隐患
+  RANDOM_EVENTS.push({
+    id: "repair_pro_insight",
+    phase: "street",
+    icon: "🔍",
+    title: "内行看门道",
+    story:
+      "你今天路过一栋老旧居民楼，习惯性地扫了一眼外墙。\\n\\n突然你停下脚步——二楼阳台的支撑架有明显裂纹，雨水沿着裂缝渗进去，墙体已经鼓包了。\\n\\n以前你走过一百次也不会注意到这些，但现在不一样了。",
+    conditions: function (st) {
+      // 修理技能≥40触发专业视角
+      if (!st.skills || !st.skills.repair) return false;
+      if ((st.skills.repair.level || 0) < 40) return false;
+      if (st.player.day < 30) return false;
+      // 90天冷却
+      if (
+        st.flags._repairInsightDay &&
+        st.player.day - st.flags._repairInsightDay < 90
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "📢 告诉居委会，让找人来修",
+        hint: "道德+5，可能赚点报酬",
+        apply: function (s) {
+          s.flags._repairInsightDay = s.player.day;
+          s.player.morality = Math.min(100, (s.player.morality || 50) + 5);
+          s.skills.repair.xp = (s.skills.repair.xp || 0) + 30;
+          var reward = Random.int(50, 150);
+          s.resources.cash += reward;
+          s.resources.totalEarned = (s.resources.totalEarned || 0) + reward;
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📢 你找到居委会大姐，指着裂缝说了你的判断。她叫来物业一看——果然！你帮大家避免了一场事故。道德+5，修理XP+30，报酬¥" +
+              reward +
+              "。有手艺的人，走到哪都被人高看一眼。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤐 多一事不如少一事",
+        hint: "没事发生",
+        apply: function (s) {
+          s.flags._repairInsightDay = s.player.day;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 1);
+          StateManager.addMessage(
+            "🤐 你犹豫了一下，还是走开了。那不是你该管的事。但你知道那堵墙迟早要出事。心智+1。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🔧 自己带上工具去修（需在城中村）",
+        hint: "技能+XP，但可能惹麻烦",
+        apply: function (s) {
+          s.flags._repairInsightDay = s.player.day;
+          s.skills.repair.xp = (s.skills.repair.xp || 0) + 80;
+          s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 10);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          if (Random.chance(0.3)) {
+            s.status.health = Math.max(0, (s.status.health || 0) - 3);
+            StateManager.addMessage(
+              "🔧 你借了工具自己修，但操作不熟练划伤了手。修理XP+80，心智+3，健康-3。手艺还没到能独当一面的程度。",
+              "warning",
+            );
+          } else {
+            StateManager.addMessage(
+              "🔧 你花了半天时间把支撑架加固了。活干得漂亮——你在下面仰头看了看，心里很踏实。修理XP+80，心智+3。有时候本事就是胆量。",
+              "success",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // E10：编程技能≥30 → 发现数字世界的套利机会
+  RANDOM_EVENTS.push({
+    id: "coding_digital_edge",
+    phase: "street",
+    icon: "🖥️",
+    title: "数字嗅觉",
+    story:
+      "你在网吧查资料时，注意到一个二手交易平台有个价格漏洞——某款热门电子产品在不同城市间的价差高达30%。\\n\\n你会写爬虫，能自动化抓取这些价差信息。普通人看到的是网页，你看到的是机会。\\n\\n但利用这个漏洞需要花时间研究，也可能引起平台注意。",
+    conditions: function (st) {
+      // 编程技能≥30触发
+      if (!st.skills || !st.skills.coding) return false;
+      if ((st.skills.coding.level || 0) < 30) return false;
+      if (st.player.day < 40) return false;
+      // 120天冷却
+      if (
+        st.flags._codingEdgeDay &&
+        st.player.day - st.flags._codingEdgeDay < 120
+      )
+        return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "💻 写爬虫套利，赚差价",
+        hint: "净赚¥800-1500但引注意",
+        apply: function (s) {
+          s.flags._codingEdgeDay = s.player.day;
+          s.skills.coding.xp = (s.skills.coding.xp || 0) + 50;
+          var profit = Random.int(800, 1500);
+          s.resources.cash += profit;
+          s.resources.totalEarned = (s.resources.totalEarned || 0) + profit;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "💻 你花了两天写了个脚本，全自动监控价差。一周下来净赚¥" +
+              profit +
+              "！编程XP+50，心智+3。技术就是生产力——这句话你第一次真切体会到了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 记下这个思路，以后做正经项目",
+        hint: "编程XP+30，心智+3",
+        apply: function (s) {
+          s.flags._codingEdgeDay = s.player.day;
+          s.skills.coding.xp = (s.skills.coding.xp || 0) + 30;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.player.morality = Math.min(100, (s.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "📝 你在笔记本上记下了这个思路，但决定不去钻空子。能用技术赚钱的机会以后还有很多——不必走捷径。编程XP+30，心智+3，道德+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我就一普通人，当没看见",
+        hint: "无事发生",
+        apply: function (s) {
+          s.flags._codingEdgeDay = s.player.day;
+          StateManager.addMessage(
+            "😅 你关掉了网页，继续刷视频。会写代码的人看到的世界确实不一样——但你今天不想动脑子。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
 })();
