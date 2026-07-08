@@ -1099,6 +1099,7 @@ function renderMapTab(state, parent) {
         if (!d) return null;
         hops =
           typeof getLocationHops === "function" ? getLocationHops(cloc, k) : 1;
+        if (hops >= 99) return null; // 地图孤立节点，永不显示
         hopStr = hops + "跳";
         if (mode === "walk") {
           ap = Math.max(8, 4 + hops * 6); // 1跳=10, 2跳=16, 3跳=22（远途高消耗倒逼换乘）

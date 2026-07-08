@@ -513,12 +513,12 @@ const LOCATIONS = {
 
 // 旅行图（哪些地点之间可以直接通行）
 // v4.0 重构：按真实中国城市地理重新设计
-//   - 商业区(市中心)是核心枢纽，连接主要市政/商业节点
-//   - 城中村位于中心区边缘，连接批发/工地/公园/银行
-//   - 郊区/工业区在最外围，需要通过中间节点中转
-//   - 每个节点2-4条连接，减少地图线段混乱
+// v3.44 补丁：全图双向化——所有 A→B 同步保证 B→A
+//   图直径=4跳，步行最大AP=28，不再出现99跳/598AP的显示bug
+//   新增回边：commercialDist→construction, factoryZone→suburb,
+//             school→hospital, school→temple, park→temple
 const TRAVEL_GRAPH = {
-  // 核心枢纽：商业区连接各类核心设施
+  // 核心枢纽：商业区连接各类核心设施（含工地回边）
   commercialDist: [
     "wholesaleMarket",
     "techPark",
@@ -526,6 +526,7 @@ const TRAVEL_GRAPH = {
     "bank",
     "gov_office",
     "entertainment",
+    "construction",
   ],
   // 内城区：城中村位于核心区边缘
   slum: ["wholesaleMarket", "construction", "park", "bank"],
@@ -533,18 +534,25 @@ const TRAVEL_GRAPH = {
   wholesaleMarket: ["slum", "commercialDist", "factoryZone"],
   // 建设区：工地连接城中村和商业区
   construction: ["slum", "commercialDist"],
-  // 工业区：在外围，连接批发市场(物流)和大学城(人才)
-  factoryZone: ["wholesaleMarket", "school"],
-  // 大学城：教育集群，连接工业区/公园/培训/娱乐
-  school: ["factoryZone", "park", "trainingCenter", "entertainment"],
+  // 工业区：在外围，连接批发市场/大学城/郊区（郊区回边）
+  factoryZone: ["wholesaleMarket", "school", "suburb"],
+  // 大学城：教育集群，连接工业区/公园/培训/娱乐/医院/寺庙（双向补全）
+  school: [
+    "factoryZone",
+    "park",
+    "trainingCenter",
+    "entertainment",
+    "hospital",
+    "temple",
+  ],
   // 科技园：靠近商业区和娱乐城
   techPark: ["commercialDist", "entertainment"],
   // 医院：医疗集群，连接商业区和大学城
   hospital: ["commercialDist", "school"],
   // 银行：金融中心，连接城中村/商业区/政府
   bank: ["slum", "commercialDist", "gov_office"],
-  // 公园：绿色过渡带，连接城中村/大学城/郊区
-  park: ["slum", "school", "suburb"],
+  // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙（寺庙回边）
+  park: ["slum", "school", "suburb", "temple"],
   // 培训中心：紧邻大学城
   trainingCenter: ["school"],
   // 郊区：最外围，通过公园或工业区进入
@@ -553,7 +561,7 @@ const TRAVEL_GRAPH = {
   gov_office: ["commercialDist", "bank"],
   // 娱乐城：连接商业区/科技园/大学城
   entertainment: ["commercialDist", "techPark", "school"],
-  // 寺庙：在风景好的地方，连接公园和大学城
+  // 寺庙：位于公园旁/大学城周边；park和school均已添加回边
   temple: ["park", "school"],
 };
 
