@@ -32,11 +32,25 @@ metadata:
 | 注册导航入口     | 数据条目加 `navHints` 字段，或通过 `navActionButton` 标准 API                 |
 | 注册事件/触发    | 事件数据对象声明 `conditions/apply` 字段，`loadAll` 自动注册到触发槽          |
 
-### 判断标准
+### 🚨 CoC断链判断标准（可操作规则）
 
-新系统添加后，**不需要修改任何已有的渲染/导航/注册代码**。只新增文件 + 按约定格式声明字段。
+> **新系统添加后，不得修改任何已有的渲染/导航/注册代码。只新增文件 + 按约定格式声明字段。**
+>
+> **如果不得不改旧文件来适配新系统 → 说明框架的约定有缺口 → 先修框架再交付系统。**
+>
+> 例如：加宠物系统时发现需要去 `render.js` 加一个 `if (pets)` 判断，那就是 CoC 断链——应该在 `TAB_RENDERERS` 或渲染引擎层补齐约定，而不是打补丁。
 
-如果不得不改旧文件来适配新系统，说明 CoC 链路有断点，需要先补齐约定再交付。
+### 具体检查清单
+
+开发者在添加新系统时，逐项确认：
+
+- [ ] 数据文件放在 `data/<system>.js`，导出标准格式数组/对象
+- [ ] Tab 入口通过 `TAB_RENDERERS` 声明，未修改 render.js 主体逻辑
+- [ ] 管线步骤在 `PIPELINE_STEPS` 加一行 ID，未修改 daily_pipeline.js 主循环
+- [ ] 百科条目通过 `MECHANICS.<id>` 注册或 mechanics_registry.js 追加
+- [ ] 导航通过 `navHints` 字段或 `navActionButton` API，未修改 wiki.js/render.js
+- [ ] 事件通过数据对象式 `conditions/apply` 声明
+- [ ] 上述 6 项全为"只新增，不改旧" → CoC 链路完整 ✅
 
 ### 链接记忆
 
