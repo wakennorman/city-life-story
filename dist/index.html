@@ -40192,7 +40192,9 @@ if (typeof window !== "undefined") {
         st.player.phase === "street" &&
         st.player.day >= 5 &&
         (curLoc === "bank" || curLoc === "commercialDist") &&
-        (!st.relationships || !st.relationships.uncle_chen_bank || !st.relationships.uncle_chen_bank.met)
+        (!st.relationships ||
+          !st.relationships.uncle_chen_bank ||
+          !st.relationships.uncle_chen_bank.met)
       );
     },
     probability: 0.04,
@@ -40207,8 +40209,14 @@ if (typeof window !== "undefined") {
             st.relationships.uncle_chen_bank = { affinity: 0, met: true };
           }
           st.relationships.uncle_chen_bank.met = true;
-          st.relationships.uncle_chen_bank.affinity = Math.min(100, (st.relationships.uncle_chen_bank.affinity || 0) + 10);
-          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 1);
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 10,
+          );
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 1,
+          );
           st.flags.chenScamWarning = true;
           StateManager.addMessage(
             "🙏 老陈摆摆手：「不客气，防人之心不可无。」你记住了他的忠告。结识老陈（银行保安），好感+10，智力+1。",
@@ -40225,7 +40233,10 @@ if (typeof window !== "undefined") {
             st.relationships.uncle_chen_bank = { affinity: 0, met: true };
           }
           st.relationships.uncle_chen_bank.met = true;
-          st.relationships.uncle_chen_bank.affinity = Math.min(100, (st.relationships.uncle_chen_bank.affinity || 0) + 3);
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 3,
+          );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
           StateManager.addMessage(
             "😅 老陈笑了：「也是，骗子也得挑人下手。但多个心眼总没错。」结识老陈，好感+3，心情+5。",
@@ -40252,7 +40263,9 @@ if (typeof window !== "undefined") {
         st.player.phase === "street" &&
         st.player.day >= 10 &&
         curLoc === "commercialDist" &&
-        (!st.relationships || !st.relationships.sister_wu || !st.relationships.sister_wu.met)
+        (!st.relationships ||
+          !st.relationships.sister_wu ||
+          !st.relationships.sister_wu.met)
       );
     },
     probability: 0.035,
@@ -40267,8 +40280,12 @@ if (typeof window !== "undefined") {
             st.relationships.sister_wu = { affinity: 0, met: true };
           }
           st.relationships.sister_wu.met = true;
-          st.relationships.sister_wu.affinity = Math.min(100, (st.relationships.sister_wu.affinity || 0) + 8);
+          st.relationships.sister_wu.affinity = Math.min(
+            100,
+            (st.relationships.sister_wu.affinity || 0) + 8,
+          );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          st.flags._sisterWuMetDay = st.player.day;
           StateManager.addMessage(
             "💇 你跟着吴姐进了美容院。店里装修不错，吴姐说前台月薪¥2800+提成。结识吴姐（美容院老板），好感+8，心情+6。",
             "success",
@@ -40284,8 +40301,12 @@ if (typeof window !== "undefined") {
             st.relationships.sister_wu = { affinity: 0, met: true };
           }
           st.relationships.sister_wu.met = true;
-          st.relationships.sister_wu.affinity = Math.min(100, (st.relationships.sister_wu.affinity || 0) + 5);
+          st.relationships.sister_wu.affinity = Math.min(
+            100,
+            (st.relationships.sister_wu.affinity || 0) + 5,
+          );
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          st.flags._sisterWuMetDay = st.player.day;
           StateManager.addMessage(
             "😊 你收下名片。吴姐笑着说「随时来找我」。结识吴姐，好感+5，名气+2。",
             "info",
@@ -40311,7 +40332,9 @@ if (typeof window !== "undefined") {
         st.player.phase === "street" &&
         st.player.day >= 15 &&
         (curLoc === "commercialDist" || curLoc === "techPark") &&
-        (!st.relationships || !st.relationships.brother_huang || !st.relationships.brother_huang.met)
+        (!st.relationships ||
+          !st.relationships.brother_huang ||
+          !st.relationships.brother_huang.met)
       );
     },
     probability: 0.04,
@@ -40326,10 +40349,14 @@ if (typeof window !== "undefined") {
             st.relationships.brother_huang = { affinity: 0, met: true };
           }
           st.relationships.brother_huang.met = true;
-          st.relationships.brother_huang.affinity = Math.min(100, (st.relationships.brother_huang.affinity || 0) + 10);
+          st.relationships.brother_huang.affinity = Math.min(
+            100,
+            (st.relationships.brother_huang.affinity || 0) + 10,
+          );
           st.resources.cash += 200;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + 200;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          st.flags._brotherHuangMetDay = st.player.day;
           StateManager.addMessage(
             "📦 你换上工服开始分拣包裹，干到晚上八点腰酸背痛。但¥200到手，阿黄拍拍你的肩说「明天继续来！」结识阿黄（快递站长），好感+10。",
             "success",
@@ -40345,9 +40372,124 @@ if (typeof window !== "undefined") {
             st.relationships.brother_huang = { affinity: 0, met: true };
           }
           st.relationships.brother_huang.met = true;
-          st.relationships.brother_huang.affinity = Math.min(100, (st.relationships.brother_huang.affinity || 0) + 5);
+          st.relationships.brother_huang.affinity = Math.min(
+            100,
+            (st.relationships.brother_huang.affinity || 0) + 5,
+          );
+          st.flags._brotherHuangMetDay = st.player.day;
           StateManager.addMessage(
             "📱 你加了阿黄微信。他说「缺人手的时候我给你发消息」。结识阿黄，好感+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== v3.54b NPC链式后续事件（吴姐回访/阿黄内部消息）======
+
+  // ----- 事件59：吴姐的美容展代班机会（相遇4天后）-----
+  // 设计意图：让吴姐的相识不止于名片交换，产生实际工作机会
+  RANDOM_EVENTS.push({
+    id: "npc_sister_wu_followup",
+    _isChainEvent: false,
+    phase: "street",
+    icon: "💄",
+    title: "吴姐的邀请",
+    story:
+      "手机响了，是上次在美容院遇到的吴姐打来的：\\n\\n「喂，小XX吗？我这边周末有个美容展，我店里忙不过来，想请你来帮忙站台发传单和引导客人。一天¥180，管午饭，你要是能来我教你点美容知识。来不来？」\\n\\n旁边传来美容院仪器的嗡嗡声，听起来确实忙。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.sister_wu;
+      return (
+        st.player.phase === "street" &&
+        rel &&
+        rel.met &&
+        !st.flags._sisterWuFollowupSeen &&
+        st.player.day >= ((st.flags._sisterWuMetDay) || 0) + 4
+      );
+    },
+    probability: 0.5,  // 条件精确触发
+    repeatable: false,
+    choices: [
+      {
+        text: "✅ 去！发传单我也会",
+        hint: "日薪¥180，结识展会人脉",
+        apply: function (st) {
+          st.flags._sisterWuFollowupSeen = true;
+          st.resources.cash += 180;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 180;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.relationships.sister_wu.affinity = Math.min(100, (st.relationships.sister_wu.affinity || 0) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "💄 你在美容展站了一天，发了几百张传单。吴姐教你认了几种美容仪器，还介绍了个客户给你认识。日薪¥180到账，名气+3，吴姐好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 周末有安排了，下次吧",
+        hint: "婉拒，好感不减",
+        apply: function (st) {
+          st.flags._sisterWuFollowupSeen = true;
+          st.relationships.sister_wu.affinity = Math.min(100, (st.relationships.sister_wu.affinity || 0) + 2);
+          StateManager.addMessage(
+            "🙅 你说周末有事去不了。吴姐说「没关系，下次有机会再叫你」。好感+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件60：阿黄的内部派件消息（结识3天后）-----
+  // 设计意图：阿黄给玩家提供内部消息，建立信任关系
+  RANDOM_EVENTS.push({
+    id: "npc_brother_huang_followup",
+    _isChainEvent: false,
+    phase: "street",
+    icon: "📬",
+    title: "阿黄的内部消息",
+    story:
+      "阿黄突然给你发了条微信：「兄弟，跟你透个底——下个月平台要调整配送费规则，听说单价会涨，但考核更严了。趁现在还没变，多跑几单把数据做漂亮，到时候你评级高，单价涨得更多。」\\n\\n这个信息说明阿黄是真的把你当自己人了。",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.brother_huang;
+      return (
+        st.player.phase === "street" &&
+        rel &&
+        rel.met &&
+        (rel.affinity || 0) >= 5 &&
+        !st.flags._brotherHuangTipSeen &&
+        st.player.day >= ((st.flags._brotherHuangMetDay) || 0) + 3
+      );
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "👍 谢谢黄哥！这几天多跑几单",
+        hint: "未来配送收入+15%",
+        apply: function (st) {
+          st.flags._brotherHuangTipSeen = true;
+          st.flags._huangDeliveryBonus = true;
+          st.relationships.brother_huang.affinity = Math.min(100, (st.relationships.brother_huang.affinity || 0) + 8);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 2);
+          StateManager.addMessage(
+            "👍 你回了个「收到」，然后这几天每天多跑了几单。月底一看评级果然上去了，配送单价+15%。阿黄好感+8，智力+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 记下来了，改天请你吃饭",
+        hint: "好感+5，信息已收到",
+        apply: function (st) {
+          st.flags._brotherHuangTipSeen = true;
+          st.relationships.brother_huang.affinity = Math.min(100, (st.relationships.brother_huang.affinity || 0) + 5);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 1);
+          StateManager.addMessage(
+            "📝 你把这事记在心里。阿黄说「好，记着你欠我一顿饭」。好感+5，智力+1。",
             "info",
           );
         },
