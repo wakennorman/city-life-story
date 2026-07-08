@@ -2546,6 +2546,103 @@ function renderInventoryTab(state, parent) {
     div.appendChild(grid);
   }
 
+  // ====== 装备购买弹窗（直接在UI内购买，不再导航到地点）======
+  function _showEquipmentShopModal(slotKey, slotName, curState, filterLoc) {
+    if (typeof showModal !== "function" || typeof ITEMS === "undefined") return;
+    var itemList = ITEMS.filter(function (i) {
+      return (
+        i.slot &&
+        i.buyLocations &&
+        (slotKey ? i.slot === slotKey : true) &&
+        (filterLoc ? i.buyLocations.indexOf(filterLoc) !== -1 : true)
+      );
+    });
+    if (itemList.length === 0) {
+      showModal({
+        title: "🛒 装备商店",
+        body: "<p>暂无可购买装备。</p>",
+        buttons: [{ text: "关闭", cls: "" }],
+      });
+      return;
+    }
+    var cash = (curState.resources && curState.resources.cash) || 0;
+    var equippedNow =
+      (curState.inventory && curState.inventory.equipment) || {};
+    var rows = itemList
+      .map(function (item) {
+        var isEquipped = equippedNow[item.slot] === item.id;
+        var canAfford = cash >= item.price;
+        var locNames = (item.buyLocations || [])
+          .map(function (lk) {
+            return typeof LOCATIONS !== "undefined" && LOCATIONS[lk]
+              ? LOCATIONS[lk].icon + LOCATIONS[lk].name
+              : lk;
+          })
+          .join("、");
+        var slotNames = {
+          head: "头部",
+          body: "身体",
+          feet: "脚部",
+          hand: "手部",
+          accessory: "配件",
+        };
+        return (
+          '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);">' +
+          '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:12px;font-weight:600;">' +
+          (item.icon || "🛡️") +
+          " " +
+          item.name +
+          (isEquipped
+            ? ' <span style="color:var(--success);font-size:10px;">✅ 已装备</span>'
+            : "") +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);margin:2px 0;">' +
+          (item.desc || "") +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);">部位：' +
+          (slotNames[item.slot] || item.slot) +
+          " | 购买地点：" +
+          locNames +
+          "</div>" +
+          "</div>" +
+          '<div style="flex-shrink:0;text-align:right;">' +
+          '<div style="font-size:13px;color:var(--accent);font-weight:bold;">¥' +
+          item.price +
+          "</div>" +
+          '<button class="btn btn-sm ' +
+          (canAfford && !isEquipped ? "btn-primary" : "") +
+          '" ' +
+          "onclick=\"(function(){var r=buyItemFromShop('" +
+          item.id +
+          "');if(typeof renderAll==='function')renderAll();})()\" " +
+          (canAfford && !isEquipped ? "" : "disabled") +
+          ">" +
+          (isEquipped ? "已装备" : canAfford ? "购买" : "钱不够") +
+          "</button>" +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+    var title = slotKey
+      ? "🛒 购买" + (slotName || slotKey) + "装备"
+      : filterLoc && typeof LOCATIONS !== "undefined" && LOCATIONS[filterLoc]
+        ? "🏪 " + LOCATIONS[filterLoc].name + " — 装备商店"
+        : "🛒 装备商店";
+    showModal({
+      title: title,
+      body:
+        '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">当前现金：<strong style="color:var(--accent);">¥' +
+        cash.toLocaleString() +
+        "</strong></div>" +
+        '<div style="max-height:60vh;overflow-y:auto;">' +
+        rows +
+        "</div>",
+      buttons: [{ text: "关闭", cls: "" }],
+    });
+  }
+
   // 装备栏
   const equip = state.inventory.equipment;
   const equipDiv = document.createElement("div");
@@ -2645,37 +2742,10 @@ function renderInventoryTab(state, parent) {
         buyBtn.className = "btn btn-sm";
         buyBtn.style.cssText =
           "font-size:10px;margin-top:4px;width:100%;padding:3px 6px;";
-        buyBtn.textContent = "🔗 去购买";
+        buyBtn.textContent = "🛒 购买装备";
         buyBtn.onclick = (function (slotKey, slotName) {
           return function () {
-            var locs = [];
-            var miList = ITEMS.filter(function (i) {
-              return i.slot === slotKey && i.buyLocations;
-            });
-            miList.forEach(function (mi) {
-              if (mi.buyLocations) {
-                mi.buyLocations.forEach(function (l) {
-                  if (locs.indexOf(l) === -1) locs.push(l);
-                });
-              }
-            });
-            if (locs.length > 0) {
-              var firstLoc = locs[0];
-              var locName =
-                typeof LOCATIONS !== "undefined" && LOCATIONS[firstLoc]
-                  ? LOCATIONS[firstLoc].name
-                  : firstLoc;
-              navigateTo(
-                state,
-                { type: "location", key: firstLoc, displayName: locName },
-                {
-                  title: "🔗 购买" + slotName + "装备",
-                  skipConfirm: false,
-                  confirmText: "✅ 出发去" + locName,
-                  cancelText: "❌ 算了",
-                },
-              );
-            }
+            _showEquipmentShopModal(slotKey, slotName, state);
           };
         })(slot.key, slot.name);
         card.appendChild(buyBtn);
@@ -2728,18 +2798,11 @@ function renderInventoryTab(state, parent) {
         "(" +
         locMap[lk].length +
         "种)";
-      btn.onclick = function () {
-        navigateTo(
-          state,
-          { type: "location", key: lk, displayName: loc ? loc.name : lk },
-          {
-            title: "🔗 前往采购装备",
-            skipConfirm: false,
-            confirmText: "✅ 出发",
-            cancelText: "❌ 算了",
-          },
-        );
-      };
+      btn.onclick = (function (locKey) {
+        return function () {
+          _showEquipmentShopModal(null, null, state, locKey);
+        };
+      })(lk);
       navRow.appendChild(btn);
     });
     navDiv.appendChild(navRow);

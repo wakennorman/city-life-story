@@ -101,8 +101,8 @@ var _CLASSIC_STEPS = [
           站台的风夹着煤灰，眼睛发酸。
         </p>
         <p style="line-height:1.85;font-size:13px;margin-top:10px;">
-          口袋里：<strong style="color:var(--accent);">¥2,000</strong>（打工三年攒的）<br>
-          欠村长：<strong style="color:var(--danger);">¥5,500</strong>（借来的路费，日息0.3%）
+          口袋里：<strong style="color:var(--accent);">¥300</strong>（东拼西凑的路费）<br>
+          没有债，但也几乎身无分文。
         </p>
         <p style="line-height:1.7;font-size:12px;color:var(--text-secondary);margin-top:10px;">
           这座城市不认识你。<br>
@@ -777,8 +777,8 @@ function showTutorialStep(steps, index) {
       },
     });
   } else if (step.waitForClick) {
-    // 中间步骤且需要点击目标：不显示"下一步"按钮
-    // 只显示"返回上一步"和"跳过引导"
+    // 中间步骤且需要点击目标：同时显示"下一步"按钮作为兜底
+    // 因为modal遮罩可能阻止点击高亮元素，需要提供备选推进方式
     buttons.push({
       text: "← 上一步",
       cls: "",
@@ -791,6 +791,14 @@ function showTutorialStep(steps, index) {
       cls: "",
       callback: () => {
         _confirmSkip(steps);
+      },
+    });
+    buttons.push({
+      text: "下一步 →",
+      cls: "btn-primary",
+      callback: () => {
+        _clearWaitForClickListeners();
+        showTutorialStep(steps, index + 1);
       },
     });
   } else {

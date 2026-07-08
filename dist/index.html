@@ -5078,7 +5078,7 @@ function showEventModal(evt) {
       try {
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
         var _preEvtCash = state.resources.cash;
-        var _preEvtHealth = state.stats ? state.stats.health : 0;
+        var _preEvtHealth = (state.status && state.status.health) || 100;
         var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
           choice.apply(state);
@@ -5106,10 +5106,10 @@ function showEventModal(evt) {
             var dCash = state.resources.cash - _preEvtCash;
             if (dCash < 0)
               state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
-            if (state.stats) {
-              var dHealth = state.stats.health - _preEvtHealth;
+            if (state.status) {
+              var dHealth = state.status.health - _preEvtHealth;
               if (dHealth < 0)
-                state.stats.health =
+                state.status.health =
                   _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {
@@ -30140,7 +30140,7 @@ if (typeof window !== "undefined") {
           },
         },
       ],
-    }
+    },
   );
 
   // ====== v3.22 天气×工作/NPC/消费深度联动（已合并自 cross_system_events_v322.js） ======
@@ -30274,8 +30274,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             var profit = Random.int(80, 180);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (!st.relationships.old_zhou.affinity)
               st.relationships.old_zhou.affinity = 0;
             st.relationships.old_zhou.affinity = Math.min(
@@ -30361,8 +30360,7 @@ if (typeof window !== "undefined") {
               : 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash += bonus;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             if (Random.chance(0.3)) {
               st.status.health = Math.max(0, (st.status.health || 0) - 10);
@@ -30560,7 +30558,7 @@ if (typeof window !== "undefined") {
           },
         },
       ],
-    }
+    },
   );
 
   var CAREER_EVENTS = [
@@ -46402,7 +46400,7 @@ var _NEWS_CLASSIFIER_RULES = [
   {
     id: "employment",
     patterns: [
-      /\b(?:裁员|失业|降薪|辞退|优化|毕业|就业|招聘|求职|岗位|打工|薪资|收入|工资|应届|找工作|offer)\b/,
+      /裁员|失业|降薪|辞退|优化|毕业|就业|招聘|求职|岗位|打工|薪资|收入|工资|应届|找工作|offer/,
     ],
     sector: { 科技: -0.05, 消费: 0.03 },
     mood: "bearish",
@@ -46418,9 +46416,7 @@ var _NEWS_CLASSIFIER_RULES = [
   },
   {
     id: "housing",
-    patterns: [
-      /\b(?:房价|楼市|租房|房产|城中村|拆迁|房贷|地产|租金|购房|卖房)\b/,
-    ],
+    patterns: [/房价|楼市|租房|房产|城中村|拆迁|房贷|地产|租金|购房|卖房/],
     sector: { 房地产: 0 },
     mood: "neutral",
     tag: "房产",
@@ -46442,7 +46438,7 @@ var _NEWS_CLASSIFIER_RULES = [
   {
     id: "tech",
     patterns: [
-      /\b(?:科技|AI|人工智能|芯片|互联网|数字化|5G|大数据|软件|程序|算法|机器人|半导体|新能源|自动驾驶)\b/,
+      /科技|AI|人工智能|芯片|互联网|数字化|5G|大数据|软件|程序员|算法|机器人|半导体|自动驾驶/,
     ],
     sector: { 科技: 0.1 },
     mood: "bullish",
@@ -46466,7 +46462,7 @@ var _NEWS_CLASSIFIER_RULES = [
     id: "economy",
     // 经济/宏观类：覆盖宏观经济指标、政策、市场趋势等
     patterns: [
-      /\b(?:经济|GDP|通胀|通缩|CPI|PPI|PMI|利率|降准|降息|加息|准备金率|流动性|货币|财政|赤字|国债|地方债|人民币|汇率|美元|美联储|央行|货币政策|宏观经济|经济数据|经济指标|经济增速|经济增长|放缓|复苏|景气|衰退|萧条)\b/,
+      /经济|GDP|通胀|通缩|CPI|PPI|PMI|利率|降准|降息|加息|流动性|货币|财政|赤字|国债|地方债|人民币|汇率|美元|美联储|央行|宏观|经济数据|增速|复苏|景气|衰退|萧条/,
     ],
     sector: { 金融: 0.05, 消费: 0.03 },
     mood: "bullish",
@@ -46490,7 +46486,7 @@ var _NEWS_CLASSIFIER_RULES = [
     id: "finance",
     // 金融/投资类：覆盖股市、基金、理财、投融资等
     patterns: [
-      /\b(?:股市|A股|港股|美股|基金|ETF|理财|投资|股票|指数|沪指|深指|创业板|科创板|北向资金|南向资金|主力资金|外资|流入|流出|开户|交易量|成交额|牛市|熊市|反弹|回调|震荡|涨停|跌停|IPO|上市|退市|分红|股息|回购|融资|配股|可转债|债券|收益率|年化|净值)\b/,
+      /股市|A股|港股|美股|基金|ETF|理财|投资|股票|沪指|深指|创业板|科创板|外资|牛市|熊市|反弹|回调|震荡|涨停|跌停|IPO|上市|退市|分红|股息|回购|可转债|债券|收益率|净值/,
     ],
     sector: { 金融: 0.08, 科技: 0.03 },
     mood: "bullish",
@@ -46513,7 +46509,7 @@ var _NEWS_CLASSIFIER_RULES = [
   {
     id: "policy",
     patterns: [
-      /\b(?:政策|法规|监管|政府|税收|补贴|乡村振兴|改革|立法|新规|央行|银保监)\b/,
+      /政策|法规|监管|政府|税收|补贴|乡村振兴|改革|立法|新规|银保监|发改委|国务院/,
     ],
     sector: { 消费: 0.04, 金融: 0.03 },
     mood: "neutral",
@@ -46535,7 +46531,7 @@ var _NEWS_CLASSIFIER_RULES = [
     id: "consumption",
     // 消费/零售/电商类：覆盖消费市场、零售、电商、物价等
     patterns: [
-      /\b(?:消费|零售|电商|网购|购物|商品|物价|涨价|降价|促销|打折|双十一|618|直播带货|外卖|餐饮|旅游|酒店|票房|客流量|营收|销售额|门店|商家|商超|便利店|供销)\b/,
+      /消费|零售|电商|网购|购物|物价|涨价|降价|促销|打折|双十一|618|直播带货|外卖|餐饮|旅游|酒店|票房|客流量|销售额|商超|便利店|供销/,
     ],
     sector: { 消费: 0.08, 科技: 0.03 },
     mood: "bullish",
@@ -46559,7 +46555,7 @@ var _NEWS_CLASSIFIER_RULES = [
     id: "social",
     // 社会/民生类：限制在真正社会话题而非泛化匹配
     patterns: [
-      /\b(?:养老|老龄化|社保|医保|退休|生育|出生率|人口|落户|户籍|低保|救助|慈善|公益|志愿者|社区|居委会|公共服务|入学|学区|摇号)\b/,
+      /养老|老龄化|社保|医保|退休|生育|出生率|人口|落户|户籍|低保|救助|慈善|公益|志愿者|社区|公共服务|入学|学区|摇号/,
     ],
     sector: { 医药: 0.05, 消费: 0.02 },
     mood: "neutral",
@@ -46580,7 +46576,7 @@ var _NEWS_CLASSIFIER_RULES = [
   {
     id: "seasonal",
     patterns: [
-      /\b(?:春节|中秋|国庆|端午|清明|五一|618|双十一|双11|黄金周|寒潮|高温|台风|暴雨|雪灾|洪水)\b/,
+      /春节|中秋|国庆|端午|清明|五一|黄金周|寒潮|高温|台风|暴雨|雪灾|洪水/,
     ],
     sector: { 消费: 0.08 },
     mood: "bullish",
@@ -46602,9 +46598,7 @@ var _NEWS_CLASSIFIER_RULES = [
   },
   {
     id: "energy",
-    patterns: [
-      /\b(?:新能源|光伏|风电|锂电池|电动车|充电桩|能源|油价|电力|煤炭|天然气)\b/,
-    ],
+    patterns: [/新能源|光伏|风电|锂电池|电动车|充电桩|油价|电力|煤炭|天然气/],
     sector: { 新能源: 0.1, 科技: 0.05 },
     mood: "bullish",
     tag: "产业",
@@ -88977,6 +88971,54 @@ const DAILY_PIPELINE = [
     name: "finance",
     fn: function (state) {
       settleDailyFinance(state);
+      // v3.1 经济系统：累进财富税 + 连续盈利衰减 + 市场饱和度（修复 B1/B4）
+      if (typeof EconomySystem !== "undefined") {
+        try {
+          var _ecoResult = EconomySystem.dailyEconomicSettlement(state);
+          if (_ecoResult.wealthTax > 0) {
+            state.resources.cash = Math.max(
+              0,
+              (state.resources.cash || 0) - _ecoResult.wealthTax,
+            );
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(
+                state,
+                "expense",
+                "wealth_tax",
+                _ecoResult.wealthTax,
+                "累进财富税（" +
+                  (_ecoResult.activeTaxTier
+                    ? _ecoResult.activeTaxTier.label
+                    : "无") +
+                  "）",
+              );
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage(
+                "📋 财富税 -¥" +
+                  _ecoResult.wealthTax.toLocaleString() +
+                  "（" +
+                  (_ecoResult.activeTaxTier
+                    ? _ecoResult.activeTaxTier.label + "级"
+                    : "免稅") +
+                  "）",
+                "warning",
+              );
+            }
+          }
+          // 连续盈利衰减记录
+          if (_ecoResult.consecutiveWinDecay < 1.0) {
+            state._consecutiveWinDecay = _ecoResult.consecutiveWinDecay;
+          }
+          // 市场饱和度记录
+          if (_ecoResult.marketSaturationPenalty < 1.0) {
+            state._marketSaturationPenalty =
+              _ecoResult.marketSaturationPenalty;
+          }
+        } catch (e) {
+          console.warn("[finance] EconomySystem 执行失败:", e);
+        }
+      }
       // 成就追踪：现金归零
       if ((state.resources.cash || 0) <= 0) state.flags._everBroke = true;
     },
@@ -99053,8 +99095,8 @@ function renderCars(area, inv, state, parent) {
   marketDiv.innerHTML =
     '<h4 style="font-size:13px;color:var(--accent);margin-bottom:8px;">🚗 汽车市场</h4>';
   var marketGrid = document.createElement("div");
-  marketGrid.className = "action-cards";
-  marketGrid.style.gridTemplateColumns = "repeat(auto-fill,minmax(210px,1fr))";
+  marketGrid.style.cssText =
+    "display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,240px));gap:8px;align-items:start;";
 
   for (var mi = 0; mi < CAR_TYPES.length; mi++) {
     var carDef = CAR_TYPES[mi];
@@ -114539,6 +114581,343 @@ function manageInventoryAction(state, inventoryType, action, amount) {
   }
 })();
 </script>
+    <script>/**
+ * 副业系统深化（v3.6 P0-3）
+ *
+ * 6种副业：代购/家教/网约车/外卖/自媒体/投资理财
+ * - 代购：18:00后+15%售价（与trade.js联动）
+ * - 网约车/外卖：需要agility≥50
+ * - 家教：需要intelligence≥30
+ * - 自媒体：持续投入+粉丝积累
+ * - 投资理财：资金门槛
+ * - 副业疲劳度系统：过度副业影响主业
+ */
+
+(function () {
+  // ====== 副业定义 ======
+  const SIDE_HUSTLES = {
+    // 代购
+    daigou: {
+      id: "daigou",
+      name: "代购",
+      icon: "🛍️",
+      desc: "帮人代购商品，赚取差价",
+      minAttr: { agility: 30 },
+      baseIncome: 80,
+      incomeVar: [50, 150],
+      fatigueCost: 15,
+      timeSlot: ["afternoon", "evening"],
+      specialBonus: { time: "evening", mod: 1.15 }, // 18:00后+15%
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 家教
+    tutoring: {
+      id: "tutoring",
+      name: "家教",
+      icon: "📚",
+      desc: "给学生补课，时薪可观",
+      minAttr: { intelligence: 30 },
+      baseIncome: 60,
+      incomeVar: [40, 100],
+      fatigueCost: 10,
+      timeSlot: ["afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 网约车
+    rideHailing: {
+      id: "ride_hailing",
+      name: "网约车",
+      icon: "🚗",
+      desc: "开网约车接单，自由灵活",
+      minAttr: { agility: 50 },
+      baseIncome: 120,
+      incomeVar: [80, 200],
+      fatigueCost: 25,
+      timeSlot: ["morning", "afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 外卖
+    foodDelivery: {
+      id: "food_delivery",
+      name: "外卖配送",
+      icon: "🛵",
+      desc: "送外卖，多劳多得",
+      minAttr: { agility: 50 },
+      baseIncome: 100,
+      incomeVar: [60, 180],
+      fatigueCost: 30,
+      timeSlot: ["morning", "afternoon", "evening"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+    // 自媒体
+    selfMedia: {
+      id: "self_media",
+      name: "自媒体",
+      icon: "📱",
+      desc: "做短视频/写文章，积累粉丝",
+      minAttr: { intelligence: 40, charm: 30 },
+      baseIncome: 50,
+      incomeVar: [20, 300], // 波动大
+      fatigueCost: 20,
+      timeSlot: ["evening", "night"],
+      specialBonus: { followers: 100, mod: 1.5 }, // 粉丝≥100时+50%
+      levelUp: { level: 1, xp: 0, followers: 0 },
+    },
+    // 投资理财
+    investment: {
+      id: "investment_side",
+      name: "投资理财",
+      icon: "📈",
+      desc: "用闲钱投资，获得被动收入",
+      minAttr: { intelligence: 50 },
+      minCash: 500, // 资金门槛
+      baseIncome: 30,
+      incomeVar: [10, 200],
+      fatigueCost: 5,
+      timeSlot: ["morning", "afternoon"],
+      specialBonus: null,
+      levelUp: { level: 1, xp: 0 },
+    },
+  };
+
+  // ====== 副业疲劳度配置 ======
+  const FATIGUE_CONFIG = {
+    maxSideHustleFatigue: 100,
+    penaltyThreshold: 60, // 疲劳度超过60开始惩罚
+    penaltyRate: 0.1, // 每超过1点，收入-1%
+    recoveryRate: 10, // 每天自然恢复
+  };
+
+  /**
+   * 检查是否满足副业条件
+   * @param {string} hustleId - 副业ID
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 检查结果
+   */
+  function checkHustleConditions(hustleId, state) {
+    const hustle = SIDE_HUSTLES[hustleId];
+    if (!hustle) return { ok: false, reason: "未知副业" };
+
+    // 属性检查
+    if (hustle.minAttr) {
+      for (let attr in hustle.minAttr) {
+        if ((state.player[attr] || 0) < hustle.minAttr[attr]) {
+          return {
+            ok: false,
+            reason: `${attr}不足（需要${hustle.minAttr[attr]}）`,
+          };
+        }
+      }
+    }
+
+    // 现金检查
+    if (hustle.minCash && (state.resources.cash || 0) < hustle.minCash) {
+      return {
+        ok: false,
+        reason: `资金不足（需要¥${hustle.minCash}）`,
+      };
+    }
+
+    // 时间槽检查
+    const currentSlot = state.player.timeSlot;
+    if (!hustle.timeSlot.includes(currentSlot)) {
+      return {
+        ok: false,
+        reason: `当前时间段不可进行（可在${hustle.timeSlot.join("、")}进行）`,
+      };
+    }
+
+    return { ok: true };
+  }
+
+  /**
+   * 执行副业
+   * @param {string} hustleId - 副业ID
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 执行结果
+   */
+  function performHustle(hustleId, state) {
+    const hustle = SIDE_HUSTLES[hustleId];
+    if (!hustle) return { success: false, error: "未知副业" };
+
+    // 检查条件
+    const check = checkHustleConditions(hustleId, state);
+    if (!check.ok) {
+      return { success: false, error: check.reason };
+    }
+
+    // 检查疲劳度
+    const fatigue = state._sideHustleFatigue || 0;
+    if (fatigue >= FATIGUE_CONFIG.maxSideHustleFatigue) {
+      return {
+        success: false,
+        error: "副业疲劳度过高，需要休息",
+      };
+    }
+
+    // 计算收入
+    let income = hustle.baseIncome;
+    if (hustle.incomeVar) {
+      income += Random.int(hustle.incomeVar[0], hustle.incomeVar[1]);
+    }
+
+    // P1-4：主业在职→副业冲突惩罚（利用晚上/周末时间，精力打折）
+    const hasMainJob =
+      state.career &&
+      state.career.currentJob &&
+      !(state.flags && state.flags._retired);
+    if (hasMainJob) {
+      const careerCap =
+        typeof ensureCareerCapital === "function"
+          ? ensureCareerCapital(state)
+          : null;
+      const curBurnout = careerCap ? careerCap.burnout || 0 : 0;
+      // 主业占用主要精力，副业效率基础-20%；高倦怠时再-15%
+      let conflictMult = curBurnout >= 60 ? 0.65 : 0.8;
+      income = Math.round(income * conflictMult);
+      // 副业也加剧职业倦怠（偷用工作时间/精力）
+      if (careerCap && typeof clampCareerCapital === "function") {
+        careerCap.burnout = Math.min(100, (careerCap.burnout || 0) + 3);
+        clampCareerCapital(careerCap);
+      }
+    }
+
+    // 特殊加成
+    if (hustle.specialBonus) {
+      if (hustle.specialBonus.time === state.player.timeSlot) {
+        income *= hustle.specialBonus.mod;
+      }
+      if (hustle.specialBonus.followers) {
+        const followers =
+          (state._sideHustleData &&
+            state._sideHustleData.selfMedia &&
+            state._sideHustleData.selfMedia.followers) ||
+          0;
+        if (followers >= hustle.specialBonus.followers) {
+          income *= hustle.specialBonus.mod;
+        }
+      }
+    }
+
+    income = Math.round(income);
+
+    // 应用收入
+    state.resources.cash += income;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + income;
+
+    // 增加疲劳度
+    const newFatigue = Math.min(
+      FATIGUE_CONFIG.maxSideHustleFatigue,
+      fatigue + hustle.fatigueCost,
+    );
+    state._sideHustleFatigue = newFatigue;
+
+    // 更新自媒体粉丝（如果是自媒体）
+    if (hustleId === "self_media") {
+      if (!state._sideHustleData) state._sideHustleData = {};
+      if (!state._sideHustleData.selfMedia)
+        state._sideHustleData.selfMedia = { followers: 0 };
+      state._sideHustleData.selfMedia.followers = Math.min(
+        10000,
+        (state._sideHustleData.selfMedia.followers || 0) + Random.int(1, 5),
+      );
+    }
+
+    // 疲劳度惩罚检查
+    let penalty = 0;
+    if (newFatigue > FATIGUE_CONFIG.penaltyThreshold) {
+      penalty =
+        (newFatigue - FATIGUE_CONFIG.penaltyThreshold) *
+        FATIGUE_CONFIG.penaltyRate;
+    }
+
+    // v3.1 — 副业执行后 8% 概率触发随机副业事件（当日无其他待弹事件时）
+    if (
+      !state._pendingEvent &&
+      typeof triggerSideHustleEvent === "function" &&
+      Random.chance(0.08)
+    ) {
+      triggerSideHustleEvent(state, hustleId);
+    }
+
+    return {
+      success: true,
+      income,
+      fatigueCost: hustle.fatigueCost,
+      newFatigue,
+      penalty,
+      message: `完成${hustle.name}，收入¥${income}${penalty > 0 ? `（疲劳惩罚-${Math.round(penalty * 100)}%）` : ""}`,
+    };
+  }
+
+  /**
+   * 副业每日 tick
+   * @param {Object} state - 游戏状态
+   */
+  function sideHustleTick(state) {
+    if (!state.player) return;
+
+    // 疲劳度自然恢复
+    if (state._sideHustleFatigue !== undefined) {
+      state._sideHustleFatigue = Math.max(
+        0,
+        state._sideHustleFatigue - FATIGUE_CONFIG.recoveryRate,
+      );
+    }
+  }
+
+  /**
+   * 获取副业疲劳度状态
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 疲劳度状态
+   */
+  function getFatigueStatus(state) {
+    const fatigue = state._sideHustleFatigue || 0;
+    let status = "normal";
+    if (fatigue > 80) status = "exhausted";
+    else if (fatigue > FATIGUE_CONFIG.penaltyThreshold) status = "warning";
+
+    return {
+      fatigue,
+      max: FATIGUE_CONFIG.maxSideHustleFatigue,
+      status,
+      penalty: Math.max(
+        0,
+        (fatigue - FATIGUE_CONFIG.penaltyThreshold) *
+          FATIGUE_CONFIG.penaltyRate,
+      ),
+    };
+  }
+
+  /**
+   * 初始化副业系统
+   * @param {Object} state - 游戏状态
+   */
+  function initSideHustle(state) {
+    state._sideHustleFatigue = 0;
+    state._sideHustleData = {
+      selfMedia: { followers: 0 },
+    };
+  }
+
+  // ====== 导出 ======
+  if (typeof window !== "undefined") {
+    window.SIDE_HUSTLES = SIDE_HUSTLES;
+    window.sideHustleTick = sideHustleTick; // 供 daily_pipeline.js 直接调用
+    window.sideHustle = {
+      init: initSideHustle,
+      tick: sideHustleTick,
+      check: checkHustleConditions,
+      perform: performHustle,
+      getFatigue: getFatigueStatus,
+      getList: () => SIDE_HUSTLES,
+    };
+  }
+})();
+</script>
 
     <!-- Phase 2: Deep Interaction Modules -->
     <script>/**
@@ -121851,6 +122230,14 @@ function openLifeSystemsPendingNode() {
     showLifeNodeModal(node);
     return;
   }
+  if (typeof showModal === "function") {
+    showModal({
+      title: "🎯 人生节点",
+      body: '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">当前没有待处理的人生节点。<br>随着游戏进行，重要的人生抉择会在此触发：高考、职业转型、婚姻家庭、人生岔路……</p>',
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
   StateManager.addMessage("当前没有待处理的人生节点。", "info");
 }
 
@@ -121892,6 +122279,25 @@ function openLifeSystemsCityServices() {
     typeof window.WebAppBridge.showCityServiceModal === "function"
   ) {
     window.WebAppBridge.showCityServiceModal();
+    return;
+  }
+  if (typeof showModal === "function") {
+    showModal({
+      title: "🏙️ 城市服务中心",
+      body:
+        '<div style="font-size:13px;line-height:1.8;">' +
+        '<p style="color:var(--text-secondary);">城市服务中心提供以下服务，前往对应地点即可办理：</p>' +
+        '<ul style="margin:8px 0;padding-left:18px;color:var(--text-primary);">' +
+        "<li>🏥 <strong>医疗就诊</strong> — 前往医院看病，需当前有疾病</li>" +
+        "<li>⚖️ <strong>法律咨询</strong> — 前往法律援助中心，需有案件</li>" +
+        "<li>🏦 <strong>金融服务</strong> — 前往银行办理贷款/存款</li>" +
+        "<li>🎓 <strong>技能培训</strong> — 前往培训中心学习技能</li>" +
+        "<li>🏢 <strong>政务办理</strong> — 前往政务大厅办证</li>" +
+        "</ul>" +
+        '<p style="color:var(--text-muted);font-size:11px;">提示：在「城市」Tab → 对应地点旁可直接进入服务。</p>' +
+        "</div>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
     return;
   }
   StateManager.addMessage("城市服务中心尚未加载。", "warning");
@@ -121942,14 +122348,21 @@ function _renderMedicalPanel(state) {
     0;
   if (illnesses > 0)
     lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
+  var treatBtn =
+    illnesses > 0
+      ? '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>'
+      : '<button class="btn btn-sm" disabled title="当前身体健康，无需就医" style="opacity:0.45;cursor:not-allowed;">就医治疗</button>';
   return _lifeSystemsCard(
     "🏥",
     "医疗与医保",
     '<ul style="margin:0;padding-left:18px;">' +
       _lifeSystemsLines(lines, "暂无医疗记录") +
+      (illnesses === 0
+        ? '<li style="color:var(--success);font-size:11px;">✅ 当前身体健康</li>'
+        : "") +
       "</ul>",
     '<div class="life-system-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;">' +
-      '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>' +
+      treatBtn +
       '<button class="btn btn-sm" onclick="openLifeSystemsMedicalInsurance()">医保咨询</button>' +
       "</div>",
   );
@@ -121975,13 +122388,20 @@ function _renderLegalPanel(state) {
     typeof getLegalSummary === "function"
       ? getLegalSummary(state)
       : ["法律系统未加载"];
+  var hasCase = !!(state.legal && state.legal.activeCase);
+  var legalBtn = hasCase
+    ? '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>'
+    : '<button class="btn btn-sm" disabled title="当前无案件，无需法律咨询" style="opacity:0.45;cursor:not-allowed;">法律咨询</button>';
   return _lifeSystemsCard(
     "⚖️",
     "法律事务",
     '<ul style="margin:0;padding-left:18px;">' +
       _lifeSystemsLines(lines, "暂无案件记录") +
+      (hasCase
+        ? ""
+        : '<li style="color:var(--success);font-size:11px;">✅ 当前无法律纠纷</li>') +
       "</ul>",
-    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>',
+    legalBtn,
   );
 }
 
@@ -123012,15 +123432,18 @@ function renderMeTab(state, parent) {
  */
 function renderCareerTab(state, parent) {
   parent.innerHTML = "";
-  // ---- 子Tab导航 ----
+  // ---- 子Tab导航（平铺：总览+求职合并为顶级，消除二级嵌套）----
   var SUB_TABS = [
-    { id: "career_jobs", label: "💼 工作" },
+    { id: "career_overview", label: "📊 总览" },
+    { id: "career_jobs", label: "💼 求职" },
     { id: "career_invest", label: "💰 投资" },
     { id: "career_hustle", label: "🔄 副业" },
     { id: "career_startup", label: "🚀 创业" },
     { id: "career_achievements", label: "🏅 成就" },
   ];
-  var currentSubTab = state._careerTabSubTab || "career_jobs";
+  var hasJob = !!(state.career && state.career.currentJob);
+  var currentSubTab =
+    state._careerTabSubTab || (hasJob ? "career_overview" : "career_jobs");
 
   var nav = document.createElement("div");
   nav.style.cssText =
@@ -123042,17 +123465,27 @@ function renderCareerTab(state, parent) {
 
   // ---- 内容 ----
   switch (currentSubTab) {
-    case "career_jobs": {
-      // 工作（职场 + 事业发展合并显示）
-      // 使用 career_dev 的 "总览" 子Tab 作为默认入口
-      if (typeof renderCareerDevTab === "function") {
-        state._careerSubTab = state._careerSubTab || "career_overview";
-        var careerJobsContainer = document.createElement("div");
-        parent.appendChild(careerJobsContainer);
-        renderCareerDevTab(state, careerJobsContainer);
+    case "career_overview": {
+      // 总览（职业资本 + 当前职位 + 副业状态）
+      if (typeof renderCareerOverview === "function") {
+        var overviewContainer = document.createElement("div");
+        parent.appendChild(overviewContainer);
+        renderCareerOverview(state, overviewContainer);
       } else {
         parent.innerHTML +=
-          '<p style="color:var(--text-muted);text-align:center;">💼 工作信息加载中...</p>';
+          '<p style="color:var(--text-muted);text-align:center;">📊 总览加载中...</p>';
+      }
+      break;
+    }
+    case "career_jobs": {
+      // 求职（职业路径 + 招聘列表）
+      if (typeof renderCareerJobs === "function") {
+        var careerJobsContainer = document.createElement("div");
+        parent.appendChild(careerJobsContainer);
+        renderCareerJobs(state, careerJobsContainer);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">💼 求职信息加载中...</p>';
       }
       break;
     }
@@ -125671,6 +126104,103 @@ function renderInventoryTab(state, parent) {
     div.appendChild(grid);
   }
 
+  // ====== 装备购买弹窗（直接在UI内购买，不再导航到地点）======
+  function _showEquipmentShopModal(slotKey, slotName, curState, filterLoc) {
+    if (typeof showModal !== "function" || typeof ITEMS === "undefined") return;
+    var itemList = ITEMS.filter(function (i) {
+      return (
+        i.slot &&
+        i.buyLocations &&
+        (slotKey ? i.slot === slotKey : true) &&
+        (filterLoc ? i.buyLocations.indexOf(filterLoc) !== -1 : true)
+      );
+    });
+    if (itemList.length === 0) {
+      showModal({
+        title: "🛒 装备商店",
+        body: "<p>暂无可购买装备。</p>",
+        buttons: [{ text: "关闭", cls: "" }],
+      });
+      return;
+    }
+    var cash = (curState.resources && curState.resources.cash) || 0;
+    var equippedNow =
+      (curState.inventory && curState.inventory.equipment) || {};
+    var rows = itemList
+      .map(function (item) {
+        var isEquipped = equippedNow[item.slot] === item.id;
+        var canAfford = cash >= item.price;
+        var locNames = (item.buyLocations || [])
+          .map(function (lk) {
+            return typeof LOCATIONS !== "undefined" && LOCATIONS[lk]
+              ? LOCATIONS[lk].icon + LOCATIONS[lk].name
+              : lk;
+          })
+          .join("、");
+        var slotNames = {
+          head: "头部",
+          body: "身体",
+          feet: "脚部",
+          hand: "手部",
+          accessory: "配件",
+        };
+        return (
+          '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);">' +
+          '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:12px;font-weight:600;">' +
+          (item.icon || "🛡️") +
+          " " +
+          item.name +
+          (isEquipped
+            ? ' <span style="color:var(--success);font-size:10px;">✅ 已装备</span>'
+            : "") +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);margin:2px 0;">' +
+          (item.desc || "") +
+          "</div>" +
+          '<div style="font-size:10px;color:var(--text-muted);">部位：' +
+          (slotNames[item.slot] || item.slot) +
+          " | 购买地点：" +
+          locNames +
+          "</div>" +
+          "</div>" +
+          '<div style="flex-shrink:0;text-align:right;">' +
+          '<div style="font-size:13px;color:var(--accent);font-weight:bold;">¥' +
+          item.price +
+          "</div>" +
+          '<button class="btn btn-sm ' +
+          (canAfford && !isEquipped ? "btn-primary" : "") +
+          '" ' +
+          "onclick=\"(function(){var r=buyItemFromShop('" +
+          item.id +
+          "');if(typeof renderAll==='function')renderAll();})()\" " +
+          (canAfford && !isEquipped ? "" : "disabled") +
+          ">" +
+          (isEquipped ? "已装备" : canAfford ? "购买" : "钱不够") +
+          "</button>" +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+    var title = slotKey
+      ? "🛒 购买" + (slotName || slotKey) + "装备"
+      : filterLoc && typeof LOCATIONS !== "undefined" && LOCATIONS[filterLoc]
+        ? "🏪 " + LOCATIONS[filterLoc].name + " — 装备商店"
+        : "🛒 装备商店";
+    showModal({
+      title: title,
+      body:
+        '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">当前现金：<strong style="color:var(--accent);">¥' +
+        cash.toLocaleString() +
+        "</strong></div>" +
+        '<div style="max-height:60vh;overflow-y:auto;">' +
+        rows +
+        "</div>",
+      buttons: [{ text: "关闭", cls: "" }],
+    });
+  }
+
   // 装备栏
   const equip = state.inventory.equipment;
   const equipDiv = document.createElement("div");
@@ -125770,37 +126300,10 @@ function renderInventoryTab(state, parent) {
         buyBtn.className = "btn btn-sm";
         buyBtn.style.cssText =
           "font-size:10px;margin-top:4px;width:100%;padding:3px 6px;";
-        buyBtn.textContent = "🔗 去购买";
+        buyBtn.textContent = "🛒 购买装备";
         buyBtn.onclick = (function (slotKey, slotName) {
           return function () {
-            var locs = [];
-            var miList = ITEMS.filter(function (i) {
-              return i.slot === slotKey && i.buyLocations;
-            });
-            miList.forEach(function (mi) {
-              if (mi.buyLocations) {
-                mi.buyLocations.forEach(function (l) {
-                  if (locs.indexOf(l) === -1) locs.push(l);
-                });
-              }
-            });
-            if (locs.length > 0) {
-              var firstLoc = locs[0];
-              var locName =
-                typeof LOCATIONS !== "undefined" && LOCATIONS[firstLoc]
-                  ? LOCATIONS[firstLoc].name
-                  : firstLoc;
-              navigateTo(
-                state,
-                { type: "location", key: firstLoc, displayName: locName },
-                {
-                  title: "🔗 购买" + slotName + "装备",
-                  skipConfirm: false,
-                  confirmText: "✅ 出发去" + locName,
-                  cancelText: "❌ 算了",
-                },
-              );
-            }
+            _showEquipmentShopModal(slotKey, slotName, state);
           };
         })(slot.key, slot.name);
         card.appendChild(buyBtn);
@@ -125853,18 +126356,11 @@ function renderInventoryTab(state, parent) {
         "(" +
         locMap[lk].length +
         "种)";
-      btn.onclick = function () {
-        navigateTo(
-          state,
-          { type: "location", key: lk, displayName: loc ? loc.name : lk },
-          {
-            title: "🔗 前往采购装备",
-            skipConfirm: false,
-            confirmText: "✅ 出发",
-            cancelText: "❌ 算了",
-          },
-        );
-      };
+      btn.onclick = (function (locKey) {
+        return function () {
+          _showEquipmentShopModal(null, null, state, locKey);
+        };
+      })(lk);
       navRow.appendChild(btn);
     });
     navDiv.appendChild(navRow);
@@ -131851,8 +132347,8 @@ var _CLASSIC_STEPS = [
           站台的风夹着煤灰，眼睛发酸。
         </p>
         <p style="line-height:1.85;font-size:13px;margin-top:10px;">
-          口袋里：<strong style="color:var(--accent);">¥2,000</strong>（打工三年攒的）<br>
-          欠村长：<strong style="color:var(--danger);">¥5,500</strong>（借来的路费，日息0.3%）
+          口袋里：<strong style="color:var(--accent);">¥300</strong>（东拼西凑的路费）<br>
+          没有债，但也几乎身无分文。
         </p>
         <p style="line-height:1.7;font-size:12px;color:var(--text-secondary);margin-top:10px;">
           这座城市不认识你。<br>
@@ -132527,8 +133023,8 @@ function showTutorialStep(steps, index) {
       },
     });
   } else if (step.waitForClick) {
-    // 中间步骤且需要点击目标：不显示"下一步"按钮
-    // 只显示"返回上一步"和"跳过引导"
+    // 中间步骤且需要点击目标：同时显示"下一步"按钮作为兜底
+    // 因为modal遮罩可能阻止点击高亮元素，需要提供备选推进方式
     buttons.push({
       text: "← 上一步",
       cls: "",
@@ -132541,6 +133037,14 @@ function showTutorialStep(steps, index) {
       cls: "",
       callback: () => {
         _confirmSkip(steps);
+      },
+    });
+    buttons.push({
+      text: "下一步 →",
+      cls: "btn-primary",
+      callback: () => {
+        _clearWaitForClickListeners();
+        showTutorialStep(steps, index + 1);
       },
     });
   } else {
@@ -145014,6 +145518,865 @@ if (typeof document !== "undefined") {
     }
   });
 }
+</script>
+    <script>/**
+ * 副业UI（v3.6 P0-3）
+ *
+ * 副业Tab界面 + 副业状态卡片
+ */
+
+// ====== 副业Tab渲染 ======
+function renderSideHustleTab(state, parent) {
+  if (!parent) return;
+  parent.innerHTML = "";
+
+  // 获取副业数据
+  const hustleList = typeof SIDE_HUSTLES !== "undefined" ? SIDE_HUSTLES : {};
+  const fatigue =
+    typeof sideHustle !== "undefined"
+      ? sideHustle.getFatigue(state)
+      : { fatigue: 0, max: 100, status: "normal" };
+
+  // 标题
+  const header = document.createElement("div");
+  header.innerHTML = "<h3>💼 副业</h3>";
+  header.style.cssText =
+    "padding:12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);";
+  parent.appendChild(header);
+
+  // 疲劳度状态
+  const fatigueBar = document.createElement("div");
+  fatigueBar.style.cssText =
+    "padding:12px;background:var(--bg-secondary);margin:12px;border-radius:6px;";
+  const fatigueColor =
+    fatigue.status === "exhausted"
+      ? "var(--danger)"
+      : fatigue.status === "warning"
+        ? "var(--warning)"
+        : "var(--success)";
+  const fatigueIcon =
+    fatigue.status === "exhausted"
+      ? "😫"
+      : fatigue.status === "warning"
+        ? "⚠️"
+        : "💪";
+  fatigueBar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:14px;">${fatigueIcon} 副业疲劳度</span>
+      <span style="font-size:12px;color:var(--text-muted);">
+        ${fatigue.fatigue}/${fatigue.max}${fatigue.penalty > 0 ? `（惩罚-${Math.round(fatigue.penalty * 100)}%）` : ""}
+      </span>
+    </div>
+    <div style="height:8px;background:var(--bg-dark);border-radius:4px;overflow:hidden;">
+      <div style="height:100%;width:${(fatigue.fatigue / fatigue.max) * 100}%;background:${fatigueColor};transition:width 0.3s;"></div>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+      每天自然恢复10点。疲劳度过高会影响副业收入。
+    </p>
+  `;
+  parent.appendChild(fatigueBar);
+
+  // 副业列表
+  const list = document.createElement("div");
+  list.style.cssText = "padding:8px;display:flex;flex-wrap:wrap;gap:12px;";
+
+  for (let hustleId in hustleList) {
+    const hustle = hustleList[hustleId];
+    const check =
+      typeof sideHustle !== "undefined"
+        ? sideHustle.check(hustleId, state)
+        : { ok: false, reason: "系统未加载" };
+
+    const card = document.createElement("div");
+    card.style.cssText =
+      "flex:1;min-width:200px;max-width:280px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);";
+
+    // 检查是否可用
+    const available = check.ok;
+    const cardColor = available ? "var(--primary)" : "var(--text-muted)";
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:20px;">${hustle.icon}</span>
+        <span style="font-weight:bold;color:${cardColor};">${hustle.name}</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${hustle.desc}</p>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+        <div>💰 基础收入：¥${hustle.baseIncome}</div>
+        <div>💪 疲劳消耗：${hustle.fatigueCost}</div>
+        <div>⏰ 可接时间：${hustle.timeSlot.map((s) => (s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜")).join("、")}</div>
+      </div>
+    `;
+
+    // 属性要求
+    if (hustle.minAttr) {
+      const reqText = Object.entries(hustle.minAttr)
+        .map(([attr, val]) => {
+          const current = state.player[attr] || 0;
+          const met = current >= val;
+          return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
+        })
+        .join(", ");
+      card.innerHTML += `<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">${reqText}</div>`;
+    }
+
+    // 按钮
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm";
+    btn.style.cssText = "width:100%;margin-top:8px;";
+    btn.textContent = available ? "开始副业" : "不可进行";
+    btn.disabled = !available;
+
+    if (available) {
+      btn.onclick = function () {
+        performHustleAction(hustleId, state);
+      };
+    } else {
+      btn.title = check.reason;
+    }
+
+    card.appendChild(btn);
+    list.appendChild(card);
+  }
+
+  parent.appendChild(list);
+}
+
+// ====== 执行副业动作 ======
+function performHustleAction(hustleId, state) {
+  if (typeof sideHustle === "undefined") {
+    StateManager.addMessage("❌ 副业系统未加载", "danger");
+    return;
+  }
+
+  const result = sideHustle.perform(hustleId, state);
+  if (result.success) {
+    StateManager.addMessage(result.message, "success");
+    renderAll();
+  } else {
+    StateManager.addMessage("❌ " + result.error, "warning");
+  }
+}
+
+// ====== 注册到窗口 ======
+if (typeof window !== "undefined") {
+  window.renderSideHustleTab = renderSideHustleTab;
+  window.performHustleAction = performHustleAction;
+}
+</script>
+    <script>/**
+ * 今日目标 + 人生旅程弧系统
+ *
+ * 解决"不知道干什么"和"没有玩下去的动力"两大留存痛点。
+ * 设计参考：Stardew Valley 的任务板（简洁可达成）
+ *           BitLife 的人生目标（阶段感）
+ *           Papers Please 的信息优先级（最重要的在最前面）
+ */
+(function () {
+  "use strict";
+
+  // ─── 人生阶段定义 ─────────────────────────────────────────────
+  var LIFE_STAGES = [
+    {
+      id: "survival",
+      icon: "🌱",
+      label: "初来乍到",
+      nextDesc: "活过第一周，租个床位睡觉",
+    },
+    {
+      id: "debt",
+      icon: "💪",
+      label: "站稳脚跟",
+      nextDesc: "还清债务，攒到¥5000",
+    },
+    {
+      id: "growth",
+      icon: "🚀",
+      label: "积累成长",
+      nextDesc: "智力≥45，考下证书，进入职场",
+    },
+    {
+      id: "corporate",
+      icon: "🏢",
+      label: "职场打拼",
+      nextDesc: "月薪¥15000+，总资产¥50000",
+    },
+    {
+      id: "advanced",
+      icon: "🏆",
+      label: "有头有脸",
+      nextDesc: "财富自由，书写自己的传奇",
+    },
+  ];
+
+  function _getLifeStage(state) {
+    var p = state.player;
+    var r = state.resources || {};
+    var cash = (r.cash || 0) + (r.bankBalance || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    if (p.day <= 7) return "survival";
+    if (debt > 0) return "debt";
+    if (p.phase === "corporate")
+      return cash >= 50000 ? "advanced" : "corporate";
+    if ((p.intelligence || 0) >= 40 && p.day > 60) return "growth";
+    return "growth";
+  }
+
+  function _getStageIdx(stage) {
+    for (var i = 0; i < LIFE_STAGES.length; i++) {
+      if (LIFE_STAGES[i].id === stage) return i;
+    }
+    return 0;
+  }
+
+  // 动态生成下一阶段提示文案（不同剧本/状态下文案不同）
+  function _dynamicNextDesc(stage, state) {
+    var p = state.player || {};
+    if (stage.id === "debt") {
+      var r = state.resources || {};
+      var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+      return debt > 0 ? "还清债务，攒到¥5000" : "攒下¥5000启动资金";
+    }
+    // 快到职场门槛时，提示玩家智力路线 → techPark
+    if (
+      stage.id === "growth" &&
+      p.phase === "street" &&
+      (p.intelligence || 0) >= 35 &&
+      (p.intelligence || 0) < 45
+    ) {
+      return (
+        "智力 " +
+        (p.intelligence || 0) +
+        " / 45 —— 再提升 " +
+        (45 - (p.intelligence || 0)) +
+        " 点就能去科技园应聘职场！前往培训中心自学"
+      );
+    }
+    if (
+      stage.id === "growth" &&
+      p.phase === "street" &&
+      (p.intelligence || 0) >= 45
+    ) {
+      return "智力已达 45，去科技园应聘互联网公司开启职场人生！";
+    }
+
+    // ─── 全剧本专属引导（v3.1 §四 峰终 + §五 留存）──────────────
+    var scenarioId = state.flags && state.flags._scenarioId;
+    var day = p.day || 1;
+    var cash = (state.resources && state.resources.cash) || 0;
+    if (stage.id === "growth" && p.phase === "street") {
+      // 城市务工者 / 外来打工者：现金≥2000 仍租房引导（禀赋效应前置 — 有积蓄更珍惜住所）
+      if (
+        (scenarioId === "classic" || scenarioId === "foreign_worker") &&
+        cash >= 2000
+      ) {
+        return (
+          "🎯 现金已满¥2000——去租房中介看看，露宿街头生活质量太低！再撑 " +
+          Math.max(1, 30 - day) +
+          " 天就能签约"
+        );
+      }
+      // 下岗再就业：再就业引导（损失厌恶 — 强调每待业一天都在损失工龄）
+      if (scenarioId === "laid_off") {
+        return (
+          "🎯 失业 " +
+          day +
+          " 天了——去社区服务中心登记再就业培训，每天损失 ¥200+ 潜在收入"
+        );
+      }
+      // 小镇做题家：培训/考证引导（禀赋效应 — 技能是你一辈子带不走的资本）
+      if (scenarioId === "small_town_grinder") {
+        return (
+          "🎯 你的智力比 80% 乘客都高 —— 去培训中心自学，技能考到证书就是一辈子资本！再考 " +
+          Math.max(1, 90 - day) +
+          " 天拿第一证"
+        );
+      }
+      // 二代创业者：家族资源引导（禀赋效应 — 人脉是你父辈留下的隐形资产）
+      if (scenarioId === "second_gen") {
+        return "🎯 家族积累是你的起跑线 —— 去认识父亲老同事，人脉关系能在创业时省 ¥50k 启动金";
+      }
+      // 中年危机：技能重塑引导（损失厌恶 — 不学就被年轻人淘汰）
+      if (scenarioId === "midlife_crisis") {
+        return "🎯 职场新人月薪 ¥8k 你的 ¥12k，技能不更新 5 年内被替代！立即报名夜校";
+      }
+      // 应届生：考证/培训入口（禀赋效应 — 每一本证书都让你离 offer 更近一步）
+      if (scenarioId === "fresh_grad") {
+        return (
+          "🎯 毕业生起薪 ¥4500 起点太低——考一本职业资格证起薪能涨 ¥2000！再拼 " +
+          Math.max(1, 60 - day) +
+          " 天"
+        );
+      }
+    }
+    return stage.nextDesc;
+  }
+
+  // ─── 目标检查函数 ──────────────────────────────────────────────
+  function _checkQuest(q, state) {
+    var r = state.resources || {};
+    var p = state.player || {};
+    var cash = r.cash || 0;
+    var bank = r.bankBalance || 0;
+    var assets = cash + bank;
+    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var rels = state.relationships || {};
+    var certs = state.certs || {};
+
+    switch (q.type) {
+      case "cashGte":
+        return cash >= q.t;
+      case "assetsGte":
+        return assets >= q.t;
+      case "debtLte":
+        return debt <= q.t;
+      case "noDebt":
+        return debt === 0;
+      case "statGte":
+        return (p[q.k] || 0) >= q.t;
+      case "bankGte":
+        return bank >= q.t;
+      case "housingGte":
+        return ((state.housing && state.housing.tier) || 0) >= q.t;
+      case "corporate":
+        return p.phase === "corporate";
+      case "certGte": {
+        var n = Object.keys(certs).filter(function (k) {
+          return certs[k];
+        }).length;
+        return n >= q.t;
+      }
+      case "npcGte": {
+        return Object.keys(rels).some(function (k) {
+          return rels[k] && (rels[k].affinity || 0) >= q.t;
+        });
+      }
+      case "npcMet": {
+        var met = Object.keys(rels).filter(function (k) {
+          return rels[k] && rels[k].met;
+        }).length;
+        return met >= q.t;
+      }
+      case "dayGte":
+        return (p.day || 1) >= q.t;
+      case "careerJobGte": {
+        var job = state.career && state.career.currentJob;
+        return job && (job.workDays || 0) >= q.t;
+      }
+      case "salaryGte": {
+        var job2 = state.career && state.career.currentJob;
+        return job2 && (job2.salary || 0) >= q.t;
+      }
+      case "corpRankGte": {
+        var rank = (state.corporate && state.corporate.rank) || "";
+        var rankMap = { P5: 5, P6: 6, P7: 7, P8: 8, P9: 9, P10: 10 };
+        return (rankMap[rank] || 0) >= q.t;
+      }
+    }
+    return false;
+  }
+
+  // ─── 按阶段生成目标池 ──────────────────────────────────────────
+  function _buildPool(state) {
+    var p = state.player;
+    var r = state.resources || {};
+    var cash = r.cash || 0;
+    var bank = r.bankBalance || 0;
+    var assets = cash + bank;
+    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var intel = p.intelligence || 0;
+    var day = p.day;
+    var housing = (state.housing && state.housing.tier) || 0;
+    var rels = state.relationships || {};
+    var certs = state.certs || {};
+    var certCount = Object.keys(certs).filter(function (k) {
+      return certs[k];
+    }).length;
+    var metNpcs = Object.keys(rels).filter(function (k) {
+      return rels[k] && rels[k].met;
+    }).length;
+    var stage = _getLifeStage(state);
+    var pool = [];
+
+    // ── 生存期（前7天）──
+    if (stage === "survival" || day <= 7) {
+      if (cash < 200)
+        pool.push({
+          id: "s_cash200",
+          icon: "💰",
+          text: "手头现金达¥200",
+          type: "cashGte",
+          t: 200,
+        });
+      if (cash < 100)
+        pool.push({
+          id: "s_cash100",
+          icon: "💵",
+          text: "先赚到¥100再说",
+          type: "cashGte",
+          t: 100,
+        });
+      if (housing < 1)
+        pool.push({
+          id: "s_bed",
+          icon: "🛏️",
+          text: "租个床位睡个好觉",
+          type: "housingGte",
+          t: 1,
+        });
+      pool.push({
+        id: "s_day3",
+        icon: "🌙",
+        text: "在城市活过3天",
+        type: "dayGte",
+        t: 3,
+      });
+      pool.push({
+        id: "s_assets300",
+        icon: "🪙",
+        text: "总资产达¥300",
+        type: "assetsGte",
+        t: 300,
+      });
+    }
+
+    // ── 还债期 ──
+    if (debt > 0) {
+      if (debt > 3000)
+        pool.push({
+          id: "d_repay3k",
+          icon: "🏦",
+          text: "债务降到¥3000以内",
+          type: "debtLte",
+          t: 3000,
+        });
+      else if (debt > 1000)
+        pool.push({
+          id: "d_repay1k",
+          icon: "🏦",
+          text: "债务降到¥1000以内",
+          type: "debtLte",
+          t: 1000,
+        });
+      else
+        pool.push({
+          id: "d_clear",
+          icon: "🎉",
+          text: "还清全部债务！一身轻松",
+          type: "noDebt",
+          t: 0,
+        });
+      if (assets < 1000)
+        pool.push({
+          id: "d_1k",
+          icon: "💎",
+          text: "总资产存到¥1000",
+          type: "assetsGte",
+          t: 1000,
+        });
+      if (assets < 3000)
+        pool.push({
+          id: "d_3k",
+          icon: "💎",
+          text: "总资产存到¥3000",
+          type: "assetsGte",
+          t: 3000,
+        });
+      if (bank < 500)
+        pool.push({
+          id: "d_bank",
+          icon: "🏦",
+          text: "银行存款达¥500",
+          type: "bankGte",
+          t: 500,
+        });
+    }
+
+    // ── 成长期（街头，无债）──
+    if (stage === "growth" || (p.phase === "street" && debt === 0)) {
+      if (intel < 30)
+        pool.push({
+          id: "g_intel30",
+          icon: "🧠",
+          text: "智力提升到30（去夜校学习）",
+          type: "statGte",
+          k: "intelligence",
+          t: 30,
+        });
+      if (intel >= 30 && intel < 45)
+        pool.push({
+          id: "g_intel45",
+          icon: "🧠",
+          text: "智力达到45（职场入门线！）",
+          type: "statGte",
+          k: "intelligence",
+          t: 45,
+        });
+      if (assets < 5000)
+        pool.push({
+          id: "g_5k",
+          icon: "🏦",
+          text: "总资产达¥5000",
+          type: "assetsGte",
+          t: 5000,
+        });
+      if (assets < 10000)
+        pool.push({
+          id: "g_10k",
+          icon: "💎",
+          text: "总资产达¥10000",
+          type: "assetsGte",
+          t: 10000,
+        });
+      if (certCount < 1)
+        pool.push({
+          id: "g_cert1",
+          icon: "📜",
+          text: "考下第一张证书",
+          type: "certGte",
+          t: 1,
+        });
+      if (metNpcs < 3)
+        pool.push({
+          id: "g_npc3",
+          icon: "🤝",
+          text: "认识3个以上朋友",
+          type: "npcMet",
+          t: 3,
+        });
+      if (housing < 2)
+        pool.push({
+          id: "g_housing2",
+          icon: "🏠",
+          text: "搬进单间住（升级住所）",
+          type: "housingGte",
+          t: 2,
+        });
+      if (intel >= 40)
+        pool.push({
+          id: "g_apply",
+          icon: "💼",
+          text: "去科技园/职业中心应聘",
+          type: "corporate",
+          t: 0,
+        });
+    }
+
+    // ── 职场期 ──
+    if (p.phase === "corporate") {
+      var job = state.career && state.career.currentJob;
+      var salary = job ? job.salary || 0 : 0;
+      var workDays = job ? job.workDays || 0 : 0;
+      var rank = (state.corporate && state.corporate.rank) || "";
+      var rankMap = { P5: 5, P6: 6, P7: 7, P8: 8, P9: 9, P10: 10 };
+      var rankNum = rankMap[rank] || 0;
+
+      if (salary > 0 && salary < 12000)
+        pool.push({
+          id: "c_sal12k",
+          icon: "💰",
+          text: "月薪升到¥12000",
+          type: "salaryGte",
+          t: 12000,
+        });
+      if (salary >= 12000 && salary < 20000)
+        pool.push({
+          id: "c_sal20k",
+          icon: "💰",
+          text: "月薪升到¥20000",
+          type: "salaryGte",
+          t: 20000,
+        });
+      if (salary >= 20000 && salary < 30000)
+        pool.push({
+          id: "c_sal30k",
+          icon: "💰",
+          text: "月薪升到¥30000",
+          type: "salaryGte",
+          t: 30000,
+        });
+      if (workDays < 365)
+        pool.push({
+          id: "c_yr1",
+          icon: "📅",
+          text: "在岗坚持满1年",
+          type: "careerJobGte",
+          t: 365,
+        });
+      if (assets < 30000)
+        pool.push({
+          id: "c_30k",
+          icon: "💎",
+          text: "总资产达¥30000",
+          type: "assetsGte",
+          t: 30000,
+        });
+      if (assets < 80000)
+        pool.push({
+          id: "c_80k",
+          icon: "💎",
+          text: "总资产达¥80000",
+          type: "assetsGte",
+          t: 80000,
+        });
+      if (rankNum > 0 && rankNum < 7)
+        pool.push({
+          id: "c_p7",
+          icon: "🏆",
+          text: "晋升到P7（团队骨干分水岭）",
+          type: "corpRankGte",
+          t: 7,
+        });
+      if (certCount < 2)
+        pool.push({
+          id: "c_cert2",
+          icon: "📜",
+          text: "拥有2张以上证书",
+          type: "certGte",
+          t: 2,
+        });
+      pool.push({
+        id: "c_npc60",
+        icon: "❤️",
+        text: "某位朋友好感度达到60",
+        type: "npcGte",
+        t: 60,
+      });
+    }
+
+    // ── 有头有脸（高级）──
+    if (stage === "advanced") {
+      if (assets < 200000)
+        pool.push({
+          id: "a_200k",
+          icon: "🏆",
+          text: "总资产达¥200000",
+          type: "assetsGte",
+          t: 200000,
+        });
+      pool.push({
+        id: "a_npc80",
+        icon: "❤️",
+        text: "某位朋友好感度达到80",
+        type: "npcGte",
+        t: 80,
+      });
+      pool.push({
+        id: "a_cert3",
+        icon: "📜",
+        text: "拥有3张以上证书",
+        type: "certGte",
+        t: 3,
+      });
+      if (assets >= 200000)
+        pool.push({
+          id: "a_500k",
+          icon: "💎",
+          text: "总资产达¥500000",
+          type: "assetsGte",
+          t: 500000,
+        });
+    }
+
+    // ── 保底（池太少时补充通用目标）──
+    if (pool.length < 3) {
+      pool.push({
+        id: "u_npc50",
+        icon: "❤️",
+        text: "某位朋友好感度达到50",
+        type: "npcGte",
+        t: 50,
+      });
+      if (certCount < 1)
+        pool.push({
+          id: "u_cert",
+          icon: "📜",
+          text: "考下一张证书",
+          type: "certGte",
+          t: 1,
+        });
+      pool.push({
+        id: "u_housing3",
+        icon: "🏠",
+        text: "住所升级到独立公寓",
+        type: "housingGte",
+        t: 3,
+      });
+    }
+
+    return pool;
+  }
+
+  // ─── 每日目标生成（缓存到 state.flags._dailyQuests）────────────
+  function generateDailyQuests(state) {
+    var day = state.player.day;
+    var stored = state.flags && state.flags._dailyQuests;
+    if (
+      stored &&
+      stored.day === day &&
+      stored.quests &&
+      stored.quests.length > 0
+    ) {
+      return stored.quests;
+    }
+    var pool = _buildPool(state);
+    // 优先选未完成的目标（最多3个）
+    var incomplete = pool.filter(function (q) {
+      return !_checkQuest(q, state);
+    });
+    var picked = (incomplete.length >= 3 ? incomplete : pool).slice(0, 3);
+    if (!state.flags) state.flags = {};
+    state.flags._dailyQuests = { day: day, quests: picked };
+    return picked;
+  }
+
+  // ─── 渲染：今日目标卡 ──────────────────────────────────────────
+  function renderDailyQuestCard(state, parent) {
+    var quests = generateDailyQuests(state);
+    if (!quests || quests.length === 0) return;
+
+    var doneCount = quests.filter(function (q) {
+      return _checkQuest(q, state);
+    }).length;
+    var allDone = doneCount === quests.length;
+
+    var card = document.createElement("div");
+    card.id = "daily-quest-card";
+    card.style.cssText = [
+      "margin-bottom:12px;",
+      "padding:10px 12px;",
+      "background:linear-gradient(135deg,rgba(102,126,234,0.07),rgba(74,158,92,0.05));",
+      "border:1px solid rgba(102,126,234,0.22);",
+      "border-radius:10px;",
+    ].join("");
+
+    // 标题行
+    var hdr = document.createElement("div");
+    hdr.style.cssText =
+      "display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;";
+    var hdrLeft = document.createElement("span");
+    hdrLeft.style.cssText =
+      "font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.5px;";
+    hdrLeft.textContent = "🎯 当前目标";
+    var hdrRight = document.createElement("span");
+    hdrRight.style.cssText = "font-size:10px;color:var(--text-muted);";
+    hdrRight.textContent = doneCount + "/" + quests.length + " 达成";
+    hdr.appendChild(hdrLeft);
+    hdr.appendChild(hdrRight);
+    card.appendChild(hdr);
+
+    // 目标列表
+    quests.forEach(function (q, i) {
+      var done = _checkQuest(q, state);
+      var row = document.createElement("div");
+      row.style.cssText = [
+        "display:flex;align-items:center;gap:8px;",
+        "padding:4px 0;",
+        i < quests.length - 1
+          ? "border-bottom:1px solid rgba(255,255,255,0.04);"
+          : "",
+        "font-size:12px;",
+      ].join("");
+
+      var icon = document.createElement("span");
+      icon.style.cssText = "flex-shrink:0;font-size:13px;";
+      icon.textContent = done ? "✅" : q.icon;
+
+      var txt = document.createElement("span");
+      txt.style.cssText = done
+        ? "color:var(--text-muted);text-decoration:line-through;"
+        : "color:var(--text-primary);";
+      txt.textContent = q.text;
+
+      row.appendChild(icon);
+      row.appendChild(txt);
+      card.appendChild(row);
+    });
+
+    // 全达成庆祝
+    if (allDone) {
+      var celebrate = document.createElement("div");
+      celebrate.style.cssText =
+        "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
+      celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
+      card.appendChild(celebrate);
+    }
+
+    parent.appendChild(card);
+  }
+
+  // ─── 渲染：人生旅程弧 ─────────────────────────────────────────
+  function renderLifeArcStrip(state, parent) {
+    var stage = _getLifeStage(state);
+    var idx = _getStageIdx(stage);
+    var cur = LIFE_STAGES[idx];
+    var next = LIFE_STAGES[idx + 1];
+
+    var wrap = document.createElement("div");
+    wrap.id = "life-arc-wrap";
+    wrap.style.cssText = "margin-bottom:8px;";
+
+    // 阶段点阵
+    var strip = document.createElement("div");
+    strip.style.cssText = [
+      "display:flex;align-items:center;gap:4px;flex-wrap:nowrap;",
+      "padding:5px 10px;",
+      "background:rgba(102,126,234,0.05);",
+      "border-radius:8px;font-size:11px;",
+      "overflow-x:auto;-webkit-overflow-scrolling:touch;",
+    ].join("");
+
+    LIFE_STAGES.forEach(function (s, i) {
+      var isPast = i < idx;
+      var isCur = i === idx;
+
+      var dot = document.createElement("span");
+      dot.style.cssText = [
+        "white-space:nowrap;padding:2px 7px;border-radius:10px;flex-shrink:0;",
+        isCur
+          ? "background:var(--accent);color:#fff;font-weight:700;font-size:11px;"
+          : isPast
+            ? "color:var(--success);opacity:0.75;font-size:11px;"
+            : "color:var(--text-muted);opacity:0.35;font-size:11px;",
+      ].join("");
+      dot.textContent = s.icon + " " + s.label;
+      strip.appendChild(dot);
+
+      if (i < LIFE_STAGES.length - 1) {
+        var arrow = document.createElement("span");
+        arrow.style.cssText =
+          "color:var(--text-muted);opacity:0.25;font-size:9px;flex-shrink:0;";
+        arrow.textContent = "›";
+        strip.appendChild(arrow);
+      }
+    });
+    wrap.appendChild(strip);
+
+    // 下一阶段提示（仅当还没到最后阶段）
+    if (next) {
+      var hint = document.createElement("div");
+      hint.style.cssText =
+        "font-size:10px;color:var(--text-secondary);padding:3px 4px 0;line-height:1.4;";
+      hint.textContent =
+        "▸ 下一阶段「" +
+        next.icon +
+        " " +
+        next.label +
+        "」：" +
+        _dynamicNextDesc(next, state);
+      wrap.appendChild(hint);
+    }
+
+    parent.appendChild(wrap);
+  }
+
+  // ─── 全局挂载 ─────────────────────────────────────────────────
+  if (typeof window !== "undefined") {
+    window.generateDailyQuests = generateDailyQuests;
+    window.renderDailyQuestCard = renderDailyQuestCard;
+    window.renderLifeArcStrip = renderLifeArcStrip;
+  }
+})();
 </script>
     <!-- v3.21 职业里程碑叙事事件 -->
     <script>/**

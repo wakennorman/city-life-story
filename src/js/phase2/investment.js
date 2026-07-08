@@ -3599,8 +3599,8 @@ function renderCars(area, inv, state, parent) {
   marketDiv.innerHTML =
     '<h4 style="font-size:13px;color:var(--accent);margin-bottom:8px;">🚗 汽车市场</h4>';
   var marketGrid = document.createElement("div");
-  marketGrid.className = "action-cards";
-  marketGrid.style.gridTemplateColumns = "repeat(auto-fill,minmax(210px,1fr))";
+  marketGrid.style.cssText =
+    "display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,240px));gap:8px;align-items:start;";
 
   for (var mi = 0; mi < CAR_TYPES.length; mi++) {
     var carDef = CAR_TYPES[mi];

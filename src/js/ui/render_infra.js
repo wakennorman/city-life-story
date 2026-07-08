@@ -241,6 +241,14 @@ function openLifeSystemsPendingNode() {
     showLifeNodeModal(node);
     return;
   }
+  if (typeof showModal === "function") {
+    showModal({
+      title: "🎯 人生节点",
+      body: '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">当前没有待处理的人生节点。<br>随着游戏进行，重要的人生抉择会在此触发：高考、职业转型、婚姻家庭、人生岔路……</p>',
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+    return;
+  }
   StateManager.addMessage("当前没有待处理的人生节点。", "info");
 }
 
@@ -282,6 +290,25 @@ function openLifeSystemsCityServices() {
     typeof window.WebAppBridge.showCityServiceModal === "function"
   ) {
     window.WebAppBridge.showCityServiceModal();
+    return;
+  }
+  if (typeof showModal === "function") {
+    showModal({
+      title: "🏙️ 城市服务中心",
+      body:
+        '<div style="font-size:13px;line-height:1.8;">' +
+        '<p style="color:var(--text-secondary);">城市服务中心提供以下服务，前往对应地点即可办理：</p>' +
+        '<ul style="margin:8px 0;padding-left:18px;color:var(--text-primary);">' +
+        "<li>🏥 <strong>医疗就诊</strong> — 前往医院看病，需当前有疾病</li>" +
+        "<li>⚖️ <strong>法律咨询</strong> — 前往法律援助中心，需有案件</li>" +
+        "<li>🏦 <strong>金融服务</strong> — 前往银行办理贷款/存款</li>" +
+        "<li>🎓 <strong>技能培训</strong> — 前往培训中心学习技能</li>" +
+        "<li>🏢 <strong>政务办理</strong> — 前往政务大厅办证</li>" +
+        "</ul>" +
+        '<p style="color:var(--text-muted);font-size:11px;">提示：在「城市」Tab → 对应地点旁可直接进入服务。</p>' +
+        "</div>",
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
     return;
   }
   StateManager.addMessage("城市服务中心尚未加载。", "warning");
@@ -332,14 +359,21 @@ function _renderMedicalPanel(state) {
     0;
   if (illnesses > 0)
     lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
+  var treatBtn =
+    illnesses > 0
+      ? '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>'
+      : '<button class="btn btn-sm" disabled title="当前身体健康，无需就医" style="opacity:0.45;cursor:not-allowed;">就医治疗</button>';
   return _lifeSystemsCard(
     "🏥",
     "医疗与医保",
     '<ul style="margin:0;padding-left:18px;">' +
       _lifeSystemsLines(lines, "暂无医疗记录") +
+      (illnesses === 0
+        ? '<li style="color:var(--success);font-size:11px;">✅ 当前身体健康</li>'
+        : "") +
       "</ul>",
     '<div class="life-system-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;">' +
-      '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>' +
+      treatBtn +
       '<button class="btn btn-sm" onclick="openLifeSystemsMedicalInsurance()">医保咨询</button>' +
       "</div>",
   );
@@ -365,13 +399,20 @@ function _renderLegalPanel(state) {
     typeof getLegalSummary === "function"
       ? getLegalSummary(state)
       : ["法律系统未加载"];
+  var hasCase = !!(state.legal && state.legal.activeCase);
+  var legalBtn = hasCase
+    ? '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>'
+    : '<button class="btn btn-sm" disabled title="当前无案件，无需法律咨询" style="opacity:0.45;cursor:not-allowed;">法律咨询</button>';
   return _lifeSystemsCard(
     "⚖️",
     "法律事务",
     '<ul style="margin:0;padding-left:18px;">' +
       _lifeSystemsLines(lines, "暂无案件记录") +
+      (hasCase
+        ? ""
+        : '<li style="color:var(--success);font-size:11px;">✅ 当前无法律纠纷</li>') +
       "</ul>",
-    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>',
+    legalBtn,
   );
 }
 
@@ -1402,15 +1443,18 @@ function renderMeTab(state, parent) {
  */
 function renderCareerTab(state, parent) {
   parent.innerHTML = "";
-  // ---- 子Tab导航 ----
+  // ---- 子Tab导航（平铺：总览+求职合并为顶级，消除二级嵌套）----
   var SUB_TABS = [
-    { id: "career_jobs", label: "💼 工作" },
+    { id: "career_overview", label: "📊 总览" },
+    { id: "career_jobs", label: "💼 求职" },
     { id: "career_invest", label: "💰 投资" },
     { id: "career_hustle", label: "🔄 副业" },
     { id: "career_startup", label: "🚀 创业" },
     { id: "career_achievements", label: "🏅 成就" },
   ];
-  var currentSubTab = state._careerTabSubTab || "career_jobs";
+  var hasJob = !!(state.career && state.career.currentJob);
+  var currentSubTab =
+    state._careerTabSubTab || (hasJob ? "career_overview" : "career_jobs");
 
   var nav = document.createElement("div");
   nav.style.cssText =
@@ -1432,17 +1476,27 @@ function renderCareerTab(state, parent) {
 
   // ---- 内容 ----
   switch (currentSubTab) {
-    case "career_jobs": {
-      // 工作（职场 + 事业发展合并显示）
-      // 使用 career_dev 的 "总览" 子Tab 作为默认入口
-      if (typeof renderCareerDevTab === "function") {
-        state._careerSubTab = state._careerSubTab || "career_overview";
-        var careerJobsContainer = document.createElement("div");
-        parent.appendChild(careerJobsContainer);
-        renderCareerDevTab(state, careerJobsContainer);
+    case "career_overview": {
+      // 总览（职业资本 + 当前职位 + 副业状态）
+      if (typeof renderCareerOverview === "function") {
+        var overviewContainer = document.createElement("div");
+        parent.appendChild(overviewContainer);
+        renderCareerOverview(state, overviewContainer);
       } else {
         parent.innerHTML +=
-          '<p style="color:var(--text-muted);text-align:center;">💼 工作信息加载中...</p>';
+          '<p style="color:var(--text-muted);text-align:center;">📊 总览加载中...</p>';
+      }
+      break;
+    }
+    case "career_jobs": {
+      // 求职（职业路径 + 招聘列表）
+      if (typeof renderCareerJobs === "function") {
+        var careerJobsContainer = document.createElement("div");
+        parent.appendChild(careerJobsContainer);
+        renderCareerJobs(state, careerJobsContainer);
+      } else {
+        parent.innerHTML +=
+          '<p style="color:var(--text-muted);text-align:center;">💼 求职信息加载中...</p>';
       }
       break;
     }
