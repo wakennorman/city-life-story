@@ -2,7 +2,17 @@
 
 > 最后更新: 2026-07-09（v3.48 职业系统深度优化）
 >
-> commit: `70f5c2c4`
+> commit: `b3fc8049`
+
+---
+
+## 🔄 多窗口协作协议
+
+> **当有多个 Claude Code 窗口同时开发本仓库时，必须遵守 `D:\Claude Code+DeepSeekV4\memory\window-coordination.md` 中定义的协议。**
+> 
+> 核心：开工前 Read `memory/file-lock.json` → 声明角色和文件 → 检查冲突 → 获取锁 → 工作 → 释放锁。
+> 
+> 详细规则（10章）：事前分工、文件锁定机制、窗口角色分工、冲突预防策略、事后追溯机制、示例场景。
 
 ---
 
