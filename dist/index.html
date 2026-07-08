@@ -37347,6 +37347,230 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ====== 四大扩展系统深度联动事件（v3.40 新增）======
+  RANDOM_EVENTS.push({
+    id: "medical_debt_crisis",
+    phase: "street",
+    icon: "💊",
+    title: "医药费催收单",
+    story:
+      "你收到一封挂号信——是医院寄来的医疗费用催收通知。\\n\\n你之前看病欠下的费用加上滞纳金，已经累计到一个让你手心冒汗的数字。\\n\\n信上写着：「请在15日内结清，否则将移交法务部门处理。」你的手微微发抖——这不是玩笑。",
+    conditions: function (st) {
+      if (!st.medical) return false;
+      if ((st.medical.totalMedicalSpent || 0) < 5000) return false;
+      if (st.medical.insurance) return false;
+      if (st.player.day < 30) return false;
+      if (st.flags._medicalDebtSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "💸 咬牙还清",
+        hint: "还清债务，心情-5",
+        apply: function (s) {
+          s.flags._medicalDebtSeen = true;
+          var debt = Math.min(
+            s.medical.totalMedicalSpent || 5000,
+            s.resources.cash || 0,
+          );
+          s.resources.cash -= debt;
+          s.medical.totalMedicalSpent = 0;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "💸 你取出了存款，把医疗费结清了。走出医院大门时，手里攥着缴费单，心里说不上是轻松还是沉重。心智+3，心情-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "⚖️ 申请医疗救助",
+        hint: "需智力≥40，可减免60%",
+        apply: function (s) {
+          s.flags._medicalDebtSeen = true;
+          if ((s.player.intelligence || 0) >= 40) {
+            var reduced = Math.floor(
+              (s.medical.totalMedicalSpent || 5000) * 0.4,
+            );
+            s.medical.totalMedicalSpent = reduced;
+            s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
+            s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+            StateManager.addMessage(
+              "⚖️ 你跑了三趟街道办和民政局，终于申请到医疗救助。欠款减到¥" +
+                reduced +
+                "。心智+5，名气+3。",
+              "success",
+            );
+          } else {
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 8);
+            StateManager.addMessage(
+              "⚖️ 你去了街道办，但听不太懂政策条款，空手而归。心情-8。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📞 商量分期付款",
+        hint: "每月¥500，免利息",
+        apply: function (s) {
+          s.flags._medicalDebtSeen = true;
+          s.flags._medicalDebtInstallment = true;
+          s.medical.totalMedicalSpent = Math.max(
+            0,
+            (s.medical.totalMedicalSpent || 5000) - 500,
+          );
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 500);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "📞 你跟医院磨了半天，对方同意分期。每月¥500，免利息。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E12：旅行+医疗 — 异乡突发疾病
+  RANDOM_EVENTS.push({
+    id: "travel_health_emergency",
+    phase: "street",
+    icon: "🚑",
+    title: "异乡急诊",
+    story:
+      "你正在外地，突然腹部剧烈绞痛，冷汗直冒。\\n\\n你蹲在陌生的街边，看着手机上显示的「最近的医院：1.2公里」。\\n\\n这里没有认识的人，没有熟悉的医保网络，你甚至不确定身上的钱够不够挂急诊。",
+    conditions: function (st) {
+      if (!st.travel || !st.travel.active) return false;
+      if (!st.status || (st.status.health || 70) >= 50) return false;
+      if (st.player.day < 30) return false;
+      if (st.flags._travelHealthSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 去最近医院",
+        hint: "花¥300-800，健康+15",
+        apply: function (s) {
+          s.flags._travelHealthSeen = true;
+          var cost = Math.min(300 + Random.int(0, 500), s.resources.cash || 0);
+          s.resources.cash -= cost;
+          s.status.health = Math.min(100, (s.status.health || 0) + 15);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "🏥 你硬撑着走到医院，急诊医生说是急性肠胃炎。花了¥" +
+              cost +
+              "，健康+15。一个人在外地生病，最想家。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💊 买药扛一扛",
+        hint: "花¥50-150，效果差",
+        apply: function (s) {
+          s.flags._travelHealthSeen = true;
+          var cost = Math.min(50 + Random.int(0, 100), s.resources.cash || 0);
+          s.resources.cash -= cost;
+          s.status.health = Math.min(100, (s.status.health || 0) + 5);
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "💊 你在药店买了止痛药和胃药。花了¥" + cost + "，健康+5，心情-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏠 取消行程回家",
+        hint: "旅行取消，健康+8",
+        apply: function (s) {
+          s.flags._travelHealthSeen = true;
+          s.travel.active = false;
+          s.status.health = Math.min(100, (s.status.health || 0) + 8);
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 10);
+          StateManager.addMessage(
+            "🏠 你买了最近一班车票回家。回到熟悉的城市时，心里踏实了。健康+8，心情-10，旅行取消。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // E13：人生节点+职业 — 35岁后的重塑
+  RANDOM_EVENTS.push({
+    id: "life_midcareer_reinvent",
+    phase: "street",
+    icon: "🔄",
+    title: "三十五岁之后",
+    story:
+      "你最近总是失眠。\\n\\n白天干着同样的活，晚上躺在床上算账。\\n\\n你也刷到过那些「35岁职场危机」的文章，以前觉得是贩卖焦虑，现在发现自己已经在那个年纪了。\\n\\n同乡老周上个月回老家了，走之前说了一句话：「这城市终究是年轻人的。」你当时没接话——但这句话一直卡在喉咙里。",
+    conditions: function (st) {
+      if (!st.flags || !st.flags._lifeNode_midlife_crisis_done) return false;
+      if (st.player.age < 35) return false;
+      if (st.flags._midlifeCareerSeen) return false;
+      if (st.career && st.career.currentJob && st.career.currentJob.level >= 3)
+        return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 报培训班转行",
+        hint: "花¥2000，开启新可能",
+        apply: function (s) {
+          s.flags._midlifeCareerSeen = true;
+          var cost = Math.min(2000, s.resources.cash || 0);
+          s.resources.cash -= cost;
+          s.flags._midlifeRetraining = true;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📚 你报了一个职业技能培训班，花¥" +
+              cost +
+              "。第一天上课，教室里坐着的都是比你年轻的人——但开始永远不晚。心智+5，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 深耕现有工作",
+        hint: "技能XP+100",
+        apply: function (s) {
+          s.flags._midlifeCareerSeen = true;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 3);
+          if (s.skills) {
+            var keys = Object.keys(s.skills);
+            if (keys.length > 0) {
+              s.skills[keys[0]].xp = (s.skills[keys[0]].xp || 0) + 100;
+            }
+          }
+          StateManager.addMessage(
+            "💪 你决定在现有路上跑得更快、学得更深。技能XP+100，心智+5，心情+3。你不是在下坡——你是在换挡。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😮‍💨 走一步看一步",
+        hint: "维持现状，心情-5",
+        apply: function (s) {
+          s.flags._midlifeCareerSeen = true;
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "😮‍💨 你翻了个身，把手机扣在床头。明天的事明天再说。但有些问题不会自己消失。心情-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
