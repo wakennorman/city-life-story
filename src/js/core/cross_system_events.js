@@ -7704,7 +7704,8 @@
   // v3.34 新增联动事件（5个）— 空白区填充
   // 设计意图：长期行为累积触发、技能门槛解锁、NPC好感溢出、天气×位置情境、道德极端分叉
   // ============================================================
-  CROSS_EVENTS.push(
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原写法在循环结束后才push，变成死代码）
+  RANDOM_EVENTS.push(
     // 1. 长期跑腿后的老手特遇 — 连续跑腿≥30天，老主顾回头
     {
       id: "gig_regular_customer",
@@ -9422,7 +9423,8 @@
 
   // ====== 联动事件44：老手特遇——配送老主顾的谢礼 ======
   // 设计意图：玩家长期做配送/跑腿类工作后，遇到回头客的主动推荐，体现"城市开始认识你"
-  CROSS_EVENTS.push({
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
     id: "delivery_regular_customer",
     phase: "street",
     icon: "📦",
@@ -9507,7 +9509,8 @@
 
   // ====== 联动事件45：专业人士视角——识别假冒伪劣电动工具 ======
   // 设计意图：修理技能到达门槛后解锁"专业人士视角"事件，体现技能积累的价值
-  CROSS_EVENTS.push({
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
     id: "pro_identify_fake_tools",
     phase: "street",
     icon: "🔧",
@@ -9576,7 +9579,8 @@
 
   // ====== 联动事件46：NPC好感积累——意外的信息泄露 ======
   // 设计意图：NPC好感达到阈值后，对方无意中透露一个隐藏信息/机会
-  CROSS_EVENTS.push({
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
     id: "npc_affinity_info_leak",
     phase: "street",
     icon: "🤫",
@@ -9768,7 +9772,8 @@
 
   // ====== 联动事件47：天气×位置组合——暴雨中的批发市场 ======
   // 设计意图：暴雨天气 + 批发市场 = 独特情境事件，体现环境与地点的交叉影响
-  CROSS_EVENTS.push({
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
     id: "rain_wholesale_opportunity",
     phase: "street",
     icon: "🌧️",
@@ -9843,4 +9848,708 @@
       },
     ],
   });
+  // ====== v3.52 联动事件扩充（5个新增）======
+  // 设计意图：填补5个联动空白区——寒潮住所危机/名气社交回响/健康孤立支持/学历白领瓶颈/副业规模化
+
+  // ----- 事件48：天气×住所情境 — 寒潮中住所不达标的危机 -----
+  // 联动：weather.cold_snap + housing.tier ≤ 1 + health < 65
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
+    id: "cold_snap_housing_crisis",
+    phase: "street",
+    icon: "🥶",
+    title: "寒潮中的四面墙",
+    story:
+      "寒潮来袭，夜间气温骤降到零下。你住所的墙壁薄得能听见风在缝隙里尖叫。\n\n被冻醒第四次时，你看了看手机：今晚还有6级北风。薄被已经不够了，哈出的气在黑暗里凝成白雾。",
+    // [自洽新增] conditions：寒潮天气 + 住所 tier≤1 + 健康<65
+    conditions: function (st) {
+      var isColdSnap = st.weather && st.weather.current === "cold_snap";
+      var isPoorHousing = ((st.housing && st.housing.tier) || 0) <= 1;
+      var isWeak = ((st.status && st.status.health) || 70) < 65;
+      return (
+        st.player.phase === "street" &&
+        isColdSnap &&
+        isPoorHousing &&
+        isWeak &&
+        st.player.day >= 15 &&
+        !st.flags._coldSnapHousingSeen
+      );
+    },
+    probability: 0.07,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏠 借住朋友家（需NPC好感≥40）",
+        hint: "求助有代价",
+        apply: function (st) {
+          st.flags._coldSnapHousingSeen = true;
+          var helper = null;
+          for (var nid in st.relationships) {
+            var r = st.relationships[nid];
+            if (r && r.met && r.affinity >= 40) {
+              helper = nid;
+              break;
+            }
+          }
+          if (helper) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            st.relationships[helper].affinity = Math.max(
+              -100,
+              st.relationships[helper].affinity - 3,
+            );
+            StateManager.addMessage(
+              "🥶 你在" +
+                helper +
+                "家借住了一晚——人情冷暖，欠下的总要还。心情+8，疲劳-10，对方好感-3。",
+              "success",
+            );
+          } else {
+            st.status.health = Math.max(0, (st.status.health || 70) - 3);
+            StateManager.addMessage(
+              "🥶 你想找人借住，翻了翻通讯录竟没有能开口的人。在寒夜中又熬了一晚。健康-3。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🛒 花¥80买床厚被",
+        hint: "咬牙御寒",
+        apply: function (st) {
+          st.flags._coldSnapHousingSeen = true;
+          if (st.resources.cash >= 80) {
+            st.resources.cash -= 80;
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "🛒 花¥80在二手店买了床厚被。沉甸甸压在身上，终于睡了个整觉。疲劳-8，心情+3。",
+              "success",
+            );
+          } else {
+            st.status.health = Math.max(0, (st.status.health || 70) - 5);
+            StateManager.addMessage(
+              "🛒 想买被子但差了几块钱。这一夜格外漫长。健康-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🔥 硬扛过去",
+        hint: "消耗健康",
+        apply: function (st) {
+          st.flags._coldSnapHousingSeen = true;
+          st.status.health = Math.max(0, (st.status.health || 70) - 8);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "🔥 你裹紧薄被硬扛了一夜。凌晨全身都在发抖——下次一定提前准备。健康-8，疲劳+15。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件49：名气积累×社交网络的"被认出" -----
+  // 联动：player.fame ≥ 60 + day ≥ 80
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
+    id: "fame_recognized_encounter",
+    phase: "street",
+    icon: "⭐",
+    title: "这个人我见过",
+    story:
+      '你在街边小店吃饭，邻桌一个中年男人盯着你看了好一会儿，突然走过来说："你是不是就是那个……我好像在短视频里刷到过你？"\n\n他表情真诚，不像是坏人。但「被人认出」这件事，让你既意外又有点微妙的不安。',
+    // [自洽新增] conditions：名气≥60 + day≥80
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 80 &&
+        (st.player.fame || 0) >= 60 &&
+        !st.flags._fameRecognizedSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 客气回应，留个好印象",
+        hint: "名气+3，心情+5",
+        apply: function (st) {
+          st.flags._fameRecognizedSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😊 你笑着聊了几句。对方加了你的联系方式，说'以后多走动'。名气+3，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 谦虚否认，低调做人",
+        hint: "安稳但错失机会",
+        apply: function (st) {
+          st.flags._fameRecognizedSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "😅 你摆手说认错人了。保持低调有低调的好处——至少没那么多麻烦。心情+2，心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤔 跟他聊，看有没有合作机会",
+        hint: "需魅力≥40，可触发人脉",
+        apply: function (st) {
+          st.flags._fameRecognizedSeen = true;
+          if ((st.player.charm || 0) >= 40) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            st.flags._fameConnectionBonus = true;
+            StateManager.addMessage(
+              "🤔 聊了半小时，发现他做的是跟你名气相关的行业。一笔小合作谈成了。名气+5，人脉机会开启。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "🤔 你试着聊合作，但话不投机。尴尬喝了杯茶就散了。心情-3。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // ----- 事件50：健康连续恶化×社会支持缺失的"孤立危机" -----
+  // 联动：health < 40 + lowHealthStreak ≥ 5 + 无NPC好感≥50
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
+    id: "health_alone_trough",
+    phase: "street",
+    icon: "💔",
+    title: "没人知道的痛",
+    story:
+      "身体已经不舒服整整五天了。今天走在路上，突然觉得腿软，蹲在路边缓了好一会儿。\n\n看着来来往往的人，你突然意识到——这座城市这么大，竟然没有一个你可以打电话说'我不舒服'的人。",
+    // [自洽新增] conditions：health<40 + lowHealthStreak≥5 + 无NPC好友
+    conditions: function (st) {
+      var habits = st.flags && st.flags._habits;
+      var lowHealthStreak = habits ? habits.lowHealthStreak || 0 : 0;
+      var noCloseFriend = true;
+      for (var nid in st.relationships) {
+        var r = st.relationships[nid];
+        if (r && r.met && r.affinity >= 50) {
+          noCloseFriend = false;
+          break;
+        }
+      }
+      return (
+        st.player.phase === "street" &&
+        (st.status.health || 70) < 40 &&
+        lowHealthStreak >= 5 &&
+        noCloseFriend &&
+        st.player.day >= 30 &&
+        !st.flags._healthAloneSeen
+      );
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 咬牙去医院（需¥200+）",
+        hint: "治愈但花费大",
+        apply: function (st) {
+          st.flags._healthAloneSeen = true;
+          var cost = Math.min(200 + Random.int(0, 200), st.resources.cash || 0);
+          st.resources.cash -= cost;
+          st.status.health = Math.min(100, (st.status.health || 0) + 18);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "🏥 你独自在医院排队挂号。拿到药走出医院时，阳光特别刺眼。花了¥" +
+              cost +
+              "，健康+18，心智+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍜 吃碗热面，给自己打气",
+        hint: "小幅恢复，心情+",
+        apply: function (st) {
+          st.flags._healthAloneSeen = true;
+          if (st.resources.cash >= 15) {
+            st.resources.cash -= 15;
+            st.status.health = Math.min(100, (st.status.health || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "🍜 路边小店吃了碗热汤面。热气从胃里暖上来，眼泪差点掉进碗里。健康+5，心情+8。",
+              "info",
+            );
+          } else {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "🍜 兜里只剩几个硬币，喝了口热水胃里暖了点。心情+3。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🤝 试着找个人聊聊",
+        hint: "尝试经营NPC关系",
+        apply: function (st) {
+          st.flags._healthAloneSeen = true;
+          st.flags._triedReachingOut = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🤝 你决定放下自尊，去找一个认识但不熟的人说说话。这城市里，孤立是慢慢攒出来的——靠近别人也是。心情+5，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件51：学历完成后×白领世界的"入世门槛" -----
+  // 联动：education ≥ 2 + 无职业状态 → 第一次面试挫败
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
+    id: "edu_white_collar_threshold",
+    phase: "street",
+    icon: "🎓",
+    title: "学历拿到了，然后呢",
+    story:
+      '本科毕业证的快递到了。你撕开信封，看着自己的名字烫在证书上。\n\n当天下午你信心满满地去写字楼面试前台——HR翻了翻你的简历，抬头问："你有什么工作经验?"\n\n你愣住了。',
+    // [自洽新增] conditions：education≥2 + 无职业 + day≥30
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.education >= 2 &&
+        st.player.day >= 30 &&
+        !(st.career && st.career.currentJob) &&
+        !st.flags._eduWhiteCollarSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 强调街头工作经验也是经验",
+        hint: "需魅力≥35",
+        apply: function (st) {
+          st.flags._eduWhiteCollarSeen = true;
+          if ((st.player.charm || 0) >= 35) {
+            st.flags._impressedHr = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage(
+              "💪 你用亲身经历打动了HR。她说'你的抗压能力很稀缺'——让你下周来复试。心情+10，心智+5。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "💪 你努力描述街头经验，但HR礼貌地说'回去等消息'。结果你知道——不会有了。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📋 投基层岗位，从零开始",
+        hint: "白白领薪起点，但稳定",
+        apply: function (st) {
+          st.flags._eduWhiteCollarSeen = true;
+          st.flags._whiteCollarEntry = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📋 你降低身段投了基层岗位。HR说'学历不错，下一轮面试'。踏进白领世界的第一步！心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 算了，还是做熟悉的",
+        hint: "白领路暂缓",
+        apply: function (st) {
+          st.flags._eduWhiteCollarSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🚶 你走出了写字楼。熟悉的街头才是你的主场——但有些门推开过就不会后悔。心情-5，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件52：副业持续经营×"规模化瓶颈" -----
+  // 联动：sideHustle.active + lastActiveDay≥30 + totalEarned≥3000
+  // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
+  RANDOM_EVENTS.push({
+    id: "side_hustle_scaling_crisis",
+    phase: "street",
+    icon: "📈",
+    title: "一个人干到头了",
+    story:
+      "你一个人干了整整一个月，从采购到销售到售后全部自己包。\n\n生意确实在增长，但已经接近极限——你不可能同时出现在两个地方，也不可能每天只睡4小时。\n\n要么招人合伙，要么停在这条线。",
+    // [自洽新增] conditions：副业活跃 + 同副业连续做≥30天 + 累计副业收入≥3000
+    conditions: function (st) {
+      var isActive = st.sideHustle && st.sideHustle.active;
+      var isVeteran =
+        ((st.sideHustle && st.sideHustle.lastActiveDay) || 0) >= 30;
+      var hasEarned =
+        ((st.sideHustle && st.sideHustle.totalEarned) || 0) >= 3000;
+      return (
+        st.player.phase === "street" &&
+        isActive &&
+        isVeteran &&
+        hasEarned &&
+        st.player.day >= 60 &&
+        !st.flags._sideHustleScalingSeen
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 找搭档分成合伙",
+        hint: "需NPC好感≥50，长期收益×1.3",
+        apply: function (st) {
+          st.flags._sideHustleScalingSeen = true;
+          var partner = null;
+          for (var nid in st.relationships) {
+            var r = st.relationships[nid];
+            if (r && r.met && r.affinity >= 50) {
+              partner = nid;
+              break;
+            }
+          }
+          if (partner) {
+            st.flags._sideHustlePartner = partner;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            StateManager.addMessage(
+              "🤝 你和" +
+                partner +
+                "正式开始合伙！分工经营，轻松多了。心情+10，心智+5。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "🤝 想找人合伙，但信任到能一起做生意的人还找不到。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📉 稳在现有规模，挺住",
+        hint: "守住果实，提升效率",
+        apply: function (st) {
+          st.flags._sideHustleScalingSeen = true;
+          st.sideHustle.reputation = Math.min(
+            100,
+            (st.sideHustle.reputation || 0) + 8,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📉 你决定稳住，把现有流程做得更精细。口碑+8，心情+5。成功不一定是做大——也可以是做稳。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 硬性扩量（借¥1000加投）",
+        hint: "高风险高回报",
+        apply: function (st) {
+          st.flags._sideHustleScalingSeen = true;
+          if (Random.chance(0.6)) {
+            var profit = Random.int(800, 2000);
+            st.resources.cash += profit - 1000;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "💰 赌赢了！加投¥1000入货，三天净赚¥" + profit + "。心情+8。",
+              "success",
+            );
+          } else {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            StateManager.addMessage(
+              "💰 扩量失败，¥1000货砸在手里。心情-8。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+// ====== v3.52 烹饪×市场×NPC联动事件（填补cooking技能/林阿姨/陈师傅集成空白） ======
+
+  // === 事件1：cooking技能→食材识别 ===
+  // 【设计意图】cooking技能达到门槛后获得「识货」能力，让玩家感受技能成长的实用价值
+  RANDOM_EVENTS.push({
+    id: "cooking_market_insight",
+    phase: "street",
+    icon: "🔍",
+    title: "菜市场的识货眼力",
+    story:
+      "你在菜市场闲逛，看到一个摊位的小青菜品相不错。" +
+      "凭着多年的下厨经验，你发现这批菜叶梗饱满、虫眼极少，应该是今早刚摘的本地菜。\n" +
+      "旁边一位大妈正在砍价：「两块五？太贵了，两块！」\n" +
+      "摊主犹豫了一下——你知道这批菜值这个价。",
+    conditions: function (st) {
+      // 检查cooking技能≥15
+      return (
+        st.player &&
+        st.player.day > 5 &&
+        st.skills &&
+        st.skills.cooking &&
+        st.skills.cooking.level >= 15
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    options: [
+      {
+        text: "🛒 提醒大妈这菜值这个价",
+        hint: "帮人识货，好感+",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🗣️ 你跟大妈说这菜是本地今早摘的，值这价。大妈半信半疑买了两斤。\n摊主冲你笑了笑——「老懂的。」社会声望+3。",
+            "success",
+          );
+          st.fame = Math.min(100, (st.fame || 0) + 3);
+          if (st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15;
+          }
+        },
+      },
+      {
+        text: "💰 自己囤一批倒手卖",
+        hint: "¥50进货，看行情",
+        apply: function (st) {
+          var cost = 50;
+          if (st.resources.cash >= cost) {
+            st.resources.cash -= cost;
+            // 行情波动：60%赚，40%亏
+            if (Random.chance(0.6)) {
+              var profit = Random.int(30, 80);
+              st.resources.cash += profit + cost;
+              st.resources.totalEarned =
+                (st.resources.totalEarned || 0) + profit;
+              addDailyTransaction(
+                st,
+                "income",
+                "market_flip",
+                profit,
+                "蔬菜倒手利润",
+              );
+              StateManager.addMessage(
+                "🛒 你果断入手一批小青菜，转手卖给餐馆赚了¥" +
+                  profit +
+                  "。厨艺不仅能做饭，还能赚钱。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🛒 行情不好，小青菜砸手里了——只能自己吃掉。亏了¥" +
+                  cost +
+                  "，下次得看准再出手。",
+                "warning",
+              );
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
+            }
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "😞 你看了看钱包，¥50都拿不出来。还是先把肚子填饱再说吧。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "👀 看看就走，长个见识",
+        hint: "无消耗，学经验",
+        apply: function (st) {
+          if (st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 10;
+          }
+          StateManager.addMessage(
+            "👀 你默默记住了辨别青菜的小技巧。烹饪经验+10。好厨子都是从会买菜开始的。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 事件2：auntie_lin好感→烹饪配方 ===
+  // 【设计意图】林阿姨是菜市场摊主，cooking技能玩家与她建立关系能学到街头厨艺秘方
+  RANDOM_EVENTS.push({
+    id: "auntie_lin_secret_recipe",
+    phase: "street",
+    icon: "📜",
+    title: "林阿姨的秘方",
+    story:
+      "收摊时分，林阿姨叫住你：「小伙子/姑娘，我看你经常自己做饭？」\n" +
+      "她从围裙兜里掏出一张皱巴巴的纸：「这是我婆婆传下来的红烧肉秘方，外面吃不到这个味。」\n" +
+      "你闻了闻纸上残留的香料味——八角、桂皮、还有一味说不出的香气。",
+    conditions: function (st) {
+      // [自洽修复] conditions 新增 auntie_lin.met + 好感≥30 + cooking≥10 检查
+      return (
+        st.player &&
+        st.player.day > 15 &&
+        st.relationships &&
+        st.relationships.auntie_lin &&
+        st.relationships.auntie_lin.met &&
+        (st.relationships.auntie_lin.affinity || 0) >= 30 &&
+        st.skills &&
+        st.skills.cooking &&
+        st.skills.cooking.level >= 10
+      );
+    },
+    probability: 0.025,
+    repeatable: false,
+    options: [
+      {
+        text: "🙏 郑重收下，认真学习",
+        hint: "好感+8，厨艺+30xp",
+        apply: function (st) {
+          st.relationships.auntie_lin.affinity = Math.min(
+            100,
+            (st.relationships.auntie_lin.affinity || 0) + 8,
+          );
+          if (st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 30;
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📜 你郑重收下秘方，当天晚上就试做了。味道确实不一样——有一丝陈皮香，服了。好感+8，烹饪经验+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💡 建议林阿姨开网课教做菜",
+        hint: "帮林阿姨增收",
+        apply: function (st) {
+          st.relationships.auntie_lin.affinity = Math.min(
+            100,
+            (st.relationships.auntie_lin.affinity || 0) + 5,
+          );
+          if (st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15;
+          }
+          // 标记林阿姨的网课生意
+          st.flags._auntieLinOnlineClass = true;
+          // 魅力≥30时建议更有效
+          var charm = st.player ? st.player.charm || 0 : 0;
+          if (charm >= 30) {
+            st.fame = Math.min(100, (st.fame || 0) + 5);
+            StateManager.addMessage(
+              "💡 林阿姨眼睛一亮：「这主意好！我女儿正好会拍视频。」\n她觉得你脑子活络，好感+5，声望+5。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💡 林阿姨将信将疑：「网课？我年纪大了搞不懂这些……」\n但她还是把秘方给了你一份。好感+5。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // === 事件3：chef_chen紧急后厨——cooking技能+工作联动 ===
+  // 【设计意图】chef_chen是餐馆厨师，cooking技能的玩家可以在餐馆突发需求时获得临时工作机会
+  RANDOM_EVENTS.push({
+    id: "chef_chen_kitchen_crisis",
+    phase: "street",
+    icon: "🔥",
+    title: "后厨告急",
+    story:
+      "你路过陈师傅的餐馆，门帘一掀，陈师傅探头出来：「哎！你来得正好！」\n" +
+      "他一脸焦头烂额：「今天帮厨急性肠胃炎请假了，晚上还有三桌预订。你平时不是自己做菜吗？能不能江湖救急？」\n" +
+      "厨房里传来锅铲碰撞的声响和切菜声。",
+    conditions: function (st) {
+      // [自洽修复] conditions 新增 chef_chen.met + cooking≥15 检查
+      return (
+        st.player &&
+        st.player.day > 20 &&
+        st.relationships &&
+        st.relationships.chef_chen &&
+        st.relationships.chef_chen.met &&
+        (st.relationships.chef_chen.affinity || 0) >= 40 &&
+        st.skills &&
+        st.skills.cooking &&
+        st.skills.cooking.level >= 15
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    options: [
+      {
+        text: "🔥 系上围裙上灶台",
+        hint: "临时工收入+好感",
+        apply: function (st) {
+          var pay = Random.int(80, 150);
+          var cookingLevel = st.skills.cooking
+            ? st.skills.cooking.level || 0
+            : 0;
+          // 烹饪技能越高，陈师傅越满意
+          var bonus = cookingLevel >= 30 ? Random.int(30, 60) : 0;
+          st.resources.cash += pay + bonus;
+          st.resources.totalEarned =
+            (st.resources.totalEarned || 0) + pay + bonus;
+          addDailyTransaction(
+            st,
+            "income",
+            "temp_kitchen",
+            pay + bonus,
+            "陈师傅后厨帮工",
+          );
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            (st.relationships.chef_chen.affinity || 0) + 5,
+          );
+          if (st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 20;
+          }
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🔥 你系上围裙，在陈师傅的指点下撑过了晚高峰。\n酬劳¥" +
+              (pay + bonus) +
+              "，陈师傅夸你「有点底子」。好感+5，烹饪经验+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 抱歉，今晚有事来不了",
+        hint: "不伤好感",
+        apply: function (st) {
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            Math.max(0, (st.relationships.chef_chen.affinity || 0) - 1),
+          );
+          StateManager.addMessage(
+            "🙅 陈师傅摆摆手：「没事没事，我再想想办法。」\n他转身掏出手机打给另一个朋友。你心里过意不去，但确实有事走不开。好感-1（轻微）。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 注册结束 ======
 })();
