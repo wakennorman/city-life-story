@@ -62,7 +62,7 @@
               cap.reputation = Math.max(0, cap.reputation - 5);
               _clamp(cap);
             }
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
             _msg(
               "🙇 你平静道歉并处置了渗液，家属情绪稳定下来。声誉-5，心理-8。",
               "warning",
@@ -84,7 +84,7 @@
                 "success",
               );
             } else {
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 15);
               _msg(
                 "😰 家属不依不饶升级到投诉，医院让你写检查报告。心理-15。",
                 "warning",
@@ -100,7 +100,7 @@
               "📞 护士长赶来，用老练的方式化解了矛盾。你背了半小时骂，心里憋屈。",
               "info",
             );
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
           },
         },
       ],
@@ -202,7 +202,7 @@
               _clamp(cap);
             }
             st.player.physique = Math.max(0, (st.player.physique || 30) - 10);
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 15);
             st.flags = st.flags || {};
             st.flags._medVolunteerHonor = true;
             _msg(
@@ -246,7 +246,7 @@
               cap.reputation = Math.max(0, cap.reputation - 3);
               _clamp(cap);
             }
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
             _msg(
               "📝 你上报了险情。护士长说「发现了就是好的，感谢你的诚实」，科室据此改了排班流程。",
               "info",
@@ -310,7 +310,7 @@
           text: "😤 私下找她谈，要求署名",
           hint: "需要一定心理强度",
           apply: function (st) {
-            if (st.needs && (st.needs.mental || 0) >= 50) {
+            if (st.needs && (st.player.mental || 0) >= 50) {
               var cap = _cap(st);
               if (cap) {
                 cap.reputation = Math.min(100, cap.reputation + 6);
@@ -325,7 +325,7 @@
                 "😔 你鼓足勇气说了几句，但声音发抖，她态度敷衍，你最终没争到什么。",
                 "warning",
               );
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 5);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             }
           },
         },
@@ -619,7 +619,7 @@
                 "😱 检查组发现了痕迹，要求你配合调查。事情比想象中严重。声誉-25。",
                 "warning",
               );
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 20);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 20);
             } else {
               _msg(
                 "😮‍💨 检查顺利结束，没有问题。这次算过去了，但心理阴影留下了。",
@@ -790,7 +790,7 @@
               cap.burnout = Math.min(100, cap.burnout + 8);
               _clamp(cap);
             }
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
             _msg(
               "🏗️ 视察顺利，领导满意。但你看着那些三天后就会枯死的盆栽，心情很复杂。倦怠+8，心理-8。",
               "warning",
@@ -894,7 +894,7 @@
           text: "😔 焦虑但什么也没做",
           hint: "摆烂，后果自负",
           apply: function (st) {
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 15);
             var cap = _cap(st);
             if (cap) {
               cap.burnout = Math.min(100, cap.burnout + 12);
@@ -1227,7 +1227,7 @@
           text: "😤 生气，但认了——坚守了底线",
           hint: "心理代价换职业操守",
           apply: function (st) {
-            st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.min(100, cap.reputation + 5);
@@ -1353,7 +1353,7 @@
                 "success",
               );
             } else {
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
               _msg(
                 "😡 家长态度很差，坚持说你有问题。你心里委屈但无话可说。心理-10。",
                 "warning",
@@ -1805,7 +1805,7 @@
               var cap = _cap(st);
               if (cap) cap.reputation = Math.max(0, cap.reputation - 20);
               _clamp(cap);
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 20);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 20);
               _msg(
                 "⚠️ 患者后来在别的医院确诊心梗并投诉了你，医务科找你谈话。声誉-20，心理-20。",
                 "warning",
@@ -1900,7 +1900,7 @@
                 "success",
               );
             } else {
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 15);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 15);
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
               _msg(
                 "😔 差了几分没过。明年再战，这次有了经验会更有把握。",
@@ -1925,7 +1925,7 @@
                 "success",
               );
             } else {
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
               _msg("📅 太忙了，复习时间不够。下次得全职备考才行。", "info");
             }
           },
@@ -2033,7 +2033,7 @@
                 "success",
               );
             } else {
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 10);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
               _msg(
                 "📖 笔试过了但面试被刷。明年继续，这次攒了经验。心理-10，疲劳+20。",
@@ -2148,7 +2148,7 @@
               );
             } else {
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
-              st.needs.mental = Math.max(0, (st.needs.mental || 50) - 12);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 12);
               _msg(
                 "📄 政策被退回修改了好几轮。虽然最终通过了，但过程极其痛苦。疲劳+30，心理-12。",
                 "warning",
