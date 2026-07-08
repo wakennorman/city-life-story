@@ -938,19 +938,29 @@ var REAL_TIME_NEWS_CONFIG = {
   maxItems: 6, // 最多保留几条实时新闻
   displayCount: 4, // 弹窗展示几条
   sources: {
-    // 源1：直接抓取 RSS XML 解析（无需第三方转换服务，DOMParser 原生支持）
+    // 源1：直接抓取 RSS XML（先直连，CORS失败自动回退到代理）
     rss_direct: {
       enabled: true,
-      timeout: 5000,
+      timeout: 6000,
+      // CORS代理回退链：直连失败后按序尝试，encodeURIComponent拼接在代理后
+      corsProxies: ["https://corsproxy.io/?"],
+      feeds: [{ name: "36氪", url: "https://36kr.com/feed", category: "科技" }],
+    },
+    // 源2：rss2json.com 转换服务（CORS-enabled，免费1w次/天，最可靠）
+    rss2json: {
+      enabled: true,
+      endpoint: "https://api.rss2json.com/v1/api.json",
+      timeout: 7000,
       feeds: [
+        { name: "36氪", url: "https://36kr.com/feed", category: "科技" },
         {
-          name: "36氪",
-          url: "https://36kr.com/feed",
-          category: "科技",
+          name: "澎湃",
+          url: "https://www.thepaper.cn/rss/channel/25434",
+          category: "综合",
         },
       ],
     },
-    // 源2：天行数据API（需注册免费Key，更稳定）
+    // 源3：天行数据API（需注册免费Key，更稳定）
     // ═══════════════════════════════════════════════════════════════════
     //  🔑 如何获取：
     //     1. 浏览器打开 https://www.tianapi.com/ → 注册账号
@@ -965,11 +975,9 @@ var REAL_TIME_NEWS_CONFIG = {
       endpoint: "https://api.tianapi.com/txapi/guonei/index",
       params: "num=10&rand=1", // 随机10条
     },
-    // 源3：通过 CORS 代理直接抓取新闻页面（无需API Key，兜底用）
-    // 源3：直连 CORS 代理（2026-07-06 已禁用 — allorigins.win 返回 408/CORS）
+    // 源4：直连 CORS 代理（已禁用 — allorigins.win 返回 408/CORS）
     direct: {
       enabled: false,
-      // 使用与 world_params.js 相同的 CORS 代理
       proxyUrl: "https://api.allorigins.win/raw?url=",
       sources: [
         {
@@ -1423,93 +1431,113 @@ function generateInvestmentEffectFromTag(tag, mood) {
  * 从 RSS XML 直接抓取并解析（不需要第三方转换服务）
  * 使用浏览器原生 DOMParser 解析 XML
  */
-function fetchFromRSSDirect(feed) {
-  var timeout = REAL_TIME_NEWS_CONFIG.sources.rss_direct.timeout || 5000;
+/** 解析 RSS XML 文本为游戏新闻格式（内部辅助） */
+function _parseRSSXML(xmlText, feed) {
+  var parser = new DOMParser();
+  var xmlDoc = parser.parseFromString(xmlText, "text/xml");
+  var parseError = xmlDoc.querySelector("parsererror");
+  if (parseError) throw new Error("XML parse error for " + feed.name);
 
+  var items = xmlDoc.querySelectorAll("item");
+  if (!items || items.length === 0)
+    throw new Error("No items in RSS feed: " + feed.name);
+
+  var newsItems = [];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var titleEl = item.querySelector("title");
+    var descEl = item.querySelector("description");
+    var linkEl = item.querySelector("link");
+    var title = titleEl ? titleEl.textContent : "";
+    if (!title) continue;
+    var description = descEl ? descEl.textContent : "";
+    var link = linkEl ? linkEl.textContent : "";
+    var classification = classifyRealNews(title, description);
+    newsItems.push({
+      id: "realtime_" + feed.name + "_" + i,
+      icon: getNewsIconByTag(classification.tag),
+      tag: classification.tag,
+      headline: title
+        .replace(/<[^>]+>/g, "")
+        .trim()
+        .substring(0, 80),
+      detail: description
+        .replace(/<[^>]+>/g, "")
+        .trim()
+        .substring(0, 120),
+      worldEffect: {
+        sectorHeat: classification.sectorHeat,
+        marketMood: classification.marketMood,
+        note: classification.note,
+      },
+      investmentEffect: generateInvestmentEffectFromTag(
+        classification.tag,
+        classification.marketMood,
+      ),
+      source: "实时·" + feed.name,
+      url: link,
+      _isRealTime: true,
+    });
+  }
+  if (newsItems.length === 0)
+    throw new Error("Empty items after parsing RSS: " + feed.name);
+  return newsItems;
+}
+
+/** 从指定 URL 抓取 RSS XML 并解析（内部辅助，单URL单次） */
+function _fetchRSSFromUrl(url, feed, timeout) {
   return new Promise(function (resolve, reject) {
     var timeoutId = setTimeout(function () {
       reject(new Error("RSS timeout: " + feed.name));
     }, timeout);
 
-    fetch(feed.url)
+    fetch(url)
       .then(function (response) {
         clearTimeout(timeoutId);
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error("HTTP " + response.status + " for " + feed.name);
-        }
         return response.text();
       })
       .then(function (xmlText) {
-        // 使用 DOMParser 解析 XML
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(xmlText, "text/xml");
-
-        // 检查解析错误
-        var parseError = xmlDoc.querySelector("parsererror");
-        if (parseError) {
-          throw new Error("XML parse error for " + feed.name);
-        }
-
-        var items = xmlDoc.querySelectorAll("item");
-        if (!items || items.length === 0) {
-          throw new Error("No items in RSS feed: " + feed.name);
-        }
-
-        var newsItems = [];
-        for (var i = 0; i < items.length; i++) {
-          var item = items[i];
-          var titleEl = item.querySelector("title");
-          var descEl = item.querySelector("description");
-          var linkEl = item.querySelector("link");
-          var dateEl = item.querySelector("pubDate");
-
-          var title = titleEl ? titleEl.textContent : "";
-          if (!title) continue;
-
-          var description = descEl ? descEl.textContent : "";
-          var link = linkEl ? linkEl.textContent : "";
-          var pubDate = dateEl ? dateEl.textContent : "";
-
-          var classification = classifyRealNews(title, description);
-
-          newsItems.push({
-            id: "realtime_" + feed.name + "_" + i,
-            icon: getNewsIconByTag(classification.tag),
-            tag: classification.tag,
-            headline: title
-              .replace(/<[^>]+>/g, "")
-              .trim()
-              .substring(0, 80),
-            detail: description
-              .replace(/<[^>]+>/g, "")
-              .trim()
-              .substring(0, 120),
-            worldEffect: {
-              sectorHeat: classification.sectorHeat,
-              marketMood: classification.marketMood,
-              note: classification.note,
-            },
-            investmentEffect: generateInvestmentEffectFromTag(
-              classification.tag,
-              classification.marketMood,
-            ),
-            source: "实时·" + feed.name,
-            url: link,
-            _isRealTime: true,
-          });
-        }
-
-        if (newsItems.length > 0) {
-          resolve(newsItems);
-        } else {
-          reject(new Error("Empty items after parsing RSS: " + feed.name));
-        }
+        resolve(_parseRSSXML(xmlText, feed));
       })
       .catch(function (err) {
         clearTimeout(timeoutId);
         reject(err);
       });
   });
+}
+
+/**
+ * 从 RSS XML 直接抓取（先直连，CORS失败自动依次尝试corsProxies列表）
+ */
+function fetchFromRSSDirect(feed) {
+  var rssDirectCfg = REAL_TIME_NEWS_CONFIG.sources.rss_direct;
+  var timeout = rssDirectCfg.timeout || 6000;
+  var proxies = rssDirectCfg.corsProxies || [];
+
+  // 待尝试的URL列表：直连 → 各CORS代理
+  var urlsToTry = [feed.url];
+  for (var pi = 0; pi < proxies.length; pi++) {
+    urlsToTry.push(proxies[pi] + encodeURIComponent(feed.url));
+  }
+
+  function tryNext(idx) {
+    if (idx >= urlsToTry.length) {
+      return Promise.reject(new Error("All URLs failed for " + feed.name));
+    }
+    return _fetchRSSFromUrl(urlsToTry[idx], feed, timeout).catch(
+      function (err) {
+        console.warn(
+          "[实时新闻] " + feed.name + " 尝试#" + idx + " 失败:",
+          err.message || err,
+        );
+        return tryNext(idx + 1);
+      },
+    );
+  }
+
+  return tryNext(0);
 }
 
 /** 尝试用指定的转换URL抓取RSS并转换为游戏新闻格式 */
@@ -1587,6 +1615,17 @@ function tryFetchRSS(converterUrl, feed) {
         reject(err);
       });
   });
+}
+
+/**
+ * 通过 rss2json.com 将 RSS 转换为 JSON（绕过 CORS）
+ */
+function fetchFromRSS2JSON(feed) {
+  var cfg = REAL_TIME_NEWS_CONFIG.sources.rss2json;
+  if (!cfg || !cfg.enabled) {
+    return Promise.reject(new Error("rss2json not configured"));
+  }
+  return tryFetchRSS(cfg.endpoint, feed);
 }
 
 /**
@@ -1843,7 +1882,7 @@ function fetchRealTimeNews() {
   _realNewsStatus = "loading";
   var promises = [];
 
-  // 添加RSS直接抓取源（直接解析XML，无需第三方转换）
+  // 源1：RSS直连（含 CORS 代理回退）
   var rssDirectCfg = REAL_TIME_NEWS_CONFIG.sources.rss_direct;
   if (
     rssDirectCfg.enabled &&
@@ -1855,7 +1894,20 @@ function fetchRealTimeNews() {
     }
   }
 
-  // 添加天行数据（如果配置了）
+  // 源2：rss2json 转换服务（CORS-enabled，最可靠）
+  var rss2jsonCfg = REAL_TIME_NEWS_CONFIG.sources.rss2json;
+  if (
+    rss2jsonCfg &&
+    rss2jsonCfg.enabled &&
+    rss2jsonCfg.feeds &&
+    rss2jsonCfg.feeds.length > 0
+  ) {
+    for (var rj = 0; rj < rss2jsonCfg.feeds.length; rj++) {
+      promises.push(fetchFromRSS2JSON(rss2jsonCfg.feeds[rj]));
+    }
+  }
+
+  // 源3：天行数据API
   if (
     REAL_TIME_NEWS_CONFIG.sources.tianapi.enabled &&
     REAL_TIME_NEWS_CONFIG.sources.tianapi.apiKey
@@ -1863,7 +1915,7 @@ function fetchRealTimeNews() {
     promises.push(fetchFromTianAPI());
   }
 
-  // 添加直连兜底源（通过 CORS 代理）
+  // 源4：直连兜底（已禁用）
   var directCfg = REAL_TIME_NEWS_CONFIG.sources.direct;
   if (directCfg.enabled && directCfg.sources && directCfg.sources.length > 0) {
     promises.push(fetchFromDirect());
@@ -1897,6 +1949,11 @@ function fetchRealTimeNews() {
               allNews.push(news);
             }
           }
+        } else if (result.status === "rejected") {
+          console.warn(
+            "[实时新闻] 源失败:",
+            result.reason && (result.reason.message || result.reason),
+          );
         }
       }
 
@@ -1940,10 +1997,14 @@ function fetchRealTimeNewsInBackground() {
   _realNewsStatus = "loading";
   fetchRealTimeNews()
     .then(function (news) {
-      // 成功 — 缓存已由 fetchRealTimeNews 设置
+      console.log("[城市浮生记] ✅ 实时新闻获取成功，共" + news.length + "条");
     })
     .catch(function (err) {
-      // 失败 — 状态已由 fetchRealTimeNews 设置
+      console.warn(
+        "[城市浮生记] ⚠️ 实时新闻获取失败（" +
+          (_realNewsError || err.message) +
+          "），将使用离线新闻",
+      );
     });
 }
 
