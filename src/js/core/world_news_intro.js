@@ -2576,17 +2576,27 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
     }
 
     // 在消息日志里写入氛围背景
+    // 设计：在线模式（有实时新闻）→ 只显示实时头条，营造"世界正在发生"的沉浸感
+    //      离线模式（本地新闻）→ 显示世界参数初始化 + 时代背景，说明游戏世界已生成
     var headlineList = selectedNews.map(function (n) {
       return n.icon + n.headline;
     });
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      StateManager.addMessage(
-        "📺 " +
-          (selectedNews[0]._isRealTime ? "实时" : "今日") +
-          "头条·时代背景：" +
-          headlineList.slice(0, 2).join(" | "),
-        "event",
-      );
+      var isRealTime = selectedNews[0]._isRealTime;
+      if (isRealTime) {
+        // 在线模式：实时新闻主导，不显示世界参数初始化消息
+        StateManager.addMessage(
+          "📺 实时头条·时代背景：" + headlineList.slice(0, 2).join(" | "),
+          "event",
+        );
+      } else {
+        // 离线模式：显示世界参数初始化 + 本地时代背景
+        StateManager.addMessage(
+          "🌐 世界参数已随机初始化 | 📺 时代背景：" +
+            headlineList.slice(0, 2).join(" | "),
+          "event",
+        );
+      }
     }
   }
   if (typeof enterGame === "function") {

@@ -398,10 +398,7 @@ function seedRandomFallback(params) {
   params.seedSource = "random";
   params.seedDate = null;
 
-  StateManager.addMessage(
-    "🌐 世界参数已随机初始化（浏览器模式：使用本地随机种子）",
-    "info",
-  );
+  // 开局消息移到 applyNewsAndEnter 统一管理，避免与新闻消息冲突
 }
 
 // ====== 每日参数更新 ======

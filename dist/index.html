@@ -40729,7 +40729,10 @@ function showMedicalTreatmentModal() {
         "）";
     }
   }
-  body += "</div>" + '<div style="display:grid;gap:8px;">';
+  body +=
+    "</div>" +
+    '<div class="modal-treatment-feedback"></div>' +
+    '<div style="display:grid;gap:8px;">';
 
   Object.keys(ILLNESS_GRADES).forEach(function (gradeKey) {
     var grade = ILLNESS_GRADES[gradeKey];
@@ -40759,8 +40762,19 @@ function showMedicalTreatmentModal() {
       cls: gradeKey === "mild" ? "btn-primary" : "btn-warning",
       callback: function () {
         var result = startTreatment(StateManager.getState(), gradeKey);
+        // 显示简短通知消息，方便用户看到反馈
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          // 不关闭弹窗，在弹窗内显示提示
+          var feedbackEl = document.querySelector(".modal-treatment-feedback");
+          if (feedbackEl) {
+            feedbackEl.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };
@@ -40779,6 +40793,7 @@ function showMedicalInsuranceModal() {
     '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
     summary.join("<br>") +
     "</div>" +
+    '<div class="modal-insurance-feedback"></div>' +
     '<div style="display:grid;gap:8px;">';
   for (var i = 0; i < INSURANCE_PLANS.length; i++) {
     var p = INSURANCE_PLANS[i];
@@ -40803,7 +40818,17 @@ function showMedicalInsuranceModal() {
       callback: function () {
         var result = buyMedicalInsurance(StateManager.getState(), plan.id);
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          // 弹窗内显示提示
+          var fb = document.querySelector(".modal-insurance-feedback");
+          if (fb) {
+            fb.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };
@@ -41256,7 +41281,16 @@ function showTravelAgencyModal() {
       callback: function () {
         var result = startTravel(StateManager.getState(), destId);
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          var fb = document.querySelector(".modal-travel-feedback");
+          if (fb) {
+            fb.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };
@@ -43303,10 +43337,7 @@ function seedRandomFallback(params) {
   params.seedSource = "random";
   params.seedDate = null;
 
-  StateManager.addMessage(
-    "🌐 世界参数已随机初始化（浏览器模式：使用本地随机种子）",
-    "info",
-  );
+  // 开局消息移到 applyNewsAndEnter 统一管理，避免与新闻消息冲突
 }
 
 // ====== 每日参数更新 ======
@@ -46320,17 +46351,28 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
     }
 
     // 在消息日志里写入氛围背景
+    // 设计：在线模式（有实时新闻）→ 只显示实时头条，营造"世界正在发生"的沉浸感
+    //      离线模式（本地新闻）→ 显示世界参数初始化 + 时代背景，说明游戏世界已生成
     var headlineList = selectedNews.map(function (n) {
       return n.icon + n.headline;
     });
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      StateManager.addMessage(
-        "📺 " +
-          (selectedNews[0]._isRealTime ? "实时" : "今日") +
-          "头条·时代背景：" +
-          headlineList.slice(0, 2).join(" | "),
-        "event",
-      );
+      var isRealTime = selectedNews[0]._isRealTime;
+      if (isRealTime) {
+        // 在线模式：实时新闻主导，不显示世界参数初始化消息
+        StateManager.addMessage(
+          "📺 实时头条·时代背景：" +
+            headlineList.slice(0, 2).join(" | "),
+          "event",
+        );
+      } else {
+        // 离线模式：显示世界参数初始化 + 本地时代背景
+        StateManager.addMessage(
+          "🌐 世界参数已随机初始化 | 📺 时代背景：" +
+            headlineList.slice(0, 2).join(" | "),
+          "event",
+        );
+      }
     }
   }
   if (typeof enterGame === "function") {
@@ -87376,6 +87418,48 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 外观维持（发型衰减 + 整容保养提醒） ===
+  {
+    name: "appearance_maintenance",
+    fn: function (state) {
+      var flags = state.flags || (state.flags = {});
+      var day = state.player ? state.player.day : 0;
+      // 发型设计：每日衰减1点魅力，直到衰减完毕
+      if (flags._groomingBonus && flags._groomingBonus > 0) {
+        flags._groomingBonus = Math.max(0, flags._groomingBonus - 1);
+        if (flags._groomingBonus === 0) {
+          // 魅力回降（已通过每日-1衰减回原始值）
+          if (typeof StateManager !== "undefined" && day % 5 === 0) {
+            StateManager.addMessage("💇 发型效果已消退，魅力回到自然状态。", "info");
+          }
+        }
+      }
+      // 整容保养提醒：90天后提示需要维护
+      if (flags._lastSurgeryDay && day > 0) {
+        var daysSinceSurgery = day - flags._lastSurgeryDay;
+        if (daysSinceSurgery > 85 && daysSinceSurgery <= 90 && day % 5 === 0) {
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              "💉 上次整容已过去" + daysSinceSurgery + "天，建议去医院做保养维护。",
+              "info",
+            );
+          }
+        }
+        if (daysSinceSurgery > 90) {
+          // 超过90天未保养，魅力缓慢衰减（每10天-1）
+          var decayTotal = Math.floor((daysSinceSurgery - 90) / 10);
+          if (decayTotal > 0) {
+            p = state.player || {};
+            if (p.charm) {
+              var originalCharm = p.charm;
+              p.charm = Math.min(100, Math.max(0, p.charm - decayTotal));
+            }
+          }
+        }
+      }
+    },
+  },
+
   // === v3.4 C3D-T1: NPC 位置轮换 ===
   {
     name: "npc_location_tick",
@@ -123739,6 +123823,12 @@ function renderInventoryTab(state, parent) {
         负重 ${totalWeight}/${maxCarry}kg
       </span>
     </h3>
+    <div style="margin-bottom:10px;padding:8px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.15);border-radius:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <span style="font-size:11px;color:var(--text-muted);">🔗 前往升级：</span>
+      ${navActionButton("location", "wholesaleMarket", "🏪 批发市场买背包", { hideConfirm: true })}
+      ${navActionButton("location", "commercialDist", "🏬 商业区买行李箱", { hideConfirm: true })}
+      <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">批发市场/商业区有更大容量的装备出售</span>
+    </div>
   `;
 
   const items = state.inventory.items;
@@ -125797,6 +125887,9 @@ function renderMergedPersonalGrowthTab(state, parent) {
   }
 
   parent.appendChild(content);
+
+  // 子Tab切换不经过 renderMeTab，需在此手动绑定导航按钮
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
@@ -125866,7 +125959,7 @@ function renderPgStatTrain(state, content) {
   var html =
     '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
   html +=
-    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点。必须在对应地点才能训练。整容手术有失败风险且会降低魅力上限。</p>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
 
   trainings.forEach(function (t) {
@@ -125877,6 +125970,19 @@ function renderPgStatTrain(state, content) {
     html +=
       '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
     html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
+    // 位置要求提示
+    var locHint = {
+      train_physique: "📍公园·商业区",
+      train_intelligence: "📍大学城·培训中心",
+      train_agility: "📍公园",
+      train_ability: "📍公园",
+      train_charm_grooming: "📍商业区",
+      train_charm_surgery: "📍医院",
+    }[t.id];
+    if (locHint) {
+      html +=
+        '<div style="font-size:10px;color:var(--info);margin-top:2px;">' + locHint + "</div>";
+    }
     html +=
       '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
       t.statLabel +
@@ -125895,7 +126001,15 @@ function renderPgStatTrain(state, content) {
       "</div>";
     if (t.risky) {
       html +=
-        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（魅力-5/健康-15）</div>';
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（失败魅力上限-3）</div>';
+    }
+    if (t.id === "train_charm_grooming") {
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 临时效果，每日衰减</div>';
+    }
+    if (t.id === "train_charm_surgery") {
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 长期效果，每90天需保养</div>';
     }
     html +=
       "<button onclick=\"window.__doTrain('" +
@@ -125917,21 +126031,24 @@ function renderPgStatTrain(state, content) {
   });
   html += "</div>";
 
-  // 整容说明
+  // 训练说明
   html +=
     '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
   html +=
-    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力-5、健康-15、心情-10。发型设计是临时魅力维护，整容成功才是长期改变。";
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力上限永久-3、魅力-5、健康-15。成功效果长期，约90天后需保养维护。<br>" +
+    "💇 <strong>发型设计</strong>：临时魅力效果，每日衰减1点，需要定期维护。<br>" +
+    "🏃 <strong>健身/跑步</strong>：在公园或商业区可训练体质和敏捷，持续锻炼能积累永久提升。";
   html += "</div>";
 
   content.innerHTML = html;
 }
 
-/** v3.0 训练执行（暴露给 onclick）*/
+/** v3.0 训练执行（暴露给 onclick）— 现已加入位置门控 + 导航弹窗 */
 window.__doTrain = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
+  var currentLoc = state.trade && state.trade.currentLocation;
   var trainings = {
     train_physique: {
       stat: "physique",
@@ -125940,6 +126057,8 @@ window.__doTrain = function (trainId) {
       priceStep: 30,
       gain: [1, 3],
       apCost: 6,
+      locations: ["park", "commercialDist"],
+      locationNames: "公园、商业区",
     },
     train_intelligence: {
       stat: "intelligence",
@@ -125948,6 +126067,8 @@ window.__doTrain = function (trainId) {
       priceStep: 40,
       gain: [1, 3],
       apCost: 6,
+      locations: ["school", "trainingCenter"],
+      locationNames: "大学城、培训中心",
     },
     train_agility: {
       stat: "agility",
@@ -125956,6 +126077,8 @@ window.__doTrain = function (trainId) {
       priceStep: 25,
       gain: [1, 3],
       apCost: 5,
+      locations: ["park"],
+      locationNames: "公园",
     },
     train_ability: {
       stat: "mental",
@@ -125964,6 +126087,8 @@ window.__doTrain = function (trainId) {
       priceStep: 50,
       gain: [1, 2],
       apCost: 5,
+      locations: ["park"],
+      locationNames: "公园",
     },
     train_charm_grooming: {
       stat: "charm",
@@ -125972,6 +126097,9 @@ window.__doTrain = function (trainId) {
       priceStep: 80,
       gain: [1, 3],
       apCost: 4,
+      locations: ["commercialDist"],
+      locationNames: "商业区",
+      tempLabel: "（临时效果，每日-1衰减）",
     },
     train_charm_surgery: {
       stat: "charm",
@@ -125981,10 +126109,52 @@ window.__doTrain = function (trainId) {
       gain: [5, 15],
       apCost: 8,
       risky: true,
+      locations: ["hospital"],
+      locationNames: "医院",
+      surgeryLabel: "（长期效果，每90天需保养）",
     },
   };
   var t = trainings[trainId];
   if (!t) return;
+
+  // ====== 位置门控 ======
+  if (t.locations && t.locations.indexOf(currentLoc) === -1) {
+    // 不在正确位置 → 弹窗导航
+    var locBtns = t.locations.map(function (locId) {
+      var locNames = {
+        park: "公园",
+        commercialDist: "商业区",
+        school: "大学城",
+        trainingCenter: "培训中心",
+        hospital: "医院",
+      };
+      var locName = locNames[locId] || locId;
+      return {
+        text: "📍 前往" + locName,
+        cls: "btn-primary",
+        callback: function () {
+          navigateTo(state, { type: "location", key: locId, displayName: locName });
+          return true;
+        },
+      };
+    });
+    locBtns.push({ text: "取消", cls: "" });
+    showModal({
+      title: "📍 需要前往" + t.locationNames,
+      body:
+        '<div style="text-align:center;padding:8px 0;">' +
+        '<div style="font-size:32px;margin-bottom:10px;">' +
+        ({ train_physique: "🏋️", train_intelligence: "📚", train_agility: "🏃", train_ability: "🧘", train_charm_grooming: "💇", train_charm_surgery: "💉" }[trainId] || "🏋️") +
+        "</div>" +
+        '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
+        "当前不在" + t.locationNames + "，无法进行此项训练。<br>" +
+        "请先前往对应地点，再开始训练。</p>" +
+        "</div>",
+      buttons: locBtns,
+    });
+    return;
+  }
+
   var count = flags["_trainCount_" + trainId] || 0;
   var price = t.basePrice + count * t.priceStep;
   if ((state.resources.cash || 0) < price) {
@@ -125994,17 +126164,45 @@ window.__doTrain = function (trainId) {
   state.resources.cash -= price;
   flags["_trainCount_" + trainId] = count + 1;
 
-  // 风险检查（整容）
+  // ====== 整容手术：失败降低魅力上限 ======
   if (t.risky && Math.random() < 0.2) {
+    // 失败：降低魅力上限（永久）
+    state.flags._charmMaxReduction = (state.flags._charmMaxReduction || 0) + 3;
     p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
-      "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
+      "💉 整容失败！魅力上限-3，魅力-5，健康-15，心情-10。手术有风险...",
       "error",
     );
+  } else if (t.risky) {
+    // 整容成功：长期效果，但需定期保养
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var charmMaxReduction = state.flags._charmMaxReduction || 0;
+    var maxCharm = 100 - charmMaxReduction;
+    p[t.stat] = Math.min(maxCharm, (p[t.stat] || 0) + baseGain);
+    // 记录整容时间，90天后开始衰减
+    state.flags._lastSurgeryDay = state.player.day;
+    StateManager.addMessage(
+      "💉 整容成功！魅力+" + baseGain + "（长期效果，约90天后需保养维护）",
+      "success",
+    );
+  } else if (trainId === "train_charm_grooming") {
+    // 发型设计：临时效果，每日衰减1点
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var crit = Math.random() < 0.1 ? 2 : 0;
+    var totalGain = baseGain + crit;
+    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
+    // 记录临时魅力加成衰减日
+    state.flags._groomingBonusDay = state.player.day;
+    state.flags._groomingBonus = (state.flags._groomingBonus || 0) + totalGain;
+    var msg = "💇 发型设计 魅力+" + totalGain + "（临时效果，每日衰减1点）";
+    if (crit > 0) msg += "（爆击！）";
+    StateManager.addMessage(msg, "success");
   } else {
-    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
+    // 普通训练：随机提升
     var baseGain =
       t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
     var crit = Math.random() < 0.1 ? 2 : 0;
@@ -139326,64 +139524,7 @@ function getCareerRequirementText(level) {
   return parts.length ? parts.join(" / ") : "无硬性门槛";
 }
 
-function getCareerEducationHtml(state) {
-  var p = state.player || {};
-  var edu = p.education ?? state.education ?? 0;
-  var eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
-  var eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
-  var eduThresholds = [0, 50, 100, 150, 300, 500];
-  var sp = p.eduStudyPoints || 0;
-
-  if (edu >= eduNames.length - 1) {
-    // 已到顶
-    return (
-      '<div class="section"><h3>🎓 学历与考试</h3>' +
-      '<div class="card" style="padding:12px;">' +
-      '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-      eduIcons[edu] +
-      " 当前学历：" +
-      eduNames[edu] +
-      "</div>" +
-      '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">' +
-      "学历已到顶级，后续更依赖项目、技能和人脉。" +
-      "</div></div></div>"
-    );
-  }
-
-  var nextLevel = edu + 1;
-  var threshold = eduThresholds[nextLevel];
-  var pct = Math.min(100, Math.round((sp / threshold) * 100));
-
-  return (
-    '<div class="section"><h3>🎓 学历与考试</h3>' +
-    '<div class="card" style="padding:12px;">' +
-    '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-    eduIcons[edu] +
-    " 当前学历：" +
-    eduNames[edu] +
-    "</div>" +
-    '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">' +
-    "目标：<strong>" +
-    eduNames[nextLevel] +
-    "</strong>（需" +
-    threshold +
-    "学习点）" +
-    "</div>" +
-    '<div style="margin-top:8px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">' +
-    '<div style="height:100%;width:' +
-    pct +
-    '%;background:var(--accent);"></div></div>' +
-    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "学习点：" +
-    sp +
-    "/" +
-    threshold +
-    "<br>" +
-    '<button class="btn btn-sm nav-action-btn" style="margin-top:6px;min-height:44px;" ' +
-    'data-nav-type="location" data-nav-target=\'{"type":"location","key":"school"}\'>🏛️ 去大学城备考</button>' +
-    "</div></div></div>"
-  );
-}
+// 学历已在「我→成长→学历」中展示，事业总览不再重复
 
 /** 事业发展Tab主渲染函数 */
 function renderCareerDevTab(state, parent) {
@@ -140064,7 +140205,6 @@ function renderCareerOverview(state, parent) {
     '">🎓 去大学城提升学历</button>' +
     "</div>";
 
-  html += getCareerEducationHtml(state);
   html += "</div>";
   parent.innerHTML = html;
 }

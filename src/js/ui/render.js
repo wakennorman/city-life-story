@@ -2491,6 +2491,12 @@ function renderInventoryTab(state, parent) {
         负重 ${totalWeight}/${maxCarry}kg
       </span>
     </h3>
+    <div style="margin-bottom:10px;padding:8px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.15);border-radius:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <span style="font-size:11px;color:var(--text-muted);">🔗 前往升级：</span>
+      ${navActionButton("location", "wholesaleMarket", "🏪 批发市场买背包", { hideConfirm: true })}
+      ${navActionButton("location", "commercialDist", "🏬 商业区买行李箱", { hideConfirm: true })}
+      <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">批发市场/商业区有更大容量的装备出售</span>
+    </div>
   `;
 
   const items = state.inventory.items;
@@ -4549,6 +4555,9 @@ function renderMergedPersonalGrowthTab(state, parent) {
   }
 
   parent.appendChild(content);
+
+  // 子Tab切换不经过 renderMeTab，需在此手动绑定导航按钮
+  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
@@ -4618,7 +4627,7 @@ function renderPgStatTrain(state, content) {
   var html =
     '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
   html +=
-    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点。必须在对应地点才能训练。整容手术有失败风险且会降低魅力上限。</p>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
 
   trainings.forEach(function (t) {
@@ -4629,6 +4638,21 @@ function renderPgStatTrain(state, content) {
     html +=
       '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
     html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
+    // 位置要求提示
+    var locHint = {
+      train_physique: "📍公园·商业区",
+      train_intelligence: "📍大学城·培训中心",
+      train_agility: "📍公园",
+      train_ability: "📍公园",
+      train_charm_grooming: "📍商业区",
+      train_charm_surgery: "📍医院",
+    }[t.id];
+    if (locHint) {
+      html +=
+        '<div style="font-size:10px;color:var(--info);margin-top:2px;">' +
+        locHint +
+        "</div>";
+    }
     html +=
       '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
       t.statLabel +
@@ -4647,7 +4671,15 @@ function renderPgStatTrain(state, content) {
       "</div>";
     if (t.risky) {
       html +=
-        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（魅力-5/健康-15）</div>';
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（失败魅力上限-3）</div>';
+    }
+    if (t.id === "train_charm_grooming") {
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 临时效果，每日衰减</div>';
+    }
+    if (t.id === "train_charm_surgery") {
+      html +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 长期效果，每90天需保养</div>';
     }
     html +=
       "<button onclick=\"window.__doTrain('" +
@@ -4669,21 +4701,24 @@ function renderPgStatTrain(state, content) {
   });
   html += "</div>";
 
-  // 整容说明
+  // 训练说明
   html +=
     '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
   html +=
-    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力-5、健康-15、心情-10。发型设计是临时魅力维护，整容成功才是长期改变。";
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力上限永久-3、魅力-5、健康-15。成功效果长期，约90天后需保养维护。<br>" +
+    "💇 <strong>发型设计</strong>：临时魅力效果，每日衰减1点，需要定期维护。<br>" +
+    "🏃 <strong>健身/跑步</strong>：在公园或商业区可训练体质和敏捷，持续锻炼能积累永久提升。";
   html += "</div>";
 
   content.innerHTML = html;
 }
 
-/** v3.0 训练执行（暴露给 onclick）*/
+/** v3.0 训练执行（暴露给 onclick）— 现已加入位置门控 + 导航弹窗 */
 window.__doTrain = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
+  var currentLoc = state.trade && state.trade.currentLocation;
   var trainings = {
     train_physique: {
       stat: "physique",
@@ -4692,6 +4727,8 @@ window.__doTrain = function (trainId) {
       priceStep: 30,
       gain: [1, 3],
       apCost: 6,
+      locations: ["park", "commercialDist"],
+      locationNames: "公园、商业区",
     },
     train_intelligence: {
       stat: "intelligence",
@@ -4700,6 +4737,8 @@ window.__doTrain = function (trainId) {
       priceStep: 40,
       gain: [1, 3],
       apCost: 6,
+      locations: ["school", "trainingCenter"],
+      locationNames: "大学城、培训中心",
     },
     train_agility: {
       stat: "agility",
@@ -4708,6 +4747,8 @@ window.__doTrain = function (trainId) {
       priceStep: 25,
       gain: [1, 3],
       apCost: 5,
+      locations: ["park"],
+      locationNames: "公园",
     },
     train_ability: {
       stat: "mental",
@@ -4716,6 +4757,8 @@ window.__doTrain = function (trainId) {
       priceStep: 50,
       gain: [1, 2],
       apCost: 5,
+      locations: ["park"],
+      locationNames: "公园",
     },
     train_charm_grooming: {
       stat: "charm",
@@ -4724,6 +4767,9 @@ window.__doTrain = function (trainId) {
       priceStep: 80,
       gain: [1, 3],
       apCost: 4,
+      locations: ["commercialDist"],
+      locationNames: "商业区",
+      tempLabel: "（临时效果，每日-1衰减）",
     },
     train_charm_surgery: {
       stat: "charm",
@@ -4733,10 +4779,65 @@ window.__doTrain = function (trainId) {
       gain: [5, 15],
       apCost: 8,
       risky: true,
+      locations: ["hospital"],
+      locationNames: "医院",
+      surgeryLabel: "（长期效果，每90天需保养）",
     },
   };
   var t = trainings[trainId];
   if (!t) return;
+
+  // ====== 位置门控 ======
+  if (t.locations && t.locations.indexOf(currentLoc) === -1) {
+    // 不在正确位置 → 弹窗导航
+    var locBtns = t.locations.map(function (locId) {
+      var locNames = {
+        park: "公园",
+        commercialDist: "商业区",
+        school: "大学城",
+        trainingCenter: "培训中心",
+        hospital: "医院",
+      };
+      var locName = locNames[locId] || locId;
+      return {
+        text: "📍 前往" + locName,
+        cls: "btn-primary",
+        callback: function () {
+          navigateTo(state, {
+            type: "location",
+            key: locId,
+            displayName: locName,
+          });
+          return true;
+        },
+      };
+    });
+    locBtns.push({ text: "取消", cls: "" });
+    showModal({
+      title: "📍 需要前往" + t.locationNames,
+      body:
+        '<div style="text-align:center;padding:8px 0;">' +
+        '<div style="font-size:32px;margin-bottom:10px;">' +
+        ({
+          train_physique: "🏋️",
+          train_intelligence: "📚",
+          train_agility: "🏃",
+          train_ability: "🧘",
+          train_charm_grooming: "💇",
+          train_charm_surgery: "💉",
+        }[trainId] || "🏋️") +
+        "</div>" +
+        '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
+        "当前不在" +
+        t.locationNames +
+        "，无法进行此项训练。<br>" +
+        "请先前往对应地点，再开始训练。</p>" +
+        "</div>",
+      buttons: locBtns,
+    });
+    return;
+  }
+
   var count = flags["_trainCount_" + trainId] || 0;
   var price = t.basePrice + count * t.priceStep;
   if ((state.resources.cash || 0) < price) {
@@ -4746,17 +4847,45 @@ window.__doTrain = function (trainId) {
   state.resources.cash -= price;
   flags["_trainCount_" + trainId] = count + 1;
 
-  // 风险检查（整容）
+  // ====== 整容手术：失败降低魅力上限 ======
   if (t.risky && Math.random() < 0.2) {
+    // 失败：降低魅力上限（永久）
+    state.flags._charmMaxReduction = (state.flags._charmMaxReduction || 0) + 3;
     p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
-      "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
+      "💉 整容失败！魅力上限-3，魅力-5，健康-15，心情-10。手术有风险...",
       "error",
     );
+  } else if (t.risky) {
+    // 整容成功：长期效果，但需定期保养
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var charmMaxReduction = state.flags._charmMaxReduction || 0;
+    var maxCharm = 100 - charmMaxReduction;
+    p[t.stat] = Math.min(maxCharm, (p[t.stat] || 0) + baseGain);
+    // 记录整容时间，90天后开始衰减
+    state.flags._lastSurgeryDay = state.player.day;
+    StateManager.addMessage(
+      "💉 整容成功！魅力+" + baseGain + "（长期效果，约90天后需保养维护）",
+      "success",
+    );
+  } else if (trainId === "train_charm_grooming") {
+    // 发型设计：临时效果，每日衰减1点
+    var baseGain =
+      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var crit = Math.random() < 0.1 ? 2 : 0;
+    var totalGain = baseGain + crit;
+    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
+    // 记录临时魅力加成衰减日
+    state.flags._groomingBonusDay = state.player.day;
+    state.flags._groomingBonus = (state.flags._groomingBonus || 0) + totalGain;
+    var msg = "💇 发型设计 魅力+" + totalGain + "（临时效果，每日衰减1点）";
+    if (crit > 0) msg += "（爆击！）";
+    StateManager.addMessage(msg, "success");
   } else {
-    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
+    // 普通训练：随机提升
     var baseGain =
       t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
     var crit = Math.random() < 0.1 ? 2 : 0;

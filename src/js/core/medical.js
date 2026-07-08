@@ -251,7 +251,10 @@ function showMedicalTreatmentModal() {
         "）";
     }
   }
-  body += "</div>" + '<div style="display:grid;gap:8px;">';
+  body +=
+    "</div>" +
+    '<div class="modal-treatment-feedback"></div>' +
+    '<div style="display:grid;gap:8px;">';
 
   Object.keys(ILLNESS_GRADES).forEach(function (gradeKey) {
     var grade = ILLNESS_GRADES[gradeKey];
@@ -281,8 +284,19 @@ function showMedicalTreatmentModal() {
       cls: gradeKey === "mild" ? "btn-primary" : "btn-warning",
       callback: function () {
         var result = startTreatment(StateManager.getState(), gradeKey);
+        // 显示简短通知消息，方便用户看到反馈
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          // 不关闭弹窗，在弹窗内显示提示
+          var feedbackEl = document.querySelector(".modal-treatment-feedback");
+          if (feedbackEl) {
+            feedbackEl.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };
@@ -301,6 +315,7 @@ function showMedicalInsuranceModal() {
     '<div style="padding:8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:10px;">' +
     summary.join("<br>") +
     "</div>" +
+    '<div class="modal-insurance-feedback"></div>' +
     '<div style="display:grid;gap:8px;">';
   for (var i = 0; i < INSURANCE_PLANS.length; i++) {
     var p = INSURANCE_PLANS[i];
@@ -325,7 +340,17 @@ function showMedicalInsuranceModal() {
       callback: function () {
         var result = buyMedicalInsurance(StateManager.getState(), plan.id);
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          // 弹窗内显示提示
+          var fb = document.querySelector(".modal-insurance-feedback");
+          if (fb) {
+            fb.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };

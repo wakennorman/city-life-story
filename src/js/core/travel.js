@@ -304,7 +304,16 @@ function showTravelAgencyModal() {
       callback: function () {
         var result = startTravel(StateManager.getState(), destId);
         StateManager.addMessage(result.msg, result.ok ? "success" : "warning");
-        if (!result.ok) return false;
+        if (!result.ok) {
+          var fb = document.querySelector(".modal-travel-feedback");
+          if (fb) {
+            fb.innerHTML =
+              '<div style="margin-top:8px;padding:6px 10px;background:rgba(231,76,60,0.1);border-left:3px solid var(--danger);border-radius:4px;font-size:12px;color:var(--danger);">' +
+              result.msg +
+              "</div>";
+          }
+          return false;
+        }
         if (typeof renderAll === "function") renderAll();
       },
     };

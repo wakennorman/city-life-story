@@ -915,64 +915,7 @@ function getCareerRequirementText(level) {
   return parts.length ? parts.join(" / ") : "无硬性门槛";
 }
 
-function getCareerEducationHtml(state) {
-  var p = state.player || {};
-  var edu = p.education ?? state.education ?? 0;
-  var eduNames = ["初中", "高中", "大专", "本科", "研究生", "博士"];
-  var eduIcons = ["📗", "📘", "📙", "🎓", "🏛️", "👨‍🎓"];
-  var eduThresholds = [0, 50, 100, 150, 300, 500];
-  var sp = p.eduStudyPoints || 0;
-
-  if (edu >= eduNames.length - 1) {
-    // 已到顶
-    return (
-      '<div class="section"><h3>🎓 学历与考试</h3>' +
-      '<div class="card" style="padding:12px;">' +
-      '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-      eduIcons[edu] +
-      " 当前学历：" +
-      eduNames[edu] +
-      "</div>" +
-      '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">' +
-      "学历已到顶级，后续更依赖项目、技能和人脉。" +
-      "</div></div></div>"
-    );
-  }
-
-  var nextLevel = edu + 1;
-  var threshold = eduThresholds[nextLevel];
-  var pct = Math.min(100, Math.round((sp / threshold) * 100));
-
-  return (
-    '<div class="section"><h3>🎓 学历与考试</h3>' +
-    '<div class="card" style="padding:12px;">' +
-    '<div style="font-size:14px;font-weight:700;color:var(--text-primary);">' +
-    eduIcons[edu] +
-    " 当前学历：" +
-    eduNames[edu] +
-    "</div>" +
-    '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">' +
-    "目标：<strong>" +
-    eduNames[nextLevel] +
-    "</strong>（需" +
-    threshold +
-    "学习点）" +
-    "</div>" +
-    '<div style="margin-top:8px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">' +
-    '<div style="height:100%;width:' +
-    pct +
-    '%;background:var(--accent);"></div></div>' +
-    '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px;">' +
-    "学习点：" +
-    sp +
-    "/" +
-    threshold +
-    "<br>" +
-    '<button class="btn btn-sm nav-action-btn" style="margin-top:6px;min-height:44px;" ' +
-    'data-nav-type="location" data-nav-target=\'{"type":"location","key":"school"}\'>🏛️ 去大学城备考</button>' +
-    "</div></div></div>"
-  );
-}
+// 学历已在「我→成长→学历」中展示，事业总览不再重复
 
 /** 事业发展Tab主渲染函数 */
 function renderCareerDevTab(state, parent) {
@@ -1653,7 +1596,6 @@ function renderCareerOverview(state, parent) {
     '">🎓 去大学城提升学历</button>' +
     "</div>";
 
-  html += getCareerEducationHtml(state);
   html += "</div>";
   parent.innerHTML = html;
 }

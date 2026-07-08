@@ -648,6 +648,53 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 外观维持（发型衰减 + 整容保养提醒） ===
+  {
+    name: "appearance_maintenance",
+    fn: function (state) {
+      var flags = state.flags || (state.flags = {});
+      var day = state.player ? state.player.day : 0;
+      // 发型设计：每日衰减1点魅力，直到衰减完毕
+      if (flags._groomingBonus && flags._groomingBonus > 0) {
+        flags._groomingBonus = Math.max(0, flags._groomingBonus - 1);
+        if (flags._groomingBonus === 0) {
+          // 魅力回降（已通过每日-1衰减回原始值）
+          if (typeof StateManager !== "undefined" && day % 5 === 0) {
+            StateManager.addMessage(
+              "💇 发型效果已消退，魅力回到自然状态。",
+              "info",
+            );
+          }
+        }
+      }
+      // 整容保养提醒：90天后提示需要维护
+      if (flags._lastSurgeryDay && day > 0) {
+        var daysSinceSurgery = day - flags._lastSurgeryDay;
+        if (daysSinceSurgery > 85 && daysSinceSurgery <= 90 && day % 5 === 0) {
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              "💉 上次整容已过去" +
+                daysSinceSurgery +
+                "天，建议去医院做保养维护。",
+              "info",
+            );
+          }
+        }
+        if (daysSinceSurgery > 90) {
+          // 超过90天未保养，魅力缓慢衰减（每10天-1）
+          var decayTotal = Math.floor((daysSinceSurgery - 90) / 10);
+          if (decayTotal > 0) {
+            p = state.player || {};
+            if (p.charm) {
+              var originalCharm = p.charm;
+              p.charm = Math.min(100, Math.max(0, p.charm - decayTotal));
+            }
+          }
+        }
+      }
+    },
+  },
+
   // === v3.4 C3D-T1: NPC 位置轮换 ===
   {
     name: "npc_location_tick",
