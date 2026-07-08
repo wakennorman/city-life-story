@@ -1,17 +1,42 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.48 职业系统深度优化）
+> 最后更新: 2026-07-09（v3.50 8项UI/UX修复）
 >
-> commit: `b3fc8049`
+> commit: `ea7a6e25`
+
+---
+
+## 2026-07-09 — v3.50 8项UI/UX修复
+
+**目标**：修复游戏体验中8个明显的 UI/UX 问题，提升玩家操作的即时反馈和信息准确性。
+
+| #   | Bug                       | 根因                                                                         | 修复                                                             |
+| --- | ------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| ①   | 教程Step1显示¥2000欠¥5500 | 文案与经典剧本实际初始值（¥300/无债）不符                                    | 更新`_CLASSIC_STEPS[0].body`                                     |
+| ②   | 教程Step2无法前进         | waitForClick步骤modal遮挡，只有上一步/跳过按钮                               | 新增"下一步→"按钮作为fallback                                    |
+| ③   | 事业Tab嵌套两级导航       | `career_jobs`→`renderCareerDevTab`内部再分上班族/总览                        | 顶级平铺：📊总览/💼求职/💰投资/🔄副业/🚀创业/🏅成就              |
+| ④   | 投资汽车卡片frame过大     | `minmax(210px,1fr)`导致卡片横向撑满                                          | 改`minmax(180px,240px)+align-items:start`                        |
+| ⑤   | 副业Tab完全空白           | `side_hustle.js`+`side_hustle_ui.js`未加载到index.html                       | index.html补入3个缺失脚本（含`daily_quest.js`）                  |
+| ⑥   | 今日头条所有新闻效果相同  | `_NEWS_CLASSIFIER_RULES`全10条规则使用`\b`边界符，中文字符非`\w`导致永不匹配 | 去除所有`\b...\b`包装                                            |
+| ⑦   | 装备"去购买"跳转到空白页  | `navigateTo`切换到actions tab但地点无购买行动                                | 改为`_showEquipmentShopModal`内联弹窗，直接展示装备+购买         |
+| ⑧   | 就医/法律按钮无条件可点   | 无论有无疾病/案件都显示enabled                                               | 无病→就医按钮disabled；无案件→法律按钮disabled；显示健康状态提示 |
+
+**附加修复**：
+
+- `openLifeSystemsCityServices()`无反馈：WebAppBridge不可用时改用`showModal`展示城市服务列表
+- `openLifeSystemsPendingNode()`无反馈：无待处理节点时用`showModal`提示而非静默addMessage
+
+**影响文件**：`tutorial.js` / `world_news_intro.js` / `render_infra.js` / `render.js` / `investment.js` / `index.html`  
+**验证**：node --check ✅ / python build.py 5350KB ✅
 
 ---
 
 ## 🔄 多窗口协作协议
 
 > **当有多个 Claude Code 窗口同时开发本仓库时，必须遵守 `D:\Claude Code+DeepSeekV4\memory\window-coordination.md` 中定义的协议。**
-> 
+>
 > 核心：开工前 Read `memory/file-lock.json` → 声明角色和文件 → 检查冲突 → 获取锁 → 工作 → 释放锁。
-> 
+>
 > 详细规则（10章）：事前分工、文件锁定机制、窗口角色分工、冲突预防策略、事后追溯机制、示例场景。
 
 ---
