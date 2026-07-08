@@ -30,7 +30,8 @@ const STREET_JOBS = [
       agilityXp: 1,
     },
     payCalc(state) {
-      const base = Random.float(20, 55);
+      // v3.53 修复：下限从¥20提升到¥25，避免"升级住房→入不敷出"死锁
+      const base = Random.float(25, 55);
       const multi = 1 + state.skills.sales.level * 0.005;
       // v3.8 P1修复：zhouScrapBonus（老周好感奖励→废品+20%）
       const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;

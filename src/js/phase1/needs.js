@@ -189,8 +189,9 @@ function applyWealthBasedOverhead(state) {
 
   // 住房维护费：住房等级越高越贵
   // v3.2: tier 0=¥0, tier 1=¥10, tier 2=¥40, tier 3=¥200 (降低中期负担)
+  // v3.53 修复：扩展至 7 档，tier 4-6 维护费不为零（原数组越界导致 tier≥4 维护费=0 的性价比崩坏）
   var houseTier = (state.housing && state.housing.tier) || 0;
-  var UPKEEP = [0, 10, 40, 200];
+  var UPKEEP = [0, 10, 40, 200, 500, 2000, 5000];
   var houseCost = UPKEEP[houseTier] || 0;
   if (houseCost > 0) {
     state.resources.cash -= houseCost;
