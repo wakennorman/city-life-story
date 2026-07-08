@@ -10786,5 +10786,215 @@
     ],
   });
 
+  // ====== v3.54 新激活NPC相遇事件（3个）======
+  // 设计意图：为uncle_chen_bank(老陈)/sister_wu(吴姐)/brother_huang(阿黄)
+  // 分别创建初始相遇事件，让这些NPC从数据定义走入玩法
+
+  // ----- 事件56：老陈的防骗提醒（银行门前相遇）-----
+  // 设计意图：在银行附近触发，建立老陈「防诈骗顾问」的人设
+  RANDOM_EVENTS.push({
+    id: "npc_uncle_chen_first_meet",
+    phase: "street",
+    icon: "👮",
+    title: "银行门口的老陈",
+    story:
+      "你路过银行门口，一个穿保安服的大叔看了你一眼，叫住你：\\n\\n「小伙子，办业务呢？我看你年纪轻轻，提醒你一句——最近银行门口老有人推销高息理财，年化12%以上那种，别信，全是坑。」\\n\\n他指了指胸前的工牌：「我在这站了八年了，见过的套路比你吃过的盐多。」",
+    // [自洽新增] conditions：在银行附近 + day≥5 + 未结识老陈
+    conditions: function (st) {
+      var curLoc = st.trade && st.trade.currentLocation;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 5 &&
+        (curLoc === "bank" || curLoc === "commercialDist") &&
+        (!st.relationships ||
+          !st.relationships.uncle_chen_bank ||
+          !st.relationships.uncle_chen_bank.met)
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢叔，记下了",
+        hint: "结识老陈，好感+10",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.uncle_chen_bank) {
+            st.relationships.uncle_chen_bank = { affinity: 0, met: true };
+          }
+          st.relationships.uncle_chen_bank.met = true;
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 10,
+          );
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 1,
+          );
+          st.flags.chenScamWarning = true;
+          StateManager.addMessage(
+            "🙏 老陈摆摆手：「不客气，防人之心不可无。」你记住了他的忠告。结识老陈（银行保安），好感+10，智力+1。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我哪有钱被人骗",
+        hint: "自嘲，好感+3",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.uncle_chen_bank) {
+            st.relationships.uncle_chen_bank = { affinity: 0, met: true };
+          }
+          st.relationships.uncle_chen_bank.met = true;
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😅 老陈笑了：「也是，骗子也得挑人下手。但多个心眼总没错。」结识老陈，好感+3，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件57：吴姐的理发店邀约（商业区相遇）-----
+  // 设计意图：在商业区触发，建立吴姐「美容时尚人脉」的人设
+  RANDOM_EVENTS.push({
+    id: "npc_sister_wu_first_meet",
+    phase: "street",
+    icon: "💇",
+    title: "美容院的吴姐",
+    story:
+      "你在商业区闲逛，经过一家美容院时，一个打扮精致的中年女人推门出来，上下打量了你一眼：\\n\\n「小伙子/小姑娘，找工作不？我看你形象不错，我店里正缺个前台兼助理，工资日结，包培训。要不要进来聊聊？」\\n\\n她递过来一张名片——「吴姐美容·形象设计」。",
+    // [自洽新增] conditions：在商业区 + day≥10 + 未结识吴姐
+    conditions: function (st) {
+      var curLoc = st.trade && st.trade.currentLocation;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 10 &&
+        curLoc === "commercialDist" &&
+        (!st.relationships ||
+          !st.relationships.sister_wu ||
+          !st.relationships.sister_wu.met)
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 进去聊聊工作机会",
+        hint: "结识吴姐，好感+8",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.sister_wu) {
+            st.relationships.sister_wu = { affinity: 0, met: true };
+          }
+          st.relationships.sister_wu.met = true;
+          st.relationships.sister_wu.affinity = Math.min(
+            100,
+            (st.relationships.sister_wu.affinity || 0) + 8,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "💇 你跟着吴姐进了美容院。店里装修不错，吴姐说前台月薪¥2800+提成。结识吴姐（美容院老板），好感+8，心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😊 收下名片，以后有需要再来",
+        hint: "结识吴姐，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.sister_wu) {
+            st.relationships.sister_wu = { affinity: 0, met: true };
+          }
+          st.relationships.sister_wu.met = true;
+          st.relationships.sister_wu.affinity = Math.min(
+            100,
+            (st.relationships.sister_wu.affinity || 0) + 5,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "😊 你收下名片。吴姐笑着说「随时来找我」。结识吴姐，好感+5，名气+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件58：阿黄的急招配送员（快递站相遇）-----
+  // 设计意图：在商业区/科技园触发，建立阿黄「配送站长」的人设
+  RANDOM_EVENTS.push({
+    id: "npc_brother_huang_first_meet",
+    phase: "street",
+    icon: "📦",
+    title: "快递站缺人手",
+    story:
+      "你经过一个快递站点，门口堆满了包裹。一个满头大汗的中年男人冲出来叫住你：\\n\\n「兄弟！你是不是来找工作的？我这边今天爆仓了，缺人分拣和配送，日结¥200，干到晚上八点，管一顿饭！会骑电动车就行！」\\n\\n他指了指旁边的电动车：「不会骑也没事，我让人带你跑一单试试。」",
+    // [自洽新增] conditions：在商业区 + day≥15 + 未结识阿黄
+    conditions: function (st) {
+      var curLoc = st.trade && st.trade.currentLocation;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        (curLoc === "commercialDist" || curLoc === "techPark") &&
+        (!st.relationships ||
+          !st.relationships.brother_huang ||
+          !st.relationships.brother_huang.met)
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏃 干！今天就开始",
+        hint: "日结¥200，结识阿黄",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.brother_huang) {
+            st.relationships.brother_huang = { affinity: 0, met: true };
+          }
+          st.relationships.brother_huang.met = true;
+          st.relationships.brother_huang.affinity = Math.min(
+            100,
+            (st.relationships.brother_huang.affinity || 0) + 10,
+          );
+          st.resources.cash += 200;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 200;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "📦 你换上工服开始分拣包裹，干到晚上八点腰酸背痛。但¥200到手，阿黄拍拍你的肩说「明天继续来！」结识阿黄（快递站长），好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 加个微信，改天来",
+        hint: "结识阿黄，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.brother_huang) {
+            st.relationships.brother_huang = { affinity: 0, met: true };
+          }
+          st.relationships.brother_huang.met = true;
+          st.relationships.brother_huang.affinity = Math.min(
+            100,
+            (st.relationships.brother_huang.affinity || 0) + 5,
+          );
+          StateManager.addMessage(
+            "📱 你加了阿黄微信。他说「缺人手的时候我给你发消息」。结识阿黄，好感+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
