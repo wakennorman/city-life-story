@@ -347,14 +347,21 @@ function showWelcome() {
         var latest = allSlots[0];
         loadSection.style.display = "";
         var modeTag = latest.mode ? " " + latest.mode : "";
+        var isAuto = latest.slot === "_auto";
         loadSection.innerHTML =
-          '<button id="btn-load-latest" class="btn btn-lg">📂 继续游戏' +
+          '<button id="btn-load-latest" class="btn btn-lg">' +
+          (isAuto ? "🤖 " : "📂 ") +
+          "继续游戏" +
           modeTag +
           " (第" +
           latest.day +
           "天, ¥" +
           (latest.cash ? latest.cash.toLocaleString() : 0) +
-          ")</button>" +
+          ")" +
+          (isAuto
+            ? '<span style="display:block;font-size:10px;color:var(--text-muted);margin-top:2px;">自动存档 · 每日自动保存</span>'
+            : "") +
+          "</button>" +
           '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
         document.getElementById("btn-load-latest").onclick = function () {
           loadExistingGame(latest.slot);
@@ -2220,6 +2227,8 @@ function getAvailableActions(state) {
                 "。",
               "success",
             );
+            // 里程碑：搬家/升级住所
+            if (typeof autoSave === "function") autoSave("milestone");
           };
         })(t, house),
       });

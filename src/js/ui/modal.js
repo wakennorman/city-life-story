@@ -716,11 +716,29 @@ function showRepayVillageModal() {
 // ====== 存档 / 读档菜单 =====
 function showSaveMenu() {
   const allSlots = getAllSlotsWithEmpty();
+
+  // 获取自动存档信息
+  const autoInfo = getSlotInfo("_auto");
+  let autoLine = "";
+  if (autoInfo) {
+    const d = new Date(autoInfo.savedAt);
+    autoLine =
+      '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.2);border-radius:6px;font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;">' +
+      "<span>📅 上次自动存档</span>" +
+      '<span style="color:#27ae60;">第<strong>' +
+      autoInfo.day +
+      "</strong>天 · " +
+      d.toLocaleString("zh-CN") +
+      "</span>" +
+      "</div>";
+  }
+
   let bodyHtml =
     '<p style="margin-bottom:8px;color:var(--text-secondary);">选择一个槽位保存当前进度：</p>';
+  bodyHtml += autoLine;
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
   for (const s of allSlots) {
-    if (s.slot === "_auto") continue; // 自动存档单独处理
+    if (s.slot === "_auto") continue; // 自动存档不可手动覆盖
     if (s.empty) {
       bodyHtml += `
         <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
@@ -795,15 +813,23 @@ function showLoadMenu() {
   let hasAnySave = false;
   for (const s of allSlots) {
     if (s.empty) {
+      // 自动存档空槽位不显示
+      if (s.slot === "_auto") continue;
       bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
     } else {
       hasAnySave = true;
       const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
       const modeTag = s.mode ? s.mode + " " : "";
+      const isAuto = s.slot === "_auto";
+      // 自动存档用绿色高亮样式
+      const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
+      const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
+      const labelIcon = isAuto ? "🤖 " : "";
+      const labelName = isAuto ? "自动存档" : s.label;
       bodyHtml += `
-        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color 0.15s;">
+        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${modeTag}${s.label}</strong>
+            <strong>${labelIcon}${modeTag}${labelName}</strong>
             <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
@@ -813,6 +839,7 @@ function showLoadMenu() {
             ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
           </div>
           ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
+          ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
         </div>`;
     }
   }

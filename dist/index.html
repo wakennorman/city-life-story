@@ -3449,7 +3449,11 @@ if (typeof window !== "undefined") {
 const NUM_SLOTS = 5;
 const SLOT_PREFIX = "city_life_story_slot_";
 const AUTO_SAVE_KEY = "city_life_story_autosave";
+const AUTO_SAVE_PREV_KEY = "city_life_story_autosave_prev"; // 滚动双槽·前一日备份
 const INDEX_KEY = "city_life_story_index";
+
+// localStorage 配额警戒线（字节）
+const QUOTA_WARN_THRESHOLD = 2 * 1024 * 1024; // 剩余<2MB时预警
 
 /** 获取槽位键 */
 function slotKey(n) {
@@ -3469,6 +3473,53 @@ function getSaveIndex() {
 /** 写入存档索引 */
 function setSaveIndex(index) {
   localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+}
+
+/**
+ * 检测 localStorage 剩余空间
+ * 通过试探性写入检测是否接近配额上限
+ * 返回 { ok: boolean, remaining: number, detail: string }
+ */
+function checkStorageQuota() {
+  try {
+    var probeKey = "__quota_probe__";
+    // 先写一个小值确认 localStorage 还可写入
+    localStorage.setItem(probeKey, "1");
+    // 尝试写入一个 ~500KB 的字符串 — 如果失败说明快满了
+    var probeData = new Array(500 * 1024).join("x");
+    try {
+      localStorage.setItem(probeKey, probeData);
+      localStorage.removeItem(probeKey);
+      return { ok: true, remaining: QUOTA_WARN_THRESHOLD + 1, detail: "充足" };
+    } catch (quotaErr) {
+      // 500KB 写入失败 → 接近配额上限
+      localStorage.removeItem(probeKey);
+      // 用二分法逼近剩余空间
+      var lo = 0,
+        hi = 500 * 1024,
+        lastOk = 0;
+      while (lo <= hi) {
+        var mid = Math.floor((lo + hi) / 2);
+        try {
+          var test = new Array(mid).join("x");
+          localStorage.setItem(probeKey, test);
+          lastOk = mid;
+          localStorage.removeItem(probeKey);
+          lo = mid + 1;
+        } catch (e) {
+          hi = mid - 1;
+        }
+      }
+      return {
+        ok: lastOk >= QUOTA_WARN_THRESHOLD,
+        remaining: lastOk,
+        detail: "剩余约 " + Math.round(lastOk / 1024) + "KB",
+      };
+    }
+  } catch (e) {
+    // localStorage 不可用（隐私模式等）
+    return { ok: false, remaining: 0, detail: "无法检测: " + e.message };
+  }
 }
 
 /** 生成"那时候你..."回忆文案（存储于索引，读档时展示） */
@@ -3578,6 +3629,36 @@ function generateSaveNarrative(state) {
  * 基于存档快照生成"那时候你..."的叙事文案
  */
 
+/**
+ * 裁剪存档数据中的冗余字段，减小体积
+ * - messageLog: 保留前50条+后50条完整，中间浓缩摘要
+ */
+function _trimStateForSave(saveData) {
+  if (saveData.messageLog && saveData.messageLog.length > 100) {
+    var head = saveData.messageLog.slice(0, 50);
+    var tail = saveData.messageLog.slice(-50);
+    var middle = saveData.messageLog.slice(50, -50);
+    var condensed = [];
+    // 按每10条一组浓缩
+    for (var i = 0; i < middle.length; i += 10) {
+      var chunk = middle.slice(i, i + 10);
+      var summaries = [];
+      for (var j = 0; j < chunk.length; j++) {
+        var m = chunk[j];
+        var txt = typeof m === "string" ? m : m.text || "";
+        if (txt.length > 40) txt = txt.slice(0, 40) + "…";
+        summaries.push(txt);
+      }
+      condensed.push({
+        text: "📋 " + chunk.length + "条消息：" + summaries.join(" · "),
+        condensed: true,
+      });
+    }
+    saveData.messageLog = head.concat(condensed).concat(tail);
+  }
+  return saveData;
+}
+
 /** 保存游戏到指定槽位（1-5） */
 function saveGame(slot) {
   if (slot < 1 || slot > NUM_SLOTS) {
@@ -3587,6 +3668,18 @@ function saveGame(slot) {
 
   try {
     const state = StateManager.getState();
+
+    // 配额检测
+    var quota =
+      typeof checkStorageQuota === "function" ? checkStorageQuota() : null;
+    if (quota && !quota.ok) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），请清理旧存档后再保存。",
+        "danger",
+      );
+      return false;
+    }
+
     state.lastPlayedAt = Date.now();
 
     const saveData = JSON.parse(JSON.stringify(state));
@@ -3598,6 +3691,8 @@ function saveGame(slot) {
     if (saveData.messageLog && saveData.messageLog.length > 200) {
       saveData.messageLog = saveData.messageLog.slice(-200);
     }
+    // 进一步压缩（保留前50+后50，中间浓缩）
+    _trimStateForSave(saveData);
 
     localStorage.setItem(slotKey(slot), JSON.stringify(saveData));
 
@@ -3634,23 +3729,51 @@ function saveGame(slot) {
   }
 }
 
-/** 自动存档 */
-function autoSave() {
+/** 自动存档（含配额检测 + 消息压缩 + 滚动双槽 + 用户反馈） */
+function autoSave(reason) {
   try {
     const state = StateManager.getState();
-    const saveData = JSON.parse(JSON.stringify(state));
+
+    // 配额检测
+    var quota = checkStorageQuota();
+    if (!quota.ok) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），自动存档失败！请清理旧存档。",
+        "danger",
+      );
+      return false;
+    }
+
+    // 深拷贝
+    var saveData = JSON.parse(JSON.stringify(state));
     saveData.lastPlayedAt = Date.now();
-    // 附加存档快照（用于读档回忆文案）
+    // 存档快照
     if (typeof createSnapshot === "function") {
       saveData._snapshot = createSnapshot(state);
     }
-    if (saveData.messageLog && saveData.messageLog.length > 200) {
-      saveData.messageLog = saveData.messageLog.slice(-200);
+    // 压缩消息日志
+    _trimStateForSave(saveData);
+
+    // 滚动双槽：当前 → 前一日备份
+    var existing = null;
+    try {
+      existing = localStorage.getItem(AUTO_SAVE_KEY);
+    } catch (e) {
+      /* 忽略 */
     }
+    if (existing) {
+      try {
+        localStorage.setItem(AUTO_SAVE_PREV_KEY, existing);
+      } catch (e) {
+        /* 忽略 */
+      }
+    }
+
+    // 写入新存档
     localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(saveData));
 
-    // 更新索引中的自动存档信息
-    const index = getSaveIndex();
+    // 更新索引
+    var index = getSaveIndex();
     index._auto = {
       day: state.player.day,
       phase: state.player.phase,
@@ -3662,10 +3785,33 @@ function autoSave() {
       rank: state.player.phase === "corporate" ? state.corporate.rank : null,
       savedAt: Date.now(),
       narrative: generateSaveNarrative(state),
+      reason: reason || "daily",
     };
     setSaveIndex(index);
+
+    // 用户反馈（里程碑存档用不同文案，但不重复刷屏）
+    if (reason !== "milestone" || !window._autoSaveMsgDay) {
+      window._autoSaveMsgDay = window._autoSaveMsgDay || {};
+    }
+    if (reason === "milestone" && window._autoSaveMsgDay[state.player.day]) {
+      // 同一日已发过里程碑消息，不再重复
+    } else {
+      StateManager.addMessage(
+        reason === "milestone"
+          ? "💾 里程碑自动保存（第" + state.player.day + "天）"
+          : "💾 第" + state.player.day + "天已自动保存",
+        "success",
+      );
+      if (reason === "milestone") {
+        window._autoSaveMsgDay[state.player.day] = true;
+      }
+    }
+
+    return true;
   } catch (e) {
-    /* 静默 */
+    console.error("自动存档失败:", e);
+    StateManager.addMessage("⚠️ 自动存档失败: " + e.message, "warning");
+    return false;
   }
 }
 
@@ -4143,13 +4289,17 @@ if (typeof window !== "undefined") {
     getAllSlotsWithEmpty,
     exportSave,
     importSave,
+    checkStorageQuota,
+    _trimStateForSave,
     NUM_SLOTS,
     SLOT_PREFIX,
     AUTO_SAVE_KEY,
+    AUTO_SAVE_PREV_KEY,
     INDEX_KEY,
     slotKey,
     getSaveIndex,
     setSaveIndex,
+    QUOTA_WARN_THRESHOLD,
   });
 }
 </script>
@@ -34861,151 +35011,153 @@ if (typeof window !== "undefined") {
 
   // 1. 连续多天高强度工作后的「身体崩溃」特遇
   // 联动：flags._habits.highFatigueStreak + employment + health
-  RANDOM_EVENTS.push({
-    id: "overwork_body_crash",
-    phase: "street",
-    icon: "🫨",
-    title: "身体亮红灯了",
-    story:
-      "你连续加班了一周，今天站在操作台前突然眼前一黑，差点摔倒。同事一把扶住你说：「你是不是没睡觉？」\n\n你摸了摸额头，烫得吓人。身体已经不是累的问题了——它在抗议。",
-    conditions: function (st) {
-      var habits = st.flags && st.flags._habits;
-      // 连续3天以上高疲劳 或 健康已低于35
-      return (
-        st.player.phase === "street" &&
-        ((habits && habits.highFatigueStreak >= 3) ||
-          (st.status && st.status.health != null && st.status.health < 35))
-      );
+  RANDOM_EVENTS.push(
+    {
+      id: "overwork_body_crash",
+      phase: "street",
+      icon: "🫨",
+      title: "身体亮红灯了",
+      story:
+        "你连续加班了一周，今天站在操作台前突然眼前一黑，差点摔倒。同事一把扶住你说：「你是不是没睡觉？」\n\n你摸了摸额头，烫得吓人。身体已经不是累的问题了——它在抗议。",
+      conditions: function (st) {
+        var habits = st.flags && st.flags._habits;
+        // 连续3天以上高疲劳 或 健康已低于35
+        return (
+          st.player.phase === "street" &&
+          ((habits && habits.highFatigueStreak >= 3) ||
+            (st.status && st.status.health != null && st.status.health < 35))
+        );
+      },
+      probability: 0.08,
+      repeatable: false,
+      choices: [
+        {
+          text: "🏥 请假看病（¥100）",
+          hint: "花钱买命，健康+15",
+          apply: function (st) {
+            if (st.resources.cash >= 100) {
+              st.resources.cash -= 100;
+              st.status.health = Math.min(100, (st.status.health || 50) + 15);
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+              if (st.flags._habits) st.flags._habits.highFatigueStreak = 0;
+              StateManager.addMessage(
+                "🏥 你请了一天病假去医院，医生说是过度劳累。打了针吃了药，舒服了不少。健康+15，疲劳-30。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😰 你想去看病，但连¥100都凑不齐。只能硬着头皮回去上班。",
+                "warning",
+              );
+              st.status.health = Math.max(0, (st.status.health || 50) - 10);
+            }
+          },
+        },
+        {
+          text: "💊 买药扛过去（¥30）",
+          hint: "临时缓解，不治本",
+          apply: function (st) {
+            if (st.resources.cash >= 30) {
+              st.resources.cash -= 30;
+              st.status.health = Math.min(100, (st.status.health || 50) + 5);
+              StateManager.addMessage(
+                "💊 你买了些退烧药和板蓝根，灌了两大杯水。好点了，但你知道这只是缓兵之计。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage(
+                "😵 连¥30的药都买不起。你靠在墙上喘了口气。",
+                "warning",
+              );
+              st.status.health = Math.max(0, (st.status.health || 50) - 8);
+            }
+          },
+        },
+        {
+          text: "💪 没事，年轻人扛得住",
+          hint: "健康-15，可能触发疾病",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 50) - 15);
+            if (!st.flags._habits) st.flags._habits = {};
+            st.flags._habits.overworkDenialCount =
+              (st.flags._habits.overworkDenialCount || 0) + 1;
+            StateManager.addMessage(
+              "💪 你摇了摇头继续干活。但身体的账迟早要还。健康-15。",
+              "danger",
+            );
+          },
+        },
+      ],
     },
-    probability: 0.08,
-    repeatable: false,
-    choices: [
-      {
-        text: "🏥 请假看病（¥100）",
-        hint: "花钱买命，健康+15",
-        apply: function (st) {
-          if (st.resources.cash >= 100) {
-            st.resources.cash -= 100;
-            st.status.health = Math.min(100, (st.status.health || 50) + 15);
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
-            if (st.flags._habits) st.flags._habits.highFatigueStreak = 0;
-            StateManager.addMessage(
-              "🏥 你请了一天病假去医院，医生说是过度劳累。打了针吃了药，舒服了不少。健康+15，疲劳-30。",
-              "success",
-            );
-          } else {
-            StateManager.addMessage(
-              "😰 你想去看病，但连¥100都凑不齐。只能硬着头皮回去上班。",
-              "warning",
-            );
-            st.status.health = Math.max(0, (st.status.health || 50) - 10);
-          }
-        },
-      },
-      {
-        text: "💊 买药扛过去（¥30）",
-        hint: "临时缓解，不治本",
-        apply: function (st) {
-          if (st.resources.cash >= 30) {
-            st.resources.cash -= 30;
-            st.status.health = Math.min(100, (st.status.health || 50) + 5);
-            StateManager.addMessage(
-              "💊 你买了些退烧药和板蓝根，灌了两大杯水。好点了，但你知道这只是缓兵之计。",
-              "info",
-            );
-          } else {
-            StateManager.addMessage(
-              "😵 连¥30的药都买不起。你靠在墙上喘了口气。",
-              "warning",
-            );
-            st.status.health = Math.max(0, (st.status.health || 50) - 8);
-          }
-        },
-      },
-      {
-        text: "💪 没事，年轻人扛得住",
-        hint: "健康-15，可能触发疾病",
-        apply: function (st) {
-          st.status.health = Math.max(0, (st.status.health || 50) - 15);
-          if (!st.flags._habits) st.flags._habits = {};
-          st.flags._habits.overworkDenialCount =
-            (st.flags._habits.overworkDenialCount || 0) + 1;
-          StateManager.addMessage(
-            "💪 你摇了摇头继续干活。但身体的账迟早要还。健康-15。",
-            "danger",
-          );
-        },
-      },
-    ],
-  },
 
-  // 2. 技能≥50解锁的「专业人士视角」事件
-  // 联动：skills.*.level >= 50 + trade.currentLocation
-  {
-    id: "pro_insight_quality_check",
-    phase: "street",
-    icon: "🔍",
-    title: "行家一眼看出问题",
-    story:
-      "你在批发市场挑货，旁边两个商贩在争论一批货的质量。外行人看不出区别，但你凭经验一眼就看出这批货里掺了次品。\n\n你犹豫了一下——是说还是不说？",
-    conditions: function (st) {
-      // 检查是否有任何技能≥50
-      var hasExpertSkill = false;
-      if (st.skills) {
-        for (var sk in st.skills) {
-          if (st.skills[sk] && st.skills[sk].level >= 50) {
-            hasExpertSkill = true;
-            break;
-          }
-        }
-      }
-      return (
-        st.player.phase === "street" &&
-        hasExpertSkill &&
-        st.trade &&
-        st.trade.currentLocation === "wholesaleMarket" &&
-        !st.flags._proInsightSeen
-      );
-    },
-    probability: 0.05,
-    repeatable: false,
-    choices: [
-      {
-        text: "🗣️ 指出问题，帮他们辨别",
-        hint: "名气+5，商贩好感",
-        apply: function (st) {
-          st.flags._proInsightSeen = true;
-          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-          // 随机选择一个≥50的技能加经验
-          if (st.skills) {
-            for (var sk2 in st.skills) {
-              if (st.skills[sk2] && st.skills[sk2].level >= 50) {
-                st.skills[sk2].xp = (st.skills[sk2].xp || 0) + 30;
-                break;
-              }
+    // 2. 技能≥50解锁的「专业人士视角」事件
+    // 联动：skills.*.level >= 50 + trade.currentLocation
+    {
+      id: "pro_insight_quality_check",
+      phase: "street",
+      icon: "🔍",
+      title: "行家一眼看出问题",
+      story:
+        "你在批发市场挑货，旁边两个商贩在争论一批货的质量。外行人看不出区别，但你凭经验一眼就看出这批货里掺了次品。\n\n你犹豫了一下——是说还是不说？",
+      conditions: function (st) {
+        // 检查是否有任何技能≥50
+        var hasExpertSkill = false;
+        if (st.skills) {
+          for (var sk in st.skills) {
+            if (st.skills[sk] && st.skills[sk].level >= 50) {
+              hasExpertSkill = true;
+              break;
             }
           }
-          StateManager.addMessage(
-            "🔍 你一眼看出问题所在，两个商贩都惊了：「行家啊！」名气+5，技能经验+30。专业的事还得专业的人来看。",
-            "success",
-          );
-        },
+        }
+        return (
+          st.player.phase === "street" &&
+          hasExpertSkill &&
+          st.trade &&
+          st.trade.currentLocation === "wholesaleMarket" &&
+          !st.flags._proInsightSeen
+        );
       },
-      {
-        text: "🤐 看热闹不说话",
-        hint: "安全但错失机会",
-        apply: function (st) {
-          st.flags._proInsightSeen = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          StateManager.addMessage(
-            "🤐 你看了看热闹。他们吵了半天最后还是买错了——但你没开口。心情+3。",
-            "info",
-          );
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🗣️ 指出问题，帮他们辨别",
+          hint: "名气+5，商贩好感",
+          apply: function (st) {
+            st.flags._proInsightSeen = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            // 随机选择一个≥50的技能加经验
+            if (st.skills) {
+              for (var sk2 in st.skills) {
+                if (st.skills[sk2] && st.skills[sk2].level >= 50) {
+                  st.skills[sk2].xp = (st.skills[sk2].xp || 0) + 30;
+                  break;
+                }
+              }
+            }
+            StateManager.addMessage(
+              "🔍 你一眼看出问题所在，两个商贩都惊了：「行家啊！」名气+5，技能经验+30。专业的事还得专业的人来看。",
+              "success",
+            );
+          },
         },
-      },
-    ],
-  });
+        {
+          text: "🤐 看热闹不说话",
+          hint: "安全但错失机会",
+          apply: function (st) {
+            st.flags._proInsightSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "🤐 你看了看热闹。他们吵了半天最后还是买错了——但你没开口。心情+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  );
 
   // 3. NPC好感≥70的「意外信息」事件
   // 联动：relationships.*.affinity >= 70 + discovered
@@ -35280,7 +35432,16 @@ if (typeof window !== "undefined") {
               bestNpc = nid;
             }
           }
-          var npcName = bestNpc === "aunt_wang" ? "王大婶" : bestNpc === "old_zhou" ? "老周" : bestNpc === "sister_zhang" ? "张姐" : bestNpc === "chef_chen" ? "陈师傅" : "那位朋友";
+          var npcName =
+            bestNpc === "aunt_wang"
+              ? "王大婶"
+              : bestNpc === "old_zhou"
+                ? "老周"
+                : bestNpc === "sister_zhang"
+                  ? "张姐"
+                  : bestNpc === "chef_chen"
+                    ? "陈师傅"
+                    : "那位朋友";
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
           // 推荐人好感提升
@@ -35382,7 +35543,12 @@ if (typeof window !== "undefined") {
           // 根据技能类型给出不同结果
           var salary = 0;
           if (bestSkill === "cooking") salary = Random.int(8000, 15000);
-          else if (bestSkill === "repair" || bestSkill === "electrician" || bestSkill === "welding") salary = Random.int(6000, 12000);
+          else if (
+            bestSkill === "repair" ||
+            bestSkill === "electrician" ||
+            bestSkill === "welding"
+          )
+            salary = Random.int(6000, 12000);
           else if (bestSkill === "coding") salary = Random.int(12000, 25000);
           else if (bestSkill === "sales") salary = Random.int(5000, 10000);
           else if (bestSkill === "management") salary = Random.int(8000, 18000);
@@ -35468,7 +35634,8 @@ if (typeof window !== "undefined") {
     repeatable: true,
     choices: function (st) {
       var curLoc = st.trade && st.trade.currentLocation;
-      var housingTier = st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
+      var housingTier =
+        st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
 
       // 在市场：货物可能被吹走
       if (curLoc === "market" || curLoc === "wholesaleMarket") {
@@ -35481,7 +35648,10 @@ if (typeof window !== "undefined") {
               s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 20);
               s.needs.hunger = Math.max(0, (s.needs.hunger || 0) - 10);
               if (Random.chance(0.7)) {
-                s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) + 5,
+                );
                 StateManager.addMessage(
                   "🛡️ 你用绳子和砖头把摊位固定好了。风刮了一夜，天亮时货还在。虽然累得腰酸背痛，但没损失。心情+5。",
                   "success",
@@ -35598,7 +35768,10 @@ if (typeof window !== "undefined") {
             apply: function (s) {
               s.flags._typhoonSeenToday = true;
               if (Random.chance(0.5)) {
-                s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) + 5,
+                );
                 StateManager.addMessage(
                   "🏃 你跑进了一家24小时便利店。老板看你可怜，让你在后仓躲了一夜。虽然条件差，但至少安全。心情+5。",
                   "success",
@@ -35693,7 +35866,8 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       // 检查是否有活跃的副业或足够的副业行动记录
       if (!st.sideHustle) return false;
-      if (!st.sideHustle.active && (!st.stats || !st.stats.actionFreq)) return false;
+      if (!st.sideHustle.active && (!st.stats || !st.stats.actionFreq))
+        return false;
       // 检查副业类型和行动频次
       var hustleType = st.sideHustle.type || "";
       var totalHustleActions = 0;
@@ -35861,7 +36035,13 @@ if (typeof window !== "undefined") {
               );
               StateManager.addMessage(
                 "💔 催收电话打到了" +
-                  (nid === "aunt_wang" ? "王大婶" : nid === "old_zhou" ? "老周" : nid === "sister_zhang" ? "张姐" : "你的一位朋友") +
+                  (nid === "aunt_wang"
+                    ? "王大婶"
+                    : nid === "old_zhou"
+                      ? "老周"
+                      : nid === "sister_zhang"
+                        ? "张姐"
+                        : "你的一位朋友") +
                   "那里。TA很担心你，但也被打扰得不轻。好感-5。",
                 "danger",
               );
@@ -35884,7 +36064,12 @@ if (typeof window !== "undefined") {
           var bestAff = -200;
           for (var nid in st.relationships) {
             var rel = st.relationships[nid];
-            if (rel && rel.met && (rel.affinity || 0) >= 50 && (rel.affinity || 0) > bestAff) {
+            if (
+              rel &&
+              rel.met &&
+              (rel.affinity || 0) >= 50 &&
+              (rel.affinity || 0) > bestAff
+            ) {
               bestAff = rel.affinity || 0;
               bestNpc = nid;
             }
@@ -35896,13 +36081,28 @@ if (typeof window !== "undefined") {
             );
             if (borrowAmount > 0) {
               st.resources.cash += borrowAmount;
-              st.resources.debt = Math.max(0, (st.resources.debt || 0) - borrowAmount);
+              st.resources.debt = Math.max(
+                0,
+                (st.resources.debt || 0) - borrowAmount,
+              );
               st.relationships[bestNpc].affinity = Math.min(
                 100,
                 (st.relationships[bestNpc].affinity || 0) + 10,
               );
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-              var npcName = bestNpc === "aunt_wang" ? "王大婶" : bestNpc === "old_zhou" ? "老周" : bestNpc === "sister_zhang" ? "张姐" : bestNpc === "chef_chen" ? "陈师傅" : bestNpc;
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 10,
+              );
+              var npcName =
+                bestNpc === "aunt_wang"
+                  ? "王大婶"
+                  : bestNpc === "old_zhou"
+                    ? "老周"
+                    : bestNpc === "sister_zhang"
+                      ? "张姐"
+                      : bestNpc === "chef_chen"
+                        ? "陈师傅"
+                        : bestNpc;
               StateManager.addMessage(
                 "🙏 你鼓起勇气找了" +
                   npcName +
@@ -35942,7 +36142,9 @@ if (typeof window !== "undefined") {
         // 检查玩家是否在做跑腿副业（累计≥30次 courier_gig 行动）
         var isFreelance =
           (st.sideHustle && st.sideHustle.type === "freelance") ||
-          (st.stats && st.stats.actionFreq && st.stats.actionFreq["courier_gig"] >= 30);
+          (st.stats &&
+            st.stats.actionFreq &&
+            st.stats.actionFreq["courier_gig"] >= 30);
         return (
           st.player.phase === "street" &&
           isFreelance &&
@@ -35964,7 +36166,9 @@ if (typeof window !== "undefined") {
             st.resources.totalEarned += bonus;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             StateManager.addMessage(
-              "🤝 加了名片，以后每个月能多赚¥" + bonus + "的私单。这城市里人情就是钱。心情+8。",
+              "🤝 加了名片，以后每个月能多赚¥" +
+                bonus +
+                "的私单。这城市里人情就是钱。心情+8。",
               "success",
             );
           },
@@ -35993,7 +36197,8 @@ if (typeof window !== "undefined") {
       // [自洽修复] conditions 新增：修理技能≥40 检查
       conditions: function (st) {
         // 检查玩家修理技能是否达到专业门槛
-        var repairLvl = (st.skills && st.skills.repair && st.skills.repair.level) || 0;
+        var repairLvl =
+          (st.skills && st.skills.repair && st.skills.repair.level) || 0;
         return (
           st.player.phase === "street" &&
           repairLvl >= 40 &&
@@ -36011,8 +36216,14 @@ if (typeof window !== "undefined") {
             st.flags._repairExpertSeen = true;
             if (st.resources.cash >= 200) {
               st.resources.cash -= 200;
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 0) + 10,
+              );
+              st.player.intelligence = Math.min(
+                100,
+                (st.player.intelligence || 0) + 2,
+              );
               StateManager.addMessage(
                 "🔍 你拿到了正品配件，质量远超那些仿品。摊主看你的眼神都变了——从此你在这行有了口碑。心情+10，智力+2。",
                 "success",
@@ -36030,7 +36241,10 @@ if (typeof window !== "undefined") {
           hint: "学到经验",
           apply: function (st) {
             st.flags._repairExpertSeen = true;
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
             StateManager.addMessage(
               "🔍 你拍了照片留证，以后看到类似的就知道怎么辨别了。知识就是力量。智力+3。",
               "success",
@@ -36050,7 +36264,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         // 检查玩家与小美的好感关系是否达到深度交流门槛
         var rel = st.relationships && st.relationships.xiao_mei;
-        var aff = rel ? (rel.affinity || 0) : 0;
+        var aff = rel ? rel.affinity || 0 : 0;
         var met = rel ? !!rel.met : false;
         return (
           st.player.phase === "street" &&
@@ -36129,7 +36343,8 @@ if (typeof window !== "undefined") {
         // 检查当前是否为暴雨天气
         var isStorm =
           st.weather &&
-          (st.weather.current === "stormy" || st.weather.current === "heavy_rain");
+          (st.weather.current === "stormy" ||
+            st.weather.current === "heavy_rain");
         // 检查玩家是否在批发市场
         var atMarket =
           st.trade &&
@@ -36156,7 +36371,9 @@ if (typeof window !== "undefined") {
             var saved = Random.int(100, 300);
             st.resources.cash += saved;
             StateManager.addMessage(
-              "🌧️ 你冒着暴雨抢收回一半货物。浑身湿透，但好歹保住了¥" + saved + "的货。疲劳+20，卫生-10。",
+              "🌧️ 你冒着暴雨抢收回一半货物。浑身湿透，但好歹保住了¥" +
+                saved +
+                "的货。疲劳+20，卫生-10。",
               "warning",
             );
           },
@@ -36226,7 +36443,10 @@ if (typeof window !== "undefined") {
               s.flags._moralExtremSeen = true;
               if (Random.chance(0.7)) {
                 s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
-                s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 15);
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 0) + 15,
+                );
                 StateManager.addMessage(
                   "📢 你一声大喝，小偷慌了神跑了。学生感激地握住你的手：'谢谢你！'周围人纷纷鼓掌。名气+8，心情+15。",
                   "success",
@@ -36277,7 +36497,9 @@ if (typeof window !== "undefined") {
                 var steal = Random.int(200, 500);
                 s.resources.cash += steal;
                 StateManager.addMessage(
-                  "💰 你和小偷联手扒了那个学生，分了¥" + steal + "。心里有点不舒服，但钱是真的。道德-5。",
+                  "💰 你和小偷联手扒了那个学生，分了¥" +
+                    steal +
+                    "。心里有点不舒服，但钱是真的。道德-5。",
                   "warning",
                 );
               } else {
@@ -36320,7 +36542,8 @@ if (typeof window !== "undefined") {
           (!!st.flags._xiaoMeiTipActed || !!st.flags._xiaoMeiTipModerate) &&
           !st.flags._xiaoMeiPayoffSeen &&
           st.player.day >=
-            (st.flags._xiaoMeiTipActed || st.flags._xiaoMeiTipModerate || 0) + 12
+            (st.flags._xiaoMeiTipActed || st.flags._xiaoMeiTipModerate || 0) +
+              12
         );
       },
       probability: 0.05,
@@ -36358,7 +36581,11 @@ if (typeof window !== "undefined") {
               s.resources.cash += ret;
               s.resources.totalEarned += ret;
               StateManager.addMessage(
-                "📉 你卖掉了科技股，到手¥" + ret + "，收益¥" + (ret - invest) + "（+40%）。",
+                "📉 你卖掉了科技股，到手¥" +
+                  ret +
+                  "，收益¥" +
+                  (ret - invest) +
+                  "（+40%）。",
                 "success",
               );
             },
@@ -36383,7 +36610,6 @@ if (typeof window !== "undefined") {
       },
     },
   );
-
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
@@ -93248,7 +93474,7 @@ function endQuarter() {
   // 胜利条件
   checkCorpWinConditions(state);
 
-  autoSave();
+  autoSave("milestone");
 }
 
 /** 进入职场阶段 */
@@ -100427,6 +100653,9 @@ function registerStartup(state, name, industry, description) {
       console.warn("TriggerRegistry corp_startup 触发失败:", e);
     }
   }
+
+  // 里程碑：创业注册
+  if (typeof autoSave === "function") autoSave("milestone");
 
   return {
     success: true,
@@ -127780,11 +128009,29 @@ function showRepayVillageModal() {
 // ====== 存档 / 读档菜单 =====
 function showSaveMenu() {
   const allSlots = getAllSlotsWithEmpty();
+
+  // 获取自动存档信息
+  const autoInfo = getSlotInfo("_auto");
+  let autoLine = "";
+  if (autoInfo) {
+    const d = new Date(autoInfo.savedAt);
+    autoLine =
+      '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.2);border-radius:6px;font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;">' +
+      "<span>📅 上次自动存档</span>" +
+      '<span style="color:#27ae60;">第<strong>' +
+      autoInfo.day +
+      "</strong>天 · " +
+      d.toLocaleString("zh-CN") +
+      "</span>" +
+      "</div>";
+  }
+
   let bodyHtml =
     '<p style="margin-bottom:8px;color:var(--text-secondary);">选择一个槽位保存当前进度：</p>';
+  bodyHtml += autoLine;
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
   for (const s of allSlots) {
-    if (s.slot === "_auto") continue; // 自动存档单独处理
+    if (s.slot === "_auto") continue; // 自动存档不可手动覆盖
     if (s.empty) {
       bodyHtml += `
         <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
@@ -127859,15 +128106,23 @@ function showLoadMenu() {
   let hasAnySave = false;
   for (const s of allSlots) {
     if (s.empty) {
+      // 自动存档空槽位不显示
+      if (s.slot === "_auto") continue;
       bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
     } else {
       hasAnySave = true;
       const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
       const modeTag = s.mode ? s.mode + " " : "";
+      const isAuto = s.slot === "_auto";
+      // 自动存档用绿色高亮样式
+      const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
+      const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
+      const labelIcon = isAuto ? "🤖 " : "";
+      const labelName = isAuto ? "自动存档" : s.label;
       bodyHtml += `
-        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color 0.15s;">
+        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${modeTag}${s.label}</strong>
+            <strong>${labelIcon}${modeTag}${labelName}</strong>
             <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
@@ -127877,6 +128132,7 @@ function showLoadMenu() {
             ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
           </div>
           ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
+          ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
         </div>`;
     }
   }
@@ -140277,6 +140533,8 @@ function applyJobhop(offerId) {
       offer.salary.toLocaleString(),
     "success",
   );
+  // 里程碑：跳槽/入职
+  if (typeof autoSave === "function") autoSave("milestone");
   if (typeof renderAll === "function") renderAll();
 }
 
@@ -143312,14 +143570,21 @@ function showWelcome() {
         var latest = allSlots[0];
         loadSection.style.display = "";
         var modeTag = latest.mode ? " " + latest.mode : "";
+        var isAuto = latest.slot === "_auto";
         loadSection.innerHTML =
-          '<button id="btn-load-latest" class="btn btn-lg">📂 继续游戏' +
+          '<button id="btn-load-latest" class="btn btn-lg">' +
+          (isAuto ? "🤖 " : "📂 ") +
+          "继续游戏" +
           modeTag +
           " (第" +
           latest.day +
           "天, ¥" +
           (latest.cash ? latest.cash.toLocaleString() : 0) +
-          ")</button>" +
+          ")" +
+          (isAuto
+            ? '<span style="display:block;font-size:10px;color:var(--text-muted);margin-top:2px;">自动存档 · 每日自动保存</span>'
+            : "") +
+          "</button>" +
           '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
         document.getElementById("btn-load-latest").onclick = function () {
           loadExistingGame(latest.slot);
@@ -145185,6 +145450,8 @@ function getAvailableActions(state) {
                 "。",
               "success",
             );
+            // 里程碑：搬家/升级住所
+            if (typeof autoSave === "function") autoSave("milestone");
           };
         })(t, house),
       });

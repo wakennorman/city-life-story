@@ -2122,6 +2122,8 @@ function applyJobhop(offerId) {
       offer.salary.toLocaleString(),
     "success",
   );
+  // 里程碑：跳槽/入职
+  if (typeof autoSave === "function") autoSave("milestone");
   if (typeof renderAll === "function") renderAll();
 }
 

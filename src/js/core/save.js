@@ -9,7 +9,11 @@
 const NUM_SLOTS = 5;
 const SLOT_PREFIX = "city_life_story_slot_";
 const AUTO_SAVE_KEY = "city_life_story_autosave";
+const AUTO_SAVE_PREV_KEY = "city_life_story_autosave_prev"; // 滚动双槽·前一日备份
 const INDEX_KEY = "city_life_story_index";
+
+// localStorage 配额警戒线（字节）
+const QUOTA_WARN_THRESHOLD = 2 * 1024 * 1024; // 剩余<2MB时预警
 
 /** 获取槽位键 */
 function slotKey(n) {
@@ -29,6 +33,53 @@ function getSaveIndex() {
 /** 写入存档索引 */
 function setSaveIndex(index) {
   localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+}
+
+/**
+ * 检测 localStorage 剩余空间
+ * 通过试探性写入检测是否接近配额上限
+ * 返回 { ok: boolean, remaining: number, detail: string }
+ */
+function checkStorageQuota() {
+  try {
+    var probeKey = "__quota_probe__";
+    // 先写一个小值确认 localStorage 还可写入
+    localStorage.setItem(probeKey, "1");
+    // 尝试写入一个 ~500KB 的字符串 — 如果失败说明快满了
+    var probeData = new Array(500 * 1024).join("x");
+    try {
+      localStorage.setItem(probeKey, probeData);
+      localStorage.removeItem(probeKey);
+      return { ok: true, remaining: QUOTA_WARN_THRESHOLD + 1, detail: "充足" };
+    } catch (quotaErr) {
+      // 500KB 写入失败 → 接近配额上限
+      localStorage.removeItem(probeKey);
+      // 用二分法逼近剩余空间
+      var lo = 0,
+        hi = 500 * 1024,
+        lastOk = 0;
+      while (lo <= hi) {
+        var mid = Math.floor((lo + hi) / 2);
+        try {
+          var test = new Array(mid).join("x");
+          localStorage.setItem(probeKey, test);
+          lastOk = mid;
+          localStorage.removeItem(probeKey);
+          lo = mid + 1;
+        } catch (e) {
+          hi = mid - 1;
+        }
+      }
+      return {
+        ok: lastOk >= QUOTA_WARN_THRESHOLD,
+        remaining: lastOk,
+        detail: "剩余约 " + Math.round(lastOk / 1024) + "KB",
+      };
+    }
+  } catch (e) {
+    // localStorage 不可用（隐私模式等）
+    return { ok: false, remaining: 0, detail: "无法检测: " + e.message };
+  }
 }
 
 /** 生成"那时候你..."回忆文案（存储于索引，读档时展示） */
@@ -138,6 +189,36 @@ function generateSaveNarrative(state) {
  * 基于存档快照生成"那时候你..."的叙事文案
  */
 
+/**
+ * 裁剪存档数据中的冗余字段，减小体积
+ * - messageLog: 保留前50条+后50条完整，中间浓缩摘要
+ */
+function _trimStateForSave(saveData) {
+  if (saveData.messageLog && saveData.messageLog.length > 100) {
+    var head = saveData.messageLog.slice(0, 50);
+    var tail = saveData.messageLog.slice(-50);
+    var middle = saveData.messageLog.slice(50, -50);
+    var condensed = [];
+    // 按每10条一组浓缩
+    for (var i = 0; i < middle.length; i += 10) {
+      var chunk = middle.slice(i, i + 10);
+      var summaries = [];
+      for (var j = 0; j < chunk.length; j++) {
+        var m = chunk[j];
+        var txt = typeof m === "string" ? m : m.text || "";
+        if (txt.length > 40) txt = txt.slice(0, 40) + "…";
+        summaries.push(txt);
+      }
+      condensed.push({
+        text: "📋 " + chunk.length + "条消息：" + summaries.join(" · "),
+        condensed: true,
+      });
+    }
+    saveData.messageLog = head.concat(condensed).concat(tail);
+  }
+  return saveData;
+}
+
 /** 保存游戏到指定槽位（1-5） */
 function saveGame(slot) {
   if (slot < 1 || slot > NUM_SLOTS) {
@@ -147,6 +228,18 @@ function saveGame(slot) {
 
   try {
     const state = StateManager.getState();
+
+    // 配额检测
+    var quota =
+      typeof checkStorageQuota === "function" ? checkStorageQuota() : null;
+    if (quota && !quota.ok) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），请清理旧存档后再保存。",
+        "danger",
+      );
+      return false;
+    }
+
     state.lastPlayedAt = Date.now();
 
     const saveData = JSON.parse(JSON.stringify(state));
@@ -158,6 +251,8 @@ function saveGame(slot) {
     if (saveData.messageLog && saveData.messageLog.length > 200) {
       saveData.messageLog = saveData.messageLog.slice(-200);
     }
+    // 进一步压缩（保留前50+后50，中间浓缩）
+    _trimStateForSave(saveData);
 
     localStorage.setItem(slotKey(slot), JSON.stringify(saveData));
 
@@ -194,23 +289,51 @@ function saveGame(slot) {
   }
 }
 
-/** 自动存档 */
-function autoSave() {
+/** 自动存档（含配额检测 + 消息压缩 + 滚动双槽 + 用户反馈） */
+function autoSave(reason) {
   try {
     const state = StateManager.getState();
-    const saveData = JSON.parse(JSON.stringify(state));
+
+    // 配额检测
+    var quota = checkStorageQuota();
+    if (!quota.ok) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），自动存档失败！请清理旧存档。",
+        "danger",
+      );
+      return false;
+    }
+
+    // 深拷贝
+    var saveData = JSON.parse(JSON.stringify(state));
     saveData.lastPlayedAt = Date.now();
-    // 附加存档快照（用于读档回忆文案）
+    // 存档快照
     if (typeof createSnapshot === "function") {
       saveData._snapshot = createSnapshot(state);
     }
-    if (saveData.messageLog && saveData.messageLog.length > 200) {
-      saveData.messageLog = saveData.messageLog.slice(-200);
+    // 压缩消息日志
+    _trimStateForSave(saveData);
+
+    // 滚动双槽：当前 → 前一日备份
+    var existing = null;
+    try {
+      existing = localStorage.getItem(AUTO_SAVE_KEY);
+    } catch (e) {
+      /* 忽略 */
     }
+    if (existing) {
+      try {
+        localStorage.setItem(AUTO_SAVE_PREV_KEY, existing);
+      } catch (e) {
+        /* 忽略 */
+      }
+    }
+
+    // 写入新存档
     localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(saveData));
 
-    // 更新索引中的自动存档信息
-    const index = getSaveIndex();
+    // 更新索引
+    var index = getSaveIndex();
     index._auto = {
       day: state.player.day,
       phase: state.player.phase,
@@ -222,10 +345,33 @@ function autoSave() {
       rank: state.player.phase === "corporate" ? state.corporate.rank : null,
       savedAt: Date.now(),
       narrative: generateSaveNarrative(state),
+      reason: reason || "daily",
     };
     setSaveIndex(index);
+
+    // 用户反馈（里程碑存档用不同文案，但不重复刷屏）
+    if (reason !== "milestone" || !window._autoSaveMsgDay) {
+      window._autoSaveMsgDay = window._autoSaveMsgDay || {};
+    }
+    if (reason === "milestone" && window._autoSaveMsgDay[state.player.day]) {
+      // 同一日已发过里程碑消息，不再重复
+    } else {
+      StateManager.addMessage(
+        reason === "milestone"
+          ? "💾 里程碑自动保存（第" + state.player.day + "天）"
+          : "💾 第" + state.player.day + "天已自动保存",
+        "success",
+      );
+      if (reason === "milestone") {
+        window._autoSaveMsgDay[state.player.day] = true;
+      }
+    }
+
+    return true;
   } catch (e) {
-    /* 静默 */
+    console.error("自动存档失败:", e);
+    StateManager.addMessage("⚠️ 自动存档失败: " + e.message, "warning");
+    return false;
   }
 }
 
@@ -703,12 +849,16 @@ if (typeof window !== "undefined") {
     getAllSlotsWithEmpty,
     exportSave,
     importSave,
+    checkStorageQuota,
+    _trimStateForSave,
     NUM_SLOTS,
     SLOT_PREFIX,
     AUTO_SAVE_KEY,
+    AUTO_SAVE_PREV_KEY,
     INDEX_KEY,
     slotKey,
     getSaveIndex,
     setSaveIndex,
+    QUOTA_WARN_THRESHOLD,
   });
 }

@@ -17,3 +17,4 @@
 - [tab-system-optimization-v3.31](tab-system-optimization-v3.31.md) — Tab切换系统全面优化（子Tab内容积累/社交返回/装备导航/全局审计）
 - [nav-button-binding-fix-v3.32](nav-button-binding-fix-v3.32.md) — 导航死按钮修复 + 交通AP按距离×方式动态计算
 - [commute-system-merge-v3.33](commute-system-merge-v3.33.md) — 通勤方式合并（快速出行+交通方式→通勤方式+步行）
+- [agnes-api-claude-code-integration](agnes-api-claude-code-integration.md) — Agnes API + Claude Code 踩坑记录：claude.exe 不认 env var，必须用 --settings JSON + bare 模式

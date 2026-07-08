@@ -672,6 +672,9 @@ function registerStartup(state, name, industry, description) {
     }
   }
 
+  // 里程碑：创业注册
+  if (typeof autoSave === "function") autoSave("milestone");
+
   return {
     success: true,
     message: "公司注册成功！",

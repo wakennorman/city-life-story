@@ -245,7 +245,7 @@ function endQuarter() {
   // 胜利条件
   checkCorpWinConditions(state);
 
-  autoSave();
+  autoSave("milestone");
 }
 
 /** 进入职场阶段 */
