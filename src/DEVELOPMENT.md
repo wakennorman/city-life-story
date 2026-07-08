@@ -1,8 +1,65 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.51 职业病/成就/移动端三项优化）
+> 最后更新: 2026-07-09（v3.52 事件自洽性修复+5联动事件扩充 + v3.52b 烹饪×NPC联动事件）
 >
-> commit: `acb47a00`
+> commit: `d7e98f0d`
+
+---
+
+## 2026-07-09 — v3.52 事件自洽性修复 + 5联动事件扩充
+
+**目标**：消除叙事-触发 A 类自洽性缺陷 + 填补 5 个联动设计空白区。
+
+### ① A 类自洽性修复（7 个事件）
+
+扫描全事件池，识别「故事直呼已定义 NPC 名但 conditions 未校验 relationships.met」的缺陷：
+
+| 事件                      | 文件                      | 修复                          |
+| ------------------------- | ------------------------- | ----------------------------- |
+| `arbitrage_techpark_tip`  | events_street_wealth.js   | 新增 xiao_mei.met 检查        |
+| `arbitrage_license_tip`   | events_street_wealth.js   | 新增 sister_zhang.met 检查    |
+| `arbitrage_hygiene_tip`   | events_street_wealth.js   | 新增 chef_chen.met 检查       |
+| `aunt_wang_job_tip`       | events_street_survival.js | 新增 aunt_wang.met 检查       |
+| `boss_li_bonus`           | events_street_survival.js | 新增 boss_li.met 检查         |
+| `xiao_mei_tutoring_lead`  | events_street_survival.js | 新增 xiao_mei.met 检查        |
+| `boss_li_typhoon_warning` | cross_system_events.js    | 新增 boss_li.affinity≥30 门槛 |
+
+### ② 新增 5 个联动事件
+
+| 事件                         | 触发条件                                                | 联动系统      |
+| ---------------------------- | ------------------------------------------------------- | ------------- |
+| `cold_snap_housing_crisis`   | cold_snap + housing.tier≤1 + health<65                  | 天气×住所     |
+| `fame_recognized_encounter`  | fame≥60 + day≥80                                        | 名气×社交     |
+| `health_alone_trough`        | health<40 + lowHealthStreak≥5 + 无NPC好友               | 健康×关系网   |
+| `edu_white_collar_threshold` | education≥2 + 无职业                                    | 学历×白领职场 |
+| `side_hustle_scaling_crisis` | sideHustle.active + lastActiveDay≥30 + totalEarned≥3000 | 副业×规模化   |
+
+- 影响文件：`cross_system_events.js`（+247 行）、`events_street_wealth.js`（+18 行）、`events_street_survival.js`（+18 行）、`cross_system_events.js`（+9 行）
+- 验证：`node --check` 全通过 / `python build.py` 5382.0KB ✅
+
+### ③ v3.52b — 烹饪×NPC联动事件（3个新增）+ 清理废弃bak文件
+
+**目标**：填补 cooking 技能事件集成度最低（6处引用）和 NPC auntie_lin 引用不足（3处）的空白。
+
+#### 新增事件
+
+| 事件ID | 触发条件 | 联动系统 | 设计意图 |
+|--------|---------|---------|---------|
+| `cooking_market_insight` | cooking≥15 + day>5 | 技能+交易+声望 | 禀赋效应——技能积累带来实用「识货」能力 |
+| `auntie_lin_secret_recipe` | auntie_lin好感≥30 + cooking≥10 + day>15 | NPC+技能+魅力 | 峰终定律——秘方传授成为情感记忆锚点 |
+| `chef_chen_kitchen_crisis` | chef_chen好感≥40 + cooking≥15 + day>20 | NPC+技能+临时工作 | 社会认同——被陈师傅认可体现技能价值 |
+
+#### 清理
+
+- 删除 `src/js/phase2/investment.bak.js`（1行占位符，已迁至 investment.js）
+- 删除 `src/DEVELOPMENT.md.bak`（过时备份）
+
+#### 本轮发现（待后续迭代）
+
+- [ ] 10个NPC被注释（dr_wang/master_zhao/brother_huang/old_zhang/xiaochen/sister_li/da_liu/xiaoli/sister_wu/uncle_chen_bank）——已定义完整但未激活
+- [ ] 12个TODOs在 locations.js（高档小区/老旧小区/法院/人才市场/图书馆/体育馆/网吧/菜市场/物流园/汽车城/花鸟市场/二手市场）
+- [ ] 影响文件：`cross_system_events.js`（+261行）、`investment.bak.js`（删除）、`DEVELOPMENT.md.bak`（删除）
+- [ ] 验证：`node --check` ✅ / `python build.py` 5392.5KB ✅ / `git commit d7e98f0d` ✅（网络不通，push待后续）
 
 ---
 
