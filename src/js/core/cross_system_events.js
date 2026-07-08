@@ -10551,5 +10551,240 @@
     ],
   });
 
+  // ====== v3.53 联动事件扩充（3个新增）======
+  // 设计意图：填补3个联动空白区——住所升级里程碑/技能协同爆发/债务危机干预
+
+  // ----- 事件53：居住升级里程碑 — 从贫民窟到体面住所 -----
+  // 联动：housing.tier 从≤2跳升到≥3 + day≥20（第一次显著改善居住条件）
+  RANDOM_EVENTS.push({
+    id: "housing_upgrade_milestone",
+    phase: "street",
+    icon: "🏠",
+    title: "终于像个家了",
+    story:
+      "你搬进了新住处——虽然算不上豪宅，但比起之前那个四面漏风的地方，这里已经算是天堂了。\\n\\n有独立的卫生间、能正常锁上的门、窗户不漏风。你坐在床沿上环顾四周，忽然意识到——这是你在这座城市里第一次有了真正意义上的'住所'。",
+    // [自洽新增] conditions：housing.tier从旧的低等级跳到≥3（已记录旧等级）
+    conditions: function (st) {
+      if (st.player.day < 20) return false;
+      if (st.flags._housingUpgradeMilestoneSeen) return false;
+      var curTier = (st.housing && st.housing.tier) || 0;
+      var prevTier = st.flags._housingPrevTier || 0;
+      // 旧等级≤2 且 新等级≥3 → 显著跳跃
+      return curTier >= 3 && prevTier <= 2;
+    },
+    probability: 0.5, // 条件已精确，触发比例高
+    repeatable: false,
+    choices: [
+      {
+        text: "🏪 去楼下买点日用品布置房间",
+        hint: "心情+12，归属感提升",
+        apply: function (st) {
+          st.flags._housingUpgradeMilestoneSeen = true;
+          if (st.resources.cash >= 50) {
+            st.resources.cash -= 50;
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "🏪 你花¥50买了拖鞋、毛巾和一盆绿植。房间虽然简陋，但布置之后有了'家'的味道。心情+12，心智+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 给家里打个电话说说新住处",
+        hint: "精神充电，归属感",
+        apply: function (st) {
+          st.flags._housingUpgradeMilestoneSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "📞 你拨通了老家的电话。妈说'找了新住处就好，别老睡不好的地方'。挂了电话，你在新房间里坐了很久。心情+15，心智+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😴 洗个热水澡早点睡",
+        hint: "休息恢复",
+        apply: function (st) {
+          st.flags._housingUpgradeMilestoneSeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 20);
+          StateManager.addMessage(
+            "😴 你洗了进城以来最舒服的一个热水澡。躺在不那么硬的床上，很快就睡着了。疲劳-20，心情+8，卫生+20。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件54：技能协同爆发 — 双技能≥40解锁复合能力 -----
+  // 联动：两门关联技能同时≥40（如 repair+electrician / coding+math / cooking+sales）
+  RANDOM_EVENTS.push({
+    id: "skill_dual_synergy",
+    phase: "street",
+    icon: "⚡",
+    title: "融会贯通",
+    story:
+      "你正在干活时突然愣了一下——刚才那个难题，你发现可以用两种方法来解决。\\n\\n以前你只懂其中一种，但现在两种技能在你脑子里同时浮现，互补不足。你意识到：会一门手艺是本事，会两门就是境界了。",
+    // [自洽新增] conditions：任意两门关联技能同时≥40
+    conditions: function (st) {
+      if (st.player.day < 30) return false;
+      if (st.flags._skillDualSynergySeen) return false;
+      if (!st.skills) return false;
+      // 定义技能协同对：repair+electrician / coding+math / cooking+sales / driving+repair
+      var pairs = [
+        ["repair", "electrician"],
+        ["coding", "math"],
+        ["cooking", "sales"],
+        ["driving", "repair"],
+        ["medicine", "social"],
+        ["english", "coding"],
+      ];
+      for (var i = 0; i < pairs.length; i++) {
+        var a = st.skills[pairs[i][0]];
+        var b = st.skills[pairs[i][1]];
+        if (a && b && a.level >= 40 && b.level >= 40) {
+          st.flags._skillSynergyPair = pairs[i][0] + "_" + pairs[i][1];
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧠 认真思考两种方法结合的新可能",
+        hint: "智力+2，心智+3，可能解锁新技能",
+        apply: function (st) {
+          st.flags._skillDualSynergySeen = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 2,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🧠 你坐下来把两种方法对比了一遍，找到了结合点。智力+2，心智+3。有些东西不是1+1=2这么简单——它是乘法。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 把新方法记录下来",
+        hint: "智力+3，以后可以教别人",
+        apply: function (st) {
+          st.flags._skillDualSynergySeen = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 3,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📝 你花了半小时写下心得。智力+3，名气+3。以后有人请教时，你可以直接把这个方法讲给他们。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 先把手头的活干完",
+        hint: "务实，不浪费时间",
+        apply: function (st) {
+          st.flags._skillDualSynergySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          StateManager.addMessage(
+            "😅 你没多想，继续干活。有些顿悟不需要记在本子上——脑子已经记住了。心情+4。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 事件55：债务危机干预 — 长期高负债后的转折点 -----
+  // 联动：debt > 15000 + day > 90 + 未处理债务标记
+  RANDOM_EVENTS.push({
+    id: "debt_crisis_intervention",
+    phase: "street",
+    icon: "💰",
+    title: "债务的尽头",
+    story:
+      "你坐在出租屋里算了一笔账——负债已经超过¥" +
+      (15000).toLocaleString() +
+      "了。利息每天都在滚，催收电话一天比一天多。\\n\\n你翻了翻通讯录，突然想到一个人。或者在楼下贴着的社区援助公告上看到了什么。窗外这座灯火通明的城市，似乎并不在意一个人的绝望。",
+    // [自洽新增] conditions：债务>15000 + day>90 + 有明确的债务标志
+    conditions: function (st) {
+      if (st.player.day < 90) return false;
+      if (st.flags._debtCrisisSeen) return false;
+      var totalDebt = (st.resources && st.resources.debt) || 0;
+      return totalDebt > 15000;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 给老家打电话求助",
+        hint: "得开口，但有人会帮你",
+        apply: function (st) {
+          st.flags._debtCrisisSeen = true;
+          if (st.resources.cash >= 5000) {
+            st.resources.cash -= 5000;
+          }
+          if (st.resources.debt) {
+            st.resources.debt = Math.max(0, st.resources.debt - 8000);
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          StateManager.addMessage(
+            "📞 你终于拨通了家里的电话。妈沉默了很久，然后说「还差多少？家里给你想办法。」你突然就哭了——不是因为有了希望，而是因为在这个世界上还是有人在乎你的死活。债务减免¥8000，心情+5，心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏛️ 去社区咨询债务重组",
+        hint: "正规途径，利息减免",
+        apply: function (st) {
+          st.flags._debtCrisisSeen = true;
+          if (st.resources.cash >= 200) {
+            st.resources.cash -= 200;
+          }
+          if (st.resources.debt) {
+            st.resources.debt = Math.max(
+              0,
+              Math.round(st.resources.debt * 0.7),
+            );
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          StateManager.addMessage(
+            "🏛️ 你去了社区法律援助中心。一个戴眼镜的年轻人帮你梳理了债务，打电话跟三家平台谈了分期方案。利息砍掉了30%。心智+8。有困难的时候，不要觉得是自己一个人的事。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😤 咬牙再多打一份工",
+        hint: "健康-10，心力交瘁",
+        apply: function (st) {
+          st.flags._debtCrisisSeen = true;
+          var earn = Random.int(300, 600);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.status.health = Math.max(0, (st.status.health || 50) - 10);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+          StateManager.addMessage(
+            "😤 你接了一份夜班兼职，连续干了一周。赚了¥" +
+              earn +
+              "，但身体被掏空。健康-10，疲劳+25。这不是长久之计，但至少先把眼前这关过了。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
