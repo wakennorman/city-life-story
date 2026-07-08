@@ -1147,6 +1147,29 @@ function renderCareerJobs(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
+    // ---- v3.48：晋升就绪横幅（条件满足时突出显示）----
+    if (canPromote) {
+      html +=
+        '<div style="margin-top:12px;padding:10px 12px;background:rgba(74,158,92,0.1);border:1px solid rgba(74,158,92,0.35);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">';
+      html += "<div>";
+      html +=
+        '<div style="font-size:12px;font-weight:bold;color:var(--success);">🎉 晋升条件已满足！</div>';
+      html +=
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">可晋升至「' +
+        nextLevel.name +
+        "」，月薪 ¥" +
+        nextLevel.salary.toLocaleString() +
+        "</div>";
+      html += "</div>";
+      html +=
+        '<button class="btn btn-sm btn-primary" onclick="applyCareerPromotion(\'' +
+        currentJob.path +
+        "','" +
+        nextLevel.id +
+        "')\">⬆️ 立即晋升</button>";
+      html += "</div>";
+    }
+
     // ---- 辞职按钮 ----
     html +=
       '<div style="margin-top:12px;padding:8px;background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.15);border-radius:6px;">';
