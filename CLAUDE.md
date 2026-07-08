@@ -261,14 +261,15 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
 - **指令六（v3.22 城管联动）**：state.chengguan {heat/warnings/relationship} 长期只有 main.js 自动巡逻（纯消息无选择）→ 新建 `chengguan_events.js`：热度≥60触发"城管来了"高张力互动事件（4种选择：逃跑/魅力求情/塞钱/50%赌局），读写 heat/relationship/warnings + charm/morality → commit `2701c12`（本地待推）
 
 - **v3.34 联动事件扩充（2026-07-08）**：在 `cross_system_events.js` 末尾追加 5 个新事件 + 1 个链式后续，填补 5 个联动空白区（commit `468dab0`）：
-  | 事件                        | 联动类型           | 触发条件                                       | 设计意图                                       |
-  | --------------------------- | ------------------ | ---------------------------------------------- | ---------------------------------------------- |
-  | `gig_regular_customer`      | 老手特遇           | sideHustle.freelance 或 courier_gig≥30         | 长期跑腿积累触发熟人回头客，奖励人脉资源       |
-  | `repair_expert_inspection`  | 技能门槛解锁       | repair.level≥40                                | 专业技能赋予识别假冒伪劣能力，体现成长感       |
-  | `xiao_mei_techpark_tip`     | NPC好感溢出        | xiao_mei.affinity≥60 + met                     | 深度关系解锁内幕消息，激励玩家经营NPC关系      |
-  | `storm_market_dilemma`      | 天气×位置情境      | weather.stormy/heavy_rain + wholesaleMarket    | 同一天气在不同位置有不同叙事和选择             |
-  | `moral_extreme_pickpocket`  | 道德极端分叉       | morality≥70 或 ≤30                             | 高道德→见义勇为/报警；低道德→旁观/同流合污     |
-  | `xiao_mei_techpark_payoff`  | 链式后续（事件6）  | 12天后 + 有xiao_mei_tip相关flag                | 兑现小美消息的投资回报，形成完整事件链         |
+
+  | 事件                       | 联动类型          | 触发条件                                    | 设计意图                                   |
+  | -------------------------- | ----------------- | ------------------------------------------- | ------------------------------------------ |
+  | `gig_regular_customer`     | 老手特遇          | sideHustle.freelance 或 courier_gig≥30      | 长期跑腿积累触发熟人回头客，奖励人脉资源   |
+  | `repair_expert_inspection` | 技能门槛解锁      | repair.level≥40                             | 专业技能赋予识别假冒伪劣能力，体现成长感   |
+  | `xiao_mei_techpark_tip`    | NPC好感溢出       | xiao_mei.affinity≥60 + met                  | 深度关系解锁内幕消息，激励玩家经营NPC关系  |
+  | `storm_market_dilemma`     | 天气×位置情境     | weather.stormy/heavy_rain + wholesaleMarket | 同一天气在不同位置有不同叙事和选择         |
+  | `moral_extreme_pickpocket` | 道德极端分叉      | morality≥70 或 ≤30                          | 高道德→见义勇为/报警；低道德→旁观/同流合污 |
+  | `xiao_mei_techpark_payoff` | 链式后续（事件6） | 12天后 + 有xiao_mei_tip相关flag             | 兑现小美消息的投资回报，形成完整事件链     |
 
 - **v3.24 日终报告峰终定律增强**（commit `8d1362e`，已推送）：
   - **🏆 今日高光**：单笔最大收入高亮+天数里程碑+累计收入里程碑+健康/债务预警（损失厌恶）+平凡日温暖收尾

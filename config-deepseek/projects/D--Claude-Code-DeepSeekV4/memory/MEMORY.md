@@ -2,3 +2,4 @@
 - [action-sort-system](action-sort-system.md) — 行动选项分类排序系统 v1.7，分类分组+多层排序取代平铺
 - [property-housing-integration](property-housing-integration.md) — 房产PROPERTIES×租房HOUSING_TIERS深度对接映射表
 - [ui-status-bar-reorg](ui-status-bar-reorg.md) — UI状态栏单行左对齐 + 人生目标上移
+- [help-system-v3.36](help-system-v3.36.md) — 帮助弹窗全面更新v3.36：7剧本+约定式自动归类+百科指引

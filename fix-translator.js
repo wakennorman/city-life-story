@@ -1,5 +1,5 @@
-const fs = require('fs');
-let code = fs.readFileSync('launch-agnes.js', 'utf-8');
+const fs = require("fs");
+let code = fs.readFileSync("launch-agnes.js", "utf-8");
 
 // Change 1: Inside tool_call for loop, add per-chunk input_json_delta send
 const oldAccumulate = `if (tc.function?.arguments) this._tcBlocks[idx].args += tc.function.arguments;`;
@@ -10,9 +10,9 @@ const newAccumulate = `if (tc.function?.arguments) {
 
 if (code.includes(oldAccumulate)) {
   code = code.replace(oldAccumulate, newAccumulate);
-  console.log('Change 1: Added per-chunk input_json_delta');
+  console.log("Change 1: Added per-chunk input_json_delta");
 } else {
-  console.log('Change 1: oldAccumulate NOT FOUND');
+  console.log("Change 1: oldAccumulate NOT FOUND");
 }
 
 // Change 2: Remove the old accumulated send loop
@@ -27,15 +27,22 @@ const oldLoop = `        // 每次有 tool_calls delta 都发 input_json_delta�
         }`;
 
 if (code.includes(oldLoop)) {
-  code = code.replace(oldLoop, '');
-  console.log('Change 2: Removed accumulated send loop');
+  code = code.replace(oldLoop, "");
+  console.log("Change 2: Removed accumulated send loop");
 } else {
-  console.log('Change 2: oldLoop NOT FOUND');
+  console.log("Change 2: oldLoop NOT FOUND");
 }
 
-fs.writeFileSync('launch-agnes.js', code, 'utf-8');
-console.log('Written');
+fs.writeFileSync("launch-agnes.js", code, "utf-8");
+console.log("Written");
 
 // Verify syntax
-try { require('child_process').execSync('node --check launch-agnes.js', { cwd: __dirname, stdio: 'pipe' }); console.log('Syntax OK'); }
-catch(e) { console.log('Syntax ERROR:', e.stderr?.toString() || e.message); }
+try {
+  require("child_process").execSync("node --check launch-agnes.js", {
+    cwd: __dirname,
+    stdio: "pipe",
+  });
+  console.log("Syntax OK");
+} catch (e) {
+  console.log("Syntax ERROR:", e.stderr?.toString() || e.message);
+}

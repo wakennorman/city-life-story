@@ -24,37 +24,37 @@ metadata:
 
 ## 发现的问题
 
-| 文件 | 问题 | 严重度 |
-| --- | --- | --- |
-| `jobs.js` | 底部 514 行全是注释掉的占位符工作，引用的 skills 不存在 | 🔴P0 代码误导 |
-| `locations.js` | suburb/entertainment 的 jobs 数组包含未定义 ID | 🔴P1 静默失败 |
-| `state.js` | housing.tier 注释"0-3"但实际是"0-6" | 🟡P2 注释过期 |
-| `daily_quest.js` | 智力接近 45 时缺乏 techPark 引导 | 🟡P2 玩家路径不透明 |
+| 文件             | 问题                                                    | 严重度              |
+| ---------------- | ------------------------------------------------------- | ------------------- |
+| `jobs.js`        | 底部 514 行全是注释掉的占位符工作，引用的 skills 不存在 | 🔴P0 代码误导       |
+| `locations.js`   | suburb/entertainment 的 jobs 数组包含未定义 ID          | 🔴P1 静默失败       |
+| `state.js`       | housing.tier 注释"0-3"但实际是"0-6"                     | 🟡P2 注释过期       |
+| `daily_quest.js` | 智力接近 45 时缺乏 techPark 引导                        | 🟡P2 玩家路径不透明 |
 
 ---
 
 ## 改进
 
-| 维度 | 文件 | 改动 |
-| --- | --- | --- |
-| 死代码清理 | jobs.js | 移除 ~514 行注释占位符 → 1348→834 行 |
-| 悬空引用消除 | locations.js | suburb.jobs=[] / entertainment.jobs=[] |
-| 注释修正 | state.js | housing.tier 注释更新为"0-6" |
-| 玩家引导 | daily_quest.js | _dynamicNextDesc 扩展智力路线提示 |
+| 维度         | 文件           | 改动                                   |
+| ------------ | -------------- | -------------------------------------- |
+| 死代码清理   | jobs.js        | 移除 ~514 行注释占位符 → 1348→834 行   |
+| 悬空引用消除 | locations.js   | suburb.jobs=[] / entertainment.jobs=[] |
+| 注释修正     | state.js       | housing.tier 注释更新为"0-6"           |
+| 玩家引导     | daily_quest.js | _dynamicNextDesc 扩展智力路线提示      |
 
 ---
 
 ## 全剧本适配自查
 
-| 剧本 | 本次改动会触发吗？ | 降级/替代？ |
-| --- | --- | --- |
-| classic | ✅（提示显示） | — |
-| laid_off | ✅ | — |
-| small_town_grader | ✅（智力路线提示最直接利好此剧本，因起始智力高） | — |
-| foreign_worker | ✅ | — |
-| second_gen | ✅ | — |
-| midlife_crisis | ✅ | — |
-| fresh_grad | ✅（智力路线提示） | — |
+| 剧本              | 本次改动会触发吗？                               | 降级/替代？ |
+| ----------------- | ------------------------------------------------ | ----------- |
+| classic           | ✅（提示显示）                                   | —           |
+| laid_off          | ✅                                               | —           |
+| small_town_grader | ✅（智力路线提示最直接利好此剧本，因起始智力高） | —           |
+| foreign_worker    | ✅                                               | —           |
+| second_gen        | ✅                                               | —           |
+| midlife_crisis    | ✅                                               | —           |
+| fresh_grad        | ✅（智力路线提示）                               | —           |
 
 **结论**：全部 7 个剧本受益，无断链。
 

@@ -252,7 +252,9 @@ class StreamTranslator {
           if (tc.function?.arguments) {
             const frag = tc.function.arguments;
             this._tcBlocks[idx].args += frag;
-            events.push(`event: content_block_delta\ndata: {"type":"content_block_delta","index":${idx + 1},"delta":{"type":"input_json_delta","partial_json":"${this._e(frag)}"}}`);
+            events.push(
+              `event: content_block_delta\ndata: {"type":"content_block_delta","index":${idx + 1},"delta":{"type":"input_json_delta","partial_json":"${this._e(frag)}"}}`,
+            );
           }
 
           // 首次见到此 index → 发 content_block_start
@@ -320,8 +322,13 @@ function startProxy() {
     }
 
     // 白名单：只转发 /v1/messages 和 /v1/chat/completions
-    if (!targetPath.startsWith("/v1/messages") && !targetPath.startsWith("/v1/chat/completions")) {
-      console.log(`[proxy] Ignoring non-API request: ${req.method} ${targetPath}`);
+    if (
+      !targetPath.startsWith("/v1/messages") &&
+      !targetPath.startsWith("/v1/chat/completions")
+    ) {
+      console.log(
+        `[proxy] Ignoring non-API request: ${req.method} ${targetPath}`,
+      );
       res.writeHead(404);
       return res.end("Not found");
     }
@@ -379,16 +386,18 @@ function startProxy() {
       const proxyReq = https.request(options, (proxyRes) => {
         // DEBUG: 打印非 200 响应
         if (proxyRes.statusCode !== 200) {
-          console.error(`[proxy] Non-200 response: ${proxyRes.statusCode} for ${req.method} ${targetPath}`);
+          console.error(
+            `[proxy] Non-200 response: ${proxyRes.statusCode} for ${req.method} ${targetPath}`,
+          );
           console.error(`[proxy] Target: ${AGNES_BASE}${openaiPath}`);
         }
-        
+
         // 收集原始响应（可能是 gzip 压缩的）
         const rawChunks = [];
         proxyRes.on("data", (c) => rawChunks.push(c));
         proxyRes.on("end", () => {
           let rawData = Buffer.concat(rawChunks);
-          
+
           // 解压 gzip 内容
           const encoding = proxyRes.headers["content-encoding"];
           if (encoding === "gzip") {
@@ -398,9 +407,9 @@ function startProxy() {
               console.error("[proxy] gunzip failed, using raw:", e.message);
             }
           }
-          
+
           const dataStr = rawData.toString("utf-8");
-          
+
           if (isStream) {
             // 流式: 将 OpenAI SSE 转为 Anthropic SSE
             res.writeHead(200, {
@@ -440,7 +449,9 @@ function startProxy() {
               res.end(JSON.stringify(anthropicResp));
             } catch (e) {
               console.error(`[proxy] Non-stream error: ${e.message}`);
-              console.error(`[proxy] Status ${proxyRes.statusCode}, body length: ${dataStr.length}`);
+              console.error(
+                `[proxy] Status ${proxyRes.statusCode}, body length: ${dataStr.length}`,
+              );
               res.writeHead(proxyRes.statusCode, {
                 "content-type": "application/json",
               });
@@ -448,7 +459,7 @@ function startProxy() {
             }
           }
         });
-        
+
         proxyRes.on("error", () => res.end());
       });
 
