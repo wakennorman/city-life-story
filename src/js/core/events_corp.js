@@ -351,7 +351,10 @@
       id: "corp_overtime",
       _isChainEvent: false,
       conditions: function (st) {
-        return st.player.day >= 20 && (st.needs.health || 100) >= 25;
+        // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
+        return (
+          st.player.day >= 20 && ((st.status && st.status.health) || 100) >= 25
+        );
       },
       phase: "corporate",
       icon: "🌙",

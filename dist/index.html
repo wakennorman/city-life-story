@@ -5729,7 +5729,10 @@ function quarterlyCleanup(state) {
       id: "free_clinic",
       _isChainEvent: false,
       conditions: function (st) {
-        return st.player.day >= 10 || (st.needs.health || 100) <= 70;
+        // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
+        return (
+          st.player.day >= 10 || ((st.status && st.status.health) || 100) <= 70
+        );
       },
       phase: "street",
       icon: "💊",
@@ -16305,7 +16308,10 @@ function quarterlyCleanup(state) {
       id: "corp_overtime",
       _isChainEvent: false,
       conditions: function (st) {
-        return st.player.day >= 20 && (st.needs.health || 100) >= 25;
+        // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
+        return (
+          st.player.day >= 20 && ((st.status && st.status.health) || 100) >= 25
+        );
       },
       phase: "corporate",
       icon: "🌙",
@@ -94860,7 +94866,8 @@ function afterEventApplied(eventId, state) {
       story:
         "你的身体发出了警报——持续的头痛和低烧让你不得不去医院。检查后发现是慢性疲劳综合症的前兆，医生开了一个疗程的药，费用¥200。",
       conditions: function (st) {
-        return (st.needs.health || 50) < 35;
+        // [自洽修复] st.needs.health 不存在，改 st.status.health
+        return ((st.status && st.status.health) || 50) < 35;
       },
       choices: [
         {

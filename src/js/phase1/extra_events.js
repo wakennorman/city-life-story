@@ -530,7 +530,8 @@
       story:
         "你的身体发出了警报——持续的头痛和低烧让你不得不去医院。检查后发现是慢性疲劳综合症的前兆，医生开了一个疗程的药，费用¥200。",
       conditions: function (st) {
-        return (st.needs.health || 50) < 35;
+        // [自洽修复] st.needs.health 不存在，改 st.status.health
+        return ((st.status && st.status.health) || 50) < 35;
       },
       choices: [
         {
