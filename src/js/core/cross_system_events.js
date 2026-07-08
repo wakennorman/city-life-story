@@ -7395,4 +7395,399 @@
       },
     },
   );
+  // ====== 职业系统深度联动事件（v3.37 新增）======
+  // 设计原则：填补职业系统情感深度空白，让"工作"不再只是数值循环
+  // 涵盖：第一次收入/工友感情/技能突破/职业迷茫/职场机遇
+
+  // E1：第一次赚到有意义的钱 → 财务意识萌芽
+  // 设计意图：玩家第一次靠劳动赚到"真金白银"时的情感冲击，教玩家理财意识
+  // 联动：totalEarned + 道德 + 心情
+  RANDOM_EVENTS.push({
+    id: "first_earn_milestone",
+    phase: "street",
+    icon: "💰",
+    title: "第一笔钱",
+    story:
+      "你数着手里这些天攒下的钱——虽然不算多，但每一分都是自己挣来的。\\n\\n街边小卖部的电视里正播着理财节目，主持人说「年轻人第一桶金，存下来比花掉更重要」。你捏着钞票，心里盘算着这笔钱该怎么用。",
+    conditions: function (st) {
+      // 总赚取≥500元触发（第一次有意义的经济积累）
+      if (!st.resources) return false;
+      if ((st.resources.totalEarned || 0) < 500) return false;
+      if (st.player.day < 5) return false;
+      // 防止重复触发
+      if (st.flags && st.flags._firstEarnSeen) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏦 存进银行，利息也是钱",
+        hint: "现金→存款，财务+1",
+        apply: function (s) {
+          s.flags._firstEarnSeen = true;
+          var saveAmt = Math.min(200, s.resources.cash || 0);
+          s.resources.cash -= saveAmt;
+          s.resources.bankBalance = (s.resources.bankBalance || 0) + saveAmt;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "🏦 你走进银行，把¥" +
+              saveAmt +
+              "存进账户。看着存折上的数字，心里踏实了不少。心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍜 好好吃一顿犒劳自己",
+        hint: "心情+15，健康+3",
+        apply: function (s) {
+          s.flags._firstEarnSeen = true;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 15);
+          s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 20);
+          s.status.health = Math.min(100, (s.status.health || 70) + 3);
+          StateManager.addMessage(
+            "🍜 你找了家小馆子，点了两个硬菜。热气腾腾的饭菜下肚，整个人都活过来了。心情+15，健康+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📚 买本书学点新东西",
+        hint: "随机技能XP+50",
+        apply: function (s) {
+          s.flags._firstEarnSeen = true;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30);
+          var skillKeys = Object.keys(s.skills || {});
+          if (skillKeys.length > 0) {
+            var pick = Random.fromArray(skillKeys);
+            if (s.skills[pick]) {
+              s.skills[pick].xp = (s.skills[pick].xp || 0) + 50;
+            }
+            StateManager.addMessage(
+              "📚 你在旧书摊淘了一本《" +
+                pick +
+                "入门到精通》，虽然印刷粗糙，但内容实在。花了¥30，" +
+                pick +
+                " XP+50。",
+              "success",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // E2：工友感情——长期同岗建立的人际纽带
+  // 设计意图：让工作不仅是数字循环，有真实的社交温度
+  // 联动：employment + relationships + 心情
+  RANDOM_EVENTS.push({
+    id: "workmate_bonding",
+    phase: "street",
+    icon: "🍻",
+    title: "工友的邀请",
+    story:
+      "收工后，一个经常跟你搭班的工友搓着手走过来：「兄弟，今晚搞点烧烤喝两杯？我请客。」\\n\\n你看了看他真诚的脸，又看了看自己疲惫的身体。确实好久没跟人好好聊过天了。",
+    conditions: function (st) {
+      // 连续工作20天以上触发
+      if (!st.career || !st.career.currentJob) return false;
+      if ((st.career.currentJob.workDays || 0) < 20) return false;
+      if (st.player.day < 15) return false;
+      // 30天冷却
+      if (
+        st.flags._workmateBondDay &&
+        st.player.day - st.flags._workmateBondDay < 30
+      )
+        return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🍺 去！难得有人请客",
+        hint: "心情+12，疲劳-8",
+        apply: function (s) {
+          s.flags._workmateBondDay = s.player.day;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 12);
+          s.needs.fatigue = Math.max(0, (s.needs.fatigue || 0) - 8);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "🍻 你和工友在路边摊撸串喝到半夜。他跟你讲了他来这座城市的故事，你也说了自己的。原来每个人都不容易。心情+12，疲劳-8，名气+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 婉拒，太累了想休息",
+        hint: "疲劳-5，但关系没拉近",
+        apply: function (s) {
+          s.flags._workmateBondDay = s.player.day;
+          s.needs.fatigue = Math.max(0, (s.needs.fatigue || 0) - 5);
+          StateManager.addMessage(
+            "🙏 你婉拒了工友的好意。他拍了拍你肩膀说「下次啊！」。你回到住处倒头就睡。疲劳-5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🎸 带点小吃过去一起聊",
+        hint: "心情+8，工友情谊+",
+        apply: function (s) {
+          s.flags._workmateBondDay = s.player.day;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+          s.needs.fatigue = Math.max(0, (s.needs.fatigue || 0) - 5);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🎸 你买了点花生毛豆过去，工友眼睛一亮：「还是你讲究！」你们聊到深夜，他教了你一些干活省力的窍门。心情+8，疲劳-5，心智+3。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // E3：技能突破——熟能生巧的顿悟时刻
+  // 设计意图：重复劳动中突然"开窍"的成就感，激励玩家深耕单一技能
+  // 联动：stats.actionFreq + skills + 心智
+  RANDOM_EVENTS.push({
+    id: "job_skill_breakthrough",
+    phase: "street",
+    icon: "💡",
+    title: "熟能生巧",
+    story:
+      "你今天跟往常一样干着同样的活，但手上的动作突然变得流畅了起来。\\n\\n那些以前需要刻意去想的技术要领，现在身体自己就记住了。你意识到——自己在这件事上，已经跟刚来时不一样了。",
+    conditions: function (st) {
+      // 做同一类工作≥30次触发技能突破
+      if (!st.stats || !st.stats.actionFreq) return false;
+      if (!st.career || !st.career.currentJob) return false;
+      if (st.player.day < 20) return false;
+      // 检查是否有足够的行动频次
+      var jobId = st.career.currentJob.id || "";
+      var freq = st.stats.actionFreq[jobId] || 0;
+      if (freq < 30) return false;
+      // 60天冷却
+      if (
+        st.flags._skillBreakthroughDay &&
+        st.player.day - st.flags._skillBreakthroughDay < 60
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "⚡ 追求速度，干得更快",
+        hint: "敏捷+2，体力消耗+",
+        apply: function (s) {
+          s.flags._skillBreakthroughDay = s.player.day;
+          s.player.agility = Math.min(100, (s.player.agility || 0) + 2);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "⚡ 你找到了节奏感，同样的活现在能干得更快了。敏捷+2，心智+2。你发现自己开始享受这种「顺手」的感觉。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📖 琢磨技巧，精进手艺",
+        hint: "关联技能XP+80",
+        apply: function (s) {
+          s.flags._skillBreakthroughDay = s.player.day;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          // 根据当前工作提升关联技能
+          var jobId = s.career.currentJob.id || "";
+          var skillMap = {
+            waste_recycling: "repair",
+            old_zhou_recycling: "repair",
+            manual_labor_construction: "welding",
+            premium_engineering: "welding",
+            factory_work_assembly: "electrician",
+            street_vending_food: "cooking",
+            delivery_rider: "driving",
+            restaurant_assistant: "cooking",
+            content_writing: "coding",
+            junior_analyst: "accounting",
+            web_designer: "coding",
+            server_ops: "coding",
+            network_monitor: "coding",
+            foreign_trade_assistant: "english",
+            document_translator: "english",
+            taxi_driver: "driving",
+            truck_assistant: "driving",
+            shop_assistant: "sales",
+            procurement_clerk: "sales",
+            audit_assistant: "accounting",
+            factory_electrician: "electrician",
+            steel_worker: "welding",
+            courier_gig: "driving",
+            wholesale_delivery: "driving",
+            wholesale_sorting: "repair",
+          };
+          var skillKey = skillMap[jobId] || "repair";
+          if (s.skills && s.skills[skillKey]) {
+            s.skills[skillKey].xp = (s.skills[skillKey].xp || 0) + 80;
+          }
+          StateManager.addMessage(
+            "📖 你一边干活一边琢磨技巧，竟然悟出了不少门道。心智+3，" +
+              skillKey +
+              " XP+80。老师傅说得对：什么活干久了都是学问。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // E4：职业迷茫——长期打工后的方向思考
+  // 设计意图：触发玩家对"为什么工作"的思考，引导向职业规划发展
+  // 联动：workDays + 心智 + 心情 + 职业规划
+  RANDOM_EVENTS.push({
+    id: "career_doubt_moment",
+    phase: "street",
+    icon: "🤔",
+    title: "路在何方",
+    story:
+      "你已经在这座城市干了很久的活了。\\n\\n今晚加班回来，你坐在路边的台阶上，看着人来人往的街道。每个人都在赶路，都有自己的方向。而你——你翻着手机通讯录，发现除了工友和房东，居然没几个能说上话的人。\\n\\n「我到底要在这里过什么样的生活？」",
+    conditions: function (st) {
+      // 连续工作60天触发
+      if (!st.career || !st.career.currentJob) return false;
+      if ((st.career.currentJob.workDays || 0) < 60) return false;
+      if (st.player.day < 45) return false;
+      // 90天冷却
+      if (
+        st.flags._careerDoubtDay &&
+        st.player.day - st.flags._careerDoubtDay < 90
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "📝 列个计划，攒钱学门手艺",
+        hint: "心智+5，目标感+",
+        apply: function (s) {
+          s.flags._careerDoubtDay = s.player.day;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📝 你掏出手机，在备忘录里写了几个字：『三个月，学一门手艺，换一条路。』写完之后，心里好像没那么慌了。心智+5，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 给家里打个电话",
+        hint: "心情+8，亲情+",
+        apply: function (s) {
+          s.flags._careerDoubtDay = s.player.day;
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          // 触发父母好感
+          if (s.family && s.family.parents) {
+            if (s.family.parents.father)
+              s.family.parents.father.companionship = Math.min(
+                100,
+                (s.family.parents.father.companionship || 0) + 5,
+              );
+            if (s.family.parents.mother)
+              s.family.parents.mother.companionship = Math.min(
+                100,
+                (s.family.parents.mother.companionship || 0) + 5,
+              );
+          }
+          StateManager.addMessage(
+            "📞 你给家里打了个电话。妈接的，絮絮叨叨说了半天家长里短。挂了电话，你觉得这条街的灯光好像没那么冷了。心情+8，心智+2，父母陪伴+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😤 不想了，睡一觉明天继续",
+        hint: "疲劳-10，但问题还在",
+        apply: function (s) {
+          s.flags._careerDoubtDay = s.player.day;
+          s.needs.fatigue = Math.max(0, (s.needs.fatigue || 0) - 10);
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 2);
+          StateManager.addMessage(
+            "😤 你甩了甩头，把胡思乱想赶出脑子。洗把脸，倒头就睡。明天还要早起干活。疲劳-10，但心情微微低落。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // E5：职场机遇——客户/老板给你一个改变的机会
+  // 设计意图：让玩家感受到"被看见"的惊喜，建立职场正向反馈循环
+  // 联动：employment + skills + charm + 道德
+  RANDOM_EVENTS.push({
+    id: "workplace_opportunity",
+    phase: "street",
+    icon: "⭐",
+    title: "被看见了",
+    story:
+      "一个经常光顾的老客户今天多看了你几眼，然后递过来一张名片。\\n\\n「小伙子/小姑娘干活挺利索的，我朋友那边正缺你这样靠谱的人。工资比你现在高，要不要去试试？」\\n\\n你接过名片看了看——上面印着一个你没听说过的公司名字，但地址在市中心。",
+    conditions: function (st) {
+      // 30天以上工作经验 + 有相关技能
+      if (!st.career || !st.career.currentJob) return false;
+      if ((st.career.currentJob.workDays || 0) < 30) return false;
+      if (st.player.day < 25) return false;
+      // 60天冷却
+      if (
+        st.flags._workplaceOppDay &&
+        st.player.day - st.flags._workplaceOppDay < 60
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "📋 接下名片，去看看",
+        hint: "可能找到更好的工作",
+        apply: function (s) {
+          s.flags._workplaceOppDay = s.player.day;
+          s.flags._hasJobOpportunity = true;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📋 你接下名片，对方笑着说「随时欢迎来看看」。你把名片小心收好，觉得这城市好像也没那么冷漠。心智+3，心情+5。去市中心看看或许会有新机会。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💬 问问具体做什么的",
+        hint: "魅力+2，信息+",
+        apply: function (s) {
+          s.flags._workplaceOppDay = s.player.day;
+          s.player.charm = Math.min(100, (s.player.charm || 0) + 2);
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "💬 你详细问了问工作内容和待遇。对方一一解答，末了说「你考虑好了打名片上电话就行」。聊完你觉得这城市还是有机会的。魅力+2，心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 婉拒，但表示感谢",
+        hint: "道德+2，留个好印象",
+        apply: function (s) {
+          s.flags._workplaceOppDay = s.player.day;
+          s.player.morality = Math.min(100, (s.player.morality || 50) + 2);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🤝 你礼貌地婉拒了，说现在的工作还想再坚持一下。对方点点头：「靠谱，以后有需要可以找我。」你觉得自己做对了。道德+2，名气+3。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
 })();
