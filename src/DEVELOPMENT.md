@@ -1,8 +1,57 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.50 8项UI/UX修复）
+> 最后更新: 2026-07-09（v3.51 职业病/成就/移动端三项优化）
 >
-> commit: `ea7a6e25`
+> commit: `acb47a00`
+
+---
+
+## 2026-07-09 — v3.51 职业病/成就/移动端三项优化
+
+**目标**：游戏设计深度强化——职业风险让角色有代价感，成就激励长期坚持，移动端适配消除溢出。
+
+### ① 职业病/职业风险系统
+
+新增 `_CAREER_RISK_PROFILES` + `tickCareerOccupationalRisk(state)`，每日随职业路径+职级概率触发：
+
+| 路径      | 职业病                  | 最高职级日概率 | 主要属性损伤 |
+| --------- | ----------------------- | -------------- | ------------ |
+| tech      | 颈椎病/过劳综合征       | 1.2%           | mental       |
+| finance   | 焦虑症/睡眠障碍         | 0.9%           | mental       |
+| sales     | 情绪耗竭综合征          | 1.0%           | charm        |
+| medical   | 职业感染/过劳           | 1.0%           | physique     |
+| doctor    | 职业感染/过劳综合征     | 1.2%           | physique     |
+| logistics | 腰椎损伤/体力透支       | 0.8%           | physique     |
+| catering  | 职业性腰腿痛/油烟肺     | 0.8%           | physique     |
+| education | 慢性咽喉炎/职业性嗓音病 | 0.7%           | charm        |
+| design    | 视力退化/过劳综合征     | 0.7%           | mental       |
+
+- 严重事件（health损耗≥4）写入 `state.career.history`
+- 设置 `state.flags._hasOccupationalDisease` 供成就/事件引用
+- 工作卡片显示⚠️职业风险提示
+
+### ② 职业成就系统（8个）
+
+| 成就ID                      | 名称       | 类别   | 触发条件                              |
+| --------------------------- | ---------- | ------ | ------------------------------------- |
+| career_first_promotion      | 第一级台阶 | 里程碑 | `_careerFirstPromotion` flag          |
+| career_hundred_days         | 百日职场人 | 里程碑 | currentJob.workDays≥100               |
+| career_cross_path           | 职场变色龙 | 隐藏   | `_crossPathJobhop` flag（跨路径跳槽） |
+| career_max_level            | 路径巅峰   | 里程碑 | 当前职级=路径最高级                   |
+| career_multipath            | 职场探险家 | 隐藏   | `_careerPathsWorked`涉及≥3条路径      |
+| career_burnout_survivor     | 凤凰涅槃   | 隐藏   | `_burnoutSurvivor` flag（过劳恢复）   |
+| career_top_performer        | 绩效之王   | 隐藏   | performance≥90 且 workDays≥30         |
+| career_occupational_disease | 职业的代价 | 隐藏   | `_hasOccupationalDisease` flag        |
+
+### ③ 移动端事业Tab溢出适配
+
+- `.career-panorama-grid` 类加入全景图 div，CSS 768px 双列4px间距，360px 强制单列+9px字号
+- 职业卡 header `.career-overview-header { flex-wrap: wrap }` 防溢出
+- 求职卡 `.career-offer-card { word-break: break-all }` 防长字串撑破
+- 行动按钮组 flex自适应 `min-width:70px / max-width:120px`
+
+**影响文件**：`src/js/ui/career_dev.js`(+234行) / `src/js/core/achievements.js`(+124行) / `src/css/style.css`(+35行)  
+**验证**：node --check ✅ / python build.py 5366KB ✅
 
 ---
 
