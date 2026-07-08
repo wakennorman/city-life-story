@@ -43,11 +43,11 @@
 
 #### 新增事件
 
-| 事件ID | 触发条件 | 联动系统 | 设计意图 |
-|--------|---------|---------|---------|
-| `cooking_market_insight` | cooking≥15 + day>5 | 技能+交易+声望 | 禀赋效应——技能积累带来实用「识货」能力 |
-| `auntie_lin_secret_recipe` | auntie_lin好感≥30 + cooking≥10 + day>15 | NPC+技能+魅力 | 峰终定律——秘方传授成为情感记忆锚点 |
-| `chef_chen_kitchen_crisis` | chef_chen好感≥40 + cooking≥15 + day>20 | NPC+技能+临时工作 | 社会认同——被陈师傅认可体现技能价值 |
+| 事件ID                     | 触发条件                                | 联动系统          | 设计意图                               |
+| -------------------------- | --------------------------------------- | ----------------- | -------------------------------------- |
+| `cooking_market_insight`   | cooking≥15 + day>5                      | 技能+交易+声望    | 禀赋效应——技能积累带来实用「识货」能力 |
+| `auntie_lin_secret_recipe` | auntie_lin好感≥30 + cooking≥10 + day>15 | NPC+技能+魅力     | 峰终定律——秘方传授成为情感记忆锚点     |
+| `chef_chen_kitchen_crisis` | chef_chen好感≥40 + cooking≥15 + day>20  | NPC+技能+临时工作 | 社会认同——被陈师傅认可体现技能价值     |
 
 #### 清理
 
