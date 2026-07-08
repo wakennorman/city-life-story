@@ -2128,12 +2128,22 @@ function renderTradeTab(state, parent) {
         var npcLine = document.createElement("div");
         npcLine.style.cssText =
           "margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;";
+        var avatarHtml = "";
+        if (npcData.avatar) {
+          avatarHtml =
+            '<img src="' +
+            npcData.avatar +
+            '" class="npc-avatar" alt="' +
+            _esc(npcData.name) +
+            '" loading="lazy" />';
+        }
         npcLine.innerHTML =
-          '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
-          npcData.name +
+          '<div style="display:flex;align-items:center;gap:8px;"><div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
+          avatarHtml +
+          _esc(npcData.name) +
           "（" +
-          npcData.role +
-          "）</div>";
+          _esc(npcData.role) +
+          "）</div></div>";
 
         for (var ai = 0; ai < info.availableInfo.length; ai++) {
           var aiData = info.availableInfo[ai];
@@ -4278,13 +4288,21 @@ function renderFamilyTab(state, parent) {
         ${
           eligibleNpcs.length > 0
             ? eligibleNpcs
-                .map(
-                  (npc) => `
+                .map((npc) => {
+                  const avatar =
+                    typeof NPCS !== "undefined"
+                      ? NPCS.find((n) => n.id === npc.id)
+                      : null;
+                  const avatarImg =
+                    avatar && avatar.avatar
+                      ? `<img src="${avatar.avatar}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:4px;" loading="lazy" />`
+                      : "";
+                  return `
           <button class="btn btn-sm btn-success family-propose-btn" data-npc="${npc.id}" ${canProposeByAsset ? "" : "disabled"}>
-            💍 向${npc.name}求婚
+            ${avatarImg}💍 向${npc.name}求婚
           </button>
-        `,
-                )
+        `;
+                })
                 .join("")
             : '<p style="color:var(--text-muted);">暂无好感达到80的 NPC。</p>'
         }

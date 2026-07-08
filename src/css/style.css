@@ -928,6 +928,16 @@ body {
   font-size: 11px;
 }
 
+.npc-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  display: inline-block;
+}
+
 .btn-lg {
   padding: 12px 24px;
   font-size: 15px;

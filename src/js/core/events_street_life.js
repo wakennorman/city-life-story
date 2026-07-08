@@ -929,11 +929,18 @@
       title: "烂尾楼前",
       story:
         "一栋封顶的大楼矗立在雨中——脚手架还在，但工地上已经没人了。开发商资金链断裂，300多户业主交了首付却拿不到房。有人在楼顶拉横幅，有人在售楼处门口搭了帐篷。七个业主凑钱请了律师，每人摊¥3000。",
+      // [自洽修复] conditions 新增：雨天检查（story 明确"矗立在雨中"，需天气为 rainy/stormy/foggy）
       conditions: function (st) {
+        var isRainy =
+          st.weather &&
+          (st.weather.current === "rainy" ||
+            st.weather.current === "stormy" ||
+            st.weather.current === "foggy");
         return (
           st.player.phase === "street" &&
           st.player.day >= 45 &&
-          !st.flags._unfinishedSeen
+          !st.flags._unfinishedSeen &&
+          isRainy
         );
       },
       choices: [
@@ -1795,7 +1802,19 @@
       title: "预制菜入侵",
       story:
         "那条街上的三家小饭馆有两家换上了「预制菜」的招牌——料理包加热3分钟，成本¥3.5，卖¥18。王婶的面馆还在坚持手工拉面——但客人少了四成。冷冻批发市场多了好多卖料理包的摊位。",
-      triggers: { minDay: 20, excludeFlags: ["_preMadeFoodSeen"] },
+      // [自洽修复] conditions 新增：王婶关系检查（story 明确提到"王婶的面馆"，需已结识）
+      conditions: function (st) {
+        var hasAuntWang =
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met === true;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 20 &&
+          hasAuntWang &&
+          !st.flags._preMadeFoodSeen
+        );
+      },
       choices: [
         {
           text: "📦 批发料理包来卖",

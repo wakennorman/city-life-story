@@ -18,6 +18,7 @@ const CAREER_PATHS = {
   tech: {
     name: "IT技术",
     icon: "💻",
+    category: "white_collar", // 白领
     levels: [
       {
         id: "tech_junior",
@@ -67,6 +68,7 @@ const CAREER_PATHS = {
   finance: {
     name: "金融财务",
     icon: "📈",
+    category: "white_collar",
     levels: [
       {
         id: "fin_junior",
@@ -117,6 +119,7 @@ const CAREER_PATHS = {
   sales: {
     name: "销售市场",
     icon: "🏪",
+    category: "service",
     levels: [
       {
         id: "sales_junior",
@@ -163,6 +166,7 @@ const CAREER_PATHS = {
   operations: {
     name: "运营管理",
     icon: "⚙️",
+    category: "service",
     levels: [
       {
         id: "ops_junior",
@@ -213,6 +217,7 @@ const CAREER_PATHS = {
   design: {
     name: "设计创意",
     icon: "🎨",
+    category: "white_collar",
     levels: [
       {
         id: "des_junior",
@@ -260,6 +265,7 @@ const CAREER_PATHS = {
   legal: {
     name: "法律服务",
     icon: "⚖️",
+    category: "white_collar",
     levels: [
       {
         id: "leg_junior",
@@ -312,6 +318,7 @@ const CAREER_PATHS = {
   education: {
     name: "教育培训",
     icon: "🏫",
+    category: "service",
     levels: [
       {
         id: "edu_assist",
@@ -362,6 +369,7 @@ const CAREER_PATHS = {
   logistics: {
     name: "物流快递",
     icon: "🚚",
+    category: "blue_collar_gov",
     levels: [
       {
         id: "log_sorter",
@@ -409,6 +417,7 @@ const CAREER_PATHS = {
   catering: {
     name: "餐饮服务",
     icon: "🍜",
+    category: "service",
     levels: [
       {
         id: "cat_server",
@@ -455,6 +464,7 @@ const CAREER_PATHS = {
   medical: {
     name: "医疗护理",
     icon: "🏥",
+    category: "blue_collar_gov",
     levels: [
       {
         id: "med_aide",
@@ -510,6 +520,7 @@ const CAREER_PATHS = {
   doctor: {
     name: "医师",
     icon: "👨‍⚕️",
+    category: "blue_collar_gov",
     levels: [
       {
         id: "doc_intern",
@@ -578,6 +589,7 @@ const CAREER_PATHS = {
   public_institution: {
     name: "事业单位",
     icon: "🏢",
+    category: "blue_collar_gov",
     levels: [
       {
         id: "pi_clerk",
@@ -641,6 +653,7 @@ const CAREER_PATHS = {
   civil: {
     name: "公务员",
     icon: "🏛️",
+    category: "blue_collar_gov",
     levels: [
       {
         id: "civil_clerk",
@@ -749,6 +762,84 @@ function getCareerPathLabel(pathId) {
   var path = CAREER_PATHS[pathId];
   if (!path) return "未选择方向";
   return path.icon + " " + path.name;
+}
+
+/** 职业路径分类图标和中文名 */
+var CAREER_CATEGORIES = {
+  white_collar: { icon: "👔", name: "白领·专业技术", order: 0 },
+  service: { icon: "🛒", name: "服务·销售运营", order: 1 },
+  blue_collar_gov: { icon: "🔧", name: "蓝领·体制内", order: 2 },
+};
+
+function getCategoryLabel(cat) {
+  var c = CAREER_CATEGORIES[cat];
+  return c ? c.icon + " " + c.name : "其他";
+}
+
+/**
+ * 根据玩家当前技能/属性推荐最适合的3条职业路径
+ * v3.47 新增：约定式推荐系统，技能匹配度×属性匹配度加权评分
+ */
+function getRecommendedCareerPaths(state) {
+  var p = state.player;
+  var skills = state.skills || {};
+  var scored = [];
+  for (var key in CAREER_PATHS) {
+    var path = CAREER_PATHS[key];
+    var entry = path.levels[0];
+    if (!entry) continue;
+
+    var score = 0;
+    var maxScore = 0;
+
+    // 技能匹配：玩家当前技能 / 技能要求
+    if (entry.reqSkills) {
+      for (var s in entry.reqSkills) {
+        maxScore += 30;
+        var sActual = 0;
+        if (s === "intelligence") sActual = p.intelligence || 0;
+        else if (s === "mental") sActual = p.mental || 0;
+        else if (s === "physique") sActual = p.physique || 0;
+        else if (s === "agility") sActual = p.agility || 0;
+        else if (s === "charm") sActual = p.charm || 0;
+        else if (skills[s]) sActual = skills[s].level || 0;
+        var ratio = Math.min(1, sActual / Math.max(1, entry.reqSkills[s]));
+        score += ratio * 30;
+      }
+    }
+
+    // 属性匹配
+    if (entry.reqAttrs) {
+      for (var a in entry.reqAttrs) {
+        maxScore += 20;
+        var aActual = p[a] || 0;
+        var aRatio = Math.min(1, aActual / Math.max(1, entry.reqAttrs[a]));
+        score += aRatio * 20;
+      }
+    }
+
+    // 学历加分：满足则+10
+    if (entry.reqEducation && p.education) {
+      maxScore += 10;
+      score += 10;
+    } else if (!entry.reqEducation) {
+      maxScore += 5;
+      score += 5;
+    }
+
+    // 年龄加成
+    maxScore += 5;
+    var age = p.age || 20;
+    if (!entry.minAge || age >= entry.minAge) score += 5;
+
+    var pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    scored.push({ key: key, score: pct, path: path });
+  }
+
+  scored.sort(function (a, b) {
+    return b.score - a.score;
+  });
+  return scored.slice(0, 3);
 }
 
 function getCareerCapitalStartupDiscount(state) {
@@ -917,17 +1008,19 @@ function getCareerRequirementText(level) {
 
 // 学历已在「我→成长→学历」中展示，事业总览不再重复
 
-/** 事业发展Tab主渲染函数 */
+/** 事业发展Tab主渲染函数 — 简化导航：去掉创业子Tab（已在上级Tab独立），智能默认视图 */
 function renderCareerDevTab(state, parent) {
   parent.innerHTML = "";
 
-  // 子Tab导航
+  // 子Tab导航 — 上班族 + 总览（创业已在上级Tab独立，不在二级导航中重复）
   var subTabs = [
-    { id: "career_startup", label: "🚀 创业", icon: "🚀" },
     { id: "career_jobs", label: "💼 上班族", icon: "💼" },
     { id: "career_overview", label: "📊 总览", icon: "📊" },
   ];
-  var currentSubTab = state._careerSubTab || "career_overview";
+  // 智能默认：无工作→上班族列表直接可选，有工作→总览面板
+  var hasJob = !!(state.career && state.career.currentJob);
+  var currentSubTab =
+    state._careerSubTab || (hasJob ? "career_overview" : "career_jobs");
 
   var nav = document.createElement("div");
   nav.style.cssText =
@@ -949,9 +1042,6 @@ function renderCareerDevTab(state, parent) {
   content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
 
   switch (currentSubTab) {
-    case "career_startup":
-      renderCareerStartup(state, content);
-      break;
     case "career_jobs":
       renderCareerJobs(state, content);
       break;
@@ -1162,80 +1252,294 @@ function renderCareerJobs(state, parent) {
     html += "</div>";
   }
 
-  // ---- 职业路径选择（没有工作时显示） ----
+  // ---- 街头工作→职业路径桥接（v3.46: 让街头经历可见地转化为职场资本） ----
   if (!currentJob) {
-    html += '<div class="section"><h3>🔍 选择职业方向</h3>';
-    html +=
-      '<div class="career-path-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
-
-    for (var pathKey in CAREER_PATHS) {
-      var pData = CAREER_PATHS[pathKey];
-      var entryLevel = pData.levels[0];
-
-      // 检查是否满足最低要求
-      var meetReqs = checkCareerPromotion(state, pathKey, entryLevel);
-      var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
-
+    // 计算街头工作总天数
+    var actionFreq =
+      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
+    var streetJobIds = [
+      "waste_recycling",
+      "old_zhou_recycling",
+      "manual_labor_construction",
+      "premium_engineering",
+      "factory_work_assembly",
+      "street_vending_food",
+      "delivery_rider",
+      "restaurant_assistant",
+      "content_writing",
+      "junior_analyst",
+      "busking",
+      "bank_security",
+      "training_assistant",
+      "hospital_companion",
+      "tutoring",
+      "factory_overtime",
+      "courier_gig",
+      "wholesale_delivery",
+      "wholesale_sorting",
+      "cafeteria_worker",
+      "instrument_repair",
+      "phone_modding",
+      "web_designer",
+      "server_ops",
+      "network_monitor",
+      "foreign_trade_assistant",
+      "document_translator",
+      "taxi_driver",
+      "truck_assistant",
+      "shop_assistant",
+      "procurement_clerk",
+      "project_coordinator",
+      "audit_assistant",
+      "factory_electrician",
+      "steel_worker",
+    ];
+    var streetTotalDays = 0;
+    for (var si = 0; si < streetJobIds.length; si++) {
+      streetTotalDays += actionFreq["job_" + streetJobIds[si]] || 0;
+    }
+    // 街头经验转为职场资本感知
+    if (streetTotalDays > 0) {
+      var skills = state.skills || {};
       html +=
-        '<div class="card" style="padding:10px;cursor:pointer;opacity:' +
-        (meetReqs ? "1" : "0.75") +
-        ';" onclick="' +
-        (meetReqs
-          ? "enhancedApplyCareerJob('" + pathKey + "','" + entryLevel.id + "')"
-          : "showCareerRequirementsModal_Global('" +
-            pathKey +
-            "','" +
-            entryLevel.id +
-            "')") +
-        '">';
+        '<div class="card" style="padding:10px;margin-bottom:10px;background:rgba(255,152,0,0.06);border:1px solid rgba(255,152,0,0.18);">';
       html +=
-        '<div style="font-size:13px;font-weight:bold;">' +
-        pData.icon +
-        " " +
-        pData.name +
-        "</div>";
+        '<div style="font-size:12px;font-weight:bold;margin-bottom:4px;">🌆 街边经历 → 职场准备</div>';
       html +=
-        '<div style="font-size:11px;color:var(--text-secondary);margin:4px 0;">' +
-        entryLevel.name +
-        " · 月薪¥" +
-        entryLevel.salary.toLocaleString() +
-        "</div>";
-      html +=
-        '<div style="font-size:10px;color:var(--text-muted);">' +
-        entryLevel.desc +
-        "</div>";
-      html +=
-        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
-        reqsHtml +
-        "</div>";
-      if (meetReqs) {
+        '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你已经做了 <strong style="color:var(--accent);">' +
+        streetTotalDays +
+        "</strong> 天街头工作，积累了宝贵的基层经验。</div>";
+      // 推荐路径：根据已有技能推荐匹配的职业方向
+      var skillPathMap = [
+        { skill: "cooking", level: 8, path: "catering", tip: "厨艺→餐饮服务" },
+        { skill: "coding", level: 8, path: "tech", tip: "编程→IT技术" },
+        {
+          skill: "accounting",
+          level: 8,
+          path: "finance",
+          tip: "财务→金融财务",
+        },
+        {
+          skill: "management",
+          level: 5,
+          path: "operations",
+          tip: "管理→运营管理",
+        },
+        { skill: "sales", level: 8, path: "sales", tip: "销售→销售市场" },
+        {
+          skill: "english",
+          level: 10,
+          path: "design",
+          tip: "英语+创意→设计创意",
+        },
+        { skill: "english", level: 12, path: "legal", tip: "英语→法律服务" },
+        { skill: "medicine", level: 5, path: "medical", tip: "医学→医疗护理" },
+        { skill: "medicine", level: 10, path: "doctor", tip: "医学深入→医师" },
+        {
+          skill: "driving",
+          level: 10,
+          path: "logistics",
+          tip: "驾驶→物流快递",
+        },
+        {
+          skill: "repair",
+          level: 10,
+          path: "public_institution",
+          tip: "维修→事业单位（技术岗）",
+        },
+      ];
+      var matched = [];
+      for (var mi = 0; mi < skillPathMap.length; mi++) {
+        var sp = skillPathMap[mi];
+        var skData = skills[sp.skill];
+        var skLv = skData ? skData.level || 0 : 0;
+        if (skLv >= sp.level && CAREER_PATHS[sp.path]) {
+          matched.push({ pathKey: sp.path, tip: sp.tip, level: skLv });
+        }
+      }
+      if (matched.length > 0) {
         html +=
-          '<button class="btn btn-sm" style="margin-top:6px;">📄 投递简历（含面试）</button>';
+          '<div style="font-size:10px;color:var(--text-secondary);">根据你的技能积累，推荐职业方向：<br>';
+        for (var mi2 = 0; mi2 < matched.length; mi2++) {
+          var mp = CAREER_PATHS[matched[mi2].pathKey];
+          html +=
+            '<span style="display:inline-block;padding:2px 6px;margin:2px;background:rgba(74,158,92,0.1);border-radius:4px;cursor:pointer;" onclick="showCareerPathPreviewModal(\'' +
+            matched[mi2].pathKey +
+            "')\">" +
+            mp.icon +
+            " " +
+            mp.name +
+            " (Lv." +
+            matched[mi2].level +
+            ")</span> ";
+        }
+        html += "</div>";
       } else {
         html +=
-          '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足</div>';
+          '<div style="font-size:10px;color:var(--text-muted);">💡 继续在街头工作中提升技能，满足条件后可直接投递对口职位。</div>';
       }
       html += "</div>";
     }
-    html += "</div></div>";
   }
 
-  // ---- 晋升历史 ----
+  // ---- 职业路径选择（没有工作时显示，按分类分组 + 推荐） ----
+  if (!currentJob) {
+    html += '<div class="section">';
+
+    // --- 推荐路径（基于技能/属性匹配度） ---
+    var recs =
+      typeof getRecommendedCareerPaths === "function"
+        ? getRecommendedCareerPaths(state)
+        : [];
+    if (recs.length > 0 && recs[0].score > 15) {
+      html += '<h3 style="font-size:13px;">🌟 推荐路径</h3>';
+      html +=
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;">';
+      for (var ri = 0; ri < recs.length; ri++) {
+        var rp = recs[ri];
+        var rEntry = rp.path.levels[0];
+        var rMax = rp.path.levels[rp.path.levels.length - 1];
+        var rMeet = checkCareerPromotion(state, rp.key, rEntry);
+        html +=
+          '<div class="card" style="padding:8px;border:1px solid ' +
+          (rMeet ? "rgba(74,158,92,0.35)" : "var(--border)") +
+          ";background:" +
+          (rMeet ? "rgba(74,158,92,0.06)" : "var(--bg-card)") +
+          ';cursor:pointer;" onclick="showCareerPathPreviewModal(\'' +
+          rp.key +
+          "')\">";
+        html +=
+          '<div style="font-size:12px;font-weight:bold;">' +
+          rp.path.icon +
+          " " +
+          rp.path.name +
+          "</div>";
+        html +=
+          '<div style="font-size:10px;color:var(--text-muted);">匹配度 <span style="color:var(--accent);font-weight:bold;">' +
+          rp.score +
+          "%</span> · ¥" +
+          rEntry.salary.toLocaleString() +
+          " → " +
+          rMax.salary.toLocaleString() +
+          "</div>";
+        html +=
+          '<div style="font-size:9px;margin-top:2px;">' +
+          (rMeet ? "✅ 可投递 · 点击预览" : "⚠️ 条件不足 · 点击查看") +
+          "</div>";
+        html += "</div>";
+      }
+      html += "</div>";
+    }
+
+    // --- 按分类展示所有路径（v3.48：可折叠分类 + 薪资范围 + 路线预览入口）---
+    html += '<h3 style="font-size:13px;">📂 所有职业方向</h3>';
+    var catOrder = ["white_collar", "service", "blue_collar_gov"];
+    for (var ci = 0; ci < catOrder.length; ci++) {
+      var catId = catOrder[ci];
+      var catPaths = [];
+      for (var pk in CAREER_PATHS) {
+        if (CAREER_PATHS[pk].category === catId) catPaths.push(pk);
+      }
+      if (catPaths.length === 0) continue;
+
+      var catLabel =
+        typeof getCategoryLabel === "function"
+          ? getCategoryLabel(catId)
+          : catId;
+      var catCollapseId = "career-cat-" + catId;
+      html +=
+        "<div class=\"career-cat-header\" style=\"margin:8px 0 4px;font-size:12px;font-weight:bold;color:var(--text-secondary);padding:6px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;\" onclick=\"this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.caret').textContent=this.nextElementSibling.style.display==='none'?'▸':'▾';\">" +
+        "<span>" +
+        catLabel +
+        ' <span style="font-weight:normal;font-size:10px;color:var(--text-muted);">' +
+        catPaths.length +
+        "条路径</span></span>" +
+        '<span class="caret" style="font-size:10px;">▾</span></div>';
+      html +=
+        '<div class="career-path-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+
+      for (var pi = 0; pi < catPaths.length; pi++) {
+        var pathKey = catPaths[pi];
+        var pData = CAREER_PATHS[pathKey];
+        var entryLevel = pData.levels[0];
+        var maxLevel = pData.levels[pData.levels.length - 1];
+        var meetReqs = checkCareerPromotion(state, pathKey, entryLevel);
+        var reqsHtml = renderPromotionReqs(state, pathKey, entryLevel);
+
+        // v3.48：点击卡片打开预览弹窗，不再直接投递/显示不足
+        html +=
+          '<div class="card" style="padding:8px;cursor:pointer;opacity:' +
+          (meetReqs ? "1" : "0.7") +
+          ';" onclick="showCareerPathPreviewModal(\'' +
+          pathKey +
+          "')\">";
+        html +=
+          '<div style="font-size:12px;font-weight:bold;">' +
+          pData.icon +
+          " " +
+          pData.name +
+          "</div>";
+        html +=
+          '<div style="font-size:10px;color:var(--text-secondary);margin:2px 0;">' +
+          entryLevel.name +
+          " · ¥" +
+          entryLevel.salary.toLocaleString() +
+          " → " +
+          maxLevel.salary.toLocaleString() +
+          "</div>";
+        html +=
+          '<div style="font-size:9px;color:var(--text-muted);">' +
+          entryLevel.desc +
+          "</div>";
+        html +=
+          '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">' +
+          reqsHtml +
+          "</div>";
+        if (meetReqs) {
+          html +=
+            '<div style="font-size:9px;color:var(--accent);margin-top:4px;">✅ 可投递 · 点击预览路线</div>';
+        } else {
+          html +=
+            '<div style="font-size:9px;color:var(--warning);margin-top:4px;">⚠️ 条件不足 · 点击查看</div>';
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+  }
+
+  // ---- 晋升历史（v3.48：可视化时间线） ----
   if (careerHistory.length > 0) {
     html +=
       '<div class="section" style="margin-top:12px;"><h3>📜 职业历程</h3>';
     html += '<div style="max-height:200px;overflow-y:auto;">';
-    // 按天倒序
     var sorted = careerHistory.slice().sort(function (a, b) {
       return b.day - a.day;
     });
+    html += '<div style="position:relative;padding-left:16px;">';
+    // 竖线
+    html +=
+      '<div style="position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--border);"></div>';
     sorted.forEach(function (h) {
+      var isPromo =
+        h.event.indexOf("晋升") === 0 || h.event.indexOf("跳槽") === 0;
+      var dotColor = isPromo ? "var(--accent)" : "var(--text-muted)";
       html +=
-        '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
-      html += "第" + h.day + "天 · " + h.event;
+        '<div style="position:relative;margin-bottom:6px;padding:6px 8px;font-size:11px;background:var(--bg-secondary);border-radius:6px;">';
+      // 圆点
+      html +=
+        '<div style="position:absolute;left:-14px;top:10px;width:8px;height:8px;border-radius:50%;background:' +
+        dotColor +
+        ';border:2px solid var(--bg-primary);"></div>';
+      html +=
+        '<span style="color:var(--text-muted);font-size:9px;">第' +
+        h.day +
+        "天</span> " +
+        h.event;
       html += "</div>";
     });
-    html += "</div></div>";
+    html += "</div></div></div>";
   }
 
   html += "</div>";
@@ -1423,6 +1727,99 @@ function renderCareerOverview(state, parent) {
       " 张证书）</div>";
   }
   html += "</div></div>";
+
+  // === 无工作状态：推荐路径 + 证书引导 ===
+  if (!job) {
+    var _af =
+      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
+    var _sids = [
+      "waste_recycling",
+      "old_zhou_recycling",
+      "manual_labor_construction",
+      "premium_engineering",
+      "factory_work_assembly",
+      "street_vending_food",
+      "delivery_rider",
+      "restaurant_assistant",
+      "content_writing",
+      "junior_analyst",
+      "busking",
+      "bank_security",
+      "training_assistant",
+      "hospital_companion",
+      "tutoring",
+      "factory_overtime",
+      "courier_gig",
+      "wholesale_delivery",
+      "wholesale_sorting",
+      "cafeteria_worker",
+      "instrument_repair",
+      "phone_modding",
+      "web_designer",
+      "server_ops",
+      "network_monitor",
+      "foreign_trade_assistant",
+      "document_translator",
+      "taxi_driver",
+      "truck_assistant",
+      "shop_assistant",
+      "procurement_clerk",
+      "project_coordinator",
+      "audit_assistant",
+      "factory_electrician",
+      "steel_worker",
+    ];
+    var _sd = 0;
+    for (var _si2 = 0; _si2 < _sids.length; _si2++) {
+      _sd += _af["job_" + _sids[_si2]] || 0;
+    }
+    html +=
+      '<div class="section" style="margin-top:8px;"><h3>🎯 事业准备</h3><div class="card" style="padding:10px;">';
+    if (_sd > 0) {
+      html +=
+        '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">🌆 已积累 <strong>' +
+        _sd +
+        "</strong> 天街头工作经验</div>";
+    }
+    var _r2 =
+      typeof getRecommendedCareerPaths === "function"
+        ? getRecommendedCareerPaths(state)
+        : [];
+    if (_r2.length > 0) {
+      html +=
+        '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">🌟 推荐职业方向</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">';
+      for (var _ri2 = 0; _ri2 < _r2.length; _ri2++) {
+        html +=
+          '<span style="padding:3px 8px;background:rgba(74,158,92,0.1);border-radius:12px;font-size:10px;cursor:pointer;" onclick="switchCareerSubTab(\'career_jobs\')">' +
+          _r2[_ri2].path.icon +
+          " " +
+          _r2[_ri2].path.name +
+          ' <span style="color:var(--accent);">' +
+          _r2[_ri2].score +
+          "%</span></span>";
+      }
+      html += "</div>";
+    }
+    var _certs = state.certificates || [];
+    var _avail =
+      typeof getAvailableCertificates === "function"
+        ? getAvailableCertificates(state)
+        : [];
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);">🎓 已获证书 ' +
+      _certs.length +
+      " 张";
+    if (_avail.length > 0) {
+      html += " · 可考 " + _avail.length + " 张（培训中心→考证）";
+    }
+    html +=
+      '</div><div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">';
+    html +=
+      '<button class="btn btn-xs" style="font-size:10px;min-height:36px;" onclick="switchCareerSubTab(\'career_jobs\')">💼 查看职业路线</button>';
+    html +=
+      "<button class=\"btn btn-xs\" style=\"font-size:10px;min-height:36px;\" onclick=\"showLocationNavModal('trainingCenter', '🏫 去培训中心考证书', 'actions')\">🎓 去考证书</button>";
+    html += "</div></div></div>";
+  }
 
   // === 三、跳槽机会提示（有offer时） ===
   if (job) {
@@ -3572,11 +3969,187 @@ function showCareerRequirementsModal(state, pathKey, level) {
   });
 }
 
+// ====== 职业路线预览弹窗（v3.48） ======
+/**
+ * 显示职业路线完整预览 — 晋升阶梯图 + 各等级要求 + 玩家当前达标状态
+ * 设计意图：让玩家在投递前就看到完整职业发展路径，降低决策焦虑
+ */
+function showCareerPathPreviewModal(pathKey) {
+  var st = StateManager.getState();
+  var path = CAREER_PATHS[pathKey];
+  if (!path) return;
+  var p = st.player;
+  var skills = st.skills || {};
+
+  var body = '<div style="padding:4px 0;">';
+  // 路径头部
+  body +=
+    '<div style="text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);">';
+  body +=
+    '<div style="font-size:20px;margin-bottom:4px;">' + path.icon + "</div>";
+  body +=
+    '<div style="font-size:15px;font-weight:bold;">' + path.name + "</div>";
+  body +=
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' +
+    (typeof getCategoryLabel === "function"
+      ? getCategoryLabel(path.category)
+      : path.category) +
+    " · " +
+    path.levels.length +
+    "级晋升</div>";
+  var entrySalary = path.levels[0].salary;
+  var maxSalary = path.levels[path.levels.length - 1].salary;
+  body +=
+    '<div style="font-size:12px;color:var(--accent);margin-top:4px;">月薪范围 ¥' +
+    entrySalary.toLocaleString() +
+    " → ¥" +
+    maxSalary.toLocaleString() +
+    "</div>";
+  body += "</div>";
+
+  // 晋升阶梯图
+  body +=
+    '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📈 晋升路线</div>';
+  body += '<div style="display:flex;flex-direction:column;gap:0;">';
+
+  var skillLabels2 = {
+    coding: "编程",
+    english: "英语",
+    accounting: "财务",
+    management: "管理",
+    sales: "销售",
+    cooking: "厨艺",
+    medicine: "医学",
+    driving: "驾驶",
+    repair: "维修",
+    electrician: "电工",
+    welding: "焊工",
+    caregiving: "护理",
+  };
+  var attrLabels2 = {
+    physique: "体质",
+    intelligence: "智力",
+    agility: "敏捷",
+    mental: "能力",
+    charm: "颜值",
+    fame: "名气",
+  };
+
+  for (var i = 0; i < path.levels.length; i++) {
+    var lv = path.levels[i];
+    var canReach = checkCareerPromotion(st, pathKey, lv);
+    var isLast = i === path.levels.length - 1;
+    var color = canReach ? "rgba(74,158,92,0.1)" : "rgba(255,255,255,0.03)";
+    var border = canReach ? "rgba(74,158,92,0.35)" : "var(--border)";
+    var icon = canReach ? "✅" : "🔒";
+
+    body +=
+      '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:' +
+      color +
+      ";border:1px solid " +
+      border +
+      ";border-radius:6px;margin-bottom:" +
+      (isLast ? "0" : "4px") +
+      ';">';
+    body +=
+      '<div style="width:28px;height:28px;border-radius:50%;background:' +
+      (canReach ? "var(--accent)" : "rgba(255,255,255,0.1)") +
+      ";color:" +
+      (canReach ? "#fff" : "var(--text-muted)") +
+      ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;flex-shrink:0;">' +
+      (i + 1) +
+      "</div>";
+    body += '<div style="flex:1;min-width:0;">';
+    body +=
+      '<div style="font-size:12px;font-weight:bold;">' +
+      icon +
+      " " +
+      lv.name +
+      "</div>";
+    body +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">' +
+      lv.desc +
+      "</div>";
+    var reqParts = [];
+    if (lv.reqSkills) {
+      for (var s in lv.reqSkills) {
+        var actual = skills[s] ? skills[s].level || 0 : 0;
+        var met = actual >= lv.reqSkills[s];
+        reqParts.push(
+          (met ? "✅" : "⬜") + (skillLabels2[s] || s) + lv.reqSkills[s],
+        );
+      }
+    }
+    if (lv.reqAttrs) {
+      for (var a in lv.reqAttrs) {
+        var av = p[a] || 0;
+        var am = av >= lv.reqAttrs[a];
+        reqParts.push(
+          (am ? "✅" : "⬜") + (attrLabels2[a] || a) + lv.reqAttrs[a],
+        );
+      }
+    }
+    if (lv.reqWorkDays)
+      reqParts.push("≥" + Math.floor(lv.reqWorkDays / 365) + "年");
+    if (lv.reqEducation) reqParts.push("大专+");
+    if (lv.reqSocial) reqParts.push("人脉≥" + Math.floor(lv.reqSocial / 20));
+    if (reqParts.length > 0) {
+      body +=
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">' +
+        reqParts.join(" · ") +
+        "</div>";
+    }
+    body += "</div>";
+    body +=
+      '<div style="text-align:right;flex-shrink:0;font-size:11px;color:var(--accent);font-weight:bold;">¥' +
+      lv.salary.toLocaleString() +
+      '<span style="font-size:9px;color:var(--text-muted);font-weight:normal;">/月</span></div>';
+    body += "</div>";
+    if (!isLast) {
+      body +=
+        '<div style="width:2px;height:6px;background:var(--border);margin:0 0 0 20px;"></div>';
+    }
+  }
+  body += "</div>";
+
+  // 底部操作按钮
+  var entryLevel = path.levels[0];
+  var canApply = checkCareerPromotion(st, pathKey, entryLevel);
+  body +=
+    '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;">';
+  if (canApply) {
+    body +=
+      "<button class=\"btn btn-sm btn-primary\" style=\"flex:1;min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();setTimeout(function(){enhancedApplyCareerJob('" +
+      pathKey +
+      "','" +
+      entryLevel.id +
+      "')},100)\">📄 投递简历</button>";
+  } else {
+    body +=
+      '<button class="btn btn-sm" style="flex:1;min-height:40px;opacity:0.6;" disabled>🔒 条件不足</button>';
+  }
+  body +=
+    "<button class=\"btn btn-sm\" style=\"min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();\">取消</button>";
+  body += "</div></div>";
+
+  showModal({
+    title: path.icon + " " + path.name + " — 职业路线预览",
+    body: body,
+    wide: true,
+  });
+}
+
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.ensureCareerCapital = ensureCareerCapital;
   window.getCareerCapitalStartupDiscount = getCareerCapitalStartupDiscount;
   window.getStartupReadinessNote = getStartupReadinessNote;
+  // v3.47 分类与推荐系统
+  window.getRecommendedCareerPaths = getRecommendedCareerPaths;
+  window.getCategoryLabel = getCategoryLabel;
+  window.CAREER_CATEGORIES = CAREER_CATEGORIES;
+  // v3.48 路线预览
+  window.showCareerPathPreviewModal = showCareerPathPreviewModal;
   // v3.11 跨系统联动暴露
   window.getCareerMedicalDiscount = getCareerMedicalDiscount;
   window.getCareerLegalDiscount = getCareerLegalDiscount;
@@ -3584,6 +4157,22 @@ if (typeof window !== "undefined") {
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;
   window.showLocationNavModal = showLocationNavModal;
+  /** 子Tab快速切换（供inline onclick使用） */
+  window.switchCareerSubTab = function (subTab) {
+    try {
+      var st =
+        typeof StateManager !== "undefined" &&
+        typeof StateManager.getState === "function"
+          ? StateManager.getState()
+          : null;
+      if (st) {
+        st._careerSubTab = subTab;
+        if (typeof renderAll === "function") renderAll();
+      }
+    } catch (e) {
+      console.warn("[career_dev] switchCareerSubTab error:", e);
+    }
+  };
   /** 全局条件不足弹窗（供 inline onclick 调用） */
   window.showCareerRequirementsModal_Global = function (pathKey, levelId) {
     try {
@@ -3672,4 +4261,18 @@ if (typeof window !== "undefined") {
   if (typeof window !== "undefined") {
     window.careerSocialAction = careerSocialAction;
   }
+}
+
+// v3.46: 路径推荐标签（rec-path-tag）点击处理 — 事件委托
+if (typeof document !== "undefined") {
+  document.addEventListener("click", function (e) {
+    var el = e.target;
+    while (el && !el.classList) el = el.parentNode;
+    if (!el || !el.classList || !el.classList.contains("rec-path-tag")) return;
+    var path = el.getAttribute("data-path");
+    var level = el.getAttribute("data-level");
+    if (path && level && typeof enhancedApplyCareerJob === "function") {
+      enhancedApplyCareerJob(path, level);
+    }
+  });
 }

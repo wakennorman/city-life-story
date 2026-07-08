@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
 构建脚本：将 src/ 下的所有 CSS/JS 内联到单个 index.html 中
-输出到 dist/index.html（可独立部署的单文件）
+复制非内联资源（images/）到 dist/，输出到 dist/index.html（可独立部署）
 """
 
 import re
 import os
 import subprocess
 import sys
+import shutil
 
 SRC_DIR = 'src'
 DIST_DIR = 'dist'
@@ -73,6 +74,24 @@ def main():
 
     # 内联 JS（按顺序）
     html = inline_js(html)
+
+    # 复制静态资源（images/）
+    src_images = os.path.join(SRC_DIR, 'images')
+    dst_images = os.path.join(DIST_DIR, 'images')
+    if os.path.isdir(src_images):
+        if os.path.exists(dst_images):
+            # Avoid trash issues on Windows: incremental copy instead of full delete+copy
+            import filecmp
+            for root, dirs, files_list in os.walk(src_images):
+                for fname in files_list:
+                    src_file = os.path.join(root, fname)
+                    rel = os.path.relpath(src_file, src_images)
+                    dst_file = os.path.join(dst_images, rel)
+                    os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                    if not os.path.exists(dst_file) or filecmp.cmp(src_file, dst_file, shallow=False):
+                        shutil.copy2(src_file, dst_file)
+        else:
+            shutil.copytree(src_images, dst_images)
 
     # 写入
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:

@@ -13,6 +13,7 @@ const NPCS = [
     id: "aunt_wang",
     name: "王大婶",
     role: "房东",
+    avatar: "images/avatars/aunt_wang.png",
     location: "slum",
     // v3.4 C3D-T1: NPC 每日活动日程（地点关联系统用）
     schedule: {
@@ -256,6 +257,7 @@ const NPCS = [
     id: "boss_li",
     name: "李工头",
     role: "包工头",
+    avatar: "images/avatars/boss_li.png",
     location: "construction",
     // v3.4 C3D-T1: NPC 每日活动日程
     schedule: {
@@ -481,6 +483,7 @@ const NPCS = [
     id: "sister_zhang",
     name: "张姐",
     role: "中介",
+    avatar: "images/avatars/zijie.png",
     location: "commercialDist",
     // v3.4 C3D-T1: NPC 每日活动日程
     schedule: {
@@ -706,6 +709,7 @@ const NPCS = [
     id: "old_zhou",
     name: "老周",
     role: "收废品老人",
+    avatar: "images/avatars/old_zhou.png",
     location: "slum",
     // v3.4 C3D-T1: NPC 每日活动日程
     schedule: {
@@ -934,6 +938,7 @@ const NPCS = [
     id: "xiao_mei",
     name: "小美",
     role: "大学生",
+    avatar: "images/avatars/xiao_mei.png",
     location: "school",
     // v3.4 C3D-T1: NPC 每日活动日程
     schedule: {
@@ -1146,6 +1151,7 @@ const NPCS = [
     id: "chef_chen",
     name: "陈师傅",
     role: "大厨",
+    avatar: "images/avatars/chef_chen.png",
     location: "commercialDist",
     birthday: 325,
     desc: "商业区小有名气的厨师，手艺了得。想学烹饪可以找他。",
@@ -1823,6 +1829,7 @@ const NPCS = [
     id: "auntie_lin",
     name: "林阿姨",
     role: "菜市场摊主",
+    avatar: "images/avatars/auntie_lin.png",
     location: "wholesaleMarket",
     birthday: 150,
     desc: "菜市场卖菜的老摊主，知道食材价格门道，能介绍餐饮工作。",
@@ -1996,6 +2003,7 @@ const NPCS = [
     id: "master_zhao",
     name: "赵师傅",
     role: "修车师傅",
+    avatar: "images/avatars/master_zhao.png",
     location: "factoryZone",
     birthday: 280,
     desc: "修车铺老板，懂机械维修，能介绍维修/驾驶相关工作。",
@@ -2175,6 +2183,7 @@ const NPCS = [
     id: "xiaoli",
     name: "小丽",
     role: "网红/主播",
+    avatar: "images/avatars/xiaoli.png",
     location: "techPark",
     birthday: 300,
     desc: "短视频主播，粉丝几万，能介绍内容创作/直播相关工作。",
@@ -2342,6 +2351,7 @@ const NPCS = [
     id: "dr_wang",
     name: "王医生",
     role: "医院医生",
+    avatar: "images/avatars/dr_wang.png",
     location: "hospital",
     birthday: 120,
     desc: "医院内科医生，工作辛苦但收入稳定。能给你健康建议。",
@@ -2516,6 +2526,7 @@ const NPCS = [
     id: "zhaojie",
     name: "赵姐",
     role: "房产中介",
+    avatar: "images/avatars/zhaojie.png",
     location: "commercialDist",
     schedule: {
       morning: "commercialDist",
@@ -2726,6 +2737,7 @@ const NPCS = [
     id: "chen_ge",
     name: "陈哥",
     role: "情报贩子",
+    avatar: "images/avatars/chen_ge.png",
     location: "nightMarket",
     schedule: {
       morning: "slum",
@@ -2922,6 +2934,7 @@ const NPCS = [
     id: "ajie",
     name: "阿杰",
     role: "老同学",
+    avatar: "images/avatars/ajie.png",
     location: "random", // 随机出现
     schedule: {
       morning: "random",

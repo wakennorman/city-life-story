@@ -1,8 +1,41 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.47 UI体验5项修复）
+> 最后更新: 2026-07-09（v3.48 NPC头像系统）
 >
 > commit: `86fd6b67`
+
+---
+
+## 2026-07-09 — v3.48 NPC头像系统
+
+**目标**：为13个核心NPC增加手绘风格头像，提升人味和沉浸感，增量控制在 500KB 内（实际 ~1.4MB PNG）。
+
+**实施细节**：
+
+1. **头像生成**（13 张）：统一 Hermes 手绘插画风，暖土色系
+   - `src/images/avatars/` 目录
+   - 包含：王大婶、李工头、张姐、老周、小美、陈师傅、林阿姨、赵师傅、小丽、王医生、赵姐、陈哥、阿杰
+
+2. **NPC 数据层**：`npcs.js` 每个 NPC 对象增加 `avatar` 字段
+
+   ```js
+   avatar: "images/avatars/aunt_wang.png";
+   ```
+
+3. **渲染层**：`render.js`
+   - 区域交易情报面板：NPC 名字前嵌入 `<img class="npc-avatar">`
+   - 求婚弹窗：`eligibleNpcs.map` 中查找 NPC 原始数据获取头像，24px 显示在按钮左侧
+   - 注意：使用 `_esc()` 转义防止 XSS
+
+4. **样式**：`style.css` 新增 `.npc-avatar`（28px 圆形、`object-fit: cover`、懒加载）
+
+5. **构建**：`build.py` 改为增量复制（Windows Trash 报错修复）+ 复制 `src/images/` 到 `dist/images/`
+
+**体积影响**：
+
+- 源码 avatars：~17MB（13张PNG，后续可压缩为 webp 降至 ~1.5MB）
+- dist 总计：~22MB
+- 建议下一步：用 tinypng.com 或 cwebp 压缩至 <2MB 总量
 
 ---
 

@@ -1484,12 +1484,12 @@ function renderCareerTab(state, parent) {
       break;
     }
     case "career_startup": {
-      // 创业（通过 career_dev 的 startup 子Tab）
-      if (typeof renderCareerDevTab === "function") {
+      // 创业（直接调用 startup 渲染，不再绕 career_dev）
+      if (typeof renderStartupTab === "function") {
         state._careerSubTab = "career_startup";
         var startupContainer = document.createElement("div");
         parent.appendChild(startupContainer);
-        renderCareerDevTab(state, startupContainer);
+        renderStartupTab(state, startupContainer);
       } else {
         parent.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🚀 创业系统加载中...</p>';
