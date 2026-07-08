@@ -123966,8 +123966,12 @@ function renderMapTab(state, parent) {
             .join(" ")
         : "";
     const isCurrent = key === locKey;
-    const isReachable = reachable.has(key);
-    const canTravel = isReachable && !isCurrent;
+    const isAdjacent = reachable.has(key); // 1跳邻居，用于视觉高亮
+    const canTravel = !isCurrent; // 步行全城可达，非当前地点均可点击
+    // 步行AP：与通勤面板walk模式公式一致 max(8, 4+hops*6)
+    const mapHops =
+      typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
+    const walkAp = isCurrent ? 0 : Math.max(8, 4 + mapHops * 6);
 
     const node = document.createElement("div");
     node.className = "map-node";
@@ -123977,12 +123981,12 @@ function renderMapTab(state, parent) {
       transform:translate(-50%,-50%);
       padding:8px 12px;
       background:${isCurrent ? "linear-gradient(135deg, rgba(0,180,216,0.3), var(--bg-card))" : "var(--bg-card)"};
-      border:2px solid ${isCurrent ? "var(--accent)" : isReachable ? "var(--border-light)" : "rgba(255,255,255,0.06)"};
+      border:2px solid ${isCurrent ? "var(--accent)" : isAdjacent ? "var(--border-light)" : "rgba(255,255,255,0.08)"};
       border-radius:8px;
-      cursor:${canTravel ? "pointer" : isCurrent ? "default" : "not-allowed"};
+      cursor:${canTravel ? "pointer" : "default"};
       z-index:2;
       transition:all 0.2s;
-      opacity:${isReachable ? 1 : 0.35};
+      opacity:${isCurrent ? 1 : isAdjacent ? 1 : 0.75};
       min-width:80px;
       text-align:center;
       box-shadow:${isCurrent ? "0 0 16px rgba(0,180,216,0.3)" : "none"};
@@ -123993,8 +123997,7 @@ function renderMapTab(state, parent) {
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;">${badgeStr}</div>
-      ${canTravel ? '<div style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
-      ${!isReachable && !isCurrent ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
+      ${canTravel ? `<div style="font-size:9px;color:var(--text-muted);margin-top:4px;">🚶 步行 -⚡${walkAp}</div>` : ""}
     `;
 
     if (canTravel) {
@@ -124004,18 +124007,20 @@ function renderMapTab(state, parent) {
         node.style.transform = "translate(-50%,-50%) scale(1.05)";
       });
       node.addEventListener("mouseleave", () => {
-        node.style.borderColor = "var(--border-light)";
+        node.style.borderColor = isAdjacent
+          ? "var(--border-light)"
+          : "rgba(255,255,255,0.08)";
         node.style.boxShadow = "none";
         node.style.transform = "translate(-50%,-50%) scale(1)";
       });
       node.addEventListener("click", () => {
-        StateManager.update("trade.currentLocation", key);
         const dest = getLocation(key);
+        StateManager.update("trade.currentLocation", key);
         StateManager.addMessage(
-          `🚶 你来到了${dest ? dest.name : key}。`,
+          `🚶 步行 你来到了${dest ? dest.name : key}（-⚡${walkAp}）。`,
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(15);
+        if (typeof consumeAP === "function") consumeAP(walkAp);
         renderAll();
       });
     }
