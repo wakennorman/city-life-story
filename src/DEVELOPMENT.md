@@ -1,8 +1,70 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-08（v3.45 今日头条实时新闻 note 游戏化重写）
+> 最后更新: 2026-07-09（v3.47 UI体验5项修复）
 >
-> commit: `34585956`
+> commit: `86fd6b67`
+
+---
+
+## 2026-07-09 — v3.47 UI体验5项修复
+
+**问题1：开局教程弹框闪烁后消失**
+
+- 根因：`startTutorial()`（300ms）被紧接着的`showForcedDreamModal()`（500ms）覆盖，教程一闪而过
+- 修复：`main.js` 删除三处300ms `startTutorial`调用；改在 `selectDream()` 和 `skipDreamForNow()` 回调末尾触发（200ms延迟），确保教程在梦想弹框关闭后才显示
+- 影响文件：`main.js`（-9行）、`phase1/actions_extra.js`（+2行）
+
+**问题2：偷电瓶双图标 🔋🔋**
+
+- 根因：`illegal_actions.js` 中 `name: "🔋 偷电瓶"` 和 `icon: "🔋"` 双重emoji，渲染时card-icon和card-title各显示一次
+- 修复：`name` 改为纯文字 `"偷电瓶"`，icon字段保留 `"🔋"`
+- 影响文件：`core/illegal_actions.js`
+
+**问题3：装备采购入口显示 undefined 城中村**
+
+- 根因：`render.js` 渲染时用 `loc.icon`，但 `locations.js` 所有地点对象均无 `icon` 字段
+- 修复：`locations.js` 15个地点全部补 icon（🏘️城中村/🏪批发市场/🏗️工地/🏭工业区/🎓大学城/🏬商业区/💻科技园/🏥医院/🏦银行/🌳公园/📚培训/🌆郊区/🏛️政府/🎮娱乐/⛩️寺庙）
+- 影响文件：`data/locations.js`（+15行）
+
+**问题4：物品栏导航不扣行动力和现金**
+
+- 根因：`navigation.js` 的 `navigateTo()` 正确计算了 apCost/cashCost，但调用 `_doNavigate(state, target, options)` 时 `options` 未包含这些值；`_doNavigate` 内部从 `options.apCost` 读取（默认0）→ 始终不扣费
+- 修复：在 `navigateTo()` 中合并计算结果到 `navOptions`（`Object.assign({}, options, {apCost, cashCost})`），所有 `_doNavigate` 调用改用 `navOptions`
+- 影响文件：`ui/navigation.js`
+
+**问题5：事件记录不显示移动费用**
+
+- 修复：`_doNavigate` LOCATION分支的到达消息从 `"🚶 你来到了XXX。"` 改为 `"🚶 你来到了XXX。（⚡ -N行动力，💰 -¥M）"`（有费用才显示）
+- 影响文件：`ui/navigation.js`
+
+**验证**：`node --check` 所有文件 ✅ / `python build.py` 5273.2KB ✅ / `git push` ✅
+
+---
+
+## 2026-07-08 — v3.46 实时新闻 CORS 三层修复
+
+**问题**：有网但实时新闻不显示，始终降级为离线新闻。
+
+**根因**：浏览器 CORS 策略拦截了两路直连请求：
+
+- `36kr.com/feed` — 直连 RSS，被 CORS 拦截
+- `api.tianapi.com` — 无 CORS 头 / key 有效性未知
+  两路同时失败 → `_realNewsStatus = "failed"` → 静默使用离线新闻
+
+**修复（world_news_intro.js，+55/-38行）**：
+
+1. **`fetchFromRSSDirect` 重构**：直连失败自动尝试 `corsproxy.io` 代理
+   - 提取 `_parseRSSXML` / `_fetchRSSFromUrl` 两个辅助函数
+   - `urlsToTry` 列表按序：[直连URL, 代理URL1, ...]
+2. **新增 `rss2json` 源**：`api.rss2json.com`（专业 CORS-enabled RSS 转换，10000次/天免费）
+   - 36氪 + 澎湃两路并发，复用现有 `tryFetchRSS()` 函数
+   - 在 `fetchRealTimeNews()` 中新增 rss2json 源迭代
+3. **日志增强**：
+   - 各源失败：`console.warn("[实时新闻] 源失败: ...")`
+   - 整体成功：`console.log("[城市浮生记] ✅ 实时新闻获取成功，共N条")`
+   - 整体失败：`console.warn("[城市浮生记] ⚠️ 失败原因，将使用离线新闻")`
+
+**commit**：`bc303a2a`（本地已提交，待网络恢复后推送）
 
 ---
 
