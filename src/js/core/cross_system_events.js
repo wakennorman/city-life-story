@@ -534,6 +534,795 @@
     },
   ];
 
+  // ====== v3.21 跨系统联动事件（已合并自 cross_system_events_v321.js） ======
+  // 5个事件覆盖：天气+位置 / 连续状态积累 / NPC意外发现 / 老手特遇 / 道德分叉
+  CROSS_EVENTS.push(
+    // ===== 事件1：天气+位置组合 — 雾霾天的批发市场捡漏 =====
+    {
+      id: "foggy_market_arbitrage",
+      phase: "street",
+      icon: "🌫️",
+      title: "雾里的价签",
+      story:
+        "今早雾霾特别重，批发市场的电子价牌都看不清。你走近才发现好几家的标价还停留在昨天的低价——商户自己也看不清新价格该挂多少。\\n\\n四下里来进货的人不多，机会窗口可能只有这一小会儿。",
+      conditions: function (st) {
+        var curLoc = st.trade && st.trade.currentLocation;
+        var w = st.weather && st.weather.current;
+        return (
+          st.player.phase === "street" &&
+          curLoc === "wholesaleMarket" &&
+          (w === "foggy" || w === "heavy_smog") &&
+          st.player.day >= 20
+        );
+      },
+      probability: 0.06,
+      repeatable: true,
+      choices: [
+        {
+          text: "🧠 利用价差扫货，转手赚一笔",
+          hint: "智力≥40可识别最佳套利品",
+          apply: function (st) {
+            var int = st.player.intelligence || 0;
+            if (int >= 40) {
+              var profit = Random.int(150, 350);
+              st.resources.cash += profit;
+              st.resources.totalEarned =
+                (st.resources.totalEarned || 0) + profit;
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+              StateManager.addMessage(
+                "🧠 你快速扫了几家低价摊位，转手高价出手，套利¥" +
+                  profit +
+                  "。市场恢复清晰之前你就收手了。心智+2。",
+                "success",
+              );
+            } else {
+              var small = Random.int(40, 100);
+              st.resources.cash += small;
+              StateManager.addMessage(
+                "🧠 你凭直觉买了几样便宜货，小赚¥" +
+                  small +
+                  "。要是智力更高就能发现更多机会了。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "👀 默默记下，等天亮再来",
+          hint: "稳健，无收益无风险",
+          apply: function (st) {
+            st.flags._foggyMarketNoted = true;
+            StateManager.addMessage(
+              "👀 你记下了几家低价摊位的位置。等雾散了价格也会恢复，这个秘密先烂在肚子里。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 雾太大，空气差，走了",
+          hint: "健康优先",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🌫️ 你捂着鼻子离开了批发市场。这种天气出来打工本身就不太明智。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件2：连续状态积累爆发 — 长期饥饿后的身体警报 =====
+    {
+      id: "starvation_body_alarm",
+      phase: "street",
+      icon: "🤢",
+      title: "胃在抗议",
+      story:
+        "你在街边突然感到一阵强烈的眩晕，蹲下来才发觉已经记不清上次好好吃饭是什么时候了。\\n\\n旁边小卖部老板看你脸色发白，皱着眉说：「小伙子，你这脸色不对劲啊。」",
+      conditions: function (st) {
+        var habits = st.flags && st.flags._habits;
+        return (
+          st.player.phase === "street" &&
+          ((habits && habits.lowHungerStreak >= 3) ||
+            (st.status && st.status.health < 30))
+        );
+      },
+      probability: 0.12,
+      repeatable: false,
+      choices: [
+        {
+          text: "🍜 听劝，吃碗面（¥15）",
+          hint: "恢复饥饿，健康+3",
+          apply: function (st) {
+            if (st.resources.cash < 15) {
+              StateManager.addMessage(
+                "😅 你翻了翻口袋，连¥15的面钱都掏不出来……只好咽了咽口水。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 15;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
+            st.status.health = Math.min(100, (st.status.health || 0) + 3);
+            if (st.flags._habits) st.flags._habits.lowHungerStreak = 0;
+            StateManager.addMessage(
+              "🍜 一碗热汤面下肚，整个人都缓过来了。饥饿恢复，健康+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💊 买点止晕药扛过去（¥8）",
+          hint: "临时缓解，不治本",
+          apply: function (st) {
+            if (st.resources.cash < 8) {
+              StateManager.addMessage(
+                "😵 你连药都买不起，只好在路边蹲着等这阵晕过去。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 8;
+            st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 5);
+            StateManager.addMessage(
+              "💊 止晕药压住了症状，但胃还在隐隐作痛。这只是缓兵之计。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🚶 没事，老毛病了",
+          hint: "健康-8，可能埋下疾病隐患",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 0) - 8);
+            if (!st.flags._habits) st.flags._habits = {};
+            st.flags._habits.stomach_inflammationCount =
+              (st.flags._habits.stomach_inflammationCount || 0) + 1;
+            StateManager.addMessage(
+              "🚶 你摆摆手站起来走了。健康-8，肠胃负担加重了。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件3：NPC意外发现 — 王大婶的账本秘密 =====
+    {
+      id: "aunt_wang_secret_ledger",
+      phase: "street",
+      icon: "📒",
+      title: "王大婶的账本",
+      story:
+        "你帮王大婶搬柜子时，她那个黑皮账本不小心散开了——里面不仅记着每家的房租，还密密麻麻记着这些年每个商户给她的「推荐费」和「茶水钱」。\\n\\n她慌忙收起来，脸色不太自然：「这个……你看错了。」",
+      conditions: function (st) {
+        var rel = st.relationships && st.relationships.aunt_wang;
+        return (
+          st.player.phase === "street" &&
+          rel &&
+          rel.met &&
+          (rel.affinity || 0) >= 50 &&
+          rel.discovered &&
+          !rel.discovered._ledgerSecret &&
+          st.player.day >= 60
+        );
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤫 王婶放心，我不说",
+          hint: "好感+12，解锁隐藏'人情世故'视野",
+          apply: function (st) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 12,
+            );
+            st.relationships.aunt_wang.discovered._ledgerSecret = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            StateManager.addMessage(
+              "🤫 你压低声音：「我什么也没看见。」王大婶的脸色一下子松了，以后看你的眼神多了几分真情实意。好感+12，心智+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 问了句：推荐费是什么行情？",
+          hint: "得到租客市场行情信息，好感-5",
+          apply: function (st) {
+            st.relationships.aunt_wang.affinity = Math.max(
+              0,
+              (st.relationships.aunt_wang.affinity || 0) - 5,
+            );
+            st.relationships.aunt_wang.discovered._ledgerSecret = true;
+            st.flags._knowsRentalKickback = true;
+            StateManager.addMessage(
+              "🤔 王大婶压低声音：「行情是半个月租金，懂的都懂。」你以后租房/谈租时心里有底了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😬 尴尬，我不该看的",
+          hint: "好感+3，安全但错失机会",
+          apply: function (st) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 3,
+            );
+            st.relationships.aunt_wang.discovered._ledgerSecret = true;
+            StateManager.addMessage(
+              "😬 你赶紧帮她把账本收好。王大婶叹了口气，没再说什么。好感+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件4：老手特遇 — 城市对"长期生存者"的认可 =====
+    {
+      id: "veteran_city_welcome",
+      phase: "street",
+      icon: "🏙️",
+      title: "城里的老面孔",
+      story:
+        "你在常去的早餐摊排队，老板笑着多给你加了一勺：「老熟人了吧？我看你从这条街摆到那边，挺不容易的。」\\n\\n旁边新来的打工仔打量着你，那种眼神你很熟悉——两年前你也是这样看别人的。\\n\\n这座城市开始记住你了。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          (st.resources.totalEarned || 0) >= 20000 &&
+          st.player.day >= 100 &&
+          st.player.fame >= 15 &&
+          !st.flags._veteranWelcomeSeen
+        );
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🍜 请那个新来的吃碗面",
+          hint: "名气+6，心情+8",
+          apply: function (st) {
+            st.flags._veteranWelcomeSeen = true;
+            var cost = 15;
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+              StateManager.addMessage(
+                "🍜 你给那个一脸迷茫的新来的点了一碗面。名气+6，心情+8。你在他眼里看到了两年前的自己。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🍜 你想请客，但口袋里只剩几个硬币。那个新来的自己买了最便宜的馒头。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💬 跟他聊聊这座城市",
+          hint: "心智+5，解锁新人引导记忆",
+          apply: function (st) {
+            st.flags._veteranWelcomeSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "💬 你跟他说了哪些工靠谱、哪个摊的饭实惠、下雨天哪条街不涝。他听得很认真。心智+5，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😶 默默吃完走自己的路",
+          hint: "独自前行",
+          apply: function (st) {
+            st.flags._veteranWelcomeSeen = true;
+            StateManager.addMessage(
+              "😶 你低下头吃完面就走了。每个人都有自己的路要操心。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件5：道德分叉 — 捡到钱包后监控的死角 =====
+    {
+      id: "moral_wallet_camera_twist",
+      phase: "street",
+      icon: "📹",
+      title: "转角处的摄像头",
+      story:
+        "上次捡到的钱已经花完了。今天你在同一个街区走着，偶然注意到墙角有一个新装的摄像头——角度刚好覆盖那个ATM机。\\n\\n你突然有点不确定：那个摄像头是什么时候装的？",
+      conditions: function (st) {
+        var hasWalletHistory =
+          st.flags._foundATMCash || st.flags._keptFoundMoney;
+        return (
+          st.player.phase === "street" &&
+          hasWalletHistory &&
+          st.player.day >= (st.flags._foundMoneyDay || 0) + 14 &&
+          !st.flags._walletCameraSeen
+        );
+      },
+      probability: 0.08,
+      repeatable: false,
+      choices: [
+        {
+          text: "😰 匿名联系失主，把剩下的钱退了",
+          hint: "仅当你曾私吞时可用；道德+8",
+          apply: function (st) {
+            st.flags._walletCameraSeen = true;
+            st.flags._walletConfessed = true;
+            var refund = Math.min(st.resources.cash, 200);
+            st.resources.cash -= refund;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            StateManager.addMessage(
+              "😰 你匿名把剩下的¥" +
+                refund +
+                "退给了失主。道德+8，心情+10。至少今晚睡得着了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🧠 去查查那摄像头是什么时候装的",
+          hint: "心智+3，揭开真相",
+          apply: function (st) {
+            st.flags._walletCameraSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            if ((st.player.morality || 50) >= 50) {
+              StateManager.addMessage(
+                "🧠 你打听了一下——那摄像头三天前才装的。那一刻的抉择是纯粹的。心智+3。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage(
+                "🧠 你打听了一下——那摄像头三天前才装的。不管有没有摄像头，那一刻的选择已经定义了你是谁。心智+3。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 装没看见，快步走开",
+          hint: "把秘密藏好",
+          apply: function (st) {
+            st.flags._walletCameraSeen = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "🚶 你加快了步伐，不敢回头看。心情-5。",
+              "warning",
+            );
+          },
+        },
+      ],
+    }
+  );
+
+  // ====== v3.22 天气×工作/NPC/消费深度联动（已合并自 cross_system_events_v322.js） ======
+  // 5个事件覆盖：天气×工作 / NPC×天气 / 天气×NPC / 工作×NPC / 天气×消费
+  CROSS_EVENTS.push(
+    // ===== 事件1：天气×工作联动 — 高温天户外工作选择 =====
+    {
+      id: "heatwave_outdoor_worker",
+      phase: "street",
+      icon: "🥵",
+      title: "高温预警，干还是不干",
+      story:
+        "气象台发出高温红色预警，室外温度超过40度。\\n" +
+        "工地的工友说：「今天这天气，干一小时累得跟驴一样。」\\n" +
+        "但包工头说工期紧，今天必须赶进度。",
+      conditions: function (st) {
+        var w = st.weather && st.weather.current;
+        var isOutdoor =
+          st.employment &&
+          st.employment.currentJob &&
+          [
+            "manual_labor_construction",
+            "waste_recycling",
+            "old_zhou_recycling",
+            "street_vending_food",
+            "sister_zhang_vending",
+          ].includes(st.employment.currentJob.id);
+        return (
+          st.player.phase === "street" &&
+          w === "heatwave" &&
+          isOutdoor &&
+          st.player.day >= 30
+        );
+      },
+      probability: 0.1,
+      repeatable: false,
+      choices: [
+        {
+          text: "💧 买冰水防暑，继续干（¥15）",
+          hint: "健康+3，疲劳+5",
+          apply: function (st) {
+            if (st.resources.cash >= 15) {
+              st.resources.cash -= 15;
+              st.status.health = Math.min(100, (st.status.health || 0) + 3);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+              var pay = st.employment.currentJob.payCalc(st);
+              st.resources.cash += Math.floor(pay * 0.8);
+              st.resources.totalEarned =
+                (st.resources.totalEarned || 0) + Math.floor(pay * 0.8);
+              StateManager.addMessage(
+                "💧 买了冰水，顶着烈日干了一下午。收入打八折，但健康+3。拿到¥" +
+                  Math.floor(pay * 0.8),
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "😅 连¥15的冰水都买不起，只能在烈日下硬扛。",
+                "warning",
+              );
+              st.status.health = Math.max(0, (st.status.health || 0) - 5);
+            }
+          },
+        },
+        {
+          text: "🌳 找阴凉处躲一躲，下午再去",
+          hint: "收入×0.6，但健康+5",
+          apply: function (st) {
+            var pay = st.employment.currentJob.payCalc(st);
+            st.resources.cash += Math.floor(pay * 0.6);
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + Math.floor(pay * 0.6);
+            st.status.health = Math.min(100, (st.status.health || 0) + 5);
+            StateManager.addMessage(
+              "🌳 你在树荫下躲到下午才开工，收入打了六折，但身体没出事。拿到¥" +
+                Math.floor(pay * 0.6) +
+                "，健康+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🏠 今天实在没法干了，休息吧",
+          hint: "零收入，健康+8，疲劳-10",
+          apply: function (st) {
+            st.status.health = Math.min(100, (st.status.health || 0) + 8);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            StateManager.addMessage(
+              "🏠 你决定今天休息。身体是革命的本钱，健康+8。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件2：NPC×天气联动 — 老周根据天气推荐废品出售时机 =====
+    {
+      id: "old_zhou_weather_tip",
+      phase: "street",
+      icon: "♻️",
+      title: "老周的气象情报",
+      story:
+        "老周在废品站门口指着天说：\\n" +
+        "「小伙子，明天台风来了，这几天废品价格会上涨——大家清理家里杂物，废品多呢。\\n" +
+        "「要干就这两天赶紧收，别等台风过了。」",
+      conditions: function (st) {
+        var w = st.weather && st.weather.current;
+        var nextDayForecast = st.weather && st.weather._nextDayForecast;
+        var isTyphoonComing =
+          nextDayForecast && nextDayForecast.weatherId === "typhoon";
+        var isHeavyRainComing =
+          nextDayForecast &&
+          ["rainy", "stormy", "typhoon"].includes(nextDayForecast.weatherId);
+        return (
+          st.relationships &&
+          st.relationships.old_zhou &&
+          st.relationships.old_zhou.met &&
+          st.trade &&
+          st.trade.currentLocation === "wholesaleMarket" &&
+          (st.player.day >= 15 || st.stats.actionFreq.waste_recycling > 0) &&
+          (isTyphoonComing || isHeavyRainComing)
+        );
+      },
+      probability: 0.08,
+      repeatable: true,
+      choices: [
+        {
+          text: "📦 听老周的，多收废品（需¥50进货）",
+          hint: "台风前废品价格涨，但需资本",
+          cost: 50,
+          apply: function (st) {
+            var profit = Random.int(80, 180);
+            st.resources.cash += profit;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + profit;
+            if (!st.relationships.old_zhou.affinity)
+              st.relationships.old_zhou.affinity = 0;
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              st.relationships.old_zhou.affinity + 5,
+            );
+            StateManager.addMessage(
+              "📦 听老周的，台风前多收了一批废品。转手赚了¥" +
+                profit +
+                "，老周对你更信任了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 记在心里，明天去问问",
+          hint: "无收益，但老周记性好感+3",
+          apply: function (st) {
+            if (!st.relationships.old_zhou.affinity)
+              st.relationships.old_zhou.affinity = 0;
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              st.relationships.old_zhou.affinity + 3,
+            );
+            st.flags._oldZhouWeatherTipNoted = true;
+            StateManager.addMessage(
+              "🤔 你把老周的话记在心里。台风来了，废品价格确实涨了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😒 老周也就嘴上说说",
+          hint: "好感-3",
+          apply: function (st) {
+            st.relationships.old_zhou.affinity = Math.max(
+              -100,
+              (st.relationships.old_zhou.affinity || 0) - 3,
+            );
+            StateManager.addMessage(
+              "😒 你觉得老周又在吹牛，不以为然。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件3：天气×NPC联动 — 李工头台风安全警告 =====
+    {
+      id: "boss_li_typhoon_warning",
+      phase: "street",
+      icon: "🌀",
+      title: "台风来了，工地停工",
+      story:
+        "李工头急匆匆跑到你面前：\\n" +
+        "「台风预警了，明天工地必须停工！所有工人明天不要来！\\n" +
+        "「不过……我有个私活，台风天送材料到偏远仓库，敢不敢接？」",
+      conditions: function (st) {
+        var nextDayForecast = st.weather && st.weather._nextDayForecast;
+        var isTyphoon =
+          nextDayForecast && nextDayForecast.weatherId === "typhoon";
+        var isHeavyRain =
+          nextDayForecast &&
+          ["rainy", "stormy", "typhoon"].includes(nextDayForecast.weatherId);
+        return (
+          st.relationships &&
+          st.relationships.boss_li &&
+          st.relationships.boss_li.met &&
+          (isTyphoon || isHeavyRain) &&
+          st.player.day >= 20
+        );
+      },
+      probability: 0.08,
+      repeatable: true,
+      choices: [
+        {
+          text: "💪 接私活，风险高但钱多",
+          hint: "收入×2，但疲劳+20，可能受伤",
+          apply: function (st) {
+            var pay = st.employment.currentJob
+              ? st.employment.currentJob.payCalc(st)
+              : 100;
+            var bonus = Math.floor(pay * 1.5);
+            st.resources.cash += bonus;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + bonus;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            if (Random.chance(0.3)) {
+              st.status.health = Math.max(0, (st.status.health || 0) - 10);
+              StateManager.addMessage(
+                "💪 你在台风天送完材料，拿了¥" +
+                  bonus +
+                  "。但路上摔了一跤，健康-10。",
+                "warning",
+              );
+            } else {
+              StateManager.addMessage(
+                "💪 你在台风天送完材料，顺利拿到¥" +
+                  bonus +
+                  "。虽然累但平安无事。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "🏠 不接，安全第一",
+          hint: "零收入，但健康+5",
+          apply: function (st) {
+            st.status.health = Math.min(100, (st.status.health || 0) + 5);
+            StateManager.addMessage(
+              "🏠 你拒绝了李工头，决定在家休息。健康+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💬 问李工头有没有更稳妥的活",
+          hint: "好感+5，可能获得室内工作",
+          apply: function (st) {
+            st.relationships.boss_li.affinity = Math.min(
+              100,
+              (st.relationships.boss_li.affinity || 0) + 5,
+            );
+            var indoorPay = Random.int(80, 150);
+            st.resources.cash += indoorPay;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + indoorPay;
+            StateManager.addMessage(
+              "💬 李工头说让你帮忙整理仓库材料，不用出去。拿到¥" +
+                indoorPay +
+                "，安全又稳定。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件4：工作×NPC联动 — 张姐发现你的技能，提供晋升机会 =====
+    {
+      id: "zhang_factory_skill_offer",
+      phase: "street",
+      icon: "🏭",
+      title: "张姐的升迁提议",
+      story:
+        "下班时张姐把你叫到一边：\\n" +
+        "「你技术不错啊，能不能帮忙修一下产线的设备？\\n" +
+        "「如果修得好，以后厂里的维修工长职位就留给你。」\\n" +
+        "她递给你一个工具箱：「试试？」",
+      conditions: function (st) {
+        return (
+          st.relationships &&
+          st.relationships.sister_zhang &&
+          st.relationships.sister_zhang.met &&
+          st.employment &&
+          st.employment.currentJob &&
+          st.employment.currentJob.id === "factory_work_assembly" &&
+          ((st.skills.repair && st.skills.repair.level >= 20) ||
+            (st.skills.electrician && st.skills.electrician.level >= 20)) &&
+          st.player.day >= 40
+        );
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🔧 修设备，展示技术（需维修≥20级）",
+          hint: "成功晋升，失败受伤",
+          apply: function (st) {
+            var skill = st.skills.repair || st.skills.electrician;
+            var success = skill && skill.level >= 20 && Random.chance(0.7);
+            if (success) {
+              st.flags._factoryRepairMan = true;
+              st.skills.repair.xp += 50;
+              var bonus = Random.int(200, 400);
+              st.resources.cash += bonus;
+              st.resources.totalEarned =
+                (st.resources.totalEarned || 0) + bonus;
+              StateManager.addMessage(
+                "🔧 你修好了设备，张姐非常满意！晋升维修工长，月薪+¥500，现金奖励¥" +
+                  bonus +
+                  "。",
+                "success",
+              );
+            } else {
+              st.status.health = Math.max(0, (st.status.health || 0) - 8);
+              StateManager.addMessage(
+                "🔧 你试了半天没修好，还被机器烫了一下。健康-8。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🤔 谦虚一下，先观察",
+          hint: "好感+5，后续再试",
+          apply: function (st) {
+            st.relationships.sister_zhang.affinity = Math.min(
+              100,
+              (st.relationships.sister_zhang.affinity || 0) + 5,
+            );
+            StateManager.addMessage(
+              "🤔 你说：「张姐，我还需锻炼。」张姐点点头，等你准备好了再试。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙅 拒绝，不想管设备",
+          hint: "好感-5",
+          apply: function (st) {
+            st.relationships.sister_zhang.affinity = Math.max(
+              -100,
+              (st.relationships.sister_zhang.affinity || 0) - 5,
+            );
+            StateManager.addMessage(
+              "🙅 你婉拒了张姐，表示只想干流水线。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件5：天气×消费联动 — 重度雾霾口罩涨价 =====
+    {
+      id: "heavy_smog_price_surge",
+      phase: "street",
+      icon: "😷",
+      title: "口罩涨价了",
+      story:
+        "重度雾霾天，街边小卖部口罩价格从¥2涨到了¥5。\\n" +
+        "老板说：「雾霾天口罩需求大，进货价也涨了，不涨价我亏本啊。」\\n" +
+        "你看了看空气质量指数，又摸了摸口袋……",
+      conditions: function (st) {
+        var w = st.weather && st.weather.current;
+        return (
+          st.player.phase === "street" &&
+          w === "heavy_smog" &&
+          st.player.day >= 10 &&
+          st.status.health < 70
+        );
+      },
+      probability: 0.08,
+      repeatable: true,
+      choices: [
+        {
+          text: "😷 买口罩，防护健康（¥10）",
+          hint: "健康+5，雾霾伤害减免",
+          cost: 10,
+          apply: function (st) {
+            st.resources.cash -= 10;
+            st.status.health = Math.min(100, (st.status.health || 0) + 5);
+            StateManager.addMessage(
+              "😷 你买了口罩，虽然贵了点，但雾霾天保护自己很重要。健康+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "👕 用湿毛巾捂住口鼻",
+          hint: "免费，效果差",
+          apply: function (st) {
+            st.status.health = Math.max(0, (st.status.health || 0) - 2);
+            StateManager.addMessage(
+              "👕 你用湿毛巾捂住口鼻，效果差但免费。健康-2。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🏠 今天不出门了",
+          hint: "健康+3，零收入",
+          apply: function (st) {
+            st.status.health = Math.min(100, (st.status.health || 0) + 3);
+            StateManager.addMessage(
+              "🏠 你决定今天不出门，躲在家里。健康+3，但没收入。",
+              "info",
+            );
+          },
+        },
+      ],
+    }
+  );
+
   var CAREER_EVENTS = [
     // ====== 职业生涯事件 ======
     {
@@ -8643,7 +9432,9 @@
     // [自洽新增] conditions：检查配送类副业活跃 或 物流路径工作 或 累计配送行动≥30
     conditions: function (st) {
       var hasDrivingSideHustle =
-        st.sideHustle && st.sideHustle.type === "driving" && st.sideHustle.active;
+        st.sideHustle &&
+        st.sideHustle.type === "driving" &&
+        st.sideHustle.active;
       var hasLogisticsJob =
         st.career &&
         st.career.currentJob &&
@@ -8651,9 +9442,9 @@
       var hasDeliveryFreq =
         st.stats &&
         st.stats.actionFreq &&
-        ((st.stats.actionFreq["delivery_rider"] || 0) +
+        (st.stats.actionFreq["delivery_rider"] || 0) +
           (st.stats.actionFreq["courier_gig"] || 0) +
-          (st.stats.actionFreq["package_delivery"] || 0)) >=
+          (st.stats.actionFreq["package_delivery"] || 0) >=
           30;
       var hasDrivingSkill =
         st.skills && st.skills.driving && st.skills.driving.level >= 10;
@@ -8743,10 +9534,7 @@
         apply: function (st) {
           st.flags._proIdentifyFakeSeen = true;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-          st.player.morality = Math.min(
-            100,
-            (st.player.morality || 50) + 2,
-          );
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           StateManager.addMessage(
             "🗣️ 你走过去对正要买的摊主说：「这焊点是砂轮机磨的，不是机器焊的，假货。」那人愣了一下，把东西放下了。摊主瞪了你一眼。你帮了别人，也得罪了人。名气+3，道德+2，心情+5。",
@@ -8760,10 +9548,7 @@
         cost: 80,
         apply: function (st) {
           st.flags._proIdentifyFakeSeen = true;
-          st.skills.repair.xp = Math.min(
-            1000,
-            (st.skills.repair.xp || 0) + 20,
-          );
+          st.skills.repair.xp = Math.min(1000, (st.skills.repair.xp || 0) + 20);
           st.player.intelligence = Math.min(
             100,
             (st.player.intelligence || 10) + 1,
@@ -8779,10 +9564,7 @@
         hint: "无事发生",
         apply: function (st) {
           st.flags._proIdentifyFakeSeen = true;
-          st.player.morality = Math.max(
-            0,
-            (st.player.morality || 50) - 1,
-          );
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 1);
           StateManager.addMessage(
             "🤐 你转身走了。虽然知道那是假货，但多一事不如少一事。只是心里有点过意不去。道德-1。",
             "warning",
@@ -8850,37 +9632,47 @@
       switch (bestNid) {
         case "aunt_wang":
           infoType = "房租信息";
-          infoText = "王大婶随口说：「下个月老城区要改造，你那片房租可能要涨30%。趁现在赶紧找新地方。」";
+          infoText =
+            "王大婶随口说：「下个月老城区要改造，你那片房租可能要涨30%。趁现在赶紧找新地方。」";
           reward = { rentWarning: true };
           break;
         case "boss_li":
           infoType = "工程情报";
-          infoText = "李工头喝多了说漏嘴：「下周城东那块地要开拍了，缺人手，一天¥300起。想去的明天来找我。」";
+          infoText =
+            "李工头喝多了说漏嘴：「下周城东那块地要开拍了，缺人手，一天¥300起。想去的明天来找我。」";
           reward = { tempJobChance: true };
           break;
         case "chef_chen":
           infoType = "食材行情";
-          infoText = "陈师傅一边颠勺一边说：「下个月海鲜要涨价，批发市场的鱼贵一倍。你如果有存货赶紧出手。」";
+          infoText =
+            "陈师傅一边颠勺一边说：「下个月海鲜要涨价，批发市场的鱼贵一倍。你如果有存货赶紧出手。」";
           reward = { priceWarning: "seafood" };
           break;
         case "old_zhou":
           infoType = "废品行情";
-          infoText = "老周说：「最近铜价涨疯了，你家里有啥旧铜线赶紧翻出来。我明天去回收站问问价。」";
+          infoText =
+            "老周说：「最近铜价涨疯了，你家里有啥旧铜线赶紧翻出来。我明天去回收站问问价。」";
           reward = { scrapBonus: "copper" };
           break;
         case "sister_zhang":
           infoType = "招聘内推";
-          infoText = "张姐说：「我这边有个大厂外包的活，日结¥400，干一个月。你要不要试试？不用面试，我直接推。」";
+          infoText =
+            "张姐说：「我这边有个大厂外包的活，日结¥400，干一个月。你要不要试试？不用面试，我直接推。」";
           reward = { tempJobChance: true };
           break;
         case "xiao_mei":
           infoType = "学习资源";
-          infoText = "小美说：「我导师那边有个免费的线上编程课，结业发证书。你要不要报一个？对你找工作有帮助。」";
+          infoText =
+            "小美说：「我导师那边有个免费的线上编程课，结业发证书。你要不要报一个？对你找工作有帮助。」";
           reward = { courseOpportunity: true };
           break;
         default:
           infoType = "城市情报";
-          infoText = npcDef.name + "随口说：「对了，我听说最近" + npcDef.location + "那边有好事，你没事可以去转转。」";
+          infoText =
+            npcDef.name +
+            "随口说：「对了，我听说最近" +
+            npcDef.location +
+            "那边有好事，你没事可以去转转。」";
           reward = { locationHint: npcDef.location };
       }
 

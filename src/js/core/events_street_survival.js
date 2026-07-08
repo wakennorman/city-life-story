@@ -4,6 +4,8 @@
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._streetSurvivalLoaded) return;
+  RANDOM_EVENTS._streetSurvivalLoaded = true;
   var EVENTS = [
     {
       id: "found_wallet",

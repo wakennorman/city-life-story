@@ -4,6 +4,8 @@
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._streetWealthLoaded) return;
+  RANDOM_EVENTS._streetWealthLoaded = true;
   var EVENTS = [
     {
       id: "wage_thief_retaliate",

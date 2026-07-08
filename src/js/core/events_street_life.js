@@ -4,6 +4,8 @@
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._streetLifeLoaded) return;
+  RANDOM_EVENTS._streetLifeLoaded = true;
   var EVENTS = [
     {
       id: "community_group_buy",
