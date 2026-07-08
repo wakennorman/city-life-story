@@ -7,6 +7,7 @@ const LOCATIONS = {
   slum: {
     id: "slum",
     name: "城中村",
+    icon: "🏘️",
     desc: "鱼龙混杂的城中村，房租便宜，机会也多。",
     type: "residential",
     wealthTier: 1, // 1=贫困区 2=中等 3=富裕区 — 影响 amenity 档次和旅行AP
@@ -29,6 +30,7 @@ const LOCATIONS = {
   wholesaleMarket: {
     id: "wholesaleMarket",
     name: "批发市场",
+    icon: "🏪",
     desc: "各种商品批发的集散地，进货的天堂。",
     type: "commercial",
     wealthTier: 2,
@@ -53,6 +55,7 @@ const LOCATIONS = {
   construction: {
     id: "construction",
     name: "建筑工地",
+    icon: "🏗️",
     desc: "尘土飞扬的建筑工地，到处是钢筋水泥。",
     type: "industrial",
     wealthTier: 1,
@@ -67,6 +70,7 @@ const LOCATIONS = {
   factoryZone: {
     id: "factoryZone",
     name: "工业区",
+    icon: "🏭",
     desc: "工厂聚集的工业区，机器轰鸣声不绝于耳。",
     type: "industrial",
     wealthTier: 2,
@@ -87,6 +91,7 @@ const LOCATIONS = {
   school: {
     id: "school",
     name: "大学城",
+    icon: "🎓",
     desc: "高校云集的大学城，年轻人多，机会特殊。",
     type: "institutional",
     wealthTier: 2,
@@ -124,6 +129,7 @@ const LOCATIONS = {
   commercialDist: {
     id: "commercialDist",
     name: "商业区",
+    icon: "🏬",
     desc: "繁华的商业地段，人来人往，商机无限。",
     type: "commercial",
     wealthTier: 3,
@@ -153,6 +159,7 @@ const LOCATIONS = {
   techPark: {
     id: "techPark",
     name: "科技园",
+    icon: "💻",
     desc: "互联网大厂的聚集地，高楼林立，精英云集。",
     type: "corporate",
     wealthTier: 3,
@@ -167,6 +174,7 @@ const LOCATIONS = {
   hospital: {
     id: "hospital",
     name: "医院",
+    icon: "🏥",
     desc: "看病治疗的地方。健康是革命的本钱。",
     type: "service",
     wealthTier: 2,
@@ -181,6 +189,7 @@ const LOCATIONS = {
   bank: {
     id: "bank",
     name: "银行",
+    icon: "🏦",
     desc: "存取款、办理贷款。",
     type: "service",
     wealthTier: 2,
@@ -195,6 +204,7 @@ const LOCATIONS = {
   park: {
     id: "park",
     name: "公园",
+    icon: "🌳",
     desc: "城市中的绿洲，可以放松身心。",
     type: "recreation",
     wealthTier: 2,
@@ -209,6 +219,7 @@ const LOCATIONS = {
   trainingCenter: {
     id: "trainingCenter",
     name: "培训中心",
+    icon: "📚",
     desc: "学习技能、考取证书的地方。投资自己。",
     type: "education",
     wealthTier: 2,
@@ -234,6 +245,7 @@ const LOCATIONS = {
   suburb: {
     id: "suburb",
     name: "郊区",
+    icon: "🌆",
     desc: "城市边缘的郊区，安静但交通不便。房租便宜，适合养病/休息。",
     type: "residential",
     wealthTier: 2,
@@ -296,6 +308,7 @@ const LOCATIONS = {
   gov_office: {
     id: "gov_office",
     name: "政府办事大厅",
+    icon: "🏛️",
     desc: "办理各种证件/业务的地方。办证/贷款/社保都在这里。",
     type: "service",
     wealthTier: 2,
@@ -345,6 +358,7 @@ const LOCATIONS = {
   entertainment: {
     id: "entertainment",
     name: "娱乐城",
+    icon: "🎮",
     desc: "电影院/KTV/游戏厅聚集地。放松娱乐，消耗现金。",
     type: "recreation",
     wealthTier: 3,
@@ -364,6 +378,7 @@ const LOCATIONS = {
   temple: {
     id: "temple",
     name: "寺庙",
+    icon: "⛩️",
     desc: "城市中的古老寺庙。祈福/冥想/心灵慰藉。",
     type: "recreation",
     wealthTier: 2,

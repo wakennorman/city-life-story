@@ -120,8 +120,14 @@ function navigateTo(state, target, options) {
   }
 
   // ---- 4. 执行导航（免确认时直接走，需确认时弹窗）----
+  // 将计算好的消耗写入 options，确保 _doNavigate 能正确扣费
+  var navOptions = Object.assign({}, options, {
+    apCost: apCost,
+    cashCost: cashCost,
+  });
+
   if (skipConfirm) {
-    _doNavigate(state, target, options);
+    _doNavigate(state, target, navOptions);
     return true;
   }
 
@@ -148,14 +154,14 @@ function navigateTo(state, target, options) {
           text: confirmText,
           cls: "btn-primary",
           callback: function () {
-            _doNavigate(state, target, options);
+            _doNavigate(state, target, navOptions);
           },
         },
       ],
     });
   } else {
     // fallback: 无弹窗支持时直接导航
-    _doNavigate(state, target, options);
+    _doNavigate(state, target, navOptions);
   }
   return true;
 }
@@ -489,7 +495,14 @@ function _doNavigate(state, target, options) {
 
       var locName =
         LOCATIONS && LOCATIONS[locKey] ? LOCATIONS[locKey].name : locKey;
-      StateManager.addMessage("🚶 你来到了" + locName + "。", "info");
+      var costParts = [];
+      if (apCost > 0) costParts.push("⚡ -" + apCost + " 行动力");
+      if (cashCost > 0) costParts.push("💰 -¥" + cashCost);
+      var costNote = costParts.length ? "（" + costParts.join("，") + "）" : "";
+      StateManager.addMessage(
+        "🚶 你来到了" + locName + "。" + costNote,
+        "info",
+      );
 
       // 到达后导航到指定Tab（默认行动Tab，可传target.navTab覆盖）
       var postNavTab = target.navTab || "actions";

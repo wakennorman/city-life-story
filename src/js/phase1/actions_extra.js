@@ -1227,6 +1227,7 @@ window.selectDream = function (dreamId) {
       "event",
     );
   }
+  if (typeof startTutorial === "function") setTimeout(startTutorial, 200);
 };
 
 window.skipDreamForNow = function () {
@@ -1235,9 +1236,10 @@ window.skipDreamForNow = function () {
   var st = StateManager.getState();
   st.flags._dreamSkipped = true;
   StateManager.addMessage(
-    "🌟 你暂时没有确立人生目标。自由探索不会有惩罚，之后可在“个人成长”里重新选择并获得路线加成。",
+    "🌟 你暂时没有确立人生目标。自由探索不会有惩罚，之后可在”个人成长”里重新选择并获得路线加成。",
     "info",
   );
+  if (typeof startTutorial === "function") setTimeout(startTutorial, 200);
 };
 
 /** 梦想进度模态框 */

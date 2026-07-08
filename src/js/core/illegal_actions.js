@@ -49,7 +49,7 @@
   var ILLEGAL_ACTIONS = [
     {
       id: "illegal_steal_battery",
-      name: "🔋 偷电瓶",
+      name: "偷电瓶",
       desc: "凌晨潜入小区车棚偷电动车电瓶。来钱快，但被保安或警察抓住就完蛋。",
       icon: "🔋",
       apCost: 6,

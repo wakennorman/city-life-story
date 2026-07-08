@@ -832,16 +832,11 @@ function startScenarioGame(scenarioId) {
     // ---- 绑定顶栏按钮 ----
     bindHeaderButtons();
 
-    if (typeof startTutorial === "function") {
-      setTimeout(function () {
-        startTutorial();
-      }, 300);
-    }
     setTimeout(function () {
       if (typeof showForcedDreamModal === "function") {
         showForcedDreamModal();
       }
-    }, 500);
+    }, 300);
   };
 
   if (typeof startWithWorldNewsIntro === "function") {
@@ -1390,16 +1385,11 @@ function startSandboxGame() {
       if (typeof initCashCarousel === "function") initCashCarousel();
       // ---- 绑定顶栏按钮 ----
       bindHeaderButtons();
-      if (typeof startTutorial === "function") {
-        setTimeout(function () {
-          startTutorial();
-        }, 300);
-      }
       setTimeout(function () {
         if (typeof showForcedDreamModal === "function") {
           showForcedDreamModal();
         }
-      }, 500);
+      }, 300);
     };
 
     if (typeof startWithWorldNewsIntro === "function") {
@@ -1539,16 +1529,11 @@ function startNewGame() {
     if (typeof initCashCarousel === "function") initCashCarousel();
     // ---- 绑定顶栏按钮 ----
     bindHeaderButtons();
-    if (typeof startTutorial === "function") {
-      setTimeout(function () {
-        startTutorial();
-      }, 300);
-    }
     setTimeout(function () {
       if (typeof showForcedDreamModal === "function") {
         showForcedDreamModal();
       }
-    }, 500);
+    }, 300);
   };
 
   if (typeof startWithWorldNewsIntro === "function") {
