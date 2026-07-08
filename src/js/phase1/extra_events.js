@@ -82,7 +82,7 @@
           apply: function (st) {
             st.resources.cash += Random.int(80, 129);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 30);
-            st.needs.health = Math.max(0, st.needs.health - 3);
+            st.status.health = Math.max(0, st.status.health - 3);
             StateManager.addMessage(
               "☀️ 你在酷暑中坚持工作，赚了钱但身体吃不消。",
               "info",
@@ -167,7 +167,7 @@
           text: "🔥 找地方取暖",
           hint: "减少生病概率",
           apply: function (st) {
-            st.needs.health = Math.min(100, (st.needs.health || 50) + 8);
+            st.status.health = Math.min(100, (st.status.health || 50) + 8);
             StateManager.addMessage(
               "❄️ 你在救助站取暖，身体暖和过来了。",
               "success",
@@ -179,7 +179,7 @@
           hint: "高风险高回报",
           apply: function (st) {
             st.resources.cash += Random.int(120, 179);
-            st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
+            st.status.health = Math.max(0, (st.status.health || 50) - 5);
             if (Random.chance(0.3)) {
               st.flags._everSick = true;
               StateManager.addMessage(
@@ -530,7 +530,7 @@
       story:
         "你的身体发出了警报——持续的头痛和低烧让你不得不去医院。检查后发现是慢性疲劳综合症的前兆，医生开了一个疗程的药，费用¥200。",
       conditions: function (st) {
-        // [自洽修复] st.needs.health 不存在，改 st.status.health
+        // [自洽修复] st.status.health 不存在，改 st.status.health
         return ((st.status && st.status.health) || 50) < 35;
       },
       choices: [
@@ -540,7 +540,7 @@
           cost: 200,
           apply: function (st) {
             st.resources.cash -= 200;
-            st.needs.health = Math.min(100, (st.needs.health || 50) + 15);
+            st.status.health = Math.min(100, (st.status.health || 50) + 15);
             StateManager.addMessage(
               "🏥 你买了药开始治疗，感觉身体在慢慢恢复。",
               "success",
@@ -551,7 +551,7 @@
           text: "💪 扛一扛",
           hint: "不花钱但可能恶化",
           apply: function (st) {
-            st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
+            st.status.health = Math.max(0, (st.status.health || 50) - 5);
             StateManager.addMessage(
               "🏥 你决定硬扛，但身体似乎更差了……",
               "danger",
@@ -992,7 +992,7 @@
         "社区卫生服务中心贴出公告：本周有免费体检活动，包括血压、血糖、心电图等基础项目。平时去医院要花好几百呢。",
       conditions: function (st) {
         return (
-          // [自洽修复] st.needs.health 不存在，改 st.status.health
+          // [自洽修复] st.status.health 不存在，改 st.status.health
           st.player.day > 30 && ((st.status && st.status.health) || 100) < 90
         );
       },

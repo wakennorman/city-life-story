@@ -840,6 +840,15 @@ function renderLocationBar(state, parent) {
   div.style.cssText =
     "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;font-size:12px;";
 
+  // v3.53：添加当前位置名 — 解决移动端"我在哪"缺失（留存三要素之首）
+  var locKey = state.trade && state.trade.currentLocation;
+  var locObj = typeof getLocation === "function" ? getLocation(locKey) : null;
+  var locName = locObj ? locObj.name : "";
+  var locSpan = document.createElement("span");
+  locSpan.style.cssText =
+    "white-space:nowrap;font-weight:600;color:var(--accent);max-width:30vw;overflow:hidden;text-overflow:ellipsis;";
+  locSpan.textContent = "📍" + locName;
+
   // 背包容量
   var itemCount = 0;
   if (state.inventory && state.inventory.items) {
@@ -853,13 +862,16 @@ function renderLocationBar(state, parent) {
   var bagSpan = document.createElement("span");
   bagSpan.style.cssText = "white-space:nowrap;font-weight:600;";
   bagSpan.textContent = "🎒" + itemCount + "/" + totalCap + hasStorage;
-  div.appendChild(bagSpan);
 
   // 分隔符
   var sep = document.createElement("span");
   sep.style.cssText = "color:var(--text-muted);font-size:10px;";
   sep.textContent = "·";
+
+  // 从左到右：位置·背包 | (右侧：住所+天气)
+  div.appendChild(locSpan);
   div.appendChild(sep);
+  div.appendChild(bagSpan);
 
   // 住所 + 天气预报（右侧组，与背包不抢空间）
   var houseData =
@@ -986,6 +998,11 @@ function renderStatsStrip(state, parent) {
       var fill = document.createElement("div");
       fill.className = "mss-fill " + cfg.cls;
       fill.style.width = Math.max(0, Math.min(100, val)) + "%";
+      // v3.53：预警态用实心主题色替换渐变，信号更醒目
+      if (isBad) {
+        fill.style.background = cfg.color;
+        fill.style.animation = "ap-blink 0.9s infinite";
+      }
       track.appendChild(fill);
       cell.appendChild(track);
 
@@ -1246,14 +1263,20 @@ function renderGoalStrip(state, parent) {
 }
 
 function renderActiveNews(state, parent) {
+  // v3.53：移动端最多展示 1 条新闻，避免把「🎯 当前目标」和行动卡片挤出首屏
+  const _isMob = window.innerWidth <= 768;
+  let _shown = 0;
+  const _maxN = _isMob ? 1 : 99;
   if (state.activeNews && state.activeNews.length > 0) {
     for (const news of state.activeNews) {
       // 开局定基调新闻只影响 _worldParams，不在日常新闻栏重复展示
       if (news._isIntroNews) continue;
+      if (_shown >= _maxN) break;
       const banner = document.createElement("div");
       banner.className = "news-banner";
       banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
       parent.appendChild(banner);
+      _shown++;
     }
   }
 

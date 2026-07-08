@@ -1529,7 +1529,7 @@ function executeScavengeRoute(routeId) {
     if (Random.chance(0.08)) {
       var loss = Math.min(5, earned);
       earned -= loss;
-      st.needs.health = Math.max(0, (st.needs.health || 100) - 3);
+      st.status.health = Math.max(0, (st.status.health || 100) - 3);
       st.player.fame = Math.max(0, st.player.fame - 1);
       msg += " 被城管看见了，追赶中丢了 ¥" + loss + "。";
       msgType = "warning";

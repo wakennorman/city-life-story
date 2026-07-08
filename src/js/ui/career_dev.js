@@ -2521,7 +2521,7 @@ function careerTakePaidLeave() {
   cap.burnout = Math.max(0, burnout - 45);
   if (state.needs) {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 25);
-    state.needs.health = Math.min(100, (state.needs.health || 70) + 8);
+    state.status.health = Math.min(100, (state.status.health || 70) + 8);
   }
   p.mental = Math.min(100, (p.mental || 30) + 15);
   job._lastPaidLeaveDay = p.day;

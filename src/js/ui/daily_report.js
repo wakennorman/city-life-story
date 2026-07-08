@@ -520,8 +520,12 @@ function generateTomorrowPreviewHTML(state) {
       "😴 太累了！明天少跑点，优先睡一觉（疲劳" + needs.fatigue + "/100）",
     );
   }
-  if (needs.health !== undefined && needs.health < 35) {
-    suggestions.push("🏥 身体快扛不住了！明天去医院看看吧！");
+  // [自洽修复] needs.health 在 state.needs 中不存在，改为 state.status.health
+  var healthVal = (state.status && state.status.health) || 100;
+  if (healthVal < 35) {
+    suggestions.push(
+      "🏥 身体快扛不住了（健康" + healthVal + "/100）！明天去医院看看吧！",
+    );
   }
   if (needs.hygiene !== undefined && needs.hygiene < 20) {
     suggestions.push("🚿 卫生太差了，去澡堂洗个澡吧。");

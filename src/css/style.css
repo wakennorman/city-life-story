@@ -3345,6 +3345,17 @@ body {
 
   /* ===== 移动端优化：状态行 ===== */
 
+  /* v3.53：天气时段行在 481-768px 范围内也防折行（<=480px 已有） */
+  #time-slot-indicator {
+    overflow-x: auto;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  #time-slot-indicator::-webkit-scrollbar {
+    display: none;
+  }
+
   /* 位置+背包状态行 */
   .mobile-location-strip {
     display: flex !important;
