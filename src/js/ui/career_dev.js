@@ -1146,6 +1146,16 @@ function renderCareerJobs(state, parent) {
       (levelData ? levelData.desc : "") +
       "</div>";
 
+    // v3.51：职业风险标识
+    var _riskProfile = _CAREER_RISK_PROFILES && _CAREER_RISK_PROFILES[currentJob.path];
+    if (_riskProfile) {
+      html +=
+        '<div style="margin-top:6px;display:flex;align-items:center;gap:4px;">' +
+        '<span style="font-size:9px;padding:1px 6px;background:rgba(239,83,80,0.12);border-radius:10px;color:#e57373;">⚠️ 职业风险：' +
+        _riskProfile.diseaseMsg +
+        "</span></div>";
+    }
+
     // 晋升条件
     var nextLevel = getNextCareerLevel(currentJob.path, currentJob.levelId);
     if (nextLevel) {
@@ -1865,7 +1875,7 @@ function renderCareerOverview(state, parent) {
     '<div class="section" style="margin-top:8px;"><h3>🗺️ 职业路径全景</h3>';
   html +=
     '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  html += '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
   for (var _pki = 0; _pki < catOrder.length; _pki++) {
     var _catId = catOrder[_pki];
     for (var _pk2 in CAREER_PATHS) {
@@ -2654,6 +2664,16 @@ function applyJobhop(offerId) {
       CAREER_PATHS[offer.path].name +
       "）",
   });
+  // v3.51：跨路径跳槽成就标记
+  var _oldPath = job.path;
+  if (_oldPath !== offer.path) {
+    state.flags._crossPathJobhop = true;
+    // 追踪所有走过的路径（字符串集合）
+    var _pathSet = state.flags._careerPathsWorked || {};
+    _pathSet[_oldPath] = true;
+    _pathSet[offer.path] = true;
+    state.flags._careerPathsWorked = _pathSet;
+  }
   job.path = offer.path;
   job.levelId = offer.levelId;
   job.levelName = offer.levelName;
@@ -2935,6 +2955,12 @@ function applyCareerPromotion(pathId, levelId) {
     day: state.player.day,
     event: "晋升：" + oldJob.levelName + " → " + level.name,
   });
+  // v3.51：首次晋升成就标记
+  if (!state.flags._careerFirstPromotion) {
+    state.flags._careerFirstPromotion = true;
+  }
+  state.flags._careerPromotionCount =
+    (state.flags._careerPromotionCount || 0) + 1;
 
   state.career.currentJob.levelId = levelId;
   state.career.currentJob.levelName = level.name;
@@ -3307,6 +3333,212 @@ function tickCareerJobDaily(state) {
         "warning",
       );
     }
+  }
+
+  // ----- 职业健康风险（v3.51）-----
+  tickCareerOccupationalRisk(state);
+
+  // ----- 倦怠恢复成就追踪 -----
+  if ((cap.burnout || 0) >= 70) {
+    state.flags._burnoutWasHigh = true;
+  }
+  if (state.flags._burnoutWasHigh && (cap.burnout || 0) <= 20) {
+    state.flags._burnoutSurvivor = true;
+  }
+}
+
+// ============================================================
+// 💊 职业健康风险系统（v3.51）
+// 设计参考：《This War of Mine》职业代价 / 真实职业病数据 / 峰终定律
+// 每个职业路径有专属的健康风险，体现职业的真实代价
+// ============================================================
+
+var _CAREER_RISK_PROFILES = {
+  // IT：颈椎病+过劳综合征（996文化）
+  tech: {
+    dailyProb: [0.003, 0.005, 0.008, 0.012],
+    msgs: [
+      "🖥️ 长时间盯屏幕，脖子开始发酸——职业病正在悄悄找上你",
+      "💻 连续敲代码伤了颈椎，健康受损",
+      "😫 高级工程师的颈椎病发作，健康明显下降",
+      "🏥 架构师的慢性过劳状态，身体在透支",
+    ],
+    healthDmg: [1, 2, 3, 5],
+    attrKey: "mental",
+    attrDmg: [0, 0.5, 1, 1.5],
+    flagKey: "_careerDiseased_tech",
+    diseaseMsg: "颈椎病/过劳综合征",
+  },
+  // 金融：焦虑症+睡眠障碍（业绩压力）
+  finance: {
+    dailyProb: [0.002, 0.004, 0.006, 0.009],
+    msgs: [
+      "📊 报表截止日，压力让你今晚难以入睡",
+      "💼 季度审计压力积累，情绪开始绷紧",
+      "😰 长期高压核账，睡眠质量下降，健康悄悄流失",
+      "🧠 财务总监的决策压力已造成慢性焦虑，精神损耗",
+    ],
+    healthDmg: [1, 2, 3, 4],
+    attrKey: "mental",
+    attrDmg: [0.5, 1, 1.5, 2],
+    flagKey: "_careerDiseased_finance",
+    diseaseMsg: "焦虑症/睡眠障碍",
+  },
+  // 销售：情绪耗竭（长期高压推销）
+  sales: {
+    dailyProb: [0.002, 0.004, 0.007, 0.01],
+    msgs: [
+      "📞 一天接了几十个客户电话，情绪开始消耗",
+      "😤 被拒绝太多次，心理韧性在流失",
+      "🔥 长期高压谈单让你情绪耗竭，魅力和精神双双受损",
+      "💀 销售经理的情绪黑洞——你开始麻木了",
+    ],
+    healthDmg: [1, 2, 3, 4],
+    attrKey: "charm",
+    attrDmg: [0.5, 1, 1.5, 2],
+    flagKey: "_careerDiseased_sales",
+    diseaseMsg: "情绪耗竭综合征",
+  },
+  // 医护：感染风险（医院环境）
+  medical: {
+    dailyProb: [0.004, 0.006, 0.008, 0.01],
+    msgs: [
+      "🦠 护理员接触传染患者，轻微感染风险",
+      "😷 注册护士值夜班期间接触高危患者，有感染风险",
+      "🏥 主管护师长期暴露高强度医护环境，健康悄悄流失",
+      "⚠️ 护士长长期超负荷工作，免疫力下降",
+    ],
+    healthDmg: [2, 3, 4, 5],
+    attrKey: "physique",
+    attrDmg: [0, 0.5, 1, 1.5],
+    flagKey: "_careerDiseased_medical",
+    diseaseMsg: "职业感染/过劳",
+  },
+  // 医师：感染+超时工作（医生版）
+  doctor: {
+    dailyProb: [0.005, 0.007, 0.01, 0.012],
+    msgs: [
+      "🩺 实习医生连轴转，体力大幅透支",
+      "😴 住院医师值36小时班，身体已在极限边缘",
+      "🦠 主治医师接触高感染风险患者，健康受损",
+      "⚡ 副主任医师长期精力超支，慢性职业病正在形成",
+    ],
+    healthDmg: [3, 4, 5, 6],
+    attrKey: "physique",
+    attrDmg: [0.5, 1, 1.5, 2],
+    flagKey: "_careerDiseased_doctor",
+    diseaseMsg: "职业感染/过劳综合征",
+  },
+  // 物流：腰椎损伤+交通风险
+  logistics: {
+    dailyProb: [0.005, 0.008, 0.006, 0.005],
+    msgs: [
+      "📦 长时间搬运重物，腰椎开始酸痛",
+      "🛵 骑电动车风吹日晒，体力悄悄流失",
+      "😤 站点主管还得身体力行，腰腿酸痛",
+      "📋 区域经理长期出差，体力消耗比想象中大",
+    ],
+    healthDmg: [2, 3, 2, 2],
+    attrKey: "physique",
+    attrDmg: [1, 1.5, 1, 0.5],
+    flagKey: "_careerDiseased_logistics",
+    diseaseMsg: "腰椎损伤/体力透支",
+  },
+  // 餐饮：烫伤+腰腿痛
+  catering: {
+    dailyProb: [0.004, 0.006, 0.008, 0.007],
+    msgs: [
+      "🍳 餐厅服务站了一天，腿开始肿胀",
+      "🔥 厨房油烟、高温环境让体力加速流失",
+      "🏃 厨师长长时间站立操作，腰腿已成职业伤",
+      "🌡️ 店长操劳过度，你不记得上次好好吃饭是什么时候了",
+    ],
+    healthDmg: [2, 3, 4, 3],
+    attrKey: "physique",
+    attrDmg: [0.5, 1, 1.5, 1],
+    flagKey: "_careerDiseased_catering",
+    diseaseMsg: "职业性腰腿痛/油烟肺",
+  },
+  // 教育：咽喉炎+嗓子损伤
+  education: {
+    dailyProb: [0.003, 0.005, 0.007, 0.006],
+    msgs: [
+      "🗣️ 今天讲了六节课，嗓子开始沙哑",
+      "📚 教师职业嗓子损耗，咽喉已在发炎边缘",
+      "😮‍💨 骨干教师长期高强度授课，慢性咽喉炎找上门",
+      "🎤 管理+授课双重消耗，魅力与精力同步流失",
+    ],
+    healthDmg: [1, 2, 3, 3],
+    attrKey: "charm",
+    attrDmg: [0.5, 1, 1.5, 1.5],
+    flagKey: "_careerDiseased_edu",
+    diseaseMsg: "慢性咽喉炎/职业性嗓音病",
+  },
+  // 设计：视力退化（其余路径不触发）
+  design: {
+    dailyProb: [0.002, 0.004, 0.005, 0.007],
+    msgs: [
+      "👁️ 长时间盯着显示器做设计，眼睛开始干涩",
+      "🖼️ 资深设计师的用眼量惊人，视力在悄悄下降",
+      "💡 设计主管高强度创意输出，精神和视力双重消耗",
+      "🎨 创意总监的大脑一刻不停，过劳开始侵蚀身体",
+    ],
+    healthDmg: [1, 2, 2, 4],
+    attrKey: "mental",
+    attrDmg: [0.5, 1, 1, 2],
+    flagKey: "_careerDiseased_design",
+    diseaseMsg: "视力退化/过劳综合征",
+  },
+};
+
+function tickCareerOccupationalRisk(state) {
+  if (!state.career || !state.career.currentJob) return;
+  var job = state.career.currentJob;
+  var profile = _CAREER_RISK_PROFILES[job.path];
+  if (!profile) return;
+
+  // 找当前等级索引
+  var path = CAREER_PATHS[job.path];
+  if (!path) return;
+  var levelIdx = 0;
+  for (var i = 0; i < path.levels.length; i++) {
+    if (path.levels[i].id === job.levelId) {
+      levelIdx = i;
+      break;
+    }
+  }
+
+  var prob = profile.dailyProb[levelIdx] || 0.003;
+  var rng = Random ? Random.float(0, 1) : Math.random();
+  if (rng >= prob) return;
+
+  // 触发职业风险
+  state.status = state.status || {};
+  var dmg = profile.healthDmg[levelIdx] || 1;
+  state.status.health = Math.max(0, (state.status.health || 100) - dmg);
+
+  var attrKey = profile.attrKey;
+  var attrDmg = profile.attrDmg[levelIdx] || 0;
+  if (attrDmg > 0 && state.player.attributes) {
+    state.player.attributes[attrKey] = Math.max(
+      0,
+      (state.player.attributes[attrKey] || 0) - attrDmg,
+    );
+  }
+
+  StateManager.addMessage(profile.msgs[levelIdx], "warning");
+
+  // 设置职业病成就标记
+  state.flags[profile.flagKey] = true;
+  state.flags._hasOccupationalDisease = true;
+
+  // 严重级别（高等级岗位伤害≥4）额外写入历史
+  if (dmg >= 4) {
+    state.career.history = state.career.history || [];
+    state.career.history.push({
+      day: state.player.day,
+      event: "⚠️ 职业病发作：" + profile.diseaseMsg + "（健康-" + dmg + "）",
+    });
   }
 }
 

@@ -2240,6 +2240,130 @@ const ACHIEVEMENTS = [
       return !!(st.flags && st.flags._refusedIllegalJob);
     },
   },
+
+  // ============================================================
+  // 职业路径成就（v3.51 新增，对应 CAREER_PATHS 上班族系统）
+  // 设计参考：BitLife 职业成就 / Papers Please 隐藏记录 / 大多数成长感
+  // ============================================================
+  {
+    id: "career_first_promotion",
+    name: "第一级台阶",
+    desc: "在职业路径中第一次晋升。",
+    story:
+      "你递交了晋升申请，然后等待。邮件弹出来的那一刻，你意识到：这条路，你还能走得更远。",
+    icon: "📈",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return !!(st.flags && st.flags._careerFirstPromotion);
+    },
+  },
+  {
+    id: "career_hundred_days",
+    name: "百日职场人",
+    desc: "在同一职业路径岗位工作满100天。",
+    story:
+      "一百天。不是每个人都能在这座城市的格子间里撑过一百天——你做到了，而且你还打算继续。",
+    icon: "💼",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      return !!(
+        st.career &&
+        st.career.currentJob &&
+        (st.career.currentJob.workDays || 0) >= 100
+      );
+    },
+  },
+  {
+    id: "career_cross_path",
+    name: "职场变色龙",
+    desc: "从一条职业路径跳槽到完全不同的另一条路径。",
+    story:
+      "IT码农去做了销售，财务助理转行做了厨师——你不把自己困在一个标签里。每次重新开始，你都比上次更清楚自己要什么。",
+    icon: "🦎",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._crossPathJobhop);
+    },
+  },
+  {
+    id: "career_max_level",
+    name: "路径巅峰",
+    desc: "在某条职业路径达到最高级别。",
+    story:
+      "没有比这更高的台阶了。从第一天到今天，你用时间换来了最高的头衔——现在是做别的事情的时候了。",
+    icon: "🏔️",
+    category: "里程碑",
+    hidden: false,
+    check: function (st) {
+      if (!st.career || !st.career.currentJob) return false;
+      var job = st.career.currentJob;
+      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path])
+        return false;
+      var levels = CAREER_PATHS[job.path].levels;
+      return levels.length > 0 && job.levelId === levels[levels.length - 1].id;
+    },
+  },
+  {
+    id: "career_multipath",
+    name: "职场探险家",
+    desc: "尝试过3条或以上不同的职业路径。",
+    story:
+      "销售、IT、物流、餐饮……你每换一次，就多了一套对世界的理解。这个城市的每个行业，你都留下了脚印。",
+    icon: "🗺️",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      if (!st.flags || !st.flags._careerPathsWorked) return false;
+      return Object.keys(st.flags._careerPathsWorked).length >= 3;
+    },
+  },
+  {
+    id: "career_burnout_survivor",
+    name: "凤凰涅槃",
+    desc: "从职业倦怠巅峰（≥70）完全恢复（≤20）。",
+    story:
+      "那段时间你几乎要崩溃了——每天上班像上刑场。但你撑过来了，给自己放了个假，然后重新站起来。这才是真正的职场韧性。",
+    icon: "🔥",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._burnoutSurvivor);
+    },
+  },
+  {
+    id: "career_top_performer",
+    name: "绩效之王",
+    desc: "业绩值达到90分（隐藏成就）。",
+    story:
+      "年终绩效S+。你的名字出现在了公司优秀员工名单上——那种被看见的感觉，和薪资一样重要。",
+    icon: "🏆",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(
+        st.career &&
+        st.career.currentJob &&
+        (st.career.currentJob.performance || 0) >= 90 &&
+        (st.career.currentJob.workDays || 0) >= 30
+      );
+    },
+  },
+  {
+    id: "career_occupational_disease",
+    name: "职业的代价",
+    desc: "因职业风险导致健康受损——每个行业都有自己的职业病。",
+    story:
+      "医生的感染风险、IT的颈椎病、物流的腰椎损伤……你用身体记住了这份工作的代价。但你还在坚持——因为这座城市的生存不允许你停下来。",
+    icon: "⚕️",
+    category: "隐藏",
+    hidden: true,
+    check: function (st) {
+      return !!(st.flags && st.flags._hasOccupationalDisease);
+    },
+  },
 ];
 
 /**
