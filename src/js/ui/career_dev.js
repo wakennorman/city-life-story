@@ -1147,6 +1147,15 @@ function renderCareerJobs(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达该路径最高级别！</div>';
     }
 
+    // ---- 辞职按钮 ----
+    html +=
+      '<div style="margin-top:12px;padding:8px;background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.15);border-radius:6px;">';
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">⚠️ 辞职后当前工作清零，需重新求职。职业倦怠归零，但行业资源-5。</div>';
+    html +=
+      '<button class="btn btn-sm" style="background:rgba(255,80,80,0.15);color:var(--danger);border:1px solid rgba(255,80,80,0.3);" onclick="resignCareerJob()">🚪 辞职</button>';
+    html += "</div>";
+
     // ---- 工作行动（v3.48：分组展示 — 业绩提升 vs 压力缓解）----
     html +=
       '<div style="margin-top:12px;"><h3 style="font-size:13px;">⚡ 工作行动</h3>';
@@ -1689,6 +1698,46 @@ function renderCareerOverview(state, parent) {
         '<div style="margin-top:8px;font-size:11px;color:var(--accent);">🏆 已到达路径最高级！考虑跳槽或创业</div>';
     }
     html += "</div></div>";
+  }
+
+  // === 1.5、副业状态（有副业时显示）===
+  if (state.sideHustle && state.sideHustle.active) {
+    var sh = state.sideHustle;
+    var shTypeNames = {
+      stall: "摆摊",
+      driving: "代驾",
+      freelance: "自由职业",
+      content: "内容创作",
+      sharing: "共享经济",
+      community: "社区服务",
+    };
+    var shTypeName = shTypeNames[sh.type] || sh.type || "未知";
+    html +=
+      '<div class="section" style="margin-top:8px;"><h3>🔀 副业状态</h3><div class="card" style="padding:10px;">';
+    html +=
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    html +=
+      '<div style="font-size:12px;font-weight:bold;">🔀 ' +
+      shTypeName +
+      '</div><div style="font-size:10px;color:var(--success);">● 进行中</div>';
+    html += "</div>";
+    html +=
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;color:var(--text-muted);">';
+    html +=
+      '<div>💰 今日收入: <b style="color:var(--accent);">¥' +
+      (sh.income || 0).toLocaleString() +
+      "</b></div>";
+    html +=
+      '<div>📢 口碑: <b style="color:var(--accent);">' +
+      Math.round(sh.reputation || 0) +
+      "</b></div>";
+    html +=
+      '<div>😫 疲劳: <b style="color:' +
+      ((sh.fatigue || 0) > 60 ? "var(--danger)" : "var(--accent)") +
+      '">' +
+      Math.round(sh.fatigue || 0) +
+      "</b></div>";
+    html += "</div></div></div>";
   }
 
   // === 二、职业资本雷达卡 ===
@@ -2877,16 +2926,41 @@ function resignCareerJob() {
 
     // 记录辞职前的职位名（用于离职消息）
     var oldJobName = state.career.currentJob.levelName;
+    var oldPath = state.career.currentJob.path;
+    var oldWorkDays = state.career.currentJob.workDays || 0;
 
+    // 记录到历史（增强版：包含完整路径信息）
     state.career.history.push({
       day: state.player.day,
-      event: "辞职：离开了" + oldJobName + "岗位",
+      path: oldPath,
+      levelId: state.career.currentJob.levelId,
+      levelName: oldJobName,
+      salary: state.career.currentJob.salary,
+      workDays: oldWorkDays,
+      event: "辞职：离开了" + oldJobName + "岗位（在职" + oldWorkDays + "天）",
     });
+
     state.career.currentJob = null;
 
+    // 重置职业倦怠，扣除行业资源（重新求职需重新积累）
+    var cap = ensureCareerCapital(state);
+    cap.burnout = 0;
+    cap.industryResources = Math.max(0, (cap.industryResources || 0) - 5);
+    clampCareerCapital(cap);
+
+    var pathLabel = oldPath
+      ? (CAREER_PATHS[oldPath] ? CAREER_PATHS[oldPath].icon + " " : "") +
+        (CAREER_PATHS[oldPath] ? CAREER_PATHS[oldPath].name : "")
+      : "";
+
     StateManager.addMessage(
-      "👋 你已辞去当前工作（" + oldJobName + "）",
-      "info",
+      "👋 你已辞去" +
+        pathLabel +
+        oldJobName +
+        "（在职" +
+        oldWorkDays +
+        "天）。职业倦怠清零，行业资源-5。",
+      "warning",
     );
 
     // 自动切换到"上班族"子Tab，方便立刻找工作

@@ -8630,4 +8630,425 @@
       },
     ],
   });
+
+  // ====== 联动事件44：老手特遇——配送老主顾的谢礼 ======
+  // 设计意图：玩家长期做配送/跑腿类工作后，遇到回头客的主动推荐，体现"城市开始认识你"
+  CROSS_EVENTS.push({
+    id: "delivery_regular_customer",
+    phase: "street",
+    icon: "📦",
+    title: "老主顾的推荐",
+    story:
+      "今天送快递时，收件人认出你了——'你上次给我送过包裹对吧？我朋友公司正好在招配送主管，月薪8000起，你要不要试试？'\n\n对方递来一张名片，上面印着'顺达物流·招聘部'。你看了看手机里的配送记录，这月已经跑了150单了。",
+    // [自洽新增] conditions：检查配送类副业活跃 或 物流路径工作 或 累计配送行动≥30
+    conditions: function (st) {
+      var hasDrivingSideHustle =
+        st.sideHustle && st.sideHustle.type === "driving" && st.sideHustle.active;
+      var hasLogisticsJob =
+        st.career &&
+        st.career.currentJob &&
+        st.career.currentJob.path === "logistics";
+      var hasDeliveryFreq =
+        st.stats &&
+        st.stats.actionFreq &&
+        ((st.stats.actionFreq["delivery_rider"] || 0) +
+          (st.stats.actionFreq["courier_gig"] || 0) +
+          (st.stats.actionFreq["package_delivery"] || 0)) >=
+          30;
+      var hasDrivingSkill =
+        st.skills && st.skills.driving && st.skills.driving.level >= 10;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 30 &&
+        (hasDrivingSideHustle || hasLogisticsJob || hasDeliveryFreq) &&
+        hasDrivingSkill &&
+        !st.flags._deliveryRegularSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 投递简历，试试管理岗",
+        hint: "开启物流管理路线",
+        apply: function (st) {
+          st.flags._deliveryRegularSeen = true;
+          st.flags._deliveryRegularReferred = st.player.day;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "📋 你把简历发了过去。对方说'明天会有HR联系你'。你心里有点忐忑——从底层骑手到管理岗，这是第一次有人主动给你机会。名气+3，心情+8。",
+            "success",
+          );
+          // 后续链式：HR联系
+          if (typeof scheduleChainEvent === "function") {
+            scheduleChainEvent(st, "hr_call_delivery", 2, "street");
+          }
+        },
+      },
+      {
+        text: "📱 先要个联系方式，慢慢了解",
+        hint: "保留机会",
+        apply: function (st) {
+          st.flags._deliveryRegularSeen = true;
+          st.flags._deliveryRegularContact = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 4);
+          StateManager.addMessage(
+            "📱 你加了对方微信。他说'有需要随时找我'。虽然不急，但多一个选项总是好的。心情+4。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 算了，配送挺好的",
+        hint: "拒绝机会",
+        apply: function (st) {
+          st.flags._deliveryRegularSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2);
+          StateManager.addMessage(
+            "🚶 你笑着谢绝了。送快递虽然累，但至少自由。今天多跑了20单，赚了¥300。心情+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 联动事件45：专业人士视角——识别假冒伪劣电动工具 ======
+  // 设计意图：修理技能到达门槛后解锁"专业人士视角"事件，体现技能积累的价值
+  CROSS_EVENTS.push({
+    id: "pro_identify_fake_tools",
+    phase: "street",
+    icon: "🔧",
+    title: "假货识破眼",
+    story:
+      "路边有人摆摊卖「名牌电动工具」，价格只有商场的三分之一。电钻、角磨机堆了一地，摊主吆喝着「厂家直销，保修一年」。\n\n旁边有人掏钱要买，但你扫了一眼那做工——焊缝粗糙、标牌印刷模糊。你心里有了数。",
+    // [自洽新增] conditions：修理技能≥40（专业门槛）
+    conditions: function (st) {
+      var repairLevel =
+        (st.skills && st.skills.repair && st.skills.repair.level) || 0;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 20 &&
+        repairLevel >= 40 &&
+        !st.flags._proIdentifyFakeSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🗣️ 提醒想买的人别上当",
+        hint: "名声+3，道德+1",
+        apply: function (st) {
+          st.flags._proIdentifyFakeSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.player.morality = Math.min(
+            100,
+            (st.player.morality || 50) + 2,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage(
+            "🗣️ 你走过去对正要买的摊主说：「这焊点是砂轮机磨的，不是机器焊的，假货。」那人愣了一下，把东西放下了。摊主瞪了你一眼。你帮了别人，也得罪了人。名气+3，道德+2，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🔍 自己也买一把试试真假",
+        hint: "花¥80验证，修理XP+20",
+        cost: 80,
+        apply: function (st) {
+          st.flags._proIdentifyFakeSeen = true;
+          st.skills.repair.xp = Math.min(
+            1000,
+            (st.skills.repair.xp || 0) + 20,
+          );
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 10) + 1,
+          );
+          StateManager.addMessage(
+            "🔍 你花¥80买了一把，拆开一看——电机是二手翻新的，电路板是手工焊的。你笑了：「果然是假的。」但验证过程让你对仿造工艺有了更深的理解。修理XP+20，智力+1。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤐 不关我事，走人",
+        hint: "无事发生",
+        apply: function (st) {
+          st.flags._proIdentifyFakeSeen = true;
+          st.player.morality = Math.max(
+            0,
+            (st.player.morality || 50) - 1,
+          );
+          StateManager.addMessage(
+            "🤐 你转身走了。虽然知道那是假货，但多一事不如少一事。只是心里有点过意不去。道德-1。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 联动事件46：NPC好感积累——意外的信息泄露 ======
+  // 设计意图：NPC好感达到阈值后，对方无意中透露一个隐藏信息/机会
+  CROSS_EVENTS.push({
+    id: "npc_affinity_info_leak",
+    phase: "street",
+    icon: "🤫",
+    title: "无心之言藏玄机",
+    story: "",
+    // [自洽新增] conditions：任意NPC好感≥60时触发
+    conditions: function (st) {
+      if (!st.relationships) return false;
+      for (var nid in st.relationships) {
+        var rel = st.relationships[nid];
+        if (rel && rel.affinity >= 60 && rel.met) {
+          // 排除已触发过此类型事件的NPC
+          if (st.flags["_npcInfoLeaked_" + nid]) continue;
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [], // 动态生成
+    // [自洽新增] 动态生成选项：基于最高好感NPC
+    dynamicApply: function (st) {
+      // 找到最高好感NPC
+      var bestNid = null;
+      var bestAff = -200;
+      for (var nid in st.relationships) {
+        var rel = st.relationships[nid];
+        if (rel && rel.affinity > bestAff) {
+          bestAff = rel.affinity;
+          bestNid = nid;
+        }
+      }
+      if (!bestNid) return null;
+
+      var npcDef = null;
+      if (typeof NPCS !== "undefined") {
+        for (var ni = 0; ni < NPCS.length; ni++) {
+          if (NPCS[ni].id === bestNid) {
+            npcDef = NPCS[ni];
+            break;
+          }
+        }
+      }
+      if (!npcDef) return null;
+
+      st.flags["_npcInfoLeaked_" + bestNid] = true;
+
+      // 根据NPC角色提供不同类型的信息
+      var infoType = "";
+      var infoText = "";
+      var reward = {};
+      switch (bestNid) {
+        case "aunt_wang":
+          infoType = "房租信息";
+          infoText = "王大婶随口说：「下个月老城区要改造，你那片房租可能要涨30%。趁现在赶紧找新地方。」";
+          reward = { rentWarning: true };
+          break;
+        case "boss_li":
+          infoType = "工程情报";
+          infoText = "李工头喝多了说漏嘴：「下周城东那块地要开拍了，缺人手，一天¥300起。想去的明天来找我。」";
+          reward = { tempJobChance: true };
+          break;
+        case "chef_chen":
+          infoType = "食材行情";
+          infoText = "陈师傅一边颠勺一边说：「下个月海鲜要涨价，批发市场的鱼贵一倍。你如果有存货赶紧出手。」";
+          reward = { priceWarning: "seafood" };
+          break;
+        case "old_zhou":
+          infoType = "废品行情";
+          infoText = "老周说：「最近铜价涨疯了，你家里有啥旧铜线赶紧翻出来。我明天去回收站问问价。」";
+          reward = { scrapBonus: "copper" };
+          break;
+        case "sister_zhang":
+          infoType = "招聘内推";
+          infoText = "张姐说：「我这边有个大厂外包的活，日结¥400，干一个月。你要不要试试？不用面试，我直接推。」";
+          reward = { tempJobChance: true };
+          break;
+        case "xiao_mei":
+          infoType = "学习资源";
+          infoText = "小美说：「我导师那边有个免费的线上编程课，结业发证书。你要不要报一个？对你找工作有帮助。」";
+          reward = { courseOpportunity: true };
+          break;
+        default:
+          infoType = "城市情报";
+          infoText = npcDef.name + "随口说：「对了，我听说最近" + npcDef.location + "那边有好事，你没事可以去转转。」";
+          reward = { locationHint: npcDef.location };
+      }
+
+      return {
+        story:
+          "你正在和" +
+          npcDef.name +
+          "闲聊，" +
+          infoText +
+          "\n\n你心里一动——这可能是个机会。",
+        choices: [
+          {
+            text: "📝 记下来，以后留意",
+            hint: "获得情报价值",
+            apply: function (s) {
+              if (reward.rentWarning) {
+                s.flags.zhaojieRentInfo = true;
+                StateManager.addMessage(
+                  "📝 你把王大婶的提醒记在了手机备忘录里。下个月如果房东真要涨租，你就有准备了。",
+                  "success",
+                );
+              }
+              if (reward.tempJobChance) {
+                s.flags._npcTempJobReferral = bestNid;
+                s.flags._npcTempJobDay = s.player.day;
+                StateManager.addMessage(
+                  "📝 你记住了这个信息。" +
+                    npcDef.name +
+                    "的推荐比海投简历靠谱多了。",
+                  "success",
+                );
+              }
+              if (reward.priceWarning) {
+                s.flags._priceWarning = reward.priceWarning;
+                s.flags._priceWarningDay = s.player.day;
+                StateManager.addMessage(
+                  "📝 你记下了" +
+                    npcDef.name +
+                    "的提醒。如果" +
+                    reward.priceWarning +
+                    "真的要涨价，你提前囤货就能赚差价。",
+                  "info",
+                );
+              }
+              if (reward.scrapBonus) {
+                s.flags._scrapPriceAlert = reward.scrapBonus;
+                s.flags._scrapAlertDay = s.player.day;
+                StateManager.addMessage(
+                  "📝 你赶紧回家翻了翻——还真有一些旧铜线！明天拿去卖能多赚不少。",
+                  "success",
+                );
+              }
+              if (reward.courseOpportunity) {
+                s.flags._freeCourseLink = true;
+                s.flags._courseLinkDay = s.player.day;
+                s.player.intelligence = Math.min(
+                  100,
+                  (s.player.intelligence || 10) + 1,
+                );
+                StateManager.addMessage(
+                  "📝 你让小美把链接发你了。免费课程+证书，这对找工作确实有帮助。智力+1。",
+                  "info",
+                );
+              }
+              if (reward.locationHint) {
+                s.flags._locationHint = reward.locationHint;
+                s.flags._locationHintDay = s.player.day;
+                StateManager.addMessage(
+                  "📝 你记下了" +
+                    npcDef.name +
+                    "的话。" +
+                    reward.locationHint +
+                    "——也许那里真的有好事。",
+                  "info",
+                );
+              }
+            },
+          },
+          {
+            text: "🤷 随口一说，不算数",
+            hint: "忽略情报",
+            apply: function (s) {
+              StateManager.addMessage(
+                "🤷 你笑了笑没当真。城市里每天流传各种消息，真正有用的没几个。",
+                "info",
+              );
+            },
+          },
+        ],
+      };
+    },
+  });
+
+  // ====== 联动事件47：天气×位置组合——暴雨中的批发市场 ======
+  // 设计意图：暴雨天气 + 批发市场 = 独特情境事件，体现环境与地点的交叉影响
+  CROSS_EVENTS.push({
+    id: "rain_wholesale_opportunity",
+    phase: "street",
+    icon: "🌧️",
+    title: "雨中的批发市场",
+    story:
+      "暴雨突至，你被困在批发市场的一个大棚下。周围都是忙着收摊的商贩，但你也注意到——雨越大，越多人急着出货。\n\n一个卖防水布的老板冲你喊：「小伙子，下雨天买防水布便宜！平时¥50一捆，今天¥30！」",
+    // [自洽新增] conditions：暴雨天气 + 在批发市场
+    conditions: function (st) {
+      var isStormy =
+        st.weather &&
+        (st.weather.current === "stormy" || st.weather.current === "rainy");
+      var inWholesale =
+        st.trade && st.trade.currentLocation === "wholesaleMarket";
+      return st.player.phase === "street" && isStormy && inWholesale;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🛒 买一捆防水布（¥30）",
+        hint: "摆摊/露宿都用得上",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, st.resources.cash - 30);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          // 给防水布物品
+          if (!st.flags._boughtRainCanvas) {
+            st.flags._boughtRainCanvas = true;
+            st.flags._rainCanvasDay = st.player.day;
+          }
+          StateManager.addMessage(
+            "🛒 你花¥30买了一捆防水布。老板说「这雨还得下两天，你早点收摊」——看来暴雨还会持续。心情+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📦 趁机低价收一批货",
+        hint: "雨天没人来买，批发价更低",
+        cost: 500,
+        apply: function (st) {
+          if (st.resources.cash >= 500) {
+            st.resources.cash -= 500;
+            st.flags._rainWholesaleBought = true;
+            st.flags._rainWholesaleDay = st.player.day;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 2,
+            );
+            StateManager.addMessage(
+              "📦 你趁雨天收了¥500的货。老板们急着清仓，价格比平时低了40%。等雨停了转手卖能赚不少。智力+2。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "📦 你想趁雨天收便宜货，但现金不够。只能看看别人忙活。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏠 赶紧回家，雨天不安全",
+        hint: "安全回家",
+        apply: function (st) {
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2);
+          StateManager.addMessage(
+            "🏠 你冒雨跑回了住处。虽然淋湿了，但安全第一。明天雨停了再继续。心情+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
 })();
