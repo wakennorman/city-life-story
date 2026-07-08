@@ -22,6 +22,7 @@
 ### 第三方 API 注意事项（2026-07-09 更新）
 
 **问题**：sensenova-6.7-flash-lite 的 Anthropic 兼容端点 (`/v1/messages`) 对 system prompt 有严格限制：
+
 - 不接受 `messages` 数组中的 `role: "system"` 消息（必须用顶层 `system` 字段）
 - 不接受 system 消息出现在 messages 中间
 
