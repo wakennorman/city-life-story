@@ -1033,7 +1033,7 @@ function renderMapTab(state, parent) {
   const commuteWrap = document.createElement("div");
   commuteWrap.style.cssText =
     "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
-  // 地铁沿线大站
+  // 地铁沿线大站（银行/政务中心为市政配套，通常靠近地铁站）
   const METRO_STATIONS = [
     "techPark",
     "commercialDist",
@@ -1043,6 +1043,8 @@ function renderMapTab(state, parent) {
     "entertainment",
     "slum",
     "wholesaleMarket",
+    "bank",
+    "gov_office",
   ];
   // 为每种通勤方式计算可达目的地列表 + 价格 + AP
   function _calcCommute(mode, cloc, cstate) {
@@ -1055,8 +1057,8 @@ function renderMapTab(state, parent) {
       return k !== cloc;
     });
     if (mode === "walk") {
-      // 步行：全部 reachable
-      list = reachableList.slice();
+      // 步行：全城可达，AP随距离递增（远途步行贵，让玩家自然选择交通工具）
+      list = allLocs;
       price = 0;
     } else if (mode === "bike") {
       // 共享单车：2跳内
@@ -1078,20 +1080,16 @@ function renderMapTab(state, parent) {
       }
       price = 3;
     } else if (mode === "metro") {
-      list = reachableList.filter(function (k) {
-        return METRO_STATIONS.indexOf(k) >= 0;
+      // 地铁：任意位置均可乘车（步行至最近站点），目的地限定沿线大站
+      list = METRO_STATIONS.filter(function (k) {
+        return k !== cloc;
       });
-      if (METRO_STATIONS.indexOf(cloc) >= 0) {
-        METRO_STATIONS.forEach(function (k) {
-          if (k !== cloc && list.indexOf(k) < 0) list.push(k);
-        });
-      }
       price = 4;
     } else if (mode === "taxi") {
       list = allLocs;
       price = -1; // 按距离动态
     } else if (mode === "car") {
-      list = reachableList.slice();
+      list = allLocs;
       price = 5;
     }
     // 对每个目的地计算具体 AP 和价格
@@ -1103,12 +1101,12 @@ function renderMapTab(state, parent) {
           typeof getLocationHops === "function" ? getLocationHops(cloc, k) : 1;
         hopStr = hops + "跳";
         if (mode === "walk") {
-          ap = Math.max(6, 6 + hops * 4); // 1跳=10, 2跳=14
+          ap = Math.max(8, 4 + hops * 6); // 1跳=10, 2跳=16, 3跳=22（远途高消耗倒逼换乘）
           price = 0;
         } else if (mode === "bike") {
           ap = Math.min(7, 3 + hops * 2); // 1跳=5, 2跳=7
         } else if (mode === "metro") {
-          ap = 5;
+          ap = 6; // 含步行至站台，全程固定
         } else if (mode === "taxi") {
           ap = Math.min(8, 3 + hops * 1); // 1跳=4, 2跳=5
           price = typeof getTaxiCost === "function" ? getTaxiCost(cloc, k) : 15;
