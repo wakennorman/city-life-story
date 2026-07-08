@@ -450,3 +450,41 @@ python -m http.server 8080  # http://localhost:8080
 ## Agent 分身策略
 
 **任务复杂时主动开分身**：当任务涉及多文件修改、多步骤并行、或需要独立探索/验证时，Claude 自行判断使用 `Agent` 工具创建子代理（如 `general-purpose`、`Plan`、`Explore` 等），无需用户额外提醒。
+
+---
+
+## 🔄 多窗口协作协议（2026-07-09 新增）
+
+> **当有多个 Claude Code 窗口同时开发 `city-life-story` 时，必须遵守以下协议。**
+> 
+> 详细规则见 `memory/window-coordination.md` + `memory/file-lock.json`
+
+### 铁律
+
+1. **开工前必做**：`git pull` → Read `memory/file-lock.json` → 声明角色和文件
+2. **一人一文件**：同一文件同一时刻只能被一个窗口锁定
+3. **小步提交**：每个 commit 后立即释放锁
+4. **冲突预防**：大文件（main.js/render.js）按函数块拆分，不按行号拆分
+5. **事后追溯**：每个版本更新对应记忆文件，MEMORY.md 索引同步
+
+### 窗口角色推荐
+
+| 角色 | 负责 | 典型文件 |
+|------|------|---------|
+| 🎨 UI 窗口 | 渲染/样式/HTML | `ui/render.js`, `css/style.css` |
+| 📊 数据窗口 | 数据定义/配置 | `data/jobs.js`, `data/npcs.js` |
+| ⚙️ 逻辑窗口 | 核心逻辑/系统 | `main.js`, `core/events.js` |
+| 🎭 事件窗口 | 事件/触发/叙事 | `data/*_events.js` |
+| 🔧 基建窗口 | 框架/工具 | `core/state.js`, `core/save.js` |
+
+### 快速检查清单
+
+```
+□ git pull origin master
+□ Read memory/file-lock.json
+□ 声明："我是 window-X，负责 [模块]，修改 [文件列表]"
+□ 检查冲突 → 无冲突则获取锁
+□ 工作 → 每个 commit 后释放锁
+□ 完成后更新版本记忆文件 + MEMORY.md 索引
+□ git push origin master
+```

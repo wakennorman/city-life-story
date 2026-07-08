@@ -32,3 +32,5 @@
 - [约定式自动归类 v3.4](convention-over-config-v3.4.md) — P0行动自动归类(43行动)+P1技能↔工作双向关联+P2证书工资加成确认+P1事件触发数据化POC
 - [v3.6 约定式闭环](v3.6-convention-close-loop.md) — 证书双叠加if-eless清除+2动态证书补全 / wiki var提升残留修复+_wikiDetailJob交叉查询重建 / restore分类注册 / 事件触发双轨统一为evaluateTriggers主路径+trigger_registry辅 / pipeline+daily_end+after_work触发槽接入+3个after_work事件+cooldownNaN修复 (2026-07-07)
 - [v3.21 联动事件扩充](v3.21-cross-system-events.md) — 自洽性审查5个A类NPC断链修复 + 5个跨系统联动事件(天气+位置/状态积累/NPC秘密/老手特遇/道德分叉) (2026-07-07)
+- [多窗口协作协议](window-coordination.md) — ✅ 2026-07-09 建立，事前分工+文件锁定+冲突预防+事后追溯
+- [文件锁定状态](file-lock.json) — 运行时状态，所有窗口共享，开工前必读

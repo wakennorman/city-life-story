@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "多窗口文件锁定状态 — 所有窗口共享，开工前必读",
+    "protocol": "See memory/window-coordination.md",
+    "last_updated": "2026-07-09T03:00:00+08:00",
+    "active_windows": 0
+  },
+  "locks": [],
+  "history": [
+    {
+      "note": "协议初始化为空。每个窗口开工时在此文件登记锁定状态。",
+      "timestamp": "2026-07-09T03:00:00+08:00"
+    }
+  ],
+  "conflict_reports": []
+}
