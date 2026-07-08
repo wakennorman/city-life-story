@@ -46361,8 +46361,7 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
       if (isRealTime) {
         // 在线模式：实时新闻主导，不显示世界参数初始化消息
         StateManager.addMessage(
-          "📺 实时头条·时代背景：" +
-            headlineList.slice(0, 2).join(" | "),
+          "📺 实时头条·时代背景：" + headlineList.slice(0, 2).join(" | "),
           "event",
         );
       } else {
@@ -87430,7 +87429,10 @@ const DAILY_PIPELINE = [
         if (flags._groomingBonus === 0) {
           // 魅力回降（已通过每日-1衰减回原始值）
           if (typeof StateManager !== "undefined" && day % 5 === 0) {
-            StateManager.addMessage("💇 发型效果已消退，魅力回到自然状态。", "info");
+            StateManager.addMessage(
+              "💇 发型效果已消退，魅力回到自然状态。",
+              "info",
+            );
           }
         }
       }
@@ -87440,7 +87442,9 @@ const DAILY_PIPELINE = [
         if (daysSinceSurgery > 85 && daysSinceSurgery <= 90 && day % 5 === 0) {
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
-              "💉 上次整容已过去" + daysSinceSurgery + "天，建议去医院做保养维护。",
+              "💉 上次整容已过去" +
+                daysSinceSurgery +
+                "天，建议去医院做保养维护。",
               "info",
             );
           }
@@ -125981,7 +125985,9 @@ function renderPgStatTrain(state, content) {
     }[t.id];
     if (locHint) {
       html +=
-        '<div style="font-size:10px;color:var(--info);margin-top:2px;">' + locHint + "</div>";
+        '<div style="font-size:10px;color:var(--info);margin-top:2px;">' +
+        locHint +
+        "</div>";
     }
     html +=
       '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
@@ -126133,7 +126139,11 @@ window.__doTrain = function (trainId) {
         text: "📍 前往" + locName,
         cls: "btn-primary",
         callback: function () {
-          navigateTo(state, { type: "location", key: locId, displayName: locName });
+          navigateTo(state, {
+            type: "location",
+            key: locId,
+            displayName: locName,
+          });
           return true;
         },
       };
@@ -126144,10 +126154,19 @@ window.__doTrain = function (trainId) {
       body:
         '<div style="text-align:center;padding:8px 0;">' +
         '<div style="font-size:32px;margin-bottom:10px;">' +
-        ({ train_physique: "🏋️", train_intelligence: "📚", train_agility: "🏃", train_ability: "🧘", train_charm_grooming: "💇", train_charm_surgery: "💉" }[trainId] || "🏋️") +
+        ({
+          train_physique: "🏋️",
+          train_intelligence: "📚",
+          train_agility: "🏃",
+          train_ability: "🧘",
+          train_charm_grooming: "💇",
+          train_charm_surgery: "💉",
+        }[trainId] || "🏋️") +
         "</div>" +
         '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
-        "当前不在" + t.locationNames + "，无法进行此项训练。<br>" +
+        "当前不在" +
+        t.locationNames +
+        "，无法进行此项训练。<br>" +
         "请先前往对应地点，再开始训练。</p>" +
         "</div>",
       buttons: locBtns,
