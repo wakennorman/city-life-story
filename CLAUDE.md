@@ -156,7 +156,19 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-08)**：v3.37 — 职业系统深度联动事件（5个新增叙事事件）
+- **最新一次工作 (2026-07-08)**：v3.38 — 状态积累爆发事件（3个新增叙事事件）
+  - **设计理念**：让系统追踪的每一个状态变化都有对应的叙事回响
+  - **填补空白**：`_habits` 6指标中之前只有2个有事件覆盖，v3.38补齐3个
+    - `low_mood_crisis_encounter` — lowHappinessStreak≥3 → 卖花奶奶的善意
+    - `junk_food_body_warning` — junkFoodMeals≥10 → 半夜胃痛警告
+    - `night_owl_encounter` — lateNightActions≥5 → 夜归人类人邂逅
+  - **设计心理学**：峰终定律（低谷善意打破负循环）/ 损失厌恶（硬扛有惩罚）/ 社会比较（同类人缓解孤独）
+  - **影响文件**：cross_system_events.js（+182行）
+  - **剩余空白**：stomach_inflammationCount 已有 illness 系统覆盖
+  - **验证**：`node --check` ✅ / `python build.py` 5223.3KB ✅ / `git commit f490d72` ✅ / `git push` ✅
+  - **记忆文件**：`memory/v3.38-habit-streak-events.md`
+
+- **上一轮工作 (2026-07-08)**：v3.37 — 职业系统深度联动事件（5个新增叙事事件）
   - **设计理念**：让"工作"不再是数值循环，赋予情感温度和叙事深度
   - **新增事件**：
     - `first_earn_milestone` — 第一次赚到¥500时的财务意识启蒙（存银行/犒劳自己/买书学习）

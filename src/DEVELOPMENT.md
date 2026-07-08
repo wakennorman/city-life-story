@@ -1,8 +1,45 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-08（v3.37 职业系统深度联动事件 — 5个新增的叙事事件）
+> 最后更新: 2026-07-08（v3.38 状态积累爆发事件 — 3个新增）
 >
-> commit: `aa01667`
+> commit: `f490d72`
+>
+> ---
+>
+> ## 2026-07-08 — v3.38 状态积累爆发事件（3个新增）
+>
+> **设计理念**：让系统追踪的每一个状态变化都有对应的叙事回响。填补 `_habits` 字段的叙事空白——这些字段一直在被统计但从未产生故事。
+>
+> ### 改动内容
+>
+> | 改动                    | 文件                   | 行数 |
+> | ----------------------- | ---------------------- | ---- |
+> | 新增3个状态积累爆发事件 | cross_system_events.js | +182 |
+>
+> ### 新增事件清单
+>
+> | 事件id                      | 触发条件                     | 选项             | 设计意图                                       |
+> | --------------------------- | ---------------------------- | ---------------- | ---------------------------------------------- |
+> | `low_mood_crisis_encounter` | lowHappinessStreak≥3, day≥10 | 收花/婉拒        | 长期低心情时陌生人的温暖，峰终定律打破负面循环 |
+> | `junk_food_body_warning`    | junkFoodMeals≥10, day≥15     | 买药/硬扛/熬粥   | 垃圾食品积累的生理反馈，损失厌恶推动饮食改善   |
+> | `night_owl_encounter`       | lateNightActions≥5, day≥20   | 聊天/赶路/请夜宵 | 深夜城市的同类人邂逅，社会比较缓解孤独感       |
+>
+> ### 覆盖的空白
+>
+> 之前 `_habits` 的 6 个追踪指标中只有 2 个（lowHungerStreak, highFatigueStreak）有事件覆盖，
+> v3.38 补充了剩余 3 个：
+>
+> - `lowHappinessStreak` ✅ → low_mood_crisis_encounter
+> - `junkFoodMeals` ✅ → junk_food_body_warning
+> - `lateNightActions` ✅ → night_owl_encounter
+>
+> 剩余空白：`stomach_inflammationCount` 已有 illness 系统覆盖，无需额外事件。
+>
+> ### 验证
+>
+> - `node --check` ✅
+> - `python build.py` 5223.3KB ✅
+> - `git push origin main` ✅
 >
 > ---
 >
