@@ -37710,6 +37710,141 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ====== 更多技能视角事件（v3.42 新增）======
+  // 为sales和english补充视角事件，完成常用技能视角覆盖
+
+  // E16：销售技能≥50 → 看穿谈判对手的心理价位
+  RANDOM_EVENTS.push({
+    id: "sales_pro_insight",
+    phase: "street",
+    icon: "🤝",
+    title: "读心术",
+    story:
+      "你在二手市场看中一件东西，摊主开价¥200。\\n\\n他嘴上说「最低价了，再低要亏本」，但手指在桌面上敲了三下——你注意到这个细节。\\n\\n在销售行业待久了，你发现人在说谎或心虚时，总有些藏不住的小动作。面前这个人，他的底价最多¥120。",
+    conditions: function (st) {
+      if (!st.skills || !st.skills.sales) return false;
+      if ((st.skills.sales.level || 0) < 50) return false;
+      if (st.player.day < 35) return false;
+      if (
+        st.flags._salesInsightDay &&
+        st.player.day - st.flags._salesInsightDay < 90
+      )
+        return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "💰 砍到¥120，成交",
+        hint: "省¥80，销售XP+30",
+        apply: function (s) {
+          s.flags._salesInsightDay = s.player.day;
+          s.resources.cash -= 120;
+          s.skills.sales.xp = (s.skills.sales.xp || 0) + 30;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "💰 你报出¥120，摊主愣了一下，然后苦笑着点头。你心里清楚——他还有得赚，但你也没亏。销售XP+30，心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 不砍价，直接买",
+        hint: "多花¥80，省事",
+        apply: function (s) {
+          s.flags._salesInsightDay = s.player.day;
+          s.resources.cash -= 200;
+          StateManager.addMessage(
+            "😅 你付了¥200。虽然知道被宰了，但有时候不想把生活过成一场谈判。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤝 跟摊主聊聊，交个朋友",
+        hint: "魅力+2，可能拿到更好价",
+        apply: function (s) {
+          s.flags._salesInsightDay = s.player.day;
+          s.player.charm = Math.min(100, (s.player.charm || 0) + 2);
+          s.skills.sales.xp = (s.skills.sales.xp || 0) + 20;
+          s.resources.cash -= 100;
+          StateManager.addMessage(
+            "🤝 你跟摊主聊了会儿，夸他选货眼光好。他心情好了，主动降价到¥100。销售XP+20，魅力+2。有时候真诚比技巧更管用。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // E17：英语技能≥40 → 看懂外文信息，获得独特机会
+  RANDOM_EVENTS.push({
+    id: "english_pro_insight",
+    phase: "street",
+    icon: "🌐",
+    title: "另一扇窗",
+    story:
+      "你在网吧浏览网页时，无意中打开了一个英文自由职业平台。\\n\\n上面有大量的远程工作机会——翻译、数据标注、内容写作——报价比国内平台高出3-5倍。\\n\\n你以前从没想过自己能用英语赚钱。但现在，那些曾经陌生的单词，越来越多地变成了看得懂的信息。",
+    conditions: function (st) {
+      if (!st.skills || !st.skills.english) return false;
+      if ((st.skills.english.level || 0) < 40) return false;
+      if (st.player.day < 40) return false;
+      if (
+        st.flags._englishInsightDay &&
+        st.player.day - st.flags._englishInsightDay < 100
+      )
+        return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "💻 注册接单，赚美金",
+        hint: "英语XP+50，赚¥500-1500",
+        apply: function (s) {
+          s.flags._englishInsightDay = s.player.day;
+          s.skills.english.xp = (s.skills.english.xp || 0) + 50;
+          var earn = Random.int(500, 1500);
+          s.resources.cash += earn;
+          s.resources.totalEarned = (s.resources.totalEarned || 0) + earn;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "💻 你注册了平台，接了一个翻译单。花了三天完成，赚了¥" +
+              earn +
+              "。英语XP+50，心智+3，名气+2。多一门语言，就是多一条路。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 收藏起来，以后再说",
+        hint: "心智+2",
+        apply: function (s) {
+          s.flags._englishInsightDay = s.player.day;
+          s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "📝 你收藏了网址。在这个城市，信息就是机会——而英语，就是打开那扇门的钥匙。心智+2。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😶 跟我没关系",
+        hint: "无事发生",
+        apply: function (s) {
+          s.flags._englishInsightDay = s.player.day;
+          StateManager.addMessage(
+            "😶 你关掉了页面，继续刷短视频。那些英文看着就头疼——还是中文舒服。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
 })();
 </script>
     <!-- v3.21: 跨系统联动事件扩充（5个设计空白填补）-->
