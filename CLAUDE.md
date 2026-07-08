@@ -156,7 +156,17 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-08)**：v3.44 — TRAVEL_GRAPH 全图双向化（修复寺庙598AP bug）
+- **最新一次工作 (2026-07-08)**：v3.45 — 今日头条新闻说明升级（实时新闻 note 游戏化重写）
+  - **问题**：实时新闻 note 是「实时新闻·就业行业利空」这类抽象模板；「综合」兜底毫无信息量
+  - **修复**：新增 `_REAL_NEWS_NOTES` 查找表（10分类×4情绪），每条都是具体游戏影响说明
+    - 例：`employment.bullish` → 「招聘旺季！打工求职竞争力提升，薪资谈判空间扩大」
+    - 例：`housing.bearish` → 「楼市降温，租房可以议价，降低住所开销的好时机」
+  - **5个兜底 note** 全部改为有行动指导的说明（「社会热点新闻，对打工生活的直接影响有限」等）
+  - **离线新闻审查**：JOB_SECTOR_MAP 验证 note/effect 自洽——医药/消费/金融 sectorHeat 均正确传导到对应岗位收入 ✅
+  - **影响文件**：world_news_intro.js（+168/-38行）
+  - **验证**：node --check ✅ / python build.py 5254.0KB ✅ / `commit 34585956` ✅ / push ✅
+
+- **上一轮工作 (2026-07-08)**：v3.44 — TRAVEL_GRAPH 全图双向化（修复寺庙598AP bug）
   - **问题**：寺庙步行显示"99跳·598AP"，根因是TRAVEL_GRAPH有向图孤立节点（temple无入边）
   - **修复**：`locations.js` 补全5条缺失反向边（commercialDist→construction / factoryZone→suburb / school→hospital / school→temple / park→temple）
   - **防御**：`render.js _calcCommute` hops≥99时return null，永不显示孤立节点
