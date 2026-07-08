@@ -1101,6 +1101,22 @@ function renderCareerJobs(state, parent) {
       " · 第" +
       (currentJob.workDays || 0) +
       "天</div>";
+    // v3.48：在职天数里程碑标记
+    var _wd = currentJob.workDays || 0;
+    var _milestone = null;
+    if (_wd === 7) _milestone = "🌱 入职一周";
+    else if (_wd === 30) _milestone = "🎯 满月达成";
+    else if (_wd === 90) _milestone = "💪 百日坚持";
+    else if (_wd === 180) _milestone = "🔥 半年磨一剑";
+    else if (_wd === 365) _milestone = "🏆 一周年！";
+    else if (_wd > 0 && _wd % 365 === 0)
+      _milestone = "🏆 " + _wd / 365 + "周年！";
+    if (_milestone) {
+      html +=
+        '<div style="display:inline-block;margin-left:6px;padding:1px 6px;background:rgba(255,183,77,0.12);border-radius:10px;font-size:9px;color:var(--warning);">' +
+        _milestone +
+        "</div>";
+    }
     html +=
       '<div style="font-size:13px;color:var(--accent);font-weight:bold;margin:6px 0;">月薪 ¥' +
       (levelData ? levelData.salary.toLocaleString() : "?") +
@@ -3034,6 +3050,24 @@ function tickCareerJobDaily(state) {
   job.workDays = (job.workDays || 0) + 1;
   job.performance = Math.max(0, Math.min(100, job.performance || 50));
   cap.reputation = (cap.reputation || 0) + 0.1;
+
+  // v3.48：在职天数里程碑消息（峰终定律·小胜利庆祝）
+  var _newWd = job.workDays;
+  var _milestoneMsg = null;
+  if (_newWd === 7) _milestoneMsg = "🌱 入职一周了！开始适应新的工作节奏";
+  else if (_newWd === 30)
+    _milestoneMsg = "🎯 满月达成！你已经在这份工作上坚持了一个月";
+  else if (_newWd === 60) _milestoneMsg = "💪 两个月稳步前进，继续保持";
+  else if (_newWd === 90) _milestoneMsg = "⭐ 百日坚持！认真工作的样子真帅";
+  else if (_newWd === 180)
+    _milestoneMsg = "🔥 半年磨一剑，你已经从新人成长为老手";
+  else if (_newWd === 365)
+    _milestoneMsg = "🏆 一周年纪念日！这是你职业生涯的重要里程碑";
+  else if (_newWd > 365 && _newWd % 365 === 0)
+    _milestoneMsg = "🏆 入职" + _newWd / 365 + "周年！坚持就是胜利";
+  if (_milestoneMsg) {
+    StateManager.addMessage(_milestoneMsg, "success");
+  }
   // 职业倦怠：工作日常量增长，但有被动恢复（周末/休息自然降低）
   var dailyBurnoutChange = 0.04;
   // 周末（第7天）有额外恢复，模拟休息日
