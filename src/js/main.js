@@ -690,6 +690,75 @@ function startClassicGame() {
   startNewGame();
 }
 
+/**
+ * v3.56 天赋选择弹窗
+ * 展示剧本天赋池 + "不选天赋"选项，玩家点击后回调 onSelected(talent|null)
+ */
+function showTalentSelectionModal(scenario, onSelected) {
+  var talents = scenario.talents || [];
+  var overlay = document.createElement("div");
+  overlay.style.cssText =
+    "position:fixed;inset:0;background:rgba(0,0,0,0.68);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;";
+
+  var card = document.createElement("div");
+  card.style.cssText =
+    "background:var(--bg-primary,#fff);border-radius:14px;padding:22px 20px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 36px rgba(0,0,0,0.28);";
+
+  var html =
+    '<div style="font-size:1.08rem;font-weight:700;margin-bottom:4px;">✨ 命运之选</div>';
+  html +=
+    '<div style="color:var(--text-muted,#888);font-size:0.82rem;margin-bottom:18px;">属性已根据今日运势微调。选择一项天赋加成，或不选。</div>';
+
+  for (var ti = 0; ti < talents.length; ti++) {
+    var t = talents[ti];
+    html +=
+      '<div data-idx="' +
+      ti +
+      '" style="border:1.5px solid var(--border,#ddd);border-radius:9px;padding:11px 14px;margin-bottom:10px;cursor:pointer;">';
+    html +=
+      '<div style="font-weight:600;font-size:0.93rem;">' +
+      t.icon +
+      " " +
+      t.name +
+      "</div>";
+    html +=
+      '<div style="color:var(--text-secondary,#666);font-size:0.8rem;margin-top:3px;">' +
+      t.desc +
+      "</div>";
+    html += "</div>";
+  }
+  html +=
+    '<div data-idx="-1" style="border:1.5px dashed var(--border,#ccc);border-radius:9px;padding:9px 14px;cursor:pointer;text-align:center;color:var(--text-muted,#aaa);font-size:0.85rem;">🎯 不选天赋，靠自己</div>';
+
+  card.innerHTML = html;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // 悬停效果
+  var items = card.querySelectorAll("[data-idx]");
+  for (var ii = 0; ii < items.length; ii++) {
+    (function (el) {
+      el.addEventListener("mouseenter", function () {
+        el.style.background = "var(--bg-secondary,#f4f4f4)";
+        el.style.borderColor = "var(--accent-text,#4a7c59)";
+      });
+      el.addEventListener("mouseleave", function () {
+        el.style.background = "";
+        el.style.borderColor = "";
+      });
+    })(items[ii]);
+  }
+
+  // 点击选择
+  card.addEventListener("click", function (e) {
+    var opt = e.target.closest("[data-idx]");
+    if (!opt) return;
+    var idx = parseInt(opt.getAttribute("data-idx"), 10);
+    document.body.removeChild(overlay);
+    onSelected(idx >= 0 ? talents[idx] : null);
+  });
+}
+
 /** 剧本模式开局 */
 function startScenarioGame(scenarioId) {
   var scenario = getScenarioById(scenarioId);
@@ -824,75 +893,80 @@ function startScenarioGame(scenarioId) {
     }
   }
 
-  // --- v3.54 隐藏天赋：从剧本天赋池随机抽1个，应用效果并展示 ---
-  if (scenario.talents && scenario.talents.length > 0) {
-    var _tIdx = Math.floor(Math.random() * scenario.talents.length);
-    var _picked = scenario.talents[_tIdx];
-    if (typeof _picked.apply === "function") {
-      _picked.apply(state);
+  // --- v3.56 天赋选择回调：难度+遗产+进入游戏 ---
+  var _afterTalentSelected = function (pickedTalent) {
+    if (pickedTalent) {
+      if (typeof pickedTalent.apply === "function") pickedTalent.apply(state);
+      state.flags._talent = {
+        id: pickedTalent.id,
+        name: pickedTalent.name,
+        icon: pickedTalent.icon,
+        desc: pickedTalent.desc,
+      };
+      StateManager.addMessage(
+        "✨ 今日天赋：" +
+          pickedTalent.icon +
+          " " +
+          pickedTalent.name +
+          "——" +
+          pickedTalent.desc,
+        "event",
+      );
+    } else {
+      state.flags._talent = null;
+      StateManager.addMessage("🎯 你没有选择任何天赋，一切靠自己。", "event");
     }
-    state.flags._talent = {
-      id: _picked.id,
-      name: _picked.name,
-      icon: _picked.icon,
-      desc: _picked.desc,
+
+    // === 难度系统 + 传承币解锁 ===
+    if (
+      typeof applyDifficultyToState === "function" &&
+      window._selectedDifficulty
+    ) {
+      applyDifficultyToState(state, window._selectedDifficulty);
+    }
+    if (typeof applyHeritageUnlocks === "function") applyHeritageUnlocks(state);
+
+    // v3.2 修复: 记录第1天日初现金
+    state.flags._dayStartCash = state.resources.cash || 0;
+
+    // 隐藏选择界面
+    document.getElementById("mode-select-screen").style.display = "none";
+    document.getElementById("scenario-select-screen").style.display = "none";
+    document.getElementById("welcome-screen").style.display = "none";
+    document.getElementById("sandbox-screen").style.display = "none";
+
+    var _enterScenarioGame = function () {
+      document.getElementById("app").style.display = "";
+      gameStarted = true;
+      renderAll();
+      if (typeof initCashCarousel === "function") initCashCarousel();
+      bindHeaderButtons();
+      setTimeout(function () {
+        if (typeof showForcedDreamModal === "function") showForcedDreamModal();
+      }, 300);
     };
-    StateManager.addMessage(
-      "✨ 今日天赋：" + _picked.icon + " " + _picked.name + "——" + _picked.desc,
-      "event",
-    );
-  }
 
-  // === v3.0 P2-B-2 + P2-E-1：难度系统 + 传承币解锁（仅在玩家选择后生效）===
-  if (
-    typeof applyDifficultyToState === "function" &&
-    window._selectedDifficulty
-  ) {
-    applyDifficultyToState(state, window._selectedDifficulty);
-  }
-  if (typeof applyHeritageUnlocks === "function") {
-    applyHeritageUnlocks(state);
-  }
-
-  // v3.2 修复: 记录第1天日初现金
-  state.flags._dayStartCash = state.resources.cash || 0;
-
-  // --- 显示开局世界新闻，然后进入游戏 ---
-  document.getElementById("mode-select-screen").style.display = "none";
-  document.getElementById("scenario-select-screen").style.display = "none";
-  document.getElementById("welcome-screen").style.display = "none";
-  document.getElementById("sandbox-screen").style.display = "none";
-
-  var _enterScenarioGame = function () {
-    document.getElementById("app").style.display = "";
-    gameStarted = true;
-    renderAll();
-    if (typeof initCashCarousel === "function") initCashCarousel();
-
-    // ---- 绑定顶栏按钮 ----
-    bindHeaderButtons();
-
+    if (typeof startWithWorldNewsIntro === "function") {
+      startWithWorldNewsIntro(state, scenarioId, _enterScenarioGame);
+    } else {
+      _enterScenarioGame();
+    }
     setTimeout(function () {
-      if (typeof showForcedDreamModal === "function") {
-        showForcedDreamModal();
+      var appEl = document.getElementById("app");
+      if (appEl && appEl.style.display === "none") {
+        console.warn("[DIAG] app 仍 display:none，强制显示");
+        appEl.style.display = "";
+        if (typeof renderAll === "function") renderAll();
       }
-    }, 300);
+    }, 3000);
   };
 
-  if (typeof startWithWorldNewsIntro === "function") {
-    startWithWorldNewsIntro(state, scenarioId, _enterScenarioGame);
+  // --- 展示天赋选择界面（含"不选"选项） ---
+  if (scenario.talents && scenario.talents.length > 0) {
+    showTalentSelectionModal(scenario, _afterTalentSelected);
   } else {
-    _enterScenarioGame();
+    _afterTalentSelected(null);
   }
-  // 诊断Fallback: 3秒后若 #app 仍 display:none，强制显示（仅测试）
-  setTimeout(function () {
-    var appEl = document.getElementById("app");
-    if (appEl && appEl.style.display === "none") {
-      console.warn("[DIAG] app 仍 display:none，强制显示");
-      appEl.style.display = "";
-      if (typeof renderAll === "function") renderAll();
-    }
-  }, 3000);
 }
 
 // ====== 沙盒模式 ======
