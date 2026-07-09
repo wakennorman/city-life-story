@@ -40580,6 +40580,73 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ----- 事件62：下雪天的温暖（snowy 天气事件）-----
+  // 设计意图：填补 snowy 天气的零事件覆盖，让每种天气都有对应的叙事回响
+  RANDOM_EVENTS.push({
+    id: "snowy_day_warmth",
+    phase: "street",
+    icon: "❄️",
+    title: "下雪了",
+    story:
+      "窗外飘起了雪花，街上行人匆匆。你呼出一口白气，看着雪花落在手心里融化。\\n\\n街角卖红薯的大爷今天早早就收摊了，他走之前冲你喊了一声：\\n\\n「小伙子，天冷别在外面晃了，早点回去吧！」",
+    // [自洽新增] conditions：下雪天气 + day≥5
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.weather &&
+        st.weather.current === "snowy" &&
+        st.player.day >= 5 &&
+        !st.flags._snowyDaySeen
+      );
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍠 买个烤红薯暖暖手（¥10）",
+        hint: "心情+8，饥饱+10",
+        apply: function (st) {
+          st.flags._snowyDaySeen = true;
+          if (st.resources.cash >= 10) {
+            st.resources.cash -= 10;
+          }
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🍠 红薯又甜又烫，捂在手里整个人都暖和了。心情+8，饥饱+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📸 拍张雪景发朋友圈",
+        hint: "名气+3，记录这一刻",
+        apply: function (st) {
+          st.flags._snowyDaySeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📸 你拍了张雪景发到朋友圈。老家的朋友留言说「真好看」，城里的朋友说「冻死了」。名气+3，心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏃 趁人少赶紧出门干活",
+        hint: "体力活收入稍高，耗更多体力",
+        apply: function (st) {
+          st.flags._snowyDaySeen = true;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "🏃 你裹紧外套出了门。雪天路上人少，但活还是要干。疲劳+5，心情-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
