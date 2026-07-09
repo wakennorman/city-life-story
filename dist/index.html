@@ -11,9 +11,6 @@
         background: #f5f1e8;
         color: #3d3a35;
       }
-      .welcome-screen {
-        display: none;
-      }
     </style>
   </head>
   <body>
@@ -45112,6 +45109,246 @@ if (typeof window !== "undefined") {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           StateManager.addMessage(
             "😴 你忍住诱惑早睡了。细水长流，旺季还长。疲劳-15，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== loop-R28: NPC↔NPC关系动态（3个事件，填补关系网叙事空白）======
+
+  // 事件1：旧识重逢 — 王婶和老周在巷口偶遇（基于NPC_RELATION_MATRIX: 旧识）
+  // 设计意图：让玩家感受NPC有自己的生活，关系网不是摆设
+  RANDOM_EVENTS.push({
+    id: "npc_reunion_auntzhou",
+    phase: "street",
+    icon: "🍵",
+    title: "巷口的老茶摊",
+    story:
+      "你路过城中村巷口，看见王婶和老周坐在一张矮桌旁喝茶——他们正聊得起劲，不时爆发出一阵笑声。看见你来了，王婶招手：「来来来，坐下来。我跟老周认识二十年了，当年一起在这城中村扛过来的！」\n\n老周点点头：「那时候她还是小姑娘，天天帮我收拾废品。」\n\n他们要你坐下来一起聊。",
+    conditions: function (st) {
+      // [自洽修复] 关系网门控：基于NPC_RELATION_MATRIX的 old_acquaintance 关系
+      var rel = st.relationships || {};
+      // 两个NPC都必须已结识且好感达标
+      if (!rel.aunt_wang || !rel.aunt_wang.met) return false;
+      if (!rel.old_zhou || !rel.old_zhou.met) return false;
+      if ((rel.aunt_wang.affinity || 0) < 30) return false;
+      if ((rel.old_zhou.affinity || 0) < 30) return false;
+      return st.player.phase === "street" && !st.flags._npcReunionSeen;
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🪑 坐下听他们聊往事",
+        hint: "好感双双+5 解锁关系往事",
+        apply: function (st) {
+          st.flags._npcReunionSeen = true;
+          st.relationships.aunt_wang.affinity = Math.min(
+            100,
+            (st.relationships.aunt_wang.affinity || 0) + 5,
+          );
+          st.relationships.old_zhou.affinity = Math.min(
+            100,
+            (st.relationships.old_zhou.affinity || 0) + 5,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🪑 你坐下来听他们讲二十年的故事。两人的好感各+5，你感觉自己也是这个社区历史的一部分了。心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📸 给他们拍张合影",
+        hint: "记录美好瞬间 名气+",
+        apply: function (st) {
+          st.flags._npcReunionSeen = true;
+          st.relationships.aunt_wang.affinity = Math.min(
+            100,
+            (st.relationships.aunt_wang.affinity || 0) + 3,
+          );
+          st.relationships.old_zhou.affinity = Math.min(
+            100,
+            (st.relationships.old_zhou.affinity || 0) + 3,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📸 你掏出手机给他们拍了张合影。王婶笑得合不拢嘴：「哎呀，这张照片我要放大挂在屋里！」两人好感各+3，名气+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 笑着摆摆手走开",
+        hint: "不打扰 保留空间",
+        apply: function (st) {
+          st.flags._npcReunionSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "😅 你摆摆手走开了。那张矮桌旁的笑声，听起来真好。心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件2：竞争的代价 — boss_li和张姐抢活源爆发冲突（基于NPC_RELATION_MATRIX: 竞争/strained）
+  // 设计心理学：损失厌恶·选择代价（帮一方=得罪另一方）
+  RANDOM_EVENTS.push({
+    id: "npc_competitor_clash",
+    phase: "street",
+    icon: "⚡",
+    title: "两边的火气",
+    story:
+      "你同时收到两条消息——\n\n李工头：「有空吗？这边急需个懂行的人帮两天，日结¥500。」\n\n张姐：「我这边有个急活，靠谱的人介绍过来¥400一天。」\n\n你隐约听说他们最近在争同一个活源。两个人都帮过你，都知道你认识对方。\n\n这次你只能选一边。",
+    conditions: function (st) {
+      // [自洽修复] 关系网门控：boss_li和张姐存在竞争关系（strained/competitor）
+      var rel = st.relationships || {};
+      if (!rel.boss_li || !rel.boss_li.met) return false;
+      if (!rel.sister_zhang || !rel.sister_zhang.met) return false;
+      if ((rel.boss_li.affinity || 0) < 20) return false;
+      if ((rel.sister_zhang.affinity || 0) < 20) return false;
+      return st.player.phase === "street" && !st.flags._npcClashSeen;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔨 帮李工头（日结¥500）",
+        hint: "老板好感+张姐- 收入高",
+        apply: function (st) {
+          st.flags._npcClashSeen = true;
+          var earn = 500;
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.relationships.boss_li.affinity = Math.min(
+            100,
+            (st.relationships.boss_li.affinity || 0) + 8,
+          );
+          st.relationships.sister_zhang.affinity = Math.max(
+            -100,
+            (st.relationships.sister_zhang.affinity || 0) - 5,
+          );
+          StateManager.addMessage(
+            "🔨 你去了李工头那边。张姐知道后没说话，但看你的眼神变了。竞争之下，没有两全。收入¥500，李工头好感+8，张姐好感-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏗️ 帮张姐（日结¥400）",
+        hint: "张姐好感+李工头- 收入略低",
+        apply: function (st) {
+          st.flags._npcClashSeen = true;
+          var earn2 = 400;
+          st.resources.cash += earn2;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn2;
+          st.relationships.sister_zhang.affinity = Math.min(
+            100,
+            (st.relationships.sister_zhang.affinity || 0) + 8,
+          );
+          st.relationships.boss_li.affinity = Math.max(
+            -100,
+            (st.relationships.boss_li.affinity || 0) - 5,
+          );
+          StateManager.addMessage(
+            "🏗️ 你去了张姐那边。李工头知道后没说话，但看你的眼神变了。收入¥400，张姐好感+8，李工头好感-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🤝 两边都帮半天（各¥200）",
+        hint: "折中 两边好感都不低",
+        apply: function (st) {
+          st.flags._npcClashSeen = true;
+          var half = 200;
+          st.resources.cash += half * 2;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + half * 2;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "🤝 你上午去李工头那边，下午去张姐那边。虽然两边都不完全满意，但都没话说。收入¥400（两边各¥200），疲劳+15。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件3：同窗纽带 — 陈哥和阿杰是同学，介绍你入行（基于NPC_RELATION_MATRIX: classmate）
+  // 设计心理学：社会认同·圈层归属感（"我们都是一路人"）
+  RANDOM_EVENTS.push({
+    id: "npc_classmate_endorsement",
+    phase: "street",
+    icon: "🎓",
+    title: "老同学的话",
+    story:
+      "陈哥拍着你肩膀说：「我这个老同学阿杰，脑子活得很。我跟他提了你好几次，说你这人踏实肯干。他最近的项目缺人手，我跟他说了让他带你一带。」\n\n一旁的阿杰笑着点头：「陈哥推荐的人差不了。要不你明天来我那儿聊聊？不全职也行，兼职先试试。」",
+    conditions: function (st) {
+      // [自洽修复] 关系网门控：陈哥+阿杰都是玩家已结识NPC
+      var rel = st.relationships || {};
+      if (!rel.chen_ge || !rel.chen_ge.met) return false;
+      if (!rel.ajie || !rel.ajie.met) return false;
+      if ((rel.chen_ge.affinity || 0) < 40) return false;
+      if ((rel.ajie.affinity || 0) < 30) return false;
+      return st.player.phase === "street" && !st.flags._npcClassmateSeen;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 谢谢陈哥引荐，我去聊聊",
+        hint: "副业收入 三个人好感+",
+        apply: function (st) {
+          st.flags._npcClassmateSeen = true;
+          var earnings = Random.int(200, 450);
+          st.resources.cash += earnings;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earnings;
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            (st.relationships.chen_ge.affinity || 0) + 5,
+          );
+          st.relationships.ajie.affinity = Math.min(
+            100,
+            (st.relationships.ajie.affinity || 0) + 8,
+          );
+          StateManager.addMessage(
+            "🤝 你去了阿杰那里。第一次兼职赚了¥" +
+              earnings +
+              "。陈哥和阿杰对你的好感大增——认识对的人，有时候比埋头苦干更重要。收入¥" +
+              earnings +
+              "，陈哥好感+5，阿杰好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 先忙完手头的再说",
+        hint: "观望 陈哥略失望",
+        apply: function (st) {
+          st.flags._npcClassmateSeen = true;
+          st.relationships.chen_ge.affinity = Math.max(
+            -100,
+            (st.relationships.chen_ge.affinity || 0) - 3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "😅 你说等忙完这阵子。陈哥摆摆手说「没关系」，但你能看出来他有点失望。心情+3，陈哥好感-3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📋 问问具体做什么再决定",
+        hint: "详细了解再行动 心智+3",
+        apply: function (st) {
+          st.flags._npcClassmateSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "📋 你问了半天细节：做什么、多少钱、需要多久。阿杰一一回答了。你没当即答应，但心里已经有谱了。心智+3。",
             "info",
           );
         },
