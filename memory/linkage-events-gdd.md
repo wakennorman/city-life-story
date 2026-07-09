@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~~R27 累计 45 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~R28 累计 48 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -501,6 +501,36 @@
 - **Edge Cases**: 仅夏季触发；day<30不触发
 - **Tuning Levers**: probability 0.045
 - **Dependencies**: 天气季节系统、经济
+
+## 46. `npc_reunion_auntzhou` — 巷口的老茶摊（loop-R28）
+
+- **Purpose**: 让NPC关系网活起来——玩家目击王婶+老周（旧识关系）的私下互动，感受「NPC有自己的生活」
+- **Player Fantasy**: 我在这个城市不是一个外人——连房东和废品老板认识二十年了。
+- **Trigger**: `aunt_wang.met + affinity≥30 && old_zhou.met + affinity≥30`
+- **Outputs**: 选项A 坐下（双好感+5/心情+8）；选项B 拍照（双好感+3/名气+3）；选项C 离开（心情+3）
+- **Edge Cases**: 两NPC好感均需≥30；单次触发
+- **Tuning Levers**: probability 0.035
+- **Dependencies**: NPC关系矩阵（旧识关系）
+
+## 47. `npc_competitor_clash` — 两边的火气（loop-R28）
+
+- **Purpose**: 竞争关系→玩家被迫选边（损失厌恶·选择代价）
+- **Player Fantasy**: 两个帮过我的人打架了，我只能帮一个。
+- **Trigger**: `boss_li.met + aff≥20 && sister_zhang.met + aff≥20`
+- **Outputs**: 选项A 帮李工头（¥500/李+8/张-5）；选项B 帮张姐（¥400/张+8/李-5）；选项C 折中（两边各¥200/疲劳+15）
+- **Edge Cases**: 损失厌恶陷阱——无论怎么选都有代价；折中收入最高但疲劳代价
+- **Tuning Levers**: probability 0.03
+- **Dependencies**: NPC关系矩阵（竞争关系）、经济
+
+## 48. `npc_classmate_endorsement` — 老同学的话（loop-R28）
+
+- **Purpose**: 同窗纽带→圈内人引荐（社会认同·圈层归属感）
+- **Player Fantasy**: 陈哥把我推荐给老同学——靠谱的人互相背书。
+- **Trigger**: `chen_ge.met + aff≥40 && ajie.met + aff≥30`
+- **Outputs**: 选项A 接受引荐（¥200-450/陈+5/阿杰+8）；选项B 观望（陈哥好感-3）；选项C 了解详情（心智+3）
+- **Edge Cases**: 两人均需已结识；ajie_side_project事件的互斥分支
+- **Tuning Levers**: probability 0.03
+- **Dependencies**: NPC关系矩阵（同窗关系）
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
