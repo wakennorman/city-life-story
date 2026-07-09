@@ -6227,3 +6227,38 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 - `node --check` ✅（137文件全部通过）
 - `npm run check:js` ✅（137/137）
 - `python build.py` 5627.4KB ✅
+
+---
+
+## 2026-07-09 v3.20 叙事触发一致性审查 + 联动事件扩充
+
+### 指令一：事件自洽性审查
+
+**审计范围**：7个事件文件（cross_system_events.js, career_path_events.js, events_street_survival.js, events_street_wealth.js, events_street_life.js, events_core.js, moral_events.js），250+事件
+
+**审查结论**：
+- **A类缺陷**：0个（所有叙事-触发不匹配问题均已在先前审查中标注`[自洽修复]`并完成修复）
+- **B类缺陷**：2个（记录，未自动修复）
+- **C类缺陷**：3个（记录，未自动修复）
+
+### 指令二：空白区联动事件新增
+
+填补4个设计空白区，每个事件独立测试触发条件：
+
+| 事件 | 类型 | 触发条件 | 设计意图 |
+|------|------|----------|----------|
+| repair_workshop_offer | 技能成长兑现 | 修理技能≥40 + day≥10 | 技能积累的具象化回报，让玩家感受到成长的价值 |
+| hunger_warm_meal_kindness | 状态积累爆发 | 饥饿≥70 或饥饿连续3天 + day≥5 | 连续饥饿的极端状态触发温暖叙事，形成情感对比 |
+| rainy_wholesale_umbrella | 天气×位置组合 | 暴雨/大雾 + 批发市场 + day≥10 | 同一天气在不同位置的叙事变体，增加天气系统深度 |
+| moral_debt_dilemma | 道德×债务极端分叉 | 道德≤30 + 债务≥¥1000 + day≥15 | 低道德玩家在债务压力下面临的道德抉择，非二元对立 |
+
+### 影响文件
+
+- `cross_system_events.js`（+164行，4个新事件IIFE）
+- `dist/index.html`（重构建 5887.5KB）
+
+### 验证
+
+- `node --check` ✅
+- `python build.py` 5887.5KB ✅
+- **commit**：`b15dc467`（本地待推）
