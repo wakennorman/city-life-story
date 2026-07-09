@@ -251,5 +251,29 @@
       getEvents: getEraEvents,
       getInflationConfig: () => INFLATION_CONFIG,
     };
+    window.MECHANICS = window.MECHANICS || {};
+    window.MECHANICS.era_transform = {
+      id: "era_transform",
+      name: "时代变迁",
+      icon: "📈",
+      brief: "通胀/物价/工资/行业热度随时间变化，8个里程碑事件",
+      version: "1.0.0",
+      related: ["mechanics:world_params"],
+      sections: [
+        {
+          kind: "desc",
+          text: "物价和工资会随游戏天数推移而缓慢变化。每90天遇到一个时代里程碑事件。",
+        },
+        {
+          kind: "list",
+          items: [
+            "通胀指数每年+8%，上限250%",
+            "4个时代阶段：起步→成长→成熟→调整",
+            "每个阶段有不同的物价/工资乘数",
+            "8个里程碑天数：90/180/270/365/450/540/720/900",
+          ],
+        },
+      ],
+    };
   }
 })();

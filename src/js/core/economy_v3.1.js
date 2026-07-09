@@ -203,4 +203,29 @@ const EconomySystem = (function () {
 
 if (typeof window !== "undefined") {
   window.EconomySystem = EconomySystem;
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.economy_v3 = {
+    id: "economy_v3",
+    name: "经济平衡",
+    icon: "⚖️",
+    brief: "累进财富税/动态利率/难度收入曲线/市场饱和度",
+    version: "1.0.0",
+    related: ["mechanics:world_params", "mechanics:era_transform"],
+    sections: [
+      {
+        kind: "desc",
+        text: "中后期经济平衡系统。防止指数膨胀，让不同难度有不同体验。",
+      },
+      {
+        kind: "list",
+        items: [
+          "四级累进财富税（¥20万~¥1000万+）",
+          "动态村长债利率（基于总资产阶梯）",
+          "连续盈利衰减（第4次后每次-8%）",
+          "市场饱和度惩罚（玩家/城市财富比>20%后下降）",
+          "难度收入曲线（困难模式收入×0.9但晋升×1.3）",
+        ],
+      },
+    ],
+  };
 }

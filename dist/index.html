@@ -51236,6 +51236,30 @@ if (typeof window !== "undefined") {
       getEvents: getEraEvents,
       getInflationConfig: () => INFLATION_CONFIG,
     };
+    window.MECHANICS = window.MECHANICS || {};
+    window.MECHANICS.era_transform = {
+      id: "era_transform",
+      name: "时代变迁",
+      icon: "📈",
+      brief: "通胀/物价/工资/行业热度随时间变化，8个里程碑事件",
+      version: "1.0.0",
+      related: ["mechanics:world_params"],
+      sections: [
+        {
+          kind: "desc",
+          text: "物价和工资会随游戏天数推移而缓慢变化。每90天遇到一个时代里程碑事件。",
+        },
+        {
+          kind: "list",
+          items: [
+            "通胀指数每年+8%，上限250%",
+            "4个时代阶段：起步→成长→成熟→调整",
+            "每个阶段有不同的物价/工资乘数",
+            "8个里程碑天数：90/180/270/365/450/540/720/900",
+          ],
+        },
+      ],
+    };
   }
 })();
 </script>
@@ -51445,6 +51469,31 @@ const EconomySystem = (function () {
 
 if (typeof window !== "undefined") {
   window.EconomySystem = EconomySystem;
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.economy_v3 = {
+    id: "economy_v3",
+    name: "经济平衡",
+    icon: "⚖️",
+    brief: "累进财富税/动态利率/难度收入曲线/市场饱和度",
+    version: "1.0.0",
+    related: ["mechanics:world_params", "mechanics:era_transform"],
+    sections: [
+      {
+        kind: "desc",
+        text: "中后期经济平衡系统。防止指数膨胀，让不同难度有不同体验。",
+      },
+      {
+        kind: "list",
+        items: [
+          "四级累进财富税（¥20万~¥1000万+）",
+          "动态村长债利率（基于总资产阶梯）",
+          "连续盈利衰减（第4次后每次-8%）",
+          "市场饱和度惩罚（玩家/城市财富比>20%后下降）",
+          "难度收入曲线（困难模式收入×0.9但晋升×1.3）",
+        ],
+      },
+    ],
+  };
 }
 </script>
     <!-- v3.6: 时代叙事事件（8个里程碑交互事件）-->
