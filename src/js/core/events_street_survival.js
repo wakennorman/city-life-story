@@ -835,8 +835,7 @@
         return (
           st.resources.cash >= 1000 &&
           st.trade &&
-          (st.trade.currentLocation === "wholesaleMarket" ||
-            st.trade.currentLocation === "market")
+          st.trade.currentLocation === "wholesaleMarket"
         );
       },
       choices: [
@@ -1264,7 +1263,7 @@
         return (
           st.player.phase === "street" &&
           st.trade &&
-          (st.trade.currentLocation === "market" ||
+          (st.trade.currentLocation === "vegetable_market" ||
             st.trade.currentLocation === "slum")
         );
       },

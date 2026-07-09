@@ -385,7 +385,7 @@ function getDailyActionTips(state) {
     tips.push("💪 体质达到50！可以挑战重体力工作，收入更高。");
   if (intelligence >= 40 && !(state.flags && state.flags._tipInt40))
     tips.push("📚 智力达到40！编程技能现在可以更高效地学习。");
-  if (agility >= 40 && loc === "market")
+  if (agility >= 40 && loc === "wholesaleMarket")
     tips.push("⚡ 敏捷够高，在批发市场讨价还价更有优势！");
 
   // 技能快升级提示
@@ -573,11 +573,11 @@ function getDailyActionTips(state) {
     if (typeof calcFinalPrice === "function" && state.trade) {
       var locs2 = [
         "slum",
-        "market",
+        "wholesaleMarket",
         "construction",
         "school",
-        "mall",
-        "tech_park",
+        "commercialDist",
+        "techPark",
       ];
       var curLoc = loc;
       var GOODS2 = typeof GOODS !== "undefined" ? GOODS : [];

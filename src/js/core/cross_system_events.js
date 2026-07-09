@@ -6514,7 +6514,7 @@
       if (st.weather.current !== "rainy" && st.weather.current !== "stormy")
         return false;
       var curLoc = st.trade && st.trade.currentLocation;
-      if (curLoc !== "wholesaleMarket" && curLoc !== "market") return false;
+      if (curLoc !== "wholesaleMarket") return false;
       if (
         st.flags._rainMarketUmbrellaDay &&
         st.player.day - st.flags._rainMarketUmbrellaDay < 30
@@ -7212,7 +7212,7 @@
         st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
 
       // 在市场：货物可能被吹走
-      if (curLoc === "market" || curLoc === "wholesaleMarket") {
+      if (curLoc === "wholesaleMarket") {
         return [
           {
             text: "🛡️ 赶紧加固摊位",
@@ -7926,9 +7926,7 @@
             st.weather.current === "heavy_rain");
         // 检查玩家是否在批发市场
         var atMarket =
-          st.trade &&
-          (st.trade.currentLocation === "wholesaleMarket" ||
-            st.trade.currentLocation === "market");
+          st.trade && st.trade.currentLocation === "wholesaleMarket";
         return (
           st.player.phase === "street" &&
           isStorm &&
@@ -12277,6 +12275,293 @@
           }
           StateManager.addMessage(
             "😅 你诚实地说自己还欠火候。老黄点点头：「有自知之明的人，迟早能成事。」\n烹饪经验+15，心情+8，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 工业区事件 ======
+  RANDOM_EVENTS.push({
+    id: "factory_night_shift_offer",
+    phase: "street",
+    icon: "🏭",
+    title: "夜班加急单",
+    story:
+      "工业区的一家电子厂接了个大单，工头在路边招临时夜班工。「一晚¥300，干到天亮，明天休息——但今晚不能走神，出了次品扣钱。」你远远看到厂里灯火通明，流水线已经开动了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "factoryZone" &&
+        st.player.day >= 5 &&
+        !st.flags._factoryNightShiftSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "💪 接下夜班",
+        hint: "¥300，但疲劳+20",
+        apply: function (st) {
+          st.flags._factoryNightShiftSeen = true;
+          st.resources.cash += 300;
+          st.resources.totalEarned += 300;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          var bonus = Random.chance(0.3);
+          if (bonus) {
+            st.resources.cash += 100;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🏭 一晚上没出次品，工头多给了¥100奖金！但天亮了，你累得眼皮打架。\n+¥400，疲劳+20。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🏭 熬了一整夜，腰酸背痛，挣了¥300。回家的路上腿都在抖。\n+¥300，疲劳+20，心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏃 算了，不冒这个险",
+        hint: "保重身体",
+        apply: function (st) {
+          st.flags._factoryNightShiftSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          StateManager.addMessage(
+            "🏃 你摆摆手走了。身体是革命的本钱，不差这一晚。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 医院事件 ======
+  RANDOM_EVENTS.push({
+    id: "hospital_cheap_medicine_offer",
+    phase: "street",
+    icon: "💊",
+    title: "药贩子推销",
+    story:
+      "医院门口，一个穿白大褂的中年男人拦住你，压低声音说：「医院里同款药，外面卖一半价。消炎药、降压药、感冒药——要什么有什么，保证正品。」他掀开手里的塑料袋一角，露出几盒药。你注意到包装上的字有些模糊。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "hospital" &&
+        st.player.day >= 10 &&
+        !st.flags._hospitalCheapMedicineSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🛒 买几盒备着",
+        hint: "¥50，但可能是假药",
+        apply: function (st) {
+          st.flags._hospitalCheapMedicineSeen = true;
+          if (st.resources.cash >= 50) {
+            st.resources.cash -= 50;
+            var fake = Random.chance(0.4);
+            if (fake) {
+              st.flags._boughtFakeMedicine = true;
+              st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+              StateManager.addMessage(
+                "💊 回家打开一看，药片颜色不对，闻着有股怪味——假药！\n健康-5，心情-8。¥50打了水漂。",
+                "danger",
+              );
+            } else {
+              st.flags._hasCheapMedicine = true;
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 3,
+              );
+              StateManager.addMessage(
+                "💊 药看样子是真的，比医院便宜一半。省了钱，心里踏实了点。\n心情+3。",
+                "success",
+              );
+            }
+          } else {
+            StateManager.addMessage(
+              "💊 翻遍口袋，连¥50都凑不齐。你尴尬地走开了。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🚫 不买，举报他",
+        hint: "正义感+卫生",
+        apply: function (st) {
+          st.flags._hospitalCheapMedicineSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🚫 你瞪了他一眼：「再卖假药我报警了。」他缩了缩脖子，快步溜走了。\n道德+5，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😞 我连¥50都拿不出来",
+        hint: "自嘲",
+        apply: function (st) {
+          st.flags._hospitalCheapMedicineSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "😞 你苦笑了一下，连假药都买不起的感觉，真不好受。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 娱乐城事件 ======
+  RANDOM_EVENTS.push({
+    id: "entertainment_talent_scout",
+    phase: "street",
+    icon: "🎤",
+    title: "星探搭讪",
+    story:
+      "娱乐城三楼KTV走廊里，一个戴着金链子的男人叫住你：「小姑娘/小伙子，形象不错啊！我是天娱传媒的经纪人，最近在找新人拍短视频。签约就有保底¥5000，火了还能分红。要不要试试？」他递过来一张名片，公司名字你从没听说过。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "entertainment" &&
+        st.player.day >= 15 &&
+        (st.player.charm || 0) >= 30 &&
+        !st.flags._entertainmentScoutSeen
+      );
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "🎭 签了试试",
+        hint: "有机会但风险高",
+        apply: function (st) {
+          st.flags._entertainmentScoutSeen = true;
+          var success = Random.chance(0.3 + (st.player.charm || 0) * 0.005);
+          if (success) {
+            st.resources.cash += 5000;
+            st.resources.totalEarned += 5000;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            StateManager.addMessage(
+              "🎭 居然真的火了！一条短视频播放量破百万，公司立马给了签约费。\n+¥5000，名气+10，心情+15！",
+              "success",
+            );
+          } else {
+            st.resources.cash -= 500;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            st.player.mental = Math.max(0, (st.player.mental || 20) - 5);
+            StateManager.addMessage(
+              "🎭 拍了三条视频，数据惨淡。公司说你不适合，扣了¥500'培训费'。\n-¥500，心情-10，心智-5。果然是个坑。",
+              "danger",
+            );
+          }
+        },
+      },
+      {
+        text: "🤔 先加个微信观望",
+        hint: "留条后路",
+        apply: function (st) {
+          st.flags._entertainmentScoutSeen = true;
+          st.flags._hasScoutContact = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🤔 你加了微信。名片上写着'天娱传媒——让每个人发光'。先看看吧，不急着跳坑。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 不了，骗子太多",
+        hint: "谨慎",
+        apply: function (st) {
+          st.flags._entertainmentScoutSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          StateManager.addMessage(
+            "🚶 你摆摆手走了。娱乐城里的星探，十个有九个是骗子，不赌这个运气。\n心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 菜市场事件 ======
+  RANDOM_EVENTS.push({
+    id: "vegetable_market_clearance_deal",
+    phase: "street",
+    icon: "🥬",
+    title: "收摊大甩卖",
+    story:
+      "菜市场快收摊了，一个菜贩子喊住你：「剩下的菜便宜卖了，这一堆¥20全拿走！都是早上刚到的，放一晚上明天就不新鲜了。」你看了看，一堆菜够吃三四天，但有些叶子已经蔫了。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "vegetable_market" &&
+        st.player.day >= 5 &&
+        !st.flags._vegeClearanceSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🛍️ 买了！省一笔是一笔",
+        hint: "¥20，可能不新鲜",
+        apply: function (st) {
+          st.flags._vegeClearanceSeen = true;
+          if (st.resources.cash >= 20) {
+            st.resources.cash -= 20;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 25);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            var bad = Random.chance(0.25);
+            if (bad) {
+              st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+              StateManager.addMessage(
+                "🥬 回去发现蔫了的叶子不能吃，扔了一半。不过剩下的还算划算。\n饥饿+25，健康-3（吃了不新鲜的），心情+5。",
+                "warning",
+              );
+            } else {
+              StateManager.addMessage(
+                "🥬 挑拣了一下，大部分都还能吃！够顶三四天了。\n饥饿+25，心情+5。绝对值！",
+                "success",
+              );
+            }
+          } else {
+            StateManager.addMessage(
+              "🥬 翻遍口袋只有几块钱，连¥20都拿不出来……",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🚫 不买了，不新鲜",
+        hint: "健康第一",
+        apply: function (st) {
+          st.flags._vegeClearanceSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+          if (st.player.morality) {
+            st.player.morality = Math.min(100, st.player.morality + 2);
+          }
+          StateManager.addMessage(
+            "🚫 你摇了摇头。省钱是省钱，吃坏肚子不值当。",
             "info",
           );
         },

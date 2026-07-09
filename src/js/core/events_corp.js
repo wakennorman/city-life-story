@@ -18,11 +18,21 @@
       title: "投资圈风声",
       story:
         "公司茶水间里，几个同事在低声讨论一家叫'智远科技'的创业公司，说他们拿到了一家大机构的战略投资，估值翻了五倍。有人暗示说这个消息还没公开，但内部人士已经在悄悄买入。",
+      conditions: function (st) {
+        return (
+          st.player.phase === "corporate" &&
+          st.player.day >= 30 &&
+          st.player.corporate &&
+          st.player.corporate.kpi >= 20 &&
+          !st.flags._insiderRumorSeen
+        );
+      },
       choices: [
         {
           text: "📱 找朋友打听",
           hint: "验证消息",
           apply: (st) => {
+            st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             if (st.resources.cash >= 100) {
               st.resources.cash -= 100;
@@ -49,6 +59,7 @@
           text: "📊 自己研究一下",
           hint: "看智力",
           apply: (st) => {
+            st.flags._insiderRumorSeen = true;
             const found = Random.chance(
               0.4 + (st.player.intelligence - 30) * 0.02,
             );
@@ -76,6 +87,7 @@
           text: "🚫 不听八卦，继续干活",
           hint: "专注本职",
           apply: (st) => {
+            st.flags._insiderRumorSeen = true;
             st.player.corporate.kpi = Math.min(
               150,
               st.player.corporate.kpi + 5,
@@ -1734,6 +1746,16 @@
       id: "workplace_scapegoat",
       _isChainEvent: true,
       phase: "corporate",
+      conditions: function (st) {
+        return (
+          st.player.phase === "corporate" &&
+          st.player.day >= 60 &&
+          st.player.corporate &&
+          st.player.corporate.kpi >= 30 &&
+          st.player.corporate.ability >= 20 &&
+          !st.flags._workplaceScapegoatSeen
+        );
+      },
       icon: "😡",
       title: "项目出问题了",
       story:
@@ -1743,6 +1765,7 @@
           text: "📧 拿出邮件证据",
           hint: "据理力争",
           apply: (st) => {
+            st.flags._workplaceScapegoatSeen = true;
             const success = Random.chance(
               0.3 +
                 (st.player.corporate.upwardMgmt - 20) * 0.015 +
@@ -1792,6 +1815,7 @@
           text: "😔 默默接受批评",
           hint: "忍气吞声",
           apply: (st) => {
+            st.flags._workplaceScapegoatSeen = true;
             st.player.corporate.dignity = Math.max(
               0,
               st.player.corporate.dignity - 15,
@@ -1815,6 +1839,7 @@
           text: "💬 当场反驳",
           hint: "硬刚",
           apply: (st) => {
+            st.flags._workplaceScapegoatSeen = true;
             const success = Random.chance(
               0.25 + (st.player.corporate.ability - 30) * 0.02,
             );
