@@ -13208,5 +13208,137 @@
     ],
   });
 
-  // ====== 注册结束 ======
+  RANDOM_EVENTS.push({
+    id: "repair_mgmt_outsource",
+    phase: "street",
+    icon: "🔧",
+    title: "维修外包队",
+    story:
+      "你修活利索，又懂点排班记账，街角几家小店老板合计着：\n" +
+      "「要不你牵头，接周边的零散维修？我们帮你派单。」",
+    // conditions：维修技能 + 管理技能 双门槛，连接技能系统 → 副业/团队经济
+    conditions: function (st) {
+      var repair = st.skills && st.skills.repair && st.skills.repair.level; // 维修技能等级
+      var mgmt = st.skills && st.skills.management && st.skills.management.level; // 管理技能等级
+      return typeof repair === "number" && repair >= 25 &&
+             typeof mgmt === "number" && mgmt >= 15;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      {
+        text: "🔧 牵头接单",
+        hint: "稳定副业+",
+        apply: function (st) {
+          var cut = 1200;
+          st.resources.cash = (st.resources.cash || 0) + cut;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          StateManager.addMessage(
+            "🔧 你拉起一支三人的社区维修小队，当月净分账¥" + cut + "，名声+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先不揽活",
+        hint: "不绑定",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🤔 你谢过老板们，觉得现在一个人接单更自由。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "weld_elec_retrofit",
+    phase: "street",
+    icon: "⚡",
+    title: "设备改造单",
+    story:
+      "一家小厂的旧生产线总出故障，厂长听说你既会焊又会电工：\n" +
+      "「能不能给咱们做个自动化小改造？预算好说。」",
+    // conditions：焊接技能 + 电工技能 双门槛，连接技能系统 → 高客单改造
+    conditions: function (st) {
+      var weld = st.skills && st.skills.welding && st.skills.welding.level; // 焊接技能等级
+      var elec = st.skills && st.skills.electrician && st.skills.electrician.level; // 电工技能等级
+      return typeof weld === "number" && weld >= 20 &&
+             typeof elec === "number" && elec >= 15;
+    },
+    probability: 0.018,
+    repeatable: false,
+    choices: [
+      {
+        text: "⚡ 接下改造",
+        hint: "大额现金+",
+        apply: function (st) {
+          var fee = 3500;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          StateManager.addMessage(
+            "⚡ 改造一次调试成功，厂长很满意，当场结了¥" + fee + "，名声+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 量力而行",
+        hint: "风险规避",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🤔 你评估后接了个小模块，没贪大——稳妥落袋。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "account_sales_invoice",
+    phase: "street",
+    icon: "🧾",
+    title: "代记账客户",
+    story:
+      "你帮朋友理过几次账，口碑传开，几个摆摊和开小店的找上门：\n" +
+      "「我们不懂报税，你代记账不？按月付。」",
+    // conditions：会计技能 + 销售技能 双门槛，连接技能系统 → 稳定代账客户
+    conditions: function (st) {
+      var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 会计技能等级
+      var sales = st.skills && st.skills.sales && st.skills.sales.level; // 销售技能等级（懂客户）
+      return typeof acc === "number" && acc >= 20 &&
+             typeof sales === "number" && sales >= 10;
+    },
+    probability: 0.022,
+    repeatable: true,
+    choices: [
+      {
+        text: "🧾 接代账",
+        hint: "月入稳定+",
+        apply: function (st) {
+          var monthly = 900;
+          st.resources.cash = (st.resources.cash || 0) + monthly;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🧾 你接下 3 家代账，当月入账¥" + monthly + "，名声+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先试一家",
+        hint: "低风险",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🤔 你先接了一家练手，口碑稳了再扩。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+// ====== 注册结束 ======
 })();
