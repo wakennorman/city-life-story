@@ -11034,6 +11034,7 @@
           st.flags._sisterWuFollowupSeen = true;
           st.resources.cash += 180;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + 180;
+          addDailyTransaction(st, "income", "temp_job", 180, "吴姐美容展代班");
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
           st.relationships.sister_wu.affinity = Math.min(

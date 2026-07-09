@@ -40420,6 +40420,7 @@ if (typeof window !== "undefined") {
           st.flags._sisterWuFollowupSeen = true;
           st.resources.cash += 180;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + 180;
+          addDailyTransaction(st, "income", "temp_job", 180, "吴姐美容展代班");
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
           st.relationships.sister_wu.affinity = Math.min(
@@ -40534,7 +40535,7 @@ if (typeof window !== "undefined") {
         rel.met &&
         (rel.affinity || 0) >= 5 &&
         !st.flags._uncleChenFollowupSeen &&
-        st.player.day >= ((st.flags._uncleChenMetDay) || 0) + 5
+        st.player.day >= (st.flags._uncleChenMetDay || 0) + 5
       );
     },
     probability: 0.5,
@@ -40546,7 +40547,10 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._uncleChenFollowupSeen = true;
           st.flags._chenBankJobLead = true;
-          st.relationships.uncle_chen_bank.affinity = Math.min(100, (st.relationships.uncle_chen_bank.affinity || 0) + 10);
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 10,
+          );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           StateManager.addMessage(
@@ -40560,7 +40564,10 @@ if (typeof window !== "undefined") {
         hint: "婉拒，好感+5",
         apply: function (st) {
           st.flags._uncleChenFollowupSeen = true;
-          st.relationships.uncle_chen_bank.affinity = Math.min(100, (st.relationships.uncle_chen_bank.affinity || 0) + 5);
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            (st.relationships.uncle_chen_bank.affinity || 0) + 5,
+          );
           StateManager.addMessage(
             "🙏 老陈点点头：「行，那等你想来了跟我说一声就行。」老陈好感+5。",
             "info",
