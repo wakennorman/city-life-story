@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~R13 / loop-R26 累计 41 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~~R27 累计 45 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -461,6 +461,46 @@
 - **Edge Cases**: 无交易经验不触发；现金不足 200 时第一个选项禁用（cost 门控）。
 - **Tuning Levers**: probability 0.04、进货 200、利润 150-500。
 - **Dependencies**: 交易统计、道德系统、名声系统。
+
+## 42. `skill_absolute_mastery_capstone` — 一代宗匠（loop-R27）
+
+- **Purpose**: 技能满级(level 100)的巅峰叙事，区别于≥80的「行家找上门」（被雇佣），本事件是「成为传奇被仰望」
+- **Player Fantasy**: 我的手艺已经登峰造极，有人慕名而来求教。
+- **Trigger**: `任一技能 level >= 100`（每技能触发一次）
+- **Outputs**: 选项A 收徒（名气+10/心智+8/心情+12）；选项B 写心法（名气+15/道德+5）；选项C 淡然（心情+10）
+- **Edge Cases**: 每个技能独立触发（`repeatable:true` + flag per-skill）；多技能满级可多次体验
+- **Tuning Levers**: probability 0.04
+- **Dependencies**: 技能系统、名声系统
+
+## 43. `wealth_six_figure_milestone` — 六位数时刻（loop-R27）
+
+- **Purpose**: 累计收入破¥100,000的情感里程碑（仅¥500有叙事事件）
+- **Player Fantasy**: 从¥300到六位数，走过的路只有自己知道。
+- **Trigger**: `totalEarned >= 100000`
+- **Outputs**: 选项A 犒劳自己（心情+15）；选项B 存银行（心智+5）；选项C 报喜（心情+12/道德+2）
+- **Edge Cases**: 一次性事件；与¥500的`first_earn_milestone`形成阶梯
+- **Tuning Levers**: probability 0.045
+- **Dependencies**: 经济系统、情感系统
+
+## 44. `luxury_housing_new_life` — 新生活的气味（loop-R27）
+
+- **Purpose**: 住房tier 5-6（别墅/豪宅）搬家后的里程碑叙事
+- **Player Fantasy**: 从火车站的流浪汉到这扇窗前，走过了很长的路。
+- **Trigger**: `housing.tier === 5 || 6` + `搬入后30天内`
+- **Outputs**: 选项A 请客（心情+12/好友好感+）；选项B 独坐看夜景（心智+6/心情+8）；选项C 规划下一步（名气+3）
+- **Edge Cases**: 搬入超过30天不触发；需`recordedDay`字段
+- **Tuning Levers**: probability 0.04
+- **Dependencies**: 住房系统、NPC关系、名声
+
+## 45. `summer_night_market_boom` — 夏夜出摊黄金期（loop-R27）
+
+- **Purpose**: 夏季季节叙事（填补天气有事件、季节无事件的空白）
+- **Player Fantasy**: 夏天是旺季，一天顶三个月。
+- **Trigger**: `weather.season === "summer"` + `day >= 30`
+- **Outputs**: 选项A 出摊（收入300-700/疲劳+20）；选项B 吃喝（心情+15）；选项C 休息（疲劳-15）
+- **Edge Cases**: 仅夏季触发；day<30不触发
+- **Tuning Levers**: probability 0.045
+- **Dependencies**: 天气季节系统、经济
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
