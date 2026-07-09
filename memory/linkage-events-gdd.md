@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 累计 23 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 累计 27 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -250,25 +250,72 @@
 
 ---
 
+## 24. `mood_low_letter_home` — 夜里的家 _(R8 新增)_
+
+- **Purpose**: 填补 needs 阈值爆发空白区（除饥饿外）——极低心情(happiness<15)触发情绪低谷叙事分支，让心情系统产生玩法选择而非仅数值。
+- **Player Fantasy**: 夜深人静时，我是会向家人伸手，还是一个人硬扛。
+- **Trigger**: `st.needs.happiness < 15 && phase==street && day>=7 && 30天冷却`
+- **Outputs**: 打电话→心情+12/现金-30；写信→心情+6；硬扛→心情-2/压力+3。
+- **Edge Cases**: 心情≥15 守卫拦截；与 `hunger_streak_neighbor_meal` 形成 needs 双轴(饿/心情)互补。
+- **Tuning Levers**: 阈值 15 `[PLACEHOLDER]`、冷却 30 天、通话花费 30。
+- **Dependencies**: needs 系统、health.mental.stress。
+
+## 25. `cooking_accounting_catering` — 盒饭生意 _(R8 新增)_
+
+- **Purpose**: cooking+accounting 双技能协同空白区——会做饭+会算账解锁「盒饭副业」稳定收入路径。
+- **Player Fantasy**: 我的手艺和算盘合起来，能养活一个小生意。
+- **Trigger**: `cooking>=30 && accounting>=20 && day>=20 && !_cateringBizOn`
+- **Outputs**: 接单→现金+180~320/心情+5/开启_flag；帮衬→现金+40~90。
+- **Edge Cases**: 技能不足守卫拦截；与 `skill_synergy_restaurant_offer`(餐馆合伙)形成餐饮双路径。
+- **Tuning Levers**: 收入区间、技能门槛(cooking30/acc20)。
+- **Dependencies**: 技能系统、经济系统。
+
+## 26. `coding_management_product` — 组队接外包 _(R8 新增)_
+
+- **Purpose**: coding+management 双技能协同空白区——技术+管理双修解锁「带队接外包」高回报但有压力路径。
+- **Player Fantasy**: 我不只是写代码的人，也是能把人张罗起来的人。
+- **Trigger**: `coding>=30 && management>=15 && day>=25 && !_codingTeamDone`
+- **Outputs**: 组队→现金+900~1600/压力+10；solo→现金+350~600。
+- **Edge Cases**: 技能不足拦截；组队分支引入 stress 代价，形成风险/回报权衡。
+- **Tuning Levers**: 收入区间、压力增量 10。
+- **Dependencies**: 技能系统、health.mental.stress、经济。
+
+## 27. `stress_high_breakdown` — 临界点 _(R8 新增)_
+
+- **Purpose**: 填补 `health.mental.stress` 阈值空白区（此前 stress 字段存在但无事件引用）——压力≥80 触发职业倦怠临界点叙事。
+- **Player Fantasy**: 我的身体在拉警报，我是停一下，还是继续冲。
+- **Trigger**: `st.player.health.mental.stress >= 80 && day>=15 && 60天冷却`
+- **Outputs**: 请假→压力-25/心情+5；硬扛→压力+5/physical.score-8。
+- **Edge Cases**: stress<80 拦截；与 `mood_low_letter_home` 形成心理双轴(心情 vs 压力)。
+- **Tuning Levers**: 阈值 80 `[PLACEHOLDER]`、压力增减量。
+- **Dependencies**: health.mental 系统。
+
+---
+
 ## 系统覆盖矩阵（验证「加强关联度」达成度）
 
 | 次级系统  | 已联动事件数 | 事件 id                                                                                                                                                                                                                                                                                                                                           |
 | --------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 道德系统  | 3            | morality_wallet_honest / keep / extreme_blacklist                                                                                                                                                                                                                                                                                                 |
-| 技能系统  | 9            | coding_scam_spot / skill_synergy_restaurant_offer / talent_cook_management_class / skill_english_column / indie_dev_side_project / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / sales_english_trade                                                                                                                       |
+| 技能系统  | 11           | coding_scam_spot / skill_synergy_restaurant_offer / talent_cook_management_class / skill_english_column / indie_dev_side_project / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / sales_english_trade / cooking_accounting_catering / coding_management_product                                                       |
 | NPC 关系  | 5            | xiaoli_brand_deal / npc_oldzhou_toolloan / oldzhou_80_legacy / hunger_streak_neighbor_meal / weather_rainy_umbrella                                                                                                                                                                                                                               |
 | 天气系统  | 1            | weather_rainy_umbrella                                                                                                                                                                                                                                                                                                                            |
 | 声望系统  | 2            | reputation_high_callup / fame_high_interview                                                                                                                                                                                                                                                                                                      |
-| 经济/资产 | 14           | bank_vip_treatment / regular_customer_discount / coding_scam_spot / skill_synergy_restaurant_offer / xiaoli_brand_deal / reputation_high_callup / indie_dev_side_project / oldzhou_80_legacy / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / cash_low_community_gig / sales_english_trade / talent_sales_management_client |
+| 经济/资产 | 16           | bank_vip_treatment / regular_customer_discount / coding_scam_spot / skill_synergy_restaurant_offer / xiaoli_brand_deal / reputation_high_callup / indie_dev_side_project / oldzhou_80_legacy / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / cash_low_community_gig / sales_english_trade / talent_sales_management_client / cooking_accounting_catering / coding_management_product |
 | 天赋系统  | 2            | talent_cook_management_class / talent_sales_management_client                                                                                                                                                                                                                                                                                     |
 | 名声系统  | 6            | morality_wallet_honest / xiaoli_brand_deal / skill_english_column / fame_high_interview / sales_english_trade / talent_sales_management_client                                                                                                                                                                                                    |
+| 心情/心理 | 2            | mood_low_letter_home / stress_high_breakdown                                                                                                                                                                                                                                                                                                      |
 
 **空白区（待后续循环填补）**:
 
 - 时代变迁(era)联动——`state.js` 无 `era*` 字段，需先在状态层落地。
-- needs 阈值爆发（除现金外：连续低心情 `emotionalState`/高 `stress` 轴——`state.js` 已有 `emotionalState` 与 `stress` 字段，可下一轮接入）。
-- 更多双技能协同组合（cooking+accounting 餐饮记账、coding+management 小团队产品 等）。
+- 更多双技能协同组合（welding+sales 报价、electrician+management 工程队 等）。
 - `xiaoli`/`auntie_lin`/`master_zhao` 激活后，对应深度好感事件才真正生效。
+
+### 指令一 A 类自洽修复记录（R8）
+
+- **`suburb_storm_shelter`（A2 真实缺陷，已修）**：原 `conditions` 仅查 `trade.currentLocation==="suburb"`，未查天气；叙事为「豆大的雨点砸下来/暴雨庇护」，晴天在郊区也会触发，叙事断裂。已补 `st.weather.current === "rainy" || "stormy"` 门控，加 `// [自洽修复]` 注释。
+- **全量扫描结论（6 文件 / 113 事件）**：A4=0（无单点 `trigger:` 绕过）；A3=0 真实（`zhou_channel_first_deal` 为 `_isChainEvent` 链式门控、`life_midcareer_reinvent` 中「老周」为过去式回忆 flavor）；A1=0 真实（14 个职业词候选逐条复核，均为技能门控/标志门控/场景 flavor/对方职业，无「玩家必须干此行才合理」前提）。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
