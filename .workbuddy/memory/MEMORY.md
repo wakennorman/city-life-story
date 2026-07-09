@@ -57,6 +57,7 @@
 - **NPC 关系**：`st.relationships[npcId] = { affinity:-100~100, met:bool, discovered:{} }`。活跃 NPC：aunt_wang/boss_li/sister_zhang/old_zhou/xiao_mei/chef_chen/uncle_chen_bank/sister_wu/brother_huang。**注意 `xiaoli`/`auntie_lin`/`master_zhao` 在 npcs.js 仍是 TODO 注释状态（未激活）**——引用它们的事件目前永不触发。
 - **习惯 streak**：`st.flags._habits` 仅有 `lowHungerStreak`（连续 hunger<25 天数）。无 `lowMoodStreak`/`lowSleepStreak`——需要"连续低心情/低睡眠"事件时改用 `st.needs.*` 阈值而非 streak flag。
 - **天气**：`st.weather.current` ∈ sunny/cloudy/rainy/stormy/heatwave/typhoon。天气叙述事件必须校验此字段（A类）。
+- **压力/心理**：`stress` 在 **`st.player.health.mental.stress`**（0-100），**不是** `st.player.stress`。`emotionalState` 在 `st.status.emotionalState`（stable|happy|sad|angry|stressed|depressed）。低心情阈值用 `st.needs.happiness < X`（needs: hunger/fatigue/hygiene/happiness 均在 0-100）。R8 曾误以为 `st.player.stress` 实则不存在 → 死事件，已核实路径后修正。
 - **自洽守卫惯例**：NPC 名事件条件须 `rel && rel.met && (rel.affinity||0) >= N`；职业叙述须查 `st.employment.currentJob`/`st.sideHustle.type`/`st.stats.actionFreq`；已有修复加 `// [自洽修复]` 注释。
 
 ## 设计参考库（已用过的同类游戏）
