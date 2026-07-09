@@ -20,7 +20,7 @@
 5. 任何改动结束必须更新 `src/DEVELOPMENT.md` 顶部
 6. 不删文件只改文件；新文件必须论证为什么不能放现有模块
 7. 不修改 `build.py` / 不改 `src/index.html` 的 `<script>` 加载顺序 / 不引入外部库
-8. **禁止 `git push`**（CLAUDE.md 规则）— 项目无 remote 配置
+8. **`git push` 仅在用户明确要求时执行**（CLAUDE.md §714 授权）；`remote origin` 已存在（`github.com/wakennorman/city-life-story.git`）。当前唯一阻塞是网络/代理（`127.0.0.1:3067` 未连通，GitHub:443 不可达），非策略禁止
 
 ## v3.0 SOP 已知即时缺陷清单（按下表优先级实施）
 
