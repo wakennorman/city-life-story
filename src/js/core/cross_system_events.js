@@ -10117,6 +10117,60 @@
     ],
   });
 
+
+  // ----- 事件50：学历 0→1 毕业典礼仪式 -----
+  // 联动：education 从 0 升级到 1 后首次触发（一次性）
+  // 设计心理学：峰终定律·人生里程碑·仪式感奖励
+  // 触发方式：在 edu_cert 动作完成后由 daily_pipeline 手动检查触发
+  RANDOM_EVENTS.push({
+    id: "edu_graduation_ceremony",
+    icon: "🎓",
+    title: "毕业典礼",
+    phase: ["street", "office", "corporate"],
+    priority: 99,
+    conditions: function(state) {
+      return state.player.education >= 1 && !state.flags._eduGraduationShown;
+    },
+    desc: function(state) {
+      var school = state.player.education === 1 ? "夜大" : (state.player.education === 2 ? "本科" : "硕士");
+      return "四年（或两年）的寒窗苦读终于结束了。今天，你站在" + school + "的礼堂里，接过那张薄薄的证书。台下坐着几个同样熬过来的同学，有人已经30多岁，有人带着孩子。" +
+        "\n\n看着手里的文凭，你想起刚进城时连公交车都坐不起的日子。这张纸，或许不能立刻改变什么，但至少——它是你给自己的一份交代。\n\n班主任老周说：「拿了证，记住：路是自己走的。」";
+    },
+    choices: [
+      {
+        text: "📸 合影留念（+2 心情，+1 智力）",
+        apply: function(state) {
+          state.player.mood = Math.min(100, (state.player.mood || 50) + 2);
+          state.player.intellect = Math.min(100, (state.player.intellect || 30) + 1);
+          state.flags._eduGraduationShown = true;
+          state.flags._eduGraduationPhoto = true;
+          return "和同学们合影留念，把这一刻定格。老周说：「好好混，以后同学会别缺席。」";
+        }
+      },
+      {
+        text: "👔 立刻投简历（解锁白领求职）",
+        apply: function(state) {
+          state.flags._eduGraduationShown = true;
+          state.flags._eduGraduationJobHunt = true;
+          state.player.mood = Math.min(100, (state.player.mood || 50) + 1);
+          return "你当场打开手机，把简历投给了三家本地公司。学历是敲门砖，但门后的路还得自己跑。";
+        }
+      },
+      {
+        text: "🍲 回家吃顿好的（+5 饥饿恢复）",
+        apply: function(state) {
+          state.flags._eduGraduationShown = true;
+          state.flags._eduGraduationHome = true;
+          state.player.hunger = Math.min(100, (state.player.hunger || 50) + 5);
+          return "你买了瓶二锅头，回家炖了个白菜豆腐。妈在电话那头说：「回来吃饭就行，别省钱。」";
+        }
+      }
+    ],
+    apply: function(state) {
+      state.flags._eduGraduationShown = true;
+    }
+  });
+
   // ----- 事件51：学历完成后×白领世界的"入世门槛" -----
   // 联动：education ≥ 2 + 无职业状态 → 第一次面试挫败
   // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）

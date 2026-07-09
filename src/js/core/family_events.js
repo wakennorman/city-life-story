@@ -281,6 +281,172 @@
         },
       ],
     },
+
+    // ===== 公司阶段家庭事件（R30 新增）=====
+    // 事件4：母亲手术费·公司阶段版
+    {
+      id: "corporate_mother_surgery",
+      phase: "corporate",
+      icon: "🏥",
+      title: "母亲需要手术",
+      story:
+        "你接到老家电话，母亲血压持续升高，医生建议住院观察一周，费用大约¥5,000。\\n\\n你现在的公司手头比较宽裕，但你正在准备下一次市场推广，这笔钱如果拿去，营销计划就得延后。\\n\\n你犹豫了。公司是你的事业，母亲是你的根。",
+      conditions: function (st) {
+        return (
+          st.corporate &&
+          st.corporate.funds >= 10000 &&
+          st.player.age >= 25 &&
+          !st.flags._corpMotherSurgeryDone
+        );
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 全额支付手术费（公司资金-¥5,000，morality+3，mood+5）",
+          hint: "亲情最大化",
+          apply: function (st) {
+            st.flags._corpMotherSurgeryDone = true;
+            st.corporate.funds = Math.max(0, st.corporate.funds - 5000);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            st.player.mood = Math.min(100, (st.player.mood || 50) + 5);
+            StateManager.addMessage(
+              "💰 你当场转了¥5,000给母亲。她电话那头说：你辛苦了，别太累。道德+3，心情+5。事业再大也大不过这一句话。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏦 部分支付¥2,000，催家人分担（资金-¥2,000，morality+1）",
+          hint: "折中方案",
+          apply: function (st) {
+            st.flags._corpMotherSurgeryDone = true;
+            st.corporate.funds = Math.max(0, st.corporate.funds - 2000);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+            StateManager.addMessage(
+              "🏦 你转了¥2,000，让父亲和弟弟凑剩下的。电话那头沉默了一会儿：行吧，我们想辦法。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📋 等营销结束再处理（morality-3，mood-8）",
+          hint: "先顾事业，有心理负担",
+          apply: function (st) {
+            st.flags._corpMotherSurgeryDone = true;
+            st.flags._corpMotherSurgeryDelay = true;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+            st.player.mood = Math.max(0, (st.player.mood || 50) - 8);
+            StateManager.addMessage(
+              "📋 你选择了先顾事业。挂掉电话后你坐了很久。道德-3，心情-8。夜里你梦见小时候母亲在灯下给你缝衣服的画面。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // 事件5：公司扩张·全家搬城市
+    {
+      id: "corporate_family_relocation",
+      phase: "corporate",
+      icon: "🏠",
+      title: "全家搬来城市",
+      story:
+        "公司发展到第五人，你终于觉得自己有能力了。爸妈主动打来电话：我们不想再拖累你，但如果你愿意，我们想搬来城市帮你带孩子、做家务。\\n\\n搬来城市意味着你要给他们租一套房，月租大约¥1,200。这是一笔固定开销，但有人分担家务，你每天可以多挣两个小时。\\n\\n这是一道关于家与成本的选择题。",
+      conditions: function (st) {
+        return (
+          st.corporate &&
+          (st.corporate.employees || 0) >= 5 &&
+          (st.corporate.level || 1) >= 2 &&
+          !st.flags._corpFamilyRelocated
+        );
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🏡 接他们来，租房住（月租-¥1,200/天，mood+8）",
+          hint: "亲情最大化 + 家务帮手",
+          apply: function (st) {
+            st.flags._corpFamilyRelocated = true;
+            st.flags._familyInCity = true;
+            st.player.mood = Math.min(100, (st.player.mood || 50) + 8);
+            if (!st.corporate.monthlyExpenses) st.corporate.monthlyExpenses = {};
+            st.corporate.monthlyExpenses.familyRent = 1200;
+            StateManager.addMessage(
+              "🏡 你租了一间两居室，爸妈搬来了。妈说：终于能天天吃上热饭了。你每天下班回到家，饭已经好了——这是你在城市里最踏实的感觉。心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📞 婉拒，汇钱回老家装修（资金-¥8,000，mood+2）",
+          hint: "给钱不接人",
+          apply: function (st) {
+            st.flags._corpFamilyRelocated = true;
+            st.flags._familyStayedHometown = true;
+            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 8000);
+            st.player.mood = Math.min(100, (st.player.mood || 50) + 2);
+            StateManager.addMessage(
+              "📞 你汇了¥8,000回老家，让父亲把房子翻修一下。妈说：你别太累，我们在老家挺好的。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // 事件6：公司盈利·家庭分红仪式
+    {
+      id: "corporate_family_dividend",
+      phase: "corporate",
+      icon: "💎",
+      title: "公司第一次分红",
+      story:
+        "公司月利润突破¥20,000，你可以开始给自己发分红了。但在此之前，你决定先给家里人打一笔钱。\\n\\n爸：你挣了这么多，给我们也分点。\\n\\n妈：你存着吧，买房用。\\n\\n你站在公司的办公室里，看着窗外的城市，突然意识到——你终于能让家人不再吃苦了。",
+      conditions: function (st) {
+        return (
+          st.corporate &&
+          (st.corporate.level || 1) >= 3 &&
+          (st.corporate.monthlyProfit || 0) >= 20000 &&
+          !st.flags._corpFamilyDividend
+        );
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 给家里打¥20,000，给父母买新车（funds-¥20k，mood+10，morality+5）",
+          hint: "回报最大化",
+          apply: function (st) {
+            st.flags._corpFamilyDividend = true;
+            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 20000);
+            st.player.mood = Math.min(100, (st.player.mood || 50) + 10);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+            st.achievements = st.achievements || [];
+            st.achievements.push({ id: "family_dividend", name: "回报家人", desc: "公司盈利后给家人发第一笔分红", date: st.day });
+            StateManager.addMessage(
+              "💰 你给老家转了¥20,000，给父母买了辆五菱宏光。爸在电话那头声音有点抖：你小子，终于熬出来了。心情+10，道德+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💼 先攒首付，给家里打¥10,000（funds-¥10k，mood+5）",
+          hint: "兼顾事业与亲情",
+          apply: function (st) {
+            st.flags._corpFamilyDividend = true;
+            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 10000);
+            st.player.mood = Math.min(100, (st.player.mood || 50) + 5);
+            StateManager.addMessage(
+              "💼 你给家里打了¥10,000，自己留了大部分准备买房。妈说：你心里有数就好。心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   // 注入到 RANDOM_EVENTS

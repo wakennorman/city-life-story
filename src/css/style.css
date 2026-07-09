@@ -5197,3 +5197,20 @@ body {
 .tab-btn {
   touch-action: manipulation;
 }
+
+/* [R30] NPC 拜访按钮 */
+.npc-visit-btn {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-top: 4px;
+  font-size: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--success);
+  background: var(--bg-primary);
+  color: var(--success);
+  cursor: pointer;
+}
+.npc-visit-btn:hover {
+  background: var(--success);
+  color: var(--bg-primary);
+}
