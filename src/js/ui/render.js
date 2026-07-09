@@ -1299,9 +1299,6 @@ function renderCurrentTab(state, anchorGoodId) {
   // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
   renderStatsStrip(state, area);
 
-  // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
-  renderGoalStrip(state, area);
-
   // 活跃新闻
   renderActiveNews(state, area);
 
@@ -2872,6 +2869,159 @@ function getDailyActionTips(state) {
   return urgent.concat(tips);
 }
 
+// ── 引导面板：折叠显示"人生目标/阶段/目标/建议"，减少滚动负担 ──────────────
+function renderGuidanceBar(state, parent) {
+  var _SM = {
+    survival: { icon: "🌱", label: "初来乍到" },
+    debt: { icon: "💪", label: "站稳脚跟" },
+    growth: { icon: "🚀", label: "积累成长" },
+    corporate: { icon: "🏢", label: "职场打拼" },
+    advanced: { icon: "🏆", label: "有头有脸" },
+  };
+  var p = state.player,
+    r = state.resources || {};
+  var cash = (r.cash || 0) + (r.bankBalance || 0);
+  var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+  var stageId =
+    p.day <= 7
+      ? "survival"
+      : debt > 0
+        ? "debt"
+        : p.phase === "corporate"
+          ? cash >= 50000
+            ? "advanced"
+            : "corporate"
+          : "growth";
+  var si = _SM[stageId] || _SM.survival;
+
+  var dream =
+    typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
+  var progress =
+    dream && typeof getDreamProgress === "function"
+      ? Math.round(getDreamProgress(state))
+      : 0;
+  var tips = getDailyActionTips(state);
+  var isOpen = !!window._guidancePanelOpen;
+
+  var bar = document.createElement("div");
+  bar.className = "guidance-bar";
+
+  // ── 折叠条（单行，始终显示）
+  var parts = [];
+  if (dream) {
+    parts.push(
+      '<span class="gb-chip gb-dream">' +
+        _esc(dream.icon + " " + dream.name) +
+        "</span>" +
+        '<span class="gb-prog"><span class="gb-prog-fill" style="width:' +
+        progress +
+        '%"></span></span>' +
+        '<span class="gb-pct">' +
+        progress +
+        "%</span>",
+    );
+  }
+  parts.push('<span class="gb-chip">' + si.icon + " " + si.label + "</span>");
+  if (tips.length > 0) {
+    parts.push('<span class="gb-chip gb-tips">💡 ' + tips.length + "条</span>");
+  }
+  var strip = document.createElement("div");
+  strip.className = "guidance-bar-strip";
+  strip.innerHTML =
+    parts.join('<span class="gb-sep"> · </span>') +
+    '<span class="gb-toggle">' +
+    (isOpen ? "▲ 收起" : "▼ 引导") +
+    "</span>";
+  bar.appendChild(strip);
+
+  // ── 展开面板
+  var panel = document.createElement("div");
+  panel.className = "guidance-panel";
+  if (!isOpen) panel.style.display = "none";
+
+  if (dream) {
+    var s1 = document.createElement("div");
+    s1.className = "guidance-section";
+    renderGoalStrip(state, s1);
+    panel.appendChild(s1);
+  }
+  if (typeof renderLifeArcStrip === "function") {
+    var s2 = document.createElement("div");
+    s2.className = "guidance-section";
+    renderLifeArcStrip(state, s2);
+    panel.appendChild(s2);
+  }
+  if (typeof renderDailyQuestCard === "function") {
+    var s3 = document.createElement("div");
+    s3.className = "guidance-section";
+    renderDailyQuestCard(state, s3);
+    panel.appendChild(s3);
+  }
+  if (tips.length > 0) {
+    var s4 = document.createElement("div");
+    s4.className = "guidance-section";
+    var mental = (state.player && state.player.mental) || 0;
+    var mentalTag =
+      mental >= 80
+        ? "🧠 专家洞察"
+        : mental >= 60
+          ? "💡 进阶建议"
+          : "💡 今日建议";
+    var titleD = document.createElement("div");
+    titleD.style.cssText =
+      "font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;";
+    titleD.innerHTML =
+      mentalTag +
+      ' <span style="font-size:9px;color:var(--text-muted);font-weight:400;">（心智' +
+      mental +
+      "）</span>";
+    s4.appendChild(titleD);
+    var listD = document.createElement("div");
+    listD.style.cssText = "max-height:130px;overflow-y:auto;padding-right:2px;";
+    tips.forEach(function (t) {
+      var item = document.createElement("div");
+      item.style.cssText =
+        "font-size:12px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
+      item.textContent = t;
+      listD.appendChild(item);
+    });
+    s4.appendChild(listD);
+    panel.appendChild(s4);
+  }
+
+  bar.appendChild(panel);
+  parent.appendChild(bar);
+
+  // ── 展开/收起 + 自动定位当前阶段
+  function _scrollToCurStage() {
+    setTimeout(function () {
+      var arcWrap = bar.querySelector("#life-arc-wrap");
+      if (!arcWrap) return;
+      var cur = arcWrap.querySelector("[data-stage-cur]");
+      if (cur)
+        cur.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest",
+        });
+    }, 80);
+  }
+  if (isOpen) _scrollToCurStage();
+
+  strip.addEventListener("click", function () {
+    window._guidancePanelOpen = !window._guidancePanelOpen;
+    panel.style.display = window._guidancePanelOpen ? "block" : "none";
+    var tgl = strip.querySelector(".gb-toggle");
+    if (tgl) tgl.textContent = window._guidancePanelOpen ? "▲ 收起" : "▼ 引导";
+    if (window._guidancePanelOpen) {
+      setTimeout(function () {
+        bar.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 10);
+      _scrollToCurStage();
+    }
+  });
+}
+
 function renderActionsTab(state, parent) {
   var actions = getAvailableActions(state);
 
@@ -2898,53 +3048,8 @@ function renderActionsTab(state, parent) {
     }
   }
 
-  // === 人生旅程弧 + 今日目标卡（v3.11：解决"不知道干什么"留存痛点）===
-  if (typeof renderLifeArcStrip === "function") {
-    renderLifeArcStrip(state, parent);
-  }
-  if (typeof renderDailyQuestCard === "function") {
-    renderDailyQuestCard(state, parent);
-  }
-
-  // === 今日智能建议（心智驱动，不限数量，滚动展示）===
-  {
-    var tips = getDailyActionTips(state);
-    if (tips.length > 0) {
-      var tipBox = document.createElement("div");
-      tipBox.style.cssText =
-        "margin-bottom:14px;padding:10px 12px;background:rgba(74,158,92,0.06);border:1px solid rgba(74,158,92,0.25);border-radius:8px;";
-      var mental = (state.player && state.player.mental) || 0;
-      var mentalTag =
-        mental >= 80
-          ? "🧠 专家洞察"
-          : mental >= 60
-            ? "💡 进阶建议"
-            : "💡 今日建议";
-      // 标题行（静态文字，safe to innerHTML）
-      var titleDiv = document.createElement("div");
-      titleDiv.style.cssText =
-        "font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
-      titleDiv.innerHTML =
-        mentalTag +
-        ' <span style="font-size:9px;color:var(--text-muted);font-weight:400;">（心智' +
-        mental +
-        "）</span>";
-      tipBox.appendChild(titleDiv);
-      // 建议列表（用 textContent 避免 XSS）
-      var listDiv = document.createElement("div");
-      listDiv.style.cssText =
-        "max-height:110px;overflow-y:auto;padding-right:2px;";
-      tips.forEach(function (t) {
-        var item = document.createElement("div");
-        item.style.cssText =
-          "font-size:12px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
-        item.textContent = t;
-        listDiv.appendChild(item);
-      });
-      tipBox.appendChild(listDiv);
-      parent.appendChild(tipBox);
-    }
-  }
+  // === 引导面板（可展开/折叠，减少滚动负担）===
+  renderGuidanceBar(state, parent);
 
   // === 频次追踪 + 智能排序 ===
   if (typeof ActionSort !== "undefined" && ActionSort.sortActions) {
