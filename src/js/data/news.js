@@ -1511,8 +1511,68 @@ var NPC_INTEL_RULES = {
     {
       newsId: "e_commerce_festival",
       delay: 2,
-      text: "赵姐说几个做电商的朋友都在补税，说平台开始代扣代缴了。",
+      text: "赵姐说几个做电商的朋友都在备货，平台大促马上要开始了。",
       confidence: 70,
+    },
+  ],
+  xiaoli: [
+    {
+      newsId: "tech_fair",
+      delay: 2,
+      text: "小丽刷到同行在科技展直播，流量爆了，说下周也要去蹭热度。",
+      confidence: 72,
+    },
+    {
+      newsId: "second_hand_boom",
+      delay: 2,
+      text: "小丽说最近二手奢侈品在小红书上特别火，她几个姐妹都在做。",
+      confidence: 74,
+    },
+    {
+      newsId: "tourism_revival",
+      delay: 3,
+      text: "小丽说好几个旅游博主这个月接单接到手软，出境游好像确实在恢复。",
+      confidence: 68,
+    },
+  ],
+  chen_ge: [
+    {
+      newsId: "construction_boom",
+      delay: 1,
+      text: "陈哥说工头们都在抢人，好几个工地同时开工，人手严重不够。",
+      confidence: 78,
+    },
+    {
+      newsId: "winter_heating",
+      delay: 2,
+      text: "陈哥说最近暖气管道维护的活多了，天水暖工日结¥350起。",
+      confidence: 74,
+    },
+    {
+      newsId: "urban_renewal_pilot",
+      delay: 2,
+      text: "陈哥说他待过的几个城中村都有人来量房了，旧改真要在年底前动。",
+      confidence: 76,
+    },
+  ],
+  ajie: [
+    {
+      newsId: "tech_layoff",
+      delay: 2,
+      text: "阿杰说他几个在大厂的同学收到裁员预警，互联网寒冬又要来了。",
+      confidence: 70,
+    },
+    {
+      newsId: "crypto_crash",
+      delay: 1,
+      text: "阿杰说他的币圈群全在哀嚎，一夜之间爆仓的过半。他说幸好早跑了。",
+      confidence: 68,
+    },
+    {
+      newsId: "ai_boom",
+      delay: 3,
+      text: "阿杰说有个同学转行做AI培训了，三个月赚了以前一年的钱。",
+      confidence: 72,
     },
   ],
 };
@@ -1541,6 +1601,9 @@ function getNpcIntelSourceName(npcId) {
     xiaochen: "小陈",
     dr_wang: "王医生",
     zhaojie: "赵姐",
+    xiaoli: "小丽",
+    chen_ge: "陈哥",
+    ajie: "阿杰",
   };
   return names[npcId] || "熟人";
 }
