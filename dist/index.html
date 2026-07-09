@@ -40745,12 +40745,7 @@ if (typeof window !== "undefined") {
       // 需要已有健康问题或疲劳值偏高，且王医生已认识玩家
       var health = st.needs ? st.needs.health || 100 : 100;
       var fatigue = st.needs ? st.needs.fatigue || 0 : 0;
-      return (
-        st.player &&
-        st.player.day > 10 &&
-        health < 60 &&
-        fatigue > 40
-      );
+      return st.player && st.player.day > 10 && health < 60 && fatigue > 40;
     },
     probability: 0.025,
     repeatable: true,
@@ -40774,8 +40769,12 @@ if (typeof window !== "undefined") {
             );
           }
           // 建立王医生关系
-          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
-          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 5);
+          if (!st.relationships.dr_wang)
+            st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.affinity = Math.min(
+            100,
+            (st.relationships.dr_wang.affinity || 0) + 5,
+          );
           st.relationships.dr_wang.met = true;
           StateManager.addMessage(
             "🩺 王医生给你开了¥30的药，叮嘱你注意饮食规律。健康+15。医者仁心。",
@@ -40787,8 +40786,12 @@ if (typeof window !== "undefined") {
         text: "😅 我没事，就是没钱看病",
         hint: "只说实情，好感+3",
         apply: function (st) {
-          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
-          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 3);
+          if (!st.relationships.dr_wang)
+            st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.affinity = Math.min(
+            100,
+            (st.relationships.dr_wang.affinity || 0) + 3,
+          );
           st.relationships.dr_wang.met = true;
           st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
           StateManager.addMessage(
@@ -40828,22 +40831,34 @@ if (typeof window !== "undefined") {
         text: "🔧 我来听听——好像是轴承问题",
         hint: "修理≥20效果最佳",
         apply: function (st) {
-          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
-          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 8);
+          if (!st.relationships.master_zhao)
+            st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.affinity = Math.min(
+            100,
+            (st.relationships.master_zhao.affinity || 0) + 8,
+          );
           st.relationships.master_zhao.met = true;
           var repairLevel = st.skills.repair ? st.skills.repair.level || 0 : 0;
           if (repairLevel >= 20) {
             st.resources.cash += 80;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + 80;
-            addDailyTransaction(st, "income", "repair_help", 80, "赵师傅修车帮工");
-            if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
+            addDailyTransaction(
+              st,
+              "income",
+              "repair_help",
+              80,
+              "赵师傅修车帮工",
+            );
+            if (st.skills.repair)
+              st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
             StateManager.addMessage(
               "🔧 你听出发动机异响来自左轴承。赵师傅一拍大腿：「对上了！」\n他塞给你¥80，说以后有空来帮忙。好感+8，修理经验+40。",
               "success",
             );
           } else {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+            if (st.skills.repair)
+              st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
             StateManager.addMessage(
               "🔧 你不太确定是哪里的问题，但赵师傅说你愿意帮忙的心意不错。\n他简单教了你几个听异响的技巧。好感+8，修理经验+15。",
               "info",
@@ -40855,10 +40870,15 @@ if (typeof window !== "undefined") {
         text: "🔩 帮您递工具打下手",
         hint: "修理XP+15",
         apply: function (st) {
-          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
-          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 5);
+          if (!st.relationships.master_zhao)
+            st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.affinity = Math.min(
+            100,
+            (st.relationships.master_zhao.affinity || 0) + 5,
+          );
           st.relationships.master_zhao.met = true;
-          if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+          if (st.skills.repair)
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
           StateManager.addMessage(
             "🔩 你帮赵师傅递工具、扶发动机，虽然没直接上手修，但也学到了不少。\n修理经验+15。赵师傅说：「下次有空再来！」",
             "info",
@@ -40894,10 +40914,8 @@ if (typeof window !== "undefined") {
       return (
         st.player &&
         st.player.day > 20 &&
-        (
-          (st.fame || 0) >= 5 ||
-          (st.skills && st.skills.sales && st.skills.sales.level >= 10)
-        )
+        ((st.fame || 0) >= 5 ||
+          (st.skills && st.skills.sales && st.skills.sales.level >= 10))
       );
     },
     probability: 0.025,
@@ -40907,16 +40925,28 @@ if (typeof window !== "undefined") {
         text: "📱 帮你拍！我正好有空",
         hint: "收入+名气+社交",
         apply: function (st) {
-          if (!st.relationships.xiaoli) st.relationships.xiaoli = { affinity: 0, met: true };
-          st.relationships.xiaoli.affinity = Math.min(100, (st.relationships.xiaoli.affinity || 0) + 8);
+          if (!st.relationships.xiaoli)
+            st.relationships.xiaoli = { affinity: 0, met: true };
+          st.relationships.xiaoli.affinity = Math.min(
+            100,
+            (st.relationships.xiaoli.affinity || 0) + 8,
+          );
           st.relationships.xiaoli.met = true;
           var pay = Random.int(60, 120);
           st.resources.cash += pay;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + pay;
-          addDailyTransaction(st, "income", "content_collab", pay, "小丽拍摄帮工");
+          addDailyTransaction(
+            st,
+            "income",
+            "content_collab",
+            pay,
+            "小丽拍摄帮工",
+          );
           st.fame = Math.min(100, (st.fame || 0) + 3);
           StateManager.addMessage(
-            "📱 你帮小丽举了两小时补光灯，视频拍得很顺利。\n小丽请你吃了碗牛肉面，还把你介绍给她的粉丝群。收入¥" + pay + "，声望+3。",
+            "📱 你帮小丽举了两小时补光灯，视频拍得很顺利。\n小丽请你吃了碗牛肉面，还把你介绍给她的粉丝群。收入¥" +
+              pay +
+              "，声望+3。",
             "success",
           );
         },
@@ -40925,8 +40955,12 @@ if (typeof window !== "undefined") {
         text: "💡 我帮你联系专业摄影师",
         hint: "好感+5",
         apply: function (st) {
-          if (!st.relationships.xiaoli) st.relationships.xiaoli = { affinity: 0, met: true };
-          st.relationships.xiaoli.affinity = Math.min(100, (st.relationships.xiaoli.affinity || 0) + 5);
+          if (!st.relationships.xiaoli)
+            st.relationships.xiaoli = { affinity: 0, met: true };
+          st.relationships.xiaoli.affinity = Math.min(
+            100,
+            (st.relationships.xiaoli.affinity || 0) + 5,
+          );
           st.relationships.xiaoli.met = true;
           if (st.skills && st.skills.sales) {
             st.skills.sales.xp = (st.skills.sales.xp || 0) + 15;
