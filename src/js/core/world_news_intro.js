@@ -2367,30 +2367,33 @@ function applyWorldNewsToParams(state, selectedNews) {
 function applyIntroNewsDirectEffects(state, selectedNews) {
   if (!state || !selectedNews || selectedNews.length === 0) return;
 
-  // --- 1. 应用工作加成 ---
+  // --- 1. 应用工作加成（与 news.js 保持一致，使用 _jobMultipliers） ---
   if (state._introJobBonuses) {
     var jobBonusEntries = Object.keys(state._introJobBonuses);
     if (jobBonusEntries.length > 0) {
-      state._worldJobModifiers = state._worldJobModifiers || {};
+      state._jobMultipliers = state._jobMultipliers || {};
       for (var jbi = 0; jbi < jobBonusEntries.length; jbi++) {
         var jid = jobBonusEntries[jbi];
-        state._worldJobModifiers[jid] =
-          (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
+        state._jobMultipliers[jid] =
+          (state._jobMultipliers[jid] || 1) * state._introJobBonuses[jid];
       }
     }
   }
 
-  // --- 2. 应用价格修正 ---
+  // --- 2. 应用价格修正（直接修改 goodsPrices，与 news.js applyNewsEffect 一致） ---
   if (state._introPriceMods) {
     var priceModEntries = Object.keys(state._introPriceMods);
-    if (priceModEntries.length > 0) {
-      // 将价格修正应用到所有地点的商品价格
+    if (priceModEntries.length > 0 && state.trade && state.trade.goodsPrices) {
       for (var pmi = 0; pmi < priceModEntries.length; pmi++) {
         var goodId = priceModEntries[pmi];
         var mod = state._introPriceMods[goodId];
         if (mod !== 1.0) {
-          state._worldPriceMods = state._worldPriceMods || {};
-          state._worldPriceMods[goodId] = mod;
+          for (var locKey in state.trade.goodsPrices) {
+            var prices = state.trade.goodsPrices[locKey];
+            if (prices && prices[goodId]) {
+              prices[goodId] = Math.round(prices[goodId] * mod * 100) / 100;
+            }
+          }
         }
       }
     }

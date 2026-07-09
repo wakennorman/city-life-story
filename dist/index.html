@@ -53017,6 +53017,10 @@ const WORLD_NEWS_DB = {
         sectorHeat: { 金融: 0.1, 科技: 0.04 },
         marketMood: "bullish",
         note: "金融/投资岗位薪资走高，财会/金融类证书价值提升",
+        jobBonus: [
+          { id: "accounting", mul: 1.12 },
+          { id: "financial_advisor", mul: 1.15 },
+        ],
       },
       investmentEffect: [
         { industry: "金融", mul: 1.1 },
@@ -55158,15 +55162,25 @@ function applyWorldNewsToParams(state, selectedNews) {
       state._introJobBonuses = state._introJobBonuses || {};
       for (var ji = 0; ji < eff.jobBonus.length; ji++) {
         var jb = eff.jobBonus[ji];
-        state._introJobBonuses[jb.id] = jb.mul || 1.1;
+        if (typeof jb === "string") {
+          state._introJobBonuses[jb] = eff.jobMultiplier || 1.1;
+        } else if (jb && jb.id) {
+          state._introJobBonuses[jb.id] = jb.mul || eff.jobMultiplier || 1.1;
+        }
       }
     }
     if (eff.jobPenalty && Array.isArray(eff.jobPenalty)) {
       state._introJobBonuses = state._introJobBonuses || {};
       for (var pj = 0; pj < eff.jobPenalty.length; pj++) {
         var jp = eff.jobPenalty[pj];
-        state._introJobBonuses[jp] =
-          (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+        if (typeof jp === "string") {
+          state._introJobBonuses[jp] =
+            (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+        } else if (jp && jp.id) {
+          state._introJobBonuses[jp.id] =
+            (state._introJobBonuses[jp.id] || 1) *
+            (jp.mul || eff.jobMultiplier || 0.7);
+        }
       }
     }
 
@@ -55221,30 +55235,33 @@ function applyWorldNewsToParams(state, selectedNews) {
 function applyIntroNewsDirectEffects(state, selectedNews) {
   if (!state || !selectedNews || selectedNews.length === 0) return;
 
-  // --- 1. 应用工作加成 ---
+  // --- 1. 应用工作加成（与 news.js 保持一致，使用 _jobMultipliers） ---
   if (state._introJobBonuses) {
     var jobBonusEntries = Object.keys(state._introJobBonuses);
     if (jobBonusEntries.length > 0) {
-      state._worldJobModifiers = state._worldJobModifiers || {};
+      state._jobMultipliers = state._jobMultipliers || {};
       for (var jbi = 0; jbi < jobBonusEntries.length; jbi++) {
         var jid = jobBonusEntries[jbi];
-        state._worldJobModifiers[jid] =
-          (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
+        state._jobMultipliers[jid] =
+          (state._jobMultipliers[jid] || 1) * state._introJobBonuses[jid];
       }
     }
   }
 
-  // --- 2. 应用价格修正 ---
+  // --- 2. 应用价格修正（直接修改 goodsPrices，与 news.js applyNewsEffect 一致） ---
   if (state._introPriceMods) {
     var priceModEntries = Object.keys(state._introPriceMods);
-    if (priceModEntries.length > 0) {
-      // 将价格修正应用到所有地点的商品价格
+    if (priceModEntries.length > 0 && state.trade && state.trade.goodsPrices) {
       for (var pmi = 0; pmi < priceModEntries.length; pmi++) {
         var goodId = priceModEntries[pmi];
         var mod = state._introPriceMods[goodId];
         if (mod !== 1.0) {
-          state._worldPriceMods = state._worldPriceMods || {};
-          state._worldPriceMods[goodId] = mod;
+          for (var locKey in state.trade.goodsPrices) {
+            var prices = state.trade.goodsPrices[locKey];
+            if (prices && prices[goodId]) {
+              prices[goodId] = Math.round(prices[goodId] * mod * 100) / 100;
+            }
+          }
         }
       }
     }
@@ -55457,10 +55474,7 @@ function applyIntroChoice(choiceId, state) {
         st.skills = st.skills || {};
         st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
         st.skills.coding.xp = (st.skills.coding.xp || 0) + 10;
-        st.needs.intelligence = Math.min(
-          100,
-          (st.needs.intelligence || 0) + 5,
-        );
+        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 5);
         st.flags._introStudyTech = true;
       },
       msg: "💻 你报名了编程培训班，花了¥200。编码技能经验+10，智力需求+5。",
@@ -55468,10 +55482,7 @@ function applyIntroChoice(choiceId, state) {
     start_side_hustle: {
       apply: function (st) {
         st.resources.cash = (st.resources.cash || 0) + 100;
-        st.needs.fatigue = Math.min(
-          100,
-          (st.needs.fatigue || 0) + 5,
-        );
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
         st.flags._introSideHustle = true;
       },
       msg: "🛒 你找了份零工过渡，赚了¥100。虽然辛苦，但先站稳脚跟。",
@@ -55491,10 +55502,7 @@ function applyIntroChoice(choiceId, state) {
     },
     explore_city: {
       apply: function (st) {
-        st.needs.happiness = Math.min(
-          100,
-          (st.needs.happiness || 0) + 5,
-        );
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
         st.flags._introExploredCity = true;
       },
       msg: "🚶 你花了半天逛了逛城市，心情好了不少。对这座城市有了初步了解。",
@@ -98819,7 +98827,10 @@ const DAILY_PIPELINE = [
       var eco = window.EconomySystem;
       // 应用难度收入乘数到工作收入（如果已有 jobMultipliers）
       if (state._difficulty && state._difficulty !== "normal") {
-        var incomeMult = eco.getDifficultyIncomeMultiplier(state._difficulty, "baseSalaryMult");
+        var incomeMult = eco.getDifficultyIncomeMultiplier(
+          state._difficulty,
+          "baseSalaryMult",
+        );
         if (incomeMult !== 1.0) {
           // 通过全局乘数影响所有收入
           state._allJobsBonus = state._allJobsBonus || 1.0;
@@ -98827,13 +98838,27 @@ const DAILY_PIPELINE = [
         }
       }
       // 中后期财富税（仅当总资产≥¥20万且不是休闲模式）
-      var totalAssets = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
-      if (totalAssets >= 200000 && state._difficulty !== "casual" && state._difficulty !== "easy") {
+      var totalAssets =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      if (
+        totalAssets >= 200000 &&
+        state._difficulty !== "casual" &&
+        state._difficulty !== "easy"
+      ) {
         var diff = state._difficulty || "normal";
         var wealthTax = eco.calculateProgressiveWealthTax(totalAssets, diff);
         if (wealthTax > 0 && state.player && state.player.day > 30) {
-          state.resources.cash = Math.max(0, (state.resources.cash || 0) - wealthTax);
-          addDailyTransaction(state, "expense", "wealth_tax", wealthTax, "累进财富税");
+          state.resources.cash = Math.max(
+            0,
+            (state.resources.cash || 0) - wealthTax,
+          );
+          addDailyTransaction(
+            state,
+            "expense",
+            "wealth_tax",
+            wealthTax,
+            "累进财富税",
+          );
         }
       }
     },
