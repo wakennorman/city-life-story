@@ -43714,6 +43714,555 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ================================================================
+  // 空白区填充 Batch 2：5个新联动事件（v3.21 新增）
+  // 场景5：债务清零 → 轻装上阵（重大人生转折）
+  // 场景6：技能50+ 职业尊严 → 社会认可事件
+  // 场景7：季节×住所×天气三重联动 → 寒冬庇护
+  // 场景8：连续多天同一行动 → 肌肉记忆/习惯事件
+  // 场景9：父母生日/节日关怀 → 家庭系统联动
+  // ================================================================
+
+  // 场景5：债务清零 — 轻装上阵
+  // 设计意图：还清债务是游戏中最重要的里程碑之一，但目前缺少庆祝/反思事件
+  RANDOM_EVENTS.push({
+    id: "debt_freed_light_step",
+    phase: "street",
+    icon: "🎉",
+    title: "终于还清了",
+    story:
+      "你打开手机银行，看到最后一个还款通知：「您的贷款已全部结清。」\n\n你站在路边愣了很久。从第一天被催债短信吓醒，到现在终于一身轻松——这笔钱花掉了你整整大半年的收入。\n\n街边的早餐摊飘来香味，你忽然觉得今天的阳光格外好。",
+    // [自洽新增] conditions：债务清零 + 之前有还款记录 + 游戏≥30天
+    conditions: function (st) {
+      var debt = st.resources.debt || 0;
+      if (debt > 0) return false;
+      if (!st.flags._paidOffAnyDebt) return false;
+      if (st.flags._debtFreedSeen) return false;
+      if (st.player.day < 30) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍜 吃顿好的庆祝一下",
+        hint: "花¥200犒劳自己",
+        apply: function (st) {
+          st.flags._debtFreedSeen = true;
+          st.flags._paidOffAnyDebt = true;
+          if (st.resources.cash >= 200) {
+            st.resources.cash -= 200;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 20);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            StateManager.addMessage(
+              "🍜 你走进一家平时舍不得去的餐馆，点了两个菜一瓶饮料。吃饱喝足走出门，感觉整个人都轻了。心情+20，疲劳-10。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "🍜 你想吃顿好的庆祝，但口袋里只剩几十块。算了，明天再补。心情+8。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📞 给家里打个电话",
+        hint: "报喜不报忧",
+        apply: function (st) {
+          st.flags._debtFreedSeen = true;
+          st.flags._paidOffAnyDebt = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "📞 你拨通了家里的电话。妈问最近怎么样，你说「挺好的，一切都好」——这是你第一次可以说这句真话。心情+15，心智+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 继续攒钱，目标更远",
+        hint: "稳扎稳打",
+        apply: function (st) {
+          st.flags._debtFreedSeen = true;
+          st.flags._paidOffAnyDebt = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "💪 你深吸一口气，把手机放回口袋。没有庆祝，没有停顿——下一步是攒第一笔存款。心态稳了，路就长了。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 场景6：技能50+ → 职业尊严（社会认可）
+  // 设计意图：玩家在某技能上投入大量时间后，获得来自社会的正向反馈
+  // 这是禀赋效应的叙事体现——玩家对自己培养的技能产生情感依附
+  RANDOM_EVENTS.push({
+    id: "skill_milestone_recognition",
+    phase: "street",
+    icon: "⭐",
+    title: "高手的名号",
+    story:
+      "你在街上修东西的事传开了。今天有个穿西装的人走过来，递上一张名片：「听说你这儿什么都能修？我公司设备老坏，能不能请你去看看？一个月¥3000，兼职。」\n\n你看了看名片上的公司名——居然是个正经企业。",
+    // [自洽新增] conditions：任一技能≥50 且 街头阶段
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.flags._skillMilestoneSeen) return false;
+      if (st.player.day < 40) return false;
+      if (!st.skills) return false;
+      var skilledSkills = [];
+      for (var sk in st.skills) {
+        if (st.skills[sk] && st.skills[sk].level >= 50) {
+          skilledSkills.push(sk);
+        }
+      }
+      if (skilledSkills.length === 0) return false;
+      st._skillMilestoneTrigger = skilledSkills[0];
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接了这份兼职",
+        hint: "月收入+3000",
+        apply: function (st) {
+          st.flags._skillMilestoneSeen = true;
+          st.flags._skillMilestoneSkill = st._skillMilestoneTrigger || "repair";
+          st.flags._monthlySkilledGig = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "⭐ 你接下了这份兼职。技能" +
+              (st._skillMilestoneTrigger || "修理") +
+              "达到专业水平，开始获得市场认可。名气+5，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 先了解工作内容再决定",
+        hint: "谨慎起见",
+        apply: function (st) {
+          st.flags._skillMilestoneSeen = true;
+          st.flags._skillMilestoneSkill = st._skillMilestoneTrigger || "repair";
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "📋 你接过名片仔细看了看。技能" +
+              (st._skillMilestoneTrigger || "修理") +
+              "确实练出来了，但兼职也得看合不合适。心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🙋 谢谢，但想自己开店",
+        hint: "志向更大",
+        apply: function (st) {
+          st.flags._skillMilestoneSeen = true;
+          st.flags._skillMilestoneSkill = st._skillMilestoneTrigger || "repair";
+          st.flags._wantOwnShop = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🙋 你说想自己开店。西装男愣了一下，笑了：「有野心是好事。」技能" +
+              (st._skillMilestoneTrigger || "修理") +
+              "的自信在你心里种下了种子。心智+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 场景7：季节×住所×天气三重联动 → 寒冬庇护
+  // 设计意图：寒冬天气下，不同住所条件的玩家体验完全不同
+  // 露宿=生死考验，合租=勉强过关，独居以上=舒适享受
+  RANDOM_EVENTS.push({
+    id: "cold_snap_housing_crisis",
+    phase: "street",
+    icon: "🥶",
+    title: "寒潮来袭",
+    story:
+      "气象台发布了寒潮蓝色预警：未来三天最低气温降至零下10度。寒风像刀子一样割在脸上，街上的行人都裹紧了衣服。\n\n你看了看自己住的地方——",
+    // [自洽新增] conditions：雪天/暴雨天气 + 住所≤豪华公寓以下
+    conditions: function (st) {
+      if (st.weather && st.weather.current === "heatwave") return false;
+      var isColdWeather =
+        st.weather &&
+        (st.weather.current === "snowy" || st.weather.current === "stormy");
+      if (!isColdWeather) return false;
+      if (st.player.day < 5) return false;
+      var housingTier =
+        st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
+      if (housingTier > 4) return false;
+      if (st.flags._coldSnapHousingSeen) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: true,
+    choices: function (st) {
+      var housingTier =
+        st.housing && st.housing.tier !== undefined ? st.housing.tier : 0;
+
+      if (housingTier === 0) {
+        return [
+          {
+            text: "🏚️ 找个桥洞凑合一晚",
+            hint: "健康-12，但免费",
+            apply: function (s) {
+              s.flags._coldSnapHousingSeen = true;
+              s.status.health = Math.max(0, (s.status.health || 70) - 12);
+              s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 15);
+              StateManager.addMessage(
+                "🏚️ 桥洞里的风像冰锥一样扎人。你裹着所有衣服蜷缩了一夜，早上起来浑身僵硬。健康-12，疲劳+15。",
+                "danger",
+              );
+            },
+          },
+          {
+            text: "🏪 24小时便利店熬一晚",
+            hint: "花¥30买咖啡，健康-3",
+            cost: 30,
+            apply: function (s) {
+              s.flags._coldSnapHousingSeen = true;
+              if (s.resources.cash >= 30) {
+                s.resources.cash -= 30;
+                s.status.health = Math.max(0, (s.status.health || 70) - 3);
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) + 5,
+                );
+                StateManager.addMessage(
+                  "🏪 你买了杯热咖啡在便利店坐到天亮。虽然被保安赶了两次，但至少没冻着。健康-3，心情+5。",
+                  "info",
+                );
+              } else {
+                s.status.health = Math.max(0, (s.status.health || 70) - 8);
+                StateManager.addMessage(
+                  "🏪 你没钱买咖啡，只能在便利店门口站着。店员看你可怜，给了你半杯剩咖啡。健康-8。",
+                  "warning",
+                );
+              }
+            },
+          },
+        ];
+      }
+
+      if (housingTier === 1 || housingTier === 2) {
+        return [
+          {
+            text: "🔥 把暖气开到最大",
+            hint: "花¥50电费，但温暖",
+            cost: 50,
+            apply: function (s) {
+              s.flags._coldSnapHousingSeen = true;
+              if (s.resources.cash >= 50) {
+                s.resources.cash -= 50;
+                s.needs.happiness = Math.min(
+                  100,
+                  (s.needs.happiness || 50) + 10,
+                );
+                s.status.health = Math.min(
+                  100,
+                  (s.status.health || 70) + 5,
+                );
+                StateManager.addMessage(
+                  "🔥 你把暖气开到最大，房间里终于有了温度。虽然电费账单会让人心痛，但今晚能睡个好觉了。心情+10，健康+5。",
+                  "success",
+                );
+              } else {
+                s.needs.happiness = Math.max(
+                  0,
+                  (s.needs.happiness || 50) - 5,
+                );
+                StateManager.addMessage(
+                  "🔥 你想开暖气，但余额不够交电费。只能多盖一层被子。心情-5。",
+                  "warning",
+                );
+              }
+            },
+          },
+          {
+            text: "🛏️ 裹紧被子硬扛",
+            hint: "免费，但睡眠差",
+            apply: function (s) {
+              s.flags._coldSnapHousingSeen = true;
+              s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 8);
+              s.status.health = Math.max(0, (s.status.health || 70) - 3);
+              StateManager.addMessage(
+                "🛏️ 你裹紧被子，但寒气还是从墙壁渗进来。一夜没睡踏实，早上起来浑身酸痛。健康-3，疲劳+8。",
+                "info",
+              );
+            },
+          },
+        ];
+      }
+
+      // 一居室及以上
+      return [
+        {
+          text: "🍲 煮碗热汤面犒劳自己",
+          hint: "花¥20，心情+10",
+          cost: 20,
+          apply: function (s) {
+            s.flags._coldSnapHousingSeen = true;
+            if (s.resources.cash >= 20) {
+              s.resources.cash -= 20;
+              s.needs.happiness = Math.min(
+                100,
+                (s.needs.happiness || 50) + 10,
+              );
+              s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 15);
+              StateManager.addMessage(
+                "🍲 你煮了一碗热腾腾的汤面，加了鸡蛋和青菜。窗外的寒风和你碗里的热气形成两个世界。心情+10。",
+                "success",
+              );
+            } else {
+              StateManager.addMessage(
+                "🍲 你想煮碗面，但连面条的钱都没有了。泡了杯热水凑合。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📱 给老家打个电话问候",
+          hint: "亲情温暖，心情+8",
+          apply: function (s) {
+            s.flags._coldSnapHousingSeen = true;
+            s.needs.happiness = Math.min(
+              100,
+              (s.needs.happiness || 50) + 8,
+            );
+            s.player.mental = Math.min(100, (s.player.mental || 0) + 4);
+            StateManager.addMessage(
+              "📱 你拨通了家里的电话。妈妈说「天冷了多穿点」，你鼻子一酸。挂了电话后，房间好像没那么冷了。心情+8，心智+4。",
+              "success",
+            );
+          },
+        },
+      ];
+    },
+  });
+
+  // 场景8：连续多天同一行动 → 肌肉记忆/习惯事件
+  // 设计意图：玩家反复做同一件事后，系统给予叙事反馈
+  // 这是对"刻意练习"概念的 gamification 体现
+  RANDOM_EVENTS.push({
+    id: "muscle_memory_breakthrough",
+    phase: "street",
+    icon: "💪",
+    title: "肌肉记住了",
+    story:
+      "你已经连续一周做同样的事了。今天，你突然发现——不用思考，手自己就知道该怎么做了。\n\n就像骑自行车一样，某些动作已经刻进了肌肉记忆里。你低头看了看自己的手，它们好像有了自己的意志。",
+    // [自洽新增] conditions：任一行动类型累计≥50次
+    conditions: function (st) {
+      if (st.flags._muscleMemorySeen) return false;
+      if (st.player.day < 20) return false;
+      if (!st.stats || !st.stats.actionFreq) return false;
+      var maxFreq = 0;
+      var maxAction = "";
+      for (var act in st.stats.actionFreq) {
+        if (st.stats.actionFreq[act] > maxFreq) {
+          maxFreq = st.stats.actionFreq[act];
+          maxAction = act;
+        }
+      }
+      if (maxFreq < 50) return false;
+      st._muscleMemoryAction = maxAction;
+      st._muscleMemoryFreq = maxFreq;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧠 趁热打铁，继续练",
+        hint: "相关技能+25XP",
+        apply: function (st) {
+          st.flags._muscleMemorySeen = true;
+          var action = st._muscleMemoryAction || "unknown";
+          var skillMap = {
+            manual_labor_construction: "physique",
+            waste_recycling: "physique",
+            food_stall: "cooking",
+            street_vending_goods: "sales",
+            delivery_rider: "driving",
+            courier_gig: "agility",
+          };
+          var skillName = skillMap[action] || "physique";
+          if (st.skills && st.skills[skillName]) {
+            st.skills[skillName].xp = Math.min(
+              1000,
+              (st.skills[skillName].xp || 0) + 25,
+            );
+            StateManager.addMessage(
+              "💪 你决定继续练。" +
+                action +
+                "你已经做了" +
+                (st._muscleMemoryFreq || 0) +
+                "次——肌肉记住了。" +
+                skillName +
+                "经验+25。",
+              "success",
+            );
+          } else {
+            st.player.physique = Math.min(
+              100,
+              (st.player.physique || 20) + 2,
+            );
+            StateManager.addMessage(
+              "💪 你继续练。" +
+                action +
+                "你已经做了" +
+                (st._muscleMemoryFreq || 0) +
+                "次——肌肉记住了。体质+2。",
+              "success",
+            );
+          }
+        },
+      },
+      {
+        text: "🔄 换个新活试试",
+        hint: "探索新方向",
+        apply: function (st) {
+          st.flags._muscleMemorySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🔄 你觉得该换个口味了。" +
+              (st._muscleMemoryAction || "之前的活") +
+              "练得够多了，是时候看看别的可能。心情+5，心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📝 记录心得，总结经验",
+        hint: "智力+2，获得长期buff",
+        apply: function (st) {
+          st.flags._muscleMemorySeen = true;
+          st.flags._muscleMemoryNotes = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 20) + 2,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "📝 你坐下来把这段时间的经验写成笔记。" +
+              (st._muscleMemoryAction || "这份工作") +
+              "的门道你摸透了。智力+2，心智+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 场景9：父母生日关怀 → 家庭系统联动
+  // 设计意图：父母的生日/节日是游戏中少有的情感锚点，缺少叙事反馈
+  // 连接"家庭系统"与"情感需求系统"的桥梁事件
+  RANDOM_EVENTS.push({
+    id: "parent_birthday_call",
+    phase: "street",
+    icon: "📞",
+    title: "爸妈的电话",
+    story:
+      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是他们的结婚纪念日，也是母亲的生日。你差点忘了。",
+    // [自洽新增] conditions：家庭系统存在 + 周末触发
+    conditions: function (st) {
+      if (!st.family) return false;
+      if (st.flags._parentBirthdayCallSeen) return false;
+      if (st.player.day < 15) return false;
+      var isWeekend = st.player.day % 7 === 0 || st.player.day % 7 === 6;
+      return isWeekend;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎂 订个蛋糕寄回去",
+        hint: "花¥150，家人陪伴↑",
+        cost: 150,
+        apply: function (st) {
+          st.flags._parentBirthdayCallSeen = true;
+          if (st.resources.cash >= 150) {
+            st.resources.cash -= 150;
+            st.needs.happiness = Math.min(
+              100,
+              (st.needs.happiness || 0) + 15,
+            );
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (st.family && st.family.parents) {
+              st.family.parents.father.companionship = Math.min(
+                100,
+                (st.family.parents.father.companionship || 10) + 15,
+              );
+              st.family.parents.mother.companionship = Math.min(
+                100,
+                (st.family.parents.mother.companionship || 10) + 15,
+              );
+            }
+            StateManager.addMessage(
+              "🎂 你订了一个蛋糕寄回老家。妈妈打来电话说爸爸感动得不得了。你听着电话那头的笑声，觉得¥150花得值。心情+15，家人陪伴+15。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "🎂 你想订个蛋糕，但算了算余额不够。只能打电话祝生日快乐。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📞 陪他们聊久一点",
+        hint: "免费，但情感满足",
+        apply: function (st) {
+          st.flags._parentBirthdayCallSeen = true;
+          st.needs.happiness = Math.min(
+            100,
+            (st.needs.happiness || 0) + 12,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
+          if (st.family && st.family.parents) {
+            st.family.parents.father.companionship = Math.min(
+              100,
+              (st.family.parents.father.companionship || 10) + 8,
+            );
+            st.family.parents.mother.companionship = Math.min(
+              100,
+              (st.family.parents.mother.companionship || 10) + 8,
+            );
+          }
+          StateManager.addMessage(
+            "📞 你和爸妈聊了一个小时。从工作聊到邻居家的小事，最后爸爸说「累了就回家」。你挂断电话，眼眶有点热。心情+12，心智+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 随便聊几句就挂了",
+        hint: "匆忙，省时间",
+        apply: function (st) {
+          st.flags._parentBirthdayCallSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3);
+          StateManager.addMessage(
+            "😶 你说「还行，忙呢」就挂了电话。妈妈还想说什么，你已经把手机塞回了口袋。明天可能会后悔。心情-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
@@ -93943,7 +94492,12 @@ function treatIllness(illnessId, tier) {
   if (!ill) return;
   var cost = (ill.treatCost && ill.treatCost[tier]) || 0;
   // 王医生诊所折扣：有 flags.wangClinicDiscount 且 _clinicDiscountDays > 0 时打八折
-  if (cost > 0 && state.flags && state.flags.wangClinicDiscount && state._clinicDiscountDays > 0) {
+  if (
+    cost > 0 &&
+    state.flags &&
+    state.flags.wangClinicDiscount &&
+    state._clinicDiscountDays > 0
+  ) {
     cost = Math.round(cost * 0.8);
     state._clinicDiscountDays--;
     if (state._clinicDiscountDays <= 0) {
