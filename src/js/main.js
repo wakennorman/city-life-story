@@ -3869,6 +3869,28 @@ function getAvailableActions(state) {
 }
 
 /** 执行街头工作 */
+// v3.70 收益浮动数字动效
+function showEarnFloat(amount, sourceEl) {
+  if (!amount || amount <= 0) return;
+  var el = document.createElement("div");
+  el.className = "earn-float" + (amount >= 500 ? " earn-big" : "");
+  el.textContent = "+¥" + amount;
+  // 定位：优先跟随来源元素，否则屏幕中央偏上
+  var x = window.innerWidth / 2 - 30;
+  var y = window.innerHeight * 0.38;
+  if (sourceEl) {
+    var rect = sourceEl.getBoundingClientRect();
+    x = rect.left + rect.width / 2 - 20;
+    y = rect.top - 8;
+  }
+  el.style.left = Math.max(8, Math.min(x, window.innerWidth - 80)) + "px";
+  el.style.top = y + "px";
+  document.body.appendChild(el);
+  el.addEventListener("animationend", function () {
+    el.remove();
+  });
+}
+
 function doStreetJob(job) {
   const state = StateManager.getState();
 
@@ -4269,6 +4291,10 @@ function doStreetJob(job) {
     pay,
     "工作收入 - " + (job.name || "临时工"),
   );
+
+  // v3.70 收益浮动数字
+  var _hotCardEl = document.querySelector('[data-action-id="' + job.id + '"]');
+  showEarnFloat(pay, _hotCardEl);
 
   // === 城管检查（摆摊类工作）===
   const vendingJobs = [

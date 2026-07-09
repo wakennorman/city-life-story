@@ -3310,6 +3310,16 @@ function createActionCard(action, state) {
     card.classList.add("disabled");
   }
 
+  // v3.70 热招工作高亮
+  if (
+    state &&
+    state.flags &&
+    state.flags._dailyHotJob &&
+    state.flags._dailyHotJob.jobId === action.id
+  ) {
+    card.classList.add("card-hot");
+  }
+
   // 新行动标记
   var isNew = false;
   if (typeof ActionSort !== "undefined" && ActionSort.isActionNew && state) {
