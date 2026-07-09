@@ -7709,6 +7709,7 @@
     // 1. 长期跑腿后的老手特遇 — 连续跑腿≥30天，老主顾回头
     {
       id: "gig_regular_customer",
+      title: "回头客",
       name: "回头客",
       icon: "🤝",
       phase: "street",
@@ -7766,6 +7767,7 @@
     // 2. 修理技能≥40的专业人士视角 — 能识别假冒伪劣商品
     {
       id: "repair_expert_inspection",
+      title: "行家眼光",
       name: "行家眼光",
       icon: "🔍",
       phase: "street",
@@ -7832,6 +7834,7 @@
     // 3. NPC好感≥60的意外发现 — 小美透露科技园扩建内幕
     {
       id: "xiao_mei_techpark_tip",
+      title: "小美的消息",
       name: "小美的消息",
       icon: "📐",
       phase: "street",
@@ -7910,6 +7913,7 @@
     // 4. 天气×位置组合情境 — 暴雨时在批发市场
     {
       id: "storm_market_dilemma",
+      title: "暴雨中的市场",
       name: "暴雨中的市场",
       icon: "🌧️",
       phase: "street",
@@ -7989,6 +7993,7 @@
     // 5. 道德值极端分叉 — 高道德 vs 低道德面对同一事件
     {
       id: "moral_extreme_pickpocket",
+      title: "道德的岔路",
       name: "道德的岔路",
       icon: "⚖️",
       phase: "street",
@@ -8108,6 +8113,7 @@
     // 链式后续：小美科技园消息兑现
     {
       id: "xiao_mei_techpark_payoff",
+      title: "科技园官宣了！",
       name: "科技园官宣了！",
       icon: "🏗️",
       phase: "street",
