@@ -156,7 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-09)**：v3.70 — 微动效系统：触摸反馈+热招脉冲+收益浮动数字
+- **最新一次工作 (2026-07-10)**：v3.71(loop R27) — 指令一扫描0真实A类+4新增高影响事件(技能满级/六位数财富/豪宅/夏夜)
+  - **gap分析发现**: 最高Impact空白区 = 技能满级(0事件) > 财富里程碑(1事件) > 住房高端(0事件) > 季节叙事(0事件)
+  - **新增4事件**: skill_absolute_mastery_capstone(满级收徒/写心法) / wealth_six_figure_milestone(六位数时刻) / luxury_housing_new_life(豪宅搬家) / summer_night_market_boom(旺季出摊)
+  - **影响文件**: cross_system_events.js(+317行) / linkage-events-gdd.md(+41行)
+  - **验证**: node --check ✅ / build.py 5901.2KB ✅
+  - **commit**: `f72ec70d`+`35d7ce40`(本地待推)
+
+- **上一轮工作 (2026-07-09)**：v3.70 — 微动效系统：触摸反馈+热招脉冲+收益浮动数字
   - **P0 触摸反馈**：action-card:active scale(0.95) + tab-btn:active scale(0.92) + touch-action:manipulation（消除iOS 300ms延迟）
   - **P1 热招引导脉冲**：.card-hot（card-hot-pulse 2s∞金黄边框+背景+🔥前缀），createActionCard自动注入
   - **P1 收益浮动数字**：showEarnFloat(pay, cardEl)，doStreetJob后触发，≥¥500大字金黄色
