@@ -886,6 +886,7 @@ const SCENARIOS = [
         id: "academic_excellence",
         name: "学霸",
         icon: "📚",
+        rarity: "common",
         desc: "大学GPA拔尖，智力+10",
         apply: function (s) {
           s.player.intelligence = Math.min(100, s.player.intelligence + 10);
@@ -895,6 +896,7 @@ const SCENARIOS = [
         id: "social_butterfly_grad",
         name: "社牛",
         icon: "🎤",
+        rarity: "common",
         desc: "大学人缘超好，魅力+10，心情+5",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 10);
@@ -905,7 +907,8 @@ const SCENARIOS = [
         id: "internet_native",
         name: "互联网原住民",
         icon: "💻",
-        desc: "从小玩电脑，编程技能+10",
+        rarity: "common",
+        desc: "从小玩电脑，编程+10",
         apply: function (s) {
           if (s.skills.coding)
             s.skills.coding.level = Math.min(100, s.skills.coding.level + 10);
@@ -915,10 +918,48 @@ const SCENARIOS = [
         id: "fearless_rookie",
         name: "初生牛犊",
         icon: "🔥",
+        rarity: "common",
         desc: "什么都不怕，能力+10，敏捷+5",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 10);
           s.player.agility = Math.min(100, s.player.agility + 5);
+        },
+      },
+      {
+        id: "well_rounded",
+        name: "全面发展",
+        icon: "🌈",
+        rarity: "uncommon",
+        desc: "德智体全面，智力+7，魅力+7，敏捷+7",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 7);
+          s.player.charm = Math.min(100, s.player.charm + 7);
+          s.player.agility = Math.min(100, s.player.agility + 7);
+        },
+      },
+      {
+        id: "tech_specialist",
+        name: "专业热门",
+        icon: "🔬",
+        rarity: "uncommon",
+        desc: "所学专业就业好，编程+12，英语+8",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
+          if (s.skills.english)
+            s.skills.english.level = Math.min(100, s.skills.english.level + 8);
+        },
+      },
+      {
+        id: "mentor_letter",
+        name: "导师推荐信",
+        icon: "📜",
+        rarity: "rare",
+        desc: "教授亲写推荐信，名声+15，编程+8，起步比别人高",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 15);
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 8);
         },
       },
     ],

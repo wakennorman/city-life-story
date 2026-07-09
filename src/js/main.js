@@ -691,72 +691,152 @@ function startClassicGame() {
 }
 
 /**
- * v3.56 天赋选择弹窗
- * 展示剧本天赋池 + "不选天赋"选项，玩家点击后回调 onSelected(talent|null)
+ * v3.57 天赋随机抽签
+ * 稀有度权重：common=60, uncommon=30, rare=10
+ * 抽签数量：10%=0个(命运弄人) / 70%=1个 / 20%=2个
+ * 返回 [] | [t] | [t1, t2]
  */
-function showTalentSelectionModal(scenario, onSelected) {
-  var talents = scenario.talents || [];
+function rollTalents(scenario) {
+  var pool = scenario.talents || [];
+  if (!pool.length) return [];
+
+  // 按稀有度权重构建加权池
+  var rarityWeights = { common: 60, uncommon: 30, rare: 10 };
+  var weightedPool = [];
+  for (var wi = 0; wi < pool.length; wi++) {
+    var tw = rarityWeights[pool[wi].rarity] || 60;
+    for (var wj = 0; wj < tw; wj++) weightedPool.push(pool[wi]);
+  }
+
+  function pickOne(exclude) {
+    var available = exclude
+      ? weightedPool.filter(function (t) {
+          return t.id !== exclude;
+        })
+      : weightedPool;
+    if (!available.length) return null;
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  var roll = Math.random();
+  if (roll < 0.1) {
+    return []; // 10% 命运弄人——无天赋
+  } else if (roll < 0.8) {
+    var t1 = pickOne(null);
+    return t1 ? [t1] : []; // 70% 单天赋
+  } else {
+    var ta = pickOne(null);
+    var tb = ta ? pickOne(ta.id) : null;
+    return [ta, tb].filter(Boolean); // 20% 双天赋
+  }
+}
+
+/**
+ * v3.57 天赋揭示弹窗（随机已抽好，展示结果供接受/放弃）
+ * 修复：z-index 10000（高于 modal-overlay 的 9999）
+ */
+function showTalentRevealModal(rolledTalents, onAccept, onDecline) {
+  var rarityLabel = { common: "⚪ 普通", uncommon: "🔵 优秀", rare: "🟡 稀有" };
+  var rarityColor = { common: "#888", uncommon: "#4a7c59", rare: "#b8860b" };
+
   var overlay = document.createElement("div");
   overlay.style.cssText =
-    "position:fixed;inset:0;background:rgba(0,0,0,0.68);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;";
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;";
 
   var card = document.createElement("div");
   card.style.cssText =
-    "background:var(--bg-primary,#fff);border-radius:14px;padding:22px 20px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 36px rgba(0,0,0,0.28);";
+    "background:var(--bg-primary,#fff);border-radius:14px;padding:24px 20px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.32);";
 
-  var html =
-    '<div style="font-size:1.08rem;font-weight:700;margin-bottom:4px;">✨ 命运之选</div>';
-  html +=
-    '<div style="color:var(--text-muted,#888);font-size:0.82rem;margin-bottom:18px;">属性已根据今日运势微调。选择一项天赋加成，或不选。</div>';
+  var html = "";
 
-  for (var ti = 0; ti < talents.length; ti++) {
-    var t = talents[ti];
+  if (!rolledTalents.length) {
+    // 0天赋——命运弄人
     html +=
-      '<div data-idx="' +
-      ti +
-      '" style="border:1.5px solid var(--border,#ddd);border-radius:9px;padding:11px 14px;margin-bottom:10px;cursor:pointer;">';
+      '<div style="text-align:center;font-size:2rem;margin-bottom:8px;">😶</div>';
     html +=
-      '<div style="font-weight:600;font-size:0.93rem;">' +
-      t.icon +
-      " " +
-      t.name +
+      '<div style="font-size:1.05rem;font-weight:700;text-align:center;margin-bottom:6px;">命运弄人</div>';
+    html +=
+      '<div style="color:var(--text-muted,#888);font-size:0.85rem;text-align:center;margin-bottom:20px;">这一局，命运没有给你任何天赋加成。<br>但有些人，就是靠自己走出来的。</div>';
+    html +=
+      '<button id="_talent_ok" style="width:100%;padding:11px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.95rem;cursor:pointer;font-weight:600;">好，靠自己</button>';
+  } else {
+    // 1-2天赋——揭晓结果
+    var hasRare = rolledTalents.some(function (t) {
+      return t.rarity === "rare";
+    });
+    var titleEmoji = rolledTalents.length === 2 ? "🎲 双重天赋" : "✨ 今日天赋";
+    html +=
+      '<div style="font-size:1.08rem;font-weight:700;margin-bottom:4px;">' +
+      titleEmoji +
       "</div>";
     html +=
-      '<div style="color:var(--text-secondary,#666);font-size:0.8rem;margin-top:3px;">' +
-      t.desc +
-      "</div>";
+      '<div style="color:var(--text-muted,#888);font-size:0.82rem;margin-bottom:16px;">命运为你选好了，接受还是放弃？</div>';
+
+    for (var ri = 0; ri < rolledTalents.length; ri++) {
+      var t = rolledTalents[ri];
+      var rColor = rarityColor[t.rarity] || "#888";
+      var rLabel = rarityLabel[t.rarity] || "⚪ 普通";
+      html +=
+        '<div style="border:2px solid ' +
+        rColor +
+        ';border-radius:10px;padding:13px 14px;margin-bottom:12px;">';
+      html +=
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">';
+      html +=
+        '<span style="font-weight:700;font-size:0.96rem;">' +
+        t.icon +
+        " " +
+        t.name +
+        "</span>";
+      html +=
+        '<span style="font-size:0.75rem;color:' +
+        rColor +
+        ';font-weight:600;">' +
+        rLabel +
+        "</span>";
+      html += "</div>";
+      html +=
+        '<div style="color:var(--text-secondary,#555);font-size:0.82rem;">' +
+        t.desc +
+        "</div>";
+      html += "</div>";
+    }
+
+    html += '<div style="display:flex;gap:10px;margin-top:4px;">';
+    html +=
+      '<button id="_talent_decline" style="flex:1;padding:10px;background:transparent;color:var(--text-muted,#888);border:1.5px solid var(--border,#ddd);border-radius:8px;font-size:0.88rem;cursor:pointer;">放弃，靠自己</button>';
+    html +=
+      '<button id="_talent_accept" style="flex:2;padding:10px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.92rem;cursor:pointer;font-weight:700;">✨ 接受天赋</button>';
     html += "</div>";
   }
-  html +=
-    '<div data-idx="-1" style="border:1.5px dashed var(--border,#ccc);border-radius:9px;padding:9px 14px;cursor:pointer;text-align:center;color:var(--text-muted,#aaa);font-size:0.85rem;">🎯 不选天赋，靠自己</div>';
 
   card.innerHTML = html;
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  // 悬停效果
-  var items = card.querySelectorAll("[data-idx]");
-  for (var ii = 0; ii < items.length; ii++) {
-    (function (el) {
-      el.addEventListener("mouseenter", function () {
-        el.style.background = "var(--bg-secondary,#f4f4f4)";
-        el.style.borderColor = "var(--accent-text,#4a7c59)";
-      });
-      el.addEventListener("mouseleave", function () {
-        el.style.background = "";
-        el.style.borderColor = "";
-      });
-    })(items[ii]);
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 
-  // 点击选择
-  card.addEventListener("click", function (e) {
-    var opt = e.target.closest("[data-idx]");
-    if (!opt) return;
-    var idx = parseInt(opt.getAttribute("data-idx"), 10);
-    document.body.removeChild(overlay);
-    onSelected(idx >= 0 ? talents[idx] : null);
-  });
+  var acceptBtn = card.querySelector("#_talent_accept");
+  var declineBtn = card.querySelector("#_talent_decline");
+  var okBtn = card.querySelector("#_talent_ok");
+
+  if (acceptBtn)
+    acceptBtn.addEventListener("click", function () {
+      close();
+      onAccept(rolledTalents);
+    });
+  if (declineBtn)
+    declineBtn.addEventListener("click", function () {
+      close();
+      onDecline();
+    });
+  if (okBtn)
+    okBtn.addEventListener("click", function () {
+      close();
+      onDecline();
+    });
 }
 
 /** 剧本模式开局 */
@@ -893,28 +973,29 @@ function startScenarioGame(scenarioId) {
     }
   }
 
-  // --- v3.56 天赋选择回调：难度+遗产+进入游戏 ---
-  var _afterTalentSelected = function (pickedTalent) {
-    if (pickedTalent) {
-      if (typeof pickedTalent.apply === "function") pickedTalent.apply(state);
-      state.flags._talent = {
-        id: pickedTalent.id,
-        name: pickedTalent.name,
-        icon: pickedTalent.icon,
-        desc: pickedTalent.desc,
-      };
-      StateManager.addMessage(
-        "✨ 今日天赋：" +
-          pickedTalent.icon +
-          " " +
-          pickedTalent.name +
-          "——" +
-          pickedTalent.desc,
-        "event",
-      );
+  // --- v3.57 天赋接受回调：接受数组 [] | [t] | [t1,t2] ---
+  var _afterTalentSelected = function (acceptedTalents) {
+    if (acceptedTalents && acceptedTalents.length > 0) {
+      state.flags._talent = [];
+      for (var _ti = 0; _ti < acceptedTalents.length; _ti++) {
+        var _pt = acceptedTalents[_ti];
+        if (typeof _pt.apply === "function") _pt.apply(state);
+        state.flags._talent.push({
+          id: _pt.id,
+          name: _pt.name,
+          icon: _pt.icon,
+          desc: _pt.desc,
+        });
+      }
+      var _talentNames = acceptedTalents
+        .map(function (t) {
+          return t.icon + " " + t.name;
+        })
+        .join("、");
+      StateManager.addMessage("✨ 接受天赋：" + _talentNames, "event");
     } else {
       state.flags._talent = null;
-      StateManager.addMessage("🎯 你没有选择任何天赋，一切靠自己。", "event");
+      StateManager.addMessage("🎯 放弃天赋，靠自己打拼。", "event");
     }
 
     // === 难度系统 + 传承币解锁 ===
@@ -961,11 +1042,20 @@ function startScenarioGame(scenarioId) {
     }, 3000);
   };
 
-  // --- 展示天赋选择界面（含"不选"选项） ---
+  // --- v3.57 随机抽签 → 揭示弹窗 ---
   if (scenario.talents && scenario.talents.length > 0) {
-    showTalentSelectionModal(scenario, _afterTalentSelected);
+    var _rolled = rollTalents(scenario);
+    showTalentRevealModal(
+      _rolled,
+      function (accepted) {
+        _afterTalentSelected(accepted);
+      },
+      function () {
+        _afterTalentSelected([]);
+      },
+    );
   } else {
-    _afterTalentSelected(null);
+    _afterTalentSelected([]);
   }
 }
 
