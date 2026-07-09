@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-09)**：v3.65(loop R26) — 指令一扫描0真实A类(2候选已被另窗口独立修复) + 新增4个空白区联动事件
+- **最新一次工作 (2026-07-09)**：v3.70 — 微动效系统：触摸反馈+热招脉冲+收益浮动数字
+  - **P0 触摸反馈**：action-card:active scale(0.95) + tab-btn:active scale(0.92) + touch-action:manipulation（消除iOS 300ms延迟）
+  - **P1 热招引导脉冲**：.card-hot（card-hot-pulse 2s∞金黄边框+背景+🔥前缀），createActionCard自动注入
+  - **P1 收益浮动数字**：showEarnFloat(pay, cardEl)，doStreetJob后触发，≥¥500大字金黄色
+  - **P2预留**：.card-unlock闪光CSS（新解锁行动入场，暂未触发）
+  - **影响文件**：style.css(+70行) / main.js(+showEarnFloat+触发) / render.js(+.card-hot注入)
+  - **验证**：node --check ✅ / build.py 5887.5KB ✅
+  - **commit**：`13b9f61e`
+
+- **上一轮工作 (2026-07-09)**：v3.65(loop R26) — 指令一扫描0真实A类(2候选已被另窗口独立修复) + 新增4个空白区联动事件
   - **指令一审查结论**：全量扫描5个事件文件(250+事件)，发现2个A类候选均已被另一窗口独立修复( startup_meet_coder天气+edu_crash家教 )，0真实A类缺陷
   - **指令二新增事件**：4个高潜力空白区填充
     - `snow_night_scrap_deal` — ❄️雪天+废品站+老周好感(填补snow天气事件空白)
