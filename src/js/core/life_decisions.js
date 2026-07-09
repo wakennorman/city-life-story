@@ -636,6 +636,31 @@ function getStallIncome(state) {
   return total;
 }
 
+/** 店铺每日收入（由 stall_income 管线步骤调用） */
+function getShopIncome(state) {
+  if (!state.flags._hasShop) return 0;
+  var base = 50;
+  var bonus =
+    typeof Random !== "undefined"
+      ? Random.int(0, 30)
+      : Math.floor(Math.random() * 31);
+  var fameBonus = Math.floor((state.player.fame || 0) * 0.5);
+  var total = base + bonus + fameBonus;
+  state.flags._shopTotalEarned = (state.flags._shopTotalEarned || 0) + total;
+  if (
+    typeof StateManager !== "undefined" &&
+    state.player &&
+    state.flags._shopLastMsgDay !== state.player.day
+  ) {
+    StateManager.addMessage(
+      "🏪 奶茶店今日营业，净赚¥" + total + "。",
+      "success",
+    );
+    state.flags._shopLastMsgDay = state.player.day;
+  }
+  return total;
+}
+
 /**
  * 初始化人生抉择系统
  */

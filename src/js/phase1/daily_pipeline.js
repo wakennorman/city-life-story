@@ -392,7 +392,7 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === v3.1 第41轮：摊位合伙收入 ===
+  // === v3.1 第41轮：摊位合伙收入 + 店铺收入 ===
   {
     name: "stall_income",
     fn: function (state) {
@@ -408,6 +408,21 @@ const DAILY_PIPELINE = [
             "stall_partnership",
             income,
             "摊位合伙分成",
+          );
+        }
+      }
+      if (typeof getShopIncome === "function") {
+        var shopIncome = getShopIncome(state);
+        if (shopIncome > 0) {
+          state.resources.cash += shopIncome;
+          state.resources.totalEarned =
+            (state.resources.totalEarned || 0) + shopIncome;
+          addDailyTransaction(
+            state,
+            "income",
+            "shop",
+            shopIncome,
+            "店铺日收入",
           );
         }
       }
