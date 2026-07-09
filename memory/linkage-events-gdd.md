@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~R28 累计 48 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~R29 累计 50 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -531,6 +531,26 @@
 - **Edge Cases**: 两人均需已结识；ajie_side_project事件的互斥分支
 - **Tuning Levers**: probability 0.03
 - **Dependencies**: NPC关系矩阵（同窗关系）
+
+## 49. `health_crisis_slow_collapse` — 身体的账单（loop-R29）
+
+- **Purpose**: 健康低于30时的慢性危机事件（区别于death事件，是预警性质）
+- **Player Fantasy**: 身体在跟我算总账。
+- **Trigger**: `health < 30 && health >= 5`
+- **Outputs**: 选项A 看病（¥300→健康+12）；选项B 买药（¥50→健康+5）；选项C 硬扛（收入¥150-280但健康-8）
+- **Edge Cases**: health<5时不触发（留给濒死事件）；损失厌恶·预警驱动
+- **Tuning Levers**: probability 0.05
+- **Dependencies**: 健康系统、经济
+
+## 50. `health_near_death_reckoning` — 最后一次选择（loop-R29）
+
+- **Purpose**: 濒死边缘(health<15)的紧急抉择（峰终定律·人生最低谷）
+- **Player Fantasy**: 不干就没饭吃，干了可能没命。
+- **Trigger**: `health < 15`
+- **Outputs**: 选项A 打120（健康+20/负债¥1000-3000）；选项B 躺平（健康+8）；选项C 拼最后一次（50%成功否则健康-12）
+- **Edge Cases**: 最负面时刻的紧张感；50%赌局制造情感冲击
+- **Tuning Levers**: probability 0.06
+- **Dependencies**: 健康系统、经济、债务
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
