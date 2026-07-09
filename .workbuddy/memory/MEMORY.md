@@ -46,6 +46,17 @@
 - **多窗口开发**：`.claude/last_known_head` 跟踪 HEAD，pre-commit 钩子检测漂移
 - **新模块接入 SOP**：暴露 ≤4 个 `window.xxx` 函数；接 `daily_pipeline.js` 一个 step；`index.html` 注册 script 放 core/ 之后
 
+## 事件编写字段约定（避免引用死字段 → 死事件/崩溃）
+
+写 `cross_system_events.js` / `events_street_*.js` 事件条件前，**先核 `src/js/core/state.js`**：
+
+- **`st.skills` 仅有**：cooking / repair / coding / english / driving / sales / management / accounting / electrician / welding。**没有 `writing`、`content`、`art` 等**——曾误用 `skills.writing` 导致整条事件永不触发（已改为 `skills.english`）。
+- **`st.reputation` 是按地点 key 的对象**：`{ slum:0-100, commercialDist:0-100, bank:0-100, ... }`，**不是标量**。判断口碑应写 `st.reputation && (st.reputation.slum||0) >= X`。
+- **NPC 关系**：`st.relationships[npcId] = { affinity:-100~100, met:bool, discovered:{} }`。活跃 NPC：aunt_wang/boss_li/sister_zhang/old_zhou/xiao_mei/chef_chen/uncle_chen_bank/sister_wu/brother_huang。**注意 `xiaoli`/`auntie_lin`/`master_zhao` 在 npcs.js 仍是 TODO 注释状态（未激活）**——引用它们的事件目前永不触发。
+- **习惯 streak**：`st.flags._habits` 仅有 `lowHungerStreak`（连续 hunger<25 天数）。无 `lowMoodStreak`/`lowSleepStreak`——需要"连续低心情/低睡眠"事件时改用 `st.needs.*` 阈值而非 streak flag。
+- **天气**：`st.weather.current` ∈ sunny/cloudy/rainy/stormy/heatwave/typhoon。天气叙述事件必须校验此字段（A类）。
+- **自洽守卫惯例**：NPC 名事件条件须 `rel && rel.met && (rel.affinity||0) >= N`；职业叙述须查 `st.employment.currentJob`/`st.sideHustle.type`/`st.stats.actionFreq`；已有修复加 `// [自洽修复]` 注释。
+
 ## 设计参考库（已用过的同类游戏）
 
 - **难度分层**：《大多数》心态值分级 / 《中国式家长》经济复利 / This War of Mine 角色组合
