@@ -5954,3 +5954,25 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 **影响文件**：`career_dev.js`（+~200行分类+推荐函数，~100行UI重构）
 
 **验证**：`node --check` ✅ / `python build.py` 5281.0KB ✅
+
+---
+
+## 待办清单（2026-07-09 记录）
+
+> 以下为后续迭代方向，暂存以备后续开发。
+
+### 🔄 v3.58 待推
+
+- **父仓库 submodule 指针更新**：`city-life-story` 子模块已到 v3.57（`12e20d08`），父仓库 `git add city-life-story && git commit -m "update submodule: v3.57"` + push
+
+### 🆕 新功能方向（v3.58+）
+
+- **事件/职业/NPC/UI 等**后续新功能迭代（待具体定方向）
+
+### 🔍 审查/修复
+
+- 扫描现有代码找 bug、自洽性缺陷、死代码
+
+### 📊 MC 验证回归
+
+- 跑 Monte Carlo 测试验证经济平衡/策略存活率
