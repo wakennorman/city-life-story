@@ -38,7 +38,8 @@
       },
       probability: 0.03,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "📢 向安全员举报",
           hint: "良心选择",
@@ -95,7 +96,8 @@
       },
       probability: 0.035,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "😷 帮忙做志愿者",
           hint: "累但助人",
@@ -159,7 +161,8 @@
       },
       probability: 0.04,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "🤝 商量少涨点",
           hint: "讨价还价",
@@ -233,7 +236,8 @@
       },
       probability: 0.035,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "💻 报名学习（¥50）",
           hint: "投资技能",
@@ -306,7 +310,8 @@
       },
       probability: 0.04,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "🤝 帮大爷求情",
           hint: "冒险但暖心",
@@ -391,7 +396,8 @@
       },
       probability: 0.05,
       repeatable: true,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "📦 干！日结¥300",
           hint: "赚快钱",
@@ -472,7 +478,8 @@
       },
       probability: 0.03,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "🧥 把外套给他",
           hint: "助人",
@@ -546,7 +553,8 @@
       },
       probability: 0.03,
       repeatable: false,
-      options: [
+      // [自洽修复] options→choices
+      choices: [
         {
           text: "🤝 帮老刘介绍活",
           hint: "助人积德",
