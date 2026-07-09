@@ -14499,19 +14499,13 @@
                   100,
                   (s.needs.happiness || 50) + 10,
                 );
-                s.status.health = Math.min(
-                  100,
-                  (s.status.health || 70) + 5,
-                );
+                s.status.health = Math.min(100, (s.status.health || 70) + 5);
                 StateManager.addMessage(
                   "🔥 你把暖气开到最大，房间里终于有了温度。虽然电费账单会让人心痛，但今晚能睡个好觉了。心情+10，健康+5。",
                   "success",
                 );
               } else {
-                s.needs.happiness = Math.max(
-                  0,
-                  (s.needs.happiness || 50) - 5,
-                );
+                s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
                 StateManager.addMessage(
                   "🔥 你想开暖气，但余额不够交电费。只能多盖一层被子。心情-5。",
                   "warning",
@@ -14545,10 +14539,7 @@
             s.flags._coldSnapHousingSeen = true;
             if (s.resources.cash >= 20) {
               s.resources.cash -= 20;
-              s.needs.happiness = Math.min(
-                100,
-                (s.needs.happiness || 50) + 10,
-              );
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
               s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 15);
               StateManager.addMessage(
                 "🍲 你煮了一碗热腾腾的汤面，加了鸡蛋和青菜。窗外的寒风和你碗里的热气形成两个世界。心情+10。",
@@ -14567,10 +14558,7 @@
           hint: "亲情温暖，心情+8",
           apply: function (s) {
             s.flags._coldSnapHousingSeen = true;
-            s.needs.happiness = Math.min(
-              100,
-              (s.needs.happiness || 50) + 8,
-            );
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 8);
             s.player.mental = Math.min(100, (s.player.mental || 0) + 4);
             StateManager.addMessage(
               "📱 你拨通了家里的电话。妈妈说「天冷了多穿点」，你鼻子一酸。挂了电话后，房间好像没那么冷了。心情+8，心智+4。",
@@ -14644,10 +14632,7 @@
               "success",
             );
           } else {
-            st.player.physique = Math.min(
-              100,
-              (st.player.physique || 20) + 2,
-            );
+            st.player.physique = Math.min(100, (st.player.physique || 20) + 2);
             StateManager.addMessage(
               "💪 你继续练。" +
                 action +
@@ -14725,10 +14710,7 @@
           st.flags._parentBirthdayCallSeen = true;
           if (st.resources.cash >= 150) {
             st.resources.cash -= 150;
-            st.needs.happiness = Math.min(
-              100,
-              (st.needs.happiness || 0) + 15,
-            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             if (st.family && st.family.parents) {
               st.family.parents.father.companionship = Math.min(
@@ -14758,10 +14740,7 @@
         hint: "免费，但情感满足",
         apply: function (st) {
           st.flags._parentBirthdayCallSeen = true;
-          st.needs.happiness = Math.min(
-            100,
-            (st.needs.happiness || 0) + 12,
-          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
           st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
           if (st.family && st.family.parents) {
             st.family.parents.father.companionship = Math.min(
@@ -14788,6 +14767,120 @@
           StateManager.addMessage(
             "😶 你说「还行，忙呢」就挂了电话。妈妈还想说什么，你已经把手机塞回了口袋。明天可能会后悔。心情-3。",
             "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== NPC事件空白区填充：小陈/赵姐相关事件 ======
+  // 小陈的夜宵局 — 好感≥30时邀请宵夜，社交+副业两不误
+  RANDOM_EVENTS.push({
+    id: "xiaochen_night_market",
+    phase: "street",
+    icon: "🍜",
+    title: "骑手的深夜食堂",
+    story:
+      "晚上十一点，你看到小陈蹲在路边的电瓶车上扒拉盒饭。他看到你，扬了扬手里的筷子：「跑完了？来，这条街有家通宵面馆，老板手艺不错，我请你。」\n\n他的电瓶车灯在夜色里一闪一闪的。",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.xiaochen) return false;
+      if (!st.relationships.xiaochen.met) return false;
+      if ((st.relationships.xiaochen.affinity || 0) < 30) return false;
+      if (st.flags._xiaochenNightMarketSeen) return false;
+      if (st.player.day < 5) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍜 一起去，聊聊",
+        hint: "心情+ 好感+ 副业灵感",
+        apply: function (st) {
+          st.flags._xiaochenNightMarketSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 25);
+          st.relationships.xiaochen.affinity = Math.min(
+            100,
+            st.relationships.xiaochen.affinity + 5,
+          );
+          if (st.skills && st.skills.driving) {
+            st.skills.driving.xp = (st.skills.driving.xp || 0) + 15;
+          }
+          StateManager.addMessage(
+            "🍜 你们边吃边聊，小陈说了几个跑单窍门。心情+12，饱食-25，好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 太累了，回去睡了",
+        hint: "保留体力",
+        apply: function (st) {
+          st.flags._xiaochenNightMarketSeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          StateManager.addMessage(
+            "😅 你说改天吧，小陈也没勉强：「早点休息，明天还要跑呢。」",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 赵姐的商业情报 — 好感≥50时分享商业区铺面信息
+  RANDOM_EVENTS.push({
+    id: "zhaojie_shop_tip",
+    phase: "street",
+    icon: "🏪",
+    title: "赵姐的内幕消息",
+    story:
+      "赵姐神神秘秘地把你拉到一边，压低声音说：「商业区有家奶茶店要转让，老板娘怀孕回老家了，设备都是九成新。我跟她熟，你要是想干，十万块就能盘下来——正常价至少十五万。」\n\n她拍了拍你的肩：「机会难得，自己琢磨琢磨。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.zhaojie) return false;
+      if (!st.relationships.zhaojie.met) return false;
+      if ((st.relationships.zhaojie.affinity || 0) < 50) return false;
+      if (st.flags._zhaojieShopTipSeen) return false;
+      if (st.player.day < 30) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 盘下来！",
+        hint: "现金-100000 解锁店面",
+        apply: function (st) {
+          st.flags._zhaojieShopTipSeen = true;
+          if ((st.resources.cash || 0) >= 100000) {
+            st.resources.cash -= 100000;
+            st.flags._hasShop = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+            st.relationships.zhaojie.affinity = Math.min(
+              100,
+              st.relationships.zhaojie.affinity + 8,
+            );
+            StateManager.addMessage(
+              "💰 你盘下了奶茶店！设备齐全，位置也不错。赵姐替你高兴：「好好干！」名气+10。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💸 你算了算存款，差了八万。赵姐看出你的窘迫：「差多少姐帮你垫点？」但你不想欠太多人情。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📝 先看看，钱不够",
+        hint: "保留机会，记下信息",
+        apply: function (st) {
+          st.flags._zhaojieShopTipSeen = true;
+          st.flags._zhaojieShopDeal = true;
+          StateManager.addMessage(
+            "📝 你记下赵姐说的联系方式，说等凑够钱再联系。她点点头：「别太久，好铺子不等人。」",
+            "info",
           );
         },
       },

@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 累计 33 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 / loop-R12 累计 35 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -377,6 +377,26 @@
 - **Edge Cases**: 好感边界 40；折扣天数叠加逻辑。
 - **Tuning Levers**: 好感阈值(40)、折扣率(20%)、持续天数(30)。
 - **Dependencies**: NPC 关系、医疗经济系统。
+
+## 34. `xiaochen_night_market` — 骑手的深夜食堂（loop-R12）
+
+- **Purpose**: 小陈好感≥30触发社交剧情，填补xiaochen事件空白。
+- **Player Fantasy**: 跑完单有骑手兄弟请宵夜。
+- **Trigger**: `xiaochen.met && affinity >= 30`
+- **Outputs**: 心情+12 / 饱食-25 / 好感+5 / 驾驶XP+15。
+- **Edge Cases**: 未结识不触发；驾驶技能未初始化时跳过XP。
+- **Tuning Levers**: 好感阈值(30)、恢复量。
+- **Dependencies**: NPC 关系、技能系统、needs 系统。
+
+## 35. `zhaojie_shop_tip` — 赵姐的内幕消息（loop-R12）
+
+- **Purpose**: 赵姐好感≥50解锁商业情报，填补zhaojie事件空白。
+- **Player Fantasy**: 有人脉就有信息差，信息差就是钱。
+- **Trigger**: `zhaojie.met && affinity >= 50 && day >= 30`
+- **Outputs**: 现金-100000解锁店面 / 或记下信息保留机会。
+- **Edge Cases**: 现金不足时显示婉拒消息；已触发不重复。
+- **Tuning Levers**: 好感阈值(50)、盘店价格(100000)。
+- **Dependencies**: NPC 关系、财务系统、名声系统。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
