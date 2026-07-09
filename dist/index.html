@@ -42031,7 +42031,10 @@ if (typeof window !== "undefined") {
       "郊区的小路上，天色突然暗了下来。豆大的雨点砸下来，你环顾四周，最近的公交站还在几百米外。不远处一户人家的门开着，门廊下一位老奶奶朝你招手：「快进来躲躲，这雨一时半会儿停不了。」屋里飘出热茶的香气。",
     // [自洽修复] conditions 新增：天气=雨/暴雨才触发（叙事为暴雨庇护，晴天触发不合理）
     conditions: function (st) {
-      if (!st.weather || (st.weather.current !== "rainy" && st.weather.current !== "stormy"))
+      if (
+        !st.weather ||
+        (st.weather.current !== "rainy" && st.weather.current !== "stormy")
+      )
         return false;
       return (
         st.player.phase === "street" &&
@@ -42943,136 +42946,224 @@ if (typeof window !== "undefined") {
   // ====== R8 联动事件（指令二：空白区填充）======
   RANDOM_EVENTS.push({
     id: "mood_low_letter_home",
-    phase: "street", icon: "📞", title: "夜里的家",
-    story: "出租屋的灯坏了半边，你躺在漆黑里刷到老家同学的动态——人家孩子都会叫爸爸了。胃里空空的，不是饿，是想家。手机相册自动弹出去年过年的全家福。",
+    phase: "street",
+    icon: "📞",
+    title: "夜里的家",
+    story:
+      "出租屋的灯坏了半边，你躺在漆黑里刷到老家同学的动态——人家孩子都会叫爸爸了。胃里空空的，不是饿，是想家。手机相册自动弹出去年过年的全家福。",
     // conditions：极低心情阈值爆发（除饥饿外的 needs 阈值空白区）
     conditions: function (st) {
-      if (!st.needs) return false;                       // 检查 needs 系统存在
+      if (!st.needs) return false; // 检查 needs 系统存在
       if ((st.needs.happiness || 100) >= 15) return false; // 检查 心情值<15（极低）
-      if (st.player.phase !== "street") return false;    // 检查 仅在街头阶段
-      if (st.player.day < 7) return false;               // 检查 开局几天后
-      if (st.flags && st.flags._moodLowLetterDay &&      // 检查 30天冷却
-        st.player.day - st.flags._moodLowLetterDay < 30) return false;
+      if (st.player.phase !== "street") return false; // 检查 仅在街头阶段
+      if (st.player.day < 7) return false; // 检查 开局几天后
+      if (
+        st.flags &&
+        st.flags._moodLowLetterDay && // 检查 30天冷却
+        st.player.day - st.flags._moodLowLetterDay < 30
+      )
+        return false;
       return true;
     },
-    probability: 0.05, repeatable: true,
+    probability: 0.05,
+    repeatable: true,
     choices: [
-      { text: "📞 给家里打个电话", hint: "心情+,花钱-", apply: function (st) {
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
-        st.resources.cash -= 30;
-        st.flags._moodLowLetterDay = st.player.day;
-        StateManager.addMessage("📞 你拨通了家里的电话，妈在那头絮叨，你鼻头一酸，但胸口松了。");
-      }},
-      { text: "✍️ 写一封长信", hint: "心情+,省钱", apply: function (st) {
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
-        st.flags._moodLowLetterDay = st.player.day;
-        StateManager.addMessage("✍️ 你打开备忘录写了很久，没发出去，但写完后睡得比往常沉。");
-      }},
-      { text: "🌃 一个人闷着", hint: "省钱,心情-", apply: function (st) {
-        st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 2);
-        if (st.player.health && st.player.health.mental)
-          st.player.health.mental.stress = (st.player.health.mental.stress || 0) + 3;
-        StateManager.addMessage("🌃 你把手机扣在桌上，盯着天花板。有些情绪，只能自己消化。");
-      }}
-    ]
+      {
+        text: "📞 给家里打个电话",
+        hint: "心情+,花钱-",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.resources.cash -= 30;
+          st.flags._moodLowLetterDay = st.player.day;
+          StateManager.addMessage(
+            "📞 你拨通了家里的电话，妈在那头絮叨，你鼻头一酸，但胸口松了。",
+          );
+        },
+      },
+      {
+        text: "✍️ 写一封长信",
+        hint: "心情+,省钱",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
+          st.flags._moodLowLetterDay = st.player.day;
+          StateManager.addMessage(
+            "✍️ 你打开备忘录写了很久，没发出去，但写完后睡得比往常沉。",
+          );
+        },
+      },
+      {
+        text: "🌃 一个人闷着",
+        hint: "省钱,心情-",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 2);
+          if (st.player.health && st.player.health.mental)
+            st.player.health.mental.stress =
+              (st.player.health.mental.stress || 0) + 3;
+          StateManager.addMessage(
+            "🌃 你把手机扣在桌上，盯着天花板。有些情绪，只能自己消化。",
+          );
+        },
+      },
+    ],
   });
   RANDOM_EVENTS.push({
     id: "cooking_accounting_catering",
-    phase: "street", icon: "🍱", title: "盒饭生意",
-    story: "楼下便利店老板娘尝了你带的午饭，眼睛一亮：「你这手艺能开店了！我店门口让你摆个盒饭摊行不？」你脑子立刻算起毛利、损耗和人手——这你熟。",
+    phase: "street",
+    icon: "🍱",
+    title: "盒饭生意",
+    story:
+      "楼下便利店老板娘尝了你带的午饭，眼睛一亮：「你这手艺能开店了！我店门口让你摆个盒饭摊行不？」你脑子立刻算起毛利、损耗和人手——这你熟。",
     // conditions：cooking + accounting 双技能协同（餐饮记账空白区）
     conditions: function (st) {
       var cook = st.skills && st.skills.cooking && st.skills.cooking.level; // 检查 烹饪技能
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 会计技能
-      if (typeof cook !== "number" || cook < 30) return false;  // 检查 烹饪≥30
-      if (typeof acc !== "number" || acc < 20) return false;   // 检查 会计≥20
-      if (st.player.phase !== "street") return false;          // 检查 街头阶段
-      if (st.player.day < 20) return false;                    // 检查 中后期
-      if (st.flags && st.flags._cateringBizOn) return false;   // 检查 未已开启
+      if (typeof cook !== "number" || cook < 30) return false; // 检查 烹饪≥30
+      if (typeof acc !== "number" || acc < 20) return false; // 检查 会计≥20
+      if (st.player.phase !== "street") return false; // 检查 街头阶段
+      if (st.player.day < 20) return false; // 检查 中后期
+      if (st.flags && st.flags._cateringBizOn) return false; // 检查 未已开启
       return true;
     },
-    probability: 0.025, repeatable: false,
+    probability: 0.025,
+    repeatable: false,
     choices: [
-      { text: "🍱 接下长期盒饭单", hint: "稳定收入+,耗时+", apply: function (st) {
-        var earn = Random.int(180, 320);
-        st.resources.cash += earn;
-        st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-        st.flags._cateringBizOn = true;
-        StateManager.addMessage("🍱 你算清每盒饭毛利后接下了单，便利店门口多了你的保温箱。");
-      }},
-      { text: "🤝 只偶尔帮衬", hint: "轻量练手", apply: function (st) {
-        var earn = Random.int(40, 90);
-        st.resources.cash += earn;
-        StateManager.addMessage("🤝 你偶尔帮老板娘做几顿，权当练手赚零花。");
-      }}
-    ]
+      {
+        text: "🍱 接下长期盒饭单",
+        hint: "稳定收入+,耗时+",
+        apply: function (st) {
+          var earn = Random.int(180, 320);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.flags._cateringBizOn = true;
+          StateManager.addMessage(
+            "🍱 你算清每盒饭毛利后接下了单，便利店门口多了你的保温箱。",
+          );
+        },
+      },
+      {
+        text: "🤝 只偶尔帮衬",
+        hint: "轻量练手",
+        apply: function (st) {
+          var earn = Random.int(40, 90);
+          st.resources.cash += earn;
+          StateManager.addMessage("🤝 你偶尔帮老板娘做几顿，权当练手赚零花。");
+        },
+      },
+    ],
   });
   RANDOM_EVENTS.push({
     id: "coding_management_product",
-    phase: "street", icon: "👥", title: "组队接外包",
-    story: "前同事发来一单外包：一个小程序，工期紧、预算还行。你技术够啃下来，但一个人熬不起。忽然想到——你不是也能张罗人吗？",
+    phase: "street",
+    icon: "👥",
+    title: "组队接外包",
+    story:
+      "前同事发来一单外包：一个小程序，工期紧、预算还行。你技术够啃下来，但一个人熬不起。忽然想到——你不是也能张罗人吗？",
     // conditions：coding + management 双技能协同（带小团队接单空白区）
     conditions: function (st) {
       var code = st.skills && st.skills.coding && st.skills.coding.level; // 检查 编程技能
-      var mgmt = st.skills && st.skills.management && st.skills.management.level; // 检查 管理技能
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 检查 管理技能
       if (typeof code !== "number" || code < 30) return false; // 检查 编程≥30
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 管理≥15
-      if (st.player.day < 25) return false;                   // 检查 中后期
+      if (st.player.day < 25) return false; // 检查 中后期
       if (st.flags && st.flags._codingTeamDone) return false; // 检查 未做过
       return true;
     },
-    probability: 0.022, repeatable: false,
+    probability: 0.022,
+    repeatable: false,
     choices: [
-      { text: "👥 拉小队接下", hint: "大收入+,压力+", apply: function (st) {
-        var earn = Random.int(900, 1600);
-        st.resources.cash += earn;
-        st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-        if (st.player.health && st.player.health.mental)
-          st.player.health.mental.stress = (st.player.health.mental.stress || 0) + 10;
-        st.flags._codingTeamDone = true;
-        StateManager.addMessage("👥 你拉了两个靠谱朋友组队，把外包单啃下来了，账户厚了一截。");
-      }},
-      { text: "💻 自己 solo 做", hint: "收入中,压力小", apply: function (st) {
-        var earn = Random.int(350, 600);
-        st.resources.cash += earn;
-        st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-        StateManager.addMessage("💻 你一个人熬了几个通宵把外包做完了，钱不多但落袋为安。");
-      }}
-    ]
+      {
+        text: "👥 拉小队接下",
+        hint: "大收入+,压力+",
+        apply: function (st) {
+          var earn = Random.int(900, 1600);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          if (st.player.health && st.player.health.mental)
+            st.player.health.mental.stress =
+              (st.player.health.mental.stress || 0) + 10;
+          st.flags._codingTeamDone = true;
+          StateManager.addMessage(
+            "👥 你拉了两个靠谱朋友组队，把外包单啃下来了，账户厚了一截。",
+          );
+        },
+      },
+      {
+        text: "💻 自己 solo 做",
+        hint: "收入中,压力小",
+        apply: function (st) {
+          var earn = Random.int(350, 600);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          StateManager.addMessage(
+            "💻 你一个人熬了几个通宵把外包做完了，钱不多但落袋为安。",
+          );
+        },
+      },
+    ],
   });
   RANDOM_EVENTS.push({
     id: "stress_high_breakdown",
-    phase: "street", icon: "⚡", title: "临界点",
-    story: "连续的高压把人磨钝了。你开始在地铁上走神，对同事一点就着，半夜睁眼到三点。镜子里的自己，眼窝深得吓人。身体在拉警报。",
+    phase: "street",
+    icon: "⚡",
+    title: "临界点",
+    story:
+      "连续的高压把人磨钝了。你开始在地铁上走神，对同事一点就着，半夜睁眼到三点。镜子里的自己，眼窝深得吓人。身体在拉警报。",
     // conditions：stress 心理健康阈值（health.mental.stress 空白区）
     conditions: function (st) {
-      var stress = st.player && st.player.health && st.player.health.mental
-        ? st.player.health.mental.stress : 0;              // 检查 心理压力值
-      if (stress < 80) return false;                       // 检查 压力≥80（临界）
-      if (st.player.day < 15) return false;                // 检查 中后期
-      if (st.flags && st.flags._stressBreakdownDay &&      // 检查 60天冷却
-        st.player.day - st.flags._stressBreakdownDay < 60) return false;
+      var stress =
+        st.player && st.player.health && st.player.health.mental
+          ? st.player.health.mental.stress
+          : 0; // 检查 心理压力值
+      if (stress < 80) return false; // 检查 压力≥80（临界）
+      if (st.player.day < 15) return false; // 检查 中后期
+      if (
+        st.flags &&
+        st.flags._stressBreakdownDay && // 检查 60天冷却
+        st.player.day - st.flags._stressBreakdownDay < 60
+      )
+        return false;
       return true;
     },
-    probability: 0.04, repeatable: true,
+    probability: 0.04,
+    repeatable: true,
     choices: [
-      { text: "🏖️ 请几天假缓一缓", hint: "压力-,收入-", apply: function (st) {
-        if (st.player.health && st.player.health.mental)
-          st.player.health.mental.stress = Math.max(0, st.player.health.mental.stress - 25);
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-        st.flags._stressBreakdownDay = st.player.day;
-        StateManager.addMessage("🏖️ 你关掉手机睡了两天，醒来觉得世界没那么糟。");
-      }},
-      { text: "⚡ 硬扛过去", hint: "收入保,健康-", apply: function (st) {
-        if (st.player.health && st.player.health.mental)
-          st.player.health.mental.stress = (st.player.health.mental.stress || 0) + 5;
-        if (st.player.health && st.player.health.physical)
-          st.player.health.physical.score = Math.max(0, st.player.health.physical.score - 8);
-        st.flags._stressBreakdownDay = st.player.day;
-        StateManager.addMessage("⚡ 你继续连轴转，直到某天在地铁上眼前一黑。");
-      }}
-    ]
+      {
+        text: "🏖️ 请几天假缓一缓",
+        hint: "压力-,收入-",
+        apply: function (st) {
+          if (st.player.health && st.player.health.mental)
+            st.player.health.mental.stress = Math.max(
+              0,
+              st.player.health.mental.stress - 25,
+            );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.flags._stressBreakdownDay = st.player.day;
+          StateManager.addMessage(
+            "🏖️ 你关掉手机睡了两天，醒来觉得世界没那么糟。",
+          );
+        },
+      },
+      {
+        text: "⚡ 硬扛过去",
+        hint: "收入保,健康-",
+        apply: function (st) {
+          if (st.player.health && st.player.health.mental)
+            st.player.health.mental.stress =
+              (st.player.health.mental.stress || 0) + 5;
+          if (st.player.health && st.player.health.physical)
+            st.player.health.physical.score = Math.max(
+              0,
+              st.player.health.physical.score - 8,
+            );
+          st.flags._stressBreakdownDay = st.player.day;
+          StateManager.addMessage(
+            "⚡ 你继续连轴转，直到某天在地铁上眼前一黑。",
+          );
+        },
+      },
+    ],
   });
   // ====== 注册结束 ======
 })();
