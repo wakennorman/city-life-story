@@ -11332,5 +11332,156 @@
     ],
   });
 
+  // ====== v3.53: 休眠NPC激活事件 — 王医生/赵师傅（填补0事件空白） ======
+
+  // === 事件1：dr_wang — 医院的超出诊疗费帮扶 ===
+  // 【设计意图】王医生是医院NPC但零事件。让他在玩家健康垂危时提供医疗帮扶
+  RANDOM_EVENTS.push({
+    id: "dr_wang_free_clinic",
+    phase: "street",
+    icon: "🩺",
+    title: "王医生的免费门诊",
+    story:
+      "你到医院做检查，发现挂号窗口前排着长队。" +
+      "正在这时，一个穿白大褂的中年医生推门出来看到你：「脸色不太好，进来我看看。」\n" +
+      "他把你领进诊室，仔细问了你的症状，眉头皱了皱：" +
+      "「你是不是很久没吃过像样的饭了？肝火旺，脾胃虚。」",
+    conditions: function (st) {
+      // 需要已有健康问题或疲劳值偏高，且王医生已认识玩家
+      var health = st.needs ? st.needs.health || 100 : 100;
+      var fatigue = st.needs ? st.needs.fatigue || 0 : 0;
+      return (
+        st.player &&
+        st.player.day > 10 &&
+        health < 60 &&
+        fatigue > 40
+      );
+    },
+    probability: 0.025,
+    repeatable: true,
+    options: [
+      {
+        text: "🙏 谢谢医生，听您的建议",
+        hint: "健康+10，开便宜药",
+        apply: function (st) {
+          var health = st.needs.health || 50;
+          st.needs.health = Math.min(100, health + 10);
+          if (st.resources.cash >= 30) {
+            st.resources.cash -= 30;
+            // 温和消炎+调理，健康再加5
+            st.needs.health = Math.min(100, st.needs.health + 5);
+            addDailyTransaction(
+              st,
+              "expense",
+              "medical",
+              30,
+              "王医生开的便宜药",
+            );
+          }
+          // 建立王医生关系
+          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 5);
+          st.relationships.dr_wang.met = true;
+          StateManager.addMessage(
+            "🩺 王医生给你开了¥30的药，叮嘱你注意饮食规律。健康+15。医者仁心。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我没事，就是没钱看病",
+        hint: "只说实情，好感+3",
+        apply: function (st) {
+          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 3);
+          st.relationships.dr_wang.met = true;
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
+          StateManager.addMessage(
+            "😅 王医生笑了笑：「没钱更要保重身体，生病更烧钱。」\n他给你倒了杯热水，「免费热水总能喝。」健康+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 事件2：master_zhao — 工厂区修车铺的招工 ===
+  // 【设计意图】赵师傅是工厂区修车铺但零事件。让有修理技能的玩家获得工作线索
+  RANDOM_EVENTS.push({
+    id: "master_zhao_tool_help",
+    phase: "street",
+    icon: "🔧",
+    title: "赵师傅的维修摊",
+    story:
+      "路过工厂区修车铺时，你看见一个满手油污的中年师傅正在对着一台发动机发愁。" +
+      "他抬头看见你：「小伙子/姑娘，你会不会修车？这发动机异响，我耳朵不行了听不出来。」\n" +
+      "铺子门口摆着几辆修了一半的电动车，地上散落着扳手和螺丝。",
+    conditions: function (st) {
+      // [自洽修复] conditions 新增 repair.skill 检查，赵师傅是修车铺老板
+      return (
+        st.player &&
+        st.player.day > 15 &&
+        st.skills &&
+        st.skills.repair &&
+        st.skills.repair.level >= 5
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    options: [
+      {
+        text: "🔧 我来听听——好像是轴承问题",
+        hint: "修理≥20效果最佳",
+        apply: function (st) {
+          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 8);
+          st.relationships.master_zhao.met = true;
+          var repairLevel = st.skills.repair ? st.skills.repair.level || 0 : 0;
+          if (repairLevel >= 20) {
+            st.resources.cash += 80;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + 80;
+            addDailyTransaction(st, "income", "repair_help", 80, "赵师傅修车帮工");
+            if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
+            StateManager.addMessage(
+              "🔧 你听出发动机异响来自左轴承。赵师傅一拍大腿：「对上了！」\n他塞给你¥80，说以后有空来帮忙。好感+8，修理经验+40。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+            StateManager.addMessage(
+              "🔧 你不太确定是哪里的问题，但赵师傅说你愿意帮忙的心意不错。\n他简单教了你几个听异响的技巧。好感+8，修理经验+15。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🔩 帮您递工具打下手",
+        hint: "修理XP+15",
+        apply: function (st) {
+          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 5);
+          st.relationships.master_zhao.met = true;
+          if (st.skills.repair) st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+          StateManager.addMessage(
+            "🔩 你帮赵师傅递工具、扶发动机，虽然没直接上手修，但也学到了不少。\n修理经验+15。赵师傅说：「下次有空再来！」",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🙅 不好意思，我赶时间",
+        hint: "无变化",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🙅 赵师傅摆摆手：「没事，我自己再研究研究。」\n你继续赶路，心里想着下次有空再帮忙。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
