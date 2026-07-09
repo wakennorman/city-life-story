@@ -20,7 +20,7 @@
 5. 任何改动结束必须更新 `src/DEVELOPMENT.md` 顶部
 6. 不删文件只改文件；新文件必须论证为什么不能放现有模块
 7. 不修改 `build.py` / 不改 `src/index.html` 的 `<script>` 加载顺序 / 不引入外部库
-8. **`git push` 仅在用户明确要求时执行**（CLAUDE.md §714 授权）；`remote origin` 已存在（`github.com/wakennorman/city-life-story.git`）。当前唯一阻塞是网络/代理（`127.0.0.1:3067` 未连通，GitHub:443 不可达），非策略禁止
+8. **`git push` 由用户统一协调，loop 任务不主动 push**（CLAUDE.md §714 授权但用户已明确安排）：`remote origin` 已存在（`github.com/wakennorman/city-life-story.git`）。用户 2026-07-09 确认——后期会让其他 AI 把他做的 + 各并行窗口做的改动**一起推一次**；所以本 loop（含交互窗口与 `loop/auto` 自动化）只管本地 `commit`，**绝不主动 `git push`**、绝不每轮追问是否推送。物理上代理 `127.0.0.1:3067` 仍断（GitHub:443 不可达），但这已非主要约束——即便通了也按用户统一安排走。
 
 ## v3.0 SOP 已知即时缺陷清单（按下表优先级实施）
 
