@@ -5042,71 +5042,88 @@ body {
     font-size: 12px;
   }
 
-/* ── 引导面板 Guidance Bar ───────────────────────────── */
+/* ── 引导面板 Guidance Bar（三格横排，常驻不折叠）──────── */
 .guidance-bar { margin-bottom: 10px; }
 
-.guidance-bar-strip {
+/* 三格容器：同一行，小屏自动换行 */
+.gb-row {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  background: rgba(102,126,234,0.07);
-  border: 1px solid rgba(102,126,234,0.15);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  user-select: none;
+  gap: 6px;
+  align-items: stretch;
   flex-wrap: wrap;
-  min-height: 28px;
-  -webkit-tap-highlight-color: transparent;
 }
-.guidance-bar-strip:active { background: rgba(102,126,234,0.14); }
 
-.gb-chip { white-space: nowrap; color: var(--text-secondary); }
-.gb-dream { color: var(--accent); font-weight: 600; }
-.gb-tips  { color: var(--success); }
-.gb-sep   { color: var(--text-muted); opacity: 0.45; flex-shrink: 0; }
-.gb-pct   { font-size: 10px; color: var(--text-muted); }
-.gb-toggle {
-  margin-left: auto;
-  color: var(--text-muted);
-  font-size: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.gb-prog {
-  display: inline-block;
-  width: 36px; height: 4px;
-  background: var(--bg-input);
-  border-radius: 2px;
-  overflow: hidden;
-  vertical-align: middle;
-  margin: 0 2px;
-  flex-shrink: 0;
-}
-.gb-prog-fill {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-}
-.guidance-panel {
-  margin-top: 4px;
-  border: 1px solid rgba(102,126,234,0.12);
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(0,0,0,0.1);
-  max-height: 65vh;
-  overflow-y: auto;
-}
-.guidance-section {
+/* 每个格子 */
+.gb-cell {
+  flex: 1 1 0;
+  min-width: 90px;
   padding: 8px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(102,126,234,0.15);
+  background: rgba(102,126,234,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
 }
-.guidance-section:last-child { border-bottom: none; }
-/* 消除 goal-strip / quest-card 在 panel 内的多余下边距 */
-.guidance-section .goal-strip-mobile { margin-bottom: 0; }
-.guidance-section #daily-quest-card  { margin-bottom: 0; }
+
+.gb-cell-title {
+  font-size: 9px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+/* 阶段格：稍宽，包含旅程弧 */
+.gb-cell-stage { flex: 1.2 1 0; }
+
+/* 目标格 */
+.gb-cell-quest { flex: 1.4 1 0; }
+.gb-quest-inner { overflow-y: auto; max-height: 80px; }
+/* 抹去 quest-card 在格子内的外层样式 */
+.gb-quest-inner #daily-quest-card {
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+/* 隐藏quest-card的标题行（格子标题已说明） */
+.gb-quest-inner #daily-quest-card > div:first-child { display: none !important; }
+
+/* 建议格 */
+.gb-cell-tips  { flex: 1.4 1 0; }
+.gb-tips-inner { overflow-y: auto; max-height: 80px; }
+
+/* 旅程弧在格1内紧凑显示 */
+.gb-arc-wrap #life-arc-wrap { margin-bottom: 0; }
+.gb-arc-wrap #life-arc-wrap > div:first-child {
+  padding: 3px 0 !important;
+  background: none !important;
+  border-radius: 0 !important;
+  font-size: 10px !important;
+  gap: 2px !important;
+  overflow-x: auto;
+}
+.gb-arc-wrap #life-arc-wrap > div:last-child {
+  display: none;  /* 隐藏"下一阶段提示"，节省空间 */
+}
+
+/* 手机端竖屏：目标+建议各占一行，阶段单独一行 */
+@media (max-width: 400px) {
+  .gb-cell-stage  { flex: 1 1 100%; }
+  .gb-cell-quest  { flex: 1 1 calc(50% - 3px); }
+  .gb-cell-tips   { flex: 1 1 calc(50% - 3px); }
+}
+
+/* 旧折叠条废弃（保留名字防止 JS 引用出错，设为不可见） */
+.guidance-bar-strip { display: none; }
+.guidance-panel { display: none; }
+.guidance-section { display: none; }
+.gb-chip, .gb-sep, .gb-toggle, .gb-prog, .gb-prog-fill, .gb-pct { display: none; }
 
 /* ====== v3.70 微动效系统 ====== */
 

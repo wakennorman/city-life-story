@@ -5,8 +5,8 @@
  * 渲染函数命名: render<Section>()
  */
 
-// 当前激活的 Tab
-let currentTab = "actions";
+// 当前激活的 Tab — 定义在 render_core.js 中，这里不重复声明
+// let currentTab = "actions";
 
 // ====== 玩家可见名称兜底 ======
 var DISPLAY_NAME_ALIASES = {
@@ -101,19 +101,6 @@ function warnStatRow(id, value, threshold, warnColor, inverted) {
       valEl2.style.animation = "";
     }
   }
-}
-
-// ====== 主渲染入口 ======
-function renderAll() {
-  const state = StateManager.getState();
-
-  renderHeader(state);
-  renderSidebar(state);
-  renderTabBar(state);
-  renderCurrentTab(state);
-  renderMessageLog(state);
-
-  StateManager.cleanAllDirty();
 }
 
 // ====== Header 渲染 ======
@@ -1049,97 +1036,6 @@ function getLocationServiceBadges(locKey) {
 }
 
 // ====== Tab Bar ======
-function renderTabBar(state) {
-  const tabs = document.querySelectorAll("#tab-bar .tab-btn");
-  tabs.forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.tab === currentTab);
-
-    // 某些 Tab 在特定阶段隐藏
-    if (btn.dataset.tab === "corp" && state.player.phase !== "corporate") {
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "trade" && state.player.phase !== "street") {
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "enterprise") {
-      // 企业命运生态 — 后台系统，不单独显示Tab
-      // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
-      btn.style.display = "none";
-    } else if (btn.dataset.tab === "career_dev") {
-      // 事业发展Tab：街头阶段显示上班族工作引导，公司阶段不冲突时显示
-      if (
-        state.player.phase === "corporate" &&
-        (!state.startup || state.startup.status === "none")
-      ) {
-        btn.style.display = "none";
-      } else {
-        btn.style.display = "";
-      }
-    } else if (btn.dataset.tab === "social") {
-      // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
-      btn.style.display = "";
-    } else if (btn.dataset.tab === "side_hustle") {
-      // 副业Tab：公司阶段显示（Phase 2）
-      if (state.player.phase === "corporate") {
-        btn.style.display = "";
-      } else {
-        btn.style.display = "none";
-      }
-    } else if (btn.dataset.tab === "personal_growth") {
-      // 个人成长不再作为主入口；成长行为拆回具体地点行动，保留 renderer 兼容旧入口。
-      btn.style.display = "none";
-    } else {
-      btn.style.display = "";
-    }
-  });
-}
-
-function switchTab(tabName) {
-  currentTab = tabName;
-  renderAll();
-}
-
-// ====== Tab 渲染函数注册表 ======
-// 新增标签页只需在这里加一行，无需修改 renderCurrentTab
-//
-// 注意：对于定义在其他 JS 文件中的函数（跨文件），
-// 不能直接用引用（const 创建时函数尚未加载），
-// 要用 fnName 字符串 + 运行时 window[fnName] 动态查找。
-const TAB_RENDERERS = {
-  actions: renderActionsTab,
-  map: renderMapTab,
-  trade: renderTradeTab,
-  inventory: renderInventoryTab,
-  skills: { fn: renderSkillsTab, fallback: "📚 技能系统加载中..." },
-  corp: renderCorpTab,
-  // renderInvestmentTab 在 investment.js 中定义（跨文件）
-  investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
-  // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
-  career_dev: {
-    fnName: "renderCareerDevTab",
-    fallback: "事业发展系统加载中...",
-  },
-  enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
-  // renderSideHustleTab 在 side_hustle_ui.js 中定义（跨文件）
-  side_hustle: { fnName: "renderSideHustleTab", fallback: "副业系统加载中..." },
-  achievements: renderAchievementsTab,
-  // 社交Tab：合并职场社交+家庭（跨文件）
-  social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
-  life_systems: {
-    fn: renderLifeSystemsTab,
-    fallback: "人生事务系统加载中...",
-  },
-  // 个人成长Tab（合并了原成长数据可视化+原个人成长）
-  personal_growth: {
-    fn: renderMergedPersonalGrowthTab,
-    fallback: "个人成长系统加载中...",
-  },
-  // renderWikiTab 在 wiki.js 中定义（跨文件）
-  equipmentSuites: {
-    fnName: "renderEquipmentSuitesTab",
-    fallback: "装备套装加载中...",
-  },
-  wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
-};
-
 /**
  * 📍 当前地点服务条 + 声望条（地图 Tab 顶部通用件）
  * - 服务标签：仓库 / 工作 / 银行 / 医院 / 客流量...
@@ -1216,28 +1112,7 @@ function appendLocationServicesStrip(container, state, locKey) {
   container.appendChild(strip);
 }
 
-// ====== 通用滚动锚定辅助函数 ======
-// 返回当前在 #content-area 视口内、位置最靠上的那张 .action-card 的屏幕 top，
-// 作为通用锚点（不含 goodId 时使用，覆盖行动/技能等 tab）。没有则返回 null。
-function _firstVisibleActionCardTop(area) {
-  var cards = area.querySelectorAll(".action-card");
-  if (!cards.length) return null;
-  var areaTop = area.getBoundingClientRect().top;
-  for (var i = 0; i < cards.length; i++) {
-    var t = cards[i].getBoundingClientRect().top;
-    if (t >= areaTop - 1) return t; // 首张位于（或刚好没过）容器顶的卡片
-  }
-  // 全部卡片滚到上方视口外时，回退到首张卡片
-  return cards[0].getBoundingClientRect().top;
-}
-
-// ====== Tab Content 渲染 ======
-// anchorGoodId（可选，仅交易页）: 传入被操作商品的 id。
-// 重绘后通过滚动锚定把目标卡片拉回重绘前的视口位置，避免上方区块出现/消失
-// 把内容推离光标导致连点错位。
-//   - 传入 anchorGoodId：精确定位到该商品所在卡片（交易页专用）；
-//   - 未传入：自动锚定首张可见 .action-card（行动/技能等 tab 通用）。
-function renderCurrentTab(state, anchorGoodId) {
+function renderCurrentTab_legacy(state, anchorGoodId) {
   const area = document.getElementById("content-area");
 
   // ===== 阶段一（重绘前）：保存滚动状态 =====
@@ -1299,8 +1174,7 @@ function renderCurrentTab(state, anchorGoodId) {
   // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
   renderStatsStrip(state, area);
 
-  // 活跃新闻
-  renderActiveNews(state, area);
+  // 活跃新闻横幅已隐藏：新闻内容通过消息日志+弹窗传达，横幅占空间且玩家不看
 
   const renderer = TAB_RENDERERS[currentTab];
   if (typeof renderer === "function") {
@@ -2869,7 +2743,7 @@ function getDailyActionTips(state) {
   return urgent.concat(tips);
 }
 
-// ── 引导面板：折叠显示"人生目标/阶段/目标/建议"，减少滚动负担 ──────────────
+// ── 引导面板：三格横排常驻（阶段 | 当前目标 | 今日建议），无需展开 ──────────────
 function renderGuidanceBar(state, parent) {
   var _SM = {
     survival: { icon: "🌱", label: "初来乍到" },
@@ -2878,148 +2752,117 @@ function renderGuidanceBar(state, parent) {
     corporate: { icon: "🏢", label: "职场打拼" },
     advanced: { icon: "🏆", label: "有头有脸" },
   };
-  var p = state.player,
-    r = state.resources || {};
+  var p = state.player, r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
   var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
-  var stageId =
-    p.day <= 7
-      ? "survival"
-      : debt > 0
-        ? "debt"
-        : p.phase === "corporate"
-          ? cash >= 50000
-            ? "advanced"
-            : "corporate"
-          : "growth";
+  var stageId = p.day <= 7 ? "survival"
+    : debt > 0 ? "debt"
+    : p.phase === "corporate" ? (cash >= 50000 ? "advanced" : "corporate")
+    : "growth";
   var si = _SM[stageId] || _SM.survival;
 
-  var dream =
-    typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
-  var progress =
-    dream && typeof getDreamProgress === "function"
-      ? Math.round(getDreamProgress(state))
-      : 0;
+  var dream = typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
+  var progress = dream && typeof getDreamProgress === "function" ? Math.round(getDreamProgress(state)) : 0;
   var tips = getDailyActionTips(state);
-  var isOpen = !!window._guidancePanelOpen;
+  var mental = (state.player && state.player.mental) || 0;
 
   var bar = document.createElement("div");
   bar.className = "guidance-bar";
 
-  // ── 折叠条（单行，始终显示）
-  var parts = [];
-  if (dream) {
-    parts.push(
-      '<span class="gb-chip gb-dream">' +
-        _esc(dream.icon + " " + dream.name) +
-        "</span>" +
-        '<span class="gb-prog"><span class="gb-prog-fill" style="width:' +
-        progress +
-        '%"></span></span>' +
-        '<span class="gb-pct">' +
-        progress +
-        "%</span>",
-    );
-  }
-  parts.push('<span class="gb-chip">' + si.icon + " " + si.label + "</span>");
-  if (tips.length > 0) {
-    parts.push('<span class="gb-chip gb-tips">💡 ' + tips.length + "条</span>");
-  }
-  var strip = document.createElement("div");
-  strip.className = "guidance-bar-strip";
-  strip.innerHTML =
-    parts.join('<span class="gb-sep"> · </span>') +
-    '<span class="gb-toggle">' +
-    (isOpen ? "▲ 收起" : "▼ 引导") +
-    "</span>";
-  bar.appendChild(strip);
+  var row = document.createElement("div");
+  row.className = "gb-row";
+  bar.appendChild(row);
 
-  // ── 展开面板
-  var panel = document.createElement("div");
-  panel.className = "guidance-panel";
-  if (!isOpen) panel.style.display = "none";
+  // ── 格1：阶段 ──
+  var c1 = document.createElement("div");
+  c1.className = "gb-cell gb-cell-stage";
 
+  var stageTitle = document.createElement("div");
+  stageTitle.className = "gb-cell-title";
+  stageTitle.textContent = "当前阶段";
+  c1.appendChild(stageTitle);
+
+  var stageLabel = document.createElement("div");
+  stageLabel.style.cssText = "font-size:13px;font-weight:700;color:var(--accent);margin:3px 0;";
+  stageLabel.textContent = si.icon + " " + si.label;
+  c1.appendChild(stageLabel);
+
+  // 人生旅程弧（横向滚动小点）
+  if (typeof window !== "undefined" && window.renderLifeArcStrip) {
+    var arcWrap = document.createElement("div");
+    arcWrap.className = "gb-arc-wrap";
+    window.renderLifeArcStrip(state, arcWrap);
+    c1.appendChild(arcWrap);
+  }
+
+  // 人生目标进度
   if (dream) {
-    var s1 = document.createElement("div");
-    s1.className = "guidance-section";
-    renderGoalStrip(state, s1);
-    panel.appendChild(s1);
+    var goalRow = document.createElement("div");
+    goalRow.style.cssText = "display:flex;align-items:center;gap:5px;margin-top:4px;";
+    goalRow.innerHTML =
+      '<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">' + _esc(dream.icon + " " + dream.name) + '</span>' +
+      '<div style="flex:1;height:3px;background:var(--bg-input);border-radius:2px;overflow:hidden;">' +
+        '<div style="width:' + progress + '%;height:100%;background:var(--accent);border-radius:2px;"></div>' +
+      '</div>' +
+      '<span style="font-size:9px;color:var(--text-muted);">' + progress + '%</span>';
+    c1.appendChild(goalRow);
   }
-  if (typeof renderLifeArcStrip === "function") {
-    var s2 = document.createElement("div");
-    s2.className = "guidance-section";
-    renderLifeArcStrip(state, s2);
-    panel.appendChild(s2);
+
+  row.appendChild(c1);
+
+  // ── 格2：当前目标 ──
+  var c2 = document.createElement("div");
+  c2.className = "gb-cell gb-cell-quest";
+
+  var questTitle = document.createElement("div");
+  questTitle.className = "gb-cell-title";
+  questTitle.textContent = "🎯 当前目标";
+  c2.appendChild(questTitle);
+
+  if (typeof window !== "undefined" && window.renderDailyQuestCard) {
+    var questWrap = document.createElement("div");
+    questWrap.className = "gb-quest-inner";
+    window.renderDailyQuestCard(state, questWrap);
+    c2.appendChild(questWrap);
   }
-  if (typeof renderDailyQuestCard === "function") {
-    var s3 = document.createElement("div");
-    s3.className = "guidance-section";
-    renderDailyQuestCard(state, s3);
-    panel.appendChild(s3);
-  }
+
+  row.appendChild(c2);
+
+  // ── 格3：今日建议 ──
+  var c3 = document.createElement("div");
+  c3.className = "gb-cell gb-cell-tips";
+
+  var mentalTag = mental >= 80 ? "🧠 专家洞察" : mental >= 60 ? "💡 进阶建议" : "💡 今日建议";
+  var tipsTitle = document.createElement("div");
+  tipsTitle.className = "gb-cell-title";
+  tipsTitle.textContent = mentalTag;
+  c3.appendChild(tipsTitle);
+
   if (tips.length > 0) {
-    var s4 = document.createElement("div");
-    s4.className = "guidance-section";
-    var mental = (state.player && state.player.mental) || 0;
-    var mentalTag =
-      mental >= 80
-        ? "🧠 专家洞察"
-        : mental >= 60
-          ? "💡 进阶建议"
-          : "💡 今日建议";
-    var titleD = document.createElement("div");
-    titleD.style.cssText =
-      "font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;";
-    titleD.innerHTML =
-      mentalTag +
-      ' <span style="font-size:9px;color:var(--text-muted);font-weight:400;">（心智' +
-      mental +
-      "）</span>";
-    s4.appendChild(titleD);
-    var listD = document.createElement("div");
-    listD.style.cssText = "max-height:130px;overflow-y:auto;padding-right:2px;";
-    tips.forEach(function (t) {
-      var item = document.createElement("div");
-      item.style.cssText =
-        "font-size:12px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
-      item.textContent = t;
-      listD.appendChild(item);
+    var tipInner = document.createElement("div");
+    tipInner.className = "gb-tips-inner";
+    tips.slice(0, 4).forEach(function(t) {
+      var trow = document.createElement("div");
+      trow.style.cssText = "font-size:11px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.4;";
+      trow.textContent = t;
+      tipInner.appendChild(trow);
     });
-    s4.appendChild(listD);
-    panel.appendChild(s4);
-  }
-
-  bar.appendChild(panel);
-  parent.appendChild(bar);
-
-  // ── 展开/收起 + 自动定位当前阶段
-  function _scrollToCurStage() {
-    setTimeout(function () {
-      var arcWrap = bar.querySelector("#life-arc-wrap");
-      if (!arcWrap) return;
-      var cur = arcWrap.querySelector("[data-stage-cur]");
-      if (cur)
-        cur.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-          block: "nearest",
-        });
-    }, 80);
-  }
-  if (isOpen) _scrollToCurStage();
-
-  strip.addEventListener("click", function () {
-    window._guidancePanelOpen = !window._guidancePanelOpen;
-    panel.style.display = window._guidancePanelOpen ? "block" : "none";
-    var tgl = strip.querySelector(".gb-toggle");
-    if (tgl) tgl.textContent = window._guidancePanelOpen ? "▲ 收起" : "▼ 引导";
-    if (window._guidancePanelOpen) {
-      setTimeout(function () {
-        bar.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 10);
-      _scrollToCurStage();
+    if (tips.length > 4) {
+      var moreT = document.createElement("div");
+      moreT.style.cssText = "font-size:10px;color:var(--text-muted);margin-top:2px;";
+      moreT.textContent = "…共" + tips.length + "条";
+      tipInner.appendChild(moreT);
     }
-  });
+    c3.appendChild(tipInner);
+  } else {
+    var noTip = document.createElement("div");
+    noTip.style.cssText = "font-size:11px;color:var(--text-muted);";
+    noTip.textContent = "暂无紧急建议，继续当前计划。";
+    c3.appendChild(noTip);
+  }
+
+  row.appendChild(c3);
+  parent.appendChild(bar);
 }
 
 function renderActionsTab(state, parent) {

@@ -84,8 +84,7 @@ function renderCurrentTab(state, anchorGoodId) {
   // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
   renderGoalStrip(state, area);
 
-  // 活跃新闻
-  renderActiveNews(state, area);
+  // 活跃新闻横幅已隐藏：新闻内容通过消息日志+弹窗传达，横幅占空间且玩家不看
 
   const renderer = TAB_RENDERERS[currentTab];
   if (typeof renderer === "function") {
