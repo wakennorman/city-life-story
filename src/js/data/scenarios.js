@@ -75,12 +75,13 @@ const SCENARIOS = [
       text: "天刚亮，你摸出手机——3%的电。弟弟昨晚发了条语音，你犹豫了三秒，点开。\n\n「哥……学校说下学期学费要提前交……¥800……妈说等你消息……」\n\n他在哭。你听完，把手机锁上。\n\n旁边的四川大叔没睁眼，翻了个身说：「工地六点招日工，去晚了就满了。」\n\n口袋里¥300，胃在绞着疼。你站起来，抖掉纸板上的灰。",
       effects: { mental: -5, happiness: -10 },
     },
-    // 开局天赋池（随机抽1个，增加重玩性）
+    // 开局天赋池（随机抽，⚪普通/🔵优秀/🟡稀有三档权重 60/30/10）
     talents: [
       {
         id: "strong_back",
         name: "力大无穷",
         icon: "🦾",
+        rarity: "common",
         desc: "天生力气大，体质+10，搬运和体力活更顺手",
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 10);
@@ -90,6 +91,7 @@ const SCENARIOS = [
         id: "nimble_worker",
         name: "手脚麻利",
         icon: "⚡",
+        rarity: "common",
         desc: "动作快人一步，敏捷+10，每天能多干一点",
         apply: function (s) {
           s.player.agility = Math.min(100, s.player.agility + 10);
@@ -99,6 +101,7 @@ const SCENARIOS = [
         id: "fellow_guide",
         name: "老乡指路",
         icon: "🤝",
+        rarity: "common",
         desc: "有老乡介绍工头联系方式，魅力+5，心情+15",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 5);
@@ -109,10 +112,45 @@ const SCENARIOS = [
         id: "desperation_drive",
         name: "破釜沉舟",
         icon: "🔥",
+        rarity: "common",
         desc: "没有退路反而激出韧性，能力+12，道德感+3",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
           s.player.morality = Math.min(100, s.player.morality + 3);
+        },
+      },
+      {
+        id: "veteran_physique",
+        name: "老练工人",
+        icon: "🏗️",
+        rarity: "uncommon",
+        desc: "老家干过工地，体质+8敏捷+6双属性加成",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 8);
+          s.player.agility = Math.min(100, s.player.agility + 6);
+        },
+      },
+      {
+        id: "steel_nerve",
+        name: "钢铁意志",
+        icon: "🧱",
+        rarity: "uncommon",
+        desc: "经历过更难的关口，能力+10，健康+8",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.status.health = Math.min(100, s.status.health + 8);
+        },
+      },
+      {
+        id: "destined_worker",
+        name: "天选打工人",
+        icon: "⭐",
+        rarity: "rare",
+        desc: "命运格外垂青，体质+15，敏捷+10，额外¥500",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 15);
+          s.player.agility = Math.min(100, s.player.agility + 10);
+          s.resources.cash += 500;
         },
       },
     ],
@@ -171,6 +209,7 @@ const SCENARIOS = [
         id: "veteran_craftsman",
         name: "老师傅",
         icon: "🔧",
+        rarity: "common",
         desc: "手艺比同期工人都强，维修技能+12",
         apply: function (s) {
           if (s.skills.repair)
@@ -181,6 +220,7 @@ const SCENARIOS = [
         id: "wide_connections",
         name: "人脉广",
         icon: "🤝",
+        rarity: "common",
         desc: "工厂里认识的人多，名声+10，魅力+5",
         apply: function (s) {
           s.player.fame = Math.min(100, s.player.fame + 10);
@@ -191,6 +231,7 @@ const SCENARIOS = [
         id: "resilient_spirit",
         name: "越挫越勇",
         icon: "💪",
+        rarity: "common",
         desc: "人到中年历过风浪，能力+12，健康+5",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
@@ -201,7 +242,8 @@ const SCENARIOS = [
         id: "skilled_electrician",
         name: "电工一把手",
         icon: "⚙️",
-        desc: "电工经验扎实，电工技能+10，体质+3",
+        rarity: "common",
+        desc: "电工经验扎实，电工+10，体质+3",
         apply: function (s) {
           if (s.skills.electrician)
             s.skills.electrician.level = Math.min(
@@ -209,6 +251,45 @@ const SCENARIOS = [
               s.skills.electrician.level + 10,
             );
           s.player.physique = Math.min(100, s.player.physique + 3);
+        },
+      },
+      {
+        id: "dual_trade",
+        name: "焊修两手硬",
+        icon: "🔩",
+        rarity: "uncommon",
+        desc: "焊接和维修都精通，焊接+10，维修+8",
+        apply: function (s) {
+          if (s.skills.welding)
+            s.skills.welding.level = Math.min(100, s.skills.welding.level + 10);
+          if (s.skills.repair)
+            s.skills.repair.level = Math.min(100, s.skills.repair.level + 8);
+        },
+      },
+      {
+        id: "old_horse",
+        name: "老骥伏枥",
+        icon: "🏇",
+        rarity: "uncommon",
+        desc: "越老越硬，体质+5，能力+10，健康+5",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 5);
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.status.health = Math.min(100, s.status.health + 5);
+        },
+      },
+      {
+        id: "gold_craftsman",
+        name: "金牌工匠",
+        icon: "🏅",
+        rarity: "rare",
+        desc: "厂里第一把好手，维修+15，焊接+15，名声+5",
+        apply: function (s) {
+          if (s.skills.repair)
+            s.skills.repair.level = Math.min(100, s.skills.repair.level + 15);
+          if (s.skills.welding)
+            s.skills.welding.level = Math.min(100, s.skills.welding.level + 15);
+          s.player.fame = Math.min(100, s.player.fame + 5);
         },
       },
     ],
@@ -267,6 +348,7 @@ const SCENARIOS = [
         id: "top_student",
         name: "全县第一",
         icon: "📚",
+        rarity: "common",
         desc: "智力比同龄人高出一截，智力+10",
         apply: function (s) {
           s.player.intelligence = Math.min(100, s.player.intelligence + 10);
@@ -276,7 +358,8 @@ const SCENARIOS = [
         id: "competition_award",
         name: "竞赛获奖",
         icon: "🏆",
-        desc: "大学参加竞赛拿过奖，编程技能+12",
+        rarity: "common",
+        desc: "大学竞赛拿过奖，编程+12",
         apply: function (s) {
           if (s.skills.coding)
             s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
@@ -286,7 +369,8 @@ const SCENARIOS = [
         id: "scholarship_record",
         name: "奖学金记录",
         icon: "🎓",
-        desc: "大学拿过奖学金，银行存款+¥2000，等于还了部分债",
+        rarity: "common",
+        desc: "大学拿过奖学金，银行+¥2000，等于还了部分债",
         apply: function (s) {
           s.resources.bankBalance = (s.resources.bankBalance || 0) + 2000;
         },
@@ -295,7 +379,8 @@ const SCENARIOS = [
         id: "note_master",
         name: "笔记达人",
         icon: "📝",
-        desc: "学习方法好有条理，能力+8，会计技能+5",
+        rarity: "common",
+        desc: "学习方法好有条理，能力+8，会计+5",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 8);
           if (s.skills.accounting)
@@ -303,6 +388,45 @@ const SCENARIOS = [
               100,
               s.skills.accounting.level + 5,
             );
+        },
+      },
+      {
+        id: "genius_boy",
+        name: "天才少年",
+        icon: "🧠",
+        rarity: "uncommon",
+        desc: "智力超群，智力+12，编程+8，学什么都快",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 12);
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 8);
+        },
+      },
+      {
+        id: "language_gifted",
+        name: "语言天赋",
+        icon: "🌐",
+        rarity: "uncommon",
+        desc: "英语成绩拔尖，智力+8，英语+12，职场竞争力强",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 8);
+          if (s.skills.english)
+            s.skills.english.level = Math.min(100, s.skills.english.level + 12);
+        },
+      },
+      {
+        id: "scholar_aura",
+        name: "学霸光环",
+        icon: "🌟",
+        rarity: "rare",
+        desc: "全县状元，智力+15，乡债减少¥5000（县里补贴）",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 15);
+          s.resources.villageDebt = Math.max(
+            0,
+            (s.resources.villageDebt || 0) - 5000,
+          );
+          s.resources.debt = Math.max(0, (s.resources.debt || 0) - 5000);
         },
       },
     ],
@@ -356,6 +480,7 @@ const SCENARIOS = [
         id: "tough_body",
         name: "苦出身",
         icon: "💪",
+        rarity: "common",
         desc: "从小吃苦练就的体魄，体质+12",
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 12);
@@ -365,6 +490,7 @@ const SCENARIOS = [
         id: "social_butterfly",
         name: "自来熟",
         icon: "🤝",
+        rarity: "common",
         desc: "天生会和人打交道，魅力+10，心情+5",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 10);
@@ -375,6 +501,7 @@ const SCENARIOS = [
         id: "packed_extra",
         name: "多带了点",
         icon: "📦",
+        rarity: "common",
         desc: "行李比别人装得多，背包容量+10",
         apply: function (s) {
           s.inventory.capacity = (s.inventory.capacity || 20) + 10;
@@ -384,10 +511,45 @@ const SCENARIOS = [
         id: "iron_will",
         name: "拼命三郎",
         icon: "🔥",
+        rarity: "common",
         desc: "为了妈妈手术费什么苦都能吃，能力+10，敏捷+3",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 10);
           s.player.agility = Math.min(100, s.player.agility + 3);
+        },
+      },
+      {
+        id: "iron_physique",
+        name: "铁打的身体",
+        icon: "⚒️",
+        rarity: "uncommon",
+        desc: "从小劳作锻出来的，体质+10，健康+8，不容易病",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 10);
+          s.status.health = Math.min(100, s.status.health + 8);
+        },
+      },
+      {
+        id: "pioneer_drive",
+        name: "异乡闯劲",
+        icon: "🌊",
+        rarity: "uncommon",
+        desc: "越在外越拼命，能力+12，魅力+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 12);
+          s.player.charm = Math.min(100, s.player.charm + 5);
+        },
+      },
+      {
+        id: "family_mission",
+        name: "家族使命",
+        icon: "🏡",
+        rarity: "rare",
+        desc: "一家人指望你，体质+8，能力+8，额外启动金¥500",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 8);
+          s.player.mental = Math.min(100, s.player.mental + 8);
+          s.resources.cash += 500;
         },
       },
     ],
@@ -446,6 +608,7 @@ const SCENARIOS = [
         id: "elite_education",
         name: "名校光环",
         icon: "🎓",
+        rarity: "common",
         desc: "一线名校出来的，智力+8，名声+8",
         apply: function (s) {
           s.player.intelligence = Math.min(100, s.player.intelligence + 8);
@@ -456,6 +619,7 @@ const SCENARIOS = [
         id: "secret_funds",
         name: "私藏零花",
         icon: "💰",
+        rarity: "common",
         desc: "父亲给的是明账，还有自己藏着的¥8000",
         apply: function (s) {
           s.resources.cash += 8000;
@@ -465,7 +629,8 @@ const SCENARIOS = [
         id: "drivers_network",
         name: "好车好人脉",
         icon: "🚗",
-        desc: "常年社交圈子好，驾驶技能+12，名声+5",
+        rarity: "common",
+        desc: "常年社交圈子好，驾驶+12，名声+5",
         apply: function (s) {
           if (s.skills.driving)
             s.skills.driving.level = Math.min(100, s.skills.driving.level + 12);
@@ -476,13 +641,51 @@ const SCENARIOS = [
         id: "business_sense",
         name: "商业眼光",
         icon: "👔",
-        desc: "从小耳濡目染，管理技能+12",
+        rarity: "common",
+        desc: "从小耳濡目染，管理+12",
         apply: function (s) {
           if (s.skills.management)
             s.skills.management.level = Math.min(
               100,
               s.skills.management.level + 12,
             );
+        },
+      },
+      {
+        id: "network_capital",
+        name: "人脉资本",
+        icon: "🌐",
+        rarity: "uncommon",
+        desc: "朋友圈都是有资源的人，名声+15，魅力+8",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 15);
+          s.player.charm = Math.min(100, s.player.charm + 8);
+        },
+      },
+      {
+        id: "fathers_wisdom",
+        name: "父亲的智慧",
+        icon: "📊",
+        rarity: "uncommon",
+        desc: "耳濡目染经商之道，管理+10，销售+8",
+        apply: function (s) {
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 10,
+            );
+          if (s.skills.sales)
+            s.skills.sales.level = Math.min(100, s.skills.sales.level + 8);
+        },
+      },
+      {
+        id: "hidden_fortune",
+        name: "财富子弹",
+        icon: "💎",
+        rarity: "rare",
+        desc: "父亲悄悄给的备用金，现金再+¥20000",
+        apply: function (s) {
+          s.resources.cash += 20000;
         },
       },
     ],
@@ -541,7 +744,8 @@ const SCENARIOS = [
         id: "code_veteran",
         name: "代码老兵",
         icon: "💾",
-        desc: "十几年代码写下来，编程技能+12",
+        rarity: "common",
+        desc: "十几年代码写下来，编程+12",
         apply: function (s) {
           if (s.skills.coding)
             s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
@@ -551,6 +755,7 @@ const SCENARIOS = [
         id: "office_fox",
         name: "职场老狐狸",
         icon: "🦊",
+        rarity: "common",
         desc: "摸清了所有套路，管理+10，销售+5",
         apply: function (s) {
           if (s.skills.management)
@@ -566,6 +771,7 @@ const SCENARIOS = [
         id: "emergency_fund",
         name: "私房钱",
         icon: "💰",
+        rarity: "common",
         desc: "多年工作攒下的私人小金库，现金+¥8000",
         apply: function (s) {
           s.resources.cash += 8000;
@@ -575,10 +781,53 @@ const SCENARIOS = [
         id: "weathered_wisdom",
         name: "见过大风浪",
         icon: "🧘",
+        rarity: "common",
         desc: "职场沉浮过来的，能力+12，心情+10",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+        },
+      },
+      {
+        id: "decade_stack",
+        name: "十年积累",
+        icon: "📈",
+        rarity: "uncommon",
+        desc: "双修积累，编程+10，管理+8",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 10);
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 8,
+            );
+        },
+      },
+      {
+        id: "midlife_defiance",
+        name: "中年破釜",
+        icon: "💥",
+        rarity: "uncommon",
+        desc: "越逼越猛，能力+15，道德感+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 15);
+          s.player.morality = Math.min(100, s.player.morality + 5);
+        },
+      },
+      {
+        id: "industry_icon",
+        name: "行业人脉王",
+        icon: "👑",
+        rarity: "rare",
+        desc: "干了十几年攒的关系网，名声+20，管理+12",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 20);
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 12,
+            );
         },
       },
     ],

@@ -44226,6 +44226,624 @@ if (typeof window !== "undefined") {
   }
 })();
 </script>
+    <!-- v3.6: 新闻驱动深度叙事事件（8个联动事件）-->
+    <script>/**
+ * 新闻驱动深度叙事事件 — 让新闻不只是背景板
+ *
+ * 设计理念：
+ *   - 每条新闻都有可能触发有玩家选择、有后果的叙事事件
+ *   - 玩家选择产生 flag，后续同一类新闻会参考这些 flag
+ *   - 峰终定律：新闻事件的峰值情感体验创造记忆锚点
+ *   - 损失厌恶：参与/不参与都有不同后果，没有绝对正确的选择
+ *
+ * 设计参考：This War of Mine 情景事件 / Papers Please 每日报纸 / 大多数 新闻回应
+ *
+ * 接入方式：与 cross_system_events.js 同样采用 IIFE 注入 RANDOM_EVENTS
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._newsDrivenLoaded) return;
+  RANDOM_EVENTS._newsDrivenLoaded = true;
+
+  var NEWS_EVENTS = [
+    // ====== 建筑行业新闻驱动事件 ======
+    {
+      id: "construction_safety_incident",
+      phase: "street",
+      icon: "⚠️",
+      title: "工地的安全警示",
+      story:
+        "新闻里说建筑行业大热，到处都在招人。今天你在工地上亲眼看到一个工友从脚手架上滑了下来——好在只擦破了皮。包工头让人赶紧把他扶走，压低声音说：「别声张，继续干。」\n\n你想起新闻里热火朝天的画面，和眼前的现实形成了对比。",
+      conditions: function (st) {
+        if (!st.activeNews || st.activeNews.length === 0) return false;
+        for (var ci = 0; ci < st.activeNews.length; ci++) {
+          if (
+            st.activeNews[ci].id === "construction_boom" ||
+            st.activeNews[ci].id === "urban_renewal_pilot"
+          )
+            return true;
+        }
+        return false;
+      },
+      probability: 0.03,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "📢 向安全员举报",
+          hint: "良心选择",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.flags._constructionWhistleblower = true;
+            StateManager.addMessage(
+              "📢 你举报了安全隐患，安全员来做了全面检查。包工头黑着脸，但你心里踏实了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤫 假装没看见",
+          hint: "不惹麻烦",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "🤫 你低下头继续干活，但那个画面一直在脑子里转。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "📸 拍下来发网上",
+          hint: "引发关注",
+          apply: function (st) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            st.flags._constructionExposed = true;
+            StateManager.addMessage(
+              "📸 你把视频发到了网上，引发了不少讨论。工地被要求停工整改了。",
+              "event",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 流感季节新闻驱动事件 ======
+    {
+      id: "flu_hospital_overload",
+      phase: "street",
+      icon: "🏥",
+      title: "医院走廊的加床",
+      story:
+        "新闻里说流感高峰到了、医院人满为患。今天你路过医院，发现走廊里全是加床，咳嗽声此起彼伏。\n\n护士台前排着长队，一个护士看见你，跑过来问：「你是来看病的还是来帮忙的？我们实在忙不过来了。」",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var fi = 0; fi < st.activeNews.length; fi++) {
+          if (st.activeNews[fi].id === "flu_surge") return true;
+        }
+        return false;
+      },
+      probability: 0.035,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "😷 帮忙做志愿者",
+          hint: "累但助人",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.flags._fluVolunteer = true;
+            StateManager.addMessage(
+              "😷 你帮忙搬床送水跑腿，忙了整整一天。护士长感谢说：「你是好人。」",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🛒 囤口罩卖高价",
+          hint: "赚个差价",
+          apply: function (st) {
+            var profit = 80 + Random.int(0, 120);
+            st.resources.cash = (st.resources.cash || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            st.flags._fluProfiteer = true;
+            StateManager.addMessage(
+              "🛒 你倒手赚了¥" + profit + "。但看着排队的人，心情有点复杂。",
+              "event",
+            );
+          },
+        },
+        {
+          text: "🚶 赶紧离开",
+          hint: "避免被传染",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你戴好口罩快步离开了。流感季不该来医院晃悠。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 租金上涨新闻驱动事件 ======
+    {
+      id: "rental_crisis_landlord",
+      phase: "street",
+      icon: "🏠",
+      title: "房东的涨价通知",
+      story:
+        "你刚在手机新闻里看到「租房市场全面紧张，租金飙涨」，房东就来敲门了。\n\n「小伙子，你也看到了，现在行情就是这样。下个月起，房租涨¥200。你要是接受不了，我也没办法——后面排队要租的人多的是。」",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var ri = 0; ri < st.activeNews.length; ri++) {
+          if (
+            st.activeNews[ri].id === "rental_crisis" ||
+            st.activeNews[ri].id === "population_inflow"
+          )
+            return true;
+        }
+        return st.housing && st.housing.tier > 0 && st.housing.tier < 4;
+      },
+      probability: 0.04,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "🤝 商量少涨点",
+          hint: "讨价还价",
+          apply: function (st) {
+            var charm = st.player.charm || 0;
+            if (charm >= 40 || Random.chance(0.4)) {
+              st.flags._rentHalfIncrease = true;
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 3,
+              );
+              StateManager.addMessage(
+                "🤝 你嘴皮子磨了半天，房东松口只涨¥100。省一点是一点。",
+                "success",
+              );
+            } else {
+              st.flags._rentFullIncrease = true;
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "🤝 房东根本不听：「爱租不租。」",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "😤 咬牙接受",
+          hint: "多花钱省心",
+          apply: function (st) {
+            st.flags._rentFullIncrease = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "😤 你咬着牙答应了。现在行情就这样，搬家更折腾。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "🔍 开始找新住处",
+          hint: "主动出击",
+          apply: function (st) {
+            st.flags._lookingForNewHome = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            StateManager.addMessage(
+              "🔍 你开始四处留意更便宜的住处。也许城郊能找到实惠的地方。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 科技裁员新闻驱动事件 ======
+    {
+      id: "tech_layoff_opportunity",
+      phase: "street",
+      icon: "💻",
+      title: "被裁程序员的课堂",
+      story:
+        "新闻里说科技大厂裁员潮来了，互联网行业经历寒冬。\n\n今天你在城中村碰到几个年轻人，在小卖部门口贴了一张手写告示：「大厂被裁，手把手教编程——¥50/节，包教包会。」\n\n其中一个戴黑框眼镜的看了你一眼：「兄弟，要不要学一手？以前进大厂才用得上的技术。」",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var ti = 0; ti < st.activeNews.length; ti++) {
+          if (
+            st.activeNews[ti].id === "tech_layoff" ||
+            st.activeNews[ti].id === "tech_layoff_echo"
+          )
+            return true;
+        }
+        return false;
+      },
+      probability: 0.035,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "💻 报名学习（¥50）",
+          hint: "投资技能",
+          cost: 50,
+          apply: function (st) {
+            if ((st.resources.cash || 0) < 50) {
+              StateManager.addMessage(
+                "💻 你摸了摸口袋，钱不够。先攒攒再说吧。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 50;
+            st.skills = st.skills || {};
+            st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
+            st.flags._learnedCodingFromLayoff = true;
+            StateManager.addMessage(
+              "💻 你花¥50学了一节编程课。虽然难，但打开了新世界的大门。技能经验+50。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "👀 在边上旁听",
+          hint: "白嫖知识",
+          apply: function (st) {
+            st.needs.intelligence = Math.min(
+              100,
+              (st.needs.intelligence || 0) + 2,
+            );
+            st.flags._codingInterestPiqued = true;
+            StateManager.addMessage(
+              "👀 你站在旁边听了一会儿。编程好像也没那么神秘。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚶 路过而已",
+          hint: "不感兴趣",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你摆摆手走开了。跟自己不是一个世界的东西。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 城管严查新闻驱动事件 ======
+    {
+      id: "crackdown_street_vendor",
+      phase: "street",
+      icon: "🚔",
+      title: "城管的突击检查",
+      story:
+        "你刚在新闻里看到「城管严查摆摊」的消息，今天就撞上了现场。\n\n街口几个摆摊的小贩慌乱地收摊，一个卖烤红薯的大爷跑不及，三轮车被扣住了。大爷蹲在路边默默抽烟，手在微微发抖。旁边几个小贩围过来低声商量办法。",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var ci = 0; ci < st.activeNews.length; ci++) {
+          if (
+            st.activeNews[ci].id === "crackdown" ||
+            st.activeNews[ci].id === "chengguan_special_op"
+          )
+            return true;
+        }
+        return false;
+      },
+      probability: 0.04,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "🤝 帮大爷求情",
+          hint: "冒险但暖心",
+          apply: function (st) {
+            var charm = st.player.charm || 0;
+            if (charm >= 50 || Random.chance(0.35)) {
+              st.flags._helpedVendorGetCartBack = true;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              StateManager.addMessage(
+                "🤝 你过去跟城管说了几句好话，大爷的三轮车居然要回来了！大爷感激地塞给你两个烤红薯。",
+                "success",
+              );
+            } else {
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+              StateManager.addMessage(
+                "🤝 你试着求情，城管瞪了你一眼：「少管闲事。」",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "💰 凑钱帮交罚款",
+          hint: "花¥50帮忙",
+          cost: 50,
+          apply: function (st) {
+            if ((st.resources.cash || 0) < 50) {
+              StateManager.addMessage(
+                "💰 你自己也没几个钱，帮不上忙。",
+                "warning",
+              );
+              return;
+            }
+            st.resources.cash -= 50;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.flags._donatedToVendor = true;
+            StateManager.addMessage(
+              "💰 你塞给大爷¥50。他眼圈红了：「孩子，你是个好人。」",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📝 默默记下教训",
+          hint: "长个心眼",
+          apply: function (st) {
+            st.needs.intelligence = Math.min(
+              100,
+              (st.needs.intelligence || 0) + 2,
+            );
+            StateManager.addMessage(
+              "📝 摆摊的生意，得看天看地看城管。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 电商大促新闻驱动事件 ======
+    {
+      id: "ecom_festival_side_hustle",
+      phase: "street",
+      icon: "📦",
+      title: "电商大促的临时工潮",
+      story:
+        "新闻里说电商大促节物流爆仓，快递站包裹堆成山。你刚好路过，站长满头大汗在门口招人：「日结¥300！干到晚上12点！谁来？」\n\n广播里不断播着「距离截单还有3小时」，快递员们像蚂蚁一样忙碌。",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var ei = 0; ei < st.activeNews.length; ei++) {
+          if (
+            st.activeNews[ei].id === "e_commerce_festival" ||
+            st.activeNews[ei].id === "sea_double_11"
+          )
+            return true;
+        }
+        return false;
+      },
+      probability: 0.05,
+      repeatable: true,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "📦 干！日结¥300",
+          hint: "赚快钱",
+          apply: function (st) {
+            var fatigue = 20 + Random.int(0, 10);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + fatigue);
+            var income = 300 + Random.int(0, 100);
+            st.resources.cash = (st.resources.cash || 0) + income;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+            st.flags._ecomTempWorker = (st.flags._ecomTempWorker || 0) + 1;
+            StateManager.addMessage(
+              "📦 你干了一整天快递分拣，累得腰直不起来，但赚了¥" +
+                income +
+                "！",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🔄 承包一条线路",
+          hint: "赚更多（需¥200押金）",
+          cost: 200,
+          apply: function (st) {
+            var charm = st.player.charm || 0;
+            if (charm >= 35 && (st.resources.cash || 0) >= 200) {
+              st.resources.cash -= 200;
+              var income = 500 + Random.int(0, 200);
+              st.resources.cash = (st.resources.cash || 0) + income;
+              st.resources.totalEarned =
+                (st.resources.totalEarned || 0) + income;
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+              st.flags._ecomSubcontractor = true;
+              StateManager.addMessage(
+                "🔄 你押了¥200，承包了一条路线配送到凌晨，赚了¥" +
+                  income +
+                  "！",
+                "event",
+              );
+            } else {
+              StateManager.addMessage(
+                "🔄 站长看了看你：「连辆三轮车都没，包什么包？」",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🚶 不凑热闹",
+          hint: "人太多太乱",
+          apply: function (st) {
+            StateManager.addMessage(
+              "🚶 你看着忙碌的快递站，转身走了。赚钱的机会还多。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 寒冷天气新闻驱动事件 ======
+    {
+      id: "cold_wave_homeless_encounter",
+      phase: "street",
+      icon: "🥶",
+      title: "街角的寒夜",
+      story:
+        "新闻说寒潮来袭，气温骤降。深夜收工回家路上，你看到天桥下一个流浪老人蜷缩在纸箱里，冻得直哆嗦。\n\n风很大，街上几乎没有人。你站在不远处，犹豫着。",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        for (var ci = 0; ci < st.activeNews.length; ci++) {
+          if (
+            st.activeNews[ci].id === "cold_wave" ||
+            st.activeNews[ci].id === "winter_heating"
+          )
+            return true;
+        }
+        return false;
+      },
+      probability: 0.03,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "🧥 把外套给他",
+          hint: "助人",
+          apply: function (st) {
+            st.flags._gaveCoatToHomeless = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.status.health = Math.max(0, (st.status.health || 50) - 2);
+            StateManager.addMessage(
+              "🧥 你脱下外套盖在老人身上。他醒了，含糊说了句「谢谢」。你快步走开，但心里一阵暖意。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🍞 买份热饭送去",
+          hint: "花¥15",
+          cost: 15,
+          apply: function (st) {
+            if ((st.resources.cash || 0) < 15) {
+              StateManager.addMessage("🍞 你摸了摸口袋，没什么钱。", "warning");
+              return;
+            }
+            st.resources.cash -= 15;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.flags._boughtFoodForHomeless = true;
+            StateManager.addMessage(
+              "🍞 你在便利店买了热包子和水，轻轻放在老人身边。希望他能撑过今晚。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🚶 快步走过",
+          hint: "自顾不暇",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "🚶 你裹紧衣服快步走过。这座城市里，每个人都有自己的难处。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 经济下行新闻驱动事件 ======
+    {
+      id: "recession_side_hustle_dilemma",
+      phase: "street",
+      icon: "📉",
+      title: "经济寒潮下的选择",
+      story:
+        "新闻里说经济下行压力大，小生意难做。身边的工友老刘愁眉苦脸：「厂里订单少了，这周只排了两天班。」\n\n他问你：「听说你在搞副业？有没有路子？我什么都能干。」",
+      conditions: function (st) {
+        if (!st.activeNews) return false;
+        var hasEcoNews = false;
+        for (var ei = 0; ei < st.activeNews.length; ei++) {
+          var nid = st.activeNews[ei].id;
+          if (
+            nid === "eco_small_biz_hard" ||
+            nid === "eco_deflation_worry" ||
+            nid === "tech_layoff" ||
+            nid === "global_recession_fear"
+          ) {
+            hasEcoNews = true;
+            break;
+          }
+        }
+        return hasEcoNews && st.player.day >= 10;
+      },
+      probability: 0.03,
+      repeatable: false,
+      // [自洽修复] options→choices
+      choices: [
+        {
+          text: "🤝 帮老刘介绍活",
+          hint: "助人积德",
+          apply: function (st) {
+            st.flags._helpedFriendFindWork = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            if (st.relationships && st.relationships.old_zhou) {
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 5,
+              );
+            }
+            StateManager.addMessage(
+              "🤝 你帮老刘介绍了一份零工。他千恩万谢，说改天请你喝酒。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 自顾不暇",
+          hint: "说实话",
+          apply: function (st) {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage(
+              "😅 你苦笑着摊手：「我自己也紧巴巴的。」老刘叹了口气，没再说什么。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💡 劝他一起干副业",
+          hint: "合伙",
+          apply: function (st) {
+            st.flags._startedHustleWithFriend = true;
+            if (st.flags._startupProgress) {
+              st.flags._startupProgress += 5;
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "💡 你给老刘讲了讲副业的事。他眼睛亮了：「行，明天我跟你干！」",
+              "event",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  // 注入到 RANDOM_EVENTS
+  for (var i = 0; i < NEWS_EVENTS.length; i++) {
+    if (!NEWS_EVENTS[i].conditions) {
+      NEWS_EVENTS[i].conditions = function () {
+        return true;
+      };
+    }
+    RANDOM_EVENTS.push(NEWS_EVENTS[i]);
+  }
+})();
+</script>
     <!-- v3.22: 家庭联动事件（接入 family 子系统）-->
     <script>/**
  * 家庭联动事件 — 接入 state.family 子系统
@@ -76848,12 +77466,13 @@ const SCENARIOS = [
       text: "天刚亮，你摸出手机——3%的电。弟弟昨晚发了条语音，你犹豫了三秒，点开。\n\n「哥……学校说下学期学费要提前交……¥800……妈说等你消息……」\n\n他在哭。你听完，把手机锁上。\n\n旁边的四川大叔没睁眼，翻了个身说：「工地六点招日工，去晚了就满了。」\n\n口袋里¥300，胃在绞着疼。你站起来，抖掉纸板上的灰。",
       effects: { mental: -5, happiness: -10 },
     },
-    // 开局天赋池（随机抽1个，增加重玩性）
+    // 开局天赋池（随机抽，⚪普通/🔵优秀/🟡稀有三档权重 60/30/10）
     talents: [
       {
         id: "strong_back",
         name: "力大无穷",
         icon: "🦾",
+        rarity: "common",
         desc: "天生力气大，体质+10，搬运和体力活更顺手",
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 10);
@@ -76863,6 +77482,7 @@ const SCENARIOS = [
         id: "nimble_worker",
         name: "手脚麻利",
         icon: "⚡",
+        rarity: "common",
         desc: "动作快人一步，敏捷+10，每天能多干一点",
         apply: function (s) {
           s.player.agility = Math.min(100, s.player.agility + 10);
@@ -76872,6 +77492,7 @@ const SCENARIOS = [
         id: "fellow_guide",
         name: "老乡指路",
         icon: "🤝",
+        rarity: "common",
         desc: "有老乡介绍工头联系方式，魅力+5，心情+15",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 5);
@@ -76882,10 +77503,45 @@ const SCENARIOS = [
         id: "desperation_drive",
         name: "破釜沉舟",
         icon: "🔥",
+        rarity: "common",
         desc: "没有退路反而激出韧性，能力+12，道德感+3",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
           s.player.morality = Math.min(100, s.player.morality + 3);
+        },
+      },
+      {
+        id: "veteran_physique",
+        name: "老练工人",
+        icon: "🏗️",
+        rarity: "uncommon",
+        desc: "老家干过工地，体质+8敏捷+6双属性加成",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 8);
+          s.player.agility = Math.min(100, s.player.agility + 6);
+        },
+      },
+      {
+        id: "steel_nerve",
+        name: "钢铁意志",
+        icon: "🧱",
+        rarity: "uncommon",
+        desc: "经历过更难的关口，能力+10，健康+8",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.status.health = Math.min(100, s.status.health + 8);
+        },
+      },
+      {
+        id: "destined_worker",
+        name: "天选打工人",
+        icon: "⭐",
+        rarity: "rare",
+        desc: "命运格外垂青，体质+15，敏捷+10，额外¥500",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 15);
+          s.player.agility = Math.min(100, s.player.agility + 10);
+          s.resources.cash += 500;
         },
       },
     ],
@@ -76944,6 +77600,7 @@ const SCENARIOS = [
         id: "veteran_craftsman",
         name: "老师傅",
         icon: "🔧",
+        rarity: "common",
         desc: "手艺比同期工人都强，维修技能+12",
         apply: function (s) {
           if (s.skills.repair)
@@ -76954,6 +77611,7 @@ const SCENARIOS = [
         id: "wide_connections",
         name: "人脉广",
         icon: "🤝",
+        rarity: "common",
         desc: "工厂里认识的人多，名声+10，魅力+5",
         apply: function (s) {
           s.player.fame = Math.min(100, s.player.fame + 10);
@@ -76964,6 +77622,7 @@ const SCENARIOS = [
         id: "resilient_spirit",
         name: "越挫越勇",
         icon: "💪",
+        rarity: "common",
         desc: "人到中年历过风浪，能力+12，健康+5",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
@@ -76974,7 +77633,8 @@ const SCENARIOS = [
         id: "skilled_electrician",
         name: "电工一把手",
         icon: "⚙️",
-        desc: "电工经验扎实，电工技能+10，体质+3",
+        rarity: "common",
+        desc: "电工经验扎实，电工+10，体质+3",
         apply: function (s) {
           if (s.skills.electrician)
             s.skills.electrician.level = Math.min(
@@ -76982,6 +77642,45 @@ const SCENARIOS = [
               s.skills.electrician.level + 10,
             );
           s.player.physique = Math.min(100, s.player.physique + 3);
+        },
+      },
+      {
+        id: "dual_trade",
+        name: "焊修两手硬",
+        icon: "🔩",
+        rarity: "uncommon",
+        desc: "焊接和维修都精通，焊接+10，维修+8",
+        apply: function (s) {
+          if (s.skills.welding)
+            s.skills.welding.level = Math.min(100, s.skills.welding.level + 10);
+          if (s.skills.repair)
+            s.skills.repair.level = Math.min(100, s.skills.repair.level + 8);
+        },
+      },
+      {
+        id: "old_horse",
+        name: "老骥伏枥",
+        icon: "🏇",
+        rarity: "uncommon",
+        desc: "越老越硬，体质+5，能力+10，健康+5",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 5);
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.status.health = Math.min(100, s.status.health + 5);
+        },
+      },
+      {
+        id: "gold_craftsman",
+        name: "金牌工匠",
+        icon: "🏅",
+        rarity: "rare",
+        desc: "厂里第一把好手，维修+15，焊接+15，名声+5",
+        apply: function (s) {
+          if (s.skills.repair)
+            s.skills.repair.level = Math.min(100, s.skills.repair.level + 15);
+          if (s.skills.welding)
+            s.skills.welding.level = Math.min(100, s.skills.welding.level + 15);
+          s.player.fame = Math.min(100, s.player.fame + 5);
         },
       },
     ],
@@ -77040,6 +77739,7 @@ const SCENARIOS = [
         id: "top_student",
         name: "全县第一",
         icon: "📚",
+        rarity: "common",
         desc: "智力比同龄人高出一截，智力+10",
         apply: function (s) {
           s.player.intelligence = Math.min(100, s.player.intelligence + 10);
@@ -77049,7 +77749,8 @@ const SCENARIOS = [
         id: "competition_award",
         name: "竞赛获奖",
         icon: "🏆",
-        desc: "大学参加竞赛拿过奖，编程技能+12",
+        rarity: "common",
+        desc: "大学竞赛拿过奖，编程+12",
         apply: function (s) {
           if (s.skills.coding)
             s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
@@ -77059,7 +77760,8 @@ const SCENARIOS = [
         id: "scholarship_record",
         name: "奖学金记录",
         icon: "🎓",
-        desc: "大学拿过奖学金，银行存款+¥2000，等于还了部分债",
+        rarity: "common",
+        desc: "大学拿过奖学金，银行+¥2000，等于还了部分债",
         apply: function (s) {
           s.resources.bankBalance = (s.resources.bankBalance || 0) + 2000;
         },
@@ -77068,7 +77770,8 @@ const SCENARIOS = [
         id: "note_master",
         name: "笔记达人",
         icon: "📝",
-        desc: "学习方法好有条理，能力+8，会计技能+5",
+        rarity: "common",
+        desc: "学习方法好有条理，能力+8，会计+5",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 8);
           if (s.skills.accounting)
@@ -77076,6 +77779,45 @@ const SCENARIOS = [
               100,
               s.skills.accounting.level + 5,
             );
+        },
+      },
+      {
+        id: "genius_boy",
+        name: "天才少年",
+        icon: "🧠",
+        rarity: "uncommon",
+        desc: "智力超群，智力+12，编程+8，学什么都快",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 12);
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 8);
+        },
+      },
+      {
+        id: "language_gifted",
+        name: "语言天赋",
+        icon: "🌐",
+        rarity: "uncommon",
+        desc: "英语成绩拔尖，智力+8，英语+12，职场竞争力强",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 8);
+          if (s.skills.english)
+            s.skills.english.level = Math.min(100, s.skills.english.level + 12);
+        },
+      },
+      {
+        id: "scholar_aura",
+        name: "学霸光环",
+        icon: "🌟",
+        rarity: "rare",
+        desc: "全县状元，智力+15，乡债减少¥5000（县里补贴）",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 15);
+          s.resources.villageDebt = Math.max(
+            0,
+            (s.resources.villageDebt || 0) - 5000,
+          );
+          s.resources.debt = Math.max(0, (s.resources.debt || 0) - 5000);
         },
       },
     ],
@@ -77129,6 +77871,7 @@ const SCENARIOS = [
         id: "tough_body",
         name: "苦出身",
         icon: "💪",
+        rarity: "common",
         desc: "从小吃苦练就的体魄，体质+12",
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 12);
@@ -77138,6 +77881,7 @@ const SCENARIOS = [
         id: "social_butterfly",
         name: "自来熟",
         icon: "🤝",
+        rarity: "common",
         desc: "天生会和人打交道，魅力+10，心情+5",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 10);
@@ -77148,6 +77892,7 @@ const SCENARIOS = [
         id: "packed_extra",
         name: "多带了点",
         icon: "📦",
+        rarity: "common",
         desc: "行李比别人装得多，背包容量+10",
         apply: function (s) {
           s.inventory.capacity = (s.inventory.capacity || 20) + 10;
@@ -77157,10 +77902,45 @@ const SCENARIOS = [
         id: "iron_will",
         name: "拼命三郎",
         icon: "🔥",
+        rarity: "common",
         desc: "为了妈妈手术费什么苦都能吃，能力+10，敏捷+3",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 10);
           s.player.agility = Math.min(100, s.player.agility + 3);
+        },
+      },
+      {
+        id: "iron_physique",
+        name: "铁打的身体",
+        icon: "⚒️",
+        rarity: "uncommon",
+        desc: "从小劳作锻出来的，体质+10，健康+8，不容易病",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 10);
+          s.status.health = Math.min(100, s.status.health + 8);
+        },
+      },
+      {
+        id: "pioneer_drive",
+        name: "异乡闯劲",
+        icon: "🌊",
+        rarity: "uncommon",
+        desc: "越在外越拼命，能力+12，魅力+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 12);
+          s.player.charm = Math.min(100, s.player.charm + 5);
+        },
+      },
+      {
+        id: "family_mission",
+        name: "家族使命",
+        icon: "🏡",
+        rarity: "rare",
+        desc: "一家人指望你，体质+8，能力+8，额外启动金¥500",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 8);
+          s.player.mental = Math.min(100, s.player.mental + 8);
+          s.resources.cash += 500;
         },
       },
     ],
@@ -77219,6 +77999,7 @@ const SCENARIOS = [
         id: "elite_education",
         name: "名校光环",
         icon: "🎓",
+        rarity: "common",
         desc: "一线名校出来的，智力+8，名声+8",
         apply: function (s) {
           s.player.intelligence = Math.min(100, s.player.intelligence + 8);
@@ -77229,6 +78010,7 @@ const SCENARIOS = [
         id: "secret_funds",
         name: "私藏零花",
         icon: "💰",
+        rarity: "common",
         desc: "父亲给的是明账，还有自己藏着的¥8000",
         apply: function (s) {
           s.resources.cash += 8000;
@@ -77238,7 +78020,8 @@ const SCENARIOS = [
         id: "drivers_network",
         name: "好车好人脉",
         icon: "🚗",
-        desc: "常年社交圈子好，驾驶技能+12，名声+5",
+        rarity: "common",
+        desc: "常年社交圈子好，驾驶+12，名声+5",
         apply: function (s) {
           if (s.skills.driving)
             s.skills.driving.level = Math.min(100, s.skills.driving.level + 12);
@@ -77249,13 +78032,51 @@ const SCENARIOS = [
         id: "business_sense",
         name: "商业眼光",
         icon: "👔",
-        desc: "从小耳濡目染，管理技能+12",
+        rarity: "common",
+        desc: "从小耳濡目染，管理+12",
         apply: function (s) {
           if (s.skills.management)
             s.skills.management.level = Math.min(
               100,
               s.skills.management.level + 12,
             );
+        },
+      },
+      {
+        id: "network_capital",
+        name: "人脉资本",
+        icon: "🌐",
+        rarity: "uncommon",
+        desc: "朋友圈都是有资源的人，名声+15，魅力+8",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 15);
+          s.player.charm = Math.min(100, s.player.charm + 8);
+        },
+      },
+      {
+        id: "fathers_wisdom",
+        name: "父亲的智慧",
+        icon: "📊",
+        rarity: "uncommon",
+        desc: "耳濡目染经商之道，管理+10，销售+8",
+        apply: function (s) {
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 10,
+            );
+          if (s.skills.sales)
+            s.skills.sales.level = Math.min(100, s.skills.sales.level + 8);
+        },
+      },
+      {
+        id: "hidden_fortune",
+        name: "财富子弹",
+        icon: "💎",
+        rarity: "rare",
+        desc: "父亲悄悄给的备用金，现金再+¥20000",
+        apply: function (s) {
+          s.resources.cash += 20000;
         },
       },
     ],
@@ -77314,7 +78135,8 @@ const SCENARIOS = [
         id: "code_veteran",
         name: "代码老兵",
         icon: "💾",
-        desc: "十几年代码写下来，编程技能+12",
+        rarity: "common",
+        desc: "十几年代码写下来，编程+12",
         apply: function (s) {
           if (s.skills.coding)
             s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
@@ -77324,6 +78146,7 @@ const SCENARIOS = [
         id: "office_fox",
         name: "职场老狐狸",
         icon: "🦊",
+        rarity: "common",
         desc: "摸清了所有套路，管理+10，销售+5",
         apply: function (s) {
           if (s.skills.management)
@@ -77339,6 +78162,7 @@ const SCENARIOS = [
         id: "emergency_fund",
         name: "私房钱",
         icon: "💰",
+        rarity: "common",
         desc: "多年工作攒下的私人小金库，现金+¥8000",
         apply: function (s) {
           s.resources.cash += 8000;
@@ -77348,10 +78172,53 @@ const SCENARIOS = [
         id: "weathered_wisdom",
         name: "见过大风浪",
         icon: "🧘",
+        rarity: "common",
         desc: "职场沉浮过来的，能力+12，心情+10",
         apply: function (s) {
           s.player.mental = Math.min(100, s.player.mental + 12);
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+        },
+      },
+      {
+        id: "decade_stack",
+        name: "十年积累",
+        icon: "📈",
+        rarity: "uncommon",
+        desc: "双修积累，编程+10，管理+8",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 10);
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 8,
+            );
+        },
+      },
+      {
+        id: "midlife_defiance",
+        name: "中年破釜",
+        icon: "💥",
+        rarity: "uncommon",
+        desc: "越逼越猛，能力+15，道德感+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 15);
+          s.player.morality = Math.min(100, s.player.morality + 5);
+        },
+      },
+      {
+        id: "industry_icon",
+        name: "行业人脉王",
+        icon: "👑",
+        rarity: "rare",
+        desc: "干了十几年攒的关系网，名声+20，管理+12",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 20);
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 12,
+            );
         },
       },
     ],
