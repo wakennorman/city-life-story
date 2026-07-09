@@ -440,8 +440,8 @@ const LOCATIONS = {
   //   jobs: ["data_entry"],
   //   priceMod: { snacks: 1.0, beverages: 1.0 },
   // },
-  // TODO: 待实现 - 菜市场（参考真实农贸市场）
-  // {
+  // 菜市场（市场下沿，食材供应链终端）
+  // vegetable_market: {
   //   id: "vegetable_market",
   //   name: "菜市场",
   //   desc: "买菜的地方。新鲜食材最便宜，但环境嘈杂。",
@@ -524,6 +524,25 @@ const LOCATIONS = {
   //     books: 0.6,
   //   },
   // },
+  vegetable_market: {
+    id: "vegetable_market",
+    name: "菜市场",
+    desc: "买菜的地方。新鲜食材最便宜，但环境嘈杂。讨价还价的唇枪舌剑此起彼伏。",
+    type: "commercial",
+    wealthTier: 2,
+    footfall: 1.2,
+    vendingNote: "买菜人多，但消费力有限",
+    specialties: ["vegetables", "fruits", "meat", "seafood"],
+    dailyProbability: 0.8,
+    specialCategory: ["food"],
+    jobs: ["street_vending_food"],
+    priceMod: {
+      vegetables: 0.7,
+      fruits: 0.75,
+      meat: 0.85,
+      seafood: 0.8,
+    },
+  },
 };
 
 // 旅行图（哪些地点之间可以直接通行）
@@ -542,11 +561,14 @@ const TRAVEL_GRAPH = {
     "gov_office",
     "entertainment",
     "construction",
+    "vegetable_market",
   ],
   // 内城区：城中村位于核心区边缘
-  slum: ["wholesaleMarket", "construction", "park", "bank"],
+  slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market"],
   // 商业物流：批发市场连接工业区和中心区
-  wholesaleMarket: ["slum", "commercialDist", "factoryZone"],
+  wholesaleMarket: ["slum", "commercialDist", "factoryZone", "vegetable_market"],
+  // 菜市场：紧邻批发市场，买菜人流密集
+  vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
   // 建设区：工地连接城中村和商业区
   construction: ["slum", "commercialDist"],
   // 工业区：在外围，连接批发市场/大学城/郊区（郊区回边）
