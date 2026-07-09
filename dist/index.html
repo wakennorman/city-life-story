@@ -42269,16 +42269,18 @@ if (typeof window !== "undefined") {
   });
 
   RANDOM_EVENTS.push({
-    id: "skill_writing_column",
+    // [自洽修复] 原 skill_writing_column 引用了不存在的 skills.writing（state.js 技能表无 writing）
+    // → 改为 skills.english（真实存在），双语内容创作角度，仍连接 技能→名声/稿费经济
+    id: "skill_english_column",
     phase: "street",
     icon: "✍️",
-    title: "自媒体约稿",
+    title: "双语专栏约稿",
     story:
-      "你常把城市里的小人物写进随笔，不知不觉攒了一批读者。\n" +
-      "一家本地生活号编辑私信你：「想不想开个专栏？按篇付稿费。」",
-    // conditions：写作技能达到一定等级，连接技能系统 → 名声 / 稿费经济
+      "你常把城市里的小人物写进随笔，英语底子让你能翻些外刊对照着写。\n" +
+      "一家本地生活号编辑私信你：「想不想开个双语专栏？按篇付稿费，涉外稿另加¥300。」",
+    // conditions：英语技能达到一定等级，连接技能系统 → 名声 / 稿费经济
     conditions: function (st) {
-      var lvl = st.skills && st.skills.writing && st.skills.writing.level;
+      var lvl = st.skills && st.skills.english && st.skills.english.level;
       return typeof lvl === "number" && lvl >= 30;
     },
     probability: 0.025,
@@ -42292,7 +42294,7 @@ if (typeof window !== "undefined") {
           st.resources.cash = (st.resources.cash || 0) + pay;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           StateManager.addMessage(
-            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" +
+            "✍️ 你写了篇《城中村理发师的老剃刀》（中英对照），发出去一夜破万阅读。稿费¥" +
               pay +
               "，名声+6。",
             "success",
@@ -42480,6 +42482,159 @@ if (typeof window !== "undefined") {
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
           StateManager.addMessage(
             "🤫 你谢绝了出镜，但记者写了篇匿名小稿。名声+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    // [联动] 声望系统 ↔ 职业/收入：副业口碑达阈值后，老客户主动回头
+    id: "reputation_high_callup",
+    phase: "street",
+    icon: "🌟",
+    title: "口碑带来的回头客",
+    story:
+      "你在这一带做了不少活，街坊都认得你这个人。\n" +
+      "今天一家小超市老板专门找上门：「听说你靠谱，以后我店的杂活都包给你，长期算。」",
+    // conditions：副业口碑（按地点）达到阈值，连接 reputation 系统 → 稳定收入机会
+    conditions: function (st) {
+      var rep = st.reputation;
+      if (!rep) return false;
+      // 任一常去地点口碑≥50 即视为积累了可信度
+      var ok =
+        (rep.slum || 0) >= 50 ||
+        (rep.commercialDist || 0) >= 50 ||
+        (rep.bank || 0) >= 50 ||
+        (rep.wholesaleMarket || 0) >= 50;
+      return !!ok;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接下长期活",
+        hint: "解锁稳定副业收入",
+        apply: function (st) {
+          st.flags.repLongTermGig = true;
+          var bonus = 400 + Random.int(0, 199);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🤝 你和超市签了长期杂活合同，首月预支¥" +
+              bonus +
+              "。口碑终于变成了真金白银。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙇 先试一单看看",
+        hint: "低风险",
+        apply: function (st) {
+          var bonus = 150 + Random.int(0, 99);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🙇 你接了第一单，老板挺满意，塞给你¥" + bonus + "。口碑路还能走。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    // [联动] 技能协同：编程 + 英语 → 独立开发副业（技能系统内部交叉）
+    id: "indie_dev_side_project",
+    phase: "street",
+    icon: "💻",
+    title: "独立开发的小项目",
+    story:
+      "你既会写代码，英语也还过得去，能直接读英文文档和海外教程。\n" +
+      "一个想法在脑子里转了很久——做个小工具，放到海外平台上去卖。",
+    // conditions：编程与英语双门槛，连接 skills 系统 → 被动收入 / 名声
+    conditions: function (st) {
+      var codeLv = st.skills && st.skills.coding && st.skills.coding.level;
+      var engLv = st.skills && st.skills.english && st.skills.english.level;
+      return (
+        typeof codeLv === "number" &&
+        codeLv >= 30 &&
+        typeof engLv === "number" &&
+        engLv >= 25
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚀 花两周做出来上架",
+        hint: "前期投入，潜在被动收入",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 600);
+          st.flags.indieDevLaunched = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "🚀 你熬了两周把小工具做出来，挂上平台。头月分成不多，但这是第一条睡后收入。现金-¥600，名声+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 先写个免费版试水",
+        hint: "零成本攒口碑",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📝 你先发了个免费版，几天攒了几十个用户。口碑比钱重要，名声+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    // [联动] NPC 深层好感（挚友级 ≥80）：老周把更私密的人脉托付给你
+    id: "oldzhou_80_legacy",
+    phase: "street",
+    icon: "🤝",
+    title: "老周的托付",
+    story:
+      "老周把你当自家后生看。这天他神秘兮兮把你拉到一边：\n" +
+      "「我干废品这行，有些门道外人进不来。我信你，带你认识城西回收站的老周明——他手里有正经渠道。」",
+    // conditions：老周 old_zhou 已结识且好感达挚友级（≥80），连接 relationships 系统 → 高价回收渠道
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.old_zhou;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 80);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏭 跟他去见老周明",
+        hint: "解锁高价回收渠道",
+        apply: function (st) {
+          st.flags.oldZhouMingChannel = true;
+          var bonus = 300 + Random.int(0, 199);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🏭 老周明是个爽快人，当场让你走他的渠道，废铁价每斤多三毛。临走塞你¥" +
+              bonus +
+              "「拿去喝茶」。废品回收收益永久提升。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 先记在心里",
+        hint: "稳一手",
+        apply: function (st) {
+          st.flags.oldZhouMingIntro = true;
+          StateManager.addMessage(
+            "🙏 你谢过老周，把这份人情记在心里。以后随时能去找老周明。",
             "info",
           );
         },
@@ -55227,13 +55382,179 @@ function applyWorldNewsToParams(state, selectedNews) {
 }
 
 /**
- * 将开局新闻的直接影响应用到游戏状态（v2.0 新增）
+ * 开局新闻持久化时长（天）— 不是永久，而是"世界底色"
+ * 后续每日新闻会覆盖/叠加/替换这些效果
+ * v3.64 新增：开局新闻效果有时效性，模拟真实世界的新闻周期
+ */
+var INTRO_NEWS_DEFAULT_DURATION = 30; // 默认30天后被后续新闻覆盖
+
+/**
+ * 保存基准状态快照（v3.64 新增）
+ * 在应用开局新闻效果之前保存，到期时可回滚
+ * @param {Object} state - 游戏状态
+ * @param {Array} selectedNews - 选中的新闻条目
+ * @returns {Object} 基准快照
+ */
+function saveIntroNewsBaseline(state, selectedNews) {
+  var baseline = {
+    day: state.player ? state.player.day : 0,
+    _jobMultipliers: {},
+    _allJobsBonus: state._allJobsBonus || 1,
+    goodsPricesSnapshot: {},
+    cashBefore: state.resources ? state.resources.cash : 0,
+    skillsSnapshot: {},
+    investmentSnapshot: {},
+  };
+
+  // 保存 _jobMultipliers 快照
+  if (state._jobMultipliers) {
+    for (var kj in state._jobMultipliers) {
+      if (state._jobMultipliers.hasOwnProperty(kj)) {
+        baseline._jobMultipliers[kj] = state._jobMultipliers[kj];
+      }
+    }
+  }
+
+  // 保存 goodsPrices 快照（每个地点的每种商品价格）
+  if (state.trade && state.trade.goodsPrices) {
+    for (var loc in state.trade.goodsPrices) {
+      if (state.trade.goodsPrices.hasOwnProperty(loc)) {
+        baseline.goodsPricesSnapshot[loc] = {};
+        for (var good in state.trade.goodsPrices[loc]) {
+          if (state.trade.goodsPrices[loc].hasOwnProperty(good)) {
+            baseline.goodsPricesSnapshot[loc][good] =
+              state.trade.goodsPrices[loc][good];
+          }
+        }
+      }
+    }
+  }
+
+  // 保存 skills 快照
+  if (state.skills) {
+    for (var sk in state.skills) {
+      if (state.skills.hasOwnProperty(sk)) {
+        baseline.skillsSnapshot[sk] = {
+          xp: state.skills[sk].xp || 0,
+          level: state.skills[sk].level || 1,
+        };
+      }
+    }
+  }
+
+  // 保存 investment 快照
+  if (state.investment && state.investment.stockMarket) {
+    for (var sym in state.investment.stockMarket) {
+      if (state.investment.stockMarket.hasOwnProperty(sym)) {
+        var sm = state.investment.stockMarket[sym];
+        baseline.investmentSnapshot[sym] = {
+          price: sm.price || 0,
+          openPrice: sm.openPrice || sm.price || 0,
+        };
+      }
+    }
+    if (state.investment.btcPrice) {
+      baseline.btcPriceBefore = state.investment.btcPrice;
+      baseline.btcFearGreedBefore = state.investment.btcFearGreed || 50;
+    }
+  }
+
+  return baseline;
+}
+
+/**
+ * 回滚开局新闻效果（v3.64 新增）
+ * 当 intro news 过期时，恢复到应用前的状态
+ * @param {Object} state - 游戏状态
+ * @param {Object} baseline - 基准快照
+ */
+function rollbackIntroNewsEffects(state, baseline) {
+  if (!state || !baseline) return;
+
+  // 恢复 _jobMultipliers
+  if (state._jobMultipliers) {
+    for (var kj in state._jobMultipliers) {
+      if (state._jobMultipliers.hasOwnProperty(kj)) {
+        // 如果 baseline 中没有这个键，说明是 intro news 加的，直接删除
+        if (baseline._jobMultipliers[kj] === undefined) {
+          delete state._jobMultipliers[kj];
+        } else {
+          // 否则恢复到 baseline 值
+          state._jobMultipliers[kj] = baseline._jobMultipliers[kj];
+        }
+      }
+    }
+  }
+
+  // 恢复 _allJobsBonus
+  if (baseline._allJobsBonus !== undefined) {
+    state._allJobsBonus = baseline._allJobsBonus;
+  }
+
+  // 恢复 goodsPrices
+  if (baseline.goodsPricesSnapshot && state.trade && state.trade.goodsPrices) {
+    for (var loc in baseline.goodsPricesSnapshot) {
+      if (
+        baseline.goodsPricesSnapshot.hasOwnProperty(loc) &&
+        state.trade.goodsPrices[loc]
+      ) {
+        for (var good in baseline.goodsPricesSnapshot[loc]) {
+          if (
+            baseline.goodsPricesSnapshot[loc].hasOwnProperty(good) &&
+            state.trade.goodsPrices[loc][good] !== undefined
+          ) {
+            state.trade.goodsPrices[loc][good] =
+              baseline.goodsPricesSnapshot[loc][good];
+          }
+        }
+      }
+    }
+  }
+
+  // 恢复技能 XP（只回滚 intro news 增加的）
+  if (baseline.skillsSnapshot && state.skills) {
+    for (var sk in baseline.skillsSnapshot) {
+      if (baseline.skillsSnapshot.hasOwnProperty(sk) && state.skills[sk]) {
+        state.skills[sk].xp = baseline.skillsSnapshot[sk].xp;
+      }
+    }
+  }
+
+  // 恢复投资价格
+  if (
+    baseline.investmentSnapshot &&
+    state.investment &&
+    state.investment.stockMarket
+  ) {
+    for (var sym in baseline.investmentSnapshot) {
+      if (
+        baseline.investmentSnapshot.hasOwnProperty(sym) &&
+        state.investment.stockMarket[sym]
+      ) {
+        state.investment.stockMarket[sym].price =
+          baseline.investmentSnapshot[sym].price;
+        state.investment.stockMarket[sym].openPrice =
+          baseline.investmentSnapshot[sym].openPrice;
+      }
+    }
+  }
+  if (baseline.btcPriceBefore !== undefined && state.investment) {
+    state.investment.btcPrice = baseline.btcPriceBefore;
+    state.investment.btcFearGreed = baseline.btcFearGreedBefore;
+  }
+}
+
+/**
+ * 将开局新闻的直接影响应用到游戏状态（v3.64 更新：支持持久化和回滚）
  * 在 applyWorldNewsToParams 之后调用，确保所有效果都已生效
  * @param {Object} state - 游戏状态
  * @param {Array} selectedNews - 选中的新闻条目
  */
 function applyIntroNewsDirectEffects(state, selectedNews) {
   if (!state || !selectedNews || selectedNews.length === 0) return;
+
+  // --- 保存基准快照（在应用效果之前） ---
+  state._introNewsBaseline = saveIntroNewsBaseline(state, selectedNews);
 
   // --- 1. 应用工作加成（与 news.js 保持一致，使用 _jobMultipliers） ---
   if (state._introJobBonuses) {
@@ -55246,6 +55567,7 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
           (state._jobMultipliers[jid] || 1) * state._introJobBonuses[jid];
       }
     }
+    delete state._introJobBonuses;
   }
 
   // --- 2. 应用价格修正（直接修改 goodsPrices，与 news.js applyNewsEffect 一致） ---
@@ -55265,6 +55587,7 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
         }
       }
     }
+    delete state._introPriceMods;
   }
 
   // --- 3. 应用技能经验加成 ---
@@ -55279,11 +55602,13 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
         }
       }
     }
+    delete state._introSkillXp;
   }
 
   // --- 4. 应用初始资金调整 ---
   if (state._introCashBonus) {
     state.resources.cash = (state.resources.cash || 0) + state._introCashBonus;
+    delete state._introCashBonus;
   }
 
   // --- 5. 应用投资市场开盘价修正 ---
@@ -55330,12 +55655,6 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
       }
     }
   }
-
-  // --- 清理临时数据 ---
-  delete state._introJobBonuses;
-  delete state._introPriceMods;
-  delete state._introSkillXp;
-  delete state._introCashBonus;
 }
 
 // ============================================================
@@ -55346,70 +55665,133 @@ var _worldNewsSelected = null; // 存储本局选中的新闻
 var _playerIntroChoice = null; // 存储玩家在开局的选择
 
 /**
- * v2.0 新增：构建开局选择面板
- * 根据当前世界新闻和剧本，动态生成 2-3 个开局选择
- * 选择会影响玩家的初始资金、技能、心态、人际关系等
+ * v3.64 重构：构建开局选择面板
+ * 原则：只显示与当前新闻内容真正相关的建议，不堆砌通用选项
+ * 每个建议都是对新闻内容的自然回应，而非固定模板
  */
 function buildIntroChoicePanel(scenarioId, newsItems) {
   if (!newsItems || newsItems.length === 0) return "";
 
   var choices = [];
 
-  // 根据新闻内容生成针对性选择
+  // ---- 根据新闻内容提取关键词和意图，动态生成建议 ----
+  var allNotes = "";
+  var tags = [];
   for (var ni = 0; ni < newsItems.length; ni++) {
-    var news = newsItems[ni];
-    var note = (news.worldEffect && news.worldEffect.note) || "";
-    var tag = news.tag || "";
-
-    // AI/科技利好 → 选择学编程或投资科技股
-    if (tag === "科技" && note.indexOf("AI") >= 0) {
-      choices.push({
-        id: "study_tech",
-        text: "💻 报名编程培训班",
-        hint: "投资技能，但前期花费大",
-        cost: 200,
-        effect: {
-          cash: -200,
-          skills: { coding: 10 },
-          needs: { intelligence: 5 },
-          flags: { _introStudyTech: true },
-        },
-      });
-      break;
+    var nw = newsItems[ni];
+    if (nw.worldEffect && nw.worldEffect.note) {
+      allNotes += nw.worldEffect.note + " ";
     }
+    if (nw.tag) tags.push(nw.tag);
+  }
+  var allTags = tags.join(",");
 
-    // 裁员/就业压力 → 选择摆摊/零工
-    if (note.indexOf("零工") >= 0 || note.indexOf("裁员") >= 0) {
-      choices.push({
-        id: "start_side_hustle",
-        text: "🛒 先找份零工过渡",
-        hint: "快速赚钱，但收入不稳定",
-        effect: {
-          cash: 100,
-          needs: { fatigue: 5 },
-          flags: { _introSideHustle: true },
-        },
-      });
-      break;
-    }
-
-    // 消费/物价 → 选择省钱/投资
-    if (tag === "消费" || note.indexOf("物价") >= 0) {
-      choices.push({
-        id: "save_money",
-        text: "🏦 把钱存定期",
-        hint: "安全但收益低",
-        effect: {
-          cash: -50,
-          flags: { _introSavedMoney: true },
-        },
-      });
-      break;
-    }
+  // --- 规则1：AI/科技利好 → 建议学技术或投资 ---
+  if (
+    allTags.indexOf("科技") >= 0 ||
+    allNotes.indexOf("AI") >= 0 ||
+    allNotes.indexOf("编程") >= 0 ||
+    allNotes.indexOf("数字化") >= 0
+  ) {
+    choices.push({
+      id: "study_tech",
+      text: "💻 报名编程培训班",
+      hint: "顺应趋势投资自己——但前期要花 ¥200",
+      cost: 200,
+      effect: {
+        cash: -200,
+        skills: { coding: 10 },
+        needs: { intelligence: 5 },
+        flags: { _introStudyTech: true },
+      },
+    });
   }
 
-  // 如果没有生成足够选择，添加通用选项
-  if (choices.length < 2) {
+  // --- 规则2：裁员/就业压力 → 建议灵活就业 ---
+  if (
+    allNotes.indexOf("裁员") >= 0 ||
+    allNotes.indexOf("降薪") >= 0 ||
+    allNotes.indexOf("零工") >= 0 ||
+    allNotes.indexOf("失业") >= 0
+  ) {
+    choices.push({
+      id: "start_side_hustle",
+      text: "🛒 先做零工过渡",
+      hint: "快速搞到钱，但身体会累一些",
+      effect: {
+        cash: 100,
+        needs: { fatigue: 5 },
+        flags: { _introSideHustle: true },
+      },
+    });
+  }
+
+  // --- 规则3：物价上涨 → 建议省钱/理财 ---
+  if (
+    allTags.indexOf("消费") >= 0 ||
+    allNotes.indexOf("物价") >= 0 ||
+    allNotes.indexOf("通胀") >= 0 ||
+    allNotes.indexOf("涨价") >= 0
+  ) {
+    choices.push({
+      id: "save_money",
+      text: "🏦 把钱存定期",
+      hint: "先保住本金，应对物价波动",
+      effect: {
+        cash: -50,
+        flags: { _introSavedMoney: true },
+      },
+    });
+  }
+
+  // --- 规则4：投资机会 → 建议关注市场 ---
+  if (
+    allNotes.indexOf("股市") >= 0 ||
+    allNotes.indexOf("投资") >= 0 ||
+    allNotes.indexOf("牛市") >= 0 ||
+    allNotes.indexOf("加密") >= 0
+  ) {
+    choices.push({
+      id: "watch_market",
+      text: "📊 先了解市场行情",
+      hint: "花时间研究投资方向，不花但费精力",
+      effect: {
+        needs: { fatigue: 3 },
+        flags: { _introWatchMarket: true },
+      },
+    });
+  }
+
+  // --- 规则5：政策利好 → 建议抓住机会 ---
+  if (
+    allNotes.indexOf("补贴") >= 0 ||
+    allNotes.indexOf("扶持") >= 0 ||
+    allNotes.indexOf("优惠") >= 0 ||
+    allTags.indexOf("政策") >= 0
+  ) {
+    choices.push({
+      id: "grab_opportunity",
+      text: "🎯 抓住政策红利",
+      hint: "顺势而为，可能找到新出路",
+      effect: {
+        flags: { _introGrabOpportunity: true },
+      },
+    });
+  }
+
+  // --- 保底选项：至少要有 2 个选择 ---
+  // 如果上面只生成了 1 个，补充一个通用但合理的选项
+  if (choices.length === 1) {
+    choices.push({
+      id: "find_work",
+      text: "💼 立刻找工作",
+      hint: "先站稳脚跟，边干边看",
+      effect: {
+        flags: { _introFoundWorkEarly: true },
+      },
+    });
+  } else if (choices.length === 0) {
+    // 极端情况：没有任何新闻匹配，给两个最基础的
     choices.push({
       id: "find_work",
       text: "💼 立刻找工作",
@@ -55418,8 +55800,6 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introFoundWorkEarly: true },
       },
     });
-  }
-  if (choices.length < 2) {
     choices.push({
       id: "explore_city",
       text: "🚶 先逛逛城市",
@@ -55429,6 +55809,11 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introExploredCity: true },
       },
     });
+  }
+
+  // 最多显示 3 个选项（认知负荷原则）
+  if (choices.length > 3) {
+    choices = choices.slice(0, 3);
   }
 
   if (choices.length === 0) return "";

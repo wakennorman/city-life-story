@@ -2359,13 +2359,179 @@ function applyWorldNewsToParams(state, selectedNews) {
 }
 
 /**
- * 将开局新闻的直接影响应用到游戏状态（v2.0 新增）
+ * 开局新闻持久化时长（天）— 不是永久，而是"世界底色"
+ * 后续每日新闻会覆盖/叠加/替换这些效果
+ * v3.64 新增：开局新闻效果有时效性，模拟真实世界的新闻周期
+ */
+var INTRO_NEWS_DEFAULT_DURATION = 30; // 默认30天后被后续新闻覆盖
+
+/**
+ * 保存基准状态快照（v3.64 新增）
+ * 在应用开局新闻效果之前保存，到期时可回滚
+ * @param {Object} state - 游戏状态
+ * @param {Array} selectedNews - 选中的新闻条目
+ * @returns {Object} 基准快照
+ */
+function saveIntroNewsBaseline(state, selectedNews) {
+  var baseline = {
+    day: state.player ? state.player.day : 0,
+    _jobMultipliers: {},
+    _allJobsBonus: state._allJobsBonus || 1,
+    goodsPricesSnapshot: {},
+    cashBefore: state.resources ? state.resources.cash : 0,
+    skillsSnapshot: {},
+    investmentSnapshot: {},
+  };
+
+  // 保存 _jobMultipliers 快照
+  if (state._jobMultipliers) {
+    for (var kj in state._jobMultipliers) {
+      if (state._jobMultipliers.hasOwnProperty(kj)) {
+        baseline._jobMultipliers[kj] = state._jobMultipliers[kj];
+      }
+    }
+  }
+
+  // 保存 goodsPrices 快照（每个地点的每种商品价格）
+  if (state.trade && state.trade.goodsPrices) {
+    for (var loc in state.trade.goodsPrices) {
+      if (state.trade.goodsPrices.hasOwnProperty(loc)) {
+        baseline.goodsPricesSnapshot[loc] = {};
+        for (var good in state.trade.goodsPrices[loc]) {
+          if (state.trade.goodsPrices[loc].hasOwnProperty(good)) {
+            baseline.goodsPricesSnapshot[loc][good] =
+              state.trade.goodsPrices[loc][good];
+          }
+        }
+      }
+    }
+  }
+
+  // 保存 skills 快照
+  if (state.skills) {
+    for (var sk in state.skills) {
+      if (state.skills.hasOwnProperty(sk)) {
+        baseline.skillsSnapshot[sk] = {
+          xp: state.skills[sk].xp || 0,
+          level: state.skills[sk].level || 1,
+        };
+      }
+    }
+  }
+
+  // 保存 investment 快照
+  if (state.investment && state.investment.stockMarket) {
+    for (var sym in state.investment.stockMarket) {
+      if (state.investment.stockMarket.hasOwnProperty(sym)) {
+        var sm = state.investment.stockMarket[sym];
+        baseline.investmentSnapshot[sym] = {
+          price: sm.price || 0,
+          openPrice: sm.openPrice || sm.price || 0,
+        };
+      }
+    }
+    if (state.investment.btcPrice) {
+      baseline.btcPriceBefore = state.investment.btcPrice;
+      baseline.btcFearGreedBefore = state.investment.btcFearGreed || 50;
+    }
+  }
+
+  return baseline;
+}
+
+/**
+ * 回滚开局新闻效果（v3.64 新增）
+ * 当 intro news 过期时，恢复到应用前的状态
+ * @param {Object} state - 游戏状态
+ * @param {Object} baseline - 基准快照
+ */
+function rollbackIntroNewsEffects(state, baseline) {
+  if (!state || !baseline) return;
+
+  // 恢复 _jobMultipliers
+  if (state._jobMultipliers) {
+    for (var kj in state._jobMultipliers) {
+      if (state._jobMultipliers.hasOwnProperty(kj)) {
+        // 如果 baseline 中没有这个键，说明是 intro news 加的，直接删除
+        if (baseline._jobMultipliers[kj] === undefined) {
+          delete state._jobMultipliers[kj];
+        } else {
+          // 否则恢复到 baseline 值
+          state._jobMultipliers[kj] = baseline._jobMultipliers[kj];
+        }
+      }
+    }
+  }
+
+  // 恢复 _allJobsBonus
+  if (baseline._allJobsBonus !== undefined) {
+    state._allJobsBonus = baseline._allJobsBonus;
+  }
+
+  // 恢复 goodsPrices
+  if (baseline.goodsPricesSnapshot && state.trade && state.trade.goodsPrices) {
+    for (var loc in baseline.goodsPricesSnapshot) {
+      if (
+        baseline.goodsPricesSnapshot.hasOwnProperty(loc) &&
+        state.trade.goodsPrices[loc]
+      ) {
+        for (var good in baseline.goodsPricesSnapshot[loc]) {
+          if (
+            baseline.goodsPricesSnapshot[loc].hasOwnProperty(good) &&
+            state.trade.goodsPrices[loc][good] !== undefined
+          ) {
+            state.trade.goodsPrices[loc][good] =
+              baseline.goodsPricesSnapshot[loc][good];
+          }
+        }
+      }
+    }
+  }
+
+  // 恢复技能 XP（只回滚 intro news 增加的）
+  if (baseline.skillsSnapshot && state.skills) {
+    for (var sk in baseline.skillsSnapshot) {
+      if (baseline.skillsSnapshot.hasOwnProperty(sk) && state.skills[sk]) {
+        state.skills[sk].xp = baseline.skillsSnapshot[sk].xp;
+      }
+    }
+  }
+
+  // 恢复投资价格
+  if (
+    baseline.investmentSnapshot &&
+    state.investment &&
+    state.investment.stockMarket
+  ) {
+    for (var sym in baseline.investmentSnapshot) {
+      if (
+        baseline.investmentSnapshot.hasOwnProperty(sym) &&
+        state.investment.stockMarket[sym]
+      ) {
+        state.investment.stockMarket[sym].price =
+          baseline.investmentSnapshot[sym].price;
+        state.investment.stockMarket[sym].openPrice =
+          baseline.investmentSnapshot[sym].openPrice;
+      }
+    }
+  }
+  if (baseline.btcPriceBefore !== undefined && state.investment) {
+    state.investment.btcPrice = baseline.btcPriceBefore;
+    state.investment.btcFearGreed = baseline.btcFearGreedBefore;
+  }
+}
+
+/**
+ * 将开局新闻的直接影响应用到游戏状态（v3.64 更新：支持持久化和回滚）
  * 在 applyWorldNewsToParams 之后调用，确保所有效果都已生效
  * @param {Object} state - 游戏状态
  * @param {Array} selectedNews - 选中的新闻条目
  */
 function applyIntroNewsDirectEffects(state, selectedNews) {
   if (!state || !selectedNews || selectedNews.length === 0) return;
+
+  // --- 保存基准快照（在应用效果之前） ---
+  state._introNewsBaseline = saveIntroNewsBaseline(state, selectedNews);
 
   // --- 1. 应用工作加成（与 news.js 保持一致，使用 _jobMultipliers） ---
   if (state._introJobBonuses) {
@@ -2378,6 +2544,7 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
           (state._jobMultipliers[jid] || 1) * state._introJobBonuses[jid];
       }
     }
+    delete state._introJobBonuses;
   }
 
   // --- 2. 应用价格修正（直接修改 goodsPrices，与 news.js applyNewsEffect 一致） ---
@@ -2397,6 +2564,7 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
         }
       }
     }
+    delete state._introPriceMods;
   }
 
   // --- 3. 应用技能经验加成 ---
@@ -2411,11 +2579,13 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
         }
       }
     }
+    delete state._introSkillXp;
   }
 
   // --- 4. 应用初始资金调整 ---
   if (state._introCashBonus) {
     state.resources.cash = (state.resources.cash || 0) + state._introCashBonus;
+    delete state._introCashBonus;
   }
 
   // --- 5. 应用投资市场开盘价修正 ---
@@ -2462,12 +2632,6 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
       }
     }
   }
-
-  // --- 清理临时数据 ---
-  delete state._introJobBonuses;
-  delete state._introPriceMods;
-  delete state._introSkillXp;
-  delete state._introCashBonus;
 }
 
 // ============================================================
@@ -2478,70 +2642,133 @@ var _worldNewsSelected = null; // 存储本局选中的新闻
 var _playerIntroChoice = null; // 存储玩家在开局的选择
 
 /**
- * v2.0 新增：构建开局选择面板
- * 根据当前世界新闻和剧本，动态生成 2-3 个开局选择
- * 选择会影响玩家的初始资金、技能、心态、人际关系等
+ * v3.64 重构：构建开局选择面板
+ * 原则：只显示与当前新闻内容真正相关的建议，不堆砌通用选项
+ * 每个建议都是对新闻内容的自然回应，而非固定模板
  */
 function buildIntroChoicePanel(scenarioId, newsItems) {
   if (!newsItems || newsItems.length === 0) return "";
 
   var choices = [];
 
-  // 根据新闻内容生成针对性选择
+  // ---- 根据新闻内容提取关键词和意图，动态生成建议 ----
+  var allNotes = "";
+  var tags = [];
   for (var ni = 0; ni < newsItems.length; ni++) {
-    var news = newsItems[ni];
-    var note = (news.worldEffect && news.worldEffect.note) || "";
-    var tag = news.tag || "";
-
-    // AI/科技利好 → 选择学编程或投资科技股
-    if (tag === "科技" && note.indexOf("AI") >= 0) {
-      choices.push({
-        id: "study_tech",
-        text: "💻 报名编程培训班",
-        hint: "投资技能，但前期花费大",
-        cost: 200,
-        effect: {
-          cash: -200,
-          skills: { coding: 10 },
-          needs: { intelligence: 5 },
-          flags: { _introStudyTech: true },
-        },
-      });
-      break;
+    var nw = newsItems[ni];
+    if (nw.worldEffect && nw.worldEffect.note) {
+      allNotes += nw.worldEffect.note + " ";
     }
+    if (nw.tag) tags.push(nw.tag);
+  }
+  var allTags = tags.join(",");
 
-    // 裁员/就业压力 → 选择摆摊/零工
-    if (note.indexOf("零工") >= 0 || note.indexOf("裁员") >= 0) {
-      choices.push({
-        id: "start_side_hustle",
-        text: "🛒 先找份零工过渡",
-        hint: "快速赚钱，但收入不稳定",
-        effect: {
-          cash: 100,
-          needs: { fatigue: 5 },
-          flags: { _introSideHustle: true },
-        },
-      });
-      break;
-    }
-
-    // 消费/物价 → 选择省钱/投资
-    if (tag === "消费" || note.indexOf("物价") >= 0) {
-      choices.push({
-        id: "save_money",
-        text: "🏦 把钱存定期",
-        hint: "安全但收益低",
-        effect: {
-          cash: -50,
-          flags: { _introSavedMoney: true },
-        },
-      });
-      break;
-    }
+  // --- 规则1：AI/科技利好 → 建议学技术或投资 ---
+  if (
+    allTags.indexOf("科技") >= 0 ||
+    allNotes.indexOf("AI") >= 0 ||
+    allNotes.indexOf("编程") >= 0 ||
+    allNotes.indexOf("数字化") >= 0
+  ) {
+    choices.push({
+      id: "study_tech",
+      text: "💻 报名编程培训班",
+      hint: "顺应趋势投资自己——但前期要花 ¥200",
+      cost: 200,
+      effect: {
+        cash: -200,
+        skills: { coding: 10 },
+        needs: { intelligence: 5 },
+        flags: { _introStudyTech: true },
+      },
+    });
   }
 
-  // 如果没有生成足够选择，添加通用选项
-  if (choices.length < 2) {
+  // --- 规则2：裁员/就业压力 → 建议灵活就业 ---
+  if (
+    allNotes.indexOf("裁员") >= 0 ||
+    allNotes.indexOf("降薪") >= 0 ||
+    allNotes.indexOf("零工") >= 0 ||
+    allNotes.indexOf("失业") >= 0
+  ) {
+    choices.push({
+      id: "start_side_hustle",
+      text: "🛒 先做零工过渡",
+      hint: "快速搞到钱，但身体会累一些",
+      effect: {
+        cash: 100,
+        needs: { fatigue: 5 },
+        flags: { _introSideHustle: true },
+      },
+    });
+  }
+
+  // --- 规则3：物价上涨 → 建议省钱/理财 ---
+  if (
+    allTags.indexOf("消费") >= 0 ||
+    allNotes.indexOf("物价") >= 0 ||
+    allNotes.indexOf("通胀") >= 0 ||
+    allNotes.indexOf("涨价") >= 0
+  ) {
+    choices.push({
+      id: "save_money",
+      text: "🏦 把钱存定期",
+      hint: "先保住本金，应对物价波动",
+      effect: {
+        cash: -50,
+        flags: { _introSavedMoney: true },
+      },
+    });
+  }
+
+  // --- 规则4：投资机会 → 建议关注市场 ---
+  if (
+    allNotes.indexOf("股市") >= 0 ||
+    allNotes.indexOf("投资") >= 0 ||
+    allNotes.indexOf("牛市") >= 0 ||
+    allNotes.indexOf("加密") >= 0
+  ) {
+    choices.push({
+      id: "watch_market",
+      text: "📊 先了解市场行情",
+      hint: "花时间研究投资方向，不花但费精力",
+      effect: {
+        needs: { fatigue: 3 },
+        flags: { _introWatchMarket: true },
+      },
+    });
+  }
+
+  // --- 规则5：政策利好 → 建议抓住机会 ---
+  if (
+    allNotes.indexOf("补贴") >= 0 ||
+    allNotes.indexOf("扶持") >= 0 ||
+    allNotes.indexOf("优惠") >= 0 ||
+    allTags.indexOf("政策") >= 0
+  ) {
+    choices.push({
+      id: "grab_opportunity",
+      text: "🎯 抓住政策红利",
+      hint: "顺势而为，可能找到新出路",
+      effect: {
+        flags: { _introGrabOpportunity: true },
+      },
+    });
+  }
+
+  // --- 保底选项：至少要有 2 个选择 ---
+  // 如果上面只生成了 1 个，补充一个通用但合理的选项
+  if (choices.length === 1) {
+    choices.push({
+      id: "find_work",
+      text: "💼 立刻找工作",
+      hint: "先站稳脚跟，边干边看",
+      effect: {
+        flags: { _introFoundWorkEarly: true },
+      },
+    });
+  } else if (choices.length === 0) {
+    // 极端情况：没有任何新闻匹配，给两个最基础的
     choices.push({
       id: "find_work",
       text: "💼 立刻找工作",
@@ -2550,8 +2777,6 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introFoundWorkEarly: true },
       },
     });
-  }
-  if (choices.length < 2) {
     choices.push({
       id: "explore_city",
       text: "🚶 先逛逛城市",
@@ -2561,6 +2786,11 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introExploredCity: true },
       },
     });
+  }
+
+  // 最多显示 3 个选项（认知负荷原则）
+  if (choices.length > 3) {
+    choices = choices.slice(0, 3);
   }
 
   if (choices.length === 0) return "";
