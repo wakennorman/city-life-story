@@ -381,6 +381,7 @@ function startProxy() {
         method: "POST",
         headers,
         rejectUnauthorized: true,
+        family: 4,
       };
 
       const proxyReq = https.request(options, (proxyRes) => {

@@ -18,6 +18,7 @@
 - [手机端顶栏三行设计范式](mobile-design-principles.md) — mob-first 文字生存游戏顶栏/状态条/触控尺寸设计模板
 - [移动端顶栏精简 2026-07-03](mobile-topbar-cleanup-2026-07-03.md) — 删除 renderTitleBar，品牌移至侧栏底部，状态条改两字+放大，阶段文案按债务动态化
 - [git push 在 git-bash 失败 cmd 成功](git-push-via-karing.md) — MSYS2 沙盒不继承系统 TUN 代理；根治是 SSH，不要配 http.proxy
+- [游戏系统状态总览 R26](game-state-loop-r26.md) — 各维度完成度、待改进空间、状态字段地图
 - [v3.11 职业系统深度扩展](v3.11-career-system-expansion.md) — 医师路径(5级)+事业单位路径(5级)+跨系统联动(医疗↔疾病/公职↔法律)+雇佣机制(面试/试用期/解雇)+10个新职业事件
 - [v3.1 审查改进 2026-07-03](review-improve-v3.1-round2-2026-07-03.md) — 6维度全量审查+11项修复：clampCareerCapital挂载/跳槽永动机修复/抛售返现/触控44px/对比度修复/旅行AP显示/物业费下调/中期提示/住宿引导
 - [v3.1 第三轮遗留修复](review-improve-v3.1-round3-2026-07-03.md) — 年终奖系统/6新结局补齐/script顺序整理/死函数清理/存贷利息修复/疾病双系统协调

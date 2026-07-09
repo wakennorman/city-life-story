@@ -45,7 +45,8 @@
 - **script 加载顺序**：`src/index.html` 中按序加载，**禁止改变**
 - **多窗口开发**：`.claude/last_known_head` 跟踪 HEAD，pre-commit 钩子检测漂移
 - **同一 loop 任务多窗口并行会逐字撞车**：用户在桌面开多个 Claude Code CLI 窗口跑同一 `/loop`（如「日常开发」），会产生**事件 id 与 GDD 内容完全一致的重复提交**。遇 pre-commit 漂移拦截时，**先 `git diff <old_head>..<new_head>` 核对并行窗口改动**；若 identical，则 `git checkout -- <files>` 放弃本窗口重复改动 + 同步 `last_known_head`，**绝不强行合并**（否则事件 id 重复 / GDD 双重）。此流程在 2026-07-09 R7 实战验证有效。
-- **循环自动化**：已建定时 automation `automation-1783592608308`「城市浮生记·日常开发循环」（每 2 小时一轮）。它跑在**独立分支 `loop/auto`**，**绝不碰 main、绝不 push**，与用户 3 个 CLI 窗口(桌面 .bat)并行不冲突。用户定期 `git merge loop/auto` 即可吸收。安全规则：只 `git add` 具体文件、绝不 `git add -A`/`--amend`、20 事件 id 存活校验。
+- **循环自动化**：已建定时 automation `automation-1783592608308`「城市浮生记·日常开发循环」。**频率：`FREQ=MINUTELY;INTERVAL=10`（每 10 分钟一轮，2026-07-09 从 2 小时改 10 分钟）**。它跑在**独立分支 `loop/auto`**，**绝不碰 main、绝不 push**，与用户 3 个 CLI 窗口(桌面 .bat)并行不冲突。用户定期 `git merge loop/auto` 即可吸收。安全规则：只 `git add` 具体文件、绝不 `git add -A`/`--amend`、20 事件 id 存活校验。
+- **双 10 分钟循环策略（2026-07-09 用户裁定 B 方案）**：用户的 Claude Code `/cron`(10 分钟,提交 `main`) + 本 WorkBuddy 自动化(10 分钟,提交 `loop/auto`)**并存**。用户明确接受「**合并后若出现重复事件 id 再统一整改**」，所以 loop 任务**不必规避生成、自由产出事件**，重复清理留到后期 merge 阶段。遇 pre-commit 漂移拦截仍按 line 47 流程核对，但不再因「怕撞车」而少生成。
 - **新模块接入 SOP**：暴露 ≤4 个 `window.xxx` 函数；接 `daily_pipeline.js` 一个 step；`index.html` 注册 script 放 core/ 之后
 
 ## 事件编写字段约定（避免引用死字段 → 死事件/崩溃）
@@ -80,3 +81,15 @@
 - v3.0 改进模块：`src/js/core/review_improvements.js`（509 行）
 - 剧本定义：`src/js/data/scenarios.js`（10 个剧本，difficulty 字段为展示用，不影响玩法）
 - 旧版兜底死代码：`src/js/ui/wiki.js`（百科迁移完成后保留）
+
+## 循环模式行为规范（2026-07-09 新增）
+
+**问题**：循环模式下回复被截断导致"假停机"——单次回复塞入过多内容（审查结论 + 写代码 + commit + push + 更新记忆 + 收工报告）导致被切断，且回复末尾无继续信号。
+
+**规范**：
+
+1. **单次回复内容控制在合理范围内**：优先写代码 + commit，记忆更新和收工报告可简化为一行；详细的收工报告写在 memory 文件中而非回复正文。
+2. **回复末尾必须附带继续信号**：每次回复结尾加一行 `⏭ 继续下一轮` 或 `⏭ 等待下一轮触发`，让循环系统知道任务未完成。
+3. **循环任务流程**：指令一审计（快速扫描，有缺陷则修复，无则一行记录）→ 指令二新增事件（3-5个）→ node --check → build.py → commit → 更新 memory → 结尾标注继续信号。
+4. **遇到并行窗口提交漂移**：先 `git diff <old>..<new>` 核对，若 identical 则放弃重复 + 同步 last_known_head（不强行合并）。
+5. **不主动 push**：由用户统一安排推送时机。
