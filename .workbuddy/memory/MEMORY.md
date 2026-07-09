@@ -44,6 +44,7 @@
 - **核心架构**：世界参数反馈环 v1.7 — `src/js/core/world_params.js` 定义 `_worldParams`，行业热度/市场情绪/财富等级统一反馈闭环
 - **script 加载顺序**：`src/index.html` 中按序加载，**禁止改变**
 - **多窗口开发**：`.claude/last_known_head` 跟踪 HEAD，pre-commit 钩子检测漂移
+- **循环自动化**：已建定时 automation `automation-1783592608308`「城市浮生记·日常开发循环」（每 2 小时一轮）。它跑在**独立分支 `loop/auto`**，**绝不碰 main、绝不 push**，与用户 3 个 CLI 窗口(桌面 .bat)并行不冲突。用户定期 `git merge loop/auto` 即可吸收。安全规则：只 `git add` 具体文件、绝不 `git add -A`/`--amend`、20 事件 id 存活校验。
 - **新模块接入 SOP**：暴露 ≤4 个 `window.xxx` 函数；接 `daily_pipeline.js` 一个 step；`index.html` 注册 script 放 core/ 之后
 
 ## 事件编写字段约定（避免引用死字段 → 死事件/崩溃）
