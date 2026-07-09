@@ -10,14 +10,9 @@ try {
     $claudeConfigDir = Join-Path $realUserProfile ".claude-sensenova-flash"
     $settingsPath = Join-Path $claudeConfigDir "settings.json"
     $statePath = Join-Path $claudeHome ".claude.json"
-    $claudeExe = Join-Path $env:APPDATA "npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe"
-    $claudeCmd = Join-Path $env:APPDATA "npm\claude.cmd"
+    $claude = Join-Path $env:APPDATA "npm\claude.cmd"
 
-    if (Test-Path -LiteralPath $claudeExe) {
-        $claude = $claudeExe
-    } elseif (Test-Path -LiteralPath $claudeCmd) {
-        $claude = $claudeCmd
-    } else {
+    if (-not (Test-Path -LiteralPath $claude)) {
         throw "Claude Code is not installed."
     }
 
@@ -73,34 +68,16 @@ try {
     $env:USERPROFILE = $claudeHome
     $env:CLAUDE_CONFIG_DIR = $claudeConfigDir
     $env:ANTHROPIC_API_KEY = ""
-    $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$proxyPort"
 
     $rtkPath = Join-Path $env:USERPROFILE ".local\bin"
     if (Test-Path (Join-Path $rtkPath "rtk.exe")) {
         $env:PATH = "$rtkPath;$env:PATH"
     }
 
-    $settingsPayload = @{
-        env = @{
-            ANTHROPIC_AUTH_TOKEN = "sk-Qiag674sOboyfMoJHkUhB1SmF1xSxw3u"
-            ANTHROPIC_BASE_URL = "http://127.0.0.1:$proxyPort"
-            ANTHROPIC_MODEL = "sensenova-6.7-flash-lite"
-            ANTHROPIC_DEFAULT_SONNET_MODEL = "sensenova-6.7-flash-lite"
-            ANTHROPIC_DEFAULT_HAIKU_MODEL = "sensenova-6.7-flash-lite"
-            ANTHROPIC_DEFAULT_OPUS_MODEL = "sensenova-6.7-flash-lite"
-            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
-        }
-        systemPrompt = "You are a helpful AI assistant. Respond in Chinese."
-        permissions = @{ allow = @("Bash(*)", "Read(*)", "Write(*)", "Edit(*)") }
-        theme = "auto"
-        autoMemoryEnabled = $true
-    } | ConvertTo-Json -Depth 5
-
     Set-Location -LiteralPath ([string]$projectDir)
 
     try {
-        # Use --settings for binary Claude Code (it ignores ANTHROPIC_BASE_URL env var)
-        & $claude --settings $settingsPayload --model sensenova-6.7-flash-lite --bare @args
+        & $claude --model sensenova-6.7-flash-lite @args
     }
     finally {
         # Kill proxy when Claude exits
