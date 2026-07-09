@@ -263,6 +263,7 @@ const RELATION_PROPAGATION = {
   sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
   zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
   xiaochen: { aunt_wang: 0.1 },
+  dr_wang: { aunt_wang: 0.08, auntie_lin: 0.08 },
 };
 
 /** 初始化NPC关系状态 */

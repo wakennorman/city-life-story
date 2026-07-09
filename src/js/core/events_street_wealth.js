@@ -2719,12 +2719,17 @@
       title: "咖啡馆里的创业梦",
       story:
         "你在咖啡馆躲雨时，邻座一个戴眼镜的年轻人突然跟你搭话：「哥们，我看你像个干实事的人。」他叫小陈，是个全栈程序员，说做了一个AI笔记App，就差一个懂市场和运营的合伙人。他不要你全职，先投点钱试试——¥30,000换10%股份。他眼睛亮得让人不忍心拒绝。",
+      // [自洽修复] conditions 新增：雨天检查（story 明确"躲雨时"，需天气为 rainy/stormy）
       conditions: function (st) {
+        var isRainy =
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy");
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
           st.resources.cash >= 30000 &&
-          !st.flags._startupMeetSeen
+          !st.flags._startupMeetSeen &&
+          isRainy
         );
       },
       choices: [
@@ -3132,8 +3137,20 @@
       title: "「双减」真的来了",
       story:
         "双减文件正式公布：学科类培训不得上市融资。教育股暴跌90%。你的家教兼职也发来消息：「抱歉不需要了。」",
+      // [自洽修复] conditions 新增：家教职业检查（story 明确"你的家教兼职"，需有 tutoring 工作/副业/行动记录）
       conditions: function (st) {
-        return !!st.flags._eduRumorSeen && !st.flags._eduCrashSeen;
+        var hasTutoring =
+          (st.employment &&
+            st.employment.currentJob &&
+            st.employment.currentJob.id === "tutoring") ||
+          (st.sideHustle && st.sideHustle.type === "tutoring") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["tutoring"] > 0 ||
+              st.stats.actionFreq["tutor_teach"] > 0));
+        return (
+          !!st.flags._eduRumorSeen && !st.flags._eduCrashSeen && hasTutoring
+        );
       },
       choices: [
         {

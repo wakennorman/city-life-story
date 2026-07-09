@@ -11881,12 +11881,17 @@ function quarterlyCleanup(state) {
       title: "咖啡馆里的创业梦",
       story:
         "你在咖啡馆躲雨时，邻座一个戴眼镜的年轻人突然跟你搭话：「哥们，我看你像个干实事的人。」他叫小陈，是个全栈程序员，说做了一个AI笔记App，就差一个懂市场和运营的合伙人。他不要你全职，先投点钱试试——¥30,000换10%股份。他眼睛亮得让人不忍心拒绝。",
+      // [自洽修复] conditions 新增：雨天检查（story 明确"躲雨时"，需天气为 rainy/stormy）
       conditions: function (st) {
+        var isRainy =
+          st.weather &&
+          (st.weather.current === "rainy" || st.weather.current === "stormy");
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
           st.resources.cash >= 30000 &&
-          !st.flags._startupMeetSeen
+          !st.flags._startupMeetSeen &&
+          isRainy
         );
       },
       choices: [
@@ -12294,8 +12299,20 @@ function quarterlyCleanup(state) {
       title: "「双减」真的来了",
       story:
         "双减文件正式公布：学科类培训不得上市融资。教育股暴跌90%。你的家教兼职也发来消息：「抱歉不需要了。」",
+      // [自洽修复] conditions 新增：家教职业检查（story 明确"你的家教兼职"，需有 tutoring 工作/副业/行动记录）
       conditions: function (st) {
-        return !!st.flags._eduRumorSeen && !st.flags._eduCrashSeen;
+        var hasTutoring =
+          (st.employment &&
+            st.employment.currentJob &&
+            st.employment.currentJob.id === "tutoring") ||
+          (st.sideHustle && st.sideHustle.type === "tutoring") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["tutoring"] > 0 ||
+              st.stats.actionFreq["tutor_teach"] > 0));
+        return (
+          !!st.flags._eduRumorSeen && !st.flags._eduCrashSeen && hasTutoring
+        );
       },
       choices: [
         {
@@ -43595,6 +43612,108 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====== 医疗系统联动：王医生相关事件 ======
+  RANDOM_EVENTS.push({
+    id: "dr_wang_health_warning",
+    phase: "street",
+    icon: "🏥",
+    title: "医生的忠告",
+    story:
+      "你捂着肚子从医院走廊出来，正好碰上王医生。他看你脸色发青，皱了皱眉：「又没好好吃饭？跟你说过多少次了，胃病不是闹着玩的。过来，我给你开点药，别再拖了。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.dr_wang) return false;
+      if (!st.relationships.dr_wang.met) return false;
+      if (!st.needs) return false;
+      var health = st.needs.health || 100;
+      if (health > 50) return false;
+      if (st.flags._drWangWarningSeen) return false;
+      if (st.player.day < 10) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢医生，我注意",
+        hint: "health+10",
+        apply: function (st) {
+          st.flags._drWangWarningSeen = true;
+          st.needs.health = Math.min(100, (st.needs.health || 0) + 10);
+          st.relationships.dr_wang.affinity = Math.min(
+            100,
+            st.relationships.dr_wang.affinity + 3,
+          );
+          StateManager.addMessage(
+            "🙏 王医生给你开了一周的胃药，叮嘱按时吃。健康+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 我没事，不用开药",
+        hint: "省药费，没效果",
+        apply: function (st) {
+          st.flags._drWangWarningSeen = true;
+          st.relationships.dr_wang.affinity = Math.max(
+            -100,
+            st.relationships.dr_wang.affinity - 2,
+          );
+          StateManager.addMessage(
+            "💰 你说没事，王医生摇摇头走开了。好感-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // 王医生的医疗人脉 — 好感≥40时推荐便宜诊所
+  RANDOM_EVENTS.push({
+    id: "dr_wang_clinic_referral",
+    phase: "street",
+    icon: "📋",
+    title: "便宜诊所推荐",
+    story:
+      "王医生下班时叫住你：「城东新开了家社区诊所，收费便宜设备也新。我跟那边主任打过招呼了，你去报我名字能打八折。」\n\n他把地址写在处方笺上递过来，又补充道：「小病去那看就行，别动不动往大医院跑，贵。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.dr_wang) return false;
+      if (!st.relationships.dr_wang.met) return false;
+      if ((st.relationships.dr_wang.affinity || 0) < 40) return false;
+      if (st.flags._drWangClinicReferral) return false;
+      if (st.player.day < 15) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢，我去看看",
+        hint: "医疗费用-20%持续30天",
+        apply: function (st) {
+          st.flags._drWangClinicReferral = true;
+          st.flags.wangClinicDiscount = true;
+          if (!st._clinicDiscountDays) st._clinicDiscountDays = 0;
+          st._clinicDiscountDays = Math.max(st._clinicDiscountDays, 30);
+          StateManager.addMessage(
+            "📋 你收下地址，下次看病可以省一笔。医疗费用-20%，持续30天。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 记下来，以后再说",
+        hint: "保留机会",
+        apply: function (st) {
+          st.flags._drWangClinicReferral = true;
+          StateManager.addMessage(
+            "📱 你把地址拍下来存好。王医生拍拍你：「别硬扛，该看就看。」",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
@@ -58713,6 +58832,7 @@ const RELATION_PROPAGATION = {
   sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
   zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
   xiaochen: { aunt_wang: 0.1 },
+  dr_wang: { aunt_wang: 0.08, auntie_lin: 0.08 },
 };
 
 /** 初始化NPC关系状态 */
@@ -79793,64 +79913,185 @@ const NPCS = [
     },
   },
   //
-  // === 医院/服务类 NPC ===
-  // TODO: 待实现 - 王医生（医院医生，参考真实医患关系）
-  // {
-  //   id: "dr_wang",
-  //   name: "王医生",
-  //   role: "医院医生",
-  //   location: "hospital",
-  //   birthday: 120,
-  //   desc: "医院内科医生，工作辛苦但收入稳定。能给你健康建议。",
-  //   birthdayLine: "今天生日？难得有人记得。送你一句：健康最重要。",
-  //   festivalLines: {
-  //     spring_festival: "过年医院最忙，急诊人爆满。",
-  //     mid_autumn: "中秋节医院也不休息，病人不会放假。",
-  //     labor_day: "劳动节我值班，病人不会因为你放假就不生病。",
-  //     national_day: "黄金周急诊最多，喝酒吃坏肚子的全是。",
-  //   },
-  //   talkLines: [
-  //     "健康是革命的本钱，别透支。",
-  //     "现在年轻人亚健康太普遍了。",
-  //     "我干了二十年医生，见多了。",
-  //   ],
-  //   giftPrefers: ["fruits", "daily_use"],
-  //   tradeInfo: {
-  //     expertise: ["daily", "food"],
-  //     infoTypes: {
-  //       price_level: { label: "医疗价格水平", threshold: 30, cost: 40 },
-  //       category_lowest: { label: "哪看病最便宜", threshold: 60, cost: 20 },
-  //     },
-  //   },
-  //   presenceBonus: [
-  //     {
-  //       minAffinity: 30,
-  //       jobs: ["hospital_caregiver"],
-  //       multiplier: 1.1,
-  //     },
-  //   ],
-  //   affinityRewards: [
-  //     { threshold: 30, id: "dr_wang_30", desc: "王医生给你健康建议（生病概率-5%）", effect: function(st) { st.flags.wangHealthTips = true; StateManager.addMessage("💕 王医生给你一些健康建议，生病概率-5%！", "success"); } },
-  //     { threshold: 60, id: "dr_wang_60", desc: "王医生给你优先挂号（医院AP-2）", effect: function(st) { st.flags.wangPriority = true; StateManager.addMessage("💕 王医生说'找我直接进'，医院AP-2！", "success"); } },
-  //     { threshold: 80, id: "dr_wang_80", desc: "王医生给你免费体检（健康检查）", effect: function(st) { st.flags.wangFreeCheckup = true; StateManager.addMessage("❤️ 王医生说'给你做个全面检查'，免费体检！", "success"); } },
-  //   ],
-  //   favor: {
-  //     story: "王医生有些疲惫：「今天连续看了30个病人，累死了。你能不能帮我倒杯咖啡？」",
-  //     choices: [
-  //       { text: "☕ 帮你买咖啡", apply: function(st) { st.flags._npcFavor_dr_wang = true; st.resources.cash -= 15; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 8); StateManager.addMessage("☕ 王医生喝了咖啡，精神好多了！", "success"); } },
-  //       { text: "😅 我没带钱", apply: function(st) { st.flags._npcFavor_dr_wang = true; st.relationships.dr_wang.affinity = Math.max(-100, st.relationships.dr_wang.affinity - 2); StateManager.addMessage("😅 王医生点点头：「没事。」", "info"); } },
-  //     ],
-  //   },
-  //   deepTask: {
-  //     requiredAffinity: 70,
-  //     story: "王医生叹了口气：「干了二十年医生，见多了生死。有时候觉得，自己也在消耗生命……」",
-  //     choices: [
-  //       { text: "💪 你是救死扶伤的英雄", hint: "好感+8", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 8); st.needs.happiness = Math.min(100, st.needs.happiness + 10); StateManager.addMessage("💕 王医生笑了笑：「谢谢你。」", "success"); } },
-  //       { text: "⚠️ 注意休息", hint: "好感+5", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; st.relationships.dr_wang.affinity = Math.min(100, st.relationships.dr_wang.affinity + 5); StateManager.addMessage("⚠️ 王医生点点头：「我会注意的。」", "info"); } },
-  //       { text: "🤷 你自己决定", hint: "好感不变", apply: function(st) { st.flags._npcDeepTask_dr_wang = true; StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info"); } },
-  //     ],
-  //   },
-  // },
+  // ============================================================
+  // 医院 NPC（系统联动 — 王医生）
+  // ============================================================
+  {
+    id: "dr_wang",
+    name: "王医生",
+    role: "医院医生",
+    avatar: "images/avatars/dr_wang.png",
+    location: "hospital",
+    birthday: 120,
+    desc: "医院内科医生，工作辛苦但收入稳定。能给你健康建议、看病优惠。",
+    schedule: {
+      morning: "hospital",
+      afternoon: "hospital",
+      evening: "commercialDist",
+      night: "hospital",
+    },
+    birthdayLine: "今天生日？难得有人记得。送你一句：健康最重要。",
+    festivalLines: {
+      spring_festival: "过年医院最忙，急诊人爆满。",
+      mid_autumn: "中秋节医院也不休息，病人不会放假。",
+      dragon_boat: "端午节吃粽子吃出胃病的特别多。",
+      labor_day: "劳动节我值班，病人不会因为你放假就不生病。",
+      national_day: "黄金周急诊最多，喝酒吃坏肚子的全是。",
+    },
+    talkLines: [
+      "健康是革命的本钱，别透支。",
+      "现在年轻人亚健康太普遍了。",
+      "我干了二十年医生，见多了。",
+      "住院一天¥300起，能不住就别住。",
+    ],
+    presenceChance: 0.7,
+    encounterLines: [
+      "王医生在走廊里翻看病历，眉头紧锁着。",
+      "王医生刚从急诊出来，白大褂上沾了点血渍。",
+      "王医生在食堂吃饭，边吃边看手机上的医学论文。",
+    ],
+    infoHints: {
+      giftHint: "王医生下班时总买点水果回去，说家里小孩爱吃。",
+      birthdayHint: "王医生今天心情不错，说难得准点下班。",
+    },
+    giftPrefers: ["fruits", "daily_use"],
+    locationPreference: {
+      hospital: 0.7,
+      commercialDist: 0.2,
+      residentialZone: 0.1,
+    },
+    relationshipWeight: {
+      neighbor: 0.8,
+    },
+    interactionHistory: [],
+    tradeInfo: {
+      expertise: ["daily", "food"],
+      infoTypes: {
+        price_level: { label: "医疗价格水平", threshold: 30, cost: 40 },
+        category_lowest: { label: "哪看病最便宜", threshold: 60, cost: 20 },
+      },
+    },
+    presenceBonus: [
+      {
+        minAffinity: 30,
+        jobs: ["hospital_caregiver"],
+        multiplier: 1.1,
+      },
+    ],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "dr_wang_30",
+        desc: "王医生给你健康建议（生病概率-5%）",
+        effect: function (st) {
+          st.flags.wangHealthTips = true;
+          StateManager.addMessage(
+            "💕 王医生给你一些健康建议，生病概率-5%！",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 60,
+        id: "dr_wang_60",
+        desc: "王医生给你优先挂号（医院AP-2）",
+        effect: function (st) {
+          st.flags.wangPriority = true;
+          StateManager.addMessage(
+            "💕 王医生说「找我直接进」，医院AP消耗-2！",
+            "success",
+          );
+        },
+      },
+      {
+        threshold: 80,
+        id: "dr_wang_80",
+        desc: "王医生给你免费体检（健康检查）",
+        effect: function (st) {
+          st.flags.wangFreeCheckup = true;
+          StateManager.addMessage(
+            "❤️ 王医生说「给你做个全面检查」，免费体检！",
+            "success",
+          );
+        },
+      },
+    ],
+    favor: {
+      story:
+        "王医生有些疲惫：「今天连续看了30个病人，累死了。你能不能帮我倒杯咖啡？」",
+      choices: [
+        {
+          text: "☕ 帮你买咖啡",
+          apply: function (st) {
+            st.flags._npcFavor_dr_wang = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+            st.relationships.dr_wang.affinity = Math.min(
+              100,
+              st.relationships.dr_wang.affinity + 8,
+            );
+            StateManager.addMessage(
+              "☕ 王医生喝了咖啡，精神好多了！好感+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😅 我没带钱",
+          apply: function (st) {
+            st.flags._npcFavor_dr_wang = true;
+            st.relationships.dr_wang.affinity = Math.max(
+              -100,
+              st.relationships.dr_wang.affinity - 2,
+            );
+            StateManager.addMessage("😅 王医生点点头：「没事。」", "info");
+          },
+        },
+      ],
+    },
+    deepTask: {
+      requiredAffinity: 70,
+      story:
+        "王医生叹了口气：「干了二十年医生，见多了生死。有时候觉得，自己也在消耗生命……」",
+      choices: [
+        {
+          text: "💪 你是救死扶伤的英雄",
+          hint: "好感+8",
+          apply: function (st) {
+            st.flags._npcDeepTask_dr_wang = true;
+            st.relationships.dr_wang.affinity = Math.min(
+              100,
+              st.relationships.dr_wang.affinity + 8,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            StateManager.addMessage("💕 王医生笑了笑：「谢谢你。」", "success");
+          },
+        },
+        {
+          text: "⚠️ 注意休息",
+          hint: "好感+5",
+          apply: function (st) {
+            st.flags._npcDeepTask_dr_wang = true;
+            st.relationships.dr_wang.affinity = Math.min(
+              100,
+              st.relationships.dr_wang.affinity + 5,
+            );
+            StateManager.addMessage(
+              "⚠️ 王医生点点头：「我会注意的。」",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤷 你自己决定",
+          hint: "好感不变",
+          apply: function (st) {
+            st.flags._npcDeepTask_dr_wang = true;
+            StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info");
+          },
+        },
+      ],
+    },
+  },
   //
   // === 其他特色 NPC ===
   // TODO: 待实现 - 老张（拾荒者，参考真实拾荒者生活）
@@ -93701,6 +93942,14 @@ function treatIllness(illnessId, tier) {
   var ill = ILLNESSES[illnessId];
   if (!ill) return;
   var cost = (ill.treatCost && ill.treatCost[tier]) || 0;
+  // 王医生诊所折扣：有 flags.wangClinicDiscount 且 _clinicDiscountDays > 0 时打八折
+  if (cost > 0 && state.flags && state.flags.wangClinicDiscount && state._clinicDiscountDays > 0) {
+    cost = Math.round(cost * 0.8);
+    state._clinicDiscountDays--;
+    if (state._clinicDiscountDays <= 0) {
+      delete state.flags.wangClinicDiscount;
+    }
+  }
   if (cost === 0 && tier === "pharmacy") {
     StateManager.addMessage("💊 此病无法仅靠药店治疗，请去医院。", "warning");
     return;

@@ -536,6 +536,19 @@ function treatIllness(illnessId, tier) {
   var ill = ILLNESSES[illnessId];
   if (!ill) return;
   var cost = (ill.treatCost && ill.treatCost[tier]) || 0;
+  // 王医生诊所折扣：有 flags.wangClinicDiscount 且 _clinicDiscountDays > 0 时打八折
+  if (
+    cost > 0 &&
+    state.flags &&
+    state.flags.wangClinicDiscount &&
+    state._clinicDiscountDays > 0
+  ) {
+    cost = Math.round(cost * 0.8);
+    state._clinicDiscountDays--;
+    if (state._clinicDiscountDays <= 0) {
+      delete state.flags.wangClinicDiscount;
+    }
+  }
   if (cost === 0 && tier === "pharmacy") {
     StateManager.addMessage("💊 此病无法仅靠药店治疗，请去医院。", "warning");
     return;

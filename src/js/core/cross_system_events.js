@@ -14143,5 +14143,107 @@
     ],
   });
 
+  // ====== 医疗系统联动：王医生相关事件 ======
+  RANDOM_EVENTS.push({
+    id: "dr_wang_health_warning",
+    phase: "street",
+    icon: "🏥",
+    title: "医生的忠告",
+    story:
+      "你捂着肚子从医院走廊出来，正好碰上王医生。他看你脸色发青，皱了皱眉：「又没好好吃饭？跟你说过多少次了，胃病不是闹着玩的。过来，我给你开点药，别再拖了。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.dr_wang) return false;
+      if (!st.relationships.dr_wang.met) return false;
+      if (!st.needs) return false;
+      var health = st.needs.health || 100;
+      if (health > 50) return false;
+      if (st.flags._drWangWarningSeen) return false;
+      if (st.player.day < 10) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢医生，我注意",
+        hint: "health+10",
+        apply: function (st) {
+          st.flags._drWangWarningSeen = true;
+          st.needs.health = Math.min(100, (st.needs.health || 0) + 10);
+          st.relationships.dr_wang.affinity = Math.min(
+            100,
+            st.relationships.dr_wang.affinity + 3,
+          );
+          StateManager.addMessage(
+            "🙏 王医生给你开了一周的胃药，叮嘱按时吃。健康+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 我没事，不用开药",
+        hint: "省药费，没效果",
+        apply: function (st) {
+          st.flags._drWangWarningSeen = true;
+          st.relationships.dr_wang.affinity = Math.max(
+            -100,
+            st.relationships.dr_wang.affinity - 2,
+          );
+          StateManager.addMessage(
+            "💰 你说没事，王医生摇摇头走开了。好感-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // 王医生的医疗人脉 — 好感≥40时推荐便宜诊所
+  RANDOM_EVENTS.push({
+    id: "dr_wang_clinic_referral",
+    phase: "street",
+    icon: "📋",
+    title: "便宜诊所推荐",
+    story:
+      "王医生下班时叫住你：「城东新开了家社区诊所，收费便宜设备也新。我跟那边主任打过招呼了，你去报我名字能打八折。」\n\n他把地址写在处方笺上递过来，又补充道：「小病去那看就行，别动不动往大医院跑，贵。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.dr_wang) return false;
+      if (!st.relationships.dr_wang.met) return false;
+      if ((st.relationships.dr_wang.affinity || 0) < 40) return false;
+      if (st.flags._drWangClinicReferral) return false;
+      if (st.player.day < 15) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢，我去看看",
+        hint: "医疗费用-20%持续30天",
+        apply: function (st) {
+          st.flags._drWangClinicReferral = true;
+          st.flags.wangClinicDiscount = true;
+          if (!st._clinicDiscountDays) st._clinicDiscountDays = 0;
+          st._clinicDiscountDays = Math.max(st._clinicDiscountDays, 30);
+          StateManager.addMessage(
+            "📋 你收下地址，下次看病可以省一笔。医疗费用-20%，持续30天。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 记下来，以后再说",
+        hint: "保留机会",
+        apply: function (st) {
+          st.flags._drWangClinicReferral = true;
+          StateManager.addMessage(
+            "📱 你把地址拍下来存好。王医生拍拍你：「别硬扛，该看就看。」",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

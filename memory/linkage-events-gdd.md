@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 累计 31 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 累计 33 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -62,7 +62,7 @@
 - **Outputs**: 长期代运营收入机会 / 名声 + / 好感 +。
 - **Edge Cases**: xiaoli 未结识（守卫拦截）；好感边界 60。
 - **Tuning Levers**: 好感阈值(60)、合同月收入 `[PLACEHOLDER]`。
-- **Dependencies**: NPC 关系、副业/收入系统。⚠️ `xiaoli` 当前在 npcs.js 仍为 TODO 未激活——事件已就位，待 NPC 激活后生效。
+- **Dependencies**: NPC 关系、副业/收入系统。✅ `xiaoli` 已激活。
 
 ## 6. `skill_synergy_restaurant_offer` — 餐馆合伙邀约
 
@@ -357,6 +357,26 @@
 
 - **`suburb_storm_shelter`（A2 真实缺陷，已修）**：原 `conditions` 仅查 `trade.currentLocation==="suburb"`，未查天气；叙事为「豆大的雨点砸下来/暴雨庇护」，晴天在郊区也会触发，叙事断裂。已补 `st.weather.current === "rainy" || "stormy"` 门控，加 `// [自洽修复]` 注释。
 - **全量扫描结论（6 文件 / 113 事件）**：A4=0（无单点 `trigger:` 绕过）；A3=0 真实（`zhou_channel_first_deal` 为 `_isChainEvent` 链式门控、`life_midcareer_reinvent` 中「老周」为过去式回忆 flavor）；A1=0 真实（14 个职业词候选逐条复核，均为技能门控/标志门控/场景 flavor/对方职业，无「玩家必须干此行才合理」前提）。
+
+## 32. `dr_wang_health_warning` — 医生的忠告（loop-R11）
+
+- **Purpose**: 医疗系统 + NPC 关系交叉——低健康状态触发王医生主动干预。
+- **Player Fantasy**: 认识医生就是认识个健康守护者。
+- **Trigger**: `st.relationships.dr_wang.met && health < 50`
+- **Outputs**: 健康+10（配合治疗）/ 好感-2（硬扛）。
+- **Edge Cases**: 王医生未结识不触发；dr_wang 已激活于 npcs.js。
+- **Tuning Levers**: 健康阈值(50)、恢复量(10)。
+- **Dependencies**: 医疗系统、NPC 关系。
+
+## 33. `dr_wang_clinic_referral` — 便宜诊所推荐（loop-R11）
+
+- **Purpose**: 好感积累解锁经济福利——医疗费用长期折扣。
+- **Player Fantasy**: 有人脉，看病就是比普通人便宜。
+- **Trigger**: `dr_wang.met && affinity >= 40`
+- **Outputs**: 医疗费用-20%持续30天 / 保留机会。
+- **Edge Cases**: 好感边界 40；折扣天数叠加逻辑。
+- **Tuning Levers**: 好感阈值(40)、折扣率(20%)、持续天数(30)。
+- **Dependencies**: NPC 关系、医疗经济系统。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
