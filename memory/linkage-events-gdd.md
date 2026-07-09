@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 / loop-R12 / loop-R13 累计 37 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~R13 / loop-R26 累计 41 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -334,22 +334,26 @@
 
 ## 系统覆盖矩阵（验证「加强关联度」达成度）
 
-| 次级系统  | 已联动事件数 | 事件 id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 道德系统  | 3            | morality_wallet_honest / keep / extreme_blacklist                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 技能系统  | 12           | coding_scam_spot / skill_synergy_restaurant_offer / talent_cook_management_class / skill_english_column / indie_dev_side_project / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / sales_english_trade / cooking_accounting_catering / coding_management_product / electrician_coding_smart_home                                                                                                                                                                           |
-| NPC 关系  | 6            | xiaoli_brand_deal / npc_oldzhou_toolloan / oldzhou_80_legacy / hunger_streak_neighbor_meal / weather_rainy_umbrella / sister_zhang_market_tip                                                                                                                                                                                                                                                                                                                                                   |
-| 天气系统  | 1            | weather_rainy_umbrella                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 声望系统  | 3            | reputation_high_callup / fame_high_interview / reputation_top_influencer                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 经济/资产 | 19           | bank_vip_treatment / regular_customer_discount / coding_scam_spot / skill_synergy_restaurant_offer / xiaoli_brand_deal / reputation_high_callup / indie_dev_side_project / oldzhou_80_legacy / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / cash_low_community_gig / sales_english_trade / talent_sales_management_client / cooking_accounting_catering / coding_management_product / era_inflation_rent_hike / sister_zhang_market_tip / electrician_coding_smart_home |
-| 天赋系统  | 2            | talent_cook_management_class / talent_sales_management_client                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 名声系统  | 7            | morality_wallet_honest / xiaoli_brand_deal / skill_english_column / fame_high_interview / sales_english_trade / talent_sales_management_client / sister_zhang_market_tip                                                                                                                                                                                                                                                                                                                        |
-| 心情/心理 | 2            | mood_low_letter_home / stress_high_breakdown                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 时代变迁  | 1            | era_inflation_rent_hike                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 次级系统  | 已联动事件数 | 事件 id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 道德系统  | 3            | morality_wallet_honest / keep / extreme_blacklist                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 技能系统  | 12           | coding_scam_spot / skill_synergy_restaurant_offer / talent_cook_management_class / skill_english_column / indie_dev_side_project / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / sales_english_trade / cooking_accounting_catering / coding_management_product / electrician_coding_smart_home                                                                                                                                                                                                                              |
+| NPC 关系  | 8            | xiaoli_brand_deal / npc_oldzhou_toolloan / oldzhou_80_legacy / hunger_streak_neighbor_meal / weather_rainy_umbrella / sister_zhang_market_tip / snow_night_scrap_deal / oldzhou_affinity_max_heritage                                                                                                                                                                                                                                                                                                                                              |
+| 天气系统  | 2            | weather_rainy_umbrella / snow_night_scrap_deal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 声望系统  | 3            | reputation_high_callup / fame_high_interview / reputation_top_influencer                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 经济/资产 | 21           | bank_vip_treatment / regular_customer_discount / coding_scam_spot / skill_synergy_restaurant_offer / xiaoli_brand_deal / reputation_high_callup / indie_dev_side_project / oldzhou_80_legacy / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / cash_low_community_gig / sales_english_trade / talent_sales_management_client / cooking_accounting_catering / coding_management_product / era_inflation_rent_hike / sister_zhang_market_tip / electrician_coding_smart_home / cert_first_job_bonus / trading_supply_demand_gap |
+| 天赋系统  | 2            | talent_cook_management_class / talent_sales_management_client                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 名声系统  | 7            | morality_wallet_honest / xiaoli_brand_deal / skill_english_column / fame_high_interview / sales_english_trade / talent_sales_management_client / sister_zhang_market_tip                                                                                                                                                                                                                                                                                                                                                                           |
+| 心情/心理 | 2            | mood_low_letter_home / stress_high_breakdown                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 时代变迁  | 1            | era_inflation_rent_hike                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 **空白区（待后续循环填补）**:
 
 - 时代变迁(era)联动——**R9 已填**（`era_inflation_rent_hike`，依赖 `era_transform.js` 的 `st._eraState`）。
+- 天气系统雪天联动——**R26 已填**（`snow_night_scrap_deal`，snow+废品站+老周）。
+- 教育系统证书联动——**R26 已填**（`cert_first_job_bonus`，证书+应聘溢价+链式90天回报）。
+- NPC好感100终极奖励——**R26 已填**（`oldzhou_affinity_max_heritage`，传家级人脉线）。
+- 交易供需动态——**R26 已填**（`trading_supply_demand_gap`，信息差套利vs人情）。
 - 更多双技能协同组合（welding+sales 报价、electrician+management 工程队 等）。
 - `xiaoli`/`auntie_lin`/`master_zhao` 激活后，对应深度好感事件才真正生效。
 
@@ -417,6 +421,46 @@
 - **Edge Cases**: 未结识不触发；repair技能未初始化时跳过XP。
 - **Tuning Levers**: 好感阈值(40)、利润区间(200-500)。
 - **Dependencies**: NPC 关系、技能系统、财务系统。
+
+## 38. `snow_night_scrap_deal` — 雪夜废品站（loop-R26）
+
+- **Purpose**: 填补snow天气事件空白，把"雪天+废品站地点+老周好感"三系统交联。
+- **Player Fantasy**: 雪夜接手来路不明的货，靠眼力赚钱。
+- **Trigger**: `weather.current === "sunny" && old_zhou.met && affinity >= 20 && trade.currentLocation === "wholesaleMarket"`
+- **Outputs**: 选项A 现金+/好感+5；选项B 稳健小赚；选项C 道德+3。
+- **Edge Cases**: 非雪天不触发（守卫 `weather.current === "snowy"`）；老周未结识不触发。
+- **Tuning Levers**: probability 0.03、进货价 800/300、利润区间 400-1200。
+- **Dependencies**: 天气系统、NPC 关系、交易系统。
+
+## 39. `cert_first_job_bonus` — 证书的第一次兑现（loop-R26）
+
+- **Purpose**: 教育系统×就业系统交联——持有证书时应聘触发薪资溢价事件。
+- **Player Fantasy**: 考证花的那些时间，终于换回来真金白银。
+- **Trigger**: `certificates.length > 0 && !employment.currentJob && day >= 10`
+- **Outputs**: 选项A 现金+300~700 + 链式后续(90天后再发)；选项B 心情+10；选项C 心智+3。
+- **Edge Cases**: 已在职不触发（`lookingForWork` 守卫）；无证书不触发。
+- **Tuning Levers**: probability 0.04、薪资上浮 300-700、链式延迟 90 天。
+- **Dependencies**: 证书系统、就业系统、经济系统。**链式后续 `cert_bonus_recurring`**。
+
+## 40. `oldzhou_affinity_max_heritage` — 老周的信任（loop-R26）
+
+- **Purpose**: 好感100终极奖励——深度关系兑现，解锁建材/物业/拆迁三条人脉线。
+- **Player Fantasy**: 老朋友把半辈子积累的关系交给你。
+- **Trigger**: `old_zhou.met && affinity >= 100 && day >= 60`
+- **Outputs**: 选项A 三条商业人脉线 unlock + 名气+8 + 心情+12；选项B 感动封顶。
+- **Edge Cases**: 好感恰好 100 边界；未封顶不触发。
+- **Tuning Levers**: probability 0.035、人脉线数量(3)。
+- **Dependencies**: NPC 关系、名声系统。
+
+## 41. `trading_supply_demand_gap` — 市场缺货了（loop-R26）
+
+- **Purpose**: 交易供需动态×道德分叉——低买高卖 vs 分享信息的人情。
+- **Player Fantasy**: 信息差就是钱，但赚昧心钱还是赚人情由你选。
+- **Trigger**: `tradeFreq 有记录 && day >= 15 && cash >= 200`
+- **Outputs**: 选项A 现金+150~500 + 销售XP+15；选项B 道德+3 + 名气+2；选项C 心智+2。
+- **Edge Cases**: 无交易经验不触发；现金不足 200 时第一个选项禁用（cost 门控）。
+- **Tuning Levers**: probability 0.04、进货 200、利润 150-500。
+- **Dependencies**: 交易统计、道德系统、名声系统。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 
