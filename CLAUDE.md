@@ -156,7 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.72(loop R28) — 新增3个NPC↔NPC关系动态事件(旧识重逢/竞争选边/同学引荐)
+- **最新一次工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
+  - **设计意图**: 平衡大量正面成就事件，加入负面里程碑制造张力
+  - **新增2事件**: health_crisis_slow_collapse(health<30预警) / health_near_death_reckoning(health<15濒死抉择)
+  - **影响文件**: cross_system_events.js(+158行) / linkage-events-gdd.md(+21行)
+  - **验证**: node --check ✅ / build.py 5918KB ✅
+  - **commit**: `180bb5e2`+`ee5d9f10`(本地待推)
+
+- **上一轮工作 (2026-07-10)**：v3.72(loop R28) — 新增3个NPC↔NPC关系动态事件(旧识重逢/竞争选边/同学引荐)
   - **设计意图**: NPC关系矩阵(14NPC×14NPC)首次被事件消费，让玩家感受「NPC有自己的生活」
   - **新增3事件**: npc_reunion_auntzhou(王婶+老周旧识) / npc_competitor_clash(Li工头+张姐竞争选边) / npc_classmate_endorsement(陈哥+阿杰同窗引荐)
   - **影响文件**: cross_system_events.js(+239行) / linkage-events-gdd.md(+31行)
