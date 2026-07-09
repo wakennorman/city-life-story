@@ -39733,7 +39733,7 @@ if (typeof window !== "undefined") {
             "🗣️ 你跟大妈说这菜是本地今早摘的，值这价。大妈半信半疑买了两斤。\n摊主冲你笑了笑——「老懂的。」社会声望+3。",
             "success",
           );
-          st.fame = Math.min(100, (st.fame || 0) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           if (st.skills.cooking) {
             st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15;
           }
@@ -39861,7 +39861,7 @@ if (typeof window !== "undefined") {
           // 魅力≥30时建议更有效
           var charm = st.player ? st.player.charm || 0 : 0;
           if (charm >= 30) {
-            st.fame = Math.min(100, (st.fame || 0) + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "💡 林阿姨眼睛一亮：「这主意好！我女儿正好会拍视频。」\n她觉得你脑子活络，好感+5，声望+5。",
               "success",
@@ -40754,8 +40754,8 @@ if (typeof window !== "undefined") {
       "他把你领进诊室，仔细问了你的症状，眉头皱了皱：" +
       "「你是不是很久没吃过像样的饭了？肝火旺，脾胃虚。」",
     conditions: function (st) {
-      // 需要已有健康问题或疲劳值偏高，且王医生已认识玩家
-      var health = st.needs ? st.needs.health || 100 : 100;
+      // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
+      var health = st.status ? st.status.health || 100 : 100;
       var fatigue = st.needs ? st.needs.fatigue || 0 : 0;
       return st.player && st.player.day > 10 && health < 60 && fatigue > 40;
     },
@@ -40766,12 +40766,13 @@ if (typeof window !== "undefined") {
         text: "🙏 谢谢医生，听您的建议",
         hint: "健康+10，开便宜药",
         apply: function (st) {
-          var health = st.needs.health || 50;
-          st.needs.health = Math.min(100, health + 10);
+          // [自洽修复] st.needs.health → st.status.health
+          var health = st.status.health || 50;
+          st.status.health = Math.min(100, health + 10);
           if (st.resources.cash >= 30) {
             st.resources.cash -= 30;
             // 温和消炎+调理，健康再加5
-            st.needs.health = Math.min(100, st.needs.health + 5);
+            st.status.health = Math.min(100, (st.status.health || 50) + 5);
             addDailyTransaction(
               st,
               "expense",
@@ -40805,7 +40806,7 @@ if (typeof window !== "undefined") {
             (st.relationships.dr_wang.affinity || 0) + 3,
           );
           st.relationships.dr_wang.met = true;
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
+          st.status.health = Math.min(100, (st.status.health || 50) + 3);
           StateManager.addMessage(
             "😅 王医生笑了笑：「没钱更要保重身体，生病更烧钱。」\n他给你倒了杯热水，「免费热水总能喝。」健康+3。",
             "info",
@@ -40926,7 +40927,7 @@ if (typeof window !== "undefined") {
       return (
         st.player &&
         st.player.day > 20 &&
-        ((st.fame || 0) >= 5 ||
+        ((st.player.fame || 0) >= 5 ||
           (st.skills && st.skills.sales && st.skills.sales.level >= 10))
       );
     },
@@ -40954,7 +40955,7 @@ if (typeof window !== "undefined") {
             pay,
             "小丽拍摄帮工",
           );
-          st.fame = Math.min(100, (st.fame || 0) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           StateManager.addMessage(
             "📱 你帮小丽举了两小时补光灯，视频拍得很顺利。\n小丽请你吃了碗牛肉面，还把你介绍给她的粉丝群。收入¥" +
               pay +
@@ -41196,6 +41197,487 @@ if (typeof window !== "undefined") {
           st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
           StateManager.addMessage(
             "😶 你收起感概，把钥匙挂好。这才哪到哪——你要的远不止一个单间。心智+4。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 联动事件恢复（v3.59/v3.60 自洽审计 + 联动事件，从重构中还原）======
+  RANDOM_EVENTS.push({
+    id: "morality_wallet_honest",
+    phase: "street",
+    icon: "👛",
+    title: "捡到钱包",
+    story:
+      "你在巷口捡到一个钱包，里面夹着¥800现金和一张写满字迹的身份证。\n" +
+      "失主大概急疯了——你摸出手机，犹豫了一瞬。",
+    // conditions：高道德玩家（人设分叉·诚信侧），与 low 侧互斥
+    conditions: function (st) {
+      // 检查玩家道德值是否达到诚信门槛
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m >= 70;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 按身份证地址找失主",
+        hint: "道德+，声望+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          StateManager.addMessage(
+            "📞 你辗转联系上失主，是个外地打工的姑娘。她红着眼眶要塞给你¥100谢礼，你没收。道德+5，声望+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏢 交到派出所",
+        hint: "稳妥，道德+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "🏢 你把钱包交到辖区派出所，民警登记时多看了你一眼：「现在这样的人不多了。」道德+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "morality_wallet_keep",
+    phase: "street",
+    icon: "💰",
+    title: "捡到钱包",
+    story:
+      "你在巷口捡到一个钱包，里面夹着¥800现金和一张身份证。\n" +
+      "四下无人——这钱够你撑过这个月了。你心跳加快，手指攥紧了皮夹。",
+    // conditions：低道德玩家（人设分叉·利己侧），与 high 侧互斥
+    conditions: function (st) {
+      // 检查玩家道德值是否跌破利己门槛
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m <= 30;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "😏 现金拿走，证件扔了",
+        hint: "现金+，道德-",
+        apply: function (st) {
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 8);
+          StateManager.addMessage(
+            "😏 你抽走¥800，把空钱包连同身份证扔进垃圾桶。当晚睡得不太踏实。现金+¥800，道德-8。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🤔 留着，但有点不安",
+        hint: "折中，道德微-",
+        apply: function (st) {
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+          StateManager.addMessage(
+            "🤔 你留下了钱，却总想起那张身份证。现金+¥800，但心里堵得慌，心情-5，道德-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "hunger_streak_neighbor_meal",
+    phase: "street",
+    icon: "🍚",
+    title: "邻居的一碗饭",
+    story:
+      "你连着几天没正经吃过饭，在路边蹲着时眼前一阵发黑。\n" +
+      "卖煎饼的摊主老姐头探出头：「小伙子，看你脸色不对，这俩煎饼叔请了。」",
+    // conditions：低饥饿连续天数达到爆发阈值（flags._habits.lowHungerStreak）
+    conditions: function (st) {
+      // 检查连续饥饿天数是否≥3
+      var streak =
+        st.flags && st.flags._habits && st.flags._habits.lowHungerStreak;
+      return (streak || 0) >= 3 && st.player.phase === "street";
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍚 接过煎饼，道谢",
+        hint: "饱食+，心情+",
+        apply: function (st) {
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "🍚 你接过还烫手的煎饼，狼吞虎咽。一股暖意从胃里升起来。饱食+40，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 倔强推辞",
+        hint: "自尊，但更虚",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          StateManager.addMessage(
+            "🙅 你逞强推了，转身却腿一软。有些尊严，是空肚子撑不起的。心情+3，疲劳+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "coding_scam_spot",
+    phase: "street",
+    icon: "💻",
+    title: "刷单短信",
+    story:
+      "手机弹出一条短信：「亲，刷单返利轻松日入500，加微信xxx领任务」。\n" +
+      "你扫了一眼那个仿冒得拙劣的链接结构——跳转域名、伪造备案号——立刻断定是钓鱼。",
+    // conditions：编程技能达到专业视角门槛（能识别骗局）
+    conditions: function (st) {
+      // 检查 coding 技能等级是否解锁「识骗」视角
+      var lvl = st.skills && st.skills.coding && st.skills.coding.level;
+      return (lvl || 0) >= 40;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚫 举报并拉黑",
+        hint: "道德+，技能+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 4);
+          if (st.skills && st.skills.coding) {
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + 20;
+          }
+          StateManager.addMessage(
+            "🚫 你顺手把号码举报到反诈平台，顺带给家里群发了提醒。技能+20xp，道德+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🕵️ 反向试探骗子",
+        hint: "冒险，可能反被坑",
+        apply: function (st) {
+          if (Random.chance(0.5)) {
+            st.resources.cash += 100;
+            if (st.skills && st.skills.coding) {
+              st.skills.coding.xp = (st.skills.coding.xp || 0) + 30;
+            }
+            StateManager.addMessage(
+              "🕵️ 你用脚本反查到骗子服务器漏洞，顺手薅了¥100「学费」。技能+30xp，现金+¥100。",
+              "event",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "🕵️ 你刚试探两下就被对方拉黑，还差点中了木马。没赚到，反而后怕。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "xiaoli_brand_deal",
+    phase: "street",
+    icon: "🤝",
+    title: "小丽的品牌单",
+    story:
+      "小丽发来语音：「有个国货护肤品牌找长期代运营，我推荐了你。\n" +
+      "他们要的不只是剪辑，是懂内容的人。报酬按月¥3000-5000，你接不接？」",
+    // conditions：已结识小丽且好感达到深度合作门槛（联动 relationships 系统）
+    conditions: function (st) {
+      // 检查是否已结识小丽且好感≥60
+      var rel = st.relationships && st.relationships.xiaoli;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 60);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "✅ 接下长期代运营",
+        hint: "稳定月入+声望",
+        apply: function (st) {
+          st.flags._xiaoliBrandDeal = true;
+          var pay = Random.int(3000, 5000);
+          st.resources.cash += pay;
+          st.resources.totalEarned += pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          if (st.relationships.xiaoli) {
+            st.relationships.xiaoli.affinity = Math.min(
+              100,
+              st.relationships.xiaoli.affinity + 5,
+            );
+          }
+          StateManager.addMessage(
+            "✅ 你和品牌签了月框。第一笔¥" +
+              pay +
+              "到账，小丽在群里@你：「靠谱！」声望+6，好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 先接一单试试",
+        hint: "低风险试探",
+        apply: function (st) {
+          st.flags._xiaoliBrandTrial = true;
+          var pay2 = Random.int(800, 1500);
+          st.resources.cash += pay2;
+          st.resources.totalEarned += pay2;
+          StateManager.addMessage(
+            "🤝 你接了试单，交付后品牌方挺满意。先赚¥" + pay2 + "，看看后续。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "bank_vip_treatment",
+    phase: "street",
+    icon: "🏦",
+    title: "VIP客户室",
+    story:
+      "你走进银行办业务，大堂经理看了一眼你的叫号单，忽然压低声音：\n" +
+      "「先生/女士，您在我们行的日均存款已超过¥5000，可以进VIP室办理。」\n" +
+      "你被请进一间有沙发和饮水机的小房间。客户经理递上一张名片：\n" +
+      "「我们有一款新出的VIP理财，年化4.2%，额度有限。另外您的信用记录可以申请¥30,000以内的消费贷，利率优惠。」",
+    conditions: function (st) {
+      // 在银行且存款≥5000（达标VIP门槛）
+      var bankBalance = st.resources && st.resources.bankBalance;
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 20 &&
+        (bankBalance || 0) >= 5000 &&
+        !st.flags._bankVipSeen
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 买¥5000理财（年化4.2%）",
+        hint: "30天后增值，中风险",
+        cost: 5000,
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.flags._bankVipInvested = true;
+          st.flags._bankVipDay = st.player.day;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage(
+            "💰 你买了¥5000的VIP理财，30天后本息共计¥5210到账。\n" +
+              "客户经理笑着说：「有眼光。」心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 了解一下贷款额度",
+        hint: "信用记录+，了解贷款条件",
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.flags._bankVipLoanKnown = true;
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          StateManager.addMessage(
+            "📋 客户经理详细解释了贷款条件：¥30,000以内，月息0.45%，随借随还。\n" +
+              "你心里有底了——缺钱的时候知道该找谁。心智+2，心情+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 存钱只是为了安全，不搞这些",
+        hint: "保守，但心里踏实",
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          StateManager.addMessage(
+            "🚶 你谢过经理，在普通窗口办完业务就走了。\n" +
+              "VIP室里的沙发确实舒服——但你知道，真正的安全感来自于卡里的数字，而不是理财产品的承诺。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "regular_customer_discount",
+    phase: "street",
+    icon: "🛒",
+    title: "老主顾的优待",
+    story:
+      "你走进那家经常光顾的小店，老板抬头看见你，熟稔地招呼：\n" +
+      "「又来啦？今天新到了一批好货，我给你留着呢。」\n" +
+      "他压低声音：「其他人我卖¥15，你给¥10就行——老主顾了。」\n" +
+      "你经常来这儿买东西，老板都认得你了。",
+    conditions: function (st) {
+      // 检查 trade 行动频次是否≥10（在任何地点累计购买）
+      var freq = st.stats && st.stats.actionFreq;
+      var totalTrade = 0;
+      if (freq) {
+        for (var k in freq) {
+          // 累加所有交易类行动（buy/start_business/food_stall等）
+          if (k.indexOf("buy") >= 0 || k.indexOf("trade") >= 0) {
+            totalTrade += freq[k] || 0;
+          }
+        }
+      }
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        totalTrade >= 10 &&
+        !st.flags._regularDiscountSeen
+      );
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "👍 谢了老板！那我多买点",
+        hint: "打折购物，好感+",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 10;
+          }
+          StateManager.addMessage(
+            "👍 你多挑了几样东西，老板果然按¥10算了。\n" +
+              "走的时候他还塞了一把葱：「拿回去下面吃！」声望+2，心情+8，销售经验+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 老板记着账，月底一起结",
+        hint: "赊账，月底自动扣",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.flags._regularCredit = true;
+          st.flags._regularCreditDay = st.player.day;
+          StateManager.addMessage(
+            "🙏 老板爽快答应：「行，月底再说。你常来，我信得过。」\n" +
+              "在这座城市，能被一个人信任的感觉真好。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😊 跟老板聊几句再走",
+        hint: "好感+，可能获得情报",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 1);
+          if (Random.chance(0.3)) {
+            st.flags._regularShopTip = true;
+            StateManager.addMessage(
+              "😊 你跟老板聊了会儿天，他无意中透露：「听说对面那条街要开夜市了，\n" +
+                "摊位费前三个月免费。」这可能是个机会！心情+5，心智+1。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage(
+              "😊 你跟老板聊了会儿天，才知道他也是外地来的，在这条街干了八年。\n" +
+                "他说：「这城市啊，待久了就是家了。」心情+5。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "skill_synergy_restaurant_offer",
+    phase: "street",
+    icon: "🍳",
+    title: "老板想合伙",
+    story:
+      "你常去的那家小炒店里，老板老黄端着两杯茶坐下来。\n" +
+      "「我观察你很久了——你懂吃，又会跟客人聊天。我这家店生意一直不错，但一个人撑太累了。」\n" +
+      "他压低声音：「我在对面街看中一个铺面，想开分店。你出手艺+管店，我出钱+供应链，五五分。」",
+    conditions: function (st) {
+      // 烹饪≥20 且 销售≥10 → 双重门槛协同
+      var cooking = st.skills && st.skills.cooking && st.skills.cooking.level;
+      var sales = st.skills && st.skills.sales && st.skills.sales.level;
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 30 &&
+        (cooking || 0) >= 20 &&
+        (sales || 0) >= 10 &&
+        !st.flags._skillSynergyRestaurantSeen
+      );
+    },
+    probability: 0.015,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接受合伙！我来管店",
+        hint: "获得稳定分红+技能成长",
+        apply: function (st) {
+          st.flags._skillSynergyRestaurantSeen = true;
+          st.flags._restaurantPartner = true;
+          var invest = 3000;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - invest);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
+          // 烹饪和销售技能同步成长
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 40;
+          }
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 30;
+          }
+          StateManager.addMessage(
+            "🤝 你出了¥" +
+              invest +
+              "当押金，正式成为合伙人。\n" +
+              "老黄拍着你肩膀：「我看人不会错。」声望+8，心智+5，烹饪经验+40，销售经验+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我经验还不够，怕拖累你",
+        hint: "婉拒，技能仍获认可",
+        apply: function (st) {
+          st.flags._skillSynergyRestaurantSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15;
+          }
+          StateManager.addMessage(
+            "😅 你诚实地说自己还欠火候。老黄点点头：「有自知之明的人，迟早能成事。」\n烹饪经验+15，心情+8，心智+3。",
             "info",
           );
         },
