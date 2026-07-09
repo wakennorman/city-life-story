@@ -15325,5 +15325,322 @@
     ],
   });
 
+  // ====== loop-R27 新增：4个高影响空白区填充 ======
+
+  // 事件1：技能满级(level 100) 巅峰时刻 — 区别于已有≥80的「行家找上门」
+  // 设计心理学：峰终定律·峰值记忆 — 最难达成瞬间必须有叙事回响
+  RANDOM_EVENTS.push({
+    id: "skill_absolute_mastery_capstone",
+    phase: "street",
+    icon: "👑",
+    title: "一代宗匠",
+    story:
+      "你没有刻意追求，但量变终于成了质变——你的手艺已经登峰造极。\n\n" +
+      "今天发生了一件小事：一个年轻人慕名而来，怯生生地问你能不能「指点两下」。他说是朋友推荐的——有人说你是这个城市里这方面最厉害的人。\n\n" +
+      "你愣了一下。什么时候起，你从那个什么都不会的街头小子，变成了别人口中的「师傅」？",
+    conditions: function (st) {
+      if (!st.skills) return false;
+      // 找到第一个达到100级的技能
+      var masterSkill = null;
+      for (var sk in st.skills) {
+        if (st.skills[sk] && (st.skills[sk].level || 0) >= 100) {
+          if (st.flags["_skillCapstone_" + sk]) continue;
+          masterSkill = sk;
+          break;
+        }
+      }
+      if (!masterSkill) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true, // 每个技能满级都触发一次
+    choices: [
+      {
+        text: "👨‍🏫 收徒，把手艺传下去",
+        hint: "名气+10 心智+8（传承满足感）",
+        apply: function (st) {
+          var sk = st.flags._capstoneReadySkill || null;
+          // 重新找到满级技能（apply时flags可能变化）
+          if (!sk) {
+            for (var s in st.skills) {
+              if (st.skills[s] && (st.skills[s].level || 0) >= 100) {
+                sk = s;
+                break;
+              }
+            }
+          }
+          if (sk) st.flags["_skillCapstone_" + sk] = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "👨‍🏫 你收下了这个徒弟。手艺这东西，练到顶了就该传下去。看着徒弟的眼神，你想起当初的自己。名气+10，心智+8，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "✍️ 写下心法笔记发到网上",
+        hint: "帮助更多人 名声扩散",
+        apply: function (st) {
+          var sk = null;
+          for (var s in st.skills) {
+            if (st.skills[s] && (st.skills[s].level || 0) >= 100) {
+              sk = s;
+              break;
+            }
+          }
+          if (sk) st.flags["_skillCapstone_" + sk] = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 15);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          StateManager.addMessage(
+            "✍️ 你把这些年积累的心法写成帖子发到网上。从街头到宗匠的修行之路——三天内转发过万，很多人留言说「受益匪浅」。名气+15，道德+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😌 淡淡一笑，继续干活",
+        hint: "匠人本色 心情+10",
+        apply: function (st) {
+          var sk = null;
+          for (var s in st.skills) {
+            if (st.skills[s] && (st.skills[s].level || 0) >= 100) {
+              sk = s;
+              break;
+            }
+          }
+          if (sk) st.flags["_skillCapstone_" + sk] = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "😌 你说「指点谈不上，相互学习吧」，然后回头继续干活。山再高，路还得一步一步走。心情+10。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件2：六位数财富里程碑 (totalEarned ≥ ¥100,000)
+  // 设计心理学：峰终定律·阶段性成就感知
+  RANDOM_EVENTS.push({
+    id: "wealth_six_figure_milestone",
+    phase: "street",
+    icon: "💰",
+    title: "六位数时刻",
+    story:
+      "你无意中发现系统提示：累计收入突破了¥100,000。\n\n" +
+      "你站在原地发了会儿呆。刚来这座城市的时候，口袋里只有¥300。露宿街头、吃馒头就咸菜、连个像样的住处都没有。\n\n" +
+      "现在回头看，那些日子好像又近又远。¥100,000——这个数字三年前想都不敢想。但此刻你站在这里，觉得才刚刚开始。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        (st.resources.totalEarned || 0) >= 100000 &&
+        !st.flags._wealthSixFigureSeen
+      );
+    },
+    probability: 0.045,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎉 给自己买个大件庆祝",
+        hint: "犒劳自己 心情+15",
+        cost: 3000,
+        apply: function (st) {
+          st.flags._wealthSixFigureSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 20);
+          StateManager.addMessage(
+            "🎉 你买了件一直想要的东西。三年了，这是第一次真正犒劳自己。那些苦，没白吃。心情+15，饱食-20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏦 存起来当启动资金",
+        hint: "储蓄安全感 心智+5",
+        apply: function (st) {
+          st.flags._wealthSixFigureSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          var saveAmount = Math.min(
+            st.resources.cash || 0,
+            Math.floor((st.resources.cash || 0) * 0.3),
+          );
+          st.resources.bankBalance =
+            (st.resources.bankBalance || 0) + saveAmount;
+          st.resources.cash -= saveAmount;
+          StateManager.addMessage(
+            "🏦 你把¥" +
+              saveAmount.toLocaleString() +
+              "存进银行。钱是胆气，有了这笔存款，下一步的选择更多了。心智+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 打个电话回家报喜",
+        hint: "家的温度 心情+12 道德+2",
+        apply: function (st) {
+          st.flags._wealthSixFigureSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "📞 电话那头，妈妈连说了三个「好」。她说别光顾着赚钱，身体最重要。挂了电话，你在路边坐了好一会儿。心情+12，道德+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件3：住房豪华/豪宅里程碑 (tier 5-6 别墅或豪宅搬家)
+  // 设计心理学：峰终定律·购买的终局记忆锚点
+  RANDOM_EVENTS.push({
+    id: "luxury_housing_new_life",
+    phase: "street",
+    icon: "🏡",
+    title: "新生活的气味",
+    story:
+      "你站在新房子的窗前——这真的是你的家了。推窗望去，这座城市的夜景尽收眼底。\n\n" +
+      "你想起第一次来这个城市的那天，拖着行李箱站在火车站广场上，连¥100一晚的旅馆都嫌贵。\n\n" +
+      "那些日子好像已经很久远了。你用了很久，一步步走到了这里。",
+    conditions: function (st) {
+      var tier = st.housing && st.housing.tier;
+      // 仅触发于别墅(5)或豪宅(6)
+      if (tier !== 5 && tier !== 6) return false;
+      if (st.flags._luxuryHousingSeen) return false;
+      // 必须在搬入后30天内触发
+      if (!st.housing.rentedDay) return false;
+      if (st.player.day - st.housing.rentedDay > 30) return false;
+      return st.player.phase === "street";
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🌸 邀请朋友们来新家做客",
+        hint: "社交温度 心情+12 好感随机+",
+        apply: function (st) {
+          st.flags._luxuryHousingSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          // 给所有已结识NPC随机加好感
+          var npcList = st.relationships || {};
+          for (var npcId in npcList) {
+            if (npcList[npcId].met && npcList[npcId].affinity >= 30) {
+              npcList[npcId].affinity = Math.min(
+                100,
+                (npcList[npcId].affinity || 0) + Random.int(3, 8),
+              );
+            }
+          }
+          StateManager.addMessage(
+            "🌸 你下厨做了一大桌菜，朋友们来了十几个人。推杯换盏间你觉得——这一切都值了。心情+12，多位好友好感+3~8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🪟 独自坐着看了很久的夜景",
+        hint: "安静消化成就感 心智+6",
+        apply: function (st) {
+          st.flags._luxuryHousingSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🪟 你泡了杯茶，坐在窗前看了很久的城市灯火。从吃不饱饭到这座房子——走过来的人才知道这意味着什么。心智+6，心情+8。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💼 立刻着手规划下一步",
+        hint: "行动派 名气+3",
+        apply: function (st) {
+          st.flags._luxuryHousingSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "💼 你只感慨了三分钟——然后打开电脑开始规划下一步。房子是终点，也是起点。名气+3，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件4：夏季夜市旺季 (season === 'summer' 触发，填补季节叙事空白)
+  // 设计心理学：稀缺性·季节性节奏感（夏天来了=夜生活经济爆发）
+  RANDOM_EVENTS.push({
+    id: "summer_night_market_boom",
+    phase: "street",
+    icon: "🌙",
+    title: "夏夜出摊黄金期",
+    story:
+      "七月的夜晚热得睡不着，但街头的夜市却热闹非凡——烧烤摊烟雾缭绕、大排档坐满了人、小贩们吆喝声此起彼伏。\n\n" +
+      "隔壁卖炒粉的阿珍跟你说：「夏天是我们的旺季，一天能赚两三个月的钱。趁这两个月多攒点，冬天就能歇歇了。」\n\n" +
+      "夜风裹着孜然味吹过，几小时后就是这座城市最热闹的几个小时。",
+    conditions: function (st) {
+      // 检查是否为夏季（season字段）
+      var isSummer = st.weather && st.weather.season === "summer";
+      return (
+        st.player.phase === "street" &&
+        isSummer &&
+        st.player.day >= 30 &&
+        !st.flags._summerNightMarketSeen
+      );
+    },
+    probability: 0.045,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔥 趁机出摊多赚一波",
+        hint: "疲劳+20 收入++++",
+        apply: function (st) {
+          st.flags._summerNightMarketSeen = true;
+          var profit = Random.int(300, 700);
+          st.resources.cash += profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🔥 你支起了小摊。夏夜里人们兜里有钱也有心情，一晚上净赚¥" +
+              profit +
+              "。虽然累，但值得。收入¥" +
+              profit +
+              "，疲劳+20，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍺 跟朋友去吃烧烤喝啤酒",
+        hint: "心情++ 好感+",
+        cost: 150,
+        apply: function (st) {
+          st.flags._summerNightMarketSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 30);
+          StateManager.addMessage(
+            "🍺 你约了几个朋友，烤串配啤酒，吹着晚风聊到半夜。夏天就这一次，该享受的时候得享受。心情+15，饱食-30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😴 不出摊，早点休息",
+        hint: "存体力 疲劳-",
+        apply: function (st) {
+          st.flags._summerNightMarketSeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "😴 你忍住诱惑早睡了。细水长流，旺季还长。疲劳-15，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
