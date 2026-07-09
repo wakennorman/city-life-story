@@ -5,7 +5,7 @@
  * 参考：《Stardew Valley》岛民关系 / 《大多数》人情网络
  *
  * ┌─────────────────────────┐
- * │ NPC关系矩阵（12×12双向）│
+ * │ NPC关系矩阵（13×13双向）│
  * │ aunt_wang ↔ old_zhou    │ ← 旧识（城中村老邻居）
  * │ boss_li ↔ sister_zhang  │ ← 竞争关系（抢活源）
  * │ 赵姐 ↔ boss_li          │ ← 业务关系
@@ -40,6 +40,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "friendly",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "friendly",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -54,6 +55,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "friendly",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "friendly",
@@ -68,6 +70,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "business",
     chen_ge: "neutral",
@@ -82,6 +85,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "business",
     chen_ge: "neutral",
@@ -96,6 +100,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -110,6 +115,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "friendly",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -124,6 +130,7 @@ const NPC_RELATION_MATRIX = {
     chef_chen: "friendly",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -138,6 +145,7 @@ const NPC_RELATION_MATRIX = {
     chef_chen: "neutral",
     auntie_lin: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -152,6 +160,7 @@ const NPC_RELATION_MATRIX = {
     chef_chen: "neutral",
     auntie_lin: "neutral",
     master_zhao: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
@@ -167,6 +176,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
@@ -181,6 +191,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
@@ -195,6 +206,7 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     ajie: "neutral",
@@ -209,19 +221,48 @@ const NPC_RELATION_MATRIX = {
     auntie_lin: "neutral",
     master_zhao: "neutral",
     xiaoli: "neutral",
+    xiaochen: "neutral",
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "classmate",
+  },
+  xiaochen: {
+    aunt_wang: "friendly",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
   },
 };
 
 // ====== 关系传播矩阵 ======
 const RELATION_PROPAGATION = {
-  aunt_wang: { old_zhou: 0.3, xiao_mei: 0.15, chef_chen: 0.1, auntie_lin: 0.1 },
-  old_zhou: { aunt_wang: 0.3, xiao_mei: 0.15, auntie_lin: 0.1, chen_ge: 0.15 },
+  aunt_wang: {
+    old_zhou: 0.3,
+    xiao_mei: 0.15,
+    chef_chen: 0.1,
+    auntie_lin: 0.1,
+    xiaochen: 0.1,
+  },
+  old_zhou: {
+    aunt_wang: 0.3,
+    xiao_mei: 0.15,
+    auntie_lin: 0.1,
+    chen_ge: 0.15,
+    xiaochen: 0.05,
+  },
   boss_li: { sister_zhang: -0.25, zhaojie: 0.15 },
   sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
   zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
+  xiaochen: { aunt_wang: 0.1 },
 };
 
 /** 初始化NPC关系状态 */
