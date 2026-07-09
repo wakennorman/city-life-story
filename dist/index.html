@@ -8279,6 +8279,7 @@ function quarterlyCleanup(state) {
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           st.trade.currentLocation === "construction"
         );
       },
@@ -9515,6 +9516,7 @@ function quarterlyCleanup(state) {
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           (st.trade.currentLocation === "market" ||
             st.trade.currentLocation === "wholesaleMarket") &&
           st.player.day >= 5 &&
@@ -9630,6 +9632,7 @@ function quarterlyCleanup(state) {
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           st.trade.currentLocation === "construction" &&
           st.player.day >= 15 &&
           !st.flags._coworkerDocSeen
@@ -9743,6 +9746,7 @@ function quarterlyCleanup(state) {
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           st.trade.currentLocation === "park" &&
           st.player.day >= 7 &&
           !st.flags._foundLotteryTicket

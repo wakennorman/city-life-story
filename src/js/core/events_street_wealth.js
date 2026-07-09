@@ -353,6 +353,7 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           (st.trade.currentLocation === "market" ||
             st.trade.currentLocation === "wholesaleMarket") &&
           st.player.day >= 5 &&
@@ -468,6 +469,7 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           st.trade.currentLocation === "construction" &&
           st.player.day >= 15 &&
           !st.flags._coworkerDocSeen
@@ -581,6 +583,7 @@
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
+          st.trade &&
           st.trade.currentLocation === "park" &&
           st.player.day >= 7 &&
           !st.flags._foundLotteryTicket
