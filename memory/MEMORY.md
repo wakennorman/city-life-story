@@ -21,3 +21,4 @@
 - [v3.5x-news-depth-rework](v3.5x-news-depth-rework.md) — 新闻系统深度影响链条全面修复（6大传导断层+8个叙事事件，2026-07-09，commit 65b06fc4）
 - [v3.52-cooking-npc-events-bak-cleanup](v3.52-cooking-npc-events-bak-cleanup.md) — 3个烹饪×NPC联动事件（cooking技能/林阿姨/陈师傅）+ 清理2个废弃bak文件（2026-07-09，commit d7e98f0d）
 - [v3.60-loop-sixth-round](v3.60-loop-sixth-round.md) — /loop 第6轮：15个options→choices P0修复 + 3个联动事件（多技能协同/银行VIP/熟客经济）
+- [v3.61-loop-seventh-round](v3.61-loop-seventh-round.md) — /loop 第7轮：corporate死代码修复 + 4个地点事件（工业区/医院/娱乐城/菜市场） + market引用清理

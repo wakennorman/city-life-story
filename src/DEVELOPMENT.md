@@ -1,8 +1,8 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.59 事件自洽审计 + v3.60 联动事件 + v3.55 重构事件还原）
+> 最后更新: 2026-07-09（v3.61 死代码修复 + 4个新地点事件 + market引用清理）
 >
-> commit: `f406da10`
+> commit: `3a4d80fd`
 
 ---
 
@@ -6064,3 +6064,43 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 - `node --check` ✅
 - `python build.py` 5462.5KB ✅
 - Git commit: `05f02855`（本地，待网络恢复推送）
+
+---
+
+## 2026-07-09 — v3.61 死代码修复 + 4个新地点事件 + market引用清理
+
+**commit: `3a4d80fd`**
+
+### 修复
+
+#### 1. Corporate事件死代码（P1级）
+
+| 事件                  | 问题                              | 修复                                                     |
+| --------------------- | --------------------------------- | -------------------------------------------------------- |
+| `insider_rumor_start` | 无`conditions`，4事件内幕链不可达 | 添加conditions：phase=corporate+kpi≥20+day≥30            |
+| `workplace_scapegoat` | 无`conditions`，5事件职场链不可达 | 添加conditions：phase=corporate+kpi≥30+ability≥20+day≥60 |
+| **合计**              | 2个链条共9事件从死代码恢复        |                                                          |
+
+#### 2. `"market"` 死引用清理（6文件）
+
+- `cross_system_events.js`（3处）：`"market"` → `"wholesaleMarket"`
+- `events_street_survival.js`（2处）：批发市场改`wholesaleMarket`，菜市场改`vegetable_market`
+- `events_street_wealth.js`（1处）：`"market"` → `"wholesaleMarket"`
+- `render.js`（2处）：`"market"` → `"wholesaleMarket"` + `"tech_park"` → `"techPark"` + `"mall"` → `"commercialDist"`
+
+### 新增（4个地点专属事件）
+
+| 事件                              | 地点      | 触发条件            | 设计要点                                  |
+| --------------------------------- | --------- | ------------------- | ----------------------------------------- |
+| `factory_night_shift_offer`       | 🏭 工业区 | day≥5               | present bias：夜班¥300现结 vs 健康损耗    |
+| `hospital_cheap_medicine_offer`   | 💊 医院   | day≥10+phase=street | loss aversion：假药风险/省钱/举报道德分叉 |
+| `entertainment_talent_scout`      | 🎤 娱乐城 | day≥15+charm≥30     | sunk cost：签约风险/魅力决定成败          |
+| `vegetable_market_clearance_deal` | 🥬 菜市场 | day≥5               | 禀赋效应：便宜菜vs新鲜度取舍              |
+
+**设计心理学**：每个事件提供≥2个选择，包含风险/回报计算+道德维度
+
+### 验证
+
+- `node --check` ✅（全部文件）
+- `python build.py` 5575KB ✅
+- Git commit: `3a4d80fd`（本地待推）
