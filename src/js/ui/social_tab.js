@@ -61,15 +61,20 @@ function renderNpcRelationships(state, content) {
     html += 'border:1px solid var(--border);background:var(--bg-secondary);">';
     html += '<div style="display:flex;align-items:center;gap:4px;">';
     html += "<span>" + icon + "</span>";
-    html +=
-      '<span style="font-weight:bold;">' +
-      (npcId.replace(/_/g, " ") + "</span>");
+    // [自洽修复] 显示NPC中文名而非英文ID
+    var _npcDef =
+      typeof NPCS !== "undefined" &&
+      NPCS.find(function (n) {
+        return n.id === npcId;
+      });
+    var _displayName = _npcDef ? _npcDef.name : npcId.replace(/_/g, " ");
+    html += '<span style="font-weight:bold;">' + _displayName + "</span>";
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";
-
+    html += "</div>";
     // v3.1 ⑥ 社会比较心理抓手：好感≥20 时透露对方月薪，制造羡慕/优越感
-    var _npcDef =
+    _npcDef =
       typeof NPCS !== "undefined" &&
       NPCS.find(function (n) {
         return n.id === npcId;
