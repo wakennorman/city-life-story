@@ -12814,7 +12814,9 @@
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           StateManager.addMessage(
-            "🍳 你带了一节「家常红烧肉」体验课，十几个邻居边学边尝。结课费¥" + pay + "，心情+8，名声+3。",
+            "🍳 你带了一节「家常红烧肉」体验课，十几个邻居边学边尝。结课费¥" +
+              pay +
+              "，心情+8，名声+3。",
             "success",
           );
         },
@@ -12856,7 +12858,9 @@
           st.resources.cash = (st.resources.cash || 0) + pay;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           StateManager.addMessage(
-            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" + pay + "，名声+6。",
+            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" +
+              pay +
+              "，名声+6。",
             "success",
           );
         },
@@ -12911,6 +12915,133 @@
           if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 1);
           StateManager.addMessage(
             "🙏 你说「急用就借，用完就还」，老周爽快应了。手头多了套趁手工具，好感+1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "morality_extreme_blacklist",
+    phase: "street",
+    icon: "⚠️",
+    title: "旧账找上门",
+    story:
+      "你早年耍过的那些心眼，终于有了回响。\n" +
+      "一个你坑过的熟人托人放话：「这人办事不地道，以后活儿别给他。」",
+    // conditions：道德跌破极低门槛，极端利己的长期回响（与 high 侧形成闭环）
+    conditions: function (st) {
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m <= 15;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🕊️ 主动登门道歉赔钱",
+        hint: "现金-，道德+，但声誉难回",
+        apply: function (st) {
+          var cost = 1500;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
+          StateManager.addMessage(
+            "🕊️ 你上门赔了¥" + cost + "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
+            "danger",
+          );
+        },
+      },
+      {
+        text: "🙈 装作没事",
+        hint: "躲一时",
+        apply: function (st) {
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 3);
+          StateManager.addMessage(
+            "🙈 你假装没听见风声。名声-3，有些门从此对你关上了。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "weather_rainy_umbrella",
+    phase: "street",
+    icon: "🌧️",
+    title: "雨里的一把伞",
+    story:
+      "突如其来的雨把整条街浇透。你缩在屋檐下，旁边也有人正发愁。\n" +
+      "对方递来半边伞：「顺路，一起走？」",
+    // conditions：当前天气为雨天，连接天气系统 → 偶遇 / 心情
+    conditions: function (st) {
+      return !!(st.weather && st.weather.current === "rainy");
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🌂 接下半边伞",
+        hint: "心情+，可能结识",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "🌂 你们挤在一把伞下走了两条街，聊得意外投机。心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏃 冒雨冲回去",
+        hint: "省事但狼狈",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+          StateManager.addMessage(
+            "🏃 你摆摆手冲进雨里，到家时浑身湿透。心情-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "fame_high_interview",
+    phase: "street",
+    icon: "🎤",
+    title: "本地媒体的采访",
+    story:
+      "你在街坊里攒下的好名声，引来了城里生活周刊的记者。\n" +
+      "「我们想做个『普通人的城市故事』专栏，能聊聊你吗？」",
+    // conditions：名声达到较高门槛，累积状态爆发 → 曝光机会
+    conditions: function (st) {
+      var f = st.player && st.player.fame;
+      return typeof f === "number" && f >= 60;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎤 答应采访",
+        hint: "名声+，现金+",
+        apply: function (st) {
+          var pay = 1000;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          StateManager.addMessage(
+            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" + pay + "，名声+8，连菜市场阿姨都认得你了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤫 婉拒出镜",
+        hint: "低调",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "🤫 你谢绝了出镜，但记者写了篇匿名小稿。名声+2。",
             "info",
           );
         },
