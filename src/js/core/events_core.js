@@ -40,17 +40,18 @@ function queueChainEvent(state, eventId, delayDays, conditions) {
  */
 function eTriggersMatch(event, state) {
   if (!event) return false;
-  // 约定式优先：triggers 数据对象
+  // triggers 数据对象检查（如果存在）
   if (event.triggers && typeof event.triggers === "object") {
-    return evaluateTriggers(event.triggers, state);
+    if (!evaluateTriggers(event.triggers, state)) return false;
+  } else if (event.triggers) {
+    // 有 triggers 定义但 evaluateTriggers 不可用 → 默认放行（向前兼容）
+    // 不阻断后续条件检查
   }
-  // 兼容旧写法：conditions 函数
+  // conditions 函数检查（如果存在，与 triggers 是 and 关系）
   if (typeof event.conditions === "function") {
     return event.conditions(state);
   }
-  // 有 triggers 定义但 evaluateTriggers 不可用 → 默认放行（向前兼容）
-  if (event.triggers) return true;
-  return false;
+  return true;
 }
 
 /** 街头每日事件判定 */
@@ -333,12 +334,14 @@ function queueRandomEvent(state, phase) {
   var eligible = pool.filter(function (e) {
     if (e._isChainEvent) return false;
 
-    // 约定式触发条件评估（triggers 数据对象）
-    // 优先级：triggers > conditions 函数（兼容旧代码）
+    // 约定式触发条件评估：triggers 数据对象 + conditions 函数
+    // 两者共存时都需要满足（and 关系）。修复 v3.54 的 else-if 短路bug——
+    // 原来 if-else-if 导致有 triggers 的事件完全跳过 conditions 函数
     if (e.triggers && typeof e.triggers === "object") {
       if (!evaluateTriggers(e.triggers, state)) return false;
-    } else if (e.conditions && !e.conditions(state)) {
-      return false;
+    }
+    if (e.conditions && typeof e.conditions === "function") {
+      if (!e.conditions(state)) return false;
     }
     if (e.trigger && !e.trigger(state)) return false;
 
