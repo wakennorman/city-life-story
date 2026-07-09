@@ -1835,6 +1835,10 @@ function loadExistingGame(slot) {
     if (typeof initEquipmentDurability === "function") {
       initEquipmentDurability(StateManager.getState());
     }
+    // v3.54h：兼容旧存档：初始化社交网络状态
+    if (typeof ensureSocialNetworkState === "function") {
+      ensureSocialNetworkState(StateManager.getState());
+    }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
     document.getElementById("app").style.display = "";

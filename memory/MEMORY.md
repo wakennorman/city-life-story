@@ -23,3 +23,4 @@
 - [v3.60-loop-sixth-round](v3.60-loop-sixth-round.md) — /loop 第6轮：15个options→choices P0修复 + 3个联动事件（多技能协同/银行VIP/熟客经济）
 - [v3.61-loop-seventh-round](v3.61-loop-seventh-round.md) — /loop 第7轮：corporate死代码修复 + 4个地点事件（工业区/医院/娱乐城/菜市场） + market引用清理
 - [v3.62-loop-eighth-round](v3.62-loop-eighth-round.md) — /loop 第8轮：填补最后3个零事件地点（郊区/政府办事大厅/培训中心） → 16个地点全部拥有事件覆盖
+- [v3.63-opening-news-deep-link](v3.63-opening-news-deep-link.md) — 开局新闻深度联动修复：新闻note实际生效/投资联动/AI新闻影响/选择面板/news_driven_events ID兼容（2026-07-09）
