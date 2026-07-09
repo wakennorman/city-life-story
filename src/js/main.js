@@ -4809,6 +4809,10 @@ function getNextGoals(state) {
     goals.push({ title: "💪 站稳脚跟", desc: "熟悉城市", priority: 80 });
   else if (sc === "second_gen" && p.phase === "street")
     goals.push({ title: "🎯 证明自己", desc: "靠本事", priority: 80 });
+  else if (sc === "midlife_crisis" && p.phase === "street")
+    goals.push({ title: "🔄 技能重塑", desc: "不被年轻人替代", priority: 85 });
+  else if (sc === "fresh_grad" && p.phase === "street")
+    goals.push({ title: "📋 职场起步", desc: "第一份正式工作", priority: 85 });
 
   return goals.sort((a, b) => b.priority - a.priority).slice(0, 3);
 }

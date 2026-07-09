@@ -1,8 +1,8 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.63 开局新闻深度联动修复）
+> 最后更新: 2026-07-09（v3.63b 多剧本适配审查）
 >
-> commit: `7ed765aa`
+> commit: 待定（与 v3.63 合并）
 
 ---
 
@@ -49,7 +49,35 @@
 
 ---
 
-## 2026-07-09 — v3.63 开局新闻深度联动修复
+## 2026-07-09 — v3.63b 多剧本适配审查（全剧本审计 + 修复）
+
+**审计目标**：检查 7 个剧本在所有系统/事件/UI 中是否都能正常工作，无断裂。
+
+**审计范围**：所有事件文件（RANDOM_EVENTS）、tutorial.js、daily_quest.js、career_dev.js、main.js、save.js、scenario_start_chains.js、startup.js、world_news_intro.js、render_core.js
+
+**审计结果**：
+
+| 系统                      | 状态              | 说明                                                                  |
+| ------------------------- | ----------------- | --------------------------------------------------------------------- |
+| 事件系统（RANDOM_EVENTS） | ✅ 全剧本适配     | 无事件直接检查 `_currentScenario`，所有条件为 phase/location/资源门控 |
+| tutorial.js               | ✅ 全剧本覆盖     | 6 个剧本各 3 条专属引导 + classic 回退                                |
+| daily_quest.js            | ✅ 全剧本覆盖     | 7 个剧本各有专属分支                                                  |
+| career_dev.js             | ✅ 全剧本覆盖     | 7 个剧本各有专属建议                                                  |
+| scenario_start_chains.js  | ✅ 全剧本覆盖     | 7 个剧本各有 3-5 天开局链                                             |
+| startup.js                | ✅ 全剧本覆盖     | 7 个剧本各有专属创业触发条件                                          |
+| save.js                   | ✅ 全剧本适配     | 正确保存/读取剧本模式元数据                                           |
+| render_core.js            | ✅ 全剧本适配     | 显示剧本名称/沙盒标识                                                 |
+| world_news_intro.js       | ✅ 全剧本覆盖     | 所有剧本均有场景专属新闻标签                                          |
+| **main.js getNextGoals**  | ❌ **修复前遗漏** | **midlife_crisis 和 fresh_grad 无专属目标**                           |
+
+**修复 1**：`main.js` getNextGoals 函数补全 2 个剧本专属目标：
+
+- `midlife_crisis` → 🔄 技能重塑（不被年轻人替代，priority 85）
+- `fresh_grad` → 📋 职场起步（第一份正式工作，priority 85）
+
+**验证**：node --check ✅
+
+**影响文件**：src/js/main.js（+4 行）
 
 **问题**：开局新闻弹窗中的 💡 note 文字（如"科技/AI岗位薪资上涨""裁员降薪潮来袭"）是死内容——只在弹窗显示，不实际影响游戏任何系统。
 

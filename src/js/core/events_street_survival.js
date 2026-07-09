@@ -8,7 +8,7 @@
   RANDOM_EVENTS._streetSurvivalLoaded = true;
   var EVENTS = [
     {
-      id: "found_wallet",
+      id: "found_wallet_street",
       _isChainEvent: false,
       conditions: function (st) {
         return st.player.day >= 5;
@@ -240,7 +240,7 @@
       ],
     },
     {
-      id: "free_clinic",
+      id: "free_clinic_street",
       _isChainEvent: false,
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health

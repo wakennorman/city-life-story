@@ -247,8 +247,18 @@ function tickSocialNetwork(state) {
     refreshWeiboHotlist(state);
   }
 
-  // 网红收入结算
-  calculateInfluencerIncome(state);
+  // 网红收入结算（每天发放到现金）
+  var incomeResult = calculateInfluencerIncome(state);
+  if (incomeResult && incomeResult.income > 0) {
+    state.resources.cash = (state.resources.cash || 0) + incomeResult.income;
+    addDailyTransaction(
+      state,
+      "income",
+      "influencer",
+      Math.round(incomeResult.income),
+      "网红日收入",
+    );
+  }
 
   // 舆论危机衰减
   if (state.socialNetwork.舆论危机.active) {

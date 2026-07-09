@@ -156,17 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-09)**：v3.54b — BugFix: st.fame/st.needs.health 路径错误修复
-  - **BugFix A**：`cross_system_events.js` 中7处 `st.fame` 写为 `st.player.fame`（v3.0迁移遗漏，fame在player下）
-  - **BugFix B**：`dr_wang_free_clinic` 事件中4处 `st.needs.health` 改为 `st.status.health`（state.needs无health字段）
-  - **防漏审核**：`grep -rn "needs.health" src/js/core/` 验证0残留 ✅
-  - **指令一审查**：扫描 events_street_life/survival/wealth + cross_system_events + career_path_events 6个事件文件，原A类缺陷（NPC met/职业条件/天气检查）已在v3.20-v3.53中全部标注`[自洽修复]`并修复，本轮无新增A类缺陷
-  - **指令二扩充**：新增3个联动事件填补叙事空白——
-    - `work_streak_community_recognition`（工作连击≥50天→社区认可，联动工作系统×社交）
-    - `skill_mastery_side_opportunity`（修理+电工双≥20→双料师傅副业，联动技能×经济）
-    - `housing_tier_milestone_reflection`（住所升级→情感回响，联动住房×心理）
-  - **影响文件**：cross_system_events.js（+185行，3个新事件 + 10处BugFix）
-  - **验证**：`node --check` + `npm run check:js` 137 ✅ + `python build.py` 5481.5KB ✅
+- **最新一次工作 (2026-07-09)**：v3.63b — 多剧本适配审查 + getNextGoals 补全
+  - **审计范围**：7 个剧本 × 全部事件/UI/系统文件（RANDOM_EVENTS/tutorial/daily_quest/career_dev/startup/save/render/world_news）
+  - **审计结论**：全剧本适配良好，无重大断裂
+  - **修复**：`main.js getNextGoals` 补全 2 个遗漏剧本专属目标
+    - `midlife_crisis` → 🔄 技能重塑（priority 85）
+    - `fresh_grad` → 📋 职场起步（priority 85）
+  - **影响文件**：main.js（+4 行）
+  - **验证**：node --check ✅
   - **commit**：`f2136d0`(新事件) + `3033985`(docs)（本地待推）
 
 - **上一轮工作 (2026-07-09)**：v3.52b — 烹饪×NPC联动事件（3个新增）+ 清理废弃bak文件
