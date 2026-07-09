@@ -1667,6 +1667,11 @@ function startNewGame() {
     initLifeDecisions(StateManager.getState());
   }
 
+  // v3.1: 初始化社交网络系统
+  if (typeof ensureSocialNetworkState === "function") {
+    ensureSocialNetworkState(StateManager.getState());
+  }
+
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）
   if (typeof seedWorldFromReality === "function") {
     seedWorldFromReality(StateManager.getState());

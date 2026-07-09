@@ -42381,7 +42381,9 @@ if (typeof window !== "undefined") {
           st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
           st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
           StateManager.addMessage(
-            "🕊️ 你上门赔了¥" + cost + "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
+            "🕊️ 你上门赔了¥" +
+              cost +
+              "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
             "danger",
           );
         },
@@ -42464,7 +42466,9 @@ if (typeof window !== "undefined") {
           st.resources.cash = (st.resources.cash || 0) + pay;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
           StateManager.addMessage(
-            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" + pay + "，名声+8，连菜市场阿姨都认得你了。",
+            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" +
+              pay +
+              "，名声+8，连菜市场阿姨都认得你了。",
             "success",
           );
         },
@@ -44716,6 +44720,10 @@ if (typeof window !== "undefined") {
  *   - 峰终定律：新闻事件的峰值情感体验创造记忆锚点
  *   - 损失厌恶：参与/不参与都有不同后果，没有绝对正确的选择
  *
+ * v2.0 改动：
+ *   - 新增 _hasNewsId() 辅助函数，自动匹配原始ID和 "intro_" 前缀ID
+ *   - 确保开局新闻也能触发叙事事件
+ *
  * 设计参考：This War of Mine 情景事件 / Papers Please 每日报纸 / 大多数 新闻回应
  *
  * 接入方式：与 cross_system_events.js 同样采用 IIFE 注入 RANDOM_EVENTS
@@ -44724,6 +44732,19 @@ if (typeof window !== "undefined") {
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._newsDrivenLoaded) return;
   RANDOM_EVENTS._newsDrivenLoaded = true;
+
+  /**
+   * 检查 activeNews 中是否存在指定新闻ID
+   * v2.0：自动支持原始ID和 "intro_" 前缀ID
+   */
+  function _hasNewsId(activeNews, targetId) {
+    if (!activeNews || !Array.isArray(activeNews)) return false;
+    for (var i = 0; i < activeNews.length; i++) {
+      var nid = activeNews[i].id || "";
+      if (nid === targetId || nid === "intro_" + targetId) return true;
+    }
+    return false;
+  }
 
   var NEWS_EVENTS = [
     // ====== 建筑行业新闻驱动事件 ======
@@ -44735,15 +44756,8 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说建筑行业大热，到处都在招人。今天你在工地上亲眼看到一个工友从脚手架上滑了下来——好在只擦破了皮。包工头让人赶紧把他扶走，压低声音说：「别声张，继续干。」\n\n你想起新闻里热火朝天的画面，和眼前的现实形成了对比。",
       conditions: function (st) {
-        if (!st.activeNews || st.activeNews.length === 0) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          if (
-            st.activeNews[ci].id === "construction_boom" ||
-            st.activeNews[ci].id === "urban_renewal_pilot"
-          )
-            return true;
-        }
-        return false;
+        return _hasNewsId(st.activeNews, "construction_boom") ||
+               _hasNewsId(st.activeNews, "urban_renewal_pilot");
       },
       probability: 0.03,
       repeatable: false,
@@ -44797,11 +44811,7 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说流感高峰到了、医院人满为患。今天你路过医院，发现走廊里全是加床，咳嗽声此起彼伏。\n\n护士台前排着长队，一个护士看见你，跑过来问：「你是来看病的还是来帮忙的？我们实在忙不过来了。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var fi = 0; fi < st.activeNews.length; fi++) {
-          if (st.activeNews[fi].id === "flu_surge") return true;
-        }
-        return false;
+        return _hasNewsId(st.activeNews, "flu_surge");
       },
       probability: 0.035,
       repeatable: false,
@@ -44858,15 +44868,9 @@ if (typeof window !== "undefined") {
       story:
         "你刚在手机新闻里看到「租房市场全面紧张，租金飙涨」，房东就来敲门了。\n\n「小伙子，你也看到了，现在行情就是这样。下个月起，房租涨¥200。你要是接受不了，我也没办法——后面排队要租的人多的是。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ri = 0; ri < st.activeNews.length; ri++) {
-          if (
-            st.activeNews[ri].id === "rental_crisis" ||
-            st.activeNews[ri].id === "population_inflow"
-          )
-            return true;
-        }
-        return st.housing && st.housing.tier > 0 && st.housing.tier < 4;
+        return _hasNewsId(st.activeNews, "rental_crisis") ||
+               _hasNewsId(st.activeNews, "population_inflow") ||
+               (st.housing && st.housing.tier > 0 && st.housing.tier < 4);
       },
       probability: 0.04,
       repeatable: false,
@@ -44935,9 +44939,10 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ti = 0; ti < st.activeNews.length; ti++) {
+          var nid = st.activeNews[ti].id || "";
           if (
-            st.activeNews[ti].id === "tech_layoff" ||
-            st.activeNews[ti].id === "tech_layoff_echo"
+            nid === "tech_layoff" || nid === "intro_tech_layoff" ||
+            nid === "tech_layoff_echo" || nid === "intro_tech_layoff_echo"
           )
             return true;
         }
@@ -45009,9 +45014,10 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ci = 0; ci < st.activeNews.length; ci++) {
+          var nid = st.activeNews[ci].id || "";
           if (
-            st.activeNews[ci].id === "crackdown" ||
-            st.activeNews[ci].id === "chengguan_special_op"
+            nid === "crackdown" || nid === "intro_crackdown" ||
+            nid === "chengguan_special_op" || nid === "intro_chengguan_special_op"
           )
             return true;
         }
@@ -45095,9 +45101,10 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ei = 0; ei < st.activeNews.length; ei++) {
+          var nid = st.activeNews[ei].id || "";
           if (
-            st.activeNews[ei].id === "e_commerce_festival" ||
-            st.activeNews[ei].id === "sea_double_11"
+            nid === "e_commerce_festival" || nid === "intro_e_commerce_festival" ||
+            nid === "sea_double_11" || nid === "intro_sea_double_11"
           )
             return true;
         }
@@ -45177,9 +45184,10 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ci = 0; ci < st.activeNews.length; ci++) {
+          var nid = st.activeNews[ci].id || "";
           if (
-            st.activeNews[ci].id === "cold_wave" ||
-            st.activeNews[ci].id === "winter_heating"
+            nid === "cold_wave" || nid === "intro_cold_wave" ||
+            nid === "winter_heating" || nid === "intro_winter_heating"
           )
             return true;
         }
@@ -45246,17 +45254,18 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st.activeNews) return false;
         var hasEcoNews = false;
+        var ecoIds = [
+          "eco_small_biz_hard", "eco_deflation_worry", "tech_layoff", "global_recession_fear"
+        ];
         for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id;
-          if (
-            nid === "eco_small_biz_hard" ||
-            nid === "eco_deflation_worry" ||
-            nid === "tech_layoff" ||
-            nid === "global_recession_fear"
-          ) {
-            hasEcoNews = true;
-            break;
+          var nid = st.activeNews[ei].id || "";
+          for (var ei2 = 0; ei2 < ecoIds.length; ei2++) {
+            if (nid === ecoIds[ei2] || nid === "intro_" + ecoIds[ei2]) {
+              hasEcoNews = true;
+              break;
+            }
           }
+          if (hasEcoNews) break;
         }
         return hasEcoNews && st.player.day >= 10;
       },
@@ -45755,6 +45764,309 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(CHENGGUAN_EVENTS[i]);
   }
 })();
+</script>
+    <!-- v3.1: 社交网络系统（朋友圈/微博热搜/网红经济）-->
+    <script>/**
+ * 社交网络系统 (Social Network System)
+ *
+ * 参考：微信朋友圈 + 微博双平台机制
+ *
+ * 核心功能：
+ * - 发布朋友圈（消耗AP，选择配图，写文字，可见范围）
+ * - 刷围脖（每日刷新热搜榜，点赞/评论/转发）
+ * - NPC动态（NPC发布生活动态，玩家互动）
+ * - 网红经济（粉丝数≥1000可接广告，≥10000可直播带货）
+ * - 舆论危机（负面事件可能引发舆论风暴）
+ */
+
+// ====== 社交网络状态 ======
+function createSocialNetworkState() {
+  return {
+    posts: [], // 朋友圈帖子 [{ id, authorId, content, images: [], visibility: 'public'|'friends'|'private', likes: [], comments: [], postedDay }]
+    weiboHotlist: [], // 微博热搜榜 [{ rank, title, heat, category }]
+    weiboPosts: [], // 微博动态 [{ id, author, content, likes, comments, reposts, hot }]
+    npcFeeds: [], // NPC动态 [{ npcId, content, images: [], postedDay, type: 'daily'|'event'|'mood' }]
+    playerFans: 0, // 粉丝数
+    playerFollowers: [], // 关注者列表
+    playerInfluencerLevel: "none", // 'none'|'micro'|'medium'|'large'|'top'
+    influencerIncome: 0, // 网红收入
+    lastWeiboRefresh: 0, // 上次刷新热搜的天数
+    舆论危机: {
+      active: false,
+      severity: 0, // 0-100
+      topics: [],
+      daysRemaining: 0,
+    },
+  };
+}
+
+function ensureSocialNetworkState(state) {
+  if (!state.socialNetwork) {
+    state.socialNetwork = createSocialNetworkState();
+  }
+  var base = createSocialNetworkState();
+  for (var key in base) {
+    if (typeof state.socialNetwork[key] === "undefined") {
+      state.socialNetwork[key] = base[key];
+    }
+  }
+  if (!state.socialNetwork.舆论危机) {
+    state.socialNetwork.舆论危机 = base.舆论危机;
+  }
+  return state.socialNetwork;
+}
+
+// ====== 发布朋友圈 ======
+function postToMoments(state, content, images, visibility) {
+  ensureSocialNetworkState(state);
+  if ((state.player.actionPoints || 0) < 20) {
+    return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
+  }
+  var post = {
+    id: "post_" + state.player.day + "_" + Date.now(),
+    authorId: "player",
+    content: content,
+    images: images || [],
+    visibility: visibility || "public",
+    likes: [],
+    comments: [],
+    postedDay: state.player.day,
+  };
+  state.socialNetwork.posts.unshift(post);
+  // 消耗AP
+  state.player.actionPoints = Math.max(0, state.player.actionPoints - 20);
+  // 增加粉丝（如果公开）
+  if (visibility === "public") {
+    // 基础增长：内容长度影响
+    var baseGain = 1;
+    if (content.length > 20) baseGain += 1; // 较长内容+1
+    if (content.length > 50) baseGain += 1; // 长内容再+1
+    if (images && images.length > 0) baseGain += 1; // 配图+1
+    // 名气加成：每10点名气 +0.5粉丝
+    var fameBonus = Math.floor((state.player.fame || 0) / 20);
+    // 随机波动
+    var totalGain = baseGain + fameBonus + Math.floor(Math.random() * 3);
+    state.socialNetwork.playerFans += totalGain;
+    // 反哺名气：少量粉丝增长也略微提升名气
+    state.player.fame = Math.min(
+      100,
+      (state.player.fame || 0) + Math.floor(totalGain / 5),
+    );
+  }
+  return { ok: true, post: post };
+}
+
+// ====== 预定义热搜话题池（30条，风格参考真实围脖热搜）======
+var WEIBO_HOT_TOPICS = [
+  { title: "某明星被曝恋情疑似地下情三年", category: "娱乐" },
+  { title: "某知名企业家称未来五年最赚钱行业是AI", category: "财经" },
+  { title: "某城市房价连跌三个月购房者观望加剧", category: "财经" },
+  { title: "某品牌手机发布新品引发排队抢购", category: "科技" },
+  { title: "某大学研发新型疫苗进入临床试验", category: "科技" },
+  { title: "某平台外卖小哥月入过万引发热议", category: "社会" },
+  { title: "某市出台新规严查租房乱收费", category: "社会" },
+  { title: "某知名主播被曝带货数据造假", category: "娱乐" },
+  { title: "某城市地铁新线开通市民排队体验", category: "社会" },
+  { title: "CBA季后赛某队爆冷淘汰夺冠热门", category: "体育" },
+  { title: "某选秀节目选手退赛引发争议", category: "娱乐" },
+  { title: "某程序员连续加班猝死引关注", category: "社会" },
+  { title: "某市出台人才新政本科可落户", category: "社会" },
+  { title: "某平台公布Q2财报营收超预期", category: "财经" },
+  { title: "某品牌联名款上线秒空黄牛加价", category: "时尚" },
+  { title: "某网红餐厅被曝使用过期食材", category: "社会" },
+  { title: "某市试点每周四天工作制引热议", category: "社会" },
+  { title: "某游戏公司新作上线首日收入破亿", category: "科技" },
+  { title: "某老旧小区改造居民将获补偿", category: "社会" },
+  { title: "某导演新片获国际电影节大奖提名", category: "娱乐" },
+  { title: "某新能源车企宣布全系降价", category: "财经" },
+  { title: "某高校食堂推出自助餐9元管饱", category: "社会" },
+  { title: "某外卖平台调整配送费算法引不满", category: "社会" },
+  { title: "某脱口秀演员段子被指冒犯引争议", category: "娱乐" },
+  { title: "某银行下调存款利率储户转向理财", category: "财经" },
+  { title: "某服装品牌宣布全面使用环保面料", category: "时尚" },
+  { title: "某市马拉松报名人数创新高", category: "体育" },
+  { title: "某短视频平台出新规打击抄袭", category: "科技" },
+  { title: "某奶茶品牌联名款日销百万杯", category: "时尚" },
+  { title: "某整容机构致人毁容被查封", category: "社会" },
+];
+
+// ====== 刷新微博热搜（联动新闻系统+话题池）======
+function refreshWeiboHotlist(state) {
+  ensureSocialNetworkState(state);
+  var categories = ["娱乐", "社会", "体育", "科技", "财经", "时尚"];
+  var hotlist = [];
+
+  // 从当日活跃新闻中提取热点（最多3条）
+  var newsTopics = [];
+  if (state.activeNews && state.activeNews.length > 0) {
+    for (
+      var ni = 0;
+      ni < state.activeNews.length && newsTopics.length < 3;
+      ni++
+    ) {
+      var newsItem = state.activeNews[ni];
+      var title =
+        typeof newsItem === "string"
+          ? newsItem
+          : newsItem.title || newsItem.brief || "";
+      if (title && newsTopics.indexOf(title) < 0) newsTopics.push(title);
+    }
+  }
+  // 从新闻历史中取最近新闻
+  if (
+    newsTopics.length < 3 &&
+    state.newsHistory &&
+    state.newsHistory.length > 0
+  ) {
+    var recentNews = state.newsHistory.slice(-5);
+    for (var nri = 0; nri < recentNews.length && newsTopics.length < 3; nri++) {
+      var nr = recentNews[nri];
+      var nt = typeof nr === "string" ? nr : nr.title || nr.brief || "";
+      if (nt && newsTopics.indexOf(nt) < 0) newsTopics.push(nt);
+    }
+  }
+
+  // 前3条放新闻热点，余下的从话题池随机取
+  var poolCopy = WEIBO_HOT_TOPICS.slice();
+  for (var i = 0; i < 10; i++) {
+    var item = {
+      rank: i + 1,
+      heat: Math.floor(Math.random() * 1000000) + 100000,
+    };
+    if (i < newsTopics.length) {
+      item.title = newsTopics[i];
+      item.category = categories[Math.floor(Math.random() * categories.length)];
+    } else if (poolCopy.length > 0) {
+      var pickIdx = Math.floor(Math.random() * poolCopy.length);
+      var picked = poolCopy.splice(pickIdx, 1)[0];
+      item.title = picked.title;
+      item.category = picked.category;
+    } else {
+      item.title = "热议话题" + (i + 1);
+      item.category = categories[Math.floor(Math.random() * categories.length)];
+    }
+    hotlist.push(item);
+  }
+  state.socialNetwork.weiboHotlist = hotlist;
+  state.socialNetwork.lastWeiboRefresh = state.player.day;
+  return hotlist;
+}
+
+// ====== NPC发布动态 ======
+function npcPostFeed(state, npcId, content, type) {
+  ensureSocialNetworkState(state);
+  var feed = {
+    npcId: npcId,
+    content: content,
+    images: [],
+    postedDay: state.player.day,
+    type: type || "daily",
+  };
+  state.socialNetwork.npcFeeds.unshift(feed);
+  // 保持最近50条
+  if (state.socialNetwork.npcFeeds.length > 50) {
+    state.socialNetwork.npcFeeds = state.socialNetwork.npcFeeds.slice(0, 50);
+  }
+  return feed;
+}
+
+// ====== 网红经济计算 ======
+function calculateInfluencerIncome(state) {
+  ensureSocialNetworkState(state);
+  var fans = state.socialNetwork.playerFans;
+  var income = 0;
+  var level = "none";
+
+  if (fans >= 100000) {
+    level = "top";
+    income = fans * 0.5; // 每粉丝¥0.5/天
+  } else if (fans >= 10000) {
+    level = "large";
+    income = fans * 0.3;
+  } else if (fans >= 1000) {
+    level = "medium";
+    income = fans * 0.1;
+  } else if (fans >= 100) {
+    level = "micro";
+    income = fans * 0.05;
+  }
+
+  state.socialNetwork.playerInfluencerLevel = level;
+  state.socialNetwork.influencerIncome = income;
+  return { level, income };
+}
+
+// ====== 舆论危机触发 ======
+function triggerPublicOpinionCrisis(state, topic, severity) {
+  ensureSocialNetworkState(state);
+  state.socialNetwork.舆论危机 = {
+    active: true,
+    severity: severity || Math.floor(Math.random() * 50) + 30,
+    topics: [topic],
+    daysRemaining: Math.floor(Math.random() * 5) + 3,
+  };
+}
+
+// ====== 每日tick ======
+function tickSocialNetwork(state) {
+  ensureSocialNetworkState(state);
+  // 刷新微博热搜（每3天）
+  if (state.player.day - state.socialNetwork.lastWeiboRefresh >= 3) {
+    refreshWeiboHotlist(state);
+  }
+
+  // 网红收入结算
+  calculateInfluencerIncome(state);
+
+  // 舆论危机衰减
+  if (state.socialNetwork.舆论危机.active) {
+    state.socialNetwork.舆论危机.daysRemaining--;
+    state.socialNetwork.舆论危机.severity = Math.max(
+      0,
+      state.socialNetwork.舆论危机.severity - 5,
+    );
+    if (state.socialNetwork.舆论危机.daysRemaining <= 0) {
+      state.socialNetwork.舆论危机.active = false;
+    }
+  }
+}
+
+// ====== 全局挂载 ======
+if (typeof window !== "undefined") {
+  window.createSocialNetworkState = createSocialNetworkState;
+  window.ensureSocialNetworkState = ensureSocialNetworkState;
+  window.postToMoments = postToMoments;
+  window.refreshWeiboHotlist = refreshWeiboHotlist;
+  window.npcPostFeed = npcPostFeed;
+  window.calculateInfluencerIncome = calculateInfluencerIncome;
+  window.triggerPublicOpinionCrisis = triggerPublicOpinionCrisis;
+  window.tickSocialNetwork = tickSocialNetwork;
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.social_network = {
+    id: "social_network",
+    name: "社交网络",
+    icon: "📱",
+    brief: "朋友圈、微博热搜、NPC动态、网红经济和舆论危机",
+    version: "1.0.0",
+    related: ["mechanics:npc_affinity", "mechanics:family_life"],
+    sections: [
+      {
+        kind: "desc",
+        text: "社交网络把玩家的日常发声、NPC动态、微博热搜和粉丝增长接入同一个系统。公开发布内容会消耗行动力，也可能带来粉丝增长。",
+      },
+      {
+        kind: "list",
+        items: [
+          "发朋友圈：消耗20点行动力，公开内容较完整时会增长少量粉丝",
+          "微博热搜：每3天自动刷新，也可在社交网络页手动刷新",
+          "NPC动态：事件或日常互动可写入动态流，保留最近50条",
+          "网红经济：粉丝达到100/1000/10000/100000后提升等级并产生日收入",
+          "舆论危机：负面事件可触发危机，严重度会每日衰减",
+        ],
+      },
+    ],
+  };
+}
 </script>
     <!-- v3.23: 内幕交易事件（风声/监管/道德抉择）-->
     <script>/**
@@ -50105,10 +50417,14 @@ if (typeof window !== "undefined") {
         stage: eraMod.stageId,
       };
       // 调度 era_events.js 中的交互事件（如果有）
-      if (typeof window !== 'undefined' && window.ERA_EVENTS && typeof scheduleChainEvent === 'function') {
+      if (
+        typeof window !== "undefined" &&
+        window.ERA_EVENTS &&
+        typeof scheduleChainEvent === "function"
+      ) {
         for (var ei = 0; ei < window.ERA_EVENTS.length; ei++) {
           if (window.ERA_EVENTS[ei].day === day) {
-            scheduleChainEvent(state, window.ERA_EVENTS[ei].id, 0, 'street');
+            scheduleChainEvent(state, window.ERA_EVENTS[ei].id, 0, "street");
             break;
           }
         }
@@ -53757,6 +54073,7 @@ function classifyRealNews(title, desc) {
 
 /**
  * 根据分类标签和市场情绪生成 investmentEffect（让实时新闻也能影响投资市场）
+ * v2.0 增强：覆盖更多行业标签，AI/科技新闻直接联动股票投资
  * @param {string} tag  - 分类标签
  * @param {string} mood - 市场情绪
  * @returns {Array} investmentEffect 数组
@@ -53764,7 +54081,6 @@ function classifyRealNews(title, desc) {
 function generateInvestmentEffectFromTag(tag, mood) {
   var isUp = mood === "bullish";
   var isDown = mood === "bearish";
-  // 按标签映射行业和乘数
   var map = {
     就业: { industry: "科技", up: 1.06, down: 0.92 },
     房产: { industry: "房地产", up: 1.08, down: 0.88 },
@@ -53785,12 +54101,21 @@ function generateInvestmentEffectFromTag(tag, mood) {
     新媒体: { industry: "科技", up: 1.06, down: 0.95 },
     租房: { industry: "房地产", up: 1.02, down: 0.96 },
     城市: { industry: "房地产", up: 1.04, down: 0.95 },
+    // v2.0 新增：AI/芯片/大模型 → 科技行业投资联动
+    AI: { industry: "科技", up: 1.15, down: 0.88 },
+    芯片: { industry: "科技", up: 1.18, down: 0.85 },
+    机器人: { industry: "科技", up: 1.12, down: 0.9 },
+    大数据: { industry: "科技", up: 1.1, down: 0.92 },
+    加密货币: { category: "虚拟币", up: 1.15, down: 0.8 },
+    黄金: { category: "贵金属", up: 1.08, down: 0.95 },
+    能源: { industry: "新能源", up: 1.12, down: 0.9 },
+    医疗: { industry: "医药", up: 1.08, down: 0.94 },
   };
   var entry = map[tag];
   if (!entry) return [];
   var mul = isUp ? entry.up : isDown ? entry.down : 1.0;
   if (mul === 1.0) return [];
-  return [{ industry: entry.industry, mul: mul }];
+  return [{ industry: entry.industry || null, category: entry.category || null, mul: mul }];
 }
 
 /**
@@ -54587,7 +54912,16 @@ function ensureDiversity(shuffled, month) {
 }
 
 // ============================================================
-//  三、世界参数应用
+//  三、世界参数应用（v2.0 — 深度联动增强）
+//  设计目标：开局新闻不只是"背景板"，每条新闻都要实际影响游戏系统
+//  联动维度：
+//    1. sectorHeat → 投资波动率/事件权重（已有）
+//    2. marketMood → 玩家初始心态/风险偏好（已有）
+//    3. jobBonus/jobPenalty → 工作收入加成/惩罚（新增）
+//    4. priceMod → 商品价格浮动（新增）
+//    5. skillXp → 技能经验加成（新增）
+//    6. cashBonus → 初始资金调整（新增）
+//    7. investmentEffect → 投资市场开盘价（已有但需强化）
 // ============================================================
 
 /**
@@ -54606,7 +54940,7 @@ function applyWorldNewsToParams(state, selectedNews) {
     var eff = news.worldEffect;
     if (!eff) continue;
 
-    // 应用行业热度
+    // 1. 应用行业热度（sectorHeat → 投资波动率 + 事件权重）
     if (eff.sectorHeat) {
       for (var sec in eff.sectorHeat) {
         if (eff.sectorHeat.hasOwnProperty(sec)) {
@@ -54621,13 +54955,57 @@ function applyWorldNewsToParams(state, selectedNews) {
       }
     }
 
-    // 统计市场情绪投票
+    // 2. 统计市场情绪投票
     if (eff.marketMood) {
       moodVotes[eff.marketMood] = (moodVotes[eff.marketMood] || 0) + 1;
     }
+
+    // 3. 应用工作加成/惩罚（jobBonus/jobPenalty → 工作收入）
+    if (eff.jobBonus && Array.isArray(eff.jobBonus)) {
+      state._introJobBonuses = state._introJobBonuses || {};
+      for (var ji = 0; ji < eff.jobBonus.length; ji++) {
+        var jb = eff.jobBonus[ji];
+        state._introJobBonuses[jb.id] = jb.mul || 1.1;
+      }
+    }
+    if (eff.jobPenalty && Array.isArray(eff.jobPenalty)) {
+      state._introJobBonuses = state._introJobBonuses || {};
+      for (var pj = 0; pj < eff.jobPenalty.length; pj++) {
+        var jp = eff.jobPenalty[pj];
+        state._introJobBonuses[jp] = (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+      }
+    }
+
+    // 4. 应用价格修正（priceMod → 商品市场）
+    if (eff.priceMod) {
+      state._introPriceMods = state._introPriceMods || {};
+      for (var pm in eff.priceMod) {
+        if (eff.priceMod.hasOwnProperty(pm)) {
+          state._introPriceMods[pm] = eff.priceMod[pm];
+        }
+      }
+    }
+
+    // 5. 应用技能经验加成（skillXp → 技能XP）
+    if (eff.skillXp) {
+      state._introSkillXp = state._introSkillXp || {};
+      for (var sk in eff.skillXp) {
+        if (eff.skillXp.hasOwnProperty(sk)) {
+          state._introSkillXp[sk] = eff.skillXp[sk];
+        }
+      }
+    }
+
+    // 6. 应用初始资金调整（cashBonus/cashLoss）
+    if (eff.cashBonus) {
+      state._introCashBonus = (state._introCashBonus || 0) + eff.cashBonus;
+    }
+    if (eff.cashLoss) {
+      state._introCashBonus = (state._introCashBonus || 0) - eff.cashLoss;
+    }
   }
 
-  // 决定最终市场情绪（多数投票）
+  // 7. 决定最终市场情绪（多数投票）
   var winningMood = "neutral";
   var maxVotes = 0;
   for (var mood in moodVotes) {
@@ -54638,6 +55016,112 @@ function applyWorldNewsToParams(state, selectedNews) {
   }
   wp.marketMood = winningMood;
   wp.seedSource = "world_news_intro";
+}
+
+/**
+ * 将开局新闻的直接影响应用到游戏状态（v2.0 新增）
+ * 在 applyWorldNewsToParams 之后调用，确保所有效果都已生效
+ * @param {Object} state - 游戏状态
+ * @param {Array} selectedNews - 选中的新闻条目
+ */
+function applyIntroNewsDirectEffects(state, selectedNews) {
+  if (!state || !selectedNews || selectedNews.length === 0) return;
+
+  // --- 1. 应用工作加成 ---
+  if (state._introJobBonuses) {
+    var jobBonusEntries = Object.keys(state._introJobBonuses);
+    if (jobBonusEntries.length > 0) {
+      state._worldJobModifiers = state._worldJobModifiers || {};
+      for (var jbi = 0; jbi < jobBonusEntries.length; jbi++) {
+        var jid = jobBonusEntries[jbi];
+        state._worldJobModifiers[jid] = (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
+      }
+    }
+  }
+
+  // --- 2. 应用价格修正 ---
+  if (state._introPriceMods) {
+    var priceModEntries = Object.keys(state._introPriceMods);
+    if (priceModEntries.length > 0) {
+      // 将价格修正应用到所有地点的商品价格
+      for (var pmi = 0; pmi < priceModEntries.length; pmi++) {
+        var goodId = priceModEntries[pmi];
+        var mod = state._introPriceMods[goodId];
+        if (mod !== 1.0) {
+          state._worldPriceMods = state._worldPriceMods || {};
+          state._worldPriceMods[goodId] = mod;
+        }
+      }
+    }
+  }
+
+  // --- 3. 应用技能经验加成 ---
+  if (state._introSkillXp) {
+    var skillXpEntries = Object.keys(state._introSkillXp);
+    if (skillXpEntries.length > 0 && state.skills) {
+      for (var ski = 0; ski < skillXpEntries.length; ski++) {
+        var sk = skillXpEntries[ski];
+        if (state.skills[sk]) {
+          state.skills[sk].xp = (state.skills[sk].xp || 0) + state._introSkillXp[sk];
+        }
+      }
+    }
+  }
+
+  // --- 4. 应用初始资金调整 ---
+  if (state._introCashBonus) {
+    state.resources.cash = (state.resources.cash || 0) + state._introCashBonus;
+  }
+
+  // --- 5. 应用投资市场开盘价修正 ---
+  if (state.investment && state.investment.stockMarket) {
+    for (var ni = 0; ni < selectedNews.length; ni++) {
+      var nn = selectedNews[ni];
+      if (!nn.investmentEffect || !Array.isArray(nn.investmentEffect)) continue;
+      var inv = state.investment;
+      var hasInvStocks = typeof INV_STOCKS !== "undefined";
+      if (!hasInvStocks) continue;
+
+      for (var ei = 0; ei < nn.investmentEffect.length; ei++) {
+        var rule = nn.investmentEffect[ei];
+        var mul = rule.mul || 1.0;
+        if (mul === 1.0) continue;
+
+        // 比特币专项
+        if (rule.btc && inv.btcPrice) {
+          inv.btcPrice = Math.max(1000, Math.round(inv.btcPrice * mul));
+          inv.btcFearGreed = Math.max(
+            5,
+            Math.min(95, (inv.btcFearGreed || 50) + (mul > 1 ? 15 : -15)),
+          );
+          continue;
+        }
+
+        for (var si = 0; si < INV_STOCKS.length; si++) {
+          var stock = INV_STOCKS[si];
+          var mkt = inv.stockMarket[stock.symbol];
+          if (!mkt) continue;
+
+          var hit = false;
+          if (rule.allStocks) hit = true;
+          if (rule.industry && stock.industry === rule.industry) hit = true;
+          if (rule.category && stock.category === rule.category) hit = true;
+          if (rule.symbols && rule.symbols.indexOf(stock.symbol) >= 0) hit = true;
+
+          if (hit) {
+            mkt.openPrice = mkt.price; // 记录开盘价
+            mkt.price = Math.max(0.01, Math.round(mkt.price * mul * 100) / 100);
+          }
+        }
+      }
+    }
+  }
+
+  // --- 清理临时数据 ---
+  delete state._introJobBonuses;
+  delete state._introPriceMods;
+  delete state._introSkillXp;
+  delete state._introCashBonus;
 }
 
 // ============================================================
@@ -55028,66 +55512,194 @@ function replaceLoadingWithNews(scenarioId, state, enterGame, realNews) {
 }
 
 /**
- * 应用新闻效果并进入游戏（统一回调）
+ * 应用新闻效果并进入游戏（统一回调 v2.0 — 深度联动）
  * 流程：
  *   1. 应用世界参数偏差（sectorHeat + marketMood）
- *   2. 将开局新闻注入 state.activeNews（让投资/价格/事件等引擎读取）
- *   3. 在消息日志写入氛围背景
- *   4. 进入游戏
+ *   2. 应用直接游戏效果（工作加成/价格修正/技能XP/资金调整/投资开盘价）
+ *   3. 将开局新闻注入 activeNews（让投资/价格/事件等引擎读取）
+ *   4. 在消息日志写入氛围背景 + 具体影响说明
+ *   5. 进入游戏
+ *
+ * v2.0 改动：
+ *   - 新闻的 investmentEffect/worldEffect/jobBonus/priceMod 全部实际生效
+ *   - activeNews 同时保留原始ID和 "intro_" 前缀ID，确保 news_driven_events.js 能匹配
+ *   - 每条新闻的影响都以消息形式告知玩家"这对你的打工生活意味着什么"
  */
 function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
   if (selectedNews && selectedNews.length > 0) {
+    // Step 1: 应用世界参数偏差
     applyWorldNewsToParams(state, selectedNews);
 
-    // ——— 将开局新闻注入 activeNews 队列 ———
-    // 让 news_investment_bridge / news_event_bridge / tickInvestmentDaily 等都能读取
+    // Step 2: 应用直接游戏效果（工作加成/价格修正/技能XP/资金/投资开盘价）
+    applyIntroNewsDirectEffects(state, selectedNews);
+
+    // Step 3: 将开局新闻注入 activeNews 队列
+    // 关键：同时保留原始ID和 "intro_" 前缀ID，确保所有下游系统都能匹配
     state.activeNews = state.activeNews || [];
+    var appliedNewsIds = [];
+
     for (var ai = 0; ai < selectedNews.length; ai++) {
       var nn = selectedNews[ai];
-      // 只有在有 investmentEffect 时才注入
-      if (!nn.investmentEffect || nn.investmentEffect.length === 0) continue;
-      // 检查是否已存在（防止重复注入）
-      var exists = false;
-      for (var ei = 0; ei < state.activeNews.length; ei++) {
-        if (state.activeNews[ei].id === "intro_" + nn.id) {
-          exists = true;
-          break;
+
+      // 构建完整的 effects 对象（合并 investmentEffect + worldEffect 中的 jobBonus/priceMod 等）
+      var combinedEffects = {};
+
+      // 投资市场联动
+      if (nn.investmentEffect && nn.investmentEffect.length > 0) {
+        combinedEffects.investmentEffect = nn.investmentEffect;
+      }
+
+      // 工作加成/惩罚
+      if (nn.worldEffect) {
+        if (nn.worldEffect.jobBonus) {
+          combinedEffects.jobBonus = nn.worldEffect.jobBonus;
+          combinedEffects.jobMultiplier = nn.worldEffect.jobMultiplier || 1.1;
+        }
+        if (nn.worldEffect.jobPenalty) {
+          combinedEffects.jobPenalty = nn.worldEffect.jobPenalty;
+          combinedEffects.jobMultiplier = nn.worldEffect.jobMultiplier || 0.7;
+        }
+        if (nn.worldEffect.allJobsBonus) {
+          combinedEffects.allJobsBonus = nn.worldEffect.allJobsBonus;
+        }
+        if (nn.worldEffect.priceMod) {
+          combinedEffects.priceMod = nn.worldEffect.priceMod;
+        }
+        if (nn.worldEffect.duration) {
+          combinedEffects.duration = nn.worldEffect.duration;
         }
       }
-      if (exists) continue;
-      state.activeNews.push({
-        id: "intro_" + nn.id,
+
+      // 如果没有可应用的 effects，仍然注入 headline
+      var entry = {
+        id: nn.id, // 使用原始ID — 让 news_driven_events.js 能直接匹配
         headline: nn.icon + nn.headline,
-        effects: {
-          investmentEffect: nn.investmentEffect,
-          duration: 365,
-        },
+        effects: combinedEffects.duration ? combinedEffects : { duration: 365 },
         _appliedDay: state.player ? state.player.day : 0,
         _isIntroNews: true,
+        _originalId: nn.id,
+        _tag: nn.tag || "社会",
+        _note: nn.worldEffect && nn.worldEffect.note ? nn.worldEffect.note : "",
+      };
+
+      state.activeNews.push(entry);
+      appliedNewsIds.push(nn.id);
+
+      // 也注入带前缀的版本（兼容旧代码）
+      var prefixedId = "intro_" + nn.id;
+      var alreadyExists = state.activeNews.some(function (an) {
+        return an.id === prefixedId;
       });
+      if (!alreadyExists) {
+        state.activeNews.push({
+          id: prefixedId,
+          headline: "📌 " + nn.headline,
+          effects: { duration: 365 },
+          _appliedDay: state.player ? state.player.day : 0,
+          _isIntroNews: true,
+          _originalId: nn.id,
+        });
+      }
     }
 
-    // 在消息日志里写入氛围背景
-    // 设计：在线模式（有实时新闻）→ 只显示实时头条，营造"世界正在发生"的沉浸感
-    //      离线模式（本地新闻）→ 显示世界参数初始化 + 时代背景，说明游戏世界已生成
+    // Step 4: 在消息日志写入氛围背景 + 具体影响说明
     var headlineList = selectedNews.map(function (n) {
       return n.icon + n.headline;
     });
+
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      var isRealTime = selectedNews[0]._isRealTime;
+      var isRealTime = selectedNews[0] && selectedNews[0]._isRealTime;
+
+      // 4a. 显示时代背景
       if (isRealTime) {
-        // 在线模式：实时新闻主导，不显示世界参数初始化消息
         StateManager.addMessage(
           "📺 实时头条·时代背景：" + headlineList.slice(0, 2).join(" | "),
           "event",
         );
       } else {
-        // 离线模式：显示世界参数初始化 + 本地时代背景
         StateManager.addMessage(
           "🌐 世界参数已随机初始化 | 📺 时代背景：" +
             headlineList.slice(0, 2).join(" | "),
           "event",
         );
+      }
+
+      // 4b. 显示每条新闻的具体游戏影响
+      for (var mi = 0; mi < selectedNews.length; mi++) {
+        var mn = selectedNews[mi];
+        var impactLines = [];
+
+        // 工作影响
+        if (mn.worldEffect && mn.worldEffect.jobBonus) {
+          impactLines.push("💼 工作：[" + mn.worldEffect.jobBonus.join(", ") + "] 收入×" + ((mn.worldEffect.jobMultiplier || 1.1)).toFixed(2));
+        }
+        if (mn.worldEffect && mn.worldEffect.jobPenalty) {
+          impactLines.push("💼 工作：[" + mn.worldEffect.jobPenalty.join(", ") + "] 收入×" + ((mn.worldEffect.jobMultiplier || 0.7)).toFixed(2));
+        }
+        if (mn.worldEffect && mn.worldEffect.allJobsBonus) {
+          impactLines.push("💼 所有工作收入 ×" + mn.worldEffect.allJobsBonus.toFixed(2));
+        }
+        // 价格影响
+        if (mn.worldEffect && mn.worldEffect.priceMod) {
+          var priceMods = [];
+          for (var pk in mn.worldEffect.priceMod) {
+            if (mn.worldEffect.priceMod.hasOwnProperty(pk)) {
+              var p = mn.worldEffect.priceMod[pk];
+              if (p > 1) priceMods.push(pk + " ↑" + ((p - 1) * 100).toFixed(0) + "%");
+              else if (p < 1) priceMods.push(pk + " ↓" + ((1 - p) * 100).toFixed(0) + "%");
+            }
+          }
+          if (priceMods.length > 0) impactLines.push("🛒 物价：" + priceMods.join(", "));
+        }
+        // 技能影响
+        if (mn.worldEffect && mn.worldEffect.skillXp) {
+          var skillXpLines = [];
+          for (var sk in mn.worldEffect.skillXp) {
+            if (mn.worldEffect.skillXp.hasOwnProperty(sk)) {
+              skillXpLines.push(sk + " +" + mn.worldEffect.skillXp[sk]);
+            }
+          }
+          if (skillXpLines.length > 0) impactLines.push("📚 技能：" + skillXpLines.join(", "));
+        }
+        // 资金影响
+        if (mn.worldEffect && mn.worldEffect.cashBonus) {
+          impactLines.push("💰 资金：+" + mn.worldEffect.cashBonus);
+        }
+        if (mn.worldEffect && mn.worldEffect.cashLoss) {
+          impactLines.push("💰 资金：-" + mn.worldEffect.cashLoss);
+        }
+        // 投资影响
+        if (mn.investmentEffect && mn.investmentEffect.length > 0) {
+          var invLines = [];
+          for (var ii = 0; ii < mn.investmentEffect.length; ii++) {
+            var ie = mn.investmentEffect[ii];
+            if (ie.industry) invLines.push(ie.industry + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.category) invLines.push(ie.category + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.symbols) invLines.push(ie.symbols.join(",") + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.allStocks) invLines.push("全市场 ×" + (ie.mul || 1).toFixed(2));
+            if (ie.btc) invLines.push("比特币 ×" + (ie.mul || 1).toFixed(2));
+          }
+          if (invLines.length > 0) impactLines.push("📈 投资：" + invLines.join(" | "));
+        }
+        // 行业热度
+        if (mn.worldEffect && mn.worldEffect.sectorHeat) {
+          var sectorLines = [];
+          for (var sec in mn.worldEffect.sectorHeat) {
+            if (mn.worldEffect.sectorHeat.hasOwnProperty(sec)) {
+              var sv = mn.worldEffect.sectorHeat[sec];
+              if (sv > 0) sectorLines.push(sec + " ↑" + (sv * 100).toFixed(0) + "%");
+              else sectorLines.push(sec + " ↓" + (sv * 100).toFixed(0) + "%");
+            }
+          }
+          if (sectorLines.length > 0) impactLines.push("🌍 行业：" + sectorLines.join(", "));
+        }
+
+        if (impactLines.length > 0) {
+          StateManager.addMessage(
+            "📌 " + mn.icon + " " + mn.headline + " → " + impactLines.join("；"),
+            "info",
+          );
+        }
       }
     }
   }
@@ -97765,6 +98377,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1: 社交网络系统（每日微博热搜/网红收入/舆论危机）===
+  {
+    name: "social_network_tick",
+    fn: function (state) {
+      if (typeof tickSocialNetwork === "function") {
+        tickSocialNetwork(state);
+      }
+    },
+  },
+
   // === Review P0-4：中产税事件 + P1-1：35岁危机 ===
   {
     name: "review_improvements_tick",
@@ -97805,7 +98427,11 @@ const DAILY_PIPELINE = [
   {
     name: "era_tick",
     fn: function (state) {
-      if (typeof window !== "undefined" && window.eraTransform && typeof window.eraTransform.tick === "function") {
+      if (
+        typeof window !== "undefined" &&
+        window.eraTransform &&
+        typeof window.eraTransform.tick === "function"
+      ) {
         window.eraTransform.tick(state);
       }
     },
@@ -149040,6 +149666,9 @@ function renderSocialTab(state, parent) {
     case "social_npc":
       renderNpcRelationships(state, content);
       break;
+    case "social_network":
+      renderSocialNetworkTab(state, content);
+      break;
     case "social_overview":
     default:
       renderSocialOverviewTab(state, content);
@@ -149136,6 +149765,84 @@ function renderSocialWorkplaceTab(state, parent) {
     parent.innerHTML =
       '<p style="color:var(--text-muted);padding:40px;text-align:center;">🏢 职场社交系统加载中...</p>';
   }
+}
+
+// ====== 社交网络子tab（朋友圈/围脖/网红经济） ======
+function renderSocialNetworkTab(state, parent) {
+  if (!state.socialNetwork) {
+    parent.innerHTML = '<p style="color:var(--text-muted);padding:40px;text-align:center;">📱 社交网络初始化中...</p>';
+    return;
+  }
+  var sn = state.socialNetwork;
+  var html = '<div class="tab-content">';
+
+  // 网红经济卡片
+  var levelNames = { none: "无等", micro: "微网红", medium: "中网红", large: "大网红", top: "顶流" };
+  var levelName = levelNames[sn.playerInfluencerLevel] || "无等";
+  var income = sn.influencerIncome || 0;
+  html += '<div class="section"><h3>🌟 网红经济</h3>';
+  html += '<div class="card" style="padding:12px;">';
+  html += '<p>👥 粉丝：<strong>' + (sn.playerFans || 0) + '</strong></p>';
+  html += '<p>🏅 等级：' + levelName + '</p>';
+  html += '<p>💰 日收入：¥' + income + '</p>';
+  if (sn.舆论危机 && sn.舆论危机.active) {
+    html += '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' + sn.舆论危机.severity + '）</p>';
+  }
+  html += '</div></div>';
+
+  // 围脖热搜
+  html += '<div class="section"><h3>🔥 围脖热搜</h3>';
+  if (sn.weiboHotlist && sn.weiboHotlist.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var hi = 0; hi < Math.min(5, sn.weiboHotlist.length); hi++) {
+      var hot = sn.weiboHotlist[hi];
+      html += '<div style="padding:4px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html += '<span style="font-weight:700;color:var(--danger);">#' + (hi + 1) + '</span> ';
+      html += '<span>' + (hot.title || '热门话题') + '</span>';
+      html += '<span style="color:var(--text-muted);margin-left:8px;">🔥' + (hot.heat || 0) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:11px;">暂无热搜，每日结算时自动刷新。</p>';
+  }
+  html += '</div>';
+
+  // 朋友圈动态
+  html += '<div class="section"><h3>📝 朋友圈动态</h3>';
+  if (sn.posts && sn.posts.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var pi = 0; pi < Math.min(3, sn.posts.length); pi++) {
+      var post = sn.posts[pi];
+      html += '<div style="padding:6px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html += '<p style="margin:0 0 2px 0;">' + (post.content || '') + '</p>';
+      html += '<p style="margin:0;color:var(--text-muted);font-size:10px;">❤️' + (post.likes ? post.likes.length : 0) + ' 💬' + (post.comments ? post.comments.length : 0) + '</p>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:11px;">暂无朋友圈动态。</p>';
+  }
+  html += '</div>';
+
+  // NPC动态
+  html += '<div class="section"><h3>👤 NPC动态</h3>';
+  if (sn.npcFeeds && sn.npcFeeds.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var fi = 0; fi < Math.min(3, sn.npcFeeds.length); fi++) {
+      var feed = sn.npcFeeds[fi];
+      html += '<div style="padding:4px 0;font-size:11px;">';
+      html += '<p style="margin:0;">' + (feed.content || '') + '</p>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<p style="color:var(--text-muted);font-size:11px;">暂无NPC动态。</p>';
+  }
+  html += '</div>';
+
+  html += '</div>';
+  parent.innerHTML = html;
 }
 </script>
     <script>﻿/**
@@ -157513,6 +158220,11 @@ function startNewGame() {
   // v3.1 第41轮：初始化人生抉择系统
   if (typeof initLifeDecisions === "function") {
     initLifeDecisions(StateManager.getState());
+  }
+
+  // v3.1: 初始化社交网络系统
+  if (typeof ensureSocialNetworkState === "function") {
+    ensureSocialNetworkState(StateManager.getState());
   }
 
   // 世界参数反馈环：开局种子（尝试拉取真实市场数据，失败则随机）

@@ -1387,6 +1387,7 @@ function classifyRealNews(title, desc) {
 
 /**
  * 根据分类标签和市场情绪生成 investmentEffect（让实时新闻也能影响投资市场）
+ * v2.0 增强：覆盖更多行业标签，AI/科技新闻直接联动股票投资
  * @param {string} tag  - 分类标签
  * @param {string} mood - 市场情绪
  * @returns {Array} investmentEffect 数组
@@ -1394,7 +1395,6 @@ function classifyRealNews(title, desc) {
 function generateInvestmentEffectFromTag(tag, mood) {
   var isUp = mood === "bullish";
   var isDown = mood === "bearish";
-  // 按标签映射行业和乘数
   var map = {
     就业: { industry: "科技", up: 1.06, down: 0.92 },
     房产: { industry: "房地产", up: 1.08, down: 0.88 },
@@ -1415,12 +1415,27 @@ function generateInvestmentEffectFromTag(tag, mood) {
     新媒体: { industry: "科技", up: 1.06, down: 0.95 },
     租房: { industry: "房地产", up: 1.02, down: 0.96 },
     城市: { industry: "房地产", up: 1.04, down: 0.95 },
+    // v2.0 新增：AI/芯片/大模型 → 科技行业投资联动
+    AI: { industry: "科技", up: 1.15, down: 0.88 },
+    芯片: { industry: "科技", up: 1.18, down: 0.85 },
+    机器人: { industry: "科技", up: 1.12, down: 0.9 },
+    大数据: { industry: "科技", up: 1.1, down: 0.92 },
+    加密货币: { category: "虚拟币", up: 1.15, down: 0.8 },
+    黄金: { category: "贵金属", up: 1.08, down: 0.95 },
+    能源: { industry: "新能源", up: 1.12, down: 0.9 },
+    医疗: { industry: "医药", up: 1.08, down: 0.94 },
   };
   var entry = map[tag];
   if (!entry) return [];
   var mul = isUp ? entry.up : isDown ? entry.down : 1.0;
   if (mul === 1.0) return [];
-  return [{ industry: entry.industry, mul: mul }];
+  return [
+    {
+      industry: entry.industry || null,
+      category: entry.category || null,
+      mul: mul,
+    },
+  ];
 }
 
 /**
@@ -2217,7 +2232,16 @@ function ensureDiversity(shuffled, month) {
 }
 
 // ============================================================
-//  三、世界参数应用
+//  三、世界参数应用（v2.0 — 深度联动增强）
+//  设计目标：开局新闻不只是"背景板"，每条新闻都要实际影响游戏系统
+//  联动维度：
+//    1. sectorHeat → 投资波动率/事件权重（已有）
+//    2. marketMood → 玩家初始心态/风险偏好（已有）
+//    3. jobBonus/jobPenalty → 工作收入加成/惩罚（新增）
+//    4. priceMod → 商品价格浮动（新增）
+//    5. skillXp → 技能经验加成（新增）
+//    6. cashBonus → 初始资金调整（新增）
+//    7. investmentEffect → 投资市场开盘价（已有但需强化）
 // ============================================================
 
 /**
@@ -2236,7 +2260,7 @@ function applyWorldNewsToParams(state, selectedNews) {
     var eff = news.worldEffect;
     if (!eff) continue;
 
-    // 应用行业热度
+    // 1. 应用行业热度（sectorHeat → 投资波动率 + 事件权重）
     if (eff.sectorHeat) {
       for (var sec in eff.sectorHeat) {
         if (eff.sectorHeat.hasOwnProperty(sec)) {
@@ -2251,13 +2275,58 @@ function applyWorldNewsToParams(state, selectedNews) {
       }
     }
 
-    // 统计市场情绪投票
+    // 2. 统计市场情绪投票
     if (eff.marketMood) {
       moodVotes[eff.marketMood] = (moodVotes[eff.marketMood] || 0) + 1;
     }
+
+    // 3. 应用工作加成/惩罚（jobBonus/jobPenalty → 工作收入）
+    if (eff.jobBonus && Array.isArray(eff.jobBonus)) {
+      state._introJobBonuses = state._introJobBonuses || {};
+      for (var ji = 0; ji < eff.jobBonus.length; ji++) {
+        var jb = eff.jobBonus[ji];
+        state._introJobBonuses[jb.id] = jb.mul || 1.1;
+      }
+    }
+    if (eff.jobPenalty && Array.isArray(eff.jobPenalty)) {
+      state._introJobBonuses = state._introJobBonuses || {};
+      for (var pj = 0; pj < eff.jobPenalty.length; pj++) {
+        var jp = eff.jobPenalty[pj];
+        state._introJobBonuses[jp] =
+          (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+      }
+    }
+
+    // 4. 应用价格修正（priceMod → 商品市场）
+    if (eff.priceMod) {
+      state._introPriceMods = state._introPriceMods || {};
+      for (var pm in eff.priceMod) {
+        if (eff.priceMod.hasOwnProperty(pm)) {
+          state._introPriceMods[pm] = eff.priceMod[pm];
+        }
+      }
+    }
+
+    // 5. 应用技能经验加成（skillXp → 技能XP）
+    if (eff.skillXp) {
+      state._introSkillXp = state._introSkillXp || {};
+      for (var sk in eff.skillXp) {
+        if (eff.skillXp.hasOwnProperty(sk)) {
+          state._introSkillXp[sk] = eff.skillXp[sk];
+        }
+      }
+    }
+
+    // 6. 应用初始资金调整（cashBonus/cashLoss）
+    if (eff.cashBonus) {
+      state._introCashBonus = (state._introCashBonus || 0) + eff.cashBonus;
+    }
+    if (eff.cashLoss) {
+      state._introCashBonus = (state._introCashBonus || 0) - eff.cashLoss;
+    }
   }
 
-  // 决定最终市场情绪（多数投票）
+  // 7. 决定最终市场情绪（多数投票）
   var winningMood = "neutral";
   var maxVotes = 0;
   for (var mood in moodVotes) {
@@ -2268,6 +2337,115 @@ function applyWorldNewsToParams(state, selectedNews) {
   }
   wp.marketMood = winningMood;
   wp.seedSource = "world_news_intro";
+}
+
+/**
+ * 将开局新闻的直接影响应用到游戏状态（v2.0 新增）
+ * 在 applyWorldNewsToParams 之后调用，确保所有效果都已生效
+ * @param {Object} state - 游戏状态
+ * @param {Array} selectedNews - 选中的新闻条目
+ */
+function applyIntroNewsDirectEffects(state, selectedNews) {
+  if (!state || !selectedNews || selectedNews.length === 0) return;
+
+  // --- 1. 应用工作加成 ---
+  if (state._introJobBonuses) {
+    var jobBonusEntries = Object.keys(state._introJobBonuses);
+    if (jobBonusEntries.length > 0) {
+      state._worldJobModifiers = state._worldJobModifiers || {};
+      for (var jbi = 0; jbi < jobBonusEntries.length; jbi++) {
+        var jid = jobBonusEntries[jbi];
+        state._worldJobModifiers[jid] =
+          (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
+      }
+    }
+  }
+
+  // --- 2. 应用价格修正 ---
+  if (state._introPriceMods) {
+    var priceModEntries = Object.keys(state._introPriceMods);
+    if (priceModEntries.length > 0) {
+      // 将价格修正应用到所有地点的商品价格
+      for (var pmi = 0; pmi < priceModEntries.length; pmi++) {
+        var goodId = priceModEntries[pmi];
+        var mod = state._introPriceMods[goodId];
+        if (mod !== 1.0) {
+          state._worldPriceMods = state._worldPriceMods || {};
+          state._worldPriceMods[goodId] = mod;
+        }
+      }
+    }
+  }
+
+  // --- 3. 应用技能经验加成 ---
+  if (state._introSkillXp) {
+    var skillXpEntries = Object.keys(state._introSkillXp);
+    if (skillXpEntries.length > 0 && state.skills) {
+      for (var ski = 0; ski < skillXpEntries.length; ski++) {
+        var sk = skillXpEntries[ski];
+        if (state.skills[sk]) {
+          state.skills[sk].xp =
+            (state.skills[sk].xp || 0) + state._introSkillXp[sk];
+        }
+      }
+    }
+  }
+
+  // --- 4. 应用初始资金调整 ---
+  if (state._introCashBonus) {
+    state.resources.cash = (state.resources.cash || 0) + state._introCashBonus;
+  }
+
+  // --- 5. 应用投资市场开盘价修正 ---
+  if (state.investment && state.investment.stockMarket) {
+    for (var ni = 0; ni < selectedNews.length; ni++) {
+      var nn = selectedNews[ni];
+      if (!nn.investmentEffect || !Array.isArray(nn.investmentEffect)) continue;
+      var inv = state.investment;
+      var hasInvStocks = typeof INV_STOCKS !== "undefined";
+      if (!hasInvStocks) continue;
+
+      for (var ei = 0; ei < nn.investmentEffect.length; ei++) {
+        var rule = nn.investmentEffect[ei];
+        var mul = rule.mul || 1.0;
+        if (mul === 1.0) continue;
+
+        // 比特币专项
+        if (rule.btc && inv.btcPrice) {
+          inv.btcPrice = Math.max(1000, Math.round(inv.btcPrice * mul));
+          inv.btcFearGreed = Math.max(
+            5,
+            Math.min(95, (inv.btcFearGreed || 50) + (mul > 1 ? 15 : -15)),
+          );
+          continue;
+        }
+
+        for (var si = 0; si < INV_STOCKS.length; si++) {
+          var stock = INV_STOCKS[si];
+          var mkt = inv.stockMarket[stock.symbol];
+          if (!mkt) continue;
+
+          var hit = false;
+          if (rule.allStocks) hit = true;
+          if (rule.industry && stock.industry === rule.industry) hit = true;
+          if (rule.category && stock.category === rule.category) hit = true;
+          if (rule.symbols && rule.symbols.indexOf(stock.symbol) >= 0)
+            hit = true;
+
+          if (hit) {
+            mkt.openPrice = mkt.price; // 记录开盘价
+            mkt.price = Math.max(0.01, Math.round(mkt.price * mul * 100) / 100);
+          }
+        }
+      }
+    }
+  }
+
+  // --- 清理临时数据 ---
+  delete state._introJobBonuses;
+  delete state._introPriceMods;
+  delete state._introSkillXp;
+  delete state._introCashBonus;
 }
 
 // ============================================================
@@ -2658,66 +2836,224 @@ function replaceLoadingWithNews(scenarioId, state, enterGame, realNews) {
 }
 
 /**
- * 应用新闻效果并进入游戏（统一回调）
+ * 应用新闻效果并进入游戏（统一回调 v2.0 — 深度联动）
  * 流程：
  *   1. 应用世界参数偏差（sectorHeat + marketMood）
- *   2. 将开局新闻注入 state.activeNews（让投资/价格/事件等引擎读取）
- *   3. 在消息日志写入氛围背景
- *   4. 进入游戏
+ *   2. 应用直接游戏效果（工作加成/价格修正/技能XP/资金调整/投资开盘价）
+ *   3. 将开局新闻注入 activeNews（让投资/价格/事件等引擎读取）
+ *   4. 在消息日志写入氛围背景 + 具体影响说明
+ *   5. 进入游戏
+ *
+ * v2.0 改动：
+ *   - 新闻的 investmentEffect/worldEffect/jobBonus/priceMod 全部实际生效
+ *   - activeNews 同时保留原始ID和 "intro_" 前缀ID，确保 news_driven_events.js 能匹配
+ *   - 每条新闻的影响都以消息形式告知玩家"这对你的打工生活意味着什么"
  */
 function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
   if (selectedNews && selectedNews.length > 0) {
+    // Step 1: 应用世界参数偏差
     applyWorldNewsToParams(state, selectedNews);
 
-    // ——— 将开局新闻注入 activeNews 队列 ———
-    // 让 news_investment_bridge / news_event_bridge / tickInvestmentDaily 等都能读取
+    // Step 2: 应用直接游戏效果（工作加成/价格修正/技能XP/资金/投资开盘价）
+    applyIntroNewsDirectEffects(state, selectedNews);
+
+    // Step 3: 将开局新闻注入 activeNews 队列
+    // 关键：同时保留原始ID和 "intro_" 前缀ID，确保所有下游系统都能匹配
     state.activeNews = state.activeNews || [];
+    var appliedNewsIds = [];
+
     for (var ai = 0; ai < selectedNews.length; ai++) {
       var nn = selectedNews[ai];
-      // 只有在有 investmentEffect 时才注入
-      if (!nn.investmentEffect || nn.investmentEffect.length === 0) continue;
-      // 检查是否已存在（防止重复注入）
-      var exists = false;
-      for (var ei = 0; ei < state.activeNews.length; ei++) {
-        if (state.activeNews[ei].id === "intro_" + nn.id) {
-          exists = true;
-          break;
+
+      // 构建完整的 effects 对象（合并 investmentEffect + worldEffect 中的 jobBonus/priceMod 等）
+      var combinedEffects = {};
+
+      // 投资市场联动
+      if (nn.investmentEffect && nn.investmentEffect.length > 0) {
+        combinedEffects.investmentEffect = nn.investmentEffect;
+      }
+
+      // 工作加成/惩罚
+      if (nn.worldEffect) {
+        if (nn.worldEffect.jobBonus) {
+          combinedEffects.jobBonus = nn.worldEffect.jobBonus;
+          combinedEffects.jobMultiplier = nn.worldEffect.jobMultiplier || 1.1;
+        }
+        if (nn.worldEffect.jobPenalty) {
+          combinedEffects.jobPenalty = nn.worldEffect.jobPenalty;
+          combinedEffects.jobMultiplier = nn.worldEffect.jobMultiplier || 0.7;
+        }
+        if (nn.worldEffect.allJobsBonus) {
+          combinedEffects.allJobsBonus = nn.worldEffect.allJobsBonus;
+        }
+        if (nn.worldEffect.priceMod) {
+          combinedEffects.priceMod = nn.worldEffect.priceMod;
+        }
+        if (nn.worldEffect.duration) {
+          combinedEffects.duration = nn.worldEffect.duration;
         }
       }
-      if (exists) continue;
-      state.activeNews.push({
-        id: "intro_" + nn.id,
+
+      // 如果没有可应用的 effects，仍然注入 headline
+      var entry = {
+        id: nn.id, // 使用原始ID — 让 news_driven_events.js 能直接匹配
         headline: nn.icon + nn.headline,
-        effects: {
-          investmentEffect: nn.investmentEffect,
-          duration: 365,
-        },
+        effects: combinedEffects.duration ? combinedEffects : { duration: 365 },
         _appliedDay: state.player ? state.player.day : 0,
         _isIntroNews: true,
+        _originalId: nn.id,
+        _tag: nn.tag || "社会",
+        _note: nn.worldEffect && nn.worldEffect.note ? nn.worldEffect.note : "",
+      };
+
+      state.activeNews.push(entry);
+      appliedNewsIds.push(nn.id);
+
+      // 也注入带前缀的版本（兼容旧代码）
+      var prefixedId = "intro_" + nn.id;
+      var alreadyExists = state.activeNews.some(function (an) {
+        return an.id === prefixedId;
       });
+      if (!alreadyExists) {
+        state.activeNews.push({
+          id: prefixedId,
+          headline: "📌 " + nn.headline,
+          effects: { duration: 365 },
+          _appliedDay: state.player ? state.player.day : 0,
+          _isIntroNews: true,
+          _originalId: nn.id,
+        });
+      }
     }
 
-    // 在消息日志里写入氛围背景
-    // 设计：在线模式（有实时新闻）→ 只显示实时头条，营造"世界正在发生"的沉浸感
-    //      离线模式（本地新闻）→ 显示世界参数初始化 + 时代背景，说明游戏世界已生成
+    // Step 4: 在消息日志写入氛围背景 + 具体影响说明
     var headlineList = selectedNews.map(function (n) {
       return n.icon + n.headline;
     });
+
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      var isRealTime = selectedNews[0]._isRealTime;
+      var isRealTime = selectedNews[0] && selectedNews[0]._isRealTime;
+
+      // 4a. 显示时代背景
       if (isRealTime) {
-        // 在线模式：实时新闻主导，不显示世界参数初始化消息
         StateManager.addMessage(
           "📺 实时头条·时代背景：" + headlineList.slice(0, 2).join(" | "),
           "event",
         );
       } else {
-        // 离线模式：显示世界参数初始化 + 本地时代背景
         StateManager.addMessage(
           "🌐 世界参数已随机初始化 | 📺 时代背景：" +
             headlineList.slice(0, 2).join(" | "),
           "event",
         );
+      }
+
+      // 4b. 显示每条新闻的具体游戏影响
+      for (var mi = 0; mi < selectedNews.length; mi++) {
+        var mn = selectedNews[mi];
+        var impactLines = [];
+
+        // 工作影响
+        if (mn.worldEffect && mn.worldEffect.jobBonus) {
+          impactLines.push(
+            "💼 工作：[" +
+              mn.worldEffect.jobBonus.join(", ") +
+              "] 收入×" +
+              (mn.worldEffect.jobMultiplier || 1.1).toFixed(2),
+          );
+        }
+        if (mn.worldEffect && mn.worldEffect.jobPenalty) {
+          impactLines.push(
+            "💼 工作：[" +
+              mn.worldEffect.jobPenalty.join(", ") +
+              "] 收入×" +
+              (mn.worldEffect.jobMultiplier || 0.7).toFixed(2),
+          );
+        }
+        if (mn.worldEffect && mn.worldEffect.allJobsBonus) {
+          impactLines.push(
+            "💼 所有工作收入 ×" + mn.worldEffect.allJobsBonus.toFixed(2),
+          );
+        }
+        // 价格影响
+        if (mn.worldEffect && mn.worldEffect.priceMod) {
+          var priceMods = [];
+          for (var pk in mn.worldEffect.priceMod) {
+            if (mn.worldEffect.priceMod.hasOwnProperty(pk)) {
+              var p = mn.worldEffect.priceMod[pk];
+              if (p > 1)
+                priceMods.push(pk + " ↑" + ((p - 1) * 100).toFixed(0) + "%");
+              else if (p < 1)
+                priceMods.push(pk + " ↓" + ((1 - p) * 100).toFixed(0) + "%");
+            }
+          }
+          if (priceMods.length > 0)
+            impactLines.push("🛒 物价：" + priceMods.join(", "));
+        }
+        // 技能影响
+        if (mn.worldEffect && mn.worldEffect.skillXp) {
+          var skillXpLines = [];
+          for (var sk in mn.worldEffect.skillXp) {
+            if (mn.worldEffect.skillXp.hasOwnProperty(sk)) {
+              skillXpLines.push(sk + " +" + mn.worldEffect.skillXp[sk]);
+            }
+          }
+          if (skillXpLines.length > 0)
+            impactLines.push("📚 技能：" + skillXpLines.join(", "));
+        }
+        // 资金影响
+        if (mn.worldEffect && mn.worldEffect.cashBonus) {
+          impactLines.push("💰 资金：+" + mn.worldEffect.cashBonus);
+        }
+        if (mn.worldEffect && mn.worldEffect.cashLoss) {
+          impactLines.push("💰 资金：-" + mn.worldEffect.cashLoss);
+        }
+        // 投资影响
+        if (mn.investmentEffect && mn.investmentEffect.length > 0) {
+          var invLines = [];
+          for (var ii = 0; ii < mn.investmentEffect.length; ii++) {
+            var ie = mn.investmentEffect[ii];
+            if (ie.industry)
+              invLines.push(ie.industry + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.category)
+              invLines.push(ie.category + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.symbols)
+              invLines.push(
+                ie.symbols.join(",") + " ×" + (ie.mul || 1).toFixed(2),
+              );
+            if (ie.allStocks)
+              invLines.push("全市场 ×" + (ie.mul || 1).toFixed(2));
+            if (ie.btc) invLines.push("比特币 ×" + (ie.mul || 1).toFixed(2));
+          }
+          if (invLines.length > 0)
+            impactLines.push("📈 投资：" + invLines.join(" | "));
+        }
+        // 行业热度
+        if (mn.worldEffect && mn.worldEffect.sectorHeat) {
+          var sectorLines = [];
+          for (var sec in mn.worldEffect.sectorHeat) {
+            if (mn.worldEffect.sectorHeat.hasOwnProperty(sec)) {
+              var sv = mn.worldEffect.sectorHeat[sec];
+              if (sv > 0)
+                sectorLines.push(sec + " ↑" + (sv * 100).toFixed(0) + "%");
+              else sectorLines.push(sec + " ↓" + (sv * 100).toFixed(0) + "%");
+            }
+          }
+          if (sectorLines.length > 0)
+            impactLines.push("🌍 行业：" + sectorLines.join(", "));
+        }
+
+        if (impactLines.length > 0) {
+          StateManager.addMessage(
+            "📌 " +
+              mn.icon +
+              " " +
+              mn.headline +
+              " → " +
+              impactLines.join("；"),
+            "info",
+          );
+        }
       }
     }
   }

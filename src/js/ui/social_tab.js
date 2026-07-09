@@ -217,6 +217,9 @@ function renderSocialTab(state, parent) {
     case "social_npc":
       renderNpcRelationships(state, content);
       break;
+    case "social_network":
+      renderSocialNetworkTab(state, content);
+      break;
     case "social_overview":
     default:
       renderSocialOverviewTab(state, content);
@@ -313,4 +316,108 @@ function renderSocialWorkplaceTab(state, parent) {
     parent.innerHTML =
       '<p style="color:var(--text-muted);padding:40px;text-align:center;">🏢 职场社交系统加载中...</p>';
   }
+}
+
+// ====== 社交网络子tab（朋友圈/围脖/网红经济） ======
+function renderSocialNetworkTab(state, parent) {
+  if (!state.socialNetwork) {
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">📱 社交网络初始化中...</p>';
+    return;
+  }
+  var sn = state.socialNetwork;
+  var html = '<div class="tab-content">';
+
+  // 网红经济卡片
+  var levelNames = {
+    none: "无等",
+    micro: "微网红",
+    medium: "中网红",
+    large: "大网红",
+    top: "顶流",
+  };
+  var levelName = levelNames[sn.playerInfluencerLevel] || "无等";
+  var income = sn.influencerIncome || 0;
+  html += '<div class="section"><h3>🌟 网红经济</h3>';
+  html += '<div class="card" style="padding:12px;">';
+  html += "<p>👥 粉丝：<strong>" + (sn.playerFans || 0) + "</strong></p>";
+  html += "<p>🏅 等级：" + levelName + "</p>";
+  html += "<p>💰 日收入：¥" + income + "</p>";
+  if (sn.舆论危机 && sn.舆论危机.active) {
+    html +=
+      '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' +
+      sn.舆论危机.severity +
+      "）</p>";
+  }
+  html += "</div></div>";
+
+  // 围脖热搜
+  html += '<div class="section"><h3>🔥 围脖热搜</h3>';
+  if (sn.weiboHotlist && sn.weiboHotlist.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var hi = 0; hi < Math.min(5, sn.weiboHotlist.length); hi++) {
+      var hot = sn.weiboHotlist[hi];
+      html +=
+        '<div style="padding:4px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html +=
+        '<span style="font-weight:700;color:var(--danger);">#' +
+        (hi + 1) +
+        "</span> ";
+      html += "<span>" + (hot.title || "热门话题") + "</span>";
+      html +=
+        '<span style="color:var(--text-muted);margin-left:8px;">🔥' +
+        (hot.heat || 0) +
+        "</span>";
+      html += "</div>";
+    }
+    html += "</div>";
+  } else {
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无热搜，每日结算时自动刷新。</p>';
+  }
+  html += "</div>";
+
+  // 朋友圈动态
+  html += '<div class="section"><h3>📝 朋友圈动态</h3>';
+  if (sn.posts && sn.posts.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var pi = 0; pi < Math.min(3, sn.posts.length); pi++) {
+      var post = sn.posts[pi];
+      html +=
+        '<div style="padding:6px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html += '<p style="margin:0 0 2px 0;">' + (post.content || "") + "</p>";
+      html +=
+        '<p style="margin:0;color:var(--text-muted);font-size:10px;">❤️' +
+        (post.likes ? post.likes.length : 0) +
+        " 💬" +
+        (post.comments ? post.comments.length : 0) +
+        "</p>";
+      html += "</div>";
+    }
+    html += "</div>";
+  } else {
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无朋友圈动态。</p>';
+  }
+  html += "</div>";
+
+  // NPC动态
+  html += '<div class="section"><h3>👤 NPC动态</h3>';
+  if (sn.npcFeeds && sn.npcFeeds.length > 0) {
+    html += '<div class="card" style="padding:8px;">';
+    for (var fi = 0; fi < Math.min(3, sn.npcFeeds.length); fi++) {
+      var feed = sn.npcFeeds[fi];
+      html += '<div style="padding:4px 0;font-size:11px;">';
+      html += '<p style="margin:0;">' + (feed.content || "") + "</p>";
+      html += "</div>";
+    }
+    html += "</div>";
+  } else {
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无NPC动态。</p>';
+  }
+  html += "</div>";
+
+  html += "</div>";
+  parent.innerHTML = html;
 }

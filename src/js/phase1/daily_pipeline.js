@@ -1342,6 +1342,16 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1: 社交网络系统（每日微博热搜/网红收入/舆论危机）===
+  {
+    name: "social_network_tick",
+    fn: function (state) {
+      if (typeof tickSocialNetwork === "function") {
+        tickSocialNetwork(state);
+      }
+    },
+  },
+
   // === Review P0-4：中产税事件 + P1-1：35岁危机 ===
   {
     name: "review_improvements_tick",

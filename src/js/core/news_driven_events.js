@@ -7,6 +7,10 @@
  *   - 峰终定律：新闻事件的峰值情感体验创造记忆锚点
  *   - 损失厌恶：参与/不参与都有不同后果，没有绝对正确的选择
  *
+ * v2.0 改动：
+ *   - 新增 _hasNewsId() 辅助函数，自动匹配原始ID和 "intro_" 前缀ID
+ *   - 确保开局新闻也能触发叙事事件
+ *
  * 设计参考：This War of Mine 情景事件 / Papers Please 每日报纸 / 大多数 新闻回应
  *
  * 接入方式：与 cross_system_events.js 同样采用 IIFE 注入 RANDOM_EVENTS
@@ -15,6 +19,19 @@
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._newsDrivenLoaded) return;
   RANDOM_EVENTS._newsDrivenLoaded = true;
+
+  /**
+   * 检查 activeNews 中是否存在指定新闻ID
+   * v2.0：自动支持原始ID和 "intro_" 前缀ID
+   */
+  function _hasNewsId(activeNews, targetId) {
+    if (!activeNews || !Array.isArray(activeNews)) return false;
+    for (var i = 0; i < activeNews.length; i++) {
+      var nid = activeNews[i].id || "";
+      if (nid === targetId || nid === "intro_" + targetId) return true;
+    }
+    return false;
+  }
 
   var NEWS_EVENTS = [
     // ====== 建筑行业新闻驱动事件 ======
@@ -26,15 +43,10 @@
       story:
         "新闻里说建筑行业大热，到处都在招人。今天你在工地上亲眼看到一个工友从脚手架上滑了下来——好在只擦破了皮。包工头让人赶紧把他扶走，压低声音说：「别声张，继续干。」\n\n你想起新闻里热火朝天的画面，和眼前的现实形成了对比。",
       conditions: function (st) {
-        if (!st.activeNews || st.activeNews.length === 0) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          if (
-            st.activeNews[ci].id === "construction_boom" ||
-            st.activeNews[ci].id === "urban_renewal_pilot"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "construction_boom") ||
+          _hasNewsId(st.activeNews, "urban_renewal_pilot")
+        );
       },
       probability: 0.03,
       repeatable: false,
@@ -88,11 +100,7 @@
       story:
         "新闻里说流感高峰到了、医院人满为患。今天你路过医院，发现走廊里全是加床，咳嗽声此起彼伏。\n\n护士台前排着长队，一个护士看见你，跑过来问：「你是来看病的还是来帮忙的？我们实在忙不过来了。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var fi = 0; fi < st.activeNews.length; fi++) {
-          if (st.activeNews[fi].id === "flu_surge") return true;
-        }
-        return false;
+        return _hasNewsId(st.activeNews, "flu_surge");
       },
       probability: 0.035,
       repeatable: false,
@@ -149,15 +157,11 @@
       story:
         "你刚在手机新闻里看到「租房市场全面紧张，租金飙涨」，房东就来敲门了。\n\n「小伙子，你也看到了，现在行情就是这样。下个月起，房租涨¥200。你要是接受不了，我也没办法——后面排队要租的人多的是。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ri = 0; ri < st.activeNews.length; ri++) {
-          if (
-            st.activeNews[ri].id === "rental_crisis" ||
-            st.activeNews[ri].id === "population_inflow"
-          )
-            return true;
-        }
-        return st.housing && st.housing.tier > 0 && st.housing.tier < 4;
+        return (
+          _hasNewsId(st.activeNews, "rental_crisis") ||
+          _hasNewsId(st.activeNews, "population_inflow") ||
+          (st.housing && st.housing.tier > 0 && st.housing.tier < 4)
+        );
       },
       probability: 0.04,
       repeatable: false,
@@ -224,15 +228,10 @@
       story:
         "新闻里说科技大厂裁员潮来了，互联网行业经历寒冬。\n\n今天你在城中村碰到几个年轻人，在小卖部门口贴了一张手写告示：「大厂被裁，手把手教编程——¥50/节，包教包会。」\n\n其中一个戴黑框眼镜的看了你一眼：「兄弟，要不要学一手？以前进大厂才用得上的技术。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ti = 0; ti < st.activeNews.length; ti++) {
-          if (
-            st.activeNews[ti].id === "tech_layoff" ||
-            st.activeNews[ti].id === "tech_layoff_echo"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "tech_layoff") ||
+          _hasNewsId(st.activeNews, "tech_layoff_echo")
+        );
       },
       probability: 0.035,
       repeatable: false,
@@ -300,9 +299,12 @@
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ci = 0; ci < st.activeNews.length; ci++) {
+          var nid = st.activeNews[ci].id || "";
           if (
-            st.activeNews[ci].id === "crackdown" ||
-            st.activeNews[ci].id === "chengguan_special_op"
+            nid === "crackdown" ||
+            nid === "intro_crackdown" ||
+            nid === "chengguan_special_op" ||
+            nid === "intro_chengguan_special_op"
           )
             return true;
         }
@@ -386,9 +388,12 @@
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ei = 0; ei < st.activeNews.length; ei++) {
+          var nid = st.activeNews[ei].id || "";
           if (
-            st.activeNews[ei].id === "e_commerce_festival" ||
-            st.activeNews[ei].id === "sea_double_11"
+            nid === "e_commerce_festival" ||
+            nid === "intro_e_commerce_festival" ||
+            nid === "sea_double_11" ||
+            nid === "intro_sea_double_11"
           )
             return true;
         }
@@ -468,9 +473,12 @@
       conditions: function (st) {
         if (!st.activeNews) return false;
         for (var ci = 0; ci < st.activeNews.length; ci++) {
+          var nid = st.activeNews[ci].id || "";
           if (
-            st.activeNews[ci].id === "cold_wave" ||
-            st.activeNews[ci].id === "winter_heating"
+            nid === "cold_wave" ||
+            nid === "intro_cold_wave" ||
+            nid === "winter_heating" ||
+            nid === "intro_winter_heating"
           )
             return true;
         }
@@ -537,17 +545,21 @@
       conditions: function (st) {
         if (!st.activeNews) return false;
         var hasEcoNews = false;
+        var ecoIds = [
+          "eco_small_biz_hard",
+          "eco_deflation_worry",
+          "tech_layoff",
+          "global_recession_fear",
+        ];
         for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id;
-          if (
-            nid === "eco_small_biz_hard" ||
-            nid === "eco_deflation_worry" ||
-            nid === "tech_layoff" ||
-            nid === "global_recession_fear"
-          ) {
-            hasEcoNews = true;
-            break;
+          var nid = st.activeNews[ei].id || "";
+          for (var ei2 = 0; ei2 < ecoIds.length; ei2++) {
+            if (nid === ecoIds[ei2] || nid === "intro_" + ecoIds[ei2]) {
+              hasEcoNews = true;
+              break;
+            }
           }
+          if (hasEcoNews) break;
         }
         return hasEcoNews && st.player.day >= 10;
       },
