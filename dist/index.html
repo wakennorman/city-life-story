@@ -41229,6 +41229,246 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====== v3.60 联动事件 ×3（多重技能联动+位置深度+熟客经济）======
+
+  // 1. 多重技能协同：cooking≥20 + sales≥10 → 餐馆老板提议合作开分店
+  // 【设计意图】填补"多重技能组合门槛"空白——不是单一技能检查，而是技能组合协同效应
+  RANDOM_EVENTS.push({
+    id: "skill_synergy_restaurant_offer",
+    phase: "street",
+    icon: "🍳",
+    title: "老板想合伙",
+    story:
+      "你常去的那家小炒店里，老板老黄端着两杯茶坐下来。\n" +
+      "「我观察你很久了——你懂吃，又会跟客人聊天。我这家店生意一直不错，但一个人撑太累了。」\n" +
+      "他压低声音：「我在对面街看中一个铺面，想开分店。你出手艺+管店，我出钱+供应链，五五分。」",
+    conditions: function (st) {
+      // 烹饪≥20 且 销售≥10 → 双重门槛协同
+      var cooking = st.skills && st.skills.cooking && st.skills.cooking.level;
+      var sales = st.skills && st.skills.sales && st.skills.sales.level;
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 30 &&
+        (cooking || 0) >= 20 &&
+        (sales || 0) >= 10 &&
+        !st.flags._skillSynergyRestaurantSeen
+      );
+    },
+    probability: 0.015,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接受合伙！我来管店",
+        hint: "获得稳定分红+技能成长",
+        apply: function (st) {
+          st.flags._skillSynergyRestaurantSeen = true;
+          st.flags._restaurantPartner = true;
+          var invest = 3000;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - invest);
+          st.fame = Math.min(100, (st.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
+          // 烹饪和销售技能同步成长
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 40;
+          }
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 30;
+          }
+          StateManager.addMessage(
+            "🤝 你出了¥" +
+              invest +
+              "当押金，正式成为合伙人。\n" +
+              "老黄拍着你肩膀：「我看人不会错。」声望+8，心智+5，烹饪经验+40，销售经验+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 我经验还不够，怕拖累你",
+        hint: "婉拒，技能仍获认可",
+        apply: function (st) {
+          st.flags._skillSynergyRestaurantSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15;
+          }
+          StateManager.addMessage(
+            "😅 你诚实地说自己还欠火候。老黄点点头：「有自知之明的人，迟早能成事。」\n烹饪经验+15，心情+8，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 2. 银行位置深度事件：存款≥5000 → 客户经理推荐VIP理财 + 贷款额度
+  // 【设计意图】银行位置只有 bank_promo 事件，缺少"有存款后的VIP待遇"叙事
+  RANDOM_EVENTS.push({
+    id: "bank_vip_treatment",
+    phase: "street",
+    icon: "🏦",
+    title: "VIP客户室",
+    story:
+      "你走进银行办业务，大堂经理看了一眼你的叫号单，忽然压低声音：\n" +
+      "「先生/女士，您在我们行的日均存款已超过¥5000，可以进VIP室办理。」\n" +
+      "你被请进一间有沙发和饮水机的小房间。客户经理递上一张名片：\n" +
+      "「我们有一款新出的VIP理财，年化4.2%，额度有限。另外您的信用记录可以申请¥30,000以内的消费贷，利率优惠。」",
+    conditions: function (st) {
+      // 在银行且存款≥5000（达标VIP门槛）
+      var bankBalance = st.resources && st.resources.bankBalance;
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 20 &&
+        (bankBalance || 0) >= 5000 &&
+        !st.flags._bankVipSeen
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 买¥5000理财（年化4.2%）",
+        hint: "30天后增值，中风险",
+        cost: 5000,
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.flags._bankVipInvested = true;
+          st.flags._bankVipDay = st.player.day;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage(
+            "💰 你买了¥5000的VIP理财，30天后本息共计¥5210到账。\n" +
+              "客户经理笑着说：「有眼光。」心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 了解一下贷款额度",
+        hint: "信用记录+，了解贷款条件",
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.flags._bankVipLoanKnown = true;
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          StateManager.addMessage(
+            "📋 客户经理详细解释了贷款条件：¥30,000以内，月息0.45%，随借随还。\n" +
+              "你心里有底了——缺钱的时候知道该找谁。心智+2，心情+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 存钱只是为了安全，不搞这些",
+        hint: "保守，但心里踏实",
+        apply: function (st) {
+          st.flags._bankVipSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          StateManager.addMessage(
+            "🚶 你谢过经理，在普通窗口办完业务就走了。\n" +
+              "VIP室里的沙发确实舒服——但你知道，真正的安全感来自于卡里的数字，而不是理财产品的承诺。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 3. 熟客经济：长期在同一地点购买（actionFreq ≥10）→ 老板主动打折+赊账
+  // 【设计意图】填补"消费行为积累"空白——游戏记录 actionFreq 但从未用于叙事
+  RANDOM_EVENTS.push({
+    id: "regular_customer_discount",
+    phase: "street",
+    icon: "🛒",
+    title: "老主顾的优待",
+    story:
+      "你走进那家经常光顾的小店，老板抬头看见你，熟稔地招呼：\n" +
+      "「又来啦？今天新到了一批好货，我给你留着呢。」\n" +
+      "他压低声音：「其他人我卖¥15，你给¥10就行——老主顾了。」\n" +
+      "你经常来这儿买东西，老板都认得你了。",
+    conditions: function (st) {
+      // 检查 trade 行动频次是否≥10（在任何地点累计购买）
+      var freq = st.stats && st.stats.actionFreq;
+      var totalTrade = 0;
+      if (freq) {
+        for (var k in freq) {
+          // 累加所有交易类行动（buy/start_business/food_stall等）
+          if (k.indexOf("buy") >= 0 || k.indexOf("trade") >= 0) {
+            totalTrade += freq[k] || 0;
+          }
+        }
+      }
+      return (
+        st.player &&
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        totalTrade >= 10 &&
+        !st.flags._regularDiscountSeen
+      );
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "👍 谢了老板！那我多买点",
+        hint: "打折购物，好感+",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 10;
+          }
+          StateManager.addMessage(
+            "👍 你多挑了几样东西，老板果然按¥10算了。\n" +
+              "走的时候他还塞了一把葱：「拿回去下面吃！」声望+2，心情+8，销售经验+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 老板记着账，月底一起结",
+        hint: "赊账，月底自动扣",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.flags._regularCredit = true;
+          st.flags._regularCreditDay = st.player.day;
+          StateManager.addMessage(
+            "🙏 老板爽快答应：「行，月底再说。你常来，我信得过。」\n" +
+              "在这座城市，能被一个人信任的感觉真好。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😊 跟老板聊几句再走",
+        hint: "好感+，可能获得情报",
+        apply: function (st) {
+          st.flags._regularDiscountSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 20) + 1);
+          if (Random.chance(0.3)) {
+            st.flags._regularShopTip = true;
+            StateManager.addMessage(
+              "😊 你跟老板聊了会儿天，他无意中透露：「听说对面那条街要开夜市了，\n" +
+                "摊位费前三个月免费。」这可能是个机会！心情+5，心智+1。",
+              "event",
+            );
+          } else {
+            StateManager.addMessage(
+              "😊 你跟老板聊了会儿天，才知道他也是外地来的，在这条街干了八年。\n" +
+                "他说：「这城市啊，待久了就是家了。」心情+5。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
