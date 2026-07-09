@@ -75,6 +75,47 @@ const SCENARIOS = [
       text: "天刚亮，你摸出手机——3%的电。弟弟昨晚发了条语音，你犹豫了三秒，点开。\n\n「哥……学校说下学期学费要提前交……¥800……妈说等你消息……」\n\n他在哭。你听完，把手机锁上。\n\n旁边的四川大叔没睁眼，翻了个身说：「工地六点招日工，去晚了就满了。」\n\n口袋里¥300，胃在绞着疼。你站起来，抖掉纸板上的灰。",
       effects: { mental: -5, happiness: -10 },
     },
+    // 开局天赋池（随机抽1个，增加重玩性）
+    talents: [
+      {
+        id: "strong_back",
+        name: "力大无穷",
+        icon: "🦾",
+        desc: "天生力气大，体质+10，搬运和体力活更顺手",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 10);
+        },
+      },
+      {
+        id: "nimble_worker",
+        name: "手脚麻利",
+        icon: "⚡",
+        desc: "动作快人一步，敏捷+10，每天能多干一点",
+        apply: function (s) {
+          s.player.agility = Math.min(100, s.player.agility + 10);
+        },
+      },
+      {
+        id: "fellow_guide",
+        name: "老乡指路",
+        icon: "🤝",
+        desc: "有老乡介绍工头联系方式，魅力+5，心情+15",
+        apply: function (s) {
+          s.player.charm = Math.min(100, s.player.charm + 5);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 15);
+        },
+      },
+      {
+        id: "desperation_drive",
+        name: "破釜沉舟",
+        icon: "🔥",
+        desc: "没有退路反而激出韧性，能力+12，道德感+3",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 12);
+          s.player.morality = Math.min(100, s.player.morality + 3);
+        },
+      },
+    ],
   },
 
   // ====== 下岗再就业者 ======
@@ -125,6 +166,52 @@ const SCENARIOS = [
       text: "你最后一次从这扇铁门走出去。门卫老李没说话，拍了拍你的肩膀。那张蓝色工牌跟了你十五年，颜色都磨白了，现在装进信封里了。\n\n手机震：张梅发来消息——「学费的事记得，¥8500，下月15号截止」\n\n你存款够还贷、够撑三个月，但够不了你想要的那种活法。\n\n这双茧子，值多少钱——你自己定。",
       effects: { mental: -3, happiness: -8 },
     },
+    talents: [
+      {
+        id: "veteran_craftsman",
+        name: "老师傅",
+        icon: "🔧",
+        desc: "手艺比同期工人都强，维修技能+12",
+        apply: function (s) {
+          if (s.skills.repair)
+            s.skills.repair.level = Math.min(100, s.skills.repair.level + 12);
+        },
+      },
+      {
+        id: "wide_connections",
+        name: "人脉广",
+        icon: "🤝",
+        desc: "工厂里认识的人多，名声+10，魅力+5",
+        apply: function (s) {
+          s.player.fame = Math.min(100, s.player.fame + 10);
+          s.player.charm = Math.min(100, s.player.charm + 5);
+        },
+      },
+      {
+        id: "resilient_spirit",
+        name: "越挫越勇",
+        icon: "💪",
+        desc: "人到中年历过风浪，能力+12，健康+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 12);
+          s.status.health = Math.min(100, s.status.health + 5);
+        },
+      },
+      {
+        id: "skilled_electrician",
+        name: "电工一把手",
+        icon: "⚙️",
+        desc: "电工经验扎实，电工技能+10，体质+3",
+        apply: function (s) {
+          if (s.skills.electrician)
+            s.skills.electrician.level = Math.min(
+              100,
+              s.skills.electrician.level + 10,
+            );
+          s.player.physique = Math.min(100, s.player.physique + 3);
+        },
+      },
+    ],
   },
 
   // ====== 小镇做题家 ======
@@ -175,6 +262,50 @@ const SCENARIOS = [
       text: "手机震动。父亲发来一张照片——村里公示栏，上面贴着你的毕业证复印件。配文：「村里人都说你有出息。好好干，咱家的债你别操心。」\n\n你盯着那张照片，打开计算器。¥12000村债+¥8000助学贷款，光利息每月¥300。你现在的工资扣掉房租，不够还利息。\n\n你给他回了两个字：「嗯嗯。」",
       effects: { happiness: -8, mental: 3 },
     },
+    talents: [
+      {
+        id: "top_student",
+        name: "全县第一",
+        icon: "📚",
+        desc: "智力比同龄人高出一截，智力+10",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 10);
+        },
+      },
+      {
+        id: "competition_award",
+        name: "竞赛获奖",
+        icon: "🏆",
+        desc: "大学参加竞赛拿过奖，编程技能+12",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
+        },
+      },
+      {
+        id: "scholarship_record",
+        name: "奖学金记录",
+        icon: "🎓",
+        desc: "大学拿过奖学金，银行存款+¥2000，等于还了部分债",
+        apply: function (s) {
+          s.resources.bankBalance = (s.resources.bankBalance || 0) + 2000;
+        },
+      },
+      {
+        id: "note_master",
+        name: "笔记达人",
+        icon: "📝",
+        desc: "学习方法好有条理，能力+8，会计技能+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 8);
+          if (s.skills.accounting)
+            s.skills.accounting.level = Math.min(
+              100,
+              s.skills.accounting.level + 5,
+            );
+        },
+      },
+    ],
   },
 
   // ====== 外来打工者 ======
@@ -220,6 +351,46 @@ const SCENARIOS = [
       text: "铁架床吱呀响。你给妈妈发消息，她问：「儿子，那边冷不冷？」\n你打：「不冷，工资很高，你安心等手术，我很快凑到钱。」\n\n你没说的是：¥18000，按现在日薪算，要九十天不吃不喝才够。手术日期是三个月后。\n\n你数了数汇率，关灯，盯着天花板，算了一遍又一遍。",
       effects: { mental: 5, happiness: -8 },
     },
+    talents: [
+      {
+        id: "tough_body",
+        name: "苦出身",
+        icon: "💪",
+        desc: "从小吃苦练就的体魄，体质+12",
+        apply: function (s) {
+          s.player.physique = Math.min(100, s.player.physique + 12);
+        },
+      },
+      {
+        id: "social_butterfly",
+        name: "自来熟",
+        icon: "🤝",
+        desc: "天生会和人打交道，魅力+10，心情+5",
+        apply: function (s) {
+          s.player.charm = Math.min(100, s.player.charm + 10);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+        },
+      },
+      {
+        id: "packed_extra",
+        name: "多带了点",
+        icon: "📦",
+        desc: "行李比别人装得多，背包容量+10",
+        apply: function (s) {
+          s.inventory.capacity = (s.inventory.capacity || 20) + 10;
+        },
+      },
+      {
+        id: "iron_will",
+        name: "拼命三郎",
+        icon: "🔥",
+        desc: "为了妈妈手术费什么苦都能吃，能力+10，敏捷+3",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.player.agility = Math.min(100, s.player.agility + 3);
+        },
+      },
+    ],
   },
 
   // ====== 二代创业者 ======
@@ -270,6 +441,51 @@ const SCENARIOS = [
       text: "你坐在共享工位上，手机银行显示¥150000。隔壁桌的人在谈融资轮次，你一个词都没听懂。\n\n你打开新文档，标题敲了三个字：商业计划——然后盯着光标闪了十分钟。\n\n你想起父亲那句话：「够你败两年。」\n\n他连「搏」都懒得说。",
       effects: { mental: -5, happiness: -5, fame: 8 },
     },
+    talents: [
+      {
+        id: "elite_education",
+        name: "名校光环",
+        icon: "🎓",
+        desc: "一线名校出来的，智力+8，名声+8",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 8);
+          s.player.fame = Math.min(100, s.player.fame + 8);
+        },
+      },
+      {
+        id: "secret_funds",
+        name: "私藏零花",
+        icon: "💰",
+        desc: "父亲给的是明账，还有自己藏着的¥8000",
+        apply: function (s) {
+          s.resources.cash += 8000;
+        },
+      },
+      {
+        id: "drivers_network",
+        name: "好车好人脉",
+        icon: "🚗",
+        desc: "常年社交圈子好，驾驶技能+12，名声+5",
+        apply: function (s) {
+          if (s.skills.driving)
+            s.skills.driving.level = Math.min(100, s.skills.driving.level + 12);
+          s.player.fame = Math.min(100, s.player.fame + 5);
+        },
+      },
+      {
+        id: "business_sense",
+        name: "商业眼光",
+        icon: "👔",
+        desc: "从小耳濡目染，管理技能+12",
+        apply: function (s) {
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 12,
+            );
+        },
+      },
+    ],
   },
 
   // ====== 中年危机职场人 ======
@@ -320,6 +536,52 @@ const SCENARIOS = [
       text: "你抱着纸箱走出写字楼。电梯里有个实习生，礼貌地往旁边挪了一步。\n\n手机震：「招商银行：您本月房贷将于明日扣款¥14500，请确保余额充足。」\n\n卡里现在¥15300，扣完¥800。\n\n老婆又发来消息：「到楼下了吗？我接你。」\n\n你没动，盯着那条扣款提醒，想到今天面了三个猎头——工资都比现在低40%。\n\n不知道该不该告诉她。",
       effects: { mental: -8, happiness: -10 },
     },
+    talents: [
+      {
+        id: "code_veteran",
+        name: "代码老兵",
+        icon: "💾",
+        desc: "十几年代码写下来，编程技能+12",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 12);
+        },
+      },
+      {
+        id: "office_fox",
+        name: "职场老狐狸",
+        icon: "🦊",
+        desc: "摸清了所有套路，管理+10，销售+5",
+        apply: function (s) {
+          if (s.skills.management)
+            s.skills.management.level = Math.min(
+              100,
+              s.skills.management.level + 10,
+            );
+          if (s.skills.sales)
+            s.skills.sales.level = Math.min(100, s.skills.sales.level + 5);
+        },
+      },
+      {
+        id: "emergency_fund",
+        name: "私房钱",
+        icon: "💰",
+        desc: "多年工作攒下的私人小金库，现金+¥8000",
+        apply: function (s) {
+          s.resources.cash += 8000;
+        },
+      },
+      {
+        id: "weathered_wisdom",
+        name: "见过大风浪",
+        icon: "🧘",
+        desc: "职场沉浮过来的，能力+12，心情+10",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 12);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+        },
+      },
+    ],
   },
 
   // ====== 应届毕业生（扩展剧本） ======
@@ -370,6 +632,47 @@ const SCENARIOS = [
       text: "你在备忘录里新建文档：「每月收支」。\n月薪4200，扣五险到手约3600。\n房租1100，通勤约300，吃饭500……\n\n你算到第三行，停下来了。\n\n剩¥1700，但父母那¥8000还没算，助学贷款每月¥680还没开始还。\n\n你关掉备忘录，打开外卖App，看了看最便宜的¥9.9，关掉了——去便利店买了包榨菜。",
       effects: { mental: 3, happiness: -10 },
     },
+    talents: [
+      {
+        id: "academic_excellence",
+        name: "学霸",
+        icon: "📚",
+        desc: "大学GPA拔尖，智力+10",
+        apply: function (s) {
+          s.player.intelligence = Math.min(100, s.player.intelligence + 10);
+        },
+      },
+      {
+        id: "social_butterfly_grad",
+        name: "社牛",
+        icon: "🎤",
+        desc: "大学人缘超好，魅力+10，心情+5",
+        apply: function (s) {
+          s.player.charm = Math.min(100, s.player.charm + 10);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 5);
+        },
+      },
+      {
+        id: "internet_native",
+        name: "互联网原住民",
+        icon: "💻",
+        desc: "从小玩电脑，编程技能+10",
+        apply: function (s) {
+          if (s.skills.coding)
+            s.skills.coding.level = Math.min(100, s.skills.coding.level + 10);
+        },
+      },
+      {
+        id: "fearless_rookie",
+        name: "初生牛犊",
+        icon: "🔥",
+        desc: "什么都不怕，能力+10，敏捷+5",
+        apply: function (s) {
+          s.player.mental = Math.min(100, s.player.mental + 10);
+          s.player.agility = Math.min(100, s.player.agility + 5);
+        },
+      },
+    ],
   },
 ];
 

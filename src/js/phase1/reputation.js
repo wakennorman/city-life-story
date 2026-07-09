@@ -214,6 +214,7 @@ function getLocationName(locKey) {
     government: "政府办事大厅",
     temple: "寺庙",
     nightMarket: "夜市",
+    vegetable_market: "菜市场",
     beach: "海滩",
   };
   return fallback[locKey] || locKey;

@@ -76,6 +76,11 @@ const LOCATION_GOODS_TAGS = {
     scarce: [],
     desc: "教育区，商品交易有限",
   },
+  vegetable_market: {
+    specialties: ["vegetables", "fruits", "cooking_oil", "rice", "salt"],
+    scarce: ["electronics", "clothing", "cigarettes"],
+    desc: "食材批发价，日用品偏贵",
+  },
 };
 
 /** 获取商品在某地的供需标签 (specialty/scarce/normal) */

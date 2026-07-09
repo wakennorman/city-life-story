@@ -760,6 +760,27 @@ function startScenarioGame(scenarioId) {
     state.trade.currentLocation = scenario.startLocation;
   }
 
+  // --- v3.54 命运浮动：属性 ±15%、现金 ±15%（底线70%基础值）---
+  var _svKeys = ["physique", "intelligence", "agility", "mental", "charm"];
+  for (var _svi = 0; _svi < _svKeys.length; _svi++) {
+    var _svk = _svKeys[_svi];
+    if (typeof state.player[_svk] === "number") {
+      var _svf = 1 + (Math.random() * 2 - 1) * 0.15;
+      state.player[_svk] = Math.round(
+        Math.max(1, Math.min(100, state.player[_svk] * _svf)),
+      );
+    }
+  }
+  var _cashBase = state.resources.cash;
+  var _cashF = 1 + (Math.random() * 2 - 1) * 0.15;
+  state.resources.cash = Math.round(
+    Math.max(Math.floor(_cashBase * 0.7), _cashBase * _cashF),
+  );
+  // 健康 ±5
+  state.status.health = Math.round(
+    Math.max(1, Math.min(99, state.status.health + (Math.random() * 10 - 5))),
+  );
+
   // --- 剧本标记 ---
   state.flags._scenarioId = scenarioId;
   state.flags._currentScenario = scenarioId; // v3.3 W2-T3: 开局链用
@@ -801,6 +822,25 @@ function startScenarioGame(scenarioId) {
         }
       }
     }
+  }
+
+  // --- v3.54 隐藏天赋：从剧本天赋池随机抽1个，应用效果并展示 ---
+  if (scenario.talents && scenario.talents.length > 0) {
+    var _tIdx = Math.floor(Math.random() * scenario.talents.length);
+    var _picked = scenario.talents[_tIdx];
+    if (typeof _picked.apply === "function") {
+      _picked.apply(state);
+    }
+    state.flags._talent = {
+      id: _picked.id,
+      name: _picked.name,
+      icon: _picked.icon,
+      desc: _picked.desc,
+    };
+    StateManager.addMessage(
+      "✨ 今日天赋：" + _picked.icon + " " + _picked.name + "——" + _picked.desc,
+      "event",
+    );
   }
 
   // === v3.0 P2-B-2 + P2-E-1：难度系统 + 传承币解锁（仅在玩家选择后生效）===

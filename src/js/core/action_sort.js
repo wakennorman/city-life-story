@@ -195,6 +195,18 @@
       "appliance",
     ],
 
+    // 🥬 菜市场：购物 → 短期工作 → 生存必需 → 学习 → 社交 → 金融 → 职业 → 服务
+    vegetable_market: [
+      "shopping",
+      "work",
+      "survival",
+      "education",
+      "social",
+      "finance",
+      "career",
+      "appliance",
+    ],
+
     // 🏡 郊区：生存必需 → 短期工作 → 购物 → 学习 → 社交 → 金融 → 职业 → 服务
     suburb: [
       "survival",
