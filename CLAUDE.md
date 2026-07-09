@@ -156,7 +156,18 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-09)**：v3.63b — 多剧本适配审查 + getNextGoals 补全
+- **最新一次工作 (2026-07-09)**：v3.65(loop R26) — 指令一扫描0真实A类(2候选已被另窗口独立修复) + 新增4个空白区联动事件
+  - **指令一审查结论**：全量扫描5个事件文件(250+事件)，发现2个A类候选均已被另一窗口独立修复( startup_meet_coder天气+edu_crash家教 )，0真实A类缺陷
+  - **指令二新增事件**：4个高潜力空白区填充
+    - `snow_night_scrap_deal` — ❄️雪天+废品站+老周好感(填补snow天气事件空白)
+    - `cert_first_job_bonus` — 🎓证书首次兑现+链式90天回报(填补教育系统事件空白)
+    - `oldzhou_affinity_max_heritage` — 🤝好感100传家级人脉线(填补NPC终极奖励空白)
+    - `trading_supply_demand_gap` — 📦市场供需套利vs人情(填补交易动态事件空白)
+  - **影响文件**：cross_system_events.js(+329行) / linkage-events-gdd.md(+57行)
+  - **验证**：node --check ✅ / build.py 5885.2KB ✅
+  - **commit**：`70fdaa6a` + `6f25d9b3`（本地待推）
+
+- **上一轮工作 (2026-07-09)**：v3.63b — 多剧本适配审查 + getNextGoals 补全
   - **审计范围**：7 个剧本 × 全部事件/UI/系统文件（RANDOM_EVENTS/tutorial/daily_quest/career_dev/startup/save/render/world_news）
   - **审计结论**：全剧本适配良好，无重大断裂
   - **修复**：`main.js getNextGoals` 补全 2 个遗漏剧本专属目标
