@@ -44756,8 +44756,10 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说建筑行业大热，到处都在招人。今天你在工地上亲眼看到一个工友从脚手架上滑了下来——好在只擦破了皮。包工头让人赶紧把他扶走，压低声音说：「别声张，继续干。」\n\n你想起新闻里热火朝天的画面，和眼前的现实形成了对比。",
       conditions: function (st) {
-        return _hasNewsId(st.activeNews, "construction_boom") ||
-               _hasNewsId(st.activeNews, "urban_renewal_pilot");
+        return (
+          _hasNewsId(st.activeNews, "construction_boom") ||
+          _hasNewsId(st.activeNews, "urban_renewal_pilot")
+        );
       },
       probability: 0.03,
       repeatable: false,
@@ -44868,9 +44870,11 @@ if (typeof window !== "undefined") {
       story:
         "你刚在手机新闻里看到「租房市场全面紧张，租金飙涨」，房东就来敲门了。\n\n「小伙子，你也看到了，现在行情就是这样。下个月起，房租涨¥200。你要是接受不了，我也没办法——后面排队要租的人多的是。」",
       conditions: function (st) {
-        return _hasNewsId(st.activeNews, "rental_crisis") ||
-               _hasNewsId(st.activeNews, "population_inflow") ||
-               (st.housing && st.housing.tier > 0 && st.housing.tier < 4);
+        return (
+          _hasNewsId(st.activeNews, "rental_crisis") ||
+          _hasNewsId(st.activeNews, "population_inflow") ||
+          (st.housing && st.housing.tier > 0 && st.housing.tier < 4)
+        );
       },
       probability: 0.04,
       repeatable: false,
@@ -44937,16 +44941,10 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说科技大厂裁员潮来了，互联网行业经历寒冬。\n\n今天你在城中村碰到几个年轻人，在小卖部门口贴了一张手写告示：「大厂被裁，手把手教编程——¥50/节，包教包会。」\n\n其中一个戴黑框眼镜的看了你一眼：「兄弟，要不要学一手？以前进大厂才用得上的技术。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ti = 0; ti < st.activeNews.length; ti++) {
-          var nid = st.activeNews[ti].id || "";
-          if (
-            nid === "tech_layoff" || nid === "intro_tech_layoff" ||
-            nid === "tech_layoff_echo" || nid === "intro_tech_layoff_echo"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "tech_layoff") ||
+          _hasNewsId(st.activeNews, "tech_layoff_echo")
+        );
       },
       probability: 0.035,
       repeatable: false,
@@ -45012,16 +45010,10 @@ if (typeof window !== "undefined") {
       story:
         "你刚在新闻里看到「城管严查摆摊」的消息，今天就撞上了现场。\n\n街口几个摆摊的小贩慌乱地收摊，一个卖烤红薯的大爷跑不及，三轮车被扣住了。大爷蹲在路边默默抽烟，手在微微发抖。旁边几个小贩围过来低声商量办法。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          var nid = st.activeNews[ci].id || "";
-          if (
-            nid === "crackdown" || nid === "intro_crackdown" ||
-            nid === "chengguan_special_op" || nid === "intro_chengguan_special_op"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "crackdown") ||
+          _hasNewsId(st.activeNews, "chengguan_special_op")
+        );
       },
       probability: 0.04,
       repeatable: false,
@@ -45099,16 +45091,10 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说电商大促节物流爆仓，快递站包裹堆成山。你刚好路过，站长满头大汗在门口招人：「日结¥300！干到晚上12点！谁来？」\n\n广播里不断播着「距离截单还有3小时」，快递员们像蚂蚁一样忙碌。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id || "";
-          if (
-            nid === "e_commerce_festival" || nid === "intro_e_commerce_festival" ||
-            nid === "sea_double_11" || nid === "intro_sea_double_11"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "e_commerce_festival") ||
+          _hasNewsId(st.activeNews, "sea_double_11")
+        );
       },
       probability: 0.05,
       repeatable: true,
@@ -45182,16 +45168,10 @@ if (typeof window !== "undefined") {
       story:
         "新闻说寒潮来袭，气温骤降。深夜收工回家路上，你看到天桥下一个流浪老人蜷缩在纸箱里，冻得直哆嗦。\n\n风很大，街上几乎没有人。你站在不远处，犹豫着。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          var nid = st.activeNews[ci].id || "";
-          if (
-            nid === "cold_wave" || nid === "intro_cold_wave" ||
-            nid === "winter_heating" || nid === "intro_winter_heating"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "cold_wave") ||
+          _hasNewsId(st.activeNews, "winter_heating")
+        );
       },
       probability: 0.03,
       repeatable: false,
@@ -45252,22 +45232,16 @@ if (typeof window !== "undefined") {
       story:
         "新闻里说经济下行压力大，小生意难做。身边的工友老刘愁眉苦脸：「厂里订单少了，这周只排了两天班。」\n\n他问你：「听说你在搞副业？有没有路子？我什么都能干。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        var hasEcoNews = false;
         var ecoIds = [
-          "eco_small_biz_hard", "eco_deflation_worry", "tech_layoff", "global_recession_fear"
+          "eco_small_biz_hard",
+          "eco_deflation_worry",
+          "tech_layoff",
+          "global_recession_fear",
         ];
-        for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id || "";
-          for (var ei2 = 0; ei2 < ecoIds.length; ei2++) {
-            if (nid === ecoIds[ei2] || nid === "intro_" + ecoIds[ei2]) {
-              hasEcoNews = true;
-              break;
-            }
-          }
-          if (hasEcoNews) break;
+        for (var ei = 0; ei < ecoIds.length; ei++) {
+          if (_hasNewsId(st.activeNews, ecoIds[ei])) return st.player.day >= 10;
         }
-        return hasEcoNews && st.player.day >= 10;
+        return false;
       },
       probability: 0.03,
       repeatable: false,
@@ -50532,6 +50506,214 @@ if (typeof window !== "undefined") {
   }
 })();
 </script>
+    <!-- v3.1: 经济平衡调参（累进财富税/动态利率/难度收入曲线）-->
+    <script>// ============================================================
+// economy_v3.1.js — 城市浮生记 经济系统 v3.1 改进
+// ============================================================
+// v3.0 审查问题修复:
+//   B1: 中后期指数膨胀 → 多级累进闸门
+//   B2: 村长债利率对老玩家无效 → 动态利率
+//   B4: 财富税 ¥20万阈值过低 → 多级累进税
+//   B5: 难度只调惩罚不调收益 → 收益曲线调节
+// ============================================================
+
+const EconomySystem = (function () {
+  "use strict";
+
+  // ============================================================
+  // 1. 多级累进财富税系统 (修复 B4)
+  // ============================================================
+  // v3.0 问题: 单一 ¥20万阈值, 高端玩家(¥500万+)几乎无感
+  // v3.1 改进: 四级累进阈值, 边际税率递增
+
+  const WEALTH_TAX_THRESHOLDS = [
+    { min: 200000, max: 500000, rate: 0.0003, label: "入门税" }, // 日 0.03%
+    { min: 500000, max: 2000000, rate: 0.0005, label: "中产税" }, // 日 0.05%
+    { min: 2000000, max: 10000000, rate: 0.0008, label: "精英税" }, // 日 0.08%
+    { min: 10000000, max: Infinity, rate: 0.0012, label: "富豪税" }, // 日 0.12%
+  ];
+
+  // 难度系数: 休闲/标准/困难 → 税率乘数
+  const DIFFICULTY_TAX_MULTIPLIER = {
+    casual: 0.7, // 休闲模式减 30%
+    normal: 1.0, // 标准模式
+    hard: 1.4, // 困难模式增 40%
+  };
+
+  function calculateProgressiveWealthTax(totalAssets, difficulty) {
+    if (totalAssets <= 0) return 0;
+    const mult = DIFFICULTY_TAX_MULTIPLIER[difficulty] || 1.0;
+    let totalTax = 0;
+    let remaining = totalAssets;
+
+    for (const tier of WEALTH_TAX_THRESHOLDS) {
+      if (remaining <= 0) break;
+      const taxable = Math.min(remaining, tier.max - tier.min);
+      if (taxable <= 0) continue;
+      totalTax += taxable * tier.rate;
+      remaining -= taxable;
+    }
+
+    return Math.round(totalTax * mult);
+  }
+
+  function getActiveTaxTier(totalAssets) {
+    for (const tier of WEALTH_TAX_THRESHOLDS) {
+      if (totalAssets >= tier.min) {
+        return tier;
+      }
+    }
+    return null;
+  }
+
+  // ============================================================
+  // 2. 动态村长债利率 (修复 B2)
+  // ============================================================
+  // v3.0 问题: 0.35%/日 对 ¥50万+ 玩家完全可忽略 (日息仅 ¥1,750)
+  // v3.1 改进: 基于总资产的阶梯利率, 鼓励玩家持续投资
+
+  const LOAN_RATE_TIERS = [
+    { assetFloor: 0, ratePerDay: 0.2 / 100, label: "基础利率" },
+    { assetFloor: 100000, ratePerDay: 0.3 / 100, label: "提升利率" },
+    { assetFloor: 300000, ratePerDay: 0.4 / 100, label: "进阶利率" },
+    { assetFloor: 500000, ratePerDay: 0.55 / 100, label: "高级利率" },
+    { assetFloor: 1000000, ratePerDay: 0.75 / 100, label: "专家利率" },
+    { assetFloor: 3000000, ratePerDay: 1.0 / 100, label: "大师利率" },
+  ];
+
+  function getDynamicLoanRate(totalAssets) {
+    let bestRate = LOAN_RATE_TIERS[0].ratePerDay;
+    for (const tier of LOAN_RATE_TIERS) {
+      if (totalAssets >= tier.assetFloor) {
+        bestRate = tier.ratePerDay;
+      }
+    }
+    return bestRate;
+  }
+
+  // ============================================================
+  // 3. 投资冷却与反膨胀机制 (修复 B1)
+  // ============================================================
+  // v3.0 问题: 股票+房产+创业+套利多系统收益叠加无减速
+  // v3.1 改进: 日投资次数限制 + 连续盈利衰减 + 市场饱和度
+
+  const INVESTMENT_CAPS = {
+    maxDailyStockTrades: 5, // 每日股票交易上限
+    maxDailyPropertyDeals: 2, // 每日房产交易上限
+    maxConsecutiveWins: 7, // 连续盈利上限
+    decayStart: 4, // 第 N 次连续盈利开始衰减
+  };
+
+  // 连续盈利衰减系数
+  function getConsecutiveWinDecay(consecutiveWins) {
+    if (consecutiveWins < INVESTMENT_CAPS.decayStart) return 1.0;
+    const excess = consecutiveWins - INVESTMENT_CAPS.decayStart + 1;
+    // 每多一次衰减 8%, 最大衰减 50%
+    const decay = Math.min(0.5, excess * 0.08);
+    return 1.0 - decay;
+  }
+
+  // 市场饱和度: 当玩家总资产/城市总财富比超过阈值时, 投资收益下降
+  function getMarketSaturationPenalty(playerAssets, cityWealth, difficulty) {
+    const ratio = playerAssets / cityWealth;
+    const threshold =
+      difficulty === "hard" ? 0.15 : difficulty === "casual" ? 0.25 : 0.2;
+    if (ratio <= threshold) return 1.0;
+    // 超过阈值后每 1% 额外比例衰减 2%
+    const excess = (ratio - threshold) * 100;
+    return Math.max(0.5, 1.0 - excess * 0.02);
+  }
+
+  // ============================================================
+  // 4. 难度收益曲线调节 (修复 B5)
+  // ============================================================
+  // v3.0 问题: 困难模式只加惩罚, 熟练玩家可沿用相同策略
+  // v3.1 改进: 困难模式收益曲线更陡, 需要更高效率才能达标
+
+  const DIFFICULTY_INCOME_CURVE = {
+    casual: { baseSalaryMult: 1.0, jobOpportunity: 1.2, promotionSpeed: 0.8 },
+    normal: { baseSalaryMult: 1.0, jobOpportunity: 1.0, promotionSpeed: 1.0 },
+    hard: { baseSalaryMult: 0.9, jobOpportunity: 0.7, promotionSpeed: 1.3 },
+  };
+
+  function getDifficultyIncomeMultiplier(difficulty, category) {
+    const config =
+      DIFFICULTY_INCOME_CURVE[difficulty] || DIFFICULTY_INCOME_CURVE.normal;
+    return config[category] || 1.0;
+  }
+
+  // ============================================================
+  // 5. 综合每日经济结算
+  // ============================================================
+  function dailyEconomicSettlement(state) {
+    const {
+      totalAssets,
+      cash,
+      savings,
+      difficulty,
+      investmentCountToday,
+      consecutiveWins,
+      cityWealth,
+    } = state;
+
+    // 1. 财富税
+    const wealthTax = calculateProgressiveWealthTax(totalAssets, difficulty);
+
+    // 2. 动态村长债收益
+    const loanRate = getDynamicLoanRate(totalAssets);
+    const loanInterest = Math.round(savings * loanRate);
+
+    // 3. 投资衰减
+    const winDecay = getConsecutiveWinDecay(consecutiveWins);
+
+    // 4. 市场饱和惩罚
+    const saturationPenalty = getMarketSaturationPenalty(
+      totalAssets,
+      cityWealth || 10000000,
+      difficulty,
+    );
+
+    // 5. 难度收入系数
+    const incomeMult = getDifficultyIncomeMultiplier(
+      difficulty,
+      "baseSalaryMult",
+    );
+
+    const effectiveCash = Math.max(0, cash - wealthTax);
+
+    return {
+      wealthTax,
+      loanInterest,
+      consecutiveWinDecay: winDecay,
+      marketSaturationPenalty: saturationPenalty,
+      incomeMultiplier: incomeMult,
+      effectiveCash,
+      activeTaxTier: getActiveTaxTier(totalAssets),
+      loanRate,
+      netDailyChange: loanInterest - wealthTax,
+    };
+  }
+
+  return {
+    WEALTH_TAX_THRESHOLDS,
+    DIFFICULTY_TAX_MULTIPLIER,
+    calculateProgressiveWealthTax,
+    getActiveTaxTier,
+    LOAN_RATE_TIERS,
+    getDynamicLoanRate,
+    INVESTMENT_CAPS,
+    getConsecutiveWinDecay,
+    getMarketSaturationPenalty,
+    DIFFICULTY_INCOME_CURVE,
+    getDifficultyIncomeMultiplier,
+    dailyEconomicSettlement,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.EconomySystem = EconomySystem;
+}
+</script>
     <!-- v3.6: 时代叙事事件（8个里程碑交互事件）-->
     <script>/**
  * 时代变迁事件（v3.6 P0-2）
@@ -52811,6 +52993,11 @@ const WORLD_NEWS_DB = {
         sectorHeat: { 科技: 0.1 },
         marketMood: "volatile",
         note: "AI赋能岗位收入+15%，传统基础岗位薪资承压",
+        jobBonus: [
+          { id: "coding_freelance", mul: 1.15 },
+          { id: "data_entry", mul: 0.9 }, // AI替代型岗位收入下降
+        ],
+        skillXp: { coding: 5, logic: 3 },
       },
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
@@ -54115,7 +54302,13 @@ function generateInvestmentEffectFromTag(tag, mood) {
   if (!entry) return [];
   var mul = isUp ? entry.up : isDown ? entry.down : 1.0;
   if (mul === 1.0) return [];
-  return [{ industry: entry.industry || null, category: entry.category || null, mul: mul }];
+  return [
+    {
+      industry: entry.industry || null,
+      category: entry.category || null,
+      mul: mul,
+    },
+  ];
 }
 
 /**
@@ -54972,7 +55165,8 @@ function applyWorldNewsToParams(state, selectedNews) {
       state._introJobBonuses = state._introJobBonuses || {};
       for (var pj = 0; pj < eff.jobPenalty.length; pj++) {
         var jp = eff.jobPenalty[pj];
-        state._introJobBonuses[jp] = (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+        state._introJobBonuses[jp] =
+          (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
       }
     }
 
@@ -55034,7 +55228,8 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
       state._worldJobModifiers = state._worldJobModifiers || {};
       for (var jbi = 0; jbi < jobBonusEntries.length; jbi++) {
         var jid = jobBonusEntries[jbi];
-        state._worldJobModifiers[jid] = (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
+        state._worldJobModifiers[jid] =
+          (state._worldJobModifiers[jid] || 1) * state._introJobBonuses[jid];
       }
     }
   }
@@ -55062,7 +55257,8 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
       for (var ski = 0; ski < skillXpEntries.length; ski++) {
         var sk = skillXpEntries[ski];
         if (state.skills[sk]) {
-          state.skills[sk].xp = (state.skills[sk].xp || 0) + state._introSkillXp[sk];
+          state.skills[sk].xp =
+            (state.skills[sk].xp || 0) + state._introSkillXp[sk];
         }
       }
     }
@@ -55106,7 +55302,8 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
           if (rule.allStocks) hit = true;
           if (rule.industry && stock.industry === rule.industry) hit = true;
           if (rule.category && stock.category === rule.category) hit = true;
-          if (rule.symbols && rule.symbols.indexOf(stock.symbol) >= 0) hit = true;
+          if (rule.symbols && rule.symbols.indexOf(stock.symbol) >= 0)
+            hit = true;
 
           if (hit) {
             mkt.openPrice = mkt.price; // 记录开盘价
@@ -55129,6 +55326,189 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
 // ============================================================
 
 var _worldNewsSelected = null; // 存储本局选中的新闻
+var _playerIntroChoice = null; // 存储玩家在开局的选择
+
+/**
+ * v2.0 新增：构建开局选择面板
+ * 根据当前世界新闻和剧本，动态生成 2-3 个开局选择
+ * 选择会影响玩家的初始资金、技能、心态、人际关系等
+ */
+function buildIntroChoicePanel(scenarioId, newsItems) {
+  if (!newsItems || newsItems.length === 0) return "";
+
+  var choices = [];
+
+  // 根据新闻内容生成针对性选择
+  for (var ni = 0; ni < newsItems.length; ni++) {
+    var news = newsItems[ni];
+    var note = (news.worldEffect && news.worldEffect.note) || "";
+    var tag = news.tag || "";
+
+    // AI/科技利好 → 选择学编程或投资科技股
+    if (tag === "科技" && note.indexOf("AI") >= 0) {
+      choices.push({
+        id: "study_tech",
+        text: "💻 报名编程培训班",
+        hint: "投资技能，但前期花费大",
+        cost: 200,
+        effect: {
+          cash: -200,
+          skills: { coding: 10 },
+          needs: { intelligence: 5 },
+          flags: { _introStudyTech: true },
+        },
+      });
+      break;
+    }
+
+    // 裁员/就业压力 → 选择摆摊/零工
+    if (note.indexOf("零工") >= 0 || note.indexOf("裁员") >= 0) {
+      choices.push({
+        id: "start_side_hustle",
+        text: "🛒 先找份零工过渡",
+        hint: "快速赚钱，但收入不稳定",
+        effect: {
+          cash: 100,
+          needs: { fatigue: 5 },
+          flags: { _introSideHustle: true },
+        },
+      });
+      break;
+    }
+
+    // 消费/物价 → 选择省钱/投资
+    if (tag === "消费" || note.indexOf("物价") >= 0) {
+      choices.push({
+        id: "save_money",
+        text: "🏦 把钱存定期",
+        hint: "安全但收益低",
+        effect: {
+          cash: -50,
+          flags: { _introSavedMoney: true },
+        },
+      });
+      break;
+    }
+  }
+
+  // 如果没有生成足够选择，添加通用选项
+  if (choices.length < 2) {
+    choices.push({
+      id: "find_work",
+      text: "💼 立刻找工作",
+      hint: "先站稳脚跟",
+      effect: {
+        flags: { _introFoundWorkEarly: true },
+      },
+    });
+  }
+  if (choices.length < 2) {
+    choices.push({
+      id: "explore_city",
+      text: "🚶 先逛逛城市",
+      hint: "了解环境再做打算",
+      effect: {
+        needs: { happiness: 5 },
+        flags: { _introExploredCity: true },
+      },
+    });
+  }
+
+  if (choices.length === 0) return "";
+
+  // 构建 HTML
+  var html =
+    '<div class="world-news-choice-section">' +
+    '<div class="world-news-choice-title">🤔 面对这个世界的变化，你决定：</div>';
+
+  for (var ci = 0; ci < choices.length; ci++) {
+    var ch = choices[ci];
+    html +=
+      '<div class="world-news-choice-option" data-choice="' +
+      ch.id +
+      '">' +
+      '<div class="world-news-choice-text">' +
+      ch.text +
+      "</div>" +
+      '<div class="world-news-choice-hint">' +
+      ch.hint +
+      (ch.cost ? "（需要¥" + ch.cost + "）" : "") +
+      "</div>" +
+      "</div>";
+  }
+
+  html += "</div>";
+  return html;
+}
+
+/**
+ * 处理玩家在开局选择面板中的选择
+ * @param {string} choiceId - 选择的 ID
+ * @param {Object} state - 游戏状态
+ */
+function applyIntroChoice(choiceId, state) {
+  if (!state || !choiceId) return;
+  _playerIntroChoice = choiceId;
+
+  var choicesMap = {
+    study_tech: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+        st.skills = st.skills || {};
+        st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
+        st.skills.coding.xp = (st.skills.coding.xp || 0) + 10;
+        st.needs.intelligence = Math.min(
+          100,
+          (st.needs.intelligence || 0) + 5,
+        );
+        st.flags._introStudyTech = true;
+      },
+      msg: "💻 你报名了编程培训班，花了¥200。编码技能经验+10，智力需求+5。",
+    },
+    start_side_hustle: {
+      apply: function (st) {
+        st.resources.cash = (st.resources.cash || 0) + 100;
+        st.needs.fatigue = Math.min(
+          100,
+          (st.needs.fatigue || 0) + 5,
+        );
+        st.flags._introSideHustle = true;
+      },
+      msg: "🛒 你找了份零工过渡，赚了¥100。虽然辛苦，但先站稳脚跟。",
+    },
+    save_money: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+        st.flags._introSavedMoney = true;
+      },
+      msg: "🏦 你把¥50存进了定期。虽然收益不高，但心里踏实。",
+    },
+    find_work: {
+      apply: function (st) {
+        st.flags._introFoundWorkEarly = true;
+      },
+      msg: "💼 你决定立刻找工作。先站稳脚跟，再图发展。",
+    },
+    explore_city: {
+      apply: function (st) {
+        st.needs.happiness = Math.min(
+          100,
+          (st.needs.happiness || 0) + 5,
+        );
+        st.flags._introExploredCity = true;
+      },
+      msg: "🚶 你花了半天逛了逛城市，心情好了不少。对这座城市有了初步了解。",
+    },
+  };
+
+  var ch = choicesMap[choiceId];
+  if (ch) {
+    ch.apply(state);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(ch.msg, "info");
+    }
+  }
+}
 
 /**
  * 显示开局世界新闻弹窗
@@ -55209,6 +55589,9 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   // 剧本特色描述
   var scenarioIntro = getScenarioWorldContext(scenarioId);
 
+  // v2.0 新增：开局选择面板 — 让玩家对世界新闻做出反应，影响初始状态
+  var introChoicesHtml = buildIntroChoicePanel(scenarioId, _worldNewsSelected);
+
   // 构建完整HTML
   // 判断是否为实时新闻
   var isRealTime =
@@ -55238,9 +55621,11 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
     '<div class="world-news-list">' +
     newsHtml +
     "</div>" +
+    // v2.0 新增：开局选择面板
+    introChoicesHtml +
     // 底部说明
     '<div class="world-news-footer">' +
-    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。</div>' +
+    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。<br><em>做出你的第一个选择，改变这局游戏的起点。</em></div>' +
     '<button class="world-news-start-btn" id="world-news-start-btn">▶ 带着这个世界，出发</button>' +
     "</div>" +
     "</div>" +
@@ -55251,6 +55636,19 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   container.id = "world-news-intro-container";
   container.innerHTML = html;
   document.body.appendChild(container);
+
+  // 绑定选择面板事件
+  var choiceOptions = container.querySelectorAll(".world-news-choice-option");
+  for (var co = 0; co < choiceOptions.length; co++) {
+    choiceOptions[co].addEventListener("click", function () {
+      // 清除之前的选中状态
+      for (var o = 0; o < choiceOptions.length; o++) {
+        choiceOptions[o].classList.remove("selected");
+      }
+      this.classList.add("selected");
+      _playerIntroChoice = this.getAttribute("data-choice");
+    });
+  }
 
   // 绑定按钮事件
   var startBtn = document.getElementById("world-news-start-btn");
@@ -55631,13 +56029,25 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
 
         // 工作影响
         if (mn.worldEffect && mn.worldEffect.jobBonus) {
-          impactLines.push("💼 工作：[" + mn.worldEffect.jobBonus.join(", ") + "] 收入×" + ((mn.worldEffect.jobMultiplier || 1.1)).toFixed(2));
+          impactLines.push(
+            "💼 工作：[" +
+              mn.worldEffect.jobBonus.join(", ") +
+              "] 收入×" +
+              (mn.worldEffect.jobMultiplier || 1.1).toFixed(2),
+          );
         }
         if (mn.worldEffect && mn.worldEffect.jobPenalty) {
-          impactLines.push("💼 工作：[" + mn.worldEffect.jobPenalty.join(", ") + "] 收入×" + ((mn.worldEffect.jobMultiplier || 0.7)).toFixed(2));
+          impactLines.push(
+            "💼 工作：[" +
+              mn.worldEffect.jobPenalty.join(", ") +
+              "] 收入×" +
+              (mn.worldEffect.jobMultiplier || 0.7).toFixed(2),
+          );
         }
         if (mn.worldEffect && mn.worldEffect.allJobsBonus) {
-          impactLines.push("💼 所有工作收入 ×" + mn.worldEffect.allJobsBonus.toFixed(2));
+          impactLines.push(
+            "💼 所有工作收入 ×" + mn.worldEffect.allJobsBonus.toFixed(2),
+          );
         }
         // 价格影响
         if (mn.worldEffect && mn.worldEffect.priceMod) {
@@ -55645,11 +56055,14 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
           for (var pk in mn.worldEffect.priceMod) {
             if (mn.worldEffect.priceMod.hasOwnProperty(pk)) {
               var p = mn.worldEffect.priceMod[pk];
-              if (p > 1) priceMods.push(pk + " ↑" + ((p - 1) * 100).toFixed(0) + "%");
-              else if (p < 1) priceMods.push(pk + " ↓" + ((1 - p) * 100).toFixed(0) + "%");
+              if (p > 1)
+                priceMods.push(pk + " ↑" + ((p - 1) * 100).toFixed(0) + "%");
+              else if (p < 1)
+                priceMods.push(pk + " ↓" + ((1 - p) * 100).toFixed(0) + "%");
             }
           }
-          if (priceMods.length > 0) impactLines.push("🛒 物价：" + priceMods.join(", "));
+          if (priceMods.length > 0)
+            impactLines.push("🛒 物价：" + priceMods.join(", "));
         }
         // 技能影响
         if (mn.worldEffect && mn.worldEffect.skillXp) {
@@ -55659,7 +56072,8 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
               skillXpLines.push(sk + " +" + mn.worldEffect.skillXp[sk]);
             }
           }
-          if (skillXpLines.length > 0) impactLines.push("📚 技能：" + skillXpLines.join(", "));
+          if (skillXpLines.length > 0)
+            impactLines.push("📚 技能：" + skillXpLines.join(", "));
         }
         // 资金影响
         if (mn.worldEffect && mn.worldEffect.cashBonus) {
@@ -55673,13 +56087,20 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
           var invLines = [];
           for (var ii = 0; ii < mn.investmentEffect.length; ii++) {
             var ie = mn.investmentEffect[ii];
-            if (ie.industry) invLines.push(ie.industry + " ×" + (ie.mul || 1).toFixed(2));
-            if (ie.category) invLines.push(ie.category + " ×" + (ie.mul || 1).toFixed(2));
-            if (ie.symbols) invLines.push(ie.symbols.join(",") + " ×" + (ie.mul || 1).toFixed(2));
-            if (ie.allStocks) invLines.push("全市场 ×" + (ie.mul || 1).toFixed(2));
+            if (ie.industry)
+              invLines.push(ie.industry + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.category)
+              invLines.push(ie.category + " ×" + (ie.mul || 1).toFixed(2));
+            if (ie.symbols)
+              invLines.push(
+                ie.symbols.join(",") + " ×" + (ie.mul || 1).toFixed(2),
+              );
+            if (ie.allStocks)
+              invLines.push("全市场 ×" + (ie.mul || 1).toFixed(2));
             if (ie.btc) invLines.push("比特币 ×" + (ie.mul || 1).toFixed(2));
           }
-          if (invLines.length > 0) impactLines.push("📈 投资：" + invLines.join(" | "));
+          if (invLines.length > 0)
+            impactLines.push("📈 投资：" + invLines.join(" | "));
         }
         // 行业热度
         if (mn.worldEffect && mn.worldEffect.sectorHeat) {
@@ -55687,22 +56108,35 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
           for (var sec in mn.worldEffect.sectorHeat) {
             if (mn.worldEffect.sectorHeat.hasOwnProperty(sec)) {
               var sv = mn.worldEffect.sectorHeat[sec];
-              if (sv > 0) sectorLines.push(sec + " ↑" + (sv * 100).toFixed(0) + "%");
+              if (sv > 0)
+                sectorLines.push(sec + " ↑" + (sv * 100).toFixed(0) + "%");
               else sectorLines.push(sec + " ↓" + (sv * 100).toFixed(0) + "%");
             }
           }
-          if (sectorLines.length > 0) impactLines.push("🌍 行业：" + sectorLines.join(", "));
+          if (sectorLines.length > 0)
+            impactLines.push("🌍 行业：" + sectorLines.join(", "));
         }
 
         if (impactLines.length > 0) {
           StateManager.addMessage(
-            "📌 " + mn.icon + " " + mn.headline + " → " + impactLines.join("；"),
+            "📌 " +
+              mn.icon +
+              " " +
+              mn.headline +
+              " → " +
+              impactLines.join("；"),
             "info",
           );
         }
       }
     }
   }
+
+  // Step 5: 应用玩家开局选择的影响
+  if (_playerIntroChoice && state) {
+    applyIntroChoice(_playerIntroChoice, state);
+  }
+
   if (typeof enterGame === "function") {
     enterGame();
   }
@@ -98373,6 +98807,34 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkMoralConsequences === "function") {
         checkMoralConsequences(state);
+      }
+    },
+  },
+
+  // === v3.1: 经济平衡调参（累进财富税/动态利率/难度收入曲线）===
+  {
+    name: "economy_v3_tick",
+    fn: function (state) {
+      if (typeof window === "undefined" || !window.EconomySystem) return;
+      var eco = window.EconomySystem;
+      // 应用难度收入乘数到工作收入（如果已有 jobMultipliers）
+      if (state._difficulty && state._difficulty !== "normal") {
+        var incomeMult = eco.getDifficultyIncomeMultiplier(state._difficulty, "baseSalaryMult");
+        if (incomeMult !== 1.0) {
+          // 通过全局乘数影响所有收入
+          state._allJobsBonus = state._allJobsBonus || 1.0;
+          state._allJobsBonus *= incomeMult;
+        }
+      }
+      // 中后期财富税（仅当总资产≥¥20万且不是休闲模式）
+      var totalAssets = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      if (totalAssets >= 200000 && state._difficulty !== "casual" && state._difficulty !== "easy") {
+        var diff = state._difficulty || "normal";
+        var wealthTax = eco.calculateProgressiveWealthTax(totalAssets, diff);
+        if (wealthTax > 0 && state.player && state.player.day > 30) {
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - wealthTax);
+          addDailyTransaction(state, "expense", "wealth_tax", wealthTax, "累进财富税");
+        }
       }
     },
   },
@@ -149770,25 +150232,35 @@ function renderSocialWorkplaceTab(state, parent) {
 // ====== 社交网络子tab（朋友圈/围脖/网红经济） ======
 function renderSocialNetworkTab(state, parent) {
   if (!state.socialNetwork) {
-    parent.innerHTML = '<p style="color:var(--text-muted);padding:40px;text-align:center;">📱 社交网络初始化中...</p>';
+    parent.innerHTML =
+      '<p style="color:var(--text-muted);padding:40px;text-align:center;">📱 社交网络初始化中...</p>';
     return;
   }
   var sn = state.socialNetwork;
   var html = '<div class="tab-content">';
 
   // 网红经济卡片
-  var levelNames = { none: "无等", micro: "微网红", medium: "中网红", large: "大网红", top: "顶流" };
+  var levelNames = {
+    none: "无等",
+    micro: "微网红",
+    medium: "中网红",
+    large: "大网红",
+    top: "顶流",
+  };
   var levelName = levelNames[sn.playerInfluencerLevel] || "无等";
   var income = sn.influencerIncome || 0;
   html += '<div class="section"><h3>🌟 网红经济</h3>';
   html += '<div class="card" style="padding:12px;">';
-  html += '<p>👥 粉丝：<strong>' + (sn.playerFans || 0) + '</strong></p>';
-  html += '<p>🏅 等级：' + levelName + '</p>';
-  html += '<p>💰 日收入：¥' + income + '</p>';
+  html += "<p>👥 粉丝：<strong>" + (sn.playerFans || 0) + "</strong></p>";
+  html += "<p>🏅 等级：" + levelName + "</p>";
+  html += "<p>💰 日收入：¥" + income + "</p>";
   if (sn.舆论危机 && sn.舆论危机.active) {
-    html += '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' + sn.舆论危机.severity + '）</p>';
+    html +=
+      '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' +
+      sn.舆论危机.severity +
+      "）</p>";
   }
-  html += '</div></div>';
+  html += "</div></div>";
 
   // 围脖热搜
   html += '<div class="section"><h3>🔥 围脖热搜</h3>';
@@ -149796,17 +150268,25 @@ function renderSocialNetworkTab(state, parent) {
     html += '<div class="card" style="padding:8px;">';
     for (var hi = 0; hi < Math.min(5, sn.weiboHotlist.length); hi++) {
       var hot = sn.weiboHotlist[hi];
-      html += '<div style="padding:4px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
-      html += '<span style="font-weight:700;color:var(--danger);">#' + (hi + 1) + '</span> ';
-      html += '<span>' + (hot.title || '热门话题') + '</span>';
-      html += '<span style="color:var(--text-muted);margin-left:8px;">🔥' + (hot.heat || 0) + '</span>';
-      html += '</div>';
+      html +=
+        '<div style="padding:4px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html +=
+        '<span style="font-weight:700;color:var(--danger);">#' +
+        (hi + 1) +
+        "</span> ";
+      html += "<span>" + (hot.title || "热门话题") + "</span>";
+      html +=
+        '<span style="color:var(--text-muted);margin-left:8px;">🔥' +
+        (hot.heat || 0) +
+        "</span>";
+      html += "</div>";
     }
-    html += '</div>';
+    html += "</div>";
   } else {
-    html += '<p style="color:var(--text-muted);font-size:11px;">暂无热搜，每日结算时自动刷新。</p>';
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无热搜，每日结算时自动刷新。</p>';
   }
-  html += '</div>';
+  html += "</div>";
 
   // 朋友圈动态
   html += '<div class="section"><h3>📝 朋友圈动态</h3>';
@@ -149814,16 +150294,23 @@ function renderSocialNetworkTab(state, parent) {
     html += '<div class="card" style="padding:8px;">';
     for (var pi = 0; pi < Math.min(3, sn.posts.length); pi++) {
       var post = sn.posts[pi];
-      html += '<div style="padding:6px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
-      html += '<p style="margin:0 0 2px 0;">' + (post.content || '') + '</p>';
-      html += '<p style="margin:0;color:var(--text-muted);font-size:10px;">❤️' + (post.likes ? post.likes.length : 0) + ' 💬' + (post.comments ? post.comments.length : 0) + '</p>';
-      html += '</div>';
+      html +=
+        '<div style="padding:6px 0;border-bottom:1px solid var(--border-light);font-size:11px;">';
+      html += '<p style="margin:0 0 2px 0;">' + (post.content || "") + "</p>";
+      html +=
+        '<p style="margin:0;color:var(--text-muted);font-size:10px;">❤️' +
+        (post.likes ? post.likes.length : 0) +
+        " 💬" +
+        (post.comments ? post.comments.length : 0) +
+        "</p>";
+      html += "</div>";
     }
-    html += '</div>';
+    html += "</div>";
   } else {
-    html += '<p style="color:var(--text-muted);font-size:11px;">暂无朋友圈动态。</p>';
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无朋友圈动态。</p>';
   }
-  html += '</div>';
+  html += "</div>";
 
   // NPC动态
   html += '<div class="section"><h3>👤 NPC动态</h3>';
@@ -149832,16 +150319,17 @@ function renderSocialNetworkTab(state, parent) {
     for (var fi = 0; fi < Math.min(3, sn.npcFeeds.length); fi++) {
       var feed = sn.npcFeeds[fi];
       html += '<div style="padding:4px 0;font-size:11px;">';
-      html += '<p style="margin:0;">' + (feed.content || '') + '</p>';
-      html += '</div>';
+      html += '<p style="margin:0;">' + (feed.content || "") + "</p>";
+      html += "</div>";
     }
-    html += '</div>';
+    html += "</div>";
   } else {
-    html += '<p style="color:var(--text-muted);font-size:11px;">暂无NPC动态。</p>';
+    html +=
+      '<p style="color:var(--text-muted);font-size:11px;">暂无NPC动态。</p>';
   }
-  html += '</div>';
+  html += "</div>";
 
-  html += '</div>';
+  html += "</div>";
   parent.innerHTML = html;
 }
 </script>

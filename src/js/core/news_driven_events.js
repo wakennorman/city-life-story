@@ -297,18 +297,10 @@
       story:
         "你刚在新闻里看到「城管严查摆摊」的消息，今天就撞上了现场。\n\n街口几个摆摊的小贩慌乱地收摊，一个卖烤红薯的大爷跑不及，三轮车被扣住了。大爷蹲在路边默默抽烟，手在微微发抖。旁边几个小贩围过来低声商量办法。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          var nid = st.activeNews[ci].id || "";
-          if (
-            nid === "crackdown" ||
-            nid === "intro_crackdown" ||
-            nid === "chengguan_special_op" ||
-            nid === "intro_chengguan_special_op"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "crackdown") ||
+          _hasNewsId(st.activeNews, "chengguan_special_op")
+        );
       },
       probability: 0.04,
       repeatable: false,
@@ -386,18 +378,10 @@
       story:
         "新闻里说电商大促节物流爆仓，快递站包裹堆成山。你刚好路过，站长满头大汗在门口招人：「日结¥300！干到晚上12点！谁来？」\n\n广播里不断播着「距离截单还有3小时」，快递员们像蚂蚁一样忙碌。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id || "";
-          if (
-            nid === "e_commerce_festival" ||
-            nid === "intro_e_commerce_festival" ||
-            nid === "sea_double_11" ||
-            nid === "intro_sea_double_11"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "e_commerce_festival") ||
+          _hasNewsId(st.activeNews, "sea_double_11")
+        );
       },
       probability: 0.05,
       repeatable: true,
@@ -471,18 +455,10 @@
       story:
         "新闻说寒潮来袭，气温骤降。深夜收工回家路上，你看到天桥下一个流浪老人蜷缩在纸箱里，冻得直哆嗦。\n\n风很大，街上几乎没有人。你站在不远处，犹豫着。",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        for (var ci = 0; ci < st.activeNews.length; ci++) {
-          var nid = st.activeNews[ci].id || "";
-          if (
-            nid === "cold_wave" ||
-            nid === "intro_cold_wave" ||
-            nid === "winter_heating" ||
-            nid === "intro_winter_heating"
-          )
-            return true;
-        }
-        return false;
+        return (
+          _hasNewsId(st.activeNews, "cold_wave") ||
+          _hasNewsId(st.activeNews, "winter_heating")
+        );
       },
       probability: 0.03,
       repeatable: false,
@@ -543,25 +519,16 @@
       story:
         "新闻里说经济下行压力大，小生意难做。身边的工友老刘愁眉苦脸：「厂里订单少了，这周只排了两天班。」\n\n他问你：「听说你在搞副业？有没有路子？我什么都能干。」",
       conditions: function (st) {
-        if (!st.activeNews) return false;
-        var hasEcoNews = false;
         var ecoIds = [
           "eco_small_biz_hard",
           "eco_deflation_worry",
           "tech_layoff",
           "global_recession_fear",
         ];
-        for (var ei = 0; ei < st.activeNews.length; ei++) {
-          var nid = st.activeNews[ei].id || "";
-          for (var ei2 = 0; ei2 < ecoIds.length; ei2++) {
-            if (nid === ecoIds[ei2] || nid === "intro_" + ecoIds[ei2]) {
-              hasEcoNews = true;
-              break;
-            }
-          }
-          if (hasEcoNews) break;
+        for (var ei = 0; ei < ecoIds.length; ei++) {
+          if (_hasNewsId(st.activeNews, ecoIds[ei])) return st.player.day >= 10;
         }
-        return hasEcoNews && st.player.day >= 10;
+        return false;
       },
       probability: 0.03,
       repeatable: false,

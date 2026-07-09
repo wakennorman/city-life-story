@@ -200,3 +200,7 @@ const EconomySystem = (function () {
     dailyEconomicSettlement,
   };
 })();
+
+if (typeof window !== "undefined") {
+  window.EconomySystem = EconomySystem;
+}

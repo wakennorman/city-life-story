@@ -125,6 +125,11 @@ const WORLD_NEWS_DB = {
         sectorHeat: { 科技: 0.1 },
         marketMood: "volatile",
         note: "AI赋能岗位收入+15%，传统基础岗位薪资承压",
+        jobBonus: [
+          { id: "coding_freelance", mul: 1.15 },
+          { id: "data_entry", mul: 0.9 }, // AI替代型岗位收入下降
+        ],
+        skillXp: { coding: 5, logic: 3 },
       },
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
@@ -144,6 +149,10 @@ const WORLD_NEWS_DB = {
         sectorHeat: { 金融: 0.1, 科技: 0.04 },
         marketMood: "bullish",
         note: "金融/投资岗位薪资走高，财会/金融类证书价值提升",
+        jobBonus: [
+          { id: "accounting", mul: 1.12 },
+          { id: "financial_advisor", mul: 1.15 },
+        ],
       },
       investmentEffect: [
         { industry: "金融", mul: 1.1 },
@@ -2285,15 +2294,25 @@ function applyWorldNewsToParams(state, selectedNews) {
       state._introJobBonuses = state._introJobBonuses || {};
       for (var ji = 0; ji < eff.jobBonus.length; ji++) {
         var jb = eff.jobBonus[ji];
-        state._introJobBonuses[jb.id] = jb.mul || 1.1;
+        if (typeof jb === "string") {
+          state._introJobBonuses[jb] = eff.jobMultiplier || 1.1;
+        } else if (jb && jb.id) {
+          state._introJobBonuses[jb.id] = jb.mul || eff.jobMultiplier || 1.1;
+        }
       }
     }
     if (eff.jobPenalty && Array.isArray(eff.jobPenalty)) {
       state._introJobBonuses = state._introJobBonuses || {};
       for (var pj = 0; pj < eff.jobPenalty.length; pj++) {
         var jp = eff.jobPenalty[pj];
-        state._introJobBonuses[jp] =
-          (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+        if (typeof jp === "string") {
+          state._introJobBonuses[jp] =
+            (state._introJobBonuses[jp] || 1) * (eff.jobMultiplier || 0.7);
+        } else if (jp && jp.id) {
+          state._introJobBonuses[jp.id] =
+            (state._introJobBonuses[jp.id] || 1) *
+            (jp.mul || eff.jobMultiplier || 0.7);
+        }
       }
     }
 
@@ -2453,6 +2472,180 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
 // ============================================================
 
 var _worldNewsSelected = null; // 存储本局选中的新闻
+var _playerIntroChoice = null; // 存储玩家在开局的选择
+
+/**
+ * v2.0 新增：构建开局选择面板
+ * 根据当前世界新闻和剧本，动态生成 2-3 个开局选择
+ * 选择会影响玩家的初始资金、技能、心态、人际关系等
+ */
+function buildIntroChoicePanel(scenarioId, newsItems) {
+  if (!newsItems || newsItems.length === 0) return "";
+
+  var choices = [];
+
+  // 根据新闻内容生成针对性选择
+  for (var ni = 0; ni < newsItems.length; ni++) {
+    var news = newsItems[ni];
+    var note = (news.worldEffect && news.worldEffect.note) || "";
+    var tag = news.tag || "";
+
+    // AI/科技利好 → 选择学编程或投资科技股
+    if (tag === "科技" && note.indexOf("AI") >= 0) {
+      choices.push({
+        id: "study_tech",
+        text: "💻 报名编程培训班",
+        hint: "投资技能，但前期花费大",
+        cost: 200,
+        effect: {
+          cash: -200,
+          skills: { coding: 10 },
+          needs: { intelligence: 5 },
+          flags: { _introStudyTech: true },
+        },
+      });
+      break;
+    }
+
+    // 裁员/就业压力 → 选择摆摊/零工
+    if (note.indexOf("零工") >= 0 || note.indexOf("裁员") >= 0) {
+      choices.push({
+        id: "start_side_hustle",
+        text: "🛒 先找份零工过渡",
+        hint: "快速赚钱，但收入不稳定",
+        effect: {
+          cash: 100,
+          needs: { fatigue: 5 },
+          flags: { _introSideHustle: true },
+        },
+      });
+      break;
+    }
+
+    // 消费/物价 → 选择省钱/投资
+    if (tag === "消费" || note.indexOf("物价") >= 0) {
+      choices.push({
+        id: "save_money",
+        text: "🏦 把钱存定期",
+        hint: "安全但收益低",
+        effect: {
+          cash: -50,
+          flags: { _introSavedMoney: true },
+        },
+      });
+      break;
+    }
+  }
+
+  // 如果没有生成足够选择，添加通用选项
+  if (choices.length < 2) {
+    choices.push({
+      id: "find_work",
+      text: "💼 立刻找工作",
+      hint: "先站稳脚跟",
+      effect: {
+        flags: { _introFoundWorkEarly: true },
+      },
+    });
+  }
+  if (choices.length < 2) {
+    choices.push({
+      id: "explore_city",
+      text: "🚶 先逛逛城市",
+      hint: "了解环境再做打算",
+      effect: {
+        needs: { happiness: 5 },
+        flags: { _introExploredCity: true },
+      },
+    });
+  }
+
+  if (choices.length === 0) return "";
+
+  // 构建 HTML
+  var html =
+    '<div class="world-news-choice-section">' +
+    '<div class="world-news-choice-title">🤔 面对这个世界的变化，你决定：</div>';
+
+  for (var ci = 0; ci < choices.length; ci++) {
+    var ch = choices[ci];
+    html +=
+      '<div class="world-news-choice-option" data-choice="' +
+      ch.id +
+      '">' +
+      '<div class="world-news-choice-text">' +
+      ch.text +
+      "</div>" +
+      '<div class="world-news-choice-hint">' +
+      ch.hint +
+      (ch.cost ? "（需要¥" + ch.cost + "）" : "") +
+      "</div>" +
+      "</div>";
+  }
+
+  html += "</div>";
+  return html;
+}
+
+/**
+ * 处理玩家在开局选择面板中的选择
+ * @param {string} choiceId - 选择的 ID
+ * @param {Object} state - 游戏状态
+ */
+function applyIntroChoice(choiceId, state) {
+  if (!state || !choiceId) return;
+  _playerIntroChoice = choiceId;
+
+  var choicesMap = {
+    study_tech: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+        st.skills = st.skills || {};
+        st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
+        st.skills.coding.xp = (st.skills.coding.xp || 0) + 10;
+        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 5);
+        st.flags._introStudyTech = true;
+      },
+      msg: "💻 你报名了编程培训班，花了¥200。编码技能经验+10，智力需求+5。",
+    },
+    start_side_hustle: {
+      apply: function (st) {
+        st.resources.cash = (st.resources.cash || 0) + 100;
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+        st.flags._introSideHustle = true;
+      },
+      msg: "🛒 你找了份零工过渡，赚了¥100。虽然辛苦，但先站稳脚跟。",
+    },
+    save_money: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+        st.flags._introSavedMoney = true;
+      },
+      msg: "🏦 你把¥50存进了定期。虽然收益不高，但心里踏实。",
+    },
+    find_work: {
+      apply: function (st) {
+        st.flags._introFoundWorkEarly = true;
+      },
+      msg: "💼 你决定立刻找工作。先站稳脚跟，再图发展。",
+    },
+    explore_city: {
+      apply: function (st) {
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+        st.flags._introExploredCity = true;
+      },
+      msg: "🚶 你花了半天逛了逛城市，心情好了不少。对这座城市有了初步了解。",
+    },
+  };
+
+  var ch = choicesMap[choiceId];
+  if (ch) {
+    ch.apply(state);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(ch.msg, "info");
+    }
+  }
+}
 
 /**
  * 显示开局世界新闻弹窗
@@ -2533,6 +2726,9 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   // 剧本特色描述
   var scenarioIntro = getScenarioWorldContext(scenarioId);
 
+  // v2.0 新增：开局选择面板 — 让玩家对世界新闻做出反应，影响初始状态
+  var introChoicesHtml = buildIntroChoicePanel(scenarioId, _worldNewsSelected);
+
   // 构建完整HTML
   // 判断是否为实时新闻
   var isRealTime =
@@ -2562,9 +2758,11 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
     '<div class="world-news-list">' +
     newsHtml +
     "</div>" +
+    // v2.0 新增：开局选择面板
+    introChoicesHtml +
     // 底部说明
     '<div class="world-news-footer">' +
-    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。</div>' +
+    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。<br><em>做出你的第一个选择，改变这局游戏的起点。</em></div>' +
     '<button class="world-news-start-btn" id="world-news-start-btn">▶ 带着这个世界，出发</button>' +
     "</div>" +
     "</div>" +
@@ -2575,6 +2773,19 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   container.id = "world-news-intro-container";
   container.innerHTML = html;
   document.body.appendChild(container);
+
+  // 绑定选择面板事件
+  var choiceOptions = container.querySelectorAll(".world-news-choice-option");
+  for (var co = 0; co < choiceOptions.length; co++) {
+    choiceOptions[co].addEventListener("click", function () {
+      // 清除之前的选中状态
+      for (var o = 0; o < choiceOptions.length; o++) {
+        choiceOptions[o].classList.remove("selected");
+      }
+      this.classList.add("selected");
+      _playerIntroChoice = this.getAttribute("data-choice");
+    });
+  }
 
   // 绑定按钮事件
   var startBtn = document.getElementById("world-news-start-btn");
@@ -3057,6 +3268,12 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
       }
     }
   }
+
+  // Step 5: 应用玩家开局选择的影响
+  if (_playerIntroChoice && state) {
+    applyIntroChoice(_playerIntroChoice, state);
+  }
+
   if (typeof enterGame === "function") {
     enterGame();
   }

@@ -1342,6 +1342,51 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.1: 经济平衡调参（累进财富税/动态利率/难度收入曲线）===
+  {
+    name: "economy_v3_tick",
+    fn: function (state) {
+      if (typeof window === "undefined" || !window.EconomySystem) return;
+      var eco = window.EconomySystem;
+      // 应用难度收入乘数到工作收入（如果已有 jobMultipliers）
+      if (state._difficulty && state._difficulty !== "normal") {
+        var incomeMult = eco.getDifficultyIncomeMultiplier(
+          state._difficulty,
+          "baseSalaryMult",
+        );
+        if (incomeMult !== 1.0) {
+          // 通过全局乘数影响所有收入
+          state._allJobsBonus = state._allJobsBonus || 1.0;
+          state._allJobsBonus *= incomeMult;
+        }
+      }
+      // 中后期财富税（仅当总资产≥¥20万且不是休闲模式）
+      var totalAssets =
+        (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      if (
+        totalAssets >= 200000 &&
+        state._difficulty !== "casual" &&
+        state._difficulty !== "easy"
+      ) {
+        var diff = state._difficulty || "normal";
+        var wealthTax = eco.calculateProgressiveWealthTax(totalAssets, diff);
+        if (wealthTax > 0 && state.player && state.player.day > 30) {
+          state.resources.cash = Math.max(
+            0,
+            (state.resources.cash || 0) - wealthTax,
+          );
+          addDailyTransaction(
+            state,
+            "expense",
+            "wealth_tax",
+            wealthTax,
+            "累进财富税",
+          );
+        }
+      }
+    },
+  },
+
   // === v3.1: 社交网络系统（每日微博热搜/网红收入/舆论危机）===
   {
     name: "social_network_tick",
