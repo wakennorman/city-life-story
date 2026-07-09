@@ -39705,7 +39705,8 @@ if (typeof window !== "undefined") {
     },
     probability: 0.03,
     repeatable: false,
-    options: [
+    // [自洽修复] options→choices（events_core.js 只识别 choices 字段）
+    choices: [
       {
         text: "🛒 提醒大妈这菜值这个价",
         hint: "帮人识货，好感+",
