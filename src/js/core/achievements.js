@@ -698,11 +698,19 @@ const ACHIEVEMENTS = [
       if (!st.relationships) return false;
       var npcIds = [
         "aunt_wang",
+        "old_zhou",
         "boss_li",
         "sister_zhang",
-        "old_zhou",
         "xiao_mei",
         "chef_chen",
+        "auntie_lin",
+        "master_zhao",
+        "xiaoli",
+        "zhaojie",
+        "chen_ge",
+        "ajie",
+        "xiaochen",
+        "dr_wang",
       ];
       return npcIds.every(function (id) {
         return st.relationships[id] && st.relationships[id].affinity >= 80;
@@ -722,11 +730,19 @@ const ACHIEVEMENTS = [
       if (!st.relationships) return false;
       var npcIds = [
         "aunt_wang",
+        "old_zhou",
         "boss_li",
         "sister_zhang",
-        "old_zhou",
         "xiao_mei",
         "chef_chen",
+        "auntie_lin",
+        "master_zhao",
+        "xiaoli",
+        "zhaojie",
+        "chen_ge",
+        "ajie",
+        "xiaochen",
+        "dr_wang",
       ];
       return npcIds.every(function (id) {
         return st.relationships[id] && st.relationships[id].affinity < 0;
@@ -1908,7 +1924,7 @@ const ACHIEVEMENTS = [
   {
     id: "social_butterfly",
     name: "社交蝴蝶",
-    desc: "与所有6个NPC好感达到60",
+    desc: "与所有NPC好感达到60",
     story: "每个人都记得你，每个人都愿意帮你。人脉，是另一种形式的财富。",
     icon: "🦋",
     category: "隐藏",
@@ -2191,19 +2207,11 @@ const ACHIEVEMENTS = [
       var rels = st.relationships;
       var metAny = false;
       var allHigh = true;
-      var npcIds = [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-        "zhao_jie",
-        "chen_ge",
-        "a_jie",
-      ];
-      for (var i = 0; i < npcIds.length; i++) {
-        var r = rels[npcIds[i]];
+      var metNpcs = Object.keys(rels).filter(function (k) {
+        return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
+      });
+      for (var i = 0; i < metNpcs.length; i++) {
+        var r = rels[metNpcs[i]];
         if (r && typeof r.affinity === "number" && r.affinity > 0) {
           metAny = true;
           if (r.affinity < 60) {
