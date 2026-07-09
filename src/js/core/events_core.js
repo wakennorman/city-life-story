@@ -363,6 +363,12 @@ function queueRandomEvent(state, phase) {
   // 新闻桥接加权：活跃新闻提升特定事件的触发权重
   var weights = eligible.map(function (e) {
     var w = 1.0;
+    // v3.57: 基于 probability 字段的权重归一化（以 0.05 为基准）
+    // probability: 0.01 → ×0.2, 0.05 → ×1.0, 0.10 → ×2.0
+    var prob = e.probability;
+    if (typeof prob === "number" && prob > 0) {
+      w *= prob / 0.05;
+    }
     if (typeof getNewsBonusWeight === "function") {
       w += getNewsBonusWeight(e.id, state);
     }
