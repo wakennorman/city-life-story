@@ -156,7 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.71(loop R27) — 指令一扫描0真实A类+4新增高影响事件(技能满级/六位数财富/豪宅/夏夜)
+- **最新一次工作 (2026-07-10)**：v3.72(loop R28) — 新增3个NPC↔NPC关系动态事件(旧识重逢/竞争选边/同学引荐)
+  - **设计意图**: NPC关系矩阵(14NPC×14NPC)首次被事件消费，让玩家感受「NPC有自己的生活」
+  - **新增3事件**: npc_reunion_auntzhou(王婶+老周旧识) / npc_competitor_clash(Li工头+张姐竞争选边) / npc_classmate_endorsement(陈哥+阿杰同窗引荐)
+  - **影响文件**: cross_system_events.js(+239行) / linkage-events-gdd.md(+31行)
+  - **验证**: node --check ✅ / build.py 5911KB ✅
+  - **commit**: `66b2d2fd`+`99e1e144`(本地待推)
+
+- **上一轮工作 (2026-07-10)**：v3.71(loop R27) — 指令一扫描0真实A类+4新增高影响事件(技能满级/六位数财富/豪宅/夏夜)
   - **gap分析发现**: 最高Impact空白区 = 技能满级(0事件) > 财富里程碑(1事件) > 住房高端(0事件) > 季节叙事(0事件)
   - **新增4事件**: skill_absolute_mastery_capstone(满级收徒/写心法) / wealth_six_figure_milestone(六位数时刻) / luxury_housing_new_life(豪宅搬家) / summer_night_market_boom(旺季出摊)
   - **影响文件**: cross_system_events.js(+317行) / linkage-events-gdd.md(+41行)
