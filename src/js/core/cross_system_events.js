@@ -15882,5 +15882,154 @@
     ],
   });
 
+  // ====== loop-R29: 健康危机·损失厌恶驱动（2个负面里程碑事件，平衡正面成就事件）======
+
+  // 事件1：健康红线 — health < 30 时的身体警报（区别于death事件，这是「慢性恶化」警告）
+  // 设计心理学：损失厌恶·预警驱动行动（快失去才知珍贵）
+  RANDOM_EVENTS.push({
+    id: "health_crisis_slow_collapse",
+    phase: "street",
+    icon: "🩺",
+    title: "身体的账单",
+    story:
+      "你在工地蹲久了站起来的时候，眼前突然一黑——耳鸣、恶心、小腿不受控制地发抖。\n\n工友老刘扶住你：「你脸色太差了，去看看医生吧。」\n\n你摇摇头说没事。但不是没事。你已经连续三天只能睡四个小时，每天馒头配咸菜，身体的亏空在一点点累计。\n\n今天它开始要账了。",
+    conditions: function (st) {
+      // 健康低于30但未到濒死（濒死由death事件处理）
+      var h = st.status && st.status.health;
+      if (h === undefined || h === null) return false;
+      if (h > 30) return false;
+      if (h < 5) return false; // 濒死区留给更紧急的事件
+      return st.player.phase === "street" && !st.flags._healthCrisisSeen;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 请假去看病（花¥300）",
+        hint: "健康+ 花钱止损",
+        cost: 300,
+        apply: function (st) {
+          st.flags._healthCrisisSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 12);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🏥 你去了社区诊所。医生说你是过度劳累+营养不良，开了一周的药。健康+12，心情+5。身体是革命的本钱——这句话真的太对了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💊 自己买点药扛过去（花¥50）",
+        hint: "稍有缓解 便宜",
+        cost: 50,
+        apply: function (st) {
+          st.flags._healthCrisisSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 5);
+          StateManager.addMessage(
+            "💊 你在药店买了最便宜的药。健康+5。虽然不根治，但至少不那么难受了。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "✊ 咬咬牙继续干活",
+        hint: "收入但健康继续掉",
+        apply: function (st) {
+          st.flags._healthCrisisSeen = true;
+          var earn = Random.int(150, 280);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.status.health = Math.max(0, (st.status.health || 0) - 8);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          StateManager.addMessage(
+            "✊ 你咬着牙上了一天工，赚了¥" +
+              earn +
+              "。但回家路上腿都在抖。健康-8，心情-8。有时候不选选项也是一种代价。",
+            "danger",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件2：濒死边缘 — health < 15 时的紧急抉择（death march vs 最后一搏）
+  // 设计心理学：峰终定律·人生最低谷（触底时刻的情感最深刻）
+  RANDOM_EVENTS.push({
+    id: "health_near_death_reckoning",
+    phase: "street",
+    icon: "🚨",
+    title: "最后一次选择",
+    story:
+      "你醒来发现自己在地上——不知道什么时候晕过去的。头疼得像要裂开，视野边缘发黑。\n\n手机屏幕亮着，是今天的招工信息：日结¥300的搬运活。\n\n你已经三天没吃像样的饭了。口袋里只剩¥" +
+      "[CASH]。身体在跟你说「不行了」，但今天不干，明天就没得吃。",
+    conditions: function (st) {
+      var h = st.status && st.status.health;
+      if (h === undefined || h === null) return false;
+      if (h >= 15) return false;
+      return st.player.phase === "street" && !st.flags._nearDeathSeen;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🆘 打120救命",
+        hint: "救命但负债 健康大幅+",
+        apply: function (st) {
+          st.flags._nearDeathSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 20);
+          // 急救费用：¥1000-3000 负债（无力立即偿还转为债务）
+          var bill = Random.int(1000, 3000);
+          st.resources.debt = (st.resources.debt || 0) + bill;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🆘 救护车来了。抢救及时，命保住了。但账单¥" +
+              bill +
+              "让你欠了新债。健康+20，债务+¥" +
+              bill +
+              "。活着，就有希望。心情+8。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🛏️ 躺一天什么都不干",
+        hint: "自然恢复一点 没收入",
+        apply: function (st) {
+          st.flags._nearDeathSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 8);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          StateManager.addMessage(
+            "🛏️ 你在硬板床上躺了一整天，迷迷糊糊睡睡醒醒。第二天起来好了一点——但没干活就没收入。健康+8，疲劳-20。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💪 拼最后一次（¥300日结）",
+        hint: "要么翻盘 要么更糟",
+        apply: function (st) {
+          st.flags._nearDeathSeen = true;
+          if (Random.chance(0.5)) {
+            var big = 300;
+            st.resources.cash += big;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + big;
+            st.status.health = Math.max(0, (st.status.health || 0) - 5);
+            StateManager.addMessage(
+              "💪 你硬撑着干完了一天，拿到¥300。但回家又吐了一场。健康-5。拿命换钱，从来都不划算。",
+              "warning",
+            );
+          } else {
+            st.status.health = Math.max(0, (st.status.health || 0) - 12);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
+            StateManager.addMessage(
+              "💪 你干了半天就被人扶下来了——太虚弱了。工头没给钱让你走了。健康-12，心情-15。今天的代价，很沉重。",
+              "danger",
+            );
+          }
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
