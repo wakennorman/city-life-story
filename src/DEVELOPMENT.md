@@ -1,8 +1,8 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.62 填补最后3个零事件地点：郊区/政府办事大厅/培训中心）
+> 最后更新: 2026-07-09（v3.63 开局新闻深度联动修复）
 >
-> commit: `local`（待推）
+> commit: `7ed765aa`
 
 ---
 
@@ -46,6 +46,46 @@
 - 休眠NPC激活（dr_wang/master_zhao/xiaoli）效果良好，事件联动自然
 
 **验证**：node --check ✅ / python build.py ✅ / git push ✅（全部推送成功）
+
+---
+
+## 2026-07-09 — v3.63 开局新闻深度联动修复
+
+**问题**：开局新闻弹窗中的 💡 note 文字（如"科技/AI岗位薪资上涨""裁员降薪潮来袭"）是死内容——只在弹窗显示，不实际影响游戏任何系统。
+
+**根因**：
+
+1. `WORLD_NEWS_DB` 条目中的 `note` 只是字符串，没有映射到 `jobBonus`/`priceMod`/`skillXp`
+2. 开局新闻注入 `activeNews` 时加了 `"intro_"` 前缀，`news_driven_events.js` 永远匹配不到
+3. 玩家对开局新闻没有参与感，只能"阅读→点击→进入"
+
+**修复**：
+
+| 改动                                              | 文件                    | 说明                                                |
+| ------------------------------------------------- | ----------------------- | --------------------------------------------------- |
+| `applyWorldNewsToParams` 增强                     | `world_news_intro.js`   | 解析 jobBonus/priceMod/skillXp/cashBonus            |
+| 新增 `applyIntroNewsDirectEffects`                | `world_news_intro.js`   | 开局新闻即时影响工作/价格/技能/资金/投资开盘价      |
+| `applyNewsAndEnter` 重构                          | `world_news_intro.js`   | 双ID注入 + 效果合并 + 影响日志                      |
+| 新增 `buildIntroChoicePanel` + `applyIntroChoice` | `world_news_intro.js`   | 开局玩家选择面板（💻学编程/🛒找零工/🏦存钱等）      |
+| 新增 `_hasNewsId()` 辅助函数                      | `news_driven_events.js` | 自动匹配原始ID和 `"intro_"` 前缀ID                  |
+| `generateInvestmentEffectFromTag` 扩展            | `world_news_intro.js`   | 新增16个标签映射（AI/芯片/机器人/加密货币等）       |
+| `WORLD_NEWS_DB` 条目增强                          | `world_news_intro.js`   | emp_ai_replace/emp_finance_hiring 新增实际 jobBonus |
+
+**联动维度**：
+
+| 维度               | 修复前          | 修复后              |
+| ------------------ | --------------- | ------------------- |
+| sectorHeat         | ✅              | ✅                  |
+| marketMood         | ✅              | ✅                  |
+| jobBonus           | ❌ 死内容       | ✅ 实际影响工作收入 |
+| priceMod           | ❌ 死内容       | ✅ 实际影响商品价格 |
+| skillXp            | ❌ 无           | ✅ 实际增加技能经验 |
+| cashBonus          | ❌ 无           | ✅ 实际调整初始资金 |
+| investmentEffect   | ⚠️ 仅activeNews | ✅ 立即影响开盘价   |
+| news_driven_events | ❌ ID不匹配     | ✅ 双ID兼容         |
+| player_choice      | ❌ 无           | ✅ 开局选择面板     |
+
+**验证**：node --check ✅ / 审计脚本 ✅
 
 ---
 
