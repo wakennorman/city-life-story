@@ -12790,5 +12790,133 @@
     ],
   });
 
+  RANDOM_EVENTS.push({
+    id: "talent_cook_management_class",
+    phase: "street",
+    icon: "🍳",
+    title: "社区厨艺课邀约",
+    story:
+      "你拿手的那几道家常菜在街坊间早有口碑。\n" +
+      "社区活动中心的干事找上门：「周末能不能来带一节厨艺体验课？按课时结算。」",
+    // conditions：已点亮「厨艺管理」天赋节点，连接天赋系统 → 社区副业经济
+    conditions: function (st) {
+      return !!(st.talentNodes && st.talentNodes["cook_management"]);
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "🍳 接下厨艺体验课",
+        hint: "现金+，心情+，名声+",
+        apply: function (st) {
+          var pay = 600;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🍳 你带了一节「家常红烧肉」体验课，十几个邻居边学边尝。结课费¥" + pay + "，心情+8，名声+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📅 先排到下个月",
+        hint: "留余地",
+        apply: function (st) {
+          StateManager.addMessage(
+            "📅 你答应下个月再排课，干事留了联系方式。天赋没白点。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "skill_writing_column",
+    phase: "street",
+    icon: "✍️",
+    title: "自媒体约稿",
+    story:
+      "你常把城市里的小人物写进随笔，不知不觉攒了一批读者。\n" +
+      "一家本地生活号编辑私信你：「想不想开个专栏？按篇付稿费。」",
+    // conditions：写作技能达到一定等级，连接技能系统 → 名声 / 稿费经济
+    conditions: function (st) {
+      var lvl = st.skills && st.skills.writing && st.skills.writing.level;
+      return typeof lvl === "number" && lvl >= 30;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "✍️ 开专栏，先写一篇",
+        hint: "现金+，名声+",
+        apply: function (st) {
+          var pay = 800;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          StateManager.addMessage(
+            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" + pay + "，名声+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 婉拒，保持自由",
+        hint: "不绑定",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🤔 你回绝了专栏，但留了编辑联系方式——写作仍是你的私人出口。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "npc_oldzhou_toolloan",
+    phase: "street",
+    icon: "🔧",
+    title: "老周的私藏工具",
+    story:
+      "老周看你总在鼓捣些小修小补，某天拍拍你肩：\n" +
+      "「这套德国扳手我年轻时用，你拿去使。别跟我客气。」",
+    // conditions：老周已结识且好感足够高，连接 NPC 深度好感 → 实物资源（A类守卫）
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.old_zhou;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 55);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 收下，记在心里",
+        hint: "好感+，心情+",
+        apply: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          StateManager.addMessage(
+            "🔧 你接过了那套沉甸甸的扳手。老周咧嘴一笑，好感+3，心情+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 先借急用就还",
+        hint: "灵活",
+        apply: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 1);
+          StateManager.addMessage(
+            "🙏 你说「急用就借，用完就还」，老周爽快应了。手头多了套趁手工具，好感+1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
