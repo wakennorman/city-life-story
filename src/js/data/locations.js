@@ -566,7 +566,12 @@ const TRAVEL_GRAPH = {
   // 内城区：城中村位于核心区边缘
   slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market"],
   // 商业物流：批发市场连接工业区和中心区
-  wholesaleMarket: ["slum", "commercialDist", "factoryZone", "vegetable_market"],
+  wholesaleMarket: [
+    "slum",
+    "commercialDist",
+    "factoryZone",
+    "vegetable_market",
+  ],
   // 菜市场：紧邻批发市场，买菜人流密集
   vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
   // 建设区：工地连接城中村和商业区

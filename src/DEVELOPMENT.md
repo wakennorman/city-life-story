@@ -1,24 +1,26 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.58 /loop 五轮迭代 — 清理/事件填补/NPC激活/地点激活）
+> 最后更新: 2026-07-09（v3.54 事件叙事审查+3个联动事件扩充）
 >
-> commit: `a220b0ec`
+> commit: `(待定)`
 
 ---
 
-## 2026-07-09 — /loop 五轮迭代（v3.52 ~ v3.58）
+## 2026-07-09 — /loop 六轮迭代（v3.52 ~ v3.58）
 
 **/loop 自动循环任务**，目标是加强各系统关联度、填补空白、删除冗余。
 
-| 轮次 | 版本 | 产出 | 文件 |
-|------|------|------|------|
-| ① | v3.52 | 清理2个.bak文件 + 3个cooking×NPC联动事件（菜市场识货/林阿姨秘方/陈师傅后厨） | cross_system_events.js |
-| ② | v3.53 | 激活dr_wang（王医生免费门诊） + master_zhao（赵师傅修车帮手） | cross_system_events.js |
-| ③ | v3.53b | 激活xiaoli（小丽内容合作） → NPC事件覆盖100% | cross_system_events.js |
-| ④ | v3.58 | 激活菜市场地点 vegetable_market + TRAVEL_GRAPH | locations.js |
-| ⑤ | v3.58b | 菜市场接入交易系统（蔬菜/水果buyLocations） | goods.js |
+| 轮次 | 版本   | 产出                                                                            | 文件                   |
+| ---- | ------ | ------------------------------------------------------------------------------- | ---------------------- |
+| ①    | v3.52  | 清理2个.bak文件 + 3个cooking×NPC联动事件（菜市场识货/林阿姨秘方/陈师傅后厨）    | cross_system_events.js |
+| ②    | v3.53  | 激活dr_wang（王医生免费门诊） + master_zhao（赵师傅修车帮手）                   | cross_system_events.js |
+| ③    | v3.53b | 激活xiaoli（小丽内容合作） → NPC事件覆盖100%                                    | cross_system_events.js |
+| ④    | v3.58  | 激活菜市场地点 vegetable_market + TRAVEL_GRAPH                                  | locations.js           |
+| ⑤    | v3.58b | 菜市场接入交易系统（蔬菜/水果buyLocations）                                     | goods.js               |
+| ⑥    | v3.54  | 事件叙事-触发自洽性审查（扫描6个文件，已修复事件全部达标）+ 3个联动事件填补空白 | cross_system_events.js |
 
 **经验教训**：
+
 - 新地点质量不够高，以后不再擅自添加，除非用户明确要求
 - 休眠NPC激活（dr_wang/master_zhao/xiaoli）效果良好，事件联动自然
 

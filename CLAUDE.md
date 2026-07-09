@@ -156,11 +156,15 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-09)**：v3.52c — 事件自洽性修复(A类7个)+5联动事件扩充
-  - **指令一修复**：扫描600+事件，识别7个A类缺陷（story直呼NPC名但缺met校验），全部修复并加`[自洽修复]`注释
-  - **指令二扩充**：新增5个联动事件——cold_snap_housing_crisis（天气×住所）、fame_recognized_encounter（名气×社交）、health_alone_trough（健康×关系网）、edu_white_collar_threshold（学历×白领职场）、side_hustle_scaling_crisis（副业×规模化）
-  - **影响文件**：cross_system_events.js(+5新事件), events_street_wealth.js(3处met修复), events_street_survival.js(3处met修复), cross_system_events.js(boss_li affinity门槛)
-  - **验证**：node --check ✅ / python build.py 5392.5KB ✅ / commit 7b59520f
+- **最新一次工作 (2026-07-09)**：v3.54 — 事件叙事审查+3个联动事件扩充
+  - **指令一审查**：扫描 events_street_life/survival/wealth + cross_system_events + career_path_events 6个事件文件，原A类缺陷（NPC met/职业条件/天气检查）已在v3.20-v3.53中全部标注`[自洽修复]`并修复，本轮无新增A类缺陷
+  - **指令二扩充**：新增3个联动事件填补叙事空白——
+    - `work_streak_community_recognition`（工作连击≥50天→社区认可，联动工作系统×社交）
+    - `skill_mastery_side_opportunity`（修理+电工双≥20→双料师傅副业，联动技能×经济）
+    - `housing_tier_milestone_reflection`（住所升级→情感回响，联动住房×心理）
+  - **设计意图**：连续工作50天（v3.25追踪）首次有叙事回响；多技能组合首次有协同认可；住所升级首次有情感叙事
+  - **影响文件**：cross_system_events.js（+185行，3个新事件）
+  - **验证**：node --check(6个事件文件) ✅ / check:js 137文件 ✅ / build.py 5442.8KB ✅
 
 - **上一轮工作 (2026-07-09)**：v3.52b — 烹饪×NPC联动事件（3个新增）+ 清理废弃bak文件
   - **改进1：职业路线预览弹窗** `showCareerPathPreviewModal(pathKey)`：点击任意路径卡片打开晋升阶梯图，展示全部等级（等级圆圈+名称+描述+要求+薪资），绿色=已达标/灰色=未达标，底部投递按钮（条件满足时激活）

@@ -40974,6 +40974,261 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====== v3.59 联动事件 ×5（空白区填充：道德分叉/饥饿积累爆发/编程识骗专业视角/NPC深度好感链）======
+
+  // 1. 道德人设分叉·诚信侧（高道德玩家专属）
+  RANDOM_EVENTS.push({
+    id: "morality_wallet_honest",
+    phase: "street",
+    icon: "👛",
+    title: "捡到钱包",
+    story:
+      "你在巷口捡到一个钱包，里面夹着¥800现金和一张写满字迹的身份证。\n" +
+      "失主大概急疯了——你摸出手机，犹豫了一瞬。",
+    // conditions：高道德玩家（人设分叉·诚信侧），与 low 侧互斥
+    conditions: function (st) {
+      // 检查玩家道德值是否达到诚信门槛
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m >= 70;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 按身份证地址找失主",
+        hint: "道德+，声望+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.fame = Math.min(100, (st.fame || 0) + 4);
+          StateManager.addMessage(
+            "📞 你辗转联系上失主，是个外地打工的姑娘。她红着眼眶要塞给你¥100谢礼，你没收。道德+5，声望+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏢 交到派出所",
+        hint: "稳妥，道德+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "🏢 你把钱包交到辖区派出所，民警登记时多看了你一眼：「现在这样的人不多了。」道德+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 2. 道德人设分叉·利己侧（低道德玩家专属）
+  RANDOM_EVENTS.push({
+    id: "morality_wallet_keep",
+    phase: "street",
+    icon: "💰",
+    title: "捡到钱包",
+    story:
+      "你在巷口捡到一个钱包，里面夹着¥800现金和一张身份证。\n" +
+      "四下无人——这钱够你撑过这个月了。你心跳加快，手指攥紧了皮夹。",
+    // conditions：低道德玩家（人设分叉·利己侧），与 high 侧互斥
+    conditions: function (st) {
+      // 检查玩家道德值是否跌破利己门槛
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m <= 30;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "😏 现金拿走，证件扔了",
+        hint: "现金+，道德-",
+        apply: function (st) {
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 8);
+          StateManager.addMessage(
+            "😏 你抽走¥800，把空钱包连同身份证扔进垃圾桶。当晚睡得不太踏实。现金+¥800，道德-8。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🤔 留着，但有点不安",
+        hint: "折中，道德微-",
+        apply: function (st) {
+          st.resources.cash += 800;
+          st.resources.totalEarned += 800;
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+          StateManager.addMessage(
+            "🤔 你留下了钱，却总想起那张身份证。现金+¥800，但心里堵得慌，心情-5，道德-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 3. 连续饥饿积累爆发（needs.hunger<25 连续≥3天）
+  RANDOM_EVENTS.push({
+    id: "hunger_streak_neighbor_meal",
+    phase: "street",
+    icon: "🍚",
+    title: "邻居的一碗饭",
+    story:
+      "你连着几天没正经吃过饭，在路边蹲着时眼前一阵发黑。\n" +
+      "卖煎饼的摊主老姐头探出头：「小伙子，看你脸色不对，这俩煎饼叔请了。」",
+    // conditions：低饥饿连续天数达到爆发阈值（flags._habits.lowHungerStreak）
+    conditions: function (st) {
+      // 检查连续饥饿天数是否≥3
+      var streak =
+        st.flags && st.flags._habits && st.flags._habits.lowHungerStreak;
+      return (streak || 0) >= 3 && st.player.phase === "street";
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍚 接过煎饼，道谢",
+        hint: "饱食+，心情+",
+        apply: function (st) {
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "🍚 你接过还烫手的煎饼，狼吞虎咽。一股暖意从胃里升起来。饱食+40，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 倔强推辞",
+        hint: "自尊，但更虚",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          StateManager.addMessage(
+            "🙅 你逞强推了，转身却腿一软。有些尊严，是空肚子撑不起的。心情+3，疲劳+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 4. 编程技能专业视角（coding≥40 识破钓鱼短信）
+  RANDOM_EVENTS.push({
+    id: "coding_scam_spot",
+    phase: "street",
+    icon: "💻",
+    title: "刷单短信",
+    story:
+      "手机弹出一条短信：「亲，刷单返利轻松日入500，加微信xxx领任务」。\n" +
+      "你扫了一眼那个仿冒得拙劣的链接结构——跳转域名、伪造备案号——立刻断定是钓鱼。",
+    // conditions：编程技能达到专业视角门槛（能识别骗局）
+    conditions: function (st) {
+      // 检查 coding 技能等级是否解锁「识骗」视角
+      var lvl = st.skills && st.skills.coding && st.skills.coding.level;
+      return (lvl || 0) >= 40;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚫 举报并拉黑",
+        hint: "道德+，技能+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 4);
+          if (st.skills && st.skills.coding) {
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + 20;
+          }
+          StateManager.addMessage(
+            "🚫 你顺手把号码举报到反诈平台，顺带给家里群发了提醒。技能+20xp，道德+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🕵️ 反向试探骗子",
+        hint: "冒险，可能反被坑",
+        apply: function (st) {
+          if (Random.chance(0.5)) {
+            st.resources.cash += 100;
+            if (st.skills && st.skills.coding) {
+              st.skills.coding.xp = (st.skills.coding.xp || 0) + 30;
+            }
+            StateManager.addMessage(
+              "🕵️ 你用脚本反查到骗子服务器漏洞，顺手薅了¥100「学费」。技能+30xp，现金+¥100。",
+              "event",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            StateManager.addMessage(
+              "🕵️ 你刚试探两下就被对方拉黑，还差点中了木马。没赚到，反而后怕。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // 5. NPC 深度好感链（小丽好感≥60 透露品牌长期合作）
+  RANDOM_EVENTS.push({
+    id: "xiaoli_brand_deal",
+    phase: "street",
+    icon: "🤝",
+    title: "小丽的品牌单",
+    story:
+      "小丽发来语音：「有个国货护肤品牌找长期代运营，我推荐了你。\n" +
+      "他们要的不只是剪辑，是懂内容的人。报酬按月¥3000-5000，你接不接？」",
+    // conditions：已结识小丽且好感达到深度合作门槛（联动 relationships 系统）
+    conditions: function (st) {
+      // 检查是否已结识小丽且好感≥60
+      var rel = st.relationships && st.relationships.xiaoli;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 60);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "✅ 接下长期代运营",
+        hint: "稳定月入+声望",
+        apply: function (st) {
+          st.flags._xiaoliBrandDeal = true;
+          var pay = Random.int(3000, 5000);
+          st.resources.cash += pay;
+          st.resources.totalEarned += pay;
+          st.fame = Math.min(100, (st.fame || 0) + 6);
+          if (st.relationships.xiaoli) {
+            st.relationships.xiaoli.affinity = Math.min(
+              100,
+              st.relationships.xiaoli.affinity + 5,
+            );
+          }
+          StateManager.addMessage(
+            "✅ 你和品牌签了月框。第一笔¥" +
+              pay +
+              "到账，小丽在群里@你：「靠谱！」声望+6，好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 先接一单试试",
+        hint: "低风险试探",
+        apply: function (st) {
+          st.flags._xiaoliBrandTrial = true;
+          var pay2 = Random.int(800, 1500);
+          st.resources.cash += pay2;
+          st.resources.totalEarned += pay2;
+          StateManager.addMessage(
+            "🤝 你接了试单，交付后品牌方挺满意。先赚¥" + pay2 + "，看看后续。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
@@ -65106,7 +65361,12 @@ const TRAVEL_GRAPH = {
   // 内城区：城中村位于核心区边缘
   slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market"],
   // 商业物流：批发市场连接工业区和中心区
-  wholesaleMarket: ["slum", "commercialDist", "factoryZone", "vegetable_market"],
+  wholesaleMarket: [
+    "slum",
+    "commercialDist",
+    "factoryZone",
+    "vegetable_market",
+  ],
   // 菜市场：紧邻批发市场，买菜人流密集
   vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
   // 建设区：工地连接城中村和商业区
