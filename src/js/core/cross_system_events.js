@@ -13713,5 +13713,128 @@
       },
     ],
   });
+  // ====== R9 联动事件（空白区填充：时代变迁/NPCD深度好感/双技能/声望高阶）======
+  RANDOM_EVENTS.push({
+    id: "era_inflation_rent_hike",
+    phase: "street", icon: "📈", title: "通胀下的涨租",
+    story: "物价一年比一年高。房东贴出通知：下月房租上调一成。菜场大妈念叨「钱越来越不经花了」，你捏着钱包发愁。",
+    // conditions：时代变迁进入中后期（物价/工资明显变化），联动 era_transform 系统
+    conditions: function (st) {
+      var era = st._eraState; // 检查 时代状态是否已初始化
+      if (!era) return false;
+      return era.stageId === "mature" || era.stageId === "decline"; // 检查 中后期阶段（约1.5年后）
+    },
+    probability: 0.04, repeatable: true,
+    choices: [
+      {
+        text: "💰 咬牙续租", hint: "现金- 安稳+",
+        apply: function (st) {
+          var hike = Math.round((st.resources.cash || 0) * 0.06); // 涨租差价
+          st.resources.cash = Math.max(0, st.resources.cash - hike);
+          StateManager.addMessage("你补齐了涨租的差价，总算没流落街头。", "info");
+        },
+      },
+      {
+        text: "📦 搬去城郊", hint: "现金+ 通勤累",
+        apply: function (st) {
+          st.resources.cash += 80; // 省下月租
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          StateManager.addMessage("你搬到城郊更便宜的床位，每月省下一笔，但通勤更累了。", "info");
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "sister_zhang_market_tip",
+    phase: "street", icon: "🤝", title: "张姐的内推",
+    story: "张姐神秘兮兮把你拉到一边：「商业区有个黄金摊位空出来了，我帮你递个话？」她眼里是真心想拉你一把。",
+    // conditions：张姐好感积累后的意外发现（NPC 关系空白区）
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.sister_zhang; // 检查 张姐关系对象
+      if (!rel || !rel.met) return false; // 检查 已结识
+      return (rel.affinity || 0) >= 60; // 检查 好感≥60
+    },
+    probability: 0.03, repeatable: false,
+    choices: [
+      {
+        text: "🙌 接下人情", hint: "声望+ 现金+",
+        apply: function (st) {
+          st.resources.cash += 200;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          var rel = st.relationships.sister_zhang;
+          rel.affinity = Math.min(100, rel.affinity + 5);
+          StateManager.addMessage("张姐真帮你递了话，你拿到商业区临时摊位资格，名声也涨了。", "info");
+        },
+      },
+      {
+        text: "🙏 先记着", hint: "好感+ 无消耗",
+        apply: function (st) {
+          var rel = st.relationships.sister_zhang;
+          rel.affinity = Math.min(100, rel.affinity + 8);
+          StateManager.addMessage("你婉拒了，说等站稳再说。张姐反倒更欣赏你的稳重。", "info");
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "electrician_coding_smart_home",
+    phase: "street", icon: "💡", title: "智能家居改装",
+    story: "邻居看你既懂电路又玩得转代码，凑过来问：「能不能帮我把老房子改成手机遥控灯？给你算工钱。」",
+    // conditions：电工+编程双技能协同（技能系统空白区）
+    conditions: function (st) {
+      var elec = st.skills && st.skills.electrician ? st.skills.electrician.level : 0; // 检查 电工等级
+      var code = st.skills && st.skills.coding ? st.skills.coding.level : 0; // 检查 编程等级
+      return elec >= 20 && code >= 20; // 检查 双技能均≥20
+    },
+    probability: 0.03, repeatable: true,
+    choices: [
+      {
+        text: "🔧 接单改装", hint: "现金+ 电工xp+",
+        apply: function (st) {
+          st.resources.cash += 150;
+          if (st.skills.electrician) st.skills.electrician.xp += 25;
+          StateManager.addMessage("你用继电器加单片机把灯连进手机，邻居直呼神奇，工钱到手。", "info");
+        },
+      },
+      {
+        text: "📚 教他自己弄", hint: "声望+ 无消耗",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          StateManager.addMessage("你甩给他一份教程和零件清单，他后来真鼓捣出来了，逢人夸你。", "info");
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "reputation_top_influencer",
+    phase: "street", icon: "🌟", title: "商圈红人",
+    story: "商业区里越来越多的人认得你——店员喊你「常客」，摊主留你最爱的位置。你成了这片街区隐形的「自己人」。",
+    // conditions：声望系统高阶分叉（reputation 按地点 key 存，非标量）
+    conditions: function (st) {
+      var rep = st.reputation && st.reputation.commercialDist; // 检查 商业区声望
+      return (rep || 0) >= 80; // 检查 声望≥80（顶阶）
+    },
+    probability: 0.03, repeatable: false,
+    choices: [
+      {
+        text: "🤝 牵头邻里互助", hint: "声望+ 好感扩散",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          if (st.reputation) st.reputation.commercialDist = Math.min(100, (st.reputation.commercialDist || 0) + 3);
+          StateManager.addMessage("你张罗起邻里互助群，整片街区的商家都买你的账。", "info");
+        },
+      },
+      {
+        text: "🙂 低调保持", hint: "无消耗 稳",
+        apply: function (st) {
+          StateManager.addMessage("你笑着摆摆手，继续做个被记得脸熟的人。", "info");
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
