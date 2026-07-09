@@ -72771,12 +72771,14 @@ const NPCS = [
     name: "陈哥",
     role: "情报贩子",
     avatar: "images/avatars/chen_ge.png",
-    location: "nightMarket",
+    // [自洽修复] 原 location: "nightMarket" 不存在于 locations.js，改为 commercialDist
+    location: "commercialDist",
     schedule: {
       morning: "slum",
       afternoon: "commercialDist",
-      evening: "nightMarket",
-      night: "nightMarket",
+      // [自洽修复] nightMarket 不在 locations.js 中，改 commercialDist（夜市在商业区附近）
+      evening: "commercialDist",
+      night: "commercialDist",
     },
     birthday: 245,
     desc: "夜市摊主兼情报贩子，什么都知道。用钱或者人情换消息。",
@@ -72821,7 +72823,8 @@ const NPCS = [
       },
     ],
     tradeInfo: {
-      expertise: ["info", "nightMarket"],
+      // [自洽修复] nightMarket → commercialDist
+      expertise: ["info", "commercialDist"],
       infoTypes: {
         price_level: { label: "隐藏商机", threshold: 40, cost: 80 },
         category_highest: {
