@@ -105,7 +105,7 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["waste_recycling", "courier_gig", "parcel_sorting"],
+        jobs: ["waste_recycling", "courier_gig", "wholesale_sorting"],
         multiplier: 1.1,
       },
       { minAffinity: 60, jobs: null, multiplier: 1.05 },
@@ -334,16 +334,14 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["manual_labor_construction", "skilled_labor_construction"],
+        // [自洽修复] skilled_labor_construction/bricklaying 不存在 → factory_work_assembly/steel_worker
+        jobs: ["manual_labor_construction", "factory_work_assembly"],
         multiplier: 1.15,
       },
       {
         minAffinity: 60,
-        jobs: [
-          "manual_labor_construction",
-          "skilled_labor_construction",
-          "bricklaying",
-        ],
+        // [自洽修复] skilled_labor_construction/bricklaying 不存在
+        jobs: ["manual_labor_construction", "factory_work_assembly"],
         multiplier: 1.1,
       },
     ],
@@ -568,12 +566,8 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: [
-          "street_vending_goods",
-          "street_vending_food",
-          "food_stall",
-          "sales_promotion",
-        ],
+        // [自洽修复] street_vending_goods/food_stall/sales_promotion 不存在 → 替换
+        jobs: ["street_vending_food", "shop_assistant", "cafeteria_worker"],
         multiplier: 1.12,
       },
       { minAffinity: 60, jobs: null, multiplier: 1.05 },
@@ -791,12 +785,14 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["waste_recycling", "junk_sorting"],
+        // [自洽修复] junk_sorting 不存在 → waste_recycling (同类工作)
+        jobs: ["waste_recycling", "wholesale_sorting"],
         multiplier: 1.2,
       },
       {
         minAffinity: 60,
-        jobs: ["waste_recycling", "junk_sorting"],
+        // [自洽修复] junk_sorting 不存在 → waste_recycling (同类工作)
+        jobs: ["waste_recycling", "wholesale_sorting"],
         multiplier: 1.1,
       },
     ],
@@ -1019,7 +1015,8 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["tutoring", "package_delivery"],
+        // [自洽修复] package_delivery 不存在 → delivery_rider
+        jobs: ["tutoring", "delivery_rider"],
         multiplier: 1.15,
       },
       { minAffinity: 60, jobs: ["tutoring"], multiplier: 1.1 },
@@ -1210,12 +1207,14 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["food_stall", "street_vending_food", "kitchen_helper"],
+        // [自洽修复] kitchen_helper 不存在 → restaurant_assistant
+        jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
         multiplier: 1.18,
       },
       {
         minAffinity: 60,
-        jobs: ["food_stall", "street_vending_food", "kitchen_helper"],
+        // [自洽修复] kitchen_helper 不存在 → restaurant_assistant
+        jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
         multiplier: 1.1,
       },
     ],
@@ -1554,7 +1553,8 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["beauty_salon", "nail_artist"],
+        // [自洽修复] beauty_salon/nail_artist 不存在 → shop_assistant
+        jobs: ["shop_assistant", "manual_labor_construction"],
         multiplier: 1.1,
       },
     ],
@@ -1703,7 +1703,8 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["delivery_rider", "package_delivery"],
+        // [自洽修复] package_delivery 不存在 → wholesale_delivery
+        jobs: ["delivery_rider", "wholesale_delivery"],
         multiplier: 1.12,
       },
     ],
@@ -2676,7 +2677,8 @@ const NPCS = [
     presenceBonus: [
       {
         minAffinity: 30,
-        jobs: ["hospital_caregiver", "hospital_companion"],
+        // [自洽修复] hospital_caregiver 不存在 → hospital_companion
+        jobs: ["hospital_companion", "cafeteria_worker"],
         multiplier: 1.1,
       },
     ],
