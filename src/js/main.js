@@ -1720,30 +1720,94 @@ function startNewGame() {
     '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。左侧栏也有附近可前往的地点列表。',
     "info",
   );
-  document.getElementById("welcome-screen").style.display = "none";
-  document.getElementById("mode-select-screen").style.display = "none";
-  document.getElementById("scenario-select-screen").style.display = "none";
-  document.getElementById("sandbox-screen").style.display = "none";
 
-  var _classicState = StateManager.getState();
-  var _enterClassicGame = function () {
-    document.getElementById("app").style.display = "";
-    gameStarted = true;
-    renderAll();
-    if (typeof initCashCarousel === "function") initCashCarousel();
-    // ---- 绑定顶栏按钮 ----
-    bindHeaderButtons();
-    setTimeout(function () {
-      if (typeof showForcedDreamModal === "function") {
-        showForcedDreamModal();
+  // === v3.57 经典模式天赋系统 ===
+  var classicScenario = getScenarioById("classic");
+  var _classicAfterTalent = function (acceptedTalents) {
+    // 记录天赋
+    var state = StateManager.getState();
+    if (acceptedTalents && acceptedTalents.length > 0) {
+      state.flags._talent = [];
+      for (var _ti = 0; _ti < acceptedTalents.length; _ti++) {
+        var _pt = acceptedTalents[_ti];
+        if (typeof _pt.apply === "function") _pt.apply(state);
+        state.flags._talent.push({
+          id: _pt.id,
+          name: _pt.name,
+          icon: _pt.icon,
+          desc: _pt.desc,
+        });
       }
-    }, 300);
+      var _talentNames = acceptedTalents
+        .map(function (t) {
+          return t.icon + " " + t.name;
+        })
+        .join("、");
+      StateManager.addMessage("✨ 接受天赋：" + _talentNames, "event");
+    } else {
+      state.flags._talent = null;
+      StateManager.addMessage("🎯 放弃天赋，靠自己打拼。", "event");
+    }
+
+    // === 难度系统 + 传承币解锁 ===
+    if (
+      typeof applyDifficultyToState === "function" &&
+      window._selectedDifficulty
+    ) {
+      applyDifficultyToState(state, window._selectedDifficulty);
+    }
+    if (typeof applyHeritageUnlocks === "function") applyHeritageUnlocks(state);
+
+    // 隐藏选择界面
+    document.getElementById("mode-select-screen").style.display = "none";
+    document.getElementById("scenario-select-screen").style.display = "none";
+    document.getElementById("welcome-screen").style.display = "none";
+    document.getElementById("sandbox-screen").style.display = "none";
+
+    var _enterClassicGame = function () {
+      document.getElementById("app").style.display = "";
+      gameStarted = true;
+      renderAll();
+      if (typeof initCashCarousel === "function") initCashCarousel();
+      bindHeaderButtons();
+      setTimeout(function () {
+        if (typeof showForcedDreamModal === "function") showForcedDreamModal();
+      }, 300);
+    };
+
+    if (typeof startWithWorldNewsIntro === "function") {
+      startWithWorldNewsIntro(state, "classic", _enterClassicGame);
+    } else {
+      _enterClassicGame();
+    }
+    setTimeout(function () {
+      var appEl = document.getElementById("app");
+      if (appEl && appEl.style.display === "none") {
+        console.warn("[DIAG] app 仍 display:none，强制显示");
+        appEl.style.display = "";
+        if (typeof renderAll === "function") renderAll();
+      }
+    }, 3000);
   };
 
-  if (typeof startWithWorldNewsIntro === "function") {
-    startWithWorldNewsIntro(_classicState, "classic", _enterClassicGame);
+  // 经典模式也有天赋池
+  if (
+    classicScenario &&
+    classicScenario.talents &&
+    classicScenario.talents.length > 0
+  ) {
+    var _rolled = rollTalents(classicScenario);
+    showTalentRevealModal(
+      _rolled,
+      function (accepted) {
+        _classicAfterTalent(accepted);
+      },
+      function () {
+        _classicAfterTalent([]);
+      },
+    );
   } else {
-    _enterClassicGame();
+    _classicAfterTalent([]);
   }
 }
 

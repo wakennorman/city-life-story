@@ -138,6 +138,19 @@
         triggerDay: day,
         stage: eraMod.stageId,
       };
+      // 调度 era_events.js 中的交互事件（如果有）
+      if (
+        typeof window !== "undefined" &&
+        window.ERA_EVENTS &&
+        typeof scheduleChainEvent === "function"
+      ) {
+        for (var ei = 0; ei < window.ERA_EVENTS.length; ei++) {
+          if (window.ERA_EVENTS[ei].day === day) {
+            scheduleChainEvent(state, window.ERA_EVENTS[ei].id, 0, "street");
+            break;
+          }
+        }
+      }
     }
   }
 

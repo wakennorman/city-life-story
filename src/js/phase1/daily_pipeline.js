@@ -1378,6 +1378,20 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === v3.6 时代变迁系统（通胀/物价/行业热度）===
+  {
+    name: "era_tick",
+    fn: function (state) {
+      if (
+        typeof window !== "undefined" &&
+        window.eraTransform &&
+        typeof window.eraTransform.tick === "function"
+      ) {
+        window.eraTransform.tick(state);
+      }
+    },
+  },
+
   // === 三章结局路线效应 ===
   {
     name: "route_effects",

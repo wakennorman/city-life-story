@@ -42224,6 +42224,265 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  RANDOM_EVENTS.push({
+    id: "talent_cook_management_class",
+    phase: "street",
+    icon: "🍳",
+    title: "社区厨艺课邀约",
+    story:
+      "你拿手的那几道家常菜在街坊间早有口碑。\n" +
+      "社区活动中心的干事找上门：「周末能不能来带一节厨艺体验课？按课时结算。」",
+    // conditions：已点亮「厨艺管理」天赋节点，连接天赋系统 → 社区副业经济
+    conditions: function (st) {
+      return !!(st.talentNodes && st.talentNodes["cook_management"]);
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "🍳 接下厨艺体验课",
+        hint: "现金+，心情+，名声+",
+        apply: function (st) {
+          var pay = 600;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🍳 你带了一节「家常红烧肉」体验课，十几个邻居边学边尝。结课费¥" +
+              pay +
+              "，心情+8，名声+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📅 先排到下个月",
+        hint: "留余地",
+        apply: function (st) {
+          StateManager.addMessage(
+            "📅 你答应下个月再排课，干事留了联系方式。天赋没白点。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "skill_writing_column",
+    phase: "street",
+    icon: "✍️",
+    title: "自媒体约稿",
+    story:
+      "你常把城市里的小人物写进随笔，不知不觉攒了一批读者。\n" +
+      "一家本地生活号编辑私信你：「想不想开个专栏？按篇付稿费。」",
+    // conditions：写作技能达到一定等级，连接技能系统 → 名声 / 稿费经济
+    conditions: function (st) {
+      var lvl = st.skills && st.skills.writing && st.skills.writing.level;
+      return typeof lvl === "number" && lvl >= 30;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      {
+        text: "✍️ 开专栏，先写一篇",
+        hint: "现金+，名声+",
+        apply: function (st) {
+          var pay = 800;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          StateManager.addMessage(
+            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" +
+              pay +
+              "，名声+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 婉拒，保持自由",
+        hint: "不绑定",
+        apply: function (st) {
+          StateManager.addMessage(
+            "🤔 你回绝了专栏，但留了编辑联系方式——写作仍是你的私人出口。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "npc_oldzhou_toolloan",
+    phase: "street",
+    icon: "🔧",
+    title: "老周的私藏工具",
+    story:
+      "老周看你总在鼓捣些小修小补，某天拍拍你肩：\n" +
+      "「这套德国扳手我年轻时用，你拿去使。别跟我客气。」",
+    // conditions：老周已结识且好感足够高，连接 NPC 深度好感 → 实物资源（A类守卫）
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.old_zhou;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 55);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 收下，记在心里",
+        hint: "好感+，心情+",
+        apply: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          StateManager.addMessage(
+            "🔧 你接过了那套沉甸甸的扳手。老周咧嘴一笑，好感+3，心情+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 先借急用就还",
+        hint: "灵活",
+        apply: function (st) {
+          var rel = st.relationships && st.relationships.old_zhou;
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 1);
+          StateManager.addMessage(
+            "🙏 你说「急用就借，用完就还」，老周爽快应了。手头多了套趁手工具，好感+1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "morality_extreme_blacklist",
+    phase: "street",
+    icon: "⚠️",
+    title: "旧账找上门",
+    story:
+      "你早年耍过的那些心眼，终于有了回响。\n" +
+      "一个你坑过的熟人托人放话：「这人办事不地道，以后活儿别给他。」",
+    // conditions：道德跌破极低门槛，极端利己的长期回响（与 high 侧形成闭环）
+    conditions: function (st) {
+      var m = st.player && st.player.morality;
+      return typeof m === "number" && m <= 15;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🕊️ 主动登门道歉赔钱",
+        hint: "现金-，道德+，但声誉难回",
+        apply: function (st) {
+          var cost = 1500;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
+          StateManager.addMessage(
+            "🕊️ 你上门赔了¥" + cost + "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
+            "danger",
+          );
+        },
+      },
+      {
+        text: "🙈 装作没事",
+        hint: "躲一时",
+        apply: function (st) {
+          st.player.fame = Math.max(0, (st.player.fame || 0) - 3);
+          StateManager.addMessage(
+            "🙈 你假装没听见风声。名声-3，有些门从此对你关上了。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "weather_rainy_umbrella",
+    phase: "street",
+    icon: "🌧️",
+    title: "雨里的一把伞",
+    story:
+      "突如其来的雨把整条街浇透。你缩在屋檐下，旁边也有人正发愁。\n" +
+      "对方递来半边伞：「顺路，一起走？」",
+    // conditions：当前天气为雨天，连接天气系统 → 偶遇 / 心情
+    conditions: function (st) {
+      return !!(st.weather && st.weather.current === "rainy");
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🌂 接下半边伞",
+        hint: "心情+，可能结识",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "🌂 你们挤在一把伞下走了两条街，聊得意外投机。心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏃 冒雨冲回去",
+        hint: "省事但狼狈",
+        apply: function (st) {
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+          StateManager.addMessage(
+            "🏃 你摆摆手冲进雨里，到家时浑身湿透。心情-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "fame_high_interview",
+    phase: "street",
+    icon: "🎤",
+    title: "本地媒体的采访",
+    story:
+      "你在街坊里攒下的好名声，引来了城里生活周刊的记者。\n" +
+      "「我们想做个『普通人的城市故事』专栏，能聊聊你吗？」",
+    // conditions：名声达到较高门槛，累积状态爆发 → 曝光机会
+    conditions: function (st) {
+      var f = st.player && st.player.fame;
+      return typeof f === "number" && f >= 60;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎤 答应采访",
+        hint: "名声+，现金+",
+        apply: function (st) {
+          var pay = 1000;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          StateManager.addMessage(
+            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" + pay + "，名声+8，连菜市场阿姨都认得你了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤫 婉拒出镜",
+        hint: "低调",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "🤫 你谢绝了出镜，但记者写了篇匿名小稿。名声+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
@@ -49702,6 +49961,738 @@ if (typeof window !== "undefined") {
   window.checkTravelLegalEvents = checkTravelLegalEvents;
   window.checkLifeNodeTravelEvents = checkLifeNodeTravelEvents;
   window.checkCrossSystemEvents = checkCrossSystemEvents;
+}
+</script>
+    <!-- v3.6: 时代变迁系统（通胀/物价/工资/行业热度）-->
+    <script>/**
+ * 时代变迁系统（v3.6 P0-2）
+ *
+ * 模拟中国近30年经济变迁对物价/工资的影响：
+ * - 通胀指数：1.0 → 1.08（8%/年）
+ * - 时代阶段：初期/成长期/成熟期/衰退期
+ * - 每个阶段有不同的价格/工资倍率
+ *
+ * 设计参考：中国CPI历史数据 / Capitalism Lab经济周期
+ */
+
+(function () {
+  // ====== 时代阶段定义 ======
+  const ERA_STAGES = {
+    initial: {
+      id: "initial",
+      name: "起步期",
+      icon: "🌱",
+      desc: "经济起步阶段，物价稳定但工资较低",
+      priceMod: 0.85,
+      wageMod: 0.8,
+      color: "var(--success)",
+    },
+    growth: {
+      id: "growth",
+      name: "成长期",
+      icon: "📈",
+      desc: "经济高速增长，物价温和上涨，工资快速提升",
+      priceMod: 1.0,
+      wageMod: 1.0,
+      color: "var(--primary)",
+    },
+    mature: {
+      id: "mature",
+      name: "成熟期",
+      icon: "💰",
+      desc: "经济成熟，物价上涨明显，工资增长放缓",
+      priceMod: 1.15,
+      wageMod: 1.1,
+      color: "var(--warning)",
+    },
+    decline: {
+      id: "decline",
+      name: "调整期",
+      icon: "📉",
+      desc: "经济调整期，部分行业下行，机会与风险并存",
+      priceMod: 1.05,
+      wageMod: 0.95,
+      color: "var(--danger)",
+    },
+  };
+
+  // ====== 通胀指数配置 ======
+  const INFLATION_CONFIG = {
+    annualRate: 0.08, // 8%/年
+    baseIndex: 1.0,
+    maxIndex: 2.5, // 通胀指数上限
+    minIndex: 0.8, // 通胀指数下限
+  };
+
+  // ====== 时代事件触发点（按游戏天数） ======
+  const ERA_EVENTS_TRIGGER_DAYS = [90, 180, 270, 365, 450, 540, 720, 900];
+
+  /**
+   * 获取当前时代阶段
+   * @param {number} day - 当前游戏天数
+   * @returns {string} 阶段ID
+   */
+  function getEraStage(day) {
+    const year = day / 365;
+    if (year < 0.5) return "initial";
+    if (year < 1.5) return "growth";
+    if (year < 3) return "mature";
+    return "decline";
+  }
+
+  /**
+   * 获取当前时代修正
+   * @param {Object} state - 游戏状态
+   * @returns {Object} 时代修正信息
+   */
+  function getEraMod(state) {
+    const day = state.player ? state.player.day : 1;
+    const stageId = getEraStage(day);
+    const stage = ERA_STAGES[stageId];
+
+    // 计算通胀指数
+    const year = day / 365;
+    let inflationIndex = INFLATION_CONFIG.baseIndex;
+    inflationIndex *= Math.pow(1 + INFLATION_CONFIG.annualRate, year);
+    inflationIndex = Math.max(
+      INFLATION_CONFIG.minIndex,
+      Math.min(INFLATION_CONFIG.maxIndex, inflationIndex),
+    );
+
+    // 世界参数叠加
+    let sectorDrift = 0;
+    if (state._worldParams && state._worldParams.sectorHeat) {
+      // 取平均行业热度
+      const heats = Object.values(state._worldParams.sectorHeat);
+      if (heats.length > 0) {
+        sectorDrift = heats.reduce((a, b) => a + b, 0) / heats.length - 1;
+      }
+    }
+
+    return {
+      stageId,
+      stageName: stage.name,
+      stageIcon: stage.icon,
+      stageDesc: stage.desc,
+      priceMod: stage.priceMod * inflationIndex * (1 + sectorDrift * 0.1),
+      wageMod: stage.wageMod * inflationIndex * (1 + sectorDrift * 0.05),
+      inflationIndex: inflationIndex,
+      year: year,
+    };
+  }
+
+  /**
+   * 时代变迁每日 tick
+   * @param {Object} state - 游戏状态
+   */
+  function eraTick(state) {
+    if (!state.player) return;
+
+    const day = state.player.day;
+    const eraMod = getEraMod(state);
+
+    // 记录时代状态
+    state._eraState = {
+      stageId: eraMod.stageId,
+      inflationIndex: eraMod.inflationIndex,
+      lastCheckDay: day,
+    };
+
+    // 检查是否触发时代事件
+    if (ERA_EVENTS_TRIGGER_DAYS.includes(day)) {
+      state._pendingEraEvent = {
+        triggerDay: day,
+        stage: eraMod.stageId,
+      };
+      // 调度 era_events.js 中的交互事件（如果有）
+      if (typeof window !== 'undefined' && window.ERA_EVENTS && typeof scheduleChainEvent === 'function') {
+        for (var ei = 0; ei < window.ERA_EVENTS.length; ei++) {
+          if (window.ERA_EVENTS[ei].day === day) {
+            scheduleChainEvent(state, window.ERA_EVENTS[ei].id, 0, 'street');
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * 获取时代事件列表
+   * @returns {Array} 时代事件
+   */
+  function getEraEvents() {
+    return [
+      {
+        id: "era_90",
+        day: 90,
+        title: "第一桶金",
+        story:
+          "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。",
+        effect: "物价+5%，工资+3%",
+      },
+      {
+        id: "era_180",
+        day: 180,
+        title: "行业风口",
+        story:
+          "某个新兴行业突然火爆，相关岗位薪资翻倍。你看到新闻，心里痒痒的。",
+        effect: "解锁新工作机会，部分行业热度+20%",
+      },
+      {
+        id: "era_270",
+        day: 270,
+        title: "物价飞涨",
+        story:
+          "通胀开始显现。房租涨了10%，菜价涨了8%。你开始认真考虑要不要存点钱买房。",
+        effect: "物价+10%，房租+10%",
+      },
+      {
+        id: "era_365",
+        day: 365,
+        title: "一周年",
+        story:
+          "一年过去了。你回头看刚来时的自己，感慨万千。这一年，城市变了，你也变了。",
+        effect: "获得「城市生存者」成就，所有NPC好感衰减减半",
+      },
+      {
+        id: "era_450",
+        day: 450,
+        title: "行业洗牌",
+        story:
+          "某些行业开始整合，小公司倒闭，大公司收购。有人失业，有人跳槽成功。",
+        effect: "部分工作消失，新工作出现",
+      },
+      {
+        id: "era_540",
+        day: 540,
+        title: "消费升级",
+        story:
+          "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。",
+        effect: "高端商品解锁，物价+5%",
+      },
+      {
+        id: "era_720",
+        day: 720,
+        title: "两年之痒",
+        story:
+          "两年了。你开始思考：是继续打工，还是自己单干？城市给了你机会，也给了你压力。",
+        effect: "创业门槛降低，创业事件概率+50%",
+      },
+      {
+        id: "era_900",
+        day: 900,
+        title: "三年之变",
+        story:
+          "三年。这座城市已经把你塑造成了另一个人。你开始有能力影响周围的人。",
+        effect: "解锁「城市影响者」成就，NPC关系传导效果+20%",
+      },
+    ];
+  }
+
+  /**
+   * 初始化时代变迁系统
+   * @param {Object} state - 游戏状态
+   */
+  function initEraTransform(state) {
+    state._eraState = {
+      stageId: "initial",
+      inflationIndex: INFLATION_CONFIG.baseIndex,
+      lastCheckDay: state.player ? state.player.day : 1,
+    };
+    state._pendingEraEvent = null;
+  }
+
+  // ====== 导出 ======
+  if (typeof window !== "undefined") {
+    window.ERA_STAGES = ERA_STAGES;
+    window.eraTransform = {
+      init: initEraTransform,
+      tick: eraTick,
+      getMod: getEraMod,
+      getStage: getEraStage,
+      getEvents: getEraEvents,
+      getInflationConfig: () => INFLATION_CONFIG,
+    };
+  }
+})();
+</script>
+    <!-- v3.6: 时代叙事事件（8个里程碑交互事件）-->
+    <script>/**
+ * 时代变迁事件（v3.6 P0-2）
+ *
+ * 定义8个时代事件（Day 90/180/270/365/450/540/720/900）
+ * 每个事件包含：触发条件、选项、影响（物价/工资/行业热度）
+ */
+
+const ERA_EVENTS = [
+  // === Day 90: 第一桶金 ===
+  {
+    id: "era_90",
+    day: 90,
+    title: "第一桶金",
+    icon: "💰",
+    story:
+      "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 90 && !st.flags._eraEvent_90;
+    },
+    choices: [
+      {
+        text: "💡 学老周，多囤点耐用品",
+        hint: "物价+5%，但获得「精明消费者」徽章",
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          st.flags.preciousConsumerBadge = true;
+          if (st._worldParams && st._worldParams.sectorHeat) {
+            for (let sector in st._worldParams.sectorHeat) {
+              st._worldParams.sectorHeat[sector] *= 1.05;
+            }
+          }
+          StateManager.addMessage(
+            "💡 你开始精明消费，学会了对比价格。获得「精明消费者」徽章。物价整体+5%。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📈 投资点东西抗通胀",
+        hint: "需要¥200，获得投资经验",
+        cost: 200,
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          st.resources.cash -= 200;
+          if (!st.investment) st.investment = {};
+          if (!st.investment.history) st.investment.history = [];
+          st.investment.history.push({
+            day: st.player.day,
+            type: "inflation_hedge",
+            amount: 200,
+          });
+          StateManager.addMessage(
+            "📈 你花了¥200买了些抗通胀的东西。虽然钱少了，但心里踏实。获得投资经验。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😌 走一步看一步",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._eraEvent_90 = true;
+          StateManager.addMessage(
+            "😌 你决定先不急着做决定。日子还得一天天过。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 180: 行业风口 ===
+  {
+    id: "era_180",
+    day: 180,
+    title: "行业风口",
+    icon: "🚀",
+    story:
+      "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 180 && !st.flags._eraEvent_180;
+    },
+    choices: [
+      {
+        text: "🔥 抓住风口！",
+        hint: "工资+50%，但需要体力消耗",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          st.flags.trendJobUnlocked = true;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          StateManager.addMessage(
+            "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先调研一下",
+        hint: "心智+3，获得行业情报",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          if (!st.flags) st.flags = {};
+          st.flags.industryIntel = true;
+          StateManager.addMessage(
+            "🤔 你花时间调研了行业趋势，发现有些风口其实是泡沫。心智+3。",
+            "hint",
+          );
+        },
+      },
+      {
+        text: "🙅 不靠谱，还是干老本行",
+        hint: "稳定但错失机会",
+        apply: function (st) {
+          st.flags._eraEvent_180 = true;
+          StateManager.addMessage(
+            "🙅 你觉得风口太虚，还是继续干原来的活。稳妥，但也错过了可能的好机会。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 270: 物价飞涨 ===
+  {
+    id: "era_270",
+    day: 270,
+    title: "物价飞涨",
+    icon: "📈",
+    story:
+      "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 270 && !st.flags._eraEvent_270;
+    },
+    choices: [
+      {
+        text: "😓 接受涨价",
+        hint: "房租+¥50/天",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
+          StateManager.addMessage(
+            "😓 你接受了房租涨价。每个月多花¥1,500。物价涨了，钱包瘪了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏠 找便宜的房子",
+        hint: "消耗行动力，可能找到更便宜的",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          st.player.actionPoints = Math.max(
+            0,
+            (st.player.actionPoints || 100) - 20,
+          );
+          if (st.housing) {
+            const newRent = Math.max(200, st.housing.rent - 30);
+            st.housing.rent = newRent;
+          }
+          StateManager.addMessage(
+            "🏠 你花了半天找房，找到个便宜点的。房租从¥350降到¥320。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 跟王大婶商量",
+        hint: "需要好感≥40，可能成功",
+        apply: function (st) {
+          st.flags._eraEvent_270 = true;
+          const affinity =
+            (st.relationships &&
+              st.relationships.aunt_wang &&
+              st.relationships.aunt_wang.affinity) ||
+            0;
+          if (affinity >= 40) {
+            if (st.housing) st.housing.rent = (st.housing.rent || 300) + 20;
+            StateManager.addMessage(
+              "🤝 王大婶看你平时表现不错，房租只涨了¥20。人情有时候比钱管用。",
+              "success",
+            );
+          } else {
+            if (st.housing) st.housing.rent = (st.housing.rent || 300) + 50;
+            StateManager.addMessage(
+              "🤝 王大婶说：「咱俩关系一般，涨价是没办法。」房租涨了¥50。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  },
+
+  // === Day 365: 一周年 ===
+  {
+    id: "era_365",
+    day: 365,
+    title: "一周年",
+    icon: "🎉",
+    story:
+      "一年过去了。你回头看刚来这座城市时的自己，感慨万千。\n这一年，你经历了什么？失去了什么？又得到了什么？",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 365 && !st.flags._eraEvent_365;
+    },
+    choices: [
+      {
+        text: "📝 写一封给自己的信",
+        hint: "心情+10，获得「反思者」徽章",
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          st.flags.reflectorBadge = true;
+          StateManager.addMessage(
+            "📝 你写下了一年的感悟。虽然辛苦，但你发现自己成长了很多。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎉 庆祝一下！",
+        hint: "花费¥100，心情+15",
+        cost: 100,
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.resources.cash -= 100;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          StateManager.addMessage(
+            "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😌 平静地接受",
+        hint: "心智+5",
+        apply: function (st) {
+          st.flags._eraEvent_365 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "😌 你平静地接受了一年的收获与失去。心智+5。",
+            "hint",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 450: 行业洗牌 ===
+  {
+    id: "era_450",
+    day: 450,
+    title: "行业洗牌",
+    icon: "🔄",
+    story:
+      "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 450 && !st.flags._eraEvent_450;
+    },
+    choices: [
+      {
+        text: "🔄 转行",
+        hint: "解锁新工作类别",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          st.flags.careerShift = true;
+          StateManager.addMessage(
+            "🔄 你决定转行。虽然有风险，但不转可能被淘汰。解锁新工作类别。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 坚持原来的行业",
+        hint: "稳定但工资可能下降",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          StateManager.addMessage(
+            "💪 你决定坚持原来的行业。虽然活少了，但你相信熬过去会好起来。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📊 分析形势",
+        hint: "心智+5，获得决策建议",
+        apply: function (st) {
+          st.flags._eraEvent_450 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
+            "hint",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 540: 消费升级 ===
+  {
+    id: "era_540",
+    day: 540,
+    title: "消费升级",
+    icon: "✨",
+    story:
+      "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 540 && !st.flags._eraEvent_540;
+    },
+    choices: [
+      {
+        text: "✨ 体验高端消费",
+        hint: "花费¥150，心情+10",
+        cost: 150,
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.resources.cash -= 150;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          StateManager.addMessage(
+            "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 观望一下",
+        hint: "心智+3",
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🤔 你觉得高端消费不是必须的，先观望。心智+3。",
+            "hint",
+          );
+        },
+      },
+      {
+        text: "💡 自己开个小店",
+        hint: "需要¥500，解锁创业机会",
+        cost: 500,
+        apply: function (st) {
+          st.flags._eraEvent_540 = true;
+          st.resources.cash -= 500;
+          st.flags.smallBusinessUnlocked = true;
+          StateManager.addMessage(
+            "💡 你决定自己开个小店。虽然有风险，但这是实现梦想的机会。解锁创业机会。",
+            "success",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 720: 两年之痒 ===
+  {
+    id: "era_720",
+    day: 720,
+    title: "两年之痒",
+    icon: "🤔",
+    story:
+      "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 720 && !st.flags._eraEvent_720;
+    },
+    choices: [
+      {
+        text: "💼 鼓励老周创业",
+        hint: "老周好感+10，获得创业灵感",
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          if (st.relationships && st.relationships.old_zhou) {
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 10,
+            );
+          }
+          st.flags.careerInspiration = true;
+          StateManager.addMessage(
+            "💼 你鼓励老周创业。他很高兴，说会认真考虑。好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏢 自己考虑创业",
+        hint: "需要¥1000，解锁创业Tab",
+        cost: 1000,
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          st.resources.cash -= 1000;
+          st.flags.startupUnlocked = true;
+          StateManager.addMessage(
+            "🏢 你决定认真考虑创业。虽然需要投入，但这是改变命运的机会。解锁创业Tab。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😌 继续打工",
+        hint: "稳定但错失机会",
+        apply: function (st) {
+          st.flags._eraEvent_720 = true;
+          StateManager.addMessage(
+            "😌 你觉得创业风险太大，还是继续打工稳妥。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+
+  // === Day 900: 三年之变 ===
+  {
+    id: "era_900",
+    day: 900,
+    title: "三年之变",
+    icon: "🌟",
+    story:
+      "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
+    phase: "street",
+    conditions: function (st) {
+      return st.player && st.player.day >= 900 && !st.flags._eraEvent_900;
+    },
+    choices: [
+      {
+        text: "🌟 成为城市影响者",
+        hint: "获得「城市影响者」成就，NPC关系传导+20%",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.flags.cityInfluencer = true;
+          StateManager.addMessage(
+            "🌟 你成为了城市影响者。你的行为能影响更多人。NPC关系传导效果+20%。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📚 回馈社会",
+        hint: "心情+15，道德+5",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
+          StateManager.addMessage(
+            "📚 你决定回馈社会，帮助更多刚来这座城市的人。心情+15，道德+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏠 回家看看",
+        hint: "心情+10",
+        apply: function (st) {
+          st.flags._eraEvent_900 = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          StateManager.addMessage(
+            "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",
+            "info",
+          );
+        },
+      },
+    ],
+  },
+];
+
+// 导出
+if (typeof window !== "undefined") {
+  window.ERA_EVENTS = ERA_EVENTS;
 }
 </script>
     <!-- v3.1 第41轮：人生抉择系统 -->
@@ -96806,6 +97797,16 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkStoryChapter === "function") {
         checkStoryChapter(state);
+      }
+    },
+  },
+
+  // === v3.6 时代变迁系统（通胀/物价/行业热度）===
+  {
+    name: "era_tick",
+    fn: function (state) {
+      if (typeof window !== "undefined" && window.eraTransform && typeof window.eraTransform.tick === "function") {
+        window.eraTransform.tick(state);
       }
     },
   },
@@ -156567,30 +157568,94 @@ function startNewGame() {
     '🚶 点击行动页的"前往 XX"卡片或地图上的地点即可出行。左侧栏也有附近可前往的地点列表。',
     "info",
   );
-  document.getElementById("welcome-screen").style.display = "none";
-  document.getElementById("mode-select-screen").style.display = "none";
-  document.getElementById("scenario-select-screen").style.display = "none";
-  document.getElementById("sandbox-screen").style.display = "none";
 
-  var _classicState = StateManager.getState();
-  var _enterClassicGame = function () {
-    document.getElementById("app").style.display = "";
-    gameStarted = true;
-    renderAll();
-    if (typeof initCashCarousel === "function") initCashCarousel();
-    // ---- 绑定顶栏按钮 ----
-    bindHeaderButtons();
-    setTimeout(function () {
-      if (typeof showForcedDreamModal === "function") {
-        showForcedDreamModal();
+  // === v3.57 经典模式天赋系统 ===
+  var classicScenario = getScenarioById("classic");
+  var _classicAfterTalent = function (acceptedTalents) {
+    // 记录天赋
+    var state = StateManager.getState();
+    if (acceptedTalents && acceptedTalents.length > 0) {
+      state.flags._talent = [];
+      for (var _ti = 0; _ti < acceptedTalents.length; _ti++) {
+        var _pt = acceptedTalents[_ti];
+        if (typeof _pt.apply === "function") _pt.apply(state);
+        state.flags._talent.push({
+          id: _pt.id,
+          name: _pt.name,
+          icon: _pt.icon,
+          desc: _pt.desc,
+        });
       }
-    }, 300);
+      var _talentNames = acceptedTalents
+        .map(function (t) {
+          return t.icon + " " + t.name;
+        })
+        .join("、");
+      StateManager.addMessage("✨ 接受天赋：" + _talentNames, "event");
+    } else {
+      state.flags._talent = null;
+      StateManager.addMessage("🎯 放弃天赋，靠自己打拼。", "event");
+    }
+
+    // === 难度系统 + 传承币解锁 ===
+    if (
+      typeof applyDifficultyToState === "function" &&
+      window._selectedDifficulty
+    ) {
+      applyDifficultyToState(state, window._selectedDifficulty);
+    }
+    if (typeof applyHeritageUnlocks === "function") applyHeritageUnlocks(state);
+
+    // 隐藏选择界面
+    document.getElementById("mode-select-screen").style.display = "none";
+    document.getElementById("scenario-select-screen").style.display = "none";
+    document.getElementById("welcome-screen").style.display = "none";
+    document.getElementById("sandbox-screen").style.display = "none";
+
+    var _enterClassicGame = function () {
+      document.getElementById("app").style.display = "";
+      gameStarted = true;
+      renderAll();
+      if (typeof initCashCarousel === "function") initCashCarousel();
+      bindHeaderButtons();
+      setTimeout(function () {
+        if (typeof showForcedDreamModal === "function") showForcedDreamModal();
+      }, 300);
+    };
+
+    if (typeof startWithWorldNewsIntro === "function") {
+      startWithWorldNewsIntro(state, "classic", _enterClassicGame);
+    } else {
+      _enterClassicGame();
+    }
+    setTimeout(function () {
+      var appEl = document.getElementById("app");
+      if (appEl && appEl.style.display === "none") {
+        console.warn("[DIAG] app 仍 display:none，强制显示");
+        appEl.style.display = "";
+        if (typeof renderAll === "function") renderAll();
+      }
+    }, 3000);
   };
 
-  if (typeof startWithWorldNewsIntro === "function") {
-    startWithWorldNewsIntro(_classicState, "classic", _enterClassicGame);
+  // 经典模式也有天赋池
+  if (
+    classicScenario &&
+    classicScenario.talents &&
+    classicScenario.talents.length > 0
+  ) {
+    var _rolled = rollTalents(classicScenario);
+    showTalentRevealModal(
+      _rolled,
+      function (accepted) {
+        _classicAfterTalent(accepted);
+      },
+      function () {
+        _classicAfterTalent([]);
+      },
+    );
   } else {
-    _enterClassicGame();
+    _classicAfterTalent([]);
   }
 }
 

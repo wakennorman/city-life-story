@@ -12947,7 +12947,9 @@
           st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
           st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
           StateManager.addMessage(
-            "🕊️ 你上门赔了¥" + cost + "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
+            "🕊️ 你上门赔了¥" +
+              cost +
+              "，对方冷笑收下。道德+8，但名声-5——信用的裂痕没那么好补。",
             "danger",
           );
         },
@@ -13030,7 +13032,9 @@
           st.resources.cash = (st.resources.cash || 0) + pay;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
           StateManager.addMessage(
-            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" + pay + "，名声+8，连菜市场阿姨都认得你了。",
+            "🎤 采访登出来，配了张你在巷口笑的照片。稿费¥" +
+              pay +
+              "，名声+8，连菜市场阿姨都认得你了。",
             "success",
           );
         },
