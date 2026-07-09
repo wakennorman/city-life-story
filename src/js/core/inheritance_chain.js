@@ -641,7 +641,16 @@ function applyInheritance(newState, prevState, inheritanceData) {
     // 催收金额 = 上局债务的 5%~15%，上限 ¥2000
     var debtCollect = Math.min(
       2000,
-      Math.max(500, Math.round(prevDebt * (0.05 + Math.random() * 0.1))),
+      Math.max(
+        500,
+        Math.round(
+          prevDebt *
+            (0.05 +
+              (typeof Random !== "undefined"
+                ? Random.float(0, 0.1)
+                : Math.random() * 0.1)),
+        ),
+      ),
     );
     newState.flags._inheritanceDebtCollection = debtCollect;
     newState.resources.cash = Math.max(

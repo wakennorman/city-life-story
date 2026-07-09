@@ -2522,16 +2522,23 @@ function rollbackIntroNewsEffects(state, baseline) {
 }
 
 /**
- * 将开局新闻的直接影响应用到游戏状态（v3.64 更新：支持持久化和回滚）
+ * v3.65 更新：开局新闻效果不再"锁死30天再回滚"
+ * 新原则：
+ *   1. 开局新闻只设置世界参数的初始值（sectorHeat / marketMood 的起点）
+ *   2. 每日新闻持续在此基础上叠加/修改，世界状态自然演变
+ *   3. 不再有"30天回滚"的概念——那会破坏沉浸感，让玩家感到世界突然"重置"
+ *   4. intro news 的效果通过 _introNewsApplied 标记，确保只应用一次
+ *   5. 后续每日新闻正常通过 cleanupExpiredNews 清理过期效果
+ */
+
+/**
+ * 将开局新闻的直接影响应用到游戏状态（v3.65 更新：不设持久锁定）
  * 在 applyWorldNewsToParams 之后调用，确保所有效果都已生效
  * @param {Object} state - 游戏状态
  * @param {Array} selectedNews - 选中的新闻条目
  */
 function applyIntroNewsDirectEffects(state, selectedNews) {
   if (!state || !selectedNews || selectedNews.length === 0) return;
-
-  // --- 保存基准快照（在应用效果之前） ---
-  state._introNewsBaseline = saveIntroNewsBaseline(state, selectedNews);
 
   // --- 1. 应用工作加成（与 news.js 保持一致，使用 _jobMultipliers） ---
   if (state._introJobBonuses) {
@@ -2632,6 +2639,9 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
       }
     }
   }
+
+  // --- 6. 标记 intro news 已应用（防止重复应用） ---
+  state._introNewsApplied = true;
 }
 
 // ============================================================
@@ -2642,9 +2652,12 @@ var _worldNewsSelected = null; // 存储本局选中的新闻
 var _playerIntroChoice = null; // 存储玩家在开局的选择
 
 /**
- * v3.64 重构：构建开局选择面板
- * 原则：只显示与当前新闻内容真正相关的建议，不堆砌通用选项
- * 每个建议都是对新闻内容的自然回应，而非固定模板
+ * v3.65 重构：构建开局选择面板
+ * 原则：
+ *   1. 只显示与当前新闻内容真正相关的建议，绝不堆砌固定模板选项
+ *   2. 每条建议都是对新闻内容的自然回应，而非千篇一律的"找工作/学编程"
+ *   3. 如果新闻不涉及特定方向，只给一个中性建议，不强行凑选项
+ *   4. 选项数量 1-3 个，取决于新闻相关度
  */
 function buildIntroChoicePanel(scenarioId, newsItems) {
   if (!newsItems || newsItems.length === 0) return "";
@@ -2653,12 +2666,14 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
 
   // ---- 根据新闻内容提取关键词和意图，动态生成建议 ----
   var allNotes = "";
+  var allHeadlines = "";
   var tags = [];
   for (var ni = 0; ni < newsItems.length; ni++) {
     var nw = newsItems[ni];
     if (nw.worldEffect && nw.worldEffect.note) {
       allNotes += nw.worldEffect.note + " ";
     }
+    if (nw.headline) allHeadlines += nw.headline + " ";
     if (nw.tag) tags.push(nw.tag);
   }
   var allTags = tags.join(",");
@@ -2668,7 +2683,13 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     allTags.indexOf("科技") >= 0 ||
     allNotes.indexOf("AI") >= 0 ||
     allNotes.indexOf("编程") >= 0 ||
-    allNotes.indexOf("数字化") >= 0
+    allNotes.indexOf("数字化") >= 0 ||
+    allNotes.indexOf("芯片") >= 0 ||
+    allNotes.indexOf("机器人") >= 0 ||
+    allHeadlines.indexOf("AI") >= 0 ||
+    allHeadlines.indexOf("编程") >= 0 ||
+    allHeadlines.indexOf("芯片") >= 0 ||
+    allHeadlines.indexOf("机器人") >= 0
   ) {
     choices.push({
       id: "study_tech",
@@ -2689,7 +2710,11 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     allNotes.indexOf("裁员") >= 0 ||
     allNotes.indexOf("降薪") >= 0 ||
     allNotes.indexOf("零工") >= 0 ||
-    allNotes.indexOf("失业") >= 0
+    allNotes.indexOf("失业") >= 0 ||
+    allHeadlines.indexOf("裁员") >= 0 ||
+    allHeadlines.indexOf("失业") >= 0 ||
+    allHeadlines.indexOf("优化") >= 0 ||
+    allHeadlines.indexOf("下岗") >= 0
   ) {
     choices.push({
       id: "start_side_hustle",
@@ -2703,12 +2728,16 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     });
   }
 
-  // --- 规则3：物价上涨 → 建议省钱/理财 ---
+  // --- 规则3：消费/物价 → 建议省钱/理财 ---
   if (
     allTags.indexOf("消费") >= 0 ||
     allNotes.indexOf("物价") >= 0 ||
     allNotes.indexOf("通胀") >= 0 ||
-    allNotes.indexOf("涨价") >= 0
+    allNotes.indexOf("涨价") >= 0 ||
+    allHeadlines.indexOf("物价") >= 0 ||
+    allHeadlines.indexOf("消费") >= 0 ||
+    allHeadlines.indexOf("降价") >= 0 ||
+    allHeadlines.indexOf("促销") >= 0
   ) {
     choices.push({
       id: "save_money",
@@ -2726,7 +2755,12 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     allNotes.indexOf("股市") >= 0 ||
     allNotes.indexOf("投资") >= 0 ||
     allNotes.indexOf("牛市") >= 0 ||
-    allNotes.indexOf("加密") >= 0
+    allNotes.indexOf("加密") >= 0 ||
+    allHeadlines.indexOf("股市") >= 0 ||
+    allHeadlines.indexOf("沪指") >= 0 ||
+    allHeadlines.indexOf("加密") >= 0 ||
+    allHeadlines.indexOf("基金") >= 0 ||
+    allHeadlines.indexOf("理财") >= 0
   ) {
     choices.push({
       id: "watch_market",
@@ -2744,7 +2778,12 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     allNotes.indexOf("补贴") >= 0 ||
     allNotes.indexOf("扶持") >= 0 ||
     allNotes.indexOf("优惠") >= 0 ||
-    allTags.indexOf("政策") >= 0
+    allTags.indexOf("政策") >= 0 ||
+    allHeadlines.indexOf("补贴") >= 0 ||
+    allHeadlines.indexOf("扶持") >= 0 ||
+    allHeadlines.indexOf("政策") >= 0 ||
+    allHeadlines.indexOf("降准") >= 0 ||
+    allHeadlines.indexOf("降息") >= 0
   ) {
     choices.push({
       id: "grab_opportunity",
@@ -2756,9 +2795,17 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
     });
   }
 
-  // --- 保底选项：至少要有 2 个选择 ---
-  // 如果上面只生成了 1 个，补充一个通用但合理的选项
-  if (choices.length === 1) {
+  // --- 规则6：就业/招聘旺季 → 建议积极求职 ---
+  if (
+    allNotes.indexOf("招聘") >= 0 ||
+    allNotes.indexOf("抢人") >= 0 ||
+    allNotes.indexOf("用工荒") >= 0 ||
+    allHeadlines.indexOf("招聘") >= 0 ||
+    allHeadlines.indexOf("抢人") >= 0 ||
+    allHeadlines.indexOf("用工") >= 0 ||
+    allHeadlines.indexOf("金三银四") >= 0 ||
+    allTags.indexOf("招聘") >= 0
+  ) {
     choices.push({
       id: "find_work",
       text: "💼 立刻找工作",
@@ -2767,23 +2814,143 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introFoundWorkEarly: true },
       },
     });
-  } else if (choices.length === 0) {
-    // 极端情况：没有任何新闻匹配，给两个最基础的
+  }
+
+  // --- 规则7：房地产/租房 → 建议关注住所 ---
+  if (
+    allHeadlines.indexOf("房价") >= 0 ||
+    allHeadlines.indexOf("租房") >= 0 ||
+    allHeadlines.indexOf("租金") >= 0 ||
+    allHeadlines.indexOf("城中村") >= 0 ||
+    allHeadlines.indexOf("拆迁") >= 0 ||
+    allHeadlines.indexOf("保交楼") >= 0 ||
+    allTags.indexOf("房产") >= 0 ||
+    allTags.indexOf("租房") >= 0 ||
+    allTags.indexOf("城市") >= 0
+  ) {
     choices.push({
-      id: "find_work",
-      text: "💼 立刻找工作",
-      hint: "先站稳脚跟",
+      id: "secure_housing",
+      text: "🏠 先安顿好住处",
+      hint: "在这个环境下，稳定的住所比什么都重要",
       effect: {
-        flags: { _introFoundWorkEarly: true },
+        flags: { _introSecureHousing: true },
       },
     });
+  }
+
+  // --- 规则8：新能源/制造业 → 建议学技术工种 ---
+  if (
+    allHeadlines.indexOf("新能源") >= 0 ||
+    allHeadlines.indexOf("技工") >= 0 ||
+    allHeadlines.indexOf("焊工") >= 0 ||
+    allHeadlines.indexOf("电工") >= 0 ||
+    allHeadlines.indexOf("制造业") >= 0 ||
+    allHeadlines.indexOf("工厂") >= 0 ||
+    allTags.indexOf("产业") >= 0
+  ) {
     choices.push({
-      id: "explore_city",
-      text: "🚶 先逛逛城市",
-      hint: "了解环境再做打算",
+      id: "learn_trade",
+      text: "🔧 学门手艺",
+      hint: "技工越老越吃香，门槛低但收入稳",
       effect: {
-        needs: { happiness: 5 },
-        flags: { _introExploredCity: true },
+        cash: -100,
+        flags: { _introLearnTrade: true },
+      },
+    });
+  }
+
+  // --- 规则9：社会民生/养老/医疗 → 建议关注健康和人脉 ---
+  if (
+    allHeadlines.indexOf("养老") >= 0 ||
+    allHeadlines.indexOf("医疗") >= 0 ||
+    allHeadlines.indexOf("健康") >= 0 ||
+    allHeadlines.indexOf("心理") >= 0 ||
+    allHeadlines.indexOf("焦虑") >= 0 ||
+    allHeadlines.indexOf("抑郁") >= 0 ||
+    allTags.indexOf("社会") >= 0
+  ) {
+    choices.push({
+      id: "build_network",
+      text: "🤝 多结交人脉",
+      hint: "在这个城市，认识靠谱的人比什么都重要",
+      effect: {
+        needs: { happiness: 3 },
+        flags: { _introBuildNetwork: true },
+      },
+    });
+  }
+
+  // --- 规则10：毕业季/应届生 → 建议提升学历或技能 ---
+  if (
+    allHeadlines.indexOf("毕业") >= 0 ||
+    allHeadlines.indexOf("应届") >= 0 ||
+    allHeadlines.indexOf("高校") >= 0 ||
+    allHeadlines.indexOf("大学生") >= 0 ||
+    allTags.indexOf("毕业") >= 0
+  ) {
+    choices.push({
+      id: "upgrade_skills",
+      text: "📚 给自己充充电",
+      hint: "学历和技能是硬通货，投资自己最稳妥",
+      effect: {
+        cash: -80,
+        needs: { intelligence: 3 },
+        flags: { _introUpgradeSkills: true },
+      },
+    });
+  }
+
+  // --- 规则11：节日/旺季 → 建议抓住短期机会 ---
+  if (
+    allHeadlines.indexOf("春节") >= 0 ||
+    allHeadlines.indexOf("618") >= 0 ||
+    allHeadlines.indexOf("双十一") >= 0 ||
+    allHeadlines.indexOf("黄金周") >= 0 ||
+    allTags.indexOf("节日") >= 0 ||
+    allTags.indexOf("季节") >= 0
+  ) {
+    choices.push({
+      id: "catch_season",
+      text: "🎉 抓住旺季机会",
+      hint: "这段时间收入高，但过后就没了",
+      effect: {
+        cash: 50,
+        needs: { fatigue: 8 },
+        flags: { _introCatchSeason: true },
+      },
+    });
+  }
+
+  // --- 规则12：极端天气/寒潮 → 建议做好防护 ---
+  if (
+    allHeadlines.indexOf("寒潮") >= 0 ||
+    allHeadlines.indexOf("高温") >= 0 ||
+    allHeadlines.indexOf("暴雨") >= 0 ||
+    allHeadlines.indexOf("台风") >= 0 ||
+    allTags.indexOf("天气") >= 0
+  ) {
+    choices.push({
+      id: "prepare_weather",
+      text: "🌂 做好防护措施",
+      hint: "天气不好，安全第一，减少外出",
+      effect: {
+        needs: { health: 3 },
+        flags: { _introPrepareWeather: true },
+      },
+    });
+  }
+
+  // --- 保底逻辑 ---
+  // 如果生成了 0 个选项：说明新闻与所有已知方向都不匹配
+  // 此时只给一个最中性的建议，不再强行凑"找工作"
+  if (choices.length === 0) {
+    choices.push({
+      id: "observe_world",
+      text: "👀 先观察一段时间",
+      hint: "不急，看看形势再行动",
+      effect: {
+        needs: { intelligence: 3 },
+        flags: { _introObserveWorld: true },
       },
     });
   }
@@ -2861,6 +3028,56 @@ function applyIntroChoice(choiceId, state) {
         st.flags._introFoundWorkEarly = true;
       },
       msg: "💼 你决定立刻找工作。先站稳脚跟，再图发展。",
+    },
+    secure_housing: {
+      apply: function (st) {
+        st.flags._introSecureHousing = true;
+      },
+      msg: "🏠 你仔细研究了租房市场，找到了一个性价比不错的住处。在这个城市，稳定的住所就是底气。",
+    },
+    learn_trade: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+        st.flags._introLearnTrade = true;
+      },
+      msg: "🔧 你报了一个技工培训班，花了¥100。学一门手艺，走到哪里都不怕。",
+    },
+    build_network: {
+      apply: function (st) {
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+        st.flags._introBuildNetwork = true;
+      },
+      msg: "🤝 你主动认识了几个老乡和新朋友。在这座城市，人脉就是资源。",
+    },
+    upgrade_skills: {
+      apply: function (st) {
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
+        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 3);
+        st.flags._introUpgradeSkills = true;
+      },
+      msg: "📚 你买了一本技能教材，花了¥80。知识就是力量，慢慢学。",
+    },
+    catch_season: {
+      apply: function (st) {
+        st.resources.cash = (st.resources.cash || 0) + 50;
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+        st.flags._introCatchSeason = true;
+      },
+      msg: "🎉 你抓住了旺季机会，虽然累了一些，但赚了¥50 extra。",
+    },
+    prepare_weather: {
+      apply: function (st) {
+        st.needs.health = Math.min(100, (st.needs.health || 0) + 3);
+        st.flags._introPrepareWeather = true;
+      },
+      msg: "🌂 你做好了防护措施。天气虽恶劣，但平安就是最大的财富。",
+    },
+    observe_world: {
+      apply: function (st) {
+        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 3);
+        st.flags._introObserveWorld = true;
+      },
+      msg: "👀 你没有急着行动，而是花了一天时间观察这个世界。对形势有了更清晰的认识。",
     },
     explore_city: {
       apply: function (st) {
@@ -3339,10 +3556,12 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
       }
 
       // 如果没有可应用的 effects，仍然注入 headline
+      // v3.65: intro news 的 duration 设为 5 天（播报过期），但其世界参数效果已持久化
+      var introDuration = combinedEffects.duration || 5;
       var entry = {
         id: nn.id, // 使用原始ID — 让 news_driven_events.js 能直接匹配
         headline: nn.icon + nn.headline,
-        effects: combinedEffects.duration ? combinedEffects : { duration: 365 },
+        effects: introDuration,
         _appliedDay: state.player ? state.player.day : 0,
         _isIntroNews: true,
         _originalId: nn.id,
@@ -3362,7 +3581,7 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
         state.activeNews.push({
           id: prefixedId,
           headline: "📌 " + nn.headline,
-          effects: { duration: 365 },
+          effects: 5,
           _appliedDay: state.player ? state.player.day : 0,
           _isIntroNews: true,
           _originalId: nn.id,

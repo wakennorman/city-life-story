@@ -46,7 +46,11 @@ const LIFE_DECISIONS = [
             state.flags._lifeDec_firstDeal = "lost";
           } else if (roll < 0.75) {
             // 35% 小赚
-            var gain = 300 + Math.floor(Math.random() * 400);
+            var gain =
+              300 +
+              (typeof Random !== "undefined"
+                ? Random.int(0, 399)
+                : Math.floor(Math.random() * 400));
             state.resources.cash += gain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + gain;
@@ -57,7 +61,11 @@ const LIFE_DECISIONS = [
             state.flags._lifeDec_firstDeal = "small_win";
           } else {
             // 25% 大赚
-            var bigGain = 800 + Math.floor(Math.random() * 700);
+            var bigGain =
+              800 +
+              (typeof Random !== "undefined"
+                ? Random.int(0, 699)
+                : Math.floor(Math.random() * 700));
             state.resources.cash += bigGain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + bigGain;
@@ -189,7 +197,12 @@ const LIFE_DECISIONS = [
           if (typeof state.relationships === "object" && state.relationships) {
             var npcIds = Object.keys(state.relationships);
             if (npcIds.length > 0) {
-              var target = npcIds[Math.floor(Math.random() * npcIds.length)];
+              var target =
+                npcIds[
+                  typeof Random !== "undefined"
+                    ? Random.int(0, npcIds.length - 1)
+                    : Math.floor(Math.random() * npcIds.length)
+                ];
               if (state.relationships[target]) {
                 state.relationships[target].affinity =
                   (state.relationships[target].affinity || 0) + 5;
@@ -612,7 +625,11 @@ function getStallIncome(state) {
   if (!state.flags._stallPartnership) return 0;
   var daysActive = state.player.day - state.flags._stallPartnership.startDay;
   if (daysActive <= 0) return 0;
-  var dailyIncome = 5 + Math.floor(Math.random() * 15);
+  var dailyIncome =
+    5 +
+    (typeof Random !== "undefined"
+      ? Random.int(0, 14)
+      : Math.floor(Math.random() * 15));
   var total = Math.floor(dailyIncome * 0.5); // 当日收入的一半
   state.flags._stallPartnership.totalEarned =
     (state.flags._stallPartnership.totalEarned || 0) + total;

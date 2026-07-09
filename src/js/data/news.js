@@ -1881,18 +1881,21 @@ function checkNewsFollowUp(state) {
   state.flags._pendingFollowUpNews = remaining;
 }
 
-/** 清除过期新闻效果（v3.64 更新：支持 intro news 回滚） */
+/** 清除过期新闻效果（v3.65 更新：移除 intro news 回滚机制）
+ * v3.65 变更：
+ *   - 不再在30天后回滚 intro news 效果（破坏沉浸感）
+ *   - intro news 的 worldEffect/investmentEffect 通过 sectorHeat/marketMood 持久影响世界参数
+ *   - 这些世界参数会被每日新闻持续修改，自然演变
+ *   - intro news 条目本身仍然会在5天后从 activeNews 中过期（作为"播报"消失）
+ *   - 但 sectorHeat/marketMood 等世界参数保持累积，不会回滚
+ */
 function cleanupExpiredNews(state) {
-  var removedIntroNews = []; // 记录即将过期的 intro news
   state.activeNews = (state.activeNews || []).filter(function (news) {
     if (news._appliedDay === undefined) news._appliedDay = state.player.day;
     var dur = news.effects;
     // effects 可能是数字（天数）或对象（含 duration 字段）
     var durationVal = typeof dur === "number" ? dur : dur.duration || 5;
     var expired = state.player.day - news._appliedDay >= durationVal;
-    if (expired && news._isIntroNews) {
-      removedIntroNews.push(news);
-    }
     return !expired;
   });
 
@@ -1911,23 +1914,9 @@ function cleanupExpiredNews(state) {
     );
   }
 
-  // v3.64: 当所有 intro news 过期时，回滚到基准状态
-  var remainingIntroNews = state.activeNews.filter(function (n) {
-    return n._isIntroNews;
-  });
-  if (remainingIntroNews.length === 0 && state._introNewsBaseline) {
-    // 所有 intro news 都过期了，回滚基准状态
-    if (typeof rollbackIntroNewsEffects === "function") {
-      rollbackIntroNewsEffects(state, state._introNewsBaseline);
-    }
-    delete state._introNewsBaseline;
-    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      StateManager.addMessage(
-        "🌅 开局时代的新闻已过去，世界回归日常节奏。你的状态已恢复到初始水平。",
-        "info",
-      );
-    }
-  }
+  // v3.65: 不再回滚 intro news 效果
+  // intro news 的世界参数影响（sectorHeat/marketMood）已通过 applyWorldNewsToParams 持久化
+  // 每日新闻会在此基础上持续叠加修改，世界状态自然演变
 
   // 恢复工作倍率（非 intro news 的新闻也适用）
   if (state.activeNews.length === 0) {
