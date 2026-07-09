@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 / loop-R12 累计 35 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 / loop-R8 / loop-R9 / loop-R11 / loop-R12 / loop-R13 累计 37 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -397,6 +397,26 @@
 - **Edge Cases**: 现金不足时显示婉拒消息；已触发不重复。
 - **Tuning Levers**: 好感阈值(50)、盘店价格(100000)。
 - **Dependencies**: NPC 关系、财务系统、名声系统。
+
+## 36. `chen_ge_connections` — 陈哥的人脉（loop-R13）
+
+- **Purpose**: 填补chen_ge事件空白，好感≥35触发工地人脉推荐。
+- **Player Fantasy**: 老江湖朋友给介绍活。
+- **Trigger**: `chen_ge.met && affinity >= 35 && day >= 15`
+- **Outputs**: 现金+280 / 名声+3 / 好感+5。
+- **Edge Cases**: 未结识不触发；已触发不重复。
+- **Tuning Levers**: 好感阈值(35)、工钱(280)。
+- **Dependencies**: NPC 关系、财务系统、名声系统。
+
+## 37. `ajie_side_project` — 阿杰的点子（loop-R13）
+
+- **Purpose**: 填补ajie事件空白，好感≥40触发二手手机翻新副业。
+- **Player Fantasy**: 老同学一起创业，搞副业赚钱。
+- **Trigger**: `ajie.met && affinity >= 40 && day >= 20`
+- **Outputs**: 现金+200~500 / 维修XP+20 / 好感+8。
+- **Edge Cases**: 未结识不触发；repair技能未初始化时跳过XP。
+- **Tuning Levers**: 好感阈值(40)、利润区间(200-500)。
+- **Dependencies**: NPC 关系、技能系统、财务系统。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 

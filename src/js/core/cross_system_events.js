@@ -14887,5 +14887,114 @@
     ],
   });
 
+  // 陈哥的经验之谈 — 好感≥35时分享工地/工厂人脉
+  RANDOM_EVENTS.push({
+    id: "chen_ge_connections",
+    phase: "street",
+    icon: "🤝",
+    title: "陈哥的人脉",
+    story:
+      "陈哥叼着烟在街角蹲着，看到你过来招了招手：「小子，听说你最近在找活？我认识城东一个工头，最近缺人，一天¥280管一顿饭。你去了报我名字，他不敢压你价。」\n\n他把烟头摁灭，又补了一句：「别跟人说是我介绍的，我不想欠他人情。」",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.chen_ge) return false;
+      if (!st.relationships.chen_ge.met) return false;
+      if ((st.relationships.chen_ge.affinity || 0) < 35) return false;
+      if (st.flags._chenGeConnectionsSeen) return false;
+      if (st.player.day < 15) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢陈哥，我去",
+        hint: "现金+280 名声+",
+        apply: function (st) {
+          st.flags._chenGeConnectionsSeen = true;
+          st.resources.cash = (st.resources.cash || 0) + 280;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 280;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            st.relationships.chen_ge.affinity + 5,
+          );
+          StateManager.addMessage(
+            "🤝 你按陈哥说的去了工地，果然缺人。工头听说你是陈哥介绍的，多给了你¥30。现金+280，名声+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 记下联系方式",
+        hint: "保留机会",
+        apply: function (st) {
+          st.flags._chenGeConnectionsSeen = true;
+          st.flags._chenGeContact = true;
+          StateManager.addMessage(
+            "📱 你说改天去，陈哥把号码发给你了：「别拖太久，活不等人。」",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 阿杰的创业邀约 — 好感≥40时邀请一起搞副业
+  RANDOM_EVENTS.push({
+    id: "ajie_side_project",
+    phase: "street",
+    icon: "💡",
+    title: "阿杰的点子",
+    story:
+      "阿杰突然在微信上找你，发了一长串语音。你点开听，他声音里带着兴奋：「老同学，我最近在搞一个二手手机翻新的项目，利润空间很大。一台手机收过来¥200，翻新一下能卖¥500。你要不要一起干？你出人手我出渠道，五五分成。」\n\n他发来几张翻新后的手机照片，看起来确实不错。",
+    conditions: function (st) {
+      if (!st.relationships || !st.relationships.ajie) return false;
+      if (!st.relationships.ajie.met) return false;
+      if ((st.relationships.ajie.affinity || 0) < 40) return false;
+      if (st.flags._ajieSideProjectSeen) return false;
+      if (st.player.day < 20) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 一起干！",
+        hint: "现金+ 技能+ 启动副业",
+        apply: function (st) {
+          st.flags._ajieSideProjectSeen = true;
+          st.flags._ajiePartnership = true;
+          var profit = Random.int(200, 500);
+          st.resources.cash = (st.resources.cash || 0) + profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          st.relationships.ajie.affinity = Math.min(
+            100,
+            st.relationships.ajie.affinity + 8,
+          );
+          if (st.skills && st.skills.repair) {
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 20;
+          }
+          StateManager.addMessage(
+            "💪 你和阿杰合伙干了一周，翻新了5台手机，净赚¥" +
+              profit +
+              "！维修XP+20，阿杰好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 我先看看",
+        hint: "观望，保留机会",
+        apply: function (st) {
+          st.flags._ajieSideProjectSeen = true;
+          StateManager.addMessage(
+            "🤔 你说先看看市场。阿杰也不急：「行，你想好了跟我说。」",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
