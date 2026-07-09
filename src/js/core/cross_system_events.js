@@ -14996,5 +14996,334 @@
     ],
   });
 
+  // ====== loop-R26 新增：4个空白区联动事件 ======
+
+  // 事件1：雪天+地点情境 — 废品站的雪夜接头（空白区：snow天气无专属事件）
+  RANDOM_EVENTS.push({
+    id: "snow_night_scrap_deal",
+    phase: "street",
+    icon: "❄️",
+    title: "雪夜废品站",
+    story:
+      "雪下了整整一夜，今天早上特别冷。废品站门口蹲着个缩成一团的人，手里拎着个黑色塑料袋——他东张西望，明显在等什么人。老周看了你一眼，压低声音：「这批货来路不太好，但成色真不赖。你要的话，¥800全拿走。」",
+    conditions: function (st) {
+      // [自洽修复] 检查雪天天气（story 明确"雪下了整整一夜"）
+      var isSnowy = st.weather && st.weather.current === "snowy";
+      // [自洽修复] 检查已结识老周（直呼"老周"，需已结识）
+      var rel = st.relationships && st.relationships.old_zhou;
+      if (!rel || !rel.met) return false;
+      return (
+        st.player.phase === "street" &&
+        isSnowy &&
+        rel.affinity >= 20 &&
+        st.trade &&
+        st.trade.currentLocation === "wholesaleMarket" &&
+        !st.flags._snowNightScrapSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 ¥800全拿下",
+        hint: "来路不明但赚",
+        cost: 800,
+        apply: function (st) {
+          st.flags._snowNightScrapSeen = true;
+          var profit = Random.int(400, 1200);
+          st.resources.cash += profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          st.relationships.old_zhou.affinity = Math.min(
+            100,
+            st.relationships.old_zhou.affinity + 5,
+          );
+          StateManager.addMessage(
+            "💰 你咬着牙付了¥800。拆开发现有几台旧笔记本成色还行，转手净赚¥" +
+              profit +
+              "。老周看你痛快，好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "✅ 只挑值钱的要（¥300）",
+        hint: "谨慎试水",
+        cost: 300,
+        apply: function (st) {
+          st.flags._snowNightScrapSeen = true;
+          var smallProfit = Random.int(100, 450);
+          st.resources.cash += smallProfit;
+          st.resources.totalEarned =
+            (st.resources.totalEarned || 0) + smallProfit;
+          StateManager.addMessage(
+            "✅ 你挑了几样确定能卖的，花了¥300，净赚¥" +
+              smallProfit +
+              "。「眼力见长啊。」老周笑了笑。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚶 来路不正，算了",
+        hint: "断然拒绝",
+        apply: function (st) {
+          st.flags._snowNightScrapSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "🚶 你摇摇头走开了。雪越下越大，但心里踏踏实实的。道德+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件2：学历/证书里程碑（空白区：教育证书系统零事件覆盖）
+  RANDOM_EVENTS.push({
+    id: "cert_first_job_bonus",
+    phase: "street",
+    icon: "🎓",
+    title: "证书的第一次兑现",
+    story:
+      "你去应聘一个还不错的岗位，面试官看了看你的简历，目光停在了那本证书上：「哦，你有这个证？」他抬头看你的眼神变了，从漫不经心变成了认真。\n\n「我们正缺有证的人。试用期工资可以上浮一档。」",
+    conditions: function (st) {
+      // 检查玩家持有任何证书（state.certificates 非空）
+      var hasCert =
+        st.certificates &&
+        Array.isArray(st.certificates) &&
+        st.certificates.length > 0;
+      // 检查还没有稳定工作（employment.currentJob === null 或 day < 30）
+      var lookingForWork =
+        !st.employment || !st.employment.currentJob || st.player.day < 30;
+      return (
+        st.player.phase === "street" &&
+        hasCert &&
+        lookingForWork &&
+        st.player.day >= 10 &&
+        !st.flags._certBonusSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "💼 坦诚谈薪资",
+        hint: "用证书争取溢价",
+        apply: function (st) {
+          st.flags._certBonusSeen = true;
+          var raise = Random.int(300, 700);
+          st.resources.cash += raise;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + raise;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "💼 你拿出证书据理力争，对方同意试用期月薪上浮¥" +
+              raise +
+              "。知识真的能换钱。名气+3。",
+            "success",
+          );
+          // 链式后续：3个月后变现
+          scheduleChainEvent(st, "cert_bonus_recurring", 90, "street");
+        },
+      },
+      {
+        text: "🙂 接受，先干起来",
+        hint: "稳扎稳打",
+        apply: function (st) {
+          st.flags._certBonusSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🙂 你把证书复印件给了HR，正式入职。工作有了着落，心情+10。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🔍 先看看别的机会",
+        hint: "不急决定",
+        apply: function (st) {
+          st.flags._certBonusSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🔍 你没急着答应，出来后又投了两家比较比较。多一个选择，心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 链式后续：证书工资加成的长期回报
+  RANDOM_EVENTS.push({
+    id: "cert_bonus_recurring",
+    _isChainEvent: true,
+    phase: "street",
+    icon: "💵",
+    title: "证书的力量",
+    story:
+      "发工资了。你发现自己比同岗位的同事多了¥500——HR说那是「持证津贴」。同事偷偷问你为什么，你笑了笑没解释。晚上回到出租屋，看着多出来的那笔钱，你觉得当初考证花的那些时间值了。",
+    conditions: function (st) {
+      return (
+        st.certificates &&
+        Array.isArray(st.certificates) &&
+        st.certificates.length > 0 &&
+        !st.flags._certRecurringSeen
+      );
+    },
+    probability: 0.6,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 存起来，细水长流",
+        hint: "银行储蓄+心理安稳",
+        apply: function (st) {
+          st.flags._certRecurringSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "💰 你把多出来的¥500存进了银行。细水长流，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎉 犒劳自己吃顿好的",
+        hint: "心情+15",
+        apply: function (st) {
+          st.flags._certRecurringSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 30);
+          StateManager.addMessage(
+            "🎉 你破天荒去了趟小馆子，点了个硬菜。努力有了回报的味道，真好。心情+15，饱食-30。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件3：NPC好感100传家 — 老周的传家老关系深度兑现（空白区：好感100终极奖励）
+  RANDOM_EVENTS.push({
+    id: "oldzhou_affinity_max_heritage",
+    phase: "street",
+    icon: "🗝️",
+    title: "老周的信任",
+    story:
+      "深夜收摊后，老周突然叫住你。他从抽屉里翻出一个泛黄的信封：「小伙子，跟了你这么久，我看你是个靠得住的人。这里面是我当年入行时的几个老客户关系——我年纪大了跑不动了，以后就交给你了。」\n\n信封里有三张名片，手写的电话号码，和一个名字：一个建材老板、一个物业经理、一个拆迁承包商。",
+    conditions: function (st) {
+      // [自洽修复] 检查已结识老周且好感达到100
+      var rel = st.relationships && st.relationships.old_zhou;
+      if (!rel || !rel.met) return false;
+      return (
+        st.player.phase === "street" &&
+        rel.affinity >= 100 &&
+        st.player.day >= 60 &&
+        !st.flags._oldzhouHeritageSeen
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 郑重接过",
+        hint: "解锁建材/物业/拆迁三条商业人脉线",
+        apply: function (st) {
+          st.flags._oldzhouHeritageSeen = true;
+          st.flags._oldzhouContactsGiven = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "🤝 你双手接过信封，点了点头。老周眼眶有点红：「别给我丢人。」你获得了三条建材/物业/拆迁人脉线，名气+8，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😢 推辞，说这太重了",
+        hint: "老周感动+后续另给",
+        apply: function (st) {
+          st.flags._oldzhouHeritageSeen = true;
+          st.relationships.old_zhou.affinity = 100; // 封顶
+          st.relationships.old_zhou.trust = true;
+          StateManager.addMessage(
+            "😢 你真心觉得受之有愧。老周愣了一下，拍拍你肩膀：「你这人啊……」他没再说，但你知道这份信任已经传递了。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件4：低库存市场套利（空白区：交易供需动态零事件覆盖）
+  RANDOM_EVENTS.push({
+    id: "trading_supply_demand_gap",
+    phase: "street",
+    icon: "📊",
+    title: "市场缺货了",
+    story:
+      "你路过批发市场，发现好几个摊主都在抱怨同一个问题：最近某种货特别紧俏，进价涨了三成还是拿不到。但你在前面的摊位似乎见过有不少存货——如果现在就低买高卖……",
+    conditions: function (st) {
+      // 检查玩家有交易经验（总交易次数>0）
+      var hasTradeExp =
+        st.stats &&
+        st.stats.tradeFreq &&
+        Object.keys(st.stats.tradeFreq).length > 0;
+      return (
+        st.player.phase === "street" &&
+        hasTradeExp &&
+        st.player.day >= 15 &&
+        st.resources.cash >= 200 &&
+        !st.flags._supplyDemandSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📦 低买高卖赚差价",
+        hint: "利用信息差套利",
+        cost: 200,
+        apply: function (st) {
+          st.flags._supplyDemandSeen = true;
+          var profit = Random.int(150, 500);
+          st.resources.cash += profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 15;
+          }
+          StateManager.addMessage(
+            "📦 你在前面的摊位低价收了一批，转手以市价卖给急要的摊主。净赚¥" +
+              profit +
+              "，销售XP+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 告诉缺货的摊主哪里有货",
+        hint: "不赚但赚人情",
+        apply: function (st) {
+          st.flags._supplyDemandSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "🤝 你告诉缺货的摊主前面有人有货。对方连声感谢。商圈里的人都愿意跟实诚人做生意。道德+3，名气+2。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "👀 观望，不确定就不动",
+        hint: "不冒险",
+        apply: function (st) {
+          st.flags._supplyDemandSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          StateManager.addMessage(
+            "👀 你觉得信息不够确认，决定再等等。有时候，不亏钱就等于赚钱。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
