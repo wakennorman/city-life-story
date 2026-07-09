@@ -13354,5 +13354,136 @@
     ],
   });
 
+  // [联动 R7] 需求阈值爆发：现金濒临枯竭 → 社区零工互助
+  RANDOM_EVENTS.push({
+    id: "cash_low_community_gig",
+    phase: "street",
+    icon: "🪙",
+    title: "邻里零工",
+    story:
+      "房租和饭钱快见底了，你在业主群里随口问了句有没有零活。\n" +
+      "楼下的便利店老板和快递驿站先后找来：『有空帮个忙不？按次结。』",
+    // conditions：现金阈值触发——危机转化为互助契机，连接 经济系统 → 社区互助/微收入
+    conditions: function (st) {
+      var cash = st.resources && st.resources.cash; // 现金（元）
+      return typeof cash === "number" && cash <= 200;
+    },
+    probability: 0.05,
+    repeatable: true,
+    choices: [
+      {
+        text: "🪙 接零工",
+        hint: "现金+（小额）",
+        apply: function (st) {
+          var pay = 260;
+          st.resources.cash = (st.resources.cash || 0) + pay;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "🪙 你帮便利店理了两小时货、替驿站分了趟件，当天进账¥" +
+              pay +
+              "，名声+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 先缓缓",
+        hint: "不接活",
+        apply: function (st) {
+          StateManager.addMessage("你婉拒了，想先缓口气。", "info");
+        },
+      },
+    ],
+  });
+
+  // [联动 R7] 双技能协同：销售 + 英语 → 外贸跟单/选品顾问
+  RANDOM_EVENTS.push({
+    id: "sales_english_trade",
+    phase: "street",
+    icon: "🌐",
+    title: "外贸跟单",
+    story:
+      "一家做跨境小商品的公司缺个既懂客户又过得硬英语的跟单。\n" +
+      "猎头刷到你的履历：「能不能兼着帮我们跟几票单？」",
+    // conditions：销售技能 + 英语技能 双门槛，连接 技能系统 → 跨境副业
+    conditions: function (st) {
+      var sales = st.skills && st.skills.sales && st.skills.sales.level; // 销售技能等级
+      var eng = st.skills && st.skills.english && st.skills.english.level; // 英语技能等级
+      return (
+        typeof sales === "number" &&
+        sales >= 15 &&
+        typeof eng === "number" &&
+        eng >= 25
+      );
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      {
+        text: "🌐 接跟单",
+        hint: "现金+（佣金）/名声+",
+        apply: function (st) {
+          var fee = 1100;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          StateManager.addMessage(
+            "🌐 你跟下了两票小单，拿到佣金¥" + fee + "，名声+4。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 暂时不接",
+        hint: "不接",
+        apply: function (st) {
+          StateManager.addMessage("你婉拒了，手头事够多了。", "info");
+        },
+      },
+    ],
+  });
+
+  // [联动 R7] 天赋系统扩展：sales_management 天赋节点 → 大客户资源
+  RANDOM_EVENTS.push({
+    id: "talent_sales_management_client",
+    phase: "street",
+    icon: "💼",
+    title: "大客户介绍",
+    story:
+      "你拿下「销售管理」天赋后，圈子里开始有人把你当能扛盘的人。\n" +
+      "一位老客户牵线：「有个大单，我觉得你能接，要不要聊聊？」",
+    // conditions：天赋节点 sales_management 已激活，连接 天赋系统 → 高价值客户
+    conditions: function (st) {
+      return !!(st.talentNodes && st.talentNodes["sales_management"]);
+    },
+    probability: 0.018,
+    repeatable: true,
+    choices: [
+      {
+        text: "💼 接大单",
+        hint: "现金+（大额）/名声+",
+        apply: function (st) {
+          var retainer = 2600;
+          st.resources.cash = (st.resources.cash || 0) + retainer;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 7);
+          StateManager.addMessage(
+            "💼 你谈下了这笔年框，预付¥" + retainer + "，名声+7。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 先认识人",
+        hint: "只建联不接单",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "你先吃了顿饭认识人，暂未接单，名声+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

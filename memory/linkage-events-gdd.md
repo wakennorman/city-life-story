@@ -1,7 +1,7 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1 / loop-R2 / loop-R3 累计 17 个联动事件
+> 版本: v3.59 / v3.60 / loop-R1~R3 / loop-R6 / loop-R7 累计 23 个联动事件
 > 最后更新: 2026-07-09
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
@@ -188,24 +188,86 @@
 
 ---
 
+## 18. `repair_mgmt_outsource` — 维修外包队
+
+- **Purpose**: 双技能协同——维修+管理双门槛触发「被小店老板推举牵头接单」，把个人手艺升级为微型团队经营。
+- **Player Fantasy**: 我的手艺+排班脑子，被街坊当成能扛事的人。
+- **Trigger**: `st.skills.repair.level >= 25 && st.skills.management.level >= 15`
+- **Outputs**: 现金+(月分账 ¥1200) / 名声+4 / 隐性社区副业。
+- **Edge Cases**: 仅满足单技能不触发；已在职时选项语义变为「兼职」。
+- **Tuning Levers**: 双阈值、月分账额 `[PLACEHOLDER]`、名声增量。
+- **Dependencies**: 技能系统、经济/副业系统。
+
+## 19. `weld_elec_retrofit` — 设备改造单
+
+- **Purpose**: 双技能协同——焊接+电工双门槛解锁「设备自动化改造」高客单机会。
+- **Player Fantasy**: 我又会焊又会接电，这种改造单只有我能接。
+- **Trigger**: `st.skills.welding.level >= 20 && st.skills.electrician.level >= 15`
+- **Outputs**: 现金+(大额 ¥3500) / 名声+8。
+- **Edge Cases**: 仅单技能不触发；`repeatable:false`(一次性改造，防刷钱)。
+- **Tuning Levers**: 双阈值、改造费 `[PLACEHOLDER]`、名声增量。
+- **Dependencies**: 技能系统、经济系统。
+
+## 20. `account_sales_invoice` — 代记账客户
+
+- **Purpose**: 双技能协同——会计+销售双门槛触发「代记账客户」稳定月入。
+- **Player Fantasy**: 我懂账又懂客户，小老板们愿意把税务外包给我。
+- **Trigger**: `st.skills.accounting.level >= 20 && st.skills.sales.level >= 10`
+- **Outputs**: 现金+(月入 ¥900) / 名声+3。
+- **Edge Cases**: 仅单技能不触发；与 repair_mgmt(维修+管理)为不同技能组合，不冲突。
+- **Tuning Levers**: 双阈值、月费 `[PLACEHOLDER]`。
+- **Dependencies**: 技能系统、经济/副业系统。
+
+## 21. `cash_low_community_gig` — 邻里零工 _(R7 新增)_
+
+- **Purpose**: 需求阈值爆发——现金≤200 的财务危机转化为社区零工互助契机，填补「除饥饿外的 needs 阈值」空白。
+- **Player Fantasy**: 最难的时候，邻里递来零活救急。
+- **Trigger**: `st.resources.cash <= 200`
+- **Outputs**: 现金+(小额 ¥260) / 名声+2。
+- **Edge Cases**: 现金恰好 200 边界；`repeatable:true` 但门控(现金≤200)天然限流，不会无成本刷；叙事不点名具体 NPC，规避 A 类自洽缺陷。
+- **Tuning Levers**: 现金阈值(200)、零工报酬 `[PLACEHOLDER]`。
+- **Dependencies**: 经济系统、社区/needs 系统。
+
+## 22. `sales_english_trade` — 外贸跟单 _(R7 新增)_
+
+- **Purpose**: 更多双技能协同——销售+英语双门槛触发「外贸跟单」跨境副业，区别于已有的 coding+english(indie_dev)与 accounting+sales(代记账)。
+- **Player Fantasy**: 我的嘴皮子+英语，能啃下跨境小单。
+- **Trigger**: `st.skills.sales.level >= 15 && st.skills.english.level >= 25`
+- **Outputs**: 现金+(佣金 ¥1100) / 名声+4。
+- **Edge Cases**: 仅单技能不触发；与 indie_dev(coding+english)技能组合不同，不冲突。
+- **Tuning Levers**: 双阈值、佣金 `[PLACEHOLDER]`。
+- **Dependencies**: 技能系统、经济/副业系统。
+
+## 23. `talent_sales_management_client` — 大客户介绍 _(R7 新增)_
+
+- **Purpose**: 扩展天赋系统联动(此前 GDD 仅 cook_management)——`sales_management` 天赋节点激活后解锁「大客户年框」高价值资源。
+- **Player Fantasy**: 我拿下销售管理天赋，圈子里开始把我当能扛盘的人。
+- **Trigger**: `!!(st.talentNodes && st.talentNodes["sales_management"])`
+- **Outputs**: 现金+(大额预付 ¥2600) / 名声+7(接单)或+3(仅建联)。
+- **Edge Cases**: 天赋未激活则守卫拦截；与普通销售技能事件阶梯递进(天赋=更高阶回报)。
+- **Tuning Levers**: 预付额 `[PLACEHOLDER]`、名声增量。
+- **Dependencies**: 天赋系统(skill_tree)、经济系统。
+
+---
+
 ## 系统覆盖矩阵（验证「加强关联度」达成度）
 
-| 次级系统  | 已联动事件数 | 事件 id                                                                                                                                                              |
-| --------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 道德系统  | 4            | morality_wallet_honest / keep / extreme_blacklist (+ high 侧闭环)                                                                                                    |
-| 技能系统  | 7            | coding_scam_spot / skill_synergy_restaurant_offer / skill_english_column / talent_cook_management_class / indie_dev_side_project / (cooking/sales/english/coding 轴) |
-| NPC 关系  | 5            | xiaoli_brand_deal / npc_oldzhou_toolloan / oldzhou_80_legacy / hunger_streak_neighbor_meal / weather_rainy_umbrella                                                  |
-| 天气系统  | 1            | weather_rainy_umbrella                                                                                                                                               |
-| 声望系统  | 2            | reputation_high_callup / fame_high_interview                                                                                                                         |
-| 经济/资产 | 5            | bank_vip_treatment / regular_customer_discount / oldzhou_80_legacy / indie_dev_side_project / xiaoli_brand_deal                                                      |
-| 天赋系统  | 1            | talent_cook_management_class                                                                                                                                         |
-| 名声系统  | 3            | morality_wallet_honest / skill_english_column / fame_high_interview                                                                                                  |
+| 次级系统  | 已联动事件数 | 事件 id                                                                                                                                                                                                                                                                                                                                           |
+| --------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 道德系统  | 3            | morality_wallet_honest / keep / extreme_blacklist                                                                                                                                                                                                                                                                                                 |
+| 技能系统  | 9            | coding_scam_spot / skill_synergy_restaurant_offer / talent_cook_management_class / skill_english_column / indie_dev_side_project / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / sales_english_trade                                                                                                                       |
+| NPC 关系  | 5            | xiaoli_brand_deal / npc_oldzhou_toolloan / oldzhou_80_legacy / hunger_streak_neighbor_meal / weather_rainy_umbrella                                                                                                                                                                                                                               |
+| 天气系统  | 1            | weather_rainy_umbrella                                                                                                                                                                                                                                                                                                                            |
+| 声望系统  | 2            | reputation_high_callup / fame_high_interview                                                                                                                                                                                                                                                                                                      |
+| 经济/资产 | 14           | bank_vip_treatment / regular_customer_discount / coding_scam_spot / skill_synergy_restaurant_offer / xiaoli_brand_deal / reputation_high_callup / indie_dev_side_project / oldzhou_80_legacy / repair_mgmt_outsource / weld_elec_retrofit / account_sales_invoice / cash_low_community_gig / sales_english_trade / talent_sales_management_client |
+| 天赋系统  | 2            | talent_cook_management_class / talent_sales_management_client                                                                                                                                                                                                                                                                                     |
+| 名声系统  | 6            | morality_wallet_honest / xiaoli_brand_deal / skill_english_column / fame_high_interview / sales_english_trade / talent_sales_management_client                                                                                                                                                                                                    |
 
 **空白区（待后续循环填补）**:
 
 - 时代变迁(era)联动——`state.js` 无 `era*` 字段，需先在状态层落地。
-- needs 阈值爆发（除饥饿外：连续低心情/低睡眠）。
-- 更多双技能协同组合（repair+management、sales+accounting 等）。
+- needs 阈值爆发（除现金外：连续低心情 `emotionalState`/高 `stress` 轴——`state.js` 已有 `emotionalState` 与 `stress` 字段，可下一轮接入）。
+- 更多双技能协同组合（cooking+accounting 餐饮记账、coding+management 小团队产品 等）。
 - `xiaoli`/`auntie_lin`/`master_zhao` 激活后，对应深度好感事件才真正生效。
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）

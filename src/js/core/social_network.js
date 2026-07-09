@@ -77,7 +77,12 @@ function postToMoments(state, content, images, visibility) {
     // 名气加成：每10点名气 +0.5粉丝
     var fameBonus = Math.floor((state.player.fame || 0) / 20);
     // 随机波动
-    var totalGain = baseGain + fameBonus + Math.floor(Math.random() * 3);
+    var totalGain =
+      baseGain +
+      fameBonus +
+      (typeof Random !== "undefined"
+        ? Random.int(0, 2)
+        : Math.floor(Math.random() * 3));
     state.socialNetwork.playerFans += totalGain;
     // 反哺名气：少量粉丝增长也略微提升名气
     state.player.fame = Math.min(
@@ -163,19 +168,35 @@ function refreshWeiboHotlist(state) {
   for (var i = 0; i < 10; i++) {
     var item = {
       rank: i + 1,
-      heat: Math.floor(Math.random() * 1000000) + 100000,
+      heat:
+        typeof Random !== "undefined"
+          ? Random.int(100000, 1100000 - 1)
+          : Math.floor(Math.random() * 1000000) + 100000,
     };
     if (i < newsTopics.length) {
       item.title = newsTopics[i];
-      item.category = categories[Math.floor(Math.random() * categories.length)];
+      item.category =
+        categories[
+          typeof Random !== "undefined"
+            ? Random.int(0, categories.length - 1)
+            : Math.floor(Math.random() * categories.length)
+        ];
     } else if (poolCopy.length > 0) {
-      var pickIdx = Math.floor(Math.random() * poolCopy.length);
+      var pickIdx =
+        typeof Random !== "undefined"
+          ? Random.int(0, poolCopy.length - 1)
+          : Math.floor(Math.random() * poolCopy.length);
       var picked = poolCopy.splice(pickIdx, 1)[0];
       item.title = picked.title;
       item.category = picked.category;
     } else {
       item.title = "热议话题" + (i + 1);
-      item.category = categories[Math.floor(Math.random() * categories.length)];
+      item.category =
+        categories[
+          typeof Random !== "undefined"
+            ? Random.int(0, categories.length - 1)
+            : Math.floor(Math.random() * categories.length)
+        ];
     }
     hotlist.push(item);
   }
@@ -233,9 +254,16 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
   ensureSocialNetworkState(state);
   state.socialNetwork.舆论危机 = {
     active: true,
-    severity: severity || Math.floor(Math.random() * 50) + 30,
+    severity:
+      severity ||
+      (typeof Random !== "undefined"
+        ? Random.int(30, 79)
+        : Math.floor(Math.random() * 50) + 30),
     topics: [topic],
-    daysRemaining: Math.floor(Math.random() * 5) + 3,
+    daysRemaining:
+      typeof Random !== "undefined"
+        ? Random.int(3, 7)
+        : Math.floor(Math.random() * 5) + 3,
   };
 }
 
