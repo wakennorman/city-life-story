@@ -1,132 +1,2364 @@
+/**
+ * 主渲染调度器
+ *
+ * 管理整个 UI 的渲染。使用脏标记 (dirty flag) 按需更新 DOM。
+ * 渲染函数命名: render<Section>()
+ */
+
+// 当前激活的 Tab
+let currentTab = "actions";
+
+// ====== 玩家可见名称兜底 ======
+var DISPLAY_NAME_ALIASES = {
+  vitamins_item: "维生素片",
+  electronics: "电子产品",
+  electronics_item: "电子产品",
+  daily: "日用品",
+  food: "食品",
+  clothing: "衣物",
+  luxury: "奢侈品",
+  scrap: "废品",
+};
+
+function formatIdAsDisplayName(id) {
+  if (id === undefined || id === null || id === "") return "未知项目";
+  return String(id)
+    .replace(/_item$/g, "")
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map(function (part) {
+      return DISPLAY_NAME_ALIASES[part] || part;
+    })
+    .join(" ");
+}
+
+function getUiDisplayName(id, fallback) {
+  if (fallback && fallback !== "undefined") return fallback;
+  if (id === undefined || id === null || id === "") return "未知项目";
+  var key = String(id);
+  if (DISPLAY_NAME_ALIASES[key]) return DISPLAY_NAME_ALIASES[key];
+  if (typeof getItemById === "function") {
+    var item = getItemById(key);
+    if (item && item.name) return item.name;
+  }
+  if (typeof getGoodById === "function") {
+    var good = getGoodById(key);
+    if (good && good.name) return good.name;
+  }
+  if (
+    typeof LOCATIONS !== "undefined" &&
+    LOCATIONS[key] &&
+    LOCATIONS[key].name
+  ) {
+    return LOCATIONS[key].name;
+  }
+  if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
+    var job = STREET_JOBS.find(function (j) {
+      return j && j.id === key;
+    });
+    if (job && job.name) return job.name;
+  }
+  return formatIdAsDisplayName(key);
+}
+
+// ====== 紧凑型低数值预警 ======
+/**
+ * 为 stat-row 元素添加颜色匹配的紧凑预警
+ * @param id - stat-row 的 DOM ID
+ * @param value - 当前值
+ * @param threshold - 低于此值触发预警（疲劳/风险等高即坏的值用 inverted=true）
+ * @param warnColor - 预警边框和闪烁颜色（匹配该要素本身的颜色）
+ * @param inverted - true 表示"高于阈值"触发预警（用于疲劳、风险）
+ */
+function warnStatRow(id, value, threshold, warnColor, inverted) {
+  var row = document.getElementById(id);
+  if (!row) return;
+  var isBad = inverted ? value >= threshold : value <= threshold;
+  if (isBad) {
+    // 紧凑预警：薄左边框 + 极淡背景 + 无额外 padding
+    row.style.cssText =
+      "border-left:3px solid " +
+      warnColor +
+      ";" +
+      "background:linear-gradient(90deg, " +
+      warnColor +
+      "15, transparent 40%);" +
+      "padding-left:6px;margin:1px 0;border-radius:0 4px 4px 0;" +
+      "transition:all 0.3s;";
+    // 数值变色
+    var valEl = row.querySelector(".stat-value");
+    if (valEl) {
+      valEl.style.color = warnColor;
+      valEl.style.fontWeight = "bold";
+      valEl.style.animation = "ap-blink 0.7s infinite";
+    }
+  } else {
+    row.style.cssText = "";
+    var valEl2 = row.querySelector(".stat-value");
+    if (valEl2) {
+      valEl2.style.color = "";
+      valEl2.style.fontWeight = "";
+      valEl2.style.animation = "";
+    }
+  }
+}
+
+// ====== 主渲染入口 ======
+function renderAll() {
+  const state = StateManager.getState();
+
+  renderHeader(state);
+  renderSidebar(state);
+  renderTabBar(state);
+  renderCurrentTab(state);
+  renderMessageLog(state);
+
+  StateManager.cleanAllDirty();
+}
+
+// ====== Header 渲染 ======
+function renderHeader(state) {
+  const p = state.player;
+  const r = state.resources;
+  const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
+
+  document.getElementById("header-day").textContent = p.day;
+  document.getElementById("header-age").textContent = p.age;
+  var phaseEl = document.getElementById("header-phase");
+  if (phaseEl) phaseEl.textContent = phaseLabel;
+
+  // 模式指示器
+  var modeEl = document.getElementById("header-mode");
+  var modeStat = document.getElementById("header-mode-stat");
+  if (modeEl && modeStat) {
+    var modeLabel = "";
+    if (state.flags && state.flags._isScenarioMode) {
+      modeLabel = "📜 " + (state.flags._scenarioName || "剧本模式");
+    } else if (state.flags && state.flags._isSandboxMode) {
+      modeLabel = "⚙️ 沙盒模式";
+    }
+    if (modeLabel) {
+      modeEl.textContent = modeLabel;
+      modeStat.style.display = "";
+      modeStat.classList.add("has-mode");
+    } else {
+      modeStat.style.display = "none";
+      modeStat.classList.remove("has-mode");
+    }
+  }
+
+  // ===== 资金（cash-label区域）：展示现金+储蓄，单资金静态/多资金温和轮播 =====
+  renderFundsHeader(state);
+
+  // ===== 债务：独立区域，单债务闪烁/多债务轮播闪烁 =====
+  renderDebtHeader(state);
+
+  // 季节显示
+  var seasonEl = document.getElementById("header-season-label");
+  if (seasonEl && typeof getSeason === "function") {
+    var season = getSeason(p.day);
+    seasonEl.textContent = season.icon + " " + season.name;
+  }
+
+  // 节日显示
+  var festStat = document.getElementById("header-festival-stat");
+  var festEl = document.getElementById("header-festival");
+  if (festStat && festEl && typeof getCurrentFestival === "function") {
+    var festival = getCurrentFestival(p.day);
+    if (festival) {
+      var doy = p.day % 365;
+      var daysLeft = festival.startDay + festival.duration - doy;
+      festEl.textContent =
+        festival.icon + " " + festival.name + "（" + daysLeft + "天）";
+      festStat.style.display = "";
+    } else {
+      festStat.style.display = "none";
+    }
+  }
+
+  // 季节显示（在 header-season-label 旁边添加季节描述）
+  var seasonLabel = document.getElementById("header-season-label");
+  if (seasonLabel && typeof getSeasonDesc === "function") {
+    var seasonDesc = getSeasonDesc(p.day);
+    seasonLabel.title = seasonDesc; // 鼠标悬停显示季节描述
+  }
+}
+
+/**
+ * 资金头部渲染 — 展示现金+储蓄，温和滚动
+ *
+ * 设计参考：
+ * - 大多数 (The Most)：资产负债分栏，资金整洁展示
+ * - 王权 (Reigns)：资源固定独立槽位，互不干扰
+ * - 中国式家长：金钱展示不带警告感，数字干净直接
+ *
+ * 规则：
+ * - 只有现金 → 静态 "💰 ¥X,XXX"
+ * - 现金+储蓄 → 温和轮播（4s切换，纯文本更新，无闪烁）
+ * - 展示风格比债务低调（无闪烁、无脉冲背景）
+ */
+function renderFundsHeader(state) {
+  var labelEl = document.getElementById("header-cash-label");
+  var valueEl = document.getElementById("header-cash");
+  if (!labelEl || !valueEl) return;
+
+  var r = state.resources;
+  var cash = r.cash || 0;
+  var bankBalance = r.bankBalance || 0;
+
+  // 收集资金条目
+  var fundItems = [];
+  fundItems.push({
+    label: "💰",
+    value: "¥" + cash.toLocaleString(),
+    color: "var(--success)",
+  });
+  if (bankBalance > 0) {
+    fundItems.push({
+      label: "🏦",
+      value: "¥" + bankBalance.toLocaleString(),
+      color: "#4fc3f7",
+    });
+  }
+
+  if (fundItems.length === 1) {
+    // === 只有现金：静态展示（无动画） ===
+    if (window._fundsCarouselTimer) {
+      clearInterval(window._fundsCarouselTimer);
+      window._fundsCarouselTimer = null;
+    }
+    labelEl.textContent = fundItems[0].label;
+    valueEl.textContent = fundItems[0].value;
+    valueEl.style.color = fundItems[0].color;
+    valueEl.style.animation = "";
+    valueEl.className = "value cash";
+  } else {
+    // === 现金+储蓄：温和轮播（每4s，纯文字切换，无闪烁） ===
+    var areaEl = document.getElementById("header-cash-area");
+    if (areaEl) {
+      areaEl.className = "header-stat";
+      areaEl.style.cssText = "cursor: default; min-width: 100px;";
+    }
+
+    var fundCarouselData = fundItems.map(function (f) {
+      return { label: f.label, value: f.value, color: f.color };
+    });
+
+    if (!window._fundsCarouselTimer) {
+      // 首次启动
+      window._fundsCarouselIdx = 0;
+      var f0 = fundCarouselData[0];
+      labelEl.textContent = f0.label;
+      valueEl.textContent = f0.value;
+      valueEl.style.color = f0.color;
+      valueEl.className = "value cash";
+
+      window._fundsCarouselData = fundCarouselData;
+      window._fundsCarouselTimer = setInterval(function () {
+        var fdata = window._fundsCarouselData;
+        if (!fdata || fdata.length <= 1) return;
+        window._fundsCarouselIdx =
+          (window._fundsCarouselIdx + 1) % fdata.length;
+        var fnext = fdata[window._fundsCarouselIdx];
+        var fl = document.getElementById("header-cash-label");
+        var fv = document.getElementById("header-cash");
+        if (fl) fl.textContent = fnext.label;
+        if (fv) {
+          fv.textContent = fnext.value;
+          fv.style.color = fnext.color;
+          fv.className = "value cash";
+        }
+      }, 4000);
+    } else {
+      // 定时器已存在，刷新当前项（金额可能变化）
+      var idx2 = window._fundsCarouselIdx || 0;
+      if (fundCarouselData[idx2]) {
+        var fcur = fundCarouselData[idx2];
+        labelEl.textContent = fcur.label;
+        valueEl.textContent = fcur.value;
+        valueEl.style.color = fcur.color;
+        valueEl.className = "value cash";
+      }
+      window._fundsCarouselData = fundCarouselData;
+    }
+  }
+}
+
+/**
+ * 债务头部渲染 — 现金和债务彻底分离，独立槽位
+ *
+ * 设计参考：
+ * - 北京浮生记：债务红色独立警示，不混在资金栏
+ * - 大多数 (The Most)：资产负债分栏，债务用醒目警示色
+ * - 王权 (Reigns)：每种资源固定独立槽位，互不干扰
+ * - 中国式家长：面子/金钱分占不同视觉区域
+ *
+ * 规则：
+ * - 无债务 → 隐藏
+ * - 单种债务 → 静态闪烁（debt-blink）
+ * - 多种债务 → 轮播（3s切换）+ 每项闪烁
+ */
+function renderDebtHeader(state) {
+  var debtArea = document.getElementById("header-debt-area");
+  var debtLabel = document.getElementById("header-debt-label");
+  var debtValue = document.getElementById("header-debt");
+  if (!debtArea || !debtLabel || !debtValue) return;
+
+  var r = state.resources;
+  var villageDebt = r.villageDebt || 0;
+  var bankDebt = r.bankDebt || 0;
+
+  // 收集非零债务
+  var debtItems = [];
+  if (villageDebt > 0) {
+    debtItems.push({
+      label: "🏘️ 欠村长",
+      value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (bankDebt > 0) {
+    debtItems.push({
+      label: "🏦 欠银行",
+      value: "¥" + bankDebt.toLocaleString(),
+      color: "var(--warning)",
+    });
+  }
+
+  if (debtItems.length === 0) {
+    // 无债务 → 隐藏区块，清除计时器
+    debtArea.style.display = "none";
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    debtArea.className = "header-stat";
+    return;
+  }
+
+  // 有债务 → 显示
+  debtArea.style.display = "";
+
+  if (debtItems.length === 1) {
+    // === 只有一种债务：静态显示 + 闪烁 ===
+    if (window._debtCarouselTimer) {
+      clearInterval(window._debtCarouselTimer);
+      window._debtCarouselTimer = null;
+    }
+    var item = debtItems[0];
+    debtLabel.textContent = item.label;
+    debtValue.textContent = item.value;
+    debtValue.style.color = item.color;
+    debtValue.className = "value debt single-debt-blink";
+    debtArea.className = "header-stat header-debt-active";
+  } else {
+    // === 多种债务：轮播（3s 切换）+ 每项闪烁 ===
+    debtArea.className = "header-stat header-debt-carousel-active";
+    var debtCarouselData = debtItems.map(function (d) {
+      return { label: d.label, value: d.value, color: d.color };
+    });
+
+    if (!window._debtCarouselTimer) {
+      // 首次启动
+      window._debtCarouselIdx = 0;
+      var first = debtCarouselData[0];
+      debtLabel.textContent = first.label;
+      debtValue.textContent = first.value;
+      debtValue.style.color = first.color;
+      debtValue.className = "value debt carousel-debt-blink debt-fade-in";
+      setTimeout(function () {
+        var dv = document.getElementById("header-debt");
+        if (dv) dv.className = "value debt carousel-debt-blink";
+      }, 400);
+
+      window._debtCarouselData = debtCarouselData;
+      window._debtCarouselTimer = setInterval(function () {
+        var data = window._debtCarouselData;
+        if (!data || data.length <= 1) return;
+        window._debtCarouselIdx = (window._debtCarouselIdx + 1) % data.length;
+        var next = data[window._debtCarouselIdx];
+        var dl = document.getElementById("header-debt-label");
+        var dv = document.getElementById("header-debt");
+        if (dl) dl.textContent = next.label;
+        if (dv) {
+          dv.textContent = next.value;
+          dv.style.color = next.color;
+          dv.className = "value debt carousel-debt-blink debt-fade-in";
+          setTimeout(function () {
+            var dv2 = document.getElementById("header-debt");
+            if (dv2) dv2.className = "value debt carousel-debt-blink";
+          }, 400);
+        }
+      }, 3000);
+    } else {
+      // 定时器已存在，刷新当前显示项（金额可能变化）
+      var idx = window._debtCarouselIdx || 0;
+      if (debtCarouselData[idx]) {
+        var cur = debtCarouselData[idx];
+        debtLabel.textContent = cur.label;
+        debtValue.textContent = cur.value;
+        debtValue.style.color = cur.color;
+        debtValue.className = "value debt carousel-debt-blink";
+      }
+      window._debtCarouselData = debtCarouselData;
+    }
+  }
+}
+
+/**
+ * 资金展示初始化（原现金轮播 → 现资金展示）
+ * 由 renderHeader → renderFundsHeader / renderDebtHeader 自动处理；
+ * 此函数保留仅用于向后兼容 main.js 的调用。
+ */
+function initCashCarousel() {
+  // 债务展示已在 renderDebtHeader 中自动初始化，无需额外操作
+}
+
+// ====== Sidebar 渲染 ======
+function renderSidebar(state) {
+  const p = state.player;
+  var sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.classList.toggle("phase-street", p.phase === "street");
+    sidebar.classList.toggle("phase-corporate", p.phase !== "street");
+  }
+
+  if (p.phase === "street") {
+    renderStreetStats(state);
+  } else {
+    renderCorporateStats(state);
+  }
+
+  renderNeedsBars(state);
+  renderDebtInfo(state);
+  // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
+  // renderDreamSection(state);
+  // 今日重点已整合到行动页的"今日智能建议"中
+  // if (typeof renderDailyFocusSection === "function") {
+  //   renderDailyFocusSection(state);
+  // }
+  // 学历已移到个人成长Tab的"🎓 学历"子Tab中
+  // renderEduSection(state);
+  renderReputationBadge(state);
+  renderMoralStatus(state);
+  renderAccountingIntel(state);
+  renderLocation(state);
+}
+
+/** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
+function renderReputationBadge(state) {
+  if (typeof getHistoryModifiers !== "function") return;
+  var mods = getHistoryModifiers(state);
+  if (!mods.reputationLabel) {
+    var el = document.getElementById("reputation-badge");
+    if (el) el.style.display = "none";
+    return;
+  }
+  var el = document.getElementById("reputation-badge");
+  if (!el) {
+    // 动态创建并附加到梦想区之后；学历已移出侧栏。
+    el = document.createElement("div");
+    el.id = "reputation-badge";
+    el.style.cssText =
+      "margin-top:6px;padding:6px 10px;background:rgba(74,158,92,0.10);border:1px solid rgba(74,158,92,0.30);border-radius:8px;";
+    var anchorEl = document.getElementById("dream-section");
+    if (anchorEl && anchorEl.parentNode) {
+      anchorEl.parentNode.insertBefore(el, anchorEl.nextSibling);
+    } else {
+      return;
+    }
+  }
+  el.style.display = "block";
+  var earning =
+    mods.earningsBonus > 1.0
+      ? "收入+" + Math.round((mods.earningsBonus - 1) * 100) + "%"
+      : "";
+  var luck = mods.luckBonus > 0 ? " 幸运+" + mods.luckBonus : "";
+  el.innerHTML =
+    "<h3>🏅 声誉</h3>" +
+    '<div style="font-size:12px;font-weight:600;color:var(--accent);">' +
+    mods.reputationLabel +
+    "</div>" +
+    (earning || luck
+      ? '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' +
+        earning +
+        luck +
+        "</div>"
+      : "");
+}
+
+/** 道德状态显示 */
+function renderMoralStatus(state) {
+  var moral = state.flags.moral;
+  if (!moral || !moral.actions || moral.actions.length === 0) return;
+  var score = moral.score || 0;
+  var el = document.getElementById("moral-status");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "moral-status";
+    el.style.cssText = "font-size:11px;margin-bottom:4px;margin-top:-4px;";
+    var dreamEl = document.getElementById("dream-section");
+    var parent = dreamEl ? dreamEl.parentNode : null;
+    if (parent) parent.insertBefore(el, dreamEl ? dreamEl.nextSibling : null);
+    else return;
+  }
+  var emoji = typeof getMoralEmoji === "function" ? getMoralEmoji(score) : "😐";
+  var level =
+    typeof getMoralLevelName === "function" ? getMoralLevelName(score) : "";
+  var color =
+    score >= 50
+      ? "var(--success)"
+      : score >= 20
+        ? "var(--accent)"
+        : score >= -10
+          ? "var(--text-secondary)"
+          : score >= -40
+            ? "var(--warning)"
+            : "var(--danger)";
+  el.innerHTML =
+    emoji +
+    " " +
+    level +
+    " <span style='color:" +
+    color +
+    ";font-weight:bold;'>(" +
+    (score > 0 ? "+" : "") +
+    score +
+    ")</span>";
+}
+
+/** 会计情报（技能门控，Lv.20+侧边栏显示） */
+function renderAccountingIntel(state) {
+  var el = document.getElementById("accounting-intel");
+  if (!el) return;
+  var lvl =
+    (state.skills &&
+      state.skills.accounting &&
+      state.skills.accounting.level) ||
+    0;
+  if (lvl < 20) {
+    el.style.display = "none";
+    return;
+  }
+  el.style.display = "block";
+  var html = '<h3 style="font-size:12px;margin-bottom:4px;">🧾 财务情报</h3>';
+  var preview = buildAccountingPreview(state, "bank");
+  if (preview) {
+    html +=
+      '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">' +
+      preview +
+      "</div>";
+  }
+  html +=
+    '<div style="font-size:9px;color:var(--text-muted);margin-top:3px;">📊 会计 Lv.' +
+    lvl +
+    "</div>";
+  el.innerHTML = html;
+}
+
+function renderEduSection(state) {
+  var el = document.getElementById("edu-section");
+  if (!el) return;
+  var p = state.player;
+  var edu = p.education ?? state.education ?? 0;
+  var ep = p.eduProgress ||
+    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
+  var eduNames = ["大专", "本科", "研究生"];
+  var eduIcons = ["🎓", "📜", "🏛️"];
+  el.style.display = "block";
+  var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
+  var progressHtml = "";
+  if (edu === 0) {
+    var pct = Math.round((ep.examsPassed / (ep.totalExams || 6)) * 100);
+    progressHtml =
+      '<div style="background:var(--bg-input);border-radius:3px;height:5px;overflow:hidden;margin:4px 0;">' +
+      '<div style="width:' +
+      pct +
+      '%;height:100%;background:var(--accent);border-radius:3px;"></div></div>' +
+      '<div style="font-size:10px;color:var(--text-muted);">' +
+      "备考进度：" +
+      ep.examsPassed +
+      "/" +
+      (ep.totalExams || 6) +
+      "门（学习点" +
+      ep.studyPoints +
+      "/150）</div>";
+  }
+  el.innerHTML =
+    "<h3>🎓 学历</h3>" +
+    '<div style="font-size:12px;font-weight:600;">' +
+    label +
+    "</div>" +
+    progressHtml;
+}
+
+/** 梦想追踪侧边栏区块 */
+function renderDreamSection(state) {
+  var dreamEl = document.getElementById("dream-section");
+  if (!dreamEl) return;
+  if (typeof getCurrentDream !== "function") {
+    dreamEl.style.display = "none";
+    return;
+  }
+  var dream = getCurrentDream(state);
+  if (!dream) {
+    dreamEl.style.display = "none";
+    return;
+  }
+  var progress =
+    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+  var curTitle =
+    typeof getDreamCurrentTitle === "function"
+      ? getDreamCurrentTitle(state)
+      : "";
+  dreamEl.style.display = "";
+  dreamEl.innerHTML =
+    "<h3>🌟 人生目标</h3>" +
+    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+    '<span style="font-size:18px;">' +
+    dream.icon +
+    "</span>" +
+    '<span style="font-size:12px;font-weight:600;color:var(--text-primary);">' +
+    dream.name +
+    "</span></div>" +
+    '<div style="background:var(--bg-input);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;">' +
+    '<div style="width:' +
+    progress +
+    '%;height:100%;background:var(--accent);border-radius:4px;"></div>' +
+    "</div>" +
+    '<div style="font-size:10px;color:var(--text-muted);">' +
+    progress +
+    "% · " +
+    curTitle +
+    "</div>";
+}
+
+/** 侧边栏显示村长/银行债务 */
+function renderDebtInfo(state) {
+  const debtSection = document.getElementById("debt-section");
+  if (!debtSection) return;
+  const bankDebt = state.resources.bankDebt || 0;
+  let html = "";
+  if (bankDebt > 0) {
+    html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(243,156,18,0.08);border-radius:4px;font-size:11px;">
+      🏦 欠银行: <strong style="color:var(--warning);">¥${bankDebt.toLocaleString()}</strong>
+    </div>`;
+  }
+  debtSection.innerHTML = html;
+  debtSection.style.display = bankDebt > 0 ? "block" : "none";
+}
+
+function renderStreetStats(state) {
+  const p = state.player;
+  setStatBar("stat-physique", p.physique, "physique");
+  setStatBar("stat-intelligence", p.intelligence, "intelligence");
+  setStatBar("stat-agility", p.agility, "agility");
+  setStatBar("stat-mental", p.mental, "mental-bar");
+  setStatBar("stat-charm", p.charm || 0, "charm");
+  // 低数值预警（基础属性阈值=10）
+  warnStatRow("stat-physique", p.physique, 10, "#c4803a");
+  warnStatRow("stat-intelligence", p.intelligence, 10, "#5a8ab4");
+  warnStatRow("stat-agility", p.agility, 10, "#5aaa5a");
+  warnStatRow("stat-mental", p.mental, 10, "#9b74b8");
+  warnStatRow("stat-charm", p.charm || 0, 10, "#d9789e");
+}
+
+function renderCorporateStats(state) {
+  const c = state.player.corporate;
+  // 切换侧边栏区域显示
+  document.getElementById("street-stats-section").style.display = "none";
+  document.getElementById("corp-stats-section").style.display = "block";
+
+  setStatBar("stat-hair", c.hair, "hair");
+  setStatBar("stat-dignity", c.dignity, "dignity");
+  setStatBar("stat-kpi", c.kpi, "kpi");
+  setStatBar("stat-ability", c.ability, "intelligence");
+  setStatBar("stat-upward", c.upwardMgmt, "physique");
+  setStatBar("stat-popularity", c.popularity, "happiness");
+  setStatBar("stat-risk", c.risk, "risk");
+
+  // 职场属性预警：发量≤25 尊严≤15 KPI≤15 能力≤15 向上管理≤10 人缘≤15 风险≥70
+  warnStatRow("stat-hair", c.hair, 25, "#7ab8d8");
+  warnStatRow("stat-dignity", c.dignity, 15, "#9b74b8");
+  warnStatRow("stat-kpi", c.kpi, 15, "#c9a440");
+  warnStatRow("stat-ability", c.ability, 15, "#5a8ab4");
+  warnStatRow("stat-upward", c.upwardMgmt, 10, "#c4803a");
+  warnStatRow("stat-popularity", c.popularity, 15, "#5aaa5a");
+  warnStatRow("stat-risk", c.risk, 70, "#c4553d", true); // 风险高是坏事
+}
+
+function renderNeedsBars(state) {
+  var statusSection = document.getElementById("location-section");
+  if (statusSection) statusSection.style.display = "block";
+  const n = state.needs;
+  const s = state.status;
+  const p = state.player;
+  setStatBar("stat-hunger", n.hunger, "hunger");
+  setStatBar("stat-fatigue", n.fatigue, "fatigue");
+  setStatBar("stat-hygiene", n.hygiene, "hygiene");
+  setStatBar("stat-happiness", n.happiness, "happiness");
+  setStatBar("stat-health", s.health, "health");
+  // 名气：v1.1 起统一读 player.fame
+  setStatBar("stat-fame", (p && p.fame) || 0, "fame");
+  // 疾病列表（动态渲染到 stat-fame 之后）
+  renderIllnessRow(state);
+  // 行动力
+  const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
+  setStatBar("stat-ap", apPct, "ap-bar");
+  const apVal = document.querySelector("#stat-ap .stat-value");
+  if (apVal)
+    apVal.textContent = p.actionPoints + "/" + (p.maxActionPoints || 100);
+
+  // === 紧凑型低数值预警 ===
+  // 状态：饥饿≤15 疲劳≥85 卫生≤15 心情≤10 健康≤20 名气≤5
+  warnStatRow("stat-hunger", n.hunger, 15, "#c9a838");
+  warnStatRow("stat-fatigue", n.fatigue, 85, "#8a9080", true); // 疲劳高是坏事
+  warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
+  warnStatRow("stat-happiness", n.happiness, 10, "#cc7868");
+  warnStatRow("stat-health", s.health, 20, "#cc7868");
+  warnStatRow("stat-fame", (p && p.fame) || 0, 5, "#9b74b8");
+  // AP≤20
+  warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
+}
+
+function renderLocation(state) {
+  const locKey = state.trade.currentLocation;
+  const loc = getLocation(locKey);
+  if (loc) {
+    document.getElementById("location-name").textContent = loc.name;
+    document.getElementById("location-desc").textContent = loc.desc;
+  }
+
+  // 天气显示
+  const weather = state.weather || {};
+  const weatherDef =
+    typeof WEATHER_TYPES !== "undefined"
+      ? WEATHER_TYPES.find((w) => w.id === weather.current)
+      : null;
+  const seasonDef =
+    typeof SEASONS !== "undefined"
+      ? SEASONS.find((s) => s.id === weather.season)
+      : null;
+  // location-name 仅显示地点名（天气详情由下方 weather-panel 展示，避免冗余）
+  renderHeaderContext(state, loc, weatherDef, seasonDef);
+
+  // 服务标签 + 街坊声望已移至地图 Tab（renderMapTab → appendLocationServicesStrip）
+  // sidebar 的 location-services / location-reputation 容器保持空占位，避免其他代码 getElementById 报错
+
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData
+    ? houseData.icon + " " + houseData.name
+    : "🌃 露宿街头";
+  var curRent = houseData ? houseData.rent : 0;
+  var houseEl = document.getElementById("housing-info");
+  if (houseEl) {
+    houseEl.style.display = "none";
+    houseEl.innerHTML = "";
+  }
+
+  // 天气面板（天气深化系统）
+  renderWeatherPanel(state);
+}
+
+function renderHeaderContext(state, loc, weatherDef, seasonDef) {
+  var el = document.getElementById("header-context");
+  if (!el) return;
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData ? houseData.name : "露宿街头";
+  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
+  // 住所和背包信息已移到时间槽下方展示，此处只做简洁展示
+  el.innerHTML =
+    '<span class="context-chip" style="font-size:11px;">' +
+    houseIcon +
+    " " +
+    houseName +
+    "</span>";
+  el.title = "当前住所：" + houseName;
+}
+
+function getHousingUpgradeTip(state) {
+  if (typeof HOUSING_TIERS === "undefined" || !Array.isArray(HOUSING_TIERS)) {
+    return "";
+  }
+  if (typeof getAvailableHousingTiersAtLocation !== "function") return "";
+  var locKey = state.trade ? state.trade.currentLocation : "slum";
+  var availableTiers = getAvailableHousingTiersAtLocation(locKey);
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  // 找到当前地点可选的、比当前高的最低档
+  var nextTier = null;
+  for (var i = 0; i < availableTiers.length; i++) {
+    if (availableTiers[i] > currentTier) {
+      nextTier = HOUSING_TIERS[availableTiers[i]];
+      break;
+    }
+  }
+  if (!nextTier) return "";
+  var locName = getLocationChineseName(locKey);
+  var actualRent =
+    typeof getHousingRentAtLocation === "function"
+      ? getHousingRentAtLocation(locKey, nextTier.tier)
+      : nextTier.rent;
+  return (
+    "在" +
+    locName +
+    "可升级为" +
+    (nextTier.icon || "🏠") +
+    nextTier.name +
+    "（¥" +
+    actualRent +
+    "/天）"
+  );
+}
+
+/**
+ * 渲染天气面板（天气深化系统）
+ * 显示：当前天气详情、舒适度、持续期、天气预报
+ */
+function renderWeatherPanel(state) {
+  var panel = document.getElementById("weather-panel");
+  if (!panel) return;
+  var w = state.weather;
+  if (!w || !w.current) {
+    panel.style.display = "none";
+    return;
+  }
+  var wDef =
+    typeof WEATHER_TYPES !== "undefined"
+      ? WEATHER_TYPES.find(function (wt) {
+          return wt.id === w.current;
+        })
+      : null;
+  if (!wDef) {
+    panel.style.display = "none";
+    return;
+  }
+  var tempEffect =
+    typeof getTempEffect === "function"
+      ? getTempEffect(w.temperature || 22)
+      : null;
+
+  var isExtreme =
+    typeof isExtremeWeather === "function"
+      ? isExtremeWeather(w.current)
+      : false;
+  var isPersistent = w.persistent && w.duration > 1;
+
+  var comfort =
+    state.status && state.status.comfort != null ? state.status.comfort : 50;
+  var comfortLabel =
+    comfort >= 80
+      ? "舒适"
+      : comfort >= 60
+        ? "还行"
+        : comfort >= 40
+          ? "不适"
+          : comfort >= 20
+            ? "难受"
+            : "恶劣";
+  var comfortColor =
+    comfort >= 60
+      ? "var(--success)"
+      : comfort >= 40
+        ? "var(--warning)"
+        : "var(--danger)";
+
+  var html = "";
+
+  html +=
+    '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
+  html += '<span style="font-size:14px;">' + wDef.icon + "</span>";
+  html +=
+    '<span style="font-size:12px;font-weight:600;">' + wDef.name + "</span>";
+  html +=
+    '<span style="font-size:11px;color:var(--text-secondary);">🌡️' +
+    Math.round(w.temperature || 22) +
+    "°C</span>";
+  if (tempEffect) {
+    html +=
+      '<span style="font-size:10px;color:var(--text-muted);">(' +
+      tempEffect.name +
+      ")</span>";
+  }
+  html +=
+    '<span style="font-size:10px;color:' +
+    comfortColor +
+    ';margin-left:auto;">☂️' +
+    comfortLabel +
+    "</span>";
+  html += "</div>";
+
+  if (isPersistent) {
+    html += '<div style="margin-top:3px;font-size:10px;color:var(--warning);">';
+    html += "📅 第" + w.daysActive + "/" + w.duration + "天";
+    if (w.current === "plum_rain") html += " · 注意防潮防霉";
+    else if (w.current === "heatwave") html += " · 注意防暑降温";
+    else if (w.current === "cold_snap") html += " · 注意防寒保暖";
+    else if (w.current === "typhoon") html += " · 注意人身安全";
+    else if (w.current === "sandstorm") html += " · 做好防护措施";
+    else if (w.current === "heavy_smog") html += " · 建议佩戴口罩";
+    html += "</div>";
+  }
+
+  if (w.forecast && w.forecast.length > 0) {
+    html +=
+      '<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);">';
+    html +=
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">📅 未来天气展望：</div>';
+    html += '<div style="display:flex;gap:3px;">';
+    for (var i = 0; i < w.forecast.length; i++) {
+      var f = w.forecast[i];
+      var fDef =
+        typeof WEATHER_TYPES !== "undefined"
+          ? WEATHER_TYPES.find(function (wt) {
+              return wt.id === f.weatherId;
+            })
+          : null;
+      var icon = fDef ? fDef.icon : "🌤️";
+      var fName = fDef ? fDef.name : "未知";
+      var pct = Math.round(f.confidence * 100);
+      html +=
+        '<div style="flex:1;text-align:center;font-size:10px;padding:3px 2px;border-radius:4px;background:var(--bg-card);">';
+      html += "<div>" + icon + "</div>";
+      html +=
+        '<div style="font-size:9px;color:var(--text-secondary);">' +
+        fName +
+        "</div>";
+      html +=
+        '<div style="font-size:8px;color:var(--text-muted);">' +
+        pct +
+        "%</div>";
+      html += "</div>";
+    }
+    html += "</div></div>";
+  }
+
+  if (isExtreme) {
+    panel.style.cssText =
+      "margin-top:6px;padding:6px 8px;border-radius:6px;" +
+      "background:rgba(196,85,61,0.08);font-size:11px;line-height:1.5;display:block;" +
+      "border-left:3px solid var(--danger);";
+  } else {
+    panel.style.cssText =
+      "margin-top:6px;padding:6px 8px;border-radius:6px;" +
+      "background:var(--bg-input);font-size:11px;line-height:1.5;display:block;";
+  }
+
+  // === v3.3 W2-T2: 明日预报 + 准备状态 ===
+  if (typeof getForecastHTML === "function") {
+    html += getForecastHTML(state);
+  }
+
+  panel.innerHTML = html;
+}
+
+/** 获取地点服务标签 */
+function getLocationServiceBadges(locKey) {
+  const badges = [];
+  const loc = getLocation(locKey);
+  if (!loc) return badges;
+
+  // 可租房
+  if (locKey === "slum") {
+    badges.push({
+      icon: "🏠",
+      label: "租房",
+      bg: "rgba(74,158,92,0.1)",
+      color: "#4a9e5c",
+    });
+  }
+  // 可租仓库 & 批发
+  if (locKey === "wholesaleMarket") {
+    badges.push({
+      icon: "📦",
+      label: "仓库+批发",
+      bg: "rgba(196,154,58,0.1)",
+      color: "#c49a3a",
+    });
+  }
+  // 医院
+  if (locKey === "hospital") {
+    badges.push({
+      icon: "🏥",
+      label: "看病",
+      bg: "rgba(196,85,61,0.1)",
+      color: "#c4553d",
+    });
+  }
+  // 银行
+  if (locKey === "bank") {
+    badges.push({
+      icon: "🏦",
+      label: "存取款",
+      bg: "rgba(90,138,180,0.1)",
+      color: "#5a8ab4",
+    });
+  }
+  // 培训
+  if (locKey === "trainingCenter") {
+    badges.push({
+      icon: "📚",
+      label: "学习考证",
+      bg: "rgba(155,116,184,0.1)",
+      color: "#9b74b8",
+    });
+  }
+  // 公园
+  if (locKey === "park") {
+    badges.push({
+      icon: "🌳",
+      label: "放松",
+      bg: "rgba(74,158,92,0.1)",
+      color: "#4a9e5c",
+    });
+  }
+  // 科技园
+  if (locKey === "techPark") {
+    badges.push({
+      icon: "💼",
+      label: "应聘",
+      bg: "rgba(74,158,92,0.1)",
+      color: "#4a9e5c",
+    });
+  }
+  // 商业区
+  if (locKey === "commercialDist") {
+    badges.push({
+      icon: "🛍️",
+      label: "购物+摆摊",
+      bg: "rgba(74,158,92,0.1)",
+      color: "#4a9e5c",
+    });
+  }
+  // 工作数量
+  if (loc.jobs && loc.jobs.length > 0) {
+    badges.push({
+      icon: "💼",
+      label: loc.jobs.length + "种工作",
+      bg: "rgba(196,154,58,0.1)",
+      color: "#c49a3a",
+    });
+  }
+
+  return badges;
+}
+
+// ====== Tab Bar ======
+function renderTabBar(state) {
+  const tabs = document.querySelectorAll("#tab-bar .tab-btn");
+  tabs.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === currentTab);
+
+    // 某些 Tab 在特定阶段隐藏
+    if (btn.dataset.tab === "corp" && state.player.phase !== "corporate") {
+      btn.style.display = "none";
+    } else if (btn.dataset.tab === "trade" && state.player.phase !== "street") {
+      btn.style.display = "none";
+    } else if (btn.dataset.tab === "enterprise") {
+      // 企业命运生态 — 后台系统，不单独显示Tab
+      // 信息已在职场Tab的公司名旁通过 _fateTag() 显示
+      btn.style.display = "none";
+    } else if (btn.dataset.tab === "career_dev") {
+      // 事业发展Tab：街头阶段显示上班族工作引导，公司阶段不冲突时显示
+      if (
+        state.player.phase === "corporate" &&
+        (!state.startup || state.startup.status === "none")
+      ) {
+        btn.style.display = "none";
+      } else {
+        btn.style.display = "";
+      }
+    } else if (btn.dataset.tab === "social") {
+      // 社交Tab全阶段显示（家庭系统+职场社交，后者仅公司阶段活跃）
+      btn.style.display = "";
+    } else if (btn.dataset.tab === "side_hustle") {
+      // 副业Tab：公司阶段显示（Phase 2）
+      if (state.player.phase === "corporate") {
+        btn.style.display = "";
+      } else {
+        btn.style.display = "none";
+      }
+    } else if (btn.dataset.tab === "personal_growth") {
+      // 个人成长不再作为主入口；成长行为拆回具体地点行动，保留 renderer 兼容旧入口。
+      btn.style.display = "none";
+    } else {
+      btn.style.display = "";
+    }
+  });
+}
+
+function switchTab(tabName) {
+  currentTab = tabName;
+  renderAll();
+}
+
+// ====== Tab 渲染函数注册表 ======
+// 新增标签页只需在这里加一行，无需修改 renderCurrentTab
+//
+// 注意：对于定义在其他 JS 文件中的函数（跨文件），
+// 不能直接用引用（const 创建时函数尚未加载），
+// 要用 fnName 字符串 + 运行时 window[fnName] 动态查找。
+const TAB_RENDERERS = {
+  actions: renderActionsTab,
+  map: renderMapTab,
+  trade: renderTradeTab,
+  inventory: renderInventoryTab,
+  skills: { fn: renderSkillsTab, fallback: "📚 技能系统加载中..." },
+  corp: renderCorpTab,
+  // renderInvestmentTab 在 investment.js 中定义（跨文件）
+  investment: { fnName: "renderInvestmentTab", fallback: "投资系统加载中..." },
+  // renderStartupTab + career jobs 在 career_dev.js 中定义（跨文件）
+  career_dev: {
+    fnName: "renderCareerDevTab",
+    fallback: "事业发展系统加载中...",
+  },
+  enterprise: { fn: renderEnterpriseFateTab, fallback: "企业生态加载中..." },
+  // renderSideHustleTab 在 side_hustle_ui.js 中定义（跨文件）
+  side_hustle: { fnName: "renderSideHustleTab", fallback: "副业系统加载中..." },
+  achievements: renderAchievementsTab,
+  // 社交Tab：合并职场社交+家庭（跨文件）
+  social: { fnName: "renderSocialTab", fallback: "社交系统加载中..." },
+  life_systems: {
+    fn: renderLifeSystemsTab,
+    fallback: "人生事务系统加载中...",
+  },
+  // 个人成长Tab（合并了原成长数据可视化+原个人成长）
+  personal_growth: {
+    fn: renderMergedPersonalGrowthTab,
+    fallback: "个人成长系统加载中...",
+  },
+  // renderWikiTab 在 wiki.js 中定义（跨文件）
+  equipmentSuites: {
+    fnName: "renderEquipmentSuitesTab",
+    fallback: "装备套装加载中...",
+  },
+  wiki: { fnName: "renderWikiTab", fallback: "📖 百科系统加载中..." },
+};
+
+/**
+ * 📍 当前地点服务条 + 声望条（地图 Tab 顶部通用件）
+ * - 服务标签：仓库 / 工作 / 银行 / 医院 / 客流量...
+ * - 街坊声望：⭐⭐ + 进度条 + 下一档称号
+ * 移入地图 Tab 后桌面/移动端均可见（替代原 sidebar 位置）
+ */
+function appendLocationServicesStrip(container, state, locKey) {
+  if (!container || !locKey) return;
+  const loc = getLocation(locKey);
+  if (!loc) return;
+
+  const strip = document.createElement("div");
+  strip.className = "map-location-services-strip";
+  strip.style.cssText =
+    "display:flex;flex-direction:column;gap:4px;padding:6px 8px;" +
+    "background:var(--bg-card);border:1px solid var(--border-light);border-radius:6px;" +
+    "font-size:11px;margin-bottom:4px;";
+
+  const badges = getLocationServiceBadges(locKey);
+  let badgeHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+  badges.forEach((b) => {
+    badgeHtml += `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`;
+  });
+  if (
+    typeof getVendingFootfallMod === "function" &&
+    typeof getFootfallStars === "function" &&
+    loc.footfall
+  ) {
+    const footfall = getVendingFootfallMod(locKey, state);
+    const stars = getFootfallStars(footfall);
+    const note = loc.vendingNote || "";
+    badgeHtml +=
+      `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
+      `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
+      `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
+  }
+  if (typeof getLocationNewsBadges === "function") {
+    const pulseBadges = getLocationNewsBadges(locKey, state);
+    pulseBadges.forEach((b) => {
+      const color = b.positive ? "var(--success)" : "var(--warning)";
+      const bg = b.positive ? "rgba(46,204,113,0.10)" : "rgba(243,156,18,0.10)";
+      badgeHtml +=
+        `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
+        `background:${bg};color:${color};border:1px solid ${color};" ` +
+        `title="${_esc(b.tip || "")}">📰 ${_esc(b.label)}</span>`;
+    });
+  }
+  badgeHtml += `</div>`;
+  strip.innerHTML = badgeHtml;
+
+  // 街坊声望
+  if (typeof getReputationUIData === "function") {
+    const repData = getReputationUIData(state, locKey);
+    let stars = "";
+    for (let i = 0; i < repData.level; i++) stars += "⭐";
+    if (repData.level === 0) stars = "〇";
+    const bonusText =
+      repData.bonus > 0 ? ` +${Math.round(repData.bonus * 100)}%收入` : "";
+    const progressBar =
+      repData.level < 5
+        ? `<span style="display:inline-block;width:40px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:3px;"><span style="display:block;height:100%;width:${repData.progress}%;background:var(--accent);border-radius:2px;"></span></span>`
+        : "✨MAX";
+    const nextText = repData.nextTitle ? ` → ${repData.nextTitle}` : "";
+    const repEl = document.createElement("div");
+    repEl.style.cssText =
+      "display:flex;align-items:center;justify-content:space-between;" +
+      "padding:3px 6px;background:rgba(243,156,18,0.06);border:1px solid rgba(243,156,18,0.2);border-radius:4px;";
+    repEl.innerHTML =
+      `<span><span style="font-weight:600;">👥 ${_esc(repData.title)}</span>${bonusText}</span>` +
+      `<span style="font-size:10px;color:var(--text-secondary);">${stars}${progressBar}${nextText}</span>`;
+    strip.appendChild(repEl);
+  }
+
+  container.appendChild(strip);
+}
+
+// ====== 通用滚动锚定辅助函数 ======
+// 返回当前在 #content-area 视口内、位置最靠上的那张 .action-card 的屏幕 top，
+// 作为通用锚点（不含 goodId 时使用，覆盖行动/技能等 tab）。没有则返回 null。
+function _firstVisibleActionCardTop(area) {
+  var cards = area.querySelectorAll(".action-card");
+  if (!cards.length) return null;
+  var areaTop = area.getBoundingClientRect().top;
+  for (var i = 0; i < cards.length; i++) {
+    var t = cards[i].getBoundingClientRect().top;
+    if (t >= areaTop - 1) return t; // 首张位于（或刚好没过）容器顶的卡片
+  }
+  // 全部卡片滚到上方视口外时，回退到首张卡片
+  return cards[0].getBoundingClientRect().top;
+}
+
+// ====== Tab Content 渲染 ======
+// anchorGoodId（可选，仅交易页）: 传入被操作商品的 id。
+// 重绘后通过滚动锚定把目标卡片拉回重绘前的视口位置，避免上方区块出现/消失
+// 把内容推离光标导致连点错位。
+//   - 传入 anchorGoodId：精确定位到该商品所在卡片（交易页专用）；
+//   - 未传入：自动锚定首张可见 .action-card（行动/技能等 tab 通用）。
+function renderCurrentTab(state, anchorGoodId) {
+  const area = document.getElementById("content-area");
+
+  // ===== 阶段一（重绘前）：保存滚动状态 =====
+  // 1. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移，交易/行动/技能 tab）
+  var anchorOldCardScreenTop = null;
+  var useSpecific = false;
+  if (anchorGoodId) {
+    // 精确定位：锚定用户刚点击的那张商品卡片（交易页）
+    var oldCardEl = area.querySelector(
+      '#trade-market-grid [data-good="' + anchorGoodId + '"]',
+    );
+    var oldActionCard =
+      oldCardEl && oldCardEl.closest ? oldCardEl.closest(".action-card") : null;
+    if (oldActionCard) {
+      anchorOldCardScreenTop = oldActionCard.getBoundingClientRect().top;
+      useSpecific = true;
+    }
+  }
+  if (anchorOldCardScreenTop === null) {
+    // 通用定位：锚定首张可见的 .action-card（行动/技能等 tab）
+    anchorOldCardScreenTop = _firstVisibleActionCardTop(area);
+  }
+
+  // 2. 内层滚动容器 scrollTop 备份 + 锚点内容坐标（事业 tab 等拥有独立内层滚动容器的情况）
+  //    同时记录容器内 [data-scroll-anchor] 在内容坐标系中的位置，用于修正上方区块伸缩导致的按钮位移
+  var innerScrollRestore = null;
+  for (var _ci = 0; _ci < area.children.length; _ci++) {
+    var _child = area.children[_ci];
+    var _oy =
+      _child.style && _child.style.overflowY
+        ? _child.style.overflowY
+        : getComputedStyle(_child).overflowY;
+    if (_oy === "auto" || _oy === "scroll") {
+      innerScrollRestore = {
+        childIndex: _ci,
+        scrollTop: _child.scrollTop,
+        anchorContentPos: null,
+      };
+      var _anchor = _child.querySelector("[data-scroll-anchor]");
+      if (_anchor) {
+        // 锚点在内容坐标系中的位置 = 屏幕相对位置 + 已滚动偏移（与 position 无关的稳健算法）
+        innerScrollRestore.anchorContentPos =
+          _anchor.getBoundingClientRect().top -
+          _child.getBoundingClientRect().top +
+          _child.scrollTop;
+      }
+      break;
+    }
+  }
+
+  area.innerHTML = "";
+
+  // 时间槽指示器（日期 + 时段 + AP）
+  renderTimeSlot(state, area);
+
+  // 移动端专属：背包 + 住所状态条（上移至标题行位置，标题行已移除）
+  renderLocationBar(state, area);
+
+  // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
+  renderStatsStrip(state, area);
+
+  // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
+  renderGoalStrip(state, area);
+
+  // 活跃新闻
+  renderActiveNews(state, area);
+
+  const renderer = TAB_RENDERERS[currentTab];
+  if (typeof renderer === "function") {
+    renderer(state, area);
+  } else if (renderer) {
+    // 尝试获取渲染函数：优先用 fn 引用，否则通过 fnName 动态查找
+    var actualFn =
+      typeof renderer.fn === "function"
+        ? renderer.fn
+        : typeof renderer.fnName === "string"
+          ? window[renderer.fnName]
+          : null;
+    if (typeof actualFn === "function") {
+      actualFn(state, area);
+    } else {
+      area.innerHTML +=
+        '<p style="color:var(--text-muted);text-align:center;padding:40px;">' +
+        (renderer.fallback || "开发中...") +
+        "</p>";
+    }
+  } else {
+    area.innerHTML += '<p style="color:var(--text-muted)">📌 开发中...</p>';
+  }
+
+  // ===== 阶段二（重绘后）：恢复滚动状态 =====
+  // 1. 恢复内层滚动容器 scrollTop，并按锚点位移差修正（优先执行）
+  if (innerScrollRestore) {
+    var newChild = area.children[innerScrollRestore.childIndex];
+    if (newChild) {
+      var newOy =
+        newChild.style && newChild.style.overflowY
+          ? newChild.style.overflowY
+          : getComputedStyle(newChild).overflowY;
+      if (newOy === "auto" || newOy === "scroll") {
+        var restoredScroll = innerScrollRestore.scrollTop;
+        // 若存在锚点，按内容位移差修正 scrollTop，保持锚点屏幕位置不变
+        if (innerScrollRestore.anchorContentPos != null) {
+          var newAnchor = newChild.querySelector("[data-scroll-anchor]");
+          if (newAnchor) {
+            var newAnchorContentPos =
+              newAnchor.getBoundingClientRect().top -
+              newChild.getBoundingClientRect().top +
+              newChild.scrollTop; // 此时 scrollTop 刚被 innerHTML="" 归零，≈ 0
+            var delta =
+              newAnchorContentPos - innerScrollRestore.anchorContentPos;
+            restoredScroll = innerScrollRestore.scrollTop + delta;
+          }
+        }
+        newChild.scrollTop = Math.max(0, restoredScroll);
+      }
+    }
+  }
+
+  // 2. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移）
+  if (anchorOldCardScreenTop === null) return;
+
+  var newCardScreenTop;
+  if (useSpecific) {
+    var newCardEl = area.querySelector(
+      '#trade-market-grid [data-good="' + anchorGoodId + '"]',
+    );
+    var newActionCard =
+      newCardEl && newCardEl.closest ? newCardEl.closest(".action-card") : null;
+    if (!newActionCard) return; // 商品不再显示，放弃锚定
+    newCardScreenTop = newActionCard.getBoundingClientRect().top;
+  } else {
+    newCardScreenTop = _firstVisibleActionCardTop(area);
+    if (newCardScreenTop === null) return; // 新页面没有卡片，放弃锚定
+  }
+  var delta = newCardScreenTop - anchorOldCardScreenTop;
+  if (delta !== 0) {
+    area.scrollTop += delta;
+    // 防止上方区块缩小时滚到负值
+    if (area.scrollTop < 0) area.scrollTop = 0;
+  }
+}
+
+// ====== Life Systems Tab: 人生节点 / 医疗 / 旅行 / 法律 ======
+function _lifeSystemsEscape(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[ch];
+  });
+}
+
+function _lifeSystemsMoney(value) {
+  return "¥" + Math.round(value || 0).toLocaleString();
+}
+
+function _lifeSystemsLocationNames(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return "当前地点";
+  return ids
+    .map(function (id) {
+      var loc =
+        Array.isArray(window.LOCATIONS) &&
+        window.LOCATIONS.find(function (item) {
+          return item && item.id === id;
+        });
+      return (loc && (loc.name || loc.title)) || id;
+    })
+    .join(" / ");
+}
+
+function _lifeSystemsLines(lines, emptyText) {
+  if (!Array.isArray(lines) || lines.length === 0) {
+    lines = [emptyText || "暂无记录"];
+  }
+  return lines
+    .map(function (line) {
+      return (
+        '<li style="margin:4px 0;color:var(--text-secondary);">' +
+        _lifeSystemsEscape(line) +
+        "</li>"
+      );
+    })
+    .join("");
+}
+
+function _lifeSystemsCard(icon, title, bodyHtml, buttonHtml) {
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;min-height:170px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">' +
+    '<h3 style="margin:0;font-size:14px;color:var(--text-primary);">' +
+    icon +
+    " " +
+    title +
+    "</h3>" +
+    (buttonHtml || "") +
+    "</div>" +
+    bodyHtml +
+    "</section>"
+  );
+}
+
+function openLifeSystemsPendingNode() {
+  var state = StateManager.getState();
+  var status =
+    typeof getLifeNodeStatus === "function"
+      ? getLifeNodeStatus(state)
+      : { pending: null };
+  var node =
+    state._pendingLifeNode ||
+    (status.pending &&
+      window.LIFE_NODES &&
+      window.LIFE_NODES[status.pending.id]);
+
+  if (node && typeof showLifeNodeModal === "function") {
+    showLifeNodeModal(node);
+    return;
+  }
+  StateManager.addMessage("当前没有待处理的人生节点。", "info");
+}
+
+function openLifeSystemsMedicalTreatment() {
+  if (typeof showMedicalTreatmentModal === "function") {
+    showMedicalTreatmentModal();
+    return;
+  }
+  StateManager.addMessage("医疗治疗入口尚未加载。", "warning");
+}
+
+function openLifeSystemsMedicalInsurance() {
+  if (typeof showMedicalInsuranceModal === "function") {
+    showMedicalInsuranceModal();
+    return;
+  }
+  StateManager.addMessage("医保咨询入口尚未加载。", "warning");
+}
+
+function openLifeSystemsTravel() {
+  if (typeof showTravelAgencyModal === "function") {
+    showTravelAgencyModal();
+    return;
+  }
+  StateManager.addMessage("旅行系统尚未加载。", "warning");
+}
+
+function openLifeSystemsLegal() {
+  if (typeof showLegalOfficeModal === "function") {
+    showLegalOfficeModal();
+    return;
+  }
+  StateManager.addMessage("法律系统尚未加载。", "warning");
+}
+
+function openLifeSystemsCityServices() {
+  if (
+    window.WebAppBridge &&
+    typeof window.WebAppBridge.showCityServiceModal === "function"
+  ) {
+    window.WebAppBridge.showCityServiceModal();
+    return;
+  }
+  StateManager.addMessage("城市服务中心尚未加载。", "warning");
+}
+
+function _renderLifeNodePanel(state) {
+  var status =
+    typeof getLifeNodeStatus === "function"
+      ? getLifeNodeStatus(state)
+      : { completed: [], pending: null };
+  var completed = status.completed || [];
+  var lines = [];
+  lines.push(
+    "已完成节点：" +
+      (completed.length
+        ? completed
+            .map(function (node) {
+              return node.icon + node.name;
+            })
+            .join("、")
+        : "暂无"),
+  );
+  lines.push(
+    "待处理节点：" +
+      (status.pending ? status.pending.icon + status.pending.name : "暂无"),
+  );
+  if (typeof getGaokaoNarrative === "function") {
+    var narrative = getGaokaoNarrative(state);
+    if (narrative) lines.push("高考回忆：" + narrative);
+  }
+  return _lifeSystemsCard(
+    "🎯",
+    "人生节点",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines) +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsPendingNode()">处理节点</button>',
+  );
+}
+
+function _renderMedicalPanel(state) {
+  var lines =
+    typeof getMedicalSummary === "function"
+      ? getMedicalSummary(state)
+      : ["医疗系统未加载"];
+  var illnesses =
+    (state.status && state.status.illnesses && state.status.illnesses.length) ||
+    0;
+  if (illnesses > 0)
+    lines.unshift("当前疾病：" + illnesses + " 种，建议先去医院看病");
+  return _lifeSystemsCard(
+    "🏥",
+    "医疗与医保",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无医疗记录") +
+      "</ul>",
+    '<div class="life-system-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;">' +
+      '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsMedicalTreatment()">就医治疗</button>' +
+      '<button class="btn btn-sm" onclick="openLifeSystemsMedicalInsurance()">医保咨询</button>' +
+      "</div>",
+  );
+}
+
+function _renderTravelPanel(state) {
+  var lines =
+    typeof getTravelStatus === "function"
+      ? getTravelStatus(state)
+      : ["旅行系统未加载"];
+  return _lifeSystemsCard(
+    "✈️",
+    "旅行记录",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无旅行记录") +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsTravel()">长途旅行</button>',
+  );
+}
+
+function _renderLegalPanel(state) {
+  var lines =
+    typeof getLegalSummary === "function"
+      ? getLegalSummary(state)
+      : ["法律系统未加载"];
+  return _lifeSystemsCard(
+    "⚖️",
+    "法律事务",
+    '<ul style="margin:0;padding-left:18px;">' +
+      _lifeSystemsLines(lines, "暂无案件记录") +
+      "</ul>",
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsLegal()">法律咨询</button>',
+  );
+}
+
+function _renderBridgeRecommendations(state) {
+  var bridge = window.WebAppBridge;
+  var recs = [];
+  if (bridge && typeof bridge.getRecommendedCityServices === "function") {
+    recs = bridge.getRecommendedCityServices(state) || [];
+  }
+
+  var body = "";
+  if (recs.length > 0) {
+    body =
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;">' +
+      recs
+        .map(function (rec) {
+          var action = rec.action || {};
+          return (
+            '<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--bg-input);">' +
+            '<strong style="font-size:13px;color:var(--text-primary);">' +
+            _lifeSystemsEscape((action.icon || "🏙️") + " " + action.title) +
+            "</strong>" +
+            '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' +
+            _lifeSystemsEscape(rec.reason || action.brief || "") +
+            "</div>" +
+            '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' +
+            _lifeSystemsMoney(action.cost || 0) +
+            " · " +
+            (action.apCost || 0) +
+            "行动力 · 入口：" +
+            _lifeSystemsEscape(_lifeSystemsLocationNames(action.locationIds)) +
+            "</div>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>";
+  } else {
+    body =
+      '<p style="margin:0;color:var(--text-secondary);font-size:13px;">当前没有强推荐服务。你仍可打开城市服务中心，查看当前地点可用的政务、金融和健康服务。</p>';
+  }
+
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">' +
+    '<h3 style="margin:0;font-size:14px;color:var(--text-primary);">🏙️ 城市服务推荐</h3>' +
+    '<button class="btn btn-sm btn-primary" onclick="openLifeSystemsCityServices()">打开服务中心</button>' +
+    "</div>" +
+    body +
+    "</section>"
+  );
+}
+
+function _renderDataCatalogBridgeStatus() {
+  var bridge = window.WebAppBridge;
+  if (!bridge || typeof bridge.getDataCatalogSummary !== "function") return "";
+  var summary = bridge.getDataCatalogSummary();
+  var statusLabel = {
+    playable: "可玩",
+    partial: "部分接入",
+    typed: "仅类型化",
+  };
+  return (
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card);padding:12px;">' +
+    '<h3 style="margin:0 0 8px;font-size:14px;color:var(--text-primary);">📂 TypeScript 内容接入状态</h3>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+    (summary.catalogs || [])
+      .map(function (catalog) {
+        return (
+          '<span style="display:inline-flex;gap:4px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:11px;background:var(--bg-input);">' +
+          _lifeSystemsEscape(catalog.name) +
+          " · " +
+          _lifeSystemsEscape(String(catalog.count)) +
+          " · " +
+          _lifeSystemsEscape(statusLabel[catalog.status] || catalog.status) +
+          "</span>"
+        );
+      })
+      .join("") +
+    "</div>" +
+    '<p style="margin:8px 0 0;font-size:11px;color:var(--text-muted);">总计 ' +
+    _lifeSystemsEscape(String(summary.totalRecords || 0)) +
+    " 条 TS 内容；显示为“仅类型化”的目录尚未自动进入旧游戏行动或事件池。</p>" +
+    "</section>"
+  );
+}
+
+function renderLifeSystemsTab(state, parent) {
+  if (typeof initMedicalState === "function") initMedicalState(state);
+  if (typeof initTravelState === "function") initTravelState(state);
+  if (typeof initLegalState === "function") initLegalState(state);
+
+  var wrap = document.createElement("div");
+  wrap.style.cssText =
+    "padding:12px;display:flex;flex-direction:column;gap:12px;";
+  wrap.innerHTML =
+    '<section style="border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);padding:12px;">' +
+    '<h2 style="margin:0 0 6px;font-size:16px;color:var(--text-primary);">🧭 人生事务</h2>' +
+    '<p style="margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;">集中查看会影响长期人生的事务：关键节点、医保治疗、旅行记录、法律案件，以及城市公共服务。</p>' +
+    "</section>" +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">' +
+    _renderLifeNodePanel(state) +
+    _renderMedicalPanel(state) +
+    _renderTravelPanel(state) +
+    _renderLegalPanel(state) +
+    "</div>" +
+    _renderBridgeRecommendations(state);
+
+  parent.appendChild(wrap);
+}
+
+// ====== Growth Tab — 委托到 data_viz.js 新版 ======
+function renderGrowthTab(state, parent) {
+  if (typeof _dataVizRenderGrowthTab === "function") {
+    _dataVizRenderGrowthTab(state, parent);
+    return;
+  }
+  parent.innerHTML = "";
+  var p = state.player;
+  var wrapper = document.createElement("div");
+  wrapper.style.cssText = "padding:12px;";
+
+  // ---- 1. 资产曲线 ----
+  var chartSection = document.createElement("div");
+  chartSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+  chartSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📈 资产变化曲线</h3>';
+
+  var lineCanvas = document.createElement("canvas");
+  lineCanvas.width = 520;
+  lineCanvas.height = 160;
+  lineCanvas.style.cssText = "width:100%;height:auto;display:block;";
+  chartSection.appendChild(lineCanvas);
+  wrapper.appendChild(chartSection);
+
+  // ---- 2. 属性雷达图 ----
+  var radarSection = document.createElement("div");
+  radarSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;";
+
+  var radarInfo = document.createElement("div");
+  radarInfo.style.cssText = "flex:1;min-width:0;";
+  radarInfo.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🕸️ 能力雷达图</h3>';
+  var radarCanvas = document.createElement("canvas");
+  radarCanvas.width = 200;
+  radarCanvas.height = 200;
+  radarCanvas.style.cssText =
+    "width:100%;max-width:200px;height:auto;display:block;margin:0 auto;";
+  radarInfo.appendChild(radarCanvas);
+  radarSection.appendChild(radarInfo);
+
+  // 属性说明（v3.0：心智→能力，新增魅力/道德，标题"属性"取代"基础属性"）
+  var statSummary = document.createElement("div");
+  statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
+  var stats = [
+    { label: "体质", value: p.physique, color: "#c4803a" },
+    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
+    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
+    { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
+    { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
+  ];
+  stats.forEach(function (s) {
+    var row = document.createElement("div");
+    row.style.cssText =
+      "display:flex;align-items:center;gap:6px;margin-bottom:6px;";
+    row.innerHTML =
+      '<span style="width:32px;font-size:11px;color:var(--text-muted);">' +
+      s.label +
+      "</span>" +
+      '<div style="flex:1;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+      '<div style="width:' +
+      Math.min(100, s.value) +
+      "%;height:100%;background:" +
+      s.color +
+      ';border-radius:3px;"></div>' +
+      "</div>" +
+      '<span style="width:24px;font-size:11px;color:var(--text-secondary);text-align:right;">' +
+      s.value +
+      "</span>";
+    statSummary.appendChild(row);
+  });
+  radarSection.appendChild(statSummary);
+  wrapper.appendChild(radarSection);
+
+  // ---- 3. 今日简报 ----
+  var briefSection = document.createElement("div");
+  briefSection.style.cssText =
+    "background:var(--bg-card);border-radius:8px;padding:14px;border:1px solid var(--border);";
+  var assetSnapshot =
+    typeof getInvestmentAssetSnapshot === "function"
+      ? getInvestmentAssetSnapshot(state)
+      : null;
+  var totalAsset = assetSnapshot
+    ? Math.round(assetSnapshot.totalAssets)
+    : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  var debt =
+    (state.resources.villageDebt || state.resources.debt || 0) +
+    (state.resources.bankDebt || 0);
+  briefSection.innerHTML =
+    '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">' +
+    _growthStat("📅 游戏天数", "第" + p.day + "天") +
+    _growthStat("🎂 当前年龄", p.age + "岁") +
+    _growthStat("💰 总资产", "¥" + totalAsset.toLocaleString()) +
+    _growthStat(
+      "🏦 银行存款",
+      "¥" + (state.resources.bankBalance || 0).toLocaleString(),
+    ) +
+    (debt > 0
+      ? _growthStat("💸 总负债", "¥" + debt.toLocaleString(), "#c4553d")
+      : "") +
+    _growthStat(
+      "🏅 成就数",
+      ((state.flags && state.flags._unlockedAchievements) || []).length + "个",
+    ) +
+    _growthStat(
+      "🌟 梦想进度",
+      typeof getDreamProgress === "function"
+        ? getDreamProgress(state) + "%"
+        : "未设定",
+    ) +
+    (state.trade && state.trade.totalProfit
+      ? _growthStat(
+          "📦 贸易总利润",
+          "¥" + (state.trade.totalProfit || 0).toLocaleString(),
+        )
+      : "") +
+    "</div>";
+  wrapper.appendChild(briefSection);
+
+  // ---- 4. NPC 人际关系面板 ----
+  if (typeof NPCS !== "undefined" && state.relationships) {
+    var npcSection = document.createElement("div");
+    npcSection.style.cssText =
+      "background:var(--bg-card);border-radius:8px;padding:14px;margin-top:12px;border:1px solid var(--border);";
+    var npcHtml =
+      '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">🤝 人际关系</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">';
+    NPCS.forEach(function (npc) {
+      var rel = state.relationships[npc.id];
+      if (!rel || !rel.met) return;
+      var aff = rel.affinity || 0;
+      var affLabel =
+        typeof getAffinityLabel === "function" ? getAffinityLabel(aff) : "";
+      var deepDone = !!(state.flags && state.flags["_npcDeepTask_" + npc.id]);
+      var favorDone = !!(state.flags && state.flags["_npcFavor_" + npc.id]);
+      var bar = Math.min(100, Math.max(0, aff));
+      var barColor = aff >= 70 ? "#4caf50" : aff >= 40 ? "#ff9800" : "#2196f3";
+      npcHtml +=
+        '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">' +
+        _esc(npc.name) +
+        " " +
+        affLabel +
+        "</div>" +
+        '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
+        '<div style="width:' +
+        bar +
+        "%;height:100%;background:" +
+        barColor +
+        ';transition:width 0.3s;"></div>' +
+        "</div>" +
+        '<div style="font-size:10px;color:var(--text-muted);">' +
+        (favorDone ? "✅ 委托完成 " : "⬜ 委托未完 ") +
+        (deepDone ? "💌 深度对话" : aff >= 70 ? "💌 可对话" : "") +
+        "</div>" +
+        "</div>";
+    });
+    npcHtml += "</div>";
+    npcSection.innerHTML = npcHtml;
+    wrapper.appendChild(npcSection);
+  }
+
+  parent.appendChild(wrapper);
+
+  // ---- 绘制图表（DOM插入后） ----
+  setTimeout(function () {
+    drawAssetLineChart(
+      lineCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      lineCanvas.width,
+      lineCanvas.height,
+    );
+
+    // 使用data_viz雷达图（支持职场属性 + 历史对比）
+    drawRadarChart(
+      radarCanvas.getContext("2d"),
+      state,
+      0,
+      0,
+      radarCanvas.width,
+      radarCanvas.height,
+      p.phase,
+    );
+
+    // 如果有收入/支出历史，绘制收入曲线
+    if (typeof drawIncomeChart === "function") {
+      var incomeSection2 = document.createElement("div");
+      incomeSection2.style.cssText =
+        "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+      incomeSection2.innerHTML =
+        '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">💰 收入/支出曲线</h3>';
+      var incomeCanvas = document.createElement("canvas");
+      incomeCanvas.width = 520;
+      incomeCanvas.height = 160;
+      incomeCanvas.style.cssText = "width:100%;height:auto;display:block;";
+      incomeSection2.appendChild(incomeCanvas);
+      wrapper.insertBefore(incomeSection2, wrapper.firstChild);
+
+      setTimeout(function () {
+        var ctx = incomeCanvas.getContext("2d");
+        drawIncomeChart(
+          ctx,
+          state,
+          0,
+          0,
+          incomeCanvas.width,
+          incomeCanvas.height,
+        );
+      }, 10);
+    }
+
+    // 如果有技能成长历史，绘制技能成长图
+    if (typeof drawSkillGrowthChart === "function") {
+      var skills = state.skills || {};
+      var skillKeys = Object.keys(skills);
+      if (skillKeys.length > 0) {
+        var skillSection = document.createElement("div");
+        skillSection.style.cssText =
+          "background:var(--bg-card);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid var(--border);";
+        skillSection.innerHTML =
+          '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📚 技能成长</h3>';
+
+        var skillSelect = document.createElement("select");
+        skillSelect.style.cssText =
+          "margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);";
+        var skillNames = {
+          cooking: "烹饪",
+          repair: "维修",
+          coding: "编程",
+          english: "英语",
+          driving: "驾驶",
+          sales: "销售",
+          management: "管理",
+          accounting: "会计",
+          electrician: "电工",
+          welding: "焊接",
+        };
+        skillKeys.forEach(function (k) {
+          var opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent =
+            skillNames[k] || k + " (Lv." + (skills[k].level || 0) + ")";
+          if (skills[k].history && skills[k].history.length > 0) {
+            opt.selected = true;
+          }
+          skillSelect.appendChild(opt);
+        });
+        skillSection.appendChild(skillSelect);
+
+        var skillCanvas = document.createElement("canvas");
+        skillCanvas.width = 520;
+        skillCanvas.height = 160;
+        skillCanvas.style.cssText = "width:100%;height:auto;display:block;";
+        skillSection.appendChild(skillCanvas);
+        wrapper.appendChild(skillSection);
+
+        function renderSkillChart(sk) {
+          var ctx = skillCanvas.getContext("2d");
+          ctx.clearRect(0, 0, skillCanvas.width, skillCanvas.height);
+          drawSkillGrowthChart(
+            ctx,
+            state,
+            0,
+            0,
+            skillCanvas.width,
+            skillCanvas.height,
+            sk,
+          );
+        }
+
+        renderSkillChart(skillSelect.value);
+
+        skillSelect.addEventListener("change", function () {
+          renderSkillChart(this.value);
+        });
+      }
+    }
+  }, 30);
+}
+
+function _growthStat(label, value, color) {
+  return (
+    '<div style="background:var(--bg-input);border-radius:6px;padding:8px;text-align:center;">' +
+    '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">' +
+    label +
+    "</div>" +
+    '<div style="font-size:13px;font-weight:700;color:' +
+    (color || "var(--text-primary)") +
+    ';">' +
+    value +
+    "</div>" +
+    "</div>"
+  );
+}
+
+/** 时间槽 + 住所/背包信息 */
+/**
+ * 移动端位置+背包状态行（时间指示器下方）
+ * 结构：🎒 X/Y · 🌃 住所名  （常显，一目了然）
+ */
+function renderLocationBar(state, parent) {
+  var div = document.createElement("div");
+  div.className = "mobile-location-strip";
+  div.style.cssText =
+    "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
+
+  // 背包容量
+  var itemCount = 0;
+  if (state.inventory && state.inventory.items) {
+    itemCount = state.inventory.items.reduce(function (sum, item) {
+      return sum + (item.qty || 0);
+    }, 0);
+  }
+  var totalCap = state.inventory ? state.inventory.capacity || 0 : 0;
+  var hasStorage = state.housing && state.housing.storageRented ? " 📦仓" : "";
+
+  var bagSpan = document.createElement("span");
+  bagSpan.style.cssText = "white-space:nowrap;font-weight:600;";
+  bagSpan.textContent = "🎒" + itemCount + "/" + totalCap + hasStorage;
+  div.appendChild(bagSpan);
+
+  // 分隔符
+  var sep = document.createElement("span");
+  sep.style.cssText = "color:var(--text-muted);font-size:10px;";
+  sep.textContent = "·";
+  div.appendChild(sep);
+
+  // 住所 + 住所名紧贴升级提示（均与住所名紧邻，右对齐组）
+  var houseData =
+    (typeof HOUSING_TIERS !== "undefined" &&
+      HOUSING_TIERS[state.housing?.tier || 0]) ||
+    null;
+  var houseName = houseData ? houseData.name : "露宿街头";
+  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
+
+  // 右侧组（住所名 + 升级提示 紧贴，作为整体右对齐）
+  var rightGroup = document.createElement("span");
+  rightGroup.style.cssText =
+    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;";
+
+  var houseSpan = document.createElement("span");
+  houseSpan.style.cssText = "color:var(--text-secondary);";
+  houseSpan.textContent = houseIcon + houseName;
+  rightGroup.appendChild(houseSpan);
+
+  var currentTier = state.housing ? state.housing.tier || 0 : 0;
+  // 升级提示：露宿时引导升级（提示随住所变化而变化）
+  if (currentTier === 0) {
+    var tipSpan = document.createElement("span");
+    tipSpan.style.cssText = "font-size:10px;color:var(--warning);";
+    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
+    rightGroup.appendChild(tipSpan);
+  }
+
+  div.appendChild(rightGroup);
+
+  parent.appendChild(div);
+}
+
+/**
+ * 移动端常驻状态条（位置/背包 与 人生目标 之间）
+ * 结构：2 行 × 5 条，每条「细标签 + 细色带 + 数值」
+ *  第1行：体/智/敏/心/魅  5基础属性
+ *  第2行：饿/疲/卫/情/健  5状态
+ * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
+ */
+function renderStatsStrip(state, parent) {
+  var p = state.player;
+  var n = state.needs || {};
+  var s = state.status || {};
+
+  var container = document.createElement("div");
+  container.className = "mobile-stats-strip";
+
+  // 单行 5 条紧凑型细色带
+  function buildRow(items) {
+    var row = document.createElement("div");
+    row.className = "mss-row";
+    items.forEach(function (cfg) {
+      var val = cfg.getVal();
+      var cell = document.createElement("div");
+      cell.className = "mss-cell";
+
+      // 预警：低数值（或高即坏如疲劳）时用该要素本身色值予以薄边+数值变色
+      var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
+      var warnStyle = isBad ? "border-bottom:2px solid " + cfg.color + ";" : "";
+
+      cell.style.cssText =
+        "flex:1;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.02);" +
+        warnStyle;
+
+      // 细标签（1~2 中文字）
+      var label = document.createElement("span");
+      label.className = "mss-label";
+      label.textContent = cfg.label;
+      cell.appendChild(label);
+
+      // 细色带（复用侧栏同名 CSS 渐变色，不重新定义）
+      var track = document.createElement("div");
+      track.className = "mss-track";
+      var fill = document.createElement("div");
+      fill.className = "mss-fill " + cfg.cls;
+      fill.style.width = Math.max(0, Math.min(100, val)) + "%";
+      track.appendChild(fill);
+      cell.appendChild(track);
+
+      // 数值（坏值时变色）
+      var num = document.createElement("span");
+      num.className = "mss-val";
+      num.textContent = Math.round(val);
+      if (isBad) {
+        num.style.color = cfg.color;
+        num.style.fontWeight = "700";
+      }
+      cell.appendChild(num);
+
+      row.appendChild(cell);
+    });
+    return row;
+  }
+
+  var attrs = [
+    {
+      label: "体质",
+      cls: "physique",
+      color: "#c4803a",
+      threshold: 10,
+      getVal: function () {
+        return p.physique || 0;
+      },
+    },
+    {
+      label: "智力",
+      cls: "intelligence",
+      color: "#5a8ab4",
+      threshold: 10,
+      getVal: function () {
+        return p.intelligence || 0;
+      },
+    },
+    {
+      label: "敏捷",
+      cls: "agility",
+      color: "#5aaa5a",
+      threshold: 10,
+      getVal: function () {
+        return p.agility || 0;
+      },
+    },
+    {
+      label: "心智",
+      cls: "mental-bar",
+      color: "#9b74b8",
+      threshold: 10,
+      getVal: function () {
+        return p.mental || 0;
+      },
+    },
+    {
+      label: "魅力",
+      cls: "charm",
+      color: "#d9789e",
+      threshold: 10,
+      getVal: function () {
+        return p.charm || 0;
+      },
+    },
+  ];
+
+  var needs = [
+    {
+      label: "饥饿",
+      cls: "hunger",
+      color: "#c9a838",
+      threshold: 15,
+      getVal: function () {
+        return n.hunger != null ? n.hunger : 100;
+      },
+    },
+    {
+      label: "疲劳",
+      cls: "fatigue",
+      color: "#8a9080",
+      threshold: 85,
+      inverted: true,
+      getVal: function () {
+        return n.fatigue != null ? n.fatigue : 0;
+      },
+    },
+    {
+      label: "卫生",
+      cls: "hygiene",
+      color: "#4a9490",
+      threshold: 15,
+      getVal: function () {
+        return n.hygiene != null ? n.hygiene : 100;
+      },
+    },
+    {
+      label: "心情",
+      cls: "happiness",
+      color: "#cc7868",
+      threshold: 10,
+      getVal: function () {
+        return n.happiness != null ? n.happiness : 100;
+      },
+    },
+    {
+      label: "健康",
+      cls: "health",
+      color: "#cc7868",
+      threshold: 20,
+      getVal: function () {
+        return s.health != null ? s.health : 100;
+      },
+    },
+  ];
+
+  container.appendChild(buildRow(attrs));
+  container.appendChild(buildRow(needs));
+
+  // 疾病行：有疾病时在第2行之后追加（保持 5+急性病的紧凑信息）
+  if (s.illnesses && s.illnesses.length > 0) {
+    var illnessDiv = document.createElement("div");
+    illnessDiv.className = "mss-illness";
+    var names = s.illnesses
+      .map(function (d) {
+        var nm = typeof d === "string" ? d : d.name || d.id || "";
+        return nm;
+      })
+      .filter(Boolean);
+    illnessDiv.textContent = "🤒 " + names.join("、");
+    container.appendChild(illnessDiv);
+  }
+
+  parent.appendChild(container);
+}
+
+function renderTimeSlot(state, parent) {
+  const slotNames = {
+    morning: "☀️ 上午",
+    afternoon: "🌤️ 下午",
+    evening: "🌙 晚上",
+  };
+  const slot = state.player.timeSlot;
+  const div = document.createElement("div");
+  div.id = "time-slot-indicator";
+
+  // 住所数据（用于 "· Qn" 企业季标签）
+  var phaseLabel =
+    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter}` : "";
+
+  const ap = state.player.actionPoints || 0;
+  const maxAp = state.player.maxActionPoints || 100;
+  // 低AP闪烁警告（≤20时加CSS闪烁动画）
+  const lowAp = ap <= 20 && ap > 0;
+  const apColor =
+    ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
+  // 底部独立行：🎒 背包 / 🌃 已提取到 renderLocationBar，此处仅保留日期 + 时段 + AP
+  div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  div.innerHTML = `
+    <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
+    <span style="color:var(--text-muted);">|</span>
+    <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
+    <span style="white-space:nowrap;font-size:12px;margin-left:auto;">
+      ⚡ <strong style="color:${apColor};${lowAp ? "animation:ap-blink 0.8s infinite;" : ""}">${ap}</strong>/${maxAp}
+      ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
+    </span>
+    ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
+  `;
+  parent.appendChild(div);
+}
+
+/** 在内容区时间槽下方显示人生目标（🌟 紧凑横条） */
+function renderGoalStrip(state, parent) {
+  if (typeof getCurrentDream !== "function") return;
+  var dream = getCurrentDream(state);
+  if (!dream) return;
+  var progress =
+    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+  var curTitle =
+    typeof getDreamCurrentTitle === "function"
+      ? getDreamCurrentTitle(state)
+      : "";
+  var div = document.createElement("div");
+  div.className = "goal-strip-mobile";
+  div.style.cssText =
+    "display:flex;align-items:center;gap:8px;padding:4px 12px;margin:0 0 6px 0;background:rgba(74,158,92,0.06);border-radius:8px;font-size:12px;";
+  div.innerHTML =
+    '<span style="font-weight:600;color:var(--accent);white-space:nowrap;">🌟 人生目标</span>' +
+    '<span style="font-size:11px;">' +
+    dream.icon +
+    " " +
+    dream.name +
+    "</span>" +
+    '<div style="flex:1;max-width:160px;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
+    '<div style="width:' +
+    progress +
+    '%;height:100%;background:var(--accent);border-radius:3px;"></div>' +
+    "</div>" +
+    '<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">' +
+    progress +
+    "%</span>" +
+    (curTitle
+      ? '<span style="font-size:10px;color:var(--text-secondary);">· ' +
+        curTitle +
+        "</span>"
+      : "");
+  parent.appendChild(div);
+}
+
+function renderActiveNews(state, parent) {
+  if (state.activeNews && state.activeNews.length > 0) {
+    for (const news of state.activeNews) {
+      const banner = document.createElement("div");
+      banner.className = "news-banner";
+      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+      parent.appendChild(banner);
+    }
+  }
+
+  var intelList = (state.flags && state.flags._activeIntel) || [];
+  var today = state.player ? state.player.day : 1;
+  for (var ii = 0; ii < intelList.length; ii++) {
+    var intel = intelList[ii];
+    if (intel.expireDay < today) continue;
+    var daysLeft = Math.max(0, intel.triggerDay - today);
+    var intelBanner = document.createElement("div");
+    intelBanner.className = "news-banner";
+    intelBanner.style.background = "rgba(255, 193, 7, 0.12)";
+    intelBanner.style.borderColor = "rgba(255, 193, 7, 0.35)";
+    intelBanner.textContent =
+      "🗞️ " +
+      intel.sourceName +
+      "的风声：" +
+      intel.text +
+      "（约" +
+      daysLeft +
+      "天后，可信度" +
+      intel.confidence +
+      "%）";
+    parent.appendChild(intelBanner);
+  }
+}
+
+// ====== Actions Tab ======
 function _esc(str) {
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-/**
- * 渲染事件记录（📜 事件记录）
- * 支持折叠/展开：默认折叠显示最近3条 + 预览行，点击展开全部
- * 桌面端：直接显示全部（max-height 滚动）
- * 移动端：折叠态显示预览 + 展开/关闭按钮
- */
-function renderMessageLog(state) {
-  var logEl = document.getElementById("message-log");
-  if (!logEl) return;
-  var contentEl = logEl.querySelector(".log-content");
-  if (!contentEl) return;
-
-  // --- 一次性注入：折叠按钮 + 预览行 ---
-  if (!logEl.querySelector("#message-log-toggle")) {
-    // 标题加折叠按钮
-    var h3 = logEl.querySelector("h3");
-    if (h3) {
-      var toggleBtn = document.createElement("button");
-      toggleBtn.id = "message-log-toggle";
-      toggleBtn.className = "btn btn-sm";
-      toggleBtn.textContent = "▾ 展开";
-      toggleBtn.style.cssText =
-        "font-size:11px;padding:2px 8px;margin-left:auto;white-space:nowrap;";
-      toggleBtn.addEventListener("click", function () {
-        var isCollapsed = logEl.classList.contains("collapsed");
-        if (isCollapsed) {
-          logEl.classList.remove("collapsed");
-          toggleBtn.textContent = "▴ 关闭";
-          scrollMessageLogToBottom(true);
-        } else {
-          logEl.classList.add("collapsed");
-          toggleBtn.textContent = "▾ 展开";
-        }
-      });
-      h3.appendChild(toggleBtn);
-    }
-
-    // 预览行（折叠态显示最近一条摘要）
-    var previewEl = document.createElement("div");
-    previewEl.id = "message-log-preview";
-    previewEl.innerHTML = '<div class="log-preview-inner"></div>';
-    previewEl.addEventListener("click", function () {
-      logEl.classList.remove("collapsed");
-      var btn = logEl.querySelector("#message-log-toggle");
-      if (btn) btn.textContent = "▴ 关闭";
-      scrollMessageLogToBottom(true);
-    });
-    logEl.insertBefore(previewEl, contentEl);
-
-    // 默认折叠（移动端由 CSS 控制显示，桌面端始终展开）
-    if (window.innerWidth <= 768) {
-      logEl.classList.add("collapsed");
-    }
-  }
-
-  // --- 渲染日志条目 ---
-  var entries = state.messageLog || [];
-
-  // 检测是否有新条目加入 → 强制滚到底（用户交互后的反馈即时可见）
-  var prevCount = parseInt(contentEl.dataset._prevEntryCount || 0, 10);
-  var hasNewEntries = entries.length > prevCount;
-  contentEl.dataset._prevEntryCount = entries.length;
-
-  var html = "";
-  // 桌面端全部显示，移动端展开态最多50条
-  var maxEntries = window.innerWidth <= 768 ? 50 : entries.length;
-  var startIdx = Math.max(0, entries.length - maxEntries);
-  for (var i = startIdx; i < entries.length; i++) {
-    var e = entries[i];
-    var type = e.type || "info";
-    html +=
-      '<div class="log-entry ' +
-      type +
-      '">' +
-      '<span class="log-day">第' +
-      (e.day || 0) +
-      "天</span>" +
-      _esc(e.text || "") +
-      "</div>";
-  }
-  contentEl.innerHTML = html;
-
-  // --- 更新预览行（最近一条） ---
-  var previewInner = logEl.querySelector(".log-preview-inner");
-  if (previewInner && entries.length > 0) {
-    var last = entries[entries.length - 1];
-    previewInner.innerHTML =
-      '<span class="log-day">第' +
-      (last.day || 0) +
-      "天</span>" +
-      _esc(last.text || "");
-    previewEl = logEl.querySelector("#message-log-preview");
-    if (previewEl) {
-      previewEl.title = "共 " + entries.length + " 条记录，点击展开";
-    }
-  }
-
-  // --- 自动滚动（有新条目则强制到底，否则仅在用户已在底部时跟随） ---
-  if (!logEl.classList.contains("collapsed")) {
-    scrollMessageLogToBottom(hasNewEntries);
-  }
-}
-
-/** 事件记录滚动到底部（用户交互触发时始终滚到底，不依赖阅读位置） */
-function scrollMessageLogToBottom(force) {
-  var logEl = document.getElementById("message-log");
-  if (!logEl) return;
-  var contentEl = logEl.querySelector(".log-content");
-  if (!contentEl) return;
-  // 折叠态不滚动
-  if (logEl.classList.contains("collapsed")) return;
-  // force=true（用户交互后）：始终到底 | 否则仅在接近底部时自动滚
-  if (!force) {
-    var nearBottom =
-      contentEl.scrollHeight - contentEl.scrollTop - contentEl.clientHeight <
-      40;
-    if (!nearBottom) return;
-  }
-  requestAnimationFrame(function () {
-    contentEl.scrollTop = contentEl.scrollHeight;
-  });
 }
 
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
@@ -385,7 +2617,7 @@ function getDailyActionTips(state) {
     tips.push("💪 体质达到50！可以挑战重体力工作，收入更高。");
   if (intelligence >= 40 && !(state.flags && state.flags._tipInt40))
     tips.push("📚 智力达到40！编程技能现在可以更高效地学习。");
-  if (agility >= 40 && loc === "wholesaleMarket")
+  if (agility >= 40 && loc === "market")
     tips.push("⚡ 敏捷够高，在批发市场讨价还价更有优势！");
 
   // 技能快升级提示
@@ -573,11 +2805,11 @@ function getDailyActionTips(state) {
     if (typeof calcFinalPrice === "function" && state.trade) {
       var locs2 = [
         "slum",
-        "wholesaleMarket",
+        "market",
         "construction",
         "school",
-        "commercialDist",
-        "techPark",
+        "mall",
+        "tech_park",
       ];
       var curLoc = loc;
       var GOODS2 = typeof GOODS !== "undefined" ? GOODS : [];
@@ -1028,12 +3260,121 @@ function renderMapTab(state, parent) {
   // 服务标签 + 声望条（从 sidebar 迁移到地图 Tab 顶部）
   appendLocationServicesStrip(container, state, locKey);
 
-  // === v3.3 通勤方式 unified（快速出行 + 交通方式合并 + 步行加入）===
+  // === ⭐ 快速出行置顶区（解决"地图没了"问题） ===
   const reachableList = Array.from(reachable).filter((k) => k !== locKey);
-  const commuteWrap = document.createElement("div");
-  commuteWrap.style.cssText =
-    "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
-  // 地铁沿线大站（银行/政务中心为市政配套，通常靠近地铁站）
+  if (reachableList.length > 0) {
+    const quick = document.createElement("div");
+    quick.style.cssText =
+      "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
+    quick.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h4 style="color:var(--accent);margin:0;font-size:14px;">🚶 快速出行</h4>
+        <span style="font-size:10px;color:var(--text-muted);">从 ${loc ? loc.name : "当前位置"} 出发</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+    `;
+    for (const destKey of reachableList) {
+      const dest = getLocation(destKey);
+      if (!dest) continue;
+      const destType =
+        dest.type === "commercial"
+          ? "🛒商业"
+          : dest.type === "industrial"
+            ? "🏭工业"
+            : dest.type === "residential"
+              ? "🏘️居住"
+              : dest.type === "service"
+                ? "🏥服务"
+                : dest.type === "education"
+                  ? "📚教育"
+                  : dest.type === "corporate"
+                    ? "🏢职场"
+                    : dest.type === "recreation"
+                      ? "🌳休闲"
+                      : dest.type === "institutional"
+                        ? "🏫机构"
+                        : "📍其他";
+      quick.innerHTML += `
+        <button class="quick-travel-btn" data-dest="${destKey}" style="
+          padding:10px 12px;
+          background:var(--bg-secondary);
+          border:1px solid var(--border);
+          border-radius:6px;
+          cursor:pointer;
+          text-align:left;
+          color:var(--text-primary);
+          font-size:12px;
+          transition:all 0.15s;
+        " onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(0,180,216,0.06)';"
+           onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';">
+          <div style="font-weight:600;color:var(--accent);">📍 ${dest.name}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${destType}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</div>
+        </button>
+      `;
+    }
+    quick.innerHTML += "</div>";
+    container.appendChild(quick);
+  }
+
+  // === v3.0 交通方式选择（共享单车/地铁/打车）===
+  // 设计参考：北上广真实数据
+  //   共享单车 ¥2/15分钟，仅适合相邻地点（≤1跳），最快到非商业区
+  //   地铁 ¥4 固定，仅可到地铁沿线大站（科技园/商业区/医院/学校/培训中心/娱乐区）
+  //   打车 ¥15-50 按距离，可达任何已探索地点，最快但最贵
+  const transitWrap = document.createElement("div");
+  transitWrap.style.cssText =
+    "padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);";
+  transitWrap.innerHTML = `
+    <h4 style="color:var(--accent);margin:0 0 8px;font-size:13px;">🚇 交通方式</h4>
+    <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;">
+      点击上方"快速出行"选择目的地后，下方按钮激活；或直接点选交通方式查看可达地点。
+    </p>
+    <div id="transit-buttons" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;"><button class="transit-btn" data-mode="bike" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥3 · 2跳内可达</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">比步行快、比打车便宜</div>
+      </button>
+      <button class="transit-btn" data-mode="metro" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--accent);">🚇 地铁</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 地铁8站覆盖</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院/城中村等</div>
+      </button>
+      <button class="transit-btn" data-mode="taxi" style="
+        padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;">
+        <div style="font-weight:600;color:var(--warning);">🚕 打车</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥10-40 按距离</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快的点对点交通</div>
+      </button>
+    </div>
+    <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+  `;
+  // v4.0 自驾出行按钮（有车时动态添加）
+  var ownCars =
+    state.investment && state.investment.cars ? state.investment.cars : [];
+  if (ownCars.length > 0) {
+    var transitBtns = transitWrap.querySelector("#transit-buttons");
+    if (transitBtns) {
+      var carBtn = document.createElement("button");
+      carBtn.className = "transit-btn car-btn";
+      carBtn.dataset.mode = "car";
+      carBtn.style.cssText =
+        "padding:10px 6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;";
+      carBtn.innerHTML =
+        '<div style="font-weight:600;color:var(--accent);">🚗 自驾</div>' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥5油费 · 任意直达</div>' +
+        '<div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">用自己的车出行，不限跳数</div>';
+      transitBtns.appendChild(carBtn);
+    }
+  }
+  container.appendChild(transitWrap);
+
+  // v3.2 地铁沿线大站定义（扩展：新增城中村+批发市场）
   const METRO_STATIONS = [
     "techPark",
     "commercialDist",
@@ -1041,261 +3382,164 @@ function renderMapTab(state, parent) {
     "school",
     "trainingCenter",
     "entertainment",
-    "slum",
-    "wholesaleMarket",
-    "bank",
-    "gov_office",
+    "slum", // v3.2 新增：城中村地铁站（城市中心扩张）
+    "wholesaleMarket", // v3.2 新增：批发市场站（物流枢纽）
   ];
-  // 为每种通勤方式计算可达目的地列表 + 价格 + AP
-  function _calcCommute(mode, cloc, cstate) {
-    var list = [],
-      price,
-      ap,
-      hops,
-      hopStr;
-    var allLocs = Object.keys(LOCATIONS).filter(function (k) {
-      return k !== cloc;
-    });
-    if (mode === "walk") {
-      // 步行：全城可达，AP随距离递增（远途步行贵，让玩家自然选择交通工具）
-      list = allLocs;
-      price = 0;
-    } else if (mode === "bike") {
-      // 共享单车：2跳内
-      var q = [cloc],
-        vis = {};
-      vis[cloc] = 0;
-      while (q.length) {
-        var cur = q.shift(),
-          d = vis[cur];
-        if (d >= 2) continue;
-        var nbrs = getReachableLocations(cur);
-        for (var i = 0; i < nbrs.length; i++) {
-          var nb = nbrs[i];
-          if (vis[nb] !== undefined) continue;
-          vis[nb] = d + 1;
-          if (nb !== cloc && list.indexOf(nb) < 0) list.push(nb);
-          q.push(nb);
-        }
-      }
-      price = 3;
-    } else if (mode === "metro") {
-      // 地铁：任意位置均可乘车（步行至最近站点），目的地限定沿线大站
-      list = METRO_STATIONS.filter(function (k) {
-        return k !== cloc;
-      });
-      price = 4;
-    } else if (mode === "taxi") {
-      list = allLocs;
-      price = -1; // 按距离动态
-    } else if (mode === "car") {
-      list = allLocs;
-      price = 5;
-    }
-    // 对每个目的地计算具体 AP 和价格
-    return list
-      .map(function (k) {
-        var d = getLocation(k);
-        if (!d) return null;
-        hops =
-          typeof getLocationHops === "function" ? getLocationHops(cloc, k) : 1;
-        if (hops >= 99) return null; // 地图孤立节点，永不显示
-        hopStr = hops + "跳";
-        if (mode === "walk") {
-          ap = Math.max(8, 4 + hops * 6); // 1跳=10, 2跳=16, 3跳=22（远途高消耗倒逼换乘）
-          price = 0;
-        } else if (mode === "bike") {
-          ap = Math.min(7, 3 + hops * 2); // 1跳=5, 2跳=7
+  // v3.2 共享单车扩展到2跳内（不仅相邻地点），价格¥2→¥3，AP-8→AP-6
+  // 打车价格下调：¥15-50→¥10-40
+  // 打包绑定交通方式按钮
+  setTimeout(() => {
+    document.querySelectorAll(".transit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        const result = document.getElementById("transit-result");
+        if (!result) return;
+        // 列出该交通方式可到的地点
+        let available = [];
+        let priceInfo = "";
+        let apInfo = "";
+        if (mode === "bike") {
+          // v3.2 共享单车扩展到2跳内
+          var bikeReachable = [];
+          var bikeQueue = [locKey];
+          var bikeVisited = {};
+          bikeVisited[locKey] = 0;
+          while (bikeQueue.length) {
+            var cur = bikeQueue.shift();
+            var dist = bikeVisited[cur];
+            if (dist >= 2) continue;
+            var neighbors = getReachableLocations(cur);
+            for (var ni = 0; ni < neighbors.length; ni++) {
+              var nb = neighbors[ni];
+              if (bikeVisited[nb] !== undefined) continue;
+              bikeVisited[nb] = dist + 1;
+              if (nb !== locKey && bikeReachable.indexOf(nb) < 0)
+                bikeReachable.push(nb);
+              bikeQueue.push(nb);
+            }
+          }
+          available = bikeReachable.slice();
+          priceInfo = "¥3/次";
+          apInfo = "行动力 -6（骑行适中）";
         } else if (mode === "metro") {
-          ap = 6; // 含步行至站台，全程固定
-        } else if (mode === "taxi") {
-          ap = Math.min(8, 3 + hops * 1); // 1跳=4, 2跳=5
-          price = typeof getTaxiCost === "function" ? getTaxiCost(cloc, k) : 15;
-        } else if (mode === "car") {
-          ap = Math.max(2, 1 + hops * 1); // 1跳=2, 2跳=3
-        } else {
-          ap = 10;
-          price = 0;
-        }
-        return {
-          key: k,
-          name: d.name,
-          desc: d.desc,
-          type: d.type,
-          hops: hops,
-          ap: ap,
-          price: price,
-          hopStr: hopStr,
-        };
-      })
-      .filter(Boolean);
-  }
-  function _modeLabel(mode) {
-    return (
-      {
-        walk: "🚶 步行",
-        bike: "🚲 共享单车",
-        metro: "🚇 地铁",
-        taxi: "🚕 打车",
-        car: "🚗 自驾",
-      }[mode] || mode
-    );
-  }
-  function _destTypeBadge(type) {
-    return type === "commercial"
-      ? "🛒商业"
-      : type === "industrial"
-        ? "🏭工业"
-        : type === "residential"
-          ? "🏘️居住"
-          : type === "service"
-            ? "🏥服务"
-            : type === "education"
-              ? "📚教育"
-              : type === "corporate"
-                ? "🏢职场"
-                : type === "recreation"
-                  ? "🌳休闲"
-                  : type === "institutional"
-                    ? "🏫机构"
-                    : "📍其他";
-  }
-  // 初始模式 = 步行
-  var _commuteMode = "walk";
-  commuteWrap.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-    '<h4 style="color:var(--accent);margin:0;font-size:14px;">🚇 通勤方式</h4>' +
-    '<span style="font-size:10px;color:var(--text-muted);">从 ' +
-    (loc ? loc.name : "当前位置") +
-    " 出发</span>" +
-    "</div>" +
-    '<div id="commute-modes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">' +
-    // walk
-    '<button class="commute-mode-btn active-mode" data-mode="walk" style="padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--accent);background:var(--accent);color:#fff;">🚶 步行 · 免费</button>' +
-    // bike
-    '<button class="commute-mode-btn" data-mode="bike" style="padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);">🚲 共享单车 · ¥3</button>' +
-    // metro
-    '<button class="commute-mode-btn" data-mode="metro" style="padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);">🚇 地铁 · ¥4</button>' +
-    // taxi
-    '<button class="commute-mode-btn" data-mode="taxi" style="padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);">🚕 打车 · ¥10-40</button>' +
-    "</div>" +
-    '<div id="commute-destinations" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>';
-  // 自驾按钮（有车时动态插入）
-  var ownCars =
-    state.investment && state.investment.cars ? state.investment.cars : [];
-  if (ownCars.length > 0) {
-    var modeBar = commuteWrap.querySelector("#commute-modes");
-    if (modeBar) {
-      var carModeBtn = document.createElement("button");
-      carModeBtn.className = "commute-mode-btn";
-      carModeBtn.dataset.mode = "car";
-      carModeBtn.style.cssText =
-        "padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);";
-      carModeBtn.innerHTML = "🚗 自驾 · ¥5";
-      modeBar.appendChild(carModeBtn);
-    }
-  }
-  container.appendChild(commuteWrap);
-  // 填充目的地卡片
-  function _refreshCommuteDestinations(mode) {
-    var wrap = document.getElementById("commute-destinations");
-    if (!wrap) return;
-    var items = _calcCommute(mode, locKey, state);
-    if (items.length === 0) {
-      wrap.innerHTML =
-        '<span style="color:var(--text-muted);font-size:12px;">📍 当前模式无可达地点</span>';
-      return;
-    }
-    wrap.innerHTML = items
-      .map(function (item) {
-        return (
-          '<button class="commute-go-btn" data-dest="' +
-          item.key +
-          '" data-price="' +
-          item.price +
-          '" data-ap="' +
-          item.ap +
-          '" data-mode="' +
-          mode +
-          "\" style=\"padding:10px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;color:var(--text-primary);font-size:12px;transition:all 0.15s;\" onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='rgba(0,180,216,0.06)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)';\">" +
-          '<div style="font-weight:600;color:var(--accent);">📍 ' +
-          item.name +
-          "</div>" +
-          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">' +
-          _destTypeBadge(item.type) +
-          "</div>" +
-          '<div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">' +
-          item.desc +
-          "</div>" +
-          '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">' +
-          _modeLabel(mode) +
-          " " +
-          item.hopStr +
-          " · ⚡" +
-          item.ap +
-          (item.price > 0 ? " · ¥" + item.price : " · 免费") +
-          "</div>" +
-          "</button>"
-        );
-      })
-      .join("");
-    // 绑定出行按钮
-    document.querySelectorAll(".commute-go-btn").forEach(function (gb) {
-      gb.addEventListener("click", function () {
-        var dk = gb.dataset.dest;
-        var pr = parseInt(gb.dataset.price, 10) || 0;
-        var ac = parseInt(gb.dataset.ap, 10) || 5;
-        var md = gb.dataset.mode || "walk";
-        var mn = _modeLabel(md);
-        if (pr > 0 && (state.resources.cash || 0) < pr) {
-          StateManager.addMessage(
-            "💸 " + mn + "需要¥" + pr + "，你现金不够。",
-            "warning",
+          available = reachableList.filter(
+            (k) => METRO_STATIONS.indexOf(k) >= 0,
           );
+          // 也允许从地铁沿线出发到任何地铁沿线
+          if (METRO_STATIONS.indexOf(locKey) >= 0) {
+            METRO_STATIONS.forEach((k) => {
+              if (k !== locKey && available.indexOf(k) < 0) available.push(k);
+            });
+          }
+          priceInfo = "¥4/次";
+          apInfo = "行动力 -5（地铁最快）";
+        } else if (mode === "taxi") {
+          available = reachableList.slice();
+          priceInfo = "¥10-40（按距离）";
+          apInfo = "行动力 -3（最快但最贵）";
+        } else if (mode === "car") {
+          available = reachableList.slice();
+          priceInfo = "¥5油费";
+          apInfo = "行动力 -2（自驾快捷）";
+        }
+        if (available.length === 0) {
+          result.innerHTML =
+            '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
           return;
         }
-        if (pr > 0) state.resources.cash -= pr;
-        StateManager.update("trade.currentLocation", dk);
-        var dt = getLocation(dk);
-        StateManager.addMessage(
-          mn +
-            " 你来到了" +
-            (dt ? dt.name : dk) +
-            (pr > 0 ? "，花费¥" + pr : "") +
-            "（-⚡" +
-            ac +
-            "）。",
-          "info",
-        );
-        if (typeof consumeAP === "function") consumeAP(ac);
-        renderAll();
-      });
-    });
-  }
-  _refreshCommuteDestinations("walk");
-  // 绑定模式切换
-  setTimeout(function () {
-    document.querySelectorAll(".commute-mode-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var newMode = btn.dataset.mode;
-        // 切换激活样式
-        document.querySelectorAll(".commute-mode-btn").forEach(function (b) {
-          if (b.dataset.mode === newMode) {
-            b.style.borderColor = "var(--accent)";
-            b.style.background = "var(--accent)";
-            b.style.color = "#fff";
-          } else {
-            b.style.borderColor = "var(--border)";
-            b.style.background = "var(--bg-secondary)";
-            b.style.color = "var(--text-primary)";
-          }
+        result.innerHTML =
+          '<div style="margin-bottom:6px;">' +
+          "<strong>" +
+          {
+            bike: "🚲 共享单车",
+            metro: "🚇 地铁",
+            taxi: "🚕 打车",
+            car: "🚗 自驾",
+          }[mode] +
+          "</strong> · " +
+          priceInfo +
+          " · " +
+          apInfo +
+          "</div>" +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">' +
+          available
+            .map((k) => {
+              const d = getLocation(k);
+              if (!d) return "";
+              const price =
+                mode === "bike"
+                  ? 3 // v3.2 从¥2→¥3
+                  : mode === "metro"
+                    ? 4
+                    : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
+              const ap =
+                mode === "bike"
+                  ? 6
+                  : mode === "metro"
+                    ? 5
+                    : mode === "car"
+                      ? 2
+                      : 3; // v3.2 单车AP-8→AP-6
+              return (
+                '<button class="transit-go-btn" data-dest="' +
+                k +
+                '" data-price="' +
+                price +
+                '" data-ap="' +
+                ap +
+                '" data-mode="' +
+                mode +
+                '" style="' +
+                'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+                '<div style="font-weight:600;">' +
+                d.name +
+                "</div>" +
+                '<div style="color:var(--text-muted);margin-top:2px;">¥' +
+                price +
+                " · 行动力" +
+                ap +
+                "</div>" +
+                "</button>"
+              );
+            })
+            .join("") +
+          "</div>";
+        // 绑定实际出行按钮
+        document.querySelectorAll(".transit-go-btn").forEach((gb) => {
+          gb.addEventListener("click", () => {
+            const destKey = gb.dataset.dest;
+            const price = parseInt(gb.dataset.price, 10) || 0;
+            const ap = parseInt(gb.dataset.ap, 10) || 5;
+            const modeName =
+              { bike: "🚲 共享单车", metro: "🚇 地铁", taxi: "🚕 打车" }[
+                gb.dataset.mode
+              ] || "出行";
+            if ((state.resources.cash || 0) < price) {
+              StateManager.addMessage(
+                "💸 " + modeName + "需要¥" + price + "，你现金不够。",
+                "warning",
+              );
+              return;
+            }
+            state.resources.cash -= price;
+            StateManager.update("trade.currentLocation", destKey);
+            const dest = getLocation(destKey);
+            StateManager.addMessage(
+              modeName +
+                " 你来到了" +
+                (dest ? dest.name : destKey) +
+                "，花了¥" +
+                price +
+                "。",
+              "info",
+            );
+            if (typeof consumeAP === "function") consumeAP(ap);
+            renderAll();
+          });
         });
-        _commuteMode = newMode;
-        _refreshCommuteDestinations(newMode);
       });
     });
   }, 0);
-  // 自驾按钮也绑定（动态添加的也在 querySelectorAll 范围内）
 
   // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
   const mapWrap = document.createElement("div");
@@ -1388,12 +3632,8 @@ function renderMapTab(state, parent) {
             .join(" ")
         : "";
     const isCurrent = key === locKey;
-    const isAdjacent = reachable.has(key); // 1跳邻居，用于视觉高亮
-    const canTravel = !isCurrent; // 步行全城可达，非当前地点均可点击
-    // 步行AP：与通勤面板walk模式公式一致 max(8, 4+hops*6)
-    const mapHops =
-      typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
-    const walkAp = isCurrent ? 0 : Math.max(8, 4 + mapHops * 6);
+    const isReachable = reachable.has(key);
+    const canTravel = isReachable && !isCurrent;
 
     const node = document.createElement("div");
     node.className = "map-node";
@@ -1403,12 +3643,12 @@ function renderMapTab(state, parent) {
       transform:translate(-50%,-50%);
       padding:8px 12px;
       background:${isCurrent ? "linear-gradient(135deg, rgba(0,180,216,0.3), var(--bg-card))" : "var(--bg-card)"};
-      border:2px solid ${isCurrent ? "var(--accent)" : isAdjacent ? "var(--border-light)" : "rgba(255,255,255,0.08)"};
+      border:2px solid ${isCurrent ? "var(--accent)" : isReachable ? "var(--border-light)" : "rgba(255,255,255,0.06)"};
       border-radius:8px;
-      cursor:${canTravel ? "pointer" : "default"};
+      cursor:${canTravel ? "pointer" : isCurrent ? "default" : "not-allowed"};
       z-index:2;
       transition:all 0.2s;
-      opacity:${isCurrent ? 1 : isAdjacent ? 1 : 0.75};
+      opacity:${isReachable ? 1 : 0.35};
       min-width:80px;
       text-align:center;
       box-shadow:${isCurrent ? "0 0 16px rgba(0,180,216,0.3)" : "none"};
@@ -1419,7 +3659,8 @@ function renderMapTab(state, parent) {
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;">${badgeStr}</div>
-      ${canTravel ? `<div style="font-size:9px;color:var(--text-muted);margin-top:4px;">🚶 步行 -⚡${walkAp}</div>` : ""}
+      ${canTravel ? '<div style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
+      ${!isReachable && !isCurrent ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
     if (canTravel) {
@@ -1429,20 +3670,18 @@ function renderMapTab(state, parent) {
         node.style.transform = "translate(-50%,-50%) scale(1.05)";
       });
       node.addEventListener("mouseleave", () => {
-        node.style.borderColor = isAdjacent
-          ? "var(--border-light)"
-          : "rgba(255,255,255,0.08)";
+        node.style.borderColor = "var(--border-light)";
         node.style.boxShadow = "none";
         node.style.transform = "translate(-50%,-50%) scale(1)";
       });
       node.addEventListener("click", () => {
-        const dest = getLocation(key);
         StateManager.update("trade.currentLocation", key);
+        const dest = getLocation(key);
         StateManager.addMessage(
-          `🚶 步行 你来到了${dest ? dest.name : key}（-⚡${walkAp}）。`,
+          `🚶 你来到了${dest ? dest.name : key}。`,
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(walkAp);
+        if (typeof consumeAP === "function") consumeAP(15);
         renderAll();
       });
     }
@@ -1502,6 +3741,23 @@ function renderMapTab(state, parent) {
 
   parent.appendChild(container);
 
+  // 绑定快速出行按钮
+  setTimeout(() => {
+    document.querySelectorAll(".quick-travel-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const destKey = btn.dataset.dest;
+        StateManager.update("trade.currentLocation", destKey);
+        const dest = getLocation(destKey);
+        StateManager.addMessage(
+          `🚶 你来到了${dest ? dest.name : destKey}。`,
+          "info",
+        );
+        if (typeof consumeAP === "function") consumeAP(15);
+        renderAll();
+      });
+    });
+  }, 0);
+
   // 延迟绘制 SVG 连线
   setTimeout(drawConnections, 100);
   // 再绘制一次确保
@@ -1514,40 +3770,6 @@ function renderTradeTab(state, parent) {
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
-
-  // ====== 提前计算变量（放在 header 模板之前，避免 var 提升 = undefined） ======
-  var CATEGORY_NAMES_TRADE = {
-    daily: "日用品",
-    luxury: "奢侈品",
-    food: "食品",
-    clothing: "服装",
-    electronics: "电子",
-    scrap: "废品",
-    books: "书籍",
-    flowers: "鲜花",
-    medicine: "药品",
-    stationery: "文具",
-  };
-  var visitedLocs =
-    typeof getRememberedLocations === "function"
-      ? getRememberedLocations(state)
-      : [];
-  var salesLvl =
-    state.skills && state.skills.sales ? state.skills.sales.level : 0;
-  var skillTag = "";
-  if (salesLvl < 20) {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 仅看本地价格</span>";
-  } else {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 可对比" +
-      visitedLocs.length +
-      "个区域</span>";
-  }
   // v3.0 BUGFIX: 原为 const goodsList，但下方 SortUtils.sortInteractiveList 会重新赋值，
   // 触发 "Assignment to constant variable" 错误导致整个交易Tab崩溃。改为 let。
   let goodsList =
@@ -1585,12 +3807,20 @@ function renderTradeTab(state, parent) {
     }
   }
 
-  // 季节性价格波动提示横幅（需销售≥10级才能看出季节规律）
-  if (salesLvl >= 10 && typeof getSeasonalPriceMod === "function") {
+  // 季节性价格波动提示横幅
+  if (typeof getSeasonalPriceMod === "function") {
     var seasonMods = getSeasonalPriceMod(state);
     if (Object.keys(seasonMods).length > 0) {
       var hotBuy = [];
       var hotSell = [];
+      var CATEGORY_NAMES_TRADE = {
+        daily: "日用品",
+        luxury: "奢侈品",
+        food: "食品",
+        clothing: "服装",
+        electronics: "电子",
+        scrap: "废品",
+      };
       for (var cat in seasonMods) {
         var catName = CATEGORY_NAMES_TRADE[cat] || cat;
         if (seasonMods[cat] < 0.9) {
@@ -1626,11 +3856,33 @@ function renderTradeTab(state, parent) {
     resetDailyTradeXp(state);
   }
 
-  // 是否可跨区比价（留在原位供下游使用）
+  // 已访问区域数量提示
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
   var canCompare =
     typeof canSeePriceMarkers === "function"
       ? canSeePriceMarkers(state)
       : false;
+
+  // 技能等级标签
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
 
   // 模糊记忆提示条
   var memoryHints =
@@ -1658,64 +3910,6 @@ function renderTradeTab(state, parent) {
     return;
   }
 
-  // ====== 动态路线推荐（需销售≥15级+已访问≥2地点，才能分析出有价值的路线） ======
-  if (
-    salesLvl >= 15 &&
-    visitedLocs.length >= 2 &&
-    typeof getBestTradeRoutes === "function"
-  ) {
-    var routeData = getBestTradeRoutes(state);
-    if (routeData && routeData.tips && routeData.tips.length > 0) {
-      var routeBox = document.createElement("div");
-      routeBox.style.cssText =
-        "background:linear-gradient(135deg,rgba(40,167,69,0.06),rgba(102,126,234,0.06));" +
-        "border:1px solid rgba(40,167,69,0.2);border-radius:6px;" +
-        "padding:8px 10px;margin-bottom:12px;font-size:12px;";
-      var routeHtml =
-        '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">🛤️ 当前最佳路线 <span style="font-size:10px;font-weight:normal;color:var(--text-muted);">（综合考虑市场/季节/饱和）</span></div>';
-      var shownCount = 0;
-      for (var rti = 0; rti < routeData.tips.length && shownCount < 3; rti++) {
-        var rt = routeData.tips[rti];
-        if (rt.profitRate >= 5 || (rt.rawRate && rt.rawRate >= 15)) {
-          var pctColor =
-            rt.profitRate >= 40
-              ? "var(--success)"
-              : rt.profitRate >= 20
-                ? "#d4a017"
-                : rt.profitRate >= 8
-                  ? "var(--text-muted)"
-                  : "var(--text-secondary)";
-          var icon = rt.isNearby ? "📍" : "🗺️";
-          var extraInfo = "";
-          if (!rt.isNearby) extraInfo += " (需前往)";
-          if (rt.profitRate >= 8 && rt.profitRate < 20) extraInfo = "";
-          routeHtml +=
-            '<div style="padding:2px 0;color:var(--text-secondary);">' +
-            "  <span style='color:" +
-            pctColor +
-            ";font-weight:600;'>" +
-            icon +
-            " +" +
-            rt.profitRate +
-            "%</span> " +
-            rt.route +
-            extraInfo +
-            "</div>";
-          shownCount++;
-        }
-      }
-      if (shownCount === 0 && routeData.tips && routeData.tips.length > 0) {
-        // 当前无明显利润路线时显示兜底提示
-        routeHtml +=
-          '<div style="padding:2px 0;color:var(--text-muted);font-size:11px;">💡 市场暂时平稳，可关注季节性或节日价格波动</div>';
-      }
-      if (shownCount > 0 || routeData.tips.length > 0) {
-        routeBox.innerHTML = routeHtml;
-        parent.appendChild(routeBox);
-      }
-    }
-  }
-
   // ====== 分类排序系统：品类优先 → 频次辅助 → 价格 → 名称 ======
   if (typeof SortUtils !== "undefined") {
     goodsList = SortUtils.sortInteractiveList(
@@ -1728,10 +3922,6 @@ function renderTradeTab(state, parent) {
           "electronics",
           "luxury",
           "scrap",
-          "medicine",
-          "books",
-          "stationery",
-          "flowers",
         ],
         priorityMap: {
           water: 10,
@@ -1892,60 +4082,47 @@ function renderTradeTab(state, parent) {
         "</span>"
       : "";
 
-    // 季节性价格标签（需已有销售经验才能认出季节规律，与横幅同步门控）
+    // 季节性价格标签
     var seasonTag = "";
-    if (salesLvl >= 10 && typeof getSeasonalPriceMod === "function") {
+    if (typeof getSeasonalPriceMod === "function") {
       var cat = good.category;
       var seasonMod = getSeasonalPriceMod(state)[cat];
       if (seasonMod && seasonMod < 0.85) {
         seasonTag =
-          '<span style="color:var(--success);font-size:10px;white-space:nowrap;">🟢低价季</span>';
+          '<span style="color:var(--success);font-size:10px;margin-left:8px;">🟢 季节性低价</span>';
       } else if (seasonMod && seasonMod > 1.15) {
         seasonTag =
-          '<span style="color:var(--danger);font-size:10px;white-space:nowrap;">🔴高价季</span>';
+          '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔴 季节性高价</span>';
       }
     }
 
-    // 价格行文案：批发市场显示批/零对比，零售市场显示基准→当前
-    var priceLineHtml = wholesalePrice
-      ? '批<strong style="color:var(--success)">¥' +
-        wholesalePrice.toFixed(1) +
-        "</strong> 零¥" +
-        price.toFixed(1)
-      : "基¥" +
-        good.basePrice +
-        ' → <strong style="color:' +
-        priceColor +
-        '">¥' +
-        price.toFixed(1) +
-        "</strong>" +
-        trendHtml +
-        (priceLabel
-          ? '<span style="font-size:10px;">' + priceLabel + "</span>"
-          : "");
-
     const card = document.createElement("div");
-    card.className = "action-card trade-item-card";
+    card.className = "action-card";
     card.innerHTML = `
-      <div class="tic-header">
-        <span class="card-title" style="margin:0;">${good.name}</span>
-        <span class="slot-tag">${CATEGORY_NAMES_TRADE[good.category] || good.category}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" style="margin:0;">${good.name}</div>
+        <span class="slot-tag">${{ daily: "日用品", luxury: "奢侈品", food: "食品", clothing: "服装", electronics: "电子", scrap: "废品" }[good.category] || good.category}</span>
         ${seasonTag}
       </div>
-      <div class="tic-body">
-        <span class="tic-price">${priceLineHtml}</span>
-        <div class="tic-btns">
-          <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
-          <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
-          ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批×10</button>` : ""}
-          <button class="qty-toggle-btn" data-good="${good.id}" data-side="buy" title="自定义数量">✏️</button>
-        </div>
+      <div class="card-desc" style="margin:4px 0;">
+        基准: ¥${good.basePrice}/${good.unit}
+        ${wholesalePrice ? `<br>批发价: <strong style="color:var(--success)">¥${wholesalePrice.toFixed(1)}</strong>/件 (零售 ¥${price.toFixed(1)})` : ""}
       </div>
-      <div class="qty-input-group" data-good="${good.id}" data-side="buy" style="display:none;margin-top:4px;">
-        <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
-        <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
-        <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
-        <button class="btn btn-sm btn-success qty-action-btn" data-good="${good.id}" data-side="buy">买</button>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
+        当前零售价: <strong style="color:${priceColor}">¥${price.toFixed(1)}</strong>${trendHtml}
+        ${priceLabel}
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
+        <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="5">买5</button>
+        ${isWholesale ? `<button class="btn btn-sm btn-primary wholesale-btn" data-good="${good.id}" data-qty="10">批发×10</button>` : ""}
+        <button class="qty-toggle-btn" data-good="${good.id}" data-side="buy" title="自定义数量">✏️</button>
+        <div class="qty-input-group" data-good="${good.id}" data-side="buy" style="display:none;">
+          <button class="qty-step-btn" data-good="${good.id}" data-dir="-1">−</button>
+          <input type="number" class="qty-num-input" value="1" min="1" max="999" step="1" data-good="${good.id}">
+          <button class="qty-step-btn" data-good="${good.id}" data-dir="1">+</button>
+          <button class="btn btn-sm btn-success qty-action-btn" data-good="${good.id}" data-side="buy">买</button>
+        </div>
       </div>
     `;
     grid.appendChild(card);
@@ -2072,33 +4249,20 @@ function renderTradeTab(state, parent) {
     compareTable.innerHTML = tableHtml;
     compareDiv.appendChild(compareTable);
     parent.appendChild(compareDiv);
-  } else {
-    // 未满足条件 → 根据差距给出针对性提示
+  } else if (visitedLocs2.length < 2) {
+    // 还没跑够2个区域 → 提示探索
     var exploreHint = document.createElement("div");
     exploreHint.style.cssText =
       "margin-top:16px;padding:10px;background:rgba(102,126,234,0.06);border-radius:6px;font-size:12px;color:var(--text-muted);text-align:center;";
-    var remainCount2 = allLocKeys.length - visitedLocs2.length;
-    var hintText = "";
-    if (salesLvl < 20 && visitedLocs2.length < 2) {
-      hintText = "🗺️ 多跑几处市集、多做几笔买卖，慢慢就能摸清各地行情";
-    } else if (salesLvl < 20) {
-      hintText =
-        "📊 已走访 " +
-        visitedLocs2.length +
-        " 处市集！销售升至20级后可开启跨区比价（当前" +
-        salesLvl +
-        "级）";
-    } else {
-      hintText =
-        "🧭 已访问 " +
-        visitedLocs2.length +
-        "/" +
-        allLocKeys.length +
-        " 个区域，再走访 " +
-        (2 - visitedLocs2.length) +
-        " 个区域即可解锁价格对比！";
-    }
-    exploreHint.innerHTML = hintText;
+    var remainCount = allLocKeys.length - visitedLocs2.length;
+    exploreHint.innerHTML =
+      "🧭 已访问 " +
+      visitedLocs2.length +
+      "/" +
+      allLocKeys.length +
+      " 个区域。再逛 " +
+      remainCount +
+      " 个区域就能解锁价格对比！（需销售≥20级）";
     parent.appendChild(exploreHint);
   }
 
@@ -2128,22 +4292,12 @@ function renderTradeTab(state, parent) {
         var npcLine = document.createElement("div");
         npcLine.style.cssText =
           "margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;";
-        var avatarHtml = "";
-        if (npcData.avatar) {
-          avatarHtml =
-            '<img src="' +
-            npcData.avatar +
-            '" class="npc-avatar" alt="' +
-            _esc(npcData.name) +
-            '" loading="lazy" />';
-        }
         npcLine.innerHTML =
-          '<div style="display:flex;align-items:center;gap:8px;"><div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
-          avatarHtml +
-          _esc(npcData.name) +
+          '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;">' +
+          npcData.name +
           "（" +
-          _esc(npcData.role) +
-          "）</div></div>";
+          npcData.role +
+          "）</div>";
 
         for (var ai = 0; ai < info.availableInfo.length; ai++) {
           var aiData = info.availableInfo[ai];
@@ -2505,12 +4659,6 @@ function renderInventoryTab(state, parent) {
         负重 ${totalWeight}/${maxCarry}kg
       </span>
     </h3>
-    <div style="margin-bottom:10px;padding:8px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.15);border-radius:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-      <span style="font-size:11px;color:var(--text-muted);">🔗 前往升级：</span>
-      ${navActionButton("location", "wholesaleMarket", "🏪 批发市场买背包", { hideConfirm: true })}
-      ${navActionButton("location", "commercialDist", "🏬 商业区买行李箱", { hideConfirm: true })}
-      <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">批发市场/商业区有更大容量的装备出售</span>
-    </div>
   `;
 
   const items = state.inventory.items;
@@ -2544,103 +4692,6 @@ function renderInventoryTab(state, parent) {
       grid.appendChild(el);
     }
     div.appendChild(grid);
-  }
-
-  // ====== 装备购买弹窗（直接在UI内购买，不再导航到地点）======
-  function _showEquipmentShopModal(slotKey, slotName, curState, filterLoc) {
-    if (typeof showModal !== "function" || typeof ITEMS === "undefined") return;
-    var itemList = ITEMS.filter(function (i) {
-      return (
-        i.slot &&
-        i.buyLocations &&
-        (slotKey ? i.slot === slotKey : true) &&
-        (filterLoc ? i.buyLocations.indexOf(filterLoc) !== -1 : true)
-      );
-    });
-    if (itemList.length === 0) {
-      showModal({
-        title: "🛒 装备商店",
-        body: "<p>暂无可购买装备。</p>",
-        buttons: [{ text: "关闭", cls: "" }],
-      });
-      return;
-    }
-    var cash = (curState.resources && curState.resources.cash) || 0;
-    var equippedNow =
-      (curState.inventory && curState.inventory.equipment) || {};
-    var rows = itemList
-      .map(function (item) {
-        var isEquipped = equippedNow[item.slot] === item.id;
-        var canAfford = cash >= item.price;
-        var locNames = (item.buyLocations || [])
-          .map(function (lk) {
-            return typeof LOCATIONS !== "undefined" && LOCATIONS[lk]
-              ? LOCATIONS[lk].icon + LOCATIONS[lk].name
-              : lk;
-          })
-          .join("、");
-        var slotNames = {
-          head: "头部",
-          body: "身体",
-          feet: "脚部",
-          hand: "手部",
-          accessory: "配件",
-        };
-        return (
-          '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);">' +
-          '<div style="flex:1;min-width:0;">' +
-          '<div style="font-size:12px;font-weight:600;">' +
-          (item.icon || "🛡️") +
-          " " +
-          item.name +
-          (isEquipped
-            ? ' <span style="color:var(--success);font-size:10px;">✅ 已装备</span>'
-            : "") +
-          "</div>" +
-          '<div style="font-size:10px;color:var(--text-muted);margin:2px 0;">' +
-          (item.desc || "") +
-          "</div>" +
-          '<div style="font-size:10px;color:var(--text-muted);">部位：' +
-          (slotNames[item.slot] || item.slot) +
-          " | 购买地点：" +
-          locNames +
-          "</div>" +
-          "</div>" +
-          '<div style="flex-shrink:0;text-align:right;">' +
-          '<div style="font-size:13px;color:var(--accent);font-weight:bold;">¥' +
-          item.price +
-          "</div>" +
-          '<button class="btn btn-sm ' +
-          (canAfford && !isEquipped ? "btn-primary" : "") +
-          '" ' +
-          "onclick=\"(function(){var r=buyItemFromShop('" +
-          item.id +
-          "');if(typeof renderAll==='function')renderAll();})()\" " +
-          (canAfford && !isEquipped ? "" : "disabled") +
-          ">" +
-          (isEquipped ? "已装备" : canAfford ? "购买" : "钱不够") +
-          "</button>" +
-          "</div>" +
-          "</div>"
-        );
-      })
-      .join("");
-    var title = slotKey
-      ? "🛒 购买" + (slotName || slotKey) + "装备"
-      : filterLoc && typeof LOCATIONS !== "undefined" && LOCATIONS[filterLoc]
-        ? "🏪 " + LOCATIONS[filterLoc].name + " — 装备商店"
-        : "🛒 装备商店";
-    showModal({
-      title: title,
-      body:
-        '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">当前现金：<strong style="color:var(--accent);">¥' +
-        cash.toLocaleString() +
-        "</strong></div>" +
-        '<div style="max-height:60vh;overflow-y:auto;">' +
-        rows +
-        "</div>",
-      buttons: [{ text: "关闭", cls: "" }],
-    });
   }
 
   // 装备栏
@@ -2700,15 +4751,6 @@ function renderInventoryTab(state, parent) {
           rp +
           "</div>";
     }
-    // 耐久条
-    var durBarHtml = "";
-    if (
-      equipInstance &&
-      equipInstance.durability !== undefined &&
-      typeof renderDurabilityBar === "function"
-    ) {
-      durBarHtml = renderDurabilityBar(equipInstance);
-    }
     var qualityBadge = "";
     if (qualityInfo && displayItem && displayItem.actualPrice) {
       // 品质标签同时标对应价格：贵即好货（普通不显示徽章）
@@ -2724,109 +4766,12 @@ function renderInventoryTab(state, parent) {
         ${displayItem ? displayItem.name : "(空)"} ${qualityBadge}
       </div>
       ${priceDisplay}
-      ${durBarHtml}
       ${repairHtml}
     `;
-
-    // === 空装备槽位 → 提供购买导航（带确认弹窗）===
-    if (
-      !displayItem &&
-      typeof navigateTo === "function" &&
-      typeof ITEMS !== "undefined"
-    ) {
-      var matchingItems = ITEMS.filter(function (i) {
-        return i.slot === slot.key && i.buyLocations;
-      });
-      if (matchingItems.length > 0) {
-        var buyBtn = document.createElement("button");
-        buyBtn.className = "btn btn-sm";
-        buyBtn.style.cssText =
-          "font-size:10px;margin-top:4px;width:100%;padding:3px 6px;";
-        buyBtn.textContent = "🛒 购买装备";
-        buyBtn.onclick = (function (slotKey, slotName) {
-          return function () {
-            _showEquipmentShopModal(slotKey, slotName, state);
-          };
-        })(slot.key, slot.name);
-        card.appendChild(buyBtn);
-      }
-    }
     equipGrid.appendChild(card);
   }
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
-
-  // ====== 装备采购导航（所有装备的购买地点汇总） ======
-  (function () {
-    if (
-      typeof LOCATIONS === "undefined" ||
-      typeof ITEMS === "undefined" ||
-      typeof navigateTo !== "function"
-    )
-      return;
-    var allEquip = ITEMS.filter(function (i) {
-      return i.slot;
-    });
-    var locMap = {};
-    allEquip.forEach(function (item) {
-      if (item.buyLocations && item.buyLocations.length) {
-        item.buyLocations.forEach(function (lk) {
-          if (!locMap[lk]) locMap[lk] = [];
-          if (locMap[lk].indexOf(item.name) === -1) locMap[lk].push(item.name);
-        });
-      }
-    });
-    var locKeys = Object.keys(locMap);
-    if (locKeys.length === 0) return;
-    var navDiv = document.createElement("div");
-    navDiv.style.cssText =
-      "margin-top:12px;padding:10px 12px;background:rgba(0,180,216,0.04);border:1px solid rgba(0,180,216,0.15);border-radius:8px;";
-    var navTitle = document.createElement("div");
-    navTitle.style.cssText =
-      "font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;";
-    navTitle.textContent = "🏪 装备采购入口";
-    navDiv.appendChild(navTitle);
-    var navRow = document.createElement("div");
-    navRow.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;";
-    locKeys.forEach(function (lk) {
-      var loc = LOCATIONS[lk];
-      var btn = document.createElement("button");
-      btn.className = "btn btn-sm";
-      btn.style.cssText = "font-size:10px;padding:3px 8px;";
-      btn.textContent =
-        (loc ? loc.icon + " " + loc.name : lk) +
-        "(" +
-        locMap[lk].length +
-        "种)";
-      btn.onclick = (function (locKey) {
-        return function () {
-          _showEquipmentShopModal(null, null, state, locKey);
-        };
-      })(lk);
-      navRow.appendChild(btn);
-    });
-    navDiv.appendChild(navRow);
-    div.appendChild(navDiv);
-  })();
-
-  // ====== 装备套装状态（装备栏下方） ======
-  if (state.equipmentSuites && Object.keys(state.equipmentSuites).length > 0) {
-    var suiteTitle = document.createElement("h3");
-    suiteTitle.style.cssText =
-      "color:var(--text-muted);margin-top:16px;margin-bottom:8px;";
-    suiteTitle.textContent = "🎯 装备套装效果";
-    div.appendChild(suiteTitle);
-
-    for (var sid in state.equipmentSuites) {
-      var sr = state.equipmentSuites[sid];
-      if (sr && typeof renderSuiteCard === "function") {
-        var suiteHtml = renderSuiteCard(sr);
-        var suiteWrapper = document.createElement("div");
-        suiteWrapper.innerHTML = suiteHtml;
-        div.appendChild(suiteWrapper.firstElementChild);
-      }
-    }
-  }
 
   parent.appendChild(div);
 }
@@ -2865,22 +4810,6 @@ function renderSkillsTab(state, parent) {
       "margin-bottom:12px;padding:10px 12px;border:1px solid rgba(196,85,61,0.35);background:rgba(196,85,61,0.08);border-radius:8px;color:var(--danger);font-size:12px;line-height:1.5;";
     gate.textContent =
       "技能训练需要前往培训中心；当前地点只能查看技能与解锁条件。";
-
-    // 添加导航按钮
-    var navGate = document.createElement("div");
-    navGate.style.cssText = "margin-top:8px;text-align:center;";
-    if (typeof navActionButton === "function") {
-      navGate.innerHTML = navActionButton(
-        "location",
-        "trainingCenter",
-        "📚 前往培训中心训练技能",
-        { navTab: "me", subTab: "me_skills" },
-      );
-    } else {
-      navGate.innerHTML =
-        '<button class="btn btn-sm" style="min-height:36px;" onclick="navToLocation(\'trainingCenter\')">📚 前往培训中心训练技能</button>';
-    }
-    gate.appendChild(navGate);
     parent.appendChild(gate);
   }
 
@@ -4351,21 +6280,13 @@ function renderFamilyTab(state, parent) {
         ${
           eligibleNpcs.length > 0
             ? eligibleNpcs
-                .map((npc) => {
-                  const avatar =
-                    typeof NPCS !== "undefined"
-                      ? NPCS.find((n) => n.id === npc.id)
-                      : null;
-                  const avatarImg =
-                    avatar && avatar.avatar
-                      ? `<img src="${avatar.avatar}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:4px;" loading="lazy" />`
-                      : "";
-                  return `
+                .map(
+                  (npc) => `
           <button class="btn btn-sm btn-success family-propose-btn" data-npc="${npc.id}" ${canProposeByAsset ? "" : "disabled"}>
-            ${avatarImg}💍 向${npc.name}求婚
+            💍 向${npc.name}求婚
           </button>
-        `;
-                })
+        `,
+                )
                 .join("")
             : '<p style="color:var(--text-muted);">暂无好感达到80的 NPC。</p>'
         }
@@ -4640,9 +6561,6 @@ function renderMergedPersonalGrowthTab(state, parent) {
   }
 
   parent.appendChild(content);
-
-  // 子Tab切换不经过 renderMeTab，需在此手动绑定导航按钮
-  if (typeof bindAllNavButtons === "function") bindAllNavButtons();
 }
 
 /** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
@@ -4712,7 +6630,7 @@ function renderPgStatTrain(state, content) {
   var html =
     '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
   html +=
-    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点。必须在对应地点才能训练。整容手术有失败风险且会降低魅力上限。</p>';
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
 
   trainings.forEach(function (t) {
@@ -4723,21 +6641,6 @@ function renderPgStatTrain(state, content) {
     html +=
       '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
     html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
-    // 位置要求提示
-    var locHint = {
-      train_physique: "📍公园·商业区",
-      train_intelligence: "📍大学城·培训中心",
-      train_agility: "📍公园",
-      train_ability: "📍公园",
-      train_charm_grooming: "📍商业区",
-      train_charm_surgery: "📍医院",
-    }[t.id];
-    if (locHint) {
-      html +=
-        '<div style="font-size:10px;color:var(--info);margin-top:2px;">' +
-        locHint +
-        "</div>";
-    }
     html +=
       '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
       t.statLabel +
@@ -4756,15 +6659,7 @@ function renderPgStatTrain(state, content) {
       "</div>";
     if (t.risky) {
       html +=
-        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（失败魅力上限-3）</div>';
-    }
-    if (t.id === "train_charm_grooming") {
-      html +=
-        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 临时效果，每日衰减</div>';
-    }
-    if (t.id === "train_charm_surgery") {
-      html +=
-        '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">💡 长期效果，每90天需保养</div>';
+        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（魅力-5/健康-15）</div>';
     }
     html +=
       "<button onclick=\"window.__doTrain('" +
@@ -4786,24 +6681,21 @@ function renderPgStatTrain(state, content) {
   });
   html += "</div>";
 
-  // 训练说明
+  // 整容说明
   html +=
     '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
   html +=
-    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力上限永久-3、魅力-5、健康-15。成功效果长期，约90天后需保养维护。<br>" +
-    "💇 <strong>发型设计</strong>：临时魅力效果，每日衰减1点，需要定期维护。<br>" +
-    "🏃 <strong>健身/跑步</strong>：在公园或商业区可训练体质和敏捷，持续锻炼能积累永久提升。";
+    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力-5、健康-15、心情-10。发型设计是临时魅力维护，整容成功才是长期改变。";
   html += "</div>";
 
   content.innerHTML = html;
 }
 
-/** v3.0 训练执行（暴露给 onclick）— 现已加入位置门控 + 导航弹窗 */
+/** v3.0 训练执行（暴露给 onclick）*/
 window.__doTrain = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
-  var currentLoc = state.trade && state.trade.currentLocation;
   var trainings = {
     train_physique: {
       stat: "physique",
@@ -4812,8 +6704,6 @@ window.__doTrain = function (trainId) {
       priceStep: 30,
       gain: [1, 3],
       apCost: 6,
-      locations: ["park", "commercialDist"],
-      locationNames: "公园、商业区",
     },
     train_intelligence: {
       stat: "intelligence",
@@ -4822,8 +6712,6 @@ window.__doTrain = function (trainId) {
       priceStep: 40,
       gain: [1, 3],
       apCost: 6,
-      locations: ["school", "trainingCenter"],
-      locationNames: "大学城、培训中心",
     },
     train_agility: {
       stat: "agility",
@@ -4832,8 +6720,6 @@ window.__doTrain = function (trainId) {
       priceStep: 25,
       gain: [1, 3],
       apCost: 5,
-      locations: ["park"],
-      locationNames: "公园",
     },
     train_ability: {
       stat: "mental",
@@ -4842,8 +6728,6 @@ window.__doTrain = function (trainId) {
       priceStep: 50,
       gain: [1, 2],
       apCost: 5,
-      locations: ["park"],
-      locationNames: "公园",
     },
     train_charm_grooming: {
       stat: "charm",
@@ -4852,9 +6736,6 @@ window.__doTrain = function (trainId) {
       priceStep: 80,
       gain: [1, 3],
       apCost: 4,
-      locations: ["commercialDist"],
-      locationNames: "商业区",
-      tempLabel: "（临时效果，每日-1衰减）",
     },
     train_charm_surgery: {
       stat: "charm",
@@ -4864,65 +6745,10 @@ window.__doTrain = function (trainId) {
       gain: [5, 15],
       apCost: 8,
       risky: true,
-      locations: ["hospital"],
-      locationNames: "医院",
-      surgeryLabel: "（长期效果，每90天需保养）",
     },
   };
   var t = trainings[trainId];
   if (!t) return;
-
-  // ====== 位置门控 ======
-  if (t.locations && t.locations.indexOf(currentLoc) === -1) {
-    // 不在正确位置 → 弹窗导航
-    var locBtns = t.locations.map(function (locId) {
-      var locNames = {
-        park: "公园",
-        commercialDist: "商业区",
-        school: "大学城",
-        trainingCenter: "培训中心",
-        hospital: "医院",
-      };
-      var locName = locNames[locId] || locId;
-      return {
-        text: "📍 前往" + locName,
-        cls: "btn-primary",
-        callback: function () {
-          navigateTo(state, {
-            type: "location",
-            key: locId,
-            displayName: locName,
-          });
-          return true;
-        },
-      };
-    });
-    locBtns.push({ text: "取消", cls: "" });
-    showModal({
-      title: "📍 需要前往" + t.locationNames,
-      body:
-        '<div style="text-align:center;padding:8px 0;">' +
-        '<div style="font-size:32px;margin-bottom:10px;">' +
-        ({
-          train_physique: "🏋️",
-          train_intelligence: "📚",
-          train_agility: "🏃",
-          train_ability: "🧘",
-          train_charm_grooming: "💇",
-          train_charm_surgery: "💉",
-        }[trainId] || "🏋️") +
-        "</div>" +
-        '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
-        "当前不在" +
-        t.locationNames +
-        "，无法进行此项训练。<br>" +
-        "请先前往对应地点，再开始训练。</p>" +
-        "</div>",
-      buttons: locBtns,
-    });
-    return;
-  }
-
   var count = flags["_trainCount_" + trainId] || 0;
   var price = t.basePrice + count * t.priceStep;
   if ((state.resources.cash || 0) < price) {
@@ -4932,45 +6758,17 @@ window.__doTrain = function (trainId) {
   state.resources.cash -= price;
   flags["_trainCount_" + trainId] = count + 1;
 
-  // ====== 整容手术：失败降低魅力上限 ======
+  // 风险检查（整容）
   if (t.risky && Math.random() < 0.2) {
-    // 失败：降低魅力上限（永久）
-    state.flags._charmMaxReduction = (state.flags._charmMaxReduction || 0) + 3;
     p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
-      "💉 整容失败！魅力上限-3，魅力-5，健康-15，心情-10。手术有风险...",
+      "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
       "error",
     );
-  } else if (t.risky) {
-    // 整容成功：长期效果，但需定期保养
-    var baseGain =
-      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
-    var charmMaxReduction = state.flags._charmMaxReduction || 0;
-    var maxCharm = 100 - charmMaxReduction;
-    p[t.stat] = Math.min(maxCharm, (p[t.stat] || 0) + baseGain);
-    // 记录整容时间，90天后开始衰减
-    state.flags._lastSurgeryDay = state.player.day;
-    StateManager.addMessage(
-      "💉 整容成功！魅力+" + baseGain + "（长期效果，约90天后需保养维护）",
-      "success",
-    );
-  } else if (trainId === "train_charm_grooming") {
-    // 发型设计：临时效果，每日衰减1点
-    var baseGain =
-      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
-    var crit = Math.random() < 0.1 ? 2 : 0;
-    var totalGain = baseGain + crit;
-    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
-    // 记录临时魅力加成衰减日
-    state.flags._groomingBonusDay = state.player.day;
-    state.flags._groomingBonus = (state.flags._groomingBonus || 0) + totalGain;
-    var msg = "💇 发型设计 魅力+" + totalGain + "（临时效果，每日衰减1点）";
-    if (crit > 0) msg += "（爆击！）";
-    StateManager.addMessage(msg, "success");
   } else {
-    // 普通训练：随机提升
+    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
     var baseGain =
       t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
     var crit = Math.random() < 0.1 ? 2 : 0;
@@ -5224,68 +7022,6 @@ function renderPgEdu(state, content) {
       eduNames[edu] +
       "。</div>";
   }
-  // 导航按钮区
-  html +=
-    '<div style="margin-top:12px;padding:10px;background:rgba(0,180,216,0.05);border:1px solid rgba(0,180,216,0.2);border-radius:8px;text-align:center;">' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🔗 快速行动</div>' +
-    (edu === 0
-      ? '<button class="btn btn-sm" style="margin:2px 4px;min-height:36px;" ' +
-        'onclick="showStudyNavModal()">🏛️ 去大学城备考</button>' +
-        ' <span style="font-size:10px;color:var(--text-muted);">|</span> '
-      : "") +
-    navActionButton("location", "school", "📚 去大学城图书馆") +
-    ' <span style="font-size:10px;color:var(--text-muted);">|</span> ' +
-    navActionButton("location", "trainingCenter", "📖 去培训中心学习", {
-      navTab: "me",
-      subTab: "me_skills",
-    }) +
-    "</div>";
   html += "</div></div>";
   content.innerHTML = html;
 }
-
-/** 大学城备考导航弹窗 */
-function showStudyNavModal() {
-  if (typeof showModal !== "function") return;
-  showModal({
-    title: "🏛️ 去大学城备考",
-    body:
-      '<div style="text-align:center;padding:8px 0;">' +
-      '<div style="font-size:32px;margin-bottom:10px;">📚</div>' +
-      '<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">' +
-      "在大学城可以参加自考本科备考，提升学历后能解锁更多好工作！<br><br>" +
-      "备考需要花费时间和学习点，每通过一门考试都能累积学分。</p>" +
-      "</div>",
-    buttons: [
-      {
-        text: "先不去",
-        cls: "btn-secondary",
-        callback: function () {
-          return true;
-        },
-      },
-      {
-        text: "出发去大学城",
-        cls: "btn-primary",
-        callback: function () {
-          var st =
-            typeof StateManager !== "undefined" &&
-            typeof StateManager.getState === "function"
-              ? StateManager.getState()
-              : null;
-          if (st && typeof _doNavigate === "function") {
-            _doNavigate(
-              st,
-              { type: "location", key: "school", navTab: "me" },
-              {},
-            );
-          }
-          return true;
-        },
-      },
-    ],
-  });
-}
-
-// 暴露到全局以便 onclick 调用
-if (typeof window !== "undefined") window.showStudyNavModal = showStudyNavModal;

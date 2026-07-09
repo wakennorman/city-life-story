@@ -674,6 +674,7 @@
             : "color:var(--text-muted);opacity:0.35;font-size:11px;",
       ].join("");
       dot.textContent = s.icon + " " + s.label;
+      if (isCur) dot.dataset.stageCur = "1";
       strip.appendChild(dot);
 
       if (i < LIFE_STAGES.length - 1) {

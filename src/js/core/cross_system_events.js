@@ -13219,9 +13219,14 @@
     // conditions：维修技能 + 管理技能 双门槛，连接技能系统 → 副业/团队经济
     conditions: function (st) {
       var repair = st.skills && st.skills.repair && st.skills.repair.level; // 维修技能等级
-      var mgmt = st.skills && st.skills.management && st.skills.management.level; // 管理技能等级
-      return typeof repair === "number" && repair >= 25 &&
-             typeof mgmt === "number" && mgmt >= 15;
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 管理技能等级
+      return (
+        typeof repair === "number" &&
+        repair >= 25 &&
+        typeof mgmt === "number" &&
+        mgmt >= 15
+      );
     },
     probability: 0.02,
     repeatable: true,
@@ -13263,9 +13268,14 @@
     // conditions：焊接技能 + 电工技能 双门槛，连接技能系统 → 高客单改造
     conditions: function (st) {
       var weld = st.skills && st.skills.welding && st.skills.welding.level; // 焊接技能等级
-      var elec = st.skills && st.skills.electrician && st.skills.electrician.level; // 电工技能等级
-      return typeof weld === "number" && weld >= 20 &&
-             typeof elec === "number" && elec >= 15;
+      var elec =
+        st.skills && st.skills.electrician && st.skills.electrician.level; // 电工技能等级
+      return (
+        typeof weld === "number" &&
+        weld >= 20 &&
+        typeof elec === "number" &&
+        elec >= 15
+      );
     },
     probability: 0.018,
     repeatable: false,
@@ -13308,8 +13318,12 @@
     conditions: function (st) {
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 会计技能等级
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 销售技能等级（懂客户）
-      return typeof acc === "number" && acc >= 20 &&
-             typeof sales === "number" && sales >= 10;
+      return (
+        typeof acc === "number" &&
+        acc >= 20 &&
+        typeof sales === "number" &&
+        sales >= 10
+      );
     },
     probability: 0.022,
     repeatable: true,
@@ -13340,5 +13354,5 @@
     ],
   });
 
-// ====== 注册结束 ======
+  // ====== 注册结束 ======
 })();
