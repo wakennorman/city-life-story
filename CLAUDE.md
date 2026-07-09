@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
+- **最新一次工作 (2026-07-10)**：v3.74(loop R30) — P1三方向落地(学历毕业典礼/公司阶段家庭事件/Social Tab NPC拜访)
+  - **设计意图**: 填补P1高影响空白(覆盖矩阵中家庭=0/教育=2/社交Tab=0)
+  - **①学历毕业典礼**: `edu_graduation_ceremony`(education≥1时一次性触发，3选择:合影留念/投简历/回家吃饭)
+  - **②公司阶段家庭3事件**: `corporate_mother_surgery`(手术费道德困境)/`corporate_family_relocation`(全家搬城)/`corporate_family_dividend`(月利润¥20k分红仪式)
+  - **③Social Tab NPC拜访**: NPC卡新增🚶拜访按钮→导航到NPC所在地点+好感+3~5+7天冷却
+  - **影响文件**: cross_system_events.js(+90行)/family_events.js(+144行)/social_tab.js(+55行)/style.css(+15行)
+  - **验证**: node --check ✅ / build.py 6216.9KB ✅
+  - **commit**: `b8bbc30c`(本地待推)
+
+- **上一轮工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
   - **设计意图**: 平衡大量正面成就事件，加入负面里程碑制造张力
   - **新增2事件**: health_crisis_slow_collapse(health<30预警) / health_near_death_reckoning(health<15濒死抉择)
   - **影响文件**: cross_system_events.js(+158行) / linkage-events-gdd.md(+21行)
@@ -538,9 +547,9 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 | 道德系统  | 4            | wallet_honest / extreme / competitor_choose 等                   |
 | 健康/医疗 | 4            | crisis_slow / near_death / dr_wang×2                             |
 | 住房      | 3            | luxury_housing / tier_milestone / cold_snap                      |
-| 教育      | 2            | cert_bonus(+chain) / edu_white_collar                            |
-| 家庭      | 0            | ⛔ **未覆盖**（family_events.js 独立运行但不走 RANDOM_EVENTS）   |
-| 社交 Tab  | 0            | ⛔ **未覆盖**（纯展示面板，无事件联动）                          |
+| 教育      | 3            | grad_ceremony / cert_bonus / edu_white_collar                   |
+| 家庭      | 3            | corporate_mother_surgery / relocation / dividend(R30新增)        |
+| 社交 Tab  | 1            | NPC拜访按钮+好感互动(R30新增)                                    |
 
 ---
 
