@@ -1415,6 +1415,106 @@ var NPC_INTEL_RULES = {
       confidence: 74,
     },
   ],
+  auntie_lin: [
+    {
+      newsId: "food_safety",
+      delay: 1,
+      text: "林阿姨说今天菜场来了几拨穿制服的人，查农药残留，怕是又要严打了。",
+      confidence: 80,
+    },
+    {
+      newsId: "platform_subsidy_war",
+      delay: 2,
+      text: "林阿姨说美团优选的人来菜场谈供货价，补贴战要打到菜市场了。",
+      confidence: 72,
+    },
+    {
+      newsId: "second_hand_boom",
+      delay: 3,
+      text: "林阿姨说进口水果批发价松动了些，海运那边好像在恢复。",
+      confidence: 68,
+    },
+  ],
+  master_zhao: [
+    {
+      newsId: "ev_subsidy",
+      delay: 2,
+      text: "赵师傅说最近修车铺来了几辆新能源车，他都不会修——这行当要变天了。",
+      confidence: 76,
+    },
+    {
+      newsId: "crackdown",
+      delay: 1,
+      text: "赵师傅说隔壁汽修店被查了，没资质乱修新能源车，最近查得严。",
+      confidence: 78,
+    },
+    {
+      newsId: "construction_boom",
+      delay: 2,
+      text: "赵师傅说工地上的工程车最近修理单子翻倍了，基建项目好像都开了。",
+      confidence: 72,
+    },
+  ],
+  xiaochen: [
+    {
+      newsId: "platform_subsidy_war",
+      delay: 1,
+      text: "小陈说平台又开始撒补贴了，新人注册奖励¥500，但老骑手单价又被压了。",
+      confidence: 82,
+    },
+    {
+      newsId: "rain_storm",
+      delay: 1,
+      text: "小陈说天气预报不准，但经验告诉他风向变了，接下来雨水多、跑单要受罪。",
+      confidence: 74,
+    },
+    {
+      newsId: "crackdown",
+      delay: 1,
+      text: "小陈说昨晚好几个闯红灯的骑手被抓了，交警在路口蹲点，送餐得绕路。",
+      confidence: 76,
+    },
+  ],
+  dr_wang: [
+    {
+      newsId: "flu_surge",
+      delay: 0,
+      text: "王医生查房时说急诊这两天流感病人翻了两倍，药房连退烧药都开始限购了。",
+      confidence: 88,
+    },
+    {
+      newsId: "good_sleep",
+      delay: 3,
+      text: "王医生听到风声说医保目录要大改，有些常用药要调出自费，有些要限报。",
+      confidence: 70,
+    },
+    {
+      newsId: "food_safety",
+      delay: 2,
+      text: "王医生说卫生局马上要搞餐饮突击检查，听说不少小馆子怕罚款在突击整改。",
+      confidence: 74,
+    },
+  ],
+  zhaojie: [
+    {
+      newsId: "rental_crisis",
+      delay: 2,
+      text: "赵姐说商业区好几家店在转租，租金降了15%还没人要，实体店越来越难做。",
+      confidence: 76,
+    },
+    {
+      newsId: "property_stimulus",
+      delay: 3,
+      text: "赵姐说她认识的中介说贷款审批松了不少，有人已经批下来了。",
+      confidence: 72,
+    },
+    {
+      newsId: "e_commerce_festival",
+      delay: 2,
+      text: "赵姐说几个做电商的朋友都在补税，说平台开始代扣代缴了。",
+      confidence: 70,
+    },
+  ],
 };
 
 function getNewsEventById(newsId) {
@@ -1436,6 +1536,11 @@ function getNpcIntelSourceName(npcId) {
     old_zhou: "老周",
     xiao_mei: "小美",
     chef_chen: "陈师傅",
+    auntie_lin: "林阿姨",
+    master_zhao: "赵师傅",
+    xiaochen: "小陈",
+    dr_wang: "王医生",
+    zhaojie: "赵姐",
   };
   return names[npcId] || "熟人";
 }
