@@ -12835,16 +12835,18 @@
   });
 
   RANDOM_EVENTS.push({
-    id: "skill_writing_column",
+    // [自洽修复] 原 skill_writing_column 引用了不存在的 skills.writing（state.js 技能表无 writing）
+    // → 改为 skills.english（真实存在），双语内容创作角度，仍连接 技能→名声/稿费经济
+    id: "skill_english_column",
     phase: "street",
     icon: "✍️",
-    title: "自媒体约稿",
+    title: "双语专栏约稿",
     story:
-      "你常把城市里的小人物写进随笔，不知不觉攒了一批读者。\n" +
-      "一家本地生活号编辑私信你：「想不想开个专栏？按篇付稿费。」",
-    // conditions：写作技能达到一定等级，连接技能系统 → 名声 / 稿费经济
+      "你常把城市里的小人物写进随笔，英语底子让你能翻些外刊对照着写。\n" +
+      "一家本地生活号编辑私信你：「想不想开个双语专栏？按篇付稿费，涉外稿另加¥300。」",
+    // conditions：英语技能达到一定等级，连接技能系统 → 名声 / 稿费经济
     conditions: function (st) {
-      var lvl = st.skills && st.skills.writing && st.skills.writing.level;
+      var lvl = st.skills && st.skills.english && st.skills.english.level;
       return typeof lvl === "number" && lvl >= 30;
     },
     probability: 0.025,
@@ -12858,7 +12860,7 @@
           st.resources.cash = (st.resources.cash || 0) + pay;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           StateManager.addMessage(
-            "✍️ 你写了篇《城中村理发师的老剃刀》，发出去一夜破万阅读。稿费¥" +
+            "✍️ 你写了篇《城中村理发师的老剃刀》（中英对照），发出去一夜破万阅读。稿费¥" +
               pay +
               "，名声+6。",
             "success",
@@ -13053,5 +13055,158 @@
     ],
   });
 
-  // ====== 注册结束 ======
+  RANDOM_EVENTS.push({
+    // [联动] 声望系统 ↔ 职业/收入：副业口碑达阈值后，老客户主动回头
+    id: "reputation_high_callup",
+    phase: "street",
+    icon: "🌟",
+    title: "口碑带来的回头客",
+    story:
+      "你在这一带做了不少活，街坊都认得你这个人。\n" +
+      "今天一家小超市老板专门找上门：「听说你靠谱，以后我店的杂活都包给你，长期算。」",
+    // conditions：副业口碑（按地点）达到阈值，连接 reputation 系统 → 稳定收入机会
+    conditions: function (st) {
+      var rep = st.reputation;
+      if (!rep) return false;
+      // 任一常去地点口碑≥50 即视为积累了可信度
+      var ok =
+        (rep.slum || 0) >= 50 ||
+        (rep.commercialDist || 0) >= 50 ||
+        (rep.bank || 0) >= 50 ||
+        (rep.wholesaleMarket || 0) >= 50;
+      return !!ok;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接下长期活",
+        hint: "解锁稳定副业收入",
+        apply: function (st) {
+          st.flags.repLongTermGig = true;
+          var bonus = 400 + Random.int(0, 199);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🤝 你和超市签了长期杂活合同，首月预支¥" +
+              bonus +
+              "。口碑终于变成了真金白银。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙇 先试一单看看",
+        hint: "低风险",
+        apply: function (st) {
+          var bonus = 150 + Random.int(0, 99);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🙇 你接了第一单，老板挺满意，塞给你¥" + bonus + "。口碑路还能走。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    // [联动] 技能协同：编程 + 英语 → 独立开发副业（技能系统内部交叉）
+    id: "indie_dev_side_project",
+    phase: "street",
+    icon: "💻",
+    title: "独立开发的小项目",
+    story:
+      "你既会写代码，英语也还过得去，能直接读英文文档和海外教程。\n" +
+      "一个想法在脑子里转了很久——做个小工具，放到海外平台上去卖。",
+    // conditions：编程与英语双门槛，连接 skills 系统 → 被动收入 / 名声
+    conditions: function (st) {
+      var codeLv = st.skills && st.skills.coding && st.skills.coding.level;
+      var engLv = st.skills && st.skills.english && st.skills.english.level;
+      return (
+        typeof codeLv === "number" &&
+        codeLv >= 30 &&
+        typeof engLv === "number" &&
+        engLv >= 25
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚀 花两周做出来上架",
+        hint: "前期投入，潜在被动收入",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 600);
+          st.flags.indieDevLaunched = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "🚀 你熬了两周把小工具做出来，挂上平台。头月分成不多，但这是第一条睡后收入。现金-¥600，名声+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 先写个免费版试水",
+        hint: "零成本攒口碑",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📝 你先发了个免费版，几天攒了几十个用户。口碑比钱重要，名声+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    // [联动] NPC 深层好感（挚友级 ≥80）：老周把更私密的人脉托付给你
+    id: "oldzhou_80_legacy",
+    phase: "street",
+    icon: "🤝",
+    title: "老周的托付",
+    story:
+      "老周把你当自家后生看。这天他神秘兮兮把你拉到一边：\n" +
+      "「我干废品这行，有些门道外人进不来。我信你，带你认识城西回收站的老周明——他手里有正经渠道。」",
+    // conditions：老周 old_zhou 已结识且好感达挚友级（≥80），连接 relationships 系统 → 高价回收渠道
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.old_zhou;
+      return !!(rel && rel.met && (rel.affinity || 0) >= 80);
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏭 跟他去见老周明",
+        hint: "解锁高价回收渠道",
+        apply: function (st) {
+          st.flags.oldZhouMingChannel = true;
+          var bonus = 300 + Random.int(0, 199);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+          StateManager.addMessage(
+            "🏭 老周明是个爽快人，当场让你走他的渠道，废铁价每斤多三毛。临走塞你¥" +
+              bonus +
+              "「拿去喝茶」。废品回收收益永久提升。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 先记在心里",
+        hint: "稳一手",
+        apply: function (st) {
+          st.flags.oldZhouMingIntro = true;
+          StateManager.addMessage(
+            "🙏 你谢过老周，把这份人情记在心里。以后随时能去找老周明。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+// ====== 注册结束 ======
 })();
