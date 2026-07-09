@@ -44,6 +44,7 @@
 - **核心架构**：世界参数反馈环 v1.7 — `src/js/core/world_params.js` 定义 `_worldParams`，行业热度/市场情绪/财富等级统一反馈闭环
 - **script 加载顺序**：`src/index.html` 中按序加载，**禁止改变**
 - **多窗口开发**：`.claude/last_known_head` 跟踪 HEAD，pre-commit 钩子检测漂移
+- **同一 loop 任务多窗口并行会逐字撞车**：用户在桌面开多个 Claude Code CLI 窗口跑同一 `/loop`（如「日常开发」），会产生**事件 id 与 GDD 内容完全一致的重复提交**。遇 pre-commit 漂移拦截时，**先 `git diff <old_head>..<new_head>` 核对并行窗口改动**；若 identical，则 `git checkout -- <files>` 放弃本窗口重复改动 + 同步 `last_known_head`，**绝不强行合并**（否则事件 id 重复 / GDD 双重）。此流程在 2026-07-09 R7 实战验证有效。
 - **循环自动化**：已建定时 automation `automation-1783592608308`「城市浮生记·日常开发循环」（每 2 小时一轮）。它跑在**独立分支 `loop/auto`**，**绝不碰 main、绝不 push**，与用户 3 个 CLI 窗口(桌面 .bat)并行不冲突。用户定期 `git merge loop/auto` 即可吸收。安全规则：只 `git add` 具体文件、绝不 `git add -A`/`--amend`、20 事件 id 存活校验。
 - **新模块接入 SOP**：暴露 ≤4 个 `window.xxx` 函数；接 `daily_pipeline.js` 一个 step；`index.html` 注册 script 放 core/ 之后
 
