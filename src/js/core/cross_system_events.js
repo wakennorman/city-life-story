@@ -11258,5 +11258,78 @@
     ],
   });
 
+  // ----- 事件63：大风天的意外收获（windy 天气事件）-----
+  // 设计意图：填补 windy 天气的零事件覆盖，完成全部天气类型的叙事闭环
+  RANDOM_EVENTS.push({
+    id: "windy_day_finding",
+    phase: "street",
+    icon: "🌬️",
+    title: "大风天",
+    story:
+      "今天风特别大，街上的塑料袋和纸屑在空中乱飞。你眯着眼睛走在路上，突然看到一张废纸被吹到脚边——上面印着什么。\\n\\n捡起来一看，是一张被风吹散的招聘传单，地址就在附近。风太大，你差点没抓住它。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.weather &&
+        st.weather.current === "windy" &&
+        st.player.day >= 3 &&
+        !st.flags._windyDaySeen
+      );
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 看看传单上的招聘信息",
+        hint: "可能发现工作机会",
+        apply: function (st) {
+          st.flags._windyDaySeen = true;
+          st.flags._windyJobLead = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources.cash < 500) {
+            st.resources.cash += 50;
+            addDailyTransaction(
+              st,
+              "income",
+              "job_income",
+              50,
+              "大风天的意外发现",
+            );
+          }
+          StateManager.addMessage(
+            "🌬️ 传单上写着附近一家餐馆招杂工，工资日结。你拍了张照记下地址。心情+5。也许这阵风是来给你送机会的。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏃 赶紧找个地方躲风",
+        hint: "保护健康",
+        apply: function (st) {
+          st.flags._windyDaySeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🏃 你躲进一家便利店避风。买了瓶热饮，隔着玻璃看外面的落叶被吹得打转。疲劳-5，心情+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 顶着风继续干活",
+        hint: "收入略低但坚持",
+        apply: function (st) {
+          st.flags._windyDaySeen = true;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "😤 你裹紧了外套继续干活。风大到有时候站不稳，但今天不能白过。疲劳+8，心情-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
