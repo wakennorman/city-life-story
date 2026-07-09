@@ -42003,6 +42003,227 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====== 郊区事件 ======
+  RANDOM_EVENTS.push({
+    id: "suburb_storm_shelter",
+    phase: "street",
+    icon: "🌆",
+    title: "暴雨中的庇护",
+    story:
+      "郊区的小路上，天色突然暗了下来。豆大的雨点砸下来，你环顾四周，最近的公交站还在几百米外。不远处一户人家的门开着，门廊下一位老奶奶朝你招手：「快进来躲躲，这雨一时半会儿停不了。」屋里飘出热茶的香气。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "suburb" &&
+        st.player.day >= 3 &&
+        !st.flags._suburbStormShelterSeen
+      );
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🏠 进屋躲雨，谢谢老人家",
+        hint: "健康+2，心情+3，休息恢复",
+        apply: function (st) {
+          st.flags._suburbStormShelterSeen = true;
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+          StateManager.addMessage(
+            "🌆 老奶奶给你倒了杯热茶，还拿出自家腌的萝卜干。「年轻人一个人在城里不容易，注意身体啊。」雨停后你道谢离开，心里暖暖的。\n健康+2，心情+3，疲劳-5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🌳 在树下躲到雨小",
+        hint: "免费，但淋湿了",
+        apply: function (st) {
+          st.flags._suburbStormShelterSeen = true;
+          st.needs.health = Math.max(0, (st.needs.health || 50) - 1);
+          st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
+          StateManager.addMessage(
+            "🌳 你在树下缩着身子等雨小，衣服湿了大半。风一吹，冷得直哆嗦。\n健康-1，卫生-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🚶 冒雨跑回公交站",
+        hint: "省时间，但全身湿透",
+        apply: function (st) {
+          st.flags._suburbStormShelterSeen = true;
+          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 10);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "🚶 你冒雨跑到公交站，全身湿透了。车上的人都不自觉地离你远了一点。\n健康-3，卫生-10，心情-3。",
+            "danger",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 政府办事大厅事件 ======
+  RANDOM_EVENTS.push({
+    id: "gov_office_tout_encounter",
+    phase: "street",
+    icon: "🏛️",
+    title: "办证黄牛",
+    story:
+      "政府办事大厅门口，一个穿花衬衫的中年女人凑过来，压低声音说：「办身份证？社保？护照？我认识里面的主任，半天就能出证。你自己排队至少三天，还得跑好几趟。」她晃了晃手机，屏幕上显示着几张办证成功的照片。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "gov_office" &&
+        st.player.day >= 5 &&
+        !st.flags._govOfficeToutSeen
+      );
+    },
+    probability: 0.035,
+    repeatable: true,
+    choices: [
+      {
+        text: "💸 花¥100找黄牛",
+        hint: "快捷方便，但助长不正之风",
+        apply: function (st) {
+          st.flags._govOfficeToutSeen = true;
+          if (st.resources.cash >= 100) {
+            st.resources.cash -= 100;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "💸 你给了¥100，中年女人打了个电话，半小时后果然有人带你办完了。虽然方便，但总觉得哪里不对。\n现金-¥100，道德-3，心情+3。",
+              "warning",
+            );
+          } else {
+            StateManager.addMessage(
+              "💸 你翻了翻口袋——¥100都拿不出来。女人翻了个白眼走开了。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📋 自己排队办理",
+        hint: "免费，但耗费时间",
+        apply: function (st) {
+          st.flags._govOfficeToutSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+          StateManager.addMessage(
+            "📋 你排了一上午队，终于办完了。虽然折腾，但省下了¥100，心里踏实。\n道德+2，心情-2。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📱 偷偷拍下证据举报",
+        hint: "维护正义，但有风险",
+        apply: function (st) {
+          st.flags._govOfficeToutSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📱 你偷偷拍了照片，走到大厅内找到值班人员举报。不一会儿，保安出来把那个女人带走了。周围几个办事的人朝你投来赞许的目光。\n道德+5，心情+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 培训中心事件 ======
+  RANDOM_EVENTS.push({
+    id: "training_cert_scam",
+    phase: "street",
+    icon: "📚",
+    title: "包就业培训班",
+    story:
+      "培训中心大厅里，一个穿西装的销售热情地拦住你：「小伙子来得正好！我们和政府合作的'IT就业班'，三个月包教会，结业推荐就业，月薪起步¥8000！现在报名只要¥2000，下个月就涨价了。」他手里拿着一叠宣传单，上面印着几个所谓成功学员的案例。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.trade &&
+        st.trade.currentLocation === "trainingCenter" &&
+        st.player.day >= 10 &&
+        !st.flags._trainingCertScamSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🔍 要求查看政府认证文件",
+        hint: "谨慎核实，避免上当",
+        apply: function (st) {
+          st.flags._trainingCertScamSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          st.player.ability = Math.min(100, (st.player.ability || 50) + 1);
+          StateManager.addMessage(
+            "🔍 你要求看政府批文和认证资质。销售支支吾吾，翻了半天只拿出一张过期的培训许可证。你明白了——这班根本不正规。\n道德+2，心智+1。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 报名试试",
+        hint: "¥2000，可能学到东西，也可能被骗",
+        apply: function (st) {
+          st.flags._trainingCertScamSeen = true;
+          if (st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            var legit = Random.chance(0.3);
+            if (legit) {
+              st.player.ability = Math.min(100, (st.player.ability || 50) + 5);
+              st.player.knowledge = Math.min(
+                100,
+                (st.player.knowledge || 50) + 5,
+              );
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              StateManager.addMessage(
+                "💰 培训了三个月，虽然不像宣传的那么神，但确实学到了一些基础技能。\n现金-¥2000，能力+5，知识+5，心情+8。",
+                "success",
+              );
+            } else {
+              st.player.morality = Math.max(0, (st.player.morality || 50) - 2);
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+              StateManager.addMessage(
+                "💰 上了几节课才发现，教的都是网上免费的公开课内容，所谓的'包就业'也只是一份月薪¥3000的销售岗位名单。\n现金-¥2000，道德-2，心情-10。",
+                "danger",
+              );
+            }
+          } else {
+            StateManager.addMessage(
+              "💰 你看了看钱包——¥2000可不是小数目。还是先攒够钱再说吧。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🚶 礼貌拒绝，转身离开",
+        hint: "省钱省心",
+        apply: function (st) {
+          st.flags._trainingCertScamSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+          StateManager.addMessage(
+            "🚶 「我再考虑考虑。」你走出培训中心，外面的空气新鲜多了。\n道德+1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
