@@ -183,6 +183,7 @@ function renderSocialTab(state, parent) {
     { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
     { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
     { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
+    { id: "social_network", label: "📱 社交网络", icon: "📱" },
     { id: "social_overview", label: "📊 关系总览", icon: "📊" },
   ];
   var currentSubTab = state._socialSubTab || "social_overview";
