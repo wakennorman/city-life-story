@@ -35,3 +35,4 @@
 - [多窗口协作协议](window-coordination.md) — ✅ 2026-07-09 建立，事前分工+文件锁定+冲突预防+事后追溯
 - [文件锁定状态](file-lock.json) — 运行时状态，所有窗口共享，开工前必读
 - [v3.52-loop-iteration1](v3.52-loop-iteration1.md) — /loop 第一轮迭代：废弃清理 + 3个烹饪/NPC联动事件 + 系统关联度审查发现清单（2026-07-09）
+- [v3.58-loop-iteration4](v3.58-loop-iteration4.md) — /loop 第四轮：激活菜市场地点（12个TODO中首个，2026-07-09）
