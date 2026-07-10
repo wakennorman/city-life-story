@@ -44181,5 +44181,199 @@
   // ====================================================================
   // v3.77 新增事件注册完毕
   // ====================================================================
+
+  // ====================================================================
+  // v3.80 财富天花板 + 多周目继承彩蛋（loop R37）
+  // ====================================================================
+
+  // R37-① ¥1000万里程碑 — 城市传奇（财富天花板叙事）
+  RANDOM_EVENTS.push({
+    id: "wealth_10m_milestone",
+    phase: "any",
+    icon: "🏆",
+    title: "城市传奇",
+    story:
+      "你最后一次核算资产的时候，数字跳过了一个你从未设想过的门槛——一千万。\n\n不是账面上的。是真实的：银行存款、投资账户、手里的房产，全部折算下来，超过了一千万。\n\n你想起第一天来这个城市，兜里揣着几百块，站在火车站广场上不知道该往哪走。那个站在广场上茫然的人，和今天的你，住在同一座城市里，却像是两个世界的人。\n\n你没有庆祝，没有发朋友圈。只是打开窗户，让夜风吹进来，站了很久。",
+    conditions: function (st) {
+      if (st.flags._10mMilestoneDone) return false;
+      var total =
+        (st.player.cash || 0) +
+        (st.bankBalance || 0) +
+        (st.investment && st.investment.portfolio
+          ? Object.values(st.investment.portfolio).reduce(function (s, h) {
+              return s + (h.shares || 0) * (h.avgCost || 0);
+            }, 0)
+          : 0);
+      return total >= 10000000;
+    },
+    probability: 1.0,
+    repeatable: false,
+    choices: [
+      {
+        text: "🌃 站在窗边，想了很久",
+        hint: "峰终记忆·名声+20·心情+30",
+        apply: function (st) {
+          st.flags._10mMilestoneDone = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 30);
+          StateManager.addMessage(
+            "🏆 你站在窗边，让夜风吹了很久。一千万。这个数字不再是别人的故事。名声+20，心情+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 给家里打了个电话",
+        hint: "亲情回归·家庭关系+15·心情+20",
+        apply: function (st) {
+          st.flags._10mMilestoneDone = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          if (st.family) {
+            st.family.parentRelation = Math.min(
+              100,
+              (st.family.parentRelation || 50) + 15,
+            );
+          }
+          StateManager.addMessage(
+            "📞 电话那头，妈妈说「你好好的就行」。你没说钱的事，只说挺好的。名声+10，心情+20，亲情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎯 立刻制定下一个目标",
+        hint: "继续前行·智力+5·解锁亿万旗帜",
+        apply: function (st) {
+          st.flags._10mMilestoneDone = true;
+          st.flags._targeting100m = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "🎯 你在笔记本上写下：下一个目标，一个亿。智力+5，心情+15。目标已设定。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // R37-② 多周目熟悉的陌生人 — NPC认出你（继承好感触发）
+  RANDOM_EVENTS.push({
+    id: "ng_plus_familiar_face",
+    phase: "street",
+    icon: "🔮",
+    title: "似乎在哪见过你",
+    story:
+      "你走进一家小摊前，摊主突然抬起头多看了你一眼。\n\n「你这张脸……」他停顿了一下，「奇怪，我明明没见过你，但总感觉认识很久了。你之前住在这附近吗？」\n\n你愣住了。这个问题你说不清楚——这辈子你确实是第一次来，但有什么东西说不清道不明地存在于你们之间。",
+    conditions: function (st) {
+      if (st.flags._ngFamiliarFaceDone) return false;
+      if (!st.inheritanceBonuses) return false;
+      if (!(st.inheritanceBonuses.npcInitialAffinity >= 5)) return false;
+      if (st.player.day < 3) return false;
+      return true;
+    },
+    probability: 0.8,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 「也许是有缘分吧」",
+        hint: "所有已认识NPC好感+5·道德+2",
+        apply: function (st) {
+          st.flags._ngFamiliarFaceDone = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          if (st.relationships) {
+            Object.keys(st.relationships).forEach(function (k) {
+              if (st.relationships[k] && st.relationships[k].met) {
+                st.relationships[k].affinity = Math.min(
+                  100,
+                  (st.relationships[k].affinity || 0) + 5,
+                );
+              }
+            });
+          }
+          StateManager.addMessage(
+            "🔮 你笑了笑说「也许是有缘分吧」。摊主也笑了，比以前更自在。所有认识的人好感+5，道德+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 「我也说不清楚……」",
+        hint: "获得跨生命感悟·心智+3",
+        apply: function (st) {
+          st.flags._ngFamiliarFaceDone = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          StateManager.addMessage(
+            "🔮 你也说不清楚。像是某种无法解释的记忆在心里浮现。心智+3。你觉得这辈子会不一样。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R37-③ 多周目遗产礼物 — 上辈子的好意这辈子回来了
+  RANDOM_EVENTS.push({
+    id: "ng_plus_heritage_gift",
+    phase: "street",
+    icon: "🎁",
+    title: "说不清的好运",
+    story:
+      "你路过巷口的时候，一个老大爷叫住了你。\n\n「小伙子，是你吗？我记得你之前帮过我……对，就是你这个眼神。」\n\n你不知道他在说什么，因为这辈子你根本没见过他。但老人坚持要给你一个红包，说是报恩。你推辞不过，最终收下了。",
+    conditions: function (st) {
+      if (st.flags._ngHeritageGiftDone) return false;
+      if (!st.inheritanceBonuses) return false;
+      var hadGoodBadges =
+        st.inheritanceBonuses.moralEventRate ||
+        (st.inheritanceBonuses.npcInitialAffinity || 0) >= 10;
+      if (!hadGoodBadges) return false;
+      if (st.player.day < 5) return false;
+      return true;
+    },
+    probability: 0.6,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎁 收下，感谢老人",
+        hint: "¥200~¥800·道德+5",
+        apply: function (st) {
+          st.flags._ngHeritageGiftDone = true;
+          var bonus = 200 + Math.floor((((st.player.day || 1) * 17) % 7) * 100);
+          st.player.cash = (st.player.cash || 0) + bonus;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          StateManager.addMessage(
+            "🎁 你收下了红包，里面有¥" +
+              bonus +
+              "。老人说：「好人有好报。」道德+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 推辞——我真的没帮过你",
+        hint: "道德+8·心情+10",
+        apply: function (st) {
+          st.flags._ngHeritageGiftDone = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🙏 你执意推辞了。老人楞了一下，然后笑着说：「你这孩子，跟上辈子一样倔。」道德+8，心情+10。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.80 loop R37 注册完毕（3个事件：¥1000万里程碑/多周目熟人/多周目遗产礼物）
+  // ====================================================================
   // ====== 注册结束 ======
 })();
