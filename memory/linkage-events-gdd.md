@@ -2912,3 +2912,27 @@
 - **Purpose**: 填补"天气×地点×声望"交叉空白，让高温天气与批发市场口碑共同决定可用事件，强化世界状态对街头收益的影响。
 - **Cross-system link**: 天气系统（weather.current==="heatwave"）∩ 声望系统（reputation.wholesaleMarket≥30，按地点key）∩ 经济/道德系统（倒卖获利 vs 邻里送水）。
 - **Key guard**: `weather.current==="heatwave" && reputation.wholesaleMarket>=30 && !flags._weatherHeatwaveMarketSeen`。
+
+## 391. winter_cold_street_grind — 冬天的苦活（冬季×街头×需求·R40）
+
+- **Purpose**: 填补 winter 季节叙事空白（之前只有1个cold_snap_housing_crisis）。冬天的街头工作带来独特的生存感。
+- **Cross-system link**: 天气/季节系统（weather.season=winter）∩ 需求系统（疲劳+10）∩ 经济系统。
+- **Key guard**: `!_winterColdGrindSeen && season==='winter' && day>=10`。
+
+## 392. winter_year_end_reflection — 又一年快过去了（冬季×年末·R40）
+
+- **Purpose**: 冬季×年末360天情感锚点，让玩家感受时间流逝的重量，可每年重复。
+- **Cross-system link**: 季节系统（season=winter）∩ 时间系统（dayOfYear≥330）∩ 社交/情感。
+- **Key guard**: `season==='winter' && dayOfYear>=330`，repeatable=true（每年重置）。
+
+## 393. corporate_year_end_review — 年终述职（corporate专属×年末·R40）
+
+- **Purpose**: 填补 corporate 阶段事件空白（仅有~7个）。年终述职是高张力决策点。
+- **Cross-system link**: 职业系统（phase=corporate+employment.currentJob）∩ 道德系统∩ 时间系统（dayOfYear≥300）。
+- **Key guard**: `phase==='corporate' && currentJob && dayOfYear>=300`。
+
+## 394. corporate_office_politics — 职场站队（corporate专属×NPC·R40）
+
+- **Purpose**: 职场政治是 corporate 阶段核心叙事，玩家在两个派系间选边站，触发 _sideWithChen/_sideWithWang flag 供后续链式事件使用。
+- **Cross-system link**: 职业系统（phase=corporate）∩ 道德系统∩ 心理（倦怠）。
+- **Key guard**: `phase==='corporate' && tenureDays>=30 && !_corpOfficePoliticsDone`，probability=0.04。
