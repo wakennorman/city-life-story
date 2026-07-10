@@ -2844,3 +2844,53 @@
 - **Purpose**: 英语达标且遇台风的玩家为外籍游客联络救援，强化 技能→天气 联动。
 - **Cross-system link**: 技能系统（skills.english.level≥10）∩ 天气系统（weather.current==='typhoon'）。
 - **Key guard**: `skills.english.level>=10 && weather.current==='typhoon' && !st.flags._r119EngTyphoon`。
+
+## 381.
+
+120_education_graduation — 毕业典礼（学历里程碑）
+
+- **Purpose**: 学历升级后的峰终记忆，让玩家感受长期投入的回报。
+- **Cross-system link**: 教育系统（player.education≥1）∩ 天数系统（player.day≥60）。
+- **Key guard**: player.day>=60 && player.education>=1 && !st.flags._graduationCeremonySeen。
+
+## 382.
+
+120_housing_one_room — 自己的房间（住房里程碑）
+
+- **Purpose**: 首次搬入一居室的里程碑叙事，让住房升级有情感温度。
+- **Cross-system link**: 住房系统（housing.tier≥3）∩ 天数系统。
+- **Key guard**: housing.tier>=3 && !st.flags._housingOneRoomSeen。
+
+## 383.
+
+120_fatigue_breakdown — 倒下的一瞬间（连续疲劳爆发）
+
+- **Purpose**: 连续高疲劳的强制健康危机，让疲劳系统有真实后果。
+- **Cross-system link**: 需求系统（needs.fatigue≥80）∩ 习惯追踪（flags._habits.highFatigueStreak≥3）。
+- **Key guard**: highFatigueStreak>=3 && needs.fatigue>=80 && !st.flags._fatigueBreakdownSeen。
+
+## 384.
+
+120_moral_extreme_city — 城市的温度（道德极端分叉）
+
+- **Purpose**: 同一情境下高道德/低道德玩家的差异化叙事体验。
+- **Cross-system link**: 道德系统（morality≥80或≤20）∩ 社交系统。
+- **Key guard**: morality>=80||morality<=20 && !st.flags._moralCityResonanceSeen。
+
+## 385. wealth_10m_milestone — 城市传奇（¥1000万财富天花板·P2⑧）
+
+- **Purpose**: 填补经济叙事天花板——之前最高只到¥100万，玩家突破¥1000万无任何叙事回响。
+- **Cross-system link**: 经济系统（cash+bankBalance+portfolio≥10,000,000）∩ 家庭系统（打电话→parentRelation+15）∩ 名声系统（standing window/fame+20）。
+- **Key guard**: `!st.flags._10mMilestoneDone && totalAssets>=10000000`。
+
+## 386. ng_plus_familiar_face — 似乎在哪见过你（多周目熟悉陌生人·P2⑨）
+
+- **Purpose**: 首次为多周目继承系统（inheritance_chain.js已有完整基础设施）提供玩法触发点——继承好感数据后第3天有NPC认出你的情怀彩蛋。
+- **Cross-system link**: 多周目继承系统（inheritanceBonuses.npcInitialAffinity≥5）∩ NPC系统（所有已认识NPC好感+5）∩ 道德系统。
+- **Key guard**: `!st.flags._ngFamiliarFaceDone && st.inheritanceBonuses.npcInitialAffinity>=5 && day>=3`。
+
+## 387. ng_plus_heritage_gift — 说不清的好运（多周目遗产礼物·P2⑨）
+
+- **Purpose**: 上辈子积累道德声誉徽章在新周目第5天以神秘礼物形式回馈——情怀型彩蛋，让玩家感受"善有善报"的跨生命叙事。
+- **Cross-system link**: 多周目继承系统（inheritanceBonuses.moralEventRate或npcInitialAffinity≥10）∩ 经济系统（¥200~¥800奖励）∩ 道德系统。
+- **Key guard**: `!st.flags._ngHeritageGiftDone && hadGoodBadges && day>=5`。
