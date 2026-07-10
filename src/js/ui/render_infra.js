@@ -1068,7 +1068,7 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "道德",
-      cls: "morality",
+      cls: "morality-bar",
       color: "#6ac49a",
       threshold: 20,
       getVal: function () {

@@ -1448,6 +1448,208 @@ function generateInvestmentEffectFromTag(tag, mood) {
 }
 
 /**
+ * 真实新闻关键词→游戏内谐音公司 symbol 强绑定表
+ * 真实公司名 → [游戏symbol, 友商symbol, 竞争对手symbol]
+ * 顺序：直接涉及公司、友商/供应商受益、竞争对手受损
+ */
+var _REAL_COMPANY_KEYWORD_MAP = [
+  // 英伟达
+  {
+    keywords: ["nvidia", "英伟达", "英特尔", "nvidia"],
+    symbol: "NVDA",
+    rivals: [{ sym: "AMD", rel: 0.6 }],
+  },
+  // 高通/AMD
+  {
+    keywords: ["amd", "超威", "锐龙", "radeon"],
+    symbol: "AMD",
+    rivals: [{ sym: "NVDA", rel: 0.5 }],
+  },
+  // 华为
+  {
+    keywords: ["华为", "huawei", "鸿蒙", "麒麟"],
+    symbol: "HUAW",
+    rivals: [
+      { sym: "XIAO", rel: 0.4 },
+      { sym: "NVDA", rel: -0.3 },
+    ],
+  },
+  // 台积电
+  {
+    keywords: ["台积电", "tsmc", "台湾积体"],
+    symbol: "TSMC",
+    rivals: [{ sym: "SMIC", rel: -0.4 }],
+  },
+  // 中芯
+  {
+    keywords: ["中芯", "smic", "芯片国产化"],
+    symbol: "SMIC",
+    rivals: [{ sym: "TSMC", rel: -0.3 }],
+  },
+  // 阿里
+  {
+    keywords: ["阿里", "alibaba", "淘宝", "天猫", "支付宝", "蚂蚁"],
+    symbol: "ALIM",
+    rivals: [
+      { sym: "JD", rel: -0.3 },
+      { sym: "PDD", rel: -0.2 },
+    ],
+  },
+  // 腾讯
+  {
+    keywords: ["腾讯", "tencent", "微信", "wechat", "王者荣耀"],
+    symbol: "TENC",
+    rivals: [{ sym: "BYTE", rel: -0.2 }],
+  },
+  // 百度
+  {
+    keywords: ["百度", "baidu", "文心一言", "ernie"],
+    symbol: "BAID",
+    rivals: [{ sym: "TENC", rel: -0.2 }],
+  },
+  // 京东
+  {
+    keywords: ["京东", "jd", "刘强东", "京喜"],
+    symbol: "JD",
+    rivals: [{ sym: "ALIM", rel: -0.2 }],
+  },
+  // 拼多多
+  {
+    keywords: ["拼多多", "pdd", "pinduoduo", "temu"],
+    symbol: "PDD",
+    rivals: [{ sym: "ALIM", rel: -0.3 }],
+  },
+  // 小米
+  {
+    keywords: ["小米", "xiaomi", "雷军", "澎湃"],
+    symbol: "XIAO",
+    rivals: [{ sym: "HUAW", rel: -0.2 }],
+  },
+  // 美团
+  { keywords: ["美团", "meituan", "王兴", "外卖"], symbol: "MEIT", rivals: [] },
+  // 字节跳动
+  {
+    keywords: ["字节", "bytedance", "tiktok", "抖音", "今日头条"],
+    symbol: "BYTE",
+    rivals: [{ sym: "TENC", rel: -0.2 }],
+  },
+  // 特斯拉
+  {
+    keywords: ["tesla", "特斯拉", "马斯克", "elon"],
+    symbol: "TSLA",
+    rivals: [
+      { sym: "BYD", rel: -0.3 },
+      { sym: "NIO", rel: -0.2 },
+    ],
+  },
+  // 比亚迪
+  {
+    keywords: ["比亚迪", "byd", "刀片电池", "汉ev", "海豚ev"],
+    symbol: "BYD",
+    rivals: [{ sym: "TSLA", rel: -0.2 }],
+  },
+  // 宁德时代
+  {
+    keywords: ["宁德时代", "catl", "宁王", "麒麟电池"],
+    symbol: "CATL",
+    rivals: [],
+  },
+  // 蔚来/小鹏/理想
+  { keywords: ["蔚来", "nio", "换电"], symbol: "NIO", rivals: [] },
+  { keywords: ["小鹏", "xpeng", "xpev"], symbol: "XPEV", rivals: [] },
+  { keywords: ["理想", "li auto", "增程"], symbol: "LI", rivals: [] },
+  // 茅台
+  {
+    keywords: ["茅台", "moutai", "贵州茅台", "飞天"],
+    symbol: "MAOT",
+    rivals: [],
+  },
+  // 海底捞
+  { keywords: ["海底捞", "haidilao"], symbol: "SEAH", rivals: [] },
+  // 比特币/以太坊
+  {
+    keywords: ["bitcoin", "比特币", "btc"],
+    symbol: "BTC",
+    rivals: [{ sym: "ETH", rel: 0.6 }],
+  },
+  {
+    keywords: ["ethereum", "以太坊", "eth"],
+    symbol: "ETH",
+    rivals: [{ sym: "BTC", rel: 0.5 }],
+  },
+  // 黄金
+  { keywords: ["黄金", "gold", "金价", "xau"], symbol: "XAU", rivals: [] },
+];
+
+/**
+ * 增强版：从分类+全文生成 investmentEffect，支持公司级精准绑定
+ * 真实新闻中提到英伟达→NVDA直接变动；AMD/华为等竞争对手根据 rel 系数联动
+ */
+function generateInvestmentEffectFromClassification(classification, fullText) {
+  var text = (fullText || "").toLowerCase();
+  var effects = [];
+  var hitSymbols = new Set();
+
+  // 1. 公司关键词精准匹配（最高优先级）
+  for (var ci = 0; ci < _REAL_COMPANY_KEYWORD_MAP.length; ci++) {
+    var entry = _REAL_COMPANY_KEYWORD_MAP[ci];
+    var matched = false;
+    for (var ki = 0; ki < entry.keywords.length; ki++) {
+      if (text.indexOf(entry.keywords[ki]) !== -1) {
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) continue;
+
+    var isUp = classification.marketMood === "bullish";
+    var isDown = classification.marketMood === "bearish";
+    var baseMul = isUp ? 1.12 : isDown ? 0.89 : 1.0;
+
+    if (baseMul !== 1.0 && !hitSymbols.has(entry.symbol)) {
+      effects.push({ symbols: [entry.symbol], mul: baseMul });
+      hitSymbols.add(entry.symbol);
+    }
+
+    // 友商/竞争对手联动
+    for (var ri = 0; ri < entry.rivals.length; ri++) {
+      var rival = entry.rivals[ri];
+      if (hitSymbols.has(rival.sym)) continue;
+      var rivalMul = 1.0 + (baseMul - 1.0) * rival.rel;
+      if (Math.abs(rivalMul - 1.0) >= 0.01) {
+        effects.push({
+          symbols: [rival.sym],
+          mul: parseFloat(rivalMul.toFixed(3)),
+        });
+        hitSymbols.add(rival.sym);
+      }
+    }
+  }
+
+  // 2. 如果有精准公司匹配，叠加行业层面（较弱）
+  // 3. 如果无精准匹配，回退到行业层面
+  var industryEffect = generateInvestmentEffectFromTag(
+    classification.tag,
+    classification.marketMood,
+  );
+  if (industryEffect.length > 0) {
+    // 精准匹配已有时，行业乘数减弱（避免双重叠加过强）
+    if (effects.length > 0) {
+      industryEffect = industryEffect.map(function (ie) {
+        return {
+          industry: ie.industry,
+          category: ie.category,
+          mul: 1.0 + (ie.mul - 1.0) * 0.5,
+        };
+      });
+    }
+    effects = effects.concat(industryEffect);
+  }
+
+  return effects;
+}
+
+/**
  * 从 RSS XML 直接抓取并解析（不需要第三方转换服务）
  * 使用浏览器原生 DOMParser 解析 XML
  */
@@ -1490,9 +1692,9 @@ function _parseRSSXML(xmlText, feed) {
         marketMood: classification.marketMood,
         note: classification.note,
       },
-      investmentEffect: generateInvestmentEffectFromTag(
-        classification.tag,
-        classification.marketMood,
+      investmentEffect: generateInvestmentEffectFromClassification(
+        classification,
+        title + " " + description,
       ),
       source: "实时·" + feed.name,
       url: link,

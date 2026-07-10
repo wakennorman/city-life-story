@@ -42896,5 +42896,286 @@
     ],
   });
 
+  // ==== NPC 关系矩阵深度互动 ====
+
+  // 事件1：王婶×张姐紧张调解
+  // [自洽修复] conditions 校验：王婶已认识(met)、张姐已认识(met)、好感≥30
+  RANDOM_EVENTS.push({
+    id: "npc_wang_zhang_mediation",
+    phase: "street",
+    icon: "🤝",
+    title: "街坊矛盾",
+    story:
+      "你路过巷口时听到争执声。王婶涨红了脸：「这块地我摆了三年了！」张姐不甘示弱：「城管都划线了，写的是公共区域！」\n\n旁边卖水果的大叔小声告诉你：王婶和张姐为了巷口摆摊的位置吵了一上午了，谁也不让谁。",
+    conditions: function (st) {
+      var rel = st.relationships; // 检查 relationships 对象
+      if (!rel) return false;
+      var wang = rel["aunt_wang"]; // 检查王婶关系
+      var zhang = rel["sister_zhang"]; // 检查张姐关系
+      if (!wang || !zhang) return false;
+      if (!wang.met || !zhang.met) return false; // 两人都认识
+      if ((wang.affinity || 0) < 30 || (zhang.affinity || 0) < 30) return false; // 好感≥30
+      if (st.player.day < 20) return false; // 中期开始
+      if (st.flags && st.flags._wangZhangMediation) return false; // 一次性
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 劝两人各退一步",
+        hint: "各好感+8，心智+2",
+        apply: function (st) {
+          var rel = st.relationships;
+          if (rel && rel["aunt_wang"])
+            rel["aunt_wang"].affinity = Math.min(
+              100,
+              (rel["aunt_wang"].affinity || 0) + 8,
+            );
+          if (rel && rel["sister_zhang"])
+            rel["sister_zhang"].affinity = Math.min(
+              100,
+              (rel["sister_zhang"].affinity || 0) + 8,
+            );
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 2,
+          );
+          st.flags._wangZhangMediation = true;
+          StateManager.addMessage(
+            "你两头说和，提议轮班摆：一人上午一人下午。两人勉强同意，各好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 帮王婶说话",
+        hint: "王婶好感+12，张姐-6",
+        apply: function (st) {
+          var rel = st.relationships;
+          if (rel && rel["aunt_wang"])
+            rel["aunt_wang"].affinity = Math.min(
+              100,
+              (rel["aunt_wang"].affinity || 0) + 12,
+            );
+          if (rel && rel["sister_zhang"])
+            rel["sister_zhang"].affinity = Math.max(
+              0,
+              (rel["sister_zhang"].affinity || 0) - 6,
+            );
+          st.flags._wangZhangMediation = true;
+          StateManager.addMessage(
+            "你帮王婶说话，张姐气得瞪了你一眼走了。王婶感激你，好感+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤷 卖水果大叔说得对",
+        hint: "回避问题，各好感+0",
+        apply: function (st) {
+          st.flags._wangZhangMediation = true;
+          StateManager.addMessage(
+            "你打了个哈哈，借口有事溜了。两边都觉得你不靠谱。关系无变化。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件2：老周牵头社区聚餐（多NPC联动）
+  // [自洽修复] conditions 校验：老周已认识、好感≥40
+  RANDOM_EVENTS.push({
+    id: "npc_community_gathering",
+    phase: "street",
+    icon: "🍲",
+    title: "巷口百家宴",
+    story:
+      "老周拎着两瓶白酒挨家挨户敲门：「今晚巷口摆百家宴，都来啊！」\n\n你探头一看，王婶端了锅红烧肉，陈师傅拎着半扇排骨，阿黄牵着孙女在摆凳子。老周冲你喊：「愣着干啥，去帮张姐搬桌子！」",
+    conditions: function (st) {
+      var rel = st.relationships;
+      if (!rel) return false;
+      var zhou = rel["old_zhou"];
+      if (!zhou || !zhou.met) return false; // 认识老周
+      if ((zhou.affinity || 0) < 40) return false; // 老周好感≥40
+      if (st.player.day < 30) return false; // 中后期
+      if (st.player.day > 365) return false; // 不超过一年
+      if (
+        st.flags &&
+        (st.flags._communityGatheringDone || st.flags._rNpcCommunityGathering)
+      )
+        return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍲 热心帮忙张罗",
+        hint: "多NPC好感+5~8",
+        apply: function (st) {
+          var rel = st.relationships;
+          var targets = [
+            "old_zhou",
+            "aunt_wang",
+            "chef_chen",
+            "sister_zhang",
+            "ah_huang",
+          ];
+          for (var i = 0; i < targets.length; i++) {
+            var r = rel && rel[targets[i]];
+            if (r && r.met) r.affinity = Math.min(100, (r.affinity || 0) + 5);
+          }
+          if (rel && rel["old_zhou"])
+            rel["old_zhou"].affinity = Math.min(
+              100,
+              (rel["old_zhou"].affinity || 0) + 8,
+            );
+          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8);
+          st.flags._communityGatheringDone = true;
+          StateManager.addMessage(
+            "你端菜、搬桌子、陪小孩玩。百家宴热热闹闹，老周拍你肩膀：「好小子！」多NPC好感+5~8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🥟 露一手厨艺",
+        hint: "魅力+3，陈师傅好感+10",
+        apply: function (st) {
+          var rel = st.relationships;
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 3);
+          if (rel && rel["chef_chen"])
+            rel["chef_chen"].affinity = Math.min(
+              100,
+              (rel["chef_chen"].affinity || 0) + 10,
+            );
+          if (rel && rel["old_zhou"])
+            rel["old_zhou"].affinity = Math.min(
+              100,
+              (rel["old_zhou"].affinity || 0) + 5,
+            );
+          st.flags._communityGatheringDone = true;
+          StateManager.addMessage(
+            "你做了道拿手菜，陈师傅尝了直点头：「有点意思！」魅力+3，陈师傅好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍺 带两瓶酒加入",
+        hint: "心情+5，老周好感+5",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
+          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+          var rel = st.relationships;
+          if (rel && rel["old_zhou"])
+            rel["old_zhou"].affinity = Math.min(
+              100,
+              (rel["old_zhou"].affinity || 0) + 5,
+            );
+          st.flags._communityGatheringDone = true;
+          StateManager.addMessage(
+            "你带了酒过去，和大家喝了几杯。老周说你够意思。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 事件3：李工头×陈哥合作契机
+  // [自洽修复] conditions 校验：两人都认识、好感≥20
+  RANDOM_EVENTS.push({
+    id: "npc_li_chen_cooperation",
+    phase: "street",
+    icon: "🏗️",
+    title: "工地缺人手",
+    story:
+      "李工头在工地上急得团团转：「这批钢筋今天必须卸完，但搬运工临时跑了仨！」\n\n他刚要打电话叫人，瞥见陈哥从外面路过。李工头犹豫了一下——他跟陈哥不太熟，但陈哥手下有几个兄弟闲着。",
+    conditions: function (st) {
+      var rel = st.relationships;
+      if (!rel) return false;
+      var li = rel["boss_li"];
+      var chen = rel["chen_ge"];
+      if (!li || !chen) return false;
+      if (!li.met || !chen.met) return false; // 两人都认识
+      if ((li.affinity || 0) < 20 || (chen.affinity || 0) < 20) return false; // 好感≥20
+      if (st.player.day < 35) return false; // 中期
+      if (st.flags && st.flags._liChenCooperation) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "💡 撮合他俩合作",
+        hint: "各好感+10，名声+3",
+        apply: function (st) {
+          var rel = st.relationships;
+          if (rel && rel["boss_li"])
+            rel["boss_li"].affinity = Math.min(
+              100,
+              (rel["boss_li"].affinity || 0) + 10,
+            );
+          if (rel && rel["chen_ge"])
+            rel["chen_ge"].affinity = Math.min(
+              100,
+              (rel["chen_ge"].affinity || 0) + 10,
+            );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.flags._liChenCooperation = true;
+          StateManager.addMessage(
+            "你主动牵线，陈哥马上喊来三个人把活干了。李工头松了一大口气，各好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "👷 自己顶上",
+        hint: "体力+15，现金+120",
+        apply: function (st) {
+          st.resources.cash += 120;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          var rel = st.relationships;
+          if (rel && rel["boss_li"])
+            rel["boss_li"].affinity = Math.min(
+              100,
+              (rel["boss_li"].affinity || 0) + 8,
+            );
+          st.flags._liChenCooperation = true;
+          StateManager.addMessage(
+            "你撸起袖子自己干，搬了一下午钢筋，赚了¥120。李工头觉得你这人实在，好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📢 当中间人赚点",
+        hint: "现金+80，好感+3",
+        apply: function (st) {
+          st.resources.cash += 80;
+          var rel = st.relationships;
+          if (rel && rel["boss_li"])
+            rel["boss_li"].affinity = Math.min(
+              100,
+              (rel["boss_li"].affinity || 0) + 3,
+            );
+          if (rel && rel["chen_ge"])
+            rel["chen_ge"].affinity = Math.min(
+              100,
+              (rel["chen_ge"].affinity || 0) + 3,
+            );
+          st.flags._liChenCooperation = true;
+          StateManager.addMessage(
+            "你替李工头传话，谈好了搬运费，自己赚了¥80中介费。两边都还算满意。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

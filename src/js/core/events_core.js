@@ -832,8 +832,15 @@ function showNewsBriefingModal(news, state) {
         "</div>";
     }
 
+    // 个人/邻里类小事用"邻里见闻"，大事件用"新闻快报"
+    var _modalNewsTitle =
+      news.level === "L4" ||
+      news.type === "personal" ||
+      news.type === "neighborhood"
+        ? "🏘️ 邻里见闻"
+        : "📰 新闻快报";
     showModal({
-      title: "📰 新闻快报",
+      title: _modalNewsTitle,
       body:
         '<div style="font-size:13px;line-height:1.65;">' +
         '<div style="font-weight:700;color:var(--text-primary);margin-bottom:8px;">' +

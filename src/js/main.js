@@ -764,7 +764,8 @@ function showTalentRevealModal(rolledTalents, onAccept, onDecline) {
     var hasRare = rolledTalents.some(function (t) {
       return t.rarity === "rare";
     });
-    var titleEmoji = rolledTalents.length === 2 ? "🎲 双重天赋" : "✨ 今日天赋";
+    var titleEmoji =
+      rolledTalents.length === 2 ? "🎲 双重天赋" : "✨ 本次人生天赋";
     html +=
       '<div style="font-size:1.08rem;font-weight:700;margin-bottom:4px;">' +
       titleEmoji +
