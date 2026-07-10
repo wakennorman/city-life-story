@@ -93,6 +93,14 @@ def main():
         else:
             shutil.copytree(src_images, dst_images)
 
+    # 复制 favicon 文件到 dist/
+    for fname in os.listdir(SRC_DIR):
+        if fname.startswith('favicon') or fname.startswith('apple-touch-icon'):
+            src_file = os.path.join(SRC_DIR, fname)
+            if os.path.isfile(src_file):
+                shutil.copy2(src_file, os.path.join(DIST_DIR, fname))
+                print(f"  📦 favicon: {fname}")
+
     # 写入
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write(html)

@@ -29,7 +29,8 @@ function showModal({ title, body, buttons = [] }) {
 
   const bodyDiv = document.createElement("div");
   bodyDiv.className = "modal-body";
-  bodyDiv.style.cssText = "margin:12px 0;font-size:13px;line-height:1.7;color:var(--text-primary);";
+  bodyDiv.style.cssText =
+    "margin:12px 0;font-size:13px;line-height:1.7;color:var(--text-primary);";
   bodyDiv.innerHTML = body; // body 是纯 HTML 字符串，安全
   box.appendChild(bodyDiv);
 

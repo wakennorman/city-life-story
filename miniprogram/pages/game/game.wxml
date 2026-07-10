@@ -1,0 +1,23 @@
+<!-- 城市浮生记 — 游戏主页面 -->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading && !loadError}}">
+    <image class="loading-icon" src="/images/app-icon.png" mode="aspectFill" />
+    <text class="loading-text">正在加载城市...</text>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="error" wx:if="{{loadError}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">网络开小差了</text>
+    <button class="retry-btn" bindtap="retry">重新加载</button>
+  </view>
+
+  <!-- WebView 承载游戏 -->
+  <web-view
+    wx:if="{{!loading || loadError}}"
+    src="{{gameUrl}}"
+    bindload="onWebViewLoad"
+    binderror="onWebViewError"
+  />
+</view>

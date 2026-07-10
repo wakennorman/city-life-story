@@ -1,0 +1,31 @@
+/* 城市浮生记 — 全局样式 */
+page {
+  --bg-primary: #1a1a2e;
+  --accent: #4a9e5c;
+  --accent-light: #6bbf7c;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.3);
+  --danger: #c4553d;
+  --warning: #c49a3a;
+  --info: #5a8ab4;
+
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+button {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  line-height: inherit;
+}
+
+button::after {
+  border: none;
+}

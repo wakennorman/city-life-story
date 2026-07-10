@@ -5492,3 +5492,22 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
+
+/* [v3.86] 交通方式选择按钮（步行/共享单车/地铁/打车/自驾） */
+.transit-btn {
+  padding: 10px 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: var(--transition);
+}
+.transit-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- 消息/新闻 - 对话气泡 -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6bbf7c"/>
+      <stop offset="100%" stop-color="#4a9e5c"/>
+    </linearGradient>
+  </defs>
+  <path d="M18,28 L18,62 Q18,68 24,68 L40,68 L50,82 L60,68 L76,68 Q82,68 82,62 L82,28 Q82,22 76,22 L24,22 Q18,22 18,28 Z" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="38" cy="44" r="4" fill="url(#g)" opacity="0.6"/>
+  <circle cx="50" cy="44" r="4" fill="url(#g)" opacity="0.4"/>
+  <circle cx="62" cy="44" r="4" fill="url(#g)" opacity="0.6"/>
+</svg>
