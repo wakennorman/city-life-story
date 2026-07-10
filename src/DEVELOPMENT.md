@@ -1,8 +1,34 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.86 统一悬停动效）
+> 最后更新: 2026-07-11（v3.86b 交通按钮悬停+步行选项）
 >
-> commit: 468aec8a（v3.86 统一悬停动效）
+> commit: 5499d9a3（v3.86b 交通按钮悬停+步行选项）
+
+---
+
+## 2026-07-11 — v3.86b 交通方式悬停动效+步行选项
+
+### 问题
+
+1. 城市Tab的交通方式按钮（共享单车/地铁/打车）完全没有悬停动效
+2. 缺少"步行"选项，只有目的地卡片显示🚶跳数
+
+### 修复
+
+1. **新增`.transit-btn` / `.transit-btn:hover` CSS规则** — 使用与action-card一致的标准悬停动效（bg + accent边框 + lift + shadow）
+2. **移除transit-btn内联style** — 将base样式中提取到CSS类统一管理，使hover可生效
+3. **新增🚶步行按钮** — ¥0全城可达，AP=6+跳数×4随距离递增
+4. **walk模式完整接入** — 价格计算(0)、AP计算(hops-based)、消息提示(步行专用文案)、modeName映射
+5. **自驾车按钮同步** — 移除内联style，由CSS类接管hover
+
+### 影响文件
+
+- `src/css/style.css` (+16行) — `.transit-btn` / `.transit-btn:hover`
+- `src/js/ui/render.js` (~20行) — 新增步行按钮+walk逻辑+移除内联style
+
+### 验证
+
+- `node --check` ✅ / `python build.py` 7766.6KB ✅
 
 ---
 

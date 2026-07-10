@@ -45000,23 +45000,14 @@
     story:
       "你刚缓过来没多久，门就被敲响了。\n\n打开门，王大婶端着一碗热腾腾的鸡汤站在门口，围裙上还沾着油渍：\n「听说你前阵子病得不轻？年轻人一个人在外面，别硬撑。这汤我炖了一上午，趁热喝。」\n\n你愣了一下——你们平时也就见面打个招呼的交情。她放下汤就走了，临走又回头说了句：\n「碗不用急着还。」",
     conditions: function (st) {
-      // [自洽修复] 曾经病过 + 现在健康恢复 + 有NPC关系基础
+      // [自洽修复] 曾经病过 + 现在健康恢复 + 必须认识王大婶
       if (!st.flags._everSick) return false;
       if (st.player.phase !== "street") return false;
       if ((st.status.health || 50) < 60) return false;
       // 没有活跃疾病
       if (st.status.illnesses && st.status.illnesses.length > 0) return false;
-      // 至少认识一个NPC（有碰面基础）
-      var hasNpcContact = false;
-      if (st.relationships) {
-        for (var r in st.relationships) {
-          if (st.relationships[r] && st.relationships[r].met) {
-            hasNpcContact = true;
-            break;
-          }
-        }
-      }
-      if (!hasNpcContact) return false;
+      // [自洽修复] 必须认识王大婶（叙事中有她亲自端汤）
+      if (!st.relationships?.aunt_wang?.met) return false;
       if (st.flags._recoverySoupSeen) return false;
       return st.player.day >= 15;
     },
@@ -45362,6 +45353,8 @@
       if (!st.weather || st.weather.season !== "summer") return false;
       if (st.flags && st.flags._summerNightCoolingSeen) return false;
       if (st.player.day < 10) return false;
+      // [自洽修复] 王婶在叙事中主动招呼，必须见过王婶
+      if (!st.relationships?.aunt_wang?.met) return false;
       return true;
     },
     probability: 0.03,
@@ -45499,6 +45492,8 @@
       if (st.player.day < 10) return false;
       var cold = (st.weather.temperature || 10) < 5;
       if (!cold) return false;
+      // [自洽修复] 老周在叙事中招呼你烤火，必须见过老周
+      if (!st.relationships?.old_zhou?.met) return false;
       return true;
     },
     probability: 0.035,
@@ -45866,7 +45861,336 @@
   });
 
   // ====================================================================
-  // v3.81 loop R40 注册完毕（4个：冬季寒潮/年末倒计时/年终述职/职场站队）
+  // v3.83 loop R41 新增事件（4个：装备磨损/城管关系/教育认证/社区聚会）
+  // ====================================================================
+
+  // R41-① 装备关键时刻损坏 — 装备系统×天气×工作联动
+  RANDOM_EVENTS.push({
+    id: "gear_break_critical_moment",
+    phase: "street",
+    icon: "🔧",
+    title: "装备在关键时刻坏了",
+    story:
+      "你正忙着手头的活计，突然「咔嚓」一声——用了很久的工具终于撑不住了。\n\n手套磨破了口子，鞋底彻底裂开，或者背包带子断了。总之，这件陪你风里来雨里去的装备，在这一刻正式宣告退役。\n\n你蹲下来看着它，有点心疼——不是因为它多值钱，而是因为它陪你扛过了最难的那段日子。",
+    conditions: function (st) {
+      // [自洽修复] 需要装备系统中有低耐久装备
+      var inst = st.inventory && st.inventory.equipmentInstances;
+      if (!inst) return false;
+      var hasLowDurability = false;
+      for (var slot in inst) {
+        if (
+          inst[slot] &&
+          typeof inst[slot].durability === "number" &&
+          inst[slot].durability < 30
+        ) {
+          hasLowDurability = true;
+          break;
+        }
+      }
+      if (!hasLowDurability) return false;
+      if (st.flags._gearBreakSeen) return false;
+      if (st.player.day < 20) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔨 想办法修修，凑合再用",
+        hint: "修理技能≥15 能用",
+        apply: function (st) {
+          st.flags._gearBreakSeen = true;
+          var repairLvl =
+            st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+          if (repairLvl >= 15) {
+            // 修好了
+            for (var slot in (st.inventory &&
+              st.inventory.equipmentInstances) ||
+              {}) {
+              var eq = st.inventory.equipmentInstances[slot];
+              if (eq && eq.durability < 30) {
+                eq.durability = Math.min(100, eq.durability + 30);
+              }
+            }
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 15;
+            StateManager.addMessage(
+              "🔨 你凭着手艺勉强修好了。虽然不太好看，但还能撑一阵子。修理XP+15。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "🔨 你试着修了修，但手艺不行，越弄越糟。只好等有钱再换新的。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "💰 攒钱买新的吧，旧的扔了",
+        hint: "心情-10·激励赚钱",
+        apply: function (st) {
+          st.flags._gearBreakSeen = true;
+          // 移除所有低耐久装备
+          if (st.inventory && st.inventory.equipmentInstances) {
+            for (var slot in st.inventory.equipmentInstances) {
+              if (
+                st.inventory.equipmentInstances[slot] &&
+                st.inventory.equipmentInstances[slot].durability < 30
+              ) {
+                delete st.inventory.equipmentInstances[slot];
+              }
+            }
+          }
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          st.flags._needBuyNewGear = true;
+          StateManager.addMessage(
+            "📦 你叹了口气，把旧装备扔进了垃圾桶。它陪了你很久，你甚至有点舍不得。心情-10。得赶紧赚钱买新的了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🙏 凑合着用，还能撑",
+        hint: "免费·但效率降低",
+        apply: function (st) {
+          st.flags._gearBreakSeen = true;
+          // 耐久继续下降但不处理
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🙏 你把破的地方打了个结，继续用。穷人的智慧就是——什么都能将就。心智+3，心情-3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R41-② 城管关系改善机会 — chengguan系统×好感反馈
+  RANDOM_EVENTS.push({
+    id: "chengguan_relationship_help",
+    phase: "street",
+    icon: "👮",
+    title: "城管的通融",
+    story:
+      "你正在街边整理摊位，一辆执法车停在了不远处。你心里一紧——但车上的老城管探出头来，居然是上次打过交道的那个。\n\n他冲你点了点头：「今天上面来检查，这一片下午三点前不能摆。你去后街那边，我跟那边打过招呼了。」\n\n旁边的小贩投来羡慕的目光。你意识到——平时攒下的那点关系，有时候比钱管用。",
+    conditions: function (st) {
+      // [自洽修复] chengguan关系好时触发
+      if (!st.chengguan) return false;
+      if ((st.chengguan.relationship || 0) < 25) return false;
+      if (st.flags && st.flags._chengguanHelpSeen) return false;
+      if ((st.chengguan.heat || 0) < 30) return false;
+      if (st.player.day < 15) return false;
+      return true;
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 谢谢！马上搬",
+        hint: "城管关系+5·免于处罚",
+        apply: function (st) {
+          st.flags._chengguanHelpSeen = true;
+          st.chengguan.relationship = Math.min(
+            100,
+            (st.chengguan.relationship || 0) + 5,
+          );
+          st.chengguan.warnings = Math.max(0, (st.chengguan.warnings || 0) - 1);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🙏 你赶紧收摊。搬到后街果然没人管，还多卖了两个钟头。城管关系+5，警告-1，心情+5。关系真的有用。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍵 给他递瓶水",
+        hint: "城管关系+10·¥5",
+        cost: 5,
+        apply: function (st) {
+          st.flags._chengguanHelpSeen = true;
+          st.chengguan.relationship = Math.min(
+            100,
+            (st.chengguan.relationship || 0) + 10,
+          );
+          st.resources.cash -= 5;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🍵 你递了瓶水过去。他愣了一下，接过去说：「行了，赶紧搬吧。」旁边的同行看着，有人悄悄记下了你的脸。城管关系+10，心情+8，花费¥5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😅 今天太累了，收摊不摆了",
+        hint: "安全第一·无损失",
+        apply: function (st) {
+          st.flags._chengguanHelpSeen = true;
+          st.chengguan.warnings = Math.max(0, (st.chengguan.warnings || 0) - 1);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 8);
+          StateManager.addMessage(
+            "😅 你跟城管打了招呼，收摊回去了。他冲你摆摆手：「明儿早点来。」有时候，听劝比硬扛聪明。疲劳-8，警告-1。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R41-③ 教育改变人生 — 学历认证带来工作机会
+  RANDOM_EVENTS.push({
+    id: "education_opening_door",
+    phase: "street",
+    icon: "🎓",
+    title: "学历带来的机会",
+    story:
+      "你在街上闲逛时，手机响了。是一个陌生号码。\n\n「你好，我们在人才网上看到了你的学历信息，这边有一份工作觉得你很合适……」\n\n你愣了一下——你确实在某天无聊时填过一份简历，之后就忘了这回事。没想到，当时随手填的学历信息，居然真的有人看到了。\n\n电话那头继续说：「岗位是XX公司的初级文员，带培训，月薪¥4500起。」",
+    conditions: function (st) {
+      // [自洽修复] 学历≥本科(1) + 未在职 + 天数适中
+      if ((st.player.education || 0) < 1) return false;
+      if (st.employment && st.employment.currentJob) return false;
+      if (st.flags && st.flags._educationDoorOpened) return false;
+      if (st.player.day < 30 || st.player.day > 300) return false;
+      if (st.player.phase !== "street") return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎯 约面试时间",
+        hint: "智力+3·收入提升机会",
+        apply: function (st) {
+          st.flags._educationDoorOpened = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.flags._educationJobOffer = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🎯 你约了下周面试。挂了电话，你看着手机屏幕——大专文凭在别人眼里可能是废纸，但在这座城市，它可能就是一把钥匙。智力+3，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先问问工资待遇再说",
+        hint: "了解更多·不承诺",
+        apply: function (st) {
+          st.flags._educationDoorOpened = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🤔 你多问了几句——五险一金、双休、带薪培训。听起来不错，但你知道没有天上掉馅饼的事。先记下来，回头再说。心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😅 现在没空，以后再联系",
+        hint: "不改变现状",
+        apply: function (st) {
+          st.flags._educationDoorOpened = true;
+          st.flags._educationOfferDeferred = true;
+          StateManager.addMessage(
+            "😅 你说现在不太方便，对方说没关系，让你有空再联系。你挂了电话，心里有点五味杂陈——也许下次机会就没这么容易了。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R41-④ 社区熟人网络 — 认识多个NPC后的邻里聚会
+  RANDOM_EVENTS.push({
+    id: "community_gathering_invite",
+    phase: "street",
+    icon: "🏘️",
+    title: "邻里聚会邀请",
+    story:
+      "傍晚，你在门口看到一张手写的告示：「本周末巷口举办社区聚餐，各家带一道菜来！」\n\n你正看着，背后有人拍了拍你的肩膀——是楼上住了半年但只在楼道见过几次的大姐。\n\n她笑着说：「你也来吧！不用带什么，人都来就行。巷子里的人想认识认识你——住了大半年了，大家只知道你是'那个年轻人'。」\n\n你这才意识到，虽然在这里住了这么久，但除了打招呼的面孔，你真的还没好好认识过这些邻居。",
+    conditions: function (st) {
+      // [自洽修复] 认识至少3个NPC + 非流浪状态
+      if (!st.relationships) return false;
+      var metCount = 0;
+      for (var r in st.relationships) {
+        if (st.relationships[r] && st.relationships[r].met) metCount++;
+      }
+      if (metCount < 3) return false;
+      if (st.flags._communityGatheringSeen) return false;
+      if (st.player.day < 30) return false;
+      // 需要住所
+      if ((st.resources.housing || "").indexOf("homeless") >= 0) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍲 带一道菜去参加",
+        hint: "名气+·心情+·社交圈+",
+        apply: function (st) {
+          st.flags._communityGatheringSeen = true;
+          st.fame = Math.min(100, (st.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 15);
+          // 所有已认识NPC好感+2
+          if (st.relationships) {
+            for (var r in st.relationships) {
+              if (st.relationships[r] && st.relationships[r].met) {
+                st.relationships[r].affinity = Math.min(
+                  100,
+                  (st.relationships[r].affinity || 0) + 2,
+                );
+              }
+            }
+          }
+          StateManager.addMessage(
+            "🍲 你带了一锅番茄炒蛋去了。虽然简单，但大家都说好吃。席间认识了楼下修车的张师傅和对面的保洁阿姨——这座城市又暖和了一点。名气+3，心情+12，邻里好感+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "👋 去坐坐聊聊天就好",
+        hint: "心情+·社交",
+        apply: function (st) {
+          st.flags._communityGatheringSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (st.relationships) {
+            for (var r in st.relationships) {
+              if (st.relationships[r] && st.relationships[r].met) {
+                st.relationships[r].affinity = Math.min(
+                  100,
+                  (st.relationships[r].affinity || 0) + 1,
+                );
+              }
+            }
+          }
+          StateManager.addMessage(
+            "👋 你空着手去了。大家没在意——给你夹菜、递饮料。你坐在角落听着他们聊家长里短，第一次觉得自己不是这个城市的过客。心情+8，邻里好感+1。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📦 在屋里待着，不去",
+        hint: "独处·不社交",
+        apply: function (st) {
+          st.flags._communityGatheringSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          StateManager.addMessage(
+            "📦 你待在屋里，听着外面的热闹声。一个人也挺好，但你心里清楚——城市里的人情，不是靠躲出来的。心智+4。",
+            "neutral",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.83 loop R41 注册完毕（4个：装备磨损/城管关系/教育认证/社区聚会）
   // ====================================================================
   // ====== 注册结束 ======
 })();
