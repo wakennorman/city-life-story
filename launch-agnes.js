@@ -333,6 +333,12 @@ function startProxy() {
       return res.end("Not found");
     }
 
+    // count_tokens 略过：Agnes 不支持，mock 返回
+    if (targetPath.includes("count_tokens")) {
+      res.writeHead(200, { "content-type": "application/json" });
+      return res.end(JSON.stringify({ input_tokens: 0, output_tokens: 0 }));
+    }
+
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
     req.on("end", () => {
@@ -466,6 +472,16 @@ function startProxy() {
 
       proxyReq.write(payload);
       proxyReq.end();
+
+      // 超时控制 + 错误防护：Cloudflare 从中国连接不稳定
+      proxyReq.setTimeout(30000, () => {
+        proxyReq.destroy();
+        try { res.writeHead(502); res.end("Upstream timeout"); } catch {}
+      });
+      proxyReq.on("error", (err) => {
+        console.error("[proxy] Upstream error:", err.message);
+        try { res.writeHead(502); res.end("Bad Gateway"); } catch {}
+      });
     });
   });
 

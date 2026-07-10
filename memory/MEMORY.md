@@ -18,6 +18,8 @@
 - [手机端顶栏三行设计范式](mobile-design-principles.md) — mob-first 文字生存游戏顶栏/状态条/触控尺寸设计模板
 - [移动端顶栏精简 2026-07-03](mobile-topbar-cleanup-2026-07-03.md) — 删除 renderTitleBar，品牌移至侧栏底部，状态条改两字+放大，阶段文案按债务动态化
 - [git push 在 git-bash 失败 cmd 成功](git-push-via-karing.md) — MSYS2 沙盒不继承系统 TUN 代理；根治是 SSH，不要配 http.proxy
+- [v3.78-loop-R32-session](v3.78-loop-R32-session.md) — R32: 3新增NPC关系矩阵深度互动+图书馆实装+v3.76世界新闻重构+R20-R119 rebase（2026-07-10）
+- [v3.79-loop-R33-session](v3.79-loop-R33-session.md) — R33: 事件叙事-触发自洽性全面审查(786事件0 A类) + 5个联动空白区事件(v3.77: 老手特遇/台风天气×地点/NPC极致好感/道德极端分叉/多技能跨界) + B类建议3个（2026-07-10）
 - [游戏系统状态总览 R26](game-state-loop-r26.md) — 各维度完成度、待改进空间、状态字段地图
 - [v3.11 职业系统深度扩展](v3.11-career-system-expansion.md) — 医师路径(5级)+事业单位路径(5级)+跨系统联动(医疗↔疾病/公职↔法律)+雇佣机制(面试/试用期/解雇)+10个新职业事件
 - [v3.1 审查改进 2026-07-03](review-improve-v3.1-round2-2026-07-03.md) — 6维度全量审查+11项修复：clampCareerCapital挂载/跳槽永动机修复/抛售返现/触控44px/对比度修复/旅行AP显示/物业费下调/中期提示/住宿引导
@@ -37,3 +39,6 @@
 - [文件锁定状态](file-lock.json) — 运行时状态，所有窗口共享，开工前必读
 - [v3.52-loop-iteration1](v3.52-loop-iteration1.md) — /loop 第一轮迭代：废弃清理 + 3个烹饪/NPC联动事件 + 系统关联度审查发现清单（2026-07-09）
 - [v3.58-loop-iteration4](v3.58-loop-iteration4.md) — /loop 第四轮：激活菜市场地点（12个TODO中首个，2026-07-09）
+- [v3.13 拆分 const/let 重复声明冲突](v3.13-split-duplicate-const-let-conflict.md) — 文件拆分时未清理旧文件中的重复 const/let 声明导致 SyntaxError，Tab 全不显示 (2026-07-10)
+- [移动端 UI 打磨偏好](mobile-ui-polish-preferences.md) — 2026-07-10 用户确认：位置栏高度/☰菜单可靠性/事件记录自动滚动+折叠/框动效保持
+- [v3.79-loop-R34-session](v3.79-loop-R34-session.md) — R34: 修复3个B类概率+新增2财富里程碑事件(50万/100万)（2026-07-10）

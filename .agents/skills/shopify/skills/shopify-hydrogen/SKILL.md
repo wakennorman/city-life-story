@@ -1034,7 +1034,7 @@ queryVariables?: GenericVariables;
 requestId?: string | null;
 clientOperation?: string;
 });
-get [Symbol.toStringTag](): string;
+get [Symbol.toStringTag](<>): string;
 /**
 _ Note: `toString()` is internally used by `console.log(...)` / `console.error(...)`
 _ when ingesting logs in Oxygen production. Therefore, we want to make sure that
