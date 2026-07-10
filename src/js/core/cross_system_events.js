@@ -43788,6 +43788,146 @@
     ],
   });
 
+  // ==== 季节叙事深化（R34空白区）====
+
+  // 酷暑求生 — 夏季极端高温事件
+  // [自洽修复] conditions 校验：weather.season==="summer" + weather.current 温度相关
+  RANDOM_EVENTS.push({
+    id: "summer_heat_escape",
+    phase: "street",
+    icon: "🌡️",
+    title: "酷暑难耐",
+    story:
+      "手机推送了高温红色预警：今日最高气温40°C。\n\n你走出门，热浪扑面而来，柏油路烤得发软。建筑工地上几个工友还在顶着太阳干活，身上的工服湿了又干、干了又湿。\n\n巷口卖冰粉的大妈今天加价了——她说冰粉都卖断货了，进货价涨了三成。",
+    conditions: function (st) {
+      if (!st.weather) return false;
+      var season = st.weather.season; // 检查季节
+      if (season !== "summer") return false;
+      var temp = st.weather.temperature; // 检查温度
+      if (typeof temp === "number" && temp < 35) return false;
+      if (!st.weather.current) return false;
+      var hotWeathers = ["sunny", "hot", "heatwave", "extreme_heat"];
+      if (hotWeathers.indexOf(st.weather.current) === -1) return false;
+      if (st.flags && st.flags._summerHeatEventSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: true,
+    choices: [
+      {
+        text: "🧊 买冰粉消暑",
+        hint: "心情+5，花¥10",
+        cost: 10,
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.flags._summerHeatEventSeen = true;
+          StateManager.addMessage(
+            "🧊 你买了碗冰粉，冰冰凉凉的感觉让人活过来了。心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💪 趁高温接室外活",
+        hint: "体力+15，收入×1.3",
+        apply: function (st) {
+          var bonus = Random.int(40, 100);
+          st.resources.cash += bonus;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.flags._summerHeatEventSeen = true;
+          StateManager.addMessage(
+            "💪 你顶着烈日干了半天活，赚了¥" +
+              bonus +
+              "。但皮肤晒得发疼，健康-3。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🏠 在家躲高温",
+        hint: "避过最热时段",
+        apply: function (st) {
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
+          st.flags._summerHeatEventSeen = true;
+          StateManager.addMessage(
+            "🏠 你决定今天不出门，在家吹风扇、看书、睡午觉。健康+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 技能双峰 — 两个技能同时达到50级
+  // [自洽修复] conditions 校验：skills 对象存在，至少2个技能 level≥50
+  RANDOM_EVENTS.push({
+    id: "skill_dual_mastery",
+    phase: "street",
+    icon: "🏆",
+    title: "技能双冠",
+    story:
+      "你查了一下自己的技能面板，忽然发现有两项技能都突破了50级大关——你现在是真正的双料熟手了。\n\n巷口的老陈头看见你，啧啧称奇：「你小子，现在什么都能干了？我听说城东那家新开的综合维修店正在招合伙师傅，月薪开到八千。」\n\n你心里一动——以前你只有一个技能的时候，没人正眼瞧你。现在不一样了。",
+    conditions: function (st) {
+      if (!st.skills || st.player.day < 45) return false;
+      var count = 0;
+      for (var key in st.skills) {
+        var sk = st.skills[key];
+        if (sk && typeof sk.level === "number" && sk.level >= 50) count++;
+        if (count >= 2) break;
+      }
+      if (count < 2) return false;
+      if (st.flags && st.flags._skillDualMasterySeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎯 去城东维修店看看",
+        hint: "现金+300，名声+5",
+        apply: function (st) {
+          st.resources.cash += 300;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.flags._skillDualMasterySeen = true;
+          StateManager.addMessage(
+            "🎯 你去城东谈了谈，老板当场拍板要你。你接了第一单，赚了¥300。名声+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💡 继续打磨第三个技能",
+        hint: "智力+3，技能积累加速",
+        apply: function (st) {
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.flags._skillDualMasterySeen = true;
+          StateManager.addMessage(
+            "💡 你没有被眼前的机会冲昏头脑。你制定了新的学习计划，要成为三面手。智力+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😌 骄傲一下，给自己放半天假",
+        hint: "心情+10",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          st.flags._skillDualMasterySeen = true;
+          StateManager.addMessage(
+            "😌 你给自己买了瓶啤酒，坐在巷口看夕阳。这么久以来，你第一次觉得自己是个有本事的人。心情+10。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
   // ====================================================================
   // v3.77 新增事件注册完毕
   // ====================================================================
