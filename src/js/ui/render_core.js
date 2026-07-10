@@ -660,12 +660,23 @@ function renderStreetStats(state) {
   setStatBar("stat-agility", p.agility, "agility");
   setStatBar("stat-mental", p.mental, "mental-bar");
   setStatBar("stat-charm", p.charm || 0, "charm");
+  setStatBar(
+    "stat-morality",
+    p.morality != null ? p.morality : 50,
+    "morality-bar",
+  );
   // 低数值预警（基础属性阈值=10）
   warnStatRow("stat-physique", p.physique, 10, "#c4803a");
   warnStatRow("stat-intelligence", p.intelligence, 10, "#5a8ab4");
   warnStatRow("stat-agility", p.agility, 10, "#5aaa5a");
   warnStatRow("stat-mental", p.mental, 10, "#9b74b8");
   warnStatRow("stat-charm", p.charm || 0, 10, "#d9789e");
+  warnStatRow(
+    "stat-morality",
+    p.morality != null ? p.morality : 50,
+    15,
+    "#6ac49a",
+  );
 }
 
 function renderCorporateStats(state) {

@@ -22,7 +22,7 @@ var CRITICAL_THRESHOLDS = {
     type: "low",
     value: 10,
     amenityType: "food",
-    label: "饥饱",
+    label: "饥饿",
     icon: "🍚",
   },
   fatigue: {
@@ -173,7 +173,15 @@ function showCriticalChoiceModal(state, need) {
 
   // 渲染弹窗
   showModal({
-    title: "⚠️ 该补充" + cfg.label + "了！",
+    title:
+      "⚠️ " +
+      (cfg.label === "疲劳"
+        ? "疲劳过高了！"
+        : cfg.label === "饥饿"
+          ? "快饿晕了！"
+          : cfg.label === "卫生"
+            ? "太久没洗澡了！"
+            : "心情快崩了！"),
     body:
       '<div style="font-size:13px;line-height:1.7;">' +
       msg +
@@ -227,7 +235,7 @@ function _getCriticalMsg(need, val) {
   }
   if (need === "hygiene") {
     if (val <= 5) return "🦠 浑身发臭，皮肤瘙痒，路人都绕着走。";
-    return "🦠 已经几天没洗澡了，再不洗要生病。";
+    return "🦠 身上味道很重，皮肤开始瘙痒，再不洗澡要生病了。";
   }
   if (need === "happiness") {
     if (val <= 5) return "🌧️ 心如死灰，做什么都没意思。需要去散散心。";

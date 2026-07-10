@@ -416,6 +416,9 @@ body {
 .stat-bar.charm {
   background: linear-gradient(90deg, #d9789e, #b95f87);
 }
+.stat-bar.morality-bar {
+  background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+}
 .stat-bar.hunger {
   background: linear-gradient(90deg, #c9a838, #dec054);
 }
@@ -4119,6 +4122,11 @@ body {
     .mss-val {
       font-size: 9px !important;
     }
+    .mobile-location-strip {
+      font-size: 10px !important;
+      gap: 1px !important;
+      padding: 1px 4px !important;
+    }
     /* v3.51：极窄屏职业全景图强制单列 */
     .career-panorama-grid {
       grid-template-columns: 1fr !important;
@@ -5304,6 +5312,7 @@ body {
 .mobile-location-strip {
   flex-wrap: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* [R30] NPC 拜访按钮 */

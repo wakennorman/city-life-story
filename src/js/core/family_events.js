@@ -372,7 +372,8 @@
             st.flags._corpFamilyRelocated = true;
             st.flags._familyInCity = true;
             st.player.mood = Math.min(100, (st.player.mood || 50) + 8);
-            if (!st.corporate.monthlyExpenses) st.corporate.monthlyExpenses = {};
+            if (!st.corporate.monthlyExpenses)
+              st.corporate.monthlyExpenses = {};
             st.corporate.monthlyExpenses.familyRent = 1200;
             StateManager.addMessage(
               "🏡 你租了一间两居室，爸妈搬来了。妈说：终于能天天吃上热饭了。你每天下班回到家，饭已经好了——这是你在城市里最踏实的感觉。心情+8。",
@@ -425,7 +426,12 @@
             st.player.mood = Math.min(100, (st.player.mood || 50) + 10);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
             st.achievements = st.achievements || [];
-            st.achievements.push({ id: "family_dividend", name: "回报家人", desc: "公司盈利后给家人发第一笔分红", date: st.day });
+            st.achievements.push({
+              id: "family_dividend",
+              name: "回报家人",
+              desc: "公司盈利后给家人发第一笔分红",
+              date: st.day,
+            });
             StateManager.addMessage(
               "💰 你给老家转了¥20,000，给父母买了辆五菱宏光。爸在电话那头声音有点抖：你小子，终于熬出来了。心情+10，道德+5。",
               "success",

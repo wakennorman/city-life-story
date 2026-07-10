@@ -1659,6 +1659,7 @@ function executeScavengeRoute(routeId) {
 
   StateManager.addMessage(msg, msgType);
   consumeAP(apCost);
+  if (typeof renderAll === "function") renderAll();
 }
 
 // ====== Phase 2: IPO 审核结果弹窗 ======

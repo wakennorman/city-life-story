@@ -174,7 +174,18 @@
       <!-- Header -->
       <header id="header">
         <div class="header-left">
-          <button id="mobile-menu-btn" aria-label="菜单">☰</button>
+          <button
+            id="mobile-menu-btn"
+            aria-label="菜单"
+            onclick="
+              (function () {
+                var s = document.getElementById('sidebar');
+                if (s) s.classList.toggle('open');
+              })()
+            "
+          >
+            ☰
+          </button>
           <span class="header-logo">城市浮生记<span>v1.0</span></span>
         </div>
 
@@ -272,6 +283,20 @@
               <div class="stat-bar mental-bar"></div>
             </div>
             <span class="stat-value">26</span>
+          </div>
+          <div class="stat-row" id="stat-charm">
+            <span class="stat-label">魅力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar charm"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-morality">
+            <span class="stat-label">道德</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar morality-bar"></div>
+            </div>
+            <span class="stat-value">50</span>
           </div>
         </div>
 

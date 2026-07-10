@@ -142,7 +142,7 @@ function renderNpcRelationships(state, content) {
         _npcId +
         '" data-nav-target=\'{\"type\":\"location\",\"key\":\"' +
         _loc +
-        '"}\'>🚶 拜访</button>';
+        "\"}'>🚶 拜访</button>";
     }
 
     html += "</div>";
@@ -446,13 +446,17 @@ function renderSocialNetworkTab(state, parent) {
           e.preventDefault();
           e.stopPropagation();
           var npcId = btn.dataset.npcId;
-          if (!npcId || !state.relationships || !state.relationships[npcId]) return;
+          if (!npcId || !state.relationships || !state.relationships[npcId])
+            return;
           var rel = state.relationships[npcId];
           // 检查是否已拜访过（冷却 7 天）
           if (rel._lastVisit && state.day - rel._lastVisit < 7) {
             var daysLeft = 7 - (state.day - rel._lastVisit);
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("⏳ 你刚拜访过" + npcId + "，再等" + daysLeft + "天吧。", "info");
+              StateManager.addMessage(
+                "⏳ 你刚拜访过" + npcId + "，再等" + daysLeft + "天吧。",
+                "info",
+              );
             }
             return;
           }
@@ -462,13 +466,18 @@ function renderSocialNetworkTab(state, parent) {
           rel._lastVisit = state.day;
           var _npcName = "";
           if (typeof NPCS !== "undefined") {
-            var _def = NPCS.find(function (n) { return n.id === npcId; });
+            var _def = NPCS.find(function (n) {
+              return n.id === npcId;
+            });
             _npcName = _def ? _def.name : npcId;
           } else {
             _npcName = npcId;
           }
           if (typeof StateManager !== "undefined") {
-            StateManager.addMessage("🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。", "success");
+            StateManager.addMessage(
+              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
+              "success",
+            );
           }
           // 导航到 NPC 所在地点
           if (typeof navigateTo === "function") {

@@ -145,39 +145,7 @@ function addStreetExtras(state, actions) {
     },
   });
 
-  actions.push({
-    id: "busking",
-    name: "街头卖唱",
-    desc: "在地铁口或天桥上唱歌赚打赏。需要胆子大。",
-    icon: "🎤",
-    category: "work",
-    apCost: 20,
-    payEstimate: "5~25",
-    handler: () => {
-      const st = StateManager.getState();
-      const skill = st.player.mental; // 心智影响成功率
-      const earned = Math.floor(5 + Random.float(0, 20) + (skill - 25) * 0.3);
-      st.resources.cash += earned;
-      st.resources.totalEarned += earned;
-      addDailyTransaction(st, "income", "side_job", earned, "街头卖唱");
-      st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
-      st.player.fame = Math.min(100, st.player.fame + 1);
-      if (Random.chance(0.2)) {
-        st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-        StateManager.addMessage(
-          `🎤 唱了半天，城管赶人+路人嫌弃，赚到 ¥${earned}。`,
-          "warning",
-        );
-      } else {
-        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-        StateManager.addMessage(
-          `🎤 卖唱结束，收获 ¥${earned} 打赏！心情好。`,
-          "success",
-        );
-      }
-      consumeAP(20);
-    },
-  });
+  // 街头卖唱已合并入 jobs.js 的 busking（街头表演）正式工作，此处不再重复
 
   actions.push({
     id: "beg",
@@ -996,7 +964,7 @@ function addStreetExtras(state, actions) {
   ) {
     actions.push({
       id: "volunteer_work",
-      name: "🤝 做义工",
+      name: "做义工",
       desc:
         "去医院/公园/寺庙做志愿者，帮助他人。提升道德和心情。当前道德" +
         morality +

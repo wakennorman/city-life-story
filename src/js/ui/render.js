@@ -1916,7 +1916,7 @@ function renderLocationBar(state, parent) {
   // 右侧组（住所名 + 升级提示 紧贴，作为整体右对齐）
   var rightGroup = document.createElement("span");
   rightGroup.style.cssText =
-    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;";
+    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
 
   var houseSpan = document.createElement("span");
   houseSpan.style.cssText = "color:var(--text-secondary);";
@@ -1927,7 +1927,8 @@ function renderLocationBar(state, parent) {
   // 升级提示：露宿时引导升级（提示随住所变化而变化）
   if (currentTier === 0) {
     var tipSpan = document.createElement("span");
-    tipSpan.style.cssText = "font-size:10px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;";
+    tipSpan.style.cssText =
+      "font-size:10px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;";
     tipSpan.title = "去城中村可升级为合租床位";
     tipSpan.textContent = "💡升级住所";
     rightGroup.appendChild(tipSpan);
@@ -2116,7 +2117,12 @@ function renderStatsStrip(state, parent) {
     var names = s.illnesses
       .map(function (d) {
         var id = typeof d === "string" ? d : d.id || "";
-        var nm = (typeof ILLNESSES !== "undefined" && ILLNESSES[id] && ILLNESSES[id].name) || (typeof d === "object" && d.name) || id;
+        var nm =
+          (typeof ILLNESSES !== "undefined" &&
+            ILLNESSES[id] &&
+            ILLNESSES[id].name) ||
+          (typeof d === "object" && d.name) ||
+          id;
         return nm;
       })
       .filter(Boolean);
@@ -2807,7 +2813,7 @@ function renderGuidanceBar(state, parent) {
   // 定位针
   var stagePin = document.createElement("div");
   stagePin.className = "gb-cell-pin";
-  stagePin.innerHTML = '📍 <strong>' + si.icon + " " + si.label + '</strong>';
+  stagePin.innerHTML = "📍 <strong>" + si.icon + " " + si.label + "</strong>";
   c1.appendChild(stagePin);
 
   // 人生旅程弧（横向滚动小点）
@@ -2879,7 +2885,8 @@ function renderGuidanceBar(state, parent) {
     tipInner.appendChild(tipDisplay);
 
     var dotRow = document.createElement("div");
-    dotRow.style.cssText = "display:flex;gap:3px;margin-top:4px;justify-content:center;flex-wrap:wrap;";
+    dotRow.style.cssText =
+      "display:flex;gap:3px;margin-top:4px;justify-content:center;flex-wrap:wrap;";
     tips.forEach(function (_, i) {
       var dot = document.createElement("span");
       dot.className = "gb-tip-dot" + (i === 0 ? " active" : "");
@@ -2893,7 +2900,8 @@ function renderGuidanceBar(state, parent) {
     allTipsWrap.style.display = "none";
     tips.forEach(function (t) {
       var trow = document.createElement("div");
-      trow.style.cssText = "font-size:11px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.4;";
+      trow.style.cssText =
+        "font-size:11px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.4;";
       trow.textContent = t;
       allTipsWrap.appendChild(trow);
     });
@@ -2901,7 +2909,8 @@ function renderGuidanceBar(state, parent) {
 
     // 展开全部按钮
     var expandBtn = document.createElement("div");
-    expandBtn.style.cssText = "font-size:10px;color:var(--accent);cursor:pointer;margin-top:3px;text-align:center;";
+    expandBtn.style.cssText =
+      "font-size:10px;color:var(--accent);cursor:pointer;margin-top:3px;text-align:center;";
     expandBtn.textContent = "展开全部" + tips.length + "条";
     var expanded = false;
     expandBtn.onclick = function () {
@@ -2909,7 +2918,9 @@ function renderGuidanceBar(state, parent) {
       allTipsWrap.style.display = expanded ? "" : "none";
       dotRow.style.display = expanded ? "none" : "";
       tipDisplay.style.display = expanded ? "none" : "";
-      expandBtn.textContent = expanded ? "收起" : "展开全部" + tips.length + "条";
+      expandBtn.textContent = expanded
+        ? "收起"
+        : "展开全部" + tips.length + "条";
     };
     tipInner.appendChild(expandBtn);
 
@@ -2918,7 +2929,10 @@ function renderGuidanceBar(state, parent) {
     // 启动轮播
     var _tipIdx = 0;
     var _tipTimer = setInterval(function () {
-      if (!tipInner.isConnected) { clearInterval(_tipTimer); return; }
+      if (!tipInner.isConnected) {
+        clearInterval(_tipTimer);
+        return;
+      }
       if (expanded) return;
       _tipIdx = (_tipIdx + 1) % tips.length;
       tipDisplay.style.animation = "none";
@@ -3853,6 +3867,10 @@ function renderTradeTab(state, parent) {
         clothing: "服装",
         electronics: "电子",
         scrap: "废品",
+        flowers: "鲜花",
+        medicine: "药品",
+        books: "书籍",
+        stationery: "文具",
       };
       for (var cat in seasonMods) {
         var catName = CATEGORY_NAMES_TRADE[cat] || cat;
@@ -7078,10 +7096,14 @@ function renderMessageLog(state) {
     var m = recent[i];
     var cls = m.type || "info";
     var dayStr = m.day ? "<span class='log-day'>D" + m.day + "</span>" : "";
-    var txt = String(m.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    var txt = String(m.text || "")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
     html += "<div class='log-entry " + cls + "'>" + dayStr + txt + "</div>";
   }
-  contentEl.innerHTML = html || "<div class='log-entry info' style='color:var(--text-muted);'>暂无事件记录</div>";
+  contentEl.innerHTML =
+    html ||
+    "<div class='log-entry info' style='color:var(--text-muted);'>暂无事件记录</div>";
 }
 
 function scrollMessageLogToBottom() {

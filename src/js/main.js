@@ -4293,7 +4293,9 @@ function doStreetJob(job) {
   );
 
   // v3.70 收益浮动数字
-  var _hotCardEl = document.querySelector('[data-action-id="job_' + job.id + '"]');
+  var _hotCardEl = document.querySelector(
+    '[data-action-id="job_' + job.id + '"]',
+  );
   showEarnFloat(pay, _hotCardEl);
 
   // === 城管检查（摆摊类工作）===

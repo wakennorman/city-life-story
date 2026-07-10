@@ -547,7 +547,7 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 | 道德系统  | 4            | wallet_honest / extreme / competitor_choose 等                   |
 | 健康/医疗 | 4            | crisis_slow / near_death / dr_wang×2                             |
 | 住房      | 3            | luxury_housing / tier_milestone / cold_snap                      |
-| 教育      | 3            | grad_ceremony / cert_bonus / edu_white_collar                   |
+| 教育      | 3            | grad_ceremony / cert_bonus / edu_white_collar                    |
 | 家庭      | 3            | corporate_mother_surgery / relocation / dividend(R30新增)        |
 | 社交 Tab  | 1            | NPC拜访按钮+好感互动(R30新增)                                    |
 
@@ -823,6 +823,7 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 - 禁止 `git push`（只做本地修改）→ **已更新：见下方 Git Push 规则**
 - 禁止引入任何外部库或 npm 包
 - 禁止在改到一半时停止（功能要完整可运行再停）
+- **🚨 禁止主动改动双端（桌面/手机）现有 UI 布局和样式**（2026-07-10 确立）：除非用户明确说"改这个UI"，否则任何功能开发、Bug修复、数据改动都不得附带修改 `render.js`/`style.css`/`index.html` 中已有的界面排列、尺寸、颜色、层级。新增内容可以追加，但不得移动或删除已有元素。
 
 ### Git Push 规则（2026-06-26 更新）
 
