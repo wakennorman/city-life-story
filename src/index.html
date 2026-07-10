@@ -177,12 +177,7 @@
           <button
             id="mobile-menu-btn"
             aria-label="菜单"
-            onclick="
-              (function () {
-                var s = document.getElementById('sidebar');
-                if (s) s.classList.toggle('open');
-              })()
-            "
+            onclick="toggleSidebar()"
           >
             ☰
           </button>
@@ -722,6 +717,24 @@
     <script src="js/data/scenario_start_chains.js"></script>
     <!-- Boot: 显示欢迎界面（所有脚本加载完毕后执行） -->
     <script>
+      function toggleSidebar() {
+        var s = document.getElementById("sidebar");
+        if (s) s.classList.toggle("open");
+      }
+      // 点击侧栏外部关闭
+      document.addEventListener("click", function (e) {
+        var sidebar = document.getElementById("sidebar");
+        var btn = document.getElementById("mobile-menu-btn");
+        if (
+          sidebar &&
+          sidebar.classList.contains("open") &&
+          !sidebar.contains(e.target) &&
+          btn &&
+          !btn.contains(e.target)
+        ) {
+          sidebar.classList.remove("open");
+        }
+      });
       showWelcome();
     </script>
   </body>

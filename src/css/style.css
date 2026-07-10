@@ -3699,6 +3699,40 @@ body {
     gap: 3px !important;
     font-size: 10px !important;
   }
+
+  /* ====== 移动端事件记录折叠（覆盖 481~768px 范围） ====== */
+  #message-log-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+  }
+  #message-log.collapsed .log-content {
+    display: block;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #message-log.collapsed .log-content .log-entry:nth-child(n+4) {
+    display: none;
+  }
+  #message-log.collapsed #message-log-preview {
+    display: block;
+    background: var(--bg-input, #fff);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 6px 10px;
+    margin: 4px 0 0;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #message-log.collapsed #message-log-preview:active {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  }
+  #message-log:not(.collapsed) #message-log-preview {
+    display: none;
+  }
 }
 
 @media (max-width: 360px) {
@@ -4012,9 +4046,10 @@ body {
   }
   .mobile-location-strip {
     overflow: hidden;
-    gap: 2px !important;
-    padding: 2px 6px !important;
-    font-size: 11px !important;
+    gap: 4px !important;
+    padding: 5px 8px !important;
+    font-size: 12px !important;
+    min-height: 34px !important;
   }
   /* 人生目标条（内容区）手机端紧凑 */
   .goal-strip-mobile {
@@ -4123,9 +4158,10 @@ body {
       font-size: 9px !important;
     }
     .mobile-location-strip {
-      font-size: 10px !important;
-      gap: 1px !important;
-      padding: 1px 4px !important;
+      font-size: 11px !important;
+      gap: 2px !important;
+      padding: 4px 6px !important;
+      min-height: 30px !important;
     }
     /* v3.51：极窄屏职业全景图强制单列 */
     .career-panorama-grid {
@@ -5313,6 +5349,7 @@ body {
   flex-wrap: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 32px;
 }
 
 /* [R30] NPC 拜访按钮 */

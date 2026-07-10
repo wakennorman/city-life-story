@@ -1882,7 +1882,7 @@ function renderLocationBar(state, parent) {
   var div = document.createElement("div");
   div.className = "mobile-location-strip";
   div.style.cssText =
-    "display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
+    "display:flex;align-items:center;gap:4px;padding:6px 10px;min-height:32px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
 
   // 背包容量
   var itemCount = 0;
@@ -7082,12 +7082,54 @@ function renderMessageLog(state) {
   var logEl = document.getElementById("message-log");
   if (!logEl) return;
   var contentEl = logEl.querySelector(".log-content");
+
+  // 确保 .log-content 存在
   if (!contentEl) {
     contentEl = document.createElement("div");
     contentEl.className = "log-content";
     contentEl.style.cssText = "max-height:220px;overflow-y:auto;";
     logEl.appendChild(contentEl);
   }
+
+  // === 首次渲染：添加折叠按钮头+预览元素（移动端可折叠） ===
+  var headerEl = logEl.querySelector("h3");
+  if (headerEl && !headerEl.querySelector("#message-log-toggle")) {
+    var toggleBtn = document.createElement("button");
+    toggleBtn.id = "message-log-toggle";
+    toggleBtn.className = "btn btn-sm";
+    toggleBtn.textContent = "📌 展开";
+    toggleBtn.onclick = function (e) {
+      e.stopPropagation();
+      logEl.classList.toggle("collapsed");
+      toggleBtn.textContent = logEl.classList.contains("collapsed")
+        ? "📌 展开"
+        : "📌 收起";
+      // 展开后自动滚动到最新
+      scrollMessageLogToTop();
+    };
+    headerEl.appendChild(toggleBtn);
+  }
+  // 创建预览行（仅移动端可见）
+  if (!document.getElementById("message-log-preview")) {
+    var preview = document.createElement("div");
+    preview.id = "message-log-preview";
+    preview.onclick = function () {
+      logEl.classList.remove("collapsed");
+      var tb = logEl.querySelector("#message-log-toggle");
+      if (tb) tb.textContent = "📌 收起";
+      scrollMessageLogToTop();
+    };
+    logEl.appendChild(preview);
+  }
+
+  // 移动端默认折叠（首次渲染时）
+  if (window.innerWidth <= 768 && !logEl._collapseInit) {
+    logEl.classList.add("collapsed");
+    logEl._collapseInit = true;
+    var tb = logEl.querySelector("#message-log-toggle");
+    if (tb) tb.textContent = "📌 展开";
+  }
+
   var msgs = (state && state.messageLog) || [];
   // 只显示最近50条
   var recent = msgs.slice(-50);
@@ -7104,6 +7146,37 @@ function renderMessageLog(state) {
   contentEl.innerHTML =
     html ||
     "<div class='log-entry info' style='color:var(--text-muted);'>暂无事件记录</div>";
+
+  // === 更新预览行：显示最新一条 ===
+  var previewEl = document.getElementById("message-log-preview");
+  if (previewEl && recent.length > 0) {
+    var last = recent[recent.length - 1];
+    var dayStr = last.day
+      ? "<span class='log-day'>D" + last.day + "</span>"
+      : "";
+    var txt = String(last.text || "")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    previewEl.innerHTML =
+      "<div class='log-preview-inner'>" +
+      dayStr +
+      txt.slice(0, 40) +
+      (txt.length > 40 ? "…" : "") +
+      "</div>";
+  } else if (previewEl) {
+    previewEl.innerHTML =
+      "<div class='log-preview-inner' style='color:var(--text-muted);'>暂无事件</div>";
+  }
+
+  // 自动滚动到最新（最上方）
+  scrollMessageLogToTop();
+}
+
+function scrollMessageLogToTop() {
+  var logEl = document.getElementById("message-log");
+  if (!logEl) return;
+  var c = logEl.querySelector(".log-content");
+  if (c) c.scrollTop = 0;
 }
 
 function scrollMessageLogToBottom() {
