@@ -1,16 +1,19 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-10（loop/r10-r19 rebase 到 main — 补入 30 个 R10-R19 独有事件 + 修复 cold_snap id 冲突）
+> 最后更新: 2026-07-10（loop/r20-r119 rebase 为超集：main + R10–R19(30) + R20–R119(478)，0 重复 id）
 >
 > commit: 待定（与 v3.63 合并）
 
 ---
 
-## 2026-07-10 — loop/r10-r19 rebase 到 main（R10-R19 缺失事件补入）
+## 2026-07-10 — rebase loop/r20-r119 → main（R20–R119 百轮联动事件合并）
 
-**背景**：R10–R19 那批 215 个事件原本在祖先提交 `bbdfc870`，当前 `main` 已含其中 185 个（平行窗口/早前合并带入），缺 30 个独有事件。本提交在 main 之上补入这 30 个，并把 main 自身重复的两份 `cold_snap_housing_crisis` 之一重命名为 `cold_snap_winter_shelter`（季节「寒潮来袭」事件，避免 id 冲突）。
+**操作**：将 `loop/r20-r119`（R20–R119 共 320 个联动事件）变基到当前 `main`，解决冲突后合并：
 
-**校验**：255 事件 / 0 重复 id / node --check OK / python build.py OK
+- `cross_system_events.js`：3 处既有事件的 `conditions` 被 main 与分支双向修改（xiaochen_night_market / trading_supply_demand_gap / npc_classmate_endorsement）→ 保留 main 的 NPC 关系门控（更贴合事件主题，且 NPC 系统是项目亮点）。
+- `linkage-events-gdd.md`：采用分支版（严格超集，累计 380 事件）。
+- 修复 1 个重复 id：分支追加的 `cold_snap_housing_crisis` 副本重命名为 `cold_snap_winter_shelter`。
+- 校验：事件总数 545（main 224 + R20–R119 新增 321），0 重复 id；`node --check` 通过；`python build.py` 通过。
 
 ---
 
