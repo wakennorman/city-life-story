@@ -44375,5 +44375,343 @@
   // ====================================================================
   // v3.80 loop R37 注册完毕（3个事件：¥1000万里程碑/多周目熟人/多周目遗产礼物）
   // ====================================================================
+
+  // ====================================================================
+  // v3.81 loop R38 学历里程碑 + 住房里程碑 + 连续疲劳爆发 + 道德极端分叉
+  // ====================================================================
+
+  // R38-① 学历里程碑 — 大专→本科毕业典礼
+  // 设计意图：学历升级是长期投入的回报，毕业典礼提供峰终记忆
+  // 联动系统：education + player.day + housing.tier
+  RANDOM_EVENTS.push({
+    id: "education_graduation_ceremony",
+    phase: "street",
+    icon: "🎓",
+    title: "毕业典礼",
+    story:
+      "成人教育学院发来短信：「尊敬的学员，您的毕业论文已通过答辩，请于本周六参加毕业典礼。」\n\n你盯着那条短信看了很久。三年前你还在城中村漏雨的隔间里刷夜刷题，今天你居然真的要毕业了。\n\n典礼很简单——一个简陋的会议室、几张塑料椅、院长念了半小时的致辞。但当校长把证书递到你手里时，你感觉到纸张的重量。",
+    conditions: function (st) {
+      if (st.player.day < 60) return false;
+      if (st.flags && st.flags._graduationCeremonySeen) return false;
+      // 检查education升级：从0→1或1→2
+      var edu = st.player.education || 0;
+      if (edu < 1) return false;
+      return true;
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "📸 认真拍几张照片",
+        hint: "心情+15，智力+3",
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          StateManager.addMessage(
+            "🎓 你在毕业典礼上拍了三张照片——一张和校长握手、一张和同学们的大合照、一张自己拿着证书的自拍。三年前的那个刷题少年，终于有了凭证。心情+15，智力+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍜 请同学吃顿饭",
+        hint: "现金-¥200，心情+10",
+        cost: 200,
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🍜 你请几个同学吃了顿火锅。大家聊起当年的苦日子，有人哭了，有人笑了。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 悄悄走掉，不参加了",
+        hint: "错过仪式感",
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          StateManager.addMessage(
+            "🚶 你选了个借口溜了。证书收到了，但总觉得少了点什么。可能是一群人一起哭一起笑的冲动。心情-8。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-② 住房等级里程碑 — 首次搬入一居室（从合租到独立）
+  // 设计意图：住房升级是底层玩家的重要里程碑，需要情感叙事
+  // 联动系统：housing.tier + player.day + cash
+  RANDOM_EVENTS.push({
+    id: "housing_tier_one_room",
+    phase: "street",
+    icon: "🏠",
+    title: "自己的房间",
+    story:
+      "你终于签了一居室的合同——不再是合租的一个床位，也不再是隔断间里的一扇小门。\n\n钥匙插进锁孔的那一刻，你推开门。三十平米，一室一厅，卫生间能洗澡，厨房能煮面。虽然很小，但这是你在这座城市第一个完全属于自己的空间。\n\n你坐在地板上看了一会儿阳光从窗户照进来。",
+    conditions: function (st) {
+      if (st.player.day < 30) return false;
+      if (st.flags && st.flags._housingOneRoomSeen) return false;
+      // 检查是否刚搬入一居室（tier从<3升到3）
+      if (!st.housing) return false;
+      var tier = st.housing.tier || 0;
+      // 首次达到一居室
+      if (tier >= 3 && st.flags._housingTierReached < 3) {
+        st.flags._housingTierReached = 3;
+        return true;
+      }
+      // 或者tier刚升到3
+      if (tier === 3 && !st.flags._housingOneRoomSeen) {
+        return true;
+      }
+      return false;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🛋️ 慢慢布置自己的小窝",
+        hint: "心情+15，卫生+10",
+        apply: function (st) {
+          st.flags._housingOneRoomSeen = true;
+          st.flags._housingTierReached = Math.max(
+            st.flags._housingTierReached || 0,
+            3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 10);
+          StateManager.addMessage(
+            "🏠 你花了两天时间布置这个小窝——一张桌子、一把椅子、一个书架。虽然简陋，但每一样东西都是你选的。心情+15，卫生+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📦 先住下来再说，以后慢慢添",
+        hint: "先安顿，心情+5",
+        apply: function (st) {
+          st.flags._housingOneRoomSeen = true;
+          st.flags._housingTierReached = Math.max(
+            st.flags._housingTierReached || 0,
+            3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📦 你先把行李搬进来，铺了张床垫就睡了。明天再去买桌椅。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-③ 连续疲劳爆发 — 过劳晕倒
+  // 设计意图：高疲劳持续多天后强制触发健康危机，让疲劳系统有真实后果
+  // 联动系统：needs.fatigue + flags._habits.highFatigueStreak + housing.tier
+  RANDOM_EVENTS.push({
+    id: "fatigue_breakdown_collapse",
+    phase: "street",
+    icon: "💥",
+    title: "倒下的一瞬间",
+    story:
+      "你在搬东西的时候突然眼前一黑，整个人失去了知觉。\n\n醒来时发现自己躺在出租屋的床上，头痛欲裂。邻居说你已经晕了快两个小时了。你记不清自己连续多少天没好好休息了——大概是从上周开始的？\n\n身体在用最极端的方式告诉你：不能再这样了。",
+    conditions: function (st) {
+      if (st.player.day < 15) return false;
+      if (st.flags && st.flags._fatigueBreakdownSeen) return false;
+      // 连续3天高疲劳
+      var habits = st.flags && st.flags._habits;
+      if (
+        !habits ||
+        (habits.highFatigueStreak || 0) < 3
+      )
+        return false;
+      // 当前疲劳仍高
+      if ((st.needs.fatigue || 0) < 80) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 去医院检查",
+        hint: "¥300-500，健康+20，强制休息3天",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.flags._forcedRestDays = 3;
+          st.flags._habits.highFatigueStreak = 0;
+          var cost = Random.int(300, 500);
+          if (st.resources.cash >= cost) {
+            st.resources.cash -= cost;
+          } else {
+            st.resources.debt =
+              (st.resources.debt || 0) + (cost - (st.resources.cash || 0));
+            st.resources.cash = 0;
+          }
+          st.status.health = Math.min(100, (st.status.health || 50) + 20);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 40);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🏥 医生说你这是严重过劳，再晚送来可能出大事。打了营养液，开了药，花了¥" +
+              cost +
+              "。强制休息了三天，健康+20，疲劳-40，心智+5。你发誓再也不这样了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "😴 在家躺着休息",
+        hint: "免费，健康+10，疲劳-25",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.flags._forcedRestDays = 2;
+          st.flags._habits.highFatigueStreak = 0;
+          st.status.health = Math.min(100, (st.status.health || 50) + 10);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😴 你关了手机，拉上窗帘躺了两天。除了外卖没人打扰。醒来时虽然还没完全恢复，但至少知道该放慢节奏了。健康+10，疲劳-25，心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💪 休息一下继续干",
+        hint: "健康-15，疲劳-10，可能埋下疾病隐患",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.status.health = Math.max(0, (st.status.health || 50) - 15);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage(
+            "💪 你睡了半天就起来了。身体还在抗议，但你告诉自己没事。健康-15，疲劳-10。你知道自己在透支，但有时候没有选择。",
+            "danger",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-④ 道德极端分叉 — 高道德者的城市共鸣 vs 低道德者的孤立
+  // 设计意图：同一个城市事件，高道德玩家获得善意回报，低道德玩家遭遇冷漠反噬
+  // 联动系统：morality + phase + housing.tier
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_city_resonance",
+    phase: "street",
+    icon: "🌆",
+    title: "城市的温度",
+    story:
+      "今天下班回家的路上，你经过一条小巷。巷口有个小孩子在哭——他的气球被树枝卡住了，够不着。\n\n你停下脚步。周围有几个路人也在看，但没有人动。",
+    conditions: function (st) {
+      if (st.player.day < 10) return false;
+      if (st.flags && st.flags._moralCityResonanceSeen) return false;
+      // 道德极端值：≥80（高道德）或 ≤20（低道德）
+      var mor = st.player.morality || 50;
+      if (mor > 20 && mor < 80) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: function (st) {
+      var mor = st.player.morality || 50;
+      if (mor >= 80) {
+        // 高道德：主动帮助
+        return [
+          {
+            text: "🎈 帮小孩拿下气球",
+            hint: "道德+5，心情+15，可能获得意外回报",
+            apply: function (s) {
+              s.flags._moralCityResonanceSeen = true;
+              s.player.morality = Math.min(100, (s.player.morality || 50) + 5);
+              s.needs.happiness = Math.min(
+                100,
+                (s.needs.happiness || 50) + 15,
+              );
+              // 小概率获得回报
+              if (Random.chance(0.4)) {
+                var reward = Random.int(20, 80);
+                s.resources.cash += reward;
+                s.resources.totalEarned =
+                  (s.resources.totalEarned || 0) + reward;
+                StateManager.addMessage(
+                  "🎈 你踮起脚尖，好不容易把气球取了下来。小孩不哭了，笑得特别开心。他妈妈走过来塞给你¥" +
+                    reward +
+                    "：「谢谢你，今天是我儿子最开心的一天。」道德+5，心情+15，意外获得¥" +
+                    reward +
+                    "。这座城市偶尔也会给你温暖的回馈。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "🎈 你踮起脚尖，好不容易把气球取了下来。小孩不哭了，笑得特别开心。他妈妈连声道谢。道德+5，心情+15。有时候一件小事就足够了。",
+                  "success",
+                );
+              }
+            },
+          },
+          {
+            text: "📱 教小孩自己想办法",
+            hint: "心智+3，耐心教导",
+            apply: function (s) {
+              s.flags._moralCityResonanceSeen = true;
+              s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+              s.player.morality = Math.min(
+                100,
+                (s.player.morality || 50) + 2,
+              );
+              StateManager.addMessage(
+                "📱 你蹲下来教小孩怎么够——先找根长棍子，再慢慢挑。小孩学会了，自己把气球弄了下来。心智+3，道德+2。",
+                "info",
+              );
+            },
+          },
+        ];
+      }
+      // 低道德：冷漠旁观
+      return [
+        {
+          text: "🚶 走开，不关我事",
+          hint: "冷漠，心情-5",
+          apply: function (s) {
+            s.flags._moralCityResonanceSeen = true;
+            s.player.morality = Math.max(0, (s.player.morality || 50) - 2);
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "🚶 你走了过去。身后小孩的哭声越来越小——不知道是被妈妈抱走了，还是哭累了。道德-2，心情-5。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "📱 拍个视频发网上",
+          hint: "道德-3，但可能获得流量",
+          apply: function (s) {
+            s.flags._moralCityResonanceSeen = true;
+            s.player.morality = Math.max(0, (s.player.morality || 50) - 3);
+            s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+            var earn = Random.int(10, 50);
+            s.resources.cash += earn;
+            s.resources.totalEarned = (s.resources.totalEarned || 0) + earn;
+            StateManager.addMessage(
+              "📱 你拍了个视频发了出去：「街头冷漠——小孩够不到气球没人帮。」有人评论说「这城市太凉了」。赚了¥" +
+                earn +
+                "，但心里有点堵。名气+2，道德-3。",
+              "warning",
+            );
+          },
+        },
+      ];
+    },
+  });
+
+  // ====================================================================
+  // v3.81 loop R38 注册完毕（4个事件：学历毕业/住房一居室/过劳晕倒/道德分叉）
+  // ====================================================================
   // ====== 注册结束 ======
 })();
