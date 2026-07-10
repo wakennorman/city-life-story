@@ -1927,8 +1927,9 @@ function renderLocationBar(state, parent) {
   // 升级提示：露宿时引导升级（提示随住所变化而变化）
   if (currentTier === 0) {
     var tipSpan = document.createElement("span");
-    tipSpan.style.cssText = "font-size:10px;color:var(--warning);";
-    tipSpan.textContent = "💡去城中村可升级为🛏️合租床位";
+    tipSpan.style.cssText = "font-size:10px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;";
+    tipSpan.title = "去城中村可升级为合租床位";
+    tipSpan.textContent = "💡升级住所";
     rightGroup.appendChild(tipSpan);
   }
 
@@ -2045,6 +2046,15 @@ function renderStatsStrip(state, parent) {
         return p.charm || 0;
       },
     },
+    {
+      label: "道德",
+      cls: "morality-bar",
+      color: "#6ac49a",
+      threshold: 20,
+      getVal: function () {
+        return p.morality != null ? p.morality : 50;
+      },
+    },
   ];
 
   var needs = [
@@ -2105,7 +2115,8 @@ function renderStatsStrip(state, parent) {
     illnessDiv.className = "mss-illness";
     var names = s.illnesses
       .map(function (d) {
-        var nm = typeof d === "string" ? d : d.name || d.id || "";
+        var id = typeof d === "string" ? d : d.id || "";
+        var nm = (typeof ILLNESSES !== "undefined" && ILLNESSES[id] && ILLNESSES[id].name) || (typeof d === "object" && d.name) || id;
         return nm;
       })
       .filter(Boolean);
@@ -2752,17 +2763,28 @@ function renderGuidanceBar(state, parent) {
     corporate: { icon: "🏢", label: "职场打拼" },
     advanced: { icon: "🏆", label: "有头有脸" },
   };
-  var p = state.player, r = state.resources || {};
+  var p = state.player,
+    r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
   var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
-  var stageId = p.day <= 7 ? "survival"
-    : debt > 0 ? "debt"
-    : p.phase === "corporate" ? (cash >= 50000 ? "advanced" : "corporate")
-    : "growth";
+  var stageId =
+    p.day <= 7
+      ? "survival"
+      : debt > 0
+        ? "debt"
+        : p.phase === "corporate"
+          ? cash >= 50000
+            ? "advanced"
+            : "corporate"
+          : "growth";
   var si = _SM[stageId] || _SM.survival;
 
-  var dream = typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
-  var progress = dream && typeof getDreamProgress === "function" ? Math.round(getDreamProgress(state)) : 0;
+  var dream =
+    typeof getCurrentDream === "function" ? getCurrentDream(state) : null;
+  var progress =
+    dream && typeof getDreamProgress === "function"
+      ? Math.round(getDreamProgress(state))
+      : 0;
   var tips = getDailyActionTips(state);
   var mental = (state.player && state.player.mental) || 0;
 
@@ -2773,19 +2795,20 @@ function renderGuidanceBar(state, parent) {
   row.className = "gb-row";
   bar.appendChild(row);
 
-  // ── 格1：阶段 ──
+  // ── 格1：阶段（高亮 + 定位标记）──
   var c1 = document.createElement("div");
-  c1.className = "gb-cell gb-cell-stage";
+  c1.className = "gb-cell gb-cell-stage gb-cell-active";
 
   var stageTitle = document.createElement("div");
   stageTitle.className = "gb-cell-title";
   stageTitle.textContent = "当前阶段";
   c1.appendChild(stageTitle);
 
-  var stageLabel = document.createElement("div");
-  stageLabel.style.cssText = "font-size:13px;font-weight:700;color:var(--accent);margin:3px 0;";
-  stageLabel.textContent = si.icon + " " + si.label;
-  c1.appendChild(stageLabel);
+  // 定位针
+  var stagePin = document.createElement("div");
+  stagePin.className = "gb-cell-pin";
+  stagePin.innerHTML = '📍 <strong>' + si.icon + " " + si.label + '</strong>';
+  c1.appendChild(stagePin);
 
   // 人生旅程弧（横向滚动小点）
   if (typeof window !== "undefined" && window.renderLifeArcStrip) {
@@ -2798,21 +2821,28 @@ function renderGuidanceBar(state, parent) {
   // 人生目标进度
   if (dream) {
     var goalRow = document.createElement("div");
-    goalRow.style.cssText = "display:flex;align-items:center;gap:5px;margin-top:4px;";
+    goalRow.style.cssText =
+      "display:flex;align-items:center;gap:5px;margin-top:4px;";
     goalRow.innerHTML =
-      '<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">' + _esc(dream.icon + " " + dream.name) + '</span>' +
+      '<span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">' +
+      _esc(dream.icon + " " + dream.name) +
+      "</span>" +
       '<div style="flex:1;height:3px;background:var(--bg-input);border-radius:2px;overflow:hidden;">' +
-        '<div style="width:' + progress + '%;height:100%;background:var(--accent);border-radius:2px;"></div>' +
-      '</div>' +
-      '<span style="font-size:9px;color:var(--text-muted);">' + progress + '%</span>';
+      '<div style="width:' +
+      progress +
+      '%;height:100%;background:var(--accent);border-radius:2px;"></div>' +
+      "</div>" +
+      '<span style="font-size:9px;color:var(--text-muted);">' +
+      progress +
+      "%</span>";
     c1.appendChild(goalRow);
   }
 
   row.appendChild(c1);
 
-  // ── 格2：当前目标 ──
+  // ── 格2：当前目标（高亮）──
   var c2 = document.createElement("div");
-  c2.className = "gb-cell gb-cell-quest";
+  c2.className = "gb-cell gb-cell-quest gb-cell-active";
 
   var questTitle = document.createElement("div");
   questTitle.className = "gb-cell-title";
@@ -2832,28 +2862,73 @@ function renderGuidanceBar(state, parent) {
   var c3 = document.createElement("div");
   c3.className = "gb-cell gb-cell-tips";
 
-  var mentalTag = mental >= 80 ? "🧠 专家洞察" : mental >= 60 ? "💡 进阶建议" : "💡 今日建议";
+  var mentalTag =
+    mental >= 80 ? "🧠 专家洞察" : mental >= 60 ? "💡 进阶建议" : "💡 今日建议";
   var tipsTitle = document.createElement("div");
   tipsTitle.className = "gb-cell-title";
   tipsTitle.textContent = mentalTag;
   c3.appendChild(tipsTitle);
 
   if (tips.length > 0) {
+    // 轮播式显示：一次显示一条，每2秒切换
     var tipInner = document.createElement("div");
-    tipInner.className = "gb-tips-inner";
-    tips.slice(0, 4).forEach(function(t) {
+    tipInner.className = "gb-tips-inner gb-tips-cycle";
+    var tipDisplay = document.createElement("div");
+    tipDisplay.className = "gb-tip-display";
+    tipDisplay.textContent = tips[0];
+    tipInner.appendChild(tipDisplay);
+
+    var dotRow = document.createElement("div");
+    dotRow.style.cssText = "display:flex;gap:3px;margin-top:4px;justify-content:center;flex-wrap:wrap;";
+    tips.forEach(function (_, i) {
+      var dot = document.createElement("span");
+      dot.className = "gb-tip-dot" + (i === 0 ? " active" : "");
+      dotRow.appendChild(dot);
+    });
+    tipInner.appendChild(dotRow);
+
+    // 所有建议列表（折叠展开）
+    var allTipsWrap = document.createElement("div");
+    allTipsWrap.className = "gb-tips-all-wrap";
+    allTipsWrap.style.display = "none";
+    tips.forEach(function (t) {
       var trow = document.createElement("div");
       trow.style.cssText = "font-size:11px;color:var(--text-secondary);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.4;";
       trow.textContent = t;
-      tipInner.appendChild(trow);
+      allTipsWrap.appendChild(trow);
     });
-    if (tips.length > 4) {
-      var moreT = document.createElement("div");
-      moreT.style.cssText = "font-size:10px;color:var(--text-muted);margin-top:2px;";
-      moreT.textContent = "…共" + tips.length + "条";
-      tipInner.appendChild(moreT);
-    }
+    tipInner.appendChild(allTipsWrap);
+
+    // 展开全部按钮
+    var expandBtn = document.createElement("div");
+    expandBtn.style.cssText = "font-size:10px;color:var(--accent);cursor:pointer;margin-top:3px;text-align:center;";
+    expandBtn.textContent = "展开全部" + tips.length + "条";
+    var expanded = false;
+    expandBtn.onclick = function () {
+      expanded = !expanded;
+      allTipsWrap.style.display = expanded ? "" : "none";
+      dotRow.style.display = expanded ? "none" : "";
+      tipDisplay.style.display = expanded ? "none" : "";
+      expandBtn.textContent = expanded ? "收起" : "展开全部" + tips.length + "条";
+    };
+    tipInner.appendChild(expandBtn);
+
     c3.appendChild(tipInner);
+
+    // 启动轮播
+    var _tipIdx = 0;
+    var _tipTimer = setInterval(function () {
+      if (!tipInner.isConnected) { clearInterval(_tipTimer); return; }
+      if (expanded) return;
+      _tipIdx = (_tipIdx + 1) % tips.length;
+      tipDisplay.style.animation = "none";
+      tipDisplay.offsetHeight; // reflow
+      tipDisplay.style.animation = "";
+      tipDisplay.textContent = tips[_tipIdx];
+      dotRow.querySelectorAll(".gb-tip-dot").forEach(function (d, i) {
+        d.classList.toggle("active", i === _tipIdx);
+      });
+    }, 2500);
   } else {
     var noTip = document.createElement("div");
     noTip.style.cssText = "font-size:11px;color:var(--text-muted);";
@@ -2878,7 +2953,10 @@ function renderActionsTab(state, parent) {
     );
   });
 
-  // === 地点氛围描写（每日轮换，让城市有生命感）===
+  // === 引导面板（今日建议/当前目标/当前阶段）===
+  renderGuidanceBar(state, parent);
+
+  // === 地点氛围描写（放在引导面板之后，不遮挡主要信息）===
   if (typeof getLocationFlavor === "function") {
     var locId = state.trade && state.trade.currentLocation;
     var flavorText = getLocationFlavor(locId, state.player.day);
@@ -2890,9 +2968,6 @@ function renderActionsTab(state, parent) {
       parent.appendChild(flavorBox);
     }
   }
-
-  // === 引导面板（可展开/折叠，减少滚动负担）===
-  renderGuidanceBar(state, parent);
 
   // === 频次追踪 + 智能排序 ===
   if (typeof ActionSort !== "undefined" && ActionSort.sortActions) {
@@ -6982,4 +7057,36 @@ function renderPgEdu(state, content) {
   }
   html += "</div></div>";
   content.innerHTML = html;
+}
+
+// ====== 事件记录渲染 ======
+function renderMessageLog(state) {
+  var logEl = document.getElementById("message-log");
+  if (!logEl) return;
+  var contentEl = logEl.querySelector(".log-content");
+  if (!contentEl) {
+    contentEl = document.createElement("div");
+    contentEl.className = "log-content";
+    contentEl.style.cssText = "max-height:220px;overflow-y:auto;";
+    logEl.appendChild(contentEl);
+  }
+  var msgs = (state && state.messageLog) || [];
+  // 只显示最近50条
+  var recent = msgs.slice(-50);
+  var html = "";
+  for (var i = recent.length - 1; i >= 0; i--) {
+    var m = recent[i];
+    var cls = m.type || "info";
+    var dayStr = m.day ? "<span class='log-day'>D" + m.day + "</span>" : "";
+    var txt = String(m.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    html += "<div class='log-entry " + cls + "'>" + dayStr + txt + "</div>";
+  }
+  contentEl.innerHTML = html || "<div class='log-entry info' style='color:var(--text-muted);'>暂无事件记录</div>";
+}
+
+function scrollMessageLogToBottom() {
+  var logEl = document.getElementById("message-log");
+  if (!logEl) return;
+  var c = logEl.querySelector(".log-content");
+  if (c) c.scrollTop = c.scrollHeight;
 }

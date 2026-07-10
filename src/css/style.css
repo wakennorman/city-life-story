@@ -1647,6 +1647,36 @@ body {
   .sidebar-version-footer {
     display: none !important;
   }
+
+  /* 桌面端：引导面板正方形格子 */
+  .gb-row {
+    align-items: stretch;
+  }
+  .gb-cell {
+    flex: 1 1 0;
+    min-width: 160px;
+    min-height: 120px;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+  .gb-cell-active {
+    border-width: 2px;
+  }
+  .gb-cell-pin {
+    font-size: 15px;
+    margin: 4px 0;
+  }
+  .gb-tip-display {
+    font-size: 12px;
+    min-height: 40px;
+  }
+  .gb-tips-all-wrap {
+    max-height: 200px;
+  }
+  /* 桌面端收益浮动数字：确保在 z-index 堆叠最顶层 */
+  .earn-float {
+    z-index: 99999;
+  }
 }
 
 /* ====== Tutorial System ====== */
@@ -4073,6 +4103,9 @@ body {
   .mss-fill.health {
     background: linear-gradient(90deg, #d47058, #56b468);
   }
+  .mss-fill.morality-bar {
+    background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+  }
   /* 窄屏（<=360px）进一步压字号、去空白 */
   @media (max-width: 360px) {
     .mss-label {
@@ -5196,6 +5229,81 @@ body {
 }
 .tab-btn {
   touch-action: manipulation;
+}
+
+/* ====== gb-cell 正方形框 + 高亮 + 道德色带 + 提示轮播 ====== */
+
+/* 活跃格（当前阶段/当前目标）高亮边框 + 脉冲 */
+@keyframes gb-active-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(102,126,234,0.0); border-color: rgba(102,126,234,0.35); }
+  50% { box-shadow: 0 0 0 3px rgba(102,126,234,0.18); border-color: rgba(102,126,234,0.6); }
+}
+.gb-cell-active {
+  border-color: rgba(102,126,234,0.35) !important;
+  background: rgba(102,126,234,0.08) !important;
+  animation: gb-active-pulse 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+/* 定位针标签 */
+.gb-cell-pin {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 3px 0 2px;
+  line-height: 1.3;
+}
+
+/* 今日建议轮播区 */
+@keyframes gb-tip-fadein {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gb-tip-display {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  min-height: 32px;
+  animation: gb-tip-fadein 0.4s ease;
+}
+.gb-tip-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: inline-block;
+  transition: background 0.3s;
+}
+.gb-tip-dot.active {
+  background: var(--accent);
+}
+
+/* 展开后全部建议列表可滚动 */
+.gb-tips-all-wrap {
+  overflow-y: auto;
+  max-height: 160px;
+}
+
+/* 道德色带（绿色） */
+.mss-fill.morality-bar {
+  background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+}
+
+/* 手机端 6 属性自适应：字体缩小，不换行 */
+.mobile-stats-strip .mss-row {
+  flex-wrap: nowrap;
+}
+.mobile-stats-strip .mss-cell {
+  min-width: 0;
+}
+.mobile-stats-strip .mss-label {
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* 位置栏完全自适应 */
+.mobile-location-strip {
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 /* [R30] NPC 拜访按钮 */

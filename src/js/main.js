@@ -236,7 +236,7 @@ function bindHeaderButtons() {
     {
       id: "mobile-menu-btn",
       fn: function () {
-        var sidebar = document.querySelector(".sidebar");
+        var sidebar = document.getElementById("sidebar");
         if (sidebar) sidebar.classList.toggle("open");
       },
     },
@@ -4293,7 +4293,7 @@ function doStreetJob(job) {
   );
 
   // v3.70 收益浮动数字
-  var _hotCardEl = document.querySelector('[data-action-id="' + job.id + '"]');
+  var _hotCardEl = document.querySelector('[data-action-id="job_' + job.id + '"]');
   showEarnFloat(pay, _hotCardEl);
 
   // === 城管检查（摆摊类工作）===
