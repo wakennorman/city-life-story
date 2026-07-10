@@ -1,8 +1,8 @@
 # 跨系统联动事件 GDD（设计规格文档）
 
 > 模块: `src/js/core/cross_system_events.js`
-> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~R29 累计 50 个联动事件
-> 最后更新: 2026-07-09
+> 版本: v3.59 / v3.60 / loop-R1~~R3 / loop-R6~~R9 / loop-R11~~R13 / loop-R26~R31 累计 55 个联动事件
+> 最后更新: 2026-07-10
 > 目的: 落实「日常开发」循环目标——**加强多方关联度**。每个事件都把至少一个次级系统(天赋/技能/NPC关系/天气/声望/道德/名声/经济)与随机事件系统连接,制造涌现式玩法。
 
 设计原则（贯穿全部 17 个事件）:
@@ -551,6 +551,56 @@
 - **Edge Cases**: 最负面时刻的紧张感；50%赌局制造情感冲击
 - **Tuning Levers**: probability 0.06
 - **Dependencies**: 健康系统、经济、债务
+
+## 51. `skill_combo_big_client` — 大客户招待（loop-R31）
+
+- **Purpose**: 技能组合双高门槛(sales≥40+charm≥30)解锁"专业人士感觉",让玩家感受到协同成长的价值(P2④)
+- **Player Fantasy**: 我不再是普通人了——我的专业能力被人看到了。
+- **Trigger**: `sales≥40` + `charm≥30` + `day≥30`
+- **Outputs**: 选项A 亲自接待(¥800-1500/salesXP+80/魅力+3/名气+5);选项B 引荐(中介费¥300-500/名气+3);选项C 婉拒
+- **Edge Cases**: 双技能门槛确保只有真的练了这两项的玩家才能触发;一次性的峰终定律仪式
+- **Tuning Levers**: probability 0.03, 双技能阈值
+- **Dependencies**: 技能系统、魅力属性、名声系统
+
+## 52. `skill_combo_repair_shop` — 合伙开修理铺（loop-R31）
+
+- **Purpose**: repair≥30+management≥20双combo解锁"副业升级",让技术型玩家看到技能变现路径(P2④)
+- **Player Fantasy**: 我的手艺值钱了,有人愿意投资我。
+- **Trigger**: `repair≥30` + `management≥20` + `day≥40`
+- **Outputs**: 选项A 合伙(副业收入/管理XP+50);选项B 接私活(¥200-400/修理XP+60);选项C 婉拒
+- **Edge Cases**: 管理≥20门槛确保玩家不只是闷头修东西,也开始懂经营;维修铺状态写入sideHustle
+- **Tuning Levers**: probability 0.025, 技能阈值
+- **Dependencies**: 技能系统、副业系统
+
+## 53. `spring_job_fair` — 春季招聘会（loop-R31）
+
+- **Purpose**: 填补季节叙事空白(spring),让玩家在春季感受到"万物复苏招聘旺季"(P2⑤)
+- **Player Fantasy**: 春天是新的开始,我也该找份正经工作了。
+- **Trigger**: `season=spring` + `day≥60`
+- **Outputs**: 选项A 投简历(智力+2/心智+5/春季求职Flag);选项B 看行情(智力+1);选项C 帮朋友打听(名气+3/心情+5)
+- **Edge Cases**: 季节性事件,只在春季可触发;一年一次的设计让错过春季的玩家等待下一年
+- **Tuning Levers**: probability 0.04, day≥60确保初期有积累再面对招聘
+- **Dependencies**: 天气/季节系统、职业系统
+
+## 54. `autumn_harvest_market` — 秋收集市（loop-R31）
+
+- **Purpose**: 填补秋季叙事空白,让玩家感受"丰收的季节"(P2⑤)
+- **Player Fantasy**: 秋天是收获的季节,我也该犒劳一下自己。
+- **Trigger**: `season=autumn` + `day≥30`
+- **Outputs**: 选项A 批发水果卖(¥200本/赚¥300-600/salesXP+30);选项B 买水果(¥50/心情+15/健康+3);选项C 逛逛(心情+3)
+- **Edge Cases**: 秋季专属,错过等一年;水果贩卖需要本钱¥200的设计增加了决策门槛
+- **Tuning Levers**: probability 0.04, 本钱¥200
+- **Dependencies**: 天气/季节系统、交易系统
+
+## 55. `equipment_first_high_quality` — 意外的好东西（loop-R31）
+
+- **Purpose**: 玩家第一次拥有高品质装备时的仪式感事件,让装备系统有叙事回响(P2⑥)
+- **Player Fantasy**: 我终于有了一件好东西,它改变了我对这世界的感受。
+- **Trigger**: 玩家持有good/excellent/rare品质装备 + day≥15
+- **Outputs**: 选项A 保养(所有高品质装备耐久+10/心情+8);选项B 发朋友圈(名气+4/心情+10);选项C 低调(心智+3)
+- **Edge Cases**: 扫描equipmentInstances所有槽位,任一槽有高品质装备即可触发;一次性仪式事件
+- **Tuning Levers**: probability 0.03, 品质门槛
+- **Dependencies**: 装备品质系统、名声系统
 
 ## 数值平衡备注（全部 `[PLACEHOLDER]`）
 

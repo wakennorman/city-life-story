@@ -16096,5 +16096,409 @@
     ],
   });
 
+  // ====== R31 新增：P2 空白区填充 ======
+
+  // ====== ① 技能组合双高门槛：销售+魅力 ======
+  // 设计意图：sales≥40 + charm≥30 双技能 combo 解锁"大客户招待"场景
+  RANDOM_EVENTS.push({
+    id: "skill_combo_big_client",
+    phase: "street",
+    icon: "🤝",
+    title: "大客户招待机会",
+    story:
+      "今天在市场里，一个穿着西装的中年人一直在看你的摊位。他自称是附近一家公司的采购经理，说看你做事利索、说话得体，想请你帮他们公司做一批员工福利采购——单子不小，但需要你‘能镇住场子’。",
+    conditions: function (st) {
+      // [自洽修复] 双技能门槛：sales≥40 + charm≥30
+      var sales = st.skills && st.skills.sales ? st.skills.sales.level || 0 : 0;
+      var charm = st.player ? st.player.charm || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        sales >= 40 &&
+        charm >= 29 &&
+        st.player.day >= 30 &&
+        !st.flags._bigClientDone
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "💼 亲自接待，谈下这笔单",
+        hint: "销售经验+ 魅力+",
+        apply: function (st) {
+          st.flags._bigClientDone = true;
+          var earn = Random.int(800, 1500);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 80;
+          }
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "💼 你用自己的专业态度谈下了这笔福利采购单，到手¥" +
+              earn +
+              "。销售经验大涨，魅力+3，名气+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 引荐给认识的老板",
+        hint: "拿中介费 关系网+",
+        apply: function (st) {
+          st.flags._bigClientDone = true;
+          var fee = Random.int(300, 500);
+          st.resources.cash += fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🤝 你把采购经理引荐给了王婶认识的批发商，拿了¥" +
+              fee +
+              "中介费。名气+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😅 婉拒了，怕搞砸",
+        hint: "什么也不发生",
+        apply: function (st) {
+          st.flags._bigClientDone = true;
+          StateManager.addMessage(
+            "😅 你婉拒了对方。大单子确实不是现在的你能接住的。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== ② 技能组合双高门槛：修理+管理 ======
+  // 设计意图：repair≥30 + management≥20 → 有人邀你合伙开修理铺
+  RANDOM_EVENTS.push({
+    id: "skill_combo_repair_shop",
+    phase: "street",
+    icon: "🔧",
+    title: "合伙开修理铺的机会",
+    story:
+      "经常来找你修东西的老赵今天带来一个主意——他说这条街上的住户电器坏了都要跑老远去修，不如你俩合伙在街角租个小铺面，他出钱你出技术，利润对半分。你算了算，这活儿你确实干得了。",
+    conditions: function (st) {
+      // [自洽修复] 双技能门槛：repair≥30 + management≥20
+      var repair =
+        st.skills && st.skills.repair ? st.skills.repair.level || 0 : 0;
+      var mgmt =
+        st.skills && st.skills.management ? st.skills.management.level || 0 : 0;
+      return (
+        st.player.phase === "street" &&
+        repair >= 30 &&
+        mgmt >= 20 &&
+        st.player.day >= 40 &&
+        !st.flags._repairShopOfferDone
+      );
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "👍 同意合伙",
+        hint: "副业收入+ 管理+",
+        apply: function (st) {
+          st.flags._repairShopOfferDone = true;
+          st.flags._repairShopPartner = true;
+          // 开启副业型收入：每周自动增加
+          st.sideHustle = st.sideHustle || {};
+          st.sideHustle.repairShop = {
+            active: true,
+            startedDay: st.player.day,
+            totalEarned: 0,
+          };
+          var startBonus = Random.int(500, 1000);
+          st.resources.cash += startBonus;
+          st.resources.totalEarned =
+            (st.resources.totalEarned || 0) + startBonus;
+          if (st.skills && st.skills.management) {
+            st.skills.management.xp = (st.skills.management.xp || 0) + 50;
+          }
+          StateManager.addMessage(
+            "🔧 你和老赵的修理铺开张了！第一个月就分了¥" +
+              startBonus +
+              "。管理经验+50。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🛠️ 只接私活，不合伙",
+        hint: "修理经验+ 少量现金",
+        apply: function (st) {
+          st.flags._repairShopOfferDone = true;
+          var earn = Random.int(200, 400);
+          st.resources.cash += earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          if (st.skills && st.skills.repair) {
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 60;
+          }
+          StateManager.addMessage(
+            "🛠️ 你接了老赵介绍的几单私活，赚了¥" +
+              earn +
+              "，修理技术又精进了。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😅 暂时没精力",
+        hint: "婉拒",
+        apply: function (st) {
+          st.flags._repairShopOfferDone = true;
+          StateManager.addMessage(
+            "😅 你跟老赵说现在太忙了，以后有机会再说。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== ③ 季节 Spring 叙事：春季招聘会 ======
+  // 设计意图：春季是招聘旺季，填补季节叙事空白
+  RANDOM_EVENTS.push({
+    id: "spring_job_fair",
+    phase: "street",
+    icon: "🌱",
+    title: "春季招聘会",
+    story:
+      "春风吹走了冬天的寒冷。城市广场上搭起了一排排帐篷——一年一度的春季招聘会开始了！几十家企业摆摊招人，从工厂普工到写字楼文员，岗位多得让人眼花缭乱。你手里攥着简历，在人群里挤来挤去。",
+    conditions: function (st) {
+      // [自洽修复] 检查季节为春季 + 天数≥60
+      var season = st.weather && st.weather.season;
+      return (
+        st.player.phase === "street" &&
+        season === "spring" &&
+        st.player.day >= 60 &&
+        !st.flags._springJobFairDone
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📄 认真投简历找工作",
+        hint: "职业机会+ 智力+",
+        apply: function (st) {
+          st.flags._springJobFairDone = true;
+          st.flags._springJobFairApplied = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 2,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🌱 你投了5份简历，和三个HR聊了聊。感觉离职场又近了一步。智力+2，心智+5。接下来几天可能会有面试通知。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "👀 只是看看行情",
+        hint: "了解市场",
+        apply: function (st) {
+          st.flags._springJobFairDone = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 1,
+          );
+          StateManager.addMessage(
+            "👀 你转了一圈，了解了各行业薪资水平。心里有底了。智力+1。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📢 帮朋友打听岗位",
+        hint: "名声+",
+        apply: function (st) {
+          st.flags._springJobFairDone = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📢 你帮几个工友打听了合适的岗位，他们都很感激。名气+3，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== ④ 季节 Autumn 叙事：秋收集市 ======
+  // 设计意图：秋季是丰收季节，填补季节叙事空白
+  RANDOM_EVENTS.push({
+    id: "autumn_harvest_market",
+    phase: "street",
+    icon: "🍂",
+    title: "秋收集市",
+    story:
+      "秋天的风带着果香和桂花味。城郊的农户们拉着满车的时令水果和蔬菜进城来了——红彤彤的苹果、金黄的柿子、刚挖出来的红薯。批发市场的价格比平时低了三成，但周末的市民市集上，这些农产品能卖出好价钱。",
+    conditions: function (st) {
+      // [自洽修复] 检查季节为秋季 + 天数≥30
+      var season = st.weather && st.weather.season;
+      return (
+        st.player.phase === "street" &&
+        season === "autumn" &&
+        st.player.day >= 30 &&
+        !st.flags._autumnHarvestDone
+      );
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 批发水果去市集卖",
+        hint: "赚差价 需要本钱",
+        cost: 200,
+        apply: function (st) {
+          st.flags._autumnHarvestDone = true;
+          var profit = Random.int(300, 600);
+          st.resources.cash += profit;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
+          if (st.skills && st.skills.sales) {
+            st.skills.sales.xp = (st.skills.sales.xp || 0) + 30;
+          }
+          StateManager.addMessage(
+            "🍂 你批了一箱苹果和一筐柿子，周末在市集上卖了个精光，净赚¥" +
+              profit +
+              "。销售经验+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍎 买些水果犒劳自己",
+        hint: "心情+ 健康+",
+        cost: 50,
+        apply: function (st) {
+          st.flags._autumnHarvestDone = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.status.health = Math.min(100, (st.status.health || 70) + 3);
+          StateManager.addMessage(
+            "🍎 你买了一兜苹果和几个柿子，坐在公园长椅上吃了个痛快。秋天真好啊。心情+15，健康+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 看看就好，不买",
+        hint: "省钱",
+        apply: function (st) {
+          st.flags._autumnHarvestDone = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🚶 你在集市里逛了一圈，闻着果香也挺满足的。心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== ⑤ 装备品质里程碑：首次获得高品质装备 ======
+  // 设计意图：玩家第一次获得高品质装备时的仪式感事件
+  RANDOM_EVENTS.push({
+    id: "equipment_first_high_quality",
+    phase: "street",
+    icon: "✨",
+    title: "意外的好东西",
+    story:
+      "你在翻找旧货时，手指碰到了一件手感格外特别的东西——拿起来仔细一看，成色比普通货色好太多了！这东西做工精良、用料扎实，一看就不是大路货。旁边的人凑过来问你在哪找到的，你心里美滋滋的。",
+    conditions: function (st) {
+      // [自洽修复] 玩家有高品质装备 或 首次获得高品质装备的flag
+      var hasHighQuality = false;
+      var eq = st.inventory && st.inventory.equipmentInstances;
+      if (eq) {
+        for (var slot in eq) {
+          var inst = eq[slot];
+          if (
+            inst &&
+            (inst.quality === "good" ||
+              inst.quality === "excellent" ||
+              inst.quality === "rare")
+          ) {
+            hasHighQuality = true;
+            break;
+          }
+        }
+      }
+      // 也检查物品栏
+      var items = st.inventory && st.inventory.items;
+      if (items && !hasHighQuality) {
+        // 如果有通用标志，也放行
+      }
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        hasHighQuality &&
+        !st.flags._equipQualityMilestoneSeen
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧼 精心保养这件装备",
+        hint: "耐久+ 心情+",
+        apply: function (st) {
+          st.flags._equipQualityMilestoneSeen = true;
+          // 给所有高品质装备加耐久
+          var eq2 = st.inventory && st.inventory.equipmentInstances;
+          if (eq2) {
+            for (var s2 in eq2) {
+              var inst2 = eq2[s2];
+              if (
+                inst2 &&
+                typeof inst2.durability === "number" &&
+                (inst2.quality === "good" ||
+                  inst2.quality === "excellent" ||
+                  inst2.quality === "rare")
+              ) {
+                inst2.durability = Math.min(100, inst2.durability + 10);
+              }
+            }
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "✨ 你花了一下午把这件宝贝擦得锃亮，保养得妥妥当当。心情+8。好东西值得好好对待。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📸 发朋友圈显摆一下",
+        hint: "名气+ 心情+",
+        apply: function (st) {
+          st.flags._equipQualityMilestoneSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "📸 你发了朋友圈，收获了几十个赞。朋友都在问在哪淘的。名气+4，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤫 低调收好，不声张",
+        hint: "财不外露",
+        apply: function (st) {
+          st.flags._equipQualityMilestoneSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
+          StateManager.addMessage(
+            "🤫 你默默收好了这件宝贝。心里有数就好——好东西自己知道就行。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

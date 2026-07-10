@@ -69,7 +69,21 @@
       title: "满街的共享单车",
       story:
         "一夜之间三家共享公司投了上万辆车。运维员¥200/天，把乱停的车搬回去。",
-      triggers: { minDay: 20, excludeFlags: ["_bikeShareSeen"] },
+      // [自洽修复] conditions 新增：共享单车运维暗示体力工作，需有相关行动频次
+      conditions: function (st) {
+        var hasManualWork =
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["manual_labor_construction"] > 0 ||
+              st.stats.actionFreq["food_stall"] > 0 ||
+              st.stats.actionFreq["start_business"] > 0 ||
+              st.stats.actionFreq["night_shift"] > 0)) ||
+          (st.sideHustle && st.sideHustle.active);
+        return (
+          st.player.phase === "street" && st.player.day >= 20 && hasManualWork
+        );
+      },
+      triggers: { excludeFlags: ["_bikeShareSeen"] },
       choices: [
         {
           text: "🚲 去做运维赚快钱",
@@ -101,7 +115,20 @@
       title: "直播带货风口",
       story:
         "隔壁小哥一个月流水几十万——批发市场¥20的衣直播卖¥99。你知道这是风口。",
-      triggers: { minDay: 35, excludeFlags: ["_liveStreamSeen"] },
+      // [自洽修复] conditions 新增：直播风口事件需有 content/live 相关行动经历
+      conditions: function (st) {
+        var hasContentExp =
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["live_stream"] > 0 ||
+              st.stats.actionFreq["content_creation"] > 0 ||
+              st.stats.actionFreq["short_video"] > 0)) ||
+          (st.sideHustle && st.sideHustle.type === "content");
+        return (
+          st.player.phase === "street" && st.player.day >= 35 && hasContentExp
+        );
+      },
+      triggers: { excludeFlags: ["_liveStreamSeen"] },
       choices: [
         {
           text: "📱 试播三天",
@@ -535,13 +562,24 @@
       title: "购物狂欢节来了",
       story:
         "铺天盖地的广告：「双11狂欢，全场五折！」批发市场里进货的人跟不要钱一样疯抢。但快递站贴出了急招临时工的大字报——日结¥280，干到凌晨两点。",
+      // [自洽修复] conditions 新增：选项"去快递站做临时工"暗示物流/快递经历
       conditions: function (st) {
+        var hasLogistics =
+          (st.sideHustle && st.sideHustle.type === "driving") ||
+          (st.career &&
+            st.career.currentJob &&
+            st.career.currentJob.path === "logistics") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["express_delivery"] > 0 ||
+              st.stats.actionFreq["package_sorting"] > 0));
         return (
           st.player.phase === "street" &&
           st.player.day >= 10 &&
           !st.flags._shoppingFestSeen &&
           st.player.day % 30 >= 8 &&
-          st.player.day % 30 <= 12
+          st.player.day % 30 <= 12 &&
+          hasLogistics
         );
       },
       choices: [
@@ -1871,7 +1909,20 @@
       title: "平替风暴",
       story:
         "拼多多的市值超过了阿里。街头到处都是「9.9包邮」的广告——隔壁小张在拼多多上进了一样的货，价格只有你的一半。品牌店的老板说：「现在的人只买对的，不买贵的——但对的是指最便宜的。」",
-      triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
+      // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
+      conditions: function (st) {
+        var hasDelivery =
+          (st.sideHustle && st.sideHustle.type === "driving") ||
+          (st.stats &&
+            st.stats.actionFreq &&
+            (st.stats.actionFreq["delivery"] > 0 ||
+              st.stats.actionFreq["errand"] > 0 ||
+              st.stats.actionFreq["running_message"] > 0));
+        return (
+          st.player.phase === "street" && st.player.day >= 25 && hasDelivery
+        );
+      },
+      triggers: { excludeFlags: ["_consumptionDownSeen"] },
       choices: [
         {
           text: "📦 调整进货策略——走低价路线",

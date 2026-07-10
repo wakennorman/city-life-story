@@ -156,14 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.74(loop R30) — P1三方向落地(学历毕业典礼/公司阶段家庭事件/Social Tab NPC拜访)
-  - **设计意图**: 填补P1高影响空白(覆盖矩阵中家庭=0/教育=2/社交Tab=0)
-  - **①学历毕业典礼**: `edu_graduation_ceremony`(education≥1时一次性触发，3选择:合影留念/投简历/回家吃饭)
-  - **②公司阶段家庭3事件**: `corporate_mother_surgery`(手术费道德困境)/`corporate_family_relocation`(全家搬城)/`corporate_family_dividend`(月利润¥20k分红仪式)
-  - **③Social Tab NPC拜访**: NPC卡新增🚶拜访按钮→导航到NPC所在地点+好感+3~5+7天冷却
-  - **影响文件**: cross_system_events.js(+90行)/family_events.js(+144行)/social_tab.js(+55行)/style.css(+15行)
-  - **验证**: node --check ✅ / build.py 6216.9KB ✅
-  - **commit**: `b8bbc30c`(本地待推)
+- **最新一次工作 (2026-07-10)**：v3.76(loop R31) — P2四方向填充(技能组合双高门槛×2/季节Spring×1/季节Autumn×1/装备品质里程碑×1)
+  - **设计意图**: 填补P2空白区(技能combo事件从0→2，季节叙事从2→4，装备品质里程碑从0→1)
+  - **① 技能组合双高门槛**: `skill_combo_big_client`(sales≥40+charm≥30→大客户招待)/`skill_combo_repair_shop`(repair≥30+management≥20→合伙开修理铺)
+  - **② 季节Spring叙事**: `spring_job_fair`(season=spring+day≥60→春季招聘会,一年一次)
+  - **③ 季节Autumn叙事**: `autumn_harvest_market`(season=autumn+day≥30→秋收集市,一年一次)
+  - **④ 装备品质里程碑**: `equipment_first_high_quality`(持有good/excellent/rare装备→仪式感叙事)
+  - **影响文件**: cross_system_events.js(+275行)/linkage-events-gdd.md(+65行)
+  - **验证**: node --check ✅ / build.py 6923.6KB ✅
 
 - **上一轮工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
   - **设计意图**: 平衡大量正面成就事件，加入负面里程碑制造张力
@@ -496,26 +496,29 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 
 ---
 
-## 🔮 联动事件系统·下轮推荐方向（loop-R30+ 待办）
+## 🔮 联动事件系统·下轮推荐方向（loop-R32+ 待办）
 
-> **已完成 R26~R29**：15 个新事件落地，GDD 37→50，2026-07-10。
+> **已完成 R26~R31**：20 个新事件落地，GDD 37→55，2026-07-10。
 > 以下方向经 gap 分析排序，按优先级从高到低。每轮选 3~5 个场景落地。
 
 ### P1 — 高影响空白（系统有数据但零事件覆盖）
 
-| #   | 方向                     | 触发条件建议                                                                | 设计心理学        | 理由                                                                                                                                    |
-| --- | ------------------------ | --------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| ①   | **学历毕业典礼**         | `player.education` 升级时（如 education≥2 本科）                            | 峰终定律·仪式感   | education 可升 0→3，但升级瞬间无任何叙事。"拿到学位证书的瞬间"应有苦尽甘来的仪式感。当前仅 1 个 `edu_white_collar_threshold` 是纯焦虑型 |
-| ②   | **家庭事件覆盖公司阶段** | `phase=corporate` 时复用 family_events.js / 扩展 2~3 个公司阶段专属亲情事件 | 峰终定律·情感温度 | 现有 3 个家庭事件全是 `phase:"street"`，玩家进入职场后亲情完全断联。应加：父亲退休/母亲来城/孩子入学等                                  |
-| ③   | **Social Tab NPC 拜访**  | social_tab.js 的 NPC 卡加"拜访"按钮 → 导航到 NPC 在场地点 + 触发互动        | 社交深度·禀赋效应 | Agent 评估为 THIN：NPC 卡是只读展示面板，无交互。点击 → 前往地点找 NPC → 好感+/对话                                                     |
+| #   | 方向                     | 触发条件建议                                       | 设计心理学        | 理由                                                     |
+| --- | ------------------------ | -------------------------------------------------- | ----------------- | -------------------------------------------------------- |
+| ①   | **学历毕业典礼**         | `player.education` 升级时一次性触发（education≥1） | 峰终定律·仪式感   | ✅ R30完成(edu_graduation_ceremony)                      |
+| ②   | **家庭事件覆盖公司阶段** | corporate阶段3个亲情事件                           | 峰终定律·情感温度 | ✅ R30完成(corporate_mother_surgery/relocation/dividend) |
+| ③   | **Social Tab NPC 拜访**  | NPC卡拜访按钮→导航到NPC所在地点+好感互动           | 社交深度·禀赋效应 | ✅ R30完成(NPC拜访按钮+好感+3~5+7天冷却)                 |
 
 ### P2 — 机会性填充（需要新 state 或新逻辑支撑）
 
-| #   | 方向                        | 触发条件                                                          | 设计心理学        | 理由                                                                                                                     |
-| --- | --------------------------- | ----------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| ④   | **技能组合双高门槛**        | 两个技能同时≥特定值（如 sales≥40 + charm≥30 触发「大客户招待」）  | 禀赋效应·技能协同 | 大量双技能 combo 未被挖掘（sales+charm、repair+management、cooking+english 等），每个 combo 都是一个"专业人士视角"微事件 |
-| ⑤   | **季节 Spring/Autumn 叙事** | `weather.season === "spring"` 触发春季招聘会、"autumn" 触发开学季 | 稀缺性·四季节奏   | 天气（雨/雪/暑）有事件，但四季本身无叙事。`getSeasonalPriceMod` 只管价格不管故事                                         |
-| ⑥   | **装备/品质里程碑事件**     | 首次获得「高档/传说」品质装备                                     | 峰终定律·开箱瞬间 | 装备品质系统已实装（v3.13），但掉落瞬间无叙事回响。"你第一次摸到一把浑身泛着蓝光的扳手"                                  |
+| #   | 方向                         | 触发条件                                                          | 设计心理学        | 状态                                                   |
+| --- | ---------------------------- | ----------------------------------------------------------------- | ----------------- | ------------------------------------------------------ |
+| ④   | **技能组合双高门槛**         | 两个技能同时≥特定值（如 sales≥40 + charm≥30 触发「大客户招待」）  | 禀赋效应·技能协同 | ✅ R31完成(2个: big_client/repair_shop)                |
+| ⑤   | **季节 Spring/Autumn 叙事**  | `weather.season === "spring"` 触发春季招聘会、"autumn" 触发开学季 | 稀缺性·四季节奏   | ✅ R31完成(2个: spring_job_fair/autumn_harvest_market) |
+| ⑥   | **装备/品质里程碑事件**      | 首次获得「高档/传说」品质装备                                     | 峰终定律·开箱瞬间 | ✅ R31完成(1个: equipment_first_high_quality)          |
+| ⑦   | **NPC 关系矩阵深度互动**     | NPC_RELATION_MATRIX 猜谜等剩余关系对                              | 关系的温度        | ⬜ 待做：王婶↔张姐(紧张→调解)、李工头↔陈哥(中立→合作)  |
+| ⑧   | **wealth ¥1M / ¥10M 里程碑** | cash+bankBalance ≥ ¥100万/¥1000万                                 | 峰终定律·财富叙事 | ⬜ 待做：现在只到¥100k，财富天花板无叙事               |
+| ⑨   | **多周目继承遗产事件**       | `state.flags._ngPlusData` 有继承机制但无事件                      | 情怀型彩蛋        | ⬜ 待做："上辈子认识的老朋友这辈子又遇见了"            |
 
 ### P3 — 体验优化（锦上添花）
 
@@ -536,20 +539,22 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 7. **commit message 格式**：`feat(loop RXX): 新增N个XX事件(名称1/名称2/...)`
 8. **GDD 同步**：每轮结束更新 `memory/linkage-events-gdd.md` 和 `CLAUDE.md` 当前状态
 
-### 📊 当前覆盖矩阵（R26~R29 后）
+### 📊 当前覆盖矩阵（R31 后）
 
-| 次级系统  | 已联动事件数 | 关键事件                                                         |
-| --------- | ------------ | ---------------------------------------------------------------- |
-| NPC 关系  | 11           | reunion / competitor / classmate / affinity100 / duo_referral 等 |
-| 经济/资产 | 23           | six_figure / supply_demand / bank_vip / cert_bonus 等            |
-| 技能系统  | 13           | mastery_capstone(100) / master_opp(80) / combo 系列              |
-| 天气系统  | 3            | rainy_umbrella / snow_deal / summer_night                        |
-| 道德系统  | 4            | wallet_honest / extreme / competitor_choose 等                   |
-| 健康/医疗 | 4            | crisis_slow / near_death / dr_wang×2                             |
-| 住房      | 3            | luxury_housing / tier_milestone / cold_snap                      |
-| 教育      | 3            | grad_ceremony / cert_bonus / edu_white_collar                    |
-| 家庭      | 3            | corporate_mother_surgery / relocation / dividend(R30新增)        |
-| 社交 Tab  | 1            | NPC拜访按钮+好感互动(R30新增)                                    |
+| 次级系统     | 已联动事件数 | 关键事件                                                         |
+| ------------ | ------------ | ---------------------------------------------------------------- |
+| NPC 关系     | 11           | reunion / competitor / classmate / affinity100 / duo_referral 等 |
+| 经济/资产    | 23           | six_figure / supply_demand / bank_vip / cert_bonus 等            |
+| 技能系统     | 15           | big_client(40+30) / repair_shop(30+20) / mastery_capstone(100)   |
+| 天气系统     | 3            | rainy_umbrella / snow_deal / summer_night                        |
+| **季节系统** | **2→4**      | spring_job_fair / autumn_harvest / summer_night(已有)            |
+| 道德系统     | 4            | wallet_honest / extreme / competitor_choose 等                   |
+| 健康/医疗    | 4            | crisis_slow / near_death / dr_wang×2                             |
+| **装备品质** | **0→1**      | equipment_first_high_quality(R31新增)                            |
+| 住房         | 3            | luxury_housing / tier_milestone / cold_snap                      |
+| 教育         | 3            | grad_ceremony / cert_bonus / edu_white_collar                    |
+| 家庭         | 3            | corporate_mother_surgery / relocation / dividend                 |
+| 社交 Tab     | 1            | NPC拜访按钮+好感互动                                             |
 
 ---
 
