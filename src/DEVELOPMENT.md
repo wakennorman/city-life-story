@@ -1,8 +1,16 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-09（v3.63b 多剧本适配审查）
+> 最后更新: 2026-07-10（loop/r10-r19 rebase 到 main — 补入 30 个 R10-R19 独有事件 + 修复 cold_snap id 冲突）
 >
 > commit: 待定（与 v3.63 合并）
+
+---
+
+## 2026-07-10 — loop/r10-r19 rebase 到 main（R10-R19 缺失事件补入）
+
+**背景**：R10–R19 那批 215 个事件原本在祖先提交 `bbdfc870`，当前 `main` 已含其中 185 个（平行窗口/早前合并带入），缺 30 个独有事件。本提交在 main 之上补入这 30 个，并把 main 自身重复的两份 `cold_snap_housing_crisis` 之一重命名为 `cold_snap_winter_shelter`（季节「寒潮来袭」事件，避免 id 冲突）。
+
+**校验**：255 事件 / 0 重复 id / node --check OK / python build.py OK
 
 ---
 
