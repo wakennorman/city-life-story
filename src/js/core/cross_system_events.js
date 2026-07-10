@@ -44917,5 +44917,956 @@
     ],
   });
 
+  // ====== 健康康复叙事事件（R37 新增） ======
+  // 设计意图：填补"16种疾病5大类但康复叙事为零"的空白
+  // 核心逻辑：每个事件检测「曾经病过/濒危 + 现已康复」的双态条件
+
+  // ① 从危到安：经历过health危机（<30）后恢复到正常水平的顿悟时刻
+  // 设计心理学：峰终定律（"熬过来了"的峰值记忆）· 损失厌恶（回望危险的后怕驱动）
+  RANDOM_EVENTS.push({
+    id: "recovery_brink_relief",
+    phase: "street",
+    icon: "🌅",
+    title: "从危到安",
+    story:
+      "你站在出租屋的窗前，阳光照进来，暖洋洋的。\n一个月前你差点以为自己撑不过去了——身体垮到连下床都费劲，脑子里想的最多的是「要是倒在这里了，谁会第一个发现」。\n\n现在你站在这，虽然屋子还是那个破屋子，口袋还是那么瘪，但阳光照在手上的温度是真实的。你慢慢握了握拳头，有力气。\n\n楼下早餐摊的香味飘上来。你突然觉得饿了一一这种感觉，很久没有过了。",
+    conditions: function (st) {
+      // [自洽修复] 曾经触发过health危机（<30），现在恢复到健康线以上
+      if (!st.flags._healthCrisisSeen) return false;
+      if (st.player.phase !== "street") return false;
+      if ((st.status.health || 50) < 55) return false;
+      // 不处于严重疾病中（没有severity≥3的活跃疾病）
+      if (st.status.illnesses && st.status.illnesses.length > 0) {
+        for (var i = 0; i < st.status.illnesses.length; i++) {
+          var illData = getIllnessData(st.status.illnesses[i]);
+          if (illData && illData.severity >= 3) return false;
+        }
+      }
+      if (st.flags._recoveryBrinkSeen) return false;
+      return st.player.day >= 25;
+    },
+    probability: 0.15,
+    repeatable: false,
+    choices: [
+      {
+        text: "🥣 下楼好好吃一顿早餐",
+        hint: "健康+ 心情+",
+        apply: function (st) {
+          st.flags._recoveryBrinkSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 25);
+          StateManager.addMessage(
+            "🌅 你下楼吃了一碗热腾腾的豆浆油条。老板娘笑着说「哟，今天气色不错啊！」你心里一暖，活着真好。健康+6，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 给未来的自己写封信",
+        hint: "心智+ 记录这一刻",
+        apply: function (st) {
+          st.flags._recoveryBrinkSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 5);
+          StateManager.addMessage(
+            "🌅 你撕了张纸，写了几句话：『某某年某月某日，我差点倒下，但我没倒。』你把纸条夹进书里。心智+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 出门走走，感受一下城市",
+        hint: "体力+ 心情+",
+        apply: function (st) {
+          st.flags._recoveryBrinkSeen = true;
+          st.player.physique = Math.min(100, (st.player.physique || 22) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "🌅 你沿着街走了很久。路边的猫在晒太阳，早餐摊冒着热气，卖菜的大妈在吆喝。这座城市还是老样子，但你看着它，觉得有点不一样了。体质+2，心情+6。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ② 康复后的那碗汤：NPC邻居/朋友在你病愈后送上关怀
+  // 设计心理学：社会支持（低谷中的温暖）· 禀赋效应（好感关系产生回报）
+  RANDOM_EVENTS.push({
+    id: "recovery_warm_soup",
+    phase: "street",
+    icon: "🍲",
+    title: "康复后的那碗汤",
+    story:
+      "你刚缓过来没多久，门就被敲响了。\n\n打开门，王大婶端着一碗热腾腾的鸡汤站在门口，围裙上还沾着油渍：\n「听说你前阵子病得不轻？年轻人一个人在外面，别硬撑。这汤我炖了一上午，趁热喝。」\n\n你愣了一下——你们平时也就见面打个招呼的交情。她放下汤就走了，临走又回头说了句：\n「碗不用急着还。」",
+    conditions: function (st) {
+      // [自洽修复] 曾经病过 + 现在健康恢复 + 有NPC关系基础
+      if (!st.flags._everSick) return false;
+      if (st.player.phase !== "street") return false;
+      if ((st.status.health || 50) < 60) return false;
+      // 没有活跃疾病
+      if (st.status.illnesses && st.status.illnesses.length > 0) return false;
+      // 至少认识一个NPC（有碰面基础）
+      var hasNpcContact = false;
+      if (st.relationships) {
+        for (var r in st.relationships) {
+          if (st.relationships[r] && st.relationships[r].met) {
+            hasNpcContact = true;
+            break;
+          }
+        }
+      }
+      if (!hasNpcContact) return false;
+      if (st.flags._recoverySoupSeen) return false;
+      return st.player.day >= 15;
+    },
+    probability: 0.12,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍵 趁热喝掉，晚点去还碗",
+        hint: "心情+ 好感+",
+        apply: function (st) {
+          st.flags._recoverySoupSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          st.status.health = Math.min(100, (st.status.health || 0) + 3);
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
+            );
+          }
+          StateManager.addMessage(
+            "🍲 鸡汤很浓，里面还放了枸杞和红枣。你喝得鼻子有点酸——在这座城市，第一次有人给你炖汤。心情+12，健康+3，王大婶好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🥟 买点水果送回去",
+        hint: "花¥20，人情加深",
+        apply: function (st) {
+          st.flags._recoverySoupSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 8,
+            );
+          }
+          StateManager.addMessage(
+            "🍲 你买了点水果去还碗。王大婶嗔怪道「你这孩子，花这钱干啥！」但看得出她很高兴。她留你坐下聊了会天，说了些她年轻时在外地打工的往事。心情+8，名声+2，王大婶好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😐 客气道谢，关上门自己待着",
+        hint: "保持距离",
+        apply: function (st) {
+          st.flags._recoverySoupSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 0) + 2,
+            );
+          }
+          StateManager.addMessage(
+            "🍲 你道了谢，关上门慢慢喝完汤。汤很暖，但你习惯了独来独往。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ③ 病房奇遇：住院期间遇到病友，结下特殊情谊（同病相怜）
+  // 设计心理学：社会比较（"别人比我更苦/更坚强"）· 峰终定律（低谷中的相遇成为记忆锚点）
+  RANDOM_EVENTS.push({
+    id: "recovery_ward_coincidence",
+    phase: "street",
+    icon: "🏥",
+    title: "病房奇遇",
+    story:
+      "你想起在医院那几天。隔壁床是个四十多岁的中年男人，做了个大手术，家里没人陪护，每天自己举着输液瓶去上厕所。\n\n你俩有一搭没一搭地聊天。他说他是干装修的，干了二十年，腰不行了，这次是工伤。他手机屏保是他女儿的照片，今年高考。\n\n「考上了重点大学，一年的学费顶我半年工钱。但再难也得供啊，是不是？」\n\n出院那天他塞给你一张纸条，上面写了个电话号码：「兄弟，以后有啥装修的活，找我。给你打折。」",
+    conditions: function (st) {
+      // [自洽修复] 经历过健康危机（health < 30 或重病）且已恢复 + 遇到过NPC
+      if (!st.flags._healthCrisisSeen && !st.flags._everSick) return false;
+      if (st.player.phase !== "street") return false;
+      if ((st.status.health || 50) < 60) return false;
+      if (st.flags._recoveryWardSeen) return false;
+      var hasMetNpc = false;
+      if (st.relationships) {
+        for (var r2 in st.relationships) {
+          if (st.relationships[r2] && st.relationships[r2].met) {
+            hasMetNpc = true;
+            break;
+          }
+        }
+      }
+      if (!hasMetNpc) return false;
+      return st.player.day >= 35;
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 存下号码，以后联系",
+        hint: "人脉+ 获得装修折扣渠道",
+        apply: function (st) {
+          st.flags._recoveryWardSeen = true;
+          st.flags._recoveryContractorContact = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 4);
+          StateManager.addMessage(
+            "🏥 你存下了电话号码，备注名写了「装修老哥·病房认识的」。你想起他手机屏保上的笑脸——为女儿拼命的人，值得敬重。心智+4，名声+2，以后装修/修房有折扣渠道。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 加个微信，偶尔问候",
+        hint: "社交+ 保持联系",
+        apply: function (st) {
+          st.flags._recoveryWardSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "🏥 你们加了好友。他的朋友圈三天可见，最新一条是女儿的录取通知书照片，配文「值了」。你默默点了个赞。心情+6，心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 祝他好运，各自珍重",
+        hint: "放下，继续自己的路",
+        apply: function (st) {
+          st.flags._recoveryWardSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
+          StateManager.addMessage(
+            "🏥 你们没有留联系方式。但你知道，这世上某个角落，有个为女儿拼命的装修师傅在好好活着。这就够了。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ④ 康复决心：病愈后立flag开始运动/养生的转折仪式
+  // 设计心理学：损失厌恶（不想再经历一次）· 新起点效应（病愈作为"重新做人"的心理锚点）
+  RANDOM_EVENTS.push({
+    id: "recovery_exercise_resolution",
+    phase: "street",
+    icon: "🏃",
+    title: "康复的决心",
+    story:
+      "你生了一场病后，第一次认真打量自己：镜子里的那个人脸色苍白、身形消瘦，眼下挂着两团乌青。\n\n你想起前几天躺在床上时想的事——要是早点注意身体，是不是就不会躺在那了？\n\n「不能再这样了。」你对自己说。\n\n虽然现在手头还是紧，日子还是难，但至少有一件事是现在就能开始做的。",
+    conditions: function (st) {
+      // [自洽修复] 曾经病过/濒危 + 现在健康恢复正常 + 时间足够长（已过急性期）
+      if (!st.flags._everSick && !st.flags._healthCrisisSeen) return false;
+      if (st.player.phase !== "street") return false;
+      if ((st.status.health || 50) < 55) return false;
+      if (st.flags._recoveryExerciseSeen) return false;
+      return st.player.day >= 40;
+    },
+    probability: 0.1,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏃 每天早起跑步15分钟",
+        hint: "体质+ 健康+ 养成习惯",
+        apply: function (st) {
+          st.flags._recoveryExerciseSeen = true;
+          st.flags._recoveryRunningHabit = true;
+          st.player.physique = Math.min(100, (st.player.physique || 22) + 3);
+          st.status.health = Math.min(100, (st.status.health || 0) + 4);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🏃 第二天一早你就爬起来跑了15分钟——虽然跑了一半就开始喘，但跑完后的那种畅快感很久没有过了。体质+3，健康+4，心情+5。获得「晨跑习惯」加成：每日健康恢复+1。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🥗 改善饮食，少油少盐",
+        hint: "健康+ 减少生病概率",
+        apply: function (st) {
+          st.flags._recoveryExerciseSeen = true;
+          st.flags._recoveryDietHabit = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 3);
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
+          StateManager.addMessage(
+            "🥗 你开始注意吃的东西了——早上不再是干啃馒头，好歹加个鸡蛋。晚上也尽量自己做，少点外卖。健康+3，饱腹+5，心智+2。获得「健康饮食」加成：垃圾食品致病概率-15%。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🕐 调整作息，不熬夜了",
+        hint: "疲劳恢复+ 失眠概率降低",
+        apply: function (st) {
+          st.flags._recoveryExerciseSeen = true;
+          st.flags._recoverySleepHabit = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 2);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
+          StateManager.addMessage(
+            "🕐 你试着11点前上床。第一晚翻来覆去到一点才睡着，但第二天醒来确实没那么累了。心智+3，健康+2。获得「规律作息」加成：每日疲劳恢复+5%。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ⑤ 街头老中医：亚健康状态遇到义诊老中医，给予养生点拨
+  // 设计心理学：权威效应（长者建言）· 禀赋效应（获得养生知识等于获得可积累的健康资本）
+  RANDOM_EVENTS.push({
+    id: "recovery_herbalist_wisdom",
+    phase: "street",
+    icon: "🌿",
+    title: "街头老中医",
+    story:
+      "菜市场拐角处，一个白发老人支了张折叠桌，桌上摆着「免费义诊」的牌子。旁边围了几个人，老人正在给一个大姐把脉。\n\n你本想路过——但你最近确实总觉得累，也说不上哪不舒服，就是整个人像生锈了一样。\n\n老人抬头看见你，笑了笑：\n「小伙子，脸色不太好啊。来，坐下，不要钱。我看你印堂发暗、眼下浮肿——是不是经常熬夜、吃饭不准点？」",
+    conditions: function (st) {
+      // [自洽修复] 长期处于亚健康状态（健康中等水平） + 曾经病过
+      if (!st.flags._everSick && !st.flags._healthCrisisSeen) return false;
+      if (st.player.phase !== "street") return false;
+      var h = st.status.health || 50;
+      if (h < 40 || h > 68) return false; // 太健康或太差都不触发
+      if (st.flags._recoveryHerbalSeen) return false;
+      return st.player.day >= 25;
+    },
+    probability: 0.09,
+    repeatable: false,
+    choices: [
+      {
+        text: "🖐️ 坐下让老人把脉",
+        hint: "健康知识+ 心智+",
+        apply: function (st) {
+          st.flags._recoveryHerbalSeen = true;
+          st.flags._recoveryHerbalAdvice = true;
+          st.status.health = Math.min(100, (st.status.health || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 4);
+          StateManager.addMessage(
+            "🌿 老人把了把脉，又看了看你的舌苔，沉吟片刻：\n「脾胃虚弱、气血不足。年轻人，你这不是大病——但你这样耗下去，三五年后就是大病了。」\n他开了个方子：山药、红枣、枸杞，每天煮水喝。又嘱咐你少喝冰的、晚上11点前睡。\n你记在心里。健康+5，心智+4。获得「养生知识」：健康自然恢复速度+0.5/天。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💊 问能不能治本",
+        hint: "花¥30买点中药试试",
+        apply: function (st) {
+          st.flags._recoveryHerbalSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+          st.status.health = Math.min(100, (st.status.health || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
+          StateManager.addMessage(
+            "🌿 老人给你抓了三副药：「先吃一周。一周后要是觉得有劲儿了，再来找我调方子。」\n你付了¥30，拎着一兜草药回家。晚上熬了喝，苦是真苦，但喝完身上暖洋洋的。健康+8，心智+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 道谢离开，自己注意",
+        hint: "心意领了",
+        apply: function (st) {
+          st.flags._recoveryHerbalSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
+          StateManager.addMessage(
+            "🌿 你道了谢。老人摆摆手：「没事，注意身体。身体是1，其他都是后面的0。没有1，再多0都没用。」\n这话你听过很多遍，但这次听进去了。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== R39 四季叙事深化 — 春·倒春寒 ======
+  // 设计意图：春季不仅有就业机会，也有"倒春寒"的健康挑战
+  // 设计心理学：损失厌恶（不买衣服→健康扣减，驱动玩家采取措施）
+  RANDOM_EVENTS.push({
+    id: "spring_chill_snap",
+    phase: "street",
+    icon: "🌬️",
+    title: "倒春寒",
+    story:
+      "前两天还阳光明媚，今天突然降温十几度。\n\n你缩着脖子走在街上，风灌进衣领像刀子割。路边的桃花被风吹落了一地，粉色的花瓣在泥水里打转。\n\n早餐摊的大姐搓着手说：「这鬼天气，春天比冬天还冷。小伙子穿这么少，不怕感冒啊？」",
+    conditions: function (st) {
+      if (!st.weather || st.weather.season !== "spring") return false;
+      if (st.flags && st.flags._springChillSeen) return false;
+      if (st.player.day < 5) return false;
+      return true;
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧥 买件外套御寒",
+        hint: "花¥50，健康+5",
+        cost: 50,
+        apply: function (st) {
+          st.flags._springChillSeen = true;
+          st.status.health = Math.min(100, (st.status.health || 50) + 5);
+          StateManager.addMessage(
+            "🌬️ 你在路边摊花¥50买了件外套套上。虽然不太好看，但暖和多了。健康+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🔥 喝碗热汤暖身子",
+        hint: "花¥15，饱腹+ 心情+",
+        cost: 15,
+        apply: function (st) {
+          st.flags._springChillSeen = true;
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 15);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
+          StateManager.addMessage(
+            "🌬️ 一碗热腾腾的胡辣汤下肚，整个人活过来了。饱腹-15，心情+5，健康+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 硬扛，省点钱",
+        hint: "健康-3",
+        apply: function (st) {
+          st.flags._springChillSeen = true;
+          st.status.health = Math.max(0, (st.status.health || 50) - 3);
+          StateManager.addMessage(
+            "🌬️ 你咬着牙扛过去了。风灌进领口的时候你不禁打了个哆嗦。省了几十块，但身体有点发冷。健康-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== R39 四季叙事深化 — 夏·夏夜纳凉 ======
+  // 设计意图：夏天不只是热和夜市，还有邻里纳凉的温情社交
+  // 设计心理学：社会支持（邻里互动缓解压力）· 归属感
+  RANDOM_EVENTS.push({
+    id: "summer_night_cooling",
+    phase: "street",
+    icon: "🌙",
+    title: "夏夜纳凉",
+    story:
+      "太阳落山后，白天的热浪还没散尽。城中村的居民们搬着小板凳出来了——有人拎着西瓜、有人端着凉茶、有人摇着蒲扇。\n\n巷子里闹哄哄的，小孩追来追去，大人们聊着天。王婶看见你，招呼道：「过来坐！今天买了西瓜，冰镇过的！」\n\n晚风吹过来，带着一点凉意和栀子花的香气。",
+    conditions: function (st) {
+      if (!st.weather || st.weather.season !== "summer") return false;
+      if (st.flags && st.flags._summerNightCoolingSeen) return false;
+      if (st.player.day < 10) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍉 坐下吃西瓜聊天",
+        hint: "心情++ 邻里好感+",
+        apply: function (st) {
+          st.flags._summerNightCoolingSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          var npcs = st.relationships || {};
+          for (var id in npcs) {
+            if (npcs[id].met && (npcs[id].affinity || 0) >= 10) {
+              npcs[id].affinity = Math.min(100, (npcs[id].affinity || 0) + 2);
+            }
+          }
+          StateManager.addMessage(
+            "🍉 你坐在小板凳上，啃着冰西瓜听大家唠嗑。有人说起了当年刚来这城市的糗事，笑得你肚子疼。心情+12，疲劳-5，邻里好感+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎸 回去自己待着",
+        hint: "独处 心智+4",
+        apply: function (st) {
+          st.flags._summerNightCoolingSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          StateManager.addMessage(
+            "🎸 你婉拒了邀请，回屋躺在凉席上听外面的热闹。蝉鸣、笑声、晚风——这个夏天的夜晚，你一个人也很自在。心智+4。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🧊 帮大家切西瓜跑腿",
+        hint: "名声+3 心情+",
+        apply: function (st) {
+          st.flags._summerNightCoolingSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "🧊 你帮着切西瓜、搬凳子、给老人倒茶。大家说你这小伙子不错。名声+3，心情+8。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== R39 四季叙事深化 — 秋·秋雨寄思 ======
+  // 设计意图：秋天不只有丰收，还有雨天的乡愁与家庭连结
+  // 设计心理学：峰终定律·情感锚点——雨天打电话的温暖记忆
+  RANDOM_EVENTS.push({
+    id: "autumn_rain_homesickness",
+    phase: "street",
+    icon: "🌧️",
+    title: "秋雨寄思",
+    story:
+      "淅淅沥沥的秋雨下了一整天，街上的人少了，店铺早早关了门。\n\n你站在屋檐下躲雨，看着雨滴打在路面的水洼里，一圈一圈地荡开。空气中带着泥土和枯叶的味道。\n\n手机屏幕亮了——是家里发来的消息：「天冷了，多穿点衣服。」\n\n你忽然想起，已经很久没有回过家了。",
+    conditions: function (st) {
+      if (!st.weather) return false;
+      if (st.weather.season !== "autumn") return false;
+      var rainy = ["rainy", "stormy", "plum_rain"];
+      if (rainy.indexOf(st.weather.current) === -1) return false;
+      if (st.flags && st.flags._autumnRainHomesickSeen) return false;
+      if (st.player.day < 15) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 给家里打个电话",
+        hint: "花¥5话费，心情+ 道德+",
+        cost: 5,
+        apply: function (st) {
+          st.flags._autumnRainHomesickSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "📞 你拨通了家里的电话。妈妈接的，唠叨了十分钟——问吃得怎么样、睡得怎么样、有没有对象。你听着听着笑了。挂了电话，雨好像小了一些。心情+8，道德+3，心智+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "✍️ 写封信寄回去",
+        hint: "纸质家书 心智+6",
+        apply: function (st) {
+          st.flags._autumnRainHomesickSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "✍️ 你买了信封和信纸，坐在昏暗的灯光下一笔一划地写。写了好几张纸——从最近的生活写到对未来的打算。有些话电话里说不出口，但写在纸上就容易了。心智+6，心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😤 不想了，干活去",
+        hint: "化思念为动力 现金+",
+        apply: function (st) {
+          st.flags._autumnRainHomesickSeen = true;
+          var earn = Random.int(50, 100);
+          st.resources.cash += earn;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          StateManager.addMessage(
+            "😤 你甩了甩头，把思念压进心底，冒雨出去干活了。忙起来就不想家了。赚了¥" +
+              earn +
+              "，疲劳+10。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== R39 四季叙事深化 — 冬·冬日围炉 ======
+  // 设计意图：冬天不止严寒求生，也有炉火旁的人间温暖
+  // 设计心理学：社会支持·峰终定律（寒冬中的温暖记忆锚点）
+  RANDOM_EVENTS.push({
+    id: "winter_hearth_gathering",
+    phase: "street",
+    icon: "🔥",
+    title: "冬日围炉",
+    story:
+      "气温降到了零下，冷得骨头都在疼。你匆匆走在街上，忽然闻到一阵香味——是烤红薯和热汤的味道。\n\n巷口的老周在店门口生了个铁炉子，炉膛里木柴烧得噼啪响。几个邻居围着炉子坐着，手里捧着热茶或红薯，有一搭没一搭地聊天。\n\n老周看见你，招招手：「进来暖和暖和，不收钱。」",
+    conditions: function (st) {
+      if (!st.weather || st.weather.season !== "winter") return false;
+      if (st.flags && st.flags._winterHearthSeen) return false;
+      if (st.player.day < 10) return false;
+      var cold = (st.weather.temperature || 10) < 5;
+      if (!cold) return false;
+      return true;
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🪵 坐下来一起烤火",
+        hint: "心情++ 健康+ 老周好感+",
+        apply: function (st) {
+          st.flags._winterHearthSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          st.status.health = Math.min(100, (st.status.health || 50) + 4);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          if (st.relationships && st.relationships.old_zhou) {
+            st.relationships.old_zhou.affinity = Math.min(
+              100,
+              (st.relationships.old_zhou.affinity || 0) + 5,
+            );
+          }
+          StateManager.addMessage(
+            "🔥 你坐了下来。老周递过来一个烤红薯，你剥开皮，热气腾腾的香甜味扑鼻而来。炉火烧得脸发烫，但心里更暖。心情+10，健康+4，疲劳-5，老周好感+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍠 买几个红薯带走",
+        hint: "花¥10，饱腹+ 健康+",
+        cost: 10,
+        apply: function (st) {
+          st.flags._winterHearthSeen = true;
+          st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 20);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🍠 你买了几个烤红薯揣在兜里，热乎乎地烫手。走在路上掰开一个，金黄的瓤冒着热气——冬天的幸福有时候就是这么简单。饱腹-20，健康+2，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 道谢，继续赶路",
+        hint: "独行 心智+4",
+        apply: function (st) {
+          st.flags._winterHearthSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          StateManager.addMessage(
+            "🔥 你摆摆手说还有事。老周往你手里塞了个热红薯：「拿着，路上暖和暖和。」你走出巷口回头看了一眼——炉火在冬夜里像一盏小灯。心智+4。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.81 loop R40: 冬季叙事×2 + Corporate专属×2（填补最大空白区）
+  // ====================================================================
+
+  // R40-① 冬季寒潮生存 — 冬天的街头工作（winter季节×需求系统）
+  RANDOM_EVENTS.push({
+    id: "winter_cold_street_grind",
+    phase: "street",
+    icon: "❄️",
+    title: "冬天的苦活",
+    story:
+      "今天格外冷。手指冻得发麻，连拿工具都困难。路过的行人裹紧大衣匆匆而过，没人多看你一眼。\n\n你停下来对着手呵了口气。这座城市冬天不停歇，你也没有资格停歇。只是这一刻，你想起了老家灶台上的火，想起妈妈总说冬天不能饿着。\n\n你没有灶台。你有的，只有还剩下的行动力，和一整个冬天。",
+    conditions: function (st) {
+      if (st.flags._winterColdGrindSeen) return false;
+      if (!st.weather || st.weather.season !== "winter") return false;
+      if ((st.player.day || 0) < 10) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔥 咬牙继续干，加一把劲",
+        hint: "当日收入+20%·疲劳+10·禀赋效应",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          st.flags._winterWorkerBadge = true;
+          st.needs.energy = Math.max(0, (st.needs.energy || 50) - 10);
+          var bonus = Math.floor((st.player.cash || 0) * 0.0 + 50);
+          st.player.cash = (st.player.cash || 0) + bonus;
+          st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
+          StateManager.addMessage(
+            "❄️ 你咬着牙把今天的活干完了。手指一整天都没暖过来，但账上多了¥" +
+              bonus +
+              "。体质+2，疲劳+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍵 去馆子喝碗热汤暖暖身",
+        hint: "花¥15·卫生+10·心情+10·恢复状态",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          if ((st.player.cash || 0) >= 15) {
+            st.player.cash -= 15;
+            st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🍵 你花¥15喝了碗热汤面。从胃一路暖到心里去了。卫生+10，心情+10。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🍵 摸了摸口袋——不够，只能继续熬着。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏠 今天少干一点，早点回家",
+        hint: "保存体力·疲劳-15·损失厌恶",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          st.needs.energy = Math.min(100, (st.needs.energy || 50) + 15);
+          StateManager.addMessage(
+            "🏠 你早早收了摊，今天算了。有时候保存体力本身就是一种工作。疲劳-15。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-② 年末倒计时 — 冬季×day≥330的年终反思
+  RANDOM_EVENTS.push({
+    id: "winter_year_end_reflection",
+    phase: "any",
+    icon: "🎆",
+    title: "又一年快过去了",
+    story:
+      "街上开始有人贴春联，超市里挂起了红灯笼。你算了一下——距离这一年结束，还有不到35天。\n\n你翻开自己的账本，对比年初的数字。有些东西变了，有些东西没变。城市在冬天里安静了一点，连街头巷尾的叫卖声都低了几分。\n\n你不知道明年会是什么样，但至少今年，你还在这里。",
+    conditions: function (st) {
+      if (st.flags._yearEndReflectionDone) return false;
+      if (!st.weather || st.weather.season !== "winter") return false;
+      var day = st.player.day || 0;
+      // 每年第330天后触发（330~365，365后重置年份）
+      var dayOfYear = ((day - 1) % 365) + 1;
+      if (dayOfYear < 330) return false;
+      return true;
+    },
+    probability: 0.15,
+    repeatable: true,
+    choices: [
+      {
+        text: "📊 仔细复盘这一年的得失",
+        hint: "智力+5·解锁年度总结感悟",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "📊 你认真复盘了这一年。有遗憾，有收获，但整体在往前走。智力+5，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍺 和朋友喝一杯，聊聊这一年",
+        hint: "消费¥30·心情+20·社交感",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          var cost = 30;
+          if ((st.player.cash || 0) >= cost) {
+            st.player.cash -= cost;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "🍺 你们聊了很久，从今年说到小时候，喝了不少。花了¥30，但值了。心情+20，名声+2。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🍺 口袋里钱不够请客，你一个人坐在路边发了会儿呆。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🌃 一个人走走，吹吹冬风",
+        hint: "清醒·心智+3·心情+5",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🌃 你一个人走了很久，冬风把思绪吹清醒了。心智+3，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-③ Corporate 年终述职困境 — corporate专属高张力事件
+  RANDOM_EVENTS.push({
+    id: "corporate_year_end_review",
+    phase: "corporate",
+    icon: "📋",
+    title: "年终述职",
+    story:
+      "今天是年终述职日。你坐在台下等着叫到你的名字，手心微微出汗。\n\n隔壁部门的王总监已经把PPT做了50页，据说去年绩效是S+。你只做了15页，里面有三项指标没完成——原因你知道，但解释起来很难听。\n\n主持人叫到你的名字。你深吸一口气，站起来。",
+    conditions: function (st) {
+      if (st.flags._corpYearReviewDone) return false;
+      if (!st.player || st.player.phase !== "corporate") return false;
+      if (!st.employment || !st.employment.currentJob) return false;
+      var day = st.player.day || 0;
+      var dayOfYear = ((day - 1) % 365) + 1;
+      if (dayOfYear < 300) return false;
+      return true;
+    },
+    probability: 0.25,
+    repeatable: true,
+    choices: [
+      {
+        text: "📊 如实汇报，诚信应对",
+        hint: "道德+8·概率晋升加分·上司好感+5",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          if (st.employment && st.employment.burnout !== undefined) {
+            st.employment.burnout = Math.max(
+              0,
+              (st.employment.burnout || 0) - 5,
+            );
+          }
+          if (st.flags) st.flags._reviewHonest = true;
+          StateManager.addMessage(
+            "📋 你如实汇报了，包括没完成的部分。上司点点头说：「诚实是最重要的品质。」道德+8，倦怠-5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💼 包装数据，只讲成功",
+        hint: "魅力+5·但道德-5·短期印象分+",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
+          StateManager.addMessage(
+            "💼 你把能说的都说了，不能说的跳过去。台下掌声比别人响。魅力+5，道德-5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🎯 主动请缨明年更高指标",
+        hint: "勇气加分·心情-5（压力）·长期晋升概率+",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.flags._reviewAmbitious = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "🎯 你当场提出明年目标再提30%。全场一静，然后上司眼睛亮了。智力+3，心情-5（压力增大）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-④ Corporate 职场站队 — corporate×同事关系
+  RANDOM_EVENTS.push({
+    id: "corporate_office_politics",
+    phase: "corporate",
+    icon: "⚔️",
+    title: "站队时刻",
+    story:
+      "午饭时，市场部的陈经理把你叫到一边，压低声音说：「你知道技术部李总要被换掉的事吗？我这边正在整合资源，你跟着我走，好处少不了你的。」\n\n下午，技术部的老王也找到你：「陈那边的事你知道吧？别被他拉下水，他早晚出事。我这里稳得住，你安心跟着我。」\n\n两个人说的都头头是道，但你知道：只能站一边。",
+    conditions: function (st) {
+      if (st.flags._corpOfficePoliticsDone) return false;
+      if (!st.player || st.player.phase !== "corporate") return false;
+      if (!st.employment || !st.employment.currentJob) return false;
+      var tenure = st.employment.tenureDays || 0;
+      if (tenure < 30) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 站陈经理那边",
+        hint: "魅力+5·道德-3·赌一把",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._sideWithChen = true;
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          StateManager.addMessage(
+            "⚔️ 你选择了陈经理。他满意地拍拍你的肩：「明智。」道德-3，魅力+5。后续影响待定。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🛡️ 站老王那边",
+        hint: "智力+5·道德+2·稳健选择",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._sideWithWang = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "🛡️ 你选了老王。他点点头：「踏实。」智力+5，道德+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 保持中立，两边都不得罪",
+        hint: "道德+5·但两边都对你冷淡",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._stayNeutral = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          if (st.employment && st.employment.burnout !== undefined) {
+            st.employment.burnout = Math.min(
+              100,
+              (st.employment.burnout || 0) + 8,
+            );
+          }
+          StateManager.addMessage(
+            "😶 你两边都没站。两个人后来见到你，都只点头不说话。道德+5，倦怠+8（夹心饼的压力）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.81 loop R40 注册完毕（4个：冬季寒潮/年末倒计时/年终述职/职场站队）
+  // ====================================================================
   // ====== 注册结束 ======
 })();

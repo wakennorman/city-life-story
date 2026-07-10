@@ -156,14 +156,17 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.78(loop R32) — 新增3个NPC关系矩阵深度互动事件(王婶×张姐调解/百家宴/李工头×陈哥合作)
-  - **设计意图**: 填补NPC关系矩阵深度互动空白区(P2推荐方向⑦)，覆盖aunt_wang↔sister_zhang(紧张→调解)、boss_li↔chen_ge(中立→合作)
-  - **① npc_wang_zhang_mediation**: 王婶与张姐巷口摆摊矛盾，玩家可调解/站队/回避
-  - **② npc_community_gathering**: 老周牵头百家宴，5 NPC联动(老周/王婶/陈师傅/张姐/阿黄)
-  - **③ npc_li_chen_cooperation**: 李工头缺人手遇陈哥，玩家撮合合作/自己顶上/赚中介
-  - **附带: v3.77图书馆位置激活+借书行动/读者证/v3.76世界新闻面板重构/R20-R119 rebase超集**
-  - **影响文件**: cross_system_events.js(+488行)/world_news_intro.js(refactor)/locations.js(+图书馆)/actions_extra.js(+借书行动)/style.css(+悬停)
-  - **验证**: node --check ✅ / build.py 7646.4KB ✅
+- **最新一次工作 (2026-07-11)**：v3.83(loop R39) — 四季叙事深化：4季各+1事件(倒春寒/夏夜纳凉/秋雨寄思/冬日围炉)
+  - **设计意图**: 填补"16种疾病5大类但康复叙事为零"的最大空白区
+  - **① recovery_brink_relief**: 从危到安——health<30危机后恢复至≥55，一碗热粥重新活过来
+  - **② recovery_warm_soup**: 康复后的那碗汤——病愈后王大婶端来鸡汤，社会支持的温度
+  - **③ recovery_ward_coincidence**: 病房奇遇——住院期间遇到装修老哥，同病相怜的人脉
+  - **④ recovery_exercise_resolution**: 康复的决心——病愈后立flag晨跑/改善饮食/调整作息
+  - **⑤ recovery_herbalist_wisdom**: 街头老中医——亚健康状态得到养生点拨，权威效应
+  - **设计心理学**: 峰终定律(顿悟时刻)/损失厌恶(后怕驱动)/社会支持/禀赋效应/新起点效应
+  - **影响文件**: cross_system_events.js(+428行)
+  - **验证**: node --check ✅ / build.py 7722.5KB ✅
+  - **覆盖矩阵新增**: 健康/医疗 4→9事件
 
 - **上一轮工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
   - **设计意图**: 平衡大量正面成就事件，加入负面里程碑制造张力
@@ -541,20 +544,20 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 
 ### 📊 当前覆盖矩阵（R31 后）
 
-| 次级系统     | 已联动事件数 | 关键事件                                                         |
-| ------------ | ------------ | ---------------------------------------------------------------- |
-| NPC 关系     | 11           | reunion / competitor / classmate / affinity100 / duo_referral 等 |
-| 经济/资产    | 23           | six_figure / supply_demand / bank_vip / cert_bonus 等            |
-| 技能系统     | 15           | big_client(40+30) / repair_shop(30+20) / mastery_capstone(100)   |
-| 天气系统     | 3            | rainy_umbrella / snow_deal / summer_night                        |
-| **季节系统** | **2→4**      | spring_job_fair / autumn_harvest / summer_night(已有)            |
-| 道德系统     | 4            | wallet_honest / extreme / competitor_choose 等                   |
-| 健康/医疗    | 4            | crisis_slow / near_death / dr_wang×2                             |
-| **装备品质** | **0→1**      | equipment_first_high_quality(R31新增)                            |
-| 住房         | 3            | luxury_housing / tier_milestone / cold_snap                      |
-| 教育         | 3            | grad_ceremony / cert_bonus / edu_white_collar                    |
-| 家庭         | 3            | corporate_mother_surgery / relocation / dividend                 |
-| 社交 Tab     | 1            | NPC拜访按钮+好感互动                                             |
+| 次级系统     | 已联动事件数 | 关键事件                                                                                                                                        |
+| ------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| NPC 关系     | 11           | reunion / competitor / classmate / affinity100 / duo_referral 等                                                                                |
+| 经济/资产    | 23           | six_figure / supply_demand / bank_vip / cert_bonus 等                                                                                           |
+| 技能系统     | 15           | big_client(40+30) / repair_shop(30+20) / mastery_capstone(100)                                                                                  |
+| 天气系统     | 3            | rainy_umbrella / snow_deal / summer_night                                                                                                       |
+| **季节系统** | **4→8**      | spring_job_fair / autumn_harvest / summer_night / **spring_chill** / **summer_night_cooling** / **autumn_rain_homesick** / **winter_hearth**    |
+| 道德系统     | 4            | wallet_honest / extreme / competitor_choose 等                                                                                                  |
+| 健康/医疗    | 4→9          | crisis_slow / near_death / dr_wang×2 / **recovery_brink** / **recovery_soup** / **recovery_ward** / **recovery_exercise** / **recovery_herbal** |
+| **装备品质** | **0→1**      | equipment_first_high_quality(R31新增)                                                                                                           |
+| 住房         | 3            | luxury_housing / tier_milestone / cold_snap                                                                                                     |
+| 教育         | 3            | grad_ceremony / cert_bonus / edu_white_collar                                                                                                   |
+| 家庭         | 3            | corporate_mother_surgery / relocation / dividend                                                                                                |
+| 社交 Tab     | 1            | NPC拜访按钮+好感互动                                                                                                                            |
 
 ---
 
