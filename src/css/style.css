@@ -625,8 +625,11 @@ body {
   transition: all 0.15s ease;
 }
 .card:hover {
+  background: var(--bg-card-hover);
   border-color: var(--accent);
   border-left-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 .card.disabled {
   opacity: 0.6;
@@ -651,7 +654,10 @@ body {
   flex-direction: column;
 }
 .hustle-card:hover {
+  background: var(--bg-card-hover);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 .hustle-card.unavailable {
   border-left-color: var(--text-muted);
@@ -986,7 +992,9 @@ body {
 
 .btn:hover {
   background: var(--bg-card-hover);
-  border-color: var(--border-light);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .btn:active {
@@ -1001,6 +1009,8 @@ body {
 
 .btn-primary:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .btn-success {
@@ -3217,8 +3227,10 @@ body {
 }
 
 .marketing-channel:hover {
+  background: var(--bg-card-hover);
   border-color: var(--accent);
-  background: var(--bg-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .marketing-channel.selected {
@@ -3251,7 +3263,10 @@ body {
 }
 
 .team-management-action:hover {
+  background: var(--bg-card-hover);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 /* 财报弹窗 */
@@ -4942,6 +4957,8 @@ body {
 .world-news-item:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 .world-news-item.world-news-mood-up {
   border-left-color: var(--accent);
@@ -5181,9 +5198,11 @@ body {
   transition: all 0.2s;
 }
 .world-news-skip-btn:hover {
-  color: var(--text-secondary);
-  border-color: var(--text-muted);
-  background: rgba(248, 245, 240, 0.5);
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 .world-news-skip-btn:active {
   transform: translateY(0);
@@ -5470,4 +5489,6 @@ body {
 .npc-visit-btn:hover {
   background: var(--success);
   color: var(--bg-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }

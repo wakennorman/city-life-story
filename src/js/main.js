@@ -2134,9 +2134,9 @@ function showLoadMenuOnWelcome() {
         '<div style="padding:10px;margin:4px 0;background:var(--bg-card);border-radius:4px;cursor:pointer;transition:all 0.2s;' +
         borderStyle +
         '"' +
-        " onmouseover=\"this.style.borderColor='var(--accent)'\" onmouseout=\"this.style.borderColor='" +
+        " onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='" +
         (_compareMode ? "var(--accent)" : "var(--border)") +
-        "'\"" +
+        "';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"" +
         ' onclick="' +
         clickHandler +
         '">' +

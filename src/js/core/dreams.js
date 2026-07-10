@@ -381,7 +381,7 @@ function showForcedDreamModal() {
         "<div onclick=\"window.selectDream('" +
         d.id +
         '\')" style="padding:10px 14px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;" ' +
-        "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"> " +
+        "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"> " +
         "<strong>" +
         d.icon +
         " " +

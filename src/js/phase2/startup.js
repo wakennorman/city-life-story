@@ -7544,7 +7544,7 @@ function showPRManagementModal(state) {
         ? ""
         : "onclick=\"executePRActionFromModal('" +
           event.id +
-          "')\" onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"";
+          "')\" onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"";
 
       prActionsHtml += `
         <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
@@ -7593,7 +7593,7 @@ function showPRManagementModal(state) {
         ? ""
         : "onclick=\"executeMediaRelationActionFromModal('" +
           key +
-          "')\" onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\"";
+          "')\" onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"";
 
       mediaActionsHtml += `
         <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
@@ -7668,7 +7668,7 @@ function showCrisisResponseModal(crisisId) {
     const canAfford = company.cashReserve >= opt.cost;
 
     html += `
-      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-accent)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='rgba(0,0,0,0.05)';\"" : ""} onclick="${canAfford ? `resolveCrisisActionFromModal(${i})` : ""}">
+      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"" : ""} onclick="${canAfford ? `resolveCrisisActionFromModal(${i})` : ""}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
@@ -7843,7 +7843,7 @@ function showLegalComplianceModal(state) {
       const disabled = completed || !canAfford;
 
       checklistHtml += `
-        <div style="padding:8px;background:${completed ? "rgba(34,197,94,0.1)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${completed ? "var(--success)" : "var(--border)"};opacity:${disabled ? 0.6 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalChecklistActionFromModal('${item.id}')"` : ""}>
+        <div style="padding:8px;background:${completed ? "rgba(34,197,94,0.1)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${completed ? "var(--success)" : "var(--border)"};opacity:${disabled ? 0.6 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} ${!disabled ? `onclick="executeLegalChecklistActionFromModal('${item.id}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${item.icon} ${item.name}</div>
@@ -7875,7 +7875,7 @@ function showLegalComplianceModal(state) {
       const disabled = !canAfford;
 
       legalEventsHtml += `
-        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="executeLegalEventActionFromModal('${event.id}')"` : ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} ${!disabled ? `onclick="executeLegalEventActionFromModal('${event.id}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${event.icon} ${event.name}</div>
@@ -7915,7 +7915,7 @@ function showLegalComplianceModal(state) {
       const disabled = !canAfford;
 
       patentAppsHtml += `
-        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="applyPatentFromModal('${key}')"` : ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} ${!disabled ? `onclick="applyPatentFromModal('${key}')"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">${type.icon} ${type.name}</div>
@@ -7952,7 +7952,7 @@ function showLegalComplianceModal(state) {
       const disabled = !canAfford;
 
       insuranceHtml += `
-        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} ${!disabled ? `onclick="buyLegalInsuranceFromModal(${ins.level})"` : ""}>
+        <div style="padding:8px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${!disabled ? "cursor:pointer;transition:all 0.2s;" : ""}${!disabled ? ` onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} ${!disabled ? `onclick="buyLegalInsuranceFromModal(${ins.level})"` : ""}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:11px;font-weight:bold;">🛡️ ${ins.name}</div>
@@ -8051,7 +8051,7 @@ function showLegalResponseModal(eventId) {
     const canAfford = company.legalBudget >= opt.cost;
 
     html += `
-      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-accent)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='rgba(0,0,0,0.05)';\"" : ""} onclick="${canAfford ? `resolveLegalActionFromModal(${i})` : ""}">
+      <div style="padding:12px;background:${canAfford ? "var(--bg-card)" : "rgba(0,0,0,0.05)"};border-radius:8px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"" : ""} onclick="${canAfford ? `resolveLegalActionFromModal(${i})` : ""}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:13px;font-weight:bold;">${opt.label}</div>
@@ -8171,7 +8171,7 @@ function showCompetitorDefenseModal(state) {
           company.cashReserve >=
           (company.revenue > 0 ? company.revenue * resp.costMult : 10000);
         html += `
-          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} onclick="${canAfford ? `handleCompetitorResponse(${i}, '${respId}')` : ""}">
+          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} onclick="${canAfford ? `handleCompetitorResponse(${i}, '${respId}')` : ""}">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div style="font-size:11px;font-weight:bold;">${resp.icon} ${resp.name}</div>
               <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅" : "❌"}</div>
@@ -8562,7 +8562,7 @@ function showCrisisManagementModal(state) {
           company.revenue > 0 ? company.revenue * resp.costMult : 10000;
         const canAfford = company.cashReserve >= cost;
         html += `
-          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';"` : ""} onclick="${canAfford ? `handleCrisisResponse(${i}, '${respId}')` : ""}">
+          <div style="padding:8px;background:${canAfford ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)"};border-radius:6px;border:1px solid ${canAfford ? "var(--border)" : "var(--border)"};opacity:${canAfford ? 1 : 0.5};${canAfford ? "cursor:pointer;transition:all 0.2s;" : ""} ${canAfford ? `onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';"` : ""} onclick="${canAfford ? `handleCrisisResponse(${i}, '${respId}')` : ""}">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div style="font-size:11px;font-weight:bold;">${resp.icon} ${resp.name}</div>
               <div style="font-size:9px;color:${canAfford ? "var(--success)" : "var(--danger)"};">${canAfford ? "✅" : "❌"}</div>
@@ -9116,7 +9116,7 @@ function showFeatureDevelopmentModal(state) {
           ";border-radius:4px;" +
           (canAfford ? "cursor:pointer;transition:all 0.2s;" : "opacity:0.5;") +
           (canAfford
-            ? "onmouseover=\"this.style.borderColor='var(--accent)';\" onmouseout=\"this.style.borderColor='var(--border)';\""
+            ? "onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\""
             : "") +
           (onClick ? 'onclick="' + onClick + '"' : "") +
           ">" +
