@@ -42,3 +42,4 @@
 - [v3.13 拆分 const/let 重复声明冲突](v3.13-split-duplicate-const-let-conflict.md) — 文件拆分时未清理旧文件中的重复 const/let 声明导致 SyntaxError，Tab 全不显示 (2026-07-10)
 - [移动端 UI 打磨偏好](mobile-ui-polish-preferences.md) — 2026-07-10 用户确认：位置栏高度/☰菜单可靠性/事件记录自动滚动+折叠/框动效保持
 - [v3.79-loop-R34-session](v3.79-loop-R34-session.md) — R34: 修复3个B类概率+新增2财富里程碑事件(50万/100万)（2026-07-10）
+- [v3.85-career-tab-polish](v3.85-career-tab-polish.md) — 事业Tab全面打磨：属性训练重平衡(参考完美人生递减收益)/晨跑冥想免费/求职UI框线增强/副业网格化布局/showModal按钮Bug修复（2026-07-11）

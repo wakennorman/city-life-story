@@ -19,12 +19,12 @@ try {
     New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
     New-Item -ItemType Directory -Force -Path $claudeConfigDir | Out-Null
 
-    # Kill any existing proxy on the port
-    $existingProc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-    if ($existingProc) {
-        Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
-    }
+    # Kill any existing proxy on the port (best-effort, might fail without admin)
+    try {
+        $existingProc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty OwningProcess -Unique
+        if ($existingProc) { Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }
+    } catch { /* ignore permission errors */ }
 
     # Start proxy in background
     $proxyProcess = Start-Process python "-u" $proxyScript $proxyPort -PassThru -WindowStyle Hidden

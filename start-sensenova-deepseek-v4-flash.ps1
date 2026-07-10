@@ -15,12 +15,24 @@ if (-not (Test-Path -LiteralPath $claude)) {
 New-Item -ItemType Directory -Force -Path $claudeHome | Out-Null
 New-Item -ItemType Directory -Force -Path $claudeConfigDir | Out-Null
 
-$proxyPort = 8088
-$proxyUrl = "http://127.0.0.1:$proxyPort"
+$proxyPort = 8089
+$proxyScript = Join-Path $projectDir "proxy-sensenova.py"
+
+# Kill any existing proxy on the port (best-effort, might fail without admin)
+try {
+    $existingProc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty OwningProcess -Unique
+    if ($existingProc) { Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }
+} catch { /* ignore permission errors */ }
+
+# Start proxy in background
+$proxyProcess = Start-Process python "-u" $proxyScript $proxyPort -PassThru -WindowStyle Hidden
+Write-Host "Proxy started (PID: $($proxyProcess.Id)) on port $proxyPort" -ForegroundColor Green
+Start-Sleep -Seconds 2
 
 $model = "deepseek-v4-flash"
 $apiKey = "sk-OhjHsyX8dLoYru9zMjzZ7AvHe5EWf9XE"
-$baseUrl = "$proxyUrl"
+$baseUrl = "http://127.0.0.1:$proxyPort"
 
 $settings = @"
 {
@@ -86,4 +98,23 @@ if (Test-Path (Join-Path $rtkPath "rtk.exe")) {
 
 Set-Location -LiteralPath $projectDir
 
-& $claude --model $model @args
+try {
+    & $claude --model $model @args
+}
+catch {
+    try {
+        $proc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty OwningProcess -Unique
+        if ($proc) { Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue }
+    } catch {}
+    Write-Host "Launch failed: $($_.Exception.Message)" -ForegroundColor Red
+    pause
+    exit 1
+}
+finally {
+    # Kill proxy when Claude exits
+    if ($proxyProcess -and -not $proxyProcess.HasExited) {
+        Stop-Process -Id $proxyProcess.Id -Force -ErrorAction SilentlyContinue
+        Write-Host "Proxy stopped." -ForegroundColor Gray
+    }
+}
