@@ -28,3 +28,4 @@
 - [v3.20 叙事触发一致性审查+联动事件扩充](v3.20-narrative-trigger-consistency-audit.md) — 7个事件文件250+事件A类审查（0缺陷已修复）+ 4个新联动事件：修理铺合作/饥饿热汤/雨中同行/借债困境（2026-07-09，commit b15dc467）
 - [中文外显规则](chinese-only-display-rule.md) — 游戏外显内容只能是中文，英文需隐藏到代码中（2026-07-10）
 - [双图标禁止规则](double-icon-rule.md) — 行动/按钮不能同时有 name 中的 emoji 和 icon 字段（2026-07-10）
+- [v3.76 事件叙事-触发自洽性审查 R120](v3.76-narrative-trigger-consistency-r120.md) — 系统性审查5个事件文件250+事件，修复A类4个：bike_share_boom/live_stream_rush/shopping_fest/consumption_down（文本暗示特定职业经历但缺少conditions检查）（2026-07-10，commit 477d2237）
